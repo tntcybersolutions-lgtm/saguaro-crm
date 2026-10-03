@@ -4,7 +4,7 @@ import Link from 'next/link';
 import MarketingNav from '@/components/MarketingNav';
 import { Brain, Robot, Mailbox, ChartBar } from '@phosphor-icons/react';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.08)',DIM='#CBD5E1',TEXT='#FFFFFF';
+const GOLD='var(--brand-primary)',DARK='#0A0A00',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.08)',DIM='#CBD5E1',TEXT='#FFFFFF';
 
 export default function BidsPage() {
   const [tab, setTab] = useState<'active'|'pipeline'|'history'>('active');
@@ -22,7 +22,7 @@ export default function BidsPage() {
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:24}}>
         <div>
           <h1 style={{fontWeight:600,color:TEXT,margin:0,letterSpacing:-0.4}}>Bid Center</h1>
-          <div style={{fontSize:13,color:DIM,marginTop:4}}>AI-scored opportunities and active bid packages</div>
+          <div style={{fontSize:13,color:DIM,marginTop:4}}>AI-scored opportunities and active bid packages.</div>
         </div>
         <div style={{display:'flex',gap:10}}>
           <Link href="/app/intelligence" style={{padding:'9px 16px',background:'transparent',border:`1px solid ${BORDER}`,borderRadius:8,color:DIM,fontSize:13,fontWeight:500,textDecoration:'none'}}><Brain size={15} weight="duotone" style={{verticalAlign:'-3px'}} /> Bid Intelligence</Link>
@@ -41,16 +41,16 @@ export default function BidsPage() {
 
       {tab==='pipeline'&&<div>
         <div style={{background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:12,padding:'14px 18px',marginBottom:20,fontSize:13,color:DIM}}>
-          <Robot size={15} weight="duotone" style={{verticalAlign:'-3px'}} /> <strong style={{color:TEXT}}>AI Scores These Automatically</strong> — Each opportunity is scored 0–100 for fit based on your win/loss history. Focus on green (BID) first.
+          <Robot size={15} weight="duotone" style={{verticalAlign:'-3px'}} /> <strong style={{color:TEXT}}>AI Scores These Automatically</strong> — Each opportunity is scored 0–100 for fit based on your win/loss history. Focus on green (Bid) first.
         </div>
         <table style={{width:'100%',borderCollapse:'collapse' as const,fontSize:13}}>
           <thead><tr style={{background:'rgba(255,255,255,0.03)'}}>
             {['Opportunity','Trade','Est. Value','Fit Score','Win Prob.','Bid Due','AI Recommendation','Actions'].map(h=>(
-              <th key={h} style={{padding:'10px 14px',textAlign:'left' as const,fontSize:11,fontWeight:600,textTransform:'uppercase' as const,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>
+              <th key={h} style={{padding:'10px 14px',textAlign:'left' as const,fontSize:11,fontWeight:600,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>
             ))}
           </tr></thead>
           <tbody>{opportunities.map(op=>{
-            const ac = op.action==='bid'?{bg:'rgba(26,138,74,.12)',c:'#3dd68c',label:'✓ BID'}:op.action==='pass'?{bg:'rgba(192,48,48,.12)',c:'#ff7070',label:'✗ PASS'}:{bg:'rgba(245, 158, 11,.12)',c:GOLD,label:'? INVESTIGATE'};
+            const ac = op.action==='bid'?{bg:'rgba(26,138,74,.12)',c:'#3dd68c',label:'✓ Bid'}:op.action==='pass'?{bg:'rgba(192,48,48,.12)',c:'#ff7070',label:'✗ Pass'}:{bg:'var(--brand-primary-12)',c:'var(--brand-primary)',label:'? Investigate'};
             return <tr key={op.id} style={{borderBottom:`1px solid rgba(255,255,255,0.08)`}}>
               <td style={{padding:'12px 14px',color:TEXT,fontWeight:600,maxWidth:240,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{op.title}</td>
               <td style={{padding:'12px 14px',color:DIM}}>{op.trade}</td>
@@ -66,7 +66,7 @@ export default function BidsPage() {
               <td style={{padding:'12px 14px',color:op.winPct>=60?'#3dd68c':op.winPct>=40?GOLD:'#ff7070',fontWeight:600}}>{op.winPct}%</td>
               <td style={{padding:'12px 14px',color:DIM}}>{op.due}</td>
               <td style={{padding:'12px 14px'}}>
-                <span style={{fontSize:10,fontWeight:600,padding:'3px 10px',borderRadius:4,background:ac.bg,color:ac.c,border:`1px solid ${ac.c}33`}}>{ac.label}</span>
+                <span style={{fontSize:10,fontWeight:600,padding:'3px 10px',borderRadius:4,background:ac.bg,color:ac.c,border:`1px solid color-mix(in srgb, ${ac.c} 20%, transparent)`}}>{ac.label}</span>
               </td>
               <td style={{padding:'12px 14px',display:'flex',gap:6}}>
                 <Link href="/app/intelligence" style={{background:'none',border:`1px solid ${BORDER}`,borderRadius:5,color:DIM,fontSize:11,padding:'3px 8px',cursor:'pointer',textDecoration:'none'}}>Details</Link>

@@ -36,15 +36,15 @@ export default function GetTheAppPage() {
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-          --dark:   #0a0a0a;
-          --gold:   #F59E0B;
+          --dark:   var(--bg-base);
+          --gold:   var(--brand-primary);
           --text:   #FFFFFF;
           --dim:    #CBD5E1;
           --border: rgba(255,255,255,0.12);
-          --raised: #141416;
+          --raised: var(--bg-surface);
           --green:  #22c55e;
-          --gold-dim: rgba(245,158,11,0.12);
-          --gold-glow: rgba(245,158,11,0.25);
+          --gold-dim: var(--brand-primary-12);
+          --gold-glow: var(--brand-primary-25);
         }
 
         body { background: var(--dark); }
@@ -76,7 +76,7 @@ export default function GetTheAppPage() {
         .nav-login:hover { color: var(--text); }
         .nav-cta {
           background: var(--gold);
-          color: #0a0a0a;
+          color: #0A0A00;
           text-decoration: none;
           font-size: 13px;
           font-weight: 600;
@@ -108,7 +108,7 @@ export default function GetTheAppPage() {
           position: absolute;
           bottom: -100px; left: -150px;
           width: 700px; height: 700px;
-          background: radial-gradient(circle, rgba(245,158,11,0.05) 0%, transparent 68%);
+          background: none;
           pointer-events: none;
         }
         .hero-bg-blue {
@@ -141,8 +141,6 @@ export default function GetTheAppPage() {
           font-size: 10.5px;
           font-weight: 500;
           color: var(--dim);
-          letter-spacing: .07em;
-          text-transform: uppercase;
         }
         .hero-badge-dot {
           width: 7px; height: 7px;
@@ -161,7 +159,7 @@ export default function GetTheAppPage() {
         }
         /* House display treatment — gold text-shine on ONE key phrase per heading. */
         .gold-gradient {
-          background: linear-gradient(100deg, #F59E0B 6%, #F5B84D 38%, #FDE68A 56%, #F59E0B 92%);
+          background: linear-gradient(100deg, var(--brand-primary) 6%, var(--brand-primary-strong) 50%, var(--brand-primary) 92%);
           -webkit-background-clip: text;
           background-clip: text;
           -webkit-text-fill-color: transparent;
@@ -183,7 +181,7 @@ export default function GetTheAppPage() {
         }
         .btn-primary {
           background: var(--gold);
-          color: #0a0a0a;
+          color: #0A0A00;
           text-decoration: none;
           font-size: 14px;
           font-weight: 600;
@@ -465,11 +463,9 @@ export default function GetTheAppPage() {
           color: var(--dim);
           text-align: left;
           border-bottom: 1px solid var(--border);
-          letter-spacing: .03em;
-          text-transform: uppercase;
         }
         .compare-table th.saguaro-col {
-          background: rgba(245,158,11,0.08);
+          background: color-mix(in srgb, var(--brand-primary) 8%, transparent);
           color: var(--gold);
           border-left: 2px solid var(--gold);
         }
@@ -487,12 +483,12 @@ export default function GetTheAppPage() {
         }
         .compare-table td.app-store-col { color: #CBD5E1; }
         .compare-table td.saguaro-col {
-          background: rgba(245,158,11,0.05);
+          background: color-mix(in srgb, var(--brand-primary) 5%, transparent);
           color: var(--text);
           font-weight: 600;
-          border-left: 2px solid rgba(245,158,11,0.3);
+          border-left: 2px solid var(--brand-primary-35);
         }
-        .compare-table tr:hover td.saguaro-col { background: rgba(245,158,11,0.09); }
+        .compare-table tr:hover td.saguaro-col { background: color-mix(in srgb, var(--brand-primary) 9%, transparent); }
         .compare-table td.bad { color: #f87171; }
         .compare-table td.good { color: var(--green); }
 
@@ -559,7 +555,7 @@ export default function GetTheAppPage() {
 
         /* ── FOOTER ── */
         .footer {
-          background: #141416;
+          background: var(--bg-surface);
           border-top: 1px solid var(--border);
           padding: 48px 32px;
         }
@@ -634,7 +630,7 @@ export default function GetTheAppPage() {
             <div>
               <div className="hero-badge">
                 <div className="hero-badge-dot" />
-                NOW IN BETA — TESTFLIGHT FOR iPHONE &amp; iPAD
+                Now in Beta — TestFlight for iPhone &amp; iPad
               </div>
 
               <h1 className="hero-h1">
@@ -649,13 +645,13 @@ export default function GetTheAppPage() {
 
               <div className="hero-ctas">
                 <GoldButton href={TESTFLIGHT_URL}>Join the iOS Beta</GoldButton>
-                <a href="#how-to-install" className="btn-ghost">How to install</a>
+                <a href="#how-to-install" className="btn-ghost">How to Install</a>
               </div>
 
               {/* Official-style TestFlight availability badge — plain text on a
                   machined pill. No fabricated Apple artwork, ever. */}
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid rgba(255,255,255,0.18)', borderRadius: 8, padding: '7px 14px', marginBottom: 40 }}>
-                <span style={{ fontSize: 9, fontWeight: 500, color: 'var(--dim)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Available on</span>
+                <span style={{ fontSize: 9, fontWeight: 500, color: 'var(--dim)' }}>Available on</span>
                 <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', letterSpacing: '0.01em' }}>TestFlight</span>
               </div>
 
@@ -663,7 +659,7 @@ export default function GetTheAppPage() {
                 <span className="trust-pill">✓ Native iPhone &amp; iPad</span>
                 <span className="trust-pill">✓ Works Offline</span>
                 <span className="trust-pill">✓ Live on TestFlight</span>
-                <span className="trust-pill">✓ Free during beta</span>
+                <span className="trust-pill">✓ Free During Beta</span>
               </div>
             </div>
 
@@ -700,15 +696,15 @@ export default function GetTheAppPage() {
             </div>
             <div className="stat-item">
               <div className="stat-number">100%</div>
-              <div className="stat-label">Works offline</div>
+              <div className="stat-label">Works Offline</div>
             </div>
             <div className="stat-item">
               <div className="stat-number">Beta</div>
-              <div className="stat-label">Live on TestFlight now</div>
+              <div className="stat-label">Live on TestFlight Now</div>
             </div>
             <div className="stat-item">
               <div className="stat-number">Free</div>
-              <div className="stat-label">During the beta</div>
+              <div className="stat-label">During the Beta</div>
             </div>
           </div>
         </div>
@@ -789,10 +785,10 @@ export default function GetTheAppPage() {
                   <div className="platform-name">iPhone &amp; iPad</div>
                 </div>
                 <ol className="steps-list">
-                  <li className="step-item"><div className="step-num">1</div><span className="step-text">Install Apple&apos;s free <strong>TestFlight</strong> app from the App Store</span></li>
-                  <li className="step-item"><div className="step-num">2</div><span className="step-text">Open <strong>testflight.apple.com/join/jg7jdtwx</strong> on your iPhone</span></li>
-                  <li className="step-item"><div className="step-num">3</div><span className="step-text">Tap <strong>&quot;Install&quot;</strong> in TestFlight — Saguaro Control Systems lands on your home screen</span></li>
-                  <li className="step-item"><div className="step-num">4</div><span className="step-text">Open it, sign in, and you&apos;re on the jobsite</span></li>
+                  <li className="step-item"><div className="step-num">1</div><span className="step-text">Install Apple&apos;s free <strong>TestFlight</strong> app from the App Store.</span></li>
+                  <li className="step-item"><div className="step-num">2</div><span className="step-text">Open <strong>testflight.apple.com/join/jg7jdtwx</strong> on your iPhone.</span></li>
+                  <li className="step-item"><div className="step-num">3</div><span className="step-text">Tap <strong>&quot;Install&quot;</strong> in TestFlight — Saguaro Control Systems lands on your home screen.</span></li>
+                  <li className="step-item"><div className="step-num">4</div><span className="step-text">Open it, sign in, and you&apos;re on the jobsite.</span></li>
                 </ol>
                 <div className="platform-note">iOS 15+ · iPhone &amp; iPad · Free during the beta</div>
               </div>
@@ -807,7 +803,7 @@ export default function GetTheAppPage() {
                       <rect x="4" y="17" width="16" height="4" rx="1" />
                     </svg>
                   </div>
-                  <div className="platform-name">Join the beta now</div>
+                  <div className="platform-name">Join the Beta Now</div>
                 </div>
                 <p className="feat-desc" style={{ marginBottom: 20 }}>Saguaro Control Systems is in open beta on TestFlight. Tap below on your iPhone or iPad to get in — it&apos;s free while we&apos;re in beta.</p>
                 <a href={TESTFLIGHT_URL} target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ display: 'inline-block' }}>Join the iOS Beta →</a>

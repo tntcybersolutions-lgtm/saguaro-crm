@@ -23,7 +23,7 @@ import { WarningCircle, CheckCircle, PaperPlaneTilt, XCircle } from '@phosphor-i
 import BidJacketView, { type Jacket } from '@/components/BidJacketView';
 import { SectionCard, PremiumEmpty, ghostButtonStyle, goldButtonStyle } from '@/components/ui/premium';
 
-const GOLD = '#C8960F';
+const GOLD = 'var(--brand-primary)';
 const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
 const HAIR = 'rgba(255,255,255,0.10)';
@@ -105,7 +105,7 @@ export default function BidderJacketPage() {
         <SectionCard>
           <PremiumEmpty
             icon={<WarningCircle size={30} weight="duotone" color={AMBER} />}
-            title="This bid link is no longer valid"
+            title="This Bid Link Is No Longer Valid"
             description={
               (error || '') +
               ' If you believe this is a mistake, contact the general contractor who invited you.'
@@ -130,7 +130,7 @@ export default function BidderJacketPage() {
         slot={
           <SectionCard
             flat
-            title={declined ? 'You declined this invitation' : submitted ? 'Your bid' : 'Submit your bid'}
+            title={declined ? 'You Declined This Invitation' : submitted ? 'Your Bid' : 'Submit Your Bid'}
             icon={
               declined ? <XCircle size={17} weight="duotone" color={DIM} />
                 : submitted ? <CheckCircle size={17} weight="duotone" color={GREEN} />
@@ -165,7 +165,7 @@ export default function BidderJacketPage() {
             {!declined && data.canSubmit && (
               <div style={{ marginTop: submitted ? 18 : 0 }}>
                 <div style={{ display: 'grid', gap: 12, maxWidth: 620 }}>
-                  <Field label="Your bid amount">
+                  <Field label="Your Bid Amount">
                     <input
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
@@ -174,7 +174,7 @@ export default function BidderJacketPage() {
                       style={inputStyle}
                     />
                   </Field>
-                  <Field label="Exclusions (optional)">
+                  <Field label="Exclusions (Optional)">
                     <textarea
                       value={exclusions}
                       onChange={(e) => setExclusions(e.target.value)}
@@ -183,7 +183,7 @@ export default function BidderJacketPage() {
                       style={{ ...inputStyle, resize: 'vertical' }}
                     />
                   </Field>
-                  <Field label="Notes to the general contractor (optional)">
+                  <Field label="Notes to the General Contractor (Optional)">
                     <textarea
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
@@ -205,7 +205,7 @@ export default function BidderJacketPage() {
                     style={{ ...goldButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 7 }}
                   >
                     <PaperPlaneTilt size={15} weight="bold" />
-                    {busy === 'submit' ? 'Sending…' : submitted ? 'Revise my bid' : 'Submit bid'}
+                    {busy === 'submit' ? 'Sending…' : submitted ? 'Revise My Bid' : 'Submit Bid'}
                   </button>
                   {!submitted && (
                     <button
@@ -214,7 +214,7 @@ export default function BidderJacketPage() {
                       style={{ ...ghostButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 7 }}
                     >
                       <XCircle size={15} weight="bold" />
-                      {busy === 'decline' ? 'Sending…' : 'Not bidding this one'}
+                      {busy === 'decline' ? 'Sending…' : 'Not Bidding This One'}
                     </button>
                   )}
                 </div>
@@ -247,7 +247,7 @@ const inputStyle: React.CSSProperties = {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label style={{ display: 'block' }}>
-      <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: DIM, marginBottom: 6 }}>
+      <div style={{ fontSize: 10.5, fontWeight: 800, color: DIM, marginBottom: 6 }}>
         {label}
       </div>
       {children}
@@ -259,7 +259,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
  *  quiet attribution rather than the signed-in shell. */
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ minHeight: '100vh', background: '#0d1117', color: TEXT, padding: 'clamp(16px, 4vw, 40px) clamp(12px, 4vw, 28px)' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-base)', color: TEXT, padding: 'clamp(16px, 4vw, 40px) clamp(12px, 4vw, 28px)' }}>
       <div style={{ maxWidth: 1240, margin: '0 auto' }}>{children}</div>
       <div style={{ maxWidth: 1240, margin: '28px auto 0', color: DIM, fontSize: 11.5, textAlign: 'center' }}>
         Powered by <a href="https://saguarocontrol.net/" style={{ color: GOLD, textDecoration: 'none' }}>Saguaro</a>

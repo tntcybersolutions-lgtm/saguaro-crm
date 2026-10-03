@@ -5,8 +5,8 @@ import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
 
 /* ── Design Tokens ── */
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
-const GREEN='#22c55e',RED='#ef4444',AMBER='#f59e0b',BLUE='#F59E0B',PURPLE='#8b5cf6';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
+const GREEN='#22c55e',RED='#ef4444',AMBER='#f59e0b',BLUE='var(--brand-primary)',PURPLE='#8b5cf6';
 const fmt=(n:number)=>'$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}));
 const fmtDate=(d:string)=>d?new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'--';
 
@@ -14,11 +14,11 @@ type Tab='dashboard'|'punch'|'daily'|'schedule'|'rfis'|'radio'|'payapps'|'bids'|
 
 /* ── Shared styles ── */
 const card=(extra?:React.CSSProperties):React.CSSProperties=>({background:RAISED,backgroundImage:'linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015))',border:`1px solid ${BORDER}`,borderRadius:12,padding:20,boxShadow:'0 4px 14px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.06)',...extra});
-const btnS=(color:string,small?:boolean):React.CSSProperties=>({background:color,backgroundImage:color===GOLD?'linear-gradient(180deg,#FFC14D,#F59E0B 60%,#E08A00)':'linear-gradient(180deg,rgba(255,255,255,0.16),rgba(255,255,255,0) 55%)',color:color===GOLD?'#241500':'#fff',border:'none',borderRadius:9,padding:small?'6px 14px':'11px 20px',fontWeight:800,fontSize:small?12:14,cursor:'pointer',boxShadow:color===GOLD?'0 4px 14px rgba(245,158,11,0.28), inset 0 1px 0 rgba(255,255,255,0.35)':'0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)'});
-const labelS:React.CSSProperties={display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5,textTransform:'uppercase',letterSpacing:.5};
+const btnS=(color:string,small?:boolean):React.CSSProperties=>({background:color,backgroundImage:color===GOLD?'linear-gradient(180deg,var(--brand-primary-strong),var(--brand-primary) 60%,var(--brand-primary-hover))':'linear-gradient(180deg,rgba(255,255,255,0.16),rgba(255,255,255,0) 55%)',color:color===GOLD?'#0A0A00':'#fff',border:'none',borderRadius:9,padding:small?'6px 14px':'11px 20px',fontWeight:800,fontSize:small?12:14,cursor:'pointer',boxShadow:color===GOLD?'0 4px 14px color-mix(in srgb, var(--brand-primary) 28%, transparent), inset 0 1px 0 rgba(255,255,255,0.35)':'0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)'});
+const labelS:React.CSSProperties={display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5};
 const inputS:React.CSSProperties={width:'100%',background:DARK,border:`1px solid ${BORDER}`,borderRadius:7,padding:'10px 14px',color:TEXT,fontSize:14,outline:'none',boxSizing:'border-box'};
 const textareaS:React.CSSProperties={...inputS,minHeight:80,resize:'vertical' as const};
-const badge=(status:string):React.CSSProperties=>{const m:Record<string,string>={approved:GREEN,paid:GREEN,accepted:GREEN,awarded:GREEN,valid:GREEN,submitted:BLUE,open:BLUE,pending:AMBER,under_review:AMBER,pending_review:AMBER,draft:DIM,expiring_soon:AMBER,correction_requested:AMBER,rejected:RED,disputed:RED,expired:RED,declined:RED,missing:RED};const c=m[status]||DIM;return{display:'inline-block',padding:'3px 10px',borderRadius:20,fontSize:11,fontWeight:700,background:c+'22',color:c,textTransform:'uppercase' as const}};
+const badge=(status:string):React.CSSProperties=>{const m:Record<string,string>={approved:GREEN,paid:GREEN,accepted:GREEN,awarded:GREEN,valid:GREEN,submitted:BLUE,open:BLUE,pending:AMBER,under_review:AMBER,pending_review:AMBER,draft:DIM,expiring_soon:AMBER,correction_requested:AMBER,rejected:RED,disputed:RED,expired:RED,declined:RED,missing:RED};const c=m[status]||DIM;return{display:'inline-block',padding:'3px 10px',borderRadius:20,fontSize:11,fontWeight:700,background:`color-mix(in srgb, ${c} 13%, transparent)`,color:c,textTransform:'capitalize' as const}};
 
 function Stars({rating,max=5,size=18}:{rating:number;max?:number;size?:number}){
   return <span style={{display:'inline-flex',gap:2}}>{Array.from({length:max},(_,i)=><span key={i} style={{fontSize:size,color:i<Math.round(rating)?GOLD:BORDER}}>{i<Math.round(rating)?'\u2605':'\u2606'}</span>)}</span>;
@@ -306,7 +306,7 @@ export default function SubPortal(){
       if(!res.ok){
         // The server owns the truth — re-sync to whatever it says.
         if(typeof json?.onClock==='boolean')setGpsStatus(json.onClock?'clocked_in':'clocked_out');
-        showToast(json?.error||"Couldn't record the punch");
+        showToast(json?.error||"Couldn't record the punch.");
         return;
       }
       const at=json?.punch?.punched_at||new Date().toISOString();
@@ -315,8 +315,8 @@ export default function SubPortal(){
       else{setClockOutTime(at);setGpsStatus('clocked_out');}
       showToast(
         type==='in'
-          ? (c.lat==null?'Clocked in — recorded (no location available)':'Clocked in — recorded')
-          : (c.lat==null?'Clocked out — recorded (no location available)':'Clocked out — recorded'),
+          ? (c.lat==null?'Clocked in — recorded (no location available).':'Clocked in — recorded.')
+          : (c.lat==null?'Clocked out — recorded (no location available).':'Clocked out — recorded.'),
       );
     }catch{
       showToast('No connection — punch not recorded. Try again.');
@@ -328,7 +328,7 @@ export default function SubPortal(){
   const handleClockOut=()=>punch('out');
 
   const submitDailyLog=async()=>{
-    if(!dlForm.work_completed.trim()){showToast('Please describe work completed');return;}
+    if(!dlForm.work_completed.trim()){showToast('Please describe work completed.');return;}
     setDlSaving(true);
     try{
       const result=await apiPost('daily-logs',{
@@ -345,31 +345,31 @@ export default function SubPortal(){
         gps_clock_out:clockOutTime||null,
       });
       if(result.daily_log){
-        showToast('Daily log submitted');
+        showToast('Daily log submitted.');
         setDailyLogs(prev=>[result.daily_log,...prev]);
         setDlForm({log_date:new Date().toISOString().split('T')[0],crew_count:'',hours_worked:'',work_completed:'',work_planned:'',weather:'',delays:'',safety_incidents:'',notes:''});
         setGpsStatus('idle');setClockInTime('');setClockOutTime('');
-      } else showToast(result.error||'Failed to submit');
-    }catch{showToast('Network error -- log queued for sync');}
+      } else showToast(result.error||'Failed to submit.');
+    }catch{showToast('Network error — log queued for sync.');}
     setDlSaving(false);
   };
 
   const submitRfi=async()=>{
-    if(!rfiForm.subject.trim()||!rfiForm.question.trim()){showToast('Subject and question are required');return;}
+    if(!rfiForm.subject.trim()||!rfiForm.question.trim()){showToast('Subject and question are required.');return;}
     setRfiSaving(true);
     try{
       const result=await apiPost('rfis',rfiForm);
       if(result.rfi){
-        showToast(result.message||'RFI submitted');
+        showToast(result.message||'RFI submitted.');
         setRfis(prev=>[result.rfi,...prev]);
         setRfiForm({subject:'',question:'',priority:'normal',reference_drawing:'',reference_spec:''});
-      } else showToast(result.error||'Failed to submit');
-    }catch{showToast('Network error');}
+      } else showToast(result.error||'Failed to submit.');
+    }catch{showToast('Network error.');}
     setRfiSaving(false);
   };
 
   const uploadComplianceDoc=async()=>{
-    if(!docUploadType||!docFileName){showToast('Document type and file name are required');return;}
+    if(!docUploadType||!docFileName){showToast('Document type and file name are required.');return;}
     setDocUploading(true);
     try{
       const result=await apiPost('compliance',{
@@ -381,24 +381,24 @@ export default function SubPortal(){
         coverage_amount:docCoverage?parseFloat(docCoverage):null,
       });
       if(result.compliance_doc){
-        showToast('Document uploaded');
+        showToast('Document uploaded.');
         setComplianceDocs(prev=>[{...result.compliance_doc,expiration_status:'valid',days_until_expiry:null},...prev]);
         setDocUploadType('');setDocFileName('');setDocExpiry('');setDocCarrier('');setDocPolicyNum('');setDocCoverage('');
-      } else showToast(result.error||'Upload failed');
-    }catch{showToast('Network error');}
+      } else showToast(result.error||'Upload failed.');
+    }catch{showToast('Network error.');}
     setDocUploading(false);
   };
 
   const sendMessage=async()=>{
-    if(!msgContent.trim()){showToast('Enter a message');return;}
+    if(!msgContent.trim()){showToast('Enter a message.');return;}
     setMsgSending(true);
     try{
       const result=await apiPost('messages',{content:msgContent.trim()});
       if(result.message){
         setMessages(prev=>[...prev,result.message]);
         setMsgContent('');
-      } else showToast(result.error||'Failed to send');
-    }catch{showToast('Network error');}
+      } else showToast(result.error||'Failed to send.');
+    }catch{showToast('Network error.');}
     setMsgSending(false);
   };
 
@@ -411,8 +411,8 @@ export default function SubPortal(){
         if(result.message.id)radioIdsRef.current.add(result.message.id);
         setRadioMsgs(prev=>[...prev,result.message]);
         setRadioText('');
-      } else showToast(result.error||'Failed to send message');
-    }catch{showToast('Network error');}
+      } else showToast(result.error||'Failed to send message.');
+    }catch{showToast('Network error.');}
     setRadioSending(false);
   };
 
@@ -420,8 +420,8 @@ export default function SubPortal(){
      image/pdf extensions to a kind 'image' message instead of a voice clip. */
   const sendRadioAttachment=async(file:File|null)=>{
     if(!file||!radioChannel||radioAttaching)return;
-    if(!/\.(png|jpe?g|webp|heic|pdf)$/i.test(file.name||'')){showToast('Images or PDF only');return;}
-    if(file.size>25*1024*1024){showToast('File too large -- 25 MB max');return;}
+    if(!/\.(png|jpe?g|webp|heic|pdf)$/i.test(file.name||'')){showToast('Images or PDF only.');return;}
+    if(file.size>25*1024*1024){showToast('File too large — 25 MB max.');return;}
     setRadioAttaching(true);
     try{
       const form=new FormData();
@@ -430,8 +430,8 @@ export default function SubPortal(){
       if(result.message){
         if(result.message.id)radioIdsRef.current.add(result.message.id);
         setRadioMsgs(prev=>[...prev,result.message]);
-      }else showToast(result.error||'Attachment failed');
-    }catch{showToast('Network error');}
+      }else showToast(result.error||'Attachment failed.');
+    }catch{showToast('Network error.');}
     setRadioAttaching(false);
   };
 
@@ -460,13 +460,13 @@ export default function SubPortal(){
           if(result.message){
             if(result.message.id)radioIdsRef.current.add(result.message.id);
             setRadioMsgs(prev=>[...prev,result.message]);
-          }else showToast(result.error||'Voice message failed');
-        }catch{showToast('Network error');}
+          }else showToast(result.error||'Voice message failed.');
+        }catch{showToast('Network error.');}
       };
       radioRecRef.current=rec;
       rec.start();
       setRadioRecording(true);
-    }catch{showToast('Microphone unavailable -- check permissions');}
+    }catch{showToast('Microphone unavailable — check permissions.');}
   };
 
   const stopRadioRec=()=>{
@@ -527,7 +527,7 @@ export default function SubPortal(){
     <div style={{minHeight:'100vh',background:DARK,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'system-ui,sans-serif'}}>
       <div style={{textAlign:'center'}}>
         <div style={{width:48,height:48,border:`3px solid ${BORDER}`,borderTopColor:GOLD,borderRadius:'50%',animation:'spin 1s linear infinite',margin:'0 auto 16px'}}/>
-        <div style={{color:DIM,fontSize:14}}>Loading your portal...</div>
+        <div style={{color:DIM,fontSize:14}}>Loading your portal…</div>
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     </div>
@@ -573,22 +573,22 @@ export default function SubPortal(){
       <div style={{display:'grid',gap:20}}>
         {/* Welcome + Health Badge */}
         <div style={{...card(),background:`linear-gradient(135deg,${RAISED},${DARK})`,position:'relative',overflow:'hidden'}}>
-          <div style={{position:'absolute',right:-30,top:-30,width:140,height:140,background:GOLD+'08',borderRadius:'50%'}}/>
+          <div style={{position:'absolute',right:-30,top:-30,width:140,height:140,background:`color-mix(in srgb, ${GOLD} 3%, transparent)`,borderRadius:'50%'}}/>
           <div style={{display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
-            <div style={{width:56,height:56,borderRadius:'50%',background:GOLD+'22',display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,color:GOLD,fontWeight:800}}>{companyName[0]}</div>
+            <div style={{width:56,height:56,borderRadius:'50%',background:`color-mix(in srgb, ${GOLD} 13%, transparent)`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,color:GOLD,fontWeight:800}}>{companyName[0]}</div>
             <div style={{flex:1,minWidth:200}}>
               <div style={{fontSize:22,fontWeight:800,color:TEXT}}>{companyName}</div>
               <div style={{fontSize:13,color:DIM,marginTop:2}}>{sub?.trade||'--'}</div>
               <div style={{fontSize:12,color:DIM,marginTop:2}}>Contact: {sub?.contact_name||'--'} &middot; {sub?.email||'--'}</div>
             </div>
             {/* Health Score Badge */}
-            <div style={{background:healthColor+'15',border:`1.5px solid ${healthColor}55`,borderRadius:12,padding:'12px 20px',textAlign:'center',minWidth:130}}>
+            <div style={{background:`color-mix(in srgb, ${healthColor} 8%, transparent)`,border:`1.5px solid color-mix(in srgb, ${healthColor} 33%, transparent)`,borderRadius:12,padding:'12px 20px',textAlign:'center',minWidth:130}}>
               <div style={{fontSize:28,fontWeight:800,color:healthColor}}>{healthScore>0?healthScore.toFixed(1):'--'}</div>
-              <div style={{fontSize:10,fontWeight:700,color:healthColor,textTransform:'uppercase',letterSpacing:.5}}>{healthLabel}</div>
+              <div style={{fontSize:10,fontWeight:700,color:healthColor}}>{healthLabel}</div>
               <div style={{fontSize:9,color:DIM,marginTop:2}}>Health Score</div>
             </div>
             {isPreferred&&(
-              <div style={{background:GOLD+'22',border:`1px solid ${GOLD}`,borderRadius:8,padding:'8px 16px',display:'flex',alignItems:'center',gap:8}}>
+              <div style={{background:`color-mix(in srgb, ${GOLD} 13%, transparent)`,border:`1px solid ${GOLD}`,borderRadius:8,padding:'8px 16px',display:'flex',alignItems:'center',gap:8}}>
                 <span style={{fontSize:20}}>{'\u2B50'}</span>
                 <div><div style={{fontSize:13,fontWeight:800,color:GOLD}}>Preferred Sub</div><div style={{fontSize:10,color:DIM}}>Top-rated</div></div>
               </div>
@@ -598,14 +598,14 @@ export default function SubPortal(){
 
         {/* Insurance Expiration Alerts (30/60/90 day) */}
         {alerts.length>0&&(
-          <div style={{...card(),borderColor:alerts[0].level==='critical'?RED+'55':AMBER+'55',background:alerts[0].level==='critical'?RED+'08':AMBER+'08'}}>
+          <div style={{...card(),borderColor:alerts[0].level==='critical'?`color-mix(in srgb, ${RED} 33%, transparent)`:`color-mix(in srgb, ${AMBER} 33%, transparent)`,background:alerts[0].level==='critical'?`color-mix(in srgb, ${RED} 3%, transparent)`:`color-mix(in srgb, ${AMBER} 3%, transparent)`}}>
             <div style={{fontSize:15,fontWeight:700,color:alerts[0].level==='critical'?RED:AMBER,marginBottom:10}}>{'\u26A0'} Insurance / Compliance Expiration Alerts</div>
             {alerts.map((a,i)=>{
               const days=a.doc.days_until_expiry;
               const c=a.level==='critical'?RED:a.level==='warning'?AMBER:BLUE;
               return <div key={i} style={{padding:'8px 0',borderBottom:i<alerts.length-1?`1px solid ${BORDER}44`:'none',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
                 <div style={{fontSize:13,color:TEXT}}><strong style={{color:c}}>{a.doc.doc_type}</strong> &mdash; {a.doc.file_name}</div>
-                <div style={{fontSize:12,fontWeight:700,color:c}}>{days<=0?'EXPIRED':days<=30?`${days}d - URGENT`:days<=60?`${days}d - WARNING`:`${days}d - NOTICE`}</div>
+                <div style={{fontSize:12,fontWeight:700,color:c}}>{days<=0?'Expired':days<=30?`${days}d — Urgent`:days<=60?`${days}d — Warning`:`${days}d — Notice`}</div>
               </div>;
             })}
           </div>
@@ -621,7 +621,7 @@ export default function SubPortal(){
             {label:'Compliance Docs',value:complianceDocs.length,color:GOLD,action:'compliance' as Tab},
             {label:'Overall Score',value:overallScore>0?overallScore.toFixed(1):'--',color:overallScore>=4?GREEN:overallScore>=3?AMBER:DIM,action:'scorecard' as Tab},
           ].map(s=>(
-            <button key={s.label} onClick={()=>setTab(s.action)} style={{...card(),cursor:'pointer',textAlign:'center',border:`1px solid ${s.color}33`}}>
+            <button key={s.label} onClick={()=>setTab(s.action)} style={{...card(),cursor:'pointer',textAlign:'center',border:`1px solid color-mix(in srgb, ${s.color} 20%, transparent)`}}>
               <div style={{fontSize:28,fontWeight:800,color:s.color}}>{s.value}</div>
               <div style={{fontSize:11,fontWeight:600,color:DIM,marginTop:4}}>{s.label}</div>
             </button>
@@ -636,7 +636,7 @@ export default function SubPortal(){
             {label:'File RFI',t:'rfis' as Tab,c:PURPLE},
             {label:'View Pay Apps',t:'payapps' as Tab,c:AMBER},
           ].map(a=>(
-            <button key={a.label} onClick={()=>setTab(a.t)} style={{...card(),cursor:'pointer',textAlign:'center',border:`1px solid ${a.c}44`}}>
+            <button key={a.label} onClick={()=>setTab(a.t)} style={{...card(),cursor:'pointer',textAlign:'center',border:`1px solid color-mix(in srgb, ${a.c} 27%, transparent)`}}>
               <div style={{fontSize:13,fontWeight:700,color:TEXT}}>{a.label}</div>
             </button>
           ))}
@@ -682,31 +682,31 @@ export default function SubPortal(){
         <div style={card()}>
           <div style={{fontSize:17,fontWeight:700,color:TEXT,marginBottom:16}}>Upload Compliance Document</div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:16,marginBottom:16}}>
-            <div><div style={labelS}>Document Type *</div><select value={docUploadType} onChange={e=>setDocUploadType(e.target.value)} style={{...inputS,cursor:'pointer'}}><option value="">Select type...</option>{docTypes.map(t=><option key={t} value={t}>{docLabels[t]||t}</option>)}</select></div>
+            <div><div style={labelS}>Document Type *</div><select value={docUploadType} onChange={e=>setDocUploadType(e.target.value)} style={{...inputS,cursor:'pointer'}}><option value="">Select type…</option>{docTypes.map(t=><option key={t} value={t}>{docLabels[t]||t}</option>)}</select></div>
             <div><div style={labelS}>File Name *</div><input value={docFileName} onChange={e=>setDocFileName(e.target.value)} placeholder="insurance_cert_2026.pdf" style={inputS}/></div>
             <div><div style={labelS}>Expiration Date</div><SaguaroDatePicker value={docExpiry} onChange={v=>setDocExpiry(v)} style={inputS}/></div>
           </div>
           {docUploadType==='insurance'&&(
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:16,marginBottom:16}}>
-              <div><div style={labelS}>Carrier</div><input value={docCarrier} onChange={e=>setDocCarrier(e.target.value)} placeholder="State Farm, Liberty Mutual..." style={inputS}/></div>
+              <div><div style={labelS}>Carrier</div><input value={docCarrier} onChange={e=>setDocCarrier(e.target.value)} placeholder="State Farm, Liberty Mutual…" style={inputS}/></div>
               <div><div style={labelS}>Policy Number</div><input value={docPolicyNum} onChange={e=>setDocPolicyNum(e.target.value)} placeholder="POL-123456" style={inputS}/></div>
               <div><div style={labelS}>Coverage Amount</div><input type="number" value={docCoverage} onChange={e=>setDocCoverage(e.target.value)} placeholder="1000000" style={inputS}/></div>
             </div>
           )}
-          <button onClick={uploadComplianceDoc} disabled={docUploading} style={btnS(BLUE)}>{docUploading?'Uploading...':'Upload Document'}</button>
+          <button onClick={uploadComplianceDoc} disabled={docUploading} style={btnS(BLUE)}>{docUploading?'Uploading…':'Upload Document'}</button>
         </div>
 
         {/* 30/60/90 Day Expiration Alerts */}
         {alerts.length>0&&(
-          <div style={{...card(),borderColor:AMBER+'55',background:AMBER+'08'}}>
+          <div style={{...card(),borderColor:`color-mix(in srgb, ${AMBER} 33%, transparent)`,background:`color-mix(in srgb, ${AMBER} 3%, transparent)`}}>
             <div style={{fontSize:15,fontWeight:700,color:AMBER,marginBottom:10}}>{'\u26A0'} Expiration Alerts (30/60/90 Days)</div>
             {alerts.map((a,i)=>{
               const days=a.doc.days_until_expiry;
               const c=a.level==='critical'?RED:a.level==='warning'?AMBER:BLUE;
-              const levelLabel=days<=0?'EXPIRED':days<=30?'30-DAY ALERT':days<=60?'60-DAY ALERT':'90-DAY ALERT';
-              return <div key={i} style={{padding:'10px 12px',background:c+'11',border:`1px solid ${c}33`,borderRadius:6,marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
+              const levelLabel=days<=0?'Expired':days<=30?'30-Day Alert':days<=60?'60-Day Alert':'90-Day Alert';
+              return <div key={i} style={{padding:'10px 12px',background:`color-mix(in srgb, ${c} 7%, transparent)`,border:`1px solid color-mix(in srgb, ${c} 20%, transparent)`,borderRadius:6,marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
                 <div><div style={{fontSize:13,fontWeight:700,color:TEXT}}>{docLabels[a.doc.doc_type]||a.doc.doc_type}</div><div style={{fontSize:11,color:DIM}}>{a.doc.file_name} &middot; Expires: {fmtDate(a.doc.expires_at)}</div></div>
-                <div style={{padding:'4px 12px',borderRadius:20,background:c+'22',color:c,fontSize:11,fontWeight:700}}>{levelLabel} ({days<=0?'OVERDUE':`${days}d`})</div>
+                <div style={{padding:'4px 12px',borderRadius:20,background:`color-mix(in srgb, ${c} 13%, transparent)`,color:c,fontSize:11,fontWeight:700}}>{levelLabel} ({days<=0?'Overdue':`${days}d`})</div>
               </div>;
             })}
           </div>
@@ -721,7 +721,7 @@ export default function SubPortal(){
               const status=doc?doc.expiration_status:'missing';
               const c=status==='valid'?GREEN:status==='expiring_soon'?AMBER:status==='expired'?RED:doc?.status==='approved'?GREEN:doc?.status==='pending_review'?AMBER:RED;
               return(
-                <div key={type} style={{padding:16,background:DARK,borderRadius:8,border:`1px solid ${c}44`,position:'relative'}}>
+                <div key={type} style={{padding:16,background:DARK,borderRadius:8,border:`1px solid color-mix(in srgb, ${c} 27%, transparent)`,position:'relative'}}>
                   <div style={{position:'absolute',top:12,right:12,width:10,height:10,borderRadius:'50%',background:c}}/>
                   <div style={{fontSize:14,fontWeight:700,color:TEXT,marginBottom:6}}>{docLabels[type]||type}</div>
                   {doc?(<div>
@@ -729,9 +729,9 @@ export default function SubPortal(){
                     {doc.carrier&&<div style={{fontSize:12,color:DIM,marginBottom:4}}>Carrier: {doc.carrier}</div>}
                     {doc.policy_number&&<div style={{fontSize:12,color:DIM,marginBottom:4}}>Policy: {doc.policy_number}</div>}
                     {doc.coverage_amount&&<div style={{fontSize:12,color:DIM,marginBottom:4}}>Coverage: {fmt(doc.coverage_amount)}</div>}
-                    {doc.expires_at&&<div style={{fontSize:12,color:c,fontWeight:600,marginBottom:4}}>{doc.days_until_expiry!==null&&doc.days_until_expiry<=0?'EXPIRED':doc.days_until_expiry!==null&&doc.days_until_expiry<=30?`Expires in ${doc.days_until_expiry} days`:`Expires: ${fmtDate(doc.expires_at)}`}</div>}
+                    {doc.expires_at&&<div style={{fontSize:12,color:c,fontWeight:600,marginBottom:4}}>{doc.days_until_expiry!==null&&doc.days_until_expiry<=0?'Expired':doc.days_until_expiry!==null&&doc.days_until_expiry<=30?`Expires in ${doc.days_until_expiry} days`:`Expires: ${fmtDate(doc.expires_at)}`}</div>}
                     <span style={badge(doc.status)}>{(doc.status||'').replace(/_/g,' ')}</span>
-                  </div>):(<div style={{fontSize:12,color:RED,fontWeight:600}}>Not uploaded -- action required</div>)}
+                  </div>):(<div style={{fontSize:12,color:RED,fontWeight:600}}>Not uploaded — action required</div>)}
                 </div>
               );
             })}
@@ -790,16 +790,16 @@ export default function SubPortal(){
 
             {/* Amounts */}
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:12,marginBottom:14}}>
-              <div style={{padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}><div style={{fontSize:10,color:DIM,textTransform:'uppercase'}}>Requested</div><div style={{fontSize:16,fontWeight:700,color:TEXT}}>{fmt(pa.total_requested||0)}</div></div>
-              <div style={{padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}><div style={{fontSize:10,color:DIM,textTransform:'uppercase'}}>Retainage ({pa.retainage_percent||10}%)</div><div style={{fontSize:16,fontWeight:700,color:AMBER}}>{fmt(pa.retainage_amount||0)}</div></div>
-              <div style={{padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}><div style={{fontSize:10,color:DIM,textTransform:'uppercase'}}>Net Amount</div><div style={{fontSize:16,fontWeight:700,color:GREEN}}>{fmt(pa.net_amount||0)}</div></div>
+              <div style={{padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}><div style={{fontSize:10,color:DIM}}>Requested</div><div style={{fontSize:16,fontWeight:700,color:TEXT}}>{fmt(pa.total_requested||0)}</div></div>
+              <div style={{padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}><div style={{fontSize:10,color:DIM}}>Retainage ({pa.retainage_percent||10}%)</div><div style={{fontSize:16,fontWeight:700,color:AMBER}}>{fmt(pa.retainage_amount||0)}</div></div>
+              <div style={{padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}><div style={{fontSize:10,color:DIM}}>Net Amount</div><div style={{fontSize:16,fontWeight:700,color:GREEN}}>{fmt(pa.net_amount||0)}</div></div>
             </div>
 
             {/* Line items */}
             {pa.line_items&&pa.line_items.length>0&&(
               <div style={{overflowX:'auto'}}>
                 <table style={{width:'100%',borderCollapse:'collapse',minWidth:600}}>
-                  <thead><tr>{['Description','Scheduled Value','Previous','This Period','Requested','GC Status'].map(h=><th key={h} style={{textAlign:'left',padding:'6px 10px',fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase',borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}</tr></thead>
+                  <thead><tr>{['Description','Scheduled Value','Previous','This Period','Requested','GC Status'].map(h=><th key={h} style={{textAlign:'left',padding:'6px 10px',fontSize:10,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}</tr></thead>
                   <tbody>{pa.line_items.map((li:any)=>(
                     <tr key={li.id} style={{borderBottom:`1px solid ${BORDER}44`}}>
                       <td style={{padding:'8px 10px',fontSize:12,color:TEXT}}>{li.description}</td>
@@ -816,11 +816,11 @@ export default function SubPortal(){
 
             {/* Lien Waiver */}
             {(pa.status==='approved'||pa.status==='paid')&&(
-              <div style={{marginTop:14,padding:'12px 16px',background:PURPLE+'11',border:`1px solid ${PURPLE}44`,borderRadius:8}}>
+              <div style={{marginTop:14,padding:'12px 16px',background:`color-mix(in srgb, ${PURPLE} 7%, transparent)`,border:`1px solid color-mix(in srgb, ${PURPLE} 27%, transparent)`,borderRadius:8}}>
                 <div style={{fontSize:13,fontWeight:700,color:PURPLE,marginBottom:4}}>Lien Waiver: {pa.status==='paid'?'Unconditional':'Conditional'} Required</div>
-                <div style={{fontSize:12,color:DIM,marginBottom:10}}>{pa.status==='paid'?`Unconditional lien waiver for ${fmt(pa.net_amount)} is ready for execution.`:`Conditional lien waiver for ${fmt(pa.net_amount)} -- will convert to unconditional upon payment.`}</div>
+                <div style={{fontSize:12,color:DIM,marginBottom:10}}>{pa.status==='paid'?`Unconditional lien waiver for ${fmt(pa.net_amount)} is ready for execution.`:`Conditional lien waiver for ${fmt(pa.net_amount)} — will convert to unconditional upon payment.`}</div>
                 <div style={{marginBottom:10}}><div style={labelS}>Digital Signature</div><SignatureCanvas onSign={sig=>setLienSig(sig)}/></div>
-                {lienSig&&<button onClick={()=>{showToast('Lien waiver signed and submitted');setLienSig(null);}} style={btnS(PURPLE)}>Submit Signed Lien Waiver</button>}
+                {lienSig&&<button onClick={()=>{showToast('Lien waiver signed and submitted.');setLienSig(null);}} style={btnS(PURPLE)}>Submit Signed Lien Waiver</button>}
               </div>
             )}
           </div>
@@ -834,7 +834,7 @@ export default function SubPortal(){
   /* ================================================================ */
   const renderDaily=()=>(
     <div style={{display:'grid',gap:20}}>
-      {!isOnline&&<div style={{padding:'10px 16px',background:AMBER+'22',border:`1px solid ${AMBER}`,borderRadius:8,display:'flex',alignItems:'center',gap:10}}><div style={{width:10,height:10,borderRadius:'50%',background:AMBER}}/><span style={{fontSize:13,color:AMBER,fontWeight:600}}>You are offline. Logs will be queued and submitted when connection is restored.</span></div>}
+      {!isOnline&&<div style={{padding:'10px 16px',background:`color-mix(in srgb, ${AMBER} 13%, transparent)`,border:`1px solid ${AMBER}`,borderRadius:8,display:'flex',alignItems:'center',gap:10}}><div style={{width:10,height:10,borderRadius:'50%',background:AMBER}}/><span style={{fontSize:13,color:AMBER,fontWeight:600}}>You are offline. Logs will be queued and submitted when connection is restored.</span></div>}
 
       {/* GPS Clock */}
       <div style={card()}>
@@ -857,14 +857,14 @@ export default function SubPortal(){
           <div><div style={labelS}>Hours Worked</div><input type="number" step="0.5" value={dlForm.hours_worked} onChange={e=>setDlForm(f=>({...f,hours_worked:e.target.value}))} placeholder="Total hours" style={inputS}/></div>
           <div><div style={labelS}>Weather</div><input value={dlForm.weather} onChange={e=>setDlForm(f=>({...f,weather:e.target.value}))} placeholder="Clear, 85F" style={inputS}/></div>
         </div>
-        <div style={{marginBottom:16}}><div style={labelS}>Work Completed Today *</div><textarea value={dlForm.work_completed} onChange={e=>setDlForm(f=>({...f,work_completed:e.target.value}))} placeholder="Describe all work completed today..." style={textareaS}/></div>
-        <div style={{marginBottom:16}}><div style={labelS}>Work Planned for Tomorrow</div><textarea value={dlForm.work_planned} onChange={e=>setDlForm(f=>({...f,work_planned:e.target.value}))} placeholder="What is planned for the next work day..." style={textareaS}/></div>
+        <div style={{marginBottom:16}}><div style={labelS}>Work Completed Today *</div><textarea value={dlForm.work_completed} onChange={e=>setDlForm(f=>({...f,work_completed:e.target.value}))} placeholder="Describe all work completed today…" style={textareaS}/></div>
+        <div style={{marginBottom:16}}><div style={labelS}>Work Planned for Tomorrow</div><textarea value={dlForm.work_planned} onChange={e=>setDlForm(f=>({...f,work_planned:e.target.value}))} placeholder="What is planned for the next work day…" style={textareaS}/></div>
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:16,marginBottom:16}}>
-          <div><div style={labelS}>Delays / Issues</div><textarea value={dlForm.delays} onChange={e=>setDlForm(f=>({...f,delays:e.target.value}))} placeholder="Any delays, weather issues, material shortages..." style={{...textareaS,minHeight:60}}/></div>
+          <div><div style={labelS}>Delays / Issues</div><textarea value={dlForm.delays} onChange={e=>setDlForm(f=>({...f,delays:e.target.value}))} placeholder="Any delays, weather issues, material shortages…" style={{...textareaS,minHeight:60}}/></div>
           <div><div style={labelS}>Safety Incidents</div><textarea value={dlForm.safety_incidents} onChange={e=>setDlForm(f=>({...f,safety_incidents:e.target.value}))} placeholder="Any safety incidents or near-misses (leave blank if none)" style={{...textareaS,minHeight:60}}/></div>
         </div>
-        <div style={{marginBottom:16}}><div style={labelS}>Additional Notes</div><textarea value={dlForm.notes} onChange={e=>setDlForm(f=>({...f,notes:e.target.value}))} placeholder="Any additional notes..." style={{...textareaS,minHeight:50}}/></div>
-        <button onClick={submitDailyLog} disabled={dlSaving} style={btnS(GREEN)}>{dlSaving?'Submitting...':'Submit Daily Log'}</button>
+        <div style={{marginBottom:16}}><div style={labelS}>Additional Notes</div><textarea value={dlForm.notes} onChange={e=>setDlForm(f=>({...f,notes:e.target.value}))} placeholder="Any additional notes…" style={{...textareaS,minHeight:50}}/></div>
+        <button onClick={submitDailyLog} disabled={dlSaving} style={btnS(GREEN)}>{dlSaving?'Submitting…':'Submit Daily Log'}</button>
       </div>
 
       {/* Previous Logs */}
@@ -900,13 +900,13 @@ export default function SubPortal(){
       <div style={card()}>
         <div style={{fontSize:17,fontWeight:700,color:TEXT,marginBottom:16}}>Submit RFI (Request for Information)</div>
         <div style={{marginBottom:14}}><div style={labelS}>Subject *</div><input value={rfiForm.subject} onChange={e=>setRfiForm(f=>({...f,subject:e.target.value}))} placeholder="Brief description of the question" style={inputS}/></div>
-        <div style={{marginBottom:14}}><div style={labelS}>Question / Details *</div><textarea value={rfiForm.question} onChange={e=>setRfiForm(f=>({...f,question:e.target.value}))} placeholder="Detailed question or request..." style={textareaS}/></div>
+        <div style={{marginBottom:14}}><div style={labelS}>Question / Details *</div><textarea value={rfiForm.question} onChange={e=>setRfiForm(f=>({...f,question:e.target.value}))} placeholder="Detailed question or request…" style={textareaS}/></div>
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:16,marginBottom:14}}>
           <div><div style={labelS}>Priority</div><select value={rfiForm.priority} onChange={e=>setRfiForm(f=>({...f,priority:e.target.value}))} style={{...inputS,cursor:'pointer'}}><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option><option value="critical">Critical</option></select></div>
           <div><div style={labelS}>Reference Drawing</div><input value={rfiForm.reference_drawing} onChange={e=>setRfiForm(f=>({...f,reference_drawing:e.target.value}))} placeholder="e.g. A-201" style={inputS}/></div>
           <div><div style={labelS}>Reference Spec Section</div><input value={rfiForm.reference_spec} onChange={e=>setRfiForm(f=>({...f,reference_spec:e.target.value}))} placeholder="e.g. 03 30 00" style={inputS}/></div>
         </div>
-        <button onClick={submitRfi} disabled={rfiSaving} style={btnS(PURPLE)}>{rfiSaving?'Submitting...':'Submit RFI'}</button>
+        <button onClick={submitRfi} disabled={rfiSaving} style={btnS(PURPLE)}>{rfiSaving?'Submitting…':'Submit RFI'}</button>
       </div>
 
       {/* RFI History */}
@@ -922,7 +922,7 @@ export default function SubPortal(){
             <div style={{fontSize:12,color:DIM,marginBottom:4}}>Submitted: {fmtDate(rfi.submitted_at||rfi.created_at)} &middot; Priority: <span style={{color:rfi.priority==='critical'?RED:rfi.priority==='high'?AMBER:DIM,fontWeight:600}}>{rfi.priority}</span></div>
             <div style={{fontSize:13,color:TEXT,lineHeight:1.5}}>{rfi.question}</div>
             {rfi.reference_drawing&&<div style={{fontSize:11,color:DIM,marginTop:4}}>Ref Drawing: {rfi.reference_drawing}</div>}
-            {rfi.gc_response&&<div style={{marginTop:8,padding:'8px 12px',background:GREEN+'11',borderRadius:6,border:`1px solid ${GREEN}44`}}><div style={{fontSize:11,fontWeight:700,color:GREEN,marginBottom:4}}>Response:</div><div style={{fontSize:12,color:TEXT,lineHeight:1.5}}>{rfi.gc_response}</div></div>}
+            {rfi.gc_response&&<div style={{marginTop:8,padding:'8px 12px',background:`color-mix(in srgb, ${GREEN} 7%, transparent)`,borderRadius:6,border:`1px solid color-mix(in srgb, ${GREEN} 27%, transparent)`}}><div style={{fontSize:11,fontWeight:700,color:GREEN,marginBottom:4}}>Response:</div><div style={{fontSize:12,color:TEXT,lineHeight:1.5}}>{rfi.gc_response}</div></div>}
           </div>
         ))}
       </div>
@@ -941,7 +941,7 @@ export default function SubPortal(){
           {tasks.length===0?<div style={{color:DIM,fontSize:13,textAlign:'center',padding:40}}>No schedule data available</div>:(
             <div style={{overflowX:'auto'}}>
               <table style={{width:'100%',borderCollapse:'collapse',minWidth:600}}>
-                <thead><tr>{['Task','Phase','Start','End','Progress','Status'].map(h=><th key={h} style={{textAlign:'left',padding:'8px 12px',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase',borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}</tr></thead>
+                <thead><tr>{['Task','Phase','Start','End','Progress','Status'].map(h=><th key={h} style={{textAlign:'left',padding:'8px 12px',fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}</tr></thead>
                 <tbody>{sorted.map((task:any)=>{
                   const pct=Math.round((task.percent_complete||0)*100);
                   const c=pct>=100?GREEN:pct>=50?BLUE:AMBER;
@@ -985,7 +985,7 @@ export default function SubPortal(){
       <div style={{display:'grid',gap:20}}>
         {/* Overall */}
         <div style={{...card(),background:`linear-gradient(135deg,${RAISED},${DARK})`,textAlign:'center'}}>
-          {isPreferred&&<div style={{marginBottom:16,display:'inline-flex',alignItems:'center',gap:10,background:GOLD+'22',border:`1px solid ${GOLD}`,borderRadius:30,padding:'8px 20px'}}><span style={{fontSize:22}}>{'\u2B50'}</span><span style={{fontSize:15,fontWeight:800,color:GOLD}}>Preferred Subcontractor</span></div>}
+          {isPreferred&&<div style={{marginBottom:16,display:'inline-flex',alignItems:'center',gap:10,background:`color-mix(in srgb, ${GOLD} 13%, transparent)`,border:`1px solid ${GOLD}`,borderRadius:30,padding:'8px 20px'}}><span style={{fontSize:22}}>{'\u2B50'}</span><span style={{fontSize:15,fontWeight:800,color:GOLD}}>Preferred Subcontractor</span></div>}
           <div style={{fontSize:56,fontWeight:800,color:GOLD}}>{overallScore>0?overallScore.toFixed(1):'--'}</div>
           <Stars rating={overallScore} size={28}/>
           <div style={{fontSize:14,color:DIM,marginTop:8}}>Overall Performance Rating ({scorecard?.total_reviews||0} reviews)</div>
@@ -997,7 +997,7 @@ export default function SubPortal(){
           <div style={{width:100,height:100,borderRadius:'50%',border:`4px solid ${healthColor}`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 12px'}}>
             <div style={{fontSize:32,fontWeight:800,color:healthColor}}>{healthScore>0?healthScore.toFixed(1):'--'}</div>
           </div>
-          <div style={{fontSize:13,fontWeight:700,color:healthColor,textTransform:'uppercase'}}>{healthLabel}</div>
+          <div style={{fontSize:13,fontWeight:700,color:healthColor}}>{healthLabel}</div>
           <div style={{fontSize:12,color:DIM,marginTop:8,lineHeight:1.6}}>Based on: quality, schedule adherence, safety, communication, change order frequency, insurance compliance, lien waiver timeliness, and payment history.</div>
         </div>
 
@@ -1025,7 +1025,7 @@ export default function SubPortal(){
             <div style={{fontSize:17,fontWeight:700,color:TEXT,marginBottom:16}}>Score History</div>
             <div style={{overflowX:'auto'}}>
               <table style={{width:'100%',borderCollapse:'collapse',minWidth:500}}>
-                <thead><tr>{['Date','Quality','Schedule','Safety','Communication','Cleanup','Comments'].map(h=><th key={h} style={{textAlign:'left',padding:'8px 12px',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase',borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}</tr></thead>
+                <thead><tr>{['Date','Quality','Schedule','Safety','Communication','Cleanup','Comments'].map(h=><th key={h} style={{textAlign:'left',padding:'8px 12px',fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}</tr></thead>
                 <tbody>{scorecard.scorecards.map((sc:any)=>(
                   <tr key={sc.id} style={{borderBottom:`1px solid ${BORDER}44`}}>
                     <td style={{padding:'8px 12px',fontSize:12,color:DIM}}>{fmtDate(sc.rated_at)}</td>
@@ -1070,7 +1070,7 @@ export default function SubPortal(){
               const isSub=msg.sender_type==='sub';
               return(
                 <div key={msg.id} style={{display:'flex',justifyContent:isSub?'flex-end':'flex-start',marginBottom:10}}>
-                  <div style={{maxWidth:'75%',padding:'10px 14px',borderRadius:12,background:isSub?BLUE+'22':RAISED,border:`1px solid ${isSub?BLUE+'44':BORDER}`,borderBottomRightRadius:isSub?2:12,borderBottomLeftRadius:isSub?12:2}}>
+                  <div style={{maxWidth:'75%',padding:'10px 14px',borderRadius:12,background:isSub?`color-mix(in srgb, ${BLUE} 13%, transparent)`:RAISED,border:`1px solid ${isSub?`color-mix(in srgb, ${BLUE} 27%, transparent)`:BORDER}`,borderBottomRightRadius:isSub?2:12,borderBottomLeftRadius:isSub?12:2}}>
                     <div style={{fontSize:13,color:TEXT,lineHeight:1.5}}>{msg.content}</div>
                     <div style={{fontSize:10,color:DIM,marginTop:4,textAlign:isSub?'right':'left'}}>{isSub?'You':'GC'} &middot; {fmtDate(msg.created_at)}</div>
                   </div>
@@ -1080,8 +1080,8 @@ export default function SubPortal(){
             <div ref={msgEndRef}/>
           </div>
           <div style={{display:'flex',gap:10}}>
-            <input value={msgContent} onChange={e=>setMsgContent(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}} placeholder="Type a message..." style={{...inputS,flex:1}}/>
-            <button onClick={sendMessage} disabled={msgSending} style={btnS(BLUE)}>{msgSending?'...':'Send'}</button>
+            <input value={msgContent} onChange={e=>setMsgContent(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}} placeholder="Type a message…" style={{...inputS,flex:1}}/>
+            <button onClick={sendMessage} disabled={msgSending} style={btnS(BLUE)}>{msgSending?'…':'Send'}</button>
           </div>
         </div>
       </div>
@@ -1094,7 +1094,7 @@ export default function SubPortal(){
   const renderRadio=()=>{
     if(!radioLoaded)return(
       <div style={{...card(),textAlign:'center',padding:40}}>
-        <div style={{color:DIM,fontSize:13}}>Tuning in to the project channel...</div>
+        <div style={{color:DIM,fontSize:13}}>Tuning in to the project channel…</div>
       </div>
     );
     if(!radioChannel)return(
@@ -1115,11 +1115,11 @@ export default function SubPortal(){
             </div>
             <div style={{display:'flex',border:`1px solid ${BORDER}`,borderRadius:8,overflow:'hidden'}}>
               {(['en','es'] as const).map(l=>(
-                <button key={l} onClick={()=>setRadioLang(l)} style={{padding:'6px 14px',border:'none',cursor:'pointer',fontSize:11,fontWeight:800,letterSpacing:.6,background:radioLang===l?GOLD:'transparent',color:radioLang===l?'#241500':DIM}}>{l.toUpperCase()}</button>
+                <button key={l} onClick={()=>setRadioLang(l)} style={{padding:'6px 14px',border:'none',cursor:'pointer',fontSize:11,fontWeight:800,letterSpacing:.6,background:radioLang===l?GOLD:'transparent',color:radioLang===l?'#0A0A00':DIM}}>{l.toUpperCase()}</button>
               ))}
             </div>
           </div>
-          <style>{`@keyframes sgRadioFlash{0%{background:rgba(245,158,11,0.16)}100%{background:rgba(245,158,11,0)}}@keyframes sgRadioRing{0%{box-shadow:0 0 0 3px rgba(245,158,11,0.45)}100%{box-shadow:0 0 0 0 rgba(245,158,11,0)}}`}</style>
+          <style>{`@keyframes sgRadioFlash{0%{background:color-mix(in srgb, var(--brand-primary) 16%, transparent)}100%{background:transparent}}@keyframes sgRadioRing{0%{box-shadow:0 0 0 3px color-mix(in srgb, var(--brand-primary) 45%, transparent)}100%{box-shadow:0 0 0 0 transparent}}`}</style>
           <div ref={radioFeedRef} style={{maxHeight:480,overflowY:'auto',padding:'4px 0',marginBottom:14}}>
             {radioMsgs.length===0&&<div style={{color:DIM,fontSize:13,textAlign:'center',padding:40}}>No radio traffic yet. Say something below.</div>}
             {radioMsgs.map((m:any)=>{
@@ -1129,8 +1129,8 @@ export default function SubPortal(){
               if(m.kind==='panic'||m.kind==='alert'){
                 const c=m.kind==='panic'?RED:AMBER;
                 return(
-                  <div key={m.id} style={{padding:'10px 14px',background:c+'11',border:`1px solid ${c}55`,borderRadius:8,marginBottom:10,...(radioFlashIds.has(m.id)?{animation:'sgRadioRing 2.4s ease-out'}:{})}}>
-                    <div style={{fontSize:11,fontWeight:800,color:c,textTransform:'uppercase',letterSpacing:.6,marginBottom:4}}>{'⚠'} {m.kind==='panic'?'Panic':'Alert'} &middot; {m.sender_name||'Unknown'}{m.patched_from?<span style={{marginLeft:6,fontSize:9,fontWeight:700,color:GOLD,background:GOLD+'14',border:`1px solid ${GOLD}44`,borderRadius:10,padding:'1px 7px',letterSpacing:.5,textTransform:'none',verticalAlign:'middle'}}>via patched channel</span>:null}</div>
+                  <div key={m.id} style={{padding:'10px 14px',background:`color-mix(in srgb, ${c} 7%, transparent)`,border:`1px solid color-mix(in srgb, ${c} 33%, transparent)`,borderRadius:8,marginBottom:10,...(radioFlashIds.has(m.id)?{animation:'sgRadioRing 2.4s ease-out'}:{})}}>
+                    <div style={{fontSize:11,fontWeight:800,color:c,marginBottom:4}}>{'⚠'} {m.kind==='panic'?'Panic':'Alert'} &middot; {m.sender_name||'Unknown'}{m.patched_from?<span style={{marginLeft:6,fontSize:9,fontWeight:700,color:GOLD,background:`color-mix(in srgb, ${GOLD} 8%, transparent)`,border:`1px solid color-mix(in srgb, ${GOLD} 27%, transparent)`,borderRadius:10,padding:'1px 7px',letterSpacing:.5,verticalAlign:'middle'}}>Via Patched Channel</span>:null}</div>
                     {shown&&<div style={{fontSize:13,color:TEXT,lineHeight:1.5}}>{shown}</div>}
                     <div style={{fontSize:10,color:DIM,marginTop:4}}>{new Date(m.created_at).toLocaleTimeString()}</div>
                   </div>
@@ -1139,22 +1139,22 @@ export default function SubPortal(){
               if(m.kind==='tone'){
                 const tone=String(m.body||'');
                 const tc=tone==='negative'?RED:tone==='comein'?AMBER:GREEN;
-                const tl=tone==='negative'?'NEGATIVE':tone==='comein'?'COME IN':'ACK';
+                const tl=tone==='negative'?'Negative':tone==='comein'?'Come In':'Ack';
                 return(
                   <div key={m.id} style={{display:'flex',justifyContent:mine?'flex-end':'flex-start',marginBottom:10,...(radioFlashIds.has(m.id)?{animation:'sgRadioFlash 2.4s ease-out',borderRadius:10}:{})}}>
-                    <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'6px 12px',background:tc+'14',border:`1px solid ${tc}55`,borderRadius:20,flexWrap:'wrap'}}>
+                    <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'6px 12px',background:`color-mix(in srgb, ${tc} 8%, transparent)`,border:`1px solid color-mix(in srgb, ${tc} 33%, transparent)`,borderRadius:20,flexWrap:'wrap'}}>
                       <span style={{width:7,height:7,borderRadius:'50%',background:tc,flexShrink:0}}/>
-                      <span style={{fontSize:11,fontWeight:800,color:tc,letterSpacing:1}}>{tl}</span>
+                      <span style={{fontSize:11,fontWeight:800,color:tc}}>{tl}</span>
                       <span style={{fontSize:10,color:DIM}}>{mine?'You':(m.sender_name||'Unknown')} &middot; {new Date(m.created_at).toLocaleTimeString()}</span>
-                      {m.patched_from&&<span style={{fontSize:9,fontWeight:700,color:GOLD,background:GOLD+'14',border:`1px solid ${GOLD}44`,borderRadius:10,padding:'1px 7px',letterSpacing:.5}}>via patched channel</span>}
+                      {m.patched_from&&<span style={{fontSize:9,fontWeight:700,color:GOLD,background:`color-mix(in srgb, ${GOLD} 8%, transparent)`,border:`1px solid color-mix(in srgb, ${GOLD} 27%, transparent)`,borderRadius:10,padding:'1px 7px',letterSpacing:.5}}>Via Patched Channel</span>}
                     </div>
                   </div>
                 );
               }
               return(
                 <div key={m.id} style={{display:'flex',justifyContent:mine?'flex-end':'flex-start',marginBottom:10,...(radioFlashIds.has(m.id)?{animation:'sgRadioFlash 2.4s ease-out',borderRadius:10}:{})}}>
-                  <div style={{maxWidth:'80%',padding:'10px 14px',borderRadius:12,background:mine?BLUE+'22':RAISED,border:`1px solid ${mine?BLUE+'44':BORDER}`,borderBottomRightRadius:mine?2:12,borderBottomLeftRadius:mine?12:2}}>
-                    <div style={{fontSize:11,fontWeight:700,color:mine?GOLD:DIM,marginBottom:4}}>{mine?'You':(m.sender_name||'Unknown')}{m.patched_from?<span style={{marginLeft:6,fontSize:9,fontWeight:700,color:GOLD,background:GOLD+'14',border:`1px solid ${GOLD}44`,borderRadius:10,padding:'1px 7px',letterSpacing:.5,verticalAlign:'middle'}}>via patched channel</span>:null}</div>
+                  <div style={{maxWidth:'80%',padding:'10px 14px',borderRadius:12,background:mine?`color-mix(in srgb, ${BLUE} 13%, transparent)`:RAISED,border:`1px solid ${mine?`color-mix(in srgb, ${BLUE} 27%, transparent)`:BORDER}`,borderBottomRightRadius:mine?2:12,borderBottomLeftRadius:mine?12:2}}>
+                    <div style={{fontSize:11,fontWeight:700,color:mine?GOLD:DIM,marginBottom:4}}>{mine?'You':(m.sender_name||'Unknown')}{m.patched_from?<span style={{marginLeft:6,fontSize:9,fontWeight:700,color:GOLD,background:`color-mix(in srgb, ${GOLD} 8%, transparent)`,border:`1px solid color-mix(in srgb, ${GOLD} 27%, transparent)`,borderRadius:10,padding:'1px 7px',letterSpacing:.5,verticalAlign:'middle'}}>Via Patched Channel</span>:null}</div>
                     {m.kind==='voice'?(
                       <div>
                         <RadioWave seed={String(m.id||'')} color={mine?GOLD:DIM}/>
@@ -1187,15 +1187,15 @@ export default function SubPortal(){
               <input type="file" accept="image/png,image/jpeg,image/webp,image/heic,application/pdf,.png,.jpg,.jpeg,.webp,.heic,.pdf" style={{display:'none'}} disabled={radioAttaching}
                 onChange={e=>{sendRadioAttachment(e.target.files?.[0]||null);e.currentTarget.value='';}}/>
             </label>
-            <input value={radioText} onChange={e=>setRadioText(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendRadioText();}}} placeholder="Message the channel..." style={{...inputS,flex:1}}/>
-            <button onClick={sendRadioText} disabled={radioSending} style={btnS(BLUE)}>{radioSending?'...':'Send'}</button>
+            <input value={radioText} onChange={e=>setRadioText(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendRadioText();}}} placeholder="Message the channel…" style={{...inputS,flex:1}}/>
+            <button onClick={sendRadioText} disabled={radioSending} style={btnS(BLUE)}>{radioSending?'…':'Send'}</button>
           </div>
           {radioVoiceSupported&&(
             <button
               onMouseDown={startRadioRec} onMouseUp={stopRadioRec} onMouseLeave={stopRadioRec}
               onTouchStart={e=>{e.preventDefault();startRadioRec();}} onTouchEnd={e=>{e.preventDefault();stopRadioRec();}} onContextMenu={e=>e.preventDefault()}
               style={{...btnS(radioRecording?RED:GOLD),width:'100%',marginTop:12,userSelect:'none',touchAction:'none'}}>
-              {radioRecording?'● Recording -- release to send':'≋ Hold to Talk'}
+              {radioRecording?'● Recording — Release to Send':'≋ Hold to Talk'}
             </button>
           )}
         </div>
@@ -1219,13 +1219,13 @@ export default function SubPortal(){
       const res=await apiUpload('documents',form);
       if(res.success){
         setDocuments((ds:any[])=>[res.document,...ds]);
-        showToast('Uploaded — the GC can see it now');
+        showToast('Uploaded — the GC can see it now.');
         if(['insurance','w9','lien_waiver','safety_cert','license','bond'].includes(docCategory)){
           fetch(`/api/portal/sub/compliance?token=${token}`,{headers}).then(r=>r.json()).then(d=>setComplianceDocs(d.compliance_docs||[])).catch(()=>{});
         }
         refreshActivity();
-      } else showToast(res.error||'Upload failed');
-    }catch{showToast('Upload failed');}
+      } else showToast(res.error||'Upload failed.');
+    }catch{showToast('Upload failed.');}
     setUploading(false);
   };
   const renderDocuments=()=>{
@@ -1234,7 +1234,7 @@ export default function SubPortal(){
     return(
       <div style={{display:'grid',gap:20}}>
         <div style={card()}>
-          <div style={{fontSize:16,fontWeight:800,color:TEXT,marginBottom:4}}>Upload a document</div>
+          <div style={{fontSize:16,fontWeight:800,color:TEXT,marginBottom:4}}>Upload a Document</div>
           <div style={{fontSize:12,color:DIM,marginBottom:14}}>PDF, Excel, Word, CSV, photos or video &middot; 100 MB max. Insurance, W-9 and other compliance docs update your payment status automatically.</div>
           <div style={{display:'flex',gap:10,flexWrap:'wrap',alignItems:'flex-end'}}>
             <div><label style={labelS}>Category</label>
@@ -1242,11 +1242,11 @@ export default function SubPortal(){
                 {DOC_CATS.map(([v,l])=><option key={v} value={v}>{l}</option>)}
               </select></div>
             {['insurance','safety_cert','license','bond'].includes(docCategory)&&(
-              <div><label style={labelS}>Expiration date</label>
+              <div><label style={labelS}>Expiration Date</label>
                 <SaguaroDatePicker value={docExpiry} onChange={v=>setDocExpiry(v)} style={{...inputS,width:170}}/></div>
             )}
             <label style={{...btnS(GOLD),display:'inline-flex',alignItems:'center',gap:8,opacity:uploading?0.6:1}}>
-              {uploading?'Uploading\u2026':'\u2191 Choose file & upload'}
+              {uploading?'Uploading\u2026':'\u2191 Choose File & Upload'}
               <input type="file" accept=".pdf,.xls,.xlsx,.doc,.docx,.csv,image/*,video/*" style={{display:'none'}} disabled={uploading}
                 onChange={e=>{handleDocUpload(e.target.files?.[0]||null);e.currentTarget.value='';}}/>
             </label>
@@ -1292,7 +1292,7 @@ export default function SubPortal(){
         {drawings.length===0&&<div style={card()}><div style={{color:DIM,fontSize:13}}>No current drawings shared for this project yet.</div></div>}
         {Object.entries(groups).map(([disc,list]:[string,any[]])=>(
           <div key={disc} style={card()}>
-            <div style={{fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.8,marginBottom:10}}>{disc} &middot; {list.length} sheet{list.length===1?'':'s'}</div>
+            <div style={{fontSize:11,fontWeight:700,color:DIM,marginBottom:10}}>{disc} &middot; {list.length} sheet{list.length===1?'':'s'}</div>
             {list.map((d:any)=>(
               <div key={d.id} style={{display:'flex',alignItems:'center',gap:12,padding:'9px 0',borderBottom:`1px solid ${BORDER}44`,flexWrap:'wrap'}}>
                 <span style={{fontSize:12,fontWeight:800,color:GOLD,minWidth:64}}>{d.sheet_number||'--'}</span>
@@ -1314,8 +1314,8 @@ export default function SubPortal(){
     const res=await apiUpload('punch',form);
     if(res.success){
       setPunchItems((ps:any[])=>ps.map(p=>p.id===itemId?{...p,status:'completed',completed_at:new Date().toISOString()}:p));
-      showToast('Punch item completed');refreshActivity();
-    } else showToast(res.error||'Could not complete item');
+      showToast('Punch item completed.');refreshActivity();
+    } else showToast(res.error||'Could not complete item.');
   };
   const renderPunch=()=>{
     const open=punchItems.filter((p:any)=>p.status!=='completed'&&p.status!=='verified');
@@ -1323,7 +1323,7 @@ export default function SubPortal(){
     return(
       <div style={{display:'grid',gap:20}}>
         <div style={card()}>
-          <div style={{fontSize:15,fontWeight:800,color:TEXT,marginBottom:12}}>Open items ({open.length})</div>
+          <div style={{fontSize:15,fontWeight:800,color:TEXT,marginBottom:12}}>Open Items ({open.length})</div>
           {open.length===0&&<div style={{color:DIM,fontSize:13}}>Nothing open — you're clear on this project.</div>}
           {open.map((p:any)=>(
             <div key={p.id} style={{padding:'12px 0',borderBottom:`1px solid ${BORDER}44`}}>
@@ -1331,7 +1331,7 @@ export default function SubPortal(){
                 <span style={badge(p.priority==='high'?'rejected':'pending')}>{p.priority||'normal'}</span>
                 <div style={{flex:1,minWidth:200,fontSize:13,fontWeight:700,color:TEXT}}>{p.description}</div>
                 <label style={{...btnS(GOLD,true),display:'inline-flex',alignItems:'center',gap:6}}>
-                  {'\u2713'} Complete w/ photo
+                  {'\u2713'} Complete w/ Photo
                   <input type="file" accept="image/*" capture="environment" style={{display:'none'}}
                     onChange={e=>{handlePunchComplete(p.id,e.target.files?.[0]||null);e.currentTarget.value='';}}/>
                 </label>
@@ -1359,7 +1359,7 @@ export default function SubPortal(){
     const label=(e:any)=>e.description||({document_uploaded:`Uploaded ${e.metadata?.title||'a document'}`,invoice_submitted:`Submitted invoice ${fmt(e.metadata?.amount||0)}`,punch_completed:'Completed punch item'}[e.action as string])||String(e.action||'activity').replace(/_/g,' ');
     return(
       <div style={card()}>
-        <div style={{fontSize:15,fontWeight:800,color:TEXT,marginBottom:14}}>Activity history</div>
+        <div style={{fontSize:15,fontWeight:800,color:TEXT,marginBottom:14}}>Activity History</div>
         {activity.length===0&&<div style={{color:DIM,fontSize:13}}>Your uploads, invoice submissions and completed work will appear here, timestamped.</div>}
         {activity.map((e:any)=>(
           <div key={e.id} style={{display:'flex',gap:12,padding:'10px 0',borderBottom:`1px solid ${BORDER}44`}}>
@@ -1422,7 +1422,7 @@ export default function SubPortal(){
       <header style={{background:RAISED,borderBottom:`1px solid ${BORDER}`,padding:'12px 24px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
         <div style={{display:'flex',alignItems:'center',gap:12}}>
           <span style={{fontSize:26}}>{'\u{1F335}'}</span>
-          <div><span style={{fontWeight:800,fontSize:16,color:GOLD,letterSpacing:1}}>SAGUARO</span><span style={{fontSize:12,color:DIM,marginLeft:8}}>Subcontractor Portal</span></div>
+          <div><span style={{fontWeight:800,fontSize:16,color:GOLD,letterSpacing:'-0.01em'}}>Saguaro</span><span style={{fontSize:12,color:DIM,marginLeft:8}}>Subcontractor Portal</span></div>
         </div>
         <div style={{display:'flex',alignItems:'center',gap:12}}>
           <div style={{textAlign:'right'}}>
@@ -1440,7 +1440,7 @@ export default function SubPortal(){
         {TABS.map((t,i)=>(
           <React.Fragment key={t.key}>
           {i>0&&TABS[i-1].section!==t.section&&<span style={{width:1,height:20,background:BORDER,margin:'0 4px',flexShrink:0}}/>}
-          <button onClick={()=>setTab(t.key)} style={{padding:'8px 14px',background:tab===t.key?'linear-gradient(180deg,rgba(245,158,11,0.22),rgba(245,158,11,0.10))':'rgba(255,255,255,0.03)',border:`1px solid ${tab===t.key?'rgba(245,158,11,0.5)':BORDER}`,borderRadius:999,color:tab===t.key?'#FFD98A':DIM,fontSize:11,fontWeight:700,letterSpacing:.6,textTransform:'uppercase',cursor:'pointer',whiteSpace:'nowrap',transition:'all .15s',display:'flex',alignItems:'center',gap:6,flexShrink:0,boxShadow:tab===t.key?'0 0 0 3px rgba(245,158,11,0.10)':'none'}}>
+          <button onClick={()=>setTab(t.key)} style={{padding:'8px 14px',background:tab===t.key?'linear-gradient(180deg,color-mix(in srgb, var(--brand-primary) 22%, transparent),var(--brand-primary-12))':'rgba(255,255,255,0.03)',border:`1px solid ${tab===t.key?'color-mix(in srgb, var(--brand-primary) 50%, transparent)':BORDER}`,borderRadius:999,color:tab===t.key?'var(--brand-primary-strong)':DIM,fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap',transition:'all .15s',display:'flex',alignItems:'center',gap:6,flexShrink:0,boxShadow:tab===t.key?'0 0 0 3px var(--brand-primary-12)':'none'}}>
             <span style={{fontSize:14}}>{t.icon}</span><span>{t.label}</span>
             {t.key==='messages'&&messages.filter((m:any)=>m.sender_type!=='sub'&&!m.read).length>0&&(
               <span style={{width:8,height:8,borderRadius:'50%',background:RED,flexShrink:0}}/>
@@ -1453,13 +1453,13 @@ export default function SubPortal(){
       {/* Content */}
       <main style={{maxWidth:1100,margin:'0 auto',padding:'24px 20px'}}>
         {!complianceGateOpen&&(tab==='dashboard'||tab==='payapps')&&(
-          <div style={{...card({borderColor:RED+'66',background:RED+'0d',marginBottom:20}),display:'flex',alignItems:'center',gap:14,flexWrap:'wrap'}}>
+          <div style={{...card({borderColor:`color-mix(in srgb, ${RED} 40%, transparent)`,background:`color-mix(in srgb, ${RED} 5%, transparent)`,marginBottom:20}),display:'flex',alignItems:'center',gap:14,flexWrap:'wrap'}}>
             <span style={{fontSize:22}}>{'\u26A0'}</span>
             <div style={{flex:1,minWidth:220}}>
-              <div style={{fontSize:14,fontWeight:800,color:RED}}>Payment hold \u2014 compliance documents needed</div>
+              <div style={{fontSize:14,fontWeight:800,color:RED}}>Payment Hold — Compliance Documents Needed</div>
               <div style={{fontSize:12,color:DIM,marginTop:2}}>Missing or expired: {complianceMissing.map(m=>m==='w9'?'W-9':'Insurance / COI').join(', ')}. Invoices release automatically once these are current.</div>
             </div>
-            <button onClick={()=>{setDocCategory(complianceMissing[0]==='w9'?'w9':'insurance');setTab('documents');}} style={btnS(GOLD,true)}>Upload now</button>
+            <button onClick={()=>{setDocCategory(complianceMissing[0]==='w9'?'w9':'insurance');setTab('documents');}} style={btnS(GOLD,true)}>Upload Now</button>
           </div>
         )}
         {renderContent()}

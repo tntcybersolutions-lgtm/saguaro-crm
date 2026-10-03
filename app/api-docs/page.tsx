@@ -3,17 +3,17 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 
 const C = {
-  dark: '#0B0B0F',
-  gold: '#F59E0B',
-  goldBright: '#FBBF24',
+  dark: 'var(--bg-base)',
+  gold: 'var(--brand-primary)',
+  goldBright: 'var(--brand-primary-strong)',
   text: '#F5F5F7',
   dim: '#A1A1AA',
   border: 'rgba(255,255,255,0.10)',
-  raised: '#131318',
-  raisedAlt: '#1A1A21',
+  raised: 'var(--bg-surface)',
+  raisedAlt: 'var(--bg-surface-2)',
   green: '#22C55E',
   blue: '#6366F1',
-  code: '#0E0E13',
+  code: 'var(--bg-surface)',
   font: "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
   mono: "ui-monospace,'SF Mono','JetBrains Mono','Cascadia Code',Menlo,Consolas,monospace",
 };
@@ -112,11 +112,11 @@ const PAYAPP_SAMPLE = `{
 
 const FEATURES = [
   { title: 'Predictable REST', desc: 'Resource-oriented URLs, JSON bodies, standard verbs, and HTTP status codes. If you have used Stripe, you already know this API.' },
-  { title: 'Bearer auth', desc: 'Authenticate with a single API key in the Authorization header. Live and test keys, scoped per company, rotatable from your dashboard.' },
-  { title: 'Cursor pagination', desc: 'List endpoints page with limit and starting_after. Every response includes has_more so you know when to stop.' },
-  { title: 'Idempotency keys', desc: 'Pass an Idempotency-Key header on POST requests so a retried network call never double-creates a project or pay app.' },
+  { title: 'Bearer Auth', desc: 'Authenticate with a single API key in the Authorization header. Live and test keys, scoped per company, rotatable from your dashboard.' },
+  { title: 'Cursor Pagination', desc: 'List endpoints page with limit and starting_after. Every response includes has_more so you know when to stop.' },
+  { title: 'Idempotency Keys', desc: 'Pass an Idempotency-Key header on POST requests so a retried network call never double-creates a project or pay app.' },
   { title: 'Webhooks', desc: 'Subscribe to events — rfi.answered, pay_app.approved, project.status_changed — and react in real time instead of polling.' },
-  { title: 'Rate limits', desc: '100 requests/second per key with burst headroom. Every response carries X-RateLimit headers so you can back off gracefully.' },
+  { title: 'Rate Limits', desc: '100 requests/second per key with burst headroom. Every response carries X-RateLimit headers so you can back off gracefully.' },
 ];
 
 const ERRORS = [
@@ -207,7 +207,7 @@ export default function ApiDocsPage() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link href="/login" style={{ padding: '8px 14px', color: C.dim, fontSize: 13, fontWeight: 400, textDecoration: 'none' }}>Log In</Link>
-          <Link href="/signup" style={{ padding: '8px 18px', background: C.gold, borderRadius: 8, color: '#0a0a0a', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Free Trial</Link>
+          <Link href="/signup" style={{ padding: '8px 18px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Free Trial</Link>
         </div>
       </nav>
 
@@ -217,7 +217,7 @@ export default function ApiDocsPage() {
         <section style={{ textAlign: 'center', padding: '120px 24px 72px' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 20, fontSize: 12, fontWeight: 400, color: C.dim, letterSpacing: 0.3, marginBottom: 28 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.gold, display: 'inline-block' }} />
-            Developer preview — REST API v1
+            Developer Preview — REST API v1
           </div>
           <h1 style={{ fontWeight: 600, lineHeight: 1.15, margin: '0 0 20px', letterSpacing: -0.5, color: C.text }}>
             Build on the Saguaro API
@@ -226,7 +226,7 @@ export default function ApiDocsPage() {
             A clean, predictable REST API for the entire construction lifecycle — projects, RFIs, pay applications, AI takeoffs, and compliance docs. Push data in, pull it out, and wire Saguaro into your stack.
           </p>
           <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/signup" style={{ display: 'inline-block', padding: '12px 26px', background: C.gold, borderRadius: 8, color: '#0a0a0a', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
+            <Link href="/signup" style={{ display: 'inline-block', padding: '12px 26px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
               Request API Access
             </Link>
             <a href="#quickstart" style={{ display: 'inline-block', padding: '12px 26px', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, fontWeight: 400, fontSize: 15, textDecoration: 'none' }}>
@@ -239,17 +239,17 @@ export default function ApiDocsPage() {
         <section style={{ padding: '0 24px 88px', maxWidth: 900, margin: '0 auto' }}>
           <div style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid rgba(255,255,255,0.08)`, borderRadius: 14, padding: '28px 32px', display: 'flex', gap: 32, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ minWidth: 240 }}>
-              <div style={{ fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 8 }}>Base URL</div>
+              <div style={{ fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 8 }}>Base URL</div>
               <code style={{ fontFamily: C.mono, fontSize: 16, color: C.text, fontWeight: 500 }}>{BASE_URL}</code>
             </div>
             <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap' }}>
               {[
-                { k: 'Protocol', v: 'HTTPS only' },
+                { k: 'Protocol', v: 'HTTPS Only' },
                 { k: 'Format', v: 'JSON' },
-                { k: 'Auth', v: 'Bearer token' },
+                { k: 'Auth', v: 'Bearer Token' },
               ].map(item => (
                 <div key={item.k}>
-                  <div style={{ fontSize: 11, color: C.dim, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>{item.k}</div>
+                  <div style={{ fontSize: 11, color: C.dim, marginBottom: 4 }}>{item.k}</div>
                   <div style={{ fontSize: 14, color: C.text, fontWeight: 600 }}>{item.v}</div>
                 </div>
               ))}
@@ -260,10 +260,10 @@ export default function ApiDocsPage() {
         {/* Feature grid */}
         <section style={{ padding: '0 24px 120px', maxWidth: 1000, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 400, color: C.dim, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 18 }}>
-              Why developers like it
+            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 400, color: C.dim, marginBottom: 18 }}>
+              Why Developers Like It
             </div>
-            <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3, color: C.text }}>Designed to feel familiar</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3, color: C.text }}>Designed to Feel Familiar</h2>
             <p style={{ fontSize: 16, color: C.dim, maxWidth: 520, margin: '0 auto' }}>If you have integrated a modern SaaS API before, you will be productive in minutes.</p>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0 48px' }}>
@@ -279,7 +279,7 @@ export default function ApiDocsPage() {
         {/* Quickstart / Authentication */}
         <section id="quickstart" style={{ padding: '0 24px 120px', maxWidth: 900, margin: '0 auto' }}>
           <div style={{ marginBottom: 40 }}>
-            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 400, color: C.dim, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 16 }}>
+            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 400, color: C.dim, marginBottom: 16 }}>
               Quickstart
             </div>
             <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 14px', letterSpacing: -0.3, color: C.text }}>Authentication</h2>
@@ -290,7 +290,7 @@ export default function ApiDocsPage() {
           </div>
 
           <div style={{ marginBottom: 18 }}>
-            <CodeBlock label="Authenticate a request" code={REQUEST_SAMPLE} />
+            <CodeBlock label="Authenticate a Request" code={REQUEST_SAMPLE} />
           </div>
 
           <div style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid rgba(255,255,255,0.08)`, borderRadius: 12, padding: '16px 20px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
@@ -304,10 +304,10 @@ export default function ApiDocsPage() {
         {/* Example endpoints */}
         <section style={{ padding: '0 24px 120px', maxWidth: 1000, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 400, color: C.dim, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 16 }}>
-              Core resources
+            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 400, color: C.dim, marginBottom: 16 }}>
+              Core Resources
             </div>
-            <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3, color: C.text }}>A few endpoints to get you started</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3, color: C.text }}>A Few Endpoints to Get You Started</h2>
             <p style={{ fontSize: 16, color: C.dim, maxWidth: 560, margin: '0 auto' }}>Projects, RFIs, and pay applications — the resources most teams integrate first.</p>
           </div>
 
@@ -341,7 +341,7 @@ export default function ApiDocsPage() {
               <CodeBlock label="Request" code={REQUEST_SAMPLE} />
             </div>
             <div>
-              <div style={{ fontSize: 12, fontWeight: 500, color: C.green, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, height: 28 }}>
+              <div style={{ fontSize: 12, fontWeight: 500, color: C.green, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, height: 28 }}>
                 <span style={{ width: 7, height: 7, borderRadius: '50%', background: C.green }} /> 200 OK — Response
               </div>
               <CodeBlock label="application/json" code={RESPONSE_SAMPLE} />
@@ -361,7 +361,7 @@ export default function ApiDocsPage() {
                 <MethodBadge method="GET" />
                 <code style={{ fontFamily: C.mono, fontSize: 13, color: C.text, fontWeight: 600, wordBreak: 'break-all' }}>/v1/pay-apps/{'{id}'}</code>
               </div>
-              <CodeBlock label="Pay application — G702" code={PAYAPP_SAMPLE} />
+              <CodeBlock label="Pay Application — G702" code={PAYAPP_SAMPLE} />
             </div>
           </div>
         </section>
@@ -369,10 +369,10 @@ export default function ApiDocsPage() {
         {/* Status codes */}
         <section style={{ padding: '0 24px 120px', maxWidth: 900, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 400, color: C.dim, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 16 }}>
+            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 400, color: C.dim, marginBottom: 16 }}>
               Errors
             </div>
-            <h2 style={{ fontSize: 22, fontWeight: 600, margin: 0, letterSpacing: -0.3, color: C.text }}>Standard HTTP status codes</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 600, margin: 0, letterSpacing: -0.3, color: C.text }}>Standard HTTP Status Codes</h2>
           </div>
           <div style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid rgba(255,255,255,0.08)`, borderRadius: 14, overflow: 'hidden' }}>
             {ERRORS.map((e, i) => {
@@ -392,13 +392,13 @@ export default function ApiDocsPage() {
         <section style={{ padding: '120px 24px', borderTop: `1px solid rgba(255,255,255,0.08)`, textAlign: 'center' }}>
           <div style={{ maxWidth: 640, margin: '0 auto' }}>
             <h2 style={{ fontSize: 26, fontWeight: 600, margin: '0 0 16px', lineHeight: 1.2, letterSpacing: -0.4, color: C.text }}>
-              Ready to build something?
+              Ready to Build Something?
             </h2>
             <p style={{ fontSize: 17, color: C.dim, margin: '0 0 36px', lineHeight: 1.6 }}>
               Create a free account, generate a test key from Settings &rarr; Developers, and make your first call in minutes. API access is included on Professional and Enterprise plans.
             </p>
             <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 32 }}>
-              <Link href="/signup" style={{ display: 'inline-block', padding: '13px 30px', background: C.gold, borderRadius: 8, color: '#0a0a0a', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
+              <Link href="/signup" style={{ display: 'inline-block', padding: '13px 30px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
                 Request API Access
               </Link>
               <a href="mailto:developers@saguarocontrol.net" style={{ display: 'inline-block', padding: '13px 30px', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, fontWeight: 400, fontSize: 15, textDecoration: 'none' }}>

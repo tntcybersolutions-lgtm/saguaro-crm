@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { CheckCircle, WarningCircle, Eye, EyeSlash, Check, Lock } from '@phosphor-icons/react';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444';
 
 export default function LoginPage(){
   const [form, setForm] = useState({email:'',password:''});
@@ -49,7 +49,7 @@ export default function LoginPage(){
     const msg = params.get('message');
     if (err === 'confirmation_failed') setError('The confirmation link expired or was already used. Please request a new one.');
     if (err === 'missing_code') setError('Invalid confirmation link. Please try signing up again.');
-    if (msg === 'confirmed') setInfo('Email confirmed! You can now sign in.');
+    if (msg === 'confirmed') setInfo('Email confirmed. You can now sign in.');
   }, []);
 
   async function handleLogin(e?: React.FormEvent){
@@ -108,9 +108,9 @@ export default function LoginPage(){
     outline:'none',
     boxSizing:'border-box',
     transition:'border-color .2s, box-shadow .2s',
-    boxShadow: focused === field ? `0 0 0 3px rgba(245, 158, 11,.12)` : 'none',
+    boxShadow: focused === field ? '0 0 0 3px var(--brand-primary-12)' : 'none',
   });
-  const labelStyle: React.CSSProperties = {display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:6};
+  const labelStyle: React.CSSProperties = {display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:6};
 
   return (
     <div style={{minHeight:'100vh',background:DARK,display:'flex',flexDirection:'column'}}>
@@ -119,11 +119,11 @@ export default function LoginPage(){
         <Link href="/" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:10}} aria-label="Saguaro Control Systems — home">
           <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{height:36,width:'auto',objectFit:'contain',borderRadius:4}} />
           <span style={{display:'flex',flexDirection:'column',lineHeight:1.15}}>
-            <span style={{fontWeight:900,fontSize:14,letterSpacing:1,background:`linear-gradient(90deg,${GOLD},#FBBF24)`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>SAGUARO</span>
+            <span style={{fontWeight:900,fontSize:15,letterSpacing:'-0.01em',background:`linear-gradient(90deg,${GOLD},var(--brand-primary-strong))`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>Saguaro</span>
             <span style={{fontSize:10,color:DIM,letterSpacing:.5,fontWeight:600}}>Control Systems</span>
           </span>
         </Link>
-        <Link href="/signup" style={{fontSize:13,color:DIM,textDecoration:'none',fontWeight:600}}>No account? <span style={{color:GOLD}}>Start free trial →</span></Link>
+        <Link href="/signup" style={{fontSize:13,color:DIM,textDecoration:'none',fontWeight:600}}>No account? <span style={{color:GOLD}}>Start Free Trial →</span></Link>
       </nav>
 
       {/* Main content */}
@@ -134,8 +134,8 @@ export default function LoginPage(){
             <div style={{display:'flex',justifyContent:'center',marginBottom:16}}>
               <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{height:56,width:'auto',objectFit:'contain',borderRadius:6}} />
             </div>
-            <h1 style={{fontSize:22,fontWeight:700,letterSpacing:'-0.02em',margin:'0 0 6px',color:TEXT}}>Welcome back</h1>
-            <p style={{color:DIM,fontSize:14,margin:0}}>Sign in to your Saguaro account</p>
+            <h1 style={{fontSize:22,fontWeight:700,letterSpacing:'-0.02em',margin:'0 0 6px',color:TEXT}}>Welcome Back</h1>
+            <p style={{color:DIM,fontSize:14,margin:0}}>Sign in to your Saguaro account.</p>
           </div>
 
           {/* Card */}
@@ -174,7 +174,7 @@ export default function LoginPage(){
               <div>
                 <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}>
                   <label htmlFor="login-password" style={{...labelStyle,marginBottom:0}}>Password</label>
-                  <Link href="/forgot-password" style={{fontSize:11,color:GOLD,textDecoration:'none',fontWeight:600}}>Forgot password?</Link>
+                  <Link href="/forgot-password" style={{fontSize:11,color:GOLD,textDecoration:'none',fontWeight:600}}>Forgot Password?</Link>
                 </div>
                 <div style={{position:'relative'}}>
                   <input
@@ -221,7 +221,7 @@ export default function LoginPage(){
                     transition:'all .15s',cursor:'pointer',flexShrink:0,
                   }}
                 >
-                  {remember && <Check size={11} weight="bold" color="#1C1C1E" />}
+                  {remember && <Check size={11} weight="bold" color="#0A0A00" />}
                 </div>
                 <span style={{fontSize:12,color:DIM,fontWeight:500}}>Remember me on this device</span>
               </label>
@@ -230,8 +230,8 @@ export default function LoginPage(){
               <button type="submit" disabled={loading}
                 style={{
                   marginTop:4,padding:'11px 0',
-                  background:loading?'rgba(245, 158, 11,.5)':'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))',
-                  border:'none',borderRadius:'var(--radius-md)',color:'#241500',fontSize:14,fontWeight:700,letterSpacing:'0.01em',
+                  background:loading?'color-mix(in srgb, var(--brand-primary) 50%, transparent)':'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))',
+                  border:'none',borderRadius:'var(--radius-md)',color:'#0A0A00',fontSize:14,fontWeight:700,letterSpacing:'0.01em',
                   cursor:loading?'not-allowed':'pointer',transition:'background .18s, box-shadow .18s, transform .12s',
                   display:'flex',alignItems:'center',justifyContent:'center',gap:8,
                   boxShadow:loading?'none':'0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)',
@@ -240,7 +240,7 @@ export default function LoginPage(){
                 {loading && (
                   <span style={{
                     display:'inline-block',width:16,height:16,
-                    border:'2px solid #E5E5EA',borderTopColor:'#F59E0B',
+                    border:'2px solid #E5E5EA',borderTopColor:'var(--brand-primary)',
                     borderRadius:'50%',animation:'spin .6s linear infinite',
                   }}/>
                 )}
@@ -250,18 +250,18 @@ export default function LoginPage(){
 
             {/* Hint */}
             <div style={{marginTop:12,textAlign:'center',fontSize:11,color:'rgba(203,213,225,0.6)'}}>
-              Press Enter to sign in
+              Press Enter to sign in.
             </div>
 
             <div style={{marginTop:16,textAlign:'center',fontSize:12,color:DIM}}>
-              Don't have an account? <Link href="/signup" style={{color:GOLD,textDecoration:'none',fontWeight:700}}>Start free trial</Link>
+              Don't have an account? <Link href="/signup" style={{color:GOLD,textDecoration:'none',fontWeight:700}}>Start Free Trial</Link>
             </div>
           </div>
 
           {/* Trust badges */}
           <div style={{marginTop:20,textAlign:'center',display:'flex',justifyContent:'center',gap:20,flexWrap:'wrap'}}>
-            {['256-bit SSL','SOC 2','99.9% Uptime'].map(badge => (
-              <span key={badge} style={{fontSize:10,color:'rgba(203,213,225,0.6)',fontWeight:600,letterSpacing:.5,textTransform:'uppercase'}}>
+            {['256-Bit SSL','SOC 2','99.9% Uptime'].map(badge => (
+              <span key={badge} style={{fontSize:10,color:'rgba(203,213,225,0.6)',fontWeight:600}}>
                 <Lock size={10} weight="fill" style={{verticalAlign:-1,marginRight:4}} />{badge}
               </span>
             ))}

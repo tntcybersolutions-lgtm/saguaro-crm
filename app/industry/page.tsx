@@ -8,8 +8,9 @@ export const metadata: Metadata = {
   description: 'Purpose-built for every type of contractor: general contractors, residential remodelers, commercial GCs, roofing contractors, specialty subcontractors.',
 };
 
-const DARK = '#0a0a0a';
-const GOLD = '#F59E0B';
+const DARK = 'var(--bg-base)';
+const ON_GOLD = '#0A0A00';
+const GOLD = 'var(--brand-primary)';
 const TEXT = '#FFFFFF';
 const DIM = '#CBD5E1';
 const HAIRLINE = 'rgba(255,255,255,0.08)';
@@ -56,7 +57,7 @@ export default function IndustryIndexPage() {
           <Link
             href="/signup"
             style={{
-              background: GOLD, color: DARK, fontSize: 13, fontWeight: 600,
+              background: GOLD, color: ON_GOLD, fontSize: 13, fontWeight: 600,
               padding: '8px 18px', borderRadius: 8, textDecoration: 'none',
             }}
           >
@@ -73,16 +74,16 @@ export default function IndustryIndexPage() {
             background: 'transparent',
             border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999,
             padding: '6px 14px', fontSize: 12, fontWeight: 500,
-            color: DIM, letterSpacing: 0.3,
+            color: DIM,
             marginBottom: 28,
           }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: GOLD, display: 'inline-block' }} />
-            By industry
+            By Industry
           </div>
           <h1 style={{ fontSize: 'clamp(26px, 4vw, 30px)', fontWeight: 600, lineHeight: 1.15, letterSpacing: -0.5, margin: '0 0 18px' }}>
-            Built for every type of{' '}
+            Built for Every Type of{' '}
             <span style={{ color: TEXT }}>
-              contractor
+              Contractor
             </span>
           </h1>
           <p style={{ fontSize: 17, color: DIM, maxWidth: 560, margin: '0 auto', lineHeight: 1.65 }}>
@@ -161,7 +162,7 @@ export default function IndustryIndexPage() {
         }}>
           <div style={{ maxWidth: 560, margin: '0 auto' }}>
             <h2 style={{ fontSize: 'clamp(22px, 3vw, 26px)', fontWeight: 600, color: TEXT, letterSpacing: -0.4, margin: '0 0 16px' }}>
-              Start your free trial
+              Start Your Free Trial
             </h2>
             <p style={{ fontSize: 16, color: DIM, margin: '0 0 32px', lineHeight: 1.6 }}>
               No credit card required. Get your whole team on board today.
@@ -170,7 +171,7 @@ export default function IndustryIndexPage() {
               href="/signup"
               style={{
                 display: 'inline-block',
-                background: GOLD, color: DARK, fontWeight: 600, fontSize: 15,
+                background: GOLD, color: ON_GOLD, fontWeight: 600, fontSize: 15,
                 padding: '12px 28px', borderRadius: 8, textDecoration: 'none',
               }}
             >

@@ -6,9 +6,9 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 
-const GOLD = '#F59E0B';
-const BG = '#0a0a0a';
-const CARD = '#141416';
+const GOLD = 'var(--brand-primary)';
+const BG = 'var(--bg-base)';
+const CARD = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.09)';
 const TEXT = '#F4F4F5';
 const DIM = '#9CA3AF';
@@ -62,7 +62,7 @@ export default function PublicInvoicePage() {
     <div style={{ minHeight: '100vh', background: BG, color: TEXT, fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif', display: 'flex', justifyContent: 'center', padding: '48px 16px' }}>
       <div style={{ width: '100%', maxWidth: 560 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-          <div style={{ width: 34, height: 34, borderRadius: 9, background: `linear-gradient(180deg, ${GOLD}, #B45309)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#241500', fontWeight: 900, fontSize: 15 }}>S</div>
+          <div style={{ width: 34, height: 34, borderRadius: 9, background: `linear-gradient(180deg, ${GOLD}, var(--brand-primary-hover))`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0A0A00', fontWeight: 900, fontSize: 15 }}>S</div>
           <div>
             <div style={{ fontSize: 15, fontWeight: 800 }}>{from || 'Invoice'}</div>
             {projectName && <div style={{ fontSize: 12, color: DIM }}>{projectName}</div>}
@@ -77,14 +77,14 @@ export default function PublicInvoicePage() {
           <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, overflow: 'hidden' }}>
             <div style={{ padding: '18px 22px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', color: DIM, textTransform: 'uppercase' }}>Invoice</div>
+                <div style={{ fontSize: 11, fontWeight: 800, color: DIM }}>Invoice</div>
                 <div style={{ fontSize: 20, fontWeight: 800, color: GOLD }}>{inv.invoiceNumber}</div>
               </div>
-              <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: statusColor, border: `1px solid ${statusColor}55`, background: `${statusColor}1A`, borderRadius: 999, padding: '4px 12px' }}>{inv.status}</span>
+              <span style={{ fontSize: 11, fontWeight: 800, textTransform: 'capitalize', color: statusColor, border: `1px solid color-mix(in srgb, ${statusColor} 33%, transparent)`, background: `color-mix(in srgb, ${statusColor} 10%, transparent)`, borderRadius: 999, padding: '4px 12px' }}>{inv.status}</span>
             </div>
 
             <div style={{ padding: '18px 22px', display: 'grid', gap: 12 }}>
-              {inv.vendorName && <Row label="Billed to" value={inv.vendorName} />}
+              {inv.vendorName && <Row label="Billed To" value={inv.vendorName} />}
               {inv.description && <Row label="Description" value={inv.description} />}
               {inv.issuedAt && <Row label="Issued" value={day(inv.issuedAt) || ''} />}
               {inv.dueDate && <Row label="Due" value={day(inv.dueDate) || ''} />}
@@ -94,8 +94,8 @@ export default function PublicInvoicePage() {
             <div style={{ padding: '16px 22px', display: 'grid', gap: 8 }}>
               <Row label="Amount" value={money(inv.amount)} />
               {inv.tax > 0 && <Row label="Tax" value={money(inv.tax)} />}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: `${GOLD}14`, border: `1px solid ${GOLD}40`, borderRadius: 10, padding: '12px 14px' }}>
-                <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: DIM }}>Total due</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: `color-mix(in srgb, ${GOLD} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${GOLD} 25%, transparent)`, borderRadius: 10, padding: '12px 14px' }}>
+                <span style={{ fontSize: 12, fontWeight: 800, color: DIM }}>Total Due</span>
                 <span style={{ fontSize: 22, fontWeight: 800, color: GOLD, fontVariantNumeric: 'tabular-nums' }}>{money(inv.total)}</span>
               </div>
             </div>
@@ -106,7 +106,7 @@ export default function PublicInvoicePage() {
 
             <div style={{ padding: '16px 22px', borderTop: `1px solid ${BORDER}`, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               {pdfUrl ? (
-                <a href={pdfUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: `linear-gradient(180deg, #F7BE56, ${GOLD} 60%, #D97706)`, color: '#241500', fontWeight: 800, fontSize: 14, borderRadius: 10, padding: '11px 20px', textDecoration: 'none', boxShadow: '0 4px 14px rgba(245,158,11,0.25), inset 0 1px 0 rgba(255,255,255,0.35)' }}>
+                <a href={pdfUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: `linear-gradient(180deg, var(--brand-primary-strong), ${GOLD} 60%, var(--brand-primary-hover))`, color: '#0A0A00', fontWeight: 800, fontSize: 14, borderRadius: 10, padding: '11px 20px', textDecoration: 'none', boxShadow: '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' }}>
                   Download PDF
                 </a>
               ) : (
@@ -127,7 +127,7 @@ export default function PublicInvoicePage() {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}>
-      <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: DIM, flexShrink: 0 }}>{label}</span>
+      <span style={{ fontSize: 12, fontWeight: 700, color: DIM, flexShrink: 0 }}>{label}</span>
       <span style={{ fontSize: 13.5, fontWeight: 600, textAlign: 'right' }}>{value}</span>
     </div>
   );

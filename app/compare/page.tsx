@@ -17,8 +17,9 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://saguarocontrol.net/compare' },
 };
 
-const DARK = '#0a0a0a';
-const GOLD = '#F59E0B';
+const DARK = 'var(--bg-base)';
+const ON_GOLD = '#0A0A00';
+const GOLD = 'var(--brand-primary)';
 const TEXT = '#FFFFFF';
 const DIM = '#CBD5E1';
 const BORDER = 'rgba(255,255,255,0.08)';
@@ -28,7 +29,7 @@ const GREEN = '#22c55e';
 
 /* House display treatment — gold text-shine on ONE key word per heading. */
 const SHINE: CSSProperties = {
-  background: 'linear-gradient(100deg, #F59E0B 6%, #F5B84D 38%, #FDE68A 56%, #F59E0B 92%)',
+  background: 'linear-gradient(100deg, var(--brand-primary) 6%, var(--brand-primary-strong) 50%, var(--brand-primary) 92%)',
   WebkitBackgroundClip: 'text',
   backgroundClip: 'text',
   WebkitTextFillColor: 'transparent',
@@ -53,16 +54,16 @@ export default function ComparePage() {
             display: 'inline-flex', alignItems: 'center', gap: 8, background: 'transparent',
             border: `1px solid ${PILL}`, borderRadius: 999,
             padding: '6px 14px', fontSize: 12, fontWeight: 500,
-            color: DIM, letterSpacing: 0.3,
+            color: DIM,
             marginBottom: 28,
           }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: GOLD, display: 'inline-block' }} />
-            Head-to-head comparisons
+            Head-to-Head Comparisons
           </div>
           <h1 style={{ fontWeight: 800, lineHeight: 1.12, margin: '0 0 18px', letterSpacing: '-0.02em' }}>
-            Saguaro vs. every construction
+            Saguaro vs. Every Construction
             <br />
-            software tool — <span style={SHINE}>compared</span>
+            Software Tool — <span style={SHINE}>Compared</span>
           </h1>
           <p style={{ fontSize: 'clamp(15px, 2vw, 17px)', color: DIM, maxWidth: 600, margin: '0 auto 40px', lineHeight: 1.65 }}>
             We don&apos;t hide from comparisons. See exactly how we stack up against every major competitor.
@@ -76,7 +77,7 @@ export default function ComparePage() {
             style={{
               display: 'block', textDecoration: 'none',
               background: CARD,
-              border: `1px solid rgba(245,158,11,0.45)`,
+              border: `1px solid color-mix(in srgb, var(--brand-primary) 45%, transparent)`,
               borderRadius: 14,
               padding: '36px 40px',
               boxShadow: 'none',
@@ -89,10 +90,10 @@ export default function ComparePage() {
                   display: 'inline-flex', alignItems: 'center', gap: 8,
                   background: 'transparent', border: `1px solid ${PILL}`,
                   borderRadius: 999, padding: '5px 12px', fontSize: 11, fontWeight: 500,
-                  color: DIM, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 16,
+                  color: DIM, marginBottom: 16,
                 }}>
                   <span style={{ width: 5, height: 5, borderRadius: '50%', background: GOLD, display: 'inline-block' }} />
-                  Most popular comparison
+                  Most Popular Comparison
                 </div>
                 <h2 style={{ fontWeight: 600, color: TEXT, margin: '0 0 8px' }}>
                   Saguaro vs. Procore
@@ -115,12 +116,12 @@ export default function ComparePage() {
                 display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 16, flexShrink: 0,
               }}>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 13, color: DIM, marginBottom: 4 }}>Saguaro starting price</div>
+                  <div style={{ fontSize: 13, color: DIM, marginBottom: 4 }}>Saguaro Starting Price</div>
                   <div style={{ fontSize: 32, fontWeight: 600, color: TEXT }}>{STARTING_PRICE_MO}</div>
                   <div style={{ fontSize: 13, color: DIM }}>vs Procore $375–600+/mo per seat</div>
                 </div>
                 <div style={{
-                  background: GOLD, color: DARK, fontWeight: 600, fontSize: 14,
+                  background: GOLD, color: ON_GOLD, fontWeight: 600, fontSize: 14,
                   padding: '12px 28px', borderRadius: 8,
                 }}>
                   See Full Comparison
@@ -133,7 +134,7 @@ export default function ComparePage() {
         {/* COMPETITOR GRID */}
         <div style={{ maxWidth: 1100, margin: '0 auto 80px', padding: '0 32px' }}>
           <h2 style={{ fontWeight: 600, color: TEXT, margin: '0 0 32px', textAlign: 'center', letterSpacing: -0.3 }}>
-            All competitors
+            All Competitors
           </h2>
           <div style={{
             display: 'grid',
@@ -159,14 +160,14 @@ export default function ComparePage() {
                   </h3>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 16 }}>
-                  <span style={{ fontSize: 13, color: DIM }}>Their price:</span>
+                  <span style={{ fontSize: 13, color: DIM }}>Their Price:</span>
                   <span style={{ fontSize: 14, fontWeight: 600, color: '#f87171' }}>{comp.startingPrice}</span>
                   {comp.perSeat && (
-                    <span style={{ fontSize: 11, color: DIM, background: 'rgba(248,113,113,0.1)', borderRadius: 6, padding: '1px 8px' }}>per seat</span>
+                    <span style={{ fontSize: 11, color: DIM, background: 'rgba(248,113,113,0.1)', borderRadius: 6, padding: '1px 8px' }}>Per Seat</span>
                   )}
                 </div>
                 <div style={{ marginBottom: 20 }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: DIM, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: DIM, marginBottom: 8 }}>
                     #1 Weakness
                   </div>
                   <p style={{ fontSize: 14, color: DIM, margin: 0, lineHeight: 1.5 }}>
@@ -196,7 +197,7 @@ export default function ComparePage() {
         }}>
           <div style={{ maxWidth: 640, margin: '0 auto' }}>
             <h2 style={{ fontWeight: 800, color: TEXT, margin: '0 0 16px', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
-              Ready to see why GCs are <span style={SHINE}>switching</span>?
+              Ready to See Why GCs Are <span style={SHINE}>Switching</span>?
             </h2>
             <p style={{ fontSize: 16, color: DIM, margin: '0 0 36px', lineHeight: 1.6 }}>
               Start free — no credit card required. Go live today, not in 3 months.
@@ -205,7 +206,7 @@ export default function ComparePage() {
               <Link
                 href="/signup"
                 style={{
-                  background: GOLD, color: DARK, fontWeight: 600, fontSize: 15,
+                  background: GOLD, color: ON_GOLD, fontWeight: 600, fontSize: 15,
                   padding: '12px 28px', borderRadius: 8, textDecoration: 'none',
                 }}
               >

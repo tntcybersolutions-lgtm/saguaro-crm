@@ -5,14 +5,14 @@ import MarketingNav from '@/components/MarketingNav';
 import { TRIAL_DAYS } from '@/lib/plans';
 
 const C = {
-  dark: '#0a0a0a',
-  gold: '#F59E0B',
-  goldBright: '#FBBF24',
+  dark: 'var(--bg-base)',
+  gold: 'var(--brand-primary)',
+  goldBright: 'var(--brand-primary-strong)',
   text: '#FFFFFF',
   dim: '#CBD5E1',
   border: 'rgba(255,255,255,0.08)',
-  raised: '#141416',
-  raisedAlt: '#141416',
+  raised: 'var(--bg-surface)',
+  raisedAlt: 'var(--bg-surface)',
   green: '#22C55E',
   blue: '#6366F1',
   font: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,system-ui,sans-serif",
@@ -27,7 +27,7 @@ const NAV_LINKS = [
 
 /* House display treatment — gold text-shine on ONE key word per heading. */
 const SHINE: React.CSSProperties = {
-  background: 'linear-gradient(100deg, #F59E0B 6%, #F5B84D 38%, #FDE68A 56%, #F59E0B 92%)',
+  background: 'linear-gradient(100deg, var(--brand-primary) 6%, var(--brand-primary-strong) 50%, var(--brand-primary) 92%)',
   WebkitBackgroundClip: 'text',
   backgroundClip: 'text',
   WebkitTextFillColor: 'transparent',
@@ -179,7 +179,7 @@ const FEATURES: Feature[] = [
 const REPLACES = [
   'Procore',
   'Stacks of Spreadsheets',
-  'Bluebeam (takeoff)',
+  'Bluebeam (Takeoff)',
   'Standalone Bid Software',
   'DocuSign for Waivers',
   'A Separate Field App',
@@ -189,7 +189,7 @@ const REPLACES = [
 function CheckIcon({ size = 16, color = C.green }: { size?: number; color?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 2 }}>
-      <circle cx="8" cy="8" r="8" fill={`${color}22`} />
+      <circle cx="8" cy="8" r="8" fill={`color-mix(in srgb, ${color} 13%, transparent)`} />
       <path d="M4.5 8l2.5 2.5 4-5" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
@@ -209,19 +209,19 @@ export default function FeaturesPage() {
       <div style={{ paddingTop: 64 }}>
 
         {/* Hero */}
-        <section style={{ textAlign: 'center', padding: '120px 24px 80px', background: `radial-gradient(ellipse 900px 500px at 50% 0%, rgba(245, 158, 11,0.04) 0%, transparent 70%)` }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 28 }}>
+        <section style={{ textAlign: 'center', padding: '120px 24px 80px', background: 'transparent' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 28 }}>
             <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.gold }} />
             The Complete Platform
           </div>
           <h1 style={{ fontWeight: 800, lineHeight: 1.12, margin: '0 0 20px', letterSpacing: '-0.02em', maxWidth: 820, marginInline: 'auto' }}>
-            Everything you need to run the job —{' '}
-            in <span style={SHINE}>one platform</span>
+            Everything You Need to Run the Job —{' '}
+            In <span style={SHINE}>One Platform</span>
           </h1>
           <p style={{ fontSize: 15, fontWeight: 400, color: C.dim, maxWidth: 600, margin: '0 auto 32px', lineHeight: 1.7 }}>
             AI-powered estimating, bidding, billing, field reporting, and compliance — built for general contractors who are tired of stitching together a dozen disconnected tools. One login. Your whole company.
           </p>
-          <Link href="/signup" style={{ display: 'inline-block', padding: '12px 26px', background: C.gold, borderRadius: 8, color: '#0a0a0a', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
+          <Link href="/signup" style={{ display: 'inline-block', padding: '12px 26px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
             Start Free Trial — No Credit Card →
           </Link>
           <div style={{ marginTop: 14, fontSize: 12.5, color: 'rgba(255,255,255,0.45)' }}>{TRIAL_DAYS} days free · Unlimited users · Free migration</div>
@@ -240,7 +240,7 @@ export default function FeaturesPage() {
                 alignItems: 'start',
               }}>
                 <div>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 14 }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 14 }}>
                     <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.gold }} />
                     {f.eyebrow}
                   </div>
@@ -263,7 +263,7 @@ export default function FeaturesPage() {
         {/* Replaces strip */}
         <section style={{ padding: '0 24px 96px', maxWidth: 1080, margin: '0 auto' }}>
           <div style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid rgba(255,255,255,0.08)`, borderRadius: 14, padding: '56px 44px', textAlign: 'center' }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 14 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 14 }}>
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.gold }} />
               One Platform Replaces
             </div>
@@ -288,14 +288,14 @@ export default function FeaturesPage() {
         <section style={{ padding: '100px 24px', background: C.raised, borderTop: `1px solid ${C.border}`, textAlign: 'center' }}>
           <div style={{ maxWidth: 640, margin: '0 auto' }}>
             <h2 style={{ fontWeight: 800, margin: '0 0 16px', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
-              See every feature on{' '}
-              <span style={SHINE}>your own jobs</span>.
+              See Every Feature on{' '}
+              <span style={SHINE}>Your Own Jobs</span>
             </h2>
             <p style={{ fontSize: 15, color: C.dim, margin: '0 0 36px', lineHeight: 1.7 }}>
               Spin up a free account and run a real project through Saguaro today. {TRIAL_DAYS} days free, free migration, no credit card required.
             </p>
             <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 40 }}>
-              <Link href="/signup" style={{ display: 'inline-block', padding: '12px 26px', background: C.gold, borderRadius: 8, color: '#0a0a0a', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
+              <Link href="/signup" style={{ display: 'inline-block', padding: '12px 26px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
                 Start Free Trial — No CC Required
               </Link>
               <Link href="/compare" style={{ display: 'inline-block', padding: '12px 26px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 8, color: C.dim, fontWeight: 500, fontSize: 14, textDecoration: 'none' }}>
@@ -303,7 +303,7 @@ export default function FeaturesPage() {
               </Link>
             </div>
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-              {[`${TRIAL_DAYS} days free`, 'Free migration', 'Cancel anytime', 'Unlimited users'].map(pill => (
+              {[`${TRIAL_DAYS} Days Free`, 'Free Migration', 'Cancel Anytime', 'Unlimited Users'].map(pill => (
                 <div key={pill} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${C.border}`, borderRadius: 20, fontSize: 12, fontWeight: 500, color: C.dim }}>
                   <CheckIcon size={12} color={C.dim} />
                   {pill}

@@ -13,8 +13,8 @@ export default function HowToGetStartedPage() {
       <style dangerouslySetInnerHTML={{ __html: `
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
-          --dark: #0a0a0a; --gold: #F59E0B; --text: #FFFFFF;
-          --dim: #CBD5E1; --border: rgba(255,255,255,0.08); --raised: #141416;
+          --dark: var(--bg-base); --gold: var(--brand-primary); --text: #FFFFFF;
+          --dim: #CBD5E1; --border: rgba(255,255,255,0.08); --raised: var(--bg-surface);
           --green: #22c55e; --font: system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
         }
         body { background: var(--dark); color: var(--text); font-family: var(--font); }
@@ -27,10 +27,10 @@ export default function HowToGetStartedPage() {
           border-bottom: 1px solid var(--border);
         }
         .logo { font-weight: 600; font-size: 16px; text-decoration: none;
-          color: var(--text); letter-spacing: 0.5px; }
+          color: var(--text); }
         .nav-cta {
           padding: 9px 22px; background: var(--gold);
-          border-radius: 8px; color: #0a0a0a; font-weight: 600; font-size: 13px;
+          border-radius: 8px; color: #0A0A00; font-weight: 600; font-size: 13px;
           text-decoration: none;
         }
         .container { max-width: 860px; margin: 0 auto; padding: 72px 24px; }
@@ -40,7 +40,7 @@ export default function HowToGetStartedPage() {
           padding: 6px 14px; background: transparent;
           border: 1px solid rgba(255,255,255,0.14); border-radius: 20px;
           font-size: 11px; font-weight: 500; color: var(--dim);
-          letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 24px;
+          margin-bottom: 24px;
         }
         .badge .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); }
         .hero h1 { font-size: clamp(26px,4vw,30px); font-weight: 600; line-height: 1.2; margin-bottom: 16px; letter-spacing: -0.5px; }
@@ -49,7 +49,7 @@ export default function HowToGetStartedPage() {
         .section { margin-bottom: 72px; }
         .section-label {
           font-size: 11px; font-weight: 600; color: var(--dim);
-          letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px;
+          margin-bottom: 10px;
         }
         .section h2 { font-size: 21px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
         .section .sub { font-size: 15px; color: var(--dim); line-height: 1.65; margin-bottom: 24px; }
@@ -98,7 +98,7 @@ export default function HowToGetStartedPage() {
         .btn-primary {
           display: inline-block; padding: 11px 26px;
           background: var(--gold);
-          border-radius: 8px; color: #0a0a0a; font-weight: 600; font-size: 15px;
+          border-radius: 8px; color: #0A0A00; font-weight: 600; font-size: 15px;
           text-decoration: none; box-shadow: none;
           margin-bottom: 12px;
         }
@@ -118,7 +118,7 @@ export default function HowToGetStartedPage() {
 
       {/* Nav */}
       <nav className="nav">
-        <Link href="/" className="logo">SAGUARO</Link>
+        <Link href="/" className="logo">Saguaro</Link>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           <Link href="/login" style={{ fontSize: 13, color: 'var(--dim)', textDecoration: 'none', fontWeight: 600 }}>Log In</Link>
           <Link href="/signup" className="nav-cta">Start Free Trial</Link>
@@ -137,8 +137,8 @@ export default function HowToGetStartedPage() {
         {/* WHAT IS SAGUARO */}
         <div className="section">
           <div className="card card-gold">
-            <div className="section-label">First — important to know</div>
-            <h2 style={{ fontSize: 20, fontWeight: 600, color: 'var(--text)', marginBottom: 10 }}>Saguaro is a web-based platform — nothing to download</h2>
+            <div className="section-label">First — Important to Know</div>
+            <h2 style={{ fontSize: 20, fontWeight: 600, color: 'var(--text)', marginBottom: 10 }}>Saguaro Is a Web-Based Platform — Nothing to Download</h2>
             <p style={{ fontSize: 14, color: 'var(--dim)', lineHeight: 1.7, marginBottom: 16 }}>
               Unlike traditional software, the Saguaro platform runs entirely in your web browser — just like Gmail, QuickBooks Online, or Procore. There is no installer and no .exe file to run on your computer.
             </p>
@@ -157,10 +157,10 @@ export default function HowToGetStartedPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {[
                 { n: '1', t: 'Go to saguarocontrol.net/signup', d: 'Open your browser and navigate to the signup page.' },
-                { n: '2', t: 'Enter your name, work email, and password', d: 'Use your real work email — this is where confirmation and billing notices will be sent.' },
-                { n: '3', t: 'Enter your company name and team size', d: 'This sets up your company workspace. You can change it later.' },
+                { n: '2', t: 'Enter Your Name, Work Email, and Password', d: 'Use your real work email — this is where confirmation and billing notices will be sent.' },
+                { n: '3', t: 'Enter Your Company Name and Team Size', d: 'This sets up your company workspace. You can change it later.' },
                 { n: '4', t: 'Click "Start Free Trial"', d: 'Your account is created instantly. You\'ll receive a confirmation email — click the link inside to activate.' },
-                { n: '5', t: 'Confirm your email', d: 'Check your inbox for an email from Saguaro. Click the confirmation link. You\'re in.' },
+                { n: '5', t: 'Confirm Your Email', d: 'Check your inbox for an email from Saguaro. Click the confirmation link. You\'re in.' },
               ].map(s => (
                 <div key={s.n} className="step-row">
                   <div className="step-num">{s.n}</div>
@@ -183,7 +183,7 @@ export default function HowToGetStartedPage() {
             <div className="step-row">
               <div className="step-num"><Globe size={20} weight="duotone" color="var(--gold)" /></div>
               <div className="step-body">
-                <h3>Open your browser → go to saguarocontrol.net/app</h3>
+                <h3>Open Your Browser → Go to saguarocontrol.net/app</h3>
                 <p>Works in Chrome, Safari, Edge, Firefox — on Windows, Mac, iPhone, iPad, Android, and Chromebook. No software install. No IT department. Just a browser.</p>
                 <div className="note">
                   <strong>Bookmark this now:</strong> saguarocontrol.net/app — this is your homepage for everything. Add it to your browser favorites and your phone home screen.
@@ -249,10 +249,10 @@ export default function HowToGetStartedPage() {
           <div className="card">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {[
-                { n: '1', t: 'Company profile', d: 'Add your company name, logo, license number, and default state. This appears on all pay apps, lien waivers, and bid documents you generate.' },
-                { n: '2', t: 'Create your first project', d: 'Add a project name, address, owner info, and contract value. Takes 2 minutes. You can import from Procore or spreadsheets too.' },
-                { n: '3', t: 'Upload a blueprint (optional)', d: 'Drop any PDF blueprint to try the AI Takeoff. Sage reads every dimension and builds your material list automatically — no manual counting.' },
-                { n: '4', t: 'Invite your team', d: 'Add your PMs, estimators, supers, and office staff. They\'ll receive an email invite. Unlimited users — no extra cost.' },
+                { n: '1', t: 'Company Profile', d: 'Add your company name, logo, license number, and default state. This appears on all pay apps, lien waivers, and bid documents you generate.' },
+                { n: '2', t: 'Create Your First Project', d: 'Add a project name, address, owner info, and contract value. Takes 2 minutes. You can import from Procore or spreadsheets too.' },
+                { n: '3', t: 'Upload a Blueprint (Optional)', d: 'Drop any PDF blueprint to try the AI Takeoff. Sage reads every dimension and builds your material list automatically — no manual counting.' },
+                { n: '4', t: 'Invite Your Team', d: 'Add your PMs, estimators, supers, and office staff. They\'ll receive an email invite. Unlimited users — no extra cost.' },
               ].map(s => (
                 <div key={s.n} className="step-row">
                   <div className="step-num">{s.n}</div>
@@ -277,11 +277,11 @@ export default function HowToGetStartedPage() {
               { name: 'Professional', price: '$750/mo', desc: 'Unlimited projects, unlimited AI, certified payroll, bid intelligence, owner portals, all documents.', href: '/signup', popular: true },
             ].map(p => (
               <div key={p.name} className="card" style={{ borderColor: p.popular ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.08)' }}>
-                {p.popular && <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--dim)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>Most Popular</div>}
+                {p.popular && <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--dim)', marginBottom: 8 }}>Most Popular</div>}
                 <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>{p.name}</div>
                 <div style={{ fontSize: 22, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>{p.price}</div>
                 <p style={{ fontSize: 13, color: 'var(--dim)', lineHeight: 1.6, marginBottom: 16 }}>{p.desc}</p>
-                <a href={p.href} style={{ display: 'block', padding: '10px', textAlign: 'center', background: p.popular ? 'var(--gold)' : 'transparent', border: p.popular ? 'none' : '1px solid rgba(255,255,255,0.14)', borderRadius: 8, color: p.popular ? '#0a0a0a' : 'var(--dim)', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
+                <a href={p.href} style={{ display: 'block', padding: '10px', textAlign: 'center', background: p.popular ? 'var(--gold)' : 'transparent', border: p.popular ? 'none' : '1px solid rgba(255,255,255,0.14)', borderRadius: 8, color: p.popular ? '#0A0A00' : 'var(--dim)', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
                   Start Free Trial →
                 </a>
               </div>
@@ -315,11 +315,11 @@ export default function HowToGetStartedPage() {
 
         {/* CTA */}
         <div className="cta-box">
-          <h2>Ready to get started?</h2>
+          <h2>Ready to Get Started?</h2>
           <p>Sign up in 30 seconds. No credit card required. Your whole team is live in under 5 minutes.</p>
           <Link href="/signup" className="btn-primary">Start Free Trial →</Link>
           <div className="trust-row">
-            {['30 days free', 'No credit card', 'Unlimited users', 'Free migration', 'Cancel anytime'].map(t => (
+            {['30 Days Free', 'No Credit Card', 'Unlimited Users', 'Free Migration', 'Cancel Anytime'].map(t => (
               <div key={t} className="trust-item">
                 <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
                   <circle cx="8" cy="8" r="8" fill="rgba(34,197,94,0.15)" />

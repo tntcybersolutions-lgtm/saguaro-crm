@@ -5,14 +5,15 @@ import Link from 'next/link';
 import { Timer, FileText, CurrencyDollar, HardHat, CheckCircle, Laptop, Lightbulb, ChartBar } from '@phosphor-icons/react';
 import type { Icon } from '@phosphor-icons/react';
 
-const DARK = '#0a0a0a';
-const GOLD = '#F59E0B';
+const DARK = 'var(--bg-base)';
+const ON_GOLD = '#0A0A00';
+const GOLD = 'var(--brand-primary)';
 const TEXT = '#FFFFFF';
 const DIM = '#CBD5E1';
 const BORDER = 'rgba(255,255,255,0.12)';
 const HAIRLINE = 'rgba(255,255,255,0.08)';
 const CARD = 'rgba(255,255,255,0.02)';
-const RAISED = '#141416';
+const RAISED = 'var(--bg-surface)';
 const GREEN = '#22c55e';
 
 const fmt = (n: number) => Math.round(n).toLocaleString();
@@ -161,7 +162,7 @@ export default function ROICalculatorPage() {
         <div>
           <div style={{ color: TEXT, fontSize: 13, fontWeight: 500 }}>{label}</div>
           {hours !== undefined && (
-            <div style={{ color: DIM, fontSize: 11 }}>saves {hours % 1 === 0 ? hours : hours.toFixed(1)} hrs/mo</div>
+            <div style={{ color: DIM, fontSize: 11 }}>Saves {hours % 1 === 0 ? hours : hours.toFixed(1)} hrs/mo</div>
           )}
         </div>
       </div>
@@ -221,7 +222,7 @@ export default function ROICalculatorPage() {
         .nav-btn-gold {
           background: ${GOLD};
           border: none;
-          color: ${DARK};
+          color: ${ON_GOLD};
           padding: 7px 18px;
           border-radius: 8px;
           cursor: pointer;
@@ -232,11 +233,11 @@ export default function ROICalculatorPage() {
           display: inline-block;
         }
         .nav-btn-gold:hover {
-          background: #FBBF24;
+          background: var(--brand-primary-strong);
         }
         .cta-btn {
           background: ${GOLD};
-          color: ${DARK};
+          color: ${ON_GOLD};
           font-weight: 600;
           font-size: 15px;
           padding: 13px 28px;
@@ -250,7 +251,7 @@ export default function ROICalculatorPage() {
           text-align: center;
         }
         .cta-btn:hover {
-          background: #FBBF24;
+          background: var(--brand-primary-strong);
         }
         .procore-toggle {
           display: flex;
@@ -267,8 +268,8 @@ export default function ROICalculatorPage() {
           text-align: left;
         }
         .procore-toggle.active {
-          border-color: rgba(245,158,11,0.5);
-          background: rgba(245,158,11,0.05);
+          border-color: color-mix(in srgb, var(--brand-primary) 50%, transparent);
+          background: color-mix(in srgb, var(--brand-primary) 5%, transparent);
         }
         .comparison-table {
           width: 100%;
@@ -280,8 +281,6 @@ export default function ROICalculatorPage() {
           text-align: center;
           font-weight: 600;
           font-size: 12px;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
           border-bottom: 1px solid ${HAIRLINE};
         }
         .comparison-table td {
@@ -376,13 +375,12 @@ export default function ROICalculatorPage() {
               color: DIM,
               fontSize: 12,
               fontWeight: 500,
-              letterSpacing: 0.3,
               padding: '6px 14px',
               borderRadius: 999,
               marginBottom: 28,
             }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: GOLD, display: 'inline-block' }} />
-              ROI calculator
+              ROI Calculator
             </div>
             <h1
               className="hero-headline"
@@ -394,7 +392,7 @@ export default function ROICalculatorPage() {
                 whiteSpace: 'pre-line',
               }}
             >
-              {"How much is manual work\ncosting your business?"}
+              {"How Much Is Manual Work\nCosting Your Business?"}
             </h1>
             <p
               className="hero-sub"
@@ -434,7 +432,7 @@ export default function ROICalculatorPage() {
                 marginBottom: 16,
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
-                  <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>Your business</h2>
+                  <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>Your Business</h2>
                   <button
                     onClick={handleReset}
                     style={{
@@ -450,12 +448,12 @@ export default function ROICalculatorPage() {
                     onMouseOver={(e) => { (e.target as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.25)'; (e.target as HTMLButtonElement).style.color = TEXT; }}
                     onMouseOut={(e) => { (e.target as HTMLButtonElement).style.borderColor = HAIRLINE; (e.target as HTMLButtonElement).style.color = DIM; }}
                   >
-                    Reset to defaults
+                    Reset to Defaults
                   </button>
                 </div>
 
                 <SliderRow
-                  label="Team size (field + office)"
+                  label="Team Size (Field + Office)"
                   value={teamSize}
                   min={1}
                   max={100}
@@ -464,7 +462,7 @@ export default function ROICalculatorPage() {
                   suffix=" people"
                 />
                 <SliderRow
-                  label="Bids submitted per month"
+                  label="Bids Submitted per Month"
                   value={bidsPerMonth}
                   min={1}
                   max={40}
@@ -473,7 +471,7 @@ export default function ROICalculatorPage() {
                   suffix=" bids"
                 />
                 <SliderRow
-                  label="Hours spent per takeoff (currently)"
+                  label="Hours Spent per Takeoff (Currently)"
                   value={hoursPerTakeoff}
                   min={1}
                   max={12}
@@ -482,7 +480,7 @@ export default function ROICalculatorPage() {
                   suffix=" hrs"
                 />
                 <SliderRow
-                  label="Estimator hourly rate"
+                  label="Estimator Hourly Rate"
                   value={hourlyRate}
                   min={40}
                   max={200}
@@ -499,10 +497,10 @@ export default function ROICalculatorPage() {
                 borderRadius: 14,
                 padding: '28px 24px',
               }}>
-                <h2 style={{ margin: '0 0 24px', fontSize: 18, fontWeight: 600 }}>Operations &amp; software</h2>
+                <h2 style={{ margin: '0 0 24px', fontSize: 18, fontWeight: 600 }}>Operations &amp; Software</h2>
 
                 <SliderRow
-                  label="Lien waivers processed per month"
+                  label="Lien Waivers Processed per Month"
                   value={lienWaiversPerMonth}
                   min={0}
                   max={100}
@@ -512,7 +510,7 @@ export default function ROICalculatorPage() {
                 />
 
                 <div style={{ marginBottom: 24 }}>
-                  <p style={{ color: DIM, fontSize: 13, margin: '0 0 10px' }}>Current project management software</p>
+                  <p style={{ color: DIM, fontSize: 13, margin: '0 0 10px' }}>Current Project Management Software</p>
                   <button
                     className={`procore-toggle${useProcore ? ' active' : ''}`}
                     onClick={handleProcoreToggle}
@@ -529,15 +527,15 @@ export default function ROICalculatorPage() {
                       flexShrink: 0,
                       transition: 'all 0.2s',
                     }}>
-                      {useProcore && <span style={{ fontSize: 12, color: DARK, fontWeight: 700 }}>✓</span>}
+                      {useProcore && <span style={{ fontSize: 12, color: ON_GOLD, fontWeight: 700 }}>✓</span>}
                     </div>
                     <div>
                       <div style={{ color: TEXT, fontWeight: 500, fontSize: 14 }}>
-                        I use Procore
+                        I Use Procore
                       </div>
                       {useProcore && (
                         <div style={{ color: DIM, fontSize: 11, marginTop: 2 }}>
-                          Procore typically costs $1,850+/mo for a team of your size
+                          Procore typically costs $1,850+/mo for a team of your size.
                         </div>
                       )}
                     </div>
@@ -545,7 +543,7 @@ export default function ROICalculatorPage() {
                 </div>
 
                 <SliderRow
-                  label={useProcore ? "Current software cost (Procore)" : "Current monthly software cost"}
+                  label={useProcore ? "Current Software Cost (Procore)" : "Current Monthly Software Cost"}
                   value={effectiveSoftwareCost}
                   min={0}
                   max={5000}
@@ -571,8 +569,8 @@ export default function ROICalculatorPage() {
                 }}
               >
                 <div style={{ textAlign: 'center', marginBottom: 24, paddingBottom: 24, borderBottom: `1px solid ${HAIRLINE}` }}>
-                  <div style={{ color: DIM, fontSize: 12, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500 }}>
-                    Your estimated savings
+                  <div style={{ color: DIM, fontSize: 12, marginBottom: 10, fontWeight: 500 }}>
+                    Your Estimated Savings
                   </div>
                   <div style={{
                     fontSize: 44,
@@ -583,7 +581,7 @@ export default function ROICalculatorPage() {
                   }}>
                     ${fmt(totalNetSavings)}
                   </div>
-                  <div style={{ color: DIM, fontSize: 15, marginTop: 8, fontWeight: 400 }}>per month</div>
+                  <div style={{ color: DIM, fontSize: 15, marginTop: 8, fontWeight: 400 }}>Per Month</div>
                 </div>
 
                 <div style={{ marginBottom: 20 }}>
@@ -609,13 +607,13 @@ export default function ROICalculatorPage() {
                       <div style={{ color: TEXT, fontSize: 22, fontWeight: 600, letterSpacing: -0.3 }}>
                         ${fmt(annualSavings)}
                       </div>
-                      <div style={{ color: DIM, fontSize: 11, marginTop: 2 }}>per year</div>
+                      <div style={{ color: DIM, fontSize: 11, marginTop: 2 }}>Per Year</div>
                     </div>
                     <div style={{ textAlign: 'center' }}>
                       <div style={{ color: TEXT, fontSize: 22, fontWeight: 600, letterSpacing: -0.3 }}>
                         ${fmt(threeYearSavings)}
                       </div>
-                      <div style={{ color: DIM, fontSize: 11, marginTop: 2 }}>over 3 years</div>
+                      <div style={{ color: DIM, fontSize: 11, marginTop: 2 }}>Over 3 Years</div>
                     </div>
                   </div>
                 </div>
@@ -641,19 +639,19 @@ export default function ROICalculatorPage() {
                     textAlign: 'center',
                   }}>
                     <div style={{ color: TEXT, fontSize: 20, fontWeight: 600 }}>{paybackDays}d</div>
-                    <div style={{ color: DIM, fontSize: 11, marginTop: 2 }}>payback period</div>
+                    <div style={{ color: DIM, fontSize: 11, marginTop: 2 }}>Payback Period</div>
                   </div>
                 </div>
 
                 <div style={{ marginBottom: 12, padding: '10px 14px', background: 'transparent', border: `1px solid ${HAIRLINE}`, borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Lightbulb size={14} weight="duotone" color={GOLD} />
                   <span style={{ color: DIM, fontSize: 12 }}>
-                    Pays for itself in <strong style={{ color: GREEN, fontWeight: 600 }}>{paybackDays} days</strong> — Saguaro is just <strong style={{ color: TEXT, fontWeight: 600 }}>${saguaroCost}/mo flat</strong>
+                    Pays for itself in <strong style={{ color: GREEN, fontWeight: 600 }}>{paybackDays} days</strong> — Saguaro is just <strong style={{ color: TEXT, fontWeight: 600 }}>${saguaroCost}/mo flat</strong>.
                   </span>
                 </div>
 
                 <Link href="/signup" className="cta-btn">
-                  Claim this ROI — start free trial →
+                  Claim This ROI — Start Free Trial →
                 </Link>
               </div>
             </div>
@@ -678,14 +676,12 @@ export default function ROICalculatorPage() {
                 color: DIM,
                 fontSize: 11,
                 fontWeight: 500,
-                letterSpacing: 1.5,
-                textTransform: 'uppercase',
                 marginBottom: 16,
               }}>
                 Methodology
               </div>
               <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>
-                Built on real GC data
+                Built on Real GC Data
               </h2>
             </div>
 
@@ -740,14 +736,12 @@ export default function ROICalculatorPage() {
               color: DIM,
               fontSize: 11,
               fontWeight: 500,
-              letterSpacing: 1.5,
-              textTransform: 'uppercase',
               marginBottom: 16,
             }}>
               Feature Comparison
             </div>
             <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>
-              {"What's included in the $499"}
+              {"What's Included in the $499"}
             </h2>
             <p style={{ color: DIM, fontSize: 16, marginTop: 12 }}>
               Everything you need. No per-seat pricing. No hidden add-ons.
@@ -812,14 +806,12 @@ export default function ROICalculatorPage() {
               color: DIM,
               fontSize: 11,
               fontWeight: 500,
-              letterSpacing: 1.5,
-              textTransform: 'uppercase',
               marginBottom: 20,
             }}>
               Get Started Today
             </div>
             <h2 style={{ fontWeight: 600, margin: '0 0 16px', letterSpacing: -0.4, lineHeight: 1.2 }}>
-              Ready to stop leaving<br />money on the table?
+              Ready to Stop Leaving<br />Money on the Table?
             </h2>
             <p style={{ color: DIM, fontSize: 16, lineHeight: 1.6, marginBottom: 40 }}>
               Join hundreds of GCs already saving time and money with Saguaro. Start your free 30-day trial — no credit card required.
@@ -852,7 +844,7 @@ export default function ROICalculatorPage() {
                   className="cta-btn"
                   style={{ width: 'auto', maxWidth: '100%', whiteSpace: 'normal', fontSize: 15, padding: '14px 24px' }}
                 >
-                  Start my free 30-day trial
+                  Start My Free 30-Day Trial
                 </button>
               </div>
             </form>
@@ -861,7 +853,7 @@ export default function ROICalculatorPage() {
               className="trust-pills-row"
               style={{ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap' }}
             >
-              {['No credit card required', 'Cancel anytime', '30-day free trial', 'SOC 2 compliant', 'US-based support'].map((pill) => (
+              {['No Credit Card Required', 'Cancel Anytime', '30-Day Free Trial', 'SOC 2 Compliant', 'US-Based Support'].map((pill) => (
                 <span key={pill} className="trust-pill">
                   <span style={{ color: GREEN, fontSize: 10 }}>✓</span>
                   {pill}

@@ -25,16 +25,16 @@ const weatherIcon = (conditions: string): IconCmp =>
   /rain|shower|drizzle|storm|snow/i.test(conditions || '') ? CloudRain : Sun;
 
 /* ── Palette ──────────────────────────────────────────────────────── */
-const GOLD = '#F59E0B';
-const BG = '#0a0a0a';
-const RAISED = '#141416';
+const GOLD = 'var(--brand-primary)';
+const BG = 'var(--bg-base)';
+const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const TEXT = '#FFFFFF';
 const DIM = '#CBD5E1';
 const GREEN = '#22C55E';
 const RED = '#EF4444';
 const AMBER = '#F59E0B';
-const BLUE = '#F59E0B';
+const BLUE = 'var(--brand-primary)';
 const PURPLE = '#8B5CF6';
 
 /* ── Helpers ──────────────────────────────────────────────────────── */
@@ -295,7 +295,7 @@ export default function ClientPortalPage() {
       headers: { 'x-portal-token': token },
     })
       .then((r) => {
-        if (!r.ok) throw new Error('Failed to load portal');
+        if (!r.ok) throw new Error('Failed to load the portal.');
         return r.json();
       })
       .then((d: any) => {
@@ -375,7 +375,7 @@ export default function ClientPortalPage() {
             }));
           setApprovalHistory(hist);
         })
-        .catch(() => showToast('Failed to load approvals', 'error'))
+        .catch(() => showToast('Failed to load approvals.', 'error'))
         .finally(() => setApprovalsLoading(false));
     }
     if (activeTab === 'financials' && invoices.length === 0 && !finLoading) {
@@ -387,7 +387,7 @@ export default function ClientPortalPage() {
           setBudgetLines(d.budget_lines || []);
           setPayments(d.payments || []);
         })
-        .catch(() => showToast('Failed to load financials', 'error'))
+        .catch(() => showToast('Failed to load financials.', 'error'))
         .finally(() => setFinLoading(false));
     }
     if (activeTab === 'messages' && messages.length === 0 && !msgLoading) {
@@ -395,7 +395,7 @@ export default function ClientPortalPage() {
       fetch(`/api/portal/client/messages?token=${token}`, { headers: { 'x-portal-token': token } })
         .then((r) => r.json())
         .then((d) => setMessages(d.messages || []))
-        .catch(() => showToast('Failed to load messages', 'error'))
+        .catch(() => showToast('Failed to load messages.', 'error'))
         .finally(() => setMsgLoading(false));
     }
     if (activeTab === 'documents' && documents.length === 0 && !docsLoading) {
@@ -403,7 +403,7 @@ export default function ClientPortalPage() {
       fetch(`/api/portal/client/documents?token=${token}`, { headers: { 'x-portal-token': token } })
         .then((r) => r.json())
         .then((d) => setDocuments(d.documents || []))
-        .catch(() => showToast('Failed to load documents', 'error'))
+        .catch(() => showToast('Failed to load documents.', 'error'))
         .finally(() => setDocsLoading(false));
     }
     if (activeTab === 'warranty' && warrantyClaims.length === 0 && punchItems.length === 0 && !warLoading) {
@@ -414,7 +414,7 @@ export default function ClientPortalPage() {
           setWarrantyClaims(d.claims || []);
           setPunchItems(d.punch_items || []);
         })
-        .catch(() => showToast('Failed to load warranty data', 'error'))
+        .catch(() => showToast('Failed to load warranty data.', 'error'))
         .finally(() => setWarLoading(false));
     }
     if (activeTab === 'ai' && aiSummaries.length === 0 && !aiLoading) {
@@ -422,7 +422,7 @@ export default function ClientPortalPage() {
       fetch(`/api/portal/client/summary?token=${token}`, { headers: { 'x-portal-token': token } })
         .then((r) => r.json())
         .then((d) => setAiSummaries(d.summaries || []))
-        .catch(() => showToast('Failed to load AI summaries', 'error'))
+        .catch(() => showToast('Failed to load AI summaries.', 'error'))
         .finally(() => setAiLoading(false));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -519,12 +519,12 @@ export default function ClientPortalPage() {
           { id: Date.now().toString(), item_title: approvals.find((a) => a.id === id)?.title || '', action, date: new Date().toISOString(), notes: approvalNotes[id] || '' },
           ...prev,
         ]);
-        showToast(`Item ${action} successfully`);
+        showToast(`Item ${action} successfully.`);
       } else {
-        showToast(d.error || 'Failed to process', 'error');
+        showToast(d.error || 'Failed to process.', 'error');
       }
     } catch {
-      showToast('Network error', 'error');
+      showToast('Network error. Please try again.', 'error');
     }
     setProcessingApproval(null);
   };
@@ -553,17 +553,17 @@ export default function ClientPortalPage() {
         ]);
         setNewMessage('');
       } else {
-        showToast('Failed to send message', 'error');
+        showToast('Failed to send message.', 'error');
       }
     } catch {
-      showToast('Network error', 'error');
+      showToast('Network error. Please try again.', 'error');
     }
     setSendingMsg(false);
   };
 
   const submitWarrantyClaim = async () => {
     if (!newClaim.description.trim() || !newClaim.location.trim()) {
-      showToast('Please fill in all required fields', 'error');
+      showToast('Please fill in all required fields.', 'error');
       return;
     }
     setSubmittingClaim(true);
@@ -586,12 +586,12 @@ export default function ClientPortalPage() {
           ...prev,
         ]);
         setNewClaim({ description: '', category: 'Plumbing', location: '' });
-        showToast('Warranty claim submitted');
+        showToast('Warranty claim submitted.');
       } else {
-        showToast(d.error || 'Failed to submit claim', 'error');
+        showToast(d.error || 'Failed to submit claim.', 'error');
       }
     } catch {
-      showToast('Network error', 'error');
+      showToast('Network error. Please try again.', 'error');
     }
     setSubmittingClaim(false);
   };
@@ -599,7 +599,7 @@ export default function ClientPortalPage() {
   const makePayment = async () => {
     const amount = parseFloat(paymentAmount);
     if (isNaN(amount) || amount <= 0) {
-      showToast('Enter a valid payment amount', 'error');
+      showToast('Enter a valid payment amount.', 'error');
       return;
     }
     setPaymentProcessing(true);
@@ -616,12 +616,12 @@ export default function ClientPortalPage() {
           ...prev,
         ]);
         setPaymentAmount('');
-        showToast('Payment recorded successfully');
+        showToast('Payment recorded successfully.');
       } else {
-        showToast(d.error || 'Payment failed', 'error');
+        showToast(d.error || 'Payment failed.', 'error');
       }
     } catch {
-      showToast('Network error', 'error');
+      showToast('Network error. Please try again.', 'error');
     }
     setPaymentProcessing(false);
   };
@@ -637,12 +637,12 @@ export default function ClientPortalPage() {
       const d = await res.json();
       if (d.summary) {
         setAiSummaries((prev) => [d.summary, ...prev]);
-        showToast('Summary generated');
+        showToast('Summary generated.');
       } else {
-        showToast(d.error || 'Failed to generate summary', 'error');
+        showToast(d.error || 'Failed to generate summary.', 'error');
       }
     } catch {
-      showToast('Network error', 'error');
+      showToast('Network error. Please try again.', 'error');
     }
     setGeneratingAi(false);
   };
@@ -656,10 +656,10 @@ export default function ClientPortalPage() {
         body: JSON.stringify({ token, action: 'email', summary_id: summaryId }),
       });
       const d = await res.json();
-      if (d.success) showToast('Summary emailed successfully');
-      else showToast(d.error || 'Failed to send email', 'error');
+      if (d.success) showToast('Summary emailed successfully.');
+      else showToast(d.error || 'Failed to send email.', 'error');
     } catch {
-      showToast('Network error', 'error');
+      showToast('Network error. Please try again.', 'error');
     }
     setEmailSending(false);
   };
@@ -674,18 +674,18 @@ export default function ClientPortalPage() {
       const d = await res.json();
       if (d.success) {
         setPunchItems((prev) => prev.map((p) => (p.id === id ? { ...p, status: 'signed_off' as const } : p)));
-        showToast('Punch item signed off');
+        showToast('Punch item signed off.');
       } else {
-        showToast(d.error || 'Failed', 'error');
+        showToast(d.error || 'Failed to sign off this item.', 'error');
       }
     } catch {
-      showToast('Network error', 'error');
+      showToast('Network error. Please try again.', 'error');
     }
   };
 
   const submitChangeRequest = async () => {
     if (!changeRequestForm.title.trim() || !changeRequestForm.description.trim()) {
-      showToast('Please fill in title and description', 'error');
+      showToast('Please fill in the title and description.', 'error');
       return;
     }
     setSubmittingChangeRequest(true);
@@ -704,13 +704,13 @@ export default function ClientPortalPage() {
       if (!d.error) {
         setChangeRequestForm({ title: '', description: '', estimated_amount: '' });
         setShowChangeRequest(false);
-        showToast('Change request submitted successfully');
+        showToast('Change request submitted successfully.');
         setCoSummary((prev) => ({ ...prev, pending: prev.pending + 1 }));
       } else {
-        showToast(d.error || 'Failed to submit change request', 'error');
+        showToast(d.error || 'Failed to submit change request.', 'error');
       }
     } catch {
-      showToast('Network error', 'error');
+      showToast('Network error. Please try again.', 'error');
     }
     setSubmittingChangeRequest(false);
   };
@@ -853,7 +853,7 @@ export default function ClientPortalPage() {
 
   const btnPrimary: React.CSSProperties = {
     background: GOLD,
-    color: '#1C1C1E',
+    color: '#0A0A00',
     border: 'none',
     borderRadius: 8,
     padding: '10px 20px',
@@ -921,20 +921,17 @@ export default function ClientPortalPage() {
     color: DIM,
     marginBottom: 6,
     display: 'block',
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.5,
   };
 
   const badgeStyle = (color: string): React.CSSProperties => ({
     display: 'inline-block',
-    background: `${color}20`,
+    background: `color-mix(in srgb, ${color} 13%, transparent)`,
     color,
     padding: '4px 10px',
     borderRadius: 20,
     fontSize: 11,
     fontWeight: 700,
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.5,
+    textTransform: 'capitalize' as const,
   });
 
   const statusColor = (s: string) => {
@@ -953,7 +950,7 @@ export default function ClientPortalPage() {
       <div style={{ minHeight: '100vh', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui, sans-serif' }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ width: 48, height: 48, border: `3px solid ${BORDER}`, borderTopColor: GOLD, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
-          <div style={{ color: DIM, fontSize: 16 }}>Loading your project portal...</div>
+          <div style={{ color: DIM, fontSize: 16 }}>Loading your project portal…</div>
           <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
         </div>
       </div>
@@ -980,7 +977,7 @@ export default function ClientPortalPage() {
   const LoadingBlock = () => (
     <div style={{ textAlign: 'center', padding: 64 }}>
       <div style={{ width: 36, height: 36, border: `3px solid ${BORDER}`, borderTopColor: GOLD, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 12px' }} />
-      <div style={{ color: DIM, fontSize: 14 }}>Loading...</div>
+      <div style={{ color: DIM, fontSize: 14 }}>Loading…</div>
     </div>
   );
 
@@ -1054,10 +1051,10 @@ export default function ClientPortalPage() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       {/* Welcome Banner */}
       <div style={{ ...cardStyle, background: `linear-gradient(135deg, ${RAISED} 0%, #1c1c1e 100%)`, position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: '50%', background: `${GOLD}10` }} />
-        <div style={{ position: 'absolute', bottom: -20, right: 40, width: 80, height: 80, borderRadius: '50%', background: `${GOLD}08` }} />
+        <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: '50%', background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)' }} />
+        <div style={{ position: 'absolute', bottom: -20, right: 40, width: 80, height: 80, borderRadius: '50%', background: 'color-mix(in srgb, var(--brand-primary) 3%, transparent)' }} />
         <div style={{ position: 'relative' }}>
-          <div style={{ fontSize: 12, color: GOLD, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Welcome to Your Project</div>
+          <div style={{ fontSize: 12, color: GOLD, fontWeight: 700, marginBottom: 6 }}>Welcome to Your Project</div>
           <div style={{ fontSize: 28, fontWeight: 800, color: TEXT, marginBottom: 4 }}>{project.name}</div>
           <div style={{ fontSize: 14, color: DIM, marginBottom: 16 }}>
             {project.address}{project.city ? `, ${project.city}` : ''}{project.state ? `, ${project.state}` : ''}
@@ -1069,7 +1066,7 @@ export default function ClientPortalPage() {
               <span style={{ fontSize: 13, fontWeight: 700, color: GOLD }}>{project.percent_complete}%</span>
             </div>
             <div style={{ height: 8, background: BG, borderRadius: 4, overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${project.percent_complete}%`, background: `linear-gradient(90deg, ${GOLD}, #E8B82E)`, borderRadius: 4, transition: 'width 1s ease' }} />
+              <div style={{ height: '100%', width: `${project.percent_complete}%`, background: `linear-gradient(90deg, ${GOLD}, var(--brand-primary-strong))`, borderRadius: 4, transition: 'width 1s ease' }} />
             </div>
           </div>
         </div>
@@ -1086,7 +1083,7 @@ export default function ClientPortalPage() {
           <div key={stat.label} style={{ ...cardStyle, padding: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <stat.icon size={22} weight="duotone" color={stat.color} />
-              <span style={{ fontSize: 10, fontWeight: 700, color: stat.color, textTransform: 'uppercase', letterSpacing: 0.5 }}>{stat.label}</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: stat.color }}>{stat.label}</span>
             </div>
             <div style={{ fontSize: 24, fontWeight: 800, color: TEXT }}>{stat.value}</div>
           </div>
@@ -1175,7 +1172,7 @@ export default function ClientPortalPage() {
                 <div style={{ minWidth: 160, fontSize: 13, fontWeight: 600, color: TEXT }}>{phase.name}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <span style={{ fontSize: 11, color: DIM }}>{fmtDate(phase.start)} - {fmtDate(phase.end)}</span>
+                    <span style={{ fontSize: 11, color: DIM }}>{fmtDate(phase.start)} – {fmtDate(phase.end)}</span>
                     <span style={{ fontSize: 11, fontWeight: 700, color: phase.percent_complete === 100 ? GREEN : GOLD }}>{phase.percent_complete}%</span>
                   </div>
                   <div style={{ height: 6, background: BG, borderRadius: 3, overflow: 'hidden' }}>
@@ -1260,7 +1257,7 @@ export default function ClientPortalPage() {
                       <label style={labelStyle}>Add Notes (Optional)</label>
                       <textarea
                         style={textareaStyle}
-                        placeholder="Enter any notes or conditions for this approval..."
+                        placeholder="Enter any notes or conditions for this approval…"
                         value={approvalNotes[item.id] || ''}
                         onChange={(e) => setApprovalNotes({ ...approvalNotes, [item.id]: e.target.value })}
                       />
@@ -1273,14 +1270,14 @@ export default function ClientPortalPage() {
                         disabled={processingApproval === item.id}
                         onClick={() => handleApproval(item.id, 'approved')}
                       >
-                        {processingApproval === item.id ? 'Processing...' : <><Check size={14} weight="bold" /> Approve</>}
+                        {processingApproval === item.id ? 'Processing…' : <><Check size={14} weight="bold" /> Approve</>}
                       </button>
                       <button
                         style={{ ...btnDanger, opacity: processingApproval === item.id ? 0.6 : 1 }}
                         disabled={processingApproval === item.id}
                         onClick={() => handleApproval(item.id, 'rejected')}
                       >
-                        {processingApproval === item.id ? 'Processing...' : <><X size={14} weight="bold" /> Reject</>}
+                        {processingApproval === item.id ? 'Processing…' : <><X size={14} weight="bold" /> Reject</>}
                       </button>
                     </div>
                   </div>
@@ -1322,7 +1319,7 @@ export default function ClientPortalPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {approvalHistory.map((h) => (
                 <div key={h.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${BORDER}` }}>
-                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: `${statusColor(h.action)}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: `color-mix(in srgb, ${statusColor(h.action)} 13%, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     {h.action === 'approved' ? <Check size={15} weight="bold" color={GREEN} /> : <X size={15} weight="bold" color={RED} />}
                   </div>
                   <div style={{ flex: 1 }}>
@@ -1355,11 +1352,11 @@ export default function ClientPortalPage() {
           <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 20 }}>Contract Summary</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
             <div style={{ background: BG, borderRadius: 10, padding: 20, textAlign: 'center', border: `1px solid ${BORDER}` }}>
-              <div style={{ fontSize: 12, color: DIM, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Original Contract</div>
+              <div style={{ fontSize: 12, color: DIM, marginBottom: 8 }}>Original Contract</div>
               <div style={{ fontSize: 28, fontWeight: 800, color: TEXT }}>{fmt(project.original_contract)}</div>
             </div>
             <div style={{ background: BG, borderRadius: 10, padding: 20, textAlign: 'center', border: `1px solid ${BORDER}` }}>
-              <div style={{ fontSize: 12, color: DIM, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Current Contract</div>
+              <div style={{ fontSize: 12, color: DIM, marginBottom: 8 }}>Current Contract</div>
               <div style={{ fontSize: 28, fontWeight: 800, color: GOLD }}>{fmt(project.committed_cost)}</div>
               {project.committed_cost !== project.original_contract && (
                 <div style={{ fontSize: 12, color: project.committed_cost > project.original_contract ? RED : GREEN, marginTop: 4 }}>
@@ -1368,7 +1365,7 @@ export default function ClientPortalPage() {
               )}
             </div>
             <div style={{ background: BG, borderRadius: 10, padding: 20, textAlign: 'center', border: `1px solid ${BORDER}` }}>
-              <div style={{ fontSize: 12, color: DIM, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Projected Final Cost</div>
+              <div style={{ fontSize: 12, color: DIM, marginBottom: 8 }}>Projected Final Cost</div>
               <div style={{ fontSize: 28, fontWeight: 800, color: projectedFinal > project.original_contract ? AMBER : GREEN }}>{fmt(projectedFinal)}</div>
             </div>
           </div>
@@ -1385,7 +1382,7 @@ export default function ClientPortalPage() {
                 <thead>
                   <tr>
                     {['Invoice #', 'Date', 'Due Date', 'Amount', 'Status'].map((h) => (
-                      <th key={h} style={{ textAlign: 'left', padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{h}</th>
+                      <th key={h} style={{ textAlign: 'left', padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 11, fontWeight: 700 }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -1413,7 +1410,7 @@ export default function ClientPortalPage() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {/* Header row */}
-              <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 100px 100px 100px 100px 100px', gap: 8, padding: '8px 12px', fontSize: 11, color: DIM, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: `1px solid ${BORDER}` }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 100px 100px 100px 100px 100px', gap: 8, padding: '8px 12px', fontSize: 11, color: DIM, fontWeight: 700, borderBottom: `1px solid ${BORDER}` }}>
                 <div>Code</div><div>Description</div><div style={{ textAlign: 'right' }}>Original</div><div style={{ textAlign: 'right' }}>Changes</div><div style={{ textAlign: 'right' }}>Current</div><div style={{ textAlign: 'right' }}>Spent</div><div style={{ textAlign: 'right' }}>Remaining</div>
               </div>
               {budgetLines.map((line) => (
@@ -1436,7 +1433,7 @@ export default function ClientPortalPage() {
                     <div style={{ textAlign: 'right', color: line.remaining < 0 ? RED : GREEN }}>{fmt(line.remaining)}</div>
                   </div>
                   {expandedBudget[line.id] && (
-                    <div style={{ padding: '12px 24px', background: `${BG}80`, borderBottom: `1px solid ${BORDER}22` }}>
+                    <div style={{ padding: '12px 24px', background: 'color-mix(in srgb, var(--bg-base) 50%, transparent)', borderBottom: `1px solid ${BORDER}22` }}>
                       <div style={{ display: 'flex', gap: 24, fontSize: 12, color: DIM }}>
                         <div>Committed: <span style={{ color: TEXT, fontWeight: 600 }}>{fmt(line.committed)}</span></div>
                         <div>% Complete: <span style={{ color: GOLD, fontWeight: 600 }}>{line.current > 0 ? pct(line.spent, line.current) : 0}%</span></div>
@@ -1471,7 +1468,7 @@ export default function ClientPortalPage() {
               disabled={paymentProcessing}
               onClick={makePayment}
             >
-              {paymentProcessing ? 'Processing...' : <><CreditCard size={15} weight="bold" /> Submit Payment</>}
+              {paymentProcessing ? 'Processing…' : <><CreditCard size={15} weight="bold" /> Submit Payment</>}
             </button>
           </div>
         </div>
@@ -1487,7 +1484,7 @@ export default function ClientPortalPage() {
                 <thead>
                   <tr>
                     {['Date', 'Amount', 'Method', 'Reference'].map((h) => (
-                      <th key={h} style={{ textAlign: 'left', padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>{h}</th>
+                      <th key={h} style={{ textAlign: 'left', padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 11, fontWeight: 700 }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -1534,17 +1531,17 @@ export default function ClientPortalPage() {
               >
                 <div style={{
                   maxWidth: '70%',
-                  background: msg.sender_type === 'client' ? `${GOLD}20` : `${BORDER}80`,
+                  background: msg.sender_type === 'client' ? 'color-mix(in srgb, var(--brand-primary) 13%, transparent)' : `${BORDER}80`,
                   borderRadius: msg.sender_type === 'client' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                   padding: '12px 16px',
-                  border: `1px solid ${msg.sender_type === 'client' ? GOLD + '30' : BORDER}`,
+                  border: `1px solid ${msg.sender_type === 'client' ? `color-mix(in srgb, ${GOLD} 19%, transparent)` : BORDER}`,
                 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: msg.sender_type === 'client' ? GOLD : BLUE, marginBottom: 4 }}>
                     {msg.sender}
                   </div>
                   <div style={{ fontSize: 14, color: TEXT, lineHeight: 1.5 }}>{msg.text}</div>
                   {msg.attachment && (
-                    <div style={{ marginTop: 8, padding: '6px 10px', background: `${BG}80`, borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ marginTop: 8, padding: '6px 10px', background: 'color-mix(in srgb, var(--bg-base) 50%, transparent)', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                       <Paperclip size={13} weight="bold" color={DIM} />
                       <span style={{ fontSize: 12, color: BLUE }}>{msg.attachment.name}</span>
                     </div>
@@ -1571,7 +1568,7 @@ export default function ClientPortalPage() {
             background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 8, padding: 8,
             position: 'relative', marginBottom: 8, zIndex: 10,
           }}>
-            <div style={{ fontSize: 11, color: DIM, padding: '4px 8px', fontWeight: 700, textTransform: 'uppercase' }}>Mention</div>
+            <div style={{ fontSize: 11, color: DIM, padding: '4px 8px', fontWeight: 700 }}>Mention</div>
             {mentionList.map((name) => (
               <div
                 key={name}
@@ -1591,14 +1588,14 @@ export default function ClientPortalPage() {
           <button
             style={{ ...btnOutline, padding: '10px 14px', flexShrink: 0 }}
             onClick={() => showToast('File attachments aren’t available from the client portal yet. Please email your contractor to share files.', 'error')}
-            title="Attach file"
+            title="Attach File"
           >
             <Paperclip size={16} weight="bold" />
           </button>
           <div style={{ flex: 1, position: 'relative' }}>
             <textarea
               style={{ ...inputStyle, minHeight: 44, maxHeight: 120, resize: 'none' }}
-              placeholder="Type a message... (use @ to mention)"
+              placeholder="Type a message… (use @ to mention)"
               value={newMessage}
               onChange={(e) => handleMessageInput(e.target.value)}
               onKeyDown={(e) => {
@@ -1614,7 +1611,7 @@ export default function ClientPortalPage() {
             disabled={sendingMsg || !newMessage.trim()}
             onClick={sendMessage}
           >
-            {sendingMsg ? '...' : <><PaperPlaneTilt size={14} weight="fill" /> Send</>}
+            {sendingMsg ? '…' : <><PaperPlaneTilt size={14} weight="fill" /> Send</>}
           </button>
         </div>
       </div>
@@ -1654,7 +1651,7 @@ export default function ClientPortalPage() {
                 padding: '8px 16px',
                 borderRadius: 8,
                 border: `1px solid ${docCategory === cat ? GOLD : BORDER}`,
-                background: docCategory === cat ? `${GOLD}20` : 'transparent',
+                background: docCategory === cat ? 'color-mix(in srgb, var(--brand-primary) 13%, transparent)' : 'transparent',
                 color: docCategory === cat ? GOLD : DIM,
                 fontSize: 13,
                 fontWeight: 600,
@@ -1676,7 +1673,7 @@ export default function ClientPortalPage() {
               <div key={doc.id} style={{ ...cardStyle, padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                   <div style={{
-                    width: 44, height: 44, borderRadius: 8, background: `${BLUE}20`,
+                    width: 44, height: 44, borderRadius: 8, background: 'color-mix(in srgb, var(--brand-primary) 13%, transparent)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0,
                   }}>
                     {doc.category === 'Drawings' ? <Ruler size={18} weight="duotone" color={GOLD} /> : doc.category === 'Contracts' ? <FileText size={18} weight="duotone" color={GOLD} /> : doc.category === 'Specs' ? <ClipboardText size={18} weight="duotone" color={GOLD} /> : doc.category === 'Submittals' ? <Files size={18} weight="duotone" color={GOLD} /> : doc.category === 'Permits' ? <Certificate size={18} weight="duotone" color={GOLD} /> : doc.category === 'Lien Waivers' ? <Signature size={18} weight="duotone" color={GOLD} /> : doc.category === 'Photos' ? <Camera size={18} weight="duotone" color={GOLD} /> : <FolderOpen size={18} weight="duotone" color={GOLD} />}
@@ -1752,7 +1749,7 @@ export default function ClientPortalPage() {
               <label style={labelStyle}>Location</label>
               <input
                 style={inputStyle}
-                placeholder="e.g., Kitchen, Master Bath..."
+                placeholder="e.g., Kitchen, Master Bath…"
                 value={newClaim.location}
                 onChange={(e) => setNewClaim({ ...newClaim, location: e.target.value })}
               />
@@ -1762,7 +1759,7 @@ export default function ClientPortalPage() {
             <label style={labelStyle}>Description</label>
             <textarea
               style={textareaStyle}
-              placeholder="Describe the issue in detail..."
+              placeholder="Describe the issue in detail…"
               value={newClaim.description}
               onChange={(e) => setNewClaim({ ...newClaim, description: e.target.value })}
             />
@@ -1779,7 +1776,7 @@ export default function ClientPortalPage() {
               disabled={submittingClaim}
               onClick={submitWarrantyClaim}
             >
-              {submittingClaim ? 'Submitting...' : 'Submit Claim'}
+              {submittingClaim ? 'Submitting…' : 'Submit Claim'}
             </button>
           </div>
         </div>
@@ -1863,7 +1860,7 @@ export default function ClientPortalPage() {
                 <div key={item.id} style={{ ...cardStyle, padding: 16, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
                   <div style={{
                     width: 40, height: 40, borderRadius: '50%',
-                    background: item.status === 'signed_off' ? `${GREEN}20` : item.status === 'completed' ? `${BLUE}20` : `${AMBER}20`,
+                    background: item.status === 'signed_off' ? `${GREEN}20` : item.status === 'completed' ? 'color-mix(in srgb, var(--brand-primary) 13%, transparent)' : `${AMBER}20`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
                     <span style={{ fontSize: 16 }}>
@@ -1908,7 +1905,7 @@ export default function ClientPortalPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <div style={{ fontSize: 20, fontWeight: 700, color: TEXT }}>AI Project Summaries</div>
-            <div style={{ fontSize: 13, color: DIM, marginTop: 4 }}>Weekly AI-generated insights about your project</div>
+            <div style={{ fontSize: 13, color: DIM, marginTop: 4 }}>Weekly AI-generated insights about your project.</div>
           </div>
           <button
             style={{ ...btnPrimary, display: 'flex', alignItems: 'center', gap: 8, opacity: generatingAi ? 0.6 : 1 }}
@@ -1918,7 +1915,7 @@ export default function ClientPortalPage() {
             {generatingAi ? (
               <>
                 <div style={{ width: 14, height: 14, border: '2px solid rgba(0,0,0,.3)', borderTopColor: BG, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-                Generating...
+                Generating…
               </>
             ) : (
               <><Sparkle size={15} weight="fill" /> Generate Summary</>
@@ -1945,7 +1942,7 @@ export default function ClientPortalPage() {
                     disabled={emailSending}
                     onClick={() => emailSummary(summary.id)}
                   >
-                    {emailSending ? 'Sending...' : <><EnvelopeSimple size={15} weight="bold" /> Send to Email</>}
+                    {emailSending ? 'Sending…' : <><EnvelopeSimple size={15} weight="bold" /> Send to Email</>}
                   </button>
                 </div>
 
@@ -2042,8 +2039,8 @@ export default function ClientPortalPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Cactus size={26} weight="fill" color={GOLD} />
             <div>
-              <div style={{ fontWeight: 800, fontSize: 16, color: GOLD, letterSpacing: 1.5, lineHeight: 1 }}>SAGUARO</div>
-              <div style={{ fontSize: 9, color: DIM, letterSpacing: 2, textTransform: 'uppercase' }}>Client Portal</div>
+              <div style={{ fontWeight: 800, fontSize: 16, color: GOLD, lineHeight: 1 }}>Saguaro</div>
+              <div style={{ fontSize: 9, color: DIM }}>Client Portal</div>
             </div>
           </div>
 
@@ -2054,7 +2051,7 @@ export default function ClientPortalPage() {
               <div style={{ fontSize: 11, color: DIM }}>{project.client_name}{project.company_name ? ` · ${project.company_name}` : ''}</div>
             </div>
             <div style={{
-              width: 38, height: 38, borderRadius: '50%', background: `${GOLD}20`, border: `2px solid ${GOLD}`,
+              width: 38, height: 38, borderRadius: '50%', background: 'color-mix(in srgb, var(--brand-primary) 13%, transparent)', border: `2px solid ${GOLD}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: GOLD,
             }}>
               {(project.client_name || 'C').charAt(0)}
@@ -2118,7 +2115,7 @@ export default function ClientPortalPage() {
               )}
               {tab.id === 'approvals' && pendingApprovalCount > 0 && (
                 <span style={{
-                  background: AMBER, color: '#1C1C1E', fontSize: 10, fontWeight: 800,
+                  background: AMBER, color: '#0A0A00', fontSize: 10, fontWeight: 800,
                   borderRadius: 10, padding: '2px 6px', minWidth: 18, textAlign: 'center',
                   lineHeight: '14px',
                 }}>
@@ -2134,7 +2131,7 @@ export default function ClientPortalPage() {
       {mobileMenuOpen && (
         <div style={{
           position: 'fixed', top: 64, left: 0, right: 0, bottom: 0,
-          background: `${BG}F0`, zIndex: 98, padding: 24,
+          background: 'color-mix(in srgb, var(--bg-base) 94%, transparent)', zIndex: 98, padding: 24,
           animation: 'fadeIn .2s ease',
         }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -2144,7 +2141,7 @@ export default function ClientPortalPage() {
                 onClick={() => { setActiveTab(tab.id); setMobileMenuOpen(false); }}
                 style={{
                   padding: '16px 20px',
-                  background: activeTab === tab.id ? `${GOLD}15` : 'transparent',
+                  background: activeTab === tab.id ? 'color-mix(in srgb, var(--brand-primary) 8%, transparent)' : 'transparent',
                   border: `1px solid ${activeTab === tab.id ? GOLD : BORDER}`,
                   borderRadius: 10,
                   color: activeTab === tab.id ? GOLD : TEXT,
@@ -2176,7 +2173,7 @@ export default function ClientPortalPage() {
       {showChangeRequest && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: '#0a0a0a', zIndex: 300,
+          background: 'var(--bg-base)', zIndex: 300,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           padding: 24,
         }}
@@ -2209,7 +2206,7 @@ export default function ClientPortalPage() {
                 <label style={labelStyle}>Description *</label>
                 <textarea
                   style={textareaStyle}
-                  placeholder="Describe the change you'd like to make..."
+                  placeholder="Describe the change you'd like to make…"
                   value={changeRequestForm.description}
                   onChange={(e) => setChangeRequestForm({ ...changeRequestForm, description: e.target.value })}
                 />
@@ -2231,7 +2228,7 @@ export default function ClientPortalPage() {
                   disabled={submittingChangeRequest}
                   onClick={submitChangeRequest}
                 >
-                  {submittingChangeRequest ? 'Submitting...' : 'Submit Request'}
+                  {submittingChangeRequest ? 'Submitting…' : 'Submit Request'}
                 </button>
               </div>
             </div>
@@ -2267,7 +2264,7 @@ export default function ClientPortalPage() {
             height: 48,
             borderRadius: '50%',
             background: GOLD,
-            color: '#1C1C1E',
+            color: '#0A0A00',
             border: 'none',
             fontSize: 20,
             fontWeight: 800,
@@ -2280,7 +2277,7 @@ export default function ClientPortalPage() {
             animation: 'fadeIn .2s ease',
             transition: 'transform .2s',
           }}
-          title="Scroll to top"
+          title="Scroll to Top"
           onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.1)')}
           onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
         >
@@ -2317,7 +2314,7 @@ export default function ClientPortalPage() {
                 height: 40,
                 borderRadius: 8,
                 border: 'none',
-                background: activeTab === qa.tab ? `${GOLD}30` : 'transparent',
+                background: activeTab === qa.tab ? 'color-mix(in srgb, var(--brand-primary) 19%, transparent)' : 'transparent',
                 cursor: 'pointer',
                 fontSize: 18,
                 display: 'flex',
@@ -2386,7 +2383,7 @@ export default function ClientPortalPage() {
           {/* Keyboard shortcuts hint */}
           <div style={{ textAlign: 'center', marginTop: 12 }}>
             <span style={{ fontSize: 10, color: `${DIM}40` }}>
-              Tip: Use Alt+1 through Alt+7 to quickly switch tabs
+              Tip: Use Alt+1 through Alt+7 to quickly switch tabs.
             </span>
           </div>
         </div>

@@ -2,13 +2,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 
-const BG = '#0a0a0a';
-const CARD = '#141416';
+const BG = 'var(--bg-base)';
+const CARD = 'var(--bg-surface)';
 const BORDER_LT = 'rgba(255,255,255,0.12)';
 const TEXT_DARK = '#FFFFFF';
 const TEXT_MED = '#F1F5F9';
 const TEXT_DIM = '#CBD5E1';
-const GOLD = '#F59E0B';
+const GOLD = 'var(--brand-primary)';
 const GREEN = '#16a34a';
 const RED = '#dc2626';
 
@@ -58,7 +58,7 @@ export default function PublicSigningPage() {
         const res = await fetch(`/api/documents/sign/verify?token=${encodeURIComponent(token)}`);
         const data = await res.json();
         if (!res.ok || !data.valid) {
-          setErrorMsg(data.error || 'Invalid or expired signing link');
+          setErrorMsg(data.error || 'Invalid or expired signing link.');
           setPageState('error');
           return;
         }
@@ -67,7 +67,7 @@ export default function PublicSigningPage() {
         setCompanyName(data.company_name || '');
         setPageState('ready');
       } catch {
-        setErrorMsg('Failed to load signing request');
+        setErrorMsg('Failed to load signing request.');
         setPageState('error');
       }
     })();
@@ -186,10 +186,10 @@ export default function PublicSigningPage() {
         body: JSON.stringify({ token, signature_data: sigData }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to sign');
+      if (!res.ok) throw new Error(data.error || 'Failed to sign.');
       setPageState('signed');
     } catch (e: any) {
-      setErrorMsg(e.message || 'Failed to sign document');
+      setErrorMsg(e.message || 'Failed to sign document.');
     } finally {
       setSigning(false);
     }
@@ -203,7 +203,7 @@ export default function PublicSigningPage() {
       <div style={{ minHeight: '100vh', background: BG, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ width: 36, height: 36, border: `3px solid ${BORDER_LT}`, borderTopColor: GOLD, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 12px' }} />
-          <p style={{ margin: 0, color: TEXT_DIM, fontSize: 14 }}>Loading document...</p>
+          <p style={{ margin: 0, color: TEXT_DIM, fontSize: 14 }}>Loading document…</p>
           <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
         </div>
       </div>
@@ -266,12 +266,12 @@ export default function PublicSigningPage() {
           <h2 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 700, color: TEXT_DARK }}>{signature?.doc_title}</h2>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 12 }}>
             <div>
-              <span style={{ fontSize: 11, fontWeight: 700, color: TEXT_DIM, textTransform: 'uppercase', letterSpacing: 0.5 }}>Signer</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: TEXT_DIM }}>Signer</span>
               <p style={{ margin: '2px 0 0', fontSize: 14, color: TEXT_DARK }}>{signature?.signer_name}</p>
             </div>
             {signature?.signer_company && (
               <div>
-                <span style={{ fontSize: 11, fontWeight: 700, color: TEXT_DIM, textTransform: 'uppercase', letterSpacing: 0.5 }}>Company</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: TEXT_DIM }}>Company</span>
                 <p style={{ margin: '2px 0 0', fontSize: 14, color: TEXT_DARK }}>{signature.signer_company}</p>
               </div>
             )}
@@ -281,7 +281,7 @@ export default function PublicSigningPage() {
               href={signature.pdf_url}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: 'rgba(245, 158, 11,.06)', border: `1px solid rgba(245, 158, 11,.2)`, borderRadius: 8, color: GOLD, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', border: '1px solid var(--brand-primary-18)', borderRadius: 8, color: GOLD, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -295,7 +295,7 @@ export default function PublicSigningPage() {
         {/* Message */}
         {request?.message && (
           <div style={{ background: CARD, border: `1px solid ${BORDER_LT}`, borderRadius: 12, padding: 16, marginBottom: 16, boxShadow: '0 1px 4px rgba(0,0,0,.04)' }}>
-            <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: TEXT_DIM, textTransform: 'uppercase', letterSpacing: 0.5 }}>Message</p>
+            <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: TEXT_DIM }}>Message</p>
             <p style={{ margin: 0, fontSize: 14, color: TEXT_DARK, whiteSpace: 'pre-wrap' }}>{request.message}</p>
           </div>
         )}
@@ -393,11 +393,11 @@ export default function PublicSigningPage() {
           style={{
             width: '100%', padding: '14px', border: 'none', borderRadius: 10,
             background: canSign && !signing ? GOLD : '#5B677A',
-            color: canSign && !signing ? '#000' : '#94a3b8',
+            color: canSign && !signing ? '#0A0A00' : '#94a3b8',
             fontSize: 15, fontWeight: 800, cursor: canSign && !signing ? 'pointer' : 'not-allowed',
           }}
         >
-          {signing ? 'Signing...' : 'Sign Document'}
+          {signing ? 'Signing…' : 'Sign Document'}
         </button>
 
         {/* Footer */}

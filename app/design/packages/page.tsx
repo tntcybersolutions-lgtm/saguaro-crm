@@ -4,12 +4,12 @@ import Link from 'next/link';
 import { Check } from '@phosphor-icons/react';
 
 /* ─── Palette ─── */
-const BG = '#0a0a0a', CARD = '#141416', GOLD = '#F59E0B', GREEN = '#34C759';
-const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#CBD5E1', DARK = '#0a0a0a';
-const BLUE = '#F59E0B', PURPLE = '#AF52DE', AMBER = '#FF9500';
+const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#34C759';
+const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#CBD5E1', DARK = 'var(--bg-base)';
+const BLUE = 'var(--brand-primary)', PURPLE = '#AF52DE', AMBER = '#FF9500';
 
 const glass: React.CSSProperties = {
-  background: `${CARD}CC`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+  background: `color-mix(in srgb, ${CARD} 80%, transparent)`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
   border: `1px solid ${BORDER}`, borderRadius: 16,
 };
 
@@ -121,7 +121,7 @@ function ComfortRing({ score, color }: { score: number; color: string }) {
       <circle cx="45" cy="45" r={r} fill="none" stroke={BORDER} strokeWidth="6" />
       <circle cx="45" cy="45" r={r} fill="none" stroke={color} strokeWidth="6"
         strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round"
-        transform="rotate(-90 45 45)" style={{ transition: 'stroke-dashoffset 1s ease' }} />
+        transform="rotate(-90 45 45)" style={{ stroke: color, transition: 'stroke-dashoffset 1s ease' }} />
       <text x="45" y="45" textAnchor="middle" dominantBaseline="middle"
         fill={TEXT} fontSize="18" fontWeight="800">{score}</text>
     </svg>
@@ -197,7 +197,7 @@ export default function PackagesPage() {
           ...glass, padding: 24, marginBottom: 40, display: 'flex', gap: 12,
           alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap',
         }}>
-          <span style={{ fontSize: 14, color: DIM }}>Customize for my location:</span>
+          <span style={{ fontSize: 14, color: DIM }}>Customize for My Location:</span>
           <input
             type="text" placeholder="Enter ZIP code" value={zipCode}
             onChange={e => setZipCode(e.target.value.replace(/\D/g, '').slice(0, 5))}
@@ -207,11 +207,11 @@ export default function PackagesPage() {
             }}
           />
           <button onClick={handleCustomize} disabled={customizing || zipCode.length < 5} style={{
-            padding: '10px 24px', background: GOLD, color: '#000', border: 'none',
+            padding: '10px 24px', background: GOLD, color: '#0A0A00', border: 'none',
             borderRadius: 10, fontWeight: 700, cursor: 'pointer', fontSize: 14,
             opacity: customizing || zipCode.length < 5 ? 0.5 : 1,
           }}>
-            {customizing ? 'Customizing...' : 'Get Local Pricing'}
+            {customizing ? 'Customizing…' : 'Get Local Pricing'}
           </button>
           {customized && geoData && localApplied && (
             <span style={{ fontSize: 13, color: GREEN }}>
@@ -244,9 +244,9 @@ export default function PackagesPage() {
                 {pkg.tier === 'premium' && (
                   <div style={{
                     position: 'absolute', top: 12, right: -28, background: GOLD,
-                    color: '#000', fontSize: 11, fontWeight: 800, padding: '4px 32px',
+                    color: '#0A0A00', fontSize: 11, fontWeight: 800, padding: '4px 32px',
                     transform: 'rotate(45deg)', zIndex: 1,
-                  }}>POPULAR</div>
+                  }}>Popular</div>
                 )}
                 <div style={{
                   padding: '24px 20px 16px', borderBottom: `1px solid ${BORDER}`,
@@ -254,10 +254,10 @@ export default function PackagesPage() {
                 }}>
                   <div style={{
                     display: 'inline-block', padding: '3px 14px', borderRadius: 99,
-                    background: `${tierColor}20`, color: tierColor, fontSize: 11,
-                    fontWeight: 800, textTransform: 'uppercase', marginBottom: 8,
-                    border: `1px solid ${tierColor}40`,
-                  }}>{pkg.tier}</div>
+                    background: `color-mix(in srgb, ${tierColor} 13%, transparent)`, color: tierColor, fontSize: 11,
+                    fontWeight: 800, marginBottom: 8,
+                    border: `1px solid color-mix(in srgb, ${tierColor} 25%, transparent)`,
+                  }}>{pkg.tier ? pkg.tier.charAt(0).toUpperCase() + pkg.tier.slice(1) : pkg.tier}</div>
                   <h3 style={{ fontSize: 24, fontWeight: 800, marginBottom: 4 }}>{pkg.name}</h3>
                   <p style={{ fontSize: 13, color: DIM }}>{pkg.tagline}</p>
                 </div>
@@ -313,7 +313,7 @@ export default function PackagesPage() {
                     <div>
                       <div style={{ fontSize: 11, color: DIM }}>Price Range</div>
                       <div style={{ fontSize: 14, fontWeight: 700 }}>
-                        {fmt(pkg.price_low)} - {fmt(pkg.price_high)}
+                        {fmt(pkg.price_low)} – {fmt(pkg.price_high)}
                       </div>
                     </div>
                   </div>
@@ -322,7 +322,7 @@ export default function PackagesPage() {
                 <Link href="/design/discover" style={{ textDecoration: 'none' }}>
                   <button style={{
                     width: '100%', padding: '14px', border: 'none', borderRadius: 0,
-                    background: tierColor, color: pkg.tier === 'essential' ? '#fff' : '#000',
+                    background: tierColor, color: (pkg.tier === 'essential' || pkg.tier === 'premium') ? '#0A0A00' : '#000',
                     fontWeight: 700, fontSize: 15, cursor: 'pointer', transition: 'opacity .2s',
                   }}>
                     Get Started
@@ -354,7 +354,7 @@ export default function PackagesPage() {
               {COMPARISON_FEATURES.map((feat, fi) => (
                 <tr key={feat} style={{
                   borderBottom: `1px solid ${BORDER}`,
-                  background: fi % 2 === 0 ? 'transparent' : `${BG}40`,
+                  background: fi % 2 === 0 ? 'transparent' : `color-mix(in srgb, ${BG} 25%, transparent)`,
                 }}>
                   <td style={{ padding: '10px 16px', fontSize: 13 }}>{feat}</td>
                   {['essential', 'connected', 'premium', 'ultimate'].map(tier => (
@@ -374,7 +374,7 @@ export default function PackagesPage() {
                   <td key={p.id} style={{
                     textAlign: 'center', padding: '14px 16px', fontSize: 13, fontWeight: 700,
                   }}>
-                    {fmt(p.price_low)} - {fmt(p.price_high)}
+                    {fmt(p.price_low)} – {fmt(p.price_high)}
                   </td>
                 ))}
               </tr>

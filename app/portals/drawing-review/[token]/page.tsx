@@ -35,7 +35,9 @@ import { lengthLF, areaSF } from '@/lib/takeoff/geometry';
  */
 
 /* ── Design tokens (gold-on-black, matches the portal family) ── */
-const GOLD = '#F59E0B', DARK = '#0a0a0a', RAISED = '#141416', BORDER = 'rgba(255,255,255,0.12)', DIM = '#CBD5E1', TEXT = '#FFFFFF';
+const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)', DIM = '#CBD5E1', TEXT = '#FFFFFF';
+/* Canvas paint + the stored markup color cannot use CSS var() — keep real hex for those. */
+const GOLD_HEX = '#F59E0B', DARK_HEX = '#000000';
 
 const card = (extra?: React.CSSProperties): React.CSSProperties => ({ background: RAISED, backgroundImage: 'linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015))', border: `1px solid ${BORDER}`, borderRadius: 12, boxShadow: '0 4px 14px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.06)', ...extra });
 const zoomBtn: React.CSSProperties = { width: 34, height: 34, borderRadius: 8, border: `1px solid ${BORDER}`, background: RAISED, color: TEXT, fontSize: 16, fontWeight: 800, cursor: 'pointer', lineHeight: 1 };
@@ -288,7 +290,7 @@ const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v
 
 /* ── Wave-2 guest markup creation ───────────────────────────────────────── */
 
-const GUEST_COLOR = GOLD; // guests always mark in the house gold
+const GUEST_COLOR = GOLD_HEX; // guests always mark in the house gold
 const NAME_KEY = 'sag_review_name';
 const MINE_KEY_PREFIX = 'sag_review_mine:'; // + token -> JSON array of own row ids
 const MINE_MAX_IDS = 500; // ledger cap — oldest ids fall off first
@@ -313,7 +315,7 @@ type Draft =
 const toolBtn = (active: boolean): React.CSSProperties => ({
   padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer',
   border: `1px solid ${active ? GOLD : BORDER}`,
-  background: active ? GOLD + '22' : RAISED,
+  background: active ? `color-mix(in srgb, ${GOLD} 13%, transparent)` : RAISED,
   color: active ? GOLD : TEXT,
 });
 
@@ -418,7 +420,7 @@ export default function DrawingReviewPortalPage() {
     const ctx = cv.getContext('2d');
     if (!ctx) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.fillStyle = DARK;
+    ctx.fillStyle = DARK_HEX;
     ctx.fillRect(0, 0, cw, ch);
     if (!src) return;
 
@@ -1209,8 +1211,8 @@ export default function DrawingReviewPortalPage() {
   if (denied) return (
     <div style={{ minHeight: '100vh', background: DARK, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui,sans-serif', padding: 24 }}>
       <div style={{ textAlign: 'center', maxWidth: 440 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 22 }}>Drawing Review</div>
-        <div style={{ fontSize: 20, fontWeight: 800, color: TEXT }}>This review link is no longer active</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 22 }}>Drawing Review</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: TEXT }}>This Review Link Is No Longer Active</div>
         <div style={{ fontSize: 14, color: DIM, marginTop: 10, lineHeight: 1.6 }}>The invitation has expired or was revoked by the project team. Ask your contact at the general contractor for a fresh link.</div>
       </div>
     </div>
@@ -1221,7 +1223,7 @@ export default function DrawingReviewPortalPage() {
     <div style={{ minHeight: '100vh', background: DARK, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui,sans-serif' }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ width: 48, height: 48, border: `3px solid ${BORDER}`, borderTopColor: GOLD, borderRadius: '50%', animation: 'sgSpin 1s linear infinite', margin: '0 auto 16px' }} />
-        <div style={{ color: DIM, fontSize: 14 }}>Opening the sheet...</div>
+        <div style={{ color: DIM, fontSize: 14 }}>Opening the sheet…</div>
         <style>{`@keyframes sgSpin{to{transform:rotate(360deg)}}`}</style>
       </div>
     </div>
@@ -1247,7 +1249,7 @@ export default function DrawingReviewPortalPage() {
                 <button onClick={() => goPage(page + 1)} disabled={page >= pageCount} style={{ ...zoomBtn, width: 28, height: 28, opacity: page >= pageCount ? 0.35 : 1 }} aria-label="Next page">&rsaquo;</button>
               </div>
             )}
-            <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1, color: GOLD, background: GOLD + '14', border: `1px solid ${GOLD}44`, borderRadius: 20, padding: '5px 12px' }}>REVIEW &middot; MARKUPS ENABLED</span>
+            <span style={{ fontSize: 10, fontWeight: 800, color: GOLD, background: `color-mix(in srgb, ${GOLD} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${GOLD} 27%, transparent)`, borderRadius: 20, padding: '5px 12px' }}>Review &middot; Markups Enabled</span>
           </div>
         </div>
       </header>
@@ -1256,7 +1258,7 @@ export default function DrawingReviewPortalPage() {
       <main style={{ flex: 1, minHeight: 0, padding: 12, display: 'flex', flexDirection: 'column', maxWidth: 1200, width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
         {/* ── Guest markup toolbar ── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, paddingBottom: 10, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.5, color: DIM, textTransform: 'uppercase', marginRight: 4 }}>Add comment markup</span>
+          <span style={{ fontSize: 10, fontWeight: 800, color: DIM, marginRight: 4 }}>Add Comment Markup</span>
           <button onClick={() => selectTool(null)} style={toolBtn(tool === null)} title="Pan and zoom the sheet">Pan</button>
           {GUEST_TOOLS.map((t) => (
             <button key={t.id} onClick={() => selectTool(tool === t.id ? null : t.id)} title={t.hint} style={toolBtn(tool === t.id)}>{t.label}</button>
@@ -1279,7 +1281,7 @@ export default function DrawingReviewPortalPage() {
 
           {/* text markup input (anchored where the guest tapped) */}
           {textDraft && (
-            <div style={{ position: 'absolute', left: clamp(textDraft.sx, 8, Math.max(8, (wrapRef.current?.clientWidth || 400) - 280)), top: clamp(textDraft.sy, 8, Math.max(8, (wrapRef.current?.clientHeight || 300) - 56)), zIndex: 6, display: 'flex', gap: 6, alignItems: 'center', background: 'rgba(10,10,10,0.94)', border: `1px solid ${GOLD}66`, borderRadius: 8, padding: 6 }}>
+            <div style={{ position: 'absolute', left: clamp(textDraft.sx, 8, Math.max(8, (wrapRef.current?.clientWidth || 400) - 280)), top: clamp(textDraft.sy, 8, Math.max(8, (wrapRef.current?.clientHeight || 300) - 56)), zIndex: 6, display: 'flex', gap: 6, alignItems: 'center', background: 'rgba(10,10,10,0.94)', border: `1px solid color-mix(in srgb, ${GOLD} 40%, transparent)`, borderRadius: 8, padding: 6 }}>
               <input
                 autoFocus
                 value={textValue}
@@ -1288,7 +1290,7 @@ export default function DrawingReviewPortalPage() {
                   if (e.key === 'Enter') commitText();
                   if (e.key === 'Escape') { setTextDraft(null); setTextValue(''); }
                 }}
-                placeholder="Type a note..."
+                placeholder="Type a note…"
                 maxLength={500}
                 style={{ width: 180, background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 6, color: TEXT, fontSize: 13, padding: '6px 8px', outline: 'none' }}
               />
@@ -1305,7 +1307,7 @@ export default function DrawingReviewPortalPage() {
             const left = clamp(selected.sx, 8, Math.max(8, (wrapRef.current?.clientWidth || 400) - 320));
             const top = clamp(selected.sy + 14, 8, Math.max(8, (wrapRef.current?.clientHeight || 300) - 56));
             return (
-              <div style={{ position: 'absolute', left, top, zIndex: 7, display: 'flex', gap: 6, alignItems: 'center', background: 'rgba(10,10,10,0.94)', border: `1px solid ${GOLD}66`, borderRadius: 8, padding: 6, boxShadow: '0 6px 18px rgba(0,0,0,0.45)' }}>
+              <div style={{ position: 'absolute', left, top, zIndex: 7, display: 'flex', gap: 6, alignItems: 'center', background: 'rgba(10,10,10,0.94)', border: `1px solid color-mix(in srgb, ${GOLD} 40%, transparent)`, borderRadius: 8, padding: 6, boxShadow: '0 6px 18px rgba(0,0,0,0.45)' }}>
                 {selMode === 'edit' ? (
                   <>
                     <input
@@ -1316,7 +1318,7 @@ export default function DrawingReviewPortalPage() {
                         if (e.key === 'Enter' && editValue.trim()) void doEditSave(selected.id, editValue);
                         if (e.key === 'Escape') { setSelMode('chips'); setEditValue(''); }
                       }}
-                      placeholder="Edit your note..."
+                      placeholder="Edit your note…"
                       maxLength={500}
                       style={{ width: 200, background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 6, color: TEXT, fontSize: 13, padding: '6px 8px', outline: 'none' }}
                     />
@@ -1331,9 +1333,9 @@ export default function DrawingReviewPortalPage() {
                   </>
                 ) : (
                   <>
-                    <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1, color: GOLD, textTransform: 'uppercase', padding: '0 4px' }}>Your markup</span>
+                    <span style={{ fontSize: 10, fontWeight: 800, color: GOLD, padding: '0 4px' }}>Your Markup</span>
                     {isText && (
-                      <button onClick={() => { setEditValue(String((row.data as Record<string, unknown> | null)?.text || '')); setSelMode('edit'); }} style={toolBtn(false)}>Edit text</button>
+                      <button onClick={() => { setEditValue(String((row.data as Record<string, unknown> | null)?.text || '')); setSelMode('edit'); }} style={toolBtn(false)}>Edit Text</button>
                     )}
                     <button onClick={() => setSelMode('confirm')} style={toolBtn(false)}>Remove</button>
                     <button onClick={clearSelection} style={{ ...toolBtn(false), padding: '6px 9px' }} aria-label="Dismiss">&#10005;</button>
@@ -1345,7 +1347,7 @@ export default function DrawingReviewPortalPage() {
 
           {/* hover attribution */}
           {hoverTip && (
-            <div style={{ position: 'absolute', left: Math.min(hoverTip.x + 14, (wrapRef.current?.clientWidth || 400) - 190), top: hoverTip.y + 14, background: 'rgba(10,10,10,0.94)', border: `1px solid ${GOLD}55`, borderRadius: 8, padding: '7px 11px', pointerEvents: 'none', zIndex: 5, maxWidth: 180 }}>
+            <div style={{ position: 'absolute', left: Math.min(hoverTip.x + 14, (wrapRef.current?.clientWidth || 400) - 190), top: hoverTip.y + 14, background: 'rgba(10,10,10,0.94)', border: `1px solid color-mix(in srgb, ${GOLD} 33%, transparent)`, borderRadius: 8, padding: '7px 11px', pointerEvents: 'none', zIndex: 5, maxWidth: 180 }}>
               <div style={{ fontSize: 12, fontWeight: 800, color: GOLD, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{hoverTip.who}</div>
               <div style={{ fontSize: 10, color: DIM, marginTop: 2, textTransform: 'capitalize' }}>{hoverTip.kind} &middot; {hoverTip.when}</div>
             </div>
@@ -1355,7 +1357,7 @@ export default function DrawingReviewPortalPage() {
           <div style={{ position: 'absolute', right: 12, bottom: 12, display: 'flex', flexDirection: 'column', gap: 6, zIndex: 4 }}>
             <button onClick={() => zoomBy(1.35)} style={zoomBtn} aria-label="Zoom in">+</button>
             <button onClick={() => zoomBy(1 / 1.35)} style={zoomBtn} aria-label="Zoom out">&minus;</button>
-            <button onClick={fitView} style={{ ...zoomBtn, fontSize: 10, letterSpacing: 0.5 }} aria-label="Fit to screen">FIT</button>
+            <button onClick={fitView} style={{ ...zoomBtn, fontSize: 10 }} aria-label="Fit to screen">Fit</button>
           </div>
 
           {/* busy / error overlays */}
@@ -1363,7 +1365,7 @@ export default function DrawingReviewPortalPage() {
             <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(10,10,10,0.55)', zIndex: 3 }}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ width: 38, height: 38, border: `3px solid ${BORDER}`, borderTopColor: GOLD, borderRadius: '50%', animation: 'sgSpin 1s linear infinite', margin: '0 auto 12px' }} />
-                <div style={{ color: DIM, fontSize: 13 }}>{busy || 'Loading sheet...'}</div>
+                <div style={{ color: DIM, fontSize: 13 }}>{busy || 'Loading sheet…'}</div>
                 <style>{`@keyframes sgSpin{to{transform:rotate(360deg)}}`}</style>
               </div>
             </div>
@@ -1371,7 +1373,7 @@ export default function DrawingReviewPortalPage() {
           {loadError && (
             <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3, padding: 24 }}>
               <div style={{ textAlign: 'center', maxWidth: 380 }}>
-                <div style={{ fontSize: 16, fontWeight: 800, color: TEXT }}>Sheet unavailable</div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: TEXT }}>Sheet Unavailable</div>
                 <div style={{ fontSize: 13, color: DIM, marginTop: 8, lineHeight: 1.6 }}>{loadError}</div>
               </div>
             </div>
@@ -1396,7 +1398,7 @@ export default function DrawingReviewPortalPage() {
 
       {/* ── honest failure / status toast ── */}
       {toast && (
-        <div style={{ position: 'fixed', left: '50%', bottom: 24, transform: 'translateX(-50%)', zIndex: 30, background: 'rgba(10,10,10,0.96)', border: `1px solid ${toast.kind === 'err' ? '#EF444488' : GOLD + '88'}`, borderRadius: 10, padding: '10px 16px', color: TEXT, fontSize: 13, fontWeight: 600, maxWidth: '90vw', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}>
+        <div style={{ position: 'fixed', left: '50%', bottom: 24, transform: 'translateX(-50%)', zIndex: 30, background: 'rgba(10,10,10,0.96)', border: `1px solid ${toast.kind === 'err' ? '#EF444488' : `color-mix(in srgb, ${GOLD} 53%, transparent)`}`, borderRadius: 10, padding: '10px 16px', color: TEXT, fontSize: 13, fontWeight: 600, maxWidth: '90vw', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}>
           {toast.msg}
         </div>
       )}
@@ -1421,7 +1423,7 @@ export default function DrawingReviewPortalPage() {
             />
             <div style={{ display: 'flex', gap: 8, marginTop: 14, justifyContent: 'flex-end' }}>
               <button onClick={() => { setNamePrompt(false); pendingToolRef.current = null; }} style={toolBtn(false)}>Cancel</button>
-              <button onClick={saveGuestName} disabled={!nameInput.trim()} style={{ ...toolBtn(true), opacity: nameInput.trim() ? 1 : 0.5 }}>Start marking up</button>
+              <button onClick={saveGuestName} disabled={!nameInput.trim()} style={{ ...toolBtn(true), opacity: nameInput.trim() ? 1 : 0.5 }}>Start Marking Up</button>
             </div>
           </div>
         </div>

@@ -5,12 +5,12 @@ import Link from 'next/link';
 import { Money, CalendarBlank, Robot, DeviceMobile, FileText, HardHat } from '@phosphor-icons/react';
 import type { Icon } from '@phosphor-icons/react';
 
-const DARK = '#0a0a0a';
-const GOLD = '#F59E0B';
+const DARK = 'var(--bg-base)';
+const GOLD = 'var(--brand-primary)';
 const TEXT = '#FFFFFF';
 const DIM = '#CBD5E1';
 const BORDER = 'rgba(255,255,255,0.12)';
-const RAISED = '#141416';
+const RAISED = 'var(--bg-surface)';
 const GREEN = '#22c55e';
 const RED = '#ef4444';
 
@@ -64,7 +64,7 @@ export default function SwitchFromProcorePage() {
         }
         .btn-amber {
           background: ${GOLD};
-          color: #0a0a0a;
+          color: #0A0A00;
           font-weight: 600;
           border: none;
           border-radius: 8px;
@@ -73,7 +73,7 @@ export default function SwitchFromProcorePage() {
           display: inline-block;
           transition: background 0.15s;
         }
-        .btn-amber:hover { background: #E8940A; }
+        .btn-amber:hover { background: var(--brand-primary-hover); }
         .btn-outline {
           background: transparent;
           color: ${DIM};
@@ -161,7 +161,7 @@ export default function SwitchFromProcorePage() {
           position: 'absolute', top: '10%', left: '50%',
           transform: 'translateX(-50%)',
           width: 700, height: 400,
-          background: 'radial-gradient(ellipse, rgba(245,158,11,0.05) 0%, transparent 70%)',
+          background: 'none',
           pointerEvents: 'none',
         }} />
 
@@ -172,11 +172,11 @@ export default function SwitchFromProcorePage() {
             background: 'transparent',
             border: `1px solid rgba(255,255,255,0.14)`,
             borderRadius: 999, padding: '6px 16px',
-            fontSize: '0.72rem', fontWeight: 500, letterSpacing: '0.08em',
+            fontSize: '0.72rem', fontWeight: 500,
             color: DIM, marginBottom: 32,
           }}>
             <span style={{ width: 5, height: 5, borderRadius: '50%', background: GOLD }} />
-            PROCORE MIGRATION — WE&apos;LL HANDLE EVERYTHING
+            Procore Migration — We&apos;ll Handle Everything
           </div>
 
           {/* Headline */}
@@ -309,7 +309,7 @@ export default function SwitchFromProcorePage() {
                   <th style={{
                     background: RAISED, padding: '16px 24px',
                     textAlign: 'left', color: DIM, fontWeight: 600,
-                    fontSize: '0.85rem', letterSpacing: '0.06em', textTransform: 'uppercase',
+                    fontSize: '0.85rem',
                     borderBottom: `1px solid ${BORDER}`,
                   }}>
                     Feature
@@ -475,7 +475,7 @@ export default function SwitchFromProcorePage() {
           }}>
             <div className="calc-inputs">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
-                <label style={{ color: DIM, fontSize: '0.85rem', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                <label style={{ color: DIM, fontSize: '0.85rem', fontWeight: 600 }}>
                   Your Team Size
                 </label>
                 <input
@@ -485,10 +485,10 @@ export default function SwitchFromProcorePage() {
                   min={1}
                   onChange={(e) => setTeamSize(Math.max(1, parseInt(e.target.value) || 1))}
                 />
-                <span style={{ color: DIM, fontSize: '0.78rem' }}>users</span>
+                <span style={{ color: DIM, fontSize: '0.78rem' }}>Users</span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
-                <label style={{ color: DIM, fontSize: '0.85rem', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                <label style={{ color: DIM, fontSize: '0.85rem', fontWeight: 600 }}>
                   Current Procore Cost
                 </label>
                 <input
@@ -499,14 +499,14 @@ export default function SwitchFromProcorePage() {
                   step={50}
                   onChange={(e) => setProcoreMonthly(Math.max(0, parseInt(e.target.value) || 0))}
                 />
-                <span style={{ color: DIM, fontSize: '0.78rem' }}>per month</span>
+                <span style={{ color: DIM, fontSize: '0.78rem' }}>Per month</span>
               </div>
             </div>
 
             {/* Savings display */}
             <div style={{ margin: '40px 0 32px', padding: '28px', background: 'rgba(255,255,255,0.02)', borderRadius: 14, border: `1px solid rgba(255,255,255,0.08)` }}>
-              <div style={{ fontSize: '0.8rem', color: DIM, fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 12 }}>
-                You save
+              <div style={{ fontSize: '0.8rem', color: DIM, fontWeight: 500, marginBottom: 12 }}>
+                You Save
               </div>
               <div style={{
                 fontSize: '2.2rem', fontWeight: 600, lineHeight: 1,
@@ -517,7 +517,7 @@ export default function SwitchFromProcorePage() {
               </div>
               {savings <= 0 && (
                 <div style={{ color: DIM, fontSize: '0.9rem', marginTop: 8 }}>
-                  Enter your Procore cost above to see your savings
+                  Enter your Procore cost above to see your savings.
                 </div>
               )}
             </div>
@@ -531,7 +531,7 @@ export default function SwitchFromProcorePage() {
                   <div style={{ color: TEXT, fontSize: '1.5rem', fontWeight: 600 }}>
                     {formatCurrency(annualSavings)}
                   </div>
-                  <div style={{ color: DIM, fontSize: '0.82rem', marginTop: 4 }}>per year</div>
+                  <div style={{ color: DIM, fontSize: '0.82rem', marginTop: 4 }}>Per Year</div>
                 </div>
                 <div style={{
                   flex: 1, minWidth: 140,
@@ -541,7 +541,7 @@ export default function SwitchFromProcorePage() {
                   <div style={{ color: TEXT, fontSize: '1.5rem', fontWeight: 600 }}>
                     {formatCurrency(fiveYearSavings)}
                   </div>
-                  <div style={{ color: DIM, fontSize: '0.82rem', marginTop: 4 }}>over 5 years</div>
+                  <div style={{ color: DIM, fontSize: '0.82rem', marginTop: 4 }}>Over 5 Years</div>
                 </div>
                 <div style={{
                   flex: 1, minWidth: 140,
@@ -551,7 +551,7 @@ export default function SwitchFromProcorePage() {
                   <div style={{ color: TEXT, fontSize: '1.5rem', fontWeight: 600 }}>
                     {formatCurrency(saguaroMonthlyCost)}
                   </div>
-                  <div style={{ color: DIM, fontSize: '0.82rem', marginTop: 4 }}>Saguaro flat rate</div>
+                  <div style={{ color: DIM, fontSize: '0.82rem', marginTop: 4 }}>Saguaro Flat Rate</div>
                 </div>
               </div>
             )}
@@ -650,7 +650,7 @@ export default function SwitchFromProcorePage() {
 
       {/* ─── FINAL CTA ─── */}
       <section style={{
-        background: `linear-gradient(135deg, #141416 0%, #0a0a0a 40%, #0a0a0a 60%, #141416 100%)`,
+        background: 'var(--bg-base)',
         borderTop: `1px solid ${BORDER}`,
         borderBottom: `1px solid ${BORDER}`,
         padding: '96px 40px',
@@ -661,7 +661,7 @@ export default function SwitchFromProcorePage() {
           position: 'absolute', top: '50%', left: '50%',
           transform: 'translate(-50%, -50%)',
           width: 800, height: 400,
-          background: 'radial-gradient(ellipse, rgba(245,158,11,0.05) 0%, transparent 65%)',
+          background: 'none',
           pointerEvents: 'none',
         }} />
         <div style={{ position: 'relative', maxWidth: 640, margin: '0 auto' }}>
@@ -675,7 +675,7 @@ export default function SwitchFromProcorePage() {
           <Link href="/signup" style={{
             display: 'inline-block',
             background: GOLD,
-            color: '#0a0a0a',
+            color: '#0A0A00',
             fontWeight: 600,
             fontSize: '1rem',
             padding: '13px 32px',
@@ -685,7 +685,7 @@ export default function SwitchFromProcorePage() {
             transition: 'background 0.15s',
           }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLAnchorElement).style.background = '#E8940A';
+              (e.currentTarget as HTMLAnchorElement).style.background = 'var(--brand-primary-hover)';
             }}
             onMouseLeave={(e) => {
               (e.currentTarget as HTMLAnchorElement).style.background = GOLD;
@@ -696,11 +696,11 @@ export default function SwitchFromProcorePage() {
 
           <div className="trust-pills" style={{ marginTop: 36 }}>
             {[
-              '✓ Free data migration',
-              '✓ 30-day trial',
-              '✓ No credit card',
-              '✓ Cancel anytime',
-              '✓ Live onboarding call',
+              '✓ Free Data Migration',
+              '✓ 30-Day Trial',
+              '✓ No Credit Card',
+              '✓ Cancel Anytime',
+              '✓ Live Onboarding Call',
             ].map((pill) => (
               <span key={pill} style={{
                 background: 'transparent',

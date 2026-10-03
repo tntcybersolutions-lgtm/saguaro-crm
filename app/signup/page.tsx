@@ -6,12 +6,12 @@ import Link from 'next/link';
 import MarketingNav from '@/components/MarketingNav';
 import { Check, Warning } from '@phosphor-icons/react';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444',GREEN='#22c55e';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444',GREEN='#22c55e';
 const HAIR='rgba(255,255,255,0.08)',CARD='rgba(255,255,255,0.02)';
 
 /* House display treatment — gold text-shine on ONE key word per heading. */
 const SHINE: React.CSSProperties = {
-  background: 'linear-gradient(100deg, #F59E0B 6%, #F5B84D 38%, #FDE68A 56%, #F59E0B 92%)',
+  background: 'linear-gradient(100deg, var(--brand-primary) 6%, var(--brand-primary-strong) 50%, var(--brand-primary) 92%)',
   WebkitBackgroundClip: 'text',
   backgroundClip: 'text',
   WebkitTextFillColor: 'transparent',
@@ -23,7 +23,7 @@ const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','
 const HOW_IT_WORKS = [
   {
     step: '1',
-    title: 'Create your account',
+    title: 'Create Your Account',
     desc: 'Fill out the form — takes about 30 seconds. No credit card needed.',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={DIM} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -33,7 +33,7 @@ const HOW_IT_WORKS = [
   },
   {
     step: '2',
-    title: 'Log in — it\'s ready instantly',
+    title: 'Log In — It\'s Ready Instantly',
     desc: 'No download. No install. Open your browser, go to saguarocontrol.net, and log in. Your full platform is live.',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={DIM} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -43,7 +43,7 @@ const HOW_IT_WORKS = [
   },
   {
     step: '3',
-    title: 'Install on your phone (optional)',
+    title: 'Install on Your Phone (Optional)',
     desc: 'Download Saguaro Control Systems free from Apple TestFlight on your iPhone. Android coming soon.',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={DIM} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -53,7 +53,7 @@ const HOW_IT_WORKS = [
   },
   {
     step: '4',
-    title: 'Invite your team',
+    title: 'Invite Your Team',
     desc: 'Add unlimited users — PMs, estimators, field crew. Everyone gets access for free.',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={DIM} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -110,30 +110,30 @@ export default function SignupPage(){
 
   const inputStyle: React.CSSProperties = {width:'100%',padding:'11px 14px',background:'#1c1c1e',border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:14,outline:'none',boxSizing:'border-box'};
   const selectStyle: React.CSSProperties = {width:'100%',padding:'11px 14px',background:'#1c1c1e',border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:14,outline:'none',boxSizing:'border-box',cursor:'pointer'};
-  const labelStyle: React.CSSProperties = {display:'block',fontSize:11,fontWeight:600,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:6};
+  const labelStyle: React.CSSProperties = {display:'block',fontSize:12,fontWeight:600,color:DIM,marginBottom:6};
 
   if(success) return (
     <div style={{minHeight:'100vh',background:DARK,display:'flex',alignItems:'center',justifyContent:'center',padding:24,fontFamily:"system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"}}>
       <div style={{width:'100%',maxWidth:480,textAlign:'center'}}>
         <div style={{width:72,height:72,borderRadius:'50%',background:'rgba(34,197,94,0.1)',border:'1px solid rgba(34,197,94,0.3)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 24px'}}><Check size={32} weight="bold" color={GREEN} /></div>
-        <h1 style={{fontSize:26,fontWeight:600,color:TEXT,marginBottom:12}}>Check your email</h1>
+        <h1 style={{fontSize:26,fontWeight:600,color:TEXT,marginBottom:12}}>Check Your Email</h1>
         <p style={{color:DIM,fontSize:15,lineHeight:1.7,marginBottom:28}}>
           We sent a confirmation link to <strong style={{color:TEXT}}>{form.email}</strong>.<br/>
           Click it to activate your account — then log in at <strong style={{color:TEXT}}>saguarocontrol.net/login</strong>.
         </p>
         <div style={{background:CARD,border:`1px solid ${HAIR}`,borderRadius:12,padding:'18px 24px',marginBottom:28,textAlign:'left'}}>
-          <div style={{fontSize:13,fontWeight:600,color:TEXT,marginBottom:12}}>What happens next:</div>
-          {['Click the link in your email to confirm', 'Log in at saguarocontrol.net — no download needed', 'Complete your 5-min company setup', 'Invite your team — unlimited users, always free'].map((t,i)=>(
+          <div style={{fontSize:13,fontWeight:600,color:TEXT,marginBottom:12}}>What Happens Next</div>
+          {['Click the link in your email to confirm.', 'Log in at saguarocontrol.net — no download needed.', 'Complete your 5-minute company setup.', 'Invite your team — unlimited users, always free.'].map((t,i)=>(
             <div key={i} style={{display:'flex',alignItems:'center',gap:10,marginBottom:8,fontSize:13,color:DIM}}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="rgba(34,197,94,0.15)"/><path d="M4.5 8l2.5 2.5 4-5" stroke={GREEN} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
               {t}
             </div>
           ))}
         </div>
-        <Link href="/login" style={{display:'block',padding:'12px',background:'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))',borderRadius:'var(--radius-md)',color:'#241500',fontWeight:700,fontSize:15,textDecoration:'none',marginBottom:16,boxShadow:'0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)'}}>
+        <Link href="/login" style={{display:'block',padding:'12px',background:'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))',borderRadius:'var(--radius-md)',color:'#0A0A00',fontWeight:700,fontSize:15,textDecoration:'none',marginBottom:16,boxShadow:'0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)'}}>
           Go to Login →
         </Link>
-        <p style={{fontSize:12,color:DIM}}>Didn't get it? Check spam or <button onClick={()=>setSuccess(false)} style={{background:'none',border:'none',color:GOLD,cursor:'pointer',fontSize:12,fontWeight:600}}>try again</button></p>
+        <p style={{fontSize:12,color:DIM}}>Didn't get it? Check spam or <button onClick={()=>setSuccess(false)} style={{background:'none',border:'none',color:GOLD,cursor:'pointer',fontSize:12,fontWeight:600}}>Try Again</button></p>
       </div>
     </div>
   );
@@ -152,13 +152,13 @@ export default function SignupPage(){
         <div style={{padding:'52px 0 40px',position:'sticky',top:80}}>
 
           {/* Trial badge */}
-          <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'6px 14px',background:'transparent',border:'1px solid rgba(255,255,255,0.14)',borderRadius:20,fontSize:12,fontWeight:600,color:DIM,letterSpacing:1,textTransform:'uppercase',marginBottom:28}}>
+          <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'6px 14px',background:'transparent',border:'1px solid rgba(255,255,255,0.14)',borderRadius:20,fontSize:12,fontWeight:600,color:DIM,marginBottom:28}}>
             <span style={{width:6,height:6,borderRadius:'50%',background:GREEN,display:'inline-block'}}/>
             {TRIAL_DAYS}-Day Free Trial — No Credit Card
           </div>
 
           <h1 style={{fontSize:'clamp(26px,3.4vw,36px)',fontWeight:800,color:TEXT,lineHeight:1.15,marginBottom:12,letterSpacing:'-0.02em'}}>
-            The <span style={SHINE}>fastest way</span> to run your construction company
+            The <span style={SHINE}>Fastest Way</span> to Run Your Construction Company
           </h1>
           <p style={{fontSize:15,color:DIM,lineHeight:1.7,marginBottom:40}}>
             Saguaro is a <strong style={{color:TEXT}}>web-based platform</strong> — nothing to download or install on a computer. Sign up, log in from any browser, and your whole team is running in minutes.
@@ -173,7 +173,7 @@ export default function SignupPage(){
                 </div>
                 <div>
                   <div style={{fontSize:14,fontWeight:600,color:TEXT,marginBottom:3}}>
-                    <span style={{color:DIM,fontSize:11,fontWeight:600,letterSpacing:1,marginRight:6}}>STEP {s.step}</span>
+                    <span style={{color:DIM,fontSize:11,fontWeight:600,marginRight:6}}>Step {s.step}</span>
                     {s.title}
                   </div>
                   <div style={{fontSize:13,color:DIM,lineHeight:1.6}}>{s.desc}</div>
@@ -204,7 +204,7 @@ export default function SignupPage(){
         {/* ── RIGHT: Signup form ── */}
         <div style={{padding:'52px 0 40px'}}>
           <div style={{marginBottom:28}}>
-            <h2 style={{fontSize:22,fontWeight:600,color:TEXT,margin:'0 0 6px'}}>Start your free trial</h2>
+            <h2 style={{fontSize:22,fontWeight:600,color:TEXT,margin:'0 0 6px'}}>Start Your Free Trial</h2>
             <p style={{fontSize:13,color:DIM,margin:0}}>Takes 30 seconds. No credit card required.</p>
           </div>
 
@@ -272,15 +272,15 @@ export default function SignupPage(){
                 </div>
               </div>
 
-              <button type="submit" disabled={loading} style={{marginTop:8,padding:'12px 0',background:loading?'rgba(245,158,11,.4)':'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))',border:'none',borderRadius:'var(--radius-md)',color:'#241500',fontSize:15,fontWeight:700,letterSpacing:'0.01em',cursor:loading?'not-allowed':'pointer',boxShadow:loading?'none':'0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)',transition:'background .18s, box-shadow .18s, transform .12s'}}>
+              <button type="submit" disabled={loading} style={{marginTop:8,padding:'12px 0',background:loading?'color-mix(in srgb, var(--brand-primary) 40%, transparent)':'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))',border:'none',borderRadius:'var(--radius-md)',color:'#0A0A00',fontSize:15,fontWeight:700,letterSpacing:'0.01em',cursor:loading?'not-allowed':'pointer',boxShadow:loading?'none':'0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)',transition:'background .18s, box-shadow .18s, transform .12s'}}>
                 {loading?'Creating your account…':'Start Free Trial →'}
               </button>
             </form>
 
             {/* What happens next */}
             <div style={{marginTop:20,padding:'14px 18px',background:CARD,border:`1px solid ${HAIR}`,borderRadius:8}}>
-              <div style={{fontSize:11,fontWeight:600,color:DIM,letterSpacing:1,textTransform:'uppercase',marginBottom:10}}>After you sign up:</div>
-              {['Confirm your email → you\'re in instantly','Log in at saguarocontrol.net — works in any browser','Optional: get the iOS field app free on TestFlight'].map((t,i)=>(
+              <div style={{fontSize:12,fontWeight:600,color:DIM,marginBottom:10}}>After You Sign Up</div>
+              {['Confirm your email → you\'re in instantly.','Log in at saguarocontrol.net — works in any browser.','Optional: get the iOS field app free on TestFlight.'].map((t,i)=>(
                 <div key={i} style={{display:'flex',alignItems:'center',gap:8,fontSize:12,color:DIM,marginBottom:6}}>
                   <span style={{width:18,height:18,borderRadius:'50%',background:'transparent',border:`1px solid ${HAIR}`,display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:600,color:DIM,flexShrink:0}}>{i+1}</span>
                   {t}
@@ -289,10 +289,10 @@ export default function SignupPage(){
             </div>
 
             <div style={{marginTop:16,textAlign:'center',fontSize:12,color:DIM}}>
-              Already have an account? <Link href="/login" style={{color:GOLD,textDecoration:'none',fontWeight:600}}>Log in →</Link>
+              Already have an account? <Link href="/login" style={{color:GOLD,textDecoration:'none',fontWeight:600}}>Log In →</Link>
             </div>
             <div style={{marginTop:8,textAlign:'center',fontSize:11,color:'#CBD5E1'}}>
-              By signing up you agree to our <Link href="/terms" style={{color:DIM,textDecoration:'underline',textUnderlineOffset:3}}>Terms of Service</Link> and <Link href="/privacy" style={{color:DIM,textDecoration:'underline',textUnderlineOffset:3}}>Privacy Policy</Link>
+              By signing up you agree to our <Link href="/terms" style={{color:DIM,textDecoration:'underline',textUnderlineOffset:3}}>Terms of Service</Link> and <Link href="/privacy" style={{color:DIM,textDecoration:'underline',textUnderlineOffset:3}}>Privacy Policy</Link>.
             </div>
           </div>
         </div>

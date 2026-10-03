@@ -2,16 +2,16 @@ import React from 'react';
 import Link from 'next/link';
 
 const C = {
-  dark: '#0B0B0F',
-  gold: '#F59E0B',
-  goldBright: '#FBBF24',
+  dark: 'var(--bg-base)',
+  gold: 'var(--brand-primary)',
+  goldBright: 'var(--brand-primary-strong)',
   text: '#F5F5F7',
   dim: '#A1A1AA',
   border: 'rgba(255,255,255,0.10)',
   hairline: 'rgba(255,255,255,0.08)',
   cardBg: 'rgba(255,255,255,0.02)',
-  raised: '#131318',
-  raisedAlt: '#1A1A21',
+  raised: 'var(--bg-surface)',
+  raisedAlt: 'var(--bg-surface-2)',
   green: '#22C55E',
   blue: '#6366F1',
   font: "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
@@ -42,7 +42,7 @@ const RELEASES: Release[] = [
     date: 'June 6, 2026',
     tag: 'Latest',
     tagColor: C.gold,
-    title: 'AI Takeoff — full-set blueprint estimating',
+    title: 'AI Takeoff — Full-Set Blueprint Estimating',
     summary:
       'Drop in an entire plan set and Saguaro reads every sheet. The AI Takeoff engine now detects scale automatically, measures linear feet, square footage, and counts, and maps quantities straight into a bid line by line.',
     changes: [
@@ -57,7 +57,7 @@ const RELEASES: Release[] = [
     date: 'May 19, 2026',
     tag: 'AI Assistant',
     tagColor: C.blue,
-    title: 'Meet Sage — your AI construction assistant',
+    title: 'Meet Sage — Your AI Construction Assistant',
     summary:
       'Sage lives inside every project and answers in plain English. Ask it to draft an RFI, summarize a pay app, find the latest COI for a sub, or flag which lien waivers are still outstanding — and it acts on your live project data.',
     changes: [
@@ -72,7 +72,7 @@ const RELEASES: Release[] = [
     date: 'April 28, 2026',
     tag: 'Field App',
     tagColor: C.green,
-    title: 'Saguaro Control Systems — the mobile app for the jobsite',
+    title: 'Saguaro Control Systems — The Mobile App for the Jobsite',
     summary:
       'The field crew finally has a tool built for gloves and sunlight. Saguaro Control Systems puts daily logs, photos, time, and punch lists in everyone\'s pocket — and it keeps working when the cell signal does not.',
     changes: [
@@ -87,7 +87,7 @@ const RELEASES: Release[] = [
     date: 'April 7, 2026',
     tag: 'Pay Apps',
     tagColor: C.gold,
-    title: 'Pay-app approvals & AIA G702/G703 automation',
+    title: 'Pay-App Approvals & AIA G702/G703 Automation',
     summary:
       'Progress billing without the spreadsheet gymnastics. Build AIA G702/G703 pay applications from your schedule of values, route them for approval, and let owners and subs sign off through their own portal.',
     changes: [
@@ -102,7 +102,7 @@ const RELEASES: Release[] = [
     date: 'March 17, 2026',
     tag: 'Compliance',
     tagColor: C.blue,
-    title: 'Lien waivers & certified payroll, all 50 states',
+    title: 'Lien Waivers & Certified Payroll, All 50 States',
     summary:
       'Stay protected and prevailing-wage compliant without leaving the platform. Generate conditional and unconditional lien waivers with state-specific statutory language, and produce WH-347 certified payroll validated against current Davis-Bacon rates.',
     changes: [
@@ -127,8 +127,6 @@ function KindBadge({ kind }: { kind: Change['kind'] }) {
         gap: 6,
         fontSize: 10,
         fontWeight: 500,
-        letterSpacing: 0.8,
-        textTransform: 'uppercase',
         color: C.dim,
         background: 'transparent',
         border: `1px solid rgba(255,255,255,0.14)`,
@@ -169,7 +167,7 @@ export default function ChangelogPage() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link href="/login" style={{ padding: '8px 16px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 8, color: C.dim, fontSize: 13, fontWeight: 500, textDecoration: 'none' }}>Log In</Link>
-          <Link href="/signup" style={{ padding: '8px 18px', background: C.gold, borderRadius: 8, color: '#0B0B0F', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Free Trial</Link>
+          <Link href="/signup" style={{ padding: '8px 18px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Free Trial</Link>
         </div>
       </nav>
 
@@ -179,10 +177,10 @@ export default function ChangelogPage() {
         <section style={{ textAlign: 'center', padding: '120px 24px 64px', background: 'transparent' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 12, fontWeight: 500, color: C.dim, letterSpacing: 0.3, marginBottom: 28 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.gold, display: 'inline-block' }} />
-            Product changelog
+            Product Changelog
           </div>
           <h1 style={{ fontWeight: 600, lineHeight: 1.15, margin: '0 0 18px', letterSpacing: -0.5 }}>
-            What&apos;s new in{' '}
+            What&apos;s New in{' '}
             <span style={{ color: C.text }}>
               Saguaro
             </span>
@@ -218,7 +216,7 @@ export default function ChangelogPage() {
                     <span style={{
                       marginLeft: 'auto',
                       display: 'inline-flex', alignItems: 'center', gap: 6,
-                      fontSize: 10, fontWeight: 500, letterSpacing: 1, textTransform: 'uppercase',
+                      fontSize: 10, fontWeight: 500,
                       color: C.dim,
                       background: 'transparent',
                       border: `1px solid rgba(255,255,255,0.14)`,
@@ -263,14 +261,14 @@ export default function ChangelogPage() {
         <section style={{ padding: '96px 24px 112px', background: 'transparent', borderTop: `1px solid ${C.hairline}`, textAlign: 'center' }}>
           <div style={{ maxWidth: 620, margin: '0 auto' }}>
             <h2 style={{ fontWeight: 600, margin: '0 0 16px', lineHeight: 1.25, letterSpacing: -0.3 }}>
-              Get every new feature{' '}
-              <span style={{ color: C.text }}>the day it ships</span>
+              Get Every New Feature{' '}
+              <span style={{ color: C.text }}>the Day It Ships</span>
             </h2>
             <p style={{ fontSize: 16, color: C.dim, margin: '0 0 32px', lineHeight: 1.6 }}>
               AI takeoffs, the Sage assistant, the field app, and pay-app approvals are included on every plan — and updates land automatically. No upgrades to buy, no installs to run.
             </p>
             <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 36 }}>
-              <Link href="/signup" style={{ display: 'inline-block', padding: '12px 28px', background: C.gold, borderRadius: 8, color: '#0B0B0F', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
+              <Link href="/signup" style={{ display: 'inline-block', padding: '12px 28px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
                 Start Free Trial — No Credit Card
               </Link>
               <Link href="/features" style={{ display: 'inline-block', padding: '12px 28px', background: 'transparent', border: `1px solid ${C.hairline}`, borderRadius: 8, color: C.text, fontWeight: 500, fontSize: 15, textDecoration: 'none' }}>
@@ -278,7 +276,7 @@ export default function ChangelogPage() {
               </Link>
             </div>
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-              {['30 days free', 'Unlimited users', 'Free migration', 'Cancel anytime'].map(pill => (
+              {['30 Days Free', 'Unlimited Users', 'Free Migration', 'Cancel Anytime'].map(pill => (
                 <div key={pill} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', background: 'transparent', border: `1px solid ${C.hairline}`, borderRadius: 999, fontSize: 12, fontWeight: 500, color: C.dim }}>
                   {pill}
                 </div>

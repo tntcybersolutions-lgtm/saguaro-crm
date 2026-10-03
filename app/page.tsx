@@ -12,9 +12,9 @@ import { PLANS, TRIAL_DAYS, STARTING_PRICE_FLAT } from '../lib/plans';
 import BrandMark from '@/components/BrandMark';
 
 /* ── palette ── */
-const BG = '#0a0a0a';
-const CARD = '#141416';
-const GOLD = '#F59E0B';
+const BG = 'var(--bg-base)';
+const CARD = 'var(--bg-surface)';
+const GOLD = 'var(--brand-primary)';
 const GREEN = '#34C759';
 const TEXT = '#FFFFFF';
 const DIM = '#CBD5E1';
@@ -115,7 +115,7 @@ export default function LandingPage() {
           <nav style={{
             position: 'sticky', top: 0, zIndex: 100,
             background: 'rgba(20,20,22,0.85)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
-            borderBottom: '1px solid rgba(245, 158, 11,0.12)',
+            borderBottom: '1px solid var(--brand-primary-12)',
             padding: '0 max(24px, 4vw)', height: 56,
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
@@ -130,8 +130,8 @@ export default function LandingPage() {
                 /* Marked up the way a super marks up a drawing — the arrow points
                    at it from the left so the annotation fits the 56px nav. */
                 <Link key={l.label} href={l.href} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '8px 10px 8px 6px', textDecoration: 'none' }}>
-                  <ScribbleArrow direction="right" width={30} color="#FBBF24" style={{ transform: 'rotate(6deg)', marginBottom: 2 }} />
-                  <ScribbleNote color="#FBBF24" size={17} rotate={-3}>{l.label}</ScribbleNote>
+                  <ScribbleArrow direction="right" width={30} color="var(--brand-primary-strong)" style={{ transform: 'rotate(6deg)', marginBottom: 2 }} />
+                  <ScribbleNote color="var(--brand-primary-strong)" size={17} rotate={-3}>{l.label}</ScribbleNote>
                 </Link>
               ) : (
                 <Link key={l.label} href={l.href} style={{ color: '#FFFFFF', fontSize: 13, fontWeight: 500, padding: '8px 14px', textDecoration: 'none' }}>{l.label}</Link>
@@ -165,10 +165,10 @@ export default function LandingPage() {
       {/* ══════════ 3. HERO ══════════ */}
       <section style={{ maxWidth: 1360, margin: '0 auto', padding: 'clamp(40px, 6vh, 64px) 24px 48px', display: 'grid', gridTemplateColumns: '1.05fr 1fr', gap: 'clamp(32px, 4vw, 56px)', alignItems: 'center', position: 'relative' as const }} className="hero-grid">
         {/* very subtle ambient warmth — minimal, no stock photo */}
-        <div style={{ position: 'absolute' as const, top: -120, right: -40, width: 460, height: 460, background: 'radial-gradient(circle, rgba(245,158,11,0.05) 0%, transparent 68%)', zIndex: 0, pointerEvents: 'none' as const }} />
+        <div style={{ position: 'absolute' as const, top: -120, right: -40, width: 460, height: 460, zIndex: 0, pointerEvents: 'none' as const }} />
         {/* left */}
         <div style={{ position: 'relative', zIndex: 1, minWidth: 0 }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', color: DIM, fontSize: 10.5, fontWeight: 500, letterSpacing: 0.8, padding: '5px 12px', borderRadius: 999, marginBottom: 24, textTransform: 'uppercase' as const }}><span style={{ width: 5, height: 5, borderRadius: '50%', background: GOLD }} />Construction Management Platform</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', color: DIM, fontSize: 10.5, fontWeight: 500, padding: '5px 12px', borderRadius: 999, marginBottom: 24 }}><span style={{ width: 5, height: 5, borderRadius: '50%', background: GOLD }} />Construction Management Platform</span>
           {/* Owner's call: bigger, and the heat gradient across the WHOLE phrase.
               className is load-bearing — [data-landing] h1 caps every heading at
               23px with !important, so an inline fontSize alone renders this at
@@ -177,9 +177,9 @@ export default function LandingPage() {
           <h1 className="landing-hero heat-shine" style={{ margin: '0 0 20px', maxWidth: 720 }}>Run the job. Talk to the crew. Price the work. One platform.</h1>
           <p style={{ color: DIM, fontSize: 15, fontWeight: 400, lineHeight: 1.7, margin: '0 0 32px', maxWidth: 452 }}>The construction platform with a built-in PTT radio, RF design studio, and blueprint-to-priced-bid takeoff.</p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' as const, alignItems: 'center' }}>
-            <Link href="/signup" className="btn-gold" style={{ textDecoration: 'none', fontSize: 13.5, padding: '10px 22px' }}>Start free trial <span style={{ fontSize: 15 }}>&rarr;</span></Link>
+            <Link href="/signup" className="btn-gold" style={{ textDecoration: 'none', fontSize: 13.5, padding: '10px 22px' }}>Start Free Trial <span style={{ fontSize: 15 }}>&rarr;</span></Link>
             <a href="#radio-demo" style={{ color: DIM, textDecoration: 'none', fontWeight: 500, fontSize: 13.5, padding: '10px 18px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.14)', display: 'inline-flex', alignItems: 'center', gap: 7 }}>
-              <Broadcast size={15} weight="duotone" color={GOLD} /> Try the radio
+              <Broadcast size={15} weight="duotone" color={GOLD} /> Try the Radio
             </a>
           </div>
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 24, fontWeight: 400 }}>Construction management &middot; Project controls &middot; National rollout specialists</div>
@@ -192,7 +192,7 @@ export default function LandingPage() {
           {/* browser chrome */}
           <div style={{ background: 'rgba(20,20,22,0.8)', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid rgba(255,255,255,0.12)' }}>
             <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#EF4444' }} />
-            <span style={{ width: 10, height: 10, borderRadius: '50%', background: GOLD }} />
+            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#F59E0B' }} />
             <span style={{ width: 10, height: 10, borderRadius: '50%', background: GREEN }} />
             <span style={{ flex: 1, background: 'rgba(0,0,0,0.06)', borderRadius: 6, padding: '4px 12px', fontSize: 11, color: DIM, marginLeft: 8 }}>app.saguaro.build/takeoff</span>
           </div>
@@ -202,15 +202,15 @@ export default function LandingPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <span style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>AI Takeoff Results</span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <ScribbleNote color="#FBBF24" size={13} rotate={-5} style={{ opacity: .9 }}>read the blueprint</ScribbleNote>
-                <ScribbleArrow direction="right" width={30} color="#FBBF24" style={{ transform: 'rotate(4deg)' }} />
-                <span style={{ fontSize: 11, color: GOLD, fontWeight: 600, background: 'rgba(245, 158, 11,0.12)', padding: '3px 10px', borderRadius: 12 }}>38s &bull; 47 items</span>
+                <ScribbleNote color="var(--brand-primary-strong)" size={13} rotate={-5} style={{ opacity: .9 }}>read the blueprint</ScribbleNote>
+                <ScribbleArrow direction="right" width={30} color="var(--brand-primary-strong)" style={{ transform: 'rotate(4deg)' }} />
+                <span style={{ fontSize: 11, color: GOLD, fontWeight: 600, background: 'var(--brand-primary-12)', padding: '3px 10px', borderRadius: 12 }}>38s &bull; 47 items</span>
               </span>
             </div>
             {/* table header */}
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 1, marginBottom: 2 }}>
               {['Item', 'Qty', 'Unit', 'Cost'].map(h => (
-                <div key={h} style={{ fontSize: 10, color: DIM, fontWeight: 600, textTransform: 'uppercase' as const, padding: '6px 8px', background: 'rgba(255,255,255,0.04)' }}>{h}</div>
+                <div key={h} style={{ fontSize: 10, color: DIM, fontWeight: 600, padding: '6px 8px', background: 'rgba(255,255,255,0.04)' }}>{h}</div>
               ))}
             </div>
             {/* table rows */}
@@ -228,10 +228,10 @@ export default function LandingPage() {
               </div>
             ))}
             {/* total bar */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, padding: '10px 8px', borderTop: `1px solid rgba(245, 158, 11,0.2)` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, padding: '10px 8px', borderTop: `1px solid var(--brand-primary-18)` }}>
               <span style={{ fontSize: 12, fontWeight: 700, color: TEXT }}>Total Estimate</span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
-                <ScribbleNote color="#FBBF24" size={13} rotate={-6} style={{ opacity: .9 }}>no spreadsheet</ScribbleNote>
+                <ScribbleNote color="var(--brand-primary-strong)" size={13} rotate={-6} style={{ opacity: .9 }}>no spreadsheet</ScribbleNote>
                 <span style={{ fontSize: 14, fontWeight: 800, color: GOLD }}>$137,070</span>
               </span>
             </div>
@@ -247,33 +247,33 @@ export default function LandingPage() {
           wider measure and a stronger horizon glow. Every size is a clamp, so
           the phone floor barely moves while the desktop ceiling roughly
           doubles: the headline goes 44px -> 82px only where there is room. */}
-      <section style={{ position: 'relative', overflow: 'hidden', padding: 'clamp(72px, 13vh, 136px) 24px clamp(64px, 11vh, 120px)', textAlign: 'center' as const, borderTop: '1px solid rgba(245,158,11,0.20)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <section style={{ position: 'relative', overflow: 'hidden', padding: 'clamp(72px, 13vh, 136px) 24px clamp(64px, 11vh, 120px)', textAlign: 'center' as const, borderTop: '1px solid var(--brand-primary-18)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         {/* desert-heat backdrop: horizon glow, no images */}
-        <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'radial-gradient(92% 78% at 50% 118%, rgba(224,100,78,0.22) 0%, rgba(245,158,11,0.13) 38%, rgba(0,0,0,0) 74%)' }} />
+        <div aria-hidden style={{ position: 'absolute', inset: 0 }} />
         <div style={{ position: 'relative', maxWidth: 1360, margin: '0 auto' }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '8px 20px', borderRadius: 999, border: '1px solid rgba(245,158,11,0.42)', background: 'rgba(245,158,11,0.10)', color: '#F5B84D', fontSize: 13, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase' as const, marginBottom: 28 }}>
-            <Thermometer size={15} weight="fill" /> Field-proven at 115°
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '8px 20px', borderRadius: 999, border: '1px solid color-mix(in srgb, var(--brand-primary) 42%, transparent)', background: 'var(--brand-primary-12)', color: 'var(--brand-primary)', fontSize: 13, fontWeight: 800, marginBottom: 28 }}>
+            <Thermometer size={15} weight="fill" /> Field-Proven at 115°
           </span>
           {/* className, not just an inline size: [data-landing] h2 caps every
               heading at 17px with !important, and React cannot write
               !important into a style object — so the inline clamp alone was
               silently losing and this rendered at body size. */}
           <h2 className="landing-display" style={{ fontSize: 'clamp(34px, 6.2vw, 82px)', fontWeight: 800, letterSpacing: '-0.025em', lineHeight: 1.02, margin: '0 0 20px', textWrap: 'balance' as const }}>
-            Born on <span style={{ background: 'linear-gradient(100deg, #E0644E 4%, #F59E0B 42%, #FDE68A 60%, #E0644E 96%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' }}>Sonoran</span> jobsites.
+            Born on <span style={{ background: 'linear-gradient(100deg, var(--brand-primary) 6%, var(--brand-primary-strong) 50%, var(--brand-primary) 92%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' }}>Sonoran</span> Jobsites
           </h2>
           <p className="landing-lede" style={{ color: '#E4E4E7', fontSize: 'clamp(16px, 2.1vw, 23px)', lineHeight: 1.6, maxWidth: 820, margin: '0 auto 38px' }}>
-            Built where summers hit <strong style={{ color: '#F5B84D' }}>115 degrees</strong> and the far corner of the site has no bars.
+            Built where summers hit <strong style={{ color: 'var(--brand-primary)' }}>115 degrees</strong> and the far corner of the site has no bars.
             The field app assumes gloves, glare, and no signal — because that is where it was raised.
           </p>
           <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap' as const, gap: 14 }}>
             {[
-              { Ic: Hand, label: 'Glove mode' },
-              { Ic: WifiSlash, label: 'Offline-first' },
-              { Ic: MapPin, label: 'GPS clock-in' },
-              { Ic: CloudSun, label: 'Auto weather on logs' },
+              { Ic: Hand, label: 'Glove Mode' },
+              { Ic: WifiSlash, label: 'Offline-First' },
+              { Ic: MapPin, label: 'GPS Clock-In' },
+              { Ic: CloudSun, label: 'Auto Weather on Logs' },
             ].map(b => (
-              <span key={b.label} style={{ display: 'inline-flex', alignItems: 'center', gap: 10, border: '1px solid rgba(245,158,11,0.34)', background: 'linear-gradient(180deg, rgba(245,158,11,0.12), rgba(245,158,11,0.05))', color: '#F4F4F5', fontSize: 16, fontWeight: 700, padding: '13px 22px', borderRadius: 999, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.09)' }}>
-                <b.Ic size={19} weight="duotone" color="#F59E0B" />{b.label}
+              <span key={b.label} style={{ display: 'inline-flex', alignItems: 'center', gap: 10, border: '1px solid color-mix(in srgb, var(--brand-primary) 34%, transparent)', background: 'linear-gradient(180deg, var(--brand-primary-12), color-mix(in srgb, var(--brand-primary) 5%, transparent))', color: '#F4F4F5', fontSize: 16, fontWeight: 700, padding: '13px 22px', borderRadius: 999, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.09)' }}>
+                <b.Ic size={19} weight="duotone" color="var(--brand-primary)" />{b.label}
               </span>
             ))}
           </div>
@@ -287,7 +287,7 @@ export default function LandingPage() {
 
       {/* ══════════ 4. MODULE GRID ══════════ */}
       <section id="features" style={{ maxWidth: 1360, margin: '0 auto', padding: '64px 24px' }}>
-        <h2 style={{ textAlign: 'center' as const, fontSize: 26, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 8 }}>What&apos;s inside</h2>
+        <h2 style={{ textAlign: 'center' as const, fontSize: 26, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 8 }}>What&apos;s Inside</h2>
         <p style={{ textAlign: 'center' as const, color: DIM, fontSize: 14, marginBottom: 40, maxWidth: 480, marginLeft: 'auto', marginRight: 'auto' }}>Real module names, listed because they ship — from the radio to the bid.</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '44px 48px', maxWidth: 1360, margin: '0 auto' }} className="feature-grid">
           {FEATURE_MODULES.map(f => {
@@ -299,7 +299,7 @@ export default function LandingPage() {
                 </div>
                 <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 7, color: TEXT }}>{f.title}</h3>
                 <p style={{ fontSize: 13, color: DIM, lineHeight: 1.6, margin: '0 0 10px' }}>{f.desc}</p>
-                <Link href={f.href} style={{ fontSize: 12.5, color: GOLD, fontWeight: 500, textDecoration: 'none' }}>Learn more &rarr;</Link>
+                <Link href={f.href} style={{ fontSize: 12.5, color: GOLD, fontWeight: 500, textDecoration: 'none' }}>Learn More &rarr;</Link>
               </div>
             );
           })}
@@ -309,21 +309,21 @@ export default function LandingPage() {
       {/* ══════════ 5. RADIO DEMO ══════════ */}
       <section id="radio-demo" style={{ maxWidth: 1360, margin: '0 auto', padding: '0 24px 64px', scrollMarginTop: 72 }}>
         <div style={{ ...glass, padding: '32px 28px', display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' as const }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(245, 158, 11,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--brand-primary-12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Broadcast size={24} weight="duotone" color={GOLD} />
           </div>
           <div style={{ flex: 1, minWidth: 220 }}>
-            <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 6px' }}>Try the radio</h2>
+            <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 6px' }}>Try the Radio</h2>
             <p style={{ color: DIM, fontSize: 13.5, margin: 0, lineHeight: 1.6 }}>Saguaro Radio is push-to-talk built into the field app — a channel per project, live English/Spanish translation both ways. Grab the app and key up.</p>
           </div>
-          <Link href="/get-the-app" className="btn-gold" style={{ textDecoration: 'none', fontSize: 13.5, padding: '10px 22px', whiteSpace: 'nowrap' as const }}>Get the field app &rarr;</Link>
+          <Link href="/get-the-app" className="btn-gold" style={{ textDecoration: 'none', fontSize: 13.5, padding: '10px 22px', whiteSpace: 'nowrap' as const }}>Get the Field App &rarr;</Link>
         </div>
       </section>
 
 
       {/* ══════════ 6. COMPARISON TABLE ══════════ */}
       <section id="compare" style={{ maxWidth: 1360, margin: '0 auto', padding: '64px 24px', scrollMarginTop: 72 }}>
-        <h2 style={{ textAlign: 'center' as const, fontSize: 24, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 8 }}>How Saguaro compares</h2>
+        <h2 style={{ textAlign: 'center' as const, fontSize: 24, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 8 }}>How Saguaro Compares</h2>
         <p style={{ textAlign: 'center' as const, color: DIM, fontSize: 14, marginBottom: 32 }}>Feature-for-feature — judge for yourself in the free trial.</p>
         <div style={{ ...glass, overflow: 'hidden', boxShadow: 'var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
           {/* header */}
@@ -337,7 +337,7 @@ export default function LandingPage() {
           {COMPARISON_ROWS.map((r, i) => (
             <React.Fragment key={r.feature}>
               {r.notYet && (
-                <div style={{ padding: '10px 20px', fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase' as const, color: GOLD, borderBottom: '1px solid rgba(255,255,255,0.12)', background: 'rgba(245, 158, 11,0.05)' }}>What we don&apos;t do yet</div>
+                <div style={{ padding: '10px 20px', fontSize: 11, fontWeight: 700, color: GOLD, borderBottom: '1px solid rgba(255,255,255,0.12)', background: 'color-mix(in srgb, var(--brand-primary) 5%, transparent)' }}>What We Don&apos;t Do Yet</div>
               )}
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', borderBottom: i < COMPARISON_ROWS.length - 1 ? '1px solid rgba(255,255,255,0.12)' : 'none', background: i % 2 === 0 ? 'rgba(255,255,255,0.025)' : 'transparent' }}>
                 <div style={{ padding: '11px 20px', fontSize: 13, color: TEXT }}>{r.feature}</div>
@@ -358,11 +358,11 @@ export default function LandingPage() {
       {/* ══════════ 6b. RECEIPTS ══════════ */}
       <section style={{ maxWidth: 1360, margin: '0 auto', padding: '64px 24px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: 24, alignItems: 'start' }} className="receipts-grid">
-          <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(245, 158, 11,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 52, height: 52, borderRadius: 14, background: 'var(--brand-primary-12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Receipt size={28} weight="duotone" color={GOLD} />
           </div>
           <div>
-            <h2 style={{ fontSize: 'clamp(26px, 3.2vw, 34px)', fontWeight: 800, letterSpacing: '-0.015em', margin: '0 0 12px' }}>It shows you its <span style={{ background: 'linear-gradient(100deg, #F59E0B 6%, #F5B84D 38%, #FDE68A 56%, #F59E0B 92%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' }}>receipts</span></h2>
+            <h2 style={{ fontSize: 'clamp(26px, 3.2vw, 34px)', fontWeight: 800, letterSpacing: '-0.015em', margin: '0 0 12px' }}>It Shows You Its <span style={{ background: 'linear-gradient(100deg, var(--brand-primary) 6%, var(--brand-primary-strong) 50%, var(--brand-primary) 92%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' }}>Receipts</span></h2>
             <p style={{ color: DIM, fontSize: 14, lineHeight: 1.7, margin: '0 0 12px', maxWidth: 640 }}>Every number Saguaro suggests carries a ledger entry: what it measured on the plan, which catalog line it matched, and what your past corrections taught it. Fix a price once and the next estimate starts from your fix. Open any figure and read exactly where it came from.</p>
             <p style={{ color: TEXT, fontSize: 13.5, fontWeight: 600, margin: 0 }}>Every feature ships with automated live proof.</p>
           </div>
@@ -377,7 +377,7 @@ export default function LandingPage() {
           {HOME_PLANS.map(plan => (
             <div key={plan.name} style={{
               background: 'rgba(255,255,255,0.02)',
-              border: plan.highlighted ? '1px solid rgba(245, 158, 11,0.35)' : '1px solid rgba(255,255,255,0.09)',
+              border: plan.highlighted ? '1px solid var(--brand-primary-35)' : '1px solid rgba(255,255,255,0.09)',
               borderRadius: 14,
               padding: '28px 24px',
               position: 'relative' as const,
@@ -386,7 +386,7 @@ export default function LandingPage() {
               flexDirection: 'column' as const,
             }}>
               {plan.highlighted && (
-                <span style={{ position: 'absolute' as const, top: -11, left: '50%', transform: 'translateX(-50%)', background: GOLD, color: '#000', fontSize: 10, fontWeight: 800, padding: '3px 14px', borderRadius: 10, textTransform: 'uppercase' as const, letterSpacing: 0.5 }}>Most Popular</span>
+                <span style={{ position: 'absolute' as const, top: -11, left: '50%', transform: 'translateX(-50%)', background: GOLD, color: '#0A0A00', fontSize: 10, fontWeight: 800, padding: '3px 14px', borderRadius: 10 }}>Most Popular</span>
               )}
               <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>{plan.name}</h3>
               <div style={{ marginBottom: 6 }}>
@@ -411,7 +411,7 @@ export default function LandingPage() {
                 fontSize: 14,
                 textDecoration: 'none',
                 ...(plan.highlighted
-                  ? { background: GOLD, color: '#000' }
+                  ? { background: GOLD, color: '#0A0A00' }
                   : { border: '1px solid rgba(255,255,255,0.12)', color: TEXT }),
               }}>
                 {plan.cta}
@@ -423,9 +423,9 @@ export default function LandingPage() {
 
       {/* ══════════ 9. CTA SECTION ══════════ */}
       <section style={{ maxWidth: 640, margin: '0 auto', padding: 'clamp(56px, 8vh, 72px) 24px clamp(64px, 9vh, 80px)', textAlign: 'center' as const }}>
-        <h2 style={{ fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em', marginBottom: 12 }}>Ready to build smarter?</h2>
+        <h2 style={{ fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em', marginBottom: 12 }}>Ready to Build Smarter?</h2>
         <p style={{ color: DIM, fontSize: 14, marginBottom: 28 }}>Every module unlocked for {TRIAL_DAYS} days. Run a real job on it and judge for yourself.</p>
-        <Link href="/signup" style={{ background: GOLD, color: '#0a0a0a', textDecoration: 'none', fontWeight: 600, fontSize: 14, padding: '12px 30px', borderRadius: 8, display: 'inline-block' }}>Start your free trial</Link>
+        <Link href="/signup" style={{ background: GOLD, color: '#0A0A00', textDecoration: 'none', fontWeight: 600, fontSize: 14, padding: '12px 30px', borderRadius: 8, display: 'inline-block' }}>Start Your Free Trial</Link>
         <p style={{ color: DIM, fontSize: 12, marginTop: 14 }}>No credit card required. {TRIAL_DAYS}-day free trial.</p>
       </section>
 

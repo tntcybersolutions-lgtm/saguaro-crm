@@ -5,12 +5,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 const C = {
-  dark: '#0a0a0a',
-  gold: '#F59E0B',
+  dark: 'var(--bg-base)',
+  gold: 'var(--brand-primary)',
   text: '#FFFFFF',
   dim: '#CBD5E1',
   border: 'rgba(255,255,255,0.12)',
-  raised: '#141416',
+  raised: 'var(--bg-surface)',
   green: '#22c55e',
   red: '#ef4444',
 };
@@ -25,26 +25,26 @@ const ROWS: {
   saguaroWin: boolean | 'neutral';
   note?: string;
 }[] = [
-  { feature: 'Starting Price', saguaro: '$499/mo flat', procore: '$375–600/mo+ per seat', saguaroWin: true, note: 'Procore is per-seat with an annual contract and implementation fees; Saguaro is one flat rate for your whole team' },
-  { feature: 'Annual Contract Required', saguaro: 'Month-to-month', procore: 'Annual required', saguaroWin: true, note: 'Cancel Saguaro anytime — no penalty, no lock-in' },
-  { feature: 'Setup Time', saguaro: '< 1 day', procore: '3–6 months', saguaroWin: true, note: 'Procore requires a dedicated implementation team and onboarding process' },
+  { feature: 'Starting Price', saguaro: '$499/mo flat', procore: '$375–600/mo+ per seat', saguaroWin: true, note: 'Procore is per-seat with an annual contract and implementation fees; Saguaro is one flat rate for your whole team.' },
+  { feature: 'Annual Contract Required', saguaro: 'Month-to-month', procore: 'Annual required', saguaroWin: true, note: 'Cancel Saguaro anytime — no penalty, no lock-in.' },
+  { feature: 'Setup Time', saguaro: '< 1 day', procore: '3–6 months', saguaroWin: true, note: 'Procore requires a dedicated implementation team and onboarding process.' },
   { feature: 'Per-Seat Pricing', saguaro: 'Flat rate', procore: 'Per user (costs grow)', saguaroWin: true, note: 'Add 50 users on Saguaro — same price. Procore charges per seat.' },
-  { feature: 'AI Blueprint Takeoff', saguaro: 'Included', procore: 'Add-on ($$$)', saguaroWin: true, note: 'Procore Takeoff is a separate paid module' },
+  { feature: 'AI Blueprint Takeoff', saguaro: 'Included', procore: 'Add-on ($$$)', saguaroWin: true, note: 'Procore Takeoff is a separate paid module.' },
   { feature: 'AIA Pay Apps G702/G703', saguaro: 'Included', procore: 'Included', saguaroWin: 'neutral' },
-  { feature: 'Lien Waivers (all 50 states)', saguaro: 'Included', procore: 'Add-on', saguaroWin: true, note: 'Saguaro generates state-compliant lien waivers instantly' },
-  { feature: 'Certified Payroll WH-347', saguaro: 'Included', procore: 'Not available', saguaroWin: true, note: 'Procore does not natively generate WH-347 forms' },
-  { feature: 'AI Autopilot / Automation', saguaro: 'Included', procore: 'Limited', saguaroWin: true, note: 'Saguaro automates RFI routing, CO triggers, insurance alerts, and more' },
-  { feature: 'Mobile Field App', saguaro: 'Free native iOS', procore: 'Native (extra cost)', saguaroWin: true, note: 'Native iOS app — free on TestFlight, App Store release coming soon (Android coming soon)' },
-  { feature: 'Offline Mode', saguaro: 'Full offline', procore: 'Limited', saguaroWin: true, note: 'Saguaro works without signal — syncs when back online' },
-  { feature: 'Field App Included Free', saguaro: 'Yes', procore: 'No — paid add-on', saguaroWin: true, note: 'Saguaro Control Systems is free for your whole crew — Procore charges for field access' },
-  { feature: 'AI Field Assistant (Sage)', saguaro: 'Included', procore: 'Not available', saguaroWin: true, note: 'Sage answers field questions, drafts RFIs, and surfaces project data' },
+  { feature: 'Lien Waivers (All 50 States)', saguaro: 'Included', procore: 'Add-on', saguaroWin: true, note: 'Saguaro generates state-compliant lien waivers instantly.' },
+  { feature: 'Certified Payroll WH-347', saguaro: 'Included', procore: 'Not available', saguaroWin: true, note: 'Procore does not natively generate WH-347 forms.' },
+  { feature: 'AI Autopilot / Automation', saguaro: 'Included', procore: 'Limited', saguaroWin: true, note: 'Saguaro automates RFI routing, CO triggers, insurance alerts, and more.' },
+  { feature: 'Mobile Field App', saguaro: 'Free native iOS', procore: 'Native (extra cost)', saguaroWin: true, note: 'Native iOS app — free on TestFlight, App Store release coming soon (Android coming soon).' },
+  { feature: 'Offline Mode', saguaro: 'Full offline', procore: 'Limited', saguaroWin: true, note: 'Saguaro works without signal — syncs when back online.' },
+  { feature: 'Field App Included Free', saguaro: 'Yes', procore: 'No — paid add-on', saguaroWin: true, note: 'Saguaro Control Systems is free for your whole crew — Procore charges for field access.' },
+  { feature: 'AI Field Assistant (Sage)', saguaro: 'Included', procore: 'Not available', saguaroWin: true, note: 'Sage answers field questions, drafts RFIs, and surfaces project data.' },
   { feature: 'Bid Intelligence Scoring', saguaro: 'Included', procore: 'Not available', saguaroWin: true },
   { feature: 'Owner + Sub Portals', saguaro: 'Included', procore: 'Included', saguaroWin: 'neutral' },
-  { feature: 'ACORD 25 COI Parser', saguaro: 'Included', procore: 'Add-on', saguaroWin: true, note: 'Saguaro auto-reads COI PDFs and flags expiring coverage' },
+  { feature: 'ACORD 25 COI Parser', saguaro: 'Included', procore: 'Add-on', saguaroWin: true, note: 'Saguaro auto-reads COI PDFs and flags expiring coverage.' },
   { feature: 'OSHA 300 Log', saguaro: 'Included', procore: 'Included', saguaroWin: 'neutral' },
   { feature: 'QuickBooks Sync', saguaro: 'Enterprise', procore: 'Included', saguaroWin: false },
-  { feature: 'White Label', saguaro: 'Enterprise', procore: 'Not available', saguaroWin: true, note: 'Saguaro Enterprise supports full white-label branding' },
-  { feature: 'Customer Support', saguaro: 'Email + Chat', procore: 'Enterprise only', saguaroWin: true, note: 'Procore support tiers can exceed $1,000/mo' },
+  { feature: 'White Label', saguaro: 'Enterprise', procore: 'Not available', saguaroWin: true, note: 'Saguaro Enterprise supports full white-label branding.' },
+  { feature: 'Customer Support', saguaro: 'Email + Chat', procore: 'Enterprise only', saguaroWin: true, note: 'Procore support tiers can exceed $1,000/mo.' },
 ];
 
 const DEEP_DIVE = [
@@ -183,7 +183,7 @@ export default function CompareProcorePage() {
             padding: '9px 20px',
             background: C.gold,
             borderRadius: 8,
-            color: '#0a0a0a',
+            color: '#0A0A00',
             fontSize: 13,
             fontWeight: 600,
             textDecoration: 'none',
@@ -215,8 +215,6 @@ export default function CompareProcorePage() {
           fontSize: 11,
           fontWeight: 500,
           color: C.dim,
-          letterSpacing: 0.8,
-          textTransform: 'uppercase',
           marginBottom: 26,
         }}>
           <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.gold }} />
@@ -253,7 +251,7 @@ export default function CompareProcorePage() {
             padding: '10px 22px',
             background: C.gold,
             borderRadius: 8,
-            color: '#0a0a0a',
+            color: '#0A0A00',
             fontWeight: 600,
             fontSize: 13.5,
             textDecoration: 'none',
@@ -275,7 +273,7 @@ export default function CompareProcorePage() {
         </div>
 
         <div style={{ fontSize: 13, color: C.dim, marginBottom: 52, letterSpacing: 0.3 }}>
-          No credit card &nbsp;·&nbsp; 30-day free trial &nbsp;·&nbsp; No annual contract
+          No Credit Card &nbsp;·&nbsp; 30-Day Free Trial &nbsp;·&nbsp; No Annual Contract
         </div>
 
         {/* Key win stats — de-carded row with hairline dividers */}
@@ -288,9 +286,9 @@ export default function CompareProcorePage() {
           margin: '0 auto',
         }}>
           {[
-            { stat: '82%', label: 'lower cost than Procore' },
-            { stat: '1 day', label: 'deployed vs 6 months' },
-            { stat: 'AI features', label: "Procore doesn't have" },
+            { stat: '82%', label: 'Lower Cost Than Procore' },
+            { stat: '1 Day', label: 'Deployed vs. 6 Months' },
+            { stat: 'AI Features', label: "Procore Doesn't Have" },
           ].map((item, i) => (
             <div key={item.stat} style={{ display: 'flex', alignItems: 'center' }}>
               {i > 0 && <div style={{ width: 1, height: 40, background: HAIR, margin: '0 40px' }} />}
@@ -322,10 +320,10 @@ export default function CompareProcorePage() {
           margin: '0 auto',
         }}>
           {[
-            'No per-seat fees',
+            'No Per-Seat Fees',
             'AI Blueprint Takeoff',
-            'Offline field app',
-            'Lien waivers all 50 states',
+            'Offline Field App',
+            'Lien Waivers All 50 States',
             'Certified Payroll WH-347',
           ].map((item) => (
             <div key={item} style={{
@@ -369,7 +367,7 @@ export default function CompareProcorePage() {
             background: C.raised,
             borderBottom: `1px solid ${C.border}`,
           }}>
-            <div style={{ padding: '18px 28px', fontSize: 11, fontWeight: 600, color: C.dim, textTransform: 'uppercase', letterSpacing: 1.2 }}>
+            <div style={{ padding: '18px 28px', fontSize: 11, fontWeight: 600, color: C.dim }}>
               Feature
             </div>
             <div style={{
@@ -490,7 +488,7 @@ export default function CompareProcorePage() {
           }}>
             <div>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: C.dim, marginBottom: 8 }}>
-                Current monthly software cost
+                Current Monthly Software Cost
               </label>
               <div style={{ position: 'relative' }}>
                 <span style={{
@@ -531,13 +529,13 @@ export default function CompareProcorePage() {
                   cursor: 'pointer',
                 }}
               >
-                I use Procore — fill $1,850
+                I Use Procore — Fill $1,850
               </button>
             </div>
 
             <div>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: C.dim, marginBottom: 8 }}>
-                Team size (users)
+                Team Size (Users)
               </label>
               <input
                 type="number"
@@ -559,7 +557,7 @@ export default function CompareProcorePage() {
                 onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.boxShadow = 'none'; }}
               />
               <div style={{ marginTop: 8, fontSize: 12, color: C.dim }}>
-                Saguaro is flat-rate — {teamSizeCalc} users, same price
+                Saguaro is flat-rate — {teamSizeCalc} users, same price.
               </div>
             </div>
           </div>
@@ -595,7 +593,7 @@ export default function CompareProcorePage() {
                 textAlign: 'center',
                 borderLeft: i > 0 ? `1px solid ${HAIR}` : 'none',
               }}>
-                <div style={{ fontSize: 12, fontWeight: 500, color: C.dim, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>
+                <div style={{ fontSize: 12, fontWeight: 500, color: C.dim, marginBottom: 10 }}>
                   {item.label}
                 </div>
                 <div style={{
@@ -619,7 +617,7 @@ export default function CompareProcorePage() {
               padding: '11px 26px',
               background: C.gold,
               borderRadius: 8,
-              color: '#0a0a0a',
+              color: '#0A0A00',
               fontWeight: 600,
               fontSize: 14,
               textDecoration: 'none',
@@ -629,7 +627,7 @@ export default function CompareProcorePage() {
             </Link>
             <div style={{ fontSize: 13, color: C.dim }}>
               <Link href="/roi-calculator" style={{ color: C.gold, textDecoration: 'none', fontWeight: 500 }}>
-                Or see our full ROI calculator →
+                Or See Our Full ROI Calculator →
               </Link>
             </div>
           </div>
@@ -677,8 +675,6 @@ export default function CompareProcorePage() {
                   fontSize: 10.5,
                   fontWeight: 500,
                   color: C.dim,
-                  textTransform: 'uppercase',
-                  letterSpacing: 0.8,
                   marginBottom: 16,
                 }}>
                   <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.gold }} />
@@ -697,14 +693,14 @@ export default function CompareProcorePage() {
                     borderRadius: 8,
                     padding: '14px 16px',
                   }}>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: C.red, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: C.red, marginBottom: 8 }}>
                       Procore
                     </div>
                     <p style={{ fontSize: 12, color: C.dim, lineHeight: 1.7, margin: 0 }}>{card.procoreBody}</p>
                   </div>
                 )}
                 <div style={{ fontSize: 12, color: C.gold, marginTop: 12, fontWeight: 500 }}>
-                  {activeDeep === idx ? 'Hide Procore comparison ↑' : 'Compare with Procore →'}
+                  {activeDeep === idx ? 'Hide Procore Comparison ↑' : 'Compare with Procore →'}
                 </div>
               </div>
             ))}
@@ -741,7 +737,7 @@ export default function CompareProcorePage() {
             padding: '32px 28px',
             opacity: 0.9,
           }}>
-            <div style={{ fontWeight: 500, fontSize: 13, color: C.dim, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 20 }}>
+            <div style={{ fontWeight: 500, fontSize: 13, color: C.dim, marginBottom: 20 }}>
               Procore
             </div>
             <div style={{ fontSize: 11, color: C.dim, marginBottom: 20, lineHeight: 1.6 }}>
@@ -787,7 +783,7 @@ export default function CompareProcorePage() {
               fontWeight: 600,
               color: C.dim,
             }}>
-              VS
+              vs
             </div>
           </div>
 
@@ -799,7 +795,7 @@ export default function CompareProcorePage() {
             padding: '32px 28px',
             boxShadow: 'none',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600, fontSize: 13, color: C.text, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600, fontSize: 13, color: C.text, marginBottom: 20 }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.gold }} />
               Saguaro Professional
             </div>
@@ -843,14 +839,14 @@ export default function CompareProcorePage() {
           flexWrap: 'wrap',
         }}>
           <div>
-            <div style={{ fontSize: 13, color: C.dim, marginBottom: 2 }}>Estimated annual savings vs Procore</div>
+            <div style={{ fontSize: 13, color: C.dim, marginBottom: 2 }}>Estimated Annual Savings vs. Procore</div>
             <div style={{ fontSize: 28, fontWeight: 600, color: C.green, letterSpacing: '-0.02em' }}>$17,412 / year</div>
           </div>
           <Link href="/signup" style={{
             padding: '11px 26px',
             background: C.gold,
             borderRadius: 8,
-            color: '#0a0a0a',
+            color: '#0A0A00',
             fontWeight: 600,
             fontSize: 14,
             textDecoration: 'none',
@@ -890,8 +886,6 @@ export default function CompareProcorePage() {
                 fontSize: 10.5,
                 fontWeight: 500,
                 color: C.dim,
-                letterSpacing: 0.8,
-                textTransform: 'uppercase',
                 marginBottom: 20,
               }}>
                 <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.gold }} />
@@ -939,11 +933,9 @@ export default function CompareProcorePage() {
                 fontSize: 13,
                 fontWeight: 600,
                 color: C.dim,
-                textTransform: 'uppercase',
-                letterSpacing: 0.8,
                 marginBottom: 20,
               }}>
-                What you get on day 1:
+                What You Get on Day 1:
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 28 }}>
                 {[
@@ -966,7 +958,7 @@ export default function CompareProcorePage() {
                 padding: '12px 24px',
                 background: C.gold,
                 borderRadius: 8,
-                color: '#0a0a0a',
+                color: '#0A0A00',
                 fontWeight: 600,
                 fontSize: 14,
                 textDecoration: 'none',
@@ -1071,12 +1063,10 @@ export default function CompareProcorePage() {
           fontSize: 10.5,
           fontWeight: 500,
           color: C.dim,
-          letterSpacing: 0.8,
-          textTransform: 'uppercase',
           marginBottom: 24,
         }}>
           <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.gold }} />
-          Ready to switch?
+          Ready to Switch?
         </div>
 
         <h2 style={{
@@ -1101,7 +1091,7 @@ export default function CompareProcorePage() {
             padding: '12px 28px',
             background: C.gold,
             borderRadius: 8,
-            color: '#0a0a0a',
+            color: '#0A0A00',
             fontWeight: 600,
             fontSize: 14,
             textDecoration: 'none',
@@ -1134,7 +1124,7 @@ export default function CompareProcorePage() {
       {/* ── MOBILE STICKY CTA ── */}
       <div className="mobile-sticky-cta" style={{ display: 'none', position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, background: 'rgba(20,20,22,0.97)', borderTop: `1px solid ${HAIR}`, padding: '12px 16px', backdropFilter: 'blur(12px)' }}>
         <div style={{ display: 'flex', gap: 10 }}>
-          <Link href="/signup" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '13px', background: C.gold, borderRadius: 8, color: '#0a0a0a', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
+          <Link href="/signup" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '13px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
             Start Free Trial
           </Link>
           <Link href="/switch-from-procore" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '13px', background: 'transparent', border: `1px solid ${EYEBROW}`, borderRadius: 8, color: C.dim, fontSize: 14, fontWeight: 500, textDecoration: 'none' }}>

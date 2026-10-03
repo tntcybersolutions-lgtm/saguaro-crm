@@ -14,8 +14,8 @@ import { DEVICE_REGISTRY } from '@/lib/heatmap/models';
 import { calibrateModel } from '@/lib/heatmap/calibrate';
 import { calibrationNote, engineStamp } from '@/lib/heatmap/meta';
 
-const GOLD = '#D4A017';
-const NAVY = '#0a0a0a';
+const GOLD = 'var(--brand-primary)';
+const NAVY = '#0A0A00'; // text on gold fills
 
 type ProjSnap = HeatmapProject & { snapshot?: string };
 type MultiData = { multifloor: true; floors: { id: string; name: string; proj: ProjSnap | null }[]; activeFloor?: string };
@@ -88,7 +88,7 @@ export default function SharedHeatmap() {
   const s = cov?.stats;
 
   if (loading) return <Shell><p style={{ color: '#8b949e' }}>Loading design…</p></Shell>;
-  if (err || !project) return <Shell><h2 style={{ margin: '0 0 6px' }}>Can&apos;t open this design</h2><p style={{ color: '#8b949e' }}>{err || 'Not found.'}</p></Shell>;
+  if (err || !project) return <Shell><h2 style={{ margin: '0 0 6px' }}>Can&apos;t Open This Design</h2><p style={{ color: '#8b949e' }}>{err || 'Not found.'}</p></Shell>;
 
   const img = project.snapshot || project.planDataUrl;
   return (
@@ -113,35 +113,35 @@ export default function SharedHeatmap() {
 
       {img && <img src={img} alt="Coverage plan" style={{ width: '100%', border: '1px solid #30363d', borderRadius: 10 }} />}
 
-      <H>Coverage metrics</H>
+      <H>Coverage Metrics</H>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
         <Card k="Coverage" v={s ? `${s.pctCovered.toFixed(0)}%` : '—'} />
         <Card k="Health" v={s ? `${s.healthScore}` : '—'} />
         <Card k="Devices" v={`${project.devices.length}`} />
-        <Card k="Dead zones" v={s ? `${s.deadZones}` : '0'} />
-        <Card k="Dead area" v={s ? `${Math.round(s.deadArea)} ft²` : '0 ft²'} />
+        <Card k="Dead Zones" v={s ? `${s.deadZones}` : '0'} />
+        <Card k="Dead Area" v={s ? `${Math.round(s.deadArea)} ft²` : '0 ft²'} />
       </div>
       <div style={{ color: '#8b949e', fontSize: 11.5, marginTop: 8, lineHeight: 1.5 }}>Coverage % is a predictive RF model{cal && cal.sampleCount > 0 ? ` — validated ±${cal.rmseAfter.toFixed(1)} dB against ${cal.sampleCount} survey point${cal.sampleCount === 1 ? '' : 's'}` : ''} — confirm with an on-site walk-test.</div>
 
       {bom && bom.rows.length > 0 && <>
-        <H>Bill of materials</H>
+        <H>Bill of Materials</H>
         <table style={tbl}>
           <thead><tr><Th>Item</Th><Th align="center">Qty</Th><Th align="right">Unit</Th><Th align="right">Ext</Th></tr></thead>
           <tbody>{bom.rows.map((r, i) => (
             <tr key={i}><Td>{r.item}</Td><Td align="center">{r.qty}</Td><Td align="right">{r.unit ? `$${r.unit.toLocaleString()}` : '—'}</Td><Td align="right">{r.ext ? `$${r.ext.toLocaleString()}` : '—'}</Td></tr>
           ))}</tbody>
           <tfoot>
-            <tr><Td bold>Total (hardware, est.)</Td><Td /><Td /><Td align="right" bold>${bom.total.toLocaleString()}</Td></tr>
-            <tr><Td bold>Turnkey install (hardware + labor + O&amp;P)</Td><Td /><Td /><Td align="right" bold>${bom.turnkey.toLocaleString()}</Td></tr>
+            <tr><Td bold>Total (Hardware, Est.)</Td><Td /><Td /><Td align="right" bold>${bom.total.toLocaleString()}</Td></tr>
+            <tr><Td bold>Turnkey Install (Hardware + Labor + O&amp;P)</Td><Td /><Td /><Td align="right" bold>${bom.turnkey.toLocaleString()}</Td></tr>
           </tfoot>
         </table>
       </>}
 
       {sched && sched.rows.length > 0 && <>
-        <H>Network schedule — IP · VLAN · switch port</H>
+        <H>Network Schedule — IP · VLAN · Switch Port</H>
         <div style={{ color: '#8b949e', fontSize: 12, margin: '0 0 8px' }}>{sched.vlans.map((v) => `${v.name} — VLAN ${v.id} (${v.subnet}.0/24)`).join('  ·  ')}</div>
         <table style={tbl}>
-          <thead><tr><Th>Device</Th><Th>VLAN</Th><Th>IP address</Th><Th>Switch port</Th><Th align="right">PoE</Th></tr></thead>
+          <thead><tr><Th>Device</Th><Th>VLAN</Th><Th>IP Address</Th><Th>Switch Port</Th><Th align="right">PoE</Th></tr></thead>
           <tbody>{sched.rows.map((r) => (
             <tr key={r.id}><Td>{r.label}</Td><Td>{r.vlan.id} · {r.vlan.name}</Td><Td>{r.ip}</Td><Td>{r.port}</Td><Td align="right">{r.poeW ? `${r.poeW} W` : '—'}</Td></tr>
           ))}</tbody>
@@ -150,7 +150,7 @@ export default function SharedHeatmap() {
       </>}
 
       {/* ── Approve → auto-creates the install bid for the team (design-to-money loop) ── */}
-      <div style={{ marginTop: 30, border: `1px solid ${GOLD}`, borderRadius: 12, padding: 18, background: 'rgba(212,160,23,0.06)' }}>
+      <div style={{ marginTop: 30, border: `1px solid ${GOLD}`, borderRadius: 12, padding: 18, background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)' }}>
         {approved ? (
           <div style={{ textAlign: 'center', padding: '8px 0' }}>
             <div style={{ fontSize: 18, fontWeight: 800, color: GOLD }}>Design approved — thank you, {approverName}.</div>
@@ -158,14 +158,14 @@ export default function SharedHeatmap() {
           </div>
         ) : (
           <>
-            <div style={{ fontSize: 15, fontWeight: 800 }}>Approve this design</div>
+            <div style={{ fontSize: 15, fontWeight: 800 }}>Approve This Design</div>
             <div style={{ color: '#8b949e', fontSize: 13, margin: '4px 0 12px' }}>Type your name to approve the coverage design and request an install quote{bom ? ` — turnkey ~$${bom.turnkey.toLocaleString()}` : ''}.</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               <input value={approverName} onChange={(ev) => setApproverName(ev.target.value)} placeholder="Your full name" style={inputStyle} />
               <input value={approverEmail} onChange={(ev) => setApproverEmail(ev.target.value)} placeholder="Email (optional)" style={inputStyle} />
             </div>
             {approveErr && <div style={{ color: '#ff7b72', fontSize: 12.5, marginTop: 8 }}>{approveErr}</div>}
-            <button onClick={doApprove} disabled={approving || !approverName.trim()} style={{ marginTop: 12, width: '100%', padding: 12, borderRadius: 10, border: 'none', background: GOLD, color: NAVY, fontWeight: 800, fontSize: 14, cursor: approving ? 'default' : 'pointer', opacity: approving || !approverName.trim() ? 0.6 : 1 }}>{approving ? 'Submitting…' : 'Approve & request install quote'}</button>
+            <button onClick={doApprove} disabled={approving || !approverName.trim()} style={{ marginTop: 12, width: '100%', padding: 12, borderRadius: 10, border: 'none', background: GOLD, color: NAVY, fontWeight: 800, fontSize: 14, cursor: approving ? 'default' : 'pointer', opacity: approving || !approverName.trim() ? 0.6 : 1 }}>{approving ? 'Submitting…' : 'Approve & Request Install Quote'}</button>
           </>
         )}
       </div>
@@ -180,11 +180,11 @@ export default function SharedHeatmap() {
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ minHeight: '100vh', background: '#010409', color: '#e6edf3', fontFamily: 'system-ui,Segoe UI,sans-serif' }}>
-      <div style={{ background: `linear-gradient(100deg,${NAVY},#161b22)`, padding: '18px 26px', display: 'flex', alignItems: 'center', gap: 14 }}>
-        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M12 9c0-2 -1.6-3.5 -3.5-3.5S5 7 5 9v3c0 1.4 1.1 2.5 2.5 2.5S10 13.4 10 12M12 12c0-2 1.6-3.5 3.5-3.5S19 10 19 12v2c0 1.4-1.1 2.5-2.5 2.5S14 15.4 14 14" /></svg>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-base)', color: '#e6edf3', fontFamily: 'system-ui,Segoe UI,sans-serif' }}>
+      <div style={{ background: 'linear-gradient(100deg, var(--bg-base), #161b22)', padding: '18px 26px', display: 'flex', alignItems: 'center', gap: 14 }}>
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" style={{ stroke: GOLD }} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M12 9c0-2 -1.6-3.5 -3.5-3.5S5 7 5 9v3c0 1.4 1.1 2.5 2.5 2.5S10 13.4 10 12M12 12c0-2 1.6-3.5 3.5-3.5S19 10 19 12v2c0 1.4-1.1 2.5-2.5 2.5S14 15.4 14 14" /></svg>
         <div>
-          <div style={{ color: GOLD, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.4, fontWeight: 700 }}>Saguaro Control Systems</div>
+          <div style={{ color: GOLD, fontSize: 11, fontWeight: 700 }}>Saguaro Control Systems</div>
           <div style={{ fontSize: 18, fontWeight: 800 }}>Coverage Design</div>
         </div>
       </div>
@@ -196,18 +196,18 @@ function Shell({ children }: { children: React.ReactNode }) {
 const tbl: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', fontSize: 13, marginTop: 2 };
 const inputStyle: React.CSSProperties = { flex: 1, minWidth: 160, padding: '10px 12px', borderRadius: 8, border: '1px solid #30363d', background: '#0a0a0a', color: '#e6edf3', fontSize: 14, outline: 'none' };
 function H({ children }: { children: React.ReactNode }) {
-  return <h2 style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.7, color: '#e6edf3', borderBottom: `2px solid ${GOLD}`, paddingBottom: 5, display: 'inline-block', margin: '26px 0 10px' }}>{children}</h2>;
+  return <h2 style={{ fontSize: 12, color: '#e6edf3', borderBottom: `2px solid ${GOLD}`, paddingBottom: 5, display: 'inline-block', margin: '26px 0 10px' }}>{children}</h2>;
 }
 function Card({ k, v }: { k: string; v: string }) {
   return (
     <div style={{ flex: 1, minWidth: 120, border: '1px solid #21262d', borderRadius: 8, padding: '11px 13px', background: '#0a0a0a' }}>
-      <div style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: 0.5, color: '#8b949e' }}>{k}</div>
+      <div style={{ fontSize: 10.5, color: '#8b949e' }}>{k}</div>
       <div style={{ fontSize: 22, fontWeight: 800, marginTop: 3 }}>{v}</div>
     </div>
   );
 }
 function Th({ children, align }: { children?: React.ReactNode; align?: 'center' | 'right' }) {
-  return <th style={{ textAlign: align || 'left', background: '#0a0a0a', color: '#8b949e', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.4, padding: '7px 9px', borderBottom: '1px solid #21262d' }}>{children}</th>;
+  return <th style={{ textAlign: align || 'left', background: '#0a0a0a', color: '#8b949e', fontSize: 11, padding: '7px 9px', borderBottom: '1px solid #21262d' }}>{children}</th>;
 }
 function Td({ children, align, bold }: { children?: React.ReactNode; align?: 'center' | 'right'; bold?: boolean }) {
   return <td style={{ textAlign: align || 'left', padding: '7px 9px', borderBottom: '1px solid #161b22', fontWeight: bold ? 800 : 400, fontVariantNumeric: 'tabular-nums' }}>{children}</td>;
