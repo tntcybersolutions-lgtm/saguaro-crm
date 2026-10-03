@@ -241,8 +241,12 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
               onError={() => setImgFailed(true)}
               /* Fill the square tile — cover + centered so a photo or a mark
                  never letterboxes, drifts, or spills past the 52px tile. The
-                 parent clips (overflow: hidden), so nothing runs off. */
-              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
+                 parent clips (overflow: hidden), so nothing runs off. A DARK
+                 mark keeps its light plate and is contained, same rule as the
+                 expanded banner — cropped onto dark chrome it would vanish. */
+              style={needsPlate
+                ? { maxWidth: 44, maxHeight: 44, width: 'auto', height: 'auto', objectFit: 'contain', display: 'block', ...platedImg }
+                : { width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
             />
           ) : monogram(36, 14)}
         </Link>
