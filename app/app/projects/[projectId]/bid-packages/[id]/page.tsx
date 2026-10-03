@@ -8,7 +8,7 @@ import { FolderOpen, Envelope, ArrowLeft, FileText, Lock, Trophy, Star, Plus, Ch
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, FlowStrip, ghostButtonStyle, goldButtonStyle } from '@/components/ui/premium';
 import { openPdf } from '@/components/PdfViewer';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030';
 const MUTED='rgba(255,255,255,0.62)';        // section-header meta text
 const HAIR='rgba(255,255,255,0.06)';         // table row hairlines on the dark surface
 const TH_BG='rgba(255,255,255,0.03)';        // table header band
@@ -82,8 +82,8 @@ interface BidPackage {
 
 function Badge({ label, color = DIM, bg = 'rgba(148,163,192,.1)' }: { label: string; color?: string; bg?: string }) {
   return (
-    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, background: bg, color, textTransform: 'uppercase', letterSpacing: 0.3 }}>
-      {label}
+    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, background: bg, color, letterSpacing: 0.3 }}>
+      {label.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
     </span>
   );
 }
@@ -91,9 +91,9 @@ function Badge({ label, color = DIM, bg = 'rgba(148,163,192,.1)' }: { label: str
 function subStatusColor(s: SubStatus): { c: string; bg: string } {
   switch (s) {
     case 'submitted': return { c: '#1db954', bg: 'rgba(26,138,74,.12)' };
-    case 'viewed':    return { c: GOLD,      bg: 'rgba(245, 158, 11,.12)' };
+    case 'viewed':    return { c: GOLD, bg: 'var(--brand-primary-12)' };
     case 'declined':  return { c: '#ff7070', bg: 'rgba(192,48,48,.12)' };
-    default:          return { c: DIM,       bg: 'rgba(143,163,192,.1)' };
+    default:          return { c: DIM, bg: 'rgba(143,163,192,.1)' };
   }
 }
 
@@ -214,8 +214,8 @@ export default function BidPackageDetailPage() {
         body: JSON.stringify({ subId, packageId: id }),
       });
       const d = await r.json().catch(() => ({})) as any;
-      if (!r.ok || d.error) throw new Error(d.error || 'Reminder failed');
-      showToast(`Reminder sent to ${companyName}`);
+      if (!r.ok || d.error) throw new Error(d.error || 'Reminder failed.');
+      showToast(`Reminder sent to ${companyName}.`);
     } catch (e: any) {
       showToast(e?.message || `Could not send reminder to ${companyName}. Please try again.`, '#ff7070');
     } finally { setReminding(null); }
@@ -246,7 +246,7 @@ export default function BidPackageDetailPage() {
       });
       const d = await r.json().catch(() => ({})) as any;
       if (!r.ok || d.error) {
-        const msg = String(d.error || 'Award failed');
+        const msg = String(d.error || 'Award failed.');
         /* A compliance hold is not a failure to report and forget — it is a
            decision the GC now has to make, so it stays on the page. */
         if (/compliance hold/i.test(msg)) {
@@ -271,7 +271,7 @@ export default function BidPackageDetailPage() {
         body: JSON.stringify({ projectId, vendorName: subName, vendorEmail: subEmail || '' }),
       });
       const d = await r.json().catch(() => ({})) as any;
-      if (!r.ok || d.error) throw new Error(d.error || 'Could not file the W-9 request');
+      if (!r.ok || d.error) throw new Error(d.error || 'Could not file the W-9 request.');
       showToast(`W-9 requested from ${subName}.`);
     } catch (e: any) {
       showToast(e?.message || `Could not request the W-9 from ${subName}.`, '#ff7070');
@@ -287,7 +287,7 @@ export default function BidPackageDetailPage() {
         body: JSON.stringify({ packageId: id }),
       });
       const d = await r.json().catch(() => ({})) as any;
-      if (!r.ok || d.error) throw new Error(d.error || 'Close failed');
+      if (!r.ok || d.error) throw new Error(d.error || 'Close failed.');
       if (pkg) setPkg({ ...pkg, status: 'closed' });
       showToast('Bidding closed.');
     } catch (e: any) {
@@ -307,7 +307,7 @@ export default function BidPackageDetailPage() {
         body: JSON.stringify({ subs: [{ name: inviteName, email: inviteEmail, subId: pickedSubId || undefined }] }),
       });
       if (!r.ok) throw new Error('invite failed');
-      showToast(`Invite sent to ${inviteEmail}`);
+      showToast(`Invite sent to ${inviteEmail}.`);
       setInviteName('');
       setInviteEmail('');
       setPickedSubId('');
@@ -368,7 +368,7 @@ export default function BidPackageDetailPage() {
         <PremiumEmpty
           tone="error"
           icon={<Envelope size={30} weight="duotone" color={GOLD} />}
-          title="Bid package not found"
+          title="Bid Package Not Found"
           description="We couldn't load this bid package. It may have been removed, or the link is out of date."
           action={
             <button onClick={() => router.push(`/app/projects/${projectId}/bid-packages`)} style={ghostButtonStyle} className="pmBtn">
@@ -407,7 +407,7 @@ export default function BidPackageDetailPage() {
         <FolderOpen size={16} weight="duotone" /> Open Bid Jacket
       </Link>
       <button onClick={downloadPDF} style={ghostButtonStyle} className="pmBtn">
-        <FileText size={16} weight="regular" /> Printed jacket PDF
+        <FileText size={16} weight="regular" /> Printed Jacket PDF
       </button>
       {/* LEVELLING BELONGS WHERE THE BIDS ARE.
           This page lists every bid received and an Award button beside each
@@ -427,12 +427,12 @@ export default function BidPackageDetailPage() {
           style={{ ...ghostButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 7, textDecoration: 'none' }}
           className="pmBtn"
         >
-          <Scales size={16} weight="duotone" /> Level {submissions.length} bid{submissions.length === 1 ? '' : 's'}
+          <Scales size={16} weight="duotone" /> Level {submissions.length} Bid{submissions.length === 1 ? '' : 's'}
         </Link>
       )}
       {pkg.status !== 'closed' && pkg.status !== 'awarded' && (
         <button onClick={closeBids} disabled={closing} className="pmBtn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 12, background: 'rgba(192,48,48,.12)', border: '1px solid rgba(192,48,48,.3)', color: '#ff7070', fontSize: 13.5, fontWeight: 800, cursor: 'pointer', opacity: closing ? 0.6 : 1 }}>
-          {closing ? 'Closing...' : <><Lock size={15} weight="bold" /> Close Bidding</>}
+          {closing ? 'Closing…' : <><Lock size={15} weight="bold" /> Close Bidding</>}
         </button>
       )}
     </>
@@ -462,8 +462,8 @@ export default function BidPackageDetailPage() {
           aux={
             <Badge
               label={pkg.status}
-              color={pkg.status === 'awarded' ? '#1db954' : pkg.status === 'open' ? '#F59E0B' : pkg.status === 'closed' ? '#ff7070' : DIM}
-              bg={pkg.status === 'awarded' ? 'rgba(26,138,74,.12)' : pkg.status === 'open' ? 'rgba(245,158,11,.12)' : pkg.status === 'closed' ? 'rgba(192,48,48,.12)' : 'rgba(148,163,192,.1)'}
+              color={pkg.status === 'awarded' ? '#1db954' : pkg.status === 'open' ? GOLD : pkg.status === 'closed' ? '#ff7070' : DIM}
+              bg={pkg.status === 'awarded' ? 'rgba(26,138,74,.12)' : pkg.status === 'open' ? 'var(--brand-primary-12)' : pkg.status === 'closed' ? 'rgba(192,48,48,.12)' : 'rgba(148,163,192,.1)'}
             />
           }
           title={pkg.name}
@@ -500,7 +500,7 @@ export default function BidPackageDetailPage() {
           <div style={{ background: 'rgba(26,138,74,.08)', border: '1px solid rgba(26,138,74,.25)', borderRadius: 14, padding: '14px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ fontSize: 20, display: 'inline-flex' }}><Trophy size={20} color="#1db954" weight="fill" /></span>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#1db954', marginBottom: 3, letterSpacing: 0.5 }}>Awarded To</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#1db954', marginBottom: 3 }}>Awarded To</div>
               <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{pkg.awarded_to}{pkg.awarded_amount && <span style={{ color: '#1db954', marginLeft: 12 }}>{fmt(pkg.awarded_amount)}</span>}</div>
             </div>
 
@@ -513,11 +513,11 @@ export default function BidPackageDetailPage() {
               style={{
                 marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8,
                 minHeight: 44, padding: '0 20px', borderRadius: 9,
-                background: GOLD, color: '#241500', fontSize: 13.5, fontWeight: 800,
+                background: GOLD, color: '#0A0A00', fontSize: 13.5, fontWeight: 800,
                 textDecoration: 'none', whiteSpace: 'nowrap',
               }}
             >
-              <FileText size={16} weight="bold" color="#241500" /> Paper the subcontract
+              <FileText size={16} weight="bold" color="#0A0A00" /> Paper the Subcontract
             </Link>
           </div>
         )}
@@ -540,7 +540,7 @@ export default function BidPackageDetailPage() {
                   <thead>
                     <tr style={{ background: TH_BG }}>
                       {['Description', 'Qty', 'Unit', 'Unit Cost', 'Total'].map(h => (
-                        <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: DIM, borderBottom: `1px solid ${HAIR}` }}>{h}</th>
+                        <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: `1px solid ${HAIR}` }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -554,8 +554,8 @@ export default function BidPackageDetailPage() {
                         <td style={{ padding: '11px 16px', color: TEXT, fontWeight: 600 }}>{fmt(item.total)}</td>
                       </tr>
                     ))}
-                    <tr style={{ background: 'rgba(245, 158, 11,.05)', borderTop: `1px solid ${HAIR}` }}>
-                      <td colSpan={4} style={{ padding: '11px 16px', color: DIM, fontWeight: 700, textTransform: 'uppercase', fontSize: 11, letterSpacing: 0.5 }}>Total</td>
+                    <tr style={{ background: 'color-mix(in srgb, var(--brand-primary) 5%, transparent)', borderTop: `1px solid ${HAIR}` }}>
+                      <td colSpan={4} style={{ padding: '11px 16px', color: DIM, fontWeight: 700, fontSize: 11 }}>Total</td>
                       <td style={{ padding: '11px 16px', color: GOLD, fontWeight: 800, fontSize: 15 }}>{fmt(totalSov)}</td>
                     </tr>
                   </tbody>
@@ -577,7 +577,7 @@ export default function BidPackageDetailPage() {
               {/* The hold sits with the bids it is holding, and carries both of
                   the ways out that its own wording promises. */}
               {complianceHold && (
-                <div style={{ margin: '14px 20px', padding: '14px 16px', borderRadius: 12, background: 'rgba(245,158,11,0.09)', border: '1px solid rgba(245,158,11,0.32)' }}>
+                <div style={{ margin: '14px 20px', padding: '14px 16px', borderRadius: 12, background: 'var(--brand-primary-08)', border: '1px solid color-mix(in srgb, var(--brand-primary) 32%, transparent)' }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 9 }}>
                     <Lock size={16} weight="duotone" color={GOLD} style={{ flexShrink: 0, marginTop: 1 }} />
                     <div style={{ minWidth: 0 }}>
@@ -599,7 +599,7 @@ export default function BidPackageDetailPage() {
                       className="pmBtn"
                       style={{ ...goldButtonStyle, opacity: requestingDocs ? 0.6 : 1 }}
                     >
-                      {requestingDocs ? 'Requesting…' : 'Request the documents'}
+                      {requestingDocs ? 'Requesting…' : 'Request the Documents'}
                     </button>
                     <button
                       onClick={() => awardBid(complianceHold.submissionId, complianceHold.subName, { override: true })}
@@ -607,7 +607,7 @@ export default function BidPackageDetailPage() {
                       className="pmBtn"
                       style={{ ...ghostButtonStyle, opacity: awarding ? 0.6 : 1 }}
                     >
-                      Award anyway (override)
+                      Award Anyway (Override)
                     </button>
                     <button
                       onClick={() => setComplianceHold(null)}
@@ -623,7 +623,7 @@ export default function BidPackageDetailPage() {
                   <thead>
                     <tr style={{ background: TH_BG }}>
                       {['Sub Name', 'Email', 'Bid Amount', 'Submitted', 'Action'].map(h => (
-                        <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: DIM, borderBottom: `1px solid ${HAIR}` }}>{h}</th>
+                        <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: `1px solid ${HAIR}` }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -634,7 +634,7 @@ export default function BidPackageDetailPage() {
                         <tr key={sub.id} style={{ borderBottom: `1px solid ${HAIR}`, background: isAwarded ? 'rgba(26,138,74,.06)' : 'transparent' }}>
                           <td style={{ padding: '12px 16px', color: TEXT, fontWeight: 600 }}>
                             {sub.sub_name}
-                            {isAwarded && <span style={{ fontSize: 10, color: '#1db954', marginLeft: 8, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 3 }}><Star size={10} color="#1db954" weight="fill" /> AWARDED</span>}
+                            {isAwarded && <span style={{ fontSize: 10, color: '#1db954', marginLeft: 8, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 3 }}><Star size={10} color="#1db954" weight="fill" /> Awarded</span>}
                           </td>
                           <td style={{ padding: '12px 16px', color: DIM, fontSize: 12 }}>{sub.sub_email || '—'}</td>
                           <td style={{ padding: '12px 16px', color: GOLD, fontWeight: 800, fontSize: 14 }}>{fmt(sub.amount)}</td>
@@ -645,7 +645,7 @@ export default function BidPackageDetailPage() {
                                 onClick={() => awardBid(sub.id, sub.sub_name)}
                                 disabled={awarding === sub.id}
                                 style={{ padding: '5px 14px', background: 'rgba(26,138,74,.1)', border: '1px solid rgba(26,138,74,.3)', borderRadius: 6, color: '#1db954', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: awarding === sub.id ? 0.5 : 1 }}>
-                                {awarding === sub.id ? 'Awarding...' : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Trophy size={12} color="#1db954" weight="fill" /> Award</span>}
+                                {awarding === sub.id ? 'Awarding…' : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Trophy size={12} color="#1db954" weight="fill" /> Award</span>}
                               </button>
                             )}
                             {isAwarded && <span style={{ fontSize: 11, color: '#1db954' }}>Awarded</span>}
@@ -670,7 +670,7 @@ export default function BidPackageDetailPage() {
                 <span style={{ fontSize: 12, color: MUTED }}>{pkg.invited_subs.length} invited · {submittedSubs.length} submitted</span>
                 <button
                   onClick={() => setShowInviteForm(!showInviteForm)}
-                  style={{ padding: '5px 12px', background: showInviteForm ? 'rgba(255,255,255,.05)' : 'rgba(245, 158, 11,.1)', border: `1px solid ${showInviteForm ? BORDER : 'rgba(245, 158, 11,.3)'}`, borderRadius: 6, color: showInviteForm ? DIM : GOLD, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                  style={{ padding: '5px 12px', background: showInviteForm ? 'rgba(255,255,255,.05)' : 'var(--brand-primary-08)', border: `1px solid ${showInviteForm ? BORDER : 'color-mix(in srgb, var(--brand-primary) 30%, transparent)'}`, borderRadius: 6, color: showInviteForm ? DIM : GOLD, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                   {showInviteForm ? 'Cancel' : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Plus size={12} color={GOLD} weight="bold" /> Invite More</span>}
                 </button>
               </div>
@@ -679,10 +679,10 @@ export default function BidPackageDetailPage() {
           >
             {/* Invite More Form */}
             {showInviteForm && (
-              <div style={{ padding: '14px 20px', borderBottom: `1px solid ${HAIR}`, background: 'rgba(245, 158, 11,.03)', display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+              <div style={{ padding: '14px 20px', borderBottom: `1px solid ${HAIR}`, background: 'color-mix(in srgb, var(--brand-primary) 3%, transparent)', display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
                 {directory.length > 0 && (
                   <div style={{ flex: 1, minWidth: 190 }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 4 }}>From your directory</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: DIM, marginBottom: 4 }}>From Your Directory</div>
                     <select
                       value={pickedSubId}
                       onChange={(e) => {
@@ -737,7 +737,7 @@ export default function BidPackageDetailPage() {
                   </div>
                 )}
                 <div style={{ flex: 1, minWidth: 160 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 4 }}>Name</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: DIM, marginBottom: 4 }}>Name</div>
                   <input
                     value={inviteName}
                     onChange={e => { setInviteName(e.target.value); if (pickedSubId) setPickedSubId(''); }}
@@ -746,7 +746,7 @@ export default function BidPackageDetailPage() {
                   />
                 </div>
                 <div style={{ flex: 2, minWidth: 220 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 4 }}>Email *</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: DIM, marginBottom: 4 }}>Email *</div>
                   <input value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="contractor@company.com" style={{ ...inp, width: '100%', boxSizing: 'border-box' }} />
                 </div>
                 <button
@@ -754,7 +754,7 @@ export default function BidPackageDetailPage() {
                   disabled={!inviteEmail || inviting}
                   className="pmBtn"
                   style={{ ...goldButtonStyle, opacity: (!inviteEmail || inviting) ? 0.6 : 1 }}>
-                  {inviting ? 'Sending...' : 'Send Invite'}
+                  {inviting ? 'Sending…' : 'Send Invite'}
                 </button>
               </div>
             )}
@@ -764,7 +764,7 @@ export default function BidPackageDetailPage() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 800, color: TEXT }}>
                     <UsersThree size={16} weight="duotone" color={GOLD} style={{ marginRight: 7, verticalAlign: 'text-bottom' }} />
-                    No subs invited yet
+                    No Subs Invited Yet
                     <span style={{ fontWeight: 400, color: DIM }}>{showInviteForm ? ' — send the first invite with the form above; bidding starts the moment it lands.' : ' — invite the first subcontractor to start collecting bids.'}</span>
                   </div>
                   {!showInviteForm && (
@@ -774,10 +774,10 @@ export default function BidPackageDetailPage() {
                   )}
                 </div>
                 <FlowStrip steps={[
-                  { title: 'Invite subs', desc: 'email goes out with the package' },
-                  { title: 'They bid online', desc: 'through the sub portal' },
-                  { title: 'Compare and award', desc: 'right from this page' },
-                  { title: 'Award flows on', desc: 'to contracts and budget' },
+                  { title: 'Invite Subs', desc: 'Email goes out with the package' },
+                  { title: 'They Bid Online', desc: 'Through the sub portal' },
+                  { title: 'Compare and Award', desc: 'Right from this page' },
+                  { title: 'Award Flows On', desc: 'To contracts and budget' },
                 ]} />
               </div>
             ) : (
@@ -786,7 +786,7 @@ export default function BidPackageDetailPage() {
                   <thead>
                     <tr style={{ background: TH_BG }}>
                       {['Company', 'Contact', 'Email', 'Status', 'Bid Amount', 'Invited', 'Actions'].map(h => (
-                        <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: DIM, borderBottom: `1px solid ${HAIR}` }}>{h}</th>
+                        <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: `1px solid ${HAIR}` }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -802,7 +802,7 @@ export default function BidPackageDetailPage() {
                           <td style={{ padding: '12px 16px' }}><Badge label={sub.status} color={sc.c} bg={sc.bg} /></td>
                           <td style={{ padding: '12px 16px', color: sub.bid_amount ? TEXT : DIM, fontWeight: sub.bid_amount ? 600 : 400 }}>
                             {sub.bid_amount ? fmt(sub.bid_amount) : '—'}
-                            {isAwarded && <span style={{ fontSize: 10, color: '#1db954', marginLeft: 6, display: 'inline-flex', alignItems: 'center', gap: 3 }}><Star size={10} color="#1db954" weight="fill" /> AWARDED</span>}
+                            {isAwarded && <span style={{ fontSize: 10, color: '#1db954', marginLeft: 6, display: 'inline-flex', alignItems: 'center', gap: 3 }}><Star size={10} color="#1db954" weight="fill" /> Awarded</span>}
                           </td>
                           <td style={{ padding: '12px 16px', color: DIM, fontSize: 12 }}>{sub.invited_at?.slice(0, 10) || '—'}</td>
                           <td style={{ padding: '12px 16px' }}>
@@ -811,10 +811,10 @@ export default function BidPackageDetailPage() {
                                 onClick={() => sendReminder(sub.id, sub.company_name)}
                                 disabled={reminding === sub.id}
                                 style={{ background: 'none', border: `1px solid ${BORDER}`, borderRadius: 5, color: GOLD, fontSize: 11, padding: '3px 10px', cursor: 'pointer', opacity: reminding === sub.id ? 0.5 : 1 }}>
-                                {reminding === sub.id ? 'Sending...' : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Envelope size={11} color={GOLD} weight="regular" /> Remind</span>}
+                                {reminding === sub.id ? 'Sending…' : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Envelope size={11} color={GOLD} weight="regular" /> Remind</span>}
                               </button>
                             )}
-                            {sub.status === 'submitted' && <span style={{ fontSize: 11, color: '#1db954', display: 'inline-flex', alignItems: 'center', gap: 4 }}><CheckCircle size={12} color="#1db954" weight="fill" /> Bid received</span>}
+                            {sub.status === 'submitted' && <span style={{ fontSize: 11, color: '#1db954', display: 'inline-flex', alignItems: 'center', gap: 4 }}><CheckCircle size={12} color="#1db954" weight="fill" /> Bid Received</span>}
                             {sub.status === 'declined' && <span style={{ fontSize: 11, color: '#ff7070', display: 'inline-flex', alignItems: 'center', gap: 4 }}><XCircle size={12} color="#ff7070" weight="fill" /> Declined</span>}
                           </td>
                         </tr>

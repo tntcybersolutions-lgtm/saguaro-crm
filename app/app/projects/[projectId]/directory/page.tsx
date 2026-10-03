@@ -21,12 +21,12 @@ import Suggest from '@/components/ui/Suggest';
  * third would have been the exact problem this work is meant to remove.
  */
 
-const GOLD = '#F59E0B';
+const GOLD = 'var(--brand-primary)';
 const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
 const BORDER = '#1E3A5F';
-const CARD = '#0D1D2E';
-const BASE = '#0d1117';
+const CARD = 'var(--bg-surface)';
+const BASE = 'var(--bg-base)';
 
 /* The roles a job actually has. Free text is still allowed — this is a prompt,
    not a schema. */
@@ -120,10 +120,10 @@ export default function ProjectDirectory() {
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44,
               padding: '0 20px', borderRadius: 9, border: 'none', cursor: 'pointer',
-              background: GOLD, color: '#241500', fontSize: 14, fontWeight: 800, marginBottom: 18,
+              background: GOLD, color: '#0A0A00', fontSize: 14, fontWeight: 800, marginBottom: 18,
             }}
           >
-            <Plus size={15} weight="bold" color="#241500" /> Add someone
+            <Plus size={15} weight="bold" color="#0A0A00" /> Add Someone
           </button>
         )}
 
@@ -131,23 +131,23 @@ export default function ProjectDirectory() {
           <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '16px 18px', marginBottom: 18 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 12 }}>
               <label style={{ display: 'block' }}>
-                <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Name</span>
+                <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 6 }}>Name</span>
                 <input autoFocus style={input} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
               </label>
               <label style={{ display: 'block' }}>
-                <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Role</span>
+                <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 6 }}>Role</span>
                 <Suggest style={input} value={draft.role ?? ''} onChange={(e) => setDraft({ ...draft, role: e.target.value })} options={['r']} />
                 </label>
               <label style={{ display: 'block' }}>
-                <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Company</span>
+                <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 6 }}>Company</span>
                 <input style={input} value={draft.company ?? ''} onChange={(e) => setDraft({ ...draft, company: e.target.value })} />
               </label>
               <label style={{ display: 'block' }}>
-                <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Email</span>
+                <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 6 }}>Email</span>
                 <input type="email" style={input} value={draft.email ?? ''} onChange={(e) => setDraft({ ...draft, email: e.target.value })} />
               </label>
               <label style={{ display: 'block' }}>
-                <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Phone</span>
+                <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 6 }}>Phone</span>
                 <input style={input} value={draft.phone ?? ''} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} />
               </label>
             </div>
@@ -157,12 +157,12 @@ export default function ProjectDirectory() {
                 disabled={saving || !draft.name.trim()}
                 style={{
                   minHeight: 44, padding: '0 22px', borderRadius: 9, border: 'none',
-                  background: draft.name.trim() ? GOLD : 'rgba(245,158,11,0.3)',
-                  color: '#241500', fontSize: 14, fontWeight: 800,
+                  background: draft.name.trim() ? GOLD : 'color-mix(in srgb, var(--brand-primary) 30%, transparent)',
+                  color: '#0A0A00', fontSize: 14, fontWeight: 800,
                   cursor: saving || !draft.name.trim() ? 'not-allowed' : 'pointer',
                 }}
               >
-                {saving ? 'Saving…' : 'Add to directory'}
+                {saving ? 'Saving…' : 'Add to Directory'}
               </button>
               <button
                 onClick={() => { setAdding(false); setDraft({ name: '', role: 'Project Manager' }); }}
@@ -187,7 +187,7 @@ export default function ProjectDirectory() {
             {contacts.map((c, i) => (
               <div key={c.id ?? `${c.name}-${i}`} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '15px 17px' }}>
                 {c.role && (
-                  <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: GOLD, marginBottom: 5 }}>
+                  <div style={{ fontSize: 10.5, fontWeight: 800, color: GOLD, marginBottom: 5 }}>
                     {c.role}
                   </div>
                 )}

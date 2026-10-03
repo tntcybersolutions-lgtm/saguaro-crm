@@ -27,9 +27,9 @@ import Suggest from '@/components/ui/Suggest';
 // the empty state teaches.
 // ---------------------------------------------------------------------------
 
-const DARK = '#0a0a0a', RAISED = '#141416', BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1', TEXT = '#FFFFFF', GOLD = '#F59E0B';
-const GREEN = '#3dd68c', AMBER = '#FBBF24', RED = '#f87171';
+const DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
+const DIM = '#CBD5E1', TEXT = '#FFFFFF', GOLD = 'var(--brand-primary)';
+const GREEN = '#3dd68c', AMBER = 'var(--warning)', RED = '#f87171';
 
 interface CrewMember { id: string; person_name: string; role: string | null; trade: string | null; }
 interface Crew {
@@ -44,15 +44,15 @@ const STATUS_FILTERS = ['all', 'active', 'standby', 'inactive'] as const;
 function statusTone(status: string | null | undefined): { ink: string; bg: string } {
   switch ((status ?? '').toLowerCase()) {
     case 'active':   return { ink: GREEN, bg: 'rgba(61,214,140,0.14)' };
-    case 'standby':  return { ink: AMBER, bg: 'rgba(251,191,36,0.14)' };
-    case 'inactive': return { ink: RED,   bg: 'rgba(248,113,113,0.14)' };
-    default:         return { ink: DIM,   bg: 'rgba(255,255,255,0.08)' };
+    case 'standby':  return { ink: AMBER, bg: 'color-mix(in srgb, var(--warning) 14%, transparent)' };
+    case 'inactive': return { ink: RED, bg: 'rgba(248,113,113,0.14)' };
+    default:         return { ink: DIM, bg: 'rgba(255,255,255,0.08)' };
   }
 }
 const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
 const inp: React.CSSProperties = {
-  width: '100%', padding: '9px 12px', background: '#1c1c1e',
+  width: '100%', padding: '9px 12px', background: 'var(--bg-surface-2)',
   border: '1px solid rgba(255,255,255,0.12)', borderRadius: 7, color: TEXT,
   fontSize: 13, outline: 'none', boxSizing: 'border-box',
 };
@@ -60,8 +60,7 @@ const inp: React.CSSProperties = {
 function Field({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
   return (
     <div>
-      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM,
-        textTransform: 'uppercase', letterSpacing: .5, marginBottom: 5 }}>{label}</label>
+      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>{label}</label>
       {children}
     </div>
   );
@@ -72,7 +71,7 @@ function StatusPill({ status }: { status: string | null }) {
   const t = statusTone(status);
   return (
     <span style={{ fontSize: 10, fontWeight: 800, padding: '3px 9px', borderRadius: 999,
-      background: t.bg, color: t.ink, textTransform: 'uppercase', letterSpacing: .4, whiteSpace: 'nowrap' }}>
+      background: t.bg, color: t.ink, whiteSpace: 'nowrap' }}>
       {cap(status)}
     </span>
   );
@@ -136,7 +135,7 @@ export default function CrewsPage() {
     async (url: string) => {
       const h = await getAuthHeaders();
       const r = await fetch(url, { headers: h });
-      if (!r.ok) throw new Error('Failed to load crews');
+      if (!r.ok) throw new Error('Failed to load crews.');
       return r.json();
     },
     { revalidateOnFocus: false, keepPreviousData: true }
@@ -153,7 +152,7 @@ export default function CrewsPage() {
     });
     if (!r.ok) {
       const d = await r.json().catch(() => ({}));
-      throw new Error(d?.error || 'Save failed');
+      throw new Error(d?.error || 'Save failed.');
     }
     return r.json();
   }
@@ -195,7 +194,7 @@ export default function CrewsPage() {
 
   // ── Crew create / edit — optimistic: the card lands instantly, network settles after ──
   async function saveCrew(): Promise<boolean> {
-    if (!form.name.trim()) { showToast('Crew name is required', 'error'); return false; }
+    if (!form.name.trim()) { showToast('Crew name is required.', 'error'); return false; }
     const isEdit = panel?.mode === 'edit';
     const editId = isEdit && panel && panel.mode === 'edit' ? panel.crewId : null;
     const snapshot = { ...form };
@@ -209,13 +208,13 @@ export default function CrewsPage() {
       };
       if (isEdit && editId) {
         mutate((d) => d && ({ crews: d.crews.map((c) => c.id === editId ? { ...c, ...optimistic } as Crew : c) }), false);
-        closePanel(); showToast('Crew updated');
+        closePanel(); showToast('Crew updated.');
         await post({ crewId: editId, name: form.name, foremanName: form.foremanName,
           trade: form.trade, status: form.status, notes: form.notes });
       } else {
         const temp: Crew = { id: `temp-${Date.now()}`, deleted_at: null, memberCount: 0, members: [], ...optimistic } as Crew;
         mutate((d) => ({ crews: [...(d?.crews ?? []), temp].sort((a, b) => a.name.localeCompare(b.name)) }), false);
-        closePanel(); showToast('Crew added');
+        closePanel(); showToast('Crew added.');
         await post({ name: form.name, foremanName: form.foremanName,
           trade: form.trade, status: form.status, notes: form.notes });
       }
@@ -233,12 +232,12 @@ export default function CrewsPage() {
   async function archiveCrew(c: Crew, restore: boolean) {
     if (!restore && !confirm(`Archive ${c.name}? The roster is kept and the crew can be restored.`)) return;
     mutate((d) => d && ({ crews: d.crews.filter((x) => x.id !== c.id) }), false);
-    closePanel(); showToast(restore ? 'Crew restored' : 'Crew archived');
+    closePanel(); showToast(restore ? 'Crew restored.' : 'Crew archived.');
     try {
       await post(restore ? { crewId: c.id, restore: true } : { crewId: c.id, archive: true });
       mutate();
     } catch (e: any) {
-      showToast(humanError(e, restore ? 'Restore failed' : 'Archive failed'), 'error');
+      showToast(humanError(e, restore ? 'Restore failed. Please try again.' : 'Archive failed. Please try again.'), 'error');
       mutate();
     }
   }
@@ -252,7 +251,7 @@ export default function CrewsPage() {
       await post({ crewId: crew.id, addMember: { personName, role, trade } });
       mutate();
     } catch (e: any) {
-      showToast(humanError(e, 'Could not add member'), 'error');
+      showToast(humanError(e, 'Could not add the member. Please try again.'), 'error');
       mutate();
     }
   }
@@ -264,7 +263,7 @@ export default function CrewsPage() {
       await post({ removeMemberId: m.id });
       mutate();
     } catch (e: any) {
-      showToast(humanError(e, 'Could not remove member'), 'error');
+      showToast(humanError(e, 'Could not remove the member. Please try again.'), 'error');
       mutate();
     }
   }
@@ -285,7 +284,7 @@ export default function CrewsPage() {
       <div style={{ flex: 1, overflow: 'auto', minWidth: 0 }}>
         <PremiumSurface maxWidth={2200}>
           <ModuleHero
-            eyebrow="FIELD WORKFORCE"
+            eyebrow="Field Workforce"
             eyebrowIcon={<IconChip size={24} vivid={AC.vivid ?? AC.hex}><UsersThree size={13} weight="fill" color="#F8FAFC" /></IconChip>}
             accentColor={AC.hex}
             title="Crews"
@@ -301,13 +300,13 @@ export default function CrewsPage() {
           {/* KPIs */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12, marginBottom: 24 }}>
             <StatCard icon={<UsersThree size={19} weight="duotone" color={AC.hex} />}
-              label="Crews" value={String(crews.length)} sub={showArchived ? 'archived crews' : 'on this project'} delay={0.02}  href={`/app/projects/${projectId}/crews`}/>
+              label="Crews" value={String(crews.length)} sub={showArchived ? 'Archived crews' : 'On this project'} delay={0.02}  href={`/app/projects/${projectId}/crews`}/>
             <StatCard icon={<HardHat size={19} weight="duotone" color={AC.hex} />}
-              label="Active" value={String(activeCount)} accent={activeCount > 0 ? GREEN : undefined} sub="ready for the field" delay={0.06}  href={`/app/projects/${projectId}/crews`}/>
+              label="Active" value={String(activeCount)} accent={activeCount > 0 ? GREEN : undefined} sub="Ready for the field" delay={0.06}  href={`/app/projects/${projectId}/crews`}/>
             <StatCard icon={<User size={19} weight="duotone" color={AC.hex} />}
-              label="Workers Rostered" value={String(totalMembers)} sub="across all crews" delay={0.10}  href={`/app/projects/${projectId}/crews`}/>
+              label="Workers Rostered" value={String(totalMembers)} sub="Across all crews" delay={0.10}  href={`/app/projects/${projectId}/crews`}/>
             <StatCard icon={<Wrench size={19} weight="duotone" color={AC.hex} />}
-              label="Trades Covered" value={String(tradesCovered)} sub="distinct crew trades" delay={0.14}  href={`/app/projects/${projectId}/subs`}/>
+              label="Trades Covered" value={String(tradesCovered)} sub="Distinct crew trades" delay={0.14}  href={`/app/projects/${projectId}/subs`}/>
           </div>
 
           <SectionCard
@@ -320,7 +319,7 @@ export default function CrewsPage() {
                   border: `1px solid ${showArchived ? AC.ring : BORDER}`, borderRadius: 999,
                   color: showArchived ? AC.hex : DIM, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                 <Archive size={13} weight="bold" color={showArchived ? AC.hex : DIM} />
-                {showArchived ? 'Viewing archived' : 'Archived'}
+                {showArchived ? 'Viewing Archived' : 'Archived'}
               </button>
             }
             flush
@@ -372,8 +371,8 @@ export default function CrewsPage() {
                 <PremiumEmpty
                   icon={<UsersThree size={30} weight="duotone" color={GOLD} />}
                   title={showArchived
-                    ? 'No archived crews'
-                    : crews.length === 0 ? 'No crews yet' : 'No crews match'}
+                    ? 'No Archived Crews'
+                    : crews.length === 0 ? 'No Crews Yet' : 'No Crews Match'}
                   description={showArchived
                     ? 'Archived crews land here with their rosters intact — restore one any time.'
                     : crews.length === 0
@@ -397,10 +396,10 @@ export default function CrewsPage() {
                   return (
                     <div key={c.id}
                       onClick={() => setPanel({ mode: 'roster', crewId: c.id })}
-                      style={{ background: isSel ? 'rgba(245,158,11,.08)' : RAISED,
+                      style={{ background: isSel ? 'var(--brand-primary-08)' : RAISED,
                         border: `1px solid ${isSel ? GOLD : BORDER}`, borderRadius: 10,
                         padding: '15px 18px', cursor: 'pointer', transition: 'all .15s' }}
-                      onMouseEnter={(e) => { if (!isSel) e.currentTarget.style.borderColor = 'rgba(245,158,11,.4)'; }}
+                      onMouseEnter={(e) => { if (!isSel) e.currentTarget.style.borderColor = 'color-mix(in srgb, var(--brand-primary) 40%, transparent)'; }}
                       onMouseLeave={(e) => { if (!isSel) e.currentTarget.style.borderColor = BORDER; }}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
                         <div style={{ fontWeight: 800, fontSize: 15, color: TEXT, lineHeight: 1.3, minWidth: 0 }}>{c.name}</div>
@@ -456,9 +455,9 @@ export default function CrewsPage() {
                 <>
                   <button onClick={() => openEdit(selected)}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px',
-                      background: 'rgba(245,158,11,.12)', border: '1px solid rgba(245,158,11,.27)', borderRadius: 6,
-                      color: AMBER, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-                    <PencilSimple size={13} weight="bold" color={AMBER} /> Edit
+                      background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-25)', borderRadius: 6,
+                      color: 'var(--brand-primary-strong)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                    <PencilSimple size={13} weight="bold" color="var(--brand-primary-strong)" /> Edit
                   </button>
                   <button onClick={() => archiveCrew(selected, false)}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px',
@@ -520,8 +519,8 @@ export default function CrewsPage() {
                 </Field>
                 <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
                   <button onClick={saveCrew} disabled={saving}
-                    style={{ flex: 1, padding: '11px 0', background: `linear-gradient(135deg,${GOLD},#FBBF24)`,
-                      border: 'none', borderRadius: 8, color: '#1C1C1E', fontSize: 14, fontWeight: 800,
+                    style={{ flex: 1, padding: '11px 0', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,
+                      border: 'none', borderRadius: 8, color: '#0A0A00', fontSize: 14, fontWeight: 800,
                       cursor: 'pointer', opacity: saving ? .6 : 1 }}>
                     {saving ? 'Saving…' : panel?.mode === 'create' ? 'Create Crew' : 'Save Changes'}
                   </button>
@@ -603,8 +602,7 @@ function RosterDrawer({ crew, onAdd, onRemove }: {
 
       {/* Roster */}
       <div>
-        <div style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase',
-          letterSpacing: .5, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 7 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 7 }}>
           Roster
           <span style={{ fontSize: 10.5, fontWeight: 800, padding: '1px 8px', borderRadius: 999,
             background: AC.soft, color: AC.hex }}>{crew.memberCount}</span>
@@ -652,8 +650,7 @@ function RosterDrawer({ crew, onAdd, onRemove }: {
       {/* Inline add-member composer */}
       {!crew.deleted_at && (
         <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: 14 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase',
-            letterSpacing: .5, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
             <UserPlus size={13} weight="bold" color={AC.hex} /> Add Member
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -669,8 +666,8 @@ function RosterDrawer({ crew, onAdd, onRemove }: {
                 style={inp} placeholder={crew.trade ? `Trade (${crew.trade})` : 'Trade'} />
             </div>
             <button onClick={submit} disabled={!name.trim()}
-              style={{ padding: '10px 0', background: name.trim() ? `linear-gradient(135deg,${GOLD},#FBBF24)` : 'rgba(255,255,255,0.06)',
-                border: 'none', borderRadius: 8, color: name.trim() ? '#1C1C1E' : 'rgba(255,255,255,0.35)',
+              style={{ padding: '10px 0', background: name.trim() ? `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))` : 'rgba(255,255,255,0.06)',
+                border: 'none', borderRadius: 8, color: name.trim() ? '#0A0A00' : 'rgba(255,255,255,0.35)',
                 fontSize: 13, fontWeight: 800, cursor: name.trim() ? 'pointer' : 'default' }}>
               Add to Roster
             </button>

@@ -6,6 +6,7 @@ import { humanError } from '@/lib/errors';
 import Link from 'next/link';
 import { FolderOpen, MagnifyingGlass, Plus, ArrowRight, Sparkle, WarningCircle } from '@phosphor-icons/react';
 import { colors } from '../../../lib/design-tokens';
+import { STATUS_COLORS } from '@/lib/status-colors';
 import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, goldButtonStyle } from '@/components/ui/premium';
 import { accentForProject, projectMonogram } from '@/lib/project-identity';
 // One vocabulary for "this job is over", shared with the close API — see
@@ -20,8 +21,8 @@ const GOLD=colors.gold,DIM=colors.textMuted,TEXT=colors.text;
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
 
 function statusStyle(s:string):{bg:string,c:string}{
-  if(s==='active')    return {bg:'rgba(34,197,94,.14)',c:colors.green};
-  if(s==='bidding')   return {bg:'rgba(245, 158, 11,.16)',c:GOLD};
+  if(s==='active')    return {bg:STATUS_COLORS.ongoing.bg,c:STATUS_COLORS.ongoing.color};
+  if(s==='bidding')   return {bg:STATUS_COLORS.lead.bg,c:STATUS_COLORS.lead.color};
   if(s==='planning'||s==='preconstruction'||s==='precon')  return {bg:'rgba(203,166,90,.14)',c:'#CBA65A'};
   if(isClosedStatus(s)) return {bg:'rgba(255,255,255,.06)',c:colors.textDim};
   return {bg:'rgba(255,255,255,.06)',c:colors.textDim};
@@ -100,7 +101,7 @@ export default function ProjectsPage() {
             <option value="name">Sort: Name</option>
             <option value="status">Sort: Status</option>
             <option value="contract">Sort: Contract</option>
-            <option value="start">Sort: Start date</option>
+            <option value="start">Sort: Start Date</option>
           </select>
           <div style={{position:'relative',display:'flex',alignItems:'center'}}>
             <MagnifyingGlass size={15} weight="bold" color={colors.textDim} style={{position:'absolute',left:13,pointerEvents:'none'}}/>
@@ -109,12 +110,12 @@ export default function ProjectsPage() {
               onChange={e=>setSearch(e.target.value)}
               placeholder="Search projects…"
               style={inputStyle}
-              onFocus={e=>{e.currentTarget.style.borderColor='rgba(245,158,11,0.55)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(245,158,11,.12)'}}
+              onFocus={e=>{e.currentTarget.style.borderColor='color-mix(in srgb, var(--brand-primary) 55%, transparent)';e.currentTarget.style.boxShadow='0 0 0 3px var(--brand-primary-12)'}}
               onBlur={e=>{e.currentTarget.style.borderColor=PANEL_BORDER;e.currentTarget.style.boxShadow='none'}}
             />
           </div>
           <select value={statusFilter} onChange={e=>setStatusFilter(e.target.value)} style={selectStyle}>
-            <option value="all">All Status</option>
+            <option value="all">All Statuses</option>
             <option value="active">Active</option>
             <option value="planning">Planning</option>
             <option value="bidding">Bidding</option>
@@ -133,11 +134,11 @@ export default function ProjectsPage() {
         const totalContract = projects.reduce((s:number,p:any)=>s+(Number(p.contract_amount)||0),0);
         return (
           <StatStrip items={[
-            {href: '/app/projects',  label:'Projects', value:String(projects.length), sub:'in your portfolio' },
-            {href: '/app/projects',  label:'Active', value:String(active), accent:active>0?colors.green:undefined, sub:'under construction' },
-            {href: '/app/projects',  label:'Bidding', value:String(bidding), accent:bidding>0?GOLD:undefined, sub:'in pursuit' },
-            {href: '/app/projects',  label:'Complete / Closed', value:String(complete), sub:'delivered jobs' },
-            {href: '/app/projects',  label:'Portfolio Value', value:totalContract>0?fmt(totalContract):'—', accent:totalContract>0?GOLD:undefined, sub:'combined contracts' },
+            {href: '/app/projects', label:'Projects', value:String(projects.length), sub:'In your portfolio' },
+            {href: '/app/projects', label:'Active', value:String(active), accent:active>0?colors.green:undefined, sub:'Under construction' },
+            {href: '/app/projects', label:'Bidding', value:String(bidding), accent:bidding>0?GOLD:undefined, sub:'In pursuit' },
+            {href: '/app/projects', label:'Complete / Closed', value:String(complete), sub:'Delivered jobs' },
+            {href: '/app/projects', label:'Portfolio Value', value:totalContract>0?fmt(totalContract):'—', accent:totalContract>0?GOLD:undefined, sub:'Combined contracts' },
           ]} />
         );
       })()}
@@ -149,7 +150,7 @@ export default function ProjectsPage() {
             <PremiumEmpty
               tone="error"
               icon={<WarningCircle size={30} weight="duotone" color={colors.red} />}
-              title="Couldn't load projects"
+              title="Couldn't Load Projects"
               description={error}
               compact
             />
@@ -178,7 +179,7 @@ export default function ProjectsPage() {
         <SectionCard>
           <PremiumEmpty
             icon={projects.length===0 ? <FolderOpen size={32} weight="duotone" color={GOLD}/> : <MagnifyingGlass size={30} weight="bold" color={colors.textDim}/>}
-            title={projects.length===0 ? 'No projects yet' : 'No projects match your filters'}
+            title={projects.length===0 ? 'No Projects Yet' : 'No Projects Match Your Filters'}
             description={projects.length===0 ? 'Create your first project to get started tracking your construction work.' : 'Try adjusting your search or status filter.'}
             action={projects.length===0 ? <Link href="/app/projects/new" style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold"/> Create Your First Project</Link> : undefined}
           />
@@ -210,15 +211,15 @@ export default function ProjectsPage() {
                       <div style={{fontSize:12,color:DIM,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{p.address||'No address set'}</div>
                     </div>
                   </div>
-                  <span style={{fontSize:9.5,fontWeight:800,letterSpacing:.5,padding:'4px 10px',borderRadius:999,background:st.bg,color:st.c,whiteSpace:'nowrap' as const,border:'1px solid rgba(255,255,255,0.10)',flexShrink:0}}>{(p.status||'unknown').replace(/_/g,' ').toUpperCase()}</span>
+                  <span style={{fontSize:9.5,fontWeight:800,padding:'4px 10px',borderRadius:999,background:st.bg,color:st.c,whiteSpace:'nowrap' as const,border:'1px solid rgba(255,255,255,0.10)',flexShrink:0}}>{(p.status||'unknown').replace(/_/g,' ').replace(/\b\w/g,(c:string)=>c.toUpperCase())}</span>
                 </div>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:12}}>
                   <div style={{background:SUNKEN,border:`1px solid ${SUNKEN_BORDER}`,borderRadius:10,padding:'9px 11px'}}>
-                    <div style={{fontSize:9.5,color:colors.textDim,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:.6,marginBottom:4}}>Contract</div>
+                    <div style={{fontSize:9.5,color:colors.textDim,fontWeight:700, marginBottom:4}}>Contract</div>
                     <div style={{fontSize:15,fontWeight:800,color:contract>0?GOLD:colors.textDim,letterSpacing:'-0.01em'}}>{contract>0?fmt(contract):'—'}</div>
                   </div>
                   <div style={{background:SUNKEN,border:`1px solid ${SUNKEN_BORDER}`,borderRadius:10,padding:'9px 11px'}}>
-                    <div style={{fontSize:9.5,color:colors.textDim,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:.6,marginBottom:4}}>Type</div>
+                    <div style={{fontSize:9.5,color:colors.textDim,fontWeight:700, marginBottom:4}}>Type</div>
                     <div style={{fontSize:13,fontWeight:700,color:TEXT,textTransform:'capitalize' as const,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{(p.project_type||'—').replace(/_/g,' ')}</div>
                   </div>
                 </div>
@@ -229,8 +230,8 @@ export default function ProjectsPage() {
               </Link>
             );
           })}
-          <Link href="/app/projects/new" className="pmHover" style={{textDecoration:'none',background:'rgba(245, 158, 11,.04)',border:'1px dashed rgba(245, 158, 11,.32)',borderRadius:16,padding:24,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:10,minHeight:'100%'}}>
-            <div style={{width:44,height:44,borderRadius:14,background:'linear-gradient(150deg, rgba(245,158,11,0.18), rgba(245,158,11,0.05))',border:'1px solid rgba(245,158,11,0.3)',display:'flex',alignItems:'center',justifyContent:'center',color:GOLD}}><Plus size={22} weight="bold"/></div>
+          <Link href="/app/projects/new" className="pmHover" style={{textDecoration:'none',background:'color-mix(in srgb, var(--brand-primary) 4%, transparent)',border:'1px dashed color-mix(in srgb, var(--brand-primary) 32%, transparent)',borderRadius:16,padding:24,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:10,minHeight:'100%'}}>
+            <div style={{width:44,height:44,borderRadius:14,background:'linear-gradient(150deg, var(--brand-primary-18), color-mix(in srgb, var(--brand-primary) 5%, transparent))',border:'1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)',display:'flex',alignItems:'center',justifyContent:'center',color:GOLD}}><Plus size={22} weight="bold"/></div>
             <div style={{fontWeight:800,color:GOLD,fontSize:14.5}}>New Project</div>
           </Link>
         </div>
@@ -241,7 +242,7 @@ export default function ProjectsPage() {
         <SectionCard>
           <div style={{overflowX:'auto'}}>
             <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
-              <thead><tr style={{textAlign:'left',color:colors.textDim,fontSize:11,textTransform:'uppercase' as const,letterSpacing:.5}}>
+              <thead><tr style={{textAlign:'left',color:colors.textDim,fontSize:11}}>
                 <th style={{padding:'10px 12px',fontWeight:700}}>Project</th>
                 <th style={{padding:'10px 12px',fontWeight:700}}>Status</th>
                 <th style={{padding:'10px 12px',fontWeight:700}}>Type</th>
@@ -253,7 +254,7 @@ export default function ProjectsPage() {
                 {filtered.map((p:any)=>{ const st=statusStyle(p.status||''); const contract=Number(p.contract_amount||0); return (
                   <tr key={p.id} className="pmRow" style={{borderTop:`1px solid ${PANEL_BORDER}`,cursor:'pointer'}} onClick={()=>{window.location.href=`/app/projects/${p.id}`;}}>
                     <td style={{padding:'12px'}}><div style={{display:'flex',alignItems:'center',gap:8}}><span aria-hidden style={{width:22,height:22,borderRadius:7,flexShrink:0,display:'inline-flex',alignItems:'center',justifyContent:'center',background:accentForProject(p.id).soft,border:`1px solid ${accentForProject(p.id).ring}`,color:accentForProject(p.id).hex,fontSize:9,fontWeight:900}}>{projectMonogram(p.name)}</span><div style={{minWidth:0}}><div style={{fontWeight:700,color:accentForProject(p.id).hex}}>{p.name}</div><div style={{fontSize:11.5,color:DIM}}>{p.address||'No address set'}</div></div></div></td>
-                    <td style={{padding:'12px'}}><span style={{fontSize:10,fontWeight:800,padding:'3px 9px',borderRadius:999,background:st.bg,color:st.c,whiteSpace:'nowrap' as const}}>{(p.status||'—').replace(/_/g,' ').toUpperCase()}</span></td>
+                    <td style={{padding:'12px'}}><span style={{fontSize:10,fontWeight:800,padding:'3px 9px',borderRadius:999,background:st.bg,color:st.c,whiteSpace:'nowrap' as const}}>{(p.status||'—').replace(/_/g,' ').replace(/\b\w/g,(c:string)=>c.toUpperCase())}</span></td>
                     <td style={{padding:'12px',color:DIM,textTransform:'capitalize' as const}}>{(p.project_type||'—').replace(/_/g,' ')}</td>
                     <td style={{padding:'12px',textAlign:'right',fontWeight:700,color:contract>0?GOLD:colors.textDim,fontVariantNumeric:'tabular-nums' as const}}>{contract>0?fmt(contract):'—'}</td>
                     <td style={{padding:'12px',color:DIM,fontVariantNumeric:'tabular-nums' as const}}>{p.start_date?fmtDate(p.start_date):'—'}</td>

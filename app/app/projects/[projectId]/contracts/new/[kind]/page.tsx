@@ -23,11 +23,11 @@ import { openPdf } from '@/components/PdfViewer';
  * and not in the form.
  */
 
-const GOLD = '#F59E0B';
+const GOLD = 'var(--brand-primary)';
 const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
 const BORDER = '#1E3A5F';
-const BASE = '#0d1117';
+const BASE = 'var(--bg-base)';
 
 /** What the signature tables call each kind. */
 const SIGN_DOC_TYPE: Record<ContractKind, 'subcontract' | 'change_order' | 'purchase_order' | 'prime_contract'> = {
@@ -103,7 +103,7 @@ export default function NewContractFromTemplate() {
       <main style={{ background: BASE, minHeight: '100vh', padding: '28px max(20px, 4vw)' }}>
         <p style={{ color: TEXT, fontSize: 15 }}>
           There is no contract template called “{String(params['kind'])}”.{' '}
-          <Link href={base} style={{ color: GOLD }}>Back to contracts</Link>
+          <Link href={base} style={{ color: GOLD }}>Back to Contracts</Link>
         </p>
       </main>
     );
@@ -135,7 +135,7 @@ export default function NewContractFromTemplate() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '6px 0 22px' }}>
           <FileText size={20} weight="duotone" color={GOLD} />
           <h1 style={{ margin: 0, color: TEXT, fontSize: 24, fontWeight: 800, letterSpacing: '-0.01em' }}>
-            New {spec.title.toLowerCase()}
+            New {spec.title}
           </h1>
         </div>
 
@@ -156,16 +156,16 @@ export default function NewContractFromTemplate() {
 
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               <button type="button" onClick={() => openPdf({ url: pdfUrl, title: 'Contract' })}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '0 22px', borderRadius: 9, background: GOLD, color: '#241500', fontWeight: 800, fontSize: 14, textDecoration: 'none' }}>
-                <DownloadSimple size={16} weight="bold" color="#241500" /> Open the PDF
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '0 22px', borderRadius: 9, background: GOLD, color: '#0A0A00', fontWeight: 800, fontSize: 14, textDecoration: 'none' }}>
+                <DownloadSimple size={16} weight="bold" color="#0A0A00" /> Open the PDF
               </button>
               <button onClick={() => setSigning((v) => !v)}
                 style={{ minHeight: 44, padding: '0 22px', borderRadius: 9, background: 'transparent', border: `1px solid ${GOLD}`, color: GOLD, fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>
-                {signing ? 'Hide signing' : 'Send for signature'}
+                {signing ? 'Hide Signing' : 'Send for Signature'}
               </button>
               <button onClick={() => setPdfUrl('')}
                 style={{ minHeight: 44, padding: '0 20px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: DIM, fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
-                Change something and regenerate
+                Change Something and Regenerate
               </button>
               <button onClick={() => router.push(base)}
                 style={{ minHeight: 44, padding: '0 20px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: DIM, fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>

@@ -145,30 +145,30 @@ export default function EstimatePage() {
   return (
     <PremiumSurface maxWidth={2200}>
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 60, color: T.muted }}>Loading estimate data...</div>
+        <div style={{ textAlign: 'center', padding: 60, color: T.muted }}>Loading estimate data…</div>
       ) : !takeoff ? (
         <>
           <ModuleHero
             eyebrow={ctx?.project?.name || 'Estimating'}
-            eyebrowIcon={<Ruler size={13} weight="fill" color="#F59E0B" />}
+            eyebrowIcon={<Ruler size={13} weight="fill" color="var(--brand-primary)" />}
             title="Project"
             accent="Estimate"
             subtitle="From the latest takeoff, rolled up by CSI division."
           />
           {ctx && (
             <StatStrip items={[
-              {href: `/app/projects/${projectId}/contracts`,  label: 'Original Contract', value: fmt0(originalContract), sub: 'the number the estimate answers to' },
+              {href: `/app/projects/${projectId}/contracts`,  label: 'Original Contract', value: fmt0(originalContract), sub: 'The number the estimate answers to' },
               {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmt0(revisedContract), sub: (Number(money?.approvedCoCount) || 0) + ' approved CO' + ((Number(money?.approvedCoCount) || 0) === 1 ? '' : 's') },
-              {href: `/app/projects/${projectId}/budget`,  label: 'Project Budget', value: fmt0(budgetOriginal), sub: budgetLineCount > 0 ? budgetLineCount + ' CSI-coded lines' : 'no budget lines yet' },
-              {href: `/app/projects/${projectId}/bid-packages`,  label: 'Bid Packages', value: String(bidPackages.length), sub: awardedPkgs.length > 0 ? awardedPkgs.length + ' awarded · ' + fmt0(awardedTotal) : 'none awarded yet' },
-              {href: `/app/projects/${projectId}/subs`,  label: 'Subs on the Job', value: String((ctx?.subs || []).length), sub: 'ready to price scopes' },
+              {href: `/app/projects/${projectId}/budget`,  label: 'Project Budget', value: fmt0(budgetOriginal), sub: budgetLineCount > 0 ? budgetLineCount + ' CSI-coded lines' : 'No budget lines yet' },
+              {href: `/app/projects/${projectId}/bid-packages`,  label: 'Bid Packages', value: String(bidPackages.length), sub: awardedPkgs.length > 0 ? awardedPkgs.length + ' awarded · ' + fmt0(awardedTotal) : 'None awarded yet' },
+              {href: `/app/projects/${projectId}/subs`,  label: 'Subs on the Job', value: String((ctx?.subs || []).length), sub: 'Ready to price scopes' },
             ]} />
           )}
           <SectionCard flush>
             <div style={{ display: 'grid', gridTemplateColumns: ctx ? 'minmax(0, 1fr) 360px' : '1fr', alignItems: 'stretch' }}>
               <PremiumEmpty
-                icon={<Package size={30} weight="duotone" color="#F59E0B" />}
-                title="No takeoff data yet"
+                icon={<Package size={30} weight="duotone" color="var(--brand-primary)" />}
+                title="No Takeoff Data Yet"
                 description={budgetOriginal > 0
                   ? `The budget already carries ${fmt0(budgetOriginal)} across ${budgetLineCount} CSI line${budgetLineCount === 1 ? '' : 's'} — run a blueprint takeoff and the estimate rolls up division-by-division right against it.`
                   : 'Run a blueprint analysis and the AI extracts quantities, prices them, and rolls the estimate up by CSI division here.'}
@@ -178,12 +178,12 @@ export default function EstimatePage() {
               />
               {ctx && (
                 <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', padding: '22px 24px' }}>
-                  <div style={{ fontSize: 10.5, fontWeight: 900, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 12 }}>How the Estimate Builds</div>
+                  <div style={{ fontSize: 10.5, fontWeight: 900, color: 'rgba(255,255,255,0.45)', marginBottom: 12 }}>How the Estimate Builds</div>
                   <FlowSteps title="" steps={[
-                    { title: 'Upload plans in Takeoff', desc: 'AI scans the sheets and extracts quantities with CSI codes.' },
-                    { title: 'Lines price themselves', desc: 'Unit costs extend into a priced, exportable estimate.' },
-                    { title: 'Divisions roll up here', desc: 'Every line lands in its canonical MasterFormat division.' },
-                    { title: 'Estimate meets budget', desc: budgetLineCount > 0 ? `Compared division-by-division against your ${budgetLineCount}-line budget.` : 'Seed the budget from it and track committed vs. actual.' },
+                    { title: 'Upload Plans in Takeoff', desc: 'AI scans the sheets and extracts quantities with CSI codes.' },
+                    { title: 'Lines Price Themselves', desc: 'Unit costs extend into a priced, exportable estimate.' },
+                    { title: 'Divisions Roll Up Here', desc: 'Every line lands in its canonical MasterFormat division.' },
+                    { title: 'Estimate Meets Budget', desc: budgetLineCount > 0 ? `Compared division-by-division against your ${budgetLineCount}-line budget.` : 'Seed the budget from it and track committed vs. actual.' },
                   ]} />
                 </div>
               )}
@@ -194,7 +194,7 @@ export default function EstimatePage() {
         <>
           <ModuleHero
             eyebrow={ctx?.project?.name || 'Estimating'}
-            eyebrowIcon={<Ruler size={13} weight="fill" color="#F59E0B" />}
+            eyebrowIcon={<Ruler size={13} weight="fill" color="var(--brand-primary)" />}
             title="Project"
             accent="Estimate"
             subtitle={`Priced from the latest blueprint takeoff — ${takeoff.materials.length} line${takeoff.materials.length === 1 ? '' : 's'} across ${rollup.length} CSI division${rollup.length === 1 ? '' : 's'}`}
@@ -205,7 +205,7 @@ export default function EstimatePage() {
                 className="pmBtn"
                 style={{ ...goldButtonStyle, opacity: exporting ? 0.6 : 1, cursor: exporting ? 'not-allowed' : 'pointer' }}
               >
-                <DownloadSimple size={15} weight="bold" /> {exporting ? 'Exporting...' : 'Export CSV'}
+                <DownloadSimple size={15} weight="bold" /> {exporting ? 'Exporting…' : 'Export CSV'}
               </button>
             }
           />
@@ -213,21 +213,21 @@ export default function EstimatePage() {
           {/* Contract + budget context — the live money the estimate answers to */}
           {ctx && (
             <StatStrip items={[
-              {href: `/app/projects/${projectId}/estimate`,  label: 'Estimate Total', value: fmt0(takeoff.total_cost), accent: '#FBBF24', sub: takeoff.materials.length + ' lines · ' + rollup.length + ' division' + (rollup.length === 1 ? '' : 's') },
-              {href: `/app/projects/${projectId}/budget`,  label: 'Project Budget', value: fmt0(budgetOriginal), sub: budgetLineCount > 0 ? budgetLineCount + ' CSI-coded lines' : 'no budget lines yet' },
-              {href: `/app/projects/${projectId}/budget`,  label: 'Est. vs Budget', value: budgetOriginal > 0 ? fmtSigned(estBudgetDelta) : '—', accent: budgetOriginal > 0 ? (estBudgetDelta > 0 ? '#ef4444' : '#3dd68c') : undefined, sub: budgetOriginal > 0 ? (estBudgetDelta > 0 ? 'estimate runs over the budget' : 'estimate fits inside the budget') : 'seed the budget to compare' },
+              {href: `/app/projects/${projectId}/estimate`,  label: 'Estimate Total', value: fmt0(takeoff.total_cost), accent: 'var(--brand-primary-strong)', sub: takeoff.materials.length + ' lines · ' + rollup.length + ' division' + (rollup.length === 1 ? '' : 's') },
+              {href: `/app/projects/${projectId}/budget`,  label: 'Project Budget', value: fmt0(budgetOriginal), sub: budgetLineCount > 0 ? budgetLineCount + ' CSI-coded lines' : 'No budget lines yet' },
+              {href: `/app/projects/${projectId}/budget`,  label: 'Est. vs. Budget', value: budgetOriginal > 0 ? fmtSigned(estBudgetDelta) : '—', accent: budgetOriginal > 0 ? (estBudgetDelta > 0 ? '#ef4444' : '#3dd68c') : undefined, sub: budgetOriginal > 0 ? (estBudgetDelta > 0 ? 'Estimate runs over the budget' : 'Estimate fits inside the budget') : 'Seed the budget to compare' },
               {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmt0(revisedContract), sub: (Number(money?.approvedCoCount) || 0) + ' approved CO' + ((Number(money?.approvedCoCount) || 0) === 1 ? '' : 's') },
-              {href: `/app/projects/${projectId}/estimate`,  label: 'Implied Margin', value: revisedContract > 0 ? fmt0(impliedMargin) : '—', accent: revisedContract > 0 ? (impliedMargin >= 0 ? '#3dd68c' : '#ef4444') : undefined, sub: revisedContract > 0 ? Math.round((impliedMargin / revisedContract) * 100) + '% of revised contract' : 'set the contract to see margin' },
+              {href: `/app/projects/${projectId}/estimate`,  label: 'Implied Margin', value: revisedContract > 0 ? fmt0(impliedMargin) : '—', accent: revisedContract > 0 ? (impliedMargin >= 0 ? '#3dd68c' : '#ef4444') : undefined, sub: revisedContract > 0 ? Math.round((impliedMargin / revisedContract) * 100) + '% of revised contract' : 'Set the contract to see margin' },
             ]} />
           )}
 
           {/* Summary Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-            <StatCard icon={<Package size={19} weight="duotone" color="#F59E0B" />} label="Material Cost" value={fmt(takeoff.material_cost)}  href={`/app/projects/${projectId}/estimate`}/>
-            <StatCard icon={<HardHat size={19} weight="duotone" color="#F59E0B" />} label="Labor Cost" value={fmt(takeoff.labor_cost)}  href={`/app/projects/${projectId}/estimate`}/>
-            <StatCard icon={<CurrencyDollar size={19} weight="duotone" color="#F59E0B" />} label="Total" value={fmt(takeoff.total_cost)} accent="#F59E0B"  href={`/app/projects/${projectId}/estimate`}/>
+            <StatCard icon={<Package size={19} weight="duotone" color="var(--brand-primary)" />} label="Material Cost" value={fmt(takeoff.material_cost)}  href={`/app/projects/${projectId}/estimate`}/>
+            <StatCard icon={<HardHat size={19} weight="duotone" color="var(--brand-primary)" />} label="Labor Cost" value={fmt(takeoff.labor_cost)}  href={`/app/projects/${projectId}/estimate`}/>
+            <StatCard icon={<CurrencyDollar size={19} weight="duotone" color="var(--brand-primary)" />} label="Total" value={fmt(takeoff.total_cost)} accent="var(--brand-primary)"  href={`/app/projects/${projectId}/estimate`}/>
             <StatCard
-              icon={<Ruler size={19} weight="duotone" color="#F59E0B" />}
+              icon={<Ruler size={19} weight="duotone" color="var(--brand-primary)" />}
               label="Cost per SF"
               value={takeoff.square_footage > 0 ? fmt(takeoff.total_cost / takeoff.square_footage) : 'N/A'}
               sub={takeoff.square_footage > 0 ? `${takeoff.square_footage.toLocaleString()} SF` : undefined}
@@ -239,8 +239,8 @@ export default function EstimatePage() {
             <SectionCard
               title="CSI Division Rollup"
               subtitle={budgetLineCount > 0 ? 'Estimate vs. budget by MasterFormat division' : 'Material lines grouped by canonical MasterFormat division'}
-              icon={<Stack size={17} weight="duotone" color="#F59E0B" />}
-              action={<a href={`/app/projects/${projectId}/budget`} style={{ fontSize: 12, fontWeight: 700, color: '#FBBF24', textDecoration: 'none' }}>{budgetLineCount > 0 ? 'Open Budget' : 'Seed the Budget'}</a>}
+              icon={<Stack size={17} weight="duotone" color="var(--brand-primary)" />}
+              action={<a href={`/app/projects/${projectId}/budget`} style={{ fontSize: 12, fontWeight: 700, color: 'var(--brand-primary-strong)', textDecoration: 'none' }}>{budgetLineCount > 0 ? 'Open Budget' : 'Seed the Budget'}</a>}
               flush
               style={{ marginBottom: 24 }}
             >
@@ -249,7 +249,7 @@ export default function EstimatePage() {
                   <thead>
                     <tr>
                       {['Div', 'Division', 'Items', 'Estimate', '% of Materials', ...(budgetLineCount > 0 ? ['Budget', 'Variance'] : [])].map(h => (
-                        <th key={h} style={{ padding: '9px 14px', textAlign: h === 'Div' || h === 'Division' ? 'left' : 'right', fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4, color: T.muted, borderBottom: '1px solid rgba(255,255,255,0.12)', whiteSpace: 'nowrap' }}>{h}</th>
+                        <th key={h} style={{ padding: '9px 14px', textAlign: h === 'Div' || h === 'Division' ? 'left' : 'right', fontSize: 10.5, fontWeight: 700, color: T.muted, borderBottom: '1px solid rgba(255,255,255,0.12)', whiteSpace: 'nowrap' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -263,7 +263,7 @@ export default function EstimatePage() {
                           <td style={{ padding: '9px 14px', color: T.white, fontWeight: 600, minWidth: 180 }}>
                             {r.name}
                             <div style={{ marginTop: 5, height: 4, width: '100%', maxWidth: 220, borderRadius: 999, background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
-                              <div style={{ height: '100%', width: Math.min(100, pctOfMat) + '%', borderRadius: 999, background: 'linear-gradient(90deg,#F59E0B,#FBBF24)' }} />
+                              <div style={{ height: '100%', width: Math.min(100, pctOfMat) + '%', borderRadius: 999, background: 'linear-gradient(90deg,var(--brand-primary),var(--brand-primary-strong))' }} />
                             </div>
                           </td>
                           <td style={{ padding: '9px 14px', textAlign: 'right', color: T.muted }}>{r.count}</td>
@@ -272,7 +272,7 @@ export default function EstimatePage() {
                           {budgetLineCount > 0 && (
                             <>
                               <td style={{ padding: '9px 14px', textAlign: 'right', color: r.budget > 0 ? T.white : T.muted, whiteSpace: 'nowrap' }}>{r.budget > 0 ? fmt(r.budget) : '—'}</td>
-                              <td style={{ padding: '9px 14px', textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap', color: r.budget > 0 ? (variance > 0 ? '#ef4444' : '#3dd68c') : T.muted }}>{r.budget > 0 ? fmtSigned(variance) : 'not budgeted'}</td>
+                              <td style={{ padding: '9px 14px', textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap', color: r.budget > 0 ? (variance > 0 ? '#ef4444' : '#3dd68c') : T.muted }}>{r.budget > 0 ? fmtSigned(variance) : 'Not budgeted'}</td>
                             </>
                           )}
                         </tr>
@@ -281,7 +281,7 @@ export default function EstimatePage() {
                   </tbody>
                   <tfoot>
                     <tr style={{ borderTop: '2px solid rgba(255,255,255,0.12)' }}>
-                      <td colSpan={2} style={{ padding: '10px 14px', fontWeight: 800, fontSize: 11.5, color: T.white, textTransform: 'uppercase', letterSpacing: 0.3 }}>All Divisions — Materials</td>
+                      <td colSpan={2} style={{ padding: '10px 14px', fontWeight: 800, fontSize: 11.5, color: T.white, letterSpacing: 0.3 }}>All Divisions — Materials</td>
                       <td style={{ padding: '10px 14px', textAlign: 'right', color: T.muted }}>{takeoff.materials.length}</td>
                       <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: T.gold, whiteSpace: 'nowrap' }}>{fmt(takeoff.material_cost)}</td>
                       <td style={{ padding: '10px 14px', textAlign: 'right', color: T.muted }}>100%</td>
@@ -304,7 +304,7 @@ export default function EstimatePage() {
           {/* Line Items Table */}
           <SectionCard flat
             title="Line Items"
-            icon={<Rows size={17} weight="duotone" color="#F59E0B" />}
+            icon={<Rows size={17} weight="duotone" color="var(--brand-primary)" />}
             action={<span style={{ fontSize: 12, color: T.muted }}>{takeoff.materials.length} items</span>}
             flush
           >
@@ -324,37 +324,37 @@ export default function EstimatePage() {
           {/* Summary Footer */}
           <SectionCard flat
             title="Estimate Summary"
-            icon={<Receipt size={17} weight="duotone" color="#F59E0B" />}
+            icon={<Receipt size={17} weight="duotone" color="var(--brand-primary)" />}
             style={{ marginTop: 20 }}
           >
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 32, flexWrap: 'wrap' }}>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: T.muted, textTransform: 'uppercase', marginBottom: 4 }}>Material Cost</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 4 }}>Material Cost</div>
                 <div style={{ fontSize: 18, fontWeight: 700, color: T.white }}>{fmt(takeoff.material_cost)}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: T.muted, textTransform: 'uppercase', marginBottom: 4 }}>Labor Cost</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 4 }}>Labor Cost</div>
                 <div style={{ fontSize: 18, fontWeight: 700, color: T.white }}>{fmt(takeoff.labor_cost)}</div>
               </div>
               <div style={{ textAlign: 'right', paddingLeft: 24, borderLeft: `1px solid ${T.border}` }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: T.gold, textTransform: 'uppercase', marginBottom: 4 }}>Total</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: T.gold, marginBottom: 4 }}>Total</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: T.white }}>{fmt(takeoff.total_cost)}</div>
               </div>
               {takeoff.square_footage > 0 && (
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: T.muted, textTransform: 'uppercase', marginBottom: 4 }}>Cost per SF</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 4 }}>Cost per SF</div>
                   <div style={{ fontSize: 18, fontWeight: 700, color: T.gold }}>{fmt(takeoff.total_cost / takeoff.square_footage)}</div>
                 </div>
               )}
               {budgetOriginal > 0 && (
                 <div style={{ textAlign: 'right', paddingLeft: 24, borderLeft: `1px solid ${T.border}` }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: T.muted, textTransform: 'uppercase', marginBottom: 4 }}>vs. Budget</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 4 }}>vs. Budget</div>
                   <div style={{ fontSize: 18, fontWeight: 700, color: estBudgetDelta > 0 ? '#ef4444' : '#3dd68c' }}>{fmtSigned(estBudgetDelta)}</div>
                 </div>
               )}
               {revisedContract > 0 && (
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: T.muted, textTransform: 'uppercase', marginBottom: 4 }}>Implied Margin</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 4 }}>Implied Margin</div>
                   <div style={{ fontSize: 18, fontWeight: 700, color: impliedMargin >= 0 ? '#3dd68c' : '#ef4444' }}>{fmt0(impliedMargin)}</div>
                 </div>
               )}
