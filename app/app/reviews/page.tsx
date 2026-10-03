@@ -10,8 +10,8 @@ import { useToast } from '@/components/Toast';
 import { humanError } from '@/lib/errors';
 import { fmtDate as fmtDateSafe } from '@/lib/format-date';
 
-const BG = '#1c1c1e', RAISED = '#141416', BORDER = 'rgba(255,255,255,0.12)';
-const TEXT = '#FFFFFF', DIM = '#CBD5E1', GOLD = '#F59E0B', GREEN = '#22C55E';
+const BG = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
+const TEXT = '#FFFFFF', DIM = '#CBD5E1', GOLD = 'var(--brand-primary)', GREEN = '#22C55E';
 
 type Review = {
   id: string; reviewer_name: string | null; rating: number; body: string | null;
@@ -85,7 +85,7 @@ export default function ReviewsPage() {
 
       {/* Composer */}
       <div style={card}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 10 }}>Add a review</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: DIM, letterSpacing: 0.3, marginBottom: 10 }}>Add a Review</div>
         <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
           {[1, 2, 3, 4, 5].map((n) => (
             <button key={n} onClick={() => setRating(n)} aria-label={`${n} star`} style={{
@@ -100,7 +100,7 @@ export default function ReviewsPage() {
           style={{ width: '100%', boxSizing: 'border-box', padding: '9px 13px', background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
           <button onClick={submit} disabled={saving} style={{ padding: '9px 18px', background: GOLD, color: '#000', border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
-            {saving ? 'Saving…' : 'Add review'}
+            {saving ? 'Saving…' : 'Add Review'}
           </button>
         </div>
       </div>
@@ -123,7 +123,7 @@ export default function ReviewsPage() {
               </span>
             </div>
             {r.body && <div style={{ fontSize: 13, color: DIM, marginTop: 6, whiteSpace: 'pre-wrap' }}>{r.body}</div>}
-            {r.source && r.source !== 'internal' && <div style={{ fontSize: 10, color: GREEN, marginTop: 6, textTransform: 'uppercase', letterSpacing: 0.4 }}>{r.source}</div>}
+            {r.source && r.source !== 'internal' && <div style={{ fontSize: 10, color: GREEN, marginTop: 6}}>{r.source.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}</div>}
           </div>
         ))
       )}

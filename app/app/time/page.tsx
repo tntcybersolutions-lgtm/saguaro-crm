@@ -22,7 +22,7 @@ import { Clock, Play, Stop, Plus, Trash, PaperPlaneRight, Sun, Bandaids, MapPin,
 import { PremiumSurface, ModuleHero, SectionCard, StatStrip, FlowSteps, InsightRow, PremiumEmpty, IconChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 import { moduleAccent } from '@/lib/module-identity';
 
-const GOLD = '#F59E0B', DARK = '#0a0a0a', RAISED = '#141416', BORDER = 'rgba(255,255,255,0.12)';
+const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1', TEXT = '#FFFFFF', GREEN = '#3dd68c', RED = '#ef4444';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const TZ = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { return 'UTC'; } })();
@@ -300,7 +300,7 @@ export default function TimeClockPage() {
   };
 
   const inp: React.CSSProperties = { background: DARK, border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, padding: '9px 11px', fontSize: 14, width: '100%' };
-  const btn: React.CSSProperties = { background: GOLD, color: DARK, fontWeight: 700, border: 'none', borderRadius: 8, padding: '10px 18px', cursor: 'pointer', fontSize: 14 };
+  const btn: React.CSSProperties = { background: GOLD, color: '#0A0A00', fontWeight: 700, border: 'none', borderRadius: 8, padding: '10px 18px', cursor: 'pointer', fontSize: 14 };
   const clockedIn = !!openShift;
 
   return (
@@ -317,7 +317,7 @@ export default function TimeClockPage() {
           <>
             <select value={projectId} onChange={(e) => setProjectId(e.target.value)} style={{ ...inp, width: 'auto', minWidth: 170 }}>{projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select>
             <select value={csiDiv} onChange={(e) => setCsiDiv(e.target.value)} style={{ ...inp, width: 'auto', maxWidth: 240 }} title="CSI cost code applied to the next clock-in">
-              <option value="">No cost code</option>
+              <option value="">No Cost Code</option>
               {Object.entries(CSI_DIVISIONS).map(([code, d]) => <option key={code} value={code}>Div {code} — {d.name}</option>)}
             </select>
           </>
@@ -326,14 +326,14 @@ export default function TimeClockPage() {
 
       {/* Week intelligence strip — what the engine already knows */}
       <StatStrip items={[
-        {href: '/app/time',  label: 'Today', value: `${todayHours.toFixed(2)} h`, sub: clockedIn ? 'shift running now' : 'completed shifts', accent: clockedIn ? GREEN : undefined },
-        {href: '/app/time',  label: 'This Week', value: `${(week?.workedHours ?? 0).toFixed(2)} h`, sub: `week of ${fmtDate(thisWeekKey)}` },
-        {href: '/app/time',  label: 'Regular', value: `${(week?.regularHours ?? 0).toFixed(2)} h`, sub: 'inside the 40 h threshold' },
-        {href: '/app/time',  label: 'Overtime', value: `${(week?.overtimeHours ?? 0).toFixed(2)} h`, accent: (week?.overtimeHours ?? 0) > 0 ? GOLD : undefined, sub: 'past 40 h/week or 8 h/day' },
+        {href: '/app/time', label: 'Today', value: `${todayHours.toFixed(2)} h`, sub: clockedIn ? 'Shift running now' : 'Completed shifts', accent: clockedIn ? GREEN : undefined },
+        {href: '/app/time', label: 'This Week', value: `${(week?.workedHours ?? 0).toFixed(2)} h`, sub: `Week of ${fmtDate(thisWeekKey)}` },
+        {href: '/app/time', label: 'Regular', value: `${(week?.regularHours ?? 0).toFixed(2)} h`, sub: 'Inside the 40 h threshold' },
+        {href: '/app/time', label: 'Overtime', value: `${(week?.overtimeHours ?? 0).toFixed(2)} h`, accent: (week?.overtimeHours ?? 0) > 0 ? GOLD : undefined, sub: 'Past 40 h/week or 8 h/day' },
         {href: '/app/time',  label: 'Leave', value: `${leaveHours.toFixed(2)} h`, sub: 'PTO / sick / holiday' },
         ...(regRate > 0
           ? [{href: '/app/time',  label: 'Est. Gross', value: fmtMoney(estGross), accent: GREEN, sub: `$${regRate}/h reg · $${otRate}/h OT` }]
-          : [{href: '/app/time',  label: 'Pending Approval', value: String(pendingCount), sub: 'entries awaiting review' }]),
+          : [{href: '/app/time', label: 'Pending Approval', value: String(pendingCount), sub: 'Entries awaiting review' }]),
       ]} />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 300px', gap: 18, alignItems: 'start' }}>
@@ -342,7 +342,7 @@ export default function TimeClockPage() {
           {/* Shift console — walks in knowing the project, cost code, timezone, and GPS */}
           <SectionCard style={{ marginBottom: 16 }} bodyStyle={{ textAlign: 'center', padding: 26 }}>
             <div style={{ fontSize: 46, fontWeight: 800, letterSpacing: -1, color: clockedIn ? GREEN : DIM, fontVariantNumeric: 'tabular-nums' }}>
-              {clockedIn ? (() => { const h = liveElapsed(openShift.clock_in, new Date(now).toISOString()); const s = Math.floor(h * 3600); return `${Math.floor(s / 3600)}:${String(Math.floor(s % 3600 / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; })() : 'Clocked out'}
+              {clockedIn ? (() => { const h = liveElapsed(openShift.clock_in, new Date(now).toISOString()); const s = Math.floor(h * 3600); return `${Math.floor(s / 3600)}:${String(Math.floor(s % 3600 / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; })() : 'Clocked Out'}
             </div>
             <div style={{ color: DIM, fontSize: 13, marginTop: 4 }}>{clockedIn ? `Since ${fmtTime(openShift.clock_in)} · ${openShift.timezone || TZ}` : (emp ? 'Ready to clock in' : 'Resolving your employee record…')}</div>
             <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', marginTop: 12, fontSize: 12, color: DIM }}>
@@ -350,7 +350,7 @@ export default function TimeClockPage() {
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Timer size={13} color={GOLD} />{clockedIn ? (openShift.csi_division ? `Div ${openShift.csi_division} — ${openShift.cost_code_description || CSI_DIVISIONS[openShift.csi_division]?.name || 'cost coded'}` : 'No cost code on this shift') : (csiDiv ? `Div ${csiDiv} — ${CSI_DIVISIONS[csiDiv]?.name}` : 'No cost code — pick one above')}</span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><MapPin size={13} color={GOLD} />GPS stamps in &amp; out</span>
             </div>
-            <button onClick={clockedIn ? clockOut : clockIn} disabled={busy || !emp} className="pmBtn" style={{ ...btn, marginTop: 16, background: clockedIn ? RED : GREEN, color: '#fff', fontSize: 16, padding: '13px 26px', display: 'inline-flex', alignItems: 'center', gap: 8, opacity: busy || !emp ? 0.6 : 1, borderRadius: 12 }}>{clockedIn ? <Stop size={20} weight="fill" /> : <Play size={20} weight="fill" />}{clockedIn ? 'Clock out' : 'Clock in'}</button>
+            <button onClick={clockedIn ? clockOut : clockIn} disabled={busy || !emp} className="pmBtn" style={{ ...btn, marginTop: 16, background: clockedIn ? RED : GREEN, color: '#fff', fontSize: 16, padding: '13px 26px', display: 'inline-flex', alignItems: 'center', gap: 8, opacity: busy || !emp ? 0.6 : 1, borderRadius: 12 }}>{clockedIn ? <Stop size={20} weight="fill" /> : <Play size={20} weight="fill" />}{clockedIn ? 'Clock Out' : 'Clock In'}</button>
             {msg && <div style={{ color: msgTone === 'err' ? RED : GREEN, fontSize: 13, marginTop: 10 }}>{msg}</div>}
           </SectionCard>
 
@@ -360,7 +360,7 @@ export default function TimeClockPage() {
               subtitle={`${week.regularHours.toFixed(2)} h regular · ${week.overtimeHours.toFixed(2)} h overtime${regRate > 0 ? ` · est. ${fmtMoney(estGross)} gross` : ''}`}
               icon={<Clock size={17} weight="duotone" color={GOLD} />}
               style={{ marginBottom: 16 }}
-              action={<button onClick={submitWeek} className="pmBtn" style={{ ...ghostButtonStyle, padding: '7px 13px', fontSize: 12.5 }}><PaperPlaneRight size={14} />Submit week</button>}
+              action={<button onClick={submitWeek} className="pmBtn" style={{ ...ghostButtonStyle, padding: '7px 13px', fontSize: 12.5 }}><PaperPlaneRight size={14} />Submit Week</button>}
             >
               {week.days.map((d) => {
                 const hrs = Number(d.hours) || 0;
@@ -368,7 +368,7 @@ export default function TimeClockPage() {
                   <div key={d.date} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '5px 0', fontSize: 13 }}>
                     <span style={{ width: 110, flexShrink: 0 }}>{fmtDate(d.date)}</span>
                     <div style={{ flex: 1, height: 6, borderRadius: 999, background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${Math.min(100, (hrs / 10) * 100)}%`, borderRadius: 999, background: hrs > 8 ? `linear-gradient(90deg,${GOLD},#FBBF24)` : 'rgba(61,214,140,0.75)' }} />
+                      <div style={{ height: '100%', width: `${Math.min(100, (hrs / 10) * 100)}%`, borderRadius: 999, background: hrs > 8 ? `linear-gradient(90deg,${GOLD},var(--brand-primary-strong))` : 'rgba(61,214,140,0.75)' }} />
                     </div>
                     <span style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums', width: 56, textAlign: 'right' }}>{fmtHours(d.hours)}</span>
                   </div>
@@ -380,7 +380,7 @@ export default function TimeClockPage() {
 
           {/* actions */}
           <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
-            <button onClick={() => setManual({ date: localDay(), in: '07:00', out: '15:30', meal: '30', csi: csiDiv })} className="pmBtn" style={ghostButtonStyle}><Plus size={15} />Add time</button>
+            <button onClick={() => setManual({ date: localDay(), in: '07:00', out: '15:30', meal: '30', csi: csiDiv })} className="pmBtn" style={ghostButtonStyle}><Plus size={15} />Add Time</button>
             <button onClick={() => setLeave({ date: localDay(), type: 'pto', hours: '8' })} className="pmBtn" style={ghostButtonStyle}><Sun size={15} weight="fill" color={GOLD} />PTO / Sick</button>
           </div>
 
@@ -390,8 +390,8 @@ export default function TimeClockPage() {
                 compact
                 icon={<Clock size={28} weight="duotone" color={GOLD} />}
                 title="No time on the books yet"
-                description="Clock in above to start a GPS-stamped shift, or backfill a day with Add time. Entries land as pending, roll into the weekly timesheet, and hit job cost under their CSI division."
-                action={<button onClick={() => setManual({ date: localDay(), in: '07:00', out: '15:30', meal: '30', csi: csiDiv })} className="pmBtn" style={goldButtonStyle}><Plus size={15} weight="bold" />Add time</button>}
+                description="Clock in above to start a GPS-stamped shift, or backfill a day with Add Time. Entries land as pending, roll into the weekly timesheet, and hit job cost under their CSI division."
+                action={<button onClick={() => setManual({ date: localDay(), in: '07:00', out: '15:30', meal: '30', csi: csiDiv })} className="pmBtn" style={goldButtonStyle}><Plus size={15} weight="bold" />Add Time</button>}
               />
             ) : entries.map((e) => {
               const leaveType = e.entry_type && e.entry_type !== 'regular';
@@ -404,11 +404,11 @@ export default function TimeClockPage() {
                       {leaveType ? `${e.hours_worked ?? e.total_hours ?? 8}h` : `${fmtTime(e.clock_in)} – ${e.status === 'clocked_in' ? 'now' : fmtTime(e.clock_out)}`}
                       {!leaveType && e.project_id ? ` · ${projects.find((p) => p.id === e.project_id)?.name || 'Project'}` : ''}
                     </div>
-                    {e.csi_division ? <span style={{ display: 'inline-flex', alignItems: 'center', marginTop: 4, padding: '1px 8px', borderRadius: 999, background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.35)', color: '#FBBF24', fontSize: 10.5, fontWeight: 700 }}>Div {e.csi_division} · {e.cost_code_description || CSI_DIVISIONS[e.csi_division]?.name || 'Cost coded'}</span> : null}
+                    {e.csi_division ? <span style={{ display: 'inline-flex', alignItems: 'center', marginTop: 4, padding: '1px 8px', borderRadius: 999, background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-35)', color: 'var(--brand-primary-strong)', fontSize: 10.5, fontWeight: 700 }}>Div {e.csi_division} · {e.cost_code_description || CSI_DIVISIONS[e.csi_division]?.name || 'Cost coded'}</span> : null}
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{e.status === 'clocked_in' ? '—' : `${(Number(e.total_hours ?? e.hours_worked ?? 0) || 0).toFixed(2)}h`}</div>
-                    <div style={{ fontSize: 10.5, color: e.status === 'clocked_in' ? GREEN : e.status === 'approved' ? '#FBBF24' : GOLD, fontWeight: 700, textTransform: 'uppercase' }}>{e.status}</div>
+                    <div style={{ fontSize: 10.5, color: e.status === 'clocked_in' ? GREEN : e.status === 'approved' ? 'var(--brand-primary-strong)' : GOLD, fontWeight: 700 }}>{String(e.status || '').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}</div>
                   </div>
                   {e.status !== 'clocked_in' && e.status !== 'approved' ? <button onClick={() => del(e.id)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><Trash size={15} color={RED} /></button> : null}
                 </div>
@@ -420,11 +420,11 @@ export default function TimeClockPage() {
         {/* Context rail — what the system does with these hours */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <SectionCard flat title="This Week at a Glance" icon={<CurrencyDollar size={17} weight="duotone" color={GOLD} />}>
-            <InsightRow label="Worked hours" value={`${(week?.workedHours ?? 0).toFixed(2)} h`} />
+            <InsightRow label="Worked Hours" value={`${(week?.workedHours ?? 0).toFixed(2)} h`} />
             <InsightRow label="Regular / OT" value={`${(week?.regularHours ?? 0).toFixed(2)} / ${(week?.overtimeHours ?? 0).toFixed(2)}`} accent={(week?.overtimeHours ?? 0) > 0 ? GOLD : undefined} />
-            <InsightRow label="Leave logged" value={`${leaveHours.toFixed(2)} h`} />
-            <InsightRow label="Pending approval" value={String(pendingCount)} />
-            {regRate > 0 && <InsightRow label="Est. gross" value={fmtMoney(estGross)} accent={GREEN} strong />}
+            <InsightRow label="Leave Logged" value={`${leaveHours.toFixed(2)} h`} />
+            <InsightRow label="Pending Approval" value={String(pendingCount)} />
+            {regRate > 0 && <InsightRow label="Est. Gross" value={fmtMoney(estGross)} accent={GREEN} strong />}
             <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.45)', lineHeight: 1.5, marginTop: 8 }}>Overtime splits automatically past 40 h/week and 8 h/shift. Rates come from your employee record.</div>
           </SectionCard>
           <SectionCard flat title="After You Clock Out" icon={<PaperPlaneRight size={17} weight="duotone" color={GOLD} />}>
@@ -439,24 +439,24 @@ export default function TimeClockPage() {
       </div>
 
       {manual && (
-        <Modal title={manual.id ? 'Edit time' : 'Add time'} onClose={() => setManual(null)}>
+        <Modal title={manual.id ? 'Edit Time' : 'Add Time'} onClose={() => setManual(null)}>
           <SaguaroDatePicker value={manual.date} onChange={(v) => setManual({ ...manual, date: v })} style={inp} />
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}><input type="time" value={manual.in} onChange={(e) => setManual({ ...manual, in: e.target.value })} style={inp} /><input type="time" value={manual.out} onChange={(e) => setManual({ ...manual, out: e.target.value })} style={inp} /></div>
           <input value={manual.meal} onChange={(e) => setManual({ ...manual, meal: e.target.value })} placeholder="Meal break (min)" style={{ ...inp, marginTop: 8 }} />
           <select value={manual.csi ?? ''} onChange={(e) => setManual({ ...manual, csi: e.target.value })} style={{ ...inp, marginTop: 8 }}>
-            <option value="">No cost code</option>
+            <option value="">No Cost Code</option>
             {Object.entries(CSI_DIVISIONS).map(([code, d]) => <option key={code} value={code}>Div {code} — {d.name}</option>)}
           </select>
           <div style={{ color: DIM, fontSize: 11.5, marginTop: 6, lineHeight: 1.45 }}>The CSI division routes these hours to the right budget line in job cost.</div>
-          <button onClick={saveManual} style={{ ...btn, marginTop: 14, width: '100%' }}>{manual.id ? 'Save' : 'Log time'}</button>
+          <button onClick={saveManual} style={{ ...btn, marginTop: 14, width: '100%' }}>{manual.id ? 'Save' : 'Log Time'}</button>
         </Modal>
       )}
       {leave && (
         <Modal title="Log PTO / Sick" onClose={() => setLeave(null)}>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>{['pto', 'sick', 'holiday', 'vacation'].map((t) => <button key={t} onClick={() => setLeave({ ...leave, type: t })} style={{ ...btn, background: leave.type === t ? GOLD : 'transparent', color: leave.type === t ? DARK : TEXT, border: `1px solid ${BORDER}`, padding: '7px 12px', fontSize: 13, textTransform: 'capitalize' }}>{t}</button>)}</div>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>{['pto', 'sick', 'holiday', 'vacation'].map((t) => <button key={t} onClick={() => setLeave({ ...leave, type: t })} style={{ ...btn, background: leave.type === t ? GOLD : 'transparent', color: leave.type === t ? '#0A0A00' : TEXT, border: `1px solid ${BORDER}`, padding: '7px 12px', fontSize: 13, textTransform: 'capitalize' }}>{t === 'pto' ? 'PTO' : t}</button>)}</div>
           <SaguaroDatePicker value={leave.date} onChange={(v) => setLeave({ ...leave, date: v })} style={inp} />
           <input value={leave.hours} onChange={(e) => setLeave({ ...leave, hours: e.target.value })} placeholder="Hours" style={{ ...inp, marginTop: 8 }} />
-          <button onClick={saveLeave} style={{ ...btn, marginTop: 14, width: '100%' }}>Log {leave.type}</button>
+          <button onClick={saveLeave} style={{ ...btn, marginTop: 14, width: '100%' }}>Log {leave.type === 'pto' ? 'PTO' : leave.type.charAt(0).toUpperCase() + leave.type.slice(1)}</button>
         </Modal>
       )}
     </PremiumSurface>

@@ -126,13 +126,13 @@ const FAINT = 'rgba(255,255,255,0.42)';
 const BORDER = 'rgba(255,255,255,0.08)';
 const FIELD_BG = 'rgba(255,255,255,0.04)';
 const FIELD_BORDER = '1px solid rgba(255,255,255,0.10)';
-const GOLD = '#F59E0B';
-const GOLD_HI = '#FBBF24';
+const GOLD = 'var(--brand-primary)';
+const GOLD_HI = 'var(--brand-primary-strong)';
 const RED = '#EF4444';
 const RED_SOFT = 'rgba(239,68,68,0.14)';
 const RED_BORDER = 'rgba(239,68,68,0.45)';
-const AMBER_SOFT = 'rgba(245,158,11,0.10)';
-const AMBER_BORDER = 'rgba(245,158,11,0.40)';
+const AMBER_SOFT = 'var(--brand-primary-12)';
+const AMBER_BORDER = 'var(--brand-primary-35)';
 const GREEN = '#45B37D';
 const GREEN_SOFT = 'rgba(69,179,125,0.15)';
 const GREEN_BORDER = 'rgba(69,179,125,0.5)';
@@ -442,8 +442,8 @@ function VividGoldChip({
         flexShrink: 0, width: size, height: size, borderRadius: Math.round(size * 0.29),
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         background: `linear-gradient(145deg, ${GOLD_HI} 0%, ${GOLD} 52%, #B45309 100%)`,
-        border: '1px solid rgba(253,230,138,0.55)',
-        boxShadow: '0 0 0 3px rgba(245,158,11,0.16), 0 10px 26px -10px rgba(245,158,11,0.60), inset 0 1px 0 rgba(255,255,255,0.40)',
+        border: '1px solid color-mix(in srgb, var(--brand-primary-strong) 55%, transparent)',
+        boxShadow: '0 0 0 3px color-mix(in srgb, var(--brand-primary) 16%, transparent), 0 10px 26px -10px color-mix(in srgb, var(--brand-primary) 60%, transparent), inset 0 1px 0 rgba(255,255,255,0.40)',
         color: '#F8FAFC',
         ...style,
       }}
@@ -504,12 +504,12 @@ function FrequencyDial({ seed }: { seed: string }) {
         </text>
       ))}
       {/* Legend + standby lamp */}
-      <text x={W / 2} y={78} textAnchor="middle" fontSize={9} fontWeight={800} letterSpacing="0.22em" fill="rgba(255,255,255,0.46)">
+      <text x={W / 2} y={78} textAnchor="middle" fontSize={9} fontWeight={800} fill="rgba(255,255,255,0.46)">
         FREQ — MHZ
       </text>
       <circle cx={30} cy={74} r={8.5} fill={GOLD_HI} opacity={0.16} />
       <circle cx={30} cy={74} r={4.2} fill={GOLD_HI} stroke="rgba(255,255,255,0.30)" strokeWidth={0.8} />
-      <text x={40} y={77} fontSize={7.5} fontWeight={800} letterSpacing="0.08em" fill={GOLD_HI}>STBY</text>
+      <text x={40} y={77} fontSize={7.5} fontWeight={800} fill={GOLD_HI}>Stby</text>
       {/* Needle — seeded per channel */}
       <rect x={nx - 5} y={12} width={10} height={56} rx={4} fill={GOLD} opacity={0.14} />
       <line x1={nx} y1={12} x2={nx} y2={66} stroke={`url(#sagDialNeedle-${uid})`} strokeWidth={2.4} strokeLinecap="round" />
@@ -523,7 +523,7 @@ function FrequencyDial({ seed }: { seed: string }) {
 /* One-line preview of a channel's last transmission (standby panel). */
 const trafficPreview = (lm: NonNullable<RadioChannel['lastMessage']>) =>
   lm.kind === 'voice' ? `PTT ${secsLabel(lm.secs)}`
-    : lm.kind === 'panic' ? 'PANIC ALARM'
+    : lm.kind === 'panic' ? 'Panic Alarm'
     : lm.kind === 'image' ? 'Photo'
     : lm.kind === 'tone' ? 'Tone'
     : (lm.body || '').slice(0, 80) || 'Traffic';
@@ -547,7 +547,7 @@ const TOOL_H = 40;
 const toolBtnStyle = (on: boolean, enabled: boolean): React.CSSProperties => ({
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
   height: TOOL_H, padding: '0 12px', borderRadius: 9, boxSizing: 'border-box',
-  background: on ? 'linear-gradient(180deg, rgba(245,158,11,0.28), rgba(245,158,11,0.12))' : FIELD_BG,
+  background: on ? 'linear-gradient(180deg, color-mix(in srgb, var(--brand-primary) 28%, transparent), var(--brand-primary-12))' : FIELD_BG,
   border: on ? `1px solid ${AMBER_BORDER}` : FIELD_BORDER,
   color: on ? GOLD_HI : MUTED, fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap',
   cursor: enabled ? 'pointer' : 'default', opacity: enabled ? 1 : 0.45,
@@ -556,8 +556,8 @@ const toolBtnStyle = (on: boolean, enabled: boolean): React.CSSProperties => ({
 const miniBtnStyle = (on: boolean): React.CSSProperties => ({
   flexShrink: 0, width: 26, height: 26, borderRadius: 8, padding: 0,
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-  background: on ? 'rgba(245,158,11,0.14)' : 'rgba(255,255,255,0.04)',
-  border: on ? '1px solid rgba(245,158,11,0.40)' : `1px solid ${BORDER}`,
+  background: on ? 'color-mix(in srgb, var(--brand-primary) 14%, transparent)' : 'rgba(255,255,255,0.04)',
+  border: on ? '1px solid var(--brand-primary-35)' : `1px solid ${BORDER}`,
   color: on ? GOLD_HI : FAINT, cursor: 'pointer',
 });
 /** Close/dismiss glyph button — same everywhere, no bespoke variants. */
@@ -573,7 +573,7 @@ const toolSegStyle = (on: boolean, enabled: boolean, divider: boolean): React.CS
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
   height: '100%', padding: '0 12px', border: 'none', borderRadius: 0,
   borderLeft: divider ? `1px solid ${BORDER}` : 'none',
-  background: on ? 'linear-gradient(180deg, rgba(245,158,11,0.28), rgba(245,158,11,0.12))' : 'transparent',
+  background: on ? 'linear-gradient(180deg, color-mix(in srgb, var(--brand-primary) 28%, transparent), var(--brand-primary-12))' : 'transparent',
   color: on ? GOLD_HI : MUTED, fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap',
   cursor: enabled ? 'pointer' : 'default', opacity: enabled ? 1 : 0.45,
 });
@@ -596,7 +596,7 @@ const fieldStyle: React.CSSProperties = {
   color: WHITE, fontSize: 12.5, outline: 'none',
 };
 const eyebrowStyle: React.CSSProperties = {
-  fontSize: 10, fontWeight: 900, letterSpacing: '0.12em', color: FAINT,
+  fontSize: 10, fontWeight: 900, color: FAINT,
 };
 
 /* ── Dialog ────────────────────────────────────────────────────────────────
@@ -646,7 +646,7 @@ function Dialog({
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '13px 16px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
           {icon}
-          <span style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.12em', color: GOLD_HI, flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <span style={{ fontSize: 11, fontWeight: 900, color: GOLD_HI, flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {title}
           </span>
           <button onClick={onClose} aria-label="Close" style={closeBtnStyle}><X size={15} weight="bold" /></button>
@@ -720,16 +720,16 @@ function PromoteField({ label, hint, wide, children }: {
 
 /* Tone signaling — labels, colors, and distinct WebAudio beep frequencies. */
 const TONES: Record<string, { label: string; color: string; border: string; soft: string; freq: number; hold: number }> = {
-  ack: { label: 'ACK', color: GREEN, border: GREEN_BORDER, soft: GREEN_SOFT, freq: 880, hold: 0.22 },
-  negative: { label: 'NEGATIVE', color: RED, border: RED_BORDER, soft: RED_SOFT, freq: 294, hold: 0.3 },
-  comein: { label: 'COME IN', color: GOLD_HI, border: AMBER_BORDER, soft: AMBER_SOFT, freq: 587, hold: 0.45 },
+  ack: { label: 'Ack', color: GREEN, border: GREEN_BORDER, soft: GREEN_SOFT, freq: 880, hold: 0.22 },
+  negative: { label: 'Negative', color: RED, border: RED_BORDER, soft: RED_SOFT, freq: 294, hold: 0.3 },
+  comein: { label: 'Come In', color: GOLD_HI, border: AMBER_BORDER, soft: AMBER_SOFT, freq: 587, hold: 0.45 },
 };
 
 /* Presence status — roster dot colors + labels (server enum). */
 const PRESENCE: Record<string, { label: string; color: string }> = {
   available: { label: 'Available', color: GREEN },
   busy: { label: 'Busy', color: RED },
-  on_route: { label: 'On route', color: GOLD_HI },
+  on_route: { label: 'On Route', color: GOLD_HI },
   off: { label: 'Off', color: FAINT },
 };
 
@@ -760,20 +760,20 @@ interface PromoteLink {
 }
 /** The four targets, each wearing its own module's accent (lib/module-identity). */
 const PROMOTE_META: Record<PromoteRecordType, { label: string; blurb: string; accentKey: string; icon: React.ReactNode }> = {
-  rfi:         { label: 'RFI',         blurb: 'Ask the architect',   accentKey: 'rfis',        icon: <Question size={16} weight="bold" /> },
-  punch:       { label: 'Punch item',  blurb: 'Something to fix',    accentKey: 'punch',       icon: <ListChecks size={16} weight="bold" /> },
-  field_issue: { label: 'Field issue', blurb: 'Problem on site',     accentKey: 'fieldissues', icon: <WarningOctagon size={16} weight="bold" /> },
-  daily_log:   { label: 'Daily log',   blurb: 'Log it for the day',  accentKey: 'daily',       icon: <Notebook size={16} weight="bold" /> },
+  rfi:         { label: 'RFI', blurb: 'Ask the architect', accentKey: 'rfis', icon: <Question size={16} weight="bold" /> },
+  punch:       { label: 'Punch Item', blurb: 'Something to fix', accentKey: 'punch', icon: <ListChecks size={16} weight="bold" /> },
+  field_issue: { label: 'Field Issue', blurb: 'Problem on site', accentKey: 'fieldissues', icon: <WarningOctagon size={16} weight="bold" /> },
+  daily_log:   { label: 'Daily Log', blurb: 'Log it for the day', accentKey: 'daily', icon: <Notebook size={16} weight="bold" /> },
 };
 const promoteAccent = (t: PromoteRecordType) => moduleAccent(PROMOTE_META[t].accentKey);
 /** Daily-log columns the server will accept, in its own order. */
 const DAILY_LOG_SECTION_LABELS: Record<string, string> = {
-  work_performed: 'Work performed',
+  work_performed: 'Work Performed',
   delays: 'Delays',
-  safety_notes: 'Safety notes',
+  safety_notes: 'Safety Notes',
   visitors: 'Visitors',
-  materials_delivered: 'Materials delivered',
-  quality_issues: 'Quality issues',
+  materials_delivered: 'Materials Delivered',
+  quality_issues: 'Quality Issues',
   notes: 'Notes',
 };
 /** Stored lowercase, displayed capitalized — the platform-wide convention. */
@@ -1423,7 +1423,7 @@ export default function RadioDispatchPage() {
       ok = await post();
     }
     if (ok) await mutateMessages();
-    else pushToast(`${TONES[tone]?.label || tone.toUpperCase()} tone not sent — re-key to try again`, 'err');
+    else pushToast(`${TONES[tone]?.label || tone} tone not sent — re-key to try again`, 'err');
     setToneSending(null);
   };
 
@@ -1472,7 +1472,7 @@ export default function RadioDispatchPage() {
   );
   const logText = useCallback((m: RadioMessage) => {
     if (m.kind === 'voice') return m.transcript || `[voice clip${m.audio_duration_secs ? ` ${secsLabel(m.audio_duration_secs)}` : ''} — no transcript]`;
-    if (m.kind === 'tone') return `[tone — ${TONES[m.body || '']?.label || (m.body || '').toUpperCase()}]`;
+    if (m.kind === 'tone') return `[tone — ${TONES[m.body || '']?.label || (m.body || '')}]`;
     if (m.kind === 'image') return m.body ? `[photo] ${m.body}` : '[photo]';
     return m.body || '';
   }, []);
@@ -2647,7 +2647,7 @@ export default function RadioDispatchPage() {
                 flexShrink: 0, width: 15, height: 15, borderRadius: 5,
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 background: on ? `linear-gradient(180deg, ${GOLD_HI}, ${GOLD})` : FIELD_BG,
-                border: on ? 'none' : FIELD_BORDER, color: '#241500',
+                border: on ? 'none' : FIELD_BORDER, color: '#0A0A00',
               }}
             >
               {on && <Check size={10} weight="bold" />}
@@ -2660,17 +2660,17 @@ export default function RadioDispatchPage() {
           <span style={{ flex: 1, minWidth: 0, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {busy ? 'Working…' : personName(p)}
           </span>
-          <span style={{ flexShrink: 0, fontSize: 9.5, fontWeight: 800, letterSpacing: '0.06em', color: FAINT, whiteSpace: 'nowrap' }}>
-            {sub ? 'SUB' : String(p.role || 'STAFF').toUpperCase().slice(0, 14)}
+          <span style={{ flexShrink: 0, fontSize: 9.5, fontWeight: 800, color: FAINT, whiteSpace: 'nowrap' }}>
+            {sub ? 'Sub' : String(p.role || 'Staff').replace(/_/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase()).slice(0, 14)}
           </span>
         </button>
       );
     };
     return (
       <>
-        {staff.length > 0 && <div style={{ ...eyebrowStyle, margin: '2px 0 4px' }}>STAFF</div>}
+        {staff.length > 0 && <div style={{ ...eyebrowStyle, margin: '2px 0 4px' }}>Staff</div>}
         {staff.map((p) => row(p, false))}
-        {subs.length > 0 && <div style={{ ...eyebrowStyle, margin: '6px 0 4px' }}>SUBCONTRACTORS</div>}
+        {subs.length > 0 && <div style={{ ...eyebrowStyle, margin: '6px 0 4px' }}>Subcontractors</div>}
         {subs.map((p) => row(p, true))}
       </>
     );
@@ -2855,7 +2855,7 @@ export default function RadioDispatchPage() {
     return (
       <div style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.5, marginTop: 6, fontStyle: translated ? 'normal' : 'italic' }}>
         {translated && m.detected_lang && m.detected_lang !== lang && (
-          <span style={{ color: FAINT, fontWeight: 800, fontSize: 10, letterSpacing: '0.08em', marginRight: 6 }}>
+          <span style={{ color: FAINT, fontWeight: 800, fontSize: 10, marginRight: 6 }}>
             {lang.toUpperCase()}
           </span>
         )}
@@ -2880,7 +2880,7 @@ export default function RadioDispatchPage() {
           style={{
             flexShrink: 0, width: 32, height: 32, borderRadius: 10, padding: 0, cursor: 'pointer',
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            background: isPlaying ? 'linear-gradient(180deg, rgba(245,158,11,0.35), rgba(245,158,11,0.16))' : 'rgba(245,158,11,0.12)',
+            background: isPlaying ? 'linear-gradient(180deg, var(--brand-primary-35), color-mix(in srgb, var(--brand-primary) 16%, transparent))' : 'var(--brand-primary-12)',
             border: `1px solid ${AMBER_BORDER}`, color: GOLD_HI,
           }}
         >
@@ -2895,7 +2895,7 @@ export default function RadioDispatchPage() {
                 height: Math.round(5 + h * 22),
                 background: isPlaying && i < playedTo
                   ? GOLD_HI
-                  : unheardClip ? 'rgba(245,158,11,0.50)' : 'rgba(255,255,255,0.24)',
+                  : unheardClip ? 'color-mix(in srgb, var(--brand-primary) 50%, transparent)' : 'rgba(255,255,255,0.24)',
                 transformOrigin: 'center',
                 animation: isPlaying && i >= playedTo
                   ? `sagRadioEq ${0.8 + (i % 4) * 0.14}s ease-in-out ${(i % 5) * 0.07}s infinite`
@@ -2950,8 +2950,8 @@ export default function RadioDispatchPage() {
           style={{
             flexShrink: 0, width: 34, height: 34, borderRadius: 10,
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            background: panic ? RED_SOFT : 'rgba(245,158,11,0.12)',
-            border: panic ? `1px solid ${RED_BORDER}` : '1px solid rgba(245,158,11,0.30)',
+            background: panic ? RED_SOFT : 'var(--brand-primary-12)',
+            border: panic ? `1px solid ${RED_BORDER}` : '1px solid var(--brand-primary-25)',
             color: panic ? RED : GOLD_HI, fontSize: 11.5, fontWeight: 900,
           }}
         >
@@ -2971,17 +2971,17 @@ export default function RadioDispatchPage() {
               </span>
             )}
             {panic && (
-              <span style={{ fontSize: 9.5, fontWeight: 900, letterSpacing: '0.12em', color: RED, border: `1px solid ${RED_BORDER}`, borderRadius: 999, padding: '1px 7px' }}>
+              <span style={{ fontSize: 9.5, fontWeight: 900, color: RED, border: `1px solid ${RED_BORDER}`, borderRadius: 999, padding: '1px 7px' }}>
                 PANIC
               </span>
             )}
             {resolved && (
-              <span style={{ fontSize: 9.5, fontWeight: 900, letterSpacing: '0.12em', color: GREEN, border: `1px solid ${GREEN_BORDER}`, borderRadius: 999, padding: '1px 7px' }}>
+              <span style={{ fontSize: 9.5, fontWeight: 900, color: GREEN, border: `1px solid ${GREEN_BORDER}`, borderRadius: 999, padding: '1px 7px' }}>
                 RESOLVED {timeOf(m.panic_resolved_at as string)}
               </span>
             )}
             {alert && (
-              <span style={{ fontSize: 9.5, fontWeight: 900, letterSpacing: '0.12em', color: GOLD_HI, border: `1px solid ${AMBER_BORDER}`, borderRadius: 999, padding: '1px 7px' }}>
+              <span style={{ fontSize: 9.5, fontWeight: 900, color: GOLD_HI, border: `1px solid ${AMBER_BORDER}`, borderRadius: 999, padding: '1px 7px' }}>
                 ALERT
               </span>
             )}
@@ -2989,7 +2989,7 @@ export default function RadioDispatchPage() {
               <span style={{ fontSize: 11, color: FAINT, fontVariantNumeric: 'tabular-nums' }}>{secsLabel(m.audio_duration_secs)}</span>
             )}
             {unheardClip && (
-              <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: '0.1em', color: GOLD_HI, background: AMBER_SOFT, border: `1px solid ${AMBER_BORDER}`, borderRadius: 999, padding: '1px 6px' }}>
+              <span style={{ fontSize: 9, fontWeight: 900, color: GOLD_HI, background: AMBER_SOFT, border: `1px solid ${AMBER_BORDER}`, borderRadius: 999, padding: '1px 6px' }}>
                 NEW
               </span>
             )}
@@ -3029,7 +3029,7 @@ export default function RadioDispatchPage() {
               style={{
                 flexShrink: 0, width: 22, height: 22, borderRadius: 7, padding: 0,
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                background: rowMenu?.id === m.id ? 'rgba(245,158,11,0.14)' : 'rgba(255,255,255,0.04)',
+                background: rowMenu?.id === m.id ? 'color-mix(in srgb, var(--brand-primary) 14%, transparent)' : 'rgba(255,255,255,0.04)',
                 border: `1px solid ${rowMenu?.id === m.id ? AMBER_BORDER : BORDER}`,
                 color: rowMenu?.id === m.id ? GOLD_HI : FAINT, cursor: 'pointer',
               }}
@@ -3040,7 +3040,7 @@ export default function RadioDispatchPage() {
 
           {tone && (
             <div style={{ marginTop: 6 }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 12px', borderRadius: 999, background: tone.soft, border: `1px solid ${tone.border}`, color: tone.color, fontSize: 11, fontWeight: 900, letterSpacing: '0.12em' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 12px', borderRadius: 999, background: tone.soft, border: `1px solid ${tone.border}`, color: tone.color, fontSize: 11, fontWeight: 900 }}>
                 <BellRinging size={12} weight="fill" /> {tone.label}
                 <span style={{ color: FAINT, fontWeight: 700, letterSpacing: 'normal' }}>beep</span>
               </span>
@@ -3063,7 +3063,7 @@ export default function RadioDispatchPage() {
           )}
           {m.kind !== 'voice' && translatedBody && translatedBody !== m.body && (
             <div style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.5, marginTop: 4 }}>
-              <span style={{ color: FAINT, fontWeight: 800, fontSize: 10, letterSpacing: '0.08em', marginRight: 6 }}>{lang.toUpperCase()}</span>
+              <span style={{ color: FAINT, fontWeight: 800, fontSize: 10, marginRight: 6 }}>{lang.toUpperCase()}</span>
               {translatedBody}
             </div>
           )}
@@ -3071,7 +3071,7 @@ export default function RadioDispatchPage() {
           {/* Location trail (v2) — numbered breadcrumbs, newest last */}
           {trail.length > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-              <span style={{ fontSize: 9.5, fontWeight: 900, letterSpacing: '0.12em', color: '#FCA5A5' }}>TRAIL</span>
+              <span style={{ fontSize: 9.5, fontWeight: 900, color: '#FCA5A5' }}>Trail</span>
               {trail.map((p, i) => (
                 <a
                   key={i}
@@ -3170,7 +3170,7 @@ export default function RadioDispatchPage() {
         style={{
           display: 'flex', alignItems: 'center', gap: 8, padding: '7px 9px',
           borderRadius: 11, marginBottom: 3,
-          background: isActive ? 'linear-gradient(180deg, rgba(245,158,11,0.16), rgba(245,158,11,0.05))' : 'transparent',
+          background: isActive ? 'linear-gradient(180deg, color-mix(in srgb, var(--brand-primary) 16%, transparent), color-mix(in srgb, var(--brand-primary) 5%, transparent))' : 'transparent',
           border: isActive ? `1px solid ${AMBER_BORDER}` : '1px solid transparent',
         }}
       >
@@ -3185,7 +3185,7 @@ export default function RadioDispatchPage() {
         >
           <span
             style={{
-              flexShrink: 0, fontSize: 10, fontWeight: 900, letterSpacing: '0.06em',
+              flexShrink: 0, fontSize: 10, fontWeight: 900,
               fontVariantNumeric: 'tabular-nums', color: isActive ? GOLD_HI : FAINT,
               border: `1px solid ${isActive ? AMBER_BORDER : BORDER}`, borderRadius: 7, padding: '4px 7px',
             }}
@@ -3218,7 +3218,7 @@ export default function RadioDispatchPage() {
               flexShrink: 0, minWidth: 20, height: 20, padding: '0 6px', borderRadius: 999,
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               background: `linear-gradient(180deg, ${GOLD_HI}, ${GOLD})`,
-              color: '#241500', fontSize: 10.5, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
+              color: '#0A0A00', fontSize: 10.5, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
             }}
           >
             {unread > 99 ? '99+' : unread}
@@ -3276,8 +3276,8 @@ export default function RadioDispatchPage() {
           style={{
             flexShrink: 0, width: 34, height: 34, borderRadius: 10,
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            background: held ? RED_SOFT : 'rgba(245,158,11,0.12)',
-            border: `1px solid ${held ? RED_BORDER : 'rgba(245,158,11,0.30)'}`,
+            background: held ? RED_SOFT : 'var(--brand-primary-12)',
+            border: `1px solid ${held ? RED_BORDER : 'var(--brand-primary-25)'}`,
             color: held ? RED : GOLD_HI,
           }}
         >
@@ -3289,11 +3289,11 @@ export default function RadioDispatchPage() {
             <span style={{ fontSize: 11, color: FAINT, fontVariantNumeric: 'tabular-nums' }}>{p.secs.toFixed(1)}s · {sizeLabel(p.bytes)}</span>
             <span
               style={{
-                fontSize: 9.5, fontWeight: 900, letterSpacing: '0.12em', borderRadius: 999, padding: '1px 8px',
+                fontSize: 9.5, fontWeight: 900, borderRadius: 999, padding: '1px 8px',
                 color: held ? RED : GOLD_HI, border: `1px solid ${held ? RED_BORDER : AMBER_BORDER}`,
               }}
             >
-              {working ? 'SENDING' : held ? 'HELD — NOT DELIVERED' : 'QUEUED — RETRYING'}
+              {working ? 'Sending' : held ? 'Held — Not Delivered' : 'Queued — Retrying'}
             </span>
             {working && <EqBars size={12} />}
             <span style={{ fontSize: 11, color: FAINT, marginLeft: 'auto', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
@@ -3309,7 +3309,7 @@ export default function RadioDispatchPage() {
           </div>
           {!working && (
             <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-              <button onClick={() => retryClip(p)} style={{ ...rowActionStyle, color: GOLD_HI, borderColor: AMBER_BORDER, background: 'rgba(245,158,11,0.14)' }}>
+              <button onClick={() => retryClip(p)} style={{ ...rowActionStyle, color: GOLD_HI, borderColor: AMBER_BORDER, background: 'color-mix(in srgb, var(--brand-primary) 14%, transparent)' }}>
                 <PaperPlaneRight size={11} weight="bold" /> Retry
               </button>
               <button onClick={() => discardClip(p)} title="Delete this recording for good" style={{ ...rowActionStyle, color: '#FCA5A5', borderColor: RED_BORDER, background: RED_SOFT }}>
@@ -3383,7 +3383,7 @@ export default function RadioDispatchPage() {
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
                 padding: '9px 14px', borderRadius: 12, cursor: 'pointer',
-                background: assistShown ? 'linear-gradient(180deg, rgba(245,158,11,0.30), rgba(245,158,11,0.14))' : FIELD_BG,
+                background: assistShown ? 'linear-gradient(180deg, var(--brand-primary-25), color-mix(in srgb, var(--brand-primary) 14%, transparent))' : FIELD_BG,
                 border: assistOpenCount > 0 ? `1px solid ${RED_BORDER}` : FIELD_BORDER,
                 color: assistShown ? GOLD_HI : MUTED, fontWeight: 800, fontSize: 12.5,
               }}
@@ -3419,7 +3419,7 @@ export default function RadioDispatchPage() {
                 padding: '11px 20px', borderRadius: 12, cursor: panicFiring ? 'wait' : 'pointer',
                 background: panicSent ? GREEN_SOFT : RED_SOFT,
                 border: `1px solid ${panicSent ? GREEN_BORDER : RED_BORDER}`,
-                color: panicSent ? GREEN : RED, fontWeight: 900, fontSize: 13, letterSpacing: '0.05em',
+                color: panicSent ? GREEN : RED, fontWeight: 900, fontSize: 13,
                 userSelect: 'none', touchAction: 'none',
               }}
             >
@@ -3434,7 +3434,7 @@ export default function RadioDispatchPage() {
               />
               <Siren size={16} weight="fill" style={{ position: 'relative' }} />
               <span style={{ position: 'relative' }}>
-                {panicFiring ? 'SENDING…' : panicSent ? 'PANIC SENT' : 'HOLD — PANIC'}
+                {panicFiring ? 'Sending…' : panicSent ? 'Panic Sent' : 'Hold — Panic'}
               </span>
             </button>
           </>
@@ -3452,7 +3452,7 @@ export default function RadioDispatchPage() {
           position: 'relative', display: 'flex', flexDirection: 'column',
           height: 'min(900px, calc(100vh - 300px))', minHeight: 520,
           borderRadius: 16, background: 'rgba(16,16,18,0.82)', border: `1px solid ${BORDER}`,
-          boxShadow: '0 24px 48px -32px rgba(245,158,11,0.22), inset 0 1px 0 rgba(255,255,255,0.06)',
+          boxShadow: '0 24px 48px -32px color-mix(in srgb, var(--brand-primary) 22%, transparent), inset 0 1px 0 rgba(255,255,255,0.06)',
         }}
       >
         {/* ── Instrument header ──────────────────────────────────────── */}
@@ -3469,14 +3469,14 @@ export default function RadioDispatchPage() {
             <button
               onClick={() => { setChanOpen((v) => !v); setRosterOpen(false); setMenuOpen(false); }}
               aria-expanded={chanOpen}
-              aria-label="Choose channel"
-              title="Choose a channel"
+              aria-label="Choose Channel"
+              title="Choose a Channel"
               disabled={firstLoad}
               style={{
                 display: 'flex', alignItems: 'center', gap: 10, width: '100%', boxSizing: 'border-box',
                 height: TOOL_H, padding: '0 10px', borderRadius: 10, textAlign: 'left',
                 background: chanOpen
-                  ? 'linear-gradient(180deg, rgba(245,158,11,0.26), rgba(245,158,11,0.10))'
+                  ? 'linear-gradient(180deg, color-mix(in srgb, var(--brand-primary) 26%, transparent), var(--brand-primary-12))'
                   : 'linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.025))',
                 border: chanOpen ? `1px solid ${AMBER_BORDER}` : FIELD_BORDER,
                 color: WHITE, cursor: firstLoad ? 'default' : 'pointer', opacity: firstLoad ? 0.5 : 1,
@@ -3484,7 +3484,7 @@ export default function RadioDispatchPage() {
             >
               <span
                 style={{
-                  flexShrink: 0, fontSize: 10, fontWeight: 900, letterSpacing: '0.06em',
+                  flexShrink: 0, fontSize: 10, fontWeight: 900,
                   fontVariantNumeric: 'tabular-nums', color: GOLD_HI,
                   border: `1px solid ${AMBER_BORDER}`, borderRadius: 7, padding: '3px 7px',
                 }}
@@ -3507,7 +3507,7 @@ export default function RadioDispatchPage() {
                   style={{
                     flexShrink: 0, minWidth: 20, height: 20, padding: '0 6px', borderRadius: 999,
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    background: `linear-gradient(180deg, ${GOLD_HI}, ${GOLD})`, color: '#241500',
+                    background: `linear-gradient(180deg, ${GOLD_HI}, ${GOLD})`, color: '#0A0A00',
                     fontSize: 10.5, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
                   }}
                 >
@@ -3540,7 +3540,7 @@ export default function RadioDispatchPage() {
                 {chanGroups.map((grp) => (
                   <div key={grp.key} style={{ marginBottom: 6 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 6px 5px', minWidth: 0 }}>
-                      <span style={{ ...eyebrowStyle, letterSpacing: '0.14em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
+                      <span style={{ ...eyebrowStyle, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
                         {grp.label}
                       </span>
                       <span aria-hidden style={{ flex: 1, height: 1, background: BORDER }} />
@@ -3575,7 +3575,7 @@ export default function RadioDispatchPage() {
               }}
             >
               <UsersThree size={13} weight="bold" />
-              {!active ? 'On channel'
+              {!active ? 'On Channel'
                 : otherMembers === 0 ? 'Nobody else'
                   : activeLive > 1 ? `${activeLive} live · ${otherMembers + 1}`
                     : `${otherMembers + 1} on roster`}
@@ -3585,7 +3585,7 @@ export default function RadioDispatchPage() {
             <Dropdown open={rosterOpen && !!active} onClose={() => setRosterOpen(false)} anchorRef={rosterRef} width={380}>
               <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8, padding: '11px 12px', borderBottom: `1px solid ${BORDER}` }}>
                 <UsersThree size={14} weight="bold" color={GOLD_HI} />
-                <span style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.12em', color: GOLD_HI, whiteSpace: 'nowrap' }}>ON CHANNEL</span>
+                <span style={{ fontSize: 11, fontWeight: 900, color: GOLD_HI, whiteSpace: 'nowrap' }}>On Channel</span>
                 <span style={{ fontSize: 11, color: FAINT, flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{active?.name}</span>
                 <button onClick={() => setRosterOpen(false)} aria-label="Close the roster" style={closeBtnStyle}><X size={14} weight="bold" /></button>
               </div>
@@ -3660,7 +3660,7 @@ export default function RadioDispatchPage() {
                           {senderShort(mem.display_name)}{self ? ' (you)' : ''}
                         </span>
                         {mem.call_sign && (
-                          <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 900, letterSpacing: '0.08em', color: GOLD_HI, border: `1px solid ${AMBER_BORDER}`, borderRadius: 999, padding: '1px 7px' }}>
+                          <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 900, color: GOLD_HI, border: `1px solid ${AMBER_BORDER}`, borderRadius: 999, padding: '1px 7px' }}>
                             {mem.call_sign}
                           </span>
                         )}
@@ -3739,7 +3739,7 @@ export default function RadioDispatchPage() {
                   onClick={() => { pendingSelfEditRef.current = true; if (myRosterRow) startEditProfile(myRosterRow); }}
                   style={{ ...toolBtnStyle(false, true), width: '100%' }}
                 >
-                  <PencilSimple size={13} weight="bold" /> {myRosterRow?.call_sign ? `Your handle: ${myRosterRow.call_sign}` : 'Set your handle'}
+                  <PencilSimple size={13} weight="bold" /> {myRosterRow?.call_sign ? `Your handle: ${myRosterRow.call_sign}` : 'Set Your Handle'}
                 </button>
               </div>
             </Dropdown>
@@ -3750,17 +3750,17 @@ export default function RadioDispatchPage() {
           {/* Instrument readouts — what the console already knows, inline */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0, paddingRight: 2 }}>
             {rtLive && (
-              <span title="Live — transmissions arrive instantly over the realtime socket" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 9.5, fontWeight: 900, letterSpacing: '0.1em', color: GREEN }}>
+              <span title="Live — transmissions arrive instantly over the realtime socket" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 9.5, fontWeight: 900, color: GREEN }}>
                 <span aria-hidden style={{ width: 7, height: 7, borderRadius: 999, background: GREEN, boxShadow: '0 0 8px rgba(69,179,125,0.8)' }} />
                 LIVE
               </span>
             )}
             {[
-              { label: 'TRAFFIC TODAY', value: String(stats.trafficToday) },
-              { label: 'MONITORING', value: `${stats.monitored}/${stats.channels}` },
+              { label: 'Traffic Today', value: String(stats.trafficToday) },
+              { label: 'Monitoring', value: `${stats.monitored}/${stats.channels}` },
             ].map((r) => (
               <span key={r.label} style={{ display: 'none', flexDirection: 'column', lineHeight: 1.15 }} className="sagReadout">
-                <span style={{ fontSize: 8.5, fontWeight: 900, letterSpacing: '0.12em', color: FAINT }}>{r.label}</span>
+                <span style={{ fontSize: 8.5, fontWeight: 900, color: FAINT }}>{r.label}</span>
                 <span style={{ fontSize: 13, fontWeight: 800, color: WHITE, fontVariantNumeric: 'tabular-nums' }}>{r.value}</span>
               </span>
             ))}
@@ -3800,7 +3800,7 @@ export default function RadioDispatchPage() {
                     minWidth: 16, height: 16, padding: '0 4px', borderRadius: 999,
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     background: assistOpenCount > 0 ? RED : `linear-gradient(180deg, ${GOLD_HI}, ${GOLD})`,
-                    color: assistOpenCount > 0 ? WHITE : '#241500',
+                    color: assistOpenCount > 0 ? WHITE : '#0A0A00',
                     fontSize: 9.5, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
                   }}
                 >
@@ -3841,7 +3841,7 @@ export default function RadioDispatchPage() {
                 </button>
                 <div aria-hidden style={{ height: 1, background: BORDER, margin: '6px 4px' }} />
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 10px 8px' }}>
-                  <span style={{ ...eyebrowStyle, flex: 1 }}>TRANSCRIPTS</span>
+                  <span style={{ ...eyebrowStyle, flex: 1 }}>Transcripts</span>
                   <div style={{ display: 'inline-flex', borderRadius: 8, overflow: 'hidden', border: FIELD_BORDER }}>
                     {(['en', 'es'] as const).map((l) => (
                       <button
@@ -3849,8 +3849,8 @@ export default function RadioDispatchPage() {
                         onClick={() => pickLang(l)}
                         style={{
                           padding: '5px 12px', border: 'none', cursor: 'pointer',
-                          fontSize: 11, fontWeight: 900, letterSpacing: '0.06em',
-                          background: lang === l ? 'linear-gradient(180deg, rgba(245,158,11,0.30), rgba(245,158,11,0.14))' : FIELD_BG,
+                          fontSize: 11, fontWeight: 900,
+                          background: lang === l ? 'linear-gradient(180deg, var(--brand-primary-25), color-mix(in srgb, var(--brand-primary) 14%, transparent))' : FIELD_BG,
                           color: lang === l ? GOLD_HI : MUTED,
                         }}
                       >
@@ -3874,7 +3874,7 @@ export default function RadioDispatchPage() {
             background: micOpen
               ? 'linear-gradient(90deg, rgba(239,68,68,0.22), rgba(239,68,68,0.05))'
               : onAir
-                ? 'linear-gradient(90deg, rgba(245,158,11,0.24), rgba(245,158,11,0.07))'
+                ? 'linear-gradient(90deg, color-mix(in srgb, var(--brand-primary) 24%, transparent), color-mix(in srgb, var(--brand-primary) 7%, transparent))'
                 : 'rgba(255,255,255,0.02)',
             borderBottom: `1px solid ${micOpen ? RED_BORDER : onAir ? AMBER_BORDER : BORDER}`,
           }}
@@ -3883,7 +3883,7 @@ export default function RadioDispatchPage() {
           {micOpen ? (
             <>
               <EqBars color={RED} size={15} />
-              <span style={{ fontSize: 10.5, fontWeight: 900, letterSpacing: '0.14em', color: RED, whiteSpace: 'nowrap' }}>ON AIR</span>
+              <span style={{ fontSize: 10.5, fontWeight: 900, color: RED, whiteSpace: 'nowrap' }}>On Air</span>
               <span style={{ fontSize: 13, fontWeight: 800, color: WHITE, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
                 {txSecs.toFixed(1)}s
               </span>
@@ -3891,7 +3891,7 @@ export default function RadioDispatchPage() {
                 {`Keyed up on ${active?.name || 'this channel'} — release to send`}
               </span>
               {txSecs * 1000 > TX_WARN_MS && (
-                <span style={{ fontSize: 10.5, fontWeight: 900, letterSpacing: '0.1em', color: RED, whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 10.5, fontWeight: 900, color: RED, whiteSpace: 'nowrap' }}>
                   {Math.max(0, Math.ceil((MAX_TX_MS - txSecs * 1000) / 1000))}s TO CUT-OFF
                 </span>
               )}
@@ -3900,25 +3900,25 @@ export default function RadioDispatchPage() {
           ) : keyed ? (
             <>
               <EqBars color={GOLD_HI} size={15} />
-              <span style={{ fontSize: 10.5, fontWeight: 900, letterSpacing: '0.14em', color: GOLD_HI, whiteSpace: 'nowrap' }}>OPENING MIC…</span>
+              <span style={{ fontSize: 10.5, fontWeight: 900, color: GOLD_HI, whiteSpace: 'nowrap' }}>OPENING MIC…</span>
               <span style={{ fontSize: 12, color: MUTED, fontWeight: 700 }}>Hold the key — start talking when it turns red</span>
             </>
           ) : playingId ? (
             <>
               <EqBars color={GOLD_HI} size={15} />
-              <span style={{ fontSize: 10.5, fontWeight: 900, letterSpacing: '0.14em', color: GOLD_HI, whiteSpace: 'nowrap' }}>NOW PLAYING</span>
+              <span style={{ fontSize: 10.5, fontWeight: 900, color: GOLD_HI, whiteSpace: 'nowrap' }}>Now Playing</span>
               <span style={{ fontSize: 12, color: MUTED, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
                 {`${senderShort(playingMsg?.sender_name ?? null)}${catchingUp ? ' · catch-up' : ''}${playingMsg?.audio_duration_secs ? ` · ${secsLabel(playingMsg.audio_duration_secs)}` : ''}`}
               </span>
               {catchingUp && (
-                <button onClick={stopPlayback} title="Stop the catch-up playback" style={{ ...rowActionStyle, marginLeft: 'auto', color: GOLD_HI, borderColor: AMBER_BORDER, background: 'rgba(245,158,11,0.14)' }}>
+                <button onClick={stopPlayback} title="Stop the catch-up playback" style={{ ...rowActionStyle, marginLeft: 'auto', color: GOLD_HI, borderColor: AMBER_BORDER, background: 'color-mix(in srgb, var(--brand-primary) 14%, transparent)' }}>
                   <Pause size={11} weight="fill" /> Stop catch-up
                 </button>
               )}
             </>
           ) : (
-            <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.14em', color: FAINT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
-              {active ? `STANDING BY — ${(channelNo.get(active.id) || '')} ${active.name.toUpperCase()}` : 'STANDING BY'}
+            <span style={{ fontSize: 10.5, fontWeight: 800, color: FAINT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
+              {active ? `Standing By — ${(channelNo.get(active.id) || '')} ${active.name}` : 'Standing By'}
             </span>
           )}
         </div>
@@ -3938,7 +3938,7 @@ export default function RadioDispatchPage() {
               style={{
                 position: 'sticky', top: 0, zIndex: 30, pointerEvents: 'none',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, height: 88,
-                borderRadius: 14, border: `2px dashed ${AMBER_BORDER}`, background: 'rgba(245,158,11,0.10)',
+                borderRadius: 14, border: `2px dashed ${AMBER_BORDER}`, background: 'var(--brand-primary-12)',
                 color: GOLD_HI, fontSize: 13, fontWeight: 800, marginBottom: 10,
               }}
             >
@@ -3958,7 +3958,7 @@ export default function RadioDispatchPage() {
               icon={<Broadcast size={30} color={GOLD_HI} weight="fill" />}
               title="No channels yet"
               description={projectId ? 'Open a project to auto-create its All Hands talkgroup, or start a custom channel.' : 'Start a custom channel, or open Radio from a project to spin up its All Hands talkgroup.'}
-              action={<button onClick={() => setShowNew(true)} className="pmBtn" style={goldButtonStyle}><Plus size={14} weight="bold" /> New talkgroup</button>}
+              action={<button onClick={() => setShowNew(true)} className="pmBtn" style={goldButtonStyle}><Plus size={14} weight="bold" /> New Talkgroup</button>}
             />
           )}
           {active && !msgData && !msgError && (
@@ -3990,7 +3990,7 @@ export default function RadioDispatchPage() {
               <FrequencyDial seed={activeId || 'saguaro'} />
               {lastTraffic?.lastMessage && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', padding: '8px 12px', marginTop: 12, borderRadius: 10, background: NEST, border: `1px solid ${BORDER}` }}>
-                  <span style={{ fontSize: 9.5, fontWeight: 900, letterSpacing: '0.12em', color: GOLD_HI, whiteSpace: 'nowrap' }}>LAST TRAFFIC</span>
+                  <span style={{ fontSize: 9.5, fontWeight: 900, color: GOLD_HI, whiteSpace: 'nowrap' }}>Last Traffic</span>
                   <span style={{ fontSize: 12, color: WHITE, fontWeight: 700, minWidth: 0, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {senderShort(lastTraffic.lastMessage.sender)} — {trafficPreview(lastTraffic.lastMessage)}
                   </span>
@@ -4078,11 +4078,11 @@ export default function RadioDispatchPage() {
                 background: micOpen
                   ? `linear-gradient(180deg, ${RED}, #991B1B)`
                   : keyed
-                    ? 'linear-gradient(180deg, #FDE68A, #F59E0B)'
+                    ? 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary))'
                     : micError
                       ? `linear-gradient(180deg, rgba(239,68,68,0.22), rgba(239,68,68,0.10))`
                       : `linear-gradient(180deg, ${GOLD_HI}, ${GOLD} 60%, var(--brand-primary-hover))`,
-                color: micOpen ? WHITE : micError && !keyed ? '#FCA5A5' : '#241500',
+                color: micOpen ? WHITE : micError && !keyed ? '#FCA5A5' : '#0A0A00',
                 boxShadow: micOpen
                   ? '0 0 0 5px rgba(239,68,68,0.22), 0 8px 26px -10px rgba(239,68,68,0.8)'
                   : micError ? 'none' : '0 6px 20px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)',
@@ -4093,18 +4093,18 @@ export default function RadioDispatchPage() {
             >
               {micOpen ? <Waveform size={24} weight="bold" /> : <Microphone size={24} weight="fill" />}
               <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.2, minWidth: 0, maxWidth: '100%' }}>
-                <span style={{ fontSize: 15, fontWeight: 900, letterSpacing: '0.1em', whiteSpace: 'nowrap' }}>
-                  {!active ? 'TUNE TO A CHANNEL'
+                <span style={{ fontSize: 15, fontWeight: 900, whiteSpace: 'nowrap' }}>
+                  {!active ? 'Tune to a Channel'
                     : micOpen ? `ON AIR — ${txSecs.toFixed(1)}s`
                       : keyed ? 'OPENING MIC…'
                         : micError ? 'MIC PROBLEM — PRESS TO RETRY'
-                          : 'HOLD TO TALK'}
+                          : 'Hold to Talk'}
                 </span>
-                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', opacity: 0.78, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {micOpen ? 'RELEASE TO SEND'
-                    : keyed ? 'WAIT FOR RED BEFORE YOU SPEAK'
-                      : micError ? micError.toUpperCase()
-                        : `OR HOLD ${spaceKeyed ? '[SPACE]' : 'SPACE'} ANYWHERE`}
+                <span style={{ fontSize: 10, fontWeight: 800, opacity: 0.78, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {micOpen ? 'Release to Send'
+                    : keyed ? 'Wait for Red Before You Speak'
+                      : micError ? micError
+                        : `Or Hold ${spaceKeyed ? '[Space]' : 'Space'} Anywhere`}
                 </span>
               </span>
               {micOpen && <span style={{ marginLeft: 'auto' }}><EqBars color={WHITE} size={20} /></span>}
@@ -4147,7 +4147,7 @@ export default function RadioDispatchPage() {
                   {listenerTruth.tone === 'none' && (
                     <button
                       onClick={() => { setRosterOpen(true); setRosterAddOpen(true); setRosterAddQuery(''); }}
-                      style={{ ...rowActionStyle, color: GOLD_HI, borderColor: AMBER_BORDER, background: 'rgba(245,158,11,0.14)' }}
+                      style={{ ...rowActionStyle, color: GOLD_HI, borderColor: AMBER_BORDER, background: 'color-mix(in srgb, var(--brand-primary) 14%, transparent)' }}
                     >
                       <UserPlus size={11} weight="bold" /> Add someone
                     </button>
@@ -4201,11 +4201,11 @@ export default function RadioDispatchPage() {
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     height: 42, padding: '0 10px', borderRadius: 11, cursor: 'pointer',
                     background: TONES[tn].soft, border: `1px solid ${TONES[tn].border}`,
-                    color: TONES[tn].color, fontWeight: 900, fontSize: 9.5, letterSpacing: '0.08em',
+                    color: TONES[tn].color, fontWeight: 900, fontSize: 9.5,
                     whiteSpace: 'nowrap', opacity: !active || toneSending !== null ? 0.5 : 1,
                   }}
                 >
-                  {tn === 'ack' ? 'ACK' : tn === 'negative' ? 'NEG' : 'COME IN'}
+                  {tn === 'ack' ? 'Ack' : tn === 'negative' ? 'Neg' : 'Come In'}
                 </button>
               ))}
             </span>
@@ -4244,7 +4244,7 @@ export default function RadioDispatchPage() {
       {/* ══ DIALOGS — each one has exactly one scroll region ═════════════ */}
 
       {/* Site map — live crew pins + human heatmap */}
-      <Dialog open={mapOpen} onClose={() => setMapOpen(false)} title="SITE MAP" icon={<MapTrifold size={15} weight="bold" color={GOLD_HI} />} width={980}>
+      <Dialog open={mapOpen} onClose={() => setMapOpen(false)} title="Site Map" icon={<MapTrifold size={15} weight="bold" color={GOLD_HI} />} width={980}>
         <CrewMap
           crew={crewData?.crew ?? []}
           bins={heatData?.bins ?? []}
@@ -4295,13 +4295,13 @@ export default function RadioDispatchPage() {
                 >
                   <span
                     style={{
-                      fontSize: 9.5, fontWeight: 900, letterSpacing: '0.12em', borderRadius: 999, padding: '2px 8px',
+                      fontSize: 9.5, fontWeight: 900, borderRadius: 999, padding: '2px 8px',
                       color: acked ? GREEN : RED,
                       border: `1px solid ${acked ? GREEN_BORDER : RED_BORDER}`,
                       background: acked ? GREEN_SOFT : RED_SOFT, whiteSpace: 'nowrap',
                     }}
                   >
-                    {acked ? 'ACK' : 'OPEN'}
+                    {acked ? 'Ack' : 'Open'}
                   </span>
                   <div style={{ flex: 1, minWidth: 180 }}>
                     <span style={{ fontSize: 13, fontWeight: 800, color: WHITE }}>{senderShort(a.requester_name)}</span>
@@ -4321,7 +4321,7 @@ export default function RadioDispatchPage() {
                     </a>
                   )}
                   {!acked && (
-                    <button onClick={() => triageAssist(a.id, 'ack')} disabled={assistBusy === a.id} title="Acknowledge — tells the requester dispatch is on it" style={{ ...rowActionStyle, color: GOLD_HI, borderColor: AMBER_BORDER, background: 'rgba(245,158,11,0.14)', opacity: assistBusy === a.id ? 0.6 : 1 }}>
+                    <button onClick={() => triageAssist(a.id, 'ack')} disabled={assistBusy === a.id} title="Acknowledge — tells the requester dispatch is on it" style={{ ...rowActionStyle, color: GOLD_HI, borderColor: AMBER_BORDER, background: 'color-mix(in srgb, var(--brand-primary) 14%, transparent)', opacity: assistBusy === a.id ? 0.6 : 1 }}>
                       <Check size={11} weight="bold" /> Ack
                     </button>
                   )}
@@ -4353,7 +4353,7 @@ export default function RadioDispatchPage() {
       >
         {createdUrl && (
           <div style={{ padding: 10, borderRadius: 10, background: GREEN_SOFT, border: `1px solid ${GREEN_BORDER}`, marginBottom: 12 }}>
-            <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.1em', color: GREEN, marginBottom: 5 }}>LINK READY — SEND IT TO YOUR GUEST</div>
+            <div style={{ fontSize: 10, fontWeight: 900, color: GREEN, marginBottom: 5 }}>LINK READY — SEND IT TO YOUR GUEST</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ flex: 1, minWidth: 0, fontSize: 11.5, color: WHITE, overflowWrap: 'anywhere', lineHeight: 1.4 }}>{createdUrl}</span>
               <button onClick={() => copyShare('created', createdUrl)} style={{ ...rowActionStyle, flexShrink: 0, color: copiedKey === 'created' ? GREEN : MUTED, borderColor: copiedKey === 'created' ? GREEN_BORDER : BORDER }}>
@@ -4383,11 +4383,11 @@ export default function RadioDispatchPage() {
             <option value="7">Expires in 7 days</option>
             <option value="30">Expires in 30 days</option>
             <option value="90">Expires in 90 days</option>
-            <option value="never">No expiry</option>
+            <option value="never">No Expiry</option>
           </select>
         </div>
         {shareError && <div style={{ fontSize: 11.5, color: RED, marginBottom: 10 }}>{shareError}</div>}
-        <div style={{ ...eyebrowStyle, marginBottom: 8 }}>ACTIVE LINKS</div>
+        <div style={{ ...eyebrowStyle, marginBottom: 8 }}>Active Links</div>
         {linksKey && !linkData && !linkError && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} height={38} borderRadius={10} />)}
@@ -4404,7 +4404,7 @@ export default function RadioDispatchPage() {
                 <div style={{ fontSize: 10, color: expired ? RED : FAINT, marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {l.can_talk === false ? 'Listen-only' : 'Talk + listen'}
                   {' · '}
-                  {expired ? 'EXPIRED' : l.expires_at ? `expires ${new Date(l.expires_at).toLocaleDateString()}` : 'no expiry'}
+                  {expired ? 'Expired' : l.expires_at ? `Expires ${new Date(l.expires_at).toLocaleDateString()}` : 'No Expiry'}
                 </div>
               </div>
               {!expired && (
@@ -4424,7 +4424,7 @@ export default function RadioDispatchPage() {
       <Dialog
         open={patchOpen}
         onClose={() => setPatchOpen(false)}
-        title="PATCH BOARD"
+        title="Patch Board"
         icon={<PlugsConnected size={15} weight="bold" color={GOLD_HI} />}
         width={480}
         footer={
@@ -4454,7 +4454,7 @@ export default function RadioDispatchPage() {
         </div>
         {patches.length > 0 ? (
           <>
-            <div style={{ ...eyebrowStyle, marginBottom: 8 }}>ACTIVE PATCHES</div>
+            <div style={{ ...eyebrowStyle, marginBottom: 8 }}>Active Patches</div>
             {patches.map((p) => (
               <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 10, background: NEST, border: `1px solid ${AMBER_BORDER}`, marginBottom: 6 }}>
                 <PlugsConnected size={13} weight="bold" color={GOLD_HI} style={{ flexShrink: 0 }} />
@@ -4497,8 +4497,8 @@ export default function RadioDispatchPage() {
       >
         {bcSent && (
           <div style={{ padding: '9px 11px', borderRadius: 10, background: GREEN_SOFT, border: `1px solid ${GREEN_BORDER}`, marginBottom: 12 }}>
-            <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.1em', color: GREEN, marginBottom: 3 }}>
-              SENT TO {bcSent.length} CHANNEL{bcSent.length === 1 ? '' : 'S'}
+            <div style={{ fontSize: 10, fontWeight: 900, color: GREEN, marginBottom: 3 }}>
+              SENT TO {bcSent.length} CHANNEL{bcSent.length === 1 ? '' : 's'}
             </div>
             <div style={{ fontSize: 11.5, color: WHITE, lineHeight: 1.5 }}>{bcSent.join(' · ')}</div>
           </div>
@@ -4514,7 +4514,7 @@ export default function RadioDispatchPage() {
           <input type="checkbox" checked={bcAlert} onChange={(e) => setBcAlert(e.target.checked)} style={{ accentColor: GOLD }} />
           Send as a high-visibility alert
         </label>
-        <div style={{ ...eyebrowStyle, marginBottom: 8 }}>CHANNELS</div>
+        <div style={{ ...eyebrowStyle, marginBottom: 8 }}>Channels</div>
         {channels.map((c) => {
           const on = bcSel.has(c.id);
           const full = !on && bcSel.size >= 8;
@@ -4538,7 +4538,7 @@ export default function RadioDispatchPage() {
                   flexShrink: 0, width: 15, height: 15, borderRadius: 5,
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                   background: on ? `linear-gradient(180deg, ${GOLD_HI}, ${GOLD})` : FIELD_BG,
-                  border: on ? 'none' : FIELD_BORDER, color: '#241500',
+                  border: on ? 'none' : FIELD_BORDER, color: '#0A0A00',
                 }}
               >
                 {on && <Check size={10} weight="bold" />}
@@ -4618,8 +4618,8 @@ export default function RadioDispatchPage() {
               <span style={{ flexShrink: 0, width: 120, fontSize: 11.5, fontWeight: 800, color: WHITE, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {senderShort(m.sender_name)}
               </span>
-              <span style={{ flexShrink: 0, width: 52, fontSize: 9.5, fontWeight: 900, letterSpacing: '0.08em', color: m.kind === 'panic' ? RED : m.kind === 'alert' ? GOLD_HI : FAINT }}>
-                {m.kind.toUpperCase()}
+              <span style={{ flexShrink: 0, width: 52, fontSize: 9.5, fontWeight: 900, color: m.kind === 'panic' ? RED : m.kind === 'alert' ? GOLD_HI : FAINT }}>
+                {m.kind.charAt(0).toUpperCase() + m.kind.slice(1)}
               </span>
               <span style={{ flex: 1, minWidth: 0, fontSize: 12, color: WHITE, lineHeight: 1.45, overflowWrap: 'anywhere' }}>
                 {logText(m)}
@@ -4635,7 +4635,7 @@ export default function RadioDispatchPage() {
       <Dialog
         open={showNew}
         onClose={closeNewModal}
-        title="NEW TALKGROUP"
+        title="New Talkgroup"
         icon={<Plus size={15} weight="bold" color={GOLD_HI} />}
         width={520}
         footer={
@@ -4679,7 +4679,7 @@ export default function RadioDispatchPage() {
           </label>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <span style={eyebrowStyle}>MEMBERS</span>
+          <span style={eyebrowStyle}>Members</span>
           <span style={{ fontSize: 10, fontWeight: 900, fontVariantNumeric: 'tabular-nums', color: newSel.length ? GOLD_HI : FAINT, border: `1px solid ${newSel.length ? AMBER_BORDER : BORDER}`, borderRadius: 999, padding: '1px 8px' }}>
             {newSel.length} selected
           </span>
@@ -4712,7 +4712,7 @@ export default function RadioDispatchPage() {
       <Dialog
         open={directOpen}
         onClose={() => setDirectOpen(false)}
-        title="MESSAGE SOMEONE"
+        title="Message Someone"
         icon={<ChatCircleText size={15} weight="bold" color={GOLD_HI} />}
         width={460}
         footer={<span style={{ fontSize: 10.5, color: FAINT }}>Direct channels are staff-to-staff. Reach subs through their project talkgroups.</span>}
@@ -4741,7 +4741,7 @@ export default function RadioDispatchPage() {
       <Dialog
         open={!!lockConfirm}
         onClose={() => setLockConfirm(null)}
-        title={lockConfirm?.locked ? 'UNLOCK CHANNEL' : 'LOCK CHANNEL'}
+        title={lockConfirm?.locked ? 'Unlock Channel' : 'Lock Channel'}
         icon={lockConfirm?.locked ? <LockOpen size={15} weight="bold" color={GOLD_HI} /> : <Lock size={15} weight="fill" color={GOLD_HI} />}
         width={440}
         footer={
@@ -4801,7 +4801,7 @@ export default function RadioDispatchPage() {
             </button>
             {(links[rowMenuMsg.id] || []).length > 0 && (
               <div style={{ borderTop: `1px solid ${BORDER}`, marginTop: 6, paddingTop: 6 }}>
-                <div style={{ ...eyebrowStyle, padding: '0 10px 5px' }}>ALREADY FILED AS</div>
+                <div style={{ ...eyebrowStyle, padding: '0 10px 5px' }}>Already Filed As</div>
                 {(links[rowMenuMsg.id] || []).map((l) => {
                   const a = promoteAccent(l.recordType);
                   return l.href ? (
@@ -4825,7 +4825,7 @@ export default function RadioDispatchPage() {
       <Dialog
         open={!!promoteMsg}
         onClose={() => { if (!promoteBusy) setPromoteFor(null); }}
-        title="MAKE A RECORD"
+        title="Make a Record"
         icon={<NotePencil size={15} weight="bold" color={GOLD_HI} />}
         width={640}
         footer={promoteMsg ? (
@@ -4841,7 +4841,7 @@ export default function RadioDispatchPage() {
               }}
             >
               <NotePencil size={13} weight="bold" />
-              {promoteBusy ? 'Creating…' : `Create ${PROMOTE_META[promoteType].label.toLowerCase()}`}
+              {promoteBusy ? 'Creating…' : `Create ${PROMOTE_META[promoteType].label}`}
             </button>
             <button
               onClick={() => { if (!promoteBusy) setPromoteFor(null); }}
@@ -4869,7 +4869,7 @@ export default function RadioDispatchPage() {
             {/* ── The evidence, playable while you type ───────────────── */}
             <div style={{ borderRadius: 12, border: `1px solid ${AMBER_BORDER}`, background: NEST, padding: 12, marginBottom: 14 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
-                <span style={eyebrowStyle}>EVIDENCE</span>
+                <span style={eyebrowStyle}>Evidence</span>
                 <span style={{ fontSize: 12.5, fontWeight: 800, color: WHITE }}>{senderShort(promoteMsg.sender_name)}</span>
                 <span style={{ fontSize: 11, color: FAINT, fontVariantNumeric: 'tabular-nums' }}>
                   {isToday(promoteMsg.created_at)
@@ -4894,7 +4894,7 @@ export default function RadioDispatchPage() {
 
               {promoteMsg.transcript ? (
                 <div style={{ marginTop: 10 }}>
-                  <span style={eyebrowStyle}>TRANSCRIPT</span>
+                  <span style={eyebrowStyle}>Transcript</span>
                   <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.5, marginTop: 4, overflowWrap: 'anywhere' }}>
                     {promoteMsg.transcript}
                   </div>
@@ -4938,7 +4938,7 @@ export default function RadioDispatchPage() {
             )}
 
             {/* ── The four targets, each in its own module's accent ────── */}
-            <div style={{ ...eyebrowStyle, marginBottom: 7 }}>FILE IT AS</div>
+            <div style={{ ...eyebrowStyle, marginBottom: 7 }}>File It As</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8, marginBottom: 16 }}>
               {PROMOTE_RECORD_TYPES.map((t) => {
                 const meta = PROMOTE_META[t];
@@ -5000,7 +5000,7 @@ export default function RadioDispatchPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 11 }}>
               <PromoteField
                 wide
-                label={promoteType === 'rfi' ? 'QUESTION' : promoteType === 'daily_log' ? 'LOG ENTRY' : 'DESCRIPTION'}
+                label={promoteType === 'rfi' ? 'Question' : promoteType === 'daily_log' ? 'Log Entry' : 'Description'}
                 hint={promoteMsg.transcript
                   ? 'Seeded from the transcript — edit it into the words you want on the record.'
                   : promoteMsg.kind === 'voice'
@@ -5024,7 +5024,7 @@ export default function RadioDispatchPage() {
               {promoteType !== 'daily_log' && (
                 <PromoteField
                   wide
-                  label={promoteType === 'rfi' ? 'SUBJECT' : 'TITLE'}
+                  label={promoteType === 'rfi' ? 'Subject' : 'Title'}
                   hint="Follows your summary until you edit it."
                 >
                   <input
@@ -5037,7 +5037,7 @@ export default function RadioDispatchPage() {
               )}
 
               {promoteType !== 'daily_log' && (
-                <PromoteField label="PRIORITY">
+                <PromoteField label="Priority">
                   <select
                     value={pf.priority}
                     onChange={(e) => setPf((f) => ({ ...f, priority: e.target.value }))}
@@ -5049,7 +5049,7 @@ export default function RadioDispatchPage() {
               )}
 
               {(promoteType === 'rfi' || promoteType === 'punch') && (
-                <PromoteField label="DUE DATE">
+                <PromoteField label="Due Date">
                   <SaguaroDatePicker
                     value={pf.due}
                     onChange={(v: string) => setPf((f) => ({ ...f, due: v }))}
@@ -5059,7 +5059,7 @@ export default function RadioDispatchPage() {
               )}
 
               {promoteType === 'field_issue' && (
-                <PromoteField label="LOCATION">
+                <PromoteField label="Location">
                   <input
                     value={pf.location}
                     onChange={(e) => setPf((f) => ({ ...f, location: e.target.value }))}
@@ -5071,7 +5071,7 @@ export default function RadioDispatchPage() {
 
               {promoteType === 'punch' && (
                 <>
-                  <PromoteField label="TRADE">
+                  <PromoteField label="Trade">
                     <select
                       value={pf.trade}
                       onChange={(e) => setPf((f) => ({ ...f, trade: e.target.value }))}
@@ -5081,7 +5081,7 @@ export default function RadioDispatchPage() {
                       {SUB_TRADES.map((t) => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </PromoteField>
-                  <PromoteField label="LOCATION">
+                  <PromoteField label="Location">
                     <input
                       value={pf.location}
                       onChange={(e) => setPf((f) => ({ ...f, location: e.target.value }))}
@@ -5094,7 +5094,7 @@ export default function RadioDispatchPage() {
 
               {promoteType === 'daily_log' && (
                 <>
-                  <PromoteField label="SECTION">
+                  <PromoteField label="Section">
                     <select
                       value={pf.section}
                       onChange={(e) => setPf((f) => ({ ...f, section: e.target.value }))}
@@ -5105,7 +5105,7 @@ export default function RadioDispatchPage() {
                       ))}
                     </select>
                   </PromoteField>
-                  <PromoteField label="LOG DATE" hint="Appends to that day's log — it never opens a second one.">
+                  <PromoteField label="Log Date" hint="Appends to that day's log — it never opens a second one.">
                     <SaguaroDatePicker
                       value={pf.logDate}
                       onChange={(v: string) => setPf((f) => ({ ...f, logDate: v }))}

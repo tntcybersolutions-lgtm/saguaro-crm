@@ -26,7 +26,7 @@ import { moduleAccent } from '@/lib/module-identity';
 import { getAuthHeaders, getSupabaseBrowser } from '@/lib/supabase-browser';
 
 // Kit-aligned literals (mirror components/ui/premium.tsx tokens)
-const GOLD = '#F59E0B', GOLD_HI = '#FBBF24';
+const GOLD = 'var(--brand-primary)', GOLD_HI = 'var(--brand-primary-strong)';
 const MUTED = 'rgba(255,255,255,0.62)';
 const FAINT = 'rgba(255,255,255,0.42)';
 
@@ -115,19 +115,19 @@ export default function PeopleAccessHub() {
       {/* ── roster intelligence strip — what the system already knows ── */}
       {snap && (
         <StatStrip items={[
-          {href: '/app/people',  label: 'Team Members', value: String(snap.users), sub: 'platform sign-ins' },
-          {href: '/app/people',  label: 'Roles Defined', value: String(snap.roles), sub: snap.roles > 0 ? 'permission templates in force' : 'built-ins seed on first visit' },
+          {href: '/app/people', label: 'Team Members', value: String(snap.users), sub: 'Platform sign-ins' },
+          {href: '/app/people', label: 'Roles Defined', value: String(snap.roles), sub: snap.roles > 0 ? 'Permission templates in force' : 'Built-ins seed on first visit' },
           {href: '/app/people', 
             label: 'Role Assignments', value: String(snap.assigns),
-            accent: snap.users > 0 && snap.assigns === 0 ? '#FBBF24' : undefined,
-            sub: snap.assigns > 0 ? 'users mapped to roles' : snap.users > 0 ? 'no roles assigned yet — start in Users' : 'assign roles from Roles & Access',
+            accent: snap.users > 0 && snap.assigns === 0 ? 'var(--brand-primary-strong)' : undefined,
+            sub: snap.assigns > 0 ? 'Users mapped to roles' : snap.users > 0 ? 'No roles assigned yet — start in Users' : 'Assign roles from Roles & Access',
           },
           {href: '/app/people', 
             label: 'Pending Invites', value: String(snap.invites),
-            accent: snap.expired > 0 ? '#ef4444' : snap.invites > 0 ? '#FBBF24' : undefined,
-            sub: snap.expired > 0 ? `${snap.expired} expired — resend from Users` : snap.invites > 0 ? 'invites expire after 7 days' : 'none outstanding',
+            accent: snap.expired > 0 ? '#ef4444' : snap.invites > 0 ? 'var(--brand-primary-strong)' : undefined,
+            sub: snap.expired > 0 ? `${snap.expired} expired — resend from Users` : snap.invites > 0 ? 'Invites expire after 7 days' : 'None outstanding',
           },
-          {href: '/app/people',  label: 'Crew Directory', value: String(snap.crew), sub: snap.crew > 0 ? `${snap.osha} OSHA certified` : 'add employees in Directory' },
+          {href: '/app/people', label: 'Crew Directory', value: String(snap.crew), sub: snap.crew > 0 ? `${snap.osha} OSHA certified` : 'Add employees in Directory' },
         ]} />
       )}
 
@@ -153,7 +153,7 @@ export default function PeopleAccessHub() {
                   border: 'none', cursor: 'pointer', borderRadius: 10, padding: '9px 16px',
                   background: on ? `linear-gradient(135deg, ${GOLD}, ${GOLD_HI})` : 'transparent',
                   color: on ? '#1A1206' : MUTED,
-                  boxShadow: on ? '0 10px 26px -12px rgba(245,158,11,0.7)' : 'none',
+                  boxShadow: on ? '0 10px 26px -12px color-mix(in srgb, var(--brand-primary) 70%, transparent)' : 'none',
                   transition: 'background .18s ease, color .18s ease',
                 }}
               >

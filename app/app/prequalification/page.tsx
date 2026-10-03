@@ -6,9 +6,9 @@ import { Clipboard, NotePencil, Envelope, CheckCircle, XCircle, CaretUp, CaretDo
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
 
 /* ─── Palette ─── */
-const GOLD = '#F59E0B', BG = '#0a0a0a', RAISED = '#141416', BORDER = 'rgba(255,255,255,0.12)',
+const GOLD = 'var(--brand-primary)', BG = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)',
   TEXT = '#FFFFFF', DIM = '#CBD5E1', GREEN = '#22C55E', RED = '#EF4444',
-  AMBER = '#F59E0B', BLUE = '#F59E0B', PURPLE = '#8B5CF6';
+  AMBER = 'var(--warning)', BLUE = 'var(--brand-primary)', PURPLE = '#8B5CF6';
 
 /* ─── Types ─── */
 type QType = 'text' | 'number' | 'yes_no' | 'rating' | 'file_upload' | 'multi_choice';
@@ -52,12 +52,12 @@ function pctColor(pct: number) { return pct >= 80 ? GREEN : pct >= 60 ? AMBER : 
 const inputS: React.CSSProperties = { padding: '9px 13px', background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' };
 const btnS = (bg: string, c: string = '#000'): React.CSSProperties => ({ padding: '8px 18px', background: bg, color: c, border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' });
 const cardS: React.CSSProperties = { background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: 16, marginBottom: 10 };
-const chipS = (bg: string, c: string): React.CSSProperties => ({ display: 'inline-block', padding: '3px 10px', borderRadius: 99, fontSize: 11, fontWeight: 700, background: bg + '22', color: c });
+const chipS = (bg: string, c: string): React.CSSProperties => ({ display: 'inline-block', padding: '3px 10px', borderRadius: 99, fontSize: 11, fontWeight: 700, background: `color-mix(in srgb, ${bg} 13%, transparent)`, color: c });
 const modalOverlay: React.CSSProperties = { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 };
 const modalBox: React.CSSProperties = { background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 'var(--radius-lg)', padding: 28, width: '90%', maxWidth: 700, maxHeight: '85vh', overflowY: 'auto', color: TEXT, boxShadow: 'var(--shadow-lg)' };
 const selectS: React.CSSProperties = { ...inputS, appearance: 'auto' as any };
-const labelS: React.CSSProperties = { fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 6, display: 'block', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' };
-const tableHeaderS: React.CSSProperties = { padding: '10px 14px', fontSize: 11, fontWeight: 700, color: 'var(--text-tertiary)', letterSpacing: '0.06em', textTransform: 'uppercase', textAlign: 'left', borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' };
+const labelS: React.CSSProperties = { fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 6, display: 'block', fontWeight: 700};
+const tableHeaderS: React.CSSProperties = { padding: '10px 14px', fontSize: 11, fontWeight: 700, color: 'var(--text-tertiary)', textAlign: 'left', borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' };
 const tableCellS: React.CSSProperties = { padding: '10px 14px', fontSize: 13, color: TEXT, borderBottom: `1px solid ${BORDER}15`, whiteSpace: 'nowrap' };
 
 /* ─── Small Components ─── */
@@ -78,7 +78,7 @@ function ScoreBar({ score, max }: { score: number; max: number }) {
 }
 
 function Spinner() {
-  return <div style={{ textAlign: 'center', padding: 60, color: GOLD, fontSize: 16, fontWeight: 600 }}>Loading...</div>;
+  return <div style={{ textAlign: 'center', padding: 60, color: GOLD, fontSize: 16, fontWeight: 600 }}>Loading…</div>;
 }
 
 /* ─── Radar Chart ─── */
@@ -98,7 +98,7 @@ function RadarChart({ scores, maxScores, size = 220 }: { scores: Record<string, 
         <polygon key={lv} points={cats.map((_, i) => { const a = i * step - Math.PI / 2; return `${cx + r * lv * Math.cos(a)},${cy + r * lv * Math.sin(a)}`; }).join(' ')} fill="none" stroke={BORDER} strokeWidth={1} />
       ))}
       {cats.map((c, i) => { const a = i * step - Math.PI / 2; const lx = cx + (r + 18) * Math.cos(a); const ly = cy + (r + 18) * Math.sin(a); return <text key={c} x={lx} y={ly} fill={CATEGORY_COLORS[c] || DIM} fontSize={10} fontWeight={700} textAnchor="middle" dominantBaseline="middle">{c}</text>; })}
-      <polygon points={pts.map(p => `${p.x},${p.y}`).join(' ')} fill={GOLD + '33'} stroke={GOLD} strokeWidth={2} />
+      <polygon points={pts.map(p => `${p.x},${p.y}`).join(' ')} fill={`color-mix(in srgb, ${GOLD} 20%, transparent)`} stroke={GOLD} strokeWidth={2} />
       {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={4} fill={GOLD} />)}
     </svg>
   );
@@ -310,8 +310,8 @@ export default function PrequalificationPage() {
         return;
       }
       setSubmissions(prev => prev.map(s => s.id === id ? { ...s, status: newStatus } : s));
-      showToast(`Submission status updated to ${STATUS_LABELS[newStatus]}`);
-    } catch { showToast('Network error — status not updated'); }
+      showToast(`Submission status updated to ${STATUS_LABELS[newStatus]}.`);
+    } catch { showToast('Network error — status not updated.'); }
   };
 
   /* ─── Save reviewer notes ─── */
@@ -328,8 +328,8 @@ export default function PrequalificationPage() {
         return;
       }
       setSubmissions(prev => prev.map(s => s.id === id ? { ...s, reviewer_notes: notes } : s));
-      showToast('Reviewer notes saved');
-    } catch { showToast('Network error — reviewer notes not saved'); }
+      showToast('Reviewer notes saved.');
+    } catch { showToast('Network error — reviewer notes not saved.'); }
   };
 
   /* ─── Send invite ─── */
@@ -343,23 +343,23 @@ export default function PrequalificationPage() {
         body: JSON.stringify({ sub_email: email, sub_name: subName, template_id: templateId }),
       });
       const d = await res.json().catch(() => ({}));
-      if (!res.ok) { showToast(d.error || 'Failed to create invite'); return; }
+      if (!res.ok) { showToast(d.error || 'Couldn’t create the invite.'); return; }
       await fetchData();
-      if (d.emailSent) showToast(`Prequal invitation emailed to ${email}`);
+      if (d.emailSent) showToast(`Prequal invitation emailed to ${email}.`);
       else showToast(d.emailError || 'Invite created, but email is not configured — copy the link to share it.');
     } catch {
-      showToast('Network error creating invite');
+      showToast('Network error — invite not created.');
     }
     setShowInviteModal(false);
   };
 
   /* ─── Copy a subcontractor's portal link ─── */
   const copyInviteLink = async (inv: Invite) => {
-    if (!inv.token) { showToast('No portal link available for this invite'); return; }
+    if (!inv.token) { showToast('No portal link is available for this invite.'); return; }
     const url = `${window.location.origin}/prequal/${inv.token}`;
     try {
       await navigator.clipboard.writeText(url);
-      showToast('Portal link copied to clipboard');
+      showToast('Portal link copied to clipboard.');
     } catch {
       showToast(url);
     }
@@ -380,10 +380,10 @@ export default function PrequalificationPage() {
         return;
       }
       await fetchData();
-      showToast(`Template "${tpl.name}" saved`);
+      showToast(`Template "${tpl.name}" saved.`);
       setShowTemplateBuilder(false);
       setEditTemplate(null);
-    } catch { showToast('Network error — template not saved'); }
+    } catch { showToast('Network error — template not saved.'); }
   };
 
   /* ─── Export ─── */
@@ -394,7 +394,7 @@ export default function PrequalificationPage() {
       return;
     }
     if (filtered.length === 0) {
-      showToast('No submissions to export');
+      showToast('No submissions to export.');
       return;
     }
     const esc = (v: any) => `"${String(v ?? '').replace(/"/g, '""')}"`;
@@ -416,7 +416,7 @@ export default function PrequalificationPage() {
     a.download = `prequalification_submissions_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast(`Exported ${filtered.length} submission${filtered.length !== 1 ? 's' : ''} as CSV`);
+    showToast(`Exported ${filtered.length} submission${filtered.length !== 1 ? 's' : ''} as CSV.`);
   };
 
   /* ─── Detail sub ─── */
@@ -428,11 +428,11 @@ export default function PrequalificationPage() {
     <>
     <PremiumSurface maxWidth={2200}>
       {/* Toast */}
-      {toast && <div style={{ position: 'fixed', top: 20, right: 20, background: GREEN + '22', border: `1px solid ${GREEN}`, color: GREEN, padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 600, zIndex: 2000 }}>{toast}</div>}
+      {toast && <div style={{ position: 'fixed', top: 20, right: 20, background: `color-mix(in srgb, ${GREEN} 13%, transparent)`, border: `1px solid ${GREEN}`, color: GREEN, padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 600, zIndex: 2000 }}>{toast}</div>}
 
       {/* Header */}
       <ModuleHero
-        eyebrow="PREQUALIFICATION"
+        eyebrow="Prequalification"
         eyebrowIcon={<ShieldCheck size={13} weight="fill" color={GOLD} />}
         title="Subcontractor"
         accent="Prequalification"
@@ -470,18 +470,18 @@ export default function PrequalificationPage() {
                 <StatStrip items={[
                   {href: '/app/prequalification', 
                     label: 'Invite Funnel', value: `${inviteFunnel.completed}/${inviteFunnel.sent}`,
-                    sub: inviteFunnel.sent > 0 ? `${inviteFunnel.rate}% submitted${inviteFunnel.opened ? ` · ${inviteFunnel.opened} opened` : ''}` : 'no invites sent yet',
+                    sub: inviteFunnel.sent > 0 ? `${inviteFunnel.rate}% submitted${inviteFunnel.opened ? ` · ${inviteFunnel.opened} opened` : ''}` : 'No invites sent yet',
                     accent: inviteFunnel.sent > 0 && inviteFunnel.rate < 50 ? AMBER : undefined,
                   },
                   {href: '/app/prequalification', 
                     label: 'Approval Rate', value: `${decidedRate}%`,
                     accent: stats.approved + stats.rejected === 0 ? undefined : decidedRate >= 70 ? GREEN : AMBER,
-                    sub: stats.approved + stats.rejected > 0 ? `${stats.approved} approved · ${stats.rejected} rejected` : 'no decisions yet',
+                    sub: stats.approved + stats.rejected > 0 ? `${stats.approved} approved · ${stats.rejected} rejected` : 'No decisions yet',
                   },
                   {href: '/app/prequalification', 
                     label: 'Docs on File', value: docStats.tot > 0 ? `${docStats.pct}%` : '—',
                     accent: docStats.tot === 0 ? undefined : docStats.pct >= 80 ? GREEN : AMBER,
-                    sub: docStats.tot > 0 ? `${docStats.up} of ${docStats.tot} required documents` : 'no document requests yet',
+                    sub: docStats.tot > 0 ? `${docStats.up} of ${docStats.tot} required documents` : 'No document requests yet',
                   },
                   {href: '/app/prequalification', 
                     label: 'Expiry Pressure', value: String(docStats.expired + docStats.exp30),
@@ -490,12 +490,12 @@ export default function PrequalificationPage() {
                   },
                   {href: '/app/prequalification', 
                     label: 'Templates', value: String(templates.length),
-                    sub: templates.length > 0 ? `avg pass threshold ${avgThreshold}%` : 'create your first form',
+                    sub: templates.length > 0 ? `Avg pass threshold ${avgThreshold}%` : 'Create your first form',
                   },
                   {href: '/app/prequalification', 
                     label: 'Approved Bench', value: String(stats.approved),
                     accent: stats.approved > 0 ? GREEN : undefined,
-                    sub: approvedTrades > 0 ? `covering ${approvedTrades} trade${approvedTrades === 1 ? '' : 's'}` : 'no approved subs yet',
+                    sub: approvedTrades > 0 ? `Covering ${approvedTrades} trade${approvedTrades === 1 ? '' : 's'}` : 'No approved subs yet',
                   },
                 ]} />
               )}
@@ -544,9 +544,9 @@ export default function PrequalificationPage() {
                         { l: '31–60d', n: docStats.exp60, c: BLUE },
                         { l: '61–90d', n: docStats.exp90, c: DIM },
                       ].map(b => (
-                        <div key={b.l} style={{ flex: '1 1 100px', minWidth: 96, padding: '8px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: `1px solid ${b.n > 0 ? b.c + '55' : BORDER}` }}>
+                        <div key={b.l} style={{ flex: '1 1 100px', minWidth: 96, padding: '8px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: `1px solid ${b.n > 0 ? `color-mix(in srgb, ${b.c} 33%, transparent)` : BORDER}` }}>
                           <div style={{ fontSize: 17, fontWeight: 800, color: b.n > 0 ? b.c : DIM, lineHeight: 1.1 }}>{b.n}</div>
-                          <div style={{ fontSize: 10.5, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.4, marginTop: 2 }}>{b.l}</div>
+                          <div style={{ fontSize: 10.5, fontWeight: 700, color: DIM, marginTop: 2 }}>{b.l}</div>
                         </div>
                       ))}
                     </div>
@@ -570,7 +570,7 @@ export default function PrequalificationPage() {
                           <div style={{ fontSize: 11, color: DIM }}>{ed.docName}</div>
                         </div>
                         <span style={chipS(ed.daysLeft <= 0 ? RED : ed.daysLeft <= 30 ? AMBER : BLUE, ed.daysLeft <= 0 ? RED : ed.daysLeft <= 30 ? AMBER : BLUE)}>
-                          {ed.daysLeft <= 0 ? 'EXPIRED' : `${ed.daysLeft}d left`}
+                          {ed.daysLeft <= 0 ? 'Expired' : `${ed.daysLeft}d left`}
                         </span>
                       </div>
                     ));
@@ -593,7 +593,7 @@ export default function PrequalificationPage() {
                         <div key={lbl} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                           <span style={{ width: 64, fontSize: 11.5, color: DIM, fontWeight: 600, textAlign: 'right', flexShrink: 0 }}>{lbl}</span>
                           <div style={{ flex: 1, height: 16, background: 'rgba(255,255,255,0.05)', borderRadius: 5, overflow: 'hidden' }}>
-                            <div style={{ width: `${(n / maxN) * 100}%`, height: '100%', background: `linear-gradient(90deg, ${c}AA, ${c})`, borderRadius: 5, transition: 'width .3s' }} />
+                            <div style={{ width: `${(n / maxN) * 100}%`, height: '100%', background: `linear-gradient(90deg, color-mix(in srgb, ${c} 67%, transparent), ${c})`, borderRadius: 5, transition: 'width .3s' }} />
                           </div>
                           <span style={{ minWidth: 52, fontSize: 12, color: n > 0 ? c : DIM, fontWeight: 700 }}>{n} sub{n === 1 ? '' : 's'}</span>
                         </div>
@@ -633,7 +633,7 @@ export default function PrequalificationPage() {
             <div>
               {/* Filters */}
               <div style={{ display: 'flex', gap: 10, marginBottom: 18, flexWrap: 'wrap', alignItems: 'center' }}>
-                <input placeholder="Search by name, email, trade..." value={search} onChange={e => setSearch(e.target.value)} style={{ ...inputS, width: 280 }} />
+                <input placeholder="Search by name, email, trade…" value={search} onChange={e => setSearch(e.target.value)} style={{ ...inputS, width: 280 }} />
                 <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ ...selectS, width: 160 }}>
                   <option value="all">All Statuses</option>
                   {Object.entries(STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
@@ -664,16 +664,16 @@ export default function PrequalificationPage() {
                 return (
                   <StatStrip items={[
                     {href: '/app/prequalification',  label: 'Showing', value: `${filtered.length} of ${submissions.length}`, sub: `${fPending} pending · ${fReview} in review · ${fApproved} approved` },
-                    {href: '/app/prequalification',  label: 'Avg Score (shown)', value: fScored.length > 0 ? `${fAvg}%` : '—', accent: fScored.length > 0 ? pctColor(fAvg) : undefined, sub: avgThreshold > 0 && fScored.length > 0 ? `${fPass} of ${fScored.length} clear the ${avgThreshold}% threshold` : 'no scored submissions in view' },
-                    {href: '/app/prequalification',  label: 'Docs Complete', value: fDocsTot > 0 ? `${Math.round((fDocsUp / fDocsTot) * 100)}%` : '—', accent: fDocsTot === 0 ? undefined : fDocsUp === fDocsTot ? GREEN : AMBER, sub: fDocsTot > 0 ? `${fDocsUp} of ${fDocsTot} required documents uploaded` : 'no documents requested' },
-                    {href: '/app/prequalification',  label: 'Prequals Expiring', value: String(fExpiring), accent: fExpiring > 0 ? RED : GREEN, sub: fExpiring > 0 ? 'within 30 days — request a renewal' : 'none within 30 days' },
+                    {href: '/app/prequalification', label: 'Avg Score (shown)', value: fScored.length > 0 ? `${fAvg}%` : '—', accent: fScored.length > 0 ? pctColor(fAvg) : undefined, sub: avgThreshold > 0 && fScored.length > 0 ? `${fPass} of ${fScored.length} clear the ${avgThreshold}% threshold` : 'No scored submissions in view' },
+                    {href: '/app/prequalification', label: 'Docs Complete', value: fDocsTot > 0 ? `${Math.round((fDocsUp / fDocsTot) * 100)}%` : '—', accent: fDocsTot === 0 ? undefined : fDocsUp === fDocsTot ? GREEN : AMBER, sub: fDocsTot > 0 ? `${fDocsUp} of ${fDocsTot} required documents uploaded` : 'No documents requested' },
+                    {href: '/app/prequalification', label: 'Prequals Expiring', value: String(fExpiring), accent: fExpiring > 0 ? RED : GREEN, sub: fExpiring > 0 ? 'Within 30 days — request a renewal' : 'None within 30 days' },
                   ]} />
                 );
               })()}
 
               {filtered.length === 0 ? (
                 <SectionCard>
-                  <PremiumEmpty icon={<Clipboard size={30} weight="duotone" color={GOLD} />} title="No Submissions Found" description={search || statusFilter !== 'all' || tradeFilter !== 'all' ? 'Try adjusting your filters' : 'Invite subcontractors to complete a scored questionnaire — answers grade automatically against your pass threshold, required documents are tracked with expiry dates, and every submission lands here for review.'} action={search || statusFilter !== 'all' || tradeFilter !== 'all' ? undefined : <button style={goldOutlineButtonStyle} className="pmBtn" onClick={() => setShowInviteModal(true)}><Envelope size={15} weight="fill" /> Send Prequal Form</button>} />
+                  <PremiumEmpty icon={<Clipboard size={30} weight="duotone" color={GOLD} />} title="No Submissions Found" description={search || statusFilter !== 'all' || tradeFilter !== 'all' ? 'Try adjusting your filters.' : 'Invite subcontractors to complete a scored questionnaire — answers grade automatically against your pass threshold, required documents are tracked with expiry dates, and every submission lands here for review.'} action={search || statusFilter !== 'all' || tradeFilter !== 'all' ? undefined : <button style={goldOutlineButtonStyle} className="pmBtn" onClick={() => setShowInviteModal(true)}><Envelope size={15} weight="fill" /> Send Prequal Form</button>} />
                 </SectionCard>
               ) : (
                 <SectionCard flush>
@@ -713,7 +713,7 @@ export default function PrequalificationPage() {
                             <td style={tableCellS}>{fmtDate(s.submitted_at)}</td>
                             <td style={tableCellS}>{s.expires_at ? (() => { const dl = daysUntil(s.expires_at); return (
                               <span style={{ color: dl <= 0 ? RED : dl <= 30 ? AMBER : DIM, fontWeight: dl <= 30 ? 700 : 500 }}>
-                                {dl <= 0 ? 'EXPIRED' : `${fmtDate(s.expires_at)} · ${dl}d`}
+                                {dl <= 0 ? 'Expired' : `${fmtDate(s.expires_at)} · ${dl}d`}
                               </span>
                             ); })() : <span style={{ color: DIM }}>—</span>}</td>
                             <td style={tableCellS}>
@@ -721,10 +721,10 @@ export default function PrequalificationPage() {
                             </td>
                             <td style={tableCellS} onClick={e => e.stopPropagation()}>
                               <div style={{ display: 'flex', gap: 6 }}>
-                                {s.status === 'pending' && <button style={{ ...btnS(BLUE + '33', BLUE), padding: '4px 10px', fontSize: 11 }} onClick={() => updateStatus(s.id, 'under_review')}>Review</button>}
+                                {s.status === 'pending' && <button style={{ ...btnS(`color-mix(in srgb, ${BLUE} 20%, transparent)`, BLUE), padding: '4px 10px', fontSize: 11 }} onClick={() => updateStatus(s.id, 'under_review')}>Review</button>}
                                 {s.status === 'under_review' && <>
-                                  <button style={{ ...btnS(GREEN + '33', GREEN), padding: '4px 10px', fontSize: 11 }} onClick={() => updateStatus(s.id, 'approved')}>Approve</button>
-                                  <button style={{ ...btnS(RED + '33', RED), padding: '4px 10px', fontSize: 11 }} onClick={() => updateStatus(s.id, 'rejected')}>Reject</button>
+                                  <button style={{ ...btnS(`color-mix(in srgb, ${GREEN} 20%, transparent)`, GREEN), padding: '4px 10px', fontSize: 11 }} onClick={() => updateStatus(s.id, 'approved')}>Approve</button>
+                                  <button style={{ ...btnS(`color-mix(in srgb, ${RED} 20%, transparent)`, RED), padding: '4px 10px', fontSize: 11 }} onClick={() => updateStatus(s.id, 'rejected')}>Reject</button>
                                 </>}
                               </div>
                             </td>
@@ -751,7 +751,7 @@ export default function PrequalificationPage() {
                   <PremiumEmpty
                     icon={<NotePencil size={30} weight="duotone" color={GOLD} />}
                     title="No Templates Yet"
-                    description="Create a prequalification questionnaire template to get started"
+                    description="Create a prequalification questionnaire template to get started."
                     action={<button style={goldButtonStyle} className="pmBtn" onClick={() => { setEditTemplate(null); setShowTemplateBuilder(true); }}><Plus size={15} weight="bold" /> New Template</button>}
                   />
                 </SectionCard>
@@ -803,10 +803,10 @@ export default function PrequalificationPage() {
                 const oldestDays = oldest > 0 ? Math.floor((Date.now() - oldest) / 86400000) : 0;
                 return (
                   <StatStrip items={[
-                    {href: '/app/prequalification',  label: 'Forms Sent', value: String(invites.length), sub: tplUsed > 0 ? `${tplUsed} template${tplUsed === 1 ? '' : 's'} in use` : 'awaiting template link' },
-                    {href: '/app/prequalification',  label: 'Opened', value: String(iOpened), sub: 'clicked the secure link, not yet submitted' },
+                    {href: '/app/prequalification', label: 'Forms Sent', value: String(invites.length), sub: tplUsed > 0 ? `${tplUsed} template${tplUsed === 1 ? '' : 's'} in use` : 'Awaiting template link' },
+                    {href: '/app/prequalification', label: 'Opened', value: String(iOpened), sub: 'Clicked the secure link, not yet submitted' },
                     {href: '/app/prequalification',  label: 'Submitted', value: String(iDone), accent: iDone > 0 ? GREEN : undefined, sub: `${Math.round((iDone / invites.length) * 100)}% completion rate` },
-                    {href: '/app/prequalification',  label: 'Still Waiting', value: String(iWaiting), accent: iWaiting > 0 ? AMBER : GREEN, sub: iWaiting === 0 ? 'every invite came back' : oldestDays > 0 ? `oldest outstanding ${oldestDays}d — resend below` : 'resend from the table below' },
+                    {href: '/app/prequalification', label: 'Still Waiting', value: String(iWaiting), accent: iWaiting > 0 ? AMBER : GREEN, sub: iWaiting === 0 ? 'Every invite came back' : oldestDays > 0 ? `Oldest outstanding ${oldestDays}d — resend below` : 'Resend from the table below' },
                   ]} />
                 );
               })()}
@@ -816,7 +816,7 @@ export default function PrequalificationPage() {
                   <PremiumEmpty
                     icon={<Envelope size={30} weight="duotone" color={GOLD} />}
                     title="No Invites Sent"
-                    description="Send prequalification forms to subcontractors"
+                    description="Send prequalification forms to subcontractors."
                     action={<button style={goldOutlineButtonStyle} className="pmBtn" onClick={() => setShowInviteModal(true)}><Envelope size={15} weight="fill" /> Send Prequal Form</button>}
                   />
                 </SectionCard>
@@ -838,7 +838,7 @@ export default function PrequalificationPage() {
                     {invites.map(inv => {
                       const tpl = templates.find(t => t.id === inv.template_id);
                       const statusColor = inv.status === 'completed' ? GREEN : inv.status === 'opened' ? BLUE : inv.status === 'sent' ? DIM : AMBER;
-                      const statusLabel = inv.status === 'completed' ? 'SUBMITTED' : inv.status === 'pending' ? 'NOT SENT' : inv.status.toUpperCase();
+                      const statusLabel = inv.status === 'completed' ? 'Submitted' : inv.status === 'pending' ? 'Not Sent' : inv.status.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
                       return (
                         <tr key={inv.id}>
                           <td style={tableCellS}>{inv.sub_name}</td>
@@ -939,7 +939,7 @@ export default function PrequalificationPage() {
                     <div key={i} style={{ padding: '8px 12px', background: BG, borderRadius: 8, border: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <div style={{ fontSize: 12, fontWeight: 600, color: d.uploaded ? TEXT : RED }}>{d.name}</div>
-                        {d.expires_at && <div style={{ fontSize: 10, color: dl !== null && dl <= 30 ? RED : DIM }}>{dl !== null && dl <= 0 ? 'EXPIRED' : `Expires ${fmtDate(d.expires_at)}`}</div>}
+                        {d.expires_at && <div style={{ fontSize: 10, color: dl !== null && dl <= 30 ? RED : DIM }}>{dl !== null && dl <= 0 ? 'Expired' : `Expires ${fmtDate(d.expires_at)}`}</div>}
                       </div>
                       <span style={{ fontSize: 14, display: 'inline-flex', verticalAlign: 'middle' }}>{d.uploaded ? <CheckCircle size={16} weight="fill" color={GREEN} /> : <XCircle size={16} weight="fill" color={RED} />}</span>
                     </div>
@@ -976,7 +976,7 @@ export default function PrequalificationPage() {
             {/* Reviewer notes */}
             <div style={{ marginBottom: 20 }}>
               <label style={labelS}>Reviewer Notes</label>
-              <textarea value={detailSub.reviewer_notes} onChange={e => { const v = e.target.value; setSubmissions(prev => prev.map(s => s.id === detailSub.id ? { ...s, reviewer_notes: v } : s)); }} style={{ ...inputS, height: 80, resize: 'vertical' }} placeholder="Add review notes..." />
+              <textarea value={detailSub.reviewer_notes} onChange={e => { const v = e.target.value; setSubmissions(prev => prev.map(s => s.id === detailSub.id ? { ...s, reviewer_notes: v } : s)); }} style={{ ...inputS, height: 80, resize: 'vertical' }} placeholder="Add review notes…" />
               <button style={{ ...btnS(BORDER, TEXT), marginTop: 6, fontSize: 12 }} onClick={() => saveReviewerNotes(detailSub.id, detailSub.reviewer_notes)}>Save Notes</button>
             </div>
 
@@ -1041,8 +1041,8 @@ function TemplateBuilderModal({ initial, onSave, onClose }: { initial: Template 
   };
 
   const handleSave = () => {
-    if (!name.trim()) { setErr('Template name is required'); return; }
-    if (questions.length === 0) { setErr('Add at least one question'); return; }
+    if (!name.trim()) { setErr('Template name is required.'); return; }
+    if (questions.length === 0) { setErr('Add at least one question.'); return; }
     const tpl: Template = {
       id: initial?.id || `tpl-${uid()}`, name: name.trim(), description: description.trim(),
       questions, threshold, requiredDocs, created_at: initial?.created_at || new Date().toISOString(),
@@ -1057,7 +1057,7 @@ function TemplateBuilderModal({ initial, onSave, onClose }: { initial: Template 
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: GOLD }}>{initial ? 'Edit Template' : 'New Prequal Template'}</h2>
           <button style={{ background: 'none', border: 'none', color: DIM, fontSize: 22, cursor: 'pointer' }} onClick={onClose}><X size={20} weight="regular" color={DIM} /></button>
         </div>
-        {err && <div style={{ background: RED + '22', border: `1px solid ${RED}`, color: RED, padding: '8px 14px', borderRadius: 8, fontSize: 13, marginBottom: 14 }}>{err}</div>}
+        {err && <div style={{ background: `color-mix(in srgb, ${RED} 13%, transparent)`, border: `1px solid ${RED}`, color: RED, padding: '8px 14px', borderRadius: 8, fontSize: 13, marginBottom: 14 }}>{err}</div>}
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 18 }}>
           <div><label style={labelS}>Template Name</label><input value={name} onChange={e => setName(e.target.value)} style={inputS} placeholder="e.g., Standard Subcontractor Prequal" /></div>
@@ -1065,7 +1065,7 @@ function TemplateBuilderModal({ initial, onSave, onClose }: { initial: Template 
         </div>
         <div style={{ marginBottom: 18 }}>
           <label style={labelS}>Description</label>
-          <textarea value={description} onChange={e => setDescription(e.target.value)} style={{ ...inputS, height: 50, resize: 'vertical' }} placeholder="Brief description of this form..." />
+          <textarea value={description} onChange={e => setDescription(e.target.value)} style={{ ...inputS, height: 50, resize: 'vertical' }} placeholder="Brief description of this form…" />
         </div>
 
         {/* Required docs */}
@@ -1073,7 +1073,7 @@ function TemplateBuilderModal({ initial, onSave, onClose }: { initial: Template 
           <label style={labelS}>Required Documents</label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {DEFAULT_DOCS.map(doc => (
-              <button key={doc} onClick={() => toggleDoc(doc)} style={{ padding: '5px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, border: `1px solid ${requiredDocs.includes(doc) ? GOLD : BORDER}`, background: requiredDocs.includes(doc) ? GOLD + '22' : 'transparent', color: requiredDocs.includes(doc) ? GOLD : DIM, cursor: 'pointer' }}>{doc}</button>
+              <button key={doc} onClick={() => toggleDoc(doc)} style={{ padding: '5px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, border: `1px solid ${requiredDocs.includes(doc) ? GOLD : BORDER}`, background: requiredDocs.includes(doc) ? `color-mix(in srgb, ${GOLD} 13%, transparent)` : 'transparent', color: requiredDocs.includes(doc) ? GOLD : DIM, cursor: 'pointer' }}>{doc}</button>
             ))}
           </div>
         </div>
@@ -1134,8 +1134,8 @@ function QuestionEditor({ initial, onSave, onClose }: { initial: Question | null
   const [err, setErr] = useState('');
 
   const handleSave = () => {
-    if (!label.trim()) { setErr('Question text is required'); return; }
-    if (type === 'multi_choice' && !options.trim()) { setErr('Options are required for multiple choice'); return; }
+    if (!label.trim()) { setErr('Question text is required.'); return; }
+    if (type === 'multi_choice' && !options.trim()) { setErr('Options are required for multiple choice.'); return; }
     const q: Question = {
       id: initial?.id || `q-${uid()}`, label: label.trim(), type, category, required, points,
       options: type === 'multi_choice' ? options.split(',').map(o => o.trim()).filter(Boolean) : undefined,
@@ -1148,11 +1148,11 @@ function QuestionEditor({ initial, onSave, onClose }: { initial: Question | null
     <div style={modalOverlay} onClick={onClose}>
       <div style={{ ...modalBox, maxWidth: 500 }} onClick={e => e.stopPropagation()}>
         <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, color: GOLD }}>{initial ? 'Edit Question' : 'Add Question'}</h3>
-        {err && <div style={{ background: RED + '22', color: RED, padding: '6px 12px', borderRadius: 6, fontSize: 12, marginBottom: 10 }}>{err}</div>}
+        {err && <div style={{ background: `color-mix(in srgb, ${RED} 13%, transparent)`, color: RED, padding: '6px 12px', borderRadius: 6, fontSize: 12, marginBottom: 10 }}>{err}</div>}
 
         <div style={{ marginBottom: 12 }}>
           <label style={labelS}>Question Text</label>
-          <textarea value={label} onChange={e => setLabel(e.target.value)} style={{ ...inputS, height: 60, resize: 'vertical' }} placeholder="Enter question..." />
+          <textarea value={label} onChange={e => setLabel(e.target.value)} style={{ ...inputS, height: 60, resize: 'vertical' }} placeholder="Enter question…" />
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
           <div>
@@ -1161,7 +1161,7 @@ function QuestionEditor({ initial, onSave, onClose }: { initial: Question | null
               <option value="text">Text</option>
               <option value="number">Number</option>
               <option value="yes_no">Yes / No</option>
-              <option value="rating">Rating (1-5)</option>
+              <option value="rating">Rating (1–5)</option>
               <option value="file_upload">File Upload</option>
               <option value="multi_choice">Multiple Choice</option>
             </select>
@@ -1210,8 +1210,8 @@ function InviteModal({ templates, onSend, onClose }: { templates: Template[]; on
 
   const handleSend = () => {
     if (!EMAIL_RE.test(email.trim())) { setErr('Enter a valid email address — the secure invite link is delivered there.'); return; }
-    if (!subName.trim()) { setErr('Subcontractor name is required'); return; }
-    if (!templateId) { setErr('Select a template'); return; }
+    if (!subName.trim()) { setErr('Subcontractor name is required.'); return; }
+    if (!templateId) { setErr('Select a template.'); return; }
     setSending(true);
     setTimeout(() => {
       onSend(email.trim(), subName.trim(), templateId);
@@ -1226,7 +1226,7 @@ function InviteModal({ templates, onSend, onClose }: { templates: Template[]; on
           <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: GOLD }}>Send Prequal Form</h2>
           <button style={{ background: 'none', border: 'none', color: DIM, fontSize: 22, cursor: 'pointer' }} onClick={onClose}><X size={20} weight="regular" color={DIM} /></button>
         </div>
-        {err && <div style={{ background: RED + '22', color: RED, padding: '6px 12px', borderRadius: 6, fontSize: 12, marginBottom: 10 }}>{err}</div>}
+        {err && <div style={{ background: `color-mix(in srgb, ${RED} 13%, transparent)`, color: RED, padding: '6px 12px', borderRadius: 6, fontSize: 12, marginBottom: 10 }}>{err}</div>}
 
         <div style={{ marginBottom: 14 }}>
           <label style={labelS}>Subcontractor Name</label>
@@ -1263,7 +1263,7 @@ function InviteModal({ templates, onSend, onClose }: { templates: Template[]; on
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
           <button style={btnS(BORDER, TEXT)} onClick={onClose}>Cancel</button>
-          <button style={btnS(BLUE, TEXT)} onClick={handleSend} disabled={sending}>{sending ? 'Sending...' : 'Send Invitation'}</button>
+          <button style={btnS(BLUE, TEXT)} onClick={handleSend} disabled={sending}>{sending ? 'Sending…' : 'Send Invitation'}</button>
         </div>
       </div>
     </div>

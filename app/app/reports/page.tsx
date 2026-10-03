@@ -5,16 +5,16 @@ import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, AutoC
 import { PdfIcon, XlsIcon, CsvIcon, DocIcon, FileButton } from '@/components/ui/FileTypeIcon';
 
 // ── Color palette ──────────────────────────────────────────────
-const GOLD   = '#F59E0B';
-const DARK   = '#0a0a0a';
-const RAISED = '#141416';
+const GOLD   = 'var(--brand-primary)';
+const DARK = 'var(--bg-base)';
+const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM    = '#CBD5E1';
 const TEXT   = '#FFFFFF';
 const GREEN  = '#22C55E';
-const YELLOW = '#F59E0B';
+const YELLOW = 'var(--warning)';
 const RED    = '#EF4444';
-const BLUE   = '#F59E0B';
+const BLUE   = 'var(--brand-primary)';
 
 // ── Type definitions ───────────────────────────────────────────
 interface ReportColumn {
@@ -52,18 +52,18 @@ interface HistoryItem {
 
 // ── Standard report card definitions ──────────────────────────
 const STANDARD_REPORTS = [
-  { id: 'pay-app',      title: 'Pay App Status',          icon: CurrencyDollar,  desc: 'Pay applications with amounts and status',        query: 'Show all pay applications with amounts and status' },
-  { id: 'job-cost',     title: 'Job Cost Report',         icon: ChartBar,        desc: 'Budget vs actual variance by cost code',          query: 'Job cost breakdown by cost code with budget vs actual variance' },
-  { id: 'rfi-log',      title: 'RFI Log',                 icon: Clipboard,       desc: 'All RFIs with status, due dates, and impact',     query: 'All RFIs with status, due dates, and cost/schedule impact' },
-  { id: 'change-order', title: 'Change Order Log',        icon: ArrowsClockwise, desc: 'Change orders with approval and cost impact',     query: 'All change orders with approval status and cost impact' },
-  { id: 'lien-waiver',  title: 'Lien Waiver Log',         icon: Lock,            desc: 'Lien waivers by subcontractor with status',       query: 'All lien waivers by subcontractor with status' },
-  { id: 'insurance',    title: 'Insurance Compliance',    icon: ShieldCheck,     desc: 'COI status and expiry dates by sub',              query: 'Insurance certificates by subcontractor with expiry dates' },
-  { id: 'daily-log',    title: 'Daily Log Summary',       icon: CalendarBlank,   desc: 'Last 30 days with crew counts and delays',        query: 'Daily logs for the last 30 days with crew counts and delays' },
-  { id: 'punch-list',   title: 'Punch List Report',       icon: CheckCircle,     desc: 'Open and in-progress items by trade',             query: 'All open and in-progress punch list items by trade' },
-  { id: 'sub-perf',     title: 'Subcontractor Performance', icon: HardHat,       desc: 'Contract amounts and current status',          query: 'Subcontractor list with contract amounts and status' },
-  { id: 'safety',       title: 'Safety Incidents',        icon: Warning,         desc: 'Incidents by type and severity',                 query: 'Safety incidents by type and severity' },
-  { id: 'bid-pkg',      title: 'Bid Package Summary',     icon: Package,         desc: 'Bid packages with trade, due date, and status',  query: 'All bid packages with trade, due date, and status' },
-  { id: 'timesheet',    title: 'Timesheet Report',        icon: Clock,           desc: 'Weekly summary with regular and overtime hours', query: 'Weekly timesheet summary with regular and overtime hours' },
+  { id: 'pay-app', title: 'Pay App Status', icon: CurrencyDollar, desc: 'Pay applications with amounts and status', query: 'Show all pay applications with amounts and status' },
+  { id: 'job-cost', title: 'Job Cost Report', icon: ChartBar, desc: 'Budget vs actual variance by cost code', query: 'Job cost breakdown by cost code with budget vs actual variance' },
+  { id: 'rfi-log', title: 'RFI Log', icon: Clipboard, desc: 'All RFIs with status, due dates, and impact', query: 'All RFIs with status, due dates, and cost/schedule impact' },
+  { id: 'change-order', title: 'Change Order Log', icon: ArrowsClockwise, desc: 'Change orders with approval and cost impact', query: 'All change orders with approval status and cost impact' },
+  { id: 'lien-waiver', title: 'Lien Waiver Log', icon: Lock, desc: 'Lien waivers by subcontractor with status', query: 'All lien waivers by subcontractor with status' },
+  { id: 'insurance', title: 'Insurance Compliance', icon: ShieldCheck, desc: 'COI status and expiry dates by sub', query: 'Insurance certificates by subcontractor with expiry dates' },
+  { id: 'daily-log', title: 'Daily Log Summary', icon: CalendarBlank, desc: 'Last 30 days with crew counts and delays', query: 'Daily logs for the last 30 days with crew counts and delays' },
+  { id: 'punch-list', title: 'Punch List Report', icon: CheckCircle, desc: 'Open and in-progress items by trade', query: 'All open and in-progress punch list items by trade' },
+  { id: 'sub-perf', title: 'Subcontractor Performance', icon: HardHat, desc: 'Contract amounts and current status', query: 'Subcontractor list with contract amounts and status' },
+  { id: 'safety', title: 'Safety Incidents', icon: Warning, desc: 'Incidents by type and severity', query: 'Safety incidents by type and severity' },
+  { id: 'bid-pkg', title: 'Bid Package Summary', icon: Package, desc: 'Bid packages with trade, due date, and status', query: 'All bid packages with trade, due date, and status' },
+  { id: 'timesheet', title: 'Timesheet Report', icon: Clock, desc: 'Weekly summary with regular and overtime hours', query: 'Weekly timesheet summary with regular and overtime hours' },
 ] as const;
 
 // What each standard report actually answers - shown on the catalog card so a
@@ -72,14 +72,14 @@ const REPORT_ANSWERS: Record<string, string> = {
   'pay-app':      'How much have we billed, certified, and collected?',
   'job-cost':     'Where is the budget over or under, by cost code?',
   'rfi-log':      'Which RFIs are open, who owes answers, and what is at risk?',
-  'change-order': 'How much has the contract grown - approved vs pending?',
+  'change-order': 'How much has the contract grown — approved vs pending?',
   'lien-waiver':  'Which subs still owe waivers before money can move?',
   'insurance':    'Whose COIs are expired or expiring soon?',
-  'daily-log':    'What happened on site - crews, delays, conditions?',
+  'daily-log':    'What happened on site — crews, delays, conditions?',
   'punch-list':   'What is still open, by trade, before closeout?',
   'sub-perf':     'Which subs carry the most contract value and risk?',
   'safety':       'What incidents happened, and how severe were they?',
-  'bid-pkg':      'Which packages are out, due, or awarded - and for how much?',
+  'bid-pkg':      'Which packages are out, due, or awarded — and for how much?',
   'timesheet':    'Who worked, how many hours, and how much overtime?',
 };
 
@@ -145,13 +145,13 @@ function getBadgeStyle(v: unknown): React.CSSProperties {
   if (['active', 'approved', 'complete', 'completed', 'paid', 'closed-won'].some(k => s.includes(k))) {
     bg = 'rgba(34,197,94,0.15)'; color = GREEN;
   } else if (['pending', 'submitted', 'in progress', 'in-progress', 'open', 'review'].some(k => s.includes(k))) {
-    bg = 'rgba(245,158,11,0.15)'; color = YELLOW;
+    bg = 'color-mix(in srgb, var(--warning) 18%, transparent)'; color = YELLOW;
   } else if (['overdue', 'expired', 'rejected', 'void', 'failed', 'critical'].some(k => s.includes(k))) {
     bg = 'rgba(239,68,68,0.15)'; color = RED;
   } else if (['draft', 'closed', 'cancelled', 'canceled', 'inactive'].some(k => s.includes(k))) {
     bg = 'rgba(0,0,0,0.06)'; color = DIM;
   } else if (['info', 'new', 'assigned'].some(k => s.includes(k))) {
-    bg = 'rgba(245,158,11,0.15)'; color = BLUE;
+    bg = 'var(--brand-primary-18)'; color = BLUE;
   }
   return {
     display: 'inline-flex', alignItems: 'center', padding: '2px 10px', borderRadius: 20,
@@ -199,7 +199,7 @@ export default function ReportsPage() {
   const [dateRange, setDateRange] = useState('');
   const [projects, setProjects] = useState<Array<{ id: string; name: string }>>([]);
   const [pageState, setPageState] = useState<PageState>('idle');
-  const [progress, setProgress] = useState<ReportProgress>({ step: 0, pct: 5, message: 'Connecting to Sage...' });
+  const [progress, setProgress] = useState<ReportProgress>({ step: 0, pct: 5, message: 'Connecting to Sage…' });
   const [reportResult, setReportResult] = useState<ReportResult | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
@@ -245,7 +245,7 @@ export default function ReportsPage() {
     if (esRef.current) { esRef.current.close(); esRef.current = null; }
 
     setPageState('loading');
-    setProgress({ step: 0, pct: 5, message: 'Connecting to Sage...' });
+    setProgress({ step: 0, pct: 5, message: 'Connecting to Sage…' });
     setReportResult(null);
 
     // Effective scope for THIS run - history reruns pass explicit overrides so
@@ -264,7 +264,7 @@ export default function ReportsPage() {
       try {
         const evt = JSON.parse(e.data);
         if (evt.event === 'progress') {
-          setProgress({ step: evt.step ?? 0, pct: evt.pct ?? 50, message: evt.message ?? 'Processing...' });
+          setProgress({ step: evt.step ?? 0, pct: evt.pct ?? 50, message: evt.message ?? 'Processing…' });
         }
         if (evt.event === 'result') {
           resolved = true;
@@ -444,9 +444,9 @@ export default function ReportsPage() {
 
       {/* What the reporting engine already knows — all figures live on this page */}
       <StatStrip items={[
-        {href: '/app/reports',  label: 'Report Library', value: String(STANDARD_REPORTS.length), sub: 'standard reports, one tap each' },
-        {href: '/app/reports',  label: 'Projects In Scope', value: String(projects.length), sub: projectFilter ? (projects.find(p => p.id === projectFilter)?.name || 'one selected') : 'all projects' },
-        {href: '/app/reports',  label: 'Runs This Session', value: String(history.length), sub: history[0] ? `last: ${timeAgo(history[0].ts)}` : 'none yet' },
+        {href: '/app/reports', label: 'Report Library', value: String(STANDARD_REPORTS.length), sub: 'Standard reports, one tap each' },
+        {href: '/app/reports', label: 'Projects In Scope', value: String(projects.length), sub: projectFilter ? (projects.find(p => p.id === projectFilter)?.name || 'One selected') : 'All projects' },
+        {href: '/app/reports', label: 'Runs This Session', value: String(history.length), sub: history[0] ? `Last: ${timeAgo(history[0].ts)}` : 'None yet' },
         {href: '/app/reports',  label: 'Export Formats', value: '3', sub: 'CSV, Excel, and PDF' },
       ]} />
       <SectionCard flush style={{ marginBottom: 16 }} bodyStyle={{ padding: '16px 20px' }}>
@@ -454,8 +454,8 @@ export default function ReportsPage() {
           {/* Sage icon */}
           <div style={{
             width: 36, height: 36, borderRadius: 10,
-            background: `linear-gradient(135deg, ${GOLD}22, ${GOLD}44)`,
-            border: `1px solid ${GOLD}55`,
+            background: `linear-gradient(135deg, color-mix(in srgb, ${GOLD} 13%, transparent), color-mix(in srgb, ${GOLD} 27%, transparent))`,
+            border: `1px solid color-mix(in srgb, ${GOLD} 33%, transparent)`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 18, flexShrink: 0,
           }}>
@@ -469,7 +469,7 @@ export default function ReportsPage() {
             value={sageQuery}
             onChange={e => setSageQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder='Ask Sage anything... "Show me all open RFIs on Project Alpha" or "Cost breakdown this month"'
+            placeholder='Ask Sage anything… "Show me all open RFIs on Project Alpha" or "Cost breakdown this month"'
             disabled={pageState === 'loading'}
             style={{
               flex: 1, minWidth: 240,
@@ -518,8 +518,8 @@ export default function ReportsPage() {
             style={{
               padding: '10px 22px',
               background: pageState === 'loading' || !sageQuery.trim()
-                ? 'rgba(245, 158, 11,0.3)'
-                : `linear-gradient(135deg, ${GOLD}, #FBBF24)`,
+                ? 'var(--brand-primary-25)'
+                : `linear-gradient(135deg, ${GOLD}, var(--brand-primary-strong))`,
               border: 'none',
               borderRadius: 10,
               color: pageState === 'loading' || !sageQuery.trim() ? 'rgba(0,0,0,0.4)' : DARK,
@@ -531,13 +531,13 @@ export default function ReportsPage() {
               letterSpacing: 0.3,
             }}
           >
-            {pageState === 'loading' ? 'Running...' : 'Ask Sage'}
+            {pageState === 'loading' ? 'Running…' : 'Ask Sage'}
           </button>
         </div>
 
         {/* Date-range AutoChips - the range resolves to real dates and rides along with every query and card run */}
         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, color: DIM}}>
             <CalendarBlank size={13} weight="bold" color={GOLD} /> Period
           </span>
           {['', ...DATE_RANGES].map(rg => {
@@ -549,9 +549,9 @@ export default function ReportsPage() {
                 disabled={pageState === 'loading'}
                 style={{
                   padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600,
-                  background: active ? `${GOLD}22` : 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${active ? GOLD + '66' : BORDER}`,
-                  color: active ? '#FBBF24' : DIM,
+                  background: active ? `color-mix(in srgb, ${GOLD} 13%, transparent)` : 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${active ? `color-mix(in srgb, ${GOLD} 40%, transparent)` : BORDER}`,
+                  color: active ? 'var(--brand-primary-strong)' : DIM,
                   cursor: pageState === 'loading' ? 'not-allowed' : 'pointer',
                   transition: 'all .15s',
                 }}
@@ -576,8 +576,8 @@ export default function ReportsPage() {
               onMouseLeave={() => setHoveredChip(null)}
               style={{
                 padding: '4px 12px',
-                background: hoveredChip === chip ? `${GOLD}22` : 'rgba(0,0,0,0.05)',
-                border: `1px solid ${hoveredChip === chip ? GOLD + '55' : BORDER}`,
+                background: hoveredChip === chip ? `color-mix(in srgb, ${GOLD} 13%, transparent)` : 'rgba(0,0,0,0.05)',
+                border: `1px solid ${hoveredChip === chip ? `color-mix(in srgb, ${GOLD} 33%, transparent)` : BORDER}`,
                 borderRadius: 20,
                 color: hoveredChip === chip ? GOLD : DIM,
                 fontSize: 12,
@@ -604,15 +604,15 @@ export default function ReportsPage() {
             <SectionCard flat flush style={{ marginBottom: 20 }} bodyStyle={{ padding: '40px 32px', textAlign: 'center' }}>
               <div style={{
                 width: 52, height: 52, borderRadius: 14,
-                background: `linear-gradient(135deg, ${GOLD}22, ${GOLD}44)`,
-                border: `1px solid ${GOLD}55`,
+                background: `linear-gradient(135deg, color-mix(in srgb, ${GOLD} 13%, transparent), color-mix(in srgb, ${GOLD} 27%, transparent))`,
+                border: `1px solid color-mix(in srgb, ${GOLD} 33%, transparent)`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 26, margin: '0 auto 16px',
               }}>
                 S
               </div>
               <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 8 }}>
-                Sage is analyzing your request...
+                Sage is analyzing your request…
               </div>
               <div style={{ fontSize: 13, color: DIM, marginBottom: 24, minHeight: 20 }}>
                 {progress.message}
@@ -629,7 +629,7 @@ export default function ReportsPage() {
                 <div style={{
                   height: '100%',
                   width: `${progress.pct}%`,
-                  background: `linear-gradient(90deg, ${GOLD}, #FBBF24)`,
+                  background: `linear-gradient(90deg, ${GOLD}, var(--brand-primary-strong))`,
                   borderRadius: 8,
                   transition: 'width 0.4s ease',
                 }} />
@@ -668,8 +668,8 @@ export default function ReportsPage() {
               {/* Meta strip: row count + generated timestamp */}
               <div style={{ padding: '12px 20px', borderBottom: `1px solid rgba(255,255,255,0.06)`, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 <span style={{
-                  background: 'rgba(245,158,11,0.15)', color: BLUE,
-                  border: '1px solid rgba(245,158,11,0.3)',
+                  background: 'var(--brand-primary-18)', color: BLUE,
+                  border: '1px solid var(--brand-primary-25)',
                   borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 700,
                 }}>
                   {reportResult.rowCount.toLocaleString()} rows
@@ -681,7 +681,7 @@ export default function ReportsPage() {
 
               {/* Overflow row warning */}
               {reportResult.rowCount > 100 && (
-                <div style={{ padding: '8px 20px', background: 'rgba(245,158,11,0.08)', borderBottom: `1px solid ${BORDER}`, fontSize: 12, color: YELLOW }}>
+                <div style={{ padding: '8px 20px', background: 'color-mix(in srgb, var(--warning) 8%, transparent)', borderBottom: `1px solid ${BORDER}`, fontSize: 12, color: YELLOW }}>
                   Showing 100 of {reportResult.rowCount.toLocaleString()} rows. Export to see all data.
                 </div>
               )}
@@ -696,8 +696,8 @@ export default function ReportsPage() {
                           <th key={col.key} style={{
                             padding: '11px 16px',
                             textAlign: ['currency', 'number', 'percent'].includes(col.type) ? 'right' : 'left',
-                            fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
-                            letterSpacing: 0.6, color: DIM,
+                            fontSize: 11, fontWeight: 700,
+                            color: DIM,
                             borderBottom: `1px solid ${BORDER}`,
                             whiteSpace: 'nowrap',
                           }}>
@@ -745,8 +745,8 @@ export default function ReportsPage() {
                     {hasTotals && (
                       <tfoot>
                         <tr style={{
-                          background: `${GOLD}0f`,
-                          borderTop: `2px solid ${GOLD}33`,
+                          background: `color-mix(in srgb, ${GOLD} 6%, transparent)`,
+                          borderTop: `2px solid color-mix(in srgb, ${GOLD} 20%, transparent)`,
                         }}>
                           {reportResult.columns.map((col, ci) => {
                             const val = reportResult.totals![col.key];
@@ -759,7 +759,7 @@ export default function ReportsPage() {
                                 fontSize: ci === 0 ? 12 : 13,
                                 whiteSpace: 'nowrap',
                               }}>
-                                {ci === 0 ? 'TOTALS' : val !== undefined ? (
+                                {ci === 0 ? 'Totals' : val !== undefined ? (
                                   col.type === 'currency' ? fmtCurrency(val) :
                                   col.type === 'percent' ? fmtPercent(val) :
                                   fmtNumber(val)
@@ -796,8 +796,8 @@ export default function ReportsPage() {
                     onMouseEnter={() => setHoveredCard(r.id)}
                     onMouseLeave={() => setHoveredCard(null)}
                     style={{
-                      background: hoveredCard === r.id ? `${GOLD}0a` : RAISED,
-                      border: `1px solid ${hoveredCard === r.id ? GOLD + '44' : BORDER}`,
+                      background: hoveredCard === r.id ? `color-mix(in srgb, ${GOLD} 4%, transparent)` : RAISED,
+                      border: `1px solid ${hoveredCard === r.id ? `color-mix(in srgb, ${GOLD} 27%, transparent)` : BORDER}`,
                       borderRadius: 12,
                       padding: '14px 16px',
                       display: 'flex',
@@ -810,8 +810,8 @@ export default function ReportsPage() {
                   >
                     <div style={{
                       width: 36, height: 36, borderRadius: 9,
-                      background: hoveredCard === r.id ? `${GOLD}22` : 'rgba(0,0,0,0.05)',
-                      border: `1px solid ${hoveredCard === r.id ? GOLD + '44' : BORDER}`,
+                      background: hoveredCard === r.id ? `color-mix(in srgb, ${GOLD} 13%, transparent)` : 'rgba(0,0,0,0.05)',
+                      border: `1px solid ${hoveredCard === r.id ? `color-mix(in srgb, ${GOLD} 27%, transparent)` : BORDER}`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 17, flexShrink: 0,
                       transition: 'all .15s',
@@ -822,7 +822,7 @@ export default function ReportsPage() {
                       <div style={{ fontWeight: 700, fontSize: 13, color: TEXT, marginBottom: 3 }}>{r.title}</div>
                       <div style={{ fontSize: 12, color: DIM, lineHeight: 1.5 }}>{r.desc}</div>
                       {REPORT_ANSWERS[r.id] && (
-                        <div style={{ fontSize: 11.5, color: 'rgba(251,191,36,0.8)', lineHeight: 1.45, marginTop: 5 }}>
+                        <div style={{ fontSize: 11.5, color: 'color-mix(in srgb, var(--brand-primary-strong) 80%, transparent)', lineHeight: 1.45, marginTop: 5 }}>
                           Answers: {REPORT_ANSWERS[r.id]}
                         </div>
                       )}
@@ -867,7 +867,7 @@ export default function ReportsPage() {
                     cursor: 'pointer',
                     transition: 'border-color .15s',
                   }}
-                  onMouseEnter={e => (e.currentTarget.style.borderColor = GOLD + '44')}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = `color-mix(in srgb, ${GOLD} 27%, transparent)`)}
                   onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER)}
                 >
                   <div style={{ fontSize: 12, fontWeight: 600, color: TEXT, marginBottom: 3, lineHeight: 1.3 }}>

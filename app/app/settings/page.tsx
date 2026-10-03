@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { CreditCard, DeviceMobile, Bell, Users, Clipboard, FileText, Gear, Rocket, GraduationCap, Books, ChatCircle, Clock, ArrowRight, CloudArrowUp, ShieldCheck, Plugs, UserCircle, Palette, Lifebuoy, UploadSimple, CheckCircle, WarningCircle } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, SectionCard, StatStrip, GoldButton, DangerButton, Pill, goldButtonStyle } from '@/components/ui/premium';
 
-const GOLD  = '#F59E0B';
+const GOLD  = 'var(--brand-primary)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM   = '#CBD5E1';
 const TEXT  = '#FFFFFF';
@@ -27,7 +27,6 @@ const inputStyle: React.CSSProperties = {
 };
 const labelStyle: React.CSSProperties = {
   fontSize: 11, color: DIM, fontWeight: 700, display: 'block', marginBottom: 6,
-  letterSpacing: '0.08em', textTransform: 'uppercase',
 };
 
 interface SubInfo {
@@ -80,7 +79,7 @@ const SETTINGS_SECTIONS = [
       { icon: Rocket, label: 'Free Migration', desc: 'Migrate your data from any platform or spreadsheet', href: '/contact?reason=Migration%20help' },
       { icon: GraduationCap, label: 'Guided Onboarding', desc: 'Book a hands-on setup session with a Saguaro specialist ($1,200)', href: '/contact?reason=Demo%20request' },
       { icon: Books, label: 'Help Center', desc: 'Tutorials, walkthroughs, and FAQs', href: '/help-center' },
-      { icon: ChatCircle, label: 'Contact Support', desc: 'Send us a message — we respond within 48hrs', href: '/contact?reason=Support%20request' },
+      { icon: ChatCircle, label: 'Contact Support', desc: 'Send us a message — we respond within 48 hours', href: '/contact?reason=Support%20request' },
     ],
   },
 ];
@@ -247,7 +246,7 @@ export default function SettingsPage() {
   const isTrialing = sub?.status === 'trialing';
   const isPastDue = sub?.status === 'past_due';
 
-  const acctBorder = isPastDue ? RED : (isTrialing && trialDays !== null && trialDays <= 5 ? 'rgba(245,158,11,0.4)' : undefined);
+  const acctBorder = isPastDue ? RED : (isTrialing && trialDays !== null && trialDays <= 5 ? 'color-mix(in srgb, var(--warning) 35%, transparent)' : undefined);
   const previewColor = /^#[0-9a-fA-F]{6}$/.test(branding.primary_color) ? branding.primary_color : GOLD;
 
   return (
@@ -264,14 +263,14 @@ export default function SettingsPage() {
       {/* Workspace snapshot — what the system knows about this account */}
       {(me || sub) && (
         <StatStrip items={[
-          {href: '/app/settings',  label: 'Plan', value: sub?.plan_name || 'Free Trial', accent: isPastDue ? RED : undefined, sub: sub?.status === 'active' ? 'subscription active' : isTrialing ? 'trial in progress' : isPastDue ? 'payment failed — fix in Billing' : 'manage in Billing' },
+          {href: '/app/settings', label: 'Plan', value: sub?.plan_name || 'Free Trial', accent: isPastDue ? RED : undefined, sub: sub?.status === 'active' ? 'Subscription active' : isTrialing ? 'Trial in progress' : isPastDue ? 'Payment failed — fix in Billing' : 'Manage in Billing' },
           ...(isTrialing && trialDays !== null
-            ? [{href: '/app/settings',  label: 'Trial', value: `${trialDays}d left`, accent: trialDays <= 5 ? GOLD : undefined, sub: 'upgrade any time in Billing' }]
+            ? [{href: '/app/settings', label: 'Trial', value: `${trialDays}d left`, accent: trialDays <= 5 ? GOLD : undefined, sub: 'Upgrade any time in Billing' }]
             : sub?.current_period_end
-              ? [{href: '/app/settings',  label: 'Renews', value: new Date(sub.current_period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), sub: 'next billing date' }]
+              ? [{href: '/app/settings', label: 'Renews', value: new Date(sub.current_period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), sub: 'Next billing date' }]
               : []),
-          {href: '/app/settings',  label: 'Branding', value: (branding.logo_url || branding.company_name) ? 'Custom' : 'Default', accent: (branding.logo_url || branding.company_name) ? GREEN : undefined, sub: branding.company_name || 'set a name + logo below' },
-          {href: '/app/settings',  label: 'Brand Color', value: branding.primary_color || 'Saguaro Gold', sub: branding.primary_color ? 'white-label accent' : 'default accent' },
+          {href: '/app/settings', label: 'Branding', value: (branding.logo_url || branding.company_name) ? 'Custom' : 'Default', accent: (branding.logo_url || branding.company_name) ? GREEN : undefined, sub: branding.company_name || 'Set a name + logo below' },
+          {href: '/app/settings', label: 'Brand Color', value: branding.primary_color || 'Saguaro Gold', sub: branding.primary_color ? 'White-label accent' : 'Default accent' },
           {href: '/app/settings',  label: 'Signed In As', value: me?.name || '—', sub: me?.email || undefined },
         ]} />
       )}
@@ -290,7 +289,7 @@ export default function SettingsPage() {
                 Plan: <strong style={{ color: TEXT }}>{sub.plan_name ?? 'Free Trial'}</strong>
               </div>
               {isTrialing && trialDays !== null && (
-                <div style={{ fontSize: 12.5, color: trialDays <= 5 ? GOLD : DIM }}>{trialDays} day{trialDays !== 1 ? 's' : ''} left in trial</div>
+                <div style={{ fontSize: 12.5, color: trialDays <= 5 ? 'var(--warning)' : DIM }}>{trialDays} day{trialDays !== 1 ? 's' : ''} left in trial</div>
               )}
               {isPastDue && <div style={{ fontSize: 12.5, color: RED, fontWeight: 600 }}>Payment failed</div>}
               {sub.status === 'active' && sub.current_period_end && (
@@ -343,7 +342,7 @@ export default function SettingsPage() {
             <GoldButton size="md" onClick={saveProfile} disabled={profileSaving || !profileDirty}>
               {profileSaving ? 'Saving…' : 'Save Profile'}
             </GoldButton>
-            {me?.role && <Pill tone="neutral" caps>{me.role}</Pill>}
+            {me?.role && <Pill tone="neutral">{String(me.role).replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}</Pill>}
             <SaveNotice notice={profileMsg} />
           </div>
         </SectionCard>
@@ -351,9 +350,9 @@ export default function SettingsPage() {
 
       {/* Trial warning banner */}
       {isTrialing && trialDays !== null && trialDays <= 7 && (
-        <div style={{ background: 'rgba(245,158,11,0.08)', border: `1px solid rgba(245,158,11,0.3)`, borderRadius: 12, padding: '14px 20px', marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+        <div style={{ background: 'color-mix(in srgb, var(--warning) 8%, transparent)', border: `1px solid color-mix(in srgb, var(--warning) 25%, transparent)`, borderRadius: 12, padding: '14px 20px', marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
           <div style={{ fontSize: 14, color: TEXT }}>
-            <span style={{ display: 'inline-flex', verticalAlign: 'middle' }}><Clock size={16} weight="fill" color={GOLD} /></span> <strong>{trialDays} days left</strong> in your free trial — upgrade to keep access for your whole team.
+            <span style={{ display: 'inline-flex', verticalAlign: 'middle' }}><Clock size={16} weight="fill" color="var(--warning)" /></span> <strong>{trialDays} days left</strong> in your free trial — upgrade to keep access for your whole team.
           </div>
           <Link href="/app/billing" className="pmBtn" style={{ ...goldButtonStyle, whiteSpace: 'nowrap' }}>
             Upgrade Now
@@ -403,7 +402,7 @@ export default function SettingsPage() {
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8,
                     padding: '22px 16px', borderRadius: 12, cursor: uploading ? 'wait' : 'pointer',
                     border: `1.5px dashed ${dragOver ? GOLD : 'rgba(255,255,255,0.2)'}`,
-                    background: dragOver ? 'rgba(245,158,11,0.08)' : 'rgba(255,255,255,0.02)',
+                    background: dragOver ? 'var(--brand-primary-08)' : 'rgba(255,255,255,0.02)',
                     transition: 'border-color .15s ease, background .15s ease',
                     textAlign: 'center',
                   }}
@@ -442,8 +441,8 @@ export default function SettingsPage() {
                   return (
                     <div style={{
                       marginTop: 10, padding: '10px 12px', borderRadius: 10, fontSize: 12, lineHeight: 1.5,
-                      border: `1px solid ${portrait ? 'rgba(245,158,11,0.35)' : BORDER}`,
-                      background: portrait ? 'rgba(245,158,11,0.07)' : 'rgba(255,255,255,0.02)',
+                      border: `1px solid ${portrait ? 'var(--brand-primary-35)' : BORDER}`,
+                      background: portrait ? 'color-mix(in srgb, var(--brand-primary) 7%, transparent)' : 'rgba(255,255,255,0.02)',
                       color: portrait ? TEXT : DIM,
                     }}>
                       <strong style={{ color: portrait ? GOLD : TEXT }}>
@@ -480,8 +479,8 @@ export default function SettingsPage() {
                     style={{ ...inputStyle, width: 130 }}
                   />
                   {branding.primary_color
-                    ? <button onClick={() => setBranding(b => ({ ...b, primary_color: '' }))} style={{ background: 'none', border: 'none', color: DIM, fontSize: 12, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>Reset to Saguaro gold</button>
-                    : <span style={{ fontSize: 12, color: DIM }}>Defaults to Saguaro gold</span>}
+                    ? <button onClick={() => setBranding(b => ({ ...b, primary_color: '' }))} style={{ background: 'none', border: 'none', color: DIM, fontSize: 12, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>Reset to Saguaro Default</button>
+                    : <span style={{ fontSize: 12, color: DIM }}>Defaults to the Saguaro brand color</span>}
                 </div>
                 <div style={{ fontSize: 11, color: DIM, marginTop: 5 }}>
                   Applies across your dashboard, portals, and document letterheads on the white-label plan.
@@ -528,7 +527,7 @@ export default function SettingsPage() {
                               {branding.company_name}
                             </span>
                           )}
-                          <Pill tone={isTrialing ? 'amber' : 'gold'} caps>{isTrialing ? 'Trial' : (sub?.plan_name || 'Plan')}</Pill>
+                          <Pill tone={isTrialing ? 'amber' : 'gold'}>{isTrialing ? 'Trial' : (sub?.plan_name || 'Plan')}</Pill>
                         </div>
                       </>
                     ) : branding.company_name ? (
@@ -547,7 +546,7 @@ export default function SettingsPage() {
                             {branding.company_name}
                           </span>
                           <span style={{ display: 'flex' }}>
-                            <Pill tone={isTrialing ? 'amber' : 'gold'} caps>{isTrialing ? 'Trial' : (sub?.plan_name || 'Plan')}</Pill>
+                            <Pill tone={isTrialing ? 'amber' : 'gold'}>{isTrialing ? 'Trial' : (sub?.plan_name || 'Plan')}</Pill>
                           </span>
                         </span>
                       </div>
@@ -580,9 +579,9 @@ export default function SettingsPage() {
       {platformAdmin && (
         <div style={{ marginBottom: 24 }}>
           <SectionCard title="Platform Owner" icon={<ShieldCheck size={18} weight="duotone" color={GOLD} />} flush>
-            <a href="/app/settings/platform-integrations" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '18px 24px', textDecoration: 'none', background: 'rgba(245,158,11,0.03)' }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(245,158,11,0.08)')} onMouseLeave={e => (e.currentTarget.style.background = 'rgba(245,158,11,0.03)')}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(245,158,11,0.1)', border: `1px solid rgba(245,158,11,0.2)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><ShieldCheck size={20} color={GOLD} /></div>
+            <a href="/app/settings/platform-integrations" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '18px 24px', textDecoration: 'none', background: 'color-mix(in srgb, var(--brand-primary) 3%, transparent)' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--brand-primary-08)')} onMouseLeave={e => (e.currentTarget.style.background = 'color-mix(in srgb, var(--brand-primary) 3%, transparent)')}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--brand-primary-12)', border: `1px solid var(--brand-primary-18)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><ShieldCheck size={20} color={GOLD} /></div>
               <div style={{ flex: 1 }}><div style={{ fontSize: 14, fontWeight: 600, color: GOLD, marginBottom: 2 }}>Platform Integrations</div><div style={{ fontSize: 12, color: DIM }}>Configure the cloud-storage OAuth apps once — enables one-click connect for every tenant</div></div>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={DIM} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6" /></svg>
             </a>
@@ -620,13 +619,13 @@ export default function SettingsPage() {
                 padding: '18px 24px',
                 borderBottom: i < section.items.length - 1 ? `1px solid rgba(255,255,255,0.06)` : 'none',
                 textDecoration: 'none',
-                background: item.highlight ? 'rgba(245,158,11,0.05)' : 'transparent',
+                background: item.highlight ? 'color-mix(in srgb, var(--brand-primary) 5%, transparent)' : 'transparent',
                 transition: 'background .15s',
               }}
                 onMouseEnter={(e: React.MouseEvent<HTMLElement>) => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
-                onMouseLeave={(e: React.MouseEvent<HTMLElement>) => (e.currentTarget.style.background = item.highlight ? 'rgba(245,158,11,0.05)' : 'transparent')}
+                onMouseLeave={(e: React.MouseEvent<HTMLElement>) => (e.currentTarget.style.background = item.highlight ? 'color-mix(in srgb, var(--brand-primary) 5%, transparent)' : 'transparent')}
               >
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: item.highlight ? 'rgba(245,158,11,0.1)' : 'rgba(255,255,255,0.05)', border: `1px solid ${item.highlight ? 'rgba(245,158,11,0.2)' : BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: item.highlight ? 'var(--brand-primary-12)' : 'rgba(255,255,255,0.05)', border: `1px solid ${item.highlight ? 'var(--brand-primary-18)' : BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
                   <item.icon size={20} weight="regular" color={item.highlight ? GOLD : TEXT} />
                 </div>
                 <div style={{ flex: 1 }}>
@@ -649,7 +648,7 @@ export default function SettingsPage() {
           <div style={{ display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ fontSize: 40, display: 'flex' }}><DeviceMobile size={40} weight="duotone" color={GOLD} /></div>
             <div style={{ flex: 1, minWidth: 200 }}>
-              <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Get the Saguaro Control Systems iOS app</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Get the Saguaro Control Systems iOS App</div>
               <div style={{ fontSize: 13, color: DIM }}>Native iOS app on Apple TestFlight — free for your entire team. Android coming soon.</div>
             </div>
             <Link href="/get-the-app" className="pmBtn" style={{ ...goldButtonStyle, whiteSpace: 'nowrap' }}>

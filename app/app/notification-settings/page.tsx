@@ -5,16 +5,16 @@ import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldBu
 import { Question, Package, Clipboard, ArrowsClockwise, CurrencyDollar, CalendarBlank, HardHat, Folder, ChartBar, CheckCircle, MagnifyingGlass, Scroll, Bell, Envelope, DeviceMobile, CaretRight, Check, Minus, Moon, ArrowCounterClockwise, FloppyDisk } from '@phosphor-icons/react';
 
 /* ── palette ── */
-const GOLD   = '#F59E0B';
-const BG     = '#0a0a0a';
-const RAISED = '#141416';
+const GOLD   = 'var(--brand-primary)';
+const BG = 'var(--bg-base)';
+const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const TEXT   = '#FFFFFF';
 const DIM    = '#CBD5E1';
 const GREEN  = '#22C55E';
 const RED    = '#EF4444';
-const AMBER  = '#F59E0B';
-const BLUE   = '#F59E0B';
+const AMBER = 'var(--warning)';
+const BLUE   = 'var(--brand-primary)';
 const PURPLE = '#8B5CF6';
 
 /* ── types ── */
@@ -58,30 +58,30 @@ const STANDARD_EVENTS = [
 
 /* ── module definitions ── */
 const MODULE_DEFS: ModuleDef[] = [
-  { module: 'RFIs',           icon: Question,         events: [...STANDARD_EVENTS] },
-  { module: 'Submittals',     icon: Package,          events: [...STANDARD_EVENTS] },
-  { module: 'Daily Logs',     icon: Clipboard,        events: [...STANDARD_EVENTS] },
+  { module: 'RFIs', icon: Question, events: [...STANDARD_EVENTS] },
+  { module: 'Submittals', icon: Package, events: [...STANDARD_EVENTS] },
+  { module: 'Daily Logs', icon: Clipboard, events: [...STANDARD_EVENTS] },
   { module: 'Change Orders',  icon: ArrowsClockwise,  events: [...STANDARD_EVENTS] },
-  { module: 'Pay Apps',       icon: CurrencyDollar,   events: [...STANDARD_EVENTS] },
-  { module: 'Schedule',       icon: CalendarBlank,    events: [...STANDARD_EVENTS] },
-  { module: 'Safety',         icon: HardHat,          events: [...STANDARD_EVENTS] },
-  { module: 'Documents',      icon: Folder,           events: [...STANDARD_EVENTS] },
-  { module: 'Budget',         icon: ChartBar,         events: [...STANDARD_EVENTS] },
-  { module: 'Punch List',     icon: CheckCircle,      events: [...STANDARD_EVENTS] },
-  { module: 'Inspections',    icon: MagnifyingGlass,  events: [...STANDARD_EVENTS] },
-  { module: 'Contracts',      icon: Scroll,           events: [...STANDARD_EVENTS] },
+  { module: 'Pay Apps', icon: CurrencyDollar, events: [...STANDARD_EVENTS] },
+  { module: 'Schedule', icon: CalendarBlank, events: [...STANDARD_EVENTS] },
+  { module: 'Safety', icon: HardHat, events: [...STANDARD_EVENTS] },
+  { module: 'Documents', icon: Folder, events: [...STANDARD_EVENTS] },
+  { module: 'Budget', icon: ChartBar, events: [...STANDARD_EVENTS] },
+  { module: 'Punch List', icon: CheckCircle, events: [...STANDARD_EVENTS] },
+  { module: 'Inspections', icon: MagnifyingGlass, events: [...STANDARD_EVENTS] },
+  { module: 'Contracts', icon: Scroll, events: [...STANDARD_EVENTS] },
 ];
 
 const CHANNELS: { key: Channel; label: string; icon: React.ComponentType<any> }[] = [
   { key: 'in-app', label: 'In-App',  icon: Bell },
-  { key: 'email',  label: 'Email',   icon: Envelope },
-  { key: 'push',   label: 'Push',    icon: DeviceMobile },
+  { key: 'email', label: 'Email', icon: Envelope },
+  { key: 'push', label: 'Push', icon: DeviceMobile },
 ];
 
 const FREQUENCIES: { key: Frequency; label: string; desc: string }[] = [
-  { key: 'instant', label: 'Instant',         desc: 'Get notified immediately when events occur' },
-  { key: 'hourly',  label: 'Hourly Digest',   desc: 'Receive a summary every hour' },
-  { key: 'daily',   label: 'Daily Digest',    desc: 'One summary email per day at 8 AM' },
+  { key: 'instant', label: 'Instant', desc: 'Get notified immediately when events occur' },
+  { key: 'hourly', label: 'Hourly Digest', desc: 'Receive a summary every hour' },
+  { key: 'daily', label: 'Daily Digest', desc: 'One summary email per day at 8 AM' },
   { key: 'weekly',  label: 'Weekly Summary',  desc: 'Weekly roundup every Monday morning' },
 ];
 
@@ -385,12 +385,12 @@ export default function NotificationSettingsPage() {
     }) as React.CSSProperties,
     btn: (variant: 'gold' | 'outline' | 'red' | 'blue' | 'green' | 'amber') => {
       const map: Record<string, { bg: string; fg: string; bdr: string }> = {
-        gold:    { bg: GOLD,        fg: '#000',  bdr: 'none' },
-        outline: { bg: 'transparent', fg: DIM,   bdr: `1px solid ${BORDER}` },
-        red:     { bg: RED,         fg: '#fff',  bdr: 'none' },
-        blue:    { bg: BLUE,        fg: '#fff',  bdr: 'none' },
-        green:   { bg: GREEN,       fg: '#fff',  bdr: 'none' },
-        amber:   { bg: AMBER,       fg: '#000',  bdr: 'none' },
+        gold:    { bg: GOLD, fg: '#0A0A00', bdr: 'none' },
+        outline: { bg: 'transparent', fg: DIM, bdr: `1px solid ${BORDER}` },
+        red:     { bg: RED, fg: '#fff', bdr: 'none' },
+        blue:    { bg: BLUE, fg: '#0A0A00', bdr: 'none' },
+        green:   { bg: GREEN, fg: '#fff', bdr: 'none' },
+        amber:   { bg: AMBER, fg: '#000', bdr: 'none' },
       };
       const v = map[variant] || map.outline;
       return {
@@ -412,7 +412,7 @@ export default function NotificationSettingsPage() {
       borderRadius: 12,
       fontSize: 11,
       fontWeight: 600,
-      background: color + '22',
+      background: `color-mix(in srgb, ${color} 13%, transparent)`,
       color: color,
     }) as React.CSSProperties,
     moduleHeader: (expanded: boolean) => ({
@@ -482,12 +482,11 @@ export default function NotificationSettingsPage() {
     statLabel: {
       fontSize: 11,
       color: DIM,
-      textTransform: 'uppercase' as const,
-      letterSpacing: 1,
+
       marginTop: 4,
     } as React.CSSProperties,
     errorBanner: {
-      background: `${RED}18`,
+      background: `color-mix(in srgb, ${RED} 9%, transparent)`,
       border: `1px solid ${RED}`,
       borderRadius: 8,
       padding: '12px 18px',
@@ -498,7 +497,7 @@ export default function NotificationSettingsPage() {
       gap: 12,
     } as React.CSSProperties,
     successBanner: {
-      background: `${GREEN}18`,
+      background: `color-mix(in srgb, ${GREEN} 9%, transparent)`,
       border: `1px solid ${GREEN}`,
       borderRadius: 8,
       padding: '12px 18px',
@@ -548,7 +547,7 @@ export default function NotificationSettingsPage() {
               margin: '0 auto 16px',
             }} />
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-            <div style={{ color: DIM, fontSize: 15 }}>Loading notification preferences...</div>
+            <div style={{ color: DIM, fontSize: 15 }}>Loading notification preferences…</div>
           </div>
         </div>
       </PremiumSurface>
@@ -561,7 +560,7 @@ export default function NotificationSettingsPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Notifications"
-        eyebrowIcon={<Bell size={13} weight="fill" color="#F59E0B" />}
+        eyebrowIcon={<Bell size={13} weight="fill" color="var(--brand-primary)" />}
         title="Notification"
         accent="Preferences"
         subtitle="How and when each event reaches you."
@@ -578,7 +577,7 @@ export default function NotificationSettingsPage() {
             disabled={resetting}
             type="button"
           >
-            <ArrowCounterClockwise size={15} weight="bold" /> {resetting ? 'Resetting...' : 'Reset to Defaults'}
+            <ArrowCounterClockwise size={15} weight="bold" /> {resetting ? 'Resetting…' : 'Reset to Defaults'}
           </button>
           <button
             className="pmBtn"
@@ -587,7 +586,7 @@ export default function NotificationSettingsPage() {
             disabled={saving}
             type="button"
           >
-            <FloppyDisk size={15} weight="bold" /> {saving ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save Preferences'}
+            <FloppyDisk size={15} weight="bold" /> {saving ? 'Saving…' : saveSuccess ? 'Saved' : 'Save Preferences'}
           </button>
         </>}
       />
@@ -639,7 +638,7 @@ export default function NotificationSettingsPage() {
         <StatCard
           icon={<Bell size={19} weight="duotone" color={prefs.globalEnabled ? GREEN : RED} />}
           label="Global Status"
-          value={prefs.globalEnabled ? 'ON' : 'OFF'}
+          value={prefs.globalEnabled ? 'On' : 'Off'}
           accent={prefs.globalEnabled ? GREEN : RED}
           sub={prefs.globalEnabled ? 'Notifications on' : 'All muted'}
          href="/app/notification-settings"/>
@@ -666,7 +665,7 @@ export default function NotificationSettingsPage() {
         <StatCard
           icon={<Moon size={19} weight="duotone" color={prefs.quietHours.enabled ? AMBER : DIM} />}
           label="Quiet Hours"
-          value={prefs.quietHours.enabled ? 'ON' : 'OFF'}
+          value={prefs.quietHours.enabled ? 'On' : 'Off'}
           accent={prefs.quietHours.enabled ? AMBER : undefined}
           sub={prefs.quietHours.enabled ? `${prefs.quietHours.start}–${prefs.quietHours.end}` : 'Disabled'}
          href="/app/notification-settings"/>
@@ -717,7 +716,7 @@ export default function NotificationSettingsPage() {
                   borderRadius: 8,
                   cursor: 'pointer',
                   border: `2px solid ${active ? GOLD : BORDER}`,
-                  background: active ? `${GOLD}15` : 'transparent',
+                  background: active ? `color-mix(in srgb, ${GOLD} 8%, transparent)` : 'transparent',
                   transition: 'all 0.2s',
                 }}
               >
@@ -806,7 +805,7 @@ export default function NotificationSettingsPage() {
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
             <input
               type="text"
-              placeholder="Search modules or events..."
+              placeholder="Search modules or events…"
               value={searchFilter}
               onChange={e => setSearchFilter(e.target.value)}
               style={s.searchInput}
@@ -859,7 +858,7 @@ export default function NotificationSettingsPage() {
 
         {/* Column headers */}
         <div style={s.channelHeader}>
-          <span style={{ fontSize: 12, fontWeight: 600, color: DIM, textTransform: 'uppercase', letterSpacing: 1 }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: DIM}}>
             Event
           </span>
           {CHANNELS.map(ch => {
@@ -872,8 +871,7 @@ export default function NotificationSettingsPage() {
                 fontWeight: 600,
                 color: GOLD,
                 textAlign: 'center',
-                textTransform: 'uppercase',
-                letterSpacing: 0.5,
+
                 display: 'inline-flex',
                 justifyContent: 'center',
               }}
@@ -960,7 +958,7 @@ export default function NotificationSettingsPage() {
                           height: 28,
                           borderRadius: 6,
                           border: `1px solid ${allOn ? GREEN : BORDER}`,
-                          background: allOn ? `${GREEN}22` : 'transparent',
+                          background: allOn ? `color-mix(in srgb, ${GREEN} 13%, transparent)` : 'transparent',
                           color: allOn ? GREEN : DIM,
                           fontSize: 12,
                           cursor: 'pointer',
@@ -1058,7 +1056,7 @@ export default function NotificationSettingsPage() {
             disabled={resetting}
             type="button"
           >
-            <ArrowCounterClockwise size={15} weight="bold" /> {resetting ? 'Resetting...' : 'Reset to Defaults'}
+            <ArrowCounterClockwise size={15} weight="bold" /> {resetting ? 'Resetting…' : 'Reset to Defaults'}
           </button>
           <button
             className="pmBtn"
@@ -1067,7 +1065,7 @@ export default function NotificationSettingsPage() {
             disabled={saving}
             type="button"
           >
-            <FloppyDisk size={15} weight="bold" /> {saving ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save Preferences'}
+            <FloppyDisk size={15} weight="bold" /> {saving ? 'Saving…' : saveSuccess ? 'Saved' : 'Save Preferences'}
           </button>
         </div>
       </div>

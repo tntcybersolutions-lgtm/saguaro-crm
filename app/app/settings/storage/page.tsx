@@ -40,15 +40,15 @@ type Field = { key: string; label: string; required?: boolean; placeholder?: str
 const FORM_FIELDS: Record<string, Field[]> = {
   s3: [
     { key: 'region', label: 'Region', required: true, placeholder: 'us-east-1 (use "auto" for Cloudflare R2)' },
-    { key: 'bucket', label: 'Bucket name', required: true, placeholder: 'my-company-files' },
-    { key: 'endpoint', label: 'Custom endpoint (S3-compatible only)', placeholder: 'https://<acct>.r2.cloudflarestorage.com' },
-    { key: 'forcePathStyle', label: 'Force path-style (MinIO/most non-AWS) — true/false', placeholder: 'false' },
-    { key: 'accessKeyId', label: 'Access key ID', required: true, secret: true },
-    { key: 'secretAccessKey', label: 'Secret access key', required: true, secret: true },
+    { key: 'bucket', label: 'Bucket Name', required: true, placeholder: 'my-company-files' },
+    { key: 'endpoint', label: 'Custom Endpoint (S3-Compatible Only)', placeholder: 'https://<acct>.r2.cloudflarestorage.com' },
+    { key: 'forcePathStyle', label: 'Force Path-Style (MinIO/Most Non-AWS) — True/False', placeholder: 'false' },
+    { key: 'accessKeyId', label: 'Access Key ID', required: true, secret: true },
+    { key: 'secretAccessKey', label: 'Secret Access Key', required: true, secret: true },
   ],
   egnyte: [
-    { key: 'domain', label: 'Egnyte domain', required: true, placeholder: 'acme.egnyte.com' },
-    { key: 'apiToken', label: 'API access token', required: true, secret: true },
+    { key: 'domain', label: 'Egnyte Domain', required: true, placeholder: 'acme.egnyte.com' },
+    { key: 'apiToken', label: 'API Access Token', required: true, secret: true },
   ],
 };
 
@@ -140,10 +140,10 @@ function StorageSettings() {
       {/* Live figures — connections and providers come straight from the API. */}
       {!loading && (
         <StatStrip items={[
-          {href: '/app/settings/storage',  label: 'Connections', value: String(connectors.length), sub: connectors.length ? 'linked to this workspace' : 'none yet' },
-          {href: '/app/settings/storage',  label: 'Healthy', value: String(healthy), accent: connectors.length > 0 && healthy < connectors.length ? RED : (healthy > 0 ? GREEN : undefined), sub: connectors.length > 0 && healthy < connectors.length ? `${connectors.length - healthy} need attention` : 'verified reachable' },
-          {href: '/app/settings/storage',  label: 'One-Click Providers', value: String(oneClick.filter((p) => p.available).length), sub: `of ${oneClick.length} sign-in providers` },
-          {href: '/app/settings/storage',  label: 'Bring Your Own', value: String(advanced.length), sub: 'key-based options (S3, Egnyte)' },
+          {href: '/app/settings/storage', label: 'Connections', value: String(connectors.length), sub: connectors.length ? 'Linked to this workspace' : 'None yet' },
+          {href: '/app/settings/storage', label: 'Healthy', value: String(healthy), accent: connectors.length > 0 && healthy < connectors.length ? RED : (healthy > 0 ? GREEN : undefined), sub: connectors.length > 0 && healthy < connectors.length ? `${connectors.length - healthy} need attention` : 'Verified reachable' },
+          {href: '/app/settings/storage', label: 'One-Click Providers', value: String(oneClick.filter((p) => p.available).length), sub: `Of ${oneClick.length} sign-in providers` },
+          {href: '/app/settings/storage', label: 'Bring Your Own', value: String(advanced.length), sub: 'Key-based options (S3, Egnyte)' },
         ]} />
       )}
 
@@ -171,7 +171,7 @@ function StorageSettings() {
 
       {/* One-click OAuth providers — the mainstream, no keys */}
       <SectionCard
-        title="Connect in one click"
+        title="Connect in One Click"
         subtitle="Your team signs in with their existing account — no API keys, nothing to paste."
         icon={<CheckCircle size={17} weight="duotone" color={GOLD} />}
       >
@@ -189,7 +189,7 @@ function StorageSettings() {
               }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><CloudArrowUp size={18} color={GOLD} weight="fill" /><span style={{ fontWeight: 700, fontSize: 14 }}>{p.label}</span></div>
               <div style={{ color: MUTED, fontSize: 12, marginTop: 6, lineHeight: 1.4 }}>{p.blurb}</div>
-              <div style={{ marginTop: 8, fontSize: 11.5, color: p.available ? GOLD_HI : MUTED }}>{p.available ? 'Connect with sign-in →' : 'Enabling soon'}</div>
+              <div style={{ marginTop: 8, fontSize: 11.5, color: p.available ? GOLD_HI : MUTED }}>{p.available ? 'Connect with Sign-In →' : 'Enabling Soon'}</div>
             </button>
           ))}
         </div>
@@ -197,7 +197,7 @@ function StorageSettings() {
 
         {/* advanced: self-managed keys (S3 bucket, Egnyte token) */}
         <button onClick={() => setAdvOpen((v) => !v)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', color: MUTED, marginTop: 22, padding: 0, fontSize: 13, fontWeight: 700, fontFamily: 'inherit' }}>
-          {advOpen ? <CaretDown size={14} /> : <CaretRight size={14} />}Advanced — bring your own bucket
+          {advOpen ? <CaretDown size={14} /> : <CaretRight size={14} />}Advanced — Bring Your Own Bucket
         </button>
         {advOpen && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 12, marginTop: 12 }}>
@@ -211,7 +211,7 @@ function StorageSettings() {
                 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><CloudArrowUp size={18} color={MUTED} weight="fill" /><span style={{ fontWeight: 700, fontSize: 14 }}>{p.label}</span></div>
                 <div style={{ color: MUTED, fontSize: 12, marginTop: 6, lineHeight: 1.4 }}>{p.blurb}</div>
-                <div style={{ marginTop: 8, fontSize: 11.5, color: GOLD_HI }}>Enter credentials →</div>
+                <div style={{ marginTop: 8, fontSize: 11.5, color: GOLD_HI }}>Enter Credentials →</div>
               </button>
             ))}
           </div>
@@ -220,7 +220,7 @@ function StorageSettings() {
 
       {adding && (
         <div onClick={() => setAdding(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ background: '#131316', border: `1px solid ${BORDER}`, borderRadius: 14, padding: 18, width: 'min(460px,100%)', maxHeight: '90vh', overflow: 'auto' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-surface)', border: `1px solid ${BORDER}`, borderRadius: 14, padding: 18, width: 'min(460px,100%)', maxHeight: '90vh', overflow: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 14 }}>
               <IconChip size={32}><CloudArrowUp size={16} weight="fill" color={GOLD} /></IconChip>
               <div style={{ fontWeight: 800, fontSize: 16, flex: 1, color: WHITE, marginLeft: 10 }}>Connect {providers.find((p) => p.id === adding)?.label}</div>
@@ -234,7 +234,7 @@ function StorageSettings() {
                   style={{ ...inputStyle, fontFamily: f.secret ? 'monospace' : undefined }} />
               </label>
             ))}
-            <button onClick={submitForm} disabled={busy} className="pmBtn" style={{ ...goldButtonStyle, width: '100%', marginTop: 6, cursor: busy ? 'not-allowed' : 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Verifying…' : 'Test & connect'}</button>
+            <button onClick={submitForm} disabled={busy} className="pmBtn" style={{ ...goldButtonStyle, width: '100%', marginTop: 6, cursor: busy ? 'not-allowed' : 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Verifying…' : 'Test & Connect'}</button>
             <div style={{ fontSize: 11.5, color: MUTED, marginTop: 10, lineHeight: 1.5 }}>Credentials are encrypted server-side and never shown again. We verify them before saving.</div>
           </div>
         </div>
@@ -255,13 +255,13 @@ function ConnectorCard({ c, onTest, onRemove, onSaveConfig }: { c: any; onTest: 
           <div style={{ fontWeight: 700, color: WHITE, fontSize: 14.5 }}>{c.display_name}</div>
           <div style={{ fontSize: 12, color: c.connected ? MUTED : RED }}>{c.connected ? `Connected${c.last_verified_at ? ` · verified ${new Date(c.last_verified_at).toLocaleDateString()}` : ''}` : (c.last_error || 'Not connected')}</div>
         </div>
-        {!c.connected && <Pill tone="red" caps>Attention</Pill>}
+        {!c.connected && <Pill tone="red">Attention</Pill>}
         <button onClick={onTest} style={compactGhost} className="pmBtn"><ArrowClockwise size={14} />Test</button>
         <button onClick={onRemove} className="pmBtn" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 10, cursor: 'pointer', fontSize: 12, fontWeight: 700, background: 'rgba(239,68,68,0.12)', color: RED, border: '1px solid rgba(239,68,68,0.35)' }}><Trash size={14} />Remove</button>
       </div>
       {needsSite && (
         <div style={{ padding: '0 14px 14px', display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-          <label style={{ flex: 1, minWidth: 220 }}><span style={{ fontSize: 11.5, color: MUTED }}>SharePoint Site ID (required to browse)</span>
+          <label style={{ flex: 1, minWidth: 220 }}><span style={{ fontSize: 11.5, color: MUTED }}>SharePoint Site ID (Required to Browse)</span>
             <input value={cfg.siteId || ''} onChange={(e) => setCfg({ ...cfg, siteId: e.target.value })} placeholder="contoso.sharepoint.com,<siteGuid>,<webGuid>"
               style={{ ...inputStyle, fontSize: 12.5, padding: '8px 10px' }} /></label>
           <button onClick={() => onSaveConfig(cfg)} className="pmBtn" style={{ ...goldButtonStyle, padding: '8px 14px', fontSize: 12 }}><Gear size={13} />Save</button>

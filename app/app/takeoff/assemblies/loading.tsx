@@ -1,8 +1,8 @@
 'use client';
 
-const GOLD = '#F59E0B';
-const DARK = '#0a0a0a';
-const RAISED = '#141416';
+const GOLD = 'var(--brand-primary)';
+const DARK = 'var(--bg-base)';
+const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 
 export default function AssembliesLoading() {
@@ -28,7 +28,7 @@ export default function AssembliesLoading() {
         height: 3,
         zIndex: 100,
         overflow: 'hidden',
-        background: `${GOLD}15`,
+        background: `color-mix(in srgb, ${GOLD} 8%, transparent)`,
       }}>
         <div style={{
           width: '40%',

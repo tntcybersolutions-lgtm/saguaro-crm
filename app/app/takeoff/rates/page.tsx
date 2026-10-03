@@ -8,8 +8,8 @@ import { useEffect, useState } from 'react';
 import { Sparkle, PencilSimple, CheckCircle, Coins, BookOpen } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, goldButtonStyle } from '@/components/ui/premium';
 
-const PANEL = '#161b22', LINE = 'rgba(255,255,255,0.09)', GOLD = '#F59E0B';
-const TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#34D399', BLUE = '#FBBF24';
+const PANEL = 'var(--bg-surface)', LINE = 'rgba(255,255,255,0.09)', GOLD = 'var(--brand-primary)';
+const TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#34D399', BLUE = 'var(--brand-primary-strong)';
 type Row = { cost_key: string; unit: string; note: string; bookCents: number; ownCents: number | null; source: string | null; samples: number };
 
 export default function CostCatalogPage() {
@@ -29,11 +29,11 @@ export default function CostCatalogPage() {
   const learn = async () => {
     setBusy(true); setMsg('Learning from your past takeoffs…');
     const d = await fetch('/api/takeoff/cost-rates/learn', { method: 'POST' }).then((r) => r.json());
-    setMsg(d.error ? `Error: ${d.error}` : d.learned ? `✓ Learned ${d.learned} rates from ${d.fromLines} historical line items${d.skippedManual ? ` (kept ${d.skippedManual} manual)` : ''}` : (d.message || 'No history yet'));
+    setMsg(d.error ? `Error: ${d.error}` : d.learned ? `✓ Learned ${d.learned} rates from ${d.fromLines} historical line items${d.skippedManual ? ` (kept ${d.skippedManual} manual)` : ''}` : (d.message || 'No history yet.'));
     setBusy(false); load();
   };
   const money = (c: number) => '$' + (c / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const inp: React.CSSProperties = { background: '#0a0a0a', border: `1px solid ${LINE}`, borderRadius: 6, color: TEXT, padding: '6px 8px', width: 90, fontSize: 13 };
+  const inp: React.CSSProperties = { background: 'var(--bg-surface-2)', border: `1px solid ${LINE}`, borderRadius: 6, color: TEXT, padding: '6px 8px', width: 90, fontSize: 13 };
   const learnedCount = list.filter((r) => r.source === 'learned').length, manualCount = list.filter((r) => r.source === 'manual').length;
   const bookCount = list.length - learnedCount - manualCount;
 
@@ -44,14 +44,14 @@ export default function CostCatalogPage() {
     <PremiumSurface maxWidth={1040}>
       {/* Header */}
       <ModuleHero
-        eyebrow="Learning cost database"
+        eyebrow="Learning Cost Database"
         eyebrowIcon={<Sparkle size={13} weight="fill" color={GOLD} />}
         title="Your Cost"
         accent="Catalog"
         subtitle={<>Your rates override the book everywhere the takeoff prices — so every estimate reflects <b style={{ color: TEXT }}>your</b> real numbers.</>}
         actions={
           <button onClick={learn} disabled={busy} className="pmBtn" style={{ ...goldButtonStyle, padding: '11px 22px', fontSize: 14.5, cursor: busy ? 'wait' : 'pointer', opacity: busy ? 0.85 : 1 }}>
-            {busy ? 'Learning…' : <><Sparkle size={16} weight="fill" color="#1A1206" /> Learn from my jobs</>}
+            {busy ? 'Learning…' : <><Sparkle size={16} weight="fill" color="#0A0A00" /> Learn from My Jobs</>}
           </button>
         }
       />
@@ -72,23 +72,23 @@ export default function CostCatalogPage() {
 
       {/* Source breakdown */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <StatCard icon={<Sparkle size={19} weight="duotone" color={GREEN} />} label="Learned" value={String(learnedCount)} accent={GREEN} sub="computed from your jobs" delay={0.02}  href="/app/takeoff/rates"/>
-        <StatCard icon={<PencilSimple size={19} weight="duotone" color={BLUE} />} label="Manual" value={String(manualCount)} accent={BLUE} sub="rates you set" delay={0.06}  href="/app/takeoff/rates"/>
-        <StatCard icon={<BookOpen size={19} weight="duotone" color={GOLD} />} label="On Book" value={String(bookCount)} sub="default book rates" delay={0.10}  href="/app/takeoff/rates"/>
+        <StatCard icon={<Sparkle size={19} weight="duotone" color={GREEN} />} label="Learned" value={String(learnedCount)} accent={GREEN} sub="Computed from your jobs" delay={0.02}  href="/app/takeoff/rates"/>
+        <StatCard icon={<PencilSimple size={19} weight="duotone" color={BLUE} />} label="Manual" value={String(manualCount)} accent={BLUE} sub="Rates you set" delay={0.06}  href="/app/takeoff/rates"/>
+        <StatCard icon={<BookOpen size={19} weight="duotone" color={GOLD} />} label="On Book" value={String(bookCount)} sub="Default book rates" delay={0.10}  href="/app/takeoff/rates"/>
       </div>
 
       {/* Rates table */}
       <SectionCard title="Cost Rates" subtitle="Effective unit cost applied by the takeoff engine" icon={<Coins size={17} weight="duotone" color={GOLD} />} flush>
         {/* Column header */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1.4fr 1fr', background: PANEL, padding: '10px 20px', fontSize: 11, color: DIM, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-          <span>Item</span><span>Book</span><span>Your rate</span><span>Source</span>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1.4fr 1fr', background: PANEL, padding: '10px 20px', fontSize: 11, color: DIM, fontWeight: 700}}>
+          <span>Item</span><span>Book</span><span>Your Rate</span><span>Source</span>
         </div>
         {list.length === 0 ? (
           <PremiumEmpty
             compact
             icon={<Coins size={30} weight="duotone" color={GOLD} />}
             title="No cost rates yet"
-            description="Press “Learn from my jobs” to compute quantity-weighted rates from your past takeoffs, or edit any rate manually."
+            description="Press “Learn from My Jobs” to compute quantity-weighted rates from your past takeoffs, or edit any rate manually."
           />
         ) : list.map((r) => {
           const eff = r.ownCents ?? r.bookCents;
@@ -107,11 +107,11 @@ export default function CostCatalogPage() {
                   <>
                     <span style={{ color: r.ownCents != null ? (r.source === 'learned' ? GREEN : BLUE) : TEXT, fontWeight: r.ownCents != null ? 700 : 400 }}>{money(eff)}</span>
                     <button onClick={() => setEdit((x) => ({ ...x, [r.cost_key]: (eff / 100).toFixed(2) }))} style={{ background: 'transparent', color: DIM, border: `1px solid ${LINE}`, borderRadius: 6, padding: '4px 8px', cursor: 'pointer', fontSize: 11 }}>Edit</button>
-                    {r.ownCents != null && <button onClick={() => revert(r.cost_key)} style={{ background: 'transparent', color: DIM, border: 'none', cursor: 'pointer', fontSize: 11 }}>revert</button>}
+                    {r.ownCents != null && <button onClick={() => revert(r.cost_key)} style={{ background: 'transparent', color: DIM, border: 'none', cursor: 'pointer', fontSize: 11 }}>Revert</button>}
                   </>
                 )}
               </span>
-              <span>{r.source === 'learned' ? <span style={{ color: GREEN, fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}><Sparkle size={12} weight="fill" color={GREEN} /> learned ({r.samples})</span> : r.source === 'manual' ? <span style={{ color: BLUE, fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}><PencilSimple size={12} weight="fill" color={BLUE} /> manual</span> : <span style={{ color: DIM, fontSize: 12 }}>book</span>}</span>
+              <span>{r.source === 'learned' ? <span style={{ color: GREEN, fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}><Sparkle size={12} weight="fill" color={GREEN} /> Learned ({r.samples})</span> : r.source === 'manual' ? <span style={{ color: BLUE, fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}><PencilSimple size={12} weight="fill" color={BLUE} /> Manual</span> : <span style={{ color: DIM, fontSize: 12 }}>Book</span>}</span>
             </div>
           );
         })}

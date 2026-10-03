@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { CurrencyDollar, CheckCircle, ArrowsClockwise, Warning, Question, NotePencil, Trophy, Handshake, Buildings, FileText, WarningOctagon, Clock, Bell, X, ArrowRight } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, goldOutlineButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 
-const GOLD = '#F59E0B';
-const DARK = '#0a0a0a';
-const RAISED = '#141416';
+const GOLD = 'var(--brand-primary)';
+const DARK = 'var(--bg-base)';
+const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
 const TEXT = '#FFFFFF';
@@ -27,22 +27,22 @@ interface NotificationItem {
 }
 
 const TYPE_CONFIG: Record<string, { icon: React.ComponentType<any>; label: string; color: string; actions?: string[] }> = {
-  pay_app_submitted:   { icon: CurrencyDollar,  label: 'Pay App',      color: '#F59E0B', actions: ['Review Pay App'] },
-  pay_app_approved:    { icon: CheckCircle,     label: 'Pay App',      color: GREEN,     actions: ['View Lien Waivers'] },
-  pay_app_certified:   { icon: CheckCircle,     label: 'Pay App',      color: GREEN },
+  pay_app_submitted:   { icon: CurrencyDollar, label: 'Pay App', color: 'var(--brand-primary)', actions: ['Review Pay App'] },
+  pay_app_approved:    { icon: CheckCircle, label: 'Pay App', color: GREEN, actions: ['View Lien Waivers'] },
+  pay_app_certified:   { icon: CheckCircle, label: 'Pay App', color: GREEN },
   change_order_approved:{ icon: ArrowsClockwise, label: 'Change Order', color: GREEN },
-  insurance_expiring:  { icon: Warning,         label: 'Insurance',    color: '#d97706', actions: ['Request Renewal'] },
-  rfi_submitted:       { icon: Question,        label: 'RFI',          color: '#8b5cf6', actions: ['Answer RFI'] },
-  rfi_answered:        { icon: CheckCircle,     label: 'RFI',          color: GREEN },
-  bid_submitted:       { icon: NotePencil,      label: 'Bid',          color: '#F59E0B', actions: ['Review Bid'] },
-  bid_awarded:         { icon: Trophy,          label: 'Bid',          color: GOLD },
-  sub_added:           { icon: Handshake,       label: 'Team',         color: '#8b5cf6' },
-  project_created:     { icon: Buildings,       label: 'Project',     color: GOLD },
-  document_generated:  { icon: FileText,        label: 'Document',     color: '#F59E0B', actions: ['Download'] },
-  Budget_Exceeded:     { icon: WarningOctagon,  label: 'Alert',        color: RED },
-  Budget_At_Risk:      { icon: Warning,         label: 'Alert',        color: '#d97706' },
-  Overdue_RFI:         { icon: Clock,           label: 'Alert',        color: RED },
-  Stale_Change_Order:  { icon: Bell,            label: 'Alert',        color: '#d97706' },
+  insurance_expiring:  { icon: Warning, label: 'Insurance', color: 'var(--warning)', actions: ['Request Renewal'] },
+  rfi_submitted:       { icon: Question, label: 'RFI', color: '#8b5cf6', actions: ['Answer RFI'] },
+  rfi_answered:        { icon: CheckCircle, label: 'RFI', color: GREEN },
+  bid_submitted:       { icon: NotePencil, label: 'Bid', color: 'var(--brand-primary)', actions: ['Review Bid'] },
+  bid_awarded:         { icon: Trophy, label: 'Bid', color: GOLD },
+  sub_added:           { icon: Handshake, label: 'Team', color: '#8b5cf6' },
+  project_created:     { icon: Buildings, label: 'Project', color: GOLD },
+  document_generated:  { icon: FileText, label: 'Document', color: 'var(--brand-primary)', actions: ['Download'] },
+  Budget_Exceeded:     { icon: WarningOctagon, label: 'Alert', color: RED },
+  Budget_At_Risk:      { icon: Warning, label: 'Alert', color: 'var(--warning)' },
+  Overdue_RFI:         { icon: Clock, label: 'Alert', color: RED },
+  Stale_Change_Order:  { icon: Bell, label: 'Alert', color: 'var(--warning)' },
 };
 const DEFAULT_CONFIG = { icon: Bell, label: 'Update', color: DIM };
 
@@ -160,7 +160,7 @@ export default function NotificationsPage() {
             className="pmBtn"
             style={{ ...(unreadCount > 0 ? goldOutlineButtonStyle : ghostButtonStyle), cursor: unreadCount > 0 ? 'pointer' : 'not-allowed', opacity: unreadCount > 0 ? 1 : 0.5 }}
           >
-            <CheckCircle size={15} weight="fill" /> {markingAll ? 'Marking...' : 'Mark all read'}
+            <CheckCircle size={15} weight="fill" /> {markingAll ? 'Marking…' : 'Mark All Read'}
           </button>
         }
       />
@@ -168,10 +168,10 @@ export default function NotificationsPage() {
       {/* Activity intelligence strip — what the feed holds right now */}
       {!loading && notifications.length > 0 && (
         <StatStrip items={[
-          {href: '/app/notifications',  label: 'Unread', value: String(unreadCount), accent: unreadCount > 0 ? GOLD : undefined, sub: unreadCount > 0 ? 'waiting on you' : 'all caught up' },
-          {href: '/app/notifications',  label: 'In the Feed', value: String(notifications.length), sub: 'most recent 100 events' },
-          {href: '/app/notifications',  label: 'Money Events', value: String((typeCounts['Pay App'] || 0) + (typeCounts['Change Order'] || 0)), sub: 'pay apps + change orders' },
-          {href: '/app/notifications',  label: 'Alerts', value: String(typeCounts['Alert'] || 0), accent: (typeCounts['Alert'] || 0) > 0 ? RED : undefined, sub: (typeCounts['Alert'] || 0) > 0 ? 'budget / overdue flags' : 'nothing flagged' },
+          {href: '/app/notifications', label: 'Unread', value: String(unreadCount), accent: unreadCount > 0 ? GOLD : undefined, sub: unreadCount > 0 ? 'Waiting on you' : 'All caught up' },
+          {href: '/app/notifications', label: 'In the Feed', value: String(notifications.length), sub: 'Most recent 100 events' },
+          {href: '/app/notifications', label: 'Money Events', value: String((typeCounts['Pay App'] || 0) + (typeCounts['Change Order'] || 0)), sub: 'Pay apps + change orders' },
+          {href: '/app/notifications', label: 'Alerts', value: String(typeCounts['Alert'] || 0), accent: (typeCounts['Alert'] || 0) > 0 ? RED : undefined, sub: (typeCounts['Alert'] || 0) > 0 ? 'Budget / overdue flags' : 'Nothing flagged' },
           {href: '/app/notifications',  label: 'Latest', value: notifications[0] ? timeAgo(notifications[0].created_at) : '—', sub: notifications[0] ? getConfig(notifications[0].type).label : undefined },
         ]} />
       )}
@@ -199,7 +199,7 @@ export default function NotificationsPage() {
       {/* Notification list */}
       <SectionCard flush>
         {loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: DIM, fontSize: 13 }}>Loading notifications...</div>
+          <div style={{ padding: 40, textAlign: 'center', color: DIM, fontSize: 13 }}>Loading notifications…</div>
         ) : displayed.length === 0 ? (
           <PremiumEmpty
             icon={<Bell size={30} weight="duotone" color={GOLD} />}
@@ -225,7 +225,7 @@ export default function NotificationsPage() {
                   padding: '14px 20px',
                   borderBottom: i < displayed.length - 1 ? `1px solid ${BORDER}` : 'none',
                   cursor: n.read ? 'default' : 'pointer',
-                  background: n.read ? 'transparent' : 'rgba(245, 158, 11,.04)',
+                  background: n.read ? 'transparent' : 'color-mix(in srgb, var(--brand-primary) 4%, transparent)',
                   transition: 'background .15s',
                   display: 'flex',
                   gap: 14,
@@ -233,7 +233,7 @@ export default function NotificationsPage() {
                 }}
               >
                 {/* Icon */}
-                <div style={{ width: 36, height: 36, borderRadius: 8, background: `${cfg.color}18`, border: `1px solid ${cfg.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 8, background: `color-mix(in srgb, ${cfg.color} 9%, transparent)`, border: `1px solid color-mix(in srgb, ${cfg.color} 19%, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
                   <cfg.icon size={18} weight="fill" color={cfg.color} />
                 </div>
 
@@ -253,7 +253,7 @@ export default function NotificationsPage() {
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: body ? 4 : 0 }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 3, background: `${cfg.color}18`, color: cfg.color, textTransform: 'uppercase', letterSpacing: .3 }}>{cfg.label}</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 3, background: `color-mix(in srgb, ${cfg.color} 9%, transparent)`, color: cfg.color, letterSpacing: .3 }}>{cfg.label}</span>
                   </div>
 
                   {body && <div style={{ fontSize: 13, color: DIM, lineHeight: 1.5, marginBottom: 6 }}>{body}</div>}
@@ -264,15 +264,15 @@ export default function NotificationsPage() {
                       <Link
                         href={n.link || n.action_url || '#'}
                         onClick={e => { e.stopPropagation(); markRead(n.id); }}
-                        style={{ fontSize: 12, color: GOLD, textDecoration: 'none', fontWeight: 600, padding: '3px 10px', background: 'rgba(245, 158, 11,.1)', border: '1px solid rgba(245, 158, 11,.25)', borderRadius: 5 }}
+                        style={{ fontSize: 12, color: GOLD, textDecoration: 'none', fontWeight: 600, padding: '3px 10px', background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-25)', borderRadius: 5 }}
                       >
                         View <ArrowRight size={12} weight="bold" color={GOLD} style={{ verticalAlign: 'middle' }} />
                       </Link>
                     )}
                     {n.project_id && n.type === 'pay_app_approved' && (
                       <Link href={`/app/projects/${n.project_id}/lien-waivers`} onClick={e => { e.stopPropagation(); markRead(n.id); }}
-                        style={{ fontSize: 12, color: '#F59E0B', textDecoration: 'none', fontWeight: 600, padding: '3px 10px', background: 'rgba(245,158,11,.1)', border: '1px solid rgba(245,158,11,.25)', borderRadius: 5 }}>
-                        Lien Waivers <ArrowRight size={12} weight="bold" color="#F59E0B" style={{ verticalAlign: 'middle' }} />
+                        style={{ fontSize: 12, color: 'var(--brand-primary)', textDecoration: 'none', fontWeight: 600, padding: '3px 10px', background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-25)', borderRadius: 5 }}>
+                        Lien Waivers <ArrowRight size={12} weight="bold" color="var(--brand-primary)" style={{ verticalAlign: 'middle' }} />
                       </Link>
                     )}
                     {n.project_id && (n.type === 'rfi_submitted') && (
@@ -283,7 +283,7 @@ export default function NotificationsPage() {
                     )}
                     {n.project_id && n.type === 'bid_submitted' && (
                       <Link href={`/app/projects/${n.project_id}/bid-packages`} onClick={e => { e.stopPropagation(); markRead(n.id); }}
-                        style={{ fontSize: 12, color: GOLD, textDecoration: 'none', fontWeight: 600, padding: '3px 10px', background: 'rgba(245, 158, 11,.1)', border: '1px solid rgba(245, 158, 11,.25)', borderRadius: 5 }}>
+                        style={{ fontSize: 12, color: GOLD, textDecoration: 'none', fontWeight: 600, padding: '3px 10px', background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-25)', borderRadius: 5 }}>
                         Review Bid <ArrowRight size={12} weight="bold" color={GOLD} style={{ verticalAlign: 'middle' }} />
                       </Link>
                     )}

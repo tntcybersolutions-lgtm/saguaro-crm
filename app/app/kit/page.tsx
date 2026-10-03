@@ -60,33 +60,33 @@ export default function KitPage() {
   );
 
   const columns: Column<SampleBid>[] = [
-    { key: 'name', header: 'Bid package', primary: true },
+    { key: 'name', header: 'Bid Package', primary: true },
     { key: 'client', header: 'Client' },
     { key: 'trade', header: 'Trade' },
     { key: 'due', header: 'Due', render: (r) => new Date(r.due + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) },
-    { key: 'bids', header: 'Bids in', align: 'right' },
-    { key: 'value', header: 'Est. value', align: 'right', render: (r) => money(r.value) },
+    { key: 'bids', header: 'Bids In', align: 'right' },
+    { key: 'value', header: 'Est. Value', align: 'right', render: (r) => money(r.value) },
     { key: 'status', header: 'Status', render: (r) => <Badge tone={STATUS_TONE[r.status]} dot>{r.status}</Badge> },
   ];
 
   return (
     <PageShell
-      crumbs={[{ label: 'Saguaro', href: '/app' }, { label: 'Design system' }]}
-      title="Design system"
+      crumbs={[{ label: 'Saguaro', href: '/app' }, { label: 'Design System' }]}
+      title="Design System"
       subtitle="Every page is built from these parts. Change them here and the whole app follows. The rows below are sample data."
       actions={
         <>
           <Button icon={<DownloadSimple size={15} />}>Export</Button>
-          <Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => setModal(true)}>New bid package</Button>
+          <Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => setModal(true)}>New Bid Package</Button>
         </>
       }
     >
       <StatRow
         items={[
-          { label: 'Open bids', value: 2, sub: '$6.1M in play' },
-          { label: 'Due this week', value: 1, sub: 'Chandler Medical TI', tone: 'warn' },
-          { label: 'Win rate (90d)', value: '38%', sub: '+6 pts vs prior', tone: 'good' },
-          { label: 'Overdue responses', value: 1, sub: 'Needs a decision', tone: 'bad' },
+          { label: 'Open Bids', value: 2, sub: '$6.1M in play' },
+          { label: 'Due This Week', value: 1, sub: 'Chandler Medical TI', tone: 'warn' },
+          { label: 'Win Rate (90d)', value: '38%', sub: '+6 pts vs prior', tone: 'good' },
+          { label: 'Overdue Responses', value: 1, sub: 'Needs a decision', tone: 'bad' },
           { label: 'Awarded YTD', value: '$8.2M', sub: '4 packages' },
         ]}
       />
@@ -100,7 +100,7 @@ export default function KitPage() {
               { key: 'all', label: 'All', count: SAMPLE.length },
               { key: 'open', label: 'Open', count: 3 },
               { key: 'won', label: 'Won', count: 1 },
-              { key: 'closed', label: 'Lost / closed', count: 2 },
+              { key: 'closed', label: 'Lost / Closed', count: 2 },
             ]}
           />
         </div>
@@ -109,7 +109,7 @@ export default function KitPage() {
             search={q}
             onSearch={setQ}
             placeholder="Search bid packages…"
-            filters={<Select options={['General', 'Interiors', 'Mechanical', 'Site Work', 'Framing']} placeholder="All trades" value={trade} onChange={(e) => setTrade(e.target.value)} style={{ width: 170 }} />}
+            filters={<Select options={['General', 'Interiors', 'Mechanical', 'Site Work', 'Framing']} placeholder="All Trades" value={trade} onChange={(e) => setTrade(e.target.value)} style={{ width: 170 }} />}
             actions={last ? <span className="k-hint">Last action: {last}</span> : undefined}
           />
         </div>
@@ -121,18 +121,18 @@ export default function KitPage() {
           defaultSort={{ key: 'due', dir: 'asc' }}
           rowActions={(r) => [
             { label: 'View', icon: <Eye size={14} />, inline: true, onClick: () => setLast(`view ${r.name}`) },
-            { label: 'Mark won', icon: <Trophy size={14} />, onClick: () => setLast(`won ${r.name}`), hidden: r.status !== 'Bidding' && r.status !== 'Overdue' },
-            { label: 'Mark lost', icon: <XCircle size={14} />, onClick: () => setLast(`lost ${r.name}`), hidden: r.status !== 'Bidding' && r.status !== 'Overdue' },
+            { label: 'Mark Won', icon: <Trophy size={14} />, onClick: () => setLast(`won ${r.name}`), hidden: r.status !== 'Bidding' && r.status !== 'Overdue' },
+            { label: 'Mark Lost', icon: <XCircle size={14} />, onClick: () => setLast(`lost ${r.name}`), hidden: r.status !== 'Bidding' && r.status !== 'Overdue' },
             { label: 'Close', icon: <Archive size={14} />, onClick: () => setLast(`close ${r.name}`), hidden: r.status === 'Closed' },
             { label: 'Duplicate', icon: <Copy size={14} />, onClick: () => setLast(`duplicate ${r.name}`) },
             { label: 'Delete', icon: <Trash size={14} />, tone: 'danger', onClick: () => setConfirm(r) },
           ]}
-          empty={<EmptyState title="No bid packages match" text="Clear the search or pick a different trade." action={<Button onClick={() => { setQ(''); setTrade(''); setTab('all'); }}>Clear filters</Button>} />}
+          empty={<EmptyState title="No bid packages match" text="Clear the search or pick a different trade." action={<Button onClick={() => { setQ(''); setTrade(''); setTab('all'); }}>Clear Filters</Button>} />}
         />
       </Card>
 
       <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))' }}>
-        <Card title="Buttons" subtitle="One gold button per screen — the action the user came to take.">
+        <Card title="Buttons" subtitle="One primary button per screen — the action the user came to take.">
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             <Button variant="primary">Primary</Button>
             <Button variant="secondary">Secondary</Button>
@@ -142,11 +142,11 @@ export default function KitPage() {
             <Button variant="primary" disabled>Disabled</Button>
           </div>
         </Card>
-        <Card title="Status badges" subtitle="The six fixed status colors, plus neutral.">
+        <Card title="Status Badges" subtitle="The six fixed status colors, plus neutral.">
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             <Badge tone="overdue" dot>Overdue</Badge>
             <Badge tone="lead" dot>Lead</Badge>
-            <Badge tone="under_contract" dot>Under contract</Badge>
+            <Badge tone="under_contract" dot>Under Contract</Badge>
             <Badge tone="ongoing" dot>Ongoing</Badge>
             <Badge tone="completed" dot>Completed</Badge>
             <Badge tone="closed" dot>Closed</Badge>
@@ -155,12 +155,12 @@ export default function KitPage() {
         </Card>
       </div>
 
-      <Card title="Detail-page action bar" subtitle="The same verbs as the row menu, on the record itself.">
+      <Card title="Detail-Page Action Bar" subtitle="The same verbs as the row menu, on the record itself.">
         <ActionBar
           actions={[
-            { label: 'Send to bidders', icon: <PaperPlaneTilt size={15} />, inline: true, onClick: () => setLast('send') },
+            { label: 'Send to Bidders', icon: <PaperPlaneTilt size={15} />, inline: true, onClick: () => setLast('send') },
             { label: 'Edit', icon: <PencilSimple size={15} />, inline: true, onClick: () => setModal(true) },
-            { label: 'Mark won', icon: <Trophy size={15} />, onClick: () => setLast('won') },
+            { label: 'Mark Won', icon: <Trophy size={15} />, onClick: () => setLast('won') },
             { label: 'Duplicate', icon: <Copy size={15} />, onClick: () => setLast('duplicate') },
             { label: 'Delete', icon: <Trash size={15} />, tone: 'danger', onClick: () => setLast('delete') },
           ]}
@@ -170,27 +170,27 @@ export default function KitPage() {
         </ActionBar>
       </Card>
 
-      <Card title="Empty state">
-        <EmptyState title="No daily logs yet" text="Log today's weather, crew and work so the owner report writes itself." action={<Button variant="primary" icon={<Plus size={15} weight="bold" />}>New daily log</Button>} />
+      <Card title="Empty State">
+        <EmptyState title="No daily logs yet" text="Log today's weather, crew and work so the owner report writes itself." action={<Button variant="primary" icon={<Plus size={15} weight="bold" />}>New Daily Log</Button>} />
       </Card>
 
       <FormModal
         open={modal}
         onClose={() => setModal(false)}
-        title="New bid package"
+        title="New Bid Package"
         subtitle="Sample form — nothing is saved."
-        submitLabel="Create bid package"
+        submitLabel="Create Bid Package"
         onSubmit={() => { setModal(false); setLast('created (sample)'); }}
       >
         <FormGrid cols={2}>
           <FormSection>Package</FormSection>
-          <Field label="Package name" required span><Input placeholder="e.g. Mesa Logistics Center — Shell" /></Field>
+          <Field label="Package Name" required span><Input placeholder="e.g. Mesa Logistics Center — Shell" /></Field>
           <Field label="Client" required><Input placeholder="Company" /></Field>
           <Field label="Trade"><Select options={['General', 'Interiors', 'Mechanical', 'Site Work', 'Framing']} placeholder="Choose a trade" /></Field>
-          <Field label="Bids due" required><DateInput /></Field>
-          <Field label="Estimated value" hint="Used for pipeline totals."><Input inputMode="decimal" placeholder="$0" /></Field>
+          <Field label="Bids Due" required><DateInput /></Field>
+          <Field label="Estimated Value" hint="Used for pipeline totals."><Input inputMode="decimal" placeholder="$0" /></Field>
           <FormSection>Scope</FormSection>
-          <Field label="Scope notes" span><Textarea placeholder="What's included, alternates, exclusions…" /></Field>
+          <Field label="Scope Notes" span><Textarea placeholder="What's included, alternates, exclusions…" /></Field>
         </FormGrid>
       </FormModal>
 
@@ -198,7 +198,7 @@ export default function KitPage() {
         open={!!confirm}
         onClose={() => setConfirm(null)}
         size="sm"
-        title="Delete bid package?"
+        title="Delete Bid Package?"
         footer={
           <>
             <Button variant="ghost" onClick={() => setConfirm(null)}>Cancel</Button>

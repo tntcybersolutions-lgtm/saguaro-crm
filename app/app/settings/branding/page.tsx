@@ -31,7 +31,7 @@ import {
 import { deriveTheme, contrast, parseHex, AA_TEXT } from '@/lib/brand-theme';
 import { ModuleHero, SectionCard, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 
-const GOLD = '#F59E0B';
+const GOLD = 'var(--brand-primary)';
 const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
 const BORDER = '#1E3A5F';
@@ -41,11 +41,11 @@ const PLATFORM_BASE = '#0d1117';
 
 /* Grounds that are known-good starting points, so nobody has to guess a hex. */
 const GROUND_PRESETS = [
-  { label: 'Platform dark', value: '' },
-  { label: 'True black', value: '#000000' },
+  { label: 'Platform Dark', value: '' },
+  { label: 'True Black', value: '#000000' },
   { label: 'Charcoal', value: '#14171C' },
   { label: 'Navy', value: '#0B1524' },
-  { label: 'Warm dark', value: '#161310' },
+  { label: 'Warm Dark', value: '#161310' },
   { label: 'Light', value: '#F7F8FA' },
 ];
 
@@ -116,8 +116,8 @@ export default function BrandingPage() {
   }
 
   const label: React.CSSProperties = {
-    display: 'block', fontSize: 11, fontWeight: 800, letterSpacing: '0.06em',
-    textTransform: 'uppercase', color: DIM, marginBottom: 7,
+    display: 'block', fontSize: 11, fontWeight: 800,
+    color: DIM, marginBottom: 7,
   };
   const input: React.CSSProperties = {
     width: '100%', minHeight: 44, padding: '10px 12px', borderRadius: 9,
@@ -126,15 +126,15 @@ export default function BrandingPage() {
   };
 
   return (
-    <main style={{ background: '#0d1117', minHeight: '100%', padding: '24px max(20px, 3vw) 80px' }}>
+    <main style={{ background: 'var(--bg-base)', minHeight: '100%', padding: '24px max(20px, 3vw) 80px' }}>
       <div style={{ maxWidth: 1080 }}>
         <ModuleHero
-          eyebrow="BRANDING"
+          eyebrow="Branding"
           eyebrowIcon={<Palette size={13} weight="fill" color={GOLD} />}
-          title="Make it"
-          accent="yours"
+          title="Make It"
+          accent="Yours"
           subtitle="Your logo and colors, everywhere customers see you."
-          note="pick your color — we keep it readable"
+          note="Pick your color — we keep it readable"
         />
 
         {msg && (
@@ -155,8 +155,8 @@ export default function BrandingPage() {
           {/* ── the controls ─────────────────────────────────────────── */}
           <div style={{ display: 'grid', gap: 16 }}>
 
-            <SectionCard title="Step 1 · Your company" icon={<Info size={17} weight="duotone" color={GOLD} />}>
-              <label style={label}>Company name</label>
+            <SectionCard title="Step 1 · Your Company" icon={<Info size={17} weight="duotone" color={GOLD} />}>
+              <label style={label}>Company Name</label>
               <input
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
@@ -169,7 +169,7 @@ export default function BrandingPage() {
               </p>
             </SectionCard>
 
-            <SectionCard title="Step 2 · Your logo" icon={<UploadSimple size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard title="Step 2 · Your Logo" icon={<UploadSimple size={17} weight="duotone" color={GOLD} />}>
               <p style={{ fontSize: 13.5, color: '#C6D6E8', lineHeight: 1.6, margin: '0 0 12px' }}>
                 Upload it on the main settings page. A wide logo works best — it sits in the
                 top-left of every screen and at the head of every PDF.
@@ -180,12 +180,12 @@ export default function BrandingPage() {
                 <li>A dark logo is fine — we put a light plate behind it automatically</li>
               </ul>
               <Link href="/app/settings#branding" style={{ ...ghostButtonStyle, display: 'inline-flex', textDecoration: 'none' }}>
-                Upload a logo
+                Upload a Logo
               </Link>
             </SectionCard>
 
-            <SectionCard title="Step 3 · Your color" icon={<Palette size={17} weight="duotone" color={GOLD} />}>
-              <label style={label}>Brand color</label>
+            <SectionCard title="Step 3 · Your Color" icon={<Palette size={17} weight="duotone" color={GOLD} />}>
+              <label style={label}>Brand Color</label>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 14 }}>
                 <input
                   type="color"
@@ -213,7 +213,7 @@ export default function BrandingPage() {
               </p>
             </SectionCard>
 
-            <SectionCard title="Step 4 · Your background (optional)" icon={<Eye size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard title="Step 4 · Your Background (Optional)" icon={<Eye size={17} weight="duotone" color={GOLD} />}>
               <p style={{ fontSize: 13.5, color: '#C6D6E8', lineHeight: 1.6, margin: '0 0 12px' }}>
                 Most companies leave this alone — the dark background is easy on the eyes for a
                 full day. Change it only if your brand really needs it.
@@ -228,7 +228,7 @@ export default function BrandingPage() {
                       style={{
                         display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 40,
                         padding: '0 13px', borderRadius: 9, cursor: 'pointer',
-                        background: active ? 'rgba(245,158,11,0.14)' : 'rgba(255,255,255,0.03)',
+                        background: active ? 'color-mix(in srgb, var(--brand-primary) 14%, transparent)' : 'rgba(255,255,255,0.03)',
                         border: `1px solid ${active ? GOLD : BORDER}`,
                         color: active ? TEXT : DIM, fontSize: 13, fontWeight: 700,
                       }}
@@ -245,7 +245,7 @@ export default function BrandingPage() {
               </div>
             </SectionCard>
 
-            <SectionCard title="Step 5 · The Saguaro credit" icon={<Info size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard title="Step 5 · The Saguaro Credit" icon={<Info size={17} weight="duotone" color={GOLD} />}>
               <label style={{ display: 'flex', alignItems: 'flex-start', gap: 11, cursor: 'pointer' }}>
                 <input
                   type="checkbox"
@@ -267,7 +267,7 @@ export default function BrandingPage() {
 
             <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
               <button onClick={save} disabled={saving || loading} style={{ ...goldButtonStyle, minHeight: 46, padding: '0 26px', opacity: saving || loading ? 0.6 : 1 }}>
-                {saving ? 'Saving…' : 'Save branding'}
+                {saving ? 'Saving…' : 'Save Branding'}
               </button>
               <span style={{ fontSize: 12.5, color: DIM }}>Applies to everyone on your account.</span>
             </div>
@@ -276,18 +276,18 @@ export default function BrandingPage() {
           {/* ── the preview + the honesty panel ──────────────────────── */}
           <div style={{ position: 'sticky', top: 84, display: 'grid', gap: 16 }}>
 
-            <SectionCard title="What it will look like" icon={<Eye size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard title="What It Will Look Like" icon={<Eye size={17} weight="duotone" color={GOLD} />}>
               {/* The real thing, not swatches — a color that reads fine as a
                   square can still be unreadable as a label. */}
               <div style={{ background: theme.base, borderRadius: 12, padding: 16, border: `1px solid ${theme.border}` }}>
                 <div style={{ background: theme.surface2, border: `1px solid ${theme.border}`, borderRadius: 10, padding: 14 }}>
                   <div style={{ fontSize: 15, fontWeight: 800, color: theme.text, marginBottom: 5 }}>
-                    {companyName || 'Your company'}
+                    {companyName || 'Your Company'}
                   </div>
                   <div style={{ fontSize: 13, color: theme.textMuted, lineHeight: 1.55, marginBottom: 4 }}>
                     Application for payment #4 is with the owner for review.
                   </div>
-                  <div style={{ fontSize: 11, color: theme.textFaint, letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, color: theme.textFaint, fontWeight: 700, marginBottom: 12 }}>
                     Submitted 6 days ago
                   </div>
                   {/* A picture of a button, not a button. It exists to show the
@@ -299,7 +299,7 @@ export default function BrandingPage() {
                     borderRadius: 9, background: theme.primary, color: theme.onPrimary,
                     fontSize: 13, fontWeight: 800,
                   }}>
-                    Open pay application
+                    Open Pay Application
                   </span>
                 </div>
               </div>
@@ -315,7 +315,7 @@ export default function BrandingPage() {
              * it could be, and exactly where it could not.
              */}
             <SectionCard
-              title={theme.fixes.length ? 'We adjusted a few things' : 'Everything is readable'}
+              title={theme.fixes.length ? 'We Adjusted a Few Things' : 'Everything Is Readable'}
               icon={theme.fixes.length
                 ? <Warning size={17} weight="duotone" color="#FB923C" />
                 : <CheckCircle size={17} weight="duotone" color="#4ADE80" />}
@@ -367,7 +367,7 @@ export default function BrandingPage() {
 
         {/* ── the help ─────────────────────────────────────────────────── */}
         <div style={{ marginTop: 26 }}>
-          <SectionCard flat title="If something looks wrong" icon={<Info size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard flat title="If Something Looks Wrong" icon={<Info size={17} weight="duotone" color={GOLD} />}>
             <div style={{ display: 'grid', gap: 16, maxWidth: 760 }}>
               {[
                 {
@@ -384,7 +384,7 @@ export default function BrandingPage() {
                 },
                 {
                   q: 'I want to start over',
-                  a: 'Set the background to “Platform dark”, press Reset beside the color, and save. You are back to the standard look with your logo and company name intact.',
+                  a: 'Set the background to “Platform Dark”, press Reset beside the color, and save. You are back to the standard look with your logo and company name intact.',
                 },
                 {
                   q: 'Who sees this?',

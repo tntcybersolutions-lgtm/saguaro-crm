@@ -94,7 +94,7 @@ interface ScheduledTemplate {
 const FREQUENCIES: { value: ScheduleFrequency; label: string }[] = [
   { value: 'daily', label: 'Daily' },
   { value: 'weekly', label: 'Weekly' },
-  { value: 'biweekly', label: 'Every 2 weeks' },
+  { value: 'biweekly', label: 'Every 2 Weeks' },
   { value: 'monthly', label: 'Monthly' },
 ];
 
@@ -110,7 +110,7 @@ function parseScheduledTemplates(raw: unknown): ScheduledTemplate[] {
     if (!s || s.enabled !== true || typeof row.id !== 'string') continue;
     out.push({
       id: row.id,
-      name: typeof row.name === 'string' && row.name ? row.name : 'Untitled report',
+      name: typeof row.name === 'string' && row.name ? row.name : 'Untitled Report',
       schedule: {
         enabled: true,
         frequency: FREQUENCIES.some((f) => f.value === s.frequency) ? s.frequency as ScheduleFrequency : 'weekly',
@@ -199,8 +199,7 @@ const inputStyle: React.CSSProperties = {
 const labelStyle: React.CSSProperties = {
   fontSize: 10.5,
   fontWeight: 800,
-  letterSpacing: '0.08em',
-  textTransform: 'uppercase',
+
   color: MUTED,
   marginBottom: 6,
   display: 'block',
@@ -508,12 +507,12 @@ export default function ReportBuilderPage() {
 
         {/* Live figures — every number on this strip is real page state. */}
         <StatStrip items={[
-          {href: '/app/reports/builder',  label: 'Data Sources', value: String(REPORT_ENTITIES.length), sub: 'live entities to report over' },
-          {href: '/app/reports/builder',  label: 'Columns', value: `${selectedCols.length}/${entity.columns.length}`, sub: `selected on ${entity.label}` },
-          {href: '/app/reports/builder',  label: 'Filters', value: String(filters.length), sub: filters.length ? 'narrowing this run' : 'all rows for your tenant' },
-          {href: '/app/reports/builder',  label: 'Saved Reports', value: savedLoading ? '…' : String(saved.length), sub: savedLoading ? 'loading' : saved.length ? 'reusable configurations' : 'nothing saved yet' },
-          {href: '/app/reports/builder',  label: 'Last Run', value: result ? String(result.rowCount) : '—', accent: result ? GOLD_HI : undefined, sub: result ? `row${result.rowCount === 1 ? '' : 's'} returned` : 'not run yet' },
-          {href: '/app/reports/builder',  label: 'Email Schedules', value: schedulesLoading ? '…' : String(schedules.filter((s) => s.schedule.enabled).length), sub: schedulesLoading ? 'loading' : 'recurring deliveries' },
+          {href: '/app/reports/builder', label: 'Data Sources', value: String(REPORT_ENTITIES.length), sub: 'Live entities to report over' },
+          {href: '/app/reports/builder', label: 'Columns', value: `${selectedCols.length}/${entity.columns.length}`, sub: `Selected on ${entity.label}` },
+          {href: '/app/reports/builder', label: 'Filters', value: String(filters.length), sub: filters.length ? 'Narrowing this run' : 'All rows for your tenant' },
+          {href: '/app/reports/builder', label: 'Saved Reports', value: savedLoading ? '…' : String(saved.length), sub: savedLoading ? 'Loading' : saved.length ? 'Reusable configurations' : 'Nothing saved yet' },
+          {href: '/app/reports/builder', label: 'Last Run', value: result ? String(result.rowCount) : '—', accent: result ? GOLD_HI : undefined, sub: result ? `Row${result.rowCount === 1 ? '' : 's'} returned` : 'Not run yet' },
+          {href: '/app/reports/builder', label: 'Email Schedules', value: schedulesLoading ? '…' : String(schedules.filter((s) => s.schedule.enabled).length), sub: schedulesLoading ? 'Loading' : 'Recurring deliveries' },
         ]} />
       </div>
 
@@ -541,7 +540,7 @@ export default function ReportBuilderPage() {
               </div>
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 <div style={{ flex: 1, minWidth: 130 }}>
-                  <label style={labelStyle}>Sort by</label>
+                  <label style={labelStyle}>Sort By</label>
                   <Sel value={sortField} onChange={setSortField} style={{ width: '100%' }}>
                     {entity.columns.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
                   </Sel>
@@ -556,14 +555,14 @@ export default function ReportBuilderPage() {
               </div>
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 <div style={{ flex: 1, minWidth: 130 }}>
-                  <label style={labelStyle}>Group by</label>
+                  <label style={labelStyle}>Group By</label>
                   <Sel value={groupBy} onChange={setGroupBy} style={{ width: '100%' }}>
-                    <option value="">(none)</option>
+                    <option value="">(None)</option>
                     {entity.columns.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
                   </Sel>
                 </div>
                 <div style={{ width: 110 }}>
-                  <label style={labelStyle}>Row limit</label>
+                  <label style={labelStyle}>Row Limit</label>
                   <input
                     type="number"
                     min={1}
@@ -718,7 +717,7 @@ export default function ReportBuilderPage() {
           <SectionCard
             flush
             title={reportName || `${entity.label} Report`}
-            subtitle={result ? `${result.rowCount} row${result.rowCount === 1 ? '' : 's'} · live tenant data` : 'results land here'}
+            subtitle={result ? `${result.rowCount} row${result.rowCount === 1 ? '' : 's'} · live tenant data` : 'Results land here'}
             icon={<ChartBar size={16} weight="duotone" color={GOLD} />}
             action={
               <div className="rb-noprint" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -761,9 +760,9 @@ export default function ReportBuilderPage() {
                       {result.columns.map((c) => (
                         <th key={c.key} style={{
                           padding: '10px 14px', textAlign: c.type === 'currency' || c.type === 'number' || c.type === 'percent' ? 'right' : 'left',
-                          color: MUTED, fontWeight: 700, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase',
+                          color: MUTED, fontWeight: 700, fontSize: 11,
                           borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap', position: 'sticky', top: 0, zIndex: 1,
-                          background: '#101011',
+                          background: 'var(--bg-surface-2)',
                         }}>{c.label}</th>
                       ))}
                     </tr>
