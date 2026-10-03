@@ -55,5 +55,9 @@
 	<string>Saguaro Field uses your location to GPS-stamp photos, clock in and out, and field reports.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Saguaro Field uses the microphone for voice notes and video capture.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Saguaro Field uses Face ID for quick and secure sign-in.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

@@ -51,7 +51,7 @@ const CHANNELS: { icon: Icon; title: string; desc: string; line: string; href: s
   {
     icon: LockKey,
     title: 'Security & Compliance',
-    desc: 'Vendor security reviews, SOC 2 questionnaires, DPAs, or responsible disclosure of a vulnerability.',
+    desc: 'Vendor security reviews, security questionnaires, DPAs, or responsible disclosure of a vulnerability.',
     line: SECURITY_EMAIL,
     href: `mailto:${SECURITY_EMAIL}`,
     accent: C.blue,

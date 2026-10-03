@@ -182,7 +182,7 @@ const ARTICLES: Article[] = [
   { cat: 'account', title: 'Set Up Two-Factor Authentication (2FA)', body: 'Enable 2FA under Settings → Security to require a one-time code at login. It is the single best way to keep a job’s financials and documents locked down.', tags: ['2fa', 'two factor', 'mfa', 'security'] },
   { cat: 'account', title: 'Face ID / Biometric Sign-In', body: 'Turn on Face ID or fingerprint sign-in in the field app for fast, secure access without typing a password on a dusty job site.', tags: ['face id', 'biometric', 'fingerprint', 'touch id'] },
   { cat: 'account', title: 'Manage Notification Preferences', body: 'Choose which events email or push you — RFIs, approvals, pay apps, daily logs — per project, so you get what matters and mute what does not.', tags: ['notifications', 'preferences', 'email'] },
-  { cat: 'account', title: 'Data Security, Backups & SOC 2', body: 'Your data is encrypted in transit and at rest, backed up continuously, and isolated per company. See our Security page for our SOC 2 posture and subprocessor list.', tags: ['security', 'backup', 'soc 2', 'encryption', 'privacy'] },
+  { cat: 'account', title: 'Data Security & Backups', body: 'Your data is encrypted in transit and at rest, backed up continuously, and isolated per company. See our Security page for how we protect your data and our subprocessor list.', tags: ['security', 'backup', 'encryption', 'privacy'] },
 ];
 
 const POPULAR = [

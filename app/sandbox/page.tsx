@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { TRIAL_DAYS } from '@/lib/plans';
 import { CONTRACTOR_TRADES as TRADES } from '@/lib/contractor-trades';
 
 const DARK = 'var(--bg-base)';
@@ -143,7 +144,7 @@ export default function SandboxPage() {
               Your Sandbox Is Ready!
             </h1>
             <p style={{ fontSize: 15, color: DIM, marginBottom: 32, lineHeight: 1.7 }}>
-              Check your email for your instant access link. Your 14-day free trial has started — no card needed.
+              Check your email for your instant access link. Your {TRIAL_DAYS}-day free trial has started — no card needed.
             </p>
 
             {/* Pre-loaded items */}
@@ -298,7 +299,7 @@ export default function SandboxPage() {
               {/* Header */}
               <div style={{ marginBottom: 8 }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: GOLD, marginBottom: 10 }}>
-                  Free 14-Day Trial
+                  Free {TRIAL_DAYS}-Day Trial
                 </div>
                 <h1 style={{ fontSize: 26, fontWeight: 900, color: TEXT, lineHeight: 1.2, margin: 0 }}>
                   Start Your Free AI Sandbox

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { PROFESSIONAL } from '@/lib/plans';
 
 const C = {
   dark: 'var(--bg-base)',
@@ -571,19 +572,19 @@ export default function CompareProcorePage() {
             {[
               {
                 label: 'Monthly Savings',
-                value: Math.max(0, procoreCost - 399),
+                value: Math.max(0, procoreCost - PROFESSIONAL.priceMo),
                 suffix: '/mo',
                 highlight: true,
               },
               {
                 label: 'Annual Savings',
-                value: Math.max(0, (procoreCost - 399) * 12),
+                value: Math.max(0, (procoreCost - PROFESSIONAL.priceMo) * 12),
                 suffix: '/yr',
                 highlight: false,
               },
               {
                 label: '3-Year Savings',
-                value: Math.max(0, (procoreCost - 399) * 36),
+                value: Math.max(0, (procoreCost - PROFESSIONAL.priceMo) * 36),
                 suffix: ' total',
                 highlight: false,
               },
@@ -803,7 +804,7 @@ export default function CompareProcorePage() {
               Team of 25 users, 15 active projects
             </div>
             <div style={{ fontSize: 42, fontWeight: 600, color: C.green, letterSpacing: '-0.02em', marginBottom: 4 }}>
-              $299
+              ${PROFESSIONAL.priceMo}
               <span style={{ fontSize: 16, fontWeight: 400, color: C.dim }}>/mo</span>
             </div>
             <div style={{ fontSize: 12, color: C.dim, marginBottom: 24 }}>All features included. No add-ons.</div>

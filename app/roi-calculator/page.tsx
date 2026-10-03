@@ -853,7 +853,7 @@ export default function ROICalculatorPage() {
               className="trust-pills-row"
               style={{ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap' }}
             >
-              {['No Credit Card Required', 'Cancel Anytime', '30-Day Free Trial', 'SOC 2 Compliant', 'US-Based Support'].map((pill) => (
+              {['No Credit Card Required', 'Cancel Anytime', '30-Day Free Trial', 'US-Based Support'].map((pill) => (
                 <span key={pill} className="trust-pill">
                   <span style={{ color: GREEN, fontSize: 10 }}>✓</span>
                   {pill}

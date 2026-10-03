@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { LockKey, Lock, ShieldCheck, Wall, Globe, Flask, Prohibit, Package, Trash } from '@phosphor-icons/react/dist/ssr';
+import { Lock, ShieldCheck, Wall, Globe, Flask, Prohibit, Package, Trash } from '@phosphor-icons/react/dist/ssr';
 import type { Icon } from '@phosphor-icons/react';
 
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#22c55e',HAIRLINE='rgba(255,255,255,0.08)',CARD='rgba(255,255,255,0.02)';
@@ -17,7 +17,6 @@ const NAV = (
 );
 
 const FEATURES: { icon: Icon; title: string; desc: string; color: string; border: string }[] = [
-  {icon:LockKey,title:'SOC 2 Type II',desc:'Audit in progress. We follow SOC 2 security, availability, and confidentiality trust principles. Expected certification Q3 2026.',color:'var(--brand-primary-18)',border:'var(--brand-primary-35)'},
   {icon:Lock,title:'256-bit AES Encryption',desc:'All data at rest is encrypted using AES-256, the same standard used by banks and government agencies. Your data is unreadable without your credentials.',color:'rgba(34,197,94,.08)',border:'rgba(34,197,94,.25)'},
   {icon:ShieldCheck,title:'TLS 1.3 in Transit',desc:'Every byte transferred between your browser and our servers is protected with TLS 1.3. We enforce HTTPS everywhere and reject older protocols.',color:'rgba(34,197,94,.08)',border:'rgba(34,197,94,.25)'},
   {icon:Wall,title:'Row-Level Security',desc:'Powered by Supabase RLS policies. Each user can only access their own organization\'s data — enforced at the database layer, not just the application layer.',color:'rgba(34,197,94,.08)',border:'rgba(34,197,94,.25)'},
