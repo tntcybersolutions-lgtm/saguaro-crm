@@ -9,10 +9,10 @@ import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
-const BASE = '#0a0a0a';
-const GOLD = '#F59E0B';
+const BASE = 'var(--bg-surface-2)';
+const GOLD = 'var(--brand-primary)';
 const GREEN = '#34C759';
-const BLUE = '#F59E0B';
+const BLUE = 'var(--brand-primary)';
 const RED = '#FF3B30';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
@@ -41,9 +41,9 @@ interface CableRun {
 const CABLE_TYPES = ['cat5e', 'cat6', 'cat6a', 'fiber_sm', 'fiber_mm', 'coax_rg6', 'coax_rg59', 'speaker', 'hdmi', 'usb'];
 
 const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
-  cat5e: { bg: `${BLUE}20`, text: BLUE },
+  cat5e: { bg: 'var(--brand-primary-12)', text: BLUE },
   cat6: { bg: `${GREEN}20`, text: GREEN },
-  cat6a: { bg: `${GOLD}20`, text: GOLD },
+  cat6a: { bg: 'var(--brand-primary-12)', text: GOLD },
   fiber_sm: { bg: '#F9731620', text: '#F97316' },
   fiber_mm: { bg: '#8B5CF620', text: '#8B5CF6' },
   coax_rg6: { bg: '#6B728020', text: '#9CA3AF' },
@@ -52,6 +52,12 @@ const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   hdmi: { bg: `${RED}20`, text: RED },
   usb: { bg: '#EC489920', text: '#EC4899' },
 };
+
+const CABLE_LABELS: Record<string, string> = {
+  cat5e: 'Cat5e', cat6: 'Cat6', cat6a: 'Cat6a', fiber_sm: 'Fiber SM', fiber_mm: 'Fiber MM',
+  coax_rg6: 'Coax RG6', coax_rg59: 'Coax RG59', speaker: 'Speaker', hdmi: 'HDMI', usb: 'USB',
+};
+const cableLabel = (t: string) => CABLE_LABELS[t] || t.replace(/_/g, ' ');
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 12px', background: BASE, color: TEXT,
@@ -168,7 +174,7 @@ export default function CableSchedulePage() {
   return (
     <PremiumSurface maxWidth={2200}>
       <div style={{ marginBottom: 12 }}>
-        <Link href={`/app/projects/${projectId}/network`} style={{ color: DIM, fontSize: 12, textDecoration: 'none' }}>Network &gt;</Link>
+        <Link href={`/app/projects/${projectId}/network`} style={{ color: DIM, fontSize: 12, textDecoration: 'none' }}>Network →</Link>
         <span style={{ color: TEXT, fontSize: 12, marginLeft: 4 }}>Cables</span>
       </div>
 
@@ -188,11 +194,11 @@ export default function CableSchedulePage() {
 
       {/* Summary Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <StatCard icon={<ListChecks size={19} weight="duotone" color={BLUE} />} label="Total Runs" value={String(totalRuns)} accent={BLUE} sub="cable runs" delay={0.02}  href={`/app/projects/${projectId}/network/cables`}/>
-        <StatCard icon={<Gauge size={19} weight="duotone" color={GREEN} />} label="Tested" value={`${testedCount}/${totalRuns}`} accent={GREEN} sub="tested" delay={0.06}  href={`/app/projects/${projectId}/network/cables`}/>
-        <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Passed" value={String(passCount)} accent={GREEN} sub="passed tests" delay={0.10}  href={`/app/projects/${projectId}/network/cables`}/>
-        <StatCard icon={<XCircle size={19} weight="duotone" color={failCount > 0 ? RED : GREEN} />} label="Failed" value={String(failCount)} accent={failCount > 0 ? RED : GREEN} sub="failed tests" delay={0.14}  href={`/app/projects/${projectId}/network/cables`}/>
-        <StatCard icon={<Percent size={19} weight="duotone" color={passRate >= 95 ? GREEN : passRate >= 80 ? GOLD : RED} />} label="Pass Rate" value={`${passRate}%`} accent={passRate >= 95 ? GREEN : passRate >= 80 ? GOLD : RED} sub="of tested" delay={0.18}  href={`/app/projects/${projectId}/network/cables`}/>
+        <StatCard icon={<ListChecks size={19} weight="duotone" color={BLUE} />} label="Total Runs" value={String(totalRuns)} accent={BLUE} sub="Cable runs" delay={0.02}  href={`/app/projects/${projectId}/network/cables`}/>
+        <StatCard icon={<Gauge size={19} weight="duotone" color={GREEN} />} label="Tested" value={`${testedCount}/${totalRuns}`} accent={GREEN} sub="Tested" delay={0.06}  href={`/app/projects/${projectId}/network/cables`}/>
+        <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Passed" value={String(passCount)} accent={GREEN} sub="Passed tests" delay={0.10}  href={`/app/projects/${projectId}/network/cables`}/>
+        <StatCard icon={<XCircle size={19} weight="duotone" color={failCount > 0 ? RED : GREEN} />} label="Failed" value={String(failCount)} accent={failCount > 0 ? RED : GREEN} sub="Failed tests" delay={0.14}  href={`/app/projects/${projectId}/network/cables`}/>
+        <StatCard icon={<Percent size={19} weight="duotone" color={passRate >= 95 ? GREEN : passRate >= 80 ? 'var(--warning)' : RED} />} label="Pass Rate" value={`${passRate}%`} accent={passRate >= 95 ? GREEN : passRate >= 80 ? 'var(--warning)' : RED} sub="Of tested" delay={0.18}  href={`/app/projects/${projectId}/network/cables`}/>
       </div>
 
       {/* Add Form */}
@@ -206,7 +212,7 @@ export default function CableSchedulePage() {
             <div>
               <label style={labelStyle}>Cable Type</label>
               <select value={form.cable_type} onChange={e => setForm({ ...form, cable_type: e.target.value })} style={inputStyle}>
-                {CABLE_TYPES.map(t => <option key={t} value={t}>{t.replace(/_/g, ' ').toUpperCase()}</option>)}
+                {CABLE_TYPES.map(t => <option key={t} value={t}>{cableLabel(t)}</option>)}
               </select>
             </div>
             <div>
@@ -247,7 +253,7 @@ export default function CableSchedulePage() {
             opacity: saving || !form.label ? 0.5 : 1,
             cursor: saving || !form.label ? 'not-allowed' : 'pointer',
           }}>
-            {saving ? 'Saving...' : 'Save Cable Run'}
+            {saving ? 'Saving…' : 'Save Cable Run'}
           </button>
         </SectionCard>
       )}
@@ -256,7 +262,7 @@ export default function CableSchedulePage() {
       <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
         <select value={filterType} onChange={e => setFilterType(e.target.value)} style={{ ...inputStyle, width: 150, flex: 'none' }}>
           <option value="">All Types</option>
-          {CABLE_TYPES.map(t => <option key={t} value={t}>{t.replace(/_/g, ' ').toUpperCase()}</option>)}
+          {CABLE_TYPES.map(t => <option key={t} value={t}>{cableLabel(t)}</option>)}
         </select>
         <select value={filterTested} onChange={e => setFilterTested(e.target.value)} style={{ ...inputStyle, width: 140, flex: 'none' }}>
           <option value="">All</option>
@@ -291,7 +297,7 @@ export default function CableSchedulePage() {
           <thead>
             <tr>
               {['Label', 'Type', 'From', 'To', 'Length', 'Pathway', 'Tested', 'Result', 'Actions'].map(col => (
-                <th key={col} style={{ padding: '12px 14px', textAlign: 'left', color: DIM, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>{col}</th>
+                <th key={col} style={{ padding: '12px 14px', textAlign: 'left', color: DIM, fontSize: 11, fontWeight: 700, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>{col}</th>
               ))}
             </tr>
           </thead>
@@ -302,7 +308,7 @@ export default function CableSchedulePage() {
                   <tr key={cable.id}>
                     <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontWeight: 700, fontFamily: 'monospace' }}>{cable.label}</td>
                     <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}` }}>
-                      <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 10, fontWeight: 600, background: tc.bg, color: tc.text }}>{cable.cable_type.replace(/_/g, ' ').toUpperCase()}</span>
+                      <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 10, fontWeight: 600, background: tc.bg, color: tc.text }}>{cableLabel(cable.cable_type)}</span>
                     </td>
                     <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: TEXT, fontSize: 12 }}>
                       {cable.from_location}{cable.from_port ? ` (${cable.from_port})` : ''}
@@ -325,7 +331,7 @@ export default function CableSchedulePage() {
                           fontSize: 11, padding: '3px 10px', borderRadius: 10, fontWeight: 600,
                           background: cable.test_result === 'pass' ? `${GREEN}20` : `${RED}20`,
                           color: cable.test_result === 'pass' ? GREEN : RED,
-                          textTransform: 'uppercase',
+                          textTransform: 'capitalize',
                         }}>{cable.test_result}</span>
                       ) : <span style={{ color: DIM, fontSize: 12 }}>—</span>}
                     </td>

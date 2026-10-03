@@ -6,7 +6,7 @@ import ErrorBoundary from '../../../../../components/ErrorBoundary';
 import { Brain, ArrowRight } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, SectionCard, StatStrip, InsightRow, AutoChip } from '@/components/ui/premium';
 
-const GOLD = '#F59E0B';
+const GOLD = 'var(--brand-primary)';
 const SOFT_BORDER = 'rgba(255,255,255,0.08)';
 const SURFACE = 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))';
 const DIM = '#CBD5E1';
@@ -195,7 +195,7 @@ function IntelligenceChat() {
         <span key={li}>
           {parts.map((part, pi) => {
             if (part.startsWith('**') && part.endsWith('**')) {
-              return <strong key={pi} style={{ color: isUser ? '#1A1206' : GOLD }}>{part.slice(2, -2)}</strong>;
+              return <strong key={pi} style={{ color: isUser ? '#0A0A00' : GOLD }}>{part.slice(2, -2)}</strong>;
             }
             return <span key={pi}>{part}</span>;
           })}
@@ -220,10 +220,10 @@ function IntelligenceChat() {
         <StatStrip items={[
           {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmtMoney(Number(ctx.money?.revisedContract) || 0), sub: `${Number(ctx.money?.approvedCoCount) || 0} approved CO${(Number(ctx.money?.approvedCoCount) || 0) === 1 ? '' : 's'}` },
           {href: `/app/projects/${projectId}/intelligence`,  label: 'Billed to Date', value: fmtMoney(Number(ctx.money?.billedToDate) || 0), sub: `${Number(ctx.money?.billedPct) || 0}% of revised` },
-          {href: `/app/projects/${projectId}/intelligence`,  label: 'Paid to Date', value: fmtMoney(Number(ctx.money?.paidToDate) || 0), accent: GREEN, sub: `retainage ${Number(ctx.money?.retainagePct) || 0}%` },
+          {href: `/app/projects/${projectId}/intelligence`,  label: 'Paid to Date', value: fmtMoney(Number(ctx.money?.paidToDate) || 0), accent: GREEN, sub: `Retainage ${Number(ctx.money?.retainagePct) || 0}%` },
           {href: `/app/projects/${projectId}/rfis`,  label: 'Open RFIs', value: String(Number(ctx.counts?.openRfis) || 0), accent: (Number(ctx.counts?.openRfis) || 0) > 5 ? '#E0644E' : undefined, sub: `${Number(ctx.counts?.openSubmittals) || 0} open submittal${(Number(ctx.counts?.openSubmittals) || 0) === 1 ? '' : 's'}` },
           {href: `/app/projects/${projectId}/punch-list`,  label: 'Open Punch', value: String(Number(ctx.counts?.openPunch) || 0), sub: `${Number(ctx.counts?.scheduleTasks) || 0} schedule tasks` },
-          {href: `/app/projects/${projectId}/change-orders`,  label: 'Pending COs', value: String(Number(ctx.money?.pendingCoCount) || 0), accent: (Number(ctx.money?.pendingCoCount) || 0) > 0 ? '#F0A63C' : undefined, sub: `${(ctx.subs || []).length} sub${(ctx.subs || []).length === 1 ? '' : 's'} on the job` },
+          {href: `/app/projects/${projectId}/change-orders`,  label: 'Pending COs', value: String(Number(ctx.money?.pendingCoCount) || 0), accent: (Number(ctx.money?.pendingCoCount) || 0) > 0 ? 'var(--warning)' : undefined, sub: `${(ctx.subs || []).length} sub${(ctx.subs || []).length === 1 ? '' : 's'} on the job` },
         ]} />
       )}
 
@@ -232,7 +232,7 @@ function IntelligenceChat() {
           {/* Sidebar */}
           <div style={{ width: 260, background: 'rgba(255,255,255,0.015)', borderRight: `1px solid ${SOFT_BORDER}`, padding: '20px 16px', overflowY: 'auto', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-              <div style={{ width: '32px', height: '32px', background: `linear-gradient(135deg,${GOLD},#FBBF24)`, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}><Brain size={18} weight="bold" color="#1C1C1E" /></div>
+              <div style={{ width: '32px', height: '32px', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}><Brain size={18} weight="bold" color="#0A0A00" /></div>
               <div>
                 <div style={{ color: TEXT, fontWeight: 700, fontSize: '13px' }}>Saguaro Intelligence</div>
                 <div style={{ color: DIM, fontSize: '11px' }}>AI Construction Expert</div>
@@ -243,37 +243,37 @@ function IntelligenceChat() {
             <span style={{ fontSize: '11px', color: DIM, marginLeft: '6px' }}>Online</span>
 
             {ctx && (
-              <div style={{ marginBottom: 16, padding: '10px 12px', background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.15)', borderRadius: 8 }}>
-                <div style={{ fontSize: '10px', fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: '1px', marginBottom: 6 }}>Context Loaded</div>
+              <div style={{ marginBottom: 16, padding: '10px 12px', background: 'color-mix(in srgb, var(--brand-primary) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--brand-primary) 15%, transparent)', borderRadius: 8 }}>
+                <div style={{ fontSize: '10px', fontWeight: 700, color: DIM, marginBottom: 6 }}>Context Loaded</div>
                 <InsightRow label="Project" value={ctx.project?.name || '-'} />
                 <InsightRow label="Complete" value={`${Number(ctx.project?.percentComplete) || 0}%`} />
-                <InsightRow label="Budget lines" value={String(Number(ctx.budget?.lineCount) || 0)} />
-                <InsightRow label="Bid packages" value={String((ctx.bidPackages || []).length)} />
-                {ctx.recent?.lastDailyLogDate && <InsightRow label="Last daily log" value={new Date(ctx.recent.lastDailyLogDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />}
+                <InsightRow label="Budget Lines" value={String(Number(ctx.budget?.lineCount) || 0)} />
+                <InsightRow label="Bid Packages" value={String((ctx.bidPackages || []).length)} />
+                {ctx.recent?.lastDailyLogDate && <InsightRow label="Last Daily Log" value={new Date(ctx.recent.lastDailyLogDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />}
               </div>
             )}
             {smartQuestions.length > 0 && (
               <>
-                <div style={{ fontSize: '10px', fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: '1px', marginBottom: '10px', marginTop: '8px' }}>From This Project<AutoChip /></div>
+                <div style={{ fontSize: '10px', fontWeight: 700, color: DIM, marginBottom: '10px', marginTop: '8px' }}>From This Project<AutoChip /></div>
                 {smartQuestions.map(q => (
                   <button key={q} onClick={() => sendMessage(q)}
-                    style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 10px', marginBottom: '6px', background: 'rgba(245, 158, 11,0.10)', border: '1px solid rgba(245, 158, 11,0.3)', borderRadius: '6px', color: '#FBBF24', fontSize: '11px', cursor: 'pointer', transition: 'background 0.15s' }}
-                    onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'rgba(245, 158, 11,0.16)'}
-                    onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'rgba(245, 158, 11,0.10)'}
+                    style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 10px', marginBottom: '6px', background: 'var(--brand-primary-12)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', borderRadius: '6px', color: 'var(--brand-primary-strong)', fontSize: '11px', cursor: 'pointer', transition: 'background 0.15s' }}
+                    onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--brand-primary-18)'}
+                    onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--brand-primary-12)'}
                   >{q}</button>
                 ))}
               </>
             )}
-            <div style={{ fontSize: '10px', fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: '1px', marginBottom: '10px', marginTop: '8px' }}>Quick Questions</div>
+            <div style={{ fontSize: '10px', fontWeight: 700, color: DIM, marginBottom: '10px', marginTop: '8px' }}>Quick Questions</div>
             {QUICK_QUESTIONS.map(q => (
               <button key={q} onClick={() => sendMessage(q)}
-                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 10px', marginBottom: '6px', background: 'rgba(245, 158, 11,0.06)', border: '1px solid rgba(245, 158, 11,0.15)', borderRadius: '6px', color: GOLD, fontSize: '11px', cursor: 'pointer', transition: 'background 0.15s' }}
-                onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'rgba(245, 158, 11,0.12)'}
-                onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'rgba(245, 158, 11,0.06)'}
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 10px', marginBottom: '6px', background: 'var(--brand-primary-08)', border: '1px solid color-mix(in srgb, var(--brand-primary) 15%, transparent)', borderRadius: '6px', color: GOLD, fontSize: '11px', cursor: 'pointer', transition: 'background 0.15s' }}
+                onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--brand-primary-12)'}
+                onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--brand-primary-08)'}
               >{q}</button>
             ))}
 
-            <div style={{ marginTop: '24px', fontSize: '10px', fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: '1px', marginBottom: '8px' }}>Expertise</div>
+            <div style={{ marginTop: '24px', fontSize: '10px', fontWeight: 700, color: DIM, marginBottom: '8px' }}>Expertise</div>
             {['CSI MasterFormat', 'AIA Contracts', 'Lien Law (AZ/CA/TX)', 'Davis-Bacon / WH-347', 'OSHA 29 CFR 1926', 'Change Orders & Claims', 'Pay Application Process', 'Construction Finance'].map(item => (
               <div key={item} style={{ fontSize: '11px', color: DIM, padding: '4px 0', borderBottom: `1px solid ${SOFT_BORDER}` }}>{item}</div>
             ))}
@@ -285,18 +285,18 @@ function IntelligenceChat() {
               {messages.map(msg => (
                 <div key={msg.id} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
                   {msg.role === 'assistant' && (
-                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: `linear-gradient(135deg,${GOLD},#FBBF24)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', marginRight: '8px', flexShrink: 0, alignSelf: 'flex-end', fontWeight: 900, color: '#1C1C1E' }}>S</div>
+                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', marginRight: '8px', flexShrink: 0, alignSelf: 'flex-end', fontWeight: 900, color: '#0A0A00' }}>S</div>
                   )}
                   <div style={{
                     maxWidth: '78%',
-                    background: msg.role === 'user' ? `linear-gradient(135deg,${GOLD},#FBBF24)` : SURFACE,
-                    color: msg.role === 'user' ? '#1A1206' : TEXT,
+                    background: msg.role === 'user' ? `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))` : SURFACE,
+                    color: msg.role === 'user' ? '#0A0A00' : TEXT,
                     padding: '12px 16px',
                     borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                     fontSize: '13px', lineHeight: '1.6',
                     whiteSpace: 'pre-wrap' as const, wordBreak: 'break-word' as const,
                     border: msg.role === 'assistant' ? `1px solid ${SOFT_BORDER}` : 'none',
-                    boxShadow: msg.role === 'assistant' ? '0 10px 30px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04)' : '0 10px 26px -12px rgba(245,158,11,0.5)',
+                    boxShadow: msg.role === 'assistant' ? '0 10px 30px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04)' : '0 10px 26px -12px color-mix(in srgb, var(--brand-primary) 50%, transparent)',
                   }}>
                     {renderContent(msg.content, msg.role === 'user')}
                     {msg.isStreaming && (
@@ -317,13 +317,13 @@ function IntelligenceChat() {
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask about costs, schedules, lien waivers, change orders..."
+                placeholder="Ask about costs, schedules, lien waivers, change orders…"
                 disabled={isLoading}
                 style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: `1px solid ${SOFT_BORDER}`, borderRadius: '10px', padding: '10px 14px', color: TEXT, fontSize: '13px', outline: 'none' }}
               />
               <button onClick={() => sendMessage(input)} disabled={isLoading || !input.trim()}
-                style={{ padding: '10px 20px', background: isLoading || !input.trim() ? 'rgba(245, 158, 11,0.3)' : `linear-gradient(135deg,${GOLD},#FBBF24)`, border: 'none', borderRadius: '10px', color: '#1A1206', fontSize: '13px', fontWeight: 800, cursor: isLoading || !input.trim() ? 'not-allowed' : 'pointer', boxShadow: isLoading || !input.trim() ? 'none' : '0 10px 26px -10px rgba(245,158,11,0.6)' }}>
-                {isLoading ? '...' : <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>Ask <ArrowRight size={14} weight="bold" color="#1A1206" /></span>}
+                style={{ padding: '10px 20px', background: isLoading || !input.trim() ? 'color-mix(in srgb, var(--brand-primary) 30%, transparent)' : `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: '10px', color: '#0A0A00', fontSize: '13px', fontWeight: 800, cursor: isLoading || !input.trim() ? 'not-allowed' : 'pointer', boxShadow: isLoading || !input.trim() ? 'none' : '0 10px 26px -10px color-mix(in srgb, var(--brand-primary) 60%, transparent)' }}>
+                {isLoading ? '…' : <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>Ask <ArrowRight size={14} weight="bold" color="#0A0A00" /></span>}
               </button>
             </div>
           </div>

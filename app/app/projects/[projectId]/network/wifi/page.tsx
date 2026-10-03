@@ -10,10 +10,10 @@ import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
-const BASE = '#1c1c1e';
-const GOLD = '#F59E0B';
+const BASE = 'var(--bg-surface-2)';
+const GOLD = 'var(--brand-primary)';
 const GREEN = '#22C55E';
-const BLUE = '#F59E0B';
+const BLUE = 'var(--brand-primary)';
 const RED = '#EF4444';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
@@ -67,10 +67,18 @@ const BANDS = ['2.4ghz', '5ghz', 'dual', '6ghz'];
 const SECURITY_COLORS: Record<string, { bg: string; text: string }> = {
   wpa3_enterprise: { bg: `${GREEN}20`, text: GREEN },
   wpa3_personal: { bg: `${GREEN}15`, text: GREEN },
-  wpa2_enterprise: { bg: `${BLUE}20`, text: BLUE },
-  wpa2_personal: { bg: `${BLUE}15`, text: BLUE },
+  wpa2_enterprise: { bg: 'var(--brand-primary-12)', text: BLUE },
+  wpa2_personal: { bg: 'var(--brand-primary-08)', text: BLUE },
   open: { bg: `${RED}20`, text: RED },
 };
+
+const SECURITY_LABELS: Record<string, string> = {
+  wpa3_enterprise: 'WPA3 Enterprise', wpa3_personal: 'WPA3 Personal',
+  wpa2_enterprise: 'WPA2 Enterprise', wpa2_personal: 'WPA2 Personal', open: 'Open',
+};
+const securityLabel = (s: string) => SECURITY_LABELS[s] || s.replace(/_/g, ' ');
+const BAND_LABELS: Record<string, string> = { '2.4ghz': '2.4 GHz', '5ghz': '5 GHz', dual: 'Dual', '6ghz': '6 GHz' };
+const bandLabel = (b: string) => BAND_LABELS[b] || b;
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 12px', background: BASE, color: TEXT,
@@ -208,7 +216,7 @@ export default function WifiManagerPage() {
     <PremiumSurface maxWidth={2200}>
       {/* Breadcrumb */}
       <div style={{ marginBottom: 14 }}>
-        <Link href={`/app/projects/${projectId}/network`} style={{ color: DIM, fontSize: 12, textDecoration: 'none' }}>Network &gt;</Link>
+        <Link href={`/app/projects/${projectId}/network`} style={{ color: DIM, fontSize: 12, textDecoration: 'none' }}>Network →</Link>
         <span style={{ color: TEXT, fontSize: 12, marginLeft: 4 }}>WiFi</span>
       </div>
 
@@ -241,7 +249,7 @@ export default function WifiManagerPage() {
         <StatCard
           icon={<UsersThree size={19} weight="duotone" color={GREEN} />}
           label="Connected Clients" value={String(totalClients)} accent={totalClients > 0 ? GREEN : undefined}
-          sub="across all SSIDs"
+          sub="Across all SSIDs"
          href={`/app/projects/${projectId}/network/wifi`}/>
       </div>
 
@@ -257,7 +265,7 @@ export default function WifiManagerPage() {
               <div>
                 <label style={labelStyle}>Security</label>
                 <select value={ssidForm.security_type} onChange={e => setSsidForm({ ...ssidForm, security_type: e.target.value })} style={inputStyle}>
-                  {SECURITY_TYPES.map(s => <option key={s} value={s}>{s.replace(/_/g, ' ').toUpperCase()}</option>)}
+                  {SECURITY_TYPES.map(s => <option key={s} value={s}>{securityLabel(s)}</option>)}
                 </select>
               </div>
               <div>
@@ -271,7 +279,7 @@ export default function WifiManagerPage() {
               <div>
                 <label style={labelStyle}>Band</label>
                 <select value={ssidForm.band} onChange={e => setSsidForm({ ...ssidForm, band: e.target.value })} style={inputStyle}>
-                  {BANDS.map(b => <option key={b} value={b}>{b.toUpperCase()}</option>)}
+                  {BANDS.map(b => <option key={b} value={b}>{bandLabel(b)}</option>)}
                 </select>
               </div>
               <div>
@@ -294,7 +302,7 @@ export default function WifiManagerPage() {
               opacity: saving || !ssidForm.ssid ? 0.5 : 1,
               cursor: saving || !ssidForm.ssid ? 'not-allowed' : 'pointer',
             }}>
-              {saving ? 'Saving...' : 'Save SSID'}
+              {saving ? 'Saving…' : 'Save SSID'}
             </button>
           </SectionCard>
         </div>
@@ -330,16 +338,16 @@ export default function WifiManagerPage() {
                         <span style={{
                           fontSize: 10, padding: '2px 8px', borderRadius: 8, fontWeight: 600,
                           background: sc.bg, color: sc.text,
-                        }}>{net.security_type.replace(/_/g, ' ').toUpperCase()}</span>
+                        }}>{securityLabel(net.security_type)}</span>
                         {net.vlan_name && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', color: DIM }}>VLAN: {net.vlan_name}</span>}
-                        <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', color: DIM }}>{net.band.toUpperCase()}</span>
-                        {net.client_isolation && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, background: `${GOLD}15`, color: GOLD }}>Isolated</span>}
+                        <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', color: DIM }}>{bandLabel(net.band)}</span>
+                        {net.client_isolation && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, background: 'var(--brand-primary-08)', color: GOLD }}>Isolated</span>}
                         {net.bandwidth_limit_mbps > 0 && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', color: DIM }}>{net.bandwidth_limit_mbps} Mbps</span>}
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ color: TEXT, fontSize: 18, fontWeight: 700 }}>{net.client_count ?? 0}</div>
-                      <div style={{ color: DIM, fontSize: 10 }}>clients</div>
+                      <div style={{ color: DIM, fontSize: 10 }}>Clients</div>
                     </div>
                   </div>
                 );
@@ -357,15 +365,15 @@ export default function WifiManagerPage() {
         >
           <div style={{
             display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 16,
-            padding: '18px 20px', borderRadius: 12, border: '1px solid rgba(245,184,77,0.28)',
-            background: 'linear-gradient(160deg, rgba(245,158,11,0.08), rgba(255,255,255,0.02))',
+            padding: '18px 20px', borderRadius: 12, border: '1px solid var(--brand-primary-25)',
+            background: 'var(--bg-surface-2)',
           }}>
             <div style={{
               width: 46, height: 46, borderRadius: 12, flexShrink: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'rgba(245,184,77,0.12)', border: '1px solid rgba(245,184,77,0.45)',
+              background: 'var(--brand-primary-12)', border: '1px solid color-mix(in srgb, var(--brand-primary) 45%, transparent)',
             }}>
-              <Broadcast size={24} weight="duotone" color="#F5B84D" />
+              <Broadcast size={24} weight="duotone" color={GOLD} />
             </div>
             <div style={{ flex: 1, minWidth: 220 }}>
               <div style={{ color: TEXT, fontSize: 15, fontWeight: 800 }}>Design this floor in Signal Studio</div>
@@ -380,8 +388,8 @@ export default function WifiManagerPage() {
 
           {designs.length > 0 && (
             <div style={{ marginTop: 14 }}>
-              <div style={{ color: DIM, fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>
-                Saved designs for this project
+              <div style={{ color: DIM, fontSize: 11, fontWeight: 700, marginBottom: 8 }}>
+                Saved Designs for This Project
               </div>
               <div style={{ display: 'grid', gap: 6 }}>
                 {designs.map(d => (
@@ -389,7 +397,7 @@ export default function WifiManagerPage() {
                     display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px',
                     background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: `1px solid ${BORDER}`,
                   }}>
-                    <MapTrifold size={16} weight="duotone" color="#F5B84D" />
+                    <MapTrifold size={16} weight="duotone" color={GOLD} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ color: TEXT, fontSize: 13, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</div>
                       <div style={{ color: DIM, fontSize: 11, marginTop: 2 }}>
@@ -460,7 +468,7 @@ export default function WifiManagerPage() {
                 opacity: saving || !apForm.name ? 0.5 : 1,
                 cursor: saving || !apForm.name ? 'not-allowed' : 'pointer',
               }}>
-                {saving ? 'Saving...' : 'Save AP'}
+                {saving ? 'Saving…' : 'Save AP'}
               </button>
               <button onClick={() => setShowApForm(false)} style={ghostButtonStyle} className="pmBtn">Cancel</button>
             </div>
@@ -470,7 +478,7 @@ export default function WifiManagerPage() {
         {/* AP List */}
         {aps.length > 0 ? (
           <div>
-            <div style={{ color: DIM, fontSize: 12, fontWeight: 600, marginBottom: 8 }}>ACCESS POINTS ({aps.filter(a => a.floor === selectedFloor).length} on Floor {selectedFloor})</div>
+            <div style={{ color: DIM, fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Access Points ({aps.filter(a => a.floor === selectedFloor).length} on Floor {selectedFloor})</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8 }}>
               {aps.filter(a => a.floor === selectedFloor).map(ap => (
                 <div key={ap.id} style={{

@@ -16,8 +16,8 @@ import {
 } from '@/components/ui/premium';
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 
-const BASE = '#1c1c1e';
-const GOLD = '#F59E0B';
+const BASE = 'var(--bg-surface-2)';
+const GOLD = 'var(--brand-primary)';
 const GREEN = '#34C759';
 const RED = '#FF3B30';
 const BORDER = 'rgba(255,255,255,0.12)';
@@ -165,7 +165,7 @@ export default function ConfigGeneratorPage() {
 
       {/* Header */}
       <ModuleHero
-        eyebrow="NETWORK"
+        eyebrow="Network"
         eyebrowIcon={<Gear size={13} weight="fill" color={GOLD} />}
         title="Config"
         accent="Generator"
@@ -175,10 +175,10 @@ export default function ConfigGeneratorPage() {
       {/* Generator intelligence — live counts from the data already fetched */}
       {(templates.length > 0 || devices.length > 0) && (
         <StatStrip items={[
-          {href: `/app/projects/${projectId}/network/config`,  label: 'Templates', value: String(filteredTemplates.length), sub: activeTab === 'All' ? 'all manufacturers' : `${activeTab} library` },
-          {href: `/app/projects/${projectId}/network/config`,  label: 'Manufacturers', value: String(MANUFACTURER_TABS.length - 1), sub: 'vetted template libraries' },
-          {href: `/app/projects/${projectId}/network/devices`,  label: 'Project Devices', value: String(devices.length), sub: 'ready to receive config' },
-          {href: `/app/projects/${projectId}/network/config`,  label: 'Selected', value: selectedTemplate ? selectedTemplate.name : '—', sub: selectedTemplate ? selectedTemplate.manufacturer : 'pick a template to begin' },
+          {href: `/app/projects/${projectId}/network/config`,  label: 'Templates', value: String(filteredTemplates.length), sub: activeTab === 'All' ? 'All manufacturers' : `${activeTab} library` },
+          {href: `/app/projects/${projectId}/network/config`,  label: 'Manufacturers', value: String(MANUFACTURER_TABS.length - 1), sub: 'Vetted template libraries' },
+          {href: `/app/projects/${projectId}/network/devices`,  label: 'Project Devices', value: String(devices.length), sub: 'Ready to receive config' },
+          {href: `/app/projects/${projectId}/network/config`,  label: 'Selected', value: selectedTemplate ? selectedTemplate.name : '—', sub: selectedTemplate ? selectedTemplate.manufacturer : 'Pick a template to begin' },
         ]} />
       )}
 
@@ -193,7 +193,7 @@ export default function ConfigGeneratorPage() {
                 onClick={() => setActiveTab(tab)}
                 style={{
                   padding: '4px 10px', border: `1px solid ${activeTab === tab ? GOLD : BORDER}`,
-                  borderRadius: 6, background: activeTab === tab ? `${GOLD}15` : 'transparent',
+                  borderRadius: 6, background: activeTab === tab ? 'var(--brand-primary-08)' : 'transparent',
                   color: activeTab === tab ? GOLD : DIM, fontSize: 11, fontWeight: 600, cursor: 'pointer',
                 }}
               >{tab}</button>
@@ -215,8 +215,8 @@ export default function ConfigGeneratorPage() {
                   key={tmpl.id}
                   onClick={() => selectTemplate(tmpl)}
                   style={{
-                    padding: '10px 12px', background: selectedTemplate?.id === tmpl.id ? `${GOLD}10` : 'rgba(255,255,255,0.03)',
-                    border: `1px solid ${selectedTemplate?.id === tmpl.id ? `${GOLD}40` : BORDER}`,
+                    padding: '10px 12px', background: selectedTemplate?.id === tmpl.id ? 'var(--brand-primary-08)' : 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${selectedTemplate?.id === tmpl.id ? 'var(--brand-primary-25)' : BORDER}`,
                     borderRadius: 8, cursor: 'pointer', textAlign: 'left',
                   }}
                 >
@@ -248,7 +248,7 @@ export default function ConfigGeneratorPage() {
               {/* Variable Inputs */}
               {selectedTemplate.variables && Object.keys(selectedTemplate.variables).length > 0 && (
                 <div style={{ marginBottom: 16 }}>
-                  <div style={{ color: DIM, fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Configuration Variables</div>
+                  <div style={{ color: DIM, fontSize: 12, fontWeight: 700, marginBottom: 8 }}>Configuration Variables</div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
                     {Object.entries(selectedTemplate.variables).map(([key, variable]) => (
                       <div key={key}>
@@ -262,7 +262,7 @@ export default function ConfigGeneratorPage() {
                             onChange={e => setVariableValues({ ...variableValues, [key]: e.target.value })}
                             style={inputStyle}
                           >
-                            <option value="">Select...</option>
+                            <option value="">Select…</option>
                             {variable.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                           </select>
                         ) : variable.type === 'boolean' ? (
@@ -295,14 +295,14 @@ export default function ConfigGeneratorPage() {
                 className="pmBtn"
                 style={{ ...goldButtonStyle, opacity: generating ? 0.5 : 1, cursor: generating ? 'not-allowed' : 'pointer', marginBottom: 16 }}
               >
-                {generating ? 'Generating...' : 'Generate Config'}
+                {generating ? 'Generating…' : 'Generate Config'}
               </button>
 
               {/* Generated Config Output */}
               {generatedConfig && (
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                    <div style={{ color: DIM, fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Generated Configuration</div>
+                    <div style={{ color: DIM, fontSize: 12, fontWeight: 700 }}>Generated Configuration</div>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button
                         onClick={copyToClipboard}
@@ -338,7 +338,7 @@ export default function ConfigGeneratorPage() {
                     <div style={{ flex: 1 }}>
                       <label style={labelStyle}>Apply to Device</label>
                       <select value={applyDevice} onChange={e => setApplyDevice(e.target.value)} style={inputStyle}>
-                        <option value="">Select device...</option>
+                        <option value="">Select device…</option>
                         {devices.filter(d =>
                           d.manufacturer.toLowerCase() === selectedTemplate.manufacturer.toLowerCase() ||
                           d.device_type === selectedTemplate.device_type

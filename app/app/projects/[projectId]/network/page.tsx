@@ -8,9 +8,9 @@ import { Globe, ArrowsLeftRight, Shield, WifiHigh, Printer, VideoCamera, HardDri
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, IconChip, StatStrip, FlowSteps, InsightRow, goldButtonStyle } from '@/components/ui/premium';
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 
-const GOLD = '#F59E0B';
+const GOLD = 'var(--brand-primary)';
 const GREEN = '#34C759';
-const BLUE = '#F59E0B';
+const BLUE = 'var(--brand-primary)';
 const RED = '#FF3B30';
 const TEXT = '#FFFFFF';
 // Premium kit surface tokens (match components/ui/premium.tsx) ------------------
@@ -73,7 +73,7 @@ const DEVICE_TYPE_ICONS: Record<string, React.ComponentType<any>> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  online: GREEN, offline: RED, planned: '#6B7280', warning: GOLD,
+  online: GREEN, offline: RED, planned: '#6B7280', warning: 'var(--warning)',
 };
 
 const NAV_ITEMS = [
@@ -188,10 +188,10 @@ export default function NetworkDashboard() {
           <div style={{ maxWidth: 1020 }}>
             <StatStrip items={[
               {href: `/app/projects/${projectId}/network`,  label: 'Project', value: ctx.project?.name || '—', sub: ctx.project?.projectNumber ? `#${ctx.project.projectNumber}` : (ctx.project?.status || 'active') },
-              {href: `/app/projects/${projectId}/network`,  label: 'Site Address', value: ctx.project?.address || '—', sub: 'the network documents against this site' },
-              {href: `/app/projects/${projectId}/network`,  label: 'Subs On the Job', value: String((ctx.subs || []).length), sub: 'coordinate low-volt rough-in' },
-              {href: `/app/projects/${projectId}/network`,  label: 'Open RFIs', value: String(Number(ctx.counts?.openRfis) || 0), sub: 'design questions in flight' },
-              {href: `/app/projects/${projectId}/network`,  label: 'Schedule Tasks', value: String(Number(ctx.counts?.scheduleTasks) || 0), sub: Number(ctx.schedule?.criticalCount) ? `${ctx.schedule.criticalCount} critical` : 'plan cable pulls around them' },
+              {href: `/app/projects/${projectId}/network`,  label: 'Site Address', value: ctx.project?.address || '—', sub: 'The network documents against this site' },
+              {href: `/app/projects/${projectId}/network`,  label: 'Subs On the Job', value: String((ctx.subs || []).length), sub: 'Coordinate low-volt rough-in' },
+              {href: `/app/projects/${projectId}/network`,  label: 'Open RFIs', value: String(Number(ctx.counts?.openRfis) || 0), sub: 'Design questions in flight' },
+              {href: `/app/projects/${projectId}/network`,  label: 'Schedule Tasks', value: String(Number(ctx.counts?.scheduleTasks) || 0), sub: Number(ctx.schedule?.criticalCount) ? `${ctx.schedule.criticalCount} critical` : 'Plan cable pulls around them' },
             ]} />
           </div>
         )}
@@ -248,16 +248,16 @@ export default function NetworkDashboard() {
                 className="pmBtn"
                 style={{ ...goldButtonStyle, width: '100%', opacity: creating ? 0.6 : 1, cursor: creating ? 'not-allowed' : 'pointer' }}
               >
-                {creating ? 'Creating...' : 'Set Up Network Module'}
+                {creating ? 'Creating…' : 'Set Up Network Module'}
               </button>
             </div>
           </SectionCard>
           <SectionCard flat icon={<Robot size={17} weight="duotone" color={GOLD} />} title="What You Get">
             <FlowSteps title="" steps={[
               { title: 'AI Network Wizard', desc: 'Describe the site — the wizard drafts the device list, VLAN plan, and IP scheme.' },
-              { title: 'Device & VLAN inventory', desc: 'Every switch, AP, and camera tracked with IP, MAC, VLAN, and location.' },
-              { title: 'Cable schedule & testing', desc: 'Label every run, log certification results, and watch the pass rate climb.' },
-              { title: 'Signal Studio & reports', desc: 'Physics-based coverage design in Signal Studio, plus client-ready closeout documentation.' },
+              { title: 'Device & VLAN Inventory', desc: 'Every switch, AP, and camera tracked with IP, MAC, VLAN, and location.' },
+              { title: 'Cable Schedule & Testing', desc: 'Label every run, log certification results, and watch the pass rate climb.' },
+              { title: 'Signal Studio & Reports', desc: 'Physics-based coverage design in Signal Studio, plus client-ready closeout documentation.' },
             ]} />
           </SectionCard>
         </div>
@@ -284,7 +284,7 @@ export default function NetworkDashboard() {
             className="pmBtn"
             style={goldButtonStyle}
           >
-            <Robot size={16} weight="fill" color="#1A1206" /> AI Network Wizard
+            <Robot size={16} weight="fill" color="#0A0A00" /> AI Network Wizard
           </button>
         }
       />
@@ -292,9 +292,9 @@ export default function NetworkDashboard() {
       {/* Stats Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 16, marginBottom: 28 }}>
         <StatCard icon={<Devices size={19} weight="duotone" color={BLUE} />} label="Total Devices" value={String(devices.length)} accent={BLUE} delay={0.02}  href={`/app/projects/${projectId}/network/devices`}/>
-        <StatCard icon={<Circle size={19} weight="duotone" color={GREEN} />} label="Online" value={String(devices.filter(d => d.status === 'online').length)} accent={GREEN} sub={`of ${devices.length} total`} delay={0.06}  href={`/app/projects/${projectId}/network`}/>
+        <StatCard icon={<Circle size={19} weight="duotone" color={GREEN} />} label="Online" value={String(devices.filter(d => d.status === 'online').length)} accent={GREEN} sub={`Of ${devices.length} total`} delay={0.06}  href={`/app/projects/${projectId}/network`}/>
         <StatCard icon={<Shuffle size={19} weight="duotone" color="#8B5CF6" />} label="VLANs" value={String(vlans.length)} accent="#8B5CF6" delay={0.10}  href={`/app/projects/${projectId}/network/vlans`}/>
-        <StatCard icon={<Plug size={19} weight="duotone" color={GOLD} />} label="Cable Runs" value={`${testedCables}/${cables.length}`} accent={GOLD} sub="tested" delay={0.14}  href={`/app/projects/${projectId}/network/cables`}/>
+        <StatCard icon={<Plug size={19} weight="duotone" color={GOLD} />} label="Cable Runs" value={`${testedCables}/${cables.length}`} accent={GOLD} sub="Tested" delay={0.14}  href={`/app/projects/${projectId}/network/cables`}/>
         <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Pass Rate" value={cables.length > 0 ? `${Math.round((passedCables / Math.max(testedCables, 1)) * 100)}%` : 'N/A'} accent={GREEN} delay={0.18}  href={`/app/projects/${projectId}/network`}/>
         <StatCard icon={<Warning size={19} weight="duotone" color={openAlerts > 0 ? RED : GREEN} />} label="Open Alerts" value={String(openAlerts)} accent={openAlerts > 0 ? RED : GREEN} delay={0.22}  href={`/app/projects/${projectId}/network`}/>
       </div>
@@ -368,16 +368,16 @@ export default function NetworkDashboard() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <SectionCard flat icon={<CheckCircle size={17} weight="duotone" color={GOLD} />} title="Network Readiness">
           <FlowSteps title="" steps={[
-            { title: 'Module configured', done: true, desc: `${(networkProject?.site_type || 'site').replace(/_/g, ' ')} · ${(networkProject?.total_sq_ft || 0).toLocaleString()} SF · ${networkProject?.floor_count || 1} floor${(networkProject?.floor_count || 1) > 1 ? 's' : ''}.` },
-            { title: 'Device inventory', done: devices.length > 0, desc: devices.length > 0 ? `${devices.length} device${devices.length === 1 ? '' : 's'} — ${devices.filter(d => d.status === 'online').length} online.` : 'Add devices by hand, or let the AI wizard draft the design.' },
-            { title: 'Network segmented', done: vlans.length > 0, desc: vlans.length > 0 ? `${vlans.length} VLAN${vlans.length === 1 ? '' : 's'} defined.` : 'Define VLANs to separate voice, data, cameras, and guests.' },
-            { title: 'Cabling tested', done: cables.length > 0 && testedCables === cables.length, desc: cables.length > 0 ? `${testedCables}/${cables.length} runs tested — ${passedCables} passed.` : 'Log cable runs, then record results as you certify.' },
-            { title: 'Alerts clear', done: openAlerts === 0, desc: openAlerts > 0 ? `${openAlerts} open alert${openAlerts === 1 ? '' : 's'} below need attention.` : 'No open alerts on this network.' },
+            { title: 'Module Configured', done: true, desc: `${(networkProject?.site_type || 'site').replace(/_/g, ' ')} · ${(networkProject?.total_sq_ft || 0).toLocaleString()} SF · ${networkProject?.floor_count || 1} floor${(networkProject?.floor_count || 1) > 1 ? 's' : ''}.` },
+            { title: 'Device Inventory', done: devices.length > 0, desc: devices.length > 0 ? `${devices.length} device${devices.length === 1 ? '' : 's'} — ${devices.filter(d => d.status === 'online').length} online.` : 'Add devices by hand, or let the AI wizard draft the design.' },
+            { title: 'Network Segmented', done: vlans.length > 0, desc: vlans.length > 0 ? `${vlans.length} VLAN${vlans.length === 1 ? '' : 's'} defined.` : 'Define VLANs to separate voice, data, cameras, and guests.' },
+            { title: 'Cabling Tested', done: cables.length > 0 && testedCables === cables.length, desc: cables.length > 0 ? `${testedCables}/${cables.length} runs tested — ${passedCables} passed.` : 'Log cable runs, then record results as you certify.' },
+            { title: 'Alerts Clear', done: openAlerts === 0, desc: openAlerts > 0 ? `${openAlerts} open alert${openAlerts === 1 ? '' : 's'} below need attention.` : 'No open alerts on this network.' },
           ]} />
         </SectionCard>
         <SectionCard flat icon={<Globe size={17} weight="duotone" color={GOLD} />} title="Site Profile">
-          <InsightRow label="Site type" value={(networkProject?.site_type || '—').replace(/_/g, ' ')} />
-          <InsightRow label="Square footage" value={`${(networkProject?.total_sq_ft || 0).toLocaleString()} SF`} />
+          <InsightRow label="Site Type" value={(networkProject?.site_type || '—').replace(/_/g, ' ')} />
+          <InsightRow label="Square Footage" value={`${(networkProject?.total_sq_ft || 0).toLocaleString()} SF`} />
           <InsightRow label="Floors" value={String(networkProject?.floor_count || 1)} />
           <InsightRow label="Devices per 1k SF" value={networkProject?.total_sq_ft ? (devices.length / (networkProject.total_sq_ft / 1000)).toFixed(1) : '—'} />
           {ctx?.project?.address && <InsightRow label="Address" value={ctx.project.address} />}
@@ -396,7 +396,7 @@ export default function NetworkDashboard() {
             icon={<Devices size={30} weight="duotone" color={GOLD} />}
             title="No devices added yet"
             description={`This ${(networkProject?.site_type || 'site').replace(/_/g, ' ')} covers ${(networkProject?.total_sq_ft || 0).toLocaleString()} SF — add devices by hand, or let the AI wizard draft the full design in one pass.`}
-            action={<Link href={`/app/projects/${projectId}/network/devices`} className="pmBtn" style={goldButtonStyle}><Plus size={15} weight="bold" color="#1A1206" /> Add your first device</Link>}
+            action={<Link href={`/app/projects/${projectId}/network/devices`} className="pmBtn" style={goldButtonStyle}><Plus size={15} weight="bold" color="#0A0A00" /> Add Your First Device</Link>}
             compact
           />
         ) : (
@@ -420,7 +420,7 @@ export default function NetworkDashboard() {
                       background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: `1px solid ${KIT_BORDER}`,
                       textDecoration: 'none', transition: 'border-color .15s',
                     }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(245,158,11,0.45)'; }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'color-mix(in srgb, var(--brand-primary) 45%, transparent)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = KIT_BORDER; }}
                   >
                     <div style={{
@@ -434,7 +434,7 @@ export default function NetworkDashboard() {
                     </div>
                     <span style={{
                       fontSize: 10, padding: '2px 8px', borderRadius: 10, fontWeight: 600,
-                      background: `${STATUS_COLORS[dev.status] || '#6B7280'}20`,
+                      background: `color-mix(in srgb, ${STATUS_COLORS[dev.status] || '#6B7280'} 13%, transparent)`,
                       color: STATUS_COLORS[dev.status] || '#6B7280',
                       textTransform: 'capitalize',
                     }}>{dev.status}</span>

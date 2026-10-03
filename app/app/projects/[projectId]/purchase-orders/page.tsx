@@ -339,7 +339,7 @@ export default function PurchaseOrdersPage() {
     width: '100%', padding: '8px 12px', background: T.surface2,
     border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, outline: 'none',
   };
-  const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: T.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 };
+  const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 6 };
   const hint: React.CSSProperties = { fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 };
 
   // Toolbar-driven view of the PO log.
@@ -372,7 +372,7 @@ export default function PurchaseOrdersPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Procurement"
-        eyebrowIcon={<Package size={13} weight="fill" color="#F59E0B" />}
+        eyebrowIcon={<Package size={13} weight="fill" color="var(--brand-primary)" />}
         title="Purchase"
         accent="Orders"
         subtitle="Vendor and supplier purchase orders"
@@ -392,20 +392,20 @@ export default function PurchaseOrdersPage() {
         <StatStrip items={[
           {href: `/app/projects/${projectId}/budget`,  label: 'Budget', value: fmt(bOriginal), sub: `${Number(budget?.lineCount) || budgetLines.length} cost-coded lines` },
           {href: `/app/projects/${projectId}/purchase-orders`,  label: 'Committed', value: fmt(bCommitted), sub: 'POs + subcontracts' },
-          {href: `/app/projects/${projectId}/purchase-orders`,  label: 'Actual to Date', value: fmt(bActual), sub: 'bills + invoices posted' },
-          {href: `/app/projects/${projectId}/purchase-orders`,  label: 'Uncommitted', value: fmt(bUncommitted), accent: bUncommitted < 0 ? T.red : T.green, sub: 'original less committed' },
-          {href: `/app/projects/${projectId}/purchase-orders`,  label: 'Next PO', value: nextPoStr, sub: 'numbered automatically' },
+          {href: `/app/projects/${projectId}/purchase-orders`,  label: 'Actual to Date', value: fmt(bActual), sub: 'Bills + invoices posted' },
+          {href: `/app/projects/${projectId}/purchase-orders`,  label: 'Uncommitted', value: fmt(bUncommitted), accent: bUncommitted < 0 ? T.red : T.green, sub: 'Original less committed' },
+          {href: `/app/projects/${projectId}/purchase-orders`,  label: 'Next PO', value: nextPoStr, sub: 'Numbered automatically' },
         ]} />
       )}
 
       {/* Stat Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 28 }}>
         <StatCard
-          icon={<CurrencyDollar size={19} weight="duotone" color="#F59E0B" />}
-          label="Total PO Value" value={`$${totalValue.toLocaleString()}`} accent="#F59E0B" delay={0.02}
+          icon={<CurrencyDollar size={19} weight="duotone" color="var(--brand-primary)" />}
+          label="Total PO Value" value={`$${totalValue.toLocaleString()}`} accent="var(--brand-primary)" delay={0.02}
          href={`/app/projects/${projectId}/purchase-orders`}/>
         <StatCard
-          icon={<PencilSimple size={19} weight="duotone" color="#F59E0B" />}
+          icon={<PencilSimple size={19} weight="duotone" color="var(--brand-primary)" />}
           label="Draft" value={String(draftCount)} delay={0.06}
          href={`/app/projects/${projectId}/purchase-orders`}/>
         <StatCard
@@ -428,7 +428,7 @@ export default function PurchaseOrdersPage() {
       {/* Create Form — walks in knowing the project: vendors, cost codes, budget, next number */}
       {showForm && (
         <div style={{ marginBottom: 20, display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 320px', gap: 16, alignItems: 'start' }}>
-          <SectionCard title="New Purchase Order" icon={<Package size={17} weight="duotone" color="#F59E0B" />}>
+          <SectionCard title="New Purchase Order" icon={<Package size={17} weight="duotone" color="var(--brand-primary)" />}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
               <div>
                 <label style={lbl}>PO Number{!form.po_num && <AutoChip />}</label>
@@ -479,8 +479,8 @@ export default function PurchaseOrdersPage() {
                 <input value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} style={inp} />
               </div>
               {selLine && (
-                <div style={{ gridColumn: 'span 3', display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 14px', borderRadius: 10, background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.3)', fontSize: 12.5, color: T.muted, lineHeight: 1.55 }}>
-                  <Wallet size={16} weight="duotone" color="#F59E0B" style={{ flexShrink: 0, marginTop: 1 }} />
+                <div style={{ gridColumn: 'span 3', display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 14px', borderRadius: 10, background: 'var(--brand-primary-08)', border: '1px solid var(--brand-primary-25)', fontSize: 12.5, color: T.muted, lineHeight: 1.55 }}>
+                  <Wallet size={16} weight="duotone" color="var(--brand-primary)" style={{ flexShrink: 0, marginTop: 1 }} />
                   <span>
                     Commits <b style={{ color: T.white }}>{fmt(poTotal)}</b> against <b style={{ color: T.gold }}>{selLine.costCode || selLine.division}</b>{selLine.description ? ` (${selLine.description})` : ''} — budget <b style={{ color: T.white }}>{fmt(lineBudget)}</b>, committed <b style={{ color: T.white }}>{fmt(lineCommitted)}</b>, remaining <b style={{ color: lineRemaining < 0 ? T.red : T.green }}>{fmt(lineRemaining)}</b> after this PO.
                   </span>
@@ -528,7 +528,7 @@ export default function PurchaseOrdersPage() {
                 disabled={saving}
                 style={{ ...goldButtonStyle, ...(saving ? { opacity: 0.55, cursor: 'not-allowed' } : {}) }}
               >
-                {saving ? 'Saving...' : 'Create PO'}
+                {saving ? 'Saving…' : 'Create PO'}
               </button>
               <button className="pmBtn" onClick={() => { setShowForm(false); setErrorMsg(''); }} style={ghostButtonStyle}>Cancel</button>
             </div>
@@ -537,19 +537,19 @@ export default function PurchaseOrdersPage() {
           {/* Context rail — what creating this PO sets in motion */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {selLine && (
-              <SectionCard flat title={`Cost Code ${selLine.costCode || selLine.division}`} icon={<Wallet size={17} weight="duotone" color="#F59E0B" />}>
-                <InsightRow label="Line budget" value={fmt(lineBudget)} />
-                <InsightRow label="Committed to date" value={fmt(lineCommitted)} />
+              <SectionCard flat title={`Cost Code ${selLine.costCode || selLine.division}`} icon={<Wallet size={17} weight="duotone" color="var(--brand-primary)" />}>
+                <InsightRow label="Line Budget" value={fmt(lineBudget)} />
+                <InsightRow label="Committed to Date" value={fmt(lineCommitted)} />
                 <InsightRow label="This PO" value={fmt(poTotal)} accent={T.gold} />
-                <InsightRow label="Remaining after" value={fmt(lineRemaining)} accent={lineRemaining < 0 ? T.red : T.green} strong />
+                <InsightRow label="Remaining After" value={fmt(lineRemaining)} accent={lineRemaining < 0 ? T.red : T.green} strong />
               </SectionCard>
             )}
-            <SectionCard flat title="After You Create" icon={<Package size={17} weight="duotone" color="#F59E0B" />}>
+            <SectionCard flat title="After You Create" icon={<Package size={17} weight="duotone" color="var(--brand-primary)" />}>
               <FlowSteps title="" steps={[
-                { title: 'Draft PO on the log', desc: `Saved as ${form.po_num || nextPoStr} in the procurement log for this project.` },
-                { title: 'Budget committed rolls up server-side', desc: form.cost_code ? `${fmt(poTotal)} commits against ${form.cost_code} the moment you save.` : 'Pick a cost code and the total commits against that budget line automatically.' },
-                { title: 'Send to the vendor', desc: 'One click generates the PO PDF and flips the status to Sent.' },
-                { title: 'Received closes the commitment', desc: 'Mark it Received on delivery — vendor bills then reconcile committed cost to actual.' },
+                { title: 'Draft PO on the Log', desc: `Saved as ${form.po_num || nextPoStr} in the procurement log for this project.` },
+                { title: 'Budget Committed Rolls Up Server-Side', desc: form.cost_code ? `${fmt(poTotal)} commits against ${form.cost_code} the moment you save.` : 'Pick a cost code and the total commits against that budget line automatically.' },
+                { title: 'Send to the Vendor', desc: 'One click generates the PO PDF and flips the status to Sent.' },
+                { title: 'Received Closes the Commitment', desc: 'Mark it Received on delivery — vendor bills then reconcile committed cost to actual.' },
               ]} />
             </SectionCard>
           </div>
@@ -561,7 +561,7 @@ export default function PurchaseOrdersPage() {
         module="purchase-orders"
         search={search}
         onSearch={setSearch}
-        searchPlaceholder="Search purchase orders..."
+        searchPlaceholder="Search purchase orders…"
         filters={[{ key: 'status', label: 'Status', value: statusFilter, onChange: setStatusFilter, allLabel: 'All Statuses', options: [
           { value: 'draft', label: 'Draft' },
           { value: 'sent', label: 'Sent' },
@@ -571,20 +571,20 @@ export default function PurchaseOrdersPage() {
         sort={sortBy}
         onSort={setSortBy}
         sortOptions={[
-          { value: 'newest', label: 'Newest first' },
-          { value: 'amount', label: 'Amount (high first)' },
-          { value: 'vendor', label: 'Vendor A-Z' },
+          { value: 'newest', label: 'Newest First' },
+          { value: 'amount', label: 'Amount (High First)' },
+          { value: 'vendor', label: 'Vendor A–Z' },
         ]}
         count={{ shown: filteredPos.length, total: pos.length }}
         style={{ marginBottom: 16 }}
       />
 
-      <SectionCard title="All Purchase Orders" icon={<Package size={17} weight="duotone" color="#F59E0B" />} flush>
+      <SectionCard title="All Purchase Orders" icon={<Package size={17} weight="duotone" color="var(--brand-primary)" />} flush>
         {loading ? (
           <div style={{ padding: 48, textAlign: 'center', color: 'rgba(255,255,255,0.62)', fontSize: 13 }}>Loading purchase orders…</div>
         ) : pos.length === 0 ? (
           <PremiumEmpty
-            icon={<Package size={30} weight="duotone" color="#F59E0B" />}
+            icon={<Package size={30} weight="duotone" color="var(--brand-primary)" />}
             title="No purchase orders yet"
             description="Create your first purchase order to track vendor and supplier commitments for this project."
             action={

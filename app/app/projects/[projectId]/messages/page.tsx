@@ -8,14 +8,14 @@ import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, goldB
 import { ListToolbar } from '@/components/ui/ListToolbar';
 
 // Premium surface palette (matches components/ui/premium.tsx + the dashboard) ----
-const GOLD = '#F59E0B';
+const GOLD = 'var(--brand-primary)';
 const WHITE = '#FFFFFF';
 const MUTED = 'rgba(255,255,255,0.62)';
 const FAINT = 'rgba(255,255,255,0.42)';
 const BORDER = 'rgba(255,255,255,0.08)';
 const RED = '#F87171';
-const ME_BG = 'linear-gradient(135deg, rgba(245,158,11,0.18), rgba(245,158,11,0.05))';
-const ME_BORDER = 'rgba(245,158,11,0.35)';
+const ME_BG = 'linear-gradient(135deg, var(--brand-primary-18), color-mix(in srgb, var(--brand-primary) 5%, transparent))';
+const ME_BORDER = 'var(--brand-primary-35)';
 const OTHER_BG = 'linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.015))';
 const INPUT_BG = 'rgba(255,255,255,0.04)';
 
@@ -180,9 +180,9 @@ export default function MessagesPage() {
       {!loading && messages.length > 0 && (
         <StatStrip items={[
           {href: `/app/projects/${projectId}/messages`,  label: 'Messages', value: String(messages.length), sub: `${todayCount} today` },
-          {href: `/app/projects/${projectId}/messages`,  label: 'Contributors', value: String(contributors.length), sub: contributors.slice(0, 2).join(', ') || 'no one yet' },
-          {href: `/app/projects/${projectId}/messages`,  label: 'Last Activity', value: lastMsg ? relativeTime(lastMsg.timestamp) || '—' : '—', sub: lastMsg ? `from ${lastMsg.sender}` : undefined },
-          {href: `/app/projects/${projectId}/messages`,  label: 'Project Roster', value: String(subCount + (ctx?.project?.ownerName ? 1 : 0)), sub: subCount > 0 ? `${subCount} sub${subCount === 1 ? '' : 's'}${ctx?.project?.ownerName ? ' + owner' : ''}` : 'build the directory to grow it' },
+          {href: `/app/projects/${projectId}/messages`,  label: 'Contributors', value: String(contributors.length), sub: contributors.slice(0, 2).join(', ') || 'No one yet' },
+          {href: `/app/projects/${projectId}/messages`,  label: 'Last Activity', value: lastMsg ? relativeTime(lastMsg.timestamp) || '—' : '—', sub: lastMsg ? `From ${lastMsg.sender}` : undefined },
+          {href: `/app/projects/${projectId}/messages`,  label: 'Project Roster', value: String(subCount + (ctx?.project?.ownerName ? 1 : 0)), sub: subCount > 0 ? `${subCount} sub${subCount === 1 ? '' : 's'}${ctx?.project?.ownerName ? ' + owner' : ''}` : 'Build the directory to grow it' },
         ]} />
       )}
 
@@ -191,7 +191,7 @@ export default function MessagesPage() {
         <ListToolbar
           search={search}
           onSearch={setSearch}
-          searchPlaceholder="Search messages..."
+          searchPlaceholder="Search messages…"
           count={{ shown: visibleMessages.length, total: messages.length }}
           style={{ marginBottom: 16 }}
         />
@@ -211,7 +211,7 @@ export default function MessagesPage() {
           style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: 20 }}
         >
           {loading ? (
-            <div style={{ textAlign: 'center', padding: 40, color: MUTED }}>Loading...</div>
+            <div style={{ textAlign: 'center', padding: 40, color: MUTED }}>Loading…</div>
           ) : messages.length === 0 ? (
             <PremiumEmpty
               icon={<ChatsCircle size={30} weight="duotone" color={GOLD} />}
@@ -220,11 +220,11 @@ export default function MessagesPage() {
               action={
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
                   {[
-                    { label: 'Kickoff note', text: `Kicking off the ${ctx?.project?.name || 'project'} thread — daily coordination, decisions, and weather calls all live here.` },
-                    { label: 'Schedule check', text: 'Schedule check: are we still tracking to this week\'s milestones? Flag any slips here so we can resequence early.' },
-                    { label: 'Safety reminder', text: 'Reminder: report near misses the same day and log toolbox talks under Safety — the log only works if we feed it.' },
+                    { label: 'Kickoff Note', text: `Kicking off the ${ctx?.project?.name || 'project'} thread — daily coordination, decisions, and weather calls all live here.` },
+                    { label: 'Schedule Check', text: 'Schedule check: are we still tracking to this week\'s milestones? Flag any slips here so we can resequence early.' },
+                    { label: 'Safety Reminder', text: 'Reminder: report near misses the same day and log toolbox talks under Safety — the log only works if we feed it.' },
                   ].map(p => (
-                    <button key={p.label} onClick={() => setText(p.text)} className="pmBtn" style={{ padding: '7px 14px', borderRadius: 999, background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.4)', color: '#FBBF24', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{p.label}</button>
+                    <button key={p.label} onClick={() => setText(p.text)} className="pmBtn" style={{ padding: '7px 14px', borderRadius: 999, background: 'var(--brand-primary-12)', border: '1px solid color-mix(in srgb, var(--brand-primary) 40%, transparent)', color: 'var(--brand-primary-strong)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{p.label}</button>
                   ))}
                 </div>
               }
@@ -240,7 +240,7 @@ export default function MessagesPage() {
                   {day && day !== prevDay && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '2px 0' }}>
                       <div style={{ flex: 1, height: 1, background: BORDER }} />
-                      <span style={{ fontSize: 10.5, fontWeight: 800, color: FAINT, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{day}</span>
+                      <span style={{ fontSize: 10.5, fontWeight: 800, color: FAINT }}>{day}</span>
                       <div style={{ flex: 1, height: 1, background: BORDER }} />
                     </div>
                   )}
@@ -281,7 +281,7 @@ export default function MessagesPage() {
             value={text}
             onChange={e => setText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type a message..."
+            placeholder="Type a message…"
             style={{
               flex: 1, padding: '11px 14px',
               background: INPUT_BG, border: `1px solid ${BORDER}`,
@@ -299,7 +299,7 @@ export default function MessagesPage() {
             }}
           >
             <PaperPlaneTilt size={15} weight="fill" />
-            {sending ? 'Sending...' : 'Send'}
+            {sending ? 'Sending…' : 'Send'}
           </button>
         </div>
       </SectionCard>

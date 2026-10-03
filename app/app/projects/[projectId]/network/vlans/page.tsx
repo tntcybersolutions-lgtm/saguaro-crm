@@ -12,10 +12,10 @@ import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
-const BASE = '#1c1c1e';
-const GOLD = '#F59E0B';
+const BASE = 'var(--bg-surface-2)';
+const GOLD = 'var(--brand-primary)';
 const GREEN = '#34C759';
-const BLUE = '#F59E0B';
+const BLUE = 'var(--brand-primary)';
 const RED = '#FF3B30';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
@@ -37,15 +37,18 @@ interface Vlan {
 }
 
 const PURPOSE_COLORS: Record<string, { bg: string; text: string }> = {
-  data: { bg: `${BLUE}20`, text: BLUE },
+  data: { bg: 'var(--brand-primary-12)', text: BLUE },
   voice: { bg: '#8B5CF620', text: '#8B5CF6' },
   security: { bg: `${RED}20`, text: RED },
-  guest: { bg: `${GOLD}20`, text: GOLD },
+  guest: { bg: 'var(--brand-primary-12)', text: GOLD },
   iot: { bg: '#14B8A620', text: '#14B8A6' },
   management: { bg: '#6B728020', text: '#9CA3AF' },
   server: { bg: `${GREEN}20`, text: GREEN },
   dmz: { bg: '#F9731620', text: '#F97316' },
 };
+
+const PURPOSE_LABELS: Record<string, string> = { iot: 'IoT', dmz: 'DMZ' };
+const purposeLabel = (p: string) => PURPOSE_LABELS[p] || p.charAt(0).toUpperCase() + p.slice(1);
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 12px', background: BASE, color: TEXT,
@@ -200,9 +203,9 @@ export default function VlanManagerPage() {
         return (
           <StatStrip items={[
             {href: `/app/projects/${projectId}/network/vlans`,  label: 'VLANs', value: String(vlans.length), sub: `${purposes} purpose${purposes === 1 ? '' : 's'} in use` },
-            {href: `/app/projects/${projectId}/network/devices`,  label: 'Devices Assigned', value: String(devicesAssigned), sub: 'across all VLANs' },
-            {href: `/app/projects/${projectId}/network/vlans`,  label: 'DHCP Scopes', value: String(dhcpScopes), sub: `of ${vlans.length} VLAN${vlans.length === 1 ? '' : 's'} have ranges` },
-            {href: `/app/projects/${projectId}/network/vlans`,  label: 'Usable IPs Planned', value: usableIps.toLocaleString(), sub: 'from subnet CIDRs' },
+            {href: `/app/projects/${projectId}/network/devices`,  label: 'Devices Assigned', value: String(devicesAssigned), sub: 'Across all VLANs' },
+            {href: `/app/projects/${projectId}/network/vlans`,  label: 'DHCP Scopes', value: String(dhcpScopes), sub: `Of ${vlans.length} VLAN${vlans.length === 1 ? '' : 's'} have ranges` },
+            {href: `/app/projects/${projectId}/network/vlans`,  label: 'Usable IPs Planned', value: usableIps.toLocaleString(), sub: 'From subnet CIDRs' },
           ]} />
         );
       })()}
@@ -238,7 +241,7 @@ export default function VlanManagerPage() {
             <div>
               <label style={labelStyle}>Purpose</label>
               <select value={form.purpose} onChange={e => setForm({ ...form, purpose: e.target.value })} style={inputStyle}>
-                {Object.keys(PURPOSE_COLORS).map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
+                {Object.keys(PURPOSE_COLORS).map(p => <option key={p} value={p}>{purposeLabel(p)}</option>)}
               </select>
             </div>
             <div>
@@ -249,7 +252,7 @@ export default function VlanManagerPage() {
 
           {/* Subnet Calculator */}
           {subnetInfo && (
-            <div style={{ marginTop: 16, padding: 14, background: `${BLUE}10`, borderRadius: 8, border: `1px solid ${BLUE}25` }}>
+            <div style={{ marginTop: 16, padding: 14, background: 'var(--brand-primary-08)', borderRadius: 8, border: '1px solid var(--brand-primary-18)' }}>
               <div style={{ color: BLUE, fontSize: 12, fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}><Calculator size={14} weight="duotone" color={BLUE} /> Subnet Calculator</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
                 {[
@@ -261,7 +264,7 @@ export default function VlanManagerPage() {
                   { label: 'Usable Hosts', value: subnetInfo.usableHosts.toLocaleString() },
                 ].map(item => (
                   <div key={item.label}>
-                    <div style={{ color: DIM, fontSize: 10, fontWeight: 600, textTransform: 'uppercase' }}>{item.label}</div>
+                    <div style={{ color: DIM, fontSize: 10, fontWeight: 600 }}>{item.label}</div>
                     <div style={{ color: TEXT, fontSize: 13, fontFamily: 'monospace', marginTop: 2 }}>{item.value}</div>
                   </div>
                 ))}
@@ -275,7 +278,7 @@ export default function VlanManagerPage() {
             className="pmBtn"
             style={{ ...goldButtonStyle, marginTop: 16, opacity: saving || !form.name ? 0.5 : 1, cursor: saving || !form.name ? 'not-allowed' : 'pointer' }}
           >
-            {saving ? 'Saving...' : 'Save VLAN'}
+            {saving ? 'Saving…' : 'Save VLAN'}
           </button>
         </SectionCard>
         </div>
@@ -304,7 +307,7 @@ export default function VlanManagerPage() {
           <thead>
             <tr>
               {['VLAN ID', 'Name', 'Subnet', 'Gateway', 'DHCP Range', 'Purpose', 'Devices'].map(col => (
-                <th key={col} style={{ padding: '12px 16px', textAlign: 'left', color: DIM, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>{col}</th>
+                <th key={col} style={{ padding: '12px 16px', textAlign: 'left', color: DIM, fontSize: 11, fontWeight: 700, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>{col}</th>
               ))}
             </tr>
           </thead>
@@ -318,13 +321,13 @@ export default function VlanManagerPage() {
                     <td style={{ padding: '12px', borderBottom: `1px solid ${BORDER}`, color: TEXT, fontSize: 12, fontFamily: 'monospace' }}>{vlan.subnet || '—'}</td>
                     <td style={{ padding: '12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 12, fontFamily: 'monospace' }}>{vlan.gateway || '—'}</td>
                     <td style={{ padding: '12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 12, fontFamily: 'monospace' }}>
-                      {vlan.dhcp_start && vlan.dhcp_end ? `${vlan.dhcp_start} - ${vlan.dhcp_end}` : '—'}
+                      {vlan.dhcp_start && vlan.dhcp_end ? `${vlan.dhcp_start} – ${vlan.dhcp_end}` : '—'}
                     </td>
                     <td style={{ padding: '12px', borderBottom: `1px solid ${BORDER}` }}>
                       <span style={{
                         fontSize: 11, padding: '3px 10px', borderRadius: 10, fontWeight: 600,
-                        background: pc.bg, color: pc.text, textTransform: 'capitalize',
-                      }}>{vlan.purpose}</span>
+                        background: pc.bg, color: pc.text,
+                      }}>{purposeLabel(vlan.purpose)}</span>
                     </td>
                     <td style={{ padding: '12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 13, textAlign: 'center' }}>
                       {vlan.device_count ?? 0}

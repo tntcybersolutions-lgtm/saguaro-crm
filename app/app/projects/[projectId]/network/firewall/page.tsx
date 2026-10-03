@@ -15,8 +15,8 @@ import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
-const BASE = '#1c1c1e';
-const GOLD = '#F59E0B';
+const BASE = 'var(--bg-surface-2)';
+const GOLD = 'var(--brand-primary)';
 const GREEN = '#34C759';
 const RED = '#FF3B30';
 const BORDER = 'rgba(255,255,255,0.12)';
@@ -43,6 +43,12 @@ interface FirewallRule {
 }
 
 const CATEGORIES = ['all', 'internet', 'inter-vlan', 'guest', 'voip', 'cameras', 'management'];
+
+const CATEGORY_LABELS: Record<string, string> = {
+  all: 'All', internet: 'Internet', 'inter-vlan': 'Inter-VLAN', guest: 'Guest',
+  voip: 'VoIP', cameras: 'Cameras', management: 'Management',
+};
+const categoryLabel = (c: string) => CATEGORY_LABELS[c] || c;
 
 const ACTION_STYLES: Record<string, { bg: string; text: string }> = {
   allow: { bg: `${GREEN}20`, text: GREEN },
@@ -211,7 +217,7 @@ export default function FirewallRulesPage() {
         <StatCard
           icon={<ShieldCheck size={19} weight="duotone" color={GOLD} />}
           label="Total Rules" value={String(rules.length)} accent={GOLD}
-          sub="across all categories" delay={0.02}
+          sub="Across all categories" delay={0.02}
          href={`/app/projects/${projectId}/network/firewall`}/>
         <StatCard
           icon={<CheckCircle size={19} weight="duotone" color={GREEN} />}
@@ -221,12 +227,12 @@ export default function FirewallRulesPage() {
         <StatCard
           icon={<Prohibit size={19} weight="duotone" color={RED} />}
           label="Blocking" value={String(blockingCount)} accent={blockingCount ? RED : undefined}
-          sub="deny / drop" delay={0.10}
+          sub="Deny / drop" delay={0.10}
          href={`/app/projects/${projectId}/network/firewall`}/>
         <StatCard
           icon={<ClipboardText size={19} weight="duotone" color={GOLD} />}
           label="Logging" value={String(loggingCount)}
-          sub="rules logged" delay={0.14}
+          sub="Rules logged" delay={0.14}
          href={`/app/projects/${projectId}/network/firewall`}/>
       </div>
 
@@ -283,7 +289,7 @@ export default function FirewallRulesPage() {
               <div>
                 <label style={labelStyle}>Category</label>
                 <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} style={inputStyle}>
-                  {CATEGORIES.filter(c => c !== 'all').map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1).replace('-', ' ')}</option>)}
+                  {CATEGORIES.filter(c => c !== 'all').map(c => <option key={c} value={c}>{categoryLabel(c)}</option>)}
                 </select>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-end' }}>
@@ -314,13 +320,13 @@ export default function FirewallRulesPage() {
             key={cat}
             onClick={() => setActiveCategory(cat)}
             style={{
-              padding: '6px 14px', border: `1px solid ${activeCategory === cat ? 'rgba(245,158,11,0.45)' : BORDER}`,
-              borderRadius: 999, background: activeCategory === cat ? 'rgba(245,158,11,0.14)' : 'rgba(255,255,255,0.03)',
+              padding: '6px 14px', border: `1px solid ${activeCategory === cat ? 'color-mix(in srgb, var(--brand-primary) 45%, transparent)' : BORDER}`,
+              borderRadius: 999, background: activeCategory === cat ? 'var(--brand-primary-12)' : 'rgba(255,255,255,0.03)',
               color: activeCategory === cat ? GOLD : DIM, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-              textTransform: 'capitalize', transition: 'all .15s',
+              transition: 'all .15s',
             }}
           >
-            {cat.replace('-', ' ')}
+            {categoryLabel(cat)}
           </button>
         ))}
       </div>
@@ -350,10 +356,10 @@ export default function FirewallRulesPage() {
             </div>
             {rules.length === 0 && (
               <FlowStrip steps={[
-                { title: 'Add rules', desc: 'numbered in steps of 10' },
-                { title: 'Order matters', desc: 'reorder with the arrows' },
-                { title: 'Toggle without deleting', desc: 'disable to test' },
-                { title: 'Policy exports', desc: 'into the as-built docs' },
+                { title: 'Add Rules', desc: 'Numbered in steps of 10' },
+                { title: 'Order Matters', desc: 'Reorder with the arrows' },
+                { title: 'Toggle Without Deleting', desc: 'Disable to test' },
+                { title: 'Policy Exports', desc: 'Into the as-built docs' },
               ]} />
             )}
           </div>
@@ -384,7 +390,7 @@ export default function FirewallRulesPage() {
                 {/* Action Badge */}
                 <span style={{
                   fontSize: 11, padding: '3px 10px', borderRadius: 10, fontWeight: 700,
-                  background: as.bg, color: as.text, textTransform: 'uppercase', width: 60, textAlign: 'center',
+                  background: as.bg, color: as.text, textTransform: 'capitalize', width: 60, textAlign: 'center',
                 }}>{rule.action}</span>
 
                 {/* Name */}
@@ -398,11 +404,11 @@ export default function FirewallRulesPage() {
                 {/* Category */}
                 <span style={{
                   fontSize: 10, padding: '2px 8px', borderRadius: 10, background: 'rgba(255,255,255,0.06)',
-                  color: DIM, textTransform: 'capitalize', fontWeight: 600,
-                }}>{rule.category}</span>
+                  color: DIM, fontWeight: 600,
+                }}>{categoryLabel(rule.category)}</span>
 
                 {/* Logging */}
-                {rule.logging && <span style={{ fontSize: 10, color: DIM }}>LOG</span>}
+                {rule.logging && <span style={{ fontSize: 10, color: DIM }}>Log</span>}
 
                 {/* Enabled Toggle */}
                 <button

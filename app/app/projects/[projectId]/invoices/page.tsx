@@ -14,7 +14,7 @@ import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 import { openPdf } from '@/components/PdfViewer';
 
-const GOLD='#F59E0B', DARK='#0a0a0a', RAISED='#141416', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#3dd68c', RED='#ef4444';
+const GOLD='var(--brand-primary)', DARK='var(--bg-base)', RAISED='var(--bg-surface)', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#3dd68c', RED='#ef4444';
 
 interface Invoice {
   id: string;
@@ -37,8 +37,8 @@ interface Invoice {
 // the normalization ('Sent', 'Draft') resolve to the same keys via statusKey().
 const STATUS_MAP: Record<string, { bg: string; color: string; label: string }> = {
   draft: { bg: 'rgba(143,163,192,.2)', color: DIM, label: 'Draft' },
-  sent: { bg: 'rgba(245,158,11,.2)', color: '#FBBF24', label: 'Sent' },
-  pending: { bg: 'rgba(245,158,11,.2)', color: '#f59e0b', label: 'Pending' },
+  sent: { bg: 'var(--brand-primary-18)', color: 'var(--brand-primary-strong)', label: 'Sent' },
+  pending: { bg: 'color-mix(in srgb, var(--warning) 20%, transparent)', color: 'var(--warning)', label: 'Pending' },
   approved: { bg: 'rgba(61,214,140,.2)', color: GREEN, label: 'Approved' },
   paid: { bg: 'rgba(61,214,140,.2)', color: GREEN, label: 'Paid' },
   overdue: { bg: 'rgba(239,68,68,.2)', color: RED, label: 'Overdue' },
@@ -300,7 +300,7 @@ export default function InvoicesPage() {
     }
   }
 
-  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: '#1c1c1e', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
+  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: 'var(--bg-surface-2)', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
   const label: React.CSSProperties = { fontSize: 12, color: DIM, marginBottom: 4, display: 'block' };
   const hint: React.CSSProperties = { fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 };
 
@@ -325,11 +325,11 @@ export default function InvoicesPage() {
       {/* Contract intelligence strip — what the system already knows */}
       {ctx && (
         <StatStrip items={[
-          {href: `/app/projects/${projectId}/contracts`,  label: 'Original Contract', value: fmt(original), sub: 'base agreement' },
+          {href: `/app/projects/${projectId}/contracts`,  label: 'Original Contract', value: fmt(original), sub: 'Base agreement' },
           {href: `/app/projects/${projectId}/change-orders`,  label: 'Approved COs', value: (coTotal >= 0 ? '+' : '') + fmt(coTotal), accent: coTotal > 0 ? GREEN : undefined, sub: `${Number(money?.approvedCoCount) || 0} approved${Number(money?.pendingCoCount) ? ` · ${money.pendingCoCount} pending` : ''}` },
-          {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmt(revised), sub: 'contract sum to date' },
+          {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmt(revised), sub: 'Contract sum to date' },
           {href: `/app/projects/${projectId}/invoices`,  label: 'Billed to Date', value: fmt(ctxBilled), sub: `${Number(money?.billedPct) || 0}% of revised` },
-          {href: `/app/projects/${projectId}/invoices`,  label: 'Outstanding', value: fmt(Math.max(0, ctxBilled - ctxPaid)), accent: ctxBilled - ctxPaid > 0 ? GOLD : GREEN, sub: 'billed, not yet collected' },
+          {href: `/app/projects/${projectId}/invoices`,  label: 'Outstanding', value: fmt(Math.max(0, ctxBilled - ctxPaid)), accent: ctxBilled - ctxPaid > 0 ? GOLD : GREEN, sub: 'Billed, not yet collected' },
         ]} />
       )}
 
@@ -338,17 +338,17 @@ export default function InvoicesPage() {
         <StatCard
           icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />}
           label="Total Billed" value={fmt(totalBilled > 0 ? totalBilled : ctxBilled)}
-          sub={totalBilled > 0 ? `across ${invoices.length} invoice${invoices.length === 1 ? '' : 's'}` : ctxBilled > 0 ? 'project billed to date (pay apps)' : 'across all invoices'} delay={0.02}
+          sub={totalBilled > 0 ? `Across ${invoices.length} invoice${invoices.length === 1 ? '' : 's'}` : ctxBilled > 0 ? 'Project billed to date (pay apps)' : 'Across all invoices'} delay={0.02}
          href={`/app/projects/${projectId}/invoices`}/>
         <StatCard
           icon={<CheckCircle size={19} weight="duotone" color={GREEN} />}
           label="Total Paid" value={fmt(totalPaid > 0 ? totalPaid : ctxPaid)} accent={GREEN}
-          sub={totalPaid > 0 ? 'collected on invoices' : ctxPaid > 0 ? 'collected on the contract' : 'collected'} delay={0.06}
+          sub={totalPaid > 0 ? 'Collected on invoices' : ctxPaid > 0 ? 'Collected on the contract' : 'Collected'} delay={0.06}
          href={`/app/projects/${projectId}/invoices`}/>
         <StatCard
           icon={<WarningCircle size={19} weight="duotone" color={totalOutstanding > 0 ? GOLD : GREEN} />}
           label="Outstanding" value={fmt(totalOutstanding > 0 ? totalOutstanding : Math.max(0, ctxBilled - ctxPaid))} accent={totalOutstanding > 0 || ctxBilled - ctxPaid > 0 ? GOLD : GREEN}
-          sub={totalOutstanding > 0 ? 'awaiting payment' : ctxBilled - ctxPaid > 0 ? 'billed less collected (contract)' : 'awaiting payment'} delay={0.10}
+          sub={totalOutstanding > 0 ? 'Awaiting payment' : ctxBilled - ctxPaid > 0 ? 'Billed less collected (contract)' : 'Awaiting payment'} delay={0.10}
          href={`/app/projects/${projectId}/invoices`}/>
       </div>
 
@@ -380,7 +380,7 @@ export default function InvoicesPage() {
                 {lastApp && certified > 0 ? (
                   <div style={hint}>
                     App #{lastApp.appNumber} certified {fmt(certified)}.{' '}
-                    <span onClick={() => { setForm(p => ({ ...p, amount: certified })); setAuto(a => ({ ...a, amt: true })); }} style={{ color: '#FBBF24', fontWeight: 700, cursor: 'pointer' }}>Use certified amount</span>
+                    <span onClick={() => { setForm(p => ({ ...p, amount: certified })); setAuto(a => ({ ...a, amt: true })); }} style={{ color: 'var(--brand-primary-strong)', fontWeight: 700, cursor: 'pointer' }}>Use Certified Amount</span>
                   </div>
                 ) : (
                   <div style={hint}>Pre-tax invoice amount.</div>
@@ -393,7 +393,7 @@ export default function InvoicesPage() {
               </div>
               <div>
                 <label style={label}>Invoice Total</label>
-                <div style={{ ...inp, display: 'flex', alignItems: 'center', fontWeight: 800, color: GOLD, background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.35)' }}>
+                <div style={{ ...inp, display: 'flex', alignItems: 'center', fontWeight: 800, color: GOLD, background: 'var(--brand-primary-08)', border: '1px solid var(--brand-primary-35)' }}>
                   {'$' + ((Number(form.amount) || 0) + (Number(form.tax) || 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
                 <div style={hint}>Amount + tax — computed live.</div>
@@ -432,7 +432,7 @@ export default function InvoicesPage() {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
               <button onClick={handleSave} disabled={saving} style={{ ...goldButtonStyle, opacity: saving ? 0.7 : 1 }} className="pmBtn">
-                {saving ? 'Saving...' : 'Create Invoice'}
+                {saving ? 'Saving…' : 'Create Invoice'}
               </button>
               <button onClick={() => { setShowForm(false); setErrorMsg(''); }} style={ghostButtonStyle} className="pmBtn">Cancel</button>
             </div>
@@ -440,24 +440,24 @@ export default function InvoicesPage() {
           {ctx && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <SectionCard flat title="What Saguaro Knows" icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}>
-                <InsightRow label="Original contract" value={fmt(original)} />
+                <InsightRow label="Original Contract" value={fmt(original)} />
                 {coTotal !== 0 && <InsightRow label="Approved COs" value={(coTotal > 0 ? '+' : '') + fmt(coTotal)} accent={GREEN} />}
-                <InsightRow label="Revised contract" value={fmt(revised)} />
-                <InsightRow label="Billed to date" value={fmt(ctxBilled)} />
-                <InsightRow label="Paid to date" value={fmt(ctxPaid)} accent={GREEN} />
+                <InsightRow label="Revised Contract" value={fmt(revised)} />
+                <InsightRow label="Billed to Date" value={fmt(ctxBilled)} />
+                <InsightRow label="Paid to Date" value={fmt(ctxPaid)} accent={GREEN} />
                 {lastApp && (
                   <>
                     <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '8px 0' }} />
                     <InsightRow label={`Pay App #${lastApp.appNumber}`} value={String(lastApp.status || '—').replace(/_/g, ' ')} />
-                    <InsightRow label="Certified this period" value={fmt(certified)} accent={GREEN} strong />
+                    <InsightRow label="Certified This Period" value={fmt(certified)} accent={GREEN} strong />
                   </>
                 )}
               </SectionCard>
               <SectionCard flat title="After You Create" icon={<Calculator size={17} weight="duotone" color={GOLD} />}>
                 <FlowSteps title="" steps={[
-                  { title: 'Draft is saved', desc: 'Edit the amount or adjust by % any time before sending.' },
-                  { title: 'Send to owner', desc: 'One click emails the invoice to the bill-to address above.' },
-                  { title: 'Payment is tracked', desc: 'Outstanding and overdue status update automatically from the due date.' },
+                  { title: 'Draft Is Saved', desc: 'Edit the amount or adjust by % any time before sending.' },
+                  { title: 'Send to Owner', desc: 'One click emails the invoice to the bill-to address above.' },
+                  { title: 'Payment Is Tracked', desc: 'Outstanding and overdue status update automatically from the due date.' },
                   { title: 'Ledger updates', desc: 'Billed and paid totals roll into the project money snapshot.' },
                 ]} />
               </SectionCard>
@@ -470,7 +470,7 @@ export default function InvoicesPage() {
         module="invoices"
         search={search}
         onSearch={setSearch}
-        searchPlaceholder="Search invoices..."
+        searchPlaceholder="Search invoices…"
         filters={[{ key: 'status', label: 'Status', value: statusFilter, onChange: setStatusFilter, allLabel: 'All Statuses', options: [
           { value: 'draft', label: 'Draft' }, { value: 'sent', label: 'Sent' }, { value: 'pending', label: 'Pending' },
           { value: 'approved', label: 'Approved' }, { value: 'paid', label: 'Paid' }, { value: 'overdue', label: 'Overdue' },
@@ -478,9 +478,9 @@ export default function InvoicesPage() {
         sort={sortBy}
         onSort={setSortBy}
         sortOptions={[
-          { value: 'newest', label: 'Newest first' },
-          { value: 'due', label: 'Due date' },
-          { value: 'amount', label: 'Amount (high first)' },
+          { value: 'newest', label: 'Newest First' },
+          { value: 'due', label: 'Due Date' },
+          { value: 'amount', label: 'Amount (High First)' },
         ]}
         count={{ shown: filteredInvoices.length, total: invoices.length }}
         style={{ marginBottom: 16 }}
@@ -499,19 +499,19 @@ export default function InvoicesPage() {
             />
             {ctx && (
               <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', padding: '22px 24px' }}>
-                <div style={{ fontSize: 10.5, fontWeight: 900, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 10 }}>What Saguaro Already Knows</div>
-                <InsightRow label="Original contract" value={fmt(original)} />
+                <div style={{ fontSize: 10.5, fontWeight: 900, color: 'rgba(255,255,255,0.45)', marginBottom: 10 }}>What Saguaro Already Knows</div>
+                <InsightRow label="Original Contract" value={fmt(original)} />
                 <InsightRow label="Approved COs" value={`${(coTotal > 0 ? '+' : '') + fmt(coTotal)} (${Number(money?.approvedCoCount) || 0})`} accent={coTotal > 0 ? GREEN : undefined} />
-                <InsightRow label="Revised contract" value={fmt(revised)} strong />
-                <InsightRow label="Billed to date" value={`${fmt(ctxBilled)} · ${Number(money?.billedPct) || 0}%`} />
-                <InsightRow label="Paid to date" value={fmt(ctxPaid)} accent={GREEN} />
+                <InsightRow label="Revised Contract" value={fmt(revised)} strong />
+                <InsightRow label="Billed to Date" value={`${fmt(ctxBilled)} · ${Number(money?.billedPct) || 0}%`} />
+                <InsightRow label="Paid to Date" value={fmt(ctxPaid)} accent={GREEN} />
                 {lastApp ? (
                   <>
                     <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '10px 0' }} />
-                    <InsightRow label={`Last pay app — #${lastApp.appNumber}`} value={String(lastApp.status || '—').replace(/_/g, ' ')} />
-                    <InsightRow label="Certified this period" value={fmt(certified)} accent={GREEN} strong />
+                    <InsightRow label={`Last Pay App — #${lastApp.appNumber}`} value={String(lastApp.status || '—').replace(/_/g, ' ')} />
+                    <InsightRow label="Certified This Period" value={fmt(certified)} accent={GREEN} strong />
                     {certified > 0 && (
-                      <div style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)', fontSize: 12, color: '#FBBF24', lineHeight: 1.5 }}>
+                      <div style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8, background: 'var(--brand-primary-08)', border: '1px solid var(--brand-primary-25)', fontSize: 12, color: 'var(--brand-primary-strong)', lineHeight: 1.5 }}>
                         Start by invoicing the certified amount from App #{lastApp.appNumber} — the form pre-fills it.
                       </div>
                     )}
@@ -530,7 +530,7 @@ export default function InvoicesPage() {
             <thead>
               <tr>
                 {['Invoice #','Bill To','Total','Issued','Due','Status','Notes','Actions'].map(h => (
-                  <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: DIM, borderBottom: '1px solid ' + BORDER, whiteSpace: 'nowrap' }}>{h}</th>
+                  <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: '1px solid ' + BORDER, whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -553,7 +553,7 @@ export default function InvoicesPage() {
                       ) : editId === inv.id ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                           <input value={editVal} onChange={e => setEditVal(e.target.value)} type="number" autoFocus onKeyDown={e => { if (e.key === 'Enter') handleEditInv(inv.id); if (e.key === 'Escape') setEditId(null); }} style={{ width: 100, padding: '4px 8px', background: DARK, border: `1px solid ${GOLD}`, borderRadius: 5, color: TEXT, fontSize: 12, outline: 'none', textAlign: 'right' }} />
-                          <button onClick={() => handleEditInv(inv.id)} style={{ padding: '3px 8px', background: `linear-gradient(135deg,${GOLD},#FBBF24)`, border: 'none', borderRadius: 5, color: '#1C1C1E', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Save</button>
+                          <button onClick={() => handleEditInv(inv.id)} style={{ padding: '3px 8px', background: 'linear-gradient(135deg,var(--brand-primary),var(--brand-primary-strong))', border: 'none', borderRadius: 5, color: '#0A0A00', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Save</button>
                           <button onClick={() => setEditId(null)} style={{ padding: '3px 8px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
                         </div>
                       ) : adjustId === inv.id ? (
@@ -566,7 +566,7 @@ export default function InvoicesPage() {
                       ) : (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                           <span style={{ color: GOLD, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{fmt(effectiveTotal(inv))}</span>
-                          {copiedId === inv.id && <span style={{ fontSize: 10, color: GREEN, fontWeight: 600 }}>Copied!</span>}
+                          {copiedId === inv.id && <span style={{ fontSize: 10, color: GREEN, fontWeight: 600 }}>Copied</span>}
                           <button onClick={() => openInvMenu(inv.id)} style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', padding: '2px 4px', lineHeight: 1, opacity: 0.6, display: 'inline-flex', alignItems: 'center' }} onMouseEnter={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '0.6')}><CaretDown size={11} weight="bold" /></button>
                           {menuId === inv.id && (
                             <div style={{ position: 'absolute', top: 36, right: 14, background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 'var(--radius-md)', padding: 6, zIndex: 100, minWidth: 160, boxShadow: 'var(--shadow-lg)' }}>
@@ -594,9 +594,9 @@ export default function InvoicesPage() {
                     <td style={{ padding: '10px 14px', color: DIM, fontSize: 12 }}>{inv.notes}</td>
                     <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                        <button onClick={() => handlePdf(inv)} disabled={pdfBusy === inv.id} title={inv.pdf_url ? 'Open PDF' : 'Generate PDF'} style={{ padding: '4px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid ' + BORDER, borderRadius: 5, color: inv.pdf_url ? '#FBBF24' : DIM, fontSize: 12, cursor: 'pointer', opacity: pdfBusy === inv.id ? 0.5 : 1 }}>{pdfBusy === inv.id ? '...' : 'PDF'}</button>
+                        <button onClick={() => handlePdf(inv)} disabled={pdfBusy === inv.id} title={inv.pdf_url ? 'Open PDF' : 'Generate PDF'} style={{ padding: '4px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid ' + BORDER, borderRadius: 5, color: inv.pdf_url ? 'var(--brand-primary-strong)' : DIM, fontSize: 12, cursor: 'pointer', opacity: pdfBusy === inv.id ? 0.5 : 1 }}>{pdfBusy === inv.id ? '…' : 'PDF'}</button>
                         {statusKey(inv.status) === 'draft' && (
-                          <button onClick={() => handleSend(inv.id)} style={{ padding: '4px 12px', background: 'rgba(245,158,11,.2)', border: '1px solid rgba(245,158,11,.4)', borderRadius: 5, color: '#FBBF24', fontSize: 12, cursor: 'pointer' }}>Send to Owner</button>
+                          <button onClick={() => handleSend(inv.id)} style={{ padding: '4px 12px', background: 'var(--brand-primary-18)', border: '1px solid var(--brand-primary-35)', borderRadius: 5, color: 'var(--brand-primary-strong)', fontSize: 12, cursor: 'pointer' }}>Send to Owner</button>
                         )}
                         {statusKey(inv.status) === 'paid' && <span style={{ color: GREEN, fontSize: 12 }}>Paid</span>}
                       </div>

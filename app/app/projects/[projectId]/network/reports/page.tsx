@@ -8,10 +8,10 @@ import Link from 'next/link';
 import { Clipboard, Plug, Shuffle, WifiHigh, Ruler, ChartBar, FileText, Archive } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, FlowStrip, ghostButtonStyle } from '@/components/ui/premium';
 
-const BASE = '#1c1c1e';
-const GOLD = '#F59E0B';
+const BASE = 'var(--bg-surface-2)';
+const GOLD = 'var(--brand-primary)';
 const GREEN = '#34C759';
-const BLUE = '#F59E0B';
+const BLUE = 'var(--brand-primary)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
 const TEXT = '#FFFFFF';
@@ -72,6 +72,8 @@ const REPORT_TYPES = [
 ];
 
 const FORMAT_OPTIONS = ['pdf', 'excel', 'csv'];
+const FORMAT_LABELS: Record<string, string> = { pdf: 'PDF', excel: 'Excel', csv: 'CSV' };
+const formatLabel = (f: string) => FORMAT_LABELS[f] || f.toUpperCase();
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 12px', background: BASE, color: TEXT,
@@ -99,7 +101,8 @@ export default function ReportsPage() {
   const [selectedFormat, setSelectedFormat] = useState('pdf');
   const [showBranding, setShowBranding] = useState(false);
   const [branding, setBranding] = useState({
-    company_name: '', logo_url: '', primary_color: GOLD, secondary_color: BLUE,
+    company_name: '', logo_url: '', // Hex on purpose: these feed <input type="color"> and are sent to the report API.
+    primary_color: '#F59E0B', secondary_color: '#F59E0B',
   });
 
   const fetchData = useCallback(async () => {
@@ -170,13 +173,13 @@ export default function ReportsPage() {
     <PremiumSurface maxWidth={2200}>
       {/* Breadcrumb */}
       <div style={{ marginBottom: 14 }}>
-        <Link href={`/app/projects/${projectId}/network`} style={{ color: DIM, fontSize: 12, textDecoration: 'none' }}>Network &gt;</Link>
+        <Link href={`/app/projects/${projectId}/network`} style={{ color: DIM, fontSize: 12, textDecoration: 'none' }}>Network →</Link>
         <span style={{ color: 'rgba(255,255,255,0.62)', fontSize: 12, marginLeft: 4 }}>Reports</span>
       </div>
 
       {/* Header */}
       <ModuleHero
-        eyebrow="NETWORK"
+        eyebrow="Network"
         eyebrowIcon={<FileText size={13} weight="fill" color={GOLD} />}
         title="Network"
         accent="Reports"
@@ -187,7 +190,7 @@ export default function ReportsPage() {
             onChange={e => setSelectedFormat(e.target.value)}
             style={{ ...inputStyle, width: 110 }}
           >
-            {FORMAT_OPTIONS.map(f => <option key={f} value={f}>{f.toUpperCase()}</option>)}
+            {FORMAT_OPTIONS.map(f => <option key={f} value={f}>{formatLabel(f)}</option>)}
           </select>
           <button onClick={() => setShowBranding(!showBranding)} style={ghostButtonStyle} className="pmBtn">
             {showBranding ? 'Hide Branding' : 'Branding'}
@@ -201,9 +204,9 @@ export default function ReportsPage() {
         return (
           <StatStrip items={[
             {href: `/app/projects/${projectId}/network/reports`,  label: 'Report Types', value: String(REPORT_TYPES.length), sub: 'IP schedule to as-built' },
-            {href: `/app/projects/${projectId}/network/reports`,  label: 'Formats', value: String(FORMAT_OPTIONS.length), sub: FORMAT_OPTIONS.map((f) => f.toUpperCase()).join(', ') },
-            {href: `/app/projects/${projectId}/network/reports`,  label: 'Reports Generated', value: String(history.length), sub: history.length ? 'archived in history below' : 'none generated yet' },
-            {href: `/app/projects/${projectId}/network/reports`,  label: 'Last Export', value: latest ? new Date(latest.created_at).toLocaleDateString() : 'Never', sub: latest ? latest.name : 'one tap builds the first' },
+            {href: `/app/projects/${projectId}/network/reports`,  label: 'Formats', value: String(FORMAT_OPTIONS.length), sub: FORMAT_OPTIONS.map((f) => formatLabel(f)).join(', ') },
+            {href: `/app/projects/${projectId}/network/reports`,  label: 'Reports Generated', value: String(history.length), sub: history.length ? 'Archived in history below' : 'None generated yet' },
+            {href: `/app/projects/${projectId}/network/reports`,  label: 'Last Export', value: latest ? new Date(latest.created_at).toLocaleDateString() : 'Never', sub: latest ? latest.name : 'One tap builds the first' },
           ]} />
         );
       })()}
@@ -268,13 +271,13 @@ export default function ReportsPage() {
                       disabled={generating === report.type}
                       style={{
                         flex: 1, padding: '8px 12px',
-                        background: generating === report.type ? `${report.color}22` : 'rgba(255,255,255,0.05)',
-                        color: report.color, border: `1px solid ${report.color}45`,
+                        background: generating === report.type ? `color-mix(in srgb, ${report.color} 13%, transparent)` : 'rgba(255,255,255,0.05)',
+                        color: report.color, border: `1px solid color-mix(in srgb, ${report.color} 27%, transparent)`,
                         borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer',
-                        opacity: generating === report.type ? 0.6 : 1, textTransform: 'uppercase',
+                        opacity: generating === report.type ? 0.6 : 1,
                       }}
                     >
-                      {generating === report.type ? '...' : fmt}
+                      {generating === report.type ? '…' : formatLabel(fmt)}
                     </button>
                   ))}
                 </div>
@@ -300,18 +303,18 @@ export default function ReportsPage() {
                   if (!rt) return null;
                   return (
                     <button key={t} onClick={() => generateReport(t)} disabled={generating === t} className="pmBtn"
-                      style={{ padding: '6px 14px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 999, color: GOLD, fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: generating === t ? 0.6 : 1 }}>
-                      {generating === t ? 'Generating...' : rt.label}
+                      style={{ padding: '6px 14px', background: 'var(--brand-primary-08)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', borderRadius: 999, color: GOLD, fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: generating === t ? 0.6 : 1 }}>
+                      {generating === t ? 'Generating…' : rt.label}
                     </button>
                   );
                 })}
               </div>
             </div>
             <FlowStrip steps={[
-              { title: 'Pick a document', desc: 'six report types above' },
-              { title: 'Choose the format', desc: `${selectedFormat.toUpperCase()} selected now` },
-              { title: 'Download instantly', desc: 'branded with your logo' },
-              { title: 'History archives it', desc: 'every export kept here' },
+              { title: 'Pick a Document', desc: 'Six report types above' },
+              { title: 'Choose the Format', desc: `${formatLabel(selectedFormat)} selected now` },
+              { title: 'Download Instantly', desc: 'Branded with your logo' },
+              { title: 'History Archives It', desc: 'Every export kept here' },
             ]} />
           </div>
         ) : (
@@ -331,7 +334,7 @@ export default function ReportsPage() {
                 <div style={{ flex: 1 }}>
                   <div style={{ color: TEXT, fontSize: 13, fontWeight: 600 }}>{report.name}</div>
                   <div style={{ color: DIM, fontSize: 11 }}>
-                    {new Date(report.created_at).toLocaleString()} &middot; {report.format.toUpperCase()} &middot; {formatFileSize(report.file_size || 0)}
+                    {new Date(report.created_at).toLocaleString()} &middot; {formatLabel(report.format)} &middot; {formatFileSize(report.file_size || 0)}
                   </div>
                 </div>
                 <a
@@ -339,7 +342,7 @@ export default function ReportsPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
-                    padding: '6px 14px', background: `${GOLD}18`, color: GOLD, border: `1px solid ${GOLD}45`,
+                    padding: '6px 14px', background: 'var(--brand-primary-08)', color: GOLD, border: '1px solid var(--brand-primary-25)',
                     borderRadius: 8, fontSize: 11, fontWeight: 700, textDecoration: 'none', cursor: 'pointer',
                   }}
                 >

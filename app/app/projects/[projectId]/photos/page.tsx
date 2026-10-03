@@ -27,7 +27,7 @@ import { moduleAccent } from '@/lib/module-identity';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
 const GREEN='#1a8a4a',RED='#c03030';
 
 const ALBUMS=['General','Progress','Inspections','Closeout','Issues','Other'];
@@ -40,7 +40,7 @@ const isFromFiles=(p:any)=>p?.source==='files'||p?.read_only===true;
 const titleFromFileName=(name:string)=>name.replace(/\.[^.]+$/,'').replace(/[-_]+/g,' ').replace(/\s+/g,' ').trim();
 const ALBUM_COLORS:Record<string,string>={
   General:DIM,
-  Progress:'#FBBF24',
+  Progress:'var(--brand-primary-strong)',
   Inspections:GOLD,
   Closeout:GREEN,
   Issues:RED,
@@ -49,7 +49,7 @@ const ALBUM_COLORS:Record<string,string>={
 };
 
 const inp:React.CSSProperties={
-  width:'100%',padding:'9px 12px',background:'#1c1c1e',
+  width:'100%',padding:'9px 12px',background:'var(--bg-surface-2)',
   border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,
   fontSize:13,outline:'none',boxSizing:'border-box',
 };
@@ -62,7 +62,7 @@ const EMPTY_FORM={
 function Pill({label,color}:{label:string;color:string}){
   return(
     <span style={{fontSize:10,fontWeight:700,padding:'3px 9px',borderRadius:20,
-      background:`${color}22`,color,textTransform:'uppercase',letterSpacing:.3}}>
+      background:`color-mix(in srgb, ${color} 13%, transparent)`,color}}>
       {label}
     </span>
   );
@@ -71,15 +71,15 @@ function Pill({label,color}:{label:string;color:string}){
 function FieldLabel({label,auto}:{label:string;auto?:boolean}){
   return(
     <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,
-      textTransform:'uppercase',letterSpacing:.5,marginBottom:5}}>{label}{auto&&<AutoChip/>}</label>
+      marginBottom:5}}>{label}{auto&&<AutoChip/>}</label>
   );
 }
 
 function InfoCard({label,value}:{label:string;value:string|undefined|null}){
   if(!value) return null;
   return(
-    <div style={{background:'#141416',border:`1px solid ${BORDER}`,borderRadius:8,padding:'10px 12px'}}>
-      <div style={{fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:4}}>{label}</div>
+    <div style={{background:'var(--bg-surface)',border:`1px solid ${BORDER}`,borderRadius:8,padding:'10px 12px'}}>
+      <div style={{fontSize:10,fontWeight:700,color:DIM,marginBottom:4}}>{label}</div>
       <div style={{fontSize:13,color:TEXT}}>{value}</div>
     </div>
   );
@@ -196,10 +196,10 @@ export default function PhotosPage(){
 
   async function save(): Promise<boolean> {
     setFormError('');
-    if(!form.title.trim()){setFormError('Give the photo a title first.');showToast('Title is required','error');return false;}
+    if(!form.title.trim()){setFormError('Give the photo a title first.');showToast('Title is required.','error');return false;}
     if(mode==='create'&&!uploadFile&&!form.url.trim()){
       setFormError('Choose a photo file to upload, or paste an image URL.');
-      showToast('No photo attached','error');
+      showToast('No photo attached.','error');
       return false;
     }
     setSaving(true);
@@ -239,12 +239,12 @@ export default function PhotosPage(){
               }),
             });
             if(!meta.ok){
-              showToast('Photo uploaded, but the details did not save — reopen it to re-enter them','error');
+              showToast('Photo uploaded, but the details did not save — reopen it to re-enter them.','error');
             }else{
-              showToast('Photo added');
+              showToast('Photo added.');
             }
           }else{
-            showToast('Photo uploaded');
+            showToast('Photo uploaded.');
           }
         }else{
           const r=await fetch('/api/photos/create',{
@@ -253,7 +253,7 @@ export default function PhotosPage(){
             body:JSON.stringify({...payload,projectId}),
           });
           if(!r.ok) throw await errorFrom(r,'Save failed. Please try again.');
-          showToast('Photo added');
+          showToast('Photo added.');
         }
       }else if(mode==='edit'&&selected){
         if(uploadFile){
@@ -273,7 +273,7 @@ export default function PhotosPage(){
           body:JSON.stringify(body),
         });
         if(!r.ok) throw await errorFrom(r,'Save failed. Please try again.');
-        showToast('Photo updated');
+        showToast('Photo updated.');
       }
       await load();closePanel();
       guard.clearDraft();
@@ -295,8 +295,8 @@ export default function PhotosPage(){
       const h=await getAuthHeaders();
       const dr=await fetch(`/api/photos/${photo.id}`,{method:'DELETE',headers:h});
       if (!dr.ok) throw new Error('Delete failed');
-      showToast('Photo deleted');closePanel();await load();
-    }catch{showToast('Delete failed','error');}
+      showToast('Photo deleted.');closePanel();await load();
+    }catch{showToast('Delete failed.','error');}
     finally{setDeleting(false);}
   }
 
@@ -360,9 +360,9 @@ export default function PhotosPage(){
               formData.append('file', blob, 'edited.jpg');
               const headers = await getAuthHeaders();
               const r = await fetch(`/api/photos/${id}/upload`, { method: 'POST', headers, body: formData });
-              if (r.ok) { showToast('Photo saved'); load(); }
-              else showToast('Save failed', 'error');
-            } catch { showToast('Save failed', 'error'); }
+              if (r.ok) { showToast('Photo saved.'); load(); }
+              else showToast('Save failed.', 'error');
+            } catch { showToast('Save failed.', 'error'); }
             setEditingPhoto(null);
           }}
           onDelete={async (id) => {
@@ -371,8 +371,8 @@ export default function PhotosPage(){
               const r = await fetch(`/api/photos/${id}`, { method: 'DELETE', headers: { ...headers, 'Content-Type': 'application/json' } });
               if (!r.ok) throw new Error('delete failed');
               setPhotos(prev => prev.filter(p => p.id !== id));
-              showToast('Photo deleted');
-            } catch { showToast('Delete failed', 'error'); }
+              showToast('Photo deleted.');
+            } catch { showToast('Delete failed.', 'error'); }
             setEditingPhoto(null);
           }}
         />
@@ -385,7 +385,7 @@ export default function PhotosPage(){
           <ModuleHero
             /* Always name the job on screen — never a bare "Photos" that leaves a GC
                guessing which project they are filing into. */
-            eyebrow={ctx?.project?.name||(loading?'Loading project…':'This project')}
+            eyebrow={ctx?.project?.name||(loading?'Loading project…':'This Project')}
             eyebrowIcon={<IconChip size={24} vivid={moduleAccent('photos').vivid ?? moduleAccent('photos').hex}><Camera size={13} weight="fill" color="#F8FAFC" /></IconChip>}
             accentColor={moduleAccent('photos').hex}
             title="Site"
@@ -401,21 +401,21 @@ export default function PhotosPage(){
           {/* Project intelligence strip — what the system already knows */}
           {ctx&&(
             <StatStrip items={[
-              {href: `/app/projects/${projectId}/photos`, label:'Project',value:`${Number(ctx?.project?.percentComplete)||0}%`,sub:'complete — the gallery is the proof'},
-              {href: `/app/projects/${projectId}/photos`, label:'Photos',value:String(photos.length),sub:albums.length>0?`${albums.length} album${albums.length===1?'':'s'} in use`:'no albums yet'},
-              {href: `/app/projects/${projectId}/photos`, label:'This Month',value:String(thisMonth),accent:thisMonth>0?'#3dd68c':undefined,sub:'added since the 1st'},
-              {href: `/app/projects/${projectId}/photos`, label:'Last Photo',value:lastPhotoAt?fmtDate(lastPhotoAt):'—',sub:lastPhotoAt?'most recent capture':'nothing documented yet'},
-              {href: `/app/projects/${projectId}/photos`, label:'Issues Tagged',value:String(issueCount),accent:issueCount>0?RED:undefined,sub:issueCount>0?'flagged for follow-up':'clean so far'},
-              {href: `/app/projects/${projectId}/daily-logs`, label:'Last Daily Log',value:ctx?.recent?.lastDailyLogDate?fmtDate(ctx.recent.lastDailyLogDate):'—',sub:Number(ctx?.counts?.openPunch)>0?`${ctx.counts.openPunch} open punch`:'field activity'},
+              {href: `/app/projects/${projectId}/photos`, label:'Project',value:`${Number(ctx?.project?.percentComplete)||0}%`,sub:'Complete — the gallery is the proof'},
+              {href: `/app/projects/${projectId}/photos`, label:'Photos',value:String(photos.length),sub:albums.length>0?`${albums.length} album${albums.length===1?'':'s'} in use`:'No albums yet'},
+              {href: `/app/projects/${projectId}/photos`, label:'This Month',value:String(thisMonth),accent:thisMonth>0?'#3dd68c':undefined,sub:'Added since the 1st'},
+              {href: `/app/projects/${projectId}/photos`, label:'Last Photo',value:lastPhotoAt?fmtDate(lastPhotoAt):'—',sub:lastPhotoAt?'Most recent capture':'Nothing documented yet'},
+              {href: `/app/projects/${projectId}/photos`, label:'Issues Tagged',value:String(issueCount),accent:issueCount>0?RED:undefined,sub:issueCount>0?'Flagged for follow-up':'Clean so far'},
+              {href: `/app/projects/${projectId}/daily-logs`, label:'Last Daily Log',value:ctx?.recent?.lastDailyLogDate?fmtDate(ctx.recent.lastDailyLogDate):'—',sub:Number(ctx?.counts?.openPunch)>0?`${ctx.counts.openPunch} open punch`:'Field activity'},
             ]}/>
           )}
 
           {/* KPIs */}
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
-            <StatCard icon={<Images size={19} weight="duotone" color={moduleAccent('photos').hex} />} label="Total Photos" value={String(photos.length)} accent="#FBBF24" sub="all albums" delay={0.02}  href={`/app/projects/${projectId}/photos`}/>
-            <StatCard icon={<CalendarBlank size={19} weight="duotone" color={moduleAccent('photos').hex} />} label="This Month" value={String(thisMonth)} accent={GOLD} sub="added this month" delay={0.06}  href={`/app/projects/${projectId}/photos`}/>
-            <StatCard icon={<FolderSimple size={19} weight="duotone" color={GREEN} />} label="Albums" value={String(albums.length||ALBUMS.length)} accent={GREEN} sub="in use" delay={0.10}  href={`/app/projects/${projectId}/photos`}/>
-            <StatCard icon={<WarningCircle size={19} weight="duotone" color={RED} />} label="Issues Tagged" value={String(issueCount)} accent={RED} sub="flagged" delay={0.14}  href={`/app/projects/${projectId}/photos`}/>
+            <StatCard icon={<Images size={19} weight="duotone" color={moduleAccent('photos').hex} />} label="Total Photos" value={String(photos.length)} accent="var(--brand-primary-strong)" sub="All albums" delay={0.02}  href={`/app/projects/${projectId}/photos`}/>
+            <StatCard icon={<CalendarBlank size={19} weight="duotone" color={moduleAccent('photos').hex} />} label="This Month" value={String(thisMonth)} accent={GOLD} sub="Added this month" delay={0.06}  href={`/app/projects/${projectId}/photos`}/>
+            <StatCard icon={<FolderSimple size={19} weight="duotone" color={GREEN} />} label="Albums" value={String(albums.length||ALBUMS.length)} accent={GREEN} sub="In use" delay={0.10}  href={`/app/projects/${projectId}/photos`}/>
+            <StatCard icon={<WarningCircle size={19} weight="duotone" color={RED} />} label="Issues Tagged" value={String(issueCount)} accent={RED} sub="Flagged" delay={0.14}  href={`/app/projects/${projectId}/photos`}/>
           </div>
 
           {/* Toolbar */}
@@ -423,7 +423,7 @@ export default function PhotosPage(){
             module="photos"
             search={search}
             onSearch={setSearch}
-            searchPlaceholder="Search by title or tag..."
+            searchPlaceholder="Search by title or tag…"
             filters={[
               {key:'album',label:'Album',value:filterAlbum,onChange:setFilterAlbum,
                 allValue:'All',allLabel:'All Albums',options:albums.includes(FILES_ALBUM)?[...ALBUMS,FILES_ALBUM]:ALBUMS},
@@ -434,7 +434,7 @@ export default function PhotosPage(){
                 {(['date','album'] as const).map(g=>(
                   <button key={g} onClick={()=>setGroupBy(g)}
                     style={{padding:'7px 14px',borderRadius:8,border:'none',fontWeight:700,fontSize:12,cursor:'pointer',
-                      background:groupBy===g?'rgba(245,158,11,0.15)':'transparent',color:groupBy===g?'#FBBF24':DIM,transition:'all .15s'}}>
+                      background:groupBy===g?'color-mix(in srgb, var(--brand-primary) 15%, transparent)':'transparent',color:groupBy===g?'var(--brand-primary-strong)':DIM,transition:'all .15s'}}>
                     {g==='date'?'By Date':'By Album'}
                   </button>
                 ))}
@@ -449,7 +449,7 @@ export default function PhotosPage(){
             icon={<Images size={17} weight="duotone" color={moduleAccent('photos').hex} />}
             action={<span style={{fontSize:12,color:'rgba(255,255,255,0.62)',fontWeight:600}}>{filtered.length} {filtered.length===1?'photo':'photos'}</span>}
           >
-            {loading&&<div style={{padding:40,textAlign:'center',color:DIM}}>Loading photos...</div>}
+            {loading&&<div style={{padding:40,textAlign:'center',color:DIM}}>Loading photos…</div>}
 
             {!loading&&loadError&&(
               <PremiumEmpty
@@ -473,15 +473,15 @@ export default function PhotosPage(){
                   />
                   {ctx&&(
                     <div style={{borderLeft:'1px solid rgba(255,255,255,0.08)',padding:'22px 24px'}}>
-                      <div style={{fontSize:10.5,fontWeight:900,color:'rgba(255,255,255,0.45)',textTransform:'uppercase',letterSpacing:'0.09em',marginBottom:10}}>What Belongs Here</div>
-                      <InsightRow label="Progress" value="weekly site walks"/>
-                      <InsightRow label="Inspections" value="pass / fail evidence"/>
-                      <InsightRow label="Issues" value="defects to chase"/>
-                      <InsightRow label="Closeout" value="final condition"/>
+                      <div style={{fontSize:10.5,fontWeight:900,color:'rgba(255,255,255,0.45)',marginBottom:10}}>What Belongs Here</div>
+                      <InsightRow label="Progress" value="Weekly site walks"/>
+                      <InsightRow label="Inspections" value="Pass/fail evidence"/>
+                      <InsightRow label="Issues" value="Defects to chase"/>
+                      <InsightRow label="Closeout" value="Final condition"/>
                       <div style={{height:1,background:'rgba(255,255,255,0.08)',margin:'10px 0'}}/>
                       <InsightRow label="Project" value={`${Number(ctx?.project?.percentComplete)||0}% complete`}/>
-                      {ctx?.recent?.lastDailyLogDate&&<InsightRow label="Last daily log" value={fmtDate(ctx.recent.lastDailyLogDate)}/>}
-                      {Number(ctx?.counts?.openPunch)>0&&<InsightRow label="Open punch" value={String(ctx.counts.openPunch)} accent="#FBBF24"/>}
+                      {ctx?.recent?.lastDailyLogDate&&<InsightRow label="Last Daily Log" value={fmtDate(ctx.recent.lastDailyLogDate)}/>}
+                      {Number(ctx?.counts?.openPunch)>0&&<InsightRow label="Open Punch" value={String(ctx.counts.openPunch)} accent="var(--brand-primary-strong)"/>}
                       <div style={{marginTop:12,fontSize:12,color:DIM,lineHeight:1.55}}>
                         Field photos from daily logs and punch items document the same work — album them here by phase and closeout builds itself.
                       </div>
@@ -503,7 +503,7 @@ export default function PhotosPage(){
                 {Object.entries(grouped).map(([album,albumPhotos])=>(
                   <div key={album}>
                     <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
-                      <span style={{fontSize:13,fontWeight:700,color:groupBy==='album'?(ALBUM_COLORS[album]||DIM):'#FBBF24'}}>{album}</span>
+                      <span style={{fontSize:13,fontWeight:700,color:groupBy==='album'?(ALBUM_COLORS[album]||DIM):'var(--brand-primary-strong)'}}>{album}</span>
                       <span style={{fontSize:11,color:DIM}}>({albumPhotos.length})</span>
                       <div style={{flex:1,height:1,background:BORDER}}/>
                     </div>
@@ -544,16 +544,16 @@ export default function PhotosPage(){
               {mode==='view'&&selected&&!isFromFiles(selected)&&(
                 <>
                   <button onClick={()=>openEdit(selected)}
-                    style={{padding:'6px 14px',background:'rgba(245,158,11,.1)',
-                      border:'1px solid rgba(245,158,11,.3)',borderRadius:6,
-                      color:'#FBBF24',fontSize:12,fontWeight:700,cursor:'pointer'}}>
+                    style={{padding:'6px 14px',background:'color-mix(in srgb, var(--brand-primary) 10%, transparent)',
+                      border:'1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)',borderRadius:6,
+                      color:'var(--brand-primary-strong)',fontSize:12,fontWeight:700,cursor:'pointer'}}>
                     Edit
                   </button>
                   <button onClick={()=>deletePhoto(selected)} disabled={deleting}
                     style={{padding:'6px 14px',background:'rgba(192,48,48,.1)',
                       border:`1px solid ${RED}44`,borderRadius:6,
                       color:RED,fontSize:12,fontWeight:700,cursor:'pointer'}}>
-                    {deleting?'...':'Delete'}
+                    {deleting?'…':'Delete'}
                   </button>
                 </>
               )}
@@ -581,7 +581,7 @@ export default function PhotosPage(){
                           {uploadFile?.name||'Selected photo'}
                         </span>
                         <button onClick={()=>fileRef.current?.click()}
-                          style={{background:'transparent',border:'none',color:'#FBBF24',fontSize:11.5,fontWeight:700,cursor:'pointer',padding:0}}>
+                          style={{background:'transparent',border:'none',color:'var(--brand-primary-strong)',fontSize:11.5,fontWeight:700,cursor:'pointer',padding:0}}>
                           Replace
                         </button>
                         <button onClick={clearUpload}
@@ -593,11 +593,11 @@ export default function PhotosPage(){
                   ):(
                     <button onClick={()=>fileRef.current?.click()}
                       style={{width:'100%',padding:'16px 12px',background:RAISED,
-                        border:`1px dashed rgba(245,158,11,.45)`,borderRadius:8,color:'#FBBF24',
+                        border:`1px dashed color-mix(in srgb, var(--brand-primary) 45%, transparent)`,borderRadius:8,color:'var(--brand-primary-strong)',
                         fontSize:13,fontWeight:700,cursor:'pointer',
                         display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
                       <Camera size={17} weight="duotone" color={GOLD}/>
-                      {mode==='create'?'Choose a photo from this computer':'Upload a replacement image'}
+                      {mode==='create'?'Choose a Photo from This Computer':'Upload a Replacement Image'}
                     </button>
                   )}
                   <div style={{fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:5,lineHeight:1.45}}>
@@ -656,9 +656,9 @@ export default function PhotosPage(){
                     else, but it is no longer the only way in. */}
                 {!uploadFile&&(
                   <div>
-                    <FieldLabel label={mode==='create'?'…or paste an image URL':'Photo URL'}/>
+                    <FieldLabel label={mode==='create'?'…or Paste an Image URL':'Photo URL'}/>
                     <input value={form.url} onChange={e=>setForm(f=>({...f,url:e.target.value}))}
-                      style={inp} placeholder="https://..."/>
+                      style={inp} placeholder="https://…"/>
                   </div>
                 )}
                 <div>
@@ -674,7 +674,7 @@ export default function PhotosPage(){
                 <div style={{display:'flex',gap:10,paddingTop:4}}>
                   <button onClick={save} disabled={saving} className="pmBtn"
                     style={{...goldButtonStyle,flex:1,opacity:saving?0.6:1}}>
-                    {saving?'Saving...':mode==='create'?'Add Photo':'Save Changes'}
+                    {saving?'Saving…':mode==='create'?'Add Photo':'Save Changes'}
                   </button>
                   <button onClick={closePanel} className="pmBtn"
                     style={ghostButtonStyle}>
@@ -706,15 +706,15 @@ export default function PhotosPage(){
                   {isFromFiles(selected)&&(
                     <div style={{marginTop:10,fontSize:12,color:DIM,lineHeight:1.5}}>
                       This image lives in the project&apos;s Files &amp; Media library. Rename, move or delete it there.{' '}
-                      <a href={`/app/projects/${projectId}/files`} style={{color:'#FBBF24',fontWeight:700}}>Open Files &amp; Media</a>
+                      <a href={`/app/projects/${projectId}/files`} style={{color:'var(--brand-primary-strong)',fontWeight:700}}>Open Files &amp; Media</a>
                     </div>
                   )}
                 </div>
 
                 {/* Description */}
                 {selected.description&&(
-                  <div style={{background:'#141416',border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
-                    <div style={{fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:6}}>Description</div>
+                  <div style={{background:'var(--bg-surface)',border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
+                    <div style={{fontSize:10,fontWeight:700,color:DIM,marginBottom:6}}>Description</div>
                     <div style={{fontSize:13,color:TEXT,lineHeight:1.6,whiteSpace:'pre-wrap'}}>{selected.description}</div>
                   </div>
                 )}
@@ -728,11 +728,11 @@ export default function PhotosPage(){
 
                 {/* Tags */}
                 {Array.isArray(selected.tags)&&selected.tags.length>0&&(
-                  <div style={{background:'#141416',border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
-                    <div style={{fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:8}}>Tags</div>
+                  <div style={{background:'var(--bg-surface)',border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
+                    <div style={{fontSize:10,fontWeight:700,color:DIM,marginBottom:8}}>Tags</div>
                     <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
                       {selected.tags.map((tag:string)=>(
-                        <span key={tag} style={{padding:'3px 10px',borderRadius:20,background:`${GOLD}22`,
+                        <span key={tag} style={{padding:'3px 10px',borderRadius:20,background:'color-mix(in srgb, var(--brand-primary) 13%, transparent)',
                           color:GOLD,fontSize:11,fontWeight:600}}>
                           {tag}
                         </span>
@@ -744,9 +744,9 @@ export default function PhotosPage(){
                 {/* URL link */}
                 {selected.url&&(
                   <a href={selected.url} target="_blank" rel="noreferrer"
-                    style={{display:'block',padding:'10px 14px',background:'rgba(245,158,11,.1)',
-                      border:'1px solid rgba(245,158,11,.3)',borderRadius:8,
-                      color:'#FBBF24',fontSize:13,fontWeight:700,textDecoration:'none',textAlign:'center'}}>
+                    style={{display:'block',padding:'10px 14px',background:'color-mix(in srgb, var(--brand-primary) 10%, transparent)',
+                      border:'1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)',borderRadius:8,
+                      color:'var(--brand-primary-strong)',fontSize:13,fontWeight:700,textDecoration:'none',textAlign:'center'}}>
                     View Full Image
                   </a>
                 )}
@@ -764,24 +764,24 @@ function PhotoCard({photo,selected,onClick,albumColor,onEdit}:{
   photo:any;selected:boolean;onClick:()=>void;albumColor:string;onEdit?:(id:string,url:string)=>void;
 }){
   const BORDER_C='rgba(255,255,255,0.12)';
-  const RAISED_C='#141416';
+  const RAISED_C='var(--bg-surface)';
   const DIM_C='#CBD5E1';
   const TEXT_C='#FFFFFF';
   return(
     <div onClick={onClick}
-      style={{background:selected?'rgba(245, 158, 11,.07)':RAISED_C,
-        border:`1px solid ${selected?'#F59E0B':BORDER_C}`,borderRadius:10,
+      style={{background:selected?'color-mix(in srgb, var(--brand-primary) 7%, transparent)':RAISED_C,
+        border:`1px solid ${selected?'var(--brand-primary)':BORDER_C}`,borderRadius:10,
         overflow:'hidden',cursor:'pointer',transition:'border-color .15s'}}
-      onMouseEnter={e=>{if(!selected)e.currentTarget.style.borderColor='rgba(245, 158, 11,.4)';}}
+      onMouseEnter={e=>{if(!selected)e.currentTarget.style.borderColor='color-mix(in srgb, var(--brand-primary) 40%, transparent)';}}
       onMouseLeave={e=>{if(!selected)e.currentTarget.style.borderColor=BORDER_C;}}>
       {photo.url?(
         /* Grid tiles render the ~400px thumbnail; the full original is for the
            detail panel only (see THUMBNAIL CONTRACT in /api/photos/list). */
         <img src={photo.thumbnail_url||photo.url} alt={photo.title} loading="lazy" decoding="async"
           style={{width:'100%',height:140,objectFit:'cover',display:'block'}}
-          onError={e=>{(e.target as HTMLImageElement).parentElement!.style.background='#1c1c1e';(e.target as HTMLImageElement).style.display='none';}}/>
+          onError={e=>{(e.target as HTMLImageElement).parentElement!.style.background='var(--bg-surface-2)';(e.target as HTMLImageElement).style.display='none';}}/>
       ):(
-        <div style={{width:'100%',height:140,background:'#1c1c1e',display:'flex',
+        <div style={{width:'100%',height:140,background:'var(--bg-surface-2)',display:'flex',
           alignItems:'center',justifyContent:'center',color:DIM_C,fontSize:12}}>
           No image
         </div>
@@ -793,7 +793,7 @@ function PhotoCard({photo,selected,onClick,albumColor,onEdit}:{
         </div>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
           <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:20,
-            background:`${albumColor}22`,color:albumColor,textTransform:'uppercase'}}>
+            background:`color-mix(in srgb, ${albumColor} 13%, transparent)`,color:albumColor}}>
             {photo.album||'General'}
           </span>
           {photo.taken_at&&(
@@ -809,8 +809,8 @@ function PhotoCard({photo,selected,onClick,albumColor,onEdit}:{
         )}
         {photo.url && onEdit && !isFromFiles(photo) && (
           <button onClick={(e)=>{e.stopPropagation();onEdit(photo.id,photo.url);}}
-            style={{marginTop:8,width:'100%',padding:'6px',background:'rgba(245, 158, 11,.08)',border:`1px solid rgba(245, 158, 11,.2)`,borderRadius:6,color:'#F59E0B',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
-            <PencilSimple size={13} weight="regular" color="#F59E0B" /> Edit / Crop / Rotate
+            style={{marginTop:8,width:'100%',padding:'6px',background:'var(--brand-primary-08)',border:`1px solid color-mix(in srgb, var(--brand-primary) 20%, transparent)`,borderRadius:6,color:'var(--brand-primary)',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
+            <PencilSimple size={13} weight="regular" color="var(--brand-primary)" /> Edit / Crop / Rotate
           </button>
         )}
       </div>

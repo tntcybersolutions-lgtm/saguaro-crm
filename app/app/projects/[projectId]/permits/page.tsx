@@ -38,10 +38,10 @@ const STATUS_BADGE: Record<string, 'amber' | 'green' | 'red' | 'muted' | 'blue'>
 // The permit lifecycle — applied for, issued by the AHJ, inspected while work
 // proceeds, then closed at final sign-off.
 const PIPELINE: { key: string; label: string; desc: string }[] = [
-  { key: 'applied', label: 'Applied', desc: 'submitted to the AHJ' },
-  { key: 'issued', label: 'Issued', desc: 'approved — work may start' },
+  { key: 'applied', label: 'Applied', desc: 'Submitted to the AHJ' },
+  { key: 'issued', label: 'Issued', desc: 'Approved — work may start' },
   { key: 'inspections', label: 'Inspections', desc: 'AHJ sign-offs in progress' },
-  { key: 'closed', label: 'Closed', desc: 'final approval on record' },
+  { key: 'closed', label: 'Closed', desc: 'Final approval on record' },
 ];
 
 const EMPTY_FORM = {
@@ -187,7 +187,7 @@ export default function PermitsPage() {
     width: '100%', padding: '8px 12px', background: T.surface,
     border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, outline: 'none',
   };
-  const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: T.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 };
+  const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 6 };
   const hint: React.CSSProperties = { fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 };
 
   return (
@@ -195,10 +195,10 @@ export default function PermitsPage() {
       {/* Header */}
       <ModuleHero
         eyebrow={ctx?.project?.name || 'Regulatory'}
-        eyebrowIcon={<Clipboard size={13} weight="fill" color="#F59E0B" />}
+        eyebrowIcon={<Clipboard size={13} weight="fill" style={{ color: 'var(--brand-primary)' }} />}
         title="Permits &"
         accent="Approvals"
-        subtitle={openCount > 0 ? `${openCount} open permit${openCount === 1 ? '' : 's'}${expiringSoon.length > 0 ? ` — ${expiringSoon.length} expiring within 30 days` : ''}${city ? ` · ${city} jurisdiction` : ''}` : 'Building permits and regulatory approvals'}
+        subtitle={openCount > 0 ? `${openCount} open permit${openCount === 1 ? '' : 's'}${expiringSoon.length > 0 ? ` — ${expiringSoon.length} expiring within 30 days` : ''}${city ? ` · ${city} jurisdiction` : ''}` : 'Building permits and regulatory approvals.'}
         actions={
           <button
             onClick={() => { if (showForm) { setShowForm(false); setErrorMsg(''); } else { openCreate(); } }}
@@ -213,21 +213,21 @@ export default function PermitsPage() {
       {/* Project intelligence strip — open permits and the expiry watch */}
       {ctx && (
         <StatStrip items={[
-          {href: `/app/projects/${projectId}/permits`,  label: 'Project', value: ctx.project?.projectNumber || ctx.project?.name || '—', sub: city ? `${city} jurisdiction` : (ctx.project?.status ? String(ctx.project.status).replace(/_/g, ' ') : 'active') },
+          {href: `/app/projects/${projectId}/permits`,  label: 'Project', value: ctx.project?.projectNumber || ctx.project?.name || '—', sub: city ? `${city} jurisdiction` : (ctx.project?.status ? String(ctx.project.status).replace(/_/g, ' ') : 'Active') },
           {href: `/app/projects/${projectId}/permits`,  label: 'Open Permits', value: String(openCount), sub: `${applied} applied · ${issued} issued${inInspections > 0 ? ` · ${inInspections} inspecting` : ''}` },
-          {href: `/app/projects/${projectId}/permits`,  label: 'Expiring ≤ 30 Days', value: String(expiringSoon.length), accent: expiringSoon.length > 0 ? T.amber : T.green, sub: expiringSoon.length > 0 ? `renew ${expiringSoon[0].permit_number} first` : 'nothing lapsing soon' },
-          {href: `/app/projects/${projectId}/permits`,  label: 'Expired', value: String(expired), accent: expired > 0 ? T.red : undefined, sub: expired > 0 ? 'work at risk — renew now' : 'none lapsed' },
-          {href: `/app/projects/${projectId}/permits`,  label: 'Fees to Date', value: `$${totalFees.toLocaleString()}`, sub: `across ${permits.length} permit${permits.length === 1 ? '' : 's'}` },
-          {href: `/app/projects/${projectId}/permits`,  label: 'Closed', value: String(closed), sub: 'final sign-off on record' },
+          {href: `/app/projects/${projectId}/permits`,  label: 'Expiring ≤ 30 Days', value: String(expiringSoon.length), accent: expiringSoon.length > 0 ? T.amber : T.green, sub: expiringSoon.length > 0 ? `Renew ${expiringSoon[0].permit_number} first` : 'Nothing lapsing soon' },
+          {href: `/app/projects/${projectId}/permits`,  label: 'Expired', value: String(expired), accent: expired > 0 ? T.red : undefined, sub: expired > 0 ? 'Work at risk — renew now' : 'None lapsed' },
+          {href: `/app/projects/${projectId}/permits`,  label: 'Fees to Date', value: `$${totalFees.toLocaleString()}`, sub: `Across ${permits.length} permit${permits.length === 1 ? '' : 's'}` },
+          {href: `/app/projects/${projectId}/permits`,  label: 'Closed', value: String(closed), sub: 'Final sign-off on record' },
         ]} />
       )}
 
       {/* Stat Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 28 }}>
-        <StatCard icon={<Clipboard size={19} weight="duotone" color={T.gold} />} label="Total Permits" value={String(permits.length)} accent={T.gold} sub={closed > 0 ? `${closed} closed out` : 'on the register'} delay={0.02}  href={`/app/projects/${projectId}/permits`}/>
-        <StatCard icon={<NotePencil size={19} weight="duotone" color={T.amber} />} label="Applied" value={String(applied)} accent={applied > 0 ? T.amber : undefined} sub="awaiting the AHJ" delay={0.06}  href={`/app/projects/${projectId}/permits`}/>
-        <StatCard icon={<CheckCircle size={19} weight="duotone" color={T.green} />} label="Issued" value={String(issued)} accent={issued > 0 ? T.green : undefined} sub={inInspections > 0 ? `+${inInspections} in inspections` : 'work may proceed'} delay={0.10}  href={`/app/projects/${projectId}/permits`}/>
-        <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={T.gold} />} label="Total Fees" value={`$${totalFees.toLocaleString()}`} sub={expiringSoon.length > 0 ? `${expiringSoon.length} permit${expiringSoon.length === 1 ? '' : 's'} expiring soon` : 'plan-check + permit fees'} delay={0.14}  href={`/app/projects/${projectId}/permits`}/>
+        <StatCard icon={<Clipboard size={19} weight="duotone" color={T.gold} />} label="Total Permits" value={String(permits.length)} accent={T.gold} sub={closed > 0 ? `${closed} closed out` : 'On the register'} delay={0.02}  href={`/app/projects/${projectId}/permits`}/>
+        <StatCard icon={<NotePencil size={19} weight="duotone" color={T.amber} />} label="Applied" value={String(applied)} accent={applied > 0 ? T.amber : undefined} sub="Awaiting the AHJ" delay={0.06}  href={`/app/projects/${projectId}/permits`}/>
+        <StatCard icon={<CheckCircle size={19} weight="duotone" color={T.green} />} label="Issued" value={String(issued)} accent={issued > 0 ? T.green : undefined} sub={inInspections > 0 ? `+${inInspections} in inspections` : 'Work may proceed'} delay={0.10}  href={`/app/projects/${projectId}/permits`}/>
+        <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={T.gold} />} label="Total Fees" value={`$${totalFees.toLocaleString()}`} sub={expiringSoon.length > 0 ? `${expiringSoon.length} permit${expiringSoon.length === 1 ? '' : 's'} expiring soon` : 'Plan-check + permit fees'} delay={0.14}  href={`/app/projects/${projectId}/permits`}/>
       </div>
 
       {successMsg && (
@@ -260,8 +260,8 @@ export default function PermitsPage() {
                     <ArrowRight size={14} weight="bold" color="rgba(255,255,255,0.3)" />
                   </div>
                 )}
-                <div style={{ flex: 1, minWidth: 130, padding: '10px 14px', borderRadius: 10, background: stageCount[st.key] > 0 ? 'rgba(245,158,11,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid ${stageCount[st.key] > 0 ? 'rgba(245,158,11,0.35)' : 'rgba(255,255,255,0.08)'}` }}>
-                  <div style={{ fontSize: 10.5, fontWeight: 800, color: stageCount[st.key] > 0 ? T.goldBright : T.muted, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 3 }}>{st.label}</div>
+                <div style={{ flex: 1, minWidth: 130, padding: '10px 14px', borderRadius: 10, background: stageCount[st.key] > 0 ? 'var(--brand-primary-08)' : 'rgba(255,255,255,0.03)', border: `1px solid ${stageCount[st.key] > 0 ? 'var(--brand-primary-35)' : 'rgba(255,255,255,0.08)'}` }}>
+                  <div style={{ fontSize: 10.5, fontWeight: 800, color: stageCount[st.key] > 0 ? 'var(--brand-primary-strong)' : T.muted, marginBottom: 3 }}>{st.label}</div>
                   <div style={{ fontSize: 20, fontWeight: 800, color: stageCount[st.key] > 0 ? T.white : 'rgba(255,255,255,0.35)' }}>{stageCount[st.key]}</div>
                   <div style={{ fontSize: 10.5, color: T.muted, marginTop: 2, whiteSpace: 'nowrap' }}>{st.desc}</div>
                 </div>
@@ -273,9 +273,9 @@ export default function PermitsPage() {
                   <Warning size={14} weight="fill" color={T.red} />
                 </div>
                 <div style={{ flex: 1, minWidth: 130, padding: '10px 14px', borderRadius: 10, background: 'rgba(255,59,48,0.08)', border: '1px solid rgba(255,59,48,0.35)' }}>
-                  <div style={{ fontSize: 10.5, fontWeight: 800, color: T.red, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 3 }}>Expired</div>
+                  <div style={{ fontSize: 10.5, fontWeight: 800, color: T.red, marginBottom: 3 }}>Expired</div>
                   <div style={{ fontSize: 20, fontWeight: 800, color: T.red }}>{expired}</div>
-                  <div style={{ fontSize: 10.5, color: T.muted, marginTop: 2, whiteSpace: 'nowrap' }}>renew with the AHJ</div>
+                  <div style={{ fontSize: 10.5, color: T.muted, marginTop: 2, whiteSpace: 'nowrap' }}>Renew with the AHJ</div>
                 </div>
               </>
             )}
@@ -328,7 +328,7 @@ export default function PermitsPage() {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
               <button onClick={handleSave} disabled={saving} className="pmBtn" style={{ ...goldButtonStyle, opacity: saving ? 0.55 : 1, cursor: saving ? 'not-allowed' : 'pointer' }}>
-                {saving ? 'Saving...' : 'Save Permit'}
+                {saving ? 'Saving…' : 'Save Permit'}
               </button>
               <button onClick={() => { setShowForm(false); setErrorMsg(''); }} className="pmBtn" style={ghostButtonStyle}>Cancel</button>
             </div>
@@ -339,17 +339,17 @@ export default function PermitsPage() {
                 <InsightRow label="Site" value={addr ? addr.split(',')[0] : '—'} />
                 {city ? <InsightRow label="Jurisdiction" value={city} /> : null}
                 <InsightRow label="Owner" value={ctx.defaults?.ownerName || '—'} />
-                {ctx.project?.startDate ? <InsightRow label="Start date" value={String(ctx.project.startDate).substring(0, 10)} /> : null}
+                {ctx.project?.startDate ? <InsightRow label="Start Date" value={String(ctx.project.startDate).substring(0, 10)} /> : null}
                 <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '8px 0' }} />
-                <InsightRow label="Open permits" value={String(openCount)} />
-                <InsightRow label="Expiring ≤ 30 days" value={String(expiringSoon.length)} accent={expiringSoon.length > 0 ? T.amber : undefined} strong={expiringSoon.length > 0} />
+                <InsightRow label="Open Permits" value={String(openCount)} />
+                <InsightRow label="Expiring ≤ 30 Days" value={String(expiringSoon.length)} accent={expiringSoon.length > 0 ? T.amber : undefined} strong={expiringSoon.length > 0} />
               </SectionCard>
               <SectionCard flat title="After You Save" icon={<CheckCircle size={17} weight="duotone" color={T.gold} />}>
                 <FlowSteps title="" steps={[
-                  { title: 'Permit enters the pipeline', desc: 'Starts as Applied and moves through issuance, inspections, and closeout.' },
-                  { title: 'Expiry is watched', desc: 'The row flags amber 30 days before expiry and red once lapsed.' },
-                  { title: 'Inspections log against it', desc: 'AHJ inspections on this permit live in the Inspections module.' },
-                  { title: 'Fees roll up', desc: 'Permit fees total into the register and the project cost picture.' },
+                  { title: 'Permit Enters the Pipeline', desc: 'Starts as Applied and moves through issuance, inspections, and closeout.' },
+                  { title: 'Expiry Is Watched', desc: 'The row flags amber 30 days before expiry and red once lapsed.' },
+                  { title: 'Inspections Log Against It', desc: 'AHJ inspections on this permit live in the Inspections module.' },
+                  { title: 'Fees Roll Up', desc: 'Permit fees total into the register and the project cost picture.' },
                 ]} />
               </SectionCard>
             </div>
@@ -362,7 +362,7 @@ export default function PermitsPage() {
         module="permits"
         search={permitSearch}
         onSearch={setPermitSearch}
-        searchPlaceholder="Search permits..."
+        searchPlaceholder="Search permits…"
         filters={[
           { key: 'status', label: 'Status', value: permitStatusFilter, onChange: setPermitStatusFilter, allLabel: 'All Statuses', options: [
             { value: 'applied', label: 'Applied' },
@@ -379,11 +379,11 @@ export default function PermitsPage() {
 
       <SectionCard title="Permit Register" icon={<Clipboard size={17} weight="duotone" color={T.gold} />} flush>
         {loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: T.muted }}>Loading...</div>
+          <div style={{ padding: 40, textAlign: 'center', color: T.muted }}>Loading…</div>
         ) : permits.length === 0 ? (
           <PremiumEmpty
             icon={<Clipboard size={30} weight="duotone" color={T.gold} />}
-            title="Start the permit register"
+            title="Start the Permit Register"
             description={city
               ? `This project sits in ${city} — most jobs need a Building permit plus separate trade permits (Electrical, Plumbing, Mechanical) before mobilization. The register tracks each one from application through inspections to closeout, and warns 30 days before anything expires.`
               : 'Most jobs need a Building permit plus separate trade permits before mobilization. The register tracks each one from application through inspections to closeout, and warns 30 days before anything expires.'}
@@ -406,7 +406,7 @@ export default function PermitsPage() {
                   <span key="n" style={{ color: T.gold, fontWeight: 700 }}>{p.permit_number}</span>,
                   p.permit_type,
                   <span key="a" style={{ color: T.muted }}>{p.issuing_authority}</span>,
-                  <Badge key="s" label={status} color={badgeColor} />,
+                  <Badge key="s" label={status.charAt(0).toUpperCase() + status.slice(1)} color={badgeColor} />,
                   <span key="f" style={{ fontWeight: 600 }}>${(Number(p.fee) || 0).toLocaleString()}</span>,
                   <span key="i" style={{ color: T.muted }}>{p.issued_date || '—'}</span>,
                   <span key="e" style={{ color: status === 'expired' ? T.red : expiringRow ? T.amber : T.muted, fontWeight: expiringRow || status === 'expired' ? 700 : 400 }}>

@@ -40,10 +40,10 @@ import {
   Clock, NotePencil, Trash, CaretRight,
 } from '@phosphor-icons/react';
 
-const GOLD = '#F59E0B';
-const GOLD_HI = '#FBBF24';
-const DARK = '#0a0a0a';
-const RAISED = '#141416';
+const GOLD = 'var(--brand-primary)';
+const GOLD_HI = 'var(--brand-primary-strong)';
+const DARK = 'var(--bg-base)';
+const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
 const TEXT = '#FFFFFF';
@@ -55,16 +55,16 @@ const STEEL = '#7FA3C7';
 // never gold). Used ONLY on icon chips / badges / eyebrows per the accent discipline.
 const TM_ACCENT = moduleAccent('tm').hex;
 
-const INP: React.CSSProperties = { padding: '8px 12px', background: '#1c1c1e', border: `1px solid ${BORDER}`, borderRadius: 7, color: TEXT, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' };
-const LBL: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 6 };
+const INP: React.CSSProperties = { padding: '8px 12px', background: 'var(--bg-surface-2)', border: `1px solid ${BORDER}`, borderRadius: 7, color: TEXT, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' };
+const LBL: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 6 };
 const HINT: React.CSSProperties = { fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 };
-const TH: React.CSSProperties = { padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: .5, color: DIM, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' };
+const TH: React.CSSProperties = { padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' };
 const TD: React.CSSProperties = { padding: '12px 14px', fontSize: 13, color: TEXT, verticalAlign: 'top' };
 
 // Legacy vocab: old rows carry 'disputed' — displayed as rejected everywhere.
 const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
   draft:     { label: 'Draft',     color: DIM,     bg: 'rgba(203,213,225,0.12)' },
-  submitted: { label: 'Submitted', color: GOLD_HI, bg: 'rgba(245,158,11,0.14)' },
+  submitted: { label: 'Submitted', color: GOLD_HI, bg: 'var(--brand-primary-12)' },
   approved:  { label: 'Approved',  color: GREEN,   bg: 'rgba(26,138,74,0.16)' },
   rejected:  { label: 'Rejected',  color: RED,     bg: 'rgba(192,48,48,0.16)' },
   billed:    { label: 'Billed',    color: STEEL,   bg: 'rgba(127,163,199,0.14)' },
@@ -132,7 +132,7 @@ const ticketLabel = (t: TmTicketRow) => {
 function StatusPill({ status }: { status?: string | null }) {
   const meta = STATUS_META[displayStatus(status)];
   return (
-    <span style={{ fontSize: 10, fontWeight: 800, padding: '3px 9px', borderRadius: 5, background: meta.bg, color: meta.color, textTransform: 'uppercase', letterSpacing: .4, whiteSpace: 'nowrap' }}>
+    <span style={{ fontSize: 10, fontWeight: 800, padding: '3px 9px', borderRadius: 5, background: meta.bg, color: meta.color, whiteSpace: 'nowrap' }}>
       {meta.label}
     </span>
   );
@@ -164,7 +164,7 @@ function SignaturePad({ label, value, onChange }: { label: string; value: string
       </div>
       {value
         ? <p style={{ margin: '4px 0 0', fontSize: 11, color: GREEN, fontWeight: 600 }}>Signature captured</p>
-        : <p style={{ margin: '4px 0 0', fontSize: 11, color: DIM }}>Sign above with mouse, finger or stylus</p>}
+        : <p style={{ margin: '4px 0 0', fontSize: 11, color: DIM }}>Sign above with a mouse, finger or stylus.</p>}
     </div>
   );
 }
@@ -205,11 +205,11 @@ function TotalsLadder({ sub, markupPct, taxPct, total }: { sub: number; markupPc
   const taxAmt = ((sub + markupAmt) * taxPct) / 100;
   return (
     <div>
-      <InsightRow label="Subtotal (labor + materials + equipment)" value={fmtUSD(sub)} />
+      <InsightRow label="Subtotal (Labor + Materials + Equipment)" value={fmtUSD(sub)} />
       <InsightRow label={`Markup (${markupPct}%)`} value={'+' + fmtUSD(markupAmt)} accent={markupPct > 0 ? GOLD_HI : undefined} />
       <InsightRow label={`Tax (${taxPct}%)`} value={'+' + fmtUSD(taxAmt)} accent={taxPct > 0 ? GOLD_HI : undefined} />
       <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '8px 0' }} />
-      <InsightRow label="Ticket total" value={fmtUSD(total)} accent={GOLD} strong />
+      <InsightRow label="Ticket Total" value={fmtUSD(total)} accent={GOLD} strong />
     </div>
   );
 }
@@ -547,7 +547,7 @@ export default function TmTicketsPage() {
     const base: React.CSSProperties = compact
       ? { borderRadius: 6, fontSize: 11, padding: '4px 12px', fontWeight: 800, cursor: rowBusy(t.id) ? 'wait' : 'pointer', opacity: rowBusy(t.id) ? 0.6 : 1, border: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }
       : { borderRadius: 10, fontSize: 13, padding: '10px 16px', fontWeight: 800, cursor: rowBusy(t.id) ? 'wait' : 'pointer', opacity: rowBusy(t.id) ? 0.6 : 1, border: 'none', display: 'inline-flex', alignItems: 'center', gap: 7 };
-    const gold = { ...base, background: `linear-gradient(135deg,${GOLD},#FBBF24)`, color: '#1C1C1E' };
+    const gold = { ...base, background: `linear-gradient(135deg,${GOLD},${GOLD_HI})`, color: '#0A0A00' };
     const green = { ...base, background: 'rgba(26,138,74,.16)', border: '1px solid rgba(61,214,140,.4)', color: GREEN };
     const red = { ...base, background: 'none', border: '1px solid rgba(192,48,48,.4)', color: RED };
     const steel = { ...base, background: 'rgba(127,163,199,.12)', border: '1px solid rgba(127,163,199,.4)', color: STEEL };
@@ -586,14 +586,14 @@ export default function TmTicketsPage() {
   );
   const addLineBtn = (label: string, onClick: () => void): React.ReactNode => (
     <button type="button" onClick={onClick}
-      style={{ background: 'rgba(245,158,11,.08)', border: `1px dashed rgba(245,158,11,.35)`, borderRadius: 8, padding: '7px 14px', color: GOLD_HI, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
+      style={{ background: 'var(--brand-primary-08)', border: `1px dashed var(--brand-primary-35)`, borderRadius: 8, padding: '7px 14px', color: GOLD_HI, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
       <Plus size={12} weight="bold" /> {label}
     </button>
   );
   const gridHead = (cols: string, labels: string[]): React.ReactNode => (
     <div style={{ display: 'grid', gridTemplateColumns: cols, gap: 8, marginBottom: 6 }}>
       {labels.map((h, i) => (
-        <span key={i} style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.42)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: i >= labels.length - 2 && h !== '' ? 'right' : 'left' }}>{h}</span>
+        <span key={i} style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.42)', textAlign: i >= labels.length - 2 && h !== '' ? 'right' : 'left' }}>{h}</span>
       ))}
     </div>
   );
@@ -644,8 +644,8 @@ export default function TmTicketsPage() {
           <StatStrip items={[
             {href: `/app/projects/${projectId}/tm-tickets`,  label: 'Total Value', value: fmtUSD(totalValue), accent: GOLD, sub: `${tickets.length} ticket${tickets.length !== 1 ? 's' : ''}`, icon: <CurrencyCircleDollar size={12} weight="bold" color={TM_ACCENT} /> },
             {href: `/app/projects/${projectId}/tm-tickets`,  label: 'Approved', value: fmtUSD(approvedValue), accent: approvedValue > 0 ? GREEN : undefined, sub: `${statusCounts['approved'] || 0} approved`, icon: <CheckCircle size={12} weight="bold" color={GREEN} /> },
-            {href: `/app/projects/${projectId}/tm-tickets`,  label: 'Awaiting Approval', value: fmtUSD(awaitingValue), accent: awaitingCount > 0 ? GOLD_HI : undefined, sub: awaitingCount > 0 ? `${awaitingCount} submitted` : 'none submitted', icon: <Clock size={12} weight="bold" color={GOLD_HI} /> },
-            {href: `/app/projects/${projectId}/tm-tickets`,  label: 'Drafts', value: String(draftCount), sub: draftCount > 0 ? 'not yet submitted' : 'all sent', icon: <NotePencil size={12} weight="bold" color={DIM} /> },
+            {href: `/app/projects/${projectId}/tm-tickets`,  label: 'Awaiting Approval', value: fmtUSD(awaitingValue), accent: awaitingCount > 0 ? GOLD_HI : undefined, sub: awaitingCount > 0 ? `${awaitingCount} submitted` : 'None submitted', icon: <Clock size={12} weight="bold" color={GOLD_HI} /> },
+            {href: `/app/projects/${projectId}/tm-tickets`,  label: 'Drafts', value: String(draftCount), sub: draftCount > 0 ? 'Not yet submitted' : 'All sent', icon: <NotePencil size={12} weight="bold" color={DIM} /> },
             {href: `/app/projects/${projectId}/tm-tickets`,  label: 'Billed', value: fmtUSD(billedValue), accent: billedValue > 0 ? STEEL : undefined, sub: `${statusCounts['billed'] || 0} on invoices`, icon: <Receipt size={12} weight="bold" color={STEEL} /> },
           ]} />
         )}
@@ -653,10 +653,10 @@ export default function TmTicketsPage() {
         {/* Inline composer — the create flow lives ON the page, never a dead Add zone */}
         {showForm && (
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 340px', gap: 22, alignItems: 'start', marginBottom: 24 }}>
-            <SectionCard title="New T&M Ticket" subtitle="Ticket number assigns automatically on save" icon={<Plus size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard title="New T&M Ticket" subtitle="The ticket number is assigned automatically on save." icon={<Plus size={17} weight="duotone" color={GOLD} />}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
                 <div>
-                  <label style={LBL}>Work Date<AutoChip label="TODAY" /></label>
+                  <label style={LBL}>Work Date<AutoChip label="Today" /></label>
                   <SaguaroDatePicker value={fDate} onChange={setFDate} />
                 </div>
                 <div>
@@ -692,7 +692,7 @@ export default function TmTicketsPage() {
                     {removeBtn(() => setFLabor(p => p.length > 1 ? p.filter(x => x.id !== l.id) : p), fLabor.length <= 1)}
                   </div>
                 ))}
-                {addLineBtn('Add labor line', () => setFLabor(p => [...p, { id: uid(), worker: '', trade: DEFAULT_TRADE, regHours: '', otHours: '', rate: '' }]))}
+                {addLineBtn('Add Labor Line', () => setFLabor(p => [...p, { id: uid(), worker: '', trade: DEFAULT_TRADE, regHours: '', otHours: '', rate: '' }]))}
                 <div style={HINT}>Overtime bills at 1.5x the worker&apos;s rate — same math the server stores.</div>
               </div>
 
@@ -718,7 +718,7 @@ export default function TmTicketsPage() {
                     {removeBtn(() => setFMaterials(p => p.length > 1 ? p.filter(x => x.id !== m.id) : p), fMaterials.length <= 1)}
                   </div>
                 ))}
-                {addLineBtn('Add material line', () => setFMaterials(p => [...p, { id: uid(), description: '', qty: '', unit: 'EA', unitCost: '' }]))}
+                {addLineBtn('Add Material Line', () => setFMaterials(p => [...p, { id: uid(), description: '', qty: '', unit: 'EA', unitCost: '' }]))}
               </div>
 
               {/* Equipment grid */}
@@ -740,12 +740,12 @@ export default function TmTicketsPage() {
                     {removeBtn(() => setFEquipment(p => p.length > 1 ? p.filter(x => x.id !== eq.id) : p), fEquipment.length <= 1)}
                   </div>
                 ))}
-                {addLineBtn('Add equipment line', () => setFEquipment(p => [...p, { id: uid(), description: '', hours: '', rate: '' }]))}
+                {addLineBtn('Add Equipment Line', () => setFEquipment(p => [...p, { id: uid(), description: '', hours: '', rate: '' }]))}
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
                 <div>
-                  <label style={LBL}>Markup %<AutoChip label="15% STD" /></label>
+                  <label style={LBL}>Markup %<AutoChip label="15% Standard" /></label>
                   <input value={fMarkup} onChange={e => setFMarkup(e.target.value)} inputMode="decimal" style={INP} />
                   <div style={HINT}>Applied to the full subtotal. Adds {fmtUSD(previewMarkupAmt)}.</div>
                 </div>
@@ -780,7 +780,7 @@ export default function TmTicketsPage() {
 
             {/* Context rail — live ticket math + what happens after submit */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <SectionCard flat title="Ticket Math" subtitle="Live — matches the saved total to the cent" icon={<CurrencyCircleDollar size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="Ticket Math" subtitle="Live — matches the saved total to the cent." icon={<CurrencyCircleDollar size={17} weight="duotone" color={GOLD} />}>
                 <InsightRow label="Labor (OT at 1.5x)" value={fmtUSD(previewLabor)} />
                 <InsightRow label="Materials" value={fmtUSD(previewMaterials)} />
                 <InsightRow label="Equipment" value={fmtUSD(previewEquipment)} />
@@ -789,18 +789,18 @@ export default function TmTicketsPage() {
                 <InsightRow label={`Markup (${num(fMarkup)}%)`} value={'+' + fmtUSD(previewMarkupAmt)} accent={num(fMarkup) > 0 ? GOLD_HI : undefined} />
                 <InsightRow label={`Tax (${num(fTax)}%)`} value={'+' + fmtUSD(previewTaxAmt)} accent={num(fTax) > 0 ? GOLD_HI : undefined} />
                 <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '8px 0' }} />
-                <InsightRow label="Ticket total" value={fmtUSD(previewTotal)} accent={GOLD} strong />
+                <InsightRow label="Ticket Total" value={fmtUSD(previewTotal)} accent={GOLD} strong />
               </SectionCard>
               <SectionCard flat title="Signatures" icon={<Signature size={17} weight="duotone" color={GOLD} />}>
-                <InsightRow label="Contractor" value={contractorSig ? 'Captured' : 'Not signed'} accent={contractorSig ? GREEN : undefined} />
-                <InsightRow label="Owner / GC" value={ownerSig ? 'Captured' : 'Not signed'} accent={ownerSig ? GREEN : undefined} />
+                <InsightRow label="Contractor" value={contractorSig ? 'Captured' : 'Not Signed'} accent={contractorSig ? GREEN : undefined} />
+                <InsightRow label="Owner / GC" value={ownerSig ? 'Captured' : 'Not Signed'} accent={ownerSig ? GREEN : undefined} />
                 <div style={HINT}>A signed ticket is the strongest backup when the extra hits the pay app. Both pads are optional on drafts.</div>
               </SectionCard>
               <SectionCard flat title="After You Submit" icon={<CheckCircle size={17} weight="duotone" color={GOLD} />}>
                 <FlowSteps title="" steps={[
-                  { title: 'Ticket numbered + logged', desc: 'Auto-numbered and queued for approval with the total locked server-side.' },
-                  { title: 'Approve or reject inline', desc: 'The approver is stamped on the ticket with a timestamp.' },
-                  { title: 'Bill it or escalate it', desc: 'Mark billed for invoicing, or escalate into a change event with the ticket attached.' },
+                  { title: 'Ticket Numbered + Logged', desc: 'Auto-numbered and queued for approval with the total locked server-side.' },
+                  { title: 'Approve or Reject Inline', desc: 'The approver is stamped on the ticket with a timestamp.' },
+                  { title: 'Bill It or Escalate It', desc: 'Mark billed for invoicing, or escalate into a change event with the ticket attached.' },
                 ]} />
               </SectionCard>
             </div>
@@ -834,13 +834,13 @@ export default function TmTicketsPage() {
                   <button key={s} onClick={() => setStatusFilter(s)}
                     style={{
                       display: 'inline-flex', alignItems: 'center', gap: 7, padding: '6px 13px', borderRadius: 999,
-                      background: active ? 'linear-gradient(180deg, rgba(245,158,11,0.2), rgba(245,158,11,0.08))' : 'rgba(255,255,255,0.04)',
-                      border: `1px solid ${active ? 'rgba(245,158,11,0.5)' : 'rgba(255,255,255,0.1)'}`,
+                      background: active ? 'linear-gradient(180deg, var(--brand-primary-18), var(--brand-primary-08))' : 'rgba(255,255,255,0.04)',
+                      border: `1px solid ${active ? 'color-mix(in srgb, var(--brand-primary) 50%, transparent)' : 'rgba(255,255,255,0.1)'}`,
                       color: active ? GOLD_HI : DIM, fontSize: 12, fontWeight: active ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap',
                     }}>
                     {meta && <span style={{ width: 7, height: 7, borderRadius: 999, background: meta.color, display: 'inline-block' }} />}
                     {s === 'all' ? 'All' : meta!.label}
-                    <span style={{ fontSize: 10.5, fontWeight: 800, padding: '1px 7px', borderRadius: 999, background: active ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.08)', color: active ? GOLD_HI : 'rgba(255,255,255,0.55)', fontVariantNumeric: 'tabular-nums' }}>
+                    <span style={{ fontSize: 10.5, fontWeight: 800, padding: '1px 7px', borderRadius: 999, background: active ? 'var(--brand-primary-18)' : 'rgba(255,255,255,0.08)', color: active ? GOLD_HI : 'rgba(255,255,255,0.55)', fontVariantNumeric: 'tabular-nums' }}>
                       {count}
                     </span>
                   </button>
@@ -880,10 +880,10 @@ export default function TmTicketsPage() {
               )}
             </div>
             <FlowStrip steps={[
-              { title: 'Capture the extra', desc: 'labor, materials, equipment' },
-              { title: 'Get it signed', desc: 'contractor + owner pads' },
-              { title: 'Approve', desc: 'stamped with who and when' },
-              { title: 'Bill or escalate', desc: 'invoice it or make it a change event' },
+              { title: 'Capture the Extra', desc: 'Labor, materials, equipment' },
+              { title: 'Get It Signed', desc: 'Contractor + owner pads' },
+              { title: 'Approve', desc: 'Stamped with who and when' },
+              { title: 'Bill or Escalate', desc: 'Invoice it or make it a change event' },
             ]} />
           </SectionCard>
         )}
@@ -893,7 +893,7 @@ export default function TmTicketsPage() {
           <SectionCard title="Tickets" icon={<Receipt size={17} weight="duotone" color={TM_ACCENT} />} flush>
             {filtered.length === 0 ? (
               <div style={{ padding: '32px 20px', textAlign: 'center', color: DIM, fontSize: 13 }}>
-                No tickets match the current search / filter.
+                No tickets match the current search or filter.
               </div>
             ) : (
               <div style={{ overflowX: 'auto' }}>
@@ -963,11 +963,11 @@ export default function TmTicketsPage() {
           <div onClick={() => setSelectedId(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(8,8,12,0.72)', zIndex: 300, backdropFilter: 'blur(2px)' }} />
           <aside style={{
             position: 'fixed', top: 0, right: 0, bottom: 0, width: 640, maxWidth: '96vw',
-            background: '#101011', borderLeft: `1px solid ${BORDER}`, zIndex: 301,
+            background: 'var(--bg-surface)', borderLeft: `1px solid ${BORDER}`, zIndex: 301,
             overflowY: 'auto', boxShadow: '-24px 0 60px rgba(8,8,12,0.6)',
           }}>
-            <div style={{ position: 'sticky', top: 0, background: '#101011', borderBottom: `1px solid ${BORDER}`, padding: '16px 22px', zIndex: 2, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 12, fontWeight: 800, color: GOLD, background: 'rgba(245,158,11,.12)', padding: '3px 10px', borderRadius: 6 }}>{ticketLabel(selected)}</span>
+            <div style={{ position: 'sticky', top: 0, background: 'var(--bg-surface)', borderBottom: `1px solid ${BORDER}`, padding: '16px 22px', zIndex: 2, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 12, fontWeight: 800, color: GOLD, background: 'var(--brand-primary-12)', padding: '3px 10px', borderRadius: 6 }}>{ticketLabel(selected)}</span>
               <StatusPill status={selected.status} />
               <span style={{ fontSize: 12, color: DIM }}>{fmtDate(selected.work_date || selected.created_at)}</span>
               <button onClick={() => setSelectedId(null)} aria-label="Close ticket detail" style={{ marginLeft: 'auto', background: 'none', border: 'none', color: DIM, cursor: 'pointer', display: 'inline-flex', padding: 4 }}>
@@ -976,7 +976,7 @@ export default function TmTicketsPage() {
             </div>
 
             <div style={{ padding: '20px 22px 40px' }}>
-              <h2 style={{ margin: '0 0 4px', fontSize: 19, fontWeight: 800, color: TEXT, lineHeight: 1.3 }}>{selected.description || 'T&M ticket'}</h2>
+              <h2 style={{ margin: '0 0 4px', fontSize: 19, fontWeight: 800, color: TEXT, lineHeight: 1.3 }}>{selected.description || 'T&M Ticket'}</h2>
               <div style={{ fontSize: 26, fontWeight: 800, color: GOLD, marginBottom: 4, fontVariantNumeric: 'tabular-nums' }}>{fmtUSD(selected.total)}</div>
               {selStatus !== 'draft' && selected.approved_by && (
                 <div style={{ fontSize: 12, color: DIM, marginBottom: 4 }}>
@@ -1001,7 +1001,7 @@ export default function TmTicketsPage() {
                 <div style={{ marginBottom: 18 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
                     <HardHat size={14} weight="duotone" color={TM_ACCENT} />
-                    <span style={{ fontSize: 12, fontWeight: 800, color: TEXT, textTransform: 'uppercase', letterSpacing: .5 }}>Labor</span>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: TEXT }}>Labor</span>
                     <span style={{ fontSize: 12, fontWeight: 700, color: GOLD, marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' }}>{fmtUSD(selected.labor_total)}</span>
                   </div>
                   <LineTable headers={['Worker', 'Reg', 'OT', 'Rate', 'Total']} rows={laborRows} />
@@ -1011,7 +1011,7 @@ export default function TmTicketsPage() {
                 <div style={{ marginBottom: 18 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
                     <Package size={14} weight="duotone" color={TM_ACCENT} />
-                    <span style={{ fontSize: 12, fontWeight: 800, color: TEXT, textTransform: 'uppercase', letterSpacing: .5 }}>Materials</span>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: TEXT }}>Materials</span>
                     <span style={{ fontSize: 12, fontWeight: 700, color: GOLD, marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' }}>{fmtUSD(selected.materials_total)}</span>
                   </div>
                   <LineTable headers={['Description', 'Qty', 'Unit', 'Cost', 'Total']} rows={materialRows} />
@@ -1021,7 +1021,7 @@ export default function TmTicketsPage() {
                 <div style={{ marginBottom: 18 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
                     <Wrench size={14} weight="duotone" color={TM_ACCENT} />
-                    <span style={{ fontSize: 12, fontWeight: 800, color: TEXT, textTransform: 'uppercase', letterSpacing: .5 }}>Equipment</span>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: TEXT }}>Equipment</span>
                     <span style={{ fontSize: 12, fontWeight: 700, color: GOLD, marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' }}>{fmtUSD(selected.equipment_total)}</span>
                   </div>
                   <LineTable headers={['Description', 'Hours', 'Rate', 'Total']} rows={equipmentRows} />
@@ -1046,14 +1046,14 @@ export default function TmTicketsPage() {
                       <div style={{ ...LBL, marginBottom: 6 }}>Contractor Signature</div>
                       {/* Signatures are canvas dataURLs stored as TEXT — render directly. */}
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={selected.contractor_signature} alt="Contractor signature" style={{ width: '100%', background: '#1c1c1e', border: `1px solid ${BORDER}`, borderRadius: 10 }} />
+                      <img src={selected.contractor_signature} alt="Contractor signature" style={{ width: '100%', background: 'var(--bg-surface-2)', border: `1px solid ${BORDER}`, borderRadius: 10 }} />
                     </div>
                   )}
                   {selected.owner_signature && (
                     <div>
                       <div style={{ ...LBL, marginBottom: 6 }}>Owner Signature</div>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={selected.owner_signature} alt="Owner signature" style={{ width: '100%', background: '#1c1c1e', border: `1px solid ${BORDER}`, borderRadius: 10 }} />
+                      <img src={selected.owner_signature} alt="Owner signature" style={{ width: '100%', background: 'var(--bg-surface-2)', border: `1px solid ${BORDER}`, borderRadius: 10 }} />
                     </div>
                   )}
                 </div>
