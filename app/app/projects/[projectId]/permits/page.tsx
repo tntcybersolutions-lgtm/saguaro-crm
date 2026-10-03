@@ -231,10 +231,10 @@ export default function PermitsPage() {
       </div>
 
       {successMsg && (
-        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(34,197,94,0.4)`, borderRadius: 10, color: T.green, fontSize: 13 }}>{successMsg}</div>
+        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(44,255,122,0.4)`, borderRadius: 10, color: T.green, fontSize: 13 }}>{successMsg}</div>
       )}
       {errorMsg && (
-        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.redDim, border: `1px solid rgba(239,68,68,0.4)`, borderRadius: 10, color: T.red, fontSize: 13 }}>{errorMsg}</div>
+        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.redDim, border: `1px solid rgba(255,59,48,0.4)`, borderRadius: 10, color: T.red, fontSize: 13 }}>{errorMsg}</div>
       )}
 
       {/* Expiry watch — permits lapsing within 30 days */}

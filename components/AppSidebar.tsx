@@ -1204,7 +1204,7 @@ export default function AppSidebar({
                        *
                        * This was neutral for a while, and the note that made it
                        * neutral blamed the hues: "#B8A98A parchment, #A9A2C4
-                       * lavender-gray, #7FA3C7 steel, #8FB3A9 patina ... twelve
+                       * lavender-gray, #FF8A00 steel, #8FB3A9 patina ... twelve
                        * muted pastels do not read as restraint, they read as
                        * muddy". That diagnosis was right about those values and
                        * wrong about which values were in play — every one it

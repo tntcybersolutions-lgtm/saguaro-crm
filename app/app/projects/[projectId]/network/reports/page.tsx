@@ -10,7 +10,7 @@ import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, FlowS
 
 const BASE = 'var(--bg-surface-2)';
 const GOLD = 'var(--brand-primary)';
-const GREEN = '#34C759';
+const GREEN = '#2CFF7A';
 const BLUE = 'var(--brand-primary)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
@@ -46,14 +46,14 @@ const REPORT_TYPES = [
     label: 'Port Map',
     icon: Shuffle,
     description: 'Switch port assignments showing device connections, VLANs, and PoE status per port.',
-    color: '#8B5CF6',
+    color: '#FF8A00',
   },
   {
     type: 'wifi_survey',
     label: 'WiFi Survey',
     icon: WifiHigh,
     description: 'WiFi coverage survey with AP locations, channels, power levels, and signal coverage estimates.',
-    color: '#14B8A6',
+    color: '#2CFF7A',
   },
   {
     type: 'as_built',
@@ -67,7 +67,7 @@ const REPORT_TYPES = [
     label: 'Executive Summary',
     icon: ChartBar,
     description: 'High-level project summary with equipment counts, costs, timeline, and key metrics.',
-    color: '#F97316',
+    color: '#FF8A00',
   },
 ];
 
@@ -102,7 +102,7 @@ export default function ReportsPage() {
   const [showBranding, setShowBranding] = useState(false);
   const [branding, setBranding] = useState({
     company_name: '', logo_url: '', // Hex on purpose: these feed <input type="color"> and are sent to the report API.
-    primary_color: '#F59E0B', secondary_color: '#F59E0B',
+    primary_color: '#FF8A00', secondary_color: '#FF8A00',
   });
 
   const fetchData = useCallback(async () => {

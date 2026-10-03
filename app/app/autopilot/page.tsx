@@ -5,7 +5,7 @@ import { ArrowsClockwise, Robot, CheckCircle, Bell, WarningOctagon, Warning, Lis
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, FlowSteps, InsightRow, goldButtonStyle } from '@/components/ui/premium';
 import { useProjects } from '@/lib/hooks/useProjects';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#c03030';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#FF3B30';
 
 type AlertSeverity = 'critical' | 'high' | 'medium' | 'low';
 
@@ -71,7 +71,7 @@ export default function AutopilotPage() {
     return filter === 'all' || a.severity === filter;
   });
 
-  const sevColor = (s: string) => s==='critical'?{bg:'rgba(192,48,48,.12)',c:'#ff7070',border:'rgba(192,48,48,.3)'}:s==='high'?{bg:'rgba(249,115,22,.1)',c:'#f97316',border:'rgba(249,115,22,.3)'}:{bg:'color-mix(in srgb, var(--warning) 10%, transparent)',c:'var(--warning)',border:'color-mix(in srgb, var(--warning) 30%, transparent)'};
+  const sevColor = (s: string) => s==='critical'?{bg:'rgba(192,48,48,.12)',c:'#FF3B30',border:'rgba(192,48,48,.3)'}:s==='high'?{bg:'rgba(255,138,0,.1)',c:'#FF8A00',border:'rgba(255,138,0,.3)'}:{bg:'color-mix(in srgb, var(--warning) 10%, transparent)',c:'var(--warning)',border:'color-mix(in srgb, var(--warning) 30%, transparent)'};
 
   async function acknowledge(alertId: string) {
     setAlertStates(prev => ({ ...prev, [alertId]: 'acknowledged' }));
@@ -185,21 +185,21 @@ export default function AutopilotPage() {
           sub={byProject.length > 0 ? `${SCAN_RULES.length} checks · ${byProject.length} project${byProject.length === 1 ? '' : 's'} affected` : `Across ${SCAN_RULES.length} deterministic checks`} delay={0.02}
          href="/app/autopilot"/>
         <StatCard
-          icon={<WarningOctagon size={19} weight="duotone" color="#ff7070" />}
+          icon={<WarningOctagon size={19} weight="duotone" color="#FF3B30" />}
           label="Critical" value={allAlerts.filter(a=>a.severity==='critical').length.toString()}
-          accent={allAlerts.some(a=>a.severity==='critical') ? '#ff7070' : undefined}
+          accent={allAlerts.some(a=>a.severity==='critical') ? '#FF3B30' : undefined}
           sub="Need immediate action" delay={0.06}
          href="/app/autopilot"/>
         <StatCard
-          icon={<Warning size={19} weight="duotone" color="#f97316" />}
+          icon={<Warning size={19} weight="duotone" color="#FF8A00" />}
           label="High" value={allAlerts.filter(a=>a.severity==='high').length.toString()}
-          accent={allAlerts.some(a=>a.severity==='high') ? '#f97316' : undefined}
+          accent={allAlerts.some(a=>a.severity==='high') ? '#FF8A00' : undefined}
           sub="Review soon" delay={0.10}
          href="/app/autopilot"/>
         <StatCard
-          icon={<CheckCircle size={19} weight="duotone" color="#3dd68c" />}
+          icon={<CheckCircle size={19} weight="duotone" color="#2CFF7A" />}
           label="Acknowledged" value={acknowledgedCount.toString()}
-          accent={acknowledgedCount > 0 ? '#3dd68c' : undefined}
+          accent={acknowledgedCount > 0 ? '#2CFF7A' : undefined}
           sub="Handled this session" delay={0.14}
          href="/app/autopilot"/>
       </div>
@@ -218,9 +218,9 @@ export default function AutopilotPage() {
             const sc = sevColor(alert.severity);
             const isAcknowledged = alertStates[alert.id] === 'acknowledged';
             return (
-              <div key={alert.id} style={{background:isAcknowledged?'rgba(61,214,140,.05)':'rgba(255,255,255,0.03)',border:`1px solid ${isAcknowledged?'rgba(61,214,140,.22)':sc.border}`,borderRadius:14,padding:20,opacity:isAcknowledged?0.72:1,transition:'all .2s'}}>
+              <div key={alert.id} style={{background:isAcknowledged?'rgba(44,255,122,.05)':'rgba(255,255,255,0.03)',border:`1px solid ${isAcknowledged?'rgba(44,255,122,.22)':sc.border}`,borderRadius:14,padding:20,opacity:isAcknowledged?0.72:1,transition:'all .2s'}}>
                 <div style={{display:'flex',alignItems:'flex-start',gap:14}}>
-                  <div style={{padding:'4px 10px',borderRadius:6,background:isAcknowledged?'rgba(61,214,140,.15)':sc.bg,color:isAcknowledged?'#3dd68c':sc.c,fontSize:10,fontWeight:800,textTransform:'capitalize' as const,border:`1px solid ${isAcknowledged?'rgba(61,214,140,.3)':sc.border}`,flexShrink:0,marginTop:2}}>
+                  <div style={{padding:'4px 10px',borderRadius:6,background:isAcknowledged?'rgba(44,255,122,.15)':sc.bg,color:isAcknowledged?'#2CFF7A':sc.c,fontSize:10,fontWeight:800,textTransform:'capitalize' as const,border:`1px solid ${isAcknowledged?'rgba(44,255,122,.3)':sc.border}`,flexShrink:0,marginTop:2}}>
                     {isAcknowledged ? 'Acknowledged' : alert.severity}
                   </div>
                   <div style={{flex:1}}>
@@ -242,7 +242,7 @@ export default function AutopilotPage() {
                       <button
                         onClick={() => acknowledge(alert.id)}
                         className="pmBtn"
-                        style={{padding:'6px 12px',background:'rgba(61,214,140,.1)',border:'1px solid rgba(61,214,140,.3)',borderRadius:8,color:'#3dd68c',fontSize:12,fontWeight:700,cursor:'pointer'}}
+                        style={{padding:'6px 12px',background:'rgba(44,255,122,.1)',border:'1px solid rgba(44,255,122,.3)',borderRadius:8,color:'#2CFF7A',fontSize:12,fontWeight:700,cursor:'pointer'}}
                       >
                         Acknowledge
                       </button>
@@ -261,7 +261,7 @@ export default function AutopilotPage() {
           })}
           {visibleAlerts.length===0&&(
             <PremiumEmpty
-              icon={<CheckCircle size={38} weight="duotone" color="#3dd68c" />}
+              icon={<CheckCircle size={38} weight="duotone" color="#2CFF7A" />}
               title="No Autopilot alerts — all clear."
               description="Every check came back clean: RFIs answered on time, insurance current, waivers signed, change orders moving, budgets inside 90%, invoices collected, and no scope-creep spikes. The engine re-scans automatically every 6 hours."
               action={
@@ -301,7 +301,7 @@ export default function AutopilotPage() {
             <>
               {byProject.map(([pid, n]) => (
                 <Link key={pid} href={`/app/projects/${pid}/autopilot`} style={{textDecoration:'none',display:'block'}}>
-                  <InsightRow label={projName(pid) || 'Project'} value={`${n} alert${n === 1 ? '' : 's'}`} accent={n >= 3 ? '#ff7070' : undefined}/>
+                  <InsightRow label={projName(pid) || 'Project'} value={`${n} alert${n === 1 ? '' : 's'}`} accent={n >= 3 ? '#FF3B30' : undefined}/>
                 </Link>
               ))}
               <div style={{fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:8,lineHeight:1.5}}>Click a project to work its alerts in context.</div>
@@ -310,15 +310,15 @@ export default function AutopilotPage() {
             <div style={{fontSize:12.5,color:DIM,lineHeight:1.6}}>No project-level alerts right now. Tenant-wide signals (waiver backlog, velocity spikes) still appear in the list when detected.</div>
           )}
           <div style={{height:1,background:'rgba(255,255,255,0.08)',margin:'10px 0'}}/>
-          <InsightRow label="Critical" value={String(liveAlerts.filter(a=>a.severity==='critical').length)} accent="#ff7070"/>
-          <InsightRow label="High" value={String(liveAlerts.filter(a=>a.severity==='high').length)} accent="#f97316"/>
+          <InsightRow label="Critical" value={String(liveAlerts.filter(a=>a.severity==='critical').length)} accent="#FF3B30"/>
+          <InsightRow label="High" value={String(liveAlerts.filter(a=>a.severity==='high').length)} accent="#FF8A00"/>
           <InsightRow label="Medium / Low" value={String(liveAlerts.filter(a=>a.severity==='medium'||a.severity==='low').length)}/>
         </SectionCard>
       </div>
       </div>
 
       {feedback && (
-        <div style={{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:'10px',background:'rgba(34,197,94,0.92)',color:'#fff',fontWeight:600,fontSize:'14px',whiteSpace:'nowrap',boxShadow:'0 12px 30px -12px rgba(0,0,0,0.6)'}}>
+        <div style={{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:'10px',background:'rgba(44,255,122,0.92)',color:'#fff',fontWeight:600,fontSize:'14px',whiteSpace:'nowrap',boxShadow:'0 12px 30px -12px rgba(0,0,0,0.6)'}}>
           {feedback}
         </div>
       )}

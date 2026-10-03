@@ -388,7 +388,7 @@ export default function NewProjectPage() {
       {pf && (
         <StatStrip items={[
           {href: '/app/projects/new', label:'Project Number', value: projectNumber || `${year}-001`, sub: pf.total>0 ? `Next in your ${year} sequence` : `First in the ${year} sequence`},
-          {href: '/app/projects/new', label:'This Contract', value: budgetNum>0 ? fmt(budgetNum) : '—', accent: budgetNum>0 ? '#3dd68c' : undefined, sub: contractType},
+          {href: '/app/projects/new', label:'This Contract', value: budgetNum>0 ? fmt(budgetNum) : '—', accent: budgetNum>0 ? '#2CFF7A' : undefined, sub: contractType},
           {href: '/app/projects/new', label:'Retainage', value: `${Number(retainage)||10}%`, sub: pf.retMode && auto.ret ? 'Your portfolio standard' : 'Default — editable'},
           {href: '/app/projects/new', label:'Jurisdiction', value: stateJurisdiction || '—', sub:'Lien waiver + wage rules'},
         ]}/>
@@ -404,7 +404,7 @@ export default function NewProjectPage() {
         ]}
       />
 
-      {error&&<div style={{background:'rgba(192,48,48,.1)',border:'1px solid rgba(192,48,48,.3)',borderRadius:10,padding:'12px 16px',marginBottom:20,fontSize:13,color:'#ff7070'}}>{error}</div>}
+      {error&&<div style={{background:'rgba(192,48,48,.1)',border:'1px solid rgba(192,48,48,.3)',borderRadius:10,padding:'12px 16px',marginBottom:20,fontSize:13,color:'#FF3B30'}}>{error}</div>}
 
       {/* What kind of job. One choice that furnishes the rest — retainage, the
           contract type, the CSI spread the budget expects, and the folders the

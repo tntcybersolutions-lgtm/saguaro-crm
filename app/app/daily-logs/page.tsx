@@ -392,7 +392,7 @@ export default function DailyLogsPage() {
       })()}
 
       {error && (
-        <div style={{ padding: '12px 16px', background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.3)', borderRadius: radius.md, color: colors.red, fontSize: font.size.md, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ padding: '12px 16px', background: 'rgba(255,59,48,.1)', border: '1px solid rgba(255,59,48,.3)', borderRadius: radius.md, color: colors.red, fontSize: font.size.md, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
           <Warning size={16} /> {error}
         </div>
       )}
@@ -445,7 +445,7 @@ export default function DailyLogsPage() {
                 const gap = lastLog ? missedWorkdays(lastLog, new Date().toISOString().slice(0, 10)) : 0;
                 const prev = prevLogFor(form.projectId);
                 return (
-                  <div style={{ background: gap > 0 ? 'rgba(239,68,68,.07)' : 'rgba(255,255,255,0.03)', border: `1px solid ${gap > 0 ? 'rgba(239,68,68,.3)' : colors.border}`, borderRadius: radius.md, padding: '12px 14px' }}>
+                  <div style={{ background: gap > 0 ? 'rgba(255,59,48,.07)' : 'rgba(255,255,255,0.03)', border: `1px solid ${gap > 0 ? 'rgba(255,59,48,.3)' : colors.border}`, borderRadius: radius.md, padding: '12px 14px' }}>
                     <div style={{ fontSize: font.size.md, fontWeight: font.weight.semibold, color: gap > 0 ? colors.red : colors.text }}>
                       {lastLog
                         ? gap > 0

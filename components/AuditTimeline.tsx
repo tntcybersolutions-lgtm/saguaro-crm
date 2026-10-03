@@ -20,10 +20,10 @@ const ACTION_COLORS: Record<string, string> = {
   approved: '#d29922',
   rejected: '#d29922',
   submitted: '#d29922',
-  delete: '#c03030',
-  deleted: '#c03030',
-  removed: '#c03030',
-  archive: '#c03030',
+  delete: '#FF3B30',
+  deleted: '#FF3B30',
+  removed: '#FF3B30',
+  archive: '#FF3B30',
 };
 
 function getActionColor(action: string): string {
@@ -138,7 +138,7 @@ export default function AuditTimeline({ entityType, entityId }: AuditTimelinePro
 
   if (error) {
     return (
-      <div style={{ padding: 16, color: '#c03030', fontSize: 13 }}>
+      <div style={{ padding: 16, color: '#FF3B30', fontSize: 13 }}>
         Error: {error}
       </div>
     );
@@ -262,7 +262,7 @@ export default function AuditTimeline({ entityType, entityId }: AuditTimelinePro
                         <span style={{ color: DIM }}>{fieldLabel}: </span>
                         {prevVal !== undefined ? (
                           <>
-                            <span style={{ color: '#c03030', textDecoration: 'line-through' }}>
+                            <span style={{ color: '#FF3B30', textDecoration: 'line-through' }}>
                               {formatValue(prevVal)}
                             </span>
                             <span style={{ color: DIM, margin: '0 4px' }}>&rarr;</span>

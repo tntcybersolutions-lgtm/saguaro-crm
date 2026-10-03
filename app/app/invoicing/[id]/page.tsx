@@ -393,7 +393,7 @@ export default function InvoiceDetailPage() {
       </button>
 
       {error && (
-        <div style={{ padding: '12px 16px', background: 'rgba(239,68,68,.1)', border: `1px solid rgba(239,68,68,.3)`, borderRadius: radius.md, color: colors.red, fontSize: font.size.md, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ padding: '12px 16px', background: 'rgba(255,59,48,.1)', border: `1px solid rgba(255,59,48,.3)`, borderRadius: radius.md, color: colors.red, fontSize: font.size.md, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
           <Warning size={16} /> {error}
         </div>
       )}
@@ -444,7 +444,7 @@ export default function InvoiceDetailPage() {
             <button
               onClick={handleDelete}
               disabled={busy === 'delete'}
-              style={{ ...ghostButtonStyle, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', color: colors.red, opacity: busy === 'delete' ? 0.6 : 1, cursor: busy === 'delete' ? 'not-allowed' : 'pointer' }}
+              style={{ ...ghostButtonStyle, background: 'rgba(255,59,48,0.12)', border: '1px solid rgba(255,59,48,0.35)', color: colors.red, opacity: busy === 'delete' ? 0.6 : 1, cursor: busy === 'delete' ? 'not-allowed' : 'pointer' }}
               className="pmBtn"
             >
               <Trash size={14} /> {busy === 'delete' ? 'Deleting…' : 'Delete'}

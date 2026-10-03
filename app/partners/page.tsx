@@ -13,8 +13,8 @@ const C = {
   cardBg: 'rgba(255,255,255,0.02)',
   raised: 'var(--bg-surface)',
   raisedAlt: 'var(--bg-surface-2)',
-  green: '#22C55E',
-  blue: '#6366F1',
+  green: '#2CFF7A',
+  blue: '#FF8A00',
   font: "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
 };
 
@@ -129,7 +129,7 @@ const INTEGRATIONS = [
     name: 'Open REST API',
     category: 'Developer',
     status: 'Live',
-    accent: '#F59E0B',
+    accent: '#FF8A00',
     abbr: 'API',
     desc: 'A full REST API and webhook system for building custom workflows on top of Saguaro. Read and write projects, pay apps, RFIs, and takeoffs, and subscribe to real-time events from your own stack.',
     bullets: [
@@ -142,7 +142,7 @@ const INTEGRATIONS = [
 ];
 
 const STATUS_STYLES: Record<string, { color: string; bg: string; border: string }> = {
-  Live: { color: C.green, bg: 'transparent', border: 'rgba(34,197,94,0.30)' },
+  Live: { color: C.green, bg: 'transparent', border: 'rgba(44,255,122,0.30)' },
   Beta: { color: C.dim, bg: 'transparent', border: 'rgba(255,255,255,0.14)' },
 };
 

@@ -9,7 +9,7 @@ const TEXT = '#FFFFFF';
 const DIM = '#CBD5E1';
 const BORDER = 'rgba(255,255,255,0.12)';
 const RAISED = 'var(--bg-surface)';
-const GREEN = '#22c55e';
+const GREEN = '#2CFF7A';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -69,7 +69,7 @@ const IconCheck = () => (
   </svg>
 );
 const IconX = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}>
+  <svg viewBox="0 0 24 24" fill="none" stroke="#FF3B30" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}>
     <line x1={18} y1={6} x2={6} y2={18} /><line x1={6} y1={6} x2={18} y2={18} />
   </svg>
 );

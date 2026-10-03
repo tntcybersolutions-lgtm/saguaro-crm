@@ -5,7 +5,7 @@ import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, goldB
 import { Plugs, ArrowsClockwise, ListChecks, SlidersHorizontal, ClockCounterClockwise, ArrowsLeftRight } from '@phosphor-icons/react';
 
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-surface-2)', BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1', TEXT = '#FFFFFF', GREEN = '#22C55E', RED = '#EF4444', QB_GREEN = '#2CA01C';
+const DIM = '#CBD5E1', TEXT = '#FFFFFF', GREEN = '#2CFF7A', RED = '#FF3B30', QB_GREEN = '#2CA01C';
 
 type SyncHistoryEntry = {
   timestamp: string;
@@ -199,7 +199,7 @@ export default function QuickBooksPage() {
       {notification && (
         <div style={{
           position: 'fixed', top: 20, right: 20, zIndex: 1000, padding: '14px 24px',
-          background: notification.type === 'success' ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
+          background: notification.type === 'success' ? 'rgba(44,255,122,0.15)' : 'rgba(255,59,48,0.15)',
           border: `1px solid ${notification.type === 'success' ? GREEN : RED}`,
           borderRadius: 10, color: notification.type === 'success' ? GREEN : RED,
           fontSize: 13, fontWeight: 600, backdropFilter: 'blur(12px)',
@@ -277,8 +277,8 @@ export default function QuickBooksPage() {
 
           <span style={{
             padding: '5px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800,
-            background: connected ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
-            border: `1px solid ${connected ? 'rgba(34,197,94,0.35)' : 'rgba(239,68,68,0.35)'}`,
+            background: connected ? 'rgba(44,255,122,0.12)' : 'rgba(255,59,48,0.12)',
+            border: `1px solid ${connected ? 'rgba(44,255,122,0.35)' : 'rgba(255,59,48,0.35)'}`,
             color: connected ? GREEN : RED,
           }}>
             {connected ? 'Active' : 'Inactive'}
@@ -435,7 +435,7 @@ export default function QuickBooksPage() {
                           <td style={{ padding: '10px 12px' }}>
                             <span style={{
                               padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
-                              background: allSuccess ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
+                              background: allSuccess ? 'rgba(44,255,122,0.12)' : 'rgba(255,59,48,0.12)',
                               color: allSuccess ? GREEN : RED,
                             }}>
                               {allSuccess ? 'Success' : 'Partial Error'}

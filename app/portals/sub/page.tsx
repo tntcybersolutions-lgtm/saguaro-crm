@@ -66,7 +66,7 @@ export default function SubPortalLanding() {
               <button onClick={handleTokenAccess} disabled={!token.trim()} style={{ padding: '12px 20px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#FFFFFF', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: !token.trim() ? 0.5 : 1 }}>Go</button>
             </div>
           </div>
-          {error && <div style={{ marginTop: 16, padding: '10px 14px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, color: '#EF4444', fontSize: 13 }}>{error}</div>}
+          {error && <div style={{ marginTop: 16, padding: '10px 14px', background: 'rgba(255,59,48,0.1)', border: '1px solid rgba(255,59,48,0.3)', borderRadius: 8, color: '#FF3B30', fontSize: 13 }}>{error}</div>}
         </div>
         <div style={{ textAlign: 'center', marginTop: 24 }}><a href="/" style={{ color: '#CBD5E1', fontSize: 13, textDecoration: 'none' }}>← Back to Saguaro</a></div>
       </div>

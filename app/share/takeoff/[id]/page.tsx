@@ -92,8 +92,8 @@ export default function SharedEstimate() {
             Print / Save PDF
           </button>
           {meta?.acceptedAt ? (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 800, color: '#34D399', border: '1px solid rgba(52,211,153,0.4)', background: 'rgba(52,211,153,0.10)', borderRadius: 9, padding: '8px 13px' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34D399" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 800, color: '#2CFF7A', border: '1px solid rgba(52,211,153,0.4)', background: 'rgba(52,211,153,0.10)', borderRadius: 9, padding: '8px 13px' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2CFF7A" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
               Accepted{meta.acceptedBy ? ` — ${meta.acceptedBy}` : ''}
             </span>
           ) : (

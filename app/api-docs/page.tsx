@@ -11,8 +11,8 @@ const C = {
   border: 'rgba(255,255,255,0.10)',
   raised: 'var(--bg-surface)',
   raisedAlt: 'var(--bg-surface-2)',
-  green: '#22C55E',
-  blue: '#6366F1',
+  green: '#2CFF7A',
+  blue: '#FF8A00',
   code: 'var(--bg-surface)',
   font: "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
   mono: "ui-monospace,'SF Mono','JetBrains Mono','Cascadia Code',Menlo,Consolas,monospace",
@@ -28,10 +28,10 @@ const NAV_LINKS = [
 const BASE_URL = 'https://api.saguarocontrol.net/v1';
 
 const METHOD_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  GET: { bg: 'rgba(34,197,94,0.10)', border: 'rgba(34,197,94,0.30)', text: C.green },
-  POST: { bg: 'rgba(99,102,241,0.12)', border: 'rgba(99,102,241,0.30)', text: '#FBBF24' },
-  PATCH: { bg: 'rgba(245, 158, 11,0.12)', border: 'rgba(245, 158, 11,0.30)', text: C.gold },
-  DELETE: { bg: 'rgba(239,68,68,0.10)', border: 'rgba(239,68,68,0.30)', text: '#F87171' },
+  GET: { bg: 'rgba(44,255,122,0.10)', border: 'rgba(44,255,122,0.30)', text: C.green },
+  POST: { bg: 'rgba(255,138,0,0.12)', border: 'rgba(255,138,0,0.30)', text: '#FFE600' },
+  PATCH: { bg: 'rgba(255,138,0,0.12)', border: 'rgba(255,138,0,0.30)', text: C.gold },
+  DELETE: { bg: 'rgba(255,59,48,0.10)', border: 'rgba(255,59,48,0.30)', text: '#FF3B30' },
 };
 
 const RESOURCES = [
@@ -165,8 +165,8 @@ function CodeBlock({ code, label }: { code: string; label?: string }) {
           {label && <span style={{ marginLeft: 10, fontSize: 11, color: C.dim, fontFamily: C.mono, letterSpacing: 0.3 }}>{label}</span>}
         </div>
         <button onClick={copy} style={{
-          background: copied ? 'rgba(34,197,94,0.12)' : 'rgba(255,255,255,0.05)',
-          border: `1px solid ${copied ? 'rgba(34,197,94,0.30)' : C.border}`,
+          background: copied ? 'rgba(44,255,122,0.12)' : 'rgba(255,255,255,0.05)',
+          border: `1px solid ${copied ? 'rgba(44,255,122,0.30)' : C.border}`,
           borderRadius: 7, color: copied ? C.green : C.dim, fontSize: 11, fontWeight: 500,
           padding: '4px 11px', cursor: 'pointer', fontFamily: C.font, letterSpacing: 0.3,
         }}>
@@ -379,7 +379,7 @@ export default function ApiDocsPage() {
               const ok = e.code.startsWith('2');
               return (
                 <div key={e.code} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 22px', borderBottom: i < ERRORS.length - 1 ? `1px solid rgba(255,255,255,0.08)` : 'none' }}>
-                  <code style={{ fontFamily: C.mono, fontSize: 14, fontWeight: 600, color: ok ? C.green : '#F87171', minWidth: 40 }}>{e.code}</code>
+                  <code style={{ fontFamily: C.mono, fontSize: 14, fontWeight: 600, color: ok ? C.green : '#FF3B30', minWidth: 40 }}>{e.code}</code>
                   <span style={{ fontSize: 13.5, fontWeight: 500, color: C.text, minWidth: 150 }}>{e.label}</span>
                   <span style={{ fontSize: 13, color: C.dim, lineHeight: 1.5 }}>{e.desc}</span>
                 </div>

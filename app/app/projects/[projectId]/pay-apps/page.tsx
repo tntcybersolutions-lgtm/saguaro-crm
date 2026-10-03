@@ -17,18 +17,18 @@ import { ANCHOR_PAY_APPS_DUE } from '@/lib/suggestions';
 import { ScribbleNote } from '@/components/Scribble';
 import { openPdf } from '@/components/PdfViewer';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
-const SAGE='#45B37D',AMBER='var(--warning)';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30',ORANGE='#FF8A00';
+const SAGE='#2CFF7A',AMBER='var(--warning)';
 // MONEY: several DB numerics round-trip as strings — coerce before any math/format.
 const fmt = (n:number|string|null|undefined) => '$'+((Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
 
 function statusBadge(s:string){
   const map:Record<string,{c:string,bg:string}> = {
     draft:      {c:'#CBD5E1',bg:'rgba(148,163,184,.14)'},
-    submitted:  {c:'#4a9de8',bg:'rgba(74,157,232,.14)'},
-    approved:   {c:'#3dd68c',bg:'rgba(26,138,74,.14)'},
+    submitted:  {c:'#FF8A00',bg:'rgba(255,138,0,.14)'},
+    approved:   {c:'#2CFF7A',bg:'rgba(26,138,74,.14)'},
     certified:  {c:GOLD,    bg:'var(--brand-primary-12)'},
-    paid:       {c:'#3dd68c',bg:'rgba(26,138,74,.14)'},
+    paid:       {c:'#2CFF7A',bg:'rgba(26,138,74,.14)'},
   };
   const st = map[s]||{c:DIM,bg:'rgba(143,163,192,.12)'};
   return (
@@ -55,7 +55,7 @@ function MiniPipeline({status,waivers,since,changed}:{status:string;waivers?:{to
     <div style={{minWidth:150}}>
       <LifecycleRail module="pay_applications" status={status} since={since} changed={changed} showAction={false}/>
       {waivers && waivers.total>0 && (
-        <div style={{fontSize:10,fontWeight:700,color:allSigned?'#3dd68c':AMBER,whiteSpace:'nowrap' as const,marginTop:3}}>
+        <div style={{fontSize:10,fontWeight:700,color:allSigned?'#2CFF7A':AMBER,whiteSpace:'nowrap' as const,marginTop:3}}>
           {waivers.signed}/{waivers.total} waivers signed
         </div>
       )}
@@ -268,7 +268,7 @@ export default function PayAppsPage() {
   return (
     <PremiumSurface maxWidth={2200}>
       {toast && (
-        <div style={{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:'8px',background:toast.type==='success'?'rgba(34,197,94,0.9)':'rgba(239,68,68,0.9)',color:'#fff',fontWeight:600,fontSize:'14px',pointerEvents:'none'}}>
+        <div style={{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:'8px',background:toast.type==='success'?'rgba(44,255,122,0.9)':'rgba(255,59,48,0.9)',color:'#fff',fontWeight:600,fontSize:'14px',pointerEvents:'none'}}>
           {toast.msg}
         </div>
       )}
@@ -296,11 +296,11 @@ export default function PayAppsPage() {
       {ctx && (
         <StatStrip items={[
           {href: `/app/projects/${projectId}/contracts`, label:'Original Contract', value:fmt(original), sub:'G702 line 1'},
-          {href: `/app/projects/${projectId}/change-orders`, label:'Approved COs', value:(coTotal>=0?'+':'')+fmt(coTotal), accent:coTotal>0?'#3dd68c':undefined, sub:`${Number(money?.approvedCoCount)||0} approved${Number(money?.pendingCoCount)?` · ${money.pendingCoCount} pending`:''}`},
+          {href: `/app/projects/${projectId}/change-orders`, label:'Approved COs', value:(coTotal>=0?'+':'')+fmt(coTotal), accent:coTotal>0?'#2CFF7A':undefined, sub:`${Number(money?.approvedCoCount)||0} approved${Number(money?.pendingCoCount)?` · ${money.pendingCoCount} pending`:''}`},
           {href: `/app/projects/${projectId}/contracts`, label:'Revised Contract', value:fmt(revised), sub:'Contract sum to date'},
           {href: `/app/projects/${projectId}/pay-apps`, label:'Billed to Date', value:fmt(ctxBilled), sub:`${Number(money?.billedPct)||0}% of revised`},
           {href: `/app/projects/${projectId}/pay-apps`, label:'Retainage Held', value:fmt(retainageHeld), sub:`Held to date · ${Number(money?.retainagePct)||10}% per contract`},
-          {href: `/app/projects/${projectId}/pay-apps`, label:'Paid to Date', value:fmt(ctxPaid), accent:ctxPaid>0?'#3dd68c':undefined, sub:outstandingCertified>0?`${fmt(outstandingCertified)} certified, unpaid`:'All certified money collected'},
+          {href: `/app/projects/${projectId}/pay-apps`, label:'Paid to Date', value:fmt(ctxPaid), accent:ctxPaid>0?'#2CFF7A':undefined, sub:outstandingCertified>0?`${fmt(outstandingCertified)} certified, unpaid`:'All certified money collected'},
         ]}/>
       )}
 
@@ -398,7 +398,7 @@ export default function PayAppsPage() {
             {bulkSelected.size > 0 && (
               <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 16px',background:'var(--brand-primary-08)',border:`1px solid var(--brand-primary-18)`,borderRadius:8,marginBottom:12}}>
                 <span style={{color:GOLD,fontWeight:700,fontSize:13}}>{bulkSelected.size} selected</span>
-                <button onClick={handleBulkApprove} style={{padding:'6px 14px',background:'rgba(34,197,94,0.15)',border:'1px solid rgba(34,197,94,0.3)',borderRadius:6,color:'#22C55E',fontSize:12,fontWeight:700,cursor:'pointer'}}><CheckCircle size={13} weight="fill" color="#22C55E" style={{verticalAlign:'middle'}} /> Approve All</button>
+                <button onClick={handleBulkApprove} style={{padding:'6px 14px',background:'rgba(44,255,122,0.15)',border:'1px solid rgba(44,255,122,0.3)',borderRadius:6,color:'#2CFF7A',fontSize:12,fontWeight:700,cursor:'pointer'}}><CheckCircle size={13} weight="fill" color="#2CFF7A" style={{verticalAlign:'middle'}} /> Approve All</button>
                 <button onClick={handleBulkExport} style={{padding:'6px 14px',background:'var(--brand-primary-18)',border:`1px solid var(--brand-primary-25)`,borderRadius:6,color:GOLD,fontSize:12,fontWeight:700,cursor:'pointer'}}><FileText size={13} color={GOLD} style={{verticalAlign:'middle'}} /> Export All PDFs</button>
                 <button onClick={()=>setBulkSelected(new Set())} style={{padding:'6px 14px',background:RAISED,border:`1px solid ${BORDER}`,borderRadius:6,color:DIM,fontSize:12,cursor:'pointer'}}>Clear</button>
               </div>
@@ -465,7 +465,7 @@ export default function PayAppsPage() {
                       ) : (
                         <div style={{display:'flex',alignItems:'center',gap:4}}>
                           <span style={{color:TEXT,fontWeight:700}}>{fmt(pa.current_payment_due||0)}</span>
-                          {copiedId===pa.id&&<span style={{fontSize:10,color:'#3dd68c',fontWeight:600}}>Copied</span>}
+                          {copiedId===pa.id&&<span style={{fontSize:10,color:'#2CFF7A',fontWeight:600}}>Copied</span>}
                           <button onClick={()=>openPayMenu(pa.id)} style={{background:'none',border:'none',color:DIM,cursor:'pointer',fontSize:10,padding:'2px 4px',lineHeight:1,opacity:0.6}} onMouseEnter={e=>(e.currentTarget.style.opacity='1')} onMouseLeave={e=>(e.currentTarget.style.opacity='0.6')}><span style={{display:'inline-flex',verticalAlign:'middle'}}><CaretDown size={12} color={DIM} /></span></button>
                           {menuId===pa.id&&(
                             <div style={{position:'absolute',top:36,right:14,background:RAISED,border:`1px solid ${BORDER}`,borderRadius:'var(--radius-md)',padding:6,zIndex:100,minWidth:150,boxShadow:'var(--shadow-lg)'}}>

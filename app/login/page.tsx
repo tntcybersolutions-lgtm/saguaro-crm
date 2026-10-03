@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { CheckCircle, WarningCircle, Eye, EyeSlash, Check, Lock } from '@phosphor-icons/react';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#FF3B30';
 
 export default function LoginPage(){
   const [form, setForm] = useState({email:'',password:''});
@@ -142,12 +142,12 @@ export default function LoginPage(){
           {/* Card */}
           <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:'var(--radius-lg)',padding:'32px 28px',boxShadow:'var(--shadow-lg)'}}>
             {info&&(
-              <div style={{background:'rgba(34,197,94,.1)',border:'1px solid rgba(34,197,94,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:'#22c55e',display:'flex',alignItems:'flex-start',gap:8}}>
+              <div style={{background:'rgba(44,255,122,.1)',border:'1px solid rgba(44,255,122,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:'#2CFF7A',display:'flex',alignItems:'flex-start',gap:8}}>
                 <CheckCircle size={15} weight="fill" style={{flexShrink:0,marginTop:1}} /><span>{info}</span>
               </div>
             )}
             {error&&(
-              <div style={{background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:RED,display:'flex',alignItems:'flex-start',gap:8}}>
+              <div style={{background:'rgba(255,59,48,.1)',border:'1px solid rgba(255,59,48,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:RED,display:'flex',alignItems:'flex-start',gap:8}}>
                 <WarningCircle size={15} weight="fill" style={{flexShrink:0,marginTop:1}} /><span>{error}</span>
               </div>
             )}

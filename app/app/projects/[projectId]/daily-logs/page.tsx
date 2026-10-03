@@ -16,7 +16,7 @@ import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
-const GREEN='#1a8a4a',RED='#c03030',BLUE='var(--brand-primary)';
+const GREEN='#2CFF7A',RED='#FF3B30',BLUE='var(--brand-primary)';
 
 const WEATHER_OPTS = ['Clear','Partly Cloudy','Overcast','Rain','Thunderstorm','Snow','Fog','Windy'];
 
@@ -62,7 +62,7 @@ function Section({label,value,warn}:{label:string;value?:string;warn?:boolean}){
     <div style={{background:warn?'rgba(192,48,48,.07)':'var(--bg-surface)',
       border:`1px solid ${warn?'rgba(192,48,48,.25)':'rgba(255,255,255,0.12)'}`,
       borderRadius:8,padding:'12px 14px'}}>
-      <div style={{fontSize:10,fontWeight:700,color:warn?'#f87171':DIM, marginBottom:6}}>{label}</div>
+      <div style={{fontSize:10,fontWeight:700,color:warn?'#FF3B30':DIM, marginBottom:6}}>{label}</div>
       <div style={{fontSize:13,color:TEXT,lineHeight:1.6,whiteSpace:'pre-wrap'}}>{value}</div>
     </div>
   );
@@ -494,13 +494,13 @@ export default function DailyLogsPage(){
             return (
               <StatStrip items={[
                 {href: `/app/projects/${projectId}/daily-logs`, label:'Last Log', value: lastLog ? fmtDay(lastLog) : 'None yet',
-                  accent: gap>0 ? '#f87171' : (lastLog ? '#3dd68c' : undefined),
+                  accent: gap>0 ? '#FF3B30' : (lastLog ? '#2CFF7A' : undefined),
                   sub: lastLog ? (gap>0 ? `${gap} workday${gap===1?'':'s'} unlogged` : 'Record is current') : 'Start the record'},
                 {href: `/app/projects/${projectId}/daily-logs`, label:'% Complete', value:`${Number(ctx.project?.percentComplete)||0}%`, sub: ctx.project?.status ? String(ctx.project.status).replace(/_/g,' ').replace(/\b\w/g,(c:string)=>c.toUpperCase()) : 'Project status'},
                 {href: `/app/projects/${projectId}/schedule`, label:'Schedule Tasks', value:String(ctx.counts?.scheduleTasks??0), sub: ctx.schedule?.criticalCount ? `${ctx.schedule.criticalCount} critical open` : 'On the schedule'},
                 {href: `/app/projects/${projectId}/rfis`, label:'Open RFIs', value:String(ctx.counts?.openRfis??0), accent:(Number(ctx.counts?.openRfis)||0)>0?'var(--brand-primary-strong)':undefined, sub:'Awaiting answers'},
                 {href: `/app/projects/${projectId}/submittals`, label:'Open Submittals', value:String(ctx.counts?.openSubmittals??0), sub:'In review'},
-                {href: `/app/projects/${projectId}/punch-list`, label:'Open Punch', value:String(ctx.counts?.openPunch??0), accent:(Number(ctx.counts?.openPunch)||0)>0?'#f87171':undefined, sub:'Items to close'},
+                {href: `/app/projects/${projectId}/punch-list`, label:'Open Punch', value:String(ctx.counts?.openPunch??0), accent:(Number(ctx.counts?.openPunch)||0)>0?'#FF3B30':undefined, sub:'Items to close'},
               ]}/>
             );
           })()}
@@ -530,7 +530,7 @@ export default function DailyLogsPage(){
             {loading&&<div style={{padding:40,textAlign:'center',color:DIM}}>Loading logs…</div>}
 
             {!loading&&loadError&&(
-              <div style={{margin:'0 16px 14px',background:'rgba(192,48,48,.12)',border:'1px solid rgba(192,48,48,.3)',borderRadius:8,padding:'12px 16px',color:'#c03030',fontSize:13}}>
+              <div style={{margin:'0 16px 14px',background:'rgba(192,48,48,.12)',border:'1px solid rgba(192,48,48,.3)',borderRadius:8,padding:'12px 16px',color:'#FF3B30',fontSize:13}}>
                 {loadError}
               </div>
             )}
@@ -580,7 +580,7 @@ export default function DailyLogsPage(){
                         <div style={{display:'flex',gap:6,flexShrink:0}}>
                           {log.delays?.trim()&&(
                             <span style={{fontSize:10,fontWeight:700,padding:'3px 8px',borderRadius:4,
-                              background:'rgba(192,48,48,.15)',color:'#f87171',letterSpacing:.3}}>
+                              background:'rgba(192,48,48,.15)',color:'#FF3B30',letterSpacing:.3}}>
                               Delays
                             </span>
                           )}
@@ -654,8 +654,8 @@ export default function DailyLogsPage(){
                   return (
                     <div style={{background:gap>0?'rgba(192,48,48,.07)':RAISED,
                       border:`1px solid ${gap>0?'rgba(192,48,48,.3)':BORDER}`,borderRadius:10,padding:'12px 14px'}}>
-                      <div style={{display:'flex',alignItems:'center',gap:8,fontSize:12.5,fontWeight:700,color:gap>0?'#f87171':TEXT}}>
-                        {gap>0 && <WarningCircle size={16} weight="fill" color="#f87171"/>}
+                      <div style={{display:'flex',alignItems:'center',gap:8,fontSize:12.5,fontWeight:700,color:gap>0?'#FF3B30':TEXT}}>
+                        {gap>0 && <WarningCircle size={16} weight="fill" color="#FF3B30"/>}
                         {lastLog
                           ? gap>0
                             ? `Gap in the record — last log ${fmtDay(lastLog)}, ${gap} workday${gap===1?'':'s'} unlogged.`

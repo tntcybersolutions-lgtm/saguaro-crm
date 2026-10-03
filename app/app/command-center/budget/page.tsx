@@ -12,7 +12,7 @@ const CO_STAGES: Record<string, { label: string; color: string }> = {
   draft: { label: 'Issued', color: C.dim }, pricing: { label: 'GC Pricing', color: '#5AC8FA' },
   pm_review: { label: 'PM Review', color: C.blue }, architect_review: { label: 'Architect Review', color: '#AF52DE' },
   pending_owner: { label: 'Owner Approval', color: C.gold }, approved: { label: 'Executed', color: C.green },
-  schedule_updated: { label: 'Schedule Updated', color: '#30B0C7' }, budget_updated: { label: 'Budget Updated', color: '#34C759' },
+  schedule_updated: { label: 'Schedule Updated', color: '#30B0C7' }, budget_updated: { label: 'Budget Updated', color: '#2CFF7A' },
   rejected: { label: 'Rejected', color: C.red },
 };
 

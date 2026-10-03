@@ -11,15 +11,15 @@ import React from 'react';
  * grey icons.
  */
 const MAP: Record<string, { label: string; color: string }> = {
-  pdf:  { label: 'PDF',  color: '#EF4444' },
+  pdf:  { label: 'PDF',  color: '#FF3B30' },
   doc:  { label: 'DOC',  color: '#2B579A' }, docx: { label: 'DOCX', color: '#2B579A' }, rtf: { label: 'RTF', color: '#2B579A' },
   xls:  { label: 'XLS',  color: '#217346' }, xlsx: { label: 'XLSX', color: '#217346' }, csv: { label: 'CSV', color: '#217346' },
   ppt:  { label: 'PPT',  color: '#D24726' }, pptx: { label: 'PPTX', color: '#D24726' },
-  png:  { label: 'PNG',  color: '#8B5CF6' }, jpg: { label: 'JPG', color: '#8B5CF6' }, jpeg: { label: 'JPG', color: '#8B5CF6' },
-  gif:  { label: 'GIF',  color: '#8B5CF6' }, webp: { label: 'WEBP', color: '#8B5CF6' }, heic: { label: 'HEIC', color: '#8B5CF6' }, svg: { label: 'SVG', color: '#8B5CF6' },
-  mp4:  { label: 'MP4',  color: '#F59E0B' }, mov: { label: 'MOV', color: '#F59E0B' }, webm: { label: 'WEBM', color: '#F59E0B' }, m4v: { label: 'M4V', color: '#F59E0B' },
+  png:  { label: 'PNG',  color: '#FF8A00' }, jpg: { label: 'JPG', color: '#FF8A00' }, jpeg: { label: 'JPG', color: '#FF8A00' },
+  gif:  { label: 'GIF',  color: '#FF8A00' }, webp: { label: 'WEBP', color: '#FF8A00' }, heic: { label: 'HEIC', color: '#FF8A00' }, svg: { label: 'SVG', color: '#FF8A00' },
+  mp4:  { label: 'MP4',  color: '#FF8A00' }, mov: { label: 'MOV', color: '#FF8A00' }, webm: { label: 'WEBM', color: '#FF8A00' }, m4v: { label: 'M4V', color: '#FF8A00' },
   zip:  { label: 'ZIP',  color: '#64748B' },
-  dwg:  { label: 'DWG',  color: '#0EA5E9' }, dxf: { label: 'DXF', color: '#0EA5E9' }, rvt: { label: 'RVT', color: '#0EA5E9' },
+  dwg:  { label: 'DWG',  color: '#FF8A00' }, dxf: { label: 'DXF', color: '#FF8A00' }, rvt: { label: 'RVT', color: '#FF8A00' },
   txt:  { label: 'TXT',  color: '#94A3B8' },
 };
 

@@ -414,7 +414,7 @@ export default function InvoicingPage() {
               <FilePdf size={13} weight={inv.pdf_url ? 'fill' : 'regular'} /> {pdfBusy === inv.id ? '…' : 'PDF'}
             </button>
             <button onClick={() => handleSend(inv.id)} title="Send" style={rowActionStyle}><PaperPlaneTilt size={13} /> Send</button>
-            <button onClick={() => handleDelete(inv.id)} title="Delete" style={{ ...rowActionStyle, color: colors.red, border: '1px solid rgba(239,68,68,0.35)' }}><Trash size={13} /></button>
+            <button onClick={() => handleDelete(inv.id)} title="Delete" style={{ ...rowActionStyle, color: colors.red, border: '1px solid rgba(255,59,48,0.35)' }}><Trash size={13} /></button>
           </div>
         );
       },
@@ -456,7 +456,7 @@ export default function InvoicingPage() {
       {!loading && invoices.length > 0 && (
         <StatStrip items={[
           {href: '/app/invoicing',  label: 'Total Billed', value: fmtUsd(pageBilled), sub: `Across ${invoices.length} invoice${invoices.length === 1 ? '' : 's'}` },
-          {href: '/app/invoicing',  label: 'Collected', value: fmtUsd(pagePaid), accent: '#3dd68c', sub: 'Marked paid' },
+          {href: '/app/invoicing',  label: 'Collected', value: fmtUsd(pagePaid), accent: '#2CFF7A', sub: 'Marked paid' },
           {href: '/app/invoicing',  label: 'Outstanding', value: fmtUsd(pageOutstanding), accent: pageOutstanding > 0 ? 'var(--brand-primary)' : undefined, sub: 'Sent, awaiting payment' },
           {href: '/app/invoicing',  label: 'Overdue', value: String(pageOverdue), accent: pageOverdue > 0 ? colors.red : undefined, sub: pageOverdue > 0 ? 'Past due, excludes drafts' : 'Nothing past due' },
           {href: '/app/invoicing',  label: 'Drafts', value: String(pageDrafts), sub: 'Not yet sent' },
@@ -464,14 +464,14 @@ export default function InvoicingPage() {
       )}
 
       {error && (
-        <div style={{ padding: '12px 16px', background: 'rgba(239,68,68,.1)', border: `1px solid rgba(239,68,68,.3)`, borderRadius: radius.md, color: colors.red, fontSize: font.size.md, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ padding: '12px 16px', background: 'rgba(255,59,48,.1)', border: `1px solid rgba(255,59,48,.3)`, borderRadius: radius.md, color: colors.red, fontSize: font.size.md, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
           <Warning size={16} /> {error}
         </div>
       )}
 
       {/* A confirmed delivery — named recipient, so "sent" means something. */}
       {sentNotice && (
-        <div style={{ padding: '12px 16px', background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.3)', borderRadius: radius.md, color: colors.green, fontSize: font.size.md, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ padding: '12px 16px', background: 'rgba(44,255,122,.1)', border: '1px solid rgba(44,255,122,.3)', borderRadius: radius.md, color: colors.green, fontSize: font.size.md, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
           {sentNotice}
         </div>
       )}
@@ -489,7 +489,7 @@ export default function InvoicingPage() {
               {ctx && (
                 <StatStrip items={[
                   {href: '/app/invoicing',  label: 'Original Contract', value: fmtUsd(cOriginal) },
-                  {href: '/app/invoicing',  label: 'Approved COs', value: (cCoTotal >= 0 ? '+' : '') + fmtUsd(cCoTotal), accent: cCoTotal > 0 ? '#3dd68c' : undefined },
+                  {href: '/app/invoicing',  label: 'Approved COs', value: (cCoTotal >= 0 ? '+' : '') + fmtUsd(cCoTotal), accent: cCoTotal > 0 ? '#2CFF7A' : undefined },
                   {href: '/app/invoicing',  label: 'Revised', value: fmtUsd(cRevised) },
                   {href: '/app/invoicing',  label: 'Billed to Date', value: fmtUsd(cBilled) },
                   {href: '/app/invoicing',  label: 'Outstanding', value: fmtUsd(Math.max(0, cBilled - cPaid)), accent: 'var(--brand-primary)' },

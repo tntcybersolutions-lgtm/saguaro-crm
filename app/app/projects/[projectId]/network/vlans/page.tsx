@@ -14,7 +14,7 @@ import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
 const BASE = 'var(--bg-surface-2)';
 const GOLD = 'var(--brand-primary)';
-const GREEN = '#34C759';
+const GREEN = '#2CFF7A';
 const BLUE = 'var(--brand-primary)';
 const RED = '#FF3B30';
 const BORDER = 'rgba(255,255,255,0.12)';
@@ -38,13 +38,13 @@ interface Vlan {
 
 const PURPOSE_COLORS: Record<string, { bg: string; text: string }> = {
   data: { bg: 'var(--brand-primary-12)', text: BLUE },
-  voice: { bg: '#8B5CF620', text: '#8B5CF6' },
+  voice: { bg: '#8B5CF620', text: '#FF8A00' },
   security: { bg: `${RED}20`, text: RED },
   guest: { bg: 'var(--brand-primary-12)', text: GOLD },
-  iot: { bg: '#14B8A620', text: '#14B8A6' },
+  iot: { bg: '#14B8A620', text: '#2CFF7A' },
   management: { bg: '#6B728020', text: '#9CA3AF' },
   server: { bg: `${GREEN}20`, text: GREEN },
-  dmz: { bg: '#F9731620', text: '#F97316' },
+  dmz: { bg: '#F9731620', text: '#FF8A00' },
 };
 
 const PURPOSE_LABELS: Record<string, string> = { iot: 'IoT', dmz: 'DMZ' };

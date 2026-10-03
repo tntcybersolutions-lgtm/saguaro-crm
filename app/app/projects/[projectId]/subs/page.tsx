@@ -39,25 +39,25 @@ function normalizeSub(r: any): Sub {
 // Compliance snapshot from fields /api/subs/list already returns (select *).
 function w9Ok(s: Sub) { return s.w9_on_file === true || s.w9_status === 'submitted'; }
 function coiState(s: Sub): { label: string; color: string; ok: boolean } {
-  if (!s.insurance_expiry) return { label: 'COI not on file', color: '#EF4444', ok: false };
+  if (!s.insurance_expiry) return { label: 'COI not on file', color: '#FF3B30', ok: false };
   const exp = new Date(String(s.insurance_expiry).slice(0, 10) + 'T00:00:00');
   const days = Math.floor((exp.getTime() - Date.now()) / 86400000);
   const d = exp.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  if (days < 0) return { label: `COI expired ${d}`, color: '#EF4444', ok: false };
+  if (days < 0) return { label: `COI expired ${d}`, color: '#FF3B30', ok: false };
   if (days <= 30) return { label: `COI expires in ${days}d`, color: 'var(--warning)', ok: true };
-  return { label: `COI valid through ${d}`, color: '#22C55E', ok: true };
+  return { label: `COI valid through ${d}`, color: '#2CFF7A', ok: true };
 }
 function hasComplianceIssue(s: Sub) { return !w9Ok(s) || !coiState(s).ok; }
 
 function scoreBadge(score: number) {
-  const color = score >= 80 ? '#22C55E' : score >= 60 ? 'var(--warning)' : '#EF4444';
+  const color = score >= 80 ? '#2CFF7A' : score >= 60 ? 'var(--warning)' : '#FF3B30';
   return <span style={{fontSize:12,fontWeight:800,color,background:`color-mix(in srgb, ${color} 9%, transparent)`,padding:'3px 10px',borderRadius:6}}>{score}</span>;
 }
 
 function statusBadge(s: string) {
   const map: Record<string,{c:string,bg:string}> = {
-    active:{c:'#22C55E',bg:'rgba(34,197,94,.12)'}, prequalified:{c:'var(--brand-primary-strong)',bg:'var(--brand-primary-12)'},
-    invited:{c:GOLD,bg:'var(--brand-primary-12)'}, suspended:{c:'#EF4444',bg:'rgba(239,68,68,.12)'},
+    active:{c:'#2CFF7A',bg:'rgba(44,255,122,.12)'}, prequalified:{c:'var(--brand-primary-strong)',bg:'var(--brand-primary-12)'},
+    invited:{c:GOLD,bg:'var(--brand-primary-12)'}, suspended:{c:'#FF3B30',bg:'rgba(255,59,48,.12)'},
     inactive:{c:DIM,bg:'rgba(143,163,192,.08)'},
   };
   const st = map[s]||{c:DIM,bg:'rgba(143,163,192,.08)'};
@@ -197,7 +197,7 @@ export default function SubsPage() {
   const totalContract = subs.reduce((s,sub) => s + (sub.contract_amount||0), 0);
   const totalPaid = subs.reduce((s,sub) => s + (sub.paid_amount||0), 0);
   const avgScore = subs.length > 0 ? Math.round(subs.reduce((s,sub) => s + (sub.health_score||0), 0) / subs.length) : 0;
-  const avgScoreColor = avgScore >= 80 ? '#22C55E' : avgScore >= 60 ? GOLD : subs.length > 0 ? '#EF4444' : undefined;
+  const avgScoreColor = avgScore >= 80 ? '#2CFF7A' : avgScore >= 60 ? GOLD : subs.length > 0 ? '#FF3B30' : undefined;
 
   const subTrades = Array.from(new Set(subs.map(s => s.trade).filter(Boolean))).sort();
   const filteredSubs = subs.filter(s => {
@@ -229,7 +229,7 @@ export default function SubsPage() {
 
   return (
     <PremiumSurface maxWidth={2200}>
-      {toast && <div style={{position:'fixed',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:8,background:toast.type==='success'?'rgba(34,197,94,0.9)':'rgba(239,68,68,0.9)',color:'#fff',fontWeight:600,fontSize:14}}>{toast.msg}</div>}
+      {toast && <div style={{position:'fixed',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:8,background:toast.type==='success'?'rgba(44,255,122,0.9)':'rgba(255,59,48,0.9)',color:'#fff',fontWeight:600,fontSize:14}}>{toast.msg}</div>}
 
       {/* Header */}
       <ModuleHero
@@ -250,7 +250,7 @@ export default function SubsPage() {
         <StatStrip items={[
           {href: `/app/projects/${projectId}/subs`,  label: 'Subs on Job', value: String(roster.length), sub: 'On the project roster' },
           {href: `/app/projects/${projectId}/subs`,  label: 'Sub Commitments', value: fmt(rosterTotal), sub: 'Combined sub contracts' },
-          {href: `/app/projects/${projectId}/compliance`,  label: 'Compliance Issues', value: String(complianceIssues), accent: complianceIssues > 0 ? '#EF4444' : '#22C55E', sub: complianceIssues > 0 ? 'Missing W-9 or lapsed COI' : rosterIds.size > 0 ? 'Roster is clean' : 'Directory is clean' },
+          {href: `/app/projects/${projectId}/compliance`,  label: 'Compliance Issues', value: String(complianceIssues), accent: complianceIssues > 0 ? '#FF3B30' : '#2CFF7A', sub: complianceIssues > 0 ? 'Missing W-9 or lapsed COI' : rosterIds.size > 0 ? 'Roster is clean' : 'Directory is clean' },
           {href: `/app/projects/${projectId}/subs`,  label: 'Directory', value: String(subs.length), sub: 'Companies tenant-wide' },
           {href: `/app/projects/${projectId}/bid-packages`,  label: 'Awarded Packages', value: String(awardedPkgs.length), sub: `${fmt(awardedPkgs.reduce((s, b) => s + (Number(b.awardedAmount) || 0), 0))} awarded` },
         ]} />
@@ -261,7 +261,7 @@ export default function SubsPage() {
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))',gap:16,marginBottom:28}}>
         <StatCard icon={<Users size={19} weight="duotone" color={GOLD} />} label="Total Subs" value={String(subs.length)} accent={GOLD} delay={0.02}  href={`/app/projects/${projectId}/subs`}/>
         <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />} label="Total Contract Value" value={fmt(totalContract)} accent={GOLD} delay={0.06}  href={`/app/projects/${projectId}/contracts`}/>
-        <StatCard icon={<HandCoins size={19} weight="duotone" color="#22C55E" />} label="Total Paid" value={fmt(totalPaid)} accent="#22C55E" delay={0.10}  href={`/app/projects/${projectId}/subs`}/>
+        <StatCard icon={<HandCoins size={19} weight="duotone" color="#2CFF7A" />} label="Total Paid" value={fmt(totalPaid)} accent="#2CFF7A" delay={0.10}  href={`/app/projects/${projectId}/subs`}/>
         <StatCard icon={<Heartbeat size={19} weight="duotone" color={avgScoreColor || GOLD} />} label="Avg Health Score" value={String(avgScore)} accent={avgScoreColor} delay={0.14}  href={`/app/projects/${projectId}/subs`}/>
       </div>
       )}
@@ -287,7 +287,7 @@ export default function SubsPage() {
               </div>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12}}>
                 <div>
-                  <label style={lblS}>Company Name<span style={{color:'#EF4444'}}> *</span>{auto.name&&<AutoChip/>}</label>
+                  <label style={lblS}>Company Name<span style={{color:'#FF3B30'}}> *</span>{auto.name&&<AutoChip/>}</label>
                   <input required type="text" placeholder="ABC Electric LLC" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} style={inpS} />
                 </div>
                 <div>
@@ -329,10 +329,10 @@ export default function SubsPage() {
           </SectionCard>
 
           <div style={{display:'flex',flexDirection:'column',gap:16}}>
-            <SectionCard flat title="Compliance Snapshot" icon={picked ? (hasComplianceIssue(picked) ? <ShieldWarning size={17} weight="duotone" color="#EF4444" /> : <ShieldCheck size={17} weight="duotone" color="#22C55E" />) : <ShieldCheck size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Compliance Snapshot" icon={picked ? (hasComplianceIssue(picked) ? <ShieldWarning size={17} weight="duotone" color="#FF3B30" /> : <ShieldCheck size={17} weight="duotone" color="#2CFF7A" />) : <ShieldCheck size={17} weight="duotone" color={GOLD} />}>
               {picked ? (
                 <>
-                  <InsightRow label="W-9" value={w9Ok(picked)?'On file':'Missing'} accent={w9Ok(picked)?'#22C55E':'#EF4444'} strong/>
+                  <InsightRow label="W-9" value={w9Ok(picked)?'On file':'Missing'} accent={w9Ok(picked)?'#2CFF7A':'#FF3B30'} strong/>
                   <InsightRow label="Insurance" value={coiState(picked).label} accent={coiState(picked).color}/>
                   <InsightRow label="License" value={picked.license_number||'Not on file'} accent={picked.license_number?undefined:'var(--warning)'}/>
                   <InsightRow label="Directory Status" value={cap(picked.status||'active')}/>
@@ -437,11 +437,11 @@ export default function SubsPage() {
                     <td style={{padding:'12px 14px',color:DIM}}>{sub.contact_phone||'—'}</td>
                     <td style={{padding:'12px 14px',color:DIM,fontFamily:'monospace',fontSize:11}}>{sub.license_number||'—'}</td>
                     <td style={{padding:'12px 14px',whiteSpace:'nowrap'}}>
-                      <span title={w9Ok(sub)?'W-9 on file':'W-9 missing'} style={{fontSize:10,fontWeight:800,padding:'2px 7px',borderRadius:4,marginRight:4,background:w9Ok(sub)?'rgba(34,197,94,.12)':'rgba(239,68,68,.12)',color:w9Ok(sub)?'#22C55E':'#EF4444'}}>W-9</span>
+                      <span title={w9Ok(sub)?'W-9 on file':'W-9 missing'} style={{fontSize:10,fontWeight:800,padding:'2px 7px',borderRadius:4,marginRight:4,background:w9Ok(sub)?'rgba(44,255,122,.12)':'rgba(255,59,48,.12)',color:w9Ok(sub)?'#2CFF7A':'#FF3B30'}}>W-9</span>
                       <span title={coiState(sub).label} style={{fontSize:10,fontWeight:800,padding:'2px 7px',borderRadius:4,background:`color-mix(in srgb, ${coiState(sub).color} 12%, transparent)`,color:coiState(sub).color}}>COI</span>
                     </td>
                     <td style={{padding:'12px 14px',color:TEXT,fontWeight:600}}>{fmt(sub.contract_amount || Number(roster.find(r=>r.id===sub.id)?.contractAmount || 0))}</td>
-                    <td style={{padding:'12px 14px',color:'#22C55E',fontWeight:600}}>{fmt(sub.paid_amount)}</td>
+                    <td style={{padding:'12px 14px',color:'#2CFF7A',fontWeight:600}}>{fmt(sub.paid_amount)}</td>
                     <td style={{padding:'12px 14px'}}>{scoreBadge(sub.health_score||0)}</td>
                     <td style={{padding:'12px 14px'}}>
                       <select value={sub.status||'active'} onChange={e=>handleUpdateStatus(sub.id,e.target.value)}
@@ -452,11 +452,11 @@ export default function SubsPage() {
                     <td style={{padding:'12px 14px'}}>
                       {deleteId===sub.id ? (
                         <div style={{display:'flex',gap:4}}>
-                          <button onClick={()=>handleDelete(sub.id)} style={{padding:'3px 8px',background:'rgba(239,68,68,.15)',border:'1px solid rgba(239,68,68,.3)',borderRadius:5,color:'#EF4444',fontSize:11,fontWeight:700,cursor:'pointer'}}>Yes</button>
+                          <button onClick={()=>handleDelete(sub.id)} style={{padding:'3px 8px',background:'rgba(255,59,48,.15)',border:'1px solid rgba(255,59,48,.3)',borderRadius:5,color:'#FF3B30',fontSize:11,fontWeight:700,cursor:'pointer'}}>Yes</button>
                           <button onClick={()=>setDeleteId(null)} style={{padding:'3px 8px',background:RAISED,border:`1px solid ${BORDER}`,borderRadius:5,color:DIM,fontSize:11,cursor:'pointer'}}>No</button>
                         </div>
                       ) : (
-                        <button onClick={()=>setDeleteId(sub.id)} style={{background:'none',border:'none',color:'rgba(239,68,68,.6)',cursor:'pointer',fontSize:14}} title="Delete"><Trash size={16} weight="regular" color="rgba(239,68,68,.6)" /></button>
+                        <button onClick={()=>setDeleteId(sub.id)} style={{background:'none',border:'none',color:'rgba(255,59,48,.6)',cursor:'pointer',fontSize:14}} title="Delete"><Trash size={16} weight="regular" color="rgba(255,59,48,.6)" /></button>
                       )}
                     </td>
                   </tr>

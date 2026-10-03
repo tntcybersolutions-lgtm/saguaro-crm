@@ -90,9 +90,9 @@ export default function EscalationsPage() {
       <SectionCard flat title="Escalation Matrix" subtitle="Who owns it now — ownership climbs as items age." icon={<Ladder size={16} weight="duotone" color={C.gold} />} style={{ marginBottom: 18 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
           {[
-            { n: 1, owner: 'Superintendent', hint: '0–2d overdue', color: '#34C759' },
+            { n: 1, owner: 'Superintendent', hint: '0–2d overdue', color: '#2CFF7A' },
             { n: 2, owner: 'Project Manager', hint: '3–6d overdue', color: '#FFCC00' },
-            { n: 3, owner: 'Director of Construction', hint: '7–13d overdue', color: '#FF9500' },
+            { n: 3, owner: 'Director of Construction', hint: '7–13d overdue', color: '#FF8A00' },
             { n: 4, owner: 'Executive Leadership', hint: '14d+ overdue', color: '#FF3B30' },
           ].map((lv) => {
             const count = summary.levels[lv.n - 1];

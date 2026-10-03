@@ -87,8 +87,8 @@ function ItemRow({ it, group, pid, todayStart }: { it: any; group: (typeof MODUL
       style={{
         display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none',
         padding: '10px 12px', borderRadius: 12,
-        background: overdue ? 'rgba(239,68,68,0.06)' : 'rgba(255,255,255,0.02)',
-        border: `1px solid ${overdue ? 'rgba(239,68,68,0.35)' : 'rgba(255,255,255,0.06)'}`,
+        background: overdue ? 'rgba(255,59,48,0.06)' : 'rgba(255,255,255,0.02)',
+        border: `1px solid ${overdue ? 'rgba(255,59,48,0.35)' : 'rgba(255,255,255,0.06)'}`,
       }}
     >
       <span aria-hidden style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 9, background: acc.soft, border: `1px solid ${acc.ring}` }}>
@@ -103,7 +103,7 @@ function ItemRow({ it, group, pid, todayStart }: { it: any; group: (typeof MODUL
         </span>
       )}
       {overdue && (
-        <span style={{ flexShrink: 0, fontSize: 9.5, fontWeight: 800, letterSpacing: 0.5, padding: '3px 9px', borderRadius: 999, background: 'rgba(239,68,68,0.14)', border: '1px solid rgba(239,68,68,0.4)', color: RED, whiteSpace: 'nowrap' as const }}>
+        <span style={{ flexShrink: 0, fontSize: 9.5, fontWeight: 800, letterSpacing: 0.5, padding: '3px 9px', borderRadius: 999, background: 'rgba(255,59,48,0.14)', border: '1px solid rgba(255,59,48,0.4)', color: RED, whiteSpace: 'nowrap' as const }}>
           OVERDUE
         </span>
       )}
@@ -315,7 +315,7 @@ export default function MyWorkPage() {
                       {roleLabel(p?.role)}
                     </span>
                     {projOverdue > 0 && (
-                      <span style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: 0.5, padding: '3px 10px', borderRadius: 999, background: 'rgba(239,68,68,0.14)', border: '1px solid rgba(239,68,68,0.4)', color: RED, whiteSpace: 'nowrap' as const }}>
+                      <span style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: 0.5, padding: '3px 10px', borderRadius: 999, background: 'rgba(255,59,48,0.14)', border: '1px solid rgba(255,59,48,0.4)', color: RED, whiteSpace: 'nowrap' as const }}>
                         {projOverdue} OVERDUE
                       </span>
                     )}
@@ -338,7 +338,7 @@ export default function MyWorkPage() {
                     </div>
                   ) : (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 4px', color: 'rgba(255,255,255,0.45)', fontSize: 13 }}>
-                      <span aria-hidden style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 999, background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.35)' }}>
+                      <span aria-hidden style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 999, background: 'rgba(44,255,122,0.10)', border: '1px solid rgba(44,255,122,0.35)' }}>
                         <ListChecks size={14} weight="bold" color={colors.green} />
                       </span>
                       All clear on this project — nothing open with your name on it.

@@ -458,7 +458,7 @@ export default function LeadsPage() {
     {
       key: 'next_action_date', header: 'Follow-Up', accessor: (l) => l.next_action_date || null,
       render: (l) => l.next_action_date
-        ? <span style={{ color: isOverdue(l) ? '#F87171' : undefined, fontWeight: isOverdue(l) ? 700 : undefined }}>{fmtDate(l.next_action_date)}</span>
+        ? <span style={{ color: isOverdue(l) ? '#FF3B30' : undefined, fontWeight: isOverdue(l) ? 700 : undefined }}>{fmtDate(l.next_action_date)}</span>
         : '—',
     },
     { key: 'created_at', header: 'Created', render: (l) => fmtDate(l.created_at) },
@@ -468,14 +468,14 @@ export default function LeadsPage() {
     { key: 'open', header: 'Open', align: 'right' },
     { key: 'openVal', header: 'Pipeline', align: 'right', render: (r) => fmt(r.openVal) },
     { key: 'won', header: 'Won', align: 'right' },
-    { key: 'wonVal', header: 'Won Value', align: 'right', render: (r) => <span style={{ color: r.wonVal > 0 ? '#34D399' : undefined }}>{fmt(r.wonVal)}</span> },
+    { key: 'wonVal', header: 'Won Value', align: 'right', render: (r) => <span style={{ color: r.wonVal > 0 ? '#2CFF7A' : undefined }}>{fmt(r.wonVal)}</span> },
     {
       key: 'rate', header: 'Win Rate', align: 'right', accessor: (r) => (r.won + r.lost > 0 ? Math.round((r.won / (r.won + r.lost)) * 100) : null),
       render: (r) => {
         const closed = r.won + r.lost;
         if (!closed) return '—';
         const rate = Math.round((r.won / closed) * 100);
-        return <span style={{ fontWeight: 700, color: rate >= 50 ? '#34D399' : 'var(--warning)' }}>{rate}%</span>;
+        return <span style={{ fontWeight: 700, color: rate >= 50 ? '#2CFF7A' : 'var(--warning)' }}>{rate}%</span>;
       },
     },
   ];
@@ -601,14 +601,14 @@ export default function LeadsPage() {
                     <div key={item.stage}>
                       <div style={{ display: 'grid', gridTemplateColumns: '96px minmax(0, 1fr)', alignItems: 'center', gap: 12 }}>
                         <span style={{ textAlign: 'right', fontSize: 'var(--fs-sm)', fontWeight: 600 }}>{item.stage}</span>
-                        <div style={{ width: `${widthPct}%`, minWidth: 140, height: 36, borderRadius: 'var(--radius-sm)', background: 'rgba(96,165,250,0.18)', border: '1px solid rgba(96,165,250,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px', fontSize: 'var(--fs-sm)', fontWeight: 700, gap: 8 }}>
+                        <div style={{ width: `${widthPct}%`, minWidth: 140, height: 36, borderRadius: 'var(--radius-sm)', background: 'rgba(255,138,0,0.18)', border: '1px solid rgba(255,138,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px', fontSize: 'var(--fs-sm)', fontWeight: 700, gap: 8 }}>
                           <span>{item.count} lead{item.count !== 1 ? 's' : ''}</span>
                           <span style={{ color: 'var(--text-secondary)' }}>{fmt(item.value)}</span>
                         </div>
                       </div>
                       {rate != null && (
                         <div className="k-hint" style={{ marginLeft: 108, padding: '2px 0' }}>
-                          <span style={{ fontWeight: 700, color: rate >= 50 ? '#34D399' : rate >= 25 ? 'var(--warning)' : '#F87171' }}>{rate}%</span> ↓ convert to {conversionRates[idx].to}
+                          <span style={{ fontWeight: 700, color: rate >= 50 ? '#2CFF7A' : rate >= 25 ? 'var(--warning)' : '#FF3B30' }}>{rate}%</span> ↓ convert to {conversionRates[idx].to}
                         </div>
                       )}
                     </div>
@@ -667,7 +667,7 @@ export default function LeadsPage() {
                           <div className="k-hint" style={{ display: 'flex', justifyContent: 'space-between', gap: 6, flexWrap: 'wrap' }}>
                             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lead.project_type || ''}</span>
                             {lead.next_action_date && (
-                              <span style={{ color: isOverdue(lead) ? '#F87171' : undefined, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                              <span style={{ color: isOverdue(lead) ? '#FF3B30' : undefined, fontWeight: 600, whiteSpace: 'nowrap' }}>
                                 Follow-Up {fmtDate(lead.next_action_date)}
                               </span>
                             )}

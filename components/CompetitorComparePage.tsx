@@ -10,8 +10,8 @@ const TEXT = '#FFFFFF';
 const DIM = '#CBD5E1';
 const BORDER = 'rgba(255,255,255,0.12)';
 const RAISED = 'var(--bg-surface)';
-const GREEN = '#22c55e';
-const RED = '#ef4444';
+const GREEN = '#2CFF7A';
+const RED = '#FF3B30';
 
 // ─── Nav ────────────────────────────────────────────────────────────────────
 
@@ -308,7 +308,7 @@ export default function CompetitorComparePage({ competitor }: { competitor: Comp
               {/* Saguaro cell */}
               <div style={{
                 padding: '15px 20px', borderLeft: `1px solid ${BORDER}`,
-                background: row.saguaroWins ? 'rgba(34,197,94,0.04)' : 'transparent',
+                background: row.saguaroWins ? 'rgba(44,255,122,0.04)' : 'transparent',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
               }}>
                 {row.saguaroWins && <Check />}

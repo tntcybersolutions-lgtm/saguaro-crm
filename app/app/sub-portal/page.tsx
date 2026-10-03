@@ -14,11 +14,11 @@ const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const TEXT = '#FFFFFF';
 const DIM = '#CBD5E1';
-const GREEN = '#22C55E';
-const RED = '#EF4444';
+const GREEN = '#2CFF7A';
+const RED = '#FF3B30';
 const AMBER = 'var(--warning)';
 const BLUE = 'var(--brand-primary)';
-const PURPLE = '#8B5CF6';
+const PURPLE = '#FF8A00';
 
 /* ── types ── */
 type SubStatus = 'active' | 'pending' | 'disabled';
@@ -125,7 +125,7 @@ const ALL_PERMISSIONS_LIST: { key: PortalPermission; label: string }[] = [
   { key: 'submittals', label: 'Submittals' },
   { key: 'pay_apps', label: 'Pay Applications' },
 ];
-const AVATAR_COLORS = [GOLD, BLUE, GREEN, PURPLE, AMBER, '#EC4899', '#14B8A6', '#F97316'];
+const AVATAR_COLORS = [GOLD, BLUE, GREEN, PURPLE, AMBER, '#FF8A00', '#2CFF7A', '#FF8A00'];
 const DOC_CATEGORIES = ['Drawings', 'Specifications', 'Schedules', 'Safety Plans', 'Meeting Minutes', 'Reports', 'Contracts', 'Photos'];
 
 /* ── map a real portal_users row → the roster shape the UI renders (was a

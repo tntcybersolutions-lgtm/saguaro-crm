@@ -30,7 +30,7 @@ import Suggest from '@/components/ui/Suggest';
 
 const DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1', TEXT = '#FFFFFF', GOLD = 'var(--brand-primary)';
-const GREEN = '#3dd68c', AMBER = 'var(--warning)', RED = '#f87171';
+const GREEN = '#2CFF7A', AMBER = 'var(--warning)', RED = '#FF3B30';
 
 interface CrewMember { id: string; person_name: string; role: string | null; trade: string | null; }
 interface Crew {
@@ -44,9 +44,9 @@ const STATUS_FILTERS = ['all', 'active', 'standby', 'inactive'] as const;
 // crews.status is free text — map the known values to a tone, default neutral.
 function statusTone(status: string | null | undefined): { ink: string; bg: string } {
   switch ((status ?? '').toLowerCase()) {
-    case 'active':   return { ink: GREEN, bg: 'rgba(61,214,140,0.14)' };
+    case 'active':   return { ink: GREEN, bg: 'rgba(44,255,122,0.14)' };
     case 'standby':  return { ink: AMBER, bg: 'color-mix(in srgb, var(--warning) 14%, transparent)' };
-    case 'inactive': return { ink: RED, bg: 'rgba(248,113,113,0.14)' };
+    case 'inactive': return { ink: RED, bg: 'rgba(255,59,48,0.14)' };
     default:         return { ink: DIM, bg: 'rgba(255,255,255,0.08)' };
   }
 }
@@ -362,7 +362,7 @@ export default function CrewsPage() {
 
             {!loading && loadError && (
               <div style={{ margin: '10px 16px 14px', background: 'rgba(192,48,48,.12)', border: '1px solid rgba(192,48,48,.3)',
-                borderRadius: 8, padding: '12px 16px', color: '#f87171', fontSize: 13 }}>
+                borderRadius: 8, padding: '12px 16px', color: '#FF3B30', fontSize: 13 }}>
                 {humanError(loadError, 'Failed to load crews. Please try again.')}
               </div>
             )}
@@ -471,7 +471,7 @@ export default function CrewsPage() {
               {panel?.mode === 'roster' && selected && selected.deleted_at && (
                 <button onClick={() => archiveCrew(selected, true)}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px',
-                    background: 'rgba(61,214,140,.1)', border: '1px solid rgba(61,214,140,.3)', borderRadius: 6,
+                    background: 'rgba(44,255,122,.1)', border: '1px solid rgba(44,255,122,.3)', borderRadius: 6,
                     color: GREEN, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                   <ArrowCounterClockwise size={13} weight="bold" color={GREEN} /> Restore
                 </button>

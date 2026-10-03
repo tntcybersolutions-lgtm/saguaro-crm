@@ -40,8 +40,8 @@ const RAISED = 'var(--bg-surface)'; // modal card
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM    = '#CBD5E1';
 const TEXT   = '#FFFFFF';
-const GREEN  = '#45B37D';
-const RED    = '#E0644E';
+const GREEN  = '#2CFF7A';
+const RED    = '#FF3B30';
 const SHADOW_LG = '0 16px 44px rgba(0,0,0,0.10)';
 
 type Outcome = 'won' | 'lost';

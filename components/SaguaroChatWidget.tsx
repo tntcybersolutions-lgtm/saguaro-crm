@@ -603,7 +603,7 @@ export default function SaguaroChatWidget({
         .sage-chip:hover { background: var(--brand-primary-18) !important; transform: translateY(-1px); }
         .sage-action-card:hover { background: var(--brand-primary-12) !important; border-color: color-mix(in srgb, var(--brand-primary) 50%, transparent) !important; }
         .sage-send-btn:hover:not(:disabled) { transform: scale(1.08); }
-        .sage-close-btn:hover { background: rgba(239,68,68,0.2) !important; color: #EF4444 !important; }
+        .sage-close-btn:hover { background: rgba(255,59,48,0.2) !important; color: #FF3B30 !important; }
       `}</style>
 
       {/* LAUNCHER */}
@@ -625,7 +625,7 @@ export default function SaguaroChatWidget({
           {hasNewMessage && (
             <div style={{
               position: 'absolute', top: -4, right: -4, width: 18, height: 18,
-              borderRadius: '50%', background: '#EF4444', display: 'flex',
+              borderRadius: '50%', background: '#FF3B30', display: 'flex',
               alignItems: 'center', justifyContent: 'center', fontSize: 10,
               fontWeight: 700, color: '#fff', zIndex: 1,
               animation: 'badgePulse 2s ease-in-out infinite',
@@ -691,7 +691,7 @@ export default function SaguaroChatWidget({
                 )}
               </div>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E', animation: 'onlinePulse 2s ease-in-out infinite', flexShrink: 0 }} />
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#2CFF7A', animation: 'onlinePulse 2s ease-in-out infinite', flexShrink: 0 }} />
                 AI Construction Expert · Online
                 {memoryProfile && memoryProfile.engagement.currentStreak > 2 && (
                   <span style={{ marginLeft: 6, color: 'var(--brand-primary)', fontSize: 10, animation: 'streakFlicker 3s ease-in-out infinite' }}>
@@ -845,12 +845,12 @@ export default function SaguaroChatWidget({
                       cursor: isStreaming || input.trim() ? 'pointer' : 'default',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                       transition: 'all 0.15s',
-                      background: isStreaming ? 'rgba(239,68,68,0.2)' : input.trim() ? 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))' : 'rgba(255,255,255,0.06)',
+                      background: isStreaming ? 'rgba(255,59,48,0.2)' : input.trim() ? 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))' : 'rgba(255,255,255,0.06)',
                       boxShadow: input.trim() && !isStreaming ? '0 2px 12px var(--brand-primary-25)' : 'none',
                     }}
                   >
                     {isStreaming ? (
-                      <div style={{ width: 10, height: 10, borderRadius: 2, background: '#EF4444' }} />
+                      <div style={{ width: 10, height: 10, borderRadius: 2, background: '#FF3B30' }} />
                     ) : (
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                         <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke={input.trim() ? '#0A0A00' : 'rgba(255,255,255,0.2)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />

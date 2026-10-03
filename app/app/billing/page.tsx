@@ -12,22 +12,22 @@ const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM    = '#CBD5E1';
 const TEXT   = '#FFFFFF';
-const GREEN  = '#22c55e';
-const RED    = '#ef4444';
+const GREEN  = '#2CFF7A';
+const RED    = '#FF3B30';
 
 // Semantic (destructive) button presets — kit-shaped but intentionally red,
 // so the Cancel / Update-Payment actions stay meaningful instead of gold.
 const dangerGhostStyle: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
   padding: '11px 18px', borderRadius: 12, cursor: 'pointer',
-  background: 'rgba(239,68,68,0.10)', color: RED, border: '1px solid rgba(239,68,68,0.32)',
+  background: 'rgba(255,59,48,0.10)', color: RED, border: '1px solid rgba(255,59,48,0.32)',
   fontWeight: 700, fontSize: 13.5,
 };
 const dangerSolidStyle: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
   padding: '11px 20px', borderRadius: 12, border: 'none', cursor: 'pointer',
-  background: `linear-gradient(135deg, ${RED}, #dc2626)`, color: '#fff',
-  fontWeight: 800, fontSize: 13.5, boxShadow: '0 10px 26px -10px rgba(239,68,68,0.6)',
+  background: `linear-gradient(135deg, ${RED}, #FF3B30)`, color: '#fff',
+  fontWeight: 800, fontSize: 13.5, boxShadow: '0 10px 26px -10px rgba(255,59,48,0.6)',
 };
 
 interface Subscription {
@@ -72,8 +72,8 @@ const PLANS = [
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; bg: string; color: string }> = {
     trialing:  { label: 'Free Trial',  bg: 'var(--brand-primary-12)', color: GOLD },
-    active:    { label: 'Active',      bg: 'rgba(34,197,94,0.12)',  color: GREEN },
-    past_due:  { label: 'Past Due',    bg: 'rgba(239,68,68,0.12)',  color: RED },
+    active:    { label: 'Active',      bg: 'rgba(44,255,122,0.12)',  color: GREEN },
+    past_due:  { label: 'Past Due',    bg: 'rgba(255,59,48,0.12)',  color: RED },
     canceled:  { label: 'Canceled',    bg: 'rgba(110,110,115,0.1)', color: DIM },
     paused:    { label: 'Paused',      bg: 'rgba(110,110,115,0.1)', color: DIM },
   };
@@ -327,7 +327,7 @@ export default function BillingPage() {
 
         {/* URL success message */}
         {typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('success') === '1' && (
-          <div style={{ background: 'rgba(34,197,94,0.1)', border: `1px solid rgba(34,197,94,0.3)`, borderRadius: 12, padding: '16px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ background: 'rgba(44,255,122,0.1)', border: `1px solid rgba(44,255,122,0.3)`, borderRadius: 12, padding: '16px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ fontSize: 20, display: 'inline-flex', alignItems: 'center' }}><CheckCircle size={22} weight="fill" color={GREEN} /></span>
             <div>
               <div style={{ fontWeight: 700, color: GREEN, marginBottom: 2 }}>Payment successful — you're all set!</div>
@@ -437,7 +437,7 @@ export default function BillingPage() {
               <button onClick={() => setAnnual(false)} style={{ padding: '6px 16px', borderRadius: 6, border: 'none', background: !annual ? 'color-mix(in srgb, var(--brand-primary) 15%, transparent)' : 'transparent', color: !annual ? GOLD : DIM, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Monthly</button>
               <button onClick={() => setAnnual(true)} style={{ padding: '6px 16px', borderRadius: 6, border: 'none', background: annual ? 'color-mix(in srgb, var(--brand-primary) 15%, transparent)' : 'transparent', color: annual ? GOLD : DIM, fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                 Annual
-                <span style={{ fontSize: 10, fontWeight: 800, color: GREEN, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', padding: '1px 6px', borderRadius: 8 }}>-17%</span>
+                <span style={{ fontSize: 10, fontWeight: 800, color: GREEN, background: 'rgba(44,255,122,0.12)', border: '1px solid rgba(44,255,122,0.25)', padding: '1px 6px', borderRadius: 8 }}>-17%</span>
               </button>
             </div>
           }
@@ -457,7 +457,7 @@ export default function BillingPage() {
                     <div style={{ background: `linear-gradient(90deg, ${GOLD}, var(--brand-primary-strong))`, textAlign: 'center', padding: '5px 0', fontSize: 10, fontWeight: 800, color: '#0A0A00' }}>Most Popular</div>
                   )}
                   {isCurrent && (
-                    <div style={{ background: 'rgba(34,197,94,0.15)', borderBottom: `1px solid rgba(34,197,94,0.25)`, textAlign: 'center', padding: '5px 0', fontSize: 10, fontWeight: 800, color: GREEN }}>Current Plan</div>
+                    <div style={{ background: 'rgba(44,255,122,0.15)', borderBottom: `1px solid rgba(44,255,122,0.25)`, textAlign: 'center', padding: '5px 0', fontSize: 10, fontWeight: 800, color: GREEN }}>Current Plan</div>
                   )}
                   <div style={{ padding: '24px 22px' }}>
                     <div style={{ fontSize: 11, fontWeight: 800, color: plan.popular ? GOLD : DIM, marginBottom: 4 }}>{plan.name}</div>
@@ -479,8 +479,8 @@ export default function BillingPage() {
                       onClick={() => !isCurrent && handleUpgrade(plan.id)}
                       disabled={isCurrent || upgrading === plan.id}
                       style={{
-                        width: '100%', padding: '11px 0', borderRadius: 8, border: isCurrent ? `1px solid rgba(34,197,94,0.3)` : plan.popular ? 'none' : `1px solid ${BORDER}`,
-                        background: isCurrent ? 'rgba(34,197,94,0.08)' : plan.popular ? 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))' : 'rgba(255,255,255,0.06)',
+                        width: '100%', padding: '11px 0', borderRadius: 8, border: isCurrent ? `1px solid rgba(44,255,122,0.3)` : plan.popular ? 'none' : `1px solid ${BORDER}`,
+                        background: isCurrent ? 'rgba(44,255,122,0.08)' : plan.popular ? 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))' : 'rgba(255,255,255,0.06)',
                         color: isCurrent ? GREEN : plan.popular ? '#0A0A00' : TEXT,
                         fontWeight: 800, fontSize: 13, cursor: isCurrent ? 'default' : 'pointer', marginBottom: 20,
                         boxShadow: plan.popular && !isCurrent ? '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' : 'none',
@@ -493,7 +493,7 @@ export default function BillingPage() {
                       {plan.features.map(f => (
                         <div key={f} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 2 }}>
-                            <circle cx="8" cy="8" r="8" fill="rgba(34,197,94,0.15)" />
+                            <circle cx="8" cy="8" r="8" fill="rgba(44,255,122,0.15)" />
                             <path d="M4.5 8l2.5 2.5 4-5" stroke={GREEN} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                           <span style={{ fontSize: 12, color: DIM }}>{f}</span>
@@ -562,12 +562,12 @@ export default function BillingPage() {
                 const pendingDisable = state === 'active' && !!disableReqs[addon.key];
                 const busy = requesting === addon.key;
                 const chip =
-                  state === 'active' ? { label: pendingDisable ? 'Active · Disable Requested' : 'Active', bg: 'rgba(34,197,94,0.12)', color: GREEN } :
+                  state === 'active' ? { label: pendingDisable ? 'Active · Disable Requested' : 'Active', bg: 'rgba(44,255,122,0.12)', color: GREEN } :
                   state === 'trial' ? { label: trialLeft != null ? `Trial · ${trialLeft}d Left` : 'Trial', bg: 'var(--brand-primary-12)', color: GOLD } :
                   state === 'requested' ? { label: 'Requested', bg: 'var(--brand-primary-12)', color: GOLD } :
                   { label: 'Not Enabled', bg: 'rgba(255,255,255,0.06)', color: DIM };
                 return (
-                  <div key={addon.key} style={{ background: RAISED, border: `1px solid ${state === 'active' || state === 'trial' ? 'rgba(34,197,94,0.3)' : BORDER}`, borderRadius: 14, padding: '18px 18px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div key={addon.key} style={{ background: RAISED, border: `1px solid ${state === 'active' || state === 'trial' ? 'rgba(44,255,122,0.3)' : BORDER}`, borderRadius: 14, padding: '18px 18px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
                       <div style={{ fontSize: 14, fontWeight: 800, color: TEXT, lineHeight: 1.3 }}>{addon.name}</div>
                       <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: chip.bg, color: chip.color, whiteSpace: 'nowrap', flexShrink: 0 }}>{chip.label}</span>
@@ -664,7 +664,7 @@ export default function BillingPage() {
 
       {/* Action error banner — fixed + above the cancel modal (z 500) so failures are never invisible */}
       {actionError && (
-        <div role="alert" style={{ position: 'fixed', top: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 600, width: 'calc(100% - 48px)', maxWidth: 480, background: 'rgba(239,68,68,0.14)', border: `1px solid rgba(239,68,68,0.45)`, borderRadius: 10, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 8px 30px rgba(0,0,0,0.45)' }}>
+        <div role="alert" style={{ position: 'fixed', top: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 600, width: 'calc(100% - 48px)', maxWidth: 480, background: 'rgba(255,59,48,0.14)', border: `1px solid rgba(255,59,48,0.45)`, borderRadius: 10, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 8px 30px rgba(0,0,0,0.45)' }}>
           <Warning size={20} weight="fill" color={RED} />
           <span style={{ flex: 1, fontSize: 13, fontWeight: 500, color: TEXT }}>{actionError}</span>
           <button onClick={() => setActionError(null)} aria-label="Dismiss" style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: '0 4px' }}>&times;</button>
@@ -684,7 +684,7 @@ export default function BillingPage() {
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
               <button onClick={() => setShowCancel(false)} style={{ flex: 1, padding: '12px 0', background: 'rgba(255,255,255,0.06)', border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>Keep My Plan</button>
-              <button onClick={handleCancel} disabled={canceling} style={{ flex: 1, padding: '12px 0', background: 'rgba(239,68,68,0.1)', border: `1px solid rgba(239,68,68,0.3)`, borderRadius: 8, color: RED, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
+              <button onClick={handleCancel} disabled={canceling} style={{ flex: 1, padding: '12px 0', background: 'rgba(255,59,48,0.1)', border: `1px solid rgba(255,59,48,0.3)`, borderRadius: 8, color: RED, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
                 {canceling ? 'Canceling…' : 'Yes, Cancel'}
               </button>
             </div>

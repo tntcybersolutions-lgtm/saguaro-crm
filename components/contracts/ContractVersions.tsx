@@ -19,8 +19,8 @@ const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
 const BORDER = '#1E3A5F';
 const CARD = 'var(--bg-surface)';
-const GREEN = '#22C55E';
-const RED = '#EF4444';
+const GREEN = '#2CFF7A';
+const RED = '#FF3B30';
 
 interface FieldChange {
   key: string;

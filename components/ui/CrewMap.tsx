@@ -36,7 +36,7 @@ const MUTED = '#D7DEE8';
 const FAINT = '#A9B4C4';
 const BORDER = 'rgba(255,255,255,0.09)';
 const GOLD_HI = '#FFE600';
-const RED = '#FF4D5E';
+const RED = '#FF3B30';
 const NEST = 'rgba(255,255,255,0.03)';
 
 /* ── Server shapes (GET /api/radio/location) ─────────────────────────────── */
@@ -74,7 +74,7 @@ const LOW_BATTERY = 20;
 /* Deterministic trade color — hash of the trade name into a fixed palette, so
  * any trade (canonical or custom) gets a stable, distinguishable pin color
  * without hardcoding the taxonomy here. Red is reserved for panic. */
-const PIN_PALETTE = ['#FFE600', '#60A5FA', '#34D399', '#F472B6', '#A78BFA', '#FB923C', '#2DD4BF', '#E879F9', '#A3E635', '#38BDF8'];
+const PIN_PALETTE = ['#FFE600', '#FF8A00', '#2CFF7A', '#FF8A00', '#FF8A00', '#FF8A00', '#2CFF7A', '#FF8A00', '#2CFF7A', '#FF8A00'];
 function tradeColor(trade: string | null | undefined): string {
   if (!trade) return '#94A3B8';
   let h = 0;
@@ -357,7 +357,7 @@ export function CrewMap({
         const { x, y } = proj(p.lat, p.lng);
         ctx.beginPath();
         ctx.arc(x, y, 10 + phase * 16, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(255,77,94,${(0.55 * (1 - phase)).toFixed(3)})`;
+        ctx.strokeStyle = `rgba(255,59,48,${(0.55 * (1 - phase)).toFixed(3)})`;
         ctx.lineWidth = 2.5;
         ctx.stroke();
         ctx.beginPath();

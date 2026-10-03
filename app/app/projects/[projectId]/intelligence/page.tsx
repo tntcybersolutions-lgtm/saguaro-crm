@@ -11,7 +11,7 @@ const SOFT_BORDER = 'rgba(255,255,255,0.08)';
 const SURFACE = 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))';
 const DIM = '#CBD5E1';
 const TEXT = '#FFFFFF';
-const GREEN = '#45B37D';
+const GREEN = '#2CFF7A';
 const fmtMoney = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
 
 interface Message {
@@ -221,7 +221,7 @@ function IntelligenceChat() {
           {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmtMoney(Number(ctx.money?.revisedContract) || 0), sub: `${Number(ctx.money?.approvedCoCount) || 0} approved CO${(Number(ctx.money?.approvedCoCount) || 0) === 1 ? '' : 's'}` },
           {href: `/app/projects/${projectId}/intelligence`,  label: 'Billed to Date', value: fmtMoney(Number(ctx.money?.billedToDate) || 0), sub: `${Number(ctx.money?.billedPct) || 0}% of revised` },
           {href: `/app/projects/${projectId}/intelligence`,  label: 'Paid to Date', value: fmtMoney(Number(ctx.money?.paidToDate) || 0), accent: GREEN, sub: `Retainage ${Number(ctx.money?.retainagePct) || 0}%` },
-          {href: `/app/projects/${projectId}/rfis`,  label: 'Open RFIs', value: String(Number(ctx.counts?.openRfis) || 0), accent: (Number(ctx.counts?.openRfis) || 0) > 5 ? '#E0644E' : undefined, sub: `${Number(ctx.counts?.openSubmittals) || 0} open submittal${(Number(ctx.counts?.openSubmittals) || 0) === 1 ? '' : 's'}` },
+          {href: `/app/projects/${projectId}/rfis`,  label: 'Open RFIs', value: String(Number(ctx.counts?.openRfis) || 0), accent: (Number(ctx.counts?.openRfis) || 0) > 5 ? '#FF3B30' : undefined, sub: `${Number(ctx.counts?.openSubmittals) || 0} open submittal${(Number(ctx.counts?.openSubmittals) || 0) === 1 ? '' : 's'}` },
           {href: `/app/projects/${projectId}/punch-list`,  label: 'Open Punch', value: String(Number(ctx.counts?.openPunch) || 0), sub: `${Number(ctx.counts?.scheduleTasks) || 0} schedule tasks` },
           {href: `/app/projects/${projectId}/change-orders`,  label: 'Pending COs', value: String(Number(ctx.money?.pendingCoCount) || 0), accent: (Number(ctx.money?.pendingCoCount) || 0) > 0 ? 'var(--warning)' : undefined, sub: `${(ctx.subs || []).length} sub${(ctx.subs || []).length === 1 ? '' : 's'} on the job` },
         ]} />
@@ -239,7 +239,7 @@ function IntelligenceChat() {
               </div>
             </div>
 
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22C55E', boxShadow: '0 0 6px #22C55E', marginBottom: '20px', display: 'inline-block' }} />
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#2CFF7A', boxShadow: '0 0 6px #2CFF7A', marginBottom: '20px', display: 'inline-block' }} />
             <span style={{ fontSize: '11px', color: DIM, marginLeft: '6px' }}>Online</span>
 
             {ctx && (

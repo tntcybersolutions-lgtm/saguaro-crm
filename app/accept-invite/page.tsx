@@ -17,7 +17,7 @@ import {
 
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)',
   BORDER = 'rgba(255,255,255,0.12)', DIM = '#CBD5E1', TEXT = '#FFFFFF',
-  RED = '#ef4444', GREEN = '#22c55e';
+  RED = '#FF3B30', GREEN = '#2CFF7A';
 
 type Reason = 'pending' | 'accepted' | 'expired' | 'invalid' | 'error';
 interface Invite {
@@ -323,8 +323,8 @@ const ctaSecondary: React.CSSProperties = {
   color: TEXT, fontSize: 14, fontWeight: 600, textDecoration: 'none', cursor: 'pointer',
 };
 const errorBox: React.CSSProperties = {
-  display: 'flex', alignItems: 'flex-start', gap: 8, background: 'rgba(239,68,68,.1)',
-  border: '1px solid rgba(239,68,68,.3)', borderRadius: 8, padding: '10px 14px',
+  display: 'flex', alignItems: 'flex-start', gap: 8, background: 'rgba(255,59,48,.1)',
+  border: '1px solid rgba(255,59,48,.3)', borderRadius: 8, padding: '10px 14px',
   marginBottom: 16, fontSize: 13, color: RED, lineHeight: 1.45,
 };
 const noticeBox: React.CSSProperties = {

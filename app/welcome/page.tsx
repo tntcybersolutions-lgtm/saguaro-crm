@@ -10,7 +10,7 @@ const HAIR  = 'rgba(255,255,255,0.08)';
 const DIM   = '#CBD5E1';
 const MUTED = 'rgba(255,255,255,0.45)';
 const TEXT  = '#FFFFFF';
-const GREEN = '#22c55e';
+const GREEN = '#2CFF7A';
 
 export default function WelcomePage() {
   const [name, setName] = useState('');
@@ -148,7 +148,7 @@ export default function WelcomePage() {
           {['30 days free', 'No credit card yet', 'Cancel anytime', 'Free migration included'].map(t => (
             <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: DIM }}>
               <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-                <circle cx="8" cy="8" r="8" fill="rgba(34,197,94,0.15)" />
+                <circle cx="8" cy="8" r="8" fill="rgba(44,255,122,0.15)" />
                 <path d="M4.5 8l2.5 2.5 4-5" stroke={GREEN} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               {t}

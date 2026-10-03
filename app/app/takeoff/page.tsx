@@ -142,7 +142,7 @@ const STEPS = [
   'Complete',
 ];
 
-const RING_HEX = { green: '#22c55e', amber: 'var(--warning)', red: '#ef4444' } as const;
+const RING_HEX = { green: '#2CFF7A', amber: 'var(--warning)', red: '#FF3B30' } as const;
 
 // SVG confidence donut — mirrors the mobile HealthRing (color by confidenceColor()).
 function ConfidenceRing({ value, size = 96, stroke = 9 }: { value: number; size?: number; stroke?: number }) {
@@ -626,11 +626,11 @@ export default function TakeoffPage() {
                           placeholder="Mesa Library Expansion"
                           style={{
                             width: '100%', padding: '10px 12px', borderRadius: 8,
-                            background: T.surface2, border: `1px solid ${createErr ? '#EF4444' : T.border}`,
+                            background: T.surface2, border: `1px solid ${createErr ? '#FF3B30' : T.border}`,
                             color: T.white, fontSize: 16, outline: 'none',
                           }}
                         />
-                        {createErr && <div style={{ color: '#EF4444', fontSize: 12 }}>{createErr}</div>}
+                        {createErr && <div style={{ color: '#FF3B30', fontSize: 12 }}>{createErr}</div>}
                         <div style={{ color: T.muted, fontSize: 11.5 }}>
                           Address, budget and contract can be filled in later — the blueprint analyses either way.
                         </div>
@@ -728,7 +728,7 @@ export default function TakeoffPage() {
                               fontSize: 10, fontWeight: 700,
                               background: done ? T.greenDim : active ? T.blueDim : 'rgba(255,255,255,0.05)',
                               color: done ? T.green : active ? T.blue : T.faint,
-                              border: `1px solid ${done ? 'rgba(34,197,94,0.3)' : active ? 'var(--brand-primary-25)' : T.border}`,
+                              border: `1px solid ${done ? 'rgba(44,255,122,0.3)' : active ? 'var(--brand-primary-25)' : T.border}`,
                             }}>
                               {done ? <Check size={12} weight="bold" color={T.green} /> : stepNum}
                             </span>
@@ -750,7 +750,7 @@ export default function TakeoffPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', textAlign: 'center' }}>
                     <div style={{
                       width: 48, height: 48, borderRadius: '50%',
-                      background: T.greenDim, border: `2px solid rgba(34,197,94,0.3)`,
+                      background: T.greenDim, border: `2px solid rgba(44,255,122,0.3)`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 22,
                     }}><Check size={24} weight="bold" color={T.green} /></div>
@@ -772,7 +772,7 @@ export default function TakeoffPage() {
                 {phase === 'error' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     <div style={{
-                      background: T.redDim, border: `1px solid rgba(239,68,68,0.25)`,
+                      background: T.redDim, border: `1px solid rgba(255,59,48,0.25)`,
                       borderRadius: 8, padding: '12px 14px', color: T.red, fontSize: 13,
                     }}>
                       {errorMsg || 'An error occurred. Please try again.'}

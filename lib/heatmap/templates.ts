@@ -15,9 +15,9 @@ const box = (x: number, y: number, w: number, h: number, m: WallMaterialId): Tmp
   { a: [x + w, y + h], b: [x, y + h], material: m }, { a: [x, y + h], b: [x, y], material: m },
 ]);
 
-const ICON_GOLF = '<svg viewBox="0 0 24 24" fill="none" stroke="#D4A017" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v18"/><path d="M7 4h9l-2.4 3L16 10H7"/><path d="M3 21h9"/></svg>';
-const ICON_OFFICE = '<svg viewBox="0 0 24 24" fill="none" stroke="#D4A017" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 7h2M14 7h2M8 11h2M14 11h2M8 15h2M14 15h2"/><path d="M2 21h20"/></svg>';
-const ICON_WHSE = '<svg viewBox="0 0 24 24" fill="none" stroke="#D4A017" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V9l9-5 9 5v12"/><path d="M2 21h20"/><rect x="9" y="13" width="6" height="8"/></svg>';
+const ICON_GOLF = '<svg viewBox="0 0 24 24" fill="none" stroke="#FFE600" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v18"/><path d="M7 4h9l-2.4 3L16 10H7"/><path d="M3 21h9"/></svg>';
+const ICON_OFFICE = '<svg viewBox="0 0 24 24" fill="none" stroke="#FFE600" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 7h2M14 7h2M8 11h2M14 11h2M8 15h2M14 15h2"/><path d="M2 21h20"/></svg>';
+const ICON_WHSE = '<svg viewBox="0 0 24 24" fill="none" stroke="#FFE600" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V9l9-5 9 5v12"/><path d="M2 21h20"/><rect x="9" y="13" width="6" height="8"/></svg>';
 
 /* ── Golf simulator bays (Full-Swing style) ── */
 const GOLF: TemplateSpec = {

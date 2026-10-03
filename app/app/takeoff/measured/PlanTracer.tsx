@@ -34,10 +34,10 @@ import { humanError } from '@/lib/errors';
 /* ── palette (Sonoran navy + gold) ──────────────────────────────────────── */
 const BG = 'var(--bg-base)', PANEL = 'var(--bg-surface)', LINE = 'rgba(255,255,255,0.09)', GOLD = 'var(--brand-primary)';
 // Canvas 2D cannot resolve CSS custom properties — the drawing surface keeps literal brand hexes.
-const CANVAS_GOLD = '#F59E0B', CANVAS_CYAN = '#FBBF24';
-const TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#34D399', RED = '#f87171', CYAN = 'var(--brand-primary-strong)';
+const CANVAS_GOLD = '#FF8A00', CANVAS_CYAN = '#FFE600';
+const TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#2CFF7A', RED = '#FF3B30', CYAN = 'var(--brand-primary-strong)';
 const CANVAS_BG = '#0b0e13';
-const TRADE_PALETTE = ['#FBBF24', '#34D399', '#F59E0B', '#F472B6', '#A78BFA', '#FB7185', '#22D3EE', '#FACC15', '#4ADE80', '#FBBF24', '#F97316', '#2DD4BF'];
+const TRADE_PALETTE = ['#FFE600', '#2CFF7A', '#FF8A00', '#FF8A00', '#FF8A00', '#FB7185', '#22D3EE', '#FFE600', '#2CFF7A', '#FFE600', '#FF8A00', '#2CFF7A'];
 const uid = () => Math.random().toString(36).slice(2, 9);
 const usd = (c: number) => '$' + Math.round(c / 100).toLocaleString();
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
@@ -893,7 +893,7 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
 
     // foot grid
     if (gridOn && ppf > 0 && scale * ppf * (+gridFt || 1) > 7) {
-      const g = Math.max(0.25, +gridFt || 1) * ppf; ctx.strokeStyle = 'rgba(245,158,11,0.12)'; ctx.lineWidth = 1;
+      const g = Math.max(0.25, +gridFt || 1) * ppf; ctx.strokeStyle = 'rgba(255,138,0,0.12)'; ctx.lineWidth = 1;
       const x0 = Math.floor((-tx / scale) / g) * g, x1 = (-tx + cssSize.w) / scale, y0 = Math.floor((-ty / scale) / g) * g, y1 = (-ty + cssSize.h) / scale;
       ctx.beginPath(); for (let x = x0; x < x1; x += g) { const a = sc({ x, y: y0 }), b = sc({ x, y: y1 }); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); }
       for (let y = y0; y < y1; y += g) { const a = sc({ x: x0, y }), b = sc({ x: x1, y }); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); } ctx.stroke();
@@ -928,7 +928,7 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
         if (isArea) { ctx.closePath(); ctx.fillStyle = col; ctx.globalAlpha = sel ? 0.22 : 0.13; ctx.fill(); ctx.globalAlpha = 1; }
         ctx.stroke();
         // voids
-        if (c.holes) for (const h of c.holes) { const hp = h.map(sc); ctx.beginPath(); ctx.moveTo(hp[0].x, hp[0].y); for (let i = 1; i < hp.length; i++) ctx.lineTo(hp[i].x, hp[i].y); ctx.closePath(); ctx.fillStyle = 'rgba(248,113,113,0.18)'; ctx.fill(); ctx.setLineDash([5, 4]); ctx.strokeStyle = RED; ctx.lineWidth = 1.5; ctx.stroke(); ctx.setLineDash([]); ctx.strokeStyle = col; }
+        if (c.holes) for (const h of c.holes) { const hp = h.map(sc); ctx.beginPath(); ctx.moveTo(hp[0].x, hp[0].y); for (let i = 1; i < hp.length; i++) ctx.lineTo(hp[i].x, hp[i].y); ctx.closePath(); ctx.fillStyle = 'rgba(255,59,48,0.18)'; ctx.fill(); ctx.setLineDash([5, 4]); ctx.strokeStyle = RED; ctx.lineWidth = 1.5; ctx.stroke(); ctx.setLineDash([]); ctx.strokeStyle = col; }
       }
       // vertices when selected — capped at 300 handles (an uncapped 3000-marker auto-count froze the paint;
       // above the cap the heat-dot layer above is the selection affordance and the vertex list paginates)
@@ -948,7 +948,7 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
     }
 
     // active area voids (draft)
-    for (const h of holes) { const hp = h.map(sc); ctx.beginPath(); ctx.moveTo(hp[0].x, hp[0].y); for (let i = 1; i < hp.length; i++) ctx.lineTo(hp[i].x, hp[i].y); ctx.closePath(); ctx.fillStyle = 'rgba(248,113,113,0.2)'; ctx.fill(); ctx.setLineDash([5, 4]); ctx.strokeStyle = RED; ctx.lineWidth = 1.6; ctx.stroke(); ctx.setLineDash([]); }
+    for (const h of holes) { const hp = h.map(sc); ctx.beginPath(); ctx.moveTo(hp[0].x, hp[0].y); for (let i = 1; i < hp.length; i++) ctx.lineTo(hp[i].x, hp[i].y); ctx.closePath(); ctx.fillStyle = 'rgba(255,59,48,0.2)'; ctx.fill(); ctx.setLineDash([5, 4]); ctx.strokeStyle = RED; ctx.lineWidth = 1.6; ctx.stroke(); ctx.setLineDash([]); }
 
     // active draft
     const drawPts = draft.map(sc);
@@ -982,7 +982,7 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
       const a = sc(box.a), b = sc(box.b);
       ctx.save(); ctx.strokeStyle = CANVAS_GOLD; ctx.setLineDash([6, 4]); ctx.lineWidth = 1.6;
       ctx.strokeRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y));
-      ctx.setLineDash([]); ctx.fillStyle = 'rgba(245,158,11,0.10)'; ctx.fillRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y)); ctx.restore();
+      ctx.setLineDash([]); ctx.fillStyle = 'rgba(255,138,0,0.10)'; ctx.fillRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y)); ctx.restore();
     }
 
     // snap indicator
@@ -1219,12 +1219,12 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
                         ))}
                       </div>
                       {pages > 1 && (
-                        <button onClick={() => deleteVertexRange(selected.id, start, end)} style={{ ...miniBtn, width: '100%', height: 28, marginTop: 5, fontSize: 12, color: RED, borderColor: 'rgba(248,113,113,0.4)' }}>Delete this page ({end - start} markers)</button>
+                        <button onClick={() => deleteVertexRange(selected.id, start, end)} style={{ ...miniBtn, width: '100%', height: 28, marginTop: 5, fontSize: 12, color: RED, borderColor: 'rgba(255,59,48,0.4)' }}>Delete this page ({end - start} markers)</button>
                       )}
                     </>
                   );
                 })()}
-                <button onClick={() => { commit(() => setConditions((cs) => cs.filter((c) => c.id !== selected.id))); setSelId(null); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, width: '100%', marginTop: 8, border: `1px solid rgba(248,113,113,0.4)`, background: 'rgba(248,113,113,0.08)', color: RED, borderRadius: 8, padding: '8px', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}><G g="trash" s={15} c={RED} />Delete Condition</button>
+                <button onClick={() => { commit(() => setConditions((cs) => cs.filter((c) => c.id !== selected.id))); setSelId(null); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, width: '100%', marginTop: 8, border: `1px solid rgba(255,59,48,0.4)`, background: 'rgba(255,59,48,0.08)', color: RED, borderRadius: 8, padding: '8px', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}><G g="trash" s={15} c={RED} />Delete Condition</button>
               </div>
             )}
 

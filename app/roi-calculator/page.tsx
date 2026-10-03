@@ -14,7 +14,7 @@ const BORDER = 'rgba(255,255,255,0.12)';
 const HAIRLINE = 'rgba(255,255,255,0.08)';
 const CARD = 'rgba(255,255,255,0.02)';
 const RAISED = 'var(--bg-surface)';
-const GREEN = '#22c55e';
+const GREEN = '#2CFF7A';
 
 const fmt = (n: number) => Math.round(n).toLocaleString();
 
@@ -779,7 +779,7 @@ export default function ROICalculatorPage() {
                 ].map(([feature, manual, procore, saguaro]) => (
                   <tr key={feature}>
                     <td style={{ padding: '14px 20px', color: TEXT, fontWeight: 500 }}>{feature}</td>
-                    <td style={{ color: '#ef4444' }}>{manual}</td>
+                    <td style={{ color: '#FF3B30' }}>{manual}</td>
                     <td style={{ color: procore === '✓ Included' ? GREEN : DIM }}>{procore}</td>
                     <td style={{ color: GREEN, fontWeight: 600 }}>{saguaro}</td>
                   </tr>

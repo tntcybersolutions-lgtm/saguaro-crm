@@ -21,7 +21,7 @@ import {
 import { SectionCard, PremiumEmpty } from '@/components/ui/premium';
 
 const GOLD = 'var(--brand-primary)', DIM = 'rgba(255,255,255,0.62)', TEXT = '#FFFFFF';
-const BORDER = 'rgba(255,255,255,0.10)', RED = '#FF3B30', GREEN = '#34C759';
+const BORDER = 'rgba(255,255,255,0.10)', RED = '#FF3B30', GREEN = '#2CFF7A';
 
 interface Activity {
   id: string;

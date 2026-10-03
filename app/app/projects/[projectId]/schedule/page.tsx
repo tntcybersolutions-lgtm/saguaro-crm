@@ -16,7 +16,7 @@ import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
-const GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A',BLUE='var(--brand-primary)';
+const GREEN='#2CFF7A',RED='#FF3B30',ORANGE='#FF8A00',BLUE='var(--brand-primary)';
 
 const STATUSES=['not_started','in_progress','completed','delayed','on_hold'];
 const STATUS_LABELS:Record<string,string>={

@@ -20,7 +20,7 @@ import { moduleAccent } from '@/lib/module-identity';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#c03030';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#FF3B30';
 const fmt = (n: number | null | undefined) => '$' + (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtPct = (a: number | null | undefined, b: number | null | undefined) => (b ?? 0) > 0 ? (((a ?? 0) / (b as number)) * 100).toFixed(1) + '%' : '0%';
 
@@ -303,7 +303,7 @@ export default function BudgetPage() {
   function rowBg(l: BudgetLine) {
     const actual = l.actual_cost ?? 0;
     const revised = l.revised_budget ?? 0;
-    if (actual > revised) return 'rgba(239,68,68,.08)';
+    if (actual > revised) return 'rgba(255,59,48,.08)';
     if (revised > 0 && actual / revised > 0.9) return 'var(--brand-primary-08)';
     return 'transparent';
   }
@@ -363,11 +363,11 @@ export default function BudgetPage() {
     return (
       <CinematicPage soft>
         {hero}
-        <div style={{ background: 'rgba(239,68,68,.1)', border: `1px solid rgba(239,68,68,.3)`, borderRadius: 12, padding: '12px 16px', marginBottom: 20, color: '#ff7070', fontSize: 13 }}>
+        <div style={{ background: 'rgba(255,59,48,.1)', border: `1px solid rgba(255,59,48,.3)`, borderRadius: 12, padding: '12px 16px', marginBottom: 20, color: '#FF3B30', fontSize: 13 }}>
           {error}
         </div>
         <EmptyStatePremium
-          icon={<WarningCircle size={38} weight="duotone" color="#ff7070" />}
+          icon={<WarningCircle size={38} weight="duotone" color="#FF3B30" />}
           title="Couldn't Load Budget"
           description="Something went wrong while loading the job-cost budget. Your data is safe — this is a loading error, not an empty project."
           actionLabel="Retry"
@@ -381,7 +381,7 @@ export default function BudgetPage() {
     <CinematicPage>
       {/* Toast */}
       {toast && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, padding: '12px 20px', borderRadius: 12, background: toast.ok ? 'rgba(34,197,94,.92)' : 'rgba(239,68,68,.92)', color: '#fff', fontWeight: 700, fontSize: 14, boxShadow: '0 12px 40px -10px rgba(0,0,0,.6)' }}>
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, padding: '12px 20px', borderRadius: 12, background: toast.ok ? 'rgba(44,255,122,.92)' : 'rgba(255,59,48,.92)', color: '#fff', fontWeight: 700, fontSize: 14, boxShadow: '0 12px 40px -10px rgba(0,0,0,.6)' }}>
           {toast.msg}
         </div>
       )}
@@ -393,11 +393,11 @@ export default function BudgetPage() {
         {[
           { l: 'Total Contract', v: fmt(totalRevised), c: TEXT, ac: CIN.gold, icon: <Scroll size={17} weight="duotone" color={CIN.goldHi} /> },
           { l: 'Original Budget', v: fmt(totalOriginal), c: TEXT, ac: CIN.gold, icon: <ClipboardText size={17} weight="duotone" color={CIN.goldHi} /> },
-          { l: 'Committed', v: fmt(totalCommitted), c: '#4a9de8', ac: '#4a9de8', icon: <Handshake size={17} weight="duotone" color={CIN.goldHi} /> },
-          { l: 'Actual to Date', v: fmt(totalActual), c: '#f97316', ac: '#f97316', icon: <Receipt size={17} weight="duotone" color={CIN.goldHi} /> },
-          { l: 'Cost to Complete', v: fmt(totalCostToComplete), c: totalCostToComplete < 0 ? '#ff7070' : TEXT, ac: CIN.gold, icon: <Hourglass size={17} weight="duotone" color={CIN.goldHi} /> },
-          { l: 'Forecast (EAC)', v: fmt(totalForecast), c: totalForecast > totalRevised ? '#ff7070' : '#3dd68c', ac: totalForecast > totalRevised ? '#ff7070' : '#3dd68c', icon: <ChartLineUp size={17} weight="duotone" color={CIN.goldHi} /> },
-          { l: 'Variance', v: (totalVariance >= 0 ? '+' : '') + fmt(totalVariance), c: totalVariance >= 0 ? '#3dd68c' : '#ff7070', ac: totalVariance >= 0 ? '#3dd68c' : '#ff7070', icon: <TrendUp size={17} weight="duotone" color={CIN.goldHi} /> },
+          { l: 'Committed', v: fmt(totalCommitted), c: '#FF8A00', ac: '#FF8A00', icon: <Handshake size={17} weight="duotone" color={CIN.goldHi} /> },
+          { l: 'Actual to Date', v: fmt(totalActual), c: '#FF8A00', ac: '#FF8A00', icon: <Receipt size={17} weight="duotone" color={CIN.goldHi} /> },
+          { l: 'Cost to Complete', v: fmt(totalCostToComplete), c: totalCostToComplete < 0 ? '#FF3B30' : TEXT, ac: CIN.gold, icon: <Hourglass size={17} weight="duotone" color={CIN.goldHi} /> },
+          { l: 'Forecast (EAC)', v: fmt(totalForecast), c: totalForecast > totalRevised ? '#FF3B30' : '#2CFF7A', ac: totalForecast > totalRevised ? '#FF3B30' : '#2CFF7A', icon: <ChartLineUp size={17} weight="duotone" color={CIN.goldHi} /> },
+          { l: 'Variance', v: (totalVariance >= 0 ? '+' : '') + fmt(totalVariance), c: totalVariance >= 0 ? '#2CFF7A' : '#FF3B30', ac: totalVariance >= 0 ? '#2CFF7A' : '#FF3B30', icon: <TrendUp size={17} weight="duotone" color={CIN.goldHi} /> },
         ].map((k, i) => (
           <StatCard key={k.l} delay={0.02 + i * 0.04} icon={k.icon} label={k.l} value={k.v} valueColor={k.c} accentColor={k.ac}  href={`/app/projects/${projectId}/budget`}/>
         ))}
@@ -409,9 +409,9 @@ export default function BudgetPage() {
           <StatStrip items={[
             {href: `/app/projects/${projectId}/budget`,  label: 'Budget Lines', value: String(lines.length), sub: lines.length > 0 ? `Across ${divisionsUsed} CSI division${divisionsUsed === 1 ? '' : 's'}` : 'First line on this project' },
             {href: `/app/projects/${projectId}/budget`,  label: 'Original Budget', value: fmt(Number(totalOriginal) || 0), sub: 'Sum of all lines' },
-            {href: `/app/projects/${projectId}/budget`,  label: 'Committed', value: fmt(Number(totalCommitted) || 0), accent: '#4a9de8', sub: 'Subcontracts + POs' },
-            {href: `/app/projects/${projectId}/budget`,  label: 'Actual to Date', value: fmt(Number(totalActual) || 0), accent: '#f97316', sub: 'Approved bills' },
-            {href: `/app/projects/${projectId}/budget`,  label: 'Variance', value: ((Number(totalVariance) || 0) >= 0 ? '+' : '') + fmt(Number(totalVariance) || 0), accent: (Number(totalVariance) || 0) >= 0 ? '#3dd68c' : '#ff7070', sub: 'Revised vs forecast' },
+            {href: `/app/projects/${projectId}/budget`,  label: 'Committed', value: fmt(Number(totalCommitted) || 0), accent: '#FF8A00', sub: 'Subcontracts + POs' },
+            {href: `/app/projects/${projectId}/budget`,  label: 'Actual to Date', value: fmt(Number(totalActual) || 0), accent: '#FF8A00', sub: 'Approved bills' },
+            {href: `/app/projects/${projectId}/budget`,  label: 'Variance', value: ((Number(totalVariance) || 0) >= 0 ? '+' : '') + fmt(Number(totalVariance) || 0), accent: (Number(totalVariance) || 0) >= 0 ? '#2CFF7A' : '#FF3B30', sub: 'Revised vs forecast' },
             ...(primeContract > 0 ? [{href: `/app/projects/${projectId}/contracts`,  label: 'Prime Contract', value: fmt(primeContract), sub: `Incl. ${approvedCoCount} approved CO${approvedCoCount === 1 ? '' : 's'}` }] : []),
           ]} />
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 300px', gap: 16, alignItems: 'start' }}>
@@ -454,7 +454,7 @@ export default function BudgetPage() {
                   <InsightRow label="Original Budget Today" value={fmt(Number(totalOriginal) || 0)} />
                   <InsightRow label="This Line" value={'+' + fmt(pendingAmt)} accent={CIN.goldHi} />
                   <InsightRow label="New Original Budget" value={fmt(newOriginalTotal)} strong />
-                  {primeContract > 0 && <InsightRow label="Contract Allocated" value={`${budgetVsContract}%`} accent={budgetVsContract > 100 ? '#ff7070' : '#3dd68c'} />}
+                  {primeContract > 0 && <InsightRow label="Contract Allocated" value={`${budgetVsContract}%`} accent={budgetVsContract > 100 ? '#FF3B30' : '#2CFF7A'} />}
                 </div>
               </div>
             </form>
@@ -509,7 +509,7 @@ export default function BudgetPage() {
                         <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name || p.trade}</div>
                         <div style={{ fontSize: 11.5, color: CIN.faint }}>{awarded ? `Awarded${p.awardedTo ? ` — ${p.awardedTo}` : ''}` : 'Budget estimate'}{p.trade ? ` · ${p.trade}` : ''}</div>
                       </div>
-                      <span style={{ fontSize: 13.5, fontWeight: 800, color: awarded ? '#3dd68c' : TEXT, whiteSpace: 'nowrap' }}>{fmt(amt)}</span>
+                      <span style={{ fontSize: 13.5, fontWeight: 800, color: awarded ? '#2CFF7A' : TEXT, whiteSpace: 'nowrap' }}>{fmt(amt)}</span>
                       <button onClick={() => seedFromPackage(p)} className="sgBtn" style={{ ...goldOutlineButtonStyle, padding: '7px 12px', fontSize: 12, borderRadius: 9 }}>Seed Line</button>
                     </div>
                   );
@@ -535,7 +535,7 @@ export default function BudgetPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <SectionCard flat title="What the System Knows" icon={<Wallet size={16} weight="duotone" color={CIN.goldHi} />}>
               <InsightRow label="Prime Contract" value={primeContract > 0 ? fmt(primeContract) : '—'} strong />
-              <InsightRow label="Approved COs" value={approvedCoCount > 0 ? `${approvedCoCount} · +${fmt(approvedCoTotal)}` : 'None yet'} accent={approvedCoCount > 0 ? '#3dd68c' : undefined} />
+              <InsightRow label="Approved COs" value={approvedCoCount > 0 ? `${approvedCoCount} · +${fmt(approvedCoTotal)}` : 'None yet'} accent={approvedCoCount > 0 ? '#2CFF7A' : undefined} />
               <InsightRow label="Bid Packages" value={String(bidPackages.length)} />
               <InsightRow label="Subs on the Job" value={String(subsOnJob)} />
               {primeContract > 0 && (
@@ -595,22 +595,22 @@ export default function BudgetPage() {
                         />
                       ) : fmt(l.original_budget)}
                     </td>
-                    <td style={{ padding: '11px 14px', textAlign: 'right', color: (l.approved_cos ?? 0) > 0 ? '#4a9de8' : CIN.faint }}>{(l.approved_cos ?? 0) > 0 ? '+' + fmt(l.approved_cos) : '—'}</td>
+                    <td style={{ padding: '11px 14px', textAlign: 'right', color: (l.approved_cos ?? 0) > 0 ? '#FF8A00' : CIN.faint }}>{(l.approved_cos ?? 0) > 0 ? '+' + fmt(l.approved_cos) : '—'}</td>
                     <td style={{ padding: '11px 14px', textAlign: 'right', color: TEXT, fontWeight: 600 }}>{fmt(l.revised_budget)}</td>
-                    <td style={{ padding: '11px 14px', textAlign: 'right', color: '#4a9de8' }}>{fmt(l.committed_cost)}</td>
-                    <td style={{ padding: '11px 14px', textAlign: 'right', color: (l.actual_cost ?? 0) > (l.revised_budget ?? 0) ? '#ff7070' : (l.actual_cost ?? 0) > 0 ? '#f97316' : CIN.faint }}>{fmt(l.actual_cost)}</td>
+                    <td style={{ padding: '11px 14px', textAlign: 'right', color: '#FF8A00' }}>{fmt(l.committed_cost)}</td>
+                    <td style={{ padding: '11px 14px', textAlign: 'right', color: (l.actual_cost ?? 0) > (l.revised_budget ?? 0) ? '#FF3B30' : (l.actual_cost ?? 0) > 0 ? '#FF8A00' : CIN.faint }}>{fmt(l.actual_cost)}</td>
                     <td style={{ padding: '11px 14px', textAlign: 'right' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
                         <div style={{ width: 40, height: 5, background: 'rgba(255,255,255,0.1)', borderRadius: 999 }}>
-                          <div style={{ height: '100%', width: `${Math.min(100, pct)}%`, background: pct >= 100 ? '#3dd68c' : GOLD, borderRadius: 999 }} />
+                          <div style={{ height: '100%', width: `${Math.min(100, pct)}%`, background: pct >= 100 ? '#2CFF7A' : GOLD, borderRadius: 999 }} />
                         </div>
-                        <span style={{ color: pct >= 100 ? '#3dd68c' : TEXT, fontWeight: 600, whiteSpace: 'nowrap' }}>{pct}%</span>
+                        <span style={{ color: pct >= 100 ? '#2CFF7A' : TEXT, fontWeight: 600, whiteSpace: 'nowrap' }}>{pct}%</span>
                       </div>
                     </td>
-                    <td style={{ padding: '11px 14px', textAlign: 'right', color: remaining >= 0 ? '#3dd68c' : '#ff7070', fontWeight: 600 }}>{fmt(remaining)}</td>
-                    <td style={{ padding: '11px 14px', textAlign: 'right', color: costToComplete < 0 ? '#ff7070' : TEXT }}>{fmt(costToComplete)}</td>
-                    <td style={{ padding: '11px 14px', textAlign: 'right', color: forecast > (l.revised_budget ?? 0) ? '#ff7070' : TEXT, fontWeight: 600 }}>{fmt(forecast)}</td>
-                    <td style={{ padding: '11px 14px', textAlign: 'right', color: lineVariance >= 0 ? '#3dd68c' : '#ff7070', fontWeight: 700 }}>{(lineVariance >= 0 ? '+' : '') + fmt(lineVariance)}</td>
+                    <td style={{ padding: '11px 14px', textAlign: 'right', color: remaining >= 0 ? '#2CFF7A' : '#FF3B30', fontWeight: 600 }}>{fmt(remaining)}</td>
+                    <td style={{ padding: '11px 14px', textAlign: 'right', color: costToComplete < 0 ? '#FF3B30' : TEXT }}>{fmt(costToComplete)}</td>
+                    <td style={{ padding: '11px 14px', textAlign: 'right', color: forecast > (l.revised_budget ?? 0) ? '#FF3B30' : TEXT, fontWeight: 600 }}>{fmt(forecast)}</td>
+                    <td style={{ padding: '11px 14px', textAlign: 'right', color: lineVariance >= 0 ? '#2CFF7A' : '#FF3B30', fontWeight: 700 }}>{(lineVariance >= 0 ? '+' : '') + fmt(lineVariance)}</td>
                     <td style={{ padding: '11px 14px', whiteSpace: 'nowrap', position: 'relative' as const }}>
                       {isEditing ? (
                         <div style={{ display: 'flex', gap: 5 }}>
@@ -620,19 +620,19 @@ export default function BudgetPage() {
                       ) : adjustId === l.id ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                           {[-10, -5, 5, 10].map(p => (
-                            <button key={p} onClick={() => handleAdjust(l.id, p)} style={{ padding: '3px 7px', background: p > 0 ? 'rgba(61,214,140,.1)' : 'rgba(239,68,68,.1)', border: `1px solid ${p > 0 ? 'rgba(61,214,140,.25)' : 'rgba(239,68,68,.25)'}`, borderRadius: 4, color: p > 0 ? '#3dd68c' : '#ff7070', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{p > 0 ? '+' : ''}{p}%</button>
+                            <button key={p} onClick={() => handleAdjust(l.id, p)} style={{ padding: '3px 7px', background: p > 0 ? 'rgba(44,255,122,.1)' : 'rgba(255,59,48,.1)', border: `1px solid ${p > 0 ? 'rgba(44,255,122,.25)' : 'rgba(255,59,48,.25)'}`, borderRadius: 4, color: p > 0 ? '#2CFF7A' : '#FF3B30', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{p > 0 ? '+' : ''}{p}%</button>
                           ))}
                           <button onClick={() => setAdjustId(null)} style={{ padding: '3px 6px', background: 'none', border: 'none', color: CIN.faint, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
                         </div>
                       ) : deleteId === l.id ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ fontSize: 11, color: '#ff7070', fontWeight: 600 }}>Delete?</span>
-                          <button onClick={() => handleDeleteLine(l.id)} style={{ padding: '3px 8px', background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.3)', borderRadius: 4, color: '#ff7070', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Yes</button>
+                          <span style={{ fontSize: 11, color: '#FF3B30', fontWeight: 600 }}>Delete?</span>
+                          <button onClick={() => handleDeleteLine(l.id)} style={{ padding: '3px 8px', background: 'rgba(255,59,48,.15)', border: '1px solid rgba(255,59,48,.3)', borderRadius: 4, color: '#FF3B30', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Yes</button>
                           <button onClick={() => setDeleteId(null)} style={{ padding: '3px 8px', background: 'none', border: `1px solid ${CIN.border}`, borderRadius: 4, color: CIN.faint, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
                         </div>
                       ) : (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                          {copiedId === l.id && <span style={{ fontSize: 10, color: '#3dd68c', fontWeight: 600 }}>Copied!</span>}
+                          {copiedId === l.id && <span style={{ fontSize: 10, color: '#2CFF7A', fontWeight: 600 }}>Copied!</span>}
                           <button onClick={() => openMenu(l.id)} style={{ padding: '3px 8px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${CIN.border}`, borderRadius: 6, color: CIN.faint, fontSize: 11, cursor: 'pointer' }}>Actions &#9662;</button>
                           {menuId === l.id && (
                             <div style={{ position: 'absolute', top: 36, right: 14, background: 'var(--bg-surface-2)', border: `1px solid ${CIN.border}`, borderRadius: 10, padding: 4, zIndex: 100, minWidth: 150, boxShadow: '0 16px 44px rgba(0,0,0,.6)' }}>
@@ -646,8 +646,8 @@ export default function BudgetPage() {
                                 </div>
                               ))}
                               <div style={{ height: 1, background: CIN.border, margin: '4px 0' }} />
-                              <div onClick={() => { setMenuId(null); setDeleteId(l.id); }} style={{ padding: '8px 12px', fontSize: 12, color: '#ff7070', cursor: 'pointer', borderRadius: 7, display: 'flex', alignItems: 'center', gap: 8 }} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,.08)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                                <Trash size={14} weight="duotone" color="#ff7070" />Delete Line
+                              <div onClick={() => { setMenuId(null); setDeleteId(l.id); }} style={{ padding: '8px 12px', fontSize: 12, color: '#FF3B30', cursor: 'pointer', borderRadius: 7, display: 'flex', alignItems: 'center', gap: 8 }} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,59,48,.08)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                                <Trash size={14} weight="duotone" color="#FF3B30" />Delete Line
                               </div>
                             </div>
                           )}
@@ -662,15 +662,15 @@ export default function BudgetPage() {
               <tr style={{ background: 'var(--brand-primary-08)', fontWeight: 800 }}>
                 <td colSpan={2} style={{ padding: '13px 14px', color: TEXT, fontWeight: 800 }}>Totals</td>
                 <td style={{ padding: '13px 14px', textAlign: 'right', color: TEXT }}>{fmt(totalOriginal)}</td>
-                <td style={{ padding: '13px 14px', textAlign: 'right', color: totalApprovedCOs > 0 ? '#4a9de8' : CIN.faint }}>{totalApprovedCOs > 0 ? '+' + fmt(totalApprovedCOs) : '—'}</td>
+                <td style={{ padding: '13px 14px', textAlign: 'right', color: totalApprovedCOs > 0 ? '#FF8A00' : CIN.faint }}>{totalApprovedCOs > 0 ? '+' + fmt(totalApprovedCOs) : '—'}</td>
                 <td style={{ padding: '13px 14px', textAlign: 'right', color: TEXT }}>{fmt(totalRevised)}</td>
-                <td style={{ padding: '13px 14px', textAlign: 'right', color: '#4a9de8' }}>{fmt(totalCommitted)}</td>
-                <td style={{ padding: '13px 14px', textAlign: 'right', color: '#f97316' }}>{fmt(totalActual)}</td>
+                <td style={{ padding: '13px 14px', textAlign: 'right', color: '#FF8A00' }}>{fmt(totalCommitted)}</td>
+                <td style={{ padding: '13px 14px', textAlign: 'right', color: '#FF8A00' }}>{fmt(totalActual)}</td>
                 <td style={{ padding: '13px 14px', textAlign: 'right', color: CIN.faint }}>{fmtPct(totalActual, totalRevised)}</td>
-                <td style={{ padding: '13px 14px', textAlign: 'right', color: totalRemaining >= 0 ? '#3dd68c' : '#ff7070' }}>{fmt(totalRemaining)}</td>
-                <td style={{ padding: '13px 14px', textAlign: 'right', color: totalCostToComplete < 0 ? '#ff7070' : TEXT }}>{fmt(totalCostToComplete)}</td>
-                <td style={{ padding: '13px 14px', textAlign: 'right', color: totalForecast > totalRevised ? '#ff7070' : '#3dd68c' }}>{fmt(totalForecast)}</td>
-                <td style={{ padding: '13px 14px', textAlign: 'right', color: totalVariance >= 0 ? '#3dd68c' : '#ff7070', fontWeight: 800 }}>{(totalVariance >= 0 ? '+' : '') + fmt(totalVariance)}</td>
+                <td style={{ padding: '13px 14px', textAlign: 'right', color: totalRemaining >= 0 ? '#2CFF7A' : '#FF3B30' }}>{fmt(totalRemaining)}</td>
+                <td style={{ padding: '13px 14px', textAlign: 'right', color: totalCostToComplete < 0 ? '#FF3B30' : TEXT }}>{fmt(totalCostToComplete)}</td>
+                <td style={{ padding: '13px 14px', textAlign: 'right', color: totalForecast > totalRevised ? '#FF3B30' : '#2CFF7A' }}>{fmt(totalForecast)}</td>
+                <td style={{ padding: '13px 14px', textAlign: 'right', color: totalVariance >= 0 ? '#2CFF7A' : '#FF3B30', fontWeight: 800 }}>{(totalVariance >= 0 ? '+' : '') + fmt(totalVariance)}</td>
                 <td />
               </tr>
             </tfoot>

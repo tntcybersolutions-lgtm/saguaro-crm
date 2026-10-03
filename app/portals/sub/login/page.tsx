@@ -8,8 +8,8 @@ const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
 const TEXT = '#FFFFFF';
-const GREEN = '#22c55e';
-const RED = '#ef4444';
+const GREEN = '#2CFF7A';
+const RED = '#FF3B30';
 const BLUE = 'var(--brand-primary)';
 
 export default function SubPortalLogin() {
@@ -99,7 +99,7 @@ export default function SubPortalLogin() {
 
         {found ? (
           <div style={{ textAlign: 'center' }}>
-            <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(34,197,94,0.12)', border: '1.5px solid rgba(34,197,94,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(44,255,122,0.12)', border: '1.5px solid rgba(44,255,122,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
               <svg viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={24} height={24}>
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
@@ -149,7 +149,7 @@ export default function SubPortalLogin() {
             />
 
             {error && (
-              <div style={{ marginTop: 10, padding: '10px 12px', background: 'rgba(239,68,68,0.1)', border: `1px solid rgba(239,68,68,0.25)`, borderRadius: 8, fontSize: 13, color: '#fca5a5', lineHeight: 1.5 }}>
+              <div style={{ marginTop: 10, padding: '10px 12px', background: 'rgba(255,59,48,0.1)', border: `1px solid rgba(255,59,48,0.25)`, borderRadius: 8, fontSize: 13, color: '#fca5a5', lineHeight: 1.5 }}>
                 {error}
               </div>
             )}

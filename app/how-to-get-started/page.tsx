@@ -15,7 +15,7 @@ export default function HowToGetStartedPage() {
         :root {
           --dark: var(--bg-base); --gold: var(--brand-primary); --text: #FFFFFF;
           --dim: #CBD5E1; --border: rgba(255,255,255,0.08); --raised: var(--bg-surface);
-          --green: #22c55e; --font: system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+          --green: #2CFF7A; --font: system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
         }
         body { background: var(--dark); color: var(--text); font-family: var(--font); }
         a { color: var(--gold); }
@@ -287,7 +287,7 @@ export default function HowToGetStartedPage() {
               </div>
             ))}
           </div>
-          <div style={{ marginTop: 16, padding: '16px 20px', background: 'rgba(34,197,94,0.05)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 10, fontSize: 13, color: 'var(--dim)' }}>
+          <div style={{ marginTop: 16, padding: '16px 20px', background: 'rgba(44,255,122,0.05)', border: '1px solid rgba(44,255,122,0.2)', borderRadius: 10, fontSize: 13, color: 'var(--dim)' }}>
             Payment is handled securely via Stripe. Your card is never charged during the free trial. Cancel anytime — your data is preserved for 30 days after cancellation.
           </div>
         </div>
@@ -322,8 +322,8 @@ export default function HowToGetStartedPage() {
             {['30 Days Free', 'No Credit Card', 'Unlimited Users', 'Free Migration', 'Cancel Anytime'].map(t => (
               <div key={t} className="trust-item">
                 <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                  <circle cx="8" cy="8" r="8" fill="rgba(34,197,94,0.15)" />
-                  <path d="M4.5 8l2.5 2.5 4-5" stroke="#22c55e" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  <circle cx="8" cy="8" r="8" fill="rgba(44,255,122,0.15)" />
+                  <path d="M4.5 8l2.5 2.5 4-5" stroke="#2CFF7A" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 {t}
               </div>

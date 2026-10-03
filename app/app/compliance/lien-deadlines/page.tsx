@@ -30,7 +30,7 @@ import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
 const GOLD = 'var(--brand-primary)';
 const AMBER = 'var(--warning)';
-const GREEN = '#34C759';
+const GREEN = '#2CFF7A';
 const BLUE = 'var(--brand-primary)';
 const RED = '#FF3B30';
 const TEXT = '#FFFFFF';
@@ -463,7 +463,7 @@ export default function LienDeadlinePage() {
                     {/* Reminder badges */}
                     {dl.reminder_sent_30 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(107,114,128,0.12)', color: GRAY }}>30d sent</span>}
                     {dl.reminder_sent_14 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'var(--brand-primary-12)', color: GOLD }}>14d sent</span>}
-                    {dl.reminder_sent_7 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(239,68,68,0.12)', color: RED }}>7d sent</span>}
+                    {dl.reminder_sent_7 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(255,59,48,0.12)', color: RED }}>7d sent</span>}
                   </div>
                   <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, marginBottom: 2 }}>{dl.description || deadlineTypeLabel(dl.deadline_type)}</div>
                   <div style={{ fontSize: 12, color: DIM }}>

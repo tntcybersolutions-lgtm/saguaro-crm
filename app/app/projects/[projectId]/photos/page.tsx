@@ -29,7 +29,7 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
-const GREEN='#1a8a4a',RED='#c03030';
+const GREEN='#2CFF7A',RED='#FF3B30';
 
 const ALBUMS=['General','Progress','Inspections','Closeout','Issues','Other'];
 /* Images that live in the project's Files & Media library. /api/photos/list
@@ -45,8 +45,8 @@ const ALBUM_COLORS:Record<string,string>={
   Inspections:GOLD,
   Closeout:GREEN,
   Issues:RED,
-  Other:'#a78bfa',
-  [FILES_ALBUM]:'#60A5FA',
+  Other:'#FF8A00',
+  [FILES_ALBUM]:'#FF8A00',
 };
 
 const inp:React.CSSProperties={
@@ -404,7 +404,7 @@ export default function PhotosPage(){
             <StatStrip items={[
               {href: `/app/projects/${projectId}/photos`, label:'Project',value:`${Number(ctx?.project?.percentComplete)||0}%`,sub:'Complete — the gallery is the proof'},
               {href: `/app/projects/${projectId}/photos`, label:'Photos',value:String(photos.length),sub:albums.length>0?`${albums.length} album${albums.length===1?'':'s'} in use`:'No albums yet'},
-              {href: `/app/projects/${projectId}/photos`, label:'This Month',value:String(thisMonth),accent:thisMonth>0?'#3dd68c':undefined,sub:'Added since the 1st'},
+              {href: `/app/projects/${projectId}/photos`, label:'This Month',value:String(thisMonth),accent:thisMonth>0?'#2CFF7A':undefined,sub:'Added since the 1st'},
               {href: `/app/projects/${projectId}/photos`, label:'Last Photo',value:lastPhotoAt?fmtDate(lastPhotoAt):'—',sub:lastPhotoAt?'Most recent capture':'Nothing documented yet'},
               {href: `/app/projects/${projectId}/photos`, label:'Issues Tagged',value:String(issueCount),accent:issueCount>0?RED:undefined,sub:issueCount>0?'Flagged for follow-up':'Clean so far'},
               {href: `/app/projects/${projectId}/daily-logs`, label:'Last Daily Log',value:ctx?.recent?.lastDailyLogDate?fmtDate(ctx.recent.lastDailyLogDate):'—',sub:Number(ctx?.counts?.openPunch)>0?`${ctx.counts.openPunch} open punch`:'Field activity'},

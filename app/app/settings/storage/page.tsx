@@ -27,8 +27,8 @@ const WHITE = '#FFFFFF';
 const MUTED = 'rgba(255,255,255,0.62)';
 const FAINT = 'rgba(255,255,255,0.42)';
 const BORDER = 'rgba(255,255,255,0.08)';
-const GREEN = '#22C55E';
-const RED = '#EF4444';
+const GREEN = '#2CFF7A';
+const RED = '#FF3B30';
 
 const inputStyle: React.CSSProperties = {
   width: '100%', marginTop: 3,
@@ -162,7 +162,7 @@ function StorageSettings() {
       )}
 
       {toast && (
-        <div style={{ margin: '0 0 16px', padding: '10px 14px', background: toast.ok ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)', border: `1px solid ${toast.ok ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`, borderRadius: 10, color: toast.ok ? GREEN : RED, fontSize: 13 }}>{toast.m}</div>
+        <div style={{ margin: '0 0 16px', padding: '10px 14px', background: toast.ok ? 'rgba(44,255,122,0.12)' : 'rgba(255,59,48,0.12)', border: `1px solid ${toast.ok ? 'rgba(44,255,122,0.3)' : 'rgba(255,59,48,0.3)'}`, borderRadius: 10, color: toast.ok ? GREEN : RED, fontSize: 13 }}>{toast.m}</div>
       )}
 
       {/* Existing connections */}
@@ -271,7 +271,7 @@ function ConnectorCard({ c, onTest, onRemove, onSaveConfig }: { c: any; onTest: 
         </div>
         {!c.connected && <Pill tone="red">Attention</Pill>}
         <button onClick={onTest} style={compactGhost} className="pmBtn"><ArrowClockwise size={14} />Test</button>
-        <button onClick={onRemove} className="pmBtn" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 10, cursor: 'pointer', fontSize: 12, fontWeight: 700, background: 'rgba(239,68,68,0.12)', color: RED, border: '1px solid rgba(239,68,68,0.35)' }}><Trash size={14} />Remove</button>
+        <button onClick={onRemove} className="pmBtn" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 10, cursor: 'pointer', fontSize: 12, fontWeight: 700, background: 'rgba(255,59,48,0.12)', color: RED, border: '1px solid rgba(255,59,48,0.35)' }}><Trash size={14} />Remove</button>
       </div>
       {needsSite && (
         <div style={{ padding: '0 14px 14px', display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>

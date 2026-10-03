@@ -4,8 +4,8 @@ export default function PortalsHub() {
   const portals = [
     { title: 'Owner / Client Portal', desc: 'View project progress, budgets, photos, and documents.', href: '/portals/client', color: 'var(--brand-primary)' },
     { title: 'Subcontractor Portal', desc: 'Upload insurance, W-9s, and lien waivers, and track pay apps.', href: '/portals/sub', color: 'var(--brand-primary)' },
-    { title: 'E-Signature Portal', desc: 'Sign contracts and documents securely in your browser.', href: '/portals/sign', color: '#22C55E' },
-    { title: 'W-9 Submission', desc: 'Securely submit your W-9 to your general contractor.', href: '/portals/w9', color: '#A78BFA' },
+    { title: 'E-Signature Portal', desc: 'Sign contracts and documents securely in your browser.', href: '/portals/sign', color: '#2CFF7A' },
+    { title: 'W-9 Submission', desc: 'Securely submit your W-9 to your general contractor.', href: '/portals/w9', color: '#FF8A00' },
   ];
 
   return (

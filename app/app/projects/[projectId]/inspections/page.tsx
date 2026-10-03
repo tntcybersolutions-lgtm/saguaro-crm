@@ -12,7 +12,7 @@ import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 import { StatusPill } from '@/components/ui/Status';
 
-const GOLD='var(--brand-primary)', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#3dd68c', RED='#ef4444';
+const GOLD='var(--brand-primary)', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#2CFF7A', RED='#FF3B30';
 
 interface Inspection {
   id: string;
@@ -63,8 +63,8 @@ function normalizeInspection(r: Record<string, unknown>): Inspection {
 
 function resultBadge(result: string) {
   const map: Record<string, { bg: string; color: string; label: string }> = {
-    'passed': { bg: 'rgba(61,214,140,.2)', color: GREEN, label: 'Passed' },
-    'failed': { bg: 'rgba(239,68,68,.2)', color: RED, label: 'Failed' },
+    'passed': { bg: 'rgba(44,255,122,.2)', color: GREEN, label: 'Passed' },
+    'failed': { bg: 'rgba(255,59,48,.2)', color: RED, label: 'Failed' },
     'pending': { bg: 'color-mix(in srgb, var(--warning) 20%, transparent)', color: 'var(--warning)', label: 'Pending' },
     'conditional pass': { bg: 'color-mix(in srgb, var(--warning) 20%, transparent)', color: 'var(--warning)', label: 'Conditional Pass' },
   };
@@ -254,14 +254,14 @@ export default function InspectionsPage() {
         <StatCard icon={<ClipboardText size={19} weight="duotone" style={{ color: GOLD }} />} label="Total" value={String(inspections.length)} sub={lastRecord ? `Last: ${fmtDate(lastRecord.date)}` : undefined} delay={0.18}  href={`/app/projects/${projectId}/inspections`}/>
       </div>
 
-      {successMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(61,214,140,.15)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 10, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
-      {errorMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.4)', borderRadius: 10, color: RED, fontSize: 13 }}>{errorMsg}</div>}
+      {successMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(44,255,122,.15)', border: '1px solid rgba(44,255,122,.4)', borderRadius: 10, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
+      {errorMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(255,59,48,.15)', border: '1px solid rgba(255,59,48,.4)', borderRadius: 10, color: RED, fontSize: 13 }}>{errorMsg}</div>}
 
       {showForm && (
         <div style={{ display: 'grid', gridTemplateColumns: ctx ? 'minmax(0, 1fr) 320px' : '1fr', gap: 18, alignItems: 'start', marginBottom: 24 }}>
           <SectionCard title="Schedule Inspection" icon={<CalendarCheck size={17} weight="duotone" style={{ color: GOLD }} />}>
             {awaitingReinspection.length > 0 && (
-              <div style={{ marginBottom: 14, padding: '10px 12px', borderRadius: 8, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', fontSize: 12, color: '#fca5a5', lineHeight: 1.6 }}>
+              <div style={{ marginBottom: 14, padding: '10px 12px', borderRadius: 8, background: 'rgba(255,59,48,0.08)', border: '1px solid rgba(255,59,48,0.3)', fontSize: 12, color: '#fca5a5', lineHeight: 1.6 }}>
                 <ArrowsClockwise size={13} weight="bold" color="#fca5a5" style={{ verticalAlign: 'middle', marginRight: 6 }} />
                 {awaitingReinspection.length} failed inspection{awaitingReinspection.length === 1 ? '' : 's'} awaiting re-inspection:{' '}
                 {awaitingReinspection.slice(0, 3).map(f => (

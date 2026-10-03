@@ -254,7 +254,7 @@ export default function GettingStartedRail({ projectId, compact = false }: { pro
                       width: 21, height: 21, borderRadius: 999, flexShrink: 0, zIndex: 1,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       background: s.done ? `linear-gradient(180deg,${GOLD_HI},${GOLD})` : '#101011',
-                      border: s.done ? 'none' : `1px solid rgba(245,158,11,${isCur ? 0.85 : 0.45})`,
+                      border: s.done ? 'none' : `1px solid rgba(255,138,0,${isCur ? 0.85 : 0.45})`,
                       boxShadow: isCur ? '0 0 12px var(--brand-primary-35)' : undefined,
                       color: s.done ? '#0A0A00' : GOLD_HI, fontSize: 10, fontWeight: 900,
                     }}>

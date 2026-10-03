@@ -6,7 +6,7 @@ import Link from 'next/link';
 import MarketingNav from '@/components/MarketingNav';
 import { Check, Warning } from '@phosphor-icons/react';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444',GREEN='#22c55e';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#FF3B30',GREEN='#2CFF7A';
 const HAIR='rgba(255,255,255,0.08)',CARD='rgba(255,255,255,0.02)';
 
 /* House display treatment — gold text-shine on ONE key word per heading. */
@@ -115,7 +115,7 @@ export default function SignupPage(){
   if(success) return (
     <div style={{minHeight:'100vh',background:DARK,display:'flex',alignItems:'center',justifyContent:'center',padding:24,fontFamily:"system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"}}>
       <div style={{width:'100%',maxWidth:480,textAlign:'center'}}>
-        <div style={{width:72,height:72,borderRadius:'50%',background:'rgba(34,197,94,0.1)',border:'1px solid rgba(34,197,94,0.3)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 24px'}}><Check size={32} weight="bold" color={GREEN} /></div>
+        <div style={{width:72,height:72,borderRadius:'50%',background:'rgba(44,255,122,0.1)',border:'1px solid rgba(44,255,122,0.3)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 24px'}}><Check size={32} weight="bold" color={GREEN} /></div>
         <h1 style={{fontSize:26,fontWeight:600,color:TEXT,marginBottom:12}}>Check Your Email</h1>
         <p style={{color:DIM,fontSize:15,lineHeight:1.7,marginBottom:28}}>
           We sent a confirmation link to <strong style={{color:TEXT}}>{form.email}</strong>.<br/>
@@ -125,7 +125,7 @@ export default function SignupPage(){
           <div style={{fontSize:13,fontWeight:600,color:TEXT,marginBottom:12}}>What Happens Next</div>
           {['Click the link in your email to confirm.', 'Log in at saguarocontrol.net — no download needed.', 'Complete your 5-minute company setup.', 'Invite your team — unlimited users, always free.'].map((t,i)=>(
             <div key={i} style={{display:'flex',alignItems:'center',gap:10,marginBottom:8,fontSize:13,color:DIM}}>
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="rgba(34,197,94,0.15)"/><path d="M4.5 8l2.5 2.5 4-5" stroke={GREEN} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="rgba(44,255,122,0.15)"/><path d="M4.5 8l2.5 2.5 4-5" stroke={GREEN} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
               {t}
             </div>
           ))}
@@ -186,7 +186,7 @@ export default function SignupPage(){
           <div style={{display:'flex',flexWrap:'wrap',gap:16}}>
             {['No credit card required','Cancel anytime','Unlimited users included','Free migration from Procore'].map(t=>(
               <div key={t} style={{display:'flex',alignItems:'center',gap:6,fontSize:12,color:DIM}}>
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="rgba(34,197,94,0.15)"/><path d="M4.5 8l2.5 2.5 4-5" stroke={GREEN} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="rgba(44,255,122,0.15)"/><path d="M4.5 8l2.5 2.5 4-5" stroke={GREEN} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 {t}
               </div>
             ))}
@@ -210,7 +210,7 @@ export default function SignupPage(){
 
           <div style={{background:RAISED,border:`1px solid ${HAIR}`,borderRadius:'var(--radius-lg)',padding:32,boxShadow:'var(--shadow-lg)'}}>
             {error&&(
-              <div style={{background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:RED,display:'flex',alignItems:'flex-start',gap:8}}>
+              <div style={{background:'rgba(255,59,48,.1)',border:'1px solid rgba(255,59,48,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:RED,display:'flex',alignItems:'flex-start',gap:8}}>
                 <Warning size={15} weight="fill" style={{flexShrink:0,marginTop:1}} /><span>{error}</span>
               </div>
             )}

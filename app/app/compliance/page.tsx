@@ -7,7 +7,7 @@ import { moduleAccent } from '@/lib/module-identity';
 import NudgeRing from '@/components/intelligence/NudgeRing';
 import { ANCHOR_INSURANCE_EXPIRING } from '@/lib/suggestions';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#45B37D',RED='#E0644E',AMBER='var(--warning)';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30',AMBER='var(--warning)';
 
 function ScoreBar({score}:{score:number}){
   const color = score>=80?GREEN:score>=50?AMBER:RED;
@@ -67,7 +67,7 @@ export default function CompliancePage(){
 
   const complianceLabel = (c:string) => c==='compliant'?'Compliant':c==='at_risk'?'At Risk':'Non-Compliant';
   const complianceColor = (c:string) => c==='compliant'?GREEN:c==='at_risk'?AMBER:RED;
-  const complianceBg = (c:string) => c==='compliant'?'rgba(69,179,125,.14)':c==='at_risk'?'rgba(240,166,60,.14)':'rgba(224,100,78,.14)';
+  const complianceBg = (c:string) => c==='compliant'?'rgba(44,255,122,.14)':c==='at_risk'?'rgba(240,166,60,.14)':'rgba(224,100,78,.14)';
 
   return <PremiumSurface maxWidth={2200}>
 
@@ -211,14 +211,14 @@ export default function CompliancePage(){
                 <td style={{padding:'11px 14px'}}>
                   <Badge label={sub.w9.status==='submitted'||sub.w9.status==='approved'?'On File':sub.w9.status==='pending'?'Pending':'Missing'}
                     color={sub.w9.status==='submitted'||sub.w9.status==='approved'?GREEN:sub.w9.status==='pending'?AMBER:RED}
-                    bg={sub.w9.status==='submitted'||sub.w9.status==='approved'?'rgba(69,179,125,.14)':sub.w9.status==='pending'?'rgba(240,166,60,.14)':'rgba(224,100,78,.14)'}/>
+                    bg={sub.w9.status==='submitted'||sub.w9.status==='approved'?'rgba(44,255,122,.14)':sub.w9.status==='pending'?'rgba(240,166,60,.14)':'rgba(224,100,78,.14)'}/>
                 </td>
                 <td style={{padding:'11px 14px'}}>
                   {sub.insurance.active_certs===0
                     ?<Badge label="None on File" color={RED} bg='rgba(224,100,78,.14)'/>
                     :sub.insurance.expiring_certs>0
                     ?<Badge label={`${sub.insurance.expiring_certs} Expiring`} color={AMBER} bg='rgba(240,166,60,.14)'/>
-                    :<Badge label={`${sub.insurance.active_certs} Active`} color={GREEN} bg='rgba(69,179,125,.14)'/>
+                    :<Badge label={`${sub.insurance.active_certs} Active`} color={GREEN} bg='rgba(44,255,122,.14)'/>
                   }
                 </td>
                 <td style={{padding:'11px 14px',color:DIM,fontSize:12}}>
@@ -283,7 +283,7 @@ export default function CompliancePage(){
           if(selected.lien_waivers.pending>0) gaps.push({title:`Chase ${selected.lien_waivers.pending} unsigned waiver${selected.lien_waivers.pending===1?'':'s'}`, desc:'Unreleased lien rights — hold payment until signed.'});
           return gaps.length>0
             ? <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:14,marginBottom:12}}><FlowSteps title="Fix Next" steps={gaps}/></div>
-            : <div style={{background:'rgba(69,179,125,.08)',border:'1px solid rgba(69,179,125,.3)',borderRadius:10,padding:'10px 14px',marginBottom:12,fontSize:12.5,color:GREEN}}>Fully compliant — W-9 on file, insurance active, waivers signed.</div>;
+            : <div style={{background:'rgba(44,255,122,.08)',border:'1px solid rgba(44,255,122,.3)',borderRadius:10,padding:'10px 14px',marginBottom:12,fontSize:12.5,color:GREEN}}>Fully compliant — W-9 on file, insurance active, waivers signed.</div>;
         })()}
         <div style={{display:'flex',flexDirection:'column' as const,gap:8}}>
           {selected.email&&<a href={`mailto:${selected.email}?subject=Compliance%20Follow-Up`} className="pmBtn" style={{...goldButtonStyle,width:'100%'}}><Envelope size={15} weight="bold" /> Email Sub</a>}

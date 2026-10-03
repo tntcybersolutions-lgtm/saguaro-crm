@@ -13,7 +13,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)', DIM = '#CBD5E1', TEXT = '#FFFFFF';
-const RED = '#f87171', GREEN = '#22c55e';
+const RED = '#FF3B30', GREEN = '#2CFF7A';
 
 interface StyleProfile {
   enabled: boolean;
@@ -240,7 +240,7 @@ export default function SageSettings({ onClose }: { onClose: () => void }) {
                 <button
                   onClick={() => profile && putProfile({ enabled: !profile.enabled })}
                   disabled={busy || !profile}
-                  style={{ ...btn, background: profile?.enabled ? 'rgba(34,197,94,0.12)' : 'rgba(255,255,255,0.06)', borderColor: profile?.enabled ? 'rgba(34,197,94,0.4)' : BORDER, color: profile?.enabled ? GREEN : DIM, minWidth: 60 }}
+                  style={{ ...btn, background: profile?.enabled ? 'rgba(44,255,122,0.12)' : 'rgba(255,255,255,0.06)', borderColor: profile?.enabled ? 'rgba(44,255,122,0.4)' : BORDER, color: profile?.enabled ? GREEN : DIM, minWidth: 60 }}
                 >{profile?.enabled ? 'ON' : 'OFF'}</button>
               </div>
 
@@ -366,8 +366,8 @@ export default function SageSettings({ onClose }: { onClose: () => void }) {
                       {r.description ? ` — ${r.description}` : ''}
                     </div>
                   </div>
-                  <button onClick={() => toggleRule(r.id, !r.enabled)} style={{ ...btn, background: r.enabled ? 'rgba(34,197,94,0.12)' : 'rgba(255,255,255,0.06)', borderColor: r.enabled ? 'rgba(34,197,94,0.4)' : BORDER, color: r.enabled ? GREEN : DIM }}>{r.enabled ? 'ON' : 'OFF'}</button>
-                  <button onClick={() => revokeRule(r.id)} style={{ ...btn, color: RED, borderColor: 'rgba(248,113,113,0.4)', background: 'rgba(248,113,113,0.08)' }}>Revoke</button>
+                  <button onClick={() => toggleRule(r.id, !r.enabled)} style={{ ...btn, background: r.enabled ? 'rgba(44,255,122,0.12)' : 'rgba(255,255,255,0.06)', borderColor: r.enabled ? 'rgba(44,255,122,0.4)' : BORDER, color: r.enabled ? GREEN : DIM }}>{r.enabled ? 'ON' : 'OFF'}</button>
+                  <button onClick={() => revokeRule(r.id)} style={{ ...btn, color: RED, borderColor: 'rgba(255,59,48,0.4)', background: 'rgba(255,59,48,0.08)' }}>Revoke</button>
                 </div>
               ))}
             </>

@@ -40,8 +40,8 @@ const PRIORITIES = ['high', 'medium', 'low'];
 
 // Desert-dusk accents (match dashboard) ---------------------------------------
 const GOLD = 'var(--brand-primary)';
-const GREEN = '#45B37D';
-const RED = '#E0644E';
+const GREEN = '#2CFF7A';
+const RED = '#FF3B30';
 
 const inp: React.CSSProperties = { width: '100%', padding: '8px 12px', background: T.surface2, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, outline: 'none' };
 const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 6 };
@@ -250,7 +250,7 @@ export default function TodosPage() {
       />
 
       {toast && (
-        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(34,197,94,0.3)`, borderRadius: 8, color: T.green, fontSize: 13 }}>
+        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(44,255,122,0.3)`, borderRadius: 8, color: T.green, fontSize: 13 }}>
           {toast}
         </div>
       )}

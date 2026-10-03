@@ -273,7 +273,7 @@ export async function POST(req: NextRequest) {
       const styleIn = (o.style && typeof o.style === 'object' ? o.style : {}) as Record<string, unknown>;
       const color = typeof styleIn.color === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(styleIn.color)
         ? styleIn.color
-        : '#F59E0B';
+        : '#FF8A00';
       const widthN = Number(styleIn.width);
       const style = { color, width: Number.isFinite(widthN) && widthN > 0 ? Math.min(30, widthN) : 3 };
 

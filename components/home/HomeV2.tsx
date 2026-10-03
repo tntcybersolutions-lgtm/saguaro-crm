@@ -50,11 +50,11 @@ const fetcher = async (url: string): Promise<HomePayload> => {
 /* Tier colors use the status palette (COPY-STYLE §7). Red/amber/green only
    where they mean something; the rest stays neutral. */
 const TIER_TONE: Record<number, { fg: string; bg: string }> = {
-  0: { fg: '#FF4D5E', bg: 'rgba(255,77,94,.14)' },
-  1: { fg: '#FF4D5E', bg: 'rgba(255,77,94,.14)' },
-  2: { fg: '#FF8A3D', bg: 'rgba(255,138,61,.14)' },
-  3: { fg: '#FFC53D', bg: 'rgba(255,197,61,.14)' },
-  4: { fg: '#3DA9FF', bg: 'rgba(61,169,255,.12)' },
+  0: { fg: '#FF3B30', bg: 'rgba(255,59,48,.14)' },
+  1: { fg: '#FF3B30', bg: 'rgba(255,59,48,.14)' },
+  2: { fg: '#FF8A00', bg: 'rgba(255,138,0,.14)' },
+  3: { fg: '#FFE600', bg: 'rgba(255,230,0,.14)' },
+  4: { fg: '#FF8A00', bg: 'rgba(255,138,0,.12)' },
   5: { fg: '#A3ACBB', bg: 'rgba(163,172,187,.12)' },
 };
 
@@ -116,11 +116,11 @@ function MetricCard({ m, index }: { m: Metric; index: number }) {
   // cards stay neutral so a missing number never looks like a bright result.
   const lit = NEON_CYCLE[index % NEON_CYCLE.length];
   const glow = shown ? neonCard(lit) : null;
-  const cardStyle: React.CSSProperties = glow ? { background: glow.background, borderTop: glow.borderTop, boxShadow: glow.boxShadow, borderColor: `color-mix(in srgb, ${lit} 28%, transparent)` } : {};
+  const cardStyle: React.CSSProperties = glow ? { background: glow.background, borderTop: glow.borderTop, boxShadow: glow.boxShadow, borderColor: 'var(--glass-border)' } : {};
   const body = (
     <>
-      <div className="hv2-metric-label" style={shown ? { color: `color-mix(in srgb, ${lit} 65%, #FFFFFF)` } : undefined}>{m.label}</div>
-      <div className="hv2-metric-value" style={{ ...(shown ? neonText(lit) : { color: 'var(--text-tertiary)' }), fontSize: shown ? 30 : 15 }}>
+      <div className="hv2-metric-label" style={undefined}>{m.label}</div>
+      <div className="hv2-metric-value" style={{ ...(shown ? { color: '#FFFFFF' } : { color: 'var(--text-tertiary)' }), fontSize: shown ? 30 : 15 }}>
         {shown ? m.value : m.state === 'restricted' ? 'No access' : m.state === 'failed' ? 'Couldn\'t load' : 'Not available'}
       </div>
       <div className="hv2-metric-basis">{shown ? m.basis : m.note || m.basis}</div>
@@ -495,7 +495,7 @@ export default function HomeV2() {
 const CSS = `
 .hv2 { padding: 24px; max-width: 1600px; margin: 0 auto; color: var(--text-primary); font-size: 15px; }
 .hv2 h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.01em; margin: 0; }
-.hv2 h2 { font-size: 17px; font-weight: 800; margin: 0; padding-bottom: 6px; background: linear-gradient(90deg, var(--neon-yellow, #FFE600), var(--neon-cyan, #22E5FF)) left bottom / 44px 2px no-repeat; }
+.hv2 h2 { color: var(--title-color, #FFE600); font-size: 17px; font-weight: 800; margin: 0; padding-bottom: 6px; background: linear-gradient(90deg, var(--neon-yellow, #FFE600), var(--brand-primary)) left bottom / 44px 2px no-repeat; }
 .hv2 h1 { background: linear-gradient(90deg, #FFFFFF 0%, #FFFFFF 50%, var(--neon-yellow, #FFE600) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .hv2-proj { font-weight: 700; }
 .hv2 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
@@ -517,7 +517,7 @@ const CSS = `
 .hv2-linkbtn { background: none; border: 0; padding: 0; color: var(--brand-primary); font-weight: 700; font-size: 13px; cursor: pointer; text-decoration: none; }
 .hv2-stack { display: flex; flex-direction: column; gap: 20px; margin-top: 12px; }
 .hv2-card { background: var(--bg-surface); border: 1px solid var(--glass-border); border-radius: 14px; box-shadow: var(--glass-highlight); }
-.hv2-card { border-top: 2px solid color-mix(in srgb, var(--neon-cyan, #22E5FF) 55%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--neon-cyan, #22E5FF) 5%, transparent), transparent 140px), var(--bg-surface); }
+.hv2-card { border-top: 2px solid color-mix(in srgb, var(--brand-primary) 55%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--brand-primary) 5%, transparent), transparent 140px), var(--bg-surface); }
 .hv2-pad { padding: 18px 20px; }
 .hv2-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
 .hv2-metric { padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; text-decoration: none; color: inherit; min-height: 112px; }
@@ -534,13 +534,13 @@ const CSS = `
 .hv2-qrow { display: grid; grid-template-columns: 112px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 12px 0; border-top: 1px solid var(--border-subtle); }
 .hv2-qrow:first-child { border-top: 0; }
 .hv2-tier { justify-self: start; font-size: 12px; font-weight: 750; padding: 4px 9px; border-radius: 999px; white-space: nowrap; }
-.hv2-qtitle { font-size: 15px; font-weight: 650; overflow-wrap: anywhere; }
+.hv2-qtitle { color: var(--title-color, #FFE600); font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
 .hv2-count { margin-left: 8px; font-size: 12px; font-weight: 750; padding: 1px 7px; border-radius: 999px; background: var(--bg-surface-2); color: var(--text-secondary); }
 .hv2-qmeta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 3px; font-size: 13px; color: var(--text-tertiary); }
-.hv2-unassigned { color: #FFC53D; font-style: normal; font-weight: 700; }
+.hv2-unassigned { color: #FFE600; font-style: normal; font-weight: 700; }
 .hv2-qactions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
-.hv2-qerr { margin-top: 6px; font-size: 13px; color: #FF4D5E; }
-.hv2-qok { margin-top: 6px; font-size: 13px; color: #2EE59D; }
+.hv2-qerr { margin-top: 6px; font-size: 13px; color: #FF3B30; }
+.hv2-qok { margin-top: 6px; font-size: 13px; color: #2CFF7A; }
 .hv2-more { margin-top: 10px; background: none; border: 0; color: var(--brand-primary); font-weight: 700; font-size: 14px; cursor: pointer; min-height: 36px; }
 .hv2-sched { display: flex; flex-direction: column; gap: 14px; }
 .hv2-sday { font-size: 12.5px; font-weight: 750; color: var(--text-secondary); margin-bottom: 6px; }
@@ -554,7 +554,7 @@ const CSS = `
 .hv2-table th { font-size: 12.5px; font-weight: 700; color: var(--text-secondary); padding: 8px 10px; border-bottom: 1px solid var(--glass-border); white-space: nowrap; }
 .hv2-table td { padding: 11px 10px; border-bottom: 1px solid var(--border-subtle); color: var(--text-primary); font-variant-numeric: tabular-nums; }
 .hv2-table tr:hover td { background: rgba(255,255,255,0.025); }
-.hv2-tlink { color: var(--text-primary); font-weight: 700; text-decoration: none; }
+.hv2-tlink { color: var(--title-color, #FFE600); font-weight: 700; text-decoration: none; }
 .hv2-tlink:hover { color: var(--brand-primary); }
 .hv2-create { position: relative; }
 .hv2-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; min-width: 220px; padding: 6px; border-radius: 12px; background: var(--bg-elevated); border: 1px solid var(--glass-border); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); box-shadow: 0 12px 32px rgba(0,0,0,.5); }
@@ -562,8 +562,8 @@ const CSS = `
 .hv2-menu-item { display: block; padding: 10px 12px; border-radius: 8px; font-size: 14px; font-weight: 600; color: var(--text-primary); text-decoration: none; }
 .hv2-menu-item:hover { background: var(--bg-surface-2); }
 .hv2-menu-item.off { color: var(--text-disabled, #7A8597); cursor: not-allowed; }
-.hv2-warn { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13.5px; color: #FFC53D; background: rgba(255,197,61,.08); border: 1px solid rgba(255,197,61,.3); border-radius: 10px; padding: 10px 14px; }
-.hv2-error { display: flex; align-items: center; gap: 10px; color: #FF4D5E; }
+.hv2-warn { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13.5px; color: #FFE600; background: rgba(255,230,0,.08); border: 1px solid rgba(255,230,0,.3); border-radius: 10px; padding: 10px 14px; }
+.hv2-error { display: flex; align-items: center; gap: 10px; color: #FF3B30; }
 .hv2-skel { background: linear-gradient(90deg, var(--bg-surface), var(--bg-surface-2), var(--bg-surface)); background-size: 200% 100%; animation: hv2sk 1.4s ease infinite; }
 @keyframes hv2sk { to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .hv2-skel { animation: none; } }

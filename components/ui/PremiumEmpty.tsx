@@ -21,9 +21,9 @@ type Tone = 'gold' | 'green' | 'red' | 'blue';
 
 const TONES: Record<Tone, string> = {
   gold: 'var(--brand-primary)',
-  green: '#2EE59D',
-  red: '#FF4D5E',
-  blue: '#3DA9FF',
+  green: '#2CFF7A',
+  red: '#FF3B30',
+  blue: '#FF8A00',
 };
 
 export interface PremiumEmptyProps {

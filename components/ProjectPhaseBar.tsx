@@ -28,10 +28,10 @@ const BORDER = 'rgba(255,255,255,0.09)';
    neon-on-black family as lib/status-colors (docs/COPY-STYLE.md §7). */
 const PHASE_COLORS: Record<string, string> = {
   overview:  '#A3ACBB', // grey
-  precon:    '#3DA9FF', // blue
-  execution: '#FFC53D', // amber
-  field:     '#2EE59D', // green
-  financial: '#FF8A3D', // orange
+  precon:    '#FF8A00', // blue
+  execution: '#FFE600', // amber
+  field:     '#2CFF7A', // green
+  financial: '#FF8A00', // orange
   docs:      '#B08CFF', // violet
   closeout:  '#2EDBD0', // teal
 };

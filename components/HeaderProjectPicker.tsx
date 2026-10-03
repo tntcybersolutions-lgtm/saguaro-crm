@@ -161,7 +161,7 @@ export default function HeaderProjectPicker() {
         }}
       >
         <Buildings size={15} weight="duotone" color={currentName ? GOLD : DIM} />
-        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0, ...(currentName && currentId ? { color: accentForProject(currentId).hex, textShadow: `0 0 12px ${accentForProject(currentId).ring}` } : {}) }}>
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0, ...(currentName && currentId ? { color: accentForProject(currentId).hex } : {}) }}>
           {currentName ?? 'Choose a Job'}
         </span>
         <CaretUpDown size={13} weight="bold" color={DIM} />

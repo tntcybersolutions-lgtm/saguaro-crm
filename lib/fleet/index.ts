@@ -112,4 +112,4 @@ export function fleetSummary(assets: Asset[], records: MaintenanceRecord[], docs
   return { total: assets.length, byType, byStatus, maintenanceOverdue: overdue, maintenanceSoon: soon, docsExpired, docsExpiringSoon, totalMaintenanceCostCents, needsAttention: needs };
 }
 
-export const STATUS_COLOR: Record<DueStatus, string> = { overdue: '#ef4444', soon: '#f59e0b', ok: '#3dd68c', unknown: '#8b949e' };
+export const STATUS_COLOR: Record<DueStatus, string> = { overdue: '#FF3B30', soon: '#FF8A00', ok: '#2CFF7A', unknown: '#8b949e' };

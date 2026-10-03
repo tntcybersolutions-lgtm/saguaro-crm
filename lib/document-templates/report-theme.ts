@@ -13,14 +13,14 @@
  *
  * Money is NUMERIC-as-TEXT server-side — num()/money() Number() everything,
  * and effectiveTotal() implements the house rule that a stale 0 total defers
- * to amount + tax. Money display is GOLD (#F59E0B family) per house style.
+ * to amount + tax. Money display is GOLD (#FF8A00 family) per house style.
  */
 import { PDFDocument, PDFFont, PDFPage, StandardFonts, rgb } from 'pdf-lib';
 
 export type ThemeRGB = ReturnType<typeof rgb>;
 
 // ─── House palette ───────────────────────────────────────────────────────────
-export const GOLD = rgb(0.961, 0.62, 0.043); // #F59E0B — money + accent fallback
+export const GOLD = rgb(0.961, 0.62, 0.043); // #FF8A00 — money + accent fallback
 export const INK = rgb(0.051, 0.067, 0.086); // #0D1116 — header/footer charcoal
 export const PAPER = rgb(1, 1, 1);
 export const SLATE = rgb(0.34, 0.37, 0.42); // labels

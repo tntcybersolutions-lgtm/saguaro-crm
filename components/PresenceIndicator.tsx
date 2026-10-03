@@ -8,7 +8,7 @@ const HEARTBEAT_MS = 30_000;
 const POLL_MS = 15_000;
 
 const AVATAR_COLORS = [
-  '#F59E0B', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#6366f1', '#14b8a6',
+  '#FF8A00', '#FF8A00', '#FF8A00', '#FF8A00', '#2CFF7A', '#FF3B30', '#FF8A00', '#2CFF7A',
 ];
 
 interface ActiveUser {
@@ -134,7 +134,7 @@ export default function PresenceIndicator({ projectId }: { projectId?: string })
                 width: 10,
                 height: 10,
                 borderRadius: '50%',
-                backgroundColor: '#22c55e',
+                backgroundColor: '#2CFF7A',
                 border: `2px solid ${DARK}`,
               }}
             />

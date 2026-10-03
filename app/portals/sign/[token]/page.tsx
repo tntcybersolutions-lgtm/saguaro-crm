@@ -9,8 +9,8 @@ const TEXT_DARK = '#FFFFFF';
 const TEXT_MED = '#F1F5F9';
 const TEXT_DIM = '#CBD5E1';
 const GOLD = 'var(--brand-primary)';
-const GREEN = '#16a34a';
-const RED = '#dc2626';
+const GREEN = '#2CFF7A';
+const RED = '#FF3B30';
 
 interface SignatureInfo {
   id: string;

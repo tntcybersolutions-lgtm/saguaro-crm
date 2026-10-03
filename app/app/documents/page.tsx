@@ -21,8 +21,8 @@ const GOLD = 'var(--brand-primary)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
 const TEXT = '#FFFFFF';
-const GREEN = '#3dd68c';
-const RED = '#ef4444';
+const GREEN = '#2CFF7A';
+const RED = '#FF3B30';
 
 const fmt = (n: number | string | null | undefined) =>
   '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -114,10 +114,10 @@ const isCloseoutDone = (s: string) => s === 'accepted';
 
 const CLOSEOUT_STATUS: Record<string, { label: string; color: string; bg: string }> = {
   pending:      { label: 'Pending',      color: 'var(--warning)', bg: 'color-mix(in srgb, var(--warning) 10%, transparent)' },
-  submitted:    { label: 'Submitted',    color: '#4a9de8', bg: 'rgba(26,95,168,.12)' },
-  under_review: { label: 'Under Review', color: '#4a9de8', bg: 'rgba(26,95,168,.12)' },
-  accepted:     { label: 'Complete',     color: GREEN,     bg: 'rgba(61,214,140,.12)' },
-  rejected:     { label: 'Rejected',     color: RED,       bg: 'rgba(239,68,68,.12)' },
+  submitted:    { label: 'Submitted',    color: '#FF8A00', bg: 'rgba(26,95,168,.12)' },
+  under_review: { label: 'Under Review', color: '#FF8A00', bg: 'rgba(26,95,168,.12)' },
+  accepted:     { label: 'Complete',     color: GREEN,     bg: 'rgba(44,255,122,.12)' },
+  rejected:     { label: 'Rejected',     color: RED,       bg: 'rgba(255,59,48,.12)' },
   na:           { label: 'N/A',          color: DIM,       bg: 'rgba(148,163,184,.12)' },
 };
 
@@ -128,12 +128,12 @@ const CLOSEOUT_TYPE_LABEL: Record<string, string> = {
 };
 
 const statusConfig: Record<string, { color: string; bg: string }> = {
-  paid:      { color: GREEN,   bg: 'rgba(61,214,140,.12)' },
-  approved:  { color: '#4a9de8', bg: 'rgba(26,95,168,.12)' },
+  paid:      { color: GREEN,   bg: 'rgba(44,255,122,.12)' },
+  approved:  { color: '#FF8A00', bg: 'rgba(26,95,168,.12)' },
   draft:     { color: 'var(--warning)', bg: 'color-mix(in srgb, var(--warning) 12%, transparent)' },
-  executed:  { color: GREEN,   bg: 'rgba(61,214,140,.12)' },
+  executed:  { color: GREEN,   bg: 'rgba(44,255,122,.12)' },
   pending:   { color: 'var(--warning)', bg: 'color-mix(in srgb, var(--warning) 12%, transparent)' },
-  submitted: { color: '#4a9de8', bg: 'rgba(26,95,168,.12)' },
+  submitted: { color: '#FF8A00', bg: 'rgba(26,95,168,.12)' },
 };
 
 // AIA bond/form card code -> { route, body } using existing /api/documents/* generators.
@@ -931,7 +931,7 @@ export default function DocumentsPage() {
                       display: 'flex', alignItems: 'center', gap: 14,
                       padding: '14px 20px',
                       borderBottom: idx < visCloseout.length - 1 ? `1px solid rgba(255,255,255,0.08)` : 'none',
-                      background: done ? 'rgba(61,214,140,.03)' : 'transparent',
+                      background: done ? 'rgba(44,255,122,.03)' : 'transparent',
                     }}
                   >
                     <button

@@ -32,8 +32,8 @@ const WHITE = '#FFFFFF';
 const MUTED = 'rgba(255,255,255,0.62)';
 const FAINT = 'rgba(255,255,255,0.42)';
 const BORDER = 'rgba(255,255,255,0.08)';
-const GREEN = '#22C55E';
-const RED = '#EF4444';
+const GREEN = '#2CFF7A';
+const RED = '#FF3B30';
 
 type MarketState = 'connect' | 'request';
 type Market = { key: string; name: string; desc: string; state: MarketState; href: string };
@@ -224,7 +224,7 @@ export default function IntegrationsHubPage() {
   const compactDanger: React.CSSProperties = {
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
     padding: '7px 12px', borderRadius: 10, cursor: 'pointer', fontSize: 12, fontWeight: 700,
-    background: 'rgba(239,68,68,0.12)', color: RED, border: '1px solid rgba(239,68,68,0.35)',
+    background: 'rgba(255,59,48,0.12)', color: RED, border: '1px solid rgba(255,59,48,0.35)',
   };
 
   return (

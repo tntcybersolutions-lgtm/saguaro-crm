@@ -42,7 +42,7 @@ export default function GetTheAppPage() {
           --dim:    #CBD5E1;
           --border: rgba(255,255,255,0.12);
           --raised: var(--bg-surface);
-          --green:  #22c55e;
+          --green:  #2CFF7A;
           --gold-dim: var(--brand-primary-12);
           --gold-glow: var(--brand-primary-25);
         }
@@ -432,8 +432,8 @@ export default function GetTheAppPage() {
           display: flex;
           align-items: center;
           gap: 8px;
-          background: rgba(34,197,94,0.08);
-          border: 1px solid rgba(34,197,94,0.2);
+          background: rgba(44,255,122,0.08);
+          border: 1px solid rgba(44,255,122,0.2);
           border-radius: 8px;
           padding: 10px 14px;
           font-size: 12px;
@@ -489,7 +489,7 @@ export default function GetTheAppPage() {
           border-left: 2px solid var(--brand-primary-35);
         }
         .compare-table tr:hover td.saguaro-col { background: color-mix(in srgb, var(--brand-primary) 9%, transparent); }
-        .compare-table td.bad { color: #f87171; }
+        .compare-table td.bad { color: #FF3B30; }
         .compare-table td.good { color: var(--green); }
 
         /* ── TESTIMONIALS ── */

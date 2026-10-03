@@ -92,7 +92,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       punch_item_id: isPunch ? entity_id : null,
       title: title || null,
       description: description || null,
-      color: color || '#d4a017',
+      color: color || '#FFE600',
       priority: priority || 'normal',
       status: 'open',
       created_by: user.id,

@@ -23,10 +23,10 @@ export const CIN = {
   gold: 'var(--brand-primary)',
   goldHi: 'var(--brand-primary-strong)',
   goldSoft: '#FFF7A8',
-  amber: '#FFC53D',
-  green: '#2EE59D',
-  red: '#FF4D5E',
-  blue: '#3DA9FF',
+  amber: '#FFE600',
+  green: '#2CFF7A',
+  red: '#FF3B30',
+  blue: '#FF8A00',
   bg: 'var(--bg-base)',
   text: '#FFFFFF',
   muted: '#D7DEE8',
@@ -279,7 +279,7 @@ export function StatCard({
         animation: `sgRise .5s ease ${delay.toFixed(2)}s both`,
         background: `${glow.background}, ${CIN.surface}`,
         backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR,
-        border: `1px solid color-mix(in srgb, ${lit} 30%, transparent)`,
+        border: `1px solid ${CIN.border}`,
         borderTop: glow.borderTop,
         borderRadius: 16,
         padding: '16px 18px',
@@ -304,9 +304,9 @@ export function StatCard({
             {icon}
           </span>
         )}
-        <span style={{ fontSize: 12.5, fontWeight: 750, color: `color-mix(in srgb, ${lit} 65%, #FFFFFF)` }}>{label}</span>
+        <span style={{ fontSize: 12.5, fontWeight: 750, color: CIN.muted }}>{label}</span>
       </div>
-      <div style={{ fontSize: 25, fontWeight: 900, ...neonText(valueColor || lit), letterSpacing: '-0.02em', lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      <div style={{ fontSize: 25, fontWeight: 900, color: valueColor || '#FFFFFF', letterSpacing: '-0.02em', lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
       {sub && <div style={{ fontSize: 12, color: CIN.faint, marginTop: 6 }}>{sub}</div>}
     </div>
   );
@@ -362,7 +362,7 @@ export function SectionCard({
               {title && (
                 /* Neon section title (owner 2026-10-03): bright, with a lit
                    underline in a stable neon per title — not grey-on-black. */
-                <div style={{ fontSize: 15, fontWeight: 800, color: '#FFFFFF', lineHeight: 1.3, paddingBottom: 6, display: 'inline-block', background: `linear-gradient(90deg, ${neonFor(typeof title === 'string' ? title : '')}, transparent) left bottom / 44px 2px no-repeat` }}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--title-color, var(--brand-primary))', lineHeight: 1.3, paddingBottom: 6, display: 'inline-block', background: `linear-gradient(90deg, ${neonFor(typeof title === 'string' ? title : '')}, transparent) left bottom / 44px 2px no-repeat` }}>
                   {title}
                 </div>
               )}

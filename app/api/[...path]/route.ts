@@ -225,7 +225,7 @@ export async function GET(
       });
     } catch {
       return new Response(
-        `<!DOCTYPE html><html><head><title>Saguaro Control Systems</title></head><body style="background:#0a0a0a;color:#e8edf8;font-family:system-ui;display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:16px"><div style="font-size:48px">🌵</div><h1 style="color:#D4A017;margin:0">Saguaro Control Systems</h1><a href="/sandbox" style="background:#D4A017;color:#0a0a0a;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:800">Start Free Sandbox</a><a href="/login" style="color:#8fa3c0;text-decoration:none">Sign In</a></body></html>`,
+        `<!DOCTYPE html><html><head><title>Saguaro Control Systems</title></head><body style="background:#0a0a0a;color:#e8edf8;font-family:system-ui;display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:16px"><div style="font-size:48px">🌵</div><h1 style="color:#FFE600;margin:0">Saguaro Control Systems</h1><a href="/sandbox" style="background:#FFE600;color:#0a0a0a;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:800">Start Free Sandbox</a><a href="/login" style="color:#8fa3c0;text-decoration:none">Sign In</a></body></html>`,
         { headers: { 'Content-Type': 'text/html; charset=utf-8' } },
       );
     }

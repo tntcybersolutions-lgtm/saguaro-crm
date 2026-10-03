@@ -47,9 +47,9 @@ const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
 const TEXT = '#FFFFFF';
-const GREEN = '#3dd68c';
-const RED = '#f87171';
-const STEEL = '#7FA3C7';
+const GREEN = '#2CFF7A';
+const RED = '#FF3B30';
+const STEEL = '#FF8A00';
 
 // T&M module accent — 'tm' in lib/module-identity (ledger green: money-adjacent,
 // never gold). Used ONLY on icon chips / badges / eyebrows per the accent discipline.
@@ -548,7 +548,7 @@ export default function TmTicketsPage() {
       ? { borderRadius: 6, fontSize: 11, padding: '4px 12px', fontWeight: 800, cursor: rowBusy(t.id) ? 'wait' : 'pointer', opacity: rowBusy(t.id) ? 0.6 : 1, border: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }
       : { borderRadius: 10, fontSize: 13, padding: '10px 16px', fontWeight: 800, cursor: rowBusy(t.id) ? 'wait' : 'pointer', opacity: rowBusy(t.id) ? 0.6 : 1, border: 'none', display: 'inline-flex', alignItems: 'center', gap: 7 };
     const gold = { ...base, background: `linear-gradient(135deg,${GOLD},${GOLD_HI})`, color: '#0A0A00' };
-    const green = { ...base, background: 'rgba(26,138,74,.16)', border: '1px solid rgba(61,214,140,.4)', color: GREEN };
+    const green = { ...base, background: 'rgba(26,138,74,.16)', border: '1px solid rgba(44,255,122,.4)', color: GREEN };
     const red = { ...base, background: 'none', border: '1px solid rgba(192,48,48,.4)', color: RED };
     const steel = { ...base, background: 'rgba(127,163,199,.12)', border: '1px solid rgba(127,163,199,.4)', color: STEEL };
     const btns: React.ReactNode[] = [];
@@ -614,7 +614,7 @@ export default function TmTicketsPage() {
   return (
     <>
       {toast && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 99999, padding: '12px 20px', borderRadius: 8, background: toast.type === 'success' ? 'rgba(34,197,94,0.9)' : 'rgba(239,68,68,0.9)', color: '#fff', fontWeight: 600, fontSize: 14, pointerEvents: 'none' }}>
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 99999, padding: '12px 20px', borderRadius: 8, background: toast.type === 'success' ? 'rgba(44,255,122,0.9)' : 'rgba(255,59,48,0.9)', color: '#fff', fontWeight: 600, fontSize: 14, pointerEvents: 'none' }}>
           {toast.msg}
         </div>
       )}

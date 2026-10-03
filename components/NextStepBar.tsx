@@ -48,7 +48,7 @@ const LS_PROJECT_KEY = 'sag_journey_project';
    below (`${tone}14`). Brand neon yellow for a job, Lead blue for sales. */
 const GOLD = '#FFE600';
 const GOLD_HI = '#FFF04A';
-const BLUE = '#3DA9FF';
+const BLUE = '#FF8A00';
 const BLUE_HI = '#7CC4FF';
 const TEXT = '#FFFFFF';
 const MUTED = '#D7DEE8';

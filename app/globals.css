@@ -52,17 +52,17 @@
   --gold-soft: var(--brand-primary-12);
   --gold-ring: var(--brand-primary-35);
   /* Status palette — one bright neon-on-black family (lib/status-colors.ts). */
-  --status-overdue: #FF4D5E;
-  --status-lead: #3DA9FF;
-  --status-under-contract: #FFC53D;
-  --status-ongoing: #2EE59D;
-  --status-completed: #FF8A3D;
+  --status-overdue: #FF3B30;
+  --status-lead: #FF8A00;
+  --status-under-contract: #FFE600;
+  --status-ongoing: #2CFF7A;
+  --status-completed: #FF8A00;
   --status-closed: #A3ACBB;
   /* Semantic — same family. Info is blue, never the brand yellow. */
-  --info: #3DA9FF;
-  --success: #2EE59D;
-  --danger: #FF4D5E;
-  --warning: #FFC53D;
+  --info: #FF8A00;
+  --success: #2CFF7A;
+  --danger: #FF3B30;
+  --warning: #FFE600;
   /* Elevation — deeper shadows read on dark */
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.30);
   --shadow-md: 0 4px 14px rgba(0,0,0,0.38);
@@ -458,10 +458,10 @@ input::placeholder, textarea::placeholder {
 }
 
 /* Status badge colors — the one neon-on-black status family (lib/status-colors.ts). */
-.badge-green { background: rgba(46,229,157,0.16); color: #2EE59D; border: 1px solid rgba(46,229,157,0.50); }
-.badge-gold { background: rgba(255,197,61,0.16); color: #FFC53D; border: 1px solid rgba(255,197,61,0.50); }
-.badge-red { background: rgba(255,77,94,0.16); color: #FF4D5E; border: 1px solid rgba(255,77,94,0.50); }
-.badge-blue { background: rgba(61,169,255,0.16); color: #3DA9FF; border: 1px solid rgba(61,169,255,0.50); }
+.badge-green { background: rgba(44,255,122,0.16); color: #2CFF7A; border: 1px solid rgba(44,255,122,0.50); }
+.badge-gold { background: rgba(255,230,0,0.16); color: #FFE600; border: 1px solid rgba(255,230,0,0.50); }
+.badge-red { background: rgba(255,59,48,0.16); color: #FF3B30; border: 1px solid rgba(255,59,48,0.50); }
+.badge-blue { background: rgba(255,138,0,0.16); color: #FF8A00; border: 1px solid rgba(255,138,0,0.50); }
 .badge-purple { background: rgba(176,140,255,0.16); color: #B08CFF; border: 1px solid rgba(176,140,255,0.50); }
 .badge-gray { background: rgba(163,172,187,0.16); color: #A3ACBB; border: 1px solid rgba(163,172,187,0.45); }
 [class^="badge-"] {
@@ -908,8 +908,8 @@ input:-webkit-autofill:focus {
 .k-btn-secondary:hover { background: rgba(255,255,255,0.11); border-color: var(--border-strong); color: var(--text-primary); }
 .k-btn-ghost { background: transparent; color: var(--text-primary); }
 .k-btn-ghost:hover { background: rgba(255,255,255,0.06); color: var(--text-primary); border-color: transparent; }
-.k-btn-danger { background: rgba(255,77,94,0.14); color: #FF4D5E; border-color: rgba(255,77,94,0.45); }
-.k-btn-danger:hover { background: rgba(255,77,94,0.24); border-color: rgba(255,77,94,0.65); color: #FF7A87; }
+.k-btn-danger { background: rgba(255,59,48,0.14); color: #FF3B30; border-color: rgba(255,59,48,0.45); }
+.k-btn-danger:hover { background: rgba(255,59,48,0.24); border-color: rgba(255,59,48,0.65); color: #FF7A87; }
 .k-icon-btn { width: 30px; padding: 0; }
 
 /* Card */
@@ -928,23 +928,20 @@ button.k-stat { text-align: left; font: inherit; }
 .k-stat-label { font-size: var(--fs-xs); font-weight: 600; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .k-stat-value { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; color: var(--text-primary); font-variant-numeric: tabular-nums; line-height: 1.25; }
 .k-stat-sub { font-size: var(--fs-xs); color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* ── Neon lift (owner 2026-10-03: "neon bright colors", no flat dark boxes) ──
-   Decorative accents only — kept apart from the red/amber/green status palette.
-   Stat tiles cycle through the neon set; cards get a lit top edge and a header
-   rule that fades out of neon. Source of truth for the hexes: lib/neon.ts. */
-:root { --neon-yellow: #FFE600; --neon-cyan: #22E5FF; --neon-magenta: #FF4FD8; --neon-violet: #B388FF; --neon-sky: #5AC8FF; --neon-lime: #C6FF3D; }
-.k-stat { --lit: var(--neon-yellow); position: relative; border-top: 2px solid var(--lit); border-color: color-mix(in srgb, var(--lit) 30%, transparent); border-top-color: var(--lit); background: linear-gradient(165deg, color-mix(in srgb, var(--lit) 16%, transparent) 0%, color-mix(in srgb, var(--lit) 4%, transparent) 55%, rgba(255,255,255,0.03) 100%), var(--bg-surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--lit) 18%, transparent), 0 10px 32px -14px color-mix(in srgb, var(--lit) 55%, transparent), var(--glass-highlight); }
-.k-stat:nth-child(6n+2) { --lit: var(--neon-cyan); }
-.k-stat:nth-child(6n+3) { --lit: var(--neon-magenta); }
-.k-stat:nth-child(6n+4) { --lit: var(--neon-violet); }
-.k-stat:nth-child(6n+5) { --lit: var(--neon-sky); }
-.k-stat:nth-child(6n+6) { --lit: var(--neon-lime); }
-.k-stat .k-stat-value { color: var(--lit); text-shadow: 0 0 14px color-mix(in srgb, var(--lit) 45%, transparent); }
-.k-stat .k-stat-label { color: color-mix(in srgb, var(--lit) 65%, #FFFFFF); font-weight: 700; }
-a.k-stat:hover, button.k-stat:hover { border-color: var(--lit); background: linear-gradient(165deg, color-mix(in srgb, var(--lit) 24%, transparent), color-mix(in srgb, var(--lit) 8%, transparent)), var(--bg-surface-2); }
-.k-card { border-top: 2px solid color-mix(in srgb, var(--neon-yellow) 70%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--neon-yellow) 5%, transparent), transparent 120px), var(--bg-surface); }
-.k-card-head { border-bottom: 1px solid transparent; border-image: linear-gradient(90deg, var(--neon-yellow), var(--neon-cyan) 40%, transparent) 1; }
-.k-card-title { background: linear-gradient(90deg, #FFFFFF 0%, #FFFFFF 55%, var(--neon-yellow) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* ── Professional card lift (owner 2026-10-03, revised: no rainbow) ──────────
+   One accent — brand yellow — as a thin top edge; raised charcoal surface;
+   bold white figures; grey labels. Status colors stay for status only. */
+.k-stat { border-top: 2px solid color-mix(in srgb, var(--brand-primary) 80%, transparent); background: linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.03)), var(--bg-surface); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 12px 28px -18px rgba(0,0,0,0.9); }
+.k-stat .k-stat-value { color: var(--text-primary); }
+.k-stat .k-stat-label { color: var(--text-secondary); font-weight: 700; }
+a.k-stat:hover, button.k-stat:hover { border-color: var(--border-strong); border-top-color: var(--brand-primary); background: linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.045)), var(--bg-surface-2); }
+.k-card { border-top: 2px solid color-mix(in srgb, var(--brand-primary) 70%, transparent); background: linear-gradient(180deg, rgba(255,255,255,0.04), transparent 120px), var(--bg-surface); }
+.k-card-head { border-bottom: 1px solid var(--border-subtle); }
+/* Job palette (owner 2026-10-03): black + neon yellow + neon orange + neon green.
+   Card titles and row titles use ONE title color — never white or grey. */
+:root { --title-color: var(--brand-primary); --accent-orange: #FF8A00; --accent-green: #2CFF7A; --danger-red: #FF3B30; }
+.k-card-title { color: var(--title-color); }
+.k-table td:first-child { color: var(--title-color); font-weight: 700; }
 
 /* Badge */
 .k-badge { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 9px; border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: normal; white-space: nowrap; border: 1px solid; line-height: 1; }
@@ -986,8 +983,8 @@ a.k-stat:hover, button.k-stat:hover { border-color: var(--lit); background: line
 .k-menu-list { position: fixed; z-index: 10002; /* portal'd to body — above modals and the chat widget */ min-width: 180px; padding: 4px; background: var(--bg-elevated); backdrop-filter: blur(20px) saturate(150%); -webkit-backdrop-filter: blur(20px) saturate(150%); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); }
 .k-menu-item { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border-radius: 6px; font-size: var(--fs-sm); color: var(--text-secondary); cursor: pointer; white-space: nowrap; }
 .k-menu-item:hover, .k-menu-item:focus-visible { background: rgba(255,255,255,0.07); color: var(--text-primary); }
-.k-menu-item[data-tone="danger"] { color: #FF4D5E; }
-.k-menu-item[data-tone="danger"]:hover { background: rgba(255,77,94,0.14); }
+.k-menu-item[data-tone="danger"] { color: #FF3B30; }
+.k-menu-item[data-tone="danger"]:hover { background: rgba(255,59,48,0.14); }
 .k-menu-sep { height: 1px; margin: 4px 2px; background: var(--border-subtle); }
 
 /* Action bar — the detail-page counterpart of RowActions */
@@ -998,7 +995,7 @@ a.k-stat:hover, button.k-stat:hover { border-color: var(--lit); background: line
 .k-label { font-size: var(--fs-xs); font-weight: 700; color: var(--text-secondary); }
 .k-label .k-req { color: var(--brand-primary); margin-left: 2px; }
 .k-hint { font-size: var(--fs-xs); color: var(--text-tertiary); }
-.k-error { font-size: var(--fs-xs); color: #FF4D5E; }
+.k-error { font-size: var(--fs-xs); color: #FF3B30; }
 .k-input, .k-textarea, select.k-select { width: 100%; min-height: 40px; padding: 8px 12px; font-size: var(--fs-md); font-weight: 500; color: var(--text-primary); background-color: var(--bg-surface-2); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--border-default); border-radius: var(--radius-sm); }
 select.k-select { padding-right: 36px; }
 .k-textarea { min-height: 96px; resize: vertical; line-height: 1.5; }
@@ -1007,7 +1004,7 @@ select.k-select { padding-right: 36px; }
 .k-input, .k-textarea, select.k-select { background-color: var(--bg-surface-2) !important; font-size: var(--fs-md) !important; }
 /* Placeholder must read as a hint, not as a typed value. */
 .k-input::placeholder, .k-textarea::placeholder { color: var(--text-disabled) !important; -webkit-text-fill-color: var(--text-disabled) !important; font-weight: 400; }
-.k-input[aria-invalid="true"], .k-textarea[aria-invalid="true"], select.k-select[aria-invalid="true"] { border-color: rgba(255,77,94,0.7); }
+.k-input[aria-invalid="true"], .k-textarea[aria-invalid="true"], select.k-select[aria-invalid="true"] { border-color: rgba(255,59,48,0.7); }
 .k-form-grid { display: grid; gap: var(--sp-4); grid-template-columns: repeat(var(--k-cols, 2), minmax(0, 1fr)); }
 .k-form-grid > .k-span-all { grid-column: 1 / -1; }
 .k-form-section { font-size: 13px; font-weight: 700; letter-spacing: normal; color: var(--text-secondary); padding-bottom: 6px; border-bottom: 1px solid var(--border-subtle); grid-column: 1 / -1; }

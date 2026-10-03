@@ -112,7 +112,7 @@ export default function ProjectDirectory() {
           instead of asking for them again.
         </p>
 
-        {error && <p style={{ color: '#EF4444', fontSize: 13.5 }}>{error}</p>}
+        {error && <p style={{ color: '#FF3B30', fontSize: 13.5 }}>{error}</p>}
 
         {!adding && (
           <button

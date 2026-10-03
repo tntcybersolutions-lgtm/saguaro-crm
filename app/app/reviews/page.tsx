@@ -11,7 +11,7 @@ import { humanError } from '@/lib/errors';
 import { fmtDate as fmtDateSafe } from '@/lib/format-date';
 
 const BG = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
-const TEXT = '#FFFFFF', DIM = '#CBD5E1', GOLD = 'var(--brand-primary)', GREEN = '#22C55E';
+const TEXT = '#FFFFFF', DIM = '#CBD5E1', GOLD = 'var(--brand-primary)', GREEN = '#2CFF7A';
 
 type Review = {
   id: string; reviewer_name: string | null; rating: number; body: string | null;

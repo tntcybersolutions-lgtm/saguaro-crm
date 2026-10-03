@@ -124,7 +124,7 @@ export default function PeopleAccessHub() {
           },
           {href: '/app/people', 
             label: 'Pending Invites', value: String(snap.invites),
-            accent: snap.expired > 0 ? '#ef4444' : snap.invites > 0 ? 'var(--brand-primary-strong)' : undefined,
+            accent: snap.expired > 0 ? '#FF3B30' : snap.invites > 0 ? 'var(--brand-primary-strong)' : undefined,
             sub: snap.expired > 0 ? `${snap.expired} expired — resend from Users` : snap.invites > 0 ? 'Invites expire after 7 days' : 'None outstanding',
           },
           {href: '/app/people', label: 'Crew Directory', value: String(snap.crew), sub: snap.crew > 0 ? `${snap.osha} OSHA certified` : 'Add employees in Directory' },

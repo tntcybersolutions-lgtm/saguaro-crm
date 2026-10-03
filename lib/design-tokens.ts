@@ -42,11 +42,11 @@ export const colors = {
   textFaint:  '#7A8597',
 
   // Semantic — the same neon-on-black family as lib/status-colors.ts.
-  green:      '#2EE59D',
-  red:        '#FF4D5E',
-  orange:     '#FF8A3D',
-  amber:      '#FFC53D',
-  blue:       '#3DA9FF',
+  green:      '#2CFF7A',
+  red:        '#FF3B30',
+  orange:     '#FF8A00',
+  amber:      '#FFE600',
+  blue:       '#FF8A00',
 
   white:      '#ffffff',
   black:      '#000000',

@@ -15,8 +15,8 @@ const GOLD  = 'var(--brand-primary)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM   = '#CBD5E1';
 const TEXT  = '#FFFFFF';
-const GREEN = '#22c55e';
-const RED   = '#ef4444';
+const GREEN = '#2CFF7A';
+const RED   = '#FF3B30';
 // Premium-surface field styling — legible on the aurora/glass backdrop.
 const FIELD_BG = 'rgba(0,0,0,0.22)';
 
@@ -466,7 +466,7 @@ export default function SettingsPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                   <input
                     type="color"
-                    value={previewColor === GOLD && !branding.primary_color ? '#F59E0B' : previewColor}
+                    value={previewColor === GOLD && !branding.primary_color ? '#FF8A00' : previewColor}
                     onChange={e => setBranding(b => ({ ...b, primary_color: e.target.value }))}
                     style={{ width: 48, height: 40, border: `1px solid ${BORDER}`, borderRadius: 8, background: 'none', cursor: 'pointer', padding: 2 }}
                     aria-label="Brand color"
@@ -475,7 +475,7 @@ export default function SettingsPage() {
                     type="text"
                     value={branding.primary_color}
                     onChange={e => setBranding(b => ({ ...b, primary_color: e.target.value }))}
-                    placeholder="#F59E0B"
+                    placeholder="#FF8A00"
                     style={{ ...inputStyle, width: 130 }}
                   />
                   {branding.primary_color

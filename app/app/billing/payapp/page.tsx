@@ -14,7 +14,7 @@ import { Plus, DownloadSimple, CheckCircle, FloppyDisk, Receipt, Calculator, Lis
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 import { openPdf } from '@/components/PdfViewer';
 
-const PANEL = 'var(--bg-surface-2)', LINE = 'rgba(255,255,255,0.09)', GOLD = 'var(--brand-primary)', TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#34D399';
+const PANEL = 'var(--bg-surface-2)', LINE = 'rgba(255,255,255,0.09)', GOLD = 'var(--brand-primary)', TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#2CFF7A';
 const uid = () => Math.random().toString(36).slice(2, 9);
 const c = (dollars: string) => Math.round((parseFloat(dollars) || 0) * 100);
 const d = (cents: number) => (cents / 100).toFixed(2);
@@ -145,10 +145,10 @@ export default function PayAppPage() {
     w.document.write(`<!doctype html><html><head><title>Application ${appNo} — ${proj}</title><style>
       body{font-family:-apple-system,system-ui,sans-serif;color:#111;margin:0;padding:24px}
       .band{background:linear-gradient(100deg,#0a0a0a,#161b22);color:#fff;padding:16px 22px;border-radius:4px;display:flex;justify-content:space-between;align-items:center}
-      .tag{color:#F59E0B;font-size:10px;letter-spacing:1.4px;font-weight:700;text-transform:uppercase}
-      h1{font-size:17px;margin:2px 0 0} h2{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#333;border-bottom:2px solid #F59E0B;padding-bottom:4px;display:inline-block;margin:20px 0 8px}
+      .tag{color:#FF8A00;font-size:10px;letter-spacing:1.4px;font-weight:700;text-transform:uppercase}
+      h1{font-size:17px;margin:2px 0 0} h2{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#333;border-bottom:2px solid #FF8A00;padding-bottom:4px;display:inline-block;margin:20px 0 8px}
       table{width:100%;border-collapse:collapse;font-size:11px} td,th{border:1px solid #ccc;padding:5px 6px}.r{text-align:right}
-      th{background:#f4f4f6;font-size:9.5px;text-transform:uppercase} .g702 td{border:none;padding:5px 8px;font-size:13px}.g702 tr:nth-child(8){font-weight:800;background:rgba(245,158,11,.12)}
+      th{background:#f4f4f6;font-size:9.5px;text-transform:uppercase} .g702 td{border:none;padding:5px 8px;font-size:13px}.g702 tr:nth-child(8){font-weight:800;background:rgba(255,138,0,.12)}
       .meta{font-size:12px;color:#444;margin:10px 0}
     </style></head><body>
       <div class=band><div><div class=tag>Saguaro Control Systems</div><h1>Application &amp; Certificate for Payment (AIA G702/G703)</h1></div><div style="text-align:right"><div>Application No. <b>${appNo}</b></div><div style="font-size:12px">${period || new Date().toLocaleDateString()}</div></div></div>

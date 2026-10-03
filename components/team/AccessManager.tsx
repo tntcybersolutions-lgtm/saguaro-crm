@@ -13,12 +13,12 @@ const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const TEXT = '#FFFFFF';
 const DIM = '#CBD5E1';
-const GREEN = '#22C55E';
-const RED = '#EF4444';
+const GREEN = '#2CFF7A';
+const RED = '#FF3B30';
 const AMBER = 'var(--warning)';
 const BLUE = 'var(--brand-primary)';
-const ROLE_HEX = '#F59E0B'; // stored role color value (sent to the API) — must stay hex
-const PURPLE = '#8B5CF6';
+const ROLE_HEX = '#FF8A00'; // stored role color value (sent to the API) — must stay hex
+const PURPLE = '#FF8A00';
 
 /* ── types ── */
 type PermLevel = 'None' | 'View' | 'Edit' | 'Full';
@@ -75,7 +75,7 @@ const ROLE_PRESETS: { name: string; desc: string; color: string; perms: Permissi
       if (['Projects','Budget','Change Orders','Pay Apps','Reports'].includes(c)) return [c, 'View' as PermLevel];
       return [c, 'None' as PermLevel];
     })) },
-  { name: 'Foreman', desc: 'Daily field reporting and crew management.', color: '#F97316',
+  { name: 'Foreman', desc: 'Daily field reporting and crew management.', color: '#FF8A00',
     perms: Object.fromEntries(CATEGORIES.map(c => {
       if (['Safety','Schedule'].includes(c)) return [c, 'Edit' as PermLevel];
       if (['Projects','Documents','RFIs','Submittals','Reports'].includes(c)) return [c, 'View' as PermLevel];
@@ -91,7 +91,7 @@ const ROLE_PRESETS: { name: string; desc: string; color: string; perms: Permissi
     perms: Object.fromEntries(CATEGORIES.map(c => [c, 'View' as PermLevel])) },
 ];
 
-const ROLE_COLORS = [ROLE_HEX, ROLE_HEX, GREEN, RED, ROLE_HEX, PURPLE, '#EC4899', '#14B8A6', '#F97316'];
+const ROLE_COLORS = [ROLE_HEX, ROLE_HEX, GREEN, RED, ROLE_HEX, PURPLE, '#FF8A00', '#2CFF7A', '#FF8A00'];
 
 /* ── view types for the two lightweight lookup lists ── */
 interface TenantUser {
@@ -1551,7 +1551,7 @@ export function AccessManager() {
         <div style={{ marginBottom: 16 }}>
           <label style={labelStyle()}>Email</label>
           <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)}
-            placeholder="name@company.com" style={{ ...inputStyle(), borderColor: inviteEmailTrim && !inviteEmailValid ? 'rgba(239,68,68,0.55)' : BORDER }} />
+            placeholder="name@company.com" style={{ ...inputStyle(), borderColor: inviteEmailTrim && !inviteEmailValid ? 'rgba(255,59,48,0.55)' : BORDER }} />
           {inviteEmailTrim && !inviteEmailValid && (
             <p style={{ color: RED, fontSize: 11, marginTop: 4, marginBottom: 0 }}>Enter a valid email address — the invite link is delivered there.</p>
           )}

@@ -20,7 +20,7 @@ import { ScribbleNote, ScribbleArrow } from './Scribble';
 
 const GOLD = 'var(--brand-primary)';
 const GOLD_SOFT = 'var(--brand-primary-12)';
-const GREEN = '#34C759';
+const GREEN = '#2CFF7A';
 const TEXT = '#FFFFFF';
 const DIM = '#CBD5E1';
 const MUTED = 'rgba(203,213,225,0.55)';
@@ -333,7 +333,7 @@ export default function GetStartedTour() {
                             style={{
                               display: 'flex', alignItems: 'center', gap: 8,
                               background: 'rgba(255,255,255,0.03)',
-                              border: '1px solid ' + (filled ? 'rgba(52,199,89,0.4)' : p > 0 ? 'color-mix(in srgb, var(--brand-primary) 50%, transparent)' : LINE),
+                              border: '1px solid ' + (filled ? 'rgba(44,255,122,0.4)' : p > 0 ? 'color-mix(in srgb, var(--brand-primary) 50%, transparent)' : LINE),
                               borderRadius: 9, padding: '10px 12px', minHeight: 40,
                               transition: 'border-color .25s',
                             }}

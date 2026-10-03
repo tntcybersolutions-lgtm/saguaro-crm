@@ -141,9 +141,9 @@ export default function BrandingPage() {
           <div style={{
             display: 'flex', alignItems: 'center', gap: 9, padding: '11px 14px', borderRadius: 10,
             marginBottom: 18, fontSize: 13.5, fontWeight: 600,
-            background: msg.ok ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
-            border: `1px solid ${msg.ok ? 'rgba(34,197,94,0.4)' : 'rgba(239,68,68,0.4)'}`,
-            color: msg.ok ? '#4ADE80' : '#F87171',
+            background: msg.ok ? 'rgba(44,255,122,0.12)' : 'rgba(255,59,48,0.12)',
+            border: `1px solid ${msg.ok ? 'rgba(44,255,122,0.4)' : 'rgba(255,59,48,0.4)'}`,
+            color: msg.ok ? '#2CFF7A' : '#FF3B30',
           }}>
             {msg.ok ? <CheckCircle size={16} weight="fill" /> : <Warning size={16} weight="fill" />}
             {msg.text}
@@ -317,8 +317,8 @@ export default function BrandingPage() {
             <SectionCard
               title={theme.fixes.length ? 'We Adjusted a Few Things' : 'Everything Is Readable'}
               icon={theme.fixes.length
-                ? <Warning size={17} weight="duotone" color="#FB923C" />
-                : <CheckCircle size={17} weight="duotone" color="#4ADE80" />}
+                ? <Warning size={17} weight="duotone" color="#FF8A00" />
+                : <CheckCircle size={17} weight="duotone" color="#2CFF7A" />}
             >
               {theme.fixes.length === 0 ? (
                 <p style={{ fontSize: 13, color: '#C6D6E8', lineHeight: 1.6, margin: 0 }}>
@@ -345,7 +345,7 @@ export default function BrandingPage() {
                           <span style={{ fontFamily: 'ui-monospace, monospace' }}>{f.to}</span>
                         </div>
                         <div style={{ fontSize: 11.5, color: DIM, marginTop: 5 }}>
-                          Readability {f.was}:1 → <strong style={{ color: '#4ADE80' }}>{f.now}:1</strong>
+                          Readability {f.was}:1 → <strong style={{ color: '#2CFF7A' }}>{f.now}:1</strong>
                           {' '}(needs {AA_TEXT}:1)
                         </div>
                       </div>
@@ -355,7 +355,7 @@ export default function BrandingPage() {
               )}
 
               {rawRisk !== null && rawRisk < 2 && (
-                <div style={{ marginTop: 12, fontSize: 12.5, color: '#FB923C', lineHeight: 1.55 }}>
+                <div style={{ marginTop: 12, fontSize: 12.5, color: '#FF8A00', lineHeight: 1.55 }}>
                   Your brand color and your background are very close to each other. We can keep
                   the text readable, but buttons will be hard to pick out. Try a lighter or darker
                   background above.

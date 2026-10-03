@@ -12,8 +12,8 @@ const C = {
   dim: '#CBD5E1',
   border: 'rgba(255,255,255,0.12)',
   raised: 'var(--bg-surface)',
-  green: '#22c55e',
-  red: '#ef4444',
+  green: '#2CFF7A',
+  red: '#FF3B30',
 };
 
 const HAIR = 'rgba(255,255,255,0.08)';
@@ -416,7 +416,7 @@ export default function CompareProcorePage() {
                 <div style={{
                   padding: '16px 24px',
                   borderLeft: `1px solid ${HAIR}`,
-                  background: saguaroGood ? 'rgba(34,197,94,0.04)' : undefined,
+                  background: saguaroGood ? 'rgba(44,255,122,0.04)' : undefined,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -689,8 +689,8 @@ export default function CompareProcorePage() {
                 </p>
                 {activeDeep === idx && (
                   <div style={{
-                    background: 'rgba(239,68,68,0.05)',
-                    border: `1px solid rgba(239,68,68,0.15)`,
+                    background: 'rgba(255,59,48,0.05)',
+                    border: `1px solid rgba(255,59,48,0.15)`,
                     borderRadius: 8,
                     padding: '14px 16px',
                   }}>
@@ -829,8 +829,8 @@ export default function CompareProcorePage() {
         <div style={{
           maxWidth: 900,
           margin: '24px auto 0',
-          background: 'rgba(34,197,94,0.08)',
-          border: `1px solid rgba(34,197,94,0.25)`,
+          background: 'rgba(44,255,122,0.08)',
+          border: `1px solid rgba(44,255,122,0.25)`,
           borderRadius: 12,
           padding: '20px 28px',
           display: 'flex',

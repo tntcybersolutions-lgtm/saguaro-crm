@@ -23,7 +23,7 @@ import { PremiumSurface, ModuleHero, SectionCard, StatStrip, FlowSteps, InsightR
 import { moduleAccent } from '@/lib/module-identity';
 
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1', TEXT = '#FFFFFF', GREEN = '#3dd68c', RED = '#ef4444';
+const DIM = '#CBD5E1', TEXT = '#FFFFFF', GREEN = '#2CFF7A', RED = '#FF3B30';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const TZ = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { return 'UTC'; } })();
 const localDay = (d = new Date()) => { const o = d.getTimezoneOffset() * 60000; return new Date(d.getTime() - o).toISOString().slice(0, 10); };
@@ -368,7 +368,7 @@ export default function TimeClockPage() {
                   <div key={d.date} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '5px 0', fontSize: 13 }}>
                     <span style={{ width: 110, flexShrink: 0 }}>{fmtDate(d.date)}</span>
                     <div style={{ flex: 1, height: 6, borderRadius: 999, background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${Math.min(100, (hrs / 10) * 100)}%`, borderRadius: 999, background: hrs > 8 ? `linear-gradient(90deg,${GOLD},var(--brand-primary-strong))` : 'rgba(61,214,140,0.75)' }} />
+                      <div style={{ height: '100%', width: `${Math.min(100, (hrs / 10) * 100)}%`, borderRadius: 999, background: hrs > 8 ? `linear-gradient(90deg,${GOLD},var(--brand-primary-strong))` : 'rgba(44,255,122,0.75)' }} />
                     </div>
                     <span style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums', width: 56, textAlign: 'right' }}>{fmtHours(d.hours)}</span>
                   </div>

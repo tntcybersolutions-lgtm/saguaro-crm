@@ -12,7 +12,7 @@ import { openPdf } from '@/components/PdfViewer';
 
 const GOLD='var(--brand-primary)', DARK='var(--bg-base)',
       BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF',
-      GREEN='#22c55e', RED='#ef4444', ORANGE='#f97316', BLUE='var(--brand-primary-strong)';
+      GREEN='#2CFF7A', RED='#FF3B30', ORANGE='#FF8A00', BLUE='var(--brand-primary-strong)';
 
 const fmt  = (n:number) => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n||0);
 const fmt2 = (n:number) => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2}).format(n||0);
@@ -20,10 +20,10 @@ const fmtDate = (s:string|null|undefined) => s ? new Date(s+'T12:00:00').toLocal
 
 const STATUS_META: Record<string,{label:string;color:string;bg:string;next?:string;nextLabel?:string}> = {
   draft:     {label:'Draft',     color:'#CBD5E1', bg:'rgba(148,163,184,.15)', next:'submitted',  nextLabel:'Submit to Owner'},
-  submitted: {label:'Submitted', color:BLUE,      bg:'rgba(96,165,250,.15)',  next:'approved',   nextLabel:'Approve'},
-  approved:  {label:'Approved',  color:GREEN,     bg:'rgba(34,197,94,.15)',   next:'certified',  nextLabel:'Certify'},
+  submitted: {label:'Submitted', color:BLUE,      bg:'rgba(255,138,0,.15)',  next:'approved',   nextLabel:'Approve'},
+  approved:  {label:'Approved',  color:GREEN,     bg:'rgba(44,255,122,.15)',   next:'certified',  nextLabel:'Certify'},
   certified: {label:'Certified', color:GOLD,      bg:'var(--brand-primary-18)', next:'paid',       nextLabel:'Mark Paid'},
-  paid:      {label:'Paid',      color:'#a78bfa', bg:'rgba(167,139,250,.15)'},
+  paid:      {label:'Paid',      color:'#FF8A00', bg:'rgba(255,138,0,.15)'},
 };
 
 interface SovLine {
@@ -375,7 +375,7 @@ export default function PayAppDetailPage() {
     <>
       {/* Toast */}
       {toast && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 99999, padding: '12px 22px', borderRadius: 10, background: toast.type === 'success' ? 'rgba(34,197,94,.92)' : 'rgba(239,68,68,.92)', color: '#fff', fontWeight: 700, fontSize: 14, boxShadow: '0 4px 24px rgba(0,0,0,.5)', pointerEvents: 'none' }}>
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 99999, padding: '12px 22px', borderRadius: 10, background: toast.type === 'success' ? 'rgba(44,255,122,.92)' : 'rgba(255,59,48,.92)', color: '#fff', fontWeight: 700, fontSize: 14, boxShadow: '0 4px 24px rgba(0,0,0,.5)', pointerEvents: 'none' }}>
           {toast.type === 'success'
             ? <CheckCircle size={15} weight="fill" color="#fff" style={{ verticalAlign: 'middle', marginRight: 6 }} />
             : <XCircle size={15} weight="fill" color="#fff" style={{ verticalAlign: 'middle', marginRight: 6 }} />}{toast.msg}
@@ -424,7 +424,7 @@ export default function PayAppDetailPage() {
                   Cancel
                 </button>
                 <button onClick={saveEdits} disabled={saving}
-                  style={{ ...goldButtonStyle, background: 'linear-gradient(135deg, #22c55e, #45B37D)', color: '#08240f', cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.75 : 1 }} className="pmBtn">
+                  style={{ ...goldButtonStyle, background: 'linear-gradient(135deg, #2CFF7A, #2CFF7A)', color: '#08240f', cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.75 : 1 }} className="pmBtn">
                   {saving ? 'Saving…' : <><FloppyDisk size={15} weight="bold" /> Save Changes</>}
                 </button>
               </>
@@ -447,7 +447,7 @@ export default function PayAppDetailPage() {
           style={{ marginBottom: 20 }}
         >
           <div style={{ height: 10, background: 'rgba(255,255,255,0.06)', borderRadius: 999, overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${Math.min(100, completePct)}%`, background: `linear-gradient(90deg, ${GOLD}, #22c55e)`, borderRadius: 999, transition: 'width .6s ease' }} />
+            <div style={{ height: '100%', width: `${Math.min(100, completePct)}%`, background: `linear-gradient(90deg, ${GOLD}, #2CFF7A)`, borderRadius: 999, transition: 'width .6s ease' }} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, fontSize: 12, color: DIM, flexWrap: 'wrap', gap: 8 }}>
             <span>Contract: {fmt(contractToDate)}</span>
@@ -647,11 +647,11 @@ export default function PayAppDetailPage() {
                   {timeline.map((step, i) => (
                     <div key={step.label} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', paddingBottom: i < timeline.length - 1 ? 14 : 0 }}>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <div style={{ width: 28, height: 28, borderRadius: '50%', background: step.done ? 'rgba(34,197,94,.15)' : 'rgba(255,255,255,0.05)', border: `1px solid ${step.done ? 'rgba(34,197,94,.4)' : BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}>
+                        <div style={{ width: 28, height: 28, borderRadius: '50%', background: step.done ? 'rgba(44,255,122,.15)' : 'rgba(255,255,255,0.05)', border: `1px solid ${step.done ? 'rgba(44,255,122,.4)' : BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}>
                           {step.done ? <CheckCircle size={16} weight="fill" color={GREEN} /> : step.icon}
                         </div>
                         {i < timeline.length - 1 && (
-                          <div style={{ width: 1, flex: 1, background: step.done ? 'rgba(34,197,94,.3)' : BORDER, minHeight: 14 }} />
+                          <div style={{ width: 1, flex: 1, background: step.done ? 'rgba(44,255,122,.3)' : BORDER, minHeight: 14 }} />
                         )}
                       </div>
                       <div style={{ paddingTop: 4 }}>

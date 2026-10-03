@@ -15,7 +15,7 @@ import {
 } from '@phosphor-icons/react';
 
 const C = {
-  gold: 'var(--brand-primary)', green: '#34C759', yellow: '#FF9500', red: '#FF3B30', blue: 'var(--brand-primary)',
+  gold: 'var(--brand-primary)', green: '#2CFF7A', yellow: '#FF8A00', red: '#FF3B30', blue: 'var(--brand-primary)',
   bg: 'var(--bg-base)', card: 'var(--bg-surface)', border: 'rgba(255,255,255,0.12)', dim: '#CBD5E1', text: '#FFFFFF',
 };
 const STATUS_COLOR: Record<HealthStatus, string> = { green: C.green, yellow: C.yellow, red: C.red };

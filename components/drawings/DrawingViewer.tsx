@@ -37,9 +37,9 @@ const CANVAS_BG = '#0b0e13';
 const ACCENT = 'var(--brand-primary)';
 const ACCENT_12 = 'var(--brand-primary-12, var(--brand-primary-12))';
 const ACCENT_25 = 'var(--brand-primary-25, var(--brand-primary-25))';
-const RED = '#EF4444', GREEN = '#22C55E', AMBER = 'var(--warning)';
-const INK_COLORS = ['#EF4444', '#F97316', '#FBBF24', '#22C55E', '#38BDF8', '#A78BFA', '#EC4899', '#FFFFFF'];
-const CATEGORY_COLORS: Record<string, string> = { RFI: '#38BDF8', Punch: '#EF4444', Safety: '#FBBF24', Other: '#CBD5E1' };
+const RED = '#FF3B30', GREEN = '#2CFF7A', AMBER = 'var(--warning)';
+const INK_COLORS = ['#FF3B30', '#FF8A00', '#FFE600', '#2CFF7A', '#FF8A00', '#FF8A00', '#FF8A00', '#FFFFFF'];
+const CATEGORY_COLORS: Record<string, string> = { RFI: '#FF8A00', Punch: '#FF3B30', Safety: '#FFE600', Other: '#CBD5E1' };
 
 const PDF_LONG_EDGE = 2600;   // crisp raster for plan sheets
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
@@ -47,9 +47,9 @@ const uid = () => 'local-' + Math.random().toString(36).slice(2, 10) + Date.now(
 
 /* Resolve the live brand accent for canvas painting (canvas can't read CSS vars). */
 function brandHex(): string {
-  if (typeof window === 'undefined') return '#F59E0B';
+  if (typeof window === 'undefined') return '#FF8A00';
   const v = getComputedStyle(document.documentElement).getPropertyValue('--brand-primary').trim();
-  return v || '#F59E0B';
+  return v || '#FF8A00';
 }
 
 /* ── thin-line CAD glyphs (crisp vector, never emoji) ───────────────────── */
@@ -770,7 +770,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
       const data = (row.data && typeof row.data === 'object') ? (row.data as Record<string, unknown>) : {};
       pastRef.current = [...pastRef.current.slice(-49), {
         t: 'del', localId: row.id,
-        payload: { markup_type: row.markup_type, data, color: row.color || (p.mode === 'canonical' ? p.data.style.color : '#EF4444'), page_number: row.page_number },
+        payload: { markup_type: row.markup_type, data, color: row.color || (p.mode === 'canonical' ? p.data.style.color : '#FF3B30'), page_number: row.page_number },
         row,
       }];
       futureRef.current = [];
@@ -1707,7 +1707,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
               title={rtLive ? 'Live — teammate markups land instantly.' : 'Live sync offline — refreshing every 15s.'}
               style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 9, fontWeight: 800, letterSpacing: 0.8, color: rtLive ? GREEN : 'rgba(255,255,255,0.35)', padding: '0 4px' }}
             >
-              <span style={{ width: 7, height: 7, borderRadius: '50%', background: rtLive ? GREEN : 'rgba(255,255,255,0.25)', boxShadow: rtLive ? '0 0 6px rgba(34,197,94,0.8)' : 'none' }} />
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: rtLive ? GREEN : 'rgba(255,255,255,0.25)', boxShadow: rtLive ? '0 0 6px rgba(44,255,122,0.8)' : 'none' }} />
               {rtLive ? 'LIVE' : 'OFFLINE'}
             </span>
             {/* presence chips — who else is on this sheet */}
@@ -1917,7 +1917,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
             top: pendingPin.y * view.scale + view.ty,
             transform: 'translate(-50%, -50%)', width: 20, height: 20, borderRadius: '50%',
             background: RED, border: '2px solid #fff', zIndex: 12, pointerEvents: 'none',
-            boxShadow: '0 0 0 6px rgba(239,68,68,0.25)',
+            boxShadow: '0 0 0 6px rgba(255,59,48,0.25)',
           }} />
         )}
 
@@ -1987,7 +1987,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
       {selMarkup && (
         <div style={{ ...panelStyle, borderColor: ACCENT_25 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 10, height: 10, borderRadius: '50%', background: selMarkup.color || '#EF4444', flexShrink: 0 }} />
+            <div style={{ width: 10, height: 10, borderRadius: '50%', background: selMarkup.color || '#FF3B30', flexShrink: 0 }} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: TEXT, textTransform: 'capitalize' }}>
                 {selMarkup.markup_type}{parsed(selMarkup).mode === 'legacy' ? ' (legacy · read-only)' : ''}
@@ -1997,7 +1997,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
               </p>
             </div>
             {parsed(selMarkup).mode === 'canonical' && (!selMarkup.created_by || selMarkup.created_by === me.id) && (
-              <button onClick={() => deleteMarkup(selMarkup, true)} style={{ ...iconBtn, color: RED, borderColor: 'rgba(239,68,68,0.35)' }} title="Delete markup"><G g="trash" s={15} /></button>
+              <button onClick={() => deleteMarkup(selMarkup, true)} style={{ ...iconBtn, color: RED, borderColor: 'rgba(255,59,48,0.35)' }} title="Delete markup"><G g="trash" s={15} /></button>
             )}
             <button onClick={() => setSelId(null)} style={iconBtn} title="Close"><G g="close" s={15} /></button>
           </div>
@@ -2104,7 +2104,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
       {punchModal && (
         <div style={{ ...panelStyle, border: `1.5px solid ${CATEGORY_COLORS.Punch}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-            <span style={{ background: 'rgba(239,68,68,0.14)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 5, padding: '3px 9px', fontSize: 11, fontWeight: 800, letterSpacing: 1, color: CATEGORY_COLORS.Punch }}>PUNCH</span>
+            <span style={{ background: 'rgba(255,59,48,0.14)', border: '1px solid rgba(255,59,48,0.4)', borderRadius: 5, padding: '3px 9px', fontSize: 11, fontWeight: 800, letterSpacing: 1, color: CATEGORY_COLORS.Punch }}>PUNCH</span>
             <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: TEXT }}>New Punch Item from This Drawing</p>
           </div>
           <label style={{ display: 'block', fontSize: 12, color: DIM, marginBottom: 4 }}>Title *</label>
@@ -2296,7 +2296,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
                       <button
                         onClick={() => revokeShareLink(l.id)}
                         disabled={revokingId === l.id}
-                        style={{ background: 'transparent', border: '1px solid rgba(239,68,68,0.35)', borderRadius: 8, padding: '5px 11px', color: RED, fontSize: 11, fontWeight: 700, cursor: revokingId === l.id ? 'wait' : 'pointer', flexShrink: 0 }}
+                        style={{ background: 'transparent', border: '1px solid rgba(255,59,48,0.35)', borderRadius: 8, padding: '5px 11px', color: RED, fontSize: 11, fontWeight: 700, cursor: revokingId === l.id ? 'wait' : 'pointer', flexShrink: 0 }}
                       >
                         {revokingId === l.id ? '…' : 'Revoke'}
                       </button>

@@ -75,7 +75,7 @@ const CSS = `
 .lv-cov { display: inline-block; margin-left: 8px; font-size: 12px; font-weight: 700; white-space: nowrap; }
 .lv-decide { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--sp-3); }
 .lv-pane { border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: var(--sp-3) var(--sp-4); background: var(--bg-surface-2); min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.lv-pane-rec { border-color: rgba(46,229,157,0.45); }
+.lv-pane-rec { border-color: rgba(44,255,122,0.45); }
 .lv-pane-kicker { font-size: 12px; font-weight: 700; color: var(--text-tertiary); display: inline-flex; align-items: center; gap: 6px; }
 .lv-pane-name { font-size: 16px; font-weight: 700; color: var(--text-primary); overflow-wrap: anywhere; }
 .lv-pane-amt { font-size: 20px; font-weight: 800; color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -286,19 +286,19 @@ function BidLevelingBoard() {
   const exportPdf = () => {
     const w = window.open('', '_blank'); if (!w) return;
     const cell = (t: string, c = '#111') => `<td style="padding:6px 9px;border:1px solid #ccc;text-align:right;color:${c}">${t}</td>`;
-    const head = `<th style="padding:6px 9px;border:1px solid #ccc;background:#141416;color:#fff">${''}</th>` + result.bidders.map((b) => `<th style="padding:6px 9px;border:1px solid #ccc;background:${b.id === rec?.id ? '#1a8a4a' : '#141416'};color:#fff">${b.name}${b.id === rec?.id ? ' ★' : ''}</th>`).join('');
+    const head = `<th style="padding:6px 9px;border:1px solid #ccc;background:#141416;color:#fff">${''}</th>` + result.bidders.map((b) => `<th style="padding:6px 9px;border:1px solid #ccc;background:${b.id === rec?.id ? '#2CFF7A' : '#141416'};color:#fff">${b.name}${b.id === rec?.id ? ' ★' : ''}</th>`).join('');
     const row = (label: string, fn: (b: typeof result.bidders[number]) => string) => `<tr><td style="padding:6px 9px;border:1px solid #ccc;font-weight:600">${label}</td>${result.bidders.map((b) => cell(fn(b))).join('')}</tr>`;
-    const matrix = scopeLines.map((l) => `<tr><td style="padding:5px 9px;border:1px solid #ccc">${l.description}</td>${result.bidders.map((b) => { const it = b.lines.find((s) => s.scopeLineId === l.id); const st: ScopeStatus = (it && it.status !== 'missing') ? it.status : 'excluded'; const col = st === 'included' ? '#1a8a4a' : st === 'excluded' ? '#c03030' : st === 'clarify' ? '#b8860b' : '#D97706'; return `<td style="padding:5px 9px;border:1px solid #ccc;text-align:center;color:${col};font-weight:600">${STL[st]}${it?.valueCents ? ' · ' + usd(it.valueCents) : ''}</td>`; }).join('')}</tr>`).join('');
+    const matrix = scopeLines.map((l) => `<tr><td style="padding:5px 9px;border:1px solid #ccc">${l.description}</td>${result.bidders.map((b) => { const it = b.lines.find((s) => s.scopeLineId === l.id); const st: ScopeStatus = (it && it.status !== 'missing') ? it.status : 'excluded'; const col = st === 'included' ? '#2CFF7A' : st === 'excluded' ? '#FF3B30' : st === 'clarify' ? '#b8860b' : '#FF8A00'; return `<td style="padding:5px 9px;border:1px solid #ccc;text-align:center;color:${col};font-weight:600">${STL[st]}${it?.valueCents ? ' · ' + usd(it.valueCents) : ''}</td>`; }).join('')}</tr>`).join('');
     w.document.write(`<html><head><title>Bid Tabulation</title></head><body style="font-family:Arial;padding:24px;color:#111">
       <h2 style="margin:0">Bid Tabulation</h2><div style="color:#555;font-size:12px;margin-bottom:14px">Leveled — allowances fill scope gaps for apples-to-apples comparison${result.budgetCents ? ` · Budget ${usd(result.budgetCents)}` : ''}</div>
       <table style="border-collapse:collapse;font-size:12px;width:100%"><thead><tr>${head}</tr></thead><tbody>
       ${row('Base Bid', (b) => usd(b.baseBidCents))}${row('+ Gap Allowances', (b) => b.gapAllowanceCents ? '+' + usd(b.gapAllowanceCents) : '—')}${row('+ Alternates', (b) => b.alternatesAdjCents ? usd(b.alternatesAdjCents) : '—')}${row('+ Adjustments', (b) => b.adjustmentsCents ? '+' + usd(b.adjustmentsCents) : '—')}
-      <tr style="font-weight:800"><td style="padding:6px 9px;border:1px solid #ccc">Leveled Total</td>${result.bidders.map((b) => cell(usd(b.leveledTotalCents), b.isLow ? '#1a8a4a' : '#111')).join('')}</tr>
+      <tr style="font-weight:800"><td style="padding:6px 9px;border:1px solid #ccc">Leveled Total</td>${result.bidders.map((b) => cell(usd(b.leveledTotalCents), b.isLow ? '#2CFF7A' : '#111')).join('')}</tr>
       ${result.budgetCents ? row('vs Budget', (b) => (b.vsBudgetCents! > 0 ? '+' : '') + usd(b.vsBudgetCents!) + ` (${b.vsBudgetPct}%)`) : ''}
       </tbody></table>
       <h3 style="margin:18px 0 6px">Scope Coverage</h3>
       <table style="border-collapse:collapse;font-size:11px;width:100%"><thead><tr>${head}</tr></thead><tbody>${matrix}</tbody></table>
-      ${rec ? `<div style="margin-top:16px;padding:10px 12px;border-left:3px solid #1a8a4a;background:#f0faf4"><b>Recommendation:</b> ${result.recommendation.rationale}</div>` : ''}
+      ${rec ? `<div style="margin-top:16px;padding:10px 12px;border-left:3px solid #2CFF7A;background:#f0faf4"><b>Recommendation:</b> ${result.recommendation.rationale}</div>` : ''}
       </body></html>`);
     w.document.close(); w.focus(); w.print();
   };

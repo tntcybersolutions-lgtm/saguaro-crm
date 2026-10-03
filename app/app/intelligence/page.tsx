@@ -17,7 +17,7 @@ import SuggestionTicker from '@/components/intelligence/SuggestionTicker';
 const GOLD = 'var(--brand-primary)', DIM = '#CBD5E1', TEXT = '#FFFFFF';
 // Desert-dusk semantic palette — harmonized with the dashboard (muted emerald,
 // terracotta, warm amber) so severity accents sit on the aurora bg.
-const GREEN = '#45B37D', RED = '#E0644E', AMBER = 'var(--warning)';
+const GREEN = '#2CFF7A', RED = '#FF3B30', AMBER = 'var(--warning)';
 // Nested surfaces layered on the PremiumSurface aurora (white-alpha glass —
 // dark-shell surfaces never take black alphas).
 const NEST = 'rgba(20,20,22,0.55)', NEST_BORDER = 'rgba(255,255,255,0.08)';

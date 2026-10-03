@@ -112,17 +112,17 @@ function MetricTile({ m, index }: { m: Metric; index: number }) {
   // Neon tile (owner 2026-10-03); bad/warn values keep their status color.
   const lit = NEON_CYCLE[index % NEON_CYCLE.length];
   const glow = m.state === 'ok' || m.state === 'empty' ? neonCard(lit) : null;
-  const color = m.tone === 'bad' ? 'var(--status-overdue, #FF4D5E)' : m.tone === 'warn' ? 'var(--status-under-contract, #FFC53D)' : lit;
+  const color = m.tone === 'bad' ? 'var(--status-overdue, #FF3B30)' : m.tone === 'warn' ? 'var(--status-under-contract, #FFE600)' : '#FFFFFF';
   const valueEl = m.state === 'loading'
     ? <span className="pov-skel pov-skel-line" style={{ width: '60%', height: 28 }} aria-label="Loading" />
     : m.state === 'failed'
       ? <span className="pov-metric-value pov-metric-muted">Couldn&apos;t load</span>
       : m.state === 'empty'
         ? <span className="pov-metric-value pov-metric-muted">{m.value}</span>
-        : <span className="pov-metric-value" style={{ color, textShadow: `0 0 14px color-mix(in srgb, ${color} 45%, transparent)` }}>{m.value}</span>;
+        : <span className="pov-metric-value" style={{ color }}>{m.value}</span>;
   return (
-    <Link href={m.href} className="pov-card pov-metric pov-link" style={glow ? { background: glow.background, borderTop: glow.borderTop, boxShadow: glow.boxShadow, borderColor: `color-mix(in srgb, ${lit} 28%, transparent)` } : undefined} aria-label={`${m.label}: ${m.state === 'ok' ? m.value : m.state === 'failed' ? 'couldn’t load' : m.value}. ${m.basis}`}>
-      <span className="pov-metric-label" style={glow ? { color: `color-mix(in srgb, ${lit} 65%, #FFFFFF)` } : undefined}>{m.label}</span>
+    <Link href={m.href} className="pov-card pov-metric pov-link" style={glow ? { background: glow.background, borderTop: glow.borderTop, boxShadow: glow.boxShadow, borderColor: 'var(--glass-border)' } : undefined} aria-label={`${m.label}: ${m.state === 'ok' ? m.value : m.state === 'failed' ? 'couldn’t load' : m.value}. ${m.basis}`}>
+      <span className="pov-metric-label" style={undefined}>{m.label}</span>
       {valueEl}
       <span className="pov-metric-basis">{m.basis}</span>
     </Link>
@@ -232,7 +232,7 @@ export default function OverviewPage() {
       {css}
       <div className="pov-card pov-pad pov-state" role="alert">
         <EmptyState
-          icon={<WarningCircle size={34} weight="duotone" color="var(--status-overdue, #FF4D5E)" />}
+          icon={<WarningCircle size={34} weight="duotone" color="var(--status-overdue, #FF3B30)" />}
           title="Couldn't Load Project"
           text={error}
           action={<button type="button" className="pov-btn pov-btn-ghost" onClick={load}><ArrowClockwise size={14} /> Retry</button>}
@@ -502,13 +502,13 @@ export default function OverviewPage() {
       <header className="pov-header">
         <div className="pov-titlewrap">
           <div className="pov-titleline">
-            <h1 style={{ color: accentForProject(projectId).hex, textShadow: `0 0 18px ${accentForProject(projectId).ring}` }}>{p.name}</h1>
+            <h1 style={{ color: accentForProject(projectId).hex }}>{p.name}</h1>
             <Badge tone={stageBadge.tone}>{stageBadge.label}</Badge>
           </div>
           <div className="pov-sub">
             {address ? <span>{address}</span> : <span className="pov-faint">No address on file</span>}
             {p.end_date ? (
-              <span style={{ color: daysRemaining != null && daysRemaining >= 0 && daysRemaining < 14 && !closed ? 'var(--status-overdue, #FF4D5E)' : undefined }}>
+              <span style={{ color: daysRemaining != null && daysRemaining >= 0 && daysRemaining < 14 && !closed ? 'var(--status-overdue, #FF3B30)' : undefined }}>
                 Finish {fmtShort(p.end_date)}{!closed && daysRemaining != null ? (daysRemaining >= 0 ? ` · ${plural(daysRemaining, 'day')} left` : ` · ${plural(-daysRemaining, 'day')} past`) : ''}
               </span>
             ) : <span className="pov-faint">No end date set</span>}
@@ -702,9 +702,9 @@ export default function OverviewPage() {
                 <div className="pov-bar">
                   <div className="pov-barhead">
                     <span>Actual vs. revised budget</span>
-                    <strong style={{ color: budgetVariance > 0 ? 'var(--status-overdue, #FF4D5E)' : 'var(--status-ongoing, #2EE59D)' }}>{budgetPct}% spent</strong>
+                    <strong style={{ color: budgetVariance > 0 ? 'var(--status-overdue, #FF3B30)' : 'var(--status-ongoing, #2CFF7A)' }}>{budgetPct}% spent</strong>
                   </div>
-                  <div className="pov-track"><div className="pov-fill" style={{ width: Math.min(100, parseFloat(budgetPct)) + '%', background: parseFloat(budgetPct) > 90 ? 'var(--status-overdue, #FF4D5E)' : undefined }} /></div>
+                  <div className="pov-track"><div className="pov-fill" style={{ width: Math.min(100, parseFloat(budgetPct)) + '%', background: parseFloat(budgetPct) > 90 ? 'var(--status-overdue, #FF3B30)' : undefined }} /></div>
                 </div>
                 <dl className="pov-dl">
                   {([
@@ -715,7 +715,7 @@ export default function OverviewPage() {
                     ['Forecast', fmt(budgetHealth.forecastCost)],
                     ['Variance', fmt(Math.abs(budgetVariance)) + (budgetVariance > 0 ? ' over' : ' under')],
                   ] as [string, string][]).map(([l, v]) => (
-                    <div key={l} className="pov-dlrow"><dt>{l}</dt><dd className="num" style={l === 'Variance' ? { color: budgetVariance > 0 ? 'var(--status-overdue, #FF4D5E)' : 'var(--status-ongoing, #2EE59D)' } : undefined}>{v}</dd></div>
+                    <div key={l} className="pov-dlrow"><dt>{l}</dt><dd className="num" style={l === 'Variance' ? { color: budgetVariance > 0 ? 'var(--status-overdue, #FF3B30)' : 'var(--status-ongoing, #2CFF7A)' } : undefined}>{v}</dd></div>
                   ))}
                 </dl>
               </Section>
@@ -788,7 +788,7 @@ export default function OverviewPage() {
 const CSS = `
 .pov { width: 100%; max-width: none; min-width: 0; box-sizing: border-box; padding: 24px clamp(16px, 1.67vw, 32px) 64px; color: var(--text-primary); font-size: 15px; background: var(--bg-base); min-height: calc(100vh - 56px); }
 .pov h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.01em; margin: 0; overflow-wrap: anywhere; }
-.pov h2 { font-size: 17px; font-weight: 800; margin: 0; padding-bottom: 6px; background: linear-gradient(90deg, var(--neon-yellow, #FFE600), var(--neon-cyan, #22E5FF)) left bottom / 44px 2px no-repeat; }
+.pov h2 { color: var(--title-color, #FFE600); font-size: 17px; font-weight: 800; margin: 0; padding-bottom: 6px; background: linear-gradient(90deg, var(--neon-yellow, #FFE600), var(--brand-primary)) left bottom / 44px 2px no-repeat; }
 .pov-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; }
 .pov-titlewrap { min-width: 0; flex: 1 1 320px; }
 .pov-titleline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
@@ -830,10 +830,10 @@ const CSS = `
 .pov-qtitle { font-size: 15px; font-weight: 650; overflow-wrap: anywhere; }
 .pov-qmeta { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 3px; font-size: 13px; color: var(--text-tertiary); }
 .pov-more { margin-top: 10px; background: none; border: 0; padding: 0; color: var(--brand-primary); font-weight: 700; font-size: 14px; cursor: pointer; min-height: 36px; }
-.pov-warn { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13.5px; color: var(--status-under-contract, #FFC53D); background: rgba(255,197,61,.08); border: 1px solid rgba(255,197,61,.3); border-radius: 10px; padding: 10px 14px; margin-bottom: 10px; }
+.pov-warn { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13.5px; color: var(--status-under-contract, #FFE600); background: rgba(255,230,0,.08); border: 1px solid rgba(255,230,0,.3); border-radius: 10px; padding: 10px 14px; margin-bottom: 10px; }
 .pov-banner { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; border-radius: 12px; padding: 12px 16px; }
-.pov-banner-ok { color: var(--status-ongoing, #2EE59D); background: rgba(46,229,157,.08); border: 1px solid rgba(46,229,157,.3); }
-.pov-banner-bad { color: var(--status-overdue, #FF4D5E); background: rgba(255,77,94,.08); border: 1px solid rgba(255,77,94,.3); }
+.pov-banner-ok { color: var(--status-ongoing, #2CFF7A); background: rgba(44,255,122,.08); border: 1px solid rgba(44,255,122,.3); }
+.pov-banner-bad { color: var(--status-overdue, #FF3B30); background: rgba(255,59,48,.08); border: 1px solid rgba(255,59,48,.3); }
 .pov-sched { display: flex; flex-direction: column; gap: 14px; }
 .pov-sday { font-size: 12.5px; font-weight: 750; color: var(--text-secondary); margin-bottom: 4px; }
 .pov-srow { display: flex; gap: 10px; padding: 8px 0; border-top: 1px solid var(--border-subtle); min-height: 40px; box-sizing: border-box; }

@@ -11,9 +11,9 @@ const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM    = '#CBD5E1';
 const TEXT   = '#FFFFFF';
-const GREEN  = '#22C55E';
+const GREEN  = '#2CFF7A';
 const YELLOW = 'var(--warning)';
-const RED    = '#EF4444';
+const RED    = '#FF3B30';
 const BLUE   = 'var(--brand-primary)';
 
 // ── Type definitions ───────────────────────────────────────────
@@ -143,11 +143,11 @@ function getBadgeStyle(v: unknown): React.CSSProperties {
   let bg = 'rgba(0,0,0,0.1)';
   let color = '#CBD5E1';
   if (['active', 'approved', 'complete', 'completed', 'paid', 'closed-won'].some(k => s.includes(k))) {
-    bg = 'rgba(34,197,94,0.15)'; color = GREEN;
+    bg = 'rgba(44,255,122,0.15)'; color = GREEN;
   } else if (['pending', 'submitted', 'in progress', 'in-progress', 'open', 'review'].some(k => s.includes(k))) {
     bg = 'color-mix(in srgb, var(--warning) 18%, transparent)'; color = YELLOW;
   } else if (['overdue', 'expired', 'rejected', 'void', 'failed', 'critical'].some(k => s.includes(k))) {
-    bg = 'rgba(239,68,68,0.15)'; color = RED;
+    bg = 'rgba(255,59,48,0.15)'; color = RED;
   } else if (['draft', 'closed', 'cancelled', 'canceled', 'inactive'].some(k => s.includes(k))) {
     bg = 'rgba(0,0,0,0.06)'; color = DIM;
   } else if (['info', 'new', 'assigned'].some(k => s.includes(k))) {
@@ -900,7 +900,7 @@ export default function ReportsPage() {
         zIndex: 99999,
         padding: '12px 24px',
         borderRadius: 10,
-        background: toast.type === 'success' ? 'rgba(34,197,94,0.9)' : 'rgba(239,68,68,0.9)',
+        background: toast.type === 'success' ? 'rgba(44,255,122,0.9)' : 'rgba(255,59,48,0.9)',
         color: '#fff',
         fontWeight: 700,
         fontSize: 14,

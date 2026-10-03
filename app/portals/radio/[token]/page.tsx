@@ -13,7 +13,7 @@ import { useParams } from 'next/navigation';
 
 /* ── Design tokens (gold-on-black, matches the portal family) ── */
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)', DIM = '#CBD5E1', TEXT = '#FFFFFF';
-const GREEN = '#22c55e', RED = '#ef4444', AMBER = '#f59e0b';
+const GREEN = '#2CFF7A', RED = '#FF3B30', AMBER = '#FF8A00';
 
 const card = (extra?: React.CSSProperties): React.CSSProperties => ({ background: RAISED, backgroundImage: 'linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015))', border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16, boxShadow: '0 4px 14px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.06)', ...extra });
 const btnS = (color: string): React.CSSProperties => ({ background: color, backgroundImage: color === GOLD ? 'linear-gradient(180deg,var(--brand-primary-strong),var(--brand-primary) 60%,var(--brand-primary-hover))' : 'linear-gradient(180deg,rgba(255,255,255,0.16),rgba(255,255,255,0) 55%)', color: color === GOLD ? '#0A0A00' : '#fff', border: 'none', borderRadius: 9, padding: '11px 20px', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: color === GOLD ? '0 4px 14px color-mix(in srgb, var(--brand-primary) 28%, transparent), inset 0 1px 0 rgba(255,255,255,0.35)' : '0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)' });
@@ -224,7 +224,7 @@ export default function RadioGuestPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: DARK, fontFamily: 'system-ui,sans-serif', display: 'flex', flexDirection: 'column' }}>
-      <style>{`@keyframes sgRadioFlash{0%{background:color-mix(in srgb, var(--brand-primary) 16%, transparent)}100%{background:transparent}}@keyframes sgRadioRing{0%{box-shadow:0 0 0 3px color-mix(in srgb, var(--brand-primary) 45%, transparent)}100%{box-shadow:0 0 0 0 transparent}}@keyframes sgLivePulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,0.55)}70%{box-shadow:0 0 0 7px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}`}</style>
+      <style>{`@keyframes sgRadioFlash{0%{background:color-mix(in srgb, var(--brand-primary) 16%, transparent)}100%{background:transparent}}@keyframes sgRadioRing{0%{box-shadow:0 0 0 3px color-mix(in srgb, var(--brand-primary) 45%, transparent)}100%{box-shadow:0 0 0 0 transparent}}@keyframes sgLivePulse{0%{box-shadow:0 0 0 0 rgba(44,255,122,0.55)}70%{box-shadow:0 0 0 7px rgba(44,255,122,0)}100%{box-shadow:0 0 0 0 rgba(44,255,122,0)}}`}</style>
 
       {/* ── Branded header ── */}
       <header style={{ position: 'sticky', top: 0, zIndex: 10, background: 'rgba(10,10,10,0.92)', backdropFilter: 'blur(8px)', borderBottom: `1px solid ${BORDER}`, padding: '12px 16px' }}>

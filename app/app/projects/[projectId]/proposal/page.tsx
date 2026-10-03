@@ -9,7 +9,7 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { openPdf } from '@/components/PdfViewer';
 
-const GOLD='var(--brand-primary)', RAISED='var(--bg-surface-2)', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#3dd68c', RED='#ef4444';
+const GOLD='var(--brand-primary)', RAISED='var(--bg-surface-2)', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#2CFF7A', RED='#FF3B30';
 
 interface Proposal {
   id: string;
@@ -26,10 +26,10 @@ const STATUS_MAP: Record<string, { bg: string; color: string }> = {
   Draft: { bg: 'rgba(143,163,192,.2)', color: DIM },
   Sent: { bg: 'color-mix(in srgb, var(--brand-primary) 20%, transparent)', color: 'var(--brand-primary-strong)' },
   Under_Review: { bg: 'color-mix(in srgb, var(--warning) 20%, transparent)', color: 'var(--warning)' },
-  Accepted: { bg: 'rgba(61,214,140,.2)', color: GREEN },
+  Accepted: { bg: 'rgba(44,255,122,.2)', color: GREEN },
   Superseded: { bg: 'rgba(143,163,192,.2)', color: DIM },
-  Rejected: { bg: 'rgba(239,68,68,.2)', color: RED },
-  Declined: { bg: 'rgba(239,68,68,.2)', color: RED },
+  Rejected: { bg: 'rgba(255,59,48,.2)', color: RED },
+  Declined: { bg: 'rgba(255,59,48,.2)', color: RED },
 };
 
 const EMPTY_FORM = { amount: 0, notes: '' };
@@ -272,8 +272,8 @@ export default function ProposalPage() {
         </div>
       )}
 
-      {successMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(61,214,140,.15)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 10, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
-      {errorMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.4)', borderRadius: 10, color: RED, fontSize: 13 }}>{errorMsg}</div>}
+      {successMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(44,255,122,.15)', border: '1px solid rgba(44,255,122,.4)', borderRadius: 10, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
+      {errorMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(255,59,48,.15)', border: '1px solid rgba(255,59,48,.4)', borderRadius: 10, color: RED, fontSize: 13 }}>{errorMsg}</div>}
 
       {showForm && (
         <div style={{ display: 'grid', gridTemplateColumns: ctx ? 'minmax(0, 1fr) 320px' : '1fr', gap: 18, alignItems: 'start', marginBottom: 24 }}>
@@ -366,7 +366,7 @@ export default function ProposalPage() {
                   const s = statusKey(p.status);
                   const outcomeSet = s === 'accepted' || s === 'declined' || s === 'rejected';
                   return (
-                    <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: s === 'accepted' ? 'rgba(61,214,140,.06)' : 'transparent' }}>
+                    <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: s === 'accepted' ? 'rgba(44,255,122,.06)' : 'transparent' }}>
                       <td style={{ padding: '10px 16px', color: GOLD, fontWeight: 700 }}>{p.version}</td>
                       <td style={{ padding: '10px 16px', color: DIM }}>{p.created_date}</td>
                       <td style={{ padding: '10px 16px', color: TEXT, fontWeight: 800, fontSize: 14 }}>${p.amount?.toLocaleString()}</td>
@@ -375,8 +375,8 @@ export default function ProposalPage() {
                       <td style={{ padding: '10px 16px', whiteSpace: 'nowrap', display: 'flex', gap: 6, alignItems: 'center' }}>
                         {p.pdf_url && <button onClick={() => openPdf({ url: p.pdf_url! })} style={{ padding: '4px 10px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer' }}>View PDF</button>}
                         {s === 'draft' && <button onClick={() => handleSend(p.id)} style={{ padding: '4px 10px', background: 'color-mix(in srgb, var(--brand-primary) 20%, transparent)', border: '1px solid color-mix(in srgb, var(--brand-primary) 40%, transparent)', borderRadius: 5, color: 'var(--brand-primary-strong)', fontSize: 12, cursor: 'pointer' }}>Send</button>}
-                        {!outcomeSet && <button onClick={() => handleMarkOutcome(p, true)} style={{ padding: '4px 10px', background: 'rgba(61,214,140,.2)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 5, color: GREEN, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Mark Accepted</button>}
-                        {!outcomeSet && <button onClick={() => handleMarkOutcome(p, false)} style={{ padding: '4px 10px', background: 'rgba(239,68,68,.2)', border: '1px solid rgba(239,68,68,.4)', borderRadius: 5, color: RED, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Mark Declined</button>}
+                        {!outcomeSet && <button onClick={() => handleMarkOutcome(p, true)} style={{ padding: '4px 10px', background: 'rgba(44,255,122,.2)', border: '1px solid rgba(44,255,122,.4)', borderRadius: 5, color: GREEN, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Mark Accepted</button>}
+                        {!outcomeSet && <button onClick={() => handleMarkOutcome(p, false)} style={{ padding: '4px 10px', background: 'rgba(255,59,48,.2)', border: '1px solid rgba(255,59,48,.4)', borderRadius: 5, color: RED, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Mark Declined</button>}
                         <label style={{ padding: '4px 10px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer' }}>
                           {uploadingId === p.id ? 'Uploading…' : 'Upload PDF'}
                           <input type="file" accept=".pdf" style={{ display: 'none' }} onChange={e => { if (e.target.files?.[0]) handleUpload(p.id, e.target.files[0]); }} />

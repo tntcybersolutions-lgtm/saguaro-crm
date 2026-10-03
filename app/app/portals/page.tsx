@@ -13,8 +13,8 @@ const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
 const TEXT = '#FFFFFF';
-const GREEN = '#22c55e';
-const RED = '#ef4444';
+const GREEN = '#2CFF7A';
+const RED = '#FF3B30';
 const BLUE = 'var(--brand-primary)';
 const AMBER = 'var(--warning)';
 
@@ -54,8 +54,8 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { bg: string; color: string }> = {
-    active:   { bg: 'rgba(34,197,94,0.12)',  color: GREEN },
-    inactive: { bg: 'rgba(239,68,68,0.12)',  color: RED },
+    active:   { bg: 'rgba(44,255,122,0.12)',  color: GREEN },
+    inactive: { bg: 'rgba(255,59,48,0.12)',  color: RED },
     expired:  { bg: 'color-mix(in srgb, var(--warning) 12%, transparent)', color: AMBER },
   };
   const c = map[status] || map.inactive;
@@ -342,7 +342,7 @@ export default function PortalsPage() {
         ) : tab === 'client' ? (
           <>
             {resendMsg && (
-              <div style={{ margin: '0 16px', padding: '10px 14px', background: resendMsg.ok ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${resendMsg.ok ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`, borderRadius: 8, fontSize: 13, color: resendMsg.ok ? GREEN : RED, marginTop: 12 }}>
+              <div style={{ margin: '0 16px', padding: '10px 14px', background: resendMsg.ok ? 'rgba(44,255,122,0.1)' : 'rgba(255,59,48,0.1)', border: `1px solid ${resendMsg.ok ? 'rgba(44,255,122,0.25)' : 'rgba(255,59,48,0.25)'}`, borderRadius: 8, fontSize: 13, color: resendMsg.ok ? GREEN : RED, marginTop: 12 }}>
                 <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 4 }}>{resendMsg.ok ? <CheckCircle size={14} weight="fill" color={GREEN} /> : <XCircle size={14} weight="fill" color={RED} />}</span>{resendMsg.msg}
               </div>
             )}
@@ -351,7 +351,7 @@ export default function PortalsPage() {
         ) : (
           <>
             {resendMsg && (
-              <div style={{ margin: '0 16px', padding: '10px 14px', background: resendMsg.ok ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${resendMsg.ok ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`, borderRadius: 8, fontSize: 13, color: resendMsg.ok ? GREEN : RED, marginTop: 12 }}>
+              <div style={{ margin: '0 16px', padding: '10px 14px', background: resendMsg.ok ? 'rgba(44,255,122,0.1)' : 'rgba(255,59,48,0.1)', border: `1px solid ${resendMsg.ok ? 'rgba(44,255,122,0.25)' : 'rgba(255,59,48,0.25)'}`, borderRadius: 8, fontSize: 13, color: resendMsg.ok ? GREEN : RED, marginTop: 12 }}>
                 <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 4 }}>{resendMsg.ok ? <CheckCircle size={14} weight="fill" color={GREEN} /> : <XCircle size={14} weight="fill" color={RED} />}</span>{resendMsg.msg}
               </div>
             )}
@@ -453,7 +453,7 @@ export default function PortalsPage() {
                   )}
 
                   {inviteError && (
-                    <div style={{ marginBottom: 14, padding: '10px 12px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, fontSize: 13, color: '#fca5a5' }}>
+                    <div style={{ marginBottom: 14, padding: '10px 12px', background: 'rgba(255,59,48,0.1)', border: '1px solid rgba(255,59,48,0.25)', borderRadius: 8, fontSize: 13, color: '#fca5a5' }}>
                       {inviteError}
                     </div>
                   )}
@@ -508,7 +508,7 @@ function SuccessCard({ url, name, type, emailSent, onAnother, onClose }: { url: 
 
   return (
     <div style={{ textAlign: 'center' }}>
-      <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(34,197,94,0.12)', border: '1.5px solid rgba(34,197,94,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+      <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(44,255,122,0.12)', border: '1.5px solid rgba(44,255,122,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
         <svg viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={24} height={24}><polyline points="20 6 9 17 4 12"/></svg>
       </div>
       <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Portal Access Created</div>
@@ -518,7 +518,7 @@ function SuccessCard({ url, name, type, emailSent, onAnother, onClose }: { url: 
 
       {/* Email status banner */}
       {emailSent ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 8, marginBottom: 16, textAlign: 'left' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'rgba(44,255,122,0.08)', border: '1px solid rgba(44,255,122,0.2)', borderRadius: 8, marginBottom: 16, textAlign: 'left' }}>
           <svg viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16} style={{ flexShrink: 0 }}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
           <span style={{ fontSize: 12, color: GREEN, fontWeight: 600 }}>Invitation email sent automatically.</span>
         </div>
@@ -534,7 +534,7 @@ function SuccessCard({ url, name, type, emailSent, onAnother, onClose }: { url: 
         <div style={{ fontSize: 10, fontWeight: 700, color: DIM, marginBottom: 6 }}>Portal Link</div>
         <div style={{ fontSize: 12, color: DIM, wordBreak: 'break-all', lineHeight: 1.5, marginBottom: 10 }}>{url}</div>
         <button onClick={copyUrl}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: linkCopied ? 'rgba(34,197,94,0.12)' : `var(--brand-primary-12)`, border: `1px solid ${linkCopied ? 'rgba(34,197,94,0.3)' : 'var(--brand-primary-25)'}`, borderRadius: 6, fontSize: 12, fontWeight: 700, color: linkCopied ? GREEN : GOLD, cursor: 'pointer' }}>
+          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: linkCopied ? 'rgba(44,255,122,0.12)' : `var(--brand-primary-12)`, border: `1px solid ${linkCopied ? 'rgba(44,255,122,0.3)' : 'var(--brand-primary-25)'}`, borderRadius: 6, fontSize: 12, fontWeight: 700, color: linkCopied ? GREEN : GOLD, cursor: 'pointer' }}>
           {linkCopied
             ? <><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><polyline points="20 6 9 17 4 12"/></svg> Copied</>
             : <><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><rect x={9} y={9} width={13} height={13} rx={2}/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Portal Link</>}
@@ -598,7 +598,7 @@ function ClientTable({ sessions, copied, revoking, resending, resendMsg, onCopy,
               <td style={{ padding: '12px 16px' }}>
                 {s.status === 'active' && (
                   <button onClick={() => onResend(s.id, 'client')} disabled={resending === s.id}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: resendMsg?.id === s.id && resendMsg.ok ? 'rgba(34,197,94,0.1)' : 'rgba(0,0,0,0.04)', border: `1px solid ${resendMsg?.id === s.id && resendMsg.ok ? 'rgba(34,197,94,0.25)' : BORDER}`, borderRadius: 5, fontSize: 11, fontWeight: 600, color: resendMsg?.id === s.id && resendMsg.ok ? GREEN : DIM, cursor: 'pointer', opacity: resending === s.id ? 0.5 : 1 }}>
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: resendMsg?.id === s.id && resendMsg.ok ? 'rgba(44,255,122,0.1)' : 'rgba(0,0,0,0.04)', border: `1px solid ${resendMsg?.id === s.id && resendMsg.ok ? 'rgba(44,255,122,0.25)' : BORDER}`, borderRadius: 5, fontSize: 11, fontWeight: 600, color: resendMsg?.id === s.id && resendMsg.ok ? GREEN : DIM, cursor: 'pointer', opacity: resending === s.id ? 0.5 : 1 }}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={11} height={11}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                     {resending === s.id ? 'Sending…' : resendMsg?.id === s.id && resendMsg.ok ? <><CheckCircle size={11} weight="fill" color={GREEN} /> Sent</> : 'Resend Invite'}
                   </button>
@@ -607,7 +607,7 @@ function ClientTable({ sessions, copied, revoking, resending, resendMsg, onCopy,
               <td style={{ padding: '12px 16px' }}>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   <button onClick={() => onCopy(s.token, 'client')}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: copied === s.token ? 'rgba(34,197,94,0.1)' : 'var(--brand-primary-12)', border: `1px solid ${copied === s.token ? 'rgba(34,197,94,0.25)' : 'var(--brand-primary-25)'}`, borderRadius: 5, fontSize: 11, fontWeight: 700, color: copied === s.token ? GREEN : GOLD, cursor: 'pointer' }}>
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: copied === s.token ? 'rgba(44,255,122,0.1)' : 'var(--brand-primary-12)', border: `1px solid ${copied === s.token ? 'rgba(44,255,122,0.25)' : 'var(--brand-primary-25)'}`, borderRadius: 5, fontSize: 11, fontWeight: 700, color: copied === s.token ? GREEN : GOLD, cursor: 'pointer' }}>
                     {copied === s.token ? <><CheckCircle size={11} weight="fill" color={GREEN} /> Copied</> : <><Copy size={11} weight="regular" color={GOLD} /> Copy Link</>}
                   </button>
                   <a href={`/portals/client/${s.token}`} target="_blank" rel="noreferrer"
@@ -616,7 +616,7 @@ function ClientTable({ sessions, copied, revoking, resending, resendMsg, onCopy,
                   </a>
                   {s.status === 'active' && (
                     <button onClick={() => onRevoke(s.id, 'client')} disabled={revoking === s.id}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 5, fontSize: 11, fontWeight: 600, color: RED, cursor: 'pointer', opacity: revoking === s.id ? 0.5 : 1 }}>
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: 'rgba(255,59,48,0.08)', border: '1px solid rgba(255,59,48,0.2)', borderRadius: 5, fontSize: 11, fontWeight: 600, color: RED, cursor: 'pointer', opacity: revoking === s.id ? 0.5 : 1 }}>
                       Revoke
                     </button>
                   )}
@@ -667,7 +667,7 @@ function SubTable({ sessions, copied, revoking, resending, resendMsg, onCopy, on
               <td style={{ padding: '12px 16px' }}>
                 {s.status === 'active' && (
                   <button onClick={() => onResend(s.id, 'sub')} disabled={resending === s.id}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: resendMsg?.id === s.id && resendMsg.ok ? 'rgba(34,197,94,0.1)' : 'rgba(0,0,0,0.04)', border: `1px solid ${resendMsg?.id === s.id && resendMsg.ok ? 'rgba(34,197,94,0.25)' : BORDER}`, borderRadius: 5, fontSize: 11, fontWeight: 600, color: resendMsg?.id === s.id && resendMsg.ok ? GREEN : DIM, cursor: 'pointer', opacity: resending === s.id ? 0.5 : 1 }}>
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: resendMsg?.id === s.id && resendMsg.ok ? 'rgba(44,255,122,0.1)' : 'rgba(0,0,0,0.04)', border: `1px solid ${resendMsg?.id === s.id && resendMsg.ok ? 'rgba(44,255,122,0.25)' : BORDER}`, borderRadius: 5, fontSize: 11, fontWeight: 600, color: resendMsg?.id === s.id && resendMsg.ok ? GREEN : DIM, cursor: 'pointer', opacity: resending === s.id ? 0.5 : 1 }}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={11} height={11}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                     {resending === s.id ? 'Sending…' : resendMsg?.id === s.id && resendMsg.ok ? <><CheckCircle size={11} weight="fill" color={GREEN} /> Sent</> : 'Resend Invite'}
                   </button>
@@ -676,7 +676,7 @@ function SubTable({ sessions, copied, revoking, resending, resendMsg, onCopy, on
               <td style={{ padding: '12px 16px' }}>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   <button onClick={() => onCopy(s.token, 'sub')}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: copied === s.token ? 'rgba(34,197,94,0.1)' : 'var(--brand-primary-12)', border: `1px solid ${copied === s.token ? 'rgba(34,197,94,0.25)' : 'var(--brand-primary-25)'}`, borderRadius: 5, fontSize: 11, fontWeight: 700, color: copied === s.token ? GREEN : BLUE, cursor: 'pointer' }}>
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: copied === s.token ? 'rgba(44,255,122,0.1)' : 'var(--brand-primary-12)', border: `1px solid ${copied === s.token ? 'rgba(44,255,122,0.25)' : 'var(--brand-primary-25)'}`, borderRadius: 5, fontSize: 11, fontWeight: 700, color: copied === s.token ? GREEN : BLUE, cursor: 'pointer' }}>
                     {copied === s.token ? <><CheckCircle size={11} weight="fill" color={GREEN} /> Copied</> : <><Copy size={11} weight="regular" color={BLUE} /> Copy Link</>}
                   </button>
                   <a href={`/portals/subcontractor/${s.token}`} target="_blank" rel="noreferrer"
@@ -685,7 +685,7 @@ function SubTable({ sessions, copied, revoking, resending, resendMsg, onCopy, on
                   </a>
                   {s.status === 'active' && (
                     <button onClick={() => onRevoke(s.id, 'sub')} disabled={revoking === s.id}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 5, fontSize: 11, fontWeight: 600, color: RED, cursor: 'pointer', opacity: revoking === s.id ? 0.5 : 1 }}>
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: 'rgba(255,59,48,0.08)', border: '1px solid rgba(255,59,48,0.2)', borderRadius: 5, fontSize: 11, fontWeight: 600, color: RED, cursor: 'pointer', opacity: revoking === s.id ? 0.5 : 1 }}>
                       Revoke
                     </button>
                   )}

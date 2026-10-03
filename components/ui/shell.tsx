@@ -19,14 +19,14 @@ export const T = {
   white: '#FFFFFF',
   muted: '#D7DEE8',
   faint: '#A9B4C4',
-  green: '#2EE59D',
-  greenDim: 'rgba(46,229,157,0.16)',
-  red: '#FF4D5E',
-  redDim: 'rgba(255,77,94,0.16)',
-  amber: '#FFC53D',
-  amberDim: 'rgba(255,197,61,0.16)',
-  blue: '#3DA9FF',
-  blueDim: 'rgba(61,169,255,0.16)',
+  green: '#2CFF7A',
+  greenDim: 'rgba(44,255,122,0.16)',
+  red: '#FF3B30',
+  redDim: 'rgba(255,59,48,0.16)',
+  amber: '#FFE600',
+  amberDim: 'rgba(255,230,0,0.16)',
+  blue: '#FF8A00',
+  blueDim: 'rgba(255,138,0,0.16)',
   shadowSm: '0 1px 2px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
   shadowMd: '0 4px 14px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)',
   shadowLg: '0 16px 44px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)',
@@ -100,10 +100,10 @@ type BadgeColor = 'gold' | 'green' | 'red' | 'amber' | 'blue' | 'muted';
 
 const badgeStyles: Record<BadgeColor, { bg: string; color: string; border: string }> = {
   gold:  { bg: T.goldDim,  color: T.gold,  border: T.borderGold },
-  green: { bg: T.greenDim, color: T.green, border: 'rgba(46,229,157,0.50)' },
-  red:   { bg: T.redDim,   color: T.red,   border: 'rgba(255,77,94,0.50)' },
-  amber: { bg: T.amberDim, color: T.amber, border: 'rgba(255,197,61,0.50)' },
-  blue:  { bg: T.blueDim,  color: T.blue,  border: 'rgba(61,169,255,0.50)' },
+  green: { bg: T.greenDim, color: T.green, border: 'rgba(44,255,122,0.50)' },
+  red:   { bg: T.redDim,   color: T.red,   border: 'rgba(255,59,48,0.50)' },
+  amber: { bg: T.amberDim, color: T.amber, border: 'rgba(255,230,0,0.50)' },
+  blue:  { bg: T.blueDim,  color: T.blue,  border: 'rgba(255,138,0,0.50)' },
   muted: { bg: 'rgba(163,172,187,0.16)', color: T.muted, border: 'rgba(163,172,187,0.45)' },
 };
 
@@ -229,7 +229,7 @@ const btnBase: React.CSSProperties = {
 const btnVariants: Record<BtnVariant, React.CSSProperties> = {
   primary: { background: T.gold, color: '#0A0A00', boxShadow: T.shadowSm },
   ghost: { background: T.elevated, backdropFilter: T.glassBlur, WebkitBackdropFilter: T.glassBlur, color: T.white, border: `1px solid ${T.border}` },
-  danger: { background: T.redDim, color: T.red, border: `1px solid rgba(255,77,94,0.50)` },
+  danger: { background: T.redDim, color: T.red, border: `1px solid rgba(255,59,48,0.50)` },
 };
 
 const btnSizes: Record<BtnSize, React.CSSProperties> = {

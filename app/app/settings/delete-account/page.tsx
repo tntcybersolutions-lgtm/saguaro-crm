@@ -23,7 +23,7 @@ import { PremiumSurface, SectionCard, DangerButton } from '@/components/ui/premi
 const GOLD = 'var(--brand-primary)';
 const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
-const RED = '#EF4444';
+const RED = '#FF3B30';
 const BORDER = '#1E3A5F';
 const CARD = 'var(--bg-surface-2)';
 
@@ -113,8 +113,8 @@ export default function DeleteAccountPage() {
               style={{
                 display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', marginBottom: 20,
                 borderRadius: 12,
-                border: `1px solid ${workspace ? 'rgba(239,68,68,0.45)' : 'color-mix(in srgb, var(--warning) 35%, transparent)'}`,
-                background: workspace ? 'rgba(239,68,68,0.10)' : 'color-mix(in srgb, var(--warning) 8%, transparent)',
+                border: `1px solid ${workspace ? 'rgba(255,59,48,0.45)' : 'color-mix(in srgb, var(--warning) 35%, transparent)'}`,
+                background: workspace ? 'rgba(255,59,48,0.10)' : 'color-mix(in srgb, var(--warning) 8%, transparent)',
               }}
             >
               <Warning size={22} weight="fill" color={workspace ? RED : 'var(--warning)'} />

@@ -15,7 +15,7 @@ import { humanError } from '@/lib/errors';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1', TEXT = '#FFFFFF', GREEN = '#3dd68c', RED = '#ef4444', AMBER = 'var(--warning)';
+const DIM = '#CBD5E1', TEXT = '#FFFFFF', GREEN = '#2CFF7A', RED = '#FF3B30', AMBER = 'var(--warning)';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const usd = (c: number) => '$' + Math.round((c || 0) / 100).toLocaleString();
 const now = () => new Date().toISOString();
@@ -135,9 +135,9 @@ export default function FleetPage() {
       <h2 style="margin:0">Fleet Report</h2><div style="color:#555;font-size:12px;margin-bottom:16px">Generated ${new Date().toLocaleString()}</div>
       <div style="display:flex;gap:24px;margin-bottom:18px;font-size:13px">
         <div><b style="font-size:20px">${summary.total}</b><br>Assets</div>
-        <div><b style="font-size:20px;color:#c03030">${summary.maintenanceOverdue}</b><br>Maint. Overdue</div>
+        <div><b style="font-size:20px;color:#FF3B30">${summary.maintenanceOverdue}</b><br>Maint. Overdue</div>
         <div><b style="font-size:20px;color:#b8860b">${summary.maintenanceSoon}</b><br>Due Soon</div>
-        <div><b style="font-size:20px;color:#c03030">${summary.docsExpired}</b><br>Docs Expired</div>
+        <div><b style="font-size:20px;color:#FF3B30">${summary.docsExpired}</b><br>Docs Expired</div>
         <div><b style="font-size:20px;color:#b8860b">${summary.docsExpiringSoon}</b><br>Expiring</div>
         <div><b style="font-size:20px">${usd(summary.totalMaintenanceCostCents)}</b><br>Maint. Cost</div>
       </div>
@@ -379,8 +379,8 @@ function FleetMap({ assets, pings, selId, onSelect }: { assets: any[]; pings: an
       }
       const map = mapRef.current; map._layer.clearLayers();
       const pts: [number, number][] = [];
-      for (const a of located) { const mk = L.circleMarker([a.last_lat, a.last_lng], { radius: a.id === selId ? 10 : 7, color: a.id === selId ? '#F59E0B' : '#FBBF24', fillColor: a.id === selId ? '#F59E0B' : '#FBBF24', fillOpacity: 0.85, weight: 2 }).bindPopup(`<b>${a.name}</b><br>${a.last_location_at ? new Date(a.last_location_at).toLocaleString() : ''}${a.last_speed_mph ? `<br>${Math.round(a.last_speed_mph)} mph` : ''}`); mk.on('click', () => onSelect(a.id)); mk.addTo(map._layer); pts.push([a.last_lat, a.last_lng]); }
-      if (pings && pings.length > 1) L.polyline(pings.map((p) => [p.lat, p.lng]), { color: '#F59E0B', weight: 3, opacity: 0.8 }).addTo(map._layer);
+      for (const a of located) { const mk = L.circleMarker([a.last_lat, a.last_lng], { radius: a.id === selId ? 10 : 7, color: a.id === selId ? '#FF8A00' : '#FFE600', fillColor: a.id === selId ? '#FF8A00' : '#FFE600', fillOpacity: 0.85, weight: 2 }).bindPopup(`<b>${a.name}</b><br>${a.last_location_at ? new Date(a.last_location_at).toLocaleString() : ''}${a.last_speed_mph ? `<br>${Math.round(a.last_speed_mph)} mph` : ''}`); mk.on('click', () => onSelect(a.id)); mk.addTo(map._layer); pts.push([a.last_lat, a.last_lng]); }
+      if (pings && pings.length > 1) L.polyline(pings.map((p) => [p.lat, p.lng]), { color: '#FF8A00', weight: 3, opacity: 0.8 }).addTo(map._layer);
       if (pts.length) map.fitBounds(pts, { padding: [34, 34], maxZoom: 14 });
       setTimeout(() => map.invalidateSize(), 100);
     })();

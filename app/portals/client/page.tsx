@@ -93,7 +93,7 @@ export default function ClientPortalLanding() {
             </div>
           </div>
 
-          {error && <div style={{ marginTop: 16, padding: '10px 14px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, color: '#EF4444', fontSize: 13 }}>{error}</div>}
+          {error && <div style={{ marginTop: 16, padding: '10px 14px', background: 'rgba(255,59,48,0.1)', border: '1px solid rgba(255,59,48,0.3)', borderRadius: 8, color: '#FF3B30', fontSize: 13 }}>{error}</div>}
         </div>
 
         <div style={{ textAlign: 'center', marginTop: 24 }}>

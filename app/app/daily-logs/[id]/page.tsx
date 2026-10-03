@@ -46,9 +46,9 @@ const ACCENT = moduleAccent('daily'); // sun amber — chips, eyebrow, section m
 const TEXT = '#FFFFFF';
 const DIM = 'rgba(255,255,255,0.62)';
 const FAINT = 'rgba(255,255,255,0.45)';
-const RED = '#EF4444';
-const GREEN = '#22C55E';
-const ORANGE = '#F97316';
+const RED = '#FF3B30';
+const GREEN = '#2CFF7A';
+const ORANGE = '#FF8A00';
 const HAIRLINE = 'rgba(255,255,255,0.08)';
 
 interface DailyLog {
@@ -380,7 +380,7 @@ export default function DailyLogDetailPage() {
       </button>
 
       {error && (
-        <div style={{ padding: '12px 16px', background: 'rgba(239,68,68,.1)', border: `1px solid rgba(239,68,68,.3)`, borderRadius: 12, color: RED, fontSize: 13, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ padding: '12px 16px', background: 'rgba(255,59,48,.1)', border: `1px solid rgba(255,59,48,.3)`, borderRadius: 12, color: RED, fontSize: 13, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
           <Warning size={16} /> {error}
         </div>
       )}

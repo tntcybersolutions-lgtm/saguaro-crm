@@ -17,8 +17,8 @@ import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, goldB
 // ─── Color Palette ────────────────────────────────────────────────
 const C = {
   GOLD: 'var(--brand-primary)', BG: 'var(--bg-base)', RAISED: 'var(--bg-surface)', BORDER: 'rgba(255,255,255,0.12)',
-  TEXT: '#FFFFFF', DIM: '#8094B0', GREEN: '#22C55E', RED: '#EF4444',
-  AMBER: 'var(--warning)', BLUE: 'var(--brand-primary)', PURPLE: '#8B5CF6',
+  TEXT: '#FFFFFF', DIM: '#8094B0', GREEN: '#2CFF7A', RED: '#FF3B30',
+  AMBER: 'var(--warning)', BLUE: 'var(--brand-primary)', PURPLE: '#FF8A00',
 };
 
 // The private `documents` bucket enforces this MIME allow-list on upload.
@@ -971,7 +971,7 @@ export default function DocumentVersionsPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: C.RED }}>Rev A · Red</span>
                 <StandardSelect value={overlay.aId} onChange={(v) => setOverlay({ ...overlay, aId: v })} ariaLabel="Revision A (red)" width={190} options={opts(overlay.bId)} />
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#3B82F6' }}>Rev B · Blue</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#FF8A00' }}>Rev B · Blue</span>
                 <StandardSelect value={overlay.bId} onChange={(v) => setOverlay({ ...overlay, bId: v })} ariaLabel="Revision B (blue)" width={190} options={opts(overlay.aId)} />
                 <button
                   style={sBtn('#334155', true)}

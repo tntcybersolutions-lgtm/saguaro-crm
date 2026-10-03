@@ -15,7 +15,7 @@ import BrandMark from '@/components/BrandMark';
 const BG = 'var(--bg-base)';
 const CARD = 'var(--bg-surface)';
 const GOLD = 'var(--brand-primary)';
-const GREEN = '#34C759';
+const GREEN = '#2CFF7A';
 const TEXT = '#FFFFFF';
 const DIM = '#CBD5E1';
 
@@ -34,7 +34,7 @@ const Icon = ({ d, size = 22 }: { d: string; size?: number }) => (
 );
 
 const CheckIcon = () => <svg viewBox="0 0 20 20" width={18} height={18} fill={GREEN}><path d="M10 0a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm4.3 7.7-5 5a1 1 0 0 1-1.4 0l-2-2a1 1 0 1 1 1.4-1.4L8.6 10.6l4.3-4.3a1 1 0 0 1 1.4 1.4z" /></svg>;
-const XIcon = () => <svg viewBox="0 0 20 20" width={18} height={18} fill="#EF4444"><circle cx={10} cy={10} r={10} opacity={0.15} /><path d="M7 7l6 6M13 7l-6 6" stroke="#EF4444" strokeWidth={2} strokeLinecap="round" /></svg>;
+const XIcon = () => <svg viewBox="0 0 20 20" width={18} height={18} fill="#FF3B30"><circle cx={10} cy={10} r={10} opacity={0.15} /><path d="M7 7l6 6M13 7l-6 6" stroke="#FF3B30" strokeWidth={2} strokeLinecap="round" /></svg>;
 const PartialIcon = () => <svg viewBox="0 0 20 20" width={18} height={18} fill={GOLD}><circle cx={10} cy={10} r={10} opacity={0.15} /><path d="M6 10h8" stroke={GOLD} strokeWidth={2} strokeLinecap="round" /></svg>;
 
 /* ── nav links (legacy — replaced by dropdown menus) ── */
@@ -73,7 +73,7 @@ const StatusCell = ({ v }: { v: Mark }) =>
 
 const PRICE_LABELS: Record<'saguaro' | 'comp1' | 'comp2', { text: string; color: string }> = {
   saguaro: { text: STARTING_PRICE_FLAT, color: GREEN },
-  comp1: { text: 'Custom quote', color: '#EF4444' },
+  comp1: { text: 'Custom quote', color: '#FF3B30' },
   comp2: { text: 'Per-seat', color: GOLD },
 };
 
@@ -191,8 +191,8 @@ export default function LandingPage() {
         <div id="demo" style={{ ...glass, padding: 0, overflow: 'hidden', position: 'relative', zIndex: 1, scrollMarginTop: 72, minWidth: 0, maxWidth: '100%' }} className="hero-mockup">
           {/* browser chrome */}
           <div style={{ background: 'rgba(20,20,22,0.8)', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid rgba(255,255,255,0.12)' }}>
-            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#EF4444' }} />
-            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#F59E0B' }} />
+            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#FF3B30' }} />
+            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#FF8A00' }} />
             <span style={{ width: 10, height: 10, borderRadius: '50%', background: GREEN }} />
             <span style={{ flex: 1, background: 'rgba(0,0,0,0.06)', borderRadius: 6, padding: '4px 12px', fontSize: 11, color: DIM, marginLeft: 8 }}>saguarocontrol.net/app/takeoff</span>
           </div>

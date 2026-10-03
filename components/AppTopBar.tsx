@@ -455,14 +455,14 @@ export default function AppTopBar({
                   borderRadius: radius.lg,
                   background: 'none',
                   border: 'none',
-                  color: '#FF4D5E',
+                  color: '#FF3B30',
                   fontSize: font.size.md,
                   fontWeight: font.weight.medium,
                   cursor: 'pointer',
                   textAlign: 'left',
                   transition: 'background .1s',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,77,94,0.10)')}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,59,48,0.10)')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
               >
                 <SignOut size={16} /> Sign Out

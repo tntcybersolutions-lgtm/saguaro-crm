@@ -10,7 +10,7 @@ import { ArrowLeft, ArrowRight, Plus, X, Receipt, CalendarBlank, Table, Calculat
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { PremiumSurface, ModuleHero, SectionCard, StatStrip, FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30',ORANGE='#FF8A00';
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
 const fmtDate = (d?:string|null) => d ? new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
 
@@ -269,7 +269,7 @@ export default function NewPayAppPage() {
         <StatStrip items={[
           {href: `/app/projects/${projectId}/pay-apps/new`, label:'Application', value:`#${appNumber ?? (money?.payAppCount??0)+1}`, sub: lastApp ? `Follows App #${lastApp.appNumber}` : 'First on this project'},
           {href: `/app/projects/${projectId}/contracts`, label:'Original Contract', value:fmt(original), sub:'G702 line 1'},
-          {href: `/app/projects/${projectId}/change-orders`, label:'Approved COs', value:(coTotal>=0?'+':'')+fmt(coTotal), accent:coTotal>0?'#3dd68c':undefined, sub:`${money?.approvedCoCount||0} approved${money?.pendingCoCount?` · ${money.pendingCoCount} pending`:''}`},
+          {href: `/app/projects/${projectId}/change-orders`, label:'Approved COs', value:(coTotal>=0?'+':'')+fmt(coTotal), accent:coTotal>0?'#2CFF7A':undefined, sub:`${money?.approvedCoCount||0} approved${money?.pendingCoCount?` · ${money.pendingCoCount} pending`:''}`},
           {href: `/app/projects/${projectId}/contracts`, label:'Revised Contract', value:fmt(revised), sub:'Contract sum to date'},
           {href: `/app/projects/${projectId}/pay-apps/new`, label:'Billed to Date', value:fmt(money?.billedToDate||0), sub:`${money?.billedPct||0}% of revised`},
           {href: `/app/projects/${projectId}/pay-apps/new`, label:'Retainage', value:`${pct}%`, sub: subCount ? `${subCount} sub${subCount===1?'':'s'} on the job` : 'Per contract terms'},
@@ -321,7 +321,7 @@ export default function NewPayAppPage() {
                 {rolledForward ? (
                   <>
                     <div style={{fontSize:13,color:DIM,lineHeight:1.55,marginBottom:14}}>
-                      <b style={{color:'#3dd68c'}}>{lines.length} lines rolled forward</b> from App #{lastApp?.appNumber ?? '—'} — scheduled values and completed-to-date are pre-filled. In Step 2 you only enter <b style={{color:TEXT}}>this period&apos;s work</b>.
+                      <b style={{color:'#2CFF7A'}}>{lines.length} lines rolled forward</b> from App #{lastApp?.appNumber ?? '—'} — scheduled values and completed-to-date are pre-filled. In Step 2 you only enter <b style={{color:TEXT}}>this period&apos;s work</b>.
                     </div>
                     <div style={{display:'flex',justifyContent:'space-between',fontSize:11.5,color:DIM,marginBottom:6}}>
                       <span>Billed {fmt(prevTotal)} of {fmt(sovScheduled)} scheduled</span>
@@ -351,7 +351,7 @@ export default function NewPayAppPage() {
                     <InsightRow label="Period" value={`${fmtDate(lastApp.periodFrom)} – ${fmtDate(lastApp.periodTo)}`}/>
                     <InsightRow label="Status" value={String(lastApp.status||'—').replace(/_/g,' ')}/>
                     <InsightRow label="Completed & Stored" value={fmt(lastApp.totalCompletedStored)}/>
-                    <InsightRow label="Payment Certified" value={fmt(lastApp.currentPaymentDue)} accent="#3dd68c" strong/>
+                    <InsightRow label="Payment Certified" value={fmt(lastApp.currentPaymentDue)} accent="#2CFF7A" strong/>
                   </>
                 ) : (
                   <div style={{fontSize:12.5,color:DIM,lineHeight:1.6}}>
@@ -377,7 +377,7 @@ export default function NewPayAppPage() {
             {/* Table */}
             <div style={{flex:1,minWidth:0}}>
               {rolledForward && (
-                <div style={{marginBottom:12,padding:'10px 14px',borderRadius:10,background:'rgba(34,197,94,0.08)',border:'1px solid rgba(34,197,94,0.3)',color:'#22C55E',fontSize:12.5,fontWeight:600}}>
+                <div style={{marginBottom:12,padding:'10px 14px',borderRadius:10,background:'rgba(44,255,122,0.08)',border:'1px solid rgba(44,255,122,0.3)',color:'#2CFF7A',fontSize:12.5,fontWeight:600}}>
                   Rolled forward from App #{lastApp?.appNumber ?? '—'} — scheduled values and completed-to-date are pre-filled. Just enter this period&apos;s work.
                 </div>
               )}
@@ -429,7 +429,7 @@ export default function NewPayAppPage() {
                         <td colSpan={2} style={{padding:'10px 10px',fontWeight:800,fontSize:12,color:TEXT}}>Totals</td>
                         <td style={{padding:'10px 10px',fontWeight:800,color:GOLD,textAlign:'right' as const}}>{fmt(lines.reduce((s,l)=>s+(l.scheduledValue||0),0))}</td>
                         <td style={{padding:'10px 10px',fontWeight:700,color:TEXT,textAlign:'right' as const}}>{fmt(prevTotal)}</td>
-                        <td style={{padding:'10px 10px',fontWeight:800,color:'#3dd68c',textAlign:'right' as const}}>{fmt(thisPeriodTotal)}</td>
+                        <td style={{padding:'10px 10px',fontWeight:800,color:'#2CFF7A',textAlign:'right' as const}}>{fmt(thisPeriodTotal)}</td>
                         <td style={{padding:'10px 10px',fontWeight:700,color:TEXT,textAlign:'right' as const}}>{fmt(matsTotal)}</td>
                         <td style={{padding:'10px 10px',fontWeight:700,color:DIM}}>{contractSumNum>0?((totalCompleted/contractSumNum)*100).toFixed(1):0}%</td>
                         <td style={{padding:'10px 10px',fontWeight:700,color:DIM,textAlign:'right' as const}}>{fmt(lines.reduce((s,l)=>s+(l.balanceToFinish||0),0))}</td>
@@ -461,7 +461,7 @@ export default function NewPayAppPage() {
             <div style={{width:256,flexShrink:0,position:'sticky' as const,top:80}}>
               <SectionCard flat title="Live G702 Summary" icon={<Calculator size={17} weight="duotone" color={GOLD} />}>
                 <InsightRow label="Original Contract" value={fmt(contractSumNum)}/>
-                {coTotal!==0 && <InsightRow label="Approved COs" value={(coTotal>0?'+':'')+fmt(coTotal)} accent="#3dd68c"/>}
+                {coTotal!==0 && <InsightRow label="Approved COs" value={(coTotal>0?'+':'')+fmt(coTotal)} accent="#2CFF7A"/>}
                 {coTotal!==0 && <InsightRow label="Contract to Date" value={fmt(contractSumNum+coTotal)}/>}
                 <div style={{height:1,background:'rgba(255,255,255,0.08)',margin:'8px 0'}}/>
                 <InsightRow label="Prev Completed" value={fmt(prevTotal)}/>

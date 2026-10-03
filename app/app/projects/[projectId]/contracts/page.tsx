@@ -14,7 +14,7 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { openPdf } from '@/components/PdfViewer';
 
-const GOLD='var(--brand-primary)', DARK='var(--bg-base)', RAISED='var(--bg-surface)', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#3dd68c', RED='#ef4444';
+const GOLD='var(--brand-primary)', DARK='var(--bg-base)', RAISED='var(--bg-surface)', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#2CFF7A', RED='#FF3B30';
 
 interface Contract {
   id: string;
@@ -60,7 +60,7 @@ function statusBadge(status: string) {
   const map: Record<string, { bg: string; color: string }> = {
     Draft: { bg: 'rgba(143,163,192,.2)', color: DIM },
     Sent: { bg: 'var(--brand-primary-18)', color: 'var(--brand-primary-strong)' },
-    Executed: { bg: 'rgba(61,214,140,.2)', color: GREEN },
+    Executed: { bg: 'rgba(44,255,122,.2)', color: GREEN },
     Complete: { bg: 'var(--brand-primary-18)', color: GOLD },
   };
   const s = map[status] || { bg: 'rgba(143,163,192,.2)', color: DIM };
@@ -334,8 +334,8 @@ export default function ContractsPage() {
         ]} />
       )}
 
-      {successMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(61,214,140,.15)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 10, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
-      {errorMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.4)', borderRadius: 10, color: RED, fontSize: 13 }}>{errorMsg}</div>}
+      {successMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(44,255,122,.15)', border: '1px solid rgba(44,255,122,.4)', borderRadius: 10, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
+      {errorMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(255,59,48,.15)', border: '1px solid rgba(255,59,48,.4)', borderRadius: 10, color: RED, fontSize: 13 }}>{errorMsg}</div>}
 
       {showForm && (
         <div style={{ marginBottom: 24, display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 330px', gap: 18, alignItems: 'start' }}>

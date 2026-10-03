@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useGuardedRouter } from '@/lib/navGuard';
 
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-surface)', RAISED = 'var(--bg-surface-2)', BORDER = 'rgba(255,255,255,0.12)', DIM = '#CBD5E1', TEXT = '#FFFFFF';
-const RED = '#c03030', AMBER = 'var(--warning)';
+const RED = '#FF3B30', AMBER = 'var(--warning)';
 
 interface Notification {
   id: string;

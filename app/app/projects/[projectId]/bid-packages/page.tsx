@@ -15,7 +15,7 @@ import { ANCHOR_BID_DECISION } from '@/lib/suggestions';
 import { StatusPill } from '@/components/ui/Status';
 import { openPdf } from '@/components/PdfViewer';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30',ORANGE='#FF8A00';
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -268,7 +268,7 @@ function WizardModal({ projectId, ctx, onClose, onCreated }: { projectId: string
                     <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 }}>
                       {est > 0 && <>Budget carries <b style={{ color: TEXT }}>{fmt(est)}</b> for this trade — incoming bids will level against it. </>}
                       {roster > 0
-                        ? <><b style={{ color: '#3dd68c' }}>{roster} roster sub{roster === 1 ? '' : 's'}</b> match this trade and will be suggested in Step 3.</>
+                        ? <><b style={{ color: '#2CFF7A' }}>{roster} roster sub{roster === 1 ? '' : 's'}</b> match this trade and will be suggested in Step 3.</>
                         : <>No roster subs match this trade yet — add invites by email in Step 3.</>}
                       {live && <> A {w.trade} package already exists on this project — this one will run alongside it.</>}
                     </div>
@@ -390,7 +390,7 @@ function WizardModal({ projectId, ctx, onClose, onCreated }: { projectId: string
                 </div>
               )}
               {w.error && (
-                <div style={{ background: 'rgba(192,48,48,.1)', border: '1px solid rgba(192,48,48,.3)', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#ff7070' }}>{w.error}</div>
+                <div style={{ background: 'rgba(192,48,48,.1)', border: '1px solid rgba(192,48,48,.3)', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#FF3B30' }}>{w.error}</div>
               )}
             </div>
           )}
@@ -481,7 +481,7 @@ export default function BidPackagesPage() {
   const budgetOriginal = Number(ctx?.budget?.original) || 0;
   const budgetCommitted = Number(ctx?.budget?.committed) || 0;
   const rosterCount = (ctx?.subs || []).length;
-  const spreadColor = (s: number) => s <= 10 ? '#3dd68c' : s <= 25 ? GOLD : '#ff7070';
+  const spreadColor = (s: number) => s <= 10 ? '#2CFF7A' : s <= 25 ? GOLD : '#FF3B30';
   const daysUntil = (d?: string | null) => {
     if (!d) return null;
     const t = new Date(String(d).slice(0, 10) + 'T00:00:00').getTime();
@@ -517,7 +517,7 @@ export default function BidPackagesPage() {
           {href: `/app/projects/${projectId}/bid-packages`,  label: 'Committed', value: fmt(budgetCommitted), sub: budgetOriginal > 0 ? `${Math.round((budgetCommitted / budgetOriginal) * 100)}% of budget` : 'POs + subcontracts' },
           {href: `/app/projects/${projectId}/bid-packages`,  label: 'Awarded via Bids', value: fmt(awardedTotal), accent: awardedTotal > 0 ? GOLD : undefined, sub: `${totalAwarded} package${totalAwarded === 1 ? '' : 's'} placed` },
           {href: `/app/projects/${projectId}/subs`,  label: 'Sub Roster', value: String(rosterCount), sub: rosterCount > 0 ? 'Ready to invite' : 'Invite by email works too' },
-          {href: `/app/projects/${projectId}/bid-packages`,  label: 'Responses', value: `${totalSubmissions} / ${totalInvited}`, accent: totalSubmissions > 0 ? '#3dd68c' : undefined, sub: 'Bids in vs invites out' },
+          {href: `/app/projects/${projectId}/bid-packages`,  label: 'Responses', value: `${totalSubmissions} / ${totalInvited}`, accent: totalSubmissions > 0 ? '#2CFF7A' : undefined, sub: 'Bids in vs invites out' },
         ]} />
       )}
 
@@ -529,8 +529,8 @@ export default function BidPackagesPage() {
           sub="All statuses" delay={0.02}
          href={`/app/projects/${projectId}/bid-packages`}/>
         <StatCard
-          icon={<Trophy size={19} weight="duotone" color="#45B37D" />}
-          label="Awarded" value={String(totalAwarded)} accent="#45B37D"
+          icon={<Trophy size={19} weight="duotone" color="#2CFF7A" />}
+          label="Awarded" value={String(totalAwarded)} accent="#2CFF7A"
           sub="Contracts placed" delay={0.06}
          href={`/app/projects/${projectId}/bid-packages`}/>
         <StatCard
@@ -615,17 +615,17 @@ export default function BidPackagesPage() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12, color: DIM, marginBottom: 12, flexWrap: 'wrap' }}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><CalendarBlank size={13} weight="regular" color={DIM} />{fmtDue(pkg.bid_due_date || (pkg as any).due_date)}</span>
-                    {due != null && !isAwarded && <span style={{ fontWeight: 700, color: due < 0 ? '#ff7070' : due <= 3 ? GOLD : DIM }}>{due < 0 ? `${Math.abs(due)}d overdue` : due === 0 ? 'Due today' : `${due}d left`}</span>}
+                    {due != null && !isAwarded && <span style={{ fontWeight: 700, color: due < 0 ? '#FF3B30' : due <= 3 ? GOLD : DIM }}>{due < 0 ? `${Math.abs(due)}d overdue` : due === 0 ? 'Due today' : `${due}d left`}</span>}
                     {pkg.jacket_pdf_url && <button type="button" onClick={e => { e.stopPropagation(); e.preventDefault(); openPdf({ url: pkg.jacket_pdf_url! }); }} style={{ background: 'none', border: 'none', padding: 0, font: 'inherit', cursor: 'pointer', color: GOLD, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}><FileText size={12} weight="regular" color={GOLD} />Jacket</button>}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, overflow: 'hidden' }}>
                     <div style={{ background: 'var(--bg-base)', padding: '9px 12px' }}>
                       <div style={{ fontSize: 9.5, fontWeight: 800, color: 'rgba(255,255,255,0.42)', marginBottom: 3 }}>Invited / Responded</div>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: TEXT, fontVariantNumeric: 'tabular-nums' }}>{invited} / <span style={{ color: responded > 0 ? '#3dd68c' : DIM }}>{responded}</span></div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: TEXT, fontVariantNumeric: 'tabular-nums' }}>{invited} / <span style={{ color: responded > 0 ? '#2CFF7A' : DIM }}>{responded}</span></div>
                     </div>
                     <div style={{ background: 'var(--bg-base)', padding: '9px 12px' }}>
                       <div style={{ fontSize: 9.5, fontWeight: 800, color: 'rgba(255,255,255,0.42)', marginBottom: 3 }}>{isAwarded ? 'Awarded' : 'Low Bid'}</div>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: isAwarded ? '#1db954' : low != null ? TEXT : DIM, fontVariantNumeric: 'tabular-nums', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{isAwarded && awardedAmt > 0 ? fmt(awardedAmt) : low != null ? fmt(low) : '—'}</div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: isAwarded ? '#2CFF7A' : low != null ? TEXT : DIM, fontVariantNumeric: 'tabular-nums', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{isAwarded && awardedAmt > 0 ? fmt(awardedAmt) : low != null ? fmt(low) : '—'}</div>
                       {(isAwarded ? (cp?.awardedTo || (pkg as any).awarded_to) : det?.lowWho) && <div style={{ fontSize: 10.5, color: DIM, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{isAwarded ? (cp?.awardedTo || (pkg as any).awarded_to) : det?.lowWho}</div>}
                     </div>
                     <div style={{ background: 'var(--bg-base)', padding: '9px 12px' }}>
@@ -635,7 +635,7 @@ export default function BidPackagesPage() {
                     </div>
                     <div style={{ background: 'var(--bg-base)', padding: '9px 12px' }}>
                       <div style={{ fontSize: 9.5, fontWeight: 800, color: 'rgba(255,255,255,0.42)', marginBottom: 3 }}>vs Budget</div>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: budgetEst > 0 && low != null ? (low <= budgetEst ? '#3dd68c' : '#ff7070') : DIM, fontVariantNumeric: 'tabular-nums' }}>{budgetEst > 0 && low != null ? `${low <= budgetEst ? '' : '+'}${fmt(low - budgetEst)}` : budgetEst > 0 ? fmt(budgetEst) : '—'}</div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: budgetEst > 0 && low != null ? (low <= budgetEst ? '#2CFF7A' : '#FF3B30') : DIM, fontVariantNumeric: 'tabular-nums' }}>{budgetEst > 0 && low != null ? `${low <= budgetEst ? '' : '+'}${fmt(low - budgetEst)}` : budgetEst > 0 ? fmt(budgetEst) : '—'}</div>
                       {budgetEst > 0 && <div style={{ fontSize: 10.5, color: DIM }}>{low != null ? (low <= budgetEst ? 'Low bid under budget' : 'Low bid over budget') : 'Budget estimate'}</div>}
                     </div>
                   </div>
@@ -666,7 +666,7 @@ export default function BidPackagesPage() {
                 <InsightRow label="Committed to Date" value={fmt(budgetCommitted)} />
                 <InsightRow label="Awarded via Bids" value={fmt(awardedTotal)} accent={awardedTotal > 0 ? GOLD : undefined} strong />
                 <InsightRow label="Open Packages" value={String(packages.filter(p => p.status === 'open').length)} />
-                <InsightRow label="Bids Received" value={String(totalSubmissions)} accent={totalSubmissions > 0 ? '#3dd68c' : undefined} />
+                <InsightRow label="Bids Received" value={String(totalSubmissions)} accent={totalSubmissions > 0 ? '#2CFF7A' : undefined} />
                 {rosterCount > 0 && <InsightRow label="Subs on Roster" value={String(rosterCount)} />}
               </SectionCard>
             )}

@@ -13,7 +13,7 @@ import {
 } from '@phosphor-icons/react';
 
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)', DIM = '#CBD5E1', TEXT = '#FFFFFF';
-const GREEN = '#45B37D', RED = '#E0644E';
+const GREEN = '#2CFF7A', RED = '#FF3B30';
 
 const fmt = (n: number) => '$' + (n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtK = (n: number) => {
@@ -191,7 +191,7 @@ function CashFlowContent() {
       {toast && (
         <div style={{
           position: 'fixed', top: 24, right: 24, zIndex: 9999,
-          background: toast.ok ? '#34C759' : '#FF3B30',
+          background: toast.ok ? '#2CFF7A' : '#FF3B30',
           color: '#fff', padding: '12px 24px', borderRadius: 8,
           border: `1px solid ${toast.ok ? GREEN : RED}`,
           fontSize: 13, fontWeight: 600, boxShadow: '0 4px 20px rgba(0,0,0,.5)',
@@ -306,7 +306,7 @@ function CashFlowContent() {
                   {/* Receivables bar */}
                   <div style={{
                     width: 24, height: Math.max(recHeight, 4), borderRadius: '4px 4px 0 0',
-                    background: `linear-gradient(180deg, ${GREEN}, rgba(69,179,125,0.45))`,
+                    background: `linear-gradient(180deg, ${GREEN}, rgba(44,255,122,0.45))`,
                     transition: 'height 0.4s ease',
                   }} title={`Receivables: ${fmt(period.receivables)}`} />
 

@@ -322,7 +322,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
                 )}
                 {!isCollapsed && <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label}</span>}
                 {!isCollapsed && ((item as { badge?: string }).badge || railCounts[item.href]) && (
-                  <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 5px', borderRadius: 8, background: active ? GOLD : '#B85C2A', color: active ? '#0A0A00' : '#1C1C1E' }}>
+                  <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 5px', borderRadius: 8, background: active ? GOLD : '#FF8A00', color: active ? '#0A0A00' : '#1C1C1E' }}>
                     {(item as { badge?: string }).badge || railCounts[item.href]}
                   </span>
                 )}

@@ -14,7 +14,7 @@ import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 import { openPdf } from '@/components/PdfViewer';
 
-const GOLD='var(--brand-primary)', DARK='var(--bg-base)', RAISED='var(--bg-surface)', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#3dd68c', RED='#ef4444';
+const GOLD='var(--brand-primary)', DARK='var(--bg-base)', RAISED='var(--bg-surface)', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#2CFF7A', RED='#FF3B30';
 
 interface Invoice {
   id: string;
@@ -39,9 +39,9 @@ const STATUS_MAP: Record<string, { bg: string; color: string; label: string }> =
   draft: { bg: 'rgba(143,163,192,.2)', color: DIM, label: 'Draft' },
   sent: { bg: 'var(--brand-primary-18)', color: 'var(--brand-primary-strong)', label: 'Sent' },
   pending: { bg: 'color-mix(in srgb, var(--warning) 20%, transparent)', color: 'var(--warning)', label: 'Pending' },
-  approved: { bg: 'rgba(61,214,140,.2)', color: GREEN, label: 'Approved' },
-  paid: { bg: 'rgba(61,214,140,.2)', color: GREEN, label: 'Paid' },
-  overdue: { bg: 'rgba(239,68,68,.2)', color: RED, label: 'Overdue' },
+  approved: { bg: 'rgba(44,255,122,.2)', color: GREEN, label: 'Approved' },
+  paid: { bg: 'rgba(44,255,122,.2)', color: GREEN, label: 'Paid' },
+  overdue: { bg: 'rgba(255,59,48,.2)', color: RED, label: 'Overdue' },
 };
 
 /** Lowercase-normalized status — kills the 'Sent' vs 'sent' split-brain. */
@@ -352,8 +352,8 @@ export default function InvoicesPage() {
          href={`/app/projects/${projectId}/invoices`}/>
       </div>
 
-      {successMsg && <div style={{ margin: '0 0 16px', padding: '10px 14px', background: 'rgba(61,214,140,.15)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 10, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
-      {errorMsg && <div style={{ margin: '0 0 16px', padding: '10px 14px', background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.4)', borderRadius: 10, color: RED, fontSize: 13 }}>{errorMsg}</div>}
+      {successMsg && <div style={{ margin: '0 0 16px', padding: '10px 14px', background: 'rgba(44,255,122,.15)', border: '1px solid rgba(44,255,122,.4)', borderRadius: 10, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
+      {errorMsg && <div style={{ margin: '0 0 16px', padding: '10px 14px', background: 'rgba(255,59,48,.15)', border: '1px solid rgba(255,59,48,.4)', borderRadius: 10, color: RED, fontSize: 13 }}>{errorMsg}</div>}
 
       {showForm && (
         <div style={{ display: 'grid', gridTemplateColumns: ctx ? 'minmax(0, 1fr) 320px' : '1fr', gap: 18, alignItems: 'start', marginBottom: 24 }}>
@@ -540,14 +540,14 @@ export default function InvoicesPage() {
                 const effKey = overdue ? 'overdue' : statusKey(inv.status);
                 const sc = STATUS_MAP[effKey] || { bg: 'rgba(143,163,192,.2)', color: DIM, label: statusKey(inv.status) };
                 return (
-                  <tr key={inv.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', background: overdue ? 'rgba(239,68,68,.05)' : 'transparent' }}>
+                  <tr key={inv.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', background: overdue ? 'rgba(255,59,48,.05)' : 'transparent' }}>
                     <td style={{ padding: '10px 14px', color: GOLD, fontWeight: 700 }}>{inv.invoice_number}</td>
                     <td style={{ padding: '10px 14px', color: DIM }}>{inv.vendor_name}</td>
                     <td style={{ padding: '10px 14px', position: 'relative' as const }}>
                       {deleteId === inv.id ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <span style={{ fontSize: 11, color: RED, fontWeight: 600 }}>Delete?</span>
-                          <button onClick={() => handleDeleteInv(inv.id)} style={{ padding: '3px 8px', background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.3)', borderRadius: 5, color: RED, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Yes</button>
+                          <button onClick={() => handleDeleteInv(inv.id)} style={{ padding: '3px 8px', background: 'rgba(255,59,48,.15)', border: '1px solid rgba(255,59,48,.3)', borderRadius: 5, color: RED, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Yes</button>
                           <button onClick={() => setDeleteId(null)} style={{ padding: '3px 8px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
                         </div>
                       ) : editId === inv.id ? (
@@ -559,7 +559,7 @@ export default function InvoicesPage() {
                       ) : adjustId === inv.id ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                           {[-10, -5, 5, 10].map(p => (
-                            <button key={p} onClick={() => handleAdjustInv(inv.id, p)} style={{ padding: '3px 7px', background: p > 0 ? 'rgba(61,214,140,.1)' : 'rgba(239,68,68,.1)', border: `1px solid ${p > 0 ? 'rgba(61,214,140,.25)' : 'rgba(239,68,68,.25)'}`, borderRadius: 5, color: p > 0 ? GREEN : RED, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{p > 0 ? '+' : ''}{p}%</button>
+                            <button key={p} onClick={() => handleAdjustInv(inv.id, p)} style={{ padding: '3px 7px', background: p > 0 ? 'rgba(44,255,122,.1)' : 'rgba(255,59,48,.1)', border: `1px solid ${p > 0 ? 'rgba(44,255,122,.25)' : 'rgba(255,59,48,.25)'}`, borderRadius: 5, color: p > 0 ? GREEN : RED, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{p > 0 ? '+' : ''}{p}%</button>
                           ))}
                           <button onClick={() => setAdjustId(null)} style={{ padding: '3px 6px', background: 'none', border: 'none', color: DIM, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
                         </div>
@@ -580,7 +580,7 @@ export default function InvoicesPage() {
                                 </div>
                               ))}
                               <div style={{ height: 1, background: BORDER, margin: '4px 0' }} />
-                              <div onClick={() => { setMenuId(null); setDeleteId(inv.id); }} style={{ padding: '7px 12px', fontSize: 12, color: RED, cursor: 'pointer', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 9 }} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,.08)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                              <div onClick={() => { setMenuId(null); setDeleteId(inv.id); }} style={{ padding: '7px 12px', fontSize: 12, color: RED, cursor: 'pointer', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 9 }} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,59,48,.08)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                                 <Trash size={15} weight="bold" color={RED} />Delete Invoice
                               </div>
                             </div>

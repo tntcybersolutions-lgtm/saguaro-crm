@@ -32,7 +32,7 @@ const GOLD = 'var(--brand-primary)';
 const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
 const HAIR = 'rgba(255,255,255,0.10)';
-const GREEN = '#22C55E';
+const GREEN = '#2CFF7A';
 const AMBER = 'var(--warning)';
 
 export type Drift = {
@@ -253,7 +253,7 @@ export default function BidJacketAssembly({
         <div
           style={{
             fontSize: 13.5, fontWeight: 600, marginBottom: 14,
-            color: note.tone === 'ok' ? GREEN : note.tone === 'warn' ? AMBER : '#EF4444',
+            color: note.tone === 'ok' ? GREEN : note.tone === 'warn' ? AMBER : '#FF3B30',
           }}
         >
           {note.text}

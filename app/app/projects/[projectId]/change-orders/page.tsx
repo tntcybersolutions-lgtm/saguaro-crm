@@ -15,7 +15,7 @@ import { moduleAccent } from '@/lib/module-identity';
 import Suggest from '@/components/ui/Suggest';
 import { StatusPill } from '@/components/ui/Status';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30',ORANGE='#FF8A00';
 const AMBER='var(--warning)';
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
 
@@ -35,7 +35,7 @@ interface AIRiskResult {
 
 function RiskBadge({ level }: { level: 'LOW' | 'MEDIUM' | 'HIGH' }) {
   const cfg = {
-    LOW:    { bg:'rgba(26,138,74,.18)', color:'#3dd68c', label:'Low Risk' },
+    LOW:    { bg:'rgba(26,138,74,.18)', color:'#2CFF7A', label:'Low Risk' },
     MEDIUM: { bg:'color-mix(in srgb, var(--warning) 18%, transparent)', color:AMBER, label:'Medium Risk' },
     HIGH:   { bg:'rgba(192,48,48,.18)', color:RED, label:'High Risk' },
   }[level];
@@ -47,7 +47,7 @@ function RiskBadge({ level }: { level: 'LOW' | 'MEDIUM' | 'HIGH' }) {
 }
 
 function AIRiskPanel({ result, onClose }: { result: AIRiskResult; onClose: () => void }) {
-  const approvalColor = result.approval_likelihood >= 70 ? '#3dd68c' : result.approval_likelihood >= 40 ? AMBER : RED;
+  const approvalColor = result.approval_likelihood >= 70 ? '#2CFF7A' : result.approval_likelihood >= 40 ? AMBER : RED;
   return (
     <div style={{marginTop:12,background:'var(--bg-surface)',border:`1px solid var(--brand-primary-25)`,borderRadius:12,padding:20,animation:'slideDown .25s ease'}}>
       <style>{`@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}`}</style>
@@ -83,8 +83,8 @@ function AIRiskPanel({ result, onClose }: { result: AIRiskResult; onClose: () =>
             <div style={{fontSize:11,fontWeight:700,color:DIM, marginBottom:8}}>Flags / Concerns</div>
             <ul style={{margin:0,padding:0,listStyle:'none',display:'flex',flexDirection:'column',gap:5}}>
               {result.flags.map((f) => (
-                <li key={f} style={{display:'flex',gap:7,alignItems:'flex-start',fontSize:12,color:'#f87171'}}>
-                  <span style={{marginTop:1,flexShrink:0,display:'inline-flex'}}><Warning size={12} color="#f87171" weight="fill" /></span>
+                <li key={f} style={{display:'flex',gap:7,alignItems:'flex-start',fontSize:12,color:'#FF3B30'}}>
+                  <span style={{marginTop:1,flexShrink:0,display:'inline-flex'}}><Warning size={12} color="#FF3B30" weight="fill" /></span>
                   <span>{f}</span>
                 </li>
               ))}
@@ -97,8 +97,8 @@ function AIRiskPanel({ result, onClose }: { result: AIRiskResult; onClose: () =>
             <div style={{fontSize:11,fontWeight:700,color:DIM, marginBottom:8}}>Recommendations</div>
             <ul style={{margin:0,padding:0,listStyle:'none',display:'flex',flexDirection:'column',gap:5}}>
               {result.recommendations.map((r) => (
-                <li key={r} style={{display:'flex',gap:7,alignItems:'flex-start',fontSize:12,color:'#86efac'}}>
-                  <span style={{marginTop:1,flexShrink:0,display:'inline-flex'}}><CheckCircle size={12} color="#86efac" weight="fill" /></span>
+                <li key={r} style={{display:'flex',gap:7,alignItems:'flex-start',fontSize:12,color:'#2CFF7A'}}>
+                  <span style={{marginTop:1,flexShrink:0,display:'inline-flex'}}><CheckCircle size={12} color="#2CFF7A" weight="fill" /></span>
                   <span>{r}</span>
                 </li>
               ))}
@@ -111,7 +111,7 @@ function AIRiskPanel({ result, onClose }: { result: AIRiskResult; onClose: () =>
 }
 
 function statusStyle(s:string):{c:string,bg:string}{
-  if(s==='approved') return {c:'#3dd68c',bg:'rgba(26,138,74,.14)'};
+  if(s==='approved') return {c:'#2CFF7A',bg:'rgba(26,138,74,.14)'};
   if(s==='rejected') return {c:RED, bg:'rgba(192,48,48,.14)'};
   return {c:GOLD,bg:'var(--brand-primary-12)'};
 }
@@ -368,7 +368,7 @@ export default function ChangeOrdersPage() {
   return (
     <>
       {toast && (
-        <div style={{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:'8px',background:toast.type==='success'?'rgba(34,197,94,0.9)':'rgba(239,68,68,0.9)',color:'#fff',fontWeight:600,fontSize:'14px',pointerEvents:'none'}}>
+        <div style={{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:'8px',background:toast.type==='success'?'rgba(44,255,122,0.9)':'rgba(255,59,48,0.9)',color:'#fff',fontWeight:600,fontSize:'14px',pointerEvents:'none'}}>
           {toast.msg}
         </div>
       )}
@@ -396,7 +396,7 @@ export default function ChangeOrdersPage() {
         {(ctx || !loading) && (
           <StatStrip items={[
             {href: `/app/projects/${projectId}/contracts`, label:'Original Contract', value:fmt(contractSum), sub:'Prime contract baseline'},
-            {href: `/app/projects/${projectId}/change-orders`, label:'Approved COs', value:(approvedCOs>=0?'+':'')+fmt(approvedCOs), accent:approvedCOs>0?'#3dd68c':approvedCOs<0?RED:undefined, sub:`${approvedCount} approved`},
+            {href: `/app/projects/${projectId}/change-orders`, label:'Approved COs', value:(approvedCOs>=0?'+':'')+fmt(approvedCOs), accent:approvedCOs>0?'#2CFF7A':approvedCOs<0?RED:undefined, sub:`${approvedCount} approved`},
             {href: `/app/projects/${projectId}/change-orders`, label:'Pending COs', value:(pendingCOs>=0?'+':'')+fmt(pendingCOs), accent:pendingCount>0?GOLD:undefined, sub:pendingCount>0?`${pendingCount} awaiting decision`:'None awaiting decision'},
             {href: `/app/projects/${projectId}/contracts`, label:'Revised Contract', value:fmt(currentContract), accent:GOLD, sub:'Original + approved COs'},
             {href: `/app/projects/${projectId}/change-orders`, label:'Next CO', value:`CO-${padCo(nextCoNumber)}`, sub:lastCo?`Follows CO-${padCo(lastCo.co_number)}`:'First on this project'},
@@ -433,7 +433,7 @@ export default function ChangeOrdersPage() {
                   <label style={LBL}>Cost Impact ($)</label>
                   <input type="number" value={fCost} onChange={e=>setFCost(e.target.value)} placeholder="0" style={INP}/>
                   <div style={HINT}>
-                    New contract sum: <b style={{color:fCostNum>0?'#3dd68c':fCostNum<0?RED:TEXT}}>{fmt(newContractSum)}</b> — {fmt(contractSum)} original{approvedCOs!==0 && <> {approvedCOs>0?'+':'-'} {fmt(Math.abs(approvedCOs))} approved COs</>} + this CO. Enter a negative number for credits.
+                    New contract sum: <b style={{color:fCostNum>0?'#2CFF7A':fCostNum<0?RED:TEXT}}>{fmt(newContractSum)}</b> — {fmt(contractSum)} original{approvedCOs!==0 && <> {approvedCOs>0?'+':'-'} {fmt(Math.abs(approvedCOs))} approved COs</>} + this CO. Enter a negative number for credits.
                   </div>
                 </div>
                 <div>
@@ -486,7 +486,7 @@ export default function ChangeOrdersPage() {
             <div style={{display:'flex',flexDirection:'column',gap:16}}>
               <SectionCard flat title="Contract Position" icon={<CurrencyDollar size={17} weight="duotone" color={GOLD} />}>
                 <InsightRow label="Original Contract" value={fmt(contractSum)}/>
-                <InsightRow label={`Approved COs (${approvedCount})`} value={(approvedCOs>=0?'+':'')+fmt(approvedCOs)} accent={approvedCOs>0?'#3dd68c':undefined}/>
+                <InsightRow label={`Approved COs (${approvedCount})`} value={(approvedCOs>=0?'+':'')+fmt(approvedCOs)} accent={approvedCOs>0?'#2CFF7A':undefined}/>
                 {pendingCount>0 && <InsightRow label={`Pending COs (${pendingCount})`} value={(pendingCOs>=0?'+':'')+fmt(pendingCOs)} accent={GOLD}/>}
                 <InsightRow label="This CO" value={(fCostNum>=0?'+':'')+fmt(fCostNum)} accent={fCostNum>0?ORANGE:fCostNum<0?RED:undefined}/>
                 <div style={{height:1,background:'rgba(255,255,255,0.08)',margin:'8px 0'}}/>
@@ -524,7 +524,7 @@ export default function ChangeOrdersPage() {
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
         <StatCard icon={<Clipboard size={19} weight="duotone" color={moduleAccent('changeorders').hex} />} label="Total COs" value={String(cos.length)} delay={0.02}  href={`/app/projects/${projectId}/change-orders`}/>
         <StatCard icon={<Warning size={19} weight="duotone" color={GOLD} />} label="Pending" value={String(cos.filter(c=>c.status==='pending').length)} accent={GOLD} delay={0.06}  href={`/app/projects/${projectId}/change-orders`}/>
-        <StatCard icon={<CheckCircle size={19} weight="duotone" color="#3dd68c" />} label="Approved" value={String(cos.filter(c=>c.status==='approved').length)} accent="#3dd68c" delay={0.10}  href={`/app/projects/${projectId}/change-orders`}/>
+        <StatCard icon={<CheckCircle size={19} weight="duotone" color="#2CFF7A" />} label="Approved" value={String(cos.filter(c=>c.status==='approved').length)} accent="#2CFF7A" delay={0.10}  href={`/app/projects/${projectId}/change-orders`}/>
         <StatCard icon={<XCircle size={19} weight="duotone" color={RED} />} label="Rejected" value={String(cos.filter(c=>c.status==='rejected').length)} accent={RED} delay={0.14}  href={`/app/projects/${projectId}/change-orders`}/>
       </div>
 
@@ -607,7 +607,7 @@ export default function ChangeOrdersPage() {
                         ) : (
                           <div style={{display:'flex',alignItems:'center',gap:4}}>
                             <span style={{color:cost>0?ORANGE:cost<0?RED:DIM,fontWeight:700}}>{cost>=0?'+':''}{fmt(cost)}</span>
-                            {coCopiedId===co.id&&<span style={{fontSize:10,color:'#3dd68c',fontWeight:600}}>Copied!</span>}
+                            {coCopiedId===co.id&&<span style={{fontSize:10,color:'#2CFF7A',fontWeight:600}}>Copied!</span>}
                             <button onClick={()=>openCoMenu(co.id)} style={{background:'none',border:'none',color:DIM,cursor:'pointer',fontSize:10,padding:'2px 4px',lineHeight:1,opacity:0.6}} onMouseEnter={e=>(e.currentTarget.style.opacity='1')} onMouseLeave={e=>(e.currentTarget.style.opacity='0.6')}><CaretDown size={10} color={DIM} weight="regular" /></button>
                             {coMenuId===co.id&&(
                               <div style={{position:'absolute',top:36,right:14,background:RAISED,border:`1px solid ${BORDER}`,borderRadius:'var(--radius-md)',padding:6,zIndex:100,minWidth:150,boxShadow:'var(--shadow-lg)'}}>
@@ -648,7 +648,7 @@ export default function ChangeOrdersPage() {
                               </button>
                             </>
                           )}
-                          {co.status==='approved' && <span style={{fontSize:11,color:'#3dd68c',fontWeight:700,display:'inline-flex',alignItems:'center',gap:4}}><CheckCircle size={12} color="#3dd68c" weight="fill" />Approved</span>}
+                          {co.status==='approved' && <span style={{fontSize:11,color:'#2CFF7A',fontWeight:700,display:'inline-flex',alignItems:'center',gap:4}}><CheckCircle size={12} color="#2CFF7A" weight="fill" />Approved</span>}
                           {co.status==='rejected' && <span style={{fontSize:11,color:RED,fontWeight:700,display:'inline-flex',alignItems:'center',gap:4}}><XCircle size={12} color={RED} weight="fill" />Rejected</span>}
                           <button
                             onClick={()=>{

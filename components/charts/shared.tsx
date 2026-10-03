@@ -6,7 +6,7 @@
  * Every chart in this folder draws its colors, card chrome, number formatting
  * and tooltip from here so the set reads as ONE system and matches the premium
  * surface (components/ui/premium.tsx): the same gold (var(--brand-primary) brand) / blue
- * (#3B82F6 sales) accents, the same milled-plate card, tabular-nums, uppercase
+ * (#FF8A00 sales) accents, the same milled-plate card, tabular-nums, uppercase
  * micro-labels, and the readability tokens from globals.css (--text-*,
  * --brand-primary, --bg-surface, --border-*). Colors resolve through the CSS
  * variables so white-label re-themes and the app's readability pass carry
@@ -21,10 +21,10 @@ import React from 'react';
 export const CHART = {
   gold: 'var(--brand-primary)',
   goldStrong: 'var(--brand-primary-strong)',
-  blue: '#3B82F6',
-  blueStrong: '#60A5FA',
-  green: 'var(--success, #22C55E)',
-  red: 'var(--danger, #EF4444)',
+  blue: '#FF8A00',
+  blueStrong: '#FF8A00',
+  green: 'var(--success, #2CFF7A)',
+  red: 'var(--danger, #FF3B30)',
   textPrimary: 'var(--text-primary, #FFFFFF)',
   textSecondary: 'var(--text-secondary, #CBD5E1)',
   textTertiary: 'var(--text-tertiary, #8094B0)',
@@ -55,12 +55,12 @@ export function accentColors(accent: ChartAccent): AccentPair {
  *  money chart leads with the brand hue and never collides series on hue. */
 export const CATEGORICAL: readonly string[] = [
   'var(--brand-primary)',
-  '#3B82F6',
-  '#22C55E',
-  '#A78BFA',
+  '#FF8A00',
+  '#2CFF7A',
+  '#FF8A00',
   '#22D3EE',
-  '#FB923C',
-  '#F472B6',
+  '#FF8A00',
+  '#FF8A00',
   '#64748B',
 ];
 

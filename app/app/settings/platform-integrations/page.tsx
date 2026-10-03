@@ -23,8 +23,8 @@ const GOLD = 'var(--brand-primary)';
 const WHITE = '#FFFFFF';
 const MUTED = 'rgba(255,255,255,0.62)';
 const BORDER = 'rgba(255,255,255,0.08)';
-const GREEN = '#22C55E';
-const RED = '#EF4444';
+const GREEN = '#2CFF7A';
+const RED = '#FF3B30';
 
 const modalInputStyle: React.CSSProperties = {
   width: '100%', marginTop: 3,
@@ -107,7 +107,7 @@ export default function PlatformIntegrationsPage() {
       )}
 
       {toast && (
-        <div style={{ margin: '0 0 16px', padding: '10px 14px', background: toast.ok ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)', border: `1px solid ${toast.ok ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`, borderRadius: 10, color: toast.ok ? GREEN : RED, fontSize: 13 }}>{toast.m}</div>
+        <div style={{ margin: '0 0 16px', padding: '10px 14px', background: toast.ok ? 'rgba(44,255,122,0.12)' : 'rgba(255,59,48,0.12)', border: `1px solid ${toast.ok ? 'rgba(44,255,122,0.3)' : 'rgba(255,59,48,0.3)'}`, borderRadius: 10, color: toast.ok ? GREEN : RED, fontSize: 13 }}>{toast.m}</div>
       )}
 
       <SectionCard
@@ -134,7 +134,7 @@ export default function PlatformIntegrationsPage() {
                   </div>
                   <button onClick={() => { setEditing(a); setForm({ clientId: '', clientSecret: '' }); }} className="pmBtn" style={{ ...goldButtonStyle, padding: '8px 16px', fontSize: 12.5 }}>{a.configured ? 'Update' : 'Set Up'}</button>
                   {a.source === 'in-product' && (
-                    <button onClick={() => remove(a)} className="pmBtn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', borderRadius: 10, cursor: 'pointer', background: 'rgba(239,68,68,0.12)', color: RED, border: '1px solid rgba(239,68,68,0.35)' }}><Trash size={13} /></button>
+                    <button onClick={() => remove(a)} className="pmBtn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', borderRadius: 10, cursor: 'pointer', background: 'rgba(255,59,48,0.12)', color: RED, border: '1px solid rgba(255,59,48,0.35)' }}><Trash size={13} /></button>
                   )}
                 </div>
               </div>
@@ -154,7 +154,7 @@ export default function PlatformIntegrationsPage() {
               <div style={{ fontSize: 11.5, color: MUTED, marginBottom: 8 }}>Add these redirect URIs to the app (copy each):</div>
               {editing.redirects.map((r: string) => (
                 <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-                  <code style={{ flex: 1, fontSize: 11.5, color: '#3dd68c', wordBreak: 'break-all', fontFamily: 'monospace' }}>{r}</code>
+                  <code style={{ flex: 1, fontSize: 11.5, color: '#2CFF7A', wordBreak: 'break-all', fontFamily: 'monospace' }}>{r}</code>
                   <button onClick={() => copy(r, r)} style={{ background: 'none', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '3px 7px', cursor: 'pointer', color: MUTED, display: 'inline-flex', gap: 3, alignItems: 'center', fontSize: 11 }}>{copied === r ? <Check size={12} color={GREEN} /> : <Copy size={12} />}</button>
                 </div>
               ))}

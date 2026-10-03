@@ -16,7 +16,7 @@ import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { StatusPill } from '@/components/ui/Status';
 
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
-const GREEN='#1a8a4a',RED='#c03030',ORANGE='#c07830';
+const GREEN='#2CFF7A',RED='#FF3B30',ORANGE='#c07830';
 
 const STATUSES=['pending','submitted','under_review','approved','rejected','revise_resubmit'];
 const STATUS_LABELS:Record<string,string>={
@@ -41,7 +41,7 @@ const BIC_COLORS:Record<string,string>={
   Contractor:'var(--brand-primary-strong)',
   Architect:GOLD,
   Owner:GREEN,
-  Engineer:'#a78bfa',
+  Engineer:'#FF8A00',
 };
 
 const inp:React.CSSProperties={
@@ -355,7 +355,7 @@ export default function SubmittalsPage(){
             {loading&&<div style={{padding:40,textAlign:'center',color:DIM}}>Loading submittals…</div>}
 
             {!loading&&loadError&&(
-              <div style={{margin:'0 16px 14px',background:'rgba(192,48,48,.12)',border:'1px solid rgba(192,48,48,.3)',borderRadius:8,padding:'12px 16px',color:'#c03030',fontSize:13}}>
+              <div style={{margin:'0 16px 14px',background:'rgba(192,48,48,.12)',border:'1px solid rgba(192,48,48,.3)',borderRadius:8,padding:'12px 16px',color:'#FF3B30',fontSize:13}}>
                 {loadError}
               </div>
             )}

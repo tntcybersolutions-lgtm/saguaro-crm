@@ -136,7 +136,7 @@ export default function FilesPage() {
         {!loading && (
           <StatStrip items={[
             {href: `/app/projects/${projectId}/files`,  label: 'Library', value: String(counts.total), sub: bytesTotal > 0 ? `${fmtSize(bytesTotal)} stored` : 'No storage used yet' },
-            {href: `/app/projects/${projectId}/files`,  label: 'Added This Week', value: String(addedThisWeek), accent: addedThisWeek > 0 ? '#3dd68c' : undefined, sub: lastUpload ? `Last upload ${fmtDate(lastUpload)}` : 'Nothing uploaded yet' },
+            {href: `/app/projects/${projectId}/files`,  label: 'Added This Week', value: String(addedThisWeek), accent: addedThisWeek > 0 ? '#2CFF7A' : undefined, sub: lastUpload ? `Last upload ${fmtDate(lastUpload)}` : 'Nothing uploaded yet' },
             {href: `/app/projects/${projectId}/photos`,  label: 'Photos', value: String(counts.image), sub: 'Site + progress shots' },
             {href: `/app/projects/${projectId}/files`,  label: 'Videos', value: String(counts.video), sub: 'Walkthroughs, site video' },
             {href: `/app/projects/${projectId}/drawings`,  label: 'Docs & Drawings', value: String(docCount), sub: 'PDFs, sheets, CAD, docs' },
@@ -162,7 +162,7 @@ export default function FilesPage() {
           </div>
         )}
 
-        {toast && <div style={{ marginBottom: 14, padding: '9px 14px', background: T.greenDim, border: '1px solid rgba(52,199,89,0.3)', borderRadius: 8, color: T.green, fontSize: 13 }}>{toast}</div>}
+        {toast && <div style={{ marginBottom: 14, padding: '9px 14px', background: T.greenDim, border: '1px solid rgba(44,255,122,0.3)', borderRadius: 8, color: T.green, fontSize: 13 }}>{toast}</div>}
 
         {/* Library */}
         <SectionCard

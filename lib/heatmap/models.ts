@@ -12,14 +12,14 @@ export const FT_PER_M = 3.28084;
    Every device typeId maps to one of these systems (see DEVICE_REGISTRY.color)
    so map glyphs, legends, layer chips/rows and the BOM all read consistently. */
 export const SYSTEM_COLORS = {
-  wifi:    '#F59E0B', // Wi-Fi / access points — brand gold (single GOLD token, matches UI GOLD)
+  wifi:    '#FF8A00', // Wi-Fi / access points — brand gold (single GOLD token, matches UI GOLD)
   camera:  '#E5484D', // Cameras — red
   access:  '#16C060', // Access control — green
-  sensor:  '#EAB308', // Sensors (motion / smoke / PIR) — yellow
+  sensor:  '#FFE600', // Sensors (motion / smoke / PIR) — yellow
   cabling: '#C4D0E0', // Structured cabling runs — steel / white
-  power:   '#F97316', // Electrical / power / data markers — orange
-  av:      '#A855F7', // AV / speakers / displays — violet (sensible extra)
-  iot:     '#0D9488', // Network / IoT / smart devices — teal (sensible extra)
+  power:   '#FF8A00', // Electrical / power / data markers — orange
+  av:      '#FF8A00', // AV / speakers / displays — violet (sensible extra)
+  iot:     '#2CFF7A', // Network / IoT / smart devices — teal (sensible extra)
 } as const;
 export type SystemKey = keyof typeof SYSTEM_COLORS;
 
@@ -78,11 +78,11 @@ export const WALL_MATERIALS: Record<WallMaterialId, { label: string; db24: numbe
   wood_door:   { label: 'Wood door',           db24: 3,  db5: 4,  color: '#b45309' },
   glass:       { label: 'Glass / window',      db24: 3,  db5: 4,  color: '#B7C4C4' },
   low_e_glass: { label: 'Low-E glass',         db24: 10, db5: 15, color: '#7E8C8C' },
-  brick:       { label: 'Brick',               db24: 8,  db5: 12, color: '#C2410C' },
+  brick:       { label: 'Brick',               db24: 8,  db5: 12, color: '#FF8A00' },
   cinderblock: { label: 'CMU / cinderblock',   db24: 6,  db5: 10, color: '#A9884F' },
   concrete:    { label: 'Concrete',            db24: 15, db5: 23, color: '#C9A96A' },
   metal:       { label: 'Metal / elevator',    db24: 25, db5: 30, color: '#9CA3AF' },
-  rack:        { label: 'Metal rack',          db24: 4,  db5: 6,  color: '#8b5cf6' },
+  rack:        { label: 'Metal rack',          db24: 4,  db5: 6,  color: '#FF8A00' },
 };
 export const wallDb = (m: WallMaterialId, band: Band): number => {
   const w = WALL_MATERIALS[m];
@@ -93,10 +93,10 @@ export const wallDb = (m: WallMaterialId, band: Band): number => {
 
 /* ── Camera DORI (EN 62676-4) ──────────────────────────────────────────── */
 export const DORI_ZONES = [
-  { label: 'Identify', pxPerM: 250, color: '#22c55e', opacity: 0.55 },
-  { label: 'Recognize', pxPerM: 125, color: '#84cc16', opacity: 0.45 },
-  { label: 'Observe', pxPerM: 62, color: '#eab308', opacity: 0.32 },
-  { label: 'Detect', pxPerM: 25, color: '#f97316', opacity: 0.2 },
+  { label: 'Identify', pxPerM: 250, color: '#2CFF7A', opacity: 0.55 },
+  { label: 'Recognize', pxPerM: 125, color: '#2CFF7A', opacity: 0.45 },
+  { label: 'Observe', pxPerM: 62, color: '#FFE600', opacity: 0.32 },
+  { label: 'Detect', pxPerM: 25, color: '#FF8A00', opacity: 0.2 },
 ];
 export const CAMERA_DERATE = 0.75;
 export const LENS_HFOV: { lensMm: number; hfovDeg: number }[] = [
@@ -179,44 +179,44 @@ export const DEVICE_REGISTRY: Record<DeviceTypeId, DeviceDef> = {
   },
   smart_switch: {
     label: 'Smart Light Switch', short: 'SW', modelType: 'radius', wallBlocked: false, color: SYSTEM_COLORS.iot,
-    defaults: { rangeFt: 6 }, zones: [{ outerFt: 6, color: '#EAB308', label: 'Control' }],
+    defaults: { rangeFt: 6 }, zones: [{ outerFt: 6, color: '#FFE600', label: 'Control' }],
   },
   smart_plug: {
     label: 'Smart Plug / Outlet', short: 'PLG', modelType: 'radius', wallBlocked: false, color: SYSTEM_COLORS.iot,
-    defaults: { rangeFt: 5 }, zones: [{ outerFt: 5, color: '#F59E0B', label: 'Control' }],
+    defaults: { rangeFt: 5 }, zones: [{ outerFt: 5, color: '#FF8A00', label: 'Control' }],
   },
   thermostat: {
     label: 'Smart Thermostat', short: 'TSTAT', modelType: 'radius', wallBlocked: false, color: SYSTEM_COLORS.iot,
-    defaults: { rangeFt: 6 }, zones: [{ outerFt: 6, color: '#14B8A6', label: 'Zone' }],
+    defaults: { rangeFt: 6 }, zones: [{ outerFt: 6, color: '#2CFF7A', label: 'Zone' }],
   },
   door_lock: {
     label: 'Smart Lock', short: 'LOCK', modelType: 'radius', wallBlocked: false, color: SYSTEM_COLORS.access,
-    defaults: { rangeFt: 4 }, zones: [{ outerFt: 4, color: '#8B5CF6', label: 'Door' }],
+    defaults: { rangeFt: 4 }, zones: [{ outerFt: 4, color: '#FF8A00', label: 'Door' }],
   },
   ev_charger: {
     label: 'EV Charger', short: 'EV', modelType: 'radius', wallBlocked: false, color: SYSTEM_COLORS.av,
-    defaults: { rangeFt: 8 }, zones: [{ outerFt: 8, color: '#10B981', label: 'Station' }],
+    defaults: { rangeFt: 8 }, zones: [{ outerFt: 8, color: '#2CFF7A', label: 'Station' }],
   },
   projector: {
     label: 'Projector', short: 'PROJ', modelType: 'radius', wallBlocked: false, color: SYSTEM_COLORS.av,
-    defaults: { rangeFt: 8 }, zones: [{ outerFt: 8, color: '#F472B6', label: 'AV' }],
+    defaults: { rangeFt: 8 }, zones: [{ outerFt: 8, color: '#FF8A00', label: 'AV' }],
   },
   display: {
     label: 'Display / TV', short: 'DISP', modelType: 'radius', wallBlocked: false, color: SYSTEM_COLORS.av,
-    defaults: { rangeFt: 6 }, zones: [{ outerFt: 6, color: '#FBBF24', label: 'AV' }],
+    defaults: { rangeFt: 6 }, zones: [{ outerFt: 6, color: '#FFE600', label: 'AV' }],
   },
   // ── termination / rough-in markers (annotation only — tiny footprint, never a coverage layer) ──
   electrical_outlet: {
     label: 'Electrical Outlet', short: 'PWR', modelType: 'radius', wallBlocked: false, color: SYSTEM_COLORS.power,
-    defaults: { rangeFt: 1.5, gang: 2 }, zones: [{ outerFt: 1.5, color: '#F59E0B', label: 'Outlet' }],
+    defaults: { rangeFt: 1.5, gang: 2 }, zones: [{ outerFt: 1.5, color: '#FF8A00', label: 'Outlet' }],
   },
   data_jack: {
     label: 'Data Jack (RJ45)', short: 'DATA', modelType: 'radius', wallBlocked: false, color: SYSTEM_COLORS.power,
-    defaults: { rangeFt: 1.5, ports: 1 }, zones: [{ outerFt: 1.5, color: '#D97706', label: 'Data' }],
+    defaults: { rangeFt: 1.5, ports: 1 }, zones: [{ outerFt: 1.5, color: '#FF8A00', label: 'Data' }],
   },
   voice_jack: {
     label: 'Voice Jack (RJ11)', short: 'VOICE', modelType: 'radius', wallBlocked: false, color: SYSTEM_COLORS.power,
-    defaults: { rangeFt: 1.5, ports: 1 }, zones: [{ outerFt: 1.5, color: '#16A34A', label: 'Voice' }],
+    defaults: { rangeFt: 1.5, ports: 1 }, zones: [{ outerFt: 1.5, color: '#2CFF7A', label: 'Voice' }],
   },
   combo_plate: {
     label: 'Combo Plate (Power + Data)', short: 'COMBO', modelType: 'radius', wallBlocked: false, color: SYSTEM_COLORS.power,
@@ -224,11 +224,11 @@ export const DEVICE_REGISTRY: Record<DeviceTypeId, DeviceDef> = {
   },
   cable_term: {
     label: 'Cable Termination', short: 'TERM', modelType: 'radius', wallBlocked: false, color: SYSTEM_COLORS.cabling,
-    defaults: { rangeFt: 1, gender: 'F' }, zones: [{ outerFt: 1, color: '#F59E0B', label: 'Term' }],
+    defaults: { rangeFt: 1, gender: 'F' }, zones: [{ outerFt: 1, color: '#FF8A00', label: 'Term' }],
   },
   idf: {
     label: 'IDF / Network Rack', short: 'IDF', modelType: 'radius', wallBlocked: false, color: SYSTEM_COLORS.cabling,
-    defaults: { rangeFt: 1 }, zones: [{ outerFt: 1, color: '#F59E0B', label: 'IDF' }],
+    defaults: { rangeFt: 1 }, zones: [{ outerFt: 1, color: '#FF8A00', label: 'IDF' }],
   },
 };
 

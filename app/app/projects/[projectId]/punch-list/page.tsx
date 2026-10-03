@@ -33,7 +33,7 @@ import RadioEvidence, {
 } from '@/components/RadioEvidence';
 
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
-const GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A',BLUE='var(--brand-primary)';
+const GREEN='#2CFF7A',RED='#FF3B30',ORANGE='#FF8A00',BLUE='var(--brand-primary)';
 
 // Priorities are STORED lowercase ('low'|'medium'|'high'|'critical') and
 // DISPLAYED capitalized. Legacy rows may carry capitalized values — every
@@ -335,7 +335,7 @@ export default function PunchListPage(){
             >
               <div style={{background:'rgba(255,255,255,0.08)',borderRadius:5,height:8,overflow:'hidden'}}>
                 <div style={{height:'100%',borderRadius:5,
-                  background:`linear-gradient(90deg,${GREEN},#3dd68c)`,
+                  background:`linear-gradient(90deg,${GREEN},#2CFF7A)`,
                   width:`${pct}%`,transition:'width .4s'}}/>
               </div>
               <div style={{fontSize:12,color:DIM,marginTop:8}}>{done} of {items.length} items complete</div>
@@ -632,11 +632,11 @@ export default function PunchListPage(){
                       background:selected.status==='completed'
                         ?'var(--brand-primary-12)':'rgba(26,138,74,.1)',
                       border:`1px solid color-mix(in srgb, ${selected.status==='completed'?BLUE:GREEN} 27%, transparent)`,
-                      borderRadius:7,color:selected.status==='completed'?'var(--brand-primary-strong)':'#4ade80',
+                      borderRadius:7,color:selected.status==='completed'?'var(--brand-primary-strong)':'#2CFF7A',
                       fontSize:13,fontWeight:700,cursor:'pointer'}}>
                     {selected.status==='completed'
                       ?<span style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6}}><ArrowUUpLeft size={14} weight="bold" color="var(--brand-primary-strong)"/>Reopen Item</span>
-                      :<span style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6}}><CheckCircle size={14} weight="bold" color="#4ade80"/>Mark Complete</span>}
+                      :<span style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6}}><CheckCircle size={14} weight="bold" color="#2CFF7A"/>Mark Complete</span>}
                   </button>
                 </div>
 

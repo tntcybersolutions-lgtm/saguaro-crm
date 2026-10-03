@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
 import { Cactus, EnvelopeOpen, Warning } from '@phosphor-icons/react';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444',GREEN='#22c55e';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#FF3B30',GREEN='#2CFF7A';
 
 function getSupabase() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
@@ -57,7 +57,7 @@ export default function ForgotPasswordPage(){
                 <p style={{color:DIM,fontSize:14,margin:0}}>Enter your email and we'll send a reset link.</p>
               </div>
               <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:14,padding:32}}>
-                {error&&<div style={{background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:RED}}><Warning size={14} weight="fill" style={{verticalAlign:'middle'}} /> {error}</div>}
+                {error&&<div style={{background:'rgba(255,59,48,.1)',border:'1px solid rgba(255,59,48,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:RED}}><Warning size={14} weight="fill" style={{verticalAlign:'middle'}} /> {error}</div>}
                 <form onSubmit={handleSubmit} style={{display:'flex',flexDirection:'column',gap:14}}>
                   <div>
                     <label style={{display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:6}}>Work Email</label>

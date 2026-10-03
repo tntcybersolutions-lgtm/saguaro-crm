@@ -10,7 +10,7 @@ import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty } from 
 import { Scales, MagnifyingGlass, CurrencyDollar, Calculator, CalendarBlank, CalendarCheck, Table as TableIcon, FileMagnifyingGlass } from '@phosphor-icons/react';
 
 const GOLD = 'var(--brand-primary)';
-const GREEN = '#34C759';
+const GREEN = '#2CFF7A';
 const BLUE = 'var(--brand-primary)';
 const TEXT = '#FFFFFF';
 const DIM = '#CBD5E1';
@@ -224,7 +224,7 @@ export default function PrevailingWagePage() {
         for the exact project, county and decision number. Rows marked <span style={{ color: BLUE, fontWeight: 800 }}>Custom</span> are your own tenant-entered determination and override the sample schedule.
       </div>
       {error && (
-        <div style={{ background: 'rgba(192,48,48,.1)', border: '1px solid rgba(192,48,48,.3)', borderRadius: 8, padding: '10px 16px', marginBottom: 20, fontSize: 13, color: '#ff7070' }}>
+        <div style={{ background: 'rgba(192,48,48,.1)', border: '1px solid rgba(192,48,48,.3)', borderRadius: 8, padding: '10px 16px', marginBottom: 20, fontSize: 13, color: '#FF3B30' }}>
           {error}
         </div>
       )}

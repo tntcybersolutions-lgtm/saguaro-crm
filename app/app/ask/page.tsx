@@ -126,7 +126,7 @@ export default function AskDocsPage() {
           <div ref={endRef} />
         </div>
 
-        {err && <div style={{ color: '#f87171', fontSize: 13, marginTop: 8 }}>{err}</div>}
+        {err && <div style={{ color: '#FF3B30', fontSize: 13, marginTop: 8 }}>{err}</div>}
         <div style={{ position: 'sticky', bottom: 0, background: DARK, paddingTop: 12, marginTop: 8 }}>
           <div style={{ display: 'flex', gap: 8 }}>
             <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && !busy && ask()} placeholder="Ask anything about this project…" style={inp} />

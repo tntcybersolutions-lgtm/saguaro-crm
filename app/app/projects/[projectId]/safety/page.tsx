@@ -22,8 +22,8 @@ import { StatusPill } from '@/components/ui/Status';
 
 // Semantic accents — tuned to match the dashboard's Sonoran palette.
 const GOLD = 'var(--brand-primary)';
-const GREEN = '#45B37D';
-const RED = '#E0644E';
+const GREEN = '#2CFF7A';
+const RED = '#FF3B30';
 const AMBER = 'var(--warning)';
 
 interface Incident {
@@ -536,10 +536,10 @@ export default function SafetyPage() {
       </div>
 
       {successMsg && (
-        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(34,197,94,0.4)`, borderRadius: 10, color: T.green, fontSize: 13 }}>{successMsg}</div>
+        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(44,255,122,0.4)`, borderRadius: 10, color: T.green, fontSize: 13 }}>{successMsg}</div>
       )}
       {errorMsg && (
-        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.redDim, border: `1px solid rgba(239,68,68,0.4)`, borderRadius: 10, color: T.red, fontSize: 13 }}>{errorMsg}</div>
+        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.redDim, border: `1px solid rgba(255,59,48,0.4)`, borderRadius: 10, color: T.red, fontSize: 13 }}>{errorMsg}</div>
       )}
 
       {/* Create Incident Form */}
@@ -567,7 +567,7 @@ export default function SafetyPage() {
                 <div style={hint}>Drives the OSHA-recordable flag below.</div>
               </div>
               <div style={{ gridColumn: 'span 3' }}>
-                <div style={{ padding: '9px 12px', borderRadius: 8, fontSize: 12, lineHeight: 1.5, background: formIsRecordable ? 'rgba(224,100,78,0.10)' : 'rgba(69,179,125,0.08)', border: `1px solid ${formIsRecordable ? 'rgba(224,100,78,0.35)' : 'rgba(69,179,125,0.3)'}`, color: formIsRecordable ? '#F0A092' : GREEN }}>
+                <div style={{ padding: '9px 12px', borderRadius: 8, fontSize: 12, lineHeight: 1.5, background: formIsRecordable ? 'rgba(224,100,78,0.10)' : 'rgba(44,255,122,0.08)', border: `1px solid ${formIsRecordable ? 'rgba(224,100,78,0.35)' : 'rgba(44,255,122,0.3)'}`, color: formIsRecordable ? '#F0A092' : GREEN }}>
                   {formIsRecordable
                     ? 'OSHA-recordable: this incident will be flagged for the 300 log. Recordables generally must be logged within 7 calendar days; fatalities reported within 8 hours, in-patient hospitalizations within 24.'
                     : 'Not OSHA-recordable as classified — it will be saved for internal tracking and trend analysis only.'}

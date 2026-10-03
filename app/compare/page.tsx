@@ -25,7 +25,7 @@ const DIM = '#CBD5E1';
 const BORDER = 'rgba(255,255,255,0.08)';
 const PILL = 'rgba(255,255,255,0.14)';
 const CARD = 'rgba(255,255,255,0.02)';
-const GREEN = '#22c55e';
+const GREEN = '#2CFF7A';
 
 /* House display treatment — gold text-shine on ONE key word per heading. */
 const SHINE: CSSProperties = {
@@ -161,9 +161,9 @@ export default function ComparePage() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 16 }}>
                   <span style={{ fontSize: 13, color: DIM }}>Their Price:</span>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: '#f87171' }}>{comp.startingPrice}</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: '#FF3B30' }}>{comp.startingPrice}</span>
                   {comp.perSeat && (
-                    <span style={{ fontSize: 11, color: DIM, background: 'rgba(248,113,113,0.1)', borderRadius: 6, padding: '1px 8px' }}>Per Seat</span>
+                    <span style={{ fontSize: 11, color: DIM, background: 'rgba(255,59,48,0.1)', borderRadius: 6, padding: '1px 8px' }}>Per Seat</span>
                   )}
                 </div>
                 <div style={{ marginBottom: 20 }}>

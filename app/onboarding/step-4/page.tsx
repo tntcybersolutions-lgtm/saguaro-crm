@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Cactus, Check, Confetti } from '@phosphor-icons/react';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444',GREEN='#22c55e';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#FF3B30',GREEN='#2CFF7A';
 
 const STEPS = [
   { num: 1, label: 'Welcome', done: true },
@@ -110,7 +110,7 @@ export default function OnboardingStep4() {
 
         {/* Success state */}
         {success ? (
-          <div style={{background:RAISED,border:`1px solid rgba(34,197,94,.3)`,borderRadius:16,padding:40,textAlign:'center'}}>
+          <div style={{background:RAISED,border:`1px solid rgba(44,255,122,.3)`,borderRadius:16,padding:40,textAlign:'center'}}>
             <div style={{marginBottom:20}}><Confetti size={56} weight="fill" color={GOLD} /></div>
             <h1 style={{fontSize:28,fontWeight:900,margin:'0 0 12px',color:TEXT}}>You're All Set</h1>
             <p style={{color:DIM,fontSize:15,margin:'0 0 8px',lineHeight:1.6}}>
@@ -135,7 +135,7 @@ export default function OnboardingStep4() {
             </div>
 
             {error&&(
-              <div style={{background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:RED}}>{error}</div>
+              <div style={{background:'rgba(255,59,48,.1)',border:'1px solid rgba(255,59,48,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:RED}}>{error}</div>
             )}
 
             <div style={{display:'flex',flexDirection:'column',gap:12,marginBottom:20}}>

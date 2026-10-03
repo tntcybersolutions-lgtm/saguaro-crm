@@ -21,8 +21,8 @@ import {
 /* ─── Palette (dark, shared) ─────────────────────────────────────────── */
 export const W = {
   GOLD: 'var(--brand-primary)', BG: 'var(--bg-base)', RAISED: 'var(--bg-surface)', BORDER: 'rgba(255,255,255,0.12)',
-  TEXT: '#FFFFFF', DIM: '#CBD5E1', GREEN: '#22C55E', RED: '#EF4444',
-  AMBER: 'var(--warning)', BLUE: 'var(--brand-primary)', PURPLE: '#8B5CF6',
+  TEXT: '#FFFFFF', DIM: '#CBD5E1', GREEN: '#2CFF7A', RED: '#FF3B30',
+  AMBER: 'var(--warning)', BLUE: 'var(--brand-primary)', PURPLE: '#FF8A00',
 } as const;
 
 /* ─── Widget settings & catalog ──────────────────────────────────────── */

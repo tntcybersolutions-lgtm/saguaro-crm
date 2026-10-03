@@ -127,7 +127,7 @@ export default function ReportsPage() {
       </div>
 
       {toast && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 99999, padding: '12px 22px', borderRadius: 8, background: toast.type === 'success' ? 'rgba(34,197,94,0.92)' : 'rgba(239,68,68,0.92)', color: '#fff', fontWeight: 600, fontSize: 14, boxShadow: '0 4px 20px rgba(0,0,0,.4)', pointerEvents: 'none', whiteSpace: 'nowrap' }}>
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 99999, padding: '12px 22px', borderRadius: 8, background: toast.type === 'success' ? 'rgba(44,255,122,0.92)' : 'rgba(255,59,48,0.92)', color: '#fff', fontWeight: 600, fontSize: 14, boxShadow: '0 4px 20px rgba(0,0,0,.4)', pointerEvents: 'none', whiteSpace: 'nowrap' }}>
           {toast.msg}
         </div>
       )}

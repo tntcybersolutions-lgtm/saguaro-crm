@@ -7,8 +7,8 @@ const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
 const TEXT = '#FFFFFF';
-const GREEN = '#3dd68c';
-const RED = '#EF4444';
+const GREEN = '#2CFF7A';
+const RED = '#FF3B30';
 
 interface Signer {
   id: string;
@@ -61,7 +61,7 @@ function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { bg: string; color: string; label: string }> = {
     pending: { bg: 'var(--brand-primary-12)', color: GOLD, label: 'Pending' },
     viewed: { bg: 'var(--brand-primary-12)', color: 'var(--brand-primary)', label: 'Viewed' },
-    signed: { bg: 'rgba(61,214,140,.12)', color: GREEN, label: 'Signed' },
+    signed: { bg: 'rgba(44,255,122,.12)', color: GREEN, label: 'Signed' },
   };
   const s = map[status] || map.pending;
   return (
@@ -169,7 +169,7 @@ export default function ESignatureFlow({ projectId, docType, docTitle, pdfUrl, o
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: GOLD }}>Signer {idx + 1}</span>
             {signers.length > 1 && (
-              <button type="button" onClick={() => removeSigner(signer.id)} style={{ background: 'rgba(239,68,68,.1)', border: `1px solid rgba(239,68,68,.3)`, borderRadius: 6, padding: '4px 10px', color: RED, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+              <button type="button" onClick={() => removeSigner(signer.id)} style={{ background: 'rgba(255,59,48,.1)', border: `1px solid rgba(255,59,48,.3)`, borderRadius: 6, padding: '4px 10px', color: RED, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                 Remove
               </button>
             )}

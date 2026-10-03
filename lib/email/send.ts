@@ -207,7 +207,7 @@ export async function sendInsuranceExpiring(
     if (!resend) return;
 
     const urgency = daysLeft <= 7 ? 'URGENT: ' : '';
-    const urgencyColor = daysLeft <= 7 ? '#dc2626' : '#D5A017';
+    const urgencyColor = daysLeft <= 7 ? '#FF3B30' : '#D5A017';
 
     const html = baseLayout(`
       ${heading(`${urgency}Insurance Certificate Expiring Soon`)}
@@ -367,7 +367,7 @@ export function trialExpiringEmail(data: {
   daysLeft: number;
   upgradeUrl: string;
 }): string {
-  const urgencyColor = data.daysLeft <= 1 ? '#dc2626' : '#D5A017';
+  const urgencyColor = data.daysLeft <= 1 ? '#FF3B30' : '#D5A017';
   return baseLayout(`
     <h2 style="margin:0 0 16px;color:${urgencyColor};font-size:20px;">
       Your Saguaro trial ends in ${data.daysLeft} day${data.daysLeft !== 1 ? 's' : ''}

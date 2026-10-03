@@ -94,7 +94,7 @@ const rowS: React.CSSProperties = { display: 'flex', justifyContent: 'flex-end',
 const btnBase: React.CSSProperties = { minHeight: 40, padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' };
 const btnGhost: React.CSSProperties = { ...btnBase, background: 'transparent', border: '1px solid rgba(255,255,255,0.16)', color: '#D7DEE8' };
 const btnPrimary: React.CSSProperties = { ...btnBase, background: 'var(--brand-primary, #FFE600)', border: 'none', color: 'var(--on-brand, #1C1C1E)' };
-const btnDanger: React.CSSProperties = { ...btnBase, background: '#FF4D5E', border: 'none', color: '#1a0406' };
+const btnDanger: React.CSSProperties = { ...btnBase, background: '#FF3B30', border: 'none', color: '#1a0406' };
 
 function useDismiss(onCancel: () => void) {
   useEffect(() => {

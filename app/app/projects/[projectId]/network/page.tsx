@@ -9,7 +9,7 @@ import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, IconCh
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 
 const GOLD = 'var(--brand-primary)';
-const GREEN = '#34C759';
+const GREEN = '#2CFF7A';
 const BLUE = 'var(--brand-primary)';
 const RED = '#FF3B30';
 const TEXT = '#FFFFFF';
@@ -293,7 +293,7 @@ export default function NetworkDashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 16, marginBottom: 28 }}>
         <StatCard icon={<Devices size={19} weight="duotone" color={BLUE} />} label="Total Devices" value={String(devices.length)} accent={BLUE} delay={0.02}  href={`/app/projects/${projectId}/network/devices`}/>
         <StatCard icon={<Circle size={19} weight="duotone" color={GREEN} />} label="Online" value={String(devices.filter(d => d.status === 'online').length)} accent={GREEN} sub={`Of ${devices.length} total`} delay={0.06}  href={`/app/projects/${projectId}/network`}/>
-        <StatCard icon={<Shuffle size={19} weight="duotone" color="#8B5CF6" />} label="VLANs" value={String(vlans.length)} accent="#8B5CF6" delay={0.10}  href={`/app/projects/${projectId}/network/vlans`}/>
+        <StatCard icon={<Shuffle size={19} weight="duotone" color="#FF8A00" />} label="VLANs" value={String(vlans.length)} accent="#FF8A00" delay={0.10}  href={`/app/projects/${projectId}/network/vlans`}/>
         <StatCard icon={<Plug size={19} weight="duotone" color={GOLD} />} label="Cable Runs" value={`${testedCables}/${cables.length}`} accent={GOLD} sub="Tested" delay={0.14}  href={`/app/projects/${projectId}/network/cables`}/>
         <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Pass Rate" value={cables.length > 0 ? `${Math.round((passedCables / Math.max(testedCables, 1)) * 100)}%` : 'N/A'} accent={GREEN} delay={0.18}  href={`/app/projects/${projectId}/network`}/>
         <StatCard icon={<Warning size={19} weight="duotone" color={openAlerts > 0 ? RED : GREEN} />} label="Open Alerts" value={String(openAlerts)} accent={openAlerts > 0 ? RED : GREEN} delay={0.22}  href={`/app/projects/${projectId}/network`}/>

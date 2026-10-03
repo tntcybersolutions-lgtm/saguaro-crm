@@ -10,8 +10,8 @@ const GOLD_DARK = 'var(--brand-primary-hover)';
 const TEXT = '#FFFFFF';
 const DIM = '#CBD5E1';
 const BORDER = 'rgba(255,255,255,0.12)';
-const GREEN = '#22c55e';
-const RED = '#ef4444';
+const GREEN = '#2CFF7A';
+const RED = '#FF3B30';
 
 const OLD_WAY_VS_SAGUARO = [
   ['Manual blueprint takeoff — 4 to 8 hours per bid', 'AI blueprint takeoff — complete estimate in under 60 seconds'],

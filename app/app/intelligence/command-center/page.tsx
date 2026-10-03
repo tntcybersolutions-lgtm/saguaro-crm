@@ -14,7 +14,7 @@ import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty } from 
 const BASE   = 'var(--bg-base)';
 const CARD   = 'var(--bg-surface)';
 const GOLD   = 'var(--brand-primary)';
-const GREEN  = '#34C759';
+const GREEN  = '#2CFF7A';
 const RED    = '#FF3B30';
 const BORDER = 'rgba(255,255,255,0.12)';
 const TEXT   = '#FFFFFF';
@@ -108,7 +108,7 @@ function getTypeColor(type: string): string {
   if (t.includes('commercial')) return BLUE;
   if (t.includes('residential')) return GREEN;
   if (t.includes('industrial')) return AMBER;
-  if (t.includes('infrastructure') || t.includes('civil')) return '#8B5CF6';
+  if (t.includes('infrastructure') || t.includes('civil')) return '#FF8A00';
   return GOLD;
 }
 
@@ -258,11 +258,11 @@ export default function CommandCenterPage() {
           delay={0.02}
          href="/app/intelligence/command-center"/>
         <StatCard
-          icon={<ClipboardText size={19} weight="duotone" color="#F97316" />}
+          icon={<ClipboardText size={19} weight="duotone" color="#FF8A00" />}
           label="Open Items"
           value={String(totalOpen)}
           sub="RFIs · Punch · COs"
-          accent={totalOpen > 0 ? '#F97316' : undefined}
+          accent={totalOpen > 0 ? '#FF8A00' : undefined}
           delay={0.06}
          href="/app/intelligence/command-center"/>
         <StatCard
@@ -409,8 +409,8 @@ export default function CommandCenterPage() {
                 {/* Bottom row: open items + last activity */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${BORDER}`, paddingTop: 10 }}>
                   <div style={{ display: 'flex', gap: 12 }}>
-                    <OpenItemPill label="RFIs" count={project.open_rfis} color="#F97316" />
-                    <OpenItemPill label="Punch" count={project.open_punch} color="#8B5CF6" />
+                    <OpenItemPill label="RFIs" count={project.open_rfis} color="#FF8A00" />
+                    <OpenItemPill label="Punch" count={project.open_punch} color="#FF8A00" />
                     <OpenItemPill label="COs" count={project.open_cos} color={BLUE} />
                   </div>
                   <span style={{ fontSize: 11, color: DIM }}>{formatDate(project.last_activity)}</span>
