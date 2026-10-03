@@ -1,18 +1,42 @@
 'use client';
+/**
+ * New Pay Application — Pass 4, on the RFIs reference layout (form + rail).
+ *
+ * Anatomy: crumbs → title (Application #N) → StatRow (contract position) →
+ * Tabs (1. Period · 2. Schedule of Values) → workspace: the step's form on the
+ * left, a 320–384px rail (the prior application, what the system automates,
+ * the live G702 summary) on the right. Phone: stacked. The form keeps
+ * layout.formMaxWidth; the SOV sheet runs full width.
+ *
+ * The screen walks in knowing the project: contract money, approved COs, the
+ * prior application, and the prior SOV — the GC types only this period's work.
+ * `ctx` = /api/project-context snapshot; `appNumber` and the rolled-forward
+ * SOV from the pay-app seeder. Every read / write is unchanged:
+ *   seed    GET  /api/pay-apps/create?projectId=
+ *   create  POST /api/pay-apps/create
+ *   submit  POST /api/pay-apps/[id]/submit
+ * Money is never truncated; retainage and payment due compute themselves.
+ */
 import React, { useState, useEffect, useRef } from 'react';
 import { humanError } from '@/lib/errors';
-import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import SaguaroDatePicker from '../../../../../../components/SaguaroDatePicker';
-import { ArrowLeft, ArrowRight, Plus, X, Receipt, CalendarBlank, Table, Calculator, ClockCounterClockwise, Info } from '@phosphor-icons/react';
+import { ArrowLeft, ArrowRight, Plus, X, Info } from '@phosphor-icons/react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
-import { PremiumSurface, ModuleHero, SectionCard, StatStrip, FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
+import {
+  PageShell, Card, StatRow, Button, Tabs, Field, Input, FormGrid,
+  type StatItem,
+} from '@/components/ui/kit';
+import { FlowSteps, InsightRow, AutoChip } from '@/components/ui/premium';
+import { layout } from '@/lib/design-tokens';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30',ORANGE='#FF8A00';
-const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
-const fmtDate = (d?:string|null) => d ? new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt = (n:number) => money.format(Number(n)||0);
+const fmtSigned = (n:number) => (n<0 ? '-' : n>0 ? '+' : '') + money.format(Math.abs(n||0));
+/** Date-only values parse at local noon ('T12:00:00') so they never shift a day under UTC. */
+const fmtDate = (d?:string|null) => d ? new Date(String(d).slice(0,10)+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
 
 interface SovLine {
   lineNumber: number;
@@ -30,13 +54,60 @@ function blankLine(n:number):SovLine{
   return {lineNumber:n,description:'',scheduledValue:0,workFromPrev:0,workThisPeriod:0,materialsStored:0,percentComplete:0,balanceToFinish:0,retainage:0};
 }
 
-const INP:React.CSSProperties = {padding:'8px 12px',background:DARK,border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none',width:'100%',boxSizing:'border-box'};
-const LBL:React.CSSProperties = {display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:6};
-const HINT:React.CSSProperties = {fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:5,lineHeight:1.45};
+const DATE_INPUT_STYLE: React.CSSProperties = {
+  width:'100%', minHeight:40, padding:'8px 12px', fontSize:14,
+  background:'var(--bg-surface-2)', border:'1px solid var(--border-default)',
+  borderRadius:'var(--radius-sm)', color:'var(--text-primary)',
+};
+
+const CSS = `
+.pnWs > .k-page { max-width: none; }
+.pnCq { container: pnws / inline-size; min-width: 0; }
+.pnSplit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
+.pnSplit > * { min-width: 0; }
+.pnMain { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pnRail { order: -1; display: flex; flex-direction: column; gap: 16px; }
+@container pnws (min-width: 960px) {
+  .pnSplit { grid-template-columns: minmax(0, 1fr) clamp(${layout.detailRailMin}px, 28%, ${layout.detailRailMax}px); }
+  .pnRail { order: 0; position: sticky; top: 16px; }
+}
+.pnForm { max-width: ${layout.formMaxWidth}px; }
+.pnNote { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-sm); color: var(--text-secondary); line-height: 1.55; }
+.pnOk { font-size: var(--fs-sm); color: var(--text-secondary); line-height: 1.55; }
+.pnOk b { color: var(--text-primary); }
+.pnBarLabel { display: flex; justify-content: space-between; font-size: var(--fs-xs); color: var(--text-tertiary); margin: 10px 0 6px; }
+.pnBarLabel b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.pnBarTrack { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08); overflow: hidden; }
+.pnBarFill { height: 100%; border-radius: 3px; background: var(--status-ongoing); }
+.pnBanner { padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(46,229,157,.35); background: rgba(46,229,157,.08); font-size: var(--fs-sm); color: var(--text-primary); }
+.pnTableWrap { overflow-x: auto; }
+.pnTable { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.pnTable th { position: sticky; top: 0; z-index: 1; background: rgba(21,23,28,0.88); text-align: left; padding: 8px 10px; font-size: 12px; font-weight: 700; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); white-space: nowrap; }
+.pnTable td { padding: 6px 10px; height: 44px; border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); white-space: nowrap; font-variant-numeric: tabular-nums; vertical-align: middle; }
+.pnTable th:first-child, .pnTable td:first-child { padding-left: var(--sp-4); position: sticky; left: 0; z-index: 1; background: var(--bg-solid); }
+.pnTable th:first-child { background: var(--bg-solid-2); z-index: 3; }
+.pnTable th[data-align="right"], .pnTable td[data-align="right"] { text-align: right; }
+.pnTable td[data-desc] { min-width: 200px; }
+.pnTable tfoot td { font-weight: 800; color: var(--text-primary); background: var(--bg-surface-2); border-top: 2px solid var(--border-default); }
+.pnTable .k-input { min-height: 32px; padding: 4px 8px; font-size: 13px; }
+.pnTable .k-input[data-num] { text-align: right; width: 110px; }
+.pnNeg { color: var(--status-overdue); }
+.pnStrong { color: var(--text-primary); font-weight: 700; }
+.pnRule { height: 1px; background: var(--border-subtle); margin: 8px 0; }
+.pnDue { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-default); }
+.pnDue > span { font-size: var(--fs-sm); font-weight: 800; color: var(--text-primary); }
+.pnDue > b { font-size: var(--fs-lg); font-weight: 800; color: var(--status-ongoing); font-variant-numeric: tabular-nums; }
+.pnBtns { display: flex; gap: 8px; flex-wrap: wrap; }
+.pnInlineErr { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--status-overdue); padding: 10px 14px; border: 1px solid rgba(255,77,94,.35); border-radius: var(--radius-sm); background: rgba(255,77,94,.08); }
+.pnMuted { color: var(--text-tertiary); }
+.pnDateInput { width: 100%; }
+@media (max-width: 640px) {
+  .pnWs .k-btn, .pnWs .k-stat, .pnWs .k-input { min-height: 44px; }
+}
+`;
 
 export default function NewPayAppPage() {
   const params    = useParams();
-  const router    = useRouter();
   const projectId = params['projectId'] as string;
 
   const [step,setStep]             = useState(1);
@@ -57,10 +128,6 @@ export default function NewPayAppPage() {
   // SOV
   const [lines,setLines] = useState<SovLine[]>([blankLine(1),blankLine(2),blankLine(3)]);
 
-  // The screen walks in knowing the project: contract money, approved COs,
-  // the prior application, and the prior SOV — the GC types only this
-  // period's work. `ctx` = /api/project-context snapshot; `appNumber` from
-  // the pay-app seeder.
   const { ctx } = useProjectContext(projectId);
   const [appNumber,setAppNumber]     = useState<number|null>(null);
   const [rolledForward,setRolledForward] = useState(false);
@@ -80,7 +147,7 @@ export default function NewPayAppPage() {
     // Suggested billing period: the day after the last app's period end,
     // through that month's end; first app defaults to the current month.
     const lastTo = ctx.money?.lastPayApp?.periodTo as string|undefined;
-    const start = lastTo ? new Date(new Date(lastTo+'T00:00:00').getTime()+86400000) : new Date(new Date().getFullYear(),new Date().getMonth(),1);
+    const start = lastTo ? new Date(new Date(lastTo+'T12:00:00').getTime()+86400000) : new Date(new Date().getFullYear(),new Date().getMonth(),1);
     const end   = new Date(start.getFullYear(),start.getMonth()+1,0);
     const iso   = (d:Date)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     setPeriodFrom(prev=>{ if(!prev){ setAuto(a=>({...a,period:true})); return iso(start); } return prev; });
@@ -238,251 +305,197 @@ export default function NewPayAppPage() {
     }
   }
 
+  const appLabel = appNumber ?? ((money?.payAppCount??0)+1);
+  const stats: StatItem[] = [
+    { label:'Application', value:`#${appLabel}`, sub: lastApp ? `Follows App #${lastApp.appNumber}` : 'First on this project' },
+    { label:'Original Contract', value:fmt(original||contractSumNum), sub:'G702 line 1', href:`/app/projects/${projectId}/contracts` },
+    { label:'Approved COs', value:fmtSigned(coTotal), tone: coTotal>0 ? 'good' : 'default', sub:`${money?.approvedCoCount||0} approved${money?.pendingCoCount?` · ${money.pendingCoCount} pending`:''}`, href:`/app/projects/${projectId}/change-orders` },
+    { label:'Revised Contract', value:fmt(revised), sub:'Contract sum to date', href:`/app/projects/${projectId}/contracts` },
+    { label:'Billed to Date', value:fmt(money?.billedToDate||0), sub:`${money?.billedPct||0}% of revised` },
+  ];
+
+  const liveSummary = (
+    <Card title="Live G702 Summary" subtitle="Matches the saved application to the cent.">
+      <InsightRow label="Original Contract" value={fmt(contractSumNum)}/>
+      {coTotal!==0 && <InsightRow label="Approved COs" value={fmtSigned(coTotal)}/>}
+      {coTotal!==0 && <InsightRow label="Contract to Date" value={fmt(contractSumNum+coTotal)}/>}
+      <div className="pnRule"/>
+      <InsightRow label="Prev Completed" value={fmt(prevTotal)}/>
+      <InsightRow label="This Period" value={fmt(thisPeriodTotal)}/>
+      <InsightRow label="Materials Stored" value={fmt(matsTotal)}/>
+      <InsightRow label="Total Completed" value={fmt(totalCompleted)}/>
+      <InsightRow label={`Retainage (${pct}%)`} value={fmt(retainageAmt)}/>
+      <InsightRow label="Balance to Finish" value={fmt(Math.max(0,(contractSumNum+coTotal)-totalCompleted))}/>
+      <div className="pnDue"><span>Payment Due</span><b>{fmt(paymentDue)}</b></div>
+    </Card>
+  );
+
   return (
-    <PremiumSurface maxWidth={2200}>
-      {/* Back to list */}
-      <Link href={`/app/projects/${projectId}/pay-apps`} style={{...ghostButtonStyle,padding:'7px 14px',fontSize:12.5,marginBottom:18}} className="pmBtn">
-        <ArrowLeft size={14} weight="bold" /> Pay Applications
-      </Link>
-
-      {/* Header */}
-      <ModuleHero
-        eyebrow={ctx?.project?.name || 'Pay Application'}
-        eyebrowIcon={<Receipt size={13} weight="fill" color={GOLD} />}
-        title={appNumber ? `Application #${appNumber}` : 'New Pay'}
-        accent={appNumber ? '' : 'Application'}
-        subtitle="AIA G702/G703 — Application and Certificate for Payment"
+    <div className="pnWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[
+          { label:'Projects', href:'/app/projects' },
+          { label: ctx?.project?.name || 'Project', href:`/app/projects/${projectId}/overview` },
+          { label:'Pay Applications', href:`/app/projects/${projectId}/pay-apps` },
+          { label:`New #${appLabel}` },
+        ]}
+        title={`Application #${appLabel}`}
+        subtitle="AIA G702/G703 — Application and Certificate for Payment."
         actions={
-          /* Step tabs */
-          <div style={{display:'flex',background:'rgba(255,255,255,0.04)',borderRadius:10,padding:4,border:`1px solid rgba(255,255,255,0.08)`}}>
-            {[{n:1,l:'1. Period'},{n:2,l:'2. Schedule of Values'}].map(s=>(
-              <button key={s.n} onClick={()=>setStep(s.n)} className="pmBtn"
-                style={{padding:'7px 16px',borderRadius:7,border:'none',fontWeight:800,fontSize:12,cursor:'pointer',background:step===s.n?`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`:'transparent',color:step===s.n?'#0A0A00':DIM,transition:'all .15s'}}
-              >{s.l}</button>
-            ))}
-          </div>
+          step===1
+            ? <Button variant="primary" icon={<ArrowRight size={15} weight="bold"/>} onClick={()=>setStep(2)}>Next: Schedule of Values</Button>
+            : <Button variant="primary" icon={<ArrowRight size={15} weight="bold"/>} onClick={()=>save('submitted')} disabled={saving}>{saving ? 'Submitting…' : 'Submit to Owner'}</Button>
         }
-      />
+      >
+        {ctx && <StatRow items={stats}/>}
 
-      {/* Contract intelligence strip — what the system already knows */}
-      {ctx && (
-        <StatStrip items={[
-          {href: `/app/projects/${projectId}/pay-apps/new`, label:'Application', value:`#${appNumber ?? (money?.payAppCount??0)+1}`, sub: lastApp ? `Follows App #${lastApp.appNumber}` : 'First on this project'},
-          {href: `/app/projects/${projectId}/contracts`, label:'Original Contract', value:fmt(original), sub:'G702 line 1'},
-          {href: `/app/projects/${projectId}/change-orders`, label:'Approved COs', value:(coTotal>=0?'+':'')+fmt(coTotal), accent:coTotal>0?'#2CFF7A':undefined, sub:`${money?.approvedCoCount||0} approved${money?.pendingCoCount?` · ${money.pendingCoCount} pending`:''}`},
-          {href: `/app/projects/${projectId}/contracts`, label:'Revised Contract', value:fmt(revised), sub:'Contract sum to date'},
-          {href: `/app/projects/${projectId}/pay-apps/new`, label:'Billed to Date', value:fmt(money?.billedToDate||0), sub:`${money?.billedPct||0}% of revised`},
-          {href: `/app/projects/${projectId}/pay-apps/new`, label:'Retainage', value:`${pct}%`, sub: subCount ? `${subCount} sub${subCount===1?'':'s'} on the job` : 'Per contract terms'},
-        ]}/>
-      )}
+        <Tabs value={String(step)} onChange={k=>setStep(Number(k))} tabs={[{ key:'1', label:'1. Period & Contract' }, { key:'2', label:'2. Schedule of Values', count: lines.length }]} />
 
-      <div>
         {error && (
-          <div style={{background:'rgba(192,48,48,.12)',border:`1px solid rgba(192,48,48,.3)`,borderRadius:8,padding:'12px 16px',marginBottom:20,color:RED,fontSize:13}}>
-            {error}
-          </div>
+          <div className="pnInlineErr" role="alert"><Info size={15}/> {error}<Button size="sm" variant="ghost" onClick={()=>setError('')}>Dismiss</Button></div>
         )}
 
-        {/* STEP 1: Period & Contract + automation rail */}
-        {step===1 && (
-          <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) 340px',gap:22,alignItems:'start'}}>
-            <div>
-              <SectionCard title="Billing Period" icon={<CalendarBlank size={17} weight="duotone" color={GOLD} />} style={{marginBottom:16}}>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:18,marginBottom:6}}>
-                  <div>
-                    <label style={LBL}>Period From *{auto.period && <AutoChip/>}</label>
-                    <SaguaroDatePicker value={periodFrom} onChange={v=>{setTouched(true);setPeriodFrom(v);}} style={INP}/>
-                    {lastApp && <div style={HINT}>Suggested — App #{lastApp.appNumber} billed through {fmtDate(lastApp.periodTo)}.</div>}
-                  </div>
-                  <div>
-                    <label style={LBL}>Period To *{auto.period && <AutoChip/>}</label>
-                    <SaguaroDatePicker value={periodTo} onChange={v=>{setTouched(true);setPeriodTo(v);}} style={INP}/>
-                    {auto.period && <div style={HINT}>Defaulted to month end — adjust freely.</div>}
-                  </div>
-                  <div>
-                    <label style={LBL}>Original Contract Sum ($){auto.sum && <AutoChip/>}</label>
-                    <input type="number" value={contractSum} onChange={e=>{setTouched(true);setContractSum(e.target.value);}} placeholder="0" min="0" style={INP}/>
-                    <div style={HINT}>
-                      {coTotal>0
-                        ? <>G702 line 1. With {money?.approvedCoCount} approved CO{money?.approvedCoCount===1?'':'s'} ({fmt(coTotal)}), contract sum to date is <b style={{color:TEXT}}>{fmt(revised)}</b> — change orders print on line 2 automatically.</>
-                        : <>G702 line 1 — pulled from the project contract. Approved change orders will print on line 2 automatically.</>}
+        <div className="pnCq">
+          <div className="pnSplit">
+            <div className="pnMain">
+              {step===1 && (
+                <>
+                  <Card title="Billing Period" subtitle="The dates and contract figures that print on the G702.">
+                    <div className="pnForm">
+                      <FormGrid cols={2}>
+                        <Field label="Period From" required hint={<>{auto.period && <AutoChip/>} {lastApp ? `Suggested — App #${lastApp.appNumber} billed through ${fmtDate(lastApp.periodTo)}.` : 'Defaulted to the first of the month.'}</>}>
+                          <div className="pnDateInput"><SaguaroDatePicker value={periodFrom} onChange={v=>{setTouched(true);setPeriodFrom(v);}} style={DATE_INPUT_STYLE}/></div>
+                        </Field>
+                        <Field label="Period To" required hint={auto.period ? <><AutoChip/> Defaulted to month end — adjust freely.</> : undefined}>
+                          <div className="pnDateInput"><SaguaroDatePicker value={periodTo} onChange={v=>{setTouched(true);setPeriodTo(v);}} style={DATE_INPUT_STYLE}/></div>
+                        </Field>
+                        <Field label="Original Contract Sum ($)" hint={<>{auto.sum && <AutoChip/>} {coTotal>0
+                          ? <>G702 line 1. With {money?.approvedCoCount} approved CO{money?.approvedCoCount===1?'':'s'} ({fmt(coTotal)}), contract sum to date is <b>{fmt(revised)}</b> — change orders print on line 2 automatically.</>
+                          : <>G702 line 1 — pulled from the project contract. Approved change orders print on line 2 automatically.</>}</>}>
+                          <Input type="number" value={contractSum} onChange={e=>{setTouched(true);setContractSum(e.target.value);}} placeholder="0" min="0"/>
+                        </Field>
+                        <Field label="Retainage %" hint={<>{auto.ret && <AutoChip/>} {lastApp ? `Carried from App #${lastApp.appNumber}.` : 'From project contract terms.'}</>}>
+                          <Input type="number" value={retainagePct} onChange={e=>{setTouched(true);setRetainagePct(e.target.value);}} placeholder="10" min="0" max="100"/>
+                        </Field>
+                      </FormGrid>
                     </div>
-                  </div>
-                  <div>
-                    <label style={LBL}>Retainage %{auto.ret && <AutoChip/>}</label>
-                    <input type="number" value={retainagePct} onChange={e=>{setTouched(true);setRetainagePct(e.target.value);}} placeholder="10" min="0" max="100" style={INP}/>
-                    <div style={HINT}>{lastApp ? `Carried from App #${lastApp.appNumber}.` : 'From project contract terms.'}</div>
-                  </div>
-                </div>
-              </SectionCard>
+                  </Card>
 
-              {/* SOV readiness — the rollforward the system already did */}
-              <SectionCard title="Schedule of Values — Ready" icon={<Table size={17} weight="duotone" color={GOLD} />} style={{marginBottom:16}}>
-                {rolledForward ? (
-                  <>
-                    <div style={{fontSize:13,color:DIM,lineHeight:1.55,marginBottom:14}}>
-                      <b style={{color:'#2CFF7A'}}>{lines.length} lines rolled forward</b> from App #{lastApp?.appNumber ?? '—'} — scheduled values and completed-to-date are pre-filled. In Step 2 you only enter <b style={{color:TEXT}}>this period&apos;s work</b>.
+                  <Card title="Schedule of Values" subtitle={rolledForward ? 'Rolled forward — ready for this period’s work.' : 'Built in step 2.'}>
+                    {rolledForward ? (
+                      <>
+                        <div className="pnOk"><b>{lines.length} lines rolled forward</b> from App #{lastApp?.appNumber ?? '—'} — scheduled values and completed-to-date are pre-filled. In step 2 you only enter <b>this period&apos;s work</b>.</div>
+                        <div className="pnBarLabel"><span>Billed {fmt(prevTotal)} of {fmt(sovScheduled)} scheduled</span><b>{sovScheduled>0?Math.round((prevTotal/sovScheduled)*100):0}%</b></div>
+                        <div className="pnBarTrack"><div className="pnBarFill" style={{width:`${sovScheduled>0?Math.min(100,(prevTotal/sovScheduled)*100):0}%`}}/></div>
+                      </>
+                    ) : (
+                      <div className="pnNote"><Info size={17} style={{flexShrink:0,marginTop:1}}/><span>First application on this project — build the schedule of values in step 2. It rolls forward automatically on every application after this one.</span></div>
+                    )}
+                    <div className="pnBtns" style={{marginTop:16}}>
+                      <Button icon={<ArrowRight size={15} weight="bold"/>} onClick={()=>setStep(2)}>Next: Schedule of Values</Button>
                     </div>
-                    <div style={{display:'flex',justifyContent:'space-between',fontSize:11.5,color:DIM,marginBottom:6}}>
-                      <span>Billed {fmt(prevTotal)} of {fmt(sovScheduled)} scheduled</span>
-                      <span style={{fontWeight:800,color:GOLD}}>{sovScheduled>0?Math.round((prevTotal/sovScheduled)*100):0}%</span>
+                  </Card>
+                </>
+              )}
+
+              {step===2 && (
+                <>
+                  {rolledForward && (
+                    <div className="pnBanner">Rolled forward from App #{lastApp?.appNumber ?? '—'} — scheduled values and completed-to-date are pre-filled. Just enter this period&apos;s work.</div>
+                  )}
+                  <Card title="Schedule of Values (G703)" subtitle="Retainage and payment due compute themselves." flush actions={<Button size="sm" icon={<Plus size={13} weight="bold"/>} onClick={addLine}>Add Row</Button>}>
+                    <div className="pnTableWrap">
+                      <table className="pnTable">
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>Description</th>
+                            <th data-align="right">Scheduled Value</th>
+                            <th data-align="right">Previous</th>
+                            <th data-align="right">This Period</th>
+                            <th data-align="right">Stored</th>
+                            <th data-align="right">% Done</th>
+                            <th data-align="right">Balance</th>
+                            <th data-align="right">Retainage</th>
+                            <th aria-label="Remove"/>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {lines.map((l,i)=>(
+                            <tr key={i}>
+                              <td className="pnStrong">{l.lineNumber}</td>
+                              <td data-desc="true"><Input value={l.description} onChange={e=>updateLine(i,'description',e.target.value)} placeholder="Description" aria-label={`Line ${l.lineNumber} description`}/></td>
+                              {(['scheduledValue','workFromPrev','workThisPeriod','materialsStored'] as const).map(f=>(
+                                <td key={f} data-align="right">
+                                  <Input type="number" data-num="true" value={(l as any)[f]||''} onChange={e=>updateLine(i,f,e.target.value)} placeholder="0" aria-label={`Line ${l.lineNumber} ${f}`}/>
+                                </td>
+                              ))}
+                              <td data-align="right" className="pnStrong">{l.percentComplete.toFixed(1)}%</td>
+                              <td data-align="right" className={l.balanceToFinish<0?'pnNeg':undefined}>{fmt(l.balanceToFinish)}</td>
+                              <td data-align="right">{fmt(l.retainage)}</td>
+                              <td><Button variant="ghost" size="sm" icon={<X size={14} weight="bold"/>} aria-label={`Remove line ${l.lineNumber}`} onClick={()=>removeLine(i)}/></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot>
+                          <tr>
+                            <td colSpan={2}>Totals</td>
+                            <td data-align="right">{fmt(sovScheduled)}</td>
+                            <td data-align="right">{fmt(prevTotal)}</td>
+                            <td data-align="right">{fmt(thisPeriodTotal)}</td>
+                            <td data-align="right">{fmt(matsTotal)}</td>
+                            <td data-align="right">{contractSumNum>0?((totalCompleted/contractSumNum)*100).toFixed(1):0}%</td>
+                            <td data-align="right">{fmt(lines.reduce((s,l)=>s+(l.balanceToFinish||0),0))}</td>
+                            <td data-align="right">{fmt(retainageAmt)}</td>
+                            <td/>
+                          </tr>
+                        </tfoot>
+                      </table>
                     </div>
-                    <div style={{height:7,borderRadius:999,background:'rgba(255,255,255,0.07)',overflow:'hidden',marginBottom:4}}>
-                      <div style={{height:'100%',width:`${sovScheduled>0?Math.min(100,(prevTotal/sovScheduled)*100):0}%`,background:`linear-gradient(90deg,${GOLD},var(--brand-primary-strong))`,borderRadius:999}}/>
-                    </div>
-                  </>
-                ) : (
-                  <div style={{display:'flex',gap:10,alignItems:'flex-start',fontSize:13,color:DIM,lineHeight:1.55}}>
-                    <Info size={17} color={GOLD} style={{flexShrink:0,marginTop:1}}/>
-                    <span>First application on this project — build the schedule of values in Step 2. It rolls forward automatically on every application after this one.</span>
+                  </Card>
+
+                  <div className="pnBtns">
+                    <Button icon={<ArrowLeft size={15} weight="bold"/>} onClick={()=>setStep(1)}>Back</Button>
+                    <Button onClick={()=>save('draft')} disabled={saving}>{saving ? 'Saving…' : 'Save Draft'}</Button>
+                    <Button variant="primary" icon={<ArrowRight size={15} weight="bold"/>} onClick={()=>save('submitted')} disabled={saving}>{saving ? 'Submitting…' : 'Submit to Owner'}</Button>
                   </div>
-                )}
-                <button onClick={()=>setStep(2)} style={{...goldButtonStyle,marginTop:16}} className="pmBtn">
-                  Next: Schedule of Values <ArrowRight size={15} weight="bold" color="#0A0A00" />
-                </button>
-              </SectionCard>
+                </>
+              )}
             </div>
 
-            {/* Context rail — prior app + what the system automates */}
-            <div style={{display:'flex',flexDirection:'column',gap:16}}>
-              <SectionCard flat title={lastApp ? `Last Application — #${lastApp.appNumber}` : 'First Application'} icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}>
+            <aside className="pnRail" aria-label="Pay application context">
+              {step===2 && liveSummary}
+              <Card title={lastApp ? `Last Application — #${lastApp.appNumber}` : 'First Application'}>
                 {lastApp ? (
                   <>
                     <InsightRow label="Period" value={`${fmtDate(lastApp.periodFrom)} – ${fmtDate(lastApp.periodTo)}`}/>
-                    <InsightRow label="Status" value={String(lastApp.status||'—').replace(/_/g,' ')}/>
+                    <InsightRow label="Status" value={String(lastApp.status||'—').replace(/_/g,' ').replace(/\b\w/g,(c:string)=>c.toUpperCase())}/>
                     <InsightRow label="Completed & Stored" value={fmt(lastApp.totalCompletedStored)}/>
-                    <InsightRow label="Payment Certified" value={fmt(lastApp.currentPaymentDue)} accent="#2CFF7A" strong/>
+                    <InsightRow label="Payment Certified" value={fmt(lastApp.currentPaymentDue)} strong/>
                   </>
                 ) : (
-                  <div style={{fontSize:12.5,color:DIM,lineHeight:1.6}}>
+                  <div className="pnMuted" style={{fontSize:'var(--fs-sm)',lineHeight:1.6}}>
                     This is the first pay application on {ctx?.project?.name || 'this project'}. Everything you enter here rolls forward automatically next month.
                   </div>
                 )}
-              </SectionCard>
-              <SectionCard flat title="After You Submit" icon={<Calculator size={17} weight="duotone" color={GOLD} />}>
-                <FlowSteps title="" steps={[
-                  {title:'Owner Receives the G702/G703', desc:'A signed application packet goes out for one-click owner approval.'},
-                  {title:'Lien Waivers Auto-Generate', desc: subCount>0 ? `Conditional waivers for all ${subCount} subs, each sized to their share of this period.` : 'Conditional waivers for every sub on the job, sized to their share of this period.'},
-                  {title:'Payment Is Waiver-Gated', desc:'Mark-paid is blocked until required waivers are signed — then unconditional waivers issue automatically.'},
-                  {title:'Money Flows to the Ledger', desc:'Paid-to-date, retainage held, and the prime contract update themselves.'},
-                ]}/>
-              </SectionCard>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 2: SOV */}
-        {step===2 && (
-          <div style={{display:'flex',gap:22,alignItems:'flex-start'}}>
-            {/* Table */}
-            <div style={{flex:1,minWidth:0}}>
-              {rolledForward && (
-                <div style={{marginBottom:12,padding:'10px 14px',borderRadius:10,background:'rgba(44,255,122,0.08)',border:'1px solid rgba(44,255,122,0.3)',color:'#2CFF7A',fontSize:12.5,fontWeight:600}}>
-                  Rolled forward from App #{lastApp?.appNumber ?? '—'} — scheduled values and completed-to-date are pre-filled. Just enter this period&apos;s work.
-                </div>
+              </Card>
+              {step===1 && (
+                <Card title="After You Submit">
+                  <FlowSteps title="" steps={[
+                    {title:'Owner Receives the G702/G703', desc:'A signed application packet goes out for one-click owner approval.'},
+                    {title:'Lien Waivers Auto-Generate', desc: subCount>0 ? `Conditional waivers for all ${subCount} subs, each sized to their share of this period.` : 'Conditional waivers for every sub on the job, sized to their share of this period.'},
+                    {title:'Payment Is Waiver-Gated', desc:'Mark-paid is blocked until required waivers are signed — then unconditional waivers issue automatically.'},
+                    {title:'Money Flows to the Ledger', desc:'Paid-to-date, retainage held, and the prime contract update themselves.'},
+                  ]}/>
+                </Card>
               )}
-              <SectionCard
-                title="Schedule of Values (G703)"
-                icon={<Table size={17} weight="duotone" color={GOLD} />}
-                flush
-                style={{marginBottom:16}}
-                action={
-                  <button onClick={addLine} className="pmBtn" style={{display:'inline-flex',alignItems:'center',gap:6,padding:'7px 14px',background:'var(--brand-primary-12)',border:`1px solid color-mix(in srgb, var(--brand-primary) 45%, transparent)`,borderRadius:9,color:'var(--brand-primary-strong)',fontSize:12,fontWeight:800,cursor:'pointer'}}>
-                    <Plus size={13} color="var(--brand-primary-strong)" weight="bold" /> Add Row
-                  </button>
-                }
-              >
-                <div style={{overflowX:'auto'}}>
-                  <table style={{width:'100%',borderCollapse:'collapse' as const,fontSize:12}}>
-                    <thead>
-                      <tr style={{background:'var(--bg-surface-2)'}}>
-                        {['#','Description','Sched. Value','Work Prev ($)','This Period ($)','Mat. Stored ($)','% Complete','Balance','Retainage',''].map(h=>(
-                          <th key={h} style={{padding:'9px 10px',textAlign:'left' as const,fontSize:10,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`,whiteSpace:'nowrap' as const}}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {lines.map((l,i)=>(
-                        <tr key={i} style={{borderBottom:`1px solid rgba(229,229,234,.4)`,background:i%2===0?'transparent':'rgba(0,0,0,.015)'}}>
-                          <td style={{padding:'6px 10px',color:DIM,fontWeight:700,minWidth:28}}>{l.lineNumber}</td>
-                          <td style={{padding:'4px 6px',minWidth:170}}>
-                            <input value={l.description} onChange={e=>updateLine(i,'description',e.target.value)}
-                              placeholder="Description" style={{...INP,padding:'5px 8px',fontSize:12}}/>
-                          </td>
-                          {(['scheduledValue','workFromPrev','workThisPeriod','materialsStored'] as const).map(f=>(
-                            <td key={f} style={{padding:'4px 6px',minWidth:100}}>
-                              <input type="number" value={(l as any)[f]||''} onChange={e=>updateLine(i,f,e.target.value)}
-                                placeholder="0" style={{...INP,padding:'5px 8px',fontSize:12,textAlign:'right' as const}}/>
-                            </td>
-                          ))}
-                          <td style={{padding:'6px 10px',color:TEXT,textAlign:'right' as const,whiteSpace:'nowrap' as const,minWidth:70}}>{l.percentComplete.toFixed(1)}%</td>
-                          <td style={{padding:'6px 10px',color:l.balanceToFinish<0?RED:DIM,textAlign:'right' as const,whiteSpace:'nowrap' as const,minWidth:90}}>{fmt(l.balanceToFinish)}</td>
-                          <td style={{padding:'6px 10px',color:ORANGE,textAlign:'right' as const,whiteSpace:'nowrap' as const,minWidth:90}}>{fmt(l.retainage)}</td>
-                          <td style={{padding:'6px 8px'}}>
-                            <button onClick={()=>removeLine(i)} style={{background:'none',border:'none',color:RED,cursor:'pointer',fontSize:15,padding:'3px 6px'}}><span style={{display:'inline-flex',verticalAlign:'middle'}}><X size={15} color={RED} /></span></button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                    <tfoot>
-                      <tr style={{background:'var(--bg-surface-2)',borderTop:`2px solid ${BORDER}`}}>
-                        <td colSpan={2} style={{padding:'10px 10px',fontWeight:800,fontSize:12,color:TEXT}}>Totals</td>
-                        <td style={{padding:'10px 10px',fontWeight:800,color:GOLD,textAlign:'right' as const}}>{fmt(lines.reduce((s,l)=>s+(l.scheduledValue||0),0))}</td>
-                        <td style={{padding:'10px 10px',fontWeight:700,color:TEXT,textAlign:'right' as const}}>{fmt(prevTotal)}</td>
-                        <td style={{padding:'10px 10px',fontWeight:800,color:'#2CFF7A',textAlign:'right' as const}}>{fmt(thisPeriodTotal)}</td>
-                        <td style={{padding:'10px 10px',fontWeight:700,color:TEXT,textAlign:'right' as const}}>{fmt(matsTotal)}</td>
-                        <td style={{padding:'10px 10px',fontWeight:700,color:DIM}}>{contractSumNum>0?((totalCompleted/contractSumNum)*100).toFixed(1):0}%</td>
-                        <td style={{padding:'10px 10px',fontWeight:700,color:DIM,textAlign:'right' as const}}>{fmt(lines.reduce((s,l)=>s+(l.balanceToFinish||0),0))}</td>
-                        <td style={{padding:'10px 10px',fontWeight:700,color:ORANGE,textAlign:'right' as const}}>{fmt(retainageAmt)}</td>
-                        <td/>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
-              </SectionCard>
-
-              {/* Actions */}
-              <div style={{display:'flex',gap:10,flexWrap:'wrap' as const}}>
-                <button onClick={()=>setStep(1)} style={ghostButtonStyle} className="pmBtn">
-                  <ArrowLeft size={15} weight="bold" /> Back
-                </button>
-                <button onClick={()=>save('draft')} disabled={saving}
-                  style={{...goldOutlineButtonStyle,cursor:saving?'wait':'pointer',opacity:saving?.6:1}} className="pmBtn">
-                  {saving ? 'Saving…' : 'Save Draft'}
-                </button>
-                <button onClick={()=>save('submitted')} disabled={saving}
-                  style={{...goldButtonStyle,cursor:saving?'wait':'pointer',opacity:saving?.6:1}} className="pmBtn">
-                  {saving ? 'Submitting…' : <>Submit to Owner <ArrowRight size={15} weight="bold" color="#0A0A00" /></>}
-                </button>
-              </div>
-            </div>
-
-            {/* Live Calc Panel */}
-            <div style={{width:256,flexShrink:0,position:'sticky' as const,top:80}}>
-              <SectionCard flat title="Live G702 Summary" icon={<Calculator size={17} weight="duotone" color={GOLD} />}>
-                <InsightRow label="Original Contract" value={fmt(contractSumNum)}/>
-                {coTotal!==0 && <InsightRow label="Approved COs" value={(coTotal>0?'+':'')+fmt(coTotal)} accent="#2CFF7A"/>}
-                {coTotal!==0 && <InsightRow label="Contract to Date" value={fmt(contractSumNum+coTotal)}/>}
-                <div style={{height:1,background:'rgba(255,255,255,0.08)',margin:'8px 0'}}/>
-                <InsightRow label="Prev Completed" value={fmt(prevTotal)}/>
-                <InsightRow label="This Period" value={fmt(thisPeriodTotal)} accent={GOLD}/>
-                <InsightRow label="Materials Stored" value={fmt(matsTotal)}/>
-                <InsightRow label="Total Completed" value={fmt(totalCompleted)}/>
-                <InsightRow label={`Retainage (${pct}%)`} value={fmt(retainageAmt)} accent={ORANGE}/>
-                <InsightRow label="Balance to Finish" value={fmt(Math.max(0,(contractSumNum+coTotal)-totalCompleted))}/>
-                <div style={{marginTop:12,paddingTop:12,borderTop:`1px solid rgba(255,255,255,0.1)`}}>
-                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                    <span style={{fontSize:12,fontWeight:800,color:TEXT}}>Payment Due</span>
-                    <span style={{fontSize:18,fontWeight:800,color:GREEN}}>{fmt(paymentDue)}</span>
-                  </div>
-                </div>
-              </SectionCard>
-            </div>
+            </aside>
           </div>
-        )}
-      </div>
+        </div>
+      </PageShell>
 
       <UnsavedGuardModal guard={guard} />
-    </PremiumSurface>
+    </div>
   );
 }

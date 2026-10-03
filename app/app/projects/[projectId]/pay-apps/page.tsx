@@ -1,67 +1,100 @@
 'use client';
+/**
+ * Pay Applications — Pass 4, on the RFIs reference layout (dense register).
+ *
+ * Anatomy: title + one primary action (New Pay Application) → StatRow
+ * (contract position: revised / billed / retainage / paid / lien waivers) →
+ * Toolbar → the G702 register. A row opens the application's own page.
+ *
+ * Money: every DB numeric can round-trip as a string — Number() before any
+ * math, and amounts are never truncated. Retainage held to date is the LATEST
+ * application's cumulative figure (summing across apps would re-count every
+ * prior period). Approval / record-payment stay the explicit existing
+ * workflows on the application page; this register only lists, bulk-approves
+ * (the same PATCH it always sent), exports and deletes.
+ *
+ * Every read / write is the one this screen already used:
+ *   list      GET    /api/pay-apps/list?projectId=
+ *   waivers   GET    /api/lien-waivers/list?projectId=
+ *   reorder   PATCH  /api/pay-apps/[id]   { sort_order }
+ *   approve   PATCH  /api/pay-apps/[id]   { status: 'approved' }   (bulk)
+ *   pdf       POST   /api/documents/pay-application
+ *   delete    DELETE /api/pay-apps/[id]
+ * Live status (useLiveStatus) and the NudgeRing anchor are unchanged; the
+ * persisted drag-reorder (sort_order) stays the source of truth for row order.
+ */
 import React, { useState, useEffect, useCallback } from 'react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { humanError } from '@/lib/errors';
-import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import DragHandle, { useDragReorder } from '../../../../../components/DragHandle';
-import { Clipboard, ClipboardText, CheckCircle, FileText, CaretDown, PencilSimple, Copy, Trash, Receipt, Plus, Hourglass } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, goldButtonStyle } from '@/components/ui/premium';
-import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/table-sort';
-import { SkeletonRow } from '@/components/ui/Skeleton';
-import { moduleAccent } from '@/lib/module-identity';
+import { Clipboard, CheckCircle, FileText, PencilSimple, Copy, Trash, Plus, ArrowClockwise, WarningCircle, X } from '@phosphor-icons/react';
+import {
+  PageShell, Card, StatRow, Badge, Button, Toolbar, EmptyState, RowActions, Select, Toast, useToast,
+  type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import { FlowSteps, InsightRow } from '@/components/ui/premium';
 import { LifecycleRail } from '@/components/ui/Status';
 import { useLiveStatus } from '@/lib/hooks/useLiveStatus';
 import NudgeRing from '@/components/intelligence/NudgeRing';
 import { ANCHOR_PAY_APPS_DUE } from '@/lib/suggestions';
-import { ScribbleNote } from '@/components/Scribble';
 import { openPdf } from '@/components/PdfViewer';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30',ORANGE='#FF8A00';
-const SAGE='#2CFF7A',AMBER='var(--warning)';
 // MONEY: several DB numerics round-trip as strings — coerce before any math/format.
-const fmt = (n:number|string|null|undefined) => '$'+((Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
+const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt = (n:number|string|null|undefined) => money.format(Number(n)||0);
+const fmtSigned = (n:number) => (n<0 ? '-' : n>0 ? '+' : '') + money.format(Math.abs(n||0));
+/** Date-only values parse at local noon ('T12:00:00') so they never shift a day under UTC. */
+const fmtDay = (d?:string|null, year=false) => d ? new Date(String(d).slice(0,10)+'T12:00:00').toLocaleDateString('en-US', year ? {month:'short',day:'numeric',year:'numeric'} : {month:'short',day:'numeric'}) : '—';
 
-function statusBadge(s:string){
-  const map:Record<string,{c:string,bg:string}> = {
-    draft:      {c:'#D4D4D8',bg:'rgba(148,163,184,.14)'},
-    submitted:  {c:'#FF8A00',bg:'rgba(255,138,0,.14)'},
-    approved:   {c:'#2CFF7A',bg:'rgba(26,138,74,.14)'},
-    certified:  {c:GOLD,    bg:'var(--brand-primary-12)'},
-    paid:       {c:'#2CFF7A',bg:'rgba(26,138,74,.14)'},
-  };
-  const st = map[s]||{c:DIM,bg:'rgba(143,163,192,.12)'};
-  return (
-    <span style={{fontSize:10,fontWeight:700,padding:'3px 9px',borderRadius:4,background:st.bg,color:st.c}}>
-      {s.charAt(0).toUpperCase()+s.slice(1)}
-    </span>
-  );
+/** One status → one badge. Draft neutral, Submitted amber (owner decision owed),
+ *  Approved / Certified green, Paid orange (closed money), from lib/status-colors. */
+function statusBadge(s:string|null|undefined): { label:string; tone:BadgeTone } {
+  const k = String(s||'draft').toLowerCase();
+  if (k==='submitted') return { label:'Submitted', tone:'under_contract' };
+  if (k==='approved') return { label:'Approved', tone:'ongoing' };
+  if (k==='certified') return { label:'Certified', tone:'ongoing' };
+  if (k==='paid') return { label:'Paid', tone:'completed' };
+  return { label:'Draft', tone:'neutral' };
 }
-
-// Lifecycle mini pipeline — draft -> submitted -> approved -> paid (certified rides
-// between approved and paid), with waiver coverage under it once the project's lien
-// waivers load. Inline primitive: premium.tsx is shared and intentionally untouched.
 const STAGE_RANK:Record<string,number> = {draft:0,submitted:1,approved:2,certified:2.5,paid:3};
-const STAGE_LABELS = ['Draft','Submitted','Approved','Paid'];
-/**
- * The rail that started here now lives in components/ui/Status and is used by
- * every module. This keeps the one thing that is specific to a pay
- * application — waiver coverage, which gates whether payment can be released —
- * and defers everything else to the shared treatment.
- */
-function MiniPipeline({status,waivers,since,changed}:{status:string;waivers?:{total:number;signed:number};since?:string|null;changed?:boolean}){
-  const allSigned = !!waivers && waivers.total>0 && waivers.signed===waivers.total;
-  return (
-    <div style={{minWidth:150}}>
-      <LifecycleRail module="pay_applications" status={status} since={since} changed={changed} showAction={false}/>
-      {waivers && waivers.total>0 && (
-        <div style={{fontSize:10,fontWeight:700,color:allSigned?'#2CFF7A':AMBER,whiteSpace:'nowrap' as const,marginTop:3}}>
-          {waivers.signed}/{waivers.total} waivers signed
-        </div>
-      )}
-    </div>
-  );
+const STATUS_OPTIONS = ['draft','submitted','approved','certified','paid'];
+
+const CSS = `
+.paWs > .k-page { max-width: none; }
+.paBulk { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 16px; border-bottom: 1px solid var(--border-subtle); background: var(--brand-primary-08); font-size: var(--fs-sm); }
+.paBulk > b { color: var(--text-primary); }
+.paTableWrap { overflow-x: auto; }
+.paTable { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.paTable th { position: sticky; top: 0; z-index: 1; background: rgba(21,23,28,0.88); text-align: left; padding: 8px 12px; font-size: 12px; font-weight: 700; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); white-space: nowrap; }
+.paTable td { padding: 0 12px; height: 52px; border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); white-space: nowrap; font-variant-numeric: tabular-nums; vertical-align: middle; }
+.paTable th:first-child, .paTable td:first-child { padding-left: var(--sp-4); width: 28px; }
+.paTable th:last-child, .paTable td:last-child { padding-right: var(--sp-4); }
+.paTable th[data-align="right"], .paTable td[data-align="right"] { text-align: right; }
+.paTable tbody tr { cursor: pointer; }
+.paTable tbody tr:hover td { background: rgba(255,255,255,0.03); }
+.paTable tbody tr[data-dragging="true"] td { opacity: .5; }
+.paNum { color: var(--text-primary); font-weight: 800; }
+.paMoney { color: var(--text-primary); font-weight: 700; }
+.paMuted { color: var(--text-tertiary); }
+.paSub { display: block; font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 2px; font-weight: 500; }
+.paLife { min-width: 150px; }
+.paWaivers { font-size: var(--fs-xs); font-weight: 700; color: var(--status-under-contract); white-space: nowrap; margin-top: 3px; }
+.paWaivers[data-ok="true"] { color: var(--status-ongoing); }
+.paCheck { accent-color: var(--brand-primary); cursor: pointer; width: 16px; height: 16px; }
+.paEmptyGrid { display: grid; grid-template-columns: minmax(0, 1fr); }
+@container paws (min-width: 900px) { .paEmptyGrid[data-ctx="true"] { grid-template-columns: minmax(0, 1fr) 380px; } .paEmptyRail { border-left: 1px solid var(--border-subtle); } }
+.paCq { container: paws / inline-size; min-width: 0; }
+.paEmptyRail { padding: 22px 24px; border-top: 1px solid var(--border-subtle); }
+.paRule { height: 1px; background: var(--border-subtle); margin: 14px 0 8px; }
+.paInlineErr { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--status-overdue); padding: 10px 14px; border: 1px solid rgba(255,77,94,.35); border-radius: var(--radius-sm); background: rgba(255,77,94,.08); }
+.paSkel { height: 14px; border-radius: 4px; background: var(--border-subtle); }
+@media (max-width: 640px) {
+  .paWs .k-btn, .paWs .k-stat, .paWs select.k-select, .paWs .k-input { min-height: 44px; }
+  .paTable td { height: 56px; }
 }
+`;
 
 export default function PayAppsPage() {
   const params = useParams();
@@ -72,11 +105,12 @@ export default function PayAppsPage() {
   const [loading,setLoading]   = useState(true);
   const [error,setError]       = useState('');
   const [downloading,setDownloading] = useState<string|null>(null);
-  const [toast,setToast] = useState<{msg:string;type:'success'|'error'}|null>(null);
-  const [menuId, setMenuId] = useState<string|null>(null);
+  const { toast, show } = useToast(4000);
+  const setToast = (t:{msg:string;type:'success'|'error'}) => show(t.msg, t.type==='success'?'good':'bad');
   const [copiedId, setCopiedId] = useState<string|null>(null);
-  const [deleteId, setDeleteId] = useState<string|null>(null);
   const [bulkSelected, setBulkSelected] = useState<Set<string>>(new Set());
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   // Project intelligence + waiver coverage — fetched once on mount. The list walks
   // in knowing the contract money and every lien waiver tied to a billing period.
@@ -101,8 +135,6 @@ export default function PayAppsPage() {
       })(),
     ]);
   },[projectId]);
-
-
 
   const { dragHandlers, draggingIndex } = useDragReorder(payApps, (reordered) => {
     setPayApps(reordered);
@@ -145,8 +177,6 @@ export default function PayAppsPage() {
     setBulkSelected(new Set());
   };
 
-  useEffect(()=>{ const t=toast?setTimeout(()=>setToast(null),4000):null; return ()=>{ if(t) clearTimeout(t); }; },[toast]);
-
   const load = useCallback(async()=>{
     setLoading(true);
     setError('');
@@ -180,7 +210,6 @@ export default function PayAppsPage() {
     Boolean(projectId),
   );
 
-
   useEffect(()=>{ load(); },[load]);
 
   async function downloadG702(pa:any){
@@ -204,17 +233,14 @@ export default function PayAppsPage() {
     }
   }
 
-  function openPayMenu(id: string) { setMenuId(id); setDeleteId(null); }
-
   function handleCopyPay(id: string, amount: number) {
     navigator.clipboard.writeText(fmt(amount)).catch(() => {});
     setCopiedId(id); setTimeout(() => setCopiedId(null), 2000);
-    setMenuId(null);
+    setToast({ msg: `${fmt(amount)} copied.`, type: 'success' });
   }
 
   async function handleDeletePayApp(id: string) {
     setPayApps(prev => prev.filter(p => p.id !== id));
-    setDeleteId(null);
     try {
       const r = await fetch(`/api/pay-apps/${id}`, { method: 'DELETE' });
       if (!r.ok) throw new Error('delete failed');
@@ -223,6 +249,9 @@ export default function PayAppsPage() {
       setToast({ msg: 'Could not delete the pay app. Please try again.', type: 'error' });
       load();
     }
+  }
+  async function confirmDeletePayApp(pa:any) {
+    if (await confirmDialog({ title: `Delete pay app #${pa.app_number ?? pa.application_number}?`, message: 'This cannot be undone.', confirmLabel: 'Delete', danger: true })) handleDeletePayApp(pa.id);
   }
 
   const totalCertified = payApps.filter(p=>p.status==='approved'||p.status==='certified'||p.status==='paid').reduce((s:number,p:any)=>s+(Number(p.current_payment_due)||0),0);
@@ -248,266 +277,238 @@ export default function PayAppsPage() {
   const waiverTotals = Object.values(waiversByApp).reduce((a,w)=>({total:a.total+w.total,signed:a.signed+w.signed}),{total:0,signed:0});
   const pendingApproval = payApps.filter((p:any)=>p.status==='submitted').length;
 
-  // Sortable columns (R11 sweep). Default = no sort so the persisted
-  // drag-reorder (sort_order) stays the source of truth; while a column sort
-  // is active the drag handles pause (reordering a sorted view is meaningless).
-  const { sort, cycleSort } = usePersistedSort('project-pay-apps');
-  const sortedApps = useSortedRows(payApps, sort, (pa:any, key:string) => {
-    switch (key) {
-      case 'app':       return Number(pa.app_number ?? pa.application_number)||0;
-      case 'period':    return pa.period_from || pa.period_to || null;
-      case 'lifecycle': return STAGE_RANK[pa.status||'draft'] ?? 0;
-      case 'completed': return Number(pa.total_completed_stored ?? pa.total_completed)||0;
-      case 'thisPeriod':return Number(pa.this_period)||0;
-      case 'retainage': return Number(pa.total_retainage ?? pa.retainage_amount)||0;
-      case 'due':       return Number(pa.current_payment_due)||0;
-      default:          return pa[key];
-    }
+  // Register view — search matches the app number and period; status filters.
+  const q = search.trim().toLowerCase();
+  const visible = payApps.filter((pa:any)=>{
+    if (statusFilter!=='all' && String(pa.status||'draft')!==statusFilter) return false;
+    if (!q) return true;
+    const n = String(pa.app_number ?? pa.application_number ?? '');
+    return [`#${n}`, n, fmtDay(pa.period_from, true), fmtDay(pa.period_to, true), pa.status].some(v => String(v||'').toLowerCase().includes(q));
   });
+  const filtersActive = !!search || statusFilter!=='all';
+  const clearFilters = () => { setSearch(''); setStatusFilter('all'); };
+  // Drag-reorder only makes sense on the whole, unfiltered register.
+  const dragEnabled = !filtersActive;
 
-  return (
-    <PremiumSurface maxWidth={2200}>
-      {toast && (
-        <div style={{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:'8px',background:toast.type==='success'?'rgba(44,255,122,0.9)':'rgba(255,59,48,0.9)',color:'#fff',fontWeight:600,fontSize:'14px',pointerEvents:'none'}}>
-          {toast.msg}
-        </div>
-      )}
+  // ── Stat tiles: contract position ──
+  const stats: StatItem[] = loading && !ctx
+    ? [
+        { label:'Revised Contract', value:'—', sub:'Loading…' },
+        { label:'Billed to Date', value:'—', sub:'Loading…' },
+        { label:'Retainage Held', value:'—', sub:'Loading…' },
+        { label:'Paid to Date', value:'—', sub:'Loading…' },
+        { label:'Lien Waivers', value:'—', sub:'Loading…' },
+      ]
+    : [
+        { label:'Revised Contract', value:fmt(revised), sub:`${fmt(original)} original ${coTotal>=0?'+':'-'} ${fmt(Math.abs(coTotal))} approved COs`, href:`/app/projects/${projectId}/contracts` },
+        { label:'Billed to Date', value:fmt(ctxBilled), sub:`${Number(money?.billedPct)||0}% of revised · ${payApps.length} application${payApps.length===1?'':'s'}` },
+        { label:'Retainage Held', value:fmt(retainageHeld), sub:`Held to date · ${Number(money?.retainagePct)||10}% per contract` },
+        { label:'Paid to Date', value:fmt(ctxPaid), tone: outstandingCertified>0 ? 'warn' : ctxPaid>0 ? 'good' : 'default', sub: outstandingCertified>0 ? `${fmt(outstandingCertified)} certified, unpaid` : 'All certified money collected', onClick: pendingApproval>0 ? () => setStatusFilter(s => (s==='submitted' ? 'all' : 'submitted')) : undefined },
+        { label:'Lien Waivers', value: waiverTotals.total>0 ? `${waiverTotals.signed} of ${waiverTotals.total}` : '—', tone: waiverTotals.total>0 ? (waiverTotals.signed===waiverTotals.total ? 'good' : 'warn') : 'default', sub: waiverTotals.total>0 ? 'Signed — payment is waiver-gated' : 'Generate at owner approval', href:`/app/projects/${projectId}/lien-waivers` },
+      ];
 
-      {/* Header */}
-      <ModuleHero
-        eyebrow="AIA Billing"
-        eyebrowIcon={<Receipt size={13} weight="fill" color={moduleAccent('payapps').hex} />}
-        title="Pay"
-        accent="Applications"
-        subtitle="AIA G702/G703 — Application and Certificate for Payment"
-          note="Retainage comes off the top"
-        actions={
-          <Link data-tour="new-pay-app"
-            href={`/app/projects/${projectId}/pay-apps/new`}
-            style={goldButtonStyle}
-            className="pmBtn"
-          >
-            <Plus size={15} weight="bold" /> New Pay Application
-          </Link>
-        }
-      />
+  const allVisibleSelected = visible.length>0 && visible.every((p:any)=>bulkSelected.has(p.id));
 
-      {/* Contract intelligence strip — what the system already knows */}
-      {ctx && (
-        <StatStrip items={[
-          {href: `/app/projects/${projectId}/contracts`, label:'Original Contract', value:fmt(original), sub:'G702 line 1'},
-          {href: `/app/projects/${projectId}/change-orders`, label:'Approved COs', value:(coTotal>=0?'+':'')+fmt(coTotal), accent:coTotal>0?'#2CFF7A':undefined, sub:`${Number(money?.approvedCoCount)||0} approved${Number(money?.pendingCoCount)?` · ${money.pendingCoCount} pending`:''}`},
-          {href: `/app/projects/${projectId}/contracts`, label:'Revised Contract', value:fmt(revised), sub:'Contract sum to date'},
-          {href: `/app/projects/${projectId}/pay-apps`, label:'Billed to Date', value:fmt(ctxBilled), sub:`${Number(money?.billedPct)||0}% of revised`},
-          {href: `/app/projects/${projectId}/pay-apps`, label:'Retainage Held', value:fmt(retainageHeld), sub:`Held to date · ${Number(money?.retainagePct)||10}% per contract`},
-          {href: `/app/projects/${projectId}/pay-apps`, label:'Paid to Date', value:fmt(ctxPaid), accent:ctxPaid>0?'#2CFF7A':undefined, sub:outstandingCertified>0?`${fmt(outstandingCertified)} certified, unpaid`:'All certified money collected'},
-        ]}/>
-      )}
-
-      {/* Error */}
-      {error && (
-        <div style={{background:'rgba(192,48,48,.12)',border:`1px solid rgba(192,48,48,.3)`,borderRadius:8,padding:'12px 16px',marginBottom:20,color:RED,fontSize:13}}>
-          {error}
-        </div>
-      )}
-
-      {/* KPI Row */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(190px, 1fr))',gap:16,marginBottom:28}}>
-        <StatCard
-          icon={<ClipboardText size={19} weight="duotone" color={moduleAccent('payapps').hex} />}
-          label="Total Apps" value={String(payApps.length)} accent={GOLD}
-          sub={money?.lastPayApp?`Latest #${money.lastPayApp.appNumber} · ${String(money.lastPayApp.status||'draft').replace(/_/g,' ')}`:(payApps.length===1?'1 application':`${payApps.length} applications`)} delay={0.02}
-         href={`/app/projects/${projectId}/pay-apps`}/>
-        <StatCard
-          icon={<CheckCircle size={19} weight="duotone" color={SAGE} />}
-          label="Total Certified" value={fmt(totalCertified)} accent={SAGE}
-          sub={ctxPaid>0?`${fmt(ctxPaid)} of it collected`:'Approved / paid'} delay={0.06}
-         href={`/app/projects/${projectId}/pay-apps`}/>
-        <StatCard
-          icon={<FileText size={19} weight="duotone" color={waiverTotals.total>0&&waiverTotals.signed===waiverTotals.total?SAGE:AMBER} />}
-          label="Lien Waivers" value={waiverTotals.total>0?`${waiverTotals.signed}/${waiverTotals.total}`:'—'}
-          accent={waiverTotals.total>0?(waiverTotals.signed===waiverTotals.total?SAGE:AMBER):undefined}
-          sub={waiverTotals.total>0?'Signed — payment is waiver-gated':'Generate at owner approval'} delay={0.10}
-         href={`/app/projects/${projectId}/lien-waivers`}/>
-        <StatCard
-          icon={<Hourglass size={19} weight="duotone" color={AMBER} />}
-          label="Pending Approval"
-          value={String(pendingApproval)}
-          accent={pendingApproval>0?AMBER:undefined}
-          sub={pendingApproval>0?'Awaiting owner sign-off':'Nothing awaiting the owner'} delay={0.14}
-         href={`/app/projects/${projectId}/pay-apps`}/>
-      </div>
-
-      {/* Loading — skeleton rows shaped like the real table (house pattern: rfis) */}
-      {loading && (
-        <SectionCard flat flush>
-          <SkeletonRow />
-          <SkeletonRow />
-          <SkeletonRow />
-          <SkeletonRow />
-          <SkeletonRow />
-        </SectionCard>
-      )}
-
-      {/* Empty — teach the G702 flow instead of a bare button */}
-      {!loading && payApps.length===0 && (
-        <SectionCard flush>
-          <div style={{display:'grid',gridTemplateColumns:ctx?'minmax(0,1fr) 380px':'1fr',alignItems:'stretch'}}>
-            <PremiumEmpty
-              icon={<Clipboard size={30} weight="duotone" color={GOLD} />}
-              title={revised>0?`${fmt(revised)} under contract — nothing billed yet`:'No pay applications yet'}
-              description={revised>0
-                ? `Application #1 builds your schedule of values against the ${fmt(revised)} contract${coTotal>0?` (${fmt(original)} base + ${fmt(coTotal)} approved COs)`:''}. Every application after it rolls the SOV forward — you only enter each period's work.`
-                : 'A pay application is the AIA G702/G703 packet that bills the owner for a period of work. Build the schedule of values once — it rolls forward automatically every period after.'}
-              action={
-                <Link
-                  href={`/app/projects/${projectId}/pay-apps/new`}
-                  style={goldButtonStyle}
-                  className="pmBtn"
-                >
-                  <Plus size={15} weight="bold" /> Create Application #1
-                </Link>
-              }
-            />
-            {ctx && (
-              <div style={{borderLeft:'1px solid rgba(255,255,255,0.08)',padding:'22px 24px'}}>
-                <FlowSteps title="How G702 Billing Works" steps={[
-                  {title:'Build the SOV & Bill the Period',desc:'Scheduled values, work completed, stored materials — retainage and payment due compute themselves.'},
-                  {title:'Submit to the Owner',desc:'The G702/G703 packet goes out with a one-click owner approval link.'},
-                  {title:'Approval Generates Lien Waivers',desc: subCount>0?`Conditional waivers for your ${subCount} sub${subCount===1?'':'s'}, each sized to their share of the period.`:'Conditional waivers for every sub on the job, sized to their share of the period.'},
-                  {title:'Payment Is Waiver-Gated',desc:'Mark Paid is blocked until required waivers are signed — then paid-to-date and retainage update the ledger.'},
-                ]}/>
-                <div style={{height:1,background:'rgba(255,255,255,0.08)',margin:'16px 0 10px'}}/>
-                <InsightRow label="Revised Contract" value={fmt(revised)} strong/>
-                <InsightRow label="Retainage Rate" value={`${Number(money?.retainagePct)||10}%`}/>
-                <InsightRow label="Subs on the Job" value={String(subCount)}/>
-              </div>
-            )}
+  // ── Register body: loading / error / empty / no-match / rows — each distinct ──
+  let listBody: React.ReactNode;
+  if (loading) {
+    listBody = (
+      <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }} aria-busy="true">
+        {[0,1,2,3,4].map(i => (
+          <div key={i} style={{ display: 'grid', gridTemplateColumns: '60px 150px 1fr 120px 120px 120px', gap: 14, alignItems: 'center' }}>
+            <div className="paSkel" /><div className="paSkel" /><div className="paSkel" style={{ width: '70%' }} /><div className="paSkel" /><div className="paSkel" /><div className="paSkel" />
           </div>
-        </SectionCard>
-      )}
-
-      {/* Table — NudgeRing pulses when the suggestion engine flags uncollected
-          certified money or held retainage on THIS project (ticker deep links
-          land on this anchor). */}
-      {!loading && payApps.length>0 && (
-        <NudgeRing anchorId={ANCHOR_PAY_APPS_DUE} projectId={projectId}>
-        <SectionCard style={{overflow:'visible'}} bodyStyle={{padding:0}}>
-          <div style={{overflowX:'auto',padding:16}}>
-            {/* Bulk action bar */}
-            {bulkSelected.size > 0 && (
-              <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 16px',background:'var(--brand-primary-08)',border:`1px solid var(--brand-primary-18)`,borderRadius:8,marginBottom:12}}>
-                <span style={{color:GOLD,fontWeight:700,fontSize:13}}>{bulkSelected.size} selected</span>
-                <button onClick={handleBulkApprove} style={{padding:'6px 14px',background:'rgba(44,255,122,0.15)',border:'1px solid rgba(44,255,122,0.3)',borderRadius:6,color:'#2CFF7A',fontSize:12,fontWeight:700,cursor:'pointer'}}><CheckCircle size={13} weight="fill" color="#2CFF7A" style={{verticalAlign:'middle'}} /> Approve All</button>
-                <button onClick={handleBulkExport} style={{padding:'6px 14px',background:'var(--brand-primary-18)',border:`1px solid var(--brand-primary-25)`,borderRadius:6,color:GOLD,fontSize:12,fontWeight:700,cursor:'pointer'}}><FileText size={13} color={GOLD} style={{verticalAlign:'middle'}} /> Export All PDFs</button>
-                <button onClick={()=>setBulkSelected(new Set())} style={{padding:'6px 14px',background:RAISED,border:`1px solid ${BORDER}`,borderRadius:6,color:DIM,fontSize:12,cursor:'pointer'}}>Clear</button>
-              </div>
-            )}
-            <table style={{width:'100%',borderCollapse:'collapse' as const,fontSize:13}}>
-              <thead>
-                <tr>
-                  <SortableTh label="" sort={sort} onSort={cycleSort} style={{padding:'10px 8px',width:28}} />
-                  <SortableTh
-                    label={<input type="checkbox" checked={bulkSelected.size === payApps.length && payApps.length > 0} onChange={() => { if (bulkSelected.size === payApps.length) setBulkSelected(new Set()); else setBulkSelected(new Set(payApps.map((p:any) => p.id))); }} style={{accentColor:GOLD,cursor:'pointer'}} />}
-                    sort={sort} onSort={cycleSort} style={{padding:'10px 8px',width:28}}
-                  />
-                  {([
-                    ['App #','app'],['Period','period'],['Lifecycle','lifecycle'],['Completed to Date','completed'],
-                    ['This Period','thisPeriod'],['Retainage','retainage'],['Payment Due','due'],['G702 PDF',undefined],
-                  ] as [string, string|undefined][]).map(([h,k])=>(
-                    <SortableTh key={h} label={h} sortKey={k} sort={sort} onSort={cycleSort} />
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {sortedApps.map((pa:any,idx:number)=>{
-                  // Drag-reorder only makes sense in the persisted (unsorted) order.
-                  const handlers = sort ? null : dragHandlers(idx);
-                  return (
+        ))}
+      </div>
+    );
+  } else if (error) {
+    listBody = (
+      <EmptyState
+        icon={<WarningCircle size={22}/>}
+        title="Couldn't load pay applications"
+        text={`${error} Nothing has been lost — try again.`}
+        action={<Button icon={<ArrowClockwise size={15}/>} onClick={load}>Retry</Button>}
+      />
+    );
+  } else if (payApps.length===0) {
+    listBody = (
+      <div className="paCq">
+        <div className="paEmptyGrid" data-ctx={ctx ? 'true' : 'false'}>
+          <EmptyState
+            icon={<Clipboard size={22}/>}
+            title={revised>0?`${fmt(revised)} under contract — nothing billed yet`:'No pay applications yet'}
+            text={revised>0
+              ? `Application #1 builds your schedule of values against the ${fmt(revised)} contract${coTotal>0?` (${fmt(original)} base + ${fmt(coTotal)} approved COs)`:''}. Every application after it rolls the SOV forward — you only enter each period's work.`
+              : 'A pay application is the AIA G702/G703 packet that bills the owner for a period of work. Build the schedule of values once — it rolls forward automatically every period after.'}
+            action={<Button icon={<Plus size={15} weight="bold"/>} href={`/app/projects/${projectId}/pay-apps/new`}>Create Application #1</Button>}
+          />
+          {ctx && (
+            <div className="paEmptyRail">
+              <FlowSteps title="How G702 Billing Works" steps={[
+                {title:'Build the SOV & Bill the Period',desc:'Scheduled values, work completed, stored materials — retainage and payment due compute themselves.'},
+                {title:'Submit to the Owner',desc:'The G702/G703 packet goes out with a one-click owner approval link.'},
+                {title:'Approval Generates Lien Waivers',desc: subCount>0?`Conditional waivers for your ${subCount} sub${subCount===1?'':'s'}, each sized to their share of the period.`:'Conditional waivers for every sub on the job, sized to their share of the period.'},
+                {title:'Payment Is Waiver-Gated',desc:'Mark Paid is blocked until required waivers are signed — then paid-to-date and retainage update the ledger.'},
+              ]}/>
+              <div className="paRule"/>
+              <InsightRow label="Revised Contract" value={fmt(revised)} strong/>
+              <InsightRow label="Retainage Rate" value={`${Number(money?.retainagePct)||10}%`}/>
+              <InsightRow label="Subs on the Job" value={String(subCount)}/>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  } else if (visible.length===0) {
+    listBody = (
+      <EmptyState
+        icon={<Clipboard size={22}/>}
+        title="No applications match these filters"
+        text="Clear the search or status filter to see more."
+        action={<Button onClick={clearFilters}>Clear Filters</Button>}
+      />
+    );
+  } else {
+    listBody = (
+      <>
+        {bulkSelected.size > 0 && (
+          <div className="paBulk" role="region" aria-label="Bulk actions">
+            <b>{bulkSelected.size} selected</b>
+            <Button size="sm" icon={<CheckCircle size={14}/>} onClick={handleBulkApprove}>Approve Selected</Button>
+            <Button size="sm" icon={<FileText size={14}/>} onClick={handleBulkExport} disabled={!!downloading}>Export Selected PDFs</Button>
+            <Button size="sm" variant="ghost" icon={<X size={14}/>} onClick={()=>setBulkSelected(new Set())}>Clear</Button>
+          </div>
+        )}
+        <div className="paTableWrap">
+          <table className="paTable">
+            <thead>
+              <tr>
+                <th aria-label="Reorder" />
+                <th style={{ width: 28 }}>
+                  <input type="checkbox" className="paCheck" aria-label="Select all" checked={allVisibleSelected} onChange={() => { if (allVisibleSelected) setBulkSelected(new Set()); else setBulkSelected(new Set(visible.map((p:any) => p.id))); }} />
+                </th>
+                <th>App #</th>
+                <th>Period</th>
+                <th>Lifecycle</th>
+                <th data-align="right">Completed to Date</th>
+                <th data-align="right">This Period</th>
+                <th data-align="right">Retainage</th>
+                <th data-align="right">Payment Due</th>
+                <th aria-label="Actions" />
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map((pa:any)=>{
+                const idx = payApps.indexOf(pa);
+                const handlers = dragEnabled ? dragHandlers(idx) : null;
+                const done=Number(pa.total_completed_stored ?? pa.total_completed)||0;
+                const cs=Number(pa.contract_sum_to_date ?? pa.contract_sum)||0;
+                const w = waiversByApp[pa.id];
+                const num = pa.app_number ?? pa.application_number;
+                return (
                   <tr
                     key={pa.id}
                     onClick={()=>router.push(`/app/projects/${projectId}/pay-apps/${pa.id}`)}
-                    style={{borderBottom:`1px solid rgba(229,229,234,.5)`,cursor:'pointer',transition:'background .15s',opacity:!sort&&draggingIndex===idx?0.5:1}}
-                    onMouseEnter={e=>(e.currentTarget.style.background='var(--brand-primary-08)')}
-                    onMouseLeave={e=>(e.currentTarget.style.background='')}
+                    data-dragging={dragEnabled && draggingIndex===idx ? 'true' : undefined}
                     {...(handlers||{})}
                   >
-                    <td style={{padding:'4px 4px'}} onClick={e=>e.stopPropagation()}>
+                    <td onClick={e=>e.stopPropagation()}>
                       {handlers && <DragHandle {...handlers} index={idx} isDragging={draggingIndex===idx} />}
                     </td>
-                    <td style={{padding:'4px 8px'}} onClick={e=>e.stopPropagation()}>
-                      <input type="checkbox" checked={bulkSelected.has(pa.id)} onChange={()=>toggleBulk(pa.id)} style={{accentColor:GOLD,cursor:'pointer'}} />
+                    <td onClick={e=>e.stopPropagation()}>
+                      <input type="checkbox" className="paCheck" aria-label={`Select pay app #${num}`} checked={bulkSelected.has(pa.id)} onChange={()=>toggleBulk(pa.id)} />
                     </td>
-                    <td style={{padding:'12px 14px',color:GOLD,fontWeight:800,whiteSpace:'nowrap' as const}}>#{pa.app_number ?? pa.application_number}</td>
-                    <td style={{padding:'12px 14px',color:DIM,whiteSpace:'nowrap' as const}}>
-                      {pa.period_from ? new Date(pa.period_from+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—'}
-                      {' – '}
-                      {pa.period_to ? new Date(pa.period_to+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—'}
+                    <td><span className="paNum">#{num}</span></td>
+                    <td className="paMuted">{fmtDay(pa.period_from)} – {fmtDay(pa.period_to, true)}</td>
+                    <td>
+                      <div className="paLife">
+                        <LifecycleRail module="pay_applications" status={pa.status||'draft'} since={pa.updated_at || pa.created_at} changed={liveChanged.has(pa.id)} showAction={false}/>
+                        {w && w.total>0 && <div className="paWaivers" data-ok={w.signed===w.total ? 'true' : undefined}>{w.signed} of {w.total} waivers signed</div>}
+                      </div>
                     </td>
-                    <td style={{padding:'12px 14px'}}>
-                      <MiniPipeline status={pa.status||'draft'} waivers={waiversByApp[pa.id]} since={pa.updated_at || pa.created_at} changed={liveChanged.has(pa.id)}/>
+                    <td data-align="right">
+                      <span className="paMoney">{fmt(done)}</span>
+                      {cs>0 && <span className="paSub">{Math.round((done/cs)*100)}% of {fmt(cs)}</span>}
                     </td>
-                    <td style={{padding:'12px 14px',color:TEXT,whiteSpace:'nowrap' as const}}>
-                      {(()=>{ const done=Number(pa.total_completed_stored ?? pa.total_completed)||0; const cs=Number(pa.contract_sum_to_date ?? pa.contract_sum)||0; return (<>
-                        <span style={{fontWeight:700}}>{fmt(done)}</span>
-                        {cs>0 && <div style={{fontSize:10.5,color:'rgba(255,255,255,0.45)',marginTop:2}}>{Math.round((done/cs)*100)}% of {fmt(cs)}</div>}
-                      </>); })()}
+                    <td data-align="right">{fmt(pa.this_period||0)}</td>
+                    <td data-align="right">{fmt(pa.total_retainage ?? pa.retainage_amount)}</td>
+                    <td data-align="right">
+                      <span className="paMoney">{fmt(pa.current_payment_due||0)}</span>
+                      {copiedId===pa.id && <span className="paSub">Copied</span>}
                     </td>
-                    <td style={{padding:'12px 14px',color:TEXT}}>{fmt(pa.this_period||0)}</td>
-                    <td style={{padding:'12px 14px',color:ORANGE}}>{fmt(pa.total_retainage ?? pa.retainage_amount)}</td>
-                    <td style={{padding:'12px 14px',position:'relative' as const}} onClick={e=>e.stopPropagation()}>
-                      {deleteId===pa.id ? (
-                        <div style={{display:'flex',alignItems:'center',gap:6}}>
-                          <span style={{fontSize:11,color:RED,fontWeight:600}}>Delete?</span>
-                          <button onClick={()=>handleDeletePayApp(pa.id)} style={{padding:'3px 8px',background:'rgba(192,48,48,.15)',border:'1px solid rgba(192,48,48,.3)',borderRadius:5,color:RED,fontSize:11,fontWeight:700,cursor:'pointer'}}>Yes</button>
-                          <button onClick={()=>setDeleteId(null)} style={{padding:'3px 8px',background:RAISED,border:`1px solid ${BORDER}`,borderRadius:5,color:DIM,fontSize:11,cursor:'pointer'}}>Cancel</button>
-                        </div>
-                      ) : (
-                        <div style={{display:'flex',alignItems:'center',gap:4}}>
-                          <span style={{color:TEXT,fontWeight:700}}>{fmt(pa.current_payment_due||0)}</span>
-                          {copiedId===pa.id&&<span style={{fontSize:10,color:'#2CFF7A',fontWeight:600}}>Copied</span>}
-                          <button onClick={()=>openPayMenu(pa.id)} style={{background:'none',border:'none',color:DIM,cursor:'pointer',fontSize:10,padding:'2px 4px',lineHeight:1,opacity:0.6}} onMouseEnter={e=>(e.currentTarget.style.opacity='1')} onMouseLeave={e=>(e.currentTarget.style.opacity='0.6')}><span style={{display:'inline-flex',verticalAlign:'middle'}}><CaretDown size={12} color={DIM} /></span></button>
-                          {menuId===pa.id&&(
-                            <div style={{position:'absolute',top:36,right:14,background:RAISED,border:`1px solid ${BORDER}`,borderRadius:'var(--radius-md)',padding:6,zIndex:100,minWidth:150,boxShadow:'var(--shadow-lg)'}}>
-                              {[
-                                // No inline amount edit: PATCHing current_payment_due raw would
-                                // bypass the exact-cents engine and desync retainage/earned/G702.
-                                // The pay app composer recomputes every figure server-side.
-                                {label:'Edit in Pay App',icon:<PencilSimple size={14} color={TEXT} />,title:'Payment due is computed from the period’s work by the exact-cents engine — edit the work in the pay app so retainage and every G702 field stay in sync.',action:()=>{setMenuId(null);router.push(`/app/projects/${projectId}/pay-apps/${pa.id}`);}},
-                                {label:'Copy Amount',icon:<Copy size={14} color={TEXT} />,title:'Copy the formatted payment due',action:()=>handleCopyPay(pa.id,pa.current_payment_due||0)},
-                              ].map(item=>(
-                                <div key={item.label} title={item.title} onClick={item.action} style={{padding:'7px 12px',fontSize:12,color:TEXT,cursor:'pointer',borderRadius:6,display:'flex',alignItems:'center',gap:8}} onMouseEnter={e=>(e.currentTarget.style.background='rgba(255,255,255,0.06)')} onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
-                                  <span style={{fontSize:14}}>{item.icon}</span>{item.label}
-                                </div>
-                              ))}
-                              <div style={{height:1,background:BORDER,margin:'4px 0'}}/>
-                              <div onClick={()=>{setMenuId(null);setDeleteId(pa.id);}} style={{padding:'7px 12px',fontSize:12,color:RED,cursor:'pointer',borderRadius:6,display:'flex',alignItems:'center',gap:8}} onMouseEnter={e=>(e.currentTarget.style.background='rgba(192,48,48,.08)')} onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
-                                <span style={{fontSize:14}}><Trash size={14} color={RED} /></span>Delete Pay App
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </td>
-                    <td style={{padding:'12px 14px'}}>
-                      <button
-                        onClick={()=>downloadG702(pa)}
-                        disabled={downloading===pa.id}
-                        style={{background:'none',border:`1px solid ${BORDER}`,borderRadius:5,color:GOLD,fontSize:11,padding:'4px 10px',cursor:'pointer',opacity:downloading===pa.id?.5:1}}
-                      >
-                        {downloading===pa.id ? '…' : <><FileText size={13} color={GOLD} style={{verticalAlign:'middle'}} /> Download</>}
-                      </button>
+                    <td onClick={e=>e.stopPropagation()}>
+                      <div style={{ display:'inline-flex', alignItems:'center', gap:6 }}>
+                        <Badge tone={statusBadge(pa.status).tone}>{statusBadge(pa.status).label}</Badge>
+                        <RowActions actions={[
+                          { label:'Open Pay App', icon:<Clipboard size={15}/>, href:`/app/projects/${projectId}/pay-apps/${pa.id}` },
+                          { label: downloading===pa.id ? 'Generating…' : 'G702 / G703 PDF', icon:<FileText size={15}/>, onClick:()=>downloadG702(pa), disabled:!!downloading },
+                          // No inline amount edit: PATCHing current_payment_due raw would
+                          // bypass the exact-cents engine and desync retainage/earned/G702.
+                          // The pay app composer recomputes every figure server-side.
+                          { label:'Edit in Pay App', icon:<PencilSimple size={15}/>, href:`/app/projects/${projectId}/pay-apps/${pa.id}` },
+                          { label:'Copy Payment Due', icon:<Copy size={15}/>, onClick:()=>handleCopyPay(pa.id, Number(pa.current_payment_due)||0) },
+                          { label:'Delete', icon:<Trash size={15}/>, onClick:()=>confirmDeletePayApp(pa), tone:'danger' },
+                        ]}/>
+                      </div>
                     </td>
                   </tr>
-                  );
-                })}
-              </tbody>
-              {menuId&&<div style={{position:'fixed',inset:0,zIndex:50}} onClick={()=>setMenuId(null)}/>}
-            </table>
-          </div>
-        </SectionCard>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <div className="paWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[
+          { label:'Projects', href:'/app/projects' },
+          { label: ctx?.project?.name || 'Project', href:`/app/projects/${projectId}/overview` },
+          { label:'Pay Applications' },
+        ]}
+        title="Pay Applications"
+        subtitle="AIA G702/G703 — Application and Certificate for Payment. Retainage comes off the top."
+        actions={
+          <Button variant="primary" data-tour="new-pay-app" icon={<Plus size={15} weight="bold"/>} href={`/app/projects/${projectId}/pay-apps/new`}>
+            New Pay Application
+          </Button>
+        }
+      >
+        {!error && <StatRow items={stats}/>}
+
+        {!loading && !error && payApps.length>0 && (
+          <Toolbar
+            search={search}
+            onSearch={setSearch}
+            placeholder="Search by application number or period…"
+            filters={
+              <>
+                <Select
+                  aria-label="Status"
+                  value={statusFilter}
+                  onChange={e=>setStatusFilter(e.target.value)}
+                  style={{ width:'auto', minWidth:150 }}
+                  options={[{ value:'all', label:'All Statuses' }, ...STATUS_OPTIONS.map(s=>({ value:s, label:`${statusBadge(s).label}${s==='submitted'&&pendingApproval?` (${pendingApproval})`:''}` }))]}
+                />
+                {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
+              </>
+            }
+            actions={<span className="paMuted" style={{ fontSize:'var(--fs-sm)' }}>{visible.length} of {payApps.length}{dragEnabled ? ' · drag to reorder' : ''}</span>}
+          />
+        )}
+
+        {/* NudgeRing pulses when the suggestion engine flags uncollected
+            certified money or held retainage on THIS project (ticker deep links
+            land on this anchor). */}
+        <NudgeRing anchorId={ANCHOR_PAY_APPS_DUE} projectId={projectId}>
+          <Card flush>{listBody}</Card>
         </NudgeRing>
-      )}
-    </PremiumSurface>
+      </PageShell>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </div>
   );
 }

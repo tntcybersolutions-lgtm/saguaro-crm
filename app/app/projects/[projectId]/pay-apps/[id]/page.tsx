@@ -1,29 +1,57 @@
 'use client';
+/**
+ * Pay Application detail — Pass 4, on the RFIs reference layout (record + rail).
+ *
+ * Anatomy: crumbs → title (Pay App #N) + the ONE workflow primary (Submit to
+ * Owner / Approve / Certify / Mark Paid — whichever is next) with PDF and Edit
+ * SOV as secondaries → StatRow (contract / this period / completed / retainage
+ * / payment due) → workspace: the G703 schedule of values and the G702 summary
+ * on the left, a 320–384px rail (status, where it sits in the approval /
+ * waiver / payment chain, prior-app comparison, details, retainage, related)
+ * on the right. Phone: stacked.
+ *
+ * Money: aligned, tabular, two decimals, never truncated. Approval and
+ * record-payment stay the explicit existing POST workflows.
+ *
+ * API surface (unchanged):
+ *   GET  /api/pay-apps/[id] -> { payApp, lineItems }
+ *   PUT  /api/pay-apps/[id] -> { success }   (draft SOV edits)
+ *   POST /api/pay-apps/[id]/{submit|approve|certify|paid}
+ *   POST /api/documents/pay-application  (G702 / G703 PDF)
+ *   GET  /api/pay-apps/list, /api/lien-waivers/list (rail enrichment)
+ *
+ * Note: the daily_logs-style column drift applies here too — the table's SOV
+ * columns are prev_completed / this_period / stored_materials; the old
+ * work_* names stay optional so a payload using them still works.
+ */
 import React, { useState, useEffect, useCallback } from 'react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { humanError } from '@/lib/errors';
-import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
-import { Clipboard, CheckCircle, XCircle, ArrowLeft, ArrowRight, PencilSimple, FloppyDisk, FileText, Plus, X, CaretUp, CaretDown, Export, SealCheck, CurrencyDollar, Files, Lock, Receipt, CalendarBlank, TrendUp, Coins, ClockCounterClockwise, IdentificationCard } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, FlowSteps, InsightRow, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
-import { Skeleton, SkeletonKPI, SkeletonRow, SkeletonCard } from '@/components/ui/Skeleton';
+import {
+  Clipboard, ArrowLeft, ArrowRight, PencilSimple, FloppyDisk, FileText, Plus, X,
+  Files, Lock, CurrencyDollar, WarningCircle,
+} from '@phosphor-icons/react';
+import {
+  PageShell, Card, StatRow, Badge, Button, EmptyState, DetailList, Input, Toast, useToast,
+  type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import { FlowSteps, InsightRow } from '@/components/ui/premium';
 import { openPdf } from '@/components/PdfViewer';
+import { layout } from '@/lib/design-tokens';
 
-const GOLD='var(--brand-primary)', DARK='var(--bg-base)',
-      BORDER='rgba(255,255,255,0.12)', DIM='#D4D4D8', TEXT='#FFFFFF',
-      GREEN='#2CFF7A', RED='#FF3B30', ORANGE='#FF8A00', BLUE='var(--brand-primary-strong)';
+const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt = (n:number) => money.format(Number(n)||0);
+/** Date-only values parse at local noon ('T12:00:00') so they never shift a day under UTC. */
+const fmtDate = (s:string|null|undefined) => s ? new Date(String(s).slice(0,10)+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
 
-const fmt  = (n:number) => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n||0);
-const fmt2 = (n:number) => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2}).format(n||0);
-const fmtDate = (s:string|null|undefined) => s ? new Date(s+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
-
-const STATUS_META: Record<string,{label:string;color:string;bg:string;next?:string;nextLabel?:string}> = {
-  draft:     {label:'Draft',     color:'#D4D4D8', bg:'rgba(148,163,184,.15)', next:'submitted',  nextLabel:'Submit to Owner'},
-  submitted: {label:'Submitted', color:BLUE,      bg:'rgba(255,138,0,.15)',  next:'approved',   nextLabel:'Approve'},
-  approved:  {label:'Approved',  color:GREEN,     bg:'rgba(44,255,122,.15)',   next:'certified',  nextLabel:'Certify'},
-  certified: {label:'Certified', color:GOLD,      bg:'var(--brand-primary-18)', next:'paid',       nextLabel:'Mark Paid'},
-  paid:      {label:'Paid',      color:'#FF8A00', bg:'rgba(255,138,0,.15)'},
+const STATUS_META: Record<string,{label:string;tone:BadgeTone;next?:string;nextLabel?:string;action?:string}> = {
+  draft:     {label:'Draft',     tone:'neutral',        next:'submitted',  nextLabel:'Submit to Owner', action:'submit'},
+  submitted: {label:'Submitted', tone:'under_contract', next:'approved',   nextLabel:'Approve',         action:'approve'},
+  approved:  {label:'Approved',  tone:'ongoing',        next:'certified',  nextLabel:'Certify',         action:'certify'},
+  certified: {label:'Certified', tone:'ongoing',        next:'paid',       nextLabel:'Mark Paid',       action:'paid'},
+  paid:      {label:'Paid',      tone:'completed'},
 };
 
 interface SovLine {
@@ -31,12 +59,6 @@ interface SovLine {
   line_number: number;
   description: string;
   scheduled_value: number;
-  /* The table's columns are prev_completed / this_period / stored_materials.
-     This type named them work_from_prev / work_this_period / materials_stored,
-     which exist nowhere, so every row read undefined and the whole G702
-     rendered zeros — contract sum, completed to date, payment due, the lot —
-     on a pay application that had been paid in full. The old names stay
-     optional so a payload using them still works. */
   prev_completed?: number;
   this_period?: number;
   stored_materials?: number;
@@ -92,6 +114,59 @@ function calcLine(l: SovLine, retPct: number): SovLine {
   };
 }
 
+const CSS = `
+.pdWs > .k-page { max-width: none; }
+.pdCq { container: pdws / inline-size; min-width: 0; }
+.pdSplit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
+.pdSplit > * { min-width: 0; }
+.pdMain { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pdRail { order: -1; display: flex; flex-direction: column; gap: 16px; }
+@container pdws (min-width: 960px) {
+  .pdSplit { grid-template-columns: minmax(0, 1fr) clamp(${layout.detailRailMin}px, 28%, ${layout.detailRailMax}px); }
+  .pdRail { order: 0; }
+}
+.pdBar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--border-subtle); font-size: var(--fs-sm); color: var(--text-tertiary); }
+.pdBarTrack { flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08); overflow: hidden; min-width: 80px; }
+.pdBarFill { height: 100%; border-radius: 3px; background: var(--status-ongoing); transition: width .4s; }
+.pdBar b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.pdTableWrap { overflow-x: auto; }
+.pdTable { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.pdTable th { position: sticky; top: 0; z-index: 1; background: rgba(21,23,28,0.88); text-align: left; padding: 8px 10px; font-size: 12px; font-weight: 700; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); white-space: nowrap; }
+.pdTable td { padding: 6px 10px; height: 44px; border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); white-space: nowrap; font-variant-numeric: tabular-nums; vertical-align: middle; }
+.pdTable th:first-child, .pdTable td:first-child { padding-left: var(--sp-4); position: sticky; left: 0; z-index: 1; background: var(--bg-solid); }
+.pdTable th:first-child { background: var(--bg-solid-2); z-index: 3; }
+.pdTable th[data-align="right"], .pdTable td[data-align="right"] { text-align: right; }
+.pdTable td[data-desc] { white-space: normal; min-width: 200px; color: var(--text-primary); }
+.pdTable tfoot td { font-weight: 800; color: var(--text-primary); background: var(--bg-surface-2); border-top: 2px solid var(--border-default); }
+.pdTable .k-input { min-height: 32px; padding: 4px 8px; font-size: 13px; }
+.pdTable .k-input[data-num] { text-align: right; width: 110px; }
+.pdPct { display: inline-flex; align-items: center; gap: 6px; min-width: 90px; }
+.pdPctTrack { flex: 1; height: 5px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; min-width: 40px; }
+.pdPctFill { height: 100%; border-radius: 999px; background: var(--status-under-contract); }
+.pdPctFill[data-done="true"] { background: var(--status-ongoing); }
+.pdPct > b { color: var(--text-primary); font-size: var(--fs-xs); min-width: 36px; text-align: right; }
+.pdNeg { color: var(--status-overdue); }
+.pdStrong { color: var(--text-primary); font-weight: 700; }
+.pdSummary { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 0 32px; }
+.pdRow { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--border-subtle); font-size: var(--fs-sm); }
+.pdRow > span:first-child { color: var(--text-tertiary); }
+.pdRow > span + span { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--text-primary); font-weight: 600; }
+.pdRow[data-strong="true"] > span + span { font-weight: 800; }
+.pdRow[data-large="true"] > span + span { font-size: var(--fs-lg); }
+.pdSection { display: flex; flex-direction: column; gap: 8px; }
+.pdSection + .pdSection { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-subtle); }
+.pdBadges { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pdNext { font-size: var(--fs-sm); color: var(--text-tertiary); line-height: 1.5; }
+.pdActions { display: flex; flex-direction: column; gap: 8px; }
+.pdActions .k-btn { width: 100%; justify-content: flex-start; }
+.pdRule { height: 1px; background: var(--border-subtle); margin: 8px 0; }
+.pdMuted { color: var(--text-tertiary); }
+.pdSkel { height: 14px; border-radius: 4px; background: var(--border-subtle); }
+@media (max-width: 640px) {
+  .pdWs .k-btn, .pdWs .k-stat, .pdWs .k-input { min-height: 44px; }
+}
+`;
+
 export default function PayAppDetailPage() {
   const { projectId, id } = useParams() as { projectId: string; id: string };
   const router = useRouter();
@@ -102,9 +177,10 @@ export default function PayAppDetailPage() {
   const [saving, setSaving]     = useState(false);
   const [actioning, setActioning] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [toast, setToast]       = useState<{msg:string;type:'success'|'error'}|null>(null);
+  const { toast, show } = useToast(4000);
+  const setToast = (t:{msg:string;type:'success'|'error'}) => show(t.msg, t.type==='success'?'good':'bad');
   const [downloading, setDownloading] = useState(false);
-  const [showTimeline, setShowTimeline] = useState(false);
+  const [loadError, setLoadError] = useState('');
 
   // Project intelligence — the detail walks in knowing the contract, the prior
   // application, and every lien waiver tied to this one (single reads on mount).
@@ -132,10 +208,9 @@ export default function PayAppDetailPage() {
     ]);
   }, [projectId, id]);
 
-  useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(null), 4000); return () => clearTimeout(t); }, [toast]);
-
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const headers = await getAuthHeaders();
       const r = await fetch(`/api/pay-apps/${id}`, { headers });
@@ -144,10 +219,14 @@ export default function PayAppDetailPage() {
       setPayApp(d.payApp);
       setLines((d.lineItems || []).map((l: SovLine) => calcLine(l, d.payApp?.retainage_percent || 10)));
     } catch (e: unknown) {
-      console.error(e); setToast({ msg: humanError(e, 'Failed to load the pay application.'), type: 'error' });
+      console.error(e);
+      const msg = humanError(e, 'Failed to load the pay application.');
+      setLoadError(msg);
+      setToast({ msg, type: 'error' });
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
@@ -280,65 +359,47 @@ export default function PayAppDetailPage() {
     }
   }
 
+  const crumbsBase = [
+    { label: 'Projects', href: '/app/projects' },
+    { label: ctx?.project?.name || payApp?.projects?.name || 'Project', href: `/app/projects/${projectId}/overview` },
+    { label: 'Pay Applications', href: `/app/projects/${projectId}/pay-apps` },
+  ];
+
   if (loading) return (
-    <PremiumSurface maxWidth={2200}>
-      {/* Layout-true shell — back link stays live; the SOV table paints its real
-          header immediately with skeleton rows underneath (house pattern: rfis). */}
-      <Link href={`/app/projects/${projectId}/pay-apps`}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'rgba(255,255,255,0.62)', fontSize: 13, textDecoration: 'none', marginBottom: 18 }}>
-        <ArrowLeft size={14} weight="bold" /> Pay Applications
-      </Link>
-      <div style={{ marginBottom: 24 }}>
-        <Skeleton width={130} height={11} style={{ marginBottom: 12 }} />
-        <Skeleton width={280} height={34} style={{ marginBottom: 10 }} />
-        <Skeleton width={420} height={13} style={{ maxWidth: '80%' }} />
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
-        <SkeletonKPI /><SkeletonKPI /><SkeletonKPI /><SkeletonKPI /><SkeletonKPI />
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 20, alignItems: 'flex-start' }}>
-        <SectionCard title="Schedule of Values" subtitle="G703 Continuation Sheet" icon={<FileText size={17} weight="duotone" color={GOLD} />} flush>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-              <thead>
-                <tr style={{ background: 'rgba(255,255,255,0.03)' }}>
-                  {['#', 'Description', 'Sched. Value', 'Prev ($)', 'This Period ($)', 'Stored ($)', '% Done', 'Balance', 'Retainage'].map(h => (
-                    <th key={h} style={{ padding: '9px 10px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-            </table>
+    <div className="pdWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell crumbs={[...crumbsBase, { label: 'Loading…' }]} title="Pay Application" subtitle="Loading the G702 / G703…">
+        <Card flush>
+          <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }} aria-busy="true">
+            {[0,1,2,3,4,5].map(i => (
+              <div key={i} style={{ display: 'grid', gridTemplateColumns: '30px 1fr 110px 110px 110px 110px', gap: 14, alignItems: 'center' }}>
+                <div className="pdSkel" /><div className="pdSkel" style={{ width: '70%' }} /><div className="pdSkel" /><div className="pdSkel" /><div className="pdSkel" /><div className="pdSkel" />
+              </div>
+            ))}
           </div>
-          <SkeletonRow />
-          <SkeletonRow />
-          <SkeletonRow />
-          <SkeletonRow />
-          <SkeletonRow />
-          <SkeletonRow />
-        </SectionCard>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <SkeletonCard height={190} />
-          <SkeletonCard height={150} />
-          <SkeletonCard height={120} />
-        </div>
-      </div>
-    </PremiumSurface>
+        </Card>
+      </PageShell>
+    </div>
   );
 
   if (!payApp) return (
-    <PremiumSurface maxWidth={2200}>
-      <PremiumEmpty
-        icon={<Clipboard size={30} weight="duotone" color={GOLD} />}
-        title="Pay application not found"
-        description="We couldn't find this pay application. It may have been removed, or the link is out of date."
-        action={<Link href={`/app/projects/${projectId}/pay-apps`} style={goldButtonStyle} className="pmBtn"><ArrowLeft size={15} weight="bold" /> Back to Pay Applications</Link>}
-      />
-    </PremiumSurface>
+    <div className="pdWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell crumbs={[...crumbsBase, { label: loadError ? 'Error' : 'Not Found' }]} title="Pay Application">
+        <Card flush>
+          <EmptyState
+            icon={loadError ? <WarningCircle size={22} /> : <Clipboard size={22} />}
+            title={loadError ? "Couldn't load the pay application" : 'Pay application not found'}
+            text={loadError ? `${loadError} Nothing has been lost — try again.` : "We couldn't find this pay application. It may have been removed, or the link is out of date."}
+            action={<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>{loadError && <Button onClick={load}>Retry</Button>}<Button icon={<ArrowLeft size={15} />} href={`/app/projects/${projectId}/pay-apps`}>Back to Pay Applications</Button></div>}
+          />
+        </Card>
+      </PageShell>
+    </div>
   );
 
   const meta = STATUS_META[payApp.status] || STATUS_META.draft;
+  const appNum = (payApp as any).app_number ?? payApp.application_number ?? '';
   const contractToDate = Number(payApp.contract_sum_to_date) || Number(payApp.contract_sum) || 0;
   const completePct = contractToDate > 0 ? Math.round((sovCompleted / contractToDate) * 100) : (Number(payApp.percent_complete) || 0);
 
@@ -363,357 +424,242 @@ export default function PayAppDetailPage() {
   const priorDone = Number(priorApp?.total_completed_stored ?? priorApp?.total_completed) || 0;
   const thisDelta = sovThis - priorThis;
 
-  const timeline = [
-    { label: 'Created', date: null, done: true, icon: <PencilSimple size={15} color={DIM} weight="regular" /> },
-    { label: 'Submitted', date: payApp.submitted_date, done: !!payApp.submitted_date, icon: <Export size={15} color={DIM} weight="regular" /> },
-    { label: 'Approved', date: payApp.approved_date, done: !!payApp.approved_date, icon: <CheckCircle size={15} color={DIM} weight="regular" /> },
-    { label: 'Certified', date: payApp.certified_date, done: !!payApp.certified_date, icon: <SealCheck size={15} color={DIM} weight="regular" /> },
-    { label: 'Paid', date: null, done: payApp.status === 'paid', icon: <CurrencyDollar size={15} color={DIM} weight="regular" /> },
+  const stats: StatItem[] = [
+    { label: 'Contract Sum', value: fmt(contractToDate), sub: `${fmt(Number(payApp.contract_sum)||0)} original ${Number(payApp.change_orders_total||0)>=0?'+':'-'} ${fmt(Math.abs(Number(payApp.change_orders_total)||0))} COs` },
+    { label: 'This Period', value: fmt(sovThis), sub: `${fmtDate(payApp.period_from)} – ${fmtDate(payApp.period_to)}` },
+    { label: 'Total Completed', value: fmt(sovCompleted), tone: 'good', sub: `${completePct}% of contract` },
+    { label: 'Retainage Held', value: fmt(sovRetainage), sub: `${retPct}% on completed to date` },
+    { label: 'Payment Due', value: fmt(sovPayment), tone: 'good', sub: wBlocking > 0 ? `Held by ${wBlocking} unsigned waiver${wBlocking===1?'':'s'}` : 'Line 8 of the G702' },
   ];
 
+  const nextAction = meta.action;
+
   return (
-    <>
-      {/* Toast */}
-      {toast && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 99999, padding: '12px 22px', borderRadius: 10, background: toast.type === 'success' ? 'rgba(44,255,122,.92)' : 'rgba(255,59,48,.92)', color: '#fff', fontWeight: 700, fontSize: 14, boxShadow: '0 4px 24px rgba(0,0,0,.5)', pointerEvents: 'none' }}>
-          {toast.type === 'success'
-            ? <CheckCircle size={15} weight="fill" color="#fff" style={{ verticalAlign: 'middle', marginRight: 6 }} />
-            : <XCircle size={15} weight="fill" color="#fff" style={{ verticalAlign: 'middle', marginRight: 6 }} />}{toast.msg}
-        </div>
-      )}
+    <div className="pdWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[...crumbsBase, { label: `#${appNum}` }]}
+        /* app_number is the column; application_number does not exist on
+           pay_applications, so the older read gave "Pay App #undefined". */
+        title={`Pay App #${appNum}`}
+        subtitle={`${payApp.projects?.name || ctx?.project?.name || 'Project'} · Period ${fmtDate(payApp.period_from)} – ${fmtDate(payApp.period_to)}`}
+        actions={<>
+          <Button icon={<FileText size={15} />} onClick={downloadPDF} disabled={downloading}>{downloading ? 'Generating…' : 'G702 / G703 PDF'}</Button>
+          {isDraft && !editMode && (
+            <Button icon={<PencilSimple size={15} />} onClick={() => setEditMode(true)}>Edit SOV</Button>
+          )}
+          {canEdit && (
+            <>
+              <Button variant="ghost" onClick={() => { setEditMode(false); load(); }} disabled={saving}>Cancel</Button>
+              <Button variant="primary" icon={<FloppyDisk size={15} />} onClick={saveEdits} disabled={saving}>{saving ? 'Saving…' : 'Save Changes'}</Button>
+            </>
+          )}
+          {meta.next && nextAction && !editMode && (
+            <Button variant="primary" icon={<ArrowRight size={15} />} onClick={() => doAction(nextAction)} disabled={actioning}>
+              {actioning ? 'Working…' : meta.nextLabel}
+            </Button>
+          )}
+        </>}
+      >
+        <StatRow items={stats} />
 
-      <PremiumSurface maxWidth={2200}>
-
-        {/* Back link */}
-        <Link href={`/app/projects/${projectId}/pay-apps`}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'rgba(255,255,255,0.62)', fontSize: 13, textDecoration: 'none', marginBottom: 18 }}>
-          <ArrowLeft size={14} weight="bold" /> Pay Applications
-        </Link>
-
-        {/* Header */}
-        <ModuleHero
-          eyebrow="Pay Application"
-          eyebrowIcon={<CurrencyDollar size={13} weight="fill" color="var(--brand-primary)" />}
-          aux={
-            <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 999, background: meta.bg, color: meta.color, border: `1px solid color-mix(in srgb, ${meta.color} 27%, transparent)`}}>
-              {meta.label}
-            </span>
-          }
-          title="Pay App"
-          /* app_number is the column; application_number does not exist on
-             pay_applications, so this read undefined and every G702 header
-             said "Pay App #undefined". Line 337 in this same file already had
-             the fallback the right way round. */
-          accent={`#${(payApp as any).app_number ?? payApp.application_number ?? ''}`}
-          subtitle={`${payApp.projects?.name || 'Project'} · Period ${fmtDate(payApp.period_from)} – ${fmtDate(payApp.period_to)}`}
-          actions={<>
-            {/* Downloading the G702/G703 is a secondary action, so it leads
-                the row rather than sitting to the right of the workflow
-                button that advances the application. */}
-            <button onClick={downloadPDF} disabled={downloading} style={ghostButtonStyle} className="pmBtn">
-              {downloading ? '…' : <><FileText size={15} weight="bold" /> G702/G703 PDF</>}
-            </button>
-            {isDraft && !editMode && (
-              <button onClick={() => setEditMode(true)} style={goldOutlineButtonStyle} className="pmBtn">
-                <PencilSimple size={15} weight="bold" /> Edit SOV
-              </button>
-            )}
-            {canEdit && (
-              <>
-                <button onClick={() => { setEditMode(false); load(); }} style={ghostButtonStyle} className="pmBtn">
-                  Cancel
-                </button>
-                <button onClick={saveEdits} disabled={saving}
-                  style={{ ...goldButtonStyle, background: 'linear-gradient(135deg, #2CFF7A, #2CFF7A)', color: '#08240f', cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.75 : 1 }} className="pmBtn">
-                  {saving ? 'Saving…' : <><FloppyDisk size={15} weight="bold" /> Save Changes</>}
-                </button>
-              </>
-            )}
-            {meta.next && !editMode && (
-              <button onClick={() => doAction(meta.next === 'paid' ? 'paid' : meta.next === 'submitted' ? 'submit' : meta.next === 'approved' ? 'approve' : 'certify')}
-                disabled={actioning}
-                style={{ ...goldButtonStyle, cursor: actioning ? 'wait' : 'pointer', opacity: actioning ? 0.7 : 1 }} className="pmBtn">
-                {actioning ? '…' : <>{meta.nextLabel} <ArrowRight size={14} weight="bold" /></>}
-              </button>
-            )}
-          </>}
-        />
-
-        {/* Progress bar */}
-        <SectionCard flat
-          title="Project Completion"
-          icon={<TrendUp size={17} weight="duotone" color={GOLD} />}
-          action={<span style={{ fontSize: 22, fontWeight: 800, color: GOLD, fontVariantNumeric: 'tabular-nums' }}>{completePct}%</span>}
-          style={{ marginBottom: 20 }}
-        >
-          <div style={{ height: 10, background: 'rgba(255,255,255,0.06)', borderRadius: 999, overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${Math.min(100, completePct)}%`, background: `linear-gradient(90deg, ${GOLD}, #2CFF7A)`, borderRadius: 999, transition: 'width .6s ease' }} />
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, fontSize: 12, color: DIM, flexWrap: 'wrap', gap: 8 }}>
-            <span>Contract: {fmt(contractToDate)}</span>
-            <span>Completed to Date: {fmt(sovCompleted)}</span>
-            <span>Balance: {fmt(contractToDate - sovCompleted)}</span>
-          </div>
-        </SectionCard>
-
-        {/* KPI Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
-          <StatCard icon={<Receipt size={19} weight="duotone" color={GOLD} />} label="Contract Sum" value={fmt(contractToDate)} delay={0.02}  href={`/app/projects/${projectId}/pay-apps`}/>
-          <StatCard icon={<CalendarBlank size={19} weight="duotone" color={GOLD} />} label="This Period" value={fmt(sovThis)} accent={GOLD} delay={0.06}  href={`/app/projects/${projectId}/pay-apps`}/>
-          <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Total Completed" value={fmt(sovCompleted)} accent={GREEN} delay={0.10}  href={`/app/projects/${projectId}/pay-apps`}/>
-          <StatCard icon={<Coins size={19} weight="duotone" color={ORANGE} />} label="Retainage Held" value={fmt(sovRetainage)} accent={ORANGE} delay={0.14}  href={`/app/projects/${projectId}/pay-apps`}/>
-          <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={GREEN} />} label="Payment Due" value={fmt(sovPayment)} accent={GREEN} delay={0.18}  href={`/app/projects/${projectId}/pay-apps`}/>
-        </div>
-
-        {/* Main grid: SOV table + sidebar */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 20, alignItems: 'flex-start' }}>
-
-          {/* SOV Table */}
-          <div>
-            <SectionCard
-              title="Schedule of Values"
-              subtitle="G703 Continuation Sheet"
-              icon={<FileText size={17} weight="duotone" color={GOLD} />}
-              flush
-              style={{ marginBottom: 16 }}
-              action={canEdit ? (
-                <button onClick={addLine}
-                  style={{ ...goldOutlineButtonStyle, padding: '7px 14px', fontSize: 12 }} className="pmBtn">
-                  <Plus size={13} weight="bold" /> Add Row
-                </button>
-              ) : undefined}
-            >
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                  <thead>
-                    <tr style={{ background: 'rgba(255,255,255,0.03)' }}>
-                      {['#', 'Description', 'Sched. Value', 'Prev ($)', 'This Period ($)', 'Stored ($)', '% Done', 'Balance', 'Retainage', ...(canEdit ? [''] : [])].map(h => (
-                        <th key={h} style={{ padding: '9px 10px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {lines.map((l, i) => (
-                      <tr key={i} style={{ borderBottom: `1px solid rgba(255,255,255,0.06)`, background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)' }}>
-                        <td style={{ padding: '7px 10px', color: DIM, fontWeight: 700, minWidth: 28 }}>{l.line_number}</td>
-                        <td style={{ padding: '4px 6px', minWidth: 180 }}>
-                          {canEdit
-                            ? <input value={l.description} onChange={e => updateLine(i, 'description', e.target.value)} placeholder="Description"
-                                style={{ padding: '5px 8px', background: DARK, border: `1px solid ${BORDER}`, borderRadius: 5, color: TEXT, fontSize: 12, outline: 'none', width: '100%' }} />
-                            : <span style={{ color: TEXT, paddingLeft: 4 }}>{l.description || <span style={{ color: DIM }}>—</span>}</span>
-                          }
-                        </td>
-                        {canEdit
-                          ? (['scheduled_value','work_from_prev','work_this_period','materials_stored'] as const).map(f => (
-                              <td key={f} style={{ padding: '4px 6px', minWidth: 100 }}>
-                                <input type="number" value={(l as unknown as Record<string,number>)[f] || ''} onChange={e => updateLine(i, f, e.target.value)}
-                                  placeholder="0" style={{ padding: '5px 8px', background: DARK, border: `1px solid ${BORDER}`, borderRadius: 5, color: TEXT, fontSize: 12, outline: 'none', textAlign: 'right', width: 88 }} />
-                              </td>
-                            ))
-                          : <>
-                              <td style={{ padding: '7px 10px', color: GOLD, textAlign: 'right', whiteSpace: 'nowrap' }}>{fmt(l.scheduled_value)}</td>
-                              <td style={{ padding: '7px 10px', color: DIM, textAlign: 'right', whiteSpace: 'nowrap' }}>{fmt(l.prev_completed ?? l.work_from_prev ?? 0)}</td>
-                              <td style={{ padding: '7px 10px', color: GREEN, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 700 }}>{fmt(l.this_period ?? l.work_this_period ?? 0)}</td>
-                              <td style={{ padding: '7px 10px', color: BLUE, textAlign: 'right', whiteSpace: 'nowrap' }}>{fmt(l.stored_materials ?? l.materials_stored ?? 0)}</td>
-                            </>
-                        }
-                        {/* Progress mini-bar */}
-                        <td style={{ padding: '7px 10px', minWidth: 80 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <div style={{ flex: 1, height: 5, background: 'rgba(255,255,255,0.08)', borderRadius: 999, overflow: 'hidden', minWidth: 40 }}>
-                              <div style={{ height: '100%', width: `${Math.min(100, l.percent_complete)}%`, background: l.percent_complete >= 100 ? GREEN : GOLD, borderRadius: 999 }} />
-                            </div>
-                            <span style={{ color: TEXT, fontSize: 11, fontWeight: 700, minWidth: 36, textAlign: 'right' }}>{l.percent_complete.toFixed(0)}%</span>
-                          </div>
-                        </td>
-                        <td style={{ padding: '7px 10px', color: l.balance_to_finish < 0 ? RED : DIM, textAlign: 'right', whiteSpace: 'nowrap' }}>{fmt(l.balance_to_finish)}</td>
-                        <td style={{ padding: '7px 10px', color: ORANGE, textAlign: 'right', whiteSpace: 'nowrap' }}>{fmt2(l.retainage)}</td>
-                        {canEdit && (
-                          <td style={{ padding: '4px 8px' }}>
-                            <button onClick={() => removeLine(i)} style={{ background: 'none', border: 'none', color: RED, cursor: 'pointer', fontSize: 16, padding: '2px 6px' }}><X size={16} color={RED} weight="bold" style={{ verticalAlign: 'middle' }} /></button>
-                          </td>
-                        )}
+        <div className="pdCq">
+          <div className="pdSplit">
+            <div className="pdMain">
+              {/* SOV — G703 continuation sheet */}
+              <Card
+                title="Schedule of Values"
+                subtitle="G703 Continuation Sheet"
+                flush
+                actions={canEdit ? <Button size="sm" icon={<Plus size={13} weight="bold" />} onClick={addLine}>Add Row</Button> : undefined}
+              >
+                <div className="pdBar" aria-label="Project completion">
+                  <span>Completed to date</span>
+                  <div className="pdBarTrack"><div className="pdBarFill" style={{ width: `${Math.min(100, completePct)}%` }} /></div>
+                  <b>{completePct}%</b>
+                  <span>{fmt(sovCompleted)} of {fmt(contractToDate)} · balance {fmt(contractToDate - sovCompleted)}</span>
+                </div>
+                <div className="pdTableWrap">
+                  <table className="pdTable">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Description</th>
+                        <th data-align="right">Scheduled Value</th>
+                        <th data-align="right">Previous</th>
+                        <th data-align="right">This Period</th>
+                        <th data-align="right">Stored</th>
+                        <th>% Done</th>
+                        <th data-align="right">Balance</th>
+                        <th data-align="right">Retainage</th>
+                        {canEdit && <th aria-label="Remove" />}
                       </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr style={{ background: 'rgba(255,255,255,0.04)', borderTop: `2px solid ${BORDER}` }}>
-                      <td colSpan={2} style={{ padding: '10px 10px', fontWeight: 800, fontSize: 11, color: TEXT }}>Totals</td>
-                      <td style={{ padding: '10px 10px', fontWeight: 800, color: GOLD, textAlign: 'right' }}>{fmt(sovScheduled)}</td>
-                      <td style={{ padding: '10px 10px', fontWeight: 700, color: DIM, textAlign: 'right' }}>{fmt(sovPrev)}</td>
-                      <td style={{ padding: '10px 10px', fontWeight: 800, color: GREEN, textAlign: 'right' }}>{fmt(sovThis)}</td>
-                      <td style={{ padding: '10px 10px', fontWeight: 700, color: BLUE, textAlign: 'right' }}>{fmt(sovMats)}</td>
-                      <td style={{ padding: '10px 10px', fontWeight: 700, color: TEXT }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                          <div style={{ width: 36, height: 5, background: 'rgba(255,255,255,0.1)', borderRadius: 999, overflow: 'hidden' }}>
-                            <div style={{ height: '100%', width: `${Math.min(100, completePct)}%`, background: GOLD, borderRadius: 999 }} />
-                          </div>
-                          <span style={{ fontSize: 11 }}>{completePct}%</span>
-                        </div>
-                      </td>
-                      <td style={{ padding: '10px 10px', fontWeight: 700, color: DIM, textAlign: 'right' }}>{fmt(lines.reduce((s,l) => s + (l.balance_to_finish||0), 0))}</td>
-                      <td style={{ padding: '10px 10px', fontWeight: 700, color: ORANGE, textAlign: 'right' }}>{fmt2(sovRetainage)}</td>
-                      {canEdit && <td />}
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            </SectionCard>
+                    </thead>
+                    <tbody>
+                      {lines.length === 0 && (
+                        <tr><td colSpan={canEdit ? 10 : 9} className="pdMuted" style={{ textAlign: 'center', height: 64 }}>No schedule of values lines on this application.</td></tr>
+                      )}
+                      {lines.map((l, i) => (
+                        <tr key={i}>
+                          <td className="pdStrong">{l.line_number}</td>
+                          <td data-desc="true">
+                            {canEdit
+                              ? <Input value={l.description} onChange={e => updateLine(i, 'description', e.target.value)} placeholder="Description" aria-label={`Line ${l.line_number} description`} />
+                              : (l.description || <span className="pdMuted">—</span>)}
+                          </td>
+                          {canEdit
+                            ? (['scheduled_value','work_from_prev','work_this_period','materials_stored'] as const).map(f => (
+                                <td key={f} data-align="right">
+                                  <Input type="number" data-num="true" value={(l as unknown as Record<string,number>)[f] || ''} onChange={e => updateLine(i, f, e.target.value)} placeholder="0" aria-label={`Line ${l.line_number} ${f.replace(/_/g,' ')}`} />
+                                </td>
+                              ))
+                            : <>
+                                <td data-align="right" className="pdStrong">{fmt(l.scheduled_value)}</td>
+                                <td data-align="right">{fmt(l.prev_completed ?? l.work_from_prev ?? 0)}</td>
+                                <td data-align="right" className="pdStrong">{fmt(l.this_period ?? l.work_this_period ?? 0)}</td>
+                                <td data-align="right">{fmt(l.stored_materials ?? l.materials_stored ?? 0)}</td>
+                              </>
+                          }
+                          <td>
+                            <span className="pdPct">
+                              <span className="pdPctTrack"><span className="pdPctFill" data-done={l.percent_complete >= 100 ? 'true' : undefined} style={{ display: 'block', width: `${Math.min(100, l.percent_complete)}%` }} /></span>
+                              <b>{l.percent_complete.toFixed(0)}%</b>
+                            </span>
+                          </td>
+                          <td data-align="right" className={l.balance_to_finish < 0 ? 'pdNeg' : undefined}>{fmt(l.balance_to_finish)}</td>
+                          <td data-align="right">{fmt(l.retainage)}</td>
+                          {canEdit && (
+                            <td><Button variant="ghost" size="sm" icon={<X size={14} weight="bold" />} aria-label={`Remove line ${l.line_number}`} onClick={() => removeLine(i)} /></td>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td colSpan={2}>Totals</td>
+                        <td data-align="right">{fmt(sovScheduled)}</td>
+                        <td data-align="right">{fmt(sovPrev)}</td>
+                        <td data-align="right">{fmt(sovThis)}</td>
+                        <td data-align="right">{fmt(sovMats)}</td>
+                        <td><span className="pdPct"><span className="pdPctTrack"><span className="pdPctFill" data-done={completePct >= 100 ? 'true' : undefined} style={{ display: 'block', width: `${Math.min(100, completePct)}%` }} /></span><b>{completePct}%</b></span></td>
+                        <td data-align="right">{fmt(lines.reduce((s,l) => s + (l.balance_to_finish||0), 0))}</td>
+                        <td data-align="right">{fmt(sovRetainage)}</td>
+                        {canEdit && <td />}
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </Card>
 
-            {/* G702 Summary section */}
-            <SectionCard flat title="G702 — Application Summary" icon={<FileText size={17} weight="duotone" color={GOLD} />}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 32px' }}>
-                {[
-                  { label: '1. Original Contract Sum', value: fmt(payApp.contract_sum) },
-                  { label: '2. Net Change by Change Orders', value: fmt(payApp.change_orders_total || 0) },
-                  { label: '3. Contract Sum to Date (1+2)', value: fmt(contractToDate), bold: true },
-                  { label: '4. Total Completed & Stored to Date', value: fmt(sovCompleted), color: GREEN },
-                  { label: `5. Retainage (${retPct}%)`, value: fmt(sovRetainage), color: ORANGE },
-                  { label: '6. Total Earned Less Retainage (4–5)', value: fmt(sovEarned) },
-                  { label: '7. Less Previous Certificates for Payment', value: fmt(sovPrev * (1 - retPct / 100)) },
-                  { label: '8. Current Payment Due (6–7)', value: fmt(sovPayment), color: GREEN, bold: true, large: true },
-                  { label: '9. Balance to Finish, Including Retainage', value: fmt(contractToDate - sovCompleted + sovRetainage) },
-                ].map(row => (
-                  <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: `1px solid rgba(255,255,255,0.06)` }}>
-                    <span style={{ fontSize: 12, color: DIM, flex: 1, paddingRight: 16 }}>{row.label}</span>
-                    <span style={{ fontSize: row.large ? 18 : 13, fontWeight: row.bold ? 800 : 600, color: row.color || TEXT, whiteSpace: 'nowrap' }}>
-                      {row.value}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </SectionCard>
-          </div>
-
-          {/* Sidebar */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {/* Approval / waiver / payment chain — where this app sits */}
-            <SectionCard flat title="Where This App Sits" icon={<SealCheck size={16} weight="duotone" color={GOLD} />}>
-              <FlowSteps title="" steps={[
-                { title: 'Draft & Schedule of Values', done: true,
-                  desc: `${lines.length} SOV line${lines.length === 1 ? '' : 's'} — ${fmt(sovScheduled)} scheduled.` },
-                { title: 'Submitted to Owner', done: stageRank >= 1,
-                  desc: stageRank >= 1
-                    ? `Sent${payApp.submitted_date ? ` ${fmtDate(payApp.submitted_date)}` : ''} with a one-click owner approval link.`
-                    : 'Sends the G702/G703 packet with a one-click owner approval link.' },
-                { title: 'Owner Approval', done: stageRank >= 2,
-                  desc: stageRank >= 2
-                    ? `Approved${payApp.approved_date ? ` ${fmtDate(payApp.approved_date)}` : ''} — conditional lien waivers generated for the subs.`
-                    : 'Approval auto-generates conditional waivers for every sub on the job.' },
-                { title: 'Lien Waivers Signed', done: stageRank >= 2 && wTotal > 0 && wBlocking === 0,
-                  desc: wTotal > 0
-                    ? `${wSigned} of ${wTotal} signed${wBlocking > 0 ? ` — ${wBlocking} still gate payment` : ' — payment gate clear'}.`
-                    : subCount > 0
-                      ? `Waivers for ${subCount} sub${subCount === 1 ? '' : 's'} generate at approval.`
-                      : 'Waivers generate automatically at approval.' },
-                { title: 'Payment Received', done: payApp.status === 'paid',
-                  desc: payApp.status === 'paid'
-                    ? `${fmt(sovPayment)} collected — paid-to-date and the prime contract updated automatically.`
-                    : `Mark Paid releases ${fmt(sovPayment)}${wBlocking > 0 ? ` — currently held by ${wBlocking} unsigned waiver${wBlocking === 1 ? '' : 's'}` : ''}. Signed conditionals convert to unconditional waivers.` },
-              ]} />
-            </SectionCard>
-
-            {/* Prior application comparison */}
-            {priorApp && (
-              <SectionCard flat title={`Compared to App #${priorApp._n}`} icon={<TrendUp size={16} weight="duotone" color={GOLD} />}>
-                <InsightRow label="Prior Period" value={`${fmtDate(priorApp.period_from)} – ${fmtDate(priorApp.period_to)}`} />
-                <InsightRow label="Prior Billed (Period)" value={fmt(priorThis)} />
-                <InsightRow label="This App (Period)" value={fmt(sovThis)} strong />
-                <InsightRow label="Period-over-Period" value={`${thisDelta < 0 ? '-' : '+'}${fmt(Math.abs(thisDelta))}`} accent={thisDelta >= 0 ? GREEN : ORANGE} />
-                <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '8px 0' }} />
-                <InsightRow label="Completed Then" value={fmt(priorDone)} />
-                <InsightRow label="Completed Now" value={fmt(sovCompleted)} accent={GREEN} />
-                <InsightRow label="Prior Payment Due" value={fmt(Number(priorApp.current_payment_due) || 0)} />
-                <InsightRow label="This Payment Due" value={fmt(sovPayment)} accent={GREEN} strong />
-              </SectionCard>
-            )}
-
-            {/* Status timeline */}
-            <SectionCard flat
-              title="Status Timeline"
-              icon={<ClockCounterClockwise size={16} weight="duotone" color={GOLD} />}
-              action={
-                <button onClick={() => setShowTimeline(!showTimeline)}
-                  style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}>
-                  {showTimeline ? <CaretUp size={14} color={DIM} weight="bold" /> : <CaretDown size={14} color={DIM} weight="bold" />}
-                </button>
-              }
-              bodyStyle={showTimeline ? undefined : { padding: 0 }}
-            >
-              {showTimeline && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                  {timeline.map((step, i) => (
-                    <div key={step.label} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', paddingBottom: i < timeline.length - 1 ? 14 : 0 }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <div style={{ width: 28, height: 28, borderRadius: '50%', background: step.done ? 'rgba(44,255,122,.15)' : 'rgba(255,255,255,0.05)', border: `1px solid ${step.done ? 'rgba(44,255,122,.4)' : BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}>
-                          {step.done ? <CheckCircle size={16} weight="fill" color={GREEN} /> : step.icon}
-                        </div>
-                        {i < timeline.length - 1 && (
-                          <div style={{ width: 1, flex: 1, background: step.done ? 'rgba(44,255,122,.3)' : BORDER, minHeight: 14 }} />
-                        )}
-                      </div>
-                      <div style={{ paddingTop: 4 }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: step.done ? TEXT : DIM }}>{step.label}</div>
-                        {step.date && <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>{fmtDate(step.date)}</div>}
-                      </div>
+              {/* G702 Summary */}
+              <Card title="G702 — Application Summary" subtitle="Application and Certificate for Payment">
+                <div className="pdSummary">
+                  {[
+                    { label: '1. Original Contract Sum', value: fmt(payApp.contract_sum) },
+                    { label: '2. Net Change by Change Orders', value: fmt(payApp.change_orders_total || 0) },
+                    { label: '3. Contract Sum to Date (1+2)', value: fmt(contractToDate), strong: true },
+                    { label: '4. Total Completed & Stored to Date', value: fmt(sovCompleted) },
+                    { label: `5. Retainage (${retPct}%)`, value: fmt(sovRetainage) },
+                    { label: '6. Total Earned Less Retainage (4–5)', value: fmt(sovEarned) },
+                    { label: '7. Less Previous Certificates for Payment', value: fmt(sovPrev * (1 - retPct / 100)) },
+                    { label: '8. Current Payment Due (6–7)', value: fmt(sovPayment), strong: true, large: true },
+                    { label: '9. Balance to Finish, Including Retainage', value: fmt(contractToDate - sovCompleted + sovRetainage) },
+                  ].map(row => (
+                    <div key={row.label} className="pdRow" data-strong={row.strong ? 'true' : undefined} data-large={row.large ? 'true' : undefined}>
+                      <span>{row.label}</span>
+                      <span>{row.value}</span>
                     </div>
                   ))}
                 </div>
-              )}
-            </SectionCard>
+              </Card>
+            </div>
 
-            {/* Details panel */}
-            <SectionCard flat title="Details" icon={<IdentificationCard size={16} weight="duotone" color={GOLD} />}>
-              {[
-                { label: 'Owner', value: payApp.owner_name || '—' },
-                { label: 'Architect', value: payApp.architect_name || '—' },
-                { label: 'Retainage %', value: `${retPct}%` },
-                { label: 'Submitted', value: fmtDate(payApp.submitted_date) },
-                { label: 'Approved', value: fmtDate(payApp.approved_date) },
-                { label: 'Certified', value: fmtDate(payApp.certified_date) },
-              ].map(row => (
-                <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 9 }}>
-                  <span style={{ fontSize: 11, color: DIM }}>{row.label}</span>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: TEXT, textAlign: 'right', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.value}</span>
+            <aside className="pdRail" aria-label="Pay application details and actions">
+              <Card title="Details">
+                <div className="pdSection">
+                  <div className="pdBadges">
+                    <Badge tone={meta.tone} dot>{meta.label}</Badge>
+                    {wTotal > 0 && <Badge tone={wBlocking > 0 ? 'under_contract' : 'ongoing'}>{wSigned} of {wTotal} waivers signed</Badge>}
+                  </div>
+                  <div className="pdNext">
+                    {payApp.status === 'draft' && 'Draft — edit the schedule of values, then submit the G702/G703 packet to the owner.'}
+                    {payApp.status === 'submitted' && 'With the owner. Approval generates conditional lien waivers for the subs.'}
+                    {payApp.status === 'approved' && 'Approved by the owner. Certify once the architect signs off.'}
+                    {payApp.status === 'certified' && `Certified. Mark Paid releases ${fmt(sovPayment)}${wBlocking > 0 ? ` — currently held by ${wBlocking} unsigned waiver${wBlocking===1?'':'s'}` : ''}.`}
+                    {payApp.status === 'paid' && `${fmt(sovPayment)} collected — paid-to-date and the prime contract updated automatically.`}
+                  </div>
                 </div>
-              ))}
-            </SectionCard>
+                <div className="pdSection">
+                  <DetailList items={[
+                    ['Owner', payApp.owner_name || ''],
+                    ['Architect', payApp.architect_name || ''],
+                    ['Retainage', `${retPct}%`],
+                    ['Submitted', fmtDate(payApp.submitted_date)],
+                    ['Approved', fmtDate(payApp.approved_date)],
+                    ['Certified', fmtDate(payApp.certified_date)],
+                    ['Paid', payApp.status === 'paid' ? 'Yes' : '—'],
+                  ]} />
+                </div>
+                <div className="pdSection">
+                  <div className="pdActions">
+                    <Button icon={<ArrowLeft size={16} />} onClick={() => router.push(`/app/projects/${projectId}/pay-apps`)}>All Pay Apps</Button>
+                    <Button icon={<Files size={16} />} href={`/app/projects/${projectId}/change-orders`}>Change Orders</Button>
+                    <Button icon={<Lock size={16} />} href={`/app/projects/${projectId}/lien-waivers`}>Lien Waivers</Button>
+                    <Button icon={<CurrencyDollar size={16} />} href={`/app/projects/${projectId}/budget`}>Project Budget</Button>
+                  </div>
+                </div>
+              </Card>
 
-            {/* Retainage breakdown */}
-            <SectionCard flat title="Retainage Tracking" icon={<Coins size={16} weight="duotone" color={ORANGE} />} accent={ORANGE}>
-              <div style={{ fontSize: 12, color: DIM, marginBottom: 4 }}>Rate</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: ORANGE, marginBottom: 10 }}>{retPct}%</div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ fontSize: 11, color: DIM }}>Held This App</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: ORANGE }}>{fmt2(sovRetainage)}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 11, color: DIM }}>Released to Date</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: GREEN }}>$0</span>
-              </div>
-            </SectionCard>
+              <Card title="Where This App Sits">
+                <FlowSteps title="" steps={[
+                  { title: 'Draft & Schedule of Values', done: true,
+                    desc: `${lines.length} SOV line${lines.length === 1 ? '' : 's'} — ${fmt(sovScheduled)} scheduled.` },
+                  { title: 'Submitted to Owner', done: stageRank >= 1,
+                    desc: stageRank >= 1
+                      ? `Sent${payApp.submitted_date ? ` ${fmtDate(payApp.submitted_date)}` : ''} with a one-click owner approval link.`
+                      : 'Sends the G702/G703 packet with a one-click owner approval link.' },
+                  { title: 'Owner Approval', done: stageRank >= 2,
+                    desc: stageRank >= 2
+                      ? `Approved${payApp.approved_date ? ` ${fmtDate(payApp.approved_date)}` : ''} — conditional lien waivers generated for the subs.`
+                      : 'Approval auto-generates conditional waivers for every sub on the job.' },
+                  { title: 'Lien Waivers Signed', done: stageRank >= 2 && wTotal > 0 && wBlocking === 0,
+                    desc: wTotal > 0
+                      ? `${wSigned} of ${wTotal} signed${wBlocking > 0 ? ` — ${wBlocking} still gate payment` : ' — payment gate clear'}.`
+                      : subCount > 0
+                        ? `Waivers for ${subCount} sub${subCount === 1 ? '' : 's'} generate at approval.`
+                        : 'Waivers generate automatically at approval.' },
+                  { title: 'Payment Received', done: payApp.status === 'paid',
+                    desc: payApp.status === 'paid'
+                      ? `${fmt(sovPayment)} collected — paid-to-date and the prime contract updated automatically.`
+                      : `Mark Paid releases ${fmt(sovPayment)}${wBlocking > 0 ? ` — currently held by ${wBlocking} unsigned waiver${wBlocking === 1 ? '' : 's'}` : ''}. Signed conditionals convert to unconditional waivers.` },
+                ]} />
+              </Card>
 
-            {/* Quick links */}
-            <SectionCard title="Related" icon={<Files size={16} weight="duotone" color={GOLD} />}>
-              {[
-                { icon: <ArrowLeft size={13} weight="bold" style={{ verticalAlign: 'middle', marginRight: 7 }} />, label: 'All Pay Apps', href: `/app/projects/${projectId}/pay-apps` },
-                { icon: <Files size={13} weight="regular" style={{ verticalAlign: 'middle', marginRight: 7 }} />, label: 'Change Orders', href: `/app/projects/${projectId}/change-orders` },
-                { icon: <Lock size={13} weight="regular" style={{ verticalAlign: 'middle', marginRight: 7 }} />, label: 'Lien Waivers', href: `/app/projects/${projectId}/lien-waivers` },
-                { icon: <CurrencyDollar size={13} weight="regular" style={{ verticalAlign: 'middle', marginRight: 7 }} />, label: 'Project Budget', href: `/app/projects/${projectId}/budget` },
-              ].map(link => (
-                <Link key={link.href} href={link.href}
-                  style={{ display: 'block', fontSize: 12, color: DIM, textDecoration: 'none', padding: '5px 0', borderBottom: `1px solid rgba(255,255,255,0.06)` }}
-                  onMouseEnter={e => (e.currentTarget.style.color = GOLD)}
-                  onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
-                  {link.icon}{link.label}
-                </Link>
-              ))}
-            </SectionCard>
+              {priorApp && (
+                <Card title={`Compared to App #${priorApp._n}`}>
+                  <InsightRow label="Prior Period" value={`${fmtDate(priorApp.period_from)} – ${fmtDate(priorApp.period_to)}`} />
+                  <InsightRow label="Prior Billed (Period)" value={fmt(priorThis)} />
+                  <InsightRow label="This App (Period)" value={fmt(sovThis)} strong />
+                  <InsightRow label="Period-over-Period" value={`${thisDelta < 0 ? '-' : '+'}${fmt(Math.abs(thisDelta))}`} />
+                  <div className="pdRule" />
+                  <InsightRow label="Completed Then" value={fmt(priorDone)} />
+                  <InsightRow label="Completed Now" value={fmt(sovCompleted)} />
+                  <InsightRow label="Prior Payment Due" value={fmt(Number(priorApp.current_payment_due) || 0)} />
+                  <InsightRow label="This Payment Due" value={fmt(sovPayment)} strong />
+                </Card>
+              )}
+
+              <Card title="Retainage Tracking">
+                <InsightRow label="Rate" value={`${retPct}%`} strong />
+                <InsightRow label="Held This App" value={fmt(sovRetainage)} />
+                <InsightRow label="Released to Date" value={fmt(0)} />
+                <div className="pdNext" style={{ marginTop: 8 }}>Retainage is released at closeout; nothing has been released on this application.</div>
+              </Card>
+            </aside>
           </div>
         </div>
-      </PremiumSurface>
-    </>
+      </PageShell>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </div>
   );
 }
