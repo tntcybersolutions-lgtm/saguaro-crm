@@ -21,10 +21,10 @@ import Suggest from '@/components/ui/Suggest';
 import { StatusPill } from '@/components/ui/Status';
 
 // Semantic accents — tuned to match the dashboard's Sonoran palette.
-const GOLD = '#F59E0B';
+const GOLD = 'var(--brand-primary)';
 const GREEN = '#45B37D';
 const RED = '#E0644E';
-const AMBER = '#F0A63C';
+const AMBER = 'var(--warning)';
 
 interface Incident {
   id: string;
@@ -457,7 +457,7 @@ export default function SafetyPage() {
     width: '100%', padding: '8px 12px', background: T.surface,
     border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, outline: 'none',
   };
-  const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: T.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 };
+  const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 6 };
   const hint: React.CSSProperties = { fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 };
 
   return (
@@ -486,12 +486,12 @@ export default function SafetyPage() {
       {/* Safety intelligence strip — leading and lagging indicators together */}
       {!loading && (
         <StatStrip items={[
-          {href: `/app/projects/${projectId}/safety`,  label: 'OSHA Recordables', value: String(recordables), accent: recordables > 0 ? RED : GREEN, sub: recordables > 0 ? 'on the 300 log' : 'clean 300 log' },
-          {href: `/app/projects/${projectId}/safety`,  label: 'Near Misses', value: String(nearMisses), accent: nearMisses > 0 ? AMBER : undefined, sub: 'leading indicator — keep reporting' },
-          {href: `/app/projects/${projectId}/safety`,  label: 'Toolbox Talks', value: String(talks.length), sub: lastTalk ? `last: ${fmtDate(lastTalk.talk_date)}` : 'none logged yet' },
-          {href: `/app/projects/${projectId}/safety`,  label: 'Talk Cadence', value: daysSinceTalk == null ? '—' : `${daysSinceTalk}d ago`, accent: daysSinceTalk != null && daysSinceTalk > 7 ? AMBER : daysSinceTalk != null ? GREEN : undefined, sub: daysSinceTalk != null && daysSinceTalk > 7 ? 'weekly cadence slipping' : 'weekly cadence target' },
-          {href: `/app/projects/${projectId}/safety`,  label: 'Days Incident-Free', value: String(daysSinceLast), accent: daysSinceLast > 30 ? GREEN : undefined, sub: lastIncident ? `since ${fmtDate(lastIncident.date)}` : 'no recordable incidents' },
-          {href: `/app/projects/${projectId}/crews`,  label: 'Crews On Site', value: String(subCount), sub: subCount > 0 ? 'subs to cover in talks' : 'no subs on the roster yet' },
+          {href: `/app/projects/${projectId}/safety`,  label: 'OSHA Recordables', value: String(recordables), accent: recordables > 0 ? RED : GREEN, sub: recordables > 0 ? 'On the 300 log' : 'Clean 300 log' },
+          {href: `/app/projects/${projectId}/safety`,  label: 'Near Misses', value: String(nearMisses), accent: nearMisses > 0 ? AMBER : undefined, sub: 'Leading indicator — keep reporting' },
+          {href: `/app/projects/${projectId}/safety`,  label: 'Toolbox Talks', value: String(talks.length), sub: lastTalk ? `Last: ${fmtDate(lastTalk.talk_date)}` : 'None logged yet' },
+          {href: `/app/projects/${projectId}/safety`,  label: 'Talk Cadence', value: daysSinceTalk == null ? '—' : `${daysSinceTalk}d ago`, accent: daysSinceTalk != null && daysSinceTalk > 7 ? AMBER : daysSinceTalk != null ? GREEN : undefined, sub: daysSinceTalk != null && daysSinceTalk > 7 ? 'Weekly cadence slipping' : 'Weekly cadence target' },
+          {href: `/app/projects/${projectId}/safety`,  label: 'Days Incident-Free', value: String(daysSinceLast), accent: daysSinceLast > 30 ? GREEN : undefined, sub: lastIncident ? `Since ${fmtDate(lastIncident.date)}` : 'No recordable incidents' },
+          {href: `/app/projects/${projectId}/crews`,  label: 'Crews on Site', value: String(subCount), sub: subCount > 0 ? 'Subs to cover in talks' : 'No subs on the roster yet' },
         ]} />
       )}
 
@@ -575,26 +575,26 @@ export default function SafetyPage() {
               </div>
               <div style={{ gridColumn: 'span 3' }}>
                 <label style={lbl}>Description *</label>
-                <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={3} style={{ ...inp, resize: 'vertical' }} placeholder="What happened, who was involved, where on site..." />
+                <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={3} style={{ ...inp, resize: 'vertical' }} placeholder="What happened, who was involved, where on site…" />
               </div>
               <div style={{ gridColumn: 'span 3' }}>
                 <label style={lbl}>Corrective Action</label>
-                <textarea value={form.corrective_action} onChange={e => setForm(p => ({ ...p, corrective_action: e.target.value }))} rows={2} style={{ ...inp, resize: 'vertical' }} placeholder="What prevents a repeat..." />
+                <textarea value={form.corrective_action} onChange={e => setForm(p => ({ ...p, corrective_action: e.target.value }))} rows={2} style={{ ...inp, resize: 'vertical' }} placeholder="What prevents a repeat…" />
                 <div style={hint}>Anything entered here auto-creates a tracked corrective action linked to this incident.</div>
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              <button onClick={handleSave} disabled={saving} className="pmBtn" style={{ ...goldButtonStyle, opacity: saving ? 0.5 : 1, cursor: saving ? 'not-allowed' : 'pointer' }}>{saving ? 'Saving...' : 'Report Incident'}</button>
+              <button onClick={handleSave} disabled={saving} className="pmBtn" style={{ ...goldButtonStyle, opacity: saving ? 0.5 : 1, cursor: saving ? 'not-allowed' : 'pointer' }}>{saving ? 'Saving…' : 'Report Incident'}</button>
               <button onClick={() => { setShowForm(false); setErrorMsg(''); }} style={ghostButtonStyle} className="pmBtn">Cancel</button>
             </div>
           </SectionCard>
           {ctx && (
             <SectionCard flat title="After You Report" icon={<ShieldCheck size={17} weight="duotone" color={GOLD} />}>
               <FlowSteps title="" steps={[
-                { title: 'Incident enters the log', desc: formIsRecordable ? 'Flagged OSHA-recordable for the 300 log.' : 'Saved for internal tracking and trends.' },
-                { title: 'Corrective action opens', desc: 'The corrective-action text becomes a tracked item with its own status flow.' },
-                { title: 'Verify and close', desc: 'Advance Open to In Progress to Verified to Closed as the fix lands.' },
-                { title: 'Stats update everywhere', desc: 'Days-incident-free and recordable counts refresh across the project.' },
+                { title: 'Incident Enters the Log', desc: formIsRecordable ? 'Flagged OSHA-recordable for the 300 log.' : 'Saved for internal tracking and trends.' },
+                { title: 'Corrective Action Opens', desc: 'The corrective-action text becomes a tracked item with its own status flow.' },
+                { title: 'Verify and Close', desc: 'Advance Open to In Progress to Verified to Closed as the fix lands.' },
+                { title: 'Stats Update Everywhere', desc: 'Days-incident-free and recordable counts refresh across the project.' },
               ]} />
             </SectionCard>
           )}
@@ -606,7 +606,7 @@ export default function SafetyPage() {
         module="safety"
         search={incidentSearch}
         onSearch={setIncidentSearch}
-        searchPlaceholder="Search incidents..."
+        searchPlaceholder="Search incidents…"
         filters={[
           { key: 'type', label: 'Type', value: incidentTypeFilter, onChange: setIncidentTypeFilter, allLabel: 'All Types', options: [...TYPES] },
           { key: 'status', label: 'Status', value: incidentStatusFilter, onChange: setIncidentStatusFilter, allLabel: 'All Statuses', options: ['Open', 'Resolved'] },
@@ -622,7 +622,7 @@ export default function SafetyPage() {
           flush
         >
           {loading ? (
-            <div style={{ padding: 40, textAlign: 'center', color: T.muted }}>Loading...</div>
+            <div style={{ padding: 40, textAlign: 'center', color: T.muted }}>Loading…</div>
           ) : loadError ? (
             <div style={{ padding: 40, textAlign: 'center' }}>
               <Warning size={30} weight="duotone" color={RED} />
@@ -650,7 +650,7 @@ export default function SafetyPage() {
               rows={filteredIncidents.map(i => [
                 <span key="d" style={{ color: T.muted, whiteSpace: 'nowrap' }}>{i.date}</span>,
                 i.type,
-                <span key="osha" style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.05em', color: isOshaRecordable(i) ? RED : T.muted }}>{isOshaRecordable(i) ? 'RECORDABLE' : '—'}</span>,
+                <span key="osha" style={{ fontSize: 10.5, fontWeight: 800, color: isOshaRecordable(i) ? RED : T.muted }}>{isOshaRecordable(i) ? 'Recordable' : '—'}</span>,
                 <span key="desc" style={{ maxWidth: 300, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {i.description}
                 </span>,
@@ -689,11 +689,11 @@ export default function SafetyPage() {
               </div>
               <div style={{ gridColumn: 'span 4' }}>
                 <label style={lbl}>Notes</label>
-                <textarea value={talkForm.notes} onChange={e => setTalkForm(p => ({ ...p, notes: e.target.value }))} rows={2} style={{ ...inp, resize: 'vertical' }} placeholder="Key points covered, questions raised..." />
+                <textarea value={talkForm.notes} onChange={e => setTalkForm(p => ({ ...p, notes: e.target.value }))} rows={2} style={{ ...inp, resize: 'vertical' }} placeholder="Key points covered, questions raised…" />
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              <button onClick={handleLogTalk} disabled={talkSaving} className="pmBtn" style={{ ...goldButtonStyle, opacity: talkSaving ? 0.5 : 1, cursor: talkSaving ? 'not-allowed' : 'pointer' }}>{talkSaving ? 'Logging...' : 'Log Talk'}</button>
+              <button onClick={handleLogTalk} disabled={talkSaving} className="pmBtn" style={{ ...goldButtonStyle, opacity: talkSaving ? 0.5 : 1, cursor: talkSaving ? 'not-allowed' : 'pointer' }}>{talkSaving ? 'Logging…' : 'Log Talk'}</button>
               <button onClick={() => { setShowTalkForm(false); setErrorMsg(''); }} style={ghostButtonStyle} className="pmBtn">Cancel</button>
             </div>
           </SectionCard>
@@ -763,7 +763,7 @@ export default function SafetyPage() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              <button onClick={handleCreateCA} disabled={caSaving} className="pmBtn" style={{ ...goldButtonStyle, opacity: caSaving ? 0.5 : 1, cursor: caSaving ? 'not-allowed' : 'pointer' }}>{caSaving ? 'Creating...' : 'Create Action'}</button>
+              <button onClick={handleCreateCA} disabled={caSaving} className="pmBtn" style={{ ...goldButtonStyle, opacity: caSaving ? 0.5 : 1, cursor: caSaving ? 'not-allowed' : 'pointer' }}>{caSaving ? 'Creating…' : 'Create Action'}</button>
               <button onClick={() => { setShowCAForm(false); setErrorMsg(''); }} style={ghostButtonStyle} className="pmBtn">Cancel</button>
             </div>
           </SectionCard>
@@ -774,7 +774,7 @@ export default function SafetyPage() {
       <div>
         <SectionCard flush>
           {actionsLoading ? (
-            <div style={{ padding: 40, textAlign: 'center', color: T.muted }}>Loading corrective actions...</div>
+            <div style={{ padding: 40, textAlign: 'center', color: T.muted }}>Loading corrective actions…</div>
           ) : actions.length === 0 ? (
             <div style={{ padding: 20 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
@@ -788,10 +788,10 @@ export default function SafetyPage() {
                 )}
               </div>
               <FlowStrip steps={[
-                { title: 'Open the action', desc: 'from an incident or directly' },
-                { title: 'Assign an owner', desc: 'sub roster type-ahead' },
-                { title: 'Fix lands', desc: 'advance Open to In Progress' },
-                { title: 'Verify and close', desc: 'overdue flags itself' },
+                { title: 'Open the Action', desc: 'From an incident or directly' },
+                { title: 'Assign an Owner', desc: 'Sub roster type-ahead' },
+                { title: 'Fix Lands', desc: 'Advance Open to In Progress' },
+                { title: 'Verify and Close', desc: 'Overdue flags itself' },
               ]} />
             </div>
           ) : (
@@ -808,7 +808,7 @@ export default function SafetyPage() {
                   <span key="assign" style={{ color: a.assigned_to ? T.white : T.muted }}>{a.assigned_to || 'Unassigned'}</span>,
                   <span key="due" style={{ color: overdue ? T.red : T.muted, fontWeight: overdue ? 700 : 400, whiteSpace: 'nowrap' }}>
                     {a.due_date || 'No date'}
-                    {overdue && <span style={{ display: 'block', fontSize: 10, color: T.red }}>OVERDUE</span>}
+                    {overdue && <span style={{ display: 'block', fontSize: 10, color: T.red }}>Overdue</span>}
                   </span>,
                   <Badge key="st" label={CA_STATUS_LABELS[a.status] || a.status} color={CA_STATUS_BADGE[a.status] || 'muted'} />,
                   <span key="action">

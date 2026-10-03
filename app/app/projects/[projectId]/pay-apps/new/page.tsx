@@ -10,7 +10,7 @@ import { ArrowLeft, ArrowRight, Plus, X, Receipt, CalendarBlank, Table, Calculat
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { PremiumSurface, ModuleHero, SectionCard, StatStrip, FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
 const fmtDate = (d?:string|null) => d ? new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
 
@@ -31,7 +31,7 @@ function blankLine(n:number):SovLine{
 }
 
 const INP:React.CSSProperties = {padding:'8px 12px',background:DARK,border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none',width:'100%',boxSizing:'border-box'};
-const LBL:React.CSSProperties = {display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:6};
+const LBL:React.CSSProperties = {display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:6};
 const HINT:React.CSSProperties = {fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:5,lineHeight:1.45};
 
 export default function NewPayAppPage() {
@@ -257,7 +257,7 @@ export default function NewPayAppPage() {
           <div style={{display:'flex',background:'rgba(255,255,255,0.04)',borderRadius:10,padding:4,border:`1px solid rgba(255,255,255,0.08)`}}>
             {[{n:1,l:'1. Period'},{n:2,l:'2. Schedule of Values'}].map(s=>(
               <button key={s.n} onClick={()=>setStep(s.n)} className="pmBtn"
-                style={{padding:'7px 16px',borderRadius:7,border:'none',fontWeight:800,fontSize:12,cursor:'pointer',background:step===s.n?`linear-gradient(135deg,${GOLD},#FBBF24)`:'transparent',color:step===s.n?'#1A1206':DIM,transition:'all .15s'}}
+                style={{padding:'7px 16px',borderRadius:7,border:'none',fontWeight:800,fontSize:12,cursor:'pointer',background:step===s.n?`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`:'transparent',color:step===s.n?'#0A0A00':DIM,transition:'all .15s'}}
               >{s.l}</button>
             ))}
           </div>
@@ -267,12 +267,12 @@ export default function NewPayAppPage() {
       {/* Contract intelligence strip — what the system already knows */}
       {ctx && (
         <StatStrip items={[
-          {href: `/app/projects/${projectId}/pay-apps/new`, label:'Application', value:`#${appNumber ?? (money?.payAppCount??0)+1}`, sub: lastApp ? `follows App #${lastApp.appNumber}` : 'first on this project'},
+          {href: `/app/projects/${projectId}/pay-apps/new`, label:'Application', value:`#${appNumber ?? (money?.payAppCount??0)+1}`, sub: lastApp ? `Follows App #${lastApp.appNumber}` : 'First on this project'},
           {href: `/app/projects/${projectId}/contracts`, label:'Original Contract', value:fmt(original), sub:'G702 line 1'},
           {href: `/app/projects/${projectId}/change-orders`, label:'Approved COs', value:(coTotal>=0?'+':'')+fmt(coTotal), accent:coTotal>0?'#3dd68c':undefined, sub:`${money?.approvedCoCount||0} approved${money?.pendingCoCount?` · ${money.pendingCoCount} pending`:''}`},
-          {href: `/app/projects/${projectId}/contracts`, label:'Revised Contract', value:fmt(revised), sub:'contract sum to date'},
+          {href: `/app/projects/${projectId}/contracts`, label:'Revised Contract', value:fmt(revised), sub:'Contract sum to date'},
           {href: `/app/projects/${projectId}/pay-apps/new`, label:'Billed to Date', value:fmt(money?.billedToDate||0), sub:`${money?.billedPct||0}% of revised`},
-          {href: `/app/projects/${projectId}/pay-apps/new`, label:'Retainage', value:`${pct}%`, sub: subCount ? `${subCount} sub${subCount===1?'':'s'} on the job` : 'per contract terms'},
+          {href: `/app/projects/${projectId}/pay-apps/new`, label:'Retainage', value:`${pct}%`, sub: subCount ? `${subCount} sub${subCount===1?'':'s'} on the job` : 'Per contract terms'},
         ]}/>
       )}
 
@@ -328,7 +328,7 @@ export default function NewPayAppPage() {
                       <span style={{fontWeight:800,color:GOLD}}>{sovScheduled>0?Math.round((prevTotal/sovScheduled)*100):0}%</span>
                     </div>
                     <div style={{height:7,borderRadius:999,background:'rgba(255,255,255,0.07)',overflow:'hidden',marginBottom:4}}>
-                      <div style={{height:'100%',width:`${sovScheduled>0?Math.min(100,(prevTotal/sovScheduled)*100):0}%`,background:`linear-gradient(90deg,${GOLD},#FBBF24)`,borderRadius:999}}/>
+                      <div style={{height:'100%',width:`${sovScheduled>0?Math.min(100,(prevTotal/sovScheduled)*100):0}%`,background:`linear-gradient(90deg,${GOLD},var(--brand-primary-strong))`,borderRadius:999}}/>
                     </div>
                   </>
                 ) : (
@@ -338,7 +338,7 @@ export default function NewPayAppPage() {
                   </div>
                 )}
                 <button onClick={()=>setStep(2)} style={{...goldButtonStyle,marginTop:16}} className="pmBtn">
-                  Next: Schedule of Values <ArrowRight size={15} weight="bold" color="#1A1206" />
+                  Next: Schedule of Values <ArrowRight size={15} weight="bold" color="#0A0A00" />
                 </button>
               </SectionCard>
             </div>
@@ -350,8 +350,8 @@ export default function NewPayAppPage() {
                   <>
                     <InsightRow label="Period" value={`${fmtDate(lastApp.periodFrom)} – ${fmtDate(lastApp.periodTo)}`}/>
                     <InsightRow label="Status" value={String(lastApp.status||'—').replace(/_/g,' ')}/>
-                    <InsightRow label="Completed & stored" value={fmt(lastApp.totalCompletedStored)}/>
-                    <InsightRow label="Payment certified" value={fmt(lastApp.currentPaymentDue)} accent="#3dd68c" strong/>
+                    <InsightRow label="Completed & Stored" value={fmt(lastApp.totalCompletedStored)}/>
+                    <InsightRow label="Payment Certified" value={fmt(lastApp.currentPaymentDue)} accent="#3dd68c" strong/>
                   </>
                 ) : (
                   <div style={{fontSize:12.5,color:DIM,lineHeight:1.6}}>
@@ -361,10 +361,10 @@ export default function NewPayAppPage() {
               </SectionCard>
               <SectionCard flat title="After You Submit" icon={<Calculator size={17} weight="duotone" color={GOLD} />}>
                 <FlowSteps title="" steps={[
-                  {title:'Owner receives the G702/G703', desc:'A signed application packet goes out for one-click owner approval.'},
-                  {title:'Lien waivers auto-generate', desc: subCount>0 ? `Conditional waivers for all ${subCount} subs, each sized to their share of this period.` : 'Conditional waivers for every sub on the job, sized to their share of this period.'},
-                  {title:'Payment is waiver-gated', desc:'Mark-paid is blocked until required waivers are signed — then unconditional waivers issue automatically.'},
-                  {title:'Money flows to the ledger', desc:'Paid-to-date, retainage held, and the prime contract update themselves.'},
+                  {title:'Owner Receives the G702/G703', desc:'A signed application packet goes out for one-click owner approval.'},
+                  {title:'Lien Waivers Auto-Generate', desc: subCount>0 ? `Conditional waivers for all ${subCount} subs, each sized to their share of this period.` : 'Conditional waivers for every sub on the job, sized to their share of this period.'},
+                  {title:'Payment Is Waiver-Gated', desc:'Mark-paid is blocked until required waivers are signed — then unconditional waivers issue automatically.'},
+                  {title:'Money Flows to the Ledger', desc:'Paid-to-date, retainage held, and the prime contract update themselves.'},
                 ]}/>
               </SectionCard>
             </div>
@@ -387,17 +387,17 @@ export default function NewPayAppPage() {
                 flush
                 style={{marginBottom:16}}
                 action={
-                  <button onClick={addLine} className="pmBtn" style={{display:'inline-flex',alignItems:'center',gap:6,padding:'7px 14px',background:'rgba(245,158,11,0.12)',border:`1px solid rgba(245,158,11,0.45)`,borderRadius:9,color:'#FBBF24',fontSize:12,fontWeight:800,cursor:'pointer'}}>
-                    <Plus size={13} color="#FBBF24" weight="bold" /> Add Row
+                  <button onClick={addLine} className="pmBtn" style={{display:'inline-flex',alignItems:'center',gap:6,padding:'7px 14px',background:'var(--brand-primary-12)',border:`1px solid color-mix(in srgb, var(--brand-primary) 45%, transparent)`,borderRadius:9,color:'var(--brand-primary-strong)',fontSize:12,fontWeight:800,cursor:'pointer'}}>
+                    <Plus size={13} color="var(--brand-primary-strong)" weight="bold" /> Add Row
                   </button>
                 }
               >
                 <div style={{overflowX:'auto'}}>
                   <table style={{width:'100%',borderCollapse:'collapse' as const,fontSize:12}}>
                     <thead>
-                      <tr style={{background:DARK}}>
+                      <tr style={{background:'var(--bg-surface-2)'}}>
                         {['#','Description','Sched. Value','Work Prev ($)','This Period ($)','Mat. Stored ($)','% Complete','Balance','Retainage',''].map(h=>(
-                          <th key={h} style={{padding:'9px 10px',textAlign:'left' as const,fontSize:10,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:.4,color:DIM,borderBottom:`1px solid ${BORDER}`,whiteSpace:'nowrap' as const}}>{h}</th>
+                          <th key={h} style={{padding:'9px 10px',textAlign:'left' as const,fontSize:10,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`,whiteSpace:'nowrap' as const}}>{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -425,8 +425,8 @@ export default function NewPayAppPage() {
                       ))}
                     </tbody>
                     <tfoot>
-                      <tr style={{background:DARK,borderTop:`2px solid ${BORDER}`}}>
-                        <td colSpan={2} style={{padding:'10px 10px',fontWeight:800,fontSize:12,color:TEXT,textTransform:'uppercase' as const,letterSpacing:.3}}>TOTALS</td>
+                      <tr style={{background:'var(--bg-surface-2)',borderTop:`2px solid ${BORDER}`}}>
+                        <td colSpan={2} style={{padding:'10px 10px',fontWeight:800,fontSize:12,color:TEXT}}>Totals</td>
                         <td style={{padding:'10px 10px',fontWeight:800,color:GOLD,textAlign:'right' as const}}>{fmt(lines.reduce((s,l)=>s+(l.scheduledValue||0),0))}</td>
                         <td style={{padding:'10px 10px',fontWeight:700,color:TEXT,textAlign:'right' as const}}>{fmt(prevTotal)}</td>
                         <td style={{padding:'10px 10px',fontWeight:800,color:'#3dd68c',textAlign:'right' as const}}>{fmt(thisPeriodTotal)}</td>
@@ -452,7 +452,7 @@ export default function NewPayAppPage() {
                 </button>
                 <button onClick={()=>save('submitted')} disabled={saving}
                   style={{...goldButtonStyle,cursor:saving?'wait':'pointer',opacity:saving?.6:1}} className="pmBtn">
-                  {saving ? 'Submitting…' : <>Submit to Owner <ArrowRight size={15} weight="bold" color="#1A1206" /></>}
+                  {saving ? 'Submitting…' : <>Submit to Owner <ArrowRight size={15} weight="bold" color="#0A0A00" /></>}
                 </button>
               </div>
             </div>
@@ -460,16 +460,16 @@ export default function NewPayAppPage() {
             {/* Live Calc Panel */}
             <div style={{width:256,flexShrink:0,position:'sticky' as const,top:80}}>
               <SectionCard flat title="Live G702 Summary" icon={<Calculator size={17} weight="duotone" color={GOLD} />}>
-                <InsightRow label="Original contract" value={fmt(contractSumNum)}/>
+                <InsightRow label="Original Contract" value={fmt(contractSumNum)}/>
                 {coTotal!==0 && <InsightRow label="Approved COs" value={(coTotal>0?'+':'')+fmt(coTotal)} accent="#3dd68c"/>}
-                {coTotal!==0 && <InsightRow label="Contract to date" value={fmt(contractSumNum+coTotal)}/>}
+                {coTotal!==0 && <InsightRow label="Contract to Date" value={fmt(contractSumNum+coTotal)}/>}
                 <div style={{height:1,background:'rgba(255,255,255,0.08)',margin:'8px 0'}}/>
-                <InsightRow label="Prev completed" value={fmt(prevTotal)}/>
-                <InsightRow label="This period" value={fmt(thisPeriodTotal)} accent={GOLD}/>
-                <InsightRow label="Materials stored" value={fmt(matsTotal)}/>
-                <InsightRow label="Total completed" value={fmt(totalCompleted)}/>
+                <InsightRow label="Prev Completed" value={fmt(prevTotal)}/>
+                <InsightRow label="This Period" value={fmt(thisPeriodTotal)} accent={GOLD}/>
+                <InsightRow label="Materials Stored" value={fmt(matsTotal)}/>
+                <InsightRow label="Total Completed" value={fmt(totalCompleted)}/>
                 <InsightRow label={`Retainage (${pct}%)`} value={fmt(retainageAmt)} accent={ORANGE}/>
-                <InsightRow label="Balance to finish" value={fmt(Math.max(0,(contractSumNum+coTotal)-totalCompleted))}/>
+                <InsightRow label="Balance to Finish" value={fmt(Math.max(0,(contractSumNum+coTotal)-totalCompleted))}/>
                 <div style={{marginTop:12,paddingTop:12,borderTop:`1px solid rgba(255,255,255,0.1)`}}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                     <span style={{fontSize:12,fontWeight:800,color:TEXT}}>Payment Due</span>

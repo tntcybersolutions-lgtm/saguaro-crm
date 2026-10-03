@@ -31,8 +31,8 @@ import RadioEvidence, {
   stripRadioProvenance,
 } from '@/components/RadioEvidence';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
-const GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A',BLUE='#F59E0B';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
+const GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A',BLUE='var(--brand-primary)';
 
 // Priorities are STORED lowercase ('low'|'medium'|'high'|'critical') and
 // DISPLAYED capitalized. Legacy rows may carry capitalized values — every
@@ -48,11 +48,11 @@ const prLabel=(p:unknown)=>{const k=prKey(p);return k.charAt(0).toUpperCase()+k.
 const STATUSES=['open','in_progress','completed','voided'];
 const TRADES=SUB_TRADES; // canonical taxonomy — do not hardcode partial trade lists
 const PRIORITY_COLORS:Record<string,string>={critical:RED,high:ORANGE,medium:GOLD,low:GREEN};
-const STATUS_COLORS:Record<string,string>={open:'#FBBF24',in_progress:GOLD,completed:GREEN,voided:DIM};
+const STATUS_COLORS:Record<string,string>={open:'var(--brand-primary-strong)',in_progress:GOLD,completed:GREEN,voided:DIM};
 const STATUS_LABELS:Record<string,string>={open:'Open',in_progress:'In Progress',completed:'Completed',voided:'Voided'};
 
 const inp:React.CSSProperties={
-  width:'100%',padding:'9px 12px',background:'#1c1c1e',
+  width:'100%',padding:'9px 12px',background:'var(--bg-surface-2)',
   border:'1px solid rgba(255,255,255,0.12)',borderRadius:7,color:'#FFFFFF',
   fontSize:13,outline:'none',boxSizing:'border-box',
 };
@@ -64,7 +64,7 @@ const EMPTY:Record<string,any>={
 function Pill({label,color}:{label:string;color:string}){
   return(
     <span style={{fontSize:10,fontWeight:700,padding:'3px 9px',borderRadius:20,
-      background:`${color}22`,color,textTransform:'uppercase',letterSpacing:.3}}>
+      background:`color-mix(in srgb, ${color} 13%, transparent)`,color}}>
       {label}
     </span>
   );
@@ -72,8 +72,7 @@ function Pill({label,color}:{label:string;color:string}){
 function Field({label,children}:{label:React.ReactNode;children:React.ReactNode}){
   return(
     <div>
-      <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,
-        textTransform:'uppercase',letterSpacing:.5,marginBottom:5}}>{label}</label>
+      <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5}}>{label}</label>
       {children}
     </div>
   );
@@ -179,7 +178,7 @@ export default function PunchListPage(){
   /** Create/update the item — shared by the drawer button and the guard's
    *  "Save & leave". Returns true on success (optimistic close, then network). */
   async function save(): Promise<boolean>{
-    if(!String(form.title||'').trim()){showToast('Title is required','error');return false;}
+    if(!String(form.title||'').trim()){showToast('Title is required.','error');return false;}
     // Optimistic save (house pattern: budget saveEdit) — the list updates and
     // the panel closes instantly; the network settles in the background.
     const snapshot={...form};
@@ -191,7 +190,7 @@ export default function PunchListPage(){
         const tempId=`temp-${Date.now()}`;
         setItems(prev=>[{id:tempId,...snapshot,project_id:projectId},...prev]);
         closePanel();
-        showToast('Item added');
+        showToast('Item added.');
         const r=await fetch('/api/punch-list/create',{
           method:'POST',
           headers:{...h,'Content-Type':'application/json'},
@@ -206,7 +205,7 @@ export default function PunchListPage(){
         const prevItem=selected;
         setItems(prev=>prev.map((i:any)=>i.id===prevItem.id?{...i,...snapshot}:i));
         closePanel();
-        showToast('Item updated');
+        showToast('Item updated.');
         const r=await fetch(`/api/punch-list/${prevItem.id}`,{
           method:'PUT',
           headers:{...h,'Content-Type':'application/json'},
@@ -254,14 +253,14 @@ export default function PunchListPage(){
     // rollback restores the exact list on failure.
     const prevItems=items;
     setItems(prev=>prev.filter((i:any)=>i.id!==item.id));
-    showToast('Item deleted');closePanel();
+    showToast('Item deleted.');closePanel();
     setDeleting(true);
     try{
       const h=await getAuthHeaders();
       const dr=await fetch(`/api/punch-list/${item.id}`,{method:'DELETE',headers:h});
       if (!dr.ok) throw new Error('Delete failed');
       revalidate();
-    }catch{setItems(prevItems);showToast('Delete failed','error');}
+    }catch{setItems(prevItems);showToast('Delete failed.','error');}
     finally{setDeleting(false);}
   }
 
@@ -319,7 +318,7 @@ export default function PunchListPage(){
 
         {/* KPIs */}
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:22}}>
-          <StatCard icon={<FolderOpen size={19} weight="duotone" color={moduleAccent('punch').hex}/>} label="Open" value={String(openCount)} accent="#FBBF24" delay={0.02} href={`/app/projects/${projectId}/punch-list`}/>
+          <StatCard icon={<FolderOpen size={19} weight="duotone" color={moduleAccent('punch').hex}/>} label="Open" value={String(openCount)} accent="var(--brand-primary-strong)" delay={0.02} href={`/app/projects/${projectId}/punch-list`}/>
           <StatCard icon={<CircleHalf size={19} weight="duotone" color={moduleAccent('punch').hex}/>} label="In Progress" value={String(inProg)} accent={GOLD} delay={0.06} href={`/app/projects/${projectId}/punch-list`}/>
           <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN}/>} label="Completed" value={String(done)} accent={GREEN} delay={0.10} href={`/app/projects/${projectId}/punch-list`}/>
           <StatCard icon={<WarningCircle size={19} weight="duotone" color={crit>0?RED:'rgba(255,255,255,0.42)'}/>} label="Critical Open" value={String(crit)} accent={crit>0?RED:undefined} sub={crit>0?'Needs attention':undefined} delay={0.14} href={`/app/projects/${projectId}/punch-list`}/>
@@ -406,11 +405,11 @@ export default function PunchListPage(){
                 const radio=radioEvidenceFromRecord(item);
                 return(
                   <div key={item.id}
-                    style={{background:isSel?'rgba(245, 158, 11,.07)':RAISED,
+                    style={{background:isSel?'var(--brand-primary-08)':RAISED,
                       border:`1px solid ${isSel?GOLD:BORDER}`,borderRadius:10,
                       padding:'12px 16px',cursor:'pointer',transition:'all .15s',
                       opacity:isDone?.75:1}}
-                    onMouseEnter={e=>{if(!isSel)e.currentTarget.style.borderColor='rgba(245, 158, 11,.4)';}}
+                    onMouseEnter={e=>{if(!isSel)e.currentTarget.style.borderColor='var(--brand-primary-35)';}}
                     onMouseLeave={e=>{if(!isSel)e.currentTarget.style.borderColor=BORDER;}}
                     onClick={()=>viewItem(item)}>
                     <div style={{display:'flex',alignItems:'center',gap:12}}>
@@ -465,14 +464,14 @@ export default function PunchListPage(){
               {mode==='view'&&selected&&(
                 <>
                   <button onClick={()=>openEdit(selected)}
-                    style={{padding:'6px 14px',background:'rgba(245,158,11,.1)',
-                      border:`1px solid ${BLUE}44`,borderRadius:6,
-                      color:'#FBBF24',fontSize:12,fontWeight:700,cursor:'pointer'}}>
+                    style={{padding:'6px 14px',background:'var(--brand-primary-12)',
+                      border:`1px solid color-mix(in srgb, ${BLUE} 27%, transparent)`,borderRadius:6,
+                      color:'var(--brand-primary-strong)',fontSize:12,fontWeight:700,cursor:'pointer'}}>
                     Edit
                   </button>
                   <button onClick={()=>deleteItem(selected)} disabled={deleting}
                     style={{padding:'6px 14px',background:'rgba(192,48,48,.1)',
-                      border:`1px solid ${RED}44`,borderRadius:6,
+                      border:`1px solid color-mix(in srgb, ${RED} 27%, transparent)`,borderRadius:6,
                       color:RED,fontSize:12,fontWeight:700,cursor:'pointer'}}>
                     {deleting?'…':'Delete'}
                   </button>
@@ -492,8 +491,8 @@ export default function PunchListPage(){
                 {mode==='create'&&items.length>0&&(
                   <div style={{marginBottom:-20}}>
                     <StatStrip items={[
-                      {href: `/app/projects/${projectId}/punch-list`, label:'Open',value:String(openCount),accent:'#FBBF24',sub:'on the list now'},
-                      {href: `/app/projects/${projectId}/punch-list`, label:'Critical',value:String(crit),accent:crit>0?RED:undefined,sub:crit>0?'need attention':'none open'},
+                      {href: `/app/projects/${projectId}/punch-list`, label:'Open',value:String(openCount),accent:'var(--brand-primary-strong)',sub:'On the list now'},
+                      {href: `/app/projects/${projectId}/punch-list`, label:'Critical',value:String(crit),accent:crit>0?RED:undefined,sub:crit>0?'Need attention':'None open'},
                       {href: `/app/projects/${projectId}/punch-list`, label:'Done',value:String(done),accent:GREEN,sub:`${pct}% complete`},
                     ]}/>
                   </div>
@@ -587,7 +586,7 @@ export default function PunchListPage(){
                   <textarea value={form.notes}
                     onChange={e=>setForm(f=>({...f,notes:e.target.value}))}
                     rows={3} style={{...inp,resize:'vertical',lineHeight:1.5}}
-                    placeholder="Additional notes, photos needed, etc…"/>
+                    placeholder="Additional notes, photos needed, etc."/>
                   <div style={{display:'flex',alignItems:'flex-start',gap:6,fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:5,lineHeight:1.45}}>
                     <Camera size={13} color={GOLD} style={{flexShrink:0,marginTop:1}}/>
                     <span>Snap photos in Field Mode — documented deficiencies get corrected without a return trip.</span>
@@ -604,10 +603,10 @@ export default function PunchListPage(){
                 </div>
                 {mode==='create'&&(
                   <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:'14px 16px'}}>
-                    <FlowSteps title="After you add" steps={[
-                      {title:'Lands on the punch log',desc:'Counted against open items and overall completion instantly.'},
-                      {title:'Assigned sub sees it in Field Mode',desc:form.assigned_to?`${form.assigned_to} gets it on their filtered field list.`:'Assign a sub and it shows on their filtered field list.'},
-                      {title:'Check-off rolls up closeout',desc:'Completion climbs live — critical items surface first.'},
+                    <FlowSteps title="After You Add" steps={[
+                      {title:'Lands on the Punch Log',desc:'Counted against open items and overall completion instantly.'},
+                      {title:'Assigned Sub Sees It in Field Mode',desc:form.assigned_to?`${form.assigned_to} gets it on their filtered field list.`:'Assign a sub and it shows on their filtered field list.'},
+                      {title:'Check-Off Rolls Up Closeout',desc:'Completion climbs live — critical items surface first.'},
                     ]}/>
                   </div>
                 )}
@@ -630,18 +629,18 @@ export default function PunchListPage(){
                   <button onClick={()=>toggleComplete(selected)}
                     style={{padding:'9px 0',width:'100%',
                       background:selected.status==='completed'
-                        ?'rgba(245,158,11,.1)':'rgba(26,138,74,.1)',
-                      border:`1px solid ${selected.status==='completed'?BLUE:GREEN}44`,
-                      borderRadius:7,color:selected.status==='completed'?'#FBBF24':'#4ade80',
+                        ?'var(--brand-primary-12)':'rgba(26,138,74,.1)',
+                      border:`1px solid color-mix(in srgb, ${selected.status==='completed'?BLUE:GREEN} 27%, transparent)`,
+                      borderRadius:7,color:selected.status==='completed'?'var(--brand-primary-strong)':'#4ade80',
                       fontSize:13,fontWeight:700,cursor:'pointer'}}>
                     {selected.status==='completed'
-                      ?<span style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6}}><ArrowUUpLeft size={14} weight="bold" color="#FBBF24"/>Reopen Item</span>
+                      ?<span style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6}}><ArrowUUpLeft size={14} weight="bold" color="var(--brand-primary-strong)"/>Reopen Item</span>
                       :<span style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6}}><CheckCircle size={14} weight="bold" color="#4ade80"/>Mark Complete</span>}
                   </button>
                 </div>
 
                 {/* The voice behind the item, when it was filed from the radio */}
-                {selectedRadio&&<RadioEvidence source={selectedRadio} title="Voice on the record"/>}
+                {selectedRadio&&<RadioEvidence source={selectedRadio} title="Voice on the Record"/>}
 
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
                   {[
@@ -651,19 +650,17 @@ export default function PunchListPage(){
                     {l:'Due Date',v:selected.due_date?new Date(selected.due_date+'T12:00:00')
                       .toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):null},
                   ].filter(x=>x.v).map(x=>(
-                    <div key={x.l} style={{background:'#141416',border:`1px solid ${BORDER}`,
+                    <div key={x.l} style={{background:'var(--bg-surface)',border:`1px solid ${BORDER}`,
                       borderRadius:8,padding:'10px 12px'}}>
-                      <div style={{fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase',
-                        letterSpacing:.5,marginBottom:4}}>{x.l}</div>
+                      <div style={{fontSize:10,fontWeight:700,color:DIM,marginBottom:4}}>{x.l}</div>
                       <div style={{fontSize:13,color:TEXT}}>{x.v}</div>
                     </div>
                   ))}
                 </div>
 
                 {selectedNotes&&(
-                  <div style={{background:'#141416',border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
-                    <div style={{fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase',
-                      letterSpacing:.5,marginBottom:6}}>Notes</div>
+                  <div style={{background:'var(--bg-surface)',border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
+                    <div style={{fontSize:10,fontWeight:700,color:DIM,marginBottom:6}}>Notes</div>
                     <div style={{fontSize:13,color:TEXT,lineHeight:1.6,whiteSpace:'pre-wrap'}}>{selectedNotes}</div>
                   </div>
                 )}

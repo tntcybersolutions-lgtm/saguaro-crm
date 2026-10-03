@@ -186,7 +186,7 @@ export default function SpecsPage() {
     width: '100%', padding: '9px 12px', background: 'rgba(255,255,255,0.04)',
     border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 13, outline: 'none',
   };
-  const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 700, color: T.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 };
+  const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 700, color: T.muted, marginBottom: 6 };
   const hint: React.CSSProperties = { fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 };
 
   const specRow = (s: Spec) => {
@@ -195,7 +195,7 @@ export default function SpecsPage() {
       <span key="sec" style={{ color: T.gold, fontWeight: 700 }}>{s.section}</span>,
       s.title,
       <span key="div" style={{ color: T.muted }}>{code ? `${code} — ${divName(code)}` : (s.division || '—')}</span>,
-      <Badge key="st" label={s.status} color={STATUS_BADGE[s.status] || 'muted'} />,
+      <Badge key="st" label={s.status ? s.status.charAt(0).toUpperCase() + s.status.slice(1) : '—'} color={STATUS_BADGE[s.status] || 'muted'} />,
       <span key="upd" style={{ color: T.muted, whiteSpace: 'nowrap' }}>{s.last_updated ? String(s.last_updated).substring(0, 10) : '—'}</span>,
       <span key="sub" style={{ color: T.muted, fontSize: 12 }}>
         {s.related_submittals && s.related_submittals.length > 0 ? s.related_submittals.join(', ') : '—'}
@@ -206,7 +206,7 @@ export default function SpecsPage() {
         )}
         <label style={{ cursor: 'pointer' }}>
           <Btn size="sm" variant="ghost" disabled={uploading === s.id}>
-            {uploading === s.id ? 'Uploading...' : 'Upload'}
+            {uploading === s.id ? 'Uploading…' : 'Upload'}
           </Btn>
           <input type="file" accept=".pdf" style={{ display: 'none' }} onChange={e => { if (e.target.files?.[0]) handleUploadSpec(s.id, e.target.files[0]); }} />
         </label>
@@ -220,7 +220,7 @@ export default function SpecsPage() {
       {/* Header */}
       <ModuleHero
         eyebrow={ctx?.project?.name || 'Specifications'}
-        eyebrowIcon={<FileText size={13} weight="fill" color="#F59E0B" />}
+        eyebrowIcon={<FileText size={13} weight="fill" style={{ color: 'var(--brand-primary)' }} />}
         title="Spec"
         accent="Sections"
         subtitle={specs.length > 0 ? `${specs.length} section${specs.length === 1 ? '' : 's'} across ${coveredDivisions} of ${DIV_CODES.length} CSI divisions.` : 'Project specifications organized by CSI division.'}
@@ -238,12 +238,12 @@ export default function SpecsPage() {
       {/* Project intelligence strip — what the system already knows */}
       {ctx && (
         <StatStrip items={[
-          {href: `/app/projects/${projectId}/specs`,  label: 'Project', value: ctx.project?.projectNumber || ctx.project?.name || '—', sub: ctx.project?.status ? String(ctx.project.status).replace(/_/g, ' ') : 'active' },
+          {href: `/app/projects/${projectId}/specs`,  label: 'Project', value: ctx.project?.projectNumber || ctx.project?.name || '—', sub: ctx.project?.status ? String(ctx.project.status).replace(/_/g, ' ') : 'Active' },
           {href: `/app/projects/${projectId}/specs`,  label: 'Divisions Covered', value: `${coveredDivisions} of ${DIV_CODES.length}`, sub: 'CSI MasterFormat' },
-          {href: `/app/projects/${projectId}/bid-packages`,  label: 'Bid Packages', value: String(pkgs.length), sub: pkgDivisions.size > 0 ? `across ${pkgDivisions.size} division${pkgDivisions.size === 1 ? '' : 's'}` : 'none scoped yet' },
-          {href: `/app/projects/${projectId}/specs`,  label: 'Spec Gaps', value: String(uncoveredPkgDivs.length), accent: uncoveredPkgDivs.length > 0 ? T.gold : T.green, sub: uncoveredPkgDivs.length > 0 ? `Div ${uncoveredPkgDivs.slice(0, 3).join(', ')}${uncoveredPkgDivs.length > 3 ? '…' : ''} unspecified` : 'every package covered' },
-          {href: `/app/projects/${projectId}/submittals`,  label: 'Open Submittals', value: String(openSubmittals), accent: openSubmittals > 0 ? T.gold : undefined, sub: 'reviewed against the book' },
-          {href: `/app/projects/${projectId}/subs`,  label: 'Subs on the Job', value: String((ctx.subs || []).length), sub: 'bound by these sections' },
+          {href: `/app/projects/${projectId}/bid-packages`,  label: 'Bid Packages', value: String(pkgs.length), sub: pkgDivisions.size > 0 ? `Across ${pkgDivisions.size} division${pkgDivisions.size === 1 ? '' : 's'}` : 'None scoped yet' },
+          {href: `/app/projects/${projectId}/specs`,  label: 'Spec Gaps', value: String(uncoveredPkgDivs.length), accent: uncoveredPkgDivs.length > 0 ? T.gold : T.green, sub: uncoveredPkgDivs.length > 0 ? `Div ${uncoveredPkgDivs.slice(0, 3).join(', ')}${uncoveredPkgDivs.length > 3 ? '…' : ''} unspecified` : 'Every package covered' },
+          {href: `/app/projects/${projectId}/submittals`,  label: 'Open Submittals', value: String(openSubmittals), accent: openSubmittals > 0 ? T.gold : undefined, sub: 'Reviewed against the book' },
+          {href: `/app/projects/${projectId}/subs`,  label: 'Subs on the Job', value: String((ctx.subs || []).length), sub: 'Bound by these sections' },
         ]} />
       )}
 
@@ -252,22 +252,22 @@ export default function SpecsPage() {
         <StatCard
           icon={<FileText size={19} weight="duotone" color={T.gold} />}
           label="Total Sections" value={String(specs.length)} accent={T.gold}
-          sub={coveredDivisions > 0 ? `across ${coveredDivisions} division${coveredDivisions === 1 ? '' : 's'}` : 'across all divisions'} delay={0.02}
+          sub={coveredDivisions > 0 ? `Across ${coveredDivisions} division${coveredDivisions === 1 ? '' : 's'}` : 'Across all divisions'} delay={0.02}
          href={`/app/projects/${projectId}/specs`}/>
         <StatCard
           icon={<NotePencil size={19} weight="duotone" color={T.gold} />}
           label="Draft" value={String(draftCount)}
-          sub="not yet issued" delay={0.06}
+          sub="Not yet issued" delay={0.06}
          href={`/app/projects/${projectId}/specs`}/>
         <StatCard
           icon={<Export size={19} weight="duotone" color={T.gold} />}
           label="Issued" value={String(issuedCount)} accent={T.gold}
-          sub="out for review" delay={0.10}
+          sub="Out for review" delay={0.10}
          href={`/app/projects/${projectId}/specs`}/>
         <StatCard
           icon={<CheckCircle size={19} weight="duotone" color={T.green} />}
           label="Approved" value={String(approvedCount)} accent={T.green}
-          sub="finalized" delay={0.14}
+          sub="Finalized" delay={0.14}
          href={`/app/projects/${projectId}/specs`}/>
       </div>
 
@@ -284,7 +284,7 @@ export default function SpecsPage() {
         <SectionCard
           icon={<Plus size={17} weight="bold" color={T.gold} />}
           title="Add Spec Section"
-          subtitle={uncoveredPkgDivs.length > 0 ? `${uncoveredPkgDivs.length} bid-package division${uncoveredPkgDivs.length === 1 ? ' still has' : 's still have'} no spec section` : 'Sections file themselves under their CSI division'}
+          subtitle={uncoveredPkgDivs.length > 0 ? `${uncoveredPkgDivs.length} bid-package division${uncoveredPkgDivs.length === 1 ? ' still has' : 's still have'} no spec section.` : 'Sections file themselves under their CSI division.'}
         >
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
             <div>
@@ -318,7 +318,7 @@ export default function SpecsPage() {
               className="pmBtn"
               style={{ ...goldButtonStyle, opacity: saving ? 0.5 : 1, cursor: saving ? 'not-allowed' : 'pointer' }}
             >
-              {saving ? 'Saving...' : 'Save Section'}
+              {saving ? 'Saving…' : 'Save Section'}
             </button>
             <button
               onClick={() => { setShowForm(false); setErrorMsg(''); }}
@@ -332,22 +332,22 @@ export default function SpecsPage() {
         {ctx && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <SectionCard flat title="What Saguaro Knows" icon={<ClockCounterClockwise size={17} weight="duotone" color={T.gold} />}>
-              <InsightRow label="Spec sections" value={`${specs.length} across ${coveredDivisions} division${coveredDivisions === 1 ? '' : 's'}`} />
-              <InsightRow label="Bid packages" value={String(pkgs.length)} />
-              <InsightRow label="Open submittals" value={String(openSubmittals)} accent={openSubmittals > 0 ? T.gold : undefined} />
-              <InsightRow label="Subs on the job" value={String((ctx.subs || []).length)} />
+              <InsightRow label="Spec Sections" value={`${specs.length} across ${coveredDivisions} division${coveredDivisions === 1 ? '' : 's'}`} />
+              <InsightRow label="Bid Packages" value={String(pkgs.length)} />
+              <InsightRow label="Open Submittals" value={String(openSubmittals)} accent={openSubmittals > 0 ? T.gold : undefined} />
+              <InsightRow label="Subs on the Job" value={String((ctx.subs || []).length)} />
               {uncoveredPkgDivs.length > 0 && (
-                <div style={{ marginTop: 10, padding: '10px 12px', borderRadius: 8, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)', fontSize: 12, color: T.goldBright, lineHeight: 1.5 }}>
+                <div style={{ marginTop: 10, padding: '10px 12px', borderRadius: 8, background: 'var(--brand-primary-08)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', fontSize: 12, color: 'var(--brand-primary-strong)', lineHeight: 1.5 }}>
                   Bid packages reference Division{uncoveredPkgDivs.length === 1 ? '' : 's'} {uncoveredPkgDivs.join(', ')} with no spec section yet — start there.
                 </div>
               )}
             </SectionCard>
             <SectionCard flat title="After You Save" icon={<FileText size={17} weight="duotone" color={T.gold} />}>
               <FlowSteps title="" steps={[
-                { title: 'Section files by division', desc: 'The book groups itself in CSI MasterFormat order.' },
+                { title: 'Section Files by Division', desc: 'The book groups itself in CSI MasterFormat order.' },
                 { title: 'Upload the PDF', desc: 'Attach the section document right from the register row.' },
-                { title: 'Issue for coordination', desc: 'Move draft to issued when it goes out to bidders and subs.' },
-                { title: 'Submittals check against it', desc: 'Product data and shop drawings get reviewed against this section.' },
+                { title: 'Issue for Coordination', desc: 'Move draft to issued when it goes out to bidders and subs.' },
+                { title: 'Submittals Check Against It', desc: 'Product data and shop drawings get reviewed against this section.' },
               ]} />
             </SectionCard>
           </div>
@@ -360,7 +360,7 @@ export default function SpecsPage() {
         module="specs"
         search={search}
         onSearch={setSearch}
-        searchPlaceholder="Search sections..."
+        searchPlaceholder="Search sections…"
         filters={[{ key: 'status', label: 'Status', value: statusFilter, onChange: setStatusFilter, allLabel: 'All Statuses', options: [
           { value: 'draft', label: 'Draft' },
           { value: 'issued', label: 'Issued' },
@@ -371,8 +371,8 @@ export default function SpecsPage() {
         style={{ marginBottom: 16 }}
         extra={
           <div style={{ display: 'flex', background: 'rgba(255,255,255,0.04)', border: `1px solid ${T.border}`, borderRadius: 10, overflow: 'hidden' }}>
-            <button onClick={() => setGrouped(true)} style={{ padding: '7px 13px', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: grouped ? T.gold : 'transparent', color: grouped ? '#1A1206' : T.muted }}>By Division</button>
-            <button onClick={() => setGrouped(false)} style={{ padding: '7px 13px', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: !grouped ? T.gold : 'transparent', color: !grouped ? '#1A1206' : T.muted }}>Flat List</button>
+            <button onClick={() => setGrouped(true)} style={{ padding: '7px 13px', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: grouped ? T.gold : 'transparent', color: grouped ? '#0A0A00' : T.muted }}>By Division</button>
+            <button onClick={() => setGrouped(false)} style={{ padding: '7px 13px', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: !grouped ? T.gold : 'transparent', color: !grouped ? '#0A0A00' : T.muted }}>Flat List</button>
           </div>
         }
       />
@@ -389,7 +389,7 @@ export default function SpecsPage() {
           <div style={{ padding: '12px 8px' }}>
             <PremiumEmpty
               icon={<FileText size={30} weight="duotone" color={T.gold} />}
-              title="Start the spec book"
+              title="Start the Spec Book"
               description={pkgs.length > 0
                 ? `Your ${pkgs.length} bid package${pkgs.length === 1 ? ' already references' : 's already reference'} ${pkgDivisions.size > 0 ? `${pkgDivisions.size} CSI division${pkgDivisions.size === 1 ? '' : 's'}` : 'the CSI divisions'} — add a section per division and the book files itself in MasterFormat order. Submittals get reviewed against these sections.`
                 : 'Add sections by CSI MasterFormat number — the book groups itself by division, and submittals get reviewed against each section.'}
@@ -404,8 +404,8 @@ export default function SpecsPage() {
           <div>
             {divisionOrder.map(code => (
               <div key={code}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 20px', background: 'rgba(245,158,11,0.06)', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <span style={{ fontSize: 12, fontWeight: 900, color: T.goldBright, letterSpacing: '0.06em' }}>{code === '__' ? 'UNASSIGNED' : `DIV ${code}`}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 20px', background: 'var(--bg-surface-2)', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <span style={{ fontSize: 12, fontWeight: 900, color: 'var(--brand-primary-strong)' }}>{code === '__' ? 'Unassigned' : `Div ${code}`}</span>
                   <span style={{ fontSize: 12.5, fontWeight: 700, color: T.white }}>{code === '__' ? 'No division set' : divName(code)}</span>
                   <span style={{ fontSize: 11.5, color: T.muted, marginLeft: 'auto' }}>{byDivision[code].length} section{byDivision[code].length === 1 ? '' : 's'}{pkgDivisions.has(code) ? ' · bid package scoped' : ''}</span>
                 </div>
@@ -420,7 +420,7 @@ export default function SpecsPage() {
               <span key="sec" style={{ color: T.gold, fontWeight: 700 }}>{s.section}</span>,
               s.title,
               <span key="div" style={{ color: T.muted }}>{s.division || '—'}</span>,
-              <Badge key="st" label={s.status} color={STATUS_BADGE[s.status] || 'muted'} />,
+              <Badge key="st" label={s.status ? s.status.charAt(0).toUpperCase() + s.status.slice(1) : '—'} color={STATUS_BADGE[s.status] || 'muted'} />,
               <span key="upd" style={{ color: T.muted, whiteSpace: 'nowrap' }}>{s.last_updated || '—'}</span>,
               <span key="sub" style={{ color: T.muted, fontSize: 12 }}>
                 {s.related_submittals && s.related_submittals.length > 0
@@ -433,7 +433,7 @@ export default function SpecsPage() {
                 )}
                 <label style={{ cursor: 'pointer' }}>
                   <Btn size="sm" variant="ghost" disabled={uploading === s.id}>
-                    {uploading === s.id ? 'Uploading...' : 'Upload'}
+                    {uploading === s.id ? 'Uploading…' : 'Upload'}
                   </Btn>
                   <input type="file" accept=".pdf" style={{ display: 'none' }} onChange={e => { if (e.target.files?.[0]) handleUploadSpec(s.id, e.target.files[0]); }} />
                 </label>

@@ -9,7 +9,7 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { openPdf } from '@/components/PdfViewer';
 
-const GOLD='#F59E0B', RAISED='#141416', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#3dd68c', RED='#ef4444';
+const GOLD='var(--brand-primary)', RAISED='var(--bg-surface-2)', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#3dd68c', RED='#ef4444';
 
 interface Proposal {
   id: string;
@@ -24,8 +24,8 @@ interface Proposal {
 
 const STATUS_MAP: Record<string, { bg: string; color: string }> = {
   Draft: { bg: 'rgba(143,163,192,.2)', color: DIM },
-  Sent: { bg: 'rgba(245,158,11,.2)', color: '#FBBF24' },
-  Under_Review: { bg: 'rgba(245,158,11,.2)', color: '#f59e0b' },
+  Sent: { bg: 'color-mix(in srgb, var(--brand-primary) 20%, transparent)', color: 'var(--brand-primary-strong)' },
+  Under_Review: { bg: 'color-mix(in srgb, var(--warning) 20%, transparent)', color: 'var(--warning)' },
   Accepted: { bg: 'rgba(61,214,140,.2)', color: GREEN },
   Superseded: { bg: 'rgba(143,163,192,.2)', color: DIM },
   Rejected: { bg: 'rgba(239,68,68,.2)', color: RED },
@@ -228,7 +228,7 @@ export default function ProposalPage() {
     }
   }
 
-  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: '#1c1c1e', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
+  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: 'var(--bg-surface-2)', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
   const label: React.CSSProperties = { fontSize: 12, color: DIM, marginBottom: 4, display: 'block' };
 
   return (
@@ -236,7 +236,7 @@ export default function ProposalPage() {
       {/* Header */}
       <ModuleHero
         eyebrow={ctx?.project?.name || 'Proposal'}
-        eyebrowIcon={<FileText size={13} weight="fill" color="#F59E0B" />}
+        eyebrowIcon={<FileText size={13} weight="fill" style={{ color: 'var(--brand-primary)' }} />}
         title="Proposals &"
         accent="Contract Amounts"
         subtitle="Versions, contract amounts, and win/loss outcomes."
@@ -250,11 +250,11 @@ export default function ProposalPage() {
       {/* Contract intelligence strip — what the system already knows */}
       {ctx && (
         <StatStrip items={[
-          {href: `/app/projects/${projectId}/contracts`,  label: 'Original Contract', value: fmt(original), sub: 'base agreement' },
+          {href: `/app/projects/${projectId}/contracts`,  label: 'Original Contract', value: fmt(original), sub: 'Base agreement' },
           {href: `/app/projects/${projectId}/change-orders`,  label: 'Approved COs', value: (coTotal >= 0 ? '+' : '') + fmt(coTotal), accent: coTotal > 0 ? GREEN : undefined, sub: `${Number(money?.approvedCoCount) || 0} approved${Number(money?.pendingCoCount) ? ` · ${money.pendingCoCount} pending` : ''}` },
-          {href: `/app/projects/${projectId}/contracts`,  label: 'Contract to Date', value: fmt(revised), sub: 'original + approved COs' },
-          {href: `/app/projects/${projectId}/proposal`,  label: 'Versions', value: String(proposals.length), sub: lastProposal ? `latest ${lastProposal.version} — ${statusLabel(lastProposal.status)}` : 'none yet' },
-          {href: `/app/projects/${projectId}/proposal`,  label: 'Accepted', value: accepted ? fmt(Number(accepted.amount) || 0) : '—', accent: accepted ? GREEN : undefined, sub: accepted ? accepted.version : 'no accepted version yet' },
+          {href: `/app/projects/${projectId}/contracts`,  label: 'Contract to Date', value: fmt(revised), sub: 'Original + approved COs' },
+          {href: `/app/projects/${projectId}/proposal`,  label: 'Versions', value: String(proposals.length), sub: lastProposal ? `Latest ${lastProposal.version} — ${statusLabel(lastProposal.status)}` : 'None yet' },
+          {href: `/app/projects/${projectId}/proposal`,  label: 'Accepted', value: accepted ? fmt(Number(accepted.amount) || 0) : '—', accent: accepted ? GREEN : undefined, sub: accepted ? accepted.version : 'No accepted version yet' },
           {href: `/app/projects/${projectId}/proposal`,  label: 'Billed to Date', value: fmt(Number(money?.billedToDate) || 0), sub: `${Number(money?.billedPct) || 0}% of contract` },
         ]} />
       )}
@@ -263,7 +263,7 @@ export default function ProposalPage() {
       {accepted && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
           <StatCard
-            icon={<SealCheck size={19} weight="duotone" color={GREEN} />}
+            icon={<SealCheck size={19} weight="duotone" style={{ color: GREEN }} />}
             label="Accepted Proposal"
             value={`$${accepted.amount.toLocaleString()}`}
             accent={GREEN}
@@ -277,7 +277,7 @@ export default function ProposalPage() {
 
       {showForm && (
         <div style={{ display: 'grid', gridTemplateColumns: ctx ? 'minmax(0, 1fr) 320px' : '1fr', gap: 18, alignItems: 'start', marginBottom: 24 }}>
-          <SectionCard title={`New Proposal Version (${latestVersion})`} icon={<FilePlus size={17} weight="duotone" color={GOLD} />} subtitle={lastProposal ? `Supersedes ${lastProposal.version} — prior versions stay in the history below.` : 'First version on this project.'}>
+          <SectionCard title={`New Proposal Version (${latestVersion})`} icon={<FilePlus size={17} weight="duotone" style={{ color: GOLD }} />} subtitle={lastProposal ? `Supersedes ${lastProposal.version} — prior versions stay in the history below.` : 'First version on this project.'}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 14 }}>
               <div>
                 <label style={label}>Amount ($) *{auto.amt && <AutoChip />}</label>
@@ -285,7 +285,7 @@ export default function ProposalPage() {
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 }}>
                   {seed
                     ? <>Seeded from {seed.source} ({fmt(seed.amount)}).{seedOptions.filter(o => o.amount > 0 && o.amount !== seed.amount && o.amount !== Number(form.amount)).slice(0, 2).map(o => (
-                        <span key={o.source}> Use {o.source}: <span onClick={() => { setForm(p => ({ ...p, amount: o.amount })); setAuto({ amt: true }); }} style={{ color: '#FBBF24', fontWeight: 700, cursor: 'pointer' }}>{fmt(o.amount)}</span>.</span>
+                        <span key={o.source}> Use {o.source}: <span onClick={() => { setForm(p => ({ ...p, amount: o.amount })); setAuto({ amt: true }); }} style={{ color: 'var(--brand-primary-strong)', fontWeight: 700, cursor: 'pointer' }}>{fmt(o.amount)}</span>.</span>
                       ))}</>
                     : <>No contract amount or takeoff on file yet — enter the proposed sum.</>}
                 </div>
@@ -298,34 +298,34 @@ export default function ProposalPage() {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
               <button onClick={handleSave} disabled={saving} style={{ ...goldButtonStyle, opacity: saving ? 0.7 : 1 }} className="pmBtn">
-                {saving ? 'Saving...' : 'Create Version'}
+                {saving ? 'Saving…' : 'Create Version'}
               </button>
               <button onClick={() => { setShowForm(false); setErrorMsg(''); }} style={ghostButtonStyle} className="pmBtn">Cancel</button>
             </div>
           </SectionCard>
           {ctx && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <SectionCard flat title="What Saguaro Knows" icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}>
-                <InsightRow label="Original contract" value={fmt(original)} />
+              <SectionCard flat title="What Saguaro Knows" icon={<ClockCounterClockwise size={17} weight="duotone" style={{ color: GOLD }} />}>
+                <InsightRow label="Original Contract" value={fmt(original)} />
                 {coTotal !== 0 && <InsightRow label="Approved COs" value={(coTotal > 0 ? '+' : '') + fmt(coTotal)} accent={GREEN} />}
-                <InsightRow label="Contract to date" value={fmt(revised)} strong />
-                <InsightRow label="Billed to date" value={fmt(Number(money?.billedToDate) || 0)} />
+                <InsightRow label="Contract to Date" value={fmt(revised)} strong />
+                <InsightRow label="Billed to Date" value={fmt(Number(money?.billedToDate) || 0)} />
                 {accepted && <InsightRow label={`Accepted — ${accepted.version}`} value={fmt(acceptedAmount)} accent={GREEN} />}
-                {takeoffSell > 0 && <InsightRow label="AI takeoff sell total" value={fmt(takeoffSell)} accent={GOLD} />}
+                {takeoffSell > 0 && <InsightRow label="AI Takeoff Sell Total" value={fmt(takeoffSell)} accent={GOLD} />}
                 {lastProposal && (
                   <>
                     <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '8px 0' }} />
-                    <InsightRow label={`Last version — ${lastProposal.version}`} value={statusLabel(lastProposal.status)} />
-                    <InsightRow label="Last amount" value={fmt(Number(lastProposal.amount) || 0)} accent={GOLD} />
+                    <InsightRow label={`Last Version — ${lastProposal.version}`} value={statusLabel(lastProposal.status)} />
+                    <InsightRow label="Last Amount" value={fmt(Number(lastProposal.amount) || 0)} accent={GOLD} />
                   </>
                 )}
               </SectionCard>
-              <SectionCard flat title="After You Create" icon={<SealCheck size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="After You Create" icon={<SealCheck size={17} weight="duotone" style={{ color: GOLD }} />}>
                 <FlowSteps title="" steps={[
-                  { title: 'Draft is versioned', desc: 'Prior versions mark themselves Superseded — the history stays intact.' },
-                  { title: 'Attach the PDF & send', desc: 'Upload the signed proposal and mark it sent to the client.' },
-                  { title: 'Capture the outcome', desc: 'Mark Accepted or Declined — win/loss feeds bidding analytics.' },
-                  { title: 'Accepted becomes the contract', desc: 'The accepted amount headlines this project going forward.' },
+                  { title: 'Draft Is Versioned', desc: 'Prior versions mark themselves Superseded — the history stays intact.' },
+                  { title: 'Attach the PDF & Send', desc: 'Upload the signed proposal and mark it sent to the client.' },
+                  { title: 'Capture the Outcome', desc: 'Mark Accepted or Declined — win/loss feeds bidding analytics.' },
+                  { title: 'Accepted Becomes the Contract', desc: 'The accepted amount headlines this project going forward.' },
                 ]} />
               </SectionCard>
             </div>
@@ -334,13 +334,13 @@ export default function ProposalPage() {
       )}
 
       {/* Version history */}
-      <SectionCard title="Proposal Versions" icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />} flush>
+      <SectionCard title="Proposal Versions" icon={<ClockCounterClockwise size={17} weight="duotone" style={{ color: GOLD }} />} flush>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading...</div>
+          <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading…</div>
         ) : proposals.length === 0 ? (
           <PremiumEmpty
-            icon={<FileText size={30} weight="duotone" color={GOLD} />}
-            title="No proposals yet"
+            icon={<FileText size={30} weight="duotone" style={{ color: GOLD }} />}
+            title="No Proposals Yet"
             description={revised > 0
               ? `The contract sum to date is ${fmt(revised)} — start v1.0 prefilled at that amount, then version every revision and capture the win or loss.`
               : 'Create your first proposal version to start tracking contract amounts and outcomes.'}
@@ -356,7 +356,7 @@ export default function ProposalPage() {
               <thead>
                 <tr style={{ background: 'rgba(255,255,255,0.03)' }}>
                   {['Version','Created','Amount','Status','Notes','Actions'].map(h => (
-                    <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: DIM, borderBottom: '1px solid rgba(255,255,255,0.08)', whiteSpace: 'nowrap' }}>{h}</th>
+                    <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: '1px solid rgba(255,255,255,0.08)', whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -374,11 +374,11 @@ export default function ProposalPage() {
                       <td style={{ padding: '10px 16px', color: DIM }}>{p.notes}</td>
                       <td style={{ padding: '10px 16px', whiteSpace: 'nowrap', display: 'flex', gap: 6, alignItems: 'center' }}>
                         {p.pdf_url && <button onClick={() => openPdf({ url: p.pdf_url! })} style={{ padding: '4px 10px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer' }}>View PDF</button>}
-                        {s === 'draft' && <button onClick={() => handleSend(p.id)} style={{ padding: '4px 10px', background: 'rgba(245,158,11,.2)', border: '1px solid rgba(245,158,11,.4)', borderRadius: 5, color: '#FBBF24', fontSize: 12, cursor: 'pointer' }}>Send</button>}
+                        {s === 'draft' && <button onClick={() => handleSend(p.id)} style={{ padding: '4px 10px', background: 'color-mix(in srgb, var(--brand-primary) 20%, transparent)', border: '1px solid color-mix(in srgb, var(--brand-primary) 40%, transparent)', borderRadius: 5, color: 'var(--brand-primary-strong)', fontSize: 12, cursor: 'pointer' }}>Send</button>}
                         {!outcomeSet && <button onClick={() => handleMarkOutcome(p, true)} style={{ padding: '4px 10px', background: 'rgba(61,214,140,.2)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 5, color: GREEN, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Mark Accepted</button>}
                         {!outcomeSet && <button onClick={() => handleMarkOutcome(p, false)} style={{ padding: '4px 10px', background: 'rgba(239,68,68,.2)', border: '1px solid rgba(239,68,68,.4)', borderRadius: 5, color: RED, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Mark Declined</button>}
                         <label style={{ padding: '4px 10px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer' }}>
-                          {uploadingId === p.id ? 'Uploading...' : 'Upload PDF'}
+                          {uploadingId === p.id ? 'Uploading…' : 'Upload PDF'}
                           <input type="file" accept=".pdf" style={{ display: 'none' }} onChange={e => { if (e.target.files?.[0]) handleUpload(p.id, e.target.files[0]); }} />
                         </label>
                       </td>

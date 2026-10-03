@@ -13,8 +13,8 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
-const GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A',BLUE='#F59E0B';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
+const GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A',BLUE='var(--brand-primary)';
 
 const CATEGORIES=['Flooring','Countertops','Cabinets','Plumbing Fixtures','Lighting',
   'Appliances','Tile','Paint','Hardware','Other'];
@@ -30,7 +30,7 @@ const STATUS_LABELS:Record<string,string>={
 const fmt=(n:number)=>'$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
 
 const inp:React.CSSProperties={
-  width:'100%',padding:'9px 12px',background:'#1c1c1e',
+  width:'100%',padding:'9px 12px',background:'var(--bg-surface-2)',
   border:'1px solid rgba(255,255,255,0.12)',borderRadius:7,color:'#FFFFFF',
   fontSize:13,outline:'none',boxSizing:'border-box',
 };
@@ -47,7 +47,7 @@ function Field({label,children,auto}:{label:string;children:React.ReactNode;auto
   return(
     <div>
       <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,
-        textTransform:'uppercase',letterSpacing:.5,marginBottom:5}}>{label}{auto&&<AutoChip/>}</label>
+        marginBottom:5}}>{label}{auto&&<AutoChip/>}</label>
       {children}
     </div>
   );
@@ -56,7 +56,7 @@ function Field({label,children,auto}:{label:string;children:React.ReactNode;auto
 function Pill({label,color}:{label:string;color:string}){
   return(
     <span style={{fontSize:10,fontWeight:700,padding:'3px 9px',borderRadius:20,
-      background:`${color}22`,color,textTransform:'uppercase',letterSpacing:.3}}>
+      background:`color-mix(in srgb, ${color} 13%, transparent)`,color}}>
       {label}
     </span>
   );
@@ -149,7 +149,7 @@ export default function SelectionsPage(){
   function closePanel(){setSelected(null);setMode(null);}
 
   async function save(): Promise<boolean> {
-    if(!form.item.trim()){showToast('Item name is required','error');return false;}
+    if(!form.item.trim()){showToast('Item name is required.','error');return false;}
     setSaving(true);
     try{
       const h=await getAuthHeaders();
@@ -239,7 +239,7 @@ export default function SelectionsPage(){
 
           {/* Header */}
           <ModuleHero
-            eyebrow="SELECTIONS"
+            eyebrow="Selections"
             eyebrowIcon={<Palette size={13} weight="fill" color={GOLD} />}
             title="Client"
             accent="Selections"
@@ -290,7 +290,7 @@ export default function SelectionsPage(){
               module="selections"
               search={search}
               onSearch={setSearch}
-              searchPlaceholder="Search selections by item or manufacturer..."
+              searchPlaceholder="Search selections by item or manufacturer…"
               filters={[
                 {key:'category',label:'Category',value:filterCat,onChange:setFilterCat,allLabel:'All Categories',
                   options:cats as string[]},
@@ -301,7 +301,7 @@ export default function SelectionsPage(){
               style={{marginBottom:18}}
             />
 
-            {loading&&<div style={{padding:40,textAlign:'center',color:DIM}}>Loading selections...</div>}
+            {loading&&<div style={{padding:40,textAlign:'center',color:DIM}}>Loading selections…</div>}
 
             {!loading&&loadError&&(
               <PremiumEmpty
@@ -327,10 +327,10 @@ export default function SelectionsPage(){
                   )}
                 </div>
                 <FlowStrip steps={[
-                  {title:'Log the selection',desc:'price vs allowance tracked'},
-                  {title:'Owner approves',desc:'recorded in one click'},
-                  {title:'Order to install',desc:'status advances from the log'},
-                  {title:'Variance rolls up',desc:'feeds the budget bar live'},
+                  {title:'Log the Selection',desc:'Price vs allowance tracked'},
+                  {title:'Owner Approves',desc:'Recorded in one click'},
+                  {title:'Order to Install',desc:'Status advances from the log'},
+                  {title:'Variance Rolls Up',desc:'Feeds the budget bar live'},
                 ]} />
               </div>
             )}
@@ -338,10 +338,10 @@ export default function SelectionsPage(){
             {/* Grouped by category */}
             {!loading&&filtered.length>0&&Object.entries(grouped).map(([cat,catItems])=>(
               <div key={cat} style={{marginBottom:24}}>
-                <div style={{fontSize:12,fontWeight:800,color:GOLD,textTransform:'uppercase',
-                  letterSpacing:.5,marginBottom:10,display:'flex',alignItems:'center',gap:8}}>
+                <div style={{fontSize:12,fontWeight:800,color:GOLD,
+                  marginBottom:10,display:'flex',alignItems:'center',gap:8}}>
                   {cat}
-                  <span style={{fontSize:10,fontWeight:600,color:DIM,textTransform:'none',letterSpacing:0}}>
+                  <span style={{fontSize:10,fontWeight:600,color:DIM}}>
                     {catItems.length} item{catItems.length!==1?'s':''}
                   </span>
                 </div>
@@ -351,10 +351,10 @@ export default function SelectionsPage(){
                     const color=STATUS_COLORS[item.status]||DIM;
                     return(
                       <div key={item.id} onClick={()=>viewItem(item)}
-                        style={{background:isSel?'rgba(245, 158, 11,.07)':RAISED,
+                        style={{background:isSel?'var(--brand-primary-08)':RAISED,
                           border:`1px solid ${isSel?GOLD:BORDER}`,borderRadius:10,
                           padding:'12px 16px',cursor:'pointer',transition:'all .15s'}}
-                        onMouseEnter={e=>{if(!isSel)e.currentTarget.style.borderColor='rgba(245, 158, 11,.4)';}}
+                        onMouseEnter={e=>{if(!isSel)e.currentTarget.style.borderColor='var(--brand-primary-35)';}}
                         onMouseLeave={e=>{if(!isSel)e.currentTarget.style.borderColor=BORDER;}}>
                         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10}}>
                           <div style={{flex:1,minWidth:0}}>
@@ -374,7 +374,7 @@ export default function SelectionsPage(){
                           </div>
                           <div style={{textAlign:'right',flexShrink:0}}>
                             {item.cost>0&&<div style={{fontWeight:800,fontSize:14,color:TEXT}}>{fmt(item.cost)}</div>}
-                            {item.allowance>0&&<div style={{fontSize:11,color:DIM}}>Allow: {fmt(item.allowance)}</div>}
+                            {item.allowance>0&&<div style={{fontSize:11,color:DIM}}>Allowance: {fmt(item.allowance)}</div>}
                           </div>
                         </div>
                       </div>
@@ -400,14 +400,14 @@ export default function SelectionsPage(){
               {mode==='view'&&selected&&(
                 <>
                   <button onClick={()=>openEdit(selected)}
-                    style={{padding:'6px 14px',background:'rgba(245,158,11,.1)',border:`1px solid ${BLUE}44`,
-                      borderRadius:6,color:'#FBBF24',fontSize:12,fontWeight:700,cursor:'pointer'}}>
+                    style={{padding:'6px 14px',background:'var(--brand-primary-12)',border:'1px solid var(--brand-primary-25)',
+                      borderRadius:6,color:'var(--brand-primary-strong)',fontSize:12,fontWeight:700,cursor:'pointer'}}>
                     Edit
                   </button>
                   <button onClick={()=>deleteItem(selected)} disabled={deleting}
                     style={{padding:'6px 14px',background:'rgba(192,48,48,.1)',border:`1px solid ${RED}44`,
                       borderRadius:6,color:RED,fontSize:12,fontWeight:700,cursor:'pointer'}}>
-                    {deleting?'...':'Delete'}
+                    {deleting?'…':'Delete'}
                   </button>
                 </>
               )}
@@ -425,9 +425,9 @@ export default function SelectionsPage(){
                 {mode==='create'&&(
                   <StatStrip items={[
                     {href: `/app/projects/${projectId}/selections`, label:'Selections Made', value:String(items.length-pendingCount), sub:`of ${items.length} logged`},
-                    {href: `/app/projects/${projectId}/selections`, label:'Pending', value:String(pendingCount), accent:pendingCount>0?ORANGE:undefined, sub:'awaiting decision'},
-                    {href: `/app/projects/${projectId}/selections`, label:'Total Allowance', value:fmt(totalAllowance), sub:'across all items'},
-                    {href: `/app/projects/${projectId}/selections`, label:'Variance', value:(overage>0?'+':'')+fmt(overage), accent:overage>0?RED:GREEN, sub:overage>0?'over allowances':'under allowances'},
+                    {href: `/app/projects/${projectId}/selections`, label:'Pending', value:String(pendingCount), accent:pendingCount>0?ORANGE:undefined, sub:'Awaiting decision'},
+                    {href: `/app/projects/${projectId}/selections`, label:'Total Allowance', value:fmt(totalAllowance), sub:'Across all items'},
+                    {href: `/app/projects/${projectId}/selections`, label:'Variance', value:(overage>0?'+':'')+fmt(overage), accent:overage>0?RED:GREEN, sub:overage>0?'Over allowances':'Under allowances'},
                   ]}/>
                 )}
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
@@ -459,12 +459,12 @@ export default function SelectionsPage(){
                 </div>
                 <Field label="Item Name *">
                   <input value={form.item} onChange={e=>setForm(f=>({...f,item:e.target.value}))}
-                    style={inp} placeholder="Kitchen Faucet, Quartz Countertop..."/>
+                    style={inp} placeholder="Kitchen faucet, quartz countertop…"/>
                 </Field>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
                   <Field label="Manufacturer / Vendor">
                     <Suggest value={form.manufacturer} onChange={e=>setForm(f=>({...f,manufacturer:e.target.value}))}
-                      style={inp} placeholder="Kohler, Moen..." options={['v']} />
+                      style={inp} placeholder="Kohler, Moen…" options={['v']} />
                     {(ctx?.vendors||[]).length>0&&<div style={HINT}>{(ctx.vendors||[]).length} known vendors on this project — start typing to match.</div>}
                   </Field>
                   <Field label="Model / SKU">
@@ -494,9 +494,9 @@ export default function SelectionsPage(){
                   return(
                     <div style={{background:over?'rgba(192,48,48,.07)':'rgba(26,138,74,.07)',
                       border:`1px solid ${over?RED:GREEN}33`,borderRadius:10,padding:'10px 14px'}}>
-                      <InsightRow label="Selected price" value={fmt(price)}/>
+                      <InsightRow label="Selected Price" value={fmt(price)}/>
                       <InsightRow label="Allowance" value={fmt(allow)}/>
-                      <InsightRow label={over?'Over allowance':v<0?'Under allowance':'On allowance'}
+                      <InsightRow label={over?'Over Allowance':v<0?'Under Allowance':'On Allowance'}
                         value={(over?'+':'')+fmt(v)} accent={over?RED:'#3dd68c'} strong/>
                     </div>
                   );
@@ -515,12 +515,12 @@ export default function SelectionsPage(){
                 </div>
                 <Field label="Product Link">
                   <input value={form.link} onChange={e=>setForm(f=>({...f,link:e.target.value}))}
-                    style={inp} placeholder="https://..."/>
+                    style={inp} placeholder="https://…"/>
                 </Field>
                 <Field label="Notes">
                   <textarea value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))}
                     rows={3} style={{...inp,resize:'vertical',lineHeight:1.5}}
-                    placeholder="Additional notes..."/>
+                    placeholder="Additional notes…"/>
                 </Field>
                 <div style={{display:'flex',alignItems:'center',gap:10}}>
                   <input type="checkbox" id="oa" checked={form.owner_approved}
@@ -531,17 +531,17 @@ export default function SelectionsPage(){
                 <div style={{...HINT,marginTop:-8}}>Leave unchecked to track the decision{ctx?.project?.ownerName?` with ${ctx.project.ownerName}`:''} — approval can be recorded later from the detail view.</div>
                 {mode==='create'&&(
                   <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:'14px 16px'}}>
-                    <FlowSteps title="After you save" steps={[
-                      {title:'Owner decision tracked', desc:ctx?.project?.ownerName?`Shows as pending until ${ctx.project.ownerName} approves — record it in one click.`:'Shows as pending until owner approval is recorded in one click.'},
-                      {title:'Variance rolls up live', desc:'Price vs allowance feeds the budget bar and the over/under total the moment you save.'},
-                      {title:'Order to install', desc:'Advance status through Ordered, Delivered and Installed straight from the log.'},
+                    <FlowSteps title="After You Save" steps={[
+                      {title:'Owner Decision Tracked', desc:ctx?.project?.ownerName?`Shows as pending until ${ctx.project.ownerName} approves — record it in one click.`:'Shows as pending until owner approval is recorded in one click.'},
+                      {title:'Variance Rolls Up Live', desc:'Price vs allowance feeds the budget bar and the over/under total the moment you save.'},
+                      {title:'Order to Install', desc:'Advance status through Ordered, Delivered and Installed straight from the log.'},
                     ]}/>
                   </div>
                 )}
                 <div style={{display:'flex',gap:10,paddingTop:4}}>
                   <button onClick={save} disabled={saving} className="pmBtn"
                     style={{...goldButtonStyle,flex:1,padding:'11px 0',fontSize:14,opacity:saving?0.6:1}}>
-                    {saving?'Saving...':mode==='create'?'Add Selection':'Save Changes'}
+                    {saving?'Saving…':mode==='create'?'Add Selection':'Save Changes'}
                   </button>
                   <button onClick={closePanel} className="pmBtn"
                     style={{...ghostButtonStyle,padding:'11px 16px',fontSize:14,color:DIM}}>
@@ -552,8 +552,8 @@ export default function SelectionsPage(){
             ):selected?(
               <div style={{display:'flex',flexDirection:'column',gap:14}}>
                 <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:16}}>
-                  <div style={{fontSize:10,fontWeight:700,color:GOLD,textTransform:'uppercase',
-                    letterSpacing:.5,marginBottom:6}}>{selected.category}</div>
+                  <div style={{fontSize:10,fontWeight:700,color:GOLD,
+                    marginBottom:6}}>{selected.category}</div>
                   <div style={{fontSize:18,fontWeight:800,color:TEXT,marginBottom:8}}>{selected.item}</div>
                   <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:12}}>
                     <Pill label={STATUS_LABELS[selected.status]||selected.status} color={STATUS_COLORS[selected.status]||DIM}/>
@@ -581,9 +581,9 @@ export default function SelectionsPage(){
                     {l:'Decision Due',v:selected.due_date?new Date(selected.due_date+'T12:00:00')
                       .toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):null},
                   ].filter(x=>x.v).map(x=>(
-                    <div key={x.l} style={{background:'#141416',border:`1px solid ${BORDER}`,
+                    <div key={x.l} style={{background:'var(--bg-surface-2)',border:`1px solid ${BORDER}`,
                       borderRadius:8,padding:'10px 12px'}}>
-                      <div style={{fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:4}}>{x.l}</div>
+                      <div style={{fontSize:10,fontWeight:700,color:DIM,marginBottom:4}}>{x.l}</div>
                       <div style={{fontSize:13,color:TEXT}}>{x.v}</div>
                     </div>
                   ))}
@@ -592,7 +592,7 @@ export default function SelectionsPage(){
                 {selected.cost>0&&selected.allowance>0&&(
                   <div style={{background:selected.cost>selected.allowance?'rgba(192,48,48,.07)':'rgba(26,138,74,.07)',
                     border:`1px solid ${selected.cost>selected.allowance?RED:GREEN}33`,borderRadius:8,padding:'10px 14px'}}>
-                    <div style={{fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:4}}>
+                    <div style={{fontSize:11,fontWeight:700,color:DIM,marginBottom:4}}>
                       Budget Impact
                     </div>
                     <div style={{fontSize:14,fontWeight:800,color:selected.cost>selected.allowance?RED:GREEN}}>
@@ -603,16 +603,16 @@ export default function SelectionsPage(){
 
                 {selected.link&&(
                   <a href={selected.link} target="_blank" rel="noopener noreferrer"
-                    style={{display:'block',padding:'10px 14px',background:'rgba(245,158,11,.1)',
-                      border:`1px solid ${BLUE}44`,borderRadius:8,color:'#FBBF24',
+                    style={{display:'block',padding:'10px 14px',background:'var(--brand-primary-12)',
+                      border:'1px solid var(--brand-primary-25)',borderRadius:8,color:'var(--brand-primary-strong)',
                       fontSize:13,fontWeight:600,textAlign:'center',textDecoration:'none'}}>
                     View Product Link
                   </a>
                 )}
 
                 {selected.notes&&(
-                  <div style={{background:'#141416',border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
-                    <div style={{fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:6}}>Notes</div>
+                  <div style={{background:'var(--bg-surface-2)',border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
+                    <div style={{fontSize:10,fontWeight:700,color:DIM,marginBottom:6}}>Notes</div>
                     <div style={{fontSize:13,color:TEXT,lineHeight:1.6,whiteSpace:'pre-wrap'}}>{selected.notes}</div>
                   </div>
                 )}

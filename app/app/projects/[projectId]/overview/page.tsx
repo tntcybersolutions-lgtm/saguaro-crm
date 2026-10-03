@@ -21,7 +21,7 @@ import GettingStartedRail from '@/components/GettingStartedRail';
 import ProjectOwnershipCard from '@/components/projects/ProjectOwnershipCard';
 import { StatStrip } from '@/components/ui/premium';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#22C55E',RED='#EF4444';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface-2)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#22C55E',RED='#EF4444';
 const fmt = (n:number|null|undefined) => '$'+((n ?? 0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
 const fmtPct = (a:number|null|undefined,b:number|null|undefined) => (b ?? 0)>0?(((a ?? 0)/(b as number))*100).toFixed(1)+'%':'0%';
 
@@ -112,7 +112,7 @@ export default function OverviewPage(){
       <div style={{maxWidth:560,margin:'40px auto'}}>
         <EmptyStatePremium
           icon={<WarningCircle size={38} weight="duotone" color={RED}/>}
-          title="Couldn't load project"
+          title="Couldn't Load Project"
           description={error}
           actionLabel="Retry"
           onAction={load}
@@ -127,7 +127,7 @@ export default function OverviewPage(){
       <div style={{maxWidth:560,margin:'40px auto'}}>
         <EmptyStatePremium
           icon={<FolderOpen size={38} weight="duotone" color={GOLD}/>}
-          title="Project not found"
+          title="Project Not Found"
           description="This project doesn't exist or you don't have access to it."
           actionLabel="Back to Projects"
           actionHref="/app/projects"
@@ -213,7 +213,7 @@ export default function OverviewPage(){
         title={p.name}
         subtitle={[p.address,p.city,p.state].filter(Boolean).join(', ') || 'Command center for this project — financials, schedule, and field health at a glance.'}
         actions={<>
-          <HeroButton href={'/app/projects/'+projectId+'/pay-apps/new'} icon={<Plus size={15} weight="bold" color="#241a05" />}>
+          <HeroButton href={'/app/projects/'+projectId+'/pay-apps/new'} icon={<Plus size={15} weight="bold" color="#0A0A00" />}>
             New Pay App
           </HeroButton>
         </>}
@@ -249,11 +249,11 @@ export default function OverviewPage(){
 
       {/* Field pulse — open items, schedule risk, and documentation, from the context snapshot */}
       {ctx&&<StatStrip items={[
-        {href: `/app/projects/${projectId}/rfis`, icon:<Question size={11} weight="bold" color={CIN.goldHi}/>, label:'Open RFIs', value:String(openRfiCount), accent:overdueRFIs.length>0?RED:openRfiCount>0?CIN.goldHi:undefined, sub:overdueRFIs.length>0?overdueRFIs.length+' overdue — respond now':openRfiCount>0?'awaiting answers':'all answered'},
-        {href: `/app/projects/${projectId}/submittals`, icon:<Tray size={11} weight="bold" color={CIN.goldHi}/>, label:'Open Submittals', value:String(openSubmittalCount), accent:openSubmittalCount>0?CIN.goldHi:undefined, sub:openSubmittalCount>0?'in review':'nothing in court'},
-        {href: `/app/projects/${projectId}/punch-list`, icon:<ListChecks size={11} weight="bold" color={CIN.goldHi}/>, label:'Open Punch', value:String(openPunchCount), accent:openPunchCount>0?CIN.goldHi:undefined, sub:punchSummary.complete>0?punchSummary.complete+' closed to date':openPunchCount>0?'items to close':'list is clear'},
-        {href: `/app/projects/${projectId}/schedule`, icon:<Warning size={11} weight="bold" color={CIN.goldHi}/>, label:'Critical Path', value:String(criticalTasks), accent:criticalTasks>0?RED:undefined, sub:criticalTasks>0?'tasks can slip the finish':'no critical tasks open'},
-        {href: `/app/projects/${projectId}/daily-logs`, icon:<NotePencil size={11} weight="bold" color={CIN.goldHi}/>, label:'Last Daily Log', value:logAgeDays==null?'—':logAgeDays===0?'Today':logAgeDays+'d ago', accent:logAgeDays!=null&&logAgeDays>3?RED:undefined, sub:lastLogDate?fmtShortDate(lastLogDate):'no field logs yet'},
+        {href: `/app/projects/${projectId}/rfis`, icon:<Question size={11} weight="bold" color={CIN.goldHi}/>, label:'Open RFIs', value:String(openRfiCount), accent:overdueRFIs.length>0?RED:openRfiCount>0?CIN.goldHi:undefined, sub:overdueRFIs.length>0?overdueRFIs.length+' overdue — respond now':openRfiCount>0?'Awaiting answers':'All answered'},
+        {href: `/app/projects/${projectId}/submittals`, icon:<Tray size={11} weight="bold" color={CIN.goldHi}/>, label:'Open Submittals', value:String(openSubmittalCount), accent:openSubmittalCount>0?CIN.goldHi:undefined, sub:openSubmittalCount>0?'In review':'Nothing in court'},
+        {href: `/app/projects/${projectId}/punch-list`, icon:<ListChecks size={11} weight="bold" color={CIN.goldHi}/>, label:'Open Punch', value:String(openPunchCount), accent:openPunchCount>0?CIN.goldHi:undefined, sub:punchSummary.complete>0?punchSummary.complete+' closed to date':openPunchCount>0?'Items to close':'List is clear'},
+        {href: `/app/projects/${projectId}/schedule`, icon:<Warning size={11} weight="bold" color={CIN.goldHi}/>, label:'Critical Path', value:String(criticalTasks), accent:criticalTasks>0?RED:undefined, sub:criticalTasks>0?'Tasks can slip the finish':'No critical tasks open'},
+        {href: `/app/projects/${projectId}/daily-logs`, icon:<NotePencil size={11} weight="bold" color={CIN.goldHi}/>, label:'Last Daily Log', value:logAgeDays==null?'—':logAgeDays===0?'Today':logAgeDays+'d ago', accent:logAgeDays!=null&&logAgeDays>3?RED:undefined, sub:lastLogDate?fmtShortDate(lastLogDate):'No field logs yet'},
         {href: `/app/projects/${projectId}/overview`, icon:<CurrencyDollar size={11} weight="bold" color={CIN.goldHi}/>, label:'Money Docs', value:String(moneyDocCount), sub:invoiceCount+' inv · '+billCount+' bills · '+poCount+' POs'},
       ]}/>}
 
@@ -264,14 +264,14 @@ export default function OverviewPage(){
 
       {alerts.length>0&&<div style={{marginBottom:18}}>
         {/* Autopilot de-featured: a secondary Intelligence card, not a hero action. */}
-        <SectionCard flat title="Intelligence · Autopilot alerts" icon={<Lightning size={18} weight="duotone" color={CIN.goldHi}/>}
+        <SectionCard flat title="Intelligence · Autopilot Alerts" icon={<Lightning size={18} weight="duotone" color={CIN.goldHi}/>}
           action={<span style={{display:'inline-flex',gap:14,alignItems:'center'}}>
-            <button onClick={runAutopilot} disabled={scanning} style={{all:'unset',cursor:scanning?'wait':'pointer',fontSize:12,fontWeight:700,color:CIN.goldHi}}>{scanning?'Scanning…':'Re-scan'}</button>
-            <SectionLink href={'/app/projects/'+projectId+'/autopilot'}>All alerts <ArrowRight size={11} weight="bold" color={CIN.goldHi}/></SectionLink>
+            <button onClick={runAutopilot} disabled={scanning} style={{all:'unset',cursor:scanning?'wait':'pointer',fontSize:12,fontWeight:700,color:CIN.goldHi}}>{scanning?'Scanning…':'Re-Scan'}</button>
+            <SectionLink href={'/app/projects/'+projectId+'/autopilot'}>All Alerts <ArrowRight size={11} weight="bold" color={CIN.goldHi}/></SectionLink>
           </span>}>
           {alerts.slice(0,3).map((a:any)=>(
             <div key={a.id} style={{display:'flex',alignItems:'flex-start',gap:10,padding:'8px 0',borderBottom:`1px solid ${CIN.border}`}}>
-              <div style={{width:6,height:6,borderRadius:'50%',background:GOLD,marginTop:6,flexShrink:0,boxShadow:'0 0 8px rgba(245,158,11,.7)'}}/>
+              <div style={{width:6,height:6,borderRadius:'50%',background:GOLD,marginTop:6,flexShrink:0,boxShadow:'0 0 8px color-mix(in srgb, var(--brand-primary) 70%, transparent)'}}/>
               <div style={{minWidth:0}}><div style={{fontSize:13,color:TEXT,fontWeight:600}}>{a.title}</div><div style={{fontSize:11.5,color:CIN.faint,marginTop:1}}>{a.message}</div></div>
               <div style={{marginLeft:'auto',fontSize:10,color:CIN.faint,whiteSpace:'nowrap' as const}}>{new Date(a.created_at).toLocaleDateString()}</div>
             </div>
@@ -292,7 +292,7 @@ export default function OverviewPage(){
                 <span style={{color:budgetVariance>0?RED:GREEN,fontWeight:700}}>{budgetPct}% spent</span>
               </div>
               <div style={{height:9,background:'rgba(255,255,255,0.06)',borderRadius:999,overflow:'hidden'}}>
-                <div style={{height:'100%',background:parseFloat(budgetPct)>90?RED:parseFloat(budgetPct)>75?GOLD:GREEN,width:Math.min(100,parseFloat(budgetPct))+'%',borderRadius:999,transition:'width .5s ease',boxShadow:'0 0 12px rgba(245,158,11,.4)'}}/>
+                <div style={{height:'100%',background:parseFloat(budgetPct)>90?RED:parseFloat(budgetPct)>75?GOLD:GREEN,width:Math.min(100,parseFloat(budgetPct))+'%',borderRadius:999,transition:'width .5s ease',boxShadow:'0 0 12px var(--brand-primary-35)'}}/>
               </div>
             </div>
             {[['Original Budget',fmt(budgetHealth.originalBudget)],...(Number(budgetHealth.approvedChanges)?[['Approved Changes','+'+fmt(budgetHealth.approvedChanges)],['Revised Budget',fmt(budgetBasis)]]:[]),['Committed Cost',fmt(budgetHealth.committedCost)],['Actual Cost',fmt(budgetHealth.actualCost)],['Forecast',fmt(budgetHealth.forecastCost)],['Variance',fmt(Math.abs(budgetVariance))+(budgetVariance>0?' over':' under')]].map(([l,v]:any)=>summaryRow(l,v,l==='Variance'?(budgetVariance>0?RED:GREEN):undefined))}
@@ -322,15 +322,15 @@ export default function OverviewPage(){
             {[
               {icon:<Receipt size={15} weight="duotone" color={CIN.goldHi}/>, href:'/app/projects/'+projectId+'/pay-apps',
                 title: ctxLastApp?'Pay App #'+ctxLastApp.appNumber+' · '+String(ctxLastApp.status||'draft').replace(/_/g,' '):'No pay applications yet',
-                sub: ctxLastApp?'billed through '+fmtShortDate(ctxLastApp.periodTo):'billing starts with App #1',
+                sub: ctxLastApp?'Billed through '+fmtShortDate(ctxLastApp.periodTo):'Billing starts with App #1',
                 value: ctxLastApp?fmt(Number(ctxLastApp.currentPaymentDue)||0):'—'},
               {icon:<ArrowsLeftRight size={15} weight="duotone" color={CIN.goldHi}/>, href:'/app/projects/'+projectId+'/change-orders',
                 title:(Number(cm?.approvedCoCount)||0)+' change order'+((Number(cm?.approvedCoCount)||0)===1?'':'s')+' approved',
-                sub:(Number(cm?.pendingCoCount)||0)>0?(Number(cm?.pendingCoCount)||0)+' pending decision':'none pending decision',
+                sub:(Number(cm?.pendingCoCount)||0)>0?(Number(cm?.pendingCoCount)||0)+' pending decision':'None pending decision',
                 value:(ctxCoTotal>=0?'+':'')+fmt(ctxCoTotal)},
               {icon:<NotePencil size={15} weight="duotone" color={CIN.goldHi}/>, href:'/app/projects/'+projectId+'/daily-logs',
                 title: lastLogDate?'Daily log filed':'No daily logs yet',
-                sub: lastLogDate?(logAgeDays===0?'today':logAgeDays+' day'+(logAgeDays===1?'':'s')+' ago'):'field history builds the claim file',
+                sub: lastLogDate?(logAgeDays===0?'Today':logAgeDays+' day'+(logAgeDays===1?'':'s')+' ago'):'Field history builds the claim file',
                 value: lastLogDate?fmtShortDate(lastLogDate):'—'},
               {icon:<CurrencyDollar size={15} weight="duotone" color={CIN.goldHi}/>, href:'/app/projects/'+projectId+'/invoices',
                 title: moneyDocCount>0?'Outstanding receivable':'No billing documents yet',
@@ -338,7 +338,7 @@ export default function OverviewPage(){
                 value: fmt(Math.max(0,ctxBilled-ctxPaid))},
             ].map(row=>(
               <Link key={row.href} href={row.href} style={{display:'flex',alignItems:'center',gap:10,padding:'9px 0',borderBottom:`1px solid ${CIN.border}`,textDecoration:'none'}}>
-                <span style={{width:28,height:28,borderRadius:8,flexShrink:0,display:'inline-flex',alignItems:'center',justifyContent:'center',background:'linear-gradient(150deg, rgba(245,158,11,0.16), rgba(245,158,11,0.04))',border:'1px solid rgba(245,158,11,0.26)'}}>{row.icon}</span>
+                <span style={{width:28,height:28,borderRadius:8,flexShrink:0,display:'inline-flex',alignItems:'center',justifyContent:'center',background:'linear-gradient(150deg, var(--brand-primary-18), color-mix(in srgb, var(--brand-primary) 4%, transparent))',border:'1px solid var(--brand-primary-25)'}}>{row.icon}</span>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{fontSize:13,color:TEXT,fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{row.title}</div>
                   <div style={{fontSize:11.5,color:CIN.faint}}>{row.sub}</div>
@@ -357,7 +357,7 @@ export default function OverviewPage(){
                 <span style={{color:CIN.goldHi,fontWeight:800}}>{fmtPct(heroBilled,heroContract)}</span>
               </div>
               <div style={{height:8,background:'rgba(255,255,255,0.06)',borderRadius:999,overflow:'hidden'}}>
-                <div style={{height:'100%',width:Math.min(100,heroContract>0?(heroBilled/heroContract)*100:0)+'%',background:`linear-gradient(90deg,${GOLD},#FBBF24)`,borderRadius:999,boxShadow:'0 0 12px rgba(245,158,11,.4)'}}/>
+                <div style={{height:'100%',width:Math.min(100,heroContract>0?(heroBilled/heroContract)*100:0)+'%',background:`linear-gradient(90deg,${GOLD},var(--brand-primary-strong))`,borderRadius:999,boxShadow:'0 0 12px var(--brand-primary-35)'}}/>
               </div>
             </div>}
             {[['Original Contract',fmt(Number(p.original_contract)||Number(p.contract_amount)||Number(cm?.originalContract)||0)],['Change Orders','+'+fmt(approvedCOs>0?approvedCOs:ctxCoTotal)],['Contract to Date',fmt(heroContract)],['Billed to Date',fmt(heroBilled)+' ('+fmtPct(heroBilled,heroContract)+')'],['Retainage Held',fmt(retainageHeld)],['Total Paid',fmt(heroPaid)],['Balance Due',fmt(balanceDue)]].map(([l,v]:any)=>summaryRow(l,v))}
@@ -371,7 +371,7 @@ export default function OverviewPage(){
               ].map(s=>(
                 <div key={s.l} style={{flex:1,textAlign:'center' as const,padding:'12px 0',background:s.bg,borderRadius:12,border:`1px solid ${s.bd}`}}>
                   <div style={{fontSize:24,fontWeight:900,color:s.c}}>{s.v}</div>
-                  <div style={{fontSize:10,fontWeight:800,color:CIN.faint,textTransform:'uppercase' as const,marginTop:3,letterSpacing:'0.06em'}}>{s.l}</div>
+                  <div style={{fontSize:10,fontWeight:800,color:CIN.faint,marginTop:3}}>{s.l}</div>
                 </div>
               ))}
             </div>
@@ -388,18 +388,18 @@ export default function OverviewPage(){
                 <div style={{width:8,height:8,borderRadius:'50%',flexShrink:0,background:phase.status==='complete'?GREEN:late?RED:phase.status==='in_progress'?GOLD:CIN.faint}}/>
                 <div style={{flex:1,fontSize:13,color:TEXT,fontWeight:600}}>{phase.name}</div>
                 <div style={{fontSize:11,color:late?RED:CIN.faint}}>{phase.planned_end||'—'}</div>
-                <span style={{fontSize:10,padding:'3px 8px',borderRadius:999,background:phase.status==='complete'?'rgba(34,197,94,.14)':phase.status==='in_progress'?'rgba(245,158,11,.14)':'rgba(148,163,184,.1)',color:phase.status==='complete'?GREEN:phase.status==='in_progress'?GOLD:CIN.faint,fontWeight:800,textTransform:'uppercase' as const,letterSpacing:'0.04em'}}>{phase.status||'pending'}</span>
+                <span style={{fontSize:10,padding:'3px 8px',borderRadius:999,background:phase.status==='complete'?'rgba(34,197,94,.14)':phase.status==='in_progress'?'var(--brand-primary-12)':'rgba(148,163,184,.1)',color:phase.status==='complete'?GREEN:phase.status==='in_progress'?GOLD:CIN.faint,fontWeight:800}}>{((x:string)=>x.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()))(phase.status||'pending')}</span>
               </div>;
             })}
           </SectionCard>}
           <SectionCard title="Subcontractors" icon={<UsersThree size={18} weight="duotone" color={CIN.goldHi}/>} action={<SectionLink href={'/app/projects/'+projectId+'/team'}>Manage <ArrowRight size={11} weight="bold" color={CIN.goldHi}/></SectionLink>} delay={0.2}>
             {subs.length===0
-              ?<div style={{color:CIN.faint,fontSize:13,textAlign:'center',padding:'14px 0'}}>No subs yet. <Link href={'/app/projects/'+projectId+'/team'} style={{color:CIN.goldHi,fontWeight:700}}>Add subs</Link></div>
+              ?<div style={{color:CIN.faint,fontSize:13,textAlign:'center',padding:'14px 0'}}>No subs yet. <Link href={'/app/projects/'+projectId+'/team'} style={{color:CIN.goldHi,fontWeight:700}}>Add Subs</Link></div>
               :subs.slice(0,4).map((sub:any)=>(
                 <div key={sub.id} style={{display:'flex',alignItems:'center',gap:10,padding:'9px 0',borderBottom:`1px solid ${CIN.border}`}}>
-                  <div style={{width:32,height:32,borderRadius:'50%',background:'linear-gradient(150deg, rgba(245,158,11,0.22), rgba(245,158,11,0.06))',border:'1px solid rgba(245,158,11,.28)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800,flexShrink:0,color:CIN.goldHi}}>{sub.name?.[0]||'?'}</div>
+                  <div style={{width:32,height:32,borderRadius:'50%',background:'linear-gradient(150deg, var(--brand-primary-25), var(--brand-primary-08))',border:'1px solid var(--brand-primary-25)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800,flexShrink:0,color:CIN.goldHi}}>{sub.name?.[0]||'?'}</div>
                   <div style={{flex:1,minWidth:0}}><div style={{fontSize:13,color:TEXT,fontWeight:600}}>{sub.name}</div><div style={{fontSize:11.5,color:CIN.faint}}>{sub.trade} — {fmt(sub.contract_amount||0)}</div></div>
-                  <span style={{fontSize:10,padding:'3px 8px',borderRadius:999,background:sub.status==='active'?'rgba(34,197,94,.14)':'rgba(148,163,184,.1)',color:sub.status==='active'?GREEN:CIN.faint,fontWeight:800,textTransform:'uppercase' as const}}>{sub.status}</span>
+                  <span style={{fontSize:10,padding:'3px 8px',borderRadius:999,background:sub.status==='active'?'rgba(34,197,94,.14)':'rgba(148,163,184,.1)',color:sub.status==='active'?GREEN:CIN.faint,fontWeight:800}}>{((x:string)=>x.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()))(String(sub.status||''))}</span>
                 </div>
               ))
             }

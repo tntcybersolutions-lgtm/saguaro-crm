@@ -39,12 +39,12 @@ const PRIORITY_BADGE: Record<string, 'red' | 'amber' | 'muted'> = { high: 'red',
 const PRIORITIES = ['high', 'medium', 'low'];
 
 // Desert-dusk accents (match dashboard) ---------------------------------------
-const GOLD = '#F59E0B';
+const GOLD = 'var(--brand-primary)';
 const GREEN = '#45B37D';
 const RED = '#E0644E';
 
 const inp: React.CSSProperties = { width: '100%', padding: '8px 12px', background: T.surface2, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, outline: 'none' };
-const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: T.muted, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 };
+const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 6 };
 const hint: React.CSSProperties = { fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 };
 
 const localIso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -201,7 +201,7 @@ export default function TodosPage() {
       {/* Header */}
       <ModuleHero
         eyebrow={ctx?.project?.name || 'Tasks'}
-        eyebrowIcon={<Clipboard size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<Clipboard size={13} weight="fill" style={{ color: GOLD }} />}
         title="Project"
         accent="To-Dos"
         subtitle="Project tasks and action items."
@@ -215,10 +215,10 @@ export default function TodosPage() {
       {/* Task intelligence strip — where the work stands right now */}
       {!loading && (todos.length > 0 || ctx) && (
         <StatStrip items={[
-          {href: `/app/projects/${projectId}/todos`,  label: 'Due This Week', value: String(dueThisWeek), accent: dueThisWeek > 0 ? GOLD : undefined, sub: nextDue ? `next: ${nextDue.due_date} — ${nextDue.title.slice(0, 24)}` : 'nothing coming due' },
-          {href: `/app/projects/${projectId}/todos`,  label: 'Overdue', value: String(overdueCount), accent: overdueCount > 0 ? RED : GREEN, sub: overdueCount > 0 ? 'needs attention today' : 'nothing slipping' },
-          {href: `/app/projects/${projectId}/todos`,  label: 'High Priority Open', value: String(highOpen), accent: highOpen > 0 ? RED : undefined, sub: highOpen > 0 ? 'knock these out first' : 'no fires burning' },
-          {href: `/app/projects/${projectId}/todos`,  label: 'Unassigned', value: String(unassigned), accent: unassigned > 0 ? GOLD : undefined, sub: unassigned > 0 ? 'no owner yet — assign below' : 'every task has an owner' },
+          {href: `/app/projects/${projectId}/todos`,  label: 'Due This Week', value: String(dueThisWeek), accent: dueThisWeek > 0 ? GOLD : undefined, sub: nextDue ? `Next: ${nextDue.due_date} — ${nextDue.title.slice(0, 24)}` : 'Nothing coming due' },
+          {href: `/app/projects/${projectId}/todos`,  label: 'Overdue', value: String(overdueCount), accent: overdueCount > 0 ? RED : GREEN, sub: overdueCount > 0 ? 'Needs attention today' : 'Nothing slipping' },
+          {href: `/app/projects/${projectId}/todos`,  label: 'High Priority Open', value: String(highOpen), accent: highOpen > 0 ? RED : undefined, sub: highOpen > 0 ? 'Knock these out first' : 'No fires burning' },
+          {href: `/app/projects/${projectId}/todos`,  label: 'Unassigned', value: String(unassigned), accent: unassigned > 0 ? GOLD : undefined, sub: unassigned > 0 ? 'No owner yet — assign below' : 'Every task has an owner' },
           {href: `/app/projects/${projectId}/todos`,  label: 'Completion', value: `${completionPct}%`, accent: completionPct >= 75 ? GREEN : undefined, sub: `${completedCount} of ${totalCount} done` },
           {href: `/app/projects/${projectId}/todos`,  label: 'Busiest Assignee', value: busiest ? busiest[0] : '—', sub: busiest ? `${busiest[1]} open task${busiest[1] === 1 ? '' : 's'}` : `${team.length + subs.length} people on the roster` },
         ]} />
@@ -226,10 +226,10 @@ export default function TodosPage() {
 
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 24 }}>
-        <StatCard icon={<Clipboard size={19} weight="duotone" color={GOLD} />} label="Total" value={String(totalCount)} sub="all tasks" delay={0.02}  href={`/app/projects/${projectId}/todos`}/>
-        <StatCard icon={<Circle size={19} weight="duotone" color={GOLD} />} label="Active" value={String(activeCount)} sub="in progress" accent={activeCount > 0 ? GOLD : undefined} delay={0.06}  href={`/app/projects/${projectId}/todos`}/>
-        <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Completed" value={String(completedCount)} sub="done" accent={completedCount > 0 ? GREEN : undefined} delay={0.10}  href={`/app/projects/${projectId}/todos`}/>
-        <StatCard icon={<Warning size={19} weight="duotone" color={RED} />} label="Overdue" value={String(overdueCount)} sub="past due" accent={overdueCount > 0 ? RED : undefined} delay={0.14}  href={`/app/projects/${projectId}/todos`}/>
+        <StatCard icon={<Clipboard size={19} weight="duotone" style={{ color: GOLD }} />} label="Total" value={String(totalCount)} sub="All tasks" delay={0.02}  href={`/app/projects/${projectId}/todos`}/>
+        <StatCard icon={<Circle size={19} weight="duotone" style={{ color: GOLD }} />} label="Active" value={String(activeCount)} sub="In progress" accent={activeCount > 0 ? GOLD : undefined} delay={0.06}  href={`/app/projects/${projectId}/todos`}/>
+        <StatCard icon={<CheckCircle size={19} weight="duotone" style={{ color: GREEN }} />} label="Completed" value={String(completedCount)} sub="Done" accent={completedCount > 0 ? GREEN : undefined} delay={0.10}  href={`/app/projects/${projectId}/todos`}/>
+        <StatCard icon={<Warning size={19} weight="duotone" style={{ color: RED }} />} label="Overdue" value={String(overdueCount)} sub="Past due" accent={overdueCount > 0 ? RED : undefined} delay={0.14}  href={`/app/projects/${projectId}/todos`}/>
       </div>
 
       {/* List toolbar — search + status/priority filters (replaces the old tab pills) */}
@@ -237,7 +237,7 @@ export default function TodosPage() {
         module="todos"
         search={search}
         onSearch={setSearch}
-        searchPlaceholder="Search tasks..."
+        searchPlaceholder="Search tasks…"
         filters={[
           { key: 'status', label: 'Status', value: filter, onChange: (v: string) => setFilter(v as FilterTab), allLabel: 'All Tasks', options: [
             { value: 'active', label: 'Active' },
@@ -258,11 +258,11 @@ export default function TodosPage() {
       {/* Create Form */}
       {showForm && (
         <div style={{ marginBottom: 24 }}>
-          <SectionCard title="Add Task" icon={<Plus size={16} weight="bold" color={GOLD} />}>
+          <SectionCard title="Add Task" icon={<Plus size={16} weight="bold" style={{ color: GOLD }} />}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
               <div style={{ gridColumn: 'span 2' }}>
                 <label style={lbl}>Title *</label>
-                <input type="text" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="Task description..." style={inp} />
+                <input type="text" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="Task description…" style={inp} />
               </div>
               <div style={{ gridColumn: 'span 2' }}>
                 <label style={lbl}>Description</label>
@@ -284,7 +284,7 @@ export default function TodosPage() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              <button onClick={handleAdd} disabled={saving} className="pmBtn" style={{ ...goldButtonStyle, opacity: saving ? 0.6 : 1, cursor: saving ? 'not-allowed' : 'pointer' }}>{saving ? 'Saving...' : 'Add Task'}</button>
+              <button onClick={handleAdd} disabled={saving} className="pmBtn" style={{ ...goldButtonStyle, opacity: saving ? 0.6 : 1, cursor: saving ? 'not-allowed' : 'pointer' }}>{saving ? 'Saving…' : 'Add Task'}</button>
               <button onClick={() => setShowForm(false)} className="pmBtn" style={ghostButtonStyle}>Cancel</button>
             </div>
           </SectionCard>
@@ -292,13 +292,13 @@ export default function TodosPage() {
       )}
 
       {/* Todo List */}
-      <SectionCard title="Task List" icon={<Clipboard size={16} weight="duotone" color={GOLD} />} flush>
+      <SectionCard title="Task List" icon={<Clipboard size={16} weight="duotone" style={{ color: GOLD }} />} flush>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.62)' }}>Loading...</div>
+          <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.62)' }}>Loading…</div>
         ) : filtered.length === 0 ? (
           <PremiumEmpty
-            icon={<Clipboard size={30} weight="duotone" color={GOLD} />}
-            title={todos.length === 0 ? 'No tasks yet' : filter === 'completed' ? 'Nothing completed yet' : filter === 'active' ? 'No active tasks' : 'No tasks here'}
+            icon={<Clipboard size={30} weight="duotone" style={{ color: GOLD }} />}
+            title={todos.length === 0 ? 'No Tasks Yet' : filter === 'completed' ? 'Nothing Completed Yet' : filter === 'active' ? 'No Active Tasks' : 'No Tasks Here'}
             description={todos.length === 0
               ? (ctx
                 ? `The project already tracks ${Number(ctx?.counts?.openRfis) || 0} open RFI${(Number(ctx?.counts?.openRfis) || 0) === 1 ? '' : 's'} and ${Number(ctx?.counts?.openPunch) || 0} open punch item${(Number(ctx?.counts?.openPunch) || 0) === 1 ? '' : 's'} in their own modules — to-dos capture everything smaller: callbacks, pickups, and field reminders, each with an owner and a due date.`
@@ -331,7 +331,7 @@ export default function TodosPage() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ color: T.white, fontSize: 14, fontWeight: 500, textDecoration: todo.complete ? 'line-through' : 'none' }}>{todo.title}</div>
                     {todo.description && <div style={{ fontSize: 12, color: T.muted, marginTop: 2 }}>{todo.description}</div>}
-                    <div style={{ fontSize: 12, color: todo.assigned_to ? T.muted : 'rgba(245,158,11,0.75)', marginTop: 2 }}>
+                    <div style={{ fontSize: 12, color: todo.assigned_to ? T.muted : 'color-mix(in srgb, var(--brand-primary) 75%, transparent)', marginTop: 2 }}>
                       {todo.assigned_to || (!todo.complete ? 'Unassigned' : '')}
                     </div>
                   </div>
@@ -345,10 +345,10 @@ export default function TodosPage() {
                           : todo.due_date === today
                             ? 'Due today'
                             : `${todo.due_date} (${Math.max(0, Math.round((new Date(todo.due_date + 'T00:00:00').getTime() - new Date(today + 'T00:00:00').getTime()) / 86400000))}d)`
-                      : '---'}
+                      : '—'}
                   </span>
                   {/* Priority */}
-                  <Badge label={todo.priority} color={PRIORITY_BADGE[todo.priority] || 'muted'} />
+                  <Badge label={todo.priority ? todo.priority.charAt(0).toUpperCase() + todo.priority.slice(1) : '—'} color={PRIORITY_BADGE[todo.priority] || 'muted'} />
                 </div>
               );
             })}

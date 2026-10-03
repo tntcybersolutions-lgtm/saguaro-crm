@@ -1,8 +1,8 @@
 'use client';
 
-const GOLD = '#F59E0B';
-const DARK = '#0a0a0a';
-const RAISED = '#141416';
+const GOLD = 'var(--brand-primary)';
+const DARK = 'var(--bg-base)';
+const RAISED = 'var(--bg-surface-2)';
 const BORDER = 'rgba(255,255,255,0.12)';
 
 export default function EstimateLoading() {
@@ -28,7 +28,7 @@ export default function EstimateLoading() {
         height: 3,
         zIndex: 100,
         overflow: 'hidden',
-        background: `${GOLD}15`,
+        background: 'var(--brand-primary-08)',
       }}>
         <div style={{
           width: '40%',

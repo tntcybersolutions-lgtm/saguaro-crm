@@ -11,7 +11,8 @@ import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/t
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
-const GOLD='#F59E0B',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
+const GOLD='var(--brand-primary)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
+const cap = (s:string) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
 
 interface Sub {
@@ -43,24 +44,24 @@ function coiState(s: Sub): { label: string; color: string; ok: boolean } {
   const days = Math.floor((exp.getTime() - Date.now()) / 86400000);
   const d = exp.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   if (days < 0) return { label: `COI expired ${d}`, color: '#EF4444', ok: false };
-  if (days <= 30) return { label: `COI expires in ${days}d`, color: '#FBBF24', ok: true };
+  if (days <= 30) return { label: `COI expires in ${days}d`, color: 'var(--warning)', ok: true };
   return { label: `COI valid through ${d}`, color: '#22C55E', ok: true };
 }
 function hasComplianceIssue(s: Sub) { return !w9Ok(s) || !coiState(s).ok; }
 
 function scoreBadge(score: number) {
-  const color = score >= 80 ? '#22C55E' : score >= 60 ? '#F59E0B' : '#EF4444';
-  return <span style={{fontSize:12,fontWeight:800,color,background:`${color}18`,padding:'3px 10px',borderRadius:6}}>{score}</span>;
+  const color = score >= 80 ? '#22C55E' : score >= 60 ? 'var(--warning)' : '#EF4444';
+  return <span style={{fontSize:12,fontWeight:800,color,background:`color-mix(in srgb, ${color} 9%, transparent)`,padding:'3px 10px',borderRadius:6}}>{score}</span>;
 }
 
 function statusBadge(s: string) {
   const map: Record<string,{c:string,bg:string}> = {
-    active:{c:'#22C55E',bg:'rgba(34,197,94,.12)'}, prequalified:{c:'#FBBF24',bg:'rgba(96,165,250,.12)'},
-    invited:{c:GOLD,bg:'rgba(245, 158, 11,.12)'}, suspended:{c:'#EF4444',bg:'rgba(239,68,68,.12)'},
+    active:{c:'#22C55E',bg:'rgba(34,197,94,.12)'}, prequalified:{c:'var(--brand-primary-strong)',bg:'var(--brand-primary-12)'},
+    invited:{c:GOLD,bg:'var(--brand-primary-12)'}, suspended:{c:'#EF4444',bg:'rgba(239,68,68,.12)'},
     inactive:{c:DIM,bg:'rgba(143,163,192,.08)'},
   };
   const st = map[s]||{c:DIM,bg:'rgba(143,163,192,.08)'};
-  return <span style={{fontSize:10,fontWeight:700,padding:'3px 9px',borderRadius:4,background:st.bg,color:st.c,textTransform:'uppercase',letterSpacing:'.3px'}}>{s}</span>;
+  return <span style={{fontSize:10,fontWeight:700,padding:'3px 9px',borderRadius:4,background:st.bg,color:st.c}}>{cap(s)}</span>;
 }
 
 export default function SubsPage() {
@@ -189,7 +190,7 @@ export default function SubsPage() {
   const complianceIssues = complianceScope.filter(hasComplianceIssue).length;
   const awardedPkgs = ((ctx?.bidPackages || []) as any[]).filter(b => b.awardedTo);
 
-  const inpS: React.CSSProperties = {width:'100%',padding:'8px 12px',background:'#1c1c1e',border:`1px solid ${BORDER}`,borderRadius:6,color:TEXT,fontSize:13,outline:'none',boxSizing:'border-box'};
+  const inpS: React.CSSProperties = {width:'100%',padding:'8px 12px',background:'var(--bg-surface-2)',border:`1px solid ${BORDER}`,borderRadius:6,color:TEXT,fontSize:13,outline:'none',boxSizing:'border-box'};
   const lblS: React.CSSProperties = {display:'block',fontSize:11,color:DIM,marginBottom:4,fontWeight:600};
   const hintS: React.CSSProperties = {fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:5,lineHeight:1.45};
 
@@ -232,7 +233,7 @@ export default function SubsPage() {
 
       {/* Header */}
       <ModuleHero
-        eyebrow="SUBCONTRACTORS"
+        eyebrow="Subcontractors"
         eyebrowIcon={<Handshake size={13} weight="fill" color={GOLD} />}
         title="Subcontractor"
         accent="Management"
@@ -247,10 +248,10 @@ export default function SubsPage() {
       {/* Roster intelligence — what the system already knows about this job */}
       {ctx && (
         <StatStrip items={[
-          {href: `/app/projects/${projectId}/subs`,  label: 'Subs on Job', value: String(roster.length), sub: 'on the project roster' },
-          {href: `/app/projects/${projectId}/subs`,  label: 'Sub Commitments', value: fmt(rosterTotal), sub: 'combined sub contracts' },
-          {href: `/app/projects/${projectId}/compliance`,  label: 'Compliance Issues', value: String(complianceIssues), accent: complianceIssues > 0 ? '#EF4444' : '#22C55E', sub: complianceIssues > 0 ? 'missing W-9 or lapsed COI' : rosterIds.size > 0 ? 'roster is clean' : 'directory is clean' },
-          {href: `/app/projects/${projectId}/subs`,  label: 'Directory', value: String(subs.length), sub: 'companies tenant-wide' },
+          {href: `/app/projects/${projectId}/subs`,  label: 'Subs on Job', value: String(roster.length), sub: 'On the project roster' },
+          {href: `/app/projects/${projectId}/subs`,  label: 'Sub Commitments', value: fmt(rosterTotal), sub: 'Combined sub contracts' },
+          {href: `/app/projects/${projectId}/compliance`,  label: 'Compliance Issues', value: String(complianceIssues), accent: complianceIssues > 0 ? '#EF4444' : '#22C55E', sub: complianceIssues > 0 ? 'Missing W-9 or lapsed COI' : rosterIds.size > 0 ? 'Roster is clean' : 'Directory is clean' },
+          {href: `/app/projects/${projectId}/subs`,  label: 'Directory', value: String(subs.length), sub: 'Companies tenant-wide' },
           {href: `/app/projects/${projectId}/bid-packages`,  label: 'Awarded Packages', value: String(awardedPkgs.length), sub: `${fmt(awardedPkgs.reduce((s, b) => s + (Number(b.awardedAmount) || 0), 0))} awarded` },
         ]} />
       )}
@@ -275,7 +276,7 @@ export default function SubsPage() {
                 <select value={pickId} onChange={e=>pickFromDirectory(e.target.value)} style={{...inpS,cursor:'pointer'}}>
                   <option value="">New company — type the details below</option>
                   {subs.length>0 && (
-                    <optgroup label={`Tenant directory (${subs.length})`}>
+                    <optgroup label={`Tenant Directory (${subs.length})`}>
                       {subs.map(s=>(
                         <option key={s.id} value={s.id}>{s.name||'Unnamed'}{s.trade?` — ${s.trade}`:''}{rosterIds.has(s.id)?' (on this job)':''}</option>
                       ))}
@@ -333,25 +334,25 @@ export default function SubsPage() {
                 <>
                   <InsightRow label="W-9" value={w9Ok(picked)?'On file':'Missing'} accent={w9Ok(picked)?'#22C55E':'#EF4444'} strong/>
                   <InsightRow label="Insurance" value={coiState(picked).label} accent={coiState(picked).color}/>
-                  <InsightRow label="License" value={picked.license_number||'Not on file'} accent={picked.license_number?undefined:'#FBBF24'}/>
-                  <InsightRow label="Directory status" value={picked.status||'active'}/>
-                  {rosterIds.has(picked.id) && <InsightRow label="This project" value="Already on roster" accent="#FBBF24"/>}
+                  <InsightRow label="License" value={picked.license_number||'Not on file'} accent={picked.license_number?undefined:'var(--warning)'}/>
+                  <InsightRow label="Directory Status" value={cap(picked.status||'active')}/>
+                  {rosterIds.has(picked.id) && <InsightRow label="This Project" value="Already on roster" accent="var(--brand-primary-strong)"/>}
                   {pickedAward && <InsightRow label="Award" value={`${fmt(Number(pickedAward.awardedAmount)||0)} — ${pickedAward.name}`} accent={GOLD} strong/>}
                 </>
               ) : (
                 <>
-                  <InsightRow label="W-9 on file" value={`${complianceScope.filter(w9Ok).length} / ${complianceScope.length}`}/>
-                  <InsightRow label="COI current" value={`${complianceScope.filter(s=>coiState(s).ok).length} / ${complianceScope.length}`}/>
+                  <InsightRow label="W-9 on File" value={`${complianceScope.filter(w9Ok).length} / ${complianceScope.length}`}/>
+                  <InsightRow label="COI Current" value={`${complianceScope.filter(s=>coiState(s).ok).length} / ${complianceScope.length}`}/>
                   <div style={{...hintS,marginTop:8}}>Pick a directory company above to see its full W-9, COI, and license standing before it joins the job.</div>
                 </>
               )}
             </SectionCard>
             <SectionCard flat title="After You Add" icon={<AddressBook size={17} weight="duotone" color={GOLD} />}>
               <FlowSteps title="" steps={[
-                {title:'Saved to your directory',desc:'The company lands in the tenant directory, ready for bid invites and contracts.'},
-                {title:'W-9 request auto-sends',desc:'Over $600 with an email on file, a W-9 e-request goes out automatically.'},
-                {title:'Preliminary notice reminder',desc:'AZ, CA, and TX projects get a 20-day prelim notice task on compliance.'},
-                {title:'Compliance tracking begins',desc:'COI expiry and W-9 status feed the compliance column and health scores.'},
+                {title:'Saved to Your Directory',desc:'The company lands in the tenant directory, ready for bid invites and contracts.'},
+                {title:'W-9 Request Auto-Sends',desc:'Over $600 with an email on file, a W-9 e-request goes out automatically.'},
+                {title:'Preliminary Notice Reminder',desc:'AZ, CA, and TX projects get a 20-day prelim notice task on compliance.'},
+                {title:'Compliance Tracking Begins',desc:'COI expiry and W-9 status feed the compliance column and health scores.'},
               ]}/>
             </SectionCard>
           </div>
@@ -379,10 +380,10 @@ export default function SubsPage() {
             )}
           </div>
           <FlowStrip steps={[
-            { title: 'Add the company', desc: 'directory pick pre-fills it' },
-            { title: 'W-9 auto-requests', desc: 'over $600 with an email' },
-            { title: 'Compliance tracked', desc: 'COI expiry and W-9 status' },
-            { title: 'Ready for bids', desc: 'invites and contracts' },
+            { title: 'Add the Company', desc: 'Directory pick pre-fills it' },
+            { title: 'W-9 Auto-Requests', desc: 'Over $600 with an email' },
+            { title: 'Compliance Tracked', desc: 'COI expiry and W-9 status' },
+            { title: 'Ready for Bids', desc: 'Invites and contracts' },
           ]} />
         </SectionCard>
       )}
@@ -393,12 +394,12 @@ export default function SubsPage() {
           module="subs"
           search={search}
           onSearch={setSearch}
-          searchPlaceholder="Search subs by company, contact, or license..."
+          searchPlaceholder="Search subs by company, contact, or license…"
           filters={[
             {key:'trade',label:'Trade',value:filterTrade,onChange:setFilterTrade,allLabel:'All Trades',
               options:subTrades},
             {key:'status',label:'Status',value:filterStatus,onChange:setFilterStatus,allLabel:'All Statuses',
-              options:['active','prequalified','invited','suspended','inactive']},
+              options:['active','prequalified','invited','suspended','inactive'].map(s=>({value:s,label:cap(s)}))},
           ]}
           count={{shown:filteredSubs.length,total:subs.length}}
           style={{marginBottom:14}}
@@ -426,7 +427,7 @@ export default function SubsPage() {
                   <tr><td colSpan={11} style={{padding:'26px 14px',textAlign:'center',color:DIM,fontSize:13}}>No subcontractors match your search or filters.</td></tr>
                 )}
                 {sortedSubs.map(sub=>(
-                  <tr key={sub.id} style={{borderBottom:`1px solid rgba(255,255,255,0.08)`}} onMouseEnter={e=>(e.currentTarget.style.background='rgba(245, 158, 11,.04)')} onMouseLeave={e=>(e.currentTarget.style.background='')}>
+                  <tr key={sub.id} style={{borderBottom:`1px solid rgba(255,255,255,0.08)`}} onMouseEnter={e=>(e.currentTarget.style.background='color-mix(in srgb, var(--brand-primary) 4%, transparent)')} onMouseLeave={e=>(e.currentTarget.style.background='')}>
                     <td style={{padding:'12px 14px'}}>
                       <div style={{color:TEXT,fontWeight:700}}>{sub.name}</div>
                       <div style={{color:DIM,fontSize:11}}>{sub.contact_email}</div>
@@ -437,15 +438,15 @@ export default function SubsPage() {
                     <td style={{padding:'12px 14px',color:DIM,fontFamily:'monospace',fontSize:11}}>{sub.license_number||'—'}</td>
                     <td style={{padding:'12px 14px',whiteSpace:'nowrap'}}>
                       <span title={w9Ok(sub)?'W-9 on file':'W-9 missing'} style={{fontSize:10,fontWeight:800,padding:'2px 7px',borderRadius:4,marginRight:4,background:w9Ok(sub)?'rgba(34,197,94,.12)':'rgba(239,68,68,.12)',color:w9Ok(sub)?'#22C55E':'#EF4444'}}>W-9</span>
-                      <span title={coiState(sub).label} style={{fontSize:10,fontWeight:800,padding:'2px 7px',borderRadius:4,background:`${coiState(sub).color}1f`,color:coiState(sub).color}}>COI</span>
+                      <span title={coiState(sub).label} style={{fontSize:10,fontWeight:800,padding:'2px 7px',borderRadius:4,background:`color-mix(in srgb, ${coiState(sub).color} 12%, transparent)`,color:coiState(sub).color}}>COI</span>
                     </td>
                     <td style={{padding:'12px 14px',color:TEXT,fontWeight:600}}>{fmt(sub.contract_amount || Number(roster.find(r=>r.id===sub.id)?.contractAmount || 0))}</td>
                     <td style={{padding:'12px 14px',color:'#22C55E',fontWeight:600}}>{fmt(sub.paid_amount)}</td>
                     <td style={{padding:'12px 14px'}}>{scoreBadge(sub.health_score||0)}</td>
                     <td style={{padding:'12px 14px'}}>
                       <select value={sub.status||'active'} onChange={e=>handleUpdateStatus(sub.id,e.target.value)}
-                        style={{background:'#1c1c1e',border:`1px solid ${BORDER}`,borderRadius:5,color:TEXT,fontSize:11,padding:'4px 8px',cursor:'pointer'}}>
-                        {['active','prequalified','invited','suspended','inactive'].map(s=><option key={s} value={s}>{s}</option>)}
+                        style={{background:'var(--bg-surface-2)',border:`1px solid ${BORDER}`,borderRadius:5,color:TEXT,fontSize:11,padding:'4px 8px',cursor:'pointer'}}>
+                        {['active','prequalified','invited','suspended','inactive'].map(s=><option key={s} value={s}>{cap(s)}</option>)}
                       </select>
                     </td>
                     <td style={{padding:'12px 14px'}}>

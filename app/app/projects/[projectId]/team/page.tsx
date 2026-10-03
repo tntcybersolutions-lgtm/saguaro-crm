@@ -12,10 +12,10 @@ import { moduleAccent } from '@/lib/module-identity';
 import { Button, Input } from '@/components/ui/kit';
 import ProjectOwnershipCard from '@/components/projects/ProjectOwnershipCard';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030',BLUE='#1a5fa8';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030',BLUE='#1a5fa8';
 const fmt = (n:number) => '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 function Badge({label,color='#CBD5E1',bg='rgba(148,163,184,.12)'}:{label:string,color?:string,bg?:string}){
-  return <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:bg,color,textTransform:'uppercase' as const,letterSpacing:.3}}>{label}</span>;
+  return <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:bg,color}}>{label}</span>;
 }
 
 export default function TeamPage(){
@@ -98,7 +98,7 @@ export default function TeamPage(){
       const json = await res.json();
       if (!res.ok) { setInviteMsg(json.error || 'Invite failed.'); }
       else {
-        setInviteMsg('Invitation sent!');
+        setInviteMsg('Invitation sent.');
         setInviteEmail(''); setInviteName(''); setInviteRole('Member'); setInviteAuto({});
         setTimeout(() => { setShowInvite(false); setInviteMsg(''); }, 1500);
       }
@@ -196,7 +196,7 @@ export default function TeamPage(){
     }
   }
 
-  const inputStyle = {width:'100%',padding:'8px 12px',background:'#1c1c1e',border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none',boxSizing:'border-box' as const};
+  const inputStyle = {width:'100%',padding:'8px 12px',background:'var(--bg-surface-2)',border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none',boxSizing:'border-box' as const};
   const hintStyle: React.CSSProperties = {fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:5,lineHeight:1.45};
 
   // Field leadership straight off the project record — PM, super, and foreman,
@@ -291,15 +291,15 @@ export default function TeamPage(){
         {ctx && (
           <StatStrip items={[
             {href: `/app/projects/${projectId}/team`, label:'Project', value: ctx.project?.name || '—', sub: ctx.project?.projectNumber ? `#${ctx.project.projectNumber}` : (ctx.project?.status || 'active')},
-            {href: `/app/projects/${projectId}/team`, label:'Owner', value: ctx.defaults?.ownerName || '—', sub: ctx.defaults?.ownerEmail || 'no email on file'},
-            {href: `/app/projects/${projectId}/team`, label:'Architect', value: ctx.defaults?.architectName || '—', sub: 'design contact'},
-            {href: `/app/projects/${projectId}/team`, label:'Leadership', value: `${leadersAssigned}/5`, accent: leadersAssigned>=3?'#3dd68c':GOLD, sub: leadersAssigned>0?'directory roles assigned':'set them in the directory below'},
-            {href: `/app/projects/${projectId}/subs`, label:'Trades On the Job', value: String(subTrades.length), sub: ctxSubs.length?`across ${ctxSubs.length} sub${ctxSubs.length===1?'':'s'}`:'no subs yet'},
+            {href: `/app/projects/${projectId}/team`, label:'Owner', value: ctx.defaults?.ownerName || '—', sub: ctx.defaults?.ownerEmail || 'No email on file'},
+            {href: `/app/projects/${projectId}/team`, label:'Architect', value: ctx.defaults?.architectName || '—', sub: 'Design contact'},
+            {href: `/app/projects/${projectId}/team`, label:'Leadership', value: `${leadersAssigned}/5`, accent: leadersAssigned>=3?'#3dd68c':GOLD, sub: leadersAssigned>0?'Directory roles assigned':'Set them in the directory below'},
+            {href: `/app/projects/${projectId}/subs`, label:'Trades on the Job', value: String(subTrades.length), sub: ctxSubs.length?`Across ${ctxSubs.length} sub${ctxSubs.length===1?'':'s'}`:'No subs yet'},
           ]}/>
         )}
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
           <StatCard icon={<UsersThree size={19} weight="duotone" color={GOLD} />} label="Team Members" value={String(members.length)} accent={GOLD} sub={members.length===1?'1 with access':`${members.length} with access`}  href={`/app/projects/${projectId}/team`}/>
-          <StatCard icon={<HardHat size={19} weight="duotone" color={BLUE} />} label="Subcontractors" value={String(subs.length)} accent={subs.length?BLUE:undefined} sub={subTrades.length?`${subTrades.length} trade${subTrades.length===1?'':'s'} — portal access`:'portal access'}  href={`/app/projects/${projectId}/subs`}/>
+          <StatCard icon={<HardHat size={19} weight="duotone" color={BLUE} />} label="Subcontractors" value={String(subs.length)} accent={subs.length?BLUE:undefined} sub={subTrades.length?`${subTrades.length} trade${subTrades.length===1?'':'s'} — portal access`:'Portal access'}  href={`/app/projects/${projectId}/subs`}/>
           <StatCard icon={<IdentificationBadge size={19} weight="duotone" color={leadersAssigned>=3?'#3dd68c':GOLD} />} label="Field Leadership" value={`${leadersAssigned}/5`} accent={leadersAssigned>=3?'#3dd68c':GOLD} sub="PM · super · foreman · owner · architect"  href={`/app/projects/${projectId}/team`}/>
         </div>
       </>
@@ -310,35 +310,35 @@ export default function TeamPage(){
       <SectionCard title="Invite Team Member" icon={<UserPlus size={17} weight="duotone" color={GOLD} />} subtitle={ctx?.project?.name ? `Grants access to ${ctx.project.name}` : 'Send a role-scoped invitation to this project.'}>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:14,marginBottom:16}}>
           <div>
-            <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:5}}>Email{inviteAuto.email && <AutoChip/>}</label>
+            <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5}}>Email{inviteAuto.email && <AutoChip/>}</label>
             <input type="email" value={inviteEmail} onChange={e=>{setInviteEmail(e.target.value);setInviteAuto(a=>({...a,email:false}));}} placeholder="email@company.com" style={inputStyle}/>
             <div style={hintStyle}>They get a secure accept link by email — it expires after 7 days.</div>
           </div>
           <div>
-            <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:5}}>Name{inviteAuto.name && <AutoChip/>}</label>
+            <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5}}>Name{inviteAuto.name && <AutoChip/>}</label>
             <input type="text" value={inviteName} onChange={e=>{setInviteName(e.target.value);setInviteAuto(a=>({...a,name:false}));}} placeholder="Full name" style={inputStyle}/>
             <div style={hintStyle}>Shown on the roster and in notifications.</div>
           </div>
           <div>
-            <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:5}}>Role{inviteAuto.role && <AutoChip/>}</label>
+            <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5}}>Role{inviteAuto.role && <AutoChip/>}</label>
             <select value={inviteRole} onChange={e=>{setInviteRole(e.target.value);setInviteAuto(a=>({...a,role:false}));}} style={{...inputStyle,cursor:'pointer'}}>
               {['Admin','Manager','Member','Guest','Client','Sub'].map(r=><option key={r}>{r}</option>)}
             </select>
             <div style={hintStyle}>{ROLE_HINTS[inviteRole] || 'Access level for this member.'}</div>
           </div>
         </div>
-        {inviteMsg&&<div style={{fontSize:13,marginBottom:12,color:inviteMsg==='Invitation sent!'?GREEN:RED}}>{inviteMsg}</div>}
+        {inviteMsg&&<div style={{fontSize:13,marginBottom:12,color:inviteMsg==='Invitation sent.'?GREEN:RED}}>{inviteMsg}</div>}
         <div style={{display:'flex',gap:10}}>
-          <button onClick={handleInvite} disabled={inviting} style={{...goldButtonStyle,opacity:inviting?.6:1}} className="pmBtn">{inviting?'Sending...':'Send Invitation'}</button>
+          <button onClick={handleInvite} disabled={inviting} style={{...goldButtonStyle,opacity:inviting?.6:1}} className="pmBtn">{inviting?'Sending…':'Send Invitation'}</button>
           <button onClick={()=>{setShowInvite(false);setInviteMsg('');}} style={ghostButtonStyle} className="pmBtn">Cancel</button>
         </div>
       </SectionCard>
       <SectionCard flat title="After You Send" icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}>
         <FlowSteps title="" steps={[
-          {title:'Invitation email goes out', desc:'A secure accept link is emailed — it expires after 7 days.'},
-          {title:'They create their login', desc:'One click sets up their account under your company.'},
-          {title:'Roster updates itself', desc:`They appear below with ${inviteRole} access the moment they accept.`},
-          {title:'Access stays adjustable', desc:'Change or revoke roles any time from Roles & Access.'},
+          {title:'Invitation Email Goes Out', desc:'A secure accept link is emailed — it expires after 7 days.'},
+          {title:'They Create Their Login', desc:'One click sets up their account under your company.'},
+          {title:'Roster Updates Itself', desc:`They appear below with ${inviteRole} access the moment they accept.`},
+          {title:'Access Stays Adjustable', desc:'Change or revoke roles any time from Roles & Access.'},
         ]}/>
       </SectionCard>
       </div>
@@ -348,7 +348,7 @@ export default function TeamPage(){
       module="team"
       search={search}
       onSearch={setSearch}
-      searchPlaceholder="Search the roster..."
+      searchPlaceholder="Search the roster…"
       filters={[{ key: 'show', label: 'Show', value: showGroup, onChange: setShowGroup, allLabel: 'Everyone', options: [
         { value: 'team', label: 'Internal Team' },
         { value: 'subs', label: 'Subcontractors' },
@@ -359,11 +359,11 @@ export default function TeamPage(){
 
     <div style={{display:'flex',flexDirection:'column',gap:20}}>
       {proj && <ProjectOwnershipCard projectId={projectId} project={proj} onSaved={(p)=>{ if (p && (p as any).id) setProj(p); }}/>}
-      <SectionCard title="Project Directory" subtitle="Field leadership and parties of record — Set or Edit any slot right here" icon={<IdentificationBadge size={17} weight="duotone" color={GOLD} />}>
+      <SectionCard title="Project Directory" subtitle="Field leadership and parties of record — set or edit any slot right here" icon={<IdentificationBadge size={17} weight="duotone" color={GOLD} />}>
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(210px,1fr))',gap:12}}>
           {leadership.map(l=>(
-            <div key={l.role} style={{padding:'12px 14px',borderRadius:12,border:`1px solid ${l.name?'rgba(245,158,11,0.25)':'rgba(255,255,255,0.08)'}`,background:l.name?'rgba(245,158,11,0.05)':'rgba(255,255,255,0.02)'}}>
-              <div style={{fontSize:10,fontWeight:800,color:DIM,textTransform:'uppercase' as const,letterSpacing:.6,marginBottom:6}}>{l.role}</div>
+            <div key={l.role} style={{padding:'12px 14px',borderRadius:12,border:`1px solid ${l.name?'var(--brand-primary-25)':'rgba(255,255,255,0.08)'}`,background:l.name?'color-mix(in srgb, var(--brand-primary) 5%, transparent)':'rgba(255,255,255,0.02)'}}>
+              <div style={{fontSize:10,fontWeight:800,color:DIM,marginBottom:6}}>{l.role}</div>
               {editRole === l.role ? (
                 <div style={{display:'flex',flexDirection:'column' as const,gap:6}}>
                   <Input aria-label={`${l.role} name`} value={editName} onChange={e=>setEditName(e.target.value)} placeholder="Name" autoFocus/>
@@ -377,17 +377,17 @@ export default function TeamPage(){
               <div style={{fontSize:13.5,fontWeight:700,color:l.name?TEXT:'rgba(255,255,255,0.35)',marginBottom:6}}>{l.name||'Not assigned'}</div>
               {l.name ? (
                 <div style={{display:'flex',flexDirection:'column' as const,gap:3}}>
-                  {l.email&&<a href={`mailto:${l.email}`} style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:11.5,color:'#FBBF24',textDecoration:'none'}}><EnvelopeSimple size={12} weight="bold" color="#FBBF24"/>{l.email}</a>}
+                  {l.email&&<a href={`mailto:${l.email}`} style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:11.5,color:'var(--brand-primary-strong)',textDecoration:'none'}}><EnvelopeSimple size={12} weight="bold" color="var(--brand-primary-strong)"/>{l.email}</a>}
                   {l.phone&&<a href={`tel:${l.phone}`} style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:11.5,color:DIM,textDecoration:'none'}}><Phone size={12} weight="bold" color={DIM}/>{l.phone}</a>}
                   {!l.email&&!l.phone&&<span style={{fontSize:11,color:'rgba(255,255,255,0.35)'}}>No contact on file</span>}
                   {l.email && !memberEmails.has(l.email.toLowerCase()) && (
-                    <button onClick={()=>inviteFromDirectory(l)} className="pmBtn" style={{marginTop:6,alignSelf:'flex-start',display:'inline-flex',alignItems:'center',gap:5,padding:'4px 10px',background:'rgba(245,158,11,0.10)',border:'1px solid rgba(245,158,11,0.4)',borderRadius:7,color:'#FBBF24',fontSize:11,fontWeight:800,cursor:'pointer'}}>
-                      <UserPlus size={12} weight="bold" color="#FBBF24" /> Invite to project
+                    <button onClick={()=>inviteFromDirectory(l)} className="pmBtn" style={{marginTop:6,alignSelf:'flex-start',display:'inline-flex',alignItems:'center',gap:5,padding:'4px 10px',background:'var(--brand-primary-12)',border:'1px solid var(--brand-primary-35)',borderRadius:7,color:'var(--brand-primary-strong)',fontSize:11,fontWeight:800,cursor:'pointer'}}>
+                      <UserPlus size={12} weight="bold" color="var(--brand-primary-strong)" /> Invite to Project
                     </button>
                   )}
                 </div>
               ) : (
-                <Button size="sm" variant="secondary" onClick={()=>startEdit(l)}>Set {l.role.toLowerCase()}</Button>
+                <Button size="sm" variant="secondary" onClick={()=>startEdit(l)}>Set {l.role}</Button>
               )}
               {l.name && <div style={{marginTop:6}}><Button size="sm" variant="ghost" onClick={()=>startEdit(l)}>Edit</Button></div>}
               </>)}
@@ -411,13 +411,13 @@ export default function TeamPage(){
           <div style={{overflowX:'auto',WebkitOverflowScrolling:'touch' as const}}>
             <table style={{width:'100%',borderCollapse:'collapse' as const,fontSize:13}}>
               <thead><tr>
-                {['Name','Role','Email','Access Level','Work Assignments','Last Active'].map(h=><th key={h} style={{padding:'8px 12px',textAlign:'left' as const,fontSize:11,fontWeight:700,textTransform:'uppercase' as const,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}
+                {['Name','Role','Email','Access Level','Work Assignments','Last Active'].map(h=><th key={h} style={{padding:'8px 12px',textAlign:'left' as const,fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}
               </tr></thead>
               <tbody>{filteredMembers.map(m=><tr key={m.userId||m.name} style={{borderBottom:`1px solid rgba(255,255,255,0.08)`}}>
-                <td style={{padding:'11px 12px'}}><div style={{display:'flex',alignItems:'center',gap:10}}><div style={{width:32,height:32,borderRadius:'50%',background:`linear-gradient(135deg,${GOLD},#B85C2A)`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800,color:'#1C1C1E'}}>{m.name[0]}</div><span style={{color:TEXT,fontWeight:600}}>{m.name}</span></div></td>
+                <td style={{padding:'11px 12px'}}><div style={{display:'flex',alignItems:'center',gap:10}}><div style={{width:32,height:32,borderRadius:'50%',background:GOLD,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800,color:'#0A0A00'}}>{m.name[0]}</div><span style={{color:TEXT,fontWeight:600}}>{m.name}</span></div></td>
                 <td style={{padding:'11px 12px',color:DIM}}>{m.role}</td>
                 <td style={{padding:'11px 12px',color:DIM}}>{m.email}</td>
-                <td style={{padding:'11px 12px'}}><Badge label={m.access} color={m.access==='Admin'?GOLD:m.access==='Manager'?'#4a9de8':'#CBD5E1'} bg={m.access==='Admin'?'rgba(245, 158, 11,.12)':m.access==='Manager'?'rgba(26,95,168,.12)':'rgba(148,163,184,.08)'}/></td>
+                <td style={{padding:'11px 12px'}}><Badge label={m.access} color={m.access==='Admin'?GOLD:m.access==='Manager'?'#4a9de8':'#CBD5E1'} bg={m.access==='Admin'?'var(--brand-primary-12)':m.access==='Manager'?'rgba(26,95,168,.12)':'rgba(148,163,184,.08)'}/></td>
                 <td style={{padding:'11px 12px'}}>
                   <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap' as const}}>
                     {assignmentsFor(m.userId).map(a=>(
@@ -432,7 +432,7 @@ export default function TeamPage(){
                         {ASSIGN_ROLES.map(r=><option key={r.value} value={r.value}>{r.label}</option>)}
                       </select>
                     ) : (
-                      <span title="They can be assigned work once they accept their invite" style={{fontSize:10.5,color:'rgba(255,255,255,0.35)',fontStyle:'italic' as const,whiteSpace:'nowrap' as const}}>Invite pending</span>
+                      <span title="They can be assigned work once they accept their invite" style={{fontSize:10.5,color:'rgba(255,255,255,0.35)',fontStyle:'italic' as const,whiteSpace:'nowrap' as const}}>Invite Pending</span>
                     )}
                   </div>
                 </td>
@@ -456,7 +456,7 @@ export default function TeamPage(){
             {assignments.map(a=>(
               <span key={a.id} style={{display:'inline-flex',alignItems:'center',gap:7,padding:'5px 8px 5px 12px',borderRadius:999,background:WORK.soft,border:`1px solid ${WORK.ring}`,color:WORK.hex,fontSize:12,fontWeight:700}}>
                 {a.assignee_name || members.find(m=>m.userId===a.assignee_user_id)?.name || 'Member'}
-                <span style={{fontSize:9.5,fontWeight:800,textTransform:'uppercase' as const,letterSpacing:.5,opacity:.8}}>{assignRoleLabel(a.role)}</span>
+                <span style={{fontSize:9.5,fontWeight:800,opacity:.8}}>{assignRoleLabel(a.role)}</span>
                 <button onClick={()=>endAssignment(a)} title="End this assignment" aria-label={`End ${assignRoleLabel(a.role)} assignment`} style={{display:'inline-flex',alignItems:'center',justifyContent:'center',width:16,height:16,padding:0,borderRadius:999,background:WORK.soft,border:'none',color:WORK.hex,cursor:'pointer'}}><X size={10} weight="bold"/></button>
               </span>
             ))}
@@ -465,15 +465,15 @@ export default function TeamPage(){
         {members.some(m=>m.userId) ? (
           <div style={{display:'flex',gap:12,alignItems:'flex-end',flexWrap:'wrap' as const}}>
             <div style={{flex:'1 1 220px',minWidth:200}}>
-              <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:5}}>Team member</label>
+              <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5}}>Team Member</label>
               <select value={composerUser} onChange={e=>setComposerUser(e.target.value)} style={{...inputStyle,cursor:'pointer'}}>
                 <option value="">Choose a member…</option>
                 {members.filter(m=>m.userId).map(m=><option key={m.userId!} value={m.userId!}>{m.name}</option>)}
               </select>
-              <div style={hintStyle}>Only accepted invites appear — pending members show on the roster as Invite pending.</div>
+              <div style={hintStyle}>Only accepted invites appear — pending members show on the roster as Invite Pending.</div>
             </div>
             <div style={{flex:'0 1 210px',minWidth:180}}>
-              <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:5}}>Assignment role</label>
+              <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5}}>Assignment Role</label>
               <select value={composerRole} onChange={e=>setComposerRole(e.target.value)} style={{...inputStyle,cursor:'pointer'}}>
                 {ASSIGN_ROLES.map(r=><option key={r.value} value={r.value}>{r.label}</option>)}
               </select>
@@ -484,7 +484,7 @@ export default function TeamPage(){
               disabled={!composerUser||assignBusy}
               style={{...goldButtonStyle,opacity:!composerUser||assignBusy?.55:1,cursor:!composerUser||assignBusy?'default':'pointer',marginBottom:22}}
               className="pmBtn"
-            ><Briefcase size={15} weight="bold" /> Assign work</button>
+            ><Briefcase size={15} weight="bold" /> Assign Work</button>
           </div>
         ) : (
           <div style={{fontSize:12.5,color:'rgba(255,255,255,0.45)',lineHeight:1.55}}>
@@ -507,7 +507,7 @@ export default function TeamPage(){
           <div style={{overflowX:'auto',WebkitOverflowScrolling:'touch' as const}}>
             <table style={{width:'100%',borderCollapse:'collapse' as const,fontSize:13}}>
               <thead><tr>
-                {['Company','Trade','Contact Email','Contract','Portal Access','Actions'].map(h=><th key={h} style={{padding:'8px 12px',textAlign:'left' as const,fontSize:11,fontWeight:700,textTransform:'uppercase' as const,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}
+                {['Company','Trade','Contact Email','Contract','Portal Access','Actions'].map(h=><th key={h} style={{padding:'8px 12px',textAlign:'left' as const,fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}
               </tr></thead>
               <tbody>{filteredSubs.map(s=>{const cs=findCtxSub(s.name);return <tr key={s.name} style={{borderBottom:`1px solid rgba(255,255,255,0.08)`}}>
                 <td style={{padding:'11px 12px',color:TEXT,fontWeight:600}}>{s.name}</td>
@@ -516,7 +516,7 @@ export default function TeamPage(){
                 <td style={{padding:'11px 12px',color:Number(cs?.contractAmount)>0?TEXT:DIM,fontWeight:Number(cs?.contractAmount)>0?700:400}}>{Number(cs?.contractAmount)>0?fmtMoney(Number(cs?.contractAmount)):'—'}</td>
                 <td style={{padding:'11px 12px'}}><Badge label="Sub Portal" color='#a78bfa' bg='rgba(167,139,250,.12)'/></td>
                 <td style={{padding:'11px 12px',display:'flex',gap:6}}>
-                  <button onClick={()=>handleSendPortalLink(s)} disabled={sendingPortal===s.name} style={{background:'none',border:`1px solid ${BORDER}`,borderRadius:5,color:GOLD,fontSize:11,padding:'3px 8px',cursor:sendingPortal===s.name?'default':'pointer',opacity:sendingPortal===s.name?.6:1}}>{sendingPortal===s.name?'Working...':'Copy Portal Link'}</button>
+                  <button onClick={()=>handleSendPortalLink(s)} disabled={sendingPortal===s.name} style={{background:'none',border:`1px solid ${BORDER}`,borderRadius:5,color:GOLD,fontSize:11,padding:'3px 8px',cursor:sendingPortal===s.name?'default':'pointer',opacity:sendingPortal===s.name?.6:1}}>{sendingPortal===s.name?'Working…':'Copy Portal Link'}</button>
                 </td>
               </tr>;})}</tbody>
             </table>

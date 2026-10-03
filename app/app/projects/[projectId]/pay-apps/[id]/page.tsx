@@ -10,9 +10,9 @@ import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, FlowSt
 import { Skeleton, SkeletonKPI, SkeletonRow, SkeletonCard } from '@/components/ui/Skeleton';
 import { openPdf } from '@/components/PdfViewer';
 
-const GOLD='#F59E0B', DARK='#0a0a0a',
+const GOLD='var(--brand-primary)', DARK='var(--bg-base)',
       BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF',
-      GREEN='#22c55e', RED='#ef4444', ORANGE='#f97316', BLUE='#FBBF24';
+      GREEN='#22c55e', RED='#ef4444', ORANGE='#f97316', BLUE='var(--brand-primary-strong)';
 
 const fmt  = (n:number) => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n||0);
 const fmt2 = (n:number) => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2}).format(n||0);
@@ -22,7 +22,7 @@ const STATUS_META: Record<string,{label:string;color:string;bg:string;next?:stri
   draft:     {label:'Draft',     color:'#CBD5E1', bg:'rgba(148,163,184,.15)', next:'submitted',  nextLabel:'Submit to Owner'},
   submitted: {label:'Submitted', color:BLUE,      bg:'rgba(96,165,250,.15)',  next:'approved',   nextLabel:'Approve'},
   approved:  {label:'Approved',  color:GREEN,     bg:'rgba(34,197,94,.15)',   next:'certified',  nextLabel:'Certify'},
-  certified: {label:'Certified', color:GOLD,      bg:'rgba(245, 158, 11,.15)', next:'paid',       nextLabel:'Mark Paid'},
+  certified: {label:'Certified', color:GOLD,      bg:'var(--brand-primary-18)', next:'paid',       nextLabel:'Mark Paid'},
   paid:      {label:'Paid',      color:'#a78bfa', bg:'rgba(167,139,250,.15)'},
 };
 
@@ -229,7 +229,7 @@ export default function PayAppDetailPage() {
       });
       const d = await r.json();
       if (d.error) throw new Error(d.error);
-      setToast({ msg: 'Pay application saved', type: 'success' });
+      setToast({ msg: 'Pay application saved.', type: 'success' });
       setEditMode(false);
       await load();
     } catch (e: unknown) {
@@ -246,8 +246,8 @@ export default function PayAppDetailPage() {
       const r = await fetch(`/api/pay-apps/${id}/${action}`, { method: 'POST', headers, body: JSON.stringify({ projectId }) });
       const d = await r.json();
       if (d.error) throw new Error(d.error);
-      const labels: Record<string,string> = { submit:'Submitted to owner', approve:'Approved', certify:'Certified', paid:'Marked as paid' };
-      setToast({ msg: labels[action] || 'Updated', type: 'success' });
+      const labels: Record<string,string> = { submit:'Submitted to owner.', approve:'Approved.', certify:'Certified.', paid:'Marked as paid.' };
+      setToast({ msg: labels[action] || 'Updated.', type: 'success' });
       await load();
     } catch (e: unknown) {
       console.error(e); setToast({ msg: humanError(e, 'That action failed. Please try again.'), type: 'error' });
@@ -269,12 +269,12 @@ export default function PayAppDetailPage() {
       if (url) {
         openPdf({ url });
         if (d.g703Url) openPdf({ url: d.g703Url });
-        setToast({ msg: 'PDF opened in new tab', type: 'success' });
+        setToast({ msg: 'PDF opened in a new tab.', type: 'success' });
       } else {
         console.error('pay app PDF error', d.error); setToast({ msg: humanError(d.error, 'PDF generation failed. Please try again.'), type: 'error' });
       }
     } catch {
-      setToast({ msg: 'Download failed', type: 'error' });
+      setToast({ msg: 'Download failed.', type: 'error' });
     } finally {
       setDownloading(false);
     }
@@ -303,7 +303,7 @@ export default function PayAppDetailPage() {
               <thead>
                 <tr style={{ background: 'rgba(255,255,255,0.03)' }}>
                   {['#', 'Description', 'Sched. Value', 'Prev ($)', 'This Period ($)', 'Stored ($)', '% Done', 'Balance', 'Retainage'].map(h => (
-                    <th key={h} style={{ padding: '9px 10px', textAlign: 'left', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4, color: DIM, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>
+                    <th key={h} style={{ padding: '9px 10px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>
                       {h}
                     </th>
                   ))}
@@ -393,9 +393,9 @@ export default function PayAppDetailPage() {
         {/* Header */}
         <ModuleHero
           eyebrow="Pay Application"
-          eyebrowIcon={<CurrencyDollar size={13} weight="fill" color="#F59E0B" />}
+          eyebrowIcon={<CurrencyDollar size={13} weight="fill" color="var(--brand-primary)" />}
           aux={
-            <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 999, background: meta.bg, color: meta.color, border: `1px solid ${meta.color}44`, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 999, background: meta.bg, color: meta.color, border: `1px solid color-mix(in srgb, ${meta.color} 27%, transparent)`}}>
               {meta.label}
             </span>
           }
@@ -451,7 +451,7 @@ export default function PayAppDetailPage() {
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, fontSize: 12, color: DIM, flexWrap: 'wrap', gap: 8 }}>
             <span>Contract: {fmt(contractToDate)}</span>
-            <span>Completed to date: {fmt(sovCompleted)}</span>
+            <span>Completed to Date: {fmt(sovCompleted)}</span>
             <span>Balance: {fmt(contractToDate - sovCompleted)}</span>
           </div>
         </SectionCard>
@@ -488,7 +488,7 @@ export default function PayAppDetailPage() {
                   <thead>
                     <tr style={{ background: 'rgba(255,255,255,0.03)' }}>
                       {['#', 'Description', 'Sched. Value', 'Prev ($)', 'This Period ($)', 'Stored ($)', '% Done', 'Balance', 'Retainage', ...(canEdit ? [''] : [])].map(h => (
-                        <th key={h} style={{ padding: '9px 10px', textAlign: 'left', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4, color: DIM, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>
+                        <th key={h} style={{ padding: '9px 10px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>
                           {h}
                         </th>
                       ))}
@@ -540,7 +540,7 @@ export default function PayAppDetailPage() {
                   </tbody>
                   <tfoot>
                     <tr style={{ background: 'rgba(255,255,255,0.04)', borderTop: `2px solid ${BORDER}` }}>
-                      <td colSpan={2} style={{ padding: '10px 10px', fontWeight: 800, fontSize: 11, color: TEXT, textTransform: 'uppercase', letterSpacing: 0.3 }}>TOTALS</td>
+                      <td colSpan={2} style={{ padding: '10px 10px', fontWeight: 800, fontSize: 11, color: TEXT }}>Totals</td>
                       <td style={{ padding: '10px 10px', fontWeight: 800, color: GOLD, textAlign: 'right' }}>{fmt(sovScheduled)}</td>
                       <td style={{ padding: '10px 10px', fontWeight: 700, color: DIM, textAlign: 'right' }}>{fmt(sovPrev)}</td>
                       <td style={{ padding: '10px 10px', fontWeight: 800, color: GREEN, textAlign: 'right' }}>{fmt(sovThis)}</td>
@@ -574,7 +574,7 @@ export default function PayAppDetailPage() {
                   { label: '6. Total Earned Less Retainage (4–5)', value: fmt(sovEarned) },
                   { label: '7. Less Previous Certificates for Payment', value: fmt(sovPrev * (1 - retPct / 100)) },
                   { label: '8. Current Payment Due (6–7)', value: fmt(sovPayment), color: GREEN, bold: true, large: true },
-                  { label: '9. Balance to Finish, including Retainage', value: fmt(contractToDate - sovCompleted + sovRetainage) },
+                  { label: '9. Balance to Finish, Including Retainage', value: fmt(contractToDate - sovCompleted + sovRetainage) },
                 ].map(row => (
                   <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: `1px solid rgba(255,255,255,0.06)` }}>
                     <span style={{ fontSize: 12, color: DIM, flex: 1, paddingRight: 16 }}>{row.label}</span>
@@ -592,23 +592,23 @@ export default function PayAppDetailPage() {
             {/* Approval / waiver / payment chain — where this app sits */}
             <SectionCard flat title="Where This App Sits" icon={<SealCheck size={16} weight="duotone" color={GOLD} />}>
               <FlowSteps title="" steps={[
-                { title: 'Draft & schedule of values', done: true,
+                { title: 'Draft & Schedule of Values', done: true,
                   desc: `${lines.length} SOV line${lines.length === 1 ? '' : 's'} — ${fmt(sovScheduled)} scheduled.` },
-                { title: 'Submitted to owner', done: stageRank >= 1,
+                { title: 'Submitted to Owner', done: stageRank >= 1,
                   desc: stageRank >= 1
                     ? `Sent${payApp.submitted_date ? ` ${fmtDate(payApp.submitted_date)}` : ''} with a one-click owner approval link.`
                     : 'Sends the G702/G703 packet with a one-click owner approval link.' },
-                { title: 'Owner approval', done: stageRank >= 2,
+                { title: 'Owner Approval', done: stageRank >= 2,
                   desc: stageRank >= 2
                     ? `Approved${payApp.approved_date ? ` ${fmtDate(payApp.approved_date)}` : ''} — conditional lien waivers generated for the subs.`
                     : 'Approval auto-generates conditional waivers for every sub on the job.' },
-                { title: 'Lien waivers signed', done: stageRank >= 2 && wTotal > 0 && wBlocking === 0,
+                { title: 'Lien Waivers Signed', done: stageRank >= 2 && wTotal > 0 && wBlocking === 0,
                   desc: wTotal > 0
                     ? `${wSigned} of ${wTotal} signed${wBlocking > 0 ? ` — ${wBlocking} still gate payment` : ' — payment gate clear'}.`
                     : subCount > 0
                       ? `Waivers for ${subCount} sub${subCount === 1 ? '' : 's'} generate at approval.`
                       : 'Waivers generate automatically at approval.' },
-                { title: 'Payment received', done: payApp.status === 'paid',
+                { title: 'Payment Received', done: payApp.status === 'paid',
                   desc: payApp.status === 'paid'
                     ? `${fmt(sovPayment)} collected — paid-to-date and the prime contract updated automatically.`
                     : `Mark Paid releases ${fmt(sovPayment)}${wBlocking > 0 ? ` — currently held by ${wBlocking} unsigned waiver${wBlocking === 1 ? '' : 's'}` : ''}. Signed conditionals convert to unconditional waivers.` },
@@ -618,15 +618,15 @@ export default function PayAppDetailPage() {
             {/* Prior application comparison */}
             {priorApp && (
               <SectionCard flat title={`Compared to App #${priorApp._n}`} icon={<TrendUp size={16} weight="duotone" color={GOLD} />}>
-                <InsightRow label="Prior period" value={`${fmtDate(priorApp.period_from)} – ${fmtDate(priorApp.period_to)}`} />
-                <InsightRow label="Prior billed (period)" value={fmt(priorThis)} />
-                <InsightRow label="This app (period)" value={fmt(sovThis)} strong />
-                <InsightRow label="Period-over-period" value={`${thisDelta < 0 ? '-' : '+'}${fmt(Math.abs(thisDelta))}`} accent={thisDelta >= 0 ? GREEN : ORANGE} />
+                <InsightRow label="Prior Period" value={`${fmtDate(priorApp.period_from)} – ${fmtDate(priorApp.period_to)}`} />
+                <InsightRow label="Prior Billed (Period)" value={fmt(priorThis)} />
+                <InsightRow label="This App (Period)" value={fmt(sovThis)} strong />
+                <InsightRow label="Period-over-Period" value={`${thisDelta < 0 ? '-' : '+'}${fmt(Math.abs(thisDelta))}`} accent={thisDelta >= 0 ? GREEN : ORANGE} />
                 <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '8px 0' }} />
-                <InsightRow label="Completed then" value={fmt(priorDone)} />
-                <InsightRow label="Completed now" value={fmt(sovCompleted)} accent={GREEN} />
-                <InsightRow label="Prior payment due" value={fmt(Number(priorApp.current_payment_due) || 0)} />
-                <InsightRow label="This payment due" value={fmt(sovPayment)} accent={GREEN} strong />
+                <InsightRow label="Completed Then" value={fmt(priorDone)} />
+                <InsightRow label="Completed Now" value={fmt(sovCompleted)} accent={GREEN} />
+                <InsightRow label="Prior Payment Due" value={fmt(Number(priorApp.current_payment_due) || 0)} />
+                <InsightRow label="This Payment Due" value={fmt(sovPayment)} accent={GREEN} strong />
               </SectionCard>
             )}
 
@@ -686,11 +686,11 @@ export default function PayAppDetailPage() {
               <div style={{ fontSize: 12, color: DIM, marginBottom: 4 }}>Rate</div>
               <div style={{ fontSize: 22, fontWeight: 800, color: ORANGE, marginBottom: 10 }}>{retPct}%</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ fontSize: 11, color: DIM }}>Held this app</span>
+                <span style={{ fontSize: 11, color: DIM }}>Held This App</span>
                 <span style={{ fontSize: 12, fontWeight: 700, color: ORANGE }}>{fmt2(sovRetainage)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 11, color: DIM }}>Released to date</span>
+                <span style={{ fontSize: 11, color: DIM }}>Released to Date</span>
                 <span style={{ fontSize: 12, fontWeight: 700, color: GREEN }}>$0</span>
               </div>
             </SectionCard>

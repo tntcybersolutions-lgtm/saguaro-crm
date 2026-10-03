@@ -14,7 +14,7 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { StatusPill } from '@/components/ui/Status';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
 const GREEN='#1a8a4a',RED='#c03030',ORANGE='#c07830';
 
 const STATUSES=['pending','submitted','under_review','approved','rejected','revise_resubmit'];
@@ -28,7 +28,7 @@ const STATUS_LABELS:Record<string,string>={
 };
 const STATUS_COLORS:Record<string,string>={
   pending:DIM,
-  submitted:'#FBBF24',
+  submitted:'var(--brand-primary-strong)',
   under_review:GOLD,
   approved:GREEN,
   rejected:RED,
@@ -37,14 +37,14 @@ const STATUS_COLORS:Record<string,string>={
 
 const BIC_OPTIONS=['Contractor','Architect','Owner','Engineer'];
 const BIC_COLORS:Record<string,string>={
-  Contractor:'#FBBF24',
+  Contractor:'var(--brand-primary-strong)',
   Architect:GOLD,
   Owner:GREEN,
   Engineer:'#a78bfa',
 };
 
 const inp:React.CSSProperties={
-  width:'100%',padding:'9px 12px',background:'#1c1c1e',
+  width:'100%',padding:'9px 12px',background:'var(--bg-surface-2)',
   border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,
   fontSize:13,outline:'none',boxSizing:'border-box',
 };
@@ -61,7 +61,7 @@ const EMPTY_FORM={
 function Pill({label,color}:{label:string;color:string}){
   return(
     <span style={{fontSize:10,fontWeight:700,padding:'3px 9px',borderRadius:20,
-      background:`${color}22`,color,textTransform:'uppercase',letterSpacing:.3,whiteSpace:'nowrap'}}>
+      background:`color-mix(in srgb, ${color} 13%, transparent)`,color,whiteSpace:'nowrap'}}>
       {label}
     </span>
   );
@@ -69,16 +69,15 @@ function Pill({label,color}:{label:string;color:string}){
 
 function FieldLabel({label,auto}:{label:string;auto?:boolean}){
   return(
-    <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,
-      textTransform:'uppercase',letterSpacing:.5,marginBottom:5}}>{label}{auto&&<AutoChip/>}</label>
+    <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5}}>{label}{auto&&<AutoChip/>}</label>
   );
 }
 
 function InfoCard({label,value}:{label:string;value:string|undefined|null}){
   if(!value) return null;
   return(
-    <div style={{background:'#141416',border:`1px solid ${BORDER}`,borderRadius:8,padding:'10px 12px'}}>
-      <div style={{fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:4}}>{label}</div>
+    <div style={{background:'var(--bg-surface)',border:`1px solid ${BORDER}`,borderRadius:8,padding:'10px 12px'}}>
+      <div style={{fontSize:10,fontWeight:700,color:DIM,marginBottom:4}}>{label}</div>
       <div style={{fontSize:13,color:TEXT}}>{value}</div>
     </div>
   );
@@ -179,7 +178,7 @@ export default function SubmittalsPage(){
   function closePanel(){setSelected(null);setMode(null);}
 
   async function save(): Promise<boolean> {
-    if(!form.title.trim()){showToast('Title is required','error');return false;}
+    if(!form.title.trim()){showToast('Title is required.','error');return false;}
     setSaving(true);
     try{
       const h=await getAuthHeaders();
@@ -196,7 +195,7 @@ export default function SubmittalsPage(){
           body:JSON.stringify({...payload,projectId}),
         });
         if(!r.ok) throw new Error(await r.text());
-        showToast('Submittal created');
+        showToast('Submittal created.');
       }else if(mode==='edit'&&selected){
         const r=await fetch(`/api/submittals/${selected.id}`,{
           method:'PUT',
@@ -204,7 +203,7 @@ export default function SubmittalsPage(){
           body:JSON.stringify(payload),
         });
         if(!r.ok) throw new Error(await r.text());
-        showToast('Submittal updated');
+        showToast('Submittal updated.');
       }
       await load();closePanel();
       guard.clearDraft();
@@ -215,14 +214,14 @@ export default function SubmittalsPage(){
   }
 
   async function deleteSub(sub:any){
-    if(!confirm(`Delete submittal "${sub.submittal_number} - ${sub.title}"?`)) return;
+    if(!confirm(`Delete submittal "${sub.submittal_number} — ${sub.title}"?`)) return;
     setDeleting(true);
     try{
       const h=await getAuthHeaders();
       const dr=await fetch(`/api/submittals/${sub.id}`,{method:'DELETE',headers:h});
       if (!dr.ok) throw new Error('Delete failed');
-      showToast('Submittal deleted');closePanel();await load();
-    }catch{showToast('Delete failed','error');}
+      showToast('Submittal deleted.');closePanel();await load();
+    }catch{showToast('Delete failed.','error');}
     finally{setDeleting(false);}
   }
 
@@ -241,7 +240,7 @@ export default function SubmittalsPage(){
       });
       if(!r.ok) throw new Error('Update failed');
       showToast(msg);
-    }catch{showToast('Update failed — reloading','error');await load();}
+    }catch{showToast('Update failed — reloading.','error');await load();}
     finally{setRowBusyId(null);}
   }
 
@@ -303,7 +302,7 @@ export default function SubmittalsPage(){
         <PremiumSurface maxWidth={2200}>
           {/* Header */}
           <ModuleHero
-            eyebrow="PROJECT WORKFLOW"
+            eyebrow="Project Workflow"
             eyebrowIcon={<ClipboardText size={13} weight="fill" color={moduleAccent('specs').hex} />}
             title="Submittal"
             accent="Log"
@@ -318,14 +317,14 @@ export default function SubmittalsPage(){
           {/* KPIs */}
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
             <StatCard icon={<Stack size={19} weight="duotone" color={moduleAccent('specs').hex} />}
-              label="Total" value={String(total)} accent={GOLD} sub="submittals" delay={0.02}  href={`/app/projects/${projectId}/submittals`}/>
+              label="Total" value={String(total)} accent={GOLD} sub="Submittals" delay={0.02}  href={`/app/projects/${projectId}/submittals`}/>
             <StatCard icon={<Clock size={19} weight="duotone" color={DIM} />}
-              label="Pending" value={String(pending)} sub="awaiting submission" delay={0.06}  href={`/app/projects/${projectId}/submittals`}/>
+              label="Pending" value={String(pending)} sub="Awaiting submission" delay={0.06}  href={`/app/projects/${projectId}/submittals`}/>
             <StatCard icon={<Eye size={19} weight="duotone" color={moduleAccent('specs').hex} />}
-              label="Under Review" value={String(underReview)} accent={GOLD} sub="in review" delay={0.10}  href={`/app/projects/${projectId}/submittals`}/>
+              label="Under Review" value={String(underReview)} accent={GOLD} sub="In review" delay={0.10}  href={`/app/projects/${projectId}/submittals`}/>
             <StatCard icon={<WarningCircle size={19} weight="duotone" color={RED} />}
               label="Overdue" value={String(overdue)} accent={overdue>0?RED:undefined}
-              sub={overdue>0?'past required date':'none overdue'} delay={0.14}  href={`/app/projects/${projectId}/submittals`}/>
+              sub={overdue>0?'Past required date':'None overdue'} delay={0.14}  href={`/app/projects/${projectId}/submittals`}/>
           </div>
 
           {/* Filters + Log */}
@@ -341,7 +340,7 @@ export default function SubmittalsPage(){
                 module="submittals"
                 search={search}
                 onSearch={setSearch}
-                searchPlaceholder="Search by number, title, spec section, or trade..."
+                searchPlaceholder="Search by number, title, spec section, or trade…"
                 filters={[
                   {key:'status',label:'Status',value:filterStatus,onChange:setFilterStatus,allLabel:'All Statuses',
                     options:STATUSES.map(s=>({value:s,label:STATUS_LABELS[s]}))},
@@ -352,7 +351,7 @@ export default function SubmittalsPage(){
               />
             </div>
 
-            {loading&&<div style={{padding:40,textAlign:'center',color:DIM}}>Loading submittals...</div>}
+            {loading&&<div style={{padding:40,textAlign:'center',color:DIM}}>Loading submittals…</div>}
 
             {!loading&&loadError&&(
               <div style={{margin:'0 16px 14px',background:'rgba(192,48,48,.12)',border:'1px solid rgba(192,48,48,.3)',borderRadius:8,padding:'12px 16px',color:'#c03030',fontSize:13}}>
@@ -380,10 +379,10 @@ export default function SubmittalsPage(){
                 </div>
                 {submittals.length===0&&(
                   <FlowStrip steps={[
-                    {title:'Log the submittal',desc:'numbered S-001, S-002...'},
-                    {title:'Submit for review',desc:'ball flips to the architect'},
-                    {title:'Advance in one click',desc:'right from the log'},
-                    {title:'Approved or revise',desc:'revisions keep the number'},
+                    {title:'Log the Submittal',desc:'Numbered S-001, S-002…'},
+                    {title:'Submit for Review',desc:'Ball flips to the architect'},
+                    {title:'Advance in One Click',desc:'Right from the log'},
+                    {title:'Approved or Revise',desc:'Revisions keep the number'},
                   ]} />
                 )}
               </div>
@@ -393,10 +392,9 @@ export default function SubmittalsPage(){
               <div style={{overflowX:'auto',borderTop:`1px solid rgba(255,255,255,0.06)`}}>
                 <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
                   <thead>
-                    <tr style={{background:'#1c1c1e'}}>
+                    <tr style={{background:'var(--bg-surface-2)'}}>
                       {['#','Title','Spec Section','Status','Ball in Court','Req. Date','Rev.','Actions'].map(h=>(
-                        <th key={h} style={{padding:'10px 14px',textAlign:'left',fontSize:11,fontWeight:700,
-                          textTransform:'uppercase',letterSpacing:.5,color:DIM,
+                        <th key={h} style={{padding:'10px 14px',textAlign:'left',fontSize:11,fontWeight:700,color:DIM,
                           borderBottom:`1px solid ${BORDER}`,whiteSpace:'nowrap'}}>
                           {h}
                         </th>
@@ -410,7 +408,7 @@ export default function SubmittalsPage(){
                       return(
                         <tr key={s.id}
                           onClick={()=>viewSub(s)}
-                          style={{background:isSel?'rgba(245, 158, 11,.07)':'transparent',
+                          style={{background:isSel?'var(--brand-primary-08)':'transparent',
                             borderBottom:`1px solid rgba(255,255,255,0.08)`,cursor:'pointer',
                             transition:'background .1s'}}
                           onMouseEnter={e=>{if(!isSel)e.currentTarget.style.background='rgba(255,255,255,.04)';}}
@@ -430,7 +428,7 @@ export default function SubmittalsPage(){
                           <td style={{padding:'11px 14px'}}>
                             <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>
                               <StatusPill module="submittals" status={s.status} size="sm"/>
-                              {od&&<Pill label="OVERDUE" color={RED}/>}
+                              {od&&<Pill label="Overdue" color={RED}/>}
                             </div>
                           </td>
                           <td style={{padding:'11px 14px'}}>
@@ -455,7 +453,7 @@ export default function SubmittalsPage(){
                                 disabled={rowBusyId===s.id}
                                 onChange={e=>reassignBIC(s,e.target.value)}
                                 title="Reassign ball-in-court"
-                                style={{padding:'5px 8px',background:'#1c1c1e',border:`1px solid ${BORDER}`,
+                                style={{padding:'5px 8px',background:'var(--bg-surface-2)',border:`1px solid ${BORDER}`,
                                   borderRadius:6,color:TEXT,fontSize:12,outline:'none',cursor:'pointer'}}>
                                 {BIC_OPTIONS.map(b=><option key={b} value={b}>{b}</option>)}
                               </select>
@@ -464,8 +462,8 @@ export default function SubmittalsPage(){
                                   onClick={()=>advanceStatus(s)}
                                   disabled={rowBusyId===s.id}
                                   title={`Advance to ${nextStatusLabel(s)}`}
-                                  style={{padding:'5px 10px',background:'rgba(245, 158, 11,.12)',
-                                    border:'1px solid rgba(245, 158, 11,.3)',borderRadius:6,color:GOLD,
+                                  style={{padding:'5px 10px',background:'var(--brand-primary-12)',
+                                    border:'1px solid var(--brand-primary-25)',borderRadius:6,color:GOLD,
                                     fontSize:12,fontWeight:700,cursor:rowBusyId===s.id?'wait':'pointer',
                                     display:'inline-flex',alignItems:'center',gap:4,opacity:rowBusyId===s.id?0.6:1}}>
                                   {nextStatusLabel(s)}<CaretRight size={11} weight="bold" color={GOLD}/>
@@ -499,16 +497,16 @@ export default function SubmittalsPage(){
               {mode==='view'&&selected&&(
                 <>
                   <button onClick={()=>openEdit(selected)}
-                    style={{padding:'6px 14px',background:'rgba(245,158,11,.1)',
-                      border:'1px solid rgba(245,158,11,.3)',borderRadius:6,
-                      color:'#FBBF24',fontSize:12,fontWeight:700,cursor:'pointer'}}>
+                    style={{padding:'6px 14px',background:'var(--brand-primary-12)',
+                      border:'1px solid var(--brand-primary-25)',borderRadius:6,
+                      color:'var(--brand-primary-strong)',fontSize:12,fontWeight:700,cursor:'pointer'}}>
                     Edit
                   </button>
                   <button onClick={()=>deleteSub(selected)} disabled={deleting}
                     style={{padding:'6px 14px',background:'rgba(192,48,48,.1)',
-                      border:`1px solid ${RED}44`,borderRadius:6,
+                      border:`1px solid color-mix(in srgb, ${RED} 27%, transparent)`,borderRadius:6,
                       color:RED,fontSize:12,fontWeight:700,cursor:'pointer'}}>
-                    {deleting?'...':'Delete'}
+                    {deleting?'…':'Delete'}
                   </button>
                 </>
               )}
@@ -526,9 +524,9 @@ export default function SubmittalsPage(){
                 {mode==='create'&&ctx&&(
                   <StatStrip items={[
                     {href: `/app/projects/${projectId}/submittals`, label:'Log', value:String(total), sub:`${ctx.counts?.openSubmittals??0} open now`},
-                    {href: `/app/projects/${projectId}/submittals`, label:'Reviewer', value:ctx.project?.architectName||'Architect', sub:'ball moves here on submit'},
-                    {href: `/app/projects/${projectId}/subs`, label:'Sub Roster', value:String((ctx.subs||[]).length), sub:'trades to pick from'},
-                    {href: `/app/projects/${projectId}/submittals`, label:'Overdue', value:String(overdue), accent:overdue>0?RED:undefined, sub:overdue>0?'need attention first':'log is current'},
+                    {href: `/app/projects/${projectId}/submittals`, label:'Reviewer', value:ctx.project?.architectName||'Architect', sub:'Ball moves here on submit'},
+                    {href: `/app/projects/${projectId}/subs`, label:'Sub Roster', value:String((ctx.subs||[]).length), sub:'Trades to pick from'},
+                    {href: `/app/projects/${projectId}/submittals`, label:'Overdue', value:String(overdue), accent:overdue>0?RED:undefined, sub:overdue>0?'Need attention first':'Log is current'},
                   ]}/>
                 )}
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
@@ -557,7 +555,7 @@ export default function SubmittalsPage(){
                     <select value={form.spec_section}
                       onChange={e=>setForm(f=>({...f,spec_section:e.target.value}))}
                       style={{...inp,padding:'9px 10px'}}>
-                      <option value="">Select division...</option>
+                      <option value="">Select division…</option>
                       {form.spec_section&&!specOptions.includes(form.spec_section)&&(
                         <option value={form.spec_section}>{form.spec_section}</option>
                       )}
@@ -570,18 +568,18 @@ export default function SubmittalsPage(){
                     <select value={form.trade}
                       onChange={e=>setForm(f=>({...f,trade:e.target.value}))}
                       style={{...inp,padding:'9px 10px'}}>
-                      <option value="">Select trade...</option>
+                      <option value="">Select trade…</option>
                       {form.trade&&!roster.some((s:any)=>(s.trade||s.companyName)===form.trade)&&!SUB_TRADES.includes(form.trade)&&(
                         <option value={form.trade}>{form.trade}</option>
                       )}
                       {roster.length>0&&(
-                        <optgroup label="On this project">
+                        <optgroup label="On This Project">
                           {roster.map((s:any)=>(
                             <option key={s.membershipId} value={s.trade||s.companyName||''}>{s.companyName}{s.trade?` — ${s.trade}`:''}</option>
                           ))}
                         </optgroup>
                       )}
-                      <optgroup label="All trades">
+                      <optgroup label="All Trades">
                         {SUB_TRADES.map(t=><option key={t} value={t}>{t}</option>)}
                       </optgroup>
                     </select>
@@ -626,24 +624,24 @@ export default function SubmittalsPage(){
                   <textarea value={form.notes}
                     onChange={e=>setForm(f=>({...f,notes:e.target.value}))}
                     rows={3} style={{...inp,resize:'vertical',lineHeight:1.5}}
-                    placeholder="Additional notes or comments..."/>
+                    placeholder="Additional notes or comments…"/>
                 </div>
                 {mode==='create'&&(
                   <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:'14px 16px'}}>
-                    <FlowSteps title="After you submit" steps={[
-                      {title:'Submitted for review', desc:`Ball-in-court flips to ${ctx?.project?.architectName||'the architect'} and the review clock starts.`},
-                      {title:'Under review', desc:'Advance the workflow in one click from the log — no form reopening.'},
-                      {title:'Approved — or Revise & Resubmit', desc:'A resubmittal keeps this number and auto-increments the revision (R1, R2...).'},
+                    <FlowSteps title="After You Submit" steps={[
+                      {title:'Submitted for Review', desc:`Ball-in-court flips to ${ctx?.project?.architectName||'the architect'} and the review clock starts.`},
+                      {title:'Under Review', desc:'Advance the workflow in one click from the log — no form reopening.'},
+                      {title:'Approved — or Revise & Resubmit', desc:'A resubmittal keeps this number and auto-increments the revision (R1, R2…).'},
                     ]}/>
                   </div>
                 )}
                 <div style={{display:'flex',gap:10,paddingTop:4}}>
                   <button onClick={save} disabled={saving}
                     style={{flex:1,padding:'11px 0',
-                      background:`linear-gradient(135deg,${GOLD},#FBBF24)`,
-                      border:'none',borderRadius:8,color:'#1C1C1E',
+                      background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,
+                      border:'none',borderRadius:8,color:'#0A0A00',
                       fontSize:14,fontWeight:800,cursor:'pointer',opacity:saving?0.6:1}}>
-                    {saving?'Saving...':mode==='create'?'Create Submittal':'Save Changes'}
+                    {saving?'Saving…':mode==='create'?'Create Submittal':'Save Changes'}
                   </button>
                   <button onClick={closePanel}
                     style={{padding:'11px 16px',background:'rgba(143,163,192,.1)',
@@ -671,14 +669,14 @@ export default function SubmittalsPage(){
                         color={BIC_COLORS[selected.ball_in_court]||DIM}/>
                     )}
                     {isOverdue(selected)&&(
-                      <Pill label="OVERDUE" color={RED}/>
+                      <Pill label="Overdue" color={RED}/>
                     )}
                   </div>
                 </div>
 
                 {/* Status workflow */}
-                <div style={{background:'#141416',border:`1px solid ${BORDER}`,borderRadius:10,padding:'12px 14px'}}>
-                  <div style={{fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:10}}>
+                <div style={{background:'var(--bg-surface)',border:`1px solid ${BORDER}`,borderRadius:10,padding:'12px 14px'}}>
+                  <div style={{fontSize:10,fontWeight:700,color:DIM,marginBottom:10}}>
                     Status Workflow
                   </div>
                   <div style={{display:'flex',alignItems:'center',gap:4,flexWrap:'wrap'}}>
@@ -688,9 +686,9 @@ export default function SubmittalsPage(){
                         <React.Fragment key={s}>
                           {i>0&&<span style={{display:'inline-flex',alignItems:'center',verticalAlign:'middle',color:BORDER}}><CaretRight size={12} weight="regular" color={BORDER} /></span>}
                           <span style={{fontSize:10,fontWeight:700,padding:'3px 8px',borderRadius:20,
-                            background:active?`${STATUS_COLORS[s]}22`:'transparent',
+                            background:active?`color-mix(in srgb, ${STATUS_COLORS[s]} 13%, transparent)`:'transparent',
                             color:active?STATUS_COLORS[s]:DIM,
-                            border:active?`1px solid ${STATUS_COLORS[s]}44`:'1px solid transparent'}}>
+                            border:active?`1px solid color-mix(in srgb, ${STATUS_COLORS[s]} 27%, transparent)`:'1px solid transparent'}}>
                             {STATUS_LABELS[s]}
                           </span>
                         </React.Fragment>
@@ -708,8 +706,8 @@ export default function SubmittalsPage(){
                 </div>
 
                 {selected.notes&&(
-                  <div style={{background:'#141416',border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
-                    <div style={{fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:6}}>Notes</div>
+                  <div style={{background:'var(--bg-surface)',border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
+                    <div style={{fontSize:10,fontWeight:700,color:DIM,marginBottom:6}}>Notes</div>
                     <div style={{fontSize:13,color:TEXT,lineHeight:1.6,whiteSpace:'pre-wrap'}}>{selected.notes}</div>
                   </div>
                 )}
