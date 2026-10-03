@@ -46,3 +46,16 @@ converge. One line each, newest at the bottom.
 - (2 Oct) The floating chat widget (`components/SaguaroChatWidget.tsx`, fixed bottom-right,
   z 9999) covers right-aligned controls at the bottom of the viewport — e.g. "Upload files"
   on /app/leads/[id] when the files card sits at the fold.
+- (2 Oct, audit verify) `lib/pdf-engine.ts` G706 — the "all lien waivers received" check prints as a
+  plain "v" (WinAnsi has no ✓), and the footer of every generated PDF says `saguarocrm.com`
+  instead of saguarocontrol.net.
+- (2 Oct, audit verify) Generated PDFs (bid jacket, G706) still draw in the old gold
+  `0.831 0.627 0.09` — print layouts, so not the neon screen yellow, but worth one brand decision.
+- (2 Oct, audit verify) `app/api/projects/[projectId]/close/route.ts:39` `today()` uses the server
+  clock — Vercel is UTC, so a job closed at 6 PM in Arizona records tomorrow's `closeout_date`.
+- (2 Oct, audit verify) `components/AppSidebar.tsx` phase pill — a closed job still reads
+  "Building · You won it — running the job" with "← Back to Bidding"; a lost bid that was closed
+  reads "Bidding · Chasing this job". Should read Closed. The overview header also still offers
+  "New Pay App" on a closed job and while bidding.
+- (2 Oct, audit verify) `app/app/projects/[projectId]/takeoff/page.tsx` — on load the upload hero
+  ("Drop a plan") shows for ~3–5 s before a completed takeoff's results replace it.
