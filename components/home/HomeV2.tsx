@@ -121,7 +121,7 @@ const ownerless = (it: QueueItem) => it.id.startsWith('group:') || DECISION_TYPE
 
 /** Inline completion, only where an existing route already owns the write:
  *  to-dos and punch items. Approvals always open the record first. */
-const COMPLETABLE: Record<string, (id: string) => { url: string; body?: unknown }> = {
+const COMPLETABLE: Partial<Record<string, (id: string) => { url: string; body?: unknown }>> = {
   todo: id => ({ url: `/api/todos/${id}/complete` }),
   punch: id => ({ url: `/api/punch-list/${id}/complete`, body: { status: 'completed' } }),
 };
@@ -130,7 +130,7 @@ function QueueRow({ it, today, canEdit, onChanged }: { it: QueueItem; today: str
   const tone = TIER_TONE[it.tier];
   const [state, setState] = useState<'idle' | 'busy' | 'done' | 'error'>('idle');
   const [err, setErr] = useState('');
-  const complete: ((id: string) => { url: string; body?: unknown }) | undefined = COMPLETABLE[it.sourceType];
+  const complete = COMPLETABLE[it.sourceType];
   const markDone = async () => {
     if (!complete || state === 'busy') return;
     setState('busy'); setErr('');
