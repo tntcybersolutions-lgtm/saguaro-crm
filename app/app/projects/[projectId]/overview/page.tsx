@@ -32,6 +32,7 @@ import { Badge, EmptyState, type BadgeTone } from '@/components/ui/kit';
 import GettingStartedRail from '@/components/GettingStartedRail';
 import ProjectOwnershipCard from '@/components/projects/ProjectOwnershipCard';
 import { accentForProject } from '@/lib/project-identity';
+import { NEON_CYCLE, neonCard } from '@/lib/neon';
 import { normalisePhase } from '@/lib/project-phase';
 import { isClosedStatus } from '@/lib/project-lifecycle';
 
@@ -107,18 +108,21 @@ interface UpcomingEntry { id: string; date: string; kind: string; title: string;
 
 /* ── Pieces ───────────────────────────────────────────────────────────── */
 
-function MetricTile({ m }: { m: Metric }) {
-  const color = m.tone === 'bad' ? 'var(--status-overdue, #FF4D5E)' : m.tone === 'warn' ? 'var(--status-under-contract, #FFC53D)' : 'var(--text-primary)';
+function MetricTile({ m, index }: { m: Metric; index: number }) {
+  // Neon tile (owner 2026-10-03); bad/warn values keep their status color.
+  const lit = NEON_CYCLE[index % NEON_CYCLE.length];
+  const glow = m.state === 'ok' || m.state === 'empty' ? neonCard(lit) : null;
+  const color = m.tone === 'bad' ? 'var(--status-overdue, #FF4D5E)' : m.tone === 'warn' ? 'var(--status-under-contract, #FFC53D)' : lit;
   const valueEl = m.state === 'loading'
     ? <span className="pov-skel pov-skel-line" style={{ width: '60%', height: 28 }} aria-label="Loading" />
     : m.state === 'failed'
       ? <span className="pov-metric-value pov-metric-muted">Couldn&apos;t load</span>
       : m.state === 'empty'
         ? <span className="pov-metric-value pov-metric-muted">{m.value}</span>
-        : <span className="pov-metric-value" style={{ color }}>{m.value}</span>;
+        : <span className="pov-metric-value" style={{ color, textShadow: `0 0 14px color-mix(in srgb, ${color} 45%, transparent)` }}>{m.value}</span>;
   return (
-    <Link href={m.href} className="pov-card pov-metric pov-link" aria-label={`${m.label}: ${m.state === 'ok' ? m.value : m.state === 'failed' ? 'couldn’t load' : m.value}. ${m.basis}`}>
-      <span className="pov-metric-label">{m.label}</span>
+    <Link href={m.href} className="pov-card pov-metric pov-link" style={glow ? { background: glow.background, borderTop: glow.borderTop, boxShadow: glow.boxShadow, borderColor: `color-mix(in srgb, ${lit} 28%, transparent)` } : undefined} aria-label={`${m.label}: ${m.state === 'ok' ? m.value : m.state === 'failed' ? 'couldn’t load' : m.value}. ${m.basis}`}>
+      <span className="pov-metric-label" style={glow ? { color: `color-mix(in srgb, ${lit} 65%, #FFFFFF)` } : undefined}>{m.label}</span>
       {valueEl}
       <span className="pov-metric-basis">{m.basis}</span>
     </Link>
@@ -527,7 +531,7 @@ export default function OverviewPage() {
           </div>
         )}
 
-        <div className="pov-metrics">{metrics.map(m => <MetricTile key={m.key} m={m} />)}</div>
+        <div className="pov-metrics">{metrics.map((m, i) => <MetricTile key={m.key} m={m} index={i} />)}</div>
 
         <div className="pov-primary">
           <Section
@@ -784,7 +788,7 @@ export default function OverviewPage() {
 const CSS = `
 .pov { width: 100%; max-width: none; min-width: 0; box-sizing: border-box; padding: 24px clamp(16px, 1.67vw, 32px) 64px; color: var(--text-primary); font-size: 15px; background: var(--bg-base); min-height: calc(100vh - 56px); }
 .pov h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.01em; margin: 0; overflow-wrap: anywhere; }
-.pov h2 { font-size: 17px; font-weight: 750; margin: 0; }
+.pov h2 { font-size: 17px; font-weight: 800; margin: 0; padding-bottom: 6px; background: linear-gradient(90deg, var(--neon-yellow, #FFE600), var(--neon-cyan, #22E5FF)) left bottom / 44px 2px no-repeat; }
 .pov-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; }
 .pov-titlewrap { min-width: 0; flex: 1 1 320px; }
 .pov-titleline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
