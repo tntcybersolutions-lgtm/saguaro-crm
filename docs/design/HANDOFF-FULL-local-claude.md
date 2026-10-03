@@ -54,11 +54,15 @@ Commits on `redesign/obsidian-glass` (newest first):
 - **Tokens:** `lib/design-tokens.ts` has the `layout` group (geometry). Native fonts kept; brand
   is **NEON YELLOW `#FFE600`** via `--brand-primary`. Inter and the champagne `#ebc275` were
   rejected; the parallel `.sg-root` system was **not** mounted.
-- **Robustness:** `lib/safe-json.ts` for storage reads.
-- **Docs:** `docs/design/{route-inventory,visual-findings,design-system,functional-gaps,verification}.md`.
+- **Robustness:** `lib/safe-json.ts` for storage reads; storage-connector `test`/`saveConfig`
+  now error-handled (no silent failure on non-JSON responses). *(commit `ef5b854`)*
+- **Security:** full API permission/tenant-isolation audit of all **713** routes — **clean**,
+  no cross-tenant IDOR and no unauthenticated mutations. See `security-audit-api.md`. *(commit `bfc3f1b`)*
+- **Docs (8):** `docs/design/{route-inventory,visual-findings,design-system,functional-gaps,verification,security-audit-api}.md`
+  + the two handoffs (`HANDOFF-visual-passes-3to6.md`, this file).
 
-Every commit: style guard PASS, 0 new tsc errors (8 pre-existing in `leads/[id]/media` +
-`api/reviews/route` are not ours).
+Branch total: **86 files, +1062/−153** vs main. Every commit: style guard PASS, 0 new tsc
+errors (8 pre-existing in `leads/[id]/media` + `api/reviews/route` are not ours).
 
 ---
 
