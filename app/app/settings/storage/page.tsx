@@ -119,9 +119,22 @@ function StorageSettings() {
     } catch (e: any) { console.error(e); flash(humanError(e, 'Something went wrong. Please try again.'), false); }
     setBusy(false);
   };
-  const test = async (id: string) => { const j = await (await fetch(`/api/storage/connectors/${id}/test`, { method: 'POST' })).json(); flash(j.ok ? `Connection OK${j.account ? ` — ${j.account}` : ''}` : (j.error || 'Test failed'), j.ok); load(); };
+  const test = async (id: string) => {
+    try {
+      const r = await fetch(`/api/storage/connectors/${id}/test`, { method: 'POST' });
+      const j = await r.json().catch(() => ({ ok: false, error: `Test failed (${r.status})` }));
+      flash(j.ok ? `Connection OK${j.account ? ` — ${j.account}` : ''}` : (j.error || 'Test failed'), j.ok);
+    } catch { flash('Test failed — could not reach the service', false); }
+    load();
+  };
   const remove = async (id: string, name: string) => { if (!(await confirmDialog({ title: 'Please confirm', message: `Remove "${name}"? Files already imported stay; new access stops.`, danger: true }))) return; await fetch(`/api/storage/connectors/${id}`, { method: 'DELETE' }); flash('Removed'); load(); };
-  const saveConfig = async (id: string, config: any) => { const j = await (await fetch(`/api/storage/connectors/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ config }) })).json(); if (j.error) flash(j.error, false); else { flash('Saved'); load(); } };
+  const saveConfig = async (id: string, config: any) => {
+    try {
+      const r = await fetch(`/api/storage/connectors/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ config }) });
+      const j = await r.json().catch(() => ({ error: `Save failed (${r.status})` }));
+      if (j.error) flash(j.error, false); else { flash('Saved'); load(); }
+    } catch { flash('Save failed — could not reach the service', false); }
+  };
 
   const oneClick = providers.filter((p) => p.auth === 'oauth');
   const advanced = providers.filter((p) => p.auth !== 'oauth');
