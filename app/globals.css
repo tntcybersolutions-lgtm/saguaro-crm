@@ -777,6 +777,12 @@ input:-webkit-autofill:focus {
   overflow-x: auto;
 }
 
+/* Row titles in every machined table use the one title color (owner 2026-10-03);
+ .pmTable rows get a uniform height and a yellow edge on hover. */
+.pmTable tbody td:first-child { color: var(--title-color, var(--brand-primary)); font-weight: 700; }
+.pmTable tbody tr td { padding-top: 12px; padding-bottom: 12px; }
+.pmTable tbody tr:hover td:first-child { box-shadow: inset 2px 0 0 var(--brand-primary); }
+
 /* Cards/links micro-interaction: anything opting in via .lift gets the standard hover. */
 .lift { transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease; }
 .lift:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); border-color: var(--border-strong); }
