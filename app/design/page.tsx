@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 /* ─── Palette — Sonoran minimal (gold on navy) ─── */
 const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#2CFF7A';
-const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#CBD5E1';
+const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#D4D4D8';
 const RED = '#FF3B30';
 
 /* ─── Room Types ─── */
@@ -26,13 +26,13 @@ const ROOMS = [
 const STYLES = [
   { id: 'modern', label: 'Modern Minimalist', colors: ['#FAFAF9','#78716C','#292524','#FF8A00'], desc: 'Clean lines, neutral tones' },
   { id: 'farmhouse', label: 'Modern Farmhouse', colors: ['#FEFCE8','#A16207','#44403C','#D6D3D1'], desc: 'Warm rustic charm' },
-  { id: 'mediterranean', label: 'Mediterranean', colors: ['#FEF3C7','#B45309','#7C2D12','#065F46'], desc: 'Earth tones, arched details' },
+  { id: 'mediterranean', label: 'Mediterranean', colors: ['#FEF3C7','#B45309','#7C2D12','#2CFF7A'], desc: 'Earth tones, arched details' },
   { id: 'industrial', label: 'Industrial Loft', colors: ['#78716C','#FF3B30','#1C1917','#A8A29E'], desc: 'Exposed brick, raw metal' },
   { id: 'coastal', label: 'Coastal Beach', colors: ['#F0F9FF','#FF8A00','#BAE6FD','#FDE68A'], desc: 'Light, airy, ocean palette' },
   { id: 'scandinavian', label: 'Scandinavian', colors: ['#FAFAFA','#E7E5E4','#D6D3D1','#2CFF7A'], desc: 'Hygge warmth, birch wood' },
   { id: 'art-deco', label: 'Art Deco', colors: ['#1C1917','#FF8A00','#FF8A00','#F5F5F4'], desc: 'Glamorous geometric luxury' },
   { id: 'japanese', label: 'Japanese Zen', colors: ['#F5F5DC','#8B7355','#2D4A3E','#D4C5A9'], desc: 'Tranquil, natural, wabi-sabi' },
-  { id: 'midcentury', label: 'Mid-Century Modern', colors: ['#FDE68A','#FF8A00','#065F46','#78716C'], desc: 'Retro 1960s organic curves' },
+  { id: 'midcentury', label: 'Mid-Century Modern', colors: ['#FDE68A','#FF8A00','#2CFF7A','#78716C'], desc: 'Retro 1960s organic curves' },
   { id: 'luxury', label: 'Luxury Contemporary', colors: ['#1C1917','#FF8A00','#F5F5F4','#78716C'], desc: 'High-end sophisticated' },
   { id: 'bohemian', label: 'Bohemian', colors: ['#FF8A00','#FF8A00','#FF8A00','#2CFF7A'], desc: 'Eclectic, colorful, layered' },
   { id: 'transitional', label: 'Transitional', colors: ['#F5F5F4','#A8A29E','#57534E','#FF8A00'], desc: 'Classic meets contemporary' },
@@ -337,7 +337,7 @@ export default function DesignStudioPage() {
             <div style={{
               position: 'absolute', left: 0, top: 20, width: '65%', height: '85%', borderRadius: 14,
               overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)',
-              background: 'linear-gradient(135deg, #161d2b 0%, #1e2636 100%)', zIndex: 1,
+              background: 'linear-gradient(135deg, #18181B 0%, #18181B 100%)', zIndex: 1,
             }}>
               <span style={{ position: 'absolute', bottom: 20, left: 20, background: 'rgba(0,0,0,0.5)', color: '#fff', padding: '5px 14px', borderRadius: 8, fontSize: 12, fontWeight: 500 }}>Before</span>
             </div>
@@ -433,7 +433,7 @@ export default function DesignStudioPage() {
             ].map((item, i) => (
               <div key={i} style={{ ...card, overflow: 'hidden' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', height: 200 }}>
-                  <div style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #161d2b 0%, #1e2636 100%)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #18181B 0%, #18181B 100%)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
                     <span style={{ position: 'absolute', bottom: 12, left: 12, background: 'rgba(0,0,0,0.45)', color: '#fff', padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 500 }}>Before</span>
                   </div>
                   <div style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #22242f 0%, #2c2a22 100%)' }}>

@@ -11,8 +11,8 @@ import { ListToolbar } from '@/components/ui/ListToolbar';
 
 /* ─── Palette ─── */
 const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#2CFF7A';
-const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#CBD5E1', DARK = 'var(--bg-base)';
-const RED = '#FF3B30', AMBER = 'var(--warning)', BLUE = 'var(--brand-primary)', PURPLE = '#AF52DE';
+const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#D4D4D8', DARK = 'var(--bg-base)';
+const RED = '#FF3B30', AMBER = 'var(--warning)', BLUE = 'var(--brand-primary)', PURPLE = '#FF8A00';
 /* Colors are CSS vars now, so a hex alpha suffix no longer works — tint with color-mix. */
 const mix = (c: string, pct: number) => `color-mix(in srgb, ${c} ${pct}%, transparent)`;
 

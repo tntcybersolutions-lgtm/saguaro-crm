@@ -39,7 +39,7 @@ export default function GetTheAppPage() {
           --dark:   var(--bg-base);
           --gold:   var(--brand-primary);
           --text:   #FFFFFF;
-          --dim:    #CBD5E1;
+          --dim:    #D4D4D8;
           --border: rgba(255,255,255,0.12);
           --raised: var(--bg-surface);
           --green:  #2CFF7A;
@@ -481,7 +481,7 @@ export default function GetTheAppPage() {
           color: var(--text);
           font-weight: 500;
         }
-        .compare-table td.app-store-col { color: #CBD5E1; }
+        .compare-table td.app-store-col { color: #D4D4D8; }
         .compare-table td.saguaro-col {
           background: color-mix(in srgb, var(--brand-primary) 5%, transparent);
           color: var(--text);

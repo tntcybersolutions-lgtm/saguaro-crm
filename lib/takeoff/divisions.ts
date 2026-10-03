@@ -1,7 +1,7 @@
 // SINGLE SOURCE OF TRUTH for CSI division color — CANONICAL copy: D:/Saguaro-Field (mobile) lib/takeoff/divisions.ts; the web repo carries a byte-exact mirror (scripts/sync-takeoff-engine.mjs).
 // Drives: hero accents, trade-breakdown bar segments, legend dots, division headers, PDF.
 // Reuses the exact hexes already in the Heatmap's SYSTEM_COLORS / WALL_MATERIALS
-// (teal #2CFF7A, orange #FF8A00, blue #2F6BFF, tan #C9A96A) so the two tools read
+// (teal #2CFF7A, orange #FF8A00, blue #FF8A00, tan #C9A96A) so the two tools read
 // as one family. Keep this identical across web + mobile.
 export const DIVISION_COLORS: Record<string, string> = {
   '01': '#8094B0', // General Requirements — slate
@@ -17,7 +17,7 @@ export const DIVISION_COLORS: Record<string, string> = {
   '11': '#FF8A00', // Equipment — indigo
   '12': '#FF8A00', // Furnishings — pink
   '21': '#FF3B30', // Fire Suppression — red
-  '22': '#2F6BFF', // Plumbing — blue
+  '22': '#FF8A00', // Plumbing — blue
   '23': '#16C060', // HVAC — green
   '26': '#FF8A00', // Electrical — orange
   '27': '#FFE600', // Communications — sky

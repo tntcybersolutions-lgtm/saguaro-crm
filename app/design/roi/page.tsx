@@ -6,7 +6,7 @@ import { BatteryHigh, Drop, Lightbulb, Plug, Shower, Sun, Thermometer, Thermomet
 
 /* ─── Palette — Premium Dark Glassmorphism ─── */
 const GOLD = 'var(--brand-primary)', GREEN = '#2CFF7A';
-const TEXT = '#FFFFFF', DIM = '#CBD5E1';
+const TEXT = '#FFFFFF', DIM = '#D4D4D8';
 const RED = '#FF3B30', BLUE = 'var(--brand-primary)';
 const BG = 'var(--bg-base)', CARD_BG = 'rgba(255,255,255,0.04)';
 const CARD_BORDER = 'rgba(255,255,255,0.12)', CARD_SHADOW = '0 8px 32px rgba(0,0,0,0.12)';

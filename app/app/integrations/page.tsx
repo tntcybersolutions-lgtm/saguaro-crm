@@ -8,7 +8,7 @@ import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, Insig
 import { Plugs, MagnifyingGlass } from '@phosphor-icons/react';
 
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-surface-2)', CARD = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1', TEXT = '#FFFFFF', GREEN = '#2CFF7A', RED = '#FF3B30';
+const DIM = '#D4D4D8', TEXT = '#FFFFFF', GREEN = '#2CFF7A', RED = '#FF3B30';
 
 type Integration = {
   key: string;

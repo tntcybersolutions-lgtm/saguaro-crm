@@ -5,7 +5,7 @@ import { ArrowsClockwise, Robot, CheckCircle, Bell, WarningOctagon, Warning, Lis
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, FlowSteps, InsightRow, goldButtonStyle } from '@/components/ui/premium';
 import { useProjects } from '@/lib/hooks/useProjects';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#FF3B30';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF',RED='#FF3B30';
 
 type AlertSeverity = 'critical' | 'high' | 'medium' | 'low';
 

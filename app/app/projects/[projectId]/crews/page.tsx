@@ -29,7 +29,7 @@ import Suggest from '@/components/ui/Suggest';
 // ---------------------------------------------------------------------------
 
 const DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1', TEXT = '#FFFFFF', GOLD = 'var(--brand-primary)';
+const DIM = '#D4D4D8', TEXT = '#FFFFFF', GOLD = 'var(--brand-primary)';
 const GREEN = '#2CFF7A', AMBER = 'var(--warning)', RED = '#FF3B30';
 
 interface CrewMember { id: string; person_name: string; role: string | null; trade: string | null; }

@@ -84,7 +84,7 @@ export function FileDropzone({
           boxShadow: over ? '0 0 0 3px var(--brand-primary-12)' : 'none',
         }}
       >
-        {busy ? <Spinner size={compact ? 18 : 26} color="var(--brand-primary)" className="spin" /> : <UploadSimple size={compact ? 18 : 26} color={over ? 'var(--brand-primary)' : '#CBD5E1'} />}
+        {busy ? <Spinner size={compact ? 18 : 26} color="var(--brand-primary)" className="spin" /> : <UploadSimple size={compact ? 18 : 26} color={over ? 'var(--brand-primary)' : '#D4D4D8'} />}
         <div style={{ color: 'var(--text-secondary)', fontSize: compact ? 13 : 14 }}>
           <b style={{ color: 'var(--text-primary)' }}>{busy ? msg || 'Uploading…' : 'Drop files or click to browse'}</b>
           {!compact && !busy && <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>Images, video, PDF, Office, CAD — up to 500 MB each</div>}

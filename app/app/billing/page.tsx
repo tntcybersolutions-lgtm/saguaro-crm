@@ -10,7 +10,7 @@ import { ADDONS, type AddonDef } from '@/lib/addons';
 const GOLD   = 'var(--brand-primary)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM    = '#CBD5E1';
+const DIM    = '#D4D4D8';
 const TEXT   = '#FFFFFF';
 const GREEN  = '#2CFF7A';
 const RED    = '#FF3B30';

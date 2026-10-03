@@ -28,7 +28,7 @@ import { moduleAccent } from '@/lib/module-identity';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF';
 const GREEN='#2CFF7A',RED='#FF3B30';
 
 const ALBUMS=['General','Progress','Inspections','Closeout','Issues','Other'];
@@ -766,7 +766,7 @@ function PhotoCard({photo,selected,onClick,albumColor,onEdit}:{
 }){
   const BORDER_C='rgba(255,255,255,0.12)';
   const RAISED_C='var(--bg-surface)';
-  const DIM_C='#CBD5E1';
+  const DIM_C='#D4D4D8';
   const TEXT_C='#FFFFFF';
   return(
     <div onClick={onClick}

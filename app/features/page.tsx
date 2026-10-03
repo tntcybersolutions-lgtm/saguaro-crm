@@ -9,7 +9,7 @@ const C = {
   gold: 'var(--brand-primary)',
   goldBright: 'var(--brand-primary-strong)',
   text: '#FFFFFF',
-  dim: '#CBD5E1',
+  dim: '#D4D4D8',
   border: 'rgba(255,255,255,0.08)',
   raised: 'var(--bg-surface)',
   raisedAlt: 'var(--bg-surface)',

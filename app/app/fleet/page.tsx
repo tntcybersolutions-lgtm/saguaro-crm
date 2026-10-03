@@ -15,7 +15,7 @@ import { humanError } from '@/lib/errors';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1', TEXT = '#FFFFFF', GREEN = '#2CFF7A', RED = '#FF3B30', AMBER = 'var(--warning)';
+const DIM = '#D4D4D8', TEXT = '#FFFFFF', GREEN = '#2CFF7A', RED = '#FF3B30', AMBER = 'var(--warning)';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const usd = (c: number) => '$' + Math.round((c || 0) / 100).toLocaleString();
 const now = () => new Date().toISOString();

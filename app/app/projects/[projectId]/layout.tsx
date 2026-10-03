@@ -18,7 +18,7 @@ import {
 } from '@phosphor-icons/react';
 
 const GOLD = 'var(--brand-primary)'; const DARK = 'var(--bg-base)'; const RAISED = 'var(--bg-surface-2)';
-const BORDER = 'rgba(255,255,255,0.12)'; const DIM = '#CBD5E1'; const TEXT = '#FFFFFF';
+const BORDER = 'rgba(255,255,255,0.12)'; const DIM = '#D4D4D8'; const TEXT = '#FFFFFF';
 
 // ALL sidebar nav items — every module Buildertrend has + more.
 // `accent` = module-identity key (lib/module-identity): the item's icon wears

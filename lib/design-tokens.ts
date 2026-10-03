@@ -37,7 +37,7 @@ export const colors = {
   borderDim:  'rgba(255,255,255,0.08)',
 
   text:       '#FFFFFF',
-  textMuted:  '#D7DEE8',
+  textMuted:  '#D4D4D8',
   textDim:    '#A9B4C4',
   textFaint:  '#7A8597',
 

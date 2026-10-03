@@ -14,7 +14,7 @@ import SuggestionTicker from '@/components/intelligence/SuggestionTicker';
 
 // No 'intelligence' key exists in lib/module-identity — this surface stays on
 // the gold ground (money + flagship voice) rather than inventing a module hue.
-const GOLD = 'var(--brand-primary)', DIM = '#CBD5E1', TEXT = '#FFFFFF';
+const GOLD = 'var(--brand-primary)', DIM = '#D4D4D8', TEXT = '#FFFFFF';
 // Desert-dusk semantic palette — harmonized with the dashboard (muted emerald,
 // terracotta, warm amber) so severity accents sit on the aurora bg.
 const GREEN = '#2CFF7A', RED = '#FF3B30', AMBER = 'var(--warning)';

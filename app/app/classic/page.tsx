@@ -36,7 +36,7 @@ const RAISED = 'var(--bg-surface)';
 const RAISED_ALT = 'var(--bg-surface-2)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const BORDER_SUBTLE = 'rgba(0,0,0,0.06)';
-const DIM    = '#CBD5E1';
+const DIM    = '#D4D4D8';
 const TEXT   = '#FFFFFF';
 // Desert-dusk semantic palette — retuned off raw iOS system colors so the
 // accents harmonize with gold-on-navy instead of clashing (turquoise, sage,

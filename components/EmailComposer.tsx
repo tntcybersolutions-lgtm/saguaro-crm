@@ -9,9 +9,9 @@ import { enqueue } from '@/lib/field-db';
 
 const GOLD = 'var(--brand-primary)';
 const RAISED = 'var(--bg-surface)';
-const BORDER = '#1E3A5F';
+const BORDER = '#2A2A2E';
 const TEXT = '#F0F4FF';
-const DIM = '#8BAAC8';
+const DIM = '#A1A1AA';
 const GREEN = '#2CFF7A';
 const RED = '#FF3B30';
 const BLUE = 'var(--brand-primary)';
@@ -303,7 +303,7 @@ export default function EmailComposer({
             onClick={handleSend}
             disabled={status === 'sending'}
             style={{
-              flex: 2, background: status === 'sending' ? '#1E3A5F' : GOLD,
+              flex: 2, background: status === 'sending' ? '#2A2A2E' : GOLD,
               border: 'none', borderRadius: 12, padding: '14px',
               color: status === 'sending' ? DIM : '#000', fontSize: 15,
               fontWeight: 800, cursor: status === 'sending' ? 'wait' : 'pointer',

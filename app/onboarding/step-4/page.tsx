@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Cactus, Check, Confetti } from '@phosphor-icons/react';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#FF3B30',GREEN='#2CFF7A';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF',RED='#FF3B30',GREEN='#2CFF7A';
 
 const STEPS = [
   { num: 1, label: 'Welcome', done: true },
@@ -194,7 +194,7 @@ export default function OnboardingStep4() {
           </div>
         )}
 
-        <div style={{textAlign:'center',marginTop:20,fontSize:12,color:'#CBD5E1'}}>
+        <div style={{textAlign:'center',marginTop:20,fontSize:12,color:'#D4D4D8'}}>
           Questions? <a href="mailto:support@saguarocontrol.net" style={{color:DIM}}>support@saguarocontrol.net</a>
         </div>
       </div>

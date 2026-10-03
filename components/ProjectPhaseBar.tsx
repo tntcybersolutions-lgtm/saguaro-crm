@@ -32,7 +32,7 @@ const PHASE_COLORS: Record<string, string> = {
   execution: '#FFE600', // amber
   field:     '#2CFF7A', // green
   financial: '#FF8A00', // orange
-  docs:      '#B08CFF', // violet
+  docs:      '#FF8A00', // violet
   closeout:  '#2EDBD0', // teal
 };
 

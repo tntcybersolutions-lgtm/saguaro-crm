@@ -7,7 +7,7 @@ import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, StatStrip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
 import { SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30';
 const fmt = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmt0 = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
 
@@ -441,12 +441,12 @@ export default function PayrollPage() {
             <div style={{ fontSize: 11.5, color: '#FCD9A0', marginTop: 8, lineHeight: 1.5, borderTop: `1px solid var(--brand-primary-18)`, paddingTop: 8 }}>
               <strong style={{ color: GOLD }}>Sample / reference rates.</strong> Applied rates are Davis-Bacon-style samples for planning — not an official determination. Verify against the official{' '}
               <a href="https://sam.gov/content/wage-determinations" target="_blank" rel="noopener noreferrer" style={{ color: GOLD, fontWeight: 700 }}>SAM.gov (WDOL)</a>{' '}
-              determination for this project before certifying. Rows marked <span style={{ color: '#7fb3ff', fontWeight: 800 }}>custom</span> are your own entered determination.
+              determination for this project before certifying. Rows marked <span style={{ color: '#FF8A00', fontWeight: 800 }}>custom</span> are your own entered determination.
             </div>
           )}
         </div>
       )}
-      {pwNote && <div style={{ background: 'var(--brand-primary-08)', border: '1px solid var(--brand-primary-25)', borderRadius: 8, padding: '9px 16px', marginBottom: 20, fontSize: 12.5, color: '#7fb3ff' }}>{pwNote}</div>}
+      {pwNote && <div style={{ background: 'var(--brand-primary-08)', border: '1px solid var(--brand-primary-25)', borderRadius: 8, padding: '9px 16px', marginBottom: 20, fontSize: 12.5, color: '#FF8A00' }}>{pwNote}</div>}
 
       {/* Field time clock rollup — import instead of retyping hours */}
       {weekEndingDate && weekEntries.length > 0 && (

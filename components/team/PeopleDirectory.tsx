@@ -12,7 +12,7 @@ import { UsersThree, Plus, PencilSimple, Trash, X, SealCheck, Warning, Star, Fir
 import { ListToolbar } from '@/components/ui/ListToolbar';
 
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1', TEXT = '#FFFFFF', GREEN = '#2CFF7A', RED = '#FF3B30', AMBER = 'var(--warning)';
+const DIM = '#D4D4D8', TEXT = '#FFFFFF', GREEN = '#2CFF7A', RED = '#FF3B30', AMBER = 'var(--warning)';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const nameOf = (e: any) => (e?.full_name || `${e?.first_name ?? ''} ${e?.last_name ?? ''}`).trim() || 'Unnamed';
 const initials = (n: string) => n.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();

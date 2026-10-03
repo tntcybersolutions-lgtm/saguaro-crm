@@ -1312,7 +1312,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                 <input placeholder="Alternate label (e.g. ALT-1 upgrade flooring)" value={cAlt} onChange={(e) => setCAlt(e.target.value)} style={{ ...inp, flex: 1, minWidth: 160 }} />
                 {cAlt.trim() && (['add', 'deduct'] as const).map((t) => (
-                  <button key={t} onClick={() => setCAltType(t)} style={{ ...pillBtn, textTransform: 'capitalize', background: cAltType === t ? (t === 'add' ? '#2f6bff' : '#c0392b') : 'transparent', color: cAltType === t ? '#fff' : TEXT, border: cAltType === t ? 'none' : `1px solid ${LINE}` }}>{t}</button>
+                  <button key={t} onClick={() => setCAltType(t)} style={{ ...pillBtn, textTransform: 'capitalize', background: cAltType === t ? (t === 'add' ? '#FF8A00' : '#c0392b') : 'transparent', color: cAltType === t ? '#fff' : TEXT, border: cAltType === t ? 'none' : `1px solid ${LINE}` }}>{t}</button>
                 ))}
               </div>
             </div>
@@ -1337,7 +1337,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                     <div style={{ flex: 1 }}><b>{c.name}</b>
                       {c.instanceCount && c.instanceCount > 1 ? <span style={{ marginLeft: 7, fontSize: 10.5, fontWeight: 800, color: '#16794a', background: '#eef7ee', borderRadius: 5, padding: '1px 6px' }}>×{c.instanceCount}</span> : null}
                       {(c.building || c.level || c.zone) ? <span style={{ marginLeft: 6, fontSize: 10.5, fontWeight: 700, color: DIM, border: `1px solid ${LINE}`, borderRadius: 5, padding: '1px 6px' }}>{[c.building, c.level && `L${c.level}`, c.zone].filter(Boolean).join('·')}</span> : null}
-                      {c.alternate ? <span style={{ marginLeft: 6, fontSize: 10.5, fontWeight: 800, color: c.alternateType === 'deduct' ? '#c0392b' : '#2f6bff', background: c.alternateType === 'deduct' ? 'rgba(192,57,43,0.12)' : 'rgba(47,107,255,0.12)', borderRadius: 5, padding: '1px 6px' }}>ALT {c.alternateType === 'deduct' ? '−' : '+'}</span> : null}
+                      {c.alternate ? <span style={{ marginLeft: 6, fontSize: 10.5, fontWeight: 800, color: c.alternateType === 'deduct' ? '#c0392b' : '#FF8A00', background: c.alternateType === 'deduct' ? 'rgba(192,57,43,0.12)' : 'rgba(47,107,255,0.12)', borderRadius: 5, padding: '1px 6px' }}>ALT {c.alternateType === 'deduct' ? '−' : '+'}</span> : null}
                       {c.note ? <span title={c.note} style={{ marginLeft: 6, fontSize: 10.5, fontWeight: 700, color: GOLD, border: `1px solid var(--brand-primary-35)`, borderRadius: 5, padding: '1px 6px' }}>note</span> : null}
                       <div style={{ color: DIM, fontSize: 13, marginTop: 2, display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>{c.value > 0
                       ? <span>{c.value} {unit}{c.heightFt ? ` · ${c.heightFt}′` : ''}{c.thicknessIn ? ` · ${c.thicknessIn}″` : ''} → {lines.length} items</span>

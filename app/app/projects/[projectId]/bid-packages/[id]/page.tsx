@@ -9,7 +9,7 @@ import { FolderOpen, Envelope, ArrowLeft, FileText, Lock, Trophy, Star, Plus, Ch
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, FlowStrip, ghostButtonStyle, goldButtonStyle } from '@/components/ui/premium';
 import { openPdf } from '@/components/PdfViewer';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30';
 const MUTED='rgba(255,255,255,0.62)';        // section-header meta text
 const HAIR='rgba(255,255,255,0.06)';         // table row hairlines on the dark surface
 const TH_BG='rgba(255,255,255,0.03)';        // table header band

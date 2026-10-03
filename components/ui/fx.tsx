@@ -45,7 +45,7 @@ export const UI_FX_CSS = `
 /* Theme-aware tokens (dark default; flip under light) */
 .sgUi{
   --sg-text:#ffffff;
-  --sg-text-2:#D7DEE8;
+  --sg-text-2:#D4D4D8;
   --sg-text-3:#A9B4C4;
   --sg-surface-from:rgba(255,255,255,0.055);
   --sg-surface-to:rgba(255,255,255,0.03);

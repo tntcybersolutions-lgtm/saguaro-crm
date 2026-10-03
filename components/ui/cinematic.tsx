@@ -29,7 +29,7 @@ export const CIN = {
   blue: '#FF8A00',
   bg: 'var(--bg-base)',
   text: '#FFFFFF',
-  muted: '#D7DEE8',
+  muted: '#D4D4D8',
   faint: '#A9B4C4',
   border: 'rgba(255,255,255,0.09)',
   borderGold: 'var(--brand-primary-25)',

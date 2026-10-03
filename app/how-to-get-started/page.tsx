@@ -14,7 +14,7 @@ export default function HowToGetStartedPage() {
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
           --dark: var(--bg-base); --gold: var(--brand-primary); --text: #FFFFFF;
-          --dim: #CBD5E1; --border: rgba(255,255,255,0.08); --raised: var(--bg-surface);
+          --dim: #D4D4D8; --border: rgba(255,255,255,0.08); --raised: var(--bg-surface);
           --green: #2CFF7A; --font: system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
         }
         body { background: var(--dark); color: var(--text); font-family: var(--font); }

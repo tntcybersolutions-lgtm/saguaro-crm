@@ -12,7 +12,7 @@ const DARK = 'var(--bg-base)';
 const ON_GOLD = '#0A0A00';
 const GOLD = 'var(--brand-primary)';
 const TEXT = '#FFFFFF';
-const DIM = '#CBD5E1';
+const DIM = '#D4D4D8';
 const HAIRLINE = 'rgba(255,255,255,0.08)';
 const CARD = 'rgba(255,255,255,0.02)';
 

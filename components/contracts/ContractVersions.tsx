@@ -16,8 +16,8 @@ import { ClockCounterClockwise, ArrowRight, FileText } from '@phosphor-icons/rea
 
 const GOLD = 'var(--brand-primary)';
 const TEXT = '#F0F4FF';
-const DIM = '#8BAAC8';
-const BORDER = '#1E3A5F';
+const DIM = '#A1A1AA';
+const BORDER = '#2A2A2E';
 const CARD = 'var(--bg-surface)';
 const GREEN = '#2CFF7A';
 const RED = '#FF3B30';

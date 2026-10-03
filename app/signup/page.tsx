@@ -6,7 +6,7 @@ import Link from 'next/link';
 import MarketingNav from '@/components/MarketingNav';
 import { Check, Warning } from '@phosphor-icons/react';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#FF3B30',GREEN='#2CFF7A';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF',RED='#FF3B30',GREEN='#2CFF7A';
 const HAIR='rgba(255,255,255,0.08)',CARD='rgba(255,255,255,0.02)';
 
 /* House display treatment — gold text-shine on ONE key word per heading. */
@@ -291,7 +291,7 @@ export default function SignupPage(){
             <div style={{marginTop:16,textAlign:'center',fontSize:12,color:DIM}}>
               Already have an account? <Link href="/login" style={{color:GOLD,textDecoration:'none',fontWeight:600}}>Log In →</Link>
             </div>
-            <div style={{marginTop:8,textAlign:'center',fontSize:11,color:'#CBD5E1'}}>
+            <div style={{marginTop:8,textAlign:'center',fontSize:11,color:'#D4D4D8'}}>
               By signing up you agree to our <Link href="/terms" style={{color:DIM,textDecoration:'underline',textUnderlineOffset:3}}>Terms of Service</Link> and <Link href="/privacy" style={{color:DIM,textDecoration:'underline',textUnderlineOffset:3}}>Privacy Policy</Link>.
             </div>
           </div>

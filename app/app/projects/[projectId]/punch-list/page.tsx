@@ -32,7 +32,7 @@ import RadioEvidence, {
   stripRadioProvenance,
 } from '@/components/RadioEvidence';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF';
 const GREEN='#2CFF7A',RED='#FF3B30',ORANGE='#FF8A00',BLUE='var(--brand-primary)';
 
 // Priorities are STORED lowercase ('low'|'medium'|'high'|'critical') and

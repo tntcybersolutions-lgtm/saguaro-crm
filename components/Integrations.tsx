@@ -10,9 +10,9 @@ import { ScribbleNote } from '@/components/Scribble';
 type Vendor = { name: string; color: string; Icon?: IconType };
 
 const VENDORS: Vendor[] = [
-  { name: 'QuickBooks', color: '#2CA01C', Icon: SiQuickbooks },
-  { name: 'Stripe', color: '#635BFF', Icon: SiStripe },
-  { name: 'Xero', color: '#13B5EA', Icon: SiXero },
+  { name: 'QuickBooks', color: '#2CFF7A', Icon: SiQuickbooks },
+  { name: 'Stripe', color: '#FF8A00', Icon: SiStripe },
+  { name: 'Xero', color: '#FF8A00', Icon: SiXero },
   { name: 'Sage', color: '#00D639', Icon: SiSage },
   { name: 'DocuSign', color: '#4C00FF' },
   { name: 'Autodesk', color: '#000000', Icon: SiAutodesk },
@@ -45,7 +45,7 @@ export function IntegrationStrip({
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
         <ScribbleNote size={15} rotate={-4} color="var(--brand-primary-strong)">No implementation fee</ScribbleNote>
       </div>
-      <div style={{ textAlign: 'center', color: '#CBD5E1', fontSize: 12, marginBottom: 28, fontWeight: 600 }}>
+      <div style={{ textAlign: 'center', color: '#D4D4D8', fontSize: 12, marginBottom: 28, fontWeight: 600 }}>
         {heading}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 50, flexWrap: 'wrap', maxWidth: 1000, margin: '0 auto', padding: '0 24px' }}>

@@ -164,7 +164,7 @@ export default function AppTopBar({
           height: 36,
           background: 'none',
           border: 'none',
-          color: '#D7DEE8',
+          color: '#D4D4D8',
           cursor: 'pointer',
           borderRadius: radius.xl,
           transition: 'color .15s, background .15s',
@@ -174,7 +174,7 @@ export default function AppTopBar({
           e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.color = '#D7DEE8';
+          e.currentTarget.style.color = '#D4D4D8';
           e.currentTarget.style.background = 'none';
         }}
       >
@@ -225,9 +225,9 @@ export default function AppTopBar({
             ) : (
               <Link
                 href={c.href}
-                style={{ fontSize: font.size.lg, color: '#D7DEE8', textDecoration: 'none', transition: 'color .15s' }}
+                style={{ fontSize: font.size.lg, color: '#D4D4D8', textDecoration: 'none', transition: 'color .15s' }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = '#D7DEE8')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '#D4D4D8')}
               >
                 {c.label}
               </Link>
@@ -250,7 +250,7 @@ export default function AppTopBar({
           background: 'rgba(255,255,255,0.05)',
           border: '1px solid rgba(255,255,255,0.12)',
           borderRadius: radius.xl,
-          color: '#D7DEE8',
+          color: '#D4D4D8',
           fontSize: font.size.md,
           fontWeight: font.weight.medium,
           cursor: 'pointer',
@@ -278,7 +278,7 @@ export default function AppTopBar({
             fontSize: font.size.xs,
             fontWeight: font.weight.semibold,
             fontFamily: font.mono,
-            color: '#D7DEE8',
+            color: '#D4D4D8',
             background: 'rgba(255,255,255,0.07)',
             border: '1px solid rgba(255,255,255,0.12)',
             borderRadius: radius.md,
@@ -336,7 +336,7 @@ export default function AppTopBar({
           height: 36,
           background: 'none',
           border: 'none',
-          color: '#D7DEE8',
+          color: '#D4D4D8',
           cursor: 'pointer',
           borderRadius: radius.xl,
           transition: 'color .15s, background .15s',
@@ -347,7 +347,7 @@ export default function AppTopBar({
           e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.color = '#D7DEE8';
+          e.currentTarget.style.color = '#D4D4D8';
           e.currentTarget.style.background = 'none';
         }}
       >
@@ -441,7 +441,7 @@ export default function AppTopBar({
                 onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
               >
-                <GearSix size={16} style={{ color: '#D7DEE8' }} /> Settings
+                <GearSix size={16} style={{ color: '#D4D4D8' }} /> Settings
               </Link>
               <button
                 onClick={() => { setShowUserMenu(false); onLogout(); }}

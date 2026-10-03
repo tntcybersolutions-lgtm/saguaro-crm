@@ -7,7 +7,7 @@ import type { Icon } from '@phosphor-icons/react';
 const GOLD  = 'var(--brand-primary)';
 const DARK  = 'var(--bg-base)';
 const HAIR  = 'rgba(255,255,255,0.08)';
-const DIM   = '#CBD5E1';
+const DIM   = '#D4D4D8';
 const MUTED = 'rgba(255,255,255,0.45)';
 const TEXT  = '#FFFFFF';
 const GREEN = '#2CFF7A';

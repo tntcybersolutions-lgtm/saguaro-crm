@@ -9,7 +9,7 @@ const GOLD   = 'var(--brand-primary)';
 const DARK = 'var(--bg-base)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM    = '#CBD5E1';
+const DIM    = '#D4D4D8';
 const TEXT   = '#FFFFFF';
 const GREEN  = '#2CFF7A';
 const YELLOW = 'var(--warning)';
@@ -141,7 +141,7 @@ function fmtText(v: unknown): string {
 function getBadgeStyle(v: unknown): React.CSSProperties {
   const s = String(v ?? '').toLowerCase();
   let bg = 'rgba(0,0,0,0.1)';
-  let color = '#CBD5E1';
+  let color = '#D4D4D8';
   if (['active', 'approved', 'complete', 'completed', 'paid', 'closed-won'].some(k => s.includes(k))) {
     bg = 'rgba(44,255,122,0.15)'; color = GREEN;
   } else if (['pending', 'submitted', 'in progress', 'in-progress', 'open', 'review'].some(k => s.includes(k))) {

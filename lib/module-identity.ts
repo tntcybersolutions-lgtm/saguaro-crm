@@ -37,8 +37,8 @@ export const MODULE_ACCENTS: Record<string, ModuleAccent> = Object.fromEntries([
   A('inspections','Inspections',      '#8FB3A9', '#2CFF7A'), // patina
   // Execution
   A('schedule',   'Schedule',         '#2CFF7A', '#2CFF7A'), // sage
-  A('drawings',   'Drawings',         '#7F96C7', '#4C6EF5'), // blueprint blue
-  A('specs',      'Specs',            '#A9A2C4', '#8672DB'), // lavender gray
+  A('drawings',   'Drawings',         '#A1A1AA', '#FF8A00'), // blueprint blue
+  A('specs',      'Specs',            '#A9A2C4', '#FF8A00'), // lavender gray
   A('documents',  'Documents',        '#B8A98A', '#FF8A00'), // parchment
   A('permits',    'Permits',          '#C7A97F', '#D69E2E'), // sandstone
   A('todos',      'To-Dos',           '#8FB3A9', '#2CFF7A'), // patina
@@ -63,7 +63,7 @@ export const MODULE_ACCENTS: Record<string, ModuleAccent> = Object.fromEntries([
   A('team',       'Team',             '#FF8A00', '#FF8A00'),
   A('compliance', 'Compliance',       '#8FB3A9', '#2CFF7A'),
   // Cross-project + workforce
-  A('work',       'My Work',          '#5FB8C4', '#FF8A00'), // turquoise — the personal cross-project hub
+  A('work',       'My Work',          '#FF8A00', '#FF8A00'), // turquoise — the personal cross-project hub
   A('crews',      'Crews',            '#FF8A00', '#FF8A00'), // workforce orange (mobile tools family)
   A('tm',         'T&M Tickets',      '#84BF8E', '#2CFF7A'), // ledger green — money-adjacent, never gold
 
@@ -91,13 +91,13 @@ export const MODULE_ACCENTS: Record<string, ModuleAccent> = Object.fromEntries([
 
   // Execution / correspondence — blueprint + indigo family
   A('submittals',     'Submittals',         '#8FA8D9', '#FF8A00'),
-  A('meetings',       'Meetings',           '#B49BC4', '#FF8A00'),
+  A('meetings',       'Meetings',           '#FF8A00', '#FF8A00'),
   A('correspondence', 'Correspondence',     '#A8B0C7', '#7C8FE0'),
   A('transmittals',   'Transmittals',       '#9BA8C4', '#6D83D6'),
   A('instructions',   'Instructions',       '#8FA3B8', '#5B8DEF'),
   A('coordination',   'Coordination',       '#8FB3C7', '#FF8A00'),
   A('forms',          'Forms',              '#B8A98A', '#FF8A00'),
-  A('actionplans',    'Action Plans',       '#9FA8C4', '#7C7FE0'),
+  A('actionplans',    'Action Plans',       '#9FA8C4', '#FF8A00'),
 
   // Field observation — red-clay + patina family
   A('fieldissues',    'Field Issues',       '#D97E6A', '#F0653F'),
@@ -112,51 +112,52 @@ export const MODULE_ACCENTS: Record<string, ModuleAccent> = Object.fromEntries([
   A('fleet',          'Fleet',              '#CE9A63', '#E08A2A'),
   A('fleetasset',     'Fleet Asset',        '#CE9A63', '#E08A2A'),
   A('people',         'People',             '#FF8A00', '#FF8A00'),
-  A('contacts',       'Contacts',           '#8FA8C4', '#4C8DE0'),
+  A('contacts',       'Contacts',           '#A1A1AA', '#FF8A00'),
   A('employeedetail', 'Employee',           '#FF8A00', '#FF8A00'),
   A('approvals',      'Approvals',          '#A9B87F', '#2CFF7A'),
 
   // Command center — one coherent teal→indigo family, distinguishable at chip scale
-  A('commandcenter',  'Command Center',     '#5FB8C4', '#FF8A00'),
+  A('commandcenter',  'Command Center',     '#FF8A00', '#FF8A00'),
   A('ccchecklists',   'Checklists',         '#6FB3B8', '#0FA8B8'),
   A('ccescalations',  'Escalations',        '#D97E6A', '#F0653F'),
   A('cckpis',         'KPIs',               '#7FB0C4', '#1FA2D6'),
-  A('cclonglead',     'Long Lead',          '#8FA8C4', '#4C8DE0'),
+  A('cclonglead',     'Long Lead',          '#A1A1AA', '#FF8A00'),
   A('ccmilestones',   'Milestones',         '#2CFF7A', '#2CFF7A'),
-  A('ccoac',          'OAC Meetings',       '#B49BC4', '#FF8A00'),
-  A('ccownerupdates', 'Owner Updates',      '#A9A2C4', '#8672DB'),
+  A('ccoac',          'OAC Meetings',       '#FF8A00', '#FF8A00'),
+  A('ccownerupdates', 'Owner Updates',      '#A9A2C4', '#FF8A00'),
   A('ccportals',      'Portals',            '#8FB3C7', '#FF8A00'),
   A('ccpresite',      'Pre-Site',           '#C7A97F', '#D69E2E'),
   A('ccqc',           'Quality Control',    '#8FB3A9', '#2CFF7A'),
   A('ccrisks',        'Risks',              '#FF3B30', '#FF3B30'),
-  A('ccrollout',      'Rollout',            '#9FA8C4', '#7C7FE0'),
+  A('ccrollout',      'Rollout',            '#9FA8C4', '#FF8A00'),
   A('ccvendors',      'Vendors',            '#D9A05C', '#EA8C1E'),
   A('ccverify',       'Verification',       '#8CC0A8', '#2CFF7A'),
-  A('franchiserollout','Franchise Rollout', '#9FA8C4', '#7C7FE0'),
+  A('franchiserollout','Franchise Rollout', '#9FA8C4', '#FF8A00'),
 
   // Intelligence & assistants
   A('sage',           'Sage',               '#FF8A00', '#FF8A00'),
   A('autopilot',      'Autopilot',          '#7FB0C4', '#1FA2D6'),
-  A('askdocs',        'Ask Docs',           '#A9A2C4', '#8672DB'),
-  A('voice',          'Voice Notes',        '#B49BC4', '#FF8A00'),
+  A('askdocs',        'Ask Docs',           '#A9A2C4', '#FF8A00'),
+  A('voice',          'Voice Notes',        '#FF8A00', '#FF8A00'),
   A('reports',        'Reports',            '#B8A98A', '#FF8A00'),
   A('scheduledreports','Scheduled Reports', '#B8A98A', '#FF8A00'),
-  A('portfolio',      'Portfolio',          '#5FB8C4', '#FF8A00'),
+  A('portfolio',      'Portfolio',          '#FF8A00', '#FF8A00'),
 
   // Models & plan tools
-  A('bim',            'BIM',                '#7F96C7', '#4C6EF5'),
-  A('bimviewer',      'BIM Viewer',         '#7F96C7', '#4C6EF5'),
+  A('bim',            'BIM',                '#A1A1AA', '#FF8A00'),
+  A('bimviewer',      'BIM Viewer',         '#A1A1AA', '#FF8A00'),
 
   // Platform / system surfaces
   A('notifications',  'Notifications',      '#C7A97F', '#D69E2E'),
-  A('search',         'Search',             '#8FA8C4', '#4C8DE0'),
+  A('search',         'Search',             '#A1A1AA', '#FF8A00'),
   A('bookmarks',      'Bookmarks',          '#C7A97F', '#D69E2E'),
   A('syncqueue',      'Sync Queue',         '#8FB3A9', '#2CFF7A'),
   A('newproject',     'New Project',        '#2CFF7A', '#2CFF7A'),
   A('w9',             'W-9',                '#B8A98A', '#FF8A00'),
 ].map((a) => [a.key, a]));
 
-const FALLBACK = A('default', 'Module', '#CBD5E1', '#64748B');
+const FALLBACK = A('default', 'Module', '#D4D4D8', '#64748B');
+const UNIFORM = A('brand', 'Brand', '#FFE600', '#FF8A00'); // vivid ground carries a WHITE glyph — orange, not yellow, for contrast
 
 /** Accent for a module key (route-ish string ok: '/daily', 'punch-list'...). */
 export function moduleAccent(key?: string | null): ModuleAccent {
@@ -180,5 +181,8 @@ export function moduleAccent(key?: string | null): ModuleAccent {
     tmtickets: 'tm', tickets: 'tm', employees: 'people', directory: 'people',
   };
   const kk = alias[k] || k;
-  return MODULE_ACCENTS[kk] || FALLBACK;
+  // Uniform job palette (owner 2026-10-03): every module wears the ONE brand
+  // accent — no per-module rainbow. Key/name are kept for callers that read them.
+  const known = MODULE_ACCENTS[kk] || FALLBACK;
+  return { ...UNIFORM, key: known.key, name: known.name };
 }

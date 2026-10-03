@@ -454,7 +454,7 @@ export function buildEstimateReportHtml(args: BuildEstimateReportArgs): string {
   .wrap { max-width: 960px; margin: 0 auto; }
 
   /* cover */
-  .cover { min-height: 251mm; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(158deg,#0a0a0a 0%,#161b22 55%,#1b2330 100%); color: #e6edf3; border-radius: 6px; padding: 30px 34px 26px; page-break-after: always; }
+  .cover { min-height: 251mm; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(158deg,#0a0a0a 0%,#161b22 55%,#18181B 100%); color: #e6edf3; border-radius: 6px; padding: 30px 34px 26px; page-break-after: always; }
   .brandrow { display: flex; align-items: center; gap: 13px; }
   .mark { width: 40px; height: 40px; display: inline-block; }
   .brandrow .tag { color: #FFE600; font-size: 13px; text-transform: uppercase; letter-spacing: 2px; font-weight: 800; }
@@ -489,14 +489,14 @@ export function buildEstimateReportHtml(args: BuildEstimateReportArgs): string {
 
   /* cards */
   .cards { display: flex; flex-wrap: wrap; gap: 10px; }
-  .card { flex: 1; min-width: 118px; border: 1px solid #e5e9f0; border-radius: 10px; padding: 12px 14px; background: #fafbfd; }
-  .card.hero { background: linear-gradient(160deg,#0a0a0a,#1b2330); border-color: #0a0a0a; }
+  .card { flex: 1; min-width: 118px; border: 1px solid #E4E4E7; border-radius: 10px; padding: 12px 14px; background: #fafbfd; }
+  .card.hero { background: linear-gradient(160deg,#0a0a0a,#18181B); border-color: #0a0a0a; }
   .card.hero .k { color: #b79a54; } .card.hero .v { color: #FFE600; }
   .card .k { font-size: 10px; text-transform: uppercase; letter-spacing: .6px; color: #7a8598; font-weight: 700; }
   .card .v { font-size: 24px; font-weight: 800; color: #0a0a0a; margin-top: 4px; font-variant-numeric: tabular-nums; }
 
   /* stacked bar */
-  .bar { display: flex; width: 100%; height: 30px; border-radius: 7px; overflow: hidden; border: 1px solid #e5e9f0; }
+  .bar { display: flex; width: 100%; height: 30px; border-radius: 7px; overflow: hidden; border: 1px solid #E4E4E7; }
   .bar .seg { height: 100%; }
   .legend { display: flex; flex-wrap: wrap; gap: 4px 20px; margin-top: 12px; }
   .lg { display: flex; align-items: center; gap: 7px; font-size: 11.5px; min-width: 210px; flex: 1; }
@@ -504,7 +504,7 @@ export function buildEstimateReportHtml(args: BuildEstimateReportArgs): string {
   .dot { width: 9px; height: 9px; border-radius: 3px; display: inline-block; flex: 0 0 9px; }
 
   .split { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
-  .minicard { flex: 1; min-width: 130px; border: 1px solid #e5e9f0; border-radius: 9px; padding: 10px 13px; background: #fff; }
+  .minicard { flex: 1; min-width: 130px; border: 1px solid #E4E4E7; border-radius: 9px; padding: 10px 13px; background: #fff; }
   .mk { font-size: 10px; text-transform: uppercase; letter-spacing: .6px; color: #7a8598; font-weight: 700; }
   .mv { font-size: 18px; font-weight: 800; color: #0a0a0a; margin-top: 3px; font-variant-numeric: tabular-nums; }
 
@@ -529,10 +529,10 @@ export function buildEstimateReportHtml(args: BuildEstimateReportArgs): string {
   .divhd span { margin-left: auto; font-weight: 800; font-variant-numeric: tabular-nums; }
   table.li thead th { background: #fbfcfe; }
   .ct { font-size: 8.5px; font-weight: 800; letter-spacing: .4px; border-radius: 4px; padding: 1px 4px; margin-left: 6px; vertical-align: middle; }
-  .ct.sub { background: #e7f0ff; color: #2f6bff; } .ct.eq { background: #fdeede; color: #b45309; } .ct.typ { background: #eef7ee; color: #16794a; }
+  .ct.sub { background: #e7f0ff; color: #FF8A00; } .ct.eq { background: #fdeede; color: #b45309; } .ct.typ { background: #eef7ee; color: #16794a; }
   .rsdot { color: #2CFF7A; font-size: 9px; margin-left: 4px; vertical-align: middle; }
   .alt { font-size: 9px; font-weight: 800; letter-spacing: .4px; border-radius: 4px; padding: 1px 6px; }
-  .alt.add { background: #e7f0ff; color: #2f6bff; } .alt.deduct { background: #fdecec; color: #c0392b; }
+  .alt.add { background: #e7f0ff; color: #FF8A00; } .alt.deduct { background: #fdecec; color: #c0392b; }
   td.pos { color: #2CFF7A; } td.neg { color: #c0392b; }
   ul.bullets.alw li { color: #1f5136; }
 
@@ -546,7 +546,7 @@ export function buildEstimateReportHtml(args: BuildEstimateReportArgs): string {
   ul.bullets { margin: 4px 0 0; padding-left: 18px; }
   ul.bullets li { font-size: 12px; color: #2b3446; margin-bottom: 5px; line-height: 1.5; }
   ul.flags { list-style: none; margin: 4px 0 0; padding: 0; }
-  ul.flags li { font-size: 12px; padding: 7px 11px; border-radius: 7px; margin-bottom: 6px; border: 1px solid #e5e9f0; display: flex; align-items: baseline; gap: 9px; }
+  ul.flags li { font-size: 12px; padding: 7px 11px; border-radius: 7px; margin-bottom: 6px; border: 1px solid #E4E4E7; display: flex; align-items: baseline; gap: 9px; }
   ul.flags li.warn { background: #fff8ec; border-color: #f0d9a8; color: #7a5a12; }
   ul.flags li.info { background: #f6f8fb; color: #55627a; }
   .flev { font-size: 9px; font-weight: 800; letter-spacing: .5px; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,.06); flex: 0 0 auto; }

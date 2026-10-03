@@ -33,8 +33,8 @@ import { ModuleHero, SectionCard, goldButtonStyle, ghostButtonStyle } from '@/co
 
 const GOLD = 'var(--brand-primary)';
 const TEXT = '#F0F4FF';
-const DIM = '#8BAAC8';
-const BORDER = '#1E3A5F';
+const DIM = '#A1A1AA';
+const BORDER = '#2A2A2E';
 
 const SAGUARO_GOLD = '#FFE600'; // Saguaro default brand: neon yellow
 const PLATFORM_BASE = '#0d1117';
@@ -170,7 +170,7 @@ export default function BrandingPage() {
             </SectionCard>
 
             <SectionCard title="Step 2 · Your Logo" icon={<UploadSimple size={17} weight="duotone" color={GOLD} />}>
-              <p style={{ fontSize: 13.5, color: '#C6D6E8', lineHeight: 1.6, margin: '0 0 12px' }}>
+              <p style={{ fontSize: 13.5, color: '#D4D4D8', lineHeight: 1.6, margin: '0 0 12px' }}>
                 Upload it on the main settings page. A wide logo works best — it sits in the
                 top-left of every screen and at the head of every PDF.
               </p>
@@ -214,7 +214,7 @@ export default function BrandingPage() {
             </SectionCard>
 
             <SectionCard title="Step 4 · Your Background (Optional)" icon={<Eye size={17} weight="duotone" color={GOLD} />}>
-              <p style={{ fontSize: 13.5, color: '#C6D6E8', lineHeight: 1.6, margin: '0 0 12px' }}>
+              <p style={{ fontSize: 13.5, color: '#D4D4D8', lineHeight: 1.6, margin: '0 0 12px' }}>
                 Most companies leave this alone — the dark background is easy on the eyes for a
                 full day. Change it only if your brand really needs it.
               </p>
@@ -321,14 +321,14 @@ export default function BrandingPage() {
                 : <CheckCircle size={17} weight="duotone" color="#2CFF7A" />}
             >
               {theme.fixes.length === 0 ? (
-                <p style={{ fontSize: 13, color: '#C6D6E8', lineHeight: 1.6, margin: 0 }}>
+                <p style={{ fontSize: 13, color: '#D4D4D8', lineHeight: 1.6, margin: 0 }}>
                   Your colors passed every readability check on their own — nothing was changed.
                   Text, labels and buttons all clear the accessibility standard for normal sight
                   and for anyone using your system in bright sun on a jobsite.
                 </p>
               ) : (
                 <>
-                  <p style={{ fontSize: 13, color: '#C6D6E8', lineHeight: 1.6, margin: '0 0 12px' }}>
+                  <p style={{ fontSize: 13, color: '#D4D4D8', lineHeight: 1.6, margin: '0 0 12px' }}>
                     Your colors are used as you chose them wherever they work. In these places
                     they would have been hard or impossible to read, so we shifted them just far
                     enough — the color is still yours, only lighter or darker.
@@ -393,7 +393,7 @@ export default function BrandingPage() {
               ].map((item) => (
                 <div key={item.q}>
                   <div style={{ fontSize: 14, fontWeight: 800, color: TEXT, marginBottom: 5 }}>{item.q}</div>
-                  <div style={{ fontSize: 13, color: '#C6D6E8', lineHeight: 1.65 }}>{item.a}</div>
+                  <div style={{ fontSize: 13, color: '#D4D4D8', lineHeight: 1.65 }}>{item.a}</div>
                 </div>
               ))}
             </div>

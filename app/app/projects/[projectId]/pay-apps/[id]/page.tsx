@@ -11,7 +11,7 @@ import { Skeleton, SkeletonKPI, SkeletonRow, SkeletonCard } from '@/components/u
 import { openPdf } from '@/components/PdfViewer';
 
 const GOLD='var(--brand-primary)', DARK='var(--bg-base)',
-      BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF',
+      BORDER='rgba(255,255,255,0.12)', DIM='#D4D4D8', TEXT='#FFFFFF',
       GREEN='#2CFF7A', RED='#FF3B30', ORANGE='#FF8A00', BLUE='var(--brand-primary-strong)';
 
 const fmt  = (n:number) => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n||0);
@@ -19,7 +19,7 @@ const fmt2 = (n:number) => new Intl.NumberFormat('en-US',{style:'currency',curre
 const fmtDate = (s:string|null|undefined) => s ? new Date(s+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
 
 const STATUS_META: Record<string,{label:string;color:string;bg:string;next?:string;nextLabel?:string}> = {
-  draft:     {label:'Draft',     color:'#CBD5E1', bg:'rgba(148,163,184,.15)', next:'submitted',  nextLabel:'Submit to Owner'},
+  draft:     {label:'Draft',     color:'#D4D4D8', bg:'rgba(148,163,184,.15)', next:'submitted',  nextLabel:'Submit to Owner'},
   submitted: {label:'Submitted', color:BLUE,      bg:'rgba(255,138,0,.15)',  next:'approved',   nextLabel:'Approve'},
   approved:  {label:'Approved',  color:GREEN,     bg:'rgba(44,255,122,.15)',   next:'certified',  nextLabel:'Certify'},
   certified: {label:'Certified', color:GOLD,      bg:'var(--brand-primary-18)', next:'paid',       nextLabel:'Mark Paid'},

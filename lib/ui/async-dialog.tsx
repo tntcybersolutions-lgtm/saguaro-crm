@@ -84,7 +84,7 @@ const panelS: React.CSSProperties = {
 };
 const titleS: React.CSSProperties = { margin: 0, fontSize: 17, fontWeight: 800, letterSpacing: '-0.01em' };
 const msgS: React.CSSProperties = { margin: '8px 0 0', fontSize: 13, lineHeight: 1.5, color: '#A9B4C4' };
-const labelS: React.CSSProperties = { display: 'block', margin: '14px 0 6px', fontSize: 12, fontWeight: 700, color: '#D7DEE8' };
+const labelS: React.CSSProperties = { display: 'block', margin: '14px 0 6px', fontSize: 12, fontWeight: 700, color: '#D4D4D8' };
 const inputS: React.CSSProperties = {
   width: '100%', boxSizing: 'border-box', minHeight: 44, padding: '10px 12px',
   background: 'var(--bg-surface-2, #15171C)', border: '1px solid rgba(255,255,255,0.18)',
@@ -92,7 +92,7 @@ const inputS: React.CSSProperties = {
 };
 const rowS: React.CSSProperties = { display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 18 };
 const btnBase: React.CSSProperties = { minHeight: 40, padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' };
-const btnGhost: React.CSSProperties = { ...btnBase, background: 'transparent', border: '1px solid rgba(255,255,255,0.16)', color: '#D7DEE8' };
+const btnGhost: React.CSSProperties = { ...btnBase, background: 'transparent', border: '1px solid rgba(255,255,255,0.16)', color: '#D4D4D8' };
 const btnPrimary: React.CSSProperties = { ...btnBase, background: 'var(--brand-primary, #FFE600)', border: 'none', color: 'var(--on-brand, #1C1C1E)' };
 const btnDanger: React.CSSProperties = { ...btnBase, background: '#FF3B30', border: 'none', color: '#1a0406' };
 

@@ -16,7 +16,7 @@ const GREEN = '#2CFF7A';
 const BLUE = 'var(--brand-primary)';
 const RED = '#FF3B30';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1';
+const DIM = '#D4D4D8';
 const TEXT = '#FFFFFF';
 
 interface WifiNetwork {

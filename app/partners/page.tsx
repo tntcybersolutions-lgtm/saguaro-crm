@@ -31,7 +31,7 @@ const INTEGRATIONS = [
     name: 'QuickBooks',
     category: 'Accounting',
     status: 'Live',
-    accent: '#2CA01C',
+    accent: '#2CFF7A',
     abbr: 'QB',
     desc: 'Bidirectional sync of budgets, pay applications, and change orders with QuickBooks Online and Desktop. Cost codes map to your chart of accounts so AIA G702/G703 draws post straight to your books.',
     bullets: [
@@ -45,7 +45,7 @@ const INTEGRATIONS = [
     name: 'Stripe',
     category: 'Payments',
     status: 'Live',
-    accent: '#635BFF',
+    accent: '#FF8A00',
     abbr: 'S',
     desc: 'Collect owner payments and subcontractor disbursements directly from approved pay applications. ACH and card payments settle against the draw schedule, with receipts attached to the project ledger automatically.',
     bullets: [

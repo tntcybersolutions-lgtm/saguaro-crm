@@ -30,7 +30,7 @@ import { SectionCard, ghostButtonStyle, goldButtonStyle } from '@/components/ui/
 
 const GOLD = 'var(--brand-primary)';
 const TEXT = '#F0F4FF';
-const DIM = '#8BAAC8';
+const DIM = '#A1A1AA';
 const HAIR = 'rgba(255,255,255,0.10)';
 const GREEN = '#2CFF7A';
 const AMBER = 'var(--warning)';

@@ -58,7 +58,7 @@ import {
   ORDER_PATH_SENTENCE,
 } from '@/app/api/catalog/stock';
 
-const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', BORDER = 'rgba(255,255,255,0.12)', DIM = '#CBD5E1', TEXT = '#FFFFFF', GREEN = '#2CFF7A', AMBER = 'var(--brand-primary-strong)', RED = '#FF3B30';
+const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', BORDER = 'rgba(255,255,255,0.12)', DIM = '#D4D4D8', TEXT = '#FFFFFF', GREEN = '#2CFF7A', AMBER = 'var(--brand-primary-strong)', RED = '#FF3B30';
 
 const fmtMoney = (n: number) => '$' + ((Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 const fmtDate = (d?: string | null) => {

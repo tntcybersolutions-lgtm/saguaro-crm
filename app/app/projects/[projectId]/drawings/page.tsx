@@ -54,7 +54,7 @@ const DISCIPLINE_COLORS:Record<string,string>={
   Structural:'#FF8A00',
   Mechanical:'#FF8A00',
   Electrical:'var(--brand-primary)',
-  Plumbing:'#22d3ee',
+  Plumbing:'#FF8A00',
   Civil:'#2CFF7A',
   Landscape:'#2CFF7A',
   Other:'#A9B4C4',

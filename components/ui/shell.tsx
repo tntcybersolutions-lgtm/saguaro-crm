@@ -17,7 +17,7 @@ export const T = {
   goldDim: 'rgba(255,230,0,0.12)',
   goldMid: 'rgba(255,230,0,0.18)',
   white: '#FFFFFF',
-  muted: '#D7DEE8',
+  muted: '#D4D4D8',
   faint: '#A9B4C4',
   green: '#2CFF7A',
   greenDim: 'rgba(44,255,122,0.16)',

@@ -8,7 +8,7 @@ const DARK = 'var(--bg-surface-2)';
 const RAISED = 'var(--bg-surface)';
 const RAISED2 = '#1c1c1e';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1';
+const DIM = '#D4D4D8';
 const TEXT = '#FFFFFF';
 const GREEN = '#2CFF7A';
 

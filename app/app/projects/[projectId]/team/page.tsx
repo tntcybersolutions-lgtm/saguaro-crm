@@ -12,9 +12,9 @@ import { moduleAccent } from '@/lib/module-identity';
 import { Button, Input } from '@/components/ui/kit';
 import ProjectOwnershipCard from '@/components/projects/ProjectOwnershipCard';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30',BLUE='#1a5fa8';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30',BLUE='#1a5fa8';
 const fmt = (n:number) => '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-function Badge({label,color='#CBD5E1',bg='rgba(148,163,184,.12)'}:{label:string,color?:string,bg?:string}){
+function Badge({label,color='#D4D4D8',bg='rgba(148,163,184,.12)'}:{label:string,color?:string,bg?:string}){
   return <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:bg,color}}>{label}</span>;
 }
 
@@ -417,7 +417,7 @@ export default function TeamPage(){
                 <td style={{padding:'11px 12px'}}><div style={{display:'flex',alignItems:'center',gap:10}}><div style={{width:32,height:32,borderRadius:'50%',background:GOLD,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800,color:'#0A0A00'}}>{m.name[0]}</div><span style={{color:TEXT,fontWeight:600}}>{m.name}</span></div></td>
                 <td style={{padding:'11px 12px',color:DIM}}>{m.role}</td>
                 <td style={{padding:'11px 12px',color:DIM}}>{m.email}</td>
-                <td style={{padding:'11px 12px'}}><Badge label={m.access} color={m.access==='Admin'?GOLD:m.access==='Manager'?'#FF8A00':'#CBD5E1'} bg={m.access==='Admin'?'var(--brand-primary-12)':m.access==='Manager'?'rgba(26,95,168,.12)':'rgba(148,163,184,.08)'}/></td>
+                <td style={{padding:'11px 12px'}}><Badge label={m.access} color={m.access==='Admin'?GOLD:m.access==='Manager'?'#FF8A00':'#D4D4D8'} bg={m.access==='Admin'?'var(--brand-primary-12)':m.access==='Manager'?'rgba(26,95,168,.12)':'rgba(148,163,184,.08)'}/></td>
                 <td style={{padding:'11px 12px'}}>
                   <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap' as const}}>
                     {assignmentsFor(m.userId).map(a=>(

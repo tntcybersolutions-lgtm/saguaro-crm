@@ -399,7 +399,7 @@ export function computeCoverage(p: HeatmapProject, cellPx = 10, opts: CoverageOp
           const rangeFt = active[0]?.rangeFt ?? (def.defaults.rangeFt as number) ?? 30;
           const distFtV = bestFrac * rangeFt;
           const z = zones.find((zz) => distFtV <= zz.outerFt) || zones[zones.length - 1];
-          out = { covered: true, value: bestFrac * 100, color: z?.color || '#2E7D32', rgba: radiusRgb(bestFrac), opacity: 0.5 };
+          out = { covered: true, value: bestFrac * 100, color: z?.color || '#2CFF7A', rgba: radiusRgb(bestFrac), opacity: 0.5 };
           covered++;
         }
       }

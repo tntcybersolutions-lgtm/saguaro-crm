@@ -32,7 +32,7 @@ const GOLD = 'var(--brand-primary)';
 const GOLD_DIM = 'var(--brand-primary-12)';
 const GOLD_LINE = 'var(--brand-primary-35)';
 const TEXT = '#FFFFFF';
-const DIM = '#CBD5E1';
+const DIM = '#D4D4D8';
 const MUTED = 'rgba(255,255,255,0.45)';
 const GREEN = '#2CFF7A';
 const BORDER = 'rgba(255,255,255,0.08)';
@@ -82,7 +82,7 @@ const TAKEOFF_HERO = `
   <style>
     .scs-takeoff{
       --bg:var(--bg-base); --gold:var(--brand-primary); --green:#2CFF7A; --sky:var(--brand-primary-strong);
-      --ink:#94A3B8; --white:#FFFFFF; --dim:#CBD5E1; --muted:rgba(255,255,255,.45);
+      --ink:#94A3B8; --white:#FFFFFF; --dim:#D4D4D8; --muted:rgba(255,255,255,.45);
       --line:rgba(148,163,184,.35); --hair:rgba(255,255,255,.08);
       width:100%; max-width:1200px; margin:0 auto;
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;

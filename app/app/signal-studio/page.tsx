@@ -16,7 +16,7 @@ import Designer from '@/components/signal-studio/Designer';
 import { useProjects } from '@/lib/hooks/useProjects';
 
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.1)';
-const TEXT = '#fff', DIM = '#CBD5E1', MUTED = 'rgba(255,255,255,0.5)';
+const TEXT = '#fff', DIM = '#D4D4D8', MUTED = 'rgba(255,255,255,0.5)';
 
 function ProjectPicker({ onPick, onSkip }: { onPick: (id: string) => void; onSkip: () => void }) {
   const { projects, loading, degraded } = useProjects();

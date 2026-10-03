@@ -104,7 +104,7 @@ export function BottomSheet({ open, onClose, title, children, height = 'auto' }:
               style={{
                 background: 'none',
                 border: 'none',
-                color: '#CBD5E1',
+                color: '#D4D4D8',
                 fontSize: 22,
                 cursor: 'pointer',
                 lineHeight: 1,

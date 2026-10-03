@@ -23,7 +23,7 @@ import { PremiumSurface, ModuleHero, SectionCard, StatStrip, FlowSteps, InsightR
 import { moduleAccent } from '@/lib/module-identity';
 
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1', TEXT = '#FFFFFF', GREEN = '#2CFF7A', RED = '#FF3B30';
+const DIM = '#D4D4D8', TEXT = '#FFFFFF', GREEN = '#2CFF7A', RED = '#FF3B30';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const TZ = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { return 'UTC'; } })();
 const localDay = (d = new Date()) => { const o = d.getTimezoneOffset() * 60000; return new Date(d.getTime() - o).toISOString().slice(0, 10); };

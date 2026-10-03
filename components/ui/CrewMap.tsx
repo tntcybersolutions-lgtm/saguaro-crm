@@ -32,7 +32,7 @@ import { Skeleton } from './Skeleton';
 
 /* ── Palette (jet black + glass + neon yellow; canvas needs literal colors) ── */
 const WHITE = '#FFFFFF';
-const MUTED = '#D7DEE8';
+const MUTED = '#D4D4D8';
 const FAINT = '#A9B4C4';
 const BORDER = 'rgba(255,255,255,0.09)';
 const GOLD_HI = '#FFE600';

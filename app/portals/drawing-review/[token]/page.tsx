@@ -36,7 +36,7 @@ import { lengthLF, areaSF } from '@/lib/takeoff/geometry';
  */
 
 /* ── Design tokens (gold-on-black, matches the portal family) ── */
-const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)', DIM = '#CBD5E1', TEXT = '#FFFFFF';
+const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)', DIM = '#D4D4D8', TEXT = '#FFFFFF';
 /* Canvas paint + the stored markup color cannot use CSS var() — keep real hex for those. */
 const GOLD_HEX = '#FF8A00', DARK_HEX = '#000000';
 

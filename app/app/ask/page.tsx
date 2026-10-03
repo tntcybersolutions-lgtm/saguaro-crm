@@ -13,7 +13,7 @@ import { Aurora, PremiumFX, ModuleHero, SectionCard, StatStrip, goldButtonStyle 
 import SageSettings from '@/components/SageSettings';
 
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1', TEXT = '#FFFFFF', BLUE = 'var(--brand-primary-strong)';
+const DIM = '#D4D4D8', TEXT = '#FFFFFF', BLUE = 'var(--brand-primary-strong)';
 const TYPE_LABEL: Record<string, string> = { rfi: 'RFI', change_order: 'Change Order', daily_log: 'Daily Log', inspection: 'Inspection', safety: 'Safety', punch: 'Punch List', submittal: 'Submittal', meeting: 'Meeting', correspondence: 'Correspondence', observation: 'Observation', tm: 'T&M Ticket', field_issue: 'Field Issue' };
 const EXAMPLES = ['What tile is specified in the lobby?', 'Any open RFIs about the footing rebar?', 'What did the latest daily log say about weather?', 'Were there any safety incidents this month?', 'What change orders affect the schedule?'];
 

@@ -37,7 +37,7 @@ const BORDER = 'rgba(255,255,255,0.09)';
 const SURFACE = 'linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.03))';
 const GLASS_BLUR = 'blur(16px) saturate(140%)';
 const WHITE = '#FFFFFF';
-const MUTED = '#D7DEE8';
+const MUTED = '#D4D4D8';
 const FAINT = '#A9B4C4';
 const RED = STATUS_COLORS.overdue;
 
@@ -654,7 +654,7 @@ export function Pill({ children, tone = 'neutral', caps, style }: {
   style?: React.CSSProperties;
 }) {
   const map = {
-    neutral: { bg: STATUS_COLORS.closed.bg, fg: '#D7DEE8', bd: 'rgba(255,255,255,0.16)' },
+    neutral: { bg: STATUS_COLORS.closed.bg, fg: '#D4D4D8', bd: 'rgba(255,255,255,0.16)' },
     green:   { bg: STATUS_COLORS.ongoing.bg, fg: STATUS_COLORS.ongoing.color, bd: STATUS_COLORS.ongoing.border },
     amber:   { bg: STATUS_COLORS.under_contract.bg, fg: STATUS_COLORS.under_contract.color, bd: STATUS_COLORS.under_contract.border },
     red:     { bg: STATUS_COLORS.overdue.bg, fg: STATUS_COLORS.overdue.color, bd: STATUS_COLORS.overdue.border },

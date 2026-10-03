@@ -51,7 +51,7 @@ const GOLD_HI = '#FFF04A';
 const BLUE = '#FF8A00';
 const BLUE_HI = '#7CC4FF';
 const TEXT = '#FFFFFF';
-const MUTED = '#D7DEE8';
+const MUTED = '#D4D4D8';
 
 const fetcher = async (url: string) => {
   const r = await fetch(url);

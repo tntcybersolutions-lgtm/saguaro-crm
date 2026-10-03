@@ -5,16 +5,16 @@ const GOLD = 'var(--brand-primary)';
 const DARK = 'var(--bg-surface-2)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1';
+const DIM = '#D4D4D8';
 const TEXT = '#FFFFFF';
 
 const ACTION_COLORS: Record<string, string> = {
   create: '#2ea043',
   created: '#2ea043',
   insert: '#2ea043',
-  update: '#388bfd',
-  updated: '#388bfd',
-  edit: '#388bfd',
+  update: '#FF8A00',
+  updated: '#FF8A00',
+  edit: '#FF8A00',
   status_change: '#d29922',
   status_updated: '#d29922',
   approved: '#d29922',

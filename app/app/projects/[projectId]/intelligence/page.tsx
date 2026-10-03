@@ -9,7 +9,7 @@ import { PremiumSurface, ModuleHero, SectionCard, StatStrip, InsightRow, AutoChi
 const GOLD = 'var(--brand-primary)';
 const SOFT_BORDER = 'rgba(255,255,255,0.08)';
 const SURFACE = 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))';
-const DIM = '#CBD5E1';
+const DIM = '#D4D4D8';
 const TEXT = '#FFFFFF';
 const GREEN = '#2CFF7A';
 const fmtMoney = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });

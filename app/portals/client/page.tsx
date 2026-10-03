@@ -43,12 +43,12 @@ export default function ClientPortalLanding() {
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <div style={{ color: 'var(--brand-primary)', fontWeight: 800, fontSize: 24, letterSpacing: '-0.01em', marginBottom: 8 }}>Saguaro</div>
           <h1 style={{ color: '#FFFFFF', fontSize: 28, fontWeight: 700, margin: '0 0 8px' }}>Owner / Client Portal</h1>
-          <p style={{ color: '#CBD5E1', fontSize: 14, margin: 0 }}>View your project progress, budgets, photos, and documents in real time.</p>
+          <p style={{ color: '#D4D4D8', fontSize: 14, margin: 0 }}>View your project progress, budgets, photos, and documents in real time.</p>
         </div>
 
         <div style={{ background: 'var(--bg-surface)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 32 }}>
           <div style={{ marginBottom: 24 }}>
-            <label style={{ color: '#CBD5E1', fontSize: 12, display: 'block', marginBottom: 8 }}>Access With Your Email</label>
+            <label style={{ color: '#D4D4D8', fontSize: 12, display: 'block', marginBottom: 8 }}>Access With Your Email</label>
             <input
               type="email"
               value={email}
@@ -68,12 +68,12 @@ export default function ClientPortalLanding() {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0' }}>
             <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.12)' }} />
-            <span style={{ color: '#CBD5E1', fontSize: 12 }}>or</span>
+            <span style={{ color: '#D4D4D8', fontSize: 12 }}>or</span>
             <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.12)' }} />
           </div>
 
           <div>
-            <label style={{ color: '#CBD5E1', fontSize: 12, display: 'block', marginBottom: 8 }}>Enter Access Token</label>
+            <label style={{ color: '#D4D4D8', fontSize: 12, display: 'block', marginBottom: 8 }}>Enter Access Token</label>
             <div style={{ display: 'flex', gap: 8 }}>
               <input
                 type="text"
@@ -97,7 +97,7 @@ export default function ClientPortalLanding() {
         </div>
 
         <div style={{ textAlign: 'center', marginTop: 24 }}>
-          <a href="/" style={{ color: '#CBD5E1', fontSize: 13, textDecoration: 'none' }}>← Back to Saguaro</a>
+          <a href="/" style={{ color: '#D4D4D8', fontSize: 13, textDecoration: 'none' }}>← Back to Saguaro</a>
         </div>
       </div>
     </div>

@@ -14,7 +14,7 @@ const roleColor = (r: string) => {
   if (s.includes('contractor') || s.includes('superintendent')) return '#FF8A00';
   if (s.includes('architect') || s.includes('engineer')) return C.blue;
   if (s.includes('full-swing') || s.includes('simulator')) return C.green;
-  if (s.includes('city') || s.includes('municipal')) return '#AF52DE';
+  if (s.includes('city') || s.includes('municipal')) return '#FF8A00';
   return C.dim;
 };
 

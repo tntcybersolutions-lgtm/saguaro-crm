@@ -4,7 +4,7 @@ import Link from 'next/link';
 import MarketingNav from '@/components/MarketingNav';
 import { Brain, Robot, Mailbox, ChartBar } from '@phosphor-icons/react';
 
-const GOLD='var(--brand-primary)',DARK='#0A0A00',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.08)',DIM='#CBD5E1',TEXT='#FFFFFF';
+const GOLD='var(--brand-primary)',DARK='#0A0A00',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.08)',DIM='#D4D4D8',TEXT='#FFFFFF';
 
 export default function BidsPage() {
   const [tab, setTab] = useState<'active'|'pipeline'|'history'>('active');

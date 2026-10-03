@@ -25,8 +25,8 @@ import { openPdf } from '@/components/PdfViewer';
 
 const GOLD = 'var(--brand-primary)';
 const TEXT = '#F0F4FF';
-const DIM = '#8BAAC8';
-const BORDER = '#1E3A5F';
+const DIM = '#A1A1AA';
+const BORDER = '#2A2A2E';
 const BASE = 'var(--bg-base)';
 
 /** What the signature tables call each kind. */

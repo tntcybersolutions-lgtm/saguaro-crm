@@ -44,7 +44,7 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
       <span>{c.icon}</span>
       <span style={{ flex: 1 }}>{toast.message}</span>
       <button onClick={() => onRemove(toast.id)}
-        style={{ background: 'none', border: 'none', color: '#8fa3c0', cursor: 'pointer', fontSize: '18px', padding: '0 4px', lineHeight: 1 }}>×</button>
+        style={{ background: 'none', border: 'none', color: '#A1A1AA', cursor: 'pointer', fontSize: '18px', padding: '0 4px', lineHeight: 1 }}>×</button>
     </div>
   );
 }

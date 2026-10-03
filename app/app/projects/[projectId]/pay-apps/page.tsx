@@ -17,14 +17,14 @@ import { ANCHOR_PAY_APPS_DUE } from '@/lib/suggestions';
 import { ScribbleNote } from '@/components/Scribble';
 import { openPdf } from '@/components/PdfViewer';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30',ORANGE='#FF8A00';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30',ORANGE='#FF8A00';
 const SAGE='#2CFF7A',AMBER='var(--warning)';
 // MONEY: several DB numerics round-trip as strings — coerce before any math/format.
 const fmt = (n:number|string|null|undefined) => '$'+((Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
 
 function statusBadge(s:string){
   const map:Record<string,{c:string,bg:string}> = {
-    draft:      {c:'#CBD5E1',bg:'rgba(148,163,184,.14)'},
+    draft:      {c:'#D4D4D8',bg:'rgba(148,163,184,.14)'},
     submitted:  {c:'#FF8A00',bg:'rgba(255,138,0,.14)'},
     approved:   {c:'#2CFF7A',bg:'rgba(26,138,74,.14)'},
     certified:  {c:GOLD,    bg:'var(--brand-primary-12)'},

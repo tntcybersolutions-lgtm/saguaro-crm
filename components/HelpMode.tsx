@@ -42,8 +42,8 @@ function titleCase(s: string): string {
 const GOLD = 'var(--brand-primary)';
 const GOLD_HI = 'var(--brand-primary-strong)';
 const TEXT = '#F0F4FF';
-const DIM = '#8BAAC8';
-const BORDER = '#1E3A5F';
+const DIM = '#A1A1AA';
+const BORDER = '#2A2A2E';
 const CARD = 'var(--bg-surface)';
 
 /**
@@ -714,7 +714,7 @@ export default function HelpMode() {
           <div style={{ fontSize: 15, fontWeight: 900, color: TEXT, marginBottom: 5, letterSpacing: '-0.01em' }}>
             {step?.title}
           </div>
-          <div style={{ fontSize: 13, color: '#C6D6E8', lineHeight: 1.52 }}>
+          <div style={{ fontSize: 13, color: '#D4D4D8', lineHeight: 1.52 }}>
             {step?.body}
           </div>
 

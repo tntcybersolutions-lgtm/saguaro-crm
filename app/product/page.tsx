@@ -77,7 +77,7 @@ function ModCard({ mod }: { mod: Mod }) {
         <IncludedTag />
       </div>
       <div style={{ fontSize: 15, fontWeight: 700, color: '#FFFFFF', marginBottom: 6, letterSpacing: '-0.01em' }}>{mod.name}</div>
-      <p style={{ fontSize: 13, color: '#CBD5E1', lineHeight: 1.65, margin: 0 }}>{mod.desc}</p>
+      <p style={{ fontSize: 13, color: '#D4D4D8', lineHeight: 1.65, margin: 0 }}>{mod.desc}</p>
     </div>
   );
 }
@@ -87,7 +87,7 @@ function GroupHeader({ eyebrow, title, sub }: { eyebrow: string; title: string; 
     <div style={{ marginBottom: 28 }}>
       <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--brand-primary)', marginBottom: 10 }}>{eyebrow}</div>
       <h2 style={{ fontWeight: 600, letterSpacing: '-0.02em', color: '#FFFFFF', margin: '0 0 8px', lineHeight: 1.2 }}>{title}</h2>
-      <p style={{ fontSize: 14.5, color: '#CBD5E1', lineHeight: 1.65, margin: 0, maxWidth: 560 }}>{sub}</p>
+      <p style={{ fontSize: 14.5, color: '#D4D4D8', lineHeight: 1.65, margin: 0, maxWidth: 560 }}>{sub}</p>
     </div>
   );
 }
@@ -125,13 +125,13 @@ export default function ProductPage() {
 
       {/* ── HERO ── */}
       <section className="prodSection" style={{ paddingTop: 'clamp(48px, 7vh, 64px)', paddingBottom: 36, textAlign: 'center' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid rgba(255,255,255,0.14)', borderRadius: 100, padding: '6px 14px', marginBottom: 24, fontSize: 12, fontWeight: 500, color: '#CBD5E1' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid rgba(255,255,255,0.14)', borderRadius: 100, padding: '6px 14px', marginBottom: 24, fontSize: 12, fontWeight: 500, color: '#D4D4D8' }}>
           The Full Module Lineup
         </div>
         <h1 style={{ fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1.12, margin: '0 0 16px' }}>
           Every Module. One Platform.<br />Nothing Sold in Pieces.
         </h1>
-        <p style={{ fontSize: 15, color: '#CBD5E1', lineHeight: 1.7, maxWidth: 620, margin: '0 auto' }}>
+        <p style={{ fontSize: 15, color: '#D4D4D8', lineHeight: 1.7, maxWidth: 620, margin: '0 auto' }}>
           Grouped the way you actually think about the work: win it, run it, talk to the crew about it, and get paid for it. Every module below ships with the platform — no per-module add-on pricing.
         </p>
       </section>
@@ -169,7 +169,7 @@ export default function ProductPage() {
             <IncludedTag />
           </div>
           <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.01em', marginBottom: 8 }}>Saguaro Radio</div>
-          <p style={{ fontSize: 14, color: '#CBD5E1', lineHeight: 1.7, margin: '0 0 18px', maxWidth: 640 }}>
+          <p style={{ fontSize: 14, color: '#D4D4D8', lineHeight: 1.7, margin: '0 0 18px', maxWidth: 640 }}>
             Push-to-talk over the network, with live English&ndash;Spanish translation on the channel, a panic button that broadcasts live location, a dispatch map of the crew, channel patching, and guest links so a sub can join without an account.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -177,7 +177,7 @@ export default function ProductPage() {
               <span key={f} style={{
                 display: 'inline-flex', alignItems: 'center', padding: '5px 12px', borderRadius: 999,
                 background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)',
-                color: '#CBD5E1', fontSize: 12, fontWeight: 500,
+                color: '#D4D4D8', fontSize: 12, fontWeight: 500,
               }}>{f}</span>
             ))}
           </div>
@@ -190,7 +190,7 @@ export default function ProductPage() {
           <h2 style={{ fontWeight: 600, letterSpacing: '-0.02em', margin: '0 0 8px' }}>Try the Radio</h2>
           {demoRadioToken ? (
             <>
-              <p style={{ fontSize: 14, color: '#CBD5E1', lineHeight: 1.65, margin: '0 0 18px', maxWidth: 620 }}>
+              <p style={{ fontSize: 14, color: '#D4D4D8', lineHeight: 1.65, margin: '0 0 18px', maxWidth: 620 }}>
                 This is a live guest channel on the real Saguaro Radio — the same guest link a sub gets. Key up and say something.
               </p>
               <iframe
@@ -204,7 +204,7 @@ export default function ProductPage() {
               </a>
             </>
           ) : (
-            <p style={{ fontSize: 14, color: '#CBD5E1', lineHeight: 1.65, margin: 0 }}>
+            <p style={{ fontSize: 14, color: '#D4D4D8', lineHeight: 1.65, margin: 0 }}>
               Live demo channel coming online.
             </p>
           )}

@@ -32,13 +32,13 @@ export default function GlobalError({
               <h1 style={{ fontSize: 26, fontWeight: 700, lineHeight: 1.25, margin: '0 0 12px', letterSpacing: '-0.02em' }}>
                 The application failed to load.
               </h1>
-              <p style={{ color: '#D7DEE8', fontSize: 14.5, lineHeight: 1.6, margin: '0 0 18px' }}>
+              <p style={{ color: '#D4D4D8', fontSize: 14.5, lineHeight: 1.6, margin: '0 0 18px' }}>
                 This is not a problem with your data — nothing has been changed
                 or lost. Reloading usually clears it.
               </p>
 
               <div style={{ background: 'rgba(0,0,0,0.42)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 10, padding: '12px 14px', marginBottom: 22 }}>
-                <div style={{ fontSize: 11.5, fontWeight: 700, color: '#D7DEE8', marginBottom: 6 }}>
+                <div style={{ fontSize: 11.5, fontWeight: 700, color: '#D4D4D8', marginBottom: 6 }}>
                   What Went Wrong
                 </div>
                 <code style={{ display: 'block', fontSize: 12.5, lineHeight: 1.5, color: '#F4F4F5', wordBreak: 'break-word', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>

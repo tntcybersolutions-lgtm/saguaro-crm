@@ -6,7 +6,7 @@ import { City } from '@/lib/cities';
 const DARK = 'var(--bg-base)';
 const GOLD = 'var(--brand-primary)';
 const TEXT = '#FFFFFF';
-const DIM = '#CBD5E1';
+const DIM = '#D4D4D8';
 const BORDER = 'rgba(255,255,255,0.12)';
 const RAISED = 'var(--bg-surface)';
 const GREEN = '#2CFF7A';
@@ -218,7 +218,7 @@ export default function CityLandingPage({ city }: { city: City }) {
               <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: '34px', width: 'auto', objectFit: 'contain', borderRadius: '4px' }} />
               <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
                 <span style={{ fontWeight: 600, fontSize: '14px', color: TEXT }}>Saguaro</span>
-                <span style={{ fontSize: '7px', color: '#CBD5E1', fontWeight: 600 }}>Control Systems</span>
+                <span style={{ fontSize: '7px', color: '#D4D4D8', fontWeight: 600 }}>Control Systems</span>
               </span>
             </Link>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -282,7 +282,7 @@ export default function CityLandingPage({ city }: { city: City }) {
           </div>
 
           {/* Trust line */}
-          <p style={{ textAlign: 'center', fontSize: '12px', color: '#CBD5E1', margin: '0 0 40px', letterSpacing: '0.04em' }}>
+          <p style={{ textAlign: 'center', fontSize: '12px', color: '#D4D4D8', margin: '0 0 40px', letterSpacing: '0.04em' }}>
             30-day free trial &middot; No credit card &middot; Month-to-month &middot; Cancel anytime
           </p>
 
@@ -322,7 +322,7 @@ export default function CityLandingPage({ city }: { city: City }) {
                     <span style={{ color: GREEN, flexShrink: 0 }}><IconCheck /></span>
                     <span style={{ fontWeight: 600, fontSize: '13px', color: TEXT, lineHeight: 1.3 }}>{item.label}</span>
                   </div>
-                  <p style={{ margin: '0 0 0 24px', fontSize: '12px', color: '#CBD5E1', lineHeight: 1.5 }}>{item.sub}</p>
+                  <p style={{ margin: '0 0 0 24px', fontSize: '12px', color: '#D4D4D8', lineHeight: 1.5 }}>{item.sub}</p>
                 </div>
               ))}
             </div>
@@ -388,8 +388,8 @@ export default function CityLandingPage({ city }: { city: City }) {
             <div style={{ borderRadius: '12px', border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
               {/* Header */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', background: 'var(--bg-surface-2)', padding: '14px 20px' }}>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: '#CBD5E1' }}>Feature</span>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: '#CBD5E1', textAlign: 'center' }}>Manual / Excel</span>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: '#D4D4D8' }}>Feature</span>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: '#D4D4D8', textAlign: 'center' }}>Manual / Excel</span>
                 <span style={{ fontSize: '12px', fontWeight: 600, color: TEXT, textAlign: 'center' }}>Saguaro Control Systems</span>
               </div>
 
@@ -404,7 +404,7 @@ export default function CityLandingPage({ city }: { city: City }) {
                   <span style={{ fontSize: '14px', fontWeight: 600, color: TEXT }}>{row.feature}</span>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                     <IconX />
-                    <span style={{ fontSize: '13px', color: '#CBD5E1' }}>{row.manual}</span>
+                    <span style={{ fontSize: '13px', color: '#D4D4D8' }}>{row.manual}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                     <IconCheck />
@@ -445,7 +445,7 @@ export default function CityLandingPage({ city }: { city: City }) {
               Try AI Takeoff Free &rarr;
             </Link>
           </div>
-          <p style={{ fontSize: '12px', color: '#CBD5E1', margin: 0 }}>
+          <p style={{ fontSize: '12px', color: '#D4D4D8', margin: 0 }}>
             30-day free trial &middot; No credit card &middot; Month-to-month &middot; Cancel anytime
           </p>
         </section>
@@ -467,7 +467,7 @@ export default function CityLandingPage({ city }: { city: City }) {
                 { label: 'Privacy', href: '/privacy' },
                 { label: 'Terms', href: '/terms' },
               ].map(link => (
-                <Link key={link.href} href={link.href} style={{ fontSize: '12px', color: '#CBD5E1', textDecoration: 'none' }}>
+                <Link key={link.href} href={link.href} style={{ fontSize: '12px', color: '#D4D4D8', textDecoration: 'none' }}>
                   {link.label}
                 </Link>
               ))}

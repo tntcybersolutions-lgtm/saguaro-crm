@@ -32,14 +32,14 @@ import { measureCondition } from '@/lib/takeoff/measure';
 import { ASSEMBLY_MENU } from '@/lib/takeoff/assemblies';
 
 /* ── palette (machined dark; brand accent rides the white-label token) ──── */
-const RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#CBD5E1';
+const RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#D4D4D8';
 const CANVAS_BG = '#0b0e13';
 const ACCENT = 'var(--brand-primary)';
 const ACCENT_12 = 'var(--brand-primary-12, var(--brand-primary-12))';
 const ACCENT_25 = 'var(--brand-primary-25, var(--brand-primary-25))';
 const RED = '#FF3B30', GREEN = '#2CFF7A', AMBER = 'var(--warning)';
 const INK_COLORS = ['#FF3B30', '#FF8A00', '#FFE600', '#2CFF7A', '#FF8A00', '#FF8A00', '#FF8A00', '#FFFFFF'];
-const CATEGORY_COLORS: Record<string, string> = { RFI: '#FF8A00', Punch: '#FF3B30', Safety: '#FFE600', Other: '#CBD5E1' };
+const CATEGORY_COLORS: Record<string, string> = { RFI: '#FF8A00', Punch: '#FF3B30', Safety: '#FFE600', Other: '#D4D4D8' };
 
 const PDF_LONG_EDGE = 2600;   // crisp raster for plan sheets
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));

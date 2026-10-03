@@ -42,7 +42,7 @@ import dynamic from 'next/dynamic';
 const Building3D = dynamic(() => import('@/components/heatmap/Building3D'), { ssr: false });
 
 const GOLD = 'var(--brand-primary)', GOLD_CANVAS = '#FF8A00', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.1)';
-const TEXT = '#fff', DIM = '#CBD5E1', MUTED = 'rgba(255,255,255,0.5)';
+const TEXT = '#fff', DIM = '#D4D4D8', MUTED = 'rgba(255,255,255,0.5)';
 
 type Tool = 'select' | 'scale' | 'wall' | 'place';
 /* ── FIELD MODE — the guided jobsite flow, IDENTICAL to the mobile app.
@@ -276,7 +276,7 @@ const hexA = (hex: string, a: number) => {
 
 // ── hero badge art: the bespoke drawings glyph the legacy field header used
 //    (scopedFieldIcon('drawings')), inlined so the designer carries no /field imports ──
-const HERO_ICON_SVG = `<svg width="30" height="30" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="ss_hero_sheet" x1="6" y1="6" x2="26" y2="27" gradientUnits="userSpaceOnUse"><stop stop-color="#EDF1F6"/><stop offset="1" stop-color="#C6CFDC"/></linearGradient><linearGradient id="ss_hero_roll" x1="5" y1="5" x2="9" y2="28" gradientUnits="userSpaceOnUse"><stop stop-color="#4A5A72"/><stop offset="1" stop-color="#2C3A4E"/></linearGradient><linearGradient id="ss_hero_gold" x1="20" y1="5" x2="20" y2="28" gradientUnits="userSpaceOnUse"><stop stop-color="#FFE600"/><stop offset="1" stop-color="#FF8A00"/></linearGradient></defs><path d="M9 6.4c0-.9.7-1.6 1.6-1.6h14.8c.9 0 1.6.7 1.6 1.6v19.2c0 .9-.7 1.6-1.6 1.6H10.6c-.9 0-1.6-.7-1.6-1.6V6.4Z" fill="url(#ss_hero_sheet)"/><path d="M13 11h11M13 15h11M13 19h7" stroke="#FFE600" stroke-width="1.4" stroke-linecap="round"/><rect x="18" y="4.8" width="9" height="3.1" rx="1.1" fill="url(#ss_hero_gold)"/><path d="M4.6 6.6C4.6 5.4 5.6 4.4 6.8 4.4S9 5.4 9 6.6v18.8c0 1.2-1 2.2-2.2 2.2s-2.2-1-2.2-2.2V6.6Z" fill="url(#ss_hero_roll)"/><ellipse cx="6.8" cy="6.6" rx="2.2" ry="1.4" fill="#1b2532"/></svg>`;
+const HERO_ICON_SVG = `<svg width="30" height="30" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="ss_hero_sheet" x1="6" y1="6" x2="26" y2="27" gradientUnits="userSpaceOnUse"><stop stop-color="#EDF1F6"/><stop offset="1" stop-color="#C6CFDC"/></linearGradient><linearGradient id="ss_hero_roll" x1="5" y1="5" x2="9" y2="28" gradientUnits="userSpaceOnUse"><stop stop-color="#4A5A72"/><stop offset="1" stop-color="#2A2A2E"/></linearGradient><linearGradient id="ss_hero_gold" x1="20" y1="5" x2="20" y2="28" gradientUnits="userSpaceOnUse"><stop stop-color="#FFE600"/><stop offset="1" stop-color="#FF8A00"/></linearGradient></defs><path d="M9 6.4c0-.9.7-1.6 1.6-1.6h14.8c.9 0 1.6.7 1.6 1.6v19.2c0 .9-.7 1.6-1.6 1.6H10.6c-.9 0-1.6-.7-1.6-1.6V6.4Z" fill="url(#ss_hero_sheet)"/><path d="M13 11h11M13 15h11M13 19h7" stroke="#FFE600" stroke-width="1.4" stroke-linecap="round"/><rect x="18" y="4.8" width="9" height="3.1" rx="1.1" fill="url(#ss_hero_gold)"/><path d="M4.6 6.6C4.6 5.4 5.6 4.4 6.8 4.4S9 5.4 9 6.6v18.8c0 1.2-1 2.2-2.2 2.2s-2.2-1-2.2-2.2V6.6Z" fill="url(#ss_hero_roll)"/><ellipse cx="6.8" cy="6.6" rx="2.2" ry="1.4" fill="#1A1A1D"/></svg>`;
 
 function makeDevice(typeId: DeviceTypeId, pos: Pt, model?: string): Device {
   const def = defOf(typeId); // registry-tolerant: 'idf' works pre-sync too
@@ -390,9 +390,9 @@ function drawCinematicField(ctx: CanvasRenderingContext2D, p: HeatmapProject): C
     const b = gp.bbox;
     ctx.save(); ctx.strokeStyle = '#FF3B30'; ctx.lineWidth = 3.5; ctx.setLineDash([16, 11]); rr(ctx, b.x, b.y, b.w, b.h, 14); ctx.stroke(); ctx.restore();
     const gx = gp.centroid.x, gy = gp.centroid.y;
-    ctx.save(); ctx.setLineDash([6, 7]); ctx.strokeStyle = '#22D3A5'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(gx, gy - 70, 34, 0, 7); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle = '#22D3A5'; ctx.font = '800 34px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('+', gx, gy - 70); ctx.restore();
-    const lines: [string, string, string][] = [['Dead Zone', '800 30px system-ui', '#fff'], [`${Math.round(gp.area).toLocaleString()} ft² · low signal`, '700 22px system-ui', '#ffd7d7'], ['▸ Place 1 AP here', '800 23px system-ui', '#22D3A5']];
+    ctx.save(); ctx.setLineDash([6, 7]); ctx.strokeStyle = '#2CFF7A'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(gx, gy - 70, 34, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = '#2CFF7A'; ctx.font = '800 34px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('+', gx, gy - 70); ctx.restore();
+    const lines: [string, string, string][] = [['Dead Zone', '800 30px system-ui', '#fff'], [`${Math.round(gp.area).toLocaleString()} ft² · low signal`, '700 22px system-ui', '#ffd7d7'], ['▸ Place 1 AP here', '800 23px system-ui', '#2CFF7A']];
     const tw = Math.max(...lines.map((l) => { ctx.font = l[1]; return ctx.measureText(l[0]).width; })) + 40, bh = 112, ly = Math.min(gy + 40, H - 150);
     ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 18; ctx.fillStyle = 'rgba(140,22,26,.97)'; rr(ctx, gx - tw / 2, ly - bh / 2, tw, bh, 14); ctx.fill(); ctx.restore();
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; lines.forEach((l, i) => { ctx.font = l[1]; ctx.fillStyle = l[2]; ctx.fillText(l[0], gx, ly - 32 + i * 32); });
@@ -1827,7 +1827,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
       .band .tag{color:#FFE600;font-size:11px;font-weight:700}
       .meta{color:#555;font-size:12.5px;margin:14px 2px 12px;display:flex;flex-wrap:wrap;gap:4px 18px}
       .meta b{color:#111}
-      .verdict{font-size:15px;line-height:1.5;color:#1a2232;background:#f7f9fc;border:1px solid #e5e9f0;border-left:4px solid #FFE600;border-radius:10px;padding:13px 16px;margin:0 2px 16px}
+      .verdict{font-size:15px;line-height:1.5;color:#1a2232;background:#f7f9fc;border:1px solid #E4E4E7;border-left:4px solid #FFE600;border-radius:10px;padding:13px 16px;margin:0 2px 16px}
       .verdict b{color:#0a0a0a}
       img.plan{width:100%;border:1px solid #d5d9de;border-radius:8px;margin-top:4px}
       .floorblock{page-break-inside:avoid;margin-top:12px}
@@ -2667,7 +2667,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                   </label>
                   <button className="hm-smart" style={{ marginBottom: 0, marginTop: 4 }} onClick={doAutoPlace}><Sparkle size={14} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Auto-place {apCat ? apCat.model : apModel.replace('UniFi ', '')} → {Math.round(autoTarget * 100)}%</button>
                 </div>
-                {fixableGaps.length > 0 && <button className="hm-smart" style={{ borderColor: 'rgba(34,211,165,0.55)', color: '#22D3A5' }} onClick={doFixDeadZones}><Sparkle size={14} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Fix {fixableGaps.length} Dead Zone{fixableGaps.length === 1 ? '' : 's'} → place {fixableGaps.length} AP{fixableGaps.length === 1 ? '' : 's'}</button>}
+                {fixableGaps.length > 0 && <button className="hm-smart" style={{ borderColor: 'rgba(34,211,165,0.55)', color: '#2CFF7A' }} onClick={doFixDeadZones}><Sparkle size={14} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Fix {fixableGaps.length} Dead Zone{fixableGaps.length === 1 ? '' : 's'} → place {fixableGaps.length} AP{fixableGaps.length === 1 ? '' : 's'}</button>}
                 {fixableGaps.length === 0 && (coverage?.gaps?.length ?? 0) > 0 && <div style={{ fontSize: 11.5, color: DIM, background: DARK, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '8px 10px', lineHeight: 1.5 }}>Remaining dead pockets are too small to justify more hardware — drag an existing AP a few feet toward the worst one.</div>}
                 <button className="hm-smart" onClick={doChannels}><Sparkle size={14} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Plan WiFi channels (1/6/11)</button>
                 <button className="hm-smart" onClick={compute}><ArrowsClockwise size={14} weight="regular" style={{ verticalAlign: 'middle', marginRight: 6 }} />Recompute Heatmap</button>
@@ -2900,7 +2900,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         /* ── in-shell hero header (machined, mirrors Takeoff Studio) ── */
         .hm-hero { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; padding: 14px 16px 12px; }
         .hm-hero-id { display: flex; align-items: center; gap: 12px; min-width: 0; }
-        .hm-hero-ic { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: linear-gradient(160deg,#1b2330,#141b26); border: 1px solid rgba(255,255,255,0.08); flex-shrink: 0; box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 6px 14px rgba(0,0,0,0.4); }
+        .hm-hero-ic { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: linear-gradient(160deg,#18181B,#141b26); border: 1px solid rgba(255,255,255,0.08); flex-shrink: 0; box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 6px 14px rgba(0,0,0,0.4); }
         .hm-hero-ic svg { display: block; }
         .hm-hero-eyebrow { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 800; color: ${GOLD}; }
         .hm-hero-title { display: flex; align-items: center; gap: 10px; min-width: 0; margin-top: 2px; }
@@ -2983,7 +2983,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         .hm-row[data-on="true"] { background: var(--brand-primary-12); }
         .hm-row i { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
         .hm-bom { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
-        .hm-bom-row { display: flex; justify-content: space-between; gap: 8px; color: #CBD5E1; }
+        .hm-bom-row { display: flex; justify-content: space-between; gap: 8px; color: #D4D4D8; }
         .hm-bom-row span:first-child { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         /* ── Field mode (guided jobsite flow — identical to the mobile app) ── */
         .hm-rail { display: flex; align-items: center; gap: 7px; padding: 11px 16px; border-top: 1px solid ${BORDER}; border-bottom: 1px solid rgba(0,0,0,0.55); background: linear-gradient(180deg, #17181b, #101114); flex-wrap: wrap; position: relative; z-index: 4; box-shadow: 0 6px 18px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05); }

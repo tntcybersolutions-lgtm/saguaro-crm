@@ -29,7 +29,7 @@ const SOCIAL_LINKS: { name: 'Instagram' | 'Facebook' | 'TikTok' | 'X'; href: str
 /** A link is real once it is not the placeholder and points somewhere. */
 const isLive = (href: string) => href.trim() !== '' && href.trim() !== '#';
 
-const DIM = '#CBD5E1';
+const DIM = '#D4D4D8';
 const TEXT = '#FFFFFF';
 const GOLD = 'var(--brand-primary)';
 

@@ -15,7 +15,7 @@ import { Plus, Buildings, MapPin, CalendarBlank, UsersThree, Sparkle, CurrencyDo
 import { useProjects } from '@/lib/hooks/useProjects';
 import Suggest from '@/components/ui/Suggest';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-surface-2)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
+const GOLD='var(--brand-primary)',DARK='var(--bg-surface-2)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF';
 const INPUT_STYLE = {width:'100%',padding:'10px 12px',background:DARK,border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:13,outline:'none'};
 const SELECT_STYLE = {...INPUT_STYLE,cursor:'pointer'};
 const HINT:React.CSSProperties = {fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:6,lineHeight:1.45};
@@ -521,7 +521,7 @@ export default function NewProjectPage() {
                             }}
                           >
                             <div style={{ fontSize: 13.5, fontWeight: 800, color: on ? 'var(--brand-primary-strong)' : '#FFFFFF', marginBottom: 3 }}>{c.title}</div>
-                            <div style={{ fontSize: 11.5, color: '#CBD5E1', lineHeight: 1.45 }}>{c.detail}</div>
+                            <div style={{ fontSize: 11.5, color: '#D4D4D8', lineHeight: 1.45 }}>{c.detail}</div>
                           </button>
                         );
                       })}

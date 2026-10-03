@@ -19,7 +19,7 @@ import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/t
 
 const GOLD = 'var(--brand-primary)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1';
+const DIM = '#D4D4D8';
 const TEXT = '#FFFFFF';
 const GREEN = '#2CFF7A';
 const RED = '#FF3B30';
@@ -32,7 +32,7 @@ const fmt = (n: number | string | null | undefined) =>
 const fmtDay = (d: string | null | undefined) =>
   d ? new Date(String(d).includes('T') ? d : `${d}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null;
 
-function Badge({ label, color = '#CBD5E1', bg = 'rgba(148,163,184,.12)' }: { label: string; color?: string; bg?: string }) {
+function Badge({ label, color = '#D4D4D8', bg = 'rgba(148,163,184,.12)' }: { label: string; color?: string; bg?: string }) {
   return (
     <span style={{
       fontSize: 10, fontWeight: 700, padding: '2px 8px',

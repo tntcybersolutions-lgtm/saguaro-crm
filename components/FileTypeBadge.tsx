@@ -12,7 +12,7 @@ import React from 'react';
  */
 const MAP: Record<string, { label: string; color: string }> = {
   pdf:  { label: 'PDF',  color: '#FF3B30' },
-  doc:  { label: 'DOC',  color: '#2B579A' }, docx: { label: 'DOCX', color: '#2B579A' }, rtf: { label: 'RTF', color: '#2B579A' },
+  doc:  { label: 'DOC',  color: '#FF8A00' }, docx: { label: 'DOCX', color: '#FF8A00' }, rtf: { label: 'RTF', color: '#FF8A00' },
   xls:  { label: 'XLS',  color: '#217346' }, xlsx: { label: 'XLSX', color: '#217346' }, csv: { label: 'CSV', color: '#217346' },
   ppt:  { label: 'PPT',  color: '#D24726' }, pptx: { label: 'PPTX', color: '#D24726' },
   png:  { label: 'PNG',  color: '#FF8A00' }, jpg: { label: 'JPG', color: '#FF8A00' }, jpeg: { label: 'JPG', color: '#FF8A00' },

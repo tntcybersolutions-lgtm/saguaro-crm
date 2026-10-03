@@ -8,7 +8,7 @@ import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, goldB
 
 const GOLD = 'var(--brand-primary)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1';
+const DIM = '#D4D4D8';
 const TEXT = '#FFFFFF';
 const RED = '#FF3B30';
 

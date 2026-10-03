@@ -35,7 +35,7 @@ export function FilePreview({ kind, url, name, height = 460 }: { kind: FileKind;
   return (
     <div style={{ ...box, flexDirection: 'column', gap: 14 }}>
       <div style={{ color: KIND_TINT[kind] }}>{ICON[kind]}</div>
-      <div style={{ color: '#CBD5E1', fontSize: 14, fontWeight: 600, maxWidth: '80%', textAlign: 'center', wordBreak: 'break-word' }}>{name || 'File'}</div>
+      <div style={{ color: '#D4D4D8', fontSize: 14, fontWeight: 600, maxWidth: '80%', textAlign: 'center', wordBreak: 'break-word' }}>{name || 'File'}</div>
       <a href={url} download={name} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'var(--brand-primary)', color: '#0A0A00', fontWeight: 700, padding: '9px 18px', borderRadius: 9, textDecoration: 'none', fontSize: 13.5 }}><DownloadSimple size={16} weight="bold" />Download to View</a>
     </div>
   );

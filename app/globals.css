@@ -27,7 +27,7 @@
   --border-strong: rgba(255,255,255,0.22);
   /* Text — high contrast on jet black (§6). */
   --text-primary: #FFFFFF;
-  --text-secondary: #D7DEE8;
+  --text-secondary: #D4D4D8;
   --text-tertiary: #A9B4C4;
   --text-disabled: #7A8597;
   /* ── Brand primary — the single white-label override point. Defaults to
@@ -462,7 +462,7 @@ input::placeholder, textarea::placeholder {
 .badge-gold { background: rgba(255,230,0,0.16); color: #FFE600; border: 1px solid rgba(255,230,0,0.50); }
 .badge-red { background: rgba(255,59,48,0.16); color: #FF3B30; border: 1px solid rgba(255,59,48,0.50); }
 .badge-blue { background: rgba(255,138,0,0.16); color: #FF8A00; border: 1px solid rgba(255,138,0,0.50); }
-.badge-purple { background: rgba(176,140,255,0.16); color: #B08CFF; border: 1px solid rgba(176,140,255,0.50); }
+.badge-purple { background: rgba(176,140,255,0.16); color: #FF8A00; border: 1px solid rgba(176,140,255,0.50); }
 .badge-gray { background: rgba(163,172,187,0.16); color: #A3ACBB; border: 1px solid rgba(163,172,187,0.45); }
 [class^="badge-"] {
   display: inline-flex; align-items: center; padding: 2px 10px;

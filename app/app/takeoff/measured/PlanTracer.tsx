@@ -37,7 +37,7 @@ const BG = 'var(--bg-base)', PANEL = 'var(--bg-surface)', LINE = 'rgba(255,255,2
 const CANVAS_GOLD = '#FF8A00', CANVAS_CYAN = '#FFE600';
 const TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#2CFF7A', RED = '#FF3B30', CYAN = 'var(--brand-primary-strong)';
 const CANVAS_BG = '#0b0e13';
-const TRADE_PALETTE = ['#FFE600', '#2CFF7A', '#FF8A00', '#FF8A00', '#FF8A00', '#FB7185', '#22D3EE', '#FFE600', '#2CFF7A', '#FFE600', '#FF8A00', '#2CFF7A'];
+const TRADE_PALETTE = ['#FFE600', '#2CFF7A', '#FF8A00', '#FF8A00', '#FF8A00', '#FB7185', '#FF8A00', '#FFE600', '#2CFF7A', '#FFE600', '#FF8A00', '#2CFF7A'];
 const uid = () => Math.random().toString(36).slice(2, 9);
 const usd = (c: number) => '$' + Math.round(c / 100).toLocaleString();
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));

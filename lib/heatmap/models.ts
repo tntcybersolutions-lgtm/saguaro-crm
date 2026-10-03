@@ -74,7 +74,7 @@ export const RSSI_ZONES: { label: string; minDbm: number; color: string }[] = [
 /* ── Wall materials (attenuation dB per crossing, per band) ─────────────── */
 export const WALL_MATERIALS: Record<WallMaterialId, { label: string; db24: number; db5: number; color: string }> = {
   drywall:     { label: 'Drywall / partition', db24: 3,  db5: 4,  color: '#E8E2D6' },
-  cubicle:     { label: 'Cubicle divider',     db24: 1,  db5: 2,  color: '#cbd5e1' },
+  cubicle:     { label: 'Cubicle divider',     db24: 1,  db5: 2,  color: '#D4D4D8' },
   wood_door:   { label: 'Wood door',           db24: 3,  db5: 4,  color: '#b45309' },
   glass:       { label: 'Glass / window',      db24: 3,  db5: 4,  color: '#B7C4C4' },
   low_e_glass: { label: 'Low-E glass',         db24: 10, db5: 15, color: '#7E8C8C' },
@@ -112,7 +112,7 @@ export function doriDistanceFt(hpx: number, hfovDeg: number, pxPerM: number): nu
 
 /* ── SPL (paging) ──────────────────────────────────────────────────────── */
 export const SPL_BANDS = [
-  { label: 'Clear', minDb: 75, color: '#2E7D32' },
+  { label: 'Clear', minDb: 75, color: '#2CFF7A' },
   { label: 'Intelligible', minDb: 70, color: '#F9A825' },
   { label: 'Marginal', minDb: 65, color: '#EF6C00' },
   { label: 'Inaudible', minDb: -1, color: '#C62828' },
@@ -142,22 +142,22 @@ export const DEVICE_REGISTRY: Record<DeviceTypeId, DeviceDef> = {
   motion_pir_ceiling: {
     label: 'Motion (PIR ceiling 360°)', short: 'PIR', modelType: 'radius', wallBlocked: true, color: SYSTEM_COLORS.sensor,
     defaults: { rangeFt: 30 },
-    zones: [{ outerFt: 25.5, color: '#2E7D32', label: 'Detect' }, { outerFt: 30, color: '#F9A825', label: 'Edge' }],
+    zones: [{ outerFt: 25.5, color: '#2CFF7A', label: 'Detect' }, { outerFt: 30, color: '#F9A825', label: 'Edge' }],
   },
   motion_pir_wall: {
     label: 'Motion (PIR wall fan)', short: 'PIR', modelType: 'fov', wallBlocked: true, color: SYSTEM_COLORS.sensor,
     defaults: { rangeFt: 40, aimDeg: 0, coverageAngleDeg: 90 },
-    zones: [{ outerFt: 32, color: '#2E7D32', label: 'Detect' }, { outerFt: 40, color: '#F9A825', label: 'Edge' }],
+    zones: [{ outerFt: 32, color: '#2CFF7A', label: 'Detect' }, { outerFt: 40, color: '#F9A825', label: 'Edge' }],
   },
   smoke_detector_spot: {
     label: 'Smoke Detector (NFPA 72)', short: 'SD', modelType: 'radius', wallBlocked: false, color: SYSTEM_COLORS.sensor,
     defaults: { rangeFt: 21 },
-    zones: [{ outerFt: 21, color: '#2E7D32', label: 'Protected' }, { outerFt: 30, color: '#F9A825', label: 'Overlap' }],
+    zones: [{ outerFt: 21, color: '#2CFF7A', label: 'Protected' }, { outerFt: 30, color: '#F9A825', label: 'Overlap' }],
   },
   heat_detector_spot: {
     label: 'Heat Detector (NFPA 72)', short: 'HD', modelType: 'radius', wallBlocked: false, color: SYSTEM_COLORS.sensor,
     defaults: { rangeFt: 17.5 },
-    zones: [{ outerFt: 17.5, color: '#2E7D32', label: 'Protected' }, { outerFt: 25, color: '#F9A825', label: 'Overlap' }],
+    zones: [{ outerFt: 17.5, color: '#2CFF7A', label: 'Protected' }, { outerFt: 25, color: '#F9A825', label: 'Overlap' }],
   },
   access_reader: {
     label: 'Access Reader / Door', short: 'AC', modelType: 'radius', wallBlocked: false, color: SYSTEM_COLORS.access,
@@ -167,7 +167,7 @@ export const DEVICE_REGISTRY: Record<DeviceTypeId, DeviceDef> = {
   paging_speaker: {
     label: 'Paging Speaker', short: 'SPK', modelType: 'spl', wallBlocked: true, color: SYSTEM_COLORS.av,
     defaults: { rangeFt: 50, splRefDb: 85 },
-    zones: [{ outerFt: 32, color: '#2E7D32', label: 'Clear' }, { outerFt: 50, color: '#F9A825', label: 'Intelligible' }, { outerFt: 71, color: '#EF6C00', label: 'Marginal' }],
+    zones: [{ outerFt: 32, color: '#2CFF7A', label: 'Clear' }, { outerFt: 50, color: '#F9A825', label: 'Intelligible' }, { outerFt: 71, color: '#EF6C00', label: 'Marginal' }],
   },
   ble_beacon: {
     label: 'BLE Beacon', short: 'BLE', modelType: 'rf', wallBlocked: true, color: SYSTEM_COLORS.iot,
