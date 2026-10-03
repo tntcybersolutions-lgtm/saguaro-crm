@@ -38,6 +38,7 @@
  * and the recording console (date range + search + print-ready record).
  */
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { safeJsonParse } from '@/lib/safe-json';
 import useSWR from 'swr';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import {
@@ -378,7 +379,7 @@ function readMonOverrides(): Record<string, boolean> {
 const HEARD_KEY = 'sag_radio_heard';
 function readHeard(): string[] {
   try {
-    const a = JSON.parse(window.localStorage.getItem(HEARD_KEY) || '[]');
+    const a = safeJsonParse<any[]>(window.localStorage.getItem(HEARD_KEY), []);
     return Array.isArray(a) ? a.filter((x) => typeof x === 'string') : [];
   } catch { return []; }
 }

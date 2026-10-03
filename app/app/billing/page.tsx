@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
+import { safeJsonParse } from '@/lib/safe-json';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { CheckCircle, Warning, CreditCard, DeviceMobile, Question, Lightning, PuzzlePiece } from '@phosphor-icons/react';
@@ -174,7 +175,7 @@ export default function BillingPage() {
     loadSubscription();
     loadEntitlements();
     try {
-      setDisableReqs(JSON.parse(window.localStorage.getItem('saguaro_addon_disable_requests') || '{}') || {});
+      setDisableReqs(safeJsonParse<Record<string, any>>(window.localStorage.getItem('saguaro_addon_disable_requests'), {}));
     } catch { /* unreadable localStorage — start clean */ }
   }, [loadSubscription, loadEntitlements]);
 

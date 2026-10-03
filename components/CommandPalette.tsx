@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { safeJsonParse } from '@/lib/safe-json';
 import { useGuardedRouter } from '@/lib/navGuard';
 
 const GOLD   = 'var(--brand-primary)';
@@ -157,7 +158,7 @@ export default function CommandPalette({ onScoreBid }: Props) {
     if (!item.href) return;
     const entry: PaletteItem = { ...item, section: 'recent', id: 'recent-' + item.id };
     try {
-      const prev: PaletteItem[] = JSON.parse(localStorage.getItem(RECENT_PAGES_KEY) || '[]');
+      const prev: PaletteItem[] = safeJsonParse<PaletteItem[]>(localStorage.getItem(RECENT_PAGES_KEY), []);
       const deduped = prev.filter(p => p.href !== item.href);
       const next = [entry, ...deduped].slice(0, MAX_RECENT);
       localStorage.setItem(RECENT_PAGES_KEY, JSON.stringify(next));

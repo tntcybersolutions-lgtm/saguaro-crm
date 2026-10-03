@@ -179,7 +179,7 @@ function MarkOutcomeModal({
         return;
       }
       if (showToast) showToast(outcome === 'won' ? 'Bid marked as won.' : 'Bid marked as lost.', 'success');
-      else console.log('[MarkOutcomeModal] recorded', json);
+      else { /* recorded */ }
       onRecorded?.(json);
       onClose();
     } catch {

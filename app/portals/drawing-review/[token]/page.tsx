@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { safeJsonParse } from '@/lib/safe-json';
 import { useParams } from 'next/navigation';
 import { lengthLF, areaSF } from '@/lib/takeoff/geometry';
 
@@ -398,7 +399,7 @@ export default function DrawingReviewPortalPage() {
   useEffect(() => {
     if (!token) return;
     try {
-      const arr = JSON.parse(localStorage.getItem(MINE_KEY_PREFIX + token) || '[]');
+      const arr = safeJsonParse<any[]>(localStorage.getItem(MINE_KEY_PREFIX + token), []);
       if (Array.isArray(arr)) {
         const s = new Set<string>();
         for (const v of arr) if (typeof v === 'string' && v) s.add(v);
