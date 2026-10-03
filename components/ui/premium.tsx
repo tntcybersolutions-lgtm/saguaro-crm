@@ -15,7 +15,7 @@
  */
 
 import React from 'react';
-import { neonCard, neonFor, neonText } from '@/lib/neon';
+import { NEON_CYCLE, neonCard, neonFor, neonText } from '@/lib/neon';
 import { Check } from '@phosphor-icons/react';
 import { moduleAccent } from '@/lib/module-identity';
 import { ScribbleNote } from '@/components/Scribble';
@@ -436,7 +436,9 @@ export function SectionCard({
             {icon && <span style={{ display: 'inline-flex', flexShrink: 0, opacity: 0.9 }}>{icon}</span>}
             <div style={{ minWidth: 0, flex: 1 }}>
               {title && (
-                <div style={{ fontSize: 13, fontWeight: 700, color: MUTED, lineHeight: 1.3 }}>
+                /* Neon section title (owner 2026-10-03): bright, with a lit
+                   underline in a stable neon per title — not grey-on-black. */
+                <div style={{ fontSize: 15, fontWeight: 800, color: '#FFFFFF', lineHeight: 1.3, paddingBottom: 6, display: 'inline-block', background: `linear-gradient(90deg, ${neonFor(typeof title === 'string' ? title : '')}, transparent) left bottom / 44px 2px no-repeat` }}>
                   {title}
                 </div>
               )}
@@ -704,18 +706,20 @@ export function StatStrip({ items }: {
     }}>
       {items.map((it, i) => {
         const clickable = !!(it.href || it.onClick);
+        // Each tile lit in its own neon (owner 2026-10-03); a caller accent wins.
+        const lit = it.accent || NEON_CYCLE[i % NEON_CYCLE.length];
         const body = (
           <div
             className="pmTile"
             onClick={it.onClick}
-            style={{ position: 'relative', background: 'linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.035)), rgba(0,0,0,0.88)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)', padding: '13px 16px', minWidth: 0, cursor: clickable ? 'pointer' : 'default', height: '100%' }}
+            style={{ position: 'relative', background: `linear-gradient(165deg, color-mix(in srgb, ${lit} 18%, transparent), color-mix(in srgb, ${lit} 4%, transparent) 60%), rgba(0,0,0,0.88)`, borderTop: `2px solid ${lit}`, boxShadow: `inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -24px 40px -30px color-mix(in srgb, ${lit} 50%, transparent)`, padding: '13px 16px', minWidth: 0, cursor: clickable ? 'pointer' : 'default', height: '100%' }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: FAINT, marginBottom: 5, whiteSpace: 'nowrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 750, color: `color-mix(in srgb, ${lit} 65%, #FFFFFF)`, marginBottom: 5, whiteSpace: 'nowrap' }}>
               {it.icon}{it.label}
               {clickable && <span aria-hidden style={{ marginLeft: 'auto', color: FAINT, fontWeight: 700 }}>→</span>}
             </div>
-            <div style={{ fontSize: 17, fontWeight: 800, color: it.accent || WHITE, letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums', textShadow: it.accent ? '0 0 20px currentColor' : undefined, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.value}</div>
-            {it.sub && <div style={{ fontSize: 11, color: MUTED, marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.sub}</div>}
+            <div style={{ fontSize: 20, fontWeight: 800, ...neonText(lit), letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.value}</div>
+            {it.sub && <div style={{ fontSize: 12, color: MUTED, marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.sub}</div>}
           </div>
         );
         if (it.href) {

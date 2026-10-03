@@ -360,7 +360,9 @@ export function SectionCard({
             {icon && <span style={{ display: 'inline-flex', flexShrink: 0, opacity: 0.85 }}>{icon}</span>}
             <div style={{ minWidth: 0, flex: 1 }}>
               {title && (
-                <div style={{ fontSize: 13, fontWeight: 700, color: CIN.muted, lineHeight: 1.3 }}>
+                /* Neon section title (owner 2026-10-03): bright, with a lit
+                   underline in a stable neon per title — not grey-on-black. */
+                <div style={{ fontSize: 15, fontWeight: 800, color: '#FFFFFF', lineHeight: 1.3, paddingBottom: 6, display: 'inline-block', background: `linear-gradient(90deg, ${neonFor(typeof title === 'string' ? title : '')}, transparent) left bottom / 44px 2px no-repeat` }}>
                   {title}
                 </div>
               )}
