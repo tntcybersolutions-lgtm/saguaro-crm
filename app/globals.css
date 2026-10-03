@@ -928,7 +928,7 @@ input:-webkit-autofill:focus {
 
 /* Stat tiles — one compact KPI tile, laid out in a StatRow */
 .k-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--sp-3); }
-.k-stat { background: var(--bg-surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); box-shadow: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: var(--sp-3) var(--sp-4); display: flex; flex-direction: column; gap: 2px; min-width: 0; text-decoration: none; color: inherit; }
+.k-stat { background: var(--bg-surface); /* no blur per tile — five or six stacked blur layers per page cost paint for nothing on a solid surface */ box-shadow: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: var(--sp-3) var(--sp-4); display: flex; flex-direction: column; gap: 2px; min-width: 0; text-decoration: none; color: inherit; }
 a.k-stat:hover, button.k-stat:hover { border-color: var(--border-strong); background: var(--bg-surface-2); }
 button.k-stat { text-align: left; font: inherit; }
 .k-stat-label { font-size: var(--fs-xs); font-weight: 600; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -970,7 +970,7 @@ a.k-stat:hover, button.k-stat:hover { border-color: var(--border-strong); border
 /* Data table — dense rows, sticky header, row actions on the right */
 .k-table-wrap { overflow-x: auto; }
 .k-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
-.k-table th { position: sticky; top: 0; z-index: 1; background: rgba(21,23,28,0.88); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); box-shadow: var(--glass-highlight); text-align: left; padding: 8px 12px; font-size: 12px; font-weight: 700; letter-spacing: normal; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); white-space: nowrap; user-select: none; }
+.k-table th { position: sticky; top: 0; z-index: 1; background: var(--bg-solid-2); /* no blur per header cell — one filter per column was the single most expensive effect on long tables */ box-shadow: var(--glass-highlight); text-align: left; padding: 8px 12px; font-size: 12px; font-weight: 700; letter-spacing: normal; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); white-space: nowrap; user-select: none; }
 .k-table th[data-sortable="true"] { cursor: pointer; }
 .k-table th[data-sortable="true"]:hover, .k-table th[aria-sort="ascending"], .k-table th[aria-sort="descending"] { color: var(--text-primary); }
 .k-table td { padding: 0 12px; height: 44px; border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -1002,7 +1002,7 @@ a.k-stat:hover, button.k-stat:hover { border-color: var(--border-strong); border
 .k-label .k-req { color: var(--brand-primary); margin-left: 2px; }
 .k-hint { font-size: var(--fs-xs); color: var(--text-tertiary); }
 .k-error { font-size: var(--fs-xs); color: #FF3B30; }
-.k-input, .k-textarea, select.k-select { width: 100%; min-height: 40px; padding: 8px 12px; font-size: var(--fs-md); font-weight: 500; color: var(--text-primary); background-color: var(--bg-surface-2); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--border-default); border-radius: var(--radius-sm); }
+.k-input, .k-textarea, select.k-select { width: 100%; min-height: 40px; padding: 8px 12px; font-size: var(--fs-md); font-weight: 500; color: var(--text-primary); background-color: var(--bg-surface-2); /* no blur per field — forms carry a dozen of these */ border: 1px solid var(--border-default); border-radius: var(--radius-sm); }
 select.k-select { padding-right: 36px; }
 .k-textarea { min-height: 96px; resize: vertical; line-height: 1.5; }
 /* The app-wide input rules above use !important (13px, solid #15171C). Kit fields
