@@ -60,6 +60,16 @@ export function confirmDialog(opts: ConfirmOptions): Promise<boolean> {
   });
 }
 
+export interface AlertOptions { title?: string; message: string; okLabel?: string; danger?: boolean }
+
+/** Styled replacement for window.alert — a single-button notice. Resolves when dismissed. */
+export function alertDialog(opts: AlertOptions): Promise<void> {
+  return new Promise((resolve) => {
+    if (typeof document === 'undefined') { resolve(); return; }
+    mount((close) => <AlertModal opts={opts} done={() => { close(); resolve(); }} />);
+  });
+}
+
 /* ── shared chrome ──────────────────────────────────────────────────── */
 const overlayS: React.CSSProperties = {
   position: 'fixed', inset: 0, zIndex: 1000,
@@ -149,6 +159,28 @@ function ConfirmModal({ opts, done }: { opts: ConfirmOptions; done: (v: boolean)
             onClick={() => done(true)}
             onKeyDown={(e) => { if (e.key === 'Enter') done(true); }}
           >{opts.confirmLabel ?? 'Confirm'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AlertModal({ opts, done }: { opts: AlertOptions; done: () => void }) {
+  const ref = useRef<HTMLButtonElement>(null);
+  useDismiss(done);
+  useEffect(() => { ref.current?.focus(); }, []);
+  return (
+    <div style={overlayS} onMouseDown={(e) => { if (e.target === e.currentTarget) done(); }}>
+      <div style={panelS} role="alertdialog" aria-modal="true" aria-label={opts.title ?? 'Notice'}>
+        <h2 style={titleS}>{opts.title ?? 'Notice'}</h2>
+        <p style={msgS}>{opts.message}</p>
+        <div style={rowS}>
+          <button
+            ref={ref} type="button"
+            style={opts.danger ? btnDanger : btnPrimary}
+            onClick={done}
+            onKeyDown={(e) => { if (e.key === 'Enter') done(); }}
+          >{opts.okLabel ?? 'OK'}</button>
         </div>
       </div>
     </div>

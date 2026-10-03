@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { alertDialog } from '@/lib/ui/async-dialog';
 import { SUB_TRADES as ALL_TRADES } from '@/lib/construction-intelligence';
 import { humanError } from '@/lib/errors';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
@@ -455,19 +456,19 @@ export default function SubPortalPage() {
         // Persisted server-side — prepend the real row (real id + timestamp).
         setAnnouncements(prev => [data.announcement as Announcement, ...prev]);
         if (data.emailConfigured === false) {
-          alert('Announcement saved. Email delivery isn’t set up yet, so no emails were sent — ask your administrator to enable email.');
+          void alertDialog({ title: 'Notice', message: 'Announcement saved. Email delivery isn’t set up yet, so no emails were sent — ask your administrator to enable email.' });
         } else {
           const n = Number(data.sent) || 0;
-          alert(`Announcement sent and emailed to ${n} recipient${n === 1 ? '' : 's'}.`);
+          void alertDialog({ title: 'Notice', message: `Announcement sent and emailed to ${n} recipient${n === 1 ? '' : 's'}.` });
         }
         setAnnSubject(''); setAnnBody(''); setAnnRecipients(['all']);
         setAnnounceModal(false);
       } else {
         console.error('announcement send failed', res.status, data?.error);
-        alert(humanError(data?.error, 'Could not send the announcement. Please try again.'));
+        void alertDialog({ title: 'Notice', message: humanError(data?.error, 'Could not send the announcement. Please try again.') });
       }
     } catch {
-      alert('Could not send the announcement — check your connection and try again.');
+      void alertDialog({ title: 'Notice', message: 'Could not send the announcement — check your connection and try again.' });
     } finally {
       setAnnSending(false);
     }
@@ -483,13 +484,13 @@ export default function SubPortalPage() {
       });
       const data = await res.json().catch(() => ({} as any));
       if (res.ok && data?.success) {
-        alert(`Invitation resent${data?.sentTo ? ` to ${data.sentTo}` : ''}.`);
+        void alertDialog({ title: 'Notice', message: `Invitation resent${data?.sentTo ? ` to ${data.sentTo}` : ''}.` });
       } else {
         console.error('resend invite failed', res.status, data?.error);
-        alert(humanError(data?.error, 'Could not resend the invitation. Please try again.'));
+        void alertDialog({ title: 'Notice', message: humanError(data?.error, 'Could not resend the invitation. Please try again.') });
       }
     } catch {
-      alert('Could not resend the invitation — check your connection and try again.');
+      void alertDialog({ title: 'Notice', message: 'Could not resend the invitation — check your connection and try again.' });
     }
   }, []);
 

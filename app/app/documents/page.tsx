@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
+import { alertDialog } from '@/lib/ui/async-dialog';
 import { useProjects } from '@/lib/hooks/useProjects';
 import Link from 'next/link';
 import { Skeleton } from '../../../components/ui/Skeleton';
@@ -187,7 +188,7 @@ export default function DocumentsPage() {
       const d = await res.json().catch(() => ({}));
       if (!res.ok || !d.url) throw new Error(d.error || 'open failed');
       openPdf({ url: d.url, title: doc.title || doc.doc_type || 'Document' });
-    } catch { alert('Could not open the document. Try regenerating it.'); }
+    } catch { void alertDialog({ title: 'Notice', message: 'Could not open the document. Try regenerating it.' }); }
     finally { setBusyKey(null); }
   }
 
@@ -222,14 +223,14 @@ export default function DocumentsPage() {
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         console.error('closeout update failed', res.status, data.error);
-        alert(humanError(data.error, "Couldn't update the item. Please try again."));
+        void alertDialog({ title: 'Notice', message: humanError(data.error, "Couldn't update the item. Please try again.") });
         return;
       }
       const data = await res.json();
       const updated = (data.item ?? { ...item, status: nextStatus }) as CloseoutItem;
       setCloseoutItems(prev => prev.map(i => i.id === item.id ? { ...i, ...updated } : i));
     } catch {
-      alert("Couldn't update item. Check your connection and try again.");
+      void alertDialog({ title: 'Notice', message: "Couldn't update item. Check your connection and try again." });
     } finally {
       setTogglingId(null);
     }
@@ -292,7 +293,7 @@ export default function DocumentsPage() {
     gen: { path: string; body: Record<string, unknown>; urlField?: string } | null,
   ) {
     if (existingUrl) { openPdf({ url: existingUrl, title: key }); return; }
-    if (!gen) { alert('No document available to download.'); return; }
+    if (!gen) { void alertDialog({ title: 'Notice', message: 'No document available to download.' }); return; }
     setBusyKey(key);
     try {
       const res = await fetch(gen.path, {
@@ -302,10 +303,10 @@ export default function DocumentsPage() {
       });
       const data = await res.json();
       const url = data[gen.urlField ?? 'pdfUrl'] ?? data.pdfUrl ?? data.g702Url;
-      if (!res.ok || !url) { console.error('doc generation failed', res.status, data.error); alert(humanError(data.error, 'Document generation failed. Please try again.')); return; }
+      if (!res.ok || !url) { console.error('doc generation failed', res.status, data.error); void alertDialog({ title: 'Notice', message: humanError(data.error, 'Document generation failed. Please try again.') }); return; }
       openPdf({ url, title: key });
     } catch {
-      alert('Document generation failed.');
+      void alertDialog({ title: 'Notice', message: 'Document generation failed.' });
     } finally {
       setBusyKey(null);
     }
@@ -313,7 +314,7 @@ export default function DocumentsPage() {
 
   function requireProject(): string | null {
     if (selectedProject) return selectedProject;
-    alert('Select a project first.');
+    void alertDialog({ title: 'Notice', message: 'Select a project first.' });
     return null;
   }
 
@@ -752,7 +753,7 @@ export default function DocumentsPage() {
                     disabled={busyKey === `bond-${card.code}` || !BOND_ROUTES[card.code]}
                     onClick={() => {
                       const route = BOND_ROUTES[card.code];
-                      if (!route) { alert(`No generator for ${card.code}.`); return; }
+                      if (!route) { void alertDialog({ title: 'Notice', message: `No generator for ${card.code}.` }); return; }
                       const projectId = requireProject();
                       if (!projectId) return;
                       openOrGenerate(`bond-${card.code}`, null, { ...route, body: route.body(projectId) });

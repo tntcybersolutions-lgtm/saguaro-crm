@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { alertDialog } from '@/lib/ui/async-dialog';
 import type { Icon } from '@phosphor-icons/react';
 import { Bathtub, CookingPot, GridFour, Lightbulb, Log, Mountains, Nut, Palette } from '@phosphor-icons/react';
 
@@ -123,7 +124,7 @@ export default function MaterialsPage() {
   );
 
   const exportToEstimate = async () => {
-    if (selections.length === 0) { alert('Add at least one selection first.'); return; }
+    if (selections.length === 0) { void alertDialog({ title: 'Notice', message: 'Add at least one selection first.' }); return; }
     // Persist to the REAL material_selections store. Previously this POSTed to
     // /api/takeoff/from-materials — a route that does not exist (404) — then
     // unconditionally alerted "exported!", so nothing was ever saved.
@@ -145,14 +146,14 @@ export default function MaterialsPage() {
         }),
       ));
       if (results.every(r => r.ok)) {
-        alert(`Saved ${selections.length} selection${selections.length === 1 ? '' : 's'} to your project.`);
+        void alertDialog({ title: 'Notice', message: `Saved ${selections.length} selection${selections.length === 1 ? '' : 's'} to your project.` });
       } else if (results.some(r => r.status === 401)) {
-        alert('Please sign in to save these selections to your project.');
+        void alertDialog({ title: 'Notice', message: 'Please sign in to save these selections to your project.' });
       } else {
-        alert('Some selections could not be saved. Please try again.');
+        void alertDialog({ title: 'Notice', message: 'Some selections could not be saved. Please try again.' });
       }
     } catch {
-      alert('Could not save selections — check your connection and try again.');
+      void alertDialog({ title: 'Notice', message: 'Could not save selections — check your connection and try again.' });
     }
   };
 
