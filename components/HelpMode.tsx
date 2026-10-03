@@ -31,6 +31,14 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Lifebuoy, X, CaretRight, MagicWand } from '@phosphor-icons/react';
 import { TOURS, CATEGORY_ORDER, tourById, routeMatches, type Tour, type TourStep } from '@/lib/help-tours';
 
+/* Tour categories are compared values ("Build it", "Get paid"), so they stay
+   as stored; headings show them in Title Case (docs/COPY-STYLE.md §1). */
+const SMALL_WORDS = new Set(['a','an','the','and','but','or','nor','for','so','yet','as','at','by','in','of','off','on','per','to','up','via','vs','from','into','onto','over','with']);
+function titleCase(s: string): string {
+  const words = s.split(' ');
+  return words.map((w, i) => (i > 0 && i < words.length - 1 && SMALL_WORDS.has(w.toLowerCase()) ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1))).join(' ');
+}
+
 const GOLD = 'var(--brand-primary)';
 const GOLD_HI = 'var(--brand-primary-strong)';
 const TEXT = '#F0F4FF';
@@ -465,7 +473,7 @@ export default function HelpMode() {
             return (
               <div key={cat} style={{ marginBottom: 22 }}>
                 <div style={{ fontSize: 10.5, fontWeight: 900, color: GOLD, marginBottom: 9 }}>
-                  {cat}
+                  {titleCase(cat)}
                 </div>
                 <div style={{ display: 'grid', gap: 8 }}>
                   {inCat.map((t) => (
