@@ -20,6 +20,7 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { CaretRight, DotsThree, MagnifyingGlass, X, Tray } from '@phosphor-icons/react';
 import { useSortedRows, type SortState, type SortDir } from './premium';
+import { SortBar } from './sort';
 import { STATUS_COLORS, type StatusKind } from '@/lib/status-colors';
 
 const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ');
@@ -432,9 +433,13 @@ export function DataTable<T>({
     setSort((p) => (!p || p.key !== key ? { key, dir: 'asc' } : p.dir === 'asc' ? { key, dir: 'desc' } : null));
 
   const colCount = columns.length + (rowActions ? 1 : 0);
+  // Phones hide the header row (rows become cards), so the sort lives in a
+  // control above the list there. Desktop keeps the clickable headers.
+  const sortCols = columns.filter((c) => c.sortable !== false && typeof c.header === 'string').map((c) => ({ key: c.key, label: c.header as string }));
 
   return (
     <div className="k-table-wrap">
+      <SortBar columns={sortCols} sort={sort} onChange={setSort} />
       <table className="k-table">
         <thead>
           <tr>

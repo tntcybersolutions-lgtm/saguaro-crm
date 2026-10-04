@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSort, useSortedRows, SortTh, SortBar } from '@/components/ui/sort';
 import { useProjects } from '@/lib/hooks/useProjects';
 import UserPicker from '@/components/UserPicker';
 import { SkeletonRow } from '../../../components/ui/Skeleton';
@@ -17,6 +18,10 @@ const RED = '#FF3B30', AMBER = 'var(--warning)', BLUE = 'var(--brand-primary)', 
 const mix = (c: string, pct: number) => `color-mix(in srgb, ${c} ${pct}%, transparent)`;
 
 /* ─── Types ─── */
+const CUSTOMER_COLS = [
+  { key: 'name', label: 'Name' }, { key: 'email', label: 'Email' }, { key: 'state', label: 'State' }, { key: 'status', label: 'Status' },
+  { key: 'lead_score', label: 'Score' }, { key: 'projects', label: 'Projects' }, { key: 'ltv', label: 'Lifetime Value' }, { key: 'source', label: 'Source' }, { key: 'created_at', label: 'Created' },
+];
 type CustomerStatus = 'lead' | 'qualified' | 'proposal' | 'customer' | 'lost';
 type Customer = {
   id: string; name: string; email: string; phone: string; state: string;
@@ -106,7 +111,7 @@ export default function CustomersPage() {
         c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q)
       );
     }
-    return [...list].sort((a, b) => (Number(b.lead_score) || 0) - (Number(a.lead_score) || 0));
+    return list;
   }, [customers, filterStatus, filterSource, filterState, search]);
 
   const exportCSV = useCallback(() => {
@@ -173,6 +178,17 @@ export default function CustomersPage() {
     });
     return map;
   }, [customers, projects]);
+
+  // Sorting covers the whole filtered list (every column, both directions);
+  // Score descending is the default, as before.
+  const { sort: custSort, setSort: setCustSort, cycle: cycleCustSort } = useSort({ key: 'lead_score', dir: 'desc' });
+  const custSortValue = useCallback((c: Customer, key: string): unknown => {
+    if (key === 'projects') return projectRollup.get(c.id)?.count || 0;
+    if (key === 'ltv') return projectRollup.get(c.id)?.value || 0;
+    if (key === 'lead_score') return Number(c.lead_score) || 0;
+    return (c as unknown as Record<string, unknown>)[key];
+  }, [projectRollup]);
+  const sortedCustomers = useSortedRows(filtered, custSort, custSortValue);
 
   // Portfolio lifetime value across every customer with matched projects.
   const lifetimeTotals = useMemo(() => {
@@ -711,19 +727,17 @@ export default function CustomersPage() {
             />
           ) : (
             <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
+              <SortBar columns={CUSTOMER_COLS} sort={custSort} onChange={setCustSort} />
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 880 }}>
                 <thead>
                   <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
-                    {['Name', 'Email', 'State', 'Status', 'Score', 'Projects', 'Lifetime Value', 'Source', 'Created'].map(h => (
-                      <th key={h} style={{
-                        padding: '12px 14px', textAlign: 'left', fontSize: 10.5,
-                        color: 'var(--text-tertiary)', fontWeight: 700,
-                      }}>{h}</th>
+                    {CUSTOMER_COLS.map(c => (
+                      <SortTh key={c.key} col={c.key} label={c.label} sort={custSort} onSort={cycleCustSort} style={{ padding: '12px 14px', fontSize: 10.5, color: 'var(--text-tertiary)', fontWeight: 700 }} />
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((c, idx) => (
+                  {sortedCustomers.map((c, idx) => (
                     <tr
                       key={c.id}
                       onClick={() => { setSelected(c); setDetailTab('overview'); }}

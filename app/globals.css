@@ -1248,6 +1248,11 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 .pj-next-step span { font-size: 12.5px; color: var(--text-tertiary); line-height: 1.4; }
 .pj-next-switch { grid-column: 1 / -1; justify-content: flex-end; padding-top: 4px; }
 
+/* Sort controls (components/ui/sort.tsx). Header carets on desktop; the
+   phone bar is hidden until the phone media query below shows it. */
+.k-sort-th[data-dir="asc"], .k-sort-th[data-dir="desc"] { color: var(--brand-primary); }
+.k-sortbar { display: none; }
+
 /* Metric grid — four up, two on tablets, one on phones */
 .pj-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
 .pj-metrics .k-stat-value { font-size: 24px; white-space: nowrap; }
@@ -1268,6 +1273,12 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
   .pj-next { padding: 16px 16px 12px; }
   .pj-next-actions .k-btn { min-height: 44px; flex: 1 1 auto; }
   .pj-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .k-sortbar { display: flex; align-items: center; gap: 8px; padding: 8px 12px 4px; }
+  .k-sortbar-field { display: flex; align-items: center; gap: 8px; flex: 1 1 auto; min-width: 0; }
+  .k-sortbar-label { font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--text-tertiary); flex-shrink: 0; }
+  .k-sortbar-select { flex: 1 1 auto; min-width: 0; min-height: 44px; font-size: 16px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--border-default); background: var(--surface-raised); color: var(--text-primary); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06); }
+  .k-sortbar-dir { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; min-width: 44px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--border-default); background: var(--surface-raised); color: var(--text-primary); font-size: 13px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+  .k-sortbar-dir:disabled { opacity: .45; cursor: default; }
   .pj-metrics .k-stat-value { font-size: 20px; }
 }
 @media (max-width: 420px) { .pj-metrics { grid-template-columns: minmax(0, 1fr); } }

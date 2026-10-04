@@ -28,6 +28,7 @@
  * which are vendors a GC contracts with.
  */
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useSort, useSortedRows, SortTh, SortBar } from '@/components/ui/sort';
 import Link from 'next/link';
 import {
   UsersThree, ShieldCheck, WarningCircle, SealCheck, Buildings,
@@ -72,6 +73,11 @@ function parseDay(iso: string | null): Date | null {
 }
 
 /** Expiry read the way a GC reads it: gone, going, or fine. */
+const SUB_COLS = [
+  { key: 'company_name', label: 'Company' }, { key: 'trade', label: 'Trade' }, { key: 'contact', label: 'Contact' },
+  { key: 'license_number', label: 'License' }, { key: 'insurance_expiry', label: 'Insurance' }, { key: 'w9_on_file', label: 'W-9' },
+];
+
 function expiryState(iso: string | null): { label: string; tone: string } {
   const d = parseDay(iso);
   if (!d) return { label: 'Not on File', tone: RED };
@@ -121,6 +127,14 @@ export default function SubsAndVendorsPage() {
         .some(v => (v || '').toLowerCase().includes(needle));
     });
   }, [subs, q, trade]);
+
+  const { sort: subSort, setSort: setSubSort, cycle: cycleSubSort } = useSort(null);
+  const subSortValue = useCallback((s: (typeof subs)[number], key: string): unknown => {
+    if (key === 'contact') return s.contact_name || s.email || s.contact_email || '';
+    if (key === 'w9_on_file') return s.w9_on_file === true ? 1 : 0;
+    return (s as unknown as Record<string, unknown>)[key];
+  }, []);
+  const sortedSubs = useSortedRows(shown, subSort, subSortValue);
 
   /* The number that matters is not how many subs there are, it is how many
      cannot be awarded work today. */
@@ -199,16 +213,17 @@ export default function SubsAndVendorsPage() {
           />
         ) : (
           <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
+            <SortBar columns={SUB_COLS} sort={subSort} onChange={setSubSort} />
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr>
-                  {['Company', 'Trade', 'Contact', 'License', 'Insurance', 'W-9'].map(h => (
-                    <th key={h} style={{ textAlign: 'left', padding: '11px 16px', color: DIM, fontSize: 10.5, fontWeight: 800, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>{h}</th>
+                  {SUB_COLS.map(c => (
+                    <SortTh key={c.key} col={c.key} label={c.label} sort={subSort} onSort={cycleSubSort} style={{ padding: '11px 16px', color: DIM, fontSize: 10.5, fontWeight: 800, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }} />
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {shown.map(s => {
+                {sortedSubs.map(s => {
                   const ins = expiryState(s.insurance_expiry);
                   const email = s.email || s.contact_email;
                   const phone = s.phone || s.contact_phone;
