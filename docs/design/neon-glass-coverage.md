@@ -105,8 +105,9 @@ form/modal/drawer, loading/empty/error states.
 | /app/subs | DRIVEN — tone-edged tiles | after/393-subs.png |
 | Job overview | DRIVEN — one Open Takeoff, NextAction, 84px tab-bar clearance | after/393-project-overview*.png |
 | Job takeoff | DRIVEN — on system. DATA NOTE (not design, logged in FOUND): the takeoff record on ZZ AUDIT 2 carries the name "ZZ AUDIT — Mesa Flex Office" | after/393-takeoff.png |
-| Job estimate | DRIVEN — StatStrip was a joined 1px band → separate rounded tiles (cb4e2503) | after/393-estimate.png |
+| Job estimate | DRIVEN — StatStrip was a joined 1px band → separate rounded tiles (cb4e2503), re-driven | after/393-estimate.png, after/393-estimate-tiles.png |
 | Job bid packages | DRIVEN — DataTable + phone Sort bar | after/393-bid-packages.png |
-| Job schedule | DEFECT FIXED (cb4e2503): the task composer is a fixed 460px flex sibling → page overflowed 393 by ~460px; now a full-screen phone sheet. Before: before/393-schedule-overflow.png. Re-drive pending the next preview. | — |
-| Job daily logs, punch list, RFIs, change orders, pay apps | DRIVEN — tiles + styled empty states | after/393-*.png |
+| Job schedule | DEFECT FIXED + RE-DRIVEN (cb4e2503): the task composer was a fixed 460px flex sibling → page overflowed 393. Now on the preview: document scrollWidth 393 = viewport; tapping Add Task opens the composer as a fixed full-screen sheet (393×852, z 160, 84px bottom clearance). The page is script-heavy enough that Chrome's screenshot injection timed out, so the probe numbers are the evidence. Before: before/393-schedule-overflow.png | after/393-schedule.png (list, loading) |
+| Job daily logs, punch list, RFIs, change orders, pay apps, lien waivers, invoices | DRIVEN — tiles + styled empty states; lien-waiver register headers sortable | after/393-*.png |
+| /app/time | DRIVEN — tiles, glance card, Time tab lit | after/393-time.png |
 | Job photos | DRIVEN — loading state on system (page took >7s to load project context) | after/393-photos-loading.png |
