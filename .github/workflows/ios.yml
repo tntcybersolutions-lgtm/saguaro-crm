@@ -97,7 +97,7 @@ jobs:
   testflight:
     if: github.event_name == 'workflow_dispatch' && inputs.testflight
     needs: build
-    runs-on: macos-14
+    runs-on: macos-26
     timeout-minutes: 60
     env:
       # Repo secrets (Settings → Secrets and variables → Actions):
@@ -108,6 +108,18 @@ jobs:
       #   ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_P8_BASE64   App Store Connect API key
       HAS_SECRETS: ${{ secrets.IOS_DIST_CERT_P12_BASE64 != '' && secrets.IOS_PROFILE_BASE64 != '' && secrets.ASC_KEY_P8_BASE64 != '' }}
     steps:
+      # App Store Connect rejects anything built with an SDK older than iOS 26
+      # ("SDK version issue ... built with the iOS 17.5 SDK", run 37212609340),
+      # so the upload job runs on the macos-26 image and pins the newest Xcode 26.
+      - name: Select Xcode 26
+        run: |
+          set -e
+          ls -d /Applications/Xcode*.app
+          XC=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$XC" ]; then echo "No Xcode 26 on this runner image"; exit 1; fi
+          sudo xcode-select -s "$XC"
+          xcodebuild -version
+          xcodebuild -showsdks | grep -i iphoneos
       - name: Check Apple secrets
         run: |
           if [ "$HAS_SECRETS" != "true" ]; then
