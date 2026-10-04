@@ -15,7 +15,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    const db = createServerClient();
+    // customer_reviews is not in the generated Database type (the list route has the
+    // same gap), so the chain is typed loosely here rather than deep-instantiated.
+    const db = createServerClient() as unknown as { from: (t: string) => any };
     const { data, error } = await db
       .from('customer_reviews')
       .delete()
