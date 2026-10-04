@@ -114,3 +114,12 @@ converge. One line each, newest at the bottom.
   auto-selected three.
 - (3 Oct, iOS QA) `app/app/time/page.tsx` — the entry row menu's Delete removes the shift with no
   confirm step (every other register asks first).
+- (3 Oct, iOS QA) `app/app/leads/[id]/page.tsx` Files & media — a file can be uploaded and
+  downloaded but never removed; deleting the lead (`DELETE /api/leads/[id]`) removes the lead and
+  its activities and leaves the storage objects under `project-files/deals/<id>/` behind.
+- (3 Oct, iOS QA) Projects — no archive / delete control anywhere in the UI; `DELETE
+  /api/projects/[projectId]` (archive) exists and works.
+- (3 Oct, iOS QA) `app/app/projects/[projectId]/pay-apps/new/page.tsx` — the Original Contract
+  Sum typed in step 1 is not on the created pay app (detail shows $0.00 original); same root as the
+  `contract_sum` 0 entry above.
+

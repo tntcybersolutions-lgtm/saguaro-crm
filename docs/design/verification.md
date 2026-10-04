@@ -111,15 +111,16 @@ review, time entry). Screenshots: `docs/design/screenshots/phone/393-*.png` besi
 | 2. Universal search by company name | **was broken** — the palette listed only navigation and quick actions; now a "Jobs & Leads" section (`0f829574`). | — |
 | 3. Leads: New Lead → Create → reopen | every field pre-filled (company, contact, email, stage Qualified, $12,345) | `393-leads-board.png` / `1440-leads-board.jpg` |
 | 4. Deal page: stage bar | Proposal stuck after reload; Won shows "Open the Job"; activity note logged; "Email the GC" composer opens and cancels | `393-deal-page.png`, `393-deal-page-won.png` / `1440-deal-page.jpg` |
-| 4. Files & media upload / download | **not driven** (file picker; camera is a device check) | — |
-| 4. Convert Won → job | **not driven** — would create a real project | — |
+| 4. Files & media upload / download | a PDF and a PNG set on the page's own file input → two `201`s, both listed with signed links; fetching the links returned the same bytes (`%PDF-1.4`, 193 B; PNG 279 B). No way to remove a file from a deal (FOUND). | `393-deal-files.png` |
+| 4. Convert Won → job | Won → "Open the Job" created the job and landed on its overview; the deal then shows "View the Job" to the same id (convert is idempotent by `project_id`). The test job was archived afterwards through the DELETE route — there is no archive control in the UI (FOUND). | — |
 | 5. Documents | real PDF badges, Preview / Download per row, Library tabs; row titles are 38 px (FOUND) | `393-documents.png` / `1440-documents.jpg` |
 | 6. ZZ AUDIT 2 project tabs | Daily log create → edit → delete; punch item create → complete → reopen → delete; permit create → delete (Delete was missing, added `d57afcde`); change order create → **Analyze Risk (AI)** → delete. Budget and photos opened (photo upload is a file picker). | `393-zz2-budget.png` / `1440-zz2-budget.jpg`, `393-zz2-change-order-risk.png` / `1440-zz2-change-order-risk.jpg` |
+| 6. Pay-app wizard (ZZ AUDIT 2) | Period auto-filled, contract sum entered, Next → SOV (3 lines) → Save Draft → #1 listed as a card → reopened (period, Draft, SOV) → row menu Delete → "Pay app deleted." The entered contract sum did not persist (shows $0.00 — the FOUND `contract_sum` entry). Submit to Owner not driven. | `393-zz2-pay-app-draft.png`, `393-zz2-pay-app-detail.png` |
 | 6. Pima registers | Daily Logs, Punch List, Pay Apps (cards at 393 since `3aa2ee69`), Permits | `393-pima-*.png` / `1440-pima-*.jpg` |
 | 7. Time clock | Clock In **hung on "Clocking in…"** while the location prompt sat unanswered — fixed (`85084bb1`, 8 s hard race). On the fixed build: Clock In → POST 201, timer running, entry "On the Clock" for ZZ AUDIT 2; Clock Out → entry 8:09–8:10 PM pending. React #425/#422 hydration errors on load (FOUND). | `393-time.png` / — (the desktop tab froze twice on this page while the prompt was pending) |
 | 7. Daily log create | works (see 6) | — |
-| 7. Photo capture | **not driven** — camera | — |
-| 8. Reviews | Add Review → 4.0 / 5, listed. No way to remove one — added Remove + DELETE route (`85084bb1`, `0828ee20`, `80268fe6`); removal verified at 393. | `393-reviews.png` / `1440-reviews.jpg` |
+| 7. Photo | Add Photo on ZZ AUDIT 2 with a PNG set on the composer's input → listed, thumbnail present after reload, deleted with confirm. Camera capture itself is a device check. | — |
+| 8. Reviews | Add Review → 4.0 / 5, listed. No way to remove one — added Remove + DELETE route (`85084bb1`, `0828ee20`, `80268fe6`, `5e92e9a6`); add → 3.0 / 5 · 1 review → Remove → "No reviews yet" driven at 393. | `393-reviews.png` / `1440-reviews.jpg` |
 | 9. Reps & permissions | tabs Roles / Permission Matrix / Assignments / Compare / Audit / Directory all switch; **salesperson sign-in not driven** (no second account in env) | `393-people.png` / `1440-people.jpg` |
 | 10. Shell | drawer tools (Search → palette, Help Me toggle, Notifications, Sage), tab bar, Sage chat opens from the top bar and closes | `393-sage-chat.png`, `393-notifications.png` / `1440-notifications.jpg` |
 
@@ -140,7 +141,9 @@ whole session family and every request is 401. Two causes, both fixed on the bra
    expiry (`a9daf776`).
 2. 556 API routes call `getUser(req)` with no response object, so a refresh done inside a route
    never wrote the new pair back. The middleware now refreshes on `/api/*` and forwards the fresh
-   token (`a79ea02a`).
+   token (`a79ea02a`); the block also had to move above the public-path return, which included
+   `/api/` (`5b8fa732`), skip `/api/auth/*` and carry the new pair on the forwarded request
+   cookies (`bacf8183`).
 Real phones hit this too: same site, same cookies, and one person with the app open on a phone
 and a laptop is exactly the two-tabs case. The one-hour expiry path end to end was not driven
 (needs an hour); the normal path was driven after both changes.
@@ -148,9 +151,14 @@ and a laptop is exactly the two-tabs case. The one-hour expiry path end to end w
 ### Not verified
 - Camera (photo capture), GPS accuracy, the notch and home-bar safe-area spacing — Chrome cannot
   show them; check on the real iPhone after merging.
-- Login error path (form never submitted), Files & media upload/download, Won → job conversion,
-  salesperson login, Send-to-GC actual send, pay-app wizard submit, Sage report runs.
-- The one-hour token-expiry path end to end (both auth fixes are reasoned from the auth log and code).
+- Login error path (form never submitted), salesperson login, Send-to-GC actual send, pay-app
+  "Submit to Owner", Sage report runs.
+- The one-hour token-expiry path end to end. The `/api` refresh block was proven to run on the
+  preview (a temporary response header, since removed) and its order is fixed; the refresh branch
+  itself could not be exercised from the tab because both auth cookies are HttpOnly and the real
+  refresh token was not handled by hand.
+- Two tiny test files remain in the `project-files` bucket under `deals/3fbf3884…` — deleting the
+  lead removes the lead and its activities but not its files, and the deal page has no remove.
 
 ## Pass 4 — per-route status
 
