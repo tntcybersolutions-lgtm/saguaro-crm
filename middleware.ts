@@ -129,13 +129,19 @@ export async function middleware(request: NextRequest) {
   // 401 and the next page load bounced to /login (the mid-session sign-outs on
   // the preview and, since the iOS WebView loads this same site, on phones).
   // Refresh once, store the new pair, and hand the route the fresh token.
-  if (pathname.startsWith('/api/')) {
+  // /api/auth/* is excluded: those routes rotate the token themselves, and a
+  // second rotation of the same old token right after ours is exactly the
+  // "already used" rejection that clears the cookies and signs the user out.
+  if (pathname.startsWith('/api/') && !pathname.startsWith('/api/auth/')) {
     if (isValid(accessToken) || !refreshToken) return NextResponse.next();
     const session = await refreshTokens(refreshToken);
     if (!session) return NextResponse.next();
-    const headers = new Headers(request.headers);
-    if (!headers.has('authorization')) headers.set('authorization', `Bearer ${session.access_token}`);
-    const response = NextResponse.next({ request: { headers } });
+    // The forwarded request carries the fresh pair too, so a route that reads
+    // the cookies directly (not just the Authorization header) sees them.
+    request.cookies.set('sb-access-token', session.access_token);
+    request.cookies.set('sb-refresh-token', session.refresh_token);
+    if (!request.headers.has('authorization')) request.headers.set('authorization', `Bearer ${session.access_token}`);
+    const response = NextResponse.next({ request: { headers: request.headers } });
     response.cookies.set('sb-access-token', session.access_token, {
       ...cookieOpts,
       expires: session.expires_at ? new Date(session.expires_at * 1000) : undefined,
