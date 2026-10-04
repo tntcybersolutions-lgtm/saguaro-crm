@@ -102,4 +102,14 @@ converge. One line each, newest at the bottom.
 - (3 Oct, tap-through) `/app/leads` board at 393 is a sideways kanban: every card and its
   "Actions for …" button sit off the right edge until you scroll the strip (page not in the
   redesign).
+- (3 Oct, iOS QA) `app/app/projects/[projectId]/budget/page.tsx` — "Actions ▾" is 23 px tall and
+  off the right edge at 393; Add Line 39 px, Export 37 px.
+- (3 Oct, iOS QA) `app/app/documents/page.tsx` — document row titles are 38 px buttons at 393.
+- (3 Oct, iOS QA) `app/app/reviews/page.tsx` — star buttons 32 px, Add Review 35 px at 393.
+- (3 Oct, iOS QA) `app/app/settings/page.tsx` — "Delete account" is a 20 px link at 393.
+- (3 Oct, iOS QA) `app/app/time/page.tsx` — React #425 / #422 (hydration text mismatch) on every
+  load; the week label is rendered server-side in UTC and client-side in local time.
+- (3 Oct, iOS QA) `app/app/intelligence/page.tsx` — first paint in a fresh tab shows three
+  skeleton cards and "Select Projects (0)" until the project list arrives; a reload shows the
+  auto-selected three.
 

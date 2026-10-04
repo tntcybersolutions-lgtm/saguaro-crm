@@ -179,3 +179,52 @@ won → job), 5 (documents), 7 (time clock, photo), 8 (reviews), 9 (salesperson 
 1440 pass on the remaining routes. Camera, GPS, notch and home-bar spacing cannot be checked
 in Chrome at all.
 
+### Finding: sessions die an hour after sign-in (phones too)
+- Screen: every screen
+- What I did: kept the preview open; three times in one evening every API call went 401 and the next tap bounced to /login
+- Expected: silent refresh
+- Actual: wrong — routes call getUser(req) with no response, so the rotated refresh token was never stored
+- Severity: blocker
+- Status: **FIXED on branch** `a79ea02a` (middleware refreshes on /api/* and forwards the fresh token)
+
+### Finding: Clock In hangs on "Clocking in…"
+- Screen: /app/time
+- What I did: picked ZZ AUDIT 2, tapped Clock In while the location prompt was unanswered
+- Expected: a shift within a few seconds, with or without GPS
+- Actual: dead — the browser's geolocation timeout never starts until permission is answered; the button stayed on "Clocking in…" indefinitely
+- Severity: blocker
+- Status: **FIXED on branch** `85084bb1` (8 s hard race; the shift is stamped without GPS). Driven after the fix: POST 201, timer, entry listed, Clock Out.
+
+### Finding: universal search finds no records
+- Screen: ⌘K palette / drawer Search
+- What I did: typed "Pima"
+- Expected: the Pima jobs
+- Actual: wrong — only "New Punch Item" and "Autopilot" (static actions)
+- Severity: major
+- Status: **FIXED on branch** `0f829574` (Jobs & Leads section)
+
+### Finding: Change Orders crashes after Analyze Risk (AI)
+- Screen: /app/projects/[id]/change-orders
+- What I did: Analyze Risk on the ZZ AUDIT 2 test change order
+- Expected: the risk panel
+- Actual: wrong — "Cannot read properties of undefined (reading 'tone')": the model answers lowercase, the tone map was keyed uppercase
+- Severity: blocker
+- Status: **FIXED on branch** `41d6e092`; panel driven at 393 and 1440 ("High Risk", 25 %)
+
+### Finding: a review can never be removed
+- Screen: /app/reviews
+- Status: **FIXED on branch** `85084bb1` + `0828ee20` + `80268fe6` (Remove with confirm, tenant-scoped DELETE, average refreshes)
+
+### Finding: small targets on pages outside the redesign (logged in FOUND, not fixed)
+- /app/projects/[id]/budget: "Actions ▾" 23 px and off the right edge; Add Line 39 px, Export 37 px
+- /app/documents: document row titles 38 px
+- /app/people (AccessManager): Invite User 35 px, Assign Role 33 / 29 px, Remove 29 px off-screen in the hand-rolled table
+- /app/reviews: star buttons 32 px, Add Review 35 px
+- /app/settings: "Delete account" is a 20 px link
+- /app/time: React #425 / #422 hydration errors on load (dates rendered server-side in UTC, client local)
+
+### Driven and clean (no finding)
+Home, Leads board, deal page (stage bar, Won → "Open the Job", activity), Documents, ZZ AUDIT 2
+daily log / punch / permit / change order CRUD, Pima registers, Reviews add, People tabs,
+Settings, Notifications, Sage chat open/close, Intelligence, Portals, Schedule, Reports.
+

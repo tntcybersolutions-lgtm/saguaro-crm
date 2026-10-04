@@ -95,6 +95,55 @@ walk; their buttons have not been tapped on a phone frame.
 - Punch-list row checkbox was a 24 px target → 44 px hit area on phones (`.plCheck::after`).
 - Menu-drawer Help Me (36 px) and job picker (34 px) → 44 px minimum for every drawer tool.
 
+## iOS QA run — IOS-DEVICE-QA.md driven in Chrome iPhone 16 device mode (3 Oct, evening)
+
+Preview `redesign/obsidian-glass`, signed in, 393 × 852. Desktop twin taken at a 1440 layout in a
+second tab. Create / edit / delete only on **ZZ AUDIT 2 Fix Check** and on records I created;
+real jobs opened and cancelled. Every test record was removed afterwards (see the time entry
+note). Screenshots: `docs/design/screenshots/phone/393-*.png` beside
+`docs/design/screenshots/desktop/1440-*.jpg` (same name = same screen).
+
+| Script step | Result | Phone / desktop pair |
+|---|---|---|
+| 0. App open signed-in | lands on `/app` (Owner Home), not marketing | `393-home.png` / `1440-home.jpg` |
+| 1. Login error path | **not driven** — this session never submits the login form | — |
+| 2. Home tiles, Create, Today / Next 7, role segments, Needs-Attention filters | all work; "Review →" is a full page load (FOUND) | same |
+| 2. Universal search by company name | **was broken** — the palette listed only navigation and quick actions; now a "Jobs & Leads" section (`0f829574`). | — |
+| 3. Leads: New Lead → Create → reopen | every field pre-filled (company, contact, email, stage Qualified, $12,345) | `393-leads-board.png` / `1440-leads-board.jpg` |
+| 4. Deal page: stage bar | Proposal stuck after reload; Won shows "Open the Job"; activity note logged; "Email the GC" composer opens and cancels | `393-deal-page.png`, `393-deal-page-won.png` / `1440-deal-page.jpg` |
+| 4. Files & media upload / download | **not driven** (file picker; camera is a device check) | — |
+| 4. Convert Won → job | **not driven** — would create a real project | — |
+| 5. Documents | real PDF badges, Preview / Download per row, Library tabs; row titles are 38 px (FOUND) | `393-documents.png` / `1440-documents.jpg` |
+| 6. ZZ AUDIT 2 project tabs | Daily log create → edit → delete; punch item create → complete → reopen → delete; permit create → delete (Delete was missing, added `d57afcde`); change order create → **Analyze Risk (AI)** → delete. Budget and photos opened (photo upload is a file picker). | `393-zz2-budget.png` / `1440-zz2-budget.jpg`, `393-zz2-change-order-risk.png` / `1440-zz2-change-order-risk.jpg` |
+| 6. Pima registers | Daily Logs, Punch List, Pay Apps (cards at 393 since `3aa2ee69`), Permits | `393-pima-*.png` / `1440-pima-*.jpg` |
+| 7. Time clock | Clock In **hung on "Clocking in…"** while the location prompt sat unanswered — fixed (`85084bb1`, 8 s hard race). On the fixed build: Clock In → POST 201, timer running, entry "On the Clock" for ZZ AUDIT 2; Clock Out → entry 8:09–8:10 PM pending. React #425/#422 hydration errors on load (FOUND). | `393-time.png` / — (the desktop tab froze twice on this page while the prompt was pending) |
+| 7. Daily log create | works (see 6) | — |
+| 7. Photo capture | **not driven** — camera | — |
+| 8. Reviews | Add Review → 4.0 / 5, listed. No way to remove one — added Remove + DELETE route (`85084bb1`, `0828ee20`, `80268fe6`); removal verified at 393. | `393-reviews.png` / `1440-reviews.jpg` |
+| 9. Reps & permissions | tabs Roles / Permission Matrix / Assignments / Compare / Audit / Directory all switch; **salesperson sign-in not driven** (no second account in env) | `393-people.png` / `1440-people.jpg` |
+| 10. Shell | drawer tools (Search → palette, Help Me toggle, Notifications, Sage), tab bar, Sage chat opens from the top bar and closes | `393-sage-chat.png`, `393-notifications.png` / `1440-notifications.jpg` |
+
+Also paired: Schedule, Portals, Settings, Reports, Intelligence (`393-*` / `1440-*`). Colors
+match in every pair: black base, yellow card titles and edges, orange / green / grey status
+pills, orange section headings, neon stat figures. The phone shell reads the same tokens as
+desktop since `292f4dbf`.
+
+### Session drop — root cause and fix
+Three sign-outs in one evening: 556 API routes call `getUser(req)` with no response object, so
+the first API call after the one-hour access token expired rotated the refresh token server-side
+and never wrote the new pair back; the browser kept replaying the revoked token, every call went
+401 and the next navigation bounced to `/login`. The iOS WebView loads this same site, so real
+phones were logged out an hour in. Fixed in `middleware.ts` (`a79ea02a`): `/api/*` refreshes
+once, stores the new cookies and hands the route the fresh token. The expiry path itself was
+reasoned from code, not driven (it needs an hour); the normal path was driven after the change.
+
+### Not verified
+- Camera (photo capture), GPS accuracy, the notch and home-bar safe-area spacing — Chrome cannot
+  show them; check on the real iPhone after merging.
+- Login error path (form never submitted), Files & media upload/download, Won → job conversion,
+  salesperson login, Send-to-GC actual send, pay-app wizard submit, Sage report runs.
+- The one-hour token-expiry path end to end.
+
 ## Pass 4 — per-route status
 
 | Route | Commit | 1280 | 1440 | 390 | Notes |
