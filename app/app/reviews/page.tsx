@@ -37,19 +37,6 @@ export default function ReviewsPage() {
   const [text, setText] = React.useState('');
   const [saving, setSaving] = React.useState(false);
 
-  // A review entered by mistake could never be taken back; DELETE /api/reviews/[id]
-  // is tenant-scoped and the list drops the row on success.
-  const remove = React.useCallback(async (r: Review) => {
-    if (!(await confirmDialog({ title: 'Please confirm', message: `Remove the review by ${r.reviewer_name || 'Anonymous'}? This cannot be undone.`, danger: true }))) return;
-    try {
-      const res = await fetch(`/api/reviews/${r.id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('delete failed');
-      setReviews((prev) => prev.filter((x) => x.id !== r.id));
-    } catch {
-      setState('error');
-    }
-  }, []);
-
   const load = React.useCallback(async () => {
     setState('loading');
     try {
@@ -61,6 +48,21 @@ export default function ReviewsPage() {
       setState('ok');
     } catch { setState('error'); }
   }, []);
+
+  // A review entered by mistake could never be taken back; DELETE /api/reviews/[id]
+  // is tenant-scoped and the list drops the row on success.
+  const remove = React.useCallback(async (r: Review) => {
+    if (!(await confirmDialog({ title: 'Please confirm', message: `Remove the review by ${r.reviewer_name || 'Anonymous'}? This cannot be undone.`, danger: true }))) return;
+    try {
+      const res = await fetch(`/api/reviews/${r.id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('delete failed');
+      setReviews((prev) => prev.filter((x) => x.id !== r.id));
+      void load(); // the average and count come from the server — refresh them too
+    } catch {
+      setState('error');
+    }
+  }, []);
+
   React.useEffect(() => { void load(); }, [load]);
 
   const submit = React.useCallback(async () => {
