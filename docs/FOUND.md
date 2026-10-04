@@ -79,7 +79,7 @@ converge. One line each, newest at the bottom.
   `status` not_started~~ **Fixed at the writer 4 Oct (`fix/found-items`):** create and PUT keep
   the two columns agreeing (100 → complete, started → in progress, complete → 100, not started
   → 0; when both are sent and disagree the bar wins), and the inline editors send both. Driven
-  on a ZZ AUDIT 2 task: progress 100 → Complete; status Not Started → 0 %; FOUND_CREATE_PLACEHOLDER **The 15 stored Pima rows are not rewritten by code** — reconciliation SQL is in
+  on a ZZ AUDIT 2 task: progress 100 → Complete; status Not Started → 0 %; a task created at 50 % with the composer's default Not Started is stored In Progress (second build, `8173b1ea`). **The 15 stored Pima rows are not rewritten by code** — reconciliation SQL is in
   the PR description for someone with authority over that job.
 - ~~(3 Oct, Pass 4 drive) `/app/intelligence` — the comparison cards show $0.00 contract~~
   **Fixed 4 Oct (`fix/found-items`):** all three contract columns were 0 on both ZZ AUDIT jobs;
