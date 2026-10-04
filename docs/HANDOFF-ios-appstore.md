@@ -9,9 +9,9 @@ which is yours.
 | Item | Status | Proof |
 |---|---|---|
 | Repo | `tntcybersolutions-lgtm/saguaro-crm`, branch `main` | PR #37, #38 merged |
-| Bundle ID | `com.saguaro.field` | `ios/App/App.xcodeproj/project.pbxproj` |
+| Bundle ID | `net.saguarocontrol.field` — the EXISTING TestFlight app "Saguaro Field" (it ran the retired React Native build from `D:/Saguaro-Field`, last build 35). This shell ships as its next build, so installed phones update in place. | `ios/App/App.xcodeproj/project.pbxproj`, guarded by `tools/check-ios-mirror.mjs` |
 | Display name | Saguaro Field | `ios/App/App/Info.plist` |
-| Version / build | `MARKETING_VERSION 1.0`, build = CI run number | `.github/workflows/ios.yml` |
+| Version / build | `MARKETING_VERSION 2.0`, build = 1000 + CI run number (above the React Native builds) | `.github/workflows/ios.yml` |
 | Min iOS | 14.0 (the Face ID plugin requires it) | Podfile + pbxproj |
 | Devices | iPhone + iPad (`TARGETED_DEVICE_FAMILY 1,2`) | pbxproj |
 | Start URL | `https://www.saguarocontrol.net/app` (server mode, loads the live site) | `capacitor.config.ts` |
@@ -43,19 +43,19 @@ There is no Mac. The build runs on GitHub-hosted macOS (`macos-14`) through
 ## 3. Your job — Apple side, in order
 
 ### 3a. developer.apple.com → Certificates, Identifiers & Profiles
-1. **Identifier**: create (or confirm) App ID `com.saguaro.field`, explicit.
-   Enable **Push Notifications**. Face ID and Camera need no capability.
+1. **Identifier**: App ID `net.saguarocontrol.field` already exists (the
+   current TestFlight app). Nothing to create.
+   Face ID and Camera need no capability.
 2. **Certificate**: create an **Apple Distribution** certificate (or reuse
    the team's). Export it as `.p12` with a password.
 3. **Profile**: create an **App Store Connect** distribution provisioning
-   profile for `com.saguaro.field` using that certificate. Download the
-   `.mobileprovision`.
+   profile for `net.saguarocontrol.field` using that certificate (or reuse
+   the existing one). Download the `.mobileprovision`.
 4. Note the **Team ID** (Membership page, 10 characters).
 
 ### 3b. appstoreconnect.apple.com
-1. **My Apps → +**: New App, iOS, name "Saguaro Field" (if the name is
-   taken, use "Saguaro Field — Control Systems"), bundle ID
-   `com.saguaro.field`, SKU `saguaro-field-ios`.
+1. **No new app record.** "Saguaro Field" (`net.saguarocontrol.field`)
+   already exists; this build uploads to it as version 2.0.
 2. **Users and Access → Integrations → App Store Connect API → +**: create a
    key with role **App Manager**. Download the `.p8` (you only get it once).
    Note the **Key ID** and **Issuer ID**.
@@ -112,7 +112,7 @@ processing (about 5–30 minutes). Add internal testers there.
   token. Push won't deliver until both are added and the App ID has Push
   enabled. Ship TestFlight without it if needed; ask the code session to add
   the entitlement plus AppDelegate hooks once the profile includes Push.
-- **Versioning**: the build number is the CI run number. Bump
+- **Versioning**: the build number is 1000 + the CI run number (above the retired React Native builds on the same app). Bump
   `MARKETING_VERSION` in the pbxproj for each App Store version.
 - The `testflight` job has never run, because no secrets existed. If the
   archive step fails on signing, the usual cause is a profile/certificate

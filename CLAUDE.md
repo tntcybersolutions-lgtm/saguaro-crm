@@ -87,6 +87,23 @@ was built and the paths were never walked. §0 is the correction, and it is why
 pass on the way. Every detour is individually defensible; the sum of them is
 why a year did not converge.
 
+### ONE APP — iOS IS THE WEB APP. NEVER A SECOND CODEBASE.
+
+iOS and desktop are the same product on the same database for the same users,
+so they are the same code. The iPhone app is this repo's Capacitor shell
+(`capacitor.config.ts`, `ios/`) in server mode, loading
+`https://www.saguarocontrol.net/app` under the existing TestFlight bundle id
+`net.saguarocontrol.field`. Every web deploy is the iOS update.
+
+- Build every phone screen HERE, as the responsive web app. Never in
+  `D:/Saguaro-Field`, `saguaro-mobile`, Expo/React Native, or any other repo —
+  those are retired; the iPhone drifted to a different app once because of them.
+- Never point the shell at a bundled copy, a `*.vercel.app` alias or another
+  domain. `tools/check-ios-mirror.mjs` fails the iOS CI job if the bundle id,
+  the live URL or server mode changes.
+- Native-only work (plugins, permissions, icons, signing) stays in `ios/` and
+  `.github/workflows/ios.yml`, and ships to TestFlight from that workflow.
+
 ---
 
 ## IDENTITY

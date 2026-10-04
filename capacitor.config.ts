@@ -27,7 +27,11 @@ const PRODUCTION_URL = 'https://www.saguarocontrol.net/app';
 const serverUrl = process.env.CAPACITOR_SERVER_URL ?? PRODUCTION_URL;
 
 const config: CapacitorConfig = {
-  appId: 'com.saguaro.field',
+  // ONE app: this is the existing TestFlight app "Saguaro Field" (the same
+  // bundle id the retired React Native build in D:/Saguaro-Field used), so
+  // installs update in place to this shell, which loads the live site.
+  // tools/check-ios-mirror.mjs fails CI if this or the URL above drifts.
+  appId: 'net.saguarocontrol.field',
   appName: 'Saguaro Field',
 
   // webDir holds initial web assets; in server mode the live URL takes over
