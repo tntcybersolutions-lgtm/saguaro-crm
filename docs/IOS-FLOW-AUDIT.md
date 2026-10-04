@@ -185,7 +185,7 @@ in Chrome at all.
 - Expected: silent refresh
 - Actual: wrong — routes call getUser(req) with no response, so the rotated refresh token was never stored
 - Severity: blocker
-- Status: **FIXED on branch** `a79ea02a` (middleware refreshes on /api/* and forwards the fresh token)
+- Status: **FIXED on branch** `a79ea02a` (middleware refreshes on /api/* and forwards the fresh token) + `a9daf776` (`/api/auth/refresh` no longer rotates on every page load — the auth log showed a rotation a minute and then `refresh_token_already_used`)
 
 ### Finding: Clock In hangs on "Clocking in…"
 - Screen: /app/time

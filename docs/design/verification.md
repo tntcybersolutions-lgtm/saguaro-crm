@@ -129,20 +129,28 @@ pills, orange section headings, neon stat figures. The phone shell reads the sam
 desktop since `292f4dbf`.
 
 ### Session drop — root cause and fix
-Three sign-outs in one evening: 556 API routes call `getUser(req)` with no response object, so
-the first API call after the one-hour access token expired rotated the refresh token server-side
-and never wrote the new pair back; the browser kept replaying the revoked token, every call went
-401 and the next navigation bounced to `/login`. The iOS WebView loads this same site, so real
-phones were logged out an hour in. Fixed in `middleware.ts` (`a79ea02a`): `/api/*` refreshes
-once, stores the new cookies and hands the route the fresh token. The expiry path itself was
-reasoned from code, not driven (it needs an hour); the normal path was driven after the change.
+Four sign-outs in one evening. The Supabase auth log (`auth_logs`, 02:55–03:21 UTC) shows a
+`token_revoked` + `Login (token)` pair every minute or so — the refresh-token grant being called
+on every page load, each call rotating the token — and then two
+`refresh_token_already_used` ("Possible abuse attempt") 400s, after which Supabase revokes the
+whole session family and every request is 401. Two causes, both fixed on the branch:
+1. `/api/auth/refresh` is called on every app-layout mount and always rotated, even with an
+   hour-fresh access token; two loads in flight (a second tab, a phone plus a desktop, a double
+   navigation) replayed the old token. Now a no-op until the access token is within 5 minutes of
+   expiry (`a9daf776`).
+2. 556 API routes call `getUser(req)` with no response object, so a refresh done inside a route
+   never wrote the new pair back. The middleware now refreshes on `/api/*` and forwards the fresh
+   token (`a79ea02a`).
+Real phones hit this too: same site, same cookies, and one person with the app open on a phone
+and a laptop is exactly the two-tabs case. The one-hour expiry path end to end was not driven
+(needs an hour); the normal path was driven after both changes.
 
 ### Not verified
 - Camera (photo capture), GPS accuracy, the notch and home-bar safe-area spacing — Chrome cannot
   show them; check on the real iPhone after merging.
 - Login error path (form never submitted), Files & media upload/download, Won → job conversion,
   salesperson login, Send-to-GC actual send, pay-app wizard submit, Sage report runs.
-- The one-hour token-expiry path end to end.
+- The one-hour token-expiry path end to end (both auth fixes are reasoned from the auth log and code).
 
 ## Pass 4 — per-route status
 
