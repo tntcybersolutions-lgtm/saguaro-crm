@@ -377,7 +377,8 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
       <style>{`
         @media (max-width: 768px) {
           .sidebar-desktop { display: none !important; }
-          .project-mobile-bar { display: flex !important; }
+          /* The phase bar carries the Modules button on phones now; the old
+             module bar stays off so a job shows one bar above its title. */
         }
       `}</style>
 
