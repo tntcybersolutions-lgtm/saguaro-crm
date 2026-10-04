@@ -6,6 +6,7 @@
  * /api/reviews (tenant-scoped; writes need Sales:Edit).
  */
 import React from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useToast } from '@/components/Toast';
 import { humanError } from '@/lib/errors';
 import { fmtDate as fmtDateSafe } from '@/lib/format-date';
@@ -39,7 +40,7 @@ export default function ReviewsPage() {
   // A review entered by mistake could never be taken back; DELETE /api/reviews/[id]
   // is tenant-scoped and the list drops the row on success.
   const remove = React.useCallback(async (r: Review) => {
-    if (typeof window !== 'undefined' && !window.confirm(`Remove the review by ${r.reviewer_name || 'Anonymous'}? This cannot be undone.`)) return;
+    if (!(await confirmDialog({ title: 'Please confirm', message: `Remove the review by ${r.reviewer_name || 'Anonymous'}? This cannot be undone.`, danger: true }))) return;
     try {
       const res = await fetch(`/api/reviews/${r.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('delete failed');
