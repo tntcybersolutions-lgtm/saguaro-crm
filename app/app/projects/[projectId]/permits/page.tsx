@@ -20,11 +20,12 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
-import { Clipboard, Plus, X, Warning, ClipboardText } from '@phosphor-icons/react';
+import { Clipboard, Plus, X, Warning, ClipboardText, Trash } from '@phosphor-icons/react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import {
   PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState,
   FormModal, Field, Input, Select, FormGrid, DetailList, Toast, useToast,
-  type Column, type BadgeTone, type StatItem,
+  type Column, type BadgeTone, type StatItem, type Action,
 } from '@/components/ui/kit';
 import { FlowSteps, InsightRow, AutoChip } from '@/components/ui/premium';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
@@ -256,6 +257,32 @@ export default function PermitsPage() {
   }
   function closeComposer() { guard.requestClose(() => { setShowForm(false); setErrorMsg(''); }); }
 
+  // A permit entered by mistake could never be removed: the API has had DELETE
+  // /api/permits/[id] (tenant-scoped) all along, the register just never offered it.
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  async function deletePermit(p: Permit) {
+    if (!(await confirmDialog({ title: 'Please confirm', message: `Delete permit ${p.permit_number || ''}? This cannot be undone.`, danger: true }))) return;
+    setDeletingId(p.id);
+    try {
+      const r = await fetch(`/api/permits/${p.id}`, { method: 'DELETE' });
+      const json = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(json?.error || 'Could not delete the permit');
+      setPermits(prev => prev.filter(x => x.id !== p.id));
+      if (selectedId === p.id) setSelectedId(null);
+      show('Permit deleted.');
+    } catch (e) {
+      show(e instanceof Error ? e.message : 'Could not delete the permit', 'bad');
+    } finally {
+      setDeletingId(null);
+    }
+  }
+  function permitActions(p: Permit): Action[] {
+    return [
+      { label: 'Open Details', icon: <ClipboardText size={15} />, onClick: () => setSelectedId(p.id) },
+      { label: 'Delete', icon: <Trash size={15} />, onClick: () => deletePermit(p), tone: 'danger', disabled: deletingId === p.id },
+    ];
+  }
+
   const selected = selectedId ? permits.find(p => p.id === selectedId) || null : null;
   const detailOpen = !!selected;
   useEffect(() => {
@@ -363,6 +390,7 @@ export default function PermitsPage() {
         loading={loading}
         defaultSort={{ key: 'expiry_date', dir: 'asc' }}
         onRowClick={p => setSelectedId(p.id)}
+        rowActions={permitActions}
         empty={<EmptyState icon={<Clipboard size={22} />} title="No permits match these filters" text="Clear the search, status, or type filter to see more." action={<Button onClick={clearFilters}>Clear Filters</Button>} />}
       />
     );
