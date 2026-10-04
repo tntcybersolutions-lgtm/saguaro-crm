@@ -140,7 +140,9 @@ const CSS = `
   .plWs .k-btn, .plWs .k-stat, .plWs select.k-select, .plWs .k-input { min-height: 44px; }
   .plWs .k-table td { height: 48px; }
   .plTitle { max-width: 220px; }
-  .plCheck { width: 24px; height: 24px; }
+  /* 24px box, 44px thumb: the hit area grows around the checkbox without moving the row. */
+  .plCheck { width: 24px; height: 24px; position: relative; }
+  .plCheck::after { content: ''; position: absolute; inset: -10px; }
 }
 `;
 

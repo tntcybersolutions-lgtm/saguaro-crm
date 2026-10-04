@@ -1118,6 +1118,8 @@ select.k-select { padding-right: 36px; }
      next step): the next-step bar, the old Modules bar and the page crumbs go. */
   .sag-nsb[data-in-project="true"] { display: none !important; }
   .project-mobile-bar { display: none !important; }
+  /* Every control in the menu drawer's tool block is a thumb target. */
+  .sag-menu-tools button, .sag-menu-tools a, .sag-menu-tools select { min-height: 44px !important; }
   .k-crumbs { display: none !important; }
   .sag-phase-nav[data-open="true"] { padding-top: 4px; }
 

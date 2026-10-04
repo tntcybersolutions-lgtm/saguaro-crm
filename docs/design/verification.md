@@ -24,7 +24,7 @@ County ADC project (`759aa973…`), ZZ AUDIT Mesa Flex (`a2aad352…`) and invoi
 were used; no demo data was inserted.
 
 **393 px (iPhone 16, DevTools device mode):** every route in the table below was opened
-signed-in at 393 px after the phone frame landed (commits `03a1e234` → `d36a0ae8`). The
+signed-in at 393 px after the phone frame landed (commits `03a1e234` → `2ab40244`). The
 probe on each page was `document.documentElement.scrollWidth === innerWidth` (no sideways
 page scroll) plus a zoomed capture of the top and of the first table. Screenshots are in
 `docs/design/screenshots/phone/`.
@@ -43,6 +43,57 @@ page scroll) plus a zoomed capture of the top and of the first table. Screenshot
 Leftovers outside the kit tables (logged in `docs/FOUND.md`): the hand-rolled pay-app table
 (drag reorder + bulk) and the AccessManager people table still scroll sideways at 393;
 FlowStrip arrows wrap between steps.
+
+## Phone round 3 — Chad's review of the 393 screenshots (3 Oct)
+Before/after captures are in `docs/design/screenshots/phone/before-*.png` and `after-*.png`,
+all taken signed-in on the preview in iPhone 16 device mode (393 × 852).
+
+| # | Item | Fix | Verified on build |
+|---|---|---|---|
+| 1 | Daily-log composer defaulted to tomorrow after 5 pm (UTC date) | `localToday()` (Intl `en-CA`) replaces every `toISOString()` date on both daily-log pages: default date, Copy Yesterday, gap count, this-month count. Ported from `path/daily-log-2`. | `174f91b7` — composer opened at 17:56 local on Oct 3 shows **10/03/2026** (`after-daily-log-date-local.png`; before: `before-daily-log-date-utc.png`) |
+| 2 | "Modules / Pima County…" bar drew over the open menu drawer | The old module bar is gone on phones (its own `display:flex !important` in the project layout was beating the global hide — removed in `2ab40244`). | `2ab40244` — drawer open over a project page shows only the drawer (`after-menu-drawer-no-bar.png`) |
+| 3 | Round button half off the right edge on every screen | **Not the app.** The DOM at that point is `<vercel-live-feedback>`: the Vercel Toolbar's comment handle that Vercel injects on every preview deployment for a signed-in Vercel user. There is no element of ours there (`elementsFromPoint` and a scan for fixed elements near the edge both find nothing). It never ships to production. To hide it on previews, turn off the Vercel Toolbar for this project in the Vercel dashboard (Project → Settings → Comments / Toolbar), or dismiss it from the toolbar's own menu; both are account settings, so not changed from this session. | n/a |
+| 4 | Chat bubble covered the "8 of 8" count and drew over the open drawer | No floating launcher on phones at all; the top-bar **Sage** button opens the same chat (`saguaro:open-chat`). | `174f91b7` — Daily Logs "8 of 8" and Invoicing "11 of 11" fully visible, no bubble (`after-invoicing-no-bubble.png`; before: `before-bubble-over-count.png`) |
+| 5 | One job, three statuses (Closed / "every stage done, Building 6 of 6" / "Field step 4 of 7") | Both bars read the project status through the same `isClosedStatus()`; a closed job shows **Closed job** in the phase bar and "You Are Here" no longer renders inside a project at all. | `174f91b7` — Pima: drawer badge Closed, phase bar "Field · Closed job", sheet "ALL DONE → Open the closeout record" (`after-phase-sheet-open.png`) |
+| 6 | "You Are Here" opened was cramped and showed sales text on Radio and Invoicing | Bar only renders on sales routes (`/app/sales`, `/leads`, `/customers`, `/bids`, `/bid-intelligence`) and the build journey; open layout re-flowed (label + chevron, then the full-width step and explanation, then the stage line, then the button). | `174f91b7` — Leads open (`after-leads-yah-open.png`); Radio and Invoicing have no bar |
+| 7 | Project pages stacked three bars plus breadcrumbs above the title | One bar: **Modules** + current phase + next step, tapping it opens the phase sheet with the NEXT STEP link and the seven phases. Breadcrumbs hidden on phones. | `2ab40244` — title at y=117, first log card on the first screen (`after-one-bar-per-job.png`; before: `before-three-bars-yah-open.png`) |
+| 8 | Home "All Jobs" dropdown ran off the right edge | `.hv2-select` takes the full row on phones. | `174f91b7` — select right edge at 377 px of 393 (`after-home-all-jobs.png`; before: `before-home-all-jobs.png`) |
+
+### Tap-every-button at 393 — what was driven, what was not
+Driven by hand (JS `.click()` in device mode, every opener closed again, nothing submitted):
+- **Shell:** menu drawer → Search opens the command palette and Escape closes palette and drawer;
+  Help Me, job picker, Notifications and Sage AI Expert all present and on-screen; tab bar
+  Home / My Work / Projects / Time / More; top-bar Sage opens the chat; account button.
+- **Project Daily Logs:** Modules (opens the project drawer), the phase bar (opens the sheet),
+  Blank Log and Copy Yesterday (composer, 16 px inputs, fits), the four stat tiles (filter),
+  Clear, row "More actions" (bottom sheet). Auto-Fill Today not tapped (writes a log).
+- **Daily Logs (company):** New Log, stat tiles, Clear, row menu.
+- **Daily Log detail:** Edit Report Info / Work Performed / Delays / Materials & Visitors open
+  their inline editors; Cancel closes them. Add Safety Note / Equipment / Notes not tapped.
+- **Punch List:** Modules, phase bar, stat tiles, Clear, row menu — and, by mistake, the row
+  checkboxes (see the incident below).
+- **Photos:** empty state; Add Photo / Add First Photo not tapped (file picker).
+- **Time, Crews, T&M, Change Orders:** controls listed read-only (all 44 px, none off-screen,
+  no sideways scroll); openers not tapped — see below.
+
+**Incident:** the first automated pass tapped the four completed punch-list checkboxes on Pima
+("Reopen …") before the skip list covered that verb, which set four real items back to
+`open`: *Campus overview graphics — pod labels transposed*, *CHW differential pressure sensor
+reading offset*, *Panel DDC-B2 missing engraved nameplate*, *Duct transition at AHU-7 not
+sealed*. The restore (`UPDATE punch_list SET status='completed'` for those four ids) was
+blocked by the session's permission classifier, as was every scripted tap after it. They
+still need to be marked complete again (one tap each on the punch list, or the UPDATE above).
+
+**Not driven (classifier stopped scripted taps after the incident):** the openers and row
+menus on Time, Crews, T&M, Change Orders, Pay Apps (+ new), Invoicing (+ detail), Billing,
+Permits, Inspections, Submittals, Projects, My Work, Schedule, Reports, Autopilot,
+Intelligence, People, Settings, Branding, Portals, Takeoff, Document Versions, Signal
+Studio, Radio, Bid Packages. Each was opened at 393 with no sideways scroll in the earlier
+walk; their buttons have not been tapped on a phone frame.
+
+### Found by the taps and fixed (`2ab40244` +1)
+- Punch-list row checkbox was a 24 px target → 44 px hit area on phones (`.plCheck::after`).
+- Menu-drawer Help Me (36 px) and job picker (34 px) → 44 px minimum for every drawer tool.
 
 ## Pass 4 — per-route status
 
