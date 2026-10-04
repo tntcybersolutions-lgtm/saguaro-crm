@@ -50,13 +50,23 @@ Fixes found while driving (commit after a7ddd111):
 
 After: `docs/design/screenshots/after/393-dashboard*.png`, `after/1280-dashboard*.jpg`. Phone: the five view pills wrap to two rows at 393 (Operations · Sales · Service · Owner / Field) — readable, logged for the mobile-controls pass.
 
+## Sorting + mobile sort controls (M4, commits 42c2319a + M4b)
+
+| Piece | Where | Status |
+|---|---|---|
+| Shared sort kit: `useSort`, `SortTh` (click to cycle asc → desc → off, aria-sort, caret), `SortBar` (phone-only Sort select + asc/desc toggle, 44px targets) over the stable comparator in `components/ui/premium` (empties sink both ways, ties keep source order) | `components/ui/sort.tsx` | BUILT |
+| DataTable shows the SortBar on phones (its header row becomes cards there) — covers projects list, leads and every other DataTable screen (27) | `components/ui/kit.tsx` | BUILT |
+| Full-dataset guarantee: lists are fetched whole and filtered client-side (only two API routes paginate: client-portal messages and project activity, neither a sortable table), so every sort covers every filtered row | audit of `.range(` in `app/api` | BUILT |
+| Hand-rolled tables now sort by every meaningful column: customers (Score desc default), subs, project invoices (column click overrides the toolbar order), pay-app register (drag reorder pauses while a sort is active), project team members + subs, estimate CSI rollup (incl. Budget/Variance when present), schedule task list, warranty claims, prequalification submissions, compliance | the page files | BUILT |
+| Already sorted before this pass (toolbar sort): bills, lien waivers, insurance certificates | — | BUILT |
+| Not sortable by design: bid-package line-item editor, budget line editor (rows are edited by index), pay-app continuation sheet | — | n/a |
+
 ## Not yet started
 
 Projects list, pipeline/deals, leads, estimates, takeoff, bid packages, proposals,
 subs/team, schedule, daily logs, punch list, photos, RFIs, submittals, change
 orders, pay apps, lien waivers, invoices, time clock, reports, settings, every
-form/modal/drawer, loading/empty/error states, sorting parity + mobile sort
-controls, native iOS shell (status bar, safe areas, sheets, keyboard, reduced
+form/modal/drawer, loading/empty/error states, native iOS shell (status bar, safe areas, sheets, keyboard, reduced
 motion/transparency).
 
 ## Verification log

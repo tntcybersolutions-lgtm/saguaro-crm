@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useSort, useSortedRows, SortTh, SortBar } from '@/components/ui/sort';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
@@ -171,6 +172,11 @@ function GanttChart({tasks}:{tasks:any[]}){
     </div>
   );
 }
+
+const TASK_COLS = [
+  { key: 'name', label: 'Task' }, { key: 'phase', label: 'Phase' }, { key: 'start_date', label: 'Start' }, { key: 'end_date', label: 'End' },
+  { key: 'duration', label: 'Duration' }, { key: 'status', label: 'Status' }, { key: 'pct_complete', label: '% Done' }, { key: 'assigned_to', label: 'Assigned' },
+];
 
 export default function SchedulePage(){
   const {projectId}=useParams() as {projectId:string};
@@ -387,6 +393,13 @@ export default function SchedulePage(){
     const mp=filterPhase==='all'||t.phase===filterPhase;
     return ms&&mst&&mp;
   });
+  const taskSort = useSort(null);
+  const taskSortValue = useCallback((t: any, key: string): unknown => {
+    if (key === 'duration') return t.start_date && t.end_date ? daysBetween(t.start_date, t.end_date) : null;
+    if (key === 'pct_complete') return Number(t.pct_complete) || 0;
+    return t?.[key];
+  }, []);
+  const sortedTasks = useSortedRows(filtered, taskSort.sort, taskSortValue);
 
   const today=new Date().toISOString().split('T')[0];
   const allEnds=tasks.filter((t:any)=>t.end_date).map((t:any)=>t.end_date);
@@ -543,20 +556,17 @@ export default function SchedulePage(){
               icon={<ListChecks size={17} weight="duotone" color={moduleAccent('schedule').hex} />}
               action={<span style={{fontSize:12,color:DIM,fontWeight:700}}>{filtered.length} shown</span>}>
               <div style={{overflowX:'auto'}}>
+              <SortBar columns={TASK_COLS} sort={taskSort.sort} onChange={taskSort.setSort} />
               <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
                 <thead>
                   <tr style={{background:DARK}}>
-                    {['Task','Phase','Start','End','Duration','Status','% Done','Assigned'].map(h=>(
-                      <th key={h} style={{padding:'10px 14px',textAlign:'left',fontSize:11,
-                        fontWeight:700,
-                        color:DIM,borderBottom:`1px solid ${BORDER}`,whiteSpace:'nowrap'}}>
-                        {h}
-                      </th>
+                    {TASK_COLS.map(c=>(
+                      <SortTh key={c.key} col={c.key} label={c.label} sort={taskSort.sort} onSort={taskSort.cycle} style={{padding:'10px 14px',fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`,whiteSpace:'nowrap'}} />
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((task:any)=>{
+                  {sortedTasks.map((task:any)=>{
                     const dur=task.start_date&&task.end_date?daysBetween(task.start_date,task.end_date):null;
                     const color=STATUS_COLORS[task.status]||DIM;
                     return(
