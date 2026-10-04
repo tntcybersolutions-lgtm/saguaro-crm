@@ -7,8 +7,10 @@
  * (393 × 852 CSS px, the iPhone 15/16 Pro logical size), dark titanium
  * bezel, dynamic island, machined side keys, a real iOS status bar (time,
  * cellular, Wi-Fi, battery) drawn over the capture, and a glass reflection.
- * The screen media is a REAL app screenshot captured at 3× (1179 × 2556) by
- * tools/marketing-phone-shots.mjs, so it stays crisp on Retina displays.
+ * The screen media is a 3× (1179 × 2556) image of the phone app on a demo job
+ * — tools/marketing-phone-renders.mjs renders the neon set, and
+ * tools/marketing-phone-shots.mjs can capture live screens to the same files —
+ * so it stays crisp on Retina displays.
  *
  * LaptopFrame: matching titanium lid + hinge deck.
  *

@@ -149,9 +149,11 @@ export default function GetTheAppPage() {
           animation: pulse 2s ease-in-out infinite;
         }
         @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(0.85)} }
+        /* globals.css forces h1 18px / h2 15px !important app-wide, which beat
+           the page's own sizes — these headings must win on the marketing page. */
         .hero-h1 {
-          font-size: clamp(32px, 4.5vw, 44px);
-          font-weight: 800;
+          font-size: clamp(32px, 4.5vw, 44px) !important;
+          font-weight: 800 !important;
           line-height: 1.12;
           letter-spacing: -0.02em;
           margin-bottom: 20px;
@@ -268,7 +270,7 @@ export default function GetTheAppPage() {
         .phones-inner { position: relative; max-width: 1200px; margin: 0 auto; padding: 0 32px; }
         .phones-head { max-width: 640px; margin-bottom: 36px; }
         .phones .eyebrow { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #FFE600; }
-        .phones-h2 { font-size: 40px; font-weight: 800; letter-spacing: -0.02em; margin: 10px 0 12px; color: var(--text); }
+        .phones-h2 { font-size: 40px !important; font-weight: 800 !important; letter-spacing: -0.02em; margin: 10px 0 12px; color: var(--text); }
         .phones-sub { color: var(--dim); font-size: 16px; line-height: 1.6; margin: 0; }
         .phones-strip { display: flex; gap: 28px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 24px 8px 18px; margin: 0 -8px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
         .phones-strip::-webkit-scrollbar { display: none; }
@@ -323,8 +325,8 @@ export default function GetTheAppPage() {
           margin-bottom: 56px;
         }
         .section-h2 {
-          font-size: clamp(20px, 2.4vw, 26px);
-          font-weight: 600;
+          font-size: clamp(20px, 2.4vw, 26px) !important;
+          font-weight: 600 !important;
           letter-spacing: -.02em;
           color: var(--text);
           margin-bottom: 14px;
@@ -560,8 +562,8 @@ export default function GetTheAppPage() {
           text-align: center;
         }
         .final-h2 {
-          font-size: clamp(24px, 3.4vw, 34px);
-          font-weight: 800;
+          font-size: clamp(24px, 3.4vw, 34px) !important;
+          font-weight: 800 !important;
           color: var(--text);
           letter-spacing: -0.02em;
           margin-bottom: 36px;
@@ -626,7 +628,7 @@ export default function GetTheAppPage() {
           .dev-slot-phone-b, .dev-slot-phone-c { display: none; }
           .phones { padding: 48px 0 56px; }
           .phones-inner { padding: 0 16px; }
-          .phones-h2 { font-size: 30px; }
+          .phones-h2 { font-size: 30px !important; }
           .phones-strip { gap: 18px; }
           .numbers-bar { padding: 32px 16px; }
           .numbers-inner { grid-template-columns: repeat(2,1fr); }
@@ -641,7 +643,7 @@ export default function GetTheAppPage() {
         @media (max-width: 480px) {
           .numbers-inner { grid-template-columns: 1fr 1fr; }
           .stat-number { font-size: 28px; }
-          .hero-h1 { font-size: 34px; }
+          .hero-h1 { font-size: 34px !important; }
           .devices { height: 520px; }
         }
       ` }} />
@@ -697,9 +699,10 @@ export default function GetTheAppPage() {
               </div>
             </div>
 
-            {/* Devices — REAL 3× captures of the phone app on a demo job
-                (tools/marketing-phone-shots.mjs writes /public/marketing/phone-*.png).
-                Demo data only: no client names, addresses or real dollar amounts. */}
+            {/* Devices — 3× (1179 × 2556) neon renders of the phone app's screens
+                on a demo job (tools/marketing-phone-renders.mjs writes
+                /public/marketing/phone-*.png). Demo data only: no client names,
+                addresses or real dollar amounts. */}
             <div className="devices" aria-label="The Saguaro field app on iPhone">
               <div className="devices-glow" aria-hidden />
               <div className="dev-slot-phone-b">
@@ -715,14 +718,14 @@ export default function GetTheAppPage() {
           </div>
         </section>
 
-        {/* ── PHONES — every core screen, real captures, glowing stage ── */}
+        {/* ── PHONES — every core screen, glowing stage ── */}
         <section className="phones" aria-labelledby="phones-h2">
           <div className="phones-glow" aria-hidden />
           <div className="phones-inner">
             <div className="phones-head">
               <span className="eyebrow">The phone app</span>
               <h2 id="phones-h2" className="phones-h2">Every screen, one thumb.</h2>
-              <p className="phones-sub">The same job your office sees — phase, money, logs, time — in a frame built for a job site. Real screens, not renders.</p>
+              <p className="phones-sub">The same job your office sees — phase, money, logs, time — in a frame built for a job site.</p>
             </div>
             <div className="phones-strip" role="list">
               {[
