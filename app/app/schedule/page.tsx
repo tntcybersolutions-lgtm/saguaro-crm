@@ -114,10 +114,10 @@ const CSS = `
 .scList .k-table th:first-child, .scList .k-table td:first-child { position: sticky; left: 0; z-index: 1; background: var(--bg-solid); }
 .scList .k-table th:first-child { background: var(--bg-solid-2); z-index: 3; }
 .scList .k-table tbody tr:hover td:first-child { background: linear-gradient(rgba(255,255,255,0.03), rgba(255,255,255,0.03)), var(--bg-solid); }
-.scTask { display: flex; flex-direction: column; gap: 2px; max-width: 300px; min-width: 0; }
+.scTask { display: flex; flex-direction: column; gap: 2px; max-width: 250px; min-width: 0; }
 /* Predecessor picker: capped so the seven-column register fits 1440 without a sideways scroll. */
-.scInline { max-width: 200px; min-width: 0; }
-.scInline select, .scInline .k-select { max-width: 200px; }
+.scInline { max-width: 160px; min-width: 0; }
+.scInline select, .scInline .k-select { max-width: 160px; }
 .scTask > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .scTask > span:first-child { color: var(--text-primary); font-weight: 700; }
 .scTask > span + span { font-size: var(--fs-xs); color: var(--text-tertiary); }
