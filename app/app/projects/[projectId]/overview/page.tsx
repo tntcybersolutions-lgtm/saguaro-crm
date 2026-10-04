@@ -18,7 +18,7 @@
  * load, and a section whose source failed says so instead of showing zero.
  */
 import React, { useState } from 'react';
-import useSWR from 'swr';
+import useSWR, { mutate as swrMutate } from 'swr';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { confirmDialog } from '@/lib/ui/async-dialog';
@@ -168,6 +168,8 @@ function ArchiveButton({ projectId, name }: { projectId: string; name: string })
     try {
       const r = await fetch(`/api/projects/${projectId}`, { method: 'DELETE' });
       if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Could not archive the job');
+      // The portfolio list is cached by useProjects — drop it so the archived job is gone on arrival.
+      await swrMutate('/api/projects/list');
       router.push('/app/projects');
     } catch (e) {
       setErr(humanError(e, 'Could not archive the job.'));
@@ -177,7 +179,7 @@ function ArchiveButton({ projectId, name }: { projectId: string; name: string })
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
       {err && <span style={{ fontSize: 12, color: 'var(--status-overdue)' }}>{err}</span>}
-      <button type="button" onClick={() => void archive()} disabled={busy} style={{ background: 'none', border: '1px solid var(--border-default)', borderRadius: 8, padding: '6px 10px', minHeight: 36, cursor: busy ? 'wait' : 'pointer', color: 'var(--status-overdue)', fontSize: 12, fontWeight: 700 }}>
+      <button type="button" onClick={() => void archive()} disabled={busy} style={{ background: 'none', border: '1px solid var(--border-default)', borderRadius: 8, padding: '6px 12px', minHeight: 44, cursor: busy ? 'wait' : 'pointer', color: 'var(--status-overdue)', fontSize: 12, fontWeight: 700 }}>
         {busy ? 'Archiving…' : 'Archive Job'}
       </button>
     </span>

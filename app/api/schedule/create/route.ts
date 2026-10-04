@@ -25,6 +25,12 @@ export async function POST(req: NextRequest) {
     // One fact, two columns — see the PATCH route.
     if (body.status === undefined && pctRaw !== undefined) status = pctComplete >= 100 ? 'complete' : pctComplete > 0 ? 'in_progress' : 'not_started';
     else if (pctRaw === undefined && status === 'complete') pctComplete = 100;
+    else if (pctRaw !== undefined) {
+      // Both sent and disagreeing (the composer sends both): the bar wins.
+      if (pctComplete >= 100 && status !== 'complete') status = 'complete';
+      else if (pctComplete > 0 && pctComplete < 100 && status === 'not_started') status = 'in_progress';
+      else if (pctComplete <= 0 && status === 'complete') pctComplete = 100;
+    }
     const predecessorId = body.predecessor_id ?? body.predecessorId ?? null;
     const db = createServerClient();
     const { data, error } = await db.from('schedule_tasks').insert({
