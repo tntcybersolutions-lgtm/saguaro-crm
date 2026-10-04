@@ -1128,7 +1128,8 @@ select.k-select { padding-right: 36px; }
   .k-menu-list { left: 12px !important; right: 12px !important; top: auto !important; bottom: calc(var(--sag-tabbar-h) + 8px) !important; min-width: 0 !important; max-height: 60vh; overflow-y: auto; }
   .k-menu-item { min-height: 44px; }
   /* The chat launcher yields to anything already floating: a modal, a menu, the Sage panel. */
-  body:has([data-ai-panel]) .sag-chat-launcher, body:has(.k-overlay) .sag-chat-launcher, body:has(.k-menu-list) .sag-chat-launcher { display: none !important; }
+  body:has([data-ai-panel]) .sag-chat-launcher, body:has(.k-overlay) .sag-chat-launcher, body:has(.k-menu-list) .sag-chat-launcher, body:has(.rdWs) .sag-chat-launcher { display: none !important; }
+  /* The radio console has its own transmit deck pinned to the bottom — no bubble over its send button. */
 
   /* Tables become stacked cards: name, status, amount, one action. Columns past
      the fourth are dropped on phones — the row opens the full record. */
