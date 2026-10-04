@@ -123,7 +123,8 @@ converge. One line each, newest at the bottom.
   Sum typed in step 1 is not on the created pay app (detail shows $0.00 original); same root as the
   `contract_sum` 0 entry above.
 
-- (4 Oct, neon-glass walk) `app/app/projects/[projectId]/takeoff/page.tsx` on ZZ AUDIT 2 Fix Check — the
-  takeoff hero shows "ZZ AUDIT — Mesa Flex Office": the takeoff row's stored name is the other audit
-  job's, so the title does not match the project it sits under. Data on the takeoff record, not the
-  page. Not fixed (off-path).
+- ~~(4 Oct, neon-glass walk) `app/app/projects/[projectId]/takeoff/page.tsx` on ZZ AUDIT 2 Fix Check — the
+  takeoff hero showed "ZZ AUDIT — Mesa Flex Office".~~ FIXED on redesign/neon-glass (Chad: "FIX IT"): the
+  hero was printing `project_name_detected` — the title the AI read off the drawings — as if it were the
+  job. It now names the job from project context and shows the drawing title beneath, labelled, only
+  when it differs.
