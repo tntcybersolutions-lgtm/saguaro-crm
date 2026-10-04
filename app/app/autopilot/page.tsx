@@ -231,11 +231,11 @@ export default function AutopilotPage() {
 
   const isAck = (a: AutopilotAlert) => alertStates[a.id] === 'acknowledged';
   const columns: Column<AutopilotAlert>[] = [
-    { key: 'severity', header: 'Severity', accessor: a => SEV_RANK[a.severity] ?? 9, width: 120, render: a => isAck(a) ? <Badge tone="ongoing">Acknowledged</Badge> : <Badge tone={sevBadge(a.severity).tone} dot>{sevBadge(a.severity).label}</Badge> },
+    { key: 'severity', phone: 'show', header: 'Severity', accessor: a => SEV_RANK[a.severity] ?? 9, width: 120, render: a => isAck(a) ? <Badge tone="ongoing">Acknowledged</Badge> : <Badge tone={sevBadge(a.severity).tone} dot>{sevBadge(a.severity).label}</Badge> },
     { key: 'title', header: 'Alert', accessor: a => a.title.toLowerCase(), render: a => <div className="apAlert"><b title={a.title}>{a.title}</b>{a.summary && <span title={a.summary}>{a.summary}</span>}</div> },
-    { key: 'rule_code', header: 'Check', accessor: a => a.rule_code, render: a => a.rule_code ? <span className="apTag">{a.rule_code.replace(/_/g, ' ')}{a.entity_type ? ` · ${a.entity_type}` : ''}</span> : <span className="apMuted">—</span> },
+    { key: 'rule_code', phone: 'hide', header: 'Check', accessor: a => a.rule_code, render: a => a.rule_code ? <span className="apTag">{a.rule_code.replace(/_/g, ' ')}{a.entity_type ? ` · ${a.entity_type}` : ''}</span> : <span className="apMuted">—</span> },
     { key: 'project', header: 'Project', accessor: a => (projName(a.project_id) || '').toLowerCase(), render: a => a.project_id ? <Button variant="ghost" size="sm" href={`/app/projects/${a.project_id}/autopilot`}>{projName(a.project_id) || 'View Project'}</Button> : <span className="apMuted">Tenant-wide</span> },
-    { key: 'created_at', header: 'Raised', accessor: a => a.created_at || '', render: a => <span className="apMuted">{fmtDate(a.created_at)}</span> },
+    { key: 'created_at', phone: 'hide', header: 'Raised', accessor: a => a.created_at || '', render: a => <span className="apMuted">{fmtDate(a.created_at)}</span> },
   ];
   const rowActions = (a: AutopilotAlert): Action[] => [
     { label: 'Acknowledge', icon: <CheckCircle size={15} />, onClick: () => acknowledge(a.id), hidden: isAck(a), disabled: busyId === a.id },

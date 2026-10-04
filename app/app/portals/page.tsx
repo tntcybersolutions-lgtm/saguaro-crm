@@ -298,10 +298,10 @@ export default function PortalsPage() {
   // ── Columns ──
   const clientColumns: Column<ClientSession>[] = [
     { key: 'client_name', header: 'Client', accessor: s => (s.client_name || '').toLowerCase(), render: s => <div className="poWho"><span>{s.client_name}</span><span>{s.client_email}</span></div> },
-    { key: 'project_name', header: 'Project', accessor: s => (s.project_name || '').toLowerCase(), render: s => s.project_name ? <span className="poMuted">{s.project_name}</span> : <span className="poMuted">—</span> },
-    { key: 'status', header: 'Status', accessor: s => STATUS_RANK[s.status] ?? 9, render: s => { const b = statusBadge(s.status); return <Badge tone={b.tone} dot>{b.label}</Badge>; } },
+    { key: 'project_name', phone: 'hide', header: 'Project', accessor: s => (s.project_name || '').toLowerCase(), render: s => s.project_name ? <span className="poMuted">{s.project_name}</span> : <span className="poMuted">—</span> },
+    { key: 'status', phone: 'show', header: 'Status', accessor: s => STATUS_RANK[s.status] ?? 9, render: s => { const b = statusBadge(s.status); return <Badge tone={b.tone} dot>{b.label}</Badge>; } },
     { key: 'last', header: 'Last Access', accessor: s => lastSeen(s) || '', render: s => { const v = lastSeen(s); return v ? <span className="poMuted">{fmt(v)}</span> : s.status === 'active' ? <span className="poNever">Never opened</span> : <span className="poMuted">—</span>; } },
-    { key: 'expires_at', header: 'Expires', accessor: s => s.expires_at || '9999', render: s => {
+    { key: 'expires_at', phone: 'show', header: 'Expires', accessor: s => s.expires_at || '9999', render: s => {
       if (!s.expires_at) return <span className="poMuted">Never</span>;
       const dl = Math.ceil((new Date(s.expires_at).getTime() - Date.now()) / 86400000);
       return <span className={dl <= 0 ? 'poLate' : dl <= 30 ? 'poSoon' : 'poMuted'}>{fmt(s.expires_at)}{dl <= 0 ? ' · expired' : dl <= 30 ? ` · ${dl}d left` : ''}</span>;
@@ -312,7 +312,7 @@ export default function PortalsPage() {
     { key: 'project_name', header: 'Project', accessor: s => (s.project_name || '').toLowerCase(), render: s => s.project_name ? <span className="poMuted">{s.project_name}</span> : <span className="poMuted">—</span> },
     { key: 'status', header: 'Status', accessor: s => STATUS_RANK[s.status] ?? 9, render: s => { const b = statusBadge(s.status); return <Badge tone={b.tone} dot>{b.label}</Badge>; } },
     { key: 'last_login_at', header: 'Last Login', accessor: s => s.last_login_at || '', render: s => s.last_login_at ? <span className="poMuted">{fmt(s.last_login_at)}</span> : s.status === 'active' ? <span className="poNever">Never opened</span> : <span className="poMuted">—</span> },
-    { key: 'created_at', header: 'Invited', accessor: s => s.created_at || '', render: s => <span className="poMuted">{fmt(s.created_at)}</span> },
+    { key: 'created_at', phone: 'hide', header: 'Invited', accessor: s => s.created_at || '', render: s => <span className="poMuted">{fmt(s.created_at)}</span> },
   ];
   const rowActionsFor = (type: Tab) => (s: { id: string; token: string; status: string }): Action[] => [
     { label: 'Copy Link', icon: <Copy size={15} />, onClick: () => copyLink(s.token, type) },

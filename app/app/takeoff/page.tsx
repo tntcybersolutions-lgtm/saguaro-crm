@@ -598,10 +598,10 @@ export default function TakeoffPage() {
     { key: 'csi_code', header: 'CSI Code', accessor: m => m.csi_code || '', render: m => <span className="tkMono">{m.csi_code}</span> },
     { key: 'description', header: 'Description', accessor: m => (m.description || '').toLowerCase(), render: m => <span className="tkDesc" title={m.description}>{m.description}</span> },
     { key: 'quantity', header: 'Qty', accessor: m => Number(m.quantity) || 0, align: 'right', render: m => <span className="tkMoney">{(m.quantity || 0).toLocaleString()}</span> },
-    { key: 'unit', header: 'Unit', accessor: m => m.unit || '', render: m => <span className="tkMono">{m.unit}</span> },
-    { key: 'unit_cost', header: '$ / Unit', accessor: m => Number(m.unit_cost) || 0, align: 'right', render: m => <span className="tkMoney" style={{ color: 'var(--text-tertiary)', fontWeight: 500 }}>{fmt(m.unit_cost)}</span> },
-    { key: 'total_cost', header: 'Total', accessor: m => Number(m.total_cost) || 0, align: 'right', render: m => <span className="tkMoney">{fmt(m.total_cost)}</span> },
-    { key: 'pct', header: '% of Div', accessor: m => div.totalCost > 0 ? (m.total_cost / div.totalCost) : 0, render: m => { const pct = div.totalCost > 0 ? Math.round((m.total_cost / div.totalCost) * 100) : 0; return <div className="tkPct"><div className="tkBar"><div style={{ width: `${pct}%` }} /></div><span className="tkMuted">{pct}%</span></div>; } },
+    { key: 'unit', phone: 'hide', header: 'Unit', accessor: m => m.unit || '', render: m => <span className="tkMono">{m.unit}</span> },
+    { key: 'unit_cost', phone: 'hide', header: '$ / Unit', accessor: m => Number(m.unit_cost) || 0, align: 'right', render: m => <span className="tkMoney" style={{ color: 'var(--text-tertiary)', fontWeight: 500 }}>{fmt(m.unit_cost)}</span> },
+    { key: 'total_cost', phone: 'show', header: 'Total', accessor: m => Number(m.total_cost) || 0, align: 'right', render: m => <span className="tkMoney">{fmt(m.total_cost)}</span> },
+    { key: 'pct', phone: 'hide', header: '% of Div', accessor: m => div.totalCost > 0 ? (m.total_cost / div.totalCost) : 0, render: m => { const pct = div.totalCost > 0 ? Math.round((m.total_cost / div.totalCost) * 100) : 0; return <div className="tkPct"><div className="tkBar"><div style={{ width: `${pct}%` }} /></div><span className="tkMuted">{pct}%</span></div>; } },
   ];
 
   // ── Upload card body by phase ──

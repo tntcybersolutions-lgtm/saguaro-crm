@@ -285,11 +285,11 @@ export default function PermitsPage() {
   const isSel = (p: Permit) => p.id === selectedId;
   const numCol: Column<Permit> = { key: 'permit_number', header: 'Permit #', accessor: p => p.permit_number || '', width: 150, render: p => <span className="peNum" data-sel={isSel(p) ? 'true' : undefined}>{p.permit_number || '—'}</span> };
   const typeCol: Column<Permit> = { key: 'permit_type', header: 'Type', accessor: p => p.permit_type || '', render: p => <span style={{ color: 'var(--text-primary)' }}>{p.permit_type}</span> };
-  const agencyCol: Column<Permit> = { key: 'issuing_authority', header: 'Agency', accessor: p => (p.issuing_authority || '').toLowerCase(), render: p => p.issuing_authority || <span className="peMuted">—</span> };
-  const statusCol: Column<Permit> = { key: 'status', header: 'Status', accessor: p => STATUS_RANK[effStatus(p)] ?? 9, render: p => { const b = statusBadge(effStatus(p)); return <span className="peBadges"><Badge tone={b.tone}>{b.label}</Badge>{isExpiringSoon(p) && <Badge tone="under_contract">Expiring</Badge>}</span>; } };
-  const feeCol: Column<Permit> = { key: 'fee', header: 'Fee', accessor: p => Number(p.fee) || 0, align: 'right', render: p => <span className="peMoney">{fmtUsd(Number(p.fee) || 0)}</span> };
-  const issuedCol: Column<Permit> = { key: 'issued_date', header: 'Issued', accessor: p => p.issued_date || '', render: p => <span className="peMuted">{fmtDate(p.issued_date)}</span> };
-  const expiryCol: Column<Permit> = { key: 'expiry_date', header: 'Expiry', accessor: p => p.expiry_date || '', render: p => {
+  const agencyCol: Column<Permit> = { key: 'issuing_authority', phone: 'hide', header: 'Agency', accessor: p => (p.issuing_authority || '').toLowerCase(), render: p => p.issuing_authority || <span className="peMuted">—</span> };
+  const statusCol: Column<Permit> = { key: 'status', phone: 'show', header: 'Status', accessor: p => STATUS_RANK[effStatus(p)] ?? 9, render: p => { const b = statusBadge(effStatus(p)); return <span className="peBadges"><Badge tone={b.tone}>{b.label}</Badge>{isExpiringSoon(p) && <Badge tone="under_contract">Expiring</Badge>}</span>; } };
+  const feeCol: Column<Permit> = { key: 'fee', phone: 'show', header: 'Fee', accessor: p => Number(p.fee) || 0, align: 'right', render: p => <span className="peMoney">{fmtUsd(Number(p.fee) || 0)}</span> };
+  const issuedCol: Column<Permit> = { key: 'issued_date', phone: 'hide', header: 'Issued', accessor: p => p.issued_date || '', render: p => <span className="peMuted">{fmtDate(p.issued_date)}</span> };
+  const expiryCol: Column<Permit> = { key: 'expiry_date', phone: 'show', header: 'Expiry', accessor: p => p.expiry_date || '', render: p => {
     const st = effStatus(p); const d = daysToExpiry(p); const soon = isExpiringSoon(p);
     return <span className={st === 'expired' ? 'peLate' : soon ? 'peSoon' : 'peMuted'}>{fmtDate(p.expiry_date)}{st === 'expired' && d !== null ? ` · lapsed ${Math.abs(d)}d ago` : soon ? ` · ${d}d left` : ''}</span>;
   } };

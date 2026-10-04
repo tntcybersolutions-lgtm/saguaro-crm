@@ -548,9 +548,9 @@ export default function DocumentVersionsPage() {
         )}
       </div>
     ) },
-    { key: 'category', header: 'Category', accessor: (d) => d.category, render: (d) => <span className="dvMuted">{d.category}</span> },
-    { key: 'currentVersion', header: 'Version', accessor: (d) => d.currentVersionNumber, render: (d) => <span className="dvMono">{d.currentVersion}</span> },
-    { key: 'status', header: 'Status', accessor: (d) => STATUS_RANK[d.status] ?? 9, render: (d) => <Badge tone={STATUS_TONE[d.status] ?? 'neutral'} dot>{d.status}</Badge> },
+    { key: 'category', phone: 'hide', header: 'Category', accessor: (d) => d.category, render: (d) => <span className="dvMuted">{d.category}</span> },
+    { key: 'currentVersion', phone: 'show', header: 'Version', accessor: (d) => d.currentVersionNumber, render: (d) => <span className="dvMono">{d.currentVersion}</span> },
+    { key: 'status', phone: 'show', header: 'Status', accessor: (d) => STATUS_RANK[d.status] ?? 9, render: (d) => <Badge tone={STATUS_TONE[d.status] ?? 'neutral'} dot>{d.status}</Badge> },
     { key: 'lastModified', header: 'Modified', accessor: (d) => d.lastModified || '', render: (d) => <div><div style={{ color: 'var(--text-primary)' }}>{fmtDate(d.lastModified)}</div><div className="dvMuted" style={{ fontSize: 'var(--fs-xs)' }}>{d.modifiedBy}</div></div> },
   ];
   const rowActions = (d: Document): Action[] => [
