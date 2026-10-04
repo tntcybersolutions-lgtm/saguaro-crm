@@ -90,3 +90,16 @@ converge. One line each, newest at the bottom.
 - (3 Oct, phone walk) `app/app/projects/[projectId]/pay-apps/page.tsx` `.paTable` — the custom
   table (drag reorder, bulk select, LifecycleRail) is not a kit DataTable, so it scrolls
   sideways at 393px instead of becoming cards.
+- (3 Oct, tap-through) `app/app/intelligence/page.tsx` live-signals ticker — the "Dismiss
+  suggestion ×" control is 13 px and scrolls past off-screen; the ticker is a marquee, so
+  on a phone there is no still target to tap.
+- (3 Oct, tap-through) `/app/radio` console (untouched by the redesign) — Patch / Broadcast
+  39 px, "Add someone" 21–31 px, deck buttons 42 px; all under the 44 px thumb target.
+- (3 Oct, tap-through) Home "Review →" on a decision card is a hard navigation (full page
+  load), not a client route; the sidebar and chat widget remount.
+- (3 Oct, tap-through) Pima change-order row "Open Details" opens nothing visible at 393 and
+  does not navigate — the detail rail is desktop-only on that page.
+- (3 Oct, tap-through) `/app/leads` board at 393 is a sideways kanban: every card and its
+  "Actions for …" button sit off the right edge until you scroll the strip (page not in the
+  redesign).
+

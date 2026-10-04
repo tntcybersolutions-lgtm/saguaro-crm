@@ -101,3 +101,81 @@ _Fix log — append each change here as it merges:_
   app opening on the marketing page.
 - 2026-10-02: Documents + deal media show real file-type badges (PDF/DOCX/…).
 - 2026-10-02: Added `tools/qa-crawl.mjs` — in-browser screen crawler (above).
+
+---
+
+## Driven findings — Chrome iPhone 16 device mode on the `redesign/obsidian-glass` preview (3 Oct 2026)
+
+Signed in, 393 × 852, every route in `docs/design/verification.md` tapped. Create / edit /
+delete only on **ZZ AUDIT 2 Fix Check**; real jobs opened and cancelled. Each line says
+whether it was fixed on the branch (PR #42) and the commit.
+
+### Finding: punch-list checkbox is a 24 px target
+- Screen: /app/projects/[id]/punch-list
+- What I did: tapped the row checkbox ("Mark … complete" / "Reopen …")
+- Expected: a 44 px thumb target
+- Actual: hard-to-tap — 24 px box; an automated pass hit four at once
+- Severity: minor
+- Status: **FIXED on branch** `745e5863` (44 px hit area via `::after`)
+
+### Finding: menu-drawer tools under 44 px
+- Screen: every screen (More → drawer)
+- What I did: measured Help Me (36 px) and the job picker (34 px)
+- Expected: 44 px
+- Actual: hard-to-tap
+- Severity: minor
+- Status: **FIXED on branch** `745e5863`
+
+### Finding: pay-app row menu off the right edge
+- Screen: /app/projects/[id]/pay-apps
+- What I did: looked for the row "More actions" button at 393
+- Expected: on screen, like every kit table (card per row)
+- Actual: wrong — the hand-rolled table scrolls sideways; the menu button starts at x > 393
+- Severity: major
+- Status: **FIXED on branch** `3aa2ee69` (card layout under 768 px; drag handle + bulk box stay)
+
+### Finding: "You Are Here" toggle is 36 px
+- Screen: /app/leads (and every sales route)
+- What I did: tapped "Show the next step"
+- Expected: 44 px
+- Actual: hard-to-tap
+- Severity: minor
+- Status: **FIXED on branch** `3aa2ee69`
+
+### Finding: a permit can never be deleted
+- Screen: /app/projects/[id]/permits
+- What I did: created ZZ-TAP-TEST-1 on ZZ AUDIT 2, then looked for Delete in the row, the
+  detail rail and the menu
+- Expected: a Delete on the row menu (DELETE /api/permits/[id] exists and is tenant-scoped)
+- Actual: wrong — no row menu at all, no delete anywhere; the test permit is still in the table
+- Severity: major
+- Status: **FIXED on branch** `d57afcde` (row menu: Open Details · Delete with confirm).
+  The test record `ZZ-TAP-TEST-1` (permit `7b25b849…`) still has to be deleted once the
+  preview is signed in again.
+
+### Finding: Daily Logs register squeezed at 1440 (desktop)
+- Screen: /app/daily-logs at 1440
+- What I did: loaded the register with 11 logs
+- Expected: columns fit, or the table scrolls
+- Actual: wrong — nine columns needed ~1,230 px in 1,146; the Date cell painted over the
+  Project name ("nter — BA…")
+- Severity: major
+- Status: **FIXED on branch** `3aa2ee69` (Weather and Temp columns moved out of the register;
+  they stay in the detail and the phone card). Invoicing (Amount column dropped, Total kept)
+  and Schedule (task / predecessor clamps) tightened in the same commit.
+
+### Fields-talk results (ZZ AUDIT 2 Fix Check, 393)
+- Daily log: Blank Log → Create → row listed → opened → Edit Log → superintendent changed →
+  Save Changes ("Log updated.", value shown) → row menu Delete → confirm ("Log deleted.").
+  **works**
+- Punch item: Add Item → listed ("Item added.") → checkbox Mark complete → label flips to
+  Reopen → tap → flips back → row menu Delete → confirm ("Item deleted."). **works**
+- Permit: Add Permit → Save Permit → listed. **works** — but see "a permit can never be
+  deleted" above.
+
+### Still to drive (preview session expired mid-run)
+IOS-DEVICE-QA.md sections 1 (login error path), 3–4 (lead create → deal page → stage bar →
+won → job), 5 (documents), 7 (time clock, photo), 8 (reviews), 9 (salesperson login) and the
+1440 pass on the remaining routes. Camera, GPS, notch and home-bar spacing cannot be checked
+in Chrome at all.
+
