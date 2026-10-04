@@ -587,7 +587,7 @@ const CSS = `
   .hv2-hide-sm { display: none; }
   .hv2-select { display: block; min-width: 0; max-width: 100%; flex: 1 1 100%; }
   .hv2-select select { max-width: 100%; width: 100%; }
-  .hv2-controls > * { min-width: 0; max-width: 100%; }
+  .hv2-controls .hv2-seg, .hv2-controls .hv2-btn { min-width: 0; max-width: 100%; }
   .hv2-order-1 { order: 1; } .hv2-order-3 { order: 3; } .hv2-order-4 { order: 4; } .hv2-order-5 { order: 5; } .hv2-order-6 { order: 6; } .hv2-order-7 { order: 7; }
 }
 `;
