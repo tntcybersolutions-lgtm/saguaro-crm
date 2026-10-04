@@ -130,6 +130,7 @@ export default function AppTopBar({
 
   return (
     <header
+      className="sag-topbar"
       style={{
         position: 'fixed',
         top: 0,

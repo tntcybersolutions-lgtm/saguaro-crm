@@ -1083,7 +1083,9 @@ select.k-select { padding-right: 36px; }
   .topbar-area { left: 0 !important; }
 
   /* Top bar: menu · back / page title · Sage · account. Search, Help Me, the job
-     picker and notifications live in the menu. */
+     picker and notifications live in the menu. The <header> is fixed with an
+     inline left equal to the sidebar width — on a phone there is no sidebar. */
+  .sag-topbar { left: 0 !important; padding-left: 10px !important; padding-right: 10px !important; gap: 6px !important; }
   .sag-topbar-desktop { display: none !important; }
   .sag-topbar-back { padding: 0 8px !important; }
   .sag-topbar-back span { max-width: 72px !important; }
@@ -1091,8 +1093,11 @@ select.k-select { padding-right: 36px; }
   .sag-crumb-last { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 
   /* "You Are Here" and the phase strip: one short line, tap for the details. */
-  .sag-nsb-detail { display: none; }
-  .sag-nsb[data-open="true"] .sag-nsb-detail { display: flex; }
+  .sag-nsb .sag-nsb-detail { display: none !important; }
+  .sag-nsb[data-open="true"] .sag-nsb-detail { display: flex !important; }
+  .sag-nsb[data-open="true"] { row-gap: 8px; }
+  .sag-nsb[data-open="true"] > span:nth-of-type(3) { flex-basis: 100%; }
+  .sag-nsb[data-open="true"] .sag-nsb-detail[title] { max-width: none; }
   .sag-nsb-toggle { display: inline-flex !important; }
   .sag-phase-summary { display: flex !important; }
   .sag-phase-nav { display: none !important; }
@@ -1102,6 +1107,13 @@ select.k-select { padding-right: 36px; }
 
   /* Bottom tab bar. */
   .sag-tabbar { display: flex !important; }
+  /* Room under the last row so it can scroll above the tab bar and the chat bubble. */
+  .k-page { padding-bottom: calc(var(--sp-8) + 72px); }
+  .k-crumbs a, .k-crumbs span { max-width: 48vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* The chat launcher steps aside while the page scrolls (see SaguaroChatWidget). */
+  .sag-chat-launcher { right: 12px !important; transition: transform .2s ease, opacity .2s ease; }
+  .sag-chat-launcher[data-hidden="true"] { transform: translateX(72px); opacity: 0; pointer-events: none; }
+  .sag-chat-launcher > button { width: 46px !important; height: 46px !important; }
 
   /* Chat bubble sits above the tab bar; the Sage panel too. */
   [data-ai-panel] { bottom: calc(12px + var(--sag-tabbar-h)) !important; height: min(680px, calc(100vh - 24px - var(--sag-tabbar-h))) !important; }

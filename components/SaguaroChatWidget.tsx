@@ -183,6 +183,20 @@ export default function SaguaroChatWidget({
   const [isStreaming, setIsStreaming] = useState(false);
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
+  /* Phones: the launcher steps aside while the page scrolls and comes back
+     once the thumb is still, so it never covers the row being reached for. */
+  const [scrollHidden, setScrollHidden] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia('(max-width: 767px)').matches) return;
+    let t: ReturnType<typeof setTimeout> | null = null;
+    const onScroll = () => {
+      setScrollHidden(true);
+      if (t) clearTimeout(t);
+      t = setTimeout(() => setScrollHidden(false), 700);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => { window.removeEventListener('scroll', onScroll); if (t) clearTimeout(t); };
+  }, []);
   const [showMenu, setShowMenu] = useState(false);
   const [memoryProfile, setMemoryProfile] = useState<UserMemoryProfile | null>(null);
   const [sessionId] = useState(() => {
@@ -608,7 +622,7 @@ export default function SaguaroChatWidget({
 
       {/* LAUNCHER */}
       {!isOpen && (
-        <div style={{ position: 'fixed', bottom: 'calc(24px + var(--sag-tabbar-h, 0px))', right: 24, zIndex: 9999 }}>
+        <div className="sag-chat-launcher" data-hidden={scrollHidden ? 'true' : 'false'} style={{ position: 'fixed', bottom: 'calc(24px + var(--sag-tabbar-h, 0px))', right: 24, zIndex: 9999 }}>
           {showTooltip && (
             <div style={{
               position: 'absolute', bottom: '100%', left: '50%',
