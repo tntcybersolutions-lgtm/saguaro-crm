@@ -93,3 +93,20 @@ form/modal/drawer, loading/empty/error states.
 - 2026-10-04 — M3 pushed (e8fb30b7); preview building (dpl_n9qfg7qFX3hvR4QBZ9kgT3A8ibSK). Phone tab still on `/login` for the neon-glass host — unchanged: CANNOT VERIFY until signed in.
 - 2026-10-04 — Chad signed in on the neon-glass host. Overview and dashboard DRIVEN at 393 (iPhone 16 device mode) and at 1280×529 (the desktop window would not resize past 1280 on this display; 1440 is listed under Not verified). Two fixes found and pushed (see M2).
 - 2026-10-04 — M4a preview (42c2319a) driven at 393: customers shows the phone Sort bar (Score · Desc) and rows follow it (`after/393-customers*.png`). Pay-apps register on ZZ AUDIT 2 is empty (no pay apps on that job), so header sorting is checked on customers at 1280 instead.
+
+## Route walk — phone 393 (iPhone 16 device mode), neon-glass preview
+
+| Route | Result | Screenshot |
+|---|---|---|
+| /app (dashboard) | DRIVEN — k-stat metrics, yellow section titles, layered cards | after/393-dashboard*.png |
+| /app/projects (cards + table) | DRIVEN — toolbar sort on cards; DataTable phone Sort bar: Contract asc/desc verified | after/393-projects-*.png |
+| /app/customers | DRIVEN — phone Sort bar (Score · Desc) orders rows; desktop header sort asc → desc → off verified, empties sink | after/393-customers*.png, after/1280-customers.jpg |
+| /app/leads | DRIVEN — tiles, Board/List/Funnel pills | after/393-leads.png |
+| /app/subs | DRIVEN — tone-edged tiles | after/393-subs.png |
+| Job overview | DRIVEN — one Open Takeoff, NextAction, 84px tab-bar clearance | after/393-project-overview*.png |
+| Job takeoff | DRIVEN — on system. DATA NOTE (not design, logged in FOUND): the takeoff record on ZZ AUDIT 2 carries the name "ZZ AUDIT — Mesa Flex Office" | after/393-takeoff.png |
+| Job estimate | DRIVEN — StatStrip was a joined 1px band → separate rounded tiles (cb4e2503) | after/393-estimate.png |
+| Job bid packages | DRIVEN — DataTable + phone Sort bar | after/393-bid-packages.png |
+| Job schedule | DEFECT FIXED (cb4e2503): the task composer is a fixed 460px flex sibling → page overflowed 393 by ~460px; now a full-screen phone sheet. Before: before/393-schedule-overflow.png. Re-drive pending the next preview. | — |
+| Job daily logs, punch list, RFIs, change orders, pay apps | DRIVEN — tiles + styled empty states | after/393-*.png |
+| Job photos | DRIVEN — loading state on system (page took >7s to load project context) | after/393-photos-loading.png |
