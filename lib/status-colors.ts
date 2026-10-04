@@ -39,15 +39,15 @@ export interface StatusStyle {
    black + glass + neon yellow, uniform end to end). Same saturation and
    lightness band for all six so no status shouts over another; fills are
    ~16% and borders ~50% of the hue so a pill reads on glass and on black.
-   Under Contract is a warm AMBER (#FFC53D), deliberately apart from the lemon
-   brand yellow (#FFE600) so a status never reads as "the app's accent".
+   Job-grade traffic-light semantics (Procore/Fieldwire/Buildertrend convention):
+   red = late, orange = bidding/at risk, yellow = under contract, green = active/done, grey = closed.
    Mirrored as --status-* in app/globals.css. */
 export const STATUS_COLORS: Record<StatusKind, StatusStyle> = {
-  overdue:        { kind: 'overdue',        label: 'Overdue',        color: '#FF4D5E', bg: 'rgba(255,77,94,0.16)',   border: 'rgba(255,77,94,0.50)' },
-  lead:           { kind: 'lead',           label: 'Lead',           color: '#3DA9FF', bg: 'rgba(61,169,255,0.16)',  border: 'rgba(61,169,255,0.50)' },
-  under_contract: { kind: 'under_contract', label: 'Under Contract', color: '#FFC53D', bg: 'rgba(255,197,61,0.16)',  border: 'rgba(255,197,61,0.50)' },
-  ongoing:        { kind: 'ongoing',        label: 'Ongoing',        color: '#2EE59D', bg: 'rgba(46,229,157,0.16)',  border: 'rgba(46,229,157,0.50)' },
-  completed:      { kind: 'completed',      label: 'Completed',      color: '#FF8A3D', bg: 'rgba(255,138,61,0.16)',  border: 'rgba(255,138,61,0.50)' },
+  overdue:        { kind: 'overdue',        label: 'Overdue',        color: '#FF3B30', bg: 'rgba(255,59,48,0.16)',   border: 'rgba(255,59,48,0.50)' },
+  lead:           { kind: 'lead',           label: 'Lead',           color: '#FF8A00', bg: 'rgba(255,138,0,0.16)',  border: 'rgba(255,138,0,0.50)' },
+  under_contract: { kind: 'under_contract', label: 'Under Contract', color: '#FFE600', bg: 'rgba(255,230,0,0.16)',  border: 'rgba(255,230,0,0.50)' },
+  ongoing:        { kind: 'ongoing',        label: 'Ongoing',        color: '#2CFF7A', bg: 'rgba(44,255,122,0.16)',  border: 'rgba(44,255,122,0.50)' },
+  completed:      { kind: 'completed',      label: 'Completed',      color: '#2CFF7A', bg: 'rgba(44,255,122,0.10)', border: 'rgba(44,255,122,0.35)' },
   closed:         { kind: 'closed',         label: 'Closed',         color: '#A3ACBB', bg: 'rgba(163,172,187,0.16)', border: 'rgba(163,172,187,0.45)' },
 };
 

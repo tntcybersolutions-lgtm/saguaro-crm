@@ -4,7 +4,7 @@ import Link from 'next/link';
 import MarketingNav from '@/components/MarketingNav';
 import { Brain, Robot, Mailbox, ChartBar } from '@phosphor-icons/react';
 
-const GOLD='var(--brand-primary)',DARK='#0A0A00',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.08)',DIM='#CBD5E1',TEXT='#FFFFFF';
+const GOLD='var(--brand-primary)',DARK='#0A0A00',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.08)',DIM='#D4D4D8',TEXT='#FFFFFF';
 
 export default function BidsPage() {
   const [tab, setTab] = useState<'active'|'pipeline'|'history'>('active');
@@ -50,7 +50,7 @@ export default function BidsPage() {
             ))}
           </tr></thead>
           <tbody>{opportunities.map(op=>{
-            const ac = op.action==='bid'?{bg:'rgba(26,138,74,.12)',c:'#3dd68c',label:'✓ Bid'}:op.action==='pass'?{bg:'rgba(192,48,48,.12)',c:'#ff7070',label:'✗ Pass'}:{bg:'var(--brand-primary-12)',c:'var(--brand-primary)',label:'? Investigate'};
+            const ac = op.action==='bid'?{bg:'rgba(26,138,74,.12)',c:'#2CFF7A',label:'✓ Bid'}:op.action==='pass'?{bg:'rgba(192,48,48,.12)',c:'#FF3B30',label:'✗ Pass'}:{bg:'var(--brand-primary-12)',c:'var(--brand-primary)',label:'? Investigate'};
             return <tr key={op.id} style={{borderBottom:`1px solid rgba(255,255,255,0.08)`}}>
               <td style={{padding:'12px 14px',color:TEXT,fontWeight:600,maxWidth:240,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{op.title}</td>
               <td style={{padding:'12px 14px',color:DIM}}>{op.trade}</td>
@@ -58,12 +58,12 @@ export default function BidsPage() {
               <td style={{padding:'12px 14px'}}>
                 <div style={{display:'flex',alignItems:'center',gap:8}}>
                   <div style={{width:60,height:5,background:'rgba(255,255,255,0.08)',borderRadius:3}}>
-                    <div style={{height:'100%',width:`${op.fitScore}%`,background:op.fitScore>=70?'#3dd68c':op.fitScore>=50?GOLD:'#ff7070',borderRadius:3}}/>
+                    <div style={{height:'100%',width:`${op.fitScore}%`,background:op.fitScore>=70?'#2CFF7A':op.fitScore>=50?GOLD:'#FF3B30',borderRadius:3}}/>
                   </div>
-                  <span style={{color:op.fitScore>=70?'#3dd68c':op.fitScore>=50?GOLD:'#ff7070',fontWeight:600}}>{op.fitScore}</span>
+                  <span style={{color:op.fitScore>=70?'#2CFF7A':op.fitScore>=50?GOLD:'#FF3B30',fontWeight:600}}>{op.fitScore}</span>
                 </div>
               </td>
-              <td style={{padding:'12px 14px',color:op.winPct>=60?'#3dd68c':op.winPct>=40?GOLD:'#ff7070',fontWeight:600}}>{op.winPct}%</td>
+              <td style={{padding:'12px 14px',color:op.winPct>=60?'#2CFF7A':op.winPct>=40?GOLD:'#FF3B30',fontWeight:600}}>{op.winPct}%</td>
               <td style={{padding:'12px 14px',color:DIM}}>{op.due}</td>
               <td style={{padding:'12px 14px'}}>
                 <span style={{fontSize:10,fontWeight:600,padding:'3px 10px',borderRadius:4,background:ac.bg,color:ac.c,border:`1px solid color-mix(in srgb, ${ac.c} 20%, transparent)`}}>{ac.label}</span>

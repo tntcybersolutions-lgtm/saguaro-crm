@@ -22,8 +22,8 @@ import type { ContractField, ContractKind } from '@/lib/document-templates/contr
 
 const GOLD = 'var(--brand-primary)';
 const TEXT = '#F0F4FF';
-const DIM = '#8BAAC8';
-const BORDER = '#1E3A5F';
+const DIM = '#A1A1AA';
+const BORDER = '#2A2A2E';
 const CARD = 'var(--bg-surface)';
 const RAISED = 'rgba(255,255,255,0.04)';
 
@@ -132,7 +132,7 @@ export default function ContractForm({
   };
 
   if (loading) return <p style={{ color: DIM, fontSize: 14 }}>Loading what we already know…</p>;
-  if (error && !data) return <p style={{ color: '#EF4444', fontSize: 14 }}>{error}</p>;
+  if (error && !data) return <p style={{ color: '#FF3B30', fontSize: 14 }}>{error}</p>;
   if (!data) return null;
 
   return (
@@ -170,7 +170,7 @@ export default function ContractForm({
         </div>
       ))}
 
-      {error && <p style={{ color: '#EF4444', fontSize: 13.5, margin: 0 }}>{error}</p>}
+      {error && <p style={{ color: '#FF3B30', fontSize: 13.5, margin: 0 }}>{error}</p>}
 
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
         <button

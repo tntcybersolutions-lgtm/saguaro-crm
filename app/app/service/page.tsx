@@ -333,10 +333,10 @@ const CSS = `
 .sv-num { font-size: 13px; font-weight: 750; color: var(--text-secondary); }
 .sv-rowtitle { font-size: 15px; font-weight: 650; }
 .sv-rowmeta { font-size: 13px; color: var(--text-tertiary); }
-.sv-unassigned { color: #FFC53D; font-style: normal; font-weight: 700; }
+.sv-unassigned { color: #FFE600; font-style: normal; font-weight: 700; }
 .sv-pill { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--bg-surface-2); color: var(--text-secondary); text-transform: capitalize; }
-.sv-p-emergency { background: rgba(255,77,94,.16); color: #FF4D5E; }
-.sv-p-high { background: rgba(255,138,61,.16); color: #FF8A3D; }
+.sv-p-emergency { background: rgba(255,59,48,.16); color: #FF3B30; }
+.sv-p-high { background: rgba(255,138,0,.16); color: #FF8A00; }
 .sv-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
 .sv-icon { background: none; border: 0; color: var(--text-tertiary); cursor: pointer; min-width: 44px; min-height: 44px; }
 .sv-dim { color: var(--text-tertiary); font-size: 13px; }
@@ -360,9 +360,9 @@ const CSS = `
 .sv-ghost { background: var(--bg-surface-2); border-color: var(--glass-border); color: var(--text-primary); }
 .sv-linkbtn { background: none; border: 0; color: var(--brand-primary); font-weight: 700; cursor: pointer; font-size: 13px; }
 .sv-msg { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; padding: 10px 12px; border-radius: 10px; font-size: 13.5px; }
-.sv-ok { background: rgba(46,229,157,.1); color: #2EE59D; }
-.sv-err { color: #FF4D5E; }
-.sv-msg.sv-err, .sv-msg.sv-conflict { background: rgba(255,77,94,.1); color: #FF4D5E; }
+.sv-ok { background: rgba(44,255,122,.1); color: #2CFF7A; }
+.sv-err { color: #FF3B30; }
+.sv-msg.sv-err, .sv-msg.sv-conflict { background: rgba(255,59,48,.1); color: #FF3B30; }
 .sv-notes { list-style: none; margin: 10px 0 0; padding: 0; font-size: 13px; color: var(--text-tertiary); display: flex; flex-direction: column; gap: 6px; }
 .sv-res { font-size: 14px; margin: 10px 0 0; }
 @media (max-width: 1100px) { .sv-layout.with-side { grid-template-columns: minmax(0, 1fr); } .sv-detail { order: -1; } }

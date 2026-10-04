@@ -15,6 +15,7 @@
  * All animation is disabled under prefers-reduced-motion.
  */
 import React from 'react';
+import { neonCard, neonFor, neonText } from '@/lib/neon';
 import { ScribbleNote } from '@/components/Scribble';
 
 /* ── Palette — jet black + glass + neon yellow (COPY-STYLE §7) ── */
@@ -22,13 +23,13 @@ export const CIN = {
   gold: 'var(--brand-primary)',
   goldHi: 'var(--brand-primary-strong)',
   goldSoft: '#FFF7A8',
-  amber: '#FFC53D',
-  green: '#2EE59D',
-  red: '#FF4D5E',
-  blue: '#3DA9FF',
+  amber: '#FFE600',
+  green: '#2CFF7A',
+  red: '#FF3B30',
+  blue: '#FF8A00',
   bg: 'var(--bg-base)',
   text: '#FFFFFF',
-  muted: '#D7DEE8',
+  muted: '#D4D4D8',
   faint: '#A9B4C4',
   border: 'rgba(255,255,255,0.09)',
   borderGold: 'var(--brand-primary-25)',
@@ -249,7 +250,7 @@ export function StatCard({
   value,
   sub,
   valueColor,
-  accentColor = CIN.gold,
+  accentColor,
   delay = 0,
   href,
   onClick,
@@ -265,6 +266,10 @@ export function StatCard({
   onClick?: () => void;
 }) {
   const interactive = !!(href || onClick);
+  /* Neon by default (owner 2026-10-03): a caller's accent wins, otherwise a
+     stable neon from the label — no more flat dark tiles. */
+  const lit = accentColor || neonFor(label);
+  const glow = neonCard(lit);
   const inner = (
     <div
       className="sgLift"
@@ -272,17 +277,18 @@ export function StatCard({
       style={{
         position: 'relative', overflow: 'hidden',
         animation: `sgRise .5s ease ${delay.toFixed(2)}s both`,
-        background: CIN.surface,
+        background: `${glow.background}, ${CIN.surface}`,
         backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR,
         border: `1px solid ${CIN.border}`,
+        borderTop: glow.borderTop,
         borderRadius: 16,
         padding: '16px 18px',
-        boxShadow: '0 12px 34px -22px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06)',
+        boxShadow: glow.boxShadow,
         cursor: interactive ? 'pointer' : 'default',
         height: '100%',
       }}
     >
-      <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${accentColor}, transparent)` }} />
+      <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${lit}, transparent)` }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
         {icon && (
           <span
@@ -298,9 +304,9 @@ export function StatCard({
             {icon}
           </span>
         )}
-        <span style={{ fontSize: 12.5, fontWeight: 700, color: CIN.muted }}>{label}</span>
+        <span style={{ fontSize: 12.5, fontWeight: 750, color: CIN.muted }}>{label}</span>
       </div>
-      <div style={{ fontSize: 25, fontWeight: 900, color: valueColor || CIN.text, letterSpacing: '-0.02em', lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      <div style={{ fontSize: 25, fontWeight: 900, color: valueColor || '#FFFFFF', letterSpacing: '-0.02em', lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
       {sub && <div style={{ fontSize: 12, color: CIN.faint, marginTop: 6 }}>{sub}</div>}
     </div>
   );
@@ -354,7 +360,9 @@ export function SectionCard({
             {icon && <span style={{ display: 'inline-flex', flexShrink: 0, opacity: 0.85 }}>{icon}</span>}
             <div style={{ minWidth: 0, flex: 1 }}>
               {title && (
-                <div style={{ fontSize: 13, fontWeight: 700, color: CIN.muted, lineHeight: 1.3 }}>
+                /* Neon section title (owner 2026-10-03): bright, with a lit
+                   underline in a stable neon per title — not grey-on-black. */
+                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--title-color, var(--brand-primary))', lineHeight: 1.3, paddingBottom: 6, display: 'inline-block', background: `linear-gradient(90deg, ${neonFor(typeof title === 'string' ? title : '')}, transparent) left bottom / 44px 2px no-repeat` }}>
                   {title}
                 </div>
               )}

@@ -25,10 +25,10 @@ const GOLD = 'var(--brand-primary)';
 const TEXT = '#FFFFFF';
 const DIM = 'rgba(255,255,255,0.62)';
 const FAINT = 'rgba(255,255,255,0.45)';
-const RED = '#EF4444';
-const GREEN = '#22C55E';
-const ORANGE = '#F97316';
-const BLUE = '#3B82F6';
+const RED = '#FF3B30';
+const GREEN = '#2CFF7A';
+const ORANGE = '#FF8A00';
+const BLUE = '#FF8A00';
 
 interface ScheduleTask {
   id: string;
@@ -136,7 +136,7 @@ export default function ScheduleTaskDetailPage() {
   // ── Loading / Not found / Error ──────────────────────────────────────────
   if (loading) {
     return (
-      <PremiumSurface maxWidth={1100}>
+      <PremiumSurface maxWidth={2200}>
         <ModuleSkeleton kpis={0} rows={6} />
       </PremiumSurface>
     );
@@ -144,7 +144,7 @@ export default function ScheduleTaskDetailPage() {
 
   if (notFound) {
     return (
-      <PremiumSurface maxWidth={1100}>
+      <PremiumSurface maxWidth={2200}>
         <SectionCard flat flush>
           <PremiumEmpty
             icon={<CalendarBlank size={30} weight="duotone" color={ACCENT.hex} />}
@@ -159,7 +159,7 @@ export default function ScheduleTaskDetailPage() {
 
   if (error && !task) {
     return (
-      <PremiumSurface maxWidth={1100}>
+      <PremiumSurface maxWidth={2200}>
         <SectionCard flat flush>
           <PremiumEmpty
             tone="error"
@@ -179,7 +179,7 @@ export default function ScheduleTaskDetailPage() {
   const overdue = !!t.end_date && new Date(t.end_date) < new Date() && (t.status ?? '') !== 'complete';
 
   return (
-    <PremiumSurface maxWidth={1100}>
+    <PremiumSurface maxWidth={2200}>
       {/* Back link */}
       <button
         onClick={() => router.push('/app/schedule')}
@@ -189,7 +189,7 @@ export default function ScheduleTaskDetailPage() {
       </button>
 
       {error && (
-        <div style={{ padding: '12px 16px', background: 'rgba(239,68,68,.1)', border: `1px solid rgba(239,68,68,.3)`, borderRadius: 12, color: RED, fontSize: 13, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ padding: '12px 16px', background: 'rgba(255,59,48,.1)', border: `1px solid rgba(255,59,48,.3)`, borderRadius: 12, color: RED, fontSize: 13, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
           <Warning size={16} /> {error}
         </div>
       )}

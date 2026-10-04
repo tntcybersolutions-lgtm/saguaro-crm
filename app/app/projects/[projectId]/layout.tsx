@@ -18,7 +18,7 @@ import {
 } from '@phosphor-icons/react';
 
 const GOLD = 'var(--brand-primary)'; const DARK = 'var(--bg-base)'; const RAISED = 'var(--bg-surface-2)';
-const BORDER = 'rgba(255,255,255,0.12)'; const DIM = '#CBD5E1'; const TEXT = '#FFFFFF';
+const BORDER = 'rgba(255,255,255,0.12)'; const DIM = '#D4D4D8'; const TEXT = '#FFFFFF';
 
 // ALL sidebar nav items — every module Buildertrend has + more.
 // `accent` = module-identity key (lib/module-identity): the item's icon wears
@@ -158,6 +158,12 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
   const base = `/app/projects/${projectId}`;
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  /* The phone phase bar carries the Modules button; it asks for the drawer here. */
+  useEffect(() => {
+    const open = () => setMobileOpen(true);
+    window.addEventListener('saguaro:project-menu', open);
+    return () => window.removeEventListener('saguaro:project-menu', open);
+  }, []);
 
   /* Forty-nine modules on every job is why a GC cannot find the three they
      need. Six core tools always show, anything carrying real work shows
@@ -322,7 +328,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
                 )}
                 {!isCollapsed && <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label}</span>}
                 {!isCollapsed && ((item as { badge?: string }).badge || railCounts[item.href]) && (
-                  <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 5px', borderRadius: 8, background: active ? GOLD : '#B85C2A', color: active ? '#0A0A00' : '#1C1C1E' }}>
+                  <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 5px', borderRadius: 8, background: active ? GOLD : '#FF8A00', color: active ? '#0A0A00' : '#1C1C1E' }}>
                     {(item as { badge?: string }).badge || railCounts[item.href]}
                   </span>
                 )}
@@ -371,7 +377,8 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
       <style>{`
         @media (max-width: 768px) {
           .sidebar-desktop { display: none !important; }
-          .project-mobile-bar { display: flex !important; }
+          /* The phase bar carries the Modules button on phones now; the old
+             module bar stays off so a job shows one bar above its title. */
         }
       `}</style>
 

@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
+import { alertDialog } from '@/lib/ui/async-dialog';
 import { useProjects } from '@/lib/hooks/useProjects';
 import Link from 'next/link';
 import { Skeleton } from '../../../components/ui/Skeleton';
@@ -7,6 +8,7 @@ import { WarningCircle, FileText, Clipboard, Shield, Hammer, Buildings, NotePenc
 import { FileTypeBadge } from '@/components/FileTypeBadge';
 import { humanError } from '@/lib/errors';
 import { openPdf } from '@/components/PdfViewer';
+import DocumentLibrary from '@/components/documents/DocumentLibrary';
 import {
   PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, IconChip,
   goldButtonStyle, goldOutlineButtonStyle,
@@ -18,10 +20,10 @@ import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/t
 
 const GOLD = 'var(--brand-primary)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1';
+const DIM = '#D4D4D8';
 const TEXT = '#FFFFFF';
-const GREEN = '#3dd68c';
-const RED = '#ef4444';
+const GREEN = '#2CFF7A';
+const RED = '#FF3B30';
 
 const fmt = (n: number | string | null | undefined) =>
   '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -31,7 +33,7 @@ const fmt = (n: number | string | null | undefined) =>
 const fmtDay = (d: string | null | undefined) =>
   d ? new Date(String(d).includes('T') ? d : `${d}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null;
 
-function Badge({ label, color = '#CBD5E1', bg = 'rgba(148,163,184,.12)' }: { label: string; color?: string; bg?: string }) {
+function Badge({ label, color = '#D4D4D8', bg = 'rgba(148,163,184,.12)' }: { label: string; color?: string; bg?: string }) {
   return (
     <span style={{
       fontSize: 10, fontWeight: 700, padding: '2px 8px',
@@ -113,10 +115,10 @@ const isCloseoutDone = (s: string) => s === 'accepted';
 
 const CLOSEOUT_STATUS: Record<string, { label: string; color: string; bg: string }> = {
   pending:      { label: 'Pending',      color: 'var(--warning)', bg: 'color-mix(in srgb, var(--warning) 10%, transparent)' },
-  submitted:    { label: 'Submitted',    color: '#4a9de8', bg: 'rgba(26,95,168,.12)' },
-  under_review: { label: 'Under Review', color: '#4a9de8', bg: 'rgba(26,95,168,.12)' },
-  accepted:     { label: 'Complete',     color: GREEN,     bg: 'rgba(61,214,140,.12)' },
-  rejected:     { label: 'Rejected',     color: RED,       bg: 'rgba(239,68,68,.12)' },
+  submitted:    { label: 'Submitted',    color: '#FF8A00', bg: 'rgba(26,95,168,.12)' },
+  under_review: { label: 'Under Review', color: '#FF8A00', bg: 'rgba(26,95,168,.12)' },
+  accepted:     { label: 'Complete',     color: GREEN,     bg: 'rgba(44,255,122,.12)' },
+  rejected:     { label: 'Rejected',     color: RED,       bg: 'rgba(255,59,48,.12)' },
   na:           { label: 'N/A',          color: DIM,       bg: 'rgba(148,163,184,.12)' },
 };
 
@@ -127,12 +129,12 @@ const CLOSEOUT_TYPE_LABEL: Record<string, string> = {
 };
 
 const statusConfig: Record<string, { color: string; bg: string }> = {
-  paid:      { color: GREEN,   bg: 'rgba(61,214,140,.12)' },
-  approved:  { color: '#4a9de8', bg: 'rgba(26,95,168,.12)' },
+  paid:      { color: GREEN,   bg: 'rgba(44,255,122,.12)' },
+  approved:  { color: '#FF8A00', bg: 'rgba(26,95,168,.12)' },
   draft:     { color: 'var(--warning)', bg: 'color-mix(in srgb, var(--warning) 12%, transparent)' },
-  executed:  { color: GREEN,   bg: 'rgba(61,214,140,.12)' },
+  executed:  { color: GREEN,   bg: 'rgba(44,255,122,.12)' },
   pending:   { color: 'var(--warning)', bg: 'color-mix(in srgb, var(--warning) 12%, transparent)' },
-  submitted: { color: '#4a9de8', bg: 'rgba(26,95,168,.12)' },
+  submitted: { color: '#FF8A00', bg: 'rgba(26,95,168,.12)' },
 };
 
 // AIA bond/form card code -> { route, body } using existing /api/documents/* generators.
@@ -160,36 +162,6 @@ export default function DocumentsPage() {
   const [errorPayroll, setErrorPayroll] = useState(false);
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [query, setQuery] = useState('');
-
-  // Library tab — every generated document, tenant-scoped, freshly signable.
-  const [libDocs, setLibDocs] = useState<any[]>([]);
-  const [libTypes, setLibTypes] = useState<string[]>([]);
-  const [libTypeFilter, setLibTypeFilter] = useState<string>('');
-  const [loadingLib, setLoadingLib] = useState(true);
-  const [errorLib, setErrorLib] = useState(false);
-  const loadLibrary = useCallback(() => {
-    setLoadingLib(true); setErrorLib(false);
-    fetch('/api/documents/library')
-      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then(d => { setLibDocs(d.docs ?? []); setLibTypes(d.types ?? []); })
-      .catch(() => setErrorLib(true))
-      .finally(() => setLoadingLib(false));
-  }, []);
-  useEffect(() => { loadLibrary(); }, [loadLibrary]);
-  // Stored links expire (private bucket) — always open through a fresh signature.
-  async function openLibDoc(doc: any) {
-    setBusyKey(`lib-${doc.id}`);
-    try {
-      const res = await fetch('/api/documents/library', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ docId: doc.id }),
-      });
-      const d = await res.json().catch(() => ({}));
-      if (!res.ok || !d.url) throw new Error(d.error || 'open failed');
-      openPdf({ url: d.url, title: doc.title || doc.doc_type || 'Document' });
-    } catch { alert('Could not open the document. Try regenerating it.'); }
-    finally { setBusyKey(null); }
-  }
 
   // Closeout tab — real per-project closeout items from the `closeout` table.
   const [closeoutItems, setCloseoutItems] = useState<CloseoutItem[]>([]);
@@ -222,14 +194,14 @@ export default function DocumentsPage() {
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         console.error('closeout update failed', res.status, data.error);
-        alert(humanError(data.error, "Couldn't update the item. Please try again."));
+        void alertDialog({ title: 'Notice', message: humanError(data.error, "Couldn't update the item. Please try again.") });
         return;
       }
       const data = await res.json();
       const updated = (data.item ?? { ...item, status: nextStatus }) as CloseoutItem;
       setCloseoutItems(prev => prev.map(i => i.id === item.id ? { ...i, ...updated } : i));
     } catch {
-      alert("Couldn't update item. Check your connection and try again.");
+      void alertDialog({ title: 'Notice', message: "Couldn't update item. Check your connection and try again." });
     } finally {
       setTogglingId(null);
     }
@@ -292,7 +264,7 @@ export default function DocumentsPage() {
     gen: { path: string; body: Record<string, unknown>; urlField?: string } | null,
   ) {
     if (existingUrl) { openPdf({ url: existingUrl, title: key }); return; }
-    if (!gen) { alert('No document available to download.'); return; }
+    if (!gen) { void alertDialog({ title: 'Notice', message: 'No document available to download.' }); return; }
     setBusyKey(key);
     try {
       const res = await fetch(gen.path, {
@@ -302,10 +274,10 @@ export default function DocumentsPage() {
       });
       const data = await res.json();
       const url = data[gen.urlField ?? 'pdfUrl'] ?? data.pdfUrl ?? data.g702Url;
-      if (!res.ok || !url) { console.error('doc generation failed', res.status, data.error); alert(humanError(data.error, 'Document generation failed. Please try again.')); return; }
+      if (!res.ok || !url) { console.error('doc generation failed', res.status, data.error); void alertDialog({ title: 'Notice', message: humanError(data.error, 'Document generation failed. Please try again.') }); return; }
       openPdf({ url, title: key });
     } catch {
-      alert('Document generation failed.');
+      void alertDialog({ title: 'Notice', message: 'Document generation failed.' });
     } finally {
       setBusyKey(null);
     }
@@ -313,7 +285,7 @@ export default function DocumentsPage() {
 
   function requireProject(): string | null {
     if (selectedProject) return selectedProject;
-    alert('Select a project first.');
+    void alertDialog({ title: 'Notice', message: 'Select a project first.' });
     return null;
   }
 
@@ -334,20 +306,9 @@ export default function DocumentsPage() {
   const visLienWaivers = lienWaivers.filter(lw => rowMatch(lw.subName ?? lw.sub_name, lw.type, lw.amount, lw.throughDate ?? lw.through_date, lw.status));
   const visPayroll = payroll.filter(pr => rowMatch(pr.weekEnding ?? pr.week_ending, pr.employees, pr.totalGross ?? pr.total_gross, pr.status));
   const visCloseout = closeoutItems.filter(i => rowMatch(i.title, i.item_type, i.trade, i.responsible_party, i.status));
-  const visLib = libDocs.filter(d => (!libTypeFilter || d.doc_type === libTypeFilter) && (!query || `${docTypeLabel(d.doc_type)} ${d.projectName ?? ''}`.toLowerCase().includes(query.toLowerCase())));
 
   // Sortable columns per tab (R11 sweep) — money on Number()-coerced values,
   // dates on the raw ISO strings. Each table persists its own sort.
-  const { sort: libSort, cycleSort: libCycle } = usePersistedSort('documents-library', { key: 'generated', dir: 'desc' });
-  const sortedLib = useSortedRows(visLib, libSort, (d: any, key: string) => {
-    switch (key) {
-      case 'doc':       return docTypeLabel(d.doc_type);
-      case 'project':   return d.projectName ?? null;
-      case 'generated': return d.created_at ?? null;
-      case 'status':    return d.status || 'generated';
-      default:          return d[key];
-    }
-  });
   const { sort: paSort, cycleSort: paCycle } = usePersistedSort('documents-payapps', { key: 'app', dir: 'desc' });
   const sortedPayApps = useSortedRows(visPayApps, paSort, (pa: any, key: string) => {
     switch (key) {
@@ -399,22 +360,22 @@ export default function DocumentsPage() {
           icon={<Receipt size={19} weight="duotone" color={GOLD} />}
           label="Pay Applications" value={statVal(loadingPayApps, errorPayApps, payApps.length)}
           sub="AIA G702 / G703" accent={GOLD} delay={0.02}
-         href="/app/documents"/>
+         onClick={() => setActiveTab('Pay Applications')}/>
         <StatCard
           icon={<Shield size={19} weight="duotone" color={GOLD} />}
           label="Lien Waivers" value={statVal(loadingLienWaivers, errorLienWaivers, lienWaivers.length)}
           sub="signed & pending" delay={0.06}
-         href="/app/documents"/>
+         onClick={() => setActiveTab('Lien Waivers')}/>
         <StatCard
           icon={<NotePencil size={19} weight="duotone" color={GOLD} />}
           label="Certified Payroll" value={statVal(loadingPayroll, errorPayroll, payroll.length)}
           sub="WH-347 filings" delay={0.10}
-         href="/app/documents"/>
+         onClick={() => setActiveTab('Payroll')}/>
         <StatCard
           icon={<Clipboard size={19} weight="duotone" color={GOLD} />}
           label="AIA Forms" value={String(BOND_CARDS.length)}
           sub="bond & closeout templates" delay={0.14}
-         href="/app/documents"/>
+         onClick={() => setActiveTab('Bonds & Forms')}/>
       </div>
 
       {/* Tab bar + search */}
@@ -447,7 +408,7 @@ export default function DocumentsPage() {
             >{tab}</button>
           );
         })}
-        <div style={{ marginLeft: 'auto', position: 'relative', minWidth: 230, flexShrink: 0, alignSelf: 'center', marginBottom: 6 }}>
+        {activeTab !== 'Library' && <div style={{ marginLeft: 'auto', position: 'relative', minWidth: 230, flexShrink: 0, alignSelf: 'center', marginBottom: 6 }}>
           <MagnifyingGlass size={14} color={DIM} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
           <input
             value={query}
@@ -455,98 +416,14 @@ export default function DocumentsPage() {
             placeholder="Search this tab…"
             style={{ width: '100%', boxSizing: 'border-box', padding: '8px 12px 8px 30px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 8, color: TEXT, fontSize: 12.5, outline: 'none' }}
           />
-        </div>
+        </div>}
       </div>
 
       {/* Tab content */}
       <div>
 
         {/* ── Pay Applications ──────────────────────────────────────── */}
-        {activeTab === 'Library' && (
-          <SectionCard
-            title="Document Library"
-            subtitle="Every generated document, with fresh signed links."
-            flush
-          >
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: '14px 20px 4px' }}>
-              <button onClick={() => setLibTypeFilter('')} className="pmBtn" style={{ padding: '5px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer', background: !libTypeFilter ? 'var(--brand-primary-18)' : 'rgba(255,255,255,0.05)', border: `1px solid ${!libTypeFilter ? 'color-mix(in srgb, var(--brand-primary) 45%, transparent)' : 'rgba(255,255,255,0.1)'}`, color: !libTypeFilter ? 'var(--brand-primary-strong)' : '#9CA3AF' }}>
-                All · {libDocs.length}
-              </button>
-              {libTypes.map(t => {
-                const n = libDocs.filter(d => d.doc_type === t).length;
-                const on = libTypeFilter === t;
-                return (
-                  <button key={t} onClick={() => setLibTypeFilter(on ? '' : t)} className="pmBtn" style={{ padding: '5px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer', background: on ? 'var(--brand-primary-18)' : 'rgba(255,255,255,0.05)', border: `1px solid ${on ? 'color-mix(in srgb, var(--brand-primary) 45%, transparent)' : 'rgba(255,255,255,0.1)'}`, color: on ? 'var(--brand-primary-strong)' : '#9CA3AF' }}>
-                    {docTypeLabel(t)} · {n}
-                  </button>
-                );
-              })}
-            </div>
-            <div className="pmTable" style={{ margin: '12px 20px 18px' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead><tr>
-                  <SortableTh label="Document" sortKey="doc" sort={libSort} onSort={libCycle} style={{ padding: '10px 16px' }} />
-                  <SortableTh label="Project" sortKey="project" sort={libSort} onSort={libCycle} style={{ padding: '10px 16px' }} />
-                  <SortableTh label="Generated" sortKey="generated" sort={libSort} onSort={libCycle} style={{ padding: '10px 16px' }} />
-                  <SortableTh label="Status" sortKey="status" sort={libSort} onSort={libCycle} style={{ padding: '10px 16px' }} />
-                  <SortableTh label="Open" sort={libSort} onSort={libCycle} align="right" style={{ padding: '10px 16px' }} />
-                </tr></thead>
-                <tbody>
-                  {loadingLib && <SkeletonRows rows={5} cols={5} />}
-                  {errorLib && !loadingLib && <ErrorRow colSpan={5} message="Couldn't Load the Library" onRetry={loadLibrary} />}
-                  {!loadingLib && !errorLib && sortedLib.map(doc => (
-                    <tr key={doc.id}>
-                      {/* The library listed every row by its doc_type, so
-                          twenty-eight bid jackets on one project rendered as
-                          twenty-eight identical lines. The generator records a
-                          title; show it, and keep the type as the second line
-                          so the column still scans by kind. */}
-                      <td style={{ padding: '12px 16px', fontWeight: 700 }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-                          {/* Generated library docs are PDFs — show the real type, not a generic row. */}
-                          <FileTypeBadge name={doc.file_name ?? doc.title} url={doc.url} mime={doc.mime_type ?? 'application/pdf'} />
-                          <span>
-                            {doc.title || docTypeLabel(doc.doc_type)}
-                            {doc.title && (
-                              <div style={{ fontSize: 11.5, fontWeight: 500, color: '#9CA3AF', marginTop: 2 }}>
-                                {docTypeLabel(doc.doc_type)}
-                              </div>
-                            )}
-                          </span>
-                        </span>
-                      </td>
-                      <td style={{ padding: '12px 16px', color: '#9CA3AF' }}>{doc.projectName ?? '—'}</td>
-                      <td style={{ padding: '12px 16px', color: '#9CA3AF' }}>{fmtDay(doc.created_at) ?? '—'}</td>
-                      <td style={{ padding: '12px 16px' }}><Badge label={doc.status || 'generated'} color="#34D27B" bg="rgba(52,210,123,0.12)" /></td>
-                      <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                        {/* A bid jacket has a real jacket behind it — drawings,
-                            specs, bid form, requirements. Send the GC there
-                            rather than to the flattened PDF of one section. */}
-                        {doc.doc_type === 'bid-jacket' && doc.source_id && doc.project_id && (
-                          <Link
-                            href={`/app/projects/${doc.project_id}/bid-packages/${doc.source_id}/jacket`}
-                            className="pmBtn"
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginRight: 8, textDecoration: 'none' }}
-                          >
-                            Open Jacket
-                          </Link>
-                        )}
-                        <button onClick={() => openLibDoc(doc)} disabled={busyKey === `lib-${doc.id}`} className="pmBtn" title="Open the PDF" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 12px', borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: 'pointer', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: '#E4E4E7' }}>
-                          <PdfIcon size={16} /> {busyKey === `lib-${doc.id}` ? 'Opening…' : 'Open'}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {!loadingLib && !errorLib && libDocs.length === 0 && (
-                    <tr><td colSpan={5} style={{ padding: '28px 16px', textAlign: 'center', color: '#9CA3AF', fontSize: 13 }}>
-                      No generated documents yet — create a pay app, invoice PDF, or bond from the tabs above and it lands here.
-                    </td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </SectionCard>
-        )}
+        {activeTab === 'Library' && <DocumentLibrary />}
 
         {activeTab === 'Pay Applications' && (
           <SectionCard
@@ -752,7 +629,7 @@ export default function DocumentsPage() {
                     disabled={busyKey === `bond-${card.code}` || !BOND_ROUTES[card.code]}
                     onClick={() => {
                       const route = BOND_ROUTES[card.code];
-                      if (!route) { alert(`No generator for ${card.code}.`); return; }
+                      if (!route) { void alertDialog({ title: 'Notice', message: `No generator for ${card.code}.` }); return; }
                       const projectId = requireProject();
                       if (!projectId) return;
                       openOrGenerate(`bond-${card.code}`, null, { ...route, body: route.body(projectId) });
@@ -930,7 +807,7 @@ export default function DocumentsPage() {
                       display: 'flex', alignItems: 'center', gap: 14,
                       padding: '14px 20px',
                       borderBottom: idx < visCloseout.length - 1 ? `1px solid rgba(255,255,255,0.08)` : 'none',
-                      background: done ? 'rgba(61,214,140,.03)' : 'transparent',
+                      background: done ? 'rgba(44,255,122,.03)' : 'transparent',
                     }}
                   >
                     <button

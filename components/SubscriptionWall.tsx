@@ -27,11 +27,11 @@ const GOLD   = 'var(--brand-primary)';
 const PAGE   = '#0a0a0a';
 const CARD   = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM    = '#CBD5E1';
+const DIM    = '#D4D4D8';
 const TEXT   = '#FFFFFF';
-const GREEN  = '#34C759';
+const GREEN  = '#2CFF7A';
 const RED    = '#FF3B30';
-const AMBER  = '#FF9500';
+const AMBER  = '#FF8A00';
 
 interface SubRow {
   status: 'trialing' | 'active' | 'past_due' | 'canceled' | 'paused' | null;
@@ -208,7 +208,7 @@ export default function SubscriptionWall({ children }: { children: React.ReactNo
           {['Your data is safe', 'Cancel anytime', 'No per-seat fees'].map(t => (
             <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: DIM }}>
               <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                <circle cx="8" cy="8" r="8" fill="rgba(52,199,89,0.15)" />
+                <circle cx="8" cy="8" r="8" fill="rgba(44,255,122,0.15)" />
                 <path d="M4.5 8l2.5 2.5 4-5" stroke={GREEN} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               {t}

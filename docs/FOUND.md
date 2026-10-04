@@ -59,3 +59,67 @@ converge. One line each, newest at the bottom.
   "New Pay App" on a closed job and while bidding.
 - (2 Oct, audit verify) `app/app/projects/[projectId]/takeoff/page.tsx` — on load the upload hero
   ("Drop a plan") shows for ~3–5 s before a completed takeoff's results replace it.
+- (3 Oct, Pass 4 drive) `app/app/invoicing/[id]/page.tsx` — the project name never resolves
+  (lookup via `/api/projects?limit=200&fields=id,name` predates the rewrite); the header
+  falls back to "· Project" and the Details rail prints the raw project UUID.
+- (3 Oct, Pass 4 drive) Pima change orders carry `cost_impact` 0 on every row while the
+  project context reports +$127,650 in approved COs — the two numbers disagree on screen.
+- (3 Oct, Pass 4 drive) Pay apps store `contract_sum` 0 (`contract_sum_to_date` is right), and
+  the rolled-forward SOV rows 7 and 9 on Mesa Flex have blank descriptions.
+- (3 Oct, Pass 4 drive) Project Daily Logs "Last Log" tile reads "11 workdays unlogged" on a
+  closed job — the unlogged count should stop at closeout.
+- (3 Oct, Pass 4 drive) Preview session expires mid-walk (~30–40 min): /app/billing bounced to
+  /login?next= seconds after /app/invoicing rendered; on-device QA has to re-sign-in each pass.
+- (3 Oct, Pass 4 drive) `/app/schedule` — all 15 Pima tasks carry `pct_complete` 100 with
+  `status` not_started, so every bar reads full while Complete says 0 and Overdue says 15.
+  The data disagree with themselves; one of the two writers is wrong.
+- (3 Oct, Pass 4 drive) `/app/intelligence` — the comparison cards show $0.00 contract /
+  billed / invoiced for ZZ AUDIT 2 Fix Check and ZZ AUDIT Mesa Flex Office although the
+  projects page carries contracts for them; the summary API returns zeros, not nulls.
+- (3 Oct, Pass 4 drive) `/app/portals` — the StatRow's sixth tile (Last Portal Visit) wraps
+  to its own row at 1280; the kit StatRow has no "max 5 per row" rule for 6-tile pages.
+- (3 Oct, Pass 4 drive) `/app/takeoff` — per-division line-item tables need a horizontal
+  scroll at 1280 to reach Total and % of Div; the first column is not sticky there.
+- (3 Oct, Pass 4 drive) Kit DataTable row-action menus open upward near the bottom of the
+  viewport and can overlap the row above (seen on /app/portals) — cosmetic.
+- (3 Oct, phone walk) `components/team/AccessManager.tsx` — its people table is hand-rolled, not
+  the kit DataTable, so at 393px it scrolls sideways inside the People hub instead of
+  becoming cards; the Base Role column is off-screen on load.
+- (3 Oct, phone walk) `components/ui/premium.tsx` FlowStrip — at 393px the arrows between steps
+  wrap onto their own lines (Portals "How Portal Access Works", Submittals empty state).
+- (3 Oct, phone walk) `app/app/projects/[projectId]/pay-apps/page.tsx` `.paTable` — the custom
+  table (drag reorder, bulk select, LifecycleRail) is not a kit DataTable, so it scrolls
+  sideways at 393px instead of becoming cards.
+- (3 Oct, tap-through) `app/app/intelligence/page.tsx` live-signals ticker — the "Dismiss
+  suggestion ×" control is 13 px and scrolls past off-screen; the ticker is a marquee, so
+  on a phone there is no still target to tap.
+- (3 Oct, tap-through) `/app/radio` console (untouched by the redesign) — Patch / Broadcast
+  39 px, "Add someone" 21–31 px, deck buttons 42 px; all under the 44 px thumb target.
+- (3 Oct, tap-through) Home "Review →" on a decision card is a hard navigation (full page
+  load), not a client route; the sidebar and chat widget remount.
+- (3 Oct, tap-through) Pima change-order row "Open Details" opens nothing visible at 393 and
+  does not navigate — the detail rail is desktop-only on that page.
+- (3 Oct, tap-through) `/app/leads` board at 393 is a sideways kanban: every card and its
+  "Actions for …" button sit off the right edge until you scroll the strip (page not in the
+  redesign).
+- (3 Oct, iOS QA) `app/app/projects/[projectId]/budget/page.tsx` — "Actions ▾" is 23 px tall and
+  off the right edge at 393; Add Line 39 px, Export 37 px.
+- (3 Oct, iOS QA) `app/app/documents/page.tsx` — document row titles are 38 px buttons at 393.
+- (3 Oct, iOS QA) `app/app/reviews/page.tsx` — star buttons 32 px, Add Review 35 px at 393.
+- (3 Oct, iOS QA) `app/app/settings/page.tsx` — "Delete account" is a 20 px link at 393.
+- (3 Oct, iOS QA) `app/app/time/page.tsx` — React #425 / #422 (hydration text mismatch) on every
+  load; the week label is rendered server-side in UTC and client-side in local time.
+- (3 Oct, iOS QA) `app/app/intelligence/page.tsx` — first paint in a fresh tab shows three
+  skeleton cards and "Select Projects (0)" until the project list arrives; a reload shows the
+  auto-selected three.
+- (3 Oct, iOS QA) `app/app/time/page.tsx` — the entry row menu's Delete removes the shift with no
+  confirm step (every other register asks first).
+- (3 Oct, iOS QA) `app/app/leads/[id]/page.tsx` Files & media — a file can be uploaded and
+  downloaded but never removed; deleting the lead (`DELETE /api/leads/[id]`) removes the lead and
+  its activities and leaves the storage objects under `project-files/deals/<id>/` behind.
+- (3 Oct, iOS QA) Projects — no archive / delete control anywhere in the UI; `DELETE
+  /api/projects/[projectId]` (archive) exists and works.
+- (3 Oct, iOS QA) `app/app/projects/[projectId]/pay-apps/new/page.tsx` — the Original Contract
+  Sum typed in step 1 is not on the created pay app (detail shows $0.00 original); same root as the
+  `contract_sum` 0 entry above.
+

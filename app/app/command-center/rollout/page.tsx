@@ -54,7 +54,7 @@ export default function RolloutPipelinePage() {
   if (!ready) return null;
 
   return (
-    <PremiumSurface maxWidth={1400} pad="28px 24px 60px">
+    <PremiumSurface maxWidth={2200} pad="28px 24px 60px">
       <div style={{ fontFamily: font, color: C.text }}>
         <ModuleHero
           eyebrow="Command Center"

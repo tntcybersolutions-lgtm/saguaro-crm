@@ -10,8 +10,8 @@ import { useFeature } from '@/lib/hooks/useEntitlements';
 import type { Severity } from '@/lib/franchise';
 
 export const C = {
-  gold: '#F59E0B', green: '#34C759', yellow: '#FF9500', red: '#FF3B30', blue: '#F59E0B',
-  bg: '#0a0a0a', card: '#141416', border: 'rgba(255,255,255,0.12)', dim: '#CBD5E1', text: '#FFFFFF', faint: '#CBD5E1',
+  gold: '#FF8A00', green: '#2CFF7A', yellow: '#FF8A00', red: '#FF3B30', blue: '#FF8A00',
+  bg: '#0a0a0a', card: '#141416', border: 'rgba(255,255,255,0.12)', dim: '#D4D4D8', text: '#FFFFFF', faint: '#D4D4D8',
 };
 export const SEV_COLOR: Record<Severity, string> = { green: C.green, yellow: C.yellow, red: C.red };
 export const font = "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";

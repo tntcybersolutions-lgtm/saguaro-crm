@@ -24,7 +24,7 @@ function layout(body: string): string {
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
 <tr><td style="background:#0D1116;padding:22px 32px;">
-  <span style="color:#D4A017;font-size:22px;font-weight:700;letter-spacing:1px;">SAGUARO</span>
+  <span style="color:#FFE600;font-size:22px;font-weight:700;letter-spacing:1px;">SAGUARO</span>
   <span style="color:#fff;font-size:13px;margin-left:8px;opacity:0.65;">Construction Intelligence</span>
 </td></tr>
 <tr><td style="padding:32px;">${body}</td></tr>
@@ -48,7 +48,7 @@ function p(text: string) {
   return `<p style="margin:0 0 12px;color:#374151;font-size:15px;line-height:1.65;">${text}</p>`;
 }
 function btn(label: string, url: string) {
-  return `<a href="${url}" style="display:inline-block;margin-top:20px;padding:13px 30px;background:#D4A017;color:#0D1116;font-weight:700;font-size:14px;text-decoration:none;border-radius:6px;">${label}</a>`;
+  return `<a href="${url}" style="display:inline-block;margin-top:20px;padding:13px 30px;background:#FFE600;color:#0D1116;font-weight:700;font-size:14px;text-decoration:none;border-radius:6px;">${label}</a>`;
 }
 function row(label: string, value: string) {
   return `<tr><td style="padding:8px 0;font-size:13px;color:#6b7280;width:180px;">${label}</td><td style="padding:8px 0;font-size:13px;color:#111827;font-weight:600;">${value}</td></tr>`;
@@ -238,7 +238,7 @@ export async function sendInsuranceExpiring(to: string, subName: string, project
   const urgent = daysLeft <= 7;
   await send(to, `${urgent ? 'URGENT: ' : ''}Insurance Expiring in ${daysLeft} Days — ${subName}`, layout(`
     ${h(`${urgent ? '⚠ URGENT: ' : ''}Insurance Certificate Expiring`)}
-    <p style="margin:0 0 16px;padding:12px 16px;background:${urgent ? '#fef2f2' : '#fffbeb'};border-left:4px solid ${urgent ? '#dc2626' : '#D4A017'};font-size:14px;color:#374151;">
+    <p style="margin:0 0 16px;padding:12px 16px;background:${urgent ? '#fef2f2' : '#fffbeb'};border-left:4px solid ${urgent ? '#FF3B30' : '#FFE600'};font-size:14px;color:#374151;">
       <strong>${subName}</strong>'s ${policyType} expires in <strong>${daysLeft} day${daysLeft !== 1 ? 's' : ''}</strong>.
     </p>
     ${table(row('Subcontractor', subName) + row('Project', projectName) + row('Policy Type', policyType) + row('Expiry Date', expiryDate) + row('Days Remaining', String(daysLeft)))}
@@ -267,7 +267,7 @@ export async function sendLienDeadlineReminder(
   await send(to, `${urgent ? 'URGENT: ' : ''}Lien Deadline in ${daysLeft} Day${daysLeft !== 1 ? 's' : ''} — ${projectName}`, layout(`
     ${h(`${urgent ? 'URGENT: ' : ''}Lien Deadline Approaching`)}
     ${p(`Dear ${recipientName},`)}
-    <p style="margin:0 0 16px;padding:12px 16px;background:${urgent ? '#fef2f2' : '#fffbeb'};border-left:4px solid ${urgent ? '#dc2626' : '#D4A017'};font-size:14px;color:#374151;">
+    <p style="margin:0 0 16px;padding:12px 16px;background:${urgent ? '#fef2f2' : '#fffbeb'};border-left:4px solid ${urgent ? '#FF3B30' : '#FFE600'};font-size:14px;color:#374151;">
       The <strong>${deadlineType}</strong> deadline on <strong>${projectName}</strong> is due in <strong>${daysLeft} day${daysLeft !== 1 ? 's' : ''}</strong>. Missing a statutory lien deadline can forfeit your right to payment.
     </p>
     ${table(row('Project', projectName) + row('Deadline Type', deadlineType) + (state ? row('State', state) : '') + row('Due Date', dueFmt) + row('Days Remaining', String(daysLeft)))}
@@ -448,7 +448,7 @@ export async function sendPrequalInvite(opts: {
   const subjectPrefix = isResend ? 'Reminder: ' : '';
   const html = layout(`
     <div style="background:#0D1116;border-radius:8px;padding:20px 24px;margin-bottom:24px;">
-      <p style="margin:0;font-size:12px;color:#D4A017;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Subcontractor Prequalification</p>
+      <p style="margin:0;font-size:12px;color:#FFE600;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Subcontractor Prequalification</p>
       <h1 style="margin:6px 0 0;font-size:24px;font-weight:800;color:#ffffff;line-height:1.2;">${companyName} invites you to prequalify</h1>
     </div>
     ${p(`Hi <strong>${greetName}</strong>,`)}
@@ -459,10 +459,10 @@ export async function sendPrequalInvite(opts: {
         'Company information and trade details',
         'Insurance, bonding, and safety records',
         'References and certifications',
-      ].map(text => `<tr><td style="padding:5px 0;width:20px;font-size:14px;color:#22c55e;vertical-align:top;">&#10003;</td><td style="padding:5px 0;font-size:14px;color:#374151;">${text}</td></tr>`).join('')}
+      ].map(text => `<tr><td style="padding:5px 0;width:20px;font-size:14px;color:#2CFF7A;vertical-align:top;">&#10003;</td><td style="padding:5px 0;font-size:14px;color:#374151;">${text}</td></tr>`).join('')}
     </table>
     ${p('No account or password is required — the link below is unique to you.')}
-    <a href="${portalUrl}" style="display:block;text-align:center;padding:16px 30px;background:#D4A017;color:#0D1116;font-weight:800;font-size:16px;text-decoration:none;border-radius:8px;letter-spacing:0.02em;">
+    <a href="${portalUrl}" style="display:block;text-align:center;padding:16px 30px;background:#FFE600;color:#0D1116;font-weight:800;font-size:16px;text-decoration:none;border-radius:8px;letter-spacing:0.02em;">
       Complete Prequalification &rarr;
     </a>
     ${p('<small style="color:#9ca3af;">This link is unique to your company. Please do not forward it.</small>')}
@@ -522,7 +522,7 @@ export async function sendSignatureRequest(opts: {
 export async function sendTrialExpiring(to: string, userName: string, daysLeft: number, upgradeUrl: string) {
   const urgent = daysLeft <= 3;
   await send(to, `Your Saguaro trial ends in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`, layout(`
-    <h2 style="margin:0 0 16px;color:${urgent ? '#dc2626' : '#D4A017'};font-size:20px;">
+    <h2 style="margin:0 0 16px;color:${urgent ? '#FF3B30' : '#FFE600'};font-size:20px;">
       Your trial ends in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}
     </h2>
     ${p(`Hi ${userName},`)}
@@ -567,7 +567,7 @@ export async function sendClientPortalInvite(opts: {
 
   await send(to, `${subjectPrefix}Your Project Portal is Ready — ${projectName}`, layout(`
     <div style="background:#0D1116;border-radius:8px;padding:20px 24px;margin-bottom:24px;">
-      <p style="margin:0;font-size:12px;color:#D4A017;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Client Portal Access</p>
+      <p style="margin:0;font-size:12px;color:#FFE600;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Client Portal Access</p>
       <h1 style="margin:6px 0 0;font-size:24px;font-weight:800;color:#ffffff;line-height:1.2;">${projectName}</h1>
       <p style="margin:6px 0 0;font-size:13px;color:rgba(255,255,255,0.55);">Managed by ${gcCompanyName}</p>
     </div>
@@ -584,7 +584,7 @@ export async function sendClientPortalInvite(opts: {
         ['✓', 'Send and receive messages directly with your GC team'],
         ['✓', 'Download project documents and photos'],
         ['✓', 'Submit and track warranty claims after completion'],
-      ].map(([icon, text]) => `<tr><td style="padding:5px 0;width:20px;font-size:14px;color:#22c55e;vertical-align:top;">${icon}</td><td style="padding:5px 0;font-size:14px;color:#374151;">${text}</td></tr>`).join('')}
+      ].map(([icon, text]) => `<tr><td style="padding:5px 0;width:20px;font-size:14px;color:#2CFF7A;vertical-align:top;">${icon}</td><td style="padding:5px 0;font-size:14px;color:#374151;">${text}</td></tr>`).join('')}
     </table>
 
     <div style="margin:0 0 20px;">${table(
@@ -593,7 +593,7 @@ export async function sendClientPortalInvite(opts: {
       expiryLine
     )}</div>
 
-    <a href="${portalUrl}" style="display:block;text-align:center;padding:16px 30px;background:#D4A017;color:#0D1116;font-weight:800;font-size:16px;text-decoration:none;border-radius:8px;letter-spacing:0.02em;">
+    <a href="${portalUrl}" style="display:block;text-align:center;padding:16px 30px;background:#FFE600;color:#0D1116;font-weight:800;font-size:16px;text-decoration:none;border-radius:8px;letter-spacing:0.02em;">
       Access Your Project Portal →
     </a>
 
@@ -622,7 +622,7 @@ export async function sendSubPortalInvite(opts: {
 
   await send(to, `${subjectPrefix}Subcontractor Portal Access — ${projectName}`, layout(`
     <div style="background:#0D1116;border-radius:8px;padding:20px 24px;margin-bottom:24px;">
-      <p style="margin:0;font-size:12px;color:#F59E0B;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Subcontractor Portal Access</p>
+      <p style="margin:0;font-size:12px;color:#FF8A00;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Subcontractor Portal Access</p>
       <h1 style="margin:6px 0 0;font-size:24px;font-weight:800;color:#ffffff;line-height:1.2;">${projectName}</h1>
       <p style="margin:6px 0 0;font-size:13px;color:rgba(255,255,255,0.55);">Managed by ${gcCompanyName}</p>
     </div>
@@ -639,7 +639,7 @@ export async function sendSubPortalInvite(opts: {
         ['✓', 'Submit and track pay applications with line-item detail'],
         ['✓', 'Upload compliance documents — COI, bonds, licenses'],
         ['✓', 'View your performance scorecard and RFI tracking'],
-      ].map(([icon, text]) => `<tr><td style="padding:5px 0;width:20px;font-size:14px;color:#F59E0B;vertical-align:top;">${icon}</td><td style="padding:5px 0;font-size:14px;color:#374151;">${text}</td></tr>`).join('')}
+      ].map(([icon, text]) => `<tr><td style="padding:5px 0;width:20px;font-size:14px;color:#FF8A00;vertical-align:top;">${icon}</td><td style="padding:5px 0;font-size:14px;color:#374151;">${text}</td></tr>`).join('')}
     </table>
 
     <div style="margin:0 0 20px;">${table(
@@ -648,7 +648,7 @@ export async function sendSubPortalInvite(opts: {
       row('Your Company', companyName)
     )}</div>
 
-    <a href="${portalUrl}" style="display:block;text-align:center;padding:16px 30px;background:#F59E0B;color:#ffffff;font-weight:800;font-size:16px;text-decoration:none;border-radius:8px;letter-spacing:0.02em;">
+    <a href="${portalUrl}" style="display:block;text-align:center;padding:16px 30px;background:#FF8A00;color:#ffffff;font-weight:800;font-size:16px;text-decoration:none;border-radius:8px;letter-spacing:0.02em;">
       Access Your Sub Portal →
     </a>
 

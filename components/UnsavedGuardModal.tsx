@@ -57,7 +57,7 @@ export default function UnsavedGuardModal({ guard }: { guard: UnsavedGuardApi })
             onClick={guard.discard}
             style={{
               ...ghostButtonStyle, padding: '10px 16px', fontSize: 13,
-              background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.35)', color: colors.red,
+              background: 'rgba(255,59,48,0.10)', border: '1px solid rgba(255,59,48,0.35)', color: colors.red,
             }}
           >
             Discard &amp; Leave

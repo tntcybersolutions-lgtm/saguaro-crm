@@ -58,7 +58,7 @@ import {
   ORDER_PATH_SENTENCE,
 } from '@/app/api/catalog/stock';
 
-const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', BORDER = 'rgba(255,255,255,0.12)', DIM = '#CBD5E1', TEXT = '#FFFFFF', GREEN = '#3dd68c', AMBER = 'var(--brand-primary-strong)', RED = '#c03030';
+const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', BORDER = 'rgba(255,255,255,0.12)', DIM = '#D4D4D8', TEXT = '#FFFFFF', GREEN = '#2CFF7A', AMBER = 'var(--brand-primary-strong)', RED = '#FF3B30';
 
 const fmtMoney = (n: number) => '$' + ((Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 const fmtDate = (d?: string | null) => {
@@ -175,7 +175,7 @@ function Availability({ offer, compact = false, feedConnected = false }: { offer
   }
   const s = String(offer.stockStatus || '').toLowerCase();
   const [label, color, bg] =
-    s === 'in_stock' ? ['In Stock', GREEN, 'rgba(34,197,94,0.12)'] :
+    s === 'in_stock' ? ['In Stock', GREEN, 'rgba(44,255,122,0.12)'] :
     s === 'limited' ? ['Limited', 'var(--warning)', 'color-mix(in srgb, var(--warning) 14%, transparent)'] :
     s === 'out_of_stock' ? ['Out of Stock', RED, 'rgba(192,48,48,0.14)'] :
     ['Special Order', 'rgba(255,255,255,0.55)', 'rgba(255,255,255,0.06)'];
@@ -249,18 +249,18 @@ function ProvPop({ offer, item }: { offer: Offer; item: CatalogItem }) {
 /** Vertical accent + icon for the monogram chip. Keys mirror the catalog's
  *  seeded verticals; unknown verticals fall back to gold + Package. */
 const VERTICAL_VISUAL: Record<string, { icon: React.ElementType; hue: string }> = {
-  'Low Voltage & Networking': { icon: PlugsConnected, hue: '#38BDF8' },
-  Electrical: { icon: Lightning, hue: '#FBBF24' },
-  Plumbing: { icon: Drop, hue: '#60A5FA' },
-  HVAC: { icon: Fan, hue: '#34D399' },
-  'Flooring & Carpet': { icon: SquaresFour, hue: '#F472B6' },
-  Drywall: { icon: Wall, hue: '#A78BFA' },
+  'Low Voltage & Networking': { icon: PlugsConnected, hue: '#FF8A00' },
+  Electrical: { icon: Lightning, hue: '#FFE600' },
+  Plumbing: { icon: Drop, hue: '#FF8A00' },
+  HVAC: { icon: Fan, hue: '#2CFF7A' },
+  'Flooring & Carpet': { icon: SquaresFour, hue: '#FF8A00' },
+  Drywall: { icon: Wall, hue: '#FF8A00' },
   Paint: { icon: PaintRoller, hue: '#FB7185' },
-  'Framing & Lumber': { icon: Tree, hue: '#A3E635' },
+  'Framing & Lumber': { icon: Tree, hue: '#2CFF7A' },
   Concrete: { icon: Cube, hue: '#94A3B8' },
-  Roofing: { icon: HouseLine, hue: '#F97316' },
-  'Doors & Windows': { icon: Door, hue: '#2DD4BF' },
-  Insulation: { icon: Snowflake, hue: '#7DD3FC' },
+  Roofing: { icon: HouseLine, hue: '#FF8A00' },
+  'Doors & Windows': { icon: Door, hue: '#2CFF7A' },
+  Insulation: { icon: Snowflake, hue: '#FF8A00' },
 };
 
 /** 40px image slot: the real product image when one exists (click opens the
@@ -640,7 +640,7 @@ export default function CatalogPage() {
       )}
 
       {placed && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(44,255,122,0.08)', border: '1px solid rgba(44,255,122,0.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 20 }}>
           <CheckCircle size={18} weight="fill" color={GREEN} />
           <span style={{ color: GREEN, fontSize: 13, fontWeight: 700 }}>
             {placed.pos} purchase order{placed.pos === 1 ? '' : 's'} drafted for {fmtMoney(placed.total)} — committed into the project budget.

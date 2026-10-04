@@ -28,7 +28,7 @@ const GOLD = 'var(--brand-primary)';
 const DARK = 'var(--bg-base)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1';
+const DIM = '#D4D4D8';
 const TEXT = '#FFFFFF';
 // Premium translucent surface gradient (matches the cinematic kit's SectionCard/StatCard).
 const SURFACE = 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))';
@@ -852,7 +852,7 @@ function AssemblyLibraryLoading() {
         animation: 'shimmer 1.5s infinite',
       }} />
       <style>{`@keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }`}</style>
-      <div style={{ padding: '40px 28px', maxWidth: 1400, margin: '0 auto' }}>
+      <div style={{ padding: '40px 28px', maxWidth: 2200, margin: '0 auto' }}>
         <div style={{ height: 44, width: 280, background: SURFACE, borderRadius: 8, marginBottom: 10 }} />
         <div style={{ height: 16, width: 320, background: SURFACE, borderRadius: 4, marginBottom: 24 }} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>

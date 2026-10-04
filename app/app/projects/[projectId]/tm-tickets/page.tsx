@@ -1,6 +1,6 @@
 'use client';
 /**
- * T&M Tickets — project-scoped module page (web mirror of the rich mobile screen).
+ * T&M Tickets — Pass 4, on the RFIs reference layout (dense table + detail).
  *
  * Server contract (already shipped — consumed, not rebuilt):
  *   GET   /api/projects/[projectId]/tm-tickets            -> { tickets }
@@ -11,12 +11,18 @@
  * Money columns can be TEXT in the DB — Number() before any math, always.
  * The composer's live totals replicate the server math operation-for-operation
  * (OT at 1.5x, markup on subtotal, tax on subtotal+markup) so the preview and
- * the stored total agree to the cent.
+ * the stored total agree to the cent. Amounts are never truncated.
+ *
+ * Anatomy: title + one primary action (New T&M Ticket) → StatRow (money, each
+ * tile filters the log) → Toolbar (search, status, export) → workspace split:
+ * DataTable log on the left, and when a row is selected, the ticket (line
+ * items, totals ladder, notes, signatures) beside a 320–384px details + action
+ * rail. Phone: stacked. The composer opens in a FormModal.
  *
  * Known gap (intentional, no server change here): Submit / Approve do not yet
  * fan out createNotification() on the server — notify wiring is a follow-up.
  */
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import useSWR from 'swr';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
@@ -26,55 +32,38 @@ import { humanError } from '@/lib/errors';
 import { SignatureCanvas, type SignatureCanvasHandle } from '@/components/SignaturePad';
 import { TRADESPERSON_ROLES } from '@/lib/contractor-trades';
 import { getSupabaseBrowser, ensureBrowserSession } from '@/lib/supabase-browser';
+import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import {
-  PremiumSurface, ModuleHero, StatCard, SectionCard, StatStrip, FlowSteps, FlowStrip,
-  InsightRow, AutoChip, IconChip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle,
-} from '@/components/ui/premium';
-import { moduleAccent } from '@/lib/module-identity';
-import { ListToolbar } from '@/components/ui/ListToolbar';
-import { Skeleton } from '@/components/ui/Skeleton';
-import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/table-sort';
+  PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, RowActions,
+  FormModal, Field, Input, Textarea, Select, FormGrid, DetailList, Toast, useToast,
+  type Column, type Action, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import { FlowSteps, FlowStrip, InsightRow, AutoChip } from '@/components/ui/premium';
 import {
   Receipt, Plus, X, CheckCircle, XCircle, PaperPlaneTilt, ArrowsClockwise, Lightning,
-  FileCsv, FileXls, FilePdf, HardHat, Package, Wrench, Signature, CurrencyCircleDollar,
-  Clock, NotePencil, Trash, CaretRight,
+  FileCsv, FileXls, FilePdf, HardHat, Package, Wrench, Signature, Trash, WarningCircle, ArrowClockwise,
 } from '@phosphor-icons/react';
-
-const GOLD = 'var(--brand-primary)';
-const GOLD_HI = 'var(--brand-primary-strong)';
-const DARK = 'var(--bg-base)';
-const RAISED = 'var(--bg-surface)';
-const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1';
-const TEXT = '#FFFFFF';
-const GREEN = '#3dd68c';
-const RED = '#f87171';
-const STEEL = '#7FA3C7';
-
-// T&M module accent — 'tm' in lib/module-identity (ledger green: money-adjacent,
-// never gold). Used ONLY on icon chips / badges / eyebrows per the accent discipline.
-const TM_ACCENT = moduleAccent('tm').hex;
-
-const INP: React.CSSProperties = { padding: '8px 12px', background: 'var(--bg-surface-2)', border: `1px solid ${BORDER}`, borderRadius: 7, color: TEXT, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' };
-const LBL: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 6 };
-const HINT: React.CSSProperties = { fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 };
-const TH: React.CSSProperties = { padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' };
-const TD: React.CSSProperties = { padding: '12px 14px', fontSize: 13, color: TEXT, verticalAlign: 'top' };
+import { layout } from '@/lib/design-tokens';
 
 // Legacy vocab: old rows carry 'disputed' — displayed as rejected everywhere.
-const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
-  draft:     { label: 'Draft',     color: DIM,     bg: 'rgba(203,213,225,0.12)' },
-  submitted: { label: 'Submitted', color: GOLD_HI, bg: 'var(--brand-primary-12)' },
-  approved:  { label: 'Approved',  color: GREEN,   bg: 'rgba(26,138,74,0.16)' },
-  rejected:  { label: 'Rejected',  color: RED,     bg: 'rgba(192,48,48,0.16)' },
-  billed:    { label: 'Billed',    color: STEEL,   bg: 'rgba(127,163,199,0.14)' },
-};
 const STATUS_ORDER = ['draft', 'submitted', 'approved', 'rejected', 'billed'] as const;
+const STATUS_LABEL: Record<string, string> = { draft: 'Draft', submitted: 'Submitted', approved: 'Approved', rejected: 'Rejected', billed: 'Billed' };
 function displayStatus(s?: string | null): string {
   const k = String(s || 'draft').toLowerCase();
   if (k === 'disputed') return 'rejected';
-  return STATUS_META[k] ? k : 'draft';
+  return STATUS_LABEL[k] ? k : 'draft';
 }
+/** One status → one badge. Draft stays neutral; Submitted amber (waiting),
+ *  Approved green, Rejected red, Billed orange — all from lib/status-colors. */
+function statusBadge(s?: string | null): { label: string; tone: BadgeTone } {
+  const k = displayStatus(s);
+  if (k === 'submitted') return { label: 'Submitted', tone: 'under_contract' };
+  if (k === 'approved') return { label: 'Approved', tone: 'ongoing' };
+  if (k === 'rejected') return { label: 'Rejected', tone: 'overdue' };
+  if (k === 'billed') return { label: 'Billed', tone: 'completed' };
+  return { label: 'Draft', tone: 'neutral' };
+}
+const STATUS_RANK: Record<string, number> = { draft: 0, submitted: 1, approved: 2, rejected: 3, billed: 4 };
 
 // Units are a measurement vocabulary, not a trade taxonomy (trades import from
 // lib/contractor-trades — never hardcoded).
@@ -122,75 +111,123 @@ const fetcher = async (url: string) => {
 const num = (v: unknown): number => (Number.isFinite(Number(v)) ? Number(v) : 0);
 const uid = () => `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 const fmtUSD = (v: unknown) => '$' + num(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const fmtDate = (d?: string | null) => d ? new Date(String(d).slice(0, 10) + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+/** Date-only values parse at local noon ('T12:00:00') so they never shift a day under UTC. */
+const fmtDate = (d?: string | null) => d ? new Date(String(d).slice(0, 10) + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
 const ticketLabel = (t: TmTicketRow) => {
   if (t.ticket_number == null || t.ticket_number === '') return 'TM';
   const n = Number(t.ticket_number);
   return Number.isFinite(n) ? `TM-${String(n).padStart(3, '0')}` : `TM-${t.ticket_number}`;
 };
 
-function StatusPill({ status }: { status?: string | null }) {
-  const meta = STATUS_META[displayStatus(status)];
-  return (
-    <span style={{ fontSize: 10, fontWeight: 800, padding: '3px 9px', borderRadius: 5, background: meta.bg, color: meta.color, whiteSpace: 'nowrap' }}>
-      {meta.label}
-    </span>
-  );
+const CSS = `
+.tmWs > .k-page { max-width: none; }
+.tmCq { container: tmws / inline-size; min-width: 0; }
+.tmSplit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
+.tmSplit > * { min-width: 0; }
+@container tmws (min-width: 1080px) {
+  .tmSplit[data-open="true"] { grid-template-columns: minmax(340px, 0.8fr) minmax(0, 1.6fr); }
 }
+.tmDetailCq { container: tmdetail / inline-size; min-width: 0; }
+.tmDetail { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
+.tmDetail > * { min-width: 0; }
+.tmRail { order: -1; }
+@container tmdetail (min-width: 720px) {
+  .tmDetail { grid-template-columns: minmax(0, 1fr) clamp(${layout.detailRailMin}px, 34%, ${layout.detailRailMax}px); }
+  .tmRail { order: 0; position: sticky; top: 16px; }
+}
+.tmList .k-table th:first-child, .tmList .k-table td:first-child { position: sticky; left: 0; z-index: 1; background: var(--bg-solid); }
+.tmList .k-table th:first-child { background: var(--bg-solid-2); z-index: 3; }
+.tmList .k-table tbody tr:hover td:first-child { background: linear-gradient(rgba(255,255,255,0.03), rgba(255,255,255,0.03)), var(--bg-solid); }
+.tmList .k-table tbody tr:has([data-sel="true"]) td { background: var(--brand-primary-08); }
+.tmList .k-table tbody tr:has([data-sel="true"]) td:first-child { background: linear-gradient(var(--brand-primary-08), var(--brand-primary-08)), var(--bg-solid); box-shadow: inset 3px 0 0 var(--brand-primary); }
+.tmNum { color: var(--text-primary); font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tmDesc { display: flex; flex-direction: column; gap: 2px; max-width: 380px; min-width: 0; }
+.tmDesc > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; color: var(--text-primary); font-weight: 600; }
+.tmDesc > small { display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-xs); color: var(--text-tertiary); }
+.tmMoney { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tmTotal { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 800; color: var(--text-primary); }
+.tmMuted { color: var(--text-tertiary); }
+.tmBadges { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.tmSection { display: flex; flex-direction: column; gap: 8px; }
+.tmSection + .tmSection { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-subtle); }
+.tmSectionTitle { display: flex; align-items: center; gap: 8px; font-size: var(--fs-sm); font-weight: 700; color: var(--text-tertiary); }
+.tmSectionTitle > b { margin-left: auto; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.tmProse { font-size: var(--fs-md); line-height: 1.6; color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; max-width: ${layout.readingMaxWidth}; }
+.tmBig { font-size: 28px; font-weight: 800; color: var(--text-primary); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.tmLines { overflow-x: auto; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); }
+.tmLines table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.tmLines th { text-align: left; padding: 8px 12px; font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); background: var(--bg-surface-2); border-bottom: 1px solid var(--border-subtle); white-space: nowrap; }
+.tmLines td { padding: 8px 12px; color: var(--text-secondary); border-bottom: 1px solid var(--border-subtle); font-variant-numeric: tabular-nums; }
+.tmLines tr:last-child td { border-bottom: 0; }
+.tmLines th:not(:first-child), .tmLines td:not(:first-child) { text-align: right; white-space: nowrap; }
+.tmLines td:first-child { color: var(--text-primary); }
+.tmLines td:last-child { color: var(--text-primary); font-weight: 700; }
+.tmLadder { border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--bg-surface-2); }
+.tmRule { height: 1px; background: var(--border-subtle); margin: 8px 0; }
+.tmSigs { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.tmSigs img { width: 100%; background: #fff; border: 1px solid var(--border-default); border-radius: var(--radius-sm); display: block; }
+.tmActions { display: flex; flex-direction: column; gap: 8px; }
+.tmActions .k-btn { width: 100%; justify-content: flex-start; }
+.tmActionsRow { display: flex; gap: 8px; align-items: center; }
+.tmActionsRow > .k-btn { flex: 1 1 auto; }
+.tmNext { font-size: var(--fs-sm); color: var(--text-tertiary); line-height: 1.5; }
+.tmGrid { display: grid; gap: 8px; align-items: center; margin-bottom: 8px; min-width: 0; }
+.tmGridHead { display: grid; gap: 8px; margin-bottom: 6px; font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); }
+.tmGridHead > span[data-right="true"], .tmGrid > .tmLine { text-align: right; }
+.tmLine { font-size: var(--fs-sm); font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tmGridWrap { overflow-x: auto; padding-bottom: 2px; }
+.tmGridWrap > * { min-width: 640px; }
+.tmGroup { padding: 14px; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); margin-bottom: 14px; }
+.tmGroupHead { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: var(--fs-sm); font-weight: 800; color: var(--text-primary); }
+.tmGroupHead > b { margin-left: auto; font-variant-numeric: tabular-nums; }
+.tmHint { font-size: var(--fs-xs); color: var(--text-tertiary); line-height: 1.5; margin-top: 6px; }
+.tmPad { border: 1px solid var(--border-default); border-radius: var(--radius-sm); overflow: hidden; background: #fff; }
+.tmPadHead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.tmPadNote { font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 4px; }
+.tmPadNote[data-ok="true"] { color: var(--status-ongoing); }
+.tmDateInput { width: 100%; }
+.tmExport { display: inline-flex; gap: 6px; }
+@media (max-width: 640px) {
+  .tmWs .k-btn, .tmWs .k-stat, .tmWs select.k-select, .tmWs .k-input { min-height: 44px; }
+  .tmWs .k-table td { height: 48px; }
+  .tmDesc { max-width: 200px; }
+}
+`;
 
-// ─── Signature pad — the proven canvas dataURL pattern from app/field/tm-tickets ──
+const DATE_INPUT_STYLE: React.CSSProperties = {
+  width: '100%', minHeight: 40, padding: '8px 12px', fontSize: 14,
+  background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)',
+  borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)',
+};
+
+// ─── Signature pad — the shared SignatureCanvas the field app uses, so there is
+// one signature implementation instead of three. ──
 function SignaturePad({ label, value, onChange }: { label: string; value: string; onChange: (dataUrl: string) => void }) {
-  // Thin wrapper over the shared SignatureCanvas — the same pad the field app
-  // uses, so there is one signature implementation instead of three. The copy
-  // that lived here inked in GOLD on a transparent canvas (unreadable on the
-  // white ticket PDF), never re-sized its bitmap, and restored a stored
-  // signature in a mount-only effect, so reopening a loaded ticket showed an
-  // empty pad.
   const padRef = useRef<SignatureCanvasHandle>(null);
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-        <label style={{ ...LBL, marginBottom: 0 }}>{label}</label>
-        <button
-          type="button"
-          onClick={() => padRef.current?.clear()}
-          style={{ background: 'none', border: 'none', color: RED, fontSize: 12, cursor: 'pointer', fontWeight: 600 }}
-        >
-          Clear
-        </button>
+      <div className="tmPadHead">
+        <span className="k-label">{label}</span>
+        <Button variant="ghost" size="sm" onClick={() => padRef.current?.clear()}>Clear</Button>
       </div>
-      <div style={{ border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden' }}>
+      <div className="tmPad">
         <SignatureCanvas ref={padRef} value={value} onChange={onChange} height={110} />
       </div>
-      {value
-        ? <p style={{ margin: '4px 0 0', fontSize: 11, color: GREEN, fontWeight: 600 }}>Signature captured</p>
-        : <p style={{ margin: '4px 0 0', fontSize: 11, color: DIM }}>Sign above with a mouse, finger or stylus.</p>}
+      <p className="tmPadNote" data-ok={value ? 'true' : undefined}>{value ? 'Signature captured.' : 'Sign above with a mouse, finger or stylus.'}</p>
     </div>
   );
 }
 
-// ─── Line-item detail table (drawer) — shape-tolerant across surfaces ─────────
+// ─── Line-item detail table — shape-tolerant across surfaces ─────────
 function LineTable({ headers, rows }: { headers: string[]; rows: (string | number)[][] }) {
   if (rows.length === 0) return null;
   return (
-    <div style={{ overflowX: 'auto', border: `1px solid rgba(255,255,255,0.08)`, borderRadius: 10 }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
-        <thead>
-          <tr style={{ background: DARK }}>
-            {headers.map((h, i) => (
-              <th key={h} style={{ ...TH, padding: '8px 12px', textAlign: i === 0 ? 'left' : 'right' }}>{h}</th>
-            ))}
-          </tr>
-        </thead>
+    <div className="tmLines">
+      <table>
+        <thead><tr>{headers.map((h) => <th key={h}>{h}</th>)}</tr></thead>
         <tbody>
           {rows.map((r, ri) => (
-            <tr key={ri} style={{ borderBottom: ri === rows.length - 1 ? 'none' : `1px solid rgba(255,255,255,0.06)` }}>
-              {r.map((c, ci) => (
-                <td key={ci} style={{ ...TD, padding: '9px 12px', textAlign: ci === 0 ? 'left' : 'right', color: ci === r.length - 1 ? GOLD : ci === 0 ? TEXT : DIM, fontWeight: ci === r.length - 1 ? 700 : 500, fontVariantNumeric: 'tabular-nums', whiteSpace: ci === 0 ? 'normal' : 'nowrap' }}>
-                  {c}
-                </td>
-              ))}
-            </tr>
+            <tr key={ri}>{r.map((c, ci) => <td key={ci}>{c}</td>)}</tr>
           ))}
         </tbody>
       </table>
@@ -204,12 +241,12 @@ function TotalsLadder({ sub, markupPct, taxPct, total }: { sub: number; markupPc
   const markupAmt = (sub * markupPct) / 100;
   const taxAmt = ((sub + markupAmt) * taxPct) / 100;
   return (
-    <div>
+    <div className="tmLadder">
       <InsightRow label="Subtotal (Labor + Materials + Equipment)" value={fmtUSD(sub)} />
-      <InsightRow label={`Markup (${markupPct}%)`} value={'+' + fmtUSD(markupAmt)} accent={markupPct > 0 ? GOLD_HI : undefined} />
-      <InsightRow label={`Tax (${taxPct}%)`} value={'+' + fmtUSD(taxAmt)} accent={taxPct > 0 ? GOLD_HI : undefined} />
-      <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '8px 0' }} />
-      <InsightRow label="Ticket Total" value={fmtUSD(total)} accent={GOLD} strong />
+      <InsightRow label={`Markup (${markupPct}%)`} value={'+' + fmtUSD(markupAmt)} />
+      <InsightRow label={`Tax (${taxPct}%)`} value={'+' + fmtUSD(taxAmt)} />
+      <div className="tmRule" />
+      <InsightRow label="Ticket Total" value={fmtUSD(total)} strong />
     </div>
   );
 }
@@ -218,8 +255,9 @@ export default function TmTicketsPage() {
   const params = useParams();
   const projectId = params['projectId'] as string;
   const listKey = `/api/projects/${projectId}/tm-tickets`;
+  const { ctx } = useProjectContext(projectId);
 
-  const { data, isLoading, mutate: mutateTickets } = useSWR<{ tickets: TmTicketRow[] }>(listKey, fetcher, { revalidateOnFocus: true });
+  const { data, error: loadError, isLoading, mutate: mutateTickets } = useSWR<{ tickets: TmTicketRow[] }>(listKey, fetcher, { revalidateOnFocus: true });
   const { data: me } = useSWR<{ id: string; email: string; name: string }>('/api/auth/me', fetcher, { revalidateOnFocus: false });
   const tickets = data?.tickets ?? [];
 
@@ -229,21 +267,11 @@ export default function TmTicketsPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [escalatingId, setEscalatingId] = useState<string | null>(null);
   const [exporting, setExporting] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+  const { toast, show } = useToast(4000);
+  const setToast = (t: { msg: string; type: 'success' | 'error' }) => show(t.msg, t.type === 'success' ? 'good' : 'bad');
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => { const t = toast ? setTimeout(() => setToast(null), 4000) : null; return () => { if (t) clearTimeout(t); }; }, [toast]);
-
-  // Dead-space kill: an empty log opens straight into the composer, one-shot
-  // per visit so Cancel stays cancelled.
-  const autoOpenedRef = useRef(false);
-  useEffect(() => {
-    if (!isLoading && data && tickets.length === 0 && !autoOpenedRef.current) {
-      autoOpenedRef.current = true;
-      setShowForm(true);
-    }
-  }, [isLoading, data, tickets.length]);
+  const detailRef = useRef<HTMLDivElement>(null);
 
   // ── Composer state ──────────────────────────────────────────────────────
   const [fDate, setFDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -304,7 +332,7 @@ export default function TmTicketsPage() {
     onSave: () => createTicket('draft'),
   });
 
-  /** Composer close paths (hero Cancel toggle / footer Cancel) run through the guard. */
+  /** Composer close paths (X / Cancel / Esc / backdrop) run through the guard. */
   function closeComposer() {
     guard.requestClose(() => setShowForm(false));
   }
@@ -487,26 +515,19 @@ export default function TmTicketsPage() {
     return [t.description, t.notes, ticketLabel(t), t.approved_by].some(v => String(v || '').toLowerCase().includes(q));
   });
 
-  // Sortable columns (R11 sweep) — money columns sort on their Number()-coerced
-  // values (several round-trip from the DB as TEXT), dates on the raw ISO date.
-  const { sort, cycleSort } = usePersistedSort('project-tm-tickets', { key: 'date', dir: 'desc' });
-  const sortedTickets = useSortedRows(filtered, sort, (t, key) => {
-    switch (key) {
-      case 'ticket':    return num(t.ticket_number);
-      case 'date':      return String(t.work_date || t.created_at || '').slice(0, 10) || null;
-      case 'desc':      return t.description || null;
-      case 'labor':     return num(t.labor_total);
-      case 'materials': return num(t.materials_total);
-      case 'equipment': return num(t.equipment_total);
-      case 'total':     return num(t.total);
-      case 'status':    return displayStatus(t.status);
-      default:          return (t as unknown as Record<string, unknown>)[key];
-    }
-  });
-
   const selected = selectedId ? tickets.find(t => t.id === selectedId) || null : null;
+  const detailOpen = !!selected;
 
-  // Drawer line rows — tolerate both surfaces' jsonb shapes; fall back to the
+  // Stacked layouts: once the ticket is in the DOM, bring it into view instead of leaving it below the fold.
+  useEffect(() => {
+    if (!detailOpen) return;
+    const el = detailRef.current;
+    if (el && el.getBoundingClientRect().top > window.innerHeight * 0.6) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [detailOpen, selectedId]);
+
+  // Line rows — tolerate both surfaces' jsonb shapes; fall back to the
   // aggregate labor columns when the jsonb is absent (mobile writes aggregates).
   const laborRows: (string | number)[][] = selected
     ? (Array.isArray(selected.labor) && selected.labor.length > 0
@@ -538,532 +559,483 @@ export default function TmTicketsPage() {
       })
     : [];
   const selSub = selected ? num(selected.labor_total) + num(selected.materials_total) + num(selected.equipment_total) : 0;
-
   const selStatus = selected ? displayStatus(selected.status) : 'draft';
   const rowBusy = (id: string) => busyId === id;
 
-  const statusActionButtons = (t: TmTicketRow, compact: boolean) => {
+  /** The status verbs for a ticket — the first one is its next step. */
+  function statusVerbs(t: TmTicketRow): Action[] {
     const s = displayStatus(t.status);
-    const base: React.CSSProperties = compact
-      ? { borderRadius: 6, fontSize: 11, padding: '4px 12px', fontWeight: 800, cursor: rowBusy(t.id) ? 'wait' : 'pointer', opacity: rowBusy(t.id) ? 0.6 : 1, border: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }
-      : { borderRadius: 10, fontSize: 13, padding: '10px 16px', fontWeight: 800, cursor: rowBusy(t.id) ? 'wait' : 'pointer', opacity: rowBusy(t.id) ? 0.6 : 1, border: 'none', display: 'inline-flex', alignItems: 'center', gap: 7 };
-    const gold = { ...base, background: `linear-gradient(135deg,${GOLD},${GOLD_HI})`, color: '#0A0A00' };
-    const green = { ...base, background: 'rgba(26,138,74,.16)', border: '1px solid rgba(61,214,140,.4)', color: GREEN };
-    const red = { ...base, background: 'none', border: '1px solid rgba(192,48,48,.4)', color: RED };
-    const steel = { ...base, background: 'rgba(127,163,199,.12)', border: '1px solid rgba(127,163,199,.4)', color: STEEL };
-    const btns: React.ReactNode[] = [];
-    if (s === 'draft') btns.push(
-      <button key="submit" disabled={rowBusy(t.id)} onClick={ev => { ev.stopPropagation(); submitTicket(t); }} style={gold}>
-        <PaperPlaneTilt size={compact ? 12 : 14} weight="bold" />{rowBusy(t.id) ? '…' : 'Submit'}
-      </button>);
-    if (s === 'submitted') btns.push(
-      <button key="approve" disabled={rowBusy(t.id)} onClick={ev => { ev.stopPropagation(); approveTicket(t); }} style={green}>
-        <CheckCircle size={compact ? 12 : 14} weight="bold" />{rowBusy(t.id) ? '…' : 'Approve'}
-      </button>,
-      <button key="reject" disabled={rowBusy(t.id)} onClick={ev => { ev.stopPropagation(); rejectTicket(t); }} style={red}>
-        <XCircle size={compact ? 12 : 14} weight="bold" />Reject
-      </button>);
-    if (s === 'approved') btns.push(
-      <button key="bill" disabled={rowBusy(t.id)} onClick={ev => { ev.stopPropagation(); billTicket(t); }} style={steel}>
-        <Receipt size={compact ? 12 : 14} weight="bold" />{rowBusy(t.id) ? '…' : 'Mark Billed'}
-      </button>);
-    if (s === 'rejected') btns.push(
-      <button key="resubmit" disabled={rowBusy(t.id)} onClick={ev => { ev.stopPropagation(); resubmitTicket(t); }} style={gold}>
-        <ArrowsClockwise size={compact ? 12 : 14} weight="bold" />{rowBusy(t.id) ? '…' : 'Resubmit'}
-      </button>);
-    return btns;
-  };
+    const busy = rowBusy(t.id);
+    const verbs: Action[] = [];
+    if (s === 'draft') verbs.push({ label: 'Submit for Approval', icon: <PaperPlaneTilt size={15} />, onClick: () => submitTicket(t), disabled: busy });
+    if (s === 'submitted') verbs.push(
+      { label: 'Approve', icon: <CheckCircle size={15} />, onClick: () => approveTicket(t), disabled: busy },
+      { label: 'Reject', icon: <XCircle size={15} />, onClick: () => rejectTicket(t), disabled: busy, tone: 'danger' },
+    );
+    if (s === 'approved') verbs.push({ label: 'Mark Billed', icon: <Receipt size={15} />, onClick: () => billTicket(t), disabled: busy });
+    if (s === 'rejected') verbs.push({ label: 'Resubmit', icon: <ArrowsClockwise size={15} />, onClick: () => resubmitTicket(t), disabled: busy });
+    return verbs;
+  }
+  function ticketActions(t: TmTicketRow): Action[] {
+    return [
+      { label: 'Open Ticket', icon: <Receipt size={15} />, onClick: () => setSelectedId(t.id) },
+      ...statusVerbs(t),
+      { label: 'Escalate to Change Event', icon: <Lightning size={15} />, onClick: () => escalateTicket(t), disabled: escalatingId === t.id },
+      { label: 'Export PDF', icon: <FilePdf size={15} />, onClick: () => exportTickets('pdf', [t.id]), disabled: !!exporting },
+    ];
+  }
 
   // Composer line-grid helpers
   const setLabor = (id: string, field: keyof LaborLine, val: string) => setFLabor(p => p.map(l => l.id === id ? { ...l, [field]: val } : l));
   const setMaterial = (id: string, field: keyof MaterialLine, val: string) => setFMaterials(p => p.map(m => m.id === id ? { ...m, [field]: val } : m));
   const setEquipment = (id: string, field: keyof EquipmentLine, val: string) => setFEquipment(p => p.map(e => e.id === id ? { ...e, [field]: val } : e));
   const removeBtn = (onClick: () => void, disabled: boolean): React.ReactNode => (
-    <button type="button" onClick={onClick} disabled={disabled} title="Remove line"
-      style={{ background: 'none', border: 'none', color: disabled ? 'rgba(255,255,255,0.2)' : RED, cursor: disabled ? 'default' : 'pointer', padding: 4, display: 'inline-flex' }}>
-      <Trash size={14} weight="regular" />
-    </button>
-  );
-  const addLineBtn = (label: string, onClick: () => void): React.ReactNode => (
-    <button type="button" onClick={onClick}
-      style={{ background: 'var(--brand-primary-08)', border: `1px dashed var(--brand-primary-35)`, borderRadius: 8, padding: '7px 14px', color: GOLD_HI, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
-      <Plus size={12} weight="bold" /> {label}
-    </button>
+    <Button variant="ghost" size="sm" icon={<Trash size={14} />} aria-label="Remove line" title="Remove line" onClick={onClick} disabled={disabled} />
   );
   const gridHead = (cols: string, labels: string[]): React.ReactNode => (
-    <div style={{ display: 'grid', gridTemplateColumns: cols, gap: 8, marginBottom: 6 }}>
-      {labels.map((h, i) => (
-        <span key={i} style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.42)', textAlign: i >= labels.length - 2 && h !== '' ? 'right' : 'left' }}>{h}</span>
-      ))}
+    <div className="tmGridHead" style={{ gridTemplateColumns: cols }}>
+      {labels.map((h, i) => <span key={i} data-right={i >= 2 && h !== '' ? 'true' : undefined}>{h}</span>)}
+    </div>
+  );
+  const LABOR_COLS = 'minmax(120px,1.4fr) minmax(130px,1.2fr) 72px 72px 92px 92px 36px';
+  const MAT_COLS = 'minmax(150px,1.8fr) 72px 84px 96px 92px 36px';
+  const EQ_COLS = 'minmax(150px,1.8fr) 84px 96px 92px 36px';
+
+  // ── Stat tiles: each opens the log filtered to that slice ──
+  const loading = isLoading && !data;
+  const toggleStatus = (s: string) => setStatusFilter(prev => (prev === s ? 'all' : s));
+  const stats: StatItem[] = loading
+    ? [
+        { label: 'Total Value', value: '—', sub: 'Loading…' },
+        { label: 'Approved', value: '—', sub: 'Loading…' },
+        { label: 'Awaiting Approval', value: '—', sub: 'Loading…' },
+        { label: 'Drafts', value: '—', sub: 'Loading…' },
+        { label: 'Billed', value: '—', sub: 'Loading…' },
+      ]
+    : [
+        { label: 'Total Value', value: fmtUSD(totalValue), sub: statusFilter !== 'all' || search ? 'Click to show everything' : `${tickets.length} ticket${tickets.length !== 1 ? 's' : ''}`, onClick: () => { setStatusFilter('all'); setSearch(''); } },
+        { label: 'Approved', value: fmtUSD(approvedValue), tone: approvedValue > 0 ? 'good' : 'default', sub: statusFilter === 'approved' ? 'Filtered — click to clear' : `${statusCounts['approved'] || 0} approved`, onClick: () => toggleStatus('approved') },
+        { label: 'Awaiting Approval', value: fmtUSD(awaitingValue), tone: awaitingCount > 0 ? 'warn' : 'default', sub: statusFilter === 'submitted' ? 'Filtered — click to clear' : awaitingCount > 0 ? `${awaitingCount} submitted` : 'None submitted', onClick: () => toggleStatus('submitted') },
+        { label: 'Drafts', value: draftCount, sub: statusFilter === 'draft' ? 'Filtered — click to clear' : draftCount > 0 ? 'Not yet submitted' : 'All sent', onClick: () => toggleStatus('draft') },
+        { label: 'Billed', value: fmtUSD(billedValue), sub: statusFilter === 'billed' ? 'Filtered — click to clear' : `${statusCounts['billed'] || 0} on invoices`, onClick: () => toggleStatus('billed') },
+      ];
+
+  // ── Log columns: full log, or a compact log beside the ticket ──
+  const ticketCol: Column<TmTicketRow> = { key: 'ticket', header: 'Ticket', accessor: t => num(t.ticket_number), width: 92, render: t => <span className="tmNum" data-sel={t.id === selectedId ? 'true' : undefined}>{ticketLabel(t)}</span> };
+  const dateCol: Column<TmTicketRow> = { key: 'date', header: 'Work Date', accessor: t => String(t.work_date || t.created_at || '').slice(0, 10), render: t => <span className="tmMuted">{fmtDate(t.work_date || t.created_at)}</span> };
+  const descCol: Column<TmTicketRow> = { key: 'desc', phone: 'hide', header: 'Description', accessor: t => (t.description || '').toLowerCase(), render: t => (
+    <div className="tmDesc">
+      <span title={t.description || ''}>{t.description || '—'}</span>
+      {(t.contractor_signature || t.owner_signature) && (
+        <small><Signature size={11} /> {t.contractor_signature && t.owner_signature ? 'Both signatures' : t.contractor_signature ? 'Contractor signed' : 'Owner signed'}</small>
+      )}
+    </div>
+  ) };
+  const laborCol: Column<TmTicketRow> = { key: 'labor', phone: 'hide', header: 'Labor', accessor: t => num(t.labor_total), align: 'right', render: t => <span className="tmMoney tmMuted">{fmtUSD(t.labor_total)}</span> };
+  const matCol: Column<TmTicketRow> = { key: 'materials', phone: 'hide', header: 'Materials', accessor: t => num(t.materials_total), align: 'right', render: t => <span className="tmMoney tmMuted">{fmtUSD(t.materials_total)}</span> };
+  const eqCol: Column<TmTicketRow> = { key: 'equipment', phone: 'hide', header: 'Equipment', accessor: t => num(t.equipment_total), align: 'right', render: t => <span className="tmMoney tmMuted">{fmtUSD(t.equipment_total)}</span> };
+  const totalCol: Column<TmTicketRow> = { key: 'total', phone: 'show', header: 'Total', accessor: t => num(t.total), align: 'right', render: t => <span className="tmTotal">{fmtUSD(t.total)}</span> };
+  const statusCol: Column<TmTicketRow> = { key: 'status', phone: 'show', header: 'Status', accessor: t => STATUS_RANK[displayStatus(t.status)] ?? 9, render: t => {
+    const b = statusBadge(t.status);
+    return (
+      <div className="tmDesc" style={{ maxWidth: 'none' }}>
+        <span><Badge tone={b.tone}>{b.label}</Badge></span>
+        {displayStatus(t.status) !== 'draft' && t.approved_by && <small>by {t.approved_by}{t.approved_at ? ` · ${fmtDate(t.approved_at)}` : ''}</small>}
+      </div>
+    );
+  } };
+  const columns: Column<TmTicketRow>[] = detailOpen
+    ? [ticketCol, dateCol, totalCol, statusCol]
+    : [ticketCol, dateCol, descCol, laborCol, matCol, eqCol, totalCol, statusCol];
+
+  // ── Detail workspace ──
+  const detailWorkspace = selected && (
+    <div ref={detailRef} className="tmDetailCq">
+      <div className="tmDetail">
+        <Card
+          title={selected.description || 'T&M Ticket'}
+          subtitle={`${ticketLabel(selected)} · ${fmtDate(selected.work_date || selected.created_at)}`}
+          actions={<Button variant="ghost" size="sm" icon={<X size={16} />} aria-label="Close ticket" title="Close ticket" onClick={() => setSelectedId(null)} />}
+        >
+          <div className="tmSection">
+            <div className="tmBig">{fmtUSD(selected.total)}</div>
+            {selStatus !== 'draft' && selected.approved_by && (
+              <div className="tmMuted" style={{ fontSize: 'var(--fs-sm)' }}>
+                {selStatus === 'rejected' ? 'Rejected' : 'Approved'} by {selected.approved_by}{selected.approved_at ? ` on ${fmtDate(selected.approved_at)}` : ''}
+              </div>
+            )}
+          </div>
+
+          {laborRows.length > 0 && (
+            <div className="tmSection">
+              <div className="tmSectionTitle"><HardHat size={14} /> Labor <b>{fmtUSD(selected.labor_total)}</b></div>
+              <LineTable headers={['Worker', 'Reg', 'OT', 'Rate', 'Total']} rows={laborRows} />
+            </div>
+          )}
+          {materialRows.length > 0 && (
+            <div className="tmSection">
+              <div className="tmSectionTitle"><Package size={14} /> Materials <b>{fmtUSD(selected.materials_total)}</b></div>
+              <LineTable headers={['Description', 'Qty', 'Unit', 'Cost', 'Total']} rows={materialRows} />
+            </div>
+          )}
+          {equipmentRows.length > 0 && (
+            <div className="tmSection">
+              <div className="tmSectionTitle"><Wrench size={14} /> Equipment <b>{fmtUSD(selected.equipment_total)}</b></div>
+              <LineTable headers={['Description', 'Hours', 'Rate', 'Total']} rows={equipmentRows} />
+            </div>
+          )}
+          {laborRows.length === 0 && materialRows.length === 0 && equipmentRows.length === 0 && (
+            <div className="tmSection"><div className="tmMuted" style={{ fontSize: 'var(--fs-sm)' }}>No line items were recorded on this ticket.</div></div>
+          )}
+
+          <div className="tmSection">
+            <div className="tmSectionTitle">Totals</div>
+            <TotalsLadder sub={selSub} markupPct={num(selected.markup_pct)} taxPct={num(selected.tax_pct)} total={num(selected.total)} />
+          </div>
+
+          {selected.notes && (
+            <div className="tmSection">
+              <div className="tmSectionTitle">Notes</div>
+              <div className="tmProse">{selected.notes}</div>
+            </div>
+          )}
+
+          {(selected.contractor_signature || selected.owner_signature) && (
+            <div className="tmSection">
+              <div className="tmSectionTitle"><Signature size={14} /> Signatures</div>
+              <div className="tmSigs">
+                {selected.contractor_signature && (
+                  <div>
+                    <div className="k-label" style={{ marginBottom: 6 }}>Contractor</div>
+                    {/* Signatures are canvas dataURLs stored as TEXT — render directly. */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={selected.contractor_signature} alt="Contractor signature" />
+                  </div>
+                )}
+                {selected.owner_signature && (
+                  <div>
+                    <div className="k-label" style={{ marginBottom: 6 }}>Owner / GC</div>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={selected.owner_signature} alt="Owner signature" />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </Card>
+
+        <aside className="tmRail" aria-label="Ticket details and actions">
+          <Card title="Details">
+            <div className="tmSection">
+              <div className="tmBadges">
+                <Badge tone={statusBadge(selected.status).tone} dot>{statusBadge(selected.status).label}</Badge>
+                {(selected.contractor_signature || selected.owner_signature) && <Badge tone="neutral"><Signature size={11} /> {selected.contractor_signature && selected.owner_signature ? 'Both Signed' : 'One Signature'}</Badge>}
+              </div>
+              <div className="tmNext">
+                {selStatus === 'draft' && 'Submit it for approval — the approver is stamped on the ticket.'}
+                {selStatus === 'submitted' && 'Waiting on approval. Approve or reject inline.'}
+                {selStatus === 'approved' && 'Approved. Mark it billed once it lands on an invoice, or escalate it into a change event.'}
+                {selStatus === 'rejected' && 'Rejected. Fix and resubmit, or escalate it as a change event.'}
+                {selStatus === 'billed' && 'Billed. The ticket is on an invoice.'}
+              </div>
+            </div>
+            <div className="tmSection">
+              <DetailList items={[
+                ['Ticket', ticketLabel(selected)],
+                ['Work Date', fmtDate(selected.work_date || selected.created_at)],
+                ['Labor', <span key="l" className="tmMoney">{fmtUSD(selected.labor_total)}</span>],
+                ['Materials', <span key="m" className="tmMoney">{fmtUSD(selected.materials_total)}</span>],
+                ['Equipment', <span key="e" className="tmMoney">{fmtUSD(selected.equipment_total)}</span>],
+                ['Markup', `${num(selected.markup_pct)}%`],
+                ['Tax', `${num(selected.tax_pct)}%`],
+                ['Total', <span key="t" className="tmTotal">{fmtUSD(selected.total)}</span>],
+                ['Approved By', selected.approved_by || ''],
+              ]} />
+            </div>
+            <div className="tmSection">
+              <div className="tmActions">
+                {statusVerbs(selected).map(v => (
+                  <Button key={v.label} variant={v.tone === 'danger' ? 'danger' : 'secondary'} icon={v.icon} onClick={v.onClick} disabled={v.disabled}>
+                    {rowBusy(selected.id) ? 'Working…' : v.label}
+                  </Button>
+                ))}
+                <div className="tmActionsRow">
+                  <Button icon={<Lightning size={16} />} onClick={() => escalateTicket(selected)} disabled={escalatingId === selected.id}>
+                    {escalatingId === selected.id ? 'Escalating…' : 'Escalate to Change Event'}
+                  </Button>
+                  <RowActions actions={[
+                    { label: 'Export PDF', icon: <FilePdf size={15} />, onClick: () => exportTickets('pdf', [selected.id]), disabled: !!exporting },
+                  ]} />
+                </div>
+              </div>
+            </div>
+          </Card>
+        </aside>
+      </div>
     </div>
   );
 
+  // ── Log body: loading / error / empty / no-match / rows — each distinct ──
+  let listBody: React.ReactNode;
+  if (!loading && loadError) {
+    listBody = (
+      <EmptyState
+        icon={<WarningCircle size={22} />}
+        title="Couldn't load T&M tickets"
+        text={`${humanError(loadError, 'Request failed.')} Nothing has been lost — try again.`}
+        action={<Button icon={<ArrowClockwise size={15} />} onClick={() => mutateTickets()}>Retry</Button>}
+      />
+    );
+  } else if (!loading && tickets.length === 0) {
+    listBody = (
+      <>
+        <EmptyState
+          icon={<Receipt size={22} />}
+          title="No T&M tickets yet"
+          text="Capture out-of-scope work before it becomes a dispute — labor, materials and equipment with signatures, approved, then billed or escalated."
+          action={<Button icon={<Plus size={15} weight="bold" />} onClick={() => setShowForm(true)}>New T&M Ticket</Button>}
+        />
+        <div style={{ padding: '0 16px 16px' }}>
+          <FlowStrip steps={[
+            { title: 'Capture the Extra', desc: 'Labor, materials, equipment' },
+            { title: 'Get It Signed', desc: 'Contractor + owner pads' },
+            { title: 'Approve', desc: 'Stamped with who and when' },
+            { title: 'Bill or Escalate', desc: 'Invoice it or make it a change event' },
+          ]} />
+        </div>
+      </>
+    );
+  } else {
+    listBody = (
+      <DataTable
+        columns={columns}
+        rows={filtered}
+        rowKey={t => t.id}
+        loading={loading}
+        defaultSort={{ key: 'date', dir: 'desc' }}
+        onRowClick={t => setSelectedId(t.id)}
+        rowActions={ticketActions}
+        empty={
+          <EmptyState
+            icon={<Receipt size={22} />}
+            title="No tickets match these filters"
+            text="Clear the search or status filter to see more."
+            action={<Button onClick={() => { setSearch(''); setStatusFilter('all'); }}>Clear Filters</Button>}
+          />
+        }
+      />
+    );
+  }
+
   const exportBtn = (format: 'csv' | 'xlsx' | 'pdf', icon: React.ReactNode) => (
-    <button
-      onClick={() => exportTickets(format)}
-      disabled={!!exporting || filtered.length === 0}
-      title={`Export ${filtered.length} ticket${filtered.length === 1 ? '' : 's'} (current filter) as ${format.toUpperCase()}`}
-      style={{ ...ghostButtonStyle, padding: '9px 13px', fontSize: 12, opacity: exporting || filtered.length === 0 ? 0.5 : 1, cursor: exporting ? 'wait' : 'pointer' }}
-      className="pmBtn">
-      {icon}{format.toUpperCase()}
-    </button>
+    <Button size="sm" icon={icon} onClick={() => exportTickets(format)} disabled={!!exporting || filtered.length === 0}
+      title={`Export ${filtered.length} ticket${filtered.length === 1 ? '' : 's'} (current filter) as ${format.toUpperCase()}`}>
+      {format.toUpperCase()}
+    </Button>
   );
 
-  const loading = isLoading && !data;
-
   return (
-    <>
-      {toast && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 99999, padding: '12px 20px', borderRadius: 8, background: toast.type === 'success' ? 'rgba(34,197,94,0.9)' : 'rgba(239,68,68,0.9)', color: '#fff', fontWeight: 600, fontSize: 14, pointerEvents: 'none' }}>
-          {toast.msg}
+    <div className="tmWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[
+          { label: 'Projects', href: '/app/projects' },
+          { label: ctx?.project?.name || 'Project', href: `/app/projects/${projectId}/overview` },
+          { label: 'T&M Tickets' },
+        ]}
+        title="T&M Tickets"
+        subtitle="Time and material extras with signatures — approved, then billed or escalated to a change event."
+        actions={
+          <Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => setShowForm(true)}>
+            New T&M Ticket
+          </Button>
+        }
+      >
+        {!loadError && <StatRow items={stats} />}
+
+        {!loading && !loadError && tickets.length > 0 && (
+          <Toolbar
+            search={search}
+            onSearch={setSearch}
+            placeholder="Search tickets, descriptions, approvers…"
+            filters={
+              <>
+                <Select
+                  aria-label="Status"
+                  value={statusFilter}
+                  onChange={e => setStatusFilter(e.target.value)}
+                  style={{ width: 'auto', minWidth: 150 }}
+                  options={[{ value: 'all', label: 'All Statuses' }, ...STATUS_ORDER.map(s => ({ value: s, label: `${STATUS_LABEL[s]}${statusCounts[s] ? ` (${statusCounts[s]})` : ''}` }))]}
+                />
+                {(search || statusFilter !== 'all') && <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setStatusFilter('all'); }}>Clear</Button>}
+              </>
+            }
+            actions={
+              <>
+                <span className="tmExport">
+                  {exportBtn('csv', <FileCsv size={14} />)}
+                  {exportBtn('xlsx', <FileXls size={14} />)}
+                  {exportBtn('pdf', <FilePdf size={14} />)}
+                </span>
+                <span className="tmMuted" style={{ fontSize: 'var(--fs-sm)' }}>{filtered.length} of {tickets.length}</span>
+              </>
+            }
+          />
+        )}
+
+        <div className="tmCq">
+          <div className="tmSplit" data-open={detailOpen ? 'true' : 'false'}>
+            <div className="tmList">
+              <Card flush>{listBody}</Card>
+            </div>
+            {detailWorkspace}
+          </div>
         </div>
-      )}
+      </PageShell>
 
-      <PremiumSurface maxWidth={2200}>
-
-        <ModuleHero
-          eyebrow="Field Money"
-          eyebrowIcon={<IconChip size={24} vivid={moduleAccent('tm').vivid ?? TM_ACCENT}><Receipt size={13} weight="fill" color="#F8FAFC" /></IconChip>}
-          accentColor={TM_ACCENT}
-          title="T&M"
-          accent="Tickets"
-          subtitle={loading ? 'Loading…' : `${tickets.length} ticket${tickets.length !== 1 ? 's' : ''} — capture time & material extras with signatures, get them approved, then billed or escalated to a change event.`}
-          actions={
-            <button onClick={() => { if (showForm) closeComposer(); else setShowForm(true); }} style={goldButtonStyle} className="pmBtn">
-              {showForm ? <><X size={15} weight="bold" /> Cancel</> : <><Plus size={15} weight="bold" /> New T&M Ticket</>}
-            </button>
-          }
-        />
-
-        {/* Money strip — every figure is Number()-coerced (money columns can be TEXT) */}
-        {loading ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 20 }}>
-            {[0, 1, 2, 3, 4].map(i => <Skeleton key={i} height={74} borderRadius={14} />)}
-          </div>
-        ) : (
-          <StatStrip items={[
-            {href: `/app/projects/${projectId}/tm-tickets`,  label: 'Total Value', value: fmtUSD(totalValue), accent: GOLD, sub: `${tickets.length} ticket${tickets.length !== 1 ? 's' : ''}`, icon: <CurrencyCircleDollar size={12} weight="bold" color={TM_ACCENT} /> },
-            {href: `/app/projects/${projectId}/tm-tickets`,  label: 'Approved', value: fmtUSD(approvedValue), accent: approvedValue > 0 ? GREEN : undefined, sub: `${statusCounts['approved'] || 0} approved`, icon: <CheckCircle size={12} weight="bold" color={GREEN} /> },
-            {href: `/app/projects/${projectId}/tm-tickets`,  label: 'Awaiting Approval', value: fmtUSD(awaitingValue), accent: awaitingCount > 0 ? GOLD_HI : undefined, sub: awaitingCount > 0 ? `${awaitingCount} submitted` : 'None submitted', icon: <Clock size={12} weight="bold" color={GOLD_HI} /> },
-            {href: `/app/projects/${projectId}/tm-tickets`,  label: 'Drafts', value: String(draftCount), sub: draftCount > 0 ? 'Not yet submitted' : 'All sent', icon: <NotePencil size={12} weight="bold" color={DIM} /> },
-            {href: `/app/projects/${projectId}/tm-tickets`,  label: 'Billed', value: fmtUSD(billedValue), accent: billedValue > 0 ? STEEL : undefined, sub: `${statusCounts['billed'] || 0} on invoices`, icon: <Receipt size={12} weight="bold" color={STEEL} /> },
-          ]} />
-        )}
-
-        {/* Inline composer — the create flow lives ON the page, never a dead Add zone */}
-        {showForm && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 340px', gap: 22, alignItems: 'start', marginBottom: 24 }}>
-            <SectionCard title="New T&M Ticket" subtitle="The ticket number is assigned automatically on save." icon={<Plus size={17} weight="duotone" color={GOLD} />}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-                <div>
-                  <label style={LBL}>Work Date<AutoChip label="Today" /></label>
-                  <SaguaroDatePicker value={fDate} onChange={setFDate} />
-                </div>
-                <div>
-                  <label style={LBL}>Reference / PO</label>
-                  <input value={fRef} onChange={e => setFRef(e.target.value)} placeholder="e.g. PO-1042, RFI-007" style={INP} />
-                </div>
-                <div style={{ gridColumn: '1/-1' }}>
-                  <label style={LBL}>Description of Work *</label>
-                  <input value={fDesc} onChange={e => setFDesc(e.target.value)} placeholder="e.g. Rerouted conduit around unmarked plumbing stack, level 2" style={INP} />
-                </div>
-              </div>
-
-              {/* Labor grid — trades come from lib/contractor-trades (never hardcoded) */}
-              <div style={{ marginBottom: 18 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <HardHat size={15} weight="duotone" color={TM_ACCENT} />
-                  <span style={{ fontSize: 12.5, fontWeight: 800, color: TEXT }}>Labor</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: GOLD, marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' }}>{fmtUSD(previewLabor)}</span>
-                </div>
-                {gridHead('minmax(120px,1.4fr) minmax(130px,1.2fr) 70px 70px 90px 90px 28px', ['Worker', 'Trade', 'Reg Hrs', 'OT Hrs', 'Rate', 'Line Total', ''])}
-                {fLabor.map(l => (
-                  <div key={l.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(120px,1.4fr) minmax(130px,1.2fr) 70px 70px 90px 90px 28px', gap: 8, marginBottom: 8, alignItems: 'center' }}>
-                    <input value={l.worker} onChange={e => setLabor(l.id, 'worker', e.target.value)} placeholder="Name" style={INP} />
-                    <select value={l.trade} onChange={e => setLabor(l.id, 'trade', e.target.value)} style={{ ...INP, cursor: 'pointer' }}>
-                      {TRADESPERSON_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-                    </select>
-                    <input value={l.regHours} onChange={e => setLabor(l.id, 'regHours', e.target.value)} placeholder="0" inputMode="decimal" style={{ ...INP, textAlign: 'right' }} />
-                    <input value={l.otHours} onChange={e => setLabor(l.id, 'otHours', e.target.value)} placeholder="0" inputMode="decimal" style={{ ...INP, textAlign: 'right' }} />
-                    <input value={l.rate} onChange={e => setLabor(l.id, 'rate', e.target.value)} placeholder="$/hr" inputMode="decimal" style={{ ...INP, textAlign: 'right' }} />
-                    <span style={{ fontSize: 12.5, fontWeight: 700, color: GOLD, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
-                      {fmtUSD(num(l.regHours) * num(l.rate) + num(l.otHours) * num(l.rate) * 1.5)}
-                    </span>
-                    {removeBtn(() => setFLabor(p => p.length > 1 ? p.filter(x => x.id !== l.id) : p), fLabor.length <= 1)}
-                  </div>
-                ))}
-                {addLineBtn('Add Labor Line', () => setFLabor(p => [...p, { id: uid(), worker: '', trade: DEFAULT_TRADE, regHours: '', otHours: '', rate: '' }]))}
-                <div style={HINT}>Overtime bills at 1.5x the worker&apos;s rate — same math the server stores.</div>
-              </div>
-
-              {/* Materials grid */}
-              <div style={{ marginBottom: 18 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <Package size={15} weight="duotone" color={TM_ACCENT} />
-                  <span style={{ fontSize: 12.5, fontWeight: 800, color: TEXT }}>Materials</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: GOLD, marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' }}>{fmtUSD(previewMaterials)}</span>
-                </div>
-                {gridHead('minmax(150px,1.8fr) 70px 80px 95px 90px 28px', ['Description', 'Qty', 'Unit', 'Unit Cost', 'Line Total', ''])}
-                {fMaterials.map(m => (
-                  <div key={m.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(150px,1.8fr) 70px 80px 95px 90px 28px', gap: 8, marginBottom: 8, alignItems: 'center' }}>
-                    <input value={m.description} onChange={e => setMaterial(m.id, 'description', e.target.value)} placeholder="Material" style={INP} />
-                    <input value={m.qty} onChange={e => setMaterial(m.id, 'qty', e.target.value)} placeholder="0" inputMode="decimal" style={{ ...INP, textAlign: 'right' }} />
-                    <select value={m.unit} onChange={e => setMaterial(m.id, 'unit', e.target.value)} style={{ ...INP, cursor: 'pointer' }}>
-                      {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-                    </select>
-                    <input value={m.unitCost} onChange={e => setMaterial(m.id, 'unitCost', e.target.value)} placeholder="$" inputMode="decimal" style={{ ...INP, textAlign: 'right' }} />
-                    <span style={{ fontSize: 12.5, fontWeight: 700, color: GOLD, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
-                      {fmtUSD(num(m.qty) * num(m.unitCost))}
-                    </span>
-                    {removeBtn(() => setFMaterials(p => p.length > 1 ? p.filter(x => x.id !== m.id) : p), fMaterials.length <= 1)}
-                  </div>
-                ))}
-                {addLineBtn('Add Material Line', () => setFMaterials(p => [...p, { id: uid(), description: '', qty: '', unit: 'EA', unitCost: '' }]))}
-              </div>
-
-              {/* Equipment grid */}
-              <div style={{ marginBottom: 18 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <Wrench size={15} weight="duotone" color={TM_ACCENT} />
-                  <span style={{ fontSize: 12.5, fontWeight: 800, color: TEXT }}>Equipment</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: GOLD, marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' }}>{fmtUSD(previewEquipment)}</span>
-                </div>
-                {gridHead('minmax(150px,1.8fr) 80px 95px 90px 28px', ['Description', 'Hours', 'Rate', 'Line Total', ''])}
-                {fEquipment.map(eq => (
-                  <div key={eq.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(150px,1.8fr) 80px 95px 90px 28px', gap: 8, marginBottom: 8, alignItems: 'center' }}>
-                    <input value={eq.description} onChange={e => setEquipment(eq.id, 'description', e.target.value)} placeholder="e.g. Mini excavator" style={INP} />
-                    <input value={eq.hours} onChange={e => setEquipment(eq.id, 'hours', e.target.value)} placeholder="0" inputMode="decimal" style={{ ...INP, textAlign: 'right' }} />
-                    <input value={eq.rate} onChange={e => setEquipment(eq.id, 'rate', e.target.value)} placeholder="$/hr" inputMode="decimal" style={{ ...INP, textAlign: 'right' }} />
-                    <span style={{ fontSize: 12.5, fontWeight: 700, color: GOLD, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
-                      {fmtUSD(num(eq.hours) * num(eq.rate))}
-                    </span>
-                    {removeBtn(() => setFEquipment(p => p.length > 1 ? p.filter(x => x.id !== eq.id) : p), fEquipment.length <= 1)}
-                  </div>
-                ))}
-                {addLineBtn('Add Equipment Line', () => setFEquipment(p => [...p, { id: uid(), description: '', hours: '', rate: '' }]))}
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-                <div>
-                  <label style={LBL}>Markup %<AutoChip label="15% Standard" /></label>
-                  <input value={fMarkup} onChange={e => setFMarkup(e.target.value)} inputMode="decimal" style={INP} />
-                  <div style={HINT}>Applied to the full subtotal. Adds {fmtUSD(previewMarkupAmt)}.</div>
-                </div>
-                <div>
-                  <label style={LBL}>Tax %</label>
-                  <input value={fTax} onChange={e => setFTax(e.target.value)} inputMode="decimal" style={INP} />
-                  <div style={HINT}>Applied after markup. Adds {fmtUSD(previewTaxAmt)}.</div>
-                </div>
-                <div style={{ gridColumn: '1/-1' }}>
-                  <label style={LBL}>Notes</label>
-                  <textarea value={fNotes} onChange={e => setFNotes(e.target.value)} rows={2} placeholder="Conditions, directives, who authorized the work…" style={{ ...INP, resize: 'vertical' as const }} />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 18 }}>
-                <SignaturePad label="Contractor Signature" value={contractorSig} onChange={setContractorSig} />
-                <SignaturePad label="Owner / GC Signature" value={ownerSig} onChange={setOwnerSig} />
-              </div>
-
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <button onClick={() => createTicket('submitted')} disabled={saving || !fDesc.trim()}
-                  style={{ ...goldButtonStyle, cursor: saving ? 'wait' : 'pointer', opacity: (saving || !fDesc.trim()) ? 0.6 : 1 }} className="pmBtn">
-                  <PaperPlaneTilt size={15} weight="bold" />{saving ? 'Saving…' : 'Create & Submit'}
-                </button>
-                <button onClick={() => createTicket('draft')} disabled={saving || !fDesc.trim()}
-                  style={{ ...goldOutlineButtonStyle, cursor: saving ? 'wait' : 'pointer', opacity: (saving || !fDesc.trim()) ? 0.6 : 1 }} className="pmBtn">
-                  Save as Draft
-                </button>
-                <button onClick={closeComposer} style={ghostButtonStyle} className="pmBtn">Cancel</button>
-              </div>
-            </SectionCard>
-
-            {/* Context rail — live ticket math + what happens after submit */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <SectionCard flat title="Ticket Math" subtitle="Live — matches the saved total to the cent." icon={<CurrencyCircleDollar size={17} weight="duotone" color={GOLD} />}>
-                <InsightRow label="Labor (OT at 1.5x)" value={fmtUSD(previewLabor)} />
-                <InsightRow label="Materials" value={fmtUSD(previewMaterials)} />
-                <InsightRow label="Equipment" value={fmtUSD(previewEquipment)} />
-                <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '8px 0' }} />
-                <InsightRow label="Subtotal" value={fmtUSD(previewSub)} />
-                <InsightRow label={`Markup (${num(fMarkup)}%)`} value={'+' + fmtUSD(previewMarkupAmt)} accent={num(fMarkup) > 0 ? GOLD_HI : undefined} />
-                <InsightRow label={`Tax (${num(fTax)}%)`} value={'+' + fmtUSD(previewTaxAmt)} accent={num(fTax) > 0 ? GOLD_HI : undefined} />
-                <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '8px 0' }} />
-                <InsightRow label="Ticket Total" value={fmtUSD(previewTotal)} accent={GOLD} strong />
-              </SectionCard>
-              <SectionCard flat title="Signatures" icon={<Signature size={17} weight="duotone" color={GOLD} />}>
-                <InsightRow label="Contractor" value={contractorSig ? 'Captured' : 'Not Signed'} accent={contractorSig ? GREEN : undefined} />
-                <InsightRow label="Owner / GC" value={ownerSig ? 'Captured' : 'Not Signed'} accent={ownerSig ? GREEN : undefined} />
-                <div style={HINT}>A signed ticket is the strongest backup when the extra hits the pay app. Both pads are optional on drafts.</div>
-              </SectionCard>
-              <SectionCard flat title="After You Submit" icon={<CheckCircle size={17} weight="duotone" color={GOLD} />}>
-                <FlowSteps title="" steps={[
-                  { title: 'Ticket Numbered + Logged', desc: 'Auto-numbered and queued for approval with the total locked server-side.' },
-                  { title: 'Approve or Reject Inline', desc: 'The approver is stamped on the ticket with a timestamp.' },
-                  { title: 'Bill It or Escalate It', desc: 'Mark billed for invoicing, or escalate into a change event with the ticket attached.' },
-                ]} />
-              </SectionCard>
-            </div>
-          </div>
-        )}
-
-        {/* Toolbar: search + export (current filter) */}
-        {!loading && tickets.length > 0 && (
+      {/* ── Composer ──────────────────────────────────────────────────────── */}
+      <FormModal
+        open={showForm}
+        onClose={closeComposer}
+        title="New T&M Ticket"
+        subtitle={`${ctx?.project?.name ? `${ctx.project.name} · ` : ''}the ticket number is assigned automatically on save.`}
+        busy={saving}
+        footer={
           <>
-            <ListToolbar
-              module="tm-tickets"
-              search={search}
-              onSearch={setSearch}
-              searchPlaceholder="Search tickets, descriptions, approvers…"
-              count={{ shown: filtered.length, total: tickets.length }}
-              extra={<div style={{ display: 'flex', gap: 8 }}>
-                {exportBtn('csv', <FileCsv size={14} weight="regular" />)}
-                {exportBtn('xlsx', <FileXls size={14} weight="regular" />)}
-                {exportBtn('pdf', <FilePdf size={14} weight="regular" />)}
-              </div>}
-              style={{ marginBottom: 12 }}
-            />
-
-            {/* Status chips with live counts */}
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-              {(['all', ...STATUS_ORDER] as string[]).map(s => {
-                const active = statusFilter === s;
-                const count = s === 'all' ? tickets.length : (statusCounts[s] || 0);
-                const meta = s === 'all' ? null : STATUS_META[s];
-                return (
-                  <button key={s} onClick={() => setStatusFilter(s)}
-                    style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 7, padding: '6px 13px', borderRadius: 999,
-                      background: active ? 'linear-gradient(180deg, var(--brand-primary-18), var(--brand-primary-08))' : 'rgba(255,255,255,0.04)',
-                      border: `1px solid ${active ? 'color-mix(in srgb, var(--brand-primary) 50%, transparent)' : 'rgba(255,255,255,0.1)'}`,
-                      color: active ? GOLD_HI : DIM, fontSize: 12, fontWeight: active ? 800 : 600, cursor: 'pointer', whiteSpace: 'nowrap',
-                    }}>
-                    {meta && <span style={{ width: 7, height: 7, borderRadius: 999, background: meta.color, display: 'inline-block' }} />}
-                    {s === 'all' ? 'All' : meta!.label}
-                    <span style={{ fontSize: 10.5, fontWeight: 800, padding: '1px 7px', borderRadius: 999, background: active ? 'var(--brand-primary-18)' : 'rgba(255,255,255,0.08)', color: active ? GOLD_HI : 'rgba(255,255,255,0.55)', fontVariantNumeric: 'tabular-nums' }}>
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+            <span className="tmMuted" style={{ marginRight: 'auto', alignSelf: 'center', fontSize: 'var(--fs-sm)' }}>
+              Ticket total <b className="tmTotal">{fmtUSD(previewTotal)}</b>
+            </span>
+            <Button variant="ghost" onClick={closeComposer} disabled={saving}>Cancel</Button>
+            <Button onClick={() => createTicket('draft')} disabled={saving || !fDesc.trim()}>Save as Draft</Button>
+            <Button variant="primary" icon={<PaperPlaneTilt size={15} weight="bold" />} onClick={() => createTicket('submitted')} disabled={saving || !fDesc.trim()}>
+              {saving ? 'Saving…' : 'Create & Submit'}
+            </Button>
           </>
-        )}
+        }
+      >
+        <FormGrid cols={2}>
+          <Field label="Work Date" hint={<><AutoChip label="Today" /> Defaulted to today — adjust freely.</>}>
+            <div className="tmDateInput"><SaguaroDatePicker value={fDate} onChange={setFDate} style={DATE_INPUT_STYLE} /></div>
+          </Field>
+          <Field label="Reference / PO">
+            <Input value={fRef} onChange={e => setFRef(e.target.value)} placeholder="e.g. PO-1042, RFI-007" />
+          </Field>
+          <Field label="Description of Work" required span>
+            <Input value={fDesc} onChange={e => setFDesc(e.target.value)} placeholder="e.g. Rerouted conduit around unmarked plumbing stack, level 2" autoFocus />
+          </Field>
+        </FormGrid>
 
-        {/* Loading — skeleton shaped like the table it becomes */}
-        {loading && (
-          <SectionCard flat flush>
-            <div style={{ padding: 20 }}>
-              <Skeleton height={16} width="40%" style={{ marginBottom: 18 }} />
-              {[0, 1, 2, 3, 4].map(i => (
-                <div key={i} style={{ display: 'grid', gridTemplateColumns: '90px 110px 1fr 110px 110px 110px 120px 110px', gap: 14, marginBottom: 16, alignItems: 'center' }}>
-                  <Skeleton height={13} /><Skeleton height={13} /><Skeleton height={13} width="80%" /><Skeleton height={13} /><Skeleton height={13} /><Skeleton height={13} /><Skeleton height={13} /><Skeleton height={20} borderRadius={999} />
+        {/* Labor grid — trades come from lib/contractor-trades (never hardcoded) */}
+        <div className="tmGroup" style={{ marginTop: 16 }}>
+          <div className="tmGroupHead"><HardHat size={15} /> Labor <b>{fmtUSD(previewLabor)}</b></div>
+          <div className="tmGridWrap">
+            <div>
+              {gridHead(LABOR_COLS, ['Worker', 'Trade', 'Reg Hrs', 'OT Hrs', 'Rate', 'Line Total', ''])}
+              {fLabor.map(l => (
+                <div key={l.id} className="tmGrid" style={{ gridTemplateColumns: LABOR_COLS }}>
+                  <Input value={l.worker} onChange={e => setLabor(l.id, 'worker', e.target.value)} placeholder="Name" aria-label="Worker" />
+                  <Select value={l.trade} onChange={e => setLabor(l.id, 'trade', e.target.value)} options={TRADESPERSON_ROLES as unknown as string[]} aria-label="Trade" />
+                  <Input value={l.regHours} onChange={e => setLabor(l.id, 'regHours', e.target.value)} placeholder="0" inputMode="decimal" style={{ textAlign: 'right' }} aria-label="Regular hours" />
+                  <Input value={l.otHours} onChange={e => setLabor(l.id, 'otHours', e.target.value)} placeholder="0" inputMode="decimal" style={{ textAlign: 'right' }} aria-label="Overtime hours" />
+                  <Input value={l.rate} onChange={e => setLabor(l.id, 'rate', e.target.value)} placeholder="$/hr" inputMode="decimal" style={{ textAlign: 'right' }} aria-label="Rate" />
+                  <span className="tmLine">{fmtUSD(num(l.regHours) * num(l.rate) + num(l.otHours) * num(l.rate) * 1.5)}</span>
+                  {removeBtn(() => setFLabor(p => p.length > 1 ? p.filter(x => x.id !== l.id) : p), fLabor.length <= 1)}
                 </div>
               ))}
             </div>
-          </SectionCard>
-        )}
+          </div>
+          <Button size="sm" icon={<Plus size={12} weight="bold" />} onClick={() => setFLabor(p => [...p, { id: uid(), worker: '', trade: DEFAULT_TRADE, regHours: '', otHours: '', rate: '' }])}>Add Labor Line</Button>
+          <div className="tmHint">Overtime bills at 1.5x the worker&apos;s rate — same math the server stores.</div>
+        </div>
 
-        {/* Empty — the composer above IS the zero state; the strip teaches the flow */}
-        {!loading && tickets.length === 0 && (
-          <SectionCard>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 800, color: TEXT }}>
-                <Receipt size={16} weight="duotone" color={GOLD} style={{ marginRight: 7, verticalAlign: 'text-bottom' }} />
-                No T&M tickets yet
-                <span style={{ fontWeight: 400, color: DIM }}>{showForm ? ' — the composer above is ready; describe the extra work and add lines.' : ' — capture out-of-scope work before it becomes a dispute.'}</span>
-              </div>
-              {!showForm && (
-                <button onClick={() => setShowForm(true)} style={goldButtonStyle} className="pmBtn">
-                  <Plus size={15} weight="bold" /> New T&M Ticket
-                </button>
-              )}
+        {/* Materials grid */}
+        <div className="tmGroup">
+          <div className="tmGroupHead"><Package size={15} /> Materials <b>{fmtUSD(previewMaterials)}</b></div>
+          <div className="tmGridWrap">
+            <div>
+              {gridHead(MAT_COLS, ['Description', 'Qty', 'Unit', 'Unit Cost', 'Line Total', ''])}
+              {fMaterials.map(m => (
+                <div key={m.id} className="tmGrid" style={{ gridTemplateColumns: MAT_COLS }}>
+                  <Input value={m.description} onChange={e => setMaterial(m.id, 'description', e.target.value)} placeholder="Material" aria-label="Material" />
+                  <Input value={m.qty} onChange={e => setMaterial(m.id, 'qty', e.target.value)} placeholder="0" inputMode="decimal" style={{ textAlign: 'right' }} aria-label="Quantity" />
+                  <Select value={m.unit} onChange={e => setMaterial(m.id, 'unit', e.target.value)} options={UNITS} aria-label="Unit" />
+                  <Input value={m.unitCost} onChange={e => setMaterial(m.id, 'unitCost', e.target.value)} placeholder="$" inputMode="decimal" style={{ textAlign: 'right' }} aria-label="Unit cost" />
+                  <span className="tmLine">{fmtUSD(num(m.qty) * num(m.unitCost))}</span>
+                  {removeBtn(() => setFMaterials(p => p.length > 1 ? p.filter(x => x.id !== m.id) : p), fMaterials.length <= 1)}
+                </div>
+              ))}
             </div>
-            <FlowStrip steps={[
-              { title: 'Capture the Extra', desc: 'Labor, materials, equipment' },
-              { title: 'Get It Signed', desc: 'Contractor + owner pads' },
-              { title: 'Approve', desc: 'Stamped with who and when' },
-              { title: 'Bill or Escalate', desc: 'Invoice it or make it a change event' },
-            ]} />
-          </SectionCard>
-        )}
+          </div>
+          <Button size="sm" icon={<Plus size={12} weight="bold" />} onClick={() => setFMaterials(p => [...p, { id: uid(), description: '', qty: '', unit: 'EA', unitCost: '' }])}>Add Material Line</Button>
+        </div>
 
-        {/* Ticket table */}
-        {!loading && tickets.length > 0 && (
-          <SectionCard title="Tickets" icon={<Receipt size={17} weight="duotone" color={TM_ACCENT} />} flush>
-            {filtered.length === 0 ? (
-              <div style={{ padding: '32px 20px', textAlign: 'center', color: DIM, fontSize: 13 }}>
-                No tickets match the current search or filter.
-              </div>
-            ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                  <thead>
-                    <tr>
-                      <SortableTh label="Ticket" sortKey="ticket" sort={sort} onSort={cycleSort} />
-                      <SortableTh label="Work Date" sortKey="date" sort={sort} onSort={cycleSort} />
-                      <SortableTh label="Description" sortKey="desc" sort={sort} onSort={cycleSort} />
-                      <SortableTh label="Labor" sortKey="labor" sort={sort} onSort={cycleSort} align="right" />
-                      <SortableTh label="Materials" sortKey="materials" sort={sort} onSort={cycleSort} align="right" />
-                      <SortableTh label="Equipment" sortKey="equipment" sort={sort} onSort={cycleSort} align="right" />
-                      <SortableTh label="Total" sortKey="total" sort={sort} onSort={cycleSort} align="right" />
-                      <SortableTh label="Status" sortKey="status" sort={sort} onSort={cycleSort} />
-                      <SortableTh label="Actions" sort={sort} onSort={cycleSort} />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sortedTickets.map(t => (
-                      <tr key={t.id}
-                        onClick={() => setSelectedId(t.id)}
-                        style={{ borderBottom: `1px solid rgba(255,255,255,0.07)`, cursor: 'pointer' }}
-                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
-                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                        <td style={{ ...TD, color: GOLD, fontWeight: 800, whiteSpace: 'nowrap' }}>{ticketLabel(t)}</td>
-                        <td style={{ ...TD, color: DIM, whiteSpace: 'nowrap' }}>{fmtDate(t.work_date || t.created_at)}</td>
-                        <td style={{ ...TD, maxWidth: 300 }}>
-                          <div style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 290 }}>{t.description || '—'}</div>
-                          {(t.contractor_signature || t.owner_signature) && (
-                            <div style={{ fontSize: 11, color: DIM, marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
-                              <Signature size={11} weight="regular" color={GREEN} />
-                              {t.contractor_signature && t.owner_signature ? 'Both signatures' : t.contractor_signature ? 'Contractor signed' : 'Owner signed'}
-                            </div>
-                          )}
-                        </td>
-                        <td style={{ ...TD, textAlign: 'right', color: DIM, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{fmtUSD(t.labor_total)}</td>
-                        <td style={{ ...TD, textAlign: 'right', color: DIM, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{fmtUSD(t.materials_total)}</td>
-                        <td style={{ ...TD, textAlign: 'right', color: DIM, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{fmtUSD(t.equipment_total)}</td>
-                        <td style={{ ...TD, textAlign: 'right', color: GOLD, fontWeight: 800, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{fmtUSD(t.total)}</td>
-                        <td style={TD}>
-                          <StatusPill status={t.status} />
-                          {displayStatus(t.status) !== 'draft' && t.approved_by && (
-                            <div style={{ fontSize: 10.5, color: DIM, marginTop: 4, whiteSpace: 'nowrap' }}>
-                              by {t.approved_by}{t.approved_at ? ` · ${fmtDate(t.approved_at)}` : ''}
-                            </div>
-                          )}
-                        </td>
-                        <td style={TD}>
-                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-                            {statusActionButtons(t, true)}
-                            <span style={{ color: 'rgba(255,255,255,0.35)', display: 'inline-flex' }}><CaretRight size={14} weight="regular" /></span>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </SectionCard>
-        )}
-      </PremiumSurface>
-
-      {/* ── Detail drawer ─────────────────────────────────────────────────── */}
-      {selected && (
-        <>
-          <div onClick={() => setSelectedId(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(8,8,12,0.72)', zIndex: 300, backdropFilter: 'blur(2px)' }} />
-          <aside style={{
-            position: 'fixed', top: 0, right: 0, bottom: 0, width: 640, maxWidth: '96vw',
-            background: 'var(--bg-surface)', borderLeft: `1px solid ${BORDER}`, zIndex: 301,
-            overflowY: 'auto', boxShadow: '-24px 0 60px rgba(8,8,12,0.6)',
-          }}>
-            <div style={{ position: 'sticky', top: 0, background: 'var(--bg-surface)', borderBottom: `1px solid ${BORDER}`, padding: '16px 22px', zIndex: 2, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 12, fontWeight: 800, color: GOLD, background: 'var(--brand-primary-12)', padding: '3px 10px', borderRadius: 6 }}>{ticketLabel(selected)}</span>
-              <StatusPill status={selected.status} />
-              <span style={{ fontSize: 12, color: DIM }}>{fmtDate(selected.work_date || selected.created_at)}</span>
-              <button onClick={() => setSelectedId(null)} aria-label="Close ticket detail" style={{ marginLeft: 'auto', background: 'none', border: 'none', color: DIM, cursor: 'pointer', display: 'inline-flex', padding: 4 }}>
-                <X size={20} weight="regular" />
-              </button>
+        {/* Equipment grid */}
+        <div className="tmGroup">
+          <div className="tmGroupHead"><Wrench size={15} /> Equipment <b>{fmtUSD(previewEquipment)}</b></div>
+          <div className="tmGridWrap">
+            <div>
+              {gridHead(EQ_COLS, ['Description', 'Hours', 'Rate', 'Line Total', ''])}
+              {fEquipment.map(eq => (
+                <div key={eq.id} className="tmGrid" style={{ gridTemplateColumns: EQ_COLS }}>
+                  <Input value={eq.description} onChange={e => setEquipment(eq.id, 'description', e.target.value)} placeholder="e.g. Mini excavator" aria-label="Equipment" />
+                  <Input value={eq.hours} onChange={e => setEquipment(eq.id, 'hours', e.target.value)} placeholder="0" inputMode="decimal" style={{ textAlign: 'right' }} aria-label="Hours" />
+                  <Input value={eq.rate} onChange={e => setEquipment(eq.id, 'rate', e.target.value)} placeholder="$/hr" inputMode="decimal" style={{ textAlign: 'right' }} aria-label="Rate" />
+                  <span className="tmLine">{fmtUSD(num(eq.hours) * num(eq.rate))}</span>
+                  {removeBtn(() => setFEquipment(p => p.length > 1 ? p.filter(x => x.id !== eq.id) : p), fEquipment.length <= 1)}
+                </div>
+              ))}
             </div>
+          </div>
+          <Button size="sm" icon={<Plus size={12} weight="bold" />} onClick={() => setFEquipment(p => [...p, { id: uid(), description: '', hours: '', rate: '' }])}>Add Equipment Line</Button>
+        </div>
 
-            <div style={{ padding: '20px 22px 40px' }}>
-              <h2 style={{ margin: '0 0 4px', fontSize: 19, fontWeight: 800, color: TEXT, lineHeight: 1.3 }}>{selected.description || 'T&M Ticket'}</h2>
-              <div style={{ fontSize: 26, fontWeight: 800, color: GOLD, marginBottom: 4, fontVariantNumeric: 'tabular-nums' }}>{fmtUSD(selected.total)}</div>
-              {selStatus !== 'draft' && selected.approved_by && (
-                <div style={{ fontSize: 12, color: DIM, marginBottom: 4 }}>
-                  {selStatus === 'rejected' ? 'Rejected' : 'Approved'} by {selected.approved_by}{selected.approved_at ? ` on ${fmtDate(selected.approved_at)}` : ''}
-                </div>
-              )}
+        <FormGrid cols={2}>
+          <Field label="Markup %" hint={<><AutoChip label="15% Standard" /> Applied to the full subtotal. Adds {fmtUSD(previewMarkupAmt)}.</>}>
+            <Input value={fMarkup} onChange={e => setFMarkup(e.target.value)} inputMode="decimal" />
+          </Field>
+          <Field label="Tax %" hint={`Applied after markup. Adds ${fmtUSD(previewTaxAmt)}.`}>
+            <Input value={fTax} onChange={e => setFTax(e.target.value)} inputMode="decimal" />
+          </Field>
+          <Field label="Notes" span>
+            <Textarea value={fNotes} onChange={e => setFNotes(e.target.value)} rows={2} placeholder="Conditions, directives, who authorized the work…" />
+          </Field>
+        </FormGrid>
 
-              {/* Status actions with server stamping */}
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '14px 0 20px' }}>
-                {statusActionButtons(selected, false)}
-                <button onClick={() => escalateTicket(selected)} disabled={escalatingId === selected.id}
-                  style={{ ...goldOutlineButtonStyle, padding: '10px 16px', fontSize: 13, cursor: escalatingId === selected.id ? 'wait' : 'pointer', opacity: escalatingId === selected.id ? 0.6 : 1 }} className="pmBtn">
-                  <Lightning size={14} weight="bold" />{escalatingId === selected.id ? 'Escalating…' : 'Escalate to Change Event'}
-                </button>
-                <button onClick={() => exportTickets('pdf', [selected.id])} disabled={!!exporting}
-                  style={{ ...ghostButtonStyle, padding: '10px 14px', fontSize: 13, cursor: exporting ? 'wait' : 'pointer', opacity: exporting ? 0.6 : 1 }} className="pmBtn">
-                  <FilePdf size={14} weight="regular" />PDF
-                </button>
-              </div>
+        <div className="tmGroup" style={{ marginTop: 16 }}>
+          <div className="tmGroupHead"><Signature size={15} /> Signatures</div>
+          <div className="tmSigs">
+            <SignaturePad label="Contractor Signature" value={contractorSig} onChange={setContractorSig} />
+            <SignaturePad label="Owner / GC Signature" value={ownerSig} onChange={setOwnerSig} />
+          </div>
+          <div className="tmHint">A signed ticket is the strongest backup when the extra hits the pay app. Both pads are optional on drafts.</div>
+        </div>
 
-              {laborRows.length > 0 && (
-                <div style={{ marginBottom: 18 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
-                    <HardHat size={14} weight="duotone" color={TM_ACCENT} />
-                    <span style={{ fontSize: 12, fontWeight: 800, color: TEXT }}>Labor</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: GOLD, marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' }}>{fmtUSD(selected.labor_total)}</span>
-                  </div>
-                  <LineTable headers={['Worker', 'Reg', 'OT', 'Rate', 'Total']} rows={laborRows} />
-                </div>
-              )}
-              {materialRows.length > 0 && (
-                <div style={{ marginBottom: 18 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
-                    <Package size={14} weight="duotone" color={TM_ACCENT} />
-                    <span style={{ fontSize: 12, fontWeight: 800, color: TEXT }}>Materials</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: GOLD, marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' }}>{fmtUSD(selected.materials_total)}</span>
-                  </div>
-                  <LineTable headers={['Description', 'Qty', 'Unit', 'Cost', 'Total']} rows={materialRows} />
-                </div>
-              )}
-              {equipmentRows.length > 0 && (
-                <div style={{ marginBottom: 18 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
-                    <Wrench size={14} weight="duotone" color={TM_ACCENT} />
-                    <span style={{ fontSize: 12, fontWeight: 800, color: TEXT }}>Equipment</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: GOLD, marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' }}>{fmtUSD(selected.equipment_total)}</span>
-                  </div>
-                  <LineTable headers={['Description', 'Hours', 'Rate', 'Total']} rows={equipmentRows} />
-                </div>
-              )}
+        {/* Live ticket math — the SAME operations as the server route */}
+        <div className="tmLadder">
+          <InsightRow label="Labor (OT at 1.5x)" value={fmtUSD(previewLabor)} />
+          <InsightRow label="Materials" value={fmtUSD(previewMaterials)} />
+          <InsightRow label="Equipment" value={fmtUSD(previewEquipment)} />
+          <div className="tmRule" />
+          <InsightRow label="Subtotal" value={fmtUSD(previewSub)} />
+          <InsightRow label={`Markup (${num(fMarkup)}%)`} value={'+' + fmtUSD(previewMarkupAmt)} />
+          <InsightRow label={`Tax (${num(fTax)}%)`} value={'+' + fmtUSD(previewTaxAmt)} />
+          <div className="tmRule" />
+          <InsightRow label="Ticket Total" value={fmtUSD(previewTotal)} strong />
+        </div>
+        <div style={{ marginTop: 16 }}>
+          <FlowSteps title="After You Submit" steps={[
+            { title: 'Ticket Numbered + Logged', desc: 'Auto-numbered and queued for approval with the total locked server-side.' },
+            { title: 'Approve or Reject Inline', desc: 'The approver is stamped on the ticket with a timestamp.' },
+            { title: 'Bill It or Escalate It', desc: 'Mark billed for invoicing, or escalate into a change event with the ticket attached.' },
+          ]} />
+        </div>
+      </FormModal>
 
-              <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '14px 16px', marginBottom: 18 }}>
-                <TotalsLadder sub={selSub} markupPct={num(selected.markup_pct)} taxPct={num(selected.tax_pct)} total={num(selected.total)} />
-              </div>
-
-              {selected.notes && (
-                <div style={{ marginBottom: 18 }}>
-                  <div style={{ ...LBL, marginBottom: 8 }}>Notes</div>
-                  <div style={{ fontSize: 13, color: DIM, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{selected.notes}</div>
-                </div>
-              )}
-
-              {(selected.contractor_signature || selected.owner_signature) && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                  {selected.contractor_signature && (
-                    <div>
-                      <div style={{ ...LBL, marginBottom: 6 }}>Contractor Signature</div>
-                      {/* Signatures are canvas dataURLs stored as TEXT — render directly. */}
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={selected.contractor_signature} alt="Contractor signature" style={{ width: '100%', background: 'var(--bg-surface-2)', border: `1px solid ${BORDER}`, borderRadius: 10 }} />
-                    </div>
-                  )}
-                  {selected.owner_signature && (
-                    <div>
-                      <div style={{ ...LBL, marginBottom: 6 }}>Owner Signature</div>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={selected.owner_signature} alt="Owner signature" style={{ width: '100%', background: 'var(--bg-surface-2)', border: `1px solid ${BORDER}`, borderRadius: 10 }} />
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </aside>
-        </>
-      )}
-
-      <UnsavedGuardModal guard={guard} />
-    </>
+      {/* Above the FormModal overlay so the unsaved-work prompt is never hidden behind it. */}
+      <div style={{ position: 'relative', zIndex: 10001 }}>
+        <UnsavedGuardModal guard={guard} />
+      </div>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </div>
   );
 }

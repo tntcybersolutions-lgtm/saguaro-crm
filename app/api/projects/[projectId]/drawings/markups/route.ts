@@ -116,7 +116,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
       page_number: Number.isFinite(pageNumber) && pageNumber >= 1 ? Math.floor(pageNumber) : null,
       markup_type: markupType,
       data: body.data,
-      color: typeof body.color === 'string' && body.color ? body.color : '#EF4444',
+      color: typeof body.color === 'string' && body.color ? body.color : '#FF3B30',
       created_by: user.id, // live column is uuid — never write the email here
       created_by_name: typeof body.created_by_name === 'string' && body.created_by_name
         ? body.created_by_name

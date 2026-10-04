@@ -40,7 +40,7 @@ import {
 import { SkeletonRow } from '../../../components/ui/Skeleton';
 
 const GOLD = 'var(--brand-primary)', CARD = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
-const TEXT = '#FFFFFF', DIM = '#CBD5E1', GREEN = '#34C759', RED = '#FF3B30', AMBER = '#FF9500';
+const TEXT = '#FFFFFF', DIM = '#D4D4D8', GREEN = '#2CFF7A', RED = '#FF3B30', AMBER = '#FF8A00';
 
 interface Sub {
   id: string;
@@ -130,7 +130,7 @@ export default function SubsAndVendorsPage() {
   const prequalified = subs.filter(s => s.prequalified === true).length;
 
   return (
-    <PremiumSurface maxWidth={1400}>
+    <PremiumSurface maxWidth={2200}>
       <ModuleHero
         eyebrow="Company Directory"
         eyebrowIcon={<UsersThree size={13} weight="fill" color={GOLD} />}

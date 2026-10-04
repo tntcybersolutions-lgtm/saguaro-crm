@@ -6,8 +6,8 @@ import { PremiumSurface, ModuleHero, StatStrip, SectionCard, PremiumEmpty } from
 import { UsersThree, ChatCircleDots, Buildings, ClockCounterClockwise, ListChecks } from '@phosphor-icons/react';
 
 /* ── palette ──────────────────────────────────────────── */
-const GOLD='var(--brand-primary)',BG='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',TEXT='#FFFFFF',DIM='#CBD5E1';
-const GREEN='#22C55E',RED='#EF4444',AMBER='var(--warning)',BLUE='var(--brand-primary)',PURPLE='#8B5CF6';
+const GOLD='var(--brand-primary)',BG='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',TEXT='#FFFFFF',DIM='#D4D4D8';
+const GREEN='#2CFF7A',RED='#FF3B30',AMBER='var(--warning)',BLUE='var(--brand-primary)',PURPLE='#FF8A00';
 
 /* ── types ────────────────────────────────────────────── */
 type PortalStatus = 'active' | 'pending' | 'disabled';
@@ -516,7 +516,7 @@ export default function ClientPortalPage() {
                 <td style={tdS}>
                   <span style={badge(
                     u.role === 'Owner' ? GOLD : u.role === 'Architect' ? BLUE : u.role === 'Investor' ? PURPLE : AMBER,
-                    u.role === 'Owner' ? 'var(--brand-primary-12)' : u.role === 'Architect' ? 'var(--brand-primary-12)' : u.role === 'Investor' ? 'rgba(139,92,246,.14)' : 'color-mix(in srgb, var(--warning) 14%, transparent)'
+                    u.role === 'Owner' ? 'var(--brand-primary-12)' : u.role === 'Architect' ? 'var(--brand-primary-12)' : u.role === 'Investor' ? 'rgba(255,138,0,.14)' : 'color-mix(in srgb, var(--warning) 14%, transparent)'
                   )}>{u.role}</span>
                 </td>
                 <td style={tdS}>
@@ -1149,7 +1149,7 @@ export default function ClientPortalPage() {
   /* ── RENDER ─────────────────────────────────────────── */
   /* ══════════════════════════════════════════════════════ */
   return (
-    <PremiumSurface maxWidth={1440}>
+    <PremiumSurface maxWidth={2200}>
       {/* header */}
       <ModuleHero
         eyebrow="Client Experience"

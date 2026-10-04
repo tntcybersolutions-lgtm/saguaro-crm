@@ -38,6 +38,7 @@
  * and the recording console (date range + search + print-ready record).
  */
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { safeJsonParse } from '@/lib/safe-json';
 import useSWR from 'swr';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import {
@@ -67,9 +68,8 @@ import {
   MapTrifold,
   CaretDown,
 } from '@phosphor-icons/react';
+import { PageShell, Button as KitButton } from '@/components/ui/kit';
 import {
-  PremiumSurface,
-  ModuleHero,
   PremiumEmpty,
   goldButtonStyle,
   goldOutlineButtonStyle,
@@ -128,14 +128,14 @@ const FIELD_BG = 'rgba(255,255,255,0.04)';
 const FIELD_BORDER = '1px solid rgba(255,255,255,0.10)';
 const GOLD = 'var(--brand-primary)';
 const GOLD_HI = 'var(--brand-primary-strong)';
-const RED = '#EF4444';
-const RED_SOFT = 'rgba(239,68,68,0.14)';
-const RED_BORDER = 'rgba(239,68,68,0.45)';
+const RED = '#FF3B30';
+const RED_SOFT = 'rgba(255,59,48,0.14)';
+const RED_BORDER = 'rgba(255,59,48,0.45)';
 const AMBER_SOFT = 'var(--brand-primary-12)';
 const AMBER_BORDER = 'var(--brand-primary-35)';
-const GREEN = '#45B37D';
-const GREEN_SOFT = 'rgba(69,179,125,0.15)';
-const GREEN_BORDER = 'rgba(69,179,125,0.5)';
+const GREEN = '#2CFF7A';
+const GREEN_SOFT = 'rgba(44,255,122,0.15)';
+const GREEN_BORDER = 'rgba(44,255,122,0.5)';
 const NEST = 'rgba(20,20,22,0.55)';
 
 /* ── Types (mirror the server layer; v2 fields optional — render only when present) */
@@ -378,7 +378,7 @@ function readMonOverrides(): Record<string, boolean> {
 const HEARD_KEY = 'sag_radio_heard';
 function readHeard(): string[] {
   try {
-    const a = JSON.parse(window.localStorage.getItem(HEARD_KEY) || '[]');
+    const a = safeJsonParse<any[]>(window.localStorage.getItem(HEARD_KEY), []);
     return Array.isArray(a) ? a.filter((x) => typeof x === 'string') : [];
   } catch { return []; }
 }
@@ -494,12 +494,12 @@ function FrequencyDial({ seed }: { seed: string }) {
         <line
           key={i}
           x1={xAt(f)} y1={24} x2={xAt(f)} y2={i % 5 === 0 ? 44 : 35}
-          stroke={f >= 0.86 ? 'rgba(248,113,113,0.75)' : i % 5 === 0 ? 'rgba(255,255,255,0.72)' : 'rgba(255,255,255,0.40)'}
+          stroke={f >= 0.86 ? 'rgba(255,59,48,0.75)' : i % 5 === 0 ? 'rgba(255,255,255,0.72)' : 'rgba(255,255,255,0.40)'}
           strokeWidth={i % 5 === 0 ? 1.6 : 1}
         />
       ))}
       {[0, 10, 20, 30, 40].map((i) => (
-        <text key={i} x={xAt(i / 40)} y={58} textAnchor="middle" fontSize={11} fontWeight={700} fill={i === 40 ? '#F87171' : 'rgba(255,255,255,0.62)'}>
+        <text key={i} x={xAt(i / 40)} y={58} textAnchor="middle" fontSize={11} fontWeight={700} fill={i === 40 ? '#FF3B30' : 'rgba(255,255,255,0.62)'}>
           {(26.9 + (i / 40) * 0.5).toFixed(1)}
         </text>
       ))}
@@ -2914,9 +2914,9 @@ export default function RadioDispatchPage() {
     const alert = m.kind === 'alert';
     const tone = m.kind === 'tone' ? TONES[m.body || ''] : undefined;
     const resolved = panic && !!m.panic_resolved_at;
-    const rowBg = panic ? (resolved ? 'rgba(239,68,68,0.05)' : RED_SOFT) : alert ? AMBER_SOFT : 'transparent';
+    const rowBg = panic ? (resolved ? 'rgba(255,59,48,0.05)' : RED_SOFT) : alert ? AMBER_SOFT : 'transparent';
     const rowBorder = panic
-      ? `1px solid ${resolved ? 'rgba(239,68,68,0.20)' : RED_BORDER}`
+      ? `1px solid ${resolved ? 'rgba(255,59,48,0.20)' : RED_BORDER}`
       : alert ? `1px solid ${AMBER_BORDER}` : `1px solid ${BORDER}`;
     const translatedBody = m.translations?.[lang];
     const trail = panic && Array.isArray(m.location_trail)
@@ -3083,7 +3083,7 @@ export default function RadioDispatchPage() {
                     width: 24, height: 24, borderRadius: 999, textDecoration: 'none',
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 10.5, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
-                    background: i === trail.length - 1 ? 'rgba(239,68,68,0.35)' : RED_SOFT,
+                    background: i === trail.length - 1 ? 'rgba(255,59,48,0.35)' : RED_SOFT,
                     border: `1px solid ${RED_BORDER}`, color: '#FCA5A5',
                   }}
                 >
@@ -3327,7 +3327,45 @@ export default function RadioDispatchPage() {
    * hero and the console plate are sized to fit one viewport so the feed
    * inside the plate stays the only thing that scrolls. */
   return (
-    <PremiumSurface maxWidth={1500} pad="26px 24px 26px">
+    <div className="rdWs">
+      <style dangerouslySetInnerHTML={{ __html: `.rdWs > .k-page { max-width: none; } .rdPanic { position: relative; overflow: hidden; user-select: none; touch-action: none; } .rdPanicFill { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(255,59,48,0.35); pointer-events: none; }` }} />
+      <PageShell
+        crumbs={[{ label: 'Home', href: '/app' }, { label: 'Radio' }]}
+        title="Radio"
+        subtitle="Dispatch console — push-to-talk for the crew, with English and Spanish transcripts. Connection state is real: transmissions only show once they arrive."
+        actions={
+          <>
+            {/* Assistance queue toggle — badge counts the live queue */}
+            <KitButton
+              variant={assistShown ? 'primary' : 'secondary'}
+              icon={<Lifebuoy size={15} weight="bold" />}
+              onClick={() => setAssistShown((v) => !v)}
+              aria-pressed={assistShown}
+              title="Assistance queue — field requests waiting on dispatch"
+            >
+              Assist{assistQueue.length > 0 ? ` (${assistQueue.length}${assistOpenCount > 0 ? ' open' : ''})` : ''}
+            </KitButton>
+            {/* EN/ES lives in the console overflow menu — a transcript
+              * preference does not earn permanent chrome. */}
+            {/* PANIC — hold to confirm. A hold-to-fire control, not a click, so it keeps its own fill. */}
+            <KitButton
+              variant="danger"
+              className="rdPanic"
+              icon={<Siren size={16} weight="fill" />}
+              onPointerDown={panicDown}
+              onPointerUp={panicUp}
+              onPointerLeave={panicUp}
+              onPointerCancel={panicUp}
+              disabled={panicFiring}
+              title="Hold to send a panic alarm to every channel member"
+              style={panicSent ? { color: GREEN, borderColor: GREEN_BORDER, background: GREEN_SOFT } : undefined}
+            >
+              <span aria-hidden className="rdPanicFill" style={{ width: `${panicHold * 100}%`, transition: panicHold === 0 ? 'width .2s ease' : 'none' }} />
+              <span style={{ position: 'relative' }}>{panicFiring ? 'Sending…' : panicSent ? 'Panic Sent' : 'Hold — Panic'}</span>
+            </KitButton>
+          </>
+        }
+      >
       <style>{`
         @keyframes sagRadioEq { 0%, 100% { transform: scaleY(0.35); } 50% { transform: scaleY(1); } }
         .sagRadioRow .sagRowActions { opacity: 0; pointer-events: none; transition: opacity .15s ease; }
@@ -3359,87 +3397,6 @@ export default function RadioDispatchPage() {
         /* Instrument readouts appear once the header has room for them. */
         @media (min-width: 1200px) { .sagReadout { display: flex !important; } }
       `}</style>
-      <ModuleHero
-        eyebrow="Dispatch Console"
-        eyebrowIcon={<Broadcast size={13} weight="bold" />}
-        title={
-          <>
-            <VividGoldChip
-              icon={<Broadcast size={26} weight="fill" />}
-              size={50}
-              style={{ verticalAlign: 'middle', marginRight: 16, transform: 'translateY(-3px)' }}
-            />
-            Saguaro
-          </>
-        }
-        accent="Radio"
-        subtitle="Push-to-talk for the crew, with English and Spanish transcripts."
-        actions={
-          <>
-            {/* Assistance queue toggle — badge counts the live queue */}
-            <button
-              onClick={() => setAssistShown((v) => !v)}
-              title="Assistance queue — field requests waiting on dispatch"
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                padding: '9px 14px', borderRadius: 12, cursor: 'pointer',
-                background: assistShown ? 'linear-gradient(180deg, var(--brand-primary-25), color-mix(in srgb, var(--brand-primary) 14%, transparent))' : FIELD_BG,
-                border: assistOpenCount > 0 ? `1px solid ${RED_BORDER}` : FIELD_BORDER,
-                color: assistShown ? GOLD_HI : MUTED, fontWeight: 800, fontSize: 12.5,
-              }}
-            >
-              <Lifebuoy size={15} weight="bold" /> Assist
-              {assistQueue.length > 0 && (
-                <span
-                  style={{
-                    minWidth: 18, height: 18, padding: '0 5px', borderRadius: 999,
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    background: assistOpenCount > 0 ? RED : 'rgba(255,255,255,0.14)',
-                    color: assistOpenCount > 0 ? WHITE : MUTED,
-                    fontSize: 10, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
-                  }}
-                >
-                  {assistQueue.length}
-                </span>
-              )}
-            </button>
-            {/* EN/ES lives in the console overflow menu — a transcript
-              * preference does not earn permanent chrome. */}
-            {/* PANIC — hold to confirm */}
-            <button
-              onPointerDown={panicDown}
-              onPointerUp={panicUp}
-              onPointerLeave={panicUp}
-              onPointerCancel={panicUp}
-              disabled={panicFiring}
-              title="Hold to send a panic alarm to every channel member"
-              style={{
-                position: 'relative', overflow: 'hidden',
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                padding: '11px 20px', borderRadius: 12, cursor: panicFiring ? 'wait' : 'pointer',
-                background: panicSent ? GREEN_SOFT : RED_SOFT,
-                border: `1px solid ${panicSent ? GREEN_BORDER : RED_BORDER}`,
-                color: panicSent ? GREEN : RED, fontWeight: 900, fontSize: 13,
-                userSelect: 'none', touchAction: 'none',
-              }}
-            >
-              <span
-                aria-hidden
-                style={{
-                  position: 'absolute', left: 0, top: 0, bottom: 0,
-                  width: `${panicHold * 100}%`,
-                  background: 'rgba(239,68,68,0.35)',
-                  transition: panicHold === 0 ? 'width .2s ease' : 'none',
-                }}
-              />
-              <Siren size={16} weight="fill" style={{ position: 'relative' }} />
-              <span style={{ position: 'relative' }}>
-                {panicFiring ? 'Sending…' : panicSent ? 'Panic Sent' : 'Hold — Panic'}
-              </span>
-            </button>
-          </>
-        }
-      />
 
       {/* ══════════════════════════════════════════════════════════════════
         * DISPATCH CONSOLE
@@ -3751,7 +3708,7 @@ export default function RadioDispatchPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0, paddingRight: 2 }}>
             {rtLive && (
               <span title="Live — transmissions arrive instantly over the realtime socket" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 9.5, fontWeight: 900, color: GREEN }}>
-                <span aria-hidden style={{ width: 7, height: 7, borderRadius: 999, background: GREEN, boxShadow: '0 0 8px rgba(69,179,125,0.8)' }} />
+                <span aria-hidden style={{ width: 7, height: 7, borderRadius: 999, background: GREEN, boxShadow: '0 0 8px rgba(44,255,122,0.8)' }} />
                 LIVE
               </span>
             )}
@@ -3872,7 +3829,7 @@ export default function RadioDispatchPage() {
           style={{
             flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12, padding: '8px 14px',
             background: micOpen
-              ? 'linear-gradient(90deg, rgba(239,68,68,0.22), rgba(239,68,68,0.05))'
+              ? 'linear-gradient(90deg, rgba(255,59,48,0.22), rgba(255,59,48,0.05))'
               : onAir
                 ? 'linear-gradient(90deg, color-mix(in srgb, var(--brand-primary) 24%, transparent), color-mix(in srgb, var(--brand-primary) 7%, transparent))'
                 : 'rgba(255,255,255,0.02)',
@@ -4080,11 +4037,11 @@ export default function RadioDispatchPage() {
                   : keyed
                     ? 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary))'
                     : micError
-                      ? `linear-gradient(180deg, rgba(239,68,68,0.22), rgba(239,68,68,0.10))`
+                      ? `linear-gradient(180deg, rgba(255,59,48,0.22), rgba(255,59,48,0.10))`
                       : `linear-gradient(180deg, ${GOLD_HI}, ${GOLD} 60%, var(--brand-primary-hover))`,
                 color: micOpen ? WHITE : micError && !keyed ? '#FCA5A5' : '#0A0A00',
                 boxShadow: micOpen
-                  ? '0 0 0 5px rgba(239,68,68,0.22), 0 8px 26px -10px rgba(239,68,68,0.8)'
+                  ? '0 0 0 5px rgba(255,59,48,0.22), 0 8px 26px -10px rgba(255,59,48,0.8)'
                   : micError ? 'none' : '0 6px 20px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)',
                 outline: micError && !keyed ? `1px solid ${RED_BORDER}` : 'none',
                 opacity: active ? 1 : 0.5,
@@ -5145,6 +5102,7 @@ export default function RadioDispatchPage() {
           ))}
         </div>
       )}
-    </PremiumSurface>
+      </PageShell>
+    </div>
   );
 }

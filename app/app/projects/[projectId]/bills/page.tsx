@@ -13,7 +13,7 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 
-const GOLD='var(--brand-primary)', DARK='var(--bg-base)', RAISED='var(--bg-surface)', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#3dd68c', RED='#ef4444';
+const GOLD='var(--brand-primary)', DARK='var(--bg-base)', RAISED='var(--bg-surface)', BORDER='rgba(255,255,255,0.12)', DIM='#D4D4D8', TEXT='#FFFFFF', GREEN='#2CFF7A', RED='#FF3B30';
 
 interface Bill {
   id: string;
@@ -34,8 +34,8 @@ function statusBadge(status: string) {
   const map: Record<string, { bg: string; color: string }> = {
     Pending: { bg: 'color-mix(in srgb, var(--warning) 18%, transparent)', color: 'var(--warning)' },
     Approved: { bg: 'var(--brand-primary-18)', color: 'var(--brand-primary-strong)' },
-    Paid: { bg: 'rgba(61,214,140,.2)', color: GREEN },
-    Overdue: { bg: 'rgba(239,68,68,.2)', color: RED },
+    Paid: { bg: 'rgba(44,255,122,.2)', color: GREEN },
+    Overdue: { bg: 'rgba(255,59,48,.2)', color: RED },
   };
   const s = map[status] || { bg: 'rgba(143,163,192,.2)', color: DIM };
   return <span style={{ padding: '3px 10px', borderRadius: 20, background: s.bg, color: s.color, fontSize: 11, fontWeight: 700 }}>{status}</span>;
@@ -351,8 +351,8 @@ export default function BillsPage() {
         ]} />
       )}
 
-      {successMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(61,214,140,.15)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 7, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
-      {errorMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.4)', borderRadius: 7, color: RED, fontSize: 13 }}>{errorMsg}</div>}
+      {successMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(44,255,122,.15)', border: '1px solid rgba(44,255,122,.4)', borderRadius: 7, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
+      {errorMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(255,59,48,.15)', border: '1px solid rgba(255,59,48,.4)', borderRadius: 7, color: RED, fontSize: 13 }}>{errorMsg}</div>}
 
       {showForm && (
         <div style={{ marginBottom: 24, display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 320px', gap: 16, alignItems: 'start' }}>
@@ -510,7 +510,7 @@ export default function BillsPage() {
                 {sortedBills.map(b => {
                   const overdue = isOverdue(b.due_date, b.status);
                   return (
-                    <tr key={b.id} style={{ borderBottom: '1px solid rgba(255,255,255,.06)', background: overdue ? 'rgba(239,68,68,.05)' : 'transparent' }}>
+                    <tr key={b.id} style={{ borderBottom: '1px solid rgba(255,255,255,.06)', background: overdue ? 'rgba(255,59,48,.05)' : 'transparent' }}>
                       <td style={{ padding: '10px 14px', color: GOLD, fontWeight: 600 }}>{b.bill_number}</td>
                       <td style={{ padding: '10px 14px', color: TEXT }}>{b.vendor_name}</td>
                       <td style={{ padding: '10px 14px', color: DIM, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.description}</td>
@@ -518,7 +518,7 @@ export default function BillsPage() {
                         {deleteId === b.id ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <span style={{ fontSize: 11, color: RED, fontWeight: 600 }}>Delete bill?</span>
-                            <button onClick={(e) => { e.stopPropagation(); handleDeleteBill(b.id); }} style={{ padding: '3px 8px', background: 'rgba(239,68,68,.15)', border: `1px solid rgba(239,68,68,.3)`, borderRadius: 5, color: RED, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Yes</button>
+                            <button onClick={(e) => { e.stopPropagation(); handleDeleteBill(b.id); }} style={{ padding: '3px 8px', background: 'rgba(255,59,48,.15)', border: `1px solid rgba(255,59,48,.3)`, borderRadius: 5, color: RED, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Yes</button>
                             <button onClick={(e) => { e.stopPropagation(); setDeleteId(null); }} style={{ padding: '3px 8px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
                           </div>
                         ) : editId === b.id ? (
@@ -530,7 +530,7 @@ export default function BillsPage() {
                         ) : adjustId === b.id ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                             {[-10, -5, 5, 10].map(p => (
-                              <button key={p} onClick={(e) => { e.stopPropagation(); handleAdjustBill(b.id, p); }} style={{ padding: '3px 7px', background: p > 0 ? 'rgba(61,214,140,.1)' : 'rgba(239,68,68,.1)', border: `1px solid ${p > 0 ? 'rgba(61,214,140,.25)' : 'rgba(239,68,68,.25)'}`, borderRadius: 5, color: p > 0 ? GREEN : RED, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{p > 0 ? '+' : ''}{p}%</button>
+                              <button key={p} onClick={(e) => { e.stopPropagation(); handleAdjustBill(b.id, p); }} style={{ padding: '3px 7px', background: p > 0 ? 'rgba(44,255,122,.1)' : 'rgba(255,59,48,.1)', border: `1px solid ${p > 0 ? 'rgba(44,255,122,.25)' : 'rgba(255,59,48,.25)'}`, borderRadius: 5, color: p > 0 ? GREEN : RED, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{p > 0 ? '+' : ''}{p}%</button>
                             ))}
                             <button onClick={(e) => { e.stopPropagation(); setAdjustId(null); }} style={{ padding: '3px 6px', background: 'none', border: 'none', color: DIM, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
                           </div>
@@ -551,7 +551,7 @@ export default function BillsPage() {
                                   </div>
                                 ))}
                                 <div style={{ height: 1, background: BORDER, margin: '4px 0' }} />
-                                <div onClick={(e) => { e.stopPropagation(); setMenuId(null); setDeleteId(b.id); }} style={{ padding: '7px 12px', fontSize: 12, color: RED, cursor: 'pointer', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,.08)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                                <div onClick={(e) => { e.stopPropagation(); setMenuId(null); setDeleteId(b.id); }} style={{ padding: '7px 12px', fontSize: 12, color: RED, cursor: 'pointer', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,59,48,.08)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                                   <Trash size={14} weight="duotone" color={RED} />Delete Bill
                                 </div>
                               </div>
@@ -568,7 +568,7 @@ export default function BillsPage() {
                           </button>
                         )}
                         {(b.status === 'Pending' || b.status === 'Approved') && (
-                          <button onClick={() => handlePay(b.id)} disabled={actionLoading === b.id + '-pay'} style={{ padding: '4px 10px', background: 'rgba(61,214,140,.2)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 5, color: GREEN, fontSize: 12, cursor: 'pointer' }}>
+                          <button onClick={() => handlePay(b.id)} disabled={actionLoading === b.id + '-pay'} style={{ padding: '4px 10px', background: 'rgba(44,255,122,.2)', border: '1px solid rgba(44,255,122,.4)', borderRadius: 5, color: GREEN, fontSize: 12, cursor: 'pointer' }}>
                             {actionLoading === b.id + '-pay' ? '…' : 'Mark Paid'}
                           </button>
                         )}

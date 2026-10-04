@@ -34,9 +34,9 @@ const STATUS_LABEL: Record<string, string> = {
 
 // Semantic accents tuned to the cinematic dark surface (match the dashboard).
 const GOLD = 'var(--brand-primary)';
-const GREEN = '#45B37D';
+const GREEN = '#2CFF7A';
 const AMBER = 'var(--warning)';
-const RED = '#E0644E';
+const RED = '#FF3B30';
 
 const inp: React.CSSProperties = { width: '100%', padding: '9px 12px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 13, outline: 'none', boxSizing: 'border-box' };
 const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.62)', marginBottom: 6 };
@@ -263,7 +263,7 @@ export default function W9Page() {
       </div>
 
       {toast && (
-        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(34,197,94,0.3)`, borderRadius: 10, color: T.green, fontSize: 13 }}>
+        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(44,255,122,0.3)`, borderRadius: 10, color: T.green, fontSize: 13 }}>
           {toast}
         </div>
       )}

@@ -1,67 +1,76 @@
 'use client';
+/**
+ * Signup — Pass 4 on the kit. Same flow as before: POST /api/auth/signup,
+ * confirmed / demo accounts land straight on /app, everyone else sees the
+ * check-your-email state.
+ */
 import React, { useState } from 'react';
 import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 import { TRIAL_DAYS } from '@/lib/plans';
 import Link from 'next/link';
 import MarketingNav from '@/components/MarketingNav';
-import { Check, Warning } from '@phosphor-icons/react';
-
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444',GREEN='#22c55e';
-const HAIR='rgba(255,255,255,0.08)',CARD='rgba(255,255,255,0.02)';
-
-/* House display treatment — gold text-shine on ONE key word per heading. */
-const SHINE: React.CSSProperties = {
-  background: 'linear-gradient(100deg, var(--brand-primary) 6%, var(--brand-primary-strong) 50%, var(--brand-primary) 92%)',
-  WebkitBackgroundClip: 'text',
-  backgroundClip: 'text',
-  WebkitTextFillColor: 'transparent',
-  color: 'transparent',
-};
+import { Check, Warning, User, Monitor, DeviceMobile, UsersThree, CheckCircle } from '@phosphor-icons/react';
+import { Card, Field, Input, Select, Button, FormGrid, Badge } from '@/components/ui/kit';
+import { FlowSteps } from '@/components/ui/premium';
 
 const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'];
 
 const HOW_IT_WORKS = [
-  {
-    step: '1',
-    title: 'Create Your Account',
-    desc: 'Fill out the form — takes about 30 seconds. No credit card needed.',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={DIM} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-      </svg>
-    ),
-  },
-  {
-    step: '2',
-    title: 'Log In — It\'s Ready Instantly',
-    desc: 'No download. No install. Open your browser, go to saguarocontrol.net, and log in. Your full platform is live.',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={DIM} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
-      </svg>
-    ),
-  },
-  {
-    step: '3',
-    title: 'Install on Your Phone (Optional)',
-    desc: 'Download Saguaro Control Systems free from Apple TestFlight on your iPhone. Android coming soon.',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={DIM} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
-      </svg>
-    ),
-  },
-  {
-    step: '4',
-    title: 'Invite Your Team',
-    desc: 'Add unlimited users — PMs, estimators, field crew. Everyone gets access for free.',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={DIM} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-      </svg>
-    ),
-  },
+  { title: 'Create Your Account', desc: 'Fill out the form — takes about 30 seconds. No credit card needed.', icon: User },
+  { title: 'Log In — It\'s Ready Instantly', desc: 'No download. No install. Open your browser, go to saguarocontrol.net, and log in. Your full platform is live.', icon: Monitor },
+  { title: 'Install on Your Phone (Optional)', desc: 'Download Saguaro Control Systems free from Apple TestFlight on your iPhone. Android coming soon.', icon: DeviceMobile },
+  { title: 'Invite Your Team', desc: 'Add unlimited users — PMs, estimators, field crew. Everyone gets access for free.', icon: UsersThree },
 ];
+
+const CSS = `
+.suPage { min-height: 100vh; background: var(--bg-base); }
+.suGrid { display: grid; grid-template-columns: 1fr 1fr; min-height: calc(100vh - 60px); max-width: 1100px; margin: 0 auto; padding: 0 16px; gap: 48px; align-items: start; }
+.suLeft { padding: 48px 0 40px; position: sticky; top: 80px; }
+.suRight { padding: 48px 0 40px; }
+.suTrial { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 24px; }
+.suH1 { font-size: clamp(26px, 3.4vw, 36px); font-weight: 800; color: var(--text-primary); line-height: 1.15; margin: 0 0 12px; letter-spacing: -0.02em; }
+.suH1 b { color: var(--brand-primary); }
+.suLead { font-size: var(--fs-md); color: var(--text-secondary); line-height: 1.7; margin: 0 0 32px; }
+.suLead b { color: var(--text-primary); }
+.suSteps { display: flex; flex-direction: column; gap: 20px; margin-bottom: 32px; }
+.suStep { display: flex; gap: 14px; align-items: flex-start; }
+.suStepIcon { width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0; display: grid; place-items: center; background: var(--bg-surface-2); border: 1px solid var(--glass-border); color: var(--text-tertiary); }
+.suStepTitle { font-size: var(--fs-md); font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+.suStepNum { color: var(--text-tertiary); font-size: var(--fs-xs); font-weight: 600; margin-right: 6px; }
+.suStepDesc { font-size: var(--fs-sm); color: var(--text-tertiary); line-height: 1.6; }
+.suTrust { display: flex; flex-wrap: wrap; gap: 14px; }
+.suTrust span { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-xs); color: var(--text-tertiary); }
+.suTrust svg { color: var(--status-ongoing); }
+.suQuote { margin-top: 32px; }
+.suQuote p { font-size: var(--fs-sm); color: var(--text-secondary); line-height: 1.7; margin: 0 0 10px; font-style: italic; }
+.suQuote b { font-size: var(--fs-xs); color: var(--text-primary); }
+.suQuote b span { color: var(--text-tertiary); font-weight: 400; }
+.suHead { margin-bottom: 20px; }
+.suHead h2 { font-size: 22px; font-weight: 700; color: var(--text-primary); margin: 0 0 6px; }
+.suHead p { font-size: var(--fs-sm); color: var(--text-tertiary); margin: 0; }
+.suMsg { display: flex; align-items: flex-start; gap: 8px; padding: 10px 14px; border-radius: var(--radius-sm); font-size: var(--fs-sm); margin-bottom: 16px; background: rgba(255,77,94,.08); border: 1px solid rgba(255,77,94,.35); color: var(--status-overdue); }
+.suMsg > svg { flex-shrink: 0; margin-top: 1px; }
+.suSubmit { width: 100%; justify-content: center; min-height: 46px; margin-top: 6px; }
+.suNext { margin-top: 18px; }
+.suFoot { margin-top: 16px; text-align: center; font-size: var(--fs-sm); color: var(--text-tertiary); }
+.suFoot a { color: var(--brand-primary); text-decoration: none; font-weight: 600; }
+.suLegal { margin-top: 8px; text-align: center; font-size: var(--fs-xs); color: var(--text-tertiary); }
+.suLegal a { color: var(--text-tertiary); text-decoration: underline; text-underline-offset: 3px; }
+.suDone { min-height: 100vh; background: var(--bg-base); display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
+.suDoneWrap { width: 100%; max-width: 480px; text-align: center; }
+.suDoneIcon { width: 72px; height: 72px; border-radius: 50%; background: rgba(44,255,122,.10); border: 1px solid rgba(44,255,122,.3); display: grid; place-items: center; margin: 0 auto 20px; color: var(--status-ongoing); }
+.suDoneWrap h1 { font-size: 26px; font-weight: 700; color: var(--text-primary); margin: 0 0 12px; }
+.suDoneWrap p { color: var(--text-secondary); font-size: var(--fs-md); line-height: 1.7; margin: 0 0 24px; }
+.suDoneWrap p b { color: var(--text-primary); }
+.suDoneList { text-align: left; margin-bottom: 20px; }
+.suDoneList div { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: var(--fs-sm); color: var(--text-secondary); }
+.suDoneList svg { color: var(--status-ongoing); flex-shrink: 0; }
+.suLink { all: unset; color: var(--brand-primary); cursor: pointer; font-weight: 600; }
+.suLink:focus-visible { outline: 2px solid var(--brand-primary); }
+.suPage select.k-select optgroup { color: var(--text-tertiary); }
+@media (max-width: 760px) { .suGrid { grid-template-columns: 1fr; gap: 32px; } .suLeft { position: static; padding-bottom: 0; } .suRight { padding-top: 0; } }
+@media (max-width: 640px) { .suPage .k-btn, .suPage .k-input, .suPage select.k-select { min-height: 44px; } }
+`;
 
 export default function SignupPage(){
   const [form, setForm] = useState({name:'',email:'',password:'',company:'',phone:'',role:'General Contractor',state:'AZ',size:'1-10'});
@@ -84,22 +93,8 @@ export default function SignupPage(){
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Signup failed. Please try again.'); setLoading(false); return; }
-      /* STRAIGHT INTO THE WORKSPACE.
-         This sent a brand-new owner to /onboarding/step-1, an interstitial
-         listing four features they had just read about on the pricing page.
-         Its progress bar promised three steps — Welcome, First Project, Invite
-         Team — and neither of its buttons goes to step two: one opens the
-         dashboard and the other opens the new-project form. Nothing anywhere
-         in the codebase links to /onboarding/step-2 at all, and step-4's own
-         progress bar shows a different four-step sequence with a "Company"
-         step that step-1 never mentions. So the wizard was three quarters
-         unreachable and the part a new customer did meet lied about where it
-         was taking them.
-         The dashboard already carries the guided journey, and that rail is
-         now the single one on the page. Landing there means the first screen
-         after paying attention to a signup form is the product, which is what
-         Procore and Buildertrend do and what a 30-day no-card trial has to do
-         to survive its first minute. */
+      /* STRAIGHT INTO THE WORKSPACE. The dashboard carries the guided journey,
+         so the first screen after a signup form is the product itself. */
       if (data.confirmed || data.demo) { window.location.href = '/app'; return; }
       setSuccess(true);
     } catch {
@@ -108,148 +103,99 @@ export default function SignupPage(){
     setLoading(false);
   }
 
-  const inputStyle: React.CSSProperties = {width:'100%',padding:'11px 14px',background:'#1c1c1e',border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:14,outline:'none',boxSizing:'border-box'};
-  const selectStyle: React.CSSProperties = {width:'100%',padding:'11px 14px',background:'#1c1c1e',border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:14,outline:'none',boxSizing:'border-box',cursor:'pointer'};
-  const labelStyle: React.CSSProperties = {display:'block',fontSize:12,fontWeight:600,color:DIM,marginBottom:6};
-
   if(success) return (
-    <div style={{minHeight:'100vh',background:DARK,display:'flex',alignItems:'center',justifyContent:'center',padding:24,fontFamily:"system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"}}>
-      <div style={{width:'100%',maxWidth:480,textAlign:'center'}}>
-        <div style={{width:72,height:72,borderRadius:'50%',background:'rgba(34,197,94,0.1)',border:'1px solid rgba(34,197,94,0.3)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 24px'}}><Check size={32} weight="bold" color={GREEN} /></div>
-        <h1 style={{fontSize:26,fontWeight:600,color:TEXT,marginBottom:12}}>Check Your Email</h1>
-        <p style={{color:DIM,fontSize:15,lineHeight:1.7,marginBottom:28}}>
-          We sent a confirmation link to <strong style={{color:TEXT}}>{form.email}</strong>.<br/>
-          Click it to activate your account — then log in at <strong style={{color:TEXT}}>saguarocontrol.net/login</strong>.
-        </p>
-        <div style={{background:CARD,border:`1px solid ${HAIR}`,borderRadius:12,padding:'18px 24px',marginBottom:28,textAlign:'left'}}>
-          <div style={{fontSize:13,fontWeight:600,color:TEXT,marginBottom:12}}>What Happens Next</div>
-          {['Click the link in your email to confirm.', 'Log in at saguarocontrol.net — no download needed.', 'Complete your 5-minute company setup.', 'Invite your team — unlimited users, always free.'].map((t,i)=>(
-            <div key={i} style={{display:'flex',alignItems:'center',gap:10,marginBottom:8,fontSize:13,color:DIM}}>
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="rgba(34,197,94,0.15)"/><path d="M4.5 8l2.5 2.5 4-5" stroke={GREEN} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              {t}
-            </div>
-          ))}
-        </div>
-        <Link href="/login" style={{display:'block',padding:'12px',background:'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))',borderRadius:'var(--radius-md)',color:'#0A0A00',fontWeight:700,fontSize:15,textDecoration:'none',marginBottom:16,boxShadow:'0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)'}}>
-          Go to Login →
-        </Link>
-        <p style={{fontSize:12,color:DIM}}>Didn't get it? Check spam or <button onClick={()=>setSuccess(false)} style={{background:'none',border:'none',color:GOLD,cursor:'pointer',fontSize:12,fontWeight:600}}>Try Again</button></p>
+    <div className="suDone">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <div className="suDoneWrap">
+        <div className="suDoneIcon"><Check size={32} weight="bold" /></div>
+        <h1>Check Your Email</h1>
+        <p>We sent a confirmation link to <b>{form.email}</b>.<br/>Click it to activate your account — then log in at <b>saguarocontrol.net/login</b>.</p>
+        <Card title="What Happens Next">
+          <div className="suDoneList">
+            {['Click the link in your email to confirm.', 'Log in at saguarocontrol.net — no download needed.', 'Complete your 5-minute company setup.', 'Invite your team — unlimited users, always free.'].map((t,i)=>(
+              <div key={i}><CheckCircle size={15} weight="fill" />{t}</div>
+            ))}
+          </div>
+          <Button variant="primary" href="/login" className="suSubmit">Go to Login →</Button>
+        </Card>
+        <p style={{ fontSize: 'var(--fs-xs)', marginTop: 16, marginBottom: 0 }}>Didn't get it? Check spam or <button type="button" className="suLink" onClick={()=>setSuccess(false)}>try again</button>.</p>
       </div>
     </div>
   );
 
   return (
-    <div style={{minHeight:'100vh',background:DARK,fontFamily:"system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"}}>
-
-      {/* Nav */}
+    <div className="suPage">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
       {/* One professional nav across every marketing page (fixed, 58px). */}
       <MarketingNav />
       <div style={{ height: 58 }} />
 
-      <div className="pg-stack-1" style={{display:'grid',gridTemplateColumns:'1fr 1fr',minHeight:'calc(100vh - 60px)',maxWidth:1100,margin:'0 auto',padding:'0 24px',gap:64,alignItems:'start'}}>
-
+      <div className="suGrid">
         {/* ── LEFT: How it works ── */}
-        <div style={{padding:'52px 0 40px',position:'sticky',top:80}}>
+        <div className="suLeft">
+          <div className="suTrial"><Badge tone="ongoing" dot>{TRIAL_DAYS}-Day Free Trial — No Credit Card</Badge></div>
+          <h1 className="suH1">The <b>Fastest Way</b> to Run Your Construction Company</h1>
+          <p className="suLead">Saguaro is a <b>web-based platform</b> — nothing to download or install on a computer. Sign up, log in from any browser, and your whole team is running in minutes.</p>
 
-          {/* Trial badge */}
-          <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'6px 14px',background:'transparent',border:'1px solid rgba(255,255,255,0.14)',borderRadius:20,fontSize:12,fontWeight:600,color:DIM,marginBottom:28}}>
-            <span style={{width:6,height:6,borderRadius:'50%',background:GREEN,display:'inline-block'}}/>
-            {TRIAL_DAYS}-Day Free Trial — No Credit Card
-          </div>
-
-          <h1 style={{fontSize:'clamp(26px,3.4vw,36px)',fontWeight:800,color:TEXT,lineHeight:1.15,marginBottom:12,letterSpacing:'-0.02em'}}>
-            The <span style={SHINE}>Fastest Way</span> to Run Your Construction Company
-          </h1>
-          <p style={{fontSize:15,color:DIM,lineHeight:1.7,marginBottom:40}}>
-            Saguaro is a <strong style={{color:TEXT}}>web-based platform</strong> — nothing to download or install on a computer. Sign up, log in from any browser, and your whole team is running in minutes.
-          </p>
-
-          {/* Steps */}
-          <div style={{display:'flex',flexDirection:'column',gap:24,marginBottom:40}}>
+          <div className="suSteps">
             {HOW_IT_WORKS.map((s,i)=>(
-              <div key={i} style={{display:'flex',gap:16,alignItems:'flex-start'}}>
-                <div style={{width:40,height:40,borderRadius:12,background:CARD,border:`1px solid ${HAIR}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                  {s.icon}
-                </div>
+              <div key={i} className="suStep">
+                <div className="suStepIcon"><s.icon size={20} /></div>
                 <div>
-                  <div style={{fontSize:14,fontWeight:600,color:TEXT,marginBottom:3}}>
-                    <span style={{color:DIM,fontSize:11,fontWeight:600,marginRight:6}}>Step {s.step}</span>
-                    {s.title}
-                  </div>
-                  <div style={{fontSize:13,color:DIM,lineHeight:1.6}}>{s.desc}</div>
+                  <div className="suStepTitle"><span className="suStepNum">Step {i + 1}</span>{s.title}</div>
+                  <div className="suStepDesc">{s.desc}</div>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Trust row */}
-          <div style={{display:'flex',flexWrap:'wrap',gap:16}}>
+          <div className="suTrust">
             {['No credit card required','Cancel anytime','Unlimited users included','Free migration from Procore'].map(t=>(
-              <div key={t} style={{display:'flex',alignItems:'center',gap:6,fontSize:12,color:DIM}}>
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="rgba(34,197,94,0.15)"/><path d="M4.5 8l2.5 2.5 4-5" stroke={GREEN} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                {t}
-              </div>
+              <span key={t}><CheckCircle size={13} weight="fill" />{t}</span>
             ))}
           </div>
 
-          {/* Testimonial */}
-          <div className="lift" style={{marginTop:36,padding:'20px 24px',background:CARD,border:`1px solid ${HAIR}`,borderRadius:'var(--radius-lg)',boxShadow:'var(--shadow-sm)'}}>
-            <p style={{fontSize:13,color:DIM,lineHeight:1.7,marginBottom:12,fontStyle:'italic'}}>
-              "We compared Saguaro to Procore and Buildertrend. Saguaro has everything we need at a fraction of the cost — and the AI features actually work."
-            </p>
-            <div style={{fontSize:12,fontWeight:600,color:TEXT}}>David K. <span style={{color:DIM,fontWeight:400}}>— Owner, Mid-Size GC, Denver CO</span></div>
+          <div className="suQuote">
+            <Card>
+              <p>"We compared Saguaro to Procore and Buildertrend. Saguaro has everything we need at a fraction of the cost — and the AI features actually work."</p>
+              <b>David K. <span>— Owner, Mid-Size GC, Denver CO</span></b>
+            </Card>
           </div>
         </div>
 
         {/* ── RIGHT: Signup form ── */}
-        <div style={{padding:'52px 0 40px'}}>
-          <div style={{marginBottom:28}}>
-            <h2 style={{fontSize:22,fontWeight:600,color:TEXT,margin:'0 0 6px'}}>Start Your Free Trial</h2>
-            <p style={{fontSize:13,color:DIM,margin:0}}>Takes 30 seconds. No credit card required.</p>
+        <div className="suRight">
+          <div className="suHead">
+            <h2>Start Your Free Trial</h2>
+            <p>Takes 30 seconds. No credit card required.</p>
           </div>
 
-          <div style={{background:RAISED,border:`1px solid ${HAIR}`,borderRadius:'var(--radius-lg)',padding:32,boxShadow:'var(--shadow-lg)'}}>
-            {error&&(
-              <div style={{background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:RED,display:'flex',alignItems:'flex-start',gap:8}}>
-                <Warning size={15} weight="fill" style={{flexShrink:0,marginTop:1}} /><span>{error}</span>
-              </div>
-            )}
+          <Card>
+            {error && <div className="suMsg" role="alert"><Warning size={15} weight="fill" /><span>{error}</span></div>}
 
-            <form onSubmit={handleSubmit} style={{display:'flex',flexDirection:'column',gap:16}}>
-              <div>
-                <label style={labelStyle}>Your Full Name *</label>
-                <input placeholder="John Smith" value={form.name} onChange={e=>update('name',e.target.value)} required autoComplete="name" style={inputStyle}/>
-              </div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
-                <div>
-                  <label style={labelStyle}>Work Email *</label>
-                  <input type="email" placeholder="you@company.com" value={form.email} onChange={e=>update('email',e.target.value)} required autoComplete="email" style={inputStyle}/>
-                </div>
-                <div>
-                  <label style={labelStyle}>Password *</label>
-                  <input type="password" placeholder="8+ characters" value={form.password} onChange={e=>update('password',e.target.value)} required autoComplete="new-password" style={inputStyle}/>
-                </div>
-              </div>
-              <div>
-                <label style={labelStyle}>Company Name *</label>
-                <input placeholder="Acme Construction LLC" value={form.company} onChange={e=>update('company',e.target.value)} required style={inputStyle}/>
-              </div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
-                <div>
-                  <label style={labelStyle}>Phone</label>
-                  <input type="tel" placeholder="(480) 555-0100" value={form.phone} onChange={e=>update('phone',e.target.value)} autoComplete="tel" style={inputStyle}/>
-                </div>
-                <div>
-                  <label style={labelStyle}>State</label>
-                  <select value={form.state} onChange={e=>update('state',e.target.value)} style={selectStyle}>
-                    {US_STATES.map(s=><option key={s}>{s}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
-                <div>
-                  <label style={labelStyle}>Company Type</label>
-                  <select value={form.role} onChange={e=>update('role',e.target.value)} style={selectStyle}>
+            <form onSubmit={handleSubmit}>
+              <FormGrid cols={2}>
+                <Field label="Your Full Name" required span>
+                  <Input placeholder="John Smith" value={form.name} onChange={e=>update('name',e.target.value)} required autoComplete="name" />
+                </Field>
+                <Field label="Work Email" required>
+                  <Input type="email" placeholder="you@company.com" value={form.email} onChange={e=>update('email',e.target.value)} required autoComplete="email" />
+                </Field>
+                <Field label="Password" required hint="At least 8 characters.">
+                  <Input type="password" placeholder="8+ characters" value={form.password} onChange={e=>update('password',e.target.value)} required autoComplete="new-password" />
+                </Field>
+                <Field label="Company Name" required span>
+                  <Input placeholder="Acme Construction LLC" value={form.company} onChange={e=>update('company',e.target.value)} required autoComplete="organization" />
+                </Field>
+                <Field label="Phone">
+                  <Input type="tel" placeholder="(480) 555-0100" value={form.phone} onChange={e=>update('phone',e.target.value)} autoComplete="tel" />
+                </Field>
+                <Field label="State">
+                  <Select aria-label="State" value={form.state} onChange={e=>update('state',e.target.value)} options={US_STATES} />
+                </Field>
+                <Field label="Company Type">
+                  {/* Native select — the trade list is grouped by CSI division, which the kit Select does not render. */}
+                  <select className="k-select" aria-label="Company type" value={form.role} onChange={e=>update('role',e.target.value)}>
                     {form.role&&!['General Contractor','Developer / Owner','Specialty Contractor','Other'].includes(form.role)&&!SUB_TRADES.includes(form.role)&&<option value={form.role}>{form.role}</option>}
                     <optgroup label="Company Type">
                       {['General Contractor','Developer / Owner','Specialty Contractor','Other'].map(r=><option key={r} value={r}>{r}</option>)}
@@ -263,50 +209,28 @@ export default function SignupPage(){
                       {SUB_TRADES.filter(t=>!SUB_TRADES_BY_DIVISION.some(g=>g.trades.includes(t))).map(t=><option key={t} value={t}>{t}</option>)}
                     </optgroup>
                   </select>
-                </div>
-                <div>
-                  <label style={labelStyle}>Team Size</label>
-                  <select value={form.size} onChange={e=>update('size',e.target.value)} style={selectStyle}>
-                    {['1-10','11-25','26-50','51-100','100+'].map(s=><option key={s}>{s}</option>)}
-                  </select>
-                </div>
-              </div>
+                </Field>
+                <Field label="Team Size">
+                  <Select aria-label="Team size" value={form.size} onChange={e=>update('size',e.target.value)} options={['1-10','11-25','26-50','51-100','100+']} />
+                </Field>
+              </FormGrid>
 
-              <button type="submit" disabled={loading} style={{marginTop:8,padding:'12px 0',background:loading?'color-mix(in srgb, var(--brand-primary) 40%, transparent)':'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))',border:'none',borderRadius:'var(--radius-md)',color:'#0A0A00',fontSize:15,fontWeight:700,letterSpacing:'0.01em',cursor:loading?'not-allowed':'pointer',boxShadow:loading?'none':'0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)',transition:'background .18s, box-shadow .18s, transform .12s'}}>
-                {loading?'Creating your account…':'Start Free Trial →'}
-              </button>
+              <Button type="submit" variant="primary" className="suSubmit" disabled={loading}>{loading ? 'Creating your account…' : 'Start Free Trial →'}</Button>
             </form>
 
-            {/* What happens next */}
-            <div style={{marginTop:20,padding:'14px 18px',background:CARD,border:`1px solid ${HAIR}`,borderRadius:8}}>
-              <div style={{fontSize:12,fontWeight:600,color:DIM,marginBottom:10}}>After You Sign Up</div>
-              {['Confirm your email → you\'re in instantly.','Log in at saguarocontrol.net — works in any browser.','Optional: get the iOS field app free on TestFlight.'].map((t,i)=>(
-                <div key={i} style={{display:'flex',alignItems:'center',gap:8,fontSize:12,color:DIM,marginBottom:6}}>
-                  <span style={{width:18,height:18,borderRadius:'50%',background:'transparent',border:`1px solid ${HAIR}`,display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:600,color:DIM,flexShrink:0}}>{i+1}</span>
-                  {t}
-                </div>
-              ))}
+            <div className="suNext">
+              <FlowSteps title="After You Sign Up" steps={[
+                { title: 'Confirm your email', desc: "You're in instantly." },
+                { title: 'Log in at saguarocontrol.net', desc: 'Works in any browser.' },
+                { title: 'Optional: the iOS field app', desc: 'Free on TestFlight.' },
+              ]} />
             </div>
 
-            <div style={{marginTop:16,textAlign:'center',fontSize:12,color:DIM}}>
-              Already have an account? <Link href="/login" style={{color:GOLD,textDecoration:'none',fontWeight:600}}>Log In →</Link>
-            </div>
-            <div style={{marginTop:8,textAlign:'center',fontSize:11,color:'#CBD5E1'}}>
-              By signing up you agree to our <Link href="/terms" style={{color:DIM,textDecoration:'underline',textUnderlineOffset:3}}>Terms of Service</Link> and <Link href="/privacy" style={{color:DIM,textDecoration:'underline',textUnderlineOffset:3}}>Privacy Policy</Link>.
-            </div>
-          </div>
+            <div className="suFoot">Already have an account? <Link href="/login">Log In →</Link></div>
+            <div className="suLegal">By signing up you agree to our <Link href="/terms">Terms of Service</Link> and <Link href="/privacy">Privacy Policy</Link>.</div>
+          </Card>
         </div>
       </div>
-
-      {/* Mobile: stack the two-column layout into one column */}
-      <style>{`
-        @media(max-width:640px){
-          .pg-stack-1{
-            grid-template-columns: 1fr !important;
-            gap: 40px !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }

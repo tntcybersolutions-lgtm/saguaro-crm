@@ -1,5 +1,6 @@
 'use client';
 import { useMemo, useState } from 'react';
+import { textPrompt } from '@/lib/ui/async-dialog';
 import Link from 'next/link';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { useBudget, useChangeOrders, createChangeOrder, advanceChangeOrder } from '@/lib/hooks/useFranchise';
@@ -9,9 +10,9 @@ import { CurrencyDollar, NotePencil, ArrowRight, Plus } from '@phosphor-icons/re
 
 const CO_STAGES: Record<string, { label: string; color: string }> = {
   draft: { label: 'Issued', color: C.dim }, pricing: { label: 'GC Pricing', color: '#5AC8FA' },
-  pm_review: { label: 'PM Review', color: C.blue }, architect_review: { label: 'Architect Review', color: '#AF52DE' },
+  pm_review: { label: 'PM Review', color: C.blue }, architect_review: { label: 'Architect Review', color: '#FF8A00' },
   pending_owner: { label: 'Owner Approval', color: C.gold }, approved: { label: 'Executed', color: C.green },
-  schedule_updated: { label: 'Schedule Updated', color: '#30B0C7' }, budget_updated: { label: 'Budget Updated', color: '#34C759' },
+  schedule_updated: { label: 'Schedule Updated', color: '#30B0C7' }, budget_updated: { label: 'Budget Updated', color: '#2CFF7A' },
   rejected: { label: 'Rejected', color: C.red },
 };
 
@@ -44,7 +45,7 @@ export default function BudgetPage() {
   async function act(id: string, action: 'advance' | 'reject') {
     if (busy[id]) return;
     let reason: string | undefined;
-    if (action === 'reject') { reason = typeof window !== 'undefined' ? window.prompt('Reason for rejection?') || undefined : undefined; if (reason === undefined) return; }
+    if (action === 'reject') { const rr = await textPrompt({ title: 'Reject', label: 'Reason for rejection', multiline: true, required: true }); if (!rr) return; reason = rr; }
     setBusy((b) => ({ ...b, [id]: true }));
     try { await advanceChangeOrder(id, action, reason); } catch { /* noop */ } finally { setBusy((b) => ({ ...b, [id]: false })); }
   }
@@ -53,7 +54,7 @@ export default function BudgetPage() {
   if (!ready) return null;
 
   return (
-    <PremiumSurface maxWidth={1200} pad="28px 24px 60px">
+    <PremiumSurface maxWidth={2200} pad="28px 24px 60px">
       <div style={{ fontFamily: font, color: C.text }}>
       <ModuleHero
         eyebrow="Command Center"

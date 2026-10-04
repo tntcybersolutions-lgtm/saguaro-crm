@@ -5,7 +5,7 @@ import { useState, useCallback, useRef } from 'react';
 const GOLD = 'var(--brand-primary)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1';
+const DIM = '#D4D4D8';
 
 /* ──────────────────────────────────────────────
    useDragReorder hook

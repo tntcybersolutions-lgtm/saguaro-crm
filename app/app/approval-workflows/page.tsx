@@ -20,12 +20,12 @@ const BG = 'var(--bg-base)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = '#2C3344';
 const TEXT = '#FFFFFF';
-const DIM = '#CBD5E1';
-const GREEN = '#22C55E';
-const RED = '#EF4444';
+const DIM = '#D4D4D8';
+const GREEN = '#2CFF7A';
+const RED = '#FF3B30';
 const AMBER = 'var(--warning)';
 const BLUE = 'var(--brand-primary)';
-const PURPLE = '#8B5CF6';
+const PURPLE = '#FF8A00';
 
 /* ── entity types = real approvable modules ── */
 type EntityType = 'change_order' | 'pay_app' | 'purchase_order' | 'invoice';

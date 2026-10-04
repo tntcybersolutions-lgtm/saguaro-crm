@@ -12,9 +12,9 @@ import { moduleAccent } from '@/lib/module-identity';
 import { Button, Input } from '@/components/ui/kit';
 import ProjectOwnershipCard from '@/components/projects/ProjectOwnershipCard';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030',BLUE='#1a5fa8';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30',BLUE='#1a5fa8';
 const fmt = (n:number) => '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-function Badge({label,color='#CBD5E1',bg='rgba(148,163,184,.12)'}:{label:string,color?:string,bg?:string}){
+function Badge({label,color='#D4D4D8',bg='rgba(148,163,184,.12)'}:{label:string,color?:string,bg?:string}){
   return <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:bg,color}}>{label}</span>;
 }
 
@@ -293,14 +293,14 @@ export default function TeamPage(){
             {href: `/app/projects/${projectId}/team`, label:'Project', value: ctx.project?.name || '—', sub: ctx.project?.projectNumber ? `#${ctx.project.projectNumber}` : (ctx.project?.status || 'active')},
             {href: `/app/projects/${projectId}/team`, label:'Owner', value: ctx.defaults?.ownerName || '—', sub: ctx.defaults?.ownerEmail || 'No email on file'},
             {href: `/app/projects/${projectId}/team`, label:'Architect', value: ctx.defaults?.architectName || '—', sub: 'Design contact'},
-            {href: `/app/projects/${projectId}/team`, label:'Leadership', value: `${leadersAssigned}/5`, accent: leadersAssigned>=3?'#3dd68c':GOLD, sub: leadersAssigned>0?'Directory roles assigned':'Set them in the directory below'},
+            {href: `/app/projects/${projectId}/team`, label:'Leadership', value: `${leadersAssigned}/5`, accent: leadersAssigned>=3?'#2CFF7A':GOLD, sub: leadersAssigned>0?'Directory roles assigned':'Set them in the directory below'},
             {href: `/app/projects/${projectId}/subs`, label:'Trades on the Job', value: String(subTrades.length), sub: ctxSubs.length?`Across ${ctxSubs.length} sub${ctxSubs.length===1?'':'s'}`:'No subs yet'},
           ]}/>
         )}
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
           <StatCard icon={<UsersThree size={19} weight="duotone" color={GOLD} />} label="Team Members" value={String(members.length)} accent={GOLD} sub={members.length===1?'1 with access':`${members.length} with access`}  href={`/app/projects/${projectId}/team`}/>
           <StatCard icon={<HardHat size={19} weight="duotone" color={BLUE} />} label="Subcontractors" value={String(subs.length)} accent={subs.length?BLUE:undefined} sub={subTrades.length?`${subTrades.length} trade${subTrades.length===1?'':'s'} — portal access`:'Portal access'}  href={`/app/projects/${projectId}/subs`}/>
-          <StatCard icon={<IdentificationBadge size={19} weight="duotone" color={leadersAssigned>=3?'#3dd68c':GOLD} />} label="Field Leadership" value={`${leadersAssigned}/5`} accent={leadersAssigned>=3?'#3dd68c':GOLD} sub="PM · super · foreman · owner · architect"  href={`/app/projects/${projectId}/team`}/>
+          <StatCard icon={<IdentificationBadge size={19} weight="duotone" color={leadersAssigned>=3?'#2CFF7A':GOLD} />} label="Field Leadership" value={`${leadersAssigned}/5`} accent={leadersAssigned>=3?'#2CFF7A':GOLD} sub="PM · super · foreman · owner · architect"  href={`/app/projects/${projectId}/team`}/>
         </div>
       </>
     )}
@@ -417,7 +417,7 @@ export default function TeamPage(){
                 <td style={{padding:'11px 12px'}}><div style={{display:'flex',alignItems:'center',gap:10}}><div style={{width:32,height:32,borderRadius:'50%',background:GOLD,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800,color:'#0A0A00'}}>{m.name[0]}</div><span style={{color:TEXT,fontWeight:600}}>{m.name}</span></div></td>
                 <td style={{padding:'11px 12px',color:DIM}}>{m.role}</td>
                 <td style={{padding:'11px 12px',color:DIM}}>{m.email}</td>
-                <td style={{padding:'11px 12px'}}><Badge label={m.access} color={m.access==='Admin'?GOLD:m.access==='Manager'?'#4a9de8':'#CBD5E1'} bg={m.access==='Admin'?'var(--brand-primary-12)':m.access==='Manager'?'rgba(26,95,168,.12)':'rgba(148,163,184,.08)'}/></td>
+                <td style={{padding:'11px 12px'}}><Badge label={m.access} color={m.access==='Admin'?GOLD:m.access==='Manager'?'#FF8A00':'#D4D4D8'} bg={m.access==='Admin'?'var(--brand-primary-12)':m.access==='Manager'?'rgba(26,95,168,.12)':'rgba(148,163,184,.08)'}/></td>
                 <td style={{padding:'11px 12px'}}>
                   <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap' as const}}>
                     {assignmentsFor(m.userId).map(a=>(
@@ -436,7 +436,7 @@ export default function TeamPage(){
                     )}
                   </div>
                 </td>
-                <td style={{padding:'11px 12px',color:'#3dd68c',fontSize:12}}>{m.last}</td>
+                <td style={{padding:'11px 12px',color:'#2CFF7A',fontSize:12}}>{m.last}</td>
               </tr>)}</tbody>
             </table>
           </div>
@@ -514,7 +514,7 @@ export default function TeamPage(){
                 <td style={{padding:'11px 12px',color:DIM,fontSize:12}}>{cs?.trade || '—'}</td>
                 <td style={{padding:'11px 12px',color:DIM}}>{s.email || cs?.email || ''}</td>
                 <td style={{padding:'11px 12px',color:Number(cs?.contractAmount)>0?TEXT:DIM,fontWeight:Number(cs?.contractAmount)>0?700:400}}>{Number(cs?.contractAmount)>0?fmtMoney(Number(cs?.contractAmount)):'—'}</td>
-                <td style={{padding:'11px 12px'}}><Badge label="Sub Portal" color='#a78bfa' bg='rgba(167,139,250,.12)'/></td>
+                <td style={{padding:'11px 12px'}}><Badge label="Sub Portal" color='#FF8A00' bg='rgba(255,138,0,.12)'/></td>
                 <td style={{padding:'11px 12px',display:'flex',gap:6}}>
                   <button onClick={()=>handleSendPortalLink(s)} disabled={sendingPortal===s.name} style={{background:'none',border:`1px solid ${BORDER}`,borderRadius:5,color:GOLD,fontSize:11,padding:'3px 8px',cursor:sendingPortal===s.name?'default':'pointer',opacity:sendingPortal===s.name?.6:1}}>{sendingPortal===s.name?'Working…':'Copy Portal Link'}</button>
                 </td>

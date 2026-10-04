@@ -29,8 +29,8 @@ import { Handshake, CaretDown, CaretUp, Check, ArrowRight } from '@phosphor-icon
 import { SectionCard } from '@/components/ui/premium';
 import { SALES_STEPS, salesStepsDone, type SalesSignals } from '@/lib/sales-journey';
 
-const BLUE = '#3B82F6';
-const BLUE_HI = '#60A5FA';
+const BLUE = '#FF8A00';
+const BLUE_HI = '#FF8A00';
 const TEXT = '#FFFFFF';
 const MUTED = 'rgba(255,255,255,0.62)';
 const FAINT = 'rgba(255,255,255,0.42)';
@@ -131,11 +131,11 @@ export default function SalesJourneyRail() {
             </div>
 
             <div style={{ position: 'relative' }}>
-              <div style={{ position: 'absolute', left: 10, top: 10, bottom: 16, width: 1, background: 'linear-gradient(180deg, rgba(59,130,246,0.45), rgba(255,255,255,0.08))' }} />
+              <div style={{ position: 'absolute', left: 10, top: 10, bottom: 16, width: 1, background: 'linear-gradient(180deg, rgba(255,138,0,0.45), rgba(255,255,255,0.08))' }} />
               {steps.map((s, i) => {
                 const isCur = i === curIdx;
                 const verb = s.done ? 'Review' : isCur ? 'Resume' : 'Open';
-                const base = isCur ? 'rgba(59,130,246,0.07)' : 'transparent';
+                const base = isCur ? 'rgba(255,138,0,0.07)' : 'transparent';
                 return (
                   <Link
                     key={s.key}
@@ -149,7 +149,7 @@ export default function SalesJourneyRail() {
                         display: 'flex', gap: 12, alignItems: 'flex-start', position: 'relative',
                         padding: '7px 8px', margin: '0 -8px', borderRadius: 10,
                         background: base,
-                        border: isCur ? '1px solid rgba(59,130,246,0.32)' : '1px solid transparent',
+                        border: isCur ? '1px solid rgba(255,138,0,0.32)' : '1px solid transparent',
                         transition: 'background .15s ease',
                       }}
                       onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
@@ -159,8 +159,8 @@ export default function SalesJourneyRail() {
                         width: 21, height: 21, borderRadius: 999, flexShrink: 0, zIndex: 1,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         background: s.done ? `linear-gradient(180deg,${BLUE_HI},${BLUE})` : '#101011',
-                        border: s.done ? 'none' : `1px solid rgba(59,130,246,${isCur ? 0.85 : 0.45})`,
-                        boxShadow: isCur ? '0 0 12px rgba(59,130,246,0.45)' : undefined,
+                        border: s.done ? 'none' : `1px solid rgba(255,138,0,${isCur ? 0.85 : 0.45})`,
+                        boxShadow: isCur ? '0 0 12px rgba(255,138,0,0.45)' : undefined,
                         color: s.done ? '#04121F' : BLUE_HI, fontSize: 10, fontWeight: 900,
                       }}>
                         {s.done ? <Check size={12} weight="bold" color="#04121F" /> : i + 1}
@@ -171,7 +171,7 @@ export default function SalesJourneyRail() {
                           {isCur && (
                             <span style={{
                               padding: '1px 7px', borderRadius: 999, flexShrink: 0,
-                              background: 'rgba(59,130,246,0.16)', border: '1px solid rgba(59,130,246,0.45)',
+                              background: 'rgba(255,138,0,0.16)', border: '1px solid rgba(255,138,0,0.45)',
                               color: BLUE_HI, fontSize: 9, fontWeight: 900, letterSpacing: '0.08em',
                             }}>You Are Here</span>
                           )}

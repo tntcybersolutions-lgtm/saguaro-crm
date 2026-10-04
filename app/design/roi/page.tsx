@@ -5,8 +5,8 @@ import type { Icon } from '@phosphor-icons/react';
 import { BatteryHigh, Drop, Lightbulb, Plug, Shower, Sun, Thermometer, ThermometerHot, Wall } from '@phosphor-icons/react';
 
 /* ─── Palette — Premium Dark Glassmorphism ─── */
-const GOLD = 'var(--brand-primary)', GREEN = '#34C759';
-const TEXT = '#FFFFFF', DIM = '#CBD5E1';
+const GOLD = 'var(--brand-primary)', GREEN = '#2CFF7A';
+const TEXT = '#FFFFFF', DIM = '#D4D4D8';
 const RED = '#FF3B30', BLUE = 'var(--brand-primary)';
 const BG = 'var(--bg-base)', CARD_BG = 'rgba(255,255,255,0.04)';
 const CARD_BORDER = 'rgba(255,255,255,0.12)', CARD_SHADOW = '0 8px 32px rgba(0,0,0,0.12)';
@@ -94,15 +94,15 @@ const UPGRADES: Upgrade[] = [
 
 /* ─── Icon colors per upgrade (replaces emojis) ─── */
 const ICON_COLORS: Record<string, string> = {
-  thermostat: '#EF4444',
-  lighting: '#FBBF24',
-  solar: '#F97316',
-  battery: '#22C55E',
-  ev: '#F59E0B',
-  irrigation: '#06B6D4',
-  heatpump: '#A855F7',
+  thermostat: '#FF3B30',
+  lighting: '#FFE600',
+  solar: '#FF8A00',
+  battery: '#2CFF7A',
+  ev: '#FF8A00',
+  irrigation: '#FF8A00',
+  heatpump: '#FF8A00',
   insulation: '#78716C',
-  waterheater: '#F59E0B',
+  waterheater: '#FF8A00',
 };
 
 /* ─── Animated counter hook ─── */
@@ -651,7 +651,7 @@ export default function ROICalculatorPage() {
                   fontSize: 48,
                   fontWeight: 800,
                   background: calculations.totalAnnual > 0
-                    ? `linear-gradient(135deg, ${GREEN}, #4ADE80)`
+                    ? `linear-gradient(135deg, ${GREEN}, #2CFF7A)`
                     : `linear-gradient(135deg, ${DIM}, ${DIM})`,
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',

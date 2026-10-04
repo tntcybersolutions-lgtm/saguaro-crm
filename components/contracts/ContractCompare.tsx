@@ -20,8 +20,8 @@ import { ArrowsLeftRight, FileText, X } from '@phosphor-icons/react';
 
 const GOLD = 'var(--brand-primary)';
 const TEXT = '#F0F4FF';
-const DIM = '#8BAAC8';
-const BORDER = '#1E3A5F';
+const DIM = '#A1A1AA';
+const BORDER = '#2A2A2E';
 const CARD = 'var(--bg-surface)';
 
 interface FileRow {

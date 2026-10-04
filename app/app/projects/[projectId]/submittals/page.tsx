@@ -1,21 +1,39 @@
 'use client';
+/**
+ * Submittal Log — Pass 4, on the RFIs reference layout (dense table + detail).
+ *
+ * Anatomy: title + one primary action (New Submittal) → StatRow (total /
+ * pending / under review / overdue — each tile filters the log) → Toolbar →
+ * workspace split: the log on the left, and when a row is selected, the
+ * submittal beside a 320–384px details + action rail (advance the workflow,
+ * reassign ball-in-court, edit, delete). Phone: stacked. Create / edit open
+ * the composer in a FormModal.
+ *
+ * Every read / write is the one this screen already used:
+ *   list    GET    /api/submittals/list?projectId=
+ *   create  POST   /api/submittals/create
+ *   update  PUT    /api/submittals/[id]
+ *   quick   PATCH  /api/submittals/[id]   { status } / { ball_in_court }
+ *   delete  DELETE /api/submittals/[id]
+ */
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
-import { Plus, Clipboard, X, CaretRight, ClipboardText, Clock, Eye, WarningCircle, Stack } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, FlowStrip, AutoChip, goldButtonStyle } from '@/components/ui/premium';
-import { ListToolbar } from '@/components/ui/ListToolbar';
+import { Plus, Clipboard, X, CaretRight, ClipboardText, WarningCircle, PencilSimple, Trash, UserSwitch, ArrowClockwise } from '@phosphor-icons/react';
+import {
+  PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, RowActions,
+  FormModal, Field, Input, Textarea, Select, FormGrid, DetailList, Toast, useToast,
+  type Column, type Action, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import { FlowSteps, FlowStrip, InsightRow, AutoChip } from '@/components/ui/premium';
 import { CSI_DIVISIONS, SUB_TRADES } from '@/lib/construction-intelligence';
-import { moduleAccent } from '@/lib/module-identity';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
-import { StatusPill } from '@/components/ui/Status';
-
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
-const GREEN='#1a8a4a',RED='#c03030',ORANGE='#c07830';
+import { layout } from '@/lib/design-tokens';
 
 const STATUSES=['pending','submitted','under_review','approved','rejected','revise_resubmit'];
 const STATUS_LABELS:Record<string,string>={
@@ -26,31 +44,27 @@ const STATUS_LABELS:Record<string,string>={
   rejected:'Rejected',
   revise_resubmit:'Revise & Resubmit',
 };
-const STATUS_COLORS:Record<string,string>={
-  pending:DIM,
-  submitted:'var(--brand-primary-strong)',
-  under_review:GOLD,
-  approved:GREEN,
-  rejected:RED,
-  revise_resubmit:ORANGE,
-};
-
+/** One status → one badge. Pending neutral, Submitted blue (with the architect),
+ *  Under Review amber, Approved green, Rejected red, Revise & Resubmit orange. */
+function statusBadge(s:string|null|undefined): { label:string; tone:BadgeTone } {
+  const k = String(s||'pending');
+  if (k==='submitted') return { label:'Submitted', tone:'lead' };
+  if (k==='under_review') return { label:'Under Review', tone:'under_contract' };
+  if (k==='approved') return { label:'Approved', tone:'ongoing' };
+  if (k==='rejected') return { label:'Rejected', tone:'overdue' };
+  if (k==='revise_resubmit') return { label:'Revise & Resubmit', tone:'completed' };
+  return { label: STATUS_LABELS[k] || k.replace(/_/g,' ').replace(/\b\w/g,(c)=>c.toUpperCase()) || 'Pending', tone:'neutral' };
+}
+const STATUS_RANK:Record<string,number>={pending:0,submitted:1,under_review:2,revise_resubmit:3,approved:4,rejected:5};
 const BIC_OPTIONS=['Contractor','Architect','Owner','Engineer'];
-const BIC_COLORS:Record<string,string>={
-  Contractor:'var(--brand-primary-strong)',
-  Architect:GOLD,
-  Owner:GREEN,
-  Engineer:'#a78bfa',
-};
+type StatusFilter = 'all' | 'overdue' | (typeof STATUSES)[number];
 
-const inp:React.CSSProperties={
-  width:'100%',padding:'9px 12px',background:'var(--bg-surface-2)',
-  border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,
-  fontSize:13,outline:'none',boxSizing:'border-box',
-};
-
-const HINT:React.CSSProperties={fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:5,lineHeight:1.45};
 const isoDate=(d:Date)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+/** Date-only values parse at local noon ('T12:00:00') so they never shift a day under UTC. */
+function fmtDate(s:string|null|undefined){
+  if(!s) return '—';
+  return new Date(String(s).slice(0,10)+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
 
 const EMPTY_FORM={
   submittal_number:'',title:'',spec_section:'',trade:'',
@@ -58,35 +72,60 @@ const EMPTY_FORM={
   submitted_at:'',due_date:'',revision_number:0,notes:'',
 };
 
-function Pill({label,color}:{label:string;color:string}){
-  return(
-    <span style={{fontSize:10,fontWeight:700,padding:'3px 9px',borderRadius:20,
-      background:`color-mix(in srgb, ${color} 13%, transparent)`,color,whiteSpace:'nowrap'}}>
-      {label}
-    </span>
-  );
+const CSS = `
+.sbWs > .k-page { max-width: none; }
+.sbCq { container: sbws / inline-size; min-width: 0; }
+.sbSplit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
+.sbSplit > * { min-width: 0; }
+@container sbws (min-width: 1080px) {
+  .sbSplit[data-open="true"] { grid-template-columns: minmax(340px, 0.8fr) minmax(0, 1.6fr); }
 }
+.sbDetailCq { container: sbdetail / inline-size; min-width: 0; }
+.sbDetail { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
+.sbDetail > * { min-width: 0; }
+.sbRail { order: -1; }
+@container sbdetail (min-width: 720px) {
+  .sbDetail { grid-template-columns: minmax(0, 1fr) clamp(${layout.detailRailMin}px, 34%, ${layout.detailRailMax}px); }
+  .sbRail { order: 0; position: sticky; top: 16px; }
+}
+.sbList .k-table th:first-child, .sbList .k-table td:first-child { position: sticky; left: 0; z-index: 1; background: var(--bg-solid); }
+.sbList .k-table th:first-child { background: var(--bg-solid-2); z-index: 3; }
+.sbList .k-table tbody tr:hover td:first-child { background: linear-gradient(rgba(255,255,255,0.03), rgba(255,255,255,0.03)), var(--bg-solid); }
+.sbList .k-table tbody tr:has([data-sel="true"]) td { background: var(--brand-primary-08); }
+.sbList .k-table tbody tr:has([data-sel="true"]) td:first-child { background: linear-gradient(var(--brand-primary-08), var(--brand-primary-08)), var(--bg-solid); box-shadow: inset 3px 0 0 var(--brand-primary); }
+.sbNum { color: var(--text-primary); font-weight: 800; white-space: nowrap; }
+.sbTitle { display: flex; flex-direction: column; gap: 2px; max-width: 360px; min-width: 0; }
+.sbTitle > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.sbTitle > span:first-child { color: var(--text-primary); font-weight: 600; }
+.sbTitle > span + span { font-size: var(--fs-xs); color: var(--text-tertiary); }
+.sbMuted { color: var(--text-tertiary); }
+.sbLate { color: var(--status-overdue); font-weight: 700; }
+.sbBadges { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.sbSection { display: flex; flex-direction: column; gap: 8px; }
+.sbSection + .sbSection { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-subtle); }
+.sbSectionTitle { font-size: var(--fs-sm); font-weight: 700; color: var(--text-tertiary); }
+.sbProse { font-size: var(--fs-md); line-height: 1.6; color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; max-width: ${layout.readingMaxWidth}; }
+.sbFlow { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.sbFlow > svg { color: var(--text-tertiary); }
+.sbActions { display: flex; flex-direction: column; gap: 8px; }
+.sbActions .k-btn { width: 100%; justify-content: flex-start; }
+.sbActionsRow { display: flex; gap: 8px; align-items: center; }
+.sbActionsRow > .k-btn { flex: 1 1 auto; }
+.sbNext { font-size: var(--fs-sm); color: var(--text-tertiary); line-height: 1.5; }
+.sbLadder { border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--bg-surface-2); margin-bottom: 16px; }
+.sbDateInput { width: 100%; }
+@media (max-width: 640px) {
+  .sbWs .k-btn, .sbWs .k-stat, .sbWs select.k-select, .sbWs .k-input { min-height: 44px; }
+  .sbWs .k-table td { height: 48px; }
+  .sbTitle { max-width: 200px; }
+}
+`;
 
-function FieldLabel({label,auto}:{label:string;auto?:boolean}){
-  return(
-    <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5}}>{label}{auto&&<AutoChip/>}</label>
-  );
-}
-
-function InfoCard({label,value}:{label:string;value:string|undefined|null}){
-  if(!value) return null;
-  return(
-    <div style={{background:'var(--bg-surface)',border:`1px solid ${BORDER}`,borderRadius:8,padding:'10px 12px'}}>
-      <div style={{fontSize:10,fontWeight:700,color:DIM,marginBottom:4}}>{label}</div>
-      <div style={{fontSize:13,color:TEXT}}>{value}</div>
-    </div>
-  );
-}
-
-function fmtDate(s:string|null|undefined){
-  if(!s) return '—';
-  return new Date(s+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-}
+const DATE_INPUT_STYLE: React.CSSProperties = {
+  width:'100%', minHeight:40, padding:'8px 12px', fontSize:14,
+  background:'var(--bg-surface-2)', border:'1px solid var(--border-default)',
+  borderRadius:'var(--radius-sm)', color:'var(--text-primary)',
+};
 
 export default function SubmittalsPage(){
   const {projectId}=useParams() as {projectId:string};
@@ -96,6 +135,7 @@ export default function SubmittalsPage(){
   const [selected,setSelected]=useState<any>(null);
   const [mode,setMode]=useState<'view'|'edit'|'create'|null>(null);
   const [form,setForm]=useState<Record<string,any>>({...EMPTY_FORM});
+  const detailRef = useRef<HTMLDivElement>(null);
 
   /* ── Unsaved-work guard: the composer holds real typing, so leaving this
    *    module (sidebar, field nav, ⌘K, breadcrumb, back) confirms first, and
@@ -111,9 +151,9 @@ export default function SubmittalsPage(){
   const [saving,setSaving]=useState(false);
   const [deleting,setDeleting]=useState(false);
   const [rowBusyId,setRowBusyId]=useState<string|null>(null);
-  const [toast,setToast]=useState<{msg:string;type:'success'|'error'}|null>(null);
+  const { toast, show: showToast } = useToast(4000);
   const [search,setSearch]=useState('');
-  const [filterStatus,setFilterStatus]=useState('all');
+  const [filterStatus,setFilterStatus]=useState<StatusFilter>('all');
   const [filterBIC,setFilterBIC]=useState('all');
   // SmartCreate: the create panel walks in knowing the project — reviewer,
   // sub roster, log state — via the one-shot /api/project-context snapshot.
@@ -121,10 +161,6 @@ export default function SubmittalsPage(){
   const [auto,setAuto]=useState<{num?:boolean;due?:boolean;bic?:boolean}>({});
 
   const today=new Date().toISOString().split('T')[0];
-
-  const showToast=(msg:string,type:'success'|'error'='success')=>{
-    setToast({msg,type}); setTimeout(()=>setToast(null),4000);
-  };
 
   const load=useCallback(async()=>{
     setLoading(true);
@@ -141,16 +177,13 @@ export default function SubmittalsPage(){
 
   useEffect(()=>{load();},[load]);
 
-  // Dead-space kill (spec 4.1): an empty log auto-opens the create panel —
-  // number + review window already defaulted. One-shot per visit so Cancel
-  // stays cancelled.
-  const autoOpenedRef=useRef(false);
+  // Keep the selected row pointed at the live record once a reload swaps rows in.
   useEffect(()=>{
-    if(!loading&&!loadError&&submittals.length===0&&mode===null&&!autoOpenedRef.current){
-      autoOpenedRef.current=true;
-      openCreate();
-    }
-  },[loading,loadError,submittals.length,mode]);
+    if(!selected) return;
+    const live = submittals.find((s:any)=>s.id===selected.id);
+    if(live && live!==selected) setSelected(live);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[submittals]);
 
   function openCreate(){
     const num=`S-${String(submittals.length+1).padStart(3,'0')}`;
@@ -176,9 +209,11 @@ export default function SubmittalsPage(){
   }
   function viewSub(sub:any){setSelected(sub);setMode('view');}
   function closePanel(){setSelected(null);setMode(null);}
+  /** Abandoning an edit keeps the submittal in view. */
+  function closeComposer(){ if(mode==='edit'&&selected){ setMode('view'); return; } closePanel(); }
 
   async function save(): Promise<boolean> {
-    if(!form.title.trim()){showToast('Title is required.','error');return false;}
+    if(!form.title.trim()){showToast('Title is required.','bad');return false;}
     setSaving(true);
     try{
       const h=await getAuthHeaders();
@@ -208,20 +243,20 @@ export default function SubmittalsPage(){
       await load();closePanel();
       guard.clearDraft();
       return true;
-    }catch(e:any){console.error(e);showToast(humanError(e,'Save failed. Please try again.'),'error');}
+    }catch(e:any){console.error(e);showToast(humanError(e,'Save failed. Please try again.'),'bad');}
     finally{setSaving(false);}
     return false;
   }
 
   async function deleteSub(sub:any){
-    if(!confirm(`Delete submittal "${sub.submittal_number} — ${sub.title}"?`)) return;
+    if(!(await confirmDialog({ title: 'Please confirm', message: `Delete submittal "${sub.submittal_number} — ${sub.title}"?`, danger: true }))) return;
     setDeleting(true);
     try{
       const h=await getAuthHeaders();
       const dr=await fetch(`/api/submittals/${sub.id}`,{method:'DELETE',headers:h});
       if (!dr.ok) throw new Error('Delete failed');
       showToast('Submittal deleted.');closePanel();await load();
-    }catch{showToast('Delete failed.','error');}
+    }catch{showToast('Delete failed.','bad');}
     finally{setDeleting(false);}
   }
 
@@ -240,7 +275,7 @@ export default function SubmittalsPage(){
       });
       if(!r.ok) throw new Error('Update failed');
       showToast(msg);
-    }catch{showToast('Update failed — reloading.','error');await load();}
+    }catch{showToast('Update failed — reloading.','bad');await load();}
     finally{setRowBusyId(null);}
   }
 
@@ -264,9 +299,10 @@ export default function SubmittalsPage(){
   const total=submittals.length;
   const pending=submittals.filter(s=>s.status==='pending').length;
   const underReview=submittals.filter(s=>s.status==='under_review').length;
-  const overdue=submittals.filter(s=>
-    s.due_date&&s.due_date.substring(0,10)<today&&s.status!=='approved'&&s.status!=='rejected'
-  ).length;
+  function isOverdue(s:any){
+    return !!(s.due_date&&s.due_date.substring(0,10)<today&&s.status!=='approved'&&s.status!=='rejected');
+  }
+  const overdue=submittals.filter(isOverdue).length;
 
   // Canonical CSI spec-section options + the live sub roster for the create panel.
   const specOptions=Object.entries(CSI_DIVISIONS).map(([code,d])=>`${code} — ${d.name}`);
@@ -278,445 +314,279 @@ export default function SubmittalsPage(){
       ||(s.title||'').toLowerCase().includes(search.toLowerCase())
       ||(s.spec_section||'').toLowerCase().includes(search.toLowerCase())
       ||(s.trade||'').toLowerCase().includes(search.toLowerCase());
-    const mst=filterStatus==='all'||s.status===filterStatus;
+    const mst=filterStatus==='all'||(filterStatus==='overdue'?isOverdue(s):s.status===filterStatus);
     const mb=filterBIC==='all'||s.ball_in_court===filterBIC;
     return ms&&mst&&mb;
   });
+  const filtersActive = !!search || filterStatus!=='all' || filterBIC!=='all';
+  const clearFilters = () => { setSearch(''); setFilterStatus('all'); setFilterBIC('all'); };
+  const toggleStatus = (s:StatusFilter) => setFilterStatus(prev => (prev===s ? 'all' : s));
 
-  function isOverdue(s:any){
-    return s.due_date&&s.due_date.substring(0,10)<today&&s.status!=='approved'&&s.status!=='rejected';
+  const detailOpen = !!selected && mode!=='create';
+  useEffect(()=>{
+    if(!detailOpen) return;
+    const el = detailRef.current;
+    if (el && el.getBoundingClientRect().top > window.innerHeight * 0.6) el.scrollIntoView({ behavior:'smooth', block:'start' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[detailOpen, selected?.id]);
+
+  // ── Stat tiles: each filters the log ──
+  const stats: StatItem[] = loading
+    ? [
+        { label:'Total', value:'—', sub:'Loading…' },
+        { label:'Pending', value:'—', sub:'Loading…' },
+        { label:'Under Review', value:'—', sub:'Loading…' },
+        { label:'Overdue', value:'—', sub:'Loading…' },
+      ]
+    : [
+        { label:'Total', value:total, sub: filtersActive ? 'Click to show everything' : 'Submittals on the log', onClick: clearFilters },
+        { label:'Pending', value:pending, sub: filterStatus==='pending' ? 'Filtered — click to clear' : 'Awaiting submission', onClick:()=>toggleStatus('pending') },
+        { label:'Under Review', value:underReview, tone: underReview>0 ? 'warn' : 'default', sub: filterStatus==='under_review' ? 'Filtered — click to clear' : 'With the reviewer', onClick:()=>toggleStatus('under_review') },
+        { label:'Overdue', value:overdue, tone: overdue>0 ? 'bad' : 'default', sub: filterStatus==='overdue' ? 'Filtered — click to clear' : overdue>0 ? 'Past required date' : 'None overdue', onClick:()=>toggleStatus('overdue') },
+      ];
+
+  // ── Log columns ──
+  const isSel = (s:any) => selected?.id===s.id && mode!=='create';
+  const numCol: Column<any> = { key:'submittal_number', header:'#', accessor:s=>s.submittal_number||'', width:90, render:s=><span className="sbNum" data-sel={isSel(s)?'true':undefined}>{s.submittal_number||'—'}</span> };
+  const titleCol: Column<any> = { key:'title', header:'Title', accessor:s=>(s.title||'').toLowerCase(), render:s=><div className="sbTitle"><span title={s.title}>{s.title||'—'}</span>{s.trade&&<span>{s.trade}</span>}</div> };
+  const specCol: Column<any> = { key:'spec_section', phone:'hide', header:'Spec Section', accessor:s=>s.spec_section||'', render:s=>s.spec_section?<span className="sbMuted">{s.spec_section}</span>:<span className="sbMuted">—</span> };
+  const statusCol: Column<any> = { key:'status', phone:'show', header:'Status', accessor:s=>STATUS_RANK[s.status]??9, render:s=>{const b=statusBadge(s.status);return <span className="sbBadges"><Badge tone={b.tone}>{b.label}</Badge>{isOverdue(s)&&<Badge tone="overdue">Overdue</Badge>}</span>;} };
+  const bicCol: Column<any> = { key:'ball_in_court', phone:'show', header:'Ball in Court', accessor:s=>s.ball_in_court||'', render:s=>s.ball_in_court?<Badge tone="neutral">{s.ball_in_court}</Badge>:<span className="sbMuted">—</span> };
+  const dueCol: Column<any> = { key:'due_date', phone:'show', header:'Required', accessor:s=>s.due_date||'', render:s=><span className={isOverdue(s)?'sbLate':undefined}>{s.due_date?fmtDate(s.due_date):'—'}</span> };
+  const revCol: Column<any> = { key:'revision_number', phone:'hide', header:'Rev.', accessor:s=>Number(s.revision_number)||0, align:'right', render:s=><span className="sbMuted">R{s.revision_number??0}</span> };
+  const columns: Column<any>[] = detailOpen ? [numCol, titleCol, statusCol, dueCol] : [numCol, titleCol, specCol, statusCol, bicCol, dueCol, revCol];
+
+  /** The record's verbs — shared by the row overflow and the rail. */
+  function subActions(s:any): Action[] {
+    const next = nextStatusLabel(s);
+    const busy = rowBusyId===s.id;
+    return [
+      { label:'Open Details', icon:<ClipboardText size={15}/>, onClick:()=>viewSub(s) },
+      { label: next ? `Advance to ${next}` : 'Advance', icon:<CaretRight size={15}/>, onClick:()=>advanceStatus(s), hidden:!next, disabled:busy },
+      ...BIC_OPTIONS.filter(b=>b!==s.ball_in_court).map(b=>({ label:`Ball to ${b}`, icon:<UserSwitch size={15}/>, onClick:()=>reassignBIC(s,b), disabled:busy })),
+      { label:'Edit', icon:<PencilSimple size={15}/>, onClick:()=>openEdit(s) },
+      { label:'Delete', icon:<Trash size={15}/>, onClick:()=>deleteSub(s), tone:'danger', disabled:deleting },
+    ];
   }
 
-  return(
-    <div style={{display:'flex',height:'100%',minHeight:0,position:'relative',background:DARK}}>
-      {toast&&(
-        <div style={{position:'fixed',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:99999,
-          padding:'12px 20px',borderRadius:8,color:'#fff',fontWeight:700,fontSize:14,pointerEvents:'none',
-          background:toast.type==='success'?'rgba(26,138,74,.92)':'rgba(192,48,48,.92)'}}>
-          {toast.msg}
-        </div>
-      )}
-
-      {/* Main */}
-      <div style={{flex:1,overflow:'auto',minWidth:0}}>
-        <PremiumSurface maxWidth={2200}>
-          {/* Header */}
-          <ModuleHero
-            eyebrow="Project Workflow"
-            eyebrowIcon={<ClipboardText size={13} weight="fill" color={moduleAccent('specs').hex} />}
-            title="Submittal"
-            accent="Log"
-            subtitle="Shop drawings, product data & submittal log"
-            actions={
-              <button onClick={openCreate} style={goldButtonStyle} className="pmBtn">
-                <Plus size={15} weight="bold" /> New Submittal
-              </button>
-            }
-          />
-
-          {/* KPIs */}
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
-            <StatCard icon={<Stack size={19} weight="duotone" color={moduleAccent('specs').hex} />}
-              label="Total" value={String(total)} accent={GOLD} sub="Submittals" delay={0.02}  href={`/app/projects/${projectId}/submittals`}/>
-            <StatCard icon={<Clock size={19} weight="duotone" color={DIM} />}
-              label="Pending" value={String(pending)} sub="Awaiting submission" delay={0.06}  href={`/app/projects/${projectId}/submittals`}/>
-            <StatCard icon={<Eye size={19} weight="duotone" color={moduleAccent('specs').hex} />}
-              label="Under Review" value={String(underReview)} accent={GOLD} sub="In review" delay={0.10}  href={`/app/projects/${projectId}/submittals`}/>
-            <StatCard icon={<WarningCircle size={19} weight="duotone" color={RED} />}
-              label="Overdue" value={String(overdue)} accent={overdue>0?RED:undefined}
-              sub={overdue>0?'Past required date':'None overdue'} delay={0.14}  href={`/app/projects/${projectId}/submittals`}/>
-          </div>
-
-          {/* Filters + Log */}
-          <SectionCard
-            title="Submittal Log"
-            icon={<ClipboardText size={17} weight="duotone" color={moduleAccent('specs').hex} />}
-            action={<span style={{fontSize:12,fontWeight:700,color:DIM,whiteSpace:'nowrap'}}>{filtered.length} of {total}</span>}
-            flush
+  // ── Detail workspace ──
+  const detailWorkspace = detailOpen && (()=>{
+    const b = statusBadge(selected.status); const next = nextStatusLabel(selected); const busy = rowBusyId===selected.id;
+    return (
+      <div ref={detailRef} className="sbDetailCq">
+        <div className="sbDetail">
+          <Card
+            title={`${selected.submittal_number||'—'} — ${selected.title||'Untitled submittal'}`}
+            subtitle={[selected.spec_section, selected.trade, `R${selected.revision_number??0}`].filter(Boolean).join(' · ')}
+            actions={<Button variant="ghost" size="sm" icon={<X size={16}/>} aria-label="Close details" title="Close details" onClick={closePanel}/>}
           >
-            {/* Toolbar */}
-            <div style={{padding:'14px 16px'}}>
-              <ListToolbar
-                module="submittals"
-                search={search}
-                onSearch={setSearch}
-                searchPlaceholder="Search by number, title, spec section, or trade…"
-                filters={[
-                  {key:'status',label:'Status',value:filterStatus,onChange:setFilterStatus,allLabel:'All Statuses',
-                    options:STATUSES.map(s=>({value:s,label:STATUS_LABELS[s]}))},
-                  {key:'bic',label:'Ball in Court',value:filterBIC,onChange:setFilterBIC,allLabel:'All Ball-in-Court',
-                    options:BIC_OPTIONS},
-                ]}
-                count={{shown:filtered.length,total:total}}
-              />
+            <div className="sbSection">
+              <div className="sbSectionTitle">Status Workflow</div>
+              <div className="sbFlow">
+                {STATUSES.map((s,i)=>(
+                  <React.Fragment key={s}>
+                    {i>0&&<CaretRight size={12}/>}
+                    <Badge tone={selected.status===s ? statusBadge(s).tone : 'neutral'}>{STATUS_LABELS[s]}</Badge>
+                  </React.Fragment>
+                ))}
+              </div>
             </div>
+            <div className="sbSection">
+              <div className="sbSectionTitle">Notes</div>
+              {selected.notes ? <div className="sbProse">{selected.notes}</div> : <div className="sbMuted" style={{fontSize:'var(--fs-sm)'}}>No notes were entered.</div>}
+            </div>
+          </Card>
 
-            {loading&&<div style={{padding:40,textAlign:'center',color:DIM}}>Loading submittals…</div>}
-
-            {!loading&&loadError&&(
-              <div style={{margin:'0 16px 14px',background:'rgba(192,48,48,.12)',border:'1px solid rgba(192,48,48,.3)',borderRadius:8,padding:'12px 16px',color:'#c03030',fontSize:13}}>
-                {loadError}
-              </div>
-            )}
-
-            {!loading&&filtered.length===0&&(
-              <div style={{padding:'14px 16px 20px'}}>
-                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap',marginBottom:12}}>
-                  <div style={{fontSize:13.5,fontWeight:800,color:TEXT}}>
-                    <Clipboard size={16} weight="duotone" color={GOLD} style={{marginRight:7,verticalAlign:'text-bottom'}} />
-                    {submittals.length===0?'No submittals yet':'No submittals match your filters'}
-                    <span style={{fontWeight:400,color:DIM}}>
-                      {submittals.length===0
-                        ?(mode==='create'?' — the first number and review window are already set in the panel; title it and save.':' — start the register for shop drawings and product data.')
-                        :' — try adjusting your search or filters.'}
-                    </span>
-                  </div>
-                  {submittals.length===0&&mode!=='create'&&(
-                    <button onClick={openCreate} style={goldButtonStyle} className="pmBtn">
-                      <Plus size={15} weight="bold" /> New Submittal
-                    </button>
-                  )}
+          <aside className="sbRail" aria-label="Submittal details and actions">
+            <Card title="Details">
+              <div className="sbSection">
+                <div className="sbBadges">
+                  <Badge tone={b.tone} dot>{b.label}</Badge>
+                  {selected.ball_in_court && <Badge tone="neutral">Ball: {selected.ball_in_court}</Badge>}
+                  {isOverdue(selected) && <Badge tone="overdue">Overdue</Badge>}
                 </div>
-                {submittals.length===0&&(
-                  <FlowStrip steps={[
-                    {title:'Log the Submittal',desc:'Numbered S-001, S-002…'},
-                    {title:'Submit for Review',desc:'Ball flips to the architect'},
-                    {title:'Advance in One Click',desc:'Right from the log'},
-                    {title:'Approved or Revise',desc:'Revisions keep the number'},
-                  ]} />
-                )}
+                <div className="sbNext">{next ? `Next step: ${next}.` : 'Final state — a resubmittal keeps this number and bumps the revision.'}</div>
               </div>
-            )}
-
-            {!loading&&filtered.length>0&&(
-              <div style={{overflowX:'auto',borderTop:`1px solid rgba(255,255,255,0.06)`}}>
-                <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
-                  <thead>
-                    <tr style={{background:'var(--bg-surface-2)'}}>
-                      {['#','Title','Spec Section','Status','Ball in Court','Req. Date','Rev.','Actions'].map(h=>(
-                        <th key={h} style={{padding:'10px 14px',textAlign:'left',fontSize:11,fontWeight:700,color:DIM,
-                          borderBottom:`1px solid ${BORDER}`,whiteSpace:'nowrap'}}>
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.map(s=>{
-                      const isSel=selected?.id===s.id&&mode==='view';
-                      const od=isOverdue(s);
-                      return(
-                        <tr key={s.id}
-                          onClick={()=>viewSub(s)}
-                          style={{background:isSel?'var(--brand-primary-08)':'transparent',
-                            borderBottom:`1px solid rgba(255,255,255,0.08)`,cursor:'pointer',
-                            transition:'background .1s'}}
-                          onMouseEnter={e=>{if(!isSel)e.currentTarget.style.background='rgba(255,255,255,.04)';}}
-                          onMouseLeave={e=>{if(!isSel)e.currentTarget.style.background='transparent';}}>
-                          <td style={{padding:'11px 14px',color:GOLD,fontWeight:700,whiteSpace:'nowrap'}}>
-                            {s.submittal_number||'—'}
-                          </td>
-                          <td style={{padding:'11px 14px',color:TEXT,maxWidth:220}}>
-                            <div style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                              {s.title||'—'}
-                            </div>
-                            {s.trade&&<div style={{fontSize:11,color:DIM,marginTop:2}}>{s.trade}</div>}
-                          </td>
-                          <td style={{padding:'11px 14px',color:DIM,whiteSpace:'nowrap'}}>
-                            {s.spec_section||'—'}
-                          </td>
-                          <td style={{padding:'11px 14px'}}>
-                            <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>
-                              <StatusPill module="submittals" status={s.status} size="sm"/>
-                              {od&&<Pill label="Overdue" color={RED}/>}
-                            </div>
-                          </td>
-                          <td style={{padding:'11px 14px'}}>
-                            {s.ball_in_court&&(
-                              <Pill label={s.ball_in_court} color={BIC_COLORS[s.ball_in_court]||DIM}/>
-                            )}
-                          </td>
-                          <td style={{padding:'11px 14px',whiteSpace:'nowrap',
-                            color:od?RED:DIM,fontWeight:od?700:400}}>
-                            {s.due_date?fmtDate(s.due_date.substring(0,10)):'—'}
-                            {od&&<span style={{fontSize:10,marginLeft:4}}>(overdue)</span>}
-                          </td>
-                          <td style={{padding:'11px 14px',color:DIM,textAlign:'center'}}>
-                            R{s.revision_number??0}
-                          </td>
-                          {/* Inline quick actions — reassign ball-in-court + advance status
-                              without leaving the list (mirrors the RFI inline pattern). */}
-                          <td style={{padding:'8px 14px',whiteSpace:'nowrap'}} onClick={e=>e.stopPropagation()}>
-                            <div style={{display:'flex',alignItems:'center',gap:6}}>
-                              <select
-                                value={s.ball_in_court||'Contractor'}
-                                disabled={rowBusyId===s.id}
-                                onChange={e=>reassignBIC(s,e.target.value)}
-                                title="Reassign ball-in-court"
-                                style={{padding:'5px 8px',background:'var(--bg-surface-2)',border:`1px solid ${BORDER}`,
-                                  borderRadius:6,color:TEXT,fontSize:12,outline:'none',cursor:'pointer'}}>
-                                {BIC_OPTIONS.map(b=><option key={b} value={b}>{b}</option>)}
-                              </select>
-                              {nextStatusLabel(s)?(
-                                <button
-                                  onClick={()=>advanceStatus(s)}
-                                  disabled={rowBusyId===s.id}
-                                  title={`Advance to ${nextStatusLabel(s)}`}
-                                  style={{padding:'5px 10px',background:'var(--brand-primary-12)',
-                                    border:'1px solid var(--brand-primary-25)',borderRadius:6,color:GOLD,
-                                    fontSize:12,fontWeight:700,cursor:rowBusyId===s.id?'wait':'pointer',
-                                    display:'inline-flex',alignItems:'center',gap:4,opacity:rowBusyId===s.id?0.6:1}}>
-                                  {nextStatusLabel(s)}<CaretRight size={11} weight="bold" color={GOLD}/>
-                                </button>
-                              ):(
-                                <span style={{fontSize:11,color:DIM}}>—</span>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+              <div className="sbSection">
+                <DetailList items={[
+                  ['Spec Section', selected.spec_section || ''],
+                  ['Trade', selected.trade || ''],
+                  ['Ball in Court', selected.ball_in_court || ''],
+                  ['Submitted', selected.submitted_at ? fmtDate(selected.submitted_at) : ''],
+                  ['Required', <span key="d" className={isOverdue(selected)?'sbLate':undefined}>{selected.due_date ? fmtDate(selected.due_date) : '—'}</span>],
+                  ['Revision', `R${selected.revision_number??0}`],
+                ]}/>
               </div>
-            )}
-          </SectionCard>
-        </PremiumSurface>
+              <div className="sbSection">
+                <Field label="Reassign Ball in Court">
+                  <Select value={selected.ball_in_court||'Contractor'} disabled={busy} onChange={e=>reassignBIC(selected,e.target.value)} options={BIC_OPTIONS}/>
+                </Field>
+              </div>
+              <div className="sbSection">
+                <div className="sbActions">
+                  {next && <Button icon={<CaretRight size={16}/>} onClick={()=>advanceStatus(selected)} disabled={busy}>{busy?'Working…':`Advance to ${next}`}</Button>}
+                  <div className="sbActionsRow">
+                    <Button icon={<PencilSimple size={16}/>} onClick={()=>openEdit(selected)} disabled={mode==='edit'}>Edit</Button>
+                    <RowActions actions={[{ label:'Delete', icon:<Trash size={15}/>, onClick:()=>deleteSub(selected), tone:'danger', disabled:deleting }]}/>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </aside>
+        </div>
       </div>
+    );
+  })();
 
-      {/* Side Panel */}
-      {mode!==null&&(
-        <div style={{width:460,borderLeft:`1px solid ${BORDER}`,background:DARK,
-          overflow:'auto',flexShrink:0,display:'flex',flexDirection:'column'}}>
-          <div style={{padding:'16px 20px',borderBottom:`1px solid ${BORDER}`,
-            display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-            <div style={{fontWeight:800,fontSize:15,color:TEXT}}>
-              {mode==='create'?'New Submittal':mode==='edit'?'Edit Submittal':'Submittal Detail'}
-            </div>
-            <div style={{display:'flex',gap:8}}>
-              {mode==='view'&&selected&&(
-                <>
-                  <button onClick={()=>openEdit(selected)}
-                    style={{padding:'6px 14px',background:'var(--brand-primary-12)',
-                      border:'1px solid var(--brand-primary-25)',borderRadius:6,
-                      color:'var(--brand-primary-strong)',fontSize:12,fontWeight:700,cursor:'pointer'}}>
-                    Edit
-                  </button>
-                  <button onClick={()=>deleteSub(selected)} disabled={deleting}
-                    style={{padding:'6px 14px',background:'rgba(192,48,48,.1)',
-                      border:`1px solid color-mix(in srgb, ${RED} 27%, transparent)`,borderRadius:6,
-                      color:RED,fontSize:12,fontWeight:700,cursor:'pointer'}}>
-                    {deleting?'…':'Delete'}
-                  </button>
-                </>
-              )}
-              <button onClick={closePanel}
-                style={{padding:'6px 10px',background:'rgba(143,163,192,.1)',
-                  border:`1px solid ${BORDER}`,borderRadius:6,color:DIM,fontSize:12,cursor:'pointer',display:'inline-flex',alignItems:'center'}}>
-                <X size={14} weight="bold" color={DIM} />
-              </button>
-            </div>
-          </div>
+  // ── Log body ──
+  let listBody: React.ReactNode;
+  if (!loading && loadError) {
+    listBody = <EmptyState icon={<WarningCircle size={22}/>} title="Couldn't load submittals" text={`${loadError} Nothing has been lost — try again.`} action={<Button icon={<ArrowClockwise size={15}/>} onClick={load}>Retry</Button>}/>;
+  } else if (!loading && submittals.length===0) {
+    listBody = (
+      <>
+        <EmptyState
+          icon={<Clipboard size={22}/>}
+          title="No submittals yet"
+          text="Start the register for shop drawings and product data — the first number and the 14-day review window are already set."
+          action={<Button icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>New Submittal</Button>}
+        />
+        <div style={{padding:'0 16px 16px'}}>
+          <FlowStrip steps={[
+            {title:'Log the Submittal',desc:'Numbered S-001, S-002…'},
+            {title:'Submit for Review',desc:'Ball flips to the architect'},
+            {title:'Advance in One Click',desc:'Right from the log'},
+            {title:'Approved or Revise',desc:'Revisions keep the number'},
+          ]} />
+        </div>
+      </>
+    );
+  } else {
+    listBody = (
+      <DataTable
+        columns={columns}
+        rows={filtered}
+        rowKey={s=>s.id}
+        loading={loading}
+        defaultSort={{ key:'submittal_number', dir:'asc' }}
+        onRowClick={viewSub}
+        rowActions={subActions}
+        empty={<EmptyState icon={<Clipboard size={22}/>} title="No submittals match these filters" text="Clear the search, status, or ball-in-court filter to see more." action={<Button onClick={clearFilters}>Clear Filters</Button>}/>}
+      />
+    );
+  }
 
-          <div style={{flex:1,overflow:'auto',padding:20}}>
-            {(mode==='create'||mode==='edit')?(
-              <div style={{display:'flex',flexDirection:'column',gap:14}}>
-                {mode==='create'&&ctx&&(
-                  <StatStrip items={[
-                    {href: `/app/projects/${projectId}/submittals`, label:'Log', value:String(total), sub:`${ctx.counts?.openSubmittals??0} open now`},
-                    {href: `/app/projects/${projectId}/submittals`, label:'Reviewer', value:ctx.project?.architectName||'Architect', sub:'Ball moves here on submit'},
-                    {href: `/app/projects/${projectId}/subs`, label:'Sub Roster', value:String((ctx.subs||[]).length), sub:'Trades to pick from'},
-                    {href: `/app/projects/${projectId}/submittals`, label:'Overdue', value:String(overdue), accent:overdue>0?RED:undefined, sub:overdue>0?'Need attention first':'Log is current'},
-                  ]}/>
-                )}
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-                  <div>
-                    <FieldLabel label="Submittal #" auto={auto.num}/>
-                    <input value={form.submittal_number}
-                      onChange={e=>{const v=e.target.value;setAuto(a=>({...a,num:false}));setForm(f=>({...f,submittal_number:v}));}}
-                      style={inp} placeholder="S-001"/>
-                    {auto.num&&<div style={HINT}>Next in sequence — {total} already on the log.</div>}
-                  </div>
-                  <div>
-                    <FieldLabel label="Revision"/>
-                    <input type="number" min={0} value={form.revision_number}
-                      onChange={e=>setForm(f=>({...f,revision_number:e.target.value}))}
-                      style={inp}/>
-                  </div>
-                </div>
-                <div>
-                  <FieldLabel label="Title *"/>
-                  <input value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))}
-                    style={inp} placeholder="e.g. Structural Steel Shop Drawings"/>
-                </div>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-                  <div>
-                    <FieldLabel label="Spec Section"/>
-                    <select value={form.spec_section}
-                      onChange={e=>setForm(f=>({...f,spec_section:e.target.value}))}
-                      style={{...inp,padding:'9px 10px'}}>
-                      <option value="">Select division…</option>
-                      {form.spec_section&&!specOptions.includes(form.spec_section)&&(
-                        <option value={form.spec_section}>{form.spec_section}</option>
-                      )}
-                      {specOptions.map(o=><option key={o} value={o}>{o}</option>)}
-                    </select>
-                    <div style={HINT}>CSI MasterFormat divisions.</div>
-                  </div>
-                  <div>
-                    <FieldLabel label="Trade / Sub"/>
-                    <select value={form.trade}
-                      onChange={e=>setForm(f=>({...f,trade:e.target.value}))}
-                      style={{...inp,padding:'9px 10px'}}>
-                      <option value="">Select trade…</option>
-                      {form.trade&&!roster.some((s:any)=>(s.trade||s.companyName)===form.trade)&&!SUB_TRADES.includes(form.trade)&&(
-                        <option value={form.trade}>{form.trade}</option>
-                      )}
-                      {roster.length>0&&(
-                        <optgroup label="On This Project">
-                          {roster.map((s:any)=>(
-                            <option key={s.membershipId} value={s.trade||s.companyName||''}>{s.companyName}{s.trade?` — ${s.trade}`:''}</option>
-                          ))}
-                        </optgroup>
-                      )}
-                      <optgroup label="All Trades">
-                        {SUB_TRADES.map(t=><option key={t} value={t}>{t}</option>)}
-                      </optgroup>
-                    </select>
-                    {roster.length>0&&<div style={HINT}>{roster.length} sub{roster.length===1?'':'s'} on the project roster.</div>}
-                  </div>
-                </div>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-                  <div>
-                    <FieldLabel label="Status"/>
-                    <select value={form.status} onChange={e=>setForm(f=>({...f,status:e.target.value}))}
-                      style={{...inp,padding:'9px 10px'}}>
-                      {STATUSES.map(s=><option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <FieldLabel label="Ball in Court" auto={auto.bic}/>
-                    <select value={form.ball_in_court}
-                      onChange={e=>{const v=e.target.value;setAuto(a=>({...a,bic:false}));setForm(f=>({...f,ball_in_court:v}));}}
-                      style={{...inp,padding:'9px 10px'}}>
-                      {BIC_OPTIONS.map(b=><option key={b} value={b}>{b}</option>)}
-                    </select>
-                    {auto.bic&&<div style={HINT}>Starts with you — flips to {ctx?.project?.architectName||'the architect'} on submit.</div>}
-                  </div>
-                </div>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-                  <div>
-                    <FieldLabel label="Submitted Date"/>
-                    <SaguaroDatePicker value={form.submitted_at}
-                      onChange={v=>setForm(f=>({...f,submitted_at:v}))}
-                      style={inp}/>
-                  </div>
-                  <div>
-                    <FieldLabel label="Required Date" auto={auto.due}/>
-                    <SaguaroDatePicker value={form.due_date}
-                      onChange={v=>{setAuto(a=>({...a,due:false}));setForm(f=>({...f,due_date:v}));}}
-                      style={inp}/>
-                    {auto.due&&<div style={HINT}>Standard 14-day review window — adjust to the spec.</div>}
-                  </div>
-                </div>
-                <div>
-                  <FieldLabel label="Notes"/>
-                  <textarea value={form.notes}
-                    onChange={e=>setForm(f=>({...f,notes:e.target.value}))}
-                    rows={3} style={{...inp,resize:'vertical',lineHeight:1.5}}
-                    placeholder="Additional notes or comments…"/>
-                </div>
-                {mode==='create'&&(
-                  <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:'14px 16px'}}>
-                    <FlowSteps title="After You Submit" steps={[
-                      {title:'Submitted for Review', desc:`Ball-in-court flips to ${ctx?.project?.architectName||'the architect'} and the review clock starts.`},
-                      {title:'Under Review', desc:'Advance the workflow in one click from the log — no form reopening.'},
-                      {title:'Approved — or Revise & Resubmit', desc:'A resubmittal keeps this number and auto-increments the revision (R1, R2…).'},
-                    ]}/>
-                  </div>
-                )}
-                <div style={{display:'flex',gap:10,paddingTop:4}}>
-                  <button onClick={save} disabled={saving}
-                    style={{flex:1,padding:'11px 0',
-                      background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,
-                      border:'none',borderRadius:8,color:'#0A0A00',
-                      fontSize:14,fontWeight:800,cursor:'pointer',opacity:saving?0.6:1}}>
-                    {saving?'Saving…':mode==='create'?'Create Submittal':'Save Changes'}
-                  </button>
-                  <button onClick={closePanel}
-                    style={{padding:'11px 16px',background:'rgba(143,163,192,.1)',
-                      border:`1px solid ${BORDER}`,borderRadius:8,color:DIM,
-                      fontSize:14,cursor:'pointer'}}>
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ):selected?(
-              <div style={{display:'flex',flexDirection:'column',gap:14}}>
-                {/* Header card */}
-                <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:16}}>
-                  <div style={{fontSize:12,color:GOLD,fontWeight:700,marginBottom:4}}>
-                    {selected.submittal_number||'—'} &bull; R{selected.revision_number??0}
-                  </div>
-                  <div style={{fontSize:16,fontWeight:800,color:TEXT,marginBottom:10}}>
-                    {selected.title}
-                  </div>
-                  <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-                    <Pill label={STATUS_LABELS[selected.status]||selected.status}
-                      color={STATUS_COLORS[selected.status]||DIM}/>
-                    {selected.ball_in_court&&(
-                      <Pill label={`BIC: ${selected.ball_in_court}`}
-                        color={BIC_COLORS[selected.ball_in_court]||DIM}/>
-                    )}
-                    {isOverdue(selected)&&(
-                      <Pill label="Overdue" color={RED}/>
-                    )}
-                  </div>
-                </div>
+  const composerOpen = mode==='create'||mode==='edit';
 
-                {/* Status workflow */}
-                <div style={{background:'var(--bg-surface)',border:`1px solid ${BORDER}`,borderRadius:10,padding:'12px 14px'}}>
-                  <div style={{fontSize:10,fontWeight:700,color:DIM,marginBottom:10}}>
-                    Status Workflow
-                  </div>
-                  <div style={{display:'flex',alignItems:'center',gap:4,flexWrap:'wrap'}}>
-                    {STATUSES.map((s,i)=>{
-                      const active=selected.status===s;
-                      return(
-                        <React.Fragment key={s}>
-                          {i>0&&<span style={{display:'inline-flex',alignItems:'center',verticalAlign:'middle',color:BORDER}}><CaretRight size={12} weight="regular" color={BORDER} /></span>}
-                          <span style={{fontSize:10,fontWeight:700,padding:'3px 8px',borderRadius:20,
-                            background:active?`color-mix(in srgb, ${STATUS_COLORS[s]} 13%, transparent)`:'transparent',
-                            color:active?STATUS_COLORS[s]:DIM,
-                            border:active?`1px solid color-mix(in srgb, ${STATUS_COLORS[s]} 27%, transparent)`:'1px solid transparent'}}>
-                            {STATUS_LABELS[s]}
-                          </span>
-                        </React.Fragment>
-                      );
-                    })}
-                  </div>
-                </div>
+  return(
+    <div className="sbWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[
+          { label:'Projects', href:'/app/projects' },
+          { label: ctx?.project?.name || 'Project', href:`/app/projects/${projectId}/overview` },
+          { label:'Submittals' },
+        ]}
+        title="Submittal Log"
+        subtitle="Shop drawings, product data, and the review workflow."
+        actions={<Button variant="primary" icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>New Submittal</Button>}
+      >
+        {!loadError && <StatRow items={stats}/>}
 
-                {/* Metadata */}
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-                  <InfoCard label="Spec Section" value={selected.spec_section}/>
-                  <InfoCard label="Trade" value={selected.trade}/>
-                  <InfoCard label="Submitted Date" value={selected.submitted_at?fmtDate(selected.submitted_at.substring(0,10)):null}/>
-                  <InfoCard label="Required Date" value={selected.due_date?fmtDate(selected.due_date.substring(0,10)):null}/>
-                </div>
+        {!loading && !loadError && submittals.length>0 && (
+          <Toolbar
+            search={search}
+            onSearch={setSearch}
+            placeholder="Search by number, title, spec section, or trade…"
+            filters={
+              <>
+                <Select aria-label="Status" value={filterStatus} onChange={e=>setFilterStatus(e.target.value as StatusFilter)} style={{ width:'auto', minWidth:160 }} options={[{ value:'all', label:'All Statuses' }, ...STATUSES.map(s=>({ value:s, label:STATUS_LABELS[s] })), { value:'overdue', label:'Overdue' }]}/>
+                <Select aria-label="Ball in Court" value={filterBIC} onChange={e=>setFilterBIC(e.target.value)} style={{ width:'auto', minWidth:150 }} options={[{ value:'all', label:'Anyone' }, ...BIC_OPTIONS]}/>
+                {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
+              </>
+            }
+            actions={<span className="sbMuted" style={{ fontSize:'var(--fs-sm)' }}>{filtered.length} of {total}</span>}
+          />
+        )}
 
-                {selected.notes&&(
-                  <div style={{background:'var(--bg-surface)',border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
-                    <div style={{fontSize:10,fontWeight:700,color:DIM,marginBottom:6}}>Notes</div>
-                    <div style={{fontSize:13,color:TEXT,lineHeight:1.6,whiteSpace:'pre-wrap'}}>{selected.notes}</div>
-                  </div>
-                )}
-              </div>
-            ):null}
+        <div className="sbCq">
+          <div className="sbSplit" data-open={detailOpen?'true':'false'}>
+            <div className="sbList"><Card flush>{listBody}</Card></div>
+            {detailWorkspace}
           </div>
         </div>
-      )}
-      <UnsavedGuardModal guard={guard} />
+      </PageShell>
+
+      {/* ── Composer: create / edit ── */}
+      <FormModal
+        open={composerOpen}
+        onClose={closeComposer}
+        title={mode==='edit' ? `Edit ${selected?.submittal_number||'Submittal'}` : 'New Submittal'}
+        subtitle={mode==='create' ? `${ctx?.project?.name ? `${ctx.project.name} · ` : ''}${total} on the log · reviewer ${ctx?.project?.architectName||'the architect'}` : (ctx?.project?.name || undefined)}
+        onSubmit={async()=>{ await save(); }}
+        submitLabel={mode==='create'?'Create Submittal':'Save Changes'}
+        busy={saving}
+      >
+        {mode==='create'&&ctx&&(
+          <div className="sbLadder">
+            <InsightRow label="Log" value={`${total} · ${ctx.counts?.openSubmittals??0} open now`}/>
+            <InsightRow label="Reviewer" value={ctx.project?.architectName||'Architect'}/>
+            <InsightRow label="Sub Roster" value={`${(ctx.subs||[]).length} trades to pick from`}/>
+            <InsightRow label="Overdue" value={String(overdue)} strong={overdue>0}/>
+          </div>
+        )}
+        <FormGrid cols={2}>
+          <Field label="Submittal #" hint={auto.num ? <><AutoChip/> Next in sequence — {total} already on the log.</> : undefined}>
+            <Input value={form.submittal_number} onChange={e=>{const v=e.target.value;setAuto(a=>({...a,num:false}));setForm(f=>({...f,submittal_number:v}));}} placeholder="S-001"/>
+          </Field>
+          <Field label="Revision">
+            <Input type="number" min={0} value={form.revision_number} onChange={e=>setForm(f=>({...f,revision_number:e.target.value}))}/>
+          </Field>
+          <Field label="Title" required span>
+            <Input value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))} placeholder="e.g. Structural Steel Shop Drawings" autoFocus/>
+          </Field>
+          <Field label="Spec Section" hint="CSI MasterFormat divisions.">
+            <Select value={form.spec_section} onChange={e=>setForm(f=>({...f,spec_section:e.target.value}))} placeholder="Select division…" options={[
+              ...(form.spec_section&&!specOptions.includes(form.spec_section) ? [form.spec_section] : []),
+              ...specOptions,
+            ]}/>
+          </Field>
+          <Field label="Trade / Sub" hint={roster.length>0 ? `${roster.length} sub${roster.length===1?'':'s'} on the project roster.` : undefined}>
+            <Select value={form.trade} onChange={e=>setForm(f=>({...f,trade:e.target.value}))} placeholder="Select trade…" options={[
+              ...(form.trade&&!roster.some((s:any)=>(s.trade||s.companyName)===form.trade)&&!SUB_TRADES.includes(form.trade) ? [form.trade] : []),
+              ...roster.map((s:any)=>({ value:String(s.trade||s.companyName||''), label:`${s.companyName}${s.trade?` — ${s.trade}`:''} (on this project)` })),
+              ...SUB_TRADES.map(t=>({ value:t, label:t })),
+            ]}/>
+          </Field>
+          <Field label="Status">
+            <Select value={form.status} onChange={e=>setForm(f=>({...f,status:e.target.value}))} options={STATUSES.map(s=>({ value:s, label:STATUS_LABELS[s] }))}/>
+          </Field>
+          <Field label="Ball in Court" hint={auto.bic ? <><AutoChip/> Starts with you — flips to {ctx?.project?.architectName||'the architect'} on submit.</> : undefined}>
+            <Select value={form.ball_in_court} onChange={e=>{const v=e.target.value;setAuto(a=>({...a,bic:false}));setForm(f=>({...f,ball_in_court:v}));}} options={BIC_OPTIONS}/>
+          </Field>
+          <Field label="Submitted Date">
+            <div className="sbDateInput"><SaguaroDatePicker value={form.submitted_at} onChange={v=>setForm(f=>({...f,submitted_at:v}))} style={DATE_INPUT_STYLE}/></div>
+          </Field>
+          <Field label="Required Date" hint={auto.due ? <><AutoChip/> Standard 14-day review window — adjust to the spec.</> : undefined}>
+            <div className="sbDateInput"><SaguaroDatePicker value={form.due_date} onChange={v=>{setAuto(a=>({...a,due:false}));setForm(f=>({...f,due_date:v}));}} style={DATE_INPUT_STYLE}/></div>
+          </Field>
+          <Field label="Notes" span>
+            <Textarea value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} rows={3} placeholder="Additional notes or comments…"/>
+          </Field>
+        </FormGrid>
+        {mode==='create'&&(
+          <div style={{marginTop:16}}>
+            <FlowSteps title="After You Submit" steps={[
+              {title:'Submitted for Review', desc:`Ball-in-court flips to ${ctx?.project?.architectName||'the architect'} and the review clock starts.`},
+              {title:'Under Review', desc:'Advance the workflow in one click from the log — no form reopening.'},
+              {title:'Approved — or Revise & Resubmit', desc:'A resubmittal keeps this number and auto-increments the revision (R1, R2…).'},
+            ]}/>
+          </div>
+        )}
+      </FormModal>
+
+      <div style={{ position:'relative', zIndex:10001 }}><UnsavedGuardModal guard={guard} /></div>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
     </div>
   );
 }

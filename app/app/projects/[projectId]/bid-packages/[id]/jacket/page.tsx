@@ -22,7 +22,7 @@ import { PremiumSurface, SectionCard, PremiumEmpty, ghostButtonStyle } from '@/c
 import BidJacketView, { type Jacket } from '@/components/BidJacketView';
 import BidJacketAssembly, { type Drift, type Issued } from '@/components/BidJacketAssembly';
 
-const DIM = '#8BAAC8';
+const DIM = '#A1A1AA';
 const AMBER = 'var(--warning)';
 
 type Payload = Jacket & { issued: Issued; drift: Drift | null };

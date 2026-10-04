@@ -11,10 +11,10 @@ const ROLES = ['Owner / Franchisee', 'PM / Franchisor Rep', 'Saguaro Coordinator
 const roleColor = (r: string) => {
   const s = String(r || '').toLowerCase();
   if (s.includes('owner') || s.includes('franchis')) return C.gold;
-  if (s.includes('contractor') || s.includes('superintendent')) return '#FF9500';
+  if (s.includes('contractor') || s.includes('superintendent')) return '#FF8A00';
   if (s.includes('architect') || s.includes('engineer')) return C.blue;
   if (s.includes('full-swing') || s.includes('simulator')) return C.green;
-  if (s.includes('city') || s.includes('municipal')) return '#AF52DE';
+  if (s.includes('city') || s.includes('municipal')) return '#FF8A00';
   return C.dim;
 };
 
@@ -47,7 +47,7 @@ export default function DirectoryPage() {
   if (!ready) return null;
 
   return (
-    <PremiumSurface maxWidth={1200} pad="28px 24px 60px">
+    <PremiumSurface maxWidth={2200} pad="28px 24px 60px">
       <div style={{ fontFamily: font, color: C.text }}>
       <ModuleHero
         eyebrow="Command Center"

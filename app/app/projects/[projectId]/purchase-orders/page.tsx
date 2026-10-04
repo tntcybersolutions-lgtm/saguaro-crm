@@ -362,7 +362,7 @@ export default function PurchaseOrdersPage() {
   const smallDanger: React.CSSProperties = {
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
     padding: '7px 12px', borderRadius: 9, cursor: 'pointer',
-    background: 'rgba(239,68,68,0.12)', color: '#F87171', border: '1px solid rgba(239,68,68,0.35)',
+    background: 'rgba(255,59,48,0.12)', color: '#FF3B30', border: '1px solid rgba(255,59,48,0.35)',
     fontWeight: 800, fontSize: 12.5,
   };
 
@@ -413,16 +413,16 @@ export default function PurchaseOrdersPage() {
           label="Sent" value={String(sentCount)} accent={sentCount > 0 ? '#F0A63C' : undefined} delay={0.10}
          href={`/app/projects/${projectId}/purchase-orders`}/>
         <StatCard
-          icon={<Package size={19} weight="duotone" color="#45B37D" />}
-          label="Received" value={String(receivedCount)} accent={receivedCount > 0 ? '#45B37D' : undefined} delay={0.14}
+          icon={<Package size={19} weight="duotone" color="#2CFF7A" />}
+          label="Received" value={String(receivedCount)} accent={receivedCount > 0 ? '#2CFF7A' : undefined} delay={0.14}
          href={`/app/projects/${projectId}/purchase-orders`}/>
       </div>
 
       {successMsg && (
-        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(34,197,94,0.4)`, borderRadius: 10, color: T.green, fontSize: 13 }}>{successMsg}</div>
+        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(44,255,122,0.4)`, borderRadius: 10, color: T.green, fontSize: 13 }}>{successMsg}</div>
       )}
       {errorMsg && (
-        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.redDim, border: `1px solid rgba(239,68,68,0.4)`, borderRadius: 10, color: T.red, fontSize: 13 }}>{errorMsg}</div>
+        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.redDim, border: `1px solid rgba(255,59,48,0.4)`, borderRadius: 10, color: T.red, fontSize: 13 }}>{errorMsg}</div>
       )}
 
       {/* Create Form — walks in knowing the project: vendors, cost codes, budget, next number */}

@@ -1,20 +1,30 @@
 'use client';
+/**
+ * Reports & Analytics — Pass 4 on the kit.
+ *
+ * Anatomy: title + one primary action (Ask Sage, in the query bar) → StatRow
+ * (what the engine already knows) → the Sage query bar (question, project,
+ * period, suggestion chips) → workspace split: progress / results / the
+ * standard report library on the left, recent runs in a rail on the right.
+ *
+ * Every read / write is the one this screen already used:
+ *   projects  GET  /api/projects
+ *   branding  GET  /api/branding
+ *   run       SSE  /api/reports/sage?q=&projectId=
+ *   export    POST /api/reports/export  { format, title, columns, rows, totals, companyName, logoUrl }
+ *
+ * Sage is AI: every result says so, and no figure is invented client-side —
+ * cells render what the engine returned or an em-dash.
+ */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { CurrencyDollar, ChartBar, Clipboard, ArrowsClockwise, Lock, ShieldCheck, CalendarBlank, CheckCircle, HardHat, Warning, Package, Clock, ArrowRight, X } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import { CurrencyDollar, ChartBar, Clipboard, ArrowsClockwise, Lock, ShieldCheck, CalendarBlank, CheckCircle, HardHat, Warning, Package, Clock, ArrowRight, X, Sparkle } from '@phosphor-icons/react';
+import {
+  PageShell, Card, StatRow, Badge, Button, Input, Select, DataTable, EmptyState, Toast, useToast,
+  type Column, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import { AutoChip } from '@/components/ui/premium';
 import { PdfIcon, XlsIcon, CsvIcon, DocIcon, FileButton } from '@/components/ui/FileTypeIcon';
-
-// ── Color palette ──────────────────────────────────────────────
-const GOLD   = 'var(--brand-primary)';
-const DARK = 'var(--bg-base)';
-const RAISED = 'var(--bg-surface)';
-const BORDER = 'rgba(255,255,255,0.12)';
-const DIM    = '#CBD5E1';
-const TEXT   = '#FFFFFF';
-const GREEN  = '#22C55E';
-const YELLOW = 'var(--warning)';
-const RED    = '#EF4444';
-const BLUE   = 'var(--brand-primary)';
+import { layout } from '@/lib/design-tokens';
 
 // ── Type definitions ───────────────────────────────────────────
 interface ReportColumn {
@@ -106,12 +116,12 @@ const SUGGESTION_CHIPS = [
 ];
 
 // ── Formatting helpers ─────────────────────────────────────────
+const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 function fmtCurrency(v: unknown): string {
   const n = Number(v);
   if (isNaN(n)) return String(v ?? '');
-  return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return money.format(n);
 }
-
 function fmtDate(v: unknown): string {
   if (!v) return '';
   try {
@@ -120,61 +130,43 @@ function fmtDate(v: unknown): string {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   } catch { return String(v); }
 }
-
 function fmtNumber(v: unknown): string {
   const n = Number(v);
   if (isNaN(n)) return String(v ?? '');
   return n.toLocaleString();
 }
-
 function fmtPercent(v: unknown): string {
   const n = Number(v);
   if (isNaN(n)) return String(v ?? '');
   return n + '%';
 }
-
-function fmtText(v: unknown): string {
-  const s = String(v ?? '');
-  return s.length > 60 ? s.slice(0, 57) + '...' : s;
-}
-
-function getBadgeStyle(v: unknown): React.CSSProperties {
+/** Report badges carry whatever word the engine returned — map it onto the six status kinds. */
+function badgeTone(v: unknown): BadgeTone {
   const s = String(v ?? '').toLowerCase();
-  let bg = 'rgba(0,0,0,0.1)';
-  let color = '#CBD5E1';
-  if (['active', 'approved', 'complete', 'completed', 'paid', 'closed-won'].some(k => s.includes(k))) {
-    bg = 'rgba(34,197,94,0.15)'; color = GREEN;
-  } else if (['pending', 'submitted', 'in progress', 'in-progress', 'open', 'review'].some(k => s.includes(k))) {
-    bg = 'color-mix(in srgb, var(--warning) 18%, transparent)'; color = YELLOW;
-  } else if (['overdue', 'expired', 'rejected', 'void', 'failed', 'critical'].some(k => s.includes(k))) {
-    bg = 'rgba(239,68,68,0.15)'; color = RED;
-  } else if (['draft', 'closed', 'cancelled', 'canceled', 'inactive'].some(k => s.includes(k))) {
-    bg = 'rgba(0,0,0,0.06)'; color = DIM;
-  } else if (['info', 'new', 'assigned'].some(k => s.includes(k))) {
-    bg = 'var(--brand-primary-18)'; color = BLUE;
-  }
-  return {
-    display: 'inline-flex', alignItems: 'center', padding: '2px 10px', borderRadius: 20,
-    fontSize: 11, fontWeight: 700, letterSpacing: 0.4, background: bg, color, whiteSpace: 'nowrap',
-  };
+  if (['active', 'approved', 'complete', 'completed', 'closed-won'].some(k => s.includes(k))) return 'ongoing';
+  if (['paid', 'billed'].some(k => s.includes(k))) return 'completed';
+  if (['pending', 'submitted', 'in progress', 'in-progress', 'open', 'review'].some(k => s.includes(k))) return 'under_contract';
+  if (['overdue', 'expired', 'rejected', 'void', 'failed', 'critical'].some(k => s.includes(k))) return 'overdue';
+  if (['draft', 'closed', 'cancelled', 'canceled', 'inactive'].some(k => s.includes(k))) return 'closed';
+  if (['info', 'new', 'assigned', 'sent'].some(k => s.includes(k))) return 'lead';
+  return 'neutral';
 }
-
 function formatCell(col: ReportColumn, v: unknown): React.ReactNode {
-  if (v === null || v === undefined || v === '') return <span style={{ color: DIM }}>—</span>;
+  if (v === null || v === undefined || v === '') return <span className="rpMuted">—</span>;
   switch (col.type) {
-    case 'currency': return <span style={{ color: GOLD, fontWeight: 600 }}>{fmtCurrency(v)}</span>;
-    case 'date':     return <span style={{ color: DIM }}>{fmtDate(v)}</span>;
-    case 'number':   return <span>{fmtNumber(v)}</span>;
-    case 'percent':  return <span>{fmtPercent(v)}</span>;
-    case 'badge':    return <span style={getBadgeStyle(v)}>{String(v)}</span>;
-    default:         return <span style={{ color: TEXT }}>{fmtText(v)}</span>;
+    case 'currency': return <span className="rpMoney">{fmtCurrency(v)}</span>;
+    case 'date':     return <span className="rpMuted">{fmtDate(v)}</span>;
+    case 'number':   return <span className="rpNum">{fmtNumber(v)}</span>;
+    case 'percent':  return <span className="rpNum">{fmtPercent(v)}</span>;
+    case 'badge':    return <Badge tone={badgeTone(v)}>{String(v)}</Badge>;
+    default:         return <span className="rpText" title={String(v)}>{String(v)}</span>;
   }
 }
+const isNumericCol = (c: ReportColumn) => ['currency', 'number', 'percent'].includes(c.type);
 
 function today(): string {
   return new Date().toISOString().split('T')[0];
 }
-
 function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -183,7 +175,6 @@ function downloadBlob(blob: Blob, filename: string) {
   a.click();
   URL.revokeObjectURL(url);
 }
-
 function timeAgo(ts: number): string {
   const diff = Date.now() - ts;
   if (diff < 60000) return 'just now';
@@ -191,6 +182,61 @@ function timeAgo(ts: number): string {
   if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
   return Math.floor(diff / 86400000) + 'd ago';
 }
+
+const CSS = `
+.rpWs > .k-page { max-width: none; }
+.rpCq { container: rpws / inline-size; min-width: 0; }
+.rpSplit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
+.rpSplit > * { min-width: 0; }
+@container rpws (min-width: 1080px) {
+  .rpSplit[data-rail="true"] { grid-template-columns: minmax(340px, 1fr) clamp(${layout.detailRailMin}px, 26%, ${layout.detailRailMax}px); }
+}
+.rpRail { position: sticky; top: 16px; }
+.rpAsk { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.rpAsk .rpQ { flex: 1 1 280px; min-width: 0; }
+.rpSage { width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; display: grid; place-items: center; background: var(--brand-primary-12); border: 1px solid var(--brand-primary-35); color: var(--brand-primary); }
+.rpChips { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.rpChipLabel { display: inline-flex; align-items: center; gap: 5px; font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); margin-right: 2px; }
+.rpChip { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; min-height: 28px; padding: 3px 12px; border-radius: 999px; font-size: var(--fs-xs); font-weight: 600; color: var(--text-secondary); background: var(--bg-surface-2); border: 1px solid var(--glass-border); cursor: pointer; }
+.rpChip:hover { color: var(--text-primary); border-color: var(--border-strong); }
+.rpChip[aria-pressed="true"] { color: var(--brand-primary); background: var(--brand-primary-12); border-color: var(--brand-primary-35); }
+.rpChip:disabled { opacity: .5; cursor: not-allowed; }
+.rpChip:focus-visible { outline: 2px solid var(--brand-primary); }
+.rpProgress { padding: 40px 24px; text-align: center; }
+.rpProgress .rpSage { width: 52px; height: 52px; border-radius: 14px; margin: 0 auto 16px; }
+.rpBar { background: rgba(255,255,255,.08); border-radius: 8px; height: 8px; overflow: hidden; max-width: 420px; margin: 0 auto; }
+.rpBar > div { height: 100%; background: var(--brand-primary); border-radius: 8px; transition: width .4s ease; }
+.rpMeta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 16px; border-bottom: 1px solid var(--border-subtle); font-size: var(--fs-xs); color: var(--text-tertiary); }
+.rpNote { padding: 8px 16px; border-bottom: 1px solid var(--border-subtle); font-size: var(--fs-xs); color: var(--status-under-contract); }
+.rpTotals { display: flex; flex-wrap: wrap; gap: 8px 18px; padding: 12px 16px; border-top: 2px solid var(--brand-primary-35); background: var(--brand-primary-08); font-size: var(--fs-sm); }
+.rpTotals b { color: var(--text-tertiary); font-weight: 700; margin-right: 6px; }
+.rpTotals span { color: var(--text-primary); font-weight: 800; font-variant-numeric: tabular-nums; }
+.rpMoney { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--text-primary); font-weight: 600; }
+.rpNum { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rpMuted { color: var(--text-tertiary); }
+.rpText { display: inline-block; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+.rpExports { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.rpGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.rpCard { all: unset; box-sizing: border-box; display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: var(--radius-sm); background: var(--bg-surface-2); border: 1px solid var(--glass-border); cursor: pointer; min-width: 0; }
+.rpCard:hover { border-color: var(--brand-primary-35); background: var(--brand-primary-08); }
+.rpCard:focus-visible { outline: 2px solid var(--brand-primary); }
+.rpCard:disabled { opacity: .55; cursor: not-allowed; }
+.rpCardIcon { width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0; display: grid; place-items: center; background: var(--bg-solid-2); border: 1px solid var(--glass-border); color: var(--brand-primary); }
+.rpCardTitle { font-weight: 700; font-size: var(--fs-md); color: var(--text-primary); margin-bottom: 3px; }
+.rpCardDesc { font-size: var(--fs-xs); color: var(--text-tertiary); line-height: 1.5; }
+.rpCardAsk { font-size: var(--fs-xs); color: var(--brand-primary); line-height: 1.45; margin-top: 5px; }
+.rpHist { all: unset; box-sizing: border-box; display: block; width: 100%; padding: 9px 11px; border-radius: var(--radius-sm); background: var(--bg-surface-2); border: 1px solid var(--glass-border); cursor: pointer; min-height: 44px; }
+.rpHist:hover { border-color: var(--brand-primary-35); }
+.rpHist:focus-visible { outline: 2px solid var(--brand-primary); }
+.rpHistTitle { font-size: var(--fs-sm); font-weight: 600; color: var(--text-primary); line-height: 1.3; }
+.rpHistSub { font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 3px; }
+.rpStack { display: flex; flex-direction: column; gap: 8px; }
+@media (max-width: 640px) {
+  .rpWs .k-btn, .rpWs .k-stat, .rpWs select.k-select, .rpWs .k-input, .rpChip { min-height: 44px; }
+  .rpWs .k-table td { height: 48px; }
+  .rpText { max-width: 180px; }
+}
+`;
 
 // ── Main Page Component ────────────────────────────────────────
 export default function ReportsPage() {
@@ -202,19 +248,11 @@ export default function ReportsPage() {
   const [progress, setProgress] = useState<ReportProgress>({ step: 0, pct: 5, message: 'Connecting to Sage…' });
   const [reportResult, setReportResult] = useState<ReportResult | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
-  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
-  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
-  const [hoveredChip, setHoveredChip] = useState<string | null>(null);
+  const { toast, show } = useToast(4000);
   const [branding, setBranding] = useState<{ company_name: string; logo_url: string }>({ company_name: '', logo_url: '' });
   const esRef = useRef<EventSource | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // Auto-dismiss toast
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 4000);
-    return () => clearTimeout(t);
-  }, [toast]);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   // Load projects and branding
   useEffect(() => {
@@ -232,9 +270,7 @@ export default function ReportsPage() {
       .catch(() => {/* non-fatal */});
   }, []);
 
-  const showError = useCallback((msg: string) => {
-    setToast({ msg, type: 'error' });
-  }, []);
+  const showError = useCallback((msg: string) => { show(msg, 'bad'); }, [show]);
 
   const runSageReport = useCallback((queryOverride?: string, opts?: { projectId?: string; range?: string }) => {
     const q = (queryOverride ?? sageQuery).trim();
@@ -305,6 +341,13 @@ export default function ReportsPage() {
   // Cleanup on unmount
   useEffect(() => () => { esRef.current?.close(); }, []);
 
+  // Bring the result into view once it is in the DOM.
+  useEffect(() => {
+    if (pageState !== 'results') return;
+    const el = resultsRef.current;
+    if (el && el.getBoundingClientRect().top > window.innerHeight * 0.6) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [pageState]);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') runSageReport();
   };
@@ -324,593 +367,220 @@ export default function ReportsPage() {
   };
 
   // ── Export functions ─────────────────────────────────────────
-  const exportCSV = async () => {
+  async function exportAs(format: 'csv' | 'xlsx' | 'docx' | 'pdf', failMsg: string) {
     if (!reportResult) return;
     try {
       const res = await fetch('/api/reports/export', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          format: 'csv',
+          format,
           title: reportResult.title,
           columns: reportResult.columns,
           rows: reportResult.rows,
           totals: reportResult.totals,
           companyName: branding.company_name || undefined,
+          ...(format === 'pdf' ? { logoUrl: branding.logo_url || undefined } : {}),
         }),
       });
       if (!res.ok) throw new Error('Export failed');
       const blob = await res.blob();
-      downloadBlob(blob, `${reportResult.title.replace(/\s+/g, '-')}-${today()}.csv`);
+      downloadBlob(blob, `${reportResult.title.replace(/\s+/g, '-')}-${today()}.${format}`);
+      show(`${format.toUpperCase()} downloaded.`);
     } catch {
-      showError('CSV export failed.');
+      showError(failMsg);
     }
-  };
-
-  const exportXLS = async () => {
-    if (!reportResult) return;
-    try {
-      const res = await fetch('/api/reports/export', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          format: 'xlsx',
-          title: reportResult.title,
-          columns: reportResult.columns,
-          rows: reportResult.rows,
-          totals: reportResult.totals,
-          companyName: branding.company_name || undefined,
-        }),
-      });
-      if (!res.ok) throw new Error('Export failed');
-      const blob = await res.blob();
-      downloadBlob(blob, `${reportResult.title.replace(/\s+/g, '-')}-${today()}.xlsx`);
-    } catch {
-      showError('Excel export failed. Try CSV instead.');
-    }
-  };
-  const exportDOC = async () => {
-    if (!reportResult) return;
-    try {
-      const res = await fetch('/api/reports/export', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          format: 'docx',
-          title: reportResult.title,
-          columns: reportResult.columns,
-          rows: reportResult.rows,
-          totals: reportResult.totals,
-          companyName: branding.company_name || undefined,
-        }),
-      });
-      if (!res.ok) throw new Error('Export failed');
-      const blob = await res.blob();
-      downloadBlob(blob, `${reportResult.title.replace(/\s+/g, '-')}-${today()}.docx`);
-    } catch {
-      showError('Word export failed. Try PDF instead.');
-    }
-  };
-
-  const exportPDF = async () => {
-    if (!reportResult) return;
-    try {
-      const res = await fetch('/api/reports/export', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          format: 'pdf',
-          title: reportResult.title,
-          columns: reportResult.columns,
-          rows: reportResult.rows,
-          totals: reportResult.totals,
-          companyName: branding.company_name || undefined,
-          logoUrl: branding.logo_url || undefined,
-        }),
-      });
-      if (!res.ok) throw new Error('Export failed');
-      const blob = await res.blob();
-      downloadBlob(blob, `${reportResult.title.replace(/\s+/g, '-')}-${today()}.pdf`);
-    } catch {
-      showError('PDF export failed. Try CSV instead.');
-    }
-  };
+  }
+  const exportCSV = () => exportAs('csv', 'CSV export failed.');
+  const exportXLS = () => exportAs('xlsx', 'Excel export failed. Try CSV instead.');
+  const exportDOC = () => exportAs('docx', 'Word export failed. Try PDF instead.');
+  const exportPDF = () => exportAs('pdf', 'PDF export failed. Try CSV instead.');
 
   const displayRows = reportResult ? reportResult.rows.slice(0, 100) : [];
-  const hasTotals = reportResult?.totals && Object.keys(reportResult.totals).length > 0;
+  const hasTotals = !!(reportResult?.totals && Object.keys(reportResult.totals).length > 0);
+  const busy = pageState === 'loading';
+  const selectedProjectName = projectFilter ? projects.find(p => p.id === projectFilter)?.name : '';
+  const rd = rangeDates(dateRange);
 
-  // Compact ghost button preset for the results header (export + close).
-  const exportBtnStyle: React.CSSProperties = { ...ghostButtonStyle, padding: '7px 14px', fontSize: 12, fontWeight: 700 };
+  const stats: StatItem[] = [
+    { label: 'Report Library', value: STANDARD_REPORTS.length, sub: 'Standard reports, one tap each' },
+    { label: 'Projects In Scope', value: projectFilter ? 1 : projects.length, sub: selectedProjectName || 'All projects' },
+    { label: 'Runs This Session', value: history.length, sub: history[0] ? `Last: ${timeAgo(history[0].ts)}` : 'None yet' },
+    { label: 'Export Formats', value: 4, sub: 'PDF, Excel, Word, and CSV' },
+  ];
+
+  const resultColumns: Column<Record<string, unknown>>[] = (reportResult?.columns ?? []).map((col, ci) => ({
+    key: col.key,
+    header: col.label,
+    accessor: (row) => { const v = row[col.key]; return isNumericCol(col) ? (Number(v) || 0) : String(v ?? '').toLowerCase(); },
+    align: isNumericCol(col) ? 'right' : undefined,
+    render: (row) => ci === 0 ? <span style={{ fontWeight: 600 }}>{formatCell(col, row[col.key])}</span> : formatCell(col, row[col.key]),
+  }));
 
   // ── Render ───────────────────────────────────────────────────
   return (
-    <>
-    <PremiumSurface maxWidth={2200}>
-      <div style={{ color: TEXT }}>
+    <div className="rpWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[{ label: 'Home', href: '/app' }, { label: 'Reports' }]}
+        title="Reports & Analytics"
+        subtitle="Ask Sage, the AI assistant, for any report — or run one from the standard library. Every export carries your letterhead."
+        actions={<Button icon={<ChartBar size={15} weight="bold" />} href="/app/reports/builder">Custom Report Builder</Button>}
+      >
+        <StatRow items={stats} />
 
-      {/* ── Page Header ── */}
-      <ModuleHero
-        eyebrow="Analytics"
-        eyebrowIcon={<ChartBar size={13} weight="fill" color={GOLD} />}
-        title="Reports &"
-        accent="Analytics"
-        subtitle="Ask Sage to generate any report, or pick from the standard library below."
-        actions={
-          <a href="/app/reports/builder" style={goldButtonStyle} className="pmBtn">
-            <ChartBar size={16} weight="bold" /> Custom Report Builder
-          </a>
-        }
-      />
-
-      {/* What the reporting engine already knows — all figures live on this page */}
-      <StatStrip items={[
-        {href: '/app/reports', label: 'Report Library', value: String(STANDARD_REPORTS.length), sub: 'Standard reports, one tap each' },
-        {href: '/app/reports', label: 'Projects In Scope', value: String(projects.length), sub: projectFilter ? (projects.find(p => p.id === projectFilter)?.name || 'One selected') : 'All projects' },
-        {href: '/app/reports', label: 'Runs This Session', value: String(history.length), sub: history[0] ? `Last: ${timeAgo(history[0].ts)}` : 'None yet' },
-        {href: '/app/reports',  label: 'Export Formats', value: '3', sub: 'CSV, Excel, and PDF' },
-      ]} />
-      <SectionCard flush style={{ marginBottom: 16 }} bodyStyle={{ padding: '16px 20px' }}>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          {/* Sage icon */}
-          <div style={{
-            width: 36, height: 36, borderRadius: 10,
-            background: `linear-gradient(135deg, color-mix(in srgb, ${GOLD} 13%, transparent), color-mix(in srgb, ${GOLD} 27%, transparent))`,
-            border: `1px solid color-mix(in srgb, ${GOLD} 33%, transparent)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 18, flexShrink: 0,
-          }}>
-            S
+        {/* ── Sage query bar ── */}
+        <Card title="Ask Sage" subtitle="AI-generated reports from your live data — results say what they are and where the figures came from.">
+          <div className="rpAsk">
+            <div className="rpSage" aria-hidden><Sparkle size={18} weight="fill" /></div>
+            <div className="rpQ">
+              <Input
+                ref={inputRef}
+                type="text"
+                value={sageQuery}
+                onChange={e => setSageQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder='Ask Sage anything… "Show me all open RFIs on Project Alpha" or "Cost breakdown this month"'
+                disabled={busy}
+                aria-label="Report question"
+              />
+            </div>
+            {projects.length > 0 && (
+              <Select aria-label="Project" value={projectFilter} onChange={e => setProjectFilter(e.target.value)} disabled={busy} placeholder="All Projects" style={{ width: 'auto', minWidth: 170 }} options={projects.map(p => ({ value: p.id, label: p.name }))} />
+            )}
+            <Button variant="primary" onClick={() => runSageReport()} disabled={busy || !sageQuery.trim()}>{busy ? 'Running…' : 'Ask Sage'}</Button>
           </div>
 
-          {/* Text input */}
-          <input
-            ref={inputRef}
-            type="text"
-            value={sageQuery}
-            onChange={e => setSageQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder='Ask Sage anything… "Show me all open RFIs on Project Alpha" or "Cost breakdown this month"'
-            disabled={pageState === 'loading'}
-            style={{
-              flex: 1, minWidth: 240,
-              background: 'rgba(0,0,0,0.05)',
-              border: `1px solid ${BORDER}`,
-              borderRadius: 10,
-              padding: '10px 16px',
-              color: TEXT,
-              fontSize: 14,
-              outline: 'none',
-              transition: 'border-color .15s',
-              opacity: pageState === 'loading' ? 0.6 : 1,
-            }}
-          />
+          {/* Date-range chips - the range resolves to real dates and rides along with every query and card run */}
+          <div className="rpChips">
+            <span className="rpChipLabel"><CalendarBlank size={13} weight="bold" /> Period</span>
+            {['', ...DATE_RANGES].map(rg => (
+              <button key={rg || 'all-time'} type="button" className="rpChip" aria-pressed={dateRange === rg} onClick={() => setDateRange(rg)} disabled={busy}>{rg || 'All time'}</button>
+            ))}
+            {rd && <span className="rpMuted" style={{ fontSize: 'var(--fs-xs)' }}>{rd.from} to {rd.to} <AutoChip /></span>}
+          </div>
 
-          {/* Project selector */}
-          {projects.length > 0 && (
-            <select
-              value={projectFilter}
-              onChange={e => setProjectFilter(e.target.value)}
-              disabled={pageState === 'loading'}
-              style={{
-                background: 'rgba(0,0,0,0.05)',
-                border: `1px solid ${BORDER}`,
-                borderRadius: 10,
-                padding: '10px 14px',
-                color: projectFilter ? TEXT : DIM,
-                fontSize: 13,
-                cursor: 'pointer',
-                minWidth: 160,
-                outline: 'none',
-                opacity: pageState === 'loading' ? 0.6 : 1,
-              }}
-            >
-              <option value="">All Projects</option>
-              {projects.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
-          )}
+          {/* Quick suggestion chips */}
+          <div className="rpChips">
+            <span className="rpChipLabel"><Sparkle size={13} weight="bold" /> Try</span>
+            {SUGGESTION_CHIPS.map(chip => (
+              <button key={chip} type="button" className="rpChip" onClick={() => handleChipClick(chip)} disabled={busy}>{chip}</button>
+            ))}
+          </div>
+        </Card>
 
-          {/* Run button */}
-          <button
-            onClick={() => runSageReport()}
-            disabled={pageState === 'loading' || !sageQuery.trim()}
-            style={{
-              padding: '10px 22px',
-              background: pageState === 'loading' || !sageQuery.trim()
-                ? 'var(--brand-primary-25)'
-                : `linear-gradient(135deg, ${GOLD}, var(--brand-primary-strong))`,
-              border: 'none',
-              borderRadius: 10,
-              color: pageState === 'loading' || !sageQuery.trim() ? 'rgba(0,0,0,0.4)' : DARK,
-              fontSize: 13,
-              fontWeight: 800,
-              cursor: pageState === 'loading' || !sageQuery.trim() ? 'not-allowed' : 'pointer',
-              whiteSpace: 'nowrap',
-              transition: 'opacity .15s',
-              letterSpacing: 0.3,
-            }}
-          >
-            {pageState === 'loading' ? 'Running…' : 'Ask Sage'}
-          </button>
-        </div>
-
-        {/* Date-range AutoChips - the range resolves to real dates and rides along with every query and card run */}
-        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, color: DIM}}>
-            <CalendarBlank size={13} weight="bold" color={GOLD} /> Period
-          </span>
-          {['', ...DATE_RANGES].map(rg => {
-            const active = dateRange === rg;
-            return (
-              <button
-                key={rg || 'all-time'}
-                onClick={() => setDateRange(rg)}
-                disabled={pageState === 'loading'}
-                style={{
-                  padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600,
-                  background: active ? `color-mix(in srgb, ${GOLD} 13%, transparent)` : 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${active ? `color-mix(in srgb, ${GOLD} 40%, transparent)` : BORDER}`,
-                  color: active ? 'var(--brand-primary-strong)' : DIM,
-                  cursor: pageState === 'loading' ? 'not-allowed' : 'pointer',
-                  transition: 'all .15s',
-                }}
-              >
-                {rg || 'All time'}
-              </button>
-            );
-          })}
-          {(() => { const rd = rangeDates(dateRange); return rd ? (
-            <span style={{ fontSize: 11, color: DIM }}>{rd.from} to {rd.to}<AutoChip /></span>
-          ) : null; })()}
-        </div>
-
-        {/* Quick suggestion chips */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
-          {SUGGESTION_CHIPS.map(chip => (
-            <button
-              key={chip}
-              onClick={() => handleChipClick(chip)}
-              disabled={pageState === 'loading'}
-              onMouseEnter={() => setHoveredChip(chip)}
-              onMouseLeave={() => setHoveredChip(null)}
-              style={{
-                padding: '4px 12px',
-                background: hoveredChip === chip ? `color-mix(in srgb, ${GOLD} 13%, transparent)` : 'rgba(0,0,0,0.05)',
-                border: `1px solid ${hoveredChip === chip ? `color-mix(in srgb, ${GOLD} 33%, transparent)` : BORDER}`,
-                borderRadius: 20,
-                color: hoveredChip === chip ? GOLD : DIM,
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: pageState === 'loading' ? 'not-allowed' : 'pointer',
-                transition: 'all .15s',
-                opacity: pageState === 'loading' ? 0.5 : 1,
-              }}
-            >
-              {chip}
-            </button>
-          ))}
-        </div>
-      </SectionCard>
-
-      {/* ── Main Content Area ── */}
-      <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
-
-        {/* ── Left/Main Column ── */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-
-          {/* Loading / Progress state */}
-          {pageState === 'loading' && (
-            <SectionCard flat flush style={{ marginBottom: 20 }} bodyStyle={{ padding: '40px 32px', textAlign: 'center' }}>
-              <div style={{
-                width: 52, height: 52, borderRadius: 14,
-                background: `linear-gradient(135deg, color-mix(in srgb, ${GOLD} 13%, transparent), color-mix(in srgb, ${GOLD} 27%, transparent))`,
-                border: `1px solid color-mix(in srgb, ${GOLD} 33%, transparent)`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 26, margin: '0 auto 16px',
-              }}>
-                S
-              </div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 8 }}>
-                Sage is analyzing your request…
-              </div>
-              <div style={{ fontSize: 13, color: DIM, marginBottom: 24, minHeight: 20 }}>
-                {progress.message}
-              </div>
-              {/* Progress bar */}
-              <div style={{
-                background: 'rgba(0,0,0,0.06)',
-                borderRadius: 8,
-                height: 8,
-                overflow: 'hidden',
-                maxWidth: 420,
-                margin: '0 auto',
-              }}>
-                <div style={{
-                  height: '100%',
-                  width: `${progress.pct}%`,
-                  background: `linear-gradient(90deg, ${GOLD}, var(--brand-primary-strong))`,
-                  borderRadius: 8,
-                  transition: 'width 0.4s ease',
-                }} />
-              </div>
-              <div style={{ fontSize: 12, color: DIM, marginTop: 10 }}>
-                {progress.pct}% complete
-              </div>
-            </SectionCard>
-          )}
-
-          {/* Results table */}
-          {pageState === 'results' && reportResult && (
-            <SectionCard
-              flush
-              icon={<ChartBar size={17} weight="duotone" color={GOLD} />}
-              title={reportResult.title}
-              subtitle={reportResult.description}
-              style={{ marginBottom: 20 }}
-              action={
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0, flexWrap: 'wrap' }}>
-                  <FileButton icon={<PdfIcon size={16} />} label="PDF" onClick={exportPDF} title="Branded corporate PDF — letterhead, KPI band, totals" />
-                  <FileButton icon={<XlsIcon size={16} />} label="Excel" onClick={exportXLS} title="Excel workbook (.xlsx) with typed money columns and totals" />
-                  <FileButton icon={<DocIcon size={16} />} label="Word" onClick={exportDOC} title="Word document (.docx) with a real table you can restyle" />
-                  <FileButton icon={<CsvIcon size={16} />} label="CSV" onClick={exportCSV} title="Plain CSV (.csv) for any spreadsheet tool" />
-                  <button
-                    onClick={() => { setPageState('idle'); setReportResult(null); }}
-                    aria-label="Close report"
-                    style={{ ...exportBtnStyle, padding: '7px 10px' }}
-                    className="pmBtn"
-                  >
-                    <X size={16} weight="regular" color={DIM} />
-                  </button>
-                </div>
-              }
-            >
-              {/* Meta strip: row count + generated timestamp */}
-              <div style={{ padding: '12px 20px', borderBottom: `1px solid rgba(255,255,255,0.06)`, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                <span style={{
-                  background: 'var(--brand-primary-18)', color: BLUE,
-                  border: '1px solid var(--brand-primary-25)',
-                  borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 700,
-                }}>
-                  {reportResult.rowCount.toLocaleString()} rows
-                </span>
-                <span style={{ fontSize: 11, color: DIM }}>
-                  Generated {fmtDate(reportResult.generatedAt)}
-                </span>
-              </div>
-
-              {/* Overflow row warning */}
-              {reportResult.rowCount > 100 && (
-                <div style={{ padding: '8px 20px', background: 'color-mix(in srgb, var(--warning) 8%, transparent)', borderBottom: `1px solid ${BORDER}`, fontSize: 12, color: YELLOW }}>
-                  Showing 100 of {reportResult.rowCount.toLocaleString()} rows. Export to see all data.
-                </div>
+        <div className="rpCq">
+          <div className="rpSplit" data-rail={history.length > 0 ? 'true' : 'false'}>
+            <div className="rpStack" style={{ gap: 16 }}>
+              {/* Loading / Progress state */}
+              {busy && (
+                <Card flush>
+                  <div className="rpProgress" role="status" aria-live="polite">
+                    <div className="rpSage" aria-hidden><Sparkle size={24} weight="fill" /></div>
+                    <div style={{ fontSize: 'var(--fs-lg)', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>Sage is building your report…</div>
+                    <div className="rpMuted" style={{ fontSize: 'var(--fs-sm)', marginBottom: 20, minHeight: 20 }}>{progress.message}</div>
+                    <div className="rpBar"><div style={{ width: `${progress.pct}%` }} /></div>
+                    <div className="rpMuted" style={{ fontSize: 'var(--fs-xs)', marginTop: 10 }}>{progress.pct}% complete</div>
+                  </div>
+                </Card>
               )}
 
-              {/* Table */}
-              {reportResult.columns.length > 0 && (
-                <div style={{ overflowX: 'auto', maxHeight: 520, overflowY: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                    <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
-                      <tr style={{ background: DARK }}>
-                        {reportResult.columns.map(col => (
-                          <th key={col.key} style={{
-                            padding: '11px 16px',
-                            textAlign: ['currency', 'number', 'percent'].includes(col.type) ? 'right' : 'left',
-                            fontSize: 11, fontWeight: 700,
-                            color: DIM,
-                            borderBottom: `1px solid ${BORDER}`,
-                            whiteSpace: 'nowrap',
-                          }}>
-                            {col.label}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {displayRows.length === 0 ? (
-                        <tr>
-                          <td colSpan={reportResult.columns.length} style={{ padding: 0 }}>
-                            <PremiumEmpty
-                              compact
-                              icon={<ChartBar size={30} weight="duotone" color={GOLD} />}
-                              title="No data found"
-                              description="This report returned no rows. Try a different query or project filter."
-                            />
-                          </td>
-                        </tr>
-                      ) : (
-                        displayRows.map((row, ri) => (
-                          <tr
-                            key={ri}
-                            style={{
-                              background: ri % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.02)',
-                              borderBottom: `1px solid ${BORDER}`,
-                              transition: 'background .1s',
-                            }}
-                          >
-                            {reportResult.columns.map((col, ci) => (
-                              <td key={col.key} style={{
-                                padding: '10px 16px',
-                                textAlign: ['currency', 'number', 'percent'].includes(col.type) ? 'right' : 'left',
-                                fontWeight: ci === 0 ? 600 : 400,
-                                whiteSpace: col.type === 'text' ? 'normal' : 'nowrap',
-                              }}>
-                                {formatCell(col, row[col.key])}
-                              </td>
-                            ))}
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                    {hasTotals && (
-                      <tfoot>
-                        <tr style={{
-                          background: `color-mix(in srgb, ${GOLD} 6%, transparent)`,
-                          borderTop: `2px solid color-mix(in srgb, ${GOLD} 20%, transparent)`,
-                        }}>
-                          {reportResult.columns.map((col, ci) => {
-                            const val = reportResult.totals![col.key];
-                            return (
-                              <td key={col.key} style={{
-                                padding: '11px 16px',
-                                textAlign: ['currency', 'number', 'percent'].includes(col.type) ? 'right' : 'left',
-                                fontWeight: 800,
-                                color: ci === 0 ? TEXT : (val !== undefined ? GOLD : 'transparent'),
-                                fontSize: ci === 0 ? 12 : 13,
-                                whiteSpace: 'nowrap',
-                              }}>
-                                {ci === 0 ? 'Totals' : val !== undefined ? (
-                                  col.type === 'currency' ? fmtCurrency(val) :
-                                  col.type === 'percent' ? fmtPercent(val) :
-                                  fmtNumber(val)
-                                ) : ''}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      </tfoot>
+              {/* Results */}
+              {pageState === 'results' && reportResult && (
+                <div ref={resultsRef}>
+                  <Card
+                    flush
+                    title={reportResult.title}
+                    subtitle={reportResult.description}
+                    actions={
+                      <div className="rpExports">
+                        <FileButton icon={<PdfIcon size={16} />} label="PDF" onClick={exportPDF} title="Branded corporate PDF — letterhead, KPI band, totals" />
+                        <FileButton icon={<XlsIcon size={16} />} label="Excel" onClick={exportXLS} title="Excel workbook (.xlsx) with typed money columns and totals" />
+                        <FileButton icon={<DocIcon size={16} />} label="Word" onClick={exportDOC} title="Word document (.docx) with a real table you can restyle" />
+                        <FileButton icon={<CsvIcon size={16} />} label="CSV" onClick={exportCSV} title="Plain CSV (.csv) for any spreadsheet tool" />
+                        <Button variant="ghost" size="sm" icon={<X size={16} />} aria-label="Close report" title="Close report" onClick={() => { setPageState('idle'); setReportResult(null); }} />
+                      </div>
+                    }
+                  >
+                    <div className="rpMeta">
+                      <Badge tone="gold">AI-generated by Sage</Badge>
+                      <Badge tone="neutral">{reportResult.rowCount.toLocaleString()} rows</Badge>
+                      <span>Generated {fmtDate(reportResult.generatedAt)}</span>
+                    </div>
+                    {reportResult.rowCount > 100 && (
+                      <div className="rpNote">Showing 100 of {reportResult.rowCount.toLocaleString()} rows. Export to see all data.</div>
                     )}
-                  </table>
-                </div>
-              )}
-            </SectionCard>
-          )}
-
-          {/* Standard Report Cards grid (shown when idle or results) */}
-          {(pageState === 'idle' || pageState === 'results') && (
-            <SectionCard
-              icon={<Clipboard size={17} weight="duotone" color={GOLD} />}
-              title={pageState === 'results' ? 'Run Another Report' : 'Standard Reports'}
-              subtitle={pageState === 'idle' ? 'Click any card to run it instantly with Sage.' : undefined}
-              style={{ marginBottom: 20 }}
-            >
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                gap: 12,
-              }}>
-                {STANDARD_REPORTS.map(r => (
-                  <div
-                    key={r.id}
-                    onClick={() => handleCardClick(r.query)}
-                    onMouseEnter={() => setHoveredCard(r.id)}
-                    onMouseLeave={() => setHoveredCard(null)}
-                    style={{
-                      background: hoveredCard === r.id ? `color-mix(in srgb, ${GOLD} 4%, transparent)` : RAISED,
-                      border: `1px solid ${hoveredCard === r.id ? `color-mix(in srgb, ${GOLD} 27%, transparent)` : BORDER}`,
-                      borderRadius: 12,
-                      padding: '14px 16px',
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: 12,
-                      cursor: 'pointer',
-                      transition: 'all .15s',
-                      opacity: 1,
-                    }}
-                  >
-                    <div style={{
-                      width: 36, height: 36, borderRadius: 9,
-                      background: hoveredCard === r.id ? `color-mix(in srgb, ${GOLD} 13%, transparent)` : 'rgba(0,0,0,0.05)',
-                      border: `1px solid ${hoveredCard === r.id ? `color-mix(in srgb, ${GOLD} 27%, transparent)` : BORDER}`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 17, flexShrink: 0,
-                      transition: 'all .15s',
-                    }}>
-                      <r.icon size={18} weight="regular" color={GOLD} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: TEXT, marginBottom: 3 }}>{r.title}</div>
-                      <div style={{ fontSize: 12, color: DIM, lineHeight: 1.5 }}>{r.desc}</div>
-                      {REPORT_ANSWERS[r.id] && (
-                        <div style={{ fontSize: 11.5, color: 'color-mix(in srgb, var(--brand-primary-strong) 80%, transparent)', lineHeight: 1.45, marginTop: 5 }}>
-                          Answers: {REPORT_ANSWERS[r.id]}
-                        </div>
-                      )}
-                    </div>
-                    {hoveredCard === r.id && (
-                      <div style={{ color: GOLD, fontSize: 16, alignSelf: 'center', flexShrink: 0, marginLeft: 4, display: 'inline-flex' }}>
-                        <ArrowRight size={16} weight="regular" color={GOLD} />
+                    {reportResult.columns.length > 0 && (
+                      <DataTable
+                        columns={resultColumns}
+                        rows={displayRows.map((r, i) => ({ ...r, __i: i }))}
+                        rowKey={(r) => String(r.__i)}
+                        empty={<EmptyState icon={<ChartBar size={22} />} title="No data found" text="This report returned no rows. Try a different question, period, or project." />}
+                      />
+                    )}
+                    {hasTotals && (
+                      <div className="rpTotals">
+                        <b>Totals</b>
+                        {reportResult.columns.filter(c => reportResult.totals![c.key] !== undefined).map(c => (
+                          <div key={c.key}><b>{c.label}</b><span>{c.type === 'currency' ? fmtCurrency(reportResult.totals![c.key]) : c.type === 'percent' ? fmtPercent(reportResult.totals![c.key]) : fmtNumber(reportResult.totals![c.key])}</span></div>
+                        ))}
                       </div>
                     )}
-                  </div>
-                ))}
-              </div>
-            </SectionCard>
-          )}
-        </div>
-
-        {/* ── Right Sidebar: History ── */}
-        {history.length > 0 && (
-          <SectionCard
-            icon={<Clock size={16} weight="duotone" color={GOLD} />}
-            title="Recent Reports"
-            style={{ width: 240, flexShrink: 0 }}
-            bodyStyle={{ padding: 14 }}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {history.map((item, i) => (
-                <div
-                  key={i}
-                  onClick={() => {
-                    setSageQuery(item.query);
-                    setProjectFilter(item.projectId);
-                    setDateRange(item.range || '');
-                    // Pass overrides so the rerun uses the STORED project + range
-                    // now - the state setters above only land next render.
-                    runSageReport(item.query, { projectId: item.projectId, range: item.range || '' });
-                  }}
-                  style={{
-                    background: 'rgba(0,0,0,0.03)',
-                    border: `1px solid ${BORDER}`,
-                    borderRadius: 8,
-                    padding: '9px 11px',
-                    cursor: 'pointer',
-                    transition: 'border-color .15s',
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.borderColor = `color-mix(in srgb, ${GOLD} 27%, transparent)`)}
-                  onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER)}
-                >
-                  <div style={{ fontSize: 12, fontWeight: 600, color: TEXT, marginBottom: 3, lineHeight: 1.3 }}>
-                    {item.title}
-                  </div>
-                  <div style={{ fontSize: 10, color: DIM }}>{timeAgo(item.ts)}</div>
+                  </Card>
                 </div>
-              ))}
-            </div>
-            <button
-              onClick={() => setHistory([])}
-              style={{ ...ghostButtonStyle, marginTop: 12, width: '100%', padding: '6px', fontSize: 11 }}
-              className="pmBtn"
-            >
-              Clear History
-            </button>
-          </SectionCard>
-        )}
-      </div>
-      </div>
-    </PremiumSurface>
+              )}
 
-    {/* ── Toast notification (outside PremiumSurface so it stays viewport-fixed) ── */}
-    {toast && (
-      <div style={{
-        position: 'fixed',
-        bottom: 28,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 99999,
-        padding: '12px 24px',
-        borderRadius: 10,
-        background: toast.type === 'success' ? 'rgba(34,197,94,0.9)' : 'rgba(239,68,68,0.9)',
-        color: '#fff',
-        fontWeight: 700,
-        fontSize: 14,
-        pointerEvents: 'none',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.5)',
-        whiteSpace: 'nowrap',
-      }}>
-        {toast.msg}
-      </div>
-    )}
-    </>
+              {/* Standard report library */}
+              {!busy && (
+                <Card title={pageState === 'results' ? 'Run Another Report' : 'Standard Reports'} subtitle="One tap each — Sage runs the report with the project and period above.">
+                  <div className="rpGrid">
+                    {STANDARD_REPORTS.map(r => (
+                      <button key={r.id} type="button" className="rpCard" onClick={() => handleCardClick(r.query)} disabled={busy}>
+                        <div className="rpCardIcon"><r.icon size={18} /></div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div className="rpCardTitle">{r.title}</div>
+                          <div className="rpCardDesc">{r.desc}</div>
+                          {REPORT_ANSWERS[r.id] && <div className="rpCardAsk">Answers: {REPORT_ANSWERS[r.id]}</div>}
+                        </div>
+                        <ArrowRight size={16} style={{ color: 'var(--text-tertiary)', alignSelf: 'center', flexShrink: 0 }} />
+                      </button>
+                    ))}
+                  </div>
+                </Card>
+              )}
+            </div>
+
+            {/* Recent runs rail */}
+            {history.length > 0 && (
+              <aside className="rpRail" aria-label="Recent reports">
+                <Card title="Recent Reports" subtitle="This session — tap to rerun with the same project and period." actions={<Button variant="ghost" size="sm" onClick={() => setHistory([])}>Clear</Button>}>
+                  <div className="rpStack">
+                    {history.map((item, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        className="rpHist"
+                        onClick={() => {
+                          setSageQuery(item.query);
+                          setProjectFilter(item.projectId);
+                          setDateRange(item.range || '');
+                          // Pass overrides so the rerun uses the STORED project + range
+                          // now - the state setters above only land next render.
+                          runSageReport(item.query, { projectId: item.projectId, range: item.range || '' });
+                        }}
+                      >
+                        <div className="rpHistTitle">{item.title}</div>
+                        <div className="rpHistSub">{timeAgo(item.ts)}{item.range ? ` · ${item.range}` : ''}{item.projectId ? ` · ${projects.find(p => p.id === item.projectId)?.name || 'one project'}` : ''}</div>
+                      </button>
+                    ))}
+                  </div>
+                </Card>
+              </aside>
+            )}
+          </div>
+        </div>
+      </PageShell>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </div>
   );
 }

@@ -8,10 +8,10 @@ const GOLD = 'var(--brand-primary)';
 const DARK = 'var(--bg-base)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1';
+const DIM = '#D4D4D8';
 const TEXT = '#FFFFFF';
-const GREEN = '#1a8a4a';
-const RED = '#c03030';
+const GREEN = '#2CFF7A';
+const RED = '#FF3B30';
 
 interface NotificationItem {
   id: string;
@@ -32,11 +32,11 @@ const TYPE_CONFIG: Record<string, { icon: React.ComponentType<any>; label: strin
   pay_app_certified:   { icon: CheckCircle, label: 'Pay App', color: GREEN },
   change_order_approved:{ icon: ArrowsClockwise, label: 'Change Order', color: GREEN },
   insurance_expiring:  { icon: Warning, label: 'Insurance', color: 'var(--warning)', actions: ['Request Renewal'] },
-  rfi_submitted:       { icon: Question, label: 'RFI', color: '#8b5cf6', actions: ['Answer RFI'] },
+  rfi_submitted:       { icon: Question, label: 'RFI', color: '#FF8A00', actions: ['Answer RFI'] },
   rfi_answered:        { icon: CheckCircle, label: 'RFI', color: GREEN },
   bid_submitted:       { icon: NotePencil, label: 'Bid', color: 'var(--brand-primary)', actions: ['Review Bid'] },
   bid_awarded:         { icon: Trophy, label: 'Bid', color: GOLD },
-  sub_added:           { icon: Handshake, label: 'Team', color: '#8b5cf6' },
+  sub_added:           { icon: Handshake, label: 'Team', color: '#FF8A00' },
   project_created:     { icon: Buildings, label: 'Project', color: GOLD },
   document_generated:  { icon: FileText, label: 'Document', color: 'var(--brand-primary)', actions: ['Download'] },
   Budget_Exceeded:     { icon: WarningOctagon, label: 'Alert', color: RED },
@@ -277,8 +277,8 @@ export default function NotificationsPage() {
                     )}
                     {n.project_id && (n.type === 'rfi_submitted') && (
                       <Link href={`/app/projects/${n.project_id}/rfis`} onClick={e => { e.stopPropagation(); markRead(n.id); }}
-                        style={{ fontSize: 12, color: '#8b5cf6', textDecoration: 'none', fontWeight: 600, padding: '3px 10px', background: 'rgba(139,92,246,.1)', border: '1px solid rgba(139,92,246,.25)', borderRadius: 5 }}>
-                        Answer RFI <ArrowRight size={12} weight="bold" color="#8b5cf6" style={{ verticalAlign: 'middle' }} />
+                        style={{ fontSize: 12, color: '#FF8A00', textDecoration: 'none', fontWeight: 600, padding: '3px 10px', background: 'rgba(255,138,0,.1)', border: '1px solid rgba(255,138,0,.25)', borderRadius: 5 }}>
+                        Answer RFI <ArrowRight size={12} weight="bold" color="#FF8A00" style={{ verticalAlign: 'middle' }} />
                       </Link>
                     )}
                     {n.project_id && n.type === 'bid_submitted' && (

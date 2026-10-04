@@ -9,12 +9,12 @@ const C = {
   gold: 'var(--brand-primary)',
   goldBright: 'var(--brand-primary-strong)',
   text: '#FFFFFF',
-  dim: '#CBD5E1',
+  dim: '#D4D4D8',
   border: 'rgba(255,255,255,0.08)',
   raised: 'var(--bg-surface)',
   raisedAlt: 'var(--bg-surface)',
-  green: '#22C55E',
-  blue: '#6366F1',
+  green: '#2CFF7A',
+  blue: '#FF8A00',
   font: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,system-ui,sans-serif",
 };
 
@@ -273,7 +273,7 @@ export default function FeaturesPage() {
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
               {REPLACES.map(item => (
                 <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px', background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.border}`, borderRadius: 999, fontSize: 14, color: C.dim, fontWeight: 500 }}>
-                  <span style={{ color: '#EF4444', fontWeight: 600, fontSize: 15, lineHeight: 1 }}>&times;</span>
+                  <span style={{ color: '#FF3B30', fontWeight: 600, fontSize: 15, lineHeight: 1 }}>&times;</span>
                   {item}
                 </div>
               ))}

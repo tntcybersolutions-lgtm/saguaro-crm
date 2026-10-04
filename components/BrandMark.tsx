@@ -75,7 +75,7 @@ export default function BrandMark({
           <span
             style={{
               fontSize: s.sub,
-              color: '#CBD5E1',
+              color: '#D4D4D8',
               fontWeight: 700,
               whiteSpace: 'nowrap',
             }}

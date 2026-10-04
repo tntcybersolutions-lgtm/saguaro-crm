@@ -1,9 +1,11 @@
 'use client';
 /**
- * Time Clock (web) — clock in/out goes through the canonical timeclock API
+ * Time Clock (web) — Pass 4, on the RFIs reference layout (console + register + rail).
+ *
+ * Clock in/out goes through the canonical timeclock API
  * (/api/timeclock/status|in|out) so this screen and the field screen agree on one
  * server-side truth: open-shift detection, idempotent clock-in, honest failures,
- * and the clock_punches audit trail all live on the server. This page no longer
+ * and the clock_punches audit trail all live on the server. This page never
  * writes clock events directly (that path had no dupe guard — two tabs or a
  * double-click opened two shifts).
  *
@@ -11,6 +13,12 @@
  * deterministic lib/timeclock engine (same as iOS) reading time_entries through the
  * RLS-scoped browser client, and manual add/edit + PTO/sick logging still write
  * directly (they are not clock events).
+ *
+ * Anatomy: title → StatRow (today / week / overtime / gross or pending) →
+ * workspace: shift console + this week + the entries register (DataTable) on the
+ * left, a 320–384px "this week at a glance" + "after you clock out" rail on the
+ * right. Phone: stacked. Add / edit time and PTO open in a FormModal. "Live"
+ * only ever appears next to a timestamp (the running shift's clock-in time).
  */
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
@@ -18,22 +26,37 @@ import { humanError } from '@/lib/errors';
 import { getSupabaseBrowser, ensureBrowserSession } from '@/lib/supabase-browser';
 import { computeTimesheet, weekKey, fmtHours, liveElapsed, type TimeEntry } from '@/lib/timeclock';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
-import { Clock, Play, Stop, Plus, Trash, PaperPlaneRight, Sun, Bandaids, MapPin, HardHat, Timer, CurrencyDollar } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, SectionCard, StatStrip, FlowSteps, InsightRow, PremiumEmpty, IconChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
-import { moduleAccent } from '@/lib/module-identity';
+import { Clock, Play, Stop, Plus, Trash, PaperPlaneRight, Sun, MapPin, HardHat, Timer, PencilSimple } from '@phosphor-icons/react';
+import {
+  PageShell, Card, StatRow, Badge, Button, DataTable, EmptyState, DetailList,
+  FormModal, Field, Input, Select, FormGrid,
+  type Column, type Action, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import { FlowSteps } from '@/components/ui/premium';
+import { layout } from '@/lib/design-tokens';
 
-const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1', TEXT = '#FFFFFF', GREEN = '#3dd68c', RED = '#ef4444';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const TZ = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { return 'UTC'; } })();
 const localDay = (d = new Date()) => { const o = d.getTimezoneOffset() * 60000; return new Date(d.getTime() - o).toISOString().slice(0, 10); };
 const fmtTime = (iso: string | null) => { if (!iso) return '--'; const d = new Date(iso); return isNaN(d.getTime()) ? '--' : d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); };
+/** Date-only values parse at local noon ('T12:00:00') so they never shift a day under UTC. */
 const fmtDate = (s: string) => { const d = new Date(s + 'T12:00:00'); return isNaN(d.getTime()) ? s : d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }); };
 const splitOT = (h: number) => ({ regular: Math.min(h, 8), overtime: Math.max(0, h - 8) });
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
+/* The browser's `timeout` only starts once permission is granted — while the
+   location prompt sits unanswered neither callback fires and Clock In hung on
+   "Clocking in…" for good (seen in Chrome device mode). A hard 8 s race wins
+   either way: the shift is stamped without GPS rather than never. */
 async function geo(): Promise<{ lat: number; lng: number } | null> {
-  return new Promise((res) => { if (!navigator.geolocation) return res(null); navigator.geolocation.getCurrentPosition((p) => res({ lat: p.coords.latitude, lng: p.coords.longitude }), () => res(null), { timeout: 6000 }); });
+  if (typeof navigator === 'undefined' || !navigator.geolocation) return null;
+  const ask = new Promise<{ lat: number; lng: number } | null>((res) => {
+    try {
+      navigator.geolocation.getCurrentPosition((p) => res({ lat: p.coords.latitude, lng: p.coords.longitude }), () => res(null), { timeout: 6000, maximumAge: 60000 });
+    } catch { res(null); }
+  });
+  const giveUp = new Promise<null>((res) => setTimeout(() => res(null), 8000));
+  return Promise.race([ask, giveUp]);
 }
 
 /** The canonical shift shape returned by /api/timeclock/* — the server's truth. */
@@ -65,6 +88,71 @@ async function postClock(path: string, body: Record<string, unknown>): Promise<{
   return { status: res.status, json };
 }
 
+/** One status → one badge. Pending stays amber, approved green, the running
+ *  shift green with a dot, rejected red; everything else neutral. */
+function entryStatus(s: string | null | undefined): { label: string; tone: BadgeTone } {
+  const k = String(s || '').toLowerCase();
+  if (k === 'clocked_in') return { label: 'On the Clock', tone: 'ongoing' };
+  if (k === 'approved') return { label: 'Approved', tone: 'ongoing' };
+  if (k === 'pending') return { label: 'Pending', tone: 'under_contract' };
+  if (k === 'rejected') return { label: 'Rejected', tone: 'overdue' };
+  return { label: k ? k.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : '—', tone: 'neutral' };
+}
+const LEAVE_LABEL: Record<string, string> = { pto: 'PTO', sick: 'Sick', holiday: 'Holiday', vacation: 'Vacation' };
+
+const CSS = `
+.tcWs > .k-page { max-width: none; }
+.tcCq { container: tcws / inline-size; min-width: 0; }
+.tcSplit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
+.tcSplit > * { min-width: 0; }
+.tcMain { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.tcRail { order: -1; display: flex; flex-direction: column; gap: 16px; }
+@container tcws (min-width: 900px) {
+  .tcSplit { grid-template-columns: minmax(0, 1fr) clamp(${layout.detailRailMin}px, 30%, ${layout.detailRailMax}px); }
+  .tcRail { order: 0; position: sticky; top: 16px; }
+}
+.tcConsole { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 10px 0 6px; }
+.tcClock { font-size: 46px; font-weight: 800; letter-spacing: -1px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.tcClock[data-live="true"] { color: var(--status-ongoing); }
+.tcSince { color: var(--text-tertiary); font-size: var(--fs-sm); }
+.tcFacts { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; font-size: var(--fs-xs); color: var(--text-tertiary); }
+.tcFacts span { display: inline-flex; align-items: center; gap: 5px; }
+.tcPickers { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; width: 100%; max-width: 560px; margin-top: 6px; text-align: left; }
+@media (max-width: 560px) { .tcPickers { grid-template-columns: minmax(0, 1fr); } }
+.tcBigBtn { min-height: 52px; padding: 0 28px; font-size: var(--fs-md); border-radius: var(--radius-md); margin-top: 8px; }
+.tcBigBtn[data-live="true"] { background: rgba(255,77,94,.14); border-color: rgba(255,77,94,.45); color: var(--status-overdue); }
+.tcBigBtn[data-live="false"] { background: rgba(46,229,157,.14); border-color: rgba(46,229,157,.45); color: var(--status-ongoing); }
+.tcMsg { font-size: var(--fs-sm); color: var(--status-ongoing); }
+.tcMsg[data-tone="err"] { color: var(--status-overdue); }
+.tcDays { display: flex; flex-direction: column; gap: 4px; }
+.tcDay { display: flex; align-items: center; gap: 12px; padding: 5px 0; font-size: var(--fs-sm); }
+.tcDay > span:first-child { width: 110px; flex-shrink: 0; color: var(--text-secondary); }
+.tcBar { flex: 1; height: 6px; border-radius: 999px; background: rgba(255,255,255,0.07); overflow: hidden; }
+.tcBarFill { height: 100%; border-radius: 999px; background: rgba(46,229,157,.75); }
+.tcBarFill[data-ot="true"] { background: var(--status-under-contract); }
+.tcDay > b { font-weight: 700; font-variant-numeric: tabular-nums; width: 56px; text-align: right; color: var(--text-primary); }
+.tcMuted { color: var(--text-tertiary); }
+.tcNum { font-variant-numeric: tabular-nums; }
+.tcList .k-table th:first-child, .tcList .k-table td:first-child { position: sticky; left: 0; z-index: 1; background: var(--bg-solid); }
+.tcList .k-table th:first-child { background: var(--bg-solid-2); z-index: 3; }
+.tcDate { color: var(--text-primary); font-weight: 800; white-space: nowrap; }
+.tcSeg[aria-pressed="true"] { border-color: var(--border-strong); background: rgba(255,255,255,0.12); color: var(--text-primary); }
+.tcSegRow { display: flex; gap: 8px; flex-wrap: wrap; }
+.tcDateInput { width: 100%; }
+.tcNote { font-size: var(--fs-xs); color: var(--text-tertiary); line-height: 1.5; margin-top: 8px; }
+@media (max-width: 640px) {
+  .tcWs .k-btn, .tcWs .k-stat, .tcWs select.k-select, .tcWs .k-input { min-height: 44px; }
+  .tcWs .k-table td { height: 48px; }
+  .tcClock { font-size: 38px; }
+}
+`;
+
+const DATE_INPUT_STYLE: React.CSSProperties = {
+  width: '100%', minHeight: 40, padding: '8px 12px', fontSize: 14,
+  background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)',
+  borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)',
+};
+
 export default function TimeClockPage() {
   const sb = getSupabaseBrowser();
   const [emp, setEmp] = useState<any>(null);
@@ -79,6 +167,7 @@ export default function TimeClockPage() {
   const [manual, setManual] = useState<any | null>(null);
   const [leave, setLeave] = useState<any | null>(null);
   const [csiDiv, setCsiDiv] = useState('');
+  const [savingEntry, setSavingEntry] = useState(false);
   // Server truth for the clock. `statusLoaded` stays false until /status answers once,
   // so an unreachable API falls back to the read path instead of faking "clocked out".
   const [shift, setShift] = useState<Shift | null>(null);
@@ -269,6 +358,7 @@ export default function TimeClockPage() {
        a rejected insert closed the dialog, reloaded the list, and the hours
        were simply gone — with "Week submitted for approval" on screen. Each
        result is now read and thrown so the catch below does its job. */
+    setSavingEntry(true);
     try {
       const { error } = manual.id
         ? await sb.from('time_entries').update({ work_date: manual.date, clock_in: inISO, clock_out: outISO, hours_worked: hrs, regular_hours: round2(regular), overtime_hours: round2(overtime), meal_break_mins: meal, csi_division: manual.csi || null, cost_code_description: manual.csi ? (CSI_DIVISIONS[manual.csi]?.name || null) : null, ...rates() }).eq('id', manual.id)
@@ -276,14 +366,17 @@ export default function TimeClockPage() {
       if (error) throw error;
       setManual(null); await loadEntries(emp.id);
     } catch (e: any) { console.error(e); say(humanError(e, "Couldn't save that time entry."), 'err'); }
+    finally { setSavingEntry(false); }
   };
   const saveLeave = async () => {
     if (!emp || !leave) return;
+    setSavingEntry(true);
     try {
       const { error } = await sb.from('time_entries').insert({ tenant_id: tenantId, employee_id: emp.id, work_date: leave.date, entry_type: leave.type, hours_worked: parseFloat(leave.hours) || 8, total_hours: parseFloat(leave.hours) || 8, status: 'pending', timezone: TZ });
       if (error) throw error;
       setLeave(null); await loadEntries(emp.id); say('Logged');
     } catch (e: any) { console.error(e); say(humanError(e, "Couldn't log that leave."), 'err'); }
+    finally { setSavingEntry(false); }
   };
   const del = async (id: string) => {
     const { error } = await sb.from('time_entries').delete().eq('id', id);
@@ -299,176 +392,249 @@ export default function TimeClockPage() {
     } catch (e: any) { console.error(e); say(humanError(e, "Couldn't submit the week for approval."), 'err'); }
   };
 
-  const inp: React.CSSProperties = { background: DARK, border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, padding: '9px 11px', fontSize: 14, width: '100%' };
-  const btn: React.CSSProperties = { background: GOLD, color: '#0A0A00', fontWeight: 700, border: 'none', borderRadius: 8, padding: '10px 18px', cursor: 'pointer', fontSize: 14 };
   const clockedIn = !!openShift;
+  const openManualFor = (e: any) => setManual({ id: e.id, date: e.work_date, in: e.clock_in ? new Date(e.clock_in).toTimeString().slice(0, 5) : '07:00', out: e.clock_out ? new Date(e.clock_out).toTimeString().slice(0, 5) : '15:30', meal: String(e.meal_break_mins ?? 30), csi: e.csi_division || '' });
+  const openAddTime = () => setManual({ date: localDay(), in: '07:00', out: '15:30', meal: '30', csi: csiDiv });
+  const openLeave = () => setLeave({ date: localDay(), type: 'pto', hours: '8' });
+
+  const elapsed = (() => {
+    if (!clockedIn) return null;
+    const h = liveElapsed(openShift.clock_in, new Date(now).toISOString());
+    const s = Math.floor(h * 3600);
+    return `${Math.floor(s / 3600)}:${String(Math.floor(s % 3600 / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  })();
+
+  // ── Stat tiles ──
+  const stats: StatItem[] = [
+    { label: 'Today', value: `${todayHours.toFixed(2)} h`, tone: clockedIn ? 'good' : 'default', sub: clockedIn ? `Shift running since ${fmtTime(openShift.clock_in)}` : 'Completed shifts' },
+    { label: 'This Week', value: `${(week?.workedHours ?? 0).toFixed(2)} h`, sub: `Week of ${fmtDate(thisWeekKey)}` },
+    { label: 'Overtime', value: `${(week?.overtimeHours ?? 0).toFixed(2)} h`, tone: (week?.overtimeHours ?? 0) > 0 ? 'warn' : 'default', sub: 'Past 40 h/week or 8 h/day' },
+    ...(regRate > 0
+      ? [{ label: 'Est. Gross', value: fmtMoney(estGross), tone: 'good' as const, sub: `$${regRate}/h reg · $${otRate}/h OT` }]
+      : [{ label: 'Pending Approval', value: String(pendingCount), tone: pendingCount > 0 ? 'warn' as const : 'default' as const, sub: 'Entries awaiting review' }]),
+  ];
+
+  // ── Entries register ──
+  const columns: Column<any>[] = [
+    { key: 'work_date', header: 'Date', accessor: (e) => `${e.work_date || ''}|${e.clock_in || ''}`, width: 130, render: (e) => <span className="tcDate">{fmtDate(e.work_date)}</span> },
+    { key: 'kind', header: 'Project / Type', accessor: (e) => (e.entry_type && e.entry_type !== 'regular') ? e.entry_type : (projects.find((p) => p.id === e.project_id)?.name || ''), render: (e) => {
+      const leaveType = e.entry_type && e.entry_type !== 'regular';
+      if (leaveType) return <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--text-primary)' }}><Sun size={14} /> {LEAVE_LABEL[e.entry_type] || String(e.entry_type).toUpperCase()}</span>;
+      const name = e.project_id ? (projects.find((p) => p.id === e.project_id)?.name || 'Project') : '';
+      return name ? <span style={{ color: 'var(--text-primary)' }}>{name}</span> : <span className="tcMuted">No project</span>;
+    } },
+    { key: 'span', header: 'In – Out', accessor: (e) => e.clock_in || '', render: (e) => {
+      const leaveType = e.entry_type && e.entry_type !== 'regular';
+      if (leaveType) return <span className="tcMuted">{`${e.hours_worked ?? e.total_hours ?? 8}h logged`}</span>;
+      return <span className="tcNum">{fmtTime(e.clock_in)} – {e.status === 'clocked_in' ? 'now' : fmtTime(e.clock_out)}</span>;
+    } },
+    { key: 'csi', phone: 'hide', header: 'Cost Code', accessor: (e) => e.csi_division || '', render: (e) => e.csi_division ? <Badge tone="neutral">Div {e.csi_division} · {e.cost_code_description || CSI_DIVISIONS[e.csi_division]?.name || 'Cost coded'}</Badge> : <span className="tcMuted">—</span> },
+    { key: 'hours', phone: 'show', header: 'Hours', accessor: (e) => Number(e.total_hours ?? e.hours_worked ?? 0) || 0, align: 'right', render: (e) => <span className="tcNum" style={{ fontWeight: 800, color: 'var(--text-primary)' }}>{e.status === 'clocked_in' ? '—' : `${(Number(e.total_hours ?? e.hours_worked ?? 0) || 0).toFixed(2)}h`}</span> },
+    { key: 'status', phone: 'show', header: 'Status', accessor: (e) => entryStatus(e.status).label, render: (e) => { const s = entryStatus(e.status); return <Badge tone={s.tone} dot={e.status === 'clocked_in'}>{s.label}</Badge>; } },
+  ];
+  const rowActions = (e: any): Action[] => {
+    const leaveType = e.entry_type && e.entry_type !== 'regular';
+    return [
+      { label: 'Edit Time', icon: <PencilSimple size={15} />, onClick: () => openManualFor(e), hidden: leaveType || e.status === 'clocked_in' },
+      { label: 'Delete', icon: <Trash size={15} />, onClick: () => del(e.id), tone: 'danger', hidden: e.status === 'clocked_in' || e.status === 'approved' },
+    ];
+  };
+
+  const leaveSummary = week ? Object.entries(week.byType).filter(([k]) => k !== 'regular') : [];
 
   return (
-    <PremiumSurface maxWidth={1140}>
-      <ModuleHero
-        eyebrow="Field Workforce"
-        eyebrowIcon={<IconChip size={24} vivid={moduleAccent('time').vivid ?? moduleAccent('time').hex}><Clock size={13} weight="fill" color="#F8FAFC" /></IconChip>}
-        accentColor={moduleAccent('time').hex}
-        title="Time"
-        accent="Clock"
+    <div className="tcWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[{ label: 'Home', href: '/app' }, { label: 'Time Clock' }]}
+        title="Time Clock"
         subtitle="GPS-stamped, CSI-coded labor. Same engine as the phone."
-        note="GPS stamped — no more paper"
         actions={
           <>
-            <select value={projectId} onChange={(e) => setProjectId(e.target.value)} style={{ ...inp, width: 'auto', minWidth: 170 }}>{projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select>
-            <select value={csiDiv} onChange={(e) => setCsiDiv(e.target.value)} style={{ ...inp, width: 'auto', maxWidth: 240 }} title="CSI cost code applied to the next clock-in">
-              <option value="">No Cost Code</option>
-              {Object.entries(CSI_DIVISIONS).map(([code, d]) => <option key={code} value={code}>Div {code} — {d.name}</option>)}
-            </select>
+            <Button icon={<Plus size={15} weight="bold" />} onClick={openAddTime} disabled={!emp}>Add Time</Button>
+            <Button icon={<Sun size={15} weight="fill" />} onClick={openLeave} disabled={!emp}>PTO / Sick</Button>
           </>
         }
-      />
+      >
+        <StatRow items={stats} />
 
-      {/* Week intelligence strip — what the engine already knows */}
-      <StatStrip items={[
-        {href: '/app/time', label: 'Today', value: `${todayHours.toFixed(2)} h`, sub: clockedIn ? 'Shift running now' : 'Completed shifts', accent: clockedIn ? GREEN : undefined },
-        {href: '/app/time', label: 'This Week', value: `${(week?.workedHours ?? 0).toFixed(2)} h`, sub: `Week of ${fmtDate(thisWeekKey)}` },
-        {href: '/app/time', label: 'Regular', value: `${(week?.regularHours ?? 0).toFixed(2)} h`, sub: 'Inside the 40 h threshold' },
-        {href: '/app/time', label: 'Overtime', value: `${(week?.overtimeHours ?? 0).toFixed(2)} h`, accent: (week?.overtimeHours ?? 0) > 0 ? GOLD : undefined, sub: 'Past 40 h/week or 8 h/day' },
-        {href: '/app/time',  label: 'Leave', value: `${leaveHours.toFixed(2)} h`, sub: 'PTO / sick / holiday' },
-        ...(regRate > 0
-          ? [{href: '/app/time',  label: 'Est. Gross', value: fmtMoney(estGross), accent: GREEN, sub: `$${regRate}/h reg · $${otRate}/h OT` }]
-          : [{href: '/app/time', label: 'Pending Approval', value: String(pendingCount), sub: 'Entries awaiting review' }]),
-      ]} />
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 300px', gap: 18, alignItems: 'start' }}>
-        <div>
-
-          {/* Shift console — walks in knowing the project, cost code, timezone, and GPS */}
-          <SectionCard style={{ marginBottom: 16 }} bodyStyle={{ textAlign: 'center', padding: 26 }}>
-            <div style={{ fontSize: 46, fontWeight: 800, letterSpacing: -1, color: clockedIn ? GREEN : DIM, fontVariantNumeric: 'tabular-nums' }}>
-              {clockedIn ? (() => { const h = liveElapsed(openShift.clock_in, new Date(now).toISOString()); const s = Math.floor(h * 3600); return `${Math.floor(s / 3600)}:${String(Math.floor(s % 3600 / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; })() : 'Clocked Out'}
-            </div>
-            <div style={{ color: DIM, fontSize: 13, marginTop: 4 }}>{clockedIn ? `Since ${fmtTime(openShift.clock_in)} · ${openShift.timezone || TZ}` : (emp ? 'Ready to clock in' : 'Resolving your employee record…')}</div>
-            <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', marginTop: 12, fontSize: 12, color: DIM }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><HardHat size={13} color={GOLD} />{clockedIn ? (projects.find((p) => p.id === openShift.project_id)?.name || 'Project') : (projName || 'Pick a project above')}</span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Timer size={13} color={GOLD} />{clockedIn ? (openShift.csi_division ? `Div ${openShift.csi_division} — ${openShift.cost_code_description || CSI_DIVISIONS[openShift.csi_division]?.name || 'cost coded'}` : 'No cost code on this shift') : (csiDiv ? `Div ${csiDiv} — ${CSI_DIVISIONS[csiDiv]?.name}` : 'No cost code — pick one above')}</span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><MapPin size={13} color={GOLD} />GPS stamps in &amp; out</span>
-            </div>
-            <button onClick={clockedIn ? clockOut : clockIn} disabled={busy || !emp} className="pmBtn" style={{ ...btn, marginTop: 16, background: clockedIn ? RED : GREEN, color: '#fff', fontSize: 16, padding: '13px 26px', display: 'inline-flex', alignItems: 'center', gap: 8, opacity: busy || !emp ? 0.6 : 1, borderRadius: 12 }}>{clockedIn ? <Stop size={20} weight="fill" /> : <Play size={20} weight="fill" />}{clockedIn ? 'Clock Out' : 'Clock In'}</button>
-            {msg && <div style={{ color: msgTone === 'err' ? RED : GREEN, fontSize: 13, marginTop: 10 }}>{msg}</div>}
-          </SectionCard>
-
-          {week && (
-            <SectionCard flat
-              title={`Week of ${fmtDate(week.weekStart)}`}
-              subtitle={`${week.regularHours.toFixed(2)} h regular · ${week.overtimeHours.toFixed(2)} h overtime${regRate > 0 ? ` · est. ${fmtMoney(estGross)} gross` : ''}`}
-              icon={<Clock size={17} weight="duotone" color={GOLD} />}
-              style={{ marginBottom: 16 }}
-              action={<button onClick={submitWeek} className="pmBtn" style={{ ...ghostButtonStyle, padding: '7px 13px', fontSize: 12.5 }}><PaperPlaneRight size={14} />Submit Week</button>}
-            >
-              {week.days.map((d) => {
-                const hrs = Number(d.hours) || 0;
-                return (
-                  <div key={d.date} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '5px 0', fontSize: 13 }}>
-                    <span style={{ width: 110, flexShrink: 0 }}>{fmtDate(d.date)}</span>
-                    <div style={{ flex: 1, height: 6, borderRadius: 999, background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${Math.min(100, (hrs / 10) * 100)}%`, borderRadius: 999, background: hrs > 8 ? `linear-gradient(90deg,${GOLD},var(--brand-primary-strong))` : 'rgba(61,214,140,0.75)' }} />
+        <div className="tcCq">
+          <div className="tcSplit">
+            <div className="tcMain">
+              {/* Shift console — walks in knowing the project, cost code, timezone, and GPS */}
+              <Card>
+                <div className="tcConsole">
+                  <div className="tcClock" data-live={clockedIn ? 'true' : 'false'} aria-live="polite">{clockedIn ? elapsed : 'Clocked Out'}</div>
+                  <div className="tcSince">{clockedIn ? `Since ${fmtTime(openShift.clock_in)} · ${openShift.timezone || TZ}` : (emp ? 'Ready to clock in' : 'Resolving your employee record…')}</div>
+                  <div className="tcFacts">
+                    <span><HardHat size={13} />{clockedIn ? (projects.find((p) => p.id === openShift.project_id)?.name || 'Project') : (projName || 'Pick a project below')}</span>
+                    <span><Timer size={13} />{clockedIn ? (openShift.csi_division ? `Div ${openShift.csi_division} — ${openShift.cost_code_description || CSI_DIVISIONS[openShift.csi_division]?.name || 'cost coded'}` : 'No cost code on this shift') : (csiDiv ? `Div ${csiDiv} — ${CSI_DIVISIONS[csiDiv]?.name}` : 'No cost code — pick one below')}</span>
+                    <span><MapPin size={13} />GPS stamps in &amp; out</span>
+                  </div>
+                  {!clockedIn && (
+                    <div className="tcPickers">
+                      <Field label="Project" hint={projects.length > 1 ? 'Labor cost lands in this job’s budget.' : undefined}>
+                        <Select
+                          value={projectId}
+                          onChange={(e) => setProjectId(e.target.value)}
+                          placeholder={projects.length === 1 ? undefined : 'Select project…'}
+                          options={projects.map((p) => ({ value: p.id, label: p.name }))}
+                        />
+                      </Field>
+                      <Field label="Cost Code" hint="CSI division applied to the next clock-in.">
+                        <Select
+                          value={csiDiv}
+                          onChange={(e) => setCsiDiv(e.target.value)}
+                          options={[{ value: '', label: 'No Cost Code' }, ...Object.entries(CSI_DIVISIONS).map(([code, d]) => ({ value: code, label: `Div ${code} — ${d.name}` }))]}
+                        />
+                      </Field>
                     </div>
-                    <span style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums', width: 56, textAlign: 'right' }}>{fmtHours(d.hours)}</span>
-                  </div>
-                );
-              })}
-              {Object.keys(week.byType).filter((k) => k !== 'regular').length > 0 && <div style={{ color: DIM, fontSize: 12.5, marginTop: 8 }}>Leave: {Object.entries(week.byType).filter(([k]) => k !== 'regular').map(([k, v]) => `${v}h ${k}`).join(' · ')}</div>}
-            </SectionCard>
-          )}
-
-          {/* actions */}
-          <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
-            <button onClick={() => setManual({ date: localDay(), in: '07:00', out: '15:30', meal: '30', csi: csiDiv })} className="pmBtn" style={ghostButtonStyle}><Plus size={15} />Add Time</button>
-            <button onClick={() => setLeave({ date: localDay(), type: 'pto', hours: '8' })} className="pmBtn" style={ghostButtonStyle}><Sun size={15} weight="fill" color={GOLD} />PTO / Sick</button>
-          </div>
-
-          <SectionCard title="Recent Entries" subtitle={entries.length > 0 ? `${entries.length} shown · ${pendingCount} pending approval` : undefined} icon={<Timer size={17} weight="duotone" color={GOLD} />} bodyStyle={{ padding: 14 }}>
-            {entries.length === 0 ? (
-              <PremiumEmpty
-                compact
-                icon={<Clock size={28} weight="duotone" color={GOLD} />}
-                title="No time on the books yet"
-                description="Clock in above to start a GPS-stamped shift, or backfill a day with Add Time. Entries land as pending, roll into the weekly timesheet, and hit job cost under their CSI division."
-                action={<button onClick={() => setManual({ date: localDay(), in: '07:00', out: '15:30', meal: '30', csi: csiDiv })} className="pmBtn" style={goldButtonStyle}><Plus size={15} weight="bold" />Add Time</button>}
-              />
-            ) : entries.map((e) => {
-              const leaveType = e.entry_type && e.entry_type !== 'regular';
-              return (
-                <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 12, background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: 12, marginBottom: 8 }}>
-                  {leaveType ? <Bandaids size={18} color={GOLD} /> : null}
-                  <div style={{ flex: 1, minWidth: 0, cursor: leaveType ? 'default' : 'pointer' }} onClick={() => !leaveType && e.status !== 'clocked_in' && setManual({ id: e.id, date: e.work_date, in: e.clock_in ? new Date(e.clock_in).toTimeString().slice(0, 5) : '07:00', out: e.clock_out ? new Date(e.clock_out).toTimeString().slice(0, 5) : '15:30', meal: String(e.meal_break_mins ?? 30), csi: e.csi_division || '' })}>
-                    <div style={{ fontWeight: 700, fontSize: 14 }}>{fmtDate(e.work_date)}{leaveType ? ` · ${e.entry_type.toUpperCase()}` : ''}</div>
-                    <div style={{ color: DIM, fontSize: 12.5 }}>
-                      {leaveType ? `${e.hours_worked ?? e.total_hours ?? 8}h` : `${fmtTime(e.clock_in)} – ${e.status === 'clocked_in' ? 'now' : fmtTime(e.clock_out)}`}
-                      {!leaveType && e.project_id ? ` · ${projects.find((p) => p.id === e.project_id)?.name || 'Project'}` : ''}
-                    </div>
-                    {e.csi_division ? <span style={{ display: 'inline-flex', alignItems: 'center', marginTop: 4, padding: '1px 8px', borderRadius: 999, background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-35)', color: 'var(--brand-primary-strong)', fontSize: 10.5, fontWeight: 700 }}>Div {e.csi_division} · {e.cost_code_description || CSI_DIVISIONS[e.csi_division]?.name || 'Cost coded'}</span> : null}
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{e.status === 'clocked_in' ? '—' : `${(Number(e.total_hours ?? e.hours_worked ?? 0) || 0).toFixed(2)}h`}</div>
-                    <div style={{ fontSize: 10.5, color: e.status === 'clocked_in' ? GREEN : e.status === 'approved' ? 'var(--brand-primary-strong)' : GOLD, fontWeight: 700 }}>{String(e.status || '').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}</div>
-                  </div>
-                  {e.status !== 'clocked_in' && e.status !== 'approved' ? <button onClick={() => del(e.id)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><Trash size={15} color={RED} /></button> : null}
+                  )}
+                  <Button
+                    className="tcBigBtn"
+                    data-live={clockedIn ? 'true' : 'false'}
+                    icon={clockedIn ? <Stop size={20} weight="fill" /> : <Play size={20} weight="fill" />}
+                    onClick={clockedIn ? clockOut : clockIn}
+                    disabled={busy || !emp}
+                  >
+                    {busy ? (clockedIn ? 'Clocking out…' : 'Clocking in…') : clockedIn ? 'Clock Out' : 'Clock In'}
+                  </Button>
+                  {msg && <div className="tcMsg" data-tone={msgTone} role="status">{msg}</div>}
                 </div>
-              );
-            })}
-          </SectionCard>
+              </Card>
+
+              {week && (
+                <Card
+                  title={`Week of ${fmtDate(week.weekStart)}`}
+                  subtitle={`${week.regularHours.toFixed(2)} h regular · ${week.overtimeHours.toFixed(2)} h overtime${regRate > 0 ? ` · est. ${fmtMoney(estGross)} gross` : ''}`}
+                  actions={<Button size="sm" icon={<PaperPlaneRight size={14} />} onClick={submitWeek}>Submit Week</Button>}
+                >
+                  <div className="tcDays">
+                    {week.days.map((d) => {
+                      const hrs = Number(d.hours) || 0;
+                      return (
+                        <div key={d.date} className="tcDay">
+                          <span>{fmtDate(d.date)}</span>
+                          <div className="tcBar"><div className="tcBarFill" data-ot={hrs > 8 ? 'true' : undefined} style={{ width: `${Math.min(100, (hrs / 10) * 100)}%` }} /></div>
+                          <b>{fmtHours(d.hours)}</b>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {leaveSummary.length > 0 && <div className="tcNote">Leave: {leaveSummary.map(([k, v]) => `${v}h ${LEAVE_LABEL[k] || k}`).join(' · ')}</div>}
+                </Card>
+              )}
+
+              <div className="tcList">
+                <Card title="Recent Entries" subtitle={entries.length > 0 ? `${entries.length} shown · ${pendingCount} pending approval` : undefined} flush>
+                  {entries.length === 0 ? (
+                    <EmptyState
+                      icon={<Clock size={22} />}
+                      title="No time on the books yet"
+                      text="Clock in above to start a GPS-stamped shift, or backfill a day with Add Time. Entries land as pending, roll into the weekly timesheet, and hit job cost under their CSI division."
+                      action={<Button icon={<Plus size={15} weight="bold" />} onClick={openAddTime} disabled={!emp}>Add Time</Button>}
+                    />
+                  ) : (
+                    <DataTable
+                      columns={columns}
+                      rows={entries}
+                      rowKey={(e) => e.id}
+                      rowActions={rowActions}
+                      onRowClick={(e) => { if (!(e.entry_type && e.entry_type !== 'regular') && e.status !== 'clocked_in') openManualFor(e); }}
+                    />
+                  )}
+                </Card>
+              </div>
+            </div>
+
+            {/* Context rail — what the system does with these hours */}
+            <aside className="tcRail" aria-label="This week at a glance">
+              <Card title="This Week at a Glance">
+                <DetailList items={[
+                  ['Worked Hours', `${(week?.workedHours ?? 0).toFixed(2)} h`],
+                  ['Regular / OT', `${(week?.regularHours ?? 0).toFixed(2)} / ${(week?.overtimeHours ?? 0).toFixed(2)}`],
+                  ['Leave Logged', `${leaveHours.toFixed(2)} h`],
+                  ['Pending Approval', String(pendingCount)],
+                  ...(regRate > 0 ? [['Est. Gross', fmtMoney(estGross)] as [string, React.ReactNode]] : []),
+                ]} />
+                <div className="tcNote">Overtime splits automatically past 40 h/week and 8 h/shift. Rates come from your employee record.</div>
+              </Card>
+              <Card title="After You Clock Out">
+                <FlowSteps title="" steps={[
+                  { title: 'Entry lands as pending', desc: 'GPS-stamped, timezone-aware, meal break deducted.' },
+                  { title: 'CSI division prices the labor', desc: csiDiv ? `Coding to Div ${csiDiv} — ${CSI_DIVISIONS[csiDiv]?.name}.` : 'Pick a cost code so hours hit the right budget line.' },
+                  { title: 'Submit the week', desc: 'One click sends the whole timesheet for approval.' },
+                  { title: 'Approved hours hit job cost', desc: 'Labor cost rolls into the project budget and reports.' },
+                ]} />
+              </Card>
+            </aside>
+          </div>
         </div>
+      </PageShell>
 
-        {/* Context rail — what the system does with these hours */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <SectionCard flat title="This Week at a Glance" icon={<CurrencyDollar size={17} weight="duotone" color={GOLD} />}>
-            <InsightRow label="Worked Hours" value={`${(week?.workedHours ?? 0).toFixed(2)} h`} />
-            <InsightRow label="Regular / OT" value={`${(week?.regularHours ?? 0).toFixed(2)} / ${(week?.overtimeHours ?? 0).toFixed(2)}`} accent={(week?.overtimeHours ?? 0) > 0 ? GOLD : undefined} />
-            <InsightRow label="Leave Logged" value={`${leaveHours.toFixed(2)} h`} />
-            <InsightRow label="Pending Approval" value={String(pendingCount)} />
-            {regRate > 0 && <InsightRow label="Est. Gross" value={fmtMoney(estGross)} accent={GREEN} strong />}
-            <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.45)', lineHeight: 1.5, marginTop: 8 }}>Overtime splits automatically past 40 h/week and 8 h/shift. Rates come from your employee record.</div>
-          </SectionCard>
-          <SectionCard flat title="After You Clock Out" icon={<PaperPlaneRight size={17} weight="duotone" color={GOLD} />}>
-            <FlowSteps title="" steps={[
-              { title: 'Entry lands as pending', desc: 'GPS-stamped, timezone-aware, meal break deducted.' },
-              { title: 'CSI division prices the labor', desc: csiDiv ? `Coding to Div ${csiDiv} — ${CSI_DIVISIONS[csiDiv]?.name}.` : 'Pick a cost code above so hours hit the right budget line.' },
-              { title: 'Submit the week', desc: 'One click sends the whole timesheet for approval.' },
-              { title: 'Approved hours hit job cost', desc: 'Labor cost rolls into the project budget and reports.' },
-            ]} />
-          </SectionCard>
-        </div>
-      </div>
+      {/* Add / edit time */}
+      <FormModal
+        open={!!manual}
+        onClose={() => setManual(null)}
+        title={manual?.id ? 'Edit Time' : 'Add Time'}
+        subtitle={projName ? `Logged to ${projName}.` : 'Backfill a day or correct a shift.'}
+        onSubmit={saveManual}
+        submitLabel={manual?.id ? 'Save' : 'Log Time'}
+        busy={savingEntry}
+      >
+        {manual && (
+          <FormGrid cols={2}>
+            <Field label="Date" span>
+              <div className="tcDateInput"><SaguaroDatePicker value={manual.date} onChange={(v) => setManual({ ...manual, date: v })} style={DATE_INPUT_STYLE} /></div>
+            </Field>
+            <Field label="Clock In">
+              <Input type="time" value={manual.in} onChange={(e) => setManual({ ...manual, in: e.target.value })} />
+            </Field>
+            <Field label="Clock Out">
+              <Input type="time" value={manual.out} onChange={(e) => setManual({ ...manual, out: e.target.value })} />
+            </Field>
+            <Field label="Meal Break (min)">
+              <Input inputMode="numeric" value={manual.meal} onChange={(e) => setManual({ ...manual, meal: e.target.value })} placeholder="30" />
+            </Field>
+            <Field label="Cost Code" hint="The CSI division routes these hours to the right budget line in job cost.">
+              <Select
+                value={manual.csi ?? ''}
+                onChange={(e) => setManual({ ...manual, csi: e.target.value })}
+                options={[{ value: '', label: 'No Cost Code' }, ...Object.entries(CSI_DIVISIONS).map(([code, d]) => ({ value: code, label: `Div ${code} — ${d.name}` }))]}
+              />
+            </Field>
+          </FormGrid>
+        )}
+      </FormModal>
 
-      {manual && (
-        <Modal title={manual.id ? 'Edit Time' : 'Add Time'} onClose={() => setManual(null)}>
-          <SaguaroDatePicker value={manual.date} onChange={(v) => setManual({ ...manual, date: v })} style={inp} />
-          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}><input type="time" value={manual.in} onChange={(e) => setManual({ ...manual, in: e.target.value })} style={inp} /><input type="time" value={manual.out} onChange={(e) => setManual({ ...manual, out: e.target.value })} style={inp} /></div>
-          <input value={manual.meal} onChange={(e) => setManual({ ...manual, meal: e.target.value })} placeholder="Meal break (min)" style={{ ...inp, marginTop: 8 }} />
-          <select value={manual.csi ?? ''} onChange={(e) => setManual({ ...manual, csi: e.target.value })} style={{ ...inp, marginTop: 8 }}>
-            <option value="">No Cost Code</option>
-            {Object.entries(CSI_DIVISIONS).map(([code, d]) => <option key={code} value={code}>Div {code} — {d.name}</option>)}
-          </select>
-          <div style={{ color: DIM, fontSize: 11.5, marginTop: 6, lineHeight: 1.45 }}>The CSI division routes these hours to the right budget line in job cost.</div>
-          <button onClick={saveManual} style={{ ...btn, marginTop: 14, width: '100%' }}>{manual.id ? 'Save' : 'Log Time'}</button>
-        </Modal>
-      )}
-      {leave && (
-        <Modal title="Log PTO / Sick" onClose={() => setLeave(null)}>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>{['pto', 'sick', 'holiday', 'vacation'].map((t) => <button key={t} onClick={() => setLeave({ ...leave, type: t })} style={{ ...btn, background: leave.type === t ? GOLD : 'transparent', color: leave.type === t ? '#0A0A00' : TEXT, border: `1px solid ${BORDER}`, padding: '7px 12px', fontSize: 13, textTransform: 'capitalize' }}>{t === 'pto' ? 'PTO' : t}</button>)}</div>
-          <SaguaroDatePicker value={leave.date} onChange={(v) => setLeave({ ...leave, date: v })} style={inp} />
-          <input value={leave.hours} onChange={(e) => setLeave({ ...leave, hours: e.target.value })} placeholder="Hours" style={{ ...inp, marginTop: 8 }} />
-          <button onClick={saveLeave} style={{ ...btn, marginTop: 14, width: '100%' }}>Log {leave.type === 'pto' ? 'PTO' : leave.type.charAt(0).toUpperCase() + leave.type.slice(1)}</button>
-        </Modal>
-      )}
-    </PremiumSurface>
-  );
-}
-
-function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
-  return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 18, width: 'min(400px, 100%)' }}>
-        <div style={{ fontWeight: 800, fontSize: 17, marginBottom: 14 }}>{title}</div>{children}
-      </div>
+      {/* PTO / sick */}
+      <FormModal
+        open={!!leave}
+        onClose={() => setLeave(null)}
+        title="Log PTO / Sick"
+        subtitle="Leave lands as pending and shows on the weekly timesheet."
+        onSubmit={saveLeave}
+        submitLabel={leave ? `Log ${LEAVE_LABEL[leave.type] || leave.type}` : 'Log'}
+        busy={savingEntry}
+      >
+        {leave && (
+          <FormGrid cols={2}>
+            <Field label="Type" span>
+              <div className="tcSegRow" role="group" aria-label="Leave type">
+                {['pto', 'sick', 'holiday', 'vacation'].map((t) => (
+                  <Button key={t} className="tcSeg" aria-pressed={leave.type === t} onClick={() => setLeave({ ...leave, type: t })}>{LEAVE_LABEL[t]}</Button>
+                ))}
+              </div>
+            </Field>
+            <Field label="Date">
+              <div className="tcDateInput"><SaguaroDatePicker value={leave.date} onChange={(v) => setLeave({ ...leave, date: v })} style={DATE_INPUT_STYLE} /></div>
+            </Field>
+            <Field label="Hours">
+              <Input inputMode="decimal" value={leave.hours} onChange={(e) => setLeave({ ...leave, hours: e.target.value })} placeholder="8" />
+            </Field>
+          </FormGrid>
+        )}
+      </FormModal>
     </div>
   );
 }

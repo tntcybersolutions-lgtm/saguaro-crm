@@ -15,6 +15,7 @@
  */
 
 import React from 'react';
+import { NEON_CYCLE, neonCard, neonFor, neonText } from '@/lib/neon';
 import { Check } from '@phosphor-icons/react';
 import { moduleAccent } from '@/lib/module-identity';
 import { ScribbleNote } from '@/components/Scribble';
@@ -36,7 +37,7 @@ const BORDER = 'rgba(255,255,255,0.09)';
 const SURFACE = 'linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.03))';
 const GLASS_BLUR = 'blur(16px) saturate(140%)';
 const WHITE = '#FFFFFF';
-const MUTED = '#D7DEE8';
+const MUTED = '#D4D4D8';
 const FAINT = '#A9B4C4';
 const RED = STATUS_COLORS.overdue;
 
@@ -69,9 +70,9 @@ export const PREMIUM_FX = `
 .pmGhost{background:linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.04));backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);color:#FFFFFF;border:1px solid ${BORDER};box-shadow:0 2px 10px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.07);transition:transform .16s ease,box-shadow .16s ease,background .16s ease,border-color .16s ease}
 .pmGhost:hover{transform:translateY(-1px);border-color:rgba(255,255,255,0.16)}
 .pmGhost:active{transform:translateY(0.5px) scale(.985);background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));box-shadow:inset 0 1px 3px rgba(0,0,0,0.25)}
-.pmDanger{background:linear-gradient(180deg,rgba(255,77,94,0.20),rgba(255,77,94,0.09));color:#FF4D5E;border:1px solid rgba(255,77,94,0.50);box-shadow:0 2px 10px rgba(255,77,94,0.18),inset 0 1px 0 rgba(255,255,255,0.10);transition:transform .16s ease,box-shadow .16s ease,background .16s ease}
-.pmDanger:hover{transform:translateY(-1px);background:linear-gradient(180deg,rgba(255,77,94,0.26),rgba(255,77,94,0.12))}
-.pmDanger:active{transform:translateY(0.5px) scale(.985);background:linear-gradient(180deg,rgba(255,77,94,0.30),rgba(255,77,94,0.16));box-shadow:0 1px 6px rgba(255,77,94,0.15),inset 0 1px 3px rgba(0,0,0,0.25)}
+.pmDanger{background:linear-gradient(180deg,rgba(255,59,48,0.20),rgba(255,59,48,0.09));color:#FF3B30;border:1px solid rgba(255,59,48,0.50);box-shadow:0 2px 10px rgba(255,59,48,0.18),inset 0 1px 0 rgba(255,255,255,0.10);transition:transform .16s ease,box-shadow .16s ease,background .16s ease}
+.pmDanger:hover{transform:translateY(-1px);background:linear-gradient(180deg,rgba(255,59,48,0.26),rgba(255,59,48,0.12))}
+.pmDanger:active{transform:translateY(0.5px) scale(.985);background:linear-gradient(180deg,rgba(255,59,48,0.30),rgba(255,59,48,0.16));box-shadow:0 1px 6px rgba(255,59,48,0.15),inset 0 1px 3px rgba(0,0,0,0.25)}
 .pmGold:disabled,.pmGhost:disabled,.pmDanger:disabled{opacity:.45;cursor:not-allowed;transform:none;filter:none;box-shadow:inset 0 1px 0 rgba(255,255,255,0.06)}
 /* Interactive milled plates press in slightly (pairs with .pmHover lift). !important
    outranks pmRise's held fill value, same as the :hover rule above. */
@@ -338,8 +339,12 @@ export function StatCard({
   delay?: number;
 }) {
   const interactive = !!(onClick || href || forceInteractive);
-  const numberColor = accent || WHITE;
-  const ring = active ? (accent || GOLD) : null;
+  /* Neon by default (owner 2026-10-03): every stat card is lit in its own
+     accent — a caller's accent wins, otherwise a stable neon from the label. */
+  const lit = accent || neonFor(label);
+  const numberColor = lit;
+  const ring = active ? lit : null;
+  const glow = neonCard(lit);
   const inner = (
     <div
       onClick={onClick}
@@ -348,15 +353,15 @@ export function StatCard({
       style={{
         position: 'relative', overflow: 'hidden',
         background: ring
-          ? `linear-gradient(160deg, color-mix(in srgb, ${ring} 16%, transparent), color-mix(in srgb, ${ring} 5%, transparent)), ${SURFACE}`
-          : SURFACE,
+          ? `linear-gradient(160deg, color-mix(in srgb, ${ring} 24%, transparent), color-mix(in srgb, ${ring} 8%, transparent)), ${SURFACE}`
+          : `${glow.background}, ${SURFACE}`,
         backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR,
-        border: `1px solid ${ring || BORDER}`, borderRadius: 12,
+        border: `1px solid ${ring || BORDER}`, borderTop: glow.borderTop, borderRadius: 12,
         padding: '11px 14px',
         // compact plate — tight, not fat (Procore/JobTread density)
         boxShadow: ring
           ? `0 0 0 1px ${ring}, 0 8px 20px -14px color-mix(in srgb, ${ring} 45%, transparent), inset 0 1px 0 rgba(255,255,255,0.08)`
-          : `0 8px 20px -18px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.06)`,
+          : glow.boxShadow,
         cursor: interactive ? 'pointer' : 'default',
         animation: `pmRise .5s ease ${delay.toFixed(2)}s both`,
         height: '100%',
@@ -372,10 +377,10 @@ export function StatCard({
       <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${numberColor}, transparent)`, opacity: 0.85 }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
         <IconChip size={26}>{icon}</IconChip>
-        <span style={{ fontSize: 12, color: MUTED, fontWeight: 700 }}>{label}</span>
+        <span style={{ fontSize: 12.5, color: MUTED, fontWeight: 750 }}>{label}</span>
       </div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: numberColor, letterSpacing: '-0.02em', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
-      {sub != null && <div style={{ fontSize: 11.5, color: FAINT, marginTop: 2 }}>{sub}</div>}
+      <div style={{ fontSize: 22, fontWeight: 800, color: accent ? numberColor : '#FFFFFF', letterSpacing: '-0.02em', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      {sub != null && <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{sub}</div>}
     </div>
   );
   if (href) {
@@ -431,7 +436,9 @@ export function SectionCard({
             {icon && <span style={{ display: 'inline-flex', flexShrink: 0, opacity: 0.9 }}>{icon}</span>}
             <div style={{ minWidth: 0, flex: 1 }}>
               {title && (
-                <div style={{ fontSize: 13, fontWeight: 700, color: MUTED, lineHeight: 1.3 }}>
+                /* Neon section title (owner 2026-10-03): bright, with a lit
+                   underline in a stable neon per title — not grey-on-black. */
+                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--title-color, var(--brand-primary))', lineHeight: 1.3, paddingBottom: 6, display: 'inline-block', background: `linear-gradient(90deg, ${neonFor(typeof title === 'string' ? title : '')}, transparent) left bottom / 44px 2px no-repeat` }}>
                   {title}
                 </div>
               )}
@@ -496,7 +503,7 @@ export function PremiumEmpty({
 }) {
   const ring = tone === 'error' ? RED.border : A45;
   const halo = tone === 'error' ? RED.bg : A12;
-  const glow = tone === 'error' ? 'rgba(255,77,94,0.35)' : A30;
+  const glow = tone === 'error' ? 'rgba(255,59,48,0.35)' : A30;
   return (
     <div
       style={{
@@ -510,7 +517,7 @@ export function PremiumEmpty({
           borderRadius: '50%', alignItems: 'center', justifyContent: 'center', marginBottom: 18,
           background: `radial-gradient(circle, ${halo}, transparent)`,
           border: `1px solid ${ring}`,
-          boxShadow: `0 0 0 6px ${tone === 'error' ? 'rgba(255,77,94,0.07)' : A08}, 0 0 44px -10px ${glow}`,
+          boxShadow: `0 0 0 6px ${tone === 'error' ? 'rgba(255,59,48,0.07)' : A08}, 0 0 44px -10px ${glow}`,
         }}
       >
         <span aria-hidden style={{ position: 'absolute', inset: -1, borderRadius: '50%', border: `1px solid ${ring}`, animation: 'pmRing 3s ease-out infinite' }} />
@@ -647,7 +654,7 @@ export function Pill({ children, tone = 'neutral', caps, style }: {
   style?: React.CSSProperties;
 }) {
   const map = {
-    neutral: { bg: STATUS_COLORS.closed.bg, fg: '#D7DEE8', bd: 'rgba(255,255,255,0.16)' },
+    neutral: { bg: STATUS_COLORS.closed.bg, fg: '#D4D4D8', bd: 'rgba(255,255,255,0.16)' },
     green:   { bg: STATUS_COLORS.ongoing.bg, fg: STATUS_COLORS.ongoing.color, bd: STATUS_COLORS.ongoing.border },
     amber:   { bg: STATUS_COLORS.under_contract.bg, fg: STATUS_COLORS.under_contract.color, bd: STATUS_COLORS.under_contract.border },
     red:     { bg: STATUS_COLORS.overdue.bg, fg: STATUS_COLORS.overdue.color, bd: STATUS_COLORS.overdue.border },
@@ -699,18 +706,20 @@ export function StatStrip({ items }: {
     }}>
       {items.map((it, i) => {
         const clickable = !!(it.href || it.onClick);
+        // Each tile lit in its own neon (owner 2026-10-03); a caller accent wins.
+        const lit = it.accent || NEON_CYCLE[i % NEON_CYCLE.length];
         const body = (
           <div
             className="pmTile"
             onClick={it.onClick}
-            style={{ position: 'relative', background: 'linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.035)), rgba(0,0,0,0.88)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)', padding: '13px 16px', minWidth: 0, cursor: clickable ? 'pointer' : 'default', height: '100%' }}
+            style={{ position: 'relative', background: 'linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.03)), rgba(0,0,0,0.88)', borderTop: '2px solid color-mix(in srgb, var(--brand-primary) 80%, transparent)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)', padding: '13px 16px', minWidth: 0, cursor: clickable ? 'pointer' : 'default', height: '100%' }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: FAINT, marginBottom: 5, whiteSpace: 'nowrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 750, color: MUTED, marginBottom: 5, whiteSpace: 'nowrap' }}>
               {it.icon}{it.label}
               {clickable && <span aria-hidden style={{ marginLeft: 'auto', color: FAINT, fontWeight: 700 }}>→</span>}
             </div>
-            <div style={{ fontSize: 17, fontWeight: 800, color: it.accent || WHITE, letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums', textShadow: it.accent ? '0 0 20px currentColor' : undefined, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.value}</div>
-            {it.sub && <div style={{ fontSize: 11, color: MUTED, marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.sub}</div>}
+            <div style={{ fontSize: 20, fontWeight: 800, color: it.accent || '#FFFFFF', letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.value}</div>
+            {it.sub && <div style={{ fontSize: 12, color: MUTED, marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.sub}</div>}
           </div>
         );
         if (it.href) {
@@ -1053,7 +1062,9 @@ export function DataTable<T>({
                           padding: `9px ${cIdx === columns.length - 1 ? 16 : 12}px 9px ${cIdx === 0 ? 16 : 12}px`,
                           borderBottom: isLast ? 'none' : `1px solid rgba(255,255,255,0.05)`,
                           fontSize: 13,
-                          color: '#FFFFFF',
+                          // Row title = first column, in the one title color (owner 2026-10-03).
+                          color: cIdx === 0 ? 'var(--title-color, var(--brand-primary))' : '#FFFFFF',
+                          fontWeight: cIdx === 0 ? 700 : undefined,
                           whiteSpace: 'nowrap',
                           fontVariantNumeric: 'tabular-nums',
                           textAlign: col.align || 'left',

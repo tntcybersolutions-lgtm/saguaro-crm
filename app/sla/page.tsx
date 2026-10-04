@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Cactus } from '@phosphor-icons/react/dist/ssr';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#22c55e',RED='#ef4444';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30';
 
 const NAV = (
   <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:100,height:56,background:'rgba(20,20,22,.96)',borderBottom:`1px solid ${BORDER}`,display:'flex',alignItems:'center',padding:'0 32px',gap:24,backdropFilter:'blur(12px)'}}>
@@ -24,7 +24,7 @@ const UPTIME_TIERS = [
 ];
 
 const SUPPORT_ROWS = [
-  {priority:'Critical',desc:'System unavailable / data loss risk',enterprise:'< 1 hour',pro:'< 4 hours',starter:'< 8 hours',eColor:GREEN,pColor:GREEN,sColor:'#facc15'},
+  {priority:'Critical',desc:'System unavailable / data loss risk',enterprise:'< 1 hour',pro:'< 4 hours',starter:'< 8 hours',eColor:GREEN,pColor:GREEN,sColor:'#FFE600'},
   {priority:'High',desc:'Major feature broken / blocking work',enterprise:'< 4 hours',pro:'< 8 hours',starter:'Next business day',eColor:GREEN,pColor:GREEN,sColor:DIM},
   {priority:'Medium',desc:'Feature degraded / workaround available',enterprise:'Next business day',pro:'2 business days',starter:'3 business days',eColor:DIM,pColor:DIM,sColor:DIM},
   {priority:'Low',desc:'Questions, feature requests, enhancements',enterprise:'2 business days',pro:'3 business days',starter:'Best effort',eColor:DIM,pColor:DIM,sColor:DIM},
@@ -98,7 +98,7 @@ export default function SLAPage() {
                 {SUPPORT_ROWS.map((row,i)=>(
                   <tr key={row.priority} style={{borderTop:`1px solid ${BORDER}`,background:i%2===0?'transparent':'rgba(0,0,0,.01)'}}>
                     <td style={{padding:'14px 20px'}}>
-                      <span style={{fontSize:11,fontWeight:800,padding:'3px 10px',borderRadius:4,background:row.priority==='Critical'?'rgba(239,68,68,.15)':row.priority==='High'?'var(--brand-primary-12)':'rgba(0,0,0,.06)',color:row.priority==='Critical'?RED:row.priority==='High'?GOLD:DIM}}>
+                      <span style={{fontSize:11,fontWeight:800,padding:'3px 10px',borderRadius:4,background:row.priority==='Critical'?'rgba(255,59,48,.15)':row.priority==='High'?'var(--brand-primary-12)':'rgba(0,0,0,.06)',color:row.priority==='Critical'?RED:row.priority==='High'?GOLD:DIM}}>
                         {row.priority}
                       </span>
                     </td>
@@ -131,7 +131,7 @@ export default function SLAPage() {
             </div>
           ))}
         </div>
-        <div style={{marginTop:20,padding:'16px 20px',background:'rgba(239,68,68,.06)',border:'1px solid rgba(239,68,68,.2)',borderRadius:8,fontSize:13,color:DIM}}>
+        <div style={{marginTop:20,padding:'16px 20px',background:'rgba(255,59,48,.06)',border:'1px solid rgba(255,59,48,.2)',borderRadius:8,fontSize:13,color:DIM}}>
           <strong style={{color:TEXT}}>Credit Cap:</strong> Total credits in any calendar month shall not exceed 50% of your monthly fee. Credits are non-transferable and have no cash value. To request a review, email <a href="mailto:sla@saguarocontrol.net" style={{color:GOLD,textDecoration:'none'}}>sla@saguarocontrol.net</a> within 30 days of the incident.
         </div>
       </div>

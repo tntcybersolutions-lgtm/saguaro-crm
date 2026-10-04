@@ -1,35 +1,38 @@
 'use client';
 /**
- * Invoice Detail — wired to GET /api/invoices/[id] with Send / Edit / Delete actions.
- * Matches the invoicing list page design tokens (colors / font / radius / space) and
- * uses @phosphor-icons/react (no emoji), consistent with app/app/invoicing/page.tsx.
+ * Invoice Detail — Pass 4, on the RFIs reference layout (record + rail).
  *
- * API surface:
+ * Anatomy: crumbs → title (invoice number) + the one primary action (Send) with
+ * Edit and PDF as secondaries → StatRow (amount / tax / total / due) →
+ * workspace: the invoice line, the document and the notes on the left, a
+ * 320–384px rail (status, vendor and meta, payment, actions) on the right.
+ * Phone: stacked. Edits open in a FormModal.
+ *
+ * API surface (unchanged):
  *   GET    /api/invoices/[id]          -> { invoice }
- *   POST   /api/invoices/[id]/send     -> marks status "Sent"
- *   PATCH  /api/invoices/[id]/update   -> { invoice }   (allowed columns updated)
+ *   POST   /api/invoices/[id]/send     -> marks status "Sent" only once the route reports success
+ *   PATCH  /api/invoices/[id]/update   -> { invoice }   (server recomputes total = amount + tax)
+ *   POST   /api/invoices/[id]/pdf      -> { pdfUrl }
  *   DELETE /api/invoices/[id]/delete   -> { success }
  */
 import React, { useState, useEffect, useCallback } from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { humanError } from '@/lib/errors';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  ArrowLeft, PaperPlaneTilt, Trash, PencilSimple, Warning, Check,
-  X as XIcon, Receipt, CurrencyDollar, Percent, Coins, CalendarBlank,
-  FileText, Buildings, CreditCard, Note, FilePdf, ArrowSquareOut, ArrowsClockwise,
+  ArrowLeft, PaperPlaneTilt, Trash, PencilSimple, Receipt, FilePdf, ArrowSquareOut, ArrowsClockwise, WarningCircle,
 } from '@phosphor-icons/react';
-import { colors, font, radius } from '@/lib/design-tokens';
-import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 import {
-  PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, Pill,
-  goldButtonStyle, ghostButtonStyle,
-} from '@/components/ui/premium';
+  PageShell, Card, StatRow, Badge, Button, EmptyState, RowActions, DetailList,
+  FormModal, Field, Input, Textarea, Select, FormGrid, Toast, useToast,
+  type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 import { openPdf } from '@/components/PdfViewer';
-
-const GOLD = 'var(--brand-primary)';
+import { layout } from '@/lib/design-tokens';
 
 interface Invoice {
   id: string;
@@ -57,20 +60,6 @@ interface Invoice {
 
 interface Project { id: string; name: string; }
 
-const STATUS_COLORS: Record<string, string> = {
-  draft: colors.textDim,
-  pending: colors.orange,
-  sent: colors.blue,
-  approved: colors.green,
-  paid: colors.green,
-  overdue: colors.red,
-};
-
-function statusColor(status?: string | null): string {
-  const key = (status ?? 'draft').toLowerCase();
-  return STATUS_COLORS[key] ?? colors.textDim;
-}
-
 /** Edit-form snapshot of an invoice — used both to seed the modal and as the
  *  clean baseline for the unsaved-work guard. */
 function formFromInvoice(inv: Invoice) {
@@ -89,9 +78,10 @@ function formFromInvoice(inv: Invoice) {
   };
 }
 
+const moneyFmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 function money(v: number | null | undefined): string {
   if (v == null) return '—';
-  return `$${Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return moneyFmt.format(Number(v) || 0);
 }
 
 /** Canonical invoice figure: the stored total when it's a real non-zero
@@ -108,7 +98,7 @@ function effectiveTotal(i: { amount?: number | null; tax?: number | null; total?
 function dateStr(v: string | null | undefined): string {
   if (!v) return '—';
   const d = new Date(v);
-  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString();
+  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 /** DATE-ONLY fields (due dates): 'YYYY-MM-DD' -> LOCAL midnight. Feeding the
@@ -118,7 +108,7 @@ function dateOnlyStr(v: string | null | undefined): string {
   if (!v) return '—';
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(v);
   if (!m) return dateStr(v);
-  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).toLocaleDateString();
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 /** Overdue = due before today (local), status not paid and not a draft. */
@@ -133,6 +123,66 @@ function isOverdue(i: { due_date?: string | null; status?: string | null }): boo
   return due < today && st !== 'paid' && st !== 'draft';
 }
 
+/** One status → one badge (same map as the register). */
+function statusBadge(s?: string | null): { label: string; tone: BadgeTone } {
+  const k = (s || 'draft').toLowerCase();
+  if (k === 'pending') return { label: 'Pending', tone: 'under_contract' };
+  if (k === 'sent') return { label: 'Sent', tone: 'lead' };
+  if (k === 'approved') return { label: 'Approved', tone: 'ongoing' };
+  if (k === 'paid') return { label: 'Paid', tone: 'completed' };
+  if (k === 'overdue') return { label: 'Overdue', tone: 'overdue' };
+  return { label: 'Draft', tone: 'neutral' };
+}
+
+const CSS = `
+.idWs > .k-page { max-width: none; }
+.idCq { container: idws / inline-size; min-width: 0; }
+.idSplit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
+.idSplit > * { min-width: 0; }
+.idMain { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.idRail { order: -1; }
+@container idws (min-width: 860px) {
+  .idSplit { grid-template-columns: minmax(0, 1fr) clamp(${layout.detailRailMin}px, 30%, ${layout.detailRailMax}px); }
+  .idRail { order: 0; position: sticky; top: 16px; }
+}
+.idTableWrap { overflow-x: auto; }
+.idTable { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.idTable th { text-align: left; padding: 8px 12px; font-size: 12px; font-weight: 700; color: var(--text-tertiary); background: rgba(21,23,28,0.88); border-bottom: 1px solid var(--border-default); white-space: nowrap; }
+.idTable td { padding: 10px 12px; border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); vertical-align: top; font-variant-numeric: tabular-nums; }
+.idTable th:first-child, .idTable td:first-child { padding-left: var(--sp-4); }
+.idTable th[data-align="right"], .idTable td[data-align="right"] { text-align: right; white-space: nowrap; }
+.idTable td[data-desc] { color: var(--text-primary); min-width: 220px; white-space: normal; }
+.idTable tfoot td { font-weight: 800; color: var(--text-primary); background: var(--bg-surface-2); border-top: 2px solid var(--border-default); }
+.idTotalDue { font-size: var(--fs-lg); }
+.idDoc { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.idDocIcon { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: var(--radius-sm); background: var(--brand-primary-12); border: 1px solid var(--brand-primary-25); color: var(--brand-primary); flex-shrink: 0; }
+.idDocMeta { flex: 1 1 240px; min-width: 0; }
+.idDocMeta > div:first-child { font-size: var(--fs-md); font-weight: 700; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.idDocMeta > div + div { font-size: var(--fs-sm); color: var(--text-tertiary); margin-top: 2px; }
+.idBtns { display: flex; gap: 8px; flex-wrap: wrap; }
+.idProse { font-size: var(--fs-md); line-height: 1.6; color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; max-width: ${layout.readingMaxWidth}; }
+.idSection { display: flex; flex-direction: column; gap: 8px; }
+.idSection + .idSection { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-subtle); }
+.idSectionTitle { font-size: var(--fs-sm); font-weight: 700; color: var(--text-tertiary); }
+.idBadges { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.idNext { font-size: var(--fs-sm); color: var(--text-tertiary); line-height: 1.5; }
+.idActions { display: flex; flex-direction: column; gap: 8px; }
+.idActions .k-btn { width: 100%; justify-content: flex-start; }
+.idActionsRow { display: flex; gap: 8px; align-items: center; }
+.idActionsRow > .k-btn { flex: 1 1 auto; }
+.idMuted { color: var(--text-tertiary); }
+.idDateInput { width: 100%; }
+@media (max-width: 640px) {
+  .idWs .k-btn, .idWs .k-stat, .idWs .k-input { min-height: 44px; }
+}
+`;
+
+const DATE_INPUT_STYLE: React.CSSProperties = {
+  width: '100%', minHeight: 40, padding: '8px 12px', fontSize: 14,
+  background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)',
+  borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)',
+};
+
 export default function InvoiceDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -145,7 +195,8 @@ export default function InvoiceDetailPage() {
   const [notFound, setNotFound] = useState(false);
 
   const [busy, setBusy] = useState<'' | 'send' | 'delete' | 'save' | 'pdf'>('');
-  const [toast, setToast] = useState<{ msg: string; color: string } | null>(null);
+  const { toast, show } = useToast(4000);
+  const showToast = (msg: string, bad = false) => show(msg, bad ? 'bad' : 'good');
 
   // Edit modal
   const [editing, setEditing] = useState(false);
@@ -153,11 +204,6 @@ export default function InvoiceDetailPage() {
     invoice_number: '', vendor_name: '', vendor_email: '', description: '',
     category: '', cost_code: '', amount: '', tax: '', due_date: '', status: 'draft', notes: '',
   });
-
-  function showToast(msg: string, color: string = colors.green) {
-    setToast({ msg, color });
-    setTimeout(() => setToast(null), 3500);
-  }
 
   const loadInvoice = useCallback(async () => {
     setLoading(true);
@@ -248,15 +294,14 @@ export default function InvoiceDetailPage() {
       showToast('Invoice updated.');
       return true;
     } catch (e: any) {
-      console.error(e); showToast(humanError(e, 'Update failed. Please try again.'), colors.red);
+      console.error(e); showToast(humanError(e, 'Update failed. Please try again.'), true);
       return false;
     } finally {
       setBusy('');
     }
   }
 
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSave() {
     if (await submitSave()) guard.clearDraft();
   }
 
@@ -273,7 +318,7 @@ export default function InvoiceDetailPage() {
       showToast(data?.to ? `Invoice emailed to ${data.to}.` : 'Invoice sent to vendor.');
       await loadInvoice();
     } catch (e: any) {
-      console.error(e); showToast(humanError(e, 'Send failed. Please try again.'), colors.red);
+      console.error(e); showToast(humanError(e, 'Send failed. Please try again.'), true);
     } finally {
       setBusy('');
     }
@@ -293,365 +338,288 @@ export default function InvoiceDetailPage() {
       showToast(regenerate ? 'PDF regenerated.' : 'PDF generated.');
       await loadInvoice();
     } catch (e: any) {
-      console.error(e); showToast(humanError(e, 'PDF failed. Please try again.'), colors.red);
+      console.error(e); showToast(humanError(e, 'PDF failed. Please try again.'), true);
     } finally {
       setBusy('');
     }
   }
 
   async function handleDelete() {
-    if (!confirm('Delete this invoice? This cannot be undone.')) return;
+    if (!(await confirmDialog({ title: 'Please confirm', message: 'Delete this invoice? This cannot be undone.', danger: true }))) return;
     setBusy('delete');
     try {
       const res = await fetch(`/api/invoices/${id}/delete`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete invoice');
       router.push('/app/invoicing');
     } catch (e: any) {
-      console.error(e); showToast(humanError(e, 'Delete failed. Please try again.'), colors.red);
+      console.error(e); showToast(humanError(e, 'Delete failed. Please try again.'), true);
       setBusy('');
     }
   }
 
-  // ── Styles ───────────────────────────────────────────────────────────────
-  const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '9px 12px', background: colors.raised,
-    border: `1px solid ${colors.border}`, borderRadius: radius.md,
-    color: colors.text, fontSize: font.size.md, outline: 'none',
-  };
-  const labelStyle: React.CSSProperties = {
-    fontSize: font.size.sm, fontWeight: font.weight.semibold, color: colors.textMuted,
-    marginBottom: 4, display: 'block',
-  };
+  const crumbs = [{ label: 'Invoicing', href: '/app/invoicing' }, { label: invoice?.invoice_number || 'Invoice' }];
 
   // ── Loading / Error / Not found ──────────────────────────────────────────
   if (loading) {
     return (
-      <PremiumSurface maxWidth={1100}>
-        <ModuleSkeleton kpis={4} rows={5} />
-      </PremiumSurface>
+      <div className="idWs">
+        <style dangerouslySetInnerHTML={{ __html: CSS }} />
+        <PageShell crumbs={[{ label: 'Invoicing', href: '/app/invoicing' }, { label: 'Loading…' }]} title="Invoice" subtitle="Loading the invoice…">
+          <Card flush><div style={{ padding: 16 }}><ModuleSkeleton hero={false} kpis={4} rows={4} /></div></Card>
+        </PageShell>
+      </div>
     );
   }
 
   if (notFound || (!invoice && !error)) {
     return (
-      <PremiumSurface maxWidth={1100}>
-        <PremiumEmpty
-          icon={<Receipt size={34} weight="duotone" color={GOLD} />}
-          title="Invoice not found"
-          description="This invoice may have been deleted or you don't have access to it."
-          action={
-            <button onClick={() => router.push('/app/invoicing')} style={ghostButtonStyle} className="pmBtn">
-              <ArrowLeft size={14} /> Back to Invoicing
-            </button>
-          }
-        />
-      </PremiumSurface>
+      <div className="idWs">
+        <style dangerouslySetInnerHTML={{ __html: CSS }} />
+        <PageShell crumbs={[{ label: 'Invoicing', href: '/app/invoicing' }, { label: 'Not Found' }]} title="Invoice">
+          <Card flush>
+            <EmptyState
+              icon={<Receipt size={22} />}
+              title="Invoice not found"
+              text="This invoice may have been deleted or you don't have access to it."
+              action={<Button icon={<ArrowLeft size={14} />} onClick={() => router.push('/app/invoicing')}>Back to Invoicing</Button>}
+            />
+          </Card>
+        </PageShell>
+      </div>
     );
   }
 
   if (error && !invoice) {
     return (
-      <PremiumSurface maxWidth={1100}>
-        <PremiumEmpty
-          tone="error"
-          icon={<Warning size={34} weight="duotone" color={colors.red} />}
-          title="Couldn't load invoice"
-          description={error}
-          action={
-            <button onClick={() => router.push('/app/invoicing')} style={ghostButtonStyle} className="pmBtn">
-              <ArrowLeft size={14} /> Back to Invoicing
-            </button>
-          }
-        />
-      </PremiumSurface>
+      <div className="idWs">
+        <style dangerouslySetInnerHTML={{ __html: CSS }} />
+        <PageShell crumbs={[{ label: 'Invoicing', href: '/app/invoicing' }, { label: 'Error' }]} title="Invoice">
+          <Card flush>
+            <EmptyState
+              icon={<WarningCircle size={22} />}
+              title="Couldn't load the invoice"
+              text={`${error} Nothing has been lost — try again.`}
+              action={<div className="idBtns" style={{ justifyContent: 'center' }}><Button icon={<ArrowsClockwise size={15} />} onClick={loadInvoice}>Retry</Button><Button icon={<ArrowLeft size={14} />} onClick={() => router.push('/app/invoicing')}>Back to Invoicing</Button></div>}
+            />
+          </Card>
+        </PageShell>
+      </div>
     );
   }
 
   const inv = invoice as Invoice;
-  const sc = statusColor(inv.status);
-  const statusLabel = (inv.status ?? 'draft').toLowerCase();
+  const status = statusBadge(inv.status);
   const computedTotal = effectiveTotal(inv);
   const overdue = isOverdue(inv);
+  const paidKey = (inv.status || 'draft').toLowerCase() === 'paid';
+
+  const stats: StatItem[] = [
+    { label: 'Amount', value: money(inv.amount), sub: 'Pre-tax' },
+    { label: 'Tax', value: money(inv.tax), sub: inv.amount != null && inv.tax != null && Number(inv.amount) > 0 ? `${((Number(inv.tax) / Number(inv.amount)) * 100).toFixed(2)}% of amount` : 'As recorded' },
+    { label: 'Total', value: money(computedTotal), sub: 'Amount + tax' },
+    { label: 'Due Date', value: dateOnlyStr(inv.due_date), tone: overdue ? 'bad' : 'default', sub: overdue ? 'Past due' : paidKey ? 'Paid' : 'Overdue flags itself from this date' },
+  ];
 
   return (
-    <>
-      {/* Toast */}
-      {toast && (
-        <div style={{ position: 'fixed', top: 20, right: 24, zIndex: 600, background: colors.surface, border: `1px solid ${toast.color}`, borderRadius: radius.xl, padding: '12px 20px', color: toast.color, fontSize: font.size.lg, fontWeight: font.weight.bold, boxShadow: '0 8px 32px rgba(0,0,0,.5)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          {toast.color === colors.red ? <Warning size={16} /> : <Check size={16} />} {toast.msg}
-        </div>
-      )}
-
-      <PremiumSurface maxWidth={1100}>
-      {/* Back link */}
-      <button
-        onClick={() => guard.requestLeave('/app/invoicing')}
-        style={{ background: 'none', border: 'none', color: colors.textMuted, fontSize: font.size.md, cursor: 'pointer', padding: 0, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}
-      >
-        <ArrowLeft size={14} /> Invoicing
-      </button>
-
-      {error && (
-        <div style={{ padding: '12px 16px', background: 'rgba(239,68,68,.1)', border: `1px solid rgba(239,68,68,.3)`, borderRadius: radius.md, color: colors.red, fontSize: font.size.md, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Warning size={16} /> {error}
-        </div>
-      )}
-
-      {/* Header */}
-      <ModuleHero
-        eyebrow="Invoice"
-        eyebrowIcon={<Receipt size={13} weight="fill" color={GOLD} />}
-        aux={
-          <>
-            <span style={{
-              padding: '3px 12px', borderRadius: 999, fontSize: font.size.xs, fontWeight: font.weight.bold,
-              background: `${sc}20`, color: sc,
-            }}>
-              {statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}
-            </span>
-            {overdue && <Pill tone="red">Overdue</Pill>}
-          </>
-        }
+    <div className="idWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={crumbs}
         title={inv.invoice_number || 'Invoice'}
-        subtitle={
-          <>
-            {inv.vendor_name || 'Unknown vendor'}
-            {(projectName || inv.project_id) && <span> · {projectName || 'Project'}</span>}
-          </>
-        }
+        subtitle={`${inv.vendor_name || 'Unknown vendor'}${projectName || inv.project_id ? ` · ${projectName || 'Project'}` : ''}`}
         actions={
           <>
-            <button onClick={openEdit} style={ghostButtonStyle} className="pmBtn">
-              <PencilSimple size={14} /> Edit
-            </button>
-            <button
-              onClick={() => handlePdf()}
-              disabled={busy === 'pdf'}
-              style={{ ...ghostButtonStyle, opacity: busy === 'pdf' ? 0.6 : 1, cursor: busy === 'pdf' ? 'not-allowed' : 'pointer' }}
-              className="pmBtn"
-            >
-              <FilePdf size={14} /> {busy === 'pdf' ? 'Generating…' : 'PDF'}
-            </button>
-            <button
-              onClick={handleSend}
-              disabled={busy === 'send'}
-              style={{ ...goldButtonStyle, opacity: busy === 'send' ? 0.6 : 1, cursor: busy === 'send' ? 'not-allowed' : 'pointer' }}
-              className="pmBtn"
-            >
-              <PaperPlaneTilt size={14} /> {busy === 'send' ? 'Sending…' : 'Send'}
-            </button>
-            <button
-              onClick={handleDelete}
-              disabled={busy === 'delete'}
-              style={{ ...ghostButtonStyle, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', color: colors.red, opacity: busy === 'delete' ? 0.6 : 1, cursor: busy === 'delete' ? 'not-allowed' : 'pointer' }}
-              className="pmBtn"
-            >
-              <Trash size={14} /> {busy === 'delete' ? 'Deleting…' : 'Delete'}
-            </button>
+            <Button icon={<PencilSimple size={15} />} onClick={openEdit} disabled={editing}>Edit</Button>
+            <Button icon={<FilePdf size={15} />} onClick={() => handlePdf()} disabled={busy === 'pdf'}>{busy === 'pdf' ? 'Generating…' : inv.pdf_url ? 'Open PDF' : 'Generate PDF'}</Button>
+            {!paidKey && (
+              <Button variant="primary" icon={<PaperPlaneTilt size={15} />} onClick={handleSend} disabled={busy === 'send'}>{busy === 'send' ? 'Sending…' : 'Send to Vendor'}</Button>
+            )}
           </>
         }
-      />
-
-      {/* Totals strip */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 24 }}>
-        <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />} label="Amount" value={money(inv.amount)} sub="Pre-tax" delay={0.02}  href="/app/invoicing"/>
-        <StatCard icon={<Percent size={19} weight="duotone" color={GOLD} />} label="Tax" value={money(inv.tax)} delay={0.06}  href="/app/invoicing"/>
-        <StatCard icon={<Coins size={19} weight="duotone" color={GOLD} />} label="Total" value={money(computedTotal)} accent={GOLD} sub="Amount + tax" delay={0.10}  href="/app/invoicing"/>
-        <StatCard icon={<CalendarBlank size={19} weight="duotone" color={overdue ? colors.red : GOLD} />} label="Due Date" value={dateOnlyStr(inv.due_date)} accent={overdue ? colors.red : undefined} sub={overdue ? 'Past due' : undefined} delay={0.14}  href="/app/invoicing"/>
-      </div>
-
-      {/* Line item / details */}
-      <SectionCard title="Invoice Details" icon={<FileText size={17} weight="duotone" color={GOLD} />} flush style={{ marginBottom: 20 }}>
-        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: font.size.md }}>
-            <thead>
-              <tr style={{ background: colors.darkAlt }}>
-                {['Description', 'Category', 'Cost Code', 'Amount', 'Tax', 'Total'].map(h => (
-                  <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: font.size.xs, fontWeight: font.weight.bold, color: colors.textMuted, borderBottom: `1px solid ${colors.border}` }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              <tr style={{ borderBottom: `1px solid ${colors.borderDim}` }}>
-                <td style={{ padding: '12px 16px', color: colors.text }}>{inv.description || '—'}</td>
-                <td style={{ padding: '12px 16px', color: colors.textMuted }}>{inv.category || '—'}</td>
-                <td style={{ padding: '12px 16px', color: colors.textMuted, fontFamily: font.mono }}>{inv.cost_code || '—'}</td>
-                <td style={{ padding: '12px 16px', color: colors.text, fontVariantNumeric: 'tabular-nums' }}>{money(inv.amount)}</td>
-                <td style={{ padding: '12px 16px', color: colors.text, fontVariantNumeric: 'tabular-nums' }}>{money(inv.tax)}</td>
-                <td style={{ padding: '12px 16px', color: colors.gold, fontWeight: font.weight.semibold, fontVariantNumeric: 'tabular-nums' }}>{money(computedTotal)}</td>
-              </tr>
-              <tr style={{ background: 'color-mix(in srgb, var(--brand-primary) 5%, transparent)' }}>
-                <td colSpan={5} style={{ padding: '12px 16px', color: colors.textMuted, fontWeight: font.weight.bold, fontSize: font.size.xs, textAlign: 'right' }}>Total Due</td>
-                <td style={{ padding: '12px 16px', color: colors.gold, fontWeight: font.weight.black, fontSize: font.size.xl, fontVariantNumeric: 'tabular-nums' }}>{money(computedTotal)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </SectionCard>
-
-      {/* Document — the generated PDF, or the machinery to make one */}
-      <SectionCard title="Document" icon={<FilePdf size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 20 }}>
-        {inv.pdf_url ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '1 1 260px', minWidth: 0 }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 11, background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-35)' }}>
-                <FilePdf size={20} weight="duotone" color={GOLD} />
-              </span>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: font.size.md, fontWeight: font.weight.bold, color: colors.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {(inv.invoice_number || 'Invoice')}.pdf
-                </div>
-                <div style={{ fontSize: font.size.sm, color: colors.textMuted, marginTop: 2 }}>Generated invoice document</div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button type="button" onClick={() => openPdf({ url: `/api/files/open?u=${encodeURIComponent(inv.pdf_url || '')}`, title: 'Invoice' })} style={{ ...goldButtonStyle, padding: '9px 16px', fontSize: 13 }} className="pmBtn">
-                <ArrowSquareOut size={14} /> Open PDF
-              </button>
-              <button onClick={() => handlePdf(true)} disabled={busy === 'pdf'} style={{ ...ghostButtonStyle, padding: '9px 16px', fontSize: 13, opacity: busy === 'pdf' ? 0.6 : 1, cursor: busy === 'pdf' ? 'not-allowed' : 'pointer' }} className="pmBtn">
-                <ArrowsClockwise size={14} /> {busy === 'pdf' ? 'Regenerating…' : 'Regenerate'}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-            <div style={{ flex: '1 1 260px', fontSize: font.size.md, color: colors.textMuted, lineHeight: 1.6 }}>
-              No PDF yet — generate one to get a document you can open, attach, or send.
-            </div>
-            <button onClick={() => handlePdf()} disabled={busy === 'pdf'} style={{ ...goldButtonStyle, padding: '9px 16px', fontSize: 13, opacity: busy === 'pdf' ? 0.6 : 1, cursor: busy === 'pdf' ? 'not-allowed' : 'pointer' }} className="pmBtn">
-              <FilePdf size={14} /> {busy === 'pdf' ? 'Generating…' : 'Generate PDF'}
-            </button>
-          </div>
+      >
+        {error && (
+          <div className="idNext" role="alert" style={{ color: 'var(--status-overdue)' }}><WarningCircle size={15} /> {error}</div>
         )}
-      </SectionCard>
 
-      {/* Vendor & meta */}
-      <SectionCard flat title="Vendor & Meta" icon={<Buildings size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 20 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 18 }}>
-          {[
-            { l: 'Vendor', v: inv.vendor_name || '—' },
-            { l: 'Vendor Email', v: inv.vendor_email || '—' },
-            { l: 'Project', v: projectName || inv.project_id || '—' },
-            { l: 'Created', v: dateStr(inv.created_at) },
-            { l: 'Last Updated', v: dateStr(inv.updated_at) },
-          ].map(f => (
-            <div key={f.l}>
-              <div style={{ fontSize: font.size.xs, fontWeight: font.weight.bold, color: colors.textMuted, marginBottom: 4 }}>{f.l}</div>
-              <div style={{ fontSize: font.size.md, color: colors.text, wordBreak: 'break-word' }}>{f.v}</div>
+        <StatRow items={stats} />
+
+        <div className="idCq">
+          <div className="idSplit">
+            <div className="idMain">
+              <Card title="Invoice Details" subtitle="One line — the server computes the total from amount + tax." flush>
+                <div className="idTableWrap">
+                  <table className="idTable">
+                    <thead>
+                      <tr>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th>Cost Code</th>
+                        <th data-align="right">Amount</th>
+                        <th data-align="right">Tax</th>
+                        <th data-align="right">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td data-desc="true">{inv.description || <span className="idMuted">—</span>}</td>
+                        <td>{inv.category || <span className="idMuted">—</span>}</td>
+                        <td>{inv.cost_code || <span className="idMuted">—</span>}</td>
+                        <td data-align="right">{money(inv.amount)}</td>
+                        <td data-align="right">{money(inv.tax)}</td>
+                        <td data-align="right" style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{money(computedTotal)}</td>
+                      </tr>
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td colSpan={5} data-align="right">Total Due</td>
+                        <td data-align="right" className="idTotalDue">{money(computedTotal)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </Card>
+
+              <Card title="Document" subtitle={inv.pdf_url ? 'Generated invoice document' : 'No PDF yet'}>
+                {inv.pdf_url ? (
+                  <div className="idDoc">
+                    <span className="idDocIcon"><FilePdf size={20} /></span>
+                    <div className="idDocMeta">
+                      <div>{(inv.invoice_number || 'Invoice')}.pdf</div>
+                      <div>Open it, attach it, or send it — regenerate after an edit.</div>
+                    </div>
+                    <div className="idBtns">
+                      <Button variant="primary" icon={<ArrowSquareOut size={14} />} onClick={() => openPdf({ url: `/api/files/open?u=${encodeURIComponent(inv.pdf_url || '')}`, title: 'Invoice' })}>Open PDF</Button>
+                      <Button icon={<ArrowsClockwise size={14} />} onClick={() => handlePdf(true)} disabled={busy === 'pdf'}>{busy === 'pdf' ? 'Regenerating…' : 'Regenerate'}</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="idDoc">
+                    <div className="idDocMeta"><div style={{ fontWeight: 500, color: 'var(--text-secondary)', whiteSpace: 'normal' }}>No PDF yet — generate one to get a document you can open, attach, or send.</div></div>
+                    <Button icon={<FilePdf size={14} />} onClick={() => handlePdf()} disabled={busy === 'pdf'}>{busy === 'pdf' ? 'Generating…' : 'Generate PDF'}</Button>
+                  </div>
+                )}
+              </Card>
+
+              {inv.notes && (
+                <Card title="Notes" subtitle="Internal — never printed on the invoice.">
+                  <div className="idProse">{inv.notes}</div>
+                </Card>
+              )}
             </div>
-          ))}
-        </div>
-      </SectionCard>
 
-      {/* Payment (only if relevant) */}
-      {(inv.paid_at || inv.paid_amount != null || inv.payment_method || inv.check_number) && (
-        <SectionCard flat title="Payment" icon={<CreditCard size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 20 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 18 }}>
-            {[
-              { l: 'Paid Amount', v: money(inv.paid_amount) },
-              { l: 'Paid At', v: dateStr(inv.paid_at) },
-              { l: 'Method', v: inv.payment_method || '—' },
-              { l: 'Check #', v: inv.check_number || '—' },
-            ].map(f => (
-              <div key={f.l}>
-                <div style={{ fontSize: font.size.xs, fontWeight: font.weight.bold, color: colors.textMuted, marginBottom: 4 }}>{f.l}</div>
-                <div style={{ fontSize: font.size.md, color: colors.text }}>{f.v}</div>
-              </div>
-            ))}
-          </div>
-        </SectionCard>
-      )}
-
-      {/* Notes */}
-      {inv.notes && (
-        <SectionCard flat title="Notes" icon={<Note size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: font.size.md, color: colors.text, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
-            {inv.notes}
-          </div>
-        </SectionCard>
-      )}
-
-      </PremiumSurface>
-
-      {/* ── Edit Modal ──────────────────────────────────────────────────── */}
-      {editing && (
-        <div
-          style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(0,0,0,.72)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
-          onClick={(e) => { if (e.target === e.currentTarget) closeEdit(); }}
-        >
-          <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: 14, width: '100%', maxWidth: 600, maxHeight: '85vh', overflow: 'auto', boxShadow: '0 30px 80px rgba(0,0,0,.6)' }}>
-            <div style={{ padding: '16px 20px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, background: colors.surface, zIndex: 1 }}>
-              <h2 style={{ margin: 0, fontSize: font.size.xl, fontWeight: font.weight.black, color: colors.text }}>Edit Invoice</h2>
-              <button onClick={closeEdit} style={{ background: 'none', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex' }}>
-                <XIcon size={20} />
-              </button>
-            </div>
-            <form onSubmit={handleSave} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                <div>
-                  <label style={labelStyle}>Invoice #</label>
-                  <input value={form.invoice_number} onChange={(e) => setForm({ ...form, invoice_number: e.target.value })} style={inputStyle} placeholder="INV-001" />
+            <aside className="idRail" aria-label="Invoice details and actions">
+              <Card title="Details">
+                <div className="idSection">
+                  <div className="idBadges">
+                    <Badge tone={status.tone} dot>{status.label}</Badge>
+                    {overdue && <Badge tone="overdue">Overdue</Badge>}
+                  </div>
+                  <div className="idNext">
+                    {status.label === 'Draft' && 'Draft — generate the PDF and send it to put it on the clock.'}
+                    {status.label === 'Pending' && 'Pending — waiting to go out.'}
+                    {status.label === 'Sent' && (overdue ? 'Sent and past due.' : 'Sent — overdue flags itself from the due date.')}
+                    {status.label === 'Approved' && 'Approved by the customer — awaiting payment.'}
+                    {status.label === 'Paid' && 'Paid — this invoice is settled.'}
+                  </div>
                 </div>
-                <div>
-                  <label style={labelStyle}>Vendor Name</label>
-                  <input value={form.vendor_name} onChange={(e) => setForm({ ...form, vendor_name: e.target.value })} style={inputStyle} placeholder="Vendor name" />
+                <div className="idSection">
+                  <DetailList items={[
+                    ['Vendor', inv.vendor_name || ''],
+                    ['Vendor Email', inv.vendor_email || ''],
+                    ['Project', projectName || inv.project_id || ''],
+                    ['Category', inv.category || ''],
+                    ['Cost Code', inv.cost_code || ''],
+                    ['Due', <span key="d" style={{ color: overdue ? 'var(--status-overdue)' : undefined }}>{dateOnlyStr(inv.due_date)}</span>],
+                    ['Created', dateStr(inv.created_at)],
+                    ['Updated', dateStr(inv.updated_at)],
+                  ]} />
                 </div>
-                <div>
-                  <label style={labelStyle}>Vendor Email</label>
-                  <input type="email" value={form.vendor_email} onChange={(e) => setForm({ ...form, vendor_email: e.target.value })} style={inputStyle} placeholder="vendor@email.com" />
+                {(inv.paid_at || inv.paid_amount != null || inv.payment_method || inv.check_number) && (
+                  <div className="idSection">
+                    <div className="idSectionTitle">Payment</div>
+                    <DetailList items={[
+                      ['Paid Amount', money(inv.paid_amount)],
+                      ['Paid At', dateStr(inv.paid_at)],
+                      ['Method', inv.payment_method || ''],
+                      ['Check #', inv.check_number || ''],
+                    ]} />
+                  </div>
+                )}
+                <div className="idSection">
+                  <div className="idActions">
+                    {!paidKey && (
+                      <Button icon={<PaperPlaneTilt size={16} />} onClick={handleSend} disabled={busy === 'send'}>{busy === 'send' ? 'Sending…' : 'Send to Vendor'}</Button>
+                    )}
+                    <div className="idActionsRow">
+                      <Button icon={<PencilSimple size={16} />} onClick={openEdit} disabled={editing}>Edit Invoice</Button>
+                      <RowActions actions={[
+                        { label: inv.pdf_url ? 'Regenerate PDF' : 'Generate PDF', icon: <FilePdf size={15} />, onClick: () => handlePdf(!!inv.pdf_url), disabled: busy === 'pdf' },
+                        { label: 'Delete', icon: <Trash size={15} />, onClick: handleDelete, tone: 'danger', disabled: busy === 'delete' },
+                      ]} />
+                    </div>
+                    <Button icon={<ArrowLeft size={16} />} onClick={() => guard.requestLeave('/app/invoicing')}>All Invoices</Button>
+                  </div>
                 </div>
-                <div>
-                  <label style={labelStyle}>Status</label>
-                  <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} style={inputStyle}>
-                    <option value="draft">Draft</option>
-                    <option value="pending">Pending</option>
-                    <option value="sent">Sent</option>
-                    <option value="approved">Approved</option>
-                    <option value="paid">Paid</option>
-                    <option value="overdue">Overdue</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={labelStyle}>Amount</label>
-                  <input type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} style={inputStyle} placeholder="0.00" />
-                </div>
-                <div>
-                  <label style={labelStyle}>Tax</label>
-                  <input type="number" step="0.01" value={form.tax} onChange={(e) => setForm({ ...form, tax: e.target.value })} style={inputStyle} placeholder="0.00" />
-                </div>
-                <div>
-                  <label style={labelStyle}>Due Date</label>
-                  <SaguaroDatePicker value={form.due_date} onChange={(v) => setForm({ ...form, due_date: v })} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Category</label>
-                  <input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} style={inputStyle} placeholder="Materials, Labor, etc." />
-                </div>
-                <div>
-                  <label style={labelStyle}>Cost Code</label>
-                  <input value={form.cost_code} onChange={(e) => setForm({ ...form, cost_code: e.target.value })} style={inputStyle} placeholder="03-100" />
-                </div>
-              </div>
-              <div>
-                <label style={labelStyle}>Description</label>
-                <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Invoice description…" />
-              </div>
-              <div>
-                <label style={labelStyle}>Notes</label>
-                <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Internal notes…" />
-              </div>
-              <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-                <button type="button" onClick={closeEdit} style={{ padding: '10px 20px', background: 'none', border: `1px solid ${colors.border}`, borderRadius: radius.lg, color: colors.textMuted, fontSize: font.size.md, fontWeight: font.weight.semibold, cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" disabled={busy === 'save'} style={{ padding: '10px 24px', background: colors.gold, border: 'none', borderRadius: radius.lg, color: '#0A0A00', fontSize: font.size.md, fontWeight: font.weight.black, cursor: busy === 'save' ? 'not-allowed' : 'pointer', opacity: busy === 'save' ? 0.6 : 1 }}>
-                  {busy === 'save' ? 'Saving…' : 'Save Changes'}
-                </button>
-              </div>
-            </form>
+              </Card>
+            </aside>
           </div>
         </div>
-      )}
+      </PageShell>
 
-      <UnsavedGuardModal guard={guard} />
-    </>
+      {/* ── Edit ───────────────────────────────────────────────────────── */}
+      <FormModal
+        open={editing}
+        onClose={closeEdit}
+        title={`Edit ${inv.invoice_number || 'Invoice'}`}
+        subtitle="The server recomputes the total from amount + tax on save."
+        onSubmit={handleSave}
+        submitLabel="Save Changes"
+        busy={busy === 'save'}
+      >
+        <FormGrid cols={2}>
+          <Field label="Invoice #">
+            <Input value={form.invoice_number} onChange={(e) => setForm({ ...form, invoice_number: e.target.value })} placeholder="INV-001" />
+          </Field>
+          <Field label="Vendor Name">
+            <Input value={form.vendor_name} onChange={(e) => setForm({ ...form, vendor_name: e.target.value })} placeholder="Vendor name" />
+          </Field>
+          <Field label="Vendor Email">
+            <Input type="email" value={form.vendor_email} onChange={(e) => setForm({ ...form, vendor_email: e.target.value })} placeholder="vendor@email.com" />
+          </Field>
+          <Field label="Status">
+            <Select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} options={[
+              { value: 'draft', label: 'Draft' }, { value: 'pending', label: 'Pending' }, { value: 'sent', label: 'Sent' }, { value: 'approved', label: 'Approved' }, { value: 'paid', label: 'Paid' }, { value: 'overdue', label: 'Overdue' },
+            ]} />
+          </Field>
+          <Field label="Amount">
+            <Input type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0.00" />
+          </Field>
+          <Field label="Tax">
+            <Input type="number" step="0.01" value={form.tax} onChange={(e) => setForm({ ...form, tax: e.target.value })} placeholder="0.00" />
+          </Field>
+          <Field label="Due Date">
+            <div className="idDateInput"><SaguaroDatePicker value={form.due_date} onChange={(v) => setForm({ ...form, due_date: v })} style={DATE_INPUT_STYLE} /></div>
+          </Field>
+          <Field label="Category">
+            <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Materials, Labor, etc." />
+          </Field>
+          <Field label="Cost Code">
+            <Input value={form.cost_code} onChange={(e) => setForm({ ...form, cost_code: e.target.value })} placeholder="03-100" />
+          </Field>
+          <Field label="Description" span>
+            <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} placeholder="Invoice description…" />
+          </Field>
+          <Field label="Notes" span hint="Internal — never printed on the invoice.">
+            <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} placeholder="Internal notes…" />
+          </Field>
+        </FormGrid>
+      </FormModal>
+
+      {/* Above the FormModal overlay so the unsaved-work prompt is never hidden behind it. */}
+      <div style={{ position: 'relative', zIndex: 10001 }}>
+        <UnsavedGuardModal guard={guard} />
+      </div>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </div>
   );
 }

@@ -50,7 +50,7 @@ export default function RisksPage() {
   if (!ready) return null;
 
   return (
-    <PremiumSurface maxWidth={1280} pad="28px 24px 60px">
+    <PremiumSurface maxWidth={2200} pad="28px 24px 60px">
       <div style={{ fontFamily: font, color: C.text }}>
       <ModuleHero
         eyebrow="Portfolio Exposure"

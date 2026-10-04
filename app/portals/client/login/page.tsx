@@ -6,10 +6,10 @@ const GOLD = 'var(--brand-primary)';
 const DARK = 'var(--bg-base)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1';
+const DIM = '#D4D4D8';
 const TEXT = '#FFFFFF';
-const GREEN = '#22c55e';
-const RED = '#ef4444';
+const GREEN = '#2CFF7A';
+const RED = '#FF3B30';
 
 export default function ClientPortalLogin() {
   const [email, setEmail] = useState('');
@@ -95,7 +95,7 @@ export default function ClientPortalLogin() {
 
         {sent ? (
           <div style={{ textAlign: 'center' }}>
-            <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(34,197,94,0.12)', border: '1.5px solid rgba(34,197,94,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(44,255,122,0.12)', border: '1.5px solid rgba(44,255,122,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
               <svg viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={24} height={24}>
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                 <polyline points="22,6 12,13 2,6"/>
@@ -140,7 +140,7 @@ export default function ClientPortalLogin() {
             />
 
             {error && (
-              <div style={{ marginTop: 10, padding: '10px 12px', background: 'rgba(239,68,68,0.1)', border: `1px solid rgba(239,68,68,0.25)`, borderRadius: 8, fontSize: 13, color: '#fca5a5', lineHeight: 1.5 }}>
+              <div style={{ marginTop: 10, padding: '10px 12px', background: 'rgba(255,59,48,0.1)', border: `1px solid rgba(255,59,48,0.25)`, borderRadius: 8, fontSize: 13, color: '#fca5a5', lineHeight: 1.5 }}>
                 {error}
               </div>
             )}

@@ -1,25 +1,51 @@
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+/**
+ * Project Daily Logs — Pass 4, on the RFIs reference layout (dense table + detail).
+ *
+ * Anatomy: title + one primary action (Auto-Fill Today) → StatRow (each tile
+ * filters the register) → Toolbar → workspace split: DataTable register on the
+ * left, and when a row is selected, the day's record beside a 320–384px
+ * details + action rail. Phone: list, then detail, stacked. Create / edit
+ * open the composer in a FormModal.
+ *
+ * Every read / write is the one this screen already used:
+ *   list      GET    /api/daily-logs/list?projectId=
+ *   prefill   GET    /api/projects/[id]/daily-logs/prefill?date=   (Auto-Fill Today)
+ *   create    POST   /api/daily-logs/create
+ *   update    PUT    /api/daily-logs/[id]
+ *   delete    DELETE /api/daily-logs/[id]
+ * Headcount comes from the clocks, weather from NWS — the create route stamps
+ * conditions server-side whenever the fields are left blank.
+ */
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
-import { Clipboard, ClipboardText, Thermometer, HardHat, CalendarBlank, WarningCircle, Plus, X, Sparkle, CopySimple, CloudSun, UsersThree } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
-import { ListToolbar } from '@/components/ui/ListToolbar';
-import { moduleAccent } from '@/lib/module-identity';
-import { SUB_TRADES } from '@/lib/construction-intelligence';
+import {
+  ClipboardText, Thermometer, HardHat, WarningCircle, Plus, X, Sparkle, CopySimple, CloudSun,
+  UsersThree, PencilSimple, Trash, ArrowSquareOut, ArrowClockwise, ShieldCheck, Package, Wrench,
+} from '@phosphor-icons/react';
+import {
+  PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, RowActions,
+  FormModal, Field, Input, Textarea, Select, FormGrid, DetailList, Toast, useToast,
+  type Column, type Action, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import { AutoChip, InsightRow } from '@/components/ui/premium';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
+import { layout } from '@/lib/design-tokens';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
-const GREEN='#1a8a4a',RED='#c03030',BLUE='var(--brand-primary)';
-
-const WEATHER_OPTS = ['Clear','Partly Cloudy','Overcast','Rain','Thunderstorm','Snow','Fog','Windy'];
-
-const fmtDay = (d?:string|null) => d ? new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) : '—';
+/** Date-only values parse at local noon ('T12:00:00') so they never shift a day under UTC. */
+/** Today as YYYY-MM-DD on the user's wall clock. toISOString() is the UTC day —
+ *  in Arizona every log started after 5 pm was dated tomorrow. */
+const localToday = () => new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+const fmtDay = (d?:string|null) => d ? new Date(d.slice(0,10)+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) : '—';
+const fmtDate = (d?:string|null) => d ? new Date(d.slice(0,10)+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+const fmtLong = (d?:string|null) => d ? new Date(d.slice(0,10)+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}) : '—';
 /** Workdays (Mon-Fri) strictly between two ISO dates — 0 across a plain weekend. */
 function missedWorkdays(fromIso:string,toIso:string){
   let n = 0;
@@ -30,8 +56,23 @@ function missedWorkdays(fromIso:string,toIso:string){
   return n;
 }
 
+const tempStr = (l:any) => (l.high_temp!=null||l.low_temp!=null) ? `${l.high_temp??'—'}° / ${l.low_temp??'—'}°` : '—';
+
+/** One status → one badge. Draft stays neutral so the register is not a
+ *  rainbow: only Submitted / Approved carry a hue, from lib/status-colors. */
+function logStatus(l:any): { label:string; tone:BadgeTone } {
+  const s = String(l.status||'draft').toLowerCase();
+  if (s==='submitted') return { label:'Submitted', tone:'ongoing' };
+  if (s==='approved') return { label:'Approved', tone:'ongoing' };
+  if (s==='draft') return { label:'Draft', tone:'neutral' };
+  return { label: s.replace(/_/g,' ').replace(/\b\w/g,(c:string)=>c.toUpperCase()), tone:'neutral' };
+}
+
+type MonthFilter = string; // '' = all months, else 'YYYY-MM'
+type FlagFilter = 'all' | 'delays' | 'safety';
+
 const EMPTY: Record<string,any> = {
-  log_date: new Date().toISOString().split('T')[0],
+  log_date:'',
   weather:'', high_temp:'', low_temp:'', crew_count:'', superintendent:'',
   work_performed:'', delays:'', safety_notes:'', materials_delivered:'', visitors:'', notes:'',
   phase_of_work:'', equipment:'',
@@ -39,66 +80,100 @@ const EMPTY: Record<string,any> = {
   manpower_by_trade:[] as any[], subcontractors_on_site:[] as string[], equipment_on_site:[] as string[],
 };
 
-const inp: React.CSSProperties = {
-  width:'100%', padding:'9px 12px', background:'var(--bg-surface-2)',
-  border:'1px solid rgba(255,255,255,0.12)', borderRadius:7, color:'#FFFFFF',
-  fontSize:13, outline:'none', boxSizing:'border-box',
+const CSS = `
+.pdlWs > .k-page { max-width: none; }
+.pdlCq { container: pdlws / inline-size; min-width: 0; }
+.pdlSplit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
+.pdlSplit > * { min-width: 0; }
+@container pdlws (min-width: 1080px) {
+  .pdlSplit[data-open="true"] { grid-template-columns: minmax(340px, 0.8fr) minmax(0, 1.6fr); }
+}
+.pdlDetailCq { container: pdldetail / inline-size; min-width: 0; }
+.pdlDetail { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
+.pdlDetail > * { min-width: 0; }
+.pdlRail { order: -1; }
+@container pdldetail (min-width: 720px) {
+  .pdlDetail { grid-template-columns: minmax(0, 1fr) clamp(${layout.detailRailMin}px, 34%, ${layout.detailRailMax}px); }
+  .pdlRail { order: 0; position: sticky; top: 16px; }
+}
+.pdlList .k-table th:first-child, .pdlList .k-table td:first-child { position: sticky; left: 0; z-index: 1; background: var(--bg-solid); }
+.pdlList .k-table th:first-child { background: var(--bg-solid-2); z-index: 3; }
+.pdlList .k-table tbody tr:hover td:first-child { background: linear-gradient(rgba(255,255,255,0.03), rgba(255,255,255,0.03)), var(--bg-solid); }
+.pdlList .k-table tbody tr:has([data-sel="true"]) td { background: var(--brand-primary-08); }
+.pdlList .k-table tbody tr:has([data-sel="true"]) td:first-child { background: linear-gradient(var(--brand-primary-08), var(--brand-primary-08)), var(--bg-solid); box-shadow: inset 3px 0 0 var(--brand-primary); }
+.pdlDate { color: var(--text-primary); font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pdlClamp { display: inline-block; max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+.pdlMuted { color: var(--text-tertiary); }
+.pdlNum { font-variant-numeric: tabular-nums; }
+.pdlBadges { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pdlSection { display: flex; flex-direction: column; gap: 8px; }
+.pdlSection + .pdlSection { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-subtle); }
+.pdlSectionTitle { display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); font-weight: 700; color: var(--text-tertiary); }
+.pdlSectionTitle[data-warn="true"] { color: var(--status-overdue); }
+.pdlProse { font-size: var(--fs-md); line-height: 1.6; color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; max-width: ${layout.readingMaxWidth}; }
+.pdlProse[data-warn="true"] { color: var(--text-primary); }
+.pdlChips { display: flex; flex-wrap: wrap; gap: 6px; }
+.pdlChip { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border-radius: 999px; font-size: var(--fs-sm); font-weight: 600; color: var(--text-secondary); background: var(--bg-surface-2); border: 1px solid var(--border-default); }
+.pdlChip b { color: var(--text-primary); font-weight: 800; }
+.pdlChip button { display: inline-flex; align-items: center; background: none; border: 0; padding: 0; cursor: pointer; color: var(--text-tertiary); }
+.pdlActions { display: flex; flex-direction: column; gap: 8px; }
+.pdlActions .k-btn { width: 100%; justify-content: flex-start; }
+.pdlActionsRow { display: flex; gap: 8px; align-items: center; }
+.pdlActionsRow > .k-btn { flex: 1 1 auto; }
+.pdlNext { font-size: var(--fs-sm); color: var(--text-tertiary); line-height: 1.5; }
+.pdlBanner { border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--bg-surface-2); margin-bottom: 16px; }
+.pdlBanner[data-gap="true"] { border-color: rgba(255,77,94,.35); background: rgba(255,77,94,.07); }
+.pdlBannerTitle { display: flex; align-items: center; gap: 8px; font-size: var(--fs-md); font-weight: 700; color: var(--text-primary); }
+.pdlBanner[data-gap="true"] .pdlBannerTitle { color: var(--status-overdue); }
+.pdlNote { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-sm); color: var(--text-secondary); line-height: 1.5; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--brand-primary-25); background: var(--brand-primary-08); margin-bottom: 16px; }
+.pdlRow { display: flex; gap: 8px; align-items: center; }
+.pdlRow .k-input { flex: 1 1 auto; }
+.pdlRow .k-input[data-narrow="true"] { flex: 0 0 72px; text-align: center; }
+.pdlLine { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: var(--radius-sm); background: var(--bg-surface-2); border: 1px solid var(--border-subtle); }
+.pdlLine > .pdlLineName { flex: 1; min-width: 0; font-size: var(--fs-sm); font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pdlLine > .pdlLineName small { font-weight: 500; color: var(--text-tertiary); margin-left: 8px; }
+.pdlLine .k-input { flex: 0 0 72px; min-height: 32px; padding: 4px 8px; text-align: center; }
+.pdlTotal { font-size: var(--fs-xs); color: var(--text-tertiary); text-align: right; font-weight: 700; }
+.pdlTotal b { color: var(--text-primary); }
+.pdlInlineErr { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--status-overdue); }
+.pdlDateInput { width: 100%; }
+@media (max-width: 640px) {
+  .pdlWs .k-btn, .pdlWs .k-stat, .pdlWs select.k-select, .pdlWs .k-input { min-height: 44px; }
+  .pdlWs .k-table td { height: 48px; }
+  .pdlClamp { max-width: 200px; }
+  .pdlLine .k-input, .pdlRow .k-input[data-narrow="true"] { min-height: 40px; }
+}
+`;
+
+const DATE_INPUT_STYLE: React.CSSProperties = {
+  width:'100%', minHeight:40, padding:'8px 12px', fontSize:14,
+  background:'var(--bg-surface-2)', border:'1px solid var(--border-default)',
+  borderRadius:'var(--radius-sm)', color:'var(--text-primary)',
 };
-
-function Field({label,hint,children}:{label:React.ReactNode;hint?:React.ReactNode;children:React.ReactNode}){
-  return (
-    <div>
-      <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM, marginBottom:5}}>{label}</label>
-      {children}
-      {hint && <div style={{fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:4,lineHeight:1.45}}>{hint}</div>}
-    </div>
-  );
-}
-
-function Section({label,value,warn}:{label:string;value?:string;warn?:boolean}){
-  if(!value?.trim()) return null;
-  return (
-    <div style={{background:warn?'rgba(192,48,48,.07)':'var(--bg-surface)',
-      border:`1px solid ${warn?'rgba(192,48,48,.25)':'rgba(255,255,255,0.12)'}`,
-      borderRadius:8,padding:'12px 14px'}}>
-      <div style={{fontSize:10,fontWeight:700,color:warn?'#f87171':DIM, marginBottom:6}}>{label}</div>
-      <div style={{fontSize:13,color:TEXT,lineHeight:1.6,whiteSpace:'pre-wrap'}}>{value}</div>
-    </div>
-  );
-}
 
 /** Removable-chip list with an inline add input — subs & equipment on site. */
 function ChipEditor({items,onChange,placeholder}:{items:string[];onChange:(v:string[])=>void;placeholder:string}){
   const [draft,setDraft]=useState('');
   const add=()=>{const v=draft.trim(); if(!v) return; if(!items.includes(v)) onChange([...items,v]); setDraft('');};
   return (
-    <div>
+    <div style={{display:'flex',flexDirection:'column',gap:8}}>
       {items.length>0&&(
-        <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:8}}>
+        <div className="pdlChips">
           {items.map(it=>(
-            <span key={it} style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 11px',
-              background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.13)',borderRadius:999,
-              fontSize:12.5,color:TEXT,fontWeight:600}}>
+            <span key={it} className="pdlChip">
               {it}
-              <span onClick={()=>onChange(items.filter(x=>x!==it))}
-                style={{cursor:'pointer',display:'inline-flex',alignItems:'center'}}>
-                <X size={11} weight="bold" color={DIM}/>
-              </span>
+              <button type="button" aria-label={`Remove ${it}`} onClick={()=>onChange(items.filter(x=>x!==it))}>
+                <X size={11} weight="bold"/>
+              </button>
             </span>
           ))}
         </div>
       )}
-      <div style={{display:'flex',gap:8}}>
-        <input value={draft} onChange={e=>setDraft(e.target.value)}
+      <div className="pdlRow">
+        <Input value={draft} onChange={e=>setDraft(e.target.value)}
           onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();add();}}}
-          style={{...inp,flex:1}} placeholder={placeholder}/>
-        <button onClick={add} disabled={!draft.trim()}
-          style={{padding:'0 14px',background:draft.trim()?'var(--brand-primary-12)':'rgba(255,255,255,0.05)',
-            border:`1px solid ${draft.trim()?'color-mix(in srgb, var(--brand-primary) 40%, transparent)':'rgba(255,255,255,0.12)'}`,borderRadius:7,
-            color:draft.trim()?'var(--brand-primary-strong)':'rgba(255,255,255,0.35)',fontSize:12.5,fontWeight:700,
-            cursor:draft.trim()?'pointer':'default'}}>
-          Add
-        </button>
+          placeholder={placeholder}/>
+        <Button onClick={add} disabled={!draft.trim()} icon={<Plus size={13} weight="bold"/>}>Add</Button>
       </div>
     </div>
   );
@@ -116,52 +191,33 @@ function ManpowerEditor({rows,onChange}:{rows:any[];onChange:(v:any[])=>void}){
     setTrade(''); setCount('');
   };
   return (
-    <div>
+    <div style={{display:'flex',flexDirection:'column',gap:8}}>
       {rows.length>0&&(
-        <div style={{display:'flex',flexDirection:'column',gap:6,marginBottom:8}}>
+        <>
           {rows.map((r:any,i:number)=>(
-            <div key={`${r.trade}-${i}`} style={{display:'flex',alignItems:'center',gap:8,
-              background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',
-              borderRadius:8,padding:'7px 10px'}}>
-              <HardHat size={14} weight="fill" color={DIM} style={{flexShrink:0}}/>
-              <div style={{flex:1,minWidth:0,fontSize:13,fontWeight:600,color:TEXT,
-                overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+            <div key={`${r.trade}-${i}`} className="pdlLine">
+              <HardHat size={14} weight="fill" style={{flexShrink:0,color:'var(--text-tertiary)'}}/>
+              <div className="pdlLineName">
                 {r.trade}
-                {Array.isArray(r.crews)&&r.crews.length>0&&(
-                  <span style={{fontSize:11.5,fontWeight:500,color:DIM,marginLeft:8}}>
-                    {r.crews.join(', ')}
-                  </span>
-                )}
+                {Array.isArray(r.crews)&&r.crews.length>0&&<small>{r.crews.join(', ')}</small>}
               </div>
-              <input type="number" value={r.count} min={0}
-                onChange={e=>onChange(rows.map((x:any,xi:number)=>xi===i?{...x,count:e.target.value===''?'':Number(e.target.value)}:x))}
-                style={{...inp,width:70,padding:'6px 8px',textAlign:'center'}}/>
-              <span onClick={()=>onChange(rows.filter((_:any,xi:number)=>xi!==i))}
-                style={{cursor:'pointer',display:'inline-flex',padding:4}}>
-                <X size={12} weight="bold" color={DIM}/>
-              </span>
+              <Input type="number" value={r.count} min={0} aria-label={`${r.trade} headcount`}
+                onChange={e=>onChange(rows.map((x:any,xi:number)=>xi===i?{...x,count:e.target.value===''?'':Number(e.target.value)}:x))}/>
+              <Button variant="ghost" size="sm" icon={<X size={12} weight="bold"/>} aria-label={`Remove ${r.trade}`} onClick={()=>onChange(rows.filter((_:any,xi:number)=>xi!==i))}/>
             </div>
           ))}
-          <div style={{fontSize:11.5,color:DIM,textAlign:'right',fontWeight:700}}>
-            Total on site: <span style={{color:TEXT}}>{total}</span>
-          </div>
-        </div>
+          <div className="pdlTotal">Total on site: <b>{total}</b></div>
+        </>
       )}
-      <div style={{display:'flex',gap:8}}>
-        <Suggest value={trade} onChange={e=>setTrade(e.target.value)}
+      <div className="pdlRow">
+        <Suggest className="k-input" value={trade} onChange={e=>setTrade(e.target.value)}
           onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();add();}}}
-          style={{...inp,flex:1}} placeholder="Add a trade…" options={['t']} />
-        <input type="number" value={count} min={0}
+          placeholder="Add a trade…" options={['t']} />
+        <Input type="number" value={count} min={0} data-narrow="true" aria-label="Headcount"
           onChange={e=>setCount(e.target.value)}
           onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();add();}}}
-          style={{...inp,width:70,textAlign:'center'}} placeholder="0"/>
-        <button onClick={add} disabled={!trade.trim()}
-          style={{padding:'0 14px',background:trade.trim()?'var(--brand-primary-12)':'rgba(255,255,255,0.05)',
-            border:`1px solid ${trade.trim()?'color-mix(in srgb, var(--brand-primary) 40%, transparent)':'rgba(255,255,255,0.12)'}`,borderRadius:7,
-            color:trade.trim()?'var(--brand-primary-strong)':'rgba(255,255,255,0.35)',fontSize:12.5,fontWeight:700,
-            cursor:trade.trim()?'pointer':'default'}}>
-          Add
-        </button>
+          placeholder="0"/>
+        <Button onClick={add} disabled={!trade.trim()} icon={<Plus size={13} weight="bold"/>}>Add</Button>
       </div>
     </div>
   );
@@ -175,6 +231,7 @@ export default function DailyLogsPage(){
   const [selected,setSelected] = useState<any>(null);
   const [mode,setMode]       = useState<'view'|'edit'|'create'|null>(null);
   const [form,setForm]       = useState<Record<string,any>>({...EMPTY});
+  const detailRef = useRef<HTMLDivElement>(null);
 
   /* ── Unsaved-work guard: the composer holds real typing, so leaving this
    *    module (sidebar, field nav, ⌘K, breadcrumb, back) confirms first, and
@@ -189,18 +246,15 @@ export default function DailyLogsPage(){
   });
   const [saving,setSaving]   = useState(false);
   const [deleting,setDeleting]=useState(false);
-  const [toast,setToast]     = useState<{msg:string;type:'success'|'error'}|null>(null);
+  const { toast, show: showToast } = useToast(4000);
   const [search,setSearch]   = useState('');
-  const [monthFilter,setMonthFilter] = useState('');
+  const [monthFilter,setMonthFilter] = useState<MonthFilter>('');
+  const [flagFilter,setFlagFilter] = useState<FlagFilter>('all');
   // Project snapshot (/api/project-context) — the page walks in knowing the job:
   // last log date, open items, schedule — so create prefills itself.
   const { ctx } = useProjectContext(projectId);
   const [auto,setAuto]       = useState<{date?:boolean;crew?:boolean;manpower?:boolean;subs?:boolean;carry?:boolean}>({});
   const [prefilling,setPrefilling] = useState(false);
-
-  const showToast=(msg:string,type:'success'|'error'='success')=>{
-    setToast({msg,type}); setTimeout(()=>setToast(null),4000);
-  };
 
   const load = useCallback(async()=>{
     setLoading(true);
@@ -229,13 +283,21 @@ export default function DailyLogsPage(){
 
   useEffect(()=>{load();},[load]);
 
+  // Keep the selected row pointed at the live record once a revalidate swaps rows in.
+  useEffect(()=>{
+    if(!selected) return;
+    const live = logs.find((l:any)=>l.id===selected.id);
+    if(live && live!==selected) setSelected(live);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[logs]);
+
   function openCreate(){
     // Blank manual log — kept as the fallback path; the primary entry is
     // openAutoFill below. Today's date + crew carried from the last log.
     const prev = logs[0]; // list arrives sorted date-desc
     setForm({
       ...EMPTY,
-      log_date: new Date().toISOString().split('T')[0],
+      log_date: localToday(),
       crew_count: prev?.crew_count ? String(prev.crew_count) : '',
     });
     setAuto({date:true, crew:!!(prev?.crew_count)});
@@ -250,7 +312,7 @@ export default function DailyLogsPage(){
     setPrefilling(true);
     try{
       const h = await getAuthHeaders();
-      const today = new Date().toISOString().split('T')[0];
+      const today = localToday();
       const r = await fetch(`/api/projects/${projectId}/daily-logs/prefill?date=${today}`,{headers:h});
       if(!r.ok) throw new Error('Prefill failed');
       const p = await r.json();
@@ -281,7 +343,7 @@ export default function DailyLogsPage(){
       setMode('create'); setSelected(null);
     }catch(e:any){
       console.error(e);
-      showToast(humanError(e,'Auto-fill failed — opening a blank log.'),'error');
+      showToast(humanError(e,'Auto-fill failed — opening a blank log.'),'bad');
       openCreate();
     }finally{setPrefilling(false);}
   }
@@ -293,7 +355,7 @@ export default function DailyLogsPage(){
     if(!prev) return;
     setForm({
       ...EMPTY,
-      log_date: new Date().toISOString().split('T')[0],
+      log_date: localToday(),
       crew_count: prev.crew_count ? String(prev.crew_count) : '',
       superintendent: prev.superintendent||'',
       phase_of_work: prev.phase_of_work||'',
@@ -325,8 +387,16 @@ export default function DailyLogsPage(){
     });
     setSelected(log); setMode('edit');
   }
-  function viewLog(log:any){ setSelected(log); setMode('view'); }
+  function viewLog(log:any){
+    setSelected(log); setMode('view');
+  }
   function closePanel(){ setSelected(null); setMode(null); }
+  /** The composer's close paths (X, Cancel, Esc, backdrop) keep the day's
+   *  record in view when an edit is abandoned. */
+  function closeComposer(){
+    if(mode==='edit'&&selected){ setMode('view'); return; }
+    closePanel();
+  }
 
   async function save(): Promise<boolean> {
     // Optimistic save (house pattern: budget saveEdit) — the log lands in the
@@ -374,7 +444,8 @@ export default function DailyLogsPage(){
       } else if(mode==='edit'&&selected){
         const prevLog = selected;
         setLogs(prev=>prev.map((l:any)=>l.id===prevLog.id?{...l,...payload}:l));
-        closePanel();
+        // Stay on the day's record — it re-renders with the saved values.
+        setSelected({...prevLog,...payload}); setMode('view');
         showToast('Log updated.');
         const r = await fetch(`/api/daily-logs/${prevLog.id}`,{
           method:'PUT',
@@ -387,7 +458,7 @@ export default function DailyLogsPage(){
       guard.clearDraft();
       return true;
     }catch(e:any){
-      console.error(e); showToast(humanError(e,'Save failed. Please try again.'),'error');
+      console.error(e); showToast(humanError(e,'Save failed. Please try again.'),'bad');
       // Rollback already applied — reopen the panel with the input intact.
       setForm(snapshot); setMode(prevMode); setSelected(prevSelected);
     }
@@ -396,7 +467,7 @@ export default function DailyLogsPage(){
   }
 
   async function deleteLog(log:any){
-    if(!confirm(`Delete log for ${log.log_date}?`)) return;
+    if(!(await confirmDialog({ title: 'Please confirm', message: `Delete log for ${log.log_date}?`, danger: true }))) return;
     // Optimistic remove — the log leaves and the panel closes instantly;
     // rollback restores the exact list on failure.
     const prevLogs = logs;
@@ -409,495 +480,418 @@ export default function DailyLogsPage(){
       const dr = await fetch(`/api/daily-logs/${log.id}`,{method:'DELETE',headers:h});
       if (!dr.ok) throw new Error('Delete failed');
       revalidate();
-    }catch{setLogs(prevLogs);showToast('Delete failed. Please try again.','error');}
+    }catch{setLogs(prevLogs);showToast('Delete failed. Please try again.','bad');}
     finally{setDeleting(false);}
   }
 
   const months = Array.from(new Set(logs.map(l=>(l.log_date||'').slice(0,7)))).sort().reverse();
+  const monthLabel = (m:string) => m ? new Date(m+'-01T12:00:00').toLocaleDateString('en-US',{month:'long',year:'numeric'}) : m;
+  const thisMonthIso = localToday().slice(0,7);
 
   const filtered = logs.filter(l=>{
-    const ms = !search || (l.work_performed||'').toLowerCase().includes(search.toLowerCase())
-      ||(l.notes||'').toLowerCase().includes(search.toLowerCase())
+    const q = search.toLowerCase();
+    const ms = !search || (l.work_performed||'').toLowerCase().includes(q)
+      ||(l.notes||'').toLowerCase().includes(q)
+      ||(l.superintendent||'').toLowerCase().includes(q)
+      ||(l.weather||'').toLowerCase().includes(q)
       ||(l.log_date||'').includes(search);
     const mm = !monthFilter||(l.log_date||'').startsWith(monthFilter);
-    return ms&&mm;
+    const ff = flagFilter==='all' || (flagFilter==='delays' ? !!(l.delays||'').trim() : !!(l.safety_notes||'').trim());
+    return ms&&mm&&ff;
   });
 
   const totalCrew  = logs.reduce((s:number,l:any)=>s+(Number(l.crew_count)||0),0);
   const avgCrew    = logs.length?Math.round(totalCrew/logs.length):0;
   const delayDays  = logs.filter((l:any)=>l.delays?.trim()).length;
-  const thisMonth  = logs.filter((l:any)=>(l.log_date||'').startsWith(new Date().toISOString().slice(0,7))).length;
+  const thisMonth  = logs.filter((l:any)=>(l.log_date||'').startsWith(thisMonthIso)).length;
+  const lastLogIso = (ctx?.recent?.lastDailyLogDate as string|null) || logs[0]?.log_date || null;
+  const gapDays    = lastLogIso ? missedWorkdays(lastLogIso, localToday()) : 0;
 
-  const panelOpen = mode!==null;
+  const filtersActive = !!search || !!monthFilter || flagFilter!=='all';
+  const clearFilters = () => { setSearch(''); setMonthFilter(''); setFlagFilter('all'); };
+
+  // ── Stat tiles: each opens the register filtered to that slice ──
+  const stats: StatItem[] = loading
+    ? [
+        { label:'Last Log', value:'—', sub:'Loading…' },
+        { label:'This Month', value:'—', sub:'Loading…' },
+        { label:'Days with Delays', value:'—', sub:'Loading…' },
+        { label:'Avg Crew / Day', value:'—', sub:'Loading…' },
+      ]
+    : [
+        { label:'Last Log', value: lastLogIso ? fmtDay(lastLogIso) : 'None yet',
+          tone: gapDays>0 ? 'bad' : (lastLogIso ? 'good' : 'default'),
+          sub: lastLogIso ? (gapDays>0 ? `${gapDays} workday${gapDays===1?'':'s'} unlogged` : 'Record is current') : 'Start the record',
+          onClick: logs[0] ? () => viewLog(logs[0]) : undefined },
+        { label:'This Month', value: thisMonth, sub: monthFilter===thisMonthIso ? 'Filtered — click to clear' : monthLabel(thisMonthIso),
+          onClick: () => setMonthFilter(m => (m===thisMonthIso ? '' : thisMonthIso)) },
+        { label:'Days with Delays', value: delayDays, tone: delayDays>0 ? 'bad' : 'default',
+          sub: flagFilter==='delays' ? 'Filtered — click to clear' : delayDays>0 ? 'Flagged in the record' : 'None flagged',
+          onClick: () => setFlagFilter(f => (f==='delays' ? 'all' : 'delays')) },
+        { label:'Avg Crew / Day', value: avgCrew, sub: `${logs.length} field report${logs.length===1?'':'s'}`, href: `/app/projects/${projectId}/crews` },
+      ];
+
+  // ── Register columns: full register, or a compact one beside the day's record ──
+  const isSel = (l:any) => selected?.id===l.id && mode!=='create';
+  const dateCol: Column<any> = { key:'log_date', header:'Date', accessor:l=>l.log_date||'', width:130, render:l=><span className="pdlDate" data-sel={isSel(l)?'true':undefined}>{fmtDate(l.log_date)}</span> };
+  const statusCol: Column<any> = { key:'status', header:'Status', accessor:l=>logStatus(l).label, render:l=>{const s=logStatus(l);return <Badge tone={s.tone}>{s.label}</Badge>;} };
+  const weatherCol: Column<any> = { key:'weather', header:'Weather', accessor:l=>l.weather||'', render:l=>l.weather?<span className="pdlClamp" style={{maxWidth:160}} title={l.weather}>{l.weather}</span>:<span className="pdlMuted">—</span> };
+  const tempCol: Column<any> = { key:'temp', header:'Temp', accessor:l=>Number(l.high_temp)||0, align:'right', render:l=><span className="pdlMuted pdlNum">{tempStr(l)}</span> };
+  const crewCol: Column<any> = { key:'crew_count', header:'Crew', accessor:l=>Number(l.crew_count)||0, align:'right', render:l=><span className="pdlNum" style={{display:'inline-flex',alignItems:'center',gap:4}}><UsersThree size={14} style={{color:'var(--text-tertiary)'}}/>{Number(l.crew_count)||0}</span> };
+  const superCol: Column<any> = { key:'superintendent', header:'Superintendent', accessor:l=>(l.superintendent||'').toLowerCase(), render:l=>l.superintendent?<span style={{color:'var(--text-primary)'}}>{l.superintendent}</span>:<span className="pdlMuted">—</span> };
+  const workCol: Column<any> = { key:'work_performed', header:'Work Performed', accessor:l=>(l.work_performed||'').toLowerCase(), render:l=>l.work_performed?<span className="pdlClamp" title={l.work_performed}>{l.work_performed}</span>:<span className="pdlMuted">—</span> };
+  const flagsCol: Column<any> = { key:'flags', header:'Flags', accessor:l=>((l.delays||'').trim()?2:0)+((l.safety_notes||'').trim()?1:0), render:l=>{
+    const hasDelay=!!(l.delays||'').trim(), hasSafety=!!(l.safety_notes||'').trim();
+    if(!hasDelay&&!hasSafety) return <span className="pdlMuted">Clear</span>;
+    return <span className="pdlBadges">{hasDelay&&<Badge tone="overdue">Delays</Badge>}{hasSafety&&<Badge tone="neutral">Safety Note</Badge>}</span>;
+  } };
+  const columns: Column<any>[] = (selected && mode!=='create')
+    ? [dateCol, crewCol, flagsCol, statusCol]
+    : [dateCol, statusCol, weatherCol, tempCol, crewCol, superCol, workCol, flagsCol];
+
+  /** The record's verbs — shared by the row overflow and the rail. */
+  function logActions(log:any): Action[] {
+    const temp = String(log.id).startsWith('temp-');
+    return [
+      { label:'Open Day', icon:<ClipboardText size={15}/>, onClick:()=>viewLog(log) },
+      { label:'Edit Log', icon:<PencilSimple size={15}/>, onClick:()=>openEdit(log), disabled:temp },
+      { label:'Open Full Record', icon:<ArrowSquareOut size={15}/>, href:`/app/daily-logs/${log.id}`, hidden:temp },
+      { label:'Delete', icon:<Trash size={15}/>, onClick:()=>deleteLog(log), tone:'danger', disabled:temp||deleting },
+    ];
+  }
+
+  // ── Day's record (detail workspace) ──
+  const detailOpen = !!selected && mode!=='create';
+  // Stacked layouts: once the record is in the DOM, bring it into view instead of leaving it below the fold.
+  useEffect(()=>{
+    if(!detailOpen) return;
+    const el = detailRef.current;
+    if (el && el.getBoundingClientRect().top > window.innerHeight * 0.6) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[detailOpen, selected?.id]);
+  const chips = (items:any[], withCount=false) => (
+    <div className="pdlChips">
+      {items.map((it:any,i:number)=>(
+        <span key={i} className="pdlChip">
+          {withCount ? <>{it.trade}<b>{Number(it.count)||0}</b></> : String(it)}
+        </span>
+      ))}
+    </div>
+  );
+  const textSection = (title:string, value:string|null|undefined, opts:{warn?:boolean;icon?:React.ReactNode;emptyText?:string}={}) => {
+    const v = (value||'').trim();
+    if(!v && !opts.emptyText) return null;
+    return (
+      <div className="pdlSection">
+        <div className="pdlSectionTitle" data-warn={opts.warn&&v?'true':undefined}>{opts.icon}{title}</div>
+        {v ? <div className="pdlProse" data-warn={opts.warn?'true':undefined}>{v}</div>
+           : <div className="pdlMuted" style={{fontSize:'var(--fs-sm)'}}>{opts.emptyText}</div>}
+      </div>
+    );
+  };
+
+  const detailWorkspace = detailOpen && (
+    <div ref={detailRef} className="pdlDetailCq">
+      <div className="pdlDetail">
+        <Card
+          title={fmtLong(selected.log_date)}
+          subtitle={[selected.weather, tempStr(selected)!=='—'?`${tempStr(selected)}F`:null, selected.superintendent?`Super: ${selected.superintendent}`:null].filter(Boolean).join(' · ') || undefined}
+          actions={<Button variant="ghost" size="sm" icon={<X size={16}/>} aria-label="Close day" title="Close day" onClick={closePanel}/>}
+        >
+          {Array.isArray(selected.manpower_by_trade)&&selected.manpower_by_trade.length>0&&(
+            <div className="pdlSection">
+              <div className="pdlSectionTitle"><UsersThree size={14}/>Manpower by Trade</div>
+              {chips(selected.manpower_by_trade, true)}
+            </div>
+          )}
+          {Array.isArray(selected.subcontractors_on_site)&&selected.subcontractors_on_site.length>0&&(
+            <div className="pdlSection">
+              <div className="pdlSectionTitle"><HardHat size={14}/>Subcontractors On Site</div>
+              {chips(selected.subcontractors_on_site)}
+            </div>
+          )}
+          {Array.isArray(selected.equipment_on_site)&&selected.equipment_on_site.length>0&&(
+            <div className="pdlSection">
+              <div className="pdlSectionTitle"><Wrench size={14}/>Equipment On Site</div>
+              {chips(selected.equipment_on_site)}
+            </div>
+          )}
+          {textSection('Work Performed', selected.work_performed, { icon:<ClipboardText size={14}/>, emptyText:'No work recorded for this day.' })}
+          {textSection('Delays / Issues', selected.delays, { warn:true, icon:<WarningCircle size={14}/>, emptyText:'No delays reported.' })}
+          {textSection('Safety Notes', selected.safety_notes, { icon:<ShieldCheck size={14}/>, emptyText:'No safety issues reported.' })}
+          {textSection('Materials Delivered', selected.materials_delivered, { icon:<Package size={14}/> })}
+          {textSection('Phase of Work', selected.phase_of_work)}
+          {textSection('Equipment Notes', selected.equipment, { icon:<Wrench size={14}/> })}
+          {textSection('Visitors / Inspections', selected.visitors)}
+          {textSection('General Notes', selected.notes)}
+        </Card>
+
+        <aside className="pdlRail" aria-label="Daily log details and actions">
+          <Card title="Details">
+            <div className="pdlSection">
+              <div className="pdlBadges">
+                <Badge tone={logStatus(selected).tone} dot>{logStatus(selected).label}</Badge>
+                {!!(selected.delays||'').trim() && <Badge tone="overdue">Delays</Badge>}
+                {!!(selected.safety_notes||'').trim() && <Badge tone="neutral">Safety Note</Badge>}
+              </div>
+              {logStatus(selected).label==='Draft' && <div className="pdlNext">Finish the day&apos;s log — it is the record that settles a claim.</div>}
+            </div>
+            <div className="pdlSection">
+              <DetailList items={[
+                ['Crew on Site', <span key="crew" className="pdlNum">{Number(selected.crew_count)||0}</span>],
+                ['Superintendent', selected.superintendent || ''],
+                ['Weather', selected.weather || ''],
+                ['High / Low', tempStr(selected)],
+                ['Precipitation', selected.precipitation || ''],
+                ['Wind', selected.wind_conditions || ''],
+                ['Phase of Work', selected.phase_of_work || ''],
+                ['Created', fmtDate(selected.created_at)],
+              ]}/>
+            </div>
+            <div className="pdlSection">
+              <div className="pdlActions">
+                <Button icon={<PencilSimple size={16}/>} onClick={()=>openEdit(selected)} disabled={String(selected.id).startsWith('temp-')}>
+                  Edit Log
+                </Button>
+                <div className="pdlActionsRow">
+                  <Button icon={<ArrowSquareOut size={16}/>} href={String(selected.id).startsWith('temp-')?undefined:`/app/daily-logs/${selected.id}`} disabled={String(selected.id).startsWith('temp-')}>
+                    Open Full Record
+                  </Button>
+                  <RowActions actions={[
+                    { label:'Delete', icon:<Trash size={15}/>, onClick:()=>deleteLog(selected), tone:'danger', disabled:String(selected.id).startsWith('temp-')||deleting },
+                  ]}/>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </aside>
+      </div>
+    </div>
+  );
+
+  // ── Register body: loading / error / empty / no-match / rows — each distinct ──
+  let listBody: React.ReactNode;
+  if (!loading && loadError) {
+    listBody = (
+      <EmptyState
+        icon={<WarningCircle size={22}/>}
+        title="Couldn't load daily logs"
+        text={`${loadError} Nothing has been lost — try again.`}
+        action={<Button icon={<ArrowClockwise size={15}/>} onClick={load}>Retry</Button>}
+      />
+    );
+  } else if (!loading && logs.length===0) {
+    listBody = (
+      <EmptyState
+        icon={<ClipboardText size={22}/>}
+        title="No daily logs yet"
+        text="Start the field record — headcount comes from the clocks and weather from NWS, so Auto-Fill does most of the typing."
+        action={<Button icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>Create First Log</Button>}
+      />
+    );
+  } else {
+    listBody = (
+      <DataTable
+        columns={columns}
+        rows={filtered}
+        rowKey={l=>l.id}
+        loading={loading}
+        defaultSort={{ key:'log_date', dir:'desc' }}
+        onRowClick={viewLog}
+        rowActions={logActions}
+        empty={
+          <EmptyState
+            icon={<ClipboardText size={22}/>}
+            title="No logs match these filters"
+            text="Clear the search, month, or flag filter to see more."
+            action={<Button onClick={clearFilters}>Clear Filters</Button>}
+          />
+        }
+      />
+    );
+  }
+
+  const composerOpen = mode==='create'||mode==='edit';
+  const prev = logs[0];
 
   return (
-    <div style={{display:'flex',height:'100%',minHeight:0,position:'relative',background:DARK}}>
-      {/* Toast */}
-      {toast&&(
-        <div style={{position:'fixed',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:99999,
-          padding:'12px 20px',borderRadius:8,color:'#fff',fontWeight:700,fontSize:14,pointerEvents:'none',
-          background:toast.type==='success'?'rgba(26,138,74,.92)':'rgba(192,48,48,.92)'}}>
-          {toast.msg}
-        </div>
-      )}
+    <div className="pdlWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[
+          { label:'Projects', href:'/app/projects' },
+          { label: ctx?.project?.name || 'Project', href:`/app/projects/${projectId}/overview` },
+          { label:'Daily Logs' },
+        ]}
+        title="Daily Logs"
+        subtitle="Headcount from the clocks, weather from NWS."
+        actions={
+          /* Primary last. Auto-fill is the action this screen exists for,
+             so it sits on the right where the eye lands, not buried at
+             the head of the row ahead of two fallbacks. */
+          <>
+            <Button icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>Blank Log</Button>
+            {logs.length>0&&(
+              <Button icon={<CopySimple size={15} weight="bold"/>} onClick={copyYesterday}>Copy Yesterday</Button>
+            )}
+            <Button variant="primary" icon={<Sparkle size={15} weight="fill"/>} onClick={openAutoFill} disabled={prefilling}>
+              {prefilling?'Assembling draft…':'Auto-Fill Today'}
+            </Button>
+          </>
+        }
+      >
+        {!loadError && <StatRow items={stats}/>}
 
-      {/* Main */}
-      <div style={{flex:1,overflow:'auto',minWidth:0}}>
-        <PremiumSurface maxWidth={2200}>
-          {/* Header */}
-          <ModuleHero
-            eyebrow="Field Reports"
-            eyebrowIcon={<ClipboardText size={13} weight="fill" color={moduleAccent('daily').hex}/>}
-            title="Daily"
-            accent="Logs"
-            subtitle="Headcount from the clocks, weather from NWS."
-            actions={
-              /* Primary last. Auto-fill is the action this screen exists for,
-                 so it sits on the right where the eye lands, not buried at
-                 the head of the row ahead of two fallbacks. */
+        {!loading && !loadError && logs.length>0 && (
+          <Toolbar
+            search={search}
+            onSearch={setSearch}
+            placeholder="Search logs by work, notes, super, or date…"
+            filters={
               <>
-                <button onClick={openCreate} style={ghostButtonStyle} className="pmBtn">
-                  <Plus size={14} weight="bold"/> Blank Log
-                </button>
-                {logs.length>0&&(
-                  <button onClick={copyYesterday} style={ghostButtonStyle} className="pmBtn">
-                    <CopySimple size={14} weight="bold"/> Copy Yesterday
-                  </button>
-                )}
-                <button onClick={openAutoFill} disabled={prefilling}
-                  style={{...goldButtonStyle,padding:'13px 24px',fontSize:14.5,opacity:prefilling?.7:1}}
-                  className="pmBtn">
-                  <Sparkle size={17} weight="fill"/> {prefilling?'Assembling draft…':'Auto-Fill Today'}
-                </button>
+                <Select
+                  aria-label="Month"
+                  value={monthFilter}
+                  onChange={e=>setMonthFilter(e.target.value)}
+                  style={{ width:'auto', minWidth:160 }}
+                  options={[{ value:'', label:'All Months' }, ...months.map(m=>({ value:m, label:monthLabel(m) }))]}
+                />
+                <Select
+                  aria-label="Flags"
+                  value={flagFilter}
+                  onChange={e=>setFlagFilter(e.target.value as FlagFilter)}
+                  style={{ width:'auto', minWidth:150 }}
+                  options={[
+                    { value:'all', label:'All Days' },
+                    { value:'delays', label:'Days with Delays' },
+                    { value:'safety', label:'Days with Safety Notes' },
+                  ]}
+                />
+                {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
               </>
             }
+            actions={<span className="pdlMuted" style={{ fontSize:'var(--fs-sm)' }}>{filtered.length} of {logs.length}</span>}
           />
+        )}
 
-          {/* KPIs */}
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
-            <StatCard icon={<Clipboard size={19} weight="duotone" color={moduleAccent('daily').hex}/>}
-              label="Total Logs" value={String(logs.length)} accent={GOLD} sub="All field reports" delay={0.02} href={`/app/projects/${projectId}/daily-logs`}/>
-            <StatCard icon={<CalendarBlank size={19} weight="duotone" color={moduleAccent('daily').hex}/>}
-              label="This Month" value={String(thisMonth)} sub="Logged this month" delay={0.06} href={`/app/projects/${projectId}/daily-logs`}/>
-            <StatCard icon={<HardHat size={19} weight="duotone" color={moduleAccent('daily').hex}/>}
-              label="Avg Crew / Day" value={String(avgCrew)} accent={GOLD} sub="Workers on site" delay={0.10} href={`/app/projects/${projectId}/crews`}/>
-            <StatCard icon={<WarningCircle size={19} weight="duotone" color={delayDays>0?RED:DIM}/>}
-              label="Days w/ Delays" value={String(delayDays)} accent={delayDays>0?RED:undefined}
-              sub={delayDays>0?'Flagged delays':'None flagged'} delay={0.14} href={`/app/projects/${projectId}/daily-logs`}/>
-          </div>
-
-          {/* What the system already knows about this job */}
-          {ctx && (()=>{
-            const lastLog = ctx.recent?.lastDailyLogDate as string|null;
-            const gap = lastLog ? missedWorkdays(lastLog, new Date().toISOString().split('T')[0]) : 0;
-            return (
-              <StatStrip items={[
-                {href: `/app/projects/${projectId}/daily-logs`, label:'Last Log', value: lastLog ? fmtDay(lastLog) : 'None yet',
-                  accent: gap>0 ? '#f87171' : (lastLog ? '#3dd68c' : undefined),
-                  sub: lastLog ? (gap>0 ? `${gap} workday${gap===1?'':'s'} unlogged` : 'Record is current') : 'Start the record'},
-                {href: `/app/projects/${projectId}/daily-logs`, label:'% Complete', value:`${Number(ctx.project?.percentComplete)||0}%`, sub: ctx.project?.status ? String(ctx.project.status).replace(/_/g,' ').replace(/\b\w/g,(c:string)=>c.toUpperCase()) : 'Project status'},
-                {href: `/app/projects/${projectId}/schedule`, label:'Schedule Tasks', value:String(ctx.counts?.scheduleTasks??0), sub: ctx.schedule?.criticalCount ? `${ctx.schedule.criticalCount} critical open` : 'On the schedule'},
-                {href: `/app/projects/${projectId}/rfis`, label:'Open RFIs', value:String(ctx.counts?.openRfis??0), accent:(Number(ctx.counts?.openRfis)||0)>0?'var(--brand-primary-strong)':undefined, sub:'Awaiting answers'},
-                {href: `/app/projects/${projectId}/submittals`, label:'Open Submittals', value:String(ctx.counts?.openSubmittals??0), sub:'In review'},
-                {href: `/app/projects/${projectId}/punch-list`, label:'Open Punch', value:String(ctx.counts?.openPunch??0), accent:(Number(ctx.counts?.openPunch)||0)>0?'#f87171':undefined, sub:'Items to close'},
-              ]}/>
-            );
-          })()}
-
-          {/* Filters + Log */}
-          <SectionCard
-            title="Log Entries"
-            icon={<ClipboardText size={17} weight="duotone" color={moduleAccent('daily').hex}/>}
-            action={<span style={{fontSize:12,fontWeight:700,color:DIM,whiteSpace:'nowrap'}}>{filtered.length} of {logs.length}</span>}
-            flush
-          >
-            {/* Toolbar */}
-            <div style={{padding:'14px 16px'}}>
-              <ListToolbar
-                module="daily-logs"
-                search={search}
-                onSearch={setSearch}
-                searchPlaceholder="Search logs by work, notes, or date…"
-                filters={[
-                  {key:'month',label:'Month',value:monthFilter,onChange:setMonthFilter,
-                    allValue:'',allLabel:'All Months',options:months},
-                ]}
-                count={{shown:filtered.length,total:logs.length}}
-              />
+        <div className="pdlCq">
+          <div className="pdlSplit" data-open={detailOpen?'true':'false'}>
+            <div className="pdlList">
+              <Card flush>{listBody}</Card>
             </div>
-
-            {loading&&<div style={{padding:40,textAlign:'center',color:DIM}}>Loading logs…</div>}
-
-            {!loading&&loadError&&(
-              <div style={{margin:'0 16px 14px',background:'rgba(192,48,48,.12)',border:'1px solid rgba(192,48,48,.3)',borderRadius:8,padding:'12px 16px',color:'#c03030',fontSize:13}}>
-                {loadError}
-              </div>
-            )}
-
-            {!loading&&filtered.length===0&&(
-              <div style={{padding:'8px 8px 20px'}}>
-                <PremiumEmpty
-                  icon={<Clipboard size={30} weight="duotone" color={GOLD}/>}
-                  title={logs.length===0?'No Daily Logs Yet':'No Logs Match Your Filters'}
-                  description={logs.length===0
-                    ?'Start documenting your daily field activity.'
-                    :'Try adjusting your search or month filter.'}
-                  action={logs.length===0?(
-                    <button onClick={openCreate} style={goldButtonStyle} className="pmBtn">
-                      <Plus size={15} weight="bold"/> Create First Log
-                    </button>
-                  ):undefined}
-                />
-              </div>
-            )}
-
-            {/* Log list */}
-            {!loading&&filtered.length>0&&(
-              <div style={{display:'flex',flexDirection:'column',gap:10,padding:'4px 16px 16px',borderTop:`1px solid rgba(255,255,255,0.06)`}}>
-                {filtered.map((log:any)=>{
-                  const isSel = selected?.id===log.id && mode==='view';
-                  return (
-                    <div key={log.id} onClick={()=>viewLog(log)}
-                      style={{background:isSel?'var(--brand-primary-08)':RAISED,
-                        border:`1px solid ${isSel?GOLD:BORDER}`,borderRadius:10,
-                        padding:'14px 18px',cursor:'pointer',transition:'all .15s'}}
-                      onMouseEnter={e=>{if(!isSel)e.currentTarget.style.borderColor='color-mix(in srgb, var(--brand-primary) 40%, transparent)';}}
-                      onMouseLeave={e=>{if(!isSel)e.currentTarget.style.borderColor=BORDER;}}>
-                      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10}}>
-                        <div>
-                          <div style={{fontWeight:800,fontSize:15,color:TEXT}}>
-                            {new Date(log.log_date+'T12:00:00').toLocaleDateString('en-US',
-                              {weekday:'short',month:'short',day:'numeric',year:'numeric'})}
-                          </div>
-                          <div style={{fontSize:12,color:DIM,marginTop:3,display:'flex',gap:12,flexWrap:'wrap'}}>
-                            {log.weather&&<span>{log.weather}</span>}
-                            {(log.high_temp||log.low_temp)&&
-                              <span><Thermometer size={14} weight="fill" color={DIM} style={{verticalAlign:'middle'}}/> {log.high_temp??'?'}° / {log.low_temp??'?'}°F</span>}
-                            {log.crew_count?<span><HardHat size={14} weight="fill" color={DIM} style={{verticalAlign:'middle'}}/> {log.crew_count} crew</span>:null}
-                          </div>
-                        </div>
-                        <div style={{display:'flex',gap:6,flexShrink:0}}>
-                          {log.delays?.trim()&&(
-                            <span style={{fontSize:10,fontWeight:700,padding:'3px 8px',borderRadius:4,
-                              background:'rgba(192,48,48,.15)',color:'#f87171',letterSpacing:.3}}>
-                              Delays
-                            </span>
-                          )}
-                          {log.safety_notes?.trim()&&(
-                            <span style={{fontSize:10,fontWeight:700,padding:'3px 8px',borderRadius:4,
-                              background:'color-mix(in srgb, var(--brand-primary) 15%, transparent)',color:GOLD,letterSpacing:.3}}>
-                              Safety
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      {log.work_performed&&(
-                        <div style={{marginTop:8,fontSize:13,color:DIM,lineHeight:1.4,
-                          overflow:'hidden',display:'-webkit-box',
-                          WebkitLineClamp:2,WebkitBoxOrient:'vertical' as any}}>
-                          {log.work_performed}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </SectionCard>
-        </PremiumSurface>
-      </div>
-
-      {/* Side panel */}
-      {panelOpen&&(
-        <div style={{width:480,borderLeft:`1px solid ${BORDER}`,background:DARK,
-          overflow:'auto',flexShrink:0,display:'flex',flexDirection:'column'}}>
-          {/* Panel header */}
-          <div style={{padding:'16px 20px',borderBottom:`1px solid ${BORDER}`,
-            display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-            <div style={{fontWeight:800,fontSize:15,color:TEXT}}>
-              {mode==='create'?'New Daily Log':mode==='edit'?'Edit Log':'Log Detail'}
-            </div>
-            <div style={{display:'flex',gap:8}}>
-              {mode==='view'&&selected&&(
-                <>
-                  <button onClick={()=>openEdit(selected)}
-                    style={{padding:'6px 14px',background:'var(--brand-primary-12)',
-                      border:'1px solid var(--brand-primary-25)',borderRadius:6,
-                      color:'var(--brand-primary-strong)',fontSize:12,fontWeight:700,cursor:'pointer'}}>
-                    Edit
-                  </button>
-                  <button onClick={()=>deleteLog(selected)} disabled={deleting}
-                    style={{padding:'6px 14px',background:'rgba(192,48,48,.1)',
-                      border:`1px solid ${RED}44`,borderRadius:6,
-                      color:RED,fontSize:12,fontWeight:700,cursor:'pointer'}}>
-                    {deleting?'…':'Delete'}
-                  </button>
-                </>
-              )}
-              <button onClick={closePanel}
-                style={{padding:'6px 10px',background:'rgba(143,163,192,.1)',
-                  border:`1px solid ${BORDER}`,borderRadius:6,color:DIM,fontSize:12,cursor:'pointer'}}>
-                <X size={14} weight="bold" color={DIM}/>
-              </button>
-            </div>
-          </div>
-
-          <div style={{flex:1,overflow:'auto',padding:20}}>
-            {(mode==='create'||mode==='edit')?(
-              /* FORM */
-              <div style={{display:'flex',flexDirection:'column',gap:16}}>
-                {mode==='create' && (()=>{
-                  const lastLog = ctx?.recent?.lastDailyLogDate || logs[0]?.log_date || null;
-                  const gap = lastLog ? missedWorkdays(lastLog, new Date().toISOString().split('T')[0]) : 0;
-                  const prev = logs[0];
-                  return (
-                    <div style={{background:gap>0?'rgba(192,48,48,.07)':RAISED,
-                      border:`1px solid ${gap>0?'rgba(192,48,48,.3)':BORDER}`,borderRadius:10,padding:'12px 14px'}}>
-                      <div style={{display:'flex',alignItems:'center',gap:8,fontSize:12.5,fontWeight:700,color:gap>0?'#f87171':TEXT}}>
-                        {gap>0 && <WarningCircle size={16} weight="fill" color="#f87171"/>}
-                        {lastLog
-                          ? gap>0
-                            ? `Gap in the record — last log ${fmtDay(lastLog)}, ${gap} workday${gap===1?'':'s'} unlogged.`
-                            : `Last log: ${fmtDay(lastLog)} — record is current.`
-                          : 'First daily log on this project — it starts the field record.'}
-                      </div>
-                      {prev && (
-                        <div style={{marginTop:8,paddingTop:8,borderTop:`1px solid rgba(255,255,255,0.08)`}}>
-                          <InsightRow label="Prev Crew" value={`${prev.crew_count||0} on site`}/>
-                          {prev.weather ? <InsightRow label="Prev Weather" value={`${prev.weather}${prev.high_temp!=null?` · ${prev.high_temp}°/${prev.low_temp??'—'}°F`:''}`}/> : null}
-                          {prev.superintendent ? <InsightRow label="Prev Super" value={prev.superintendent}/> : null}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
-
-                <Field label={<>Log Date{mode==='create'&&auto.date&&<AutoChip/>}</>}
-                  hint={mode==='create'?'Defaulted to today — backfill any missed day.':undefined}>
-                  <SaguaroDatePicker value={form.log_date}
-                    onChange={v=>setForm(f=>({...f,log_date:v}))}
-                    style={inp}/>
-                </Field>
-
-                <Field label="Superintendent"
-                  hint={mode==='create'&&logs[0]?.superintendent?`Last log: ${logs[0].superintendent}.`:undefined}>
-                  <input value={form.superintendent}
-                    onChange={e=>setForm(f=>({...f,superintendent:e.target.value}))}
-                    style={inp} placeholder="Who ran the site today"/>
-                </Field>
-
-                {/* NOBODY TYPES WEATHER — the create route stamps NWS server-side
-                    whenever the fields are left blank. Say so, visibly. */}
-                {mode==='create'&&(
-                  <div style={{display:'flex',gap:10,alignItems:'flex-start',
-                    background:'var(--brand-primary-08)',border:'1px solid var(--brand-primary-25)',
-                    borderRadius:9,padding:'11px 13px'}}>
-                    <CloudSun size={18} weight="fill" color={GOLD} style={{flexShrink:0,marginTop:1}}/>
-                    <div style={{fontSize:12.5,color:TEXT,lineHeight:1.55}}>
-                      <b>Weather stamps itself.</b> Leave the weather fields blank — conditions,
-                      temps, wind and precipitation auto-stamp from the National Weather Service
-                      when you save.
-                    </div>
-                  </div>
-                )}
-
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10}}>
-                  <Field label="Weather">
-                    <Suggest value={form.weather}
-                      onChange={e=>setForm(f=>({...f,weather:e.target.value}))}
-                      style={inp} placeholder={mode==='create'?'Auto (NWS)':'Clear, 10 mph W, dusty…'} options={['w']} />
-                    </Field>
-                  <Field label="High °F">
-                    <input type="number" value={form.high_temp}
-                      onChange={e=>setForm(f=>({...f,high_temp:e.target.value}))}
-                      style={inp} placeholder={mode==='create'?'Auto':'95'}/>
-                  </Field>
-                  <Field label="Low °F">
-                    <input type="number" value={form.low_temp}
-                      onChange={e=>setForm(f=>({...f,low_temp:e.target.value}))}
-                      style={inp} placeholder={mode==='create'?'Auto':'72'}/>
-                  </Field>
-                </div>
-
-                <Field label={<>Crew Count{mode==='create'&&auto.crew&&<AutoChip/>}</>}
-                  hint={mode==='create'&&auto.crew
-                    ?'Counted from clock-ins (web + mobile) or carried from your last log — adjust for today.'
-                    :undefined}>
-                  <input type="number" value={form.crew_count}
-                    onChange={e=>setForm(f=>({...f,crew_count:e.target.value}))}
-                    style={inp} placeholder="0" min={0}/>
-                </Field>
-
-                <Field
-                  label={<><UsersThree size={13} weight="fill" color={moduleAccent('daily').hex} style={{verticalAlign:'-2px',marginRight:5}}/>Manpower by Trade{mode==='create'&&auto.manpower&&<AutoChip/>}</>}
-                  hint={auto.manpower
-                    ?'Pulled from your active crews and rosters. When lines are present, their total becomes the saved crew count.'
-                    :'Break the headcount down by trade. When lines are present, their total becomes the saved crew count.'}>
-                  <ManpowerEditor rows={form.manpower_by_trade||[]}
-                    onChange={v=>setForm(f=>({...f,manpower_by_trade:v}))}/>
-                </Field>
-
-                <Field label={<>Subcontractors On Site{mode==='create'&&auto.subs&&<AutoChip/>}</>}
-                  hint={auto.subs?'Companies from the project team — remove any that were not on site today.':undefined}>
-                  <ChipEditor items={form.subcontractors_on_site||[]}
-                    onChange={v=>setForm(f=>({...f,subcontractors_on_site:v}))}
-                    placeholder="Add a subcontractor…"/>
-                </Field>
-
-                <Field label="Equipment On Site">
-                  <ChipEditor items={form.equipment_on_site||[]}
-                    onChange={v=>setForm(f=>({...f,equipment_on_site:v}))}
-                    placeholder="Add equipment (excavator, crane, lifts…)"/>
-                </Field>
-
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-                  <Field label={<>Phase of Work{mode==='create'&&auto.carry&&!!form.phase_of_work&&<AutoChip label="Carried"/>}</>}>
-                    <input value={form.phase_of_work}
-                      onChange={e=>setForm(f=>({...f,phase_of_work:e.target.value}))}
-                      style={inp} placeholder="Foundations, framing, MEP rough-in…"/>
-                  </Field>
-                  <Field label={<>Equipment Notes{mode==='create'&&auto.carry&&!!form.equipment&&<AutoChip label="Carried"/>}</>}>
-                    <input value={form.equipment}
-                      onChange={e=>setForm(f=>({...f,equipment:e.target.value}))}
-                      style={inp} placeholder="Hours, downtime, rentals…"/>
-                  </Field>
-                </div>
-
-                <Field label="Work Performed">
-                  <textarea value={form.work_performed}
-                    onChange={e=>setForm(f=>({...f,work_performed:e.target.value}))}
-                    rows={4} style={{...inp,resize:'vertical',lineHeight:1.5}}
-                    placeholder="Describe work completed today…"/>
-                </Field>
-
-                <Field label="Delays / Issues">
-                  <textarea value={form.delays}
-                    onChange={e=>setForm(f=>({...f,delays:e.target.value}))}
-                    rows={2} style={{...inp,resize:'vertical',lineHeight:1.5}}
-                    placeholder="Any delays, blockers, or issues encountered…"/>
-                </Field>
-
-                <Field label="Safety Notes">
-                  <textarea value={form.safety_notes}
-                    onChange={e=>setForm(f=>({...f,safety_notes:e.target.value}))}
-                    rows={2} style={{...inp,resize:'vertical',lineHeight:1.5}}
-                    placeholder="Safety observations, incidents, toolbox talks…"/>
-                </Field>
-
-                <Field label="Materials Delivered">
-                  <textarea value={form.materials_delivered}
-                    onChange={e=>setForm(f=>({...f,materials_delivered:e.target.value}))}
-                    rows={2} style={{...inp,resize:'vertical',lineHeight:1.5}}
-                    placeholder="List materials received on site…"/>
-                </Field>
-
-                <Field label="Visitors / Inspections">
-                  <input value={form.visitors}
-                    onChange={e=>setForm(f=>({...f,visitors:e.target.value}))}
-                    style={inp} placeholder="Inspector, owner rep, architect…"/>
-                </Field>
-
-                <Field label="General Notes">
-                  <textarea value={form.notes}
-                    onChange={e=>setForm(f=>({...f,notes:e.target.value}))}
-                    rows={3} style={{...inp,resize:'vertical',lineHeight:1.5}}
-                    placeholder="Any other notes…"/>
-                </Field>
-
-                <div style={{display:'flex',gap:10,paddingTop:4}}>
-                  <button onClick={save} disabled={saving}
-                    style={{flex:1,padding:'11px 0',
-                      background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,
-                      border:'none',borderRadius:8,color:'#0A0A00',
-                      fontSize:14,fontWeight:800,cursor:'pointer',opacity:saving?.6:1}}>
-                    {saving?'Saving…':mode==='create'?'Create Log':'Save Changes'}
-                  </button>
-                  <button onClick={closePanel}
-                    style={{padding:'11px 16px',background:'rgba(143,163,192,.1)',
-                      border:`1px solid ${BORDER}`,borderRadius:8,color:DIM,
-                      fontSize:14,cursor:'pointer'}}>
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ):selected?(
-              /* VIEW */
-              <div style={{display:'flex',flexDirection:'column',gap:16}}>
-                <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:16}}>
-                  <div style={{fontSize:18,fontWeight:800,color:TEXT,marginBottom:6}}>
-                    {new Date(selected.log_date+'T12:00:00').toLocaleDateString('en-US',
-                      {weekday:'long',month:'long',day:'numeric',year:'numeric'})}
-                  </div>
-                  <div style={{display:'flex',gap:16,fontSize:13,color:DIM,flexWrap:'wrap'}}>
-                    {selected.weather&&<span>{selected.weather}</span>}
-                    {(selected.high_temp||selected.low_temp)&&(
-                      <span><Thermometer size={15} weight="fill" color={DIM} style={{verticalAlign:'middle'}}/> {selected.high_temp??'?'}° / {selected.low_temp??'?'}°F</span>
-                    )}
-                    {selected.crew_count&&<span><HardHat size={15} weight="fill" color={DIM} style={{verticalAlign:'middle'}}/> {selected.crew_count} crew members</span>}
-                    {selected.superintendent&&<span>Super: {selected.superintendent}</span>}
-                  </div>
-                </div>
-                {Array.isArray(selected.manpower_by_trade)&&selected.manpower_by_trade.length>0&&(
-                  <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
-                    <div style={{fontSize:10,fontWeight:700,color:DIM, marginBottom:8}}>
-                      Manpower by Trade
-                    </div>
-                    <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
-                      {selected.manpower_by_trade.map((m:any,i:number)=>(
-                        <span key={i} style={{display:'inline-flex',alignItems:'center',gap:7,padding:'5px 11px',
-                          background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.13)',
-                          borderRadius:999,fontSize:12.5,color:DIM,fontWeight:600}}>
-                          {m.trade}
-                          <span style={{fontWeight:800,color:TEXT}}>{Number(m.count)||0}</span>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {Array.isArray(selected.subcontractors_on_site)&&selected.subcontractors_on_site.length>0&&(
-                  <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
-                    <div style={{fontSize:10,fontWeight:700,color:DIM, marginBottom:8}}>
-                      Subcontractors On Site
-                    </div>
-                    <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
-                      {selected.subcontractors_on_site.map((s:string,i:number)=>(
-                        <span key={i} style={{padding:'5px 11px',background:'rgba(255,255,255,0.06)',
-                          border:'1px solid rgba(255,255,255,0.13)',borderRadius:999,fontSize:12.5,color:TEXT,fontWeight:600}}>
-                          {s}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {Array.isArray(selected.equipment_on_site)&&selected.equipment_on_site.length>0&&(
-                  <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
-                    <div style={{fontSize:10,fontWeight:700,color:DIM, marginBottom:8}}>
-                      Equipment On Site
-                    </div>
-                    <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
-                      {selected.equipment_on_site.map((s:string,i:number)=>(
-                        <span key={i} style={{padding:'5px 11px',background:'rgba(255,255,255,0.06)',
-                          border:'1px solid rgba(255,255,255,0.13)',borderRadius:999,fontSize:12.5,color:TEXT,fontWeight:600}}>
-                          {s}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                <Section label="Work Performed" value={selected.work_performed}/>
-                <Section label="Delays / Issues" value={selected.delays} warn={!!selected.delays?.trim()}/>
-                <Section label="Safety Notes" value={selected.safety_notes}/>
-                <Section label="Materials Delivered" value={selected.materials_delivered}/>
-                {selected.phase_of_work&&<Section label="Phase of Work" value={selected.phase_of_work}/>}
-                {selected.equipment&&<Section label="Equipment Notes" value={selected.equipment}/>}
-                {selected.visitors&&<Section label="Visitors / Inspections" value={selected.visitors}/>}
-                {selected.notes&&<Section label="General Notes" value={selected.notes}/>}
-              </div>
-            ):null}
+            {detailWorkspace}
           </div>
         </div>
-      )}
-      <UnsavedGuardModal guard={guard} />
+      </PageShell>
+
+      {/* ── Composer: create / edit ───────────────────────────────── */}
+      <FormModal
+        open={composerOpen}
+        onClose={closeComposer}
+        title={mode==='edit' ? `Edit Log — ${fmtDate(form.log_date)}` : 'New Daily Log'}
+        subtitle={mode==='edit' ? (ctx?.project?.name || undefined) : `${ctx?.project?.name ? `${ctx.project.name} · ` : ''}only type what the system cannot know.`}
+        onSubmit={async()=>{ await save(); }}
+        submitLabel={mode==='create'?'Create Log':'Save Changes'}
+        busy={saving}
+      >
+        {mode==='create' && (()=>{
+          const lastLog = ctx?.recent?.lastDailyLogDate || logs[0]?.log_date || null;
+          const gap = lastLog ? missedWorkdays(lastLog, localToday()) : 0;
+          return (
+            <div className="pdlBanner" data-gap={gap>0?'true':'false'}>
+              <div className="pdlBannerTitle">
+                {gap>0 && <WarningCircle size={16} weight="fill"/>}
+                {lastLog
+                  ? gap>0
+                    ? `Gap in the record — last log ${fmtDay(lastLog)}, ${gap} workday${gap===1?'':'s'} unlogged.`
+                    : `Last log: ${fmtDay(lastLog)} — record is current.`
+                  : 'First daily log on this project — it starts the field record.'}
+              </div>
+              {prev && (
+                <div style={{marginTop:8,paddingTop:8,borderTop:'1px solid var(--border-subtle)'}}>
+                  <InsightRow label="Prev Crew" value={`${prev.crew_count||0} on site`}/>
+                  {prev.weather ? <InsightRow label="Prev Weather" value={`${prev.weather}${prev.high_temp!=null?` · ${prev.high_temp}°/${prev.low_temp??'—'}°F`:''}`}/> : null}
+                  {prev.superintendent ? <InsightRow label="Prev Super" value={prev.superintendent}/> : null}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* NOBODY TYPES WEATHER — the create route stamps NWS server-side
+            whenever the fields are left blank. Say so, visibly. */}
+        {mode==='create'&&(
+          <div className="pdlNote">
+            <CloudSun size={18} weight="fill" style={{flexShrink:0,color:'var(--brand-primary)'}}/>
+            <div><b>Weather stamps itself.</b> Leave the weather fields blank — conditions, temps, wind and precipitation auto-stamp from the National Weather Service when you save.</div>
+          </div>
+        )}
+
+        <FormGrid cols={2}>
+          <Field label="Log Date" hint={mode==='create'?'Defaulted to today — backfill any missed day.':undefined}>
+            <div className="pdlDateInput"><SaguaroDatePicker value={form.log_date} onChange={v=>setForm(f=>({...f,log_date:v}))} style={DATE_INPUT_STYLE}/></div>
+          </Field>
+          <Field label="Superintendent" hint={mode==='create'&&logs[0]?.superintendent?`Last log: ${logs[0].superintendent}.`:undefined}>
+            <Input value={form.superintendent} onChange={e=>setForm(f=>({...f,superintendent:e.target.value}))} placeholder="Who ran the site today"/>
+          </Field>
+          <Field label="Weather">
+            <Suggest className="k-input" value={form.weather} onChange={e=>setForm(f=>({...f,weather:e.target.value}))} placeholder={mode==='create'?'Auto (NWS)':'Clear, 10 mph W, dusty…'} options={['w']} />
+          </Field>
+          <Field label="Crew Count" hint={mode==='create'&&auto.crew ? 'Counted from clock-ins (web + mobile) or carried from your last log — adjust for today.' : undefined}>
+            <Input type="number" value={form.crew_count} onChange={e=>setForm(f=>({...f,crew_count:e.target.value}))} placeholder="0" min={0}/>
+          </Field>
+          <Field label="High °F">
+            <Input type="number" value={form.high_temp} onChange={e=>setForm(f=>({...f,high_temp:e.target.value}))} placeholder={mode==='create'?'Auto':'95'}/>
+          </Field>
+          <Field label="Low °F">
+            <Input type="number" value={form.low_temp} onChange={e=>setForm(f=>({...f,low_temp:e.target.value}))} placeholder={mode==='create'?'Auto':'72'}/>
+          </Field>
+          <Field label="Manpower by Trade" span
+            hint={<>{mode==='create'&&auto.manpower&&<AutoChip/>}{auto.manpower
+              ? ' Pulled from your active crews and rosters. When lines are present, their total becomes the saved crew count.'
+              : 'Break the headcount down by trade. When lines are present, their total becomes the saved crew count.'}</>}>
+            <ManpowerEditor rows={form.manpower_by_trade||[]} onChange={v=>setForm(f=>({...f,manpower_by_trade:v}))}/>
+          </Field>
+          <Field label="Subcontractors On Site" hint={auto.subs?<><AutoChip/> Companies from the project team — remove any that were not on site today.</>:undefined}>
+            <ChipEditor items={form.subcontractors_on_site||[]} onChange={v=>setForm(f=>({...f,subcontractors_on_site:v}))} placeholder="Add a subcontractor…"/>
+          </Field>
+          <Field label="Equipment On Site">
+            <ChipEditor items={form.equipment_on_site||[]} onChange={v=>setForm(f=>({...f,equipment_on_site:v}))} placeholder="Add equipment (excavator, crane, lifts…)"/>
+          </Field>
+          <Field label="Phase of Work" hint={mode==='create'&&auto.carry&&!!form.phase_of_work?<AutoChip label="Carried"/>:undefined}>
+            <Input value={form.phase_of_work} onChange={e=>setForm(f=>({...f,phase_of_work:e.target.value}))} placeholder="Foundations, framing, MEP rough-in…"/>
+          </Field>
+          <Field label="Equipment Notes" hint={mode==='create'&&auto.carry&&!!form.equipment?<AutoChip label="Carried"/>:undefined}>
+            <Input value={form.equipment} onChange={e=>setForm(f=>({...f,equipment:e.target.value}))} placeholder="Hours, downtime, rentals…"/>
+          </Field>
+          <Field label="Work Performed" span>
+            <Textarea value={form.work_performed} onChange={e=>setForm(f=>({...f,work_performed:e.target.value}))} rows={4} placeholder="Describe work completed today…"/>
+          </Field>
+          <Field label="Delays / Issues" span>
+            <Textarea value={form.delays} onChange={e=>setForm(f=>({...f,delays:e.target.value}))} rows={2} placeholder="Any delays, blockers, or issues encountered…"/>
+          </Field>
+          <Field label="Safety Notes" span>
+            <Textarea value={form.safety_notes} onChange={e=>setForm(f=>({...f,safety_notes:e.target.value}))} rows={2} placeholder="Safety observations, incidents, toolbox talks…"/>
+          </Field>
+          <Field label="Materials Delivered" span>
+            <Textarea value={form.materials_delivered} onChange={e=>setForm(f=>({...f,materials_delivered:e.target.value}))} rows={2} placeholder="List materials received on site…"/>
+          </Field>
+          <Field label="Visitors / Inspections" span>
+            <Input value={form.visitors} onChange={e=>setForm(f=>({...f,visitors:e.target.value}))} placeholder="Inspector, owner rep, architect…"/>
+          </Field>
+          <Field label="General Notes" span>
+            <Textarea value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} rows={3} placeholder="Any other notes…"/>
+          </Field>
+        </FormGrid>
+      </FormModal>
+
+      {/* Above the FormModal overlay so the unsaved-work prompt is never hidden behind it. */}
+      <div style={{ position:'relative', zIndex:10001 }}>
+        <UnsavedGuardModal guard={guard} />
+      </div>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
     </div>
   );
 }

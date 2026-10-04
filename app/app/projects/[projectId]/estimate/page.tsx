@@ -215,9 +215,9 @@ export default function EstimatePage() {
             <StatStrip items={[
               {href: `/app/projects/${projectId}/estimate`,  label: 'Estimate Total', value: fmt0(takeoff.total_cost), accent: 'var(--brand-primary-strong)', sub: takeoff.materials.length + ' lines · ' + rollup.length + ' division' + (rollup.length === 1 ? '' : 's') },
               {href: `/app/projects/${projectId}/budget`,  label: 'Project Budget', value: fmt0(budgetOriginal), sub: budgetLineCount > 0 ? budgetLineCount + ' CSI-coded lines' : 'No budget lines yet' },
-              {href: `/app/projects/${projectId}/budget`,  label: 'Est. vs. Budget', value: budgetOriginal > 0 ? fmtSigned(estBudgetDelta) : '—', accent: budgetOriginal > 0 ? (estBudgetDelta > 0 ? '#ef4444' : '#3dd68c') : undefined, sub: budgetOriginal > 0 ? (estBudgetDelta > 0 ? 'Estimate runs over the budget' : 'Estimate fits inside the budget') : 'Seed the budget to compare' },
+              {href: `/app/projects/${projectId}/budget`,  label: 'Est. vs. Budget', value: budgetOriginal > 0 ? fmtSigned(estBudgetDelta) : '—', accent: budgetOriginal > 0 ? (estBudgetDelta > 0 ? '#FF3B30' : '#2CFF7A') : undefined, sub: budgetOriginal > 0 ? (estBudgetDelta > 0 ? 'Estimate runs over the budget' : 'Estimate fits inside the budget') : 'Seed the budget to compare' },
               {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmt0(revisedContract), sub: (Number(money?.approvedCoCount) || 0) + ' approved CO' + ((Number(money?.approvedCoCount) || 0) === 1 ? '' : 's') },
-              {href: `/app/projects/${projectId}/estimate`,  label: 'Implied Margin', value: revisedContract > 0 ? fmt0(impliedMargin) : '—', accent: revisedContract > 0 ? (impliedMargin >= 0 ? '#3dd68c' : '#ef4444') : undefined, sub: revisedContract > 0 ? Math.round((impliedMargin / revisedContract) * 100) + '% of revised contract' : 'Set the contract to see margin' },
+              {href: `/app/projects/${projectId}/estimate`,  label: 'Implied Margin', value: revisedContract > 0 ? fmt0(impliedMargin) : '—', accent: revisedContract > 0 ? (impliedMargin >= 0 ? '#2CFF7A' : '#FF3B30') : undefined, sub: revisedContract > 0 ? Math.round((impliedMargin / revisedContract) * 100) + '% of revised contract' : 'Set the contract to see margin' },
             ]} />
           )}
 
@@ -272,7 +272,7 @@ export default function EstimatePage() {
                           {budgetLineCount > 0 && (
                             <>
                               <td style={{ padding: '9px 14px', textAlign: 'right', color: r.budget > 0 ? T.white : T.muted, whiteSpace: 'nowrap' }}>{r.budget > 0 ? fmt(r.budget) : '—'}</td>
-                              <td style={{ padding: '9px 14px', textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap', color: r.budget > 0 ? (variance > 0 ? '#ef4444' : '#3dd68c') : T.muted }}>{r.budget > 0 ? fmtSigned(variance) : 'Not budgeted'}</td>
+                              <td style={{ padding: '9px 14px', textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap', color: r.budget > 0 ? (variance > 0 ? '#FF3B30' : '#2CFF7A') : T.muted }}>{r.budget > 0 ? fmtSigned(variance) : 'Not budgeted'}</td>
                             </>
                           )}
                         </tr>
@@ -288,7 +288,7 @@ export default function EstimatePage() {
                       {budgetLineCount > 0 && (
                         <>
                           <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: T.white, whiteSpace: 'nowrap' }}>{fmt(budgetOriginal)}</td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, whiteSpace: 'nowrap', color: matBudgetDelta > 0 ? '#ef4444' : '#3dd68c' }}>{fmtSigned(matBudgetDelta)}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, whiteSpace: 'nowrap', color: matBudgetDelta > 0 ? '#FF3B30' : '#2CFF7A' }}>{fmtSigned(matBudgetDelta)}</td>
                         </>
                       )}
                     </tr>
@@ -349,13 +349,13 @@ export default function EstimatePage() {
               {budgetOriginal > 0 && (
                 <div style={{ textAlign: 'right', paddingLeft: 24, borderLeft: `1px solid ${T.border}` }}>
                   <div style={{ fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 4 }}>vs. Budget</div>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: estBudgetDelta > 0 ? '#ef4444' : '#3dd68c' }}>{fmtSigned(estBudgetDelta)}</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: estBudgetDelta > 0 ? '#FF3B30' : '#2CFF7A' }}>{fmtSigned(estBudgetDelta)}</div>
                 </div>
               )}
               {revisedContract > 0 && (
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 4 }}>Implied Margin</div>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: impliedMargin >= 0 ? '#3dd68c' : '#ef4444' }}>{fmt0(impliedMargin)}</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: impliedMargin >= 0 ? '#2CFF7A' : '#FF3B30' }}>{fmt0(impliedMargin)}</div>
                 </div>
               )}
             </div>

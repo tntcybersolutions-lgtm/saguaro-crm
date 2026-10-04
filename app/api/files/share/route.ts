@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
         if (blob) attachments.push({ filename: name, content: Buffer.from(await blob.arrayBuffer()) });
       }
       const html = `<div style="font-family:Arial,sans-serif;color:#111"><p>${(message || `${user.email} shared a file with you.`).replace(/</g, '&lt;')}</p>
-        <p style="margin:16px 0"><a href="${shareUrl}" style="background:#D4A017;color:#0D1116;font-weight:700;padding:11px 20px;border-radius:6px;text-decoration:none">Open ${name}</a></p>
+        <p style="margin:16px 0"><a href="${shareUrl}" style="background:#FFE600;color:#0D1116;font-weight:700;padding:11px 20px;border-radius:6px;text-decoration:none">Open ${name}</a></p>
         ${attachments.length ? '<p style="color:#666;font-size:12px">The file is attached, and also available at the link above (valid 30 days).</p>' : '<p style="color:#666;font-size:12px">Link valid 30 days.</p>'}</div>`;
       if (!key) return NextResponse.json({ ok: true, url: shareUrl, warning: 'Email is not configured (no RESEND_API_KEY) — share link returned instead.' });
       const resend = new Resend(key);

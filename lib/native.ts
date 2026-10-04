@@ -426,7 +426,7 @@ export async function scheduleNotification(opts: {
             schedule: { at: opts.at },
             extra: opts.data ?? null,
             smallIcon: 'ic_stat_saguaro',
-            iconColor: '#D4A017',
+            iconColor: '#FFE600',
           },
         ],
       });

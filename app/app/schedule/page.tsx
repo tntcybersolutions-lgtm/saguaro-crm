@@ -1,36 +1,38 @@
 'use client';
 /**
- * Schedule — full construction schedule module.
+ * Schedule — full construction schedule module, Pass 4 on the kit.
  *
- * Wired to:
+ * Anatomy: title + one primary action (New Task) → StatRow (total / in
+ * progress / complete / overdue — each tile filters the list) → Toolbar
+ * (search, project, status, List | Timeline) → the task list (kit DataTable
+ * with inline % / status / predecessor editors, row actions Mark Complete and
+ * Delete) or the dependency-aware SVG Gantt. The composer opens in a FormModal.
+ *
+ * Wired to (unchanged):
  *   GET    /api/schedule/list            → { tasks: [...] } (tenant-scoped)
  *   POST   /api/schedule/create          → create a task
  *   PUT    /api/schedule/[id]            → inline edit (% / status / predecessor / dates)
  *   DELETE /api/schedule/[id]            → delete a task
- *
- * Two views (List / Timeline). List has inline % + status + predecessor editing,
- * mark-complete and delete that PUT/DELETE immediately. Timeline is a dependency-aware
- * SVG Gantt (bars start→end, predecessor_id links drawn finish-to-start).
  *
  * Columns are the REAL live schedule_tasks columns: name, phase, trade, start_date,
  * end_date, pct_complete, status, predecessor_id, duration. (The table has no
  * assigned_to / notes columns — those are intentionally absent here.)
  */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
 import { useRouter } from 'next/navigation';
-import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
 import {
-  Plus, Warning, CheckCircle, Trash, GitBranch, ListBullets, ChartBar,
-  CircleNotch, CalendarBlank,
+  Plus, Warning, CheckCircle, Trash, GitBranch, ListBullets, ChartBar, CalendarBlank, ArrowSquareOut,
 } from '@phosphor-icons/react';
-import DataTable from '../../../components/DataTable';
-import { colors, font, radius } from '../../../lib/design-tokens';
-import { PremiumFX, ModuleHero, StatStrip, AutoChip, IconChip, goldButtonStyle } from '@/components/ui/premium';
-import { moduleAccent } from '@/lib/module-identity';
-import { StandardSelect } from '@/components/ui/Select';
+import {
+  PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState,
+  FormModal, Field, Input, Select, FormGrid,
+  type Column, type Action, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import { AutoChip, InsightRow } from '@/components/ui/premium';
 import { tradeOptions } from '@/lib/taxonomy';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
@@ -52,31 +54,31 @@ interface ScheduleTask {
 
 interface Project { id: string; name: string; }
 
-const columnHelper = createColumnHelper<ScheduleTask>();
-
 // Canonical statuses (task spec). Legacy values kept tolerant so old rows still render.
-const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  not_started: { label: 'Not Started', color: colors.textDim },
-  in_progress: { label: 'In Progress', color: colors.blue },
-  complete: { label: 'Complete', color: colors.green },
-  blocked: { label: 'Blocked', color: colors.red },
-  delayed: { label: 'Delayed', color: colors.orange },
-  on_hold: { label: 'On Hold', color: colors.orange },
+// Colors come from the six status kinds: Not Started grey, In Progress blue,
+// Complete green, Blocked red, Delayed / On Hold amber.
+const STATUS_MAP: Record<string, { label: string; tone: BadgeTone; css: string }> = {
+  not_started: { label: 'Not Started', tone: 'closed', css: 'var(--status-closed)' },
+  in_progress: { label: 'In Progress', tone: 'lead', css: 'var(--status-lead)' },
+  complete: { label: 'Complete', tone: 'ongoing', css: 'var(--status-ongoing)' },
+  blocked: { label: 'Blocked', tone: 'overdue', css: 'var(--status-overdue)' },
+  delayed: { label: 'Delayed', tone: 'under_contract', css: 'var(--status-under-contract)' },
+  on_hold: { label: 'On Hold', tone: 'under_contract', css: 'var(--status-under-contract)' },
 };
 const STATUS_OPTIONS = ['not_started', 'in_progress', 'complete', 'blocked'] as const;
 const STATUS_SELECT_OPTIONS = STATUS_OPTIONS.map((s) => ({ value: s, label: STATUS_MAP[s].label }));
+const STATUS_RANK: Record<string, number> = { blocked: 0, in_progress: 1, not_started: 2, delayed: 3, on_hold: 3, complete: 4 };
 
 function statusCfg(s?: string | null) {
   return STATUS_MAP[(s ?? 'not_started').toLowerCase()] ?? STATUS_MAP.not_started;
 }
-function barColor(t: ScheduleTask) {
-  return statusCfg(t.status).color;
-}
+type StatusFilter = 'all' | 'overdue' | (typeof STATUS_OPTIONS)[number];
+
+// Canonical trade taxonomy — CSI division groups plus the specialty markets
+// outside them, flattened for the kit Select.
+const TRADE_OPTIONS = tradeOptions().flatMap((g) => g.options.map((o) => ({ value: o.value, label: `${o.label} — ${g.group}` })));
 
 // ── Date-only helpers (no TZ drift: dates are 'YYYY-MM-DD') ─────────────────
-// Canonical trade taxonomy — CSI division groups plus the specialty markets outside them.
-const TRADE_OPTIONS = tradeOptions();
-
 const DAY = 86400000;
 function ymdToUTC(s: string): number {
   const [y, m, d] = s.split('-').map(Number);
@@ -88,9 +90,9 @@ function ymdAddDays(s: string, days: number): string {
 }
 function fmtDate(s: string | null | undefined): string {
   if (!s) return '—';
-  const [y, m, d] = s.split('-').map(Number);
+  const [y, m, d] = String(s).slice(0, 10).split('-').map(Number);
   if (!y) return '—';
-  return new Date(y, (m || 1) - 1, d || 1).toLocaleDateString();
+  return new Date(y, (m || 1) - 1, d || 1).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 function todayUTC(): number {
   const n = new Date();
@@ -99,24 +101,85 @@ function todayUTC(): number {
 function coerce(raw: any): ScheduleTask {
   return { ...raw, pct_complete: raw.pct_complete == null ? 0 : Number(raw.pct_complete) };
 }
+const isLate = (t: ScheduleTask) => !!t.end_date && ymdToUTC(t.end_date) < todayUTC() && t.status !== 'complete';
+
+const EMPTY_FORM = {
+  name: '', projectId: '', phase: '', trade: '',
+  startDate: '', endDate: '', pctComplete: '0',
+  status: 'not_started', predecessorId: '',
+};
+
+const CSS = `
+.scWs > .k-page { max-width: none; }
+.scList .k-table th:first-child, .scList .k-table td:first-child { position: sticky; left: 0; z-index: 1; background: var(--bg-solid); }
+.scList .k-table th:first-child { background: var(--bg-solid-2); z-index: 3; }
+.scList .k-table tbody tr:hover td:first-child { background: linear-gradient(rgba(255,255,255,0.03), rgba(255,255,255,0.03)), var(--bg-solid); }
+.scTask { display: flex; flex-direction: column; gap: 2px; max-width: 250px; min-width: 0; }
+/* Predecessor picker: capped so the seven-column register fits 1440 without a sideways scroll. */
+.scInline { max-width: 160px; min-width: 0; }
+.scInline select, .scInline .k-select { max-width: 160px; }
+.scTask > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.scTask > span:first-child { color: var(--text-primary); font-weight: 700; }
+.scTask > span + span { font-size: var(--fs-xs); color: var(--text-tertiary); }
+.scMuted { color: var(--text-tertiary); }
+.scLate { color: var(--status-overdue); font-weight: 700; }
+.scPct { display: flex; align-items: center; gap: 8px; min-width: 130px; }
+.scBar { flex: 1; height: 6px; background: rgba(255,255,255,.08); border-radius: 3px; overflow: hidden; }
+.scBar > div { height: 100%; border-radius: 3px; transition: width .3s ease; }
+.scPct input.k-input { width: 56px; min-height: 30px; padding: 3px 6px; text-align: right; font-size: var(--fs-xs); }
+.scInline select.k-select { min-height: 30px; padding: 3px 26px 3px 9px; font-size: var(--fs-xs); border-radius: 999px; font-weight: 700; width: auto; max-width: 170px; }
+.scInline[data-tone] select.k-select { color: var(--tone); border-color: color-mix(in srgb, var(--tone) 35%, transparent); background-color: color-mix(in srgb, var(--tone) 12%, transparent); }
+.scSeg { display: inline-flex; gap: 2px; padding: 2px; border-radius: var(--radius-sm); background: var(--bg-surface-2); border: 1px solid var(--glass-border); }
+.scSeg button { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 6px; font-size: var(--fs-sm); font-weight: 700; color: var(--text-tertiary); cursor: pointer; }
+.scSeg button[aria-pressed="true"] { background: var(--bg-solid-2); color: var(--text-primary); }
+.scSeg button:focus-visible { outline: 2px solid var(--brand-primary); }
+.scErr { display: flex; gap: 10px; align-items: center; font-size: var(--fs-sm); color: var(--text-primary); padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(255,77,94,.35); background: rgba(255,77,94,.08); }
+.scErr > svg { color: var(--status-overdue); flex-shrink: 0; }
+.scLadder { border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--bg-surface-2); margin-bottom: 16px; }
+.scHint { font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 4px; }
+.scGantt { display: flex; }
+.scGanttLabels { width: 230px; flex-shrink: 0; border-right: 1px solid var(--border-default); }
+.scGanttHead { height: 48px; display: flex; align-items: flex-end; padding: 0 14px 8px; font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); }
+.scGanttRow { height: 38px; display: flex; flex-direction: column; justify-content: center; padding: 0 14px; border-bottom: 1px solid var(--border-subtle); cursor: pointer; overflow: hidden; }
+.scGanttRow:hover { background: rgba(255,255,255,0.03); }
+.scGanttRow > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.scGanttRow > span:first-child { font-size: var(--fs-sm); font-weight: 600; color: var(--text-primary); }
+.scGanttRow > span + span { font-size: 10px; color: var(--text-tertiary); }
+.scGanttScroll { overflow-x: auto; flex: 1; }
+.scLegend { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 10px 16px; border-top: 1px solid var(--border-default); font-size: var(--fs-xs); color: var(--text-tertiary); }
+.scLegend > span { display: inline-flex; align-items: center; gap: 6px; }
+.scLegend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.scDateInput { width: 100%; }
+@media (max-width: 640px) {
+  .scWs .k-btn, .scWs .k-stat, .scWs select.k-select, .scWs .k-input, .scSeg button { min-height: 44px; }
+  .scWs .k-table td { height: 48px; }
+  .scGanttLabels { width: 150px; }
+  .scTask { max-width: 200px; }
+}
+`;
+
+const DATE_INPUT_STYLE: React.CSSProperties = {
+  width: '100%', minHeight: 40, padding: '8px 12px', fontSize: 14,
+  background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)',
+  borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)',
+};
 
 export default function SchedulePage() {
   const router = useRouter();
   const [tasks, setTasks] = useState<ScheduleTask[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [error, setError] = useState('');
   const [view, setView] = useState<'list' | 'timeline'>('list');
   const [projectFilter, setProjectFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [search, setSearch] = useState('');
   const [savingId, setSavingId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
 
-  const [form, setForm] = useState({
-    name: '', projectId: '', phase: '', trade: '',
-    startDate: '', endDate: '', pctComplete: '0',
-    status: 'not_started', predecessorId: '',
-  });
+  const [form, setForm] = useState({ ...EMPTY_FORM });
 
   /* ── Unsaved-work guard: the composer holds real typing, so leaving this
    *    module (sidebar, field nav, ⌘K, breadcrumb, back) confirms first, and
@@ -135,6 +198,7 @@ export default function SchedulePage() {
   const [auto, setAuto] = useState<{ start?: boolean; end?: boolean }>({});
 
   const fetchTasks = useCallback(async () => {
+    setLoadFailed(false);
     try {
       const res = await fetch('/api/schedule/list');
       if (!res.ok) throw new Error('Failed to load schedule');
@@ -142,7 +206,7 @@ export default function SchedulePage() {
       const arr = Array.isArray(data) ? data : data.tasks ?? data.schedule_tasks ?? [];
       setTasks(arr.map(coerce));
     } catch (e: any) {
-      console.error(e); setError(humanError(e, 'Something went wrong. Please try again.'));
+      console.error(e); setError(humanError(e, 'Something went wrong. Please try again.')); setLoadFailed(true);
     } finally {
       setLoading(false);
     }
@@ -153,7 +217,7 @@ export default function SchedulePage() {
     fetch('/api/projects?limit=200&fields=id,name')
       .then(r => (r.ok ? r.json() : null))
       .then(d => { if (d) setProjects(Array.isArray(d) ? d : d.projects ?? []); })
-      .catch(() => {});
+      .catch(() => { /* the project picker degrades to ids; the task list still loads */ });
   }, [fetchTasks]);
 
   const projectName = useCallback(
@@ -183,7 +247,7 @@ export default function SchedulePage() {
   }, [tasks]);
 
   const deleteTask = useCallback(async (id: string) => {
-    if (!window.confirm('Delete this task? This cannot be undone.')) return;
+    if (!(await confirmDialog({ title: 'Delete task?', message: 'This cannot be undone.', confirmLabel: 'Delete', danger: true }))) return;
     const prev = tasks;
     setTasks(ts => ts.filter(t => t.id !== id));
     setSavingId(id);
@@ -233,8 +297,9 @@ export default function SchedulePage() {
 
   async function handleCreate(e?: React.FormEvent): Promise<boolean> {
     e?.preventDefault();
-    if (!form.name || !form.projectId) return false;
+    if (!form.name || !form.projectId) { setError('Task name and project are required.'); return false; }
     setCreating(true);
+    setError('');
     try {
       const res = await fetch('/api/schedule/create', {
         method: 'POST',
@@ -253,7 +318,7 @@ export default function SchedulePage() {
       });
       if (!res.ok) throw new Error('Failed to create task');
       setShowCreate(false);
-      setForm({ name: '', projectId: '', phase: '', trade: '', startDate: '', endDate: '', pctComplete: '0', status: 'not_started', predecessorId: '' });
+      setForm({ ...EMPTY_FORM });
       setDuration(''); setAuto({});
       await fetchTasks();
       guard.clearDraft();
@@ -265,11 +330,24 @@ export default function SchedulePage() {
     }
     return false;
   }
+  function openCreate() { setError(''); setShowCreate(true); }
+  function closeComposer() { guard.requestClose(() => { setShowCreate(false); setError(''); }); }
 
-  const filtered = useMemo(
+  const byProject = useMemo(
     () => (projectFilter ? tasks.filter(t => t.project_id === projectFilter) : tasks),
     [tasks, projectFilter],
   );
+  const q = search.trim().toLowerCase();
+  const filtered = useMemo(() => byProject.filter(t => {
+    if (statusFilter === 'overdue') { if (!isLate(t)) return false; }
+    else if (statusFilter !== 'all' && (t.status || 'not_started') !== statusFilter) return false;
+    if (!q) return true;
+    return [t.name, t.phase, t.trade, projectName(t.project_id)].some(v => String(v || '').toLowerCase().includes(q));
+  }), [byProject, statusFilter, q, projectName]);
+  const filtersActive = !!search || !!projectFilter || statusFilter !== 'all';
+  const clearFilters = () => { setSearch(''); setProjectFilter(''); setStatusFilter('all'); };
+  const toggleStatus = (s: StatusFilter) => setStatusFilter(prev => (prev === s ? 'all' : s));
+
   const taskById = useMemo(() => new Map(tasks.map(t => [t.id, t])), [tasks]);
   // Predecessor candidates for a given task = other tasks in the same project.
   const predOptionsFor = useCallback(
@@ -277,285 +355,197 @@ export default function SchedulePage() {
     [tasks],
   );
 
+  // Stats describe the project in view (the project filter), not the search.
   const stats = useMemo(() => {
-    const total = filtered.length;
-    const complete = filtered.filter(t => t.status === 'complete').length;
-    const inProgress = filtered.filter(t => t.status === 'in_progress').length;
-    const today = todayUTC();
-    const overdue = filtered.filter(t => t.end_date && ymdToUTC(t.end_date) < today && t.status !== 'complete').length;
+    const total = byProject.length;
+    const complete = byProject.filter(t => t.status === 'complete').length;
+    const inProgress = byProject.filter(t => t.status === 'in_progress').length;
+    const overdue = byProject.filter(isLate).length;
     return { total, complete, inProgress, overdue };
-  }, [filtered]);
+  }, [byProject]);
+
+  const statItems: StatItem[] = loading
+    ? [
+        { label: 'Total Tasks', value: '—', sub: 'Loading…' },
+        { label: 'In Progress', value: '—', sub: 'Loading…' },
+        { label: 'Complete', value: '—', sub: 'Loading…' },
+        { label: 'Overdue', value: '—', sub: 'Loading…' },
+      ]
+    : [
+        { label: 'Total Tasks', value: stats.total, sub: statusFilter !== 'all' || search ? 'Click to show everything' : projectFilter ? 'On this project' : 'Across every project', onClick: () => { setStatusFilter('all'); setSearch(''); } },
+        { label: 'In Progress', value: stats.inProgress, tone: stats.inProgress > 0 ? 'good' : 'default', sub: statusFilter === 'in_progress' ? 'Filtered — click to clear' : 'Crews on it now', onClick: () => toggleStatus('in_progress') },
+        { label: 'Complete', value: stats.complete, tone: stats.complete > 0 ? 'good' : 'default', sub: statusFilter === 'complete' ? 'Filtered — click to clear' : stats.total > 0 ? `${Math.round((stats.complete / stats.total) * 100)}% of the plan` : 'Nothing planned yet', onClick: () => toggleStatus('complete') },
+        { label: 'Overdue', value: stats.overdue, tone: stats.overdue > 0 ? 'bad' : 'default', sub: statusFilter === 'overdue' ? 'Filtered — click to clear' : stats.overdue > 0 ? 'Past their end date, not complete' : 'Nothing slipped', onClick: () => toggleStatus('overdue') },
+      ];
 
   // ── List columns (inline editable) ──────────────────────────────────────────
-  const columns = useMemo<ColumnDef<ScheduleTask, any>[]>(() => [
-    columnHelper.accessor('name', {
-      header: 'Task',
-      cell: (info) => (
-        <div>
-          <div style={{ fontWeight: font.weight.semibold, color: colors.text }}>{info.getValue()}</div>
-          <div style={{ fontSize: font.size.xs, color: colors.textDim }}>
-            {[info.row.original.phase, projectName(info.row.original.project_id)].filter(Boolean).join(' · ') || '—'}
-          </div>
-        </div>
-      ),
-    }),
-    columnHelper.accessor('trade', {
-      header: 'Trade',
-      cell: (info) => <span style={{ color: colors.textMuted }}>{info.getValue() || '—'}</span>,
-    }),
-    columnHelper.accessor('start_date', {
-      header: 'Start',
-      cell: (info) => fmtDate(info.getValue()),
-    }),
-    columnHelper.accessor('end_date', {
-      header: 'End',
-      cell: (info) => {
-        const v = info.getValue();
-        if (!v) return '—';
-        const overdue = ymdToUTC(v) < todayUTC() && info.row.original.status !== 'complete';
-        return <span style={{ color: overdue ? colors.red : colors.text }}>{fmtDate(v)}</span>;
-      },
-    }),
-    columnHelper.display({
-      id: 'predecessor',
-      header: 'Predecessor',
-      cell: (info) => (
-        <PredecessorEditor
-          task={info.row.original}
-          options={predOptionsFor(info.row.original)}
-          saving={savingId === info.row.original.id}
-          onSave={(pid) => patchTask(info.row.original.id, { predecessor_id: pid })}
-        />
-      ),
-    }),
-    columnHelper.accessor('pct_complete', {
-      header: 'Progress',
-      // pct_complete can round-trip as TEXT — numeric sort, not lexicographic.
-      sortingFn: (a, b) => (Number(a.original.pct_complete) || 0) - (Number(b.original.pct_complete) || 0),
-      cell: (info) => (
-        <PctEditor
-          task={info.row.original}
-          saving={savingId === info.row.original.id}
-          onSave={(n) => patchTask(info.row.original.id, { pct_complete: n })}
-        />
-      ),
-    }),
-    columnHelper.accessor('status', {
-      header: 'Status',
-      cell: (info) => (
-        <StatusEditor
-          task={info.row.original}
-          saving={savingId === info.row.original.id}
-          onSave={(s) => patchTask(info.row.original.id, s === 'complete' ? { status: s, pct_complete: 100 } : { status: s })}
-        />
-      ),
-    }),
-    columnHelper.display({
-      id: 'actions',
-      header: '',
-      cell: (info) => {
-        const t = info.row.original;
-        const busy = savingId === t.id;
-        return (
-          <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
-            <button
-              title="Mark Complete"
-              disabled={busy || t.status === 'complete'}
-              onClick={() => patchTask(t.id, { status: 'complete', pct_complete: 100 })}
-              style={iconBtn(t.status === 'complete' ? colors.green : colors.textMuted, t.status === 'complete')}
-            >
-              <CheckCircle size={18} weight={t.status === 'complete' ? 'fill' : 'regular'} />
-            </button>
-            <button title="Delete Task" disabled={busy} onClick={() => deleteTask(t.id)} style={iconBtn(colors.red, false)}>
-              {busy ? <CircleNotch size={16} className="spin" /> : <Trash size={16} />}
-            </button>
-          </div>
-        );
-      },
-    }),
-  ], [projectName, predOptionsFor, savingId, patchTask, deleteTask]);
+  const columns: Column<ScheduleTask>[] = [
+    { key: 'name', header: 'Task', accessor: t => String(t.name || '').toLowerCase(), render: t => (
+      <div className="scTask">
+        <span title={t.name}>{t.name}</span>
+        <span>{[t.phase, projectName(t.project_id)].filter(Boolean).join(' · ') || '—'}</span>
+      </div>
+    ) },
+    { key: 'trade', phone: 'hide', header: 'Trade', accessor: t => String(t.trade || ''), render: t => t.trade ? <span className="scMuted">{t.trade}</span> : <span className="scMuted">—</span> },
+    { key: 'start_date', header: 'Start', accessor: t => t.start_date || '', render: t => <span className="scMuted">{fmtDate(t.start_date)}</span> },
+    { key: 'end_date', header: 'End', accessor: t => t.end_date || '', render: t => <span className={isLate(t) ? 'scLate' : 'scMuted'}>{fmtDate(t.end_date)}{isLate(t) ? ' · late' : ''}</span> },
+    { key: 'predecessor', phone: 'hide', header: 'Predecessor', accessor: t => taskById.get(t.predecessor_id || '')?.name || '', render: t => (
+      <PredecessorEditor task={t} options={predOptionsFor(t)} saving={savingId === t.id} onSave={(pid) => patchTask(t.id, { predecessor_id: pid })} />
+    ) },
+    // pct_complete can round-trip as TEXT — numeric sort, not lexicographic.
+    { key: 'pct_complete', phone: 'show', header: 'Progress', accessor: t => Number(t.pct_complete) || 0, render: t => (
+      <PctEditor task={t} saving={savingId === t.id} onSave={(n) => patchTask(t.id, { pct_complete: n })} />
+    ) },
+    { key: 'status', phone: 'show', header: 'Status', accessor: t => STATUS_RANK[t.status] ?? 9, render: t => (
+      <StatusEditor task={t} saving={savingId === t.id} onSave={(s) => patchTask(t.id, s === 'complete' ? { status: s, pct_complete: 100 } : { status: s })} />
+    ) },
+  ];
+  const rowActions = (t: ScheduleTask): Action[] => {
+    const busy = savingId === t.id;
+    return [
+      { label: 'Open Task', icon: <ArrowSquareOut size={15} />, href: `/app/schedule/${t.id}` },
+      { label: 'Mark Complete', icon: <CheckCircle size={15} />, onClick: () => patchTask(t.id, { status: 'complete', pct_complete: 100 }), hidden: t.status === 'complete', disabled: busy },
+      { label: 'Delete Task', icon: <Trash size={15} />, onClick: () => deleteTask(t.id), tone: 'danger', disabled: busy },
+    ];
+  };
 
-  const labelStyle: React.CSSProperties = { fontSize: font.size.sm, fontWeight: font.weight.semibold, color: colors.textMuted, marginBottom: 4, display: 'block' };
-  const inputStyle: React.CSSProperties = { width: '100%', padding: '9px 12px', background: colors.raisedAlt, border: `1px solid ${colors.border}`, borderRadius: radius.md, color: colors.text, fontSize: font.size.md, outline: 'none' };
   const formProjectTasks = tasks.filter(t => t.project_id === form.projectId);
+  const projectOptions = projects.map(p => ({ value: p.id, label: p.name }));
+
+  // ── Body ──
+  let body: React.ReactNode;
+  if (!loading && loadFailed) {
+    body = <Card flush><EmptyState icon={<Warning size={22} />} title="Couldn't load the schedule" text={`${error} Nothing has been lost — try again.`} action={<Button onClick={() => { setLoading(true); fetchTasks(); }}>Retry</Button>} /></Card>;
+  } else if (!loading && tasks.length === 0) {
+    body = <Card flush><EmptyState icon={<CalendarBlank size={22} />} title="No tasks scheduled yet" text="Add the first task — give it a project, dates and a predecessor, and the timeline draws itself with dependencies." action={<Button icon={<Plus size={15} weight="bold" />} onClick={openCreate}>Add First Task</Button>} /></Card>;
+  } else if (view === 'list') {
+    body = (
+      <div className="scList">
+        <Card flush>
+          <DataTable
+            columns={columns}
+            rows={filtered}
+            rowKey={t => t.id}
+            loading={loading}
+            defaultSort={{ key: 'start_date', dir: 'asc' }}
+            onRowClick={(t) => router.push(`/app/schedule/${t.id}`)}
+            rowActions={rowActions}
+            empty={<EmptyState icon={<CalendarBlank size={22} />} title="No tasks match these filters" text="Clear the search, project, or status filter to see more." action={<Button onClick={clearFilters}>Clear Filters</Button>} />}
+          />
+        </Card>
+      </div>
+    );
+  } else {
+    body = (
+      <Card flush>
+        <GanttChart rows={filtered} taskById={taskById} loading={loading} onSelect={(t) => router.push(`/app/schedule/${t.id}`)} onClear={filtersActive ? clearFilters : undefined} />
+      </Card>
+    );
+  }
 
   return (
-    <div className="pmRoot" style={{ padding: '24px 28px', maxWidth: 1400, margin: '0 auto' }}>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}.spin{animation:spin .8s linear infinite}`}</style>
+    <div className="scWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[{ label: 'Home', href: '/app' }, { label: 'Schedule' }]}
+        title="Schedule"
+        subtitle="Tasks, progress, and dependencies across every job — edit progress and status right in the list."
+        actions={<Button variant="primary" data-tour="new-task" icon={<Plus size={15} weight="bold" />} onClick={openCreate}>New Task</Button>}
+      >
+        {!loadFailed && <StatRow items={statItems} />}
 
-      {/* Header — standard module hero anatomy */}
-      <PremiumFX />
-      <ModuleHero
-        eyebrow="Execution"
-        eyebrowIcon={<IconChip size={24} vivid={moduleAccent('schedule').vivid ?? moduleAccent('schedule').hex}><CalendarBlank size={13} weight="fill" color="#F8FAFC" /></IconChip>}
-        accentColor={moduleAccent('schedule').hex}
-        title="Construction"
-        accent="Schedule"
-        subtitle="Manage tasks, track progress, and map dependencies across the build."
-        actions={
-          <button data-tour="new-task" onClick={() => setShowCreate(true)} className="pmBtn" style={goldButtonStyle}>
-            <Plus size={16} weight="bold" /> New Task
-          </button>
-        }
-      />
+        {!loading && !loadFailed && tasks.length > 0 && (
+          <Toolbar
+            search={search}
+            onSearch={setSearch}
+            placeholder="Search by task, phase, trade, or project…"
+            filters={
+              <>
+                <Select aria-label="Project" value={projectFilter} onChange={e => setProjectFilter(e.target.value)} placeholder="All Projects" style={{ width: 'auto', minWidth: 180 }} options={projectOptions} />
+                <Select aria-label="Status" value={statusFilter} onChange={e => setStatusFilter(e.target.value as StatusFilter)} style={{ width: 'auto', minWidth: 150 }} options={[{ value: 'all', label: 'All Statuses' }, ...STATUS_SELECT_OPTIONS, { value: 'overdue', label: 'Overdue' }]} />
+                {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
+              </>
+            }
+            actions={
+              <>
+                <span className="scMuted" style={{ fontSize: 'var(--fs-sm)' }}>{filtered.length} of {tasks.length}</span>
+                <div className="scSeg" role="group" aria-label="View">
+                  <button type="button" aria-pressed={view === 'list'} onClick={() => setView('list')}><ListBullets size={14} weight="bold" /> List</button>
+                  <button type="button" aria-pressed={view === 'timeline'} onClick={() => setView('timeline')}><ChartBar size={14} weight="bold" /> Timeline</button>
+                </div>
+              </>
+            }
+          />
+        )}
 
-      {/* Stat strip */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 18 }}>
-        {[
-          { l: 'Total Tasks', v: stats.total, c: colors.text },
-          { l: 'In Progress', v: stats.inProgress, c: colors.blue },
-          { l: 'Complete', v: stats.complete, c: colors.green },
-          { l: 'Overdue', v: stats.overdue, c: stats.overdue > 0 ? colors.red : colors.textMuted },
-        ].map(k => (
-          <div key={k.l} style={{ background: colors.raised, border: `1px solid ${colors.border}`, borderRadius: radius.lg, padding: '12px 16px' }}>
-            <div style={{ fontSize: font.size.xs, fontWeight: font.weight.bold, color: colors.textMuted, marginBottom: 4 }}>{k.l}</div>
-            <div style={{ fontSize: font.size['2xl'], fontWeight: font.weight.black, color: k.c }}>{k.v}</div>
+        {error && !loadFailed && !showCreate && (
+          <div className="scErr" role="alert"><Warning size={16} weight="fill" /> {error}</div>
+        )}
+
+        {body}
+      </PageShell>
+
+      {/* ── Composer ── */}
+      <FormModal
+        open={showCreate}
+        onClose={closeComposer}
+        title="New Schedule Task"
+        subtitle={form.projectId ? `${projectName(form.projectId) || 'Project'} · ${formProjectTasks.length} task${formProjectTasks.length === 1 ? '' : 's'} already planned.` : 'Pick the project first — the predecessor list and dates follow from it.'}
+        onSubmit={async () => { await handleCreate(); }}
+        submitLabel="Create Task"
+        busy={creating}
+        error={showCreate && error ? error : null}
+      >
+        {form.projectId && (
+          <div className="scLadder">
+            <InsightRow label="Tasks on This Project" value={`${formProjectTasks.length} · ${formProjectTasks.filter(t => t.status === 'complete').length} complete`} />
+            <InsightRow label="Critical Path" value={String(ctx?.schedule?.criticalCount ?? 0)} strong={(ctx?.schedule?.criticalCount ?? 0) > 0} />
+            <InsightRow label="Next Milestone" value={ctx?.schedule?.nextTasks?.[0]?.name ? `${ctx.schedule.nextTasks[0].name}${ctx.schedule.nextTasks[0].startDate ? ` · starts ${fmtDate(String(ctx.schedule.nextTasks[0].startDate))}` : ''}` : 'Nothing queued yet'} />
           </div>
-        ))}
-      </div>
+        )}
+        <FormGrid cols={2}>
+          <Field label="Task Name" required span>
+            <Input value={form.name} onChange={(e) => { setForm({ ...form, name: e.target.value }); if (error) setError(''); }} placeholder="Foundation pour, framing, etc." autoFocus />
+          </Field>
+          <Field label="Project" required>
+            <Select aria-label="Project" value={form.projectId} onChange={(e) => { setForm({ ...form, projectId: e.target.value, predecessorId: '' }); if (error) setError(''); }} placeholder="Select project…" options={projectOptions} />
+          </Field>
+          <Field label="Phase" hint="Phase 1, Rough-in, etc.">
+            <Input value={form.phase} onChange={(e) => setForm({ ...form, phase: e.target.value })} placeholder="Phase 1, Rough-in, etc." />
+          </Field>
+          <Field label="Trade">
+            <Select aria-label="Trade" value={form.trade} onChange={(e) => setForm({ ...form, trade: e.target.value })} placeholder="Select trade…" options={TRADE_OPTIONS} />
+          </Field>
+          <Field label="Status">
+            <Select aria-label="Status" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} options={STATUS_SELECT_OPTIONS} />
+          </Field>
+          <Field label="Start Date" hint={auto.start ? <><AutoChip /> Day after the predecessor ends — edit freely.</> : undefined}>
+            <div className="scDateInput"><SaguaroDatePicker value={form.startDate} onChange={(v) => setStartDate(v)} style={DATE_INPUT_STYLE} /></div>
+          </Field>
+          <Field label="Duration (days)" hint="Computes the end date from the start.">
+            <Input type="number" min="1" value={duration} onChange={(e) => setDurationDays(e.target.value)} placeholder="e.g. 10" />
+          </Field>
+          <Field label="End Date" hint={auto.end && form.startDate ? <><AutoChip /> Start + {Number(duration) || 0}d — editing it re-syncs duration.</> : undefined}>
+            <div className="scDateInput"><SaguaroDatePicker value={form.endDate} onChange={(v) => setEndDate(v)} style={DATE_INPUT_STYLE} /></div>
+          </Field>
+          <Field label="% Complete">
+            <Input type="number" min="0" max="100" value={form.pctComplete} onChange={(e) => setForm({ ...form, pctComplete: e.target.value })} />
+          </Field>
+          <Field label="Predecessor" hint={form.predecessorId ? (() => {
+            const p = taskById.get(form.predecessorId);
+            return p ? <>Follows <b style={{ color: 'var(--text-primary)' }}>{p.name}</b>{p.end_date ? ` — ends ${fmtDate(p.end_date)}; this task starts the day after.` : ' — no end date on the predecessor yet.'}</> : undefined;
+          })() : form.projectId ? 'Finish-to-start — this task waits for the predecessor.' : 'Pick a project to choose from its tasks.'}>
+            <Select aria-label="Predecessor" value={form.predecessorId} onChange={(e) => setPredecessor(e.target.value)} disabled={!form.projectId} placeholder="None" options={formProjectTasks.map(t => ({ value: t.id, label: `${t.name}${t.end_date ? ` (ends ${fmtDate(t.end_date)})` : ''}` }))} />
+          </Field>
+        </FormGrid>
+      </FormModal>
 
-      {/* Toolbar: project filter + view toggle */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
-        <StandardSelect value={projectFilter} onChange={setProjectFilter} ariaLabel="Project" placeholder="All Projects" style={{ minWidth: 220 }}
-          options={projects.map(p => ({ value: p.id, label: p.name }))} />
-        <div style={{ display: 'inline-flex', background: colors.raised, border: `1px solid ${colors.border}`, borderRadius: radius.lg, padding: 3, gap: 3 }}>
-          {([['list', 'List', ListBullets], ['timeline', 'Timeline', ChartBar]] as const).map(([key, label, Icon]) => (
-            <button key={key} onClick={() => setView(key)} style={{
-              display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', border: 'none', borderRadius: radius.md, cursor: 'pointer',
-              fontSize: font.size.sm, fontWeight: font.weight.bold,
-              background: view === key ? colors.gold : 'transparent',
-              color: view === key ? colors.dark : colors.textMuted,
-            }}>
-              <Icon size={15} weight={view === key ? 'bold' : 'regular'} /> {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {error && (
-        <div style={{ padding: '12px 16px', background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.3)', borderRadius: radius.md, color: colors.red, fontSize: font.size.md, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Warning size={16} /> {error}
-        </div>
-      )}
-
-      {view === 'list' ? (
-        <DataTable
-          data={filtered}
-          columns={columns}
-          loading={loading}
-          tableId="schedule"
-          defaultSort={{ key: 'start_date', dir: 'asc' }}
-          searchPlaceholder="Search tasks…"
-          emptyMessage="No tasks scheduled yet. Create your first task to start planning."
-          onRowClick={(row) => router.push(`/app/schedule/${row.id}`)}
-        />
-      ) : (
-        <GanttChart
-          rows={filtered}
-          taskById={taskById}
-          loading={loading}
-          onSelect={(t) => router.push(`/app/schedule/${t.id}`)}
-        />
-      )}
-
-      {/* ── Create Modal ───────────────────────────────────────────── */}
-      {showCreate && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(0,0,0,.72)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={(e) => { if (e.target === e.currentTarget) setShowCreate(false); }}>
-          <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: 14, width: '100%', maxWidth: 600, maxHeight: '85vh', overflow: 'auto', boxShadow: '0 30px 80px rgba(0,0,0,.6)' }}>
-            <div style={{ padding: '16px 20px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, background: colors.surface, zIndex: 1 }}>
-              <h2 style={{ margin: 0, fontSize: font.size.xl, fontWeight: font.weight.black, color: colors.text }}>New Schedule Task</h2>
-              <button onClick={() => setShowCreate(false)} style={{ background: 'none', border: 'none', color: colors.textMuted, cursor: 'pointer', fontSize: 22 }}>×</button>
-            </div>
-            <form onSubmit={handleCreate} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {form.projectId && (
-                <StatStrip items={[
-                  {href: '/app/schedule',  label: 'Tasks', value: String(formProjectTasks.length), sub: `${formProjectTasks.filter(t => t.status === 'complete').length} complete on this project` },
-                  {href: '/app/schedule', label: 'Critical Path', value: String(ctx?.schedule?.criticalCount ?? 0), accent: (ctx?.schedule?.criticalCount ?? 0) > 0 ? colors.gold : undefined, sub: 'Tasks drive the end date' },
-                  {href: '/app/schedule', label: 'Next Milestone', value: ctx?.schedule?.nextTasks?.[0]?.name || '—', sub: ctx?.schedule?.nextTasks?.[0]?.startDate ? `Starts ${fmtDate(String(ctx.schedule.nextTasks[0].startDate).slice(0, 10))}` : 'Nothing queued yet' },
-                ]} />
-              )}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={labelStyle}>Task Name *</label>
-                  <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required style={inputStyle} placeholder="Foundation pour, framing, etc." />
-                </div>
-                <div>
-                  <label style={labelStyle}>Project *</label>
-                  <StandardSelect value={form.projectId} onChange={(v) => setForm({ ...form, projectId: v, predecessorId: '' })} required ariaLabel="Project" placeholder="Select project…" width="100%"
-                    options={projects.map(p => ({ value: p.id, label: p.name }))} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Phase</label>
-                  <input value={form.phase} onChange={(e) => setForm({ ...form, phase: e.target.value })} style={inputStyle} placeholder="Phase 1, Rough-in, etc." />
-                </div>
-                <div>
-                  <label style={labelStyle}>Trade</label>
-                  <StandardSelect value={form.trade} onChange={(v) => setForm({ ...form, trade: v })} ariaLabel="Trade" placeholder="Select trade…" width="100%"
-                    options={TRADE_OPTIONS} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Status</label>
-                  <StandardSelect value={form.status} onChange={(v) => setForm({ ...form, status: v })} ariaLabel="Status" width="100%"
-                    options={STATUS_SELECT_OPTIONS} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Start Date{auto.start && <AutoChip />}</label>
-                  <SaguaroDatePicker value={form.startDate} onChange={(v) => setStartDate(v)} style={inputStyle} />
-                  {auto.start && <div style={{ fontSize: font.size.xs, color: colors.textDim, marginTop: 4 }}>Day after the predecessor ends — edit freely.</div>}
-                </div>
-                <div>
-                  <label style={labelStyle}>Duration (days)</label>
-                  <input type="number" min="1" value={duration} onChange={(e) => setDurationDays(e.target.value)} style={inputStyle} placeholder="e.g. 10" />
-                  <div style={{ fontSize: font.size.xs, color: colors.textDim, marginTop: 4 }}>Computes the end date from the start.</div>
-                </div>
-                <div>
-                  <label style={labelStyle}>End Date{auto.end && <AutoChip />}</label>
-                  <SaguaroDatePicker value={form.endDate} onChange={(v) => setEndDate(v)} style={inputStyle} />
-                  {auto.end && form.startDate && <div style={{ fontSize: font.size.xs, color: colors.textDim, marginTop: 4 }}>Start + {Number(duration) || 0}d — editing it re-syncs duration.</div>}
-                </div>
-                <div>
-                  <label style={labelStyle}>% Complete</label>
-                  <input type="number" min="0" max="100" value={form.pctComplete} onChange={(e) => setForm({ ...form, pctComplete: e.target.value })} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Predecessor</label>
-                  <StandardSelect value={form.predecessorId} onChange={setPredecessor} disabled={!form.projectId} ariaLabel="Predecessor" placeholder="None" width="100%"
-                    options={formProjectTasks.map(t => ({ value: t.id, label: `${t.name}${t.end_date ? ` (ends ${fmtDate(t.end_date)})` : ''}` }))} />
-                  {form.predecessorId && (() => {
-                    const p = taskById.get(form.predecessorId);
-                    return p ? (
-                      <div style={{ fontSize: font.size.xs, color: colors.textDim, marginTop: 4 }}>
-                        Follows <span style={{ color: colors.text, fontWeight: font.weight.semibold }}>{p.name}</span>{p.end_date ? ` — ends ${fmtDate(p.end_date)}; this task starts the day after.` : ' — no end date on the predecessor yet.'}
-                      </div>
-                    ) : null;
-                  })()}
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-                <button type="button" onClick={() => setShowCreate(false)} style={{ padding: '10px 20px', background: 'none', border: `1px solid ${colors.border}`, borderRadius: radius.lg, color: colors.textMuted, fontSize: font.size.md, fontWeight: font.weight.semibold, cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" disabled={creating} style={{ padding: '10px 24px', background: colors.gold, border: 'none', borderRadius: radius.lg, color: colors.dark, fontSize: font.size.md, fontWeight: font.weight.black, cursor: creating ? 'not-allowed' : 'pointer', opacity: creating ? 0.6 : 1 }}>
-                  {creating ? 'Creating…' : 'Create Task'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-      <UnsavedGuardModal guard={guard} />
+      <div style={{ position: 'relative', zIndex: 10001 }}><UnsavedGuardModal guard={guard} /></div>
     </div>
   );
 }
 
 // ── Inline editors ────────────────────────────────────────────────────────────
-function iconBtn(color: string, disabled: boolean): React.CSSProperties {
-  return {
-    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-    width: 30, height: 30, borderRadius: radius.md, border: `1px solid ${colors.border}`,
-    background: 'transparent', color, cursor: disabled ? 'default' : 'pointer',
-    opacity: disabled ? 0.4 : 1,
-  };
-}
-
 function PctEditor({ task, onSave, saving }: { task: ScheduleTask; onSave: (n: number) => void; saving: boolean }) {
   const [val, setVal] = useState(String(task.pct_complete ?? 0));
   useEffect(() => { setVal(String(task.pct_complete ?? 0)); }, [task.pct_complete]);
@@ -565,17 +555,15 @@ function PctEditor({ task, onSave, saving }: { task: ScheduleTask; onSave: (n: n
     setVal(String(n));
   };
   return (
-    <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 130 }}>
-      <div style={{ flex: 1, height: 6, background: 'rgba(255,255,255,.08)', borderRadius: 3, overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${n}%`, background: n >= 100 ? colors.green : n > 50 ? colors.blue : colors.gold, borderRadius: 3, transition: 'width .3s ease' }} />
-      </div>
-      <input
+    <div onClick={(e) => e.stopPropagation()} className="scPct">
+      <div className="scBar"><div style={{ width: `${n}%`, background: n >= 100 ? 'var(--status-ongoing)' : n > 50 ? 'var(--status-lead)' : 'var(--brand-primary)' }} /></div>
+      <Input
         type="number" min={0} max={100} value={val}
+        aria-label="Percent complete"
         onChange={(e) => setVal(e.target.value)}
         onBlur={commit}
         onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
         disabled={saving}
-        style={{ width: 48, padding: '4px 6px', textAlign: 'right', background: colors.raisedAlt, border: `1px solid ${colors.border}`, borderRadius: radius.sm, color: colors.text, fontSize: font.size.xs, outline: 'none' }}
       />
     </div>
   );
@@ -584,47 +572,42 @@ function PctEditor({ task, onSave, saving }: { task: ScheduleTask; onSave: (n: n
 function StatusEditor({ task, onSave, saving }: { task: ScheduleTask; onSave: (s: string) => void; saving: boolean }) {
   const cfg = statusCfg(task.status);
   return (
-    <StandardSelect
-      onClick={(e) => e.stopPropagation()}
-      value={STATUS_OPTIONS.includes(task.status as any) ? task.status : 'not_started'}
-      onChange={onSave}
-      disabled={saving}
-      size="sm"
-      accent={cfg.color}
-      ariaLabel="Status"
-      options={STATUS_SELECT_OPTIONS}
-      style={{
-        padding: '5px 10px', borderRadius: 999, fontSize: font.size.xs, fontWeight: font.weight.bold,
-        background: `color-mix(in srgb, ${cfg.color} 13%, transparent)`, color: cfg.color, border: `1px solid color-mix(in srgb, ${cfg.color} 33%, transparent)`,
-      }}
-    />
+    <div onClick={(e) => e.stopPropagation()} className="scInline" data-tone="" style={{ ['--tone' as any]: cfg.css }}>
+      <Select
+        aria-label="Status"
+        value={STATUS_OPTIONS.includes(task.status as any) ? task.status : 'not_started'}
+        onChange={(e) => onSave(e.target.value)}
+        disabled={saving}
+        options={STATUS_SELECT_OPTIONS}
+      />
+    </div>
   );
 }
 
 function PredecessorEditor({ task, options, onSave, saving }: { task: ScheduleTask; options: ScheduleTask[]; onSave: (id: string) => void; saving: boolean }) {
   return (
-    <StandardSelect
-      onClick={(e) => e.stopPropagation()}
-      value={task.predecessor_id ?? ''}
-      onChange={onSave}
-      disabled={saving || options.length === 0}
-      size="sm"
-      ariaLabel="Predecessor"
-      placeholder="None"
-      options={options.map(o => ({ value: o.id, label: o.name }))}
-      style={{ maxWidth: 160, fontSize: font.size.xs }}
-    />
+    <div onClick={(e) => e.stopPropagation()} className="scInline">
+      <Select
+        aria-label="Predecessor"
+        value={task.predecessor_id ?? ''}
+        onChange={(e) => onSave(e.target.value)}
+        disabled={saving || options.length === 0}
+        placeholder="None"
+        options={options.map(o => ({ value: o.id, label: o.name }))}
+      />
+    </div>
   );
 }
 
 // ── Gantt / Timeline ──────────────────────────────────────────────────────────
-function GanttChart({ rows, taskById, loading, onSelect }: {
+function GanttChart({ rows, taskById, loading, onSelect, onClear }: {
   rows: ScheduleTask[];
   taskById: Map<string, ScheduleTask>;
   loading: boolean;
   onSelect: (t: ScheduleTask) => void;
+  onClear?: () => void;
 }) {
-  const LABEL_W = 230, ROW_H = 38, HEADER_H = 48, BAR_H = 22, PX_DAY = 26;
+  const ROW_H = 38, HEADER_H = 48, BAR_H = 22, PX_DAY = 26;
 
   const geom = useMemo(() => {
     const dated = rows.filter(t => t.start_date && t.end_date);
@@ -640,16 +623,10 @@ function GanttChart({ rows, taskById, loading, onSelect }: {
   }, [rows]);
 
   if (loading) {
-    return <div style={{ padding: 48, textAlign: 'center', color: colors.textMuted }}>Loading timeline…</div>;
+    return <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-tertiary)' }}>Loading timeline…</div>;
   }
   if (!geom) {
-    return (
-      <div style={{ padding: 56, textAlign: 'center', color: colors.textMuted, background: colors.raised, border: `1px solid ${colors.border}`, borderRadius: radius.xl }}>
-        <CalendarBlank size={40} color={colors.textDim} style={{ marginBottom: 12 }} />
-        <div style={{ fontSize: font.size.lg, fontWeight: font.weight.bold, color: colors.text, marginBottom: 4 }}>Nothing to plot yet</div>
-        <div style={{ fontSize: font.size.md }}>Add start and end dates to tasks to see them on the timeline.</div>
-      </div>
-    );
+    return <EmptyState icon={<CalendarBlank size={22} />} title="Nothing to plot yet" text={rows.length > 0 ? 'These tasks have no start and end dates — add them to draw the timeline.' : 'No tasks match these filters.'} action={onClear ? <Button onClick={onClear}>Clear Filters</Button> : undefined} />;
   }
 
   const { domainStart, totalDays, width, xOf } = geom;
@@ -681,64 +658,62 @@ function GanttChart({ rows, taskById, loading, onSelect }: {
     const midX = Math.max(fromX + 10, toX - 10);
     links.push({ d: `M ${fromX} ${fromY} H ${midX} V ${toY} H ${toX}` });
   }
+  const LINK = 'var(--status-completed)';
 
   return (
-    <div style={{ background: colors.raised, border: `1px solid ${colors.border}`, borderRadius: radius.xl, overflow: 'hidden' }}>
-      <div style={{ display: 'flex' }}>
+    <div>
+      <div className="scGantt">
         {/* Fixed label column */}
-        <div style={{ width: LABEL_W, flexShrink: 0, borderRight: `1px solid ${colors.border}` }}>
-          <div style={{ height: HEADER_H, display: 'flex', alignItems: 'flex-end', padding: '0 14px 8px', fontSize: font.size.xs, fontWeight: font.weight.bold, color: colors.textMuted, borderBottom: `1px solid ${colors.border}` }}>Task</div>
+        <div className="scGanttLabels">
+          <div className="scGanttHead">Task</div>
           {rows.map((t) => {
             const unscheduled = !t.start_date || !t.end_date;
             return (
-              <div key={t.id} onClick={() => onSelect(t)} title={t.name}
-                style={{ height: ROW_H, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 14px', borderBottom: `1px solid ${colors.borderDim}`, cursor: 'pointer', overflow: 'hidden' }}>
-                <div style={{ fontSize: font.size.sm, fontWeight: font.weight.semibold, color: colors.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</div>
-                <div style={{ fontSize: 10, color: colors.textDim, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {unscheduled ? 'Unscheduled' : (t.trade || t.phase || '—')}
-                </div>
+              <div key={t.id} onClick={() => onSelect(t)} title={t.name} className="scGanttRow" role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') onSelect(t); }}>
+                <span>{t.name}</span>
+                <span>{unscheduled ? 'Unscheduled' : (t.trade || t.phase || '—')}</span>
               </div>
             );
           })}
         </div>
 
         {/* Scrollable timeline */}
-        <div style={{ overflowX: 'auto', flex: 1 }}>
+        <div className="scGanttScroll">
           <svg width={width} height={svgH} style={{ display: 'block' }}>
             <defs>
               <marker id="gantt-arrow" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto" markerUnits="userSpaceOnUse">
-                <path d="M0,0 L6,3 L0,6 Z" fill={colors.orange} />
+                <path d="M0,0 L6,3 L0,6 Z" fill={LINK} />
               </marker>
             </defs>
 
             {/* Month band + week gridlines */}
             <rect x={0} y={0} width={width} height={HEADER_H} fill="rgba(255,255,255,0.02)" />
             {monthLabels.map((m, i) => (
-              <text key={`mo${i}`} x={m.x + 4} y={16} fontSize={11} fontWeight={700} fill={colors.textMuted}>{m.label}</text>
+              <text key={`mo${i}`} x={m.x + 4} y={16} fontSize={11} fontWeight={700} fill="var(--text-secondary)">{m.label}</text>
             ))}
             {weekLines.map((w, i) => (
               <g key={`wk${i}`}>
                 <line x1={w.x} y1={HEADER_H} x2={w.x} y2={svgH} stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
-                <text x={w.x + 3} y={HEADER_H - 6} fontSize={9} fill={colors.textDim}>{w.label}</text>
+                <text x={w.x + 3} y={HEADER_H - 6} fontSize={9} fill="var(--text-tertiary)">{w.label}</text>
               </g>
             ))}
 
             {/* Row separators */}
             {rows.map((_, i) => (
-              <line key={`rs${i}`} x1={0} y1={HEADER_H + (i + 1) * ROW_H} x2={width} y2={HEADER_H + (i + 1) * ROW_H} stroke={colors.borderDim} strokeWidth={1} />
+              <line key={`rs${i}`} x1={0} y1={HEADER_H + (i + 1) * ROW_H} x2={width} y2={HEADER_H + (i + 1) * ROW_H} stroke="var(--border-subtle)" strokeWidth={1} />
             ))}
 
             {/* Today marker */}
             {todayX != null && (
               <g>
-                <line x1={todayX} y1={HEADER_H} x2={todayX} y2={svgH} stroke={colors.gold} strokeWidth={1.5} strokeDasharray="4 3" />
-                <text x={todayX + 4} y={HEADER_H + 11} fontSize={9} fontWeight={700} fill={colors.gold}>Today</text>
+                <line x1={todayX} y1={HEADER_H} x2={todayX} y2={svgH} stroke="var(--brand-primary)" strokeWidth={1.5} strokeDasharray="4 3" />
+                <text x={todayX + 4} y={HEADER_H + 11} fontSize={9} fontWeight={700} fill="var(--brand-primary)">Today</text>
               </g>
             )}
 
             {/* Dependency links */}
             {links.map((l, i) => (
-              <path key={`ln${i}`} d={l.d} fill="none" stroke={colors.orange} strokeWidth={1.5} markerEnd="url(#gantt-arrow)" opacity={0.85} />
+              <path key={`ln${i}`} d={l.d} fill="none" stroke={LINK} strokeWidth={1.5} markerEnd="url(#gantt-arrow)" opacity={0.85} />
             ))}
 
             {/* Bars */}
@@ -748,7 +723,7 @@ function GanttChart({ rows, taskById, loading, onSelect }: {
               const endX = xOf(ymdToUTC(t.end_date)) + PX_DAY;
               const w = Math.max(endX - x, 6);
               const y = HEADER_H + i * ROW_H + (ROW_H - BAR_H) / 2;
-              const c = barColor(t);
+              const c = statusCfg(t.status).css;
               const pct = Math.max(0, Math.min(100, t.pct_complete ?? 0));
               return (
                 <g key={`bar${t.id}`} onClick={() => onSelect(t)} style={{ cursor: 'pointer' }}>
@@ -756,7 +731,7 @@ function GanttChart({ rows, taskById, loading, onSelect }: {
                   <rect x={x} y={y} width={w} height={BAR_H} rx={5} fill={`color-mix(in srgb, ${c} 20%, transparent)`} stroke={c} strokeWidth={1} />
                   <rect x={x} y={y} width={(w * pct) / 100} height={BAR_H} rx={5} fill={c} opacity={0.9} />
                   {w > 46 && (
-                    <text x={x + 7} y={y + BAR_H / 2 + 3.5} fontSize={10} fontWeight={700} fill={colors.text} style={{ pointerEvents: 'none' }}>{pct}%</text>
+                    <text x={x + 7} y={y + BAR_H / 2 + 3.5} fontSize={10} fontWeight={700} fill="var(--text-primary)" style={{ pointerEvents: 'none' }}>{pct}%</text>
                   )}
                 </g>
               );
@@ -766,15 +741,12 @@ function GanttChart({ rows, taskById, loading, onSelect }: {
       </div>
 
       {/* Legend */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', padding: '10px 16px', borderTop: `1px solid ${colors.border}`, fontSize: font.size.xs, color: colors.textMuted }}>
+      <div className="scLegend">
         {STATUS_OPTIONS.map(s => (
-          <span key={s} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 12, height: 12, borderRadius: 3, background: STATUS_MAP[s].color, display: 'inline-block' }} /> {STATUS_MAP[s].label}
-          </span>
+          <span key={s}><i style={{ background: STATUS_MAP[s].css }} /> {STATUS_MAP[s].label}</span>
         ))}
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          <GitBranch size={13} color={colors.orange} /> Dependency
-        </span>
+        <span><GitBranch size={13} color={LINK} /> Dependency</span>
+        <span><Badge tone="gold">Today</Badge> dashed line</span>
       </div>
     </div>
   );

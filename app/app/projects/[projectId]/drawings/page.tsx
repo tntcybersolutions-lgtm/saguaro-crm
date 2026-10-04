@@ -1,24 +1,29 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
-import { Plus, Ruler, X, Stack, CheckCircle, Eye, SquaresFour, UploadSimple } from '@phosphor-icons/react';
+import {
+  Plus, Ruler, X, UploadSimple, SidebarSimple, Info, ArrowsOutSimple, Columns,
+  CaretLeft, CaretRight, PencilSimple, Trash, Warning, ArrowClockwise, FileX, ArrowSquareOut,
+} from '@phosphor-icons/react';
 import { SHEET_DISCIPLINES } from '@/lib/construction-intelligence';
-import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
-import { ListToolbar } from '@/components/ui/ListToolbar';
-import { moduleAccent } from '@/lib/module-identity';
+import { FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import {
+  Button, Badge, Tabs, Toolbar, Select, StatRow, DataTable, DetailList, EmptyState, Card, Menu, Toast,
+  type BadgeTone, type Column,
+} from '@/components/ui/kit';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
-import { openPdf } from '@/components/PdfViewer';
+import { openPdf, PdfPane } from '@/components/PdfViewer';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
-const GREEN='#1a8a4a',RED='#c03030';
-// Premium kit surface language (match components/ui/premium.tsx) --------------
-const PSURFACE='linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))';
-const PBORDER='rgba(255,255,255,0.08)';
+const BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)';
+const RED='var(--danger)';
+const PSURFACE='var(--bg-surface)';
+const PBORDER='var(--border-subtle)';
 
 // Canonical sheet-discipline taxonomy — the shared list every picker draws from.
 const DISCIPLINES=SHEET_DISCIPLINES;
@@ -29,65 +34,47 @@ const STATUS_LABELS:Record<string,string>={
   for_review:'For Review',
   void:'Void',
 };
-const STATUS_COLORS:Record<string,string>={
-  current:GREEN,
-  superseded:DIM,
-  for_review:GOLD,
-  void:RED,
+/* Status → the six fixed status colors (lib/status-colors) via the kit Badge. */
+const STATUS_TONE:Record<string,BadgeTone>={
+  current:'ongoing',
+  superseded:'closed',
+  for_review:'under_contract',
+  void:'overdue',
 };
 
 const DISCIPLINE_COLORS:Record<string,string>={
-  General:DIM,
+  General:'#A9B4C4',
   Architectural:'var(--brand-primary-strong)',
-  Sitework:'#10b981',
-  Demolition:'#f43f5e',
-  'Fire Protection':'#ef4444',
-  'Low Voltage / Technology':'#60a5fa',
+  Sitework:'#2CFF7A',
+  Demolition:'#FF3B30',
+  'Fire Protection':'#FF3B30',
+  'Low Voltage / Technology':'#FF8A00',
   Interiors:'#e879b9',
   Specialties:'#94a3b8',
-  Structural:'#f97316',
-  Mechanical:'#a78bfa',
-  Electrical:GOLD,
-  Plumbing:'#22d3ee',
-  Civil:GREEN,
-  Landscape:'#84cc16',
-  Other:DIM,
+  Structural:'#FF8A00',
+  Mechanical:'#FF8A00',
+  Electrical:'var(--brand-primary)',
+  Plumbing:'#FF8A00',
+  Civil:'#2CFF7A',
+  Landscape:'#2CFF7A',
+  Other:'#A9B4C4',
 };
 
 const inp:React.CSSProperties={
   width:'100%',padding:'9px 12px',background:'var(--bg-surface-2)',
   border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,
-  fontSize:13,outline:'none',boxSizing:'border-box',
+  fontSize:16,outline:'none',boxSizing:'border-box',
 };
-const hint:React.CSSProperties={fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:5,lineHeight:1.45};
+const hint:React.CSSProperties={fontSize:12,color:'var(--text-tertiary)',marginTop:5,lineHeight:1.45};
 
 const EMPTY_FORM={
   drawing_number:'',title:'',discipline:'Architectural',
   revision:0,revision_date:'',status:'current',url:'',notes:'',
 };
 
-function Pill({label,color}:{label:string;color:string}){
-  return(
-    <span style={{fontSize:10,fontWeight:700,padding:'3px 9px',borderRadius:20,
-      background:`color-mix(in srgb, ${color} 13%, transparent)`,color,letterSpacing:.3,whiteSpace:'nowrap'}}>
-      {label}
-    </span>
-  );
-}
-
 function FieldLabel({label,auto}:{label:string;auto?:boolean}){
   return(
-    <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM, marginBottom:5}}>{label}{auto&&<AutoChip/>}</label>
-  );
-}
-
-function InfoCard({label,value}:{label:string;value:string|undefined|null}){
-  if(!value) return null;
-  return(
-    <div style={{background:PSURFACE,border:`1px solid ${PBORDER}`,borderRadius:10,padding:'10px 12px'}}>
-      <div style={{fontSize:10,fontWeight:700,color:DIM, marginBottom:4}}>{label}</div>
-      <div style={{fontSize:13,color:TEXT}}>{value}</div>
-    </div>
+    <label style={{display:'block',fontSize:12,fontWeight:700,color:DIM, marginBottom:5}}>{label}{auto&&<AutoChip/>}</label>
   );
 }
 
@@ -112,6 +99,100 @@ function todayIso(){
   const d=new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
+
+/* The list API normalizes revision to `revision || version || ''`, so a
+   rev 0 sheet arrives as ''. Read both columns and fall back to 0. */
+function revOf(d:any):number{
+  const v=d?.revision!==''&&d?.revision!=null?d.revision:d?.version;
+  const n=Number(v);
+  return Number.isFinite(n)?n:0;
+}
+
+const PHONE='(max-width: 640px)';
+
+/* Layout CSS — injected via __html (tools/check-style-escapes.mjs). No
+   backdrop-filter anywhere in the canvas area: the sheet repaints on every
+   pan and page, and a blur behind it costs a frame each time. */
+const DW_CSS=`
+@keyframes drawerIn{from{transform:translateX(100%);opacity:.4}to{transform:translateX(0);opacity:1}}
+.dw-root{--dw-h:calc(100vh - 56px - env(safe-area-inset-top,0px) - var(--sag-header-msg-h,0px) - var(--sag-nextstep-h,0px));width:100%;max-width:none;min-width:0;display:flex;flex-direction:column}
+@supports (height:100dvh){.dw-root{--dw-h:calc(100dvh - 56px - env(safe-area-inset-top,0px) - var(--sag-header-msg-h,0px) - var(--sag-nextstep-h,0px))}}
+.dw-root[data-view="sheet"]{height:var(--dw-h);min-height:520px}
+.dw-head{display:flex;align-items:center;flex-wrap:wrap;gap:10px 16px;padding:14px var(--sp-6) 0;min-width:0}
+.dw-head-id{min-width:0;flex:1 1 220px}
+.dw-eyebrow{font-size:12px;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dw-title{margin:2px 0 0;font-size:20px;font-weight:800;color:var(--text-primary);letter-spacing:-0.01em;line-height:1.2}
+.dw-head-tabs .k-tabs{border-bottom:none}
+.dw-err{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px var(--sp-6) 0;padding:10px 14px;border-radius:var(--radius-sm);background:rgba(255,59,48,0.10);border:1px solid rgba(255,59,48,0.40);color:#FFB3BB;font-size:13px}
+.dw-work{flex:1;min-height:0;min-width:0;display:flex;margin:12px var(--sp-6) var(--sp-4);border:1px solid var(--border-subtle);border-radius:var(--radius-md);overflow:hidden;background:var(--bg-base)}
+.dw-rail{width:280px;flex-shrink:0;display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--border-subtle);background:var(--bg-surface)}
+.dw-rail-head{display:flex;align-items:center;gap:6px;padding:10px 10px 8px 12px;border-bottom:1px solid var(--border-subtle)}
+.dw-rail-title{flex:1;min-width:0;font-size:13px;font-weight:700;color:var(--text-primary)}
+.dw-rail-search{padding:8px 10px;border-bottom:1px solid var(--border-subtle)}
+.dw-rail-search input{width:100%;box-sizing:border-box;height:36px;padding:0 10px;border-radius:var(--radius-sm);border:1px solid var(--border-default);background:var(--bg-surface-2);color:var(--text-primary);font-size:13px;outline:none}
+.dw-rail-search input:focus-visible{border-color:var(--brand-primary)}
+.dw-rail-list{flex:1;min-height:0;overflow-y:auto;padding:4px 0 8px}
+.dw-group{display:flex;align-items:center;gap:8px;padding:10px 12px 4px;font-size:12px;font-weight:700;color:var(--text-tertiary)}
+.dw-dot{width:8px;height:8px;border-radius:3px;flex-shrink:0}
+.dw-item{all:unset;box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;width:100%;min-height:44px;padding:7px 12px 7px 10px;border-left:2px solid transparent;cursor:pointer}
+.dw-item:hover{background:rgba(255,255,255,0.04)}
+.dw-item[aria-current="true"]{background:var(--brand-primary-08);border-left-color:var(--brand-primary)}
+.dw-item:focus-visible{outline:2px solid var(--brand-primary);outline-offset:-2px}
+.dw-item-no{font-size:13px;font-weight:700;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dw-item-rev{font-size:12px;font-weight:600;color:var(--text-secondary);white-space:nowrap;font-variant-numeric:tabular-nums}
+.dw-item-title{font-size:12px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dw-item-date{font-size:12px;color:var(--text-tertiary);white-space:nowrap;font-variant-numeric:tabular-nums}
+.dw-item[data-old="true"] .dw-item-no,.dw-item[data-old="true"] .dw-item-title{color:var(--text-tertiary)}
+.dw-rail-note{padding:16px 14px;font-size:13px;color:var(--text-tertiary);line-height:1.5}
+.dw-skel{height:44px;margin:4px 12px;border-radius:6px;background:rgba(255,255,255,0.05)}
+.dw-stage{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
+.dw-bar{display:flex;align-items:center;gap:6px;min-width:0;padding:6px 8px;border-bottom:1px solid var(--border-subtle);background:var(--bg-surface)}
+.dw-bar-id{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:0 4px}
+.dw-bar-no{font-size:14px;font-weight:800;color:var(--text-primary);white-space:nowrap}
+.dw-bar-title{font-size:13px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.dw-bar-rev{font-size:12px;font-weight:700;color:var(--text-secondary);white-space:nowrap;font-variant-numeric:tabular-nums}
+.dw-pages{display:flex;align-items:center;gap:2px;font-size:12px;color:var(--text-secondary);font-variant-numeric:tabular-nums;white-space:nowrap}
+.dw-ibtn{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;flex-shrink:0;border-radius:var(--radius-sm);color:var(--text-secondary);cursor:pointer}
+.dw-ibtn:hover{background:rgba(255,255,255,0.07);color:var(--text-primary)}
+.dw-ibtn:focus-visible{outline:2px solid var(--brand-primary);outline-offset:-2px}
+.dw-ibtn[aria-pressed="true"]{color:var(--text-primary);background:rgba(255,255,255,0.08)}
+.dw-ibtn:disabled{opacity:.4;cursor:not-allowed}
+.dw-canvas{flex:1;min-height:0;min-width:0;display:flex;flex-direction:column;background:var(--bg-base);overflow:hidden}
+.dw-canvas-img{flex:1;min-height:0;overflow:auto;display:flex;justify-content:center;align-items:flex-start;padding:24px}
+.dw-canvas-img img{max-width:100%;height:auto;border-radius:3px;box-shadow:0 30px 80px -20px rgba(0,0,0,0.9),0 0 0 1px rgba(255,255,255,0.07)}
+.dw-center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center;color:var(--text-secondary);font-size:13px;line-height:1.55}
+.dw-meta{width:340px;flex-shrink:0;min-height:0;overflow-y:auto;border-left:1px solid var(--border-subtle);background:var(--bg-surface)}
+.dw-meta-sec{padding:12px 14px;border-bottom:1px solid var(--border-subtle)}
+.dw-meta-sec:last-child{border-bottom:none}
+.dw-meta-h{font-size:12px;font-weight:700;color:var(--text-tertiary);margin:0 0 6px}
+.dw-hist{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;width:100%;min-height:40px;padding:6px 8px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;color:var(--text-primary)}
+.dw-hist:hover{background:rgba(255,255,255,0.05)}
+.dw-hist[aria-current="true"]{background:rgba(255,255,255,0.08)}
+.dw-hist:focus-visible{outline:2px solid var(--brand-primary);outline-offset:-2px}
+.dw-link{color:var(--text-primary);text-decoration:underline;text-underline-offset:2px}
+.dw-scrim{display:none}
+.dw-reg{display:flex;flex-direction:column;gap:var(--sp-4);padding:var(--sp-4) var(--sp-6) var(--sp-8);min-width:0}
+.dw-seg{display:inline-flex;border:1px solid var(--border-default);border-radius:var(--radius-sm);overflow:hidden}
+.dw-seg button{all:unset;box-sizing:border-box;height:36px;padding:0 12px;font-size:13px;font-weight:600;color:var(--text-secondary);cursor:pointer;white-space:nowrap}
+.dw-seg button[aria-pressed="true"]{background:rgba(255,255,255,0.10);color:var(--text-primary)}
+.dw-seg button:focus-visible{outline:2px solid var(--brand-primary);outline-offset:-2px}
+@media ${PHONE}{
+  .dw-head{padding:10px 16px 0}
+  .dw-err{margin:10px 16px 0}
+  .dw-work{margin:10px 0 0;border-radius:0;border-left:none;border-right:none;border-bottom:none}
+  .dw-rail,.dw-meta{position:fixed;top:0;bottom:0;z-index:560;width:min(88vw,360px);background:var(--bg-elevated);box-shadow:var(--shadow-lg);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .dw-rail{left:0}
+  .dw-meta{right:0;border-left:1px solid var(--border-default)}
+  .dw-scrim{display:block;position:fixed;inset:0;z-index:555;background:rgba(0,0,0,0.6)}
+  .dw-ibtn{width:44px;height:44px}
+  .dw-item{min-height:52px}
+  .dw-hist{min-height:44px}
+  .dw-hide-sm{display:none}
+  .dw-root .k-btn,.dw-seg button{height:44px}
+  .dw-rail-search input{height:44px;font-size:16px}
+  .dw-reg{padding:var(--sp-4) 16px var(--sp-6)}
+}
+`;
 
 export default function DrawingsPage(){
   const {projectId}=useParams() as {projectId:string};
@@ -143,6 +224,21 @@ export default function DrawingsPage(){
   const [drawingSet,setDrawingSet]=useState<'current'|'all'>('current');
   const [uploadFile,setUploadFile]=useState<File|null>(null);
   const [autoFields,setAutoFields]=useState<{num?:boolean;title?:boolean;date?:boolean}>({});
+  /* Save/upload failure, kept on screen in the drawer (the toast is gone in
+     4s; a failed upload must stay visible until the user acts on it). */
+  const [saveError,setSaveError]=useState('');
+  /* Set when the drawer is filing a NEW REVISION of an existing sheet. */
+  const [replacing,setReplacing]=useState<any>(null);
+
+  /* ── Canvas layout state ── */
+  const [view,setView]=useState<'sheet'|'register'>('sheet');
+  const [activeId,setActiveId]=useState<string|null>(null);
+  const [railOpen,setRailOpen]=useState(true);
+  const [metaOpen,setMetaOpen]=useState(true);
+  const [isPhone,setIsPhone]=useState(false);
+  const [page,setPage]=useState(1);
+  const [pageCount,setPageCount]=useState(1);
+  const [imgError,setImgError]=useState(false);
 
   // Project intelligence — one snapshot; the register walks in knowing the job.
   const { ctx } = useProjectContext(projectId);
@@ -166,16 +262,57 @@ export default function DrawingsPage(){
 
   useEffect(()=>{load();},[load]);
 
+  /* Phone: the rail and the metadata panel become drawers, closed by default,
+     so the sheet gets the full width. Wide desktop opens both. */
+  useEffect(()=>{
+    if(typeof window==='undefined'||!window.matchMedia) return;
+    const mq=window.matchMedia(PHONE);
+    const apply=()=>{
+      setIsPhone(mq.matches);
+      if(mq.matches){setRailOpen(false);setMetaOpen(false);}
+      else{setRailOpen(true);setMetaOpen(window.innerWidth>=1280);}
+    };
+    apply();
+    mq.addEventListener?.('change',apply);
+    return()=>mq.removeEventListener?.('change',apply);
+  },[]);
+
+  // Escape closes a phone drawer.
+  useEffect(()=>{
+    if(!isPhone||(!railOpen&&!metaOpen)) return;
+    const onKey=(e:KeyboardEvent)=>{if(e.key==='Escape'&&mode===null){setRailOpen(false);setMetaOpen(false);}};
+    window.addEventListener('keydown',onKey);
+    return()=>window.removeEventListener('keydown',onKey);
+  },[isPhone,railOpen,metaOpen,mode]);
+
   function openCreate(){
     setForm({...EMPTY_FORM,revision_date:todayIso()});
     setAutoFields({date:true});
     setUploadFile(null);
+    setSaveError('');setReplacing(null);
+    setMode('create');setSelected(null);
+  }
+  /* New revision of an existing sheet: same create/upload path, with the
+     sheet's number, title and discipline carried over and the rev bumped. */
+  function openNewRevision(drawing:any){
+    setForm({
+      ...EMPTY_FORM,
+      drawing_number:sheetNo(drawing),
+      title:drawing.title||drawing.name||'',
+      discipline:drawing.discipline||'Architectural',
+      revision:revOf(drawing)+1,
+      revision_date:todayIso(),
+    });
+    setAutoFields({date:true});
+    setUploadFile(null);
+    setSaveError('');setReplacing(drawing);
     setMode('create');setSelected(null);
   }
   // Mirror the server's sheet-number derivation (drawings/upload) so the form
   // shows exactly what will be saved: "A-101 Floor Plan.pdf" -> "A-101".
   function pickFile(f:File|null){
     setUploadFile(f);
+    setSaveError('');
     if(!f) return;
     const base=f.name.replace(/\.[^.]+$/,'');
     const m=base.match(/^([A-Za-z]{1,3}[-\s]?\d{2,4})/);
@@ -197,16 +334,24 @@ export default function DrawingsPage(){
       url:drawing.url||'',
       notes:drawing.notes||'',
     });
+    setSaveError('');setReplacing(null);
     setSelected(drawing);setMode('edit');
   }
-  function viewDrawing(drawing:any){setSelected(drawing);setMode('view');}
-  function closePanel(){setSelected(null);setMode(null);}
+  /* Opening a sheet puts it on the canvas (it used to open a side drawer). */
+  function viewDrawing(drawing:any){
+    setActiveId(drawing.id);
+    setPage(1);setPageCount(1);setImgError(false);
+    setView('sheet');
+    if(isPhone) setRailOpen(false);
+  }
+  function closePanel(){setSelected(null);setMode(null);setReplacing(null);setSaveError('');}
 
   async function save(): Promise<boolean> {
     if(!form.drawing_number.trim()||!form.title.trim()){
       showToast('Drawing number and title are required.','error');return false;
     }
     setSaving(true);
+    setSaveError('');
     try{
       const h=await getAuthHeaders();
       const payload={
@@ -261,13 +406,18 @@ export default function DrawingsPage(){
       await load();closePanel();
       guard.clearDraft();
       return true;
-    }catch(e:any){console.error(e);showToast(humanError(e,'Save failed. Please try again.'),'error');}
+    }catch(e:any){
+      console.error(e);
+      const msg=humanError(e,'Save failed. Please try again.');
+      setSaveError(msg);
+      showToast(msg,'error');
+    }
     finally{setSaving(false);}
     return false;
   }
 
   async function deleteDrawing(drawing:any){
-    if(!confirm(`Delete drawing "${drawing.drawing_number} - ${drawing.title}"?`)) return;
+    if(!(await confirmDialog({ title: 'Delete Drawing', message: `Delete drawing "${drawing.drawing_number||drawing.sheet_number||''} - ${drawing.title}"?`, confirmLabel: 'Delete', danger: true }))) return;
     setDeleting(true);
     try{
       const h=await getAuthHeaders();
@@ -286,7 +436,7 @@ export default function DrawingsPage(){
 
   // API rows carry sheet_number (canonical column); legacy rows may carry
   // drawing_number. Read both everywhere so no sheet ever renders as a dash.
-  const sheetNo=(d:any)=>d.drawing_number||d.sheet_number||'';
+  function sheetNo(d:any):string{return d?.drawing_number||d?.sheet_number||'';}
   // Natural sheet-number sort: A-2 files before A-10, S1.01 before S1.2.
   const bySheet=(a:any,b:any)=>sheetNo(a).localeCompare(sheetNo(b),undefined,{numeric:true,sensitivity:'base'});
 
@@ -313,422 +463,542 @@ export default function DrawingsPage(){
   }
 
   const groupOrder=[...DISCIPLINES.filter(d=>grouped[d]),...Object.keys(grouped).filter(d=>!DISCIPLINES.includes(d)).sort()];
-  const latestRev=drawings.filter(d=>dayOf(d.revision_date)).sort((a,b)=>dayOf(b.revision_date).localeCompare(dayOf(a.revision_date)))[0];
   const counts=ctx?.counts;
+  const filtersOn=!!search||filterDiscipline!=='all'||filterStatus!=='all';
+  function clearFilters(){setSearch('');setFilterDiscipline('all');setFilterStatus('all');}
 
-  function DrawingRow({drawing}:{drawing:any}){
-    const isSel=selected?.id===drawing.id&&mode==='view';
+  /* The sheet on the canvas: the one the user opened, else the first sheet
+     in the current list. Looked up in the whole register so a superseded
+     revision opened from history still shows even when the set hides it. */
+  const active=(activeId?drawings.find(d=>d.id===activeId):null)??filtered[0]??null;
+  const activeUrl:string=active?(active.url||active.file_url||''):'';
+  const activeIsPdf=!!active&&(active.file_type==='application/pdf'||/\.pdf(\?|$)/i.test(activeUrl));
+  const activeLabel=active?`${sheetNo(active)} ${active.title||''}`.trim()||'Drawing':'';
+  /* Every revision filed under this sheet number, newest first. */
+  const history=active?drawings
+    .filter(d=>sheetNo(d).toLowerCase()===sheetNo(active).toLowerCase())
+    .sort((a,b)=>revOf(b)-revOf(a)||dayOf(b.revision_date).localeCompare(dayOf(a.revision_date))):[];
+  /* The revision just before the one on screen, for a side-by-side compare. */
+  const priorRev=active?history.find(d=>d.id!==active.id&&revOf(d)<revOf(active)&&(d.url||d.file_url)):null;
+
+  // A new sheet resets paging and the image fallback.
+  const activeKey=active?.id??'';
+  useEffect(()=>{setPage(1);setPageCount(1);setImgError(false);},[activeKey]);
+
+  const onPages=useCallback((n:number)=>setPageCount(n),[]);
+
+  function openReader(){
+    if(!active||!activeUrl) return;
+    openPdf({url:activeUrl,title:activeLabel});
+  }
+  function openCompare(other:any){
+    if(!active||!activeUrl) return;
+    const otherUrl=other.url||other.file_url;
+    if(!otherUrl) return;
+    openPdf({
+      url:activeUrl,title:`${activeLabel} — R${revOf(active)}`,
+      compareUrl:otherUrl,compareTitle:`${sheetNo(other)} R${revOf(other)}`,
+    });
+  }
+
+  /* ── Register (list) view ── */
+  const columns:Column<any>[]=[
+    {key:'sheet',header:'Sheet',primary:true,accessor:d=>sheetNo(d),render:d=>sheetNo(d)||'—'},
+    {key:'title',header:'Title',accessor:d=>d.title||'',render:d=>(
+      <span style={{color:(d.status==='superseded'||d.status==='void')?'var(--text-tertiary)':TEXT}}>{d.title||'—'}</span>
+    )},
+    {key:'discipline',header:'Discipline',accessor:d=>d.discipline||'Other',render:d=>(
+      <span style={{display:'inline-flex',alignItems:'center',gap:6,whiteSpace:'nowrap'}}>
+        <span className="dw-dot" style={{background:DISCIPLINE_COLORS[d.discipline]||'#A9B4C4'}}/>{d.discipline||'Other'}
+      </span>
+    )},
+    {key:'rev',header:'Rev',align:'right',accessor:d=>revOf(d),render:d=><span style={{fontVariantNumeric:'tabular-nums'}}>R{revOf(d)}</span>},
+    {key:'date',header:'Rev Date',accessor:d=>dayOf(d.revision_date),render:d=><span style={{whiteSpace:'nowrap'}}>{fmtDate(d.revision_date)}</span>},
+    {key:'status',header:'Status',accessor:d=>d.status,render:d=><Badge tone={STATUS_TONE[d.status]||'neutral'}>{STATUS_LABELS[d.status]||d.status||'—'}</Badge>},
+    {key:'file',header:'File',sortable:false,render:d=>(d.url?(
+      <a href={d.url} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()} className="dw-link" style={{whiteSpace:'nowrap',fontSize:13}}>
+        View PDF
+      </a>
+    ):<span style={{fontSize:12,color:'var(--text-tertiary)'}}>No File</span>)},
+  ];
+  const rowActions=(d:any)=>[
+    {label:'Open on Canvas',onClick:()=>viewDrawing(d)},
+    {label:'Edit',onClick:()=>openEdit(d)},
+    {label:'Upload New Revision',onClick:()=>openNewRevision(d)},
+    {label:'Delete',tone:'danger' as const,onClick:()=>deleteDrawing(d),disabled:deleting},
+  ];
+  const registerEmpty=loadError?(
+    <EmptyState icon={<Warning size={22}/>} title="Couldn’t Load the Register" text="The drawings didn’t load, so nothing is shown. This is not an empty register."
+      action={<Button icon={<ArrowClockwise size={14}/>} onClick={load}>Retry</Button>}/>
+  ):drawings.length===0?(
+    <EmptyState icon={<Ruler size={22}/>} title="Start the Drawing Register"
+      text={`Upload the issued-for-construction set — each sheet files itself under its discipline, sorted by sheet number, and superseded revisions stay on record so every RFI points at the sheet it was answered against.${(ctx?.subs||[]).length>0?` Your ${ctx.subs.length} sub${ctx.subs.length===1?'':'s'} ${ctx.subs.length===1?'builds':'build'} from whatever is marked current.`:''}`}
+      action={<Button icon={<UploadSimple size={14}/>} onClick={openCreate}>Upload First Sheet</Button>}/>
+  ):(
+    <EmptyState title="No Drawings Match Your Filters"
+      text={drawingSet==='current'&&superseded>0
+        ?'Nothing in the current set matches — switch to All Revisions to search superseded sheets, or adjust your filters.'
+        :'Try adjusting your search or filters.'}
+      action={filtersOn?<Button onClick={clearFilters}>Clear Filters</Button>:undefined}/>
+  );
+
+  const setToggle=(
+    <div className="dw-seg" role="group" aria-label="Drawing set">
+      <button type="button" aria-pressed={drawingSet==='current'} onClick={()=>setDrawingSet('current')}>Current Set ({current})</button>
+      <button type="button" aria-pressed={drawingSet==='all'} onClick={()=>setDrawingSet('all')}>All Revisions ({total})</button>
+    </div>
+  );
+
+  /* ── Rail (compact sheet / revision list) ── */
+  function RailItem({drawing}:{drawing:any}){
+    const isActive=active?.id===drawing.id;
     return(
-      <tr
+      <button type="button" className="dw-item" aria-current={isActive?'true':undefined}
+        data-old={(drawing.status==='superseded'||drawing.status==='void')?'true':undefined}
         onClick={()=>viewDrawing(drawing)}
-        style={{background:isSel?'var(--brand-primary-08)':'transparent',opacity:(drawing.status==='superseded'||drawing.status==='void')?0.55:1,
-          borderBottom:`1px solid rgba(255,255,255,0.06)`,cursor:'pointer',transition:'background .1s'}}
-        onMouseEnter={e=>{if(!isSel)e.currentTarget.style.background='rgba(255,255,255,0.03)';}}
-        onMouseLeave={e=>{if(!isSel)e.currentTarget.style.background='transparent';}}>
-        <td style={{padding:'11px 14px',color:GOLD,fontWeight:700,whiteSpace:'nowrap'}}>
-          {sheetNo(drawing)||'—'}
-        </td>
-        <td style={{padding:'11px 14px',color:TEXT,maxWidth:240}}>
-          <div style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-            {drawing.title||'—'}
-          </div>
-        </td>
-        <td style={{padding:'11px 14px'}}>
-          <Pill label={drawing.discipline||'Other'}
-            color={DISCIPLINE_COLORS[drawing.discipline]||DIM}/>
-        </td>
-        <td style={{padding:'11px 14px',color:DIM,textAlign:'center'}}>
-          R{drawing.revision??0}
-        </td>
-        <td style={{padding:'11px 14px',color:DIM,whiteSpace:'nowrap'}}>
-          {fmtDate(drawing.revision_date)}
-        </td>
-        <td style={{padding:'11px 14px'}}>
-          <Pill label={STATUS_LABELS[drawing.status]||drawing.status}
-            color={STATUS_COLORS[drawing.status]||DIM}/>
-        </td>
-        <td style={{padding:'11px 14px'}}>
-          {drawing.url?(
-            <a href={drawing.url} target="_blank" rel="noreferrer"
-              onClick={e=>e.stopPropagation()}
-              style={{padding:'4px 10px',background:'var(--brand-primary-08)',
-                border:'1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)',borderRadius:6,
-                color:'var(--brand-primary-strong)',fontSize:11,fontWeight:700,textDecoration:'none',
-                whiteSpace:'nowrap'}}>
-              View PDF
-            </a>
-          ):(
-            <span style={{fontSize:11,color:DIM}}>No link</span>
-          )}
-        </td>
-      </tr>
+        title={`${sheetNo(drawing)} ${drawing.title||''}`.trim()}>
+        <span className="dw-item-no">{sheetNo(drawing)||'—'}</span>
+        <span className="dw-item-rev">R{revOf(drawing)}</span>
+        <span className="dw-item-title">{drawing.title||'Untitled'}</span>
+        <span className="dw-item-date">{fmtDate(drawing.revision_date)}</span>
+      </button>
     );
   }
 
-  const tableHead=(
-    <thead>
-      <tr style={{background:'rgba(255,255,255,0.02)'}}>
-        {['Drawing #','Title','Discipline','Rev','Rev Date','Status','Link'].map(h=>(
-          <th key={h} style={{padding:'10px 14px',textAlign:'left',fontSize:11,fontWeight:700, color:DIM,
-            borderBottom:`1px solid ${PBORDER}`,whiteSpace:'nowrap'}}>
-            {h}
-          </th>
-        ))}
-      </tr>
-    </thead>
+  const rail=(
+    <aside className="dw-rail" aria-label="Sheets">
+      <div className="dw-rail-head">
+        <div className="dw-rail-title">
+          Sheets{!loading&&!loadError&&<span style={{color:'var(--text-tertiary)',fontWeight:600}}> · {filtered.length}{filtered.length!==total?` of ${total}`:''}</span>}
+        </div>
+        <button type="button" className="dw-ibtn" aria-label="Collapse sheet list" title="Collapse Sheet List" onClick={()=>setRailOpen(false)}>
+          {isPhone?<X size={18}/>:<CaretLeft size={16}/>}
+        </button>
+      </div>
+      <div className="dw-rail-search">
+        <input type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search sheet # or title…" aria-label="Search sheets"/>
+        <div style={{display:'flex',gap:6,marginTop:8}}>
+          <div className="dw-seg" role="group" aria-label="Drawing set" style={{flex:1}}>
+            <button type="button" style={{flex:1,textAlign:'center'}} aria-pressed={drawingSet==='current'} onClick={()=>setDrawingSet('current')}>Current</button>
+            <button type="button" style={{flex:1,textAlign:'center'}} aria-pressed={drawingSet==='all'} onClick={()=>setDrawingSet('all')}>All Revs</button>
+          </div>
+        </div>
+      </div>
+      <div className="dw-rail-list">
+        {loading?(
+          <div aria-busy="true" aria-label="Loading sheets">{[0,1,2,3,4,5].map(i=><div key={i} className="dw-skel"/>)}</div>
+        ):loadError?(
+          <div className="dw-rail-note">The sheet list didn’t load.</div>
+        ):drawings.length===0?(
+          <div className="dw-rail-note">No sheets yet. Upload the first sheet to start the register.</div>
+        ):filtered.length===0?(
+          <div className="dw-rail-note">
+            {drawingSet==='current'&&superseded>0?'Nothing in the current set matches — try All Revs.':'No sheets match.'}
+            {filtersOn&&<div style={{marginTop:10}}><Button size="sm" onClick={clearFilters}>Clear Filters</Button></div>}
+          </div>
+        ):groupByDiscipline?(
+          groupOrder.map(disc=>(
+            <div key={disc}>
+              <div className="dw-group"><span className="dw-dot" style={{background:DISCIPLINE_COLORS[disc]||'#A9B4C4'}}/>{disc}<span style={{fontWeight:600}}>{grouped[disc].length}</span></div>
+              {grouped[disc].map(d=><RailItem key={d.id} drawing={d}/>)}
+            </div>
+          ))
+        ):(
+          filtered.map(d=><RailItem key={d.id} drawing={d}/>)
+        )}
+      </div>
+    </aside>
   );
+
+  /* ── Metadata panel ── */
+  const meta=active&&(
+    <aside className="dw-meta" aria-label="Sheet details">
+      <div className="dw-meta-sec" style={{display:'flex',alignItems:'flex-start',gap:8}}>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:13,fontWeight:700,color:'var(--text-secondary)'}}>{sheetNo(active)||'—'} · R{revOf(active)}</div>
+          <div style={{fontSize:15,fontWeight:800,color:TEXT,marginTop:2,overflowWrap:'anywhere'}}>{active.title||'Untitled'}</div>
+          <div style={{display:'flex',gap:6,flexWrap:'wrap',marginTop:8}}>
+            <Badge tone={STATUS_TONE[active.status]||'neutral'}>{STATUS_LABELS[active.status]||active.status||'—'}</Badge>
+          </div>
+        </div>
+        <button type="button" className="dw-ibtn" aria-label="Collapse details" title="Collapse Details" onClick={()=>setMetaOpen(false)}>
+          {isPhone?<X size={18}/>:<CaretRight size={16}/>}
+        </button>
+      </div>
+      <div className="dw-meta-sec" style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+        <Button size="sm" icon={<PencilSimple size={14}/>} onClick={()=>openEdit(active)}>Edit</Button>
+        <Button size="sm" icon={<UploadSimple size={14}/>} onClick={()=>openNewRevision(active)}>New Revision</Button>
+        <Menu label="More sheet actions" actions={[
+          {label:'Delete Drawing',icon:<Trash size={14}/>,tone:'danger',onClick:()=>deleteDrawing(active),disabled:deleting},
+        ]}/>
+      </div>
+      <div className="dw-meta-sec">
+        <div className="dw-meta-h">Details</div>
+        <DetailList items={[
+          ['Discipline',active.discipline?(
+            <span style={{display:'inline-flex',alignItems:'center',gap:6}}><span className="dw-dot" style={{background:DISCIPLINE_COLORS[active.discipline]||'#A9B4C4'}}/>{active.discipline}</span>
+          ):null],
+          ['Revision',`R${revOf(active)}`],
+          ['Revision Date',fmtDate(active.revision_date)==='—'?null:fmtDate(active.revision_date)],
+          ['Status',STATUS_LABELS[active.status]||active.status],
+          ['Added',fmtDate(active.created_at)==='—'?null:fmtDate(active.created_at)],
+          ['File',activeUrl?(activeIsPdf?'PDF':'Linked File'):'None Attached'],
+        ]}/>
+      </div>
+      <div className="dw-meta-sec">
+        <div className="dw-meta-h">Revision History</div>
+        {history.length<=1?(
+          <div style={{fontSize:13,color:'var(--text-tertiary)',lineHeight:1.5}}>Only this revision is on record.</div>
+        ):history.map(h=>(
+          <div key={h.id} style={{display:'flex',alignItems:'center',gap:4}}>
+            <button type="button" className="dw-hist" aria-current={h.id===active.id?'true':undefined} onClick={()=>viewDrawing(h)}>
+              <span style={{fontWeight:700,fontVariantNumeric:'tabular-nums',minWidth:30}}>R{revOf(h)}</span>
+              <span style={{flex:1,minWidth:0,color:'var(--text-secondary)',fontSize:12,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{fmtDate(h.revision_date)}</span>
+              <Badge tone={STATUS_TONE[h.status]||'neutral'}>{STATUS_LABELS[h.status]||h.status||'—'}</Badge>
+            </button>
+            {h.id!==active.id&&activeUrl&&(h.url||h.file_url)&&(
+              <button type="button" className="dw-ibtn" aria-label={`Compare with R${revOf(h)}`} title={`Compare with R${revOf(h)}`} onClick={()=>openCompare(h)}>
+                <Columns size={16}/>
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+      {active.notes&&(
+        <div className="dw-meta-sec">
+          <div className="dw-meta-h">Notes</div>
+          <div style={{fontSize:13,color:TEXT,lineHeight:1.6,whiteSpace:'pre-wrap'}}>{active.notes}</div>
+        </div>
+      )}
+      {ctx&&(
+        <div className="dw-meta-sec">
+          <div className="dw-meta-h">On This Project</div>
+          <InsightRow label="Current Set" value={`${current} sheet${current===1?'':'s'}`}/>
+          <InsightRow label={`${active.discipline||'Other'} Sheets Current`} value={String(drawings.filter(d=>(d.discipline||'Other')===(active.discipline||'Other')&&d.status==='current').length)}/>
+          <InsightRow label="Open RFIs" value={String(Number(counts?.openRfis)||0)}/>
+          <InsightRow label="Open Submittals" value={String(Number(counts?.openSubmittals)||0)}/>
+          <div style={{display:'flex',gap:14,flexWrap:'wrap',marginTop:8,fontSize:13}}>
+            <a className="dw-link" href={`/app/projects/${projectId}/rfis`}>Open RFIs →</a>
+            <a className="dw-link" href={`/app/projects/${projectId}/submittals`}>Open Submittals →</a>
+          </div>
+        </div>
+      )}
+    </aside>
+  );
+
+  /* ── Canvas body ── */
+  let canvasBody:React.ReactNode;
+  if(loading){
+    canvasBody=<div className="dw-center" aria-busy="true">Loading drawings…</div>;
+  }else if(loadError){
+    canvasBody=(
+      <div className="dw-center">
+        <Warning size={28} color="var(--danger)"/>
+        <div style={{fontSize:15,fontWeight:700,color:TEXT}}>Couldn’t Load the Drawings</div>
+        <div>Nothing is shown because the register didn’t load — this is not an empty set.</div>
+        <Button icon={<ArrowClockwise size={14}/>} onClick={load}>Retry</Button>
+      </div>
+    );
+  }else if(drawings.length===0){
+    canvasBody=(
+      <div className="dw-center">
+        <EmptyState icon={<Ruler size={22}/>} title="Start the Drawing Register"
+          text="Upload the issued-for-construction set. Each sheet files itself under its discipline and opens here on the canvas."
+          action={<Button icon={<UploadSimple size={14}/>} onClick={openCreate}>Upload First Sheet</Button>}/>
+      </div>
+    );
+  }else if(!active){
+    canvasBody=(
+      <div className="dw-center">
+        <div style={{fontSize:15,fontWeight:700,color:TEXT}}>No Sheet Matches</div>
+        <div>Adjust the search or filters to pick a sheet.</div>
+        {filtersOn&&<Button onClick={clearFilters}>Clear Filters</Button>}
+      </div>
+    );
+  }else if(!activeUrl){
+    canvasBody=(
+      <div className="dw-center">
+        <FileX size={28} color="var(--text-tertiary)"/>
+        <div style={{fontSize:15,fontWeight:700,color:TEXT}}>No File on This Sheet</div>
+        <div>This register entry has no PDF or link attached yet.</div>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap',justifyContent:'center'}}>
+          <Button icon={<UploadSimple size={14}/>} onClick={()=>openNewRevision(active)}>Upload a Revision</Button>
+          <Button variant="ghost" icon={<PencilSimple size={14}/>} onClick={()=>openEdit(active)}>Link a URL</Button>
+        </div>
+      </div>
+    );
+  }else if(activeIsPdf){
+    /* The reader's own page renderer (components/PdfViewer). Keyed on the
+       panel layout so a rail/details toggle re-fits the sheet to its width. */
+    canvasBody=(
+      <PdfPane key={`${active.id}:${railOpen?1:0}${metaOpen?1:0}`} url={activeUrl} zoom={1} page={page} onPages={onPages} fit/>
+    );
+  }else if(imgError){
+    canvasBody=(
+      <div className="dw-center">
+        <Warning size={28} color="var(--danger)"/>
+        <div style={{fontSize:15,fontWeight:700,color:TEXT}}>This File Couldn’t Be Displayed</div>
+        <div>It may not be an image or PDF, or the link may have expired.</div>
+        <a className="dw-link" href={activeUrl} target="_blank" rel="noopener noreferrer">Try Opening It Directly</a>
+      </div>
+    );
+  }else{
+    canvasBody=(
+      <div className="dw-canvas-img">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={activeUrl} alt={activeLabel} onError={()=>setImgError(true)}/>
+      </div>
+    );
+  }
 
   return(
     <>
-      <style>{`@keyframes drawerIn{from{transform:translateX(100%);opacity:.4}to{transform:translateX(0);opacity:1}}`}</style>
+      <style dangerouslySetInnerHTML={{__html:DW_CSS}}/>
 
-      {toast&&(
-        <div style={{position:'fixed',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:99999,
-          padding:'12px 20px',borderRadius:8,color:'#fff',fontWeight:700,fontSize:14,pointerEvents:'none',
-          background:toast.type==='success'?'rgba(26,138,74,.92)':'rgba(192,48,48,.92)'}}>
-          {toast.msg}
-        </div>
-      )}
+      <Toast message={toast?.msg??null} tone={toast?.type==='error'?'bad':'good'}/>
 
-      <PremiumSurface maxWidth={2200}>
-        {/* Header */}
-        <ModuleHero
-          eyebrow={ctx?.project?.name||'Drawings'}
-          eyebrowIcon={<Ruler size={13} weight="fill" color={moduleAccent('drawings').hex}/>}
-          title="Drawing"
-          accent="Register"
-          subtitle={current>0?`${current} current sheet${current===1?'':'s'} in force across ${disciplineCount} discipline${disciplineCount===1?'':'s'}${superseded>0?` — ${superseded} superseded kept on record`:''}.`:'Architectural and engineering drawing sets'}
-          actions={
-            <button onClick={openCreate} style={goldButtonStyle} className="pmBtn">
-              <Plus size={15} weight="bold"/> Add Drawing
-            </button>
-          }
-        />
-
-        {/* Project intelligence strip — what the system already knows */}
-        {ctx&&(
-          <StatStrip items={[
-            {href: `/app/projects/${projectId}/drawings`, label:'Project',value:ctx.project?.projectNumber||ctx.project?.name||'—',sub:ctx.project?.status?String(ctx.project.status).replace(/_/g,' ').replace(/\b\w/g,(c:string)=>c.toUpperCase()):'Active'},
-            {href: `/app/projects/${projectId}/drawings`, label:'Current Set',value:String(current),sub:superseded>0?`${superseded} superseded on record`:'No superseded sheets'},
-            {href: `/app/projects/${projectId}/drawings`, label:'Latest Revision',value:latestRev?fmtDate(latestRev.revision_date):'—',sub:latestRev?`${sheetNo(latestRev)||latestRev.title||'sheet'} R${latestRev.revision??latestRev.version??0}`:'No revision dates yet'},
-            {href: `/app/projects/${projectId}/rfis`, label:'Open RFIs',value:String(Number(counts?.openRfis)||0),accent:Number(counts?.openRfis)>0?GOLD:undefined,sub:'Often resolve on these sheets'},
-            {href: `/app/projects/${projectId}/submittals`, label:'Open Submittals',value:String(Number(counts?.openSubmittals)||0),sub:'Checked against the set'},
-            {href: `/app/projects/${projectId}/subs`, label:'Subs on the Job',value:String((ctx.subs||[]).length),sub:'Build from the current set'},
-          ]}/>
-        )}
-
-        {/* KPIs */}
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
-          <StatCard icon={<Stack size={19} weight="duotone" color={moduleAccent('drawings').hex}/>} label="Total Drawings" value={String(total)} accent="var(--brand-primary-strong)" sub="In register" delay={0.02} href={`/app/projects/${projectId}/drawings`}/>
-          <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN}/>} label="Current" value={String(current)} accent={GREEN} sub={superseded>0?`vs ${superseded} superseded`:'Active sheets'} delay={0.06} href={`/app/projects/${projectId}/drawings`}/>
-          <StatCard icon={<Eye size={19} weight="duotone" color={GOLD}/>} label="For Review" value={String(forReview)} accent={GOLD} sub="Awaiting review" delay={0.10} href={`/app/projects/${projectId}/drawings`}/>
-          <StatCard icon={<SquaresFour size={19} weight="duotone" color="#a78bfa"/>} label="Disciplines" value={String(disciplineCount)} accent="#a78bfa" sub="Represented" delay={0.14} href={`/app/projects/${projectId}/drawings`}/>
-        </div>
-
-        {/* List toolbar — search + discipline/status filters; set + view toggles in extra */}
-        <ListToolbar
-          module="drawings"
-          search={search}
-          onSearch={setSearch}
-          searchPlaceholder="Search drawings…"
-          filters={[
-            { key: 'discipline', label: 'Discipline', value: filterDiscipline, onChange: setFilterDiscipline, allLabel: 'All Disciplines', options: [...DISCIPLINES] },
-            { key: 'status', label: 'Status', value: filterStatus, onChange: setFilterStatus, allLabel: 'All Statuses', options: STATUSES.map(s => ({ value: s, label: STATUS_LABELS[s] })) },
-          ]}
-          count={{ shown: filtered.length, total: total }}
-          style={{ marginBottom: 18 }}
-          extra={<>
-            {/* Current set vs full revision history */}
-            <div style={{display:'flex',background:RAISED,border:`1px solid ${PBORDER}`,borderRadius:10,overflow:'hidden'}}>
-              <button onClick={()=>setDrawingSet('current')}
-                style={{padding:'9px 15px',border:'none',cursor:'pointer',fontSize:12,fontWeight:700,
-                  background:drawingSet==='current'?GOLD:'transparent',
-                  color:drawingSet==='current'?'#0A0A00':DIM}}>
-                Current Set ({current})
-              </button>
-              <button onClick={()=>setDrawingSet('all')}
-                style={{padding:'9px 15px',border:'none',cursor:'pointer',fontSize:12,fontWeight:700,
-                  background:drawingSet==='all'?GOLD:'transparent',
-                  color:drawingSet==='all'?'#0A0A00':DIM}}>
-                All Revisions ({total})
-              </button>
-            </div>
-            {/* View toggle */}
-            <div style={{display:'flex',background:RAISED,border:`1px solid ${PBORDER}`,borderRadius:10,overflow:'hidden'}}>
-              <button onClick={()=>setGroupByDiscipline(true)}
-                style={{padding:'9px 15px',border:'none',cursor:'pointer',fontSize:12,fontWeight:700,
-                  background:groupByDiscipline?GOLD:'transparent',
-                  color:groupByDiscipline?'#0A0A00':DIM}}>
-                By Discipline
-              </button>
-              <button onClick={()=>setGroupByDiscipline(false)}
-                style={{padding:'9px 15px',border:'none',cursor:'pointer',fontSize:12,fontWeight:700,
-                  background:!groupByDiscipline?GOLD:'transparent',
-                  color:!groupByDiscipline?'#0A0A00':DIM}}>
-                Flat List
-              </button>
-            </div>
-          </>}
-        />
-
-        {loading&&(
-          <SectionCard flat>
-            <div style={{padding:24,textAlign:'center',color:DIM}}>Loading drawings…</div>
-          </SectionCard>
-        )}
-
-        {!loading&&loadError&&(
-          <div style={{background:'rgba(192,48,48,.12)',border:'1px solid rgba(192,48,48,.3)',borderRadius:12,padding:'12px 16px',marginBottom:20,color:'#f0a0a0',fontSize:13}}>
-            {loadError}
+      <div className="dw-root" data-view={view}>
+        {/* Header — context, title, view toggle, ONE primary action */}
+        <header className="dw-head">
+          <div className="dw-head-id">
+            <div className="dw-eyebrow">{ctx?.project?.name||'Project'}{!loading&&!loadError&&total>0?` · ${current} current sheet${current===1?'':'s'} across ${disciplineCount} discipline${disciplineCount===1?'':'s'}`:''}</div>
+            <h1 className="dw-title">Drawings</h1>
           </div>
-        )}
+          <div className="dw-head-tabs">
+            <Tabs value={view} onChange={k=>setView(k as 'sheet'|'register')} tabs={[
+              {key:'sheet',label:'Sheet'},
+              {key:'register',label:'Register',count:loading||loadError?undefined:total},
+            ]}/>
+          </div>
+          <Button variant="primary" icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>Add Drawing</Button>
+        </header>
 
-        {!loading&&filtered.length===0&&(
-          <SectionCard>
-            <PremiumEmpty
-              icon={<Ruler size={30} weight="duotone" color={GOLD}/>}
-              title={drawings.length===0?'Start the Drawing Register':'No Drawings Match Your Filters'}
-              description={drawings.length===0
-                ?`Upload the issued-for-construction set — each sheet files itself under its discipline, sorted by sheet number, and superseded revisions stay on record so every RFI points at the sheet it was answered against.${(ctx?.subs||[]).length>0?` Your ${ctx.subs.length} sub${ctx.subs.length===1?'':'s'} ${ctx.subs.length===1?'builds':'build'} from whatever is marked current.`:''}`
-                :(drawingSet==='current'&&superseded>0
-                  ?'Nothing in the current set matches — switch to All Revisions to search superseded sheets, or adjust your filters.'
-                  :'Try adjusting your search or filters.')}
-              action={drawings.length===0?(
-                <button onClick={openCreate} style={goldButtonStyle} className="pmBtn">
-                  <UploadSimple size={15} weight="bold"/> Upload First Sheet
-                </button>
-              ):undefined}
-            />
-          </SectionCard>
-        )}
-
-        {!loading&&filtered.length>0&&groupByDiscipline&&(
-          <div style={{display:'flex',flexDirection:'column',gap:20}}>
-            {groupOrder.map(discipline=>{const discDrawings=grouped[discipline];return(
-              <SectionCard
-                key={discipline}
-                flush
-                accent={DISCIPLINE_COLORS[discipline]||DIM}
-                icon={<div style={{width:13,height:13,borderRadius:4,background:DISCIPLINE_COLORS[discipline]||DIM}}/>}
-                title={discipline}
-                subtitle={`${discDrawings.length} sheet${discDrawings.length===1?'':'s'}`}
-              >
-                <div style={{overflowX:'auto'}}>
-                  <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
-                    {tableHead}
-                    <tbody>
-                      {discDrawings.map(d=><DrawingRow key={d.id} drawing={d}/>)}
-                    </tbody>
-                  </table>
+        {view==='sheet'?(
+          <div className="dw-work">
+            {railOpen&&rail}
+            {isPhone&&(railOpen||(metaOpen&&!!active))&&(
+              <div className="dw-scrim" onClick={()=>{setRailOpen(false);setMetaOpen(false);}} aria-hidden/>
+            )}
+            <section className="dw-stage" aria-label="Sheet">
+              <div className="dw-bar">
+                {!railOpen&&(
+                  <button type="button" className="dw-ibtn" aria-label="Show sheet list" title="Show Sheet List" onClick={()=>setRailOpen(true)}>
+                    <SidebarSimple size={18}/>
+                  </button>
+                )}
+                <div className="dw-bar-id">
+                  {active?(
+                    <>
+                      <span className="dw-bar-no">{sheetNo(active)||'—'}</span>
+                      <span className="dw-bar-rev">R{revOf(active)}</span>
+                      <span className="dw-bar-title">{active.title||''}</span>
+                      <span className="dw-hide-sm"><Badge tone={STATUS_TONE[active.status]||'neutral'}>{STATUS_LABELS[active.status]||active.status||'—'}</Badge></span>
+                    </>
+                  ):(
+                    <span className="dw-bar-title">{loading?'Loading…':'No sheet selected'}</span>
+                  )}
                 </div>
-              </SectionCard>
-            );})}
+                {active&&activeIsPdf&&pageCount>1&&(
+                  <div className="dw-pages">
+                    <button type="button" className="dw-ibtn" aria-label="Previous page" disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))}><CaretLeft size={16}/></button>
+                    <span>{page} / {pageCount}</span>
+                    <button type="button" className="dw-ibtn" aria-label="Next page" disabled={page>=pageCount} onClick={()=>setPage(p=>Math.min(pageCount,p+1))}><CaretRight size={16}/></button>
+                  </div>
+                )}
+                {active&&activeUrl&&priorRev&&(
+                  <button type="button" className="dw-ibtn" aria-label={`Compare with R${revOf(priorRev)}`} title={`Compare with R${revOf(priorRev)}`} onClick={()=>openCompare(priorRev)}>
+                    <Columns size={18}/>
+                  </button>
+                )}
+                {active&&activeUrl&&activeIsPdf&&(
+                  <button type="button" className="dw-ibtn" aria-label="Open in reader (zoom, full screen)" title="Open in Reader" onClick={openReader}>
+                    <ArrowsOutSimple size={18}/>
+                  </button>
+                )}
+                {active&&activeUrl&&!activeIsPdf&&(
+                  <a className="dw-ibtn" href={activeUrl} target="_blank" rel="noopener noreferrer" aria-label="Open file in a new tab" title="Open File">
+                    <ArrowSquareOut size={18}/>
+                  </a>
+                )}
+                {active&&(
+                  <button type="button" className="dw-ibtn" aria-pressed={metaOpen} aria-label={metaOpen?'Hide details':'Show details'} title={metaOpen?'Hide Details':'Show Details'} onClick={()=>setMetaOpen(o=>!o)}>
+                    <Info size={18}/>
+                  </button>
+                )}
+              </div>
+              <div className="dw-canvas">{canvasBody}</div>
+            </section>
+            {metaOpen&&meta}
+          </div>
+        ):(
+          <div className="dw-reg">
+            {!loading&&!loadError&&total>0&&(
+              <StatRow items={[
+                {label:'Current Set',value:current,sub:superseded>0?`${superseded} superseded on record`:'No superseded sheets',tone:'good',onClick:()=>{setFilterStatus('current');setDrawingSet('current');}},
+                {label:'For Review',value:forReview,sub:'Awaiting review',tone:forReview>0?'warn':'default',onClick:()=>{setFilterStatus('for_review');}},
+                {label:'Superseded',value:superseded,sub:'Kept on record',onClick:()=>{setFilterStatus('superseded');setDrawingSet('all');}},
+                {label:'Disciplines',value:disciplineCount,sub:`${total} sheet${total===1?'':'s'} in register`,onClick:()=>{clearFilters();setDrawingSet('all');}},
+              ]}/>
+            )}
+            <Toolbar search={search} onSearch={setSearch} placeholder="Search drawings…"
+              filters={<>
+                <Select aria-label="Discipline" value={filterDiscipline==='all'?'':filterDiscipline} onChange={e=>setFilterDiscipline(e.target.value||'all')} placeholder="All Disciplines" options={[...DISCIPLINES]}/>
+                <Select aria-label="Status" value={filterStatus==='all'?'':filterStatus} onChange={e=>setFilterStatus(e.target.value||'all')} placeholder="All Statuses" options={STATUSES.map(s=>({value:s,label:STATUS_LABELS[s]}))}/>
+                {setToggle}
+              </>}
+              actions={
+                <div className="dw-seg" role="group" aria-label="Grouping">
+                  <button type="button" aria-pressed={groupByDiscipline} onClick={()=>setGroupByDiscipline(true)}>By Discipline</button>
+                  <button type="button" aria-pressed={!groupByDiscipline} onClick={()=>setGroupByDiscipline(false)}>Flat List</button>
+                </div>
+              }
+            />
+            {(loading||loadError||filtered.length===0||!groupByDiscipline)?(
+              <Card flush title={loading?'Drawings':!groupByDiscipline&&filtered.length>0?'All Drawings':undefined}
+                subtitle={!loading&&filtered.length>0?`${filtered.length} of ${total} sheet${total===1?'':'s'}`:undefined}>
+                <DataTable columns={columns} rows={loading||loadError?[]:filtered} rowKey={d=>d.id} loading={loading}
+                  onRowClick={viewDrawing} rowActions={rowActions} empty={registerEmpty}/>
+              </Card>
+            ):(
+              groupOrder.map(disc=>(
+                <Card key={disc} flush
+                  title={<span style={{display:'inline-flex',alignItems:'center',gap:8}}><span className="dw-dot" style={{background:DISCIPLINE_COLORS[disc]||'#A9B4C4'}}/>{disc}</span>}
+                  subtitle={`${grouped[disc].length} sheet${grouped[disc].length===1?'':'s'}`}>
+                  <DataTable columns={columns} rows={grouped[disc]} rowKey={d=>d.id} onRowClick={viewDrawing} rowActions={rowActions}/>
+                </Card>
+              ))
+            )}
           </div>
         )}
+      </div>
 
-        {!loading&&filtered.length>0&&!groupByDiscipline&&(
-          <SectionCard flush icon={<Ruler size={17} weight="duotone" color={moduleAccent('drawings').hex}/>} title="All Drawings" subtitle={`${filtered.length} sheet${filtered.length===1?'':'s'}`}>
-            <div style={{overflowX:'auto'}}>
-              <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
-                {tableHead}
-                <tbody>
-                  {filtered.map(d=><DrawingRow key={d.id} drawing={d}/>)}
-                </tbody>
-              </table>
-            </div>
-          </SectionCard>
-        )}
-      </PremiumSurface>
-
-      {/* Side Panel — premium slide-over */}
-      {mode!==null&&(
-        <div style={{position:'fixed',top:0,right:0,bottom:0,width:'min(460px,100%)',zIndex:600,
-          background:'var(--bg-surface)',borderLeft:`1px solid ${PBORDER}`,
+      {/* Add / Edit / New Revision — slide-over */}
+      {(mode==='create'||mode==='edit')&&(
+        <div role="dialog" aria-modal="true" aria-label={mode==='create'?(replacing?'Upload New Revision':'Add Drawing'):'Edit Drawing'}
+          style={{position:'fixed',top:0,right:0,bottom:0,width:'min(460px,100%)',zIndex:600,
+          background:'var(--bg-elevated)',borderLeft:`1px solid ${BORDER}`,
           boxShadow:'-28px 0 70px -24px rgba(0,0,0,.75)',
           overflow:'auto',display:'flex',flexDirection:'column',
+          paddingTop:'env(safe-area-inset-top,0px)',paddingBottom:'env(safe-area-inset-bottom,0px)',
           animation:'drawerIn .28s cubic-bezier(.2,.7,.3,1)'}}>
-          <div style={{padding:'16px 20px',borderBottom:`1px solid ${PBORDER}`,
+          <div style={{padding:'12px 16px 12px 20px',borderBottom:`1px solid ${PBORDER}`,
             display:'flex',alignItems:'center',justifyContent:'space-between',
-            position:'sticky',top:0,background:'var(--bg-surface)',zIndex:2}}>
+            position:'sticky',top:0,background:'var(--bg-elevated)',zIndex:2}}>
             <div style={{fontWeight:800,fontSize:15,color:TEXT}}>
-              {mode==='create'?'Add Drawing':mode==='edit'?'Edit Drawing':'Drawing Detail'}
+              {mode==='create'?(replacing?'Upload New Revision':'Add Drawing'):'Edit Drawing'}
             </div>
-            <div style={{display:'flex',gap:8}}>
-              {mode==='view'&&selected&&(
-                <>
-                  <button onClick={()=>openEdit(selected)}
-                    style={{padding:'6px 14px',background:'var(--brand-primary-12)',
-                      border:'1px solid var(--brand-primary-35)',borderRadius:8,
-                      color:'var(--brand-primary-strong)',fontSize:12,fontWeight:700,cursor:'pointer'}}>
-                    Edit
-                  </button>
-                  <button onClick={()=>deleteDrawing(selected)} disabled={deleting}
-                    style={{padding:'6px 14px',background:'rgba(192,48,48,.12)',
-                      border:`1px solid ${RED}55`,borderRadius:8,
-                      color:'#e88a8a',fontSize:12,fontWeight:700,cursor:'pointer'}}>
-                    {deleting?'…':'Delete'}
-                  </button>
-                </>
-              )}
-              <button onClick={closePanel}
-                style={{padding:'6px 10px',background:'rgba(255,255,255,0.04)',
-                  border:`1px solid ${PBORDER}`,borderRadius:8,color:DIM,fontSize:12,cursor:'pointer',display:'inline-flex',alignItems:'center'}}>
-                <X size={14} weight="bold" color={DIM}/>
-              </button>
-            </div>
+            <button type="button" className="dw-ibtn" onClick={closePanel} aria-label="Close" style={{width:44,height:44}}>
+              <X size={16} weight="bold"/>
+            </button>
           </div>
 
           <div style={{flex:1,padding:20}}>
-            {(mode==='create'||mode==='edit')?(
-              <div style={{display:'flex',flexDirection:'column',gap:14}}>
-                {mode==='create'&&(
-                  <label style={{display:'block',cursor:'pointer',border:`1.5px dashed ${uploadFile?'rgba(52,199,89,0.5)':'color-mix(in srgb, var(--brand-primary) 40%, transparent)'}`,borderRadius:12,padding:'16px 14px',textAlign:'center',background:uploadFile?'rgba(52,199,89,0.06)':'color-mix(in srgb, var(--brand-primary) 5%, transparent)'}}>
-                    <input type="file" accept=".pdf,image/*" style={{display:'none'}}
-                      onChange={e=>pickFile(e.target.files?.[0]||null)}/>
-                    <UploadSimple size={20} weight="bold" color={uploadFile?'#34C759':'var(--brand-primary-strong)'}/>
-                    <div style={{fontSize:13,fontWeight:800,color:uploadFile?'#34C759':'var(--brand-primary-strong)',marginTop:6}}>
-                      {uploadFile?uploadFile.name:'Upload the Sheet PDF'}
-                    </div>
-                    <div style={{fontSize:11,color:DIM,marginTop:4,lineHeight:1.5}}>
-                      {uploadFile?'Sheet number and title were read from the filename — adjust below.':'Drop in "A-101 Floor Plan.pdf" and the sheet number and title prefill from the filename. Or skip the file and link a URL below.'}
-                    </div>
-                  </label>
-                )}
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-                  <div>
-                    <FieldLabel label="Drawing # *" auto={mode==='create'&&autoFields.num}/>
-                    <input value={form.drawing_number}
-                      onChange={e=>{const v=e.target.value;setAutoFields(a=>({...a,num:false}));setForm(f=>({...f,drawing_number:v}));}}
-                      style={inp} placeholder="e.g. A1.01"/>
-                    <div style={hint}>Sheets sort naturally — A-2 files before A-10.</div>
-                  </div>
-                  <div>
-                    <FieldLabel label="Revision"/>
-                    <input type="number" min={0} value={form.revision}
-                      onChange={e=>setForm(f=>({...f,revision:e.target.value}))}
-                      style={inp}/>
-                  </div>
+            <div style={{display:'flex',flexDirection:'column',gap:14}}>
+              {mode==='create'&&replacing&&(
+                <div style={{background:'rgba(255,138,0,0.10)',border:'1px solid rgba(255,138,0,0.40)',borderRadius:10,padding:'10px 12px',fontSize:13,color:TEXT,lineHeight:1.5}}>
+                  Replacing <strong>{sheetNo(replacing)||'this sheet'} R{revOf(replacing)}</strong> — this files as R{Number(form.revision)||0}. The earlier revision stays on record; edit it to mark it superseded once the new one is in.
                 </div>
-                <div>
-                  <FieldLabel label="Title *" auto={mode==='create'&&autoFields.title}/>
-                  <input value={form.title} onChange={e=>{const v=e.target.value;setAutoFields(a=>({...a,title:false}));setForm(f=>({...f,title:v}));}}
-                    style={inp} placeholder="e.g. Floor Plan - Level 1"/>
-                </div>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-                  <div>
-                    <FieldLabel label="Discipline"/>
-                    <select value={form.discipline}
-                      onChange={e=>setForm(f=>({...f,discipline:e.target.value}))}
-                      style={{...inp,padding:'9px 10px'}}>
-                      {DISCIPLINES.map(d=><option key={d} value={d}>{d}</option>)}
-                    </select>
-                    <div style={hint}>Canonical discipline list — the register groups sheets under this.</div>
+              )}
+              {mode==='create'&&(
+                <label style={{display:'block',cursor:'pointer',border:`1.5px dashed ${saveError&&uploadFile?'rgba(255,59,48,0.6)':uploadFile?'rgba(44,255,122,0.5)':'color-mix(in srgb, var(--brand-primary) 40%, transparent)'}`,borderRadius:12,padding:'16px 14px',textAlign:'center',background:saveError&&uploadFile?'rgba(255,59,48,0.06)':uploadFile?'rgba(44,255,122,0.06)':'color-mix(in srgb, var(--brand-primary) 5%, transparent)'}}>
+                  <input type="file" accept=".pdf,image/*" style={{display:'none'}}
+                    onChange={e=>pickFile(e.target.files?.[0]||null)}/>
+                  <UploadSimple size={20} weight="bold" color={saveError&&uploadFile?'#FF3B30':uploadFile?'#2CFF7A':'var(--brand-primary-strong)'}/>
+                  <div style={{fontSize:13,fontWeight:800,color:saveError&&uploadFile?'#FF3B30':uploadFile?'#2CFF7A':'var(--brand-primary-strong)',marginTop:6,overflowWrap:'anywhere'}}>
+                    {uploadFile?uploadFile.name:'Upload the Sheet PDF'}
                   </div>
-                  <div>
-                    <FieldLabel label="Status"/>
-                    <select value={form.status}
-                      onChange={e=>setForm(f=>({...f,status:e.target.value}))}
-                      style={{...inp,padding:'9px 10px'}}>
-                      {STATUSES.map(s=><option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
-                    </select>
-                    <div style={hint}>Superseded and void sheets drop out of the current set but stay on record.</div>
+                  <div style={{fontSize:12,color:DIM,marginTop:4,lineHeight:1.5}}>
+                    {saveError&&uploadFile?'Not uploaded. The file is still attached — fix the issue below and try again, or tap to choose a different file.'
+                      :uploadFile?'Ready to upload. Sheet number and title were read from the filename — adjust below.'
+                      :'Drop in "A-101 Floor Plan.pdf" and the sheet number and title prefill from the filename. Or skip the file and link a URL below.'}
                   </div>
+                </label>
+              )}
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                <div style={{minWidth:0}}>
+                  <FieldLabel label="Drawing # *" auto={mode==='create'&&autoFields.num}/>
+                  <input value={form.drawing_number}
+                    onChange={e=>{const v=e.target.value;setAutoFields(a=>({...a,num:false}));setForm(f=>({...f,drawing_number:v}));}}
+                    style={inp} placeholder="e.g. A1.01"/>
+                  <div style={hint}>Sheets sort naturally — A-2 files before A-10.</div>
                 </div>
-                <div>
-                  <FieldLabel label="Revision Date" auto={mode==='create'&&autoFields.date}/>
-                  <SaguaroDatePicker value={form.revision_date}
-                    onChange={v=>{setAutoFields(a=>({...a,date:false}));setForm(f=>({...f,revision_date:v}));}}
+                <div style={{minWidth:0}}>
+                  <FieldLabel label="Revision"/>
+                  <input type="number" min={0} value={form.revision}
+                    onChange={e=>setForm(f=>({...f,revision:e.target.value}))}
                     style={inp}/>
-                  <div style={hint}>Defaults to today — the date on the title block wins.</div>
-                </div>
-                <div>
-                  <FieldLabel label="PDF / Drawing URL"/>
-                  <input value={form.url} onChange={e=>setForm(f=>({...f,url:e.target.value}))}
-                    style={inp} placeholder="https://…"/>
-                  <div style={hint}>{uploadFile&&mode==='create'?'Not needed — the uploaded file stores its own link.':'Optional — link an external PDF if you are not uploading the file.'}</div>
-                </div>
-                <div>
-                  <FieldLabel label="Notes"/>
-                  <textarea value={form.notes}
-                    onChange={e=>setForm(f=>({...f,notes:e.target.value}))}
-                    rows={3} style={{...inp,resize:'vertical',lineHeight:1.5}}
-                    placeholder="Revision notes, superseded by, etc."/>
-                </div>
-                {mode==='create'&&(
-                  <div style={{background:PSURFACE,border:`1px solid ${PBORDER}`,borderRadius:12,padding:'14px 16px'}}>
-                    <FlowSteps title="What Happens Next" steps={[
-                      {title:'Sheet Files Itself',desc:'Lands under its discipline, sorted by sheet number.'},
-                      {title:'The Team Works the Current Set',desc:'Field crews and subs build from sheets marked current.'},
-                      {title:'Revisions Supersede Cleanly',desc:'When the next rev lands, mark this one superseded — it stays on record.'},
-                    ]}/>
-                  </div>
-                )}
-                <div style={{display:'flex',gap:10,paddingTop:4}}>
-                  <button onClick={save} disabled={saving} className="pmBtn"
-                    style={{...goldButtonStyle,flex:1,opacity:saving?0.6:1,cursor:saving?'not-allowed':'pointer'}}>
-                    {saving?(uploadFile&&mode==='create'?'Uploading…':'Saving…'):mode==='create'?(uploadFile?'Upload Sheet':'Add Drawing'):'Save Changes'}
-                  </button>
-                  <button onClick={closePanel} style={{...ghostButtonStyle}}>
-                    Cancel
-                  </button>
                 </div>
               </div>
-            ):selected?(
-              <div style={{display:'flex',flexDirection:'column',gap:14}}>
-                {/* Header card */}
-                <div style={{background:PSURFACE,border:`1px solid ${PBORDER}`,borderRadius:12,padding:16}}>
-                  <div style={{fontSize:12,color:GOLD,fontWeight:700,marginBottom:4}}>
-                    {sheetNo(selected)||'—'} &bull; R{selected.revision??selected.version??0}
-                  </div>
-                  <div style={{fontSize:16,fontWeight:800,color:TEXT,marginBottom:10}}>
-                    {selected.title}
-                  </div>
-                  <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-                    <Pill label={selected.discipline||'Other'}
-                      color={DISCIPLINE_COLORS[selected.discipline]||DIM}/>
-                    <Pill label={STATUS_LABELS[selected.status]||selected.status}
-                      color={STATUS_COLORS[selected.status]||DIM}/>
-                  </div>
-                </div>
-
-                {/* Metadata */}
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-                  <InfoCard label="Revision #" value={`R${selected.revision??0}`}/>
-                  <InfoCard label="Revision Date" value={fmtDate(selected.revision_date)}/>
-                  <InfoCard label="Status" value={STATUS_LABELS[selected.status]||selected.status}/>
-                  <InfoCard label="Discipline" value={selected.discipline}/>
-                </div>
-
-                {ctx&&(
-                  <div style={{background:PSURFACE,border:`1px solid ${PBORDER}`,borderRadius:10,padding:'12px 14px'}}>
-                    <div style={{fontSize:10,fontWeight:700,color:DIM, marginBottom:6}}>On This Project</div>
-                    <InsightRow label="Current Set" value={`${current} sheet${current===1?'':'s'}`}/>
-                    <InsightRow label={`${selected.discipline||'Other'} Sheets Current`} value={String(drawings.filter(d=>(d.discipline||'Other')===(selected.discipline||'Other')&&d.status==='current').length)}/>
-                    <InsightRow label="Open RFIs" value={String(Number(ctx.counts?.openRfis)||0)} accent={Number(ctx.counts?.openRfis)>0?GOLD:undefined}/>
-                    <InsightRow label="Open Submittals" value={String(Number(ctx.counts?.openSubmittals)||0)}/>
-                  </div>
-                )}
-
-                {selected.notes&&(
-                  <div style={{background:PSURFACE,border:`1px solid ${PBORDER}`,borderRadius:10,padding:'12px 14px'}}>
-                    <div style={{fontSize:10,fontWeight:700,color:DIM, marginBottom:6}}>Notes</div>
-                    <div style={{fontSize:13,color:TEXT,lineHeight:1.6,whiteSpace:'pre-wrap'}}>{selected.notes}</div>
-                  </div>
-                )}
-
-                {selected.url&&(
-                  <button type="button"
-                    onClick={()=>openPdf({url:selected.url!,title:`${selected.number||''} ${selected.title||'Drawing'}`.trim()})}
-                    style={{display:'block',padding:'12px 14px',
-                      background:'var(--brand-primary-08)',
-                      border:'1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)',borderRadius:10,
-                      color:'var(--brand-primary-strong)',fontSize:13,fontWeight:700,textDecoration:'none',
-                      textAlign:'center'}}>
-                    View PDF / Drawing
-                  </button>
-                )}
+              <div>
+                <FieldLabel label="Title *" auto={mode==='create'&&autoFields.title}/>
+                <input value={form.title} onChange={e=>{const v=e.target.value;setAutoFields(a=>({...a,title:false}));setForm(f=>({...f,title:v}));}}
+                  style={inp} placeholder="e.g. Floor Plan - Level 1"/>
               </div>
-            ):null}
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                <div style={{minWidth:0}}>
+                  <FieldLabel label="Discipline"/>
+                  <select value={form.discipline}
+                    onChange={e=>setForm(f=>({...f,discipline:e.target.value}))}
+                    style={{...inp,padding:'9px 10px'}}>
+                    {DISCIPLINES.map(d=><option key={d} value={d}>{d}</option>)}
+                  </select>
+                  <div style={hint}>Canonical discipline list — the register groups sheets under this.</div>
+                </div>
+                <div style={{minWidth:0}}>
+                  <FieldLabel label="Status"/>
+                  <select value={form.status}
+                    onChange={e=>setForm(f=>({...f,status:e.target.value}))}
+                    style={{...inp,padding:'9px 10px'}}>
+                    {STATUSES.map(s=><option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
+                  </select>
+                  <div style={hint}>Superseded and void sheets drop out of the current set but stay on record.</div>
+                </div>
+              </div>
+              <div>
+                <FieldLabel label="Revision Date" auto={mode==='create'&&autoFields.date}/>
+                <SaguaroDatePicker value={form.revision_date}
+                  onChange={v=>{setAutoFields(a=>({...a,date:false}));setForm(f=>({...f,revision_date:v}));}}
+                  style={inp}/>
+                <div style={hint}>Defaults to today — the date on the title block wins.</div>
+              </div>
+              <div>
+                <FieldLabel label="PDF / Drawing URL"/>
+                <input value={form.url} onChange={e=>setForm(f=>({...f,url:e.target.value}))}
+                  style={inp} placeholder="https://…"/>
+                <div style={hint}>{uploadFile&&mode==='create'?'Not needed — the uploaded file stores its own link.':'Optional — link an external PDF if you are not uploading the file.'}</div>
+              </div>
+              <div>
+                <FieldLabel label="Notes"/>
+                <textarea value={form.notes}
+                  onChange={e=>setForm(f=>({...f,notes:e.target.value}))}
+                  rows={3} style={{...inp,resize:'vertical',lineHeight:1.5}}
+                  placeholder="Revision notes, superseded by, etc."/>
+              </div>
+              {mode==='create'&&!replacing&&(
+                <div style={{background:PSURFACE,border:`1px solid ${PBORDER}`,borderRadius:12,padding:'14px 16px'}}>
+                  <FlowSteps title="What Happens Next" steps={[
+                    {title:'Sheet Files Itself',desc:'Lands under its discipline, sorted by sheet number.'},
+                    {title:'The Team Works the Current Set',desc:'Field crews and subs build from sheets marked current.'},
+                    {title:'Revisions Supersede Cleanly',desc:'When the next rev lands, mark this one superseded — it stays on record.'},
+                  ]}/>
+                </div>
+              )}
+              {saveError&&(
+                <div role="alert" style={{display:'flex',gap:8,alignItems:'flex-start',background:'rgba(255,59,48,0.10)',border:'1px solid rgba(255,59,48,0.45)',borderRadius:10,padding:'10px 12px',fontSize:13,color:'#FFB3BB',lineHeight:1.5}}>
+                  <Warning size={16} color={RED} style={{flexShrink:0,marginTop:2}}/>
+                  <div><strong style={{color:TEXT}}>{mode==='create'&&uploadFile?'Upload Failed':'Save Failed'}</strong> — {saveError}</div>
+                </div>
+              )}
+              <div style={{display:'flex',gap:10,paddingTop:4}}>
+                <button onClick={save} disabled={saving} className="pmBtn"
+                  style={{...goldButtonStyle,flex:1,minHeight:44,opacity:saving?0.6:1,cursor:saving?'not-allowed':'pointer'}}>
+                  {saving?(uploadFile&&mode==='create'?'Uploading…':'Saving…'):mode==='create'?(uploadFile?(saveError?'Retry Upload':'Upload Sheet'):(replacing?'Add Revision':'Add Drawing')):'Save Changes'}
+                </button>
+                <button onClick={closePanel} style={{...ghostButtonStyle,minHeight:44}}>
+                  Cancel
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

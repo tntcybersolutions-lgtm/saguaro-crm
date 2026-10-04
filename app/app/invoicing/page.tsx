@@ -1,24 +1,42 @@
 'use client';
 /**
- * Invoicing Page — Fully wired to /api/invoices/list and /api/invoices/create.
- * Uses DataTable with sorting, filtering, pagination.
+ * Invoicing — Pass 4, on the RFIs reference layout (dense register).
+ *
+ * Anatomy: title + one primary action (New Invoice) → StatRow (billed /
+ * collected / outstanding / overdue / drafts — each tile filters the register)
+ * → Toolbar → the invoice register (kit DataTable). A row opens the invoice.
+ *
+ * Money: NUMERIC columns arrive as TEXT — Number() always — and a stale 0
+ * total defers to amount + tax so a $67,800 invoice never rolls up as $0.
+ * Amounts are aligned, tabular and two decimals, never truncated. A failed
+ * read is shown as a failure, never as an empty, all-clear ledger.
+ *
+ * Every read / write is the one this screen already used:
+ *   list     GET    /api/invoices/list
+ *   projects GET    /api/projects?limit=100&fields=id,name
+ *   create   POST   /api/invoices/create
+ *   send     POST   /api/invoices/[id]/send     (only "sent" once the route reports emailed)
+ *   pdf      POST   /api/invoices/[id]/pdf      (always a fresh signed URL)
+ *   delete   DELETE /api/invoices/[id]/delete
+ * The NudgeRing anchor and the unsaved-work guard are unchanged.
  */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
-import { createColumnHelper } from '@tanstack/react-table';
-import { Plus, CurrencyDollar, PaperPlaneTilt, Trash, Warning, Receipt, FilePdf } from '@phosphor-icons/react';
-import DataTable from '../../../components/DataTable';
-import { colors, font, radius } from '../../../lib/design-tokens';
-import { PremiumSurface, ModuleHero, SectionCard, StatStrip, FlowSteps, InsightRow, AutoChip, IconChip, Pill, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
-import { moduleAccent } from '@/lib/module-identity';
+import { Plus, PaperPlaneTilt, Trash, Receipt, FilePdf, ArrowClockwise, WarningCircle, ArrowSquareOut } from '@phosphor-icons/react';
+import {
+  PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, Select,
+  FormModal, Field, Input, Textarea, FormGrid, Toast, useToast,
+  type Column, type Action, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import { FlowSteps, InsightRow, AutoChip } from '@/components/ui/premium';
 import NudgeRing from '@/components/intelligence/NudgeRing';
 import { ANCHOR_INVOICES_OVERDUE } from '@/lib/suggestions';
 import Suggest from '@/components/ui/Suggest';
-import { StatusPill } from '@/components/ui/Status';
 import { openPdf } from '@/components/PdfViewer';
 
 interface Invoice {
@@ -42,18 +60,8 @@ interface Invoice {
 
 interface Project { id: string; name: string; }
 
-const columnHelper = createColumnHelper<Invoice>();
-
-const STATUS_COLORS: Record<string, string> = {
-  draft: colors.textDim,
-  pending: colors.orange,
-  sent: colors.blue,
-  approved: colors.green,
-  paid: colors.green,
-  overdue: colors.red,
-};
-
-const INV_ACCENT = moduleAccent('invoices');
+const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtUsd = (n: number) => money.format(Number(n) || 0);
 
 /** Canonical money figure for an invoice: the stored total when it's a real
  *  (non-zero) number, else amount + tax. NUMERIC columns arrive as TEXT so
@@ -78,6 +86,7 @@ function parseDateOnly(v: string): Date | null {
   if (!m) { const d = new Date(v); return isNaN(d.getTime()) ? null : d; }
   return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
 }
+const fmtDate = (v?: string | null) => { if (!v) return '—'; const d = parseDateOnly(v); return d ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'; };
 
 /** Overdue = due before today (local), and not paid / not a draft. */
 function isOverdue(i: { due_date?: string | null; status?: string | null }): boolean {
@@ -90,6 +99,52 @@ function isOverdue(i: { due_date?: string | null; status?: string | null }): boo
   return due < today && st !== 'paid' && st !== 'draft';
 }
 
+/** One status → one badge. Draft neutral; Pending amber; Sent blue (with the
+ *  customer); Approved green; Paid orange (closed money). Overdue rides as its
+ *  own red badge next to the status, from lib/status-colors. */
+function statusBadge(s?: string | null): { label: string; tone: BadgeTone } {
+  const k = statusKey(s);
+  if (k === 'pending') return { label: 'Pending', tone: 'under_contract' };
+  if (k === 'sent') return { label: 'Sent', tone: 'lead' };
+  if (k === 'approved') return { label: 'Approved', tone: 'ongoing' };
+  if (k === 'paid') return { label: 'Paid', tone: 'completed' };
+  if (k === 'overdue') return { label: 'Overdue', tone: 'overdue' };
+  return { label: 'Draft', tone: 'neutral' };
+}
+const STATUS_RANK: Record<string, number> = { draft: 0, pending: 1, sent: 2, approved: 3, paid: 4, overdue: 5 };
+type StatusFilter = 'all' | 'draft' | 'pending' | 'sent' | 'approved' | 'paid' | 'outstanding' | 'overdue';
+
+const EMPTY_FORM = { project_id: '', vendor_name: '', invoice_number: '', vendor_email: '', description: '', category: '', cost_code: '', amount: '', tax: '', due_date: '', status: 'draft', notes: '' };
+
+const CSS = `
+.ivWs > .k-page { max-width: none; }
+.ivList .k-table th:first-child, .ivList .k-table td:first-child { position: sticky; left: 0; z-index: 1; background: var(--bg-solid); }
+.ivList .k-table th:first-child { background: var(--bg-solid-2); z-index: 3; }
+.ivList .k-table tbody tr:hover td:first-child { background: linear-gradient(rgba(255,255,255,0.03), rgba(255,255,255,0.03)), var(--bg-solid); }
+.ivNum { color: var(--text-primary); font-weight: 800; white-space: nowrap; }
+.ivClamp { display: inline-block; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+.ivMoney { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ivTotal { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 800; color: var(--text-primary); }
+.ivLate { color: var(--status-overdue); font-weight: 700; }
+.ivMuted { color: var(--text-tertiary); }
+.ivBadges { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ivLadder { border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--bg-surface-2); margin-bottom: 16px; }
+.ivTotalBox { display: flex; align-items: center; min-height: 40px; padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--brand-primary-35); background: var(--brand-primary-08); color: var(--text-primary); font-weight: 800; font-variant-numeric: tabular-nums; }
+.ivReadonly { display: flex; align-items: center; min-height: 40px; padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); background: var(--bg-surface-2); color: var(--text-tertiary); }
+.ivDateInput { width: 100%; }
+@media (max-width: 640px) {
+  .ivWs .k-btn, .ivWs .k-stat, .ivWs select.k-select, .ivWs .k-input { min-height: 44px; }
+  .ivWs .k-table td { height: 48px; }
+  .ivClamp { max-width: 180px; }
+}
+`;
+
+const DATE_INPUT_STYLE: React.CSSProperties = {
+  width: '100%', minHeight: 40, padding: '8px 12px', fontSize: 14,
+  background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)',
+  borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)',
+};
+
 export default function InvoicingPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -98,25 +153,14 @@ export default function InvoicingPage() {
   /** True when the invoice list read failed — keeps "empty" from reading as an
    *  all-clear (0 overdue, $0 outstanding) on a ledger we never managed to read. */
   const [loadFailed, setLoadFailed] = useState(false);
-  /** Confirmed delivery message — only set after the send route reports emailed. */
-  const [sentNotice, setSentNotice] = useState('');
+  const { toast, show } = useToast(6000);
   const [showCreate, setShowCreate] = useState(false);
+  const [search, setSearch] = useState('');
+  const [projectFilter, setProjectFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
   // Create form state — matches API schema
-  const [form, setForm] = useState({
-    project_id: '',
-    vendor_name: '',
-    invoice_number: '',
-    vendor_email: '',
-    description: '',
-    category: '',
-    cost_code: '',
-    amount: '',
-    tax: '',
-    due_date: '',
-    status: 'draft',
-    notes: '',
-  });
+  const [form, setForm] = useState({ ...EMPTY_FORM });
   const [creating, setCreating] = useState(false);
 
   // Project intelligence — once a project is picked, the form walks in knowing it.
@@ -152,20 +196,20 @@ export default function InvoicingPage() {
     });
   }, [ctx]);
 
-  const money = ctx?.money;
-  const cOriginal = Number(money?.originalContract) || 0;
-  const cCoTotal = Number(money?.approvedCoTotal) || 0;
-  const cRevised = Number(money?.revisedContract) || (cOriginal + cCoTotal);
-  const cBilled = Number(money?.billedToDate) || 0;
-  const cPaid = Number(money?.paidToDate) || 0;
+  const ctxMoney = ctx?.money;
+  const cOriginal = Number(ctxMoney?.originalContract) || 0;
+  const cCoTotal = Number(ctxMoney?.approvedCoTotal) || 0;
+  const cRevised = Number(ctxMoney?.revisedContract) || (cOriginal + cCoTotal);
+  const cBilled = Number(ctxMoney?.billedToDate) || 0;
+  const cPaid = Number(ctxMoney?.paidToDate) || 0;
   const ctxVendors = (ctx?.vendors || []) as string[];
   const ctxCodes = (ctx?.costCodes || []) as { division: string; costCode: string; description: string }[];
-  const fmtUsd = (n: number) => '$' + ((Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }));
   const liveTotal = (parseFloat(form.amount) || 0) + (parseFloat(form.tax) || 0);
 
   const pageBilled = invoices.reduce((s, i) => s + effectiveTotal(i), 0);
   const pagePaid = invoices.filter(i => statusKey(i.status) === 'paid').reduce((s, i) => s + effectiveTotal(i), 0);
-  const pageOutstanding = invoices.filter(i => { const st = statusKey(i.status); return st !== 'paid' && st !== 'draft'; }).reduce((s, i) => s + effectiveTotal(i), 0);
+  const isOutstanding = (i: Invoice) => { const st = statusKey(i.status); return st !== 'paid' && st !== 'draft'; };
+  const pageOutstanding = invoices.filter(isOutstanding).reduce((s, i) => s + effectiveTotal(i), 0);
   const pageOverdue = invoices.filter(isOverdue).length;
   const pageDrafts = invoices.filter(i => statusKey(i.status) === 'draft').length;
 
@@ -243,7 +287,9 @@ export default function InvoicingPage() {
       });
       if (!res.ok) throw new Error('Failed to create invoice');
       setShowCreate(false);
-      setForm({ project_id: '', vendor_name: '', invoice_number: '', vendor_email: '', description: '', category: '', cost_code: '', amount: '', tax: '', due_date: '', status: 'draft', notes: '' });
+      setForm({ ...EMPTY_FORM });
+      setError('');
+      show('Invoice created.');
       await fetchInvoices();
       return true;
     } catch (e: any) {
@@ -255,33 +301,33 @@ export default function InvoicingPage() {
     }
   }
 
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleCreate() {
     if (await submitCreate()) guard.clearDraft();
   }
 
-  /** Every close path (Close / Cancel / hero toggle) runs through the guard:
+  /** Every close path (X / Cancel / Esc / backdrop) runs through the guard:
    *  clean closes immediately, dirty asks Save / Discard / Stay first. */
   function closeComposer() {
     guard.requestClose(() => {
       setShowCreate(false);
-      setForm({ project_id: '', vendor_name: '', invoice_number: '', vendor_email: '', description: '', category: '', cost_code: '', amount: '', tax: '', due_date: '', status: 'draft', notes: '' });
+      setError('');
+      setForm({ ...EMPTY_FORM });
     });
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this invoice?')) return;
-    setError('');
+    if (!(await confirmDialog({ title: 'Please confirm', message: 'Delete this invoice?', danger: true }))) return;
     try {
       const res = await fetch(`/api/invoices/${id}/delete`, { method: 'DELETE' });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data?.error || `Delete failed (${res.status})`);
       }
+      show('Invoice deleted.');
       await fetchInvoices();
     } catch (e: any) {
       console.error(e);
-      setError(humanError(e, "Couldn't delete the invoice. It is still on the ledger."));
+      show(humanError(e, "Couldn't delete the invoice. It is still on the ledger."), 'bad');
     }
   }
 
@@ -289,43 +335,29 @@ export default function InvoicingPage() {
    * The send route is already honest — it refuses with a 400 when the invoice
    * has no vendor_email and a 502 when email is not provisioned or Resend
    * rejects the message, and it only flips the row to "sent" after delivery.
-   * This used to swallow both, so accounting saw the button click succeed and
-   * believed the vendor had been emailed. Now the refusal reaches the screen.
+   * The refusal reaches the screen as a toast.
    */
   async function handleSend(id: string) {
-    setError(''); setSentNotice('');
     try {
       const res = await fetch(`/api/invoices/${id}/send`, { method: 'POST' });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.emailed) {
         throw new Error(data?.error || `The invoice was not sent (${res.status}).`);
       }
-      setSentNotice(`Invoice emailed to ${data.to}.`);
-      setTimeout(() => setSentNotice(''), 6000);
+      show(`Invoice emailed to ${data.to}.`);
       await fetchInvoices();
     } catch (e: any) {
       console.error(e);
-      setError(humanError(e, 'The invoice was not emailed. Nothing was sent to the vendor.'));
+      show(humanError(e, 'The invoice was not emailed. Nothing was sent to the vendor.'), 'bad');
       // Re-read so the row still shows its true (un-sent) status.
       await fetchInvoices();
     }
   }
 
   const [pdfBusy, setPdfBusy] = useState<string | null>(null);
-  /**
-   * POST /api/invoices/[id]/pdf -> { pdfUrl }.
-   *
-   * This used to short-circuit: if the row already carried a pdf_url it opened
-   * that directly. But the stored value is a SIGNED url with an hour on it —
-   * the route that writes it says so in its own comment — so any invoice
-   * looked at more than an hour after its PDF was made opened to
-   *
-   *   {"error":"InvalidJWT","message":"\"exp\" claim timestamp check failed"}
-   *
-   * which is what a GC sees when they click PDF on last week's invoice. The
-   * stored value is a "this has a PDF" flag, not a link. Always ask for a
-   * fresh one; the route regenerates cheaply and returns a working URL.
-   */
+  /** POST /api/invoices/[id]/pdf -> { pdfUrl }. The stored pdf_url is a signed
+   *  URL with an hour on it — a "this has a PDF" flag, not a link — so always
+   *  ask for a fresh one; the route regenerates cheaply. */
   async function handlePdf(inv: Invoice) {
     setPdfBusy(inv.id);
     try {
@@ -336,310 +368,254 @@ export default function InvoicingPage() {
       await fetchInvoices();
     } catch (e: any) {
       console.error(e);
-      setError(humanError(e, "Couldn't generate the PDF. Please try again."));
+      show(humanError(e, "Couldn't generate the PDF. Please try again."), 'bad');
     } finally {
       setPdfBusy(null);
     }
   }
 
-  const columns = useMemo(() => [
-    columnHelper.accessor('invoice_number', {
-      header: 'Invoice #',
-      cell: (info) => <span style={{ fontWeight: font.weight.semibold }}>{info.getValue() || '—'}</span>,
-    }),
-    columnHelper.accessor('vendor_name', {
-      header: 'Vendor',
-      cell: (info) => info.getValue(),
-    }),
-    columnHelper.accessor('description', {
-      header: 'Description',
-      cell: (info) => <span style={{ color: colors.textMuted, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', display: 'inline-block' }}>{info.getValue() || '—'}</span>,
-    }),
-    columnHelper.accessor('amount', {
-      header: 'Amount',
-      // DB money columns round-trip as TEXT — sort on the coerced number, not the string.
-      sortingFn: (a, b) => (Number(a.original.amount) || 0) - (Number(b.original.amount) || 0),
-      cell: (info) => {
-        const v = info.getValue();
-        return v != null ? `$${Number(v).toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '—';
-      },
-    }),
-    columnHelper.accessor('total', {
-      header: 'Total',
-      // Sort on the same effective total the cell renders (raw `total` can be null/stale).
-      sortingFn: (a, b) => effectiveTotal(a.original) - effectiveTotal(b.original),
-      cell: (info) => {
-        const v = effectiveTotal(info.row.original);
-        return <span style={{ fontWeight: font.weight.bold, color: colors.gold, fontVariantNumeric: 'tabular-nums' }}>${v.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>;
-      },
-    }),
-    columnHelper.accessor('due_date', {
-      header: 'Due Date',
-      cell: (info) => {
-        const v = info.getValue();
-        if (!v) return '—';
-        const d = parseDateOnly(v);
-        if (!d) return '—';
-        const overdue = isOverdue(info.row.original);
-        return <span style={{ color: overdue ? colors.red : colors.text }}>{d.toLocaleDateString()}</span>;
-      },
-    }),
-    columnHelper.accessor('status', {
-      header: 'Status',
-      cell: (info) => {
-        const s = statusKey(info.getValue());
-        const overdue = isOverdue(info.row.original);
-        return (
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            <StatusPill module="invoices" status={s} size="sm" />
-            {overdue && <Pill tone="red">Overdue</Pill>}
-          </span>
-        );
-      },
-    }),
-    columnHelper.display({
-      id: 'actions',
-      header: '',
-      cell: (info) => {
-        const inv = info.row.original;
-        return (
-          <div style={{ display: 'flex', gap: 6 }} onClick={(e) => e.stopPropagation()}>
-            <button
-              onClick={() => handlePdf(inv)}
-              title={inv.pdf_url ? 'Open PDF' : 'Generate PDF'}
-              disabled={pdfBusy === inv.id}
-              style={{ ...rowActionStyle, color: inv.pdf_url ? colors.gold : colors.textMuted, opacity: pdfBusy === inv.id ? 0.5 : 1 }}
-            >
-              <FilePdf size={13} weight={inv.pdf_url ? 'fill' : 'regular'} /> {pdfBusy === inv.id ? '…' : 'PDF'}
-            </button>
-            <button onClick={() => handleSend(inv.id)} title="Send" style={rowActionStyle}><PaperPlaneTilt size={13} /> Send</button>
-            <button onClick={() => handleDelete(inv.id)} title="Delete" style={{ ...rowActionStyle, color: colors.red, border: '1px solid rgba(239,68,68,0.35)' }}><Trash size={13} /></button>
-          </div>
-        );
-      },
-    }),
-  ], [pdfBusy]);
+  const projectName = useCallback((pid: string) => projects.find(p => p.id === pid)?.name || '', [projects]);
 
-  const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '9px 12px', background: colors.raised,
-    border: `1px solid ${colors.border}`, borderRadius: radius.md,
-    color: colors.text, fontSize: font.size.md, outline: 'none',
-  };
+  const visible = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return invoices.filter(i => {
+      if (projectFilter !== 'all' && i.project_id !== projectFilter) return false;
+      if (statusFilter === 'overdue') { if (!isOverdue(i)) return false; }
+      else if (statusFilter === 'outstanding') { if (!isOutstanding(i)) return false; }
+      else if (statusFilter !== 'all' && statusKey(i.status) !== statusFilter) return false;
+      if (!q) return true;
+      return [i.invoice_number, i.vendor_name, i.description, i.category, i.cost_code, projectName(i.project_id)].some(v => String(v || '').toLowerCase().includes(q));
+    });
+  }, [invoices, search, projectFilter, statusFilter, projectName]);
+  const filtersActive = !!search || projectFilter !== 'all' || statusFilter !== 'all';
+  const clearFilters = () => { setSearch(''); setProjectFilter('all'); setStatusFilter('all'); };
+  const toggleStatus = (s: StatusFilter) => setStatusFilter(prev => (prev === s ? 'all' : s));
 
-  const labelStyle: React.CSSProperties = {
-    fontSize: 10.5, fontWeight: 700, color: colors.textMuted, marginBottom: 6, display: 'block',
-  };
+  // ── Stat tiles: each opens the register filtered to that slice ──
+  const stats: StatItem[] = loading
+    ? [
+        { label: 'Total Billed', value: '—', sub: 'Loading…' },
+        { label: 'Collected', value: '—', sub: 'Loading…' },
+        { label: 'Outstanding', value: '—', sub: 'Loading…' },
+        { label: 'Overdue', value: '—', sub: 'Loading…' },
+        { label: 'Drafts', value: '—', sub: 'Loading…' },
+      ]
+    : [
+        { label: 'Total Billed', value: fmtUsd(pageBilled), sub: filtersActive ? 'Click to show everything' : `Across ${invoices.length} invoice${invoices.length === 1 ? '' : 's'}`, onClick: clearFilters },
+        { label: 'Collected', value: fmtUsd(pagePaid), tone: pagePaid > 0 ? 'good' : 'default', sub: statusFilter === 'paid' ? 'Filtered — click to clear' : 'Marked paid', onClick: () => toggleStatus('paid') },
+        { label: 'Outstanding', value: fmtUsd(pageOutstanding), tone: pageOutstanding > 0 ? 'warn' : 'default', sub: statusFilter === 'outstanding' ? 'Filtered — click to clear' : 'Sent, awaiting payment', onClick: () => toggleStatus('outstanding') },
+        { label: 'Overdue', value: pageOverdue, tone: pageOverdue > 0 ? 'bad' : 'default', sub: statusFilter === 'overdue' ? 'Filtered — click to clear' : pageOverdue > 0 ? 'Past due, excludes drafts' : 'Nothing past due', onClick: () => toggleStatus('overdue') },
+        { label: 'Drafts', value: pageDrafts, sub: statusFilter === 'draft' ? 'Filtered — click to clear' : 'Not yet sent', onClick: () => toggleStatus('draft') },
+      ];
 
-  const hintStyle: React.CSSProperties = {
-    fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45,
-  };
+  // ── Register columns ──
+  const columns: Column<Invoice>[] = [
+    { key: 'invoice_number', header: 'Invoice #', accessor: i => i.invoice_number || '', width: 140, render: i => <span className="ivNum">{i.invoice_number || <span className="ivMuted">No number</span>}</span> },
+    { key: 'vendor_name', header: 'Vendor', accessor: i => (i.vendor_name || '').toLowerCase(), render: i => <span className="ivClamp" style={{ color: 'var(--text-primary)', fontWeight: 600 }} title={i.vendor_name}>{i.vendor_name || '—'}</span> },
+    { key: 'project', phone: 'hide', header: 'Project', accessor: i => projectName(i.project_id).toLowerCase(), render: i => projectName(i.project_id) ? <span className="ivClamp" style={{ maxWidth: 200 }} title={projectName(i.project_id)}>{projectName(i.project_id)}</span> : <span className="ivMuted">—</span> },
+    { key: 'description', phone: 'hide', header: 'Description', accessor: i => (i.description || '').toLowerCase(), render: i => i.description ? <span className="ivClamp" title={i.description}>{i.description}</span> : <span className="ivMuted">—</span> },
+    { key: 'total', phone: 'show', header: 'Total', accessor: i => effectiveTotal(i), align: 'right', render: i => <span className="ivTotal">{fmtUsd(effectiveTotal(i))}</span> },
+    { key: 'due_date', phone: 'show', header: 'Due', accessor: i => i.due_date || '', render: i => <span className={isOverdue(i) ? 'ivLate' : undefined}>{fmtDate(i.due_date)}</span> },
+    { key: 'status', phone: 'show', header: 'Status', accessor: i => STATUS_RANK[statusKey(i.status)] ?? 9, render: i => {
+      const b = statusBadge(i.status);
+      return <span className="ivBadges"><Badge tone={b.tone}>{b.label}</Badge>{isOverdue(i) && <Badge tone="overdue">Overdue</Badge>}</span>;
+    } },
+  ];
+  const rowActions = (i: Invoice): Action[] => [
+    { label: 'Open Invoice', icon: <ArrowSquareOut size={15} />, onClick: () => guard.requestLeave(`/app/invoicing/${i.id}`) },
+    { label: pdfBusy === i.id ? 'Generating…' : (i.pdf_url ? 'Open PDF' : 'Generate PDF'), icon: <FilePdf size={15} />, onClick: () => handlePdf(i), disabled: pdfBusy === i.id },
+    { label: 'Send to Vendor', icon: <PaperPlaneTilt size={15} />, onClick: () => handleSend(i.id), hidden: statusKey(i.status) === 'paid' },
+    { label: 'Delete', icon: <Trash size={15} />, onClick: () => handleDelete(i.id), tone: 'danger' },
+  ];
 
-  return (
-    <>
-    <PremiumSurface maxWidth={2200}>
-      {/* Header */}
-      <ModuleHero
-        eyebrow="Finance"
-        eyebrowIcon={<IconChip size={24} vivid={INV_ACCENT.vivid ?? INV_ACCENT.hex}><Receipt size={13} weight="fill" color="#F8FAFC" /></IconChip>}
-        accentColor={INV_ACCENT.hex}
-        title="Invoicing"
-        subtitle="Manage invoices, track payments, and send to vendors."
-        note="Money owed to you"
-        actions={
-          <button data-tour="new-invoice" onClick={() => (showCreate ? closeComposer() : setShowCreate(true))} style={goldButtonStyle} className="pmBtn">
-            <Plus size={15} weight="bold" /> New Invoice
-          </button>
+  // ── Register body: loading / error / empty / no-match / rows — each distinct ──
+  let listBody: React.ReactNode;
+  if (!loading && loadFailed) {
+    listBody = (
+      <EmptyState
+        icon={<WarningCircle size={22} />}
+        title="Invoices could not be loaded"
+        text={`${error || 'The ledger could not be read.'} This is not an empty ledger — nothing has been lost. Try again.`}
+        action={<Button icon={<ArrowClockwise size={15} />} onClick={() => { setLoading(true); fetchInvoices(); }}>Retry</Button>}
+      />
+    );
+  } else if (!loading && invoices.length === 0) {
+    listBody = (
+      <EmptyState
+        icon={<Receipt size={22} />}
+        title="No invoices yet"
+        text="Create the first invoice — generate the PDF, send it from the table, and overdue flags itself from the due date."
+        action={<Button icon={<Plus size={15} weight="bold" />} onClick={() => setShowCreate(true)}>New Invoice</Button>}
+      />
+    );
+  } else {
+    listBody = (
+      <DataTable
+        columns={columns}
+        rows={visible}
+        rowKey={i => i.id}
+        loading={loading}
+        defaultSort={{ key: 'due_date', dir: 'desc' }}
+        onRowClick={(row) => guard.requestLeave(`/app/invoicing/${row.id}`)}
+        rowActions={rowActions}
+        empty={
+          <EmptyState
+            icon={<Receipt size={22} />}
+            title="No invoices match these filters"
+            text="Clear the search, project, or status filter to see more."
+            action={<Button onClick={clearFilters}>Clear Filters</Button>}
+          />
         }
       />
+    );
+  }
 
-      {!loading && invoices.length > 0 && (
-        <StatStrip items={[
-          {href: '/app/invoicing',  label: 'Total Billed', value: fmtUsd(pageBilled), sub: `Across ${invoices.length} invoice${invoices.length === 1 ? '' : 's'}` },
-          {href: '/app/invoicing',  label: 'Collected', value: fmtUsd(pagePaid), accent: '#3dd68c', sub: 'Marked paid' },
-          {href: '/app/invoicing',  label: 'Outstanding', value: fmtUsd(pageOutstanding), accent: pageOutstanding > 0 ? 'var(--brand-primary)' : undefined, sub: 'Sent, awaiting payment' },
-          {href: '/app/invoicing',  label: 'Overdue', value: String(pageOverdue), accent: pageOverdue > 0 ? colors.red : undefined, sub: pageOverdue > 0 ? 'Past due, excludes drafts' : 'Nothing past due' },
-          {href: '/app/invoicing',  label: 'Drafts', value: String(pageDrafts), sub: 'Not yet sent' },
-        ]} />
-      )}
+  return (
+    <div className="ivWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[{ label: 'Home', href: '/app' }, { label: 'Invoicing' }]}
+        title="Invoicing"
+        subtitle="Invoices, payments, and sending to vendors — money owed to you."
+        actions={
+          <Button variant="primary" data-tour="new-invoice" icon={<Plus size={15} weight="bold" />} onClick={() => setShowCreate(true)}>
+            New Invoice
+          </Button>
+        }
+      >
+        {!loadFailed && <StatRow items={stats} />}
 
-      {error && (
-        <div style={{ padding: '12px 16px', background: 'rgba(239,68,68,.1)', border: `1px solid rgba(239,68,68,.3)`, borderRadius: radius.md, color: colors.red, fontSize: font.size.md, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Warning size={16} /> {error}
-        </div>
-      )}
+        {!loading && !loadFailed && invoices.length > 0 && (
+          <Toolbar
+            search={search}
+            onSearch={setSearch}
+            placeholder="Search by number, vendor, project, or description…"
+            filters={
+              <>
+                <Select
+                  aria-label="Project"
+                  value={projectFilter}
+                  onChange={e => setProjectFilter(e.target.value)}
+                  style={{ width: 'auto', minWidth: 160, maxWidth: 280 }}
+                  options={[{ value: 'all', label: 'All Projects' }, ...projects.map(p => ({ value: p.id, label: p.name }))]}
+                />
+                <Select
+                  aria-label="Status"
+                  value={statusFilter}
+                  onChange={e => setStatusFilter(e.target.value as StatusFilter)}
+                  style={{ width: 'auto', minWidth: 150 }}
+                  options={[
+                    { value: 'all', label: 'All Statuses' },
+                    { value: 'draft', label: 'Draft' },
+                    { value: 'pending', label: 'Pending' },
+                    { value: 'sent', label: 'Sent' },
+                    { value: 'approved', label: 'Approved' },
+                    { value: 'paid', label: 'Paid' },
+                    { value: 'outstanding', label: 'Outstanding (unpaid)' },
+                    { value: 'overdue', label: 'Overdue' },
+                  ]}
+                />
+                {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
+              </>
+            }
+            actions={<span className="ivMuted" style={{ fontSize: 'var(--fs-sm)' }}>{visible.length} of {invoices.length}</span>}
+          />
+        )}
 
-      {/* A confirmed delivery — named recipient, so "sent" means something. */}
-      {sentNotice && (
-        <div style={{ padding: '12px 16px', background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.3)', borderRadius: radius.md, color: colors.green, fontSize: font.size.md, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-          {sentNotice}
-        </div>
-      )}
+        {/* NudgeRing pulses this section when the suggestion engine flags
+            overdue invoices (ticker deep-links land on this anchor). */}
+        <NudgeRing anchorId={ANCHOR_INVOICES_OVERDUE}>
+          <div className="ivList">
+            <Card flush>{listBody}</Card>
+          </div>
+        </NudgeRing>
+      </PageShell>
 
-      {/* ── Inline Composer — SmartCreate anatomy, right above the ledger ── */}
-      {showCreate && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 300px', gap: 18, alignItems: 'start', marginBottom: 24 }}>
-          <SectionCard
-            title="New Invoice"
-            icon={<Plus size={17} weight="bold" color="var(--brand-primary)" />}
-            subtitle="The server computes the total — amount + tax, every time."
-            action={<button type="button" onClick={closeComposer} style={{ ...ghostButtonStyle, padding: '7px 14px', fontSize: 12.5 }} className="pmBtn">Close</button>}
-          >
-            <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
-              {ctx && (
-                <StatStrip items={[
-                  {href: '/app/invoicing',  label: 'Original Contract', value: fmtUsd(cOriginal) },
-                  {href: '/app/invoicing',  label: 'Approved COs', value: (cCoTotal >= 0 ? '+' : '') + fmtUsd(cCoTotal), accent: cCoTotal > 0 ? '#3dd68c' : undefined },
-                  {href: '/app/invoicing',  label: 'Revised', value: fmtUsd(cRevised) },
-                  {href: '/app/invoicing',  label: 'Billed to Date', value: fmtUsd(cBilled) },
-                  {href: '/app/invoicing',  label: 'Outstanding', value: fmtUsd(Math.max(0, cBilled - cPaid)), accent: 'var(--brand-primary)' },
-                ]} />
-              )}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                <div>
-                  <label style={labelStyle}>Project *</label>
-                  <select value={form.project_id} onChange={(e) => setForm({ ...form, project_id: e.target.value })} required style={inputStyle}>
-                    <option value="">Select project…</option>
-                    {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
-                  <div style={hintStyle}>{ctx ? 'Snapshot loaded — fields below pre-fill from it.' : 'Pick one to pre-fill the rest.'}</div>
-                </div>
-                <div>
-                  <label style={labelStyle}>Vendor Name *</label>
-                  <Suggest value={form.vendor_name} onChange={(e) => setForm({ ...form, vendor_name: e.target.value })} required style={inputStyle} placeholder="Vendor name" options={['v']} />
-                  <div style={hintStyle}>{ctxVendors.length > 0 ? `${ctxVendors.length} known vendor${ctxVendors.length === 1 ? '' : 's'} on this project — start typing.` : 'Vendors suggest once a project is picked.'}</div>
-                </div>
-                <div>
-                  <label style={labelStyle}>Invoice #{auto.num && <AutoChip />}</label>
-                  <input value={form.invoice_number} onChange={(e) => setForm({ ...form, invoice_number: e.target.value })} style={inputStyle} placeholder="INV-001" />
-                  <div style={hintStyle}>{auto.num ? 'Next in sequence on this project.' : 'Auto-suggested when you pick a project.'}</div>
-                </div>
-                <div>
-                  <label style={labelStyle}>Vendor Email</label>
-                  <input type="email" value={form.vendor_email} onChange={(e) => setForm({ ...form, vendor_email: e.target.value })} style={inputStyle} placeholder="vendor@email.com" />
-                  <div style={hintStyle}>Needed to send the invoice by email.</div>
-                </div>
-                <div>
-                  <label style={labelStyle}>Amount</label>
-                  <input type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} style={inputStyle} placeholder="0.00" />
-                </div>
-                <div>
-                  <label style={labelStyle}>Tax</label>
-                  <input type="number" step="0.01" value={form.tax} onChange={(e) => setForm({ ...form, tax: e.target.value })} style={inputStyle} placeholder="0.00" />
-                </div>
-                <div>
-                  <label style={labelStyle}>Invoice Total</label>
-                  <div style={{ ...inputStyle, display: 'flex', alignItems: 'center', fontWeight: 800, color: colors.gold, background: 'var(--brand-primary-08)', borderColor: 'var(--brand-primary-35)' }}>
-                    {'$' + liveTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </div>
-                  <div style={hintStyle}>Amount + tax — computed live.</div>
-                </div>
-                <div>
-                  <label style={labelStyle}>Issue Date<AutoChip /></label>
-                  <div style={{ ...inputStyle, display: 'flex', alignItems: 'center', color: colors.textMuted }}>{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
-                  <div style={hintStyle}>Recorded automatically when the invoice is created.</div>
-                </div>
-                <div>
-                  <label style={labelStyle}>Due Date{auto.due && <AutoChip />}</label>
-                  <SaguaroDatePicker value={form.due_date} onChange={(v) => setForm({ ...form, due_date: v })} style={inputStyle} />
-                  <div style={hintStyle}>{auto.due ? 'Net 30 from today — adjust freely.' : 'Overdue flags itself from this date.'}</div>
-                </div>
-                <div>
-                  <label style={labelStyle}>Status</label>
-                  <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} style={inputStyle}>
-                    <option value="draft">Draft</option>
-                    <option value="pending">Pending</option>
-                    <option value="sent">Sent</option>
-                    <option value="approved">Approved</option>
-                    <option value="paid">Paid</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={labelStyle}>Category</label>
-                  <input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} style={inputStyle} placeholder="Materials, Labor, etc." />
-                </div>
-                <div>
-                  <label style={labelStyle}>Cost Code</label>
-                  {ctxCodes.length > 0 ? (
-                    <select value={form.cost_code} onChange={(e) => setForm({ ...form, cost_code: e.target.value })} style={inputStyle}>
-                      <option value="">No cost code</option>
-                      {ctxCodes.map(c => <option key={c.costCode} value={c.costCode}>{c.costCode} — {c.description}</option>)}
-                    </select>
-                  ) : (
-                    <input value={form.cost_code} onChange={(e) => setForm({ ...form, cost_code: e.target.value })} style={inputStyle} placeholder="03-100" />
-                  )}
-                  <div style={hintStyle}>{ctxCodes.length > 0 ? `${ctxCodes.length} codes from the project budget.` : 'Budget codes load from the project.'}</div>
-                </div>
-              </div>
-              <div>
-                <label style={labelStyle}>Description</label>
-                <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Invoice description…" />
-              </div>
-              <div>
-                <label style={labelStyle}>Notes</label>
-                <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Internal notes…" />
-              </div>
-              <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-                <button type="button" onClick={closeComposer} style={ghostButtonStyle}>Cancel</button>
-                <button type="submit" disabled={creating} className="pmBtn" style={{ ...goldButtonStyle, cursor: creating ? 'not-allowed' : 'pointer', opacity: creating ? 0.6 : 1 }}>
-                  {creating ? 'Creating…' : 'Create Invoice'}
-                </button>
-              </div>
-            </form>
-          </SectionCard>
-          <SectionCard flat title="Project Intelligence" icon={<CurrencyDollar size={17} weight="duotone" color="var(--brand-primary)" />}>
-            {ctx ? (
-              <div>
-                <div style={{ fontSize: 10.5, fontWeight: 900, color: colors.textDim, marginBottom: 10 }}>{ctx.project?.name || 'Project'}</div>
-                <InsightRow label="Owner" value={ctx.defaults?.ownerName || '—'} />
-                <InsightRow label="Invoices on Project" value={String(Number(ctx.counts?.invoices) || 0)} />
-                <InsightRow label="Pay Applications" value={String(Number(money?.payAppCount) || 0)} />
-                <InsightRow label="Known Vendors" value={String(ctxVendors.length)} />
-                <InsightRow label="Budget Cost Codes" value={String(ctxCodes.length)} />
-              </div>
-            ) : (
-              <div style={{ fontSize: 12, color: colors.textMuted, lineHeight: 1.55 }}>
-                Pick a project and Saguaro pre-fills the invoice number, known vendors, and budget cost codes from what it already tracks.
-              </div>
-            )}
-            <div style={{ height: 18 }} />
-            <FlowSteps title="After You Create" steps={[
-              { title: 'Draft Is Saved', desc: 'Review and edit anything before it goes out.' },
-              { title: 'Generate the PDF', desc: 'One click builds the document — the row keeps the real .pdf link.' },
-              { title: 'Send to Owner', desc: 'One click emails it straight from the table.' },
-              { title: 'Payment Is Tracked', desc: 'Overdue flags itself from the due date — drafts never count.' },
+      {/* ── Composer — SmartCreate: pick a project and it walks in knowing the job ── */}
+      <FormModal
+        open={showCreate}
+        onClose={closeComposer}
+        title="New Invoice"
+        subtitle={ctx?.project?.name ? `${ctx.project.name} · the server computes the total — amount + tax, every time.` : 'The server computes the total — amount + tax, every time.'}
+        onSubmit={handleCreate}
+        submitLabel="Create Invoice"
+        busy={creating}
+        error={error || null}
+      >
+        {ctx && (
+          <div className="ivLadder">
+            <InsightRow label="Original Contract" value={fmtUsd(cOriginal)} />
+            <InsightRow label="Approved COs" value={(cCoTotal >= 0 ? '+' : '-') + fmtUsd(Math.abs(cCoTotal))} />
+            <InsightRow label="Revised Contract" value={fmtUsd(cRevised)} />
+            <InsightRow label="Billed to Date" value={fmtUsd(cBilled)} />
+            <InsightRow label="Outstanding" value={fmtUsd(Math.max(0, cBilled - cPaid))} strong />
+          </div>
+        )}
+        <FormGrid cols={2}>
+          <Field label="Project" required hint={ctx ? 'Snapshot loaded — fields below pre-fill from it.' : 'Pick one to pre-fill the rest.'}>
+            <Select value={form.project_id} onChange={(e) => { setForm({ ...form, project_id: e.target.value }); if (error) setError(''); }} required placeholder="Select project…" options={projects.map(p => ({ value: p.id, label: p.name }))} />
+          </Field>
+          <Field label="Vendor Name" required hint={<>{auto.billto && <AutoChip />} {ctxVendors.length > 0 ? `${ctxVendors.length} known vendor${ctxVendors.length === 1 ? '' : 's'} on this project — start typing.` : 'Vendors suggest once a project is picked.'}</>}>
+            <Suggest className="k-input" value={form.vendor_name} onChange={(e) => { setForm({ ...form, vendor_name: e.target.value }); if (error) setError(''); }} required placeholder="Vendor name" options={['v']} />
+          </Field>
+          <Field label="Invoice #" hint={<>{auto.num && <AutoChip />} {auto.num ? 'Next in sequence on this project.' : 'Auto-suggested when you pick a project.'}</>}>
+            <Input value={form.invoice_number} onChange={(e) => setForm({ ...form, invoice_number: e.target.value })} placeholder="INV-001" />
+          </Field>
+          <Field label="Vendor Email" hint={<>{auto.email && <AutoChip />} Needed to send the invoice by email.</>}>
+            <Input type="email" value={form.vendor_email} onChange={(e) => setForm({ ...form, vendor_email: e.target.value })} placeholder="vendor@email.com" />
+          </Field>
+          <Field label="Amount">
+            <Input type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0.00" />
+          </Field>
+          <Field label="Tax">
+            <Input type="number" step="0.01" value={form.tax} onChange={(e) => setForm({ ...form, tax: e.target.value })} placeholder="0.00" />
+          </Field>
+          <Field label="Invoice Total" hint="Amount + tax — computed live.">
+            <div className="ivTotalBox">{fmtUsd(liveTotal)}</div>
+          </Field>
+          <Field label="Issue Date" hint={<><AutoChip /> Recorded automatically when the invoice is created.</>}>
+            <div className="ivReadonly">{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+          </Field>
+          <Field label="Due Date" hint={<>{auto.due && <AutoChip />} {auto.due ? 'Net 30 from today — adjust freely.' : 'Overdue flags itself from this date.'}</>}>
+            <div className="ivDateInput"><SaguaroDatePicker value={form.due_date} onChange={(v) => setForm({ ...form, due_date: v })} style={DATE_INPUT_STYLE} /></div>
+          </Field>
+          <Field label="Status">
+            <Select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} options={[
+              { value: 'draft', label: 'Draft' }, { value: 'pending', label: 'Pending' }, { value: 'sent', label: 'Sent' }, { value: 'approved', label: 'Approved' }, { value: 'paid', label: 'Paid' },
             ]} />
-          </SectionCard>
+          </Field>
+          <Field label="Category">
+            <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Materials, Labor, etc." />
+          </Field>
+          <Field label="Cost Code" hint={ctxCodes.length > 0 ? `${ctxCodes.length} codes from the project budget.` : 'Budget codes load from the project.'}>
+            {ctxCodes.length > 0 ? (
+              <Select value={form.cost_code} onChange={(e) => setForm({ ...form, cost_code: e.target.value })} options={[{ value: '', label: 'No cost code' }, ...ctxCodes.map(c => ({ value: c.costCode, label: `${c.costCode} — ${c.description}` }))]} />
+            ) : (
+              <Input value={form.cost_code} onChange={(e) => setForm({ ...form, cost_code: e.target.value })} placeholder="03-100" />
+            )}
+          </Field>
+          <Field label="Description" span>
+            <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} placeholder="Invoice description…" />
+          </Field>
+          <Field label="Notes" span hint="Internal — never printed on the invoice.">
+            <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} placeholder="Internal notes…" />
+          </Field>
+        </FormGrid>
+        <div style={{ marginTop: 16 }}>
+          <FlowSteps title="After You Create" steps={[
+            { title: 'Draft Is Saved', desc: 'Review and edit anything before it goes out.' },
+            { title: 'Generate the PDF', desc: 'One click builds the document — the row keeps the real .pdf link.' },
+            { title: 'Send to Owner', desc: 'One click emails it straight from the register.' },
+            { title: 'Payment Is Tracked', desc: 'Overdue flags itself from the due date — drafts never count.' },
+          ]} />
         </div>
-      )}
+      </FormModal>
 
-      {/* All invoices — DataTable rides its own machined .pmTable plate.
-          NudgeRing pulses this section when the suggestion engine flags
-          overdue invoices (ticker deep-links land on this anchor). */}
-      <NudgeRing anchorId={ANCHOR_INVOICES_OVERDUE}>
-        <DataTable
-          data={invoices}
-          columns={columns}
-          loading={loading}
-          tableId="invoicing"
-          searchPlaceholder="Search invoices…"
-          emptyMessage={loadFailed
-            ? 'Invoices could not be loaded — this is not an empty ledger. Reload to try again.'
-            : 'No invoices yet. Create your first invoice to get started.'}
-          onRowClick={(row) => guard.requestLeave(`/app/invoicing/${row.id}`)}
-        />
-      </NudgeRing>
-    </PremiumSurface>
-    <UnsavedGuardModal guard={guard} />
-    </>
+      {/* Above the FormModal overlay so the unsaved-work prompt is never hidden behind it. */}
+      <div style={{ position: 'relative', zIndex: 10001 }}>
+        <UnsavedGuardModal guard={guard} />
+      </div>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </div>
   );
 }
-
-/** Uniform machined row action — mini frosted-glass part, one geometry for
- *  PDF / Send / Delete so the action column reads as a single toolkit. */
-const rowActionStyle: React.CSSProperties = {
-  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-  padding: '5px 10px', background: 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))',
-  border: `1px solid ${colors.border}`, borderRadius: 8,
-  color: colors.textMuted, cursor: 'pointer', fontSize: 11.5, fontWeight: 700,
-  lineHeight: 1.2, whiteSpace: 'nowrap',
-};

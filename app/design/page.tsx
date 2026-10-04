@@ -4,44 +4,44 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 
 /* ─── Palette — Sonoran minimal (gold on navy) ─── */
-const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#16A34A';
-const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#CBD5E1';
-const RED = '#DC2626';
+const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#2CFF7A';
+const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#D4D4D8';
+const RED = '#FF3B30';
 
 /* ─── Room Types ─── */
 const ROOMS = [
-  { id: 'kitchen', label: 'Kitchen', icon: 'kitchen', gradient: 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)' },
-  { id: 'bathroom', label: 'Bathroom', icon: 'bath', gradient: 'linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)' },
-  { id: 'living_room', label: 'Living Room', icon: 'sofa', gradient: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)' },
-  { id: 'bedroom', label: 'Bedroom', icon: 'bed', gradient: 'linear-gradient(135deg, #EC4899 0%, #DB2777 100%)' },
-  { id: 'dining_room', label: 'Dining Room', icon: 'dining', gradient: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' },
-  { id: 'home_office', label: 'Home Office', icon: 'office', gradient: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' },
-  { id: 'exterior', label: 'Exterior', icon: 'house', gradient: 'linear-gradient(135deg, #10B981 0%, #059669 100%)' },
-  { id: 'backyard', label: 'Backyard', icon: 'yard', gradient: 'linear-gradient(135deg, #22C55E 0%, #16A34A 100%)' },
+  { id: 'kitchen', label: 'Kitchen', icon: 'kitchen', gradient: 'linear-gradient(135deg, #FF8A00 0%, #FF8A00 100%)' },
+  { id: 'bathroom', label: 'Bathroom', icon: 'bath', gradient: 'linear-gradient(135deg, #FF8A00 0%, #0891B2 100%)' },
+  { id: 'living_room', label: 'Living Room', icon: 'sofa', gradient: 'linear-gradient(135deg, #FF8A00 0%, #FF8A00 100%)' },
+  { id: 'bedroom', label: 'Bedroom', icon: 'bed', gradient: 'linear-gradient(135deg, #FF8A00 0%, #FF8A00 100%)' },
+  { id: 'dining_room', label: 'Dining Room', icon: 'dining', gradient: 'linear-gradient(135deg, #FF8A00 0%, #FF8A00 100%)' },
+  { id: 'home_office', label: 'Home Office', icon: 'office', gradient: 'linear-gradient(135deg, #FF8A00 0%, #FF8A00 100%)' },
+  { id: 'exterior', label: 'Exterior', icon: 'house', gradient: 'linear-gradient(135deg, #2CFF7A 0%, #2CFF7A 100%)' },
+  { id: 'backyard', label: 'Backyard', icon: 'yard', gradient: 'linear-gradient(135deg, #2CFF7A 0%, #2CFF7A 100%)' },
   { id: 'garage', label: 'Garage', icon: 'garage', gradient: 'linear-gradient(135deg, #6B7280 0%, #4B5563 100%)' },
-  { id: 'basement', label: 'Basement', icon: 'basement', gradient: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)' },
+  { id: 'basement', label: 'Basement', icon: 'basement', gradient: 'linear-gradient(135deg, #FF8A00 0%, #4F46E5 100%)' },
 ];
 
 /* ─── Design Styles with color swatches ─── */
 const STYLES = [
-  { id: 'modern', label: 'Modern Minimalist', colors: ['#FAFAF9','#78716C','#292524','#F59E0B'], desc: 'Clean lines, neutral tones' },
+  { id: 'modern', label: 'Modern Minimalist', colors: ['#FAFAF9','#78716C','#292524','#FF8A00'], desc: 'Clean lines, neutral tones' },
   { id: 'farmhouse', label: 'Modern Farmhouse', colors: ['#FEFCE8','#A16207','#44403C','#D6D3D1'], desc: 'Warm rustic charm' },
-  { id: 'mediterranean', label: 'Mediterranean', colors: ['#FEF3C7','#B45309','#7C2D12','#065F46'], desc: 'Earth tones, arched details' },
-  { id: 'industrial', label: 'Industrial Loft', colors: ['#78716C','#DC2626','#1C1917','#A8A29E'], desc: 'Exposed brick, raw metal' },
-  { id: 'coastal', label: 'Coastal Beach', colors: ['#F0F9FF','#F59E0B','#BAE6FD','#FDE68A'], desc: 'Light, airy, ocean palette' },
-  { id: 'scandinavian', label: 'Scandinavian', colors: ['#FAFAFA','#E7E5E4','#D6D3D1','#A3E635'], desc: 'Hygge warmth, birch wood' },
-  { id: 'art-deco', label: 'Art Deco', colors: ['#1C1917','#F59E0B','#7C3AED','#F5F5F4'], desc: 'Glamorous geometric luxury' },
+  { id: 'mediterranean', label: 'Mediterranean', colors: ['#FEF3C7','#B45309','#7C2D12','#2CFF7A'], desc: 'Earth tones, arched details' },
+  { id: 'industrial', label: 'Industrial Loft', colors: ['#78716C','#FF3B30','#1C1917','#A8A29E'], desc: 'Exposed brick, raw metal' },
+  { id: 'coastal', label: 'Coastal Beach', colors: ['#F0F9FF','#FF8A00','#BAE6FD','#FDE68A'], desc: 'Light, airy, ocean palette' },
+  { id: 'scandinavian', label: 'Scandinavian', colors: ['#FAFAFA','#E7E5E4','#D6D3D1','#2CFF7A'], desc: 'Hygge warmth, birch wood' },
+  { id: 'art-deco', label: 'Art Deco', colors: ['#1C1917','#FF8A00','#FF8A00','#F5F5F4'], desc: 'Glamorous geometric luxury' },
   { id: 'japanese', label: 'Japanese Zen', colors: ['#F5F5DC','#8B7355','#2D4A3E','#D4C5A9'], desc: 'Tranquil, natural, wabi-sabi' },
-  { id: 'midcentury', label: 'Mid-Century Modern', colors: ['#FDE68A','#EA580C','#065F46','#78716C'], desc: 'Retro 1960s organic curves' },
-  { id: 'luxury', label: 'Luxury Contemporary', colors: ['#1C1917','#F59E0B','#F5F5F4','#78716C'], desc: 'High-end sophisticated' },
-  { id: 'bohemian', label: 'Bohemian', colors: ['#7C3AED','#DB2777','#F59E0B','#059669'], desc: 'Eclectic, colorful, layered' },
-  { id: 'transitional', label: 'Transitional', colors: ['#F5F5F4','#A8A29E','#57534E','#F59E0B'], desc: 'Classic meets contemporary' },
+  { id: 'midcentury', label: 'Mid-Century Modern', colors: ['#FDE68A','#FF8A00','#2CFF7A','#78716C'], desc: 'Retro 1960s organic curves' },
+  { id: 'luxury', label: 'Luxury Contemporary', colors: ['#1C1917','#FF8A00','#F5F5F4','#78716C'], desc: 'High-end sophisticated' },
+  { id: 'bohemian', label: 'Bohemian', colors: ['#FF8A00','#FF8A00','#FF8A00','#2CFF7A'], desc: 'Eclectic, colorful, layered' },
+  { id: 'transitional', label: 'Transitional', colors: ['#F5F5F4','#A8A29E','#57534E','#FF8A00'], desc: 'Classic meets contemporary' },
   { id: 'desert-modern', label: 'Desert Modern', colors: ['#D2B48C','#8B4513','#2F4F4F','#DAA520'], desc: 'Southwest contemporary' },
-  { id: 'kitchen', label: "Chef's Kitchen", colors: ['#1E3A5A','#F59E0B','#F5F5F4','#44403C'], desc: 'Professional-grade kitchen' },
-  { id: 'bathroom-spa', label: 'Spa Bathroom', colors: ['#F0FDFA','#5EEAD4','#F5F5F4','#F59E0B'], desc: 'Hotel-quality spa retreat' },
-  { id: 'resort-backyard', label: 'Resort Backyard', colors: ['#F59E0B','#22C55E','#FDE68A','#78716C'], desc: 'Luxury pool & outdoor living' },
-  { id: 'home-office', label: 'Executive Office', colors: ['#1C1917','#78716C','#F59E0B','#F5F5F4'], desc: 'Productive, stylish workspace' },
-  { id: 'garage-workshop', label: 'Dream Garage', colors: ['#374151','#EF4444','#9CA3AF','#F5F5F4'], desc: 'Organized workshop & storage' },
+  { id: 'kitchen', label: "Chef's Kitchen", colors: ['#1E3A5A','#FF8A00','#F5F5F4','#44403C'], desc: 'Professional-grade kitchen' },
+  { id: 'bathroom-spa', label: 'Spa Bathroom', colors: ['#F0FDFA','#5EEAD4','#F5F5F4','#FF8A00'], desc: 'Hotel-quality spa retreat' },
+  { id: 'resort-backyard', label: 'Resort Backyard', colors: ['#FF8A00','#2CFF7A','#FDE68A','#78716C'], desc: 'Luxury pool & outdoor living' },
+  { id: 'home-office', label: 'Executive Office', colors: ['#1C1917','#78716C','#FF8A00','#F5F5F4'], desc: 'Productive, stylish workspace' },
+  { id: 'garage-workshop', label: 'Dream Garage', colors: ['#374151','#FF3B30','#9CA3AF','#F5F5F4'], desc: 'Organized workshop & storage' },
 ];
 
 /* ─── Step wizard flow ─── */
@@ -100,7 +100,7 @@ const XIcon = () => (
   </svg>
 );
 const TildeIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFE600" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M2 12c2-3 4-4 6-4s4 5 6 5 4-1 6-4"/>
   </svg>
 );
@@ -110,7 +110,7 @@ const ArrowRight = () => (
   </svg>
 );
 const StarIcon = ({ filled = true }: { filled?: boolean }) => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill={filled ? '#F59E0B' : 'none'} stroke="#F59E0B" strokeWidth="2">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill={filled ? '#FF8A00' : 'none'} stroke="#FF8A00" strokeWidth="2">
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
   </svg>
 );
@@ -337,7 +337,7 @@ export default function DesignStudioPage() {
             <div style={{
               position: 'absolute', left: 0, top: 20, width: '65%', height: '85%', borderRadius: 14,
               overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)',
-              background: 'linear-gradient(135deg, #161d2b 0%, #1e2636 100%)', zIndex: 1,
+              background: 'linear-gradient(135deg, #18181B 0%, #18181B 100%)', zIndex: 1,
             }}>
               <span style={{ position: 'absolute', bottom: 20, left: 20, background: 'rgba(0,0,0,0.5)', color: '#fff', padding: '5px 14px', borderRadius: 8, fontSize: 12, fontWeight: 500 }}>Before</span>
             </div>
@@ -384,7 +384,7 @@ export default function DesignStudioPage() {
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 22, fontWeight: 600, color: TEXT, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                     {item.num}
-                    {item.star && <svg width="20" height="20" viewBox="0 0 24 24" fill="#F59E0B" stroke="#F59E0B" strokeWidth="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>}
+                    {item.star && <svg width="20" height="20" viewBox="0 0 24 24" fill="#FF8A00" stroke="#FF8A00" strokeWidth="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>}
                   </div>
                   <div style={{ fontSize: 13, color: DIM, marginTop: 2 }}>{item.label}</div>
                 </div>
@@ -433,7 +433,7 @@ export default function DesignStudioPage() {
             ].map((item, i) => (
               <div key={i} style={{ ...card, overflow: 'hidden' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', height: 200 }}>
-                  <div style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #161d2b 0%, #1e2636 100%)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #18181B 0%, #18181B 100%)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
                     <span style={{ position: 'absolute', bottom: 12, left: 12, background: 'rgba(0,0,0,0.45)', color: '#fff', padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 500 }}>Before</span>
                   </div>
                   <div style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #22242f 0%, #2c2a22 100%)' }}>

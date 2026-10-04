@@ -131,7 +131,7 @@ export default function PermitCorrespondence({ projectId }: { projectId: string 
         <div style={{ display: 'grid', gap: 8 }}>
           {items.map((c) => {
             const inbound = c.direction === 'inbound';
-            const tone = inbound ? '#34D399' : GOLD;
+            const tone = inbound ? '#2CFF7A' : GOLD;
             const n = Array.isArray(c.document_ids) ? c.document_ids.length : 0;
             return (
               <div key={c.id} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '11px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: `1px solid ${BORDER}` }}>

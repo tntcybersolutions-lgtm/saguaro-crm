@@ -65,7 +65,7 @@ export default function VerifyHubPage() {
   if (!ready) return null;
 
   return (
-    <PremiumSurface maxWidth={1200} pad="28px 24px 60px">
+    <PremiumSurface maxWidth={2200} pad="28px 24px 60px">
       <div style={{ fontFamily: font, color: C.text }}>
         <ModuleHero
           eyebrow="Command Center"

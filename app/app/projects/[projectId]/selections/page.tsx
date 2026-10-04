@@ -1,5 +1,6 @@
 'use client';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
@@ -13,14 +14,14 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
-const GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A',BLUE='var(--brand-primary)';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF';
+const GREEN='#2CFF7A',RED='#FF3B30',ORANGE='#FF8A00',BLUE='var(--brand-primary)';
 
 const CATEGORIES=['Flooring','Countertops','Cabinets','Plumbing Fixtures','Lighting',
   'Appliances','Tile','Paint','Hardware','Other'];
 const STATUSES=['pending','selected','ordered','delivered','installed'];
 const STATUS_COLORS:Record<string,string>={
-  pending:ORANGE,selected:BLUE,ordered:GOLD,delivered:'#a78bfa',installed:GREEN,
+  pending:ORANGE,selected:BLUE,ordered:GOLD,delivered:'#FF8A00',installed:GREEN,
 };
 const STATUS_LABELS:Record<string,string>={
   pending:'Pending',selected:'Selected',ordered:'Ordered',
@@ -190,7 +191,7 @@ export default function SelectionsPage(){
   }
 
   async function deleteItem(item:any){
-    if(!confirm(`Delete "${item.item}"?`)) return;
+    if(!(await confirmDialog({ title: 'Please confirm', message: `Delete "${item.item}"?`, danger: true }))) return;
     setDeleting(true);
     try{
       const h=await getAuthHeaders();
@@ -235,7 +236,7 @@ export default function SelectionsPage(){
       )}
 
       <div style={{flex:1,overflow:'auto',minWidth:0}}>
-        <PremiumSurface maxWidth={1200}>
+        <PremiumSurface maxWidth={2200}>
 
           {/* Header */}
           <ModuleHero
@@ -276,7 +277,7 @@ export default function SelectionsPage(){
               >
                 <div style={{background:'rgba(255,255,255,0.12)',borderRadius:4,height:8,overflow:'hidden'}}>
                   <div style={{height:'100%',borderRadius:4,
-                    background:overage>0?`linear-gradient(90deg,${RED},#f87171)`:`linear-gradient(90deg,${GREEN},#3dd68c)`,
+                    background:overage>0?`linear-gradient(90deg,${RED},#FF3B30)`:`linear-gradient(90deg,${GREEN},#2CFF7A)`,
                     width:`${Math.min(100,totalAllowance>0?(totalCost/totalAllowance*100):0)}%`,transition:'width .4s'}}/>
                 </div>
               </SectionCard>
@@ -497,7 +498,7 @@ export default function SelectionsPage(){
                       <InsightRow label="Selected Price" value={fmt(price)}/>
                       <InsightRow label="Allowance" value={fmt(allow)}/>
                       <InsightRow label={over?'Over Allowance':v<0?'Under Allowance':'On Allowance'}
-                        value={(over?'+':'')+fmt(v)} accent={over?RED:'#3dd68c'} strong/>
+                        value={(over?'+':'')+fmt(v)} accent={over?RED:'#2CFF7A'} strong/>
                     </div>
                   );
                 })()}
@@ -562,7 +563,7 @@ export default function SelectionsPage(){
                   {!selected.owner_approved&&(
                     <button onClick={()=>approve(selected)}
                       style={{padding:'9px 0',width:'100%',background:'rgba(26,138,74,.1)',
-                        border:`1px solid ${GREEN}44`,borderRadius:7,color:'#4ade80',
+                        border:`1px solid ${GREEN}44`,borderRadius:7,color:'#2CFF7A',
                         fontSize:13,fontWeight:700,cursor:'pointer'}}>
                       Record Owner Approval
                     </button>

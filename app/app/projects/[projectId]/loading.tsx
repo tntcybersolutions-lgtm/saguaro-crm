@@ -2,7 +2,7 @@
 
 const RAISED = '#141416';
 const BORDER = 'rgba(255,255,255,0.12)';
-const GOLD = '#F59E0B';
+const GOLD = '#FF8A00';
 const DARK = '#0a0a0a';
 
 function Pulse({ w, h, mb }: { w: string; h: number; mb?: number }) {

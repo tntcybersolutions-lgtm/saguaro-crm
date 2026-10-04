@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { Check } from '@phosphor-icons/react';
 
 /* ─── Palette ─── */
-const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#34C759';
-const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#CBD5E1', DARK = 'var(--bg-base)';
-const BLUE = 'var(--brand-primary)', PURPLE = '#AF52DE', AMBER = '#FF9500';
+const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#2CFF7A';
+const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#D4D4D8', DARK = 'var(--bg-base)';
+const BLUE = 'var(--brand-primary)', PURPLE = '#FF8A00', AMBER = '#FF8A00';
 
 const glass: React.CSSProperties = {
   background: `color-mix(in srgb, ${CARD} 80%, transparent)`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',

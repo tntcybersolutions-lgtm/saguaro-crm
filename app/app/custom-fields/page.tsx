@@ -15,12 +15,12 @@ const RAISED = 'var(--bg-surface)';
 const ON_GOLD = '#0A0A00';
 const BORDER = 'rgba(255,255,255,0.12)';
 const TEXT = '#FFFFFF';
-const DIM = '#CBD5E1';
-const GREEN = '#22C55E';
-const RED = '#EF4444';
+const DIM = '#D4D4D8';
+const GREEN = '#2CFF7A';
+const RED = '#FF3B30';
 const AMBER = 'var(--warning)';
 const BLUE = 'var(--brand-primary)';
-const PURPLE = '#8B5CF6';
+const PURPLE = '#FF8A00';
 
 /* ── Constants ── */
 const MODULES = [
@@ -1010,7 +1010,7 @@ export default function CustomFieldsPage() {
 
   /* ══════════ RENDER ══════════ */
   return (
-    <PremiumSurface maxWidth={1200}>
+    <PremiumSurface maxWidth={2200}>
       {/* Toast Notification */}
       {toast && (
         <div

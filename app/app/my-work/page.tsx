@@ -1,33 +1,30 @@
 'use client';
 /**
- * My Work — the signed-in user's whole day on one page.
+ * My Work — the signed-in user's whole day on one page. Pass 4 on the kit.
  *
  * One card per assigned project (assignment lives in work_assignments, made
  * from Project → Team), with every open item that carries the user's name —
  * to-dos, RFIs, punch, field issues, T&M awaiting approval, assists — grouped
- * by module and deep-linked to where the work gets done.
+ * by module and deep-linked to where the work gets done. Sales follow-ups
+ * hang off a lead, not a project, so they render whether or not this person
+ * holds a single work_assignment.
  *
  * Server shape (/api/my-work): {projects:[{project:{id,name,status},role,scope,
  * counts:{todos,rfis,punch,issues,tmAwaiting,assists,overdue,dueToday},
- * items:{todos,rfis,punch,issues,tm,assists}}],totals}. Built in parallel —
- * every read below tolerates a missing key so loading/partial payloads never
- * crash the hub.
+ * items:{todos,rfis,punch,issues,tm,assists}}],totals,followUps,followUpCounts}.
+ * Built in parallel — every read below tolerates a missing key so loading /
+ * partial payloads never crash the hub.
  */
 import React from 'react';
 import useSWR from 'swr';
 import Link from 'next/link';
 import {
   Briefcase, ListChecks, ChatCenteredText, Hammer, Warning, Receipt, Handshake,
-  ArrowRight, WarningCircle, FolderSimple, CalendarCheck, ClockCountdown, Stamp,
+  ArrowRight, WarningCircle, FolderSimple,
 } from '@phosphor-icons/react';
-import { colors } from '../../../lib/design-tokens';
-import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, IconChip, ghostButtonStyle, goldButtonStyle } from '@/components/ui/premium';
+import { PageShell, Card, StatRow, Badge, Button, EmptyState, type StatItem } from '@/components/ui/kit';
 import { accentForProject, projectMonogram } from '@/lib/project-identity';
 import { moduleAccent } from '@/lib/module-identity';
-
-const GOLD = colors.gold, DIM = colors.textMuted, TEXT = colors.text, RED = colors.red;
-const PANEL = 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))';
-const PANEL_BORDER = 'rgba(255,255,255,0.08)';
 
 const fetcher = async (url: string) => {
   const r = await fetch(url);
@@ -69,6 +66,49 @@ function isOverdue(it: any, todayStart: number): boolean {
   const d = parseDue(it);
   return !!d && d.getTime() < todayStart;
 }
+const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtUsd = (n: number) => money.format(Number(n) || 0);
+const dueLabelOf = (d: string) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d));
+  if (!m) return d;
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
+
+const CSS = `
+.mwWs > .k-page { max-width: none; }
+.mwStack { display: flex; flex-direction: column; gap: 16px; }
+.mwRow { display: flex; align-items: center; gap: 12px; text-decoration: none; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--bg-surface-2); border: 1px solid var(--border-subtle); color: var(--text-primary); min-height: 44px; }
+.mwRow:hover { border-color: var(--border-strong); }
+.mwRow:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.mwRow[data-overdue="true"] { background: rgba(255,77,94,.06); border-color: rgba(255,77,94,.35); }
+.mwChip { flex-shrink: 0; display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; border: 1px solid transparent; }
+.mwTitle { flex: 1; min-width: 0; font-size: var(--fs-md); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mwSub { font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mwDue { flex-shrink: 0; font-size: var(--fs-xs); font-weight: 600; color: var(--text-tertiary); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.mwDue[data-today="true"] { color: var(--brand-primary); font-weight: 800; }
+.mwDue[data-late="true"] { color: var(--status-overdue); font-weight: 800; }
+.mwRow > svg:last-child { flex-shrink: 0; color: var(--text-tertiary); }
+.mwGroup + .mwGroup { margin-top: 16px; }
+.mwGroupHead { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: var(--fs-xs); font-weight: 800; color: var(--text-tertiary); }
+.mwGroupHead .mwChip { width: 20px; height: 20px; border-radius: 6px; }
+.mwList { display: flex; flex-direction: column; gap: 6px; }
+.mwCardTitle { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.mwBucket { font-size: var(--fs-xs); font-weight: 700; margin-bottom: 7px; }
+.mwBucket[data-tone="late"] { color: var(--status-overdue); }
+.mwBucket[data-tone="today"] { color: var(--brand-primary); }
+.mwBucket[data-tone="soon"] { color: var(--text-tertiary); }
+.mwFollow { border-left-width: 3px; }
+.mwFollow[data-tone="late"] { border-left-color: var(--status-overdue); }
+.mwFollow[data-tone="today"] { border-left-color: var(--brand-primary); }
+.mwFollow[data-tone="soon"] { border-left-color: var(--border-strong); }
+.mwRight { text-align: right; flex-shrink: 0; }
+.mwNote { display: flex; align-items: center; gap: 10px; padding: 6px 0; color: var(--text-secondary); font-size: var(--fs-sm); }
+.mwSkel { border-radius: var(--radius-md); background: var(--bg-surface); border: 1px solid var(--glass-border); padding: 18px; }
+.mwSkel div { border-radius: 6px; background: rgba(255,255,255,0.06); }
+@media (max-width: 640px) {
+  .mwWs .k-btn, .mwWs .k-stat { min-height: 44px; }
+}
+`;
 
 /* ── One work item row — icon chip · title · status pill · due date · link ── */
 function ItemRow({ it, group, pid, todayStart }: { it: any; group: (typeof MODULE_GROUPS)[number]; pid: string; todayStart: number }) {
@@ -81,43 +121,29 @@ function ItemRow({ it, group, pid, todayStart }: { it: any; group: (typeof MODUL
   const status = itemStatus(it);
   const href = typeof it?.href === 'string' && it.href ? it.href : group.href(pid);
   return (
-    <Link
-      href={href}
-      className="pmHover"
-      style={{
-        display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none',
-        padding: '10px 12px', borderRadius: 12,
-        background: overdue ? 'rgba(239,68,68,0.06)' : 'rgba(255,255,255,0.02)',
-        border: `1px solid ${overdue ? 'rgba(239,68,68,0.35)' : 'rgba(255,255,255,0.06)'}`,
-      }}
-    >
-      <span aria-hidden style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 9, background: acc.soft, border: `1px solid ${acc.ring}` }}>
-        <Icon size={15} weight="duotone" color={acc.hex} />
-      </span>
-      <span style={{ flex: 1, minWidth: 0, color: TEXT, fontSize: 13.5, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
-        {itemTitle(it, group.fallback)}
-      </span>
-      {status && (
-        <span style={{ flexShrink: 0, fontSize: 9.5, fontWeight: 800, padding: '3px 9px', borderRadius: 999, background: 'rgba(148,163,184,0.12)', color: DIM, whiteSpace: 'nowrap' as const }}>
-          {status}
-        </span>
-      )}
-      {overdue && (
-        <span style={{ flexShrink: 0, fontSize: 9.5, fontWeight: 800, letterSpacing: 0.5, padding: '3px 9px', borderRadius: 999, background: 'rgba(239,68,68,0.14)', border: '1px solid rgba(239,68,68,0.4)', color: RED, whiteSpace: 'nowrap' as const }}>
-          OVERDUE
-        </span>
-      )}
-      {dueLabel && !overdue && (
-        <span style={{ flexShrink: 0, fontSize: 11.5, fontWeight: dueToday ? 800 : 600, color: dueToday ? 'var(--brand-primary-strong)' : colors.textDim, whiteSpace: 'nowrap' as const, fontVariantNumeric: 'tabular-nums' as const }}>
-          {dueLabel}
-        </span>
-      )}
-      {dueLabel && overdue && (
-        <span style={{ flexShrink: 0, fontSize: 11.5, fontWeight: 800, color: RED, whiteSpace: 'nowrap' as const, fontVariantNumeric: 'tabular-nums' as const }}>
-          {dueLabel}
-        </span>
-      )}
-      <ArrowRight size={13} weight="bold" color={colors.textDim} style={{ flexShrink: 0 }} />
+    <Link href={href} className="mwRow" data-overdue={overdue ? 'true' : undefined}>
+      <span aria-hidden className="mwChip" style={{ background: acc.soft, borderColor: acc.ring }}><Icon size={15} weight="duotone" color={acc.hex} /></span>
+      <span className="mwTitle">{itemTitle(it, group.fallback)}</span>
+      {status && <Badge tone="neutral">{status}</Badge>}
+      {overdue && <Badge tone="overdue">Overdue</Badge>}
+      {dueLabel && <span className="mwDue" data-today={dueToday && !overdue ? 'true' : undefined} data-late={overdue ? 'true' : undefined}>{dueLabel}</span>}
+      <ArrowRight size={13} weight="bold" />
+    </Link>
+  );
+}
+
+function FollowUpRow({ f, tone }: { f: any; tone: 'late' | 'today' | 'soon' }) {
+  return (
+    <Link href="/app/leads" className="mwRow mwFollow" data-tone={tone}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="mwTitle">{f.company}{f.contact ? <span style={{ color: 'var(--text-tertiary)', fontWeight: 400 }}>{'  ·  '}{f.contact}</span> : null}</div>
+        <div className="mwSub">{f.action}</div>
+      </div>
+      <div className="mwRight">
+        <div className="mwDue" data-late={tone === 'late' ? 'true' : undefined} data-today={tone === 'today' ? 'true' : undefined}>{dueLabelOf(f.due)}</div>
+        <div className="mwSub">{f.stage}{f.value ? `  ·  ${fmtUsd(f.value)}` : ''}</div>
+      </div>
+      <ArrowRight size={13} weight="bold" />
     </Link>
   );
 }
@@ -140,239 +166,144 @@ export default function MyWorkPage() {
 
   const roleLabel = (r?: string) => String(r || 'assignee').replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
-  /* Sales follow-ups hang off a lead, not a project, so they are read straight
-     off the payload and rendered whether or not this person holds a single
-     work_assignment. A salesperson with a full pipeline and no assigned project
-     used to get "Nothing assigned to you yet" while owing four people a call. */
   const followUps: any[] = Array.isArray(data?.followUps) ? data.followUps : [];
   const fuCounts = data?.followUpCounts || { overdue: 0, today: 0, upcoming: 0 };
   const fuOverdue = followUps.filter((f) => f.bucket === 'overdue');
   const fuToday = followUps.filter((f) => f.bucket === 'today');
   const fuUpcoming = followUps.filter((f) => f.bucket === 'upcoming');
-  const fuMoney = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
-  const dueLabel = (d: string) => {
-    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d));
-    if (!m) return d;
-    return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
-      .toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
 
-  const FollowUpRow = ({ f, tone }: { f: any; tone: string }) => (
-    <Link
-      href="/app/leads"
-      className="pmBtn"
-      style={{
-        display: 'flex', alignItems: 'center', gap: 12, padding: '11px 13px',
-        borderRadius: 10, background: PANEL, border: `1px solid ${PANEL_BORDER}`,
-        borderLeft: `3px solid ${tone}`, textDecoration: 'none', color: TEXT,
-      }}
-    >
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {f.company}
-          {f.contact ? <span style={{ color: DIM, fontWeight: 400 }}>{'  ·  '}{f.contact}</span> : null}
-        </div>
-        <div style={{ fontSize: 12, color: DIM, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {f.action}
-        </div>
-      </div>
-      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: tone }}>{dueLabel(f.due)}</div>
-        <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>{f.stage}{f.value ? `  ·  ${fuMoney(f.value)}` : ''}</div>
-      </div>
-      <ArrowRight size={13} weight="bold" color={colors.textDim} style={{ flexShrink: 0 }} />
-    </Link>
-  );
+  const stats: StatItem[] = [
+    { label: 'Assigned Projects', value: rows.length, sub: 'From Project → Team' },
+    { label: 'Due Today', value: dueToday, tone: dueToday > 0 ? 'warn' : 'default', sub: dueToday > 0 ? 'Needs attention today' : 'Nothing lands today' },
+    { label: 'Overdue', value: overdue, tone: overdue > 0 ? 'bad' : 'default', sub: overdue > 0 ? 'Past their due date' : 'All caught up' },
+    { label: 'Awaiting My Approval', value: awaiting, tone: awaiting > 0 ? 'warn' : 'default', sub: 'T&M tickets to sign off' },
+  ];
 
   return (
-    <PremiumSurface maxWidth={1200}>
-      <ModuleHero
-        eyebrow="My Work"
-        eyebrowIcon={<IconChip size={24} vivid={moduleAccent('work').vivid ?? moduleAccent('work').hex}><Briefcase size={13} weight="fill" color="#F8FAFC" /></IconChip>}
-        accentColor={moduleAccent('work').hex}
-        title="Your"
-        accent="Day"
+    <div className="mwWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[{ label: 'Home', href: '/app' }, { label: 'My Work' }]}
+        title="My Work"
         subtitle={isLoading
           ? 'Pulling everything with your name on it…'
           : rows.length
-            ? `${openItems} open item${openItems === 1 ? '' : 's'} across ${rows.length} assigned project${rows.length === 1 ? '' : 's'} — refreshed live.`
+            ? `${openItems} open item${openItems === 1 ? '' : 's'} across ${rows.length} assigned project${rows.length === 1 ? '' : 's'} — refreshed every minute.`
             : 'Every to-do, RFI, punch item, field issue, and T&M ticket assigned to you — one page, every project.'}
-        actions={<Link href="/app/projects" style={ghostButtonStyle} className="pmBtn"><FolderSimple size={15} weight="bold" /> All Projects</Link>}
-      />
+        actions={<Button icon={<FolderSimple size={15} weight="bold" />} href="/app/projects">All Projects</Button>}
+      >
+        {!isLoading && !error && rows.length > 0 && <StatRow items={stats} />}
 
-      {/* Stat strip — the day at a glance */}
-      {!isLoading && !error && rows.length > 0 && (
-        <StatStrip items={[
-          {href: '/app/my-work',  label: 'Assigned Projects', value: String(rows.length), icon: <Briefcase size={11} weight="bold" /> },
-          {href: '/app/my-work', label: 'Due Today', value: String(dueToday), accent: dueToday > 0 ? 'var(--brand-primary-strong)' : undefined, icon: <CalendarCheck size={11} weight="bold" />, sub: dueToday > 0 ? 'Needs attention today' : 'Nothing lands today' },
-          {href: '/app/my-work', label: 'Overdue', value: String(overdue), accent: overdue > 0 ? RED : undefined, icon: <ClockCountdown size={11} weight="bold" />, sub: overdue > 0 ? 'Past their due date' : 'All caught up' },
-          {href: '/app/my-work',  label: 'Awaiting My Approval', value: String(awaiting), accent: awaiting > 0 ? GOLD : undefined, icon: <Stamp size={11} weight="bold" />, sub: 'T&M tickets to sign off' },
-        ]} />
-      )}
+        {error && !isLoading && (
+          <Card flush>
+            <EmptyState icon={<WarningCircle size={22} />} title="Couldn't load your work" text="The hub couldn't reach the server. It retries automatically every minute — or reload now." action={<Button onClick={() => window.location.reload()}>Reload</Button>} />
+          </Card>
+        )}
 
-      {/* Error */}
-      {error && !isLoading && (
-        <SectionCard flat>
-          <PremiumEmpty
-            tone="error"
-            icon={<WarningCircle size={30} weight="duotone" color={RED} />}
-            title="Couldn't load your work"
-            description="The hub couldn't reach the server. It retries automatically every minute — or reload now."
-            compact
-          />
-        </SectionCard>
-      )}
-
-      {/* First-load skeletons — shaped like the project cards they become */}
-      {isLoading && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-          <div className="pmSkeleton" style={{ height: 74, borderRadius: 14, background: PANEL, border: `1px solid ${PANEL_BORDER}` }} />
-          {[1, 2].map((i) => (
-            <div key={i} className="pmSkeleton" style={{ background: PANEL, border: `1px solid ${PANEL_BORDER}`, borderRadius: 16, padding: 20 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-                <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(255,255,255,0.08)' }} />
-                <div style={{ height: 14, width: '32%', borderRadius: 6, background: 'rgba(255,255,255,0.08)' }} />
-                <div style={{ height: 18, width: 110, borderRadius: 999, background: 'rgba(255,255,255,0.06)' }} />
-              </div>
-              {[1, 2, 3].map((r) => (
-                <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)', marginBottom: 8 }}>
-                  <div style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(255,255,255,0.07)' }} />
-                  <div style={{ height: 12, flex: 1, maxWidth: `${62 - r * 9}%`, borderRadius: 6, background: 'rgba(255,255,255,0.06)' }} />
-                  <div style={{ height: 16, width: 64, borderRadius: 999, background: 'rgba(255,255,255,0.05)' }} />
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Sales follow-ups — what you owe somebody, soonest first */}
-      {!isLoading && !error && followUps.length > 0 && (
-        <SectionCard
-          title="Sales Follow-Ups"
-          subtitle={`${fuCounts.overdue} past due · ${fuCounts.today} today · ${fuCounts.upcoming} in the next two weeks`}
-          action={<Link href="/app/leads" style={ghostButtonStyle} className="pmBtn"><Handshake size={15} weight="bold" /> Open Pipeline</Link>}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {[
-              { list: fuOverdue, label: 'Past Due', tone: RED },
-              { list: fuToday, label: 'Today', tone: 'var(--brand-primary-strong)' },
-              { list: fuUpcoming, label: 'Next Two Weeks', tone: colors.textDim },
-            ].filter((g) => g.list.length > 0).map((g) => (
-              <div key={g.label}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: g.tone, marginBottom: 7 }}>
-                  {g.label} · {g.list.length}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                  {g.list.map((f: any) => <FollowUpRow key={f.id} f={f} tone={g.tone} />)}
-                </div>
+        {isLoading && (
+          <div className="mwStack" aria-busy="true" aria-label="Loading your work">
+            <div className="mwSkel" style={{ height: 74 }} />
+            {[1, 2].map((i) => (
+              <div key={i} className="mwSkel">
+                <div style={{ height: 14, width: '32%', marginBottom: 16 }} />
+                {[1, 2, 3].map((r) => <div key={r} style={{ height: 40, marginBottom: 6, maxWidth: `${92 - r * 9}%` }} />)}
               </div>
             ))}
           </div>
-        </SectionCard>
-      )}
+        )}
 
-      {/* Global empty state — teach how assignment works */}
-      {!isLoading && !error && rows.length === 0 && followUps.length === 0 && (
-        <SectionCard>
-          <PremiumEmpty
-            icon={<Briefcase size={32} weight="duotone" color={GOLD} />}
-            title="Nothing assigned to you yet"
-            description="A PM assigns you a project from Project → Team. The moment they do, every open to-do, RFI, punch item, field issue, and T&M ticket with your name on it lands here — with due dates, overdue flags, and one-tap deep links."
-            action={<Link href="/app/projects" style={goldButtonStyle} className="pmBtn"><FolderSimple size={15} weight="bold" /> Browse Projects</Link>}
-          />
-        </SectionCard>
-      )}
-
-      {/* One card per assigned project */}
-      {!isLoading && !error && rows.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-          {rows.map((p: any, idx: number) => {
-            const proj = p?.project || {};
-            const pid = String(proj.id || '');
-            const acc = accentForProject(pid);
-            const counts = p?.counts || {};
-            const groups = MODULE_GROUPS
-              .map((g) => ({ g, items: (Array.isArray(p?.items?.[g.key]) ? p.items[g.key] : []) as any[] }))
-              .filter((x) => x.items.length > 0);
-            const projOverdue = Number(counts.overdue) || 0;
-            const projDueToday = Number(counts.dueToday) || 0;
-            // Counts and item lists arrive from the same endpoint but items may
-            // be capped server-side — never show "all clear" while counts say otherwise.
-            const countOpen = ['todos', 'rfis', 'punch', 'issues', 'tmAwaiting', 'assists'].reduce((n, k) => n + (Number(counts[k]) || 0), 0);
-            return (
-              <SectionCard flat
-                key={pid || idx}
-                accent={acc.hex}
-                title={
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' as const }}>
-                    {/* Project identity chip — deterministic accent, same as everywhere else */}
-                    <span aria-hidden style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 9, background: acc.soft, border: `1px solid ${acc.ring}`, color: acc.hex, fontSize: 11, fontWeight: 900, letterSpacing: '0.03em' }}>
-                      {projectMonogram(proj.name)}
-                    </span>
-                    <span style={{ color: acc.hex }}>{proj.name || 'Untitled Project'}</span>
-                    <span style={{ fontSize: 9.5, fontWeight: 800, padding: '3px 10px', borderRadius: 999, background: acc.soft, border: `1px solid ${acc.ring}`, color: acc.hex, whiteSpace: 'nowrap' as const }}>
-                      {roleLabel(p?.role)}
-                    </span>
-                    {projOverdue > 0 && (
-                      <span style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: 0.5, padding: '3px 10px', borderRadius: 999, background: 'rgba(239,68,68,0.14)', border: '1px solid rgba(239,68,68,0.4)', color: RED, whiteSpace: 'nowrap' as const }}>
-                        {projOverdue} OVERDUE
-                      </span>
-                    )}
-                  </span>
-                }
-                subtitle={`${(proj.status || 'active')}${p?.scope && p.scope !== 'full' ? ` · ${String(p.scope).replace(/_/g, ' ')} scope` : ''}${projDueToday > 0 ? ` · ${projDueToday} due today` : ''}`}
-                action={pid ? (
-                  <Link href={`/app/projects/${pid}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: GOLD, textDecoration: 'none', whiteSpace: 'nowrap' as const }}>
-                    Open Project <ArrowRight size={13} weight="bold" />
-                  </Link>
-                ) : undefined}
+        {!isLoading && !error && (
+          <div className="mwStack">
+            {/* Sales follow-ups — what you owe somebody, soonest first */}
+            {followUps.length > 0 && (
+              <Card
+                title="Sales Follow-Ups"
+                subtitle={`${fuCounts.overdue} past due · ${fuCounts.today} today · ${fuCounts.upcoming} in the next two weeks`}
+                actions={<Button size="sm" icon={<Handshake size={15} weight="bold" />} href="/app/leads">Open Pipeline</Button>}
               >
-                {groups.length === 0 ? (
-                  countOpen > 0 ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 4px', color: 'rgba(255,255,255,0.55)', fontSize: 13 }}>
-                      <span aria-hidden style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 999, background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-35)' }}>
-                        <Briefcase size={14} weight="bold" color={GOLD} />
-                      </span>
-                      {countOpen} open item{countOpen === 1 ? '' : 's'} on this project — open it for the full list.
+                <div className="mwStack">
+                  {([
+                    { list: fuOverdue, label: 'Past Due', tone: 'late' },
+                    { list: fuToday, label: 'Today', tone: 'today' },
+                    { list: fuUpcoming, label: 'Next Two Weeks', tone: 'soon' },
+                  ] as const).filter((g) => g.list.length > 0).map((g) => (
+                    <div key={g.label}>
+                      <div className="mwBucket" data-tone={g.tone}>{g.label} · {g.list.length}</div>
+                      <div className="mwList">{g.list.map((f: any) => <FollowUpRow key={f.id} f={f} tone={g.tone} />)}</div>
                     </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+
+            {/* Global empty state — teach how assignment works */}
+            {rows.length === 0 && followUps.length === 0 && (
+              <Card flush>
+                <EmptyState
+                  icon={<Briefcase size={22} />}
+                  title="Nothing assigned to you yet"
+                  text="A PM assigns you a project from Project → Team. The moment they do, every open to-do, RFI, punch item, field issue, and T&M ticket with your name on it lands here — with due dates, overdue flags, and one-tap deep links."
+                  action={<Button variant="primary" icon={<FolderSimple size={15} weight="bold" />} href="/app/projects">Browse Projects</Button>}
+                />
+              </Card>
+            )}
+
+            {/* One card per assigned project */}
+            {rows.map((p: any, idx: number) => {
+              const proj = p?.project || {};
+              const pid = String(proj.id || '');
+              const acc = accentForProject(pid);
+              const counts = p?.counts || {};
+              const groups = MODULE_GROUPS
+                .map((g) => ({ g, items: (Array.isArray(p?.items?.[g.key]) ? p.items[g.key] : []) as any[] }))
+                .filter((x) => x.items.length > 0);
+              const projOverdue = Number(counts.overdue) || 0;
+              const projDueToday = Number(counts.dueToday) || 0;
+              // Counts and item lists arrive from the same endpoint but items may
+              // be capped server-side — never show "all clear" while counts say otherwise.
+              const countOpen = ['todos', 'rfis', 'punch', 'issues', 'tmAwaiting', 'assists'].reduce((n, k) => n + (Number(counts[k]) || 0), 0);
+              return (
+                <Card
+                  key={pid || idx}
+                  title={
+                    <span className="mwCardTitle">
+                      <span aria-hidden className="mwChip" style={{ background: acc.soft, borderColor: acc.ring, color: acc.hex, fontSize: 11, fontWeight: 900 }}>{projectMonogram(proj.name)}</span>
+                      <span>{proj.name || 'Untitled Project'}</span>
+                      <Badge tone="neutral">{roleLabel(p?.role)}</Badge>
+                      {projOverdue > 0 && <Badge tone="overdue" dot>{projOverdue} overdue</Badge>}
+                    </span>
+                  }
+                  subtitle={`${String(proj.status || 'active').replace(/_/g, ' ')}${p?.scope && p.scope !== 'full' ? ` · ${String(p.scope).replace(/_/g, ' ')} scope` : ''}${projDueToday > 0 ? ` · ${projDueToday} due today` : ''}`}
+                  actions={pid ? <Button size="sm" variant="ghost" icon={<ArrowRight size={14} weight="bold" />} href={`/app/projects/${pid}`}>Open Project</Button> : undefined}
+                >
+                  {groups.length === 0 ? (
+                    countOpen > 0
+                      ? <div className="mwNote"><Briefcase size={16} color="var(--brand-primary)" /> {countOpen} open item{countOpen === 1 ? '' : 's'} on this project — open it for the full list.</div>
+                      : <div className="mwNote"><ListChecks size={16} color="var(--status-ongoing)" /> All clear on this project — nothing open with your name on it.</div>
                   ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 4px', color: 'rgba(255,255,255,0.45)', fontSize: 13 }}>
-                      <span aria-hidden style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 999, background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.35)' }}>
-                        <ListChecks size={14} weight="bold" color={colors.green} />
-                      </span>
-                      All clear on this project — nothing open with your name on it.
-                    </div>
-                  )
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    {groups.map(({ g, items }) => {
+                    groups.map(({ g, items }) => {
                       const gAcc = moduleAccent(g.accent);
                       const GIcon = g.icon;
                       return (
-                        <div key={g.key}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                            <span aria-hidden style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: 6, background: gAcc.soft, border: `1px solid ${gAcc.ring}` }}>
-                              <GIcon size={11} weight="bold" color={gAcc.hex} />
-                            </span>
-                            <span style={{ fontSize: 10.5, fontWeight: 800, color: DIM }}>{g.label}</span>
-                            <span style={{ fontSize: 10, fontWeight: 800, padding: '1px 8px', borderRadius: 999, background: gAcc.soft, border: `1px solid ${gAcc.ring}`, color: gAcc.hex, fontVariantNumeric: 'tabular-nums' as const }}>{items.length}</span>
+                        <div key={g.key} className="mwGroup">
+                          <div className="mwGroupHead">
+                            <span aria-hidden className="mwChip" style={{ background: gAcc.soft, borderColor: gAcc.ring }}><GIcon size={11} weight="bold" color={gAcc.hex} /></span>
+                            <span>{g.label}</span>
+                            <Badge tone="neutral">{items.length}</Badge>
                           </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                            {items.map((it: any, i: number) => (
-                              <ItemRow key={it?.id || `${g.key}-${i}`} it={it} group={g} pid={pid} todayStart={todayStart} />
-                            ))}
+                          <div className="mwList">
+                            {items.map((it: any, i: number) => <ItemRow key={it?.id || `${g.key}-${i}`} it={it} group={g} pid={pid} todayStart={todayStart} />)}
                           </div>
                         </div>
                       );
-                    })}
-                  </div>
-                )}
-              </SectionCard>
-            );
-          })}
-        </div>
-      )}
-    </PremiumSurface>
+                    })
+                  )}
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </PageShell>
+    </div>
   );
 }

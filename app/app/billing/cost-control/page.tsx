@@ -17,7 +17,7 @@ import { costControl, usd, type CostLine } from '@/lib/finance';
 import { humanError } from '@/lib/errors';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 
-const BG = 'var(--bg-base)', PANEL = 'var(--bg-surface-2)', LINE = 'rgba(255,255,255,0.09)', GOLD = 'var(--brand-primary)', TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#34D399', RED = '#f87171';
+const BG = 'var(--bg-base)', PANEL = 'var(--bg-surface-2)', LINE = 'rgba(255,255,255,0.09)', GOLD = 'var(--brand-primary)', TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#2CFF7A', RED = '#FF3B30';
 const uid = () => Math.random().toString(36).slice(2, 9);
 const c = (s: string) => Math.round((parseFloat(s) || 0) * 100);   // dollars string → cents
 const d = (cents: number) => (cents / 100).toFixed(2);             // cents → dollars string
@@ -148,7 +148,7 @@ export default function CostControlPage() {
   const GRID = '1.5fr 0.9fr 0.8fr 1.05fr 1.05fr 1fr 1fr 26px';
 
   return (
-    <PremiumSurface maxWidth={1240} pad="40px 24px 90px">
+    <PremiumSurface maxWidth={2200} pad="40px 24px 90px">
       {/* Header */}
       <ModuleHero
         eyebrow="Cost Control · Budget vs. Committed vs. Actual"

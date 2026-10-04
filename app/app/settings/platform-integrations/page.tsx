@@ -9,6 +9,7 @@
  * the API), SectionCard list, skeletons, honest states.
  */
 import React, { useEffect, useState, useCallback } from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { humanError } from '@/lib/errors';
 import {
   PremiumSurface, ModuleHero, SectionCard, StatStrip, IconChip, Pill,
@@ -22,8 +23,8 @@ const GOLD = 'var(--brand-primary)';
 const WHITE = '#FFFFFF';
 const MUTED = 'rgba(255,255,255,0.62)';
 const BORDER = 'rgba(255,255,255,0.08)';
-const GREEN = '#22C55E';
-const RED = '#EF4444';
+const GREEN = '#2CFF7A';
+const RED = '#FF3B30';
 
 const modalInputStyle: React.CSSProperties = {
   width: '100%', marginTop: 3,
@@ -66,12 +67,12 @@ export default function PlatformIntegrationsPage() {
     } catch (e: any) { console.error(e); flash(humanError(e, 'Something went wrong. Please try again.'), false); }
     setBusy(false);
   };
-  const remove = async (app: any) => { if (!confirm(`Remove ${app.label} credentials? Tenants can't connect it until re-added.`)) return; await fetch(`/api/platform/integrations/${app.app}`, { method: 'DELETE' }); flash('Removed'); load(); };
+  const remove = async (app: any) => { if (!(await confirmDialog({ title: 'Please confirm', message: `Remove ${app.label} credentials? Tenants can't connect it until re-added.`, danger: true }))) return; await fetch(`/api/platform/integrations/${app.app}`, { method: 'DELETE' }); flash('Removed'); load(); };
   const copy = async (text: string, key: string) => { try { await navigator.clipboard.writeText(text); setCopied(key); setTimeout(() => setCopied((c) => (c === key ? null : c)), 1500); } catch { /* */ } };
 
   if (denied) {
     return (
-      <PremiumSurface maxWidth={1100}>
+      <PremiumSurface maxWidth={2200}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '72px 24px' }}>
           <IconChip size={64}><ShieldCheck size={30} weight="duotone" color={GOLD} /></IconChip>
           <div style={{ fontSize: 18, fontWeight: 800, color: WHITE, margin: '18px 0 8px' }}>Platform Owners Only</div>
@@ -87,7 +88,7 @@ export default function PlatformIntegrationsPage() {
   const pending = (apps ?? []).filter((a) => !a.configured);
 
   return (
-    <PremiumSurface maxWidth={1100}>
+    <PremiumSurface maxWidth={2200}>
       <ModuleHero
         eyebrow="Platform"
         eyebrowIcon={<ShieldCheck size={13} weight="fill" color={GOLD} />}
@@ -106,7 +107,7 @@ export default function PlatformIntegrationsPage() {
       )}
 
       {toast && (
-        <div style={{ margin: '0 0 16px', padding: '10px 14px', background: toast.ok ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)', border: `1px solid ${toast.ok ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`, borderRadius: 10, color: toast.ok ? GREEN : RED, fontSize: 13 }}>{toast.m}</div>
+        <div style={{ margin: '0 0 16px', padding: '10px 14px', background: toast.ok ? 'rgba(44,255,122,0.12)' : 'rgba(255,59,48,0.12)', border: `1px solid ${toast.ok ? 'rgba(44,255,122,0.3)' : 'rgba(255,59,48,0.3)'}`, borderRadius: 10, color: toast.ok ? GREEN : RED, fontSize: 13 }}>{toast.m}</div>
       )}
 
       <SectionCard
@@ -133,7 +134,7 @@ export default function PlatformIntegrationsPage() {
                   </div>
                   <button onClick={() => { setEditing(a); setForm({ clientId: '', clientSecret: '' }); }} className="pmBtn" style={{ ...goldButtonStyle, padding: '8px 16px', fontSize: 12.5 }}>{a.configured ? 'Update' : 'Set Up'}</button>
                   {a.source === 'in-product' && (
-                    <button onClick={() => remove(a)} className="pmBtn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', borderRadius: 10, cursor: 'pointer', background: 'rgba(239,68,68,0.12)', color: RED, border: '1px solid rgba(239,68,68,0.35)' }}><Trash size={13} /></button>
+                    <button onClick={() => remove(a)} className="pmBtn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', borderRadius: 10, cursor: 'pointer', background: 'rgba(255,59,48,0.12)', color: RED, border: '1px solid rgba(255,59,48,0.35)' }}><Trash size={13} /></button>
                   )}
                 </div>
               </div>
@@ -153,7 +154,7 @@ export default function PlatformIntegrationsPage() {
               <div style={{ fontSize: 11.5, color: MUTED, marginBottom: 8 }}>Add these redirect URIs to the app (copy each):</div>
               {editing.redirects.map((r: string) => (
                 <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-                  <code style={{ flex: 1, fontSize: 11.5, color: '#3dd68c', wordBreak: 'break-all', fontFamily: 'monospace' }}>{r}</code>
+                  <code style={{ flex: 1, fontSize: 11.5, color: '#2CFF7A', wordBreak: 'break-all', fontFamily: 'monospace' }}>{r}</code>
                   <button onClick={() => copy(r, r)} style={{ background: 'none', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '3px 7px', cursor: 'pointer', color: MUTED, display: 'inline-flex', gap: 3, alignItems: 'center', fontSize: 11 }}>{copied === r ? <Check size={12} color={GREEN} /> : <Copy size={12} />}</button>
                 </div>
               ))}

@@ -8,9 +8,9 @@ const DARK = 'var(--bg-surface-2)';
 const RAISED = 'var(--bg-surface)';
 const RAISED2 = '#1c1c1e';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1';
+const DIM = '#D4D4D8';
 const TEXT = '#FFFFFF';
-const GREEN = '#3dd68c';
+const GREEN = '#2CFF7A';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -363,7 +363,7 @@ function Step2({ projectId, lineItems, onLineItemsChange, onNext, onBack }: {
                     </td>
                     <td style={tdStyle}>
                       <button onClick={() => removeRow(row.id)}
-                        style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: 14, padding: '2px 6px' }}>
+                        style={{ background: 'none', border: 'none', color: '#FF3B30', cursor: 'pointer', fontSize: 14, padding: '2px 6px' }}>
                         ×
                       </button>
                     </td>
@@ -464,7 +464,7 @@ function Step3({ trade, projectId, selectedSubs, onSelectedSubsChange, manualEma
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <span style={{
               fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4,
-              background: sub.winRate >= 75 ? 'rgba(61,214,140,0.12)' : 'var(--brand-primary-12)',
+              background: sub.winRate >= 75 ? 'rgba(44,255,122,0.12)' : 'var(--brand-primary-12)',
               color: sub.winRate >= 75 ? GREEN : GOLD,
             }}>
               {sub.winRate}% Win

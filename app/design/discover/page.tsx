@@ -12,8 +12,8 @@ import {
 } from '@phosphor-icons/react';
 
 /* ─── Palette ─── */
-const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#34C759';
-const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#CBD5E1', DARK = 'var(--bg-base)';
+const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#2CFF7A';
+const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#D4D4D8', DARK = 'var(--bg-base)';
 
 const glass: React.CSSProperties = {
   background: `color-mix(in srgb, ${CARD} 80%, transparent)`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
@@ -370,7 +370,7 @@ export default function DiscoverPage() {
                 <div style={{ flex: 1, minWidth: 200 }}>
                   <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>
                     {rec.status === 'accepted' && <span style={{ color: GREEN, marginRight: 8 }}>&#10003;</span>}
-                    {rec.status === 'rejected' && <span style={{ color: '#EF4444', marginRight: 8 }}>&#10007;</span>}
+                    {rec.status === 'rejected' && <span style={{ color: '#FF3B30', marginRight: 8 }}>&#10007;</span>}
                     {rec.title}
                   </h3>
                   <p style={{ color: DIM, fontSize: 14, lineHeight: 1.6, marginBottom: 12 }}>{rec.description}</p>
@@ -388,8 +388,8 @@ export default function DiscoverPage() {
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>&#10003;</button>
                     <button onClick={() => handleRecAction(rec.id, 'rejected')} style={{
-                      width: 44, height: 44, borderRadius: 12, border: `1px solid #EF4444`,
-                      background: '#EF444420', color: '#EF4444', fontSize: 20, cursor: 'pointer',
+                      width: 44, height: 44, borderRadius: 12, border: `1px solid #FF3B30`,
+                      background: '#EF444420', color: '#FF3B30', fontSize: 20, cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>&#10007;</button>
                   </div>

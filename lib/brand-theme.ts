@@ -214,11 +214,11 @@ export const AA_TEXT = 4.5;
 export const AA_LARGE = 3;
 
 /* Saguaro defaults (owner decision 2026-10-02): neon yellow on jet black.
-   The previous defaults (gold #F59E0B on navy #0d1117) are treated as "no
+   The previous defaults (gold #FF8A00 on navy #0d1117) are treated as "no
    custom color" so tenants who never picked one move to the new look. */
 const SAGUARO_GOLD = '#FFE600';
 const SAGUARO_BASE = '#000000';
-const LEGACY_DEFAULT_PRIMARY = new Set(['#f59e0b', '#c8960f', '#c8881c']);
+const LEGACY_DEFAULT_PRIMARY = new Set(['#FF8A00', '#FFE600', '#c8881c']);
 const LEGACY_DEFAULT_BASE = new Set(['#0d1117', '#0a0a0a']);
 const notLegacy = (hex: string | null | undefined, legacy: Set<string>) =>
   hex && !legacy.has(hex.trim().toLowerCase()) ? hex : null;

@@ -12,8 +12,8 @@ const C = {
   cardBg: 'rgba(255,255,255,0.02)',
   raised: 'var(--bg-surface)',
   raisedAlt: 'var(--bg-surface-2)',
-  green: '#22C55E',
-  blue: '#6366F1',
+  green: '#2CFF7A',
+  blue: '#FF8A00',
   font: "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
 };
 

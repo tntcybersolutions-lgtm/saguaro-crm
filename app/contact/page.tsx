@@ -15,8 +15,8 @@ const C = {
   cardBg: 'rgba(255,255,255,0.02)',
   raised: 'var(--bg-surface)',
   raisedAlt: 'var(--bg-surface-2)',
-  green: '#22C55E',
-  blue: '#6366F1',
+  green: '#2CFF7A',
+  blue: '#FF8A00',
   font: "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
 };
 
@@ -247,7 +247,7 @@ export default function ContactPage() {
             <div style={{ background: C.cardBg, border: `1px solid ${C.hairline}`, borderRadius: 14, padding: '36px 36px', boxShadow: 'none' }}>
               {status === 'sent' ? (
                 <div style={{ textAlign: 'center', padding: '32px 8px' }}>
-                  <div style={{ width: 64, height: 64, margin: '0 auto 20px', borderRadius: '50%', background: 'rgba(34,197,94,0.12)', border: `1px solid rgba(34,197,94,0.35)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 64, height: 64, margin: '0 auto 20px', borderRadius: '50%', background: 'rgba(44,255,122,0.12)', border: `1px solid rgba(44,255,122,0.35)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
                       <path d="M5 12.5l4.5 4.5L19 7" stroke={C.green} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
@@ -362,7 +362,7 @@ export default function ContactPage() {
                   ].map(item => (
                     <div key={item} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 2 }}>
-                        <circle cx="8" cy="8" r="8" fill="rgba(34,197,94,0.13)" />
+                        <circle cx="8" cy="8" r="8" fill="rgba(44,255,122,0.13)" />
                         <path d="M4.5 8l2.5 2.5 4-5" stroke={C.green} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                       <span style={{ fontSize: 13.5, color: C.text, lineHeight: 1.5 }}>{item}</span>

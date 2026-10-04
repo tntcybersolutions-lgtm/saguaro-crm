@@ -245,7 +245,7 @@ function buildReportEmail(title: string, columns: string[], rows: string[][], te
 <tr><td align="center">
 <table width="720" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);max-width:720px;width:100%;">
 <tr><td style="background:#0D1116;padding:22px 32px;">
-  <span style="color:#D4A017;font-size:22px;font-weight:700;letter-spacing:1px;">SAGUARO</span>
+  <span style="color:#FFE600;font-size:22px;font-weight:700;letter-spacing:1px;">SAGUARO</span>
   <span style="color:#fff;font-size:13px;margin-left:8px;opacity:0.65;">Scheduled Report</span>
 </td></tr>
 <tr><td style="padding:28px 32px;">

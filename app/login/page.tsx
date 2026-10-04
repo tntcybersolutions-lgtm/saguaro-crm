@@ -1,9 +1,47 @@
 'use client';
+/**
+ * Login — Pass 4 on the kit. Same flow as before: hash-token confirmation,
+ * POST /api/auth/session, then land a sales-only rep on /app/sales.
+ */
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { CheckCircle, WarningCircle, Eye, EyeSlash, Check, Lock } from '@phosphor-icons/react';
+import { CheckCircle, WarningCircle, Eye, EyeSlash, Lock } from '@phosphor-icons/react';
+import { Card, Field, Input, Button } from '@/components/ui/kit';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444';
+const CSS = `
+.lgPage { min-height: 100vh; background: var(--bg-base); display: flex; flex-direction: column; }
+.lgNav { padding: env(safe-area-inset-top, 0px) 24px 0; box-sizing: content-box; height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--border-subtle); }
+.lgBrand { text-decoration: none; display: inline-flex; align-items: center; gap: 10px; }
+.lgBrand img { height: 36px; width: auto; object-fit: contain; border-radius: 4px; }
+.lgBrandName { font-weight: 900; font-size: 15px; letter-spacing: -0.01em; color: var(--brand-primary); line-height: 1.15; }
+.lgBrandSub { font-size: 10px; color: var(--text-tertiary); letter-spacing: .5px; font-weight: 600; }
+.lgNavLink { font-size: var(--fs-sm); color: var(--text-tertiary); text-decoration: none; font-weight: 600; }
+.lgNavLink b { color: var(--brand-primary); }
+.lgMain { flex: 1; display: flex; align-items: center; justify-content: center; padding: 32px 16px; }
+.lgWrap { width: 100%; max-width: 420px; }
+.lgHead { text-align: center; margin-bottom: 24px; }
+.lgHead img { height: 56px; width: auto; object-fit: contain; border-radius: 6px; margin-bottom: 14px; }
+.lgHead h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 6px; color: var(--text-primary); }
+.lgHead p { color: var(--text-tertiary); font-size: var(--fs-md); margin: 0; }
+.lgForm { display: flex; flex-direction: column; gap: 14px; }
+.lgMsg { display: flex; align-items: flex-start; gap: 8px; padding: 10px 14px; border-radius: var(--radius-sm); font-size: var(--fs-sm); margin-bottom: 16px; }
+.lgMsg > svg { flex-shrink: 0; margin-top: 1px; }
+.lgMsg[data-tone="good"] { background: rgba(44,255,122,.10); border: 1px solid rgba(44,255,122,.3); color: var(--status-ongoing); }
+.lgMsg[data-tone="bad"] { background: rgba(255,77,94,.08); border: 1px solid rgba(255,77,94,.35); color: var(--status-overdue); }
+.lgPwdWrap { position: relative; }
+.lgPwdWrap .k-input { padding-right: 44px; }
+.lgPwdToggle { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); }
+.lgLabelRow { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.lgLabelRow a { font-size: var(--fs-xs); color: var(--brand-primary); text-decoration: none; font-weight: 600; }
+.lgRemember { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; font-size: var(--fs-sm); color: var(--text-secondary); min-height: 32px; }
+.lgRemember input { width: 16px; height: 16px; accent-color: var(--brand-primary); cursor: pointer; }
+.lgFoot { margin-top: 14px; text-align: center; font-size: var(--fs-sm); color: var(--text-tertiary); }
+.lgFoot a { color: var(--brand-primary); text-decoration: none; font-weight: 700; }
+.lgTrust { margin-top: 20px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; font-size: 10px; color: var(--text-tertiary); font-weight: 600; }
+.lgTrust span { display: inline-flex; align-items: center; gap: 4px; }
+.lgSubmit { width: 100%; justify-content: center; min-height: 44px; }
+@media (max-width: 640px) { .lgPage .k-btn, .lgPage .k-input { min-height: 44px; } }
+`;
 
 export default function LoginPage(){
   const [form, setForm] = useState({email:'',password:''});
@@ -12,7 +50,6 @@ export default function LoginPage(){
   const [info, setInfo] = useState('');
   const [showPwd, setShowPwd] = useState(false);
   const [remember, setRemember] = useState(true);
-  const [focused, setFocused] = useState<string|null>(null);
 
   React.useEffect(() => {
     // Handle implicit flow: Supabase puts tokens in the URL hash fragment.
@@ -96,183 +133,86 @@ export default function LoginPage(){
     setLoading(false);
   }
 
-  const inputStyle = (field: string): React.CSSProperties => ({
-    width:'100%',
-    padding:'10px 13px',
-    paddingRight: field === 'password' ? 44 : 13,
-    background:'#1c1c1e',
-    border:`1px solid ${focused === field ? GOLD : BORDER}`,
-    borderRadius:8,
-    color:TEXT,
-    fontSize:14,
-    outline:'none',
-    boxSizing:'border-box',
-    transition:'border-color .2s, box-shadow .2s',
-    boxShadow: focused === field ? '0 0 0 3px var(--brand-primary-12)' : 'none',
-  });
-  const labelStyle: React.CSSProperties = {display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:6};
-
   return (
-    <div style={{minHeight:'100vh',background:DARK,display:'flex',flexDirection:'column'}}>
-      {/* Top nav */}
-      {/* Pushed below the notch / status bar in the iOS app (viewport-fit=cover). */}
-      <nav style={{padding:'env(safe-area-inset-top, 0px) 24px 0',boxSizing:'content-box',height:56,display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:`1px solid ${BORDER}`}}>
-        <Link href="/" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:10}} aria-label="Saguaro Control Systems — home">
-          <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{height:36,width:'auto',objectFit:'contain',borderRadius:4}} />
-          <span style={{display:'flex',flexDirection:'column',lineHeight:1.15}}>
-            <span style={{fontWeight:900,fontSize:15,letterSpacing:'-0.01em',background:`linear-gradient(90deg,${GOLD},var(--brand-primary-strong))`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>Saguaro</span>
-            <span style={{fontSize:10,color:DIM,letterSpacing:.5,fontWeight:600}}>Control Systems</span>
+    <div className="lgPage">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      {/* Top nav — pushed below the notch / status bar in the iOS app (viewport-fit=cover). */}
+      <nav className="lgNav">
+        <Link href="/" className="lgBrand" aria-label="Saguaro Control Systems — home">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-full.jpg" alt="Saguaro Control Systems" />
+          <span style={{ display: 'flex', flexDirection: 'column' }}>
+            <span className="lgBrandName">Saguaro</span>
+            <span className="lgBrandSub">Control Systems</span>
           </span>
         </Link>
-        <Link href="/signup" style={{fontSize:13,color:DIM,textDecoration:'none',fontWeight:600}}>No account? <span style={{color:GOLD}}>Start Free Trial →</span></Link>
+        <Link href="/signup" className="lgNavLink">No account? <b>Start Free Trial →</b></Link>
       </nav>
 
-      {/* Main content */}
-      <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',padding:'32px 24px'}}>
-        <div style={{width:'100%',maxWidth:420}}>
-          {/* Header */}
-          <div style={{textAlign:'center',marginBottom:28}}>
-            <div style={{display:'flex',justifyContent:'center',marginBottom:16}}>
-              <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{height:56,width:'auto',objectFit:'contain',borderRadius:6}} />
-            </div>
-            <h1 style={{fontSize:22,fontWeight:700,letterSpacing:'-0.02em',margin:'0 0 6px',color:TEXT}}>Welcome Back</h1>
-            <p style={{color:DIM,fontSize:14,margin:0}}>Sign in to your Saguaro account.</p>
+      <div className="lgMain">
+        <div className="lgWrap">
+          <div className="lgHead">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-full.jpg" alt="Saguaro Control Systems" />
+            <h1>Welcome Back</h1>
+            <p>Sign in to your Saguaro account.</p>
           </div>
 
-          {/* Card */}
-          <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:'var(--radius-lg)',padding:'32px 28px',boxShadow:'var(--shadow-lg)'}}>
-            {info&&(
-              <div style={{background:'rgba(34,197,94,.1)',border:'1px solid rgba(34,197,94,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:'#22c55e',display:'flex',alignItems:'flex-start',gap:8}}>
-                <CheckCircle size={15} weight="fill" style={{flexShrink:0,marginTop:1}} /><span>{info}</span>
-              </div>
-            )}
-            {error&&(
-              <div style={{background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:RED,display:'flex',alignItems:'flex-start',gap:8}}>
-                <WarningCircle size={15} weight="fill" style={{flexShrink:0,marginTop:1}} /><span>{error}</span>
-              </div>
-            )}
+          <Card>
+            {info && <div className="lgMsg" data-tone="good" role="status"><CheckCircle size={15} weight="fill" /><span>{info}</span></div>}
+            {error && <div className="lgMsg" data-tone="bad" role="alert"><WarningCircle size={15} weight="fill" /><span>{error}</span></div>}
 
-            <form onSubmit={handleLogin} style={{display:'flex',flexDirection:'column',gap:16}}>
-              {/* Email */}
-              <div>
-                <label htmlFor="login-email" style={labelStyle}>Email Address</label>
-                <input
+            <form onSubmit={handleLogin} className="lgForm">
+              <Field label="Email Address" required>
+                <Input
                   id="login-email"
                   name="email"
                   type="email"
                   placeholder="you@company.com"
                   value={form.email}
                   onChange={e=>setForm(p=>({...p,email:e.target.value}))}
-                  onFocus={()=>setFocused('email')}
-                  onBlur={()=>setFocused(null)}
                   autoComplete="username"
                   required
-                  style={inputStyle('email')}
                 />
-              </div>
+              </Field>
 
-              {/* Password */}
-              <div>
-                <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}>
-                  <label htmlFor="login-password" style={{...labelStyle,marginBottom:0}}>Password</label>
-                  <Link href="/forgot-password" style={{fontSize:11,color:GOLD,textDecoration:'none',fontWeight:600}}>Forgot Password?</Link>
-                </div>
-                <div style={{position:'relative'}}>
-                  <input
+              <Field label="Password" required hint={<span className="lgLabelRow"><span>Press Enter to sign in.</span><Link href="/forgot-password">Forgot Password?</Link></span>}>
+                <div className="lgPwdWrap">
+                  <Input
                     id="login-password"
                     name="password"
                     type={showPwd ? 'text' : 'password'}
                     placeholder="••••••••"
                     value={form.password}
                     onChange={e=>setForm(p=>({...p,password:e.target.value}))}
-                    onFocus={()=>setFocused('password')}
-                    onBlur={()=>setFocused(null)}
                     autoComplete="current-password"
                     required
-                    style={inputStyle('password')}
                   />
-                  <button
-                    type="button"
-                    tabIndex={-1}
-                    onClick={()=>setShowPwd(p=>!p)}
-                    style={{
-                      position:'absolute',right:10,top:'50%',transform:'translateY(-50%)',
-                      background:'none',border:'none',color:DIM,cursor:'pointer',
-                      fontSize:16,padding:'4px 6px',lineHeight:1,
-                      transition:'color .15s',
-                    }}
-                    onMouseEnter={e=>(e.currentTarget.style.color=TEXT)}
-                    onMouseLeave={e=>(e.currentTarget.style.color=DIM)}
-                    aria-label={showPwd ? 'Hide password' : 'Show password'}
-                  >
-                    {showPwd ? <EyeSlash size={17} weight="regular" /> : <Eye size={17} weight="regular" />}
-                  </button>
+                  <div className="lgPwdToggle">
+                    <Button type="button" variant="ghost" size="sm" tabIndex={-1} icon={showPwd ? <EyeSlash size={17} /> : <Eye size={17} />} aria-label={showPwd ? 'Hide password' : 'Show password'} onClick={()=>setShowPwd(p=>!p)} />
+                  </div>
                 </div>
-              </div>
+              </Field>
 
-              {/* Remember me */}
-              <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',userSelect:'none'}}>
-                <div
-                  onClick={()=>setRemember(p=>!p)}
-                  style={{
-                    width:16,height:16,borderRadius:4,
-                    border:`1.5px solid ${remember ? GOLD : BORDER}`,
-                    background: remember ? GOLD : 'transparent',
-                    display:'flex',alignItems:'center',justifyContent:'center',
-                    transition:'all .15s',cursor:'pointer',flexShrink:0,
-                  }}
-                >
-                  {remember && <Check size={11} weight="bold" color="#0A0A00" />}
-                </div>
-                <span style={{fontSize:12,color:DIM,fontWeight:500}}>Remember me on this device</span>
+              <label className="lgRemember">
+                <input type="checkbox" checked={remember} onChange={e=>setRemember(e.target.checked)} />
+                <span>Remember me on this device</span>
               </label>
 
-              {/* Submit */}
-              <button type="submit" disabled={loading}
-                style={{
-                  marginTop:4,padding:'11px 0',
-                  background:loading?'color-mix(in srgb, var(--brand-primary) 50%, transparent)':'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))',
-                  border:'none',borderRadius:'var(--radius-md)',color:'#0A0A00',fontSize:14,fontWeight:700,letterSpacing:'0.01em',
-                  cursor:loading?'not-allowed':'pointer',transition:'background .18s, box-shadow .18s, transform .12s',
-                  display:'flex',alignItems:'center',justifyContent:'center',gap:8,
-                  boxShadow:loading?'none':'0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)',
-                }}
-              >
-                {loading && (
-                  <span style={{
-                    display:'inline-block',width:16,height:16,
-                    border:'2px solid #E5E5EA',borderTopColor:'var(--brand-primary)',
-                    borderRadius:'50%',animation:'spin .6s linear infinite',
-                  }}/>
-                )}
-                {loading?'Signing in…':'Sign In →'}
-              </button>
+              <Button type="submit" variant="primary" className="lgSubmit" disabled={loading}>{loading ? 'Signing in…' : 'Sign In →'}</Button>
             </form>
 
-            {/* Hint */}
-            <div style={{marginTop:12,textAlign:'center',fontSize:11,color:'rgba(203,213,225,0.6)'}}>
-              Press Enter to sign in.
-            </div>
-
-            <div style={{marginTop:16,textAlign:'center',fontSize:12,color:DIM}}>
-              Don't have an account? <Link href="/signup" style={{color:GOLD,textDecoration:'none',fontWeight:700}}>Start Free Trial</Link>
-            </div>
-          </div>
+            <div className="lgFoot">Don't have an account? <Link href="/signup">Start Free Trial</Link></div>
+          </Card>
 
           {/* Trust badges */}
-          <div style={{marginTop:20,textAlign:'center',display:'flex',justifyContent:'center',gap:20,flexWrap:'wrap'}}>
+          <div className="lgTrust">
             {['256-Bit SSL','Encrypted at Rest','99.9% Uptime'].map(badge => (
-              <span key={badge} style={{fontSize:10,color:'rgba(203,213,225,0.6)',fontWeight:600}}>
-                <Lock size={10} weight="fill" style={{verticalAlign:-1,marginRight:4}} />{badge}
-              </span>
+              <span key={badge}><Lock size={10} weight="fill" />{badge}</span>
             ))}
           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-      `}</style>
     </div>
   );
 }

@@ -27,9 +27,9 @@ const SEVERITY_BADGE: Record<string, 'red' | 'amber' | 'gold' | 'blue' | 'muted'
 
 // Palette aligned with the dashboard kit (desert-dusk semantic accents).
 const GOLD = 'var(--brand-primary)';
-const RED = '#E0644E';
+const RED = '#FF3B30';
 const AMBER = 'var(--warning)';
-const GREEN = '#45B37D';
+const GREEN = '#2CFF7A';
 
 // The four deterministic checks the project-scoped engine runs
 // (lib/autopilot/scan, via /api/autopilot/run), in execution order — rendered as the pipeline rail.
@@ -206,7 +206,7 @@ export default function AutopilotPage() {
       </div>
 
       {toast && (
-        <div style={{ marginBottom: 20, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(34,197,94,0.3)`, borderRadius: 10, color: T.green, fontSize: 13 }}>
+        <div style={{ marginBottom: 20, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(44,255,122,0.3)`, borderRadius: 10, color: T.green, fontSize: 13 }}>
           {toast}
         </div>
       )}

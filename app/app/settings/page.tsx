@@ -1,33 +1,19 @@
 'use client';
 /**
- * Settings — workspace control panel.
+ * Settings — workspace control panel, Pass 4 on the kit.
  * Every control on this page does something real: profile fields save to
  * profiles, branding saves to tenants.settings (with instant sidebar refresh
  * via the `saguaro:branding-updated` event), and every hub row links to a
  * live route. No dead clicks.
+ *
+ * Reads / writes (unchanged):
+ *   GET /api/billing/subscription · GET/PUT /api/auth/me · GET /api/platform/me
+ *   GET/PUT /api/branding · POST /api/branding/logo · POST /api/auth/logout
  */
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { CreditCard, DeviceMobile, Bell, Users, Clipboard, FileText, Gear, Rocket, GraduationCap, Books, ChatCircle, Clock, ArrowRight, CloudArrowUp, ShieldCheck, Plugs, UserCircle, Palette, Lifebuoy, UploadSimple, CheckCircle, WarningCircle } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, SectionCard, StatStrip, GoldButton, DangerButton, Pill, goldButtonStyle } from '@/components/ui/premium';
-
-const GOLD  = 'var(--brand-primary)';
-const BORDER = 'rgba(255,255,255,0.12)';
-const DIM   = '#CBD5E1';
-const TEXT  = '#FFFFFF';
-const GREEN = '#22c55e';
-const RED   = '#ef4444';
-// Premium-surface field styling — legible on the aurora/glass backdrop.
-const FIELD_BG = 'rgba(0,0,0,0.22)';
-
-const inputStyle: React.CSSProperties = {
-  width: '100%', background: FIELD_BG, border: `1px solid ${BORDER}`, borderRadius: 10,
-  padding: '10px 14px', color: TEXT, fontSize: 14, outline: 'none', boxSizing: 'border-box',
-  fontFamily: 'inherit',
-};
-const labelStyle: React.CSSProperties = {
-  fontSize: 11, color: DIM, fontWeight: 700, display: 'block', marginBottom: 6,
-};
+import { CreditCard, DeviceMobile, Bell, Users, Clipboard, FileText, Gear, Rocket, GraduationCap, Books, ChatCircle, Clock, ArrowRight, CloudArrowUp, ShieldCheck, Plugs, Palette, Lifebuoy, UploadSimple, CheckCircle, WarningCircle, CaretRight, SignOut } from '@phosphor-icons/react';
+import { PageShell, Card, StatRow, Badge, Button, Field, Input, FormGrid, type StatItem } from '@/components/ui/kit';
 
 interface SubInfo {
   plan_name: string;
@@ -57,7 +43,7 @@ const SETTINGS_SECTIONS = [
     title: 'Team & Permissions',
     sectionIcon: Users,
     items: [
-      { icon: Users, label: 'Roles & Permissions', desc: 'Control what each team role can access', href: '/app/people?tab=access' },
+      { icon: Users, label: 'People & Access', desc: 'Crew directory, roles, and what each team role can reach', href: '/app/people?tab=access' },
       { icon: Palette, label: 'Branding & White Label', desc: 'Your logo and colors across every screen, report and email', href: '/app/settings/branding' },
       { icon: Plugs, label: 'Integration Hub', desc: 'API keys, outbound webhooks, and the integration marketplace', href: '/app/settings/integrations-hub' },
       { icon: CloudArrowUp, label: 'External Storage', desc: 'Connect S3, OneDrive, SharePoint, Egnyte, Dropbox, Google Drive, or Box', href: '/app/settings/storage' },
@@ -100,12 +86,67 @@ function companyInitials(name: string): string {
 function SaveNotice({ notice }: { notice: { text: string; ok: boolean } | null }) {
   if (!notice) return null;
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: notice.ok ? GREEN : RED, fontWeight: 600 }}>
-      {notice.ok ? <CheckCircle size={15} weight="fill" color={GREEN} /> : <WarningCircle size={15} weight="fill" color={RED} />}
+    <span className="stNotice" data-ok={notice.ok ? 'true' : 'false'} role="status">
+      {notice.ok ? <CheckCircle size={15} weight="fill" /> : <WarningCircle size={15} weight="fill" />}
       {notice.text}
     </span>
   );
 }
+
+const GOLD = 'var(--brand-primary)';
+
+const CSS = `
+.stWs > .k-page { max-width: 1040px; }
+.stStack { display: flex; flex-direction: column; gap: 16px; }
+.stActions { display: flex; align-items: center; gap: 14px; margin-top: 16px; flex-wrap: wrap; }
+.stNotice { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-sm); font-weight: 600; }
+.stNotice[data-ok="true"] { color: var(--status-ongoing); }
+.stNotice[data-ok="false"] { color: var(--status-overdue); }
+.stPlan { text-align: right; font-size: var(--fs-xs); color: var(--text-tertiary); line-height: 1.6; }
+.stPlan b { color: var(--text-primary); }
+.stWarn { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid rgba(255,197,61,.35); background: rgba(255,197,61,.08); font-size: var(--fs-sm); color: var(--text-primary); }
+.stWarn svg { color: var(--status-under-contract); vertical-align: -3px; }
+.stBrand { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 22px; }
+.stDrop { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 22px 16px; border-radius: var(--radius-sm); cursor: pointer; border: 1.5px dashed var(--border-strong); background: var(--bg-surface-2); text-align: center; transition: border-color .15s ease, background .15s ease; }
+.stDrop[data-over="true"] { border-color: var(--brand-primary); background: var(--brand-primary-08); }
+.stDrop:focus-visible { outline: 2px solid var(--brand-primary); }
+.stDropTitle { font-size: var(--fs-sm); font-weight: 700; color: var(--text-primary); }
+.stDropSub { font-size: var(--fs-xs); color: var(--text-tertiary); }
+.stShape { margin-top: 10px; padding: 10px 12px; border-radius: var(--radius-sm); font-size: var(--fs-xs); line-height: 1.5; border: 1px solid var(--border-subtle); background: var(--bg-surface-2); color: var(--text-tertiary); }
+.stShape[data-portrait="true"] { border-color: var(--brand-primary-35); background: var(--brand-primary-08); color: var(--text-primary); }
+.stShape b { color: var(--text-primary); }
+.stColor { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.stColor input[type="color"] { width: 48px; height: 40px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); background: none; cursor: pointer; padding: 2px; }
+.stLink { all: unset; color: var(--text-tertiary); font-size: var(--fs-xs); cursor: pointer; text-decoration: underline; }
+.stLink:focus-visible { outline: 2px solid var(--brand-primary); }
+.stHint { font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 5px; line-height: 1.5; }
+.stPreview { border-radius: var(--radius-md); border: 1px solid var(--border-default); overflow: hidden; background: var(--bg-solid); }
+.stPreviewHead { padding: 12px; border-bottom: 1px solid var(--border-subtle); }
+.stLockup { padding: 12px; border-radius: var(--radius-sm); background: var(--bg-surface-2); border: 1px solid var(--border-subtle); }
+.stLockupRow { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.stLockupName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-md); font-weight: 800; color: var(--text-primary); }
+.stLockupSub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); flex: 1 1 auto; min-width: 0; }
+.stFaux { padding: 10px 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.stFaux span { display: inline-block; height: 8px; border-radius: 4px; background: rgba(255,255,255,0.07); }
+.stRow { display: flex; align-items: center; gap: 16px; padding: 14px 18px; text-decoration: none; color: inherit; border-bottom: 1px solid var(--border-subtle); min-height: 56px; }
+.stRow:last-child { border-bottom: 0; }
+.stRow:hover { background: rgba(255,255,255,0.03); }
+.stRow:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: -2px; }
+.stRow[data-hi="true"] { background: var(--brand-primary-08); }
+.stRowIcon { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; display: grid; place-items: center; background: var(--bg-surface-2); border: 1px solid var(--glass-border); color: var(--text-primary); }
+.stRow[data-hi="true"] .stRowIcon { color: var(--brand-primary); border-color: var(--brand-primary-35); }
+.stRowLabel { font-size: var(--fs-md); font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+.stRow[data-hi="true"] .stRowLabel { color: var(--brand-primary); }
+.stRowDesc { font-size: var(--fs-xs); color: var(--text-tertiary); }
+.stRow > svg:last-child { color: var(--text-tertiary); flex-shrink: 0; }
+.stCta { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+.stCta > svg { color: var(--brand-primary); flex-shrink: 0; }
+.stFoot { text-align: center; padding: 8px 0 16px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.stFoot a { font-size: var(--fs-sm); color: var(--text-tertiary); text-decoration: underline; }
+@media (max-width: 640px) {
+  .stWs .k-btn, .stWs .k-stat, .stWs .k-input { min-height: 44px; }
+}
+`;
 
 export default function SettingsPage() {
   const [sub, setSub] = useState<SubInfo | null>(null);
@@ -245,450 +286,301 @@ export default function SettingsPage() {
   const trialDays = sub?.trial_ends_at ? daysLeft(sub.trial_ends_at) : null;
   const isTrialing = sub?.status === 'trialing';
   const isPastDue = sub?.status === 'past_due';
-
-  const acctBorder = isPastDue ? RED : (isTrialing && trialDays !== null && trialDays <= 5 ? 'color-mix(in srgb, var(--warning) 35%, transparent)' : undefined);
   const previewColor = /^#[0-9a-fA-F]{6}$/.test(branding.primary_color) ? branding.primary_color : GOLD;
+  const roleLabel = me?.role ? String(me.role).replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : '';
+
+  const stats: StatItem[] = [
+    { label: 'Plan', value: sub?.plan_name || 'Free Trial', tone: isPastDue ? 'bad' : sub?.status === 'active' ? 'good' : 'default', sub: sub?.status === 'active' ? 'Subscription active' : isTrialing ? 'Trial in progress' : isPastDue ? 'Payment failed — fix in Billing' : 'Manage in Billing', href: '/app/billing' },
+    ...(isTrialing && trialDays !== null
+      ? [{ label: 'Trial', value: `${trialDays}d left`, tone: trialDays <= 5 ? 'warn' : 'default', sub: 'Upgrade any time in Billing', href: '/app/billing' } as StatItem]
+      : sub?.current_period_end
+        ? [{ label: 'Renews', value: new Date(sub.current_period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), sub: 'Next billing date', href: '/app/billing' } as StatItem]
+        : []),
+    { label: 'Branding', value: (branding.logo_url || branding.company_name) ? 'Custom' : 'Default', tone: (branding.logo_url || branding.company_name) ? 'good' : 'default', sub: branding.company_name || 'Set a name + logo below', href: '#branding' },
+    { label: 'Brand Color', value: branding.primary_color || 'Saguaro Gold', sub: branding.primary_color ? 'White-label accent' : 'Default accent', href: '/app/settings/branding' },
+    { label: 'Signed In As', value: me?.name || '—', sub: me?.email || undefined },
+  ];
 
   return (
-    <PremiumSurface maxWidth={920}>
-
-      <ModuleHero
-        eyebrow="Workspace"
-        eyebrowIcon={<Gear size={13} weight="fill" color={GOLD} />}
+    <div className="stWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[{ label: 'Home', href: '/app' }, { label: 'Settings' }]}
         title="Settings"
-        accent="& Preferences"
-        subtitle="Manage your account, team, billing, and app preferences."
-      />
+        subtitle="Your account, team, billing, and app preferences — every control here saves for real."
+      >
+        {(me || sub) && <StatRow items={stats} />}
 
-      {/* Workspace snapshot — what the system knows about this account */}
-      {(me || sub) && (
-        <StatStrip items={[
-          {href: '/app/settings', label: 'Plan', value: sub?.plan_name || 'Free Trial', accent: isPastDue ? RED : undefined, sub: sub?.status === 'active' ? 'Subscription active' : isTrialing ? 'Trial in progress' : isPastDue ? 'Payment failed — fix in Billing' : 'Manage in Billing' },
-          ...(isTrialing && trialDays !== null
-            ? [{href: '/app/settings', label: 'Trial', value: `${trialDays}d left`, accent: trialDays <= 5 ? GOLD : undefined, sub: 'Upgrade any time in Billing' }]
-            : sub?.current_period_end
-              ? [{href: '/app/settings', label: 'Renews', value: new Date(sub.current_period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), sub: 'Next billing date' }]
-              : []),
-          {href: '/app/settings', label: 'Branding', value: (branding.logo_url || branding.company_name) ? 'Custom' : 'Default', accent: (branding.logo_url || branding.company_name) ? GREEN : undefined, sub: branding.company_name || 'Set a name + logo below' },
-          {href: '/app/settings', label: 'Brand Color', value: branding.primary_color || 'Saguaro Gold', sub: branding.primary_color ? 'White-label accent' : 'Default accent' },
-          {href: '/app/settings',  label: 'Signed In As', value: me?.name || '—', sub: me?.email || undefined },
-        ]} />
-      )}
-
-      {/* ── Your Profile — editable, saves to profiles ─────────────── */}
-      <div style={{ marginBottom: 24 }}>
-        <SectionCard
-          title="Your Profile"
-          subtitle="Your name and contact info — shown on daily logs, approvals, and team lists."
-          icon={<UserCircle size={18} weight="duotone" color={GOLD} />}
-          accent={isPastDue ? RED : GOLD}
-          style={acctBorder ? { borderColor: acctBorder } : undefined}
-          action={sub ? (
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 12.5, color: DIM, marginBottom: 3 }}>
-                Plan: <strong style={{ color: TEXT }}>{sub.plan_name ?? 'Free Trial'}</strong>
+        <div className="stStack">
+          {/* ── Your Profile — editable, saves to profiles ─────────────── */}
+          <Card
+            title="Your Profile"
+            subtitle="Your name and contact info — shown on daily logs, approvals, and team lists."
+            actions={sub ? (
+              <div className="stPlan">
+                <div>Plan: <b>{sub.plan_name ?? 'Free Trial'}</b></div>
+                {isTrialing && trialDays !== null && <div style={{ color: trialDays <= 5 ? 'var(--status-under-contract)' : undefined }}>{trialDays} day{trialDays !== 1 ? 's' : ''} left in trial</div>}
+                {isPastDue && <div style={{ color: 'var(--status-overdue)', fontWeight: 600 }}>Payment failed</div>}
+                {sub.status === 'active' && sub.current_period_end && <div style={{ color: 'var(--status-ongoing)' }}>Active · renews {new Date(sub.current_period_end).toLocaleDateString()}</div>}
+                <Button variant="ghost" size="sm" href="/app/billing" icon={<ArrowRight size={13} weight="bold" />}>Manage Billing</Button>
               </div>
-              {isTrialing && trialDays !== null && (
-                <div style={{ fontSize: 12.5, color: trialDays <= 5 ? 'var(--warning)' : DIM }}>{trialDays} day{trialDays !== 1 ? 's' : ''} left in trial</div>
-              )}
-              {isPastDue && <div style={{ fontSize: 12.5, color: RED, fontWeight: 600 }}>Payment failed</div>}
-              {sub.status === 'active' && sub.current_period_end && (
-                <div style={{ fontSize: 12.5, color: GREEN }}>Active · renews {new Date(sub.current_period_end).toLocaleDateString()}</div>
-              )}
-              <Link href="/app/billing" style={{ fontSize: 12, color: GOLD, textDecoration: 'none', fontWeight: 600 }}>
-                Manage Billing <span style={{ display: 'inline-flex', verticalAlign: 'middle' }}><ArrowRight size={12} weight="regular" color={GOLD} /></span>
-              </Link>
-            </div>
-          ) : undefined}
-        >
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
-            <div>
-              <label style={labelStyle}>Full Name</label>
-              <input
-                type="text"
-                value={profile.full_name}
-                onChange={e => { setProfile(p => ({ ...p, full_name: e.target.value })); setProfileDirty(true); }}
-                placeholder="Your name"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>Job Title</label>
-              <input
-                type="text"
-                value={profile.title}
-                onChange={e => { setProfile(p => ({ ...p, title: e.target.value })); setProfileDirty(true); }}
-                placeholder="e.g. Project Executive"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>Phone</label>
-              <input
-                type="tel"
-                value={profile.phone}
-                onChange={e => { setProfile(p => ({ ...p, phone: e.target.value })); setProfileDirty(true); }}
-                placeholder="(602) 555-0100"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>Email · Sign-In</label>
-              <input type="email" value={me?.email ?? ''} readOnly disabled title="Your sign-in email cannot be changed here — contact support to migrate accounts."
-                style={{ ...inputStyle, opacity: 0.6, cursor: 'not-allowed' }} />
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 16, flexWrap: 'wrap' }}>
-            <GoldButton size="md" onClick={saveProfile} disabled={profileSaving || !profileDirty}>
-              {profileSaving ? 'Saving…' : 'Save Profile'}
-            </GoldButton>
-            {me?.role && <Pill tone="neutral">{String(me.role).replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}</Pill>}
-            <SaveNotice notice={profileMsg} />
-          </div>
-        </SectionCard>
-      </div>
-
-      {/* Trial warning banner */}
-      {isTrialing && trialDays !== null && trialDays <= 7 && (
-        <div style={{ background: 'color-mix(in srgb, var(--warning) 8%, transparent)', border: `1px solid color-mix(in srgb, var(--warning) 25%, transparent)`, borderRadius: 12, padding: '14px 20px', marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-          <div style={{ fontSize: 14, color: TEXT }}>
-            <span style={{ display: 'inline-flex', verticalAlign: 'middle' }}><Clock size={16} weight="fill" color="var(--warning)" /></span> <strong>{trialDays} days left</strong> in your free trial — upgrade to keep access for your whole team.
-          </div>
-          <Link href="/app/billing" className="pmBtn" style={{ ...goldButtonStyle, whiteSpace: 'nowrap' }}>
-            Upgrade Now
-          </Link>
-        </div>
-      )}
-
-      {/* ── Company Branding — logo, name, color + live sidebar preview ── */}
-      <div id="branding" style={{ marginBottom: 24, scrollMarginTop: 72 }}>
-        <SectionCard
-          title="Company Branding"
-          subtitle="Shown in the sidebar and on every exported report."
-          icon={<Palette size={18} weight="duotone" color={GOLD} />}
-        >
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 22 }}>
-
-            {/* ── Left: the form ── */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div>
-                <label style={labelStyle}>Company Name</label>
-                <input
-                  type="text"
-                  value={branding.company_name}
-                  onChange={e => setBranding(b => ({ ...b, company_name: e.target.value }))}
-                  placeholder="e.g. Acme General Contractors"
-                  style={inputStyle}
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Company Logo</label>
-                {/* Drag-and-drop upload zone */}
-                <div
-                  role="button"
-                  tabIndex={0}
-                  aria-label="Upload company logo"
-                  onClick={() => !uploading && fileRef.current?.click()}
-                  onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && !uploading) { e.preventDefault(); fileRef.current?.click(); } }}
-                  onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-                  onDragLeave={() => setDragOver(false)}
-                  onDrop={e => {
-                    e.preventDefault(); setDragOver(false);
-                    const f = e.dataTransfer.files?.[0];
-                    if (f && !uploading) uploadLogo(f);
-                  }}
-                  style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8,
-                    padding: '22px 16px', borderRadius: 12, cursor: uploading ? 'wait' : 'pointer',
-                    border: `1.5px dashed ${dragOver ? GOLD : 'rgba(255,255,255,0.2)'}`,
-                    background: dragOver ? 'var(--brand-primary-08)' : 'rgba(255,255,255,0.02)',
-                    transition: 'border-color .15s ease, background .15s ease',
-                    textAlign: 'center',
-                  }}
-                >
-                  <UploadSimple size={22} weight="bold" color={dragOver ? GOLD : DIM} />
-                  <div style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>
-                    {uploading ? 'Uploading…' : dragOver ? 'Drop to upload' : 'Drop your logo here, or click to browse'}
-                  </div>
-                  <div style={{ fontSize: 11.5, color: DIM }}>PNG, JPG, WEBP, or SVG · max 5 MB · transparent PNG looks best</div>
-                </div>
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                  style={{ display: 'none' }}
-                  onChange={e => { const f = e.target.files?.[0]; if (f) uploadLogo(f); e.currentTarget.value = ''; }}
-                />
-                {/* Advanced: paste a hosted URL instead */}
-                <div style={{ marginTop: 10 }}>
-                  <input
-                    type="url"
-                    value={branding.logo_url}
-                    onChange={e => setBranding(b => ({ ...b, logo_url: e.target.value }))}
-                    placeholder="…or paste a public logo URL (https://yoursite.com/logo.png)"
-                    style={{ ...inputStyle, fontSize: 12.5, padding: '8px 12px' }}
-                  />
-                </div>
-
-                {/* Honest shape feedback. A tall logo is not "wrong", but it WILL
-                    render small in a sidebar that caps height — say so here
-                    rather than letting it look like a bug. */}
-                {logoDims && (() => {
-                  const aspect = logoDims.w / logoDims.h;
-                  const portrait = aspect < 0.8;
-                  const rendered = Math.round(96 * aspect);
-                  return (
-                    <div style={{
-                      marginTop: 10, padding: '10px 12px', borderRadius: 10, fontSize: 12, lineHeight: 1.5,
-                      border: `1px solid ${portrait ? 'var(--brand-primary-35)' : BORDER}`,
-                      background: portrait ? 'color-mix(in srgb, var(--brand-primary) 7%, transparent)' : 'rgba(255,255,255,0.02)',
-                      color: portrait ? TEXT : DIM,
-                    }}>
-                      <strong style={{ color: portrait ? GOLD : TEXT }}>
-                        {logoDims.w} x {logoDims.h}px
-                      </strong>
-                      {portrait ? (
-                        <> — this logo is taller than it is wide, so the sidebar renders it about{' '}
-                          <strong>{rendered}px wide</strong>. A horizontal (landscape) version of your
-                          mark will read far better here and on report letterheads.</>
-                      ) : (
-                        <> — good shape for the sidebar and report letterheads.</>
-                      )}
-                    </div>
-                  );
-                })()}
-              </div>
-
-              {/* Brand color */}
-              <div>
-                <label style={labelStyle}>Brand Color</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                  <input
-                    type="color"
-                    value={previewColor === GOLD && !branding.primary_color ? '#F59E0B' : previewColor}
-                    onChange={e => setBranding(b => ({ ...b, primary_color: e.target.value }))}
-                    style={{ width: 48, height: 40, border: `1px solid ${BORDER}`, borderRadius: 8, background: 'none', cursor: 'pointer', padding: 2 }}
-                    aria-label="Brand color"
-                  />
-                  <input
-                    type="text"
-                    value={branding.primary_color}
-                    onChange={e => setBranding(b => ({ ...b, primary_color: e.target.value }))}
-                    placeholder="#F59E0B"
-                    style={{ ...inputStyle, width: 130 }}
-                  />
-                  {branding.primary_color
-                    ? <button onClick={() => setBranding(b => ({ ...b, primary_color: '' }))} style={{ background: 'none', border: 'none', color: DIM, fontSize: 12, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>Reset to Saguaro Default</button>
-                    : <span style={{ fontSize: 12, color: DIM }}>Defaults to the Saguaro brand color</span>}
-                </div>
-                <div style={{ fontSize: 11, color: DIM, marginTop: 5 }}>
-                  Applies across your dashboard, portals, and document letterheads on the white-label plan.
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 2, flexWrap: 'wrap' }}>
-                <GoldButton size="md" onClick={saveBranding} disabled={brandingSaving}>
-                  {brandingSaving ? 'Saving…' : 'Save Branding'}
-                </GoldButton>
-                <SaveNotice notice={brandingMsg} />
-              </div>
-            </div>
-
-            {/* ── Right: live sidebar preview — exactly what the lockup renders ── */}
-            <div>
-              <label style={labelStyle}>Live Sidebar Preview</label>
-              <div style={{
-                borderRadius: 14, border: `1px solid ${BORDER}`, overflow: 'hidden',
-                background: 'linear-gradient(180deg, #141416, #0c0d10)',
-              }}>
-                <div style={{ padding: '12px 12px 11px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                  <div style={{
-                    padding: '12px 12px 11px', borderRadius: 12,
-                    background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
-                  }}>
-                    {branding.logo_url ? (
-                      <>
-                        <img
-                          src={branding.logo_url}
-                          alt="Logo preview"
-                          onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                          onLoad={e => {
-                            const im = e.target as HTMLImageElement;
-                            if (im.naturalWidth && im.naturalHeight) setLogoDims({ w: im.naturalWidth, h: im.naturalHeight });
-                          }}
-                          /* 96 mirrors AppSidebar exactly — a preview that lies
-                             about the cap is worse than no preview. */
-                          style={{ display: 'block', maxWidth: '100%', maxHeight: 96, width: 'auto', height: 'auto', objectFit: 'contain', objectPosition: 'left center', marginBottom: 9 }}
-                        />
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                          {branding.company_name && (
-                            <span style={{ flex: '1 1 auto', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 12, fontWeight: 700, color: DIM }}>
-                              {branding.company_name}
-                            </span>
-                          )}
-                          <Pill tone={isTrialing ? 'amber' : 'gold'}>{isTrialing ? 'Trial' : (sub?.plan_name || 'Plan')}</Pill>
-                        </div>
-                      </>
-                    ) : branding.company_name ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 11, minWidth: 0 }}>
-                        <span aria-hidden style={{
-                          width: 42, height: 42, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                          borderRadius: 11,
-                          background: `linear-gradient(150deg, ${previewColor}, color-mix(in srgb, ${previewColor} 72%, #000000))`,
-                          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35)',
-                          color: '#241500', fontSize: 16, fontWeight: 900,
-                        }}>
-                          {companyInitials(branding.company_name)}
-                        </span>
-                        <span style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
-                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 13.5, fontWeight: 800, color: TEXT }}>
-                            {branding.company_name}
-                          </span>
-                          <span style={{ display: 'flex' }}>
-                            <Pill tone={isTrialing ? 'amber' : 'gold'}>{isTrialing ? 'Trial' : (sub?.plan_name || 'Plan')}</Pill>
-                          </span>
-                        </span>
-                      </div>
-                    ) : (
-                      <div style={{ fontSize: 12.5, color: DIM, padding: '4px 0' }}>
-                        Set a company name or upload a logo to see your sidebar lockup.
-                      </div>
-                    )}
-                  </div>
-                </div>
-                {/* Faux nav rows so the preview reads as the actual sidebar */}
-                <div aria-hidden style={{ padding: '10px 12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {[92, 70, 110].map((w, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                      <span style={{ width: 14, height: 14, borderRadius: 4, background: 'rgba(255,255,255,0.08)' }} />
-                      <span style={{ width: w, height: 8, borderRadius: 4, background: 'rgba(255,255,255,0.07)' }} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div style={{ fontSize: 11, color: DIM, marginTop: 7 }}>
-                Updates in the real sidebar the moment you upload or save — no reload needed.
-              </div>
-            </div>
-          </div>
-        </SectionCard>
-      </div>
-
-      {/* Platform Owner section */}
-      {platformAdmin && (
-        <div style={{ marginBottom: 24 }}>
-          <SectionCard title="Platform Owner" icon={<ShieldCheck size={18} weight="duotone" color={GOLD} />} flush>
-            <a href="/app/settings/platform-integrations" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '18px 24px', textDecoration: 'none', background: 'color-mix(in srgb, var(--brand-primary) 3%, transparent)' }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'var(--brand-primary-08)')} onMouseLeave={e => (e.currentTarget.style.background = 'color-mix(in srgb, var(--brand-primary) 3%, transparent)')}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--brand-primary-12)', border: `1px solid var(--brand-primary-18)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><ShieldCheck size={20} color={GOLD} /></div>
-              <div style={{ flex: 1 }}><div style={{ fontSize: 14, fontWeight: 600, color: GOLD, marginBottom: 2 }}>Platform Integrations</div><div style={{ fontSize: 12, color: DIM }}>Configure the cloud-storage OAuth apps once — enables one-click connect for every tenant</div></div>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={DIM} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6" /></svg>
-            </a>
-          </SectionCard>
-        </div>
-      )}
-
-      {SETTINGS_SECTIONS.map(section => (
-        <div key={section.title} style={{ marginBottom: 24 }}>
-          <SectionCard title={section.title} icon={<section.sectionIcon size={18} weight="duotone" color={GOLD} />} flush>
-            {section.items.map((item, i) => {
-              /* Internal routes MUST go through next/link.
-               *
-               * Every row here was a plain <a href>, which means a full page
-               * reload and NO prefetch — so each click woke a cold serverless
-               * function. Measured on production: /app/notification-settings
-               * took 15,526ms cold and 86-108ms warm. That 15-second first hit
-               * is the reported "not opening / super slow"; the page was fine
-               * once something had warmed it.
-               *
-               * <Link> gives client-side navigation AND prefetches the route
-               * when the row scrolls into view, so the lambda is already warm
-               * by the time anyone clicks.
-               *
-               * mailto: and other non-route hrefs stay plain anchors — Link
-               * would try to route them. */
-              const external = !item.href.startsWith('/');
-              const Row: any = external ? 'a' : Link;
-              const rowProps = external
-                ? { href: item.href }
-                : { href: item.href, prefetch: true };
-              return (
-              <Row key={item.label} {...rowProps} style={{
-                display: 'flex', alignItems: 'center', gap: 16,
-                padding: '18px 24px',
-                borderBottom: i < section.items.length - 1 ? `1px solid rgba(255,255,255,0.06)` : 'none',
-                textDecoration: 'none',
-                background: item.highlight ? 'color-mix(in srgb, var(--brand-primary) 5%, transparent)' : 'transparent',
-                transition: 'background .15s',
-              }}
-                onMouseEnter={(e: React.MouseEvent<HTMLElement>) => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
-                onMouseLeave={(e: React.MouseEvent<HTMLElement>) => (e.currentTarget.style.background = item.highlight ? 'color-mix(in srgb, var(--brand-primary) 5%, transparent)' : 'transparent')}
-              >
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: item.highlight ? 'var(--brand-primary-12)' : 'rgba(255,255,255,0.05)', border: `1px solid ${item.highlight ? 'var(--brand-primary-18)' : BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
-                  <item.icon size={20} weight="regular" color={item.highlight ? GOLD : TEXT} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: item.highlight ? GOLD : TEXT, marginBottom: 2 }}>{item.label}</div>
-                  <div style={{ fontSize: 12, color: DIM }}>{item.desc}</div>
-                </div>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={DIM} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
-              </Row>
-              );
-            })}
-          </SectionCard>
-        </div>
-      ))}
-
-      {/* Install App CTA */}
-      <div style={{ marginBottom: 24 }}>
-        <SectionCard>
-          <div style={{ display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ fontSize: 40, display: 'flex' }}><DeviceMobile size={40} weight="duotone" color={GOLD} /></div>
-            <div style={{ flex: 1, minWidth: 200 }}>
-              <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Get the Saguaro Control Systems iOS App</div>
-              <div style={{ fontSize: 13, color: DIM }}>Native iOS app on Apple TestFlight — free for your entire team. Android coming soon.</div>
-            </div>
-            <Link href="/get-the-app" className="pmBtn" style={{ ...goldButtonStyle, whiteSpace: 'nowrap' }}>
-              Get Install Guide
-            </Link>
-          </div>
-        </SectionCard>
-      </div>
-
-      {/* Logout */}
-      <div style={{ textAlign: 'center', paddingBottom: 8 }}>
-        <DangerButton
-          size="md"
-          onClick={async () => {
-            await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
-            try {
-              for (const k of Object.keys(localStorage)) {
-                if (k.startsWith('sb-') || k.toLowerCase().includes('supabase')) localStorage.removeItem(k);
-              }
-              sessionStorage.clear();
-            } catch { /* storage unavailable — ignore */ }
-            window.location.replace('/login');
-          }}
-        >
-          Sign Out
-        </DangerButton>
-        {/* The privacy policy names this page, and the iOS app needs the same
-            control for App Store Guideline 5.1.1(v). Plain text under Sign Out
-            rather than a second red button — it should be findable, not easy to
-            hit by accident next to the one people press every day. */}
-        <div style={{ marginTop: 14 }}>
-          <Link
-            href="/app/settings/delete-account"
-            style={{ fontSize: 13, color: DIM, textDecoration: 'underline' }}
+            ) : undefined}
           >
-            Delete account
-          </Link>
-        </div>
-      </div>
+            <FormGrid cols={2}>
+              <Field label="Full Name" required>
+                <Input type="text" value={profile.full_name} onChange={e => { setProfile(p => ({ ...p, full_name: e.target.value })); setProfileDirty(true); }} placeholder="Your name" />
+              </Field>
+              <Field label="Job Title">
+                <Input type="text" value={profile.title} onChange={e => { setProfile(p => ({ ...p, title: e.target.value })); setProfileDirty(true); }} placeholder="e.g. Project Executive" />
+              </Field>
+              <Field label="Phone">
+                <Input type="tel" value={profile.phone} onChange={e => { setProfile(p => ({ ...p, phone: e.target.value })); setProfileDirty(true); }} placeholder="(602) 555-0100" />
+              </Field>
+              <Field label="Email · Sign-In" hint="Your sign-in email cannot be changed here — contact support to migrate accounts.">
+                <Input type="email" value={me?.email ?? ''} readOnly disabled />
+              </Field>
+            </FormGrid>
+            <div className="stActions">
+              <Button variant="primary" onClick={saveProfile} disabled={profileSaving || !profileDirty}>{profileSaving ? 'Saving…' : 'Save Profile'}</Button>
+              {roleLabel && <Badge tone="neutral">{roleLabel}</Badge>}
+              {profileDirty && !profileSaving && <span className="stHint" style={{ marginTop: 0 }}>Unsaved changes</span>}
+              <SaveNotice notice={profileMsg} />
+            </div>
+          </Card>
 
-    </PremiumSurface>
+          {/* Trial warning banner */}
+          {isTrialing && trialDays !== null && trialDays <= 7 && (
+            <div className="stWarn" role="status">
+              <div><Clock size={16} weight="fill" /> <b>{trialDays} days left</b> in your free trial — upgrade to keep access for your whole team.</div>
+              <Button variant="primary" href="/app/billing">Upgrade Now</Button>
+            </div>
+          )}
+
+          {/* ── Company Branding — logo, name, color + live sidebar preview ── */}
+          <div id="branding" style={{ scrollMarginTop: 72 }}>
+            <Card title="Company Branding" subtitle="Shown in the sidebar and on every exported report." actions={<Button variant="ghost" size="sm" href="/app/settings/branding" icon={<Palette size={14} />}>Full Branding Studio</Button>}>
+              <div className="stBrand">
+                {/* ── Left: the form ── */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <Field label="Company Name">
+                    <Input type="text" value={branding.company_name} onChange={e => setBranding(b => ({ ...b, company_name: e.target.value }))} placeholder="e.g. Acme General Contractors" />
+                  </Field>
+
+                  <Field label="Company Logo" hint="PNG, JPG, WEBP, or SVG · max 5 MB · transparent PNG looks best">
+                    {/* Drag-and-drop upload zone */}
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      aria-label="Upload company logo"
+                      className="stDrop"
+                      data-over={dragOver ? 'true' : undefined}
+                      onClick={() => !uploading && fileRef.current?.click()}
+                      onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && !uploading) { e.preventDefault(); fileRef.current?.click(); } }}
+                      onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                      onDragLeave={() => setDragOver(false)}
+                      onDrop={e => {
+                        e.preventDefault(); setDragOver(false);
+                        const f = e.dataTransfer.files?.[0];
+                        if (f && !uploading) uploadLogo(f);
+                      }}
+                      style={{ cursor: uploading ? 'wait' : 'pointer' }}
+                    >
+                      <UploadSimple size={22} weight="bold" color={dragOver ? 'var(--brand-primary)' : 'var(--text-tertiary)'} />
+                      <div className="stDropTitle">{uploading ? 'Uploading…' : dragOver ? 'Drop to upload' : 'Drop your logo here, or click to browse'}</div>
+                    </div>
+                    <input
+                      ref={fileRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                      style={{ display: 'none' }}
+                      onChange={e => { const f = e.target.files?.[0]; if (f) uploadLogo(f); e.currentTarget.value = ''; }}
+                    />
+                    {/* Advanced: paste a hosted URL instead */}
+                    <div style={{ marginTop: 10 }}>
+                      <Input type="url" value={branding.logo_url} onChange={e => setBranding(b => ({ ...b, logo_url: e.target.value }))} placeholder="…or paste a public logo URL (https://yoursite.com/logo.png)" />
+                    </div>
+
+                    {/* Honest shape feedback. A tall logo is not "wrong", but it WILL
+                        render small in a sidebar that caps height — say so here
+                        rather than letting it look like a bug. */}
+                    {logoDims && (() => {
+                      const aspect = logoDims.w / logoDims.h;
+                      const portrait = aspect < 0.8;
+                      const rendered = Math.round(96 * aspect);
+                      return (
+                        <div className="stShape" data-portrait={portrait ? 'true' : 'false'}>
+                          <b>{logoDims.w} x {logoDims.h}px</b>
+                          {portrait ? (
+                            <> — this logo is taller than it is wide, so the sidebar renders it about <b>{rendered}px wide</b>. A horizontal (landscape) version of your mark will read far better here and on report letterheads.</>
+                          ) : (
+                            <> — good shape for the sidebar and report letterheads.</>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </Field>
+
+                  {/* Brand color */}
+                  <Field label="Brand Color" hint="Applies across your dashboard, portals, and document letterheads on the white-label plan.">
+                    <div className="stColor">
+                      <input
+                        type="color"
+                        value={previewColor === GOLD && !branding.primary_color ? '#FF8A00' : previewColor}
+                        onChange={e => setBranding(b => ({ ...b, primary_color: e.target.value }))}
+                        aria-label="Brand color"
+                      />
+                      <Input type="text" value={branding.primary_color} onChange={e => setBranding(b => ({ ...b, primary_color: e.target.value }))} placeholder="#FF8A00" style={{ width: 130 }} aria-label="Brand color hex" />
+                      {branding.primary_color
+                        ? <button type="button" className="stLink" onClick={() => setBranding(b => ({ ...b, primary_color: '' }))}>Reset to Saguaro Default</button>
+                        : <span className="stHint" style={{ marginTop: 0 }}>Defaults to the Saguaro brand color</span>}
+                    </div>
+                  </Field>
+
+                  <div className="stActions" style={{ marginTop: 2 }}>
+                    <Button variant="primary" onClick={saveBranding} disabled={brandingSaving}>{brandingSaving ? 'Saving…' : 'Save Branding'}</Button>
+                    <SaveNotice notice={brandingMsg} />
+                  </div>
+                </div>
+
+                {/* ── Right: live sidebar preview — exactly what the lockup renders ── */}
+                <div>
+                  <Field label="Live Sidebar Preview" hint="Updates in the real sidebar the moment you upload or save — no reload needed.">
+                    <div className="stPreview">
+                      <div className="stPreviewHead">
+                        <div className="stLockup">
+                          {branding.logo_url ? (
+                            <>
+                              <img
+                                src={branding.logo_url}
+                                alt="Logo preview"
+                                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                onLoad={e => {
+                                  const im = e.target as HTMLImageElement;
+                                  if (im.naturalWidth && im.naturalHeight) setLogoDims({ w: im.naturalWidth, h: im.naturalHeight });
+                                }}
+                                /* 96 mirrors AppSidebar exactly — a preview that lies
+                                   about the cap is worse than no preview. */
+                                style={{ display: 'block', maxWidth: '100%', maxHeight: 96, width: 'auto', height: 'auto', objectFit: 'contain', objectPosition: 'left center', marginBottom: 9 }}
+                              />
+                              <div className="stLockupRow" style={{ gap: 8 }}>
+                                {branding.company_name && <span className="stLockupSub">{branding.company_name}</span>}
+                                <Badge tone={isTrialing ? 'under_contract' : 'gold'}>{isTrialing ? 'Trial' : (sub?.plan_name || 'Plan')}</Badge>
+                              </div>
+                            </>
+                          ) : branding.company_name ? (
+                            <div className="stLockupRow">
+                              <span aria-hidden style={{
+                                width: 42, height: 42, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                borderRadius: 11,
+                                background: `linear-gradient(150deg, ${previewColor}, color-mix(in srgb, ${previewColor} 72%, #000000))`,
+                                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35)',
+                                color: '#241500', fontSize: 16, fontWeight: 900,
+                              }}>
+                                {companyInitials(branding.company_name)}
+                              </span>
+                              <span style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
+                                <span className="stLockupName">{branding.company_name}</span>
+                                <span style={{ display: 'flex' }}><Badge tone={isTrialing ? 'under_contract' : 'gold'}>{isTrialing ? 'Trial' : (sub?.plan_name || 'Plan')}</Badge></span>
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="stHint" style={{ marginTop: 0, padding: '4px 0' }}>Set a company name or upload a logo to see your sidebar lockup.</div>
+                          )}
+                        </div>
+                      </div>
+                      {/* Faux nav rows so the preview reads as the actual sidebar */}
+                      <div aria-hidden className="stFaux">
+                        {[92, 70, 110].map((w, i) => (
+                          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                            <span style={{ width: 14, height: 14, borderRadius: 4 }} />
+                            <span style={{ width: w }} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </Field>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Platform Owner section */}
+          {platformAdmin && (
+            <Card title="Platform Owner" flush>
+              <Link href="/app/settings/platform-integrations" className="stRow" data-hi="true">
+                <div className="stRowIcon"><ShieldCheck size={20} /></div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="stRowLabel">Platform Integrations</div>
+                  <div className="stRowDesc">Configure the cloud-storage OAuth apps once — enables one-click connect for every tenant</div>
+                </div>
+                <CaretRight size={16} weight="bold" />
+              </Link>
+            </Card>
+          )}
+
+          {SETTINGS_SECTIONS.map(section => (
+            <Card key={section.title} title={section.title} flush>
+              {section.items.map((item) => {
+                /* Internal routes MUST go through next/link — client-side navigation
+                 * AND prefetch when the row scrolls into view, so the lambda is
+                 * already warm by the time anyone clicks (a cold hit measured 15 s).
+                 * mailto: and other non-route hrefs stay plain anchors. */
+                const external = !item.href.startsWith('/');
+                const content = (
+                  <>
+                    <div className="stRowIcon"><item.icon size={20} /></div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="stRowLabel">{item.label}</div>
+                      <div className="stRowDesc">{item.desc}</div>
+                    </div>
+                    <CaretRight size={16} weight="bold" />
+                  </>
+                );
+                return external
+                  ? <a key={item.label} href={item.href} className="stRow" data-hi={item.highlight ? 'true' : undefined}>{content}</a>
+                  : <Link key={item.label} href={item.href} prefetch className="stRow" data-hi={item.highlight ? 'true' : undefined}>{content}</Link>;
+              })}
+            </Card>
+          ))}
+
+          {/* Install App CTA */}
+          <Card>
+            <div className="stCta">
+              <DeviceMobile size={40} weight="duotone" />
+              <div style={{ flex: 1, minWidth: 200 }}>
+                <div className="stRowLabel" style={{ fontSize: 'var(--fs-lg)' }}>Get the Saguaro Control Systems iOS App</div>
+                <div className="stRowDesc">Native iOS app on Apple TestFlight — free for your entire team. Android coming soon.</div>
+              </div>
+              <Button href="/get-the-app">Get Install Guide</Button>
+            </div>
+          </Card>
+
+          {/* Logout */}
+          <div className="stFoot">
+            <Button
+              variant="danger"
+              icon={<SignOut size={15} weight="bold" />}
+              onClick={async () => {
+                await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+                try {
+                  for (const k of Object.keys(localStorage)) {
+                    if (k.startsWith('sb-') || k.toLowerCase().includes('supabase')) localStorage.removeItem(k);
+                  }
+                  sessionStorage.clear();
+                } catch { /* storage unavailable — ignore */ }
+                window.location.replace('/login');
+              }}
+            >
+              Sign Out
+            </Button>
+            {/* The privacy policy names this page, and the iOS app needs the same
+                control for App Store Guideline 5.1.1(v). Plain text under Sign Out
+                rather than a second red button — it should be findable, not easy to
+                hit by accident next to the one people press every day. */}
+            <Link href="/app/settings/delete-account">Delete account</Link>
+          </div>
+        </div>
+      </PageShell>
+    </div>
   );
 }

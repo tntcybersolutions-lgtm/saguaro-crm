@@ -31,7 +31,7 @@ import Link from 'next/link';
 const CARD = 'var(--bg-surface)';
 const GOLD = 'var(--brand-primary)';
 const TEXT = '#F0F4FF';
-const DIM = '#8BAAC8';
+const DIM = '#A1A1AA';
 
 export default function RouteError({
   error,

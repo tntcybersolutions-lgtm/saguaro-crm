@@ -7,10 +7,10 @@ const CARD = 'var(--bg-surface)';
 const BORDER_LT = 'rgba(255,255,255,0.12)';
 const TEXT_DARK = '#FFFFFF';
 const TEXT_MED = '#F1F5F9';
-const TEXT_DIM = '#CBD5E1';
+const TEXT_DIM = '#D4D4D8';
 const GOLD = 'var(--brand-primary)';
-const GREEN = '#16a34a';
-const RED = '#dc2626';
+const GREEN = '#2CFF7A';
+const RED = '#FF3B30';
 
 interface SignatureInfo {
   id: string;
@@ -88,7 +88,7 @@ export default function PublicSigningPage() {
     ctx.fillRect(0, 0, c.width, c.height);
     // Baseline
     ctx.beginPath();
-    ctx.strokeStyle = '#cbd5e1';
+    ctx.strokeStyle = '#D4D4D8';
     ctx.lineWidth = 1;
     ctx.moveTo(20, c.height - 30);
     ctx.lineTo(c.width - 20, c.height - 30);
@@ -123,7 +123,7 @@ export default function PublicSigningPage() {
     if (!ctx) return;
     const { x, y } = getPos(e);
     ctx.beginPath();
-    ctx.strokeStyle = '#1a202c';
+    ctx.strokeStyle = '#18181B';
     ctx.lineWidth = 2.5;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -156,7 +156,7 @@ export default function PublicSigningPage() {
     if (!ctx) return '';
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, c.width, c.height);
-    ctx.fillStyle = '#1a202c';
+    ctx.fillStyle = '#18181B';
     ctx.font = 'italic 36px Georgia, serif';
     ctx.textBaseline = 'middle';
     ctx.fillText(typedName, 20, 50);

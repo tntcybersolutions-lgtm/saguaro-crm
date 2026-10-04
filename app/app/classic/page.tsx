@@ -30,19 +30,19 @@ const Cell = dynamic(() => import('recharts').then(m => m.Cell), { ssr: false })
 
 const GOLD   = 'var(--brand-primary)';
 // Recharts writes `fill` as an SVG presentation attribute, which cannot take var().
-const GOLD_HEX = '#F59E0B';
+const GOLD_HEX = '#FF8A00';
 const DARK   = 'var(--bg-surface-2)';
 const RAISED = 'var(--bg-surface)';
 const RAISED_ALT = 'var(--bg-surface-2)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const BORDER_SUBTLE = 'rgba(0,0,0,0.06)';
-const DIM    = '#CBD5E1';
+const DIM    = '#D4D4D8';
 const TEXT   = '#FFFFFF';
 // Desert-dusk semantic palette — retuned off raw iOS system colors so the
 // accents harmonize with gold-on-navy instead of clashing (turquoise, sage,
 // terracotta, amber are authentic Sonoran hues that sit on the dark bg).
-const GREEN  = '#45B37D'; // money / positive — muted emerald-sage
-const RED    = '#E0644E'; // alert / overdue  — terracotta
+const GREEN  = '#2CFF7A'; // money / positive — muted emerald-sage
+const RED    = '#FF3B30'; // alert / overdue  — terracotta
 const BLUE   = 'var(--brand-primary)'; // info / open bids — unified to brand color (Chad's call)
 const ORANGE = 'var(--warning)'; // warning / pending
 const SHADOW_SM = '0 1px 2px rgba(0,0,0,0.06)';
@@ -704,7 +704,7 @@ export default function DashboardPage() {
                         <div style={{ fontWeight: 700, color: TEXT, fontSize: 14, marginBottom: 2 }}>{proj.name}</div>
                         <div style={{ fontSize: 12, color: DIM }}>{proj.address}</div>
                       </div>
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: 'rgba(52,199,89,0.14)', color: GREEN, border: '1px solid rgba(52,199,89,0.3)', height: 'fit-content', textTransform: 'capitalize' }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: 'rgba(44,255,122,0.14)', color: GREEN, border: '1px solid rgba(44,255,122,0.3)', height: 'fit-content', textTransform: 'capitalize' }}>
                         {proj.status}
                       </span>
                     </div>
@@ -916,12 +916,12 @@ export default function DashboardPage() {
                     <PieChart>
                       <Pie
                         data={[
-                          { name: 'Active', value: stats?.activeProjects ?? 0, fill: '#F59E0B' },
-                          { name: 'Open Bids', value: stats?.openBids ?? 0, fill: '#FBBF24' },
+                          { name: 'Active', value: stats?.activeProjects ?? 0, fill: '#FF8A00' },
+                          { name: 'Open Bids', value: stats?.openBids ?? 0, fill: '#FFE600' },
                           /* Withheld, not zero — see hasPayApps. The donut's own
                              `.filter(value > 0)` would have hidden it anyway; the
                              legend below would not, so both read the same flag. */
-                          ...(hasPayApps ? [{ name: 'Pay Apps', value: stats?.pendingPayApps ?? 0, fill: '#D97706' }] : []),
+                          ...(hasPayApps ? [{ name: 'Pay Apps', value: stats?.pendingPayApps ?? 0, fill: '#FF8A00' }] : []),
                           { name: 'RFIs', value: openRFIs?.length ?? 0, fill: '#9CA3AF' },
                         ].filter(d => d.value > 0)}
                         cx="50%" cy="50%"
@@ -940,9 +940,9 @@ export default function DashboardPage() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {[
-                    { label: 'Active Projects', value: stats?.activeProjects ?? 0, color: '#F59E0B' },
-                    { label: 'Open Bids', value: stats?.openBids ?? 0, color: '#FBBF24' },
-                    ...(hasPayApps ? [{ label: 'Pending Pay Apps', value: stats?.pendingPayApps ?? 0, color: '#D97706' }] : []),
+                    { label: 'Active Projects', value: stats?.activeProjects ?? 0, color: '#FF8A00' },
+                    { label: 'Open Bids', value: stats?.openBids ?? 0, color: '#FFE600' },
+                    ...(hasPayApps ? [{ label: 'Pending Pay Apps', value: stats?.pendingPayApps ?? 0, color: '#FF8A00' }] : []),
                     { label: 'Open RFIs', value: openRFIs?.length ?? 0, color: '#9CA3AF' },
                   ].map(item => (
                     <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

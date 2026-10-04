@@ -6,12 +6,13 @@
  * /api/reviews (tenant-scoped; writes need Sales:Edit).
  */
 import React from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useToast } from '@/components/Toast';
 import { humanError } from '@/lib/errors';
 import { fmtDate as fmtDateSafe } from '@/lib/format-date';
 
 const BG = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
-const TEXT = '#FFFFFF', DIM = '#CBD5E1', GOLD = 'var(--brand-primary)', GREEN = '#22C55E';
+const TEXT = '#FFFFFF', DIM = '#D4D4D8', GOLD = 'var(--brand-primary)', GREEN = '#2CFF7A';
 
 type Review = {
   id: string; reviewer_name: string | null; rating: number; body: string | null;
@@ -47,6 +48,21 @@ export default function ReviewsPage() {
       setState('ok');
     } catch { setState('error'); }
   }, []);
+
+  // A review entered by mistake could never be taken back; DELETE /api/reviews/[id]
+  // is tenant-scoped and the list drops the row on success.
+  const remove = React.useCallback(async (r: Review) => {
+    if (!(await confirmDialog({ title: 'Please confirm', message: `Remove the review by ${r.reviewer_name || 'Anonymous'}? This cannot be undone.`, danger: true }))) return;
+    try {
+      const res = await fetch(`/api/reviews/${r.id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('delete failed');
+      setReviews((prev) => prev.filter((x) => x.id !== r.id));
+    } catch {
+      // Not a load failure — leave the list in place; the reload below shows the truth.
+    }
+    void load(); // the average and count come from the server — refresh them too
+  }, []);
+
   React.useEffect(() => { void load(); }, [load]);
 
   const submit = React.useCallback(async () => {
@@ -120,6 +136,13 @@ export default function ReviewsPage() {
               <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Stars n={Math.max(0, Math.min(5, r.rating))} />
                 <span style={{ fontSize: 11, color: DIM }}>{r.created_at ? fmtDateSafe(r.created_at) : ''}</span>
+                <button
+                  type="button"
+                  onClick={() => void remove(r)}
+                  aria-label={`Remove review by ${r.reviewer_name || 'Anonymous'}`}
+                  title="Remove this review"
+                  style={{ minWidth: 44, minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 18, lineHeight: 1, margin: '-10px -12px -10px 0' }}
+                >×</button>
               </span>
             </div>
             {r.body && <div style={{ fontSize: 13, color: DIM, marginTop: 6, whiteSpace: 'pre-wrap' }}>{r.body}</div>}

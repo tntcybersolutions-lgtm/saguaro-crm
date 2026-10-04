@@ -4,8 +4,8 @@ export default function PortalsHub() {
   const portals = [
     { title: 'Owner / Client Portal', desc: 'View project progress, budgets, photos, and documents.', href: '/portals/client', color: 'var(--brand-primary)' },
     { title: 'Subcontractor Portal', desc: 'Upload insurance, W-9s, and lien waivers, and track pay apps.', href: '/portals/sub', color: 'var(--brand-primary)' },
-    { title: 'E-Signature Portal', desc: 'Sign contracts and documents securely in your browser.', href: '/portals/sign', color: '#22C55E' },
-    { title: 'W-9 Submission', desc: 'Securely submit your W-9 to your general contractor.', href: '/portals/w9', color: '#A78BFA' },
+    { title: 'E-Signature Portal', desc: 'Sign contracts and documents securely in your browser.', href: '/portals/sign', color: '#2CFF7A' },
+    { title: 'W-9 Submission', desc: 'Securely submit your W-9 to your general contractor.', href: '/portals/w9', color: '#FF8A00' },
   ];
 
   return (
@@ -14,7 +14,7 @@ export default function PortalsHub() {
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
           <div style={{ color: 'var(--brand-primary)', fontWeight: 800, fontSize: 24, letterSpacing: '-0.01em', marginBottom: 8 }}>Saguaro</div>
           <h1 style={{ color: '#FFFFFF', fontSize: 32, fontWeight: 700, margin: '0 0 8px' }}>Portal Access</h1>
-          <p style={{ color: '#CBD5E1', fontSize: 14, margin: 0 }}>Select your portal below to get started.</p>
+          <p style={{ color: '#D4D4D8', fontSize: 14, margin: 0 }}>Select your portal below to get started.</p>
         </div>
 
         <div style={{ display: 'grid', gap: 16 }}>
@@ -26,12 +26,12 @@ export default function PortalsHub() {
               borderLeft: `4px solid ${p.color}`,
             }}>
               <div style={{ color: '#FFFFFF', fontSize: 18, fontWeight: 700, marginBottom: 4 }}>{p.title}</div>
-              <div style={{ color: '#CBD5E1', fontSize: 13 }}>{p.desc}</div>
+              <div style={{ color: '#D4D4D8', fontSize: 13 }}>{p.desc}</div>
             </a>
           ))}
         </div>
 
-        <div style={{ textAlign: 'center', marginTop: 32 }}><a href="/" style={{ color: '#CBD5E1', fontSize: 13, textDecoration: 'none' }}>← Back to Saguaro</a></div>
+        <div style={{ textAlign: 'center', marginTop: 32 }}><a href="/" style={{ color: '#D4D4D8', fontSize: 13, textDecoration: 'none' }}>← Back to Saguaro</a></div>
       </div>
     </div>
   );

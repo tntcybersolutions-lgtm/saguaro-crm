@@ -233,9 +233,9 @@ export default function CompliancePage() {
       {scoredSummary && (
         <StatStrip items={[
           {href: `/app/projects/${projectId}/subs`,  label: 'Subs Tracked', value: String(merged.length), sub: ctxSubs.length ? `${ctxSubs.length} on the project roster` : 'From live compliance tables' },
-          {href: `/app/projects/${projectId}/compliance`,  label: 'Compliant', value: String(Number(scoredSummary.compliant) || 0), accent: '#3dd68c', sub: 'Score 80+ — cleared to work' },
+          {href: `/app/projects/${projectId}/compliance`,  label: 'Compliant', value: String(Number(scoredSummary.compliant) || 0), accent: '#2CFF7A', sub: 'Score 80+ — cleared to work' },
           {href: `/app/projects/${projectId}/compliance`,  label: 'At Risk', value: String(Number(scoredSummary.at_risk) || 0), accent: Number(scoredSummary.at_risk) > 0 ? 'var(--warning)' : undefined, sub: 'Gaps to close this month' },
-          {href: `/app/projects/${projectId}/compliance`,  label: 'Non-Compliant', value: String(Number(scoredSummary.non_compliant) || 0), accent: Number(scoredSummary.non_compliant) > 0 ? '#ff7070' : '#3dd68c', sub: 'Hold payment and site access' },
+          {href: `/app/projects/${projectId}/compliance`,  label: 'Non-Compliant', value: String(Number(scoredSummary.non_compliant) || 0), accent: Number(scoredSummary.non_compliant) > 0 ? '#FF3B30' : '#2CFF7A', sub: 'Hold payment and site access' },
           {href: `/app/projects/${projectId}/compliance`,  label: 'Avg Score', value: `${Number(scoredSummary.avg_score) || 0}/100`, sub: 'W-9 25 · insurance 40 · waivers 35' },
         ]} />
       )}
@@ -249,7 +249,7 @@ export default function CompliancePage() {
       </div>
 
       {toast && (
-        <div style={{ marginBottom: 20, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(34,197,94,0.3)`, borderRadius: 12, color: T.green, fontSize: 13 }}>
+        <div style={{ marginBottom: 20, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(44,255,122,0.3)`, borderRadius: 12, color: T.green, fontSize: 13 }}>
           {toast}
         </div>
       )}
@@ -305,7 +305,7 @@ export default function CompliancePage() {
                 {prequals[s.id] && (
                   <span style={{
                     fontSize: 11, fontWeight: 800, padding: '2px 8px', borderRadius: 4, background: prequals[s.id].verdict === 'pass' ? 'rgba(26,138,74,.15)' : prequals[s.id].verdict === 'flag' ? 'color-mix(in srgb, var(--warning) 15%, transparent)' : 'rgba(192,48,48,.15)',
-                    color: prequals[s.id].verdict === 'pass' ? '#3dd68c' : prequals[s.id].verdict === 'flag' ? 'var(--warning)' : '#ff7070',
+                    color: prequals[s.id].verdict === 'pass' ? '#2CFF7A' : prequals[s.id].verdict === 'flag' ? 'var(--warning)' : '#FF3B30',
                   }}>
                     {prequals[s.id].verdict.charAt(0).toUpperCase() + prequals[s.id].verdict.slice(1)} {prequals[s.id].score}/100
                   </span>
@@ -323,7 +323,7 @@ export default function CompliancePage() {
           {Object.entries(prequals).map(([subId, result]) => {
             const sub = subs.find(s => s.id === subId);
             if (!sub) return null;
-            const verdictColor = result.verdict === 'pass' ? '#3dd68c' : result.verdict === 'flag' ? 'var(--warning)' : '#ff7070';
+            const verdictColor = result.verdict === 'pass' ? '#2CFF7A' : result.verdict === 'flag' ? 'var(--warning)' : '#FF3B30';
             const verdictBg = result.verdict === 'pass' ? 'rgba(26,138,74,.08)' : result.verdict === 'flag' ? 'color-mix(in srgb, var(--warning) 8%, transparent)' : 'rgba(192,48,48,.08)';
             return (
               <SectionCard flat key={subId} accent={verdictColor} style={{ marginBottom: 12, border: `1px solid color-mix(in srgb, ${verdictColor} 19%, transparent)` }}>
@@ -338,13 +338,13 @@ export default function CompliancePage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
                   {result.flags.length > 0 && (
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: '#ff7070', marginBottom: 6 }}>Flags</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#FF3B30', marginBottom: 6 }}>Flags</div>
                       {result.flags.map((f, i) => <div key={i} style={{ fontSize: 12, color: T.muted, marginBottom: 3 }}>• {f}</div>)}
                     </div>
                   )}
                   {result.strengths.length > 0 && (
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: '#3dd68c', marginBottom: 6 }}>Strengths</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#2CFF7A', marginBottom: 6 }}>Strengths</div>
                       {result.strengths.map((s, i) => <div key={i} style={{ fontSize: 12, color: T.muted, marginBottom: 3 }}>• {s}</div>)}
                     </div>
                   )}

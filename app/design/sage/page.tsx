@@ -4,8 +4,8 @@ import type { Icon } from '@phosphor-icons/react';
 import { Cactus, CookingPot, Eye, House, Lightning, Question, Smiley, SmileyAngry, Sun, Wrench } from '@phosphor-icons/react';
 
 /* ─── Palette ─── */
-const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#34C759';
-const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#CBD5E1', DARK = 'var(--bg-base)';
+const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#2CFF7A';
+const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#D4D4D8', DARK = 'var(--bg-base)';
 const BLUE = 'var(--brand-primary)';
 
 const glass: React.CSSProperties = {

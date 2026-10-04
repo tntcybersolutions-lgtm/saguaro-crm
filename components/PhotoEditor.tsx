@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 
-const GOLD='var(--brand-primary)',GOLD_CANVAS='#F59E0B',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
+const GOLD='var(--brand-primary)',GOLD_CANVAS='#FF8A00',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF';
 
 interface PhotoEditorProps {
   src: string;
@@ -215,12 +215,12 @@ export default function PhotoEditor({ src, photoId, onSave, onDelete, onClose }:
         <div style={{ marginLeft: 'auto' }}>
           {confirmDelete ? (
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              <span style={{ color: '#EF4444', fontSize: 12, fontWeight: 700 }}>Delete photo?</span>
-              <button onClick={handleDelete} style={{ padding: '6px 12px', background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.3)', borderRadius: 6, color: '#EF4444', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Yes, Delete</button>
+              <span style={{ color: '#FF3B30', fontSize: 12, fontWeight: 700 }}>Delete photo?</span>
+              <button onClick={handleDelete} style={{ padding: '6px 12px', background: 'rgba(255,59,48,.15)', border: '1px solid rgba(255,59,48,.3)', borderRadius: 6, color: '#FF3B30', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Yes, Delete</button>
               <button onClick={() => setConfirmDelete(false)} style={{ padding: '6px 12px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 6, color: DIM, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
             </div>
           ) : (
-            <button onClick={() => setConfirmDelete(true)} style={{ ...btnStyle(), color: '#EF4444', borderColor: 'rgba(239,68,68,.3)' }}>Delete</button>
+            <button onClick={() => setConfirmDelete(true)} style={{ ...btnStyle(), color: '#FF3B30', borderColor: 'rgba(255,59,48,.3)' }}>Delete</button>
           )}
         </div>
       </div>

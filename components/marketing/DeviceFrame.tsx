@@ -56,7 +56,7 @@ function ScreenMedia({ src, alt }: { src: string; alt: string }) {
         </div>
         <div style={{ fontSize: 10, lineHeight: 1.6, color: 'rgba(255,255,255,0.45)' }}>
           Drop{' '}
-          <code style={{ color: '#F5B84D', fontFamily: 'ui-monospace, SFMono-Regular, monospace', fontSize: 9.5 }}>
+          <code style={{ color: '#FFE600', fontFamily: 'ui-monospace, SFMono-Regular, monospace', fontSize: 9.5 }}>
             {fileOf(src)}
           </code>{' '}
           into /public/marketing/

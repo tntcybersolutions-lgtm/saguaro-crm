@@ -7,10 +7,10 @@ import { CONTRACTOR_TRADES as TRADES } from '@/lib/contractor-trades';
 const DARK = 'var(--bg-base)';
 const GOLD = 'var(--brand-primary)';
 const TEXT = '#FFFFFF';
-const DIM = '#CBD5E1';
+const DIM = '#D4D4D8';
 const BORDER = 'rgba(255,255,255,0.12)';
 const RAISED = 'var(--bg-surface)';
-const GREEN = '#22c55e';
+const GREEN = '#2CFF7A';
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -348,7 +348,7 @@ export default function SandboxPage() {
               {/* Error banner */}
               {error && (
                 <div style={{
-                  background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
+                  background: 'rgba(255,59,48,0.1)', border: '1px solid rgba(255,59,48,0.3)',
                   borderRadius: 8, padding: '10px 14px', marginBottom: 16,
                   fontSize: 13, color: '#fca5a5', lineHeight: 1.5,
                 }}>

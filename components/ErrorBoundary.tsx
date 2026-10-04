@@ -24,7 +24,7 @@ interface Props { children: ReactNode; fallback?: ReactNode; }
 interface State { hasError: boolean; error: Error | null; }
 
 const GOLD = 'var(--brand-primary)';
-const DIM = '#8BAAC8';
+const DIM = '#A1A1AA';
 
 export default class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {

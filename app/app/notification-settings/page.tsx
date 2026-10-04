@@ -10,12 +10,12 @@ const BG = 'var(--bg-base)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const TEXT   = '#FFFFFF';
-const DIM    = '#CBD5E1';
-const GREEN  = '#22C55E';
-const RED    = '#EF4444';
+const DIM    = '#D4D4D8';
+const GREEN  = '#2CFF7A';
+const RED    = '#FF3B30';
 const AMBER = 'var(--warning)';
 const BLUE   = 'var(--brand-primary)';
-const PURPLE = '#8B5CF6';
+const PURPLE = '#FF8A00';
 
 /* ── types ── */
 type Channel = 'in-app' | 'email' | 'push';
@@ -529,7 +529,7 @@ export default function NotificationSettingsPage() {
   /* ── loading state ── */
   if (loading) {
     return (
-      <PremiumSurface maxWidth={1200}>
+      <PremiumSurface maxWidth={2200}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -556,7 +556,7 @@ export default function NotificationSettingsPage() {
 
   /* ── main render ── */
   return (
-    <PremiumSurface maxWidth={1200}>
+    <PremiumSurface maxWidth={2200}>
       {/* Header */}
       <ModuleHero
         eyebrow="Notifications"
@@ -570,7 +570,7 @@ export default function NotificationSettingsPage() {
             style={{
               ...ghostButtonStyle,
               color: RED,
-              borderColor: 'rgba(239,68,68,0.45)',
+              borderColor: 'rgba(255,59,48,0.45)',
               opacity: resetting ? 0.6 : 1,
             }}
             onClick={resetToDefaults}
@@ -1049,7 +1049,7 @@ export default function NotificationSettingsPage() {
             style={{
               ...ghostButtonStyle,
               color: RED,
-              borderColor: 'rgba(239,68,68,0.45)',
+              borderColor: 'rgba(255,59,48,0.45)',
               opacity: resetting ? 0.6 : 1,
             }}
             onClick={resetToDefaults}

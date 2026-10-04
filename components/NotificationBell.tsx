@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useGuardedRouter } from '@/lib/navGuard';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#c03030';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF',RED='#FF3B30';
 
 interface Notification {
   id: string;
@@ -146,7 +146,7 @@ export default function NotificationBell() {
             <span style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>Notifications</span>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               {displayCount > 0 && (
-                <span style={{ fontSize: 11, background: 'rgba(192,48,48,.15)', color: '#ff7070', padding: '2px 7px', borderRadius: 4, fontWeight: 700 }}>{displayCount} new</span>
+                <span style={{ fontSize: 11, background: 'rgba(192,48,48,.15)', color: '#FF3B30', padding: '2px 7px', borderRadius: 4, fontWeight: 700 }}>{displayCount} new</span>
               )}
               <button
                 onClick={markAllRead}

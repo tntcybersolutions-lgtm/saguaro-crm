@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { alertDialog } from '@/lib/ui/async-dialog';
 import { SUB_TRADES as ALL_TRADES } from '@/lib/construction-intelligence';
 import { humanError } from '@/lib/errors';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
@@ -12,12 +13,12 @@ const BG = 'var(--bg-base)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const TEXT = '#FFFFFF';
-const DIM = '#CBD5E1';
-const GREEN = '#22C55E';
-const RED = '#EF4444';
+const DIM = '#D4D4D8';
+const GREEN = '#2CFF7A';
+const RED = '#FF3B30';
 const AMBER = 'var(--warning)';
 const BLUE = 'var(--brand-primary)';
-const PURPLE = '#8B5CF6';
+const PURPLE = '#FF8A00';
 
 /* ── types ── */
 type SubStatus = 'active' | 'pending' | 'disabled';
@@ -124,7 +125,7 @@ const ALL_PERMISSIONS_LIST: { key: PortalPermission; label: string }[] = [
   { key: 'submittals', label: 'Submittals' },
   { key: 'pay_apps', label: 'Pay Applications' },
 ];
-const AVATAR_COLORS = [GOLD, BLUE, GREEN, PURPLE, AMBER, '#EC4899', '#14B8A6', '#F97316'];
+const AVATAR_COLORS = [GOLD, BLUE, GREEN, PURPLE, AMBER, '#FF8A00', '#2CFF7A', '#FF8A00'];
 const DOC_CATEGORIES = ['Drawings', 'Specifications', 'Schedules', 'Safety Plans', 'Meeting Minutes', 'Reports', 'Contracts', 'Photos'];
 
 /* ── map a real portal_users row → the roster shape the UI renders (was a
@@ -455,19 +456,19 @@ export default function SubPortalPage() {
         // Persisted server-side — prepend the real row (real id + timestamp).
         setAnnouncements(prev => [data.announcement as Announcement, ...prev]);
         if (data.emailConfigured === false) {
-          alert('Announcement saved. Email delivery isn’t set up yet, so no emails were sent — ask your administrator to enable email.');
+          void alertDialog({ title: 'Notice', message: 'Announcement saved. Email delivery isn’t set up yet, so no emails were sent — ask your administrator to enable email.' });
         } else {
           const n = Number(data.sent) || 0;
-          alert(`Announcement sent and emailed to ${n} recipient${n === 1 ? '' : 's'}.`);
+          void alertDialog({ title: 'Notice', message: `Announcement sent and emailed to ${n} recipient${n === 1 ? '' : 's'}.` });
         }
         setAnnSubject(''); setAnnBody(''); setAnnRecipients(['all']);
         setAnnounceModal(false);
       } else {
         console.error('announcement send failed', res.status, data?.error);
-        alert(humanError(data?.error, 'Could not send the announcement. Please try again.'));
+        void alertDialog({ title: 'Notice', message: humanError(data?.error, 'Could not send the announcement. Please try again.') });
       }
     } catch {
-      alert('Could not send the announcement — check your connection and try again.');
+      void alertDialog({ title: 'Notice', message: 'Could not send the announcement — check your connection and try again.' });
     } finally {
       setAnnSending(false);
     }
@@ -483,13 +484,13 @@ export default function SubPortalPage() {
       });
       const data = await res.json().catch(() => ({} as any));
       if (res.ok && data?.success) {
-        alert(`Invitation resent${data?.sentTo ? ` to ${data.sentTo}` : ''}.`);
+        void alertDialog({ title: 'Notice', message: `Invitation resent${data?.sentTo ? ` to ${data.sentTo}` : ''}.` });
       } else {
         console.error('resend invite failed', res.status, data?.error);
-        alert(humanError(data?.error, 'Could not resend the invitation. Please try again.'));
+        void alertDialog({ title: 'Notice', message: humanError(data?.error, 'Could not resend the invitation. Please try again.') });
       }
     } catch {
-      alert('Could not resend the invitation — check your connection and try again.');
+      void alertDialog({ title: 'Notice', message: 'Could not resend the invitation — check your connection and try again.' });
     }
   }, []);
 

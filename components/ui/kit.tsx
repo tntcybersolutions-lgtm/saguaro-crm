@@ -176,7 +176,7 @@ export function StatRow({ items }: { items: StatItem[] }) {
 
 export type BadgeTone = StatusKind | 'neutral' | 'gold';
 
-const BADGE_NEUTRAL = { color: '#D7DEE8', bg: 'rgba(255,255,255,0.08)', border: 'rgba(255,255,255,0.18)' };
+const BADGE_NEUTRAL = { color: '#D4D4D8', bg: 'rgba(255,255,255,0.08)', border: 'rgba(255,255,255,0.18)' };
 const BADGE_GOLD = { color: 'var(--brand-primary)', bg: 'var(--brand-primary-12)', border: 'var(--brand-primary-35)' };
 
 /** Status badge. Tones are the six fixed status colors (lib/status-colors). */
@@ -384,6 +384,10 @@ export type Column<T> = {
   width?: number | string;
   /** Bright, bold cell — the row's name column. */
   primary?: boolean;
+  /** Phones show the first column plus up to three more as a stacked card.
+   *  'show' keeps this column on the card regardless of position; 'hide'
+   *  drops it there. Status and money columns should say 'show'. */
+  phone?: 'show' | 'hide';
 };
 
 const valueOf = <T,>(col: Column<T>, row: T): unknown =>
@@ -464,10 +468,11 @@ export function DataTable<T>({
           ) : (
             sorted.map((row) => (
               <tr key={rowKey(row)} data-clickable={!!onRowClick} onClick={onRowClick ? () => onRowClick(row) : undefined}>
-                {columns.map((c) => {
+                {columns.map((c, ci) => {
                   const v = valueOf(c, row);
+                  const phone = c.phone ?? (ci < 4 ? 'show' : 'hide');
                   return (
-                    <td key={c.key} className={c.primary ? 'k-td-primary' : undefined} style={{ textAlign: c.align }}>
+                    <td key={c.key} className={c.primary ? 'k-td-primary' : undefined} style={{ textAlign: c.align }} data-label={typeof c.header === 'string' ? c.header : undefined} data-phone={phone}>
                       {c.render ? c.render(row) : v == null || v === '' ? '—' : String(v)}
                     </td>
                   );

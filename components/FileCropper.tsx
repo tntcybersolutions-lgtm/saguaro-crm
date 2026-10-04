@@ -50,7 +50,7 @@ export function FileCropper({ fileId, url, name, onDone, onClose }: {
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
           <Crop size={18} color="var(--brand-primary)" weight="fill" />
           <div style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: '#fff' }}>Edit Image</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} color="#CBD5E1" /></button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} color="#D4D4D8" /></button>
         </div>
         <div
           ref={wrapRef}

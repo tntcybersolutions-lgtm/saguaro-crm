@@ -31,7 +31,7 @@ import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import useSWR from 'swr';
 import { usePathname } from 'next/navigation';
-import { ArrowRight, MapPin, CheckCircle } from '@phosphor-icons/react';
+import { ArrowRight, MapPin, CheckCircle, CaretDown } from '@phosphor-icons/react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { normalisePhase, stepsForPhase, stepsDone, PHASE_LABEL } from '@/lib/project-phase';
@@ -44,14 +44,14 @@ import { SALES_STEPS, salesStepsDone, type SalesSignals } from '@/lib/sales-jour
    disagreeing on screen. */
 const LS_PROJECT_KEY = 'sag_journey_project';
 
-/* Literal hexes (not CSS vars) because the tone is suffixed with hex alpha
-   below (`${tone}14`). Brand neon yellow for a job, Lead blue for sales. */
-const GOLD = '#FFE600';
-const GOLD_HI = '#FFF04A';
-const BLUE = '#3DA9FF';
-const BLUE_HI = '#7CC4FF';
-const TEXT = '#FFFFFF';
-const MUTED = '#D7DEE8';
+/* Tokens, same as desktop: brand neon yellow for a job (white-label aware), the
+   Lead orange for sales. Tints are color-mix() so the vars stay vars. */
+const GOLD = 'var(--brand-primary)';
+const GOLD_HI = 'var(--brand-primary-strong)';
+const BLUE = 'var(--status-lead)';
+const BLUE_HI = 'var(--status-lead)';
+const TEXT = 'var(--text-primary)';
+const MUTED = 'var(--text-secondary)';
 
 const fetcher = async (url: string) => {
   const r = await fetch(url);
@@ -80,8 +80,8 @@ function Reserve({ boxRef }: { boxRef: React.MutableRefObject<HTMLDivElement | n
       style={{
         minHeight: BAR_H, boxSizing: 'border-box',
         background: 'var(--bg-base, #000000)',
-        borderTop: '1px solid rgba(255,255,255,0.08)',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        borderTop: '1px solid var(--border-subtle)',
+        borderBottom: '1px solid var(--border-subtle)',
       }}
     />
   );
@@ -113,6 +113,9 @@ export default function NextStepBar() {
      remembered choice, and speaks for the build journey whenever one exists. */
   const { projects } = useProjects();
   const [picked, setPicked] = React.useState<string | null>(null);
+  /* Phones: the bar is one line until tapped — the step, nothing else. */
+  const [open, setOpen] = React.useState(false);
+  useEffect(() => { setOpen(false); }, [pathname]);
   useEffect(() => {
     if (inProject) return;
     try { setPicked(localStorage.getItem(LS_PROJECT_KEY)); } catch { /* private mode */ }
@@ -159,6 +162,11 @@ export default function NextStepBar() {
   });
 
   if (onHome) return null;
+  /* Outside a job the bar speaks for the sales journey — but only where sales
+     work happens. On Radio, Invoicing, Settings and the rest it announced a
+     sales step that had nothing to do with the screen. */
+  const onSalesRoute = /^\/app\/(sales|leads|customers|bids|bid-intelligence)(\/|$)/.test(pathname);
+  if (!onBuildJourney && !onSalesRoute) return null;
 
   let tone = BLUE;
   let toneHi = BLUE_HI;
@@ -180,7 +188,10 @@ export default function NextStepBar() {
     /* Off the job's own pages (the dashboard), name the job — a step with no
        job attached reads as if it were about whatever screen you are on. */
     const jobName = !inProject ? String(ctx?.project?.name || '').trim() : '';
-    side = jobName ? `${jobName} · ${PHASE_LABEL[phase]}` : PHASE_LABEL[phase];
+    /* A closed job is Closed — not "Building", whatever its stored phase says.
+       The sidebar pill and the phase strip read the same status. */
+    const stageLabel = isClosedStatus(ctx?.project?.status) ? 'Closed' : PHASE_LABEL[phase];
+    side = jobName ? `${jobName} · ${stageLabel}` : stageLabel;
     const base = `/app/projects/${journeyId}`;
     if (i === -1) {
       complete = true;
@@ -222,17 +233,20 @@ export default function NextStepBar() {
     <div
       ref={boxRef}
       data-tour="next-step"
+      className="sag-nsb"
+      data-open={open ? 'true' : 'false'}
+      data-in-project={inProject ? 'true' : 'false'}
       style={{
-        display: 'flex', alignItems: 'center', gap: 14,
+        display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
         padding: '9px 18px',
         /* The tone tint must sit on a SOLID base. It used to fade to
            rgba(0,0,0,0), leaving the right ~65% of this fixed bar transparent,
            so scrolled page content (hero titles, tables) bled straight through
            it — the garbled overlap on every screen. Layer the gradient over the
            page base so the bar is fully opaque and nothing shows through. */
-        background: `linear-gradient(90deg, ${tone}14, rgba(0,0,0,0) 55%), var(--bg-base, #000000)`,
-        borderTop: '1px solid rgba(255,255,255,0.08)',
-        borderBottom: `1px solid ${tone}40`,
+        background: `linear-gradient(90deg, color-mix(in srgb, ${tone} 8%, transparent), rgba(0,0,0,0) 55%), var(--bg-base, #000000)`,
+        borderTop: '1px solid var(--border-subtle)',
+        borderBottom: `1px solid color-mix(in srgb, ${tone} 25%, transparent)`,
         minWidth: 0,
         minHeight: BAR_H, boxSizing: 'border-box',
       }}
@@ -247,19 +261,31 @@ export default function NextStepBar() {
         You Are Here
       </span>
 
-      <span aria-hidden style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.12)', flexShrink: 0 }} />
+      <span aria-hidden className="sag-nsb-detail" style={{ width: 1, height: 18, background: 'var(--border-default)', flexShrink: 0 }} />
 
       <span style={{ minWidth: 0, display: 'flex', alignItems: 'baseline', gap: 9, flex: 1 }}>
-        <span style={{ fontSize: 13, fontWeight: 800, color: TEXT, whiteSpace: 'nowrap' }}>{here}</span>
-        <span style={{
+        <span style={{ fontSize: 13, fontWeight: 800, color: TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{here}</span>
+        <span className="sag-nsb-detail" style={{
           fontSize: 12, color: MUTED, minWidth: 0,
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>{next}</span>
       </span>
 
-      <span style={{
+      {/* Phone only: the line opens the details. Desktop never shows this. */}
+      <button
+        type="button"
+        className="sag-nsb-toggle"
+        aria-expanded={open}
+        aria-label={open ? 'Hide the next step' : 'Show the next step'}
+        onClick={() => setOpen(v => !v)}
+        style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, margin: '-6px -8px -6px 0', background: 'transparent', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', flexShrink: 0 }}
+      >
+        <CaretDown size={14} weight="bold" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }} />
+      </button>
+
+      <span className="sag-nsb-detail" style={{
         flexShrink: 0, fontSize: 11.5, fontWeight: 700,
-        color: '#A9B4C4', whiteSpace: 'nowrap',
+        color: 'var(--text-tertiary)', whiteSpace: 'nowrap',
         maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis',
       }} title={`${side} · ${position}`}>
         {side} · {position}
@@ -267,17 +293,17 @@ export default function NextStepBar() {
 
       <Link
         href={href}
-        className="pmBtn"
+        className="pmBtn sag-nsb-detail"
         style={{
           flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6,
           padding: '6px 13px', borderRadius: 8, textDecoration: 'none',
           background: `linear-gradient(180deg, ${toneHi}, ${tone})`,
-          color: onBuildJourney ? '#0A0A00' : '#04121F',
+          color: 'var(--on-brand)',
           fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap',
-          boxShadow: `0 2px 10px ${tone}44`,
+          boxShadow: `0 2px 10px color-mix(in srgb, ${tone} 27%, transparent)`,
         }}
       >
-        {cta} <ArrowRight size={12} weight="bold" color={onBuildJourney ? '#0A0A00' : '#04121F'} />
+        {cta} <ArrowRight size={12} weight="bold" color={'var(--on-brand)'} />
       </Link>
     </div>
   );

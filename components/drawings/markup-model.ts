@@ -35,12 +35,12 @@ export type MarkupKind =
 export type StampName = 'APPROVED' | 'REJECTED' | 'RFI' | 'VERIFY' | 'AS-BUILT' | 'PUNCH';
 
 export const STAMPS: { name: StampName; color: string }[] = [
-  { name: 'APPROVED', color: '#22C55E' },
-  { name: 'REJECTED', color: '#EF4444' },
-  { name: 'RFI',      color: '#38BDF8' },
-  { name: 'VERIFY',   color: '#FBBF24' },
-  { name: 'AS-BUILT', color: '#A78BFA' },
-  { name: 'PUNCH',    color: '#F87171' },
+  { name: 'APPROVED', color: '#2CFF7A' },
+  { name: 'REJECTED', color: '#FF3B30' },
+  { name: 'RFI',      color: '#FF8A00' },
+  { name: 'VERIFY',   color: '#FFE600' },
+  { name: 'AS-BUILT', color: '#FF8A00' },
+  { name: 'PUNCH',    color: '#FF3B30' },
 ];
 
 export interface MarkupStyle { color: string; width: number }
@@ -150,8 +150,8 @@ export function parseMarkup(row: MarkupRow): ParsedMarkup {
       const o = d as Record<string, unknown>;
       const kind = (row.markup_type || 'freehand') as MarkupKind;
       const style = (o.style && typeof o.style === 'object')
-        ? { color: String((o.style as Record<string, unknown>).color || row.color || '#EF4444'), width: num((o.style as Record<string, unknown>).width) || 3 }
-        : { color: row.color || '#EF4444', width: 3 };
+        ? { color: String((o.style as Record<string, unknown>).color || row.color || '#FF3B30'), width: num((o.style as Record<string, unknown>).width) || 3 }
+        : { color: row.color || '#FF3B30', width: 3 };
       return {
         mode: 'canonical',
         kind,
@@ -183,7 +183,7 @@ export function parseMarkup(row: MarkupRow): ParsedMarkup {
       if (Array.isArray(o.strokes)) strokes = legacyStrokesFrom(o.strokes);
       else if (Array.isArray(o.points)) strokes = legacyStrokesFrom([o.points]);
     }
-    return { mode: 'legacy', strokes, color: row.color || '#EF4444', refW, refH };
+    return { mode: 'legacy', strokes, color: row.color || '#FF3B30', refW, refH };
   } catch {
     return { mode: 'invisible' };
   }

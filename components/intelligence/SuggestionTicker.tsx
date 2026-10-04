@@ -30,7 +30,7 @@ import type { Suggestion, SuggestionFeed, SuggestionSeverity } from '@/lib/sugge
 
 const GOLD_HI = 'var(--brand-primary-strong)'; // white-label aware
 // Desert-dusk severity palette — matches the dashboard + intelligence pages.
-const RED = '#E0644E';
+const RED = '#FF3B30';
 const AMBER = 'var(--warning)';
 const INFO = 'rgba(255,255,255,0.45)';
 const BORDER = 'rgba(255,255,255,0.08)';
@@ -130,7 +130,7 @@ const TICKER_FX = `
 .sgTickerItem:hover{background:rgba(255,255,255,0.07)!important;border-color:rgba(255,255,255,0.18)!important}
 .sgTickerX{opacity:.35;transition:opacity .15s ease,color .15s ease}
 .sgTickerItem:hover .sgTickerX{opacity:.75}
-.sgTickerX:hover{opacity:1!important;color:#E0644E!important}
+.sgTickerX:hover{opacity:1!important;color:#FF3B30!important}
 @media (prefers-reduced-motion: reduce){
   .sgTickerTrack{animation:none!important}
   .sgTickerViewport{overflow-x:auto!important}

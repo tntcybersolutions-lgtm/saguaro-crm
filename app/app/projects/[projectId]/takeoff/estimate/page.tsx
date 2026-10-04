@@ -21,7 +21,7 @@ const GOLD = 'var(--brand-primary)';
 const DARK = 'var(--bg-base)';
 const RAISED = 'var(--bg-surface-2)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1';
+const DIM = '#D4D4D8';
 const TEXT = '#FFFFFF';
 
 interface Project {
@@ -89,10 +89,10 @@ interface Assembly {
 const disciplineColors: Record<string, string> = {
   Architectural: '#4a90d9',
   Structural: '#e06c75',
-  Mechanical: '#61afef',
+  Mechanical: '#FF8A00',
   Electrical: '#e5c07b',
   Plumbing: '#56b6c2',
-  Civil: '#98c379',
+  Civil: '#2CFF7A',
   Sitework: '#8a9a5b',
   Demolition: '#b0743c',
   'Fire Protection': '#d1494e',
@@ -518,8 +518,8 @@ function EstimatePage() {
       {/* KPI ROW */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
         <StatCard icon={<Calculator size={19} weight="duotone" color={GOLD} />} label="Total Cost" value={currency(grandTotal)} accent={GOLD} sub="Material + labor" delay={0.02}  href={`/app/projects/${projectId}/takeoff/estimate`}/>
-        <StatCard icon={<Cube size={19} weight="duotone" color="#61afef" />} label="Material" value={currency(totalMaterial)} accent="#61afef" sub="Rolled up" delay={0.06}  href={`/app/projects/${projectId}/takeoff/estimate`}/>
-        <StatCard icon={<Users size={19} weight="duotone" color="#98c379" />} label="Labor" value={currency(totalLabor)} accent="#98c379" sub="Rolled up" delay={0.10}  href={`/app/projects/${projectId}/takeoff/estimate`}/>
+        <StatCard icon={<Cube size={19} weight="duotone" color="#FF8A00" />} label="Material" value={currency(totalMaterial)} accent="#FF8A00" sub="Rolled up" delay={0.06}  href={`/app/projects/${projectId}/takeoff/estimate`}/>
+        <StatCard icon={<Users size={19} weight="duotone" color="#2CFF7A" />} label="Labor" value={currency(totalLabor)} accent="#2CFF7A" sub="Rolled up" delay={0.10}  href={`/app/projects/${projectId}/takeoff/estimate`}/>
       </div>
 
       {/* WORKSPACE */}
@@ -556,7 +556,7 @@ function EstimatePage() {
                   {(SHEET_DISCIPLINES.includes(newSheetDiscipline) ? SHEET_DISCIPLINES : [newSheetDiscipline, ...SHEET_DISCIPLINES]).map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
                 {sheetError && (
-                  <div style={{ fontSize: 12, lineHeight: 1.45, color: '#FCA5A5', background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.28)', borderRadius: 8, padding: '7px 10px' }}>
+                  <div style={{ fontSize: 12, lineHeight: 1.45, color: '#FCA5A5', background: 'rgba(255,59,48,0.10)', border: '1px solid rgba(255,59,48,0.28)', borderRadius: 8, padding: '7px 10px' }}>
                     {sheetError}
                   </div>
                 )}
@@ -892,11 +892,11 @@ function EstimatePage() {
             <div style={{ height: 22, width: 1, background: BORDER }}></div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 12, color: DIM }}>Sell Price:</span>
-              <span style={{ fontSize: 18, fontWeight: 800, color: '#61afef', fontVariantNumeric: 'tabular-nums' }}>{currency(sellPrice)}</span>
+              <span style={{ fontSize: 18, fontWeight: 800, color: '#FF8A00', fontVariantNumeric: 'tabular-nums' }}>{currency(sellPrice)}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 12, color: DIM }}>Gross Margin:</span>
-              <span style={{ fontSize: 15, fontWeight: 800, color: grossMargin > 20 ? '#98c379' : grossMargin > 10 ? 'var(--warning)' : '#e06c75' }}>{grossMargin.toFixed(1)}%</span>
+              <span style={{ fontSize: 15, fontWeight: 800, color: grossMargin > 20 ? '#2CFF7A' : grossMargin > 10 ? 'var(--warning)' : '#e06c75' }}>{grossMargin.toFixed(1)}%</span>
             </div>
             <div style={{ marginLeft: 'auto', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               {selectedTakeoff && (
@@ -940,7 +940,7 @@ function EstimatePage() {
 export default function EstimatePageWrapper() {
   return (
     <Suspense fallback={
-      <div style={{ background: 'var(--bg-base)', color: '#CBD5E1', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
+      <div style={{ background: 'var(--bg-base)', color: '#D4D4D8', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
         Loading estimate workspace…
       </div>
     }>

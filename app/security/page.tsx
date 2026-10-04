@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Lock, ShieldCheck, Wall, Globe, Flask, Prohibit, Package, Trash } from '@phosphor-icons/react/dist/ssr';
 import type { Icon } from '@phosphor-icons/react';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#22c55e',HAIRLINE='rgba(255,255,255,0.08)',CARD='rgba(255,255,255,0.02)';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',DIM='#D4D4D8',TEXT='#FFFFFF',GREEN='#2CFF7A',HAIRLINE='rgba(255,255,255,0.08)',CARD='rgba(255,255,255,0.02)';
 
 const NAV = (
   <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:200,height:64,background:'rgba(13,17,23,0.9)',borderBottom:`1px solid ${HAIRLINE}`,display:'flex',alignItems:'center',padding:'0 32px',backdropFilter:'blur(16px)',WebkitBackdropFilter:'blur(16px)'}}>
@@ -17,11 +17,11 @@ const NAV = (
 );
 
 const FEATURES: { icon: Icon; title: string; desc: string; color: string; border: string }[] = [
-  {icon:Lock,title:'256-bit AES Encryption',desc:'All data at rest is encrypted using AES-256, the same standard used by banks and government agencies. Your data is unreadable without your credentials.',color:'rgba(34,197,94,.08)',border:'rgba(34,197,94,.25)'},
-  {icon:ShieldCheck,title:'TLS 1.3 in Transit',desc:'Every byte transferred between your browser and our servers is protected with TLS 1.3. We enforce HTTPS everywhere and reject older protocols.',color:'rgba(34,197,94,.08)',border:'rgba(34,197,94,.25)'},
-  {icon:Wall,title:'Row-Level Security',desc:'Powered by Supabase RLS policies. Each user can only access their own organization\'s data — enforced at the database layer, not just the application layer.',color:'rgba(34,197,94,.08)',border:'rgba(34,197,94,.25)'},
-  {icon:Globe,title:'GDPR Compliant',desc:'We honor data subject rights: access, correction, deletion, and export. Data processing agreements available. EU residents can request their data at any time.',color:'rgba(34,197,94,.08)',border:'rgba(34,197,94,.25)'},
-  {icon:Flask,title:'Penetration Testing',desc:'Annual third-party penetration tests are conducted by independent security firms. Findings are remediated within 30 days. Reports available under NDA for Enterprise customers.',color:'rgba(34,197,94,.08)',border:'rgba(34,197,94,.25)'},
+  {icon:Lock,title:'256-bit AES Encryption',desc:'All data at rest is encrypted using AES-256, the same standard used by banks and government agencies. Your data is unreadable without your credentials.',color:'rgba(44,255,122,.08)',border:'rgba(44,255,122,.25)'},
+  {icon:ShieldCheck,title:'TLS 1.3 in Transit',desc:'Every byte transferred between your browser and our servers is protected with TLS 1.3. We enforce HTTPS everywhere and reject older protocols.',color:'rgba(44,255,122,.08)',border:'rgba(44,255,122,.25)'},
+  {icon:Wall,title:'Row-Level Security',desc:'Powered by Supabase RLS policies. Each user can only access their own organization\'s data — enforced at the database layer, not just the application layer.',color:'rgba(44,255,122,.08)',border:'rgba(44,255,122,.25)'},
+  {icon:Globe,title:'GDPR Compliant',desc:'We honor data subject rights: access, correction, deletion, and export. Data processing agreements available. EU residents can request their data at any time.',color:'rgba(44,255,122,.08)',border:'rgba(44,255,122,.25)'},
+  {icon:Flask,title:'Penetration Testing',desc:'Annual third-party penetration tests are conducted by independent security firms. Findings are remediated within 30 days. Reports available under NDA for Enterprise customers.',color:'rgba(44,255,122,.08)',border:'rgba(44,255,122,.25)'},
 ];
 
 const INFRA = [

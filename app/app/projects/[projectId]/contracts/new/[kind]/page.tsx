@@ -25,8 +25,8 @@ import { openPdf } from '@/components/PdfViewer';
 
 const GOLD = 'var(--brand-primary)';
 const TEXT = '#F0F4FF';
-const DIM = '#8BAAC8';
-const BORDER = '#1E3A5F';
+const DIM = '#A1A1AA';
+const BORDER = '#2A2A2E';
 const BASE = 'var(--bg-base)';
 
 /** What the signature tables call each kind. */
@@ -143,8 +143,8 @@ export default function NewContractFromTemplate() {
           /* Generated. The document is the point, so it gets the whole screen —
              and the GC can go straight back and change something if it is wrong. */
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#22C55E', fontSize: 15, fontWeight: 700 }}>
-              <CheckCircle size={18} weight="fill" color="#22C55E" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#2CFF7A', fontSize: 15, fontWeight: 700 }}>
+              <CheckCircle size={18} weight="fill" color="#2CFF7A" />
               {spec.title} generated
             </div>
 
@@ -198,7 +198,7 @@ export default function NewContractFromTemplate() {
           </div>
         ) : (
           <>
-            {error && <p style={{ color: '#EF4444', fontSize: 13.5 }}>{error}</p>}
+            {error && <p style={{ color: '#FF3B30', fontSize: 13.5 }}>{error}</p>}
             <ContractForm
               kind={kind}
               projectId={projectId}

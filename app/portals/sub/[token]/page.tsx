@@ -5,8 +5,8 @@ import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
 
 /* ── Design Tokens ── */
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
-const GREEN='#22c55e',RED='#ef4444',AMBER='#f59e0b',BLUE='var(--brand-primary)',PURPLE='#8b5cf6';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF';
+const GREEN='#2CFF7A',RED='#FF3B30',AMBER='#FF8A00',BLUE='var(--brand-primary)',PURPLE='#FF8A00';
 const fmt=(n:number)=>'$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}));
 const fmtDate=(d:string)=>d?new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'--';
 

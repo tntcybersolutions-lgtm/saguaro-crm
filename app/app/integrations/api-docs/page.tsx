@@ -19,11 +19,11 @@ import {
 } from '@phosphor-icons/react';
 
 const GOLD = 'var(--brand-primary)', CARD = 'var(--bg-surface)', INSET = 'var(--bg-base)', BORDER = 'rgba(255,255,255,0.12)', HAIRLINE = 'rgba(255,255,255,0.07)';
-const DIM = '#CBD5E1', MUTED = 'rgba(255,255,255,0.45)', TEXT = '#FFFFFF', GREEN = '#22C55E';
+const DIM = '#D4D4D8', MUTED = 'rgba(255,255,255,0.45)', TEXT = '#FFFFFF', GREEN = '#2CFF7A';
 
 // Integrations accent — steel blue, local because 'integrations' is not a key in
 // lib/module-identity (owned elsewhere). Chips / eyebrows / badges ONLY.
-const API_ACCENT = '#7FA3C7';
+const API_ACCENT = '#FF8A00';
 
 // Dark inset panel for code — every sample and payload sits on this material.
 const CODE_PANEL: React.CSSProperties = {
@@ -50,10 +50,10 @@ type APIModule = {
 };
 
 const METHOD_COLORS: Record<string, string> = {
-  GET: '#22C55E',
+  GET: '#2CFF7A',
   POST: 'var(--brand-primary)',
   PATCH: 'var(--brand-primary)',
-  DELETE: '#EF4444',
+  DELETE: '#FF3B30',
 };
 
 // Only the GET /api/v1/* endpoints below are LIVE — they accept sk_live_ keys
@@ -211,7 +211,7 @@ export default function ApiDocsPage() {
   const soonCount = totalEndpoints - liveCount;
 
   return (
-    <PremiumSurface maxWidth={1300}>
+    <PremiumSurface maxWidth={2200}>
       <style>{`@media (max-width: 760px){ .ad-stack{ grid-template-columns: 1fr !important } }`}</style>
 
       {/* Breadcrumb */}

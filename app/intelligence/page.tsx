@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 import MarketingNav from '@/components/MarketingNav';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',BORDER='rgba(255,255,255,0.08)',HAIRLINE='rgba(255,255,255,0.08)',CARD='rgba(255,255,255,0.02)',DIM='#CBD5E1',MUTED='rgba(255,255,255,0.45)',TEXT='#FFFFFF',GREEN='#3dd68c',RED='#c03030';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',BORDER='rgba(255,255,255,0.08)',HAIRLINE='rgba(255,255,255,0.08)',CARD='rgba(255,255,255,0.02)',DIM='#D4D4D8',MUTED='rgba(255,255,255,0.45)',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30';
 
 export default function IntelligencePage() {
   const [scoring, setScoring] = useState(false);

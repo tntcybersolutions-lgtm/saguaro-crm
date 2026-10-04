@@ -17,10 +17,10 @@ import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
 const BASE = 'var(--bg-surface-2)';
 const GOLD = 'var(--brand-primary)';
-const GREEN = '#34C759';
+const GREEN = '#2CFF7A';
 const RED = '#FF3B30';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1';
+const DIM = '#D4D4D8';
 const TEXT = '#FFFFFF';
 
 interface FirewallRule {
@@ -183,14 +183,14 @@ export default function FirewallRulesPage() {
 
   if (loading) {
     return (
-      <PremiumSurface maxWidth={1200}>
+      <PremiumSurface maxWidth={2200}>
         <ModuleSkeleton kpis={4} rows={5} />
       </PremiumSurface>
     );
   }
 
   return (
-    <PremiumSurface maxWidth={1200}>
+    <PremiumSurface maxWidth={2200}>
       {/* Breadcrumb */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}>
         <Link href={`/app/projects/${projectId}/network`} style={{ color: DIM, fontSize: 12, textDecoration: 'none' }}>Network</Link>

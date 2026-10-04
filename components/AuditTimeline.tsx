@@ -5,25 +5,25 @@ const GOLD = 'var(--brand-primary)';
 const DARK = 'var(--bg-surface-2)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1';
+const DIM = '#D4D4D8';
 const TEXT = '#FFFFFF';
 
 const ACTION_COLORS: Record<string, string> = {
   create: '#2ea043',
   created: '#2ea043',
   insert: '#2ea043',
-  update: '#388bfd',
-  updated: '#388bfd',
-  edit: '#388bfd',
+  update: '#FF8A00',
+  updated: '#FF8A00',
+  edit: '#FF8A00',
   status_change: '#d29922',
   status_updated: '#d29922',
   approved: '#d29922',
   rejected: '#d29922',
   submitted: '#d29922',
-  delete: '#c03030',
-  deleted: '#c03030',
-  removed: '#c03030',
-  archive: '#c03030',
+  delete: '#FF3B30',
+  deleted: '#FF3B30',
+  removed: '#FF3B30',
+  archive: '#FF3B30',
 };
 
 function getActionColor(action: string): string {
@@ -138,7 +138,7 @@ export default function AuditTimeline({ entityType, entityId }: AuditTimelinePro
 
   if (error) {
     return (
-      <div style={{ padding: 16, color: '#c03030', fontSize: 13 }}>
+      <div style={{ padding: 16, color: '#FF3B30', fontSize: 13 }}>
         Error: {error}
       </div>
     );
@@ -262,7 +262,7 @@ export default function AuditTimeline({ entityType, entityId }: AuditTimelinePro
                         <span style={{ color: DIM }}>{fieldLabel}: </span>
                         {prevVal !== undefined ? (
                           <>
-                            <span style={{ color: '#c03030', textDecoration: 'line-through' }}>
+                            <span style={{ color: '#FF3B30', textDecoration: 'line-through' }}>
                               {formatValue(prevVal)}
                             </span>
                             <span style={{ color: DIM, margin: '0 4px' }}>&rarr;</span>

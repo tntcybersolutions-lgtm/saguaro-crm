@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Cactus, Check } from '@phosphor-icons/react';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444',GREEN='#22c55e';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF',RED='#FF3B30',GREEN='#2CFF7A';
 
 const STEPS = [
   { num: 1, label: 'Welcome', done: true },
@@ -123,7 +123,7 @@ export default function OnboardingStep2() {
           </div>
 
           {error&&(
-            <div style={{background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:RED}}>{error}</div>
+            <div style={{background:'rgba(255,59,48,.1)',border:'1px solid rgba(255,59,48,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:RED}}>{error}</div>
           )}
 
           <div style={{display:'flex',flexDirection:'column',gap:16}}>
@@ -193,7 +193,7 @@ export default function OnboardingStep2() {
           </div>
         </div>
 
-        <div style={{textAlign:'center',marginTop:20,fontSize:12,color:'#CBD5E1'}}>
+        <div style={{textAlign:'center',marginTop:20,fontSize:12,color:'#D4D4D8'}}>
           <Link href="/app" style={{color:DIM,textDecoration:'none'}}>Skip Setup — Go to Dashboard</Link>
         </div>
       </div>

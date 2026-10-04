@@ -37,16 +37,16 @@ export const colors = {
   borderDim:  'rgba(255,255,255,0.08)',
 
   text:       '#FFFFFF',
-  textMuted:  '#D7DEE8',
+  textMuted:  '#D4D4D8',
   textDim:    '#A9B4C4',
   textFaint:  '#7A8597',
 
   // Semantic — the same neon-on-black family as lib/status-colors.ts.
-  green:      '#2EE59D',
-  red:        '#FF4D5E',
-  orange:     '#FF8A3D',
-  amber:      '#FFC53D',
-  blue:       '#3DA9FF',
+  green:      '#2CFF7A',
+  red:        '#FF3B30',
+  orange:     '#FF8A00',
+  amber:      '#FFE600',
+  blue:       '#FF8A00',
 
   white:      '#ffffff',
   black:      '#000000',
@@ -149,4 +149,29 @@ export const z = {
   overlay: 250,
   toast: 300,
   tooltip: 400,
+} as const;
+
+/* ── Layout contract ───────────────────────────────────────────────────
+ * The geometry the app-wide redesign is held to (CLAUDE_MASTER_INSTRUCTIONS
+ * §3 geometry, §4 full-width contract, §7 data grid). One source so the shell,
+ * page header, toolbar, data table and forms all align. Reconciled from
+ * saguaro-visual-tokens.reference.css — values kept, the champagne accent and
+ * the Inter font default dropped: the brand stays NEON YELLOW (--brand-primary)
+ * and the type stays on the native system stack (`font.family` above). */
+export const layout = {
+  gutter:        'clamp(16px, 1.67vw, 32px)', // desktop page gutter → 32 on wide
+  gutterMobile:  16,
+  gap:           24,   // standard block gap between page sections
+  gapMobile:     16,
+  topbarHeight:  60,
+  navWidth:      256,  // expanded rail (current sidebar.width stays 240 until the shell migrates)
+  navWidthCollapsed: 72,
+  controlHeight:       40, // desktop buttons/inputs
+  controlHeightMobile: 44, // touch target
+  rowHeight:        44,    // data-table default row
+  rowHeightCompact: 36,    // optional dense mode
+  formMaxWidth:    760,    // editable field groups stay 640–800px, never full-bleed
+  readingMaxWidth: '75ch', // long-form text line length
+  detailRailMin:   320,    // metadata/action rail on detail pages
+  detailRailMax:   384,
 } as const;

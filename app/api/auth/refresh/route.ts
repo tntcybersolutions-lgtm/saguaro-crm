@@ -11,6 +11,18 @@ function isConfigured() {
   return !!(url && url !== 'https://demo.supabase.co' && key && !key.includes('placeholder') && !key.startsWith('demo_') && key.length > 20);
 }
 
+/** Seconds-since-epoch expiry of a JWT, or null when it cannot be read. */
+function jwtExpiry(token: string | undefined): number | null {
+  if (!token) return null;
+  try {
+    const payload = token.split('.')[1];
+    const json = JSON.parse(Buffer.from(payload.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'));
+    return typeof json.exp === 'number' ? json.exp : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(req: NextRequest) {
   if (!isConfigured()) {
     return NextResponse.json({ error: 'Authentication service not configured' }, { status: 503 });
@@ -19,6 +31,18 @@ export async function GET(req: NextRequest) {
   const refreshToken = req.cookies.get('sb-refresh-token')?.value;
   if (!refreshToken) {
     return NextResponse.json({ error: 'No refresh token' }, { status: 401 });
+  }
+
+  /* Only rotate when the access token is actually about to expire. This route
+     runs on EVERY app-layout mount, and Supabase rotates the refresh token on
+     every grant — so each page load minted a new token, and two loads in flight
+     at once (a second tab, a phone and a desktop, a double navigation) replayed
+     the old one: "refresh_token_already_used", the family revoked, everyone
+     signed out. The auth logs showed a rotation every minute before the drops. */
+  const accessToken = req.cookies.get('sb-access-token')?.value;
+  const exp = jwtExpiry(accessToken);
+  if (exp && exp - Math.floor(Date.now() / 1000) > 300) {
+    return NextResponse.json({ ok: true, fresh: true });
   }
 
   const supabase = createClient(

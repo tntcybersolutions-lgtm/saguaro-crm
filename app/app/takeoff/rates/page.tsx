@@ -9,7 +9,7 @@ import { Sparkle, PencilSimple, CheckCircle, Coins, BookOpen } from '@phosphor-i
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, goldButtonStyle } from '@/components/ui/premium';
 
 const PANEL = 'var(--bg-surface)', LINE = 'rgba(255,255,255,0.09)', GOLD = 'var(--brand-primary)';
-const TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#34D399', BLUE = 'var(--brand-primary-strong)';
+const TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#2CFF7A', BLUE = 'var(--brand-primary-strong)';
 type Row = { cost_key: string; unit: string; note: string; bookCents: number; ownCents: number | null; source: string | null; samples: number };
 
 export default function CostCatalogPage() {
@@ -61,9 +61,9 @@ export default function CostCatalogPage() {
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 20,
           padding: '9px 15px', borderRadius: 10, fontSize: 13,
-          background: isDone ? 'rgba(52,211,153,0.10)' : isError ? 'rgba(248,113,113,0.10)' : 'rgba(255,255,255,0.04)',
-          border: `1px solid ${isDone ? 'rgba(52,211,153,0.3)' : isError ? 'rgba(248,113,113,0.3)' : LINE}`,
-          color: isDone ? GREEN : isError ? '#f87171' : DIM,
+          background: isDone ? 'rgba(52,211,153,0.10)' : isError ? 'rgba(255,59,48,0.10)' : 'rgba(255,255,255,0.04)',
+          border: `1px solid ${isDone ? 'rgba(52,211,153,0.3)' : isError ? 'rgba(255,59,48,0.3)' : LINE}`,
+          color: isDone ? GREEN : isError ? '#FF3B30' : DIM,
         }}>
           {isDone && <CheckCircle size={15} weight="fill" color={GREEN} />}
           {msg.replace(/^✓ /, '')}

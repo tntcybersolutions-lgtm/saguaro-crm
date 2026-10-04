@@ -42,7 +42,13 @@ const LS_PROJECT_KEY = 'sag_journey_project';
 
 interface JourneyStep { title: string; desc: string; done: boolean; href?: string }
 
-export default function GettingStartedRail({ projectId }: { projectId?: string }) {
+/**
+ * compact — the project home's form (Pass 3): smaller margins, every text
+ * size at 12px or above, folds sooner once the job is moving, and the
+ * "Next:" link is outlined instead of filled so the page header keeps the
+ * one filled primary action. The dashboard (no prop) is unchanged.
+ */
+export default function GettingStartedRail({ projectId, compact = false }: { projectId?: string; compact?: boolean }) {
   const [hydrated, setHydrated] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   /* True until the GC toggles it themselves; while true the rail decides for
@@ -151,7 +157,11 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
   /* Folded once the job is moving. On the dashboard the bar is lower still —
      the live signals above it are worth more than a checklist about one
      project, and a GC with work in flight is not being onboarded any more. */
-  const autoThreshold = projectId ? 3 : 2;
+  const autoThreshold = compact ? 2 : projectId ? 3 : 2;
+  /* Type sizes: compact never drops below 12px (Pass 3 global rule). */
+  const fs = compact
+    ? { title: 13.5, desc: 12.5, verb: 12, here: 12, note: 12 }
+    : { title: 12.5, desc: 11.5, verb: 10.5, here: 9, note: 10.5 };
   const showCollapsed = autoCollapse ? doneCount >= autoThreshold : collapsed;
 
   function toggle() {
@@ -164,7 +174,7 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
   }
 
   return (
-    <div data-tour="getting-started" style={{ marginBottom: 24 }}>
+    <div data-tour="getting-started" style={{ marginBottom: compact ? 0 : 24 }}>
       <SectionCard
         title="Your Path to First Payment"
         subtitle={
@@ -195,15 +205,15 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
             <span style={{
               padding: '3px 10px', borderRadius: 999, background: 'var(--brand-primary-12)',
               border: '1px solid var(--brand-primary-35)', color: GOLD_HI,
-              fontSize: 11, fontWeight: 800, letterSpacing: '0.05em', whiteSpace: 'nowrap',
+              fontSize: compact ? 12 : 11, fontWeight: 800, letterSpacing: compact ? 'normal' : '0.05em', whiteSpace: 'nowrap',
             }}>{doneCount} of {steps.length} steps</span>
             <button
               onClick={toggle}
               aria-label={showCollapsed ? 'Expand getting started' : 'Collapse getting started'}
-              className="pmBtn"
+              className={compact ? 'pmBtn gsr-toggle' : 'pmBtn'}
               style={{
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                width: 28, height: 28, borderRadius: 8, cursor: 'pointer',
+                width: compact ? 36 : 28, height: compact ? 36 : 28, borderRadius: 8, cursor: 'pointer',
                 background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
               }}
             >
@@ -244,7 +254,7 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
                       width: 21, height: 21, borderRadius: 999, flexShrink: 0, zIndex: 1,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       background: s.done ? `linear-gradient(180deg,${GOLD_HI},${GOLD})` : '#101011',
-                      border: s.done ? 'none' : `1px solid rgba(245,158,11,${isCur ? 0.85 : 0.45})`,
+                      border: s.done ? 'none' : `1px solid rgba(255,138,0,${isCur ? 0.85 : 0.45})`,
                       boxShadow: isCur ? '0 0 12px var(--brand-primary-35)' : undefined,
                       color: s.done ? '#0A0A00' : GOLD_HI, fontSize: 10, fontWeight: 900,
                     }}>
@@ -252,21 +262,21 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
                     </div>
                     <div style={{ minWidth: 0, paddingTop: 1, flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
-                        <span style={{ fontSize: 12.5, fontWeight: 800, color: s.done ? MUTED : TEXT, lineHeight: 1.35, minWidth: 0 }}>{s.title}</span>
+                        <span style={{ fontSize: fs.title, fontWeight: 800, color: s.done ? MUTED : TEXT, lineHeight: 1.35, minWidth: 0 }}>{s.title}</span>
                         {isCur && (
                           <span style={{
                             padding: '1px 7px', borderRadius: 999, flexShrink: 0,
                             background: 'var(--brand-primary-18)', border: '1px solid var(--brand-primary-35)',
-                            color: GOLD_HI, fontSize: 9, fontWeight: 900, letterSpacing: '0.08em',
+                            color: GOLD_HI, fontSize: fs.here, fontWeight: 900, letterSpacing: compact ? 'normal' : '0.08em',
                           }}>You Are Here</span>
                         )}
                       </div>
-                      <div style={{ fontSize: 11.5, color: s.done ? FAINT : MUTED, lineHeight: 1.5, marginTop: 2 }}>{s.desc}</div>
+                      <div style={{ fontSize: fs.desc, color: s.done ? FAINT : MUTED, lineHeight: 1.5, marginTop: 2 }}>{s.desc}</div>
                     </div>
                     {s.href && (
                       <span style={{
                         display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0, marginTop: 2,
-                        color: isCur ? GOLD_HI : FAINT, fontSize: 10.5, fontWeight: 800, whiteSpace: 'nowrap',
+                        color: isCur ? GOLD_HI : FAINT, fontSize: fs.verb, fontWeight: 800, whiteSpace: 'nowrap',
                       }}>
                         {verb} <ArrowRight size={12} weight="bold" color={isCur ? GOLD_HI : FAINT} />
                       </span>
@@ -280,15 +290,25 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
             </div>
 
             {/* Plain-language proof the rail is not one-way. */}
-            <div style={{ fontSize: 10.5, color: FAINT, marginTop: 10 }}>
+            <div style={{ fontSize: fs.note, color: compact ? MUTED : FAINT, marginTop: 10 }}>
               Every step stays open — go back to review what you entered, or jump ahead. Nothing here is locked.
             </div>
 
             {/* Gold CTA on the next incomplete step */}
             {next?.href && (
-              <Link href={next.href} style={{ ...goldButtonStyle, marginTop: 18 }} className="pmBtn">
-                Next: {next.title} <ArrowRight size={15} weight="bold" color="#0A0A00" />
-              </Link>
+              compact ? (
+                <Link href={next.href} className="pmBtn" style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 14, minHeight: 40, padding: '0 14px',
+                  borderRadius: 10, border: '1px solid var(--brand-primary-35)', background: 'transparent',
+                  color: GOLD_HI, fontSize: 14, fontWeight: 700, textDecoration: 'none',
+                }}>
+                  Next: {next.title} <ArrowRight size={14} weight="bold" color={GOLD_HI} />
+                </Link>
+              ) : (
+                <Link href={next.href} style={{ ...goldButtonStyle, marginTop: 18 }} className="pmBtn">
+                  Next: {next.title} <ArrowRight size={15} weight="bold" color="#0A0A00" />
+                </Link>
+              )
             )}
           </>
         )}

@@ -23,8 +23,8 @@ import Suggest from '@/components/ui/Suggest';
 
 const GOLD = 'var(--brand-primary)';
 const TEXT = '#F0F4FF';
-const DIM = '#8BAAC8';
-const BORDER = '#1E3A5F';
+const DIM = '#A1A1AA';
+const BORDER = '#2A2A2E';
 const CARD = 'var(--bg-surface)';
 const BASE = 'var(--bg-base)';
 
@@ -102,7 +102,7 @@ export default function ProjectDirectory() {
 
   return (
     <main style={{ background: BASE, minHeight: '100%', padding: '24px max(20px, 3vw) 64px' }}>
-      <div style={{ maxWidth: 1000 }}>
+      <div style={{ maxWidth: 2200 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
           <UsersThree size={20} weight="duotone" color={GOLD} />
           <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: TEXT, letterSpacing: '-0.01em' }}>Directory</h1>
@@ -112,7 +112,7 @@ export default function ProjectDirectory() {
           instead of asking for them again.
         </p>
 
-        {error && <p style={{ color: '#EF4444', fontSize: 13.5 }}>{error}</p>}
+        {error && <p style={{ color: '#FF3B30', fontSize: 13.5 }}>{error}</p>}
 
         {!adding && (
           <button

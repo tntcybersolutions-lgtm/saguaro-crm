@@ -5,6 +5,7 @@
  * bill and rolls up LIVE — same engine + byte-identical numbers as iOS.
  */
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useSearchParams } from 'next/navigation';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { explodeTakeoff, rollupTakeoff, ASSEMBLIES, type Condition, type MeasureKind, type Pt, type RateOverrides } from '@/lib/takeoff';
@@ -34,7 +35,7 @@ type TracerTargetingProps = {
 const PlanTracer = dynamic<React.ComponentProps<(typeof import('./PlanTracer'))['default']> & TracerTargetingProps>(() => import('./PlanTracer'), { ssr: false });
 
 const BG = 'var(--bg-base)', PANEL = 'var(--bg-surface)', LINE = 'rgba(255,255,255,0.09)', GOLD = 'var(--brand-primary)';
-const TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#34D399', RED = '#f87171';
+const TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#2CFF7A', RED = '#FF3B30';
 const uid = () => Math.random().toString(36).slice(2, 9);
 // Bespoke "Crafted Two-Tone" icon (steel + gold) — the approved family, never emoji glyphs.
 function Ic({ name, s = 20, k = '' }: { name: string; s?: number; k?: string }) {
@@ -85,7 +86,7 @@ const proxyConfidence = (hasAsm: boolean, count: number): number => {
 };
 const confColor = (c: number) => (c >= 70 ? GREEN : c >= 45 ? GOLD : RED);
 type RevChange = { type: string; trade: string; description: string; location: string; costImpact: string; confidence: number | null };
-const impactColor = (i: string) => i === 'increase' ? '#f87171' : i === 'decrease' ? '#34D399' : '#8b949e';
+const impactColor = (i: string) => i === 'increase' ? '#FF3B30' : i === 'decrease' ? '#2CFF7A' : '#8b949e';
 
 // ── document-type importers (CSV/Excel + DXF) ──
 /** exact SF of a closed DXF polyline: shoelace on its pts × (ft/unit)². */
@@ -273,8 +274,8 @@ function MeasuredTakeoffInner() {
     if (t && name === 'Measured takeoff') setName(t.name);
     setMsg(`+ ${t?.name}: ${drop.length} conditions added — trace each on the plan to price it.`);
   };
-  const chooseBlank = () => {
-    if (conditions.length && !confirm('Clear all current conditions and start blank?')) return;
+  const chooseBlank = async () => {
+    if (conditions.length && !(await confirmDialog({ title: 'Please confirm', message: 'Clear all current conditions and start blank?', danger: true }))) return;
     setConditions([]); setActiveTemplate('blank'); setMsg('Blank takeoff — add conditions or open the Plan Tracer.');
   };
 
@@ -544,7 +545,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
   const [reading, setReading] = useState(false);
   const readBlueprint = async (f: File | undefined) => {
     if (!f || !projectId) { setMsg('Pick a project first'); return; }
-    if (conditions.length && !confirm(`Replaces your ${conditions.length} current condition${conditions.length === 1 ? '' : 's'} — continue?`)) return;
+    if (conditions.length && !(await confirmDialog({ title: 'Please confirm', message: `Replaces your ${conditions.length} current condition${conditions.length === 1 ? '' : 's'} — continue?`, danger: true }))) return;
     setReading(true); setMsg('Reading every sheet…');
     try {
       const b64: string = await new Promise((res, rej) => { const rd = new FileReader(); rd.onload = () => res((rd.result as string).split(',')[1]); rd.onerror = rej; rd.readAsDataURL(f); });
@@ -838,7 +839,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             </div>
             <input type="file" accept="image/*" disabled={counting} style={{ display: 'none' }} onChange={(e) => { countSymbols(e.target.files?.[0]); (e.target as HTMLInputElement).value = ''; }} />
           </label>
-          <button onClick={() => { setRevResult(null); setComparing(true); }} style={{ display: 'flex', gap: 13, alignItems: 'flex-start', textAlign: 'left', border: `1.5px solid rgba(167,139,250,0.5)`, background: 'linear-gradient(180deg,rgba(167,139,250,0.10),rgba(167,139,250,0.03))', borderRadius: 14, padding: '15px 16px', cursor: 'pointer' }}>
+          <button onClick={() => { setRevResult(null); setComparing(true); }} style={{ display: 'flex', gap: 13, alignItems: 'flex-start', textAlign: 'left', border: `1.5px solid rgba(255,138,0,0.5)`, background: 'linear-gradient(180deg,rgba(255,138,0,0.10),rgba(255,138,0,0.03))', borderRadius: 14, padding: '15px 16px', cursor: 'pointer' }}>
             <Ic name="compareRevs" s={34} k="hero3" />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 800, fontSize: 15, color: TEXT }}>Compare Revisions</div>
@@ -947,7 +948,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               {r.alternates.map((a) => (
                 <div key={a.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, padding: '3px 0' }}>
                   <span style={{ color: DIM }}>{a.label}</span>
-                  <span style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: a.type === 'deduct' ? '#f87171' : '#34D399' }}>{a.type === 'deduct' ? '−' : '+'}{usd(Math.abs(a.deltaCents))}</span>
+                  <span style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: a.type === 'deduct' ? '#FF3B30' : '#2CFF7A' }}>{a.type === 'deduct' ? '−' : '+'}{usd(Math.abs(a.deltaCents))}</span>
                 </div>
               ))}
             </div>
@@ -968,11 +969,11 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
           <div style={{ display: 'flex', gap: 8, marginTop: 9 }}>
             <button onClick={() => createRevision(false)} disabled={!conditions.length} title="Clone this takeoff as a new revision (version chain) — re-prices with the same markups"
               style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, borderRadius: 10, padding: '10px', cursor: conditions.length ? 'pointer' : 'not-allowed', opacity: conditions.length ? 1 : 0.5, fontWeight: 700, fontSize: 13, color: TEXT, background: 'transparent', border: `1px solid ${LINE}` }}>
-              <GitDiff size={16} weight="bold" color="#A78BFA" />New revision
+              <GitDiff size={16} weight="bold" color="#FF8A00" />New revision
             </button>
             <button onClick={() => createRevision(true)} disabled={!conditions.length} title="Clone as an addendum in the version chain"
               style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, borderRadius: 10, padding: '10px', cursor: conditions.length ? 'pointer' : 'not-allowed', opacity: conditions.length ? 1 : 0.5, fontWeight: 700, fontSize: 13, color: TEXT, background: 'transparent', border: `1px solid ${LINE}` }}>
-              <Note size={16} weight="bold" color="#A78BFA" />Addendum
+              <Note size={16} weight="bold" color="#FF8A00" />Addendum
             </button>
           </div>
 
@@ -1095,7 +1096,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         </SectionCard>
 
         {/* ── PRICED REVISION COMPARE — pick a prior saved takeoff, diff it against the current one, price the delta ── */}
-        <SectionCard icon={<GitDiff size={20} weight="duotone" color="#A78BFA" />} title="Compare to a Prior Revision" subtitle="Price only what changed against a saved baseline." accent="#A78BFA" style={{ marginTop: 14 }}>
+        <SectionCard icon={<GitDiff size={20} weight="duotone" color="#FF8A00" />} title="Compare to a Prior Revision" subtitle="Price only what changed against a saved baseline." accent="#FF8A00" style={{ marginTop: 14 }}>
 
           {!projectId ? (
             <div style={{ marginTop: 12, fontSize: 12.5, color: DIM }}>Open from a project to compare against its prior takeoffs.</div>
@@ -1103,7 +1104,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             <div style={{ marginTop: 12, fontSize: 12.5, color: DIM }}>No prior saved takeoffs for this project yet — save this one, revise it, then compare.</div>
           ) : (
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginTop: 12 }}>
-              <Stack size={16} weight="duotone" color="#A78BFA" style={{ flexShrink: 0 }} />
+              <Stack size={16} weight="duotone" color="#FF8A00" style={{ flexShrink: 0 }} />
               <select value={priorId} onChange={(e) => pickPrior(e.target.value)} style={{ ...inp, flex: 1, minWidth: 240 }}>
                 <option value="">— select a prior saved takeoff as the baseline —</option>
                 {priorList.map((t) => <option key={t.id} value={t.id}>{t.name} · {new Date(t.created_at).toLocaleDateString()}{t.sell_price ? ` · $${Math.round(t.sell_price).toLocaleString()}` : ''}</option>)}
@@ -1165,11 +1166,11 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                 {/* Draft change order (real route) + printable fallback */}
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 12, flexWrap: 'wrap' }}>
                   <button onClick={draftChangeOrder} disabled={coBusy || !projectId}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 9, padding: '11px 16px', cursor: (coBusy || !projectId) ? 'not-allowed' : 'pointer', opacity: (coBusy || !projectId) ? 0.55 : 1, fontWeight: 800, fontSize: 13.5, color: '#0A0A00', background: 'linear-gradient(135deg,#C4B5FD,#A78BFA)' }}>
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 9, padding: '11px 16px', cursor: (coBusy || !projectId) ? 'not-allowed' : 'pointer', opacity: (coBusy || !projectId) ? 0.55 : 1, fontWeight: 800, fontSize: 13.5, color: '#0A0A00', background: 'linear-gradient(135deg,#FF8A00,#FF8A00)' }}>
                     {coBusy ? <><CircleNotch size={16} weight="bold" color="#0A0A00" style={{ animation: 'spin 0.7s linear infinite' }} />Filing…</> : <><Note size={17} weight="bold" color="#0A0A00" />Draft Change Order</>}
                   </button>
-                  <button onClick={printChangeOrder} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'transparent', color: TEXT, border: `1px solid ${LINE}`, borderRadius: 9, padding: '11px 14px', cursor: 'pointer', fontWeight: 700, fontSize: 13 }}><Printer size={16} weight="duotone" color="#A78BFA" />Print CO</button>
-                  {coResult && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: GREEN }}><CheckCircle size={16} weight="fill" />CO{coResult.coNumber != null ? ` #${coResult.coNumber}` : ''} filed{projectId ? <a href={`/app/projects/${projectId}/change-orders`} style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: '#A78BFA', textDecoration: 'none', marginLeft: 2 }}>· view<ArrowRight size={13} weight="bold" /></a> : null}</span>}
+                  <button onClick={printChangeOrder} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'transparent', color: TEXT, border: `1px solid ${LINE}`, borderRadius: 9, padding: '11px 14px', cursor: 'pointer', fontWeight: 700, fontSize: 13 }}><Printer size={16} weight="duotone" color="#FF8A00" />Print CO</button>
+                  {coResult && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: GREEN }}><CheckCircle size={16} weight="fill" />CO{coResult.coNumber != null ? ` #${coResult.coNumber}` : ''} filed{projectId ? <a href={`/app/projects/${projectId}/change-orders`} style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: '#FF8A00', textDecoration: 'none', marginLeft: 2 }}>· view<ArrowRight size={13} weight="bold" /></a> : null}</span>}
                   {coMsg && <span style={{ fontSize: 12.5, color: coMsg.startsWith('Couldn') ? RED : DIM }}>{coMsg}</span>}
                 </div>
               </div>
@@ -1180,7 +1181,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         {/* SPEC-AWARE CROSS-CHECK — your counted quantities vs the scheduled quantities on file (the edge nobody has) */}
         <SectionCard icon={<ClipboardText size={20} weight="duotone" color="var(--brand-primary-strong)" />} title="Check Against Schedules" subtitle="Cross-check counted quantities against the schedules on file." accent="var(--brand-primary-strong)" style={{ marginTop: 14 }} action={
           <button onClick={runSpecCheck} disabled={specBusy || !projectId || !specItems.length} title={!projectId ? 'Open from a project to cross-check' : !specItems.length ? 'Add a counted condition first' : ''}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 9, padding: '10px 16px', cursor: (specBusy || !projectId || !specItems.length) ? 'not-allowed' : 'pointer', opacity: (specBusy || !projectId || !specItems.length) ? 0.5 : 1, fontWeight: 800, fontSize: 13.5, color: '#0A0A00', background: 'linear-gradient(135deg,#7DD3FC,var(--brand-primary-strong))', flexShrink: 0 }}>
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 9, padding: '10px 16px', cursor: (specBusy || !projectId || !specItems.length) ? 'not-allowed' : 'pointer', opacity: (specBusy || !projectId || !specItems.length) ? 0.5 : 1, fontWeight: 800, fontSize: 13.5, color: '#0A0A00', background: 'linear-gradient(135deg,#FF8A00,var(--brand-primary-strong))', flexShrink: 0 }}>
               {specBusy ? <><span style={{ width: 13, height: 13, borderRadius: 7, border: '2px solid #0A0A00', borderTopColor: 'transparent', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />Checking…</> : <><SealCheck size={17} weight="bold" color="#0A0A00" />Cross-check{specItems.length ? ` ${specItems.length} item${specItems.length === 1 ? '' : 's'}` : ''}</>}
             </button>
         }>
@@ -1201,7 +1202,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                     return (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
                         <span style={{ fontSize: 13.5, fontWeight: 700, color: TEXT }}>{m} of {rs.length} item{rs.length === 1 ? '' : 's'} match your schedules</span>
-                        {mm > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 800, color: RED, background: 'rgba(248,113,113,0.12)', border: `1px solid rgba(248,113,113,0.4)`, borderRadius: 20, padding: '3px 10px' }}><WarningCircle size={13} weight="bold" />{mm} mismatch{mm === 1 ? '' : 'es'} to reconcile</span>}
+                        {mm > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 800, color: RED, background: 'rgba(255,59,48,0.12)', border: `1px solid rgba(255,59,48,0.4)`, borderRadius: 20, padding: '3px 10px' }}><WarningCircle size={13} weight="bold" />{mm} mismatch{mm === 1 ? '' : 'es'} to reconcile</span>}
                       </div>
                     );
                   })()}
@@ -1210,7 +1211,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                     const bad = row.status === 'mismatch';
                     const col = ok ? GREEN : bad ? RED : DIM;
                     return (
-                      <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 11, padding: '10px 12px', borderRadius: 10, border: `1px solid ${bad ? 'rgba(248,113,113,0.4)' : LINE}`, background: ok ? 'rgba(52,211,153,0.06)' : bad ? 'rgba(248,113,113,0.08)' : 'transparent', marginBottom: 8 }}>
+                      <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 11, padding: '10px 12px', borderRadius: 10, border: `1px solid ${bad ? 'rgba(255,59,48,0.4)' : LINE}`, background: ok ? 'rgba(52,211,153,0.06)' : bad ? 'rgba(255,59,48,0.08)' : 'transparent', marginBottom: 8 }}>
                         {ok ? <CheckCircle size={20} weight="fill" color={GREEN} style={{ flexShrink: 0, marginTop: 1 }} /> : bad ? <WarningCircle size={20} weight="fill" color={RED} style={{ flexShrink: 0, marginTop: 1 }} /> : <XCircle size={20} weight="duotone" color={DIM} style={{ flexShrink: 0, marginTop: 1 }} />}
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>{row.label}</div>
@@ -1311,7 +1312,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                 <input placeholder="Alternate label (e.g. ALT-1 upgrade flooring)" value={cAlt} onChange={(e) => setCAlt(e.target.value)} style={{ ...inp, flex: 1, minWidth: 160 }} />
                 {cAlt.trim() && (['add', 'deduct'] as const).map((t) => (
-                  <button key={t} onClick={() => setCAltType(t)} style={{ ...pillBtn, textTransform: 'capitalize', background: cAltType === t ? (t === 'add' ? '#2f6bff' : '#c0392b') : 'transparent', color: cAltType === t ? '#fff' : TEXT, border: cAltType === t ? 'none' : `1px solid ${LINE}` }}>{t}</button>
+                  <button key={t} onClick={() => setCAltType(t)} style={{ ...pillBtn, textTransform: 'capitalize', background: cAltType === t ? (t === 'add' ? '#FF8A00' : '#c0392b') : 'transparent', color: cAltType === t ? '#fff' : TEXT, border: cAltType === t ? 'none' : `1px solid ${LINE}` }}>{t}</button>
                 ))}
               </div>
             </div>
@@ -1336,7 +1337,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                     <div style={{ flex: 1 }}><b>{c.name}</b>
                       {c.instanceCount && c.instanceCount > 1 ? <span style={{ marginLeft: 7, fontSize: 10.5, fontWeight: 800, color: '#16794a', background: '#eef7ee', borderRadius: 5, padding: '1px 6px' }}>×{c.instanceCount}</span> : null}
                       {(c.building || c.level || c.zone) ? <span style={{ marginLeft: 6, fontSize: 10.5, fontWeight: 700, color: DIM, border: `1px solid ${LINE}`, borderRadius: 5, padding: '1px 6px' }}>{[c.building, c.level && `L${c.level}`, c.zone].filter(Boolean).join('·')}</span> : null}
-                      {c.alternate ? <span style={{ marginLeft: 6, fontSize: 10.5, fontWeight: 800, color: c.alternateType === 'deduct' ? '#c0392b' : '#2f6bff', background: c.alternateType === 'deduct' ? 'rgba(192,57,43,0.12)' : 'rgba(47,107,255,0.12)', borderRadius: 5, padding: '1px 6px' }}>ALT {c.alternateType === 'deduct' ? '−' : '+'}</span> : null}
+                      {c.alternate ? <span style={{ marginLeft: 6, fontSize: 10.5, fontWeight: 800, color: c.alternateType === 'deduct' ? '#c0392b' : '#FF8A00', background: c.alternateType === 'deduct' ? 'rgba(192,57,43,0.12)' : 'rgba(47,107,255,0.12)', borderRadius: 5, padding: '1px 6px' }}>ALT {c.alternateType === 'deduct' ? '−' : '+'}</span> : null}
                       {c.note ? <span title={c.note} style={{ marginLeft: 6, fontSize: 10.5, fontWeight: 700, color: GOLD, border: `1px solid var(--brand-primary-35)`, borderRadius: 5, padding: '1px 6px' }}>note</span> : null}
                       <div style={{ color: DIM, fontSize: 13, marginTop: 2, display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>{c.value > 0
                       ? <span>{c.value} {unit}{c.heightFt ? ` · ${c.heightFt}′` : ''}{c.thicknessIn ? ` · ${c.thicknessIn}″` : ''} → {lines.length} items</span>
@@ -1508,7 +1509,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             {revResult && (
               <div style={{ marginTop: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                  <span style={{ fontSize: 12, fontWeight: 800, padding: '4px 10px', borderRadius: 20, background: revResult.netScope === 'increase' ? 'rgba(248,113,113,0.15)' : revResult.netScope === 'decrease' ? 'rgba(52,211,153,0.15)' : 'rgba(139,148,158,0.15)', color: revResult.netScope === 'increase' ? RED : revResult.netScope === 'decrease' ? GREEN : DIM }}>Net scope: {revResult.netScope}</span>
+                  <span style={{ fontSize: 12, fontWeight: 800, padding: '4px 10px', borderRadius: 20, background: revResult.netScope === 'increase' ? 'rgba(255,59,48,0.15)' : revResult.netScope === 'decrease' ? 'rgba(52,211,153,0.15)' : 'rgba(139,148,158,0.15)', color: revResult.netScope === 'increase' ? RED : revResult.netScope === 'decrease' ? GREEN : DIM }}>Net scope: {revResult.netScope}</span>
                   <span style={{ color: DIM, fontSize: 13 }}>{revResult.changes.length} changes found</span>
                 </div>
                 <div style={{ color: TEXT, fontSize: 14, marginBottom: 12, lineHeight: 1.5 }}>{revResult.summary}</div>
@@ -1557,13 +1558,13 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                   {qtyReview.rows.map((row, i) => {
                     const unmatched = !row.assemblyId;
                     return (
-                      <tr key={i} style={{ background: unmatched ? 'rgba(248,113,113,0.07)' : 'transparent', borderBottom: `1px solid ${LINE}` }}>
+                      <tr key={i} style={{ background: unmatched ? 'rgba(255,59,48,0.07)' : 'transparent', borderBottom: `1px solid ${LINE}` }}>
                         <td style={{ padding: '7px 12px', color: TEXT, maxWidth: 280 }}>{row.description}{row.unitCostCents ? <span style={{ color: DIM, fontSize: 11 }}> · ${(row.unitCostCents / 100).toFixed(2)}/{row.unit}</span> : null}</td>
                         <td style={{ padding: '7px 12px', fontVariantNumeric: 'tabular-nums', fontWeight: 600, whiteSpace: 'nowrap' }}>{row.qty.toLocaleString()}</td>
                         <td style={{ padding: '7px 12px', color: DIM }}>{row.unit}</td>
                         <td style={{ padding: '7px 12px', color: DIM, whiteSpace: 'nowrap' }}>{row.csi || '—'}</td>
                         <td style={{ padding: '7px 12px', minWidth: 220 }}>
-                          <select value={row.assemblyId} onChange={(e) => setQtyReview((r) => r ? { ...r, rows: r.rows.map((x, j) => j === i ? { ...x, assemblyId: e.target.value } : x) } : r)} style={{ ...inp, padding: '6px 8px', border: `1px solid ${unmatched ? 'rgba(248,113,113,0.5)' : LINE}` }}>
+                          <select value={row.assemblyId} onChange={(e) => setQtyReview((r) => r ? { ...r, rows: r.rows.map((x, j) => j === i ? { ...x, assemblyId: e.target.value } : x) } : r)} style={{ ...inp, padding: '6px 8px', border: `1px solid ${unmatched ? 'rgba(255,59,48,0.5)' : LINE}` }}>
                             <option value="">— unmapped (won&apos;t import) —</option>
                             {catalog.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
                           </select>
@@ -1695,7 +1696,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                         {it.confidence < 45 && <WarningCircle size={12} weight="bold" />}{it.aiConf ? 'AI' : 'est.'} {it.confidence}%
                       </span>
                     </div>
-                    <select value={it.assemblyId} onChange={(e) => patchReview(it.id, { assemblyId: e.target.value })} style={{ ...inp, marginTop: 9, padding: '7px 9px', border: `1px solid ${mapped ? LINE : 'rgba(248,113,113,0.5)'}` }}>
+                    <select value={it.assemblyId} onChange={(e) => patchReview(it.id, { assemblyId: e.target.value })} style={{ ...inp, marginTop: 9, padding: '7px 9px', border: `1px solid ${mapped ? LINE : 'rgba(255,59,48,0.5)'}` }}>
                       <option value="">— pick an assembly (required to add) —</option>
                       {asmList('count').map((a) => <option key={a.id} value={a.id}>{a.name} ({a.components.length} components)</option>)}
                     </select>

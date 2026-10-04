@@ -9,7 +9,7 @@ import { ListToolbar } from '@/components/ui/ListToolbar';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, StatStrip, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/table-sort';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30',ORANGE='#FF8A00';
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
 
 const INP:React.CSSProperties = {padding:'8px 12px',background:'var(--bg-surface-2)',border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none',width:'100%',boxSizing:'border-box'};
@@ -27,7 +27,7 @@ function certStatus(expiryDate:string):{label:string,c:string,bg:string}{
   const days = daysUntilExpiry(expiryDate);
   if(days<0)   return {label:'Expired',        c:RED,        bg:'rgba(192,48,48,.14)'};
   if(days<30)  return {label:`Exp. in ${days}d`,c:'var(--warning)', bg:'color-mix(in srgb, var(--warning) 14%, transparent)'};
-  return {label:'Active',c:'#3dd68c',bg:'rgba(26,138,74,.14)'};
+  return {label:'Active',c:'#2CFF7A',bg:'rgba(26,138,74,.14)'};
 }
 
 export default function InsurancePage() {
@@ -182,7 +182,7 @@ export default function InsurancePage() {
   return (
     <>
       {toast && (
-        <div style={{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:'8px',background:toast.type==='success'?'rgba(34,197,94,0.9)':'rgba(239,68,68,0.9)',color:'#fff',fontWeight:600,fontSize:'14px',pointerEvents:'none'}}>
+        <div style={{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:'8px',background:toast.type==='success'?'rgba(44,255,122,0.9)':'rgba(255,59,48,0.9)',color:'#fff',fontWeight:600,fontSize:'14px',pointerEvents:'none'}}>
           {toast.msg}
         </div>
       )}
@@ -208,10 +208,10 @@ export default function InsurancePage() {
         {ctx && subs.length>0 && (
           <StatStrip items={[
             {href: `/app/projects/${projectId}/subs`, label:'Subs on Roster', value:String(subs.length), icon:<Users size={12} color={GOLD} />, sub:'Active on this project'},
-            {href: `/app/projects/${projectId}/insurance`, label:'COI on File', value:`${coveredSubs} of ${subs.length}`, accent:coveredSubs===subs.length?'#3dd68c':'var(--warning)', sub:'Subs holding a current certificate'},
-            {href: `/app/projects/${projectId}/insurance`, label:'No COI', value:String(missingSubs.length), accent:missingSubs.length>0?'#ff7070':'#3dd68c', sub:missingSubs.length>0?'Uninsured exposure on site':'Every sub is covered'},
+            {href: `/app/projects/${projectId}/insurance`, label:'COI on File', value:`${coveredSubs} of ${subs.length}`, accent:coveredSubs===subs.length?'#2CFF7A':'var(--warning)', sub:'Subs holding a current certificate'},
+            {href: `/app/projects/${projectId}/insurance`, label:'No COI', value:String(missingSubs.length), accent:missingSubs.length>0?'#FF3B30':'#2CFF7A', sub:missingSubs.length>0?'Uninsured exposure on site':'Every sub is covered'},
             {href: `/app/projects/${projectId}/insurance`, label:'Expiring ≤30d', value:String(expiringCount), accent:expiringCount>0?'var(--warning)':undefined, sub:'Renewal window open'},
-            {href: `/app/projects/${projectId}/insurance`, label:'Expired', value:String(expiredCount), accent:expiredCount>0?'#ff7070':undefined, sub:'Past expiry — request renewal'},
+            {href: `/app/projects/${projectId}/insurance`, label:'Expired', value:String(expiredCount), accent:expiredCount>0?'#FF3B30':undefined, sub:'Past expiry — request renewal'},
             {href: `/app/projects/${projectId}/insurance`, label:'Coverage Tracked', value:fmt(totalCoverage), sub:`Across ${totalCount} certificate${totalCount===1?'':'s'}`},
           ]}/>
         )}
@@ -307,7 +307,7 @@ export default function InsurancePage() {
         {/* KPI Cards */}
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
           <StatCard icon={<ShieldCheck size={19} weight="duotone" color={GOLD} />}    label="Total"         value={totalCount}    sub="Certificates"    delay={0.02}  href={`/app/projects/${projectId}/insurance`}/>
-          <StatCard icon={<CheckCircle size={19} weight="duotone" color="#3dd68c" />} label="Active"        value={activeCount}   accent="#3dd68c" sub="30+ days out"  delay={0.06}  href={`/app/projects/${projectId}/insurance`}/>
+          <StatCard icon={<CheckCircle size={19} weight="duotone" color="#2CFF7A" />} label="Active"        value={activeCount}   accent="#2CFF7A" sub="30+ days out"  delay={0.06}  href={`/app/projects/${projectId}/insurance`}/>
           <StatCard icon={<Warning size={19} weight="duotone" color="var(--warning)" />}     label="Expiring Soon" value={expiringCount} accent="var(--warning)" sub="Under 30 days" delay={0.10}  href={`/app/projects/${projectId}/insurance`}/>
           <StatCard icon={<WarningCircle size={19} weight="duotone" color={RED} />}   label="Expired"       value={expiredCount}  accent={RED}     sub="Past due"      delay={0.14}  href={`/app/projects/${projectId}/insurance`}/>
         </div>
@@ -317,7 +317,7 @@ export default function InsurancePage() {
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:12,marginBottom:24}}>
             {expiredCerts.length>0 && (
               <div style={{padding:'12px 16px',borderRadius:12,background:'rgba(192,48,48,.08)',border:'1px solid rgba(192,48,48,.35)'}}>
-                <div style={{fontSize:11,fontWeight:800,color:'#ff7070',marginBottom:6}}>Expired — Request Renewal Now</div>
+                <div style={{fontSize:11,fontWeight:800,color:'#FF3B30',marginBottom:6}}>Expired — Request Renewal Now</div>
                 {expiredCerts.slice(0,4).map((c:any,i:number)=>(
                   <div key={c.id||i} style={{fontSize:12.5,color:DIM,padding:'2px 0'}}>
                     <b style={{color:TEXT}}>{c.sub_name||c.subName||'—'}</b> · {c.policy_type||c.policyType||'—'} lapsed {new Date(String(c.expiry_date||c.expiryDate)+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}

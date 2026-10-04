@@ -14,7 +14,7 @@ const isInstall = (desc: string) => /full-?swing|simulat|launch monitor|projecto
 
 const BUCKETS = [
   { key: 'delivered', label: 'Delivered', color: C.green },
-  { key: 'soon', label: 'Next 30 Days', color: '#FF9500' },
+  { key: 'soon', label: 'Next 30 Days', color: '#FF8A00' },
   { key: 'mid', label: '30–90 Days', color: C.blue },
   { key: 'later', label: 'Beyond 90 Days', color: C.dim },
 ];
@@ -47,7 +47,7 @@ export default function VendorsPage() {
   if (!ready) return null;
 
   return (
-    <PremiumSurface maxWidth={1200} pad="28px 24px 60px">
+    <PremiumSurface maxWidth={2200} pad="28px 24px 60px">
       <div style={{ fontFamily: font, color: C.text }}>
         <ModuleHero
           eyebrow="Command Center"

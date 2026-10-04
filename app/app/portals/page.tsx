@@ -1,21 +1,32 @@
 'use client';
+/**
+ * Portal Access — client and subcontractor portal links, Pass 4 on the kit.
+ *
+ * Anatomy: title + one primary action (Invite Client; Invite Subcontractor is
+ * secondary) → StatRow (active client / active sub portals, coverage, never
+ * opened, expiring, last visit — tiles switch the tab) → how it works →
+ * Tabs (Client | Subcontractor) over a kit DataTable with Copy Link / View /
+ * Resend Invite / Revoke row actions. The invite composer opens in a FormModal
+ * and shows the generated link on success.
+ *
+ * Every read / write is the one this screen already used:
+ *   list    GET  /api/portal/client/sessions · /api/portal/sub/sessions
+ *   create  POST /api/portal/client/create · /api/portal/sub/create
+ *   revoke  POST /api/portal/revoke        { sessionId, type }
+ *   resend  POST /api/portal/resend-invite { sessionId, type }
+ */
 import React, { useEffect, useState, useCallback } from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjects } from '@/lib/hooks/useProjects';
-import { CheckCircle, XCircle, X, ArrowRight, Plus, House, HardHat, Copy, ShareNetwork, ListNumbers } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, StatStrip, AutoChip, goldButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
+import { CheckCircle, Plus, House, HardHat, Copy, ArrowSquareOut, PaperPlaneTilt, Prohibit, Envelope, WarningCircle } from '@phosphor-icons/react';
+import {
+  PageShell, Card, StatRow, Badge, Button, Tabs, DataTable, EmptyState,
+  FormModal, Field, Input, Select, FormGrid, Toast, useToast,
+  type Column, type Action, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import { FlowStrip, AutoChip } from '@/components/ui/premium';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
-
-const GOLD = 'var(--brand-primary)';
-const DARK = 'var(--bg-base)';
-const RAISED = 'var(--bg-surface)';
-const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1';
-const TEXT = '#FFFFFF';
-const GREEN = '#22c55e';
-const RED = '#ef4444';
-const BLUE = 'var(--brand-primary)';
-const AMBER = 'var(--warning)';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -25,11 +36,7 @@ interface ClientSession {
   id: string; client_name: string; client_email: string; project_id: string;
   token: string; status: string; expires_at: string | null;
   /* The column, and what /api/portal/client/sessions returns, is
-     last_login_at — the sub table two hundred lines below reads that name
-     correctly. The client side asked for last_accessed_at, which is on no
-     payload, so every client portal reported "Never opened" however recently
-     the client had been in, the Never Opened tile counted all of them, and
-     Last Portal Visit ignored client activity entirely. */
+     last_login_at; last_accessed_at is kept as a tolerant fallback. */
   last_login_at: string | null; last_accessed_at?: string | null; created_at: string; project_name?: string;
 }
 
@@ -51,19 +58,49 @@ function fmt(d: string | null) {
 /* Real address check — both the invite email and the portal login key off it. */
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, { bg: string; color: string }> = {
-    active:   { bg: 'rgba(34,197,94,0.12)',  color: GREEN },
-    inactive: { bg: 'rgba(239,68,68,0.12)',  color: RED },
-    expired:  { bg: 'color-mix(in srgb, var(--warning) 12%, transparent)', color: AMBER },
-  };
-  const c = map[status] || map.inactive;
-  return (
-    <span style={{ padding: '2px 8px', borderRadius: 4, fontSize: 11, fontWeight: 700, background: c.bg, color: c.color, textTransform: 'capitalize' }}>
-      {status}
-    </span>
-  );
+/** Session status → badge: active green, expired amber, revoked / inactive grey. */
+function statusBadge(status: string): { label: string; tone: BadgeTone } {
+  if (status === 'active') return { label: 'Active', tone: 'ongoing' };
+  if (status === 'expired') return { label: 'Expired', tone: 'under_contract' };
+  if (status === 'revoked') return { label: 'Revoked', tone: 'closed' };
+  return { label: status ? status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Inactive', tone: 'closed' };
 }
+const STATUS_RANK: Record<string, number> = { active: 0, expired: 1, inactive: 2, revoked: 3 };
+const lastSeen = (s: { last_login_at: string | null; last_accessed_at?: string | null }) => s.last_login_at ?? s.last_accessed_at ?? null;
+
+const CSS = `
+.poWs > .k-page { max-width: none; }
+.poWho { display: flex; flex-direction: column; gap: 2px; max-width: 300px; min-width: 0; }
+.poWho > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.poWho > span:first-child { color: var(--text-primary); font-weight: 700; }
+.poWho > span + span { font-size: var(--fs-xs); color: var(--text-tertiary); }
+.poMuted { color: var(--text-tertiary); }
+.poSoon { color: var(--status-under-contract); font-weight: 700; }
+.poLate { color: var(--status-overdue); font-weight: 700; }
+.poNever { color: var(--status-under-contract); font-weight: 600; }
+.poTabs { padding: 0 16px; }
+.poFlow { padding: 0; }
+.poSuccess { text-align: center; }
+.poSuccessIcon { width: 52px; height: 52px; border-radius: 50%; margin: 0 auto 12px; display: grid; place-items: center; background: rgba(44,255,122,.12); border: 1.5px solid rgba(44,255,122,.3); color: var(--status-ongoing); }
+.poSuccessTitle { font-size: var(--fs-lg); font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+.poSuccessSub { font-size: var(--fs-sm); color: var(--text-tertiary); margin-bottom: 12px; }
+.poMail { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: var(--radius-sm); margin-bottom: 16px; text-align: left; font-size: var(--fs-xs); font-weight: 600; }
+.poMail[data-ok="true"] { background: rgba(44,255,122,.08); border: 1px solid rgba(44,255,122,.2); color: var(--status-ongoing); }
+.poMail[data-ok="false"] { background: rgba(255,197,61,.08); border: 1px solid rgba(255,197,61,.3); color: var(--status-under-contract); }
+.poLink { background: var(--bg-surface-2); border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 12px; text-align: left; }
+.poLinkLabel { font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); margin-bottom: 6px; }
+.poLinkUrl { font-size: var(--fs-xs); color: var(--text-secondary); word-break: break-all; line-height: 1.5; margin-bottom: 10px; font-family: ui-monospace, monospace; }
+.poSuccessNote { font-size: var(--fs-xs); color: var(--text-tertiary); margin-bottom: 16px; line-height: 1.5; }
+.poSuccessNote a { color: var(--brand-primary); }
+.poSuccessActions { display: flex; gap: 10px; }
+.poSuccessActions > .k-btn { flex: 1; justify-content: center; }
+.poModalTabs { margin: -4px 0 14px; }
+@media (max-width: 640px) {
+  .poWs .k-btn, .poWs .k-stat, .poWs .k-tab, .poWs .k-input, .poWs select.k-select { min-height: 44px; }
+  .poWs .k-table td { height: 48px; }
+  .poWho { max-width: 200px; }
+}
+`;
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -73,11 +110,10 @@ export default function PortalsPage() {
   const [subSessions, setSubSessions] = useState<SubSession[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [copied, setCopied] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState('');
   const [revoking, setRevoking] = useState<string | null>(null);
   const [resending, setResending] = useState<string | null>(null);
-  const [resendMsg, setResendMsg] = useState<{ id: string; msg: string; ok: boolean } | null>(null);
-  const emailConfigured = true; // always show resend — API handles missing key gracefully
+  const { toast, show } = useToast(4000);
 
   // Invite modal state
   const [showInvite, setShowInvite] = useState(false);
@@ -95,7 +131,7 @@ export default function PortalsPage() {
   /* ── Unsaved-work guard: the composer holds real typing, so leaving this
    *    module (sidebar, field nav, ⌘K, breadcrumb, back) confirms first, and
    *    the draft is kept on this device either way. ── */
-  const composerDirty = useComposerDirty(showInvite, { clientForm, subForm, inviteTab });
+  const composerDirty = useComposerDirty(showInvite && !inviteSuccess, { clientForm, subForm, inviteTab });
   const guard = useUnsavedGuard({
     dirty: composerDirty,
     draftKey: 'portal-invite',
@@ -111,6 +147,7 @@ export default function PortalsPage() {
 
   const loadData = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const [clientRes, subRes] = await Promise.all([
         fetch('/api/portal/client/sessions'),
@@ -118,7 +155,8 @@ export default function PortalsPage() {
       ]);
       if (clientRes.ok) { const d = await clientRes.json(); setClientSessions(d.sessions || []); }
       if (subRes.ok) { const d = await subRes.json(); setSubSessions(d.sessions || []); }
-    } catch { /* non-fatal */ }
+      if (!clientRes.ok && !subRes.ok) setLoadError('Failed to load portal sessions.');
+    } catch { setLoadError('Failed to load portal sessions.'); }
     setLoading(false);
   }, []);
 
@@ -126,25 +164,26 @@ export default function PortalsPage() {
 
   function copyLink(token: string, type: Tab) {
     const path = type === 'client' ? `/portals/client/${token}` : `/portals/subcontractor/${token}`;
-    navigator.clipboard.writeText(`${window.location.origin}${path}`).then(() => {
-      setCopied(token);
-      setTimeout(() => setCopied(null), 2200);
-    });
+    navigator.clipboard.writeText(`${window.location.origin}${path}`).then(
+      () => show('Portal link copied.'),
+      () => show('Could not copy — copy the link from the View page.', 'bad'),
+    );
   }
 
   async function revoke(sessionId: string, type: Tab) {
-    if (!confirm('Revoke this portal access? The link will stop working immediately.')) return;
+    if (!(await confirmDialog({ title: 'Revoke portal access?', message: 'The link will stop working immediately. You can reinvite at any time.', confirmLabel: 'Revoke', danger: true }))) return;
     setRevoking(sessionId);
     try {
-      await fetch('/api/portal/revoke', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId, type }) });
+      const res = await fetch('/api/portal/revoke', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId, type }) });
+      if (!res.ok) throw new Error('revoke failed');
+      show('Portal access revoked.');
       await loadData();
-    } catch { /* non-fatal */ }
+    } catch { show('Could not revoke access. Please try again.', 'bad'); }
     setRevoking(null);
   }
 
   async function resendInvite(sessionId: string, type: Tab) {
     setResending(sessionId);
-    setResendMsg(null);
     try {
       const res = await fetch('/api/portal/resend-invite', {
         method: 'POST',
@@ -152,22 +191,15 @@ export default function PortalsPage() {
         body: JSON.stringify({ sessionId, type }),
       });
       const data = await res.json();
-      if (res.ok) {
-        setResendMsg({ id: sessionId, msg: `Invite resent to ${data.sentTo}`, ok: true });
-      } else {
-        setResendMsg({ id: sessionId, msg: data.error || 'Failed to resend', ok: false });
-      }
-      setTimeout(() => setResendMsg(null), 4000);
+      if (res.ok) show(`Invite resent to ${data.sentTo}`);
+      else show(data.error || 'Failed to resend', 'bad');
     } catch {
-      setResendMsg({ id: sessionId, msg: 'Connection error', ok: false });
-      setTimeout(() => setResendMsg(null), 3000);
+      show('Connection error', 'bad');
     }
     setResending(null);
   }
 
-  async function submitInvite(e: React.FormEvent) {
-    e.preventDefault();
-
+  async function submitInvite() {
     // Validate the address before anything leaves the browser — the invite
     // email AND the passwordless portal login both key off it.
     const email = (inviteTab === 'client' ? clientForm.clientEmail : subForm.email).trim();
@@ -175,6 +207,10 @@ export default function PortalsPage() {
       setInviteError('Enter a valid email address — the invite and the portal login both use it.');
       return;
     }
+    const pid = inviteTab === 'client' ? clientForm.projectId : subForm.projectId;
+    if (!pid) { setInviteError('Pick the project this portal shows.'); return; }
+    if (inviteTab === 'client' && !clientForm.clientName.trim()) { setInviteError('Client name is required.'); return; }
+    if (inviteTab === 'sub' && !subForm.companyName.trim()) { setInviteError('Company name is required.'); return; }
 
     setInviteLoading(true);
     setInviteError('');
@@ -198,6 +234,7 @@ export default function PortalsPage() {
         setInviteSuccess({ url: data.portalUrl, name: isClient ? clientForm.clientName : subForm.companyName, emailSent: data.emailSent });
         if (isClient) setClientForm({ projectId: '', clientName: '', clientEmail: '', expiresInDays: '365' });
         else setSubForm({ projectId: '', companyName: '', contactName: '', email: '' });
+        guard.clearDraft();
         await loadData();
       }
     } catch {
@@ -221,20 +258,21 @@ export default function PortalsPage() {
     }
     setShowInvite(true);
   };
-
-  // ── Render ──────────────────────────────────────────────────────────────────
-  // Derived counts for the KPI row (presentation only — uses already-fetched data)
-  const clientActive = clientSessions.filter(s => s.status === 'active').length;
-  const subActive = subSessions.filter(s => s.status === 'active').length;
+  const closeInvite = () => {
+    if (inviteSuccess) { setShowInvite(false); setInviteSuccess(null); return; }
+    guard.requestClose(() => { setShowInvite(false); setInviteError(''); });
+  };
 
   // ── Portal intelligence (derived from already-fetched sessions/projects) ──
   const activeClientSessions = clientSessions.filter(s => s.status === 'active');
   const activeSubSessions = subSessions.filter(s => s.status === 'active');
+  const clientActive = activeClientSessions.length;
+  const subActive = activeSubSessions.length;
   const coveredProjects = new Set([
     ...activeClientSessions.map(s => s.project_id),
     ...activeSubSessions.map(s => s.project_id),
   ]).size;
-  const neverOpened = activeClientSessions.filter(s => !(s.last_login_at ?? s.last_accessed_at)).length
+  const neverOpened = activeClientSessions.filter(s => !lastSeen(s)).length
     + activeSubSessions.filter(s => !s.last_login_at).length;
   const expiring30 = activeClientSessions.filter(s => {
     if (!s.expires_at) return false;
@@ -242,458 +280,226 @@ export default function PortalsPage() {
     return t > Date.now() && t - Date.now() <= 30 * 86400000;
   }).length;
   const lastVisitTs = Math.max(0,
-    ...clientSessions.map(s => { const v = s.last_login_at ?? s.last_accessed_at; return v ? new Date(v).getTime() : 0; }),
+    ...clientSessions.map(s => { const v = lastSeen(s); return v ? new Date(v).getTime() : 0; }),
     ...subSessions.map(s => (s.last_login_at ? new Date(s.last_login_at).getTime() : 0)));
   const totalLinks = clientSessions.length + subSessions.length;
 
+  const stats: StatItem[] = loading
+    ? ['Active Client Portals', 'Active Sub Portals', 'Projects Covered', 'Never Opened', 'Expiring in 30 Days', 'Last Portal Visit'].map(label => ({ label, value: '—', sub: 'Loading…' }))
+    : [
+        { label: 'Active Client Portals', value: clientActive, tone: clientActive > 0 ? 'good' : 'default', sub: tab === 'client' ? 'Showing — owners with access' : 'Owners with access', onClick: () => setTab('client') },
+        { label: 'Active Sub Portals', value: subActive, tone: subActive > 0 ? 'good' : 'default', sub: tab === 'sub' ? 'Showing — subs with access' : 'Subcontractors with access', onClick: () => setTab('sub') },
+        { label: 'Projects Covered', value: `${coveredProjects} of ${projects.length}`, tone: projects.length > 0 && coveredProjects < projects.length ? 'warn' : coveredProjects > 0 ? 'good' : 'default', sub: coveredProjects < projects.length ? `${projects.length - coveredProjects} project${projects.length - coveredProjects === 1 ? '' : 's'} without portal access` : 'Every project has a live portal' },
+        { label: 'Never Opened', value: neverOpened, tone: neverOpened > 0 ? 'warn' : 'default', sub: neverOpened > 0 ? 'Links sent but never visited — resend the invite' : 'Every active link has been visited' },
+        { label: 'Expiring in 30 Days', value: expiring30, tone: expiring30 > 0 ? 'bad' : 'default', sub: expiring30 > 0 ? 'Client links auto-expire — reinvite to extend' : 'No client links expiring soon' },
+        { label: 'Last Portal Visit', value: lastVisitTs > 0 ? fmt(new Date(lastVisitTs).toISOString()) : '—', sub: `${totalLinks} link${totalLinks === 1 ? '' : 's'} issued · ${clientSessions.length} client · ${subSessions.length} sub` },
+      ];
+
+  // ── Columns ──
+  const clientColumns: Column<ClientSession>[] = [
+    { key: 'client_name', header: 'Client', accessor: s => (s.client_name || '').toLowerCase(), render: s => <div className="poWho"><span>{s.client_name}</span><span>{s.client_email}</span></div> },
+    { key: 'project_name', phone: 'hide', header: 'Project', accessor: s => (s.project_name || '').toLowerCase(), render: s => s.project_name ? <span className="poMuted">{s.project_name}</span> : <span className="poMuted">—</span> },
+    { key: 'status', phone: 'show', header: 'Status', accessor: s => STATUS_RANK[s.status] ?? 9, render: s => { const b = statusBadge(s.status); return <Badge tone={b.tone} dot>{b.label}</Badge>; } },
+    { key: 'last', header: 'Last Access', accessor: s => lastSeen(s) || '', render: s => { const v = lastSeen(s); return v ? <span className="poMuted">{fmt(v)}</span> : s.status === 'active' ? <span className="poNever">Never opened</span> : <span className="poMuted">—</span>; } },
+    { key: 'expires_at', phone: 'show', header: 'Expires', accessor: s => s.expires_at || '9999', render: s => {
+      if (!s.expires_at) return <span className="poMuted">Never</span>;
+      const dl = Math.ceil((new Date(s.expires_at).getTime() - Date.now()) / 86400000);
+      return <span className={dl <= 0 ? 'poLate' : dl <= 30 ? 'poSoon' : 'poMuted'}>{fmt(s.expires_at)}{dl <= 0 ? ' · expired' : dl <= 30 ? ` · ${dl}d left` : ''}</span>;
+    } },
+  ];
+  const subColumns: Column<SubSession>[] = [
+    { key: 'company_name', header: 'Company', accessor: s => (s.company_name || '').toLowerCase(), render: s => <div className="poWho"><span>{s.company_name || '—'}</span>{s.contact_name && <span>{s.contact_name}</span>}</div> },
+    { key: 'project_name', header: 'Project', accessor: s => (s.project_name || '').toLowerCase(), render: s => s.project_name ? <span className="poMuted">{s.project_name}</span> : <span className="poMuted">—</span> },
+    { key: 'status', header: 'Status', accessor: s => STATUS_RANK[s.status] ?? 9, render: s => { const b = statusBadge(s.status); return <Badge tone={b.tone} dot>{b.label}</Badge>; } },
+    { key: 'last_login_at', header: 'Last Login', accessor: s => s.last_login_at || '', render: s => s.last_login_at ? <span className="poMuted">{fmt(s.last_login_at)}</span> : s.status === 'active' ? <span className="poNever">Never opened</span> : <span className="poMuted">—</span> },
+    { key: 'created_at', phone: 'hide', header: 'Invited', accessor: s => s.created_at || '', render: s => <span className="poMuted">{fmt(s.created_at)}</span> },
+  ];
+  const rowActionsFor = (type: Tab) => (s: { id: string; token: string; status: string }): Action[] => [
+    { label: 'Copy Link', icon: <Copy size={15} />, onClick: () => copyLink(s.token, type) },
+    { label: 'View Portal', icon: <ArrowSquareOut size={15} />, onClick: () => window.open(type === 'client' ? `/portals/client/${s.token}` : `/portals/subcontractor/${s.token}`, '_blank', 'noopener') },
+    { label: resending === s.id ? 'Sending…' : 'Resend Invite', icon: <PaperPlaneTilt size={15} />, onClick: () => resendInvite(s.id, type), hidden: s.status !== 'active', disabled: resending === s.id },
+    { label: 'Revoke Access', icon: <Prohibit size={15} />, onClick: () => revoke(s.id, type), tone: 'danger', hidden: s.status !== 'active', disabled: revoking === s.id },
+  ];
+
+  // ── Table body ──
+  let body: React.ReactNode;
+  if (!loading && loadError) {
+    body = <EmptyState icon={<WarningCircle size={22} />} title="Couldn't load portal sessions" text={`${loadError} Nothing has been lost — try again.`} action={<Button onClick={loadData}>Retry</Button>} />;
+  } else if (tab === 'client') {
+    body = !loading && clientSessions.length === 0
+      ? <EmptyState icon={<House size={22} />} title="No client portal access yet" text="Give an owner a secure, no-password window into their project — progress, schedule, photos, and invoices — through one link you can revoke at any time. The invitation email sends itself." action={<Button icon={<Plus size={15} weight="bold" />} onClick={() => openInvite('client')}>Invite First Client</Button>} />
+      : <DataTable columns={clientColumns} rows={clientSessions} rowKey={s => s.id} loading={loading} defaultSort={{ key: 'status', dir: 'asc' }} rowActions={rowActionsFor('client')} />;
+  } else {
+    body = !loading && subSessions.length === 0
+      ? <EmptyState icon={<HardHat size={22} />} title="No subcontractor portal access yet" text="Invite a sub to a portal scoped to their work — their contract, schedule, RFIs, submittals, and shared documents. Subs never see internal controls or competitor bids." action={<Button icon={<Plus size={15} weight="bold" />} onClick={() => openInvite('sub')}>Invite First Subcontractor</Button>} />
+      : <DataTable columns={subColumns} rows={subSessions} rowKey={s => s.id} loading={loading} defaultSort={{ key: 'status', dir: 'asc' }} rowActions={rowActionsFor('sub')} />;
+  }
+
+  const inviteProjectId = inviteTab === 'client' ? clientForm.projectId : subForm.projectId;
+
   return (
-    <>
-    <PremiumSurface maxWidth={1200}>
-
-      {/* Header */}
-      <ModuleHero
-        eyebrow="Portal Access"
-        eyebrowIcon={<ShareNetwork size={13} weight="fill" color={GOLD} />}
+    <div className="poWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[{ label: 'Home', href: '/app' }, { label: 'Portals' }]}
         title="Portal Access"
-        accent="Manager"
-        subtitle="Portal access for clients and subs. Each gets a unique link."
-        actions={<>
-          <button data-tour="invite-client" onClick={() => openInvite('client')} style={goldButtonStyle} className="pmBtn">
-            <Plus size={15} weight="bold" /> Invite Client
-          </button>
-          <button onClick={() => openInvite('sub')} style={goldOutlineButtonStyle} className="pmBtn">
-            <Plus size={15} weight="bold" /> Invite Subcontractor
-          </button>
-        </>}
-      />
-
-      {/* KPI row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <StatCard label="Active Client Portals" value={loading ? '—' : String(clientActive)} sub="Clients with access" accent={GOLD} icon={<House size={19} weight="duotone" color={GOLD} />}  href="/app/portals"/>
-        <StatCard label="Active Sub Portals" value={loading ? '—' : String(subActive)} sub="Subcontractors with access" accent={GOLD} icon={<HardHat size={19} weight="duotone" color={GOLD} />}  href="/app/portals"/>
-        <StatCard label="Total Active Links" value={loading ? '—' : String(clientActive + subActive)} sub="Secure portal links live" accent={GREEN} icon={<ShareNetwork size={19} weight="duotone" color={GREEN} />}  href="/app/portals"/>
-      </div>
-
-      {/* Portal intelligence strip — coverage, engagement, and expiry pressure */}
-      {!loading && totalLinks > 0 && (
-        <StatStrip items={[
-          {href: '/app/portals', 
-            label: 'Projects Covered', value: `${coveredProjects} of ${projects.length}`,
-            sub: coveredProjects < projects.length ? `${projects.length - coveredProjects} project${projects.length - coveredProjects === 1 ? '' : 's'} without portal access` : 'Every project has a live portal',
-            accent: projects.length > 0 && coveredProjects < projects.length ? GOLD : GREEN,
-          },
-          {href: '/app/portals', 
-            label: 'Never Opened', value: String(neverOpened),
-            accent: neverOpened > 0 ? AMBER : GREEN,
-            sub: neverOpened > 0 ? 'Links sent but never visited — resend the invite' : 'Every active link has been visited',
-          },
-          {href: '/app/portals', 
-            label: 'Expiring in 30 Days', value: String(expiring30),
-            accent: expiring30 > 0 ? RED : GREEN,
-            sub: expiring30 > 0 ? 'Client links auto-expire — reinvite to extend' : 'No client links expiring soon',
-          },
-          {href: '/app/portals', 
-            label: 'Last Portal Visit', value: lastVisitTs > 0 ? fmt(new Date(lastVisitTs).toISOString()) : '—',
-            sub: 'Most recent client or sub activity',
-          },
-          {href: '/app/portals', 
-            label: 'Links Issued', value: String(totalLinks),
-            sub: `${clientSessions.length} client · ${subSessions.length} sub`,
-          },
-        ]} />
-      )}
-
-      {/* Workflow explainer */}
-      <SectionCard flat title="How Portal Access Works" icon={<ListNumbers size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 24 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
-          {[
-            { n: '1', title: 'Create Access', desc: 'Click Invite Client or Invite Subcontractor above', color: GOLD },
-            { n: '2', title: 'Copy the Link', desc: 'Copy the generated portal URL after creating access', color: GOLD },
-            { n: '3', title: 'Send to Them', desc: 'Email or text the link — no password needed', color: GOLD },
-            { n: '4', title: 'They Log In', desc: 'They go to the link or enter email at the portal login', color: GREEN },
-          ].map(s => (
-            <div key={s.n} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12 }}>
-              <div style={{ width: 26, height: 26, borderRadius: '50%', background: `var(--brand-primary-18)`, border: `1.5px solid var(--brand-primary-25)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 12, color: GOLD, flexShrink: 0 }}>{s.n}</div>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, marginBottom: 2 }}>{s.title}</div>
-                <div style={{ fontSize: 12, color: DIM, lineHeight: 1.4 }}>{s.desc}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </SectionCard>
-
-      {/* Sessions table */}
-      <SectionCard flush>
-        <div style={{ display: 'flex', borderBottom: `1px solid ${BORDER}` }}>
-          {(['client', 'sub'] as Tab[]).map(t => (
-            <button key={t} onClick={() => setTab(t)}
-              style={{ flex: 1, padding: '13px 20px', background: tab === t ? 'color-mix(in srgb, var(--brand-primary) 5%, transparent)' : 'transparent', border: 'none', borderBottom: `2px solid ${tab === t ? GOLD : 'transparent'}`, color: tab === t ? GOLD : DIM, fontSize: 13, fontWeight: tab === t ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s' }}>
-              {t === 'client'
-                ? `Client Access (${clientSessions.filter(s => s.status === 'active').length} active)`
-                : `Subcontractor Access (${subSessions.filter(s => s.status === 'active').length} active)`}
-            </button>
-          ))}
-        </div>
-
-        {loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: DIM, fontSize: 14 }}>Loading sessions…</div>
-        ) : tab === 'client' ? (
+        subtitle="Secure, no-password links for owners and subs — each portal shows one project, and you can revoke any link at any time."
+        actions={
           <>
-            {resendMsg && (
-              <div style={{ margin: '0 16px', padding: '10px 14px', background: resendMsg.ok ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${resendMsg.ok ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`, borderRadius: 8, fontSize: 13, color: resendMsg.ok ? GREEN : RED, marginTop: 12 }}>
-                <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 4 }}>{resendMsg.ok ? <CheckCircle size={14} weight="fill" color={GREEN} /> : <XCircle size={14} weight="fill" color={RED} />}</span>{resendMsg.msg}
-              </div>
-            )}
-            <ClientTable sessions={clientSessions} copied={copied} revoking={revoking} resending={resending} resendMsg={resendMsg} onCopy={copyLink} onRevoke={revoke} onResend={resendInvite} onInvite={() => openInvite('client')} emailConfigured={emailConfigured} />
+            <Button icon={<Plus size={15} weight="bold" />} onClick={() => openInvite('sub')}>Invite Subcontractor</Button>
+            <Button variant="primary" data-tour="invite-client" icon={<Plus size={15} weight="bold" />} onClick={() => openInvite('client')}>Invite Client</Button>
           </>
+        }
+      >
+        {!loadError && <StatRow items={stats} />}
+
+        <Card title="How Portal Access Works" subtitle="Four steps — no accounts to create on their side.">
+          <FlowStrip steps={[
+            { title: 'Create Access', desc: 'Invite a client or subcontractor above' },
+            { title: 'Copy the Link', desc: 'The portal URL appears the moment access is created' },
+            { title: 'Send to Them', desc: 'Email or text the link — no password needed' },
+            { title: 'They Log In', desc: 'Open the link, or enter their email at the portal login' },
+          ]} />
+        </Card>
+
+        <Card flush>
+          <div className="poTabs">
+            <Tabs
+              value={tab}
+              onChange={(k) => setTab(k as Tab)}
+              tabs={[
+                { key: 'client', label: 'Client Access', count: clientActive },
+                { key: 'sub', label: 'Subcontractor Access', count: subActive },
+              ]}
+            />
+          </div>
+          {body}
+        </Card>
+      </PageShell>
+
+      {/* ── Invite composer ── */}
+      <FormModal
+        open={showInvite}
+        onClose={closeInvite}
+        title={inviteSuccess ? 'Portal Access Created' : inviteTab === 'client' ? 'Invite Client to Portal' : 'Invite Subcontractor to Portal'}
+        subtitle={inviteSuccess ? undefined : 'Creates a secure access link for this person — the invite is emailed automatically.'}
+        onSubmit={inviteSuccess ? undefined : submitInvite}
+        submitLabel="Generate Portal Link"
+        busy={inviteLoading}
+        error={inviteError || null}
+        footer={inviteSuccess ? <></> : undefined}
+      >
+        {inviteSuccess ? (
+          <SuccessCard
+            url={inviteSuccess.url}
+            name={inviteSuccess.name}
+            type={inviteTab}
+            emailSent={inviteSuccess.emailSent}
+            onCopied={() => show('Portal link copied.')}
+            onAnother={() => setInviteSuccess(null)}
+            onClose={() => { setShowInvite(false); setInviteSuccess(null); }}
+          />
         ) : (
           <>
-            {resendMsg && (
-              <div style={{ margin: '0 16px', padding: '10px 14px', background: resendMsg.ok ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${resendMsg.ok ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`, borderRadius: 8, fontSize: 13, color: resendMsg.ok ? GREEN : RED, marginTop: 12 }}>
-                <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 4 }}>{resendMsg.ok ? <CheckCircle size={14} weight="fill" color={GREEN} /> : <XCircle size={14} weight="fill" color={RED} />}</span>{resendMsg.msg}
-              </div>
-            )}
-            <SubTable sessions={subSessions} copied={copied} revoking={revoking} resending={resending} resendMsg={resendMsg} onCopy={copyLink} onRevoke={revoke} onResend={resendInvite} onInvite={() => openInvite('sub')} emailConfigured={emailConfigured} />
+            <div className="poModalTabs">
+              <Tabs value={inviteTab} onChange={(k) => { setInviteTab(k as Tab); setInviteSuccess(null); setInviteError(''); }} tabs={[{ key: 'client', label: 'Client Portal' }, { key: 'sub', label: 'Sub Portal' }]} />
+            </div>
+            <FormGrid cols={2}>
+              <Field label="Project" required span hint={autoProj ? <><AutoChip /> Your only project — preselected. The portal shows this project only.</> : 'The portal shows this project only.'}>
+                <Select
+                  value={inviteProjectId}
+                  onChange={e => {
+                    setAutoProj(false);
+                    const v = e.target.value;
+                    if (inviteTab === 'client') setClientForm(f => ({ ...f, projectId: v }));
+                    else setSubForm(f => ({ ...f, projectId: v }));
+                    if (inviteError) setInviteError('');
+                  }}
+                  placeholder="Select a project…"
+                  options={projects.map(p => ({ value: p.id, label: p.name }))}
+                />
+              </Field>
+
+              {inviteTab === 'client' ? (
+                <>
+                  <Field label="Client Full Name" required>
+                    <Input type="text" value={clientForm.clientName} onChange={e => { setClientForm(f => ({ ...f, clientName: e.target.value })); if (inviteError) setInviteError(''); }} placeholder="John Smith" autoFocus />
+                  </Field>
+                  <Field label="Client Email Address" required hint="The invite is emailed here — and they can log in with this address, no password.">
+                    <Input type="email" value={clientForm.clientEmail} onChange={e => { setClientForm(f => ({ ...f, clientEmail: e.target.value })); if (inviteError) setInviteError(''); }} placeholder="client@company.com" />
+                  </Field>
+                  <Field label="Access Expires In" span hint="The link stops working after this date. You can revoke or reinvite at any time.">
+                    <Select value={clientForm.expiresInDays} onChange={e => setClientForm(f => ({ ...f, expiresInDays: e.target.value }))} options={[
+                      { value: '30', label: '30 Days' }, { value: '90', label: '90 Days' }, { value: '180', label: '6 Months' }, { value: '365', label: '1 Year' }, { value: '', label: 'Never Expires' },
+                    ]} />
+                  </Field>
+                </>
+              ) : (
+                <>
+                  <Field label="Company Name" required>
+                    <Input type="text" value={subForm.companyName} onChange={e => { setSubForm(f => ({ ...f, companyName: e.target.value })); if (inviteError) setInviteError(''); }} placeholder="ABC Electrical LLC" autoFocus />
+                  </Field>
+                  <Field label="Contact Name">
+                    <Input type="text" value={subForm.contactName} onChange={e => setSubForm(f => ({ ...f, contactName: e.target.value }))} placeholder="Jane Doe" />
+                  </Field>
+                  <Field label="Email Address" required span hint="The invite is emailed here — and they can log in with this address, no password.">
+                    <Input type="email" value={subForm.email} onChange={e => { setSubForm(f => ({ ...f, email: e.target.value })); if (inviteError) setInviteError(''); }} placeholder="contact@abcelectrical.com" />
+                  </Field>
+                </>
+              )}
+            </FormGrid>
           </>
         )}
-      </SectionCard>
+      </FormModal>
 
-    </PremiumSurface>
-
-      {/* ── Invite Modal ──────────────────────────────────────────────────────── */}
-      {showInvite && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
-          onClick={e => { if (e.target === e.currentTarget) { setShowInvite(false); setInviteSuccess(null); } }}>
-          <div style={{ width: '100%', maxWidth: 480, background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-lg)', overflow: 'hidden' }}>
-
-            {/* Modal header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', borderBottom: `1px solid ${BORDER}` }}>
-              <div>
-                <div style={{ fontSize: 16, fontWeight: 800, color: TEXT }}>
-                  {inviteTab === 'client' ? 'Invite Client to Portal' : 'Invite Subcontractor to Portal'}
-                </div>
-                <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>
-                  Creates a secure access link for this person
-                </div>
-              </div>
-              <button onClick={() => { setShowInvite(false); setInviteSuccess(null); }} style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: 4, display: 'inline-flex', alignItems: 'center' }}><X size={20} weight="regular" color={DIM} /></button>
-            </div>
-
-            {/* Tab switcher in modal */}
-            <div style={{ display: 'flex', borderBottom: `1px solid ${BORDER}` }}>
-              {(['client', 'sub'] as Tab[]).map(t => (
-                <button key={t} onClick={() => { setInviteTab(t); setInviteSuccess(null); setInviteError(''); }}
-                  style={{ flex: 1, padding: '10px', background: inviteTab === t ? 'color-mix(in srgb, var(--brand-primary) 6%, transparent)' : 'transparent', border: 'none', borderBottom: `2px solid ${inviteTab === t ? GOLD : 'transparent'}`, color: inviteTab === t ? GOLD : DIM, fontSize: 13, fontWeight: inviteTab === t ? 700 : 400, cursor: 'pointer' }}>
-                  {t === 'client' ? 'Client Portal' : 'Sub Portal'}
-                </button>
-              ))}
-            </div>
-
-            <div style={{ padding: 20 }}>
-              {inviteSuccess ? (
-                <SuccessCard url={inviteSuccess.url} name={inviteSuccess.name} type={inviteTab} emailSent={inviteSuccess.emailSent}
-                  onAnother={() => setInviteSuccess(null)}
-                  onClose={() => { setShowInvite(false); setInviteSuccess(null); }} />
-              ) : (
-                <form onSubmit={submitInvite}>
-                  {/* Project select */}
-                  <FormField label={<>Project{autoProj && <AutoChip />}</>}>
-                    <select
-                      value={inviteTab === 'client' ? clientForm.projectId : subForm.projectId}
-                      onChange={e => {
-                        setAutoProj(false);
-                        const v = e.target.value;
-                        if (inviteTab === 'client') setClientForm(f => ({ ...f, projectId: v }));
-                        else setSubForm(f => ({ ...f, projectId: v }));
-                      }}
-                      required
-                      style={selectStyle}>
-                      <option value="">Select a project…</option>
-                      {projects.map(p => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
-                      ))}
-                    </select>
-                    {autoProj && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5 }}>Your only project — preselected. The portal shows this project only.</div>}
-                  </FormField>
-
-                  {inviteTab === 'client' ? (
-                    <>
-                      <FormField label="Client Full Name">
-                        <input type="text" value={clientForm.clientName} onChange={e => setClientForm(f => ({ ...f, clientName: e.target.value }))} required placeholder="John Smith" style={inputStyle} />
-                      </FormField>
-                      <FormField label="Client Email Address">
-                        <input type="email" value={clientForm.clientEmail} onChange={e => setClientForm(f => ({ ...f, clientEmail: e.target.value }))} required placeholder="client@company.com" style={inputStyle} />
-                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5 }}>The invite is emailed here — and they can log in with this address, no password.</div>
-                      </FormField>
-                      <FormField label="Access Expires In">
-                        <select value={clientForm.expiresInDays} onChange={e => setClientForm(f => ({ ...f, expiresInDays: e.target.value }))} style={selectStyle}>
-                          <option value="30">30 Days</option>
-                          <option value="90">90 Days</option>
-                          <option value="180">6 Months</option>
-                          <option value="365">1 Year</option>
-                          <option value="">Never Expires</option>
-                        </select>
-                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5 }}>The link stops working after this date. You can revoke or reinvite at any time.</div>
-                      </FormField>
-                    </>
-                  ) : (
-                    <>
-                      <FormField label="Company Name">
-                        <input type="text" value={subForm.companyName} onChange={e => setSubForm(f => ({ ...f, companyName: e.target.value }))} required placeholder="ABC Electrical LLC" style={inputStyle} />
-                      </FormField>
-                      <FormField label="Contact Name">
-                        <input type="text" value={subForm.contactName} onChange={e => setSubForm(f => ({ ...f, contactName: e.target.value }))} placeholder="Jane Doe" style={inputStyle} />
-                      </FormField>
-                      <FormField label="Email Address">
-                        <input type="email" value={subForm.email} onChange={e => setSubForm(f => ({ ...f, email: e.target.value }))} required placeholder="contact@abcelectrical.com" style={inputStyle} />
-                      </FormField>
-                    </>
-                  )}
-
-                  {inviteError && (
-                    <div style={{ marginBottom: 14, padding: '10px 12px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, fontSize: 13, color: '#fca5a5' }}>
-                      {inviteError}
-                    </div>
-                  )}
-
-                  <button type="submit" disabled={inviteLoading} className="btn-gold"
-                    style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: 14, cursor: inviteLoading ? 'not-allowed' : 'pointer' }}>
-                    {inviteLoading ? 'Creating Access…' : <>Generate Portal Link <ArrowRight size={16} weight="regular" color="#000" style={{ display: 'inline-flex', verticalAlign: 'middle' }} /></>}
-                  </button>
-                </form>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-      <UnsavedGuardModal guard={guard} />
-    </>
+      <div style={{ position: 'relative', zIndex: 10001 }}><UnsavedGuardModal guard={guard} /></div>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </div>
   );
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function FormField({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <div style={{ marginBottom: 14 }}>
-      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 6 }}>{label}</label>
-      {children}
-    </div>
-  );
-}
-
-const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '10px 12px', background: 'rgba(0,0,0,0.05)',
-  border: `1px solid ${BORDER}`, borderRadius: 7, color: TEXT, fontSize: 14,
-  outline: 'none', boxSizing: 'border-box',
-};
-
-const selectStyle: React.CSSProperties = {
-  width: '100%', padding: '10px 12px', background: 'var(--bg-surface-2)',
-  border: `1px solid ${BORDER}`, borderRadius: 7, color: TEXT, fontSize: 14,
-  outline: 'none', boxSizing: 'border-box', cursor: 'pointer',
-};
-
-function SuccessCard({ url, name, type, emailSent, onAnother, onClose }: { url: string; name: string; type: Tab; emailSent?: boolean; onAnother: () => void; onClose: () => void; }) {
+function SuccessCard({ url, name, type, emailSent, onCopied, onAnother, onClose }: { url: string; name: string; type: Tab; emailSent?: boolean; onCopied: () => void; onAnother: () => void; onClose: () => void; }) {
   const [linkCopied, setLinkCopied] = useState(false);
 
   function copyUrl() {
     navigator.clipboard.writeText(url).then(() => {
       setLinkCopied(true);
+      onCopied();
       setTimeout(() => setLinkCopied(false), 2500);
     });
   }
 
   return (
-    <div style={{ textAlign: 'center' }}>
-      <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(34,197,94,0.12)', border: '1.5px solid rgba(34,197,94,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
-        <svg viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={24} height={24}><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Portal Access Created</div>
-      <div style={{ fontSize: 13, color: DIM, marginBottom: 12 }}>
-        {name} can now access their {type === 'client' ? 'client' : 'subcontractor'} portal.
-      </div>
+    <div className="poSuccess">
+      <div className="poSuccessIcon"><CheckCircle size={26} weight="fill" /></div>
+      <div className="poSuccessTitle">Portal Access Created</div>
+      <div className="poSuccessSub">{name} can now access their {type === 'client' ? 'client' : 'subcontractor'} portal.</div>
 
       {/* Email status banner */}
-      {emailSent ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 8, marginBottom: 16, textAlign: 'left' }}>
-          <svg viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16} style={{ flexShrink: 0 }}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          <span style={{ fontSize: 12, color: GREEN, fontWeight: 600 }}>Invitation email sent automatically.</span>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'color-mix(in srgb, var(--warning) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--warning) 18%, transparent)', borderRadius: 8, marginBottom: 16, textAlign: 'left' }}>
-          <svg viewBox="0 0 24 24" fill="none" stroke={AMBER} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16} style={{ flexShrink: 0 }}><circle cx={12} cy={12} r={10}/><line x1={12} y1={8} x2={12} y2={12}/><line x1={12} y1={16} x2={12.01} y2={16}/></svg>
-          <span style={{ fontSize: 12, color: AMBER, fontWeight: 600 }}>Email not sent automatically — copy the portal link below and share it directly.</span>
-        </div>
-      )}
+      <div className="poMail" data-ok={emailSent ? 'true' : 'false'} role="status">
+        {emailSent ? <Envelope size={16} weight="fill" /> : <WarningCircle size={16} weight="fill" />}
+        {emailSent ? 'Invitation email sent automatically.' : 'Email not sent automatically — copy the portal link below and share it directly.'}
+      </div>
 
       {/* Link box */}
-      <div style={{ background: 'var(--bg-surface-2)', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '10px 12px', marginBottom: 12, textAlign: 'left' }}>
-        <div style={{ fontSize: 10, fontWeight: 700, color: DIM, marginBottom: 6 }}>Portal Link</div>
-        <div style={{ fontSize: 12, color: DIM, wordBreak: 'break-all', lineHeight: 1.5, marginBottom: 10 }}>{url}</div>
-        <button onClick={copyUrl}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: linkCopied ? 'rgba(34,197,94,0.12)' : `var(--brand-primary-12)`, border: `1px solid ${linkCopied ? 'rgba(34,197,94,0.3)' : 'var(--brand-primary-25)'}`, borderRadius: 6, fontSize: 12, fontWeight: 700, color: linkCopied ? GREEN : GOLD, cursor: 'pointer' }}>
-          {linkCopied
-            ? <><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><polyline points="20 6 9 17 4 12"/></svg> Copied</>
-            : <><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><rect x={9} y={9} width={13} height={13} rx={2}/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Portal Link</>}
-        </button>
+      <div className="poLink">
+        <div className="poLinkLabel">Portal Link</div>
+        <div className="poLinkUrl">{url}</div>
+        <Button size="sm" icon={linkCopied ? <CheckCircle size={14} weight="fill" /> : <Copy size={14} />} onClick={copyUrl}>{linkCopied ? 'Copied' : 'Copy Portal Link'}</Button>
       </div>
 
-      <div style={{ fontSize: 12, color: DIM, marginBottom: 16, lineHeight: 1.5 }}>
-        Send this link via email or text. They can also log in at<br />
-        <a href={type === 'client' ? '/portals/client/login' : '/portals/sub/login'} target="_blank" rel="noreferrer" style={{ color: GOLD }}>
-          {type === 'client' ? '/portals/client/login' : '/portals/sub/login'}
-        </a> using their email address.
+      <div className="poSuccessNote">
+        Send this link via email or text. They can also log in at{' '}
+        <a href={type === 'client' ? '/portals/client/login' : '/portals/sub/login'} target="_blank" rel="noreferrer">{type === 'client' ? '/portals/client/login' : '/portals/sub/login'}</a>
+        {' '}using their email address.
       </div>
 
-      <div style={{ display: 'flex', gap: 10 }}>
-        <button onClick={onAnother} style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', background: 'rgba(255,255,255,0.06)', border: `1px solid ${BORDER}`, borderRadius: 7, color: DIM, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-          <Plus size={13} weight="regular" color={DIM} /> Invite Another
-        </button>
-        <button onClick={onClose} style={{ flex: 1, padding: '10px', background: `var(--brand-primary-12)`, border: `1px solid var(--brand-primary-25)`, borderRadius: 7, color: GOLD, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-          Done
-        </button>
+      <div className="poSuccessActions">
+        <Button icon={<Plus size={14} weight="bold" />} onClick={onAnother}>Invite Another</Button>
+        <Button variant="primary" onClick={onClose}>Done</Button>
       </div>
-    </div>
-  );
-}
-
-function ClientTable({ sessions, copied, revoking, resending, resendMsg, onCopy, onRevoke, onResend, onInvite, emailConfigured }:
-  { sessions: ClientSession[]; copied: string | null; revoking: string | null; resending: string | null; resendMsg: { id: string; ok: boolean } | null; onCopy: (t: string, type: Tab) => void; onRevoke: (id: string, type: Tab) => void; onResend: (id: string, type: Tab) => void; onInvite: () => void; emailConfigured: boolean; }) {
-  if (sessions.length === 0) {
-    return (
-      <PremiumEmpty
-        icon={<House size={30} weight="duotone" color={GOLD} />}
-        title="No client portal access yet"
-        description="Give an owner a secure, no-password window into their project — progress, schedule, photos, and invoices — through one link you can revoke at any time. The invitation email sends itself."
-        action={<button onClick={onInvite} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Invite First Client</button>}
-      />
-    );
-  }
-
-  return (
-    <div style={{ overflowX: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-        <thead>
-          <tr style={{ background: 'var(--bg-surface-2)' }}>
-            {['Client', 'Project', 'Status', 'Last Access', 'Expires', 'Invite', 'Actions'].map(h => (
-              <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, whiteSpace: 'nowrap' }}>{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {sessions.map((s, i) => (
-            <tr key={s.id} style={{ borderTop: i > 0 ? `1px solid ${BORDER}` : 'none' }}>
-              <td style={{ padding: '12px 16px' }}>
-                <div style={{ fontWeight: 600, color: TEXT }}>{s.client_name}</div>
-                <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>{s.client_email}</div>
-              </td>
-              <td style={{ padding: '12px 16px', color: DIM, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.project_name || '—'}</td>
-              <td style={{ padding: '12px 16px' }}><StatusBadge status={s.status} /></td>
-              <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{(s.last_login_at ?? s.last_accessed_at) ? <span style={{ color: DIM }}>{fmt((s.last_login_at ?? s.last_accessed_at) as string)}</span> : s.status === 'active' ? <span style={{ color: AMBER, fontWeight: 600 }}>Never Opened</span> : <span style={{ color: DIM }}>—</span>}</td>
-              <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{(() => { if (!s.expires_at) return <span style={{ color: DIM }}>Never</span>; const dl = Math.ceil((new Date(s.expires_at).getTime() - Date.now()) / 86400000); return <span style={{ color: dl <= 0 ? RED : dl <= 30 ? AMBER : DIM, fontWeight: dl <= 30 ? 600 : 400 }}>{fmt(s.expires_at)}{dl <= 0 ? ' · expired' : dl <= 30 ? ` · ${dl}d left` : ''}</span>; })()}</td>
-              {/* Resend invite column */}
-              <td style={{ padding: '12px 16px' }}>
-                {s.status === 'active' && (
-                  <button onClick={() => onResend(s.id, 'client')} disabled={resending === s.id}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: resendMsg?.id === s.id && resendMsg.ok ? 'rgba(34,197,94,0.1)' : 'rgba(0,0,0,0.04)', border: `1px solid ${resendMsg?.id === s.id && resendMsg.ok ? 'rgba(34,197,94,0.25)' : BORDER}`, borderRadius: 5, fontSize: 11, fontWeight: 600, color: resendMsg?.id === s.id && resendMsg.ok ? GREEN : DIM, cursor: 'pointer', opacity: resending === s.id ? 0.5 : 1 }}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={11} height={11}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                    {resending === s.id ? 'Sending…' : resendMsg?.id === s.id && resendMsg.ok ? <><CheckCircle size={11} weight="fill" color={GREEN} /> Sent</> : 'Resend Invite'}
-                  </button>
-                )}
-              </td>
-              <td style={{ padding: '12px 16px' }}>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  <button onClick={() => onCopy(s.token, 'client')}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: copied === s.token ? 'rgba(34,197,94,0.1)' : 'var(--brand-primary-12)', border: `1px solid ${copied === s.token ? 'rgba(34,197,94,0.25)' : 'var(--brand-primary-25)'}`, borderRadius: 5, fontSize: 11, fontWeight: 700, color: copied === s.token ? GREEN : GOLD, cursor: 'pointer' }}>
-                    {copied === s.token ? <><CheckCircle size={11} weight="fill" color={GREEN} /> Copied</> : <><Copy size={11} weight="regular" color={GOLD} /> Copy Link</>}
-                  </button>
-                  <a href={`/portals/client/${s.token}`} target="_blank" rel="noreferrer"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: 'rgba(0,0,0,0.04)', border: `1px solid ${BORDER}`, borderRadius: 5, fontSize: 11, fontWeight: 600, color: DIM, textDecoration: 'none' }}>
-                    View <ArrowRight size={11} weight="regular" color={DIM} style={{ display: 'inline-flex', verticalAlign: 'middle' }} />
-                  </a>
-                  {s.status === 'active' && (
-                    <button onClick={() => onRevoke(s.id, 'client')} disabled={revoking === s.id}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 5, fontSize: 11, fontWeight: 600, color: RED, cursor: 'pointer', opacity: revoking === s.id ? 0.5 : 1 }}>
-                      Revoke
-                    </button>
-                  )}
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function SubTable({ sessions, copied, revoking, resending, resendMsg, onCopy, onRevoke, onResend, onInvite, emailConfigured }:
-  { sessions: SubSession[]; copied: string | null; revoking: string | null; resending: string | null; resendMsg: { id: string; ok: boolean } | null; onCopy: (t: string, type: Tab) => void; onRevoke: (id: string, type: Tab) => void; onResend: (id: string, type: Tab) => void; onInvite: () => void; emailConfigured: boolean; }) {
-  if (sessions.length === 0) {
-    return (
-      <PremiumEmpty
-        icon={<HardHat size={30} weight="duotone" color={GOLD} />}
-        title="No subcontractor portal access yet"
-        description="Invite a sub to a portal scoped to their work — their contract, schedule, RFIs, submittals, and shared documents. You control exactly what each subcontractor sees."
-        action={<button onClick={onInvite} style={goldOutlineButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Invite First Subcontractor</button>}
-      />
-    );
-  }
-
-  return (
-    <div style={{ overflowX: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-        <thead>
-          <tr style={{ background: 'var(--bg-surface-2)' }}>
-            {['Company', 'Project', 'Status', 'Last Login', 'Invite', 'Actions'].map(h => (
-              <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, whiteSpace: 'nowrap' }}>{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {sessions.map((s, i) => (
-            <tr key={s.id} style={{ borderTop: i > 0 ? `1px solid ${BORDER}` : 'none' }}>
-              <td style={{ padding: '12px 16px' }}>
-                <div style={{ fontWeight: 600, color: TEXT }}>{s.company_name || '—'}</div>
-                <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>{s.contact_name}</div>
-              </td>
-              <td style={{ padding: '12px 16px', color: DIM, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.project_name || '—'}</td>
-              <td style={{ padding: '12px 16px' }}><StatusBadge status={s.status} /></td>
-              <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{s.last_login_at ? <span style={{ color: DIM }}>{fmt(s.last_login_at)}</span> : s.status === 'active' ? <span style={{ color: AMBER, fontWeight: 600 }}>Never Opened</span> : <span style={{ color: DIM }}>—</span>}</td>
-              {/* Resend invite column */}
-              <td style={{ padding: '12px 16px' }}>
-                {s.status === 'active' && (
-                  <button onClick={() => onResend(s.id, 'sub')} disabled={resending === s.id}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: resendMsg?.id === s.id && resendMsg.ok ? 'rgba(34,197,94,0.1)' : 'rgba(0,0,0,0.04)', border: `1px solid ${resendMsg?.id === s.id && resendMsg.ok ? 'rgba(34,197,94,0.25)' : BORDER}`, borderRadius: 5, fontSize: 11, fontWeight: 600, color: resendMsg?.id === s.id && resendMsg.ok ? GREEN : DIM, cursor: 'pointer', opacity: resending === s.id ? 0.5 : 1 }}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={11} height={11}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                    {resending === s.id ? 'Sending…' : resendMsg?.id === s.id && resendMsg.ok ? <><CheckCircle size={11} weight="fill" color={GREEN} /> Sent</> : 'Resend Invite'}
-                  </button>
-                )}
-              </td>
-              <td style={{ padding: '12px 16px' }}>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  <button onClick={() => onCopy(s.token, 'sub')}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: copied === s.token ? 'rgba(34,197,94,0.1)' : 'var(--brand-primary-12)', border: `1px solid ${copied === s.token ? 'rgba(34,197,94,0.25)' : 'var(--brand-primary-25)'}`, borderRadius: 5, fontSize: 11, fontWeight: 700, color: copied === s.token ? GREEN : BLUE, cursor: 'pointer' }}>
-                    {copied === s.token ? <><CheckCircle size={11} weight="fill" color={GREEN} /> Copied</> : <><Copy size={11} weight="regular" color={BLUE} /> Copy Link</>}
-                  </button>
-                  <a href={`/portals/subcontractor/${s.token}`} target="_blank" rel="noreferrer"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: 'rgba(0,0,0,0.04)', border: `1px solid ${BORDER}`, borderRadius: 5, fontSize: 11, fontWeight: 600, color: DIM, textDecoration: 'none' }}>
-                    View <ArrowRight size={11} weight="regular" color={DIM} style={{ display: 'inline-flex', verticalAlign: 'middle' }} />
-                  </a>
-                  {s.status === 'active' && (
-                    <button onClick={() => onRevoke(s.id, 'sub')} disabled={revoking === s.id}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 5, fontSize: 11, fontWeight: 600, color: RED, cursor: 'pointer', opacity: revoking === s.id ? 0.5 : 1 }}>
-                      Revoke
-                    </button>
-                  )}
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </div>
   );
 }

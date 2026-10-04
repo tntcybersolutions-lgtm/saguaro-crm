@@ -28,7 +28,7 @@ export default function DailyLogsPage() {
   if (!ready) return null;
 
   return (
-    <PremiumSurface maxWidth={1200} pad="28px 24px 60px">
+    <PremiumSurface maxWidth={2200} pad="28px 24px 60px">
       <div style={{ fontFamily: font, color: C.text }}>
       <ModuleHero
         eyebrow="Command Center"
@@ -64,9 +64,9 @@ export default function DailyLogsPage() {
           {activeSites.map((p) => {
             const ok = todayByProject[p.id];
             const late = ok && lateByProject[p.id];
-            const bg = !ok ? 'rgba(255,59,48,0.10)' : late ? 'rgba(255,149,0,0.12)' : 'rgba(52,199,89,0.12)';
+            const bg = !ok ? 'rgba(255,59,48,0.10)' : late ? 'rgba(255,149,0,0.12)' : 'rgba(44,255,122,0.12)';
             const fg = !ok ? C.red : late ? C.yellow : C.green;
-            const bd = !ok ? 'rgba(255,59,48,0.25)' : late ? 'rgba(255,149,0,0.3)' : 'rgba(52,199,89,0.3)';
+            const bd = !ok ? 'rgba(255,59,48,0.25)' : late ? 'rgba(255,149,0,0.3)' : 'rgba(44,255,122,0.3)';
             return (
               <span key={p.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, padding: '5px 11px', borderRadius: 999, background: bg, color: fg, border: `1px solid ${bd}` }}>
                 {!ok ? <Circle size={13} weight="regular" color={fg} style={{ verticalAlign: 'middle' }} /> : late ? <Warning size={13} weight="fill" color={fg} style={{ verticalAlign: 'middle' }} /> : <CheckCircle size={13} weight="fill" color={fg} style={{ verticalAlign: 'middle' }} />} {p.name}{late ? ' · Late' : ''}
