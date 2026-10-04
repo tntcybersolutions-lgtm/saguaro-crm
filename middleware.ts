@@ -130,10 +130,9 @@ export async function middleware(request: NextRequest) {
   // the preview and, since the iOS WebView loads this same site, on phones).
   // Refresh once, store the new pair, and hand the route the fresh token.
   if (pathname.startsWith('/api/')) {
-    const seen = (r: NextResponse) => { r.headers.set('x-sag-mw-api', 'seen'); return r; }; // TEMP proof — removed after the preview check
-    if (isValid(accessToken) || !refreshToken) return seen(NextResponse.next());
+    if (isValid(accessToken) || !refreshToken) return NextResponse.next();
     const session = await refreshTokens(refreshToken);
-    if (!session) return seen(NextResponse.next());
+    if (!session) return NextResponse.next();
     const headers = new Headers(request.headers);
     if (!headers.has('authorization')) headers.set('authorization', `Bearer ${session.access_token}`);
     const response = NextResponse.next({ request: { headers } });
@@ -142,7 +141,7 @@ export async function middleware(request: NextRequest) {
       expires: session.expires_at ? new Date(session.expires_at * 1000) : undefined,
     });
     response.cookies.set('sb-refresh-token', session.refresh_token, { ...cookieOpts, maxAge: 60 * 60 * 24 * 365 });
-    return seen(response);
+    return response;
   }
 
   // Always allow public paths
