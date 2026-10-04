@@ -40,6 +40,9 @@ import Suggest from '@/components/ui/Suggest';
 import { layout } from '@/lib/design-tokens';
 
 /** Date-only values parse at local noon ('T12:00:00') so they never shift a day under UTC. */
+/** Today as YYYY-MM-DD on the user's wall clock. toISOString() is the UTC day —
+ *  in Arizona every log started after 5 pm was dated tomorrow. */
+const localToday = () => new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 const fmtDay = (d?:string|null) => d ? new Date(d.slice(0,10)+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) : '—';
 const fmtDate = (d?:string|null) => d ? new Date(d.slice(0,10)+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
 const fmtLong = (d?:string|null) => d ? new Date(d.slice(0,10)+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}) : '—';
@@ -294,7 +297,7 @@ export default function DailyLogsPage(){
     const prev = logs[0]; // list arrives sorted date-desc
     setForm({
       ...EMPTY,
-      log_date: new Date().toISOString().split('T')[0],
+      log_date: localToday(),
       crew_count: prev?.crew_count ? String(prev.crew_count) : '',
     });
     setAuto({date:true, crew:!!(prev?.crew_count)});
@@ -309,7 +312,7 @@ export default function DailyLogsPage(){
     setPrefilling(true);
     try{
       const h = await getAuthHeaders();
-      const today = new Date().toISOString().split('T')[0];
+      const today = localToday();
       const r = await fetch(`/api/projects/${projectId}/daily-logs/prefill?date=${today}`,{headers:h});
       if(!r.ok) throw new Error('Prefill failed');
       const p = await r.json();
@@ -352,7 +355,7 @@ export default function DailyLogsPage(){
     if(!prev) return;
     setForm({
       ...EMPTY,
-      log_date: new Date().toISOString().split('T')[0],
+      log_date: localToday(),
       crew_count: prev.crew_count ? String(prev.crew_count) : '',
       superintendent: prev.superintendent||'',
       phase_of_work: prev.phase_of_work||'',
@@ -483,7 +486,7 @@ export default function DailyLogsPage(){
 
   const months = Array.from(new Set(logs.map(l=>(l.log_date||'').slice(0,7)))).sort().reverse();
   const monthLabel = (m:string) => m ? new Date(m+'-01T12:00:00').toLocaleDateString('en-US',{month:'long',year:'numeric'}) : m;
-  const thisMonthIso = new Date().toISOString().slice(0,7);
+  const thisMonthIso = localToday().slice(0,7);
 
   const filtered = logs.filter(l=>{
     const q = search.toLowerCase();
@@ -502,7 +505,7 @@ export default function DailyLogsPage(){
   const delayDays  = logs.filter((l:any)=>l.delays?.trim()).length;
   const thisMonth  = logs.filter((l:any)=>(l.log_date||'').startsWith(thisMonthIso)).length;
   const lastLogIso = (ctx?.recent?.lastDailyLogDate as string|null) || logs[0]?.log_date || null;
-  const gapDays    = lastLogIso ? missedWorkdays(lastLogIso, new Date().toISOString().split('T')[0]) : 0;
+  const gapDays    = lastLogIso ? missedWorkdays(lastLogIso, localToday()) : 0;
 
   const filtersActive = !!search || !!monthFilter || flagFilter!=='all';
   const clearFilters = () => { setSearch(''); setMonthFilter(''); setFlagFilter('all'); };
@@ -795,7 +798,7 @@ export default function DailyLogsPage(){
       >
         {mode==='create' && (()=>{
           const lastLog = ctx?.recent?.lastDailyLogDate || logs[0]?.log_date || null;
-          const gap = lastLog ? missedWorkdays(lastLog, new Date().toISOString().split('T')[0]) : 0;
+          const gap = lastLog ? missedWorkdays(lastLog, localToday()) : 0;
           return (
             <div className="pdlBanner" data-gap={gap>0?'true':'false'}>
               <div className="pdlBannerTitle">

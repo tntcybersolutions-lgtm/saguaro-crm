@@ -28,7 +28,7 @@ import AppTopBar from '../../components/AppTopBar';
 import NextStepBar from '../../components/NextStepBar';
 import HeaderProjectPicker from '../../components/HeaderProjectPicker';
 import { HelpModeButton } from '../../components/HelpMode';
-import { X, ArrowRight, House, Briefcase, FolderSimple, Clock, DotsThreeOutline, MagnifyingGlass, Bell } from '@phosphor-icons/react';
+import { X, ArrowRight, House, Briefcase, FolderSimple, Clock, DotsThreeOutline, MagnifyingGlass, Bell, Star } from '@phosphor-icons/react';
 import { colors, font, sidebar as sidebarTokens, z } from '../../lib/design-tokens';
 import { ensureBrowserSession } from '../../lib/supabase-browser';
 
@@ -293,6 +293,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <Link href="/app/notifications" onClick={() => setMobileSidebarOpen(false)} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '0 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#D4D4D8', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
                   <Bell size={16} /> Notifications
                 </Link>
+                <button type="button" onClick={() => { setMobileSidebarOpen(false); setAiOpen(true); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '0 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#D4D4D8', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                  <Star size={16} weight="fill" /> Sage AI Expert
+                </button>
               </div>
             </div>
             <AppSidebar

@@ -79,6 +79,8 @@ function missedWorkdays(fromIso: string, toIso: string) {
   return n;
 }
 
+/** Today as YYYY-MM-DD on the user's wall clock — never the UTC day. */
+const localToday = () => new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 const tempHigh = (l: DailyLog) => l.high_temp ?? l.temperature_high ?? null;
 const tempLow = (l: DailyLog) => l.low_temp ?? l.temperature_low ?? null;
 const tempStr = (l: DailyLog) => {
@@ -150,7 +152,7 @@ export default function DailyLogsPage() {
 
   const [form, setForm] = useState({
     projectId: '',
-    logDate: new Date().toISOString().slice(0, 10),
+    logDate: localToday(),
     weather: '',
     temperatureHigh: '',
     temperatureLow: '',
@@ -329,7 +331,7 @@ export default function DailyLogsPage() {
       setLastApplied({});
       setCarryUsed(false);
       setShowCreate(false);
-      setForm({ projectId: '', logDate: new Date().toISOString().slice(0, 10), weather: '', temperatureHigh: '', temperatureLow: '', crewCount: '', workPerformed: '', delays: '', safetyNotes: '', materialsDelivered: '', visitors: '', notes: '', superintendent: '', precipitation: '', windConditions: '', phaseOfWork: '', equipment: '' });
+      setForm({ projectId: '', logDate: localToday(), weather: '', temperatureHigh: '', temperatureLow: '', crewCount: '', workPerformed: '', delays: '', safetyNotes: '', materialsDelivered: '', visitors: '', notes: '', superintendent: '', precipitation: '', windConditions: '', phaseOfWork: '', equipment: '' });
       setAutoCrew(false);
       await fetchLogs();
       return true;
@@ -348,7 +350,7 @@ export default function DailyLogsPage() {
   const projectName = useCallback((pid: string) => projects.find(p => p.id === pid)?.name || '', [projects]);
 
   // ── Register metrics ──
-  const monthIso = new Date().toISOString().slice(0, 7);
+  const monthIso = localToday().slice(0, 7);
   const thisMonth = logs.filter(l => (l.log_date || '').startsWith(monthIso)).length;
   const avgCrew = logs.length ? Math.round(logs.reduce((s, l) => s + (Number(l.crew_count) || 0), 0) / logs.length) : 0;
   const delayDays = logs.filter(l => (l.delays || '').trim()).length;
@@ -547,7 +549,7 @@ export default function DailyLogsPage() {
       >
         {form.projectId && ctx ? (() => {
           const lastLog = ctx.recent?.lastDailyLogDate as string | null;
-          const gap = lastLog ? missedWorkdays(lastLog, new Date().toISOString().slice(0, 10)) : 0;
+          const gap = lastLog ? missedWorkdays(lastLog, localToday()) : 0;
           const prev = prevForForm;
           return (
             <div className="dlBanner" data-gap={gap > 0 ? 'true' : 'false'} style={{ marginBottom: 16 }}>

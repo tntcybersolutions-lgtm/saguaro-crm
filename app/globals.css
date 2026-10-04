@@ -1095,16 +1095,31 @@ select.k-select { padding-right: 36px; }
   /* "You Are Here" and the phase strip: one short line, tap for the details. */
   .sag-nsb .sag-nsb-detail { display: none !important; }
   .sag-nsb[data-open="true"] .sag-nsb-detail { display: flex !important; }
+  /* Open on a phone: row 1 is the label and the chevron, then the step and
+     its explanation at full width, then the stage line, then the button. The
+     text span carries an inline flex: 1, so the full-width basis needs weight. */
+  .sag-nsb { padding: 8px 12px !important; gap: 10px !important; }
+  .sag-nsb > span:first-child { order: 0; }
+  .sag-nsb > span:nth-of-type(3) { order: 1; }
+  .sag-nsb-toggle { order: 2; }
   .sag-nsb[data-open="true"] { row-gap: 8px; }
-  .sag-nsb[data-open="true"] > span:nth-of-type(3) { flex-basis: 100%; flex-direction: column; align-items: flex-start; gap: 4px; }
+  .sag-nsb[data-open="true"] > span:nth-of-type(3) { flex: 1 1 100% !important; order: 3; flex-direction: column; align-items: flex-start; gap: 4px; }
   .sag-nsb[data-open="true"] > span:nth-of-type(3) > span { white-space: normal !important; overflow: visible !important; line-height: 1.45; }
+  .sag-nsb[data-open="true"] .sag-nsb-toggle { margin-left: auto !important; }
+  .sag-nsb[data-open="true"] > span[title] { order: 4; flex: 1 1 100%; max-width: none !important; }
+  .sag-nsb[data-open="true"] > a { order: 5; }
   .sag-nsb[data-open="true"] .sag-nsb-detail[title] { max-width: none; }
   .sag-nsb-toggle { display: inline-flex !important; }
   .sag-phase-summary { display: flex !important; }
   .sag-phase-nav { display: none !important; }
   .sag-phase-nav[data-open="true"] { display: flex !important; flex-direction: column; overflow: visible; }
   .sag-phase-nav[data-open="true"] > span[aria-hidden] { display: none; }
-  .project-mobile-bar { top: calc(56px + env(safe-area-inset-top, 0px) + var(--sag-header-msg-h, 0px) + var(--sag-nextstep-h, 0px)) !important; }
+  /* Inside a job the phone has ONE bar (the phase bar carries Modules and the
+     next step): the next-step bar, the old Modules bar and the page crumbs go. */
+  .sag-nsb[data-in-project="true"] { display: none !important; }
+  .project-mobile-bar { display: none !important; }
+  .k-crumbs { display: none !important; }
+  .sag-phase-nav[data-open="true"] { padding-top: 4px; }
 
   /* The menu drawer: the tools block first, then the rail in flow (the rail
      is position:fixed on desktop and would otherwise cover the tools). */
@@ -1117,7 +1132,8 @@ select.k-select { padding-right: 36px; }
   .k-page { padding-bottom: calc(var(--sp-8) + 72px); }
   .k-crumbs a, .k-crumbs span { max-width: 48vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   /* The chat launcher steps aside while the page scrolls (see SaguaroChatWidget). */
-  .sag-chat-launcher { right: 12px !important; transition: transform .2s ease, opacity .2s ease; }
+  /* No floating bubble on phones at all — the top-bar Sage button opens the chat. */
+  .sag-chat-launcher { display: none !important; }
   .sag-chat-launcher[data-hidden="true"] { transform: translateX(72px); opacity: 0; pointer-events: none; }
   .sag-chat-launcher > button { width: 46px !important; height: 46px !important; }
 

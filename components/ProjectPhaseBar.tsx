@@ -19,10 +19,10 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
-import { CaretDown } from '@phosphor-icons/react';
+import { CaretDown, List, ArrowRight } from '@phosphor-icons/react';
 import { PROJECT_PHASES, phaseForPath } from '@/lib/project-nav';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
-import { normalisePhase, stepsDone } from '@/lib/project-phase';
+import { normalisePhase, stepsDone, stepsForPhase } from '@/lib/project-phase';
 import { isClosedStatus } from '@/lib/project-lifecycle';
 
 const BORDER = 'rgba(255,255,255,0.09)';
@@ -99,6 +99,23 @@ export default function ProjectPhaseBar() {
   const active = PROJECT_PHASES[activeIdx];
   const activeColor = PHASE_COLORS[active?.key] || '#A3ACBB';
   const ActiveIcon = active?.icon;
+  /* The same status the sidebar pill and the next-step bar read, so one job
+     never shows three different stages on one screen. */
+  const closed = isClosedStatus(ctx?.project?.status);
+  const activeState = progress[active?.key] ?? 'todo';
+  const stateText = closed ? 'Closed job' : activeState === 'done' ? 'Done' : activeState === 'progress' ? 'In progress' : `Step ${activeIdx + 1} of ${PROJECT_PHASES.length}`;
+  /* The next step, computed exactly as NextStepBar does — on phones this bar
+     carries it, because the next-step bar is hidden there. */
+  const nextStep = (() => {
+    if (!ctx) return null;
+    const phase = normalisePhase(ctx?.project?.phase);
+    const steps = stepsForPhase(phase);
+    const d = stepsDone(ctx, ctx?.money, isClosedStatus);
+    const i = steps.findIndex((st) => !d[st.key]);
+    if (i === -1) return { title: closed ? 'Open the closeout record' : 'Every stage of this job is done', href: `${base}/closeout`, done: true };
+    const st = steps[i];
+    return { title: st.title, href: base + (st.href || ''), done: false };
+  })();
 
   return (
     <div style={{ background: 'rgba(255,255,255,0.035)', borderBottom: `1px solid ${BORDER}` }}>
@@ -107,30 +124,43 @@ export default function ProjectPhaseBar() {
           repo's check:style-escapes build guard enforces this). */}
       <style dangerouslySetInnerHTML={{ __html: 'nav[aria-label="Project phase"]::-webkit-scrollbar{display:none}' }} />
 
-      {/* Phone: one line — where the job is — that opens the list. Hidden on desktop. */}
-      <button
-        type="button"
-        className="sag-phase-summary"
-        aria-expanded={open}
-        aria-controls="sag-phase-nav"
-        onClick={() => setOpen(v => !v)}
-        style={{
-          display: 'none', alignItems: 'center', gap: 10, width: '100%', minHeight: 44,
-          padding: '6px 14px', background: 'transparent', border: 'none', color: '#FFFFFF',
-          cursor: 'pointer', textAlign: 'left',
-        }}
-      >
-        {ActiveIcon && (
-          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, borderRadius: 7, flexShrink: 0, background: activeColor }}>
-            <ActiveIcon size={15} weight="fill" color="#0A0A0A" />
+      {/* Phone: ONE bar for the job — the module menu, the phase you are in, and
+          the next step on tap. Hidden on desktop. */}
+      <div className="sag-phase-summary" style={{ display: 'none', alignItems: 'center', gap: 6, minHeight: 44, padding: '4px 8px 4px 6px' }}>
+        <button
+          type="button"
+          aria-label="Open project modules"
+          onClick={() => window.dispatchEvent(new Event('saguaro:project-menu'))}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 40, padding: '0 10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 9, color: '#FFFFFF', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}
+        >
+          <List size={16} weight="bold" color="var(--brand-primary)" /> Modules
+        </button>
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls="sag-phase-nav"
+          onClick={() => setOpen(v => !v)}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0, minHeight: 40, padding: '0 6px', background: 'transparent', border: 'none', color: '#FFFFFF', cursor: 'pointer', textAlign: 'left' }}
+        >
+          {ActiveIcon && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24, borderRadius: 7, flexShrink: 0, background: activeColor }}>
+              <ActiveIcon size={14} weight="fill" color="#0A0A0A" />
+            </span>
+          )}
+          <span style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', lineHeight: 1.2, overflow: 'hidden' }}>
+            <span style={{ fontSize: 13, fontWeight: 800, color: activeColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{active?.label} <span style={{ color: '#A9B4C4', fontWeight: 600 }}>· {stateText}</span></span>
+            {nextStep && <span style={{ fontSize: 11, color: '#A9B4C4', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Next: {nextStep.title}</span>}
           </span>
-        )}
-        <span style={{ minWidth: 0, flex: 1, display: 'flex', alignItems: 'baseline', gap: 8, overflow: 'hidden' }}>
-          <span style={{ fontSize: 13, fontWeight: 800, color: activeColor, whiteSpace: 'nowrap' }}>{active?.label}</span>
-          <span style={{ fontSize: 11.5, color: '#A9B4C4', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Step {activeIdx + 1} of {PROJECT_PHASES.length} · {active?.tagline}</span>
-        </span>
-        <CaretDown size={14} weight="bold" color="#A9B4C4" style={{ flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }} />
-      </button>
+          <CaretDown size={14} weight="bold" color="#A9B4C4" style={{ flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }} />
+        </button>
+      </div>
+      {open && nextStep && (
+        <Link href={nextStep.href} className="sag-phase-next" style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 10px 6px', minHeight: 44, padding: '8px 12px', borderRadius: 10, textDecoration: 'none', background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-35)', color: '#FFFFFF' }}>
+          <span style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--brand-primary)', flexShrink: 0 }}>{nextStep.done ? 'ALL DONE' : 'NEXT STEP'}</span>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nextStep.title}</span>
+          <ArrowRight size={14} weight="bold" color="var(--brand-primary)" />
+        </Link>
+      )}
 
       <nav
         id="sag-phase-nav"

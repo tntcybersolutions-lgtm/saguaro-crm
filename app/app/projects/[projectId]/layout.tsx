@@ -158,6 +158,12 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
   const base = `/app/projects/${projectId}`;
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  /* The phone phase bar carries the Modules button; it asks for the drawer here. */
+  useEffect(() => {
+    const open = () => setMobileOpen(true);
+    window.addEventListener('saguaro:project-menu', open);
+    return () => window.removeEventListener('saguaro:project-menu', open);
+  }, []);
 
   /* Forty-nine modules on every job is why a GC cannot find the three they
      need. Six core tools always show, anything carrying real work shows

@@ -162,6 +162,11 @@ export default function NextStepBar() {
   });
 
   if (onHome) return null;
+  /* Outside a job the bar speaks for the sales journey — but only where sales
+     work happens. On Radio, Invoicing, Settings and the rest it announced a
+     sales step that had nothing to do with the screen. */
+  const onSalesRoute = /^\/app\/(sales|leads|customers|bids|bid-intelligence)(\/|$)/.test(pathname);
+  if (!onBuildJourney && !onSalesRoute) return null;
 
   let tone = BLUE;
   let toneHi = BLUE_HI;
@@ -183,7 +188,10 @@ export default function NextStepBar() {
     /* Off the job's own pages (the dashboard), name the job — a step with no
        job attached reads as if it were about whatever screen you are on. */
     const jobName = !inProject ? String(ctx?.project?.name || '').trim() : '';
-    side = jobName ? `${jobName} · ${PHASE_LABEL[phase]}` : PHASE_LABEL[phase];
+    /* A closed job is Closed — not "Building", whatever its stored phase says.
+       The sidebar pill and the phase strip read the same status. */
+    const stageLabel = isClosedStatus(ctx?.project?.status) ? 'Closed' : PHASE_LABEL[phase];
+    side = jobName ? `${jobName} · ${stageLabel}` : stageLabel;
     const base = `/app/projects/${journeyId}`;
     if (i === -1) {
       complete = true;
@@ -227,6 +235,7 @@ export default function NextStepBar() {
       data-tour="next-step"
       className="sag-nsb"
       data-open={open ? 'true' : 'false'}
+      data-in-project={inProject ? 'true' : 'false'}
       style={{
         display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
         padding: '9px 18px',

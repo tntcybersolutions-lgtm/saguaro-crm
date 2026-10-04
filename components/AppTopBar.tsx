@@ -297,9 +297,10 @@ export default function AppTopBar({
           the button", Sage is the answer to "what should I do". */}
       <div className="sag-topbar-desktop" style={{ display: 'contents' }}><HelpModeButton /></div>
 
-      {/* Sage AI */}
+      {/* Sage AI — on a phone this opens the Sage chat (the floating launcher is
+          gone there); on desktop it opens the AI Expert panel as before. */}
       <button
-        onClick={onOpenSage}
+        onClick={() => { if (typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches) window.dispatchEvent(new Event('saguaro:open-chat')); else onOpenSage(); }}
         style={{
           display: 'flex',
           alignItems: 'center',

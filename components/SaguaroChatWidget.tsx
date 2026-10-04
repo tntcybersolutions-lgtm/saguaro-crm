@@ -324,6 +324,15 @@ export default function SaguaroChatWidget({
     setTimeout(() => inputRef.current?.focus(), 100);
   };
 
+  /* The phone top bar's Sage button opens this widget (the floating launcher
+     is gone under 768px — it covered rows, counts and the menu drawer). */
+  useEffect(() => {
+    const open = () => handleOpen();
+    window.addEventListener('saguaro:open-chat', open);
+    return () => window.removeEventListener('saguaro:open-chat', open);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleClose = () => {
     if (memoryProfile && messages.length > 2) {
       const { updatedProfile } = summarizeSession(
