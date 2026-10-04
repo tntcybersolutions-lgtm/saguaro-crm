@@ -140,6 +140,8 @@ export type StatItem = {
   tone?: 'default' | 'good' | 'warn' | 'bad';
   href?: string;
   onClick?: () => void;
+  /** Colored icon tile (neon glass) — a phosphor icon at 14–15px. */
+  icon?: React.ReactNode;
 };
 
 /* Same family as the status pills (lib/status-colors): good = Ongoing green,
@@ -151,17 +153,20 @@ const TONE_COLOR: Record<NonNullable<StatItem['tone']>, string | undefined> = {
   bad: STATUS_COLORS.overdue.color,
 };
 
-export function StatTile({ label, value, sub, tone = 'default', href, onClick }: StatItem) {
+export function StatTile({ label, value, sub, tone = 'default', href, onClick, icon }: StatItem) {
   const inner = (
     <>
-      <span className="k-stat-label">{label}</span>
+      <span className="k-stat-top">
+        {icon && <span className="k-stat-icon" aria-hidden>{icon}</span>}
+        <span className="k-stat-label">{label}</span>
+      </span>
       <span className="k-stat-value" style={{ color: TONE_COLOR[tone] }}>{value}</span>
       {sub && <span className="k-stat-sub">{sub}</span>}
     </>
   );
-  if (href) return <a className="k-stat" href={href}>{inner}</a>;
-  if (onClick) return <button type="button" className="k-stat" onClick={onClick}>{inner}</button>;
-  return <div className="k-stat">{inner}</div>;
+  if (href) return <a className="k-stat" data-tone={tone} href={href}>{inner}</a>;
+  if (onClick) return <button type="button" className="k-stat" data-tone={tone} onClick={onClick}>{inner}</button>;
+  return <div className="k-stat" data-tone={tone}>{inner}</div>;
 }
 
 export function StatRow({ items }: { items: StatItem[] }) {

@@ -56,7 +56,7 @@
   --status-lead: #FF8A00;
   --status-under-contract: #FFE600;
   --status-ongoing: #2CFF7A;
-  --status-completed: #FF8A00;
+  --status-completed: #2CFF7A;
   --status-closed: #A3ACBB;
   /* Semantic — same family. Info is blue, never the brand yellow. */
   --info: #FF8A00;
@@ -246,11 +246,13 @@ select option:checked, select option:hover, select option:focus {
   z-index: 9999 !important;
 }
 
-/* ── Minimal/premium typography — small, light, lots of air (Stripe/Linear) ── */
-h1 { font-size: 18px !important; font-weight: 600 !important; letter-spacing: -0.02em; line-height: 1.3; }
-h2 { font-size: 15px !important; font-weight: 600 !important; letter-spacing: -0.015em; line-height: 1.35; }
-h3 { font-size: 13.5px !important; font-weight: 600 !important; letter-spacing: -0.008em; line-height: 1.4; }
-h4, h5, h6 { font-size: 12px !important; font-weight: 600 !important; line-height: 1.35; }
+/* ── App typography — small, light, lots of air. Scoped to the app shell
+   (.sag-app on app/app/layout.tsx) so the marketing pages' own heading scale
+   (.mkt-page below) is not overridden; the old global !important rules were. ── */
+.sag-app h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.3; }
+.sag-app h2 { font-size: 15px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.35; }
+.sag-app h3 { font-size: 13.5px; font-weight: 600; letter-spacing: -0.008em; line-height: 1.4; }
+.sag-app h4, .sag-app h5, .sag-app h6 { font-size: 12px; font-weight: 600; line-height: 1.35; }
 
 /* Body text: 13px base, not 14-16px */
 p, span, div, li, td, th, label, a {
@@ -1064,6 +1066,126 @@ select.k-select { padding-right: 36px; }
   .k-overlay { padding: 0; align-items: stretch; }
   .k-modal { width: 100%; max-height: none; border-radius: 0; }
   .k-input, .k-textarea, select.k-select { font-size: 16px !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NEON GLASS — the visual system from docs/design/reference (COLORS.png,
+   IOS-NEW-IMAGES.png). Layered dark glass with warm ambient light, glossy
+   primary actions, colored icon tiles, luminous active tab. Every value is a
+   token from the approved palette; nothing here is estimated from a picture.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root {
+  --surface-card: #0E0F12;
+  --surface-raised: #15171C;
+  --grad-primary: linear-gradient(180deg, #FFF04A 0%, #FFE600 52%, #FF8A00 100%);
+  --grad-primary-hover: linear-gradient(180deg, #FFF59A 0%, #FFE600 50%, #FF9A2A 100%);
+  --glow-y: rgba(255,230,0,0.22);
+  --glow-o: rgba(255,138,0,0.18);
+  --glow-g: rgba(44,255,122,0.18);
+  --glow-r: rgba(255,59,48,0.18);
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --shadow-card: 0 1px 0 rgba(255,255,255,0.06) inset, 0 18px 40px -24px rgba(0,0,0,0.9);
+}
+
+/* Warm ambient light at the top of every app screen — the reference's halo. */
+.sag-app {
+  background:
+    radial-gradient(70% 36% at 50% -4%, var(--glow-y) 0%, rgba(255,230,0,0.06) 45%, transparent 72%),
+    radial-gradient(40% 26% at 92% 4%, var(--glow-o) 0%, transparent 70%),
+    #000 !important;
+}
+
+/* Buttons — glossy primary (bright upper highlight, warm dimensional shadow) */
+.k-btn { border-radius: var(--radius-sm); }
+.k-btn-primary {
+  background: var(--grad-primary); color: var(--on-brand); border-color: rgba(0,0,0,0.25);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.18), 0 8px 22px -8px rgba(255,200,0,0.75);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.25);
+}
+.k-btn-primary:hover { background: var(--grad-primary-hover); border-color: rgba(0,0,0,0.25); box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(0,0,0,0.18), 0 10px 26px -8px rgba(255,200,0,0.9); }
+.k-btn-primary:active { transform: translateY(1px); box-shadow: inset 0 1px 2px rgba(0,0,0,0.25), 0 4px 12px -6px rgba(255,200,0,0.6); }
+.k-btn-secondary { background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)), var(--surface-raised); border-color: var(--border-default); box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 6px 16px -10px rgba(0,0,0,0.8); }
+.k-btn-secondary:hover { background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.05)), var(--surface-raised); border-color: var(--border-strong); }
+.k-btn-danger { background: linear-gradient(180deg, rgba(255,59,48,0.22), rgba(255,59,48,0.12)); box-shadow: inset 0 1px 0 rgba(255,255,255,0.08); }
+
+/* Cards — dark translucent, crisp edge, restrained warm reflection, real depth */
+.k-card {
+  position: relative; border-top-width: 1px; border-color: var(--border-default);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 28%, rgba(255,255,255,0) 60%),
+    radial-gradient(120% 60% at 0% 0%, rgba(255,230,0,0.09) 0%, transparent 55%),
+    rgba(14,15,18,0.86);
+  box-shadow: var(--shadow-card), 0 0 0 1px rgba(255,230,0,0.04);
+}
+.k-card::before { content: ''; position: absolute; left: 14px; right: 14px; top: -1px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, transparent, var(--brand-primary) 30%, #FF8A00 70%, transparent); opacity: .9; pointer-events: none; }
+.k-card-head { border-bottom: 1px solid var(--border-subtle); }
+.k-card-title { color: var(--brand-primary); font-weight: 800; letter-spacing: -0.01em; }
+
+/* Stat tiles — compact: colored icon tile, label, prominent figure, context.
+   The accent edge follows the tone the page gives the tile. */
+.k-stat {
+  position: relative; border: 1px solid var(--border-default); border-top-width: 1px; padding: 12px 14px 12px; gap: 3px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.025) 40%, rgba(255,255,255,0) 100%),
+    rgba(14,15,18,0.9);
+  box-shadow: var(--shadow-card);
+}
+.k-stat::before { content: ''; position: absolute; left: 12px; right: 12px; top: -1px; height: 2px; border-radius: 2px; background: var(--brand-primary); opacity: .85; pointer-events: none; box-shadow: 0 0 12px var(--glow-y); }
+.k-stat[data-tone="good"]::before { background: var(--status-ongoing); box-shadow: 0 0 12px var(--glow-g); }
+.k-stat[data-tone="warn"]::before { background: #FF8A00; box-shadow: 0 0 12px var(--glow-o); }
+.k-stat[data-tone="bad"]::before { background: var(--status-overdue); box-shadow: 0 0 12px var(--glow-r); }
+.k-stat-top { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.k-stat-icon { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; flex-shrink: 0; color: var(--brand-primary); background: rgba(255,230,0,0.16); border: 1px solid rgba(255,230,0,0.45); }
+.k-stat[data-tone="good"] .k-stat-icon { color: var(--status-ongoing); background: rgba(44,255,122,0.16); border-color: rgba(44,255,122,0.5); }
+.k-stat[data-tone="warn"] .k-stat-icon { color: #FF8A00; background: rgba(255,138,0,0.16); border-color: rgba(255,138,0,0.5); }
+.k-stat[data-tone="bad"] .k-stat-icon { color: var(--status-overdue); background: rgba(255,59,48,0.16); border-color: rgba(255,59,48,0.5); }
+.k-stat .k-stat-label { font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--text-tertiary); font-weight: 700; }
+.k-stat .k-stat-value { font-size: 24px; line-height: 1.15; }
+a.k-stat:hover, button.k-stat:hover { border-color: var(--border-strong); background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.04)), rgba(21,23,28,0.95); }
+
+/* Tabs — pills; the selected pill is yellow on a dark track (reference chips) */
+.k-tabs { gap: 6px; border-bottom: 0; padding: 4px 0; }
+.k-tab { padding: 7px 12px; border-radius: 999px; border: 1px solid var(--border-subtle); margin: 0; background: rgba(255,255,255,0.03); min-height: 34px; }
+.k-tab:hover { border-color: var(--border-default); background: rgba(255,255,255,0.06); }
+.k-tab[aria-selected="true"] { color: var(--brand-primary); background: rgba(255,230,0,0.16); border-color: rgba(255,230,0,0.5); box-shadow: 0 0 14px -4px var(--glow-y); }
+.k-tab[aria-selected="true"] .k-tab-count { background: rgba(255,230,0,0.22); color: var(--brand-primary); }
+
+/* Inputs — raised insets with a yellow focus ring */
+.k-input, .k-textarea, select.k-select { border-radius: var(--radius-sm); border: 1px solid var(--border-default); background-color: var(--surface-raised) !important; box-shadow: inset 0 1px 2px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.02); }
+.k-input:focus, .k-textarea:focus, select.k-select:focus { border-color: var(--brand-primary); box-shadow: inset 0 1px 2px rgba(0,0,0,0.45), 0 0 0 3px var(--brand-primary-25); outline: none; }
+
+/* Tables — raised header, warm hover, yellow record titles (first column) */
+.k-table th { background: var(--surface-raised); color: var(--text-tertiary); font-size: 11px; letter-spacing: .05em; text-transform: uppercase; }
+.k-table tbody tr:hover td { background: rgba(255,230,0,0.035); }
+.k-table td:first-child { color: var(--brand-primary); font-weight: 700; }
+
+/* Menus, modals, toasts — the same material, one step more opaque */
+.k-menu-list { background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)), rgba(14,15,18,0.96); border: 1px solid var(--border-default); border-radius: var(--radius-md); box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 24px 60px -20px rgba(0,0,0,0.9); }
+.k-menu-item { border-radius: 8px; }
+.k-menu-item:hover, .k-menu-item:focus-visible { background: rgba(255,230,0,0.12); color: var(--brand-primary); }
+.k-modal { background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015) 30%, rgba(255,255,255,0) 60%), radial-gradient(90% 40% at 50% 0%, rgba(255,230,0,0.10), transparent 60%), rgba(14,15,18,0.94); border: 1px solid var(--border-default); border-radius: var(--radius-lg); box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 40px 90px -30px rgba(0,0,0,0.95); }
+.k-modal-title { color: var(--brand-primary); }
+.k-modal-foot { background: rgba(255,255,255,0.025); }
+.k-toast { background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)), rgba(14,15,18,0.96); border: 1px solid var(--border-default); border-radius: var(--radius-md); box-shadow: 0 18px 40px -16px rgba(0,0,0,0.9); }
+.k-empty-icon { background: rgba(255,230,0,0.12); border: 1px solid rgba(255,230,0,0.35); color: var(--brand-primary); border-radius: 12px; }
+.k-empty-title { color: var(--brand-primary); }
+
+/* Bottom navigation — floating dark glass bar, luminous yellow active item */
+@media (max-width: 767px) {
+  .sag-tabbar {
+    left: 10px !important; right: 10px !important; bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+    height: 64px !important; padding: 6px 6px calc(6px) !important; border-radius: 22px !important;
+    background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)), rgba(14,15,18,0.92) !important;
+    border: 1px solid var(--border-default) !important; border-top: 1px solid rgba(255,255,255,0.14) !important;
+    box-shadow: 0 18px 40px -14px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,0.06);
+    --sag-tabbar-h: 84px;
+  }
+  .sag-tab { flex: 1 1 0; min-width: 0; height: 52px !important; margin: 0 1px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: var(--text-tertiary); font-size: 11px; font-weight: 600; background: none; border: none; cursor: pointer; box-shadow: none !important; transition: background .15s ease, color .15s ease; }
+  .sag-tab[data-active="true"] { color: var(--on-brand); font-weight: 800; background: var(--grad-primary); box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 0 10px 24px -8px rgba(255,200,0,0.85) !important; }
+  .sag-tab[data-active="true"] svg { color: var(--on-brand); }
+  :root { --sag-tabbar-h: 84px; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

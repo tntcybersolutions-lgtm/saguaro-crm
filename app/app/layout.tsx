@@ -234,7 +234,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <WhiteLabelProvider>
-    <div style={{ minHeight: '100vh', background: colors.dark, color: colors.text, fontFamily: font.family }}>
+    <div className="sag-app" style={{ minHeight: '100vh', background: colors.dark, color: colors.text, fontFamily: font.family }}>
 
       {/* ── Responsive + AI panel styles ──────────────────────────────── */}
       <style>{`
@@ -491,13 +491,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         ] as const).map((t) => {
           const Icon = t.icon;
           return (
-            <Link key={t.href} href={t.href} aria-current={t.active ? 'page' : undefined} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, height: 56, textDecoration: 'none', color: t.active ? 'var(--brand-primary)' : 'var(--text-tertiary)', fontSize: 11, fontWeight: t.active ? 800 : 600, boxShadow: t.active ? 'inset 0 2px 0 var(--brand-primary)' : 'none' }}>
+            <Link key={t.href} href={t.href} className="sag-tab" data-active={t.active ? 'true' : undefined} aria-current={t.active ? 'page' : undefined} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, height: 56, textDecoration: 'none', color: t.active ? 'var(--brand-primary)' : 'var(--text-tertiary)', fontSize: 11, fontWeight: t.active ? 800 : 600 }}>
               <Icon size={22} weight={t.active ? 'fill' : 'regular'} />
               <span>{t.label}</span>
             </Link>
           );
         })}
-        <button type="button" onClick={() => setMobileSidebarOpen(v => !v)} aria-expanded={mobileSidebarOpen} aria-label="More" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, height: 56, background: 'none', border: 'none', color: mobileSidebarOpen ? 'var(--brand-primary)' : 'var(--text-tertiary)', fontSize: 11, fontWeight: 600, cursor: 'pointer', boxShadow: mobileSidebarOpen ? 'inset 0 2px 0 var(--brand-primary)' : 'none' }}>
+        <button type="button" className="sag-tab" data-active={mobileSidebarOpen ? 'true' : undefined} onClick={() => setMobileSidebarOpen(v => !v)} aria-expanded={mobileSidebarOpen} aria-label="More" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, height: 56, background: 'none', border: 'none', color: mobileSidebarOpen ? 'var(--brand-primary)' : 'var(--text-tertiary)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
           <DotsThreeOutline size={22} weight={mobileSidebarOpen ? 'fill' : 'regular'} />
           <span>More</span>
         </button>
