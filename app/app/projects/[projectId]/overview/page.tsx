@@ -29,10 +29,9 @@ import { humanError } from '@/lib/errors';
 import { getAuthHeaders } from '@/lib/supabase-browser';
 import { toCents, toDollars, sumCents, subCents, summarizeContract } from '@/lib/calc';
 import { Badge, EmptyState, type BadgeTone } from '@/components/ui/kit';
-import GettingStartedRail from '@/components/GettingStartedRail';
+import NextAction from '@/components/project/NextAction';
+import ProjectHeader from '@/components/project/ProjectHeader';
 import ProjectOwnershipCard from '@/components/projects/ProjectOwnershipCard';
-import { accentForProject } from '@/lib/project-identity';
-import { NEON_CYCLE, neonCard } from '@/lib/neon';
 import { normalisePhase } from '@/lib/project-phase';
 import { isClosedStatus } from '@/lib/project-lifecycle';
 
@@ -108,23 +107,18 @@ interface UpcomingEntry { id: string; date: string; kind: string; title: string;
 
 /* ── Pieces ───────────────────────────────────────────────────────────── */
 
-function MetricTile({ m, index }: { m: Metric; index: number }) {
-  // Neon tile (owner 2026-10-03); bad/warn values keep their status color.
-  const lit = NEON_CYCLE[index % NEON_CYCLE.length];
-  const glow = m.state === 'ok' || m.state === 'empty' ? neonCard(lit) : null;
-  const color = m.tone === 'bad' ? 'var(--status-overdue, #FF3B30)' : m.tone === 'warn' ? 'var(--status-under-contract, #FFE600)' : '#FFFFFF';
-  const valueEl = m.state === 'loading'
-    ? <span className="pov-skel pov-skel-line" style={{ width: '60%', height: 28 }} aria-label="Loading" />
-    : m.state === 'failed'
-      ? <span className="pov-metric-value pov-metric-muted">Couldn&apos;t load</span>
-      : m.state === 'empty'
-        ? <span className="pov-metric-value pov-metric-muted">{m.value}</span>
-        : <span className="pov-metric-value" style={{ color }}>{m.value}</span>;
+function MetricTile({ m }: { m: Metric }) {
+  // Compact kit tile: small label, prominent tabular value, one supporting line.
+  // Missing data stays honest: "Not set" / "None yet" render muted, never as a number.
+  const tone = m.tone === 'bad' ? 'bad' : m.tone === 'warn' ? 'warn' : 'default';
+  const muted = m.state !== 'ok';
   return (
-    <Link href={m.href} className="pov-card pov-metric pov-link" style={glow ? { background: glow.background, borderTop: glow.borderTop, boxShadow: glow.boxShadow, borderColor: 'var(--glass-border)' } : undefined} aria-label={`${m.label}: ${m.state === 'ok' ? m.value : m.state === 'failed' ? 'couldn’t load' : m.value}. ${m.basis}`}>
-      <span className="pov-metric-label" style={undefined}>{m.label}</span>
-      {valueEl}
-      <span className="pov-metric-basis">{m.basis}</span>
+    <Link href={m.href} className="k-stat" data-tone={tone} aria-busy={m.state === 'loading' || undefined}>
+      <span className="k-stat-top"><span className="k-stat-label">{m.label}</span></span>
+      {m.state === 'loading'
+        ? <span className="pov-skel pov-skel-line" style={{ width: '60%', height: 26 }} aria-label="Loading" />
+        : <span className="k-stat-value" data-muted={muted ? 'true' : undefined}>{m.state === 'failed' ? 'Couldn\u2019t load' : m.value}</span>}
+      <span className="k-stat-sub">{m.basis}</span>
     </Link>
   );
 }
@@ -220,7 +214,7 @@ export default function OverviewPage() {
         </div>
       </div>
       <div className="pov-stack">
-        <div className="pov-metrics">{[0, 1, 2, 3].map(i => <div key={i} className="pov-card pov-skel" style={{ height: 112 }} />)}</div>
+        <div className="pj-metrics">{[0, 1, 2, 3].map(i => <div key={i} className="k-stat pov-skel" style={{ height: 96 }} />)}</div>
         <div className="pov-primary"><div className="pov-card pov-skel" style={{ height: 340 }} /><div className="pov-card pov-skel" style={{ height: 340 }} /></div>
       </div>
     </div>
@@ -464,7 +458,6 @@ export default function OverviewPage() {
   };
 
   /* ── Header ── */
-  const address = [p.address, p.city, p.state].filter(Boolean).join(', ');
   const stageBadge: { label: string; tone: BadgeTone } = stage === 'closed' ? { label: 'Closed', tone: 'closed' } : stage === 'bidding' ? { label: 'Bidding', tone: 'lead' } : { label: 'Building', tone: 'ongoing' };
   const primary = stage === 'closed'
     ? { href: `${base}/closeout`, label: 'Open Closeout', icon: <ArrowRight size={15} weight="bold" /> }
@@ -498,32 +491,23 @@ export default function OverviewPage() {
     <div className="pov">
       {css}
 
-      {/* Header — job, where it is, and the one thing to do next. */}
-      <header className="pov-header">
-        <div className="pov-titlewrap">
-          <div className="pov-titleline">
-            <h1 style={{ color: accentForProject(projectId).hex }}>{p.name}</h1>
-            <Badge tone={stageBadge.tone}>{stageBadge.label}</Badge>
-          </div>
-          <div className="pov-sub">
-            {address ? <span>{address}</span> : <span className="pov-faint">No address on file</span>}
-            {p.end_date ? (
-              <span style={{ color: daysRemaining != null && daysRemaining >= 0 && daysRemaining < 14 && !closed ? 'var(--status-overdue, #FF3B30)' : undefined }}>
-                Finish {fmtShort(p.end_date)}{!closed && daysRemaining != null ? (daysRemaining >= 0 ? ` · ${plural(daysRemaining, 'day')} left` : ` · ${plural(-daysRemaining, 'day')} past`) : ''}
-              </span>
-            ) : <span className="pov-faint">No end date set</span>}
-          </div>
-        </div>
-        {/* The one primary action follows where the job is. A pay app is
-            meaningless on a bid nobody has won yet or a job already closed. */}
-        <Link href={primary.href} className="pov-btn pov-btn-primary">{primary.icon} {primary.label}</Link>
-      </header>
+      <ProjectHeader
+        name={String(p.name || 'Untitled job')}
+        number={p.project_number || p.number || null}
+        status={stageBadge}
+        project={p}
+        dateText={p.end_date
+          ? <>Finish {fmtShort(p.end_date)}{!closed && daysRemaining != null ? (daysRemaining >= 0 ? ` \u00B7 ${plural(daysRemaining, 'day')} left` : ` \u00B7 ${plural(-daysRemaining, 'day')} over`) : ''}</>
+          : 'No end date set'}
+        dateTone={!closed && daysRemaining != null ? (daysRemaining < 0 ? 'bad' : daysRemaining < 14 ? 'warn' : undefined) : undefined}
+        actions={[{ href: primary.href, label: primary.label, icon: primary.icon, primary: true }]}
+      />
 
       <div className="pov-stack">
         {/* ONE path, not two — the journey is the whole job, project through
             to payment. Compact here: it folds once the job is moving and its
             Next link is outlined so the header keeps the only filled action. */}
-        <GettingStartedRail projectId={projectId} compact />
+        <NextAction projectId={projectId} />
 
         {scanMsg && (
           <div className={scanMsg.ok ? 'pov-banner pov-banner-ok' : 'pov-banner pov-banner-bad'} role="status">
@@ -531,7 +515,7 @@ export default function OverviewPage() {
           </div>
         )}
 
-        <div className="pov-metrics">{metrics.map((m, i) => <MetricTile key={m.key} m={m} index={i} />)}</div>
+        <div className="pj-metrics">{metrics.map((m) => <MetricTile key={m.key} m={m} />)}</div>
 
         <div className="pov-primary">
           <Section
@@ -813,13 +797,6 @@ const CSS = `
 .pov-sechead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 12px; }
 .pov-secactions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
 .pov-empty { color: var(--text-secondary); font-size: 14px; margin: 6px 0; line-height: 1.5; }
-.pov-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
-.pov-metric { padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; min-height: 112px; }
-.pov-metric:hover { border-color: var(--brand-primary-35); }
-.pov-metric-label { font-size: 13px; font-weight: 700; color: var(--text-secondary); }
-.pov-metric-value { font-size: 28px; font-weight: 800; line-height: 1.15; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.pov-metric-muted { font-size: 17px; color: var(--text-tertiary); padding: 6px 0 4px; white-space: normal; }
-.pov-metric-basis { font-size: 12.5px; color: var(--text-tertiary); line-height: 1.4; }
 .pov-primary { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 20px; align-items: start; }
 .pov-lower { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
 .pov-col { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
@@ -872,14 +849,11 @@ const CSS = `
 @media (prefers-reduced-motion: reduce) { .pov-skel { animation: none; } }
 @media (max-width: 1100px) {
   .pov-primary, .pov-lower { grid-template-columns: minmax(0, 1fr); }
-  .pov-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 640px) {
   .pov { padding: 16px 16px 48px; }
   .pov h1 { font-size: 22px; }
   .pov-header > .pov-btn { width: 100%; min-height: 44px; }
-  .pov-metrics { grid-template-columns: minmax(0, 1fr); gap: 12px; }
-  .pov-metric { min-height: 0; padding: 12px 14px; }
   .pov-pad { padding: 14px 16px; }
   .pov-qrow { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .pov-qbtn { min-height: 44px; justify-self: start; }

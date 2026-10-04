@@ -254,7 +254,8 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
     );
   }
 
-  /* ── Expanded: full lockup — logo at a real size, name + plan beneath ── */
+  /* ── Expanded: compact identity row — small thumbnail + company name. The
+     full photo stays in Settings → Branding, where this row links. ── */
   return (
     <div style={{ borderBottom: `1px solid ${colors.border}`, flexShrink: 0, padding: '10px 10px 9px' }}>
       <Link
@@ -264,79 +265,31 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
         style={{
-          display: 'block', textDecoration: 'none',
-          padding: '12px 12px 11px', borderRadius: 12,
+          display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, textDecoration: 'none',
+          padding: '8px 10px', borderRadius: 12,
           background: hover ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.03)',
           border: `1px solid ${hover ? 'var(--brand-primary-35)' : colors.borderDim}`,
-          boxShadow: hover ? '0 6px 18px -10px var(--brand-primary-35), inset 0 1px 0 rgba(255,255,255,0.06)' : 'inset 0 1px 0 rgba(255,255,255,0.04)',
-          transition: 'background .15s ease, border-color .15s ease, box-shadow .15s ease',
-          overflow: 'hidden',
+          transition: 'background .15s ease, border-color .15s ease',
         }}
       >
         {hasLogo ? (
-          <>
-            {needsPlate ? (
-              /* A DARK brand mark would disappear if cropped onto dark chrome,
-                 so it keeps the light plate and is contained (never cropped),
-                 aspect preserved, left-anchored. */
-              <img
-                src={wl.logoUrl}
-                alt={wl.companyName || 'Company logo'}
-                onError={() => setImgFailed(true)}
-                style={{
-                  display: 'block', maxWidth: '100%', maxHeight: 96,
-                  width: 'auto', height: 'auto', objectFit: 'contain', objectPosition: 'left center',
-                  ...platedImg,
-                  marginBottom: (wl.companyName || planPill) ? 9 : 0,
-                }}
-              />
-            ) : (
-              /* A PHOTO (or a standard mark) fills a fixed banner — cover +
-                 centered inside an overflow-clipped box, so the image always
-                 fills the full width with no letterboxing, no drift, and
-                 nothing spilling past the card. */
-              <div style={{
-                width: '100%', height: 104, borderRadius: 10, overflow: 'hidden',
-                marginBottom: (wl.companyName || planPill) ? 9 : 0,
-                background: 'rgba(255,255,255,0.03)',
-              }}>
-                <img
-                  src={wl.logoUrl}
-                  alt={wl.companyName || 'Company logo'}
-                  onError={() => setImgFailed(true)}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
-                />
-              </div>
-            )}
-            {(wl.companyName || planPill) && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                {wl.companyName && (
-                  <span style={{
-                    flex: '1 1 auto', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    fontSize: 12, fontWeight: font.weight.bold, color: colors.textMuted, letterSpacing: '0.01em',
-                  }}>
-                    {wl.companyName}
-                  </span>
-                )}
-                {planPill}
-              </span>
-            )}
-          </>
-        ) : (
-          /* Typographic lockup — monogram + name + plan. Clean, never a box. */
-          <span style={{ display: 'flex', alignItems: 'center', gap: 11, minWidth: 0 }}>
-            {monogram(42, 16)}
-            <span style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
-              <span style={{
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                fontSize: 13.5, fontWeight: font.weight.black, color: colors.text, letterSpacing: '-0.01em', lineHeight: 1.2,
-              }}>
-                {wl.companyName}
-              </span>
-              {planPill && <span style={{ display: 'flex' }}>{planPill}</span>}
-            </span>
+          <span style={{ width: 36, height: 36, borderRadius: 10, overflow: 'hidden', flexShrink: 0, display: 'grid', placeItems: 'center', background: needsPlate ? '#F5F5F5' : 'rgba(255,255,255,0.04)' }}>
+            <img
+              src={wl.logoUrl}
+              alt={wl.companyName || 'Company logo'}
+              onError={() => setImgFailed(true)}
+              style={needsPlate
+                ? { maxWidth: 30, maxHeight: 30, width: 'auto', height: 'auto', objectFit: 'contain', display: 'block' }
+                : { width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
+            />
           </span>
-        )}
+        ) : monogram(36, 14)}
+        <span style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 13, fontWeight: font.weight.black, color: colors.text, letterSpacing: '-0.01em', lineHeight: 1.2 }}>
+            {wl.companyName || 'Your company'}
+          </span>
+          {planPill && <span style={{ display: 'flex' }}>{planPill}</span>}
+        </span>
       </Link>
     </div>
   );
@@ -869,148 +822,9 @@ export default function AppSidebar({
             : undefined,
         }}
       >
-        {/* WHICH PHASE, AND THE MOVE OUT OF IT.
-            Winning a bid is the moment the product should stop showing
-            takeoff-and-proposal and start showing budget-and-pay-apps. That
-            move needs somewhere to live, and it belongs next to the phase it
-            changes rather than buried in project settings. */}
-        {inProject && !collapsed && (
-          <div style={{ padding: '0 16px 14px 20px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10 }}>
-            {/* Stacked, not side by side: the big pill and the button do not
-                both fit in the rail width and overlapped. */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, maxWidth: '100%' }}>
-              {/* The phase pill reads the status palette: Bidding = Lead blue,
-                  Building = Ongoing green (COPY-STYLE §5). Title Case, big and
-                  bright — it is the one thing on the rail that says where the
-                  job is. */}
-              <span style={{
-                alignSelf: 'flex-start',
-                display: 'inline-flex', alignItems: 'center', gap: 7,
-                fontSize: 15, fontWeight: 800, letterSpacing: 'normal',
-                padding: '7px 15px', borderRadius: 999, lineHeight: 1,
-                background: phaseTone.bg,
-                border: `1.5px solid ${phaseTone.color}`,
-                color: phaseTone.color,
-                boxShadow: `0 0 0 3px ${phaseTone.bg}`,
-                whiteSpace: 'nowrap',
-              }}>
-                <span aria-hidden style={{ width: 8, height: 8, borderRadius: 999, background: phaseTone.color, flexShrink: 0 }} />
-                {jobClosed ? 'Closed' : PHASE_LABEL[projectPhase]}
-              </span>
-              <span style={{ fontSize: 11.5, fontWeight: 600, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {jobClosed
-                  ? (projectPhase === 'bidding' ? 'Bid closed — not won' : 'Job finished and closed out')
-                  : projectPhase === 'building' ? 'You won it — running the job' : 'Chasing this job — not won yet'}
-              </span>
-            </div>
-            {jobClosed ? (
-              <Link
-                href={`/app/projects/${projectId}/closeout`}
-                className="pmBtn"
-                title="See the closeout record, or reopen the job from there"
-                style={{
-                  flexShrink: 0, whiteSpace: 'nowrap', textDecoration: 'none',
-                  background: 'rgba(255,255,255,0.07)',
-                  border: '1px solid rgba(255,255,255,0.16)',
-                  borderRadius: 8, padding: '6px 11px',
-                  fontSize: 12, fontWeight: 800, color: colors.text,
-                }}
-              >
-                Open Closeout →
-              </Link>
-            ) : (
-            <button
-              type="button"
-              onClick={async () => {
-                const next = projectPhase === 'building' ? 'bidding' : 'building';
-                try {
-                  const r = await fetch(`/api/projects/${projectId}/phase`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phase: next }),
-                  });
-                  /* Refresh the shared snapshot in place instead of a full
-                     reload. The reload raced the 30s browser cache on
-                     /api/project-context and the rail kept the BIDDING
-                     checklist until a hard refresh. Every subscriber (rail,
-                     phase bar, next-step bar, overview journey) re-renders
-                     from the one fresh copy. */
-                  if (r.ok && projectId) {
-                    await refreshProjectContext(projectId);
-                    void swrMutate('/api/projects/list');
-                  }
-                } catch (e) {
-                  /* The PUT may have landed even if the refresh failed; a
-                     reload is the honest fallback so the pill never lies. */
-                  console.error('[AppSidebar] phase change refresh failed', e);
-                  window.location.reload();
-                }
-              }}
-              title={projectPhase === 'building' ? 'Move this job back to the bidding phase' : 'Mark this job won and switch to the building phase'}
-              className="pmBtn"
-              style={{
-                flexShrink: 0, cursor: 'pointer', whiteSpace: 'nowrap',
-                background: projectPhase === 'building' ? 'rgba(255,255,255,0.07)' : STATUS_COLORS.ongoing.bg,
-                border: `1px solid ${projectPhase === 'building' ? 'rgba(255,255,255,0.16)' : STATUS_COLORS.ongoing.border}`,
-                borderRadius: 8, padding: '6px 11px',
-                fontSize: 12, fontWeight: 800,
-                color: projectPhase === 'building' ? colors.text : STATUS_COLORS.ongoing.color,
-              }}
-            >
-              {projectPhase === 'building' ? '← Back to Bidding' : 'We Won It →'}
-            </button>
-            )}
-          </div>
-        )}
-        {/* THE SEQUENCE, AS A SEQUENCE.
-            Numbering the taxonomy items did not work and could not have:
-            steps cross sections, so FINANCIAL holds step 1 (Budget) and
-            step 5 (Pay Applications), and no amount of reordering sections
-            makes 1, 5, 3, 2, 4, 6 read as a list. Numbers that descend look
-            broken however correct each one is.
-
-            So the order lives in its own block, where it can actually be an
-            order, and the sections below go back to being what they are —
-            a toolbox, grouped, unnumbered, in one fixed place. This is the
-            thing users were asking for: the menu in the order they would
-            actually approach the work. */}
-        {inProject && !collapsed && (
-          <div style={{ padding: '0 10px 14px' }}>
-            {phaseSteps.map((st, i) => {
-              const href = `/app/projects/${projectId}${st.href}`;
-              const on = isActive(href);
-              const isDone = !!phaseDone[st.key];
-              return (
-                <Link
-                  key={st.key}
-                  href={href}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 9,
-                    padding: '7px 10px', margin: '2px 0', borderRadius: 8,
-                    textDecoration: 'none', fontSize: font.size.md,
-                    fontWeight: on ? font.weight.semibold : font.weight.medium,
-                    color: on ? colors.gold : isDone ? colors.textDim : colors.textMuted,
-                    background: on ? colors.goldDim : 'transparent',
-                  }}
-                  onMouseEnter={(e) => { if (!on) e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
-                  onMouseLeave={(e) => { if (!on) e.currentTarget.style.background = 'transparent'; }}
-                >
-                  <span style={{
-                    flexShrink: 0, width: 18, height: 18, borderRadius: 5,
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 10, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
-                    background: isDone ? STATUS_COLORS.ongoing.bg : on ? 'var(--brand-primary)' : 'rgba(255,255,255,0.06)',
-                    border: `1px solid ${isDone ? STATUS_COLORS.ongoing.border : on ? 'var(--brand-primary)' : 'rgba(255,255,255,0.16)'}`,
-                    color: isDone ? STATUS_COLORS.ongoing.color : on ? 'var(--on-brand)' : colors.textMuted,
-                  }}>
-                    {isDone ? <Check size={10} weight="bold" /> : i + 1}
-                  </span>
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{st.title}</span>
-                </Link>
-              );
-            })}
-          </div>
-        )}
+        {/* The phase pill, "We Won It" and the numbered steps now live in ONE place:
+            NextAction on the job overview (components/project/NextAction). The rail is
+            a toolbox again — grouped, unnumbered, in one fixed place. */}
         {renderSections.map((section: any, sIdx: number) => {
           const visibleItems = section.items;
           /* Open when the user says so. Otherwise: open everything when there

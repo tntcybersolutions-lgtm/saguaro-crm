@@ -1188,6 +1188,90 @@ a.k-stat:hover, button.k-stat:hover { border-color: var(--border-strong); backgr
   :root { --sag-tabbar-h: 84px; }
 }
 
+/* ── Project shell components (components/project/*) ───────────────────────
+   ProjectNav: navigation only. NextAction: guidance once. ProjectHeader: one
+   header. Metric grid: compact, aligned, tabular. Spacing scale: gutters
+   24–32 desktop / 16 phone, gaps 16–24, card padding 20–24. Type: title 28,
+   section 18, body 14–15, labels 12–13. */
+.pj-nav { display: flex; align-items: center; gap: 8px; padding: 10px clamp(16px, 1.67vw, 32px); border-bottom: 1px solid var(--border-subtle); background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0)); min-width: 0; }
+.pj-nav-row { display: flex; align-items: center; gap: 6px; flex: 1 1 auto; min-width: 0; overflow: hidden; }
+.pj-nav-item { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 13px; border-radius: 999px; border: 1px solid var(--border-subtle); background: var(--surface-card); color: var(--text-secondary); font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; flex-shrink: 0; cursor: pointer; transition: background .15s ease, color .15s ease, border-color .15s ease; }
+.pj-nav-item:hover { background: var(--surface-raised); color: var(--text-primary); border-color: var(--border-default); }
+.pj-nav-item[data-active="true"] { background: var(--brand-primary); color: var(--on-brand); border-color: var(--brand-primary); font-weight: 800; box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 0 6px 16px -8px rgba(255,230,0,0.8); }
+.pj-nav-item[data-overflow="true"] { visibility: hidden; position: absolute; pointer-events: none; }
+.pj-nav-more { position: relative; flex-shrink: 0; }
+.pj-nav-menu { position: absolute; right: 0; top: calc(100% + 6px); min-width: 200px; }
+.pj-nav-menu .k-menu-item[data-active="true"] { color: var(--brand-primary); background: rgba(255,230,0,0.12); }
+.pj-nav-modules { display: none; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-default); background: var(--surface-raised); color: var(--text-primary); font-size: 13px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+
+.pj-page { width: 100%; min-width: 0; box-sizing: border-box; padding: 24px clamp(16px, 1.67vw, 32px) 64px; display: flex; flex-direction: column; gap: 20px; }
+.pj-header { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px 20px; }
+.pj-header-main { min-width: 0; flex: 1 1 360px; }
+.pj-header-titleline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.sag-app .pj-title, .pj-title { font-size: 28px; font-weight: 800; letter-spacing: -0.015em; line-height: 1.15; margin: 0; color: var(--text-primary); overflow-wrap: anywhere; }
+.pj-number { font-size: 12px; font-weight: 700; color: var(--text-tertiary); letter-spacing: .04em; }
+.pj-header-sub { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 6px; font-size: 14px; color: var(--text-secondary); }
+.pj-faint { color: var(--text-tertiary); }
+.pj-bad { color: var(--status-overdue); font-weight: 700; }
+.pj-warn { color: #FF8A00; font-weight: 700; }
+.pj-header-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+/* NextAction */
+.pj-next { position: relative; border-radius: var(--radius-lg); border: 1px solid var(--border-default); padding: 18px 22px 14px; background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02) 40%, rgba(255,255,255,0) 100%), radial-gradient(60% 80% at 0% 0%, rgba(255,230,0,0.14), transparent 60%), rgba(14,15,18,0.9); box-shadow: var(--shadow-card); }
+.pj-next::before { content: ''; position: absolute; left: 18px; right: 18px; top: -1px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, #FFF04A, #FFE600 50%, #FF8A00); }
+.pj-next-skel { min-height: 96px; }
+.pj-next-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.pj-next .k-badge[data-phase="lead"] { color: #FF8A00; background: rgba(255,138,0,0.16); border-color: rgba(255,138,0,0.5); }
+.pj-next .k-badge[data-phase="ongoing"] { color: #2CFF7A; background: rgba(44,255,122,0.16); border-color: rgba(44,255,122,0.5); }
+.pj-next .k-badge[data-phase="closed"] { color: #A3ACBB; background: rgba(163,172,187,0.16); border-color: rgba(163,172,187,0.45); }
+.pj-next-progress { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
+.pj-next-bar { width: 140px; height: 6px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; }
+.pj-next-bar > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #FFE600, #FF8A00); }
+.pj-next-count { font-size: 12px; font-weight: 700; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+.pj-next-body { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; margin-top: 12px; }
+.pj-next-text { min-width: 0; flex: 1 1 320px; }
+.pj-next-eyebrow { display: block; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--brand-primary); }
+.sag-app .pj-next-title, .pj-next-title { font-size: 18px; font-weight: 800; color: var(--text-primary); margin: 2px 0 0; line-height: 1.25; }
+.pj-next-desc { margin: 4px 0 0; font-size: 14px; color: var(--text-secondary); line-height: 1.5; max-width: 60ch; }
+.pj-next-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pj-next-toggle { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; min-height: 36px; padding: 0 4px; font-size: 13px; font-weight: 700; color: var(--text-tertiary); cursor: pointer; }
+.pj-next-toggle:hover { color: var(--text-primary); }
+.pj-next-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 6px 16px; }
+.pj-next-list li { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border-radius: 10px; }
+.pj-next-list li[data-next="true"] { background: rgba(255,230,0,0.08); border: 1px solid rgba(255,230,0,0.3); }
+.pj-next-num { width: 20px; height: 20px; border-radius: 6px; display: inline-grid; place-items: center; flex-shrink: 0; font-size: 11px; font-weight: 900; color: var(--text-tertiary); background: rgba(255,255,255,0.06); border: 1px solid var(--border-default); margin-top: 1px; }
+li[data-done="true"] .pj-next-num { color: #2CFF7A; background: rgba(44,255,122,0.16); border-color: rgba(44,255,122,0.5); }
+li[data-next="true"] .pj-next-num { color: var(--on-brand); background: var(--brand-primary); border-color: var(--brand-primary); }
+.pj-next-step { display: flex; flex-direction: column; gap: 2px; min-width: 0; text-decoration: none; color: inherit; }
+.pj-next-step strong { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-decoration: line-through; text-decoration-color: rgba(255,255,255,0.3); }
+.pj-next-step span { font-size: 12.5px; color: var(--text-tertiary); line-height: 1.4; }
+.pj-next-switch { grid-column: 1 / -1; justify-content: flex-end; padding-top: 4px; }
+
+/* Metric grid — four up, two on tablets, one on phones */
+.pj-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.pj-metrics .k-stat-value { font-size: 24px; white-space: nowrap; }
+.pj-metrics .k-stat-value[data-muted="true"] { font-size: 16px; color: var(--text-tertiary); white-space: normal; }
+.pj-metrics .k-stat-sub { white-space: normal; line-height: 1.4; }
+@media (max-width: 1100px) { .pj-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 767px) {
+  .pj-nav { padding: 8px 12px; gap: 6px; }
+  .pj-nav-modules { display: inline-flex; }
+  .pj-nav-row { overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding: 2px 0; }
+  .pj-nav-row::-webkit-scrollbar { display: none; }
+  .pj-nav-item { height: 40px; }
+  .pj-nav-item[data-overflow="true"] { visibility: visible; position: static; pointer-events: auto; }
+  .pj-nav-more { display: none; }
+  .pj-page { padding: 16px 16px 48px; gap: 16px; }
+  .sag-app .pj-title, .pj-title { font-size: 24px; }
+  .pj-header-actions .k-btn { min-height: 44px; flex: 1 1 auto; }
+  .pj-next { padding: 16px 16px 12px; }
+  .pj-next-actions .k-btn { min-height: 44px; flex: 1 1 auto; }
+  .pj-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .pj-metrics .k-stat-value { font-size: 20px; }
+}
+@media (max-width: 420px) { .pj-metrics { grid-template-columns: minmax(0, 1fr); } }
+
 /* ═══════════════════════════════════════════════════════════════════════════
    PHONE FRAME — one mobile shell for every screen (handoff §5 "Mobile").
    Everything below is scoped to < 768px. The desktop shell is untouched.
@@ -1232,19 +1316,14 @@ a.k-stat:hover, button.k-stat:hover { border-color: var(--border-strong); backgr
   .sag-nsb[data-open="true"] > a { order: 5; }
   .sag-nsb[data-open="true"] .sag-nsb-detail[title] { max-width: none; }
   .sag-nsb-toggle { display: inline-flex !important; }
-  .sag-phase-summary { display: flex !important; }
-  .sag-phase-nav { display: none !important; }
-  .sag-phase-nav[data-open="true"] { display: flex !important; flex-direction: column; overflow: visible; }
-  .sag-phase-nav[data-open="true"] > span[aria-hidden] { display: none; }
-  /* Inside a job the phone has ONE bar (the phase bar carries Modules and the
-     next step): the next-step bar, the old Modules bar and the page crumbs go. */
+  /* Inside a job the phone has ProjectNav (Modules + the seven destinations);
+     the next-step bar returns null there (NextAction on the overview is the
+     one guidance surface). */
   .sag-nsb[data-in-project="true"] { display: none !important; }
-  .project-mobile-bar { display: none !important; }
   /* Every control in the menu drawer's tool block is a thumb target. */
   .sag-menu-tools button, .sag-menu-tools a, .sag-menu-tools select { min-height: 44px !important; }
   .sag-nsb-toggle { min-height: 44px; min-width: 44px; }
   .k-crumbs { display: none !important; }
-  .sag-phase-nav[data-open="true"] { padding-top: 4px; }
 
   /* The menu drawer: the tools block first, then the rail in flow (the rail
      is position:fixed on desktop and would otherwise cover the tools). */
