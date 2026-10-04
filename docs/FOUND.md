@@ -82,3 +82,8 @@ converge. One line each, newest at the bottom.
   scroll at 1280 to reach Total and % of Div; the first column is not sticky there.
 - (3 Oct, Pass 4 drive) Kit DataTable row-action menus open upward near the bottom of the
   viewport and can overlap the row above (seen on /app/portals) — cosmetic.
+- (3 Oct, phone walk) `components/team/AccessManager.tsx` — its people table is hand-rolled, not
+  the kit DataTable, so at 393px it scrolls sideways inside the People hub instead of
+  becoming cards; the Base Role column is off-screen on load.
+- (3 Oct, phone walk) `components/ui/premium.tsx` FlowStrip — at 393px the arrows between steps
+  wrap onto their own lines (Portals "How Portal Access Works", Submittals empty state).
