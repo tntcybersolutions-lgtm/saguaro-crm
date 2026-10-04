@@ -44,8 +44,19 @@ const fmtDate = (s: string) => { const d = new Date(s + 'T12:00:00'); return isN
 const splitOT = (h: number) => ({ regular: Math.min(h, 8), overtime: Math.max(0, h - 8) });
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
+/* The browser's `timeout` only starts once permission is granted — while the
+   location prompt sits unanswered neither callback fires and Clock In hung on
+   "Clocking in…" for good (seen in Chrome device mode). A hard 8 s race wins
+   either way: the shift is stamped without GPS rather than never. */
 async function geo(): Promise<{ lat: number; lng: number } | null> {
-  return new Promise((res) => { if (!navigator.geolocation) return res(null); navigator.geolocation.getCurrentPosition((p) => res({ lat: p.coords.latitude, lng: p.coords.longitude }), () => res(null), { timeout: 6000 }); });
+  if (typeof navigator === 'undefined' || !navigator.geolocation) return null;
+  const ask = new Promise<{ lat: number; lng: number } | null>((res) => {
+    try {
+      navigator.geolocation.getCurrentPosition((p) => res({ lat: p.coords.latitude, lng: p.coords.longitude }), () => res(null), { timeout: 6000, maximumAge: 60000 });
+    } catch { res(null); }
+  });
+  const giveUp = new Promise<null>((res) => setTimeout(() => res(null), 8000));
+  return Promise.race([ask, giveUp]);
 }
 
 /** The canonical shift shape returned by /api/timeclock/* — the server's truth. */

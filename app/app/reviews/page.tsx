@@ -36,6 +36,19 @@ export default function ReviewsPage() {
   const [text, setText] = React.useState('');
   const [saving, setSaving] = React.useState(false);
 
+  // A review entered by mistake could never be taken back; DELETE /api/reviews/[id]
+  // is tenant-scoped and the list drops the row on success.
+  const remove = React.useCallback(async (r: Review) => {
+    if (typeof window !== 'undefined' && !window.confirm(`Remove the review by ${r.reviewer_name || 'Anonymous'}? This cannot be undone.`)) return;
+    try {
+      const res = await fetch(`/api/reviews/${r.id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('delete failed');
+      setReviews((prev) => prev.filter((x) => x.id !== r.id));
+    } catch {
+      setState('error');
+    }
+  }, []);
+
   const load = React.useCallback(async () => {
     setState('loading');
     try {
@@ -120,6 +133,13 @@ export default function ReviewsPage() {
               <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Stars n={Math.max(0, Math.min(5, r.rating))} />
                 <span style={{ fontSize: 11, color: DIM }}>{r.created_at ? fmtDateSafe(r.created_at) : ''}</span>
+                <button
+                  type="button"
+                  onClick={() => void remove(r)}
+                  aria-label={`Remove review by ${r.reviewer_name || 'Anonymous'}`}
+                  title="Remove this review"
+                  style={{ minWidth: 44, minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 18, lineHeight: 1, margin: '-10px -12px -10px 0' }}
+                >×</button>
               </span>
             </div>
             {r.body && <div style={{ fontSize: 13, color: DIM, marginTop: 6, whiteSpace: 'pre-wrap' }}>{r.body}</div>}
