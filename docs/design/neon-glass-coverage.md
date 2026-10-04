@@ -61,16 +61,35 @@ After: `docs/design/screenshots/after/393-dashboard*.png`, `after/1280-dashboard
 | Already sorted before this pass (toolbar sort): bills, lien waivers, insurance certificates | — | BUILT |
 | Not sortable by design: bid-package line-item editor, budget line editor (rows are edited by index), pay-app continuation sheet | — | n/a |
 
+## Native iOS shell (M5)
+
+The native app is the Capacitor shell in this repo (`capacitor.config.ts`, `ios/App`), which loads the live site in a WKWebView, so every web change above is the iOS app. Verified and corrected pieces:
+
+| Piece | Where | Status |
+|---|---|---|
+| Status bar: light text on page black (`StatusBar.style: 'Dark'`, `backgroundColor: '#000000'`, `overlaysWebView: false`); splash black with a yellow spinner | `capacitor.config.ts` | BUILT (unchanged, confirmed) |
+| Android status-bar colour was still the old navy `#060C15` → page black | `lib/native.ts` | BUILT |
+| Safe areas: top bar, drawer and content pad by `env(safe-area-inset-top)`; floating tab bar lifts by `8px + env(safe-area-inset-bottom)`; content clears `84px + inset` | `app/app/layout.tsx`, `app/globals.css` | BUILT |
+| Keyboard: layout viewport shrinks instead of covering the form (`interactiveWidget: 'resizes-content'`) | `app/layout.tsx` viewport | BUILT |
+| Reduced motion: every transition/animation collapses (already) | `app/globals.css` | BUILT |
+| Reduced transparency: glass goes solid, ambient glow off, tab bar and panels opaque | `app/globals.css` `prefers-reduced-transparency` | BUILT |
+| Native sheets/alerts/pickers forced dark (`UIUserInterfaceStyle = Dark`) so a date picker never pops up white | `ios/App/App/Info.plist` | BUILT |
+| Inputs ≥ 16px on phones (no zoom on focus); 44px targets on phone controls incl. the new sort bar | `app/globals.css` | BUILT |
+
+**Native verification evidence (exact device):** GitHub Actions `ios.yml` run 19 (37213076511), unsigned Debug build launched on the hosted-runner iPhone simulator (first available of iPhone 15 / 15 Pro / 16 / 16 Pro, iOS SDK 26, Xcode 26.6): `docs/design/screenshots/ios-simulator/run19-1-splash.png`, `run19-2-app-loaded.png` — the shell boots, status bar is light-on-black, safe areas and the home indicator are respected, and the signed-out shell lands on the login page of the live site (that build loads `www.saguarocontrol.net`, i.e. `main`, not this branch). The same run uploaded TestFlight build 1019.
+
+**CANNOT VERIFY on this machine:** this session runs on Windows (no Xcode, no simulator), so neon-glass itself has not been opened natively. Once this branch is on main the TestFlight app shows it with no native rebuild (server mode). Camera, GPS and Face ID prompts, and the native date picker colour, are listed under Not verified until someone opens build 1019 on a device.
+
 ## Not yet started
 
 Projects list, pipeline/deals, leads, estimates, takeoff, bid packages, proposals,
 subs/team, schedule, daily logs, punch list, photos, RFIs, submittals, change
 orders, pay apps, lien waivers, invoices, time clock, reports, settings, every
-form/modal/drawer, loading/empty/error states, native iOS shell (status bar, safe areas, sheets, keyboard, reduced
-motion/transparency).
+form/modal/drawer, loading/empty/error states.
 
 ## Verification log
 
 - 2026-10-04 — M2 preview `saguaro-crm-git-redesign-neon-glass-salty-vault.vercel.app` built green (dpl_6LVDQ1THNCGGgqx5U1dBL8HNregt). Opening the overview at 393 redirected to `/login` (the preview host has no session). CANNOT VERIFY until a signed-in session exists on that host; the login form is never submitted by the agent.
 - 2026-10-04 — M3 pushed (e8fb30b7); preview building (dpl_n9qfg7qFX3hvR4QBZ9kgT3A8ibSK). Phone tab still on `/login` for the neon-glass host — unchanged: CANNOT VERIFY until signed in.
 - 2026-10-04 — Chad signed in on the neon-glass host. Overview and dashboard DRIVEN at 393 (iPhone 16 device mode) and at 1280×529 (the desktop window would not resize past 1280 on this display; 1440 is listed under Not verified). Two fixes found and pushed (see M2).
+- 2026-10-04 — M4a preview (42c2319a) driven at 393: customers shows the phone Sort bar (Score · Desc) and rows follow it (`after/393-customers*.png`). Pay-apps register on ZZ AUDIT 2 is empty (no pay apps on that job), so header sorting is checked on customers at 1280 instead.

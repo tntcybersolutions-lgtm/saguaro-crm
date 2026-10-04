@@ -297,7 +297,7 @@ export async function setStatusBarDark(): Promise<void> {
   try {
     const { StatusBar, Style } = await import('@capacitor/status-bar');
     await StatusBar.setStyle({ style: Style.Dark });
-    if (isAndroid()) await StatusBar.setBackgroundColor({ color: '#060C15' });
+    if (isAndroid()) await StatusBar.setBackgroundColor({ color: '#000000' }); // page black, same as capacitor.config StatusBar.backgroundColor
   } catch { /* ok */ }
 }
 
