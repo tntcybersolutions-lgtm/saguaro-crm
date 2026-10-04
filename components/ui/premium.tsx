@@ -699,10 +699,10 @@ export function StatStrip({ items }: {
 }) {
   return (
     <div style={{
-      display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(150px, 1fr))`, gap: 1,
-      background: BORDER, border: `1px solid ${BORDER}`, borderRadius: 14, overflow: 'hidden',
-      backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR,
-      marginBottom: 20,
+      // Same compact tiles as the kit stat grid: separate rounded cards, 12px
+      // apart, 2-up on phones (minmax 150 keeps two columns at 393).
+      display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(150px, 1fr))`, gap: 12,
+      marginBottom: 20, minWidth: 0,
     }}>
       {items.map((it, i) => {
         const clickable = !!(it.href || it.onClick);
@@ -712,7 +712,7 @@ export function StatStrip({ items }: {
           <div
             className="pmTile"
             onClick={it.onClick}
-            style={{ position: 'relative', background: 'linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.03)), rgba(0,0,0,0.88)', borderTop: '2px solid color-mix(in srgb, var(--brand-primary) 80%, transparent)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)', padding: '13px 16px', minWidth: 0, cursor: clickable ? 'pointer' : 'default', height: '100%' }}
+            style={{ position: 'relative', background: 'linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.03)), var(--surface-card, #0E0F12)', border: `1px solid ${BORDER}`, borderTop: '2px solid color-mix(in srgb, var(--brand-primary) 80%, transparent)', borderRadius: 14, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 12px 28px -18px rgba(0,0,0,0.9)', padding: '13px 16px', minWidth: 0, cursor: clickable ? 'pointer' : 'default', height: '100%', boxSizing: 'border-box' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 750, color: MUTED, marginBottom: 5, whiteSpace: 'nowrap' }}>
               {it.icon}{it.label}

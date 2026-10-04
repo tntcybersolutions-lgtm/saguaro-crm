@@ -610,7 +610,7 @@ export default function SchedulePage(){
 
       {/* Side panel */}
       {mode!==null&&(
-        <div style={{width:460,borderLeft:`1px solid ${BORDER}`,background:DARK,
+        <div className="sag-side-panel" role={undefined} style={{width:460,borderLeft:`1px solid ${BORDER}`,background:DARK,
           overflow:'auto',flexShrink:0,display:'flex',flexDirection:'column'}}>
           <div style={{padding:'16px 20px',borderBottom:`1px solid ${BORDER}`,
             display:'flex',alignItems:'center',justifyContent:'space-between'}}>
