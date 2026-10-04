@@ -123,3 +123,10 @@ converge. One line each, newest at the bottom.
   Sum typed in step 1 is not on the created pay app (detail shows $0.00 original); same root as the
   `contract_sum` 0 entry above.
 
+- (4 Oct, marketing) `app/globals.css:250-253` — the app-wide `h1 { font-size: 18px !important }`
+  / `h2 { 15px !important }` / `h3 { 13.5px !important }` beat the `.mkt-page h1/h2/h3` scale at
+  `app/globals.css:825-847` (no `!important` there), so every page that opts into `mkt-page`
+  (roi-calculator, blog, intelligence, features, careers, api-docs, compare, switch-from-procore)
+  renders its headline at 18 px. `/get-the-app` is fixed locally on `marketing/phone-screens`.
+- (4 Oct) `app/globals.css` `--status-completed` is `#FF8A00` (orange) but
+  `lib/status-colors.ts` `completed` is `#2CFF7A` (green) — two answers for one status.
