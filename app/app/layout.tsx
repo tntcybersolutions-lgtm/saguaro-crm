@@ -270,30 +270,30 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="sidebar-mobile-overlay" style={{ display: 'none' }}>
           <div
             onClick={() => setMobileSidebarOpen(false)}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: 150 /* above the sticky project bar (90), below modals (200) */ }}
+            style={{ position: 'fixed', inset: 0, background: 'color-mix(in srgb, var(--bg-base) 60%, transparent)', zIndex: 150 /* above the sticky project bar (90), below modals (200) */ }}
           />
           <div style={{ position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 151, display: 'flex', flexDirection: 'column', maxWidth: '86vw', background: 'var(--bg-base)', overflowY: 'auto', WebkitOverflowScrolling: 'touch', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
             {/* The controls that leave the phone top bar live here: search,
                 the job picker, help mode and notifications. */}
-            <div className="sag-menu-tools" style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 10px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            <div className="sag-menu-tools" style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 10px', borderBottom: '1px solid var(--border-default)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 11, fontWeight: 800, color: '#A9B4C4', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Menu</span>
-                <button type="button" onClick={() => setMobileSidebarOpen(false)} aria-label="Close menu" style={{ background: 'none', border: 'none', color: '#D4D4D8', cursor: 'pointer', width: 40, height: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><X size={20} /></button>
+                <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-tertiary)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Menu</span>
+                <button type="button" onClick={() => setMobileSidebarOpen(false)} aria-label="Close menu" style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', width: 40, height: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><X size={20} /></button>
               </div>
               <button
                 type="button"
                 onClick={() => { setMobileSidebarOpen(false); window.dispatchEvent(new Event('open-command-palette')); }}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 44, padding: '0 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#D4D4D8', fontSize: 14, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 44, padding: '0 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 10, color: 'var(--text-secondary)', fontSize: 14, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}
               >
                 <MagnifyingGlass size={16} /> Search
               </button>
               <HeaderProjectPicker />
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <HelpModeButton />
-                <Link href="/app/notifications" onClick={() => setMobileSidebarOpen(false)} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '0 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#D4D4D8', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
+                <Link href="/app/notifications" onClick={() => setMobileSidebarOpen(false)} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '0 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 10, color: 'var(--text-secondary)', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
                   <Bell size={16} /> Notifications
                 </Link>
-                <button type="button" onClick={() => { setMobileSidebarOpen(false); setAiOpen(true); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '0 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#D4D4D8', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                <button type="button" onClick={() => { setMobileSidebarOpen(false); setAiOpen(true); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '0 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 10, color: 'var(--text-secondary)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                   <Star size={16} weight="fill" /> Sage AI Expert
                 </button>
               </div>
@@ -398,7 +398,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             ) : (
               aiMessages.map((msg, i) => (
                 <div key={i} style={{ display: 'flex', flexDirection: msg.role === 'user' ? 'row-reverse' : 'row', gap: 10, alignItems: 'flex-start' }}>
-                  <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, background: msg.role === 'user' ? colors.gold : 'rgba(255,255,255,0.07)', color: msg.role === 'user' ? 'var(--on-brand)' : colors.gold }}>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, background: msg.role === 'user' ? colors.gold : 'var(--bg-surface-2)', color: msg.role === 'user' ? 'var(--on-brand)' : colors.gold }}>
                     {msg.role === 'user' ? userInitials : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>}
                   </div>
                   <div style={{ maxWidth: '82%', background: msg.role === 'user' ? colors.goldDim : colors.dark, border: `1px solid ${msg.role === 'user' ? colors.goldBorder : colors.border}`, borderRadius: msg.role === 'user' ? '12px 4px 12px 12px' : '4px 12px 12px 12px', padding: '10px 14px', fontSize: 13, lineHeight: 1.65, color: colors.text }}>
@@ -482,7 +482,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           Hidden on desktop by its own display:none; the phone-frame block in
           globals.css shows it under 768px and reserves its height as
           --sag-tabbar-h so content, the chat bubble and the Sage panel clear it. */}
-      <nav className="sag-tabbar" aria-label="Primary" style={{ display: 'none', position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: z.topbar, height: 'var(--sag-tabbar-h, 56px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)', boxSizing: 'border-box', background: 'rgba(10,10,12,0.96)', borderTop: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(16px) saturate(140%)', WebkitBackdropFilter: 'blur(16px) saturate(140%)' }}>
+      <nav className="sag-tabbar" aria-label="Primary" style={{ display: 'none', position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: z.topbar, height: 'var(--sag-tabbar-h, 56px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)', boxSizing: 'border-box', background: 'var(--bg-solid)', borderTop: '1px solid var(--border-default)', backdropFilter: 'blur(16px) saturate(140%)', WebkitBackdropFilter: 'blur(16px) saturate(140%)' }}>
         {([
           { label: 'Home', href: '/app', icon: House, active: pathname === '/app' || pathname === '/app/' },
           { label: 'My Work', href: '/app/my-work', icon: Briefcase, active: pathname.startsWith('/app/my-work') },
@@ -491,13 +491,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         ] as const).map((t) => {
           const Icon = t.icon;
           return (
-            <Link key={t.href} href={t.href} aria-current={t.active ? 'page' : undefined} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, height: 56, textDecoration: 'none', color: t.active ? 'var(--brand-primary)' : '#A9B4C4', fontSize: 11, fontWeight: t.active ? 800 : 600, boxShadow: t.active ? 'inset 0 2px 0 var(--brand-primary)' : 'none' }}>
+            <Link key={t.href} href={t.href} aria-current={t.active ? 'page' : undefined} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, height: 56, textDecoration: 'none', color: t.active ? 'var(--brand-primary)' : 'var(--text-tertiary)', fontSize: 11, fontWeight: t.active ? 800 : 600, boxShadow: t.active ? 'inset 0 2px 0 var(--brand-primary)' : 'none' }}>
               <Icon size={22} weight={t.active ? 'fill' : 'regular'} />
               <span>{t.label}</span>
             </Link>
           );
         })}
-        <button type="button" onClick={() => setMobileSidebarOpen(v => !v)} aria-expanded={mobileSidebarOpen} aria-label="More" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, height: 56, background: 'none', border: 'none', color: mobileSidebarOpen ? 'var(--brand-primary)' : '#A9B4C4', fontSize: 11, fontWeight: 600, cursor: 'pointer', boxShadow: mobileSidebarOpen ? 'inset 0 2px 0 var(--brand-primary)' : 'none' }}>
+        <button type="button" onClick={() => setMobileSidebarOpen(v => !v)} aria-expanded={mobileSidebarOpen} aria-label="More" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, height: 56, background: 'none', border: 'none', color: mobileSidebarOpen ? 'var(--brand-primary)' : 'var(--text-tertiary)', fontSize: 11, fontWeight: 600, cursor: 'pointer', boxShadow: mobileSidebarOpen ? 'inset 0 2px 0 var(--brand-primary)' : 'none' }}>
           <DotsThreeOutline size={22} weight={mobileSidebarOpen ? 'fill' : 'regular'} />
           <span>More</span>
         </button>
@@ -526,7 +526,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(0,0,0,.72)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
           onClick={e => { if (e.target === e.currentTarget) setShowScoreModal(false); }}
         >
-          <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: 14, width: '100%', maxWidth: 520, boxShadow: '0 30px 80px rgba(0,0,0,.6)', overflow: 'hidden' }}>
+          <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: 14, width: '100%', maxWidth: 520, boxShadow: '0 30px 80px color-mix(in srgb, var(--bg-base) 60%, transparent)', overflow: 'hidden' }}>
             <div style={{ padding: '16px 20px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <div style={{ fontWeight: 800, fontSize: 16, color: colors.text, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -546,7 +546,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 style={{ display: 'block', marginTop: 16, padding: '10px', background: colors.gold, borderRadius: 8, color: 'var(--on-brand)', fontWeight: 800, fontSize: 14, textAlign: 'center', textDecoration: 'none' }}
                 onClick={() => setShowScoreModal(false)}
               >
-                Open Bid Scorer <span style={{ display: 'inline-flex', verticalAlign: 'middle' }}><ArrowRight size={16} weight="regular" color="#0A0A00" /></span>
+                Open Bid Scorer <span style={{ display: 'inline-flex', verticalAlign: 'middle' }}><ArrowRight size={16} weight="regular" color="var(--on-brand)" /></span>
               </a>
             </div>
           </div>

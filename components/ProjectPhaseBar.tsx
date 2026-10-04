@@ -25,20 +25,20 @@ import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { normalisePhase, stepsDone, stepsForPhase } from '@/lib/project-phase';
 import { isClosedStatus } from '@/lib/project-lifecycle';
 
-const BORDER = 'rgba(255,255,255,0.09)';
+const BORDER = 'var(--glass-border)';
 
 /* Each phase its own color so the section tabs read as a colorful headline row
    you can scan at a glance — the one you're in is filled and lit, the rest
    carry a tint of their color so every section still stands out. Same bright
    neon-on-black family as lib/status-colors (docs/COPY-STYLE.md §7). */
 const PHASE_COLORS: Record<string, string> = {
-  overview:  '#A3ACBB', // grey
-  precon:    '#FF8A00', // blue
-  execution: '#FFE600', // amber
-  field:     '#2CFF7A', // green
-  financial: '#FF8A00', // orange
-  docs:      '#FF8A00', // violet
-  closeout:  '#2EDBD0', // teal
+  overview:  'var(--status-closed)',       // grey
+  precon:    'var(--status-lead)',         // neon orange
+  execution: 'var(--brand-primary)',       // brand neon yellow (white-label aware)
+  field:     'var(--status-ongoing)',      // neon green
+  financial: 'var(--info)',                // neon orange
+  docs:      'var(--info)',                // neon orange
+  closeout:  'var(--status-closed)',       // grey — the job is done
 };
 
 type PhaseProgress = 'done' | 'progress' | 'todo';
@@ -97,7 +97,7 @@ export default function ProjectPhaseBar() {
   const activeKey = phaseForPath(rel);
   const activeIdx = Math.max(0, PROJECT_PHASES.findIndex(p => p.key === activeKey));
   const active = PROJECT_PHASES[activeIdx];
-  const activeColor = PHASE_COLORS[active?.key] || '#A3ACBB';
+  const activeColor = PHASE_COLORS[active?.key] || 'var(--status-closed)';
   const ActiveIcon = active?.icon;
   /* The same status the sidebar pill and the next-step bar read, so one job
      never shows three different stages on one screen. */
@@ -118,7 +118,7 @@ export default function ProjectPhaseBar() {
   })();
 
   return (
-    <div style={{ background: 'rgba(255,255,255,0.035)', borderBottom: `1px solid ${BORDER}` }}>
+    <div style={{ background: 'var(--bg-surface)', borderBottom: `1px solid ${BORDER}` }}>
       {/* dangerouslySetInnerHTML, not a text child: the attribute-selector
           quote would otherwise be escaped to &quot; and break the CSS (the
           repo's check:style-escapes build guard enforces this). */}
@@ -131,7 +131,7 @@ export default function ProjectPhaseBar() {
           type="button"
           aria-label="Open project modules"
           onClick={() => window.dispatchEvent(new Event('saguaro:project-menu'))}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 40, padding: '0 10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 9, color: '#FFFFFF', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 40, padding: '0 10px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 9, color: 'var(--text-primary)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}
         >
           <List size={16} weight="bold" color="var(--brand-primary)" /> Modules
         </button>
@@ -140,22 +140,22 @@ export default function ProjectPhaseBar() {
           aria-expanded={open}
           aria-controls="sag-phase-nav"
           onClick={() => setOpen(v => !v)}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0, minHeight: 40, padding: '0 6px', background: 'transparent', border: 'none', color: '#FFFFFF', cursor: 'pointer', textAlign: 'left' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0, minHeight: 40, padding: '0 6px', background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', textAlign: 'left' }}
         >
           {ActiveIcon && (
             <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24, borderRadius: 7, flexShrink: 0, background: activeColor }}>
-              <ActiveIcon size={14} weight="fill" color="#0A0A0A" />
+              <ActiveIcon size={14} weight="fill" color="var(--on-brand)" />
             </span>
           )}
           <span style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', lineHeight: 1.2, overflow: 'hidden' }}>
-            <span style={{ fontSize: 13, fontWeight: 800, color: activeColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{active?.label} <span style={{ color: '#A9B4C4', fontWeight: 600 }}>· {stateText}</span></span>
-            {nextStep && <span style={{ fontSize: 11, color: '#A9B4C4', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Next: {nextStep.title}</span>}
+            <span style={{ fontSize: 13, fontWeight: 800, color: activeColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{active?.label} <span style={{ color: 'var(--text-tertiary)', fontWeight: 600 }}>· {stateText}</span></span>
+            {nextStep && <span style={{ fontSize: 11, color: 'var(--text-tertiary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Next: {nextStep.title}</span>}
           </span>
-          <CaretDown size={14} weight="bold" color="#A9B4C4" style={{ flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }} />
+          <CaretDown size={14} weight="bold" color="var(--text-tertiary)" style={{ flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }} />
         </button>
       </div>
       {open && nextStep && (
-        <Link href={nextStep.href} className="sag-phase-next" style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 10px 6px', minHeight: 44, padding: '8px 12px', borderRadius: 10, textDecoration: 'none', background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-35)', color: '#FFFFFF' }}>
+        <Link href={nextStep.href} className="sag-phase-next" style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 10px 6px', minHeight: 44, padding: '8px 12px', borderRadius: 10, textDecoration: 'none', background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-35)', color: 'var(--text-primary)' }}>
           <span style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--brand-primary)', flexShrink: 0 }}>{nextStep.done ? 'ALL DONE' : 'NEXT STEP'}</span>
           <span style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nextStep.title}</span>
           <ArrowRight size={14} weight="bold" color="var(--brand-primary)" />
@@ -182,12 +182,12 @@ export default function ProjectPhaseBar() {
           const isDone = state === 'done';
           const inProgress = state === 'progress';
           const href = base + ph.href;
-          const c = PHASE_COLORS[ph.key] || '#A3ACBB';
+          const c = PHASE_COLORS[ph.key] || 'var(--status-closed)';
           const tintBg = `color-mix(in srgb, ${c} 14%, transparent)`;
           return (
             <React.Fragment key={ph.key}>
               {i > 0 && (
-                <span aria-hidden style={{ alignSelf: 'center', color: 'rgba(255,255,255,0.28)', fontWeight: 700, fontSize: 13, flexShrink: 0 }}>→</span>
+                <span aria-hidden style={{ alignSelf: 'center', color: 'var(--text-disabled)', fontWeight: 700, fontSize: 13, flexShrink: 0 }}>→</span>
               )}
               <Link
                 href={href}
@@ -210,20 +210,20 @@ export default function ProjectPhaseBar() {
                 <span style={{
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                   width: 24, height: 24, borderRadius: 7, flexShrink: 0,
-                  background: isActive ? 'rgba(0,0,0,0.18)' : 'transparent',
+                  background: isActive ? 'color-mix(in srgb, var(--bg-base) 18%, transparent)' : 'transparent',
                 }}>
-                  <Icon size={15} weight={isActive ? 'fill' : 'bold'} color={isActive ? '#0A0A0A' : c} />
+                  <Icon size={15} weight={isActive ? 'fill' : 'bold'} color={isActive ? 'var(--on-brand)' : c} />
                 </span>
                 <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15, minWidth: 0 }}>
                   <span style={{
                     fontSize: 10.5, fontWeight: 700,
-                    color: isActive ? 'rgba(0,0,0,0.68)' : '#A9B4C4', whiteSpace: 'nowrap',
+                    color: isActive ? 'rgba(0,0,0,0.68)' : 'var(--text-tertiary)', whiteSpace: 'nowrap',
                   }}>
                     {isActive ? 'You Are Here' : isDone ? 'Done' : inProgress ? 'In Progress' : `Step ${i + 1}`}
                   </span>
                   <span style={{
                     fontSize: 13, fontWeight: 800, whiteSpace: 'nowrap',
-                    color: isActive ? '#0A0A0A' : c,
+                    color: isActive ? 'var(--on-brand)' : c,
                   }}>
                     {ph.label}
                   </span>

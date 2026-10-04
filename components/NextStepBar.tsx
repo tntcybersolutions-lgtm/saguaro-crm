@@ -44,14 +44,14 @@ import { SALES_STEPS, salesStepsDone, type SalesSignals } from '@/lib/sales-jour
    disagreeing on screen. */
 const LS_PROJECT_KEY = 'sag_journey_project';
 
-/* Literal hexes (not CSS vars) because the tone is suffixed with hex alpha
-   below (`${tone}14`). Brand neon yellow for a job, Lead blue for sales. */
-const GOLD = '#FFE600';
-const GOLD_HI = '#FFF04A';
-const BLUE = '#FF8A00';
-const BLUE_HI = '#7CC4FF';
-const TEXT = '#FFFFFF';
-const MUTED = '#D4D4D8';
+/* Tokens, same as desktop: brand neon yellow for a job (white-label aware), the
+   Lead orange for sales. Tints are color-mix() so the vars stay vars. */
+const GOLD = 'var(--brand-primary)';
+const GOLD_HI = 'var(--brand-primary-strong)';
+const BLUE = 'var(--status-lead)';
+const BLUE_HI = 'var(--status-lead)';
+const TEXT = 'var(--text-primary)';
+const MUTED = 'var(--text-secondary)';
 
 const fetcher = async (url: string) => {
   const r = await fetch(url);
@@ -80,8 +80,8 @@ function Reserve({ boxRef }: { boxRef: React.MutableRefObject<HTMLDivElement | n
       style={{
         minHeight: BAR_H, boxSizing: 'border-box',
         background: 'var(--bg-base, #000000)',
-        borderTop: '1px solid rgba(255,255,255,0.08)',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        borderTop: '1px solid var(--border-subtle)',
+        borderBottom: '1px solid var(--border-subtle)',
       }}
     />
   );
@@ -244,9 +244,9 @@ export default function NextStepBar() {
            so scrolled page content (hero titles, tables) bled straight through
            it — the garbled overlap on every screen. Layer the gradient over the
            page base so the bar is fully opaque and nothing shows through. */
-        background: `linear-gradient(90deg, ${tone}14, rgba(0,0,0,0) 55%), var(--bg-base, #000000)`,
-        borderTop: '1px solid rgba(255,255,255,0.08)',
-        borderBottom: `1px solid ${tone}40`,
+        background: `linear-gradient(90deg, color-mix(in srgb, ${tone} 8%, transparent), rgba(0,0,0,0) 55%), var(--bg-base, #000000)`,
+        borderTop: '1px solid var(--border-subtle)',
+        borderBottom: `1px solid color-mix(in srgb, ${tone} 25%, transparent)`,
         minWidth: 0,
         minHeight: BAR_H, boxSizing: 'border-box',
       }}
@@ -261,7 +261,7 @@ export default function NextStepBar() {
         You Are Here
       </span>
 
-      <span aria-hidden className="sag-nsb-detail" style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.12)', flexShrink: 0 }} />
+      <span aria-hidden className="sag-nsb-detail" style={{ width: 1, height: 18, background: 'var(--border-default)', flexShrink: 0 }} />
 
       <span style={{ minWidth: 0, display: 'flex', alignItems: 'baseline', gap: 9, flex: 1 }}>
         <span style={{ fontSize: 13, fontWeight: 800, color: TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{here}</span>
@@ -278,14 +278,14 @@ export default function NextStepBar() {
         aria-expanded={open}
         aria-label={open ? 'Hide the next step' : 'Show the next step'}
         onClick={() => setOpen(v => !v)}
-        style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, margin: '-6px -8px -6px 0', background: 'transparent', border: 'none', color: '#A9B4C4', cursor: 'pointer', flexShrink: 0 }}
+        style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, margin: '-6px -8px -6px 0', background: 'transparent', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', flexShrink: 0 }}
       >
         <CaretDown size={14} weight="bold" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }} />
       </button>
 
       <span className="sag-nsb-detail" style={{
         flexShrink: 0, fontSize: 11.5, fontWeight: 700,
-        color: '#A9B4C4', whiteSpace: 'nowrap',
+        color: 'var(--text-tertiary)', whiteSpace: 'nowrap',
         maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis',
       }} title={`${side} · ${position}`}>
         {side} · {position}
@@ -298,12 +298,12 @@ export default function NextStepBar() {
           flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6,
           padding: '6px 13px', borderRadius: 8, textDecoration: 'none',
           background: `linear-gradient(180deg, ${toneHi}, ${tone})`,
-          color: onBuildJourney ? '#0A0A00' : '#04121F',
+          color: 'var(--on-brand)',
           fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap',
-          boxShadow: `0 2px 10px ${tone}44`,
+          boxShadow: `0 2px 10px color-mix(in srgb, ${tone} 27%, transparent)`,
         }}
       >
-        {cta} <ArrowRight size={12} weight="bold" color={onBuildJourney ? '#0A0A00' : '#04121F'} />
+        {cta} <ArrowRight size={12} weight="bold" color={'var(--on-brand)'} />
       </Link>
     </div>
   );
