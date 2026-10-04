@@ -1105,6 +1105,11 @@ select.k-select { padding-right: 36px; }
   .sag-phase-nav[data-open="true"] > span[aria-hidden] { display: none; }
   .project-mobile-bar { top: calc(56px + env(safe-area-inset-top, 0px) + var(--sag-header-msg-h, 0px) + var(--sag-nextstep-h, 0px)) !important; }
 
+  /* The menu drawer: the tools block first, then the rail in flow (the rail
+     is position:fixed on desktop and would otherwise cover the tools). */
+  .sidebar-mobile-overlay aside { position: static !important; width: 100% !important; height: auto !important; min-height: 0 !important; flex: 1 1 auto; box-shadow: none !important; border-right: 0 !important; overflow: visible !important; }
+  .sidebar-mobile-overlay { padding-bottom: var(--sag-tabbar-h); }
+
   /* Bottom tab bar. */
   .sag-tabbar { display: flex !important; }
   /* Room under the last row so it can scroll above the tab bar and the chat bubble. */
@@ -1118,8 +1123,11 @@ select.k-select { padding-right: 36px; }
   /* Chat bubble sits above the tab bar; the Sage panel too. */
   [data-ai-panel] { bottom: calc(12px + var(--sag-tabbar-h)) !important; height: min(680px, calc(100vh - 24px - var(--sag-tabbar-h))) !important; }
 
-  /* Row-action menus never open off-screen: full-width sheet under the row. */
-  .k-menu-list { left: 12px !important; right: 12px !important; min-width: 0 !important; }
+  /* Row-action menus never open off-screen: a bottom sheet above the tab bar. */
+  .k-menu-list { left: 12px !important; right: 12px !important; top: auto !important; bottom: calc(var(--sag-tabbar-h) + 8px) !important; min-width: 0 !important; max-height: 60vh; overflow-y: auto; }
+  .k-menu-item { min-height: 44px; }
+  /* The chat launcher yields to anything already floating: a modal, a menu, the Sage panel. */
+  body:has([data-ai-panel]) .sag-chat-launcher, body:has(.k-overlay) .sag-chat-launcher, body:has(.k-menu-list) .sag-chat-launcher { display: none !important; }
 
   /* Tables become stacked cards: name, status, amount, one action. Columns past
      the fourth are dropped on phones — the row opens the full record. */
