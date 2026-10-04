@@ -1277,7 +1277,7 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
    Everything below is scoped to < 768px. The desktop shell is untouched.
    ═══════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 767px) {
-  :root { --sag-tabbar-h: calc(56px + env(safe-area-inset-bottom, 0px)); }
+  :root { --sag-tabbar-h: calc(84px + env(safe-area-inset-bottom, 0px)); /* floating bar: 64px tall + 8px lift + breathing room */ }
 
   /* Inputs at 16px so iOS never zooms into a field. This beats the compact
      13px rule above because it comes later with the same !important weight. */

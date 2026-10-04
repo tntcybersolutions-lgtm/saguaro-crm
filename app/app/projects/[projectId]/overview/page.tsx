@@ -500,7 +500,8 @@ export default function OverviewPage() {
           ? <>Finish {fmtShort(p.end_date)}{!closed && daysRemaining != null ? (daysRemaining >= 0 ? ` \u00B7 ${plural(daysRemaining, 'day')} left` : ` \u00B7 ${plural(-daysRemaining, 'day')} over`) : ''}</>
           : 'No end date set'}
         dateTone={!closed && daysRemaining != null ? (daysRemaining < 0 ? 'bad' : daysRemaining < 14 ? 'warn' : undefined) : undefined}
-        actions={[{ href: primary.href, label: primary.label, icon: primary.icon, primary: true }]}
+        /* Quick action, secondary: NextAction below holds the page's ONE primary button. */
+        actions={[{ href: primary.href, label: primary.label, icon: primary.icon }]}
       />
 
       <div className="pov-stack">

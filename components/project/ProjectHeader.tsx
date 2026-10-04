@@ -41,7 +41,7 @@ export default function ProjectHeader({ name, number, status, project, dateText,
       {actions.length > 0 && (
         <div className="pj-header-actions">
           {actions.map((a) => (
-            <Link key={a.href + a.label} href={a.href} className={`k-btn ${a.primary ? 'k-btn-primary' : 'k-btn-secondary'}`}>{a.icon} {a.label}</Link>
+            <Link key={a.href + a.label} href={a.href} className={`k-btn ${a.primary ? 'k-btn-primary' : 'k-btn-secondary'}`} data-quick={a.primary ? undefined : 'true'}>{a.icon} {a.label}</Link>
           ))}
         </div>
       )}

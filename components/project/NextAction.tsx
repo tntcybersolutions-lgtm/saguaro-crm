@@ -8,6 +8,8 @@
  * to First Payment" rail. One compact component:
  *   current phase · actual progress · the next required action ·
  *   ONE primary button · an expandable checklist for the supporting steps.
+ *   (The job's quick action — Open Takeoff while bidding — lives in the header
+ *   as a secondary button, so it is never shown twice on one screen.)
  *
  * Every value comes from real workflow state (lib/project-phase reads the
  * project-context snapshot), the same source the old pieces read, so the
@@ -16,7 +18,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, CaretDown, Check, Ruler, Trophy } from '@phosphor-icons/react';
+import { ArrowRight, CaretDown, Check, Trophy } from '@phosphor-icons/react';
 import { useProjectContext, refreshProjectContext } from '@/lib/hooks/useProjectContext';
 import { normalisePhase, stepsForPhase, stepsDone, PHASE_LABEL } from '@/lib/project-phase';
 import { isClosedStatus } from '@/lib/project-lifecycle';
@@ -49,9 +51,6 @@ export default function NextAction({ projectId }: { projectId: string }) {
     : next
       ? { href: base + (next.href || ''), label: next.title }
       : { href: `${base}/closeout`, label: 'Open Closeout' };
-  const secondary = !closed && phase === 'bidding' && next?.key !== 'takeoff'
-    ? { href: `${base}/takeoff`, label: 'Open Takeoff', icon: <Ruler size={14} weight="bold" /> }
-    : null;
 
   const switchPhase = async () => {
     const to = phase === 'building' ? 'bidding' : 'building';
@@ -79,7 +78,6 @@ export default function NextAction({ projectId }: { projectId: string }) {
         </div>
         <div className="pj-next-actions">
           <Link href={primary.href} className="k-btn k-btn-primary">{primary.label} <ArrowRight size={14} weight="bold" /></Link>
-          {secondary && <Link href={secondary.href} className="k-btn k-btn-secondary">{secondary.icon} {secondary.label}</Link>}
         </div>
       </div>
       <button type="button" className="pj-next-toggle" aria-expanded={open} aria-controls="pj-next-list" onClick={() => setOpen((v) => !v)}>
