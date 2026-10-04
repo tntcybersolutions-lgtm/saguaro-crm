@@ -417,9 +417,9 @@ export default function TimeClockPage() {
       if (leaveType) return <span className="tcMuted">{`${e.hours_worked ?? e.total_hours ?? 8}h logged`}</span>;
       return <span className="tcNum">{fmtTime(e.clock_in)} – {e.status === 'clocked_in' ? 'now' : fmtTime(e.clock_out)}</span>;
     } },
-    { key: 'csi', header: 'Cost Code', accessor: (e) => e.csi_division || '', render: (e) => e.csi_division ? <Badge tone="neutral">Div {e.csi_division} · {e.cost_code_description || CSI_DIVISIONS[e.csi_division]?.name || 'Cost coded'}</Badge> : <span className="tcMuted">—</span> },
-    { key: 'hours', header: 'Hours', accessor: (e) => Number(e.total_hours ?? e.hours_worked ?? 0) || 0, align: 'right', render: (e) => <span className="tcNum" style={{ fontWeight: 800, color: 'var(--text-primary)' }}>{e.status === 'clocked_in' ? '—' : `${(Number(e.total_hours ?? e.hours_worked ?? 0) || 0).toFixed(2)}h`}</span> },
-    { key: 'status', header: 'Status', accessor: (e) => entryStatus(e.status).label, render: (e) => { const s = entryStatus(e.status); return <Badge tone={s.tone} dot={e.status === 'clocked_in'}>{s.label}</Badge>; } },
+    { key: 'csi', phone: 'hide', header: 'Cost Code', accessor: (e) => e.csi_division || '', render: (e) => e.csi_division ? <Badge tone="neutral">Div {e.csi_division} · {e.cost_code_description || CSI_DIVISIONS[e.csi_division]?.name || 'Cost coded'}</Badge> : <span className="tcMuted">—</span> },
+    { key: 'hours', phone: 'show', header: 'Hours', accessor: (e) => Number(e.total_hours ?? e.hours_worked ?? 0) || 0, align: 'right', render: (e) => <span className="tcNum" style={{ fontWeight: 800, color: 'var(--text-primary)' }}>{e.status === 'clocked_in' ? '—' : `${(Number(e.total_hours ?? e.hours_worked ?? 0) || 0).toFixed(2)}h`}</span> },
+    { key: 'status', phone: 'show', header: 'Status', accessor: (e) => entryStatus(e.status).label, render: (e) => { const s = entryStatus(e.status); return <Badge tone={s.tone} dot={e.status === 'clocked_in'}>{s.label}</Badge>; } },
   ];
   const rowActions = (e: any): Action[] => {
     const leaveType = e.entry_type && e.entry_type !== 'regular';

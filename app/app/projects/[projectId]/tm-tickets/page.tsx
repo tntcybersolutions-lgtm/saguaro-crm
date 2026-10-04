@@ -623,7 +623,7 @@ export default function TmTicketsPage() {
   // ── Log columns: full log, or a compact log beside the ticket ──
   const ticketCol: Column<TmTicketRow> = { key: 'ticket', header: 'Ticket', accessor: t => num(t.ticket_number), width: 92, render: t => <span className="tmNum" data-sel={t.id === selectedId ? 'true' : undefined}>{ticketLabel(t)}</span> };
   const dateCol: Column<TmTicketRow> = { key: 'date', header: 'Work Date', accessor: t => String(t.work_date || t.created_at || '').slice(0, 10), render: t => <span className="tmMuted">{fmtDate(t.work_date || t.created_at)}</span> };
-  const descCol: Column<TmTicketRow> = { key: 'desc', header: 'Description', accessor: t => (t.description || '').toLowerCase(), render: t => (
+  const descCol: Column<TmTicketRow> = { key: 'desc', phone: 'hide', header: 'Description', accessor: t => (t.description || '').toLowerCase(), render: t => (
     <div className="tmDesc">
       <span title={t.description || ''}>{t.description || '—'}</span>
       {(t.contractor_signature || t.owner_signature) && (
@@ -631,11 +631,11 @@ export default function TmTicketsPage() {
       )}
     </div>
   ) };
-  const laborCol: Column<TmTicketRow> = { key: 'labor', header: 'Labor', accessor: t => num(t.labor_total), align: 'right', render: t => <span className="tmMoney tmMuted">{fmtUSD(t.labor_total)}</span> };
-  const matCol: Column<TmTicketRow> = { key: 'materials', header: 'Materials', accessor: t => num(t.materials_total), align: 'right', render: t => <span className="tmMoney tmMuted">{fmtUSD(t.materials_total)}</span> };
-  const eqCol: Column<TmTicketRow> = { key: 'equipment', header: 'Equipment', accessor: t => num(t.equipment_total), align: 'right', render: t => <span className="tmMoney tmMuted">{fmtUSD(t.equipment_total)}</span> };
-  const totalCol: Column<TmTicketRow> = { key: 'total', header: 'Total', accessor: t => num(t.total), align: 'right', render: t => <span className="tmTotal">{fmtUSD(t.total)}</span> };
-  const statusCol: Column<TmTicketRow> = { key: 'status', header: 'Status', accessor: t => STATUS_RANK[displayStatus(t.status)] ?? 9, render: t => {
+  const laborCol: Column<TmTicketRow> = { key: 'labor', phone: 'hide', header: 'Labor', accessor: t => num(t.labor_total), align: 'right', render: t => <span className="tmMoney tmMuted">{fmtUSD(t.labor_total)}</span> };
+  const matCol: Column<TmTicketRow> = { key: 'materials', phone: 'hide', header: 'Materials', accessor: t => num(t.materials_total), align: 'right', render: t => <span className="tmMoney tmMuted">{fmtUSD(t.materials_total)}</span> };
+  const eqCol: Column<TmTicketRow> = { key: 'equipment', phone: 'hide', header: 'Equipment', accessor: t => num(t.equipment_total), align: 'right', render: t => <span className="tmMoney tmMuted">{fmtUSD(t.equipment_total)}</span> };
+  const totalCol: Column<TmTicketRow> = { key: 'total', phone: 'show', header: 'Total', accessor: t => num(t.total), align: 'right', render: t => <span className="tmTotal">{fmtUSD(t.total)}</span> };
+  const statusCol: Column<TmTicketRow> = { key: 'status', phone: 'show', header: 'Status', accessor: t => STATUS_RANK[displayStatus(t.status)] ?? 9, render: t => {
     const b = statusBadge(t.status);
     return (
       <div className="tmDesc" style={{ maxWidth: 'none' }}>

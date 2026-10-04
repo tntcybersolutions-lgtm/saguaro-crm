@@ -412,12 +412,12 @@ export default function InvoicingPage() {
   const columns: Column<Invoice>[] = [
     { key: 'invoice_number', header: 'Invoice #', accessor: i => i.invoice_number || '', width: 140, render: i => <span className="ivNum">{i.invoice_number || <span className="ivMuted">No number</span>}</span> },
     { key: 'vendor_name', header: 'Vendor', accessor: i => (i.vendor_name || '').toLowerCase(), render: i => <span className="ivClamp" style={{ color: 'var(--text-primary)', fontWeight: 600 }} title={i.vendor_name}>{i.vendor_name || '—'}</span> },
-    { key: 'project', header: 'Project', accessor: i => projectName(i.project_id).toLowerCase(), render: i => projectName(i.project_id) ? <span className="ivClamp" style={{ maxWidth: 200 }} title={projectName(i.project_id)}>{projectName(i.project_id)}</span> : <span className="ivMuted">—</span> },
-    { key: 'description', header: 'Description', accessor: i => (i.description || '').toLowerCase(), render: i => i.description ? <span className="ivClamp" title={i.description}>{i.description}</span> : <span className="ivMuted">—</span> },
-    { key: 'amount', header: 'Amount', accessor: i => Number(i.amount) || 0, align: 'right', render: i => <span className="ivMoney ivMuted">{i.amount != null ? fmtUsd(Number(i.amount)) : '—'}</span> },
-    { key: 'total', header: 'Total', accessor: i => effectiveTotal(i), align: 'right', render: i => <span className="ivTotal">{fmtUsd(effectiveTotal(i))}</span> },
-    { key: 'due_date', header: 'Due', accessor: i => i.due_date || '', render: i => <span className={isOverdue(i) ? 'ivLate' : undefined}>{fmtDate(i.due_date)}</span> },
-    { key: 'status', header: 'Status', accessor: i => STATUS_RANK[statusKey(i.status)] ?? 9, render: i => {
+    { key: 'project', phone: 'hide', header: 'Project', accessor: i => projectName(i.project_id).toLowerCase(), render: i => projectName(i.project_id) ? <span className="ivClamp" style={{ maxWidth: 200 }} title={projectName(i.project_id)}>{projectName(i.project_id)}</span> : <span className="ivMuted">—</span> },
+    { key: 'description', phone: 'hide', header: 'Description', accessor: i => (i.description || '').toLowerCase(), render: i => i.description ? <span className="ivClamp" title={i.description}>{i.description}</span> : <span className="ivMuted">—</span> },
+    { key: 'amount', phone: 'hide', header: 'Amount', accessor: i => Number(i.amount) || 0, align: 'right', render: i => <span className="ivMoney ivMuted">{i.amount != null ? fmtUsd(Number(i.amount)) : '—'}</span> },
+    { key: 'total', phone: 'show', header: 'Total', accessor: i => effectiveTotal(i), align: 'right', render: i => <span className="ivTotal">{fmtUsd(effectiveTotal(i))}</span> },
+    { key: 'due_date', phone: 'show', header: 'Due', accessor: i => i.due_date || '', render: i => <span className={isOverdue(i) ? 'ivLate' : undefined}>{fmtDate(i.due_date)}</span> },
+    { key: 'status', phone: 'show', header: 'Status', accessor: i => STATUS_RANK[statusKey(i.status)] ?? 9, render: i => {
       const b = statusBadge(i.status);
       return <span className="ivBadges"><Badge tone={b.tone}>{b.label}</Badge>{isOverdue(i) && <Badge tone="overdue">Overdue</Badge>}</span>;
     } },

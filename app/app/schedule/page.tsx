@@ -383,17 +383,17 @@ export default function SchedulePage() {
         <span>{[t.phase, projectName(t.project_id)].filter(Boolean).join(' · ') || '—'}</span>
       </div>
     ) },
-    { key: 'trade', header: 'Trade', accessor: t => String(t.trade || ''), render: t => t.trade ? <span className="scMuted">{t.trade}</span> : <span className="scMuted">—</span> },
+    { key: 'trade', phone: 'hide', header: 'Trade', accessor: t => String(t.trade || ''), render: t => t.trade ? <span className="scMuted">{t.trade}</span> : <span className="scMuted">—</span> },
     { key: 'start_date', header: 'Start', accessor: t => t.start_date || '', render: t => <span className="scMuted">{fmtDate(t.start_date)}</span> },
     { key: 'end_date', header: 'End', accessor: t => t.end_date || '', render: t => <span className={isLate(t) ? 'scLate' : 'scMuted'}>{fmtDate(t.end_date)}{isLate(t) ? ' · late' : ''}</span> },
-    { key: 'predecessor', header: 'Predecessor', accessor: t => taskById.get(t.predecessor_id || '')?.name || '', render: t => (
+    { key: 'predecessor', phone: 'hide', header: 'Predecessor', accessor: t => taskById.get(t.predecessor_id || '')?.name || '', render: t => (
       <PredecessorEditor task={t} options={predOptionsFor(t)} saving={savingId === t.id} onSave={(pid) => patchTask(t.id, { predecessor_id: pid })} />
     ) },
     // pct_complete can round-trip as TEXT — numeric sort, not lexicographic.
-    { key: 'pct_complete', header: 'Progress', accessor: t => Number(t.pct_complete) || 0, render: t => (
+    { key: 'pct_complete', phone: 'show', header: 'Progress', accessor: t => Number(t.pct_complete) || 0, render: t => (
       <PctEditor task={t} saving={savingId === t.id} onSave={(n) => patchTask(t.id, { pct_complete: n })} />
     ) },
-    { key: 'status', header: 'Status', accessor: t => STATUS_RANK[t.status] ?? 9, render: t => (
+    { key: 'status', phone: 'show', header: 'Status', accessor: t => STATUS_RANK[t.status] ?? 9, render: t => (
       <StatusEditor task={t} saving={savingId === t.id} onSave={(s) => patchTask(t.id, s === 'complete' ? { status: s, pct_complete: 100 } : { status: s })} />
     ) },
   ];

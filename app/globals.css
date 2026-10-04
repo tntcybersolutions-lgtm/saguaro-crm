@@ -1141,7 +1141,7 @@ select.k-select { padding-right: 36px; }
   .k-table td:not([data-label])::before { content: none; }
   .k-table td:first-child { display: block; padding-bottom: 6px !important; font-size: var(--fs-md); color: var(--text-primary); }
   .k-table td:first-child::before { content: none; }
-  .k-table td:nth-child(n+5):not(.k-td-actions) { display: none; }
+  .k-table td[data-phone="hide"]:not(:first-child):not(.k-td-actions) { display: none; }
   .k-table td.k-td-actions { position: absolute !important; top: 6px; right: 6px; width: auto; padding: 0 !important; }
   .k-table td.k-td-actions::before { content: none; }
   .k-table td.k-table-empty { display: block; padding: 32px 12px !important; }

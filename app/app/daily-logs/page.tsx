@@ -392,9 +392,9 @@ export default function DailyLogsPage() {
   const columns: Column<DailyLog>[] = [
     { key: 'log_date', header: 'Date', accessor: l => l.log_date || '', width: 130, render: l => <span className="dlDate">{fmtDate(l.log_date)}</span> },
     { key: 'project', header: 'Project', accessor: l => projectName(l.project_id).toLowerCase(), render: l => <span className="dlClamp" style={{ maxWidth: 260, color: 'var(--text-primary)', fontWeight: 600 }} title={projectName(l.project_id)}>{projectName(l.project_id) || <span className="dlMuted">Unknown project</span>}</span> },
-    { key: 'status', header: 'Status', accessor: l => logStatus(l).label, render: l => { const s = logStatus(l); return <Badge tone={s.tone}>{s.label}</Badge>; } },
-    { key: 'weather', header: 'Weather', accessor: l => l.weather || '', render: l => l.weather ? <span className="dlClamp" style={{ maxWidth: 160 }} title={l.weather}>{l.weather}</span> : <span className="dlMuted">—</span> },
-    { key: 'temp', header: 'Temp', accessor: l => Number(tempHigh(l)) || 0, align: 'right', render: l => <span className="dlMuted dlNum">{tempStr(l)}</span> },
+    { key: 'status', phone: 'show', header: 'Status', accessor: l => logStatus(l).label, render: l => { const s = logStatus(l); return <Badge tone={s.tone}>{s.label}</Badge>; } },
+    { key: 'weather', phone: 'hide', header: 'Weather', accessor: l => l.weather || '', render: l => l.weather ? <span className="dlClamp" style={{ maxWidth: 160 }} title={l.weather}>{l.weather}</span> : <span className="dlMuted">—</span> },
+    { key: 'temp', phone: 'hide', header: 'Temp', accessor: l => Number(tempHigh(l)) || 0, align: 'right', render: l => <span className="dlMuted dlNum">{tempStr(l)}</span> },
     { key: 'crew_count', header: 'Crew', accessor: l => Number(l.crew_count) || 0, align: 'right', render: l => <span className="dlNum" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><UsersThree size={14} style={{ color: 'var(--text-tertiary)' }} />{Number(l.crew_count) || 0}</span> },
     { key: 'work_performed', header: 'Work Performed', accessor: l => (l.work_performed || '').toLowerCase(), render: l => l.work_performed ? <span className="dlClamp" title={l.work_performed}>{l.work_performed}</span> : <span className="dlMuted">—</span> },
     { key: 'flags', header: 'Flags', accessor: l => ((l.delays || '').trim() ? 2 : 0) + ((l.safety_notes || '').trim() ? 1 : 0), render: l => {
