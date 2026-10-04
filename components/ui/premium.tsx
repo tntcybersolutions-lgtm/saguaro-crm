@@ -90,7 +90,7 @@ export const PREMIUM_FX = `
 .pmSortTh[aria-sort="ascending"],.pmSortTh[aria-sort="descending"]{color:var(--brand-primary-strong)}
 .pmSortTh[aria-sort="ascending"] .pmSortGlyph,.pmSortTh[aria-sort="descending"] .pmSortGlyph{opacity:1}
 /* Beat the global h1 !important size cap (globals.css) with higher specificity */
-h1.pmH1{font-size:clamp(28px,4.4vw,46px)!important;font-weight:900!important;line-height:1.04!important;letter-spacing:-0.03em!important;margin:0!important}
+h1.pmH1{font-size:clamp(24px,2.4vw,32px)!important;font-weight:800!important;line-height:1.12!important;letter-spacing:-0.02em!important;margin:0!important} /* page-title scale: 28–32 desktop, 24 phone */
 @media (prefers-reduced-motion: reduce){
   .pmRoot,.pmRoot *{animation:none!important;transition:none!important}
   .pmHover:hover,.pmHover:active,.pmBtn:hover,.pmBtn:active,.pmTile:hover,.pmGold:hover,.pmGold:active,.pmGhost:hover,.pmGhost:active,.pmDanger:hover,.pmDanger:active{transform:none!important}
