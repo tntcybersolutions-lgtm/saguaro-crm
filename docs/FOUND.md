@@ -112,4 +112,5 @@ converge. One line each, newest at the bottom.
 - (3 Oct, iOS QA) `app/app/intelligence/page.tsx` — first paint in a fresh tab shows three
   skeleton cards and "Select Projects (0)" until the project list arrives; a reload shows the
   auto-selected three.
-
+- (3 Oct, iOS QA) `app/app/time/page.tsx` — the entry row menu's Delete removes the shift with no
+  confirm step (every other register asks first).

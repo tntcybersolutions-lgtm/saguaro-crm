@@ -99,8 +99,8 @@ walk; their buttons have not been tapped on a phone frame.
 
 Preview `redesign/obsidian-glass`, signed in, 393 × 852. Desktop twin taken at a 1440 layout in a
 second tab. Create / edit / delete only on **ZZ AUDIT 2 Fix Check** and on records I created;
-real jobs opened and cancelled. Every test record was removed afterwards (see the time entry
-note). Screenshots: `docs/design/screenshots/phone/393-*.png` beside
+real jobs opened and cancelled. Every test record was removed afterwards (lead, daily log, punch item, permit, change order,
+review, time entry). Screenshots: `docs/design/screenshots/phone/393-*.png` beside
 `docs/design/screenshots/desktop/1440-*.jpg` (same name = same screen).
 
 | Script step | Result | Phone / desktop pair |
