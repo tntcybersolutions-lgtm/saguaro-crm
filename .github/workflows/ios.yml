@@ -42,6 +42,11 @@ jobs:
           cache: npm
       - run: npm ci
 
+      # One app, one source: the shell must load the live site under the
+      # existing TestFlight bundle id. Fails here before any Mac minutes are spent.
+      - name: iOS mirrors the web app (no drift)
+        run: node tools/check-ios-mirror.mjs
+
       # Server mode: the WebView loads https://www.saguarocontrol.net, so webDir
       # only needs a placeholder page for cap to copy.
       - name: Placeholder webDir
@@ -74,10 +79,10 @@ jobs:
           mkdir -p shots
           xcrun simctl io "$DEVICE" screenshot shots/0-home-before-install.png
           xcrun simctl install "$DEVICE" "$APP"
-          xcrun simctl launch "$DEVICE" com.saguaro.field
+          xcrun simctl launch "$DEVICE" net.saguarocontrol.field
           sleep 2;  xcrun simctl io "$DEVICE" screenshot shots/1-splash.png
           sleep 20; xcrun simctl io "$DEVICE" screenshot shots/2-app-loaded.png
-          xcrun simctl terminate "$DEVICE" com.saguaro.field || true
+          xcrun simctl terminate "$DEVICE" net.saguarocontrol.field || true
           sleep 2;  xcrun simctl io "$DEVICE" screenshot shots/3-home-icon.png
 
       - uses: actions/upload-artifact@v4
@@ -98,7 +103,7 @@ jobs:
       # Repo secrets (Settings → Secrets and variables → Actions):
       #   IOS_DIST_CERT_P12_BASE64   Apple Distribution certificate (.p12), base64
       #   IOS_DIST_CERT_PASSWORD     its export password
-      #   IOS_PROFILE_BASE64         App Store provisioning profile for com.saguaro.field, base64
+      #   IOS_PROFILE_BASE64         App Store provisioning profile for net.saguarocontrol.field, base64
       #   APPLE_TEAM_ID              10-character Team ID
       #   ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_P8_BASE64   App Store Connect API key
       HAS_SECRETS: ${{ secrets.IOS_DIST_CERT_P12_BASE64 != '' && secrets.IOS_PROFILE_BASE64 != '' && secrets.ASC_KEY_P8_BASE64 != '' }}
@@ -138,7 +143,7 @@ jobs:
           PROFILE_NAME=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/saguaro.mobileprovision | plutil -extract Name raw -)
           echo "PROFILE_NAME=$PROFILE_NAME" >> $GITHUB_ENV
 
-      - name: Archive (bump build number to the run number)
+      - name: Archive (build number = 1000 + run number, above the retired React Native builds)
         if: env.HAS_SECRETS == 'true'
         run: |
           set -o pipefail
@@ -146,7 +151,7 @@ jobs:
             -destination 'generic/platform=iOS' -archivePath $RUNNER_TEMP/App.xcarchive \
             DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }} CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Apple Distribution" PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
-            CURRENT_PROJECT_VERSION=${{ github.run_number }} \
+            CURRENT_PROJECT_VERSION=$((1000 + ${{ github.run_number }})) \
             archive | tail -n 40
 
       - name: Export IPA
@@ -159,7 +164,7 @@ jobs:
             <key>method</key><string>app-store</string>
             <key>teamID</key><string>${{ secrets.APPLE_TEAM_ID }}</string>
             <key>signingStyle</key><string>manual</string>
-            <key>provisioningProfiles</key><dict><key>com.saguaro.field</key><string>$PROFILE_NAME</string></dict>
+            <key>provisioningProfiles</key><dict><key>net.saguarocontrol.field</key><string>$PROFILE_NAME</string></dict>
           </dict></plist>
           EOF
           xcodebuild -exportArchive -archivePath $RUNNER_TEMP/App.xcarchive \
