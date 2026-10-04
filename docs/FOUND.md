@@ -87,3 +87,6 @@ converge. One line each, newest at the bottom.
   becoming cards; the Base Role column is off-screen on load.
 - (3 Oct, phone walk) `components/ui/premium.tsx` FlowStrip — at 393px the arrows between steps
   wrap onto their own lines (Portals "How Portal Access Works", Submittals empty state).
+- (3 Oct, phone walk) `app/app/projects/[projectId]/pay-apps/page.tsx` `.paTable` — the custom
+  table (drag reorder, bulk select, LifecycleRail) is not a kit DataTable, so it scrolls
+  sideways at 393px instead of becoming cards.
