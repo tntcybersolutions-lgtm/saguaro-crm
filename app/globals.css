@@ -1096,7 +1096,8 @@ select.k-select { padding-right: 36px; }
   .sag-nsb .sag-nsb-detail { display: none !important; }
   .sag-nsb[data-open="true"] .sag-nsb-detail { display: flex !important; }
   .sag-nsb[data-open="true"] { row-gap: 8px; }
-  .sag-nsb[data-open="true"] > span:nth-of-type(3) { flex-basis: 100%; }
+  .sag-nsb[data-open="true"] > span:nth-of-type(3) { flex-basis: 100%; flex-direction: column; align-items: flex-start; gap: 4px; }
+  .sag-nsb[data-open="true"] > span:nth-of-type(3) > span { white-space: normal !important; overflow: visible !important; line-height: 1.45; }
   .sag-nsb[data-open="true"] .sag-nsb-detail[title] { max-width: none; }
   .sag-nsb-toggle { display: inline-flex !important; }
   .sag-phase-summary { display: flex !important; }

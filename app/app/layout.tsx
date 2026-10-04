@@ -270,9 +270,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="sidebar-mobile-overlay" style={{ display: 'none' }}>
           <div
             onClick={() => setMobileSidebarOpen(false)}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: z.topbar + 1 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: 150 /* above the sticky project bar (90), below modals (200) */ }}
           />
-          <div style={{ position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: z.topbar + 2, display: 'flex', flexDirection: 'column', maxWidth: '86vw', background: 'var(--bg-base)', overflowY: 'auto', WebkitOverflowScrolling: 'touch', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+          <div style={{ position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 151, display: 'flex', flexDirection: 'column', maxWidth: '86vw', background: 'var(--bg-base)', overflowY: 'auto', WebkitOverflowScrolling: 'touch', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
             {/* The controls that leave the phone top bar live here: search,
                 the job picker, help mode and notifications. */}
             <div className="sag-menu-tools" style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 10px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
