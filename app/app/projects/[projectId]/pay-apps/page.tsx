@@ -94,6 +94,28 @@ const CSS = `
   .paWs .k-btn, .paWs .k-stat, .paWs select.k-select, .paWs .k-input { min-height: 44px; }
   .paTable td { height: 56px; }
 }
+/* Phones: each pay app is a card — number and period, payment due on the right,
+   lifecycle under it, then completed-to-date, the status and the one menu. The
+   drag handle and the bulk checkbox stay in a slim first column. */
+@media (max-width: 767px) {
+  .paTableWrap { overflow-x: visible; }
+  .paTable thead { display: none; }
+  .paTable, .paTable tbody { display: block; width: 100%; }
+  .paTable tbody tr { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; grid-template-rows: auto auto auto auto; column-gap: 10px; row-gap: 6px; padding: 12px var(--sp-4); border-bottom: 1px solid var(--border-subtle); align-items: center; }
+  .paTable tbody tr:hover td { background: transparent; }
+  .paTable td { display: block; height: auto !important; padding: 0 !important; border: 0; white-space: normal; width: auto !important; }
+  .paTable td:nth-child(1) { grid-column: 1; grid-row: 1; }
+  .paTable td:nth-child(2) { grid-column: 1; grid-row: 2; }
+  .paTable td:nth-child(3) { grid-column: 2; grid-row: 1; font-size: var(--fs-md); }
+  .paTable td:nth-child(4) { grid-column: 2; grid-row: 2; }
+  .paTable td:nth-child(5) { grid-column: 2 / 4; grid-row: 3; }
+  .paTable td:nth-child(6) { grid-column: 2; grid-row: 4; display: flex; flex-direction: column; }
+  .paTable td:nth-child(6)::before { content: 'Completed to date'; font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .04em; }
+  .paTable td:nth-child(7), .paTable td:nth-child(8) { display: none; }
+  .paTable td:nth-child(9) { grid-column: 3; grid-row: 1; text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
+  .paTable td:nth-child(9)::before { content: 'Payment due'; font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .04em; }
+  .paTable td:nth-child(10) { grid-column: 3; grid-row: 2 / 5; align-self: end; justify-self: end; }
+}
 `;
 
 export default function PayAppsPage() {

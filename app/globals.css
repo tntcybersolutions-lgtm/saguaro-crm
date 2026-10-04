@@ -1120,6 +1120,7 @@ select.k-select { padding-right: 36px; }
   .project-mobile-bar { display: none !important; }
   /* Every control in the menu drawer's tool block is a thumb target. */
   .sag-menu-tools button, .sag-menu-tools a, .sag-menu-tools select { min-height: 44px !important; }
+  .sag-nsb-toggle { min-height: 44px; min-width: 44px; }
   .k-crumbs { display: none !important; }
   .sag-phase-nav[data-open="true"] { padding-top: 4px; }
 
