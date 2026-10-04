@@ -109,9 +109,6 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Always allow public paths
-  if (isPublic(pathname)) return NextResponse.next();
-
   const accessToken  = request.cookies.get('sb-access-token')?.value;
   const refreshToken = request.cookies.get('sb-refresh-token')?.value;
 
@@ -122,7 +119,10 @@ export async function middleware(request: NextRequest) {
     httpOnly: true,
   };
 
-  // API calls: refresh HERE, not in the route. Route handlers call getUser(req)
+  // API calls: refresh HERE, not in the route — and BEFORE the public-path return
+  // below, because PUBLIC_PREFIXES includes '/api/' and this block used to sit
+  // under it, so it never ran. It only acts when a refresh cookie exists and the
+  // access token is expired; public API routes are untouched. Route handlers call getUser(req)
   // without a response, so when the hour-old access token expired the first
   // API call rotated the refresh token server-side and never wrote the new
   // pair back — the browser kept replaying the revoked token, every call went
@@ -130,9 +130,10 @@ export async function middleware(request: NextRequest) {
   // the preview and, since the iOS WebView loads this same site, on phones).
   // Refresh once, store the new pair, and hand the route the fresh token.
   if (pathname.startsWith('/api/')) {
-    if (isValid(accessToken) || !refreshToken) return NextResponse.next();
+    const seen = (r: NextResponse) => { r.headers.set('x-sag-mw-api', 'seen'); return r; }; // TEMP proof — removed after the preview check
+    if (isValid(accessToken) || !refreshToken) return seen(NextResponse.next());
     const session = await refreshTokens(refreshToken);
-    if (!session) return NextResponse.next();
+    if (!session) return seen(NextResponse.next());
     const headers = new Headers(request.headers);
     if (!headers.has('authorization')) headers.set('authorization', `Bearer ${session.access_token}`);
     const response = NextResponse.next({ request: { headers } });
@@ -141,8 +142,12 @@ export async function middleware(request: NextRequest) {
       expires: session.expires_at ? new Date(session.expires_at * 1000) : undefined,
     });
     response.cookies.set('sb-refresh-token', session.refresh_token, { ...cookieOpts, maxAge: 60 * 60 * 24 * 365 });
-    return response;
+    return seen(response);
   }
+
+  // Always allow public paths
+  if (isPublic(pathname)) return NextResponse.next();
+
 
   // Only enforce auth on /app/*
   if (!pathname.startsWith('/app')) return NextResponse.next();
