@@ -349,11 +349,11 @@ export default function SubmittalsPage(){
   const isSel = (s:any) => selected?.id===s.id && mode!=='create';
   const numCol: Column<any> = { key:'submittal_number', header:'#', accessor:s=>s.submittal_number||'', width:90, render:s=><span className="sbNum" data-sel={isSel(s)?'true':undefined}>{s.submittal_number||'—'}</span> };
   const titleCol: Column<any> = { key:'title', header:'Title', accessor:s=>(s.title||'').toLowerCase(), render:s=><div className="sbTitle"><span title={s.title}>{s.title||'—'}</span>{s.trade&&<span>{s.trade}</span>}</div> };
-  const specCol: Column<any> = { key:'spec_section', header:'Spec Section', accessor:s=>s.spec_section||'', render:s=>s.spec_section?<span className="sbMuted">{s.spec_section}</span>:<span className="sbMuted">—</span> };
-  const statusCol: Column<any> = { key:'status', header:'Status', accessor:s=>STATUS_RANK[s.status]??9, render:s=>{const b=statusBadge(s.status);return <span className="sbBadges"><Badge tone={b.tone}>{b.label}</Badge>{isOverdue(s)&&<Badge tone="overdue">Overdue</Badge>}</span>;} };
-  const bicCol: Column<any> = { key:'ball_in_court', header:'Ball in Court', accessor:s=>s.ball_in_court||'', render:s=>s.ball_in_court?<Badge tone="neutral">{s.ball_in_court}</Badge>:<span className="sbMuted">—</span> };
-  const dueCol: Column<any> = { key:'due_date', header:'Required', accessor:s=>s.due_date||'', render:s=><span className={isOverdue(s)?'sbLate':undefined}>{s.due_date?fmtDate(s.due_date):'—'}</span> };
-  const revCol: Column<any> = { key:'revision_number', header:'Rev.', accessor:s=>Number(s.revision_number)||0, align:'right', render:s=><span className="sbMuted">R{s.revision_number??0}</span> };
+  const specCol: Column<any> = { key:'spec_section', phone:'hide',header:'Spec Section', accessor:s=>s.spec_section||'', render:s=>s.spec_section?<span className="sbMuted">{s.spec_section}</span>:<span className="sbMuted">—</span> };
+  const statusCol: Column<any> = { key:'status', phone:'show',header:'Status', accessor:s=>STATUS_RANK[s.status]??9, render:s=>{const b=statusBadge(s.status);return <span className="sbBadges"><Badge tone={b.tone}>{b.label}</Badge>{isOverdue(s)&&<Badge tone="overdue">Overdue</Badge>}</span>;} };
+  const bicCol: Column<any> = { key:'ball_in_court', phone:'show',header:'Ball in Court', accessor:s=>s.ball_in_court||'', render:s=>s.ball_in_court?<Badge tone="neutral">{s.ball_in_court}</Badge>:<span className="sbMuted">—</span> };
+  const dueCol: Column<any> = { key:'due_date', phone:'show',header:'Required', accessor:s=>s.due_date||'', render:s=><span className={isOverdue(s)?'sbLate':undefined}>{s.due_date?fmtDate(s.due_date):'—'}</span> };
+  const revCol: Column<any> = { key:'revision_number', phone:'hide',header:'Rev.', accessor:s=>Number(s.revision_number)||0, align:'right', render:s=><span className="sbMuted">R{s.revision_number??0}</span> };
   const columns: Column<any>[] = detailOpen ? [numCol, titleCol, statusCol, dueCol] : [numCol, titleCol, specCol, statusCol, bicCol, dueCol, revCol];
 
   /** The record's verbs — shared by the row overflow and the rail. */
