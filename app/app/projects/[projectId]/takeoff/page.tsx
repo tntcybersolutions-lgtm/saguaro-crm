@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo, memo } from 'react';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useParams } from 'next/navigation';
+import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { applyMarkupStack } from '@/lib/takeoff/engine';
 import { laborAllocation, lineDirectCost, lineLabor, type LaborAllocation } from '@/lib/takeoff-line-cost';
 import { QTY_CHECK_TAG } from '@/lib/takeoff-quantity-sanity';
@@ -617,6 +618,11 @@ const LineItemTable = memo(function LineItemTable({ groupedItems, sellMult, labo
 
 export default function TakeoffPage() {
   const { projectId } = useParams() as { projectId: string };
+  // The job this takeoff belongs to — the hero names the JOB. The title the AI
+  // read off the drawings is shown beneath it, labelled, so a drawing set
+  // titled for another job can never masquerade as this one.
+  const { ctx: projectCtx } = useProjectContext(projectId);
+  const jobName = String(projectCtx?.project?.name || '');
   const { showToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -2031,10 +2037,13 @@ export default function TakeoffPage() {
             <CheckCircle size={13} weight="fill" color={GREEN} /> Takeoff Complete
           </div>
           <div style={{ color: '#fff', fontWeight: 800, fontSize: 22, marginTop: 6, letterSpacing: '-0.02em' }}>
-            {result?.projectName || 'Material Takeoff'}
+            {jobName || result?.projectName || 'Material Takeoff'}
           </div>
           <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12.5, marginTop: 3 }}>
             {result?.buildingType || 'Building'} · {fmtN(result?.estimatedSF || 0)} SF
+            {result?.projectName && jobName && result.projectName.trim().toLowerCase() !== jobName.trim().toLowerCase() && (
+              <> · Drawings titled “{result.projectName}”</>
+            )}
           </div>
           {result?.summary && (
             <div style={{ color: 'rgba(255,255,255,0.48)', fontSize: 12.5, marginTop: 8, maxWidth: 460, lineHeight: 1.5 }}>
