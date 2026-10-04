@@ -26,7 +26,9 @@ import WhiteLabelProvider from '../../components/WhiteLabelProvider';
 import AppSidebar from '../../components/AppSidebar';
 import AppTopBar from '../../components/AppTopBar';
 import NextStepBar from '../../components/NextStepBar';
-import { X, ArrowRight } from '@phosphor-icons/react';
+import HeaderProjectPicker from '../../components/HeaderProjectPicker';
+import { HelpModeButton } from '../../components/HelpMode';
+import { X, ArrowRight, House, Briefcase, FolderSimple, Clock, DotsThreeOutline, MagnifyingGlass, Bell } from '@phosphor-icons/react';
 import { colors, font, sidebar as sidebarTokens, z } from '../../lib/design-tokens';
 import { ensureBrowserSession } from '../../lib/supabase-browser';
 
@@ -268,9 +270,31 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="sidebar-mobile-overlay" style={{ display: 'none' }}>
           <div
             onClick={() => setMobileSidebarOpen(false)}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: z.sidebar - 1 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: z.topbar + 1 }}
           />
-          <div style={{ position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: z.sidebar }}>
+          <div style={{ position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: z.topbar + 2, display: 'flex', flexDirection: 'column', maxWidth: '86vw', background: 'var(--bg-base)', overflowY: 'auto', WebkitOverflowScrolling: 'touch', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+            {/* The controls that leave the phone top bar live here: search,
+                the job picker, help mode and notifications. */}
+            <div className="sag-menu-tools" style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 10px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: '#A9B4C4', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Menu</span>
+                <button type="button" onClick={() => setMobileSidebarOpen(false)} aria-label="Close menu" style={{ background: 'none', border: 'none', color: '#D4D4D8', cursor: 'pointer', width: 40, height: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><X size={20} /></button>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setMobileSidebarOpen(false); window.dispatchEvent(new Event('open-command-palette')); }}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 44, padding: '0 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#D4D4D8', fontSize: 14, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}
+              >
+                <MagnifyingGlass size={16} /> Search
+              </button>
+              <HeaderProjectPicker />
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <HelpModeButton />
+                <Link href="/app/notifications" onClick={() => setMobileSidebarOpen(false)} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '0 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#D4D4D8', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
+                  <Bell size={16} /> Notifications
+                </Link>
+              </div>
+            </div>
             <AppSidebar
               collapsed={false}
               onToggle={() => setMobileSidebarOpen(false)}
@@ -450,6 +474,31 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </SubscriptionWall>
         </ErrorBoundary>
       </main>
+
+      {/* ── Phone tab bar: Home · My Work · Projects · Time · More ──────────
+          Hidden on desktop by its own display:none; the phone-frame block in
+          globals.css shows it under 768px and reserves its height as
+          --sag-tabbar-h so content, the chat bubble and the Sage panel clear it. */}
+      <nav className="sag-tabbar" aria-label="Primary" style={{ display: 'none', position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: z.topbar, height: 'var(--sag-tabbar-h, 56px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)', boxSizing: 'border-box', background: 'rgba(10,10,12,0.96)', borderTop: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(16px) saturate(140%)', WebkitBackdropFilter: 'blur(16px) saturate(140%)' }}>
+        {([
+          { label: 'Home', href: '/app', icon: House, active: pathname === '/app' || pathname === '/app/' },
+          { label: 'My Work', href: '/app/my-work', icon: Briefcase, active: pathname.startsWith('/app/my-work') },
+          { label: 'Projects', href: '/app/projects', icon: FolderSimple, active: pathname.startsWith('/app/projects') },
+          { label: 'Time', href: '/app/time', icon: Clock, active: pathname.startsWith('/app/time') },
+        ] as const).map((t) => {
+          const Icon = t.icon;
+          return (
+            <Link key={t.href} href={t.href} aria-current={t.active ? 'page' : undefined} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, height: 56, textDecoration: 'none', color: t.active ? 'var(--brand-primary)' : '#A9B4C4', fontSize: 11, fontWeight: t.active ? 800 : 600, boxShadow: t.active ? 'inset 0 2px 0 var(--brand-primary)' : 'none' }}>
+              <Icon size={22} weight={t.active ? 'fill' : 'regular'} />
+              <span>{t.label}</span>
+            </Link>
+          );
+        })}
+        <button type="button" onClick={() => setMobileSidebarOpen(v => !v)} aria-expanded={mobileSidebarOpen} aria-label="More" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, height: 56, background: 'none', border: 'none', color: mobileSidebarOpen ? 'var(--brand-primary)' : '#A9B4C4', fontSize: 11, fontWeight: 600, cursor: 'pointer', boxShadow: mobileSidebarOpen ? 'inset 0 2px 0 var(--brand-primary)' : 'none' }}>
+          <DotsThreeOutline size={22} weight={mobileSidebarOpen ? 'fill' : 'regular'} />
+          <span>More</span>
+        </button>
+      </nav>
 
       {/* ── Sage CRM Chat Widget ──────────────────────────────────────── */}
       <SaguaroChatWidget variant="crm" userId={sageUserId} projectList={sageProjects} />

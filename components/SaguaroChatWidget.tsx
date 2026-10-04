@@ -608,7 +608,7 @@ export default function SaguaroChatWidget({
 
       {/* LAUNCHER */}
       {!isOpen && (
-        <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9999 }}>
+        <div style={{ position: 'fixed', bottom: 'calc(24px + var(--sag-tabbar-h, 0px))', right: 24, zIndex: 9999 }}>
           {showTooltip && (
             <div style={{
               position: 'absolute', bottom: '100%', left: '50%',
@@ -658,9 +658,9 @@ export default function SaguaroChatWidget({
         <div
           ref={panelRef}
           style={{
-            position: 'fixed', bottom: 24, right: 24,
+            position: 'fixed', bottom: 'calc(24px + var(--sag-tabbar-h, 0px))', right: 24,
             width: 'min(420px, calc(100vw - 32px))',
-            height: isMinimized ? 72 : 'min(620px, 80vh)',
+            height: isMinimized ? 72 : 'min(620px, calc(80vh - var(--sag-tabbar-h, 0px)))',
             zIndex: 9998, background: 'var(--bg-surface)',
             border: '1px solid rgba(255,255,255,0.12)',
             borderRadius: 20, overflow: 'hidden',

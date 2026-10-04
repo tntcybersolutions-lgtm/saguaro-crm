@@ -1065,3 +1065,70 @@ select.k-select { padding-right: 36px; }
   .k-modal { width: 100%; max-height: none; border-radius: 0; }
   .k-input, .k-textarea, select.k-select { font-size: 16px !important; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PHONE FRAME — one mobile shell for every screen (handoff §5 "Mobile").
+   Everything below is scoped to < 768px. The desktop shell is untouched.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+  :root { --sag-tabbar-h: calc(56px + env(safe-area-inset-bottom, 0px)); }
+
+  /* Inputs at 16px so iOS never zooms into a field. This beats the compact
+     13px rule above because it comes later with the same !important weight. */
+  input, textarea, select, .k-input, .k-textarea, select.k-select { font-size: 16px !important; }
+
+  /* The desktop sidebar is gone on phones — the tab bar and the menu replace it. */
+  .sidebar-desktop { display: none !important; }
+  .main-content-area { margin-left: 0 !important; padding-bottom: var(--sag-tabbar-h) !important; }
+  .topbar-area { left: 0 !important; }
+
+  /* Top bar: menu · back / page title · Sage · account. Search, Help Me, the job
+     picker and notifications live in the menu. */
+  .sag-topbar-desktop { display: none !important; }
+  .sag-topbar-back { padding: 0 8px !important; }
+  .sag-topbar-back span { max-width: 72px !important; }
+  .sag-crumb-prev { display: none !important; }
+  .sag-crumb-last { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+
+  /* "You Are Here" and the phase strip: one short line, tap for the details. */
+  .sag-nsb-detail { display: none; }
+  .sag-nsb[data-open="true"] .sag-nsb-detail { display: flex; }
+  .sag-nsb-toggle { display: inline-flex !important; }
+  .sag-phase-summary { display: flex !important; }
+  .sag-phase-nav { display: none !important; }
+  .sag-phase-nav[data-open="true"] { display: flex !important; flex-direction: column; overflow: visible; }
+  .sag-phase-nav[data-open="true"] > span[aria-hidden] { display: none; }
+  .project-mobile-bar { top: calc(56px + env(safe-area-inset-top, 0px) + var(--sag-header-msg-h, 0px) + var(--sag-nextstep-h, 0px)) !important; }
+
+  /* Bottom tab bar. */
+  .sag-tabbar { display: flex !important; }
+
+  /* Chat bubble sits above the tab bar; the Sage panel too. */
+  [data-ai-panel] { bottom: calc(12px + var(--sag-tabbar-h)) !important; height: min(680px, calc(100vh - 24px - var(--sag-tabbar-h))) !important; }
+
+  /* Row-action menus never open off-screen: full-width sheet under the row. */
+  .k-menu-list { left: 12px !important; right: 12px !important; min-width: 0 !important; }
+
+  /* Tables become stacked cards: name, status, amount, one action. Columns past
+     the fourth are dropped on phones — the row opens the full record. */
+  .k-table thead { display: none; }
+  .k-table, .k-table tbody, .k-table tr { display: block; width: 100%; }
+  .k-table tr { position: relative; margin: 8px 12px; width: auto; border: 1px solid var(--glass-border); border-radius: var(--radius-sm); background: var(--bg-surface); padding: 10px 12px 10px; }
+  .k-table tbody tr:hover td { background: none; }
+  .k-table td { display: flex; justify-content: space-between; align-items: center; gap: 12px; height: auto !important; min-height: 28px; padding: 3px 0 !important; border-bottom: none; white-space: normal; text-align: left !important; position: static !important; box-shadow: none !important; background: none !important; }
+  .k-table td::before { content: attr(data-label); flex-shrink: 0; font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); }
+  .k-table td:not([data-label])::before { content: none; }
+  .k-table td:first-child { display: block; padding-bottom: 6px !important; font-size: var(--fs-md); color: var(--text-primary); }
+  .k-table td:first-child::before { content: none; }
+  .k-table td:nth-child(n+5):not(.k-td-actions) { display: none; }
+  .k-table td.k-td-actions { position: absolute !important; top: 6px; right: 6px; width: auto; padding: 0 !important; }
+  .k-table td.k-td-actions::before { content: none; }
+  .k-table td.k-table-empty { display: block; padding: 32px 12px !important; }
+  .k-table .k-skel { display: block; height: 12px; }
+  /* Every target 44px. */
+  .k-btn, .k-tab, select.k-select, .k-input { min-height: 44px; }
+  .k-stat { min-height: 44px; }
+}
+@media (max-width: 480px) {
+  .k-page { padding: var(--sp-3) var(--sp-3) var(--sp-6); }
+}

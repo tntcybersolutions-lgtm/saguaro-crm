@@ -467,7 +467,7 @@ export function DataTable<T>({
                 {columns.map((c) => {
                   const v = valueOf(c, row);
                   return (
-                    <td key={c.key} className={c.primary ? 'k-td-primary' : undefined} style={{ textAlign: c.align }}>
+                    <td key={c.key} className={c.primary ? 'k-td-primary' : undefined} style={{ textAlign: c.align }} data-label={typeof c.header === 'string' ? c.header : undefined}>
                       {c.render ? c.render(row) : v == null || v === '' ? '—' : String(v)}
                     </td>
                   );

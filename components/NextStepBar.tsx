@@ -31,7 +31,7 @@ import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import useSWR from 'swr';
 import { usePathname } from 'next/navigation';
-import { ArrowRight, MapPin, CheckCircle } from '@phosphor-icons/react';
+import { ArrowRight, MapPin, CheckCircle, CaretDown } from '@phosphor-icons/react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { normalisePhase, stepsForPhase, stepsDone, PHASE_LABEL } from '@/lib/project-phase';
@@ -113,6 +113,9 @@ export default function NextStepBar() {
      remembered choice, and speaks for the build journey whenever one exists. */
   const { projects } = useProjects();
   const [picked, setPicked] = React.useState<string | null>(null);
+  /* Phones: the bar is one line until tapped — the step, nothing else. */
+  const [open, setOpen] = React.useState(false);
+  useEffect(() => { setOpen(false); }, [pathname]);
   useEffect(() => {
     if (inProject) return;
     try { setPicked(localStorage.getItem(LS_PROJECT_KEY)); } catch { /* private mode */ }
@@ -222,8 +225,10 @@ export default function NextStepBar() {
     <div
       ref={boxRef}
       data-tour="next-step"
+      className="sag-nsb"
+      data-open={open ? 'true' : 'false'}
       style={{
-        display: 'flex', alignItems: 'center', gap: 14,
+        display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
         padding: '9px 18px',
         /* The tone tint must sit on a SOLID base. It used to fade to
            rgba(0,0,0,0), leaving the right ~65% of this fixed bar transparent,
@@ -247,17 +252,29 @@ export default function NextStepBar() {
         You Are Here
       </span>
 
-      <span aria-hidden style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.12)', flexShrink: 0 }} />
+      <span aria-hidden className="sag-nsb-detail" style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.12)', flexShrink: 0 }} />
 
       <span style={{ minWidth: 0, display: 'flex', alignItems: 'baseline', gap: 9, flex: 1 }}>
-        <span style={{ fontSize: 13, fontWeight: 800, color: TEXT, whiteSpace: 'nowrap' }}>{here}</span>
-        <span style={{
+        <span style={{ fontSize: 13, fontWeight: 800, color: TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{here}</span>
+        <span className="sag-nsb-detail" style={{
           fontSize: 12, color: MUTED, minWidth: 0,
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>{next}</span>
       </span>
 
-      <span style={{
+      {/* Phone only: the line opens the details. Desktop never shows this. */}
+      <button
+        type="button"
+        className="sag-nsb-toggle"
+        aria-expanded={open}
+        aria-label={open ? 'Hide the next step' : 'Show the next step'}
+        onClick={() => setOpen(v => !v)}
+        style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, margin: '-6px -8px -6px 0', background: 'transparent', border: 'none', color: '#A9B4C4', cursor: 'pointer', flexShrink: 0 }}
+      >
+        <CaretDown size={14} weight="bold" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }} />
+      </button>
+
+      <span className="sag-nsb-detail" style={{
         flexShrink: 0, fontSize: 11.5, fontWeight: 700,
         color: '#A9B4C4', whiteSpace: 'nowrap',
         maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis',
@@ -267,7 +284,7 @@ export default function NextStepBar() {
 
       <Link
         href={href}
-        className="pmBtn"
+        className="pmBtn sag-nsb-detail"
         style={{
           flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6,
           padding: '6px 13px', borderRadius: 8, textDecoration: 'none',

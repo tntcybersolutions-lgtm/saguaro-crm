@@ -11,10 +11,15 @@
  * in lit. Click a phase and you land on its first tool; the rail beneath is the
  * detail. It reads the same order as PROJECT_NAV_SECTIONS so the two never
  * disagree.
+ *
+ * PHONES. The strip is one short line — the phase you are in and its step
+ * number — that opens the full list on tap. The seven tabs never scroll
+ * sideways under a thumb.
  */
 import React from 'react';
 import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
+import { CaretDown } from '@phosphor-icons/react';
 import { PROJECT_PHASES, phaseForPath } from '@/lib/project-nav';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { normalisePhase, stepsDone } from '@/lib/project-phase';
@@ -41,10 +46,7 @@ type PhaseProgress = 'done' | 'progress' | 'todo';
 /**
  * WHERE THE JOB ACTUALLY IS — not where the user is standing.
  *
- * This bar used to mark every phase to the LEFT of the current page "Done",
- * so opening Docs & Comms on day one announced Preconstruction, Execution,
- * Field and Financials all finished. Page position is not progress. Progress
- * comes from the same completion data as the rail checklist and the
+ * Progress comes from the same completion data as the rail checklist and the
  * next-step bar (lib/project-phase stepsDone), so the three never disagree:
  *
  *   precon     bidding: in progress until takeoff, estimate, bid packages
@@ -85,89 +87,122 @@ export default function ProjectPhaseBar() {
   /* Same SWR key the layout, rail and next-step bar read — no extra request. */
   const { ctx } = useProjectContext(validId ? projectId : null);
   const progress = React.useMemo(() => phaseProgress(ctx), [ctx]);
+  const [open, setOpen] = React.useState(false);
+  // A new route closes the phone list — the tap that got you there is done.
+  React.useEffect(() => { setOpen(false); }, [pathname]);
   if (!validId) return null;
 
   const base = `/app/projects/${projectId}`;
   const rel = pathname.startsWith(base) ? pathname.slice(base.length) : '';
   const activeKey = phaseForPath(rel);
   const activeIdx = Math.max(0, PROJECT_PHASES.findIndex(p => p.key === activeKey));
+  const active = PROJECT_PHASES[activeIdx];
+  const activeColor = PHASE_COLORS[active?.key] || '#A3ACBB';
+  const ActiveIcon = active?.icon;
 
   return (
-    <nav
-      aria-label="Project phase"
-      style={{
-        display: 'flex', alignItems: 'stretch', gap: 6,
-        padding: '10px 14px',
-        background: 'rgba(255,255,255,0.035)',
-        backdropFilter: 'blur(16px) saturate(140%)',
-        WebkitBackdropFilter: 'blur(16px) saturate(140%)',
-        borderBottom: `1px solid ${BORDER}`,
-        overflowX: 'auto',
-        WebkitOverflowScrolling: 'touch',
-        scrollbarWidth: 'none',
-      }}
-    >
+    <div style={{ background: 'rgba(255,255,255,0.035)', borderBottom: `1px solid ${BORDER}` }}>
       {/* dangerouslySetInnerHTML, not a text child: the attribute-selector
           quote would otherwise be escaped to &quot; and break the CSS (the
           repo's check:style-escapes build guard enforces this). */}
       <style dangerouslySetInnerHTML={{ __html: 'nav[aria-label="Project phase"]::-webkit-scrollbar{display:none}' }} />
-      {PROJECT_PHASES.map((ph, i) => {
-        const Icon = ph.icon;
-        const isActive = i === activeIdx;
-        const state = progress[ph.key] ?? 'todo';
-        const isDone = state === 'done';
-        const inProgress = state === 'progress';
-        const href = base + ph.href;
-        const c = PHASE_COLORS[ph.key] || '#A3ACBB';
-        const tintBg = `color-mix(in srgb, ${c} 14%, transparent)`;
-        return (
-          <React.Fragment key={ph.key}>
-            {i > 0 && (
-              <span aria-hidden style={{ alignSelf: 'center', color: 'rgba(255,255,255,0.28)', fontWeight: 700, fontSize: 13, flexShrink: 0 }}>→</span>
-            )}
-            <Link
-              href={href}
-              data-tour={`project-phase-${ph.key}`}
-              title={ph.tagline}
-              aria-current={isActive ? 'page' : undefined}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 9, flexShrink: 0,
-                padding: '7px 13px', borderRadius: 10, textDecoration: 'none',
-                // Active = filled in the phase's color. Otherwise a tint of it,
-                // so every tab still shows its own color and the name stands out.
-                background: isActive ? `linear-gradient(180deg, ${c}, color-mix(in srgb, ${c} 82%, #000))` : tintBg,
-                border: `1px solid ${isActive ? c : `color-mix(in srgb, ${c} 40%, transparent)`}`,
-                boxShadow: isActive ? `0 4px 18px -6px ${c}` : 'none',
-                transition: 'background .15s ease, border-color .15s ease',
-              }}
-              onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = `color-mix(in srgb, ${c} 26%, transparent)`; }}
-              onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = tintBg; }}
-            >
-              <span style={{
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                width: 24, height: 24, borderRadius: 7, flexShrink: 0,
-                background: isActive ? 'rgba(0,0,0,0.18)' : 'transparent',
-              }}>
-                <Icon size={15} weight={isActive ? 'fill' : 'bold'} color={isActive ? '#0A0A0A' : c} />
-              </span>
-              <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15, minWidth: 0 }}>
+
+      {/* Phone: one line — where the job is — that opens the list. Hidden on desktop. */}
+      <button
+        type="button"
+        className="sag-phase-summary"
+        aria-expanded={open}
+        aria-controls="sag-phase-nav"
+        onClick={() => setOpen(v => !v)}
+        style={{
+          display: 'none', alignItems: 'center', gap: 10, width: '100%', minHeight: 44,
+          padding: '6px 14px', background: 'transparent', border: 'none', color: '#FFFFFF',
+          cursor: 'pointer', textAlign: 'left',
+        }}
+      >
+        {ActiveIcon && (
+          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, borderRadius: 7, flexShrink: 0, background: activeColor }}>
+            <ActiveIcon size={15} weight="fill" color="#0A0A0A" />
+          </span>
+        )}
+        <span style={{ minWidth: 0, flex: 1, display: 'flex', alignItems: 'baseline', gap: 8, overflow: 'hidden' }}>
+          <span style={{ fontSize: 13, fontWeight: 800, color: activeColor, whiteSpace: 'nowrap' }}>{active?.label}</span>
+          <span style={{ fontSize: 11.5, color: '#A9B4C4', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Step {activeIdx + 1} of {PROJECT_PHASES.length} · {active?.tagline}</span>
+        </span>
+        <CaretDown size={14} weight="bold" color="#A9B4C4" style={{ flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }} />
+      </button>
+
+      <nav
+        id="sag-phase-nav"
+        aria-label="Project phase"
+        className="sag-phase-nav"
+        data-open={open ? 'true' : 'false'}
+        style={{
+          display: 'flex', alignItems: 'stretch', gap: 6,
+          padding: '10px 14px',
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'none',
+        }}
+      >
+        {PROJECT_PHASES.map((ph, i) => {
+          const Icon = ph.icon;
+          const isActive = i === activeIdx;
+          const state = progress[ph.key] ?? 'todo';
+          const isDone = state === 'done';
+          const inProgress = state === 'progress';
+          const href = base + ph.href;
+          const c = PHASE_COLORS[ph.key] || '#A3ACBB';
+          const tintBg = `color-mix(in srgb, ${c} 14%, transparent)`;
+          return (
+            <React.Fragment key={ph.key}>
+              {i > 0 && (
+                <span aria-hidden style={{ alignSelf: 'center', color: 'rgba(255,255,255,0.28)', fontWeight: 700, fontSize: 13, flexShrink: 0 }}>→</span>
+              )}
+              <Link
+                href={href}
+                data-tour={`project-phase-${ph.key}`}
+                title={ph.tagline}
+                aria-current={isActive ? 'page' : undefined}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 9, flexShrink: 0, minHeight: 44,
+                  padding: '7px 13px', borderRadius: 10, textDecoration: 'none',
+                  // Active = filled in the phase's color. Otherwise a tint of it,
+                  // so every tab still shows its own color and the name stands out.
+                  background: isActive ? `linear-gradient(180deg, ${c}, color-mix(in srgb, ${c} 82%, #000))` : tintBg,
+                  border: `1px solid ${isActive ? c : `color-mix(in srgb, ${c} 40%, transparent)`}`,
+                  boxShadow: isActive ? `0 4px 18px -6px ${c}` : 'none',
+                  transition: 'background .15s ease, border-color .15s ease',
+                }}
+                onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = `color-mix(in srgb, ${c} 26%, transparent)`; }}
+                onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = tintBg; }}
+              >
                 <span style={{
-                  fontSize: 10.5, fontWeight: 700,
-                  color: isActive ? 'rgba(0,0,0,0.68)' : '#A9B4C4', whiteSpace: 'nowrap',
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  width: 24, height: 24, borderRadius: 7, flexShrink: 0,
+                  background: isActive ? 'rgba(0,0,0,0.18)' : 'transparent',
                 }}>
-                  {isActive ? 'You Are Here' : isDone ? 'Done' : inProgress ? 'In Progress' : `Step ${i + 1}`}
+                  <Icon size={15} weight={isActive ? 'fill' : 'bold'} color={isActive ? '#0A0A0A' : c} />
                 </span>
-                <span style={{
-                  fontSize: 13, fontWeight: 800, whiteSpace: 'nowrap',
-                  color: isActive ? '#0A0A0A' : c,
-                }}>
-                  {ph.label}
+                <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15, minWidth: 0 }}>
+                  <span style={{
+                    fontSize: 10.5, fontWeight: 700,
+                    color: isActive ? 'rgba(0,0,0,0.68)' : '#A9B4C4', whiteSpace: 'nowrap',
+                  }}>
+                    {isActive ? 'You Are Here' : isDone ? 'Done' : inProgress ? 'In Progress' : `Step ${i + 1}`}
+                  </span>
+                  <span style={{
+                    fontSize: 13, fontWeight: 800, whiteSpace: 'nowrap',
+                    color: isActive ? '#0A0A0A' : c,
+                  }}>
+                    {ph.label}
+                  </span>
                 </span>
-              </span>
-            </Link>
-          </React.Fragment>
-        );
-      })}
-    </nav>
+              </Link>
+            </React.Fragment>
+          );
+        })}
+      </nav>
+    </div>
   );
 }

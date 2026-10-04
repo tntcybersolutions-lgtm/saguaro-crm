@@ -188,6 +188,7 @@ export default function AppTopBar({
           onClick={() => { const parent = crumbs[crumbs.length - 2]; if (parent) router.push(parent.href); else router.back(); }}
           aria-label={`Back to ${crumbs[crumbs.length - 2]?.label || 'previous page'}`}
           title="Back"
+          className="sag-topbar-back"
           style={{
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
             height: 34, padding: '0 12px 0 10px', marginRight: 4,
@@ -211,20 +212,22 @@ export default function AppTopBar({
 
       {/* The job you are in — same place on every screen, and switching keeps
           you on the screen you are looking at. */}
-      <HeaderProjectPicker />
-
-      <span aria-hidden style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.12)', margin: '0 4px', flexShrink: 0 }} />
+      <div className="sag-topbar-desktop" style={{ display: 'contents' }}>
+        <HeaderProjectPicker />
+        <span aria-hidden style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.12)', margin: '0 4px', flexShrink: 0 }} />
+      </div>
 
       {/* Breadcrumbs */}
       <nav style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0, overflow: 'hidden' }}>
         {crumbs.map((c, i) => (
           <React.Fragment key={c.href}>
-            {i > 0 && <CaretRight size={11} weight="bold" style={{ color: '#7A8597' }} />}
+            {i > 0 && <CaretRight className="sag-crumb-prev" size={11} weight="bold" style={{ color: '#7A8597' }} />}
             {c.isLast ? (
-              <span style={{ fontSize: font.size.lg, fontWeight: font.weight.semibold, color: '#FFFFFF', letterSpacing: '-0.01em' }}>{c.label}</span>
+              <span className="sag-crumb-last" style={{ fontSize: font.size.lg, fontWeight: font.weight.semibold, color: '#FFFFFF', letterSpacing: '-0.01em' }}>{c.label}</span>
             ) : (
               <Link
                 href={c.href}
+                className="sag-crumb-prev"
                 style={{ fontSize: font.size.lg, color: '#D4D4D8', textDecoration: 'none', transition: 'color .15s' }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
                 onMouseLeave={(e) => (e.currentTarget.style.color = '#D4D4D8')}
@@ -241,6 +244,7 @@ export default function AppTopBar({
       {/* Search button (⌘K) */}
       <button
         onClick={onOpenCommandPalette}
+        className="sag-topbar-desktop"
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -290,7 +294,7 @@ export default function AppTopBar({
 
       {/* Help Mode — sits before Sage: the arrows are the answer to "where is
           the button", Sage is the answer to "what should I do". */}
-      <HelpModeButton />
+      <div className="sag-topbar-desktop" style={{ display: 'contents' }}><HelpModeButton /></div>
 
       {/* Sage AI */}
       <button
@@ -328,6 +332,8 @@ export default function AppTopBar({
       {/* Notifications */}
       <button
         onClick={() => router.push('/app/notifications')}
+        className="sag-topbar-desktop"
+        aria-label="Notifications"
         style={{
           display: 'flex',
           alignItems: 'center',
