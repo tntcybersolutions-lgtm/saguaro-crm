@@ -57,10 +57,10 @@ export default function ReviewsPage() {
       const res = await fetch(`/api/reviews/${r.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('delete failed');
       setReviews((prev) => prev.filter((x) => x.id !== r.id));
-      void load(); // the average and count come from the server — refresh them too
     } catch {
-      setState('error');
+      // Not a load failure — leave the list in place; the reload below shows the truth.
     }
+    void load(); // the average and count come from the server — refresh them too
   }, []);
 
   React.useEffect(() => { void load(); }, [load]);
