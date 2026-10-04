@@ -155,9 +155,24 @@ export async function POST(req: NextRequest) {
     // ── G702 line 1 must be the ORIGINAL contract sum. projects.contract_amount
     //    is CO-INCLUSIVE (the CO cascade bumps it), so pairing it with a derived
     //    change_orders_total would double-count every approved CO. ──
-    const originalContractSum = p?.original_contract_amount != null
-      ? Number(p.original_contract_amount) || 0
-      : Math.max(0, (Number(body.contractSum) || Number(p?.contract_amount) || 0) - changeOrdersTotal);
+    //    The wizard's "Original Contract Sum" is exactly line 1, so it wins when
+    //    given. projects.original_contract_amount is 0 (not null) on a job that
+    //    was never set up, and the old `!= null` test made that 0 beat the typed
+    //    figure — every pay app on such a job printed $0.00 (FOUND, 3 Oct).
+    const typedSum = Number(body.contractSum) || 0;
+    const projectOriginal = Number(p?.original_contract_amount) || 0;
+    const originalContractSum = typedSum > 0
+      ? typedSum
+      : projectOriginal > 0
+        ? projectOriginal
+        : Math.max(0, (Number(p?.contract_amount) || 0) - changeOrdersTotal);
+    // A job with no contract on file learns it from the first pay app, so the
+    // projects list, the overview and Intelligence stop showing $0.00 for it.
+    if (typedSum > 0 && projectOriginal <= 0) {
+      const fill: Record<string, number> = { original_contract_amount: typedSum };
+      if (!(Number(p?.contract_amount) > 0)) fill.contract_amount = typedSum + changeOrdersTotal;
+      await db.from('projects').update(fill).eq('id', projectId).eq('tenant_id', user.tenantId);
+    }
     // G702 line 3 (CONTRACT SUM TO DATE) = line 1 + line 2 (approved COs) —
     // never the SOV scheduled total, which tracks billing lines, not the contract.
     const contractPlusCos = originalContractSum + changeOrdersTotal;

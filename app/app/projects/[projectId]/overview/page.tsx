@@ -20,7 +20,8 @@
 import React, { useState } from 'react';
 import useSWR from 'swr';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import {
   WarningCircle, FolderOpen, ArrowRight, ArrowClockwise, Plus, CheckCircle, XCircle,
 } from '@phosphor-icons/react';
@@ -153,6 +154,35 @@ function Section({ id, title, action, children, className }: { id: string; title
 const SecLink = ({ href, children }: { href: string; children: React.ReactNode }) => (
   <Link href={href} className="pov-seclink">{children} <ArrowRight size={13} weight="bold" /></Link>
 );
+
+/* Archive — the only way off the portfolio. DELETE /api/projects/[id] marks the
+   job archived (nothing is destroyed); the list, Intelligence and the pickers
+   already skip archived jobs. There was no control for it anywhere (FOUND). */
+function ArchiveButton({ projectId, name }: { projectId: string; name: string }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const archive = async () => {
+    if (!(await confirmDialog({ title: 'Archive this job?', message: `"${name}" leaves the portfolio, the pickers and Intelligence. Its records stay and support can restore it.`, danger: true }))) return;
+    setBusy(true); setErr('');
+    try {
+      const r = await fetch(`/api/projects/${projectId}`, { method: 'DELETE' });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Could not archive the job');
+      router.push('/app/projects');
+    } catch (e) {
+      setErr(humanError(e, 'Could not archive the job.'));
+      setBusy(false);
+    }
+  };
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+      {err && <span style={{ fontSize: 12, color: 'var(--status-overdue)' }}>{err}</span>}
+      <button type="button" onClick={() => void archive()} disabled={busy} style={{ background: 'none', border: '1px solid var(--border-default)', borderRadius: 8, padding: '6px 10px', minHeight: 36, cursor: busy ? 'wait' : 'pointer', color: 'var(--status-overdue)', fontSize: 12, fontWeight: 700 }}>
+        {busy ? 'Archiving…' : 'Archive Job'}
+      </button>
+    </span>
+  );
+}
 
 /* ── Page ──────────────────────────────────────────────────────────────── */
 
@@ -675,7 +705,7 @@ export default function OverviewPage() {
         <div className="pov-lower">
           <div className="pov-col">
             <ProjectOwnershipCard projectId={projectId} project={p} onSaved={() => { void revalidate(); }} />
-            <Section id="pov-details" title="Project Details">
+            <Section id="pov-details" title="Project Details" action={<ArchiveButton projectId={projectId} name={p?.name || 'this job'} />}>
               <dl className="pov-dl">
                 {detailRows.map(([l, v]) => (
                   <div key={l} className="pov-dlrow"><dt>{l}</dt><dd>{v}</dd></div>
