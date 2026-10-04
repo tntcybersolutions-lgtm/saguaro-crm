@@ -399,7 +399,7 @@ export default function DailyLogsPage() {
     { key: 'project', header: 'Project', accessor: l => projectName(l.project_id).toLowerCase(), render: l => <span className="dlClamp" style={{ maxWidth: 260, color: 'var(--text-primary)', fontWeight: 600 }} title={projectName(l.project_id)}>{projectName(l.project_id) || <span className="dlMuted">Unknown project</span>}</span> },
     { key: 'status', phone: 'show', header: 'Status', accessor: l => logStatus(l).label, render: l => { const s = logStatus(l); return <Badge tone={s.tone}>{s.label}</Badge>; } },
     { key: 'crew_count', header: 'Crew', accessor: l => Number(l.crew_count) || 0, align: 'right', render: l => <span className="dlNum" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><UsersThree size={14} style={{ color: 'var(--text-tertiary)' }} />{Number(l.crew_count) || 0}</span> },
-    { key: 'work_performed', header: 'Work Performed', accessor: l => (l.work_performed || '').toLowerCase(), render: l => l.work_performed ? <span className="dlClamp" title={l.work_performed}>{l.work_performed}</span> : <span className="dlMuted">—</span> },
+    { key: 'work_performed', header: 'Work Performed', accessor: l => (l.work_performed || '').toLowerCase(), render: l => l.work_performed ? <span className="dlClamp" style={{ maxWidth: 320 }} title={l.work_performed}>{l.work_performed}</span> : <span className="dlMuted">—</span> },
     { key: 'flags', header: 'Flags', accessor: l => ((l.delays || '').trim() ? 2 : 0) + ((l.safety_notes || '').trim() ? 1 : 0), render: l => {
       const hasDelay = !!(l.delays || '').trim();
       const hasSafety = !!(l.safety_notes || '').trim();

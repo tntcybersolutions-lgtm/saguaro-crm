@@ -14,7 +14,7 @@ const TEXT   = '#FFFFFF';
 
 interface PaletteItem {
   id: string;
-  section: 'recent' | 'actions' | 'navigation';
+  section: 'recent' | 'records' | 'actions' | 'navigation';
   icon: string;
   label: string;
   description: string;
@@ -69,6 +69,31 @@ export default function CommandPalette({ onScoreBid }: Props) {
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(0);
   const [recentPages, setRecentPages] = useState<PaletteItem[]>([]);
+  // Records — the palette used to list only navigation and quick actions, so
+  // typing a company or job name found nothing. Projects and leads load once
+  // per open (two small list calls) and match the same fuzzy filter.
+  const [records, setRecords] = useState<PaletteItem[]>([]);
+  useEffect(() => {
+    if (!open || records.length) return;
+    let alive = true;
+    (async () => {
+      const out: PaletteItem[] = [];
+      try {
+        const r = await fetch('/api/projects?limit=200&fields=id,name,project_number', { credentials: 'include' });
+        const j = await r.json().catch(() => ({}));
+        const rows: Array<{ id: string; name?: string; project_number?: string }> = j?.projects || [];
+        for (const p of rows) if (p?.id && p.name) out.push({ id: `proj-${p.id}`, section: 'records', icon: '\u{1F3D7}️', label: p.name, description: p.project_number ? `Job ${p.project_number}` : 'Job', href: `/app/projects/${p.id}/overview` });
+      } catch { /* list unavailable — the palette still works without records */ }
+      try {
+        const r = await fetch('/api/leads', { credentials: 'include' });
+        const j = await r.json().catch(() => ({}));
+        const rows: Array<{ id: string; company_name?: string; company?: string; contact_name?: string; stage?: string }> = j?.leads || [];
+        for (const l of rows) { const name = l?.company_name || l?.company; if (l?.id && name) out.push({ id: `lead-${l.id}`, section: 'records', icon: '\u{1F4C8}', label: name, description: ['Lead', l.contact_name, l.stage].filter(Boolean).join(' · '), href: `/app/leads/${l.id}` }); }
+      } catch { /* same */ }
+      if (alive) setRecords(out);
+    })();
+    return () => { alive = false; };
+  }, [open, records.length]);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const router = useGuardedRouter();
@@ -84,6 +109,7 @@ export default function CommandPalette({ onScoreBid }: Props) {
   // Build full item list with injected handlers
   const allItems: PaletteItem[] = [
     ...recentPages.map(p => ({ ...p, section: 'recent' as const })),
+    ...(query.trim() ? records : []),
     ...ACTION_ITEMS.map(a => ({
       ...a,
       section: 'actions' as const,
@@ -188,8 +214,8 @@ export default function CommandPalette({ onScoreBid }: Props) {
   // Group filtered items by section for display
   const sections: { key: PaletteItem['section']; label: string; items: { item: PaletteItem; idx: number }[] }[] = [];
   let globalIdx = 0;
-  for (const sectionKey of ['recent', 'actions', 'navigation'] as const) {
-    const sectionLabel = sectionKey === 'recent' ? 'Recent Pages' : sectionKey === 'actions' ? 'Quick Actions' : 'Navigation';
+  for (const sectionKey of ['recent', 'records', 'actions', 'navigation'] as const) {
+    const sectionLabel = sectionKey === 'recent' ? 'Recent Pages' : sectionKey === 'records' ? 'Jobs & Leads' : sectionKey === 'actions' ? 'Quick Actions' : 'Navigation';
     const items = filtered
       .map((item, i) => ({ item, idx: i }))
       .filter(({ item }) => item.section === sectionKey);
