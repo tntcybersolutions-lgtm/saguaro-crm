@@ -237,14 +237,16 @@ export default function GetTheAppPage() {
            which is exactly the part that stays clear. */
 
         /* Glow behind the hero phones — the neon palette, not flat black. */
-        .devices { position: relative; height: 720px; }
+        /* The hero column is ~560px at 1440: a 232px phone in the middle and two
+           176px phones tucked behind it at the edges, all inside the glow. */
+        .devices { position: relative; height: 600px; }
         .devices-glow {
-          position: absolute; inset: -40px -20px -20px;
+          position: absolute; inset: -60px -40px -30px;
           background:
-            radial-gradient(ellipse 60% 55% at 50% 60%, rgba(255,230,0,0.34) 0%, rgba(255,230,0,0.12) 42%, transparent 70%),
-            radial-gradient(ellipse 45% 45% at 18% 80%, rgba(255,138,0,0.32) 0%, transparent 65%),
-            radial-gradient(ellipse 40% 40% at 86% 22%, rgba(255,138,0,0.22) 0%, transparent 65%);
-          filter: blur(10px); pointer-events: none;
+            radial-gradient(ellipse 62% 58% at 50% 58%, rgba(255,230,0,0.55) 0%, rgba(255,230,0,0.22) 40%, transparent 70%),
+            radial-gradient(ellipse 48% 48% at 14% 78%, rgba(255,138,0,0.50) 0%, transparent 65%),
+            radial-gradient(ellipse 44% 44% at 88% 24%, rgba(255,138,0,0.38) 0%, transparent 65%);
+          filter: blur(12px); pointer-events: none;
         }
         .dev-slot-phone-a { position: absolute; left: 50%; transform: translateX(-50%); top: 0; z-index: 3; animation: floatA 5s ease-in-out infinite; }
         .dev-slot-phone-b { position: absolute; left: 0; bottom: 0; z-index: 2; animation: floatB 5.5s ease-in-out infinite 0.4s; }
@@ -620,7 +622,7 @@ export default function GetTheAppPage() {
           .nav { padding: 0 16px; }
           .hero { padding: 80px 16px 60px; }
           .hero-inner { grid-template-columns: 1fr; gap: 48px; }
-          .devices { height: 560px; order: -1; }
+          .devices { height: 520px; order: -1; }
           .dev-slot-phone-b, .dev-slot-phone-c { display: none; }
           .phones { padding: 48px 0 56px; }
           .phones-inner { padding: 0 16px; }
@@ -640,7 +642,7 @@ export default function GetTheAppPage() {
           .numbers-inner { grid-template-columns: 1fr 1fr; }
           .stat-number { font-size: 28px; }
           .hero-h1 { font-size: 34px; }
-          .devices { height: 540px; }
+          .devices { height: 520px; }
         }
       ` }} />
 
@@ -701,13 +703,13 @@ export default function GetTheAppPage() {
             <div className="devices" aria-label="The Saguaro field app on iPhone">
               <div className="devices-glow" aria-hidden />
               <div className="dev-slot-phone-b">
-                <PhoneFrame src="/marketing/phone-daily-log.png" alt="Daily log on iPhone — crew, weather and work performed" width={214} />
+                <PhoneFrame src="/marketing/phone-daily-log.png" alt="Daily log on iPhone — crew, weather and work performed" width={176} />
               </div>
               <div className="dev-slot-phone-a">
-                <PhoneFrame src="/marketing/phone-project.png" alt="Project overview on iPhone — phase, next step, money and what needs attention" width={252} />
+                <PhoneFrame src="/marketing/phone-project.png" alt="Project overview on iPhone — phase, next step, money and what needs attention" width={232} />
               </div>
               <div className="dev-slot-phone-c">
-                <PhoneFrame src="/marketing/phone-time-clock.png" alt="Time clock on iPhone — GPS-stamped, cost-coded shifts" width={214} />
+                <PhoneFrame src="/marketing/phone-time-clock.png" alt="Time clock on iPhone — GPS-stamped, cost-coded shifts" width={176} />
               </div>
             </div>
           </div>
