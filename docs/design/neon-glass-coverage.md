@@ -111,3 +111,17 @@ form/modal/drawer, loading/empty/error states.
 | Job daily logs, punch list, RFIs, change orders, pay apps, lien waivers, invoices | DRIVEN — tiles + styled empty states; lien-waiver register headers sortable | after/393-*.png |
 | /app/time | DRIVEN — tiles, glance card, Time tab lit | after/393-time.png |
 | Job photos | DRIVEN — loading state on system (page took >7s to load project context) | after/393-photos-loading.png |
+
+## Desktop sampling — 1280×529 (the only width this display gives Chrome; 1440 not verified)
+
+| Route | Result | Screenshot |
+|---|---|---|
+| Job overview | DRIVEN — keyboard order: Overview → … → Closeout → Open Takeoff → Send Bid Packages; all 7 tabs fit, last tab right edge 1074 < nav 1275 | after/1280-project-overview*.jpg |
+| Job bid packages | DRIVEN — kit page crumbs ("Projects › job › Bid Packages") duplicated the top bar → `.k-crumbs` hidden on every width (pending next preview). Before: before/1280-bid-packages-crumbs.jpg | — |
+| Settings | DRIVEN | after/1280-settings.jpg |
+| Customers | DRIVEN — header sort cycle verified | after/1280-customers.jpg |
+| Dashboard | DRIVEN | after/1280-dashboard*.jpg |
+
+**Tab overflow (More menu): CANNOT VERIFY in this Chrome.** The desktop tab is background-throttled (ResizeObserver callbacks — even a fresh one attached from the console — never fire, and the window ignores resizes), so shrinking the nav row did not re-measure. ProjectNav now also re-measures on `window.resize` and never caches a zero width. Needs a visible browser window narrower than ~1000px.
+
+More phone routes driven: My Work, More drawer (compact identity row), Settings, Reports, Submittals, New RFI modal (full-screen sheet, 16px inputs, Escape closes) — `after/393-*.png`.

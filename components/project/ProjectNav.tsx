@@ -39,8 +39,14 @@ export default function ProjectNav({ projectId, onOpenModules }: { projectId: st
       const avail = row.clientWidth - 96; // room for "More"
       let used = 0; let n = 0;
       for (let i = 0; i < PROJECT_PHASES.length; i++) {
-        const w = itemRefs.current[i]?.dataset.w ? Number(itemRefs.current[i]!.dataset.w) : (itemRefs.current[i]?.offsetWidth || 0);
-        if (itemRefs.current[i] && !itemRefs.current[i]!.dataset.w) itemRefs.current[i]!.dataset.w = String(w);
+        const el = itemRefs.current[i];
+        // Each pill's natural width, cached once it has really been laid out.
+        // A zero (measured before fonts/layout) must not be cached — that is
+        // how the row once claimed every pill fit and clipped the last one.
+        const cached = el?.dataset.w ? Number(el.dataset.w) : 0;
+        const w = cached > 0 ? cached : (el?.offsetWidth || 0);
+        if (el && !cached && w > 0) el.dataset.w = String(w);
+        if (w === 0) { n = PROJECT_PHASES.length; break; } // not laid out yet — show all, re-measure on the next resize
         if (used + w + 6 > avail) break;
         used += w + 6; n++;
       }
@@ -49,7 +55,10 @@ export default function ProjectNav({ projectId, onOpenModules }: { projectId: st
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(row);
-    return () => ro.disconnect();
+    // Belt and braces: a window resize also re-measures (ResizeObserver
+    // callbacks are not delivered while a tab is throttled in the background).
+    window.addEventListener('resize', measure);
+    return () => { ro.disconnect(); window.removeEventListener('resize', measure); };
   }, []);
 
   useEffect(() => {

@@ -910,7 +910,11 @@ input:-webkit-autofill:focus {
 
 /* Page frame */
 .k-page { width: 100%; max-width: var(--page-max); margin: 0 auto; padding: var(--sp-6) var(--sp-6) var(--sp-8); display: flex; flex-direction: column; gap: var(--sp-4); }
-.k-crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: var(--fs-xs); color: var(--text-tertiary); }
+/* The page crumb trail is gone on every width: the top bar already shows the
+   parent (Home / the job switcher) and the page title, so this row said the
+   same thing a second time directly beneath it. The nav stays in the DOM for
+   assistive tech. */
+.k-crumbs { display: none; }
 .k-crumbs a { color: var(--text-tertiary); }
 .k-crumbs a:hover { color: var(--text-primary); }
 .k-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--sp-3) var(--sp-4); }
