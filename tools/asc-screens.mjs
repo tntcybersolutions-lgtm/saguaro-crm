@@ -95,9 +95,20 @@ async function capture() {
     await page.goto(`${SITE}/login`, { waitUntil: 'networkidle' });
     await page.fill('input[name="email"]', review.demoAccountName);
     await page.fill('input[name="password"]', review.demoAccountPassword);
-    await Promise.all([page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 45000 }), page.click('button[type="submit"]')]);
+    const session = page.waitForResponse((r) => r.url().includes('/api/auth/session'), { timeout: 60000 }).catch(() => null);
+    await page.click('button[type="submit"]');
+    const res = await session;
+    const outcome = await Promise.race([
+      page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 60000 }).then(() => 'ok'),
+      page.waitForSelector('[data-tone="bad"]', { timeout: 60000 }).then(async (el) => `error shown: "${(await el.innerText()).trim()}"`),
+    ]).catch(() => 'no navigation and no error within 60s');
+    if (outcome !== 'ok') {
+      fs.mkdirSync(OUT, { recursive: true });
+      await page.screenshot({ path: path.join(OUT, `debug-login-${kind}.png`) });
+      throw new Error(`${kind} sign-in failed: /api/auth/session → ${res ? res.status() : 'no response'}; ${outcome}; url ${page.url()}`);
+    }
     await page.waitForLoadState('networkidle').catch(() => {});
-    console.log(`${kind}: signed in, landed on ${new URL(page.url()).pathname}`);
+    console.log(`${kind}: signed in (session ${res?.status()}), landed on ${new URL(page.url()).pathname}`);
 
     if (!project) {
       await page.goto(`${SITE}/app/projects`, { waitUntil: 'networkidle' });

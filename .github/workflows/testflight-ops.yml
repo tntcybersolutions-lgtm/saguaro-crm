@@ -61,7 +61,7 @@ jobs:
           PLAYWRIGHT_DIR: /tmp/pw
         run: node tools/asc-screens.mjs capture
       - name: Commit screenshots to this branch
-        if: env.MODE == 'screens-capture'
+        if: always() && env.MODE == 'screens-capture'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
