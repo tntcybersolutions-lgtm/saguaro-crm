@@ -143,3 +143,21 @@ More phone routes driven: My Work, More drawer (compact identity row), Settings,
 Type check: only the 8 pre-existing `deal_media` / `customer_reviews` errors. Preview builds green through 847200fd.
 
 **CANNOT VERIFY (screenshots at 390/1440) until signed in again:** the preview host's session expired overnight — both tabs are back on `/login`. The agent never submits the login form.
+
+### Polish pass — driven after sign-in (5 Oct), screenshots in `docs/design/screenshots/polish/`
+
+| Route | 393 | 1600 (this display's desktop width; 1440 falls inside it) | Notes |
+|---|---|---|---|
+| /app/subs | DRIVEN (cards, Sort bar 44px, pills with glyphs) | DRIVEN (avatars, pills, selected row = yellow edge, bubble clear) | no sideways scroll (393 = 393) |
+| /app/compliance | DRIVEN (cards) | DRIVEN | pills: W-9 Pending / None on File / Non-Compliant |
+| /app/customers | DRIVEN (cards, pipeline pills) | DRIVEN | test customers renamed ZZ AUDIT Customer … |
+| /app/prequalification | DRIVEN (dashboard, no submissions) | DRIVEN (empty) | table empty on this tenant |
+| /app/warranty-claims | — | DRIVEN (select-a-project empty state) | no claims data |
+| job /team | DRIVEN (empty roster on ZZ AUDIT 2) | — | no members on the test job |
+| job /subs | — | DRIVEN (pills W-9 / COI, status select, delete) | |
+| job /bills | — | DRIVEN (no bills → form only) | |
+| job /lien-waivers (glass skin) | DRIVEN (13 rows as cards) | DRIVEN (raised uppercase header) | raw-table cards carry no field labels (no `data-label` on hand-rolled cells) — logged below |
+| job /estimate | DRIVEN | DRIVEN | "No Takeoff Data Yet" while /takeoff is complete → FOUND |
+| /app/documents | DRIVEN (see 393 shot) | DRIVEN | |
+
+Known limit of the skin route: hand-rolled tables promoted to `.k-table` stack as cards on phones but show values without their column labels (DataTable adds `data-label`; raw cells do not). Converting each to DataTable is the fix, done for the eight record lists above; the other 42 tables keep the skin.

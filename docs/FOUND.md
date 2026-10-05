@@ -128,3 +128,6 @@ converge. One line each, newest at the bottom.
   hero was printing `project_name_detected` — the title the AI read off the drawings — as if it were the
   job. It now names the job from project context and shows the drawing title beneath, labelled, only
   when it differs.
+- (5 Oct, polish walk) ZZ AUDIT 2 Fix Check — `/takeoff` shows a complete takeoff (13 divisions, 50 lines,
+  $1,643,582) but `/estimate` says "No Takeoff Data Yet"; the estimate page reads a different shape of
+  takeoff row than the takeoff page renders. Not fixed (off-path).
