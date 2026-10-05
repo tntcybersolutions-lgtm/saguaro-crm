@@ -29,11 +29,6 @@
     "table": 2,
     "status": 0
   },
-  "app/app/classic/page.tsx": {
-    "hex": 0,
-    "table": 1,
-    "status": 0
-  },
   "app/app/client-portal/page.tsx": {
     "hex": 1,
     "table": 0,
@@ -61,17 +56,12 @@
   },
   "app/app/integrations/api-docs/page.tsx": {
     "hex": 1,
-    "table": 1,
+    "table": 0,
     "status": 0
   },
   "app/app/intelligence/command-center/page.tsx": {
     "hex": 1,
     "table": 0,
-    "status": 0
-  },
-  "app/app/prequalification/page.tsx": {
-    "hex": 0,
-    "table": 1,
     "status": 0
   },
   "app/app/projects/new/page.tsx": {
@@ -181,11 +171,6 @@
   },
   "app/app/takeoff/measured/page.tsx": {
     "hex": 12,
-    "table": 1,
-    "status": 0
-  },
-  "app/app/warranty-claims/page.tsx": {
-    "hex": 0,
     "table": 1,
     "status": 0
   },

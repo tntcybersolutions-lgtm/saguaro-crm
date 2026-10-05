@@ -614,7 +614,7 @@ export default function OverviewPage() {
               <p className="pov-empty">No bid packages yet. <Link href={`${base}/bid-packages`} className="pov-inline">Create one</Link> to send the scope to subs.</p>
             ) : (
               <div className="pov-tablewrap" role="region" aria-label="Bid packages (scrolls sideways on small screens)" tabIndex={0}>
-                <table className="pov-table">
+                <table className="pov-table k-table-skin">
                   <thead><tr><th>Package</th><th>Trade</th><th>Status</th><th className="num">Invited</th><th className="num">Awarded</th></tr></thead>
                   <tbody>
                     {((ctx?.bidPackages || []) as any[]).slice(0, 12).map((b: any) => (
@@ -637,7 +637,7 @@ export default function OverviewPage() {
               <p className="pov-empty">No pay applications yet. Billing starts with App #1.</p>
             ) : (
               <div className="pov-tablewrap" role="region" aria-label="Pay applications (scrolls sideways on small screens)" tabIndex={0}>
-                <table className="pov-table">
+                <table className="pov-table k-table-skin">
                   <thead><tr><th>App</th><th>Period To</th><th>Status</th><th className="num">Completed &amp; Stored</th><th className="num">Retainage</th><th className="num">Amount Due</th></tr></thead>
                   <tbody>
                     {payApps.slice(0, 8).map((pa: any) => (

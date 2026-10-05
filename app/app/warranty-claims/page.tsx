@@ -951,7 +951,7 @@ export default function WarrantyClaimsPage() {
             style={{ marginTop: 16 }}
             bodyStyle={{ overflow: 'auto' }}
           >
-            <table style={css.table}>
+            <table className="k-table" style={css.table}>
               <thead>
                 <tr>
                   <th style={css.th}>Claim</th>

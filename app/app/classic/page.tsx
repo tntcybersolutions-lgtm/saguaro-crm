@@ -750,7 +750,7 @@ export default function DashboardPage() {
             )}
             {!rfisLoading && !rfisError && openRFIs.length > 0 && (
               <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: RAISED_ALT }}>
                       {['RFI #', 'Subject', 'Status', 'Due'].map(h => (
