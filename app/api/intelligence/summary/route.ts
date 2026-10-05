@@ -206,6 +206,20 @@ export async function GET(req: NextRequest) {
     const todayIdx = dayIndex(today);
     const logWindowStart = ymdKey(ymdDaysAgo(today, 13)); // last 14 calendar days
 
+    /* ── contract fallback: a job set up through its budget (every ZZ AUDIT job)
+       carries 0 in all three contract columns while the budget page shows a
+       Total Contract. Σ budget_lines.revised_budget (or original) stands in,
+       so the cards stop saying $0.00 for a job that plainly has a number. ── */
+    const budgetTotal = new Map<string, number>();
+    try {
+      const { data: bl } = await db.from('budget_lines').select('project_id, revised_budget, original_budget')
+        .eq('tenant_id', t).in('project_id', ids);
+      for (const r of (bl ?? []) as Array<{ project_id: string; revised_budget: unknown; original_budget: unknown }>) {
+        const v = Number(r.revised_budget) || Number(r.original_budget) || 0;
+        budgetTotal.set(r.project_id, (budgetTotal.get(r.project_id) || 0) + v);
+      }
+    } catch { degraded.push('budget_lines'); }
+
     /* ── all sources in parallel, each in its own try ── */
     const [payApps, invoices, changeOrders, rfis, punch, dailyLogs] =
       await Promise.all([
@@ -298,7 +312,7 @@ export async function GET(req: NextRequest) {
       const name = String(p.name ?? 'Untitled');
 
       // money.contract — contract_amount, documented fallback chain
-      const contract = num(p.contract_amount) || num(p.contract_value) || num(p.contract_sum);
+      const contract = num(p.contract_amount) || num(p.contract_value) || num(p.contract_sum) || (budgetTotal.get(p.id) || 0);
 
       // money.billedToDate — LATEST live pay app's cumulative total_completed
       let billedToDate = 0;
@@ -542,7 +556,7 @@ export async function GET(req: NextRequest) {
       insights: topInsights,
       degradedSources: degraded,
       sources: {
-        contract: 'projects.contract_amount (fallback contract_value, contract_sum)',
+        contract: 'projects.contract_amount (fallback contract_value, contract_sum, then Σ budget_lines.revised_budget)',
         billedToDate: 'latest live pay_applications.total_completed (fallback total_completed_stored)',
         invoicedCosts: 'invoices total (0 total defers to amount+tax) where status in approved/paid/partial',
         approvedCOs: 'change_orders.amount where status = approved',

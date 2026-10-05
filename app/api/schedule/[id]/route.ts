@@ -26,6 +26,23 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const pctComplete = body.pct_complete ?? body.pctComplete ?? body.percent_complete ?? body.percentComplete;
     if (pctComplete !== undefined) fields.pct_complete = pctComplete;
     if (body.status !== undefined) fields.status = body.status;
+    // pct_complete and status are two writers of one fact. Keep them agreeing:
+    // 100 % is complete, a started bar is in progress, complete means 100 %,
+    // not started means 0 %. (Pima's 15 tasks sat at 100 % / not_started.)
+    const pctNum = pctComplete !== undefined ? Number(pctComplete) : NaN;
+    if (body.status === undefined && Number.isFinite(pctNum)) {
+      if (pctNum >= 100) fields.status = 'complete';
+      else if (pctNum > 0) fields.status = 'in_progress';
+      else fields.status = 'not_started';
+    } else if (body.status !== undefined && pctComplete === undefined) {
+      if (body.status === 'complete') fields.pct_complete = 100;
+      else if (body.status === 'not_started') fields.pct_complete = 0;
+    } else if (body.status !== undefined && Number.isFinite(pctNum)) {
+      // Both sent and disagreeing (the composer sends both): the bar wins.
+      if (pctNum >= 100 && body.status !== 'complete') fields.status = 'complete';
+      else if (pctNum > 0 && pctNum < 100 && body.status === 'not_started') fields.status = 'in_progress';
+      else if (pctNum <= 0 && body.status === 'complete') fields.pct_complete = 100;
+    }
     // Dependency: single predecessor task (uuid) — empty string clears it.
     const predecessorId = body.predecessor_id ?? body.predecessorId;
     if (predecessorId !== undefined) fields.predecessor_id = predecessorId || null;
