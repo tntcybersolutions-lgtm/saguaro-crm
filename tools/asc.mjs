@@ -26,7 +26,7 @@ const WHATS_NEW =
   'Sign in with your Saguaro account. Daily logs, photos, time clock, punch list, change orders, takeoffs and more.';
 
 const MODE = process.argv[2] || 'status';
-if (!['status', 'distribute', 'appstore', 'appstore-submit', 'diagnose', 'demo-reset', 'privacy'].includes(MODE)) {
+if (!['status', 'distribute', 'appstore', 'appstore-submit', 'diagnose', 'demo-reset', 'privacy', 'internal-testers'].includes(MODE)) {
   console.error(`Unknown mode "${MODE}" — use status, distribute, appstore or appstore-submit`);
   process.exit(2);
 }
@@ -256,6 +256,44 @@ if (MODE === 'privacy') {
     await api('PATCH', `/v1/appDataUsagesPublishState/${state.id}`, { data: { type: 'appDataUsagesPublishState', id: state.id, attributes: { published: true } } });
     return 'published';
   });
+  process.exit(0);
+}
+
+// internal-testers: external testers wait on Beta App Review; internal testers
+// get every build at once, but must be App Store Connect users. For the named
+// external testers this invites each one as a user (Marketing role, Saguaro
+// Field only), and adds anyone who is already a user to the internal group.
+// Run it again after they accept Apple's invitation email. Emails are masked.
+const INTERNAL_NAMES = ['rob', 'mark', 'avery'];
+if (MODE === 'internal-testers') {
+  const app = snap.app;
+  const internal = snap.groups.find((g) => g.internal);
+  const external = snap.groups.filter((g) => !g.internal);
+  const people = new Map();
+  for (const g of external) {
+    for (const t of (await api('GET', `/v1/betaGroups/${g.id}/betaTesters?limit=200`)).data) {
+      const first = String(t.attributes.firstName || '').trim().toLowerCase();
+      const email = String(t.attributes.email || '').trim().toLowerCase();
+      if (email && INTERNAL_NAMES.some((n) => first.startsWith(n))) people.set(email, t);
+    }
+  }
+  console.log(`\nTesters matching ${INTERNAL_NAMES.join(', ')}: ${people.size}`);
+  for (const [email, t] of people) {
+    const who = `${t.attributes.firstName || '?'} ${maskEmail(email)}`;
+    const users = (await api('GET', `/v1/users?filter[username]=${encodeURIComponent(email)}&limit=5`)).data;
+    if (users.length) {
+      await tryStep(`${who}: App Store Connect user — add to internal group "${internal.name}"`, () =>
+        api('POST', `/v1/betaGroups/${internal.id}/relationships/betaTesters`, { data: [{ type: 'betaTesters', id: t.id }] }).then(() => 'added; TestFlight email sent'));
+      continue;
+    }
+    const pending = (await api('GET', `/v1/userInvitations?filter[email]=${encodeURIComponent(email)}&limit=5`)).data;
+    if (pending.length) { console.log(`  · ${who}: invitation already sent, waiting for them to accept`); continue; }
+    await tryStep(`${who}: invite to App Store Connect (Marketing, Saguaro Field only)`, () =>
+      api('POST', '/v1/userInvitations', { data: { type: 'userInvitations',
+        attributes: { email, firstName: t.attributes.firstName || 'Tester', lastName: t.attributes.lastName || 'Saguaro',
+          roles: ['MARKETING'], allAppsVisible: false, provisioningAllowed: false },
+        relationships: { visibleApps: { data: [{ type: 'apps', id: app.id }] } } } }).then(() => 'invitation emailed by Apple'));
+  }
   process.exit(0);
 }
 
