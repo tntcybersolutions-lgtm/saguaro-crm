@@ -125,3 +125,21 @@ form/modal/drawer, loading/empty/error states.
 **Tab overflow (More menu): CANNOT VERIFY in this Chrome.** The desktop tab is background-throttled (ResizeObserver callbacks — even a fresh one attached from the console — never fire, and the window ignores resizes), so shrinking the nav row did not re-measure. ProjectNav now also re-measures on `window.resize` and never caches a zero width. Needs a visible browser window narrower than ~1000px.
 
 More phone routes driven: My Work, More drawer (compact identity row), Settings, Reports, Submittals, New RFI modal (full-screen sheet, 16px inputs, Escape closes) — `after/393-*.png`.
+
+## Polish pass (Chad's /app/subs review) — 5 Oct
+
+| Item | Status |
+|---|---|
+| Sidebar zone labels clipped at the left edge | FIXED — labels now carry the section-title inset (`margin 2px 8px`, `padding 0 8px 0 12px`); active-item outline is inset so it cannot clip |
+| Plain-text paperwork statuses | FIXED — `paperwork` StatusPill module (On File / Missing / Pending / Expiring / Expired / Not on File) with check / warning / X glyphs; used on subs, compliance, project subs, prequal, warranty |
+| Raw directory table on /app/subs | FIXED — DataTable: raised sticky uppercase header, 14px rows, initials avatar, stacked contact cell, hover = raised #15171C + yellow edge, selected = yellow tint; phone = cards with the Sort bar |
+| Muddy olive highlighted row | FIXED — hover/selected use `--surface-raised` + `--brand-primary` only (kit CSS) |
+| Small stat cards | FIXED — StatCard: 30px hero number, 32px toned icon chip, visible “View →” chip, whole card tappable; Paperwork Missing tinted red when > 0 and filters the list when tapped |
+| Chat bubble over the last column | FIXED — desktop main content keeps 104px clear at the bottom |
+| Audit Electric test companies | FIXED — renamed `ZZ AUDIT Electric 424170 / 903279` in the database |
+| Pay apps “Billed 13133.8% of revised” | FIXED — “No contract value set” when the revised contract is 0 |
+| The sweep (46 pages) | DataTable conversions: subs, compliance, prequalification, warranty-claims, customers, project team (2 tables), project subs. Glass skin on all 50 remaining raw tables across approval-workflows, bid-intelligence, catalog, client-portal, prevailing-wage, documents, quickbooks, sub-portal, resource-planning, reports/builder, takeoff/measured, bid-packages/[id], bills, budget, contracts, estimate, insurance, invoices, lien-waivers, network/*, payroll, proposal, schedule, takeoff/estimate, tm-tickets; header/row skin on the edit grids (bid lines, leveling, invoice lines, pay-app SOV + composer, budget, takeoff estimate). StatusPills on bills, contracts, devices, portal users, resource assignments, customers, team access. |
+
+Type check: only the 8 pre-existing `deal_media` / `customer_reviews` errors. Preview builds green through 847200fd.
+
+**CANNOT VERIFY (screenshots at 390/1440) until signed in again:** the preview host's session expired overnight — both tabs are back on `/login`. The agent never submits the login form.
