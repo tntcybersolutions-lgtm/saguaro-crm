@@ -265,8 +265,9 @@ if (MODE === 'privacy') {
 // Field only), and adds anyone who is already a user to the internal group.
 // Run it again after they accept Apple's invitation email. Emails are masked.
 const INTERNAL_NAMES = ['rob', 'mark', 'avery'];
-// Owners of the business (Rob, Avery) get the Admin role, like the account holder.
-const OWNER_DOMAINS = ['copperstatedevelopments.com', 'tntcyber.com'];
+// The API key may not grant Admin (403 ROLES_NOT_ALLOWED) or withdraw invitations;
+// owners are upgraded to Admin by the account holder in Users and Access.
+const OWNER_DOMAINS = [];
 if (MODE === 'internal-testers') {
   const app = snap.app;
   const internal = snap.groups.find((g) => g.internal);
