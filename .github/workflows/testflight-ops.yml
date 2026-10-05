@@ -1,0 +1,45 @@
+name: TestFlight ops
+
+# Read or fix TestFlight distribution for Saguaro Field (net.saguarocontrol.field)
+# through the App Store Connect API, using the same ASC_* secrets as ios.yml.
+#   status      read-only: builds, beta states, groups, review state
+#   distribute  newest valid build → export compliance, What to Test, every
+#               beta group, Beta App Review submission for external testers
+# Runs on an Ubuntu runner (no Mac minutes). On the ops/testflight branch a push
+# runs the mode written in tools/asc-mode.txt.
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'status or distribute'
+        type: choice
+        options: [status, distribute]
+        default: status
+  push:
+    branches: [ops/testflight]
+    paths: ['tools/asc.mjs', 'tools/asc-mode.txt', '.github/workflows/testflight-ops.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: testflight-ops
+  cancel-in-progress: false
+
+jobs:
+  asc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: App Store Connect
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+          MODE: ${{ inputs.mode }}
+        run: node tools/asc.mjs "${MODE:-$(tr -d '[:space:]' < tools/asc-mode.txt)}"
