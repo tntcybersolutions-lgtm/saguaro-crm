@@ -44,13 +44,16 @@ export function stampTableLabels(root: ParentNode = document) {
 
 export default function TableLabels() {
   useEffect(() => {
-    let raf = 0;
-    const run = () => { raf = 0; stampTableLabels(); };
-    const schedule = () => { if (!raf) raf = requestAnimationFrame(run); };
-    schedule();
+    // A timer, not requestAnimationFrame: frames never fire while a tab is
+    // hidden or background-throttled, and the labels must be there the
+    // moment the tab is shown.
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const run = () => { timer = null; stampTableLabels(); };
+    const schedule = () => { if (!timer) timer = setTimeout(run, 0); };
+    stampTableLabels();
     const mo = new MutationObserver(schedule);
     mo.observe(document.body, { childList: true, subtree: true });
-    return () => { mo.disconnect(); if (raf) cancelAnimationFrame(raf); };
+    return () => { mo.disconnect(); if (timer) clearTimeout(timer); };
   }, []);
   return null;
 }
