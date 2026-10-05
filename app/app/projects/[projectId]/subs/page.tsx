@@ -7,7 +7,8 @@ import { Handshake, Trash, Users, CurrencyDollar, HandCoins, Heartbeat, Plus, Sh
 import { SUB_TRADES } from '@/lib/construction-intelligence';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, FlowStrip, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 import { ListToolbar } from '@/components/ui/ListToolbar';
-import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/table-sort';
+import { DataTable, type Column } from '@/components/ui/kit';
+import { StatusPill } from '@/components/ui/Status';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
@@ -216,16 +217,6 @@ export default function SubsPage() {
 
   // Sortable columns (R11 sweep) — money columns sort on the same coerced
   // numbers the cells render (contract falls back to the roster commitment).
-  const { sort, cycleSort } = usePersistedSort('project-subs', { key: 'name', dir: 'asc' });
-  const sortedSubs = useSortedRows(filteredSubs, sort, (s, key) => {
-    switch (key) {
-      case 'contract': return s.contract_amount || Number(roster.find(r => r.id === s.id)?.contractAmount || 0);
-      case 'paid': return s.paid_amount;
-      case 'score': return s.health_score || 0;
-      case 'status': return s.status || 'active';
-      default: return (s as unknown as Record<string, unknown>)[key];
-    }
-  });
 
   return (
     <PremiumSurface maxWidth={2200}>
@@ -409,61 +400,40 @@ export default function SubsPage() {
       {/* Table */}
       {!loading && subs.length > 0 && (
         <SectionCard title="Subcontractors" subtitle={`${subs.length} ${subs.length === 1 ? 'subcontractor' : 'subcontractors'}`} icon={<Users size={17} weight="duotone" color={GOLD} />} flush>
-          <div style={{overflowX:'auto'}}>
-            <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
-              <thead>
-                <tr>
-                  {([
-                    ['Company','name'],['Trade','trade'],['Contact','contact_name'],['Phone','contact_phone'],
-                    ['License','license_number'],['W-9 / COI',undefined],['Contract','contract'],['Paid','paid'],
-                    ['Score','score'],['Status','status'],['',undefined],
-                  ] as [string, string|undefined][]).map(([h,k],i)=>(
-                    <SortableTh key={h||`th-${i}`} label={h} sortKey={k} sort={sort} onSort={cycleSort} />
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {sortedSubs.length === 0 && (
-                  <tr><td colSpan={11} style={{padding:'26px 14px',textAlign:'center',color:DIM,fontSize:13}}>No subcontractors match your search or filters.</td></tr>
-                )}
-                {sortedSubs.map(sub=>(
-                  <tr key={sub.id} style={{borderBottom:`1px solid rgba(255,255,255,0.08)`}} onMouseEnter={e=>(e.currentTarget.style.background='color-mix(in srgb, var(--brand-primary) 4%, transparent)')} onMouseLeave={e=>(e.currentTarget.style.background='')}>
-                    <td style={{padding:'12px 14px'}}>
-                      <div style={{color:TEXT,fontWeight:700}}>{sub.name}</div>
-                      <div style={{color:DIM,fontSize:11}}>{sub.contact_email}</div>
-                    </td>
-                    <td style={{padding:'12px 14px',color:GOLD,fontWeight:600}}>{sub.trade||'—'}</td>
-                    <td style={{padding:'12px 14px',color:DIM}}>{sub.contact_name||'—'}</td>
-                    <td style={{padding:'12px 14px',color:DIM}}>{sub.contact_phone||'—'}</td>
-                    <td style={{padding:'12px 14px',color:DIM,fontFamily:'monospace',fontSize:11}}>{sub.license_number||'—'}</td>
-                    <td style={{padding:'12px 14px',whiteSpace:'nowrap'}}>
-                      <span title={w9Ok(sub)?'W-9 on file':'W-9 missing'} style={{fontSize:10,fontWeight:800,padding:'2px 7px',borderRadius:4,marginRight:4,background:w9Ok(sub)?'rgba(44,255,122,.12)':'rgba(255,59,48,.12)',color:w9Ok(sub)?'#2CFF7A':'#FF3B30'}}>W-9</span>
-                      <span title={coiState(sub).label} style={{fontSize:10,fontWeight:800,padding:'2px 7px',borderRadius:4,background:`color-mix(in srgb, ${coiState(sub).color} 12%, transparent)`,color:coiState(sub).color}}>COI</span>
-                    </td>
-                    <td style={{padding:'12px 14px',color:TEXT,fontWeight:600}}>{fmt(sub.contract_amount || Number(roster.find(r=>r.id===sub.id)?.contractAmount || 0))}</td>
-                    <td style={{padding:'12px 14px',color:'#2CFF7A',fontWeight:600}}>{fmt(sub.paid_amount)}</td>
-                    <td style={{padding:'12px 14px'}}>{scoreBadge(sub.health_score||0)}</td>
-                    <td style={{padding:'12px 14px'}}>
-                      <select value={sub.status||'active'} onChange={e=>handleUpdateStatus(sub.id,e.target.value)}
-                        style={{background:'var(--bg-surface-2)',border:`1px solid ${BORDER}`,borderRadius:5,color:TEXT,fontSize:11,padding:'4px 8px',cursor:'pointer'}}>
-                        {['active','prequalified','invited','suspended','inactive'].map(s=><option key={s} value={s}>{cap(s)}</option>)}
-                      </select>
-                    </td>
-                    <td style={{padding:'12px 14px'}}>
-                      {deleteId===sub.id ? (
-                        <div style={{display:'flex',gap:4}}>
-                          <button onClick={()=>handleDelete(sub.id)} style={{padding:'3px 8px',background:'rgba(255,59,48,.15)',border:'1px solid rgba(255,59,48,.3)',borderRadius:5,color:'#FF3B30',fontSize:11,fontWeight:700,cursor:'pointer'}}>Yes</button>
-                          <button onClick={()=>setDeleteId(null)} style={{padding:'3px 8px',background:RAISED,border:`1px solid ${BORDER}`,borderRadius:5,color:DIM,fontSize:11,cursor:'pointer'}}>No</button>
-                        </div>
-                      ) : (
-                        <button onClick={()=>setDeleteId(sub.id)} style={{background:'none',border:'none',color:'rgba(255,59,48,.6)',cursor:'pointer',fontSize:14}} title="Delete"><Trash size={16} weight="regular" color="rgba(255,59,48,.6)" /></button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable<any>
+            columns={[
+              { key: 'name', header: 'Company', primary: true, phone: 'show', accessor: (sub: any) => sub.name || '', render: (sub: any) => (
+                <span className="k-name"><span className="k-avatar" aria-hidden>{(sub.name||'?').split(/\s+/).slice(0,2).map((w: string)=>w[0]?.toUpperCase()||'').join('')}</span><span className="k-name-text"><span>{sub.name}</span><span>{sub.contact_email}</span></span></span>
+              ) },
+              { key: 'trade', header: 'Trade', phone: 'show', accessor: (sub: any) => sub.trade || '', render: (sub: any) => <span style={{color:GOLD,fontWeight:600}}>{sub.trade||'—'}</span> },
+              { key: 'contact_name', header: 'Contact', phone: 'hide', accessor: (sub: any) => sub.contact_name || '', render: (sub: any) => <span className="k-cell-stack"><span>{sub.contact_name||'—'}</span>{sub.contact_phone && <span>{sub.contact_phone}</span>}</span> },
+              { key: 'license_number', header: 'License', phone: 'hide', accessor: (sub: any) => sub.license_number || '', render: (sub: any) => sub.license_number ? <span style={{fontFamily:'monospace',fontSize:12}}>{sub.license_number}</span> : <StatusPill module="paperwork" status="not_on_file" size="sm" /> },
+              { key: 'paper', header: 'W-9 / COI', sortable: false, phone: 'show', render: (sub: any) => { const coi = coiState(sub); return (
+                <span style={{display:'inline-flex',gap:4,flexWrap:'wrap'}}>
+                  <StatusPill module="paperwork" status={w9Ok(sub)?'on_file':'missing'} label={w9Ok(sub)?'W-9 on file':'W-9 missing'} size="sm" />
+                  <StatusPill module="paperwork" status={coi.ok ? 'active' : /expired/i.test(coi.label) ? 'expired' : /missing|none|not on file/i.test(coi.label) ? 'not_on_file' : 'expiring'} label={`COI · ${coi.label}`} size="sm" />
+                </span>); } },
+              { key: 'contract', header: 'Contract', align: 'right', phone: 'show', accessor: (sub: any) => Number(sub.contract_amount || roster.find(r=>r.id===sub.id)?.contractAmount || 0) || null, render: (sub: any) => <span style={{color:TEXT,fontWeight:600}}>{fmt(sub.contract_amount || Number(roster.find(r=>r.id===sub.id)?.contractAmount || 0))}</span> },
+              { key: 'paid', header: 'Paid', align: 'right', phone: 'show', accessor: (sub: any) => Number(sub.paid_amount) || 0, render: (sub: any) => <span style={{color:'#2CFF7A',fontWeight:600}}>{fmt(sub.paid_amount)}</span> },
+              { key: 'score', header: 'Score', phone: 'hide', accessor: (sub: any) => Number(sub.health_score) || 0, render: (sub: any) => scoreBadge(sub.health_score||0) },
+              { key: 'status', header: 'Status', phone: 'show', accessor: (sub: any) => sub.status || 'active', render: (sub: any) => (
+                <select value={sub.status||'active'} onClick={e=>e.stopPropagation()} onChange={e=>handleUpdateStatus(sub.id,e.target.value)} className="k-input" style={{height:30,fontSize:12,padding:'0 8px',width:'auto'}}>
+                  {['active','prequalified','invited','suspended','inactive'].map(s=><option key={s} value={s}>{cap(s)}</option>)}
+                </select>) },
+              { key: 'actions', header: '', sortable: false, phone: 'show', render: (sub: any) => deleteId===sub.id ? (
+                <span style={{display:'inline-flex',gap:4}} onClick={e=>e.stopPropagation()}>
+                  <button className="k-btn k-btn-sm" style={{background:'rgba(255,59,48,.15)',border:'1px solid rgba(255,59,48,.3)',color:'#FF3B30'}} onClick={()=>handleDelete(sub.id)}>Delete</button>
+                  <button className="k-btn k-btn-secondary k-btn-sm" onClick={()=>setDeleteId(null)}>No</button>
+                </span>
+              ) : (
+                <button onClick={e=>{e.stopPropagation();setDeleteId(sub.id);}} className="k-btn k-btn-ghost k-btn-sm" title="Delete" aria-label={`Remove ${sub.name}`}><Trash size={16} weight="regular" color="rgba(255,59,48,.8)" /></button>
+              ) },
+            ]}
+            rows={filteredSubs}
+            rowKey={(sub: any) => sub.id}
+            defaultSort={{ key: 'name', dir: 'asc' }}
+            empty="No subcontractors match your search or filters."
+          />
         </SectionCard>
       )}
     <UnsavedGuardModal guard={guard} />

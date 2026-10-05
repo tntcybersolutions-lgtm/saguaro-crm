@@ -553,7 +553,7 @@ export default function PayrollPage() {
           style={{ marginBottom: 20 }}
         >
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: 'var(--bg-surface-2)' }}>
                   {['Employee', 'Class', 'Reg $', 'OT $', ...DAYS, 'Hrs', 'Gross', 'FICA', 'Fed WH', 'St WH', 'Other', 'Net', 'OT', ''].map(h => (
@@ -688,7 +688,7 @@ export default function PayrollPage() {
                 : 'Generate your first WH-347 above — weekly certified payroll is required on Davis-Bacon and most public work.'}
           />
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: 'var(--bg-surface-2)' }}>
                 {['Week Ending', '# Employees', 'Total Gross', 'Status', 'Download'].map(h => (

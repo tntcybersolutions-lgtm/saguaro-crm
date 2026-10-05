@@ -448,7 +448,7 @@ export default function InvoiceDetailPage() {
             <div className="idMain">
               <Card title="Invoice Details" subtitle="One line — the server computes the total from amount + tax." flush>
                 <div className="idTableWrap">
-                  <table className="idTable">
+                  <table className="idTable k-table-skin">
                     <thead>
                       <tr>
                         <th>Description</th>

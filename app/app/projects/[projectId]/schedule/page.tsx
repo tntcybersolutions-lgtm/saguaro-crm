@@ -557,7 +557,7 @@ export default function SchedulePage(){
               action={<span style={{fontSize:12,color:DIM,fontWeight:700}}>{filtered.length} shown</span>}>
               <div style={{overflowX:'auto'}}>
               <SortBar columns={TASK_COLS} sort={taskSort.sort} onChange={taskSort.setSort} />
-              <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+              <table className="k-table" style={{ width:'100%',borderCollapse:'collapse' }}>
                 <thead>
                   <tr style={{background:DARK}}>
                     {TASK_COLS.map(c=>(

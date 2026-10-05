@@ -754,7 +754,7 @@ export default function ReportBuilderPage() {
                 </div>
               )}
               {!running && result && (
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
                       {result.columns.map((c) => (

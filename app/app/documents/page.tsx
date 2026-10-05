@@ -437,7 +437,7 @@ export default function DocumentsPage() {
             }
           >
             <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr>
                     {([
@@ -510,7 +510,7 @@ export default function DocumentsPage() {
             }
           >
             <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr>
                     {([
@@ -658,7 +658,7 @@ export default function DocumentsPage() {
             }
           >
             <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr>
                     {([

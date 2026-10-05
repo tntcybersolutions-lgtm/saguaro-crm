@@ -532,7 +532,7 @@ function BidLevelingBoard() {
                 <span><span className="lv-swatch lv-swatch-norm" /> Normalized total — submitted + adjustments</span>
               </div>
               <div className="lv-grid-wrap" role="region" aria-label="Leveling grid, scrolls horizontally" tabIndex={0}>
-                <table className="lv-grid">
+                <table className="lv-grid k-table-skin">
                   <thead>
                     <tr>
                       <th className="lv-scope" scope="col">Scope</th>

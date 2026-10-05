@@ -541,7 +541,7 @@ export default function InvoicesPage() {
         ) : (
           <div style={{ overflowX: 'auto' }}>
           <SortBar columns={INVOICE_COLS.filter(c => c.key) as { key: string; label: string }[]} sort={invSort} onChange={setInvSort} />
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
                 {INVOICE_COLS.map(c => c.key

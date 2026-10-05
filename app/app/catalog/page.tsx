@@ -737,7 +737,7 @@ export default function CatalogPage() {
           />
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: 12, minWidth: 1040 }}>
+            <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' as const }}>
               <thead>
                 <tr>
                   <SortableTh label="Add to Order" sort={colSort} onSort={cycleSort} style={{ padding: '9px 12px', minWidth: 132 }} />

@@ -260,7 +260,7 @@ export default function EstimatePage() {
             >
               <div style={{ overflowX: 'auto' }}>
                 <SortBar columns={EST_COLS.filter(c => budgetLineCount > 0 || !c.budgetOnly)} sort={estSort.sort} onChange={estSort.setSort} />
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
+                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
                       {EST_COLS.filter(c => budgetLineCount > 0 || !c.budgetOnly).map(c => (

@@ -537,7 +537,7 @@ export default function BidPackageDetailPage() {
           <div style={{ marginBottom: 20 }}>
             <SectionCard title="Line Items" icon={<FileText size={17} weight="duotone" color={GOLD} />} flush>
               <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: TH_BG }}>
                       {['Description', 'Qty', 'Unit', 'Unit Cost', 'Total'].map(h => (
@@ -620,7 +620,7 @@ export default function BidPackageDetailPage() {
                 </div>
               )}
               <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: TH_BG }}>
                       {['Sub Name', 'Email', 'Bid Amount', 'Submitted', 'Action'].map(h => (
@@ -783,7 +783,7 @@ export default function BidPackageDetailPage() {
               </div>
             ) : (
               <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: TH_BG }}>
                       {['Company', 'Contact', 'Email', 'Status', 'Bid Amount', 'Invited', 'Actions'].map(h => (

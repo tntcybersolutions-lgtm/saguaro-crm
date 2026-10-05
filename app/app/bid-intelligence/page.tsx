@@ -296,7 +296,7 @@ export default function IntelligencePage() {
             <div style={{padding:'32px 24px',fontSize:13,color:DIM,lineHeight:1.6}}>No bids logged yet. Mark opportunities Won or Lost to build your history.</div>
           ) : (
           <div style={{overflowX:'auto',WebkitOverflowScrolling:'touch',maxWidth:'100%'}}>
-          <table style={{width:'100%',minWidth:640,borderCollapse:'collapse' as const,fontSize:12}}>
+          <table className="k-table" style={{ width:'100%',borderCollapse:'collapse' as const }}>
             <thead><tr style={{background:DARK}}>
               {['Project','Type','Bid','Margin','Result'].map((h,i)=><th key={h} style={{...TH,textAlign:(i===2||i===3)?'right' as const:'left' as const}}>{h}</th>)}
             </tr></thead>

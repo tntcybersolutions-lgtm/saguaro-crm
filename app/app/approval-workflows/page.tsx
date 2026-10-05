@@ -576,7 +576,7 @@ export default function ApprovalWorkflowsPage() {
           ) : (
             <SectionCard flush title="Pending Approvals" icon={<Clock size={17} weight="duotone" color={GOLD} />}>
               <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 760 }}>
+                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead><tr style={{ background: BG }}>
                     <th style={thStyle}>Item</th><th style={thStyle}>Module</th><th style={thStyle}>Amount</th>
                     <th style={thStyle}>Project</th><th style={thStyle}>Submitted</th><th style={thStyle}>Progress</th><th style={thStyle}>Actions</th>
@@ -752,7 +752,7 @@ export default function ApprovalWorkflowsPage() {
               <PremiumEmpty compact icon={<ClipboardText size={30} weight="duotone" color={GOLD} />} title="No history yet" description="No decided items match your filters." />
             ) : (
               <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 820 }}>
+                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead><tr style={{ background: BG }}>
                     <th style={thStyle}>Item</th><th style={thStyle}>Module</th><th style={thStyle}>Amount</th>
                     <th style={thStyle}>Decision</th><th style={thStyle}>Decided By</th><th style={thStyle}>Date</th><th style={thStyle}>Comment</th>
@@ -1019,7 +1019,7 @@ export default function ApprovalWorkflowsPage() {
             <div style={{ marginTop: 16 }}>
               <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Step Details</div>
               <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 620 }}>
+                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead><tr>
                     <th style={{ ...thStyle, background: BG }}>#</th><th style={{ ...thStyle, background: BG }}>Name</th><th style={{ ...thStyle, background: BG }}>Approver</th>
                     <th style={{ ...thStyle, background: BG }}>Type</th><th style={{ ...thStyle, background: BG }}>Required</th><th style={{ ...thStyle, background: BG }}>Auto</th><th style={{ ...thStyle, background: BG }}>Condition</th>

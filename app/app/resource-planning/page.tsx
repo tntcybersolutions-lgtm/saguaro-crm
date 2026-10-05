@@ -757,7 +757,7 @@ export default function ResourcePlanningPage() {
               {asns[0].certifications.map(c => <span key={c} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: `color-mix(in srgb, ${PURPLE} 9%, transparent)`, color: PURPLE, fontWeight: 600 }}>{c}</span>)}
             </div>}
             {/* Assignment rows */}
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead><tr>{['Project', 'Dates', 'Hrs/Day', 'Rate', 'Status', 'Actions'].map(h => <th key={h} style={{ padding: '5px 8px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: DIM, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 19%, transparent)` }}>{h}</th>)}</tr></thead>
               <tbody>{asns.map(a => <tr key={a.id || a.project_id + a.start_date}>
                 <td style={{ padding: '6px 8px', color: TEXT, fontWeight: 600 }}>{projMap[a.project_id] || a.project_id}</td>
@@ -790,7 +790,7 @@ export default function ResourcePlanningPage() {
             <Badge label={proj.status || 'active'} color={GREEN} />
           </div>}>
             {projAsns.length === 0 ? <div style={{ padding: 16, textAlign: 'center', color: DIM, fontSize: 13 }}>No assignments for this project.</div>
-              : <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+              : <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead><tr>{['Person', 'Role', 'Trade', 'Dates', 'Hours', 'Rate', 'Status', 'Reassign', 'Actions'].map(h => <th key={h} style={{ padding: '5px 8px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: DIM, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 19%, transparent)` }}>{h}</th>)}</tr></thead>
                 <tbody>{projAsns.map(a => <tr key={a.id || a.person_name + a.start_date} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)`, background: conflictPersons.has(a.person_name) ? `color-mix(in srgb, ${RED} 2%, transparent)` : 'transparent' }}>
                   <td style={{ padding: '6px 8px', color: conflictPersons.has(a.person_name) ? RED : TEXT, fontWeight: 600 }}>
@@ -936,7 +936,7 @@ export default function ResourcePlanningPage() {
         </div>
         {/* Forecast table */}
         <Card title="Forecast Detail" icon={<ClipboardText size={17} weight="duotone" color="var(--brand-primary)" />}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr>{['Month', 'Headcount', 'FTEs', 'Labor Cost', 'Avg Cost/Person', 'Trend'].map(h => <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>)}</tr></thead>
             <tbody>{forecast.map((f, fi) => {
               const prevCount = fi > 0 ? forecast[fi - 1].count : f.count;
@@ -960,7 +960,7 @@ export default function ResourcePlanningPage() {
       {!loading && tab === 'costs' && <div>
         <Card title="Labor Cost by Project" icon={<CurrencyDollar size={17} weight="duotone" color="var(--brand-primary)" />}>
           {projectCosts.length === 0 && <div style={{ padding: 32, textAlign: 'center', color: DIM }}>No cost data available.</div>}
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr>{['Project', 'Headcount', 'Total Hours', 'Labor Cost', 'Avg Rate', 'Cost Bar'].map(h => <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>)}</tr></thead>
             <tbody>{projectCosts.map(pc => <tr key={pc.project} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
               <td style={{ padding: '10px 12px', color: TEXT, fontWeight: 700 }}>{pc.project}</td>
@@ -1008,7 +1008,7 @@ export default function ResourcePlanningPage() {
               });
               const trades = Object.entries(tradeMap).sort((a, b) => b[1].cost - a[1].cost);
               const maxTradeCost = Math.max(1, ...trades.map(([, v]) => v.cost));
-              return <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              return <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead><tr>{['Trade', 'Assignments', 'Hours', 'Cost', 'Avg Rate', ''].map(h => <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>)}</tr></thead>
                 <tbody>{trades.map(([trade, v]) => <tr key={trade} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                   <td style={{ padding: '8px 12px', color: TEXT, fontWeight: 600 }}>{trade}</td>

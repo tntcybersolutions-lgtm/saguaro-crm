@@ -363,7 +363,7 @@ export default function PrevailingWagePage() {
                   </span>
                 }
               >
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
                       <th style={{ textAlign: 'left', fontSize: 11, color: DIM, fontWeight: 600, padding: '6px 0', borderBottom: `1px solid ${BORDER}` }}>Component</th>
@@ -398,7 +398,7 @@ export default function PrevailingWagePage() {
                 subtitle={`${hours} hours`}
                 icon={<Calculator size={17} weight="duotone" color={GOLD} />}
               >
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
                       <th style={{ textAlign: 'left', fontSize: 11, color: DIM, fontWeight: 600, padding: '6px 0', borderBottom: `1px solid ${BORDER}` }}>Component</th>
@@ -449,7 +449,7 @@ export default function PrevailingWagePage() {
         style={{ marginTop: 24 }}
       >
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
+          <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
                 {['Classification', 'Base Rate', 'Fringe', 'Total/hr', 'Daily (8hr)', 'Weekly (40hr)'].map((h) => (

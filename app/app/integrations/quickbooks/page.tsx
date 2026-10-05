@@ -404,7 +404,7 @@ export default function QuickBooksPage() {
               />
             ) : (
               <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
                       {['Date', 'Direction', 'Entities', 'Records', 'Status', 'By'].map((h) => (
@@ -458,7 +458,7 @@ export default function QuickBooksPage() {
             icon={<ArrowsLeftRight size={17} weight="duotone" color={GOLD} />}
           >
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+              <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
                     <th style={{ padding: '10px 12px', textAlign: 'left', color: DIM, fontWeight: 600, fontSize: 11 }}>Entity</th>

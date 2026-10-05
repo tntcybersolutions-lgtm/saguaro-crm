@@ -296,7 +296,7 @@ export default function NetworkWizardPage() {
           {result.vlans && result.vlans.length > 0 && (
             <SectionCard title="VLAN Plan" icon={<TreeStructure size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 16 }}>
               <div style={{ overflow: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
                       {['VLAN', 'Name', 'Subnet', 'Gateway', 'Purpose'].map(h => (
@@ -331,7 +331,7 @@ export default function NetworkWizardPage() {
               style={{ marginBottom: 16 }}
             >
               <div style={{ overflow: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
                       {['Type', 'Manufacturer', 'Model', 'Qty', 'Unit Cost', 'Total'].map(h => (
@@ -360,7 +360,7 @@ export default function NetworkWizardPage() {
           {result.ip_scheme && result.ip_scheme.length > 0 && (
             <SectionCard title="IP Addressing Scheme" icon={<Globe size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 16 }}>
               <div style={{ overflow: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
                       {['VLAN', 'Subnet', 'Gateway', 'DHCP Range', 'Reserved'].map(h => (

@@ -1548,7 +1548,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               </div>
             )}
             <div style={{ overflow: 'auto', flex: 1 }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr>
                     {['Description', 'Qty', 'Unit', 'CSI', 'Assembly (prices live)'].map((h) => <th key={h} style={{ position: 'sticky', top: 0, background: PANEL, textAlign: 'left', padding: '9px 12px', fontSize: 11, color: DIM, fontWeight: 700, borderBottom: `1px solid ${LINE}`, zIndex: 1 }}>{h}</th>)}

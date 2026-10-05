@@ -1285,6 +1285,19 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
    never under the bubble. */
 @media (min-width: 768px) { .main-content-area { padding-bottom: 104px; } }
 
+/* .k-table-skin — the platform header/row look for edit grids and tables that
+   keep their own layout class (no phone card transform). */
+.k-table-skin { width: 100%; border-collapse: collapse; font-size: 14px; }
+.k-table-skin th { position: sticky; top: 0; z-index: 1; background: var(--surface-raised); color: var(--text-tertiary); font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border-default); white-space: nowrap; box-shadow: var(--glass-highlight); }
+.k-table-skin td { padding: 8px 12px; border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.k-table-skin tbody tr:hover td { background: var(--surface-raised); }
+.k-table-skin tbody tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--brand-primary); }
+/* Raw tables promoted to .k-table carry their own cell styles; the header
+   row still gets the platform treatment and inline fontSize is dropped. */
+.k-table th[style] { background: var(--surface-raised) !important; color: var(--text-tertiary) !important; font-size: 11px !important; font-weight: 700 !important; letter-spacing: .05em; text-transform: uppercase; border-bottom: 1px solid var(--border-default) !important; }
+.k-table td[style] { font-size: 14px; }
+.k-table tbody tr[style]:hover td { background: var(--surface-raised) !important; }
+
 /* Sort controls (components/ui/sort.tsx). Header carets on desktop; the
    phone bar is hidden until the phone media query below shows it. */
 .k-sort-th[data-dir="asc"], .k-sort-th[data-dir="desc"] { color: var(--brand-primary); }
@@ -1412,6 +1425,9 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
   .k-table td { display: flex; justify-content: space-between; align-items: center; gap: 12px; height: auto !important; min-height: 28px; padding: 3px 0 !important; border-bottom: none; white-space: normal; text-align: left !important; position: static !important; box-shadow: none !important; background: none !important; }
   .k-table td::before { content: attr(data-label); flex-shrink: 0; font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); }
   .k-table td:not([data-label])::before { content: none; }
+  .k-table td[style] { padding: 3px 0 !important; }
+  .k-table td:empty { display: none; }
+  .k-table tr[style] { border-bottom: 0 !important; }
   .k-table td:first-child { display: block; padding-bottom: 6px !important; font-size: var(--fs-md); color: var(--text-primary); box-shadow: none !important; }
   .k-table tbody tr[data-selected="true"] { border-color: var(--brand-primary); }
   .k-table td:first-child::before { content: none; }

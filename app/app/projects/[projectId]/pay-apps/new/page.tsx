@@ -406,7 +406,7 @@ export default function NewPayAppPage() {
                   )}
                   <Card title="Schedule of Values (G703)" subtitle="Retainage and payment due compute themselves." flush actions={<Button size="sm" icon={<Plus size={13} weight="bold"/>} onClick={addLine}>Add Row</Button>}>
                     <div className="pnTableWrap">
-                      <table className="pnTable">
+                      <table className="pnTable k-table-skin">
                         <thead>
                           <tr>
                             <th>#</th>

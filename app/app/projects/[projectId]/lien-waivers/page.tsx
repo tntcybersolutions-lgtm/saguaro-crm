@@ -452,7 +452,7 @@ export default function LienWaiversPage() {
                 <span style={{marginLeft:'auto',fontSize:11.5,color:'rgba(255,255,255,0.45)'}}>Conditional waivers auto-generate on pay-app approval and gate mark-paid until signed</span>
               </div>
               <div style={{overflowX:'auto'}}>
-                <table style={{width:'100%',borderCollapse:'collapse' as const,fontSize:13}}>
+                <table className="k-table" style={{ width:'100%',borderCollapse:'collapse' as const }}>
                   <thead>
                     <tr style={{background:'var(--bg-surface-2)'}}>
                       <th style={{padding:'10px 16px',textAlign:'left' as const,fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`,minWidth:180}}>
@@ -507,7 +507,7 @@ export default function LienWaiversPage() {
             />
             <SectionCard title="All Waivers" icon={<FileText size={17} weight="duotone" color={GOLD} />} flush>
               <div style={{overflowX:'auto'}}>
-                <table style={{width:'100%',borderCollapse:'collapse' as const,fontSize:13}}>
+                <table className="k-table" style={{ width:'100%',borderCollapse:'collapse' as const }}>
                   <thead>
                     <tr>
                       {([

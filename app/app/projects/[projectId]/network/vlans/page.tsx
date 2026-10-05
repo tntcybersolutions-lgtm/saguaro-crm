@@ -303,7 +303,7 @@ export default function VlanManagerPage() {
         />
       ) : (
       <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
               {['VLAN ID', 'Name', 'Subnet', 'Gateway', 'DHCP Range', 'Purpose', 'Devices'].map(col => (

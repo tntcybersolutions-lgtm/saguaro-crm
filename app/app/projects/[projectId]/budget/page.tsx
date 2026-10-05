@@ -564,7 +564,7 @@ export default function BudgetPage() {
       /* Budget Table */
       <SectionCard title="Cost Breakdown" subtitle={`${lines.length} line item${lines.length !== 1 ? 's' : ''}`} icon={<ChartLineUp size={18} weight="duotone" color={CIN.goldHi} />} noPad>
         <div style={{ overflowX: 'auto', borderRadius: '0 0 18px 18px' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+          <table className="k-table-skin" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
                 {['Cost Code', 'Description', 'Orig. Budget', 'Approved COs', 'Revised Budget', 'Committed', 'Actual Cost', '% Complete', 'Remaining', 'Cost to Complete', 'Forecast (EAC)', 'Variance', 'Actions'].map(h => (

@@ -475,7 +475,7 @@ export default function ClientPortalPage() {
         flush
         bodyStyle={{ overflow: 'auto' }}
       >
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 900 }}>
+        <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: BG }}>
               <th style={thS}>Name / Company</th>
@@ -865,7 +865,7 @@ export default function ClientPortalPage() {
         flush
         bodyStyle={{ overflow: 'auto' }}
       >
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1000 }}>
+        <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: BG }}>
               <th style={{ ...thS, position: 'sticky', left: 0, background: BG, zIndex: 2, minWidth: 200 }}>Client</th>
@@ -957,7 +957,7 @@ export default function ClientPortalPage() {
           flush
           bodyStyle={{ overflow: 'auto' }}
         >
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
+          <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: BG }}>
                 <th style={{ ...thS, position: 'sticky', left: 0, background: BG, zIndex: 2, minWidth: 200 }}>Client</th>

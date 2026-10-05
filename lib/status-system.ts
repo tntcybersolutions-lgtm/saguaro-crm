@@ -128,6 +128,29 @@ export const MODULES: Record<string, ModuleDef> = {
       not_on_file: { label: 'Not on File', tone: 'bad',     action: 'Not on file — request it before award' },
     },
   },
+  customers: {
+    noun: 'customer',
+    stages: ['Lead', 'Qualified', 'Proposal', 'Customer'],
+    statuses: {
+      lead:      { label: 'Lead',      tone: 'active',  stage: 0, action: 'New — qualify them' },
+      qualified: { label: 'Qualified', tone: 'waiting', stage: 1, action: 'Qualified — get a proposal out' },
+      proposal:  { label: 'Proposal',  tone: 'waiting', stage: 2, action: 'Proposal out — follow up' },
+      customer:  { label: 'Customer',  tone: 'good',    stage: 3 },
+      lost:      { label: 'Lost',      tone: 'bad' },
+    },
+  },
+  team_access: {
+    noun: 'member',
+    stages: [],
+    statuses: {
+      admin:   { label: 'Admin',   tone: 'active' },
+      manager: { label: 'Manager', tone: 'waiting' },
+      member:  { label: 'Member',  tone: 'draft' },
+      client:  { label: 'Client',  tone: 'good' },
+      guest:   { label: 'Guest',   tone: 'draft' },
+      'sub portal': { label: 'Sub Portal', tone: 'waiting' },
+    },
+  },
   compliance: {
     noun: 'subcontractor',
     stages: [],

@@ -623,7 +623,7 @@ export default function SubPortalPage() {
       {tab === 'users' && (
         <SectionCard flush icon={<UsersThree size={17} weight="duotone" color={GOLD} />} title="Sub Users">
           <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
                 {['Contact', 'Company', 'Trade', 'Status', 'Last Login', 'Projects', 'Actions'].map(h => (
@@ -782,7 +782,7 @@ export default function SubPortalPage() {
       {tab === 'permissions' && (
         <SectionCard flush icon={<ListChecks size={17} weight="duotone" color={GOLD} />} title="Portal Access Permissions" subtitle="Control what each subcontractor can see in their portal">
           <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
                 <th style={{ padding: '12px 16px', textAlign: 'left', color: DIM, fontSize: 12, fontWeight: 600}}>Subcontractor</th>
@@ -875,7 +875,7 @@ export default function SubPortalPage() {
       {tab === 'documents' && (
         <SectionCard flush icon={<FileText size={17} weight="duotone" color={GOLD} />} title="Document Sharing Controls" subtitle="Control which documents are visible to subcontractors">
           <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
                 {['Document', 'Category', 'Project', 'Size', 'Uploaded', 'Visibility', 'Actions'].map(h => (
@@ -945,7 +945,7 @@ export default function SubPortalPage() {
 
           <SectionCard flush icon={<ShieldCheck size={17} weight="duotone" color={GOLD} />} title="Compliance Tracking" subtitle="Insurance, W-9, and license expiration tracking">
             <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
                   {['Subcontractor', 'Company', 'Document Type', 'Status', 'Expiration', 'File', 'Uploaded'].map(h => (

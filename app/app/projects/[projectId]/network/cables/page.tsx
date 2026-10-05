@@ -293,7 +293,7 @@ export default function CableSchedulePage() {
           />
         ) : (
         <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
               {['Label', 'Type', 'From', 'To', 'Length', 'Pathway', 'Tested', 'Result', 'Actions'].map(col => (

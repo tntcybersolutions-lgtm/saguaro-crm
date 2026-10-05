@@ -416,7 +416,7 @@ export default function InsurancePage() {
             flush
           >
             <div style={{overflowX:'auto'}}>
-              <table style={{width:'100%',borderCollapse:'collapse' as const,fontSize:13}}>
+              <table className="k-table" style={{ width:'100%',borderCollapse:'collapse' as const }}>
                 <thead>
                   <tr>
                     {([
