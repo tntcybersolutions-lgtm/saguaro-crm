@@ -30,20 +30,21 @@ const DEVICES = {
     userAgent: 'Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 SaguaroField/1.0' },
 };
 
-// Screens in App Store order. {project} is the first project the demo account sees.
+// Screens in App Store order (the store shows the first 10). {project} is the demo job below.
+const PROJECT_NAME = 'Desert Vista Medical Plaza';
 const SCREENS = [
   ['dashboard', '/app'],
   ['project', '/app/projects/{project}/overview'],
-  ['daily-logs', '/app/projects/{project}/daily-logs'],
   ['change-orders', '/app/projects/{project}/change-orders'],
-  ['pay-apps', '/app/projects/{project}/pay-apps'],
-  ['takeoff', '/app/takeoff'],
-  ['punch-list', '/app/projects/{project}/punch-list'],
   ['rfis', '/app/projects/{project}/rfis'],
+  ['daily-logs', '/app/projects/{project}/daily-logs'],
+  ['pay-apps', '/app/projects/{project}/pay-apps'],
   ['schedule', '/app/projects/{project}/schedule'],
+  ['punch-list', '/app/projects/{project}/punch-list'],
   ['time', '/app/time'],
-  ['projects', '/app/projects'],
   ['my-work', '/app/my-work'],
+  ['projects', '/app/projects'],
+  ['takeoff', '/app/takeoff'],
 ];
 
 // ── App Store Connect API ────────────────────────────────────────────────────
@@ -115,8 +116,10 @@ async function capture() {
 
     if (!project) {
       await page.goto(`${SITE}/app/projects`, { waitUntil: 'networkidle' });
-      const hrefs = await page.$$eval('a[href*="/app/projects/"]', (as) => as.map((a) => a.getAttribute('href')));
-      project = hrefs.map((h) => h && h.match(/\/app\/projects\/([0-9a-f-]{36})/i)?.[1]).find(Boolean) || null;
+      // The fullest demo job (PROJECT_NAME) when present, else the first one listed.
+      const links = await page.$$eval('a[href*="/app/projects/"]', (as) => as.map((a) => [a.getAttribute('href'), a.innerText]));
+      const idOf = (h) => h && h.match(/\/app\/projects\/([0-9a-f-]{36})/i)?.[1];
+      project = idOf(links.find(([h, t]) => idOf(h) && t.includes(PROJECT_NAME))?.[0]) || links.map(([h]) => idOf(h)).find(Boolean) || null;
       console.log(`  demo account projects: ${project ? 'found one' : 'NONE'}`);
     }
 
