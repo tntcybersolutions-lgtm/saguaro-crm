@@ -24,7 +24,7 @@ const WHATS_NEW =
   'Sign in with your Saguaro account. Daily logs, photos, time clock, punch list, change orders, takeoffs and more.';
 
 const MODE = process.argv[2] || 'status';
-if (!['status', 'distribute', 'appstore', 'appstore-submit'].includes(MODE)) {
+if (!['status', 'distribute', 'appstore', 'appstore-submit', 'diagnose'].includes(MODE)) {
   console.error(`Unknown mode "${MODE}" — use status, distribute, appstore or appstore-submit`);
   process.exit(2);
 }
@@ -127,6 +127,33 @@ function report({ app, builds, groups }, target) {
     const has = target ? (g.buildIds.has(target.id) || (g.internal && g.allBuilds) ? 'YES' : 'no') : '-';
     console.log(`  ${g.internal ? 'internal' : 'EXTERNAL'}  "${g.name}"  testers=${g.testers}  allBuilds=${g.allBuilds}  publicLink=${g.publicLink}  has ${target ? target.build : 'target'}: ${has}`);
   }
+}
+
+if (MODE === 'diagnose') {
+  // Why is a build INVALID? Dump every place App Store Connect records it.
+  const app = (await api('GET', `/v1/apps?filter[bundleId]=${BUNDLE_ID}&limit=1`)).data[0];
+  const builds = (await api('GET', `/v1/builds?filter[app]=${app.id}&sort=-uploadedDate&limit=2`)).data;
+  const b = builds.find((x) => String(x.attributes.version) === String(process.env.TARGET_BUILD || builds[0].attributes.version)) || builds[0];
+  const dump = (label, v) => console.log(`\n── ${label}\n${JSON.stringify(v, null, 1).slice(0, 6000)}`);
+  dump(`build ${b.attributes.version} attributes`, b.attributes);
+  for (const path of [
+    `/v1/apps/${app.id}/buildUploads?limit=5`,
+    `/v1/buildUploads?filter[app]=${app.id}&limit=5`,
+    `/v1/builds/${b.id}/buildBetaDetail`,
+    `/v1/builds/${b.id}/betaBuildLocalizations`,
+    `/v1/builds/${b.id}/appEncryptionDeclaration`,
+    `/v1/builds/${b.id}/buildBundles`,
+    `/v1/builds/${b.id}/perfPowerMetrics`,
+    `/v1/betaAppReviewSubmissions?filter[build]=${b.id}`,
+    `/v1/apps/${app.id}/betaAppReviewDetail`,
+  ]) {
+    try {
+      const r = await api('GET', path);
+      const strip = (o) => JSON.parse(JSON.stringify(o, (k, v) => (/password|demoAccount|contact(Email|Phone)/i.test(k) ? '[hidden]' : v)));
+      dump(path.split('?')[0], strip(r.data ?? r));
+    } catch (e) { console.log(`\n── ${path.split('?')[0]}\n  ${e.message}`); }
+  }
+  process.exit(0);
 }
 
 const snap = await snapshot();
