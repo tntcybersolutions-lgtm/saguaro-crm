@@ -292,8 +292,23 @@ async function appStore(app, build, submit) {
     const cat = info.relationships?.primaryCategory?.data?.id || 'MISSING';
     let age = '?';
     try {
-      const d = (await api('GET', `/v1/appInfos/${info.id}/ageRatingDeclaration`)).data?.attributes || {};
-      age = Object.values(d).some((v) => v === null) ? 'INCOMPLETE' : 'complete';
+      const decl = (await api('GET', `/v1/appInfos/${info.id}/ageRatingDeclaration`)).data;
+      const d = decl?.attributes || {};
+      // Optional overrides stay null; every content question gets the business-app answer.
+      const OPTIONAL = new Set(['kidsAgeBand', 'ageRatingOverride', 'ageRatingOverrideV2', 'koreaAgeRatingOverride', 'developerAgeRatingInfoUrl']);
+      const missing = Object.keys(d).filter((k) => d[k] === null && !OPTIONAL.has(k));
+      const filled = [];
+      for (const k of missing) {
+        for (const v of ['NONE', false]) {
+          try {
+            await api('PATCH', `/v1/ageRatingDeclarations/${decl.id}`, { data: { type: 'ageRatingDeclarations', id: decl.id, attributes: { [k]: v } } });
+            filled.push(`${k}=${v}`);
+            break;
+          } catch { /* wrong type for this field, try the boolean */ }
+        }
+      }
+      const left = missing.filter((k) => !filled.some((f) => f.startsWith(`${k}=`)));
+      age = left.length ? `INCOMPLETE (${left.join(', ')})` : missing.length ? `completed now: ${filled.join(', ')}` : 'complete';
     } catch (e) { age = `unreadable (${e.status})`; }
     return `name "${l.name || 'MISSING'}", subtitle "${l.subtitle || '-'}", privacy policy ${l.privacyPolicyUrl || 'MISSING'}, category ${cat}, age rating ${age}`;
   });
