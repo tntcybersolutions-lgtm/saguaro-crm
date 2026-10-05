@@ -1,0 +1,185 @@
+#!/usr/bin/env node
+/**
+ * App Store screenshots of the real app — captured from the live site, the
+ * same pages the iOS shell loads, signed in as the App Review demo account.
+ *
+ *   capture  sign in, render each screen at iPhone 6.9" (1290x2796) and
+ *            iPad 13" (2048x2732), write tools/screens/{iphone,ipad}/NN-name.png
+ *   upload   replace the en-US App Store screenshots with those files
+ *
+ * The demo sign-in is read from App Store Connect (betaAppReviewDetail) and is
+ * never printed. Needs ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8_BASE64; capture
+ * also needs PLAYWRIGHT_DIR (a folder where `playwright` is installed).
+ */
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const OUT = path.join(ROOT, 'tools/screens');
+const BUNDLE_ID = 'net.saguarocontrol.field';
+const SITE = 'https://www.saguarocontrol.net';
+const MODE = process.argv[2];
+
+const DEVICES = {
+  iphone: { display: 'APP_IPHONE_67', viewport: { width: 430, height: 932 }, deviceScaleFactor: 3,
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 SaguaroField/1.0' },
+  ipad: { display: 'APP_IPAD_PRO_3GEN_129', viewport: { width: 1024, height: 1366 }, deviceScaleFactor: 2,
+    userAgent: 'Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 SaguaroField/1.0' },
+};
+
+// Screens in App Store order. {project} is the first project the demo account sees.
+const SCREENS = [
+  ['dashboard', '/app'],
+  ['project', '/app/projects/{project}/overview'],
+  ['daily-logs', '/app/projects/{project}/daily-logs'],
+  ['change-orders', '/app/projects/{project}/change-orders'],
+  ['pay-apps', '/app/projects/{project}/pay-apps'],
+  ['takeoff', '/app/takeoff'],
+  ['punch-list', '/app/projects/{project}/punch-list'],
+  ['rfis', '/app/projects/{project}/rfis'],
+  ['schedule', '/app/projects/{project}/schedule'],
+  ['time', '/app/time'],
+  ['projects', '/app/projects'],
+  ['my-work', '/app/my-work'],
+];
+
+// ── App Store Connect API ────────────────────────────────────────────────────
+function b64url(buf) { return Buffer.from(buf).toString('base64url'); }
+function token() {
+  const key = Buffer.from(process.env.ASC_KEY_P8_BASE64, 'base64').toString('utf8');
+  const head = b64url(JSON.stringify({ alg: 'ES256', kid: process.env.ASC_KEY_ID, typ: 'JWT' }));
+  const now = Math.floor(Date.now() / 1000);
+  const body = b64url(JSON.stringify({ iss: process.env.ASC_ISSUER_ID, iat: now, exp: now + 900, aud: 'appstoreconnect-v1' }));
+  const sig = crypto.sign('sha256', Buffer.from(`${head}.${body}`), { key, dsaEncoding: 'ieee-p1363' });
+  return `${head}.${body}.${b64url(sig)}`;
+}
+async function api(method, p, body) {
+  const res = await fetch(`https://api.appstoreconnect.apple.com${p}`, {
+    method, headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const text = await res.text();
+  const json = text ? JSON.parse(text) : {};
+  if (!res.ok) {
+    const why = (json.errors || []).map((e) => `${e.code || ''} ${e.detail || e.title || ''}`.trim()).join(' | ');
+    throw Object.assign(new Error(`${method} ${p.split('?')[0]} → ${res.status}: ${why}`), { status: res.status });
+  }
+  return json;
+}
+async function findApp() {
+  const app = (await api('GET', `/v1/apps?filter[bundleId]=${BUNDLE_ID}`)).data[0];
+  if (!app) throw new Error(`no app for ${BUNDLE_ID}`);
+  return app;
+}
+
+// ── capture ──────────────────────────────────────────────────────────────────
+async function capture() {
+  const app = await findApp();
+  const review = (await api('GET', `/v1/apps/${app.id}/betaAppReviewDetail`)).data.attributes;
+  if (!review.demoAccountName || !review.demoAccountPassword) throw new Error('no demo sign-in in App Store Connect');
+  const require = createRequire(path.join(process.env.PLAYWRIGHT_DIR, 'noop.js'));
+  const { chromium } = require('playwright');
+  const browser = await chromium.launch();
+  let project = null;
+
+  for (const [kind, dev] of Object.entries(DEVICES)) {
+    const dir = path.join(OUT, kind);
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.mkdirSync(dir, { recursive: true });
+    const ctx = await browser.newContext({ viewport: dev.viewport, deviceScaleFactor: dev.deviceScaleFactor,
+      userAgent: dev.userAgent, isMobile: true, hasTouch: true, colorScheme: 'dark' });
+    const page = await ctx.newPage();
+    await page.goto(`${SITE}/login`, { waitUntil: 'networkidle' });
+    await page.fill('input[name="email"]', review.demoAccountName);
+    await page.fill('input[name="password"]', review.demoAccountPassword);
+    await Promise.all([page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 45000 }), page.click('button[type="submit"]')]);
+    await page.waitForLoadState('networkidle').catch(() => {});
+    console.log(`${kind}: signed in, landed on ${new URL(page.url()).pathname}`);
+
+    if (!project) {
+      await page.goto(`${SITE}/app/projects`, { waitUntil: 'networkidle' });
+      const hrefs = await page.$$eval('a[href*="/app/projects/"]', (as) => as.map((a) => a.getAttribute('href')));
+      project = hrefs.map((h) => h && h.match(/\/app\/projects\/([0-9a-f-]{36})/i)?.[1]).find(Boolean) || null;
+      console.log(`  demo account projects: ${project ? 'found one' : 'NONE'}`);
+    }
+
+    let n = 0;
+    for (const [name, route] of SCREENS) {
+      if (route.includes('{project}') && !project) { console.log(`  skip ${name} (no project)`); continue; }
+      const url = SITE + route.replace('{project}', project);
+      try {
+        await page.goto(url, { waitUntil: 'networkidle', timeout: 45000 });
+        await page.waitForTimeout(2500); // charts, counters and fonts settle
+        // No cookie banners, toasts or install prompts in a store screenshot.
+        await page.addStyleTag({ content: '[role="alert"],[data-sonner-toaster],[aria-live="polite"]:empty{display:none!important}' }).catch(() => {});
+        const file = path.join(dir, `${String(++n).padStart(2, '0')}-${name}.png`);
+        await page.screenshot({ path: file });
+        const text = (await page.innerText('main').catch(() => page.innerText('body'))).replace(/\s+/g, ' ').trim();
+        console.log(`  ${path.basename(file)}  ${page.url().replace(SITE, '')}  "${text.slice(0, 110)}"`);
+      } catch (e) {
+        console.log(`  ✗ ${name}: ${e.message.split('\n')[0]}`);
+      }
+    }
+    await ctx.close();
+  }
+  await browser.close();
+}
+
+// ── upload ───────────────────────────────────────────────────────────────────
+const EDITABLE = ['PREPARE_FOR_SUBMISSION', 'DEVELOPER_REJECTED', 'REJECTED', 'METADATA_REJECTED', 'WAITING_FOR_REVIEW', 'INVALID_BINARY'];
+
+async function uploadOne(setId, file) {
+  const bytes = fs.readFileSync(file);
+  const shot = (await api('POST', '/v1/appScreenshots', { data: { type: 'appScreenshots',
+    attributes: { fileName: path.basename(file), fileSize: bytes.length },
+    relationships: { appScreenshotSet: { data: { type: 'appScreenshotSets', id: setId } } } } })).data;
+  for (const op of shot.attributes.uploadOperations) {
+    const headers = Object.fromEntries((op.requestHeaders || []).map((h) => [h.name, h.value]));
+    const res = await fetch(op.url, { method: op.method, headers, body: bytes.subarray(op.offset, op.offset + op.length) });
+    if (!res.ok) throw new Error(`upload part ${op.offset} → ${res.status}`);
+  }
+  await api('PATCH', `/v1/appScreenshots/${shot.id}`, { data: { type: 'appScreenshots', id: shot.id,
+    attributes: { uploaded: true, sourceFileChecksum: crypto.createHash('md5').update(bytes).digest('hex') } } });
+  return shot.id;
+}
+
+async function upload() {
+  const app = await findApp();
+  const ver = (await api('GET', `/v1/apps/${app.id}/appStoreVersions?filter[platform]=IOS&limit=10`)).data
+    .find((v) => EDITABLE.includes(v.attributes.appStoreState));
+  if (!ver) throw new Error('no editable App Store version');
+  const loc = (await api('GET', `/v1/appStoreVersions/${ver.id}/appStoreVersionLocalizations?limit=50`)).data
+    .find((l) => l.attributes.locale === 'en-US');
+  if (!loc) throw new Error('no en-US localization');
+  console.log(`App Store ${ver.attributes.versionString} (${ver.attributes.appStoreState}), en-US`);
+
+  const sets = (await api('GET', `/v1/appStoreVersionLocalizations/${loc.id}/appScreenshotSets?limit=50`)).data;
+  for (const [kind, dev] of Object.entries(DEVICES)) {
+    const dir = path.join(OUT, kind);
+    const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith('.png')).sort().slice(0, 10) : [];
+    if (!files.length) { console.log(`  ${dev.display}: no files in tools/screens/${kind}, left as is`); continue; }
+    let set = sets.find((s) => s.attributes.screenshotDisplayType === dev.display);
+    if (!set) {
+      set = (await api('POST', '/v1/appScreenshotSets', { data: { type: 'appScreenshotSets', attributes: { screenshotDisplayType: dev.display },
+        relationships: { appStoreVersionLocalization: { data: { type: 'appStoreVersionLocalizations', id: loc.id } } } } })).data;
+    }
+    const old = (await api('GET', `/v1/appScreenshotSets/${set.id}/appScreenshots?limit=50`)).data;
+    for (const s of old) await api('DELETE', `/v1/appScreenshots/${s.id}`);
+    for (const f of files) await uploadOne(set.id, path.join(dir, f));
+    console.log(`  ✓ ${dev.display}: removed ${old.length}, uploaded ${files.length} (${files.join(', ')})`);
+  }
+  // Apple processes uploads asynchronously; report what it accepted.
+  await new Promise((r) => setTimeout(r, 15000));
+  for (const set of (await api('GET', `/v1/appStoreVersionLocalizations/${loc.id}/appScreenshotSets?limit=50`)).data) {
+    const shots = (await api('GET', `/v1/appScreenshotSets/${set.id}/appScreenshots?limit=50`)).data;
+    const states = shots.map((s) => `${s.attributes.fileName}:${s.attributes.assetDeliveryState?.state}`);
+    console.log(`  ${set.attributes.screenshotDisplayType}: ${states.join(', ') || 'empty'}`);
+  }
+}
+
+if (MODE === 'capture') await capture();
+else if (MODE === 'upload') await upload();
+else { console.error('use: node tools/asc-screens.mjs capture|upload'); process.exit(1); }

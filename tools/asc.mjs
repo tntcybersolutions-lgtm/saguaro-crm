@@ -330,9 +330,30 @@ async function appStore(app, build, submit) {
     } catch (e) { age = `unreadable (${e.status})`; }
     return `name "${l.name || 'MISSING'}", subtitle "${l.subtitle || '-'}", privacy policy ${l.privacyPolicyUrl || 'MISSING'}, category ${cat}, age rating ${age}`;
   });
-  await tryStep('price schedule', async () => {
-    const p = await api('GET', `/v1/apps/${app.id}/appPriceSchedule`);
-    return p.data ? 'set' : 'MISSING';
+  // Price: Free, based in the USA. A schedule with no manual prices blocks submission.
+  await tryStep('price (Free)', async () => {
+    const current = await api('GET', `/v1/appPriceSchedules/${app.id}/manualPrices?include=appPricePoint&limit=5`).catch(() => ({ data: [] }));
+    if (current.data?.length) {
+      const pt = (current.included || []).find((x) => x.type === 'appPricePoints');
+      return `already set (${pt?.attributes?.customerPrice ?? '?'} ${pt ? 'USD' : ''})`.trim();
+    }
+    let free = null;
+    for (let next = `/v1/apps/${app.id}/appPricePoints?filter[territory]=USA&limit=200`; next && !free;) {
+      const page = await api('GET', next);
+      free = page.data.find((x) => Number(x.attributes.customerPrice) === 0);
+      next = page.links?.next?.replace('https://api.appstoreconnect.apple.com', '');
+    }
+    if (!free) throw new Error('no $0 price point for USA');
+    await api('POST', '/v1/appPriceSchedules', {
+      data: { type: 'appPriceSchedules', relationships: {
+        app: { data: { type: 'apps', id: app.id } },
+        baseTerritory: { data: { type: 'territories', id: 'USA' } },
+        // '${free}' is a literal local id that links the included price below.
+        manualPrices: { data: [{ type: 'appPrices', id: '${free}' }] } } },
+      included: [{ type: 'appPrices', id: '${free}', attributes: { startDate: null },
+        relationships: { appPricePoint: { data: { type: 'appPricePoints', id: free.id } } } }],
+    });
+    return 'set to Free';
   });
 
   // Review details for App Review: reuse the TestFlight review contact + demo sign-in.

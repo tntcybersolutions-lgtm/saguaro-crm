@@ -18,10 +18,11 @@ on:
         default: status
   push:
     branches: [ops/testflight]
-    paths: ['tools/asc.mjs', 'tools/asc-mode.txt', '.github/workflows/testflight-ops.yml']
+    paths: ['tools/asc.mjs', 'tools/asc-screens.mjs', 'tools/asc-mode.txt', '.github/workflows/testflight-ops.yml']
 
+# write: screens-capture commits the screenshots it takes back to this branch.
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: testflight-ops
@@ -30,16 +31,43 @@ concurrency:
 jobs:
   asc:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+    env:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: App Store Connect
+      - name: Mode
         env:
-          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
-          MODE: ${{ inputs.mode }}
-        run: node tools/asc.mjs "${MODE:-$(tr -d '[:space:]' < tools/asc-mode.txt)}"
+          INPUT_MODE: ${{ inputs.mode }}
+        run: echo "MODE=${INPUT_MODE:-$(tr -d '[:space:]' < tools/asc-mode.txt)}" >> "$GITHUB_ENV"
+      - name: App Store Connect
+        if: ${{ !startsWith(env.MODE, 'screens-') }}
+        run: node tools/asc.mjs "$MODE"
+      # screens-capture: real screens from the live site at App Store sizes.
+      - name: Install Playwright
+        if: env.MODE == 'screens-capture'
+        run: |
+          mkdir -p /tmp/pw && cd /tmp/pw && npm init -y > /dev/null
+          npm i --no-audit --no-fund playwright@1.49.1
+          npx playwright install --with-deps chromium
+      - name: Capture screenshots
+        if: env.MODE == 'screens-capture'
+        env:
+          PLAYWRIGHT_DIR: /tmp/pw
+        run: node tools/asc-screens.mjs capture
+      - name: Commit screenshots to this branch
+        if: env.MODE == 'screens-capture'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/screens
+          git commit -m "App Store screenshots captured by run ${{ github.run_id }}" || exit 0
+          git push origin HEAD:${{ github.ref_name }}
+      - name: Upload screenshots to App Store Connect
+        if: env.MODE == 'screens-upload'
+        run: node tools/asc-screens.mjs upload
