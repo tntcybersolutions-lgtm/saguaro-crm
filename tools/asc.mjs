@@ -26,7 +26,7 @@ const WHATS_NEW =
   'Sign in with your Saguaro account. Daily logs, photos, time clock, punch list, change orders, takeoffs and more.';
 
 const MODE = process.argv[2] || 'status';
-if (!['status', 'distribute', 'appstore', 'appstore-submit', 'diagnose', 'demo-reset'].includes(MODE)) {
+if (!['status', 'distribute', 'appstore', 'appstore-submit', 'diagnose', 'demo-reset', 'privacy'].includes(MODE)) {
   console.error(`Unknown mode "${MODE}" — use status, distribute, appstore or appstore-submit`);
   process.exit(2);
 }
@@ -227,6 +227,35 @@ if (MODE === 'demo-reset') {
     attributes: { demoAccountName: REVIEW_ACCOUNT, demoAccountPassword: password, demoAccountRequired: true } } });
   console.log(`  ✓ TestFlight review details now use ${maskEmail(REVIEW_ACCOUNT)} with a new password`);
   console.log(`DEMO_BCRYPT ${hash}`);
+  process.exit(0);
+}
+
+// privacy: publish the App Privacy answers (what PrivacyInfo.xcprivacy declares):
+// name, email, precise location, photos/videos and other user content, each
+// for app functionality, linked to the user, never used for tracking. Apple may
+// not expose these endpoints to API keys; the probe says so and changes nothing.
+if (MODE === 'privacy') {
+  const id = snap.app.id;
+  const probe = await api('GET', `/v1/apps/${id}/dataUsages?limit=50`).catch((e) => e);
+  if (probe instanceof Error) {
+    console.log(`  ✗ App Privacy through the API — ${probe.message}`);
+    console.log('    Apple only allows this in App Store Connect (signed in as the account holder).');
+    process.exit(0);
+  }
+  console.log(`  ✓ App Privacy endpoints reachable (${probe.data?.length ?? 0} answers today)`);
+  for (const category of ['NAME', 'EMAIL_ADDRESS', 'PRECISE_LOCATION', 'PHOTOS_OR_VIDEOS', 'OTHER_USER_CONTENT']) {
+    await tryStep(`collect ${category} — app functionality, linked to the user, no tracking`, () =>
+      api('POST', '/v1/appDataUsages', { data: { type: 'appDataUsages', relationships: {
+        app: { data: { type: 'apps', id } },
+        category: { data: { type: 'appDataUsageCategories', id: category } },
+        purpose: { data: { type: 'appDataUsagePurposes', id: 'APP_FUNCTIONALITY' } },
+        dataProtection: { data: { type: 'appDataUsageDataProtections', id: 'DATA_LINKED_TO_YOU' } } } } }).then(() => 'saved'));
+  }
+  await tryStep('publish App Privacy', async () => {
+    const state = (await api('GET', `/v1/apps/${id}/dataUsagePublishState`)).data;
+    await api('PATCH', `/v1/appDataUsagesPublishState/${state.id}`, { data: { type: 'appDataUsagesPublishState', id: state.id, attributes: { published: true } } });
+    return 'published';
+  });
   process.exit(0);
 }
 
