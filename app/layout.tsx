@@ -123,6 +123,14 @@ export const metadata: Metadata = {
 const GA_ID     = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 const PH_KEY    = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const PH_HOST   = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com';
+const ADS_ID    = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
+const PIXEL_ID  = process.env.NEXT_PUBLIC_META_PIXEL_ID;
+
+// The iOS app (Saguaro Field) loads this site and appends "SaguaroField" to the
+// user agent (capacitor.config.ts appendUserAgent). Ad and analytics tags must
+// not run there: inside an app they count as tracking under App Store rules,
+// which would need the App Tracking Transparency prompt and a tracking label.
+const OUTSIDE_APP = "navigator.userAgent.indexOf('SaguaroField') === -1";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -147,17 +155,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Marketing pages are not a PWA — no site-wide service worker registration and no
             web manifest, so browsers never offer "install this app." The /field web app
             registers its own worker (for offline) from app/field/layout.tsx. */}
-        {/* Google Analytics 4 */}
+        {/* Google Analytics 4 — website only, never inside the iOS app */}
         {GA_ID && (
-          <>
-            <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
-            <Script id="ga4-init" strategy="afterInteractive" dangerouslySetInnerHTML={{ __html: `
+          <Script id="ga4-init" strategy="afterInteractive" dangerouslySetInnerHTML={{ __html: `
+            if (${OUTSIDE_APP}) (function () {
+              var s = document.createElement('script'); s.async = true;
+              s.src = 'https://www.googletagmanager.com/gtag/js?id=${GA_ID}';
+              document.head.appendChild(s);
               window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
+              window.gtag = window.gtag || function(){dataLayer.push(arguments);};
               gtag('js', new Date());
               gtag('config', '${GA_ID}', { page_path: window.location.pathname });
-            `}} />
-          </>
+            })();
+          `}} />
         )}
 
         {/* PostHog */}
@@ -168,36 +178,40 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           `}} />
         )}
 
-        {/* Meta Pixel */}
-        {process.env.NEXT_PUBLIC_META_PIXEL_ID && (
+        {/* Meta Pixel — website only, never inside the iOS app */}
+        {PIXEL_ID && (
           <>
             <Script id="meta-pixel" strategy="afterInteractive" dangerouslySetInnerHTML={{ __html: `
-              !function(f,b,e,v,n,t,s)
-              {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-              n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-              if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-              n.queue=[];t=b.createElement(e);t.async=!0;
-              t.src=v;s=b.getElementsByTagName(e)[0];
-              s.parentNode.insertBefore(t,s)}(window, document,'script',
-              'https://connect.facebook.net/en_US/fbevents.js');
-              fbq('init', '${process.env.NEXT_PUBLIC_META_PIXEL_ID}');
-              fbq('track', 'PageView');
+              if (${OUTSIDE_APP}) {
+                !function(f,b,e,v,n,t,s)
+                {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+                n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+                if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+                n.queue=[];t=b.createElement(e);t.async=!0;
+                t.src=v;s=b.getElementsByTagName(e)[0];
+                s.parentNode.insertBefore(t,s)}(window, document,'script',
+                'https://connect.facebook.net/en_US/fbevents.js');
+                fbq('init', '${PIXEL_ID}');
+                fbq('track', 'PageView');
+              }
             `}} />
-            <noscript dangerouslySetInnerHTML={{ __html: `<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=${process.env.NEXT_PUBLIC_META_PIXEL_ID}&ev=PageView&noscript=1"/>` }} />
+            <noscript dangerouslySetInnerHTML={{ __html: `<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=${PIXEL_ID}&ev=PageView&noscript=1"/>` }} />
           </>
         )}
 
-        {/* Google Ads */}
-        {process.env.NEXT_PUBLIC_GOOGLE_ADS_ID && (
-          <>
-            <Script src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ADS_ID}`} strategy="afterInteractive" />
-            <Script id="google-ads-init" strategy="afterInteractive" dangerouslySetInnerHTML={{ __html: `
+        {/* Google Ads — website only, never inside the iOS app */}
+        {ADS_ID && (
+          <Script id="google-ads-init" strategy="afterInteractive" dangerouslySetInnerHTML={{ __html: `
+            if (${OUTSIDE_APP}) (function () {
+              var s = document.createElement('script'); s.async = true;
+              s.src = 'https://www.googletagmanager.com/gtag/js?id=${ADS_ID}';
+              document.head.appendChild(s);
               window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
+              window.gtag = window.gtag || function(){dataLayer.push(arguments);};
               gtag('js', new Date());
-              gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ADS_ID}');
-            `}} />
-          </>
+              gtag('config', '${ADS_ID}');
+            })();
+          `}} />
         )}
       </head>
       <body style={{ margin: 0, padding: 0, background: 'var(--bg-base)', color: '#FFFFFF' }}>
