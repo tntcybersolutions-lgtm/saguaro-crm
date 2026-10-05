@@ -1,4 +1,5 @@
 'use client';
+import { StatusPill } from '@/components/ui/Status';
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -460,12 +461,7 @@ export default function DeviceInventoryPage() {
                     <td style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 12 }}>{dev.vlan_name || '—'}</td>
                     <td style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 12 }}>{dev.location || '—'}</td>
                     <td style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}` }}>
-                      <span style={{
-                        fontSize: 11, padding: '3px 10px', borderRadius: 10, fontWeight: 600,
-                        background: `color-mix(in srgb, ${STATUS_COLORS[dev.status] || '#6B7280'} 8%, transparent)`,
-                        color: STATUS_COLORS[dev.status] || '#6B7280',
-                        textTransform: 'capitalize',
-                      }}>{dev.status}</span>
+                      <StatusPill module="network_devices" status={dev.status} size="sm" />
                     </td>
                   </tr>
                 ))}

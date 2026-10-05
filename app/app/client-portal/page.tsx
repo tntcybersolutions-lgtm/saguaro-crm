@@ -1,4 +1,5 @@
 'use client';
+import { StatusPill } from '@/components/ui/Status';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { humanError } from '@/lib/errors';
@@ -520,9 +521,7 @@ export default function ClientPortalPage() {
                   )}>{u.role}</span>
                 </td>
                 <td style={tdS}>
-                  <span style={badge(STATUS_COLORS[u.status], `color-mix(in srgb, ${STATUS_COLORS[u.status]} 13%, transparent)`)}>
-                    {STATUS_LABELS[u.status]}
-                  </span>
+                  <StatusPill module="portal_users" status={u.status} size="sm" />
                 </td>
                 <td style={{ ...tdS, fontSize: 12, color: DIM }}>
                   {u.projectIds.length > 0

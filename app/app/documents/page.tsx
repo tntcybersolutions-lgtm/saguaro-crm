@@ -36,8 +36,8 @@ const fmtDay = (d: string | null | undefined) =>
 function Badge({ label, color = '#D4D4D8', bg = 'rgba(148,163,184,.12)' }: { label: string; color?: string; bg?: string }) {
   return (
     <span style={{
-      fontSize: 10, fontWeight: 700, padding: '2px 8px',
-      borderRadius: 4, background: bg, color,
+      display: 'inline-flex', alignItems: 'center', fontSize: 11, fontWeight: 700, padding: '2px 9px',
+      borderRadius: 999, background: bg, color, border: `1px solid color-mix(in srgb, ${color} 50%, transparent)`, whiteSpace: 'nowrap',
     }}>{label ? String(label).replace(/_/g, ' ').replace(/\b[a-z]/g, c => c.toUpperCase()) : label}</span>
   );
 }

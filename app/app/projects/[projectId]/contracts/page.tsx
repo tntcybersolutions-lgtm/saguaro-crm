@@ -1,4 +1,5 @@
 'use client';
+import { StatusPill } from '@/components/ui/Status';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
@@ -57,14 +58,7 @@ function normalizeContract(r: any): Contract {
 }
 
 function statusBadge(status: string) {
-  const map: Record<string, { bg: string; color: string }> = {
-    Draft: { bg: 'rgba(143,163,192,.2)', color: DIM },
-    Sent: { bg: 'var(--brand-primary-18)', color: 'var(--brand-primary-strong)' },
-    Executed: { bg: 'rgba(44,255,122,.2)', color: GREEN },
-    Complete: { bg: 'var(--brand-primary-18)', color: GOLD },
-  };
-  const s = map[status] || { bg: 'rgba(143,163,192,.2)', color: DIM };
-  return <span style={{ padding: '3px 10px', borderRadius: 20, background: s.bg, color: s.color, fontSize: 11, fontWeight: 700 }}>{status}</span>;
+  return <StatusPill module="contracts" status={status} size="sm" />;
 }
 
 export default function ContractsPage() {

@@ -1,4 +1,5 @@
 'use client';
+import { StatusPill } from '@/components/ui/Status';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useProjects } from '@/lib/hooks/useProjects';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
@@ -52,7 +53,7 @@ function inp(): React.CSSProperties {
   return { width: '100%', padding: '8px 12px', background: BG, border: `1px solid ${BORDER}`, borderRadius: 7, color: TEXT, fontSize: 13, outline: 'none', boxSizing: 'border-box' as const };
 }
 function Badge({ label, color }: { label: string; color: string }) {
-  return <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, background: `color-mix(in srgb, ${color} 13%, transparent)`, color }}>{String(label).replace(/_/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase())}</span>;
+  return <span style={{ display: 'inline-flex', alignItems: 'center', fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 999, background: `color-mix(in srgb, ${color} 16%, transparent)`, border: `1px solid color-mix(in srgb, ${color} 50%, transparent)`, color, whiteSpace: 'nowrap' }}>{String(label).replace(/_/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase())}</span>;
 }
 function Card({ title, children, action, icon }: { title: string; children: React.ReactNode; action?: React.ReactNode; icon?: React.ReactNode }) {
   return <SectionCard flat title={title} action={action} icon={icon} style={{ marginBottom: 18 }}>{children}</SectionCard>;
@@ -764,7 +765,7 @@ export default function ResourcePlanningPage() {
                 <td style={{ padding: '6px 8px', color: DIM }}>{fmtDate(a.start_date)} – {fmtDate(a.end_date)}</td>
                 <td style={{ padding: '6px 8px', color: DIM }}>{a.hours_per_day}h x {a.days_per_week}d</td>
                 <td style={{ padding: '6px 8px', color: GOLD, fontWeight: 600 }}>{fmtMoney(a.hourly_rate)}/hr</td>
-                <td style={{ padding: '6px 8px' }}><Badge label={a.status} color={STATUS_COLORS[a.status]} /></td>
+                <td style={{ padding: '6px 8px' }}><StatusPill module="resource_assignments" status={a.status} size="sm" /></td>
                 <td style={{ padding: '6px 8px' }}>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button onClick={() => editAssignment(a)} style={{ ...btn(), padding: '3px 8px', fontSize: 11 }}>Edit</button>
@@ -802,7 +803,7 @@ export default function ResourcePlanningPage() {
                   <td style={{ padding: '6px 8px', color: DIM }}>{fmtDate(a.start_date)} – {fmtDate(a.end_date)}</td>
                   <td style={{ padding: '6px 8px', color: DIM }}>{a.hours_per_day}h/{a.days_per_week}d</td>
                   <td style={{ padding: '6px 8px', color: GOLD, fontWeight: 600 }}>{fmtMoney(a.hourly_rate)}</td>
-                  <td style={{ padding: '6px 8px' }}><Badge label={a.status} color={STATUS_COLORS[a.status]} /></td>
+                  <td style={{ padding: '6px 8px' }}><StatusPill module="resource_assignments" status={a.status} size="sm" /></td>
                   <td style={{ padding: '6px 8px' }}>
                     <button onClick={() => setReassignTarget({ assignment: a, show: true })} style={{ ...btn(), padding: '3px 8px', fontSize: 10 }}>Move</button>
                   </td>

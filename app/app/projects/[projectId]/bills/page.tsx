@@ -1,5 +1,6 @@
 'use client';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
+import { StatusPill } from '@/components/ui/Status';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
@@ -31,14 +32,7 @@ interface Bill {
 const EMPTY_FORM = { invoice_num: '', vendor: '', description: '', amount: 0, tax: 0, due_date: '', category: '03 - Concrete', cost_code: '' };
 
 function statusBadge(status: string) {
-  const map: Record<string, { bg: string; color: string }> = {
-    Pending: { bg: 'color-mix(in srgb, var(--warning) 18%, transparent)', color: 'var(--warning)' },
-    Approved: { bg: 'var(--brand-primary-18)', color: 'var(--brand-primary-strong)' },
-    Paid: { bg: 'rgba(44,255,122,.2)', color: GREEN },
-    Overdue: { bg: 'rgba(255,59,48,.2)', color: RED },
-  };
-  const s = map[status] || { bg: 'rgba(143,163,192,.2)', color: DIM };
-  return <span style={{ padding: '3px 10px', borderRadius: 20, background: s.bg, color: s.color, fontSize: 11, fontWeight: 700 }}>{status}</span>;
+  return <StatusPill module="bills" status={status} size="sm" />;
 }
 
 function isOverdue(dueDate: string, status: string): boolean {
