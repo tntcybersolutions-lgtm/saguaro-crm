@@ -344,7 +344,7 @@ export default function PayAppsPage() {
       ]
     : [
         { label:'Revised Contract', value:fmt(revised), sub:`${fmt(original)} original ${coTotal>=0?'+':'-'} ${fmt(Math.abs(coTotal))} approved COs`, href:`/app/projects/${projectId}/contracts` },
-        { label:'Billed to Date', value:fmt(ctxBilled), sub:`${Number(money?.billedPct)||0}% of revised · ${payApps.length} application${payApps.length===1?'':'s'}` },
+        { label:'Billed to Date', value:fmt(ctxBilled), sub: revised > 0 ? `${Math.round((ctxBilled / revised) * 1000) / 10}% of revised · ${payApps.length} application${payApps.length===1?'':'s'}` : `No contract value set · ${payApps.length} application${payApps.length===1?'':'s'}` },
         { label:'Retainage Held', value:fmt(retainageHeld), sub:`Held to date · ${Number(money?.retainagePct)||10}% per contract` },
         { label:'Paid to Date', value:fmt(ctxPaid), tone: outstandingCertified>0 ? 'warn' : ctxPaid>0 ? 'good' : 'default', sub: outstandingCertified>0 ? `${fmt(outstandingCertified)} certified, unpaid` : 'All certified money collected', onClick: pendingApproval>0 ? () => setStatusFilter(s => (s==='submitted' ? 'all' : 'submitted')) : undefined },
         { label:'Lien Waivers', value: waiverTotals.total>0 ? `${waiverTotals.signed} of ${waiverTotals.total}` : '—', tone: waiverTotals.total>0 ? (waiverTotals.signed===waiverTotals.total ? 'good' : 'warn') : 'default', sub: waiverTotals.total>0 ? 'Signed — payment is waiver-gated' : 'Generate at owner approval', href:`/app/projects/${projectId}/lien-waivers` },

@@ -872,7 +872,7 @@ export default function AppSidebar({
                    the phase pill: blue sells, green builds. */
                 <div aria-hidden style={{ height: 2, borderRadius: 2, margin: '4px 10px 12px', background: `linear-gradient(90deg, ${zoneTone}, transparent)` }} />
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '2px 0 10px', padding: '0 2px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '2px 8px 10px', padding: '0 8px 0 12px', minWidth: 0 }}>
                   <span style={{
                     fontSize: 12, fontWeight: 800, letterSpacing: 'normal',
                     color: zoneTone, whiteSpace: 'nowrap',

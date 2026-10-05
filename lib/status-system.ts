@@ -110,6 +110,24 @@ export interface ModuleDef {
 }
 
 export const MODULES: Record<string, ModuleDef> = {
+  /* Paperwork a sub must have before they can be awarded work: W-9, insurance
+     certificate, licence, prequal documents. Pill-only — a document has no
+     process rail, it is either in hand, going stale, or gone. */
+  paperwork: {
+    noun: 'document',
+    stages: [],
+    statuses: {
+      on_file:     { label: 'On File',     tone: 'good' },
+      active:      { label: 'Active',      tone: 'good' },
+      verified:    { label: 'Verified',    tone: 'good' },
+      current:     { label: 'Current',     tone: 'good' },
+      pending:     { label: 'Pending',     tone: 'waiting', action: 'Requested — waiting on the sub' },
+      expiring:    { label: 'Expiring',    tone: 'warn',    action: 'Expires within 30 days — ask for the renewal now' },
+      expired:     { label: 'Expired',     tone: 'bad',     action: 'Lapsed — nothing can be awarded until it is renewed' },
+      missing:     { label: 'Missing',     tone: 'bad',     action: 'Not on file — request it before award' },
+      not_on_file: { label: 'Not on File', tone: 'bad',     action: 'Not on file — request it before award' },
+    },
+  },
   pay_applications: {
     noun: 'pay application',
     stages: ['Draft', 'Submitted', 'Approved', 'Certified', 'Paid'],

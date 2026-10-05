@@ -90,6 +90,7 @@ export const PREMIUM_FX = `
 .pmSortTh[aria-sort="ascending"],.pmSortTh[aria-sort="descending"]{color:var(--brand-primary-strong)}
 .pmSortTh[aria-sort="ascending"] .pmSortGlyph,.pmSortTh[aria-sort="descending"] .pmSortGlyph{opacity:1}
 /* Beat the global h1 !important size cap (globals.css) with higher specificity */
+@media (max-width:640px){.pmStatValue{font-size:26px!important}}
 h1.pmH1{font-size:clamp(24px,2.4vw,32px)!important;font-weight:800!important;line-height:1.12!important;letter-spacing:-0.02em!important;margin:0!important} /* page-title scale: 28–32 desktop, 24 phone */
 @media (prefers-reduced-motion: reduce){
   .pmRoot,.pmRoot *{animation:none!important;transition:none!important}
@@ -325,12 +326,15 @@ export function StatCard({
   interactive: forceInteractive,
   active = false,
   delay = 0,
+  tone,
 }: {
   icon: React.ReactNode;
   label: string;
   value: React.ReactNode;
   sub?: React.ReactNode;
   accent?: string;
+  /** Tints the whole card: 'bad' for a count that must be zero (Paperwork Missing > 0), 'warn', 'good'. */
+  tone?: 'bad' | 'warn' | 'good';
   onClick?: () => void;
   href?: string;
   interactive?: boolean;
@@ -341,9 +345,10 @@ export function StatCard({
   const interactive = !!(onClick || href || forceInteractive);
   /* Neon by default (owner 2026-10-03): every stat card is lit in its own
      accent — a caller's accent wins, otherwise a stable neon from the label. */
-  const lit = accent || neonFor(label);
+  const toneColor = tone === 'bad' ? '#FF3B30' : tone === 'warn' ? '#FF8A00' : tone === 'good' ? '#2CFF7A' : null;
+  const lit = accent || toneColor || neonFor(label);
   const numberColor = lit;
-  const ring = active ? lit : null;
+  const ring = active ? lit : toneColor;
   const glow = neonCard(lit);
   const inner = (
     <div
@@ -357,7 +362,7 @@ export function StatCard({
           : `${glow.background}, ${SURFACE}`,
         backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR,
         border: `1px solid ${ring || BORDER}`, borderTop: glow.borderTop, borderRadius: 12,
-        padding: '11px 14px',
+        padding: '14px 16px 14px 18px',
         // compact plate — tight, not fat (Procore/JobTread density)
         boxShadow: ring
           ? `0 0 0 1px ${ring}, 0 8px 20px -14px color-mix(in srgb, ${ring} 45%, transparent), inset 0 1px 0 rgba(255,255,255,0.08)`
@@ -369,17 +374,17 @@ export function StatCard({
       }}
     >
       {interactive && (
-        <span aria-hidden style={{ position: 'absolute', top: 10, right: 12, fontSize: 10.5, fontWeight: 700, color: ring || FAINT }}>
-          {active ? '● Filtering' : 'View →'}
+        <span aria-hidden style={{ position: 'absolute', top: 10, right: 10, fontSize: 11, fontWeight: 800, color: active ? '#0A0A00' : lit, background: active ? lit : 'rgba(255,255,255,0.06)', border: `1px solid ${active ? lit : 'rgba(255,255,255,0.12)'}`, padding: '3px 8px', borderRadius: 999, lineHeight: 1.2 }}>
+          {active ? 'Filtering' : 'View →'}
         </span>
       )}
       {/* left accent bar */}
       <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${numberColor}, transparent)`, opacity: 0.85 }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-        <IconChip size={26}>{icon}</IconChip>
-        <span style={{ fontSize: 12.5, color: MUTED, fontWeight: 750 }}>{label}</span>
+        <IconChip size={32} vivid={toneColor || undefined}>{icon}</IconChip>
+        <span style={{ fontSize: 12.5, color: MUTED, fontWeight: 750, letterSpacing: '.02em', textTransform: 'uppercase' }}>{label}</span>
       </div>
-      <div style={{ fontSize: 22, fontWeight: 800, color: accent ? numberColor : '#FFFFFF', letterSpacing: '-0.02em', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      <div className="pmStatValue" style={{ fontSize: 30, fontWeight: 800, color: accent || toneColor ? numberColor : '#FFFFFF', letterSpacing: '-0.02em', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
       {sub != null && <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{sub}</div>}
     </div>
   );
