@@ -49,13 +49,17 @@ export default function EstimatePage() {
       const res = await fetch(`/api/takeoffs/latest?projectId=${projectId}`);
       if (!res.ok) { setTakeoff(null); return; }
       const data = await res.json();
-      if (data.takeoff) {
-        const t = data.takeoff;
-        const materials: EstimateLine[] = (t.materials || t.line_items || []).map((m: any) => {
-          const quantity = m.quantity || 0;
-          const unit_cost = m.unit_cost || m.unit_price || 0;
+      // /api/takeoffs/latest answers { data: takeoff | null } (lib/api-response
+      // ok()); the page read `data.takeoff`, which never existed, so every
+      // estimate said "No Takeoff Data Yet" while /takeoff showed a full one.
+      const t = data?.takeoff ?? data?.data ?? null;
+      if (t) {
+        const materials: EstimateLine[] = (t.materials || t.takeoff_materials || t.line_items || []).map((m: any) => {
+          const quantity = Number(m.quantity) || 0;
+          const unit_cost = Number(m.unit_cost ?? m.unit_price) || 0;
+          const stored = Number(m.total ?? m.total_cost) || 0;
           // Line extended cost = quantity × unit cost, exact cents (never float qty*price).
-          const lineCents = m.total ? toCents(m.total) : extend(quantity, toCents(unit_cost));
+          const lineCents = stored ? toCents(stored) : extend(quantity, toCents(unit_cost));
           return {
             csi_code: m.csi_code || m.code || '',
             description: m.description || m.name || '',

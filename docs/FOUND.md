@@ -128,6 +128,9 @@ converge. One line each, newest at the bottom.
   hero was printing `project_name_detected` — the title the AI read off the drawings — as if it were the
   job. It now names the job from project context and shows the drawing title beneath, labelled, only
   when it differs.
-- (5 Oct, polish walk) ZZ AUDIT 2 Fix Check — `/takeoff` shows a complete takeoff (13 divisions, 50 lines,
-  $1,643,582) but `/estimate` says "No Takeoff Data Yet"; the estimate page reads a different shape of
-  takeoff row than the takeoff page renders. Not fixed (off-path).
+- ~~(5 Oct, polish walk) ZZ AUDIT 2 Fix Check — `/takeoff` complete but `/estimate` says "No Takeoff Data
+  Yet".~~ FIXED on redesign/neon-glass (Chad: "FIX ESTIMATE AND TAKEOFF READING"): `/api/takeoffs/latest`
+  answers `{ data }` but the estimate page read `data.takeoff`, so EVERY estimate was empty; the route also
+  only read `takeoff_materials` (measured takeoffs write `takeoff_line_items`) and named the field
+  `takeoff_materials` while readers expect `materials`. Page reads `data.data`, route falls back to line
+  items like `/api/takeoff/[id]` and returns `materials`.
