@@ -134,3 +134,8 @@ converge. One line each, newest at the bottom.
   only read `takeoff_materials` (measured takeoffs write `takeoff_line_items`) and named the field
   `takeoff_materials` while readers expect `materials`. Page reads `data.data`, route falls back to line
   items like `/api/takeoff/[id]` and returns `materials`.
+- (5 Oct, platform migration) `scripts/sync-heatmap-engine.mjs --check` (in `prebuild`) still treats
+  D:\Saguaro-Field as the canonical heatmap engine. That repo is retired (dead-repo note, EAS paused), so
+  a local `npm run build` fails on "HEATMAP ENGINE DRIFT" whenever the dead copy differs; Vercel passes
+  because the folder does not exist there. The canonical source should be this repo now. Not fixed
+  (off-path); local builds use `npx next build` after running the gates by hand.
