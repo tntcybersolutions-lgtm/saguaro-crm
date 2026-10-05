@@ -157,7 +157,7 @@ Type check: only the 8 pre-existing `deal_media` / `customer_reviews` errors. Pr
 | job /subs | — | DRIVEN (pills W-9 / COI, status select, delete) | |
 | job /bills | — | DRIVEN (no bills → form only) | |
 | job /lien-waivers (glass skin) | DRIVEN (13 rows as cards) | DRIVEN (raised uppercase header) | raw-table cards carry no field labels (no `data-label` on hand-rolled cells) — logged below |
-| job /estimate | DRIVEN | DRIVEN | "No Takeoff Data Yet" while /takeoff is complete → FOUND |
+| job /estimate | DRIVEN (rollup as cards) | DRIVEN — 13 divisions · 50 lines · $1,234,848 | FIXED (5d6b1687): `/api/takeoffs/latest` answers `{ data }` but the page read `data.takeoff`, so every estimate was empty; route now also falls back to `takeoff_line_items`. Shots: polish/1600-estimate-fixed.jpg, 1600-estimate-rollup.jpg, 393-estimate-rollup-cards.png |
 | /app/documents | DRIVEN (see 393 shot) | DRIVEN | |
 
 Known limit of the skin route: hand-rolled tables promoted to `.k-table` stack as cards on phones but show values without their column labels (DataTable adds `data-label`; raw cells do not). Converting each to DataTable is the fix, done for the eight record lists above; the other 42 tables keep the skin.
