@@ -130,10 +130,22 @@ function report({ app, builds, groups }, target) {
 }
 
 const snap = await snapshot();
-const target = snap.builds.find((b) => b.processing === 'VALID' && !b.expired);
+// Never fall back to an older build: the newest upload (or TARGET_BUILD) or nothing.
+const wanted = process.env.TARGET_BUILD || snap.builds[0]?.build;
+const pick = snap.builds.find((b) => String(b.build) === String(wanted));
+const target = pick && pick.processing === 'VALID' && !pick.expired ? pick : null;
+if (pick && !target) console.log(`\nBuild ${pick.version} (${pick.build}) is ${pick.processing}${pick.expired ? ', expired' : ''} — internal ${pick.internal}, external ${pick.external}.`);
 report(snap, target);
 if (!target) {
-  console.log('\nNo VALID, unexpired build to distribute (still processing, or every build expired).');
+  console.log(`\nBuild ${wanted} is not VALID yet — nothing changed. Apple emails the account holder the reason when a build is INVALID.`);
+  await tryStep(`build ${wanted} details`, async () => {
+    const b = (await api('GET', `/v1/builds/${pick?.id}?fields[builds]=version,processingState,expired,minOsVersion,iconAssetToken,usesNonExemptEncryption,buildAudienceType`)).data.attributes;
+    return JSON.stringify({ processing: b.processingState, minOs: b.minOsVersion, audience: b.buildAudienceType, icon: !!b.iconAssetToken, encryption: b.usesNonExemptEncryption });
+  });
+  await tryStep(`Beta App Review submission for ${wanted}`, async () => {
+    const r = (await api('GET', `/v1/betaAppReviewSubmissions?filter[build]=${pick?.id}`)).data?.[0];
+    return r ? r.attributes.betaReviewState : 'none';
+  });
   process.exit(MODE === 'distribute' ? 1 : 0);
 }
 console.log(`\nTarget build: ${target.version} (${target.build}), uploaded ${target.uploaded} UTC`);
