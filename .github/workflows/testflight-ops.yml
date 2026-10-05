@@ -36,6 +36,9 @@ jobs:
       ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
       ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+      # The App Review demo login (demo company only); optional.
+      APP_REVIEW_DEMO_EMAIL: ${{ secrets.APP_REVIEW_DEMO_EMAIL }}
+      APP_REVIEW_DEMO_PASS: ${{ secrets.APP_REVIEW_DEMO_PASS }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

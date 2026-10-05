@@ -13,7 +13,8 @@
  *                                   TestFlight review details, reports every gap
  *   node tools/asc.mjs appstore-submit   the same, then submits for App Review
  *
- * Env (repo secrets): ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8_BASE64.
+ * Env (repo secrets): ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8_BASE64; optional
+ * APP_REVIEW_DEMO_EMAIL / APP_REVIEW_DEMO_PASS (the App Review demo login).
  * Never prints a secret, a tester's name or a tester's email.
  */
 import crypto from 'node:crypto';
@@ -66,6 +67,23 @@ async function api(method, path, body) {
     throw err;
   }
   return json;
+}
+
+// The App Review demo login: the demo-company account tools/e2e-*.mjs use,
+// held in repo secrets APP_REVIEW_DEMO_EMAIL / APP_REVIEW_DEMO_PASS. When set,
+// non-status modes write it to the TestFlight and App Store review details.
+// Values are never printed; emails show as "abc…@domain".
+const DEMO = process.env.APP_REVIEW_DEMO_EMAIL && process.env.APP_REVIEW_DEMO_PASS
+  ? { name: process.env.APP_REVIEW_DEMO_EMAIL.trim(), password: process.env.APP_REVIEW_DEMO_PASS }
+  : null;
+const maskEmail = (e) => (e ? `${e.slice(0, 3)}…@${e.split('@')[1] || '?'}` : 'none');
+// Signs in the way the app's login screen does; returns the HTTP status (200 = works).
+async function siteSignIn(email, password) {
+  const res = await fetch('https://www.saguarocontrol.net/api/auth/session', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password, remember: false }),
+  });
+  return res.status;
 }
 
 async function tryStep(label, fn) {
@@ -190,8 +208,20 @@ for (const path of [`/v1/betaAppReviewSubmissions?filter[build]=${target.id}`]) 
 await tryStep('Beta App Review details (contact + sign-in for Apple)', async () => {
   const d = (await api('GET', `/v1/apps/${snap.app.id}/betaAppReviewDetail`)).data?.attributes || {};
   const set = (v) => (v ? 'set' : 'MISSING');
-  return `contact name ${set(d.contactFirstName && d.contactLastName)}, email ${set(d.contactEmail)}, phone ${set(d.contactPhone)}, demo account required=${d.demoAccountRequired}, demo login ${set(d.demoAccountName && d.demoAccountPassword)}`;
+  const works = d.demoAccountName && d.demoAccountPassword ? await siteSignIn(d.demoAccountName, d.demoAccountPassword) : null;
+  return `contact name ${set(d.contactFirstName && d.contactLastName)}, email ${set(d.contactEmail)}, phone ${set(d.contactPhone)}, demo account required=${d.demoAccountRequired}, demo login ${maskEmail(d.demoAccountName)} → ${works === 200 ? 'signs in' : `DOES NOT SIGN IN (${works ?? 'missing'})`}`;
 });
+
+// Put the working demo login in front of Apple's reviewers (TestFlight + App Store).
+if (MODE !== 'status' && DEMO) {
+  await tryStep(`demo login for App Review → ${maskEmail(DEMO.name)}`, async () => {
+    const status = await siteSignIn(DEMO.name, DEMO.password);
+    if (status !== 200) throw new Error(`the APP_REVIEW_DEMO_* secrets do not sign in (${status}); App Store Connect left unchanged`);
+    await api('PATCH', `/v1/betaAppReviewDetails/${snap.app.id}`, { data: { type: 'betaAppReviewDetails', id: snap.app.id,
+      attributes: { demoAccountName: DEMO.name, demoAccountPassword: DEMO.password, demoAccountRequired: true } } });
+    return 'signs in; saved to the TestFlight review details';
+  });
+}
 
 await tryStep('App Store versions', async () => {
   const v = (await api('GET', `/v1/apps/${snap.app.id}/appStoreVersions?limit=10`)).data;
@@ -371,7 +401,9 @@ async function appStore(app, build, submit) {
     const fill = {};
     for (const [k, v] of Object.entries(want)) {
       if (v == null || v === '') continue;
-      if (k === 'notes' || k === 'demoAccountRequired' || !rd?.attributes?.[k]) fill[k] = v;
+      // Notes and the demo login always follow the TestFlight details (the demo
+      // login there is the verified one); contact fields only fill gaps.
+      if (k === 'notes' || k.startsWith('demoAccount') || !rd?.attributes?.[k]) fill[k] = v;
     }
     if (!rd) {
       await api('POST', '/v1/appStoreReviewDetails', { data: { type: 'appStoreReviewDetails', attributes: fill, relationships: { appStoreVersion: { data: { type: 'appStoreVersions', id: ver.id } } } } });

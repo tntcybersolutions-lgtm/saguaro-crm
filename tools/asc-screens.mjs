@@ -7,8 +7,8 @@
  *            iPad 13" (2048x2732), write tools/screens/{iphone,ipad}/NN-name.png
  *   upload   replace the en-US App Store screenshots with those files
  *
- * The demo sign-in is read from App Store Connect (betaAppReviewDetail) and is
- * never printed. Needs ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8_BASE64; capture
+ * The demo sign-in comes from APP_REVIEW_DEMO_EMAIL / APP_REVIEW_DEMO_PASS, else
+ * from App Store Connect (betaAppReviewDetail), and is never printed. Needs ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8_BASE64; capture
  * also needs PLAYWRIGHT_DIR (a folder where `playwright` is installed).
  */
 import crypto from 'node:crypto';
@@ -78,7 +78,10 @@ async function findApp() {
 // ── capture ──────────────────────────────────────────────────────────────────
 async function capture() {
   const app = await findApp();
-  const review = (await api('GET', `/v1/apps/${app.id}/betaAppReviewDetail`)).data.attributes;
+  // Prefer the demo login from repo secrets; fall back to what App Store Connect holds.
+  const review = process.env.APP_REVIEW_DEMO_EMAIL && process.env.APP_REVIEW_DEMO_PASS
+    ? { demoAccountName: process.env.APP_REVIEW_DEMO_EMAIL.trim(), demoAccountPassword: process.env.APP_REVIEW_DEMO_PASS }
+    : (await api('GET', `/v1/apps/${app.id}/betaAppReviewDetail`)).data.attributes;
   if (!review.demoAccountName || !review.demoAccountPassword) throw new Error('no demo sign-in in App Store Connect');
   const require = createRequire(path.join(process.env.PLAYWRIGHT_DIR, 'noop.js'));
   const { chromium } = require('playwright');
