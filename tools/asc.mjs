@@ -26,7 +26,7 @@ const WHATS_NEW =
   'Sign in with your Saguaro account. Daily logs, photos, time clock, punch list, change orders, takeoffs and more.';
 
 const MODE = process.argv[2] || 'status';
-if (!['status', 'distribute', 'appstore', 'appstore-submit', 'diagnose'].includes(MODE)) {
+if (!['status', 'distribute', 'appstore', 'appstore-submit', 'diagnose', 'demo-reset'].includes(MODE)) {
   console.error(`Unknown mode "${MODE}" — use status, distribute, appstore or appstore-submit`);
   process.exit(2);
 }
@@ -76,6 +76,8 @@ async function api(method, path, body) {
 const DEMO = process.env.APP_REVIEW_DEMO_EMAIL && process.env.APP_REVIEW_DEMO_PASS
   ? { name: process.env.APP_REVIEW_DEMO_EMAIL.trim(), password: process.env.APP_REVIEW_DEMO_PASS }
   : null;
+// The demo-company account Apple's reviewers sign in with (never a real company).
+const REVIEW_ACCOUNT = 'demo@saguarocontrol.net';
 const maskEmail = (e) => (e ? `${e.slice(0, 3)}…@${e.split('@')[1] || '?'}` : 'none');
 // Signs in the way the app's login screen does; returns the HTTP status (200 = works).
 async function siteSignIn(email, password) {
@@ -211,6 +213,22 @@ await tryStep('Beta App Review details (contact + sign-in for Apple)', async () 
   const works = d.demoAccountName && d.demoAccountPassword ? await siteSignIn(d.demoAccountName, d.demoAccountPassword) : null;
   return `contact name ${set(d.contactFirstName && d.contactLastName)}, email ${set(d.contactEmail)}, phone ${set(d.contactPhone)}, demo account required=${d.demoAccountRequired}, demo login ${maskEmail(d.demoAccountName)} → ${works === 200 ? 'signs in' : `DOES NOT SIGN IN (${works ?? 'missing'})`}`;
 });
+
+// demo-reset: give the demo-company account a fresh random password and save it
+// straight to Apple's TestFlight review details (the appstore pass copies it to
+// the App Store review details). The password is never printed; only its
+// bcrypt hash is, which is then set on the account (auth.users) in Supabase.
+if (MODE === 'demo-reset') {
+  const { createRequire } = await import('node:module');
+  const bcrypt = createRequire(`${process.env.BCRYPT_DIR}/noop.js`)('bcryptjs');
+  const password = crypto.randomBytes(18).toString('base64url');
+  const hash = bcrypt.hashSync(password, 10);
+  await api('PATCH', `/v1/betaAppReviewDetails/${snap.app.id}`, { data: { type: 'betaAppReviewDetails', id: snap.app.id,
+    attributes: { demoAccountName: REVIEW_ACCOUNT, demoAccountPassword: password, demoAccountRequired: true } } });
+  console.log(`  ✓ TestFlight review details now use ${maskEmail(REVIEW_ACCOUNT)} with a new password`);
+  console.log(`DEMO_BCRYPT ${hash}`);
+  process.exit(0);
+}
 
 // Put the working demo login in front of Apple's reviewers (TestFlight + App Store).
 if (MODE !== 'status' && DEMO) {

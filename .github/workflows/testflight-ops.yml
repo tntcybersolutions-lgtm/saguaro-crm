@@ -48,8 +48,13 @@ jobs:
         env:
           INPUT_MODE: ${{ inputs.mode }}
         run: echo "MODE=${INPUT_MODE:-$(tr -d '[:space:]' < tools/asc-mode.txt)}" >> "$GITHUB_ENV"
+      - name: Install bcryptjs (demo-reset)
+        if: env.MODE == 'demo-reset'
+        run: mkdir -p /tmp/bc && cd /tmp/bc && npm init -y > /dev/null && npm i --no-audit --no-fund bcryptjs@2.4.3
       - name: App Store Connect
         if: ${{ !startsWith(env.MODE, 'screens-') }}
+        env:
+          BCRYPT_DIR: /tmp/bc
         run: node tools/asc.mjs "$MODE"
       # screens-capture: real screens from the live site at App Store sizes.
       - name: Install Playwright
