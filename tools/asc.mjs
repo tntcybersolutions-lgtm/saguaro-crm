@@ -17,6 +17,7 @@
  * Never prints a secret, a tester's name or a tester's email.
  */
 import crypto from 'node:crypto';
+import { DESCRIPTION, KEYWORDS, PROMO, REVIEW_NOTES, SUBTITLE } from './asc-listing.mjs';
 
 const BUNDLE_ID = 'net.saguarocontrol.field';
 const WHATS_NEW =
@@ -202,6 +203,9 @@ if (MODE === 'appstore' || MODE === 'appstore-submit') {
 
 console.log(`\nDistributing ${target.version} (${target.build}):`);
 
+await tryStep('TestFlight review notes (full platform, what to try)', () =>
+  api('PATCH', `/v1/betaAppReviewDetails/${snap.app.id}`, { data: { type: 'betaAppReviewDetails', id: snap.app.id, attributes: { notes: REVIEW_NOTES } } }).then(() => 'saved'));
+
 if (target.encryption == null) {
   await tryStep('export compliance: uses non-exempt encryption = false', () =>
     api('PATCH', `/v1/builds/${target.id}`, { data: { type: 'builds', id: target.id, attributes: { usesNonExemptEncryption: false } } }));
@@ -269,8 +273,14 @@ async function appStore(app, build, submit) {
   await tryStep(`attach build ${build.build}`, () =>
     api('PATCH', `/v1/appStoreVersions/${ver.id}/relationships/build`, { data: { type: 'builds', id: build.id } }).then(() => 'attached'));
 
-  // Listing text + screenshots, per locale.
+  // Listing text + screenshots, per locale. The description and promotional
+  // text describe the full platform (tools/asc-listing.mjs).
   for (const loc of (await api('GET', `/v1/appStoreVersions/${ver.id}/appStoreVersionLocalizations?limit=50`)).data) {
+    if (loc.attributes.locale?.startsWith('en')) {
+      await tryStep(`listing ${loc.attributes.locale}: description (${DESCRIPTION.length} chars) + promotional text + keywords`, () =>
+        api('PATCH', `/v1/appStoreVersionLocalizations/${loc.id}`, { data: { type: 'appStoreVersionLocalizations', id: loc.id, attributes: { description: DESCRIPTION, promotionalText: PROMO, keywords: KEYWORDS } } }).then(() => 'saved'));
+      Object.assign(loc.attributes, { description: DESCRIPTION, keywords: KEYWORDS });
+    }
     const L = loc.attributes;
     console.log(`  listing ${L.locale}: description ${L.description ? `${L.description.length} chars` : 'MISSING'}, keywords ${L.keywords ? 'set' : 'MISSING'}, support URL ${L.supportUrl || 'MISSING'}, marketing URL ${L.marketingUrl || '-'}`);
     if (L.description) console.log(`    description starts: "${L.description.slice(0, 220).replace(/\s+/g, ' ')}…"`);
@@ -287,7 +297,12 @@ async function appStore(app, build, submit) {
   await tryStep('app info', async () => {
     const infos = await api('GET', `/v1/apps/${app.id}/appInfos?include=primaryCategory,appInfoLocalizations`);
     const info = infos.data.find((i) => EDITABLE.includes(i.attributes.appStoreState || i.attributes.state)) || infos.data[0];
-    const locs = (infos.included || []).filter((x) => x.type === 'appInfoLocalizations');
+    const mine = new Set((info.relationships?.appInfoLocalizations?.data || []).map((x) => x.id));
+    const locs = (infos.included || []).filter((x) => x.type === 'appInfoLocalizations' && (!mine.size || mine.has(x.id)));
+    for (const loc of locs.filter((x) => x.attributes.locale?.startsWith('en') && x.attributes.subtitle !== SUBTITLE)) {
+      await api('PATCH', `/v1/appInfoLocalizations/${loc.id}`, { data: { type: 'appInfoLocalizations', id: loc.id, attributes: { subtitle: SUBTITLE } } })
+        .then(() => { loc.attributes.subtitle = SUBTITLE; }, (e) => console.log(`  subtitle ${loc.attributes.locale}: not saved (${e.status})`));
+    }
     const l = locs[0]?.attributes || {};
     const cat = info.relationships?.primaryCategory?.data?.id || 'MISSING';
     let age = '?';
@@ -319,11 +334,7 @@ async function appStore(app, build, submit) {
 
   // Review details for App Review: reuse the TestFlight review contact + demo sign-in.
   const beta = (await api('GET', `/v1/apps/${app.id}/betaAppReviewDetail`)).data?.attributes || {};
-  const reviewNotes =
-    'Saguaro Field is the field app for Saguaro, a construction management platform used by general contractors. ' +
-    'Sign in with the demo account above. Native features used on device: camera capture for daily-log and punch-list photos, ' +
-    'GPS stamping for time-clock punches and photos, Face ID sign-in, and push notifications. ' +
-    'Accounts are created by the contractor\'s company; the app has no in-app purchases.';
+  const reviewNotes = REVIEW_NOTES;
   await tryStep('App Review contact + demo sign-in', async () => {
     let rd = null;
     try { rd = (await api('GET', `/v1/appStoreVersions/${ver.id}/appStoreReviewDetail`)).data; } catch (e) { if (e.status !== 404) throw e; }
