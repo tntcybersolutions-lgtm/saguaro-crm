@@ -128,6 +128,27 @@ export const MODULES: Record<string, ModuleDef> = {
       not_on_file: { label: 'Not on File', tone: 'bad',     action: 'Not on file — request it before award' },
     },
   },
+  compliance: {
+    noun: 'subcontractor',
+    stages: [],
+    statuses: {
+      compliant:     { label: 'Compliant',     tone: 'good' },
+      at_risk:       { label: 'At Risk',       tone: 'warn', action: 'Something is expiring or unsigned — chase it before award' },
+      non_compliant: { label: 'Non-Compliant', tone: 'bad',  action: 'Cannot be awarded or paid until the paperwork is in' },
+    },
+  },
+  prequalification: {
+    noun: 'prequalification',
+    stages: ['Pending', 'Under review', 'Approved'],
+    staleAfterDays: 10,
+    statuses: {
+      pending:      { label: 'Pending',      tone: 'waiting', stage: 0, action: 'Sent — waiting on the sub to submit' },
+      under_review: { label: 'Under review', tone: 'active',  stage: 1, action: 'Submitted — review and decide' },
+      approved:     { label: 'Approved',     tone: 'good',    stage: 2 },
+      rejected:     { label: 'Rejected',     tone: 'bad',               action: 'Rejected — tell the sub what fell short' },
+      expired:      { label: 'Expired',      tone: 'bad',               action: 'Lapsed — ask for a fresh package' },
+    },
+  },
   pay_applications: {
     noun: 'pay application',
     stages: ['Draft', 'Submitted', 'Approved', 'Certified', 'Paid'],

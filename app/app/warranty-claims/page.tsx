@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useSort, useSortedRows, SortTh, SortBar } from '@/components/ui/sort';
+import { DataTable, type Column } from '@/components/ui/kit';
 import { useProjects } from '@/lib/hooks/useProjects';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
@@ -124,11 +124,6 @@ const css = {
 };
 
 /* ───── COMPONENT ───── */
-const CLAIM_COLS: { key: string; label: string }[] = [
-  { key: 'claim_number', label: 'Claim #' }, { key: 'category', label: 'Cat' }, { key: 'title', label: 'Title' }, { key: 'priority', label: 'Priority' }, { key: 'status', label: 'Status' },
-  { key: 'reported_date', label: 'Reported' }, { key: 'assigned_contractor', label: 'Assigned' }, { key: 'cost', label: 'Cost' }, { key: 'warranty_expiry', label: 'Warranty' }, { key: '', label: 'Actions' },
-];
-
 export default function WarrantyClaimsPage() {
   /* state */
   const [projects, setProjects] = useState<Project[]>([]);
@@ -218,12 +213,23 @@ export default function WarrantyClaimsPage() {
     }
     return list;
   }, [claims, fCategory, fStatus, fPriority, fDateFrom, fDateTo, fSearch]);
-  const claimSort = useSort(null);
-  const claimSortValue = useCallback((c: (typeof claims)[number], key: string): unknown => {
-    if (key === 'cost') return Number(c.cost) || 0;
-    return (c as unknown as Record<string, unknown>)[key];
-  }, []);
-  const sortedClaims = useSortedRows(filtered, claimSort.sort, claimSortValue);
+  const claimColumns: Column<(typeof claims)[number]>[] = [
+    { key: 'claim_number', header: 'Claim #', primary: true, phone: 'show', accessor: c => c.claim_number, render: c => <span style={{ fontFamily: 'monospace' }}>{c.claim_number}</span> },
+    { key: 'category', header: 'Cat', phone: 'hide', accessor: c => c.category, render: c => <span title={c.category} style={{ fontSize: 16 }}>{CATEGORY_ICONS[c.category] || '\u2731'}</span> },
+    { key: 'title', header: 'Title', phone: 'show', accessor: c => c.title, render: c => <span style={{ display: 'inline-block', maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', verticalAlign: 'bottom', color: TEXT }}>{c.title}</span> },
+    { key: 'priority', header: 'Priority', phone: 'show', accessor: c => ({ low: 0, medium: 1, high: 2, emergency: 3 } as Record<string, number>)[c.priority] ?? 0, render: c => <span style={css.badge(PRIORITY_COLORS[c.priority] || DIM)}>{c.priority}</span> },
+    { key: 'status', header: 'Status', phone: 'show', accessor: c => c.status, render: c => <StatusPill module="warranty_claims" status={c.status} size="sm" /> },
+    { key: 'reported_date', header: 'Reported', phone: 'show', accessor: c => c.reported_date, render: c => c.reported_date },
+    { key: 'assigned_contractor', header: 'Assigned', phone: 'hide', accessor: c => c.assigned_contractor || '', render: c => c.assigned_contractor || '—' },
+    { key: 'cost', header: 'Cost', align: 'right', phone: 'hide', accessor: c => Number(c.cost) || 0, render: c => Number(c.cost) ? <span style={{ fontFamily: 'monospace' }}>${(Number(c.cost) || 0).toLocaleString()}</span> : '—' },
+    { key: 'warranty_expiry', header: 'Warranty', phone: 'show', accessor: c => c.warranty_expiry || '', render: c => isExpired(c.warranty_expiry) ? <StatusPill module="paperwork" status="expired" size="sm" /> : c.warranty_expiry ? <StatusPill module="paperwork" status="active" size="sm" /> : <span style={{ color: DIM }}>N/A</span> },
+    { key: 'actions', header: 'Actions', sortable: false, phone: 'show', render: c => (
+      <span style={{ display: 'inline-flex', gap: 6 }} onClick={e => e.stopPropagation()}>
+        <button className="k-btn k-btn-secondary k-btn-sm" onClick={() => { setDispatchForm({ assigned_trade: c.assigned_trade || '', assigned_contractor: c.assigned_contractor || '', scheduled_date: c.scheduled_date || '' }); setDispatchClaim(c); }}>Dispatch</button>
+        <button className="k-btn k-btn-secondary k-btn-sm" onClick={() => exportClaimPDF(c)}>PDF</button>
+      </span>
+    ) },
+  ];
 
   /* dashboard stats */
   const stats = useMemo(() => {
@@ -577,41 +583,15 @@ export default function WarrantyClaimsPage() {
             </SectionCard>
           ) : (
             <SectionCard flush bodyStyle={{ overflow: 'auto' }}>
-              <SortBar columns={CLAIM_COLS.filter(c => c.key)} sort={claimSort.sort} onChange={claimSort.setSort} />
-              <table style={css.table}>
-                <thead>
-                  <tr>
-                    {CLAIM_COLS.map(c => c.key
-                      ? <SortTh key={c.key} col={c.key} label={c.label} sort={claimSort.sort} onSort={claimSort.cycle} style={css.th} />
-                      : <th key={c.label} style={css.th}>{c.label}</th>)}
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedClaims.map(c => (
-                    <tr key={c.id} style={css.trHover} onClick={() => setDetailClaim(c)}
-                      onMouseEnter={e => (e.currentTarget.style.background = `color-mix(in srgb, ${BORDER} 20%, transparent)`)}
-                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                      <td style={css.td}><span style={{ fontFamily: 'monospace', color: GOLD }}>{c.claim_number}</span></td>
-                      <td style={css.td}><span title={c.category} style={{ fontSize: 16 }}>{CATEGORY_ICONS[c.category] || '\u2731'}</span></td>
-                      <td style={{ ...css.td, maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.title}</td>
-                      <td style={css.td}><span style={css.badge(PRIORITY_COLORS[c.priority] || DIM)}>{c.priority}</span></td>
-                      <td style={css.td}><StatusPill module="warranty_claims" status={c.status} size="sm" /></td>
-                      <td style={{ ...css.td, fontSize: 12, color: DIM }}>{c.reported_date}</td>
-                      <td style={{ ...css.td, fontSize: 12 }}>{c.assigned_contractor || <span style={{ color: DIM }}>—</span>}</td>
-                      <td style={{ ...css.td, fontFamily: 'monospace' }}>{Number(c.cost) ? `$${(Number(c.cost) || 0).toLocaleString()}` : '—'}</td>
-                      <td style={css.td}>
-                        {isExpired(c.warranty_expiry) ? <span style={css.expiredTag}>Expired</span> : c.warranty_expiry ? <span style={{ fontSize: 11, color: GREEN }}>Active</span> : <span style={{ color: DIM, fontSize: 11 }}>N/A</span>}
-                      </td>
-                      <td style={css.td} onClick={e => e.stopPropagation()}>
-                        <div style={{ display: 'flex', gap: 6 }}>
-                          <button style={css.btnOutline(BLUE)} onClick={() => { setDispatchForm({ assigned_trade: c.assigned_trade || '', assigned_contractor: c.assigned_contractor || '', scheduled_date: c.scheduled_date || '' }); setDispatchClaim(c); }}>Dispatch</button>
-                          <button style={css.btnOutline(GOLD)} onClick={() => exportClaimPDF(c)}>PDF</button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <DataTable<(typeof claims)[number]>
+                columns={claimColumns}
+                rows={filtered}
+                rowKey={c => c.id}
+                defaultSort={{ key: 'reported_date', dir: 'desc' }}
+                onRowClick={c => setDetailClaim(c)}
+                isSelected={c => detailClaim?.id === c.id}
+                empty="No claims match these filters."
+              />
             </SectionCard>
           )}
         </div>
