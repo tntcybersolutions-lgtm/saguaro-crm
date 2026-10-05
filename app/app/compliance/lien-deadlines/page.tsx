@@ -30,13 +30,13 @@ import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
 const GOLD = 'var(--brand-primary)';
 const AMBER = 'var(--warning)';
-const GREEN = '#2CFF7A';
+const GREEN = 'var(--success)';
 const BLUE = 'var(--brand-primary)';
-const RED = '#FF3B30';
-const TEXT = '#FFFFFF';
-const DIM = '#D4D4D8';
+const RED = 'var(--danger)';
+const TEXT = 'var(--text-primary)';
+const DIM = 'var(--text-secondary)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const GRAY = '#8094B0';
+const GRAY = 'var(--text-tertiary)';
 const ROW_BG = 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))';
 
 const STATES = ['AZ', 'CA', 'TX', 'NV', 'CO', 'FL'];

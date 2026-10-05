@@ -12,7 +12,7 @@ import { StatusPill } from '@/components/ui/Status';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
-const GOLD='var(--brand-primary)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF';
+const GOLD='var(--brand-primary)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)';
 const cap = (s:string) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
 
@@ -40,25 +40,25 @@ function normalizeSub(r: any): Sub {
 // Compliance snapshot from fields /api/subs/list already returns (select *).
 function w9Ok(s: Sub) { return s.w9_on_file === true || s.w9_status === 'submitted'; }
 function coiState(s: Sub): { label: string; color: string; ok: boolean } {
-  if (!s.insurance_expiry) return { label: 'COI not on file', color: '#FF3B30', ok: false };
+  if (!s.insurance_expiry) return { label: 'COI not on file', color: 'var(--danger)', ok: false };
   const exp = new Date(String(s.insurance_expiry).slice(0, 10) + 'T00:00:00');
   const days = Math.floor((exp.getTime() - Date.now()) / 86400000);
   const d = exp.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  if (days < 0) return { label: `COI expired ${d}`, color: '#FF3B30', ok: false };
+  if (days < 0) return { label: `COI expired ${d}`, color: 'var(--danger)', ok: false };
   if (days <= 30) return { label: `COI expires in ${days}d`, color: 'var(--warning)', ok: true };
-  return { label: `COI valid through ${d}`, color: '#2CFF7A', ok: true };
+  return { label: `COI valid through ${d}`, color: 'var(--success)', ok: true };
 }
 function hasComplianceIssue(s: Sub) { return !w9Ok(s) || !coiState(s).ok; }
 
 function scoreBadge(score: number) {
-  const color = score >= 80 ? '#2CFF7A' : score >= 60 ? 'var(--warning)' : '#FF3B30';
+  const color = score >= 80 ? 'var(--success)' : score >= 60 ? 'var(--warning)' : 'var(--danger)';
   return <span style={{fontSize:12,fontWeight:800,color,background:`color-mix(in srgb, ${color} 9%, transparent)`,padding:'3px 10px',borderRadius:6}}>{score}</span>;
 }
 
 function statusBadge(s: string) {
   const map: Record<string,{c:string,bg:string}> = {
-    active:{c:'#2CFF7A',bg:'rgba(44,255,122,.12)'}, prequalified:{c:'var(--brand-primary-strong)',bg:'var(--brand-primary-12)'},
-    invited:{c:GOLD,bg:'var(--brand-primary-12)'}, suspended:{c:'#FF3B30',bg:'rgba(255,59,48,.12)'},
+    active:{c:'var(--success)',bg:'rgba(44,255,122,.12)'}, prequalified:{c:'var(--brand-primary-strong)',bg:'var(--brand-primary-12)'},
+    invited:{c:GOLD,bg:'var(--brand-primary-12)'}, suspended:{c:'var(--danger)',bg:'rgba(255,59,48,.12)'},
     inactive:{c:DIM,bg:'rgba(163,172,187,.08)'},
   };
   const st = map[s]||{c:DIM,bg:'rgba(163,172,187,.08)'};
@@ -198,7 +198,7 @@ export default function SubsPage() {
   const totalContract = subs.reduce((s,sub) => s + (sub.contract_amount||0), 0);
   const totalPaid = subs.reduce((s,sub) => s + (sub.paid_amount||0), 0);
   const avgScore = subs.length > 0 ? Math.round(subs.reduce((s,sub) => s + (sub.health_score||0), 0) / subs.length) : 0;
-  const avgScoreColor = avgScore >= 80 ? '#2CFF7A' : avgScore >= 60 ? GOLD : subs.length > 0 ? '#FF3B30' : undefined;
+  const avgScoreColor = avgScore >= 80 ? 'var(--success)' : avgScore >= 60 ? GOLD : subs.length > 0 ? 'var(--danger)' : undefined;
 
   const subTrades = Array.from(new Set(subs.map(s => s.trade).filter(Boolean))).sort();
   const filteredSubs = subs.filter(s => {
@@ -220,7 +220,7 @@ export default function SubsPage() {
 
   return (
     <PremiumSurface maxWidth={2200}>
-      {toast && <div style={{position:'fixed',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:8,background:toast.type==='success'?'rgba(44,255,122,0.9)':'rgba(255,59,48,0.9)',color:'#fff',fontWeight:600,fontSize:14}}>{toast.msg}</div>}
+      {toast && <div style={{position:'fixed',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:8,background:toast.type==='success'?'rgba(44,255,122,0.9)':'rgba(255,59,48,0.9)',color:'var(--text-primary)',fontWeight:600,fontSize:14}}>{toast.msg}</div>}
 
       {/* Header */}
       <ModuleHero
@@ -241,7 +241,7 @@ export default function SubsPage() {
         <StatStrip items={[
           {href: `/app/projects/${projectId}/subs`,  label: 'Subs on Job', value: String(roster.length), sub: 'On the project roster' },
           {href: `/app/projects/${projectId}/subs`,  label: 'Sub Commitments', value: fmt(rosterTotal), sub: 'Combined sub contracts' },
-          {href: `/app/projects/${projectId}/compliance`,  label: 'Compliance Issues', value: String(complianceIssues), accent: complianceIssues > 0 ? '#FF3B30' : '#2CFF7A', sub: complianceIssues > 0 ? 'Missing W-9 or lapsed COI' : rosterIds.size > 0 ? 'Roster is clean' : 'Directory is clean' },
+          {href: `/app/projects/${projectId}/compliance`,  label: 'Compliance Issues', value: String(complianceIssues), accent: complianceIssues > 0 ? 'var(--danger)' : 'var(--success)', sub: complianceIssues > 0 ? 'Missing W-9 or lapsed COI' : rosterIds.size > 0 ? 'Roster is clean' : 'Directory is clean' },
           {href: `/app/projects/${projectId}/subs`,  label: 'Directory', value: String(subs.length), sub: 'Companies tenant-wide' },
           {href: `/app/projects/${projectId}/bid-packages`,  label: 'Awarded Packages', value: String(awardedPkgs.length), sub: `${fmt(awardedPkgs.reduce((s, b) => s + (Number(b.awardedAmount) || 0), 0))} awarded` },
         ]} />
@@ -252,7 +252,7 @@ export default function SubsPage() {
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))',gap:16,marginBottom:28}}>
         <StatCard icon={<Users size={19} weight="duotone" color={GOLD} />} label="Total Subs" value={String(subs.length)} accent={GOLD} delay={0.02}  href={`/app/projects/${projectId}/subs`}/>
         <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />} label="Total Contract Value" value={fmt(totalContract)} accent={GOLD} delay={0.06}  href={`/app/projects/${projectId}/contracts`}/>
-        <StatCard icon={<HandCoins size={19} weight="duotone" color="#2CFF7A" />} label="Total Paid" value={fmt(totalPaid)} accent="#2CFF7A" delay={0.10}  href={`/app/projects/${projectId}/subs`}/>
+        <StatCard icon={<HandCoins size={19} weight="duotone" color="var(--success)" />} label="Total Paid" value={fmt(totalPaid)} accent="var(--success)" delay={0.10}  href={`/app/projects/${projectId}/subs`}/>
         <StatCard icon={<Heartbeat size={19} weight="duotone" color={avgScoreColor || GOLD} />} label="Avg Health Score" value={String(avgScore)} accent={avgScoreColor} delay={0.14}  href={`/app/projects/${projectId}/subs`}/>
       </div>
       )}
@@ -278,7 +278,7 @@ export default function SubsPage() {
               </div>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12}}>
                 <div>
-                  <label style={lblS}>Company Name<span style={{color:'#FF3B30'}}> *</span>{auto.name&&<AutoChip/>}</label>
+                  <label style={lblS}>Company Name<span style={{color:'var(--danger)'}}> *</span>{auto.name&&<AutoChip/>}</label>
                   <input required type="text" placeholder="ABC Electric LLC" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} style={inpS} />
                 </div>
                 <div>
@@ -320,10 +320,10 @@ export default function SubsPage() {
           </SectionCard>
 
           <div style={{display:'flex',flexDirection:'column',gap:16}}>
-            <SectionCard flat title="Compliance Snapshot" icon={picked ? (hasComplianceIssue(picked) ? <ShieldWarning size={17} weight="duotone" color="#FF3B30" /> : <ShieldCheck size={17} weight="duotone" color="#2CFF7A" />) : <ShieldCheck size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Compliance Snapshot" icon={picked ? (hasComplianceIssue(picked) ? <ShieldWarning size={17} weight="duotone" color="var(--danger)" /> : <ShieldCheck size={17} weight="duotone" color="var(--success)" />) : <ShieldCheck size={17} weight="duotone" color={GOLD} />}>
               {picked ? (
                 <>
-                  <InsightRow label="W-9" value={w9Ok(picked)?'On file':'Missing'} accent={w9Ok(picked)?'#2CFF7A':'#FF3B30'} strong/>
+                  <InsightRow label="W-9" value={w9Ok(picked)?'On file':'Missing'} accent={w9Ok(picked)?'var(--success)':'var(--danger)'} strong/>
                   <InsightRow label="Insurance" value={coiState(picked).label} accent={coiState(picked).color}/>
                   <InsightRow label="License" value={picked.license_number||'Not on file'} accent={picked.license_number?undefined:'var(--warning)'}/>
                   <InsightRow label="Directory Status" value={cap(picked.status||'active')}/>
@@ -414,7 +414,7 @@ export default function SubsPage() {
                   <StatusPill module="paperwork" status={coi.ok ? 'active' : /expired/i.test(coi.label) ? 'expired' : /missing|none|not on file/i.test(coi.label) ? 'not_on_file' : 'expiring'} label={`COI · ${coi.label}`} size="sm" />
                 </span>); } },
               { key: 'contract', header: 'Contract', align: 'right', phone: 'show', accessor: (sub: any) => Number(sub.contract_amount || roster.find(r=>r.id===sub.id)?.contractAmount || 0) || null, render: (sub: any) => <span style={{color:TEXT,fontWeight:600}}>{fmt(sub.contract_amount || Number(roster.find(r=>r.id===sub.id)?.contractAmount || 0))}</span> },
-              { key: 'paid', header: 'Paid', align: 'right', phone: 'show', accessor: (sub: any) => Number(sub.paid_amount) || 0, render: (sub: any) => <span style={{color:'#2CFF7A',fontWeight:600}}>{fmt(sub.paid_amount)}</span> },
+              { key: 'paid', header: 'Paid', align: 'right', phone: 'show', accessor: (sub: any) => Number(sub.paid_amount) || 0, render: (sub: any) => <span style={{color:'var(--success)',fontWeight:600}}>{fmt(sub.paid_amount)}</span> },
               { key: 'score', header: 'Score', phone: 'hide', accessor: (sub: any) => Number(sub.health_score) || 0, render: (sub: any) => scoreBadge(sub.health_score||0) },
               { key: 'status', header: 'Status', phone: 'show', accessor: (sub: any) => sub.status || 'active', render: (sub: any) => (
                 <select value={sub.status||'active'} onClick={e=>e.stopPropagation()} onChange={e=>handleUpdateStatus(sub.id,e.target.value)} className="k-input" style={{height:30,fontSize:12,padding:'0 8px',width:'auto'}}>
@@ -422,7 +422,7 @@ export default function SubsPage() {
                 </select>) },
               { key: 'actions', header: '', sortable: false, phone: 'show', render: (sub: any) => deleteId===sub.id ? (
                 <span style={{display:'inline-flex',gap:4}} onClick={e=>e.stopPropagation()}>
-                  <button className="k-btn k-btn-sm" style={{background:'rgba(255,59,48,.15)',border:'1px solid rgba(255,59,48,.3)',color:'#FF3B30'}} onClick={()=>handleDelete(sub.id)}>Delete</button>
+                  <button className="k-btn k-btn-sm" style={{background:'rgba(255,59,48,.15)',border:'1px solid rgba(255,59,48,.3)',color:'var(--danger)'}} onClick={()=>handleDelete(sub.id)}>Delete</button>
                   <button className="k-btn k-btn-secondary k-btn-sm" onClick={()=>setDeleteId(null)}>No</button>
                 </span>
               ) : (

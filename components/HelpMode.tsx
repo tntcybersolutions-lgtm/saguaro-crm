@@ -41,9 +41,9 @@ function titleCase(s: string): string {
 
 const GOLD = 'var(--brand-primary)';
 const GOLD_HI = 'var(--brand-primary-strong)';
-const TEXT = '#F0F4FF';
-const DIM = '#A1A1AA';
-const BORDER = '#2A2A2E';
+const TEXT = 'var(--text-primary)';
+const DIM = 'var(--text-tertiary)';
+const BORDER = 'var(--surface-raised)';
 const CARD = 'var(--bg-surface)';
 
 /**
@@ -615,7 +615,7 @@ export default function HelpMode() {
                 disappears over the light ones. */}
             <filter id="sagHelpGlow" x="-60%" y="-60%" width="220%" height="220%">
               <feDropShadow dx="0" dy="0" stdDeviation="5" floodColor={GOLD} floodOpacity="0.65" />
-              <feDropShadow dx="0" dy="2" stdDeviation="9" floodColor="#000" floodOpacity="0.55" />
+              <feDropShadow dx="0" dy="2" stdDeviation="9" floodColor="var(--bg-base)" floodOpacity="0.55" />
             </filter>
           </defs>
 
@@ -714,7 +714,7 @@ export default function HelpMode() {
           <div style={{ fontSize: 15, fontWeight: 900, color: TEXT, marginBottom: 5, letterSpacing: '-0.01em' }}>
             {step?.title}
           </div>
-          <div style={{ fontSize: 13, color: '#D4D4D8', lineHeight: 1.52 }}>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.52 }}>
             {step?.body}
           </div>
 
@@ -727,7 +727,7 @@ export default function HelpMode() {
               onClick={() => router.push((step.route as string).replace(/\/$/, ''))}
               style={{
                 marginTop: 12, minHeight: 38, width: '100%', borderRadius: 9, cursor: 'pointer',
-                background: GOLD, border: 'none', color: '#0A0A00', fontSize: 13, fontWeight: 800,
+                background: GOLD, border: 'none', color: 'var(--on-brand)', fontSize: 13, fontWeight: 800,
               }}
             >
               {step.route.endsWith('/') ? 'Open a Project First' : 'Take Me to That Screen'}
@@ -763,7 +763,7 @@ export default function HelpMode() {
               onClick={advance}
               style={{
                 minHeight: 38, padding: '0 18px', borderRadius: 9, cursor: 'pointer',
-                background: GOLD, border: 'none', color: '#0A0A00', fontSize: 13, fontWeight: 800,
+                background: GOLD, border: 'none', color: 'var(--on-brand)', fontSize: 13, fontWeight: 800,
               }}
             >
               {stepNo === total ? 'Done' : step?.advance === 'read' ? 'Got It' : 'Next'}
@@ -838,7 +838,7 @@ export function HelpModeButton() {
         background: on ? GOLD : 'var(--brand-primary-12)',
         border: `1px solid ${on ? GOLD : 'var(--brand-primary-35)'}`,
         borderRadius: 999,
-        color: on ? '#0A0A00' : GOLD_HI,
+        color: on ? 'var(--on-brand)' : GOLD_HI,
         fontSize: 13, fontWeight: 800, letterSpacing: '0.01em', cursor: 'pointer',
         transition: 'background .15s, color .15s, border-color .15s',
         whiteSpace: 'nowrap',

@@ -20,7 +20,7 @@ import {
 } from '@phosphor-icons/react';
 
 const GOLD = 'var(--brand-primary)', GOLD_HI = 'var(--brand-primary-strong)', DARK = 'var(--bg-base)', BORDER = 'rgba(255,255,255,0.08)', HAIRLINE = 'rgba(255,255,255,0.07)';
-const DIM = '#D4D4D8', MUTED = 'rgba(255,255,255,0.45)', TEXT = '#FFFFFF', GREEN = '#2CFF7A', RED = '#FF3B30';
+const DIM = 'var(--text-secondary)', MUTED = 'rgba(255,255,255,0.45)', TEXT = 'var(--text-primary)', GREEN = 'var(--success)', RED = 'var(--danger)';
 
 // Module accent — bids family (desert rose). Chips / eyebrows / badges ONLY.
 const BIDS = moduleAccent('bids');

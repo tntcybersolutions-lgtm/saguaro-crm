@@ -30,19 +30,19 @@ const Cell = dynamic(() => import('recharts').then(m => m.Cell), { ssr: false })
 
 const GOLD   = 'var(--brand-primary)';
 // Recharts writes `fill` as an SVG presentation attribute, which cannot take var().
-const GOLD_HEX = '#FF8A00';
+const GOLD_HEX = 'var(--warning)';
 const DARK   = 'var(--bg-surface-2)';
 const RAISED = 'var(--bg-surface)';
 const RAISED_ALT = 'var(--bg-surface-2)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const BORDER_SUBTLE = 'rgba(0,0,0,0.06)';
-const DIM    = '#D4D4D8';
-const TEXT   = '#FFFFFF';
+const DIM    = 'var(--text-secondary)';
+const TEXT   = 'var(--text-primary)';
 // Desert-dusk semantic palette — retuned off raw iOS system colors so the
 // accents harmonize with gold-on-navy instead of clashing (turquoise, sage,
 // terracotta, amber are authentic Sonoran hues that sit on the dark bg).
-const GREEN  = '#2CFF7A'; // money / positive — muted emerald-sage
-const RED    = '#FF3B30'; // alert / overdue  — terracotta
+const GREEN  = 'var(--success)'; // money / positive — muted emerald-sage
+const RED    = 'var(--danger)'; // alert / overdue  — terracotta
 const BLUE   = 'var(--brand-primary)'; // info / open bids — unified to brand color (Chad's call)
 const ORANGE = 'var(--warning)'; // warning / pending
 const SHADOW_SM = '0 1px 2px rgba(0,0,0,0.06)';
@@ -221,7 +221,7 @@ function BidScoreModal({ onClose }: { onClose: () => void }) {
               {error && <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: RED, fontSize: 12, fontWeight: 600, marginBottom: 12, padding: '10px 12px', borderRadius: 8, background: 'rgba(255,59,48,0.10)', border: '1px solid rgba(255,59,48,0.28)' }}><WarningCircle size={16} weight="duotone" /> {error}</div>}
               <button
                 type="submit" disabled={loading}
-                style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', background: loading ? 'var(--bg-surface-2)' : 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', border: 'none', borderRadius: 'var(--radius-md)', color: loading ? DIM : '#0A0A00', fontWeight: 800, fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer', marginTop: 4, boxShadow: loading ? 'none' : '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' }}
+                style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', background: loading ? 'var(--bg-surface-2)' : 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', border: 'none', borderRadius: 'var(--radius-md)', color: loading ? DIM : 'var(--on-brand)', fontWeight: 800, fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer', marginTop: 4, boxShadow: loading ? 'none' : '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' }}
               >
                 {loading ? 'Analyzing…' : <>Score This Bid <ArrowRight size={15} weight="bold" /></>}
               </button>
@@ -916,13 +916,13 @@ export default function DashboardPage() {
                     <PieChart>
                       <Pie
                         data={[
-                          { name: 'Active', value: stats?.activeProjects ?? 0, fill: '#FF8A00' },
-                          { name: 'Open Bids', value: stats?.openBids ?? 0, fill: '#FFE600' },
+                          { name: 'Active', value: stats?.activeProjects ?? 0, fill: 'var(--warning)' },
+                          { name: 'Open Bids', value: stats?.openBids ?? 0, fill: 'var(--brand-primary)' },
                           /* Withheld, not zero — see hasPayApps. The donut's own
                              `.filter(value > 0)` would have hidden it anyway; the
                              legend below would not, so both read the same flag. */
-                          ...(hasPayApps ? [{ name: 'Pay Apps', value: stats?.pendingPayApps ?? 0, fill: '#FF8A00' }] : []),
-                          { name: 'RFIs', value: openRFIs?.length ?? 0, fill: '#A3ACBB' },
+                          ...(hasPayApps ? [{ name: 'Pay Apps', value: stats?.pendingPayApps ?? 0, fill: 'var(--warning)' }] : []),
+                          { name: 'RFIs', value: openRFIs?.length ?? 0, fill: 'var(--status-closed)' },
                         ].filter(d => d.value > 0)}
                         cx="50%" cy="50%"
                         innerRadius={45} outerRadius={70}
@@ -940,10 +940,10 @@ export default function DashboardPage() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {[
-                    { label: 'Active Projects', value: stats?.activeProjects ?? 0, color: '#FF8A00' },
-                    { label: 'Open Bids', value: stats?.openBids ?? 0, color: '#FFE600' },
-                    ...(hasPayApps ? [{ label: 'Pending Pay Apps', value: stats?.pendingPayApps ?? 0, color: '#FF8A00' }] : []),
-                    { label: 'Open RFIs', value: openRFIs?.length ?? 0, color: '#A3ACBB' },
+                    { label: 'Active Projects', value: stats?.activeProjects ?? 0, color: 'var(--warning)' },
+                    { label: 'Open Bids', value: stats?.openBids ?? 0, color: 'var(--brand-primary)' },
+                    ...(hasPayApps ? [{ label: 'Pending Pay Apps', value: stats?.pendingPayApps ?? 0, color: 'var(--warning)' }] : []),
+                    { label: 'Open RFIs', value: openRFIs?.length ?? 0, color: 'var(--status-closed)' },
                   ].map(item => (
                     <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <div style={{ width: 10, height: 10, borderRadius: 2, background: item.color, flexShrink: 0 }} />

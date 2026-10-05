@@ -15,7 +15,7 @@ import { Plus, Buildings, MapPin, CalendarBlank, UsersThree, Sparkle, CurrencyDo
 import { useProjects } from '@/lib/hooks/useProjects';
 import Suggest from '@/components/ui/Suggest';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-surface-2)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF';
+const GOLD='var(--brand-primary)',DARK='var(--bg-surface-2)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)';
 const INPUT_STYLE = {width:'100%',padding:'10px 12px',background:DARK,border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:13,outline:'none'};
 const SELECT_STYLE = {...INPUT_STYLE,cursor:'pointer'};
 const HINT:React.CSSProperties = {fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:6,lineHeight:1.45};
@@ -388,7 +388,7 @@ export default function NewProjectPage() {
       {pf && (
         <StatStrip items={[
           {href: '/app/projects/new', label:'Project Number', value: projectNumber || `${year}-001`, sub: pf.total>0 ? `Next in your ${year} sequence` : `First in the ${year} sequence`},
-          {href: '/app/projects/new', label:'This Contract', value: budgetNum>0 ? fmt(budgetNum) : '—', accent: budgetNum>0 ? '#2CFF7A' : undefined, sub: contractType},
+          {href: '/app/projects/new', label:'This Contract', value: budgetNum>0 ? fmt(budgetNum) : '—', accent: budgetNum>0 ? 'var(--success)' : undefined, sub: contractType},
           {href: '/app/projects/new', label:'Retainage', value: `${Number(retainage)||10}%`, sub: pf.retMode && auto.ret ? 'Your portfolio standard' : 'Default — editable'},
           {href: '/app/projects/new', label:'Jurisdiction', value: stateJurisdiction || '—', sub:'Lien waiver + wage rules'},
         ]}/>
@@ -404,7 +404,7 @@ export default function NewProjectPage() {
         ]}
       />
 
-      {error&&<div style={{background:'rgba(192,48,48,.1)',border:'1px solid rgba(192,48,48,.3)',borderRadius:10,padding:'12px 16px',marginBottom:20,fontSize:13,color:'#FF3B30'}}>{error}</div>}
+      {error&&<div style={{background:'rgba(192,48,48,.1)',border:'1px solid rgba(192,48,48,.3)',borderRadius:10,padding:'12px 16px',marginBottom:20,fontSize:13,color:'var(--danger)'}}>{error}</div>}
 
       {/* What kind of job. One choice that furnishes the rest — retainage, the
           contract type, the CSI spread the budget expects, and the folders the
@@ -443,7 +443,7 @@ export default function NewProjectPage() {
                     border: on ? '5px solid var(--brand-primary)' : '1.5px solid rgba(255,255,255,0.30)',
                     background: on ? '#1A1206' : 'transparent',
                   }} />
-                  <span style={{ fontSize: 14, fontWeight: 800, color: on ? 'var(--brand-primary)' : '#F0F4FF' }}>{t.name}</span>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: on ? 'var(--brand-primary)' : 'var(--text-primary)' }}>{t.name}</span>
                 </div>
                 <div style={{ fontSize: 12, lineHeight: 1.5, color: 'rgba(255,255,255,0.62)', marginBottom: 8 }}>{t.blurb}</div>
                 <div style={{ fontSize: 11.5, lineHeight: 1.45, color: 'rgba(255,255,255,0.38)', fontStyle: 'italic' }}>{t.example}</div>
@@ -487,7 +487,7 @@ export default function NewProjectPage() {
                         return (
                           <button type="button" key={s.key} onClick={()=>pickSector(s.key)} className="pmBtn npSeg"
                             style={{padding:'6px 12px',borderRadius:7,border:'none',cursor:'pointer',fontWeight:800,fontSize:11.5,whiteSpace:'nowrap' as const,
-                              background:active?`linear-gradient(180deg,var(--brand-primary-strong),${GOLD} 60%,var(--brand-primary-hover))`:'transparent',color:active?'#0A0A00':DIM,transition:'all .15s',
+                              background:active?`linear-gradient(180deg,var(--brand-primary-strong),${GOLD} 60%,var(--brand-primary-hover))`:'transparent',color:active?'var(--on-brand)':DIM,transition:'all .15s',
                               boxShadow:active?'0 2px 10px color-mix(in srgb, var(--brand-primary) 28%, transparent), inset 0 1px 0 rgba(255,255,255,0.35)':'none'}}>
                             {s.label}
                           </button>
@@ -520,8 +520,8 @@ export default function NewProjectPage() {
                               transition: 'background .15s, border-color .15s',
                             }}
                           >
-                            <div style={{ fontSize: 13.5, fontWeight: 800, color: on ? 'var(--brand-primary-strong)' : '#FFFFFF', marginBottom: 3 }}>{c.title}</div>
-                            <div style={{ fontSize: 11.5, color: '#D4D4D8', lineHeight: 1.45 }}>{c.detail}</div>
+                            <div style={{ fontSize: 13.5, fontWeight: 800, color: on ? 'var(--brand-primary-strong)' : 'var(--text-primary)', marginBottom: 3 }}>{c.title}</div>
+                            <div style={{ fontSize: 11.5, color: 'var(--text-secondary)', lineHeight: 1.45 }}>{c.detail}</div>
                           </button>
                         );
                       })}

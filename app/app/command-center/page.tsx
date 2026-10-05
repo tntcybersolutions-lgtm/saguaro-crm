@@ -15,8 +15,8 @@ import {
 } from '@phosphor-icons/react';
 
 const C = {
-  gold: 'var(--brand-primary)', green: '#2CFF7A', yellow: '#FF8A00', red: '#FF3B30', blue: 'var(--brand-primary)',
-  bg: 'var(--bg-base)', card: 'var(--bg-surface)', border: 'rgba(255,255,255,0.12)', dim: '#D4D4D8', text: '#FFFFFF',
+  gold: 'var(--brand-primary)', green: 'var(--success)', yellow: 'var(--warning)', red: 'var(--danger)', blue: 'var(--brand-primary)',
+  bg: 'var(--bg-base)', card: 'var(--bg-surface)', border: 'rgba(255,255,255,0.12)', dim: 'var(--text-secondary)', text: 'var(--text-primary)',
 };
 const STATUS_COLOR: Record<HealthStatus, string> = { green: C.green, yellow: C.yellow, red: C.red };
 const STATUS_LABEL: Record<HealthStatus, string> = { green: 'On Track', yellow: 'Watch', red: 'Escalate' };
@@ -299,7 +299,7 @@ function Metric({ label, value, color }: { label: string; value: string; color?:
   return (
     <div>
       <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-tertiary)' }}>{label}</div>
-      <div style={{ fontSize: 14, fontWeight: 800, color: color || '#FFFFFF', marginTop: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      <div style={{ fontSize: 14, fontWeight: 800, color: color || 'var(--text-primary)', marginTop: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
     </div>
   );
 }

@@ -31,8 +31,8 @@ export interface StatCardProps {
   style?: React.CSSProperties;
 }
 
-const GREEN = '#2CFF7A'; // status Ongoing green (lib/status-colors)
-const RED = '#FF3B30';   // status Overdue red
+const GREEN = 'var(--success)'; // status Ongoing green (lib/status-colors)
+const RED = 'var(--danger)';   // status Overdue red
 
 export function StatCard({ icon, label, value, sub, trend, accent, onClick, href, index = 0, style }: StatCardProps) {
   const [hover, setHover] = useState(false);

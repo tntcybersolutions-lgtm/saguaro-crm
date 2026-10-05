@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
+import { StatusPill } from '@/components/ui/Status';
 import { useSort, useSortedRows, SortTh, SortBar } from '@/components/ui/sort';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
@@ -15,7 +16,7 @@ import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 import { openPdf } from '@/components/PdfViewer';
 
-const GOLD='var(--brand-primary)', DARK='var(--bg-base)', RAISED='var(--bg-surface)', BORDER='rgba(255,255,255,0.12)', DIM='#D4D4D8', TEXT='#FFFFFF', GREEN='#2CFF7A', RED='#FF3B30';
+const GOLD='var(--brand-primary)', DARK='var(--bg-base)', RAISED='var(--bg-surface)', BORDER='rgba(255,255,255,0.12)', DIM='var(--text-secondary)', TEXT='var(--text-primary)', GREEN='var(--success)', RED='var(--danger)';
 
 interface Invoice {
   id: string;
@@ -324,7 +325,7 @@ export default function InvoicesPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Project Billing"
-        eyebrowIcon={<IconChip size={24} vivid={moduleAccent('invoices').vivid ?? moduleAccent('invoices').hex}><Receipt size={13} weight="fill" color="#F8FAFC" /></IconChip>}
+        eyebrowIcon={<IconChip size={24} vivid={moduleAccent('invoices').vivid ?? moduleAccent('invoices').hex}><Receipt size={13} weight="fill" color="var(--text-primary)" /></IconChip>}
         accentColor={moduleAccent('invoices').hex}
         title="Client"
         accent="Invoices"
@@ -569,7 +570,7 @@ export default function InvoicesPage() {
                       ) : editId === inv.id ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                           <input value={editVal} onChange={e => setEditVal(e.target.value)} type="number" autoFocus onKeyDown={e => { if (e.key === 'Enter') handleEditInv(inv.id); if (e.key === 'Escape') setEditId(null); }} style={{ width: 100, padding: '4px 8px', background: DARK, border: `1px solid ${GOLD}`, borderRadius: 5, color: TEXT, fontSize: 12, outline: 'none', textAlign: 'right' }} />
-                          <button onClick={() => handleEditInv(inv.id)} style={{ padding: '3px 8px', background: 'linear-gradient(135deg,var(--brand-primary),var(--brand-primary-strong))', border: 'none', borderRadius: 5, color: '#0A0A00', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Save</button>
+                          <button onClick={() => handleEditInv(inv.id)} style={{ padding: '3px 8px', background: 'linear-gradient(135deg,var(--brand-primary),var(--brand-primary-strong))', border: 'none', borderRadius: 5, color: 'var(--on-brand)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Save</button>
                           <button onClick={() => setEditId(null)} style={{ padding: '3px 8px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
                         </div>
                       ) : adjustId === inv.id ? (
@@ -614,7 +615,7 @@ export default function InvoicesPage() {
                         {statusKey(inv.status) === 'draft' && (
                           <button onClick={() => handleSend(inv.id)} style={{ padding: '4px 12px', background: 'var(--brand-primary-18)', border: '1px solid var(--brand-primary-35)', borderRadius: 5, color: 'var(--brand-primary-strong)', fontSize: 12, cursor: 'pointer' }}>Send to Owner</button>
                         )}
-                        {statusKey(inv.status) === 'paid' && <span style={{ color: GREEN, fontSize: 12 }}>Paid</span>}
+                        {statusKey(inv.status) === 'paid' && <StatusPill module="generic" status="paid" size="sm" />}
                       </div>
                     </td>
                   </tr>

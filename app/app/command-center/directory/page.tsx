@@ -11,10 +11,10 @@ const ROLES = ['Owner / Franchisee', 'PM / Franchisor Rep', 'Saguaro Coordinator
 const roleColor = (r: string) => {
   const s = String(r || '').toLowerCase();
   if (s.includes('owner') || s.includes('franchis')) return C.gold;
-  if (s.includes('contractor') || s.includes('superintendent')) return '#FF8A00';
+  if (s.includes('contractor') || s.includes('superintendent')) return 'var(--warning)';
   if (s.includes('architect') || s.includes('engineer')) return C.blue;
   if (s.includes('full-swing') || s.includes('simulator')) return C.green;
-  if (s.includes('city') || s.includes('municipal')) return '#FF8A00';
+  if (s.includes('city') || s.includes('municipal')) return 'var(--warning)';
   return C.dim;
 };
 

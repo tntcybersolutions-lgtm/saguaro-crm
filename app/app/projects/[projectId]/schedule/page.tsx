@@ -18,8 +18,8 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF';
-const GREEN='#2CFF7A',RED='#FF3B30',ORANGE='#FF8A00',BLUE='var(--brand-primary)';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)';
+const GREEN='var(--success)',RED='var(--danger)',ORANGE='var(--warning)',BLUE='var(--brand-primary)';
 
 const STATUSES=['not_started','in_progress','completed','delayed','on_hold'];
 const STATUS_LABELS:Record<string,string>={
@@ -34,7 +34,7 @@ const PHASES=['Pre-Construction','Foundation','Framing','MEP Rough','Insulation'
 
 const inp:React.CSSProperties={
   width:'100%',padding:'9px 12px',background:'var(--bg-surface-2)',
-  border:'1px solid rgba(255,255,255,0.12)',borderRadius:7,color:'#FFFFFF',
+  border:'1px solid rgba(255,255,255,0.12)',borderRadius:7,color:'var(--text-primary)',
   fontSize:13,outline:'none',boxSizing:'border-box',
 };
 const EMPTY:Record<string,any>={
@@ -160,7 +160,7 @@ function GanttChart({tasks, jobHex}:{tasks:any[]; jobHex:string}){
                 {/* Label on bar */}
                 {width>8&&(
                   <div style={{position:'absolute',top:0,left:4,right:4,
-                    fontSize:9,fontWeight:700,color:'#fff',
+                    fontSize:9,fontWeight:700,color:'var(--text-primary)',
                     lineHeight:'16px',overflow:'hidden',whiteSpace:'nowrap',
                     textOverflow:'ellipsis',textShadow:'0 1px 2px rgba(0,0,0,.6)'}}>
                     {task.pct_complete??0}%
@@ -416,7 +416,7 @@ export default function SchedulePage(){
     <div style={{display:'flex',height:'100%',minHeight:0,position:'relative'}}>
       {toast&&(
         <div style={{position:'fixed',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:99999,
-          padding:'12px 20px',borderRadius:8,color:'#fff',fontWeight:700,fontSize:14,pointerEvents:'none',
+          padding:'12px 20px',borderRadius:8,color:'var(--text-primary)',fontWeight:700,fontSize:14,pointerEvents:'none',
           background:toast.type==='success'?'rgba(26,138,74,.92)':'rgba(192,48,48,.92)'}}>
           {toast.msg}
         </div>

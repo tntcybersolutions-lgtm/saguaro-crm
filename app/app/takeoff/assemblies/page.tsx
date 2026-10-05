@@ -28,8 +28,8 @@ const GOLD = 'var(--brand-primary)';
 const DARK = 'var(--bg-base)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#D4D4D8';
-const TEXT = '#FFFFFF';
+const DIM = 'var(--text-secondary)';
+const TEXT = 'var(--text-primary)';
 // Premium translucent surface gradient (matches the cinematic kit's SectionCard/StatCard).
 const SURFACE = 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))';
 
@@ -667,7 +667,7 @@ function AssemblyLibraryContent() {
                         style={{
                           background: 'none',
                           border: 'none',
-                          color: '#e06c75',
+                          color: 'var(--danger)',
                           fontSize: 12,
                           cursor: 'pointer',
                           fontWeight: 600,
@@ -795,9 +795,9 @@ function AssemblyLibraryContent() {
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 8,
                   padding: '10px 16px',
-                  background: confirmDelete ? '#e06c75' : 'transparent',
-                  color: confirmDelete ? '#fff' : '#e06c75',
-                  border: `1px solid ${confirmDelete ? '#e06c75' : '#e06c7560'}`,
+                  background: confirmDelete ? 'var(--danger)' : 'transparent',
+                  color: confirmDelete ? 'var(--text-primary)' : 'var(--danger)',
+                  border: `1px solid ${confirmDelete ? 'var(--danger)' : '#e06c7560'}`,
                   borderRadius: 12,
                   fontSize: 13,
                   fontWeight: 700,

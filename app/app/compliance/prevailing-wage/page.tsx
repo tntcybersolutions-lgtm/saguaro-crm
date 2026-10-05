@@ -10,10 +10,10 @@ import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty } from 
 import { Scales, MagnifyingGlass, CurrencyDollar, Calculator, CalendarBlank, CalendarCheck, Table as TableIcon, FileMagnifyingGlass } from '@phosphor-icons/react';
 
 const GOLD = 'var(--brand-primary)';
-const GREEN = '#2CFF7A';
+const GREEN = 'var(--success)';
 const BLUE = 'var(--brand-primary)';
-const TEXT = '#FFFFFF';
-const DIM = '#D4D4D8';
+const TEXT = 'var(--text-primary)';
+const DIM = 'var(--text-secondary)';
 const BORDER = 'rgba(255,255,255,0.12)';
 
 interface Rate {
@@ -217,14 +217,14 @@ export default function PrevailingWagePage() {
 
       {/* Honesty disclaimer — the shared schedule is sample/reference data, not
           an official determination. Tenant-entered CUSTOM rows are authoritative. */}
-      <div style={{ background: 'color-mix(in srgb, var(--warning) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--warning) 40%, transparent)', borderRadius: 10, padding: '12px 16px', marginBottom: 20, fontSize: 12.5, color: '#D4D4D8', lineHeight: 1.55 }}>
+      <div style={{ background: 'color-mix(in srgb, var(--warning) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--warning) 40%, transparent)', borderRadius: 10, padding: '12px 16px', marginBottom: 20, fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
         <span style={{ fontWeight: 800, color: 'var(--warning)', marginRight: 6 }}>Sample / Reference Rates</span>
         These are realistic Davis-Bacon-style rates for estimating and planning only — <strong>not an official wage determination</strong>. Before certifying payroll, verify against the official determination on{' '}
         <a href="https://sam.gov/content/wage-determinations" target="_blank" rel="noopener noreferrer" style={{ color: GOLD, fontWeight: 700 }}>SAM.gov (WDOL)</a>{' '}
         for the exact project, county and decision number. Rows marked <span style={{ color: BLUE, fontWeight: 800 }}>Custom</span> are your own tenant-entered determination and override the sample schedule.
       </div>
       {error && (
-        <div style={{ background: 'rgba(192,48,48,.1)', border: '1px solid rgba(192,48,48,.3)', borderRadius: 8, padding: '10px 16px', marginBottom: 20, fontSize: 13, color: '#FF3B30' }}>
+        <div style={{ background: 'rgba(192,48,48,.1)', border: '1px solid rgba(192,48,48,.3)', borderRadius: 8, padding: '10px 16px', marginBottom: 20, fontSize: 13, color: 'var(--danger)' }}>
           {error}
         </div>
       )}

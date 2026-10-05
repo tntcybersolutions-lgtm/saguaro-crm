@@ -6,12 +6,12 @@ import type { Competitor } from '@/lib/competitors';
 
 const DARK = 'var(--bg-base)';
 const GOLD = 'var(--brand-primary)';
-const TEXT = '#FFFFFF';
-const DIM = '#D4D4D8';
+const TEXT = 'var(--text-primary)';
+const DIM = 'var(--text-secondary)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const RAISED = 'var(--bg-surface)';
-const GREEN = '#2CFF7A';
-const RED = '#FF3B30';
+const GREEN = 'var(--success)';
+const RED = 'var(--danger)';
 
 // ─── Nav ────────────────────────────────────────────────────────────────────
 
@@ -47,13 +47,13 @@ function Nav() {
             />
             <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
               <span style={{ fontWeight: 600, fontSize: '14px', color: TEXT }}>Saguaro</span>
-              <span style={{ fontSize: '7px', color: '#D4D4D8', fontWeight: 600 }}>Control Systems</span>
+              <span style={{ fontSize: '7px', color: 'var(--text-secondary)', fontWeight: 600 }}>Control Systems</span>
             </span>
           </Link>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }} className="ccp-desktop">
             <Link href="/login" style={{ padding: '7px 18px', background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '6px', color: 'rgba(255,255,255,0.8)', fontSize: '13px', fontWeight: 400, textDecoration: 'none' }}>Log In</Link>
-            <Link href="/signup" style={{ padding: '7px 18px', background: 'var(--brand-primary)', border: 'none', borderRadius: '6px', color: '#0A0A00', fontSize: '13px', fontWeight: 600, letterSpacing: '0.03em', textDecoration: 'none' }}>Free Trial</Link>
+            <Link href="/signup" style={{ padding: '7px 18px', background: 'var(--brand-primary)', border: 'none', borderRadius: '6px', color: 'var(--on-brand)', fontSize: '13px', fontWeight: 600, letterSpacing: '0.03em', textDecoration: 'none' }}>Free Trial</Link>
           </div>
 
           <button
@@ -75,7 +75,7 @@ function Nav() {
               Log In
             </Link>
             <Link href="/signup" onClick={() => setMobileOpen(false)}
-              style={{ display: 'block', textAlign: 'center', padding: '13px', background: 'var(--brand-primary)', borderRadius: '9px', color: '#0A0A00', fontWeight: 600, textDecoration: 'none', fontSize: '15px' }}>
+              style={{ display: 'block', textAlign: 'center', padding: '13px', background: 'var(--brand-primary)', borderRadius: '9px', color: 'var(--on-brand)', fontWeight: 600, textDecoration: 'none', fontSize: '15px' }}>
               Start Free Trial
             </Link>
           </div>
@@ -228,7 +228,7 @@ export default function CompetitorComparePage({ competitor }: { competitor: Comp
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <Link href="/signup" style={{
             padding: '11px 24px', background: GOLD,
-            borderRadius: '8px', color: '#0A0A00', fontWeight: 600, fontSize: '14px',
+            borderRadius: '8px', color: 'var(--on-brand)', fontWeight: 600, fontSize: '14px',
             textDecoration: 'none',
           }}>
             Start Free Trial
@@ -388,7 +388,7 @@ export default function CompetitorComparePage({ competitor }: { competitor: Comp
           <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link href={migrationLink} style={{
               padding: '11px 24px', background: GOLD,
-              borderRadius: '8px', color: '#0A0A00', fontWeight: 600, fontSize: '14px',
+              borderRadius: '8px', color: 'var(--on-brand)', fontWeight: 600, fontSize: '14px',
               textDecoration: 'none',
             }}>
               Start Free Migration
@@ -422,7 +422,7 @@ export default function CompetitorComparePage({ competitor }: { competitor: Comp
           <Link href="/signup" style={{
             display: 'inline-block', padding: '12px 28px',
             background: GOLD,
-            borderRadius: '8px', color: '#0A0A00', fontWeight: 600, fontSize: '15px',
+            borderRadius: '8px', color: 'var(--on-brand)', fontWeight: 600, fontSize: '15px',
             textDecoration: 'none',
           }}>
             Start Free Trial — No CC Required

@@ -9,7 +9,7 @@ import { Sparkle, PencilSimple, CheckCircle, Coins, BookOpen } from '@phosphor-i
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, goldButtonStyle } from '@/components/ui/premium';
 
 const PANEL = 'var(--bg-surface)', LINE = 'rgba(255,255,255,0.09)', GOLD = 'var(--brand-primary)';
-const TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#2CFF7A', BLUE = 'var(--brand-primary-strong)';
+const TEXT = 'var(--text-secondary)', DIM = 'var(--text-tertiary)', GREEN = 'var(--success)', BLUE = 'var(--brand-primary-strong)';
 type Row = { cost_key: string; unit: string; note: string; bookCents: number; ownCents: number | null; source: string | null; samples: number };
 
 export default function CostCatalogPage() {
@@ -51,7 +51,7 @@ export default function CostCatalogPage() {
         subtitle={<>Your rates override the book everywhere the takeoff prices — so every estimate reflects <b style={{ color: TEXT }}>your</b> real numbers.</>}
         actions={
           <button onClick={learn} disabled={busy} className="pmBtn" style={{ ...goldButtonStyle, padding: '11px 22px', fontSize: 14.5, cursor: busy ? 'wait' : 'pointer', opacity: busy ? 0.85 : 1 }}>
-            {busy ? 'Learning…' : <><Sparkle size={16} weight="fill" color="#0A0A00" /> Learn from My Jobs</>}
+            {busy ? 'Learning…' : <><Sparkle size={16} weight="fill" color="var(--on-brand)" /> Learn from My Jobs</>}
           </button>
         }
       />
@@ -63,7 +63,7 @@ export default function CostCatalogPage() {
           padding: '9px 15px', borderRadius: 10, fontSize: 13,
           background: isDone ? 'rgba(52,211,153,0.10)' : isError ? 'rgba(255,59,48,0.10)' : 'rgba(255,255,255,0.04)',
           border: `1px solid ${isDone ? 'rgba(52,211,153,0.3)' : isError ? 'rgba(255,59,48,0.3)' : LINE}`,
-          color: isDone ? GREEN : isError ? '#FF3B30' : DIM,
+          color: isDone ? GREEN : isError ? 'var(--danger)' : DIM,
         }}>
           {isDone && <CheckCircle size={15} weight="fill" color={GREEN} />}
           {msg.replace(/^✓ /, '')}
@@ -101,7 +101,7 @@ export default function CostCatalogPage() {
                 {editing ? (
                   <>
                     <input value={edit[r.cost_key]} onChange={(e) => setEdit((x) => ({ ...x, [r.cost_key]: e.target.value }))} style={inp} autoFocus />
-                    <button onClick={() => saveRate(r.cost_key)} style={{ background: GREEN, color: '#0a0a0a', border: 'none', borderRadius: 6, padding: '5px 10px', cursor: 'pointer', fontWeight: 700, fontSize: 12 }}>Save</button>
+                    <button onClick={() => saveRate(r.cost_key)} style={{ background: GREEN, color: 'var(--bg-base)', border: 'none', borderRadius: 6, padding: '5px 10px', cursor: 'pointer', fontWeight: 700, fontSize: 12 }}>Save</button>
                   </>
                 ) : (
                   <>

@@ -16,8 +16,8 @@ const GREEN = '#2CFF7A';
 const BLUE = 'var(--brand-primary)';
 const RED = '#FF3B30';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#D4D4D8';
-const TEXT = '#FFFFFF';
+const DIM = 'var(--text-secondary)';
+const TEXT = 'var(--text-primary)';
 
 interface WifiNetwork {
   id: string;
@@ -485,7 +485,7 @@ export default function WifiManagerPage() {
                   padding: '10px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: `1px solid ${BORDER}`,
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: ap.status === 'online' ? GREEN : ap.status === 'offline' ? RED : '#A3ACBB' }} />
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: ap.status === 'online' ? GREEN : ap.status === 'offline' ? RED : 'var(--status-closed)' }} />
                     <span style={{ color: TEXT, fontSize: 13, fontWeight: 600 }}>{ap.name}</span>
                   </div>
                   <div style={{ color: DIM, fontSize: 11, marginTop: 4 }}>

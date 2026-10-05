@@ -12,13 +12,13 @@ const GOLD = 'var(--brand-primary)';
 const BG = 'var(--bg-base)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const TEXT = '#FFFFFF';
-const DIM = '#D4D4D8';
-const GREEN = '#2CFF7A';
-const RED = '#FF3B30';
+const TEXT = 'var(--text-primary)';
+const DIM = 'var(--text-secondary)';
+const GREEN = 'var(--success)';
+const RED = 'var(--danger)';
 const AMBER = 'var(--warning)';
 const BLUE = 'var(--brand-primary)';
-const PURPLE = '#FF8A00';
+const PURPLE = 'var(--warning)';
 
 /* ── types ── */
 type SubStatus = 'active' | 'pending' | 'disabled';
@@ -125,7 +125,7 @@ const ALL_PERMISSIONS_LIST: { key: PortalPermission; label: string }[] = [
   { key: 'submittals', label: 'Submittals' },
   { key: 'pay_apps', label: 'Pay Applications' },
 ];
-const AVATAR_COLORS = [GOLD, BLUE, GREEN, PURPLE, AMBER, '#FF8A00', '#2CFF7A', '#FF8A00'];
+const AVATAR_COLORS = [GOLD, BLUE, GREEN, PURPLE, AMBER, 'var(--warning)', 'var(--success)', 'var(--warning)'];
 const DOC_CATEGORIES = ['Drawings', 'Specifications', 'Schedules', 'Safety Plans', 'Meeting Minutes', 'Reports', 'Contracts', 'Photos'];
 
 /* ── map a real portal_users row → the roster shape the UI renders (was a
@@ -175,7 +175,7 @@ const inputStyle: React.CSSProperties = {
 };
 const selectStyle: React.CSSProperties = { ...inputStyle, appearance: 'auto' as React.CSSProperties['appearance'] };
 const btnPrimary: React.CSSProperties = {
-  padding: '9px 20px', background: GOLD, color: '#0A0A00', border: 'none', borderRadius: 6,
+  padding: '9px 20px', background: GOLD, color: 'var(--on-brand)', border: 'none', borderRadius: 6,
   fontWeight: 600, cursor: 'pointer', fontSize: 14,
 };
 const btnSecondary: React.CSSProperties = {

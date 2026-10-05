@@ -8,8 +8,10 @@
  * means the same thing (palette values exactly; near-misses to the closest
  * palette colour; every blue to yellow/gray per the design rule). Skips the
  * documented exceptions (print/PDF, QR, signature canvas, portals, charts,
- * 3-D) and any identifier that is concatenated with an alpha suffix
- * (`GOLD + '33'`, `${c}1F`) because `var(--x)33` is not a colour.
+ * 3-D, canvas renderers) and any identifier that is concatenated with an
+ * alpha suffix (`GOLD + '33'`, `${c}1F`) because `var(--x)33` is not a colour.
+ * Lines that draw on a canvas, build a data-URI SVG or set a <meta> tag keep
+ * their hex too — a CSS variable cannot resolve there.
  *
  * Regex-based on purpose: the literals live inside `style={{ }}` objects,
  * `const X = '#…'` declarations and template strings, which an AST walk would
@@ -45,7 +47,9 @@ const TOKEN = {
   '#3B82F6': 'var(--brand-primary)', '#60A5FA': 'var(--brand-primary)', '#2563EB': 'var(--brand-primary)', '#1D4ED8': 'var(--brand-primary)', '#1A5FA8': 'var(--warning)', '#06B6D4': 'var(--brand-primary)', '#0EA5E9': 'var(--brand-primary)', '#38BDF8': 'var(--brand-primary)', '#8B5CF6': 'var(--status-closed)', '#A78BFA': 'var(--status-closed)', '#7C3AED': 'var(--status-closed)', '#6366F1': 'var(--status-closed)',
 };
 const ALLOW_DIRS = ['app/portals/', 'app/sign/', 'app/w9/', 'app/print/', 'app/api/', 'app/get-the-app/', 'components/charts/', 'components/heatmap/', 'components/signal-studio/', 'components/franchise/', 'lib/'];
-const ALLOW_FILE_RE = /(pdf|print|qr|signature|canvas|chart|email|letterhead|globals\.css)/i;
+const ALLOW_FILE_RE = /(pdf|print|qr|signature|canvas|chart|email|letterhead|globals\.css|PlanTracer|DrawingViewer|RevisionCompare|PdfViewer|PhotoEditor|SignaturePad|CrewMap|Building3D|Designer)/i;
+const SKIP_LINE_RE = /data:image|toDataURL|<meta |fillStyle|strokeStyle|\bctx\.|canvas/i;
+const HEX_LITERAL_RE = /(\bconst\s+([A-Za-z_$][\w$]*)\s*=\s*)?(['"`])(#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3}))\3/g;
 
 function walk(dir, out = []) {
   if (!fs.existsSync(dir)) return out;
@@ -57,31 +61,33 @@ function walk(dir, out = []) {
   return out;
 }
 const rel = (p) => path.relative(ROOT, p).replace(/\\/g, '/');
-let files = (targets.length ? targets.map((t) => path.resolve(ROOT, t)) : [path.join(ROOT, 'app', 'app'), path.join(ROOT, 'app', 'field'), path.join(ROOT, 'components')])
+const files = (targets.length ? targets.map((t) => path.resolve(ROOT, t)) : [path.join(ROOT, 'app', 'app'), path.join(ROOT, 'app', 'field'), path.join(ROOT, 'components')])
   .filter((t) => fs.existsSync(t))
   .flatMap((t) => (fs.statSync(t).isDirectory() ? walk(t) : [t]))
   .map(rel)
   .filter((r) => !ALLOW_DIRS.some((d) => r.startsWith(d)) && !ALLOW_FILE_RE.test(path.basename(r)));
 
-const HEX_RE = /#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/g;
 let changedFiles = 0, replaced = 0, skippedAlpha = 0;
 const perFile = [];
 for (const r of files) {
   const abs = path.join(ROOT, r);
-  let src = fs.readFileSync(abs, 'utf8');
+  const src = fs.readFileSync(abs, 'utf8');
   // identifiers whose value is concatenated with an alpha suffix: keep their hex
   const alphaIdents = new Set();
   for (const m of src.matchAll(/\b([A-Za-z_$][\w$]*)\s*\+\s*['"`][0-9a-fA-F]{2}['"`]/g)) alphaIdents.add(m[1]);
   for (const m of src.matchAll(/\$\{\s*([A-Za-z_$][\w$.]*)\s*\}[0-9a-fA-F]{2}\b/g)) alphaIdents.add(m[1].split('.')[0]);
   let n = 0;
-  const out = src.replace(/(\bconst\s+([A-Za-z_$][\w$]*)\s*=\s*)?(['"`])(#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3}))\3/g, (whole, decl, ident, q, hex) => {
-    const key = hex.toUpperCase();
-    const tok = TOKEN[key];
-    if (!tok) return whole;
-    if (ident && alphaIdents.has(ident)) { skippedAlpha++; return whole; }
-    n++;
-    return `${decl || ''}${q}${tok}${q}`;
-  });
+  const eol = src.includes('\r\n') ? '\r\n' : '\n';
+  const out = src.split(/\r?\n/).map((line) => {
+    if (SKIP_LINE_RE.test(line)) return line;
+    return line.replace(HEX_LITERAL_RE, (whole, decl, ident, q, hex) => {
+      const tok = TOKEN[hex.toUpperCase()];
+      if (!tok) return whole;
+      if (ident && alphaIdents.has(ident)) { skippedAlpha++; return whole; }
+      n++;
+      return `${decl || ''}${q}${tok}${q}`;
+    });
+  }).join(eol);
   if (n) { replaced += n; changedFiles++; perFile.push([n, r]); if (!DRY) fs.writeFileSync(abs, out); }
 }
 perFile.sort((a, b) => b[0] - a[0]);

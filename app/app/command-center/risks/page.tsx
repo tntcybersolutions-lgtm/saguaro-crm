@@ -209,7 +209,7 @@ function AddRiskForm({ projects, onDone }: { projects: any[]; onDone: () => void
       </div>
       {err && <div style={{ color: C.red, fontSize: 13, marginTop: 10 }}>{err}</div>}
       <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-        <button onClick={submit} disabled={busy} style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: busy ? C.dim : C.gold, color: '#0A0A00', fontWeight: 800, cursor: busy ? 'default' : 'pointer' }}>{busy ? 'Saving…' : 'Save Risk'}</button>
+        <button onClick={submit} disabled={busy} style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: busy ? C.dim : C.gold, color: 'var(--on-brand)', fontWeight: 800, cursor: busy ? 'default' : 'pointer' }}>{busy ? 'Saving…' : 'Save Risk'}</button>
         <button onClick={onDone} style={{ padding: '9px 18px', borderRadius: 10, border: `1px solid ${C.border}`, background: 'var(--bg-surface-2)', color: C.dim, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
       </div>
     </div>

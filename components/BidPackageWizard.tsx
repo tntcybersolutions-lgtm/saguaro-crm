@@ -6,11 +6,11 @@ import { CSI_DIVISIONS as CSI_TAXONOMY } from '@/lib/construction-intelligence';
 const GOLD = 'var(--brand-primary)';
 const DARK = 'var(--bg-surface-2)';
 const RAISED = 'var(--bg-surface)';
-const RAISED2 = '#1c1c1e';
+const RAISED2 = 'var(--surface-raised)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#D4D4D8';
-const TEXT = '#FFFFFF';
-const GREEN = '#2CFF7A';
+const DIM = 'var(--text-secondary)';
+const TEXT = 'var(--text-primary)';
+const GREEN = 'var(--success)';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -74,7 +74,7 @@ function PrimaryBtn({ onClick, disabled, loading, children }: {
       disabled={disabled || loading}
       style={{
         padding: '10px 24px',
-        background: disabled || loading ? '#1c1c1e' : `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,
+        background: disabled || loading ? 'var(--surface-raised)' : `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,
         border: 'none', borderRadius: 7, color: disabled || loading ? DIM : '#F2F2F7',
         fontSize: 13, fontWeight: 800, cursor: disabled || loading ? 'not-allowed' : 'pointer',
         transition: 'opacity 0.15s',
@@ -131,7 +131,7 @@ function ProgressBar({ step }: { step: number }) {
                   background: done ? GOLD : active ? 'var(--brand-primary-12)' : 'rgba(255,255,255,0.12)',
                   border: `2px solid ${color}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: done ? '#0A0A00' : color, fontWeight: 800, fontSize: 13,
+                  color: done ? 'var(--on-brand)' : color, fontWeight: 800, fontSize: 13,
                   transition: 'all 0.3s',
                 }}>
                   {done ? '✓' : i + 1}
@@ -363,7 +363,7 @@ function Step2({ projectId, lineItems, onLineItemsChange, onNext, onBack }: {
                     </td>
                     <td style={tdStyle}>
                       <button onClick={() => removeRow(row.id)}
-                        style={{ background: 'none', border: 'none', color: '#FF3B30', cursor: 'pointer', fontSize: 14, padding: '2px 6px' }}>
+                        style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: 14, padding: '2px 6px' }}>
                         ×
                       </button>
                     </td>
@@ -579,7 +579,7 @@ function Step4({ trade, scope, lineItems, selectedSubCount, packageName, onPacka
           disabled={submitting}
           style={{
             padding: '12px 32px',
-            background: submitting ? '#1c1c1e' : `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,
+            background: submitting ? 'var(--surface-raised)' : `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,
             border: 'none', borderRadius: 8,
             color: submitting ? DIM : '#F2F2F7',
             fontSize: 15, fontWeight: 800,

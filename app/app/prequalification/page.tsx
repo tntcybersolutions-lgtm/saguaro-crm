@@ -9,8 +9,8 @@ import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatSt
 
 /* ─── Palette ─── */
 const GOLD = 'var(--brand-primary)', BG = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)',
-  TEXT = '#FFFFFF', DIM = '#D4D4D8', GREEN = '#2CFF7A', RED = '#FF3B30',
-  AMBER = 'var(--warning)', BLUE = 'var(--brand-primary)', PURPLE = '#FF8A00';
+  TEXT = 'var(--text-primary)', DIM = 'var(--text-secondary)', GREEN = 'var(--success)', RED = 'var(--danger)',
+  AMBER = 'var(--warning)', BLUE = 'var(--brand-primary)', PURPLE = 'var(--warning)';
 
 /* ─── Types ─── */
 type QType = 'text' | 'number' | 'yes_no' | 'rating' | 'file_upload' | 'multi_choice';
@@ -52,7 +52,7 @@ function pctColor(pct: number) { return pct >= 80 ? GREEN : pct >= 60 ? AMBER : 
 
 /* ─── Shared Styles ─── */
 const inputS: React.CSSProperties = { padding: '9px 13px', background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' };
-const btnS = (bg: string, c: string = '#000'): React.CSSProperties => ({ padding: '8px 18px', background: bg, color: c, border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' });
+const btnS = (bg: string, c: string = 'var(--bg-base)'): React.CSSProperties => ({ padding: '8px 18px', background: bg, color: c, border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' });
 const cardS: React.CSSProperties = { background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: 16, marginBottom: 10 };
 const chipS = (bg: string, c: string): React.CSSProperties => ({ display: 'inline-block', padding: '3px 10px', borderRadius: 99, fontSize: 11, fontWeight: 700, background: `color-mix(in srgb, ${bg} 13%, transparent)`, color: c });
 const modalOverlay: React.CSSProperties = { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 };
@@ -967,10 +967,10 @@ export default function PrequalificationPage() {
               {detailSub.status === 'pending' && <button style={btnS(BLUE, TEXT)} onClick={() => { updateStatus(detailSub.id, 'under_review'); }}>Start Review</button>}
               {detailSub.status === 'under_review' && <>
                 <button style={btnS(RED, TEXT)} onClick={() => { updateStatus(detailSub.id, 'rejected'); }}>Reject</button>
-                <button style={btnS(GREEN, '#000')} onClick={() => { updateStatus(detailSub.id, 'approved'); }}>Approve</button>
+                <button style={btnS(GREEN, 'var(--bg-base)')} onClick={() => { updateStatus(detailSub.id, 'approved'); }}>Approve</button>
               </>}
               {(detailSub.status === 'approved' || detailSub.status === 'rejected') && (
-                <button style={btnS(AMBER, '#000')} onClick={() => { updateStatus(detailSub.id, 'under_review'); }}>Reopen Review</button>
+                <button style={btnS(AMBER, 'var(--bg-base)')} onClick={() => { updateStatus(detailSub.id, 'under_review'); }}>Reopen Review</button>
               )}
               <button style={btnS(BORDER, TEXT)} onClick={() => handleExport('pdf')}>Print / Export</button>
             </div>

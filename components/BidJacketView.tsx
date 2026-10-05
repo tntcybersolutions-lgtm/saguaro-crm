@@ -32,10 +32,10 @@ import { SectionCard, PremiumEmpty, ghostButtonStyle, goldButtonStyle } from '@/
 import { openPdf } from '@/components/PdfViewer';
 
 const GOLD = 'var(--brand-primary)';
-const TEXT = '#F0F4FF';
-const DIM = '#A1A1AA';
+const TEXT = 'var(--text-primary)';
+const DIM = 'var(--text-tertiary)';
 const HAIR = 'rgba(255,255,255,0.10)';
-const GREEN = '#2CFF7A';
+const GREEN = 'var(--success)';
 const AMBER = 'var(--warning)';
 
 export type Doc = { id: string; name: string; url: string | null; meta?: string; sub?: string; kind: string };
@@ -422,7 +422,7 @@ export default function BidJacketView({
 }
 
 function Stat({ label, value, note, tone }: { label: string; value: string; note?: string; tone: 'dim' | 'green' | 'amber' | 'red' }) {
-  const c = tone === 'green' ? GREEN : tone === 'amber' ? AMBER : tone === 'red' ? '#FF3B30' : DIM;
+  const c = tone === 'green' ? GREEN : tone === 'amber' ? AMBER : tone === 'red' ? 'var(--danger)' : DIM;
   return (
     <div>
       <div style={{ fontSize: 10, fontWeight: 800, color: DIM, marginBottom: 5 }}>{label}</div>

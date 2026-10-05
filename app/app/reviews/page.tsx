@@ -12,7 +12,7 @@ import { humanError } from '@/lib/errors';
 import { fmtDate as fmtDateSafe } from '@/lib/format-date';
 
 const BG = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
-const TEXT = '#FFFFFF', DIM = '#D4D4D8', GOLD = 'var(--brand-primary)', GREEN = '#2CFF7A';
+const TEXT = 'var(--text-primary)', DIM = 'var(--text-secondary)', GOLD = 'var(--brand-primary)', GREEN = 'var(--success)';
 
 type Review = {
   id: string; reviewer_name: string | null; rating: number; body: string | null;
@@ -115,7 +115,7 @@ export default function ReviewsPage() {
         <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="What did they say?" rows={3}
           style={{ width: '100%', boxSizing: 'border-box', padding: '9px 13px', background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-          <button onClick={submit} disabled={saving} style={{ padding: '9px 18px', background: GOLD, color: '#000', border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
+          <button onClick={submit} disabled={saving} style={{ padding: '9px 18px', background: GOLD, color: 'var(--bg-base)', border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
             {saving ? 'Saving…' : 'Add Review'}
           </button>
         </div>

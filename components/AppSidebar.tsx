@@ -158,7 +158,7 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
    * or uploaded before tone detection) keeps the old neutral treatment. */
   const needsPlate = hasLogo && wl.logoTone === 'dark';
   const platedImg: React.CSSProperties = needsPlate
-    ? { background: '#FFFFFF', padding: 6, borderRadius: 8, boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.06)' }
+    ? { background: 'var(--text-primary)', padding: 6, borderRadius: 8, boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.06)' }
     : {};
   const hasTenantBrand = hasLogo || !!wl.companyName;
 
@@ -1008,7 +1008,7 @@ export default function AppSidebar({
                         boxShadow: `0 0 12px -3px ${vivid}40, inset 0 1px 0 rgba(255,255,255,0.25)`,
                       }}
                     >
-                      <Icon size={collapsed ? 14 : 13} weight="fill" color="#F8FAFC" />
+                      <Icon size={collapsed ? 14 : 13} weight="fill" color="var(--text-primary)" />
                     </span>
                   ) : (
                     <Icon

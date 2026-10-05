@@ -12,15 +12,15 @@ const GOLD = 'var(--brand-primary)';
 const BG = 'var(--bg-base)';
 const RAISED = 'var(--bg-surface)';
 /* Text on a brand-yellow fill. */
-const ON_GOLD = '#0A0A00';
+const ON_GOLD = 'var(--on-brand)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const TEXT = '#FFFFFF';
-const DIM = '#D4D4D8';
-const GREEN = '#2CFF7A';
+const TEXT = 'var(--text-primary)';
+const DIM = 'var(--text-secondary)';
+const GREEN = 'var(--success)';
 const RED = '#FF3B30';
 const AMBER = 'var(--warning)';
 const BLUE = 'var(--brand-primary)';
-const PURPLE = '#FF8A00';
+const PURPLE = 'var(--warning)';
 
 /* ── Constants ── */
 const MODULES = [
@@ -1020,7 +1020,7 @@ export default function CustomFieldsPage() {
             right: 20,
             zIndex: 10000,
             background: toast.type === 'ok' ? GREEN : RED,
-            color: '#fff',
+            color: 'var(--text-primary)',
             padding: '10px 20px',
             borderRadius: 8,
             fontSize: 13,
@@ -1134,7 +1134,7 @@ export default function CustomFieldsPage() {
             }}
           >
             <span style={{ color: RED, fontSize: 13 }}>{error}</span>
-            <button style={btn(RED, '#fff')} onClick={loadFields}>
+            <button style={btn(RED, 'var(--text-primary)')} onClick={loadFields}>
               Retry
             </button>
           </div>
@@ -1341,7 +1341,7 @@ export default function CustomFieldsPage() {
                     width: 18,
                     height: 18,
                     borderRadius: '50%',
-                    background: '#fff',
+                    background: 'var(--text-primary)',
                     position: 'absolute',
                     top: 3,
                     left: formData.required ? 23 : 3,
@@ -1386,7 +1386,7 @@ export default function CustomFieldsPage() {
                     width: 18,
                     height: 18,
                     borderRadius: '50%',
-                    background: '#fff',
+                    background: 'var(--text-primary)',
                     position: 'absolute',
                     top: 3,
                     left: formData.is_active ? 23 : 3,
@@ -1646,7 +1646,7 @@ export default function CustomFieldsPage() {
                           width: 14,
                           height: 14,
                           borderRadius: '50%',
-                          background: '#fff',
+                          background: 'var(--text-primary)',
                           position: 'absolute',
                           top: 3,
                           left: field.is_active ? 21 : 3,

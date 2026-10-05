@@ -34,5 +34,5 @@ export default function BidPackageLevelingRedirect() {
     router.replace(`/app/bids/leveling?package=${id}`);
   }, [id, router]);
 
-  return <div style={{ padding: 40, color: '#A1A1AA' }}>Opening bid leveling…</div>;
+  return <div style={{ padding: 40, color: 'var(--text-tertiary)' }}>Opening bid leveling…</div>;
 }

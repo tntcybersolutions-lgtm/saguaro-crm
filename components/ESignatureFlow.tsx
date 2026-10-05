@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { StatusPill } from '@/components/ui/Status';
 
 const GOLD = 'var(--brand-primary)';
 const DARK = 'var(--bg-surface-2)';
@@ -334,7 +335,7 @@ export default function ESignatureFlow({ projectId, docType, docTitle, pdfUrl, o
         <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: TEXT }}>
           E-Signature — {docTitle}
         </h3>
-        {sent && <span style={{ fontSize: 12, color: GREEN, fontWeight: 700 }}>Sent</span>}
+        {sent && <StatusPill module="generic" status="sent" size="sm" />}
       </div>
       {!sent && renderStepper()}
       {sent ? renderDashboard() : step === 1 ? renderStep1() : step === 2 ? renderStep2() : renderStep3()}

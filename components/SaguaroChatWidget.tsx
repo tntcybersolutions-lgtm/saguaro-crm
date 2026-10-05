@@ -636,7 +636,7 @@ export default function SaguaroChatWidget({
             <div style={{
               position: 'absolute', bottom: '100%', left: '50%',
               transform: 'translateX(-50%)', marginBottom: 10,
-              background: 'rgba(0,0,0,0.88)', color: '#fff', fontSize: 11,
+              background: 'rgba(0,0,0,0.88)', color: 'var(--text-primary)', fontSize: 11,
               padding: '7px 14px', borderRadius: 20, whiteSpace: 'nowrap',
               animation: 'tooltipFade 0.2s ease forwards', pointerEvents: 'none',
               border: '1px solid rgba(255,255,255,0.12)',
@@ -648,9 +648,9 @@ export default function SaguaroChatWidget({
           {hasNewMessage && (
             <div style={{
               position: 'absolute', top: -4, right: -4, width: 18, height: 18,
-              borderRadius: '50%', background: '#FF3B30', display: 'flex',
+              borderRadius: '50%', background: 'var(--danger)', display: 'flex',
               alignItems: 'center', justifyContent: 'center', fontSize: 10,
-              fontWeight: 700, color: '#fff', zIndex: 1,
+              fontWeight: 700, color: 'var(--text-primary)', zIndex: 1,
               animation: 'badgePulse 2s ease-in-out infinite',
               border: '2px solid #0E0F12',
             }}>1</div>
@@ -707,14 +707,14 @@ export default function SaguaroChatWidget({
           >
             <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: '0 2px 12px var(--brand-primary-35)', flexShrink: 0 }}>🌵</div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#FFFFFF', letterSpacing: '-0.2px' }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.2px' }}>
                 Sage
                 {memoryProfile?.identity.firstName && (
                   <span style={{ fontWeight: 400, color: 'rgba(255,255,255,0.4)', fontSize: 13 }}> — hey {memoryProfile.identity.firstName}</span>
                 )}
               </div>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#2CFF7A', animation: 'onlinePulse 2s ease-in-out infinite', flexShrink: 0 }} />
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--success)', animation: 'onlinePulse 2s ease-in-out infinite', flexShrink: 0 }} />
                 AI Construction Expert · Online
                 {memoryProfile && memoryProfile.engagement.currentStreak > 2 && (
                   <span style={{ marginLeft: 6, color: 'var(--brand-primary)', fontSize: 10, animation: 'streakFlicker 3s ease-in-out infinite' }}>
@@ -774,7 +774,7 @@ export default function SaguaroChatWidget({
                   }}>
                     {msg.role === 'user' ? (
                       <>
-                        <div style={{ maxWidth: '80%', background: 'linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-hover) 100%)', color: '#0A0A00', fontSize: 14, fontWeight: 500, padding: '10px 16px', borderRadius: '18px 18px 4px 18px', boxShadow: '0 2px 12px var(--brand-primary-18)', lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                        <div style={{ maxWidth: '80%', background: 'linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-hover) 100%)', color: 'var(--on-brand)', fontSize: 14, fontWeight: 500, padding: '10px 16px', borderRadius: '18px 18px 4px 18px', boxShadow: '0 2px 12px var(--brand-primary-18)', lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                           {msg.content}
                         </div>
                         <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', paddingRight: 4 }}>
@@ -849,7 +849,7 @@ export default function SaguaroChatWidget({
                     onKeyDown={handleKeyDown}
                     placeholder={variant === 'crm' ? 'Ask Sage about your projects…' : 'Ask Sage anything about construction…'}
                     rows={1}
-                    style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: '#FFFFFF', fontSize: 14, lineHeight: 1.5, resize: 'none', minHeight: 22, maxHeight: 120, fontFamily: 'inherit' }}
+                    style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: 14, lineHeight: 1.5, resize: 'none', minHeight: 22, maxHeight: 120, fontFamily: 'inherit' }}
                     onFocus={e => {
                       const c = e.currentTarget.parentElement;
                       if (c) { c.style.borderColor = 'var(--brand-primary-35)'; c.style.boxShadow = '0 0 0 3px var(--brand-primary-08)'; }
@@ -873,10 +873,10 @@ export default function SaguaroChatWidget({
                     }}
                   >
                     {isStreaming ? (
-                      <div style={{ width: 10, height: 10, borderRadius: 2, background: '#FF3B30' }} />
+                      <div style={{ width: 10, height: 10, borderRadius: 2, background: 'var(--danger)' }} />
                     ) : (
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke={input.trim() ? '#0A0A00' : 'rgba(255,255,255,0.2)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke={input.trim() ? 'var(--on-brand)' : 'rgba(255,255,255,0.2)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     )}
                   </button>

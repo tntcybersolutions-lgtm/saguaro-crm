@@ -22,13 +22,13 @@ import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 
 const ACCENT = moduleAccent('schedule'); // sage — chips, eyebrow, section markers only
 const GOLD = 'var(--brand-primary)';
-const TEXT = '#FFFFFF';
+const TEXT = 'var(--text-primary)';
 const DIM = 'rgba(255,255,255,0.62)';
 const FAINT = 'rgba(255,255,255,0.45)';
-const RED = '#FF3B30';
-const GREEN = '#2CFF7A';
-const ORANGE = '#FF8A00';
-const BLUE = '#FF8A00';
+const RED = 'var(--danger)';
+const GREEN = 'var(--success)';
+const ORANGE = 'var(--warning)';
+const BLUE = 'var(--warning)';
 
 interface ScheduleTask {
   id: string;
@@ -48,7 +48,7 @@ interface ScheduleTask {
 interface Project { id: string; name: string; }
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  not_started: { label: 'Not Started', color: '#A3ACBB' }, // hex — composed into hex-alpha chip fills
+  not_started: { label: 'Not Started', color: 'var(--status-closed)' }, // hex — composed into hex-alpha chip fills
   in_progress: { label: 'In Progress', color: BLUE },
   complete: { label: 'Complete', color: GREEN },
   blocked: { label: 'Blocked', color: RED },

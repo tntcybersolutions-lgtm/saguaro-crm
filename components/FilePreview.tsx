@@ -15,13 +15,13 @@ const ICON: Record<FileKind, React.ReactNode> = {
   cad: <Cube size={54} />, other: <FileText size={54} />,
 };
 export const KIND_TINT: Record<FileKind, string> = {
-  image: '#FFE600', video: '#FF8A00', audio: '#FF8A00', pdf: '#FF3B30',
-  doc: '#FF8A00', sheet: '#2CFF7A', cad: '#FF8A00', other: '#A3ACBB',
+  image: 'var(--brand-primary)', video: 'var(--warning)', audio: 'var(--warning)', pdf: 'var(--danger)',
+  doc: 'var(--warning)', sheet: 'var(--success)', cad: 'var(--warning)', other: 'var(--status-closed)',
 };
 
 export function FilePreview({ kind, url, name, height = 460 }: { kind: FileKind; url?: string | null; name?: string; height?: number }) {
   const box: React.CSSProperties = { width: '100%', height, background: '#0b0f14', borderRadius: 12, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' };
-  if (!url) return <div style={box}><span style={{ color: '#A3ACBB' }}>No preview available</span></div>;
+  if (!url) return <div style={box}><span style={{ color: 'var(--status-closed)' }}>No preview available</span></div>;
 
   if (kind === 'image') return <div style={box}><img src={url} alt={name || ''} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} /></div>;
   // preload="metadata" + a direct (range-capable) src lets the browser stream
@@ -29,14 +29,14 @@ export function FilePreview({ kind, url, name, height = 460 }: { kind: FileKind;
   // start, even on large site videos.
   if (kind === 'video') return <div style={box}><video src={url} controls playsInline preload="metadata" style={{ maxWidth: '100%', maxHeight: '100%' }} /></div>;
   if (kind === 'audio') return <div style={{ ...box, height: 120, flexDirection: 'column', gap: 14 }}><FileAudio size={40} color={KIND_TINT.audio} /><audio src={url} controls style={{ width: '80%' }} /></div>;
-  if (kind === 'pdf') return <iframe src={url} title={name || 'PDF'} style={{ width: '100%', height, border: 'none', borderRadius: 12, background: '#fff' }} />;
+  if (kind === 'pdf') return <iframe src={url} title={name || 'PDF'} style={{ width: '100%', height, border: 'none', borderRadius: 12, background: 'var(--text-primary)' }} />;
 
   // doc / sheet / cad / other — no inline renderer, offer download
   return (
     <div style={{ ...box, flexDirection: 'column', gap: 14 }}>
       <div style={{ color: KIND_TINT[kind] }}>{ICON[kind]}</div>
-      <div style={{ color: '#D4D4D8', fontSize: 14, fontWeight: 600, maxWidth: '80%', textAlign: 'center', wordBreak: 'break-word' }}>{name || 'File'}</div>
-      <a href={url} download={name} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'var(--brand-primary)', color: '#0A0A00', fontWeight: 700, padding: '9px 18px', borderRadius: 9, textDecoration: 'none', fontSize: 13.5 }}><DownloadSimple size={16} weight="bold" />Download to View</a>
+      <div style={{ color: 'var(--text-secondary)', fontSize: 14, fontWeight: 600, maxWidth: '80%', textAlign: 'center', wordBreak: 'break-word' }}>{name || 'File'}</div>
+      <a href={url} download={name} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'var(--brand-primary)', color: 'var(--on-brand)', fontWeight: 700, padding: '9px 18px', borderRadius: 9, textDecoration: 'none', fontSize: 13.5 }}><DownloadSimple size={16} weight="bold" />Download to View</a>
     </div>
   );
 }

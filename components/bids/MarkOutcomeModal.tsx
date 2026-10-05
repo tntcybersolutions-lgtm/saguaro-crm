@@ -38,10 +38,10 @@ const GOLD   = 'var(--brand-primary)';
 const DARK   = 'var(--bg-surface-2)'; // input / inset surface
 const RAISED = 'var(--bg-surface)'; // modal card
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM    = '#D4D4D8';
-const TEXT   = '#FFFFFF';
-const GREEN  = '#2CFF7A';
-const RED    = '#FF3B30';
+const DIM    = 'var(--text-secondary)';
+const TEXT   = 'var(--text-primary)';
+const GREEN  = 'var(--success)';
+const RED    = 'var(--danger)';
 const SHADOW_LG = '0 16px 44px rgba(0,0,0,0.10)';
 
 type Outcome = 'won' | 'lost';
@@ -219,7 +219,7 @@ function MarkOutcomeModal({
                     flex: 1, padding: '9px 0', borderRadius: 6, border: 'none', cursor: 'pointer',
                     fontSize: 13, fontWeight: 800, letterSpacing: 0.3,
                     background: active ? accent : 'transparent',
-                    color: active ? '#FFFFFF' : DIM,
+                    color: active ? 'var(--text-primary)' : DIM,
                     transition: 'background .15s, color .15s',
                   }}
                 >
@@ -361,7 +361,7 @@ function MarkOutcomeModal({
             </button>
             <button
               type="submit" disabled={pending}
-              style={{ flex: 1, padding: '11px', background: pending ? 'var(--brand-primary-35)' : GOLD, border: 'none', borderRadius: 8, color: '#FFFFFF', fontWeight: 800, fontSize: 14, cursor: pending ? 'not-allowed' : 'pointer' }}
+              style={{ flex: 1, padding: '11px', background: pending ? 'var(--brand-primary-35)' : GOLD, border: 'none', borderRadius: 8, color: 'var(--text-primary)', fontWeight: 800, fontSize: 14, cursor: pending ? 'not-allowed' : 'pointer' }}
             >
               {pending ? 'Recording…' : outcome === 'won' ? 'Record Win' : 'Record Loss'}
             </button>

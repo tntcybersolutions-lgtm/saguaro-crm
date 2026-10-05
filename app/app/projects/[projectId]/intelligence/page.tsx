@@ -9,9 +9,9 @@ import { PremiumSurface, ModuleHero, SectionCard, StatStrip, InsightRow, AutoChi
 const GOLD = 'var(--brand-primary)';
 const SOFT_BORDER = 'rgba(255,255,255,0.08)';
 const SURFACE = 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))';
-const DIM = '#D4D4D8';
-const TEXT = '#FFFFFF';
-const GREEN = '#2CFF7A';
+const DIM = 'var(--text-secondary)';
+const TEXT = 'var(--text-primary)';
+const GREEN = 'var(--success)';
 const fmtMoney = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
 
 interface Message {
@@ -195,7 +195,7 @@ function IntelligenceChat() {
         <span key={li}>
           {parts.map((part, pi) => {
             if (part.startsWith('**') && part.endsWith('**')) {
-              return <strong key={pi} style={{ color: isUser ? '#0A0A00' : GOLD }}>{part.slice(2, -2)}</strong>;
+              return <strong key={pi} style={{ color: isUser ? 'var(--on-brand)' : GOLD }}>{part.slice(2, -2)}</strong>;
             }
             return <span key={pi}>{part}</span>;
           })}
@@ -221,7 +221,7 @@ function IntelligenceChat() {
           {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmtMoney(Number(ctx.money?.revisedContract) || 0), sub: `${Number(ctx.money?.approvedCoCount) || 0} approved CO${(Number(ctx.money?.approvedCoCount) || 0) === 1 ? '' : 's'}` },
           {href: `/app/projects/${projectId}/intelligence`,  label: 'Billed to Date', value: fmtMoney(Number(ctx.money?.billedToDate) || 0), sub: `${Number(ctx.money?.billedPct) || 0}% of revised` },
           {href: `/app/projects/${projectId}/intelligence`,  label: 'Paid to Date', value: fmtMoney(Number(ctx.money?.paidToDate) || 0), accent: GREEN, sub: `Retainage ${Number(ctx.money?.retainagePct) || 0}%` },
-          {href: `/app/projects/${projectId}/rfis`,  label: 'Open RFIs', value: String(Number(ctx.counts?.openRfis) || 0), accent: (Number(ctx.counts?.openRfis) || 0) > 5 ? '#FF3B30' : undefined, sub: `${Number(ctx.counts?.openSubmittals) || 0} open submittal${(Number(ctx.counts?.openSubmittals) || 0) === 1 ? '' : 's'}` },
+          {href: `/app/projects/${projectId}/rfis`,  label: 'Open RFIs', value: String(Number(ctx.counts?.openRfis) || 0), accent: (Number(ctx.counts?.openRfis) || 0) > 5 ? 'var(--danger)' : undefined, sub: `${Number(ctx.counts?.openSubmittals) || 0} open submittal${(Number(ctx.counts?.openSubmittals) || 0) === 1 ? '' : 's'}` },
           {href: `/app/projects/${projectId}/punch-list`,  label: 'Open Punch', value: String(Number(ctx.counts?.openPunch) || 0), sub: `${Number(ctx.counts?.scheduleTasks) || 0} schedule tasks` },
           {href: `/app/projects/${projectId}/change-orders`,  label: 'Pending COs', value: String(Number(ctx.money?.pendingCoCount) || 0), accent: (Number(ctx.money?.pendingCoCount) || 0) > 0 ? 'var(--warning)' : undefined, sub: `${(ctx.subs || []).length} sub${(ctx.subs || []).length === 1 ? '' : 's'} on the job` },
         ]} />
@@ -232,14 +232,14 @@ function IntelligenceChat() {
           {/* Sidebar */}
           <div style={{ width: 260, background: 'rgba(255,255,255,0.015)', borderRight: `1px solid ${SOFT_BORDER}`, padding: '20px 16px', overflowY: 'auto', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-              <div style={{ width: '32px', height: '32px', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}><Brain size={18} weight="bold" color="#0A0A00" /></div>
+              <div style={{ width: '32px', height: '32px', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}><Brain size={18} weight="bold" color="var(--on-brand)" /></div>
               <div>
                 <div style={{ color: TEXT, fontWeight: 700, fontSize: '13px' }}>Saguaro Intelligence</div>
                 <div style={{ color: DIM, fontSize: '11px' }}>AI Construction Expert</div>
               </div>
             </div>
 
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#2CFF7A', boxShadow: '0 0 6px #2CFF7A', marginBottom: '20px', display: 'inline-block' }} />
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)', boxShadow: '0 0 6px #2CFF7A', marginBottom: '20px', display: 'inline-block' }} />
             <span style={{ fontSize: '11px', color: DIM, marginLeft: '6px' }}>Online</span>
 
             {ctx && (
@@ -285,12 +285,12 @@ function IntelligenceChat() {
               {messages.map(msg => (
                 <div key={msg.id} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
                   {msg.role === 'assistant' && (
-                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', marginRight: '8px', flexShrink: 0, alignSelf: 'flex-end', fontWeight: 900, color: '#0A0A00' }}>S</div>
+                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', marginRight: '8px', flexShrink: 0, alignSelf: 'flex-end', fontWeight: 900, color: 'var(--on-brand)' }}>S</div>
                   )}
                   <div style={{
                     maxWidth: '78%',
                     background: msg.role === 'user' ? `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))` : SURFACE,
-                    color: msg.role === 'user' ? '#0A0A00' : TEXT,
+                    color: msg.role === 'user' ? 'var(--on-brand)' : TEXT,
                     padding: '12px 16px',
                     borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                     fontSize: '13px', lineHeight: '1.6',
@@ -322,8 +322,8 @@ function IntelligenceChat() {
                 style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: `1px solid ${SOFT_BORDER}`, borderRadius: '10px', padding: '10px 14px', color: TEXT, fontSize: '13px', outline: 'none' }}
               />
               <button onClick={() => sendMessage(input)} disabled={isLoading || !input.trim()}
-                style={{ padding: '10px 20px', background: isLoading || !input.trim() ? 'color-mix(in srgb, var(--brand-primary) 30%, transparent)' : `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: '10px', color: '#0A0A00', fontSize: '13px', fontWeight: 800, cursor: isLoading || !input.trim() ? 'not-allowed' : 'pointer', boxShadow: isLoading || !input.trim() ? 'none' : '0 10px 26px -10px color-mix(in srgb, var(--brand-primary) 60%, transparent)' }}>
-                {isLoading ? '…' : <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>Ask <ArrowRight size={14} weight="bold" color="#0A0A00" /></span>}
+                style={{ padding: '10px 20px', background: isLoading || !input.trim() ? 'color-mix(in srgb, var(--brand-primary) 30%, transparent)' : `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: '10px', color: 'var(--on-brand)', fontSize: '13px', fontWeight: 800, cursor: isLoading || !input.trim() ? 'not-allowed' : 'pointer', boxShadow: isLoading || !input.trim() ? 'none' : '0 10px 26px -10px color-mix(in srgb, var(--brand-primary) 60%, transparent)' }}>
+                {isLoading ? '…' : <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>Ask <ArrowRight size={14} weight="bold" color="var(--on-brand)" /></span>}
               </button>
             </div>
           </div>

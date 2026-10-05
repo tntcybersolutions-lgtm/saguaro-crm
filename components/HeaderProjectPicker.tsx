@@ -25,8 +25,8 @@ import { ProjectDot } from '@/components/ui/ProjectColor';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 
 const GOLD = 'var(--brand-primary)';
-const TEXT = '#FFFFFF';
-const DIM = '#A9B4C4';
+const TEXT = 'var(--text-primary)';
+const DIM = 'var(--text-tertiary)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const PANEL = 'rgba(22,24,29,0.94)'; // floating glass over the jet-black page
 

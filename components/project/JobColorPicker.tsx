@@ -49,12 +49,12 @@ export default function JobColorPicker({ projectId, color, onSaved }: { projectI
             onClick={() => void pick(c.hex)}
             style={{
               width: 28, height: 28, borderRadius: 8, cursor: busy ? 'default' : 'pointer', padding: 0,
-              background: c.hex, border: `2px solid ${on ? '#FFFFFF' : 'rgba(0,0,0,0.35)'}`,
+              background: c.hex, border: `2px solid ${on ? 'var(--text-primary)' : 'rgba(0,0,0,0.35)'}`,
               boxShadow: on ? `0 0 0 2px ${c.hex}` : 'inset 0 1px 0 rgba(255,255,255,0.25)',
               display: 'inline-grid', placeItems: 'center', opacity: busy && busy !== c.hex ? 0.6 : 1,
             }}
           >
-            {on && <Check size={14} weight="bold" color="#0A0A00" />}
+            {on && <Check size={14} weight="bold" color="var(--on-brand)" />}
           </button>
         );
       })}

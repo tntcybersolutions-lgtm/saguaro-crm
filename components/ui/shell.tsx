@@ -4,7 +4,7 @@ import React from 'react';
 // Jet black + glass + neon yellow (docs/COPY-STYLE.md §6–§7). Status hues are
 // the one neon-on-black family from lib/status-colors.ts.
 export const T = {
-  bg: '#000000',
+  bg: 'var(--bg-base)',
   surface: 'rgba(255,255,255,0.045)',
   surface2: 'rgba(255,255,255,0.045)',
   elevated: 'rgba(255,255,255,0.07)',
@@ -12,20 +12,20 @@ export const T = {
   borderSubtle: 'rgba(255,255,255,0.08)',
   borderStrong: 'rgba(255,255,255,0.22)',
   borderGold: 'rgba(255,230,0,0.35)',
-  gold: '#FFE600',
-  goldBright: '#FFF04A',
+  gold: 'var(--brand-primary)',
+  goldBright: 'var(--brand-primary-hi)',
   goldDim: 'rgba(255,230,0,0.12)',
   goldMid: 'rgba(255,230,0,0.18)',
-  white: '#FFFFFF',
-  muted: '#D4D4D8',
-  faint: '#A9B4C4',
-  green: '#2CFF7A',
+  white: 'var(--text-primary)',
+  muted: 'var(--text-secondary)',
+  faint: 'var(--text-tertiary)',
+  green: 'var(--success)',
   greenDim: 'rgba(44,255,122,0.16)',
-  red: '#FF3B30',
+  red: 'var(--danger)',
   redDim: 'rgba(255,59,48,0.16)',
-  amber: '#FFE600',
+  amber: 'var(--brand-primary)',
   amberDim: 'rgba(255,230,0,0.16)',
-  blue: '#FF8A00',
+  blue: 'var(--warning)',
   blueDim: 'rgba(255,138,0,0.16)',
   shadowSm: '0 1px 2px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
   shadowMd: '0 4px 14px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)',
@@ -227,7 +227,7 @@ const btnBase: React.CSSProperties = {
 };
 
 const btnVariants: Record<BtnVariant, React.CSSProperties> = {
-  primary: { background: T.gold, color: '#0A0A00', boxShadow: T.shadowSm },
+  primary: { background: T.gold, color: 'var(--on-brand)', boxShadow: T.shadowSm },
   ghost: { background: T.elevated, backdropFilter: T.glassBlur, WebkitBackdropFilter: T.glassBlur, color: T.white, border: `1px solid ${T.border}` },
   danger: { background: T.redDim, color: T.red, border: `1px solid rgba(255,59,48,0.50)` },
 };

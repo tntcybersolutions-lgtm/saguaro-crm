@@ -15,12 +15,12 @@ import { ClockCounterClockwise, ArrowRight, FileText } from '@phosphor-icons/rea
  */
 
 const GOLD = 'var(--brand-primary)';
-const TEXT = '#F0F4FF';
-const DIM = '#A1A1AA';
-const BORDER = '#2A2A2E';
+const TEXT = 'var(--text-primary)';
+const DIM = 'var(--text-tertiary)';
+const BORDER = 'var(--surface-raised)';
 const CARD = 'var(--bg-surface)';
-const GREEN = '#2CFF7A';
-const RED = '#FF3B30';
+const GREEN = 'var(--success)';
+const RED = 'var(--danger)';
 
 interface FieldChange {
   key: string;

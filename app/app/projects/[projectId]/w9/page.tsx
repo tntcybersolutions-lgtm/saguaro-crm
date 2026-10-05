@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
+import { StatusPill } from '@/components/ui/Status';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import { T, Badge, Table } from '@/components/ui/shell';
@@ -34,9 +35,9 @@ const STATUS_LABEL: Record<string, string> = {
 
 // Semantic accents tuned to the cinematic dark surface (match the dashboard).
 const GOLD = 'var(--brand-primary)';
-const GREEN = '#2CFF7A';
+const GREEN = 'var(--success)';
 const AMBER = 'var(--warning)';
-const RED = '#FF3B30';
+const RED = 'var(--danger)';
 
 const inp: React.CSSProperties = { width: '100%', padding: '9px 12px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 13, outline: 'none', boxSizing: 'border-box' };
 const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.62)', marginBottom: 6 };
@@ -413,7 +414,7 @@ export default function W9Page() {
                     </button>
                   )}
                   {(s.w9_status === 'received' || s.w9_status === 'submitted') && (
-                    <span style={{ fontSize: 12, color: T.green, fontWeight: 600 }}>Submitted</span>
+                    <StatusPill module="generic" status="submitted" size="sm" />
                   )}
                 </div>,
               ])}

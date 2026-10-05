@@ -41,17 +41,17 @@ type WeekFilter = 'current' | 'last' | 'all';
 
 // Cinematic-kit accent palette (matches the dashboard) ------------------------
 const GOLD = 'var(--brand-primary)';
-const GREEN = '#2CFF7A';
+const GREEN = 'var(--success)';
 const ORANGE = 'var(--warning)';
 
-const inp: React.CSSProperties = { width: '100%', padding: '9px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 10, color: '#FFFFFF', fontSize: 13, outline: 'none', boxSizing: 'border-box' };
+const inp: React.CSSProperties = { width: '100%', padding: '9px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 13, outline: 'none', boxSizing: 'border-box' };
 const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.62)', marginBottom: 6 };
 
 // Compact button + filter-chip presets derived from the kit --------------------
 const goldBtnSm: React.CSSProperties = { ...goldButtonStyle, padding: '6px 14px', fontSize: 12, borderRadius: 9 };
-const dangerBtnSm: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '6px 14px', borderRadius: 9, cursor: 'pointer', background: 'rgba(255,59,48,0.12)', color: '#FF3B30', border: '1px solid rgba(255,59,48,0.35)', fontWeight: 700, fontSize: 12 };
+const dangerBtnSm: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '6px 14px', borderRadius: 9, cursor: 'pointer', background: 'rgba(255,59,48,0.12)', color: 'var(--danger)', border: '1px solid rgba(255,59,48,0.35)', fontWeight: 700, fontSize: 12 };
 const chipBase: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '7px 16px', borderRadius: 999, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', border: '1px solid', transition: 'all .16s ease' };
-const chipActive: React.CSSProperties = { ...chipBase, background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-strong))', color: '#0A0A00', borderColor: 'transparent', boxShadow: '0 8px 20px -10px color-mix(in srgb, var(--brand-primary) 60%, transparent)' };
+const chipActive: React.CSSProperties = { ...chipBase, background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-strong))', color: 'var(--on-brand)', borderColor: 'transparent', boxShadow: '0 8px 20px -10px color-mix(in srgb, var(--brand-primary) 60%, transparent)' };
 const chipInactive: React.CSSProperties = { ...chipBase, background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.72)', borderColor: 'rgba(255,255,255,0.10)' };
 
 function getWeekStart(date: Date): string {
@@ -226,7 +226,7 @@ export default function TimesheetsPage() {
           {href: `/app/projects/${projectId}/timesheets`,  label: 'Cost Codes', value: String(ctx.costCodes?.length || Object.keys(CSI_DIVISIONS).length), sub: ctx.costCodes?.length ? 'From the project budget' : 'CSI divisions (no budget yet)' },
           {href: `/app/projects/${projectId}/schedule`,  label: 'Schedule Tasks', value: String(ctx.counts?.scheduleTasks ?? 0), sub: ctx.schedule?.criticalCount ? `${ctx.schedule.criticalCount} critical open` : 'On the schedule' },
           {href: `/app/projects/${projectId}/rfis`,  label: 'Open RFIs', value: String(ctx.counts?.openRfis ?? 0), accent: (Number(ctx.counts?.openRfis) || 0) > 0 ? 'var(--warning)' : undefined, sub: 'Awaiting answers' },
-          {href: `/app/projects/${projectId}/punch-list`,  label: 'Open Punch', value: String(ctx.counts?.openPunch ?? 0), accent: (Number(ctx.counts?.openPunch) || 0) > 0 ? '#FF3B30' : undefined, sub: 'Items to close' },
+          {href: `/app/projects/${projectId}/punch-list`,  label: 'Open Punch', value: String(ctx.counts?.openPunch ?? 0), accent: (Number(ctx.counts?.openPunch) || 0) > 0 ? 'var(--danger)' : undefined, sub: 'Items to close' },
         ]} />
       )}
 
@@ -328,7 +328,7 @@ export default function TimesheetsPage() {
         ) : filtered.length === 0 ? (
           <div style={{ padding: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 800, color: '#FFFFFF' }}>
+              <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text-primary)' }}>
                 <Clock size={16} weight="duotone" style={{ color: GOLD, marginRight: 7, verticalAlign: 'text-bottom' }} />
                 {entries.length === 0 ? 'No time entries yet' : 'No entries in this period'}
                 <span style={{ fontWeight: 400, color: 'rgba(255,255,255,0.62)' }}>

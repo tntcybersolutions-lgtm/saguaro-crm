@@ -6,8 +6,8 @@ const GOLD = 'var(--brand-primary)';
 const DARK = 'var(--bg-base)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#D4D4D8';
-const TEXT = '#FFFFFF';
+const DIM = 'var(--text-secondary)';
+const TEXT = 'var(--text-primary)';
 
 interface BulkActionBarProps {
   selectedCount: number;
@@ -189,7 +189,7 @@ export default function BulkActionBar({
               borderRadius: 8,
               border: action.primary ? 'none' : `1px solid ${BORDER}`,
               background: action.primary ? GOLD : 'transparent',
-              color: action.primary ? '#0A0A00' : DIM,
+              color: action.primary ? 'var(--on-brand)' : DIM,
               fontSize: 13,
               fontWeight: action.primary ? 700 : 500,
               cursor: action.onClick ? 'pointer' : 'not-allowed',

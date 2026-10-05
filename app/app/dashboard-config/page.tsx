@@ -10,13 +10,13 @@ const GOLD   = 'var(--brand-primary)';
 const BG     = 'var(--bg-base)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const TEXT   = '#FFFFFF';
-const DIM    = '#D4D4D8';
+const TEXT   = 'var(--text-primary)';
+const DIM    = 'var(--text-secondary)';
 const GREEN  = '#2CFF7A';
 const RED    = '#FF3B30';
 const AMBER  = 'var(--warning)';
 const BLUE   = 'var(--brand-primary)';
-const PURPLE = '#FF8A00';
+const PURPLE = 'var(--warning)';
 
 /* ─── Types ─────────────────────────────────────────────────────────── */
 /* WidgetSettings + the widget catalog are imported from components/dashboard-widgets. */
@@ -153,7 +153,7 @@ const pill = (active: boolean): React.CSSProperties => ({
   borderRadius: 6,
   border: `1px solid ${active ? GOLD : BORDER}`,
   background: active ? GOLD : 'transparent',
-  color: active ? '#0A0A00' : DIM,
+  color: active ? 'var(--on-brand)' : DIM,
   cursor: 'pointer',
   fontSize: 13,
   fontWeight: active ? 700 : 500,
@@ -165,7 +165,7 @@ const btnStyle = (variant: 'primary' | 'secondary' | 'danger' | 'ghost' = 'prima
   borderRadius: 6,
   border: variant === 'secondary' || variant === 'ghost' ? `1px solid ${BORDER}` : 'none',
   background: variant === 'primary' ? GOLD : variant === 'danger' ? RED : 'transparent',
-  color: variant === 'primary' ? '#0A0A00' : variant === 'danger' ? '#fff' : DIM,
+  color: variant === 'primary' ? 'var(--on-brand)' : variant === 'danger' ? 'var(--text-primary)' : DIM,
   cursor: 'pointer',
   fontSize: 13,
   fontWeight: 600,
@@ -603,7 +603,7 @@ export default function DashboardConfigPage() {
             </div>
             <button onClick={() => setPresetModalOpen(true)} style={{ ...ghostButtonStyle, padding: '9px 16px' }} className="pmBtn">
               <span>Presets</span>
-              {layout.preset && <span style={{ fontSize: 10, background: GOLD, color: '#0A0A00', padding: '1px 6px', borderRadius: 8, fontWeight: 700 }}>{layout.preset}</span>}
+              {layout.preset && <span style={{ fontSize: 10, background: GOLD, color: 'var(--on-brand)', padding: '1px 6px', borderRadius: 8, fontWeight: 700 }}>{layout.preset}</span>}
             </button>
             <div style={{ marginLeft: 'auto', display: 'flex', gap: 10, alignItems: 'center' }}>
               <span style={{ fontSize: 13, color: DIM }}>{layout.widgets.length} widget{layout.widgets.length !== 1 ? 's' : ''}</span>
@@ -651,7 +651,7 @@ export default function DashboardConfigPage() {
                         <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{cw.name}</span>
                       </div>
                       {count > 0 && (
-                        <span style={{ fontSize: 10, background: GOLD, color: '#0A0A00', padding: '2px 7px', borderRadius: 10, fontWeight: 700 }}>{count}</span>
+                        <span style={{ fontSize: 10, background: GOLD, color: 'var(--on-brand)', padding: '2px 7px', borderRadius: 10, fontWeight: 700 }}>{count}</span>
                       )}
                     </div>
                     <div style={{ fontSize: 12, color: DIM, flex: 1 }}>{cw.description}</div>
@@ -745,7 +745,7 @@ export default function DashboardConfigPage() {
                           style={{ ...miniBtn, opacity: idx === 0 ? 0.3 : 1 }} title="Move up"><CaretUp size={14} color={DIM} weight="regular" /></button>
                         <button onClick={() => moveWidget(w.id, 'down')} disabled={idx === layout.widgets.length - 1}
                           style={{ ...miniBtn, opacity: idx === layout.widgets.length - 1 ? 0.3 : 1 }} title="Move down"><CaretDown size={14} color={DIM} weight="regular" /></button>
-                        <button onClick={() => setConfigWidgetId(isConfiguring ? null : w.id)} style={{ ...miniBtn, background: isConfiguring ? GOLD : BG, color: isConfiguring ? '#0A0A00' : DIM }} title="Configure"><Gear size={14} color={isConfiguring ? '#0A0A00' : DIM} weight="regular" /></button>
+                        <button onClick={() => setConfigWidgetId(isConfiguring ? null : w.id)} style={{ ...miniBtn, background: isConfiguring ? GOLD : BG, color: isConfiguring ? 'var(--on-brand)' : DIM }} title="Configure"><Gear size={14} color={isConfiguring ? 'var(--on-brand)' : DIM} weight="regular" /></button>
                         <button onClick={() => removeWidget(w.id)} style={{ ...miniBtn, color: RED }} title="Remove"><X size={14} color={RED} weight="regular" /></button>
                       </div>
                     </div>

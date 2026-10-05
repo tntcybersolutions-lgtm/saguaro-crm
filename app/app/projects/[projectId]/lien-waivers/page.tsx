@@ -11,7 +11,7 @@ import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/t
 import { StatusPill } from '@/components/ui/Status';
 import { openPdf } from '@/components/PdfViewer';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30',ORANGE='#FF8A00';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)',GREEN='var(--success)',RED='var(--danger)',ORANGE='var(--warning)';
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
 
 const WAIVER_TYPES = [
@@ -69,7 +69,7 @@ function CellIcon({status,pdfUrl,onGenerate}:{status:string|undefined|null,pdfUr
   if(status==='signed'){
     return (
       <div style={{display:'flex',flexDirection:'column' as const,alignItems:'center',gap:4}}>
-        <span style={{display:'inline-flex',color:'#2CFF7A'}}><CheckCircle size={16} weight="fill" color="#2CFF7A" /></span>
+        <span style={{display:'inline-flex',color:'var(--success)'}}><CheckCircle size={16} weight="fill" color="var(--success)" /></span>
         {pdfUrl && (
           <button type="button" onClick={() => openPdf({ url: pdfUrl, title: 'Lien Waiver' })}
             style={{fontSize:10,color:GOLD,textDecoration:'none',padding:'2px 7px',border:'1px solid var(--brand-primary-25)',borderRadius:4}}>
@@ -287,7 +287,7 @@ export default function LienWaiversPage() {
           </button>
           <button onClick={generateAll} disabled={genAll}
             style={{...goldButtonStyle, cursor:genAll?'wait':'pointer', opacity:genAll?.6:1}} className="pmBtn">
-            {genAll ? 'Generating…' : <><Lightning size={14} weight="fill" color="#0A0A00" /> Generate All</>}
+            {genAll ? 'Generating…' : <><Lightning size={14} weight="fill" color="var(--on-brand)" /> Generate All</>}
           </button>
         </>}
       />
@@ -296,9 +296,9 @@ export default function LienWaiversPage() {
       {!loading && waivers.length>0 && (
         <StatStrip items={[
           {href: `/app/projects/${projectId}/lien-waivers`, label:'Total Waivers', value:String(waivers.length), sub:subs.length>0?`${matrix.length} of ${subs.length} subs covered`:'Generated on this project'},
-          {href: `/app/projects/${projectId}/lien-waivers`, label:'Signed', value:String(signed), accent:'#2CFF7A', sub:'Fully executed'},
+          {href: `/app/projects/${projectId}/lien-waivers`, label:'Signed', value:String(signed), accent:'var(--success)', sub:'Fully executed'},
           {href: `/app/projects/${projectId}/lien-waivers`, label:'Pending', value:String(pending), accent:pending>0?'var(--warning)':undefined, sub:'Awaiting signature'},
-          {href: `/app/projects/${projectId}/lien-waivers`, label:'Blocking Payment', value:String(blocking), accent:blocking>0?'#FF3B30':'#2CFF7A', sub:blocking>0?'Unsigned — mark-paid is held':'Nothing holds mark-paid'},
+          {href: `/app/projects/${projectId}/lien-waivers`, label:'Blocking Payment', value:String(blocking), accent:blocking>0?'var(--danger)':'var(--success)', sub:blocking>0?'Unsigned — mark-paid is held':'Nothing holds mark-paid'},
           {href: `/app/projects/${projectId}/lien-waivers`, label:'Waiver Value', value:fmt(waiverTotal), sub:'Released across all waivers'},
           ...(lastApp?[{href: `/app/projects/${projectId}/pay-apps`, label:`Pay App #${lastApp.appNumber}`, value:String(lastApp.status||'—').replace(/_/g,' '), sub:`Certified ${fmt(Number(lastApp.currentPaymentDue)||0)}`}]:[]),
         ]}/>
@@ -391,7 +391,7 @@ export default function LienWaiversPage() {
               {lastApp && (
                 <SectionCard flat title={`Pay App #${lastApp.appNumber}`} icon={<Receipt size={17} weight="duotone" color={GOLD} />}>
                   <InsightRow label="Status" value={String(lastApp.status||'—').replace(/_/g,' ')}/>
-                  <InsightRow label="Certified" value={fmt(Number(lastApp.currentPaymentDue)||0)} accent="#2CFF7A" strong/>
+                  <InsightRow label="Certified" value={fmt(Number(lastApp.currentPaymentDue)||0)} accent="var(--success)" strong/>
                   <InsightRow label="Period To" value={fmtDate(lastApp.periodTo)}/>
                 </SectionCard>
               )}
@@ -446,7 +446,7 @@ export default function LienWaiversPage() {
           <div style={{marginBottom:20}}>
             <SectionCard title="Waiver Matrix" subtitle="Coverage by subcontractor & waiver type" icon={<CheckCircle size={17} weight="duotone" color={GOLD} />} flush>
               <div style={{padding:'14px 20px',fontSize:13,color:DIM,borderBottom:`1px solid rgba(255,255,255,0.06)`,display:'flex',flexWrap:'wrap' as const,gap:16,alignItems:'center'}}>
-                <span><span style={{display:'inline-flex',verticalAlign:'middle',color:'#2CFF7A'}}><CheckCircle size={14} weight="fill" color="#2CFF7A" /></span> Signed</span>
+                <span><span style={{display:'inline-flex',verticalAlign:'middle',color:'var(--success)'}}><CheckCircle size={14} weight="fill" color="var(--success)" /></span> Signed</span>
                 <span><span style={{display:'inline-flex',verticalAlign:'middle',color:'var(--warning)'}}><Hourglass size={14} weight="fill" color="var(--warning)" /></span> Pending</span>
                 <span><span style={{color:BORDER}}>—</span> Not generated</span>
                 <span style={{marginLeft:'auto',fontSize:11.5,color:'rgba(255,255,255,0.45)'}}>Conditional waivers auto-generate on pay-app approval and gate mark-paid until signed</span>
@@ -525,8 +525,8 @@ export default function LienWaiversPage() {
                       return (
                         <tr key={w.id} style={{borderBottom:`1px solid rgba(255,255,255,0.12)`,background:wBlocks?'rgba(192,48,48,.05)':'transparent'}}>
                           <td style={{padding:'10px 14px',color:TEXT,fontWeight:600}}>{w.claimant_name||(w.subcontractors as any)?.company_name||(w.subcontractors as any)?.name||'—'}</td>
-                          <td style={{padding:'10px 14px',color:DIM,whiteSpace:'nowrap' as const}}>{typeLabel(w.waiver_type)}{w.converted_from_id?<span style={{marginLeft:6,fontSize:9,fontWeight:800,color:'#2CFF7A'}}>Auto</span>:null}</td>
-                          <td style={{padding:'10px 14px',color:DIM,whiteSpace:'nowrap' as const}}>{appNo?`App #${appNo}`:'—'}{wBlocks?<span style={{marginLeft:6,fontSize:9,fontWeight:800,color:'#FF3B30'}}>Gates Paid</span>:null}</td>
+                          <td style={{padding:'10px 14px',color:DIM,whiteSpace:'nowrap' as const}}>{typeLabel(w.waiver_type)}{w.converted_from_id?<span style={{marginLeft:6,fontSize:9,fontWeight:800,color:'var(--success)'}}>Auto</span>:null}</td>
+                          <td style={{padding:'10px 14px',color:DIM,whiteSpace:'nowrap' as const}}>{appNo?`App #${appNo}`:'—'}{wBlocks?<span style={{marginLeft:6,fontSize:9,fontWeight:800,color:'var(--danger)'}}>Gates Paid</span>:null}</td>
                           <td style={{padding:'10px 14px',color:DIM}}>{w.state||'—'}</td>
                           <td style={{padding:'10px 14px',color:TEXT}}>{fmt(Number(w.amount)||0)}</td>
                           <td style={{padding:'10px 14px',color:DIM}}>{fmtDate(w.through_date?String(w.through_date).slice(0,10):null)}</td>

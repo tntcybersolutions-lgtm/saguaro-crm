@@ -113,6 +113,23 @@ export const MODULES: Record<string, ModuleDef> = {
   /* Paperwork a sub must have before they can be awarded work: W-9, insurance
      certificate, licence, prequal documents. Pill-only — a document has no
      process rail, it is either in hand, going stale, or gone. */
+  /* Generic vocabulary for the status-to-pill codemod and for one-off pills
+     where no module applies. Tone follows the word's meaning everywhere. */
+  generic: {
+    noun: 'item',
+    stages: [],
+    statuses: {
+      missing: { label: 'Missing', tone: 'bad' }, not_on_file: { label: 'Not on File', tone: 'bad' }, on_file: { label: 'On File', tone: 'good' },
+      overdue: { label: 'Overdue', tone: 'bad' }, late: { label: 'Late', tone: 'bad' }, on_time: { label: 'On Time', tone: 'good' }, due_today: { label: 'Due Today', tone: 'warn' },
+      approved: { label: 'Approved', tone: 'good' }, paid: { label: 'Paid', tone: 'done' }, pending: { label: 'Pending', tone: 'waiting' }, rejected: { label: 'Rejected', tone: 'bad' },
+      expired: { label: 'Expired', tone: 'bad' }, expiring: { label: 'Expiring', tone: 'warn' }, draft: { label: 'Draft', tone: 'draft' }, submitted: { label: 'Submitted', tone: 'waiting' },
+      sent: { label: 'Sent', tone: 'waiting' }, open: { label: 'Open', tone: 'active' }, closed: { label: 'Closed', tone: 'done' }, active: { label: 'Active', tone: 'good' }, inactive: { label: 'Inactive', tone: 'draft' },
+      complete: { label: 'Complete', tone: 'done' }, completed: { label: 'Completed', tone: 'done' }, done: { label: 'Done', tone: 'done' }, in_progress: { label: 'In Progress', tone: 'active' }, under_review: { label: 'Under Review', tone: 'waiting' },
+      signed: { label: 'Signed', tone: 'good' }, unsigned: { label: 'Unsigned', tone: 'warn' }, certified: { label: 'Certified', tone: 'good' }, verified: { label: 'Verified', tone: 'good' }, unverified: { label: 'Unverified', tone: 'warn' },
+      declined: { label: 'Declined', tone: 'bad' }, cancelled: { label: 'Cancelled', tone: 'bad' }, canceled: { label: 'Canceled', tone: 'bad' }, awarded: { label: 'Awarded', tone: 'good' }, won: { label: 'Won', tone: 'good' }, lost: { label: 'Lost', tone: 'bad' },
+      not_started: { label: 'Not Started', tone: 'draft' }, scheduled: { label: 'Scheduled', tone: 'waiting' },
+    },
+  },
   paperwork: {
     noun: 'document',
     stages: [],

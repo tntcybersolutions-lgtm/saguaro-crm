@@ -56,7 +56,7 @@ function ScreenMedia({ src, alt }: { src: string; alt: string }) {
         </div>
         <div style={{ fontSize: 10, lineHeight: 1.6, color: 'rgba(255,255,255,0.45)' }}>
           Drop{' '}
-          <code style={{ color: '#FFE600', fontFamily: 'ui-monospace, SFMono-Regular, monospace', fontSize: 9.5 }}>
+          <code style={{ color: 'var(--brand-primary)', fontFamily: 'ui-monospace, SFMono-Regular, monospace', fontSize: 9.5 }}>
             {fileOf(src)}
           </code>{' '}
           into /public/marketing/
@@ -111,7 +111,7 @@ export function PhoneFrame({ src, alt, width = 220, height }: {
           style={{
             position: 'absolute', top: Math.round(w * 0.045), left: '50%', transform: 'translateX(-50%)',
             width: Math.round(w * 0.31), height: Math.round(w * 0.093), borderRadius: 999,
-            background: '#000', boxShadow: '0 0 0 1px rgba(255,255,255,0.05)', zIndex: 2,
+            background: 'var(--bg-base)', boxShadow: '0 0 0 1px rgba(255,255,255,0.05)', zIndex: 2,
           }}
         >
           <div

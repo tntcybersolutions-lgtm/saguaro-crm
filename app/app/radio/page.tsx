@@ -120,7 +120,7 @@ import {
 } from '@/lib/radio-promote';
 
 /* ── Palette (dark shell: white/gold alphas only) ─────────────────────── */
-const WHITE = '#FFFFFF';
+const WHITE = 'var(--text-primary)';
 const MUTED = 'rgba(255,255,255,0.62)';
 const FAINT = 'rgba(255,255,255,0.42)';
 const BORDER = 'rgba(255,255,255,0.08)';
@@ -128,12 +128,12 @@ const FIELD_BG = 'rgba(255,255,255,0.04)';
 const FIELD_BORDER = '1px solid rgba(255,255,255,0.10)';
 const GOLD = 'var(--brand-primary)';
 const GOLD_HI = 'var(--brand-primary-strong)';
-const RED = '#FF3B30';
+const RED = 'var(--danger)';
 const RED_SOFT = 'rgba(255,59,48,0.14)';
 const RED_BORDER = 'rgba(255,59,48,0.45)';
 const AMBER_SOFT = 'var(--brand-primary-12)';
 const AMBER_BORDER = 'var(--brand-primary-35)';
-const GREEN = '#2CFF7A';
+const GREEN = 'var(--success)';
 const GREEN_SOFT = 'rgba(44,255,122,0.15)';
 const GREEN_BORDER = 'rgba(44,255,122,0.5)';
 const NEST = 'rgba(20,20,22,0.55)';
@@ -444,7 +444,7 @@ function VividGoldChip({
         background: `linear-gradient(145deg, ${GOLD_HI} 0%, ${GOLD} 52%, #FF8A00 100%)`,
         border: '1px solid color-mix(in srgb, var(--brand-primary-strong) 55%, transparent)',
         boxShadow: '0 0 0 3px color-mix(in srgb, var(--brand-primary) 16%, transparent), 0 10px 26px -10px color-mix(in srgb, var(--brand-primary) 60%, transparent), inset 0 1px 0 rgba(255,255,255,0.40)',
-        color: '#F8FAFC',
+        color: 'var(--text-primary)',
         ...style,
       }}
     >
@@ -499,7 +499,7 @@ function FrequencyDial({ seed }: { seed: string }) {
         />
       ))}
       {[0, 10, 20, 30, 40].map((i) => (
-        <text key={i} x={xAt(i / 40)} y={58} textAnchor="middle" fontSize={11} fontWeight={700} fill={i === 40 ? '#FF3B30' : 'rgba(255,255,255,0.62)'}>
+        <text key={i} x={xAt(i / 40)} y={58} textAnchor="middle" fontSize={11} fontWeight={700} fill={i === 40 ? 'var(--danger)' : 'rgba(255,255,255,0.62)'}>
           {(26.9 + (i / 40) * 0.5).toFixed(1)}
         </text>
       ))}
@@ -2647,7 +2647,7 @@ export default function RadioDispatchPage() {
                 flexShrink: 0, width: 15, height: 15, borderRadius: 5,
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 background: on ? `linear-gradient(180deg, ${GOLD_HI}, ${GOLD})` : FIELD_BG,
-                border: on ? 'none' : FIELD_BORDER, color: '#0A0A00',
+                border: on ? 'none' : FIELD_BORDER, color: 'var(--on-brand)',
               }}
             >
               {on && <Check size={10} weight="bold" />}
@@ -3057,7 +3057,7 @@ export default function RadioDispatchPage() {
           )}
 
           {m.kind !== 'voice' && m.kind !== 'tone' && m.body && (
-            <div style={{ fontSize: 13.5, color: panic ? '#FCA5A5' : WHITE, lineHeight: 1.55, marginTop: 4, overflowWrap: 'anywhere' }}>
+            <div style={{ fontSize: 13.5, color: panic ? 'var(--danger)' : WHITE, lineHeight: 1.55, marginTop: 4, overflowWrap: 'anywhere' }}>
               {m.body}
             </div>
           )}
@@ -3071,7 +3071,7 @@ export default function RadioDispatchPage() {
           {/* Location trail (v2) — numbered breadcrumbs, newest last */}
           {trail.length > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-              <span style={{ fontSize: 9.5, fontWeight: 900, color: '#FCA5A5' }}>Trail</span>
+              <span style={{ fontSize: 9.5, fontWeight: 900, color: 'var(--danger)' }}>Trail</span>
               {trail.map((p, i) => (
                 <a
                   key={i}
@@ -3084,7 +3084,7 @@ export default function RadioDispatchPage() {
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 10.5, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
                     background: i === trail.length - 1 ? 'rgba(255,59,48,0.35)' : RED_SOFT,
-                    border: `1px solid ${RED_BORDER}`, color: '#FCA5A5',
+                    border: `1px solid ${RED_BORDER}`, color: 'var(--danger)',
                   }}
                 >
                   {i + 1}
@@ -3102,7 +3102,7 @@ export default function RadioDispatchPage() {
                 display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 8,
                 padding: '5px 12px', borderRadius: 999, textDecoration: 'none',
                 background: RED_SOFT, border: `1px solid ${RED_BORDER}`,
-                color: '#FCA5A5', fontSize: 11.5, fontWeight: 800,
+                color: 'var(--danger)', fontSize: 11.5, fontWeight: 800,
               }}
             >
               <MapPin size={13} weight="fill" /> Open location in Google Maps
@@ -3218,7 +3218,7 @@ export default function RadioDispatchPage() {
               flexShrink: 0, minWidth: 20, height: 20, padding: '0 6px', borderRadius: 999,
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               background: `linear-gradient(180deg, ${GOLD_HI}, ${GOLD})`,
-              color: '#0A0A00', fontSize: 10.5, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
+              color: 'var(--on-brand)', fontSize: 10.5, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
             }}
           >
             {unread > 99 ? '99+' : unread}
@@ -3300,7 +3300,7 @@ export default function RadioDispatchPage() {
               {timeOf(new Date(p.createdAt).toISOString())}
             </span>
           </div>
-          <div style={{ fontSize: 11.5, color: held ? '#FCA5A5' : MUTED, marginTop: 5, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 11.5, color: held ? 'var(--danger)' : MUTED, marginTop: 5, lineHeight: 1.45 }}>
             {working
               ? `Delivering to ${p.channelName}…`
               : held
@@ -3312,7 +3312,7 @@ export default function RadioDispatchPage() {
               <button onClick={() => retryClip(p)} style={{ ...rowActionStyle, color: GOLD_HI, borderColor: AMBER_BORDER, background: 'color-mix(in srgb, var(--brand-primary) 14%, transparent)' }}>
                 <PaperPlaneRight size={11} weight="bold" /> Retry
               </button>
-              <button onClick={() => discardClip(p)} title="Delete this recording for good" style={{ ...rowActionStyle, color: '#FCA5A5', borderColor: RED_BORDER, background: RED_SOFT }}>
+              <button onClick={() => discardClip(p)} title="Delete this recording for good" style={{ ...rowActionStyle, color: 'var(--danger)', borderColor: RED_BORDER, background: RED_SOFT }}>
                 <Trash size={11} weight="bold" /> Discard
               </button>
             </div>
@@ -3464,7 +3464,7 @@ export default function RadioDispatchPage() {
                   style={{
                     flexShrink: 0, minWidth: 20, height: 20, padding: '0 6px', borderRadius: 999,
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    background: `linear-gradient(180deg, ${GOLD_HI}, ${GOLD})`, color: '#0A0A00',
+                    background: `linear-gradient(180deg, ${GOLD_HI}, ${GOLD})`, color: 'var(--on-brand)',
                     fontSize: 10.5, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
                   }}
                 >
@@ -3528,7 +3528,7 @@ export default function RadioDispatchPage() {
               style={{
                 ...toolBtnStyle(rosterOpen, !!active),
                 borderColor: listenerTruth?.tone === 'none' ? RED_BORDER : undefined,
-                color: rosterOpen ? GOLD_HI : listenerTruth?.tone === 'none' ? '#FCA5A5' : listenerTruth?.tone === 'live' ? GREEN : MUTED,
+                color: rosterOpen ? GOLD_HI : listenerTruth?.tone === 'none' ? 'var(--danger)' : listenerTruth?.tone === 'live' ? GREEN : MUTED,
               }}
             >
               <UsersThree size={13} weight="bold" />
@@ -3554,7 +3554,7 @@ export default function RadioDispatchPage() {
                       padding: '8px 10px', borderRadius: 10, marginBottom: 10, fontSize: 11.5, lineHeight: 1.45,
                       background: listenerTruth.tone === 'none' ? RED_SOFT : listenerTruth.tone === 'idle' ? AMBER_SOFT : GREEN_SOFT,
                       border: `1px solid ${listenerTruth.tone === 'none' ? RED_BORDER : listenerTruth.tone === 'idle' ? AMBER_BORDER : GREEN_BORDER}`,
-                      color: listenerTruth.tone === 'none' ? '#FCA5A5' : listenerTruth.tone === 'idle' ? GOLD_HI : GREEN,
+                      color: listenerTruth.tone === 'none' ? 'var(--danger)' : listenerTruth.tone === 'idle' ? GOLD_HI : GREEN,
                       fontWeight: 700,
                     }}
                   >
@@ -3626,7 +3626,7 @@ export default function RadioDispatchPage() {
                             onClick={() => removeMember(mem)}
                             disabled={memberBusy === String(mem.id)}
                             title="Confirm — remove this member from the channel"
-                            style={{ ...rowActionStyle, flexShrink: 0, color: '#FCA5A5', borderColor: RED_BORDER, background: RED_SOFT, opacity: memberBusy === String(mem.id) ? 0.6 : 1 }}
+                            style={{ ...rowActionStyle, flexShrink: 0, color: 'var(--danger)', borderColor: RED_BORDER, background: RED_SOFT, opacity: memberBusy === String(mem.id) ? 0.6 : 1 }}
                           >
                             {memberBusy === String(mem.id) ? 'Removing…' : 'Remove?'}
                           </button>
@@ -3757,7 +3757,7 @@ export default function RadioDispatchPage() {
                     minWidth: 16, height: 16, padding: '0 4px', borderRadius: 999,
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     background: assistOpenCount > 0 ? RED : `linear-gradient(180deg, ${GOLD_HI}, ${GOLD})`,
-                    color: assistOpenCount > 0 ? WHITE : '#0A0A00',
+                    color: assistOpenCount > 0 ? WHITE : 'var(--on-brand)',
                     fontSize: 9.5, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
                   }}
                 >
@@ -3959,7 +3959,7 @@ export default function RadioDispatchPage() {
               {active && otherMembers === 0 && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '10px 12px', marginTop: 10, borderRadius: 10, background: RED_SOFT, border: `1px solid ${RED_BORDER}` }}>
                   <Warning size={15} weight="fill" color={RED} style={{ flexShrink: 0 }} />
-                  <span style={{ flex: 1, minWidth: 180, fontSize: 12, color: '#FCA5A5', fontWeight: 700, lineHeight: 1.45 }}>
+                  <span style={{ flex: 1, minWidth: 180, fontSize: 12, color: 'var(--danger)', fontWeight: 700, lineHeight: 1.45 }}>
                     You are the only member of {active.name}. Anything you transmit has nobody to hear it.
                   </span>
                   <button
@@ -4039,7 +4039,7 @@ export default function RadioDispatchPage() {
                     : micError
                       ? `linear-gradient(180deg, rgba(255,59,48,0.22), rgba(255,59,48,0.10))`
                       : `linear-gradient(180deg, ${GOLD_HI}, ${GOLD} 60%, var(--brand-primary-hover))`,
-                color: micOpen ? WHITE : micError && !keyed ? '#FCA5A5' : '#0A0A00',
+                color: micOpen ? WHITE : micError && !keyed ? 'var(--danger)' : 'var(--on-brand)',
                 boxShadow: micOpen
                   ? '0 0 0 5px rgba(255,59,48,0.22), 0 8px 26px -10px rgba(255,59,48,0.8)'
                   : micError ? 'none' : '0 6px 20px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)',
@@ -4082,7 +4082,7 @@ export default function RadioDispatchPage() {
                   style={{
                     display: 'inline-flex', alignItems: 'center', gap: 6, minWidth: 0,
                     fontSize: 11, fontWeight: 800, letterSpacing: '0.02em',
-                    color: txReceipt.tone === 'ok' ? GREEN : txReceipt.tone === 'bad' ? '#FCA5A5' : txReceipt.tone === 'warn' ? MUTED : GOLD_HI,
+                    color: txReceipt.tone === 'ok' ? GREEN : txReceipt.tone === 'bad' ? 'var(--danger)' : txReceipt.tone === 'warn' ? MUTED : GOLD_HI,
                   }}
                 >
                   {txReceipt.tone === 'ok' ? <Check size={12} weight="bold" />
@@ -4096,7 +4096,7 @@ export default function RadioDispatchPage() {
                   style={{
                     display: 'inline-flex', alignItems: 'center', gap: 6, minWidth: 0, marginLeft: 'auto',
                     fontSize: 11, fontWeight: 800,
-                    color: listenerTruth.tone === 'none' ? '#FCA5A5' : GOLD_HI,
+                    color: listenerTruth.tone === 'none' ? 'var(--danger)' : GOLD_HI,
                   }}
                 >
                   <Warning size={12} weight="fill" style={{ flexShrink: 0 }} />
@@ -4369,7 +4369,7 @@ export default function RadioDispatchPage() {
                   {copiedKey === l.id ? <Check size={11} weight="bold" /> : <Copy size={11} weight="bold" />} {copiedKey === l.id ? 'Copied' : 'Copy'}
                 </button>
               )}
-              <button onClick={() => revokeGuestLink(l.id)} disabled={revokingId === l.id} title="Revoke this link — the guest loses access immediately" style={{ ...rowActionStyle, color: '#FCA5A5', borderColor: RED_BORDER, background: RED_SOFT, opacity: revokingId === l.id ? 0.6 : 1 }}>
+              <button onClick={() => revokeGuestLink(l.id)} disabled={revokingId === l.id} title="Revoke this link — the guest loses access immediately" style={{ ...rowActionStyle, color: 'var(--danger)', borderColor: RED_BORDER, background: RED_SOFT, opacity: revokingId === l.id ? 0.6 : 1 }}>
                 <Trash size={11} weight="bold" /> {revokingId === l.id ? 'Revoking…' : 'Revoke'}
               </button>
             </div>
@@ -4418,7 +4418,7 @@ export default function RadioDispatchPage() {
                 <span style={{ flex: 1, minWidth: 0, fontSize: 11.5, fontWeight: 800, color: WHITE, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {channelName(p.channel_a)} + {channelName(p.channel_b)}
                 </span>
-                <button onClick={() => postPatch(p.channel_a, p.channel_b, true)} disabled={patchBusy} title="Release this patch — the channels stop mirroring" style={{ ...rowActionStyle, color: '#FCA5A5', borderColor: RED_BORDER, background: RED_SOFT, opacity: patchBusy ? 0.6 : 1 }}>
+                <button onClick={() => postPatch(p.channel_a, p.channel_b, true)} disabled={patchBusy} title="Release this patch — the channels stop mirroring" style={{ ...rowActionStyle, color: 'var(--danger)', borderColor: RED_BORDER, background: RED_SOFT, opacity: patchBusy ? 0.6 : 1 }}>
                   Release
                 </button>
               </div>
@@ -4495,7 +4495,7 @@ export default function RadioDispatchPage() {
                   flexShrink: 0, width: 15, height: 15, borderRadius: 5,
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                   background: on ? `linear-gradient(180deg, ${GOLD_HI}, ${GOLD})` : FIELD_BG,
-                  border: on ? 'none' : FIELD_BORDER, color: '#0A0A00',
+                  border: on ? 'none' : FIELD_BORDER, color: 'var(--on-brand)',
                 }}
               >
                 {on && <Check size={10} weight="bold" />}
@@ -4947,7 +4947,7 @@ export default function RadioDispatchPage() {
             {promoteError && (
               <div style={{ display: 'flex', gap: 8, marginBottom: 14, padding: '9px 11px', borderRadius: 10, background: RED_SOFT, border: `1px solid ${RED_BORDER}` }}>
                 <Warning size={14} weight="fill" color={RED} style={{ flexShrink: 0, marginTop: 1 }} />
-                <span style={{ fontSize: 11.5, color: '#FCA5A5', fontWeight: 700, lineHeight: 1.45, overflowWrap: 'anywhere' }}>
+                <span style={{ fontSize: 11.5, color: 'var(--danger)', fontWeight: 700, lineHeight: 1.45, overflowWrap: 'anywhere' }}>
                   {promoteError}
                 </span>
               </div>

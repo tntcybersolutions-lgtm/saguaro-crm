@@ -40,8 +40,8 @@ const PRIORITIES = ['high', 'medium', 'low'];
 
 // Desert-dusk accents (match dashboard) ---------------------------------------
 const GOLD = 'var(--brand-primary)';
-const GREEN = '#2CFF7A';
-const RED = '#FF3B30';
+const GREEN = 'var(--success)';
+const RED = 'var(--danger)';
 
 const inp: React.CSSProperties = { width: '100%', padding: '8px 12px', background: T.surface2, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, outline: 'none' };
 const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 6 };
@@ -325,7 +325,7 @@ export default function TodosPage() {
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}
                   >
-                    {todo.complete && <Check size={14} weight="bold" color="#000" />}
+                    {todo.complete && <Check size={14} weight="bold" color="var(--bg-base)" />}
                   </button>
                   {/* Content */}
                   <div style={{ flex: 1, minWidth: 0 }}>

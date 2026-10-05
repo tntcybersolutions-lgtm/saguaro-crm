@@ -20,9 +20,9 @@ import { ScribbleNote, ScribbleArrow } from './Scribble';
 
 const GOLD = 'var(--brand-primary)';
 const GOLD_SOFT = 'var(--brand-primary-12)';
-const GREEN = '#2CFF7A';
-const TEXT = '#FFFFFF';
-const DIM = '#D4D4D8';
+const GREEN = 'var(--success)';
+const TEXT = 'var(--text-primary)';
+const DIM = 'var(--text-secondary)';
 const MUTED = 'rgba(203,213,225,0.55)';
 const CARD = 'var(--bg-surface)';
 const LINE = 'rgba(255,255,255,0.12)';
@@ -256,7 +256,7 @@ export default function GetStartedTour() {
                         flex: '0 0 auto', width: 26, height: 26, borderRadius: 999,
                         display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 700,
                         background: on ? GOLD : 'rgba(255,255,255,0.07)',
-                        color: on ? '#0A0A00' : MUTED,
+                        color: on ? 'var(--on-brand)' : MUTED,
                         border: '1px solid ' + (on ? GOLD : LINE),
                       }}
                     >
@@ -387,7 +387,7 @@ export default function GetStartedTour() {
                       display: 'inline-flex', alignItems: 'center', minHeight: 40, padding: '0 20px',
                       borderRadius: 9, fontSize: 13.5, fontWeight: 700,
                       background: progress >= 1 ? GOLD : 'var(--brand-primary-25)',
-                      color: progress >= 1 ? '#0A0A00' : 'rgba(10,10,0,0.7)',
+                      color: progress >= 1 ? 'var(--on-brand)' : 'rgba(10,10,0,0.7)',
                       transition: 'background .3s, color .3s',
                     }}
                   >

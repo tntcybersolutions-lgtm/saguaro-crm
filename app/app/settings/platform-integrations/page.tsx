@@ -20,11 +20,11 @@ import { ShieldCheck, CheckCircle, WarningCircle, X, Copy, Check, ArrowSquareOut
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 const GOLD = 'var(--brand-primary)';
-const WHITE = '#FFFFFF';
+const WHITE = 'var(--text-primary)';
 const MUTED = 'rgba(255,255,255,0.62)';
 const BORDER = 'rgba(255,255,255,0.08)';
-const GREEN = '#2CFF7A';
-const RED = '#FF3B30';
+const GREEN = 'var(--success)';
+const RED = 'var(--danger)';
 
 const modalInputStyle: React.CSSProperties = {
   width: '100%', marginTop: 3,
@@ -154,7 +154,7 @@ export default function PlatformIntegrationsPage() {
               <div style={{ fontSize: 11.5, color: MUTED, marginBottom: 8 }}>Add these redirect URIs to the app (copy each):</div>
               {editing.redirects.map((r: string) => (
                 <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-                  <code style={{ flex: 1, fontSize: 11.5, color: '#2CFF7A', wordBreak: 'break-all', fontFamily: 'monospace' }}>{r}</code>
+                  <code style={{ flex: 1, fontSize: 11.5, color: 'var(--success)', wordBreak: 'break-all', fontFamily: 'monospace' }}>{r}</code>
                   <button onClick={() => copy(r, r)} style={{ background: 'none', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '3px 7px', cursor: 'pointer', color: MUTED, display: 'inline-flex', gap: 3, alignItems: 'center', fontSize: 11 }}>{copied === r ? <Check size={12} color={GREEN} /> : <Copy size={12} />}</button>
                 </div>
               ))}

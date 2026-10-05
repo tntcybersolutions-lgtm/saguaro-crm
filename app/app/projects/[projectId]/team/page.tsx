@@ -14,9 +14,9 @@ import { moduleAccent } from '@/lib/module-identity';
 import { Button, Input } from '@/components/ui/kit';
 import ProjectOwnershipCard from '@/components/projects/ProjectOwnershipCard';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30',BLUE='#FF8A00';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)',GREEN='var(--success)',RED='var(--danger)',BLUE='var(--warning)';
 const fmt = (n:number) => '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-function Badge({label,color='#D4D4D8',bg='rgba(163,172,187,.12)'}:{label:string,color?:string,bg?:string}){
+function Badge({label,color='var(--text-secondary)',bg='rgba(163,172,187,.12)'}:{label:string,color?:string,bg?:string}){
   return <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:bg,color}}>{label}</span>;
 }
 
@@ -295,7 +295,7 @@ export default function TeamPage(){
         )}
       </span>
     ) },
-    { key: 'last', header: 'Last Active', phone: 'hide', accessor: m => m.last, render: m => <span style={{color:'#2CFF7A',fontSize:12,fontWeight:700}}>{m.last}</span> },
+    { key: 'last', header: 'Last Active', phone: 'hide', accessor: m => m.last, render: m => <span style={{color:'var(--success)',fontSize:12,fontWeight:700}}>{m.last}</span> },
   ];
   const teamSubColumns: Column<TeamSub>[] = [
     { key: 'name', header: 'Company', primary: true, phone: 'show', accessor: s => s.name, render: s => (
@@ -334,14 +334,14 @@ export default function TeamPage(){
             {href: `/app/projects/${projectId}/team`, label:'Project', value: ctx.project?.name || '—', sub: ctx.project?.projectNumber ? `#${ctx.project.projectNumber}` : (ctx.project?.status || 'active')},
             {href: `/app/projects/${projectId}/team`, label:'Owner', value: ctx.defaults?.ownerName || '—', sub: ctx.defaults?.ownerEmail || 'No email on file'},
             {href: `/app/projects/${projectId}/team`, label:'Architect', value: ctx.defaults?.architectName || '—', sub: 'Design contact'},
-            {href: `/app/projects/${projectId}/team`, label:'Leadership', value: `${leadersAssigned}/5`, accent: leadersAssigned>=3?'#2CFF7A':GOLD, sub: leadersAssigned>0?'Directory roles assigned':'Set them in the directory below'},
+            {href: `/app/projects/${projectId}/team`, label:'Leadership', value: `${leadersAssigned}/5`, accent: leadersAssigned>=3?'var(--success)':GOLD, sub: leadersAssigned>0?'Directory roles assigned':'Set them in the directory below'},
             {href: `/app/projects/${projectId}/subs`, label:'Trades on the Job', value: String(subTrades.length), sub: ctxSubs.length?`Across ${ctxSubs.length} sub${ctxSubs.length===1?'':'s'}`:'No subs yet'},
           ]}/>
         )}
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
           <StatCard icon={<UsersThree size={19} weight="duotone" color={GOLD} />} label="Team Members" value={String(members.length)} accent={GOLD} sub={members.length===1?'1 with access':`${members.length} with access`}  href={`/app/projects/${projectId}/team`}/>
           <StatCard icon={<HardHat size={19} weight="duotone" color={BLUE} />} label="Subcontractors" value={String(subs.length)} accent={subs.length?BLUE:undefined} sub={subTrades.length?`${subTrades.length} trade${subTrades.length===1?'':'s'} — portal access`:'Portal access'}  href={`/app/projects/${projectId}/subs`}/>
-          <StatCard icon={<IdentificationBadge size={19} weight="duotone" color={leadersAssigned>=3?'#2CFF7A':GOLD} />} label="Field Leadership" value={`${leadersAssigned}/5`} accent={leadersAssigned>=3?'#2CFF7A':GOLD} sub="PM · super · foreman · owner · architect"  href={`/app/projects/${projectId}/team`}/>
+          <StatCard icon={<IdentificationBadge size={19} weight="duotone" color={leadersAssigned>=3?'var(--success)':GOLD} />} label="Field Leadership" value={`${leadersAssigned}/5`} accent={leadersAssigned>=3?'var(--success)':GOLD} sub="PM · super · foreman · owner · architect"  href={`/app/projects/${projectId}/team`}/>
         </div>
       </>
     )}

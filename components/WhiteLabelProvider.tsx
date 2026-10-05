@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { deriveTheme, themeToCssVars } from '@/lib/brand-theme';
 
-const SAGUARO_GOLD = '#FFE600'; // Saguaro default brand: neon yellow
+const SAGUARO_GOLD = 'var(--brand-primary)'; // Saguaro default brand: neon yellow
 
 export interface WhiteLabelBranding {
   logoUrl: string;

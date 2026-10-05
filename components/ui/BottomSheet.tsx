@@ -98,13 +98,13 @@ export function BottomSheet({ open, onClose, title, children, height = 'auto' }:
               borderBottom: '1px solid rgba(255,255,255,0.12)',
             }}
           >
-            <span style={{ fontWeight: 700, fontSize: 16, color: '#FFFFFF' }}>{title}</span>
+            <span style={{ fontWeight: 700, fontSize: 16, color: 'var(--text-primary)' }}>{title}</span>
             <button
               onClick={onClose}
               style={{
                 background: 'none',
                 border: 'none',
-                color: '#D4D4D8',
+                color: 'var(--text-secondary)',
                 fontSize: 22,
                 cursor: 'pointer',
                 lineHeight: 1,

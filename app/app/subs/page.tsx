@@ -42,7 +42,7 @@ import {
 import { SkeletonRow } from '../../../components/ui/Skeleton';
 
 const GOLD = 'var(--brand-primary)', CARD = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
-const TEXT = '#FFFFFF', DIM = '#D4D4D8', GREEN = '#2CFF7A', RED = '#FF3B30', AMBER = '#FF8A00';
+const TEXT = 'var(--text-primary)', DIM = 'var(--text-secondary)', GREEN = 'var(--success)', RED = 'var(--danger)', AMBER = 'var(--warning)';
 
 interface Sub {
   id: string;
@@ -209,7 +209,7 @@ export default function SubsAndVendorsPage() {
 
       <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', marginBottom: 22 }}>
         <StatCard label="On File" value={String(subs.length)} sub="Companies tenant-wide" icon={<Buildings size={17} weight="duotone" color={GOLD} />} onClick={() => { setQ(''); setTrade(''); setPaperFilter(false); }} />
-        <StatCard label="Paperwork Missing" value={String(missingPaper)} sub={missingPaper ? 'Cannot be awarded without override' : 'Everyone is current'} icon={<WarningCircle size={17} weight="duotone" color={missingPaper ? '#FFFFFF' : GOLD} />} tone={missingPaper ? 'bad' : undefined} active={paperFilter} onClick={() => setPaperFilter(v => !v)} />
+        <StatCard label="Paperwork Missing" value={String(missingPaper)} sub={missingPaper ? 'Cannot be awarded without override' : 'Everyone is current'} icon={<WarningCircle size={17} weight="duotone" color={missingPaper ? 'var(--text-primary)' : GOLD} />} tone={missingPaper ? 'bad' : undefined} active={paperFilter} onClick={() => setPaperFilter(v => !v)} />
         <StatCard label="Prequalified" value={String(prequalified)} sub="Passed prequalification" icon={<SealCheck size={17} weight="duotone" color={GOLD} />} tone={prequalified > 0 ? 'good' : undefined} href="/app/prequalification" />
         <StatCard label="Trades Covered" value={String(trades.length)} sub="Distinct trades on file" icon={<Package size={17} weight="duotone" color={GOLD} />} onClick={() => document.getElementById('subs-trade-filter')?.focus()} />
       </div>

@@ -24,14 +24,14 @@ import { usePathname } from 'next/navigation';
 
 // ── Apple LIGHT tokens (match the mobile app + dashboard) ──────────────────────
 const GOLD   = 'var(--brand-primary)';
-const PAGE   = '#0a0a0a';
+const PAGE   = 'var(--bg-base)';
 const CARD   = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM    = '#D4D4D8';
-const TEXT   = '#FFFFFF';
-const GREEN  = '#2CFF7A';
-const RED    = '#FF3B30';
-const AMBER  = '#FF8A00';
+const DIM    = 'var(--text-secondary)';
+const TEXT   = 'var(--text-primary)';
+const GREEN  = 'var(--success)';
+const RED    = 'var(--danger)';
+const AMBER  = 'var(--warning)';
 
 interface SubRow {
   status: 'trialing' | 'active' | 'past_due' | 'canceled' | 'paused' | null;
@@ -173,7 +173,7 @@ export default function SubscriptionWall({ children }: { children: React.ReactNo
                   display: 'block', padding: '10px 0', borderRadius: 10,
                   background: plan.popular ? GOLD : PAGE,
                   border: plan.popular ? 'none' : `1px solid ${BORDER}`,
-                  color: plan.popular ? '#fff' : TEXT, fontWeight: 700, fontSize: 13,
+                  color: plan.popular ? 'var(--text-primary)' : TEXT, fontWeight: 700, fontSize: 13,
                   textDecoration: 'none',
                 }}>
                   Select Plan
@@ -188,7 +188,7 @@ export default function SubscriptionWall({ children }: { children: React.ReactNo
           <Link href="/app/billing" style={{
             padding: '14px 32px',
             background: isPastDue ? RED : GOLD,
-            borderRadius: 12, color: '#fff',
+            borderRadius: 12, color: 'var(--text-primary)',
             fontWeight: 700, fontSize: 15, textDecoration: 'none',
             boxShadow: isPastDue ? '0 4px 16px rgba(255,59,48,0.25)' : '0 4px 16px var(--brand-primary-25)',
           }}>

@@ -52,12 +52,12 @@ const fetcher = async (url: string): Promise<HomePayload> => {
 /* Tier colors use the status palette (COPY-STYLE §7). Red/amber/green only
    where they mean something; the rest stays neutral. */
 const TIER_TONE: Record<number, { fg: string; bg: string }> = {
-  0: { fg: '#FF3B30', bg: 'rgba(255,59,48,.14)' },
-  1: { fg: '#FF3B30', bg: 'rgba(255,59,48,.14)' },
-  2: { fg: '#FF8A00', bg: 'rgba(255,138,0,.14)' },
-  3: { fg: '#FFE600', bg: 'rgba(255,230,0,.14)' },
-  4: { fg: '#FF8A00', bg: 'rgba(255,138,0,.12)' },
-  5: { fg: '#A3ACBB', bg: 'rgba(163,172,187,.12)' },
+  0: { fg: 'var(--danger)', bg: 'rgba(255,59,48,.14)' },
+  1: { fg: 'var(--danger)', bg: 'rgba(255,59,48,.14)' },
+  2: { fg: 'var(--warning)', bg: 'rgba(255,138,0,.14)' },
+  3: { fg: 'var(--brand-primary)', bg: 'rgba(255,230,0,.14)' },
+  4: { fg: 'var(--warning)', bg: 'rgba(255,138,0,.12)' },
+  5: { fg: 'var(--status-closed)', bg: 'rgba(163,172,187,.12)' },
 };
 
 const SECTION_NAMES: Record<string, string> = {

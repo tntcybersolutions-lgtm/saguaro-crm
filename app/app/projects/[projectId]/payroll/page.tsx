@@ -7,7 +7,7 @@ import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, StatStrip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
 import { SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)',GREEN='var(--success)',RED='var(--danger)';
 const fmt = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmt0 = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
 
@@ -121,7 +121,7 @@ function calcNet(emp: Employee): number {
 const statusCfg: Record<string, { color: string; bg: string }> = {
   submitted: { color: GOLD,      bg: 'var(--brand-primary-12)' },
   draft:     { color: DIM,       bg: 'rgba(163,172,187,.1)' },
-  certified: { color: '#2CFF7A', bg: 'rgba(26,138,74,.12)' },
+  certified: { color: 'var(--success)', bg: 'rgba(26,138,74,.12)' },
 };
 
 export default function PayrollPage() {
@@ -379,7 +379,7 @@ export default function PayrollPage() {
           {href: `/app/projects/${pid}/payroll`,  label: 'Payroll', value: '#' + (records.length + 1), sub: lastFiled ? 'Follows week ' + lastFiled.week_ending : 'First WH-347 on this project' },
           {href: `/app/projects/${pid}/payroll`,  label: 'Filed to Date', value: String(records.length), sub: grossFiled > 0 ? fmt0(grossFiled) + ' gross certified' : 'No WH-347s yet' },
           {href: `/app/projects/${pid}/crews`,  label: 'Crew This Week', value: String(employees.length), sub: totalWeekHours.toFixed(1) + ' hrs entered' },
-          {href: `/app/projects/${pid}/timesheets`,  label: 'Field Time Clock', value: weekEndingDate ? weekClockedHours.toFixed(1) + ' hrs' : timeEntries.length + ' entries', accent: weekClockedHours > 0 ? '#2CFF7A' : undefined, sub: weekEndingDate ? weekClockedNames.length + ' employee' + (weekClockedNames.length === 1 ? '' : 's') + ' clocked this week' : 'Pick a week ending to match' },
+          {href: `/app/projects/${pid}/timesheets`,  label: 'Field Time Clock', value: weekEndingDate ? weekClockedHours.toFixed(1) + ' hrs' : timeEntries.length + ' entries', accent: weekClockedHours > 0 ? 'var(--success)' : undefined, sub: weekEndingDate ? weekClockedNames.length + ' employee' + (weekClockedNames.length === 1 ? '' : 's') + ' clocked this week' : 'Pick a week ending to match' },
           {href: `/app/projects/${pid}/payroll`,  label: 'Prevailing Wage', value: pw ? 'Flagged' : 'Standard', accent: pw ? GOLD : undefined, sub: pw ? pw.state + (pw.county ? ' · ' + pw.county : '') + (pw.wageDecision ? ' · ' + pw.wageDecision : '') : 'Not a Davis-Bacon project' },
           {href: `/app/projects/${pid}/subs`,  label: 'Subs on Job', value: String((ctx?.subs || []).length), sub: 'On the project roster' },
         ]} />
@@ -403,18 +403,18 @@ export default function PayrollPage() {
           delay={0.06}
          href={`/app/projects/${pid}/payroll`}/>
         <StatCard
-          icon={<Wallet size={19} weight="duotone" color="#2CFF7A" />}
+          icon={<Wallet size={19} weight="duotone" color="var(--success)" />}
           label="Net Wages This Week"
           value={fmt(totalWeekNet)}
-          accent="#2CFF7A"
+          accent="var(--success)"
           sub="After deductions"
           delay={0.10}
          href={`/app/projects/${pid}/payroll`}/>
       </div>
 
       {/* Messages */}
-      {error && <div style={{ background: 'rgba(192,48,48,.1)', border: '1px solid rgba(192,48,48,.3)', borderRadius: 8, padding: '10px 16px', marginBottom: 20, fontSize: 13, color: '#FF3B30' }}>{error}</div>}
-      {success && <div style={{ background: 'rgba(26,138,74,.08)', border: '1px solid rgba(26,138,74,.3)', borderRadius: 8, padding: '10px 16px', marginBottom: 20, fontSize: 13, color: '#2CFF7A' }}>{success}</div>}
+      {error && <div style={{ background: 'rgba(192,48,48,.1)', border: '1px solid rgba(192,48,48,.3)', borderRadius: 8, padding: '10px 16px', marginBottom: 20, fontSize: 13, color: 'var(--danger)' }}>{error}</div>}
+      {success && <div style={{ background: 'rgba(26,138,74,.08)', border: '1px solid rgba(26,138,74,.3)', borderRadius: 8, padding: '10px 16px', marginBottom: 20, fontSize: 13, color: 'var(--success)' }}>{success}</div>}
 
       {/* Prevailing Wage assist — only when the project is flagged prevailing-wage */}
       {pw && (
@@ -427,32 +427,32 @@ export default function PayrollPage() {
               {pw.wageDecision ? ` · ${pw.wageDecision}` : ''}
               {pwRates.length > 0
                 ? <span style={{ color: DIM }}>{'. '}{pwRates.length} classifications available.</span>
-                : <span style={{ color: '#ff9d70' }}>{'. '}No determination on file for this state/county.</span>}
+                : <span style={{ color: 'var(--warning)' }}>{'. '}No determination on file for this state/county.</span>}
             </div>
             {pwRates.length > 0 && (
               <button
                 onClick={applyPwRateAll}
-                style={{ padding: '7px 16px', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 7, color: '#0A0A00', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                style={{ padding: '7px 16px', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 7, color: 'var(--on-brand)', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                 Apply Prevailing Rates
               </button>
             )}
           </div>
           {pwRates.length > 0 && (
-            <div style={{ fontSize: 11.5, color: '#FCD9A0', marginTop: 8, lineHeight: 1.5, borderTop: `1px solid var(--brand-primary-18)`, paddingTop: 8 }}>
+            <div style={{ fontSize: 11.5, color: 'var(--warning)', marginTop: 8, lineHeight: 1.5, borderTop: `1px solid var(--brand-primary-18)`, paddingTop: 8 }}>
               <strong style={{ color: GOLD }}>Sample / reference rates.</strong> Applied rates are Davis-Bacon-style samples for planning — not an official determination. Verify against the official{' '}
               <a href="https://sam.gov/content/wage-determinations" target="_blank" rel="noopener noreferrer" style={{ color: GOLD, fontWeight: 700 }}>SAM.gov (WDOL)</a>{' '}
-              determination for this project before certifying. Rows marked <span style={{ color: '#FF8A00', fontWeight: 800 }}>custom</span> are your own entered determination.
+              determination for this project before certifying. Rows marked <span style={{ color: 'var(--warning)', fontWeight: 800 }}>custom</span> are your own entered determination.
             </div>
           )}
         </div>
       )}
-      {pwNote && <div style={{ background: 'var(--brand-primary-08)', border: '1px solid var(--brand-primary-25)', borderRadius: 8, padding: '9px 16px', marginBottom: 20, fontSize: 12.5, color: '#FF8A00' }}>{pwNote}</div>}
+      {pwNote && <div style={{ background: 'var(--brand-primary-08)', border: '1px solid var(--brand-primary-25)', borderRadius: 8, padding: '9px 16px', marginBottom: 20, fontSize: 12.5, color: 'var(--warning)' }}>{pwNote}</div>}
 
       {/* Field time clock rollup — import instead of retyping hours */}
       {weekEndingDate && weekEntries.length > 0 && (
         <div style={{ background: 'rgba(44,255,122,.07)', border: '1px solid rgba(44,255,122,.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
           <div style={{ fontSize: 13, color: DIM }}>
-            <span style={{ fontWeight: 700, color: '#2CFF7A' }}>{weekClockedHours.toFixed(1)} hrs clocked in the field</span>
+            <span style={{ fontWeight: 700, color: 'var(--success)' }}>{weekClockedHours.toFixed(1)} hrs clocked in the field</span>
             {' — '}{weekEntries.length} time {weekEntries.length === 1 ? 'entry' : 'entries'} from {weekClockedNames.length} employee{weekClockedNames.length === 1 ? '' : 's'} fall in the 7 days ending {weekEndingDate}. Import them below instead of retyping.
           </div>
           <button onClick={importFromTimesheets} className="pmBtn" style={{ ...goldOutlineButtonStyle, padding: '8px 16px', fontSize: 12.5, whiteSpace: 'nowrap' }}>
@@ -601,7 +601,7 @@ export default function PayrollPage() {
                       <td style={{ padding: '7px 6px', width: 64 }}>
                         <input type="number" min={0} step={0.01} value={emp.deductions} onChange={e => updateEmp(emp.id, 'deductions', Number(e.target.value))} title="Other deductions" style={{ ...inp, fontSize: 11, textAlign: 'right', width: 56 }} />
                       </td>
-                      <td style={{ padding: '7px 8px', color: '#2CFF7A', fontWeight: 700, whiteSpace: 'nowrap' }}>{fmt(net)}</td>
+                      <td style={{ padding: '7px 8px', color: 'var(--success)', fontWeight: 700, whiteSpace: 'nowrap' }}>{fmt(net)}</td>
                       <td style={{ padding: '7px 8px', textAlign: 'center' }}>
                         <input type="checkbox" checked={emp.overtime} onChange={e => updateEmp(emp.id, 'overtime', e.target.checked)} title="OT eligible" style={{ cursor: 'pointer', accentColor: GOLD }} />
                       </td>
@@ -609,7 +609,7 @@ export default function PayrollPage() {
                         {pw && pwRates.length > 0 && (
                           <button onClick={() => applyPwRate(emp.id)} title="Apply prevailing wage rate for this classification" style={{ background: 'none', border: `1px solid var(--brand-primary-35)`, color: GOLD, cursor: 'pointer', fontSize: 10, fontWeight: 800, padding: '2px 6px', borderRadius: 4, marginRight: 4 }}>PW</button>
                         )}
-                        <button onClick={() => removeEmp(emp.id)} title="Remove" style={{ background: 'none', border: 'none', color: '#FF3B30', cursor: 'pointer', fontSize: 13, padding: '2px 4px', display: 'inline-flex', alignItems: 'center' }}><XCircle size={15} weight="regular" color="#FF3B30" /></button>
+                        <button onClick={() => removeEmp(emp.id)} title="Remove" style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: 13, padding: '2px 4px', display: 'inline-flex', alignItems: 'center' }}><XCircle size={15} weight="regular" color="var(--danger)" /></button>
                       </td>
                     </tr>
                   );
@@ -629,7 +629,7 @@ export default function PayrollPage() {
                   <td style={{ padding: '10px 6px', fontWeight: 700, color: DIM, textAlign: 'right', fontSize: 11, whiteSpace: 'nowrap' }}>{fmt(totalWeekFedWH)}</td>
                   <td style={{ padding: '10px 6px', fontWeight: 700, color: DIM, textAlign: 'right', fontSize: 11, whiteSpace: 'nowrap' }}>{fmt(totalWeekStateWH)}</td>
                   <td style={{ padding: '10px 6px', fontWeight: 700, color: DIM, textAlign: 'right', fontSize: 11, whiteSpace: 'nowrap' }}>{fmt(totalWeekOther)}</td>
-                  <td style={{ padding: '10px 8px', fontWeight: 800, color: '#2CFF7A', whiteSpace: 'nowrap' }}>{fmt(totalWeekNet)}</td>
+                  <td style={{ padding: '10px 8px', fontWeight: 800, color: 'var(--success)', whiteSpace: 'nowrap' }}>{fmt(totalWeekNet)}</td>
                   <td colSpan={2} />
                 </tr>
               </tfoot>
@@ -641,8 +641,8 @@ export default function PayrollPage() {
       {/* Statement of Compliance */}
       <SectionCard
         title="Statement of Compliance"
-        icon={<SealCheck size={17} weight="duotone" color={complianceAgreed ? '#2CFF7A' : GOLD} />}
-        accent={complianceAgreed ? '#2CFF7A' : GOLD}
+        icon={<SealCheck size={17} weight="duotone" color={complianceAgreed ? 'var(--success)' : GOLD} />}
+        accent={complianceAgreed ? 'var(--success)' : GOLD}
         style={{ marginBottom: 20 }}
       >
         <div style={{ fontSize: 13, color: DIM, lineHeight: 1.6, marginBottom: 14 }}>

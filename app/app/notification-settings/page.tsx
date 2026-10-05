@@ -9,13 +9,13 @@ const GOLD   = 'var(--brand-primary)';
 const BG = 'var(--bg-base)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const TEXT   = '#FFFFFF';
-const DIM    = '#D4D4D8';
-const GREEN  = '#2CFF7A';
-const RED    = '#FF3B30';
+const TEXT   = 'var(--text-primary)';
+const DIM    = 'var(--text-secondary)';
+const GREEN  = 'var(--success)';
+const RED    = 'var(--danger)';
 const AMBER = 'var(--warning)';
 const BLUE   = 'var(--brand-primary)';
-const PURPLE = '#FF8A00';
+const PURPLE = 'var(--warning)';
 
 /* ── types ── */
 type Channel = 'in-app' | 'email' | 'push';
@@ -376,7 +376,7 @@ export default function NotificationSettingsPage() {
       width: 18,
       height: 18,
       borderRadius: '50%',
-      background: '#fff',
+      background: 'var(--text-primary)',
       position: 'absolute' as const,
       top: 3,
       left: on ? 23 : 3,
@@ -385,12 +385,12 @@ export default function NotificationSettingsPage() {
     }) as React.CSSProperties,
     btn: (variant: 'gold' | 'outline' | 'red' | 'blue' | 'green' | 'amber') => {
       const map: Record<string, { bg: string; fg: string; bdr: string }> = {
-        gold:    { bg: GOLD, fg: '#0A0A00', bdr: 'none' },
+        gold:    { bg: GOLD, fg: 'var(--on-brand)', bdr: 'none' },
         outline: { bg: 'transparent', fg: DIM, bdr: `1px solid ${BORDER}` },
-        red:     { bg: RED, fg: '#fff', bdr: 'none' },
-        blue:    { bg: BLUE, fg: '#0A0A00', bdr: 'none' },
-        green:   { bg: GREEN, fg: '#fff', bdr: 'none' },
-        amber:   { bg: AMBER, fg: '#000', bdr: 'none' },
+        red:     { bg: RED, fg: 'var(--text-primary)', bdr: 'none' },
+        blue:    { bg: BLUE, fg: 'var(--on-brand)', bdr: 'none' },
+        green:   { bg: GREEN, fg: 'var(--text-primary)', bdr: 'none' },
+        amber:   { bg: AMBER, fg: 'var(--bg-base)', bdr: 'none' },
       };
       const v = map[variant] || map.outline;
       return {

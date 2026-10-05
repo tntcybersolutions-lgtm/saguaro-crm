@@ -5,7 +5,7 @@ import { useState, useCallback, useRef } from 'react';
 const GOLD = 'var(--brand-primary)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#D4D4D8';
+const DIM = 'var(--text-secondary)';
 
 /* ──────────────────────────────────────────────
    useDragReorder hook
@@ -143,7 +143,7 @@ export default function DragHandle({
         width="14"
         height="18"
         viewBox="0 0 14 18"
-        fill={isDropTarget ? '#FFFFFF' : DIM}
+        fill={isDropTarget ? 'var(--text-primary)' : DIM}
       >
         <circle cx="4" cy="3" r="1.5" />
         <circle cx="10" cy="3" r="1.5" />

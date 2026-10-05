@@ -2,13 +2,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 
-const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)', DIM = '#D4D4D8', TEXT = '#FFFFFF';
+const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)', DIM = 'var(--text-secondary)', TEXT = 'var(--text-primary)';
 
 const HEARTBEAT_MS = 30_000;
 const POLL_MS = 15_000;
 
 const AVATAR_COLORS = [
-  '#FF8A00', '#FF8A00', '#FF8A00', '#FF8A00', '#2CFF7A', '#FF3B30', '#FF8A00', '#2CFF7A',
+  'var(--warning)', 'var(--warning)', 'var(--warning)', 'var(--warning)', 'var(--success)', 'var(--danger)', 'var(--warning)', 'var(--success)',
 ];
 
 interface ActiveUser {
@@ -117,7 +117,7 @@ export default function PresenceIndicator({ projectId }: { projectId?: string })
                 justifyContent: 'center',
                 fontSize: 11,
                 fontWeight: 700,
-                color: '#fff',
+                color: 'var(--text-primary)',
                 border: `2px solid ${DARK}`,
                 cursor: 'default',
                 userSelect: 'none',
@@ -134,7 +134,7 @@ export default function PresenceIndicator({ projectId }: { projectId?: string })
                 width: 10,
                 height: 10,
                 borderRadius: '50%',
-                backgroundColor: '#2CFF7A',
+                backgroundColor: 'var(--success)',
                 border: `2px solid ${DARK}`,
               }}
             />

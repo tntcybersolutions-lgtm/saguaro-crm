@@ -15,7 +15,7 @@ import { humanError } from '@/lib/errors';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#D4D4D8', TEXT = '#FFFFFF', GREEN = '#2CFF7A', RED = '#FF3B30', AMBER = 'var(--warning)';
+const DIM = 'var(--text-secondary)', TEXT = 'var(--text-primary)', GREEN = 'var(--success)', RED = 'var(--danger)', AMBER = 'var(--warning)';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const usd = (c: number) => '$' + Math.round((c || 0) / 100).toLocaleString();
 const now = () => new Date().toISOString();
@@ -130,7 +130,7 @@ export default function FleetPage() {
 
   const exportReport = () => {
     const w = window.open('', '_blank'); if (!w) return;
-    const rows = assets.map((a) => { const h = assetHealth(a as Asset, records as MaintenanceRecord[], docs as AssetDoc[], now()); const col = (STATUS_COLOR as any)[h.overall]; const nextM = h.maintenance.status !== 'unknown' && h.maintenance.status !== 'ok' ? `${h.maintenance.label || 'service'} (${h.maintenance.remainingMiles != null ? (h.maintenance.remainingMiles < 0 ? Math.abs(h.maintenance.remainingMiles) + ' mi over' : h.maintenance.remainingMiles + ' mi') : ''}${h.maintenance.remainingDays != null ? ` ${h.maintenance.remainingDays}d` : ''})` : '—'; const exp = EXPIRIES.map(([c, l]) => { const e = expiryStatus(a[c], now()); return e.status === 'expired' ? `${l} expired` : e.status === 'soon' ? `${l} ${e.daysUntil}d` : null; }).filter(Boolean).join(', ') || '—'; return `<tr><td style="border:1px solid #ccc;padding:5px 8px"><b>${a.name}</b><div style="color:#666;font-size:10px">${[a.make, a.model, a.year].filter(Boolean).join(' ')}</div></td><td style="border:1px solid #ccc;padding:5px 8px">${a.type}</td><td style="border:1px solid #ccc;padding:5px 8px;text-align:right">${a.odometer ? Math.round(a.odometer).toLocaleString() : '—'}</td><td style="border:1px solid #ccc;padding:5px 8px">${a.status}</td><td style="border:1px solid #ccc;padding:5px 8px;color:${nextM === '—' ? '#111' : '#b8860b'}">${nextM}</td><td style="border:1px solid #ccc;padding:5px 8px">${exp}</td><td style="border:1px solid #ccc;padding:5px 8px"><span style="display:inline-block;width:9px;height:9px;border-radius:5px;background:${col}"></span></td></tr>`; }).join('');
+    const rows = assets.map((a) => { const h = assetHealth(a as Asset, records as MaintenanceRecord[], docs as AssetDoc[], now()); const col = (STATUS_COLOR as any)[h.overall]; const nextM = h.maintenance.status !== 'unknown' && h.maintenance.status !== 'ok' ? `${h.maintenance.label || 'service'} (${h.maintenance.remainingMiles != null ? (h.maintenance.remainingMiles < 0 ? Math.abs(h.maintenance.remainingMiles) + ' mi over' : h.maintenance.remainingMiles + ' mi') : ''}${h.maintenance.remainingDays != null ? ` ${h.maintenance.remainingDays}d` : ''})` : '—'; const exp = EXPIRIES.map(([c, l]) => { const e = expiryStatus(a[c], now()); return e.status === 'expired' ? `${l} expired` : e.status === 'soon' ? `${l} ${e.daysUntil}d` : null; }).filter(Boolean).join(', ') || '—'; return `<tr><td style="border:1px solid #ccc;padding:5px 8px"><b>${a.name}</b><div style="color:#666;font-size:10px">${[a.make, a.model, a.year].filter(Boolean).join(' ')}</div></td><td style="border:1px solid #ccc;padding:5px 8px">${a.type}</td><td style="border:1px solid #ccc;padding:5px 8px;text-align:right">${a.odometer ? Math.round(a.odometer).toLocaleString() : '—'}</td><td style="border:1px solid #ccc;padding:5px 8px">${a.status}</td><td style="border:1px solid #ccc;padding:5px 8px;color:${nextM === '—' ? '#111' : 'var(--brand-primary-strong)'}">${nextM}</td><td style="border:1px solid #ccc;padding:5px 8px">${exp}</td><td style="border:1px solid #ccc;padding:5px 8px"><span style="display:inline-block;width:9px;height:9px;border-radius:5px;background:${col}"></span></td></tr>`; }).join('');
     w.document.write(`<html><head><title>Fleet Report</title></head><body style="font-family:Arial;padding:24px;color:#111">
       <h2 style="margin:0">Fleet Report</h2><div style="color:#555;font-size:12px;margin-bottom:16px">Generated ${new Date().toLocaleString()}</div>
       <div style="display:flex;gap:24px;margin-bottom:18px;font-size:13px">
@@ -148,7 +148,7 @@ export default function FleetPage() {
   };
 
   const inp: React.CSSProperties = { background: DARK, border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, padding: '9px 11px', fontSize: 14, width: '100%' };
-  const btn: React.CSSProperties = { background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', color: '#0A0A00', fontWeight: 700, border: 'none', borderRadius: 8, padding: '9px 16px', cursor: 'pointer', fontSize: 14 };
+  const btn: React.CSSProperties = { background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', color: 'var(--on-brand)', fontWeight: 700, border: 'none', borderRadius: 8, padding: '9px 16px', cursor: 'pointer', fontSize: 14 };
 
   return (
     <>
@@ -276,7 +276,7 @@ export default function FleetPage() {
 
       {(adding || editing) && (
         <Modal title={adding ? 'Add Asset' : 'Edit Asset'} onClose={() => { setAdding(false); setEditing(false); }}>
-          {adding && <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>{['vehicle', 'equipment'].map((t) => <button key={t} onClick={() => setF({ ...f, type: t })} style={{ ...btn, flex: 1, background: f.type === t ? GOLD : 'transparent', color: f.type === t ? '#0A0A00' : TEXT, border: `1px solid ${BORDER}`, textTransform: 'capitalize' }}>{t}</button>)}</div>}
+          {adding && <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>{['vehicle', 'equipment'].map((t) => <button key={t} onClick={() => setF({ ...f, type: t })} style={{ ...btn, flex: 1, background: f.type === t ? GOLD : 'transparent', color: f.type === t ? 'var(--on-brand)' : TEXT, border: `1px solid ${BORDER}`, textTransform: 'capitalize' }}>{t}</button>)}</div>}
           {f.type === 'vehicle' && <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}><input value={f.vin ?? ''} onChange={(e) => setF({ ...f, vin: e.target.value.toUpperCase() })} placeholder="VIN (auto-fills)" style={{ ...inp, fontFamily: 'monospace' }} /><button onClick={decodeVin} disabled={vinBusy} style={{ ...btn, background: 'var(--brand-primary-strong)', display: 'inline-flex', alignItems: 'center', gap: 5 }}><Barcode size={16} />{vinBusy ? '…' : 'Decode'}</button></div>}
           <input value={f.name ?? ''} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="Name / nickname (e.g. Truck 12)" style={inp} />
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}><input value={f.make ?? ''} onChange={(e) => setF({ ...f, make: e.target.value })} placeholder="Make" style={inp} /><input value={f.model ?? ''} onChange={(e) => setF({ ...f, model: e.target.value })} placeholder="Model" style={inp} /><input value={f.year ?? ''} onChange={(e) => setF({ ...f, year: e.target.value })} placeholder="Year" style={{ ...inp, width: 80 }} /></div>
@@ -379,8 +379,8 @@ function FleetMap({ assets, pings, selId, onSelect }: { assets: any[]; pings: an
       }
       const map = mapRef.current; map._layer.clearLayers();
       const pts: [number, number][] = [];
-      for (const a of located) { const mk = L.circleMarker([a.last_lat, a.last_lng], { radius: a.id === selId ? 10 : 7, color: a.id === selId ? '#FF8A00' : '#FFE600', fillColor: a.id === selId ? '#FF8A00' : '#FFE600', fillOpacity: 0.85, weight: 2 }).bindPopup(`<b>${a.name}</b><br>${a.last_location_at ? new Date(a.last_location_at).toLocaleString() : ''}${a.last_speed_mph ? `<br>${Math.round(a.last_speed_mph)} mph` : ''}`); mk.on('click', () => onSelect(a.id)); mk.addTo(map._layer); pts.push([a.last_lat, a.last_lng]); }
-      if (pings && pings.length > 1) L.polyline(pings.map((p) => [p.lat, p.lng]), { color: '#FF8A00', weight: 3, opacity: 0.8 }).addTo(map._layer);
+      for (const a of located) { const mk = L.circleMarker([a.last_lat, a.last_lng], { radius: a.id === selId ? 10 : 7, color: a.id === selId ? 'var(--warning)' : 'var(--brand-primary)', fillColor: a.id === selId ? 'var(--warning)' : 'var(--brand-primary)', fillOpacity: 0.85, weight: 2 }).bindPopup(`<b>${a.name}</b><br>${a.last_location_at ? new Date(a.last_location_at).toLocaleString() : ''}${a.last_speed_mph ? `<br>${Math.round(a.last_speed_mph)} mph` : ''}`); mk.on('click', () => onSelect(a.id)); mk.addTo(map._layer); pts.push([a.last_lat, a.last_lng]); }
+      if (pings && pings.length > 1) L.polyline(pings.map((p) => [p.lat, p.lng]), { color: 'var(--warning)', weight: 3, opacity: 0.8 }).addTo(map._layer);
       if (pts.length) map.fitBounds(pts, { padding: [34, 34], maxZoom: 14 });
       setTimeout(() => map.invalidateSize(), 100);
     })();

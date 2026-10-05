@@ -90,16 +90,16 @@ export default function EscalationsPage() {
       <SectionCard flat title="Escalation Matrix" subtitle="Who owns it now — ownership climbs as items age." icon={<Ladder size={16} weight="duotone" color={C.gold} />} style={{ marginBottom: 18 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
           {[
-            { n: 1, owner: 'Superintendent', hint: '0–2d overdue', color: '#2CFF7A' },
-            { n: 2, owner: 'Project Manager', hint: '3–6d overdue', color: '#FFCC00' },
-            { n: 3, owner: 'Director of Construction', hint: '7–13d overdue', color: '#FF8A00' },
-            { n: 4, owner: 'Executive Leadership', hint: '14d+ overdue', color: '#FF3B30' },
+            { n: 1, owner: 'Superintendent', hint: '0–2d overdue', color: 'var(--success)' },
+            { n: 2, owner: 'Project Manager', hint: '3–6d overdue', color: 'var(--brand-primary)' },
+            { n: 3, owner: 'Director of Construction', hint: '7–13d overdue', color: 'var(--warning)' },
+            { n: 4, owner: 'Executive Leadership', hint: '14d+ overdue', color: 'var(--danger)' },
           ].map((lv) => {
             const count = summary.levels[lv.n - 1];
             return (
               <div key={lv.n} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderLeft: `4px solid ${lv.color}`, borderRadius: 12, padding: '12px 14px', opacity: count ? 1 : 0.6 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 11, fontWeight: 800, color: '#fff', background: lv.color, borderRadius: 6, padding: '2px 7px' }}>L{lv.n}</span>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-primary)', background: lv.color, borderRadius: 6, padding: '2px 7px' }}>L{lv.n}</span>
                   <span style={{ fontSize: 22, fontWeight: 900, color: count ? lv.color : C.dim, marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' }}>{count}</span>
                 </div>
                 <div style={{ fontSize: 13, fontWeight: 700, marginTop: 6 }}>{lv.owner}</div>

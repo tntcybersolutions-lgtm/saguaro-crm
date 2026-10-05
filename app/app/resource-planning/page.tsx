@@ -13,7 +13,7 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 
-const GOLD='var(--brand-primary)',BG = 'var(--bg-base)',RAISED = 'var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',TEXT='#FFFFFF',DIM='#D4D4D8',GREEN='#2CFF7A',RED='#FF3B30',AMBER ='var(--warning)',BLUE='var(--brand-primary)',PURPLE='#FF8A00';
+const GOLD='var(--brand-primary)',BG = 'var(--bg-base)',RAISED = 'var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',TEXT='var(--text-primary)',DIM='var(--text-secondary)',GREEN='var(--success)',RED='var(--danger)',AMBER ='var(--warning)',BLUE='var(--brand-primary)',PURPLE='var(--warning)';
 
 /* ===== TYPES ===== */
 interface Assignment {
@@ -46,7 +46,7 @@ type Tab = 'grid' | 'timeline' | 'people' | 'staffing' | 'utilization' | 'availa
 /* ===== STYLE HELPERS ===== */
 function btn(primary?: boolean): React.CSSProperties {
   return primary
-    ? { padding: '8px 18px', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 7, color: '#0A0A00', fontSize: 13, fontWeight: 800, cursor: 'pointer', transition: 'opacity .15s' }
+    ? { padding: '8px 18px', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 7, color: 'var(--on-brand)', fontSize: 13, fontWeight: 800, cursor: 'pointer', transition: 'opacity .15s' }
     : { padding: '8px 18px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 7, color: DIM, fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'opacity .15s' };
 }
 function inp(): React.CSSProperties {
@@ -705,7 +705,7 @@ export default function ResourcePlanningPage() {
                   const isCurrentWeek = wStart <= isoDate(new Date()) && wEnd >= isoDate(new Date());
                   const active = asns.filter(a => a.start_date <= wEnd && a.end_date >= wStart && a.status !== 'released');
                   return <div key={wi} style={{ borderLeft: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)`, height: '100%', padding: '2px 1px', display: 'flex', flexDirection: 'column', gap: 1, background: isCurrentWeek ? `color-mix(in srgb, ${GOLD} 2%, transparent)` : 'transparent' }}>
-                    {active.map((a, ai) => <div key={ai} title={`${projMap[a.project_id] || '?'} (${a.role}) — ${a.hours_per_day}h/day`} onClick={() => editAssignment(a)} style={{ height: active.length > 1 ? 10 : 20, borderRadius: 3, background: STATUS_COLORS[a.status] || BLUE, opacity: .85, fontSize: 8, color: '#fff', overflow: 'hidden', whiteSpace: 'nowrap', padding: '0 3px', lineHeight: active.length > 1 ? '10px' : '20px', fontWeight: 700, cursor: 'pointer' }}>
+                    {active.map((a, ai) => <div key={ai} title={`${projMap[a.project_id] || '?'} (${a.role}) — ${a.hours_per_day}h/day`} onClick={() => editAssignment(a)} style={{ height: active.length > 1 ? 10 : 20, borderRadius: 3, background: STATUS_COLORS[a.status] || BLUE, opacity: .85, fontSize: 8, color: 'var(--text-primary)', overflow: 'hidden', whiteSpace: 'nowrap', padding: '0 3px', lineHeight: active.length > 1 ? '10px' : '20px', fontWeight: 700, cursor: 'pointer' }}>
                       {active.length <= 2 ? (projMap[a.project_id] || '').slice(0, 12) : ''}
                     </div>)}
                   </div>;
@@ -736,7 +736,7 @@ export default function ResourcePlanningPage() {
           return <div key={name} style={{ background: `color-mix(in srgb, ${BG} 50%, transparent)`, border: `1px solid ${isConflict ? RED : BORDER}`, borderRadius: 8, padding: 16, marginBottom: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 36, height: 36, borderRadius: '50%', background: `linear-gradient(135deg,${GOLD},#FF8A00)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: '#1C1C1E' }}>{name.charAt(0)}</div>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', background: `linear-gradient(135deg,${GOLD},#FF8A00)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: 'var(--surface-raised)' }}>{name.charAt(0)}</div>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>{name}</div>
                   <div style={{ fontSize: 11, color: DIM }}>{asns[0]?.trade} - {asns[0]?.role}</div>

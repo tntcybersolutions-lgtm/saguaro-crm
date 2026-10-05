@@ -12,12 +12,12 @@ import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
 const BASE = 'var(--bg-surface-2)';
 const GOLD = 'var(--brand-primary)';
-const GREEN = '#2CFF7A';
+const GREEN = 'var(--success)';
 const BLUE = 'var(--brand-primary)';
-const RED = '#FF3B30';
+const RED = 'var(--danger)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#D4D4D8';
-const TEXT = '#FFFFFF';
+const DIM = 'var(--text-secondary)';
+const TEXT = 'var(--text-primary)';
 
 interface Device {
   id: string;
@@ -72,7 +72,7 @@ function DeviceTypeIcon({ type, size, color }: { type: string; size: number; col
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  online: GREEN, offline: RED, planned: '#A3ACBB', warning: 'var(--warning)', maintenance: BLUE,
+  online: GREEN, offline: RED, planned: 'var(--status-closed)', warning: 'var(--warning)', maintenance: BLUE,
 };
 
 const inputStyle: React.CSSProperties = {
@@ -240,8 +240,8 @@ export default function DeviceInventoryPage() {
           sub="Not reporting" delay={0.10}
          href={`/app/projects/${projectId}/network/devices`}/>
         <StatCard
-          icon={<Clock size={19} weight="duotone" color="#A3ACBB" />}
-          label="Planned" value={String(plannedCount)} accent={plannedCount ? '#A3ACBB' : undefined}
+          icon={<Clock size={19} weight="duotone" color="var(--status-closed)" />}
+          label="Planned" value={String(plannedCount)} accent={plannedCount ? 'var(--status-closed)' : undefined}
           sub="Not yet deployed" delay={0.14}
          href={`/app/projects/${projectId}/network/devices`}/>
       </div>

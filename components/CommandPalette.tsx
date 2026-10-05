@@ -7,8 +7,8 @@ const GOLD   = 'var(--brand-primary)';
 const DARK   = 'var(--bg-base)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = 'var(--border-default)';
-const DIM    = '#D4D4D8';
-const TEXT   = '#FFFFFF';
+const DIM    = 'var(--text-secondary)';
+const TEXT   = 'var(--text-primary)';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

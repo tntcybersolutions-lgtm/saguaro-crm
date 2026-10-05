@@ -425,11 +425,11 @@ export default function SettingsPage() {
                     <div className="stColor">
                       <input
                         type="color"
-                        value={previewColor === GOLD && !branding.primary_color ? '#FF8A00' : previewColor}
+                        value={previewColor === GOLD && !branding.primary_color ? 'var(--warning)' : previewColor}
                         onChange={e => setBranding(b => ({ ...b, primary_color: e.target.value }))}
                         aria-label="Brand color"
                       />
-                      <Input type="text" value={branding.primary_color} onChange={e => setBranding(b => ({ ...b, primary_color: e.target.value }))} placeholder="#FF8A00" style={{ width: 130 }} aria-label="Brand color hex" />
+                      <Input type="text" value={branding.primary_color} onChange={e => setBranding(b => ({ ...b, primary_color: e.target.value }))} placeholder="var(--warning)" style={{ width: 130 }} aria-label="Brand color hex" />
                       {branding.primary_color
                         ? <button type="button" className="stLink" onClick={() => setBranding(b => ({ ...b, primary_color: '' }))}>Reset to Saguaro Default</button>
                         : <span className="stHint" style={{ marginTop: 0 }}>Defaults to the Saguaro brand color</span>}

@@ -10,9 +10,9 @@ import { CurrencyDollar, NotePencil, ArrowRight, Plus } from '@phosphor-icons/re
 
 const CO_STAGES: Record<string, { label: string; color: string }> = {
   draft: { label: 'Issued', color: C.dim }, pricing: { label: 'GC Pricing', color: '#5AC8FA' },
-  pm_review: { label: 'PM Review', color: C.blue }, architect_review: { label: 'Architect Review', color: '#FF8A00' },
+  pm_review: { label: 'PM Review', color: C.blue }, architect_review: { label: 'Architect Review', color: 'var(--warning)' },
   pending_owner: { label: 'Owner Approval', color: C.gold }, approved: { label: 'Executed', color: C.green },
-  schedule_updated: { label: 'Schedule Updated', color: '#30B0C7' }, budget_updated: { label: 'Budget Updated', color: '#2CFF7A' },
+  schedule_updated: { label: 'Schedule Updated', color: '#30B0C7' }, budget_updated: { label: 'Budget Updated', color: 'var(--success)' },
   rejected: { label: 'Rejected', color: C.red },
 };
 
@@ -170,7 +170,7 @@ export default function BudgetPage() {
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                     <span style={{ fontSize: 11, fontWeight: 800, color: st.color, background: `${st.color}18`, padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>{st.label}</span>
                     {!final && <>
-                      <button onClick={() => act(co.id, 'advance')} disabled={busy[co.id]} className="pmBtn" style={{ padding: '6px 11px', borderRadius: 8, border: 'none', background: C.green, color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Advance <ArrowRight size={13} weight="regular" color="#fff" style={{ verticalAlign: 'middle' }} /></button>
+                      <button onClick={() => act(co.id, 'advance')} disabled={busy[co.id]} className="pmBtn" style={{ padding: '6px 11px', borderRadius: 8, border: 'none', background: C.green, color: 'var(--text-primary)', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Advance <ArrowRight size={13} weight="regular" color="var(--text-primary)" style={{ verticalAlign: 'middle' }} /></button>
                       <button onClick={() => act(co.id, 'reject')} disabled={busy[co.id]} className="pmBtn" style={{ padding: '6px 11px', borderRadius: 8, border: `1px solid ${C.red}`, background: 'var(--bg-surface)', color: C.red, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Reject</button>
                     </>}
                   </div>

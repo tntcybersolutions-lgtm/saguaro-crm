@@ -5,7 +5,7 @@ import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, goldB
 import { Plugs, ArrowsClockwise, ListChecks, SlidersHorizontal, ClockCounterClockwise, ArrowsLeftRight } from '@phosphor-icons/react';
 
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-surface-2)', BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#D4D4D8', TEXT = '#FFFFFF', GREEN = '#2CFF7A', RED = '#FF3B30', QB_GREEN = '#2CFF7A';
+const DIM = 'var(--text-secondary)', TEXT = 'var(--text-primary)', GREEN = 'var(--success)', RED = 'var(--danger)', QB_GREEN = 'var(--success)';
 
 type SyncHistoryEntry = {
   timestamp: string;

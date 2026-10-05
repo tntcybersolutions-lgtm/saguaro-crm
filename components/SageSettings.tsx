@@ -12,8 +12,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)';
-const BORDER = 'rgba(255,255,255,0.12)', DIM = '#D4D4D8', TEXT = '#FFFFFF';
-const RED = '#FF3B30', GREEN = '#2CFF7A';
+const BORDER = 'rgba(255,255,255,0.12)', DIM = 'var(--text-secondary)', TEXT = 'var(--text-primary)';
+const RED = 'var(--danger)', GREEN = 'var(--success)';
 
 interface StyleProfile {
   enabled: boolean;
@@ -209,7 +209,7 @@ export default function SageSettings({ onClose }: { onClose: () => void }) {
       <div style={{ width: 'min(680px, 100%)', maxHeight: '86vh', overflowY: 'auto', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 16, boxShadow: '0 32px 80px rgba(0,0,0,0.75)' }} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 18px', borderBottom: `1px solid ${BORDER}`, position: 'sticky', top: 0, background: RAISED, zIndex: 2 }}>
-          <div style={{ width: 30, height: 30, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#0A0A00', fontFamily: 'Georgia, serif' }}>S</div>
+          <div style={{ width: 30, height: 30, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: 'var(--on-brand)', fontFamily: 'Georgia, serif' }}>S</div>
           <div style={{ flex: 1 }}>
             <div style={{ color: TEXT, fontWeight: 700, fontSize: 15 }}>Sage Settings</div>
             <div style={{ color: DIM, fontSize: 11.5 }}>Everything Sage knows about how to work with you — visible, editable, revocable.</div>

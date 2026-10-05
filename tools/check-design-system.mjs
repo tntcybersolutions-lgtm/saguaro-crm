@@ -31,7 +31,7 @@ const ALLOW_DIRS = [
   'lib/email', 'lib/pdf', 'lib/design-tokens.ts', 'lib/project-colors.ts', 'lib/status-colors.ts', 'lib/status-system.ts',
   'app/globals.css',
 ];
-const ALLOW_FILE_RE = /(pdf|print|qr|signature|canvas|chart|email|invoice-template|letterhead)/i;
+const ALLOW_FILE_RE = /(pdf|print|qr|signature|canvas|chart|email|invoice-template|letterhead|PlanTracer|DrawingViewer|RevisionCompare|PdfViewer|PhotoEditor|SignaturePad|CrewMap|Building3D|Designer)/i;
 // A palette value is still a hex literal; pages must use the token for it.
 const PALETTE = new Set(['#000000', '#0E0F12', '#15171C', '#FFFFFF', '#D4D4D8', '#A9B4C4', '#7A8597', '#FFE600', '#FFF04A', '#E6CF00', '#0A0A00', '#FF8A00', '#2CFF7A', '#FF3B30', '#A3ACBB', '#FFF', '#000']);
 const STATUS_WORDS = /^(Missing|Not on File|On File|Overdue|Approved|Paid|Pending|Rejected|Expired|Expiring|Draft|Submitted|Sent|Open|Closed|Active|Inactive|Complete|Completed|In Progress|Under Review|Signed|Unsigned|Certified|Declined|Cancelled|Canceled|Awarded|Won|Lost)$/i;

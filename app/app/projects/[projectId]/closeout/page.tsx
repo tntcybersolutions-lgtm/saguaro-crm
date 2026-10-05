@@ -392,13 +392,13 @@ export default function CloseoutPage() {
                       a closeout gate that rubber-stamps on an error is worse
                       than no gate. */}
                   {gate.unchecked.length > 0 && (
-                    <span style={{ fontSize: 11.5, color: '#FF3B30', fontWeight: 700, alignSelf: 'center' }}>
+                    <span style={{ fontSize: 11.5, color: 'var(--danger)', fontWeight: 700, alignSelf: 'center' }}>
                       Could not check: {gate.unchecked.join(', ')}
                     </span>
                   )}
                 </div>
               )}
-              {closeErr && <div style={{ marginTop: 10, fontSize: 12, color: '#FF3B30' }}>{closeErr}</div>}
+              {closeErr && <div style={{ marginTop: 10, fontSize: 12, color: 'var(--danger)' }}>{closeErr}</div>}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'stretch' }}>
@@ -447,7 +447,7 @@ export default function CloseoutPage() {
           {href: `/app/projects/${projectId}/closeout`,  label: 'Billed to Date', value: fmtM(billed), sub: `${billedPct}% of revised` },
           {href: `/app/projects/${projectId}/closeout`,  label: 'Balance to Finish', value: fmtM(balanceToFinish), accent: balanceAccent, sub: balanceSub },
           {href: `/app/projects/${projectId}/closeout`,  label: 'Retainage Held', value: `≈${fmtM(retainageHeld)}`, sub: `${Number(money?.retainagePct) || 0}% — releases at closeout` },
-          {href: `/app/projects/${projectId}/punch-list`,  label: 'Open Punch', value: String(openPunch), accent: openPunch > 0 ? '#FF3B30' : T.green, sub: openPunch > 0 ? 'Blocks final inspection' : 'List is clear' },
+          {href: `/app/projects/${projectId}/punch-list`,  label: 'Open Punch', value: String(openPunch), accent: openPunch > 0 ? 'var(--danger)' : T.green, sub: openPunch > 0 ? 'Blocks final inspection' : 'List is clear' },
           {href: `/app/projects/${projectId}/closeout`,  label: 'Subs to Clear', value: String(subCount), sub: 'Final waivers + W-9s' },
         ]} />
       )}
@@ -536,11 +536,11 @@ export default function CloseoutPage() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
-              {item.status === 'complete' && <Check size={14} weight="bold" color="#000" />}
+              {item.status === 'complete' && <Check size={14} weight="bold" color="var(--bg-base)" />}
             </button>
             <div style={{ flex: 1, minWidth: 0 }}>
               <span style={{
-                fontSize: 14, color: item.status === 'complete' ? T.green : '#FFFFFF',
+                fontSize: 14, color: item.status === 'complete' ? T.green : 'var(--text-primary)',
                 textDecoration: item.status === 'complete' ? 'line-through' : 'none',
               }}>
                 {item.label}
@@ -585,7 +585,7 @@ export default function CloseoutPage() {
             <InsightRow label="Billed to Date" value={`${fmtM(billed)} · ${billedPct}%`} />
             <InsightRow label="Balance to Finish" value={fmtM(balanceToFinish)} accent={balanceAccent} />
             <InsightRow label="Retainage Held" value={`≈${fmtM(retainageHeld)}`} />
-            <InsightRow label="Open Punch Items" value={String(openPunch)} accent={openPunch > 0 ? '#FF3B30' : T.green} />
+            <InsightRow label="Open Punch Items" value={String(openPunch)} accent={openPunch > 0 ? 'var(--danger)' : T.green} />
             <InsightRow label="Subs to Clear" value={String(subCount)} />
             {lastApp && <InsightRow label={`Pay App #${lastApp.appNumber}`} value={String(lastApp.status || '—').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())} />}
           </SectionCard>

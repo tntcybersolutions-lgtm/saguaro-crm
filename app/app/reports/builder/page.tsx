@@ -32,11 +32,11 @@ import {
 // ── Surface tokens (white-label safe — gold rides the brand CSS vars) ──
 const GOLD = 'var(--brand-primary)';
 const GOLD_HI = 'var(--brand-primary-strong)';
-const WHITE = '#FFFFFF';
+const WHITE = 'var(--text-primary)';
 const MUTED = 'rgba(255,255,255,0.62)';
 const FAINT = 'rgba(255,255,255,0.42)';
 const BORDER = 'rgba(255,255,255,0.08)';
-const RED = '#FF3B30';
+const RED = 'var(--danger)';
 
 // ── Local types ────────────────────────────────────────────────
 interface FilterRow {

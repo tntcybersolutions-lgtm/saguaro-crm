@@ -15,8 +15,8 @@ const GREEN = '#2CFF7A';
 const BLUE = 'var(--brand-primary)';
 const RED = '#FF3B30';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#D4D4D8';
-const TEXT = '#FFFFFF';
+const DIM = 'var(--text-secondary)';
+const TEXT = 'var(--text-primary)';
 
 interface CableRun {
   id: string;
@@ -44,13 +44,13 @@ const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   cat5e: { bg: 'var(--brand-primary-12)', text: BLUE },
   cat6: { bg: `${GREEN}20`, text: GREEN },
   cat6a: { bg: 'var(--brand-primary-12)', text: GOLD },
-  fiber_sm: { bg: '#F9731620', text: '#FF8A00' },
-  fiber_mm: { bg: '#8B5CF620', text: '#FF8A00' },
-  coax_rg6: { bg: '#6B728020', text: '#A3ACBB' },
-  coax_rg59: { bg: '#6B728020', text: '#A3ACBB' },
-  speaker: { bg: '#14B8A620', text: '#2CFF7A' },
+  fiber_sm: { bg: '#F9731620', text: 'var(--warning)' },
+  fiber_mm: { bg: '#8B5CF620', text: 'var(--warning)' },
+  coax_rg6: { bg: '#6B728020', text: 'var(--status-closed)' },
+  coax_rg59: { bg: '#6B728020', text: 'var(--status-closed)' },
+  speaker: { bg: '#14B8A620', text: 'var(--success)' },
   hdmi: { bg: `${RED}20`, text: RED },
-  usb: { bg: '#EC489920', text: '#FF8A00' },
+  usb: { bg: '#EC489920', text: 'var(--warning)' },
 };
 
 const CABLE_LABELS: Record<string, string> = {

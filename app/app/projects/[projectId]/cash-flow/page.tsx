@@ -12,8 +12,8 @@ import {
   Table as TableIcon, Buildings, WarningCircle, CaretDown, ArrowsClockwise,
 } from '@phosphor-icons/react';
 
-const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)', DIM = '#D4D4D8', TEXT = '#FFFFFF';
-const GREEN = '#2CFF7A', RED = '#FF3B30';
+const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)', DIM = 'var(--text-secondary)', TEXT = 'var(--text-primary)';
+const GREEN = 'var(--success)', RED = 'var(--danger)';
 
 const fmt = (n: number) => '$' + (n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtK = (n: number) => {
@@ -191,8 +191,8 @@ function CashFlowContent() {
       {toast && (
         <div style={{
           position: 'fixed', top: 24, right: 24, zIndex: 9999,
-          background: toast.ok ? '#2CFF7A' : '#FF3B30',
-          color: '#fff', padding: '12px 24px', borderRadius: 8,
+          background: toast.ok ? 'var(--success)' : 'var(--danger)',
+          color: 'var(--text-primary)', padding: '12px 24px', borderRadius: 8,
           border: `1px solid ${toast.ok ? GREEN : RED}`,
           fontSize: 13, fontWeight: 600, boxShadow: '0 4px 20px rgba(0,0,0,.5)',
         }}>
@@ -249,9 +249,9 @@ function CashFlowContent() {
           padding: '14px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12,
           animation: 'dangerPulse 2s ease-in-out infinite',
         }}>
-          <WarningCircle size={22} weight="fill" color="#ff6b6b" />
+          <WarningCircle size={22} weight="fill" color="var(--danger)" />
           <div>
-            <div style={{ color: '#ff6b6b', fontWeight: 700, fontSize: 14 }}>Negative Cash Flow Detected</div>
+            <div style={{ color: 'var(--danger)', fontWeight: 700, fontSize: 14 }}>Negative Cash Flow Detected</div>
             <div style={{ color: DIM, fontSize: 12 }}>Running balance goes negative in projected periods. Review payment schedules.</div>
           </div>
         </div>
@@ -327,7 +327,7 @@ function CashFlowContent() {
 
                 {/* Month label */}
                 <div style={{
-                  fontSize: 10, color: isDanger ? '#ff6b6b' : DIM, fontWeight: isDanger ? 700 : 500,
+                  fontSize: 10, color: isDanger ? 'var(--danger)' : DIM, fontWeight: isDanger ? 700 : 500,
                   marginTop: 6, textAlign: 'center' as const,
                 }}>
                   {period.month}
@@ -394,7 +394,7 @@ function CashFlowContent() {
                 </div>
                 <div style={{
                   textAlign: 'right' as const, fontWeight: 700,
-                  color: isDanger ? '#ff6b6b' : TEXT,
+                  color: isDanger ? 'var(--danger)' : TEXT,
                 }}>
                   {fmt(period.running_balance)}
                 </div>

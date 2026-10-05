@@ -12,9 +12,9 @@ import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldBu
 import { ListToolbar } from '@/components/ui/ListToolbar';
 
 /* ─── Palette ─── */
-const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#2CFF7A';
-const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#D4D4D8', DARK = 'var(--bg-base)';
-const RED = '#FF3B30', AMBER = 'var(--warning)', BLUE = 'var(--brand-primary)', PURPLE = '#FF8A00';
+const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = 'var(--success)';
+const BORDER = 'rgba(255,255,255,0.12)', TEXT = 'var(--text-primary)', DIM = 'var(--text-secondary)', DARK = 'var(--bg-base)';
+const RED = 'var(--danger)', AMBER = 'var(--warning)', BLUE = 'var(--brand-primary)', PURPLE = 'var(--warning)';
 /* Colors are CSS vars now, so a hex alpha suffix no longer works — tint with color-mix. */
 const mix = (c: string, pct: number) => `color-mix(in srgb, ${c} ${pct}%, transparent)`;
 
@@ -407,7 +407,7 @@ export default function CustomersPage() {
                   onClick={(e) => e.stopPropagation()}
                   style={{ width: '100%', maxWidth: 520, background: 'var(--bg-surface)', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20, boxShadow: '0 30px 80px -20px rgba(0,0,0,0.8)' }}
                 >
-                  <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Email {c.name}</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>Email {c.name}</div>
                   <div style={{ fontSize: 12, color: DIM, marginBottom: 16 }}>To: {c.email}</div>
                   <div style={{ display: 'grid', gap: 12 }}>
                     <input

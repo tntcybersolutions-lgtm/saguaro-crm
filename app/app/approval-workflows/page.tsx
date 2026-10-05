@@ -19,13 +19,13 @@ const GOLD = 'var(--brand-primary)';
 const BG = 'var(--bg-base)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = '#2C3344';
-const TEXT = '#FFFFFF';
-const DIM = '#D4D4D8';
-const GREEN = '#2CFF7A';
-const RED = '#FF3B30';
+const TEXT = 'var(--text-primary)';
+const DIM = 'var(--text-secondary)';
+const GREEN = 'var(--success)';
+const RED = 'var(--danger)';
 const AMBER = 'var(--warning)';
 const BLUE = 'var(--brand-primary)';
-const PURPLE = '#FF8A00';
+const PURPLE = 'var(--warning)';
 
 /* ── entity types = real approvable modules ── */
 type EntityType = 'change_order' | 'pay_app' | 'purchase_order' | 'invoice';
@@ -440,17 +440,17 @@ export default function ApprovalWorkflowsPage() {
 
   const tabButton = (t: Tab, label: string, Icon: React.ElementType, count?: number) => (
     <button key={t} onClick={() => setTab(t)} style={{
-      ...btnBase(t === tab ? GOLD : BORDER, t === tab ? '#0A0A00' : DIM, t !== tab),
+      ...btnBase(t === tab ? GOLD : BORDER, t === tab ? 'var(--on-brand)' : DIM, t !== tab),
       background: t === tab
         ? 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))'
         : 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
-      color: t === tab ? '#0A0A00' : DIM,
+      color: t === tab ? 'var(--on-brand)' : DIM,
       border: `1px solid ${t === tab ? 'transparent' : 'var(--border-default)'}`, position: 'relative',
       boxShadow: t === tab ? '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' : 'none',
     }}>
       <Icon size={15} weight={t === tab ? 'fill' : 'bold'} />{label}
       {count !== undefined && count > 0 && (
-        <span style={{ marginLeft: 2, background: t === tab ? '#00000022' : RED, color: t === tab ? '#000' : '#fff', borderRadius: 10, minWidth: 18, height: 18, padding: '0 5px', fontSize: 10, fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{count}</span>
+        <span style={{ marginLeft: 2, background: t === tab ? '#00000022' : RED, color: t === tab ? 'var(--bg-base)' : 'var(--text-primary)', borderRadius: 10, minWidth: 18, height: 18, padding: '0 5px', fontSize: 10, fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{count}</span>
       )}
     </button>
   );
@@ -498,7 +498,7 @@ export default function ApprovalWorkflowsPage() {
         .aw-row:hover { background: rgba(255,255,255,0.05) !important; }
       `}</style>
       {toast && (
-        <div style={{ position: 'fixed', top: 20, right: 20, background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', color: '#0A0A00', padding: '10px 22px', borderRadius: 'var(--radius-md)', fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: 'var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.35)', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ position: 'fixed', top: 20, right: 20, background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', color: 'var(--on-brand)', padding: '10px 22px', borderRadius: 'var(--radius-md)', fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: 'var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.35)', display: 'flex', alignItems: 'center', gap: 8 }}>
           <CheckCircle size={16} weight="fill" />{toast}
         </div>
       )}
@@ -602,8 +602,8 @@ export default function ApprovalWorkflowsPage() {
                         </td>
                         <td style={tdStyle}>
                           <div style={{ display: 'flex', gap: 6 }}>
-                            <button style={{ ...btnBase(GREEN, '#fff'), padding: '5px 11px', fontSize: 12 }} onClick={() => { setActionItem(p); setActionComment(''); }}><CheckCircle size={14} weight="bold" />Approve</button>
-                            <button style={{ ...btnBase(RED, '#fff', true), padding: '5px 11px', fontSize: 12 }} onClick={() => { setActionItem(p); setActionComment(''); }}><XCircle size={14} weight="bold" />Reject</button>
+                            <button style={{ ...btnBase(GREEN, 'var(--text-primary)'), padding: '5px 11px', fontSize: 12 }} onClick={() => { setActionItem(p); setActionComment(''); }}><CheckCircle size={14} weight="bold" />Approve</button>
+                            <button style={{ ...btnBase(RED, 'var(--text-primary)', true), padding: '5px 11px', fontSize: 12 }} onClick={() => { setActionItem(p); setActionComment(''); }}><XCircle size={14} weight="bold" />Reject</button>
                           </div>
                         </td>
                       </tr>
@@ -945,9 +945,9 @@ export default function ApprovalWorkflowsPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 28, paddingTop: 18, borderTop: `1px solid ${BORDER}` }}>
               <button style={btnBase(BORDER, DIM, true)} onClick={() => wizardStep > 0 ? setWizardStep(wizardStep - 1) : setShowWizard(false)}>{wizardStep === 0 ? 'Cancel' : 'Back'}</button>
               {wizardStep < 2 ? (
-                <button style={{ ...btnBase(GOLD, '#0A0A00'), opacity: wizardStep === 0 && !wfName.trim() ? 0.4 : 1, pointerEvents: wizardStep === 0 && !wfName.trim() ? 'none' : 'auto' }} onClick={() => setWizardStep(wizardStep + 1)}>Next</button>
+                <button style={{ ...btnBase(GOLD, 'var(--on-brand)'), opacity: wizardStep === 0 && !wfName.trim() ? 0.4 : 1, pointerEvents: wizardStep === 0 && !wfName.trim() ? 'none' : 'auto' }} onClick={() => setWizardStep(wizardStep + 1)}>Next</button>
               ) : (
-                <button style={{ ...btnBase(GREEN, '#fff'), opacity: !wfName.trim() || wfSteps.length === 0 || busy ? 0.5 : 1, pointerEvents: !wfName.trim() || wfSteps.length === 0 || busy ? 'none' : 'auto' }} onClick={saveWorkflow}>
+                <button style={{ ...btnBase(GREEN, 'var(--text-primary)'), opacity: !wfName.trim() || wfSteps.length === 0 || busy ? 0.5 : 1, pointerEvents: !wfName.trim() || wfSteps.length === 0 || busy ? 'none' : 'auto' }} onClick={saveWorkflow}>
                   <CheckCircle size={15} weight="bold" />{editing ? 'Save Changes' : 'Create Workflow'}
                 </button>
               )}
@@ -990,8 +990,8 @@ export default function ApprovalWorkflowsPage() {
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
               <button style={btnBase(BORDER, DIM, true)} onClick={() => setActionItem(null)}>Cancel</button>
-              <button style={{ ...btnBase(RED, '#fff'), opacity: busy ? 0.5 : 1, pointerEvents: busy ? 'none' : 'auto' }} onClick={() => decide('rejected')}><XCircle size={15} weight="bold" />Reject</button>
-              <button style={{ ...btnBase(GREEN, '#fff'), opacity: busy ? 0.5 : 1, pointerEvents: busy ? 'none' : 'auto' }} onClick={() => decide('approved')}><CheckCircle size={15} weight="bold" />Approve</button>
+              <button style={{ ...btnBase(RED, 'var(--text-primary)'), opacity: busy ? 0.5 : 1, pointerEvents: busy ? 'none' : 'auto' }} onClick={() => decide('rejected')}><XCircle size={15} weight="bold" />Reject</button>
+              <button style={{ ...btnBase(GREEN, 'var(--text-primary)'), opacity: busy ? 0.5 : 1, pointerEvents: busy ? 'none' : 'auto' }} onClick={() => decide('approved')}><CheckCircle size={15} weight="bold" />Approve</button>
             </div>
           </div>
         </div>
@@ -1052,7 +1052,7 @@ export default function ApprovalWorkflowsPage() {
             <p style={{ color: DIM, fontSize: 14, marginBottom: 20, lineHeight: 1.5 }}>Permanently delete <strong style={{ color: TEXT }}>{deleteWf.name}</strong>? This cannot be undone.</p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
               <button style={btnBase(BORDER, DIM, true)} onClick={() => setDeleteWf(null)}>Cancel</button>
-              <button style={{ ...btnBase(RED, '#fff'), opacity: busy ? 0.5 : 1, pointerEvents: busy ? 'none' : 'auto' }} onClick={() => doDeleteWorkflow(deleteWf)}>Delete Workflow</button>
+              <button style={{ ...btnBase(RED, 'var(--text-primary)'), opacity: busy ? 0.5 : 1, pointerEvents: busy ? 'none' : 'auto' }} onClick={() => doDeleteWorkflow(deleteWf)}>Delete Workflow</button>
             </div>
           </div>
         </div>
@@ -1092,7 +1092,7 @@ export default function ApprovalWorkflowsPage() {
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 24, paddingTop: 18, borderTop: `1px solid ${BORDER}` }}>
               <button style={btnBase(BORDER, DIM, true)} onClick={() => setShowDel(false)}>Cancel</button>
-              <button style={{ ...btnBase(GREEN, '#fff'), opacity: !delTo || !delStart || !delEnd || busy ? 0.5 : 1, pointerEvents: !delTo || !delStart || !delEnd || busy ? 'none' : 'auto' }} onClick={saveDelegation}>Create Delegation</button>
+              <button style={{ ...btnBase(GREEN, 'var(--text-primary)'), opacity: !delTo || !delStart || !delEnd || busy ? 0.5 : 1, pointerEvents: !delTo || !delStart || !delEnd || busy ? 'none' : 'auto' }} onClick={saveDelegation}>Create Delegation</button>
             </div>
           </div>
         </div>

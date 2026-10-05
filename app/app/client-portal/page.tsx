@@ -7,8 +7,8 @@ import { PremiumSurface, ModuleHero, StatStrip, SectionCard, PremiumEmpty } from
 import { UsersThree, ChatCircleDots, Buildings, ClockCounterClockwise, ListChecks } from '@phosphor-icons/react';
 
 /* ── palette ──────────────────────────────────────────── */
-const GOLD='var(--brand-primary)',BG='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',TEXT='#FFFFFF',DIM='#D4D4D8';
-const GREEN='#2CFF7A',RED='#FF3B30',AMBER='var(--warning)',BLUE='var(--brand-primary)',PURPLE='#FF8A00';
+const GOLD='var(--brand-primary)',BG='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',TEXT='var(--text-primary)',DIM='var(--text-secondary)';
+const GREEN='#2CFF7A',RED='var(--danger)',AMBER='var(--warning)',BLUE='var(--brand-primary)',PURPLE='var(--warning)';
 
 /* ── types ────────────────────────────────────────────── */
 type PortalStatus = 'active' | 'pending' | 'disabled';
@@ -66,7 +66,7 @@ function defaultPerms(): Record<string, boolean> {
 
 /* ── shared inline styles ─────────────────────────────── */
 const card: React.CSSProperties = { background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: 20 };
-const btnGold: React.CSSProperties = { padding: '9px 20px', background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', color: '#0A0A00', borderRadius: 8, fontWeight: 800, fontSize: 13, border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' };
+const btnGold: React.CSSProperties = { padding: '9px 20px', background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', color: 'var(--on-brand)', borderRadius: 8, fontWeight: 800, fontSize: 13, border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' };
 const btnOutline: React.CSSProperties = { padding: '8px 16px', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, cursor: 'pointer' };
 const btnDanger: React.CSSProperties = { padding: '8px 16px', background: 'transparent', border: `1px solid ${RED}`, borderRadius: 8, color: RED, fontSize: 13, cursor: 'pointer' };
 const inputS: React.CSSProperties = { padding: '9px 14px', background: 'var(--bg-surface-2)', border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const };
@@ -95,7 +95,7 @@ function Toggle({ on, onToggle, label }: { on: boolean; onToggle: () => void; la
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }} onClick={onToggle}>
       <div style={{ width: 36, height: 20, borderRadius: 10, background: on ? GREEN : BORDER, position: 'relative', transition: 'background .2s' }}>
-        <div style={{ width: 16, height: 16, borderRadius: 8, background: '#fff', position: 'absolute', top: 2, left: on ? 18 : 2, transition: 'left .2s' }} />
+        <div style={{ width: 16, height: 16, borderRadius: 8, background: 'var(--text-primary)', position: 'absolute', top: 2, left: on ? 18 : 2, transition: 'left .2s' }} />
       </div>
       {label && <span style={{ fontSize: 13, color: TEXT }}>{label}</span>}
     </div>
@@ -713,7 +713,7 @@ export default function ClientPortalPage() {
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
               <button onClick={() => setConfirmDisable(null)} style={btnOutline}>Cancel</button>
               <button onClick={() => toggleUserStatus(confirmDisable, 'disabled')}
-                style={{ ...btnDanger, background: RED, color: '#fff' }}>Disable Access</button>
+                style={{ ...btnDanger, background: RED, color: 'var(--text-primary)' }}>Disable Access</button>
             </div>
           </div>
         )}
@@ -757,7 +757,7 @@ export default function ClientPortalPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                   <span style={{ fontWeight: 600, fontSize: 13, color: TEXT }}>{t.user.name}</span>
                   {t.unread > 0 && (
-                    <span style={{ width: 20, height: 20, borderRadius: 10, background: GOLD, color: '#0A0A00', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ width: 20, height: 20, borderRadius: 10, background: GOLD, color: 'var(--on-brand)', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {t.unread}
                     </span>
                   )}

@@ -49,8 +49,8 @@ export function FileCropper({ fileId, url, name, onDone, onClose }: {
       <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-surface)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 14, padding: 16, width: 'min(720px,100%)', maxHeight: '92vh', overflow: 'auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
           <Crop size={18} color="var(--brand-primary)" weight="fill" />
-          <div style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: '#fff' }}>Edit Image</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} color="#D4D4D8" /></button>
+          <div style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: 'var(--text-primary)' }}>Edit Image</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} color="var(--text-secondary)" /></button>
         </div>
         <div
           ref={wrapRef}
@@ -69,14 +69,14 @@ export function FileCropper({ fileId, url, name, onDone, onClose }: {
           <button onClick={() => setRotate((r) => (r - 90) % 360)} style={btn}><ArrowCounterClockwise size={16} />Rotate Left</button>
           <button onClick={() => setRotate((r) => (r + 90) % 360)} style={btn}><ArrowClockwise size={16} />Rotate Right</button>
           <button onClick={() => setRect(null)} style={btn}>Clear Box</button>
-          <span style={{ color: '#A3ACBB', fontSize: 12, marginLeft: 4 }}>Drag on the image to crop</span>
+          <span style={{ color: 'var(--status-closed)', fontSize: 12, marginLeft: 4 }}>Drag on the image to crop</span>
           <div style={{ flex: 1 }} />
-          {err && <span style={{ color: '#FF6B6B', fontSize: 12 }}>{err}</span>}
-          <button onClick={apply} disabled={busy} style={{ ...btn, background: 'var(--brand-primary)', color: '#0A0A00', fontWeight: 800, border: 'none' }}><Check size={16} weight="bold" />{busy ? 'Saving…' : 'Apply'}</button>
+          {err && <span style={{ color: 'var(--danger)', fontSize: 12 }}>{err}</span>}
+          <button onClick={apply} disabled={busy} style={{ ...btn, background: 'var(--brand-primary)', color: 'var(--on-brand)', fontWeight: 800, border: 'none' }}><Check size={16} weight="bold" />{busy ? 'Saving…' : 'Apply'}</button>
         </div>
       </div>
     </div>
   );
 }
 
-const btn: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 5, background: 'var(--bg-surface-2)', color: '#fff', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '8px 13px', fontSize: 13, cursor: 'pointer' };
+const btn: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 5, background: 'var(--bg-surface-2)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '8px 13px', fontSize: 13, cursor: 'pointer' };

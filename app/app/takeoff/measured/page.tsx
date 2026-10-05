@@ -35,7 +35,7 @@ type TracerTargetingProps = {
 const PlanTracer = dynamic<React.ComponentProps<(typeof import('./PlanTracer'))['default']> & TracerTargetingProps>(() => import('./PlanTracer'), { ssr: false });
 
 const BG = 'var(--bg-base)', PANEL = 'var(--bg-surface)', LINE = 'rgba(255,255,255,0.09)', GOLD = 'var(--brand-primary)';
-const TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#2CFF7A', RED = '#FF3B30';
+const TEXT = 'var(--text-secondary)', DIM = 'var(--text-tertiary)', GREEN = 'var(--success)', RED = 'var(--danger)';
 const uid = () => Math.random().toString(36).slice(2, 9);
 // Bespoke "Crafted Two-Tone" icon (steel + gold) — the approved family, never emoji glyphs.
 function Ic({ name, s = 20, k = '' }: { name: string; s?: number; k?: string }) {
@@ -86,7 +86,7 @@ const proxyConfidence = (hasAsm: boolean, count: number): number => {
 };
 const confColor = (c: number) => (c >= 70 ? GREEN : c >= 45 ? GOLD : RED);
 type RevChange = { type: string; trade: string; description: string; location: string; costImpact: string; confidence: number | null };
-const impactColor = (i: string) => i === 'increase' ? '#FF3B30' : i === 'decrease' ? '#2CFF7A' : '#8b949e';
+const impactColor = (i: string) => i === 'increase' ? 'var(--danger)' : i === 'decrease' ? 'var(--success)' : 'var(--text-tertiary)';
 
 // ── document-type importers (CSV/Excel + DXF) ──
 /** exact SF of a closed DXF polyline: shoelace on its pts × (ft/unit)². */
@@ -434,7 +434,7 @@ function MeasuredTakeoffInner() {
     const proj = projects.find((p) => p.id === projectId);
     const priorName = priorList.find((p) => p.id === priorId)?.name || 'prior revision';
     const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    const rows = coScopeLines(changed).map((s) => `<tr><td class="v">${s.verb}</td><td>${escapeHtml(s.name)}</td><td class="q">${escapeHtml(s.qty)}</td><td class="d" style="color:${s.delta.startsWith('+') ? '#0a7d3c' : '#b42318'}">${s.delta}</td></tr>`).join('');
+    const rows = coScopeLines(changed).map((s) => `<tr><td class="v">${s.verb}</td><td>${escapeHtml(s.name)}</td><td class="q">${escapeHtml(s.qty)}</td><td class="d" style="color:${s.delta.startsWith('+') ? 'var(--success)' : 'var(--danger)'}">${s.delta}</td></tr>`).join('');
     const net = revDiff.netDeltaCents;
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>Change Order</title>
 <style>*{box-sizing:border-box}body{font:14px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;color:#111;margin:0;padding:40px}
@@ -445,7 +445,7 @@ th{text-align:left;padding:8px 10px;background:#f6f6f4;border-bottom:2px solid #
 td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444;white-space:nowrap}td.q{color:#555;white-space:nowrap}td.d{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
 .net{margin-top:18px;display:flex;justify-content:space-between;align-items:center;border:2px solid #111;border-radius:12px;padding:16px 18px}
 .net .lbl{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:#666;font-weight:700}
-.net .amt{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;color:${net >= 0 ? '#0a7d3c' : '#b42318'}}
+.net .amt{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;color:${net >= 0 ? 'var(--success)' : 'var(--danger)'}}
 .net .was{font-size:12px;color:#666;text-align:right;margin-top:2px}.foot{margin-top:26px;font-size:11px;color:#999;border-top:1px solid #eee;padding-top:12px}</style></head>
 <body><div class="sub"><span class="brand">Saguaro Control Systems</span> · Control Every Project. Deliver Every Promise.</div>
 <h1>Change Order</h1>
@@ -748,7 +748,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
   };
 
   const inp: React.CSSProperties = { background: 'var(--bg-base)', border: `1px solid ${LINE}`, borderRadius: 8, color: TEXT, padding: '9px 11px', fontSize: 14, width: '100%' };
-  const btn: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'linear-gradient(135deg,var(--brand-primary),var(--brand-primary-strong))', color: '#0A0A00', fontWeight: 800, border: 'none', borderRadius: 10, padding: '10px 18px', cursor: 'pointer', fontSize: 14 };
+  const btn: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'linear-gradient(135deg,var(--brand-primary),var(--brand-primary-strong))', color: 'var(--on-brand)', fontWeight: 800, border: 'none', borderRadius: 10, padding: '10px 18px', cursor: 'pointer', fontSize: 14 };
   const pillBtn: React.CSSProperties = { background: 'transparent', color: TEXT, border: `1px solid ${LINE}`, borderRadius: 20, padding: '5px 12px', cursor: 'pointer', fontWeight: 700, fontSize: 12 };
   const wizRow: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', width: '100%', border: `1px solid ${LINE}`, background: BG, borderRadius: 12, padding: '13px 14px', cursor: 'pointer' };
   const wizRowT: React.CSSProperties = { fontWeight: 800, fontSize: 14, color: TEXT };
@@ -924,7 +924,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                   </div>
                 ));
               })()}
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 12px', fontSize: 14, fontWeight: 800, color: '#0A0A00', background: 'linear-gradient(135deg,var(--brand-primary-strong),var(--brand-primary))' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 12px', fontSize: 14, fontWeight: 800, color: 'var(--on-brand)', background: 'linear-gradient(135deg,var(--brand-primary-strong),var(--brand-primary))' }}>
                 <span>Sell Price</span><span style={{ fontVariantNumeric: 'tabular-nums' }}>{usd(r.sellCents)}</span>
               </div>
             </div>
@@ -948,14 +948,14 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               {r.alternates.map((a) => (
                 <div key={a.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, padding: '3px 0' }}>
                   <span style={{ color: DIM }}>{a.label}</span>
-                  <span style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: a.type === 'deduct' ? '#FF3B30' : '#2CFF7A' }}>{a.type === 'deduct' ? '−' : '+'}{usd(Math.abs(a.deltaCents))}</span>
+                  <span style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: a.type === 'deduct' ? 'var(--danger)' : 'var(--success)' }}>{a.type === 'deduct' ? '−' : '+'}{usd(Math.abs(a.deltaCents))}</span>
                 </div>
               ))}
             </div>
           )}
 
           <button onClick={exportEstimate} disabled={!conditions.length} title="Cover, executive summary, division rollup, full line items, transparent markup stack & basis of estimate"
-            style={{ marginTop: 14, width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, border: 'none', borderRadius: 10, padding: '13px', cursor: conditions.length ? 'pointer' : 'not-allowed', opacity: conditions.length ? 1 : 0.5, fontWeight: 800, fontSize: 15, color: '#0A0A00', background: 'linear-gradient(135deg,var(--brand-primary-strong),var(--brand-primary))', boxShadow: '0 6px 18px var(--brand-primary-35)' }}>
+            style={{ marginTop: 14, width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, border: 'none', borderRadius: 10, padding: '13px', cursor: conditions.length ? 'pointer' : 'not-allowed', opacity: conditions.length ? 1 : 0.5, fontWeight: 800, fontSize: 15, color: 'var(--on-brand)', background: 'linear-gradient(135deg,var(--brand-primary-strong),var(--brand-primary))', boxShadow: '0 6px 18px var(--brand-primary-35)' }}>
             <Ic name="documents" s={20} k="estpdf" />Client Estimate PDF
             <span style={{ fontWeight: 600, fontSize: 12, color: 'rgba(13,17,23,0.7)' }}>· one-tap proposal</span>
           </button>
@@ -969,11 +969,11 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
           <div style={{ display: 'flex', gap: 8, marginTop: 9 }}>
             <button onClick={() => createRevision(false)} disabled={!conditions.length} title="Clone this takeoff as a new revision (version chain) — re-prices with the same markups"
               style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, borderRadius: 10, padding: '10px', cursor: conditions.length ? 'pointer' : 'not-allowed', opacity: conditions.length ? 1 : 0.5, fontWeight: 700, fontSize: 13, color: TEXT, background: 'transparent', border: `1px solid ${LINE}` }}>
-              <GitDiff size={16} weight="bold" color="#FF8A00" />New revision
+              <GitDiff size={16} weight="bold" color="var(--warning)" />New revision
             </button>
             <button onClick={() => createRevision(true)} disabled={!conditions.length} title="Clone as an addendum in the version chain"
               style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, borderRadius: 10, padding: '10px', cursor: conditions.length ? 'pointer' : 'not-allowed', opacity: conditions.length ? 1 : 0.5, fontWeight: 700, fontSize: 13, color: TEXT, background: 'transparent', border: `1px solid ${LINE}` }}>
-              <Note size={16} weight="bold" color="#FF8A00" />Addendum
+              <Note size={16} weight="bold" color="var(--warning)" />Addendum
             </button>
           </div>
 
@@ -1003,7 +1003,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 800, fontSize: 14, color: TEXT }}><CheckCircle size={18} weight="fill" color={GREEN} />Documents Generated</div>
                 <div style={{ fontSize: 12.5, color: DIM, marginTop: 3 }}>{chainResult.packagesCreated} bid package{chainResult.packagesCreated === 1 ? '' : 's'} · {chainResult.jacketsGenerated} jacket PDF{chainResult.jacketsGenerated === 1 ? '' : 's'}{chainResult.sovCreated ? ' · Schedule of Values + pay application' : ''}</div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-                  <a href={`/app/projects/${chainResult.projectId}/bid-packages`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 700, color: '#0A0A00', background: GOLD, borderRadius: 8, padding: '8px 12px', textDecoration: 'none' }}><Package size={15} weight="bold" />View Bid Packages<ArrowRight size={14} weight="bold" /></a>
+                  <a href={`/app/projects/${chainResult.projectId}/bid-packages`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 700, color: 'var(--on-brand)', background: GOLD, borderRadius: 8, padding: '8px 12px', textDecoration: 'none' }}><Package size={15} weight="bold" />View Bid Packages<ArrowRight size={14} weight="bold" /></a>
                   {chainResult.sovCreated && <a href={`/app/projects/${chainResult.projectId}/pay-apps`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 700, color: TEXT, border: `1px solid ${LINE}`, borderRadius: 8, padding: '8px 12px', textDecoration: 'none' }}><Receipt size={15} weight="bold" color={GOLD} />View Pay App (SOV)<ArrowRight size={14} weight="bold" /></a>}
                 </div>
               </div>
@@ -1028,7 +1028,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   <input readOnly value={shareUrl} onFocus={(ev) => ev.currentTarget.select()}
                     style={{ flex: 1, minWidth: 180, background: 'var(--bg-base)', border: `1px solid ${LINE}`, borderRadius: 8, color: TEXT, padding: '8px 10px', fontSize: 12, fontFamily: 'ui-monospace,monospace' }} />
-                  <a href={shareUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12.5, fontWeight: 700, color: '#0A0A00', background: GOLD, borderRadius: 8, padding: '8px 12px', textDecoration: 'none' }}><ArrowSquareOut size={14} weight="bold" />Preview</a>
+                  <a href={shareUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12.5, fontWeight: 700, color: 'var(--on-brand)', background: GOLD, borderRadius: 8, padding: '8px 12px', textDecoration: 'none' }}><ArrowSquareOut size={14} weight="bold" />Preview</a>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, color: GREEN, fontWeight: 700 }}>{shareCopied ? <><CheckCircle size={13} weight="fill" />Copied</> : <>Link Ready</>}</span>
@@ -1058,7 +1058,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                 <div style={{ display: 'inline-flex', gap: 6 }}>
                   {(['all', 'area', 'linear', 'count'] as const).map((k) => {
                     const on = libKind === k;
-                    return <button key={k} onClick={() => setLibKind(k)} style={{ ...pillBtn, background: on ? GOLD : 'transparent', color: on ? '#0A0A00' : TEXT, border: on ? 'none' : `1px solid ${LINE}`, textTransform: 'capitalize' }}>{k === 'all' ? 'All' : k === 'area' ? 'Area (SF)' : k === 'linear' ? 'Linear (LF)' : 'Count (EA)'}</button>;
+                    return <button key={k} onClick={() => setLibKind(k)} style={{ ...pillBtn, background: on ? GOLD : 'transparent', color: on ? 'var(--on-brand)' : TEXT, border: on ? 'none' : `1px solid ${LINE}`, textTransform: 'capitalize' }}>{k === 'all' ? 'All' : k === 'area' ? 'Area (SF)' : k === 'linear' ? 'Linear (LF)' : 'Count (EA)'}</button>;
                   })}
                 </div>
               </div>
@@ -1096,7 +1096,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         </SectionCard>
 
         {/* ── PRICED REVISION COMPARE — pick a prior saved takeoff, diff it against the current one, price the delta ── */}
-        <SectionCard icon={<GitDiff size={20} weight="duotone" color="#FF8A00" />} title="Compare to a Prior Revision" subtitle="Price only what changed against a saved baseline." accent="#FF8A00" style={{ marginTop: 14 }}>
+        <SectionCard icon={<GitDiff size={20} weight="duotone" color="var(--warning)" />} title="Compare to a Prior Revision" subtitle="Price only what changed against a saved baseline." accent="var(--warning)" style={{ marginTop: 14 }}>
 
           {!projectId ? (
             <div style={{ marginTop: 12, fontSize: 12.5, color: DIM }}>Open from a project to compare against its prior takeoffs.</div>
@@ -1104,7 +1104,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             <div style={{ marginTop: 12, fontSize: 12.5, color: DIM }}>No prior saved takeoffs for this project yet — save this one, revise it, then compare.</div>
           ) : (
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginTop: 12 }}>
-              <Stack size={16} weight="duotone" color="#FF8A00" style={{ flexShrink: 0 }} />
+              <Stack size={16} weight="duotone" color="var(--warning)" style={{ flexShrink: 0 }} />
               <select value={priorId} onChange={(e) => pickPrior(e.target.value)} style={{ ...inp, flex: 1, minWidth: 240 }}>
                 <option value="">— select a prior saved takeoff as the baseline —</option>
                 {priorList.map((t) => <option key={t.id} value={t.id}>{t.name} · {new Date(t.created_at).toLocaleDateString()}{t.sell_price ? ` · $${Math.round(t.sell_price).toLocaleString()}` : ''}</option>)}
@@ -1166,11 +1166,11 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                 {/* Draft change order (real route) + printable fallback */}
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 12, flexWrap: 'wrap' }}>
                   <button onClick={draftChangeOrder} disabled={coBusy || !projectId}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 9, padding: '11px 16px', cursor: (coBusy || !projectId) ? 'not-allowed' : 'pointer', opacity: (coBusy || !projectId) ? 0.55 : 1, fontWeight: 800, fontSize: 13.5, color: '#0A0A00', background: 'linear-gradient(135deg,#FF8A00,#FF8A00)' }}>
-                    {coBusy ? <><CircleNotch size={16} weight="bold" color="#0A0A00" style={{ animation: 'spin 0.7s linear infinite' }} />Filing…</> : <><Note size={17} weight="bold" color="#0A0A00" />Draft Change Order</>}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 9, padding: '11px 16px', cursor: (coBusy || !projectId) ? 'not-allowed' : 'pointer', opacity: (coBusy || !projectId) ? 0.55 : 1, fontWeight: 800, fontSize: 13.5, color: 'var(--on-brand)', background: 'linear-gradient(135deg,#FF8A00,#FF8A00)' }}>
+                    {coBusy ? <><CircleNotch size={16} weight="bold" color="var(--on-brand)" style={{ animation: 'spin 0.7s linear infinite' }} />Filing…</> : <><Note size={17} weight="bold" color="var(--on-brand)" />Draft Change Order</>}
                   </button>
-                  <button onClick={printChangeOrder} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'transparent', color: TEXT, border: `1px solid ${LINE}`, borderRadius: 9, padding: '11px 14px', cursor: 'pointer', fontWeight: 700, fontSize: 13 }}><Printer size={16} weight="duotone" color="#FF8A00" />Print CO</button>
-                  {coResult && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: GREEN }}><CheckCircle size={16} weight="fill" />CO{coResult.coNumber != null ? ` #${coResult.coNumber}` : ''} filed{projectId ? <a href={`/app/projects/${projectId}/change-orders`} style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: '#FF8A00', textDecoration: 'none', marginLeft: 2 }}>· view<ArrowRight size={13} weight="bold" /></a> : null}</span>}
+                  <button onClick={printChangeOrder} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'transparent', color: TEXT, border: `1px solid ${LINE}`, borderRadius: 9, padding: '11px 14px', cursor: 'pointer', fontWeight: 700, fontSize: 13 }}><Printer size={16} weight="duotone" color="var(--warning)" />Print CO</button>
+                  {coResult && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: GREEN }}><CheckCircle size={16} weight="fill" />CO{coResult.coNumber != null ? ` #${coResult.coNumber}` : ''} filed{projectId ? <a href={`/app/projects/${projectId}/change-orders`} style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: 'var(--warning)', textDecoration: 'none', marginLeft: 2 }}>· view<ArrowRight size={13} weight="bold" /></a> : null}</span>}
                   {coMsg && <span style={{ fontSize: 12.5, color: coMsg.startsWith('Couldn') ? RED : DIM }}>{coMsg}</span>}
                 </div>
               </div>
@@ -1181,8 +1181,8 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         {/* SPEC-AWARE CROSS-CHECK — your counted quantities vs the scheduled quantities on file (the edge nobody has) */}
         <SectionCard icon={<ClipboardText size={20} weight="duotone" color="var(--brand-primary-strong)" />} title="Check Against Schedules" subtitle="Cross-check counted quantities against the schedules on file." accent="var(--brand-primary-strong)" style={{ marginTop: 14 }} action={
           <button onClick={runSpecCheck} disabled={specBusy || !projectId || !specItems.length} title={!projectId ? 'Open from a project to cross-check' : !specItems.length ? 'Add a counted condition first' : ''}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 9, padding: '10px 16px', cursor: (specBusy || !projectId || !specItems.length) ? 'not-allowed' : 'pointer', opacity: (specBusy || !projectId || !specItems.length) ? 0.5 : 1, fontWeight: 800, fontSize: 13.5, color: '#0A0A00', background: 'linear-gradient(135deg,#FF8A00,var(--brand-primary-strong))', flexShrink: 0 }}>
-              {specBusy ? <><span style={{ width: 13, height: 13, borderRadius: 7, border: '2px solid #0A0A00', borderTopColor: 'transparent', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />Checking…</> : <><SealCheck size={17} weight="bold" color="#0A0A00" />Cross-check{specItems.length ? ` ${specItems.length} item${specItems.length === 1 ? '' : 's'}` : ''}</>}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 9, padding: '10px 16px', cursor: (specBusy || !projectId || !specItems.length) ? 'not-allowed' : 'pointer', opacity: (specBusy || !projectId || !specItems.length) ? 0.5 : 1, fontWeight: 800, fontSize: 13.5, color: 'var(--on-brand)', background: 'linear-gradient(135deg,#FF8A00,var(--brand-primary-strong))', flexShrink: 0 }}>
+              {specBusy ? <><span style={{ width: 13, height: 13, borderRadius: 7, border: '2px solid #0A0A00', borderTopColor: 'transparent', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />Checking…</> : <><SealCheck size={17} weight="bold" color="var(--on-brand)" />Cross-check{specItems.length ? ` ${specItems.length} item${specItems.length === 1 ? '' : 's'}` : ''}</>}
             </button>
         }>
           {!projectId && <div style={{ marginTop: 10, fontSize: 12.5, color: DIM }}>Open from a project to cross-check.</div>}
@@ -1312,7 +1312,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                 <input placeholder="Alternate label (e.g. ALT-1 upgrade flooring)" value={cAlt} onChange={(e) => setCAlt(e.target.value)} style={{ ...inp, flex: 1, minWidth: 160 }} />
                 {cAlt.trim() && (['add', 'deduct'] as const).map((t) => (
-                  <button key={t} onClick={() => setCAltType(t)} style={{ ...pillBtn, textTransform: 'capitalize', background: cAltType === t ? (t === 'add' ? '#FF8A00' : '#c0392b') : 'transparent', color: cAltType === t ? '#fff' : TEXT, border: cAltType === t ? 'none' : `1px solid ${LINE}` }}>{t}</button>
+                  <button key={t} onClick={() => setCAltType(t)} style={{ ...pillBtn, textTransform: 'capitalize', background: cAltType === t ? (t === 'add' ? 'var(--warning)' : 'var(--danger)') : 'transparent', color: cAltType === t ? 'var(--text-primary)' : TEXT, border: cAltType === t ? 'none' : `1px solid ${LINE}` }}>{t}</button>
                 ))}
               </div>
             </div>
@@ -1337,7 +1337,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                     <div style={{ flex: 1 }}><b>{c.name}</b>
                       {c.instanceCount && c.instanceCount > 1 ? <span style={{ marginLeft: 7, fontSize: 10.5, fontWeight: 800, color: '#16794a', background: '#eef7ee', borderRadius: 5, padding: '1px 6px' }}>×{c.instanceCount}</span> : null}
                       {(c.building || c.level || c.zone) ? <span style={{ marginLeft: 6, fontSize: 10.5, fontWeight: 700, color: DIM, border: `1px solid ${LINE}`, borderRadius: 5, padding: '1px 6px' }}>{[c.building, c.level && `L${c.level}`, c.zone].filter(Boolean).join('·')}</span> : null}
-                      {c.alternate ? <span style={{ marginLeft: 6, fontSize: 10.5, fontWeight: 800, color: c.alternateType === 'deduct' ? '#c0392b' : '#FF8A00', background: c.alternateType === 'deduct' ? 'rgba(192,57,43,0.12)' : 'rgba(47,107,255,0.12)', borderRadius: 5, padding: '1px 6px' }}>ALT {c.alternateType === 'deduct' ? '−' : '+'}</span> : null}
+                      {c.alternate ? <span style={{ marginLeft: 6, fontSize: 10.5, fontWeight: 800, color: c.alternateType === 'deduct' ? 'var(--danger)' : 'var(--warning)', background: c.alternateType === 'deduct' ? 'rgba(192,57,43,0.12)' : 'rgba(47,107,255,0.12)', borderRadius: 5, padding: '1px 6px' }}>ALT {c.alternateType === 'deduct' ? '−' : '+'}</span> : null}
                       {c.note ? <span title={c.note} style={{ marginLeft: 6, fontSize: 10.5, fontWeight: 700, color: GOLD, border: `1px solid var(--brand-primary-35)`, borderRadius: 5, padding: '1px 6px' }}>note</span> : null}
                       <div style={{ color: DIM, fontSize: 13, marginTop: 2, display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>{c.value > 0
                       ? <span>{c.value} {unit}{c.heightFt ? ` · ${c.heightFt}′` : ''}{c.thicknessIn ? ` · ${c.thicknessIn}″` : ''} → {lines.length} items</span>
@@ -1467,8 +1467,8 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                       <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>{confidence.reasons[0]}</div>
                     </div>
                   </div>
-                  <button onClick={exportEstimate} disabled={!conditions.length} style={{ marginTop: 12, width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9, border: 'none', borderRadius: 10, padding: '13px', cursor: conditions.length ? 'pointer' : 'not-allowed', opacity: conditions.length ? 1 : 0.5, fontWeight: 800, fontSize: 15, color: '#0A0A00', background: 'linear-gradient(135deg,var(--brand-primary-strong),var(--brand-primary))' }}>
-                    <Receipt size={19} weight="bold" color="#0A0A00" />Client Estimate PDF
+                  <button onClick={exportEstimate} disabled={!conditions.length} style={{ marginTop: 12, width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9, border: 'none', borderRadius: 10, padding: '13px', cursor: conditions.length ? 'pointer' : 'not-allowed', opacity: conditions.length ? 1 : 0.5, fontWeight: 800, fontSize: 15, color: 'var(--on-brand)', background: 'linear-gradient(135deg,var(--brand-primary-strong),var(--brand-primary))' }}>
+                    <Receipt size={19} weight="bold" color="var(--on-brand)" />Client Estimate PDF
                   </button>
                 </div>
               )}
@@ -1479,8 +1479,8 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               <button onClick={() => (wizStep === 0 ? closeWizard() : setWizStep((s) => s - 1))} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'transparent', color: TEXT, border: `1px solid ${LINE}`, borderRadius: 8, padding: '9px 14px', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>{wizStep === 0 ? 'Skip' : <><ArrowLeft size={15} weight="bold" />Back</>}</button>
               <span style={{ marginLeft: 'auto', fontSize: 12.5, color: DIM }}>Step {wizStep + 1} of {WIZ_STEPS.length} · {WIZ_STEPS[wizStep]}</span>
               {wizStep < 3
-                ? <button onClick={() => setWizStep((s) => s + 1)} style={{ ...btn, display: 'inline-flex', alignItems: 'center', gap: 6 }}>Next<ArrowRight size={15} weight="bold" color="#0A0A00" /></button>
-                : <button onClick={closeWizard} style={{ ...btn, display: 'inline-flex', alignItems: 'center', gap: 6 }}><CheckCircle size={16} weight="bold" color="#0A0A00" />Start Estimating</button>}
+                ? <button onClick={() => setWizStep((s) => s + 1)} style={{ ...btn, display: 'inline-flex', alignItems: 'center', gap: 6 }}>Next<ArrowRight size={15} weight="bold" color="var(--on-brand)" /></button>
+                : <button onClick={closeWizard} style={{ ...btn, display: 'inline-flex', alignItems: 'center', gap: 6 }}><CheckCircle size={16} weight="bold" color="var(--on-brand)" />Start Estimating</button>}
             </div>
           </div>
         </div>
@@ -1578,7 +1578,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 20px', borderTop: `1px solid ${LINE}`, flexWrap: 'wrap' }}>
               <div style={{ fontSize: 12.5, color: DIM }}>Unmatched rows are highlighted — pick an assembly to include them.</div>
               <button onClick={() => setQtyReview(null)} style={{ marginLeft: 'auto', background: 'transparent', color: TEXT, border: `1px solid ${LINE}`, borderRadius: 8, padding: '9px 14px', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>Cancel</button>
-              <button onClick={addQtyConditions} disabled={!qtyAddable} style={{ ...btn, opacity: qtyAddable ? 1 : 0.5, cursor: qtyAddable ? 'pointer' : 'not-allowed', display: 'inline-flex', alignItems: 'center', gap: 7 }}><CheckCircle size={17} weight="bold" color="#0A0A00" />Add {qtyAddable} condition{qtyAddable === 1 ? '' : 's'}</button>
+              <button onClick={addQtyConditions} disabled={!qtyAddable} style={{ ...btn, opacity: qtyAddable ? 1 : 0.5, cursor: qtyAddable ? 'pointer' : 'not-allowed', display: 'inline-flex', alignItems: 'center', gap: 7 }}><CheckCircle size={17} weight="bold" color="var(--on-brand)" />Add {qtyAddable} condition{qtyAddable === 1 ? '' : 's'}</button>
             </div>
           </div>
         </div>
@@ -1655,7 +1655,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 20px', borderTop: `1px solid ${LINE}`, position: 'sticky', bottom: 0, background: PANEL, borderBottomLeftRadius: 16, borderBottomRightRadius: 16, flexWrap: 'wrap' }}>
               <div style={{ fontSize: 12, color: DIM, display: 'inline-flex', alignItems: 'center', gap: 6, maxWidth: 320 }}><MagicWand size={15} weight="duotone" color={GOLD} />DXF gives exact quantities — no scale or tracing needed.</div>
               <button onClick={() => setDxfReview(null)} style={{ marginLeft: 'auto', background: 'transparent', color: TEXT, border: `1px solid ${LINE}`, borderRadius: 8, padding: '9px 14px', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>Cancel</button>
-              <button onClick={addDxfConditions} style={{ ...btn, display: 'inline-flex', alignItems: 'center', gap: 7 }}><CheckCircle size={17} weight="bold" color="#0A0A00" />Add Conditions</button>
+              <button onClick={addDxfConditions} style={{ ...btn, display: 'inline-flex', alignItems: 'center', gap: 7 }}><CheckCircle size={17} weight="bold" color="var(--on-brand)" />Add Conditions</button>
             </div>
           </div>
         </div>
@@ -1709,7 +1709,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 20px', borderTop: `1px solid ${LINE}`, flexWrap: 'wrap' }}>
               <div style={{ fontSize: 12.5, color: DIM }}>{reviewAddable} of {reviewQueue.items.length} ready to add.</div>
               <button onClick={() => setReviewQueue(null)} style={{ marginLeft: 'auto', background: 'transparent', color: TEXT, border: `1px solid ${LINE}`, borderRadius: 8, padding: '9px 14px', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>Cancel</button>
-              <button onClick={commitReview} disabled={!reviewAddable} style={{ ...btn, opacity: reviewAddable ? 1 : 0.5, cursor: reviewAddable ? 'pointer' : 'not-allowed', display: 'inline-flex', alignItems: 'center', gap: 7 }}><CheckCircle size={17} weight="bold" color="#0A0A00" />Add {reviewAddable} accepted</button>
+              <button onClick={commitReview} disabled={!reviewAddable} style={{ ...btn, opacity: reviewAddable ? 1 : 0.5, cursor: reviewAddable ? 'pointer' : 'not-allowed', display: 'inline-flex', alignItems: 'center', gap: 7 }}><CheckCircle size={17} weight="bold" color="var(--on-brand)" />Add {reviewAddable} accepted</button>
             </div>
           </div>
         </div>

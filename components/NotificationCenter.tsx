@@ -2,8 +2,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useGuardedRouter } from '@/lib/navGuard';
 
-const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-surface)', RAISED = 'var(--bg-surface-2)', BORDER = 'rgba(255,255,255,0.12)', DIM = '#D4D4D8', TEXT = '#FFFFFF';
-const RED = '#FF3B30', AMBER = 'var(--warning)';
+const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-surface)', RAISED = 'var(--bg-surface-2)', BORDER = 'rgba(255,255,255,0.12)', DIM = 'var(--text-secondary)', TEXT = 'var(--text-primary)';
+const RED = 'var(--danger)', AMBER = 'var(--warning)';
 
 interface Notification {
   id: string;
@@ -261,7 +261,7 @@ export default function NotificationCenter() {
               height: 18,
               borderRadius: 9,
               backgroundColor: RED,
-              color: '#fff',
+              color: 'var(--text-primary)',
               fontSize: 10,
               fontWeight: 700,
               display: 'flex',
@@ -319,7 +319,7 @@ export default function NotificationCenter() {
                   padding: '3px 8px',
                   fontSize: 11,
                   fontWeight: 600,
-                  color: focusMode ? '#0A0A00' : DIM,
+                  color: focusMode ? 'var(--on-brand)' : DIM,
                   cursor: 'pointer',
                   transition: 'all 0.15s',
                 }}

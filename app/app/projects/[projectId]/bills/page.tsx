@@ -14,7 +14,7 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 
-const GOLD='var(--brand-primary)', DARK='var(--bg-base)', RAISED='var(--bg-surface)', BORDER='rgba(255,255,255,0.12)', DIM='#D4D4D8', TEXT='#FFFFFF', GREEN='#2CFF7A', RED='#FF3B30';
+const GOLD='var(--brand-primary)', DARK='var(--bg-base)', RAISED='var(--bg-surface)', BORDER='rgba(255,255,255,0.12)', DIM='var(--text-secondary)', TEXT='var(--text-primary)', GREEN='var(--success)', RED='var(--danger)';
 
 interface Bill {
   id: string;
@@ -518,7 +518,7 @@ export default function BillsPage() {
                         ) : editId === b.id ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                             <input value={editVal} onChange={e => setEditVal(e.target.value)} type="number" autoFocus onKeyDown={e => { if (e.key === 'Enter') handleEditBill(b.id); if (e.key === 'Escape') setEditId(null); }} style={{ width: 100, padding: '4px 8px', background: DARK, border: `1px solid ${GOLD}`, borderRadius: 5, color: TEXT, fontSize: 12, outline: 'none', textAlign: 'right' }} />
-                            <button onClick={() => handleEditBill(b.id)} style={{ padding: '3px 8px', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 5, color: '#0A0A00', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Save</button>
+                            <button onClick={() => handleEditBill(b.id)} style={{ padding: '3px 8px', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 5, color: 'var(--on-brand)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Save</button>
                             <button onClick={() => setEditId(null)} style={{ padding: '3px 8px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
                           </div>
                         ) : adjustId === b.id ? (
@@ -566,7 +566,7 @@ export default function BillsPage() {
                             {actionLoading === b.id + '-pay' ? '…' : 'Mark Paid'}
                           </button>
                         )}
-                        {b.status === 'Paid' && <span style={{ color: GREEN, fontSize: 12 }}>Paid</span>}
+                        {b.status === 'Paid' && <StatusPill module="generic" status="paid" size="sm" />}
                       </td>
                     </tr>
                   );

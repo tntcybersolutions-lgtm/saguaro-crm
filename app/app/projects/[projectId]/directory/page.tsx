@@ -22,9 +22,9 @@ import Suggest from '@/components/ui/Suggest';
  */
 
 const GOLD = 'var(--brand-primary)';
-const TEXT = '#F0F4FF';
-const DIM = '#A1A1AA';
-const BORDER = '#2A2A2E';
+const TEXT = 'var(--text-primary)';
+const DIM = 'var(--text-tertiary)';
+const BORDER = 'var(--surface-raised)';
 const CARD = 'var(--bg-surface)';
 const BASE = 'var(--bg-base)';
 
@@ -112,7 +112,7 @@ export default function ProjectDirectory() {
           instead of asking for them again.
         </p>
 
-        {error && <p style={{ color: '#FF3B30', fontSize: 13.5 }}>{error}</p>}
+        {error && <p style={{ color: 'var(--danger)', fontSize: 13.5 }}>{error}</p>}
 
         {!adding && (
           <button
@@ -120,10 +120,10 @@ export default function ProjectDirectory() {
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44,
               padding: '0 20px', borderRadius: 9, border: 'none', cursor: 'pointer',
-              background: GOLD, color: '#0A0A00', fontSize: 14, fontWeight: 800, marginBottom: 18,
+              background: GOLD, color: 'var(--on-brand)', fontSize: 14, fontWeight: 800, marginBottom: 18,
             }}
           >
-            <Plus size={15} weight="bold" color="#0A0A00" /> Add Someone
+            <Plus size={15} weight="bold" color="var(--on-brand)" /> Add Someone
           </button>
         )}
 
@@ -158,7 +158,7 @@ export default function ProjectDirectory() {
                 style={{
                   minHeight: 44, padding: '0 22px', borderRadius: 9, border: 'none',
                   background: draft.name.trim() ? GOLD : 'color-mix(in srgb, var(--brand-primary) 30%, transparent)',
-                  color: '#0A0A00', fontSize: 14, fontWeight: 800,
+                  color: 'var(--on-brand)', fontSize: 14, fontWeight: 800,
                   cursor: saving || !draft.name.trim() ? 'not-allowed' : 'pointer',
                 }}
               >

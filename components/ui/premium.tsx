@@ -36,9 +36,9 @@ const BORDER = 'rgba(255,255,255,0.09)';
 // Glass (COPY-STYLE §6): translucent white over jet black, blurred.
 const SURFACE = 'linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.03))';
 const GLASS_BLUR = 'blur(16px) saturate(140%)';
-const WHITE = '#FFFFFF';
-const MUTED = '#D4D4D8';
-const FAINT = '#A9B4C4';
+const WHITE = 'var(--text-primary)';
+const MUTED = 'var(--text-secondary)';
+const FAINT = 'var(--text-tertiary)';
 const RED = STATUS_COLORS.overdue;
 
 // ─── FX keyframes + interaction classes ──────────────────────────────────────
@@ -345,7 +345,7 @@ export function StatCard({
   const interactive = !!(onClick || href || forceInteractive);
   /* Neon by default (owner 2026-10-03): every stat card is lit in its own
      accent — a caller's accent wins, otherwise a stable neon from the label. */
-  const toneColor = tone === 'bad' ? '#FF3B30' : tone === 'warn' ? '#FF8A00' : tone === 'good' ? '#2CFF7A' : null;
+  const toneColor = tone === 'bad' ? 'var(--danger)' : tone === 'warn' ? 'var(--warning)' : tone === 'good' ? 'var(--success)' : null;
   const lit = accent || toneColor || neonFor(label);
   const numberColor = lit;
   const ring = active ? lit : toneColor;
@@ -374,7 +374,7 @@ export function StatCard({
       }}
     >
       {interactive && (
-        <span aria-hidden style={{ position: 'absolute', top: 10, right: 10, fontSize: 11, fontWeight: 800, color: active ? '#0A0A00' : lit, background: active ? lit : 'rgba(255,255,255,0.06)', border: `1px solid ${active ? lit : 'rgba(255,255,255,0.12)'}`, padding: '3px 8px', borderRadius: 999, lineHeight: 1.2 }}>
+        <span aria-hidden style={{ position: 'absolute', top: 10, right: 10, fontSize: 11, fontWeight: 800, color: active ? 'var(--on-brand)' : lit, background: active ? lit : 'rgba(255,255,255,0.06)', border: `1px solid ${active ? lit : 'rgba(255,255,255,0.12)'}`, padding: '3px 8px', borderRadius: 999, lineHeight: 1.2 }}>
           {active ? 'Filtering' : 'View →'}
         </span>
       )}
@@ -384,7 +384,7 @@ export function StatCard({
         <IconChip size={32} vivid={toneColor || undefined}>{icon}</IconChip>
         <span style={{ fontSize: 12.5, color: MUTED, fontWeight: 750, letterSpacing: '.02em', textTransform: 'uppercase' }}>{label}</span>
       </div>
-      <div className="pmStatValue" style={{ fontSize: 30, fontWeight: 800, color: accent || toneColor ? numberColor : '#FFFFFF', letterSpacing: '-0.02em', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      <div className="pmStatValue" style={{ fontSize: 30, fontWeight: 800, color: accent || toneColor ? numberColor : 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
       {sub != null && <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{sub}</div>}
     </div>
   );
@@ -553,7 +553,7 @@ export const ghostButtonStyle: React.CSSProperties = {
      cards and the outlined button rather than a flat grey chip. */
   background: 'rgba(255,255,255,0.06)',
   backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR,
-  color: '#FFFFFF',
+  color: 'var(--text-primary)',
   border: '1px solid rgba(255,255,255,0.11)',
   boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.07)',
   fontWeight: 700, fontSize: 13.5, textDecoration: 'none',
@@ -583,7 +583,7 @@ export const goldOutlineButtonStyle: React.CSSProperties = {
   padding: '11px 18px', borderRadius: 12, cursor: 'pointer',
   background: 'rgba(255,255,255,0.07)',
   backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR,
-  color: '#FFFFFF',
+  color: 'var(--text-primary)',
   border: '1px solid rgba(255,255,255,0.16)',
   boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.10)',
   fontWeight: 700, fontSize: 13.5, textDecoration: 'none',
@@ -659,7 +659,7 @@ export function Pill({ children, tone = 'neutral', caps, style }: {
   style?: React.CSSProperties;
 }) {
   const map = {
-    neutral: { bg: STATUS_COLORS.closed.bg, fg: '#D4D4D8', bd: 'rgba(255,255,255,0.16)' },
+    neutral: { bg: STATUS_COLORS.closed.bg, fg: 'var(--text-secondary)', bd: 'rgba(255,255,255,0.16)' },
     green:   { bg: STATUS_COLORS.ongoing.bg, fg: STATUS_COLORS.ongoing.color, bd: STATUS_COLORS.ongoing.border },
     amber:   { bg: STATUS_COLORS.under_contract.bg, fg: STATUS_COLORS.under_contract.color, bd: STATUS_COLORS.under_contract.border },
     red:     { bg: STATUS_COLORS.overdue.bg, fg: STATUS_COLORS.overdue.color, bd: STATUS_COLORS.overdue.border },
@@ -723,7 +723,7 @@ export function StatStrip({ items }: {
               {it.icon}{it.label}
               {clickable && <span aria-hidden style={{ marginLeft: 'auto', color: FAINT, fontWeight: 700 }}>→</span>}
             </div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: it.accent || '#FFFFFF', letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.value}</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: it.accent || 'var(--text-primary)', letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.value}</div>
             {it.sub && <div style={{ fontSize: 12, color: MUTED, marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.sub}</div>}
           </div>
         );
@@ -753,7 +753,7 @@ export function FlowSteps({ title = 'What Happens Next', steps }: {
             <div style={{
               width: 21, height: 21, borderRadius: 999, flexShrink: 0, zIndex: 1,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: s.done ? `linear-gradient(180deg, ${GOLD_HI}, ${GOLD} 62%, var(--brand-primary-hover))` : '#0E0F12',
+              background: s.done ? `linear-gradient(180deg, ${GOLD_HI}, ${GOLD} 62%, var(--brand-primary-hover))` : 'var(--surface-card)',
               border: s.done ? 'none' : `1px solid ${A45}`,
               boxShadow: s.done ? `inset 0 1px 0 rgba(255,255,255,0.35), 0 0 14px -2px ${A45}` : `0 0 0 3px ${A08}`,
               color: s.done ? ON_GOLD : GOLD, fontSize: 10, fontWeight: 900,
@@ -1068,7 +1068,7 @@ export function DataTable<T>({
                           borderBottom: isLast ? 'none' : `1px solid rgba(255,255,255,0.05)`,
                           fontSize: 13,
                           // Row title = first column, in the one title color (owner 2026-10-03).
-                          color: cIdx === 0 ? 'var(--title-color, var(--brand-primary))' : '#FFFFFF',
+                          color: cIdx === 0 ? 'var(--title-color, var(--brand-primary))' : 'var(--text-primary)',
                           fontWeight: cIdx === 0 ? 700 : undefined,
                           whiteSpace: 'nowrap',
                           fontVariantNumeric: 'tabular-nums',

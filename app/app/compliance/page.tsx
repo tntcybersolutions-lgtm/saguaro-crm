@@ -9,7 +9,7 @@ import { moduleAccent } from '@/lib/module-identity';
 import NudgeRing from '@/components/intelligence/NudgeRing';
 import { ANCHOR_INSURANCE_EXPIRING } from '@/lib/suggestions';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30',AMBER='var(--warning)';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)',GREEN='var(--success)',RED='var(--danger)',AMBER='var(--warning)';
 
 function ScoreBar({score}:{score:number}){
   const color = score>=80?GREEN:score>=50?AMBER:RED;
@@ -101,7 +101,7 @@ export default function CompliancePage(){
     {/* Header */}
     <ModuleHero
       eyebrow="Compliance"
-      eyebrowIcon={<IconChip size={24} vivid={moduleAccent('compliance').vivid ?? moduleAccent('compliance').hex}><ShieldCheck size={13} weight="fill" color="#F8FAFC" /></IconChip>}
+      eyebrowIcon={<IconChip size={24} vivid={moduleAccent('compliance').vivid ?? moduleAccent('compliance').hex}><ShieldCheck size={13} weight="fill" color="var(--text-primary)" /></IconChip>}
       accentColor={moduleAccent('compliance').hex}
       title="Subcontractor"
       accent="Compliance"

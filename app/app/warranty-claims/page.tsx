@@ -16,8 +16,8 @@ import { StatusPill } from '@/components/ui/Status';
 
 /* ───── PALETTE ───── */
 const GOLD = 'var(--brand-primary)', BG = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)',
-  TEXT = '#FFFFFF', DIM = '#D4D4D8', GREEN = '#2CFF7A', RED = '#FF3B30',
-  AMBER = 'var(--warning)', BLUE = 'var(--brand-primary)', PURPLE = '#FF8A00';
+  TEXT = 'var(--text-primary)', DIM = 'var(--text-secondary)', GREEN = 'var(--success)', RED = 'var(--danger)',
+  AMBER = 'var(--warning)', BLUE = 'var(--brand-primary)', PURPLE = 'var(--warning)';
 
 /* ───── TYPES ───── */
 interface WarrantyClaim {
@@ -70,10 +70,10 @@ const STATUS_FLOW: Record<string, string[]> = {
   closed: [],
 };
 
-const PRIORITY_COLORS: Record<string, string> = { low: DIM, medium: AMBER, high: '#FF8C00', emergency: RED };
+const PRIORITY_COLORS: Record<string, string> = { low: DIM, medium: AMBER, high: 'var(--warning)', emergency: RED };
 const STATUS_COLORS: Record<string, string> = {
   submitted: DIM, acknowledged: BLUE, scheduled: AMBER,
-  in_progress: '#FF8C00', completed: GREEN, denied: RED, closed: '#A3ACBB',
+  in_progress: 'var(--warning)', completed: GREEN, denied: RED, closed: 'var(--status-closed)',
 };
 const CATEGORY_ICONS: Record<string, string> = {
   structural: '\u2302', mechanical: '\u2699', electrical: '\u26A1', plumbing: '\u{1F6BF}',
@@ -102,7 +102,7 @@ const css = {
   statVal: { fontSize: 28, fontWeight: 700, color: TEXT } as React.CSSProperties,
   statLbl: { fontSize: 12, color: DIM, marginTop: 4} as React.CSSProperties,
   badge: (c: string) => ({ display: 'inline-block', padding: '2px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600, background: `color-mix(in srgb, ${c} 13%, transparent)`, color: c, border: `1px solid color-mix(in srgb, ${c} 27%, transparent)`, textTransform: 'capitalize' as const }) as React.CSSProperties,
-  btn: (bg: string) => ({ padding: '8px 18px', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600, fontSize: 13, color: bg === GOLD || bg === AMBER ? '#0A0A00' : '#FFF', background: bg, transition: 'opacity .15s' }) as React.CSSProperties,
+  btn: (bg: string) => ({ padding: '8px 18px', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600, fontSize: 13, color: bg === GOLD || bg === AMBER ? 'var(--on-brand)' : 'var(--text-primary)', background: bg, transition: 'opacity .15s' }) as React.CSSProperties,
   btnOutline: (c: string) => ({ padding: '6px 14px', border: `1px solid ${c}`, borderRadius: 6, cursor: 'pointer', fontWeight: 600, fontSize: 12, color: c, background: 'transparent' }) as React.CSSProperties,
   input: { width: '100%', padding: '8px 12px', borderRadius: 6, border: `1px solid ${BORDER}`, background: BG, color: TEXT, fontSize: 13, outline: 'none', boxSizing: 'border-box' as const } as React.CSSProperties,
   select: { width: '100%', padding: '8px 12px', borderRadius: 6, border: `1px solid ${BORDER}`, background: BG, color: TEXT, fontSize: 13, outline: 'none', boxSizing: 'border-box' as const } as React.CSSProperties,
@@ -437,7 +437,7 @@ export default function WarrantyClaimsPage() {
 
       {/* toast */}
       {msg && (
-        <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 2000, padding: '12px 24px', borderRadius: 8, background: msg.type === 'ok' ? GREEN : RED, color: '#FFF', fontWeight: 600, fontSize: 13, boxShadow: '0 4px 20px rgba(0,0,0,.4)' }}>
+        <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 2000, padding: '12px 24px', borderRadius: 8, background: msg.type === 'ok' ? GREEN : RED, color: 'var(--text-primary)', fontWeight: 600, fontSize: 13, boxShadow: '0 4px 20px rgba(0,0,0,.4)' }}>
           {msg.text}
         </div>
       )}

@@ -8,7 +8,7 @@ import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, Insig
 import { Plugs, MagnifyingGlass } from '@phosphor-icons/react';
 
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-surface-2)', CARD = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#D4D4D8', TEXT = '#FFFFFF', GREEN = '#2CFF7A', RED = '#FF3B30';
+const DIM = 'var(--text-secondary)', TEXT = 'var(--text-primary)', GREEN = 'var(--success)', RED = 'var(--danger)';
 
 type Integration = {
   key: string;
@@ -51,12 +51,12 @@ const ICONS: Record<string, string> = {
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  accounting: '#2CFF7A',
-  project_management: '#FF8A00',
+  accounting: 'var(--success)',
+  project_management: 'var(--warning)',
   communication: 'var(--brand-primary)',
-  documents: '#FFE600',
-  storage: '#FF8A00',
-  custom: '#FF8A00',
+  documents: 'var(--brand-primary)',
+  storage: 'var(--warning)',
+  custom: 'var(--warning)',
 };
 
 function timeAgo(dateStr: string | null): string {
@@ -470,7 +470,7 @@ export default function IntegrationsPage() {
                           href="/app/integrations/quickbooks"
                           style={{
                             flex: 1, padding: '8px 0', textAlign: 'center', borderRadius: 8,
-                            background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, color: '#0A0A00',
+                            background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, color: 'var(--on-brand)',
                             fontSize: 12, fontWeight: 700, textDecoration: 'none',
                           }}
                         >
@@ -633,7 +633,7 @@ export default function IntegrationsPage() {
                 style={{
                   padding: '10px 24px', borderRadius: 8, cursor: 'pointer',
                   background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none',
-                  color: '#0A0A00', fontSize: 13, fontWeight: 700,
+                  color: 'var(--on-brand)', fontSize: 13, fontWeight: 700,
                   opacity: !setupForm.api_url || connectingKey === 'sage300' ? 0.5 : 1,
                 }}
               >

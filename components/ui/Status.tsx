@@ -170,7 +170,7 @@ export function LifecycleRail({
       </div>
 
       {showAction && r.action && !compact && (
-        <div style={{ fontSize: 11.5, color: '#A9B4C4', marginTop: 3, lineHeight: 1.35 }}>
+        <div style={{ fontSize: 11.5, color: 'var(--text-tertiary)', marginTop: 3, lineHeight: 1.35 }}>
           {r.action}
         </div>
       )}

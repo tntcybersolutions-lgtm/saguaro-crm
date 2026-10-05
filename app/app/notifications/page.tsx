@@ -8,10 +8,10 @@ const GOLD = 'var(--brand-primary)';
 const DARK = 'var(--bg-base)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#D4D4D8';
-const TEXT = '#FFFFFF';
-const GREEN = '#2CFF7A';
-const RED = '#FF3B30';
+const DIM = 'var(--text-secondary)';
+const TEXT = 'var(--text-primary)';
+const GREEN = 'var(--success)';
+const RED = 'var(--danger)';
 
 interface NotificationItem {
   id: string;
@@ -32,11 +32,11 @@ const TYPE_CONFIG: Record<string, { icon: React.ComponentType<any>; label: strin
   pay_app_certified:   { icon: CheckCircle, label: 'Pay App', color: GREEN },
   change_order_approved:{ icon: ArrowsClockwise, label: 'Change Order', color: GREEN },
   insurance_expiring:  { icon: Warning, label: 'Insurance', color: 'var(--warning)', actions: ['Request Renewal'] },
-  rfi_submitted:       { icon: Question, label: 'RFI', color: '#FF8A00', actions: ['Answer RFI'] },
+  rfi_submitted:       { icon: Question, label: 'RFI', color: 'var(--warning)', actions: ['Answer RFI'] },
   rfi_answered:        { icon: CheckCircle, label: 'RFI', color: GREEN },
   bid_submitted:       { icon: NotePencil, label: 'Bid', color: 'var(--brand-primary)', actions: ['Review Bid'] },
   bid_awarded:         { icon: Trophy, label: 'Bid', color: GOLD },
-  sub_added:           { icon: Handshake, label: 'Team', color: '#FF8A00' },
+  sub_added:           { icon: Handshake, label: 'Team', color: 'var(--warning)' },
   project_created:     { icon: Buildings, label: 'Project', color: GOLD },
   document_generated:  { icon: FileText, label: 'Document', color: 'var(--brand-primary)', actions: ['Download'] },
   Budget_Exceeded:     { icon: WarningOctagon, label: 'Alert', color: RED },
@@ -247,8 +247,8 @@ export default function NotificationsPage() {
                         onClick={e => { e.stopPropagation(); dismiss(n.id); }}
                         disabled={dismissingId === n.id}
                         title="Dismiss"
-                        style={{ background: 'none', border: 'none', color: '#8094B0', cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: '2px 4px', borderRadius: 4 }}
-                      ><X size={16} weight="bold" color="#8094B0" /></button>
+                        style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: '2px 4px', borderRadius: 4 }}
+                      ><X size={16} weight="bold" color="var(--text-tertiary)" /></button>
                     </div>
                   </div>
 
@@ -277,8 +277,8 @@ export default function NotificationsPage() {
                     )}
                     {n.project_id && (n.type === 'rfi_submitted') && (
                       <Link href={`/app/projects/${n.project_id}/rfis`} onClick={e => { e.stopPropagation(); markRead(n.id); }}
-                        style={{ fontSize: 12, color: '#FF8A00', textDecoration: 'none', fontWeight: 600, padding: '3px 10px', background: 'rgba(255,138,0,.1)', border: '1px solid rgba(255,138,0,.25)', borderRadius: 5 }}>
-                        Answer RFI <ArrowRight size={12} weight="bold" color="#FF8A00" style={{ verticalAlign: 'middle' }} />
+                        style={{ fontSize: 12, color: 'var(--warning)', textDecoration: 'none', fontWeight: 600, padding: '3px 10px', background: 'rgba(255,138,0,.1)', border: '1px solid rgba(255,138,0,.25)', borderRadius: 5 }}>
+                        Answer RFI <ArrowRight size={12} weight="bold" color="var(--warning)" style={{ verticalAlign: 'middle' }} />
                       </Link>
                     )}
                     {n.project_id && n.type === 'bid_submitted' && (

@@ -23,14 +23,14 @@ export const CIN = {
   gold: 'var(--brand-primary)',
   goldHi: 'var(--brand-primary-strong)',
   goldSoft: '#FFF7A8',
-  amber: '#FFE600',
-  green: '#2CFF7A',
-  red: '#FF3B30',
-  blue: '#FF8A00',
+  amber: 'var(--brand-primary)',
+  green: 'var(--success)',
+  red: 'var(--danger)',
+  blue: 'var(--warning)',
   bg: 'var(--bg-base)',
-  text: '#FFFFFF',
-  muted: '#D4D4D8',
-  faint: '#A9B4C4',
+  text: 'var(--text-primary)',
+  muted: 'var(--text-secondary)',
+  faint: 'var(--text-tertiary)',
   border: 'rgba(255,255,255,0.09)',
   borderGold: 'var(--brand-primary-25)',
   surface: 'linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.03))',
@@ -306,7 +306,7 @@ export function StatCard({
         )}
         <span style={{ fontSize: 12.5, fontWeight: 750, color: CIN.muted }}>{label}</span>
       </div>
-      <div style={{ fontSize: 25, fontWeight: 900, color: valueColor || '#FFFFFF', letterSpacing: '-0.02em', lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      <div style={{ fontSize: 25, fontWeight: 900, color: valueColor || 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
       {sub && <div style={{ fontSize: 12, color: CIN.faint, marginTop: 6 }}>{sub}</div>}
     </div>
   );
