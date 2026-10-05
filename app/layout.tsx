@@ -20,6 +20,9 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 5,
   viewportFit: 'cover',
+  // The software keyboard shrinks the layout viewport instead of covering it,
+  // so a form's last field and its button stay reachable on phones.
+  interactiveWidget: 'resizes-content',
 };
 
 export const metadata: Metadata = {

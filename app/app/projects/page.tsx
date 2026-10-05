@@ -143,7 +143,7 @@ export default function ProjectsPage() {
     ); } },
     { key: 'status', header: 'Status', accessor: (p) => String(p.status || ''), render: (p) => { const b = statusBadge(p.status || ''); return <Badge tone={b.tone}>{b.label}</Badge>; } },
     { key: 'project_type', header: 'Type', accessor: (p) => String(p.project_type || ''), render: (p) => <span className="prMuted">{p.project_type ? titleCase(String(p.project_type)) : '—'}</span> },
-    { key: 'contract_amount', header: 'Contract', accessor: (p) => Number(p.contract_amount) || 0, align: 'right', render: (p) => { const c = Number(p.contract_amount) || 0; return c > 0 ? <span className="prMoney">{fmtUsd(c)}</span> : <span className="prMuted">—</span>; } },
+    { key: 'contract_amount', header: 'Contract', accessor: (p) => (Number(p.contract_amount) || 0) > 0 ? Number(p.contract_amount) : null /* no contract = empty, sinks last both ways (shown as —) */, align: 'right', render: (p) => { const c = Number(p.contract_amount) || 0; return c > 0 ? <span className="prMoney">{fmtUsd(c)}</span> : <span className="prMuted">—</span>; } },
     { key: 'start_date', header: 'Start', accessor: (p) => String(p.start_date || ''), render: (p) => <span className="prMuted">{p.start_date ? fmtDate(p.start_date) : '—'}</span> },
   ];
 

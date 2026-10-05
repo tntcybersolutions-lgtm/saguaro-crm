@@ -1,5 +1,6 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useSort, useSortedRows, SortTh, SortBar } from '@/components/ui/sort';
 import Link from 'next/link';
 import { ShieldCheck, Gauge, CheckCircle, WarningCircle, XCircle, FileText, Signature, MagnifyingGlass, Envelope, UsersThree, ArrowRight } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, IconChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
@@ -31,6 +32,11 @@ function StatusDot({ok,warn,label}:{ok?:boolean,warn?:boolean,label:string}){
   </div>;
 }
 
+const CMP_COLS: { key: string; label: string }[] = [
+  { key: 'name', label: 'Subcontractor' }, { key: 'trade', label: 'Trade' }, { key: 'contract_amount', label: 'Contract' }, { key: 'score', label: 'Score' },
+  { key: 'w9', label: 'W-9' }, { key: 'insurance', label: 'Insurance' }, { key: 'lien_waivers', label: 'Lien Waivers' }, { key: 'compliance', label: 'Status' }, { key: '', label: '' },
+];
+
 export default function CompliancePage(){
   const [subs, setSubs] = useState<any[]>([]);
   const [summary, setSummary] = useState<any>(null);
@@ -52,6 +58,18 @@ export default function CompliancePage(){
     if(search&&!s.name.toLowerCase().includes(search.toLowerCase())&&!s.trade?.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
+  const cmpSort = useSort(null);
+  const cmpSortValue = useCallback((sub: (typeof subs)[number], key: string): unknown => {
+    switch (key) {
+      case 'contract_amount': return Number(sub.contract_amount) || 0;
+      case 'score': return Number(sub.score) || 0;
+      case 'w9': return sub.w9.status === 'submitted' || sub.w9.status === 'approved' ? 2 : sub.w9.status === 'pending' ? 1 : 0;
+      case 'insurance': return sub.insurance.active_certs === 0 ? 0 : sub.insurance.expiring_certs > 0 ? 1 : 2;
+      case 'lien_waivers': return sub.lien_waivers.total === 0 ? null : sub.lien_waivers.signed / sub.lien_waivers.total;
+      default: return (sub as unknown as Record<string, unknown>)[key];
+    }
+  }, []);
+  const sortedCompliance = useSortedRows(filtered, cmpSort.sort, cmpSortValue);
 
   // Cross-project intelligence — what the paperwork means in dollars and follow-ups.
   // contract_amount can round-trip as a string, so every sum coerces with Number().
@@ -188,13 +206,14 @@ export default function CompliancePage(){
             compact
           />
         :<div style={{border:`1px solid ${BORDER}`,borderRadius:12,overflow:'hidden',overflowX:'auto',WebkitOverflowScrolling:'touch' as const}}>
+          <SortBar columns={CMP_COLS.filter(c=>c.key)} sort={cmpSort.sort} onChange={cmpSort.setSort} />
           <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
             <thead><tr style={{background:'var(--bg-surface-2)'}}>
-              {['Subcontractor','Trade','Contract','Score','W-9','Insurance','Lien Waivers','Status',''].map(h=>(
-                <th key={h} style={{padding:'10px 14px',textAlign:'left',fontSize:10.5,fontWeight:700,color:'var(--text-tertiary)',borderBottom:`1px solid ${BORDER}`,whiteSpace:'nowrap'}}>{h}</th>
-              ))}
+              {CMP_COLS.map(c=>c.key
+                ? <SortTh key={c.key} col={c.key} label={c.label} sort={cmpSort.sort} onSort={cmpSort.cycle} style={{padding:'10px 14px',fontSize:10.5,fontWeight:700,color:'var(--text-tertiary)',borderBottom:`1px solid ${BORDER}`,whiteSpace:'nowrap'}} />
+                : <th key="actions" aria-label="Actions" style={{padding:'10px 14px',borderBottom:`1px solid ${BORDER}`}} />)}
             </tr></thead>
-            <tbody>{filtered.map(sub=>(
+            <tbody>{sortedCompliance.map(sub=>(
               <tr key={sub.id} onClick={()=>setSelected(selected?.id===sub.id?null:sub)} style={{borderBottom:`1px solid rgba(255,255,255,0.08)`,cursor:'pointer',background:selected?.id===sub.id?'var(--brand-primary-08)':'transparent'}}>
                 <td style={{padding:'11px 14px'}}>
                   <div style={{display:'flex',alignItems:'center',gap:8}}>

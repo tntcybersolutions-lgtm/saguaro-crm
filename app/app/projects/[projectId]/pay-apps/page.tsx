@@ -24,6 +24,7 @@
  * persisted drag-reorder (sort_order) stays the source of truth for row order.
  */
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSort, useSortedRows, SortTh, SortBar } from '@/components/ui/sort';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { humanError } from '@/lib/errors';
@@ -117,6 +118,11 @@ const CSS = `
   .paTable td:nth-child(10) { grid-column: 3; grid-row: 2 / 5; align-self: end; justify-self: end; }
 }
 `;
+
+const PA_COLS = [
+  { key: 'num', label: 'App #' }, { key: 'period', label: 'Period' }, { key: 'status', label: 'Lifecycle' }, { key: 'done', label: 'Completed to Date' },
+  { key: 'this', label: 'This Period' }, { key: 'ret', label: 'Retainage' }, { key: 'due', label: 'Payment Due' },
+];
 
 export default function PayAppsPage() {
   const params = useParams();
@@ -309,8 +315,23 @@ export default function PayAppsPage() {
   });
   const filtersActive = !!search || statusFilter!=='all';
   const clearFilters = () => { setSearch(''); setStatusFilter('all'); };
-  // Drag-reorder only makes sense on the whole, unfiltered register.
-  const dragEnabled = !filtersActive;
+  // Column sort over the whole visible register (every money column, period, lifecycle).
+  const { sort: paSort, setSort: setPaSort, cycle: cyclePaSort } = useSort(null);
+  const paSortValue = useCallback((pa: any, key: string): unknown => {
+    switch (key) {
+      case 'num': return Number(pa.app_number ?? pa.application_number) || 0;
+      case 'period': return pa.period_to || pa.period_from || '';
+      case 'status': return String(pa.status || 'draft');
+      case 'done': return Number(pa.total_completed_stored ?? pa.total_completed) || 0;
+      case 'this': return Number(pa.this_period) || 0;
+      case 'ret': return Number(pa.total_retainage ?? pa.retainage_amount) || 0;
+      case 'due': return Number(pa.current_payment_due) || 0;
+      default: return undefined;
+    }
+  }, []);
+  const sortedVisible = useSortedRows(visible, paSort, paSortValue);
+  // Drag-reorder only makes sense on the whole, unfiltered, unsorted register.
+  const dragEnabled = !filtersActive && !paSort;
 
   // ── Stat tiles: contract position ──
   const stats: StatItem[] = loading && !ctx
@@ -402,6 +423,7 @@ export default function PayAppsPage() {
           </div>
         )}
         <div className="paTableWrap">
+          <SortBar columns={PA_COLS} sort={paSort} onChange={setPaSort} />
           <table className="paTable">
             <thead>
               <tr>
@@ -409,18 +431,18 @@ export default function PayAppsPage() {
                 <th style={{ width: 28 }}>
                   <input type="checkbox" className="paCheck" aria-label="Select all" checked={allVisibleSelected} onChange={() => { if (allVisibleSelected) setBulkSelected(new Set()); else setBulkSelected(new Set(visible.map((p:any) => p.id))); }} />
                 </th>
-                <th>App #</th>
-                <th>Period</th>
-                <th>Lifecycle</th>
-                <th data-align="right">Completed to Date</th>
-                <th data-align="right">This Period</th>
-                <th data-align="right">Retainage</th>
-                <th data-align="right">Payment Due</th>
+                <SortTh col="num" label="App #" sort={paSort} onSort={cyclePaSort} />
+                <SortTh col="period" label="Period" sort={paSort} onSort={cyclePaSort} />
+                <SortTh col="status" label="Lifecycle" sort={paSort} onSort={cyclePaSort} />
+                <SortTh col="done" label="Completed to Date" sort={paSort} onSort={cyclePaSort} align="right" />
+                <SortTh col="this" label="This Period" sort={paSort} onSort={cyclePaSort} align="right" />
+                <SortTh col="ret" label="Retainage" sort={paSort} onSort={cyclePaSort} align="right" />
+                <SortTh col="due" label="Payment Due" sort={paSort} onSort={cyclePaSort} align="right" />
                 <th aria-label="Actions" />
               </tr>
             </thead>
             <tbody>
-              {visible.map((pa:any)=>{
+              {sortedVisible.map((pa:any)=>{
                 const idx = payApps.indexOf(pa);
                 const handlers = dragEnabled ? dragHandlers(idx) : null;
                 const done=Number(pa.total_completed_stored ?? pa.total_completed)||0;

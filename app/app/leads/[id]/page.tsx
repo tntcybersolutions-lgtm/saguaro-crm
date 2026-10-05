@@ -15,7 +15,8 @@
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowRight, EnvelopeSimple, UploadSimple, DownloadSimple, CheckCircle, WarningCircle } from '@phosphor-icons/react';
+import { ArrowRight, EnvelopeSimple, UploadSimple, DownloadSimple, CheckCircle, WarningCircle, Trash } from '@phosphor-icons/react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useToast } from '@/components/Toast';
 import { humanError } from '@/lib/errors';
 import { fmtDate as fmtDateSafe } from '@/lib/format-date';
@@ -146,6 +147,19 @@ export default function DealPage() {
       setUploading(false);
     }
   }, [id, uploading, showToast, loadMedia]);
+
+  // Remove one file: bucket object + index row (DELETE /api/leads/[id]/media/[mediaId]).
+  const removeMedia = useCallback(async (m: MediaItem) => {
+    if (!(await confirmDialog({ title: 'Please confirm', message: `Remove "${m.name}" from this deal? This cannot be undone.`, danger: true }))) return;
+    try {
+      const r = await fetch(`/api/leads/${id}/media/${m.id}`, { method: 'DELETE' });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Could not remove the file');
+      showToast('File removed.', 'success');
+      void loadMedia();
+    } catch (e) {
+      showToast(humanError(e, 'Could not remove the file.'), 'error');
+    }
+  }, [id, showToast, loadMedia]);
 
   /* Send a message to the GC (the deal's contact). Reuses the email route,
      which is honest: it returns 503 and logs NOTHING when email isn't
@@ -404,7 +418,7 @@ export default function DealPage() {
           rows={media}
           rowKey={(m) => m.id}
           onRowClick={(m) => window.open(m.url, '_blank', 'noopener,noreferrer')}
-          rowActions={(m) => [{ label: 'Download', icon: <DownloadSimple size={14} />, inline: true, href: m.url }]}
+          rowActions={(m) => [{ label: 'Download', icon: <DownloadSimple size={14} />, inline: true, href: m.url }, { label: 'Remove', icon: <Trash size={14} />, tone: 'danger', onClick: () => void removeMedia(m) }]}
           empty={<EmptyState title="No files yet" text="Upload proposals, plans or site photos so the whole team works from the same files." />}
         />
       </Card>

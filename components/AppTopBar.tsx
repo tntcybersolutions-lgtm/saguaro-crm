@@ -218,27 +218,13 @@ export default function AppTopBar({
         <span aria-hidden style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.12)', margin: '0 4px', flexShrink: 0 }} />
       </div>
 
-      {/* Breadcrumbs */}
-      <nav style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0, overflow: 'hidden' }}>
-        {crumbs.map((c, i) => (
-          <React.Fragment key={c.href}>
-            {i > 0 && <CaretRight className="sag-crumb-prev" size={11} weight="bold" style={{ color: 'var(--text-disabled)' }} />}
-            {c.isLast ? (
-              <span className="sag-crumb-last" style={{ fontSize: font.size.lg, fontWeight: font.weight.semibold, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{c.label}</span>
-            ) : (
-              <Link
-                href={c.href}
-                className="sag-crumb-prev"
-                style={{ fontSize: font.size.lg, color: 'var(--text-secondary)', textDecoration: 'none', transition: 'color .15s' }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
-              >
-                {c.label}
-              </Link>
-            )}
-          </React.Fragment>
-        ))}
-      </nav>
+      {/* Current page — one title. The back button already names the parent,
+          so a breadcrumb trail here repeated it twice. */}
+      {crumbs.length > 0 && (
+        <span className="sag-crumb-last" style={{ fontSize: font.size.lg, fontWeight: font.weight.semibold, color: 'var(--text-primary)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {crumbs[crumbs.length - 1].label}
+        </span>
+      )}
 
       <div style={{ flex: 1 }} />
 
@@ -260,7 +246,7 @@ export default function AppTopBar({
           fontWeight: font.weight.medium,
           cursor: 'pointer',
           transition: 'border-color .15s, background .15s',
-          minWidth: 220,
+          minWidth: 0,
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.borderColor = 'var(--border-strong)';

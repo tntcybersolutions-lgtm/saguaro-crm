@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSort, useSortedRows, SortTh, SortBar } from '@/components/ui/sort';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import { Table, T } from '@/components/ui/shell';
@@ -29,6 +30,11 @@ interface TakeoffData {
 const fmt = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmt0 = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
 const fmtSigned = (n: number) => (Number(n) < 0 ? '-' : '+') + '$' + Math.abs(Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+
+const EST_COLS: { key: string; label: string; budgetOnly?: boolean }[] = [
+  { key: 'div', label: 'Div' }, { key: 'name', label: 'Division' }, { key: 'count', label: 'Items' }, { key: 'total', label: 'Estimate' }, { key: 'pct', label: '% of Materials' },
+  { key: 'budget', label: 'Budget', budgetOnly: true }, { key: 'variance', label: 'Variance', budgetOnly: true },
+];
 
 export default function EstimatePage() {
   const params = useParams();
@@ -116,6 +122,14 @@ export default function EstimatePage() {
   const rollup = Array.from(rollupMap.entries())
     .map(([div, r]) => ({ div, name: CSI_DIVISIONS[div]?.name || 'Uncategorized', total: toDollars(r.cents), count: r.count, budget: budgetByDiv.get(div) || 0 }))
     .sort((a, b) => a.div.localeCompare(b.div));
+  const estSort = useSort(null);
+  const estSortValue = useCallback((r: (typeof rollup)[number], key: string): unknown => {
+    if (key === 'pct') return takeoff && takeoff.material_cost > 0 ? r.total / takeoff.material_cost : 0;
+    if (key === 'variance') return r.budget > 0 ? r.total - r.budget : null;
+    if (key === 'budget') return r.budget > 0 ? r.budget : null;
+    return (r as unknown as Record<string, unknown>)[key];
+  }, [takeoff]);
+  const sortedRollup = useSortedRows(rollup, estSort.sort, estSortValue);
   const estBudgetDelta = takeoff ? takeoff.total_cost - budgetOriginal : 0;
   const matBudgetDelta = takeoff ? takeoff.material_cost - budgetOriginal : 0;
   const impliedMargin = takeoff ? revisedContract - takeoff.total_cost : 0;
@@ -245,16 +259,17 @@ export default function EstimatePage() {
               style={{ marginBottom: 24 }}
             >
               <div style={{ overflowX: 'auto' }}>
+                <SortBar columns={EST_COLS.filter(c => budgetLineCount > 0 || !c.budgetOnly)} sort={estSort.sort} onChange={estSort.setSort} />
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
                   <thead>
                     <tr>
-                      {['Div', 'Division', 'Items', 'Estimate', '% of Materials', ...(budgetLineCount > 0 ? ['Budget', 'Variance'] : [])].map(h => (
-                        <th key={h} style={{ padding: '9px 14px', textAlign: h === 'Div' || h === 'Division' ? 'left' : 'right', fontSize: 10.5, fontWeight: 700, color: T.muted, borderBottom: '1px solid rgba(255,255,255,0.12)', whiteSpace: 'nowrap' }}>{h}</th>
+                      {EST_COLS.filter(c => budgetLineCount > 0 || !c.budgetOnly).map(c => (
+                        <SortTh key={c.key} col={c.key} label={c.label} sort={estSort.sort} onSort={estSort.cycle} align={c.key === 'div' || c.key === 'name' ? 'left' : 'right'} style={{ padding: '9px 14px', fontSize: 10.5, fontWeight: 700, color: T.muted, borderBottom: '1px solid rgba(255,255,255,0.12)', whiteSpace: 'nowrap' }} />
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {rollup.map(r => {
+                    {sortedRollup.map(r => {
                       const pctOfMat = takeoff.material_cost > 0 ? (r.total / takeoff.material_cost) * 100 : 0;
                       const variance = r.total - r.budget;
                       return (

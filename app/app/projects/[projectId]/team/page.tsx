@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
+import { useSort, useSortedRows, SortTh, SortBar } from '@/components/ui/sort';
 import useSWR from 'swr';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import Link from 'next/link';
@@ -17,6 +18,13 @@ const fmt = (n:number) => '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,
 function Badge({label,color='#D4D4D8',bg='rgba(148,163,184,.12)'}:{label:string,color?:string,bg?:string}){
   return <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:bg,color}}>{label}</span>;
 }
+
+const MEMBER_COLS: { key: string; label: string }[] = [
+  { key: 'name', label: 'Name' }, { key: 'role', label: 'Role' }, { key: 'email', label: 'Email' }, { key: 'access', label: 'Access Level' }, { key: '', label: 'Work Assignments' }, { key: 'last', label: 'Last Active' },
+];
+const TEAM_SUB_COLS: { key: string; label: string }[] = [
+  { key: 'name', label: 'Company' }, { key: 'trade', label: 'Trade' }, { key: 'email', label: 'Contact Email' }, { key: 'contract', label: 'Contract' }, { key: 'access', label: 'Portal Access' }, { key: '', label: 'Actions' },
+];
 
 export default function TeamPage(){
   const params = useParams();
@@ -267,6 +275,17 @@ export default function TeamPage(){
     !qT || [p.name, p.role, p.email].some(v => String(v || '').toLowerCase().includes(qT));
   const filteredMembers = members.filter(matchPerson);
   const filteredSubs = subs.filter(s => matchPerson(s) || String(findCtxSub(s.name)?.trade || '').toLowerCase().includes(qT));
+  const memberSort = useSort(null);
+  const sortedMembers = useSortedRows(filteredMembers, memberSort.sort);
+  const teamSubSort = useSort(null);
+  const teamSubValue = (s: { name: string; email: string }, key: string): unknown => {
+    const cs = findCtxSub(s.name);
+    if (key === 'trade') return cs?.trade || '';
+    if (key === 'email') return s.email || cs?.email || '';
+    if (key === 'contract') return Number(cs?.contractAmount) || 0;
+    return (s as unknown as Record<string, unknown>)[key];
+  };
+  const sortedTeamSubs = useSortedRows(filteredSubs, teamSubSort.sort, teamSubValue);
   function inviteFromDirectory(l:{role:string;name:string;email:string}){
     setInviteName(l.name||'');
     setInviteEmail(l.email||'');
@@ -409,11 +428,14 @@ export default function TeamPage(){
           />
         ) : (
           <div style={{overflowX:'auto',WebkitOverflowScrolling:'touch' as const}}>
+            <SortBar columns={MEMBER_COLS.filter(c=>c.key)} sort={memberSort.sort} onChange={memberSort.setSort} />
             <table style={{width:'100%',borderCollapse:'collapse' as const,fontSize:13}}>
               <thead><tr>
-                {['Name','Role','Email','Access Level','Work Assignments','Last Active'].map(h=><th key={h} style={{padding:'8px 12px',textAlign:'left' as const,fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}
+                {MEMBER_COLS.map(c=>c.key
+                  ? <SortTh key={c.key} col={c.key} label={c.label} sort={memberSort.sort} onSort={memberSort.cycle} style={{padding:'8px 12px',fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}} />
+                  : <th key={c.label} style={{padding:'8px 12px',textAlign:'left' as const,fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{c.label}</th>)}
               </tr></thead>
-              <tbody>{filteredMembers.map(m=><tr key={m.userId||m.name} style={{borderBottom:`1px solid rgba(255,255,255,0.08)`}}>
+              <tbody>{sortedMembers.map(m=><tr key={m.userId||m.name} style={{borderBottom:`1px solid rgba(255,255,255,0.08)`}}>
                 <td style={{padding:'11px 12px'}}><div style={{display:'flex',alignItems:'center',gap:10}}><div style={{width:32,height:32,borderRadius:'50%',background:GOLD,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800,color:'#0A0A00'}}>{m.name[0]}</div><span style={{color:TEXT,fontWeight:600}}>{m.name}</span></div></td>
                 <td style={{padding:'11px 12px',color:DIM}}>{m.role}</td>
                 <td style={{padding:'11px 12px',color:DIM}}>{m.email}</td>
@@ -505,11 +527,14 @@ export default function TeamPage(){
           />
         ) : (
           <div style={{overflowX:'auto',WebkitOverflowScrolling:'touch' as const}}>
+            <SortBar columns={TEAM_SUB_COLS.filter(c=>c.key)} sort={teamSubSort.sort} onChange={teamSubSort.setSort} />
             <table style={{width:'100%',borderCollapse:'collapse' as const,fontSize:13}}>
               <thead><tr>
-                {['Company','Trade','Contact Email','Contract','Portal Access','Actions'].map(h=><th key={h} style={{padding:'8px 12px',textAlign:'left' as const,fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}
+                {TEAM_SUB_COLS.map(c=>c.key
+                  ? <SortTh key={c.key} col={c.key} label={c.label} sort={teamSubSort.sort} onSort={teamSubSort.cycle} style={{padding:'8px 12px',fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}} />
+                  : <th key={c.label} style={{padding:'8px 12px',textAlign:'left' as const,fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{c.label}</th>)}
               </tr></thead>
-              <tbody>{filteredSubs.map(s=>{const cs=findCtxSub(s.name);return <tr key={s.name} style={{borderBottom:`1px solid rgba(255,255,255,0.08)`}}>
+              <tbody>{sortedTeamSubs.map(s=>{const cs=findCtxSub(s.name);return <tr key={s.name} style={{borderBottom:`1px solid rgba(255,255,255,0.08)`}}>
                 <td style={{padding:'11px 12px',color:TEXT,fontWeight:600}}>{s.name}</td>
                 <td style={{padding:'11px 12px',color:DIM,fontSize:12}}>{cs?.trade || '—'}</td>
                 <td style={{padding:'11px 12px',color:DIM}}>{s.email || cs?.email || ''}</td>

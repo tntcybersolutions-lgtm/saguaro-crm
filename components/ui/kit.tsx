@@ -20,6 +20,7 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { CaretRight, DotsThree, MagnifyingGlass, X, Tray } from '@phosphor-icons/react';
 import { useSortedRows, type SortState, type SortDir } from './premium';
+import { SortBar } from './sort';
 import { STATUS_COLORS, type StatusKind } from '@/lib/status-colors';
 
 const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ');
@@ -140,6 +141,8 @@ export type StatItem = {
   tone?: 'default' | 'good' | 'warn' | 'bad';
   href?: string;
   onClick?: () => void;
+  /** Colored icon tile (neon glass) — a phosphor icon at 14–15px. */
+  icon?: React.ReactNode;
 };
 
 /* Same family as the status pills (lib/status-colors): good = Ongoing green,
@@ -151,17 +154,20 @@ const TONE_COLOR: Record<NonNullable<StatItem['tone']>, string | undefined> = {
   bad: STATUS_COLORS.overdue.color,
 };
 
-export function StatTile({ label, value, sub, tone = 'default', href, onClick }: StatItem) {
+export function StatTile({ label, value, sub, tone = 'default', href, onClick, icon }: StatItem) {
   const inner = (
     <>
-      <span className="k-stat-label">{label}</span>
+      <span className="k-stat-top">
+        {icon && <span className="k-stat-icon" aria-hidden>{icon}</span>}
+        <span className="k-stat-label">{label}</span>
+      </span>
       <span className="k-stat-value" style={{ color: TONE_COLOR[tone] }}>{value}</span>
       {sub && <span className="k-stat-sub">{sub}</span>}
     </>
   );
-  if (href) return <a className="k-stat" href={href}>{inner}</a>;
-  if (onClick) return <button type="button" className="k-stat" onClick={onClick}>{inner}</button>;
-  return <div className="k-stat">{inner}</div>;
+  if (href) return <a className="k-stat" data-tone={tone} href={href}>{inner}</a>;
+  if (onClick) return <button type="button" className="k-stat" data-tone={tone} onClick={onClick}>{inner}</button>;
+  return <div className="k-stat" data-tone={tone}>{inner}</div>;
 }
 
 export function StatRow({ items }: { items: StatItem[] }) {
@@ -427,9 +433,13 @@ export function DataTable<T>({
     setSort((p) => (!p || p.key !== key ? { key, dir: 'asc' } : p.dir === 'asc' ? { key, dir: 'desc' } : null));
 
   const colCount = columns.length + (rowActions ? 1 : 0);
+  // Phones hide the header row (rows become cards), so the sort lives in a
+  // control above the list there. Desktop keeps the clickable headers.
+  const sortCols = columns.filter((c) => c.sortable !== false && typeof c.header === 'string').map((c) => ({ key: c.key, label: c.header as string }));
 
   return (
     <div className="k-table-wrap">
+      <SortBar columns={sortCols} sort={sort} onChange={setSort} />
       <table className="k-table">
         <thead>
           <tr>
