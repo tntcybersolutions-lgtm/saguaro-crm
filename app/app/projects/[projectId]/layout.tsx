@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
 import { accentForProject } from '@/lib/project-identity';
+import { ProjectDot } from '@/components/ui/ProjectColor';
+import { useProjectColor } from '@/lib/hooks/useProjectColor';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { isToolVisible, hiddenToolCount, type ToolSignals } from '@/lib/project-tools';
 import { moduleAccent } from '@/lib/module-identity';
@@ -196,6 +198,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
   }, [pathname]);
 
   const { ctx } = useProjectContext(projectId || null);
+  const projectColorValue = useProjectColor(projectId as string);
   const signals = (ctx || null) as ToolSignals | null;
 
   /* Every one of the 46 rail items carried `badge: null`, and this component was
@@ -254,7 +257,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
       <div style={{ padding: '14px 12px', borderBottom: `1px solid ${BORDER}` }}>
         {!isCollapsed && (
           <>
-            <div style={{ fontSize: 12, fontWeight: 700, color: accentForProject(projectId as string).hex, marginBottom: 2, lineHeight: 1.3 }}>{projectName || '—'}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 700, color: accentForProject(projectId as string).hex, marginBottom: 2, lineHeight: 1.3 }}><ProjectDot project={{ id: projectId as string, color: projectColorValue }} /><span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{projectName || '—'}</span></div>
             <div style={{ fontSize: 10, color: DIM, marginBottom: 8 }}>{projectNumber}</div>
             {/* Progress */}
             <div style={{ height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 2, marginBottom: 3 }}>

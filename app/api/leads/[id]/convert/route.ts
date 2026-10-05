@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { nextJobColor } from '@/lib/project-colors';
 import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { normaliseStage } from '@/lib/lead-stages';
@@ -67,10 +68,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }
 
     // 2) Project — carry name / value / type across. (projects has no location column.)
+    const { count: priorCount } = await db.from('projects').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId);
     const { data: project, error: projErr } = await db
       .from('projects')
       .insert({
         tenant_id: tenantId,
+        color: nextJobColor(Number(priorCount) || 0),
         name: (L.company_name as string) || `Project — ${(L.contact_name as string) || 'New'}`,
         status: 'active',
         project_type: (L.project_type as string) ?? null,

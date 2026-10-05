@@ -14,6 +14,8 @@ import useSWR from 'swr';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Plus, ArrowRight, ArrowClockwise, CaretDown, CalendarBlank, WarningCircle } from '@phosphor-icons/react';
 import { useProjects } from '@/lib/hooks/useProjects';
+import { useProjectColors } from '@/lib/hooks/useProjectColor';
+import { jobStripeStyle } from '@/lib/project-colors';
 import ActivityFeed from '@/components/ActivityFeed';
 import SalesOverview from '@/components/SalesOverview';
 import type { Metric, QueueItem, ScheduleEntry, HomeView, DataState } from '@/lib/home/rank';
@@ -143,7 +145,7 @@ const COMPLETABLE: Partial<Record<string, (id: string) => { url: string; body?: 
   punch: id => ({ url: `/api/punch-list/${id}/complete`, body: { status: 'completed' } }),
 };
 
-function QueueRow({ it, today, canEdit, onChanged }: { it: QueueItem; today: string; canEdit: boolean; onChanged: () => Promise<unknown> }) {
+function QueueRow({ it, today, canEdit, onChanged, colorFor }: { it: QueueItem; today: string; canEdit: boolean; onChanged: () => Promise<unknown>; colorFor: (id: string | null) => string }) {
   const tone = TIER_TONE[it.tier];
   const [state, setState] = useState<'idle' | 'busy' | 'done' | 'error'>('idle');
   const [err, setErr] = useState('');
@@ -168,7 +170,7 @@ function QueueRow({ it, today, canEdit, onChanged }: { it: QueueItem; today: str
     : it.id.startsWith('group:') ? null
     : <span>{it.owner ? it.owner : <em className="hv2-unassigned">Unassigned</em>}</span>;
   return (
-    <li className="hv2-qrow">
+    <li className="hv2-qrow" style={it.projectId ? { ...jobStripeStyle(colorFor(it.projectId)), paddingLeft: 12 } : undefined}>
       <span className="hv2-tier" style={{ color: tone.fg, background: tone.bg }}>{TIER_LABEL[it.tier]}</span>
       <div className="hv2-qmain">
         <div className="hv2-qtitle">{it.title}{it.count ? <span className="hv2-count">{it.count}</span> : null}</div>
@@ -200,6 +202,7 @@ function QueueRow({ it, today, canEdit, onChanged }: { it: QueueItem; today: str
 type QFilter = 'all' | 'critical' | 'overdue' | 'today' | 'unassigned';
 
 function NeedsAttention({ data, onChanged }: { data: HomePayload; onChanged: () => Promise<unknown> }) {
+  const colorFor = useProjectColors();
   const [filter, setFilter] = useState<QFilter>('all');
   const [expanded, setExpanded] = useState(false);
   const items = data.queue.items;
@@ -231,7 +234,7 @@ function NeedsAttention({ data, onChanged }: { data: HomePayload; onChanged: () 
       ) : shown.length === 0 ? (
         <p className="hv2-empty">{filter === 'all' ? 'Nothing needs your attention in this view.' : 'Nothing in this filter.'}</p>
       ) : (
-        <ul className="hv2-qlist">{shown.map(it => <QueueRow key={it.id} it={it} today={today} canEdit={!!data.context.canEditWork} onChanged={onChanged} />)}</ul>
+        <ul className="hv2-qlist">{shown.map(it => <QueueRow key={it.id} it={it} today={today} canEdit={!!data.context.canEditWork} onChanged={onChanged} colorFor={colorFor} />)}</ul>
       )}
       {filtered.length > 6 && (
         <button type="button" className="hv2-more" onClick={() => setExpanded(e => !e)}>
@@ -243,6 +246,7 @@ function NeedsAttention({ data, onChanged }: { data: HomePayload; onChanged: () 
 }
 
 function Schedule({ data }: { data: HomePayload }) {
+  const colorFor = useProjectColors();
   const today = data.context.today;
   const groups = useMemo(() => {
     const m = new Map<string, ScheduleEntry[]>();
@@ -274,7 +278,8 @@ function Schedule({ data }: { data: HomePayload }) {
                       </span>
                     </>
                   );
-                  return <li key={e.id}>{e.href ? <Link href={e.href} className="hv2-srow hv2-link">{inner}</Link> : <div className="hv2-srow">{inner}</div>}</li>;
+                  const stripe = e.projectId ? { ...jobStripeStyle(colorFor(e.projectId)), paddingLeft: 10 } : undefined;
+                  return <li key={e.id}>{e.href ? <Link href={e.href} className="hv2-srow hv2-link" style={stripe}>{inner}</Link> : <div className="hv2-srow" style={stripe}>{inner}</div>}</li>;
                 })}
               </ul>
             </div>
@@ -286,6 +291,7 @@ function Schedule({ data }: { data: HomePayload }) {
 }
 
 function WorkTable({ data }: { data: HomePayload }) {
+  const colorFor = useProjectColors();
   const t = data.workTable;
   const today = data.context.today;
   const isDateCol = (k: string) => k === 'due' || k === 'nextDate' || k === 'when';
@@ -300,7 +306,7 @@ function WorkTable({ data }: { data: HomePayload }) {
             <thead><tr>{t.columns.map(c => <th key={c.key} style={{ textAlign: c.align || 'left' }}>{c.label}</th>)}</tr></thead>
             <tbody>
               {t.rows.slice(0, 25).map(r => (
-                <tr key={r.id}>
+                <tr key={r.id} style={t.kind === 'jobs' || t.kind === 'my-jobs' ? jobStripeStyle(colorFor(String(r.id))) : undefined}>
                   {t.columns.map((c, i) => {
                     const raw = r[c.key];
                     const val = isDateCol(c.key) ? (raw ? fmtDay(String(raw), today) : '—') : raw ?? '—';

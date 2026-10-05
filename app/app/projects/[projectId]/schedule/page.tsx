@@ -1,6 +1,8 @@
 'use client';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSort, useSortedRows, SortTh, SortBar } from '@/components/ui/sort';
+import { jobBarStyle } from '@/lib/project-colors';
+import { useProjectColor } from '@/lib/hooks/useProjectColor';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
@@ -69,7 +71,7 @@ function fmtShort(d?:string|null){
 }
 
 /* ── Gantt bar chart ────────────────────────────────────────────── */
-function GanttChart({tasks}:{tasks:any[]}){
+function GanttChart({tasks, jobHex}:{tasks:any[]; jobHex:string}){
   const withDates = tasks.filter(t=>
     t.start_date&&t.end_date
     &&!Number.isNaN(Date.parse(t.start_date))
@@ -146,8 +148,8 @@ function GanttChart({tasks}:{tasks:any[]}){
                 width:1,background:'color-mix(in srgb, var(--brand-primary) 50%, transparent)',zIndex:1}}/>
               {/* Bar background */}
               <div style={{position:'absolute',left:`${left}%`,width:`${width}%`,
-                top:4,height:16,borderRadius:3,
-                background:`color-mix(in srgb, ${color} 20%, transparent)`,border:`1px solid color-mix(in srgb, ${color} 40%, transparent)`}}>
+                top:4,height:16,borderRadius:3,boxSizing:'border-box',
+                ...jobBarStyle(jobHex),border:`1px solid color-mix(in srgb, ${jobHex} 40%, transparent)`,borderLeft:`3px solid ${jobHex}`}}>
                 {/* Progress fill */}
                 <div style={{
                   height:'100%',borderRadius:2,
@@ -180,6 +182,7 @@ const TASK_COLS = [
 
 export default function SchedulePage(){
   const {projectId}=useParams() as {projectId:string};
+  const jobHex = useProjectColor(projectId);
   const [tasks,setTasks]=useState<any[]>([]);
   const [loading,setLoading]=useState(true);
   const [loadError,setLoadError]=useState('');
@@ -468,7 +471,7 @@ export default function SchedulePage(){
             <SectionCard flat title="Timeline" subtitle="Today is marked with a yellow line."
               icon={<CalendarBlank size={17} weight="duotone" color={moduleAccent('schedule').hex} />}
               style={{marginBottom:20}} bodyStyle={{overflowX:'auto'}}>
-              <GanttChart tasks={filtered.length?filtered:tasks}/>
+              <GanttChart tasks={filtered.length?filtered:tasks} jobHex={jobHex}/>
             </SectionCard>
           )}
 

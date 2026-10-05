@@ -409,6 +409,7 @@ export function DataTable<T>({
   defaultSort,
   loading,
   isSelected,
+  rowStyle,
 }: {
   columns: Column<T>[];
   rows: T[];
@@ -423,6 +424,8 @@ export function DataTable<T>({
   loading?: boolean;
   /** Highlights the row the page is currently showing (detail panel open, etc.). */
   isSelected?: (row: T) => boolean;
+  /** Per-row inline style — e.g. rowStripe(project) from components/ui/ProjectColor for the 3px job-colour edge. */
+  rowStyle?: (row: T) => React.CSSProperties | undefined;
 }) {
   const [sort, setSort] = React.useState<SortState>(defaultSort ?? null);
   const byKey = React.useMemo(() => new Map(columns.map((c) => [c.key, c])), [columns]);
@@ -480,7 +483,7 @@ export function DataTable<T>({
             </tr>
           ) : (
             sorted.map((row) => (
-              <tr key={rowKey(row)} data-clickable={!!onRowClick} data-selected={isSelected?.(row) ? 'true' : undefined} aria-selected={isSelected ? !!isSelected(row) : undefined} onClick={onRowClick ? () => onRowClick(row) : undefined}>
+              <tr key={rowKey(row)} style={rowStyle?.(row)} data-clickable={!!onRowClick} data-selected={isSelected?.(row) ? 'true' : undefined} aria-selected={isSelected ? !!isSelected(row) : undefined} onClick={onRowClick ? () => onRowClick(row) : undefined}>
                 {columns.map((c, ci) => {
                   const v = valueOf(c, row);
                   const phone = c.phone ?? (ci < 4 ? 'show' : 'hide');

@@ -1,0 +1,1182 @@
+{
+  "app/about/page.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "app/accept-invite/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/api-docs/page.tsx": {
+    "hex": 14,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/approval-workflows/page.tsx": {
+    "hex": 19,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/ask/page.tsx": {
+    "hex": 3,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/bid-intelligence/page.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/bids/leveling/page.tsx": {
+    "hex": 12,
+    "table": 2,
+    "status": 0
+  },
+  "app/app/bids/page.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/billing/cost-control/page.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/billing/payapp/page.tsx": {
+    "hex": 8,
+    "table": 2,
+    "status": 0
+  },
+  "app/app/catalog/page.tsx": {
+    "hex": 18,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/certified-payroll/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/classic/page.tsx": {
+    "hex": 14,
+    "table": 1,
+    "status": 0
+  },
+  "app/app/client-portal/page.tsx": {
+    "hex": 9,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/command-center/budget/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/command-center/checklists/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/command-center/directory/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/command-center/escalations/page.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/command-center/oac/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/command-center/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/command-center/pre-site/page.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/command-center/qc/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/command-center/risks/page.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/command-center/vendors/page.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/command-center/verify/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/compliance/lien-deadlines/page.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/compliance/page.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/compliance/prevailing-wage/page.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/custom-fields/page.tsx": {
+    "hex": 11,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/customers/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/dashboard-config/page.tsx": {
+    "hex": 12,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/documents/page.tsx": {
+    "hex": 10,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/fleet/page.tsx": {
+    "hex": 20,
+    "table": 1,
+    "status": 0
+  },
+  "app/app/integrations/api-docs/page.tsx": {
+    "hex": 8,
+    "table": 1,
+    "status": 0
+  },
+  "app/app/integrations/page.tsx": {
+    "hex": 11,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/integrations/quickbooks/page.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/intelligence/command-center/page.tsx": {
+    "hex": 9,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/leads/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/notification-settings/page.tsx": {
+    "hex": 11,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/notifications/page.tsx": {
+    "hex": 10,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/prequalification/page.tsx": {
+    "hex": 8,
+    "table": 1,
+    "status": 0
+  },
+  "app/app/projects/new/page.tsx": {
+    "hex": 9,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/autopilot/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/bid-packages/[id]/jacket/page.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/bid-packages/[id]/leveling/page.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/bid-packages/[id]/page.tsx": {
+    "hex": 34,
+    "table": 0,
+    "status": 1
+  },
+  "app/app/projects/[projectId]/bills/page.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 1
+  },
+  "app/app/projects/[projectId]/budget/page.tsx": {
+    "hex": 59,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/cash-flow/page.tsx": {
+    "hex": 11,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/closeout/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/compliance/page.tsx": {
+    "hex": 9,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/contracts/new/[kind]/page.tsx": {
+    "hex": 9,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/contracts/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/directory/page.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/drawings/page.tsx": {
+    "hex": 23,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/estimate/page.tsx": {
+    "hex": 12,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/files/page.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/insurance/page.tsx": {
+    "hex": 14,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/intelligence/page.tsx": {
+    "hex": 12,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/invoices/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 1
+  },
+  "app/app/projects/[projectId]/layout.tsx": {
+    "hex": 10,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/lien-waivers/page.tsx": {
+    "hex": 16,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/loading.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/messages/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/network/cables/page.tsx": {
+    "hex": 10,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/network/config/page.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/network/devices/page.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/network/firewall/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/network/page.tsx": {
+    "hex": 12,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/network/reports/page.tsx": {
+    "hex": 8,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/network/vlans/page.tsx": {
+    "hex": 8,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/network/wifi/page.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/network/wizard/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/overview/page.tsx": {
+    "hex": 11,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/payroll/page.tsx": {
+    "hex": 22,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/proposal/page.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/purchase-orders/page.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/safety/page.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 2
+  },
+  "app/app/projects/[projectId]/schedule/page.tsx": {
+    "hex": 8,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/selections/page.tsx": {
+    "hex": 12,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/specs/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/subs/page.tsx": {
+    "hex": 23,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/takeoff/estimate/page.tsx": {
+    "hex": 28,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/takeoff/page.tsx": {
+    "hex": 49,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/team/page.tsx": {
+    "hex": 10,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/timesheets/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/todos/page.tsx": {
+    "hex": 3,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/w9/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 1
+  },
+  "app/app/radio/page.tsx": {
+    "hex": 35,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/reports/builder/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/reports/showcase/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/resource-planning/page.tsx": {
+    "hex": 9,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/reviews/page.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/sales/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/schedule/[id]/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/service/page.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/settings/branding/page.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/settings/delete-account/page.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/settings/integrations-hub/page.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/settings/page.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/settings/platform-integrations/page.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/settings/storage/page.tsx": {
+    "hex": 3,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/sub-portal/page.tsx": {
+    "hex": 9,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/subs/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/takeoff/assemblies/page.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/takeoff/measured/page.tsx": {
+    "hex": 55,
+    "table": 1,
+    "status": 0
+  },
+  "app/app/takeoff/measured/PlanTracer.tsx": {
+    "hex": 32,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/takeoff/rates/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/warranty-claims/page.tsx": {
+    "hex": 11,
+    "table": 1,
+    "status": 0
+  },
+  "app/app/_shared/table-sort.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/bids/page.tsx": {
+    "hex": 11,
+    "table": 0,
+    "status": 0
+  },
+  "app/blog/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/careers/page.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "app/changelog/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/compare/page.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "app/compare/procore/page.tsx": {
+    "hex": 13,
+    "table": 0,
+    "status": 0
+  },
+  "app/contact/page.tsx": {
+    "hex": 9,
+    "table": 0,
+    "status": 0
+  },
+  "app/design/discover/page.tsx": {
+    "hex": 8,
+    "table": 0,
+    "status": 0
+  },
+  "app/design/materials/page.tsx": {
+    "hex": 34,
+    "table": 0,
+    "status": 0
+  },
+  "app/design/packages/page.tsx": {
+    "hex": 9,
+    "table": 0,
+    "status": 0
+  },
+  "app/design/page.tsx": {
+    "hex": 131,
+    "table": 0,
+    "status": 0
+  },
+  "app/design/roi/page.tsx": {
+    "hex": 16,
+    "table": 0,
+    "status": 0
+  },
+  "app/design/sage/page.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "app/features/page.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "app/forgot-password/page.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "app/franchise-portal/[token]/page.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "app/global-error.tsx": {
+    "hex": 11,
+    "table": 0,
+    "status": 0
+  },
+  "app/help-center/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/how-it-works/page.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "app/how-to-get-started/page.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "app/industry/page.tsx": {
+    "hex": 3,
+    "table": 0,
+    "status": 0
+  },
+  "app/intelligence/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/layout.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "app/onboarding/step-1/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/onboarding/step-2/page.tsx": {
+    "hex": 10,
+    "table": 0,
+    "status": 0
+  },
+  "app/onboarding/step-3/page.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "app/onboarding/step-4/page.tsx": {
+    "hex": 8,
+    "table": 0,
+    "status": 0
+  },
+  "app/owner-portal/approve/[token]/page.tsx": {
+    "hex": 13,
+    "table": 0,
+    "status": 0
+  },
+  "app/page.tsx": {
+    "hex": 17,
+    "table": 0,
+    "status": 0
+  },
+  "app/partners/page.tsx": {
+    "hex": 18,
+    "table": 0,
+    "status": 0
+  },
+  "app/prequal/[token]/page.tsx": {
+    "hex": 8,
+    "table": 0,
+    "status": 0
+  },
+  "app/pricing/page.tsx": {
+    "hex": 9,
+    "table": 0,
+    "status": 0
+  },
+  "app/privacy/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/product/page.tsx": {
+    "hex": 15,
+    "table": 0,
+    "status": 0
+  },
+  "app/reports/page.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "app/reset-password/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/roi-calculator/page.tsx": {
+    "hex": 10,
+    "table": 0,
+    "status": 0
+  },
+  "app/sandbox/page.tsx": {
+    "hex": 10,
+    "table": 0,
+    "status": 0
+  },
+  "app/security/page.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "app/share/heatmap/[id]/page.tsx": {
+    "hex": 31,
+    "table": 0,
+    "status": 0
+  },
+  "app/share/takeoff/[id]/page.tsx": {
+    "hex": 18,
+    "table": 0,
+    "status": 0
+  },
+  "app/sla/page.tsx": {
+    "hex": 12,
+    "table": 0,
+    "status": 0
+  },
+  "app/switch-from-procore/page.tsx": {
+    "hex": 8,
+    "table": 0,
+    "status": 0
+  },
+  "app/takeoff/page.tsx": {
+    "hex": 38,
+    "table": 0,
+    "status": 0
+  },
+  "app/terms/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/welcome/page.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "components/ActivityFeed.tsx": {
+    "hex": 3,
+    "table": 0,
+    "status": 0
+  },
+  "components/AppSidebar.tsx": {
+    "hex": 9,
+    "table": 0,
+    "status": 0
+  },
+  "components/AuditTimeline.tsx": {
+    "hex": 21,
+    "table": 0,
+    "status": 0
+  },
+  "components/BackToTop.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "components/BidJacketAssembly.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "components/BidJacketView.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "components/BidPackageWizard.tsx": {
+    "hex": 10,
+    "table": 0,
+    "status": 0
+  },
+  "components/bids/MarkOutcomeModal.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "components/BrandMark.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "components/BulkActionBar.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "components/CityLandingPage.tsx": {
+    "hex": 16,
+    "table": 0,
+    "status": 0
+  },
+  "components/CommandPalette.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "components/CompetitorComparePage.tsx": {
+    "hex": 10,
+    "table": 0,
+    "status": 0
+  },
+  "components/contracts/ContractCompare.tsx": {
+    "hex": 3,
+    "table": 0,
+    "status": 0
+  },
+  "components/contracts/ContractForm.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "components/contracts/ContractVersions.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "components/dashboard-widgets.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "components/DataTable.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "components/documents/DocKindTile.tsx": {
+    "hex": 3,
+    "table": 0,
+    "status": 0
+  },
+  "components/documents/DocumentLibrary.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "components/DragHandle.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "components/drawings/DrawingViewer.tsx": {
+    "hex": 30,
+    "table": 0,
+    "status": 0
+  },
+  "components/drawings/markup-model.ts": {
+    "hex": 9,
+    "table": 0,
+    "status": 0
+  },
+  "components/drawings/RevisionCompare.tsx": {
+    "hex": 9,
+    "table": 0,
+    "status": 0
+  },
+  "components/ErrorBoundary.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "components/FileCropper.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "components/FileDropzone.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "components/FilePreview.tsx": {
+    "hex": 14,
+    "table": 0,
+    "status": 0
+  },
+  "components/FileTypeBadge.tsx": {
+    "hex": 26,
+    "table": 0,
+    "status": 0
+  },
+  "components/GetAppBadge.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "components/GetStartedTour.tsx": {
+    "hex": 8,
+    "table": 0,
+    "status": 0
+  },
+  "components/GettingStartedRail.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "components/GlobalShortcuts.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "components/HeaderMessages.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "components/HeaderProjectPicker.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "components/HelpMode.tsx": {
+    "hex": 12,
+    "table": 0,
+    "status": 0
+  },
+  "components/home/HomeV2.tsx": {
+    "hex": 15,
+    "table": 0,
+    "status": 0
+  },
+  "components/IndustryLandingPage.tsx": {
+    "hex": 9,
+    "table": 0,
+    "status": 0
+  },
+  "components/Integrations.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "components/intelligence/SuggestionTicker.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "components/marketing/DeviceFrame.tsx": {
+    "hex": 18,
+    "table": 0,
+    "status": 0
+  },
+  "components/MarketingFooter.tsx": {
+    "hex": 12,
+    "table": 0,
+    "status": 0
+  },
+  "components/MarketingNav.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "components/NextStepBar.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "components/NotificationBell.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "components/NotificationCenter.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "components/PermitCorrespondence.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "components/PhotoEditor.tsx": {
+    "hex": 8,
+    "table": 0,
+    "status": 0
+  },
+  "components/PresenceIndicator.tsx": {
+    "hex": 12,
+    "table": 0,
+    "status": 0
+  },
+  "components/projects/ProjectPreview.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "components/projects/SetupStepper.tsx": {
+    "hex": 3,
+    "table": 0,
+    "status": 0
+  },
+  "components/ProjectSwitcher.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "components/RouteError.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "components/SageSettings.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "components/SaguaroChatWidget.tsx": {
+    "hex": 16,
+    "table": 0,
+    "status": 0
+  },
+  "components/SaguaroDatePicker.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "components/SalesJourneyRail.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "components/SalesOverview.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "components/StatusTicker.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "components/SubscriptionWall.tsx": {
+    "hex": 8,
+    "table": 0,
+    "status": 0
+  },
+  "components/team/AccessManager.tsx": {
+    "hex": 24,
+    "table": 0,
+    "status": 0
+  },
+  "components/team/PeopleDirectory.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "components/ThemeToggle.tsx": {
+    "hex": 8,
+    "table": 0,
+    "status": 0
+  },
+  "components/Toast.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "components/ui/BottomSheet.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "components/ui/cinematic.tsx": {
+    "hex": 9,
+    "table": 0,
+    "status": 0
+  },
+  "components/ui/CrewMap.tsx": {
+    "hex": 21,
+    "table": 0,
+    "status": 0
+  },
+  "components/ui/FileTypeIcon.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "components/ui/fx.tsx": {
+    "hex": 13,
+    "table": 0,
+    "status": 0
+  },
+  "components/ui/kit.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "components/ui/ListToolbar.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "components/ui/premium.tsx": {
+    "hex": 27,
+    "table": 0,
+    "status": 0
+  },
+  "components/ui/PremiumEmpty.tsx": {
+    "hex": 3,
+    "table": 0,
+    "status": 0
+  },
+  "components/ui/Select.tsx": {
+    "hex": 3,
+    "table": 0,
+    "status": 0
+  },
+  "components/ui/shell.tsx": {
+    "hex": 11,
+    "table": 0,
+    "status": 0
+  },
+  "components/ui/SMeter.tsx": {
+    "hex": 10,
+    "table": 0,
+    "status": 0
+  },
+  "components/ui/StatCard.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "components/ui/Status.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "components/ui/Suggest.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "components/WhiteLabelProvider.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  }
+}

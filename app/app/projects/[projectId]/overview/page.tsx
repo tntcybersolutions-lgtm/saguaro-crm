@@ -31,6 +31,7 @@ import { toCents, toDollars, sumCents, subCents, summarizeContract } from '@/lib
 import { Badge, EmptyState, type BadgeTone } from '@/components/ui/kit';
 import NextAction from '@/components/project/NextAction';
 import ProjectHeader from '@/components/project/ProjectHeader';
+import JobColorPicker from '@/components/project/JobColorPicker';
 import ProjectOwnershipCard from '@/components/projects/ProjectOwnershipCard';
 import { normalisePhase } from '@/lib/project-phase';
 import { isClosedStatus } from '@/lib/project-lifecycle';
@@ -661,6 +662,10 @@ export default function OverviewPage() {
           <div className="pov-col">
             <ProjectOwnershipCard projectId={projectId} project={p} onSaved={() => { void revalidate(); }} />
             <Section id="pov-details" title="Project Details">
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px', alignItems: 'center', padding: '8px 0 12px', borderBottom: '1px solid var(--border-subtle)', marginBottom: 6 }}>
+                <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-tertiary)', minWidth: 110 }}>Job color</span>
+                <JobColorPicker projectId={projectId} color={p.color} onSaved={() => { void revalidate(); }} />
+              </div>
               <dl className="pov-dl">
                 {detailRows.map(([l, v]) => (
                   <div key={l} className="pov-dlrow"><dt>{l}</dt><dd>{v}</dd></div>

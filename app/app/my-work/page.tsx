@@ -24,6 +24,7 @@ import {
 } from '@phosphor-icons/react';
 import { PageShell, Card, StatRow, Badge, Button, EmptyState, type StatItem } from '@/components/ui/kit';
 import { accentForProject, projectMonogram } from '@/lib/project-identity';
+import { stripeStyle } from '@/components/ui/ProjectColor';
 import { moduleAccent } from '@/lib/module-identity';
 
 const fetcher = async (url: string) => {
@@ -265,6 +266,7 @@ export default function MyWorkPage() {
               return (
                 <Card
                   key={pid || idx}
+                  style={pid ? stripeStyle({ id: pid, color: proj.color }) : undefined}
                   title={
                     <span className="mwCardTitle">
                       <span aria-hidden className="mwChip" style={{ background: acc.soft, borderColor: acc.ring, color: acc.hex, fontSize: 11, fontWeight: 900 }}>{projectMonogram(proj.name)}</span>

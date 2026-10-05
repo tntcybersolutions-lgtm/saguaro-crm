@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { nextJobColor } from '@/lib/project-colors';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { normalisePhase } from '@/lib/project-phase';
 import type { Database } from '@/lib/database.types';
@@ -40,8 +41,11 @@ export async function POST(req: NextRequest) {
 
     const db = createServerClient();
 
+    // Job colour: the tenant's Nth project takes the Nth swatch, so neighbours differ.
+    const { count: priorCount } = await db.from('projects').select('id', { count: 'exact', head: true }).eq('tenant_id', user.tenantId);
     const { data: project, error } = await db.from('projects').insert({
       tenant_id: user.tenantId,
+      color: nextJobColor(Number(priorCount) || 0),
       name: body.name,
       address: body.address,
       state_jurisdiction: body.stateJurisdiction || 'AZ',

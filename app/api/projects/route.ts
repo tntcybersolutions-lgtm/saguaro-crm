@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
        returned it, so nothing downstream of this list could tell a bidding job
        from a job under construction. */
     const COLUMNS = [
-      'id', 'name', 'status', 'phase', 'address', 'city', 'state', 'project_number',
+      'id', 'name', 'status', 'phase', 'address', 'city', 'state', 'project_number', 'color',
       'type', 'project_type', 'contract_value', 'percent_complete',
       'start_date', 'end_date', 'created_at', 'updated_at',
     ];

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isJobColor } from '@/lib/project-colors';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { toCents, toDollars, sumCents, summarizeContract } from '@/lib/calc';
@@ -203,11 +204,14 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ proj
       'original_contract', 'ntp_date', 'substantial_date', 'is_public_project', 'geofence_lat',
       'geofence_lng', 'geofence_radius_meters', 'net_change_by_co', 'approved_co_count', 'city',
       'estimated_completion', 'square_footage', 'architect_firm', 'completeness_score', 'setup_complete',
-      'setup_step', 'setup_dismissed', 'health_score', 'target_finish_date', 'updated_at',
+      'setup_step', 'setup_dismissed', 'health_score', 'target_finish_date', 'updated_at', 'color',
     ];
     const updates: Record<string, any> = {};
     for (const k of ALLOWED_PROJECT_COLUMNS) {
       if (body[k] !== undefined) updates[k] = body[k];
+    }
+    if (updates.color !== undefined && updates.color !== null && !isJobColor(updates.color)) {
+      return NextResponse.json({ error: 'color must be one of the eight job colours' }, { status: 400 });
     }
     const { data, error } = await db.from('projects').update(updates).eq('id', projectId).eq('tenant_id', user.tenantId).select().single();
     if (error) throw error;
