@@ -72,6 +72,14 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   const user = g.user;
   try {
     const supabase = createServerClient();
+    // The deal's files go with it: bucket objects first, then the index rows.
+    // Deleting the lead used to leave every upload behind under deals/<id>/.
+    const loose = supabase as unknown as { from: (t: string) => any }; // deal_media is outside the generated types
+    const { data: media } = await loose.from('deal_media').select('id, path')
+      .eq('lead_id', params.id).eq('tenant_id', user.tenantId);
+    const paths = ((media ?? []) as Array<{ path: string | null }>).map((m) => m.path).filter((x): x is string => !!x);
+    if (paths.length) await supabase.storage.from('project-files').remove(paths);
+    if ((media ?? []).length) await must(loose.from('deal_media').delete().eq('lead_id', params.id).eq('tenant_id', user.tenantId), 'deal_media delete');
     await must(supabase.from('lead_activities').delete().eq('lead_id', params.id).eq('tenant_id', user.tenantId), 'lead_activities delete');
     const { error } = await supabase.from('lead_pipeline').delete().eq('id', params.id).eq('tenant_id', user.tenantId);
     if (error) throw error;

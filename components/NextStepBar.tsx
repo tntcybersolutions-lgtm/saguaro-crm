@@ -166,6 +166,8 @@ export default function NextStepBar() {
      work happens. On Radio, Invoicing, Settings and the rest it announced a
      sales step that had nothing to do with the screen. */
   const onSalesRoute = /^\/app\/(sales|leads|customers|bids|bid-intelligence)(\/|$)/.test(pathname);
+  // Inside a job the overview's NextAction is the single guidance surface.
+  if (inProject) return null;
   if (!onBuildJourney && !onSalesRoute) return null;
 
   let tone = BLUE;

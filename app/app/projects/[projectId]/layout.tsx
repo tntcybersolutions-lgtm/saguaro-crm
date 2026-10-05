@@ -404,48 +404,6 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
             project screen (win → build → bill → close), phase you're in lit. */}
         <ProjectPhaseBar />
 
-        {/* Mobile module bar — only shown <=768px (hidden on desktop) */}
-        <div className="project-mobile-bar" style={{
-          display: 'none',
-          alignItems: 'center',
-          gap: 10,
-          padding: '8px 12px',
-          background: 'var(--bg-base)',
-          borderBottom: `1px solid ${BORDER}`,
-          position: 'sticky',
-          top: 56,
-          zIndex: 90,
-        }}>
-          <button
-            onClick={() => setMobileOpen(true)}
-            aria-label="Open project menu"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              background: RAISED,
-              border: `1px solid ${BORDER}`,
-              borderRadius: 8,
-              color: TEXT,
-              cursor: 'pointer',
-              fontSize: 13,
-              fontWeight: 700,
-              padding: '7px 12px',
-            }}
-          >
-            <span style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <span style={{ width: 16, height: 2, background: GOLD, borderRadius: 1 }} />
-              <span style={{ width: 16, height: 2, background: GOLD, borderRadius: 1 }} />
-              <span style={{ width: 16, height: 2, background: GOLD, borderRadius: 1 }} />
-            </span>
-            Modules
-          </button>
-          <div style={{ minWidth: 0, overflow: 'hidden' }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: accentForProject(projectId as string).hex, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{projectName || '—'}</div>
-            {projectNumber && <div style={{ fontSize: 10, color: DIM }}>{projectNumber}</div>}
-          </div>
-        </div>
-
         {children}
       </div>
 

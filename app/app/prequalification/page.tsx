@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useSort, useSortedRows, SortTh, SortBar } from '@/components/ui/sort';
 import { humanError } from '@/lib/errors';
 import { SUB_TRADES as TRADES } from '@/lib/construction-intelligence';
 import { Clipboard, NotePencil, Envelope, CheckCircle, XCircle, CaretUp, CaretDown, X, ShieldCheck, Plus, WarningCircle, ChartBar, Clock } from '@phosphor-icons/react';
@@ -166,6 +167,11 @@ function normalizeInvite(i: any): Invite {
 /* ════════════════════════════════════════════════════════════════════
    MAIN PAGE
    ════════════════════════════════════════════════════════════════════ */
+const PQ_COLS: { key: string; label: string }[] = [
+  { key: 'sub_name', label: 'Subcontractor' }, { key: 'sub_trade', label: 'Trade' }, { key: 'score', label: 'Score' }, { key: 'status', label: 'Status' },
+  { key: 'submitted_at', label: 'Submitted' }, { key: 'expires_at', label: 'Prequal Expires' }, { key: 'docs', label: 'Docs' }, { key: '', label: 'Actions' },
+];
+
 export default function PrequalificationPage() {
   const [tab, setTab] = useState<'dashboard' | 'submissions' | 'templates' | 'invites'>('dashboard');
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -233,6 +239,13 @@ export default function PrequalificationPage() {
       return true;
     });
   }, [submissions, statusFilter, tradeFilter, scoreMin, search]);
+  const pqSort = useSort(null);
+  const pqSortValue = useCallback((s: (typeof submissions)[number], key: string): unknown => {
+    if (key === 'score') return s.max_score > 0 ? s.total_score / s.max_score : 0;
+    if (key === 'docs') return s.documents.length ? s.documents.filter(d => d.uploaded).length / s.documents.length : null;
+    return (s as unknown as Record<string, unknown>)[key];
+  }, []);
+  const sortedSubmissions = useSortedRows(filtered, pqSort.sort, pqSortValue);
 
   /* ─── Dashboard stats ─── */
   const stats = useMemo(() => {
@@ -678,21 +691,17 @@ export default function PrequalificationPage() {
               ) : (
                 <SectionCard flush>
                 <div style={{ overflowX: 'auto' }}>
+                  <SortBar columns={PQ_COLS.filter(c => c.key)} sort={pqSort.sort} onChange={pqSort.setSort} />
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                       <tr style={{ background: RAISED }}>
-                        <th style={tableHeaderS}>Subcontractor</th>
-                        <th style={tableHeaderS}>Trade</th>
-                        <th style={tableHeaderS}>Score</th>
-                        <th style={tableHeaderS}>Status</th>
-                        <th style={tableHeaderS}>Submitted</th>
-                        <th style={tableHeaderS}>Prequal Expires</th>
-                        <th style={tableHeaderS}>Docs</th>
-                        <th style={tableHeaderS}>Actions</th>
+                        {PQ_COLS.map(c => c.key
+                          ? <SortTh key={c.key} col={c.key} label={c.label} sort={pqSort.sort} onSort={pqSort.cycle} style={tableHeaderS} />
+                          : <th key={c.label} style={tableHeaderS}>{c.label}</th>)}
                       </tr>
                     </thead>
                     <tbody>
-                      {filtered.map(s => {
+                      {sortedSubmissions.map(s => {
                         const pct = s.max_score > 0 ? Math.round((s.total_score / s.max_score) * 100) : 0;
                         const docsOk = s.documents.filter(d => d.uploaded).length;
                         const docsTotal = s.documents.length;

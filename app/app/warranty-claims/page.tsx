@@ -1,5 +1,6 @@
 'use client';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useSort, useSortedRows, SortTh, SortBar } from '@/components/ui/sort';
 import { useProjects } from '@/lib/hooks/useProjects';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
@@ -123,6 +124,11 @@ const css = {
 };
 
 /* ───── COMPONENT ───── */
+const CLAIM_COLS: { key: string; label: string }[] = [
+  { key: 'claim_number', label: 'Claim #' }, { key: 'category', label: 'Cat' }, { key: 'title', label: 'Title' }, { key: 'priority', label: 'Priority' }, { key: 'status', label: 'Status' },
+  { key: 'reported_date', label: 'Reported' }, { key: 'assigned_contractor', label: 'Assigned' }, { key: 'cost', label: 'Cost' }, { key: 'warranty_expiry', label: 'Warranty' }, { key: '', label: 'Actions' },
+];
+
 export default function WarrantyClaimsPage() {
   /* state */
   const [projects, setProjects] = useState<Project[]>([]);
@@ -212,6 +218,12 @@ export default function WarrantyClaimsPage() {
     }
     return list;
   }, [claims, fCategory, fStatus, fPriority, fDateFrom, fDateTo, fSearch]);
+  const claimSort = useSort(null);
+  const claimSortValue = useCallback((c: (typeof claims)[number], key: string): unknown => {
+    if (key === 'cost') return Number(c.cost) || 0;
+    return (c as unknown as Record<string, unknown>)[key];
+  }, []);
+  const sortedClaims = useSortedRows(filtered, claimSort.sort, claimSortValue);
 
   /* dashboard stats */
   const stats = useMemo(() => {
@@ -565,23 +577,17 @@ export default function WarrantyClaimsPage() {
             </SectionCard>
           ) : (
             <SectionCard flush bodyStyle={{ overflow: 'auto' }}>
+              <SortBar columns={CLAIM_COLS.filter(c => c.key)} sort={claimSort.sort} onChange={claimSort.setSort} />
               <table style={css.table}>
                 <thead>
                   <tr>
-                    <th style={css.th}>Claim #</th>
-                    <th style={css.th}>Cat</th>
-                    <th style={css.th}>Title</th>
-                    <th style={css.th}>Priority</th>
-                    <th style={css.th}>Status</th>
-                    <th style={css.th}>Reported</th>
-                    <th style={css.th}>Assigned</th>
-                    <th style={css.th}>Cost</th>
-                    <th style={css.th}>Warranty</th>
-                    <th style={css.th}>Actions</th>
+                    {CLAIM_COLS.map(c => c.key
+                      ? <SortTh key={c.key} col={c.key} label={c.label} sort={claimSort.sort} onSort={claimSort.cycle} style={css.th} />
+                      : <th key={c.label} style={css.th}>{c.label}</th>)}
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map(c => (
+                  {sortedClaims.map(c => (
                     <tr key={c.id} style={css.trHover} onClick={() => setDetailClaim(c)}
                       onMouseEnter={e => (e.currentTarget.style.background = `color-mix(in srgb, ${BORDER} 20%, transparent)`)}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>

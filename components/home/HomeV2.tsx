@@ -18,7 +18,7 @@ import ActivityFeed from '@/components/ActivityFeed';
 import SalesOverview from '@/components/SalesOverview';
 import type { Metric, QueueItem, ScheduleEntry, HomeView, DataState } from '@/lib/home/rank';
 import { TIER_LABEL } from '@/lib/home/rank';
-import { NEON_CYCLE, neonCard, neonText } from '@/lib/neon';
+import { neonText } from '@/lib/neon';
 import { accentForProject } from '@/lib/project-identity';
 
 interface HomePayload {
@@ -110,26 +110,23 @@ function Segmented<T extends string>({ value, options, onChange, label }: { valu
   );
 }
 
-function MetricCard({ m, index }: { m: Metric; index: number }) {
+function MetricCard({ m }: { m: Metric }) {
+  // Same compact kit tile as the job overview (components/project): small label,
+  // prominent tabular value, one supporting line. A missing number is said in
+  // words and stays muted — never a bright zero.
   const shown = m.state === 'ok' || m.state === 'empty';
-  // Each metric lit in its own neon (owner 2026-10-03). Unavailable/failed
-  // cards stay neutral so a missing number never looks like a bright result.
-  const lit = NEON_CYCLE[index % NEON_CYCLE.length];
-  const glow = shown ? neonCard(lit) : null;
-  const cardStyle: React.CSSProperties = glow ? { background: glow.background, borderTop: glow.borderTop, boxShadow: glow.boxShadow, borderColor: 'var(--glass-border)' } : {};
+  const text = shown ? m.value : m.state === 'restricted' ? 'No access' : m.state === 'failed' ? 'Couldn\u2019t load' : 'Not available';
   const body = (
     <>
-      <div className="hv2-metric-label" style={undefined}>{m.label}</div>
-      <div className="hv2-metric-value" style={{ ...(shown ? { color: '#FFFFFF' } : { color: 'var(--text-tertiary)' }), fontSize: shown ? 30 : 15 }}>
-        {shown ? m.value : m.state === 'restricted' ? 'No access' : m.state === 'failed' ? 'Couldn\'t load' : 'Not available'}
-      </div>
-      <div className="hv2-metric-basis">{shown ? m.basis : m.note || m.basis}</div>
+      <span className="k-stat-top"><span className="k-stat-label">{m.label}</span></span>
+      <span className="k-stat-value" data-muted={shown ? undefined : 'true'}>{text}</span>
+      <span className="k-stat-sub">{shown ? m.basis : m.note || m.basis}</span>
     </>
   );
   return m.href && shown ? (
-    <Link href={m.href} className="hv2-card hv2-metric hv2-link" style={cardStyle} aria-label={`${m.label}: ${m.value}`}>{body}</Link>
+    <Link href={m.href} className="k-stat" aria-label={`${m.label}: ${m.value}`}>{body}</Link>
   ) : (
-    <div className="hv2-card hv2-metric" style={cardStyle}>{body}</div>
+    <div className="k-stat">{body}</div>
   );
 }
 
@@ -401,7 +398,7 @@ function HomeInner() {
 
   return (
     <div className="hv2">
-      <style>{CSS}</style>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
 
       {/* Header */}
       <header className="hv2-header">
@@ -446,7 +443,7 @@ function HomeInner() {
         </div>
       ) : isLoading && !data ? (
         <div className="hv2-stack" aria-busy="true" aria-label="Loading your home dashboard">
-          <div className="hv2-metrics">{[0, 1, 2, 3].map(i => <div key={i} className="hv2-card hv2-skel" style={{ height: 112 }} />)}</div>
+          <div className="pj-metrics">{[0, 1, 2, 3].map(i => <div key={i} className="k-stat hv2-skel" style={{ height: 96 }} />)}</div>
           <div className="hv2-primary"><div className="hv2-card hv2-skel" style={{ height: 380 }} /><div className="hv2-card hv2-skel" style={{ height: 380 }} /></div>
         </div>
       ) : data ? (
@@ -457,7 +454,7 @@ function HomeInner() {
               <button type="button" className="hv2-linkbtn" onClick={() => mutate()}>Retry</button>
             </div>
           )}
-          <div className="hv2-metrics hv2-order-3">{data.metrics.map((m, i) => <MetricCard key={m.key} m={m} index={i} />)}</div>
+          <div className="pj-metrics hv2-order-3">{data.metrics.map((m) => <MetricCard key={m.key} m={m} />)}</div>
           <div className="hv2-primary hv2-order-1">
             <NeedsAttention data={data} onChanged={() => mutate()} />
             <Schedule data={data} />
@@ -493,10 +490,10 @@ export default function HomeV2() {
 }
 
 const CSS = `
-.hv2 { padding: 24px; max-width: 1600px; margin: 0 auto; color: var(--text-primary); font-size: 15px; }
-.hv2 h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.01em; margin: 0; }
-.hv2 h2 { color: var(--title-color, #FFE600); font-size: 17px; font-weight: 800; margin: 0; padding-bottom: 6px; background: linear-gradient(90deg, var(--neon-yellow, #FFE600), var(--brand-primary)) left bottom / 44px 2px no-repeat; }
-.hv2 h1 { background: linear-gradient(90deg, #FFFFFF 0%, #FFFFFF 50%, var(--neon-yellow, #FFE600) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hv2 { padding: 24px clamp(16px, 1.67vw, 32px) 64px; max-width: 1600px; margin: 0 auto; color: var(--text-primary); font-size: 15px; }
+.sag-app .hv2 h1, .hv2 h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.015em; line-height: 1.15; margin: 0; }
+.sag-app .hv2 h2, .hv2 h2 { color: var(--brand-primary); font-size: 18px; font-weight: 800; letter-spacing: -0.01em; margin: 0; }
+.hv2 h1 { color: var(--text-primary); }
 .hv2-proj { font-weight: 700; }
 .hv2 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .hv2-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; margin-bottom: 8px; }
@@ -504,28 +501,26 @@ const CSS = `
 .hv2-greet { color: var(--text-tertiary); font-size: 14px; }
 .hv2-actions { display: flex; align-items: center; gap: 8px; }
 .hv2-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 4px 0 8px; }
-.hv2-seg { display: inline-flex; flex-wrap: wrap; background: var(--bg-surface-2); border: 1px solid var(--glass-border); border-radius: 10px; padding: 3px; gap: 2px; }
-.hv2-seg button { min-height: 34px; padding: 0 12px; border: 0; border-radius: 7px; background: transparent; color: var(--text-secondary); font-size: 13px; font-weight: 650; cursor: pointer; }
-.hv2-seg button.on { background: var(--brand-primary); color: var(--on-brand); }
+.hv2-seg { display: inline-flex; flex-wrap: wrap; background: var(--surface-card); border: 1px solid var(--border-default); border-radius: 999px; padding: 3px; gap: 2px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05); }
+.hv2-seg button { min-height: 34px; padding: 0 14px; border: 0; border-radius: 999px; background: transparent; color: var(--text-secondary); font-size: 13px; font-weight: 650; cursor: pointer; }
+.hv2-seg button.on { background: var(--brand-primary); color: var(--on-brand); font-weight: 800; box-shadow: inset 0 1px 0 rgba(255,255,255,0.5); }
 .hv2-seg button:focus-visible, .hv2-btn:focus-visible, .hv2-select select:focus-visible, .hv2-link:focus-visible, .hv2-tlink:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
-.hv2-select select { min-height: 40px; max-width: 240px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--glass-border); background: var(--bg-solid-2, #15171C); color: var(--text-primary); font-size: 14px; }
+.hv2-select select { min-height: 40px; max-width: 240px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--border-default); background: var(--surface-raised); color: var(--text-primary); font-size: 14px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.06); }
 .hv2-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: 10px; font-size: 14px; font-weight: 700; text-decoration: none; cursor: pointer; white-space: nowrap; border: 1px solid transparent; }
-.hv2-btn-primary { background: var(--brand-primary); color: var(--on-brand); }
-.hv2-btn-ghost { background: var(--bg-surface-2); border-color: var(--glass-border); color: var(--text-primary); }
+.hv2-btn-primary { background: var(--grad-primary); color: var(--on-brand); border-color: rgba(0,0,0,0.25); box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.18), 0 8px 22px -10px rgba(255,200,0,0.8); }
+.hv2-btn-primary:hover { background: var(--grad-primary-hover); }
+.hv2-btn-ghost { background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)), var(--surface-raised); border-color: var(--border-default); color: var(--text-primary); box-shadow: inset 0 1px 0 rgba(255,255,255,0.08); }
+.hv2-btn-ghost:hover { border-color: var(--border-strong); }
 .hv2-btn-disabled { background: transparent; border-color: var(--glass-border); color: var(--text-tertiary); cursor: not-allowed; }
 .hv2-hint { color: var(--text-tertiary); font-size: 13px; margin: 0 0 16px; }
 .hv2-linkbtn { background: none; border: 0; padding: 0; color: var(--brand-primary); font-weight: 700; font-size: 13px; cursor: pointer; text-decoration: none; }
 .hv2-stack { display: flex; flex-direction: column; gap: 20px; margin-top: 12px; }
-.hv2-card { background: var(--bg-surface); border: 1px solid var(--glass-border); border-radius: 14px; box-shadow: var(--glass-highlight); }
-.hv2-card { border-top: 2px solid color-mix(in srgb, var(--brand-primary) 55%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--brand-primary) 5%, transparent), transparent 140px), var(--bg-surface); }
-.hv2-pad { padding: 18px 20px; }
-.hv2-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
-.hv2-metric { padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; text-decoration: none; color: inherit; min-height: 112px; }
+/* Same layered card as .k-card: solid dark surface, a sharp upper-edge
+   highlight and a yellow-to-orange top edge; no broad glow. */
+.hv2-card { position: relative; background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.025) 48px, rgba(255,255,255,0) 160px), var(--surface-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); }
+.hv2-card::before { content: ''; position: absolute; left: 14px; right: 14px; top: -1px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, transparent, var(--brand-primary) 30%, #FF8A00 70%, transparent); opacity: .9; pointer-events: none; }
+.hv2-pad { padding: 20px 22px; }
 .hv2-link { text-decoration: none; color: inherit; }
-.hv2-metric.hv2-link:hover { border-color: var(--brand-primary-35); }
-.hv2-metric-label { font-size: 13px; font-weight: 700; color: var(--text-secondary); }
-.hv2-metric-value { font-weight: 800; line-height: 1.15; font-variant-numeric: tabular-nums; }
-.hv2-metric-basis { font-size: 12.5px; color: var(--text-tertiary); line-height: 1.4; }
 .hv2-primary { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 20px; align-items: start; }
 .hv2-sechead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
 .hv2-dim { color: var(--text-tertiary); font-size: 13px; }
@@ -557,7 +552,7 @@ const CSS = `
 .hv2-tlink { color: var(--title-color, #FFE600); font-weight: 700; text-decoration: none; }
 .hv2-tlink:hover { color: var(--brand-primary); }
 .hv2-create { position: relative; }
-.hv2-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; min-width: 220px; padding: 6px; border-radius: 12px; background: var(--bg-elevated); border: 1px solid var(--glass-border); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); box-shadow: 0 12px 32px rgba(0,0,0,.5); }
+.hv2-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; min-width: 220px; padding: 6px; border-radius: 12px; background: var(--surface-raised); border: 1px solid var(--border-default); box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 16px 40px -12px rgba(0,0,0,.85); }
 .hv2-menu-hint { font-size: 12.5px; color: var(--text-tertiary); padding: 6px 10px 8px; }
 .hv2-menu-item { display: block; padding: 10px 12px; border-radius: 8px; font-size: 14px; font-weight: 600; color: var(--text-primary); text-decoration: none; }
 .hv2-menu-item:hover { background: var(--bg-surface-2); }
@@ -572,13 +567,10 @@ const CSS = `
 .hv2-foot span { display: inline-flex; align-items: center; gap: 6px; }
 @media (max-width: 1100px) {
   .hv2-primary { grid-template-columns: minmax(0, 1fr); }
-  .hv2-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 640px) {
   .hv2 { padding: 16px; }
-  .hv2 h1 { font-size: 22px; }
-  .hv2-metrics { gap: 12px; }
-  .hv2-metric { min-height: 0; padding: 12px 14px; }
+  .sag-app .hv2 h1, .hv2 h1 { font-size: 24px; }
   .hv2-qrow { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .hv2-qrow .hv2-btn { min-height: 44px; }
   .hv2-qactions { justify-content: flex-start; }
