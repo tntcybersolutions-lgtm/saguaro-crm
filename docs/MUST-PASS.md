@@ -44,7 +44,18 @@ to stop.
 - Reopen and confirm it persisted with today's practice date, not a UTC date
 - API: `app/api/daily-logs`
 - Taps at 390px: MEASURE
-- STATUS: NOT VERIFIED
+- Code walk 5 Oct 2026 (no runtime; no .env.local):
+  - Page `app/app/daily-logs/page.tsx` exists — CODE-VERIFIED
+  - `POST /api/daily-logs/create` exists; client sends `projectId, logDate, weather, temperatureHigh/Low, crewCount, workPerformed, ...`, route reads both spellings — CODE-VERIFIED
+  - Route auth (`requirePermission` Projects/Edit), `assertProjectInTenant`, `tenant_id` stamped from session — CODE-VERIFIED
+  - Every inserted column exists in `daily_logs` (checked against information_schema on `jddfvugsaosvgllbkzch`) — CODE-VERIFIED
+  - `GET /api/daily-logs/list` auth + `tenant_id` filter; returns `logs`, client reads `data.logs` — CODE-VERIFIED
+  - `GET /api/projects?fields=id,name` returns `projects`, client reads `d.projects` — CODE-VERIFIED
+  - Date: client default is local wall-clock (`localToday`), displayed at local noon — CODE-VERIFIED
+  - Reopen: `/app/daily-logs/[id]` reads `GET /api/daily-logs/[id]` key `log`, route returns `log` — CODE-VERIFIED
+  - Link hrefs (`/app/daily-logs/[id]`, `/app/projects/[projectId]/daily-logs`) resolve to page.tsx — CODE-VERIFIED
+  - Save, persistence after reopen, NWS auto-weather stamp, tap count — NEEDS-LIVE-RUN
+- STATUS: CODE-VERIFIED — AWAITING LIVE RUN
 
 ### Path 2 — Clock in and clock out
 - Open `app/app/time/page.tsx` (474 lines), clock in, clock out

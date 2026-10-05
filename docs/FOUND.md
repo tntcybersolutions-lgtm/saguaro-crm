@@ -150,3 +150,8 @@ converge. One line each, newest at the bottom.
   hero was printing `project_name_detected` — the title the AI read off the drawings — as if it were the
   job. It now names the job from project context and shows the drawing title beneath, labelled, only
   when it differs.
+- (5 Oct, Path 1 walk) `app/app/daily-logs/page.tsx:318` throws a generic `Failed to create daily log` on any non-OK response, discarding the route's 409 message and `existingLogId` — a second save for the same project/day shows a vague error instead of "open the existing log".
+- (5 Oct, Path 1 walk) `app/app/daily-logs/page.tsx:639` "Work Performed" is marked required (`Field required` is label-only, `kit.tsx:560`) but nothing validates it; `submitCreate` (line 289) lets an empty narrative save.
+- (5 Oct, Path 1 walk) `app/api/daily-logs/create/route.ts:41` falls back to the UTC date when `logDate` is omitted (same at `projects/[projectId]/daily-logs/prefill/route.ts:31`); the web client always sends a local date, but API/mobile callers that omit it can get tomorrow's date in the evening.
+- (5 Oct, Path 1 walk) `app/api/daily-logs/list/route.ts:21` and `[id]/route.ts:20,36,56` use bare `catch {}` returning generic 500s (no `apiError`, nothing logged); list also returns `{logs: []}` with status 500 on error.
+- (5 Oct, Path 1 walk) `app/api/daily-logs/list/route.ts:11` and `[id]/route.ts:14` do not filter `deleted_at IS NULL` although `daily_logs.deleted_at` exists; `MUST-PASS.md` also cites stale line counts (page is 670 lines, not 572).
