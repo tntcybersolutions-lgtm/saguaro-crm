@@ -57,7 +57,10 @@ async function api(method, path, body) {
   let json = {};
   try { json = text ? JSON.parse(text) : {}; } catch { json = { raw: text.slice(0, 300) }; }
   if (!res.ok) {
-    const why = (json.errors || []).map((e) => `${e.code || ''} ${e.detail || e.title || ''}`.trim()).join(' | ') || JSON.stringify(json).slice(0, 300);
+    // A 409 on review submission lists what blocks it under meta.associatedErrors.
+    const assoc = (e) => Object.entries(e.meta?.associatedErrors || {})
+      .flatMap(([where, list]) => list.map((a) => `\n      - ${a.code || ''} ${a.detail || a.title || ''} [${where}]`)).join('');
+    const why = (json.errors || []).map((e) => `${e.code || ''} ${e.detail || e.title || ''}`.trim() + assoc(e)).join(' | ') || JSON.stringify(json).slice(0, 300);
     const err = new Error(`${method} ${path.split('?')[0]} → ${res.status}: ${why}`);
     err.status = res.status;
     throw err;
@@ -310,7 +313,7 @@ async function appStore(app, build, submit) {
       const decl = (await api('GET', `/v1/appInfos/${info.id}/ageRatingDeclaration`)).data;
       const d = decl?.attributes || {};
       // Optional overrides stay null; every content question gets the business-app answer.
-      const OPTIONAL = new Set(['kidsAgeBand', 'ageRatingOverride', 'ageRatingOverrideV2', 'koreaAgeRatingOverride', 'developerAgeRatingInfoUrl']);
+      const OPTIONAL = new Set(['kidsAgeBand', 'ageRatingOverride', 'ageRatingOverrideV2', 'koreaAgeRatingOverride', 'developerAgeRatingInfoUrl', 'gracRatingClassificationNumber']);
       const missing = Object.keys(d).filter((k) => d[k] === null && !OPTIONAL.has(k));
       const filled = [];
       for (const k of missing) {
