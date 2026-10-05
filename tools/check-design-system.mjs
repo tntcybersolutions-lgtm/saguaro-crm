@@ -64,7 +64,9 @@ for (const r of files) {
       hex++; findings.push({ r, line: i + 1, kind: 'hex', text: m[0] + (PALETTE.has(m[0].toUpperCase()) ? ' (palette value — use the token)' : ' (off palette)') });
     }
     // 2. raw tables (app/app only)
-    if (r.startsWith('app/app/') && /<table\b/.test(line) && !/k-table|DataTable|className=\{?["'`][^"'`]*(Table|grid)/i.test(line)) {
+    // HTML built as a template string for a print / PDF window is not a page table.
+    const htmlStringTable = /<table(\s+(style|class)="|>\s*<thead>\s*<tr>\s*<th>)/.test(line);
+    if (r.startsWith('app/app/') && /<table\b/.test(line) && !htmlStringTable && !/k-table|DataTable|className=\{?["'`][^"'`]*(Table|grid)/i.test(line)) {
       table++; findings.push({ r, line: i + 1, kind: 'table', text: line.trim().slice(0, 80) });
     }
     // 3. status words as plain styled text

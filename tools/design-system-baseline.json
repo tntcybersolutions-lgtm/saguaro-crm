@@ -21,12 +21,12 @@
   },
   "app/app/bids/leveling/page.tsx": {
     "hex": 5,
-    "table": 2,
+    "table": 0,
     "status": 0
   },
   "app/app/billing/payapp/page.tsx": {
     "hex": 5,
-    "table": 2,
+    "table": 1,
     "status": 0
   },
   "app/app/client-portal/page.tsx": {
@@ -51,7 +51,7 @@
   },
   "app/app/fleet/page.tsx": {
     "hex": 8,
-    "table": 1,
+    "table": 0,
     "status": 0
   },
   "app/app/integrations/api-docs/page.tsx": {
@@ -171,7 +171,7 @@
   },
   "app/app/takeoff/measured/page.tsx": {
     "hex": 12,
-    "table": 1,
+    "table": 0,
     "status": 0
   },
   "app/app/_shared/table-sort.tsx": {
