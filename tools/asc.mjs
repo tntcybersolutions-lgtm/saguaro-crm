@@ -265,6 +265,8 @@ if (MODE === 'privacy') {
 // Field only), and adds anyone who is already a user to the internal group.
 // Run it again after they accept Apple's invitation email. Emails are masked.
 const INTERNAL_NAMES = ['rob', 'mark', 'avery'];
+// Owners of the business (Rob, Avery) get the Admin role, like the account holder.
+const OWNER_DOMAINS = ['copperstatedevelopments.com', 'tntcyber.com'];
 if (MODE === 'internal-testers') {
   const app = snap.app;
   const internal = snap.groups.find((g) => g.internal);
@@ -286,13 +288,20 @@ if (MODE === 'internal-testers') {
         api('POST', `/v1/betaGroups/${internal.id}/relationships/betaTesters`, { data: [{ type: 'betaTesters', id: t.id }] }).then(() => 'added; TestFlight email sent'));
       continue;
     }
+    // Company owners (Chad's call) get Admin, like the account holder; everyone else Marketing on this app only.
+    const owner = OWNER_DOMAINS.some((d) => email.endsWith(`@${d}`));
+    const role = owner ? 'ADMIN' : 'MARKETING';
     const pending = (await api('GET', `/v1/userInvitations?filter[email]=${encodeURIComponent(email)}&limit=5`)).data;
-    if (pending.length) { console.log(`  · ${who}: invitation already sent, waiting for them to accept`); continue; }
-    await tryStep(`${who}: invite to App Store Connect (Marketing, Saguaro Field only)`, () =>
+    const same = pending.find((p) => (p.attributes.roles || []).includes(role));
+    if (same) { console.log(`  · ${who}: ${role} invitation already sent, waiting for them to accept`); continue; }
+    for (const p of pending) {
+      await tryStep(`${who}: withdraw ${(p.attributes.roles || []).join('/')} invitation`, () => api('DELETE', `/v1/userInvitations/${p.id}`).then(() => 'withdrawn'));
+    }
+    await tryStep(`${who}: invite to App Store Connect (${role}${owner ? ', all apps' : ', Saguaro Field only'})`, () =>
       api('POST', '/v1/userInvitations', { data: { type: 'userInvitations',
         attributes: { email, firstName: t.attributes.firstName || 'Tester', lastName: t.attributes.lastName || 'Saguaro',
-          roles: ['MARKETING'], allAppsVisible: false, provisioningAllowed: false },
-        relationships: { visibleApps: { data: [{ type: 'apps', id: app.id }] } } } }).then(() => 'invitation emailed by Apple'));
+          roles: [role], allAppsVisible: owner, provisioningAllowed: owner },
+        ...(owner ? {} : { relationships: { visibleApps: { data: [{ type: 'apps', id: app.id }] } } }) } }).then(() => 'invitation emailed by Apple'));
   }
   process.exit(0);
 }
