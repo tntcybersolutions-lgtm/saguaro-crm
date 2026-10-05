@@ -65,9 +65,10 @@ const sb = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_A
 const { data: auth, error: authErr } = await sb.auth.signInWithPassword({ email: env.SAGUARO_QA_EMAIL, password: env.SAGUARO_QA_PASS });
 if (authErr || !auth?.session) { console.error('SIGN-IN FAILED:', authErr?.message || 'no session'); process.exit(1); }
 const host = new URL(BASE).hostname;
+const secure = new URL(BASE).protocol === 'https:'; // a local `next start` on http needs non-secure cookies
 const cookies = [
-  { name: 'sb-access-token', value: auth.session.access_token, domain: host, path: '/', httpOnly: true, secure: true, sameSite: 'Lax' },
-  { name: 'sb-refresh-token', value: auth.session.refresh_token, domain: host, path: '/', httpOnly: true, secure: true, sameSite: 'Lax' },
+  { name: 'sb-access-token', value: auth.session.access_token, domain: host, path: '/', httpOnly: true, secure, sameSite: 'Lax' },
+  { name: 'sb-refresh-token', value: auth.session.refresh_token, domain: host, path: '/', httpOnly: true, secure, sameSite: 'Lax' },
 ];
 
 // ── measure in page ──
