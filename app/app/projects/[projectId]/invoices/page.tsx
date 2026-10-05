@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSort, useSortedRows, SortTh, SortBar } from '@/components/ui/sort';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
@@ -50,6 +51,11 @@ const statusKey = (s?: string | null) => (s || 'draft').toLowerCase();
 /** Canonical invoice figure: stored total when non-zero, else amount + tax.
  *  TEXT-typed money columns -> Number() always; a stale 0 total defers to
  *  amount so real money never rolls up as $0. */
+const INVOICE_COLS: { key: string; label: string }[] = [
+  { key: 'invoice_number', label: 'Invoice #' }, { key: 'vendor_name', label: 'Bill To' }, { key: 'total', label: 'Total' }, { key: 'created_at', label: 'Issued' },
+  { key: 'due_date', label: 'Due' }, { key: 'status', label: 'Status' }, { key: 'notes', label: 'Notes' }, { key: '', label: 'Actions' },
+];
+
 function effectiveTotal(i: { amount?: number | null; tax?: number | null; total?: number | null }): number {
   const t = Number(i.total);
   if (t > 0) return t;
@@ -170,6 +176,14 @@ export default function InvoicesPage() {
       if (sortBy === 'due') return String(a.due_date || '9999').localeCompare(String(b.due_date || '9999'));
       return String(b.created_at || '').localeCompare(String(a.created_at || ''));
     });
+  // Column sort (any header, both directions) overrides the toolbar order above.
+  const { sort: invSort, setSort: setInvSort, cycle: cycleInvSort } = useSort(null);
+  const invSortValue = useCallback((inv: (typeof invoices)[number], key: string): unknown => {
+    if (key === 'total') return effectiveTotal(inv);
+    if (key === 'status') return isOverdue(inv) ? 'overdue' : statusKey(inv.status);
+    return (inv as unknown as Record<string, unknown>)[key];
+  }, []);
+  const sortedInvoices = useSortedRows(filteredInvoices, invSort, invSortValue);
 
   async function handleSave(): Promise<boolean> {
     if (!form.invoice_number || !form.vendor_name || !form.amount) { setErrorMsg('Invoice number, bill-to, and amount are required.'); return false; }
@@ -526,16 +540,18 @@ export default function InvoicesPage() {
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
+          <SortBar columns={INVOICE_COLS.filter(c => c.key) as { key: string; label: string }[]} sort={invSort} onChange={setInvSort} />
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr>
-                {['Invoice #','Bill To','Total','Issued','Due','Status','Notes','Actions'].map(h => (
-                  <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: '1px solid ' + BORDER, whiteSpace: 'nowrap' }}>{h}</th>
-                ))}
+                {INVOICE_COLS.map(c => c.key
+                  ? <SortTh key={c.key} col={c.key} label={c.label} sort={invSort} onSort={cycleInvSort} style={{ padding: '10px 14px', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: '1px solid ' + BORDER, whiteSpace: 'nowrap' }} />
+                  : <th key={c.label} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: '1px solid ' + BORDER, whiteSpace: 'nowrap' }}>{c.label}</th>
+                )}
               </tr>
             </thead>
             <tbody>
-              {filteredInvoices.map(inv => {
+              {sortedInvoices.map(inv => {
                 const overdue = isOverdue(inv);
                 const effKey = overdue ? 'overdue' : statusKey(inv.status);
                 const sc = STATUS_MAP[effKey] || { bg: 'rgba(143,163,192,.2)', color: DIM, label: statusKey(inv.status) };

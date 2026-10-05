@@ -90,7 +90,7 @@ export const PREMIUM_FX = `
 .pmSortTh[aria-sort="ascending"],.pmSortTh[aria-sort="descending"]{color:var(--brand-primary-strong)}
 .pmSortTh[aria-sort="ascending"] .pmSortGlyph,.pmSortTh[aria-sort="descending"] .pmSortGlyph{opacity:1}
 /* Beat the global h1 !important size cap (globals.css) with higher specificity */
-h1.pmH1{font-size:clamp(28px,4.4vw,46px)!important;font-weight:900!important;line-height:1.04!important;letter-spacing:-0.03em!important;margin:0!important}
+h1.pmH1{font-size:clamp(24px,2.4vw,32px)!important;font-weight:800!important;line-height:1.12!important;letter-spacing:-0.02em!important;margin:0!important} /* page-title scale: 28–32 desktop, 24 phone */
 @media (prefers-reduced-motion: reduce){
   .pmRoot,.pmRoot *{animation:none!important;transition:none!important}
   .pmHover:hover,.pmHover:active,.pmBtn:hover,.pmBtn:active,.pmTile:hover,.pmGold:hover,.pmGold:active,.pmGhost:hover,.pmGhost:active,.pmDanger:hover,.pmDanger:active{transform:none!important}
@@ -699,10 +699,10 @@ export function StatStrip({ items }: {
 }) {
   return (
     <div style={{
-      display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(150px, 1fr))`, gap: 1,
-      background: BORDER, border: `1px solid ${BORDER}`, borderRadius: 14, overflow: 'hidden',
-      backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR,
-      marginBottom: 20,
+      // Same compact tiles as the kit stat grid: separate rounded cards, 12px
+      // apart, 2-up on phones (minmax 150 keeps two columns at 393).
+      display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(150px, 1fr))`, gap: 12,
+      marginBottom: 20, minWidth: 0,
     }}>
       {items.map((it, i) => {
         const clickable = !!(it.href || it.onClick);
@@ -712,7 +712,7 @@ export function StatStrip({ items }: {
           <div
             className="pmTile"
             onClick={it.onClick}
-            style={{ position: 'relative', background: 'linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.03)), rgba(0,0,0,0.88)', borderTop: '2px solid color-mix(in srgb, var(--brand-primary) 80%, transparent)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)', padding: '13px 16px', minWidth: 0, cursor: clickable ? 'pointer' : 'default', height: '100%' }}
+            style={{ position: 'relative', background: 'linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.03)), var(--surface-card, #0E0F12)', border: `1px solid ${BORDER}`, borderTop: '2px solid color-mix(in srgb, var(--brand-primary) 80%, transparent)', borderRadius: 14, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 12px 28px -18px rgba(0,0,0,0.9)', padding: '13px 16px', minWidth: 0, cursor: clickable ? 'pointer' : 'default', height: '100%', boxSizing: 'border-box' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 750, color: MUTED, marginBottom: 5, whiteSpace: 'nowrap' }}>
               {it.icon}{it.label}

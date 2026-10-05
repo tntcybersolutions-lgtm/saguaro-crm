@@ -136,10 +136,17 @@ converge. One line each, newest at the bottom.
 - ~~(3 Oct, iOS QA) pay-app wizard — the Original Contract Sum typed in step 1 is not on the
   created pay app~~ **Fixed 4 Oct** — same change as the `contract_sum` entry above.
 
-- (4 Oct, marketing) `app/globals.css:250-253` — the app-wide `h1 { font-size: 18px !important }`
+- ~~(4 Oct, marketing) `app/globals.css:250-253` — the app-wide `h1 { font-size: 18px !important }`
   / `h2 { 15px !important }` / `h3 { 13.5px !important }` beat the `.mkt-page h1/h2/h3` scale at
   `app/globals.css:825-847` (no `!important` there), so every page that opts into `mkt-page`
   (roi-calculator, blog, intelligence, features, careers, api-docs, compare, switch-from-procore)
-  renders its headline at 18 px. `/get-the-app` is fixed locally on `marketing/phone-screens`.
-- (4 Oct) `app/globals.css` `--status-completed` is `#FF8A00` (orange) but
-  `lib/status-colors.ts` `completed` is `#2CFF7A` (green) — two answers for one status.
+  renders its headline at 18 px. `/get-the-app` is fixed locally on `marketing/phone-screens`.~~ FIXED by neon-glass M1: the app heading
+  scale is scoped to `.sag-app`, so marketing headings are no longer overridden.
+- ~~(4 Oct) `app/globals.css` `--status-completed` is `#FF8A00` (orange) but
+  `lib/status-colors.ts` `completed` is `#2CFF7A` (green) — two answers for one status.~~ FIXED by neon-glass M1:
+  `--status-completed` is green.
+- ~~(4 Oct, neon-glass walk) `app/app/projects/[projectId]/takeoff/page.tsx` on ZZ AUDIT 2 Fix Check — the
+  takeoff hero showed "ZZ AUDIT — Mesa Flex Office".~~ FIXED on redesign/neon-glass (Chad: "FIX IT"): the
+  hero was printing `project_name_detected` — the title the AI read off the drawings — as if it were the
+  job. It now names the job from project context and shows the drawing title beneath, labelled, only
+  when it differs.
