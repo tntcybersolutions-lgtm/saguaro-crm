@@ -167,3 +167,19 @@ Known limit of the skin route: hand-rolled tables promoted to `.k-table` stack a
 - 85 off-palette colours in 45 files replaced with the approved set: slate greys (#9CA3AF / #94A3B8 / #6B7280 / #64748B, rgba 143,163,192 / 148,163,184) → #A3ACBB; old amber (#F0A63C, #B45309, #CA8A04, rgba 240,166,60) and navy (#1A5FA8, rgba 26,95,168) → #FF8A00; old red (#E0644E, rgba 224,100,78) → #FF3B30; #141416 → #0E0F12. `--warning` token is orange (#FF8A00), not the brand yellow.
 - `components/ui/TableLabels.tsx` mounted in the app shell stamps `data-label` from each `.k-table` header onto its cells, so every promoted raw table shows labelled phone cards, not bare values.
 - Edit grids (`.k-table-skin`) on phones: wrapper scrolls sideways with the first column pinned.
+
+## Platform migration (Chad's §0 override, 5 Oct) — fix the system once, convert mechanically, gate it
+
+| Phase | What | Where | Status |
+|---|---|---|---|
+| 1 — one source of truth | `--c-*` palette variables (bg, card, raised, text ×4, yellow ×3, on-brand, orange, green, red, gray) + typed `palette` / `paletteHex` | `app/globals.css`, `lib/design-tokens.ts` | DONE |
+| 1 | `components/ui/index.ts` is the single door: PageHeader, StatCard, StatusPill, DataTable (rowStyle, selected row, cards < 768), Section/Card, EmptyState, ProjectDot/ProjectTile, Button, Field/Input | `components/ui/*` | DONE |
+| 1 | Job colours: `lib/project-colors.ts` (8 swatches, `projectColor()` with hash fallback, `nextJobColor()` round-robin), `projects.color` column backfilled per tenant, create + won-deal set the next swatch, PUT accepts only the eight, Job color chooser on the project details; dot in the picker + sidebar, 36px initials tile in the header, 3px edge on Projects / My Work / Needs Attention / Active Jobs / Schedule rows, 25% Gantt fill | see commit "Phase 1" | DONE (not yet driven — see below) |
+| 2 — codemods | `tools/codemods/hex-to-token.mjs`: 1,325 hex literals in 178 files → tokens; canvas / data-URI / <meta> lines and canvas renderers skipped; 22 alpha-concatenated identifiers kept | `app/app`, `components` | DONE, re-runnable, idempotent |
+| 2 | `tools/codemods/status-to-pill.mjs`: literal status words in styled spans → `<StatusPill module="generic">` (7 converted; `generic` vocabulary added) | — | DONE |
+| 2 | raw tables → DataTable: 8 record lists rebuilt by hand; every other table carries `k-table` / `k-table-skin` (header, rows, hover, phone cards with labels via `TableLabels`); 1 raw table left (gate-tracked) | — | DONE |
+| 2 | stat-card markup → StatCard: pages already use `StatCard` / `StatTile`; no mechanical conversion needed | — | n/a |
+| 3 — gate | `tools/check-design-system.mjs` in `prebuild`: fails when any file grows its count of hex literals (app/ + components/, allowlist for print/PDF/QR/signature/portals/canvas/charts), raw `<table>` in app/app, or plain-text status spans; per-file baseline in `tools/design-system-baseline.json` (868 hex · 1 table · 0 spans today) | `package.json` prebuild | DONE |
+| 4 — prove it | `tools/e2e-visual-sweep.mjs`: signs in as the QA user, every app/app route at 390 and 1440, screenshots + measurements (sideways scroll, clipped boxes, tap targets < 44, inputs < 16, errors), HTML contact sheet per viewport | `docs/design/sweep/<label>/` | TOOL DONE; "before" sweep running against production; "after" BLOCKED — the preview host is behind Vercel SSO deployment protection (`ssoProtection: all_except_custom_domains`) and the project has no automation bypass secret, so Playwright is bounced to vercel.com/sso-api |
+
+Counts: 148 app pages, hex literals in app/app 932 → ~130 (the rest are alpha-concatenated constants and canvas files), StatusPill pages 5 → 22, raw tables 46 → 1 (all others on DataTable or the skin), tsc = the 8 known errors only, every push built green on Vercel.
