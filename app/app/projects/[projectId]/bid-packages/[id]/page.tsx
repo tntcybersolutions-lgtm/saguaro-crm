@@ -94,7 +94,7 @@ function subStatusColor(s: SubStatus): { c: string; bg: string } {
     case 'submitted': return { c: '#2CFF7A', bg: 'rgba(26,138,74,.12)' };
     case 'viewed':    return { c: GOLD, bg: 'var(--brand-primary-12)' };
     case 'declined':  return { c: '#FF3B30', bg: 'rgba(192,48,48,.12)' };
-    default:          return { c: DIM, bg: 'rgba(143,163,192,.1)' };
+    default:          return { c: DIM, bg: 'rgba(163,172,187,.1)' };
   }
 }
 

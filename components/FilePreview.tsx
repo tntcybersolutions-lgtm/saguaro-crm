@@ -16,12 +16,12 @@ const ICON: Record<FileKind, React.ReactNode> = {
 };
 export const KIND_TINT: Record<FileKind, string> = {
   image: '#FFE600', video: '#FF8A00', audio: '#FF8A00', pdf: '#FF3B30',
-  doc: '#FF8A00', sheet: '#2CFF7A', cad: '#FF8A00', other: '#94A3B8',
+  doc: '#FF8A00', sheet: '#2CFF7A', cad: '#FF8A00', other: '#A3ACBB',
 };
 
 export function FilePreview({ kind, url, name, height = 460 }: { kind: FileKind; url?: string | null; name?: string; height?: number }) {
   const box: React.CSSProperties = { width: '100%', height, background: '#0b0f14', borderRadius: 12, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' };
-  if (!url) return <div style={box}><span style={{ color: '#64748B' }}>No preview available</span></div>;
+  if (!url) return <div style={box}><span style={{ color: '#A3ACBB' }}>No preview available</span></div>;
 
   if (kind === 'image') return <div style={box}><img src={url} alt={name || ''} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} /></div>;
   // preload="metadata" + a direct (range-capable) src lets the browser stream

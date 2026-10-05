@@ -59,9 +59,9 @@ function statusBadge(s: string) {
   const map: Record<string,{c:string,bg:string}> = {
     active:{c:'#2CFF7A',bg:'rgba(44,255,122,.12)'}, prequalified:{c:'var(--brand-primary-strong)',bg:'var(--brand-primary-12)'},
     invited:{c:GOLD,bg:'var(--brand-primary-12)'}, suspended:{c:'#FF3B30',bg:'rgba(255,59,48,.12)'},
-    inactive:{c:DIM,bg:'rgba(143,163,192,.08)'},
+    inactive:{c:DIM,bg:'rgba(163,172,187,.08)'},
   };
-  const st = map[s]||{c:DIM,bg:'rgba(143,163,192,.08)'};
+  const st = map[s]||{c:DIM,bg:'rgba(163,172,187,.08)'};
   return <span style={{fontSize:10,fontWeight:700,padding:'3px 9px',borderRadius:4,background:st.bg,color:st.c}}>{cap(s)}</span>;
 }
 

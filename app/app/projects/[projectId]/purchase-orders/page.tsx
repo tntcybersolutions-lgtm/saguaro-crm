@@ -409,8 +409,8 @@ export default function PurchaseOrdersPage() {
           label="Draft" value={String(draftCount)} delay={0.06}
          href={`/app/projects/${projectId}/purchase-orders`}/>
         <StatCard
-          icon={<Export size={19} weight="duotone" color="#F0A63C" />}
-          label="Sent" value={String(sentCount)} accent={sentCount > 0 ? '#F0A63C' : undefined} delay={0.10}
+          icon={<Export size={19} weight="duotone" color="#FF8A00" />}
+          label="Sent" value={String(sentCount)} accent={sentCount > 0 ? '#FF8A00' : undefined} delay={0.10}
          href={`/app/projects/${projectId}/purchase-orders`}/>
         <StatCard
           icon={<Package size={19} weight="duotone" color="#2CFF7A" />}

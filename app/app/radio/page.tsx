@@ -441,7 +441,7 @@ function VividGoldChip({
       style={{
         flexShrink: 0, width: size, height: size, borderRadius: Math.round(size * 0.29),
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        background: `linear-gradient(145deg, ${GOLD_HI} 0%, ${GOLD} 52%, #B45309 100%)`,
+        background: `linear-gradient(145deg, ${GOLD_HI} 0%, ${GOLD} 52%, #FF8A00 100%)`,
         border: '1px solid color-mix(in srgb, var(--brand-primary-strong) 55%, transparent)',
         boxShadow: '0 0 0 3px color-mix(in srgb, var(--brand-primary) 16%, transparent), 0 10px 26px -10px color-mix(in srgb, var(--brand-primary) 60%, transparent), inset 0 1px 0 rgba(255,255,255,0.40)',
         color: '#F8FAFC',

@@ -24,7 +24,7 @@ interface Project {
 const statusStyle = (s: string): { color: string; bg: string } => {
   const k = (s || '').toLowerCase();
   if (k.includes('active') || k.includes('progress')) return { color: '#2CFF7A', bg: 'rgba(44,255,122,.12)' };
-  if (k.includes('complete') || k.includes('closed')) return { color: '#FF8A00', bg: 'rgba(26,95,168,.12)' };
+  if (k.includes('complete') || k.includes('closed')) return { color: '#FF8A00', bg: 'rgba(255,138,0,.12)' };
   return { color: 'var(--warning)', bg: 'color-mix(in srgb, var(--warning) 12%, transparent)' };
 };
 

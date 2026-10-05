@@ -161,3 +161,9 @@ Type check: only the 8 pre-existing `deal_media` / `customer_reviews` errors. Pr
 | /app/documents | DRIVEN (see 393 shot) | DRIVEN | |
 
 Known limit of the skin route: hand-rolled tables promoted to `.k-table` stack as cards on phones but show values without their column labels (DataTable adds `data-label`; raw cells do not). Converting each to DataTable is the fix, done for the eight record lists above; the other 42 tables keep the skin.
+
+### Site-wide colour sweep + phone card labels (5 Oct, closes the Not-verified items)
+
+- 85 off-palette colours in 45 files replaced with the approved set: slate greys (#9CA3AF / #94A3B8 / #6B7280 / #64748B, rgba 143,163,192 / 148,163,184) → #A3ACBB; old amber (#F0A63C, #B45309, #CA8A04, rgba 240,166,60) and navy (#1A5FA8, rgba 26,95,168) → #FF8A00; old red (#E0644E, rgba 224,100,78) → #FF3B30; #141416 → #0E0F12. `--warning` token is orange (#FF8A00), not the brand yellow.
+- `components/ui/TableLabels.tsx` mounted in the app shell stamps `data-label` from each `.k-table` header onto its cells, so every promoted raw table shows labelled phone cards, not bare values.
+- Edit grids (`.k-table-skin`) on phones: wrapper scrolls sideways with the first column pinned.

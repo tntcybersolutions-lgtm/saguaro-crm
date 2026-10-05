@@ -516,7 +516,7 @@ export default function IntegrationsPage() {
                 ) : (
                   <div style={{
                     flex: 1, padding: '9px 0', textAlign: 'center', borderRadius: 8,
-                    background: 'rgba(143,163,192,0.08)', border: `1px solid ${BORDER}`,
+                    background: 'rgba(163,172,187,0.08)', border: `1px solid ${BORDER}`,
                     color: DIM, fontSize: 13, fontWeight: 600,
                   }}>
                     Coming Soon

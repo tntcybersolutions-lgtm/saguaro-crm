@@ -73,7 +73,7 @@ const STATUS_FLOW: Record<string, string[]> = {
 const PRIORITY_COLORS: Record<string, string> = { low: DIM, medium: AMBER, high: '#FF8C00', emergency: RED };
 const STATUS_COLORS: Record<string, string> = {
   submitted: DIM, acknowledged: BLUE, scheduled: AMBER,
-  in_progress: '#FF8C00', completed: GREEN, denied: RED, closed: '#6B7280',
+  in_progress: '#FF8C00', completed: GREEN, denied: RED, closed: '#A3ACBB',
 };
 const CATEGORY_ICONS: Record<string, string> = {
   structural: '\u2302', mechanical: '\u2699', electrical: '\u26A1', plumbing: '\u{1F6BF}',

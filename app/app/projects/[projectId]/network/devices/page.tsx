@@ -72,7 +72,7 @@ function DeviceTypeIcon({ type, size, color }: { type: string; size: number; col
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  online: GREEN, offline: RED, planned: '#6B7280', warning: 'var(--warning)', maintenance: BLUE,
+  online: GREEN, offline: RED, planned: '#A3ACBB', warning: 'var(--warning)', maintenance: BLUE,
 };
 
 const inputStyle: React.CSSProperties = {
@@ -240,8 +240,8 @@ export default function DeviceInventoryPage() {
           sub="Not reporting" delay={0.10}
          href={`/app/projects/${projectId}/network/devices`}/>
         <StatCard
-          icon={<Clock size={19} weight="duotone" color="#94A3B8" />}
-          label="Planned" value={String(plannedCount)} accent={plannedCount ? '#94A3B8' : undefined}
+          icon={<Clock size={19} weight="duotone" color="#A3ACBB" />}
+          label="Planned" value={String(plannedCount)} accent={plannedCount ? '#A3ACBB' : undefined}
           sub="Not yet deployed" delay={0.14}
          href={`/app/projects/${projectId}/network/devices`}/>
       </div>

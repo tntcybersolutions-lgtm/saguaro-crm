@@ -58,8 +58,8 @@ export const UI_FX_CSS = `
 }
 [data-theme="light"] .sgUi{
   --sg-text:#0a0a0a;
-  --sg-text-2:#475569;
-  --sg-text-3:#94a3b8;
+  --sg-text-2:#7A8597;
+  --sg-text-3:#A3ACBB;
   --sg-surface-from:#ffffff;
   --sg-surface-to:#f7f8fa;
   --sg-surface-solid:#ffffff;

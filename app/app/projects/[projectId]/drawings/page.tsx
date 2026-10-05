@@ -50,7 +50,7 @@ const DISCIPLINE_COLORS:Record<string,string>={
   'Fire Protection':'#FF3B30',
   'Low Voltage / Technology':'#FF8A00',
   Interiors:'#e879b9',
-  Specialties:'#94a3b8',
+  Specialties:'#A3ACBB',
   Structural:'#FF8A00',
   Mechanical:'#FF8A00',
   Electrical:'var(--brand-primary)',

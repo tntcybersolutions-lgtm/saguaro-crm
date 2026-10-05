@@ -23,11 +23,11 @@ interface Proposal {
 }
 
 const STATUS_MAP: Record<string, { bg: string; color: string }> = {
-  Draft: { bg: 'rgba(143,163,192,.2)', color: DIM },
+  Draft: { bg: 'rgba(163,172,187,.2)', color: DIM },
   Sent: { bg: 'color-mix(in srgb, var(--brand-primary) 20%, transparent)', color: 'var(--brand-primary-strong)' },
   Under_Review: { bg: 'color-mix(in srgb, var(--warning) 20%, transparent)', color: 'var(--warning)' },
   Accepted: { bg: 'rgba(44,255,122,.2)', color: GREEN },
-  Superseded: { bg: 'rgba(143,163,192,.2)', color: DIM },
+  Superseded: { bg: 'rgba(163,172,187,.2)', color: DIM },
   Rejected: { bg: 'rgba(255,59,48,.2)', color: RED },
   Declined: { bg: 'rgba(255,59,48,.2)', color: RED },
 };
@@ -42,7 +42,7 @@ const EMPTY_FORM = { amount: 0, notes: '' };
 const statusKey = (s: string | null | undefined) => String(s || '').trim().toLowerCase().replace(/\s+/g, '_');
 const statusLabel = (s: string | null | undefined) =>
   statusKey(s).split('_').filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || '—';
-const statusStyle = (s: string | null | undefined) => STATUS_MAP[statusLabel(s).replace(/ /g, '_')] || { bg: 'rgba(143,163,192,.2)', color: DIM };
+const statusStyle = (s: string | null | undefined) => STATUS_MAP[statusLabel(s).replace(/ /g, '_')] || { bg: 'rgba(163,172,187,.2)', color: DIM };
 
 // The API returns raw `proposals` rows (proposal_number / created_at /
 // description) that don't match this page's display fields (version /

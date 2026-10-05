@@ -120,7 +120,7 @@ function calcNet(emp: Employee): number {
 
 const statusCfg: Record<string, { color: string; bg: string }> = {
   submitted: { color: GOLD,      bg: 'var(--brand-primary-12)' },
-  draft:     { color: DIM,       bg: 'rgba(148,163,184,.1)' },
+  draft:     { color: DIM,       bg: 'rgba(163,172,187,.1)' },
   certified: { color: '#2CFF7A', bg: 'rgba(26,138,74,.12)' },
 };
 

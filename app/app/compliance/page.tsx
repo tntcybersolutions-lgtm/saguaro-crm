@@ -94,7 +94,7 @@ export default function CompliancePage(){
 
   const complianceLabel = (c:string) => c==='compliant'?'Compliant':c==='at_risk'?'At Risk':'Non-Compliant';
   const complianceColor = (c:string) => c==='compliant'?GREEN:c==='at_risk'?AMBER:RED;
-  const complianceBg = (c:string) => c==='compliant'?'rgba(44,255,122,.14)':c==='at_risk'?'rgba(240,166,60,.14)':'rgba(224,100,78,.14)';
+  const complianceBg = (c:string) => c==='compliant'?'rgba(44,255,122,.14)':c==='at_risk'?'rgba(255,138,0,.14)':'rgba(255,59,48,.14)';
 
   return <PremiumSurface maxWidth={2200}>
 

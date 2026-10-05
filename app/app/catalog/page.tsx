@@ -257,7 +257,7 @@ const VERTICAL_VISUAL: Record<string, { icon: React.ElementType; hue: string }> 
   Drywall: { icon: Wall, hue: '#FF8A00' },
   Paint: { icon: PaintRoller, hue: '#FB7185' },
   'Framing & Lumber': { icon: Tree, hue: '#2CFF7A' },
-  Concrete: { icon: Cube, hue: '#94A3B8' },
+  Concrete: { icon: Cube, hue: '#A3ACBB' },
   Roofing: { icon: HouseLine, hue: '#FF8A00' },
   'Doors & Windows': { icon: Door, hue: '#2CFF7A' },
   Insulation: { icon: Snowflake, hue: '#FF8A00' },

@@ -390,7 +390,7 @@ export default function IndustryLandingPage({ industry }: Props) {
           <Link href="/privacy" style={{ color: DIM, fontSize: '13px', textDecoration: 'none' }}>Privacy</Link>
           <Link href="/terms" style={{ color: DIM, fontSize: '13px', textDecoration: 'none' }}>Terms</Link>
         </div>
-        <p style={{ color: '#475569', fontSize: '12px', margin: 0 }}>
+        <p style={{ color: '#7A8597', fontSize: '12px', margin: 0 }}>
           &copy; {new Date().getFullYear()} Saguaro Control Systems. All rights reserved.
         </p>
       </footer>

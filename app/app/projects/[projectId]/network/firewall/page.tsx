@@ -53,7 +53,7 @@ const categoryLabel = (c: string) => CATEGORY_LABELS[c] || c;
 const ACTION_STYLES: Record<string, { bg: string; text: string }> = {
   allow: { bg: `${GREEN}20`, text: GREEN },
   deny: { bg: `${RED}20`, text: RED },
-  drop: { bg: '#6B728020', text: '#9CA3AF' },
+  drop: { bg: '#6B728020', text: '#A3ACBB' },
 };
 
 const inputStyle: React.CSSProperties = {

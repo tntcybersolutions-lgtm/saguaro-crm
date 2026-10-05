@@ -48,7 +48,7 @@ interface ScheduleTask {
 interface Project { id: string; name: string; }
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  not_started: { label: 'Not Started', color: '#94A3B8' }, // hex — composed into hex-alpha chip fills
+  not_started: { label: 'Not Started', color: '#A3ACBB' }, // hex — composed into hex-alpha chip fills
   in_progress: { label: 'In Progress', color: BLUE },
   complete: { label: 'Complete', color: GREEN },
   blocked: { label: 'Blocked', color: RED },

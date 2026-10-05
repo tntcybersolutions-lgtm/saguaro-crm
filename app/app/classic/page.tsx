@@ -218,7 +218,7 @@ function BidScoreModal({ onClose }: { onClose: () => void }) {
                   />
                 </div>
               ))}
-              {error && <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: RED, fontSize: 12, fontWeight: 600, marginBottom: 12, padding: '10px 12px', borderRadius: 8, background: 'rgba(224,100,78,0.10)', border: '1px solid rgba(224,100,78,0.28)' }}><WarningCircle size={16} weight="duotone" /> {error}</div>}
+              {error && <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: RED, fontSize: 12, fontWeight: 600, marginBottom: 12, padding: '10px 12px', borderRadius: 8, background: 'rgba(255,59,48,0.10)', border: '1px solid rgba(255,59,48,0.28)' }}><WarningCircle size={16} weight="duotone" /> {error}</div>}
               <button
                 type="submit" disabled={loading}
                 style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', background: loading ? 'var(--bg-surface-2)' : 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', border: 'none', borderRadius: 'var(--radius-md)', color: loading ? DIM : '#0A0A00', fontWeight: 800, fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer', marginTop: 4, boxShadow: loading ? 'none' : '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' }}
@@ -922,7 +922,7 @@ export default function DashboardPage() {
                              `.filter(value > 0)` would have hidden it anyway; the
                              legend below would not, so both read the same flag. */
                           ...(hasPayApps ? [{ name: 'Pay Apps', value: stats?.pendingPayApps ?? 0, fill: '#FF8A00' }] : []),
-                          { name: 'RFIs', value: openRFIs?.length ?? 0, fill: '#9CA3AF' },
+                          { name: 'RFIs', value: openRFIs?.length ?? 0, fill: '#A3ACBB' },
                         ].filter(d => d.value > 0)}
                         cx="50%" cy="50%"
                         innerRadius={45} outerRadius={70}
@@ -943,7 +943,7 @@ export default function DashboardPage() {
                     { label: 'Active Projects', value: stats?.activeProjects ?? 0, color: '#FF8A00' },
                     { label: 'Open Bids', value: stats?.openBids ?? 0, color: '#FFE600' },
                     ...(hasPayApps ? [{ label: 'Pending Pay Apps', value: stats?.pendingPayApps ?? 0, color: '#FF8A00' }] : []),
-                    { label: 'Open RFIs', value: openRFIs?.length ?? 0, color: '#9CA3AF' },
+                    { label: 'Open RFIs', value: openRFIs?.length ?? 0, color: '#A3ACBB' },
                   ].map(item => (
                     <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <div style={{ width: 10, height: 10, borderRadius: 2, background: item.color, flexShrink: 0 }} />

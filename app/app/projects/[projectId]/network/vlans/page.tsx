@@ -42,7 +42,7 @@ const PURPOSE_COLORS: Record<string, { bg: string; text: string }> = {
   security: { bg: `${RED}20`, text: RED },
   guest: { bg: 'var(--brand-primary-12)', text: GOLD },
   iot: { bg: '#14B8A620', text: '#2CFF7A' },
-  management: { bg: '#6B728020', text: '#9CA3AF' },
+  management: { bg: '#6B728020', text: '#A3ACBB' },
   server: { bg: `${GREEN}20`, text: GREEN },
   dmz: { bg: '#F9731620', text: '#FF8A00' },
 };

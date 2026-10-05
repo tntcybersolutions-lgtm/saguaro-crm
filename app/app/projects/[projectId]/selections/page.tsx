@@ -413,7 +413,7 @@ export default function SelectionsPage(){
                 </>
               )}
               <button onClick={closePanel} aria-label="Close"
-                style={{display:'inline-flex',alignItems:'center',justifyContent:'center',padding:'6px 10px',background:'rgba(143,163,192,.1)',
+                style={{display:'inline-flex',alignItems:'center',justifyContent:'center',padding:'6px 10px',background:'rgba(163,172,187,.1)',
                   border:`1px solid ${BORDER}`,borderRadius:6,color:DIM,fontSize:12,cursor:'pointer'}}>
                 <X size={14} weight="bold" />
               </button>

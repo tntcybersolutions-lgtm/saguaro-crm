@@ -567,7 +567,7 @@ export default function SafetyPage() {
                 <div style={hint}>Drives the OSHA-recordable flag below.</div>
               </div>
               <div style={{ gridColumn: 'span 3' }}>
-                <div style={{ padding: '9px 12px', borderRadius: 8, fontSize: 12, lineHeight: 1.5, background: formIsRecordable ? 'rgba(224,100,78,0.10)' : 'rgba(44,255,122,0.08)', border: `1px solid ${formIsRecordable ? 'rgba(224,100,78,0.35)' : 'rgba(44,255,122,0.3)'}`, color: formIsRecordable ? '#F0A092' : GREEN }}>
+                <div style={{ padding: '9px 12px', borderRadius: 8, fontSize: 12, lineHeight: 1.5, background: formIsRecordable ? 'rgba(255,59,48,0.10)' : 'rgba(44,255,122,0.08)', border: `1px solid ${formIsRecordable ? 'rgba(255,59,48,0.35)' : 'rgba(44,255,122,0.3)'}`, color: formIsRecordable ? '#F0A092' : GREEN }}>
                   {formIsRecordable
                     ? 'OSHA-recordable: this incident will be flagged for the 300 log. Recordables generally must be logged within 7 calendar days; fatalities reported within 8 hours, in-patient hospitalizations within 24.'
                     : 'Not OSHA-recordable as classified — it will be saved for internal tracking and trend analysis only.'}

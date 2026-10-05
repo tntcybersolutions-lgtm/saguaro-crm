@@ -635,7 +635,7 @@ export default function SchedulePage(){
                 </>
               )}
               <button onClick={closePanel}
-                style={{padding:'6px 10px',background:'rgba(143,163,192,.1)',
+                style={{padding:'6px 10px',background:'rgba(163,172,187,.1)',
                   border:`1px solid ${BORDER}`,borderRadius:6,color:DIM,fontSize:12,cursor:'pointer'}}>
                 <X size={14} weight="regular" color={DIM} />
               </button>
@@ -772,7 +772,7 @@ export default function SchedulePage(){
                     {saving?'Saving…':mode==='create'?'Add Task':'Save Changes'}
                   </button>
                   <button onClick={closePanel}
-                    style={{padding:'11px 16px',background:'rgba(143,163,192,.1)',
+                    style={{padding:'11px 16px',background:'rgba(163,172,187,.1)',
                       border:`1px solid ${BORDER}`,borderRadius:8,color:DIM,
                       fontSize:14,cursor:'pointer'}}>
                     Cancel

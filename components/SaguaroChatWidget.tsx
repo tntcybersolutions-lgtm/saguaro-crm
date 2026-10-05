@@ -652,7 +652,7 @@ export default function SaguaroChatWidget({
               alignItems: 'center', justifyContent: 'center', fontSize: 10,
               fontWeight: 700, color: '#fff', zIndex: 1,
               animation: 'badgePulse 2s ease-in-out infinite',
-              border: '2px solid #141416',
+              border: '2px solid #0E0F12',
             }}>1</div>
           )}
           <button
@@ -699,7 +699,7 @@ export default function SaguaroChatWidget({
             onClick={isMinimized ? () => setIsMinimized(false) : undefined}
             style={{
               height: 72, minHeight: 72,
-              background: 'linear-gradient(135deg, #141416 0%, #0a0a0a 100%)',
+              background: 'linear-gradient(135deg, #0E0F12 0%, #0a0a0a 100%)',
               borderBottom: isMinimized ? 'none' : '1px solid rgba(255,255,255,0.12)',
               padding: '0 16px', display: 'flex', alignItems: 'center', gap: 12,
               cursor: isMinimized ? 'pointer' : 'default', flexShrink: 0,

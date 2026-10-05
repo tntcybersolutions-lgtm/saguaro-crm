@@ -18,9 +18,9 @@ const MAP: Record<string, { label: string; color: string }> = {
   png:  { label: 'PNG',  color: '#FF8A00' }, jpg: { label: 'JPG', color: '#FF8A00' }, jpeg: { label: 'JPG', color: '#FF8A00' },
   gif:  { label: 'GIF',  color: '#FF8A00' }, webp: { label: 'WEBP', color: '#FF8A00' }, heic: { label: 'HEIC', color: '#FF8A00' }, svg: { label: 'SVG', color: '#FF8A00' },
   mp4:  { label: 'MP4',  color: '#FF8A00' }, mov: { label: 'MOV', color: '#FF8A00' }, webm: { label: 'WEBM', color: '#FF8A00' }, m4v: { label: 'M4V', color: '#FF8A00' },
-  zip:  { label: 'ZIP',  color: '#64748B' },
+  zip:  { label: 'ZIP',  color: '#A3ACBB' },
   dwg:  { label: 'DWG',  color: '#FF8A00' }, dxf: { label: 'DXF', color: '#FF8A00' }, rvt: { label: 'RVT', color: '#FF8A00' },
-  txt:  { label: 'TXT',  color: '#94A3B8' },
+  txt:  { label: 'TXT',  color: '#A3ACBB' },
 };
 
 /** Best-effort extension from a filename/URL, falling back to a MIME type. */
@@ -47,7 +47,7 @@ export function FileTypeBadge({
   name?: string | null; url?: string | null; mime?: string | null; size?: number; style?: React.CSSProperties;
 }) {
   const ext = fileExt(name || url, mime);
-  const meta = MAP[ext] || { label: (ext || 'FILE').toUpperCase().slice(0, 4), color: '#64748B' };
+  const meta = MAP[ext] || { label: (ext || 'FILE').toUpperCase().slice(0, 4), color: '#A3ACBB' };
   return (
     <span
       aria-label={`${meta.label} file`}

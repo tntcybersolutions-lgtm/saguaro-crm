@@ -255,7 +255,7 @@ const LAYER_META: { key: string; name: string; color: string }[] = [
   { key: 'voice', name: 'Voice Jacks (RJ11)', color: SYSTEM_COLORS.power },
   { key: 'combo', name: 'Combo Plates', color: SYSTEM_COLORS.power },
   { key: 'cabling', name: 'Cable Terminations', color: SYSTEM_COLORS.cabling },
-  { key: 'other', name: 'Other Devices', color: '#94a3b8' },
+  { key: 'other', name: 'Other Devices', color: '#A3ACBB' },
 ];
 // ── compact layer-chip row (the 6 approved systems) shown under the header ──
 type PanelTab = 'design' | 'layers' | 'bom' | 'survey';
@@ -382,7 +382,7 @@ function drawCinematicField(ctx: CanvasRenderingContext2D, p: HeatmapProject): C
     const meta = WALL_MATERIALS[w.material]; const lw = hmClamp(4 + (meta?.db5 ?? 4) / 3.5, 4, 11);
     ctx.save(); ctx.lineCap = 'round';
     ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = lw + 4; ctx.beginPath(); ctx.moveTo(w.a.x, w.a.y); ctx.lineTo(w.b.x, w.b.y); ctx.stroke();
-    ctx.strokeStyle = meta?.color || '#334155'; ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(w.a.x, w.a.y); ctx.lineTo(w.b.x, w.b.y); ctx.stroke(); ctx.restore();
+    ctx.strokeStyle = meta?.color || '#15171C'; ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(w.a.x, w.a.y); ctx.lineTo(w.b.x, w.b.y); ctx.stroke(); ctx.restore();
   });
   // DEAD ZONE callouts: dashed-red box + "Place 1 AP here"
   const gaps = (cov.gaps || []).filter((g) => g.area > 150);
@@ -727,14 +727,14 @@ export default function Designer({ projectId }: { projectId: string | null }) {
     const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
     const ctx = cv.getContext('2d')!;
     ctx.fillStyle = '#eef1f5'; ctx.fillRect(0, 0, W, H);
-    ctx.strokeStyle = 'rgba(148,163,184,0.20)'; ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(163,172,187,0.20)'; ctx.lineWidth = 1;
     for (let gx = 0; gx <= spec.ftW; gx += 5) { const x = gx * k; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
     for (let gy = 0; gy <= spec.ftH; gy += 5) { const y = gy * k; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
     ctx.font = `600 ${Math.round(k * 1.5)}px system-ui`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     for (const r of spec.rooms) {
-      ctx.strokeStyle = '#334155'; ctx.lineWidth = Math.max(2, k * 0.45);
+      ctx.strokeStyle = '#15171C'; ctx.lineWidth = Math.max(2, k * 0.45);
       ctx.strokeRect(r.x * k, r.y * k, r.w * k, r.h * k);
-      if (r.label) { ctx.fillStyle = '#94a3b8'; ctx.fillText(r.label, (r.x + r.w / 2) * k, (r.y + r.h / 2) * k); }
+      if (r.label) { ctx.fillStyle = '#A3ACBB'; ctx.fillText(r.label, (r.x + r.w / 2) * k, (r.y + r.h / 2) * k); }
     }
     const walls: Wall[] = spec.walls.map((w) => ({ id: uid(), a: { x: w.a[0] * k, y: w.a[1] * k }, b: { x: w.b[0] * k, y: w.b[1] * k }, material: w.material }));
     const devices: Device[] = spec.devices.map((d) => {
@@ -1553,7 +1553,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         const pred = inspectAt({ x: mp.x, y: mp.y }, project).value;
         if (Number.isFinite(pred)) {
           const delta = pred - mp.measuredDbm;
-          const dc = Math.abs(delta) <= 3 ? '#94A3B8' : delta > 0 ? '#FF8A00' : '#FF3B30';
+          const dc = Math.abs(delta) <= 3 ? '#A3ACBB' : delta > 0 ? '#FF8A00' : '#FF3B30';
           const txt = `${delta > 0 ? '+' : ''}${delta.toFixed(0)}`;
           const bx = mp.x + 15, by = mp.y - 15;
           ctx.font = 'bold 11px system-ui';

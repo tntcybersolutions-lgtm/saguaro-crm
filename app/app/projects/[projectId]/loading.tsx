@@ -1,6 +1,6 @@
 'use client';
 
-const RAISED = '#141416';
+const RAISED = '#0E0F12';
 const BORDER = 'rgba(255,255,255,0.12)';
 const GOLD = '#FF8A00';
 const DARK = '#0a0a0a';

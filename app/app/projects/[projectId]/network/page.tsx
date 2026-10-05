@@ -73,7 +73,7 @@ const DEVICE_TYPE_ICONS: Record<string, React.ComponentType<any>> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  online: GREEN, offline: RED, planned: '#6B7280', warning: 'var(--warning)',
+  online: GREEN, offline: RED, planned: '#A3ACBB', warning: 'var(--warning)',
 };
 
 const NAV_ITEMS = [
@@ -425,7 +425,7 @@ export default function NetworkDashboard() {
                   >
                     <div style={{
                       width: 8, height: 8, borderRadius: '50%',
-                      background: STATUS_COLORS[dev.status] || '#6B7280',
+                      background: STATUS_COLORS[dev.status] || '#A3ACBB',
                       flexShrink: 0,
                     }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -434,8 +434,8 @@ export default function NetworkDashboard() {
                     </div>
                     <span style={{
                       fontSize: 10, padding: '2px 8px', borderRadius: 10, fontWeight: 600,
-                      background: `color-mix(in srgb, ${STATUS_COLORS[dev.status] || '#6B7280'} 13%, transparent)`,
-                      color: STATUS_COLORS[dev.status] || '#6B7280',
+                      background: `color-mix(in srgb, ${STATUS_COLORS[dev.status] || '#A3ACBB'} 13%, transparent)`,
+                      color: STATUS_COLORS[dev.status] || '#A3ACBB',
                       textTransform: 'capitalize',
                     }}>{dev.status}</span>
                   </Link>

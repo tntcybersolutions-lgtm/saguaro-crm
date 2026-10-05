@@ -37,7 +37,7 @@ interface Invoice {
 // Lowercase-keyed — the server stores lowercase statuses; rows written before
 // the normalization ('Sent', 'Draft') resolve to the same keys via statusKey().
 const STATUS_MAP: Record<string, { bg: string; color: string; label: string }> = {
-  draft: { bg: 'rgba(143,163,192,.2)', color: DIM, label: 'Draft' },
+  draft: { bg: 'rgba(163,172,187,.2)', color: DIM, label: 'Draft' },
   sent: { bg: 'var(--brand-primary-18)', color: 'var(--brand-primary-strong)', label: 'Sent' },
   pending: { bg: 'color-mix(in srgb, var(--warning) 20%, transparent)', color: 'var(--warning)', label: 'Pending' },
   approved: { bg: 'rgba(44,255,122,.2)', color: GREEN, label: 'Approved' },
@@ -554,7 +554,7 @@ export default function InvoicesPage() {
               {sortedInvoices.map(inv => {
                 const overdue = isOverdue(inv);
                 const effKey = overdue ? 'overdue' : statusKey(inv.status);
-                const sc = STATUS_MAP[effKey] || { bg: 'rgba(143,163,192,.2)', color: DIM, label: statusKey(inv.status) };
+                const sc = STATUS_MAP[effKey] || { bg: 'rgba(163,172,187,.2)', color: DIM, label: statusKey(inv.status) };
                 return (
                   <tr key={inv.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', background: overdue ? 'rgba(255,59,48,.05)' : 'transparent' }}>
                     <td style={{ padding: '10px 14px', color: GOLD, fontWeight: 700 }}>{inv.invoice_number}</td>

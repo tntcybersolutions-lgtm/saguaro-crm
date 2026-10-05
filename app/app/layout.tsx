@@ -31,6 +31,7 @@ import { HelpModeButton } from '../../components/HelpMode';
 import { X, ArrowRight, House, Briefcase, FolderSimple, Clock, DotsThreeOutline, MagnifyingGlass, Bell, Star } from '@phosphor-icons/react';
 import { colors, font, sidebar as sidebarTokens, z } from '../../lib/design-tokens';
 import { ensureBrowserSession } from '../../lib/supabase-browser';
+import TableLabels from '@/components/ui/TableLabels';
 
 interface ChatMsg { role: 'user' | 'assistant'; content: string; }
 
@@ -235,6 +236,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <WhiteLabelProvider>
     <div className="sag-app" style={{ minHeight: '100vh', background: colors.dark, color: colors.text, fontFamily: font.family }}>
+      <TableLabels />
 
       {/* ── Responsive + AI panel styles ──────────────────────────────── */}
       <style>{`

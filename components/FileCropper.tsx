@@ -69,7 +69,7 @@ export function FileCropper({ fileId, url, name, onDone, onClose }: {
           <button onClick={() => setRotate((r) => (r - 90) % 360)} style={btn}><ArrowCounterClockwise size={16} />Rotate Left</button>
           <button onClick={() => setRotate((r) => (r + 90) % 360)} style={btn}><ArrowClockwise size={16} />Rotate Right</button>
           <button onClick={() => setRect(null)} style={btn}>Clear Box</button>
-          <span style={{ color: '#64748B', fontSize: 12, marginLeft: 4 }}>Drag on the image to crop</span>
+          <span style={{ color: '#A3ACBB', fontSize: 12, marginLeft: 4 }}>Drag on the image to crop</span>
           <div style={{ flex: 1 }} />
           {err && <span style={{ color: '#FF6B6B', fontSize: 12 }}>{err}</span>}
           <button onClick={apply} disabled={busy} style={{ ...btn, background: 'var(--brand-primary)', color: '#0A0A00', fontWeight: 800, border: 'none' }}><Check size={16} weight="bold" />{busy ? 'Saving…' : 'Apply'}</button>
