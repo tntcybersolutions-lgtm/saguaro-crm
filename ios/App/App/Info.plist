@@ -28,7 +28,7 @@
 	<string>Main</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
-		<string>armv7</string>
+		<string>arm64</string>
 	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
@@ -53,6 +53,8 @@
 	<string>Saguaro Field saves captured jobsite photos to your photo library.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Saguaro Field uses your location to GPS-stamp photos, clock in and out, and field reports.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Saguaro Field uses your location to GPS-stamp photos, clock in and out, and field reports. It never tracks you in the background.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Saguaro Field uses the microphone for voice notes and video capture.</string>
 	<key>NSFaceIDUsageDescription</key>
