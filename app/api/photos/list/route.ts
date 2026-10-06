@@ -5,6 +5,8 @@ import { apiError } from '@/lib/api-error';
 
 /** Album the Files-library images are grouped under in the gallery. */
 const FILES_ALBUM = 'From Files';
+/** Album every project video is grouped under — wherever it was uploaded from. */
+const VIDEO_ALBUM = 'Video';
 
 /** "ZZ-AUDIT_jobsite-photo-1.jpg" -> "ZZ AUDIT jobsite photo 1". */
 function titleFromFileName(name: string): string {
@@ -85,10 +87,12 @@ export async function GET(req: NextRequest) {
 
     const { data: fileRows, error: filesErr } = await (db as any)
       .from('project_files')
-      .select('id, project_id, file_name, file_url, poster_url, mime_type, kind, file_size, file_hash, uploaded_by_name, created_at')
+      .select('id, project_id, file_name, file_url, poster_url, mime_type, kind, file_size, file_hash, uploaded_by_name, created_at, duration_seconds, width, height')
       .eq('tenant_id', user.tenantId)
       .eq('project_id', projectId)
-      .eq('kind', 'image')
+      // Site video lives in the library too (photos is image-only), so the
+      // gallery is the one place a GC rewatches what the crew recorded.
+      .in('kind', ['image', 'video'])
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .limit(500);
@@ -112,14 +116,20 @@ export async function GET(req: NextRequest) {
         id: `file:${f.id}`,
         file_id: f.id,
         source: 'files',
-        read_only: true,
+        // Videos are managed from the gallery (delete goes to /api/files/[id]);
+        // library images stay read-only here and are edited in Files & Media.
+        read_only: f.kind !== 'video',
+        media: f.kind === 'video' ? 'video' : 'image',
+        duration_seconds: f.duration_seconds ?? null,
+        width: f.width ?? null,
+        height: f.height ?? null,
         project_id: f.project_id,
         title: titleFromFileName(String(f.file_name || 'Photo')),
         filename: f.file_name,
         url: f.file_url,
         // poster_url is the Files library's stored small variant (see /api/files/upload).
         thumbnail_url: f.poster_url || null,
-        album: FILES_ALBUM,
+        album: f.kind === 'video' ? VIDEO_ALBUM : FILES_ALBUM,
         taken_at: f.created_at,
         created_at: f.created_at,
         taken_by: f.uploaded_by_name || null,
