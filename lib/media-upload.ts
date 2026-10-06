@@ -267,3 +267,61 @@ export async function uploadVideo(file: File, o: VideoUploadOpts): Promise<Recor
   o.onProgress?.(1);
   return (rec.file || {}) as Record<string, unknown>;
 }
+
+export interface SubMediaOpts {
+  /** The sub's portal token — the link they already use; no Saguaro login. */
+  token: string;
+  destination: 'project' | 'gc';
+  note?: string;
+  /** One id per "send" so the GC gets one notification for the whole batch. */
+  batchId: string;
+  onProgress?: (fraction: number) => void;
+}
+
+/** One end-of-day photo or video from a sub's portal, any size. */
+export async function uploadSubMedia(file: File, kind: MediaKind, o: SubMediaOpts): Promise<Record<string, unknown>> {
+  const q = `token=${encodeURIComponent(o.token)}`;
+  const headers = { 'Content-Type': 'application/json', 'x-portal-token': o.token };
+  const sign = async (fileName: string) =>
+    (await jsonOrThrow(
+      await fetch(`/api/portal/sub/media/upload-url?${q}`, { method: 'POST', headers, body: JSON.stringify({ fileName }) }),
+      "Couldn't start the upload.",
+    )) as unknown as SignedUpload;
+
+  const name = file.name || (kind === 'video' ? `video-${Date.now()}.mp4` : `photo-${Date.now()}.jpg`);
+  const info = kind === 'video' ? await readVideoInfo(file) : null;
+  const up = await sign(name);
+  await putSigned(up, file, (f) => o.onProgress?.(f * 0.9));
+
+  let posterPath: string | null = null;
+  if (info?.poster) {
+    try {
+      const pUp = await sign(`${name.replace(/\.[^.]+$/, '')}-poster.jpg`);
+      await putSigned(pUp, info.poster);
+      posterPath = pUp.path;
+    } catch {
+      posterPath = null; // the video matters; a missing poster only costs the tile its frame
+    }
+  }
+
+  const done = await jsonOrThrow(
+    await fetch(`/api/portal/sub/media?${q}`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        path: up.path,
+        fileName: name,
+        contentType: file.type || null,
+        fileSize: file.size,
+        posterPath,
+        durationSeconds: info?.duration ?? null,
+        destination: o.destination,
+        note: o.note || '',
+        batchId: o.batchId,
+      }),
+    }),
+    "That upload didn't save.",
+  );
+  o.onProgress?.(1);
+  return (done.item || {}) as Record<string, unknown>;
+}

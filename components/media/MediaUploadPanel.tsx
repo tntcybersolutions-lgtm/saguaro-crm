@@ -24,6 +24,8 @@ const CSS = `
 .muHead h2 { margin: 0; font-size: 18px; font-weight: 800; line-height: 1.25; color: var(--text-primary); }
 .muHead p { margin: 4px 0 0; font-size: 13px; color: var(--text-tertiary); }
 .muX { margin-left: auto; flex: 0 0 auto; width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.04); color: var(--text-primary); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.muInline .muBody { padding: 0; overflow: visible; }
+.muInline[data-drag="true"] { outline: 2px dashed var(--brand-primary); outline-offset: 6px; border-radius: 14px; }
 .muBody { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 18px 12px; display: flex; flex-direction: column; gap: 14px; }
 .muPick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .muBig { min-height: 92px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 12px 8px; border-radius: 14px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.04); color: var(--text-primary); font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; text-align: center; }
@@ -81,6 +83,8 @@ export interface MediaUploadPanelProps {
   photosOnly?: boolean;
   /** Secondary content under the pick buttons (an alternate way in, a note). */
   extra?: React.ReactNode;
+  /** Render in the page (no overlay, no close) — the sub portal's End of Day tab. */
+  inline?: boolean;
 }
 
 export default function MediaUploadPanel(p: MediaUploadPanelProps) {
@@ -91,7 +95,7 @@ export default function MediaUploadPanel(p: MediaUploadPanelProps) {
   const depth = useRef(0);
 
   useEffect(() => {
-    if (!p.open) return;
+    if (!p.open || p.inline) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') p.onClose(); };
@@ -116,15 +120,63 @@ export default function MediaUploadPanel(p: MediaUploadPanelProps) {
       ? `Uploading… ${done} of ${p.items.length - failed} done${failed ? ` · ${failed} failed` : ''}`
       : `${done} uploaded${failed ? ` · ${failed} failed — tap Retry` : ''}`;
 
+  const body = (
+    <div className="muBody">
+      {p.children}
+
+      <input ref={camRef} type="file" accept="image/*" capture="environment" multiple hidden onChange={take} />
+      <input ref={vidRef} type="file" accept="video/*" capture="environment" hidden onChange={take} />
+      <input ref={libRef} type="file" accept={p.photosOnly ? 'image/*' : 'image/*,video/*'} multiple hidden onChange={take} />
+
+      <div className="muPick">
+        <button type="button" className="muBig muCam" data-primary="true" onClick={() => camRef.current?.click()}>
+          <Camera size={26} weight="duotone" /> Take Photo
+        </button>
+        {!p.photosOnly && (
+          <button type="button" className="muBig muCam" onClick={() => vidRef.current?.click()}>
+            <VideoCamera size={26} weight="duotone" /> Record Video
+          </button>
+        )}
+        <button type="button" className="muBig" onClick={() => libRef.current?.click()}>
+          <Images size={26} weight="duotone" />
+          {p.photosOnly ? 'Choose Photos' : 'Choose Photos & Videos'}
+        </button>
+      </div>
+      <div className="muDropHint muCamHide"><UploadSimple size={18} /> {drag ? 'Let go to add them' : 'Or drag photos and videos here'}</div>
+      {p.hint && <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: -6 }}>{p.hint}</div>}
+      {p.extra}
+
+      {p.items.length > 0 && (
+        <div className="muList" aria-live="polite">
+          {p.items.map((it) => <Row key={it.id} it={it} onRetry={p.onRetry} onRemove={p.onRemove} />)}
+        </div>
+      )}
+    </div>
+  );
+
+  const dropProps = {
+    onDragEnter: (e: React.DragEvent) => { if (e.dataTransfer?.types?.includes('Files')) { e.preventDefault(); depth.current++; setDrag(true); } },
+    onDragOver: (e: React.DragEvent) => { if (e.dataTransfer?.types?.includes('Files')) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; } },
+    onDragLeave: () => { depth.current = Math.max(0, depth.current - 1); if (!depth.current) setDrag(false); },
+    onDrop: (e: React.DragEvent) => { e.preventDefault(); depth.current = 0; setDrag(false); if (e.dataTransfer?.files?.length) p.onFiles(e.dataTransfer.files); },
+  };
+
+  if (p.inline) {
+    return (
+      <div className="muInline" data-drag={drag ? 'true' : undefined} {...dropProps}>
+        <style dangerouslySetInnerHTML={{ __html: CSS }} />
+        {body}
+        {p.items.length > 0 && <div className="muSum" style={{ marginTop: 10 }}>{summary}</div>}
+      </div>
+    );
+  }
+
   return createPortal(
     <div
       className="mu"
       data-drag={drag ? 'true' : undefined}
       onMouseDown={(e) => { if (e.target === e.currentTarget) p.onClose(); }}
-      onDragEnter={(e) => { if (e.dataTransfer?.types?.includes('Files')) { e.preventDefault(); depth.current++; setDrag(true); } }}
-      onDragOver={(e) => { if (e.dataTransfer?.types?.includes('Files')) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; } }}
-      onDragLeave={() => { depth.current = Math.max(0, depth.current - 1); if (!depth.current) setDrag(false); }}
-      onDrop={(e) => { e.preventDefault(); depth.current = 0; setDrag(false); if (e.dataTransfer?.files?.length) p.onFiles(e.dataTransfer.files); }}
+      {...dropProps}
     >
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="muSheet" role="dialog" aria-modal="true" aria-label={p.title}>
@@ -136,38 +188,7 @@ export default function MediaUploadPanel(p: MediaUploadPanelProps) {
           <button type="button" className="muX" aria-label="Close" onClick={p.onClose}><X size={20} weight="bold" /></button>
         </div>
 
-        <div className="muBody">
-          {p.children}
-
-          <input ref={camRef} type="file" accept="image/*" capture="environment" multiple hidden onChange={take} />
-          <input ref={vidRef} type="file" accept="video/*" capture="environment" hidden onChange={take} />
-          <input ref={libRef} type="file" accept={p.photosOnly ? 'image/*' : 'image/*,video/*'} multiple hidden onChange={take} />
-
-          <div className="muPick">
-            <button type="button" className="muBig muCam" data-primary="true" onClick={() => camRef.current?.click()}>
-              <Camera size={26} weight="duotone" /> Take Photo
-            </button>
-            {!p.photosOnly && (
-              <button type="button" className="muBig muCam" onClick={() => vidRef.current?.click()}>
-                <VideoCamera size={26} weight="duotone" /> Record Video
-              </button>
-            )}
-            <button type="button" className="muBig" onClick={() => libRef.current?.click()}>
-              <Images size={26} weight="duotone" />
-              {p.photosOnly ? 'Choose Photos' : 'Choose Photos & Videos'}
-            </button>
-          </div>
-          <div className="muDropHint muCamHide"><UploadSimple size={18} /> {drag ? 'Let go to add them' : 'Or drag photos and videos here'}</div>
-          {p.hint && <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: -6 }}>{p.hint}</div>}
-          {p.extra}
-
-          {p.items.length > 0 && (
-            <div className="muList" aria-live="polite">
-              {p.items.map((it) => <Row key={it.id} it={it} onRetry={p.onRetry} onRemove={p.onRemove} />)}
-            </div>
-          )}
-        </div>
-
+        {body}
         <div className="muFoot">
           <div className="muSum">{summary}</div>
           <button type="button" className="muDone" onClick={p.onClose}>
@@ -185,7 +206,7 @@ function Row({ it, onRetry, onRemove }: { it: QueueItem; onRetry: (id: string) =
   const label =
     it.status === 'waiting' ? 'Waiting…'
       : it.status === 'uploading' ? (it.progress >= 0.9 ? (it.kind === 'video' ? 'Saving…' : 'Making the preview…') : `Uploading ${Math.round(it.progress * 100)}%`)
-        : it.status === 'done' ? 'Saved to the job'
+        : it.status === 'done' ? (it.doneLabel || 'Saved to the job')
           : it.error || 'Upload failed';
   return (
     <div className="muRow">

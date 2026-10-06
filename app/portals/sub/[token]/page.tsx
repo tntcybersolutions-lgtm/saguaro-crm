@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
+import SubEndOfDay from '@/components/portal/SubEndOfDay';
 
 /* ── Design Tokens ── */
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF';
@@ -10,7 +11,7 @@ const GREEN='#2CFF7A',RED='#FF3B30',AMBER='#FF8A00',BLUE='var(--brand-primary)',
 const fmt=(n:number)=>'$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}));
 const fmtDate=(d:string)=>d?new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'--';
 
-type Tab='dashboard'|'punch'|'daily'|'schedule'|'rfis'|'radio'|'payapps'|'bids'|'documents'|'drawings'|'compliance'|'scorecard'|'messages'|'history';
+type Tab='dashboard'|'photos'|'punch'|'daily'|'schedule'|'rfis'|'radio'|'payapps'|'bids'|'documents'|'drawings'|'compliance'|'scorecard'|'messages'|'history';
 
 /* ── Shared styles ── */
 const card=(extra?:React.CSSProperties):React.CSSProperties=>({background:RAISED,backgroundImage:'linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015))',border:`1px solid ${BORDER}`,borderRadius:12,padding:20,boxShadow:'0 4px 14px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.06)',...extra});
@@ -66,6 +67,8 @@ function SignatureCanvas({onSign}:{onSign:(data:string)=>void}){
 export default function SubPortal(){
   const {token}=useParams<{token:string}>();
   const [tab,setTab]=useState<Tab>('dashboard');
+  // A GC can text a crew straight to the upload: /portals/sub/<token>?tab=photos
+  useEffect(()=>{ if(new URLSearchParams(window.location.search).get('tab')==='photos') setTab('photos'); },[]);
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState('');
   const [toast,setToast]=useState('');
@@ -523,6 +526,24 @@ export default function SubPortal(){
   const healthLabel=healthScore>=4.5?'Excellent':healthScore>=4?'Good':healthScore>=3?'Fair':healthScore>=1?'Needs Improvement':'No Data';
 
   /* ── Loading ── */
+  /* Messages-tab effects. These used to live INSIDE renderMessages(), which only
+     runs while the Messages tab is open — so opening the tab changed how many
+     hooks this component called and React threw ("Rendered more hooks than
+     during the previous render"). Hooks belong at the top level; the tab gate
+     moves into the effects instead. */
+  const msgEndRef=useRef<HTMLDivElement>(null);
+  useEffect(()=>{ if(tab==='messages') msgEndRef.current?.scrollIntoView({behavior:'smooth'}); },[messages,tab]);
+  // Mark unread messages as read once the sub is actually looking at them.
+  useEffect(()=>{
+    if(tab!=='messages') return;
+    const unread=messages.filter((m:any)=>m.sender_type!=='sub'&&!m.read).map((m:any)=>m.id);
+    if(unread.length>0){
+      fetch(`/api/portal/sub/messages?token=${token}`,{method:'PATCH',headers,body:JSON.stringify({message_ids:unread})})
+        .catch((e)=>console.error('[sub-portal] mark read failed',e));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[messages,tab]);
+
   if(loading)return(
     <div style={{minHeight:'100vh',background:DARK,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'system-ui,sans-serif'}}>
       <div style={{textAlign:'center'}}>
@@ -546,6 +567,7 @@ export default function SubPortal(){
 
   const TABS:{key:Tab;label:string;icon:string;section:string}[]=[
     {key:'dashboard',label:'Dashboard',icon:'\u2302',section:'Work'},
+    {key:'photos',label:'End of Day',icon:'\u{1F4F7}',section:'Work'},
     {key:'punch',label:'Punch List',icon:'\u2713',section:'Work'},
     {key:'daily',label:'Daily Logs',icon:'\u270D',section:'Work'},
     {key:'schedule',label:'Schedule',icon:'\u2630',section:'Work'},
@@ -610,6 +632,11 @@ export default function SubPortal(){
             })}
           </div>
         )}
+
+        {/* The one thing a crew does every day on site: send the day's photos & video. */}
+        <button onClick={()=>setTab('photos')} style={{...btnS(GOLD),width:'100%',minHeight:56,fontSize:16,display:'flex',alignItems:'center',justifyContent:'center',gap:10}}>
+          <span aria-hidden style={{fontSize:20}}>{'\u{1F4F7}'}</span> Send end-of-day photos &amp; video
+        </button>
 
         {/* Quick Stats */}
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:12}}>
@@ -1049,17 +1076,6 @@ export default function SubPortal(){
   /*  MESSAGES TAB                                                     */
   /* ================================================================ */
   const renderMessages=()=>{
-    const msgEndRef=useRef<HTMLDivElement>(null);
-    useEffect(()=>{msgEndRef.current?.scrollIntoView({behavior:'smooth'})},[messages]);
-
-    // Mark unread messages as read
-    useEffect(()=>{
-      const unread=messages.filter((m:any)=>m.sender_type!=='sub'&&!m.read).map((m:any)=>m.id);
-      if(unread.length>0){
-        fetch(`/api/portal/sub/messages?token=${token}`,{method:'PATCH',headers,body:JSON.stringify({message_ids:unread})}).catch(()=>{});
-      }
-    },[messages]);
-
     return(
       <div style={{display:'grid',gap:20}}>
         <div style={card()}>
@@ -1394,6 +1410,7 @@ export default function SubPortal(){
   const renderContent=()=>{
     switch(tab){
       case'dashboard':return renderDashboard();
+      case'photos':return <SubEndOfDay token={token} jobName={session?.project_name||null} onToast={showToast}/>;
       case'compliance':return renderCompliance();
       case'payapps':return renderPayApps();
       case'daily':return renderDaily();
@@ -1415,7 +1432,7 @@ export default function SubPortal(){
   /* ================================================================ */
   return(
     <div style={{minHeight:'100vh',background:DARK,fontFamily:'system-ui,-apple-system,sans-serif',color:TEXT}}>
-      {toast&&<div style={{position:'fixed',top:20,right:20,zIndex:9999,background:RAISED,border:`1px solid ${GOLD}`,borderRadius:10,padding:'12px 20px',color:TEXT,fontSize:13,fontWeight:600,boxShadow:'0 8px 32px rgba(0,0,0,.5)',animation:'fadeIn .3s ease'}}>{toast}</div>}
+      {toast&&<div role="status" style={{position:'fixed',left:16,right:16,bottom:'max(20px, env(safe-area-inset-bottom))',margin:'0 auto',width:'fit-content',maxWidth:520,textAlign:'center',zIndex:9999,background:RAISED,border:`1px solid ${GOLD}`,borderRadius:10,padding:'12px 20px',color:TEXT,fontSize:13,fontWeight:600,boxShadow:'0 8px 32px rgba(0,0,0,.5)',animation:'fadeIn .3s ease'}}>{toast}</div>}
       {!isOnline&&<div style={{background:RED,color:'#fff',textAlign:'center',padding:'6px 16px',fontSize:12,fontWeight:700}}>You are currently offline. Changes will sync when connection is restored.</div>}
 
       {/* Header */}

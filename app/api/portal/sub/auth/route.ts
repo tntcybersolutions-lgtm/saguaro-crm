@@ -59,11 +59,17 @@ export async function POST(req: NextRequest) {
       .eq('tenant_id', session.tenant_id)
       .single();
 
+    // The job this link is for, so the portal can name it ("End of day for …").
+    const { data: project } = session.project_id
+      ? await db.from('projects').select('name').eq('id', session.project_id).eq('tenant_id', session.tenant_id).maybeSingle()
+      : { data: null };
+
     return NextResponse.json({
       session: {
         id: session.id,
         sub_id: session.sub_id,
         project_id: session.project_id,
+        project_name: project?.name ?? null,
         tenant_id: session.tenant_id,
         status: session.status,
         last_login_at: new Date().toISOString(),

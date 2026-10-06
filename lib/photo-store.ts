@@ -51,11 +51,31 @@ export interface StoredPhoto {
   warning: string | null;
 }
 
+/** The display copy + thumbnail written to storage, before any `photos` row exists. */
+export interface RenderedPhoto {
+  storagePath: string;
+  url: string;
+  thumbPath: string | null;
+  thumbnailUrl: string | null;
+  filename: string;
+  bytes: number;
+  contentType: string;
+  warning: string | null;
+}
+
 /**
+ * Shrink a camera original into the ~2000px display copy + 400px thumbnail and
+ * write both to storage. No database row — /api/photos/* insert one right away
+ * (storePhoto); a sub's "send to the GC only" upload keeps just these objects
+ * until the GC adds it to the job (insertPhotoRow then).
+ *
  * Throws UnsupportedImageError for a HEIC we can't decode (store nothing — no
  * browser could show it) and PhotoStoreError for everything else.
  */
-export async function storePhoto(db: Db, input: StorePhotoInput): Promise<StoredPhoto> {
+export async function renderAndStorePhoto(
+  db: Db,
+  input: { projectId: string; original: Buffer; fileName: string; contentType?: string | null },
+): Promise<RenderedPhoto> {
   const rawFilename = input.fileName || `photo-${Date.now()}.jpg`;
 
   // ── DOWNSCALE + THUMBNAIL (the phone-freeze fix) ─────────────────────────
@@ -124,41 +144,59 @@ export async function storePhoto(db: Db, input: StorePhotoInput): Promise<Stored
     }
   }
 
-  // `photos` is the canonical table every gallery reads. `url` / `thumbnail_url`
-  // are stored in public-URL form; the list route signs them on read (the
-  // bucket is private). createServerClient is service-role, so RLS can't
-  // silently reject the insert the way the old anon-client insert did.
-  const { data: photo, error: insertError } = await db
+  return { storagePath, url, thumbPath, thumbnailUrl, filename, bytes: displayBytes.length, contentType: displayType, warning };
+}
+
+/**
+ * Insert the `photos` row for objects renderAndStorePhoto wrote. `photos` is
+ * the canonical table every gallery reads; url / thumbnail_url are stored in
+ * public-URL form and the list route signs them on read (the bucket is
+ * private). createServerClient is service-role, so RLS can't silently reject
+ * the insert the way the old anon-client insert did.
+ */
+export async function insertPhotoRow(
+  db: Db,
+  r: Pick<RenderedPhoto, 'url' | 'thumbnailUrl' | 'filename' | 'bytes' | 'contentType'>,
+  meta: Omit<StorePhotoInput, 'original' | 'fileName' | 'contentType'>,
+): Promise<Record<string, unknown>> {
+  const { data: photo, error } = await db
     .from('photos')
     .insert({
-      tenant_id: input.tenantId,
-      project_id: input.projectId,
-      url,
-      thumbnail_url: thumbnailUrl,
-      filename,
-      category: input.category || 'Progress',
-      caption: input.caption || '',
-      taken_by: input.takenBy || '',
-      taken_at: input.takenAt || new Date().toISOString(),
+      tenant_id: meta.tenantId,
+      project_id: meta.projectId,
+      url: r.url,
+      thumbnail_url: r.thumbnailUrl,
+      filename: r.filename,
+      category: meta.category || 'Progress',
+      caption: meta.caption || '',
+      taken_by: meta.takenBy || '',
+      taken_at: meta.takenAt || new Date().toISOString(),
       // file_size / mime_type describe the object we actually STORED, not the
       // bytes the browser handed us — otherwise the row lies about storage.
-      file_size: displayBytes.length,
-      mime_type: displayType,
-      location_lat: input.location?.lat ?? null,
-      location_lng: input.location?.lng ?? null,
-      ...(input.extra || {}),
+      file_size: r.bytes,
+      mime_type: r.contentType,
+      location_lat: meta.location?.lat ?? null,
+      location_lng: meta.location?.lng ?? null,
+      ...(meta.extra || {}),
     } as never)
     .select()
     .single();
+  if (error || !photo) throw new PhotoStoreError(500, 'Failed to save photo', error);
+  return photo as Record<string, unknown>;
+}
 
-  if (insertError || !photo) {
+/** Shrink + thumbnail + photos row, in one go. */
+export async function storePhoto(db: Db, input: StorePhotoInput): Promise<StoredPhoto> {
+  const r = await renderAndStorePhoto(db, input);
+  try {
+    const photo = await insertPhotoRow(db, r, input);
+    return { photo, warning: r.warning };
+  } catch (e: unknown) {
     // No row means nothing will ever reference these objects. Clean them up so
     // a failed upload does not silently accrue orphaned bytes in the bucket.
-    await removeQuietly(db, thumbPath ? [storagePath, thumbPath] : [storagePath]);
-    throw new PhotoStoreError(500, 'Failed to save photo', insertError);
+    await removeQuietly(db, r.thumbPath ? [r.storagePath, r.thumbPath] : [r.storagePath]);
+    throw e;
   }
-
-  return { photo: photo as Record<string, unknown>, warning };
 }
 
 /**

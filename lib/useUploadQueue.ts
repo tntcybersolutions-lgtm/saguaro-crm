@@ -19,9 +19,11 @@ export interface QueueItem {
   error?: string;
   /** The saved record's small image, once the server has one. */
   thumb?: string | null;
+  /** What "done" means for this file, e.g. "Sent to the GC". */
+  doneLabel?: string;
 }
 
-export type Uploader = (file: File, kind: MediaKind, onProgress: (f: number) => void) => Promise<{ thumb?: string | null } | void>;
+export type Uploader = (file: File, kind: MediaKind, onProgress: (f: number) => void) => Promise<{ thumb?: string | null; doneLabel?: string } | void>;
 
 const CONCURRENCY = 2;
 
@@ -66,7 +68,7 @@ export function useUploadQueue(uploader: Uploader, opts: { onItemDone?: () => vo
       patch(it.id, { status: 'uploading', progress: 0.02 });
       uploaderRef.current(it.file, it.kind, (f) => patch(it.id, { progress: Math.max(0.02, Math.min(1, f)) }))
         .then((res) => {
-          patch(it.id, { status: 'done', progress: 1, thumb: (res && res.thumb) || null });
+          patch(it.id, { status: 'done', progress: 1, thumb: (res && res.thumb) || null, doneLabel: (res && res.doneLabel) || undefined });
           optsRef.current.onItemDone?.();
         })
         .catch((e: unknown) => {
