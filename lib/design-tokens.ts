@@ -8,8 +8,8 @@
  * Use `palette.*` (a CSS variable) in style props; use `paletteHex.*` only
  * where a real hex is unavoidable (canvas, SVG export, PDF, charts). */
 export const paletteHex = {
-  bg: '#000000', card: '#0E0F12', raised: '#15171C',
-  text: '#FFE600', text2: '#FF8A00', text3: '#FF8A00', text4: '#995300',
+  bg: '#050506', card: '#0E0F13', raised: '#13151A',
+  text: '#F3EAC9', text2: '#B9AE8C', text3: '#8E866B', text4: '#5E5948',
   yellow: '#FFE600', yellowHi: '#FFF04A', yellowHover: '#E6CF00', onBrand: '#0A0A00',
   orange: '#FF8A00', green: '#2CFF7A', red: '#FF3B30', gray: '#A3ACBB',
 } as const;
@@ -41,25 +41,25 @@ export const colors = {
   // as the glass tokens (--bg-surface / --bg-surface-2) over a black page, for
   // consumers that cannot take a translucent value. Naming kept (`dark` = page
   // bg, `surface`/`raised` = cards) so consumers re-theme without renames.
-  dark:       '#000000', // page background — matches --bg-base
-  darkAlt:    '#0E0F12', // card / panel — solid stand-in for --bg-surface
-  raised:     '#0E0F12', // raised card
-  raisedAlt:  '#15171C', // grouped inset / input — solid stand-in for --bg-surface-2
-  surface:    '#0E0F12', // surface / card
+  dark:       '#050506', // page background — matches --bg-base
+  darkAlt:    '#0E0F13', // card / panel — solid stand-in for --bg-surface
+  raised:     '#0E0F13', // raised card
+  raisedAlt:  '#13151A', // grouped inset / input — solid stand-in for --bg-surface-2
+  surface:    '#0E0F13', // surface / card
   glass:      'var(--bg-surface)',   // translucent card (use with backdropFilter)
   glass2:     'var(--bg-surface-2)', // translucent raised (inputs, headers)
   glassBlur:  'blur(16px) saturate(140%)',
 
-  border:     'rgba(255,255,255,0.12)',
-  borderDim:  'rgba(255,255,255,0.08)',
+  border:     'rgba(255,255,255,0.10)',
+  borderDim:  'rgba(255,255,255,0.07)',
 
-  // NO WHITE TYPE (owner decision 6 Oct 2026): primary text is the palette's
-  // bright brand yellow, supporting text the palette orange. Same values as the
-  // --c-text* variables in globals.css.
-  text:       '#FFE600',
-  textMuted:  '#FF8A00',
-  textDim:    '#FF8A00',
-  textFaint:  '#995300', // palette orange at 60% on black — switched-off text
+  // PREMIUM SYSTEM (owner-approved concept, 6 Oct 2026): champagne body type,
+  // sand supporting type, bronze labels — never white, never neon; yellow is
+  // the accent. Same values as the --c-text* variables in globals.css.
+  text:       '#F3EAC9',
+  textMuted:  '#B9AE8C',
+  textDim:    '#8E866B',
+  textFaint:  '#5E5948',
 
   // Semantic — the same neon-on-black family as lib/status-colors.ts.
   green:      '#2CFF7A',

@@ -836,10 +836,10 @@ export function HelpModeButton() {
       title="Show me how — arrows that point at the next button"
       style={{
         display: 'flex', alignItems: 'center', gap: 7, height: 36, padding: '0 13px',
-        background: on ? GOLD : 'var(--brand-primary-12)',
-        border: `1px solid ${on ? GOLD : 'var(--brand-primary-35)'}`,
+        background: on ? GOLD : 'rgba(255,255,255,0.03)',
+        border: `1px solid ${on ? GOLD : 'var(--border-subtle)'}`,
         borderRadius: 999,
-        color: on ? 'var(--on-brand)' : GOLD_HI,
+        color: on ? 'var(--on-brand)' : 'var(--c-text-2)',
         fontSize: 13, fontWeight: 800, letterSpacing: '0.01em', cursor: 'pointer',
         transition: 'background .15s, color .15s, border-color .15s',
         whiteSpace: 'nowrap',

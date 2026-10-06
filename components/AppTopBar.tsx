@@ -221,7 +221,7 @@ export default function AppTopBar({
       {/* Current page — one title. The back button already names the parent,
           so a breadcrumb trail here repeated it twice. */}
       {crumbs.length > 0 && (
-        <span className="sag-crumb-last sg-nav-label" style={{ fontSize: font.size.lg, fontWeight: font.weight.semibold, color: 'var(--text-primary)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <span className="sag-crumb-last" style={{ fontSize: font.size.lg, fontWeight: font.weight.bold, color: 'var(--text-primary)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {crumbs[crumbs.length - 1].label}
         </span>
       )}
@@ -238,8 +238,8 @@ export default function AppTopBar({
           gap: 8,
           height: 36,
           padding: '0 10px 0 12px',
-          background: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.12)',
+          background: 'rgba(255,255,255,0.03)',
+          border: '1px solid var(--border-subtle)',
           borderRadius: radius.xl,
           color: 'var(--text-secondary)',
           fontSize: font.size.md,
@@ -293,25 +293,20 @@ export default function AppTopBar({
           gap: 7,
           height: 36,
           padding: '0 14px',
-          background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))',
-          border: 'none',
+          /* Outlined, not filled: the page's own primary action is the one
+             solid yellow button on screen (premium system, 6 Oct 2026). */
+          background: 'rgba(255,230,0,0.06)',
+          border: '1px solid rgba(255,230,0,0.35)',
           borderRadius: radius.xl,
-          color: 'var(--on-brand)',
+          color: 'var(--c-yellow)',
           fontSize: font.size.md,
           fontWeight: font.weight.bold,
           letterSpacing: '0.01em',
           cursor: 'pointer',
-          boxShadow: '0 2px 10px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)',
-          transition: 'box-shadow .15s, filter .15s, transform .12s',
+          transition: 'background .15s, border-color .15s, transform .12s',
         }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.boxShadow = '0 4px 16px var(--brand-primary-35), inset 0 1px 0 rgba(255,255,255,0.35)';
-          e.currentTarget.style.filter = 'brightness(1.04)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.boxShadow = '0 2px 10px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)';
-          e.currentTarget.style.filter = 'none';
-        }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,230,0,0.12)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,230,0,0.06)'; }}
       >
         <Star size={15} weight="fill" />
         Sage

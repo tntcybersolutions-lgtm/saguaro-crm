@@ -11,25 +11,27 @@
      glass over it with a blur. Token NAMES are unchanged so every consumer
      re-themes without edits. --bg-solid* are opaque fallbacks for the few
      places that must not show what is underneath (sticky cells, popups). */
-  --bg-base: #000000;
+  --bg-base: #050506;
   --bg-surface: rgba(255,255,255,0.045);
   --bg-surface-2: rgba(255,255,255,0.07);
   --bg-elevated: rgba(22,24,29,0.92);
-  --bg-solid: #0E0F12;
-  --bg-solid-2: #15171C;
+  --bg-solid: #0E0F13;
+  --bg-solid-2: #13151A;
   /* Glass recipe — one blur, one edge, one top highlight. */
   --glass-blur: blur(16px) saturate(140%);
-  --glass-border: rgba(255,255,255,0.09);
+  --glass-border: rgba(255,255,255,0.07);
   --glass-highlight: inset 0 1px 0 rgba(255,255,255,0.06);
   /* Hairlines — white-alpha on black */
-  --border-subtle: rgba(255,255,255,0.08);
-  --border-default: rgba(255,255,255,0.12);
+  --border-subtle: rgba(255,255,255,0.07);
+  --border-default: rgba(255,255,255,0.10);
   --border-strong: rgba(255,255,255,0.22);
   /* Text — high contrast on jet black (§6). */
-  --text-primary: #FFE600;   /* NO WHITE TYPE (6 Oct 2026) — bright palette yellow */
-  --text-secondary: #FF8A00; /* palette orange — every word carries colour (6 Oct 2026) */
-  --text-tertiary: #FF8A00;
-  --text-disabled: color-mix(in srgb, var(--c-orange) 60%, var(--c-bg)); /* switched-off: dimmed orange, never grey */
+  /* Type (premium system, 6 Oct 2026): warm champagne over sand over bronze —
+     never white, never neon. Yellow is an accent, not the body colour. */
+  --text-primary: #F3EAC9;
+  --text-secondary: #B9AE8C;
+  --text-tertiary: #8E866B;
+  --text-disabled: #5E5948;
   /* ── Brand primary — the single white-label override point. Defaults to
      Saguaro NEON YELLOW (owner decision 2026-10-02, replaces gold);
      WhiteLabelProvider overrides --brand-primary (+ the derived vars) per
@@ -39,13 +41,13 @@
   /* ── THE PALETTE (approved 4 Oct 2026, docs/design/reference/COLORS.png) ──
      Every colour on the platform is one of these. Pages use the variable,
      never the hex; lib/design-tokens.ts `palette` mirrors this block for TS. */
-  --c-bg: #000000;          /* page */
-  --c-card: #0E0F12;        /* cards, nav */
-  --c-raised: #15171C;      /* inputs, menus, raised surfaces */
-  --c-text: #FFE600;        /* primary text — bright palette yellow, never white */
-  --c-text-2: #FF8A00;      /* secondary text — palette orange, never grey */
-  --c-text-3: #FF8A00;      /* tertiary / dim */
-  --c-text-4: color-mix(in srgb, var(--c-orange) 60%, var(--c-bg)); /* disabled / faint — dimmed orange */
+  --c-bg: #050506;          /* page — black with a warm glow laid over it */
+  --c-card: #0E0F13;        /* cards, nav */
+  --c-raised: #13151A;      /* raised surfaces, menus, the selected segment */
+  --c-text: #F3EAC9;        /* body — warm champagne */
+  --c-text-2: #B9AE8C;      /* supporting — warm sand */
+  --c-text-3: #8E866B;      /* labels — muted bronze, small caps */
+  --c-text-4: #5E5948;      /* switched off */
   --c-yellow: #FFE600;      /* brand primary */
   --c-yellow-hi: #FFF04A;   /* highlight edge */
   --c-yellow-hover: #E6CF00;/* hover / strong */
@@ -982,7 +984,7 @@ a.k-stat:hover, button.k-stat:hover { border-color: var(--border-strong); border
 .k-card-head { border-bottom: 1px solid var(--border-subtle); }
 /* Job palette (owner 2026-10-03): black + neon yellow + neon orange + neon green.
    Card titles and row titles use ONE title color — never white or grey. */
-:root { --title-color: var(--brand-primary); --accent-orange: #FF8A00; --accent-green: #2CFF7A; --danger-red: #FF3B30; }
+:root { --title-color: var(--c-text); --accent-orange: #FF8A00; --accent-green: #2CFF7A; --danger-red: #FF3B30; }
 .k-card-title { color: var(--title-color); }
 .k-table td:first-child { color: var(--title-color); font-weight: 700; }
 
@@ -1110,8 +1112,8 @@ select.k-select { padding-right: 36px; }
    token from the approved palette; nothing here is estimated from a picture.
    ═══════════════════════════════════════════════════════════════════════════ */
 :root {
-  --surface-card: #0E0F12;
-  --surface-raised: #15171C;
+  --surface-card: #0E0F13;
+  --surface-raised: #13151A;
   --grad-primary: linear-gradient(180deg, #FFF04A 0%, #FFE600 52%, #FF8A00 100%);
   --grad-primary-hover: linear-gradient(180deg, #FFF59A 0%, #FFE600 50%, #FF9A2A 100%);
   --glow-y: rgba(255,230,0,0.22);
@@ -1475,109 +1477,126 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
   .k-page { padding: var(--sp-3) var(--sp-3) var(--sp-6); }
 }
 
-/* ══ Brand type + dropdowns, app-wide (Chad, 6 Oct 2026) ═══════════════════
-   Site palette only. One block, so every page follows without per-page edits.
+/* ══ PREMIUM SYSTEM (owner-approved concept, 6 Oct 2026) ═══════════════════
+   The black + yellow + orange brand, with HIERARCHY: yellow is saved for the
+   page title, the one primary action, the selected item, hero figures and
+   links. Body type is warm champagne (never white, never neon), supporting
+   type warm sand, labels muted bronze in small caps. Orange marks eyebrows
+   and warnings; green/red only ever mean status. Surfaces are layered, with a
+   soft top highlight and a real shadow, over a black page with a warm glow.
+   This one block is the last word for every page — nothing below it. */
 
-   Titles: "wet" gloss — a bright #FFF04A cap melting into #FFE600 (bright,
-   never a dingy dark base); a 1px dark drop for crispness and a brand glow. -webkit-text-fill-color beats any inline `color` on a
-   page, which is what makes this reach all 148 screens. Text shadows don't
-   work on clipped text, so the edge and glow are drop-shadow filters. */
+/* Page */
+.sag-app {
+  background:
+    radial-gradient(900px 420px at 85% -10%, rgba(255,230,0,0.09), transparent 60%),
+    radial-gradient(700px 500px at 0% 110%, rgba(255,138,0,0.06), transparent 60%),
+    var(--c-bg) !important;
+}
+
+/* Type */
 .sag-app h1,
 .sag-app .k-title {
-  background: linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow-hi) 40%, var(--c-yellow) 60%, var(--c-yellow) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: var(--c-yellow); /* icons inside a title follow currentColor */
-  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.75)) drop-shadow(0 0 14px rgba(255, 230, 0, 0.16));
-}
-/* Section titles: the same gloss, quieter — no glow. */
-.sag-app h2 {
-  background: linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow-hi) 40%, var(--c-yellow) 60%, var(--c-yellow) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
   color: var(--c-yellow);
-  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.7));
+  -webkit-text-fill-color: var(--c-yellow); /* beats an inline colour on page titles */
+  font-weight: 900;
+  letter-spacing: -0.025em;
 }
-/* KPI figures with no status tone get the title gloss; a toned figure (red
-   overdue count, green paid) keeps its status colour. */
-.sag-app .pmStatValue[style*="var(--text-primary)"],
-.sag-app .k-stat-value:not([style*="color"]):not([data-muted="true"]) {
-  background: linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow-hi) 40%, var(--c-yellow) 60%, var(--c-yellow) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.75));
-}
-/* A heading sitting on a yellow fill keeps the on-brand ink. */
+.sag-app h2 { color: var(--c-text); font-weight: 800; }
 .sag-app :is(button, .k-btn, [data-tone="brand"]) :is(h1, h2),
-.sag-app :is(button, .k-btn) .k-title {
-  background: none;
-  -webkit-text-fill-color: currentColor;
-  filter: none;
-}
+.sag-app :is(button, .k-btn) .k-title { -webkit-text-fill-color: currentColor; color: inherit; }
+.sag-app .k-eyebrow { font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: var(--c-orange); }
 
-/* No white or grey type anywhere: the --c-text* scale at the top of this file
-   is the bright palette yellow (#FFE600) over the palette orange (#FF8A00);
-   switched-off text (--c-text-4) is that orange dimmed to 60%.
+/* Cards — layered, soft top light, real shadow, no yellow stripe */
+.sag-app .k-card {
+  background: linear-gradient(180deg, var(--c-raised), var(--c-card));
+  border: 1px solid var(--border-subtle);
+  border-radius: 18px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 24px 48px -28px rgba(0,0,0,0.9);
+}
+.sag-app .k-card::before { display: none; }
+.sag-app .k-card-head { border-bottom: 1px solid var(--border-subtle); }
+.sag-app .k-card-title { color: var(--c-text); font-weight: 800; }
+.sag-app .k-card-sub { color: var(--c-text-3); }
 
-   Nav menus — BRIGHT, LIT, WET (owner, 6 Oct 2026: "brighter yellow, no
-   dingy… not flat dark and boring"). Labels: a #FFF04A cap over #FFE600
-   with a crisp black edge and a soft yellow glow. Section headers: small
-   caps, yellow into orange. The current page is a solid glossy yellow pill
-   with ink type (inline in AppSidebar); hover lays a yellow wash + ring. */
-.sg-nav-label,
-.sg-nav-head,
-.sg-brand-name {
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+/* KPI tiles */
+.sag-app .k-stat {
+  background: linear-gradient(180deg, var(--c-raised), var(--c-card));
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 20px 40px -26px rgba(0,0,0,0.9);
 }
-.sg-nav-label {
-  font-weight: 700;
-  letter-spacing: -0.005em;
-  background-image: linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow-hi) 38%, var(--c-yellow) 62%, var(--c-yellow) 100%);
-  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.95)) drop-shadow(0 0 7px rgba(255, 230, 0, 0.28));
+.sag-app .k-stat::before { display: none; }
+.sag-app .k-stat .k-stat-label { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--c-text-3); }
+.sag-app .k-stat .k-stat-value { color: var(--c-text); font-weight: 900; letter-spacing: -0.02em; }
+.sag-app .k-stat[data-tone="good"] .k-stat-value { color: var(--c-green); }
+.sag-app .k-stat[data-tone="warn"] .k-stat-value { color: var(--c-orange); }
+.sag-app .k-stat[data-tone="bad"] .k-stat-value { color: var(--c-red); }
+.sag-app .k-stat .k-stat-sub { color: var(--c-text-2); }
+.sag-app a.k-stat:hover, .sag-app button.k-stat:hover { border-color: rgba(255,230,0,0.28); }
+
+/* Segmented tabs — one track, the selected segment raised with a yellow ring */
+.sag-app .k-tabs { display: inline-flex; max-width: 100%; gap: 2px; padding: 4px; border: 1px solid var(--border-subtle); border-radius: 12px; background: rgba(255,255,255,0.04); }
+.sag-app .k-tab { border: 0; border-radius: 9px; background: transparent; color: var(--c-text-2); font-weight: 700; min-height: 32px; padding: 0 14px; box-shadow: none; }
+.sag-app .k-tab:hover { color: var(--c-text); background: rgba(255,255,255,0.04); }
+.sag-app .k-tab[aria-selected="true"] { background: var(--c-raised); color: var(--c-text); box-shadow: 0 0 0 1px rgba(255,230,0,0.35), 0 4px 12px -4px rgba(0,0,0,0.8); }
+.sag-app .k-tab[aria-selected="true"] .k-tab-count { background: rgba(255,230,0,0.14); color: var(--c-yellow); }
+.sag-app .hv2-seg { background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 4px; }
+.sag-app .hv2-seg button { color: var(--c-text-2); border-radius: 9px; font-weight: 700; }
+.sag-app .hv2-seg button:hover { color: var(--c-text); }
+.sag-app .hv2-seg button.on { background: var(--c-raised); color: var(--c-text); font-weight: 800; box-shadow: 0 0 0 1px rgba(255,230,0,0.35), 0 4px 12px -4px rgba(0,0,0,0.8); }
+.sag-app .pj-nav-item { background: transparent; border-color: transparent; color: var(--c-text-2); border-radius: 10px; }
+.sag-app .pj-nav-item svg { color: var(--c-orange); }
+.sag-app .pj-nav-item:hover { background: rgba(255,255,255,0.04); color: var(--c-text); border-color: transparent; }
+.sag-app .pj-nav-item[data-active="true"] { background: var(--c-raised); color: var(--c-text); border-color: transparent; font-weight: 800; box-shadow: 0 0 0 1px rgba(255,230,0,0.35), 0 4px 12px -4px rgba(0,0,0,0.8); }
+.sag-app .pj-nav-item[data-active="true"] svg { color: var(--c-yellow); }
+.sag-app .pj-nav-row { background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 4px; }
+
+/* Buttons — ONE yellow primary; everything else steps back */
+.sag-app .k-btn-primary {
+  background: linear-gradient(180deg, var(--c-yellow-hi), var(--c-yellow) 55%, var(--c-yellow-hover));
+  color: var(--c-on-brand); border: 0; text-shadow: none;
+  box-shadow: 0 10px 24px -10px rgba(255,230,0,0.7), inset 0 1px 0 rgba(255,255,255,0.6);
 }
-.sg-nav-item:hover .sg-nav-label {
-  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.95)) drop-shadow(0 0 10px rgba(255, 230, 0, 0.45));
-}
-.sg-nav-item[data-active="true"] .sg-nav-label,
-.sg-nav-label[data-active="true"] {
-  background: none;
-  -webkit-text-fill-color: var(--c-on-brand);
-  color: var(--c-on-brand);
-  filter: none;
-  font-weight: 800;
-}
-.sg-nav-item:not([data-active="true"]):hover {
-  background: linear-gradient(90deg, var(--brand-primary-12), rgba(255, 230, 0, 0.03));
-  box-shadow: inset 0 0 0 1px var(--brand-primary-25);
-}
-.sg-nav-item:not([data-active="true"]) svg {
-  filter: drop-shadow(0 0 6px rgba(255, 138, 0, 0.45));
-}
-.sg-nav-head {
-  font-size: 10.5px;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  background-image: linear-gradient(180deg, var(--c-yellow) 0%, var(--c-orange) 100%);
-  filter: drop-shadow(0 0 6px rgba(255, 138, 0, 0.35));
-}
-.sg-brand-name {
-  background-image: linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow-hi) 40%, var(--c-yellow) 60%, var(--c-yellow) 100%);
-  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.9)) drop-shadow(0 0 8px rgba(255, 230, 0, 0.3));
-}
-/* Page tabs + the top-bar page name read as nav too. */
-.sag-app [role="tab"],
-.sag-app .k-tab {
-  color: var(--c-text);
-}
-.sag-app [role="tab"][aria-selected="true"],
-.sag-app .k-tab[aria-selected="true"] {
-  color: var(--c-yellow);
+.sag-app .k-btn-secondary { background: rgba(255,255,255,0.03); border: 1px solid var(--border-default); color: var(--c-text); box-shadow: none; }
+.sag-app .k-btn-secondary:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,230,0,0.3); color: var(--c-text); }
+.sag-app .k-btn-ghost { color: var(--c-text-2); }
+.sag-app .k-btn-ghost:hover { color: var(--c-text); background: rgba(255,255,255,0.05); }
+.sag-app .k-btn-outline, .sag-app .k-btn-accent { background: transparent; border: 1px solid rgba(255,230,0,0.3); color: var(--c-yellow); }
+
+/* Tables — muted small-caps header, champagne record names, sand cells */
+.sag-app .k-table th, .sag-app .pmTable thead th { background: rgba(255,255,255,0.02); color: var(--c-text-3); font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; box-shadow: none; }
+.sag-app .k-table td { color: var(--c-text-2); border-bottom-color: var(--border-subtle); }
+.sag-app .k-table td:first-child, .sag-app .k-table td.k-td-primary, .sag-app .pmTable tbody td:first-child { color: var(--c-text); font-weight: 700; }
+.sag-app .k-table tbody tr:hover td { background: rgba(255,230,0,0.03); }
+
+/* Inputs */
+.sag-app .k-label { color: var(--c-text-2); }
+.sag-app .k-input::placeholder, .sag-app .k-textarea::placeholder { color: var(--c-text-3) !important; -webkit-text-fill-color: var(--c-text-3) !important; }
+
+/* Menus, modals, empty states, toasts — solid, same material */
+.k-menu-list { background: var(--c-raised); border: 1px solid var(--border-default); border-radius: 12px; box-shadow: 0 18px 48px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.05); }
+.k-menu-item { color: var(--c-text-2); }
+.k-menu-item:hover, .k-menu-item:focus-visible { background: rgba(255,230,0,0.08); color: var(--c-text); }
+.k-modal { background: linear-gradient(180deg, var(--c-raised), var(--c-card)); border: 1px solid var(--border-default); border-radius: 18px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 40px 90px -30px rgba(0,0,0,0.95); }
+.k-modal-title { color: var(--c-text); }
+.k-empty-title { color: var(--c-text); }
+.k-toast { background: var(--c-raised); border: 1px solid var(--border-default); }
+
+/* Navigation (sidebar, top bar) — sand labels, champagne when current, a
+   yellow edge + soft wash for the selected row. No gloss, no glow. */
+.sg-nav-label { font-weight: 600; letter-spacing: -0.005em; }
+.sg-nav-item[data-active="true"] .sg-nav-label, .sg-nav-label[data-active="true"] { color: var(--c-text); font-weight: 700; }
+.sg-nav-item:not([data-active="true"]):hover { background: rgba(255,255,255,0.04); color: var(--c-text) !important; }
+.sg-nav-head { font-size: 10.5px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--c-text-3); }
+.sg-brand-name { color: var(--c-text); }
+
+/* Phone tab bar — the current tab is a raised segment with a yellow ring,
+   not a solid yellow slab; the screen's own primary keeps the solid fill. */
+@media (max-width: 767px) {
+  .sag-app .sag-tab { color: var(--c-text-2); }
+  .sag-app .sag-tab[data-active="true"] { color: var(--c-yellow); background: var(--c-raised); box-shadow: 0 0 0 1px rgba(255,230,0,0.35), 0 4px 12px -4px rgba(0,0,0,0.8) !important; }
+  .sag-app .sag-tab[data-active="true"] svg { color: var(--c-yellow); }
 }
 
 /* Dropdowns: the open list is ours, not the operating system's. Chrome and
@@ -1598,7 +1617,7 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
   .sag-app select:not([multiple]):not([size])::picker-icon { display: none; } /* the yellow chevron is already drawn */
   .sag-app select:not([multiple]):not([size])::picker(select) {
     background: var(--c-raised);
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    border: 1px solid var(--border-default);
     border-radius: 12px;
     padding: 6px;
     margin-block: 6px;
@@ -1613,19 +1632,20 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
     padding: 9px 12px;
     border-radius: 8px;
     background: transparent;
-    color: var(--c-text);
+    color: var(--c-text-2);
     -webkit-text-fill-color: currentColor; /* the form reset paints select text with a fill colour; options follow their own colour */
     font-size: 15px;
     font-weight: 600;
   }
   .sag-app select:not([multiple]):not([size]) option:hover,
   .sag-app select:not([multiple]):not([size]) option:focus-visible {
-    background: rgba(255, 230, 0, 0.10);
-    color: var(--c-yellow-hi);
+    background: rgba(255, 230, 0, 0.08);
+    color: var(--c-text);
   }
   .sag-app select:not([multiple]):not([size]) option:checked {
-    background: rgba(255, 230, 0, 0.16);
-    color: var(--c-yellow);
+    background: linear-gradient(90deg, rgba(255, 230, 0, 0.16), rgba(255, 230, 0, 0.03));
+    box-shadow: inset 3px 0 0 var(--c-yellow);
+    color: var(--c-text);
   }
   /* A long job name ends in "…" instead of running off a phone screen; the
      list itself never grows past the viewport. The checked row is already
