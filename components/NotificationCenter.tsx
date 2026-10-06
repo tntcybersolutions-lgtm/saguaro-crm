@@ -494,7 +494,7 @@ export default function NotificationCenter() {
                             top: '100%',
                             left: 0,
                             marginTop: 4,
-                            backgroundColor: RAISED,
+                            backgroundColor: 'var(--bg-solid-2)',
                             border: `1px solid ${BORDER}`,
                             borderRadius: 6,
                             zIndex: 10,

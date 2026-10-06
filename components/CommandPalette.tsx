@@ -229,7 +229,7 @@ export default function CommandPalette({ onScoreBid }: Props) {
       style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,.72)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '12vh' }}
       onClick={e => { if (e.target === e.currentTarget) setOpen(false); }}>
       <div
-        style={{ width: '100%', maxWidth: 620, background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-lg), 0 32px 80px rgba(0,0,0,.55)', overflow: 'hidden', margin: '0 16px' }}
+        style={{ width: '100%', maxWidth: 620, background: 'linear-gradient(180deg, var(--c-raised) 0%, var(--c-card) 100%)', border: `1px solid ${BORDER}`, borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-lg), 0 32px 80px rgba(0,0,0,.55)', overflow: 'hidden', margin: '0 16px' }}
         onKeyDown={onKeyDown}>
 
         {/* Search Input */}

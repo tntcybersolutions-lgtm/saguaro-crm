@@ -444,7 +444,7 @@ export default function BidPackageDetailPage() {
     <>
       {/* Toast */}
       {toast && (
-        <div style={{ position: 'fixed', top: 20, right: 24, zIndex: 9999, background: RAISED, border: `1px solid ${toast.color}`, borderRadius: 10, padding: '12px 20px', color: toast.color, fontSize: 14, fontWeight: 700, boxShadow: '0 4px 24px rgba(0,0,0,.4)' }}>
+        <div style={{ position: 'fixed', top: 20, right: 24, zIndex: 9999, background: 'var(--bg-solid-2)', border: `1px solid ${toast.color}`, borderRadius: 10, padding: '12px 20px', color: toast.color, fontSize: 14, fontWeight: 700, boxShadow: '0 4px 24px rgba(0,0,0,.4)' }}>
           {toast.msg}
         </div>
       )}

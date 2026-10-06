@@ -9,7 +9,7 @@
  * where a real hex is unavoidable (canvas, SVG export, PDF, charts). */
 export const paletteHex = {
   bg: '#000000', card: '#0E0F12', raised: '#15171C',
-  text: '#FFE600', text2: '#FF8A00', text3: '#FF8A00', text4: '#7A8597',
+  text: '#FFE600', text2: '#FF8A00', text3: '#FF8A00', text4: '#995300',
   yellow: '#FFE600', yellowHi: '#FFF04A', yellowHover: '#E6CF00', onBrand: '#0A0A00',
   orange: '#FF8A00', green: '#2CFF7A', red: '#FF3B30', gray: '#A3ACBB',
 } as const;
@@ -59,7 +59,7 @@ export const colors = {
   text:       '#FFE600',
   textMuted:  '#FF8A00',
   textDim:    '#FF8A00',
-  textFaint:  '#7A8597',
+  textFaint:  '#995300', // palette orange at 60% on black — switched-off text
 
   // Semantic — the same neon-on-black family as lib/status-colors.ts.
   green:      '#2CFF7A',

@@ -688,7 +688,7 @@ export default function BidPackageWizard({ projectId, onClose, onCreated }: Wiza
         transform: 'translate(-50%,-50%)',
         zIndex: 1001, width: 900, maxWidth: '95vw',
         maxHeight: '85vh', overflow: 'hidden',
-        background: RAISED, borderRadius: 14,
+        background: 'var(--bg-solid-2)', borderRadius: 14,
         border: `1px solid ${BORDER}`,
         boxShadow: '0 24px 80px rgba(0,0,0,0.7)',
         display: 'flex', flexDirection: 'column',

@@ -612,7 +612,7 @@ export default function CatalogPage() {
                 <Info size={13} weight="bold" /> How Pricing Works
               </button>
               {pricingInfo && (
-                <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', zIndex: 80, width: 304, background: 'var(--bg-surface)', border: '1px solid var(--brand-primary-35)', borderRadius: 12, padding: '14px 16px', boxShadow: '0 12px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)', textAlign: 'left' }}>
+                <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', zIndex: 80, width: 304, background: 'var(--bg-solid-2)', border: '1px solid var(--brand-primary-35)', borderRadius: 12, padding: '14px 16px', boxShadow: '0 12px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)', textAlign: 'left' }}>
                   <div style={{ fontSize: 11, fontWeight: 900, color: AMBER, marginBottom: 8 }}>How Pricing and Ordering Work</div>
                   {[
                     ['1. Reference Snapshot', 'Every price is seeded reference data stamped with its capture date — never a live quote.'],
@@ -836,7 +836,7 @@ export default function CatalogPage() {
                                 </button>
                               )}
                               {imgMenu === it.id && (
-                                <div style={{ position: 'absolute', zIndex: 80, top: '100%', left: 0, marginTop: 6, width: 252, padding: 11, borderRadius: 10, background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', boxShadow: '0 10px 28px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
+                                <div style={{ position: 'absolute', zIndex: 80, top: '100%', left: 0, marginTop: 6, width: 252, padding: 11, borderRadius: 10, background: 'var(--bg-solid-2)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', boxShadow: '0 10px 28px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
                                   <div style={{ fontSize: 9.5, fontWeight: 900, color: AMBER, marginBottom: 7 }}>Real Product Photo</div>
                                   <label className="pmBtn" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 11px', background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-35)', borderRadius: 8, color: AMBER, fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>
                                     <UploadSimple size={12} weight="bold" /> Upload Image

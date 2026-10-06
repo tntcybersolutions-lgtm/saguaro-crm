@@ -29,7 +29,7 @@
   --text-primary: #FFE600;   /* NO WHITE TYPE (6 Oct 2026) — bright palette yellow */
   --text-secondary: #FF8A00; /* palette orange — every word carries colour (6 Oct 2026) */
   --text-tertiary: #FF8A00;
-  --text-disabled: #7A8597;
+  --text-disabled: color-mix(in srgb, var(--c-orange) 60%, var(--c-bg)); /* switched-off: dimmed orange, never grey */
   /* ── Brand primary — the single white-label override point. Defaults to
      Saguaro NEON YELLOW (owner decision 2026-10-02, replaces gold);
      WhiteLabelProvider overrides --brand-primary (+ the derived vars) per
@@ -45,7 +45,7 @@
   --c-text: #FFE600;        /* primary text — bright palette yellow, never white */
   --c-text-2: #FF8A00;      /* secondary text — palette orange, never grey */
   --c-text-3: #FF8A00;      /* tertiary / dim */
-  --c-text-4: #7A8597;      /* disabled / faint */
+  --c-text-4: color-mix(in srgb, var(--c-orange) 60%, var(--c-bg)); /* disabled / faint — dimmed orange */
   --c-yellow: #FFE600;      /* brand primary */
   --c-yellow-hi: #FFF04A;   /* highlight edge */
   --c-yellow-hover: #E6CF00;/* hover / strong */
@@ -1520,7 +1520,7 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 
 /* No white or grey type anywhere: the --c-text* scale at the top of this file
    is the bright palette yellow (#FFE600) over the palette orange (#FF8A00);
-   only disabled text (--c-text-4) stays the palette gray.
+   switched-off text (--c-text-4) is that orange dimmed to 60%.
 
    Nav menus — BRIGHT, LIT, WET (owner, 6 Oct 2026: "brighter yellow, no
    dingy… not flat dark and boring"). Labels: a #FFF04A cap over #FFE600
@@ -1642,4 +1642,12 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
   border-radius: 50%;
   background: var(--dot);
   box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
+}
+
+/* Floating surfaces are SOLID (owner, 6 Oct 2026: page text was showing
+   through the Search palette and the Sage chat). Their gradients stay; only
+   the base colour under them goes opaque. */
+.k-modal,
+.k-menu-list {
+  background-color: var(--c-card);
 }

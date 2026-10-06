@@ -635,7 +635,7 @@ export default function BudgetPage() {
                           {copiedId === l.id && <span style={{ fontSize: 10, color: 'var(--success)', fontWeight: 600 }}>Copied!</span>}
                           <button onClick={() => openMenu(l.id)} style={{ padding: '3px 8px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${CIN.border}`, borderRadius: 6, color: CIN.faint, fontSize: 11, cursor: 'pointer' }}>Actions &#9662;</button>
                           {menuId === l.id && (
-                            <div style={{ position: 'absolute', top: 36, right: 14, background: 'var(--bg-surface-2)', border: `1px solid ${CIN.border}`, borderRadius: 10, padding: 4, zIndex: 100, minWidth: 150, boxShadow: '0 16px 44px rgba(0,0,0,.6)' }}>
+                            <div style={{ position: 'absolute', top: 36, right: 14, background: 'var(--bg-solid-2)', border: `1px solid ${CIN.border}`, borderRadius: 10, padding: 4, zIndex: 100, minWidth: 150, boxShadow: '0 16px 44px rgba(0,0,0,.6)' }}>
                               {([
                                 { label: 'Edit Amount', icon: PencilSimple, action: () => { setMenuId(null); setEditingId(l.id); setEditAmount(String(l.original_budget)); } },
                                 { label: 'Adjust %', icon: ChartBar, action: () => { setMenuId(null); setAdjustId(l.id); } },

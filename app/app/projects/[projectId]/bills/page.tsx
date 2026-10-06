@@ -534,7 +534,7 @@ export default function BillsPage() {
                             {copiedId === b.id && <span style={{ fontSize: 10, color: GREEN, fontWeight: 600 }}>Copied!</span>}
                             <button onClick={(e) => { e.stopPropagation(); openBillMenu(b.id); }} style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 10, padding: '2px 4px', lineHeight: 1, opacity: 0.6 }} onMouseEnter={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '0.6')}>&#9662;</button>
                             {menuId === b.id && (
-                              <div style={{ position: 'absolute', top: 36, right: 14, background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 'var(--radius-md)', padding: 6, zIndex: 100, minWidth: 150, boxShadow: 'var(--shadow-lg)' }}>
+                              <div style={{ position: 'absolute', top: 36, right: 14, background: 'var(--bg-solid-2)', border: `1px solid ${BORDER}`, borderRadius: 'var(--radius-md)', padding: 6, zIndex: 100, minWidth: 150, boxShadow: 'var(--shadow-lg)' }}>
                                 {([
                                   { label: 'Edit Amount', icon: PencilSimple, action: () => { setMenuId(null); setEditId(b.id); setEditVal(String(b.amount)); } },
                                   { label: 'Adjust %', icon: ChartBar, action: () => { setMenuId(null); setAdjustId(b.id); } },

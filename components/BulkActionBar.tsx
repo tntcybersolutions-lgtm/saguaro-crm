@@ -140,7 +140,7 @@ export default function BulkActionBar({
         left: 0,
         right: 0,
         zIndex: 9998,
-        background: RAISED,
+        background: 'var(--bg-solid-2)',
         borderTop: `1px solid ${BORDER}`,
         padding: '10px 20px',
         display: 'flex',
