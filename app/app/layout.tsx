@@ -32,6 +32,7 @@ import { X, ArrowRight, House, Briefcase, FolderSimple, Clock, DotsThreeOutline,
 import { colors, font, sidebar as sidebarTokens, z } from '../../lib/design-tokens';
 import { ensureBrowserSession } from '../../lib/supabase-browser';
 import TableLabels from '@/components/ui/TableLabels';
+import MobileSelectSheet from '@/components/MobileSelectSheet';
 
 interface ChatMsg { role: 'user' | 'assistant'; content: string; }
 
@@ -521,6 +522,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Every document opens here instead of a browser tab — one reader for
           drawings, pay applications, jackets and waivers alike. */}
       <PdfViewer />
+
+      {/* On a phone every drop-down opens as our sheet, not the white system
+          list — one mount covers all 231 selects in the app. */}
+      <MobileSelectSheet />
 
       {/* ── Bid Score Modal ────────────────────────────────────────────── */}
       {showScoreModal && (
