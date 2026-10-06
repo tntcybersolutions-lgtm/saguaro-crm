@@ -160,6 +160,7 @@ const PROOF = [
   ['home-operations', '/app?view=operations&scope=team&window=7d', null, true],
   ['project-overview', '/app/projects/{project}/overview', null, false],
   ['job-picker-open', '/app/projects/{project}/pay-apps', 'picker', false],
+  ['menu-with-job-button', '/app/projects/{project}/overview', 'menu', false],
   ['pay-apps', '/app/projects/{project}/pay-apps', null, false],
   ['rfis', '/app/projects/{project}/rfis', null, false],
   ['projects', '/app/projects', null, false],
@@ -206,6 +207,8 @@ async function proof() {
         await page.goto(SITE + route.replace('{project}', project), { waitUntil: 'networkidle', timeout: 45000 });
         await page.waitForTimeout(2500);
         if (action === 'create') await page.click('.hv2-create button');
+        // The phone keeps the job button in the menu drawer; desktop has it in the top bar already.
+        if (action === 'menu' && kind === 'phone') await page.click('.mobile-hamburger-topbar').catch(() => {});
         if (action === 'picker') {
           // On a phone the picker lives in the menu drawer.
           if (kind === 'phone') { await page.click('.mobile-hamburger-topbar').catch(() => {}); await page.waitForTimeout(600); }
