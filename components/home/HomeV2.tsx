@@ -459,6 +459,7 @@ function QuickCreate({ view, projectId }: { view: HomeView; projectId: string | 
   const p = projectId ? `/app/projects/${projectId}` : null;
   // Never guess a job: job-level items need one picked in the header.
   const items: Array<{ label: string; href: string | null }> = [
+    { label: 'Photo or Video', href: p && `${p}/photos?add=1` },
     { label: 'Task', href: p && `${p}/todos` },
     { label: 'Daily Log', href: p && `${p}/daily-logs` },
     { label: 'RFI', href: p && `${p}/rfis` },
