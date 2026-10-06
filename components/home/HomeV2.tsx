@@ -18,6 +18,8 @@ import { useProjectColors } from '@/lib/hooks/useProjectColor';
 import { jobStripeStyle, jobOptionStyle, jobDotStyle } from '@/lib/project-colors';
 import ActivityFeed from '@/components/ActivityFeed';
 import SalesOverview from '@/components/SalesOverview';
+import AlertTicker from '@/components/home/AlertTicker';
+import type { TickerItem, TickerSummary } from '@/lib/home/ticker';
 import type { Metric, QueueItem, ScheduleEntry, HomeView, DataState } from '@/lib/home/rank';
 import { TIER_LABEL } from '@/lib/home/rank';
 
@@ -37,6 +39,8 @@ interface HomePayload {
     rows: Array<Record<string, string | number | null> & { id: string; href: string }>;
   };
   errors: Record<string, string>;
+  /** Owner view: the alert ticker. */
+  ticker?: { items: TickerItem[]; summary: TickerSummary; state: DataState };
   generatedAt: string;
 }
 
@@ -61,7 +65,7 @@ const TIER_TONE: Record<number, { fg: string; bg: string }> = {
 const SECTION_NAMES: Record<string, string> = {
   rfis: 'RFIs', punch: 'Punch list', todos: 'To-dos', fieldIssues: 'Field issues', inspections: 'Inspections',
   approvals: 'Approvals', compliance: 'Compliance', schedule: 'Schedule', leads: 'Leads', proposals: 'Proposals',
-  serviceTickets: 'Service tickets', warranty: 'Warranty claims',
+  serviceTickets: 'Service tickets', warranty: 'Warranty claims', ticker: 'Part of the alert strip',
 };
 
 function fmtDay(ymd: string | null | undefined, today: string): string {
@@ -577,6 +581,11 @@ function HomeInner() {
             <div className="hv2-warn" role="status">
               <WarningCircle size={15} weight="fill" /> Couldn&apos;t load: {failedSections.map(s => SECTION_NAMES[s] || s).join(', ')}. Everything else is current.
               <button type="button" className="hv2-linkbtn" onClick={() => mutate()}>Retry</button>
+            </div>
+          )}
+          {data.ticker && (
+            <div className="hv2-order-0" style={{ minWidth: 0 }}>
+              <AlertTicker items={data.ticker.items} summary={data.ticker.summary} failed={data.ticker.state === 'failed'} />
             </div>
           )}
           <div className={data.context.view === 'owner' ? 'hv2-order-0' : 'hv2-order-3'}><Hero metrics={data.metrics} /></div>

@@ -20,6 +20,7 @@ import {
   addDays, daysBetween, dueReason, fmtMoneyShort, isMine, rankQueue, summarisePortfolio, tierForDue,
   type DataState, type HomeView, type Metric, type QueueItem, type ScheduleEntry, type Tier,
 } from './rank';
+import { buildTicker, zonedMidnightIso, type ReviewGroup, type TickerItem, type TickerSummary } from './ticker';
 
 type ServerDb = ReturnType<typeof createServerClient>;
 /* The generated Database type makes some of these selects blow the TS
@@ -43,6 +44,8 @@ export interface BuildCtx {
   projectId: string | null;
   today: string;
   window: Window;
+  /** The user's IANA zone — "today" for created_at filters. */
+  timeZone?: string;
 }
 
 export interface WorkTable {
@@ -60,6 +63,8 @@ export interface HomeSections {
   schedule: { entries: ScheduleEntry[]; state: DataState; note?: string };
   workTable: WorkTable;
   errors: Record<string, string>;
+  /** Owner view only: the alert ticker across the top of Home. */
+  ticker?: { items: TickerItem[]; summary: TickerSummary; state: DataState };
 }
 
 const OPEN_RFI_EXCLUDE = ['closed', 'answered', 'void', 'voided', 'cancelled'];
@@ -460,6 +465,11 @@ async function underContract(ctx: BuildCtx, jobs: ProjectInfo[]): Promise<Metric
 const emptyTable = (kind: WorkTable['kind'], title: string, note: string, state: DataState = 'empty'): WorkTable => ({ kind, title, columns: [], rows: [], state, note });
 
 export async function buildOperations(ctx: BuildCtx, errors: Record<string, string>): Promise<HomeSections> {
+  return (await operationsWithItems(ctx, errors)).sections;
+}
+
+/** buildOperations, plus every ranked queue item (the payload keeps only the top 50). */
+async function operationsWithItems(ctx: BuildCtx, errors: Record<string, string>): Promise<{ sections: HomeSections; items: QueueItem[] }> {
   const [projects, people, myProjects] = await Promise.all([
     loadProjects(ctx), loadPeople(ctx).catch(() => new Map<string, string>()),
     ctx.scope === 'mine' ? loadMyProjectIds(ctx).catch(() => new Set<string>()) : Promise.resolve(null),
@@ -508,7 +518,7 @@ export async function buildOperations(ctx: BuildCtx, errors: Record<string, stri
     .sort((a, b) => b._risk - a._risk || String(a.due || '9999').localeCompare(String(b.due || '9999')))
     .map(({ _risk, ...r }) => r); // eslint-disable-line @typescript-eslint/no-unused-vars
 
-  return {
+  const sections: HomeSections = {
     metrics,
     queue: { items: queue.slice(0, 50), total: queue.length, state: queue.length ? 'ok' : 'empty' },
     schedule: { entries: windowFilter(ops.schedule, ctx), state: errors.schedule ? 'failed' : 'ok' },
@@ -524,6 +534,43 @@ export async function buildOperations(ctx: BuildCtx, errors: Record<string, stri
     },
     errors,
   };
+  return { sections, items: queue };
+}
+
+/**
+ * Owner ticker sources beyond the queue: sub photos nobody has reviewed, and
+ * what got done today. Counts only — never rows the owner can't already reach.
+ */
+async function ownerTickerExtras(ctx: BuildCtx, projects: Map<string, ProjectInfo>): Promise<{ review: ReviewGroup[]; done: { logs: number; photos: number; punchClosed: number } }> {
+  const db = loose(ctx.db);
+  const t = ctx.tenantId;
+  const since = zonedMidnightIso(ctx.today, ctx.timeZone || 'UTC');
+  const live = (pid: string | null) => !!pid && projects.has(pid) && !projects.get(pid)!.closed;
+  const count = async (q: PromiseLike<{ count: number | null; error: unknown }>) => {
+    const { count: n, error } = await q;
+    if (error) throw error;
+    return n || 0;
+  };
+
+  const [subRows, logs, photos, videos, punchClosed] = await Promise.all([
+    rows(scoped(db.from('sub_media_submissions').select('project_id, sender_company, sender_name, kind, destination').eq('tenant_id', t).eq('status', 'new'), ctx).limit(1000)),
+    count(scoped(db.from('daily_logs').select('id', { count: 'exact', head: true }).eq('tenant_id', t).eq('log_date', ctx.today).is('deleted_at', null), ctx)),
+    count(scoped(db.from('photos').select('id', { count: 'exact', head: true }).eq('tenant_id', t).gte('created_at', since).is('deleted_at', null), ctx)),
+    count(scoped(db.from('project_files').select('id', { count: 'exact', head: true }).eq('tenant_id', t).eq('kind', 'video').gte('created_at', since).is('deleted_at', null), ctx)),
+    count(scoped(db.from('punch_list').select('id', { count: 'exact', head: true }).eq('tenant_id', t).gte('completed_at', since).is('deleted_at', null), ctx)),
+  ]);
+
+  const groups = new Map<string, ReviewGroup>();
+  for (const r of subRows) {
+    if (!live(r.project_id)) continue;
+    const sender = String(r.sender_company || r.sender_name || 'A sub').trim();
+    const key = `${r.project_id}|${sender}`;
+    const g = groups.get(key) || { projectId: r.project_id, projectName: projects.get(r.project_id)?.name || null, sender, photos: 0, videos: 0, toGc: false };
+    if (r.kind === 'video') g.videos++; else g.photos++;
+    if (r.destination === 'gc') g.toGc = true;
+    groups.set(key, g);
+  }
+  return { review: [...groups.values()], done: { logs, photos: photos + videos, punchClosed } };
 }
 
 export async function buildSales(ctx: BuildCtx, errors: Record<string, string>): Promise<HomeSections> {
@@ -698,7 +745,7 @@ export async function buildService(ctx: BuildCtx, errors: Record<string, string>
 }
 
 export async function buildOwner(ctx: BuildCtx, errors: Record<string, string>): Promise<HomeSections> {
-  const [ops, projects] = await Promise.all([buildOperations({ ...ctx, scope: 'team' }, errors), loadProjects(ctx)]);
+  const [{ sections: ops, items: allItems }, projects] = await Promise.all([operationsWithItems({ ...ctx, scope: 'team' }, errors), loadProjects(ctx)]);
   const decisions = ops.queue.items.filter(i => ['change_order', 'pay_app', 'purchase_order', 'invoice'].includes(i.sourceType));
   const exceptions = ops.queue.items.filter(i => i.tier <= 2);
   const merged = rankQueue([...exceptions, ...decisions]);
@@ -717,8 +764,13 @@ export async function buildOwner(ctx: BuildCtx, errors: Record<string, string>):
   const cols = ops.workTable.columns.filter(c => keep.includes(c.key));
   const at = cols.findIndex(c => c.key === 'phase') + 1;
   cols.splice(at, 0, { key: 'progress', label: 'Progress' });
+  // The alert ticker. Its extras failing must not cost the owner the queue-based
+  // lines, so they load separately and degrade to "no extras".
+  const extras = await safe('ticker', errors, () => ownerTickerExtras(ctx, projects));
+  const tick = buildTicker({ items: allItems, review: extras?.review || [], done: extras?.done || null });
   return {
     ...ops,
+    ticker: { ...tick, state: extras ? 'ok' : 'failed' },
     metrics: [
       contract,
       risk,

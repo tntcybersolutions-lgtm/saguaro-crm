@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
     const ctx: BuildCtx = {
       db, tenantId: user.tenantId,
       me: { id: user.id, email: user.email, name: profile.full_name || null },
-      perms, scope, projectId, today: ymdIn(timeZone), window,
+      perms, scope, projectId, today: ymdIn(timeZone), window, timeZone,
     };
     const errors: Record<string, string> = {};
     const sections = await BUILDERS[view](ctx, errors);
