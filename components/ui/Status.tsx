@@ -210,7 +210,7 @@ export function StatusLegend({ tones }: { tones?: Tone[] }) {
   return (
     <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
       {show.map((t) => (
-        <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>
+        <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--c-text-2)' }}>
           <span style={{ width: 7, height: 7, borderRadius: 999, background: TONES[t].fg, boxShadow: `0 0 6px ${TONES[t].fg}` }} />
           {TONES[t].meaning}
         </span>

@@ -35,7 +35,7 @@ const inp:React.CSSProperties={
   border:'1px solid rgba(255,255,255,0.12)',borderRadius:7,color:'var(--text-primary)',
   fontSize:13,outline:'none',boxSizing:'border-box',
 };
-const HINT:React.CSSProperties={fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:5,lineHeight:1.45};
+const HINT:React.CSSProperties={fontSize:11,color:'var(--c-text-2)',marginTop:5,lineHeight:1.45};
 const isoDate=(d:Date)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 
 const EMPTY:Record<string,any>={

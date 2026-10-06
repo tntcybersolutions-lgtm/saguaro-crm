@@ -199,7 +199,7 @@ export default function TeamPage(){
   }
 
   const inputStyle = {width:'100%',padding:'8px 12px',background:'var(--bg-surface-2)',border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none',boxSizing:'border-box' as const};
-  const hintStyle: React.CSSProperties = {fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:5,lineHeight:1.45};
+  const hintStyle: React.CSSProperties = {fontSize:11,color:'var(--c-text-2)',marginTop:5,lineHeight:1.45};
 
   // Field leadership straight off the project record — PM, super, and foreman,
   // plus the owner and architect of record, each with live contact links.
@@ -420,7 +420,7 @@ export default function TeamPage(){
                 <div style={{display:'flex',flexDirection:'column' as const,gap:3}}>
                   {l.email&&<a href={`mailto:${l.email}`} style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:11.5,color:'var(--brand-primary-strong)',textDecoration:'none'}}><EnvelopeSimple size={12} weight="bold" color="var(--brand-primary-strong)"/>{l.email}</a>}
                   {l.phone&&<a href={`tel:${l.phone}`} style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:11.5,color:DIM,textDecoration:'none'}}><Phone size={12} weight="bold" color={DIM}/>{l.phone}</a>}
-                  {!l.email&&!l.phone&&<span style={{fontSize:11,color:'rgba(255,255,255,0.35)'}}>No contact on file</span>}
+                  {!l.email&&!l.phone&&<span style={{fontSize:11,color:'var(--c-text-2)'}}>No contact on file</span>}
                   {l.email && !memberEmails.has(l.email.toLowerCase()) && (
                     <button onClick={()=>inviteFromDirectory(l)} className="pmBtn" style={{marginTop:6,alignSelf:'flex-start',display:'inline-flex',alignItems:'center',gap:5,padding:'4px 10px',background:'var(--brand-primary-12)',border:'1px solid var(--brand-primary-35)',borderRadius:7,color:'var(--brand-primary-strong)',fontSize:11,fontWeight:800,cursor:'pointer'}}>
                       <UserPlus size={12} weight="bold" color="var(--brand-primary-strong)" /> Invite to Project
@@ -497,7 +497,7 @@ export default function TeamPage(){
             ><Briefcase size={15} weight="bold" /> Assign Work</button>
           </div>
         ) : (
-          <div style={{fontSize:12.5,color:'rgba(255,255,255,0.45)',lineHeight:1.55}}>
+          <div style={{fontSize:12.5,color:'var(--c-text-2)',lineHeight:1.55}}>
             Invite team members above — once someone accepts their invite they can be assigned work here, and it lands on their My Work hub immediately.
           </div>
         )}

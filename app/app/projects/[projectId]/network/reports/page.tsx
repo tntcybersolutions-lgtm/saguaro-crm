@@ -174,7 +174,7 @@ export default function ReportsPage() {
       {/* Breadcrumb */}
       <div style={{ marginBottom: 14 }}>
         <Link href={`/app/projects/${projectId}/network`} style={{ color: DIM, fontSize: 12, textDecoration: 'none' }}>Network →</Link>
-        <span style={{ color: 'rgba(255,255,255,0.62)', fontSize: 12, marginLeft: 4 }}>Reports</span>
+        <span style={{ color: 'var(--c-text-2)', fontSize: 12, marginLeft: 4 }}>Reports</span>
       </div>
 
       {/* Header */}

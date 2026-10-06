@@ -45,7 +45,7 @@ const GREEN = 'var(--success)';
 const ORANGE = 'var(--warning)';
 
 const inp: React.CSSProperties = { width: '100%', padding: '9px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 13, outline: 'none', boxSizing: 'border-box' };
-const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.62)', marginBottom: 6 };
+const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--c-text-2)', marginBottom: 6 };
 
 // Compact button + filter-chip presets derived from the kit --------------------
 const goldBtnSm: React.CSSProperties = { ...goldButtonStyle, padding: '6px 14px', fontSize: 12, borderRadius: 9 };
@@ -261,12 +261,12 @@ export default function TimesheetsPage() {
               <div>
                 <label style={lbl}>Employee *</label>
                 <Suggest type="text" value={form.employee} onChange={e => setForm(p => ({ ...p, employee: e.target.value }))} style={inp} placeholder="Crew member name" options={['n']} />
-                {roster.length > 0 && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 4, lineHeight: 1.45 }}>{roster.length} crew name{roster.length === 1 ? '' : 's'} on file — start typing to pick.</div>}
+                {roster.length > 0 && <div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 4, lineHeight: 1.45 }}>{roster.length} crew name{roster.length === 1 ? '' : 's'} on file — start typing to pick.</div>}
               </div>
               <div>
                 <label style={lbl}>Date<AutoChip /></label>
                 <SaguaroDatePicker value={form.date} onChange={v => setForm(p => ({ ...p, date: v }))} style={inp} />
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 4, lineHeight: 1.45 }}>Defaulted to today — edit to backfill.</div>
+                <div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 4, lineHeight: 1.45 }}>Defaulted to today — edit to backfill.</div>
               </div>
               <div>
                 <label style={lbl}>Classification</label>
@@ -280,12 +280,12 @@ export default function TimesheetsPage() {
                   <option value="">Unassigned</option>
                   {codeOptions.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 4, lineHeight: 1.45 }}>{ctx?.costCodes?.length ? 'Pulled from the project budget lines.' : 'Full CSI division list — budget lines give project-specific codes.'}</div>
+                <div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 4, lineHeight: 1.45 }}>{ctx?.costCodes?.length ? 'Pulled from the project budget lines.' : 'Full CSI division list — budget lines give project-specific codes.'}</div>
               </div>
               <div>
                 <label style={lbl}>Regular Hours{form.regular_hrs === 8 && <AutoChip />}</label>
                 <input type="number" min={0} max={24} value={form.regular_hrs} onChange={e => setForm(p => ({ ...p, regular_hrs: Number(e.target.value) }))} style={inp} />
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 4, lineHeight: 1.45 }}>Standard 8h day — hours past 8 belong in OT.</div>
+                <div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 4, lineHeight: 1.45 }}>Standard 8h day — hours past 8 belong in OT.</div>
               </div>
               <div>
                 <label style={lbl}>OT Hours</label>
@@ -324,14 +324,14 @@ export default function TimesheetsPage() {
       {/* Table */}
       <SectionCard title="Time Entries" icon={<Clock size={17} weight="duotone" color={moduleAccent('time').hex} />} flush>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 44, color: 'rgba(255,255,255,0.62)', fontSize: 13 }}>Loading…</div>
+          <div style={{ textAlign: 'center', padding: 44, color: 'var(--c-text-2)', fontSize: 13 }}>Loading…</div>
         ) : filtered.length === 0 ? (
           <div style={{ padding: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
               <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text-primary)' }}>
                 <Clock size={16} weight="duotone" style={{ color: GOLD, marginRight: 7, verticalAlign: 'text-bottom' }} />
                 {entries.length === 0 ? 'No time entries yet' : 'No entries in this period'}
-                <span style={{ fontWeight: 400, color: 'rgba(255,255,255,0.62)' }}>
+                <span style={{ fontWeight: 400, color: 'var(--c-text-2)' }}>
                   {entries.length === 0
                     ? (showForm ? ' — log the first crew entry in the form above; the roster builds as you go.' : ' — log the first crew entry to start tracking labor.')
                     : ' — switch the week filter, or add one for this period.'}

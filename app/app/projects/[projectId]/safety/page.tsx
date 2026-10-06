@@ -458,7 +458,7 @@ export default function SafetyPage() {
     border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, outline: 'none',
   };
   const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 6 };
-  const hint: React.CSSProperties = { fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 };
+  const hint: React.CSSProperties = { fontSize: 11, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 };
 
   return (
     <PremiumSurface maxWidth={2200}>
@@ -735,7 +735,7 @@ export default function SafetyPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>Corrective Actions</h2>
-          <p style={{ margin: '3px 0 0', fontSize: 12.5, color: 'rgba(255,255,255,0.62)' }}>Track and verify corrective actions from incidents</p>
+          <p style={{ margin: '3px 0 0', fontSize: 12.5, color: 'var(--c-text-2)' }}>Track and verify corrective actions from incidents</p>
         </div>
         <button onClick={() => { if (showCAForm) { setShowCAForm(false); setErrorMsg(''); } else { openCA(); } }} style={goldButtonStyle} className="pmBtn">
           {showCAForm ? <><X size={15} weight="bold" /> Cancel</> : <><Plus size={15} weight="bold" /> New Action</>}
@@ -781,7 +781,7 @@ export default function SafetyPage() {
                 <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text-primary)' }}>
                   <Wrench size={16} weight="duotone" color={GOLD} style={{ marginRight: 7, verticalAlign: 'text-bottom' }} />
                   No corrective actions
-                  <span style={{ fontWeight: 400, color: 'rgba(255,255,255,0.62)' }}>{showCAForm ? ' — describe the first one in the form above; the due date is already a week out.' : ' — incidents auto-create them, or add one directly.'}</span>
+                  <span style={{ fontWeight: 400, color: 'var(--c-text-2)' }}>{showCAForm ? ' — describe the first one in the form above; the due date is already a week out.' : ' — incidents auto-create them, or add one directly.'}</span>
                 </div>
                 {!showCAForm && (
                   <button onClick={openCA} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add Corrective Action</button>

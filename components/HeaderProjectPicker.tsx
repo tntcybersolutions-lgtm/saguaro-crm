@@ -161,12 +161,12 @@ export default function HeaderProjectPicker() {
           fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap',
         }}
       >
-        <Buildings size={15} weight="duotone" color={currentName ? GOLD : DIM} />
+        <Buildings size={15} weight="duotone" color={currentName ? GOLD : 'var(--c-orange)'} />
         {currentName && currentId && <ProjectDot project={list.find((p) => p.id === currentId) ?? currentId} />}
-        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
+        <span className="sg-nav-label" style={{ overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
           {currentName ?? 'Choose a Job'}
         </span>
-        <CaretUpDown size={13} weight="bold" color={DIM} />
+        <CaretUpDown size={13} weight="bold" color="var(--c-orange)" />
       </button>
 
       {open && (

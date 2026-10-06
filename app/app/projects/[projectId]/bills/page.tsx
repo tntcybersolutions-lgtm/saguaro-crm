@@ -270,7 +270,7 @@ export default function BillsPage() {
   const paidCount = bills.filter(b => b.status === 'Paid').length;
   const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: 'var(--bg-surface-2)', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
   const label: React.CSSProperties = { fontSize: 12, color: DIM, marginBottom: 4, display: 'block' };
-  const hint: React.CSSProperties = { fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 };
+  const hint: React.CSSProperties = { fontSize: 11, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 };
 
   // ── SmartCreate intelligence (all Number-coerced: DB numerics round-trip as strings) ──
   const budget = ctx?.budget;

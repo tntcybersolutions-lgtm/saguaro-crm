@@ -61,7 +61,7 @@ const TH_BASE: React.CSSProperties = {
   textAlign: 'left',
   fontSize: 10.5,
   fontWeight: 800,
-  color: 'rgba(255,255,255,0.42)',
+  color: 'var(--c-text-2)',
   userSelect: 'none',
   whiteSpace: 'nowrap',
 };

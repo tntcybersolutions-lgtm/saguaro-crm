@@ -125,7 +125,7 @@ export default function ProjectPreview({
                     borderRadius: 6,
                     background: 'rgba(255,255,255,0.05)',
                     border: '1px solid rgba(255,255,255,0.07)',
-                    color: 'rgba(255,255,255,0.58)',
+                    color: 'var(--c-text-2)',
                   }}
                 >
                   {x}
@@ -135,7 +135,7 @@ export default function ProjectPreview({
           </div>
         )}
 
-        <div style={{ marginTop: 13, fontSize: 11.5, lineHeight: 1.5, color: 'rgba(255,255,255,0.34)' }}>
+        <div style={{ marginTop: 13, fontSize: 11.5, lineHeight: 1.5, color: 'var(--c-text-2)' }}>
           Saguaro filled these in. Every one of them is editable on the form, now or later.
         </div>
       </div>

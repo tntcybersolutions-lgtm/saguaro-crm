@@ -198,7 +198,7 @@ export default function DeviceInventoryPage() {
     <PremiumSurface maxWidth={2200}>
       {/* Breadcrumb */}
       <div style={{ marginBottom: 14 }}>
-        <Link href={`/app/projects/${projectId}/network`} style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12, textDecoration: 'none' }}>
+        <Link href={`/app/projects/${projectId}/network`} style={{ color: 'var(--c-text-2)', fontSize: 12, textDecoration: 'none' }}>
           Network →
         </Link>
         <span style={{ color: TEXT, fontSize: 12, marginLeft: 4 }}>Devices</span>

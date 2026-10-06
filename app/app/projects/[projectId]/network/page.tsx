@@ -219,7 +219,7 @@ export default function NetworkDashboard() {
                   <option value="residential_mdu">Residential MDU</option>
                   <option value="mixed_use">Mixed Use</option>
                 </select>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 }}>Sets wizard defaults — VLAN plan, device density, and WiFi coverage targets.</div>
+                <div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 }}>Sets wizard defaults — VLAN plan, device density, and WiFi coverage targets.</div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
@@ -230,7 +230,7 @@ export default function NetworkDashboard() {
                     onChange={e => setSetupForm({ ...setupForm, total_sq_ft: +e.target.value })}
                     style={inputStyle}
                   />
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 }}>Drives AP counts and cable-run estimates.</div>
+                  <div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 }}>Drives AP counts and cable-run estimates.</div>
                 </div>
                 <div>
                   <label style={{ color: MUTED, fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Floor Count</label>

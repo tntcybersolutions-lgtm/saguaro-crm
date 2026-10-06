@@ -107,7 +107,7 @@ export default function SetupStepper({ steps, active }: { steps: SetupStep[]; ac
                   >
                     {s.title}
                   </span>
-                  <span style={{ display: 'block', fontSize: 11.5, lineHeight: 1.45, color: 'rgba(255,255,255,0.44)', marginTop: 2 }}>
+                  <span style={{ display: 'block', fontSize: 11.5, lineHeight: 1.45, color: 'var(--c-text-2)', marginTop: 2 }}>
                     {s.hint}
                   </span>
                 </span>

@@ -158,7 +158,7 @@ export default function ConfigGeneratorPage() {
     <PremiumSurface maxWidth={2200}>
       {/* Breadcrumb */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, marginBottom: 14 }}>
-        <Link href={`/app/projects/${projectId}/network`} style={{ color: 'rgba(255,255,255,0.62)', textDecoration: 'none' }}>Network</Link>
+        <Link href={`/app/projects/${projectId}/network`} style={{ color: 'var(--c-text-2)', textDecoration: 'none' }}>Network</Link>
         <CaretRight size={11} color="rgba(255,255,255,0.42)" />
         <span style={{ color: TEXT }}>Config Generator</span>
       </div>

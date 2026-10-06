@@ -154,7 +154,7 @@ export default function FilesPage() {
         {!trash && (
           <div style={{ marginBottom: 16 }}>
             <FileDropzone projectId={projectId} folder={folder !== 'all' ? folder : null} onUploaded={(rows) => { if (rows?.length) { setFiles((prev) => [...rows, ...prev]); flash(`${rows.length} uploaded.`); } }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', marginTop: 8, fontSize: 11.5, color: 'rgba(255,255,255,0.45)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', marginTop: 8, fontSize: 11.5, color: 'var(--c-text-2)' }}>
               <span>Uploads land in {folder !== 'all' ? <b style={{ color: 'var(--brand-primary-strong)' }}>{folder}</b> : 'the library root'}</span><AutoChip label={folder !== 'all' ? 'Folder' : 'Auto'} />
               <span style={{ marginLeft: 6 }}>· dated {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span><AutoChip />
               <span style={{ marginLeft: 6 }}>· any format, video up to 500MB</span>
@@ -207,7 +207,7 @@ export default function FilesPage() {
                   />
                   {ctx && (
                     <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', padding: '20px 22px' }}>
-                      <div style={{ fontSize: 10.5, fontWeight: 900, color: 'rgba(255,255,255,0.45)', marginBottom: 10 }}>What Belongs Here</div>
+                      <div style={{ fontSize: 10.5, fontWeight: 900, color: 'var(--c-text-2)', marginBottom: 10 }}>What Belongs Here</div>
                       <InsightRow label="Drawings & Specs" value="PDF · CAD" />
                       <InsightRow label="Contracts & Permits" value="PDF · DOC" />
                       <InsightRow label="Site Photos & Video" value="Up to 500MB" />

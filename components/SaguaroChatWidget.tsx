@@ -684,8 +684,10 @@ export default function SaguaroChatWidget({
             position: 'fixed', bottom: 'calc(24px + var(--sag-tabbar-h, 0px))', right: 24,
             width: 'min(420px, calc(100vw - 32px))',
             height: isMinimized ? 72 : 'min(620px, calc(80vh - var(--sag-tabbar-h, 0px)))',
-            zIndex: 9998, background: 'var(--bg-surface)',
-            border: '1px solid rgba(255,255,255,0.12)',
+            /* SOLID panel: it floats over live page content, so a glass
+               (translucent) fill let the page's text show through the chat. */
+            zIndex: 9998, background: 'linear-gradient(180deg, var(--c-raised) 0%, var(--c-card) 100%)',
+            border: '1px solid var(--brand-primary-25)',
             borderRadius: 20, overflow: 'hidden',
             display: 'flex', flexDirection: 'column',
             boxShadow: '0 32px 80px rgba(0,0,0,0.75), 0 0 0 1px rgba(0,0,0,0.04)',
@@ -710,10 +712,10 @@ export default function SaguaroChatWidget({
               <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.2px' }}>
                 Sage
                 {memoryProfile?.identity.firstName && (
-                  <span style={{ fontWeight: 400, color: 'rgba(255,255,255,0.4)', fontSize: 13 }}> — hey {memoryProfile.identity.firstName}</span>
+                  <span style={{ fontWeight: 400, color: 'var(--c-text-2)', fontSize: 13 }}> — hey {memoryProfile.identity.firstName}</span>
                 )}
               </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
+              <div style={{ fontSize: 11, color: 'var(--c-text-2)', display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--success)', animation: 'onlinePulse 2s ease-in-out infinite', flexShrink: 0 }} />
                 AI Construction Expert · Online
                 {memoryProfile && memoryProfile.engagement.currentStreak > 2 && (
@@ -726,12 +728,12 @@ export default function SaguaroChatWidget({
             <div style={{ display: 'flex', gap: 6, flexShrink: 0, position: 'relative' }}>
               <button
                 onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
-                style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.5)', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: 'none', cursor: 'pointer', color: 'var(--c-text-2)', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.13)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.07)')}
               >⋯</button>
               {showMenu && (
-                <div style={{ position: 'absolute', top: '110%', right: 0, background: 'var(--bg-surface)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, overflow: 'hidden', zIndex: 100, minWidth: 180, boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}>
+                <div style={{ position: 'absolute', top: '110%', right: 0, background: 'var(--bg-solid-2)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, overflow: 'hidden', zIndex: 100, minWidth: 180, boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}>
                   {[
                     { label: 'Clear Conversation', action: clearConversation },
                     { label: 'Copy Transcript', action: copyTranscript },
@@ -749,14 +751,14 @@ export default function SaguaroChatWidget({
               <button
                 onClick={(e) => { e.stopPropagation(); setIsMinimized(!isMinimized); }}
                 title={isMinimized ? 'Expand' : 'Minimize'}
-                style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.5)', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: 'none', cursor: 'pointer', color: 'var(--c-text-2)', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.13)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.07)')}
               >{isMinimized ? '□' : '─'}</button>
               <button
                 className="sage-close-btn"
                 onClick={(e) => { e.stopPropagation(); handleClose(); }}
-                style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.5)', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s, color 0.15s' }}
+                style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: 'none', cursor: 'pointer', color: 'var(--c-text-2)', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s, color 0.15s' }}
               >×</button>
             </div>
           </div>
@@ -808,7 +810,7 @@ export default function SaguaroChatWidget({
                                   <span style={{ fontSize: 18 }}>{action.icon}</span>
                                   <div style={{ flex: 1 }}>
                                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--brand-primary)' }}>{action.label}</div>
-                                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{action.description}</div>
+                                    <div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 2 }}>{action.description}</div>
                                   </div>
                                   <span style={{ fontSize: 12, color: 'var(--brand-primary)', opacity: 0.7 }}>→</span>
                                 </button>

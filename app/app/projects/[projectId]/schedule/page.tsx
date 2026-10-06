@@ -44,7 +44,7 @@ const EMPTY:Record<string,any>={
 // Canonical trade taxonomy — CSI division groups plus the specialty markets outside them.
 const DIVISION_TRADE_SET=new Set(SUB_TRADES_BY_DIVISION.flatMap(d=>d.trades));
 const EXTRA_TRADES=SUB_TRADES.filter(t=>!DIVISION_TRADE_SET.has(t));
-const HINT:React.CSSProperties={fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:5,lineHeight:1.45};
+const HINT:React.CSSProperties={fontSize:11,color:'var(--c-text-2)',marginTop:5,lineHeight:1.45};
 
 function Field({label,children}:{label:React.ReactNode;children:React.ReactNode}){
   return(

@@ -40,7 +40,7 @@ const AMBER = 'var(--warning)';
 const RED = 'var(--danger)';
 
 const inp: React.CSSProperties = { width: '100%', padding: '9px 12px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 13, outline: 'none', boxSizing: 'border-box' };
-const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.62)', marginBottom: 6 };
+const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--c-text-2)', marginBottom: 6 };
 // Compact on-brand action button for in-table row actions.
 const rowActionStyle: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -303,7 +303,7 @@ export default function W9Page() {
               <input type="email" value={formEmail} onChange={e => { setFormEmail(e.target.value); setAutoFill(false); }} placeholder="accounting@vendor.com" style={inp} />
             </div>
           </div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', marginTop: 12, padding: '10px 14px', background: T.goldDim, border: `1px solid ${T.borderGold}`, borderRadius: 10 }}>
+          <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 12, padding: '10px 14px', background: T.goldDim, border: `1px solid ${T.borderGold}`, borderRadius: 10 }}>
             The vendor gets an email with a secure link to submit their W-9. Once it comes back it is marked on file — until then, the bid-award gate flags this sub with &quot;W-9 not on file&quot; and blocks award.
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
@@ -361,7 +361,7 @@ export default function W9Page() {
       )}
       <SectionCard title="W-9 Status" icon={<FileText size={17} weight="duotone" style={{ color: GOLD }} />} flush>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.62)' }}>Loading…</div>
+          <div style={{ textAlign: 'center', padding: 40, color: 'var(--c-text-2)' }}>Loading…</div>
         ) : subs.length === 0 ? (
           <div style={{ display: 'grid', gridTemplateColumns: ctx ? 'minmax(0, 1fr) 340px' : '1fr', alignItems: 'stretch' }}>
             <PremiumEmpty
@@ -388,7 +388,7 @@ export default function W9Page() {
             )}
           </div>
         ) : filteredSubs.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 32, color: 'rgba(255,255,255,0.62)', fontSize: 13 }}>
+          <div style={{ textAlign: 'center', padding: 32, color: 'var(--c-text-2)', fontSize: 13 }}>
             No subs are <strong style={{ color: GOLD }}>{FILTER_LABEL[filter].toLowerCase()}</strong>.{' '}
             <button onClick={() => setFilter('all')} style={{ background: 'none', border: 'none', color: 'var(--brand-primary-strong)', cursor: 'pointer', fontWeight: 700, fontSize: 13, textDecoration: 'underline', padding: 0 }}>Show All {subs.length}</button>
           </div>

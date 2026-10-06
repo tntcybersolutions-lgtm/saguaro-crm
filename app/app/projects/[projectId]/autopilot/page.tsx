@@ -267,7 +267,7 @@ export default function AutopilotPage() {
             {pendingCos > 0 && <InsightRow label="Pending COs" value={String(pendingCos)} accent={AMBER} />}
             {Number(counts?.openPunch) > 0 && <InsightRow label="Open Punch" value={String(Number(counts?.openPunch) || 0)} />}
             {Number(ctx?.schedule?.criticalCount) > 0 && <InsightRow label="Critical-Path Tasks" value={String(Number(ctx?.schedule?.criticalCount) || 0)} accent={RED} />}
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 8, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 8, lineHeight: 1.5 }}>
               An unanswered RFI, a lapsed cert, or a stale CO puts this money at risk — that is what the alerts on the left protect.
             </div>
           </SectionCard>
