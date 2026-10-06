@@ -1255,7 +1255,7 @@ a.k-stat:hover, button.k-stat:hover { border-color: var(--border-strong); backgr
 
 /* NextAction */
 .pj-next { position: relative; border-radius: var(--radius-lg); border: 1px solid var(--border-default); padding: 18px 22px 14px; background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02) 40%, rgba(255,255,255,0) 100%), radial-gradient(60% 80% at 0% 0%, rgba(255,230,0,0.14), transparent 60%), rgba(14,15,18,0.9); box-shadow: var(--shadow-card); }
-.pj-next::before { content: ''; position: absolute; left: 18px; right: 18px; top: -1px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, #FFF04A, #FFE600 50%, #FF8A00); }
+.pj-next::before { content: none; }
 .pj-next-skel { min-height: 96px; }
 .pj-next-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .pj-next .k-badge[data-phase="lead"] { color: #FF8A00; background: rgba(255,138,0,0.16); border-color: rgba(255,138,0,0.5); }
