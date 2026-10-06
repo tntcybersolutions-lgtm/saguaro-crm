@@ -523,6 +523,24 @@ export default function SubPortal(){
   const healthLabel=healthScore>=4.5?'Excellent':healthScore>=4?'Good':healthScore>=3?'Fair':healthScore>=1?'Needs Improvement':'No Data';
 
   /* ── Loading ── */
+  /* Messages-tab effects. These used to live INSIDE renderMessages(), which only
+     runs while the Messages tab is open — so opening the tab changed how many
+     hooks this component called and React threw ("Rendered more hooks than
+     during the previous render"). Hooks belong at the top level; the tab gate
+     moves into the effects instead. */
+  const msgEndRef=useRef<HTMLDivElement>(null);
+  useEffect(()=>{ if(tab==='messages') msgEndRef.current?.scrollIntoView({behavior:'smooth'}); },[messages,tab]);
+  // Mark unread messages as read once the sub is actually looking at them.
+  useEffect(()=>{
+    if(tab!=='messages') return;
+    const unread=messages.filter((m:any)=>m.sender_type!=='sub'&&!m.read).map((m:any)=>m.id);
+    if(unread.length>0){
+      fetch(`/api/portal/sub/messages?token=${token}`,{method:'PATCH',headers,body:JSON.stringify({message_ids:unread})})
+        .catch((e)=>console.error('[sub-portal] mark read failed',e));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[messages,tab]);
+
   if(loading)return(
     <div style={{minHeight:'100vh',background:DARK,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'system-ui,sans-serif'}}>
       <div style={{textAlign:'center'}}>
@@ -1049,17 +1067,6 @@ export default function SubPortal(){
   /*  MESSAGES TAB                                                     */
   /* ================================================================ */
   const renderMessages=()=>{
-    const msgEndRef=useRef<HTMLDivElement>(null);
-    useEffect(()=>{msgEndRef.current?.scrollIntoView({behavior:'smooth'})},[messages]);
-
-    // Mark unread messages as read
-    useEffect(()=>{
-      const unread=messages.filter((m:any)=>m.sender_type!=='sub'&&!m.read).map((m:any)=>m.id);
-      if(unread.length>0){
-        fetch(`/api/portal/sub/messages?token=${token}`,{method:'PATCH',headers,body:JSON.stringify({message_ids:unread})}).catch(()=>{});
-      }
-    },[messages]);
-
     return(
       <div style={{display:'grid',gap:20}}>
         <div style={card()}>
