@@ -15,6 +15,7 @@ import { ENTITY_META, itemLabel, type EntityType } from '@/lib/approvals';
 import { CLOSED_PROJECT_STATUSES, PLACEHOLDER_WAIVER_PREFIX } from '@/lib/project-lifecycle';
 import { OPEN_STAGES, normaliseStage } from '@/lib/lead-stages';
 import { normalisePhase, PHASE_LABEL } from '@/lib/project-phase';
+import { progressOf } from '@/lib/job-picker';
 import {
   addDays, daysBetween, dueReason, fmtMoneyShort, isMine, rankQueue, summarisePortfolio, tierForDue,
   type DataState, type HomeView, type Metric, type QueueItem, type ScheduleEntry, type Tier,
@@ -115,7 +116,8 @@ async function loadProjects(ctx: BuildCtx): Promise<Map<string, ProjectInfo>> {
       contract: Number(p.revised_contract_value || p.contract_amount || p.contract_value || 0),
       closed: isClosedProject(p.status) || p.is_archived === true,
       bidDue: p.bid_due_date || null,
-      pct: p.percent_complete == null || !Number.isFinite(Number(p.percent_complete)) ? null : Math.max(0, Math.min(100, Math.round(Number(p.percent_complete)))),
+      // 0 is the column default, not a measurement: same rule as the job picker.
+      pct: progressOf({ percent_complete: p.percent_complete }),
     });
   }
   return m;
