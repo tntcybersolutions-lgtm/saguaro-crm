@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
   // assignments means no subs — not "every sub in the tenant", which is what an
   // unfiltered fallback would have shown on a project with nobody on it yet.
   if (projectId && assignMap.size === 0) {
-    return NextResponse.json({ subs: [], summary: { total: 0, compliant: 0, at_risk: 0, non_compliant: 0, avg_score: 0 } });
+    return NextResponse.json({ subs: [], summary: { total: 0, compliant: 0, at_risk: 0, non_compliant: 0, avg_score: null } });
   }
 
   let subQuery = db
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
   const { data: subs } = await subQuery;
 
   if (!subs || subs.length === 0) {
-    return NextResponse.json({ subs: [], summary: { total: 0, compliant: 0, at_risk: 0, non_compliant: 0 } });
+    return NextResponse.json({ subs: [], summary: { total: 0, compliant: 0, at_risk: 0, non_compliant: 0, avg_score: null } });
   }
 
   const today = new Date().toISOString().split('T')[0];
@@ -168,7 +168,7 @@ export async function GET(req: NextRequest) {
     compliant: scoredSubs.filter(s => s.compliance === 'compliant').length,
     at_risk: scoredSubs.filter(s => s.compliance === 'at_risk').length,
     non_compliant: scoredSubs.filter(s => s.compliance === 'non_compliant').length,
-    avg_score: scoredSubs.length > 0 ? Math.round(scoredSubs.reduce((s, sub) => s + sub.score, 0) / scoredSubs.length) : 0,
+    avg_score: scoredSubs.length > 0 ? Math.round(scoredSubs.reduce((s, sub) => s + sub.score, 0) / scoredSubs.length) : null,
   };
 
   return NextResponse.json({ subs: scoredSubs, summary });

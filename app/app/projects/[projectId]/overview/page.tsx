@@ -810,7 +810,7 @@ export default function OverviewPage() {
 const CSS = `
 .pov { width: 100%; max-width: none; min-width: 0; box-sizing: border-box; padding: 24px clamp(16px, 1.67vw, 32px) 64px; color: var(--text-primary); font-size: 15px; background: var(--bg-base); min-height: calc(100vh - 56px); }
 .pov h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.01em; margin: 0; overflow-wrap: anywhere; }
-.pov h2 { color: var(--title-color, #FFE600); font-size: 17px; font-weight: 800; margin: 0; padding-bottom: 6px; background: linear-gradient(90deg, var(--neon-yellow, #FFE600), var(--brand-primary)) left bottom / 44px 2px no-repeat; }
+.pov h2 { color: var(--c-text); font-size: 17px; font-weight: 800; margin: 0; }
 .pov-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; }
 .pov-titlewrap { min-width: 0; flex: 1 1 320px; }
 .pov-titleline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }

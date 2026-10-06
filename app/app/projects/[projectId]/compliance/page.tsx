@@ -236,7 +236,7 @@ export default function CompliancePage() {
           {href: `/app/projects/${projectId}/compliance`,  label: 'Compliant', value: String(Number(scoredSummary.compliant) || 0), accent: 'var(--success)', sub: 'Score 80+ — cleared to work' },
           {href: `/app/projects/${projectId}/compliance`,  label: 'At Risk', value: String(Number(scoredSummary.at_risk) || 0), accent: Number(scoredSummary.at_risk) > 0 ? 'var(--warning)' : undefined, sub: 'Gaps to close this month' },
           {href: `/app/projects/${projectId}/compliance`,  label: 'Non-Compliant', value: String(Number(scoredSummary.non_compliant) || 0), accent: Number(scoredSummary.non_compliant) > 0 ? 'var(--danger)' : 'var(--success)', sub: 'Hold payment and site access' },
-          {href: `/app/projects/${projectId}/compliance`,  label: 'Avg Score', value: `${Number(scoredSummary.avg_score) || 0}/100`, sub: 'W-9 25 · insurance 40 · waivers 35' },
+          {href: `/app/projects/${projectId}/compliance`,  label: 'Avg Score', value: typeof scoredSummary.avg_score === 'number' ? `${scoredSummary.avg_score}/100` : '—', sub: 'W-9 25 · insurance 40 · waivers 35' },
         ]} />
       )}
 

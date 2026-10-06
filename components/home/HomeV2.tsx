@@ -590,10 +590,11 @@ function HomeInner() {
               <SectionBoundary name="the pipeline"><SalesOverview /></SectionBoundary>
             </div>
           )}
-          <section className="hv2-card hv2-pad hv2-order-6" aria-labelledby="hv2-activity">
-            <div className="hv2-sechead"><h2 id="hv2-activity">Recent Activity</h2></div>
+          {/* ActivityFeed brings its own card and title — wrapping it in a
+              second card drew a box inside a box. */}
+          <div className="hv2-order-6">
             <SectionBoundary name="recent activity"><ActivityFeed limit={8} /></SectionBoundary>
-          </section>
+          </div>
           <footer className="hv2-foot hv2-order-7">
             <span><CalendarBlank size={13} /> Updated {new Date(data.generatedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} · {data.context.timeZone.replace('_', ' ')}</span>
             <button type="button" className="hv2-linkbtn" onClick={() => mutate()}>Refresh</button>

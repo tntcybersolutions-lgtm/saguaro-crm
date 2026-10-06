@@ -15,7 +15,7 @@
  */
 
 import React from 'react';
-import { NEON_CYCLE, neonCard, neonFor, neonText } from '@/lib/neon';
+import { neonCard } from '@/lib/neon';
 import { Check } from '@phosphor-icons/react';
 import { moduleAccent } from '@/lib/module-identity';
 import { ScribbleNote } from '@/components/Scribble';
@@ -346,7 +346,7 @@ export function StatCard({
   /* Neon by default (owner 2026-10-03): every stat card is lit in its own
      accent — a caller's accent wins, otherwise a stable neon from the label. */
   const toneColor = tone === 'bad' ? 'var(--danger)' : tone === 'warn' ? 'var(--warning)' : tone === 'good' ? 'var(--success)' : null;
-  const lit = accent || toneColor || neonFor(label);
+  const lit = accent || toneColor || 'var(--c-yellow)';
   const numberColor = lit;
   const ring = active ? lit : toneColor;
   const glow = neonCard(lit);
@@ -360,9 +360,8 @@ export function StatCard({
         background: ring
           ? `linear-gradient(160deg, color-mix(in srgb, ${ring} 24%, transparent), color-mix(in srgb, ${ring} 8%, transparent)), ${SURFACE}`
           : `${glow.background}, ${SURFACE}`,
-        backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR,
-        border: `1px solid ${ring || BORDER}`, borderTop: glow.borderTop, borderRadius: 12,
-        padding: '14px 16px 14px 18px',
+        border: `1px solid ${ring || 'var(--border-subtle)'}`, borderRadius: 14,
+        padding: '14px 16px',
         // compact plate — tight, not fat (Procore/JobTread density)
         boxShadow: ring
           ? `0 0 0 1px ${ring}, 0 8px 20px -14px color-mix(in srgb, ${ring} 45%, transparent), inset 0 1px 0 rgba(255,255,255,0.08)`
@@ -373,19 +372,18 @@ export function StatCard({
         transition: 'border-color .15s ease, box-shadow .15s ease, background .15s ease',
       }}
     >
-      {interactive && (
-        <span aria-hidden style={{ position: 'absolute', top: 10, right: 10, fontSize: 11, fontWeight: 800, color: active ? 'var(--on-brand)' : lit, background: active ? lit : 'rgba(255,255,255,0.06)', border: `1px solid ${active ? lit : 'rgba(255,255,255,0.12)'}`, padding: '3px 8px', borderRadius: 999, lineHeight: 1.2 }}>
-          {active ? 'Filtering' : 'View →'}
-        </span>
-      )}
-      {/* left accent bar */}
-      <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${numberColor}, transparent)`, opacity: 0.85 }} />
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-        <IconChip size={32} vivid={toneColor || undefined}>{icon}</IconChip>
-        <span style={{ fontSize: 12.5, color: MUTED, fontWeight: 750, letterSpacing: '.02em', textTransform: 'uppercase' }}>{label}</span>
+      {/* Label row: icon, small-caps label, and — on a card that opens
+          something — the affordance at the end of the row, never on top of
+          the label (the old floating "View →" pill sat over long labels). */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, minWidth: 0 }}>
+        <IconChip size={30} vivid={toneColor || undefined}>{icon}</IconChip>
+        <span style={{ flex: 1, minWidth: 0, fontSize: 11, color: 'var(--c-text-3)', fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', lineHeight: 1.3 }}>{label}</span>
+        {interactive && (active
+          ? <span aria-hidden style={{ flexShrink: 0, fontSize: 11, fontWeight: 800, color: 'var(--on-brand)', background: lit, padding: '3px 8px', borderRadius: 999, lineHeight: 1.2 }}>Filtering</span>
+          : <span aria-hidden className="pmStatGo" style={{ flexShrink: 0, color: 'var(--c-text-3)', fontSize: 14, fontWeight: 800, lineHeight: 1 }}>→</span>)}
       </div>
-      <div className="pmStatValue" style={{ fontSize: 30, fontWeight: 800, color: accent || toneColor ? numberColor : 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
-      {sub != null && <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{sub}</div>}
+      <div className="pmStatValue" style={{ fontSize: 30, fontWeight: 900, color: accent || toneColor ? numberColor : 'var(--c-text)', letterSpacing: '-0.02em', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      {sub != null && <div style={{ fontSize: 12.5, color: 'var(--c-text-2)', marginTop: 4 }}>{sub}</div>}
     </div>
   );
   if (href) {
@@ -441,9 +439,9 @@ export function SectionCard({
             {icon && <span style={{ display: 'inline-flex', flexShrink: 0, opacity: 0.9 }}>{icon}</span>}
             <div style={{ minWidth: 0, flex: 1 }}>
               {title && (
-                /* Neon section title (owner 2026-10-03): bright, with a lit
-                   underline in a stable neon per title — not grey-on-black. */
-                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--title-color, var(--brand-primary))', lineHeight: 1.3, paddingBottom: 6, display: 'inline-block', background: `linear-gradient(90deg, ${neonFor(typeof title === 'string' ? title : '')}, transparent) left bottom / 44px 2px no-repeat` }}>
+                /* Section title: champagne, no underline bar (premium system —
+                   the page title is the one yellow heading). */
+                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--c-text)', lineHeight: 1.3, display: 'inline-block' }}>
                   {title}
                 </div>
               )}
@@ -466,10 +464,9 @@ export function SectionCard({
            slightly saturated pane with a lit top edge reads as something
            sitting ABOVE it — which is what "raised" was supposed to mean, and
            what makes the flat/raised distinction do any work. */
-        background: 'rgba(255,255,255,0.045)',
-        backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR,
-        border: `1px solid ${BORDER}`, borderRadius: 16,
-        boxShadow: '0 26px 54px -34px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.06)',
+        background: 'linear-gradient(180deg, var(--c-raised), var(--c-card))',
+        border: '1px solid var(--border-subtle)', borderRadius: 16,
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 18px 40px -24px rgba(0,0,0,0.9)',
         ...style,
       }}
     >
@@ -477,15 +474,13 @@ export function SectionCard({
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: `1px solid rgba(255,255,255,0.06)` }}>
           {icon && <IconChip size={32}>{icon}</IconChip>}
           <div style={{ minWidth: 0, flex: 1 }}>
-            {title && <div style={{ fontWeight: 800, fontSize: 15.5, color: WHITE, letterSpacing: '-0.01em', lineHeight: 1.25 }}>{title}</div>}
-            {subtitle && <div style={{ fontSize: 12.5, color: MUTED, marginTop: 2 }}>{subtitle}</div>}
+            {title && <div style={{ fontWeight: 800, fontSize: 15.5, color: 'var(--c-text)', letterSpacing: '-0.01em', lineHeight: 1.25 }}>{title}</div>}
+            {subtitle && <div style={{ fontSize: 12.5, color: 'var(--c-text-2)', marginTop: 2 }}>{subtitle}</div>}
           </div>
           {action && <div style={{ flex: '0 0 auto' }}>{action}</div>}
         </div>
       )}
       <div style={{ padding: flush ? 0 : 16, ...bodyStyle }}>{children}</div>
-      {/* top accent hairline */}
-      <div aria-hidden style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 1, background: `linear-gradient(90deg, transparent, ${accent}, transparent)`, opacity: 0.35 }} />
     </div>
   );
 }
@@ -712,19 +707,18 @@ export function StatStrip({ items }: {
       {items.map((it, i) => {
         const clickable = !!(it.href || it.onClick);
         // Each tile lit in its own neon (owner 2026-10-03); a caller accent wins.
-        const lit = it.accent || NEON_CYCLE[i % NEON_CYCLE.length];
         const body = (
           <div
             className="pmTile"
             onClick={it.onClick}
-            style={{ position: 'relative', background: 'linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.03)), var(--surface-card, #0E0F12)', border: `1px solid ${BORDER}`, borderTop: '2px solid color-mix(in srgb, var(--brand-primary) 80%, transparent)', borderRadius: 14, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 12px 28px -18px rgba(0,0,0,0.9)', padding: '13px 16px', minWidth: 0, cursor: clickable ? 'pointer' : 'default', height: '100%', boxSizing: 'border-box' }}
+            style={{ position: 'relative', background: 'linear-gradient(180deg, var(--c-raised), var(--c-card))', border: '1px solid var(--border-subtle)', borderRadius: 14, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 18px 40px -24px rgba(0,0,0,0.9)', padding: '13px 16px', minWidth: 0, cursor: clickable ? 'pointer' : 'default', height: '100%', boxSizing: 'border-box' }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 750, color: MUTED, marginBottom: 5, whiteSpace: 'nowrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--c-text-3)', marginBottom: 6, whiteSpace: 'nowrap' }}>
               {it.icon}{it.label}
               {clickable && <span aria-hidden style={{ marginLeft: 'auto', color: FAINT, fontWeight: 700 }}>→</span>}
             </div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: it.accent || 'var(--text-primary)', letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.value}</div>
-            {it.sub && <div style={{ fontSize: 12, color: MUTED, marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.sub}</div>}
+            <div style={{ fontSize: 20, fontWeight: 900, color: it.accent || 'var(--c-text)', letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.value}</div>
+            {it.sub && <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.sub}</div>}
           </div>
         );
         if (it.href) {

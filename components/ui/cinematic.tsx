@@ -362,7 +362,7 @@ export function SectionCard({
               {title && (
                 /* Neon section title (owner 2026-10-03): bright, with a lit
                    underline in a stable neon per title — not grey-on-black. */
-                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--title-color, var(--brand-primary))', lineHeight: 1.3, paddingBottom: 6, display: 'inline-block', background: `linear-gradient(90deg, ${neonFor(typeof title === 'string' ? title : '')}, transparent) left bottom / 44px 2px no-repeat` }}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--c-text)', lineHeight: 1.3, display: 'inline-block' }}>
                   {title}
                 </div>
               )}

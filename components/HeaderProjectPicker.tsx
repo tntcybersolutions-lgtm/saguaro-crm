@@ -419,6 +419,8 @@ const CSS = `
 .jp-panel .jp-search input { flex: 1; min-width: 0; height: 44px; background: transparent; border: 0; outline: none; color: var(--c-text); font-size: 15px !important; font-weight: 600; }
 /* globals.css pins inputs to 13px !important on desktop; 16px on a phone stops iOS zooming on focus. */
 .jp-sheet .jp-search input { font-size: 16px !important; }
+.jp-panel .jp-search input:focus, .jp-panel .jp-search input:focus-visible { border: 0 !important; box-shadow: none !important; outline: none !important; background: transparent !important; }
+.jp-panel .jp-search:focus-within { box-shadow: inset 0 -2px 0 rgba(255,230,0,0.45); }
 .jp-panel .jp-search input::placeholder { color: var(--c-text-3); font-weight: 500; }
 .jp-kbd { font-family: inherit; font-size: 11px; font-weight: 700; line-height: 1; color: var(--c-text-3); padding: 4px 6px; border-radius: 6px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.03); }
 .jp-iconbtn { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 9px; border: 0; background: transparent; color: var(--c-text-2); cursor: pointer; }
