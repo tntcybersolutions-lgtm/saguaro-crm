@@ -267,10 +267,8 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
         style={{
           display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, textDecoration: 'none',
           padding: '8px 10px', borderRadius: 12,
-          background: hover
-            ? 'linear-gradient(180deg, var(--brand-primary-18), var(--brand-primary-08))'
-            : 'linear-gradient(180deg, var(--brand-primary-12), rgba(255,230,0,0.03))',
-          border: `1px solid ${hover ? 'var(--brand-primary-35)' : 'var(--brand-primary-25)'}`,
+          background: hover ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.03)',
+          border: `1px solid ${hover ? 'rgba(255,230,0,0.3)' : 'var(--border-subtle)'}`,
           transition: 'background .15s ease, border-color .15s ease',
         }}
       >
@@ -787,14 +785,12 @@ export default function AppSidebar({
         left: 0,
         bottom: 0,
         width,
-        // LIT rail (owner, 6 Oct 2026: "not flat dark and boring"): a warm
-        // brand glow off the top-left, an orange ember at the foot, raised
-        // graphite in between, and a yellow hairline on the content edge.
-        background: 'radial-gradient(130% 30% at 0% 0%, var(--brand-primary-12), transparent 62%), radial-gradient(120% 24% at 100% 100%, color-mix(in srgb, var(--c-orange) 10%, transparent), transparent 60%), linear-gradient(180deg, var(--c-raised) 0%, var(--c-card) 45%, var(--c-bg) 100%)',
-        backdropFilter: 'blur(16px) saturate(140%)',
-        WebkitBackdropFilter: 'blur(16px) saturate(140%)',
-        borderRight: '1px solid var(--brand-primary-25)',
-        boxShadow: '14px 0 34px rgba(0,0,0,0.5), inset -1px 0 0 var(--brand-primary-08), inset 0 1px 0 rgba(255,255,255,0.06)',
+        // Premium system (6 Oct 2026): a calm graphite rail with a hairline
+        // edge — the page carries the warm light, the rail stays quiet so the
+        // selected row reads instantly.
+        background: 'linear-gradient(180deg, var(--c-card) 0%, var(--c-bg) 100%)',
+        borderRight: '1px solid var(--border-subtle)',
+        boxShadow: '14px 0 34px rgba(0,0,0,0.45)',
         display: 'flex',
         flexDirection: 'column',
         zIndex: z.sidebar,
@@ -878,8 +874,7 @@ export default function AppSidebar({
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '2px 8px 10px', padding: '0 8px 0 12px', minWidth: 0 }}>
                   <span style={{
                     fontSize: 10.5, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase',
-                    color: zoneTone, whiteSpace: 'nowrap',
-                    textShadow: `0 0 10px ${zoneTone}`,
+                    color: zoneTone, whiteSpace: 'nowrap', opacity: 0.85,
                   }}>{zoneLabel}</span>
                   <span aria-hidden style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${zoneTone}55, transparent)` }} />
                 </div>
@@ -930,7 +925,7 @@ export default function AppSidebar({
                   <CaretDown
                     size={10}
                     weight="bold"
-                    color="var(--c-orange)"
+                    color="var(--c-text-3)"
                     style={{ transform: isOpen ? 'none' : 'rotate(-90deg)', transition: 'transform .15s' }}
                   />
                 </span>
@@ -965,13 +960,11 @@ export default function AppSidebar({
                     borderRadius: radius.lg,
                     fontSize: font.size.md,
                     fontWeight: active ? font.weight.semibold : font.weight.medium,
-                    color: active ? 'var(--on-brand)' : 'var(--c-orange)',
+                    color: active ? 'var(--c-text)' : 'var(--c-text-2)',
                     background: active
-                      ? 'linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow) 50%, var(--c-yellow) 100%)'
+                      ? 'linear-gradient(90deg, rgba(255,230,0,0.16), rgba(255,230,0,0.03))'
                       : undefined,
-                    boxShadow: active
-                      ? '0 8px 22px -6px rgba(255,230,0,0.65), 0 0 0 1px var(--c-yellow-hi), inset 0 1px 0 rgba(255,255,255,0.65), inset 0 -2px 0 rgba(0,0,0,0.12)'
-                      : undefined,
+                    boxShadow: active ? 'inset 3px 0 0 var(--c-yellow)' : undefined,
                     textDecoration: 'none',
                     transition: 'background .15s ease, color .15s ease',
                     position: 'relative',
@@ -1009,7 +1002,7 @@ export default function AppSidebar({
                      * yellow pill — the loudest thing on screen. Full
                      * opacity — dimming a saturated color is what produced
                      * the mud in the first place. */
-                    color={active ? 'var(--on-brand)' : (vivid || undefined)}
+                    color={active ? 'var(--c-yellow)' : 'var(--c-orange)'}
                     style={{ flexShrink: 0, opacity: 1 }}
                   />
                   {!collapsed && (
@@ -1024,8 +1017,8 @@ export default function AppSidebar({
                         marginLeft: 'auto',
                         fontSize: font.size.xs,
                         fontWeight: font.weight.bold,
-                        background: active ? 'var(--on-brand)' : accent ? accent.soft : colors.raisedAlt,
-                        color: active ? 'var(--brand-primary)' : accent ? accent.hex : colors.textMuted,
+                        background: active ? 'rgba(255,230,0,0.15)' : 'rgba(255,255,255,0.06)',
+                        color: active ? 'var(--c-yellow)' : 'var(--c-text-2)',
                         borderRadius: radius.full,
                         padding: '1px 7px',
                         minWidth: 18,
@@ -1104,9 +1097,9 @@ export default function AppSidebar({
                 borderRadius: radius.lg,
                 fontSize: font.size.md,
                 fontWeight: active ? font.weight.semibold : font.weight.medium,
-                color: active ? 'var(--on-brand)' : 'var(--c-orange)',
-                background: active ? 'linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow) 50%, var(--c-yellow) 100%)' : undefined,
-                boxShadow: active ? '0 8px 22px -6px rgba(255,230,0,0.65), 0 0 0 1px var(--c-yellow-hi), inset 0 1px 0 rgba(255,255,255,0.65)' : undefined,
+                color: active ? 'var(--c-text)' : 'var(--c-text-2)',
+                background: active ? 'linear-gradient(90deg, rgba(255,230,0,0.16), rgba(255,230,0,0.03))' : undefined,
+                boxShadow: active ? 'inset 3px 0 0 var(--c-yellow)' : undefined,
                 textDecoration: 'none',
                 transition: 'background .15s ease, color .15s ease',
                 position: 'relative',
@@ -1116,7 +1109,7 @@ export default function AppSidebar({
               {/* Same rule as the main rail: the resting icon inherits the link
                   color and stays at full opacity. Dimming a neutral only muddies
                   it — the weight change from regular to fill already marks active. */}
-              <Icon size={collapsed ? 20 : 18} weight={active ? 'fill' : 'regular'} style={{ flexShrink: 0, opacity: 1 }} />
+              <Icon size={collapsed ? 20 : 18} weight={active ? 'fill' : 'regular'} color={active ? 'var(--c-yellow)' : 'var(--c-orange)'} style={{ flexShrink: 0, opacity: 1 }} />
               {!collapsed && <span className="sg-nav-label" data-active={active || undefined}>{item.label}</span>}
             </Link>
           );
@@ -1138,7 +1131,7 @@ export default function AppSidebar({
             borderRadius: radius.lg,
             background: 'none',
             border: 'none',
-            color: 'var(--c-orange)',
+            color: 'var(--c-text-2)',
             fontSize: font.size.md,
             fontWeight: font.weight.medium,
             cursor: 'pointer',
@@ -1146,7 +1139,7 @@ export default function AppSidebar({
           }}
           className="sg-nav-item"
         >
-          {collapsed ? <CaretRight size={18} style={{ flexShrink: 0 }} /> : <><CaretLeft size={18} style={{ flexShrink: 0 }} /><span className="sg-nav-label">Collapse</span></>}
+          {collapsed ? <CaretRight size={18} color="var(--c-orange)" style={{ flexShrink: 0 }} /> : <><CaretLeft size={18} color="var(--c-orange)" style={{ flexShrink: 0 }} /><span className="sg-nav-label">Collapse</span></>}
         </button>
       </div>
     </aside>
