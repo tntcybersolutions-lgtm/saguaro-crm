@@ -145,6 +145,87 @@ async function capture() {
   await browser.close();
 }
 
+// ── proof ────────────────────────────────────────────────────────────────────
+// Design proof: the same demo sign-in, phone + desktop, real pages, some with a
+// menu or picker opened. Written to tools/proof (never uploaded anywhere).
+const PROOF_DEVICES = {
+  phone: { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true,
+    userAgent: DEVICES.iphone.userAgent },
+  desktop: { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, isMobile: false, hasTouch: false },
+};
+// [name, route, action, fullPage]; action opens a pop-up before the shot.
+const PROOF = [
+  ['home-owner', '/app?view=owner&window=7d', null, true],
+  ['home-owner-create-menu', '/app?view=owner&window=7d', 'create', false],
+  ['home-operations', '/app?view=operations&scope=team&window=7d', null, true],
+  ['project-overview', '/app/projects/{project}/overview', null, false],
+  ['job-picker-open', '/app/projects/{project}/pay-apps', 'picker', false],
+  ['pay-apps', '/app/projects/{project}/pay-apps', null, false],
+  ['rfis', '/app/projects/{project}/rfis', null, false],
+  ['projects', '/app/projects', null, false],
+  ['my-work', '/app/my-work', null, false],
+  ['compliance', '/app/compliance', null, false],
+];
+
+async function proof() {
+  const review = process.env.APP_REVIEW_DEMO_EMAIL && process.env.APP_REVIEW_DEMO_PASS
+    ? { demoAccountName: process.env.APP_REVIEW_DEMO_EMAIL.trim(), demoAccountPassword: process.env.APP_REVIEW_DEMO_PASS }
+    : (await api('GET', `/v1/apps/${(await findApp()).id}/betaAppReviewDetail`)).data.attributes;
+  if (!review.demoAccountName || !review.demoAccountPassword) throw new Error('no demo sign-in available');
+  const require = createRequire(path.join(process.env.PLAYWRIGHT_DIR, 'noop.js'));
+  const { chromium } = require('playwright');
+  const browser = await chromium.launch();
+  const root = path.join(ROOT, 'tools/proof');
+  let project = null;
+  for (const [kind, dev] of Object.entries(PROOF_DEVICES)) {
+    const dir = path.join(root, kind);
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.mkdirSync(dir, { recursive: true });
+    const ctx = await browser.newContext({ ...dev, colorScheme: 'dark' });
+    const page = await ctx.newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(String(e.message || e).slice(0, 160)));
+    await page.goto(`${SITE}/login`, { waitUntil: 'networkidle' });
+    await page.fill('input[name="email"]', review.demoAccountName);
+    await page.fill('input[name="password"]', review.demoAccountPassword);
+    await page.click('button[type="submit"]');
+    const ok = await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 60000 }).then(() => true).catch(() => false);
+    if (!ok) { await page.screenshot({ path: path.join(dir, 'debug-login.png') }); throw new Error(`${kind} sign-in failed`); }
+    await page.waitForLoadState('networkidle').catch(() => {});
+    console.log(`${kind}: signed in`);
+    if (!project) {
+      await page.goto(`${SITE}/app/projects`, { waitUntil: 'networkidle' });
+      const links = await page.$$eval('a[href*="/app/projects/"]', (as) => as.map((a) => [a.getAttribute('href'), a.innerText]));
+      const idOf = (h) => h && h.match(/\/app\/projects\/([0-9a-f-]{36})/i)?.[1];
+      project = idOf(links.find(([h, t]) => idOf(h) && t.includes(PROJECT_NAME))?.[0]) || links.map(([h]) => idOf(h)).find(Boolean) || null;
+    }
+    let n = 0;
+    for (const [name, route, action, full] of PROOF) {
+      if (route.includes('{project}') && !project) { console.log(`  skip ${name} (no project)`); continue; }
+      try {
+        await page.goto(SITE + route.replace('{project}', project), { waitUntil: 'networkidle', timeout: 45000 });
+        await page.waitForTimeout(2500);
+        if (action === 'create') await page.click('.hv2-create button');
+        if (action === 'picker') {
+          // On a phone the picker lives in the menu drawer.
+          if (kind === 'phone') { await page.click('.mobile-hamburger-topbar').catch(() => {}); await page.waitForTimeout(600); }
+          await page.click('[data-tour="project-picker"]:visible');
+        }
+        if (action) await page.waitForTimeout(800);
+        const file = path.join(dir, `${String(++n).padStart(2, '0')}-${name}.png`);
+        await page.screenshot({ path: file, fullPage: !!full });
+        const m = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth }));
+        console.log(`  ${path.basename(file)}  ${page.url().replace(SITE, '').replace(/[0-9a-f-]{36}/gi, ':id')}  overflow:${m.sw > m.cw ? m.sw - m.cw + 'px' : 'none'}`);
+      } catch (e) {
+        console.log(`  ✗ ${name}: ${e.message.split('\n')[0]}`);
+      }
+    }
+    if (errors.length) console.log(`  page errors: ${[...new Set(errors)].join(' | ')}`);
+    await ctx.close();
+  }
+  await browser.close();
+}
+
 // ── upload ───────────────────────────────────────────────────────────────────
 const EDITABLE = ['PREPARE_FOR_SUBMISSION', 'DEVELOPER_REJECTED', 'REJECTED', 'METADATA_REJECTED', 'WAITING_FOR_REVIEW', 'INVALID_BINARY'];
 
@@ -199,4 +280,5 @@ async function upload() {
 
 if (MODE === 'capture') await capture();
 else if (MODE === 'upload') await upload();
-else { console.error('use: node tools/asc-screens.mjs capture|upload'); process.exit(1); }
+else if (MODE === 'proof') await proof();
+else { console.error('use: node tools/asc-screens.mjs capture|upload|proof'); process.exit(1); }
