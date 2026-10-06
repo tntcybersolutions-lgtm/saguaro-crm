@@ -35,6 +35,7 @@ import { getAuthHeaders } from '@/lib/supabase-browser';
 import PhotoEditor from '../../../../../components/PhotoEditor';
 import MediaUploadPanel from '@/components/media/MediaUploadPanel';
 import ZoomLightbox, { type LightboxItem } from '@/components/media/ZoomLightbox';
+import SubInbox from '@/components/media/SubInbox';
 import { useUploadQueue } from '@/lib/useUploadQueue';
 import { uploadPhoto, uploadVideo, fmtDuration } from '@/lib/media-upload';
 import {
@@ -273,14 +274,15 @@ export default function PhotosPage(){
     if(skipped) showToast(skipped===1?'1 file skipped — only photos and videos go here. Use Files & Media for documents.':`${skipped} files skipped — only photos and videos go here. Use Files & Media for documents.`,'bad');
   }
   // The Create menu links here with ?add=1 — open the picker straight away.
+  // A sub-upload notification links with ?inbox=1 — bring "From your subs" into view.
+  const [inboxFocus,setInboxFocus]=useState(false);
   useEffect(()=>{
     if(typeof window==='undefined') return;
     const u=new URL(window.location.href);
-    if(u.searchParams.get('add')==='1'){
-      setUploadOpen(true);
-      u.searchParams.delete('add');
-      window.history.replaceState(null,'',u.pathname+(u.search?u.search:'')+u.hash);
-    }
+    let changed=false;
+    if(u.searchParams.get('add')==='1'){ setUploadOpen(true); u.searchParams.delete('add'); changed=true; }
+    if(u.searchParams.get('inbox')==='1'){ setInboxFocus(true); u.searchParams.delete('inbox'); changed=true; }
+    if(changed) window.history.replaceState(null,'',u.pathname+(u.search?u.search:'')+u.hash);
   },[]);
   // Dragging files anywhere over the page opens the drop sheet.
   const onPageDragEnter=(e:React.DragEvent)=>{
@@ -827,6 +829,8 @@ export default function PhotosPage(){
         }
       >
         {!loadError && <StatRow items={stats}/>}
+
+        <SubInbox projectId={projectId} focus={inboxFocus} onChanged={()=>load({silent:true})} onToast={(m,t)=>showToast(m,t)}/>
 
         {!loading && !loadError && photos.length>0 && (
           <Toolbar
