@@ -228,3 +228,49 @@ Home, Leads board, deal page (stage bar, Won → "Open the Job", activity), Docu
 daily log / punch / permit / change order CRUD, Pima registers, Reviews add, People tabs,
 Settings, Notifications, Sage chat open/close, Intelligence, Portals, Schedule, Reports.
 
+
+## White check on main (6 Oct, after #54 + #55) — production, signed in as the QA user
+
+Method: `tools/e2e-white-check.mjs` (Playwright, headless Chromium) signed in at
+https://www.saguarocontrol.net/app, shot /app, /app/daily-logs and /app/subs at 390 and 1440 plus the
+dashboard's "All Jobs" dropdown open, and probed every visible element for a white / near-white
+background, a white input or a white border. `.env.local` carries no `E2E_EMAIL` / `E2E_PASSWORD`, so
+the QA user (`SAGUARO_QA_EMAIL`) was used. Screenshots: `docs/design/screenshots/white-check/main/`,
+measurements in `findings.json` there.
+
+Result: **nothing white.** 0 white backgrounds, 0 white inputs, 0 white borders on all eight shots;
+0 sideways scroll; 0 console errors. Headings, nav rail, pills, stat cards and both dropdowns are on the
+palette. The "All Jobs" list is the branded dropdown with the job-colour dots on both widths.
+
+### Finding: Sage launcher covers the last directory row at 1440
+- Screen: /app/subs (1440×900)
+- What I did: loaded the page; the directory ends near the bottom of the viewport
+- Expected: every W-9 pill readable
+- Actual: wrong — the floating Sage bubble sits over the last row's W-9 pill ("Missin…"); the 104px
+  bottom clearance only helps once the page scrolls
+- Severity: minor
+- Status: logged, not fixed
+
+### Finding: long job name runs off the "All Jobs" list on a phone
+- Screen: /app, "All Jobs" dropdown open (390)
+- What I did: opened the dropdown
+- Expected: each job name fits the list, ellipsised if long
+- Actual: wrong — "Copper Ridge Data Center Phase II — Critical Environment Controls" runs past the right
+  edge of the screen; the list row has no overflow/ellipsis at 390
+- Severity: minor
+- Status: logged, not fixed
+
+### Finding: "3 flagged" chip overlaps the sort bar on a phone
+- Screen: /app/daily-logs (390)
+- What I did: loaded the page
+- Expected: the flagged count sits in the card header
+- Actual: cosmetic — the chip sits on the card's top border, touching the Sort row
+- Severity: minor
+- Status: logged, not fixed
+
+### Driven and clean (no finding)
+/app at 390 and 1440 (stat cards, Needs Attention with job-colour stripes, Active Jobs, pipeline,
+follow-ups, activity), /app/daily-logs at both widths (tiles, DataTable with pills; cards + Sort bar on
+the phone), /app/subs at both widths (toned stat cards, avatars, paperwork pills, cards on the phone),
+the "All Jobs" dropdown at both widths. The floating tab bar appearing mid-page in the 390 full-page
+screenshots is a capture artefact of fixed elements, not a layout defect.
