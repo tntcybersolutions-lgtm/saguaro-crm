@@ -16,10 +16,12 @@
  * turns a two-second question into a thirty-second one.
  *
  * The list is grouped the way a GC thinks about it: the jobs you were just in,
- * then every running job, then the closed ones folded away. Each row says
- * enough to pick the right "Phase II" — number, city, phase, and how much is
- * open on it. On a phone it opens as a bottom sheet with thumb-sized rows and
- * a 16px search box (anything smaller and iOS zooms the page on focus).
+ * then by where each job is in its life — Bidding, Building, Closeout — with
+ * the closed ones folded away. Each row says enough to pick the right
+ * "Phase II": number, city, contract value, and how far along it is. The
+ * button itself shows the job's initials tile with its number and phase.
+ * On a phone it opens as a bottom sheet you can swipe down to close, with
+ * thumb-sized rows and a 16px search box (smaller and iOS zooms on focus).
  */
 
 import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
@@ -28,10 +30,10 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { CaretUpDown, MagnifyingGlass, Buildings, Check, Plus, ArrowRight, X, CaretDown } from '@phosphor-icons/react';
 import { useProjects } from '@/lib/hooks/useProjects';
-import { ProjectDot } from '@/components/ui/ProjectColor';
+import { ProjectDot, ProjectTile } from '@/components/ui/ProjectColor';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
-import { isClosedStatus } from '@/lib/project-lifecycle';
-import { normalisePhase, PHASE_LABEL } from '@/lib/project-phase';
+import { contractOf, pickerSection, progressOf, PICKER_SECTIONS, SECTION_LABEL } from '@/lib/job-picker';
+import { fmtMoneyShort } from '@/lib/home/rank';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -39,7 +41,8 @@ interface Proj {
   id: string; name?: string; project_name?: string; title?: string; status?: string;
   project_number?: string; color?: string | null; phase?: string | null;
   city?: string | null; address?: string | null;
-  open_rfis?: number; open_punch?: number; open_cos?: number;
+  revised_contract_value?: number | string | null; contract_amount?: number | string | null; contract_value?: number | string | null;
+  percent_complete?: number | string | null;
 }
 
 const nameOf = (p: Proj) => p.name || p.project_name || p.title || 'Untitled project';
@@ -85,12 +88,6 @@ function rememberJob(id: string) {
     console.warn('[job picker] could not remember recent job', e);
   }
 }
-
-const openCount = (p: Proj) => {
-  const parts = [p.open_rfis, p.open_punch, p.open_cos];
-  if (parts.every(n => typeof n !== 'number')) return null;
-  return parts.reduce<number>((s, n) => s + (typeof n === 'number' ? n : 0), 0);
-};
 
 /** Mirrors the 767px breakpoint where the header folds into the menu drawer. */
 function useSheet(): boolean {
@@ -171,20 +168,25 @@ export default function HeaderProjectPicker() {
     const needle = q.trim().toLowerCase();
     if (needle) {
       const hits = list.filter((p) => `${nameOf(p)} ${p.project_number ?? ''} ${p.city ?? ''} ${p.address ?? ''}`.toLowerCase().includes(needle));
-      const live = hits.filter((p) => !isClosedStatus(p.status)).sort(byName);
-      const closed = hits.filter((p) => isClosedStatus(p.status)).sort(byName);
-      return [{ key: 'hits', label: `${hits.length} ${hits.length === 1 ? 'match' : 'matches'}`, items: [...live, ...closed] }];
+      const rank = (p: Proj) => PICKER_SECTIONS.indexOf(pickerSection(p));
+      hits.sort((a, b) => rank(a) - rank(b) || byName(a, b));
+      return [{ key: 'hits', label: `${hits.length} ${hits.length === 1 ? 'match' : 'matches'}`, items: hits }];
     }
     const byId = new Map(list.map((p) => [p.id, p]));
-    const recentJobs = recent.map((id) => byId.get(id)).filter((p): p is Proj => !!p && !isClosedStatus(p.status)).slice(0, 3);
+    const recentJobs = recent.map((id) => byId.get(id)).filter((p): p is Proj => !!p && pickerSection(p) !== 'closed').slice(0, 3);
     const seen = new Set(recentJobs.map((p) => p.id));
-    const live = list.filter((p) => !isClosedStatus(p.status) && !seen.has(p.id)).sort(byName);
-    const closed = list.filter((p) => isClosedStatus(p.status)).sort(byName);
     const out: Group[] = [];
-    // Recent only earns its space when there is a longer list to skip.
-    if (recentJobs.length && live.length > 0) out.push({ key: 'recent', label: 'Recent', items: recentJobs });
-    out.push({ key: 'active', label: recentJobs.length && live.length > 0 ? 'All active jobs' : 'Active jobs', items: live });
-    if (closed.length) out.push({ key: 'closed', label: `Closed (${closed.length})`, items: showClosed ? closed : [] });
+    const openRest = list.filter((p) => pickerSection(p) !== 'closed' && !seen.has(p.id));
+    // Recent only earns its space when there is a longer list to skip; when
+    // it shows, those jobs are not repeated in their phase group.
+    const showRecent = recentJobs.length > 0 && openRest.length > 0;
+    if (showRecent) out.push({ key: 'recent', label: 'Recent', items: recentJobs });
+    for (const sec of PICKER_SECTIONS) {
+      const items = list.filter((p) => pickerSection(p) === sec && !(showRecent && seen.has(p.id))).sort(byName);
+      if (!items.length) continue;
+      if (sec === 'closed') out.push({ key: 'closed', label: `Closed (${items.length})`, items: showClosed ? items : [] });
+      else out.push({ key: sec, label: SECTION_LABEL[sec], items });
+    }
     return out;
   }, [list, q, recent, showClosed]);
 
@@ -241,7 +243,41 @@ export default function HeaderProjectPicker() {
     return () => { document.body.style.overflow = prev; };
   }, [open, sheet]);
 
-  function close() { setOpen(false); setQ(''); }
+  function close() { setOpen(false); setQ(''); setDragY(0); }
+
+  /* Swipe down to close the phone sheet. A drag that starts in the list only
+     moves the sheet once the list is scrolled to its top and the finger goes
+     down — otherwise it is a scroll. Far enough (or a quick flick) closes it;
+     anything less springs back. */
+  const dragRef = useRef<{ y0: number; t0: number; dy: number; live: boolean } | null>(null);
+  const [dragY, setDragY] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  function sheetTouchStart(e: React.TouchEvent) {
+    const list = (e.target as HTMLElement).closest('.jp-scroll');
+    if (list && list.scrollTop > 0) { dragRef.current = null; return; }
+    if ((e.target as HTMLElement).closest('input, button, a')) { dragRef.current = null; return; }
+    dragRef.current = { y0: e.touches[0].clientY, t0: Date.now(), dy: 0, live: false };
+  }
+  function sheetTouchMove(e: React.TouchEvent) {
+    const d = dragRef.current;
+    if (!d) return;
+    const dy = e.touches[0].clientY - d.y0;
+    if (dy <= 0) { if (d.live) { d.dy = 0; setDragY(0); } return; }
+    if (!d.live && dy < 6) return; // ignore a tap's jitter
+    d.live = true;
+    d.dy = dy;
+    setDragging(true);
+    setDragY(dy);
+  }
+  function sheetTouchEnd() {
+    const d = dragRef.current;
+    dragRef.current = null;
+    setDragging(false);
+    if (!d || !d.live) return;
+    const speed = d.dy / Math.max(1, Date.now() - d.t0); // px per ms
+    if (d.dy > 110 || (d.dy > 40 && speed > 0.7)) close();
+    else setDragY(0);
+  }
 
   /** Same screen, different job. */
   function go(id: string) {
@@ -259,6 +295,8 @@ export default function HeaderProjectPicker() {
   }
 
   const loadFailed = !loading && (!!error || degraded) && list.length === 0;
+  /* Under the job's name on the button: its number and where it is in its life. */
+  const trigMeta = current ? [current.project_number, SECTION_LABEL[pickerSection(current)]].filter(Boolean).join(' · ') : null;
   const screen = tail ? screenName(tail) : '';
 
   let idx = -1;
@@ -319,10 +357,15 @@ export default function HeaderProjectPicker() {
                 idx += 1;
                 const i = idx;
                 const isCurrent = p.id === currentId;
-                const closed = isClosedStatus(p.status);
+                const sec = pickerSection(p);
+                const closed = sec === 'closed';
                 const where = p.city || (p.address ? p.address.split(',')[0] : null);
-                const meta = [p.project_number, where, closed ? 'Closed' : PHASE_LABEL[normalisePhase(p.phase)]].filter(Boolean).join(' · ');
-                const n = closed ? null : openCount(p);
+                // The group header already says the phase; Recent and search
+                // results mix phases, so they say it per row.
+                const mixed = g.key === 'recent' || g.key === 'hits';
+                const meta = [p.project_number, where, mixed ? SECTION_LABEL[sec] : null].filter(Boolean).join(' · ');
+                const money = contractOf(p);
+                const pct = closed ? null : progressOf(p);
                 return (
                   <div
                     key={`${g.key}-${p.id}`}
@@ -341,10 +384,14 @@ export default function HeaderProjectPicker() {
                     <span className="jp-main">
                       <span className="jp-name">{nameOf(p)}</span>
                       {meta && <span className="jp-meta">{meta}</span>}
+                      {pct != null && (
+                        <span className="jp-prog">
+                          <span className="jp-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label={`${pct}% complete`}><i style={{ width: `${pct}%` }} /></span>
+                          <span className="jp-pct">{pct}%</span>
+                        </span>
+                      )}
                     </span>
-                    {n != null && n > 0 && (
-                      <span className="jp-open" title={`${p.open_rfis ?? 0} open RFIs · ${p.open_punch ?? 0} open punch items · ${p.open_cos ?? 0} pending change orders`}>{n} open</span>
-                    )}
+                    {money != null && <span className="jp-money" title="Contract value">{fmtMoneyShort(money)}</span>}
                     {isCurrent && <Check size={15} weight="bold" className="jp-check" aria-label="You are here" />}
                   </div>
                 );
@@ -373,12 +420,15 @@ export default function HeaderProjectPicker() {
         onClick={() => { if (open) { close(); return; } setRecent(readRecent()); setOpen(true); }}
         aria-expanded={open}
         aria-haspopup="listbox"
-        title={currentName ? `${currentName} — switch job` : 'Choose a Job'}
+        title={currentName ? `${currentName} — switch job` : 'All jobs — pick one to open it'}
       >
         {currentName && currentId
-          ? <ProjectDot project={current ?? currentId} size={9} />
-          : <Buildings size={15} weight="duotone" aria-hidden className="jp-trig-icon" />}
-        <span className="jp-trig-label">{currentName ?? 'Choose a Job'}</span>
+          ? <ProjectTile project={current ?? currentId} name={currentName} size={28} />
+          : <span className="jp-trig-tile" aria-hidden><Buildings size={15} weight="duotone" /></span>}
+        <span className="jp-trig-text">
+          <span className="jp-trig-label">{currentName ?? 'All jobs'}</span>
+          {trigMeta && <span className="jp-trig-meta">{trigMeta}</span>}
+        </span>
         <CaretUpDown size={13} weight="bold" aria-hidden className="jp-trig-caret" />
       </button>
 
@@ -388,8 +438,20 @@ export default function HeaderProjectPicker() {
       {open && sheet && typeof document !== 'undefined' && createPortal(
         <div className="jp-sheet-root">
           <style dangerouslySetInnerHTML={{ __html: CSS }} />
-          <div className="jp-scrim" onClick={close} aria-hidden />
-          <div ref={panelRef} className="jp-panel jp-sheet" role="dialog" aria-modal="true" aria-label="Choose a job">
+          <div className="jp-scrim" onClick={close} aria-hidden style={dragY ? { opacity: Math.max(0.15, 1 - dragY / 320) } : undefined} />
+          <div
+            ref={panelRef}
+            className="jp-panel jp-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Choose a job"
+            data-dragging={dragging ? 'true' : undefined}
+            style={dragY ? { transform: `translateY(${dragY}px)` } : undefined}
+            onTouchStart={sheetTouchStart}
+            onTouchMove={sheetTouchMove}
+            onTouchEnd={sheetTouchEnd}
+            onTouchCancel={sheetTouchEnd}
+          >
             <div className="jp-grab" aria-hidden />
             <div className="jp-sheet-title">{currentName ? 'Switch job' : 'Choose a job'}</div>
             {body}
@@ -403,14 +465,17 @@ export default function HeaderProjectPicker() {
 
 const CSS = `
 .jp-wrap { position: relative; flex-shrink: 0; min-width: 0; }
-.jp-trigger { display: flex; align-items: center; gap: 8px; height: 36px; max-width: 280px; padding: 0 11px; border-radius: 10px; cursor: pointer; white-space: nowrap;
+.jp-trigger { display: flex; align-items: center; gap: 9px; min-height: 40px; max-width: 300px; padding: 4px 10px 4px 5px; border-radius: 12px; cursor: pointer; white-space: nowrap; text-align: left;
   background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); color: var(--c-text-2); font-size: 13.5px; font-weight: 700; }
+.jp-trig-tile { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0; color: var(--c-orange); background: rgba(255,138,0,0.10); border: 1px solid rgba(255,138,0,0.35); }
+.jp-trig-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
+.jp-trig-meta { color: var(--c-text-3); font-size: 11px; font-weight: 700; letter-spacing: .02em; overflow: hidden; text-overflow: ellipsis; }
 .jp-trigger:hover { background: rgba(255,255,255,0.06); color: var(--c-text); }
 .jp-trigger[data-in-job] { color: var(--c-text); background: rgba(255,230,0,0.05); border-color: rgba(255,230,0,0.3); }
 .jp-trigger[data-in-job]:hover { border-color: rgba(255,230,0,0.55); }
 .jp-trigger[aria-expanded="true"] { border-color: rgba(255,230,0,0.6); box-shadow: 0 0 0 3px rgba(255,230,0,0.12); }
 .jp-trigger:focus-visible { outline: 2px solid var(--c-yellow); outline-offset: 2px; }
-.jp-trig-icon, .jp-trig-caret { color: var(--c-orange); flex-shrink: 0; }
+.jp-trig-caret { color: var(--c-orange); flex-shrink: 0; margin-left: 2px; }
 .jp-trig-label { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .jp-panel { position: absolute; top: calc(100% + 8px); left: 0; z-index: 3000; width: 420px; max-height: min(560px, 72vh);
   display: flex; flex-direction: column; overflow: hidden; background: var(--c-raised); border: 1px solid var(--border-default); border-radius: 16px;
@@ -439,7 +504,12 @@ const CSS = `
 .jp-opt[data-current] .jp-name { font-weight: 800; }
 .jp-opt[data-closed] .jp-name { color: var(--c-text-3); }
 .jp-meta { color: var(--c-text-3); font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.jp-open { flex-shrink: 0; font-size: 11.5px; font-weight: 800; color: var(--c-orange); background: rgba(255,138,0,0.12); padding: 2px 8px; border-radius: 999px; }
+.jp-money { flex-shrink: 0; align-self: flex-start; margin-top: 2px; color: var(--c-text); font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.jp-opt[data-closed] .jp-money { color: var(--c-text-3); }
+.jp-prog { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.jp-bar { position: relative; flex: 0 1 140px; height: 4px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; }
+.jp-bar > i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--c-yellow), var(--c-orange)); }
+.jp-pct { color: var(--c-text-2); font-size: 11.5px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .jp-check { color: var(--c-yellow); flex-shrink: 0; }
 .jp-empty { padding: 18px 12px; font-size: 13.5px; color: var(--c-text-2); line-height: 1.45; }
 .jp-linkbtn { background: none; border: 0; padding: 0; color: var(--c-yellow); font: inherit; font-weight: 700; cursor: pointer; }
@@ -452,8 +522,11 @@ const CSS = `
 .jp-sheet-root { position: fixed; inset: 0; z-index: 4000; }
 .jp-scrim { position: absolute; inset: 0; background: rgba(0,0,0,0.6); }
 .jp-panel.jp-sheet { position: absolute; top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 86vh; max-height: 86dvh; border-radius: 22px 22px 0 0; border-bottom: 0;
-  padding-bottom: env(safe-area-inset-bottom, 0px); }
-.jp-grab { width: 40px; height: 5px; border-radius: 99px; background: rgba(255,255,255,0.18); margin: 8px auto 2px; flex-shrink: 0; }
+  padding-bottom: env(safe-area-inset-bottom, 0px); transition: transform .24s cubic-bezier(.2,.8,.2,1); touch-action: pan-y; }
+.jp-panel.jp-sheet[data-dragging] { transition: none; }
+.jp-scrim { transition: opacity .24s ease; }
+@media (prefers-reduced-motion: reduce) { .jp-panel.jp-sheet, .jp-scrim { transition: none; } }
+.jp-grab { width: 40px; height: 5px; border-radius: 99px; background: rgba(255,255,255,0.22); margin: 10px auto 4px; flex-shrink: 0; }
 .jp-sheet-title { padding: 6px 16px 10px; font-size: 17px; font-weight: 800; color: var(--c-text); }
 .jp-sheet .jp-search { border-top: 1px solid var(--border-subtle); }
 .jp-sheet .jp-opt { min-height: 56px; }
@@ -463,6 +536,8 @@ const CSS = `
 .jp-sheet .jp-foot { padding: 8px 10px; }
 @media (max-width: 767px) {
   .sag-menu-tools .jp-wrap, .sag-menu-tools .jp-trigger { width: 100%; max-width: none; }
-  .jp-trigger { min-height: 44px; font-size: 14px; }
+  .jp-trigger { min-height: 52px; font-size: 14.5px; padding: 6px 12px 6px 7px; }
+  .jp-trigger .jp-trig-caret { margin-left: auto; }
+  .jp-trig-meta { font-size: 12px; }
 }
 `;
