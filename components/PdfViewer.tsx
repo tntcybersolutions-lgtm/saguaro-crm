@@ -62,16 +62,28 @@ export function openPdf(req: OpenPdfRequest) {
 
 /* ── one pane ───────────────────────────────────────────────────────────── */
 
+const ZOOM_MIN = 0.3;
+const ZOOM_MAX = 5;
+
 function Pane({
-  url, label, zoom, page, onPages, fit,
+  url, label, zoom, page, onPages, fit, onZoom,
 }: {
   url: string; label?: string; zoom: number; page: number;
   onPages?: (n: number) => void; fit: boolean;
+  /** Pinch / trackpad zoom ended at this absolute scale. */
+  onZoom?: (z: number) => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(true);
+  /* The scale the canvas is actually drawn at (Fit resolves to a number). */
+  const eff = useRef(1);
+  /* After a pinch the page re-renders at the new zoom; keep the spot that was
+     between the fingers in the same place on screen. */
+  const anchor = useRef<{ cx: number; cy: number; mx: number; my: number } | null>(null);
+  const onZoomRef = useRef(onZoom);
+  onZoomRef.current = onZoom;
   /* Renders are async and a fast page or zoom change can land out of order,
      painting an older page over a newer one. Only the newest render wins. */
   const seq = useRef(0);
@@ -100,6 +112,7 @@ function Pane({
         const base = p.getViewport({ scale: 1 });
         const avail = (wrapRef.current?.clientWidth ?? 900) - 48;
         const scale = fit ? Math.max(0.2, avail / base.width) : zoom;
+        eff.current = scale;
 
         /* Raster at device pixel ratio, or a dimension string on a plan is a
            blur the GC has to zoom into to read. */
@@ -114,7 +127,17 @@ function Pane({
         canvas.style.width = `${viewport.width / dpr}px`;
         canvas.style.height = `${viewport.height / dpr}px`;
         await p.render({ canvasContext: ctx, viewport }).promise;
-        if (!cancelled && mine === seq.current) setBusy(false);
+        if (!cancelled && mine === seq.current) {
+          // The sharp render replaces the stretched preview from the pinch.
+          canvas.style.transform = '';
+          const a = anchor.current, w = wrapRef.current;
+          if (a && w) {
+            w.scrollLeft = canvas.offsetLeft + a.cx * scale - a.mx;
+            w.scrollTop = canvas.offsetTop + a.cy * scale - a.my;
+          }
+          anchor.current = null;
+          setBusy(false);
+        }
       } catch (e) {
         if (cancelled || mine !== seq.current) return;
         console.error(e);
@@ -125,6 +148,90 @@ function Pane({
 
     return () => { cancelled = true; };
   }, [url, zoom, page, fit, onPages]);
+
+  /* Pinch to zoom (phone / tablet) and trackpad pinch or ctrl/⌘ + scroll
+     (desktop). While the fingers move the existing render is stretched with a
+     CSS transform — instant — then the page re-renders sharp at the new zoom.
+     One finger still scrolls the sheet natively. */
+  useEffect(() => {
+    const w = wrapRef.current;
+    if (!w) return;
+    let g: { d0: number; ratio: number; mx: number; my: number; cx: number; cy: number } | null = null;
+    let wheelTimer = 0;
+
+    const begin = (clientX: number, clientY: number, d0: number) => {
+      const c = canvasRef.current;
+      if (!c) return null;
+      const r = w.getBoundingClientRect();
+      const mx = clientX - r.left, my = clientY - r.top;
+      // Point on the page (unscaled units) under the fingers.
+      const cx = (w.scrollLeft + mx - c.offsetLeft) / eff.current;
+      const cy = (w.scrollTop + my - c.offsetTop) / eff.current;
+      c.style.transformOrigin = `${cx * eff.current}px ${cy * eff.current}px`;
+      return { d0, ratio: 1, mx, my, cx, cy };
+    };
+    const show = (ratio: number) => {
+      const c = canvasRef.current;
+      if (!g || !c) return;
+      g.ratio = Math.min(ZOOM_MAX / eff.current, Math.max(ZOOM_MIN / eff.current, ratio));
+      c.style.transform = `scale(${g.ratio})`;
+    };
+    const commit = () => {
+      if (!g) return;
+      const z = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, eff.current * g.ratio));
+      if (Math.abs(g.ratio - 1) > 0.02 && onZoomRef.current) {
+        anchor.current = { cx: g.cx, cy: g.cy, mx: g.mx, my: g.my };
+        onZoomRef.current(Math.round(z * 100) / 100);
+      } else if (canvasRef.current) {
+        canvasRef.current.style.transform = '';
+      }
+      g = null;
+    };
+    const dist = (t: TouchList) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY) || 1;
+
+    const ts = (e: TouchEvent) => {
+      if (e.touches.length !== 2) return;
+      e.preventDefault();
+      g = begin((e.touches[0].clientX + e.touches[1].clientX) / 2, (e.touches[0].clientY + e.touches[1].clientY) / 2, dist(e.touches));
+    };
+    const tm = (e: TouchEvent) => {
+      if (!g || e.touches.length !== 2) return;
+      e.preventDefault();
+      show(dist(e.touches) / g.d0);
+    };
+    const te = (e: TouchEvent) => { if (g && e.touches.length < 2) commit(); };
+    const wheel = (e: WheelEvent) => {
+      if (!e.ctrlKey && !e.metaKey) return; // plain wheel scrolls the sheet
+      e.preventDefault();
+      if (!g) g = begin(e.clientX, e.clientY, 1);
+      if (!g) return;
+      // A trackpad pinch sends many small deltas; a mouse notch one big one —
+      // cap each step so a single notch is ~1.5×, not a jump to the limit.
+      show(g.ratio * Math.exp(-Math.max(-40, Math.min(40, e.deltaY)) * 0.01));
+      window.clearTimeout(wheelTimer);
+      wheelTimer = window.setTimeout(commit, 180);
+    };
+    // iOS Safari's own pinch would zoom the whole app behind the reader.
+    const stopGesture = (e: Event) => e.preventDefault();
+
+    w.addEventListener('touchstart', ts, { passive: false });
+    w.addEventListener('touchmove', tm, { passive: false });
+    w.addEventListener('touchend', te);
+    w.addEventListener('touchcancel', te);
+    w.addEventListener('wheel', wheel, { passive: false });
+    w.addEventListener('gesturestart', stopGesture);
+    w.addEventListener('gesturechange', stopGesture);
+    return () => {
+      window.clearTimeout(wheelTimer);
+      w.removeEventListener('touchstart', ts);
+      w.removeEventListener('touchmove', tm);
+      w.removeEventListener('touchend', te);
+      w.removeEventListener('touchcancel', te);
+      w.removeEventListener('wheel', wheel);
+      w.removeEventListener('gesturestart', stopGesture);
+      w.removeEventListener('gesturechange', stopGesture);
+    };
+  }, [err]);
 
   return (
     <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
@@ -142,8 +249,9 @@ function Pane({
       <div
         ref={wrapRef}
         style={{
-          flex: 1, overflow: 'auto', display: 'flex',
+          flex: 1, overflow: 'auto', display: 'flex', position: 'relative',
           justifyContent: 'center', alignItems: 'flex-start', padding: 24,
+          touchAction: 'pan-x pan-y',
           background:
             'radial-gradient(120% 90% at 50% 0%, #10161F 0%, #070A0F 60%, #05070B 100%)',
         }}
@@ -248,6 +356,7 @@ export default function PdfViewer() {
   }, [compare, stacked]);
 
   const onPages = useCallback((n: number) => setPages((p) => (p === n ? p : n)), []);
+  const pinchZoom = useCallback((z: number) => { setFit(false); setZoom(z); }, []);
 
   if (!mounted || !req) return null;
 
@@ -374,7 +483,7 @@ export default function PdfViewer() {
         {compare && req.compareUrl && (
           <>
             <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0, flex: stacked ? 1 : `0 0 ${split}%` }}>
-              <Pane url={req.compareUrl} label={req.compareTitle || 'Previous Revision'} zoom={zoom} page={page} fit={fit} />
+              <Pane url={req.compareUrl} label={req.compareTitle || 'Previous Revision'} zoom={zoom} page={page} fit={fit} onZoom={pinchZoom} />
             </div>
 
             {/* Draggable divider. Wide enough to grab, thin enough to ignore. */}
@@ -400,7 +509,7 @@ export default function PdfViewer() {
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0, flex: 1 }}>
-          <Pane url={req.url} label={compare ? (req.title || 'Current') : undefined} zoom={zoom} page={page} onPages={onPages} fit={fit} />
+          <Pane url={req.url} label={compare ? (req.title || 'Current') : undefined} zoom={zoom} page={page} onPages={onPages} fit={fit} onZoom={pinchZoom} />
         </div>
       </div>
 
@@ -413,7 +522,7 @@ export default function PdfViewer() {
       }}>
         <kbd style={{ color: TEXT }}>←</kbd> <kbd style={{ color: TEXT }}>→</kbd> page
         <span style={{ margin: '0 10px', opacity: 0.4 }}>·</span>
-        <kbd style={{ color: TEXT }}>+</kbd> <kbd style={{ color: TEXT }}>−</kbd> zoom
+        <kbd style={{ color: TEXT }}>+</kbd> <kbd style={{ color: TEXT }}>−</kbd> or pinch to zoom
         <span style={{ margin: '0 10px', opacity: 0.4 }}>·</span>
         <kbd style={{ color: TEXT }}>0</kbd> fit
         <span style={{ margin: '0 10px', opacity: 0.4 }}>·</span>
