@@ -196,7 +196,7 @@ export default function EstimatePage() {
               />
               {ctx && (
                 <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', padding: '22px 24px' }}>
-                  <div style={{ fontSize: 10.5, fontWeight: 900, color: 'rgba(255,255,255,0.45)', marginBottom: 12 }}>How the Estimate Builds</div>
+                  <div style={{ fontSize: 10.5, fontWeight: 900, color: 'var(--c-text-2)', marginBottom: 12 }}>How the Estimate Builds</div>
                   <FlowSteps title="" steps={[
                     { title: 'Upload Plans in Takeoff', desc: 'AI scans the sheets and extracts quantities with CSI codes.' },
                     { title: 'Lines Price Themselves', desc: 'Unit costs extend into a priced, exportable estimate.' },
@@ -314,7 +314,7 @@ export default function EstimatePage() {
                   </tfoot>
                 </table>
               </div>
-              <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.08)', fontSize: 11.5, color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 }}>
+              <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.08)', fontSize: 11.5, color: 'var(--c-text-2)', lineHeight: 1.5 }}>
                 Labor of {fmt(takeoff.labor_cost)} is carried outside the division rollup — grand total {fmt(takeoff.total_cost)}.{budgetLineCount > 0 ? ' Division budgets come from the project budget lines; variance is estimate minus budget.' : ' Seed the project budget to see division-by-division variance here.'}
               </div>
             </SectionCard>

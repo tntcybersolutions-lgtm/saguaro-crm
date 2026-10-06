@@ -298,7 +298,7 @@ export default function BudgetPage() {
   const budgetVsContract = primeContract > 0 ? Math.round((newOriginalTotal / primeContract) * 100) : 0;
   const divLines = csiDiv ? lines.filter(l => String(l.cost_code || '').trim().startsWith(csiDiv)) : [];
   const divLinesTotal = toDollars(sumCents(divLines.map(l => toCents(Number(l.original_budget) || 0))));
-  const hintStyle: React.CSSProperties = { fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 };
+  const hintStyle: React.CSSProperties = { fontSize: 11, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 };
 
   function rowBg(l: BudgetLine) {
     const actual = l.actual_cost ?? 0;

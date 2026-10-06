@@ -50,7 +50,7 @@ export default function MarketingNav() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '28px' }} className="mn-desktop">
             {navLinks.map(link => (
               <button key={link.label} onClick={() => scrollTo(link.href)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.65)', fontSize: '13px', fontWeight: 400, letterSpacing: '0.04em', padding: 0, transition: 'color 0.2s' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-text-2)', fontSize: '13px', fontWeight: 400, letterSpacing: '0.04em', padding: 0, transition: 'color 0.2s' }}
                 onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = 'var(--brand-primary)'}
                 onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.65)'}
               >{link.label}</button>

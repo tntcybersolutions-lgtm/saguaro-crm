@@ -193,7 +193,7 @@ export default function SubsPage() {
 
   const inpS: React.CSSProperties = {width:'100%',padding:'8px 12px',background:'var(--bg-surface-2)',border:`1px solid ${BORDER}`,borderRadius:6,color:TEXT,fontSize:13,outline:'none',boxSizing:'border-box'};
   const lblS: React.CSSProperties = {display:'block',fontSize:11,color:DIM,marginBottom:4,fontWeight:600};
-  const hintS: React.CSSProperties = {fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:5,lineHeight:1.45};
+  const hintS: React.CSSProperties = {fontSize:11,color:'var(--c-text-2)',marginTop:5,lineHeight:1.45};
 
   const totalContract = subs.reduce((s,sub) => s + (sub.contract_amount||0), 0);
   const totalPaid = subs.reduce((s,sub) => s + (sub.paid_amount||0), 0);

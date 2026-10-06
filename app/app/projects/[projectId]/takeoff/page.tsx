@@ -227,7 +227,7 @@ h2.tkH2{font-size:clamp(22px,3vw,30px)!important;font-weight:800!important;line-
 .tkEditable:focus-visible{outline:none;background:color-mix(in srgb, var(--brand-primary) 14%, transparent);box-shadow:inset 0 0 0 2px color-mix(in srgb, var(--brand-primary) 90%, transparent)}
 .tkCellInput{width:100%;background:var(--brand-primary-08);border:1px solid color-mix(in srgb, var(--brand-primary) 50%, transparent);border-radius:6px;color:var(--c-text);font-size:13px;padding:4px 7px;outline:none;font-family:inherit}
 .tkCellInput:focus{box-shadow:0 0 0 2px var(--brand-primary-25)}
-.tkCellInput::placeholder{color:rgba(255,255,255,0.35)}
+.tkCellInput::placeholder{color:var(--c-text-2)}
 .tkIconBtn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:7px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.04);cursor:pointer;transition:border-color .15s ease,background .15s ease}
 .tkIconBtn:hover{border-color:color-mix(in srgb, var(--brand-primary) 50%, transparent);background:var(--brand-primary-12)}
 .tkIconBtn:disabled{opacity:.35;cursor:default}
@@ -399,9 +399,9 @@ const EditableRow = memo(function EditableRow({ item, idx, sellMult, laborAlloc,
         <EditableCell rawValue={String(item.quantity)} display={fmtN(item.quantity)} align="right" numeric disabled={!editable}
           cellStyle={{ color: 'var(--c-text-2)' }} onCommit={commitNum('quantity')} />
         <EditableCell rawValue={item.unit} display={item.unit} align="right" disabled={!editable}
-          cellStyle={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }} onCommit={commitText('unit')} />
+          cellStyle={{ color: 'var(--c-text-2)', fontSize: 11 }} onCommit={commitText('unit')} />
         <EditableCell rawValue={String(item.unitCost)} display={`$${item.unitCost.toFixed(2)}`} align="right" numeric disabled={!editable}
-          cellStyle={{ color: 'rgba(255,255,255,0.6)' }} onCommit={commitNum('unitCost')} />
+          cellStyle={{ color: 'var(--c-text-2)' }} onCommit={commitNum('unitCost')} />
         <div style={{ textAlign: 'right', color: GOLD, fontWeight: 600 }}
           title={`Material ${fmt$(item.totalCost)} + labor ${fmt$(labor)}${item.laborHours ? ` (${fmtN(item.laborHours)} hrs)` : ''}`}>
           {fmt$(direct)}
@@ -589,7 +589,7 @@ const LineItemTable = memo(function LineItemTable({ groupedItems, sellMult, labo
                     }
                   }}
                   title={`Paste rows from a spreadsheet into Division ${div} — description, quantity, unit, unit cost`}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.62)', fontSize: 10.5, fontWeight: 800, cursor: 'pointer' }}>
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.18)', background: 'transparent', color: 'var(--c-text-2)', fontSize: 10.5, fontWeight: 800, cursor: 'pointer' }}>
                   Paste Rows
                 </button>
                 <span>{fmt$(divTotal)}</span>
@@ -1669,13 +1669,13 @@ export default function TakeoffPage() {
           </div>
           <div style={{ animation: 'tkRise .55s ease .05s both', borderRadius: 20, border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', background: SURFACE, padding: '36px 28px', textAlign: 'center' }}>
             <h1 style={{ color: 'var(--text-primary)', fontSize: 26, fontWeight: 800, margin: 0, lineHeight: 1.25 }}>{measuredHandoff.name}</h1>
-            <p style={{ color: 'rgba(255,255,255,0.62)', fontSize: 14.5, lineHeight: 1.6, margin: '14px auto 0', maxWidth: 460 }}>
+            <p style={{ color: 'var(--c-text-2)', fontSize: 14.5, lineHeight: 1.6, margin: '14px auto 0', maxWidth: 460 }}>
               The latest takeoff on this project was traced and priced in Takeoff Studio.
               Its conditions, plan scale and markup stack live there — open it to review or keep measuring.
             </p>
             {measuredHandoff.total > 0 && (
               <div style={{ marginTop: 18 }}>
-                <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, fontWeight: 700 }}>Sell Price</div>
+                <div style={{ color: 'var(--c-text-2)', fontSize: 11, fontWeight: 700 }}>Sell Price</div>
                 <div style={{ color: GREEN, fontSize: 32, fontWeight: 800, marginTop: 4 }}>{fmt$(measuredHandoff.total)}</div>
               </div>
             )}
@@ -1697,7 +1697,7 @@ export default function TakeoffPage() {
   if (state === 'upload' && checkingExisting && !selectedFile) {
     return (
       <div className="tkRoot" style={{ position: 'relative', minHeight: 'calc(100vh - 56px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div role="status" aria-live="polite" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, color: 'rgba(255,255,255,0.62)', fontSize: 14, fontWeight: 600 }}>
+        <div role="status" aria-live="polite" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, color: 'var(--c-text-2)', fontSize: 14, fontWeight: 600 }}>
           <span aria-hidden style={{ width: 16, height: 16, borderRadius: 999, border: '2px solid rgba(255,255,255,0.18)', borderTopColor: GOLD, animation: 'tkSpin .8s linear infinite' }} />
           Loading this job's takeoff…
           <style>{'@keyframes tkSpin{to{transform:rotate(360deg)}}'}</style>
@@ -1725,7 +1725,7 @@ export default function TakeoffPage() {
                 Get a priced bid in minutes.
               </span>
             </h1>
-            <p style={{ animation: 'tkRise .6s ease .1s both', color: 'rgba(255,255,255,0.62)', fontSize: 16, marginTop: 16, maxWidth: 610, marginInline: 'auto', lineHeight: 1.58 }}>
+            <p style={{ animation: 'tkRise .6s ease .1s both', color: 'var(--c-text-2)', fontSize: 16, marginTop: 16, maxWidth: 610, marginInline: 'auto', lineHeight: 1.58 }}>
               Claude reads every wall, footing, fixture and column — measures the quantities, and prices them by trade. No scale wheel. No manual counting.
             </p>
             {/* The estimate workspace door must exist in EVERY page state — the
@@ -1799,7 +1799,7 @@ export default function TakeoffPage() {
                     <CheckCircle size={46} weight="fill" color={GREEN} />
                   </div>
                   <div style={{ color: GREEN, fontWeight: 800, fontSize: 18, wordBreak: 'break-word' }}>{selectedFile.name}</div>
-                  <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 6 }}>
+                  <div style={{ color: 'var(--c-text-2)', fontSize: 13, marginTop: 6 }}>
                     {fmtFileSize(selectedFile.size)} · ready to analyze — click to change
                   </div>
                 </div>
@@ -1812,14 +1812,14 @@ export default function TakeoffPage() {
                   <div style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 24, marginBottom: 8, letterSpacing: '-0.02em' }}>
                     {isDragging ? 'Release to Upload' : 'Drop Your Blueprint Here'}
                   </div>
-                  <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14.5 }}>
+                  <div style={{ color: 'var(--c-text-2)', fontSize: 14.5 }}>
                     or <span style={{ color: GOLD_HI, fontWeight: 800 }}>click to browse</span>
                   </div>
                   <div style={{ display: 'inline-flex', gap: 7, flexWrap: 'wrap', justifyContent: 'center', marginTop: 18 }}>
                     {['PDF', 'PNG', 'JPG', 'TIFF', 'WEBP'].map((x) => (
                       <span key={x} style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-text-2)', padding: '4px 11px', borderRadius: 7, background: 'rgba(255,255,255,0.06)', border: '1px solid color-mix(in srgb, var(--brand-primary) 22%, transparent)' }}>{x}</span>
                     ))}
-                    <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', padding: '4px 6px' }}>Up to 200 MB</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--c-text-2)', padding: '4px 6px' }}>Up to 200 MB</span>
                   </div>
                 </div>
               )}
@@ -1841,7 +1841,7 @@ export default function TakeoffPage() {
                 <div className="tkIcon" style={{ flex: '0 0 auto', display: 'inline-flex', width: 40, height: 40, borderRadius: 11, alignItems: 'center', justifyContent: 'center', background: 'var(--brand-primary-12)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', transition: 'box-shadow .2s' }}>{s.icon}</div>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 16, letterSpacing: '-0.01em' }}>{s.big}</div>
-                  <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 1 }}>{s.small}</div>
+                  <div style={{ color: 'var(--c-text-2)', fontSize: 12, marginTop: 1 }}>{s.small}</div>
                 </div>
               </div>
             ))}
@@ -1849,7 +1849,7 @@ export default function TakeoffPage() {
 
           {/* What AI extracts — premium cards */}
           <div style={{ marginBottom: 30 }}>
-            <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.55)', fontSize: 11, marginBottom: 16, fontWeight: 800 }}>
+            <div style={{ textAlign: 'center', color: 'var(--c-text-2)', fontSize: 11, marginBottom: 16, fontWeight: 800 }}>
               What the AI Extracts
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(248px,1fr))', gap: 12 }}>
@@ -1866,7 +1866,7 @@ export default function TakeoffPage() {
                   <div className="tkIcon" style={{ flex: '0 0 auto', display: 'inline-flex', width: 42, height: 42, borderRadius: 11, alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(150deg, var(--brand-primary-18), color-mix(in srgb, var(--brand-primary) 5%, transparent))', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', transition: 'box-shadow .2s' }}>{c.icon}</div>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: 14, lineHeight: 1.3 }}>{c.t}</div>
-                    <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12.5, marginTop: 3 }}>{c.s}</div>
+                    <div style={{ color: 'var(--c-text-2)', fontSize: 12.5, marginTop: 3 }}>{c.s}</div>
                   </div>
                 </div>
               ))}
@@ -1943,7 +1943,7 @@ export default function TakeoffPage() {
           <h2 className="tkH2" style={{ color: 'var(--text-primary)', marginBottom: 8 }}>
             Reading your blueprint…
           </h2>
-          <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 15, marginBottom: lane ? 16 : 30 }}>
+          <p style={{ color: 'var(--c-text-2)', fontSize: 15, marginBottom: lane ? 16 : 30 }}>
             {progress.message || 'Starting analysis…'}
           </p>
 
@@ -2039,14 +2039,14 @@ export default function TakeoffPage() {
           <div style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 22, marginTop: 6, letterSpacing: '-0.02em' }}>
             {jobName || result?.projectName || 'Material Takeoff'}
           </div>
-          <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12.5, marginTop: 3 }}>
+          <div style={{ color: 'var(--c-text-2)', fontSize: 12.5, marginTop: 3 }}>
             {result?.buildingType || 'Building'} · {fmtN(result?.estimatedSF || 0)} SF
             {result?.projectName && jobName && result.projectName.trim().toLowerCase() !== jobName.trim().toLowerCase() && (
               <> · Drawings titled “{result.projectName}”</>
             )}
           </div>
           {result?.summary && (
-            <div style={{ color: 'rgba(255,255,255,0.48)', fontSize: 12.5, marginTop: 8, maxWidth: 460, lineHeight: 1.5 }}>
+            <div style={{ color: 'var(--c-text-2)', fontSize: 12.5, marginTop: 8, maxWidth: 460, lineHeight: 1.5 }}>
               {result.summary}
             </div>
           )}
@@ -2100,7 +2100,7 @@ export default function TakeoffPage() {
               >
                 Let Me Pick
               </button>
-              <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, lineHeight: 1.5 }}>
+              <span style={{ color: 'var(--c-text-2)', fontSize: 12, lineHeight: 1.5 }}>
                 {divCount} divisions · {result.itemCount} lines · {fmt$(sellTotal)} bid price
                 <br />
                 Bid packages, jacket PDFs, schedule of values, lien waivers and W-9 requests
@@ -2116,23 +2116,23 @@ export default function TakeoffPage() {
           )}
         </div>
         <div style={{ position: 'relative', textAlign: 'right', flex: '1 1 auto', minWidth: 220 }}>
-          <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, fontWeight: 700 }}>Bid Price</div>
+          <div style={{ color: 'var(--c-text-2)', fontSize: 11, fontWeight: 700 }}>Bid Price</div>
           <div style={{ fontWeight: 900, fontSize: 'clamp(38px,5vw,56px)', lineHeight: 1.02, letterSpacing: '-0.03em', background: `linear-gradient(100deg, ${GOLD}, ${GOLD_HI} 55%, var(--brand-primary-hover))`, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent', textShadow: '0 0 50px color-mix(in srgb, var(--brand-primary) 30%, transparent)', animation: 'tkPop .6s ease .1s both' }}>
             {fmt$(bidPrice)}
           </div>
           {computedCosts && (
-            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11.5, marginTop: 4 }}>
+            <div style={{ color: 'var(--c-text-2)', fontSize: 11.5, marginTop: 4 }}>
               {fmt$(computedCosts.directCost)} direct cost + markups below
             </div>
           )}
           <div style={{ display: 'inline-flex', gap: 8, marginTop: 10, justifyContent: 'flex-end' }}>
             <div style={{ background: 'rgba(44,255,122,0.12)', border: '1px solid rgba(44,255,122,0.35)', borderRadius: 9, padding: '6px 12px', textAlign: 'center' }}>
               <div style={{ color: GREEN, fontWeight: 800, fontSize: 16 }}>{result?.confidence ?? 0}%</div>
-              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9.5 }}>Confidence</div>
+              <div style={{ color: 'var(--c-text-2)', fontSize: 9.5 }}>Confidence</div>
             </div>
             <div style={{ background: 'color-mix(in srgb, var(--brand-primary) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--brand-primary) 28%, transparent)', borderRadius: 9, padding: '6px 12px', textAlign: 'center' }}>
               <div style={{ color: GOLD_HI, fontWeight: 800, fontSize: 16 }}>{result?.itemCount ?? 0}</div>
-              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9.5 }}>Line Items</div>
+              <div style={{ color: 'var(--c-text-2)', fontSize: 9.5 }}>Line Items</div>
             </div>
           </div>
         </div>
@@ -2153,7 +2153,7 @@ export default function TakeoffPage() {
             ].map((card, ci) => (
               <div key={card.label} className="tkHover" style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.014))', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '15px 16px', animation: `tkPop .45s ease ${(0.05 * ci).toFixed(2)}s both` }}>
                 <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${card.color}, transparent)` }} />
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'rgba(255,255,255,0.5)', fontSize: 10.5, marginBottom: 8 }}>{card.icon}{card.label}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--c-text-2)', fontSize: 10.5, marginBottom: 8 }}>{card.icon}{card.label}</div>
                 <div style={{ color: card.color, fontWeight: 800, fontSize: 22, letterSpacing: '-0.01em' }}>{fmt$(card.value)}</div>
               </div>
             ))}
@@ -2175,7 +2175,7 @@ export default function TakeoffPage() {
             ].map((ctrl) => (
               <div key={ctrl.label} style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.014))', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '14px 16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                  <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, fontWeight: 600 }}>{ctrl.label}</span>
+                  <span style={{ color: 'var(--c-text-2)', fontSize: 11, fontWeight: 600 }}>{ctrl.label}</span>
                   <span style={{ color: ctrl.color, fontWeight: 800, fontSize: 17 }}>{ctrl.pct}%</span>
                 </div>
                 <input
@@ -2193,7 +2193,7 @@ export default function TakeoffPage() {
           </div>
           {/* Cost per SF */}
           {computedCosts.costPerSF > 0 && (
-            <div style={{ marginTop: 8, textAlign: 'right', color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>
+            <div style={{ marginTop: 8, textAlign: 'right', color: 'var(--c-text-2)', fontSize: 12 }}>
               Bid Price/SF: <span style={{ color: GOLD, fontWeight: 600 }}>${computedCosts.costPerSF.toFixed(2)}</span> · {fmtN(result?.estimatedSF || 0)} SF
             </div>
           )}
@@ -2244,7 +2244,7 @@ export default function TakeoffPage() {
               background: 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))', border: `1px solid ${BORDER}`,
               borderRadius: 14, padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center',
             }}>
-              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, marginBottom: 8, fontWeight: 700 }}>
+              <div style={{ color: 'var(--c-text-2)', fontSize: 10, marginBottom: 8, fontWeight: 700 }}>
                 Building Profile
               </div>
               <svg width={bldgW + padX * 2} height={svgH} viewBox={`0 0 ${bldgW + padX * 2} ${svgH}`}>
@@ -2286,7 +2286,7 @@ export default function TakeoffPage() {
                   {realFloors > displayFloors ? ' (top 12 shown)' : ''}
                 </text>
               </svg>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textAlign: 'center', marginTop: 4 }}>
+              <div style={{ fontSize: 11, color: 'var(--c-text-2)', textAlign: 'center', marginTop: 4 }}>
                 {result.buildingType || 'Commercial'} · {result.confidence}% confidence
               </div>
             </div>
@@ -2296,7 +2296,7 @@ export default function TakeoffPage() {
               background: 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))', border: `1px solid ${BORDER}`,
               borderRadius: 14, padding: '16px 20px',
             }}>
-              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, marginBottom: 14, fontWeight: 700 }}>
+              <div style={{ color: 'var(--c-text-2)', fontSize: 10, marginBottom: 14, fontWeight: 700 }}>
                 Cost by CSI Division
               </div>
               {divTotals.map(({ div, name, total }, bi) => {
@@ -2309,7 +2309,7 @@ export default function TakeoffPage() {
                         <span style={{ color: GOLD_HI, fontFamily: 'monospace', marginRight: 6, fontWeight: 700 }}>{div}</span>
                         {name}
                       </span>
-                      <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>
+                      <span style={{ color: 'var(--c-text-2)', fontSize: 11 }}>
                         {fmt$(total)}
                         <span style={{ color: GREEN, marginLeft: 8, fontWeight: 600 }}>{fmt$(sellAmt)}</span>
                       </span>
@@ -2323,7 +2323,7 @@ export default function TakeoffPage() {
                 );
               })}
               <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
-                <span style={{ color: 'rgba(255,255,255,0.4)' }}>Cost → Sell breakdown across {Object.keys(groupedItems).length} divisions</span>
+                <span style={{ color: 'var(--c-text-2)' }}>Cost → Sell breakdown across {Object.keys(groupedItems).length} divisions</span>
                 <span style={{ color: 'var(--success)', fontWeight: 600 }}>Bid Price: {fmt$(totalSell)}</span>
               </div>
             </div>
@@ -2333,7 +2333,7 @@ export default function TakeoffPage() {
 
       {/* Editable-takeoff ribbon — live client preview, server-confirmed after save */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', margin: '0 0 10px', padding: '10px 14px', borderRadius: 12, border: `1px solid ${BORDER}`, background: 'linear-gradient(160deg, rgba(255,255,255,0.04), rgba(255,255,255,0.012))' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'rgba(255,255,255,0.6)', fontSize: 12.5 }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--c-text-2)', fontSize: 12.5 }}>
           <NotePencil size={15} weight="duotone" color={GOLD_HI} />
           Click any description, qty, unit or $/unit to edit. Every line takes a note; deletes hold 6s for undo.
         </div>
@@ -2468,15 +2468,15 @@ export default function TakeoffPage() {
                 zeroNote: 'Nothing needed filing.' },
             ].map((s) => (
               <div key={s.label} style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.014))', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '14px 16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'rgba(255,255,255,0.55)', fontSize: 10.5, marginBottom: 8, fontWeight: 700 }}>{s.icon}{s.label}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'var(--c-text-2)', fontSize: 10.5, marginBottom: 8, fontWeight: 700 }}>{s.icon}{s.label}</div>
                 <div style={{ color: s.big ? 'var(--text-primary)' : 'rgba(255,255,255,0.45)', fontWeight: 800, fontSize: 26, letterSpacing: '-0.02em' }}>{fmtN(s.big)}</div>
                 {!s.big && (
-                  <div style={{ color: 'rgba(255,255,255,0.42)', fontSize: 11, lineHeight: 1.35, marginTop: 4 }}>{s.zeroNote}</div>
+                  <div style={{ color: 'var(--c-text-2)', fontSize: 11, lineHeight: 1.35, marginTop: 4 }}>{s.zeroNote}</div>
                 )}
               </div>
             ))}
           </div>
-          <div style={{ position: 'relative', color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ position: 'relative', color: 'var(--c-text-2)', fontSize: 13, marginTop: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
             <CheckCircle size={15} weight="fill" color={GREEN} />
             {autoSummary.packages} bid package{autoSummary.packages !== 1 ? 's' : ''} written{autoSummary.sov ? ', Schedule of Values built' : autoSummary.sovDeferred ? ' (pay application waits until the job is won)' : ''} — everything filed to Documents / Compliance.
           </div>
@@ -2500,7 +2500,7 @@ export default function TakeoffPage() {
               style={{ display: 'none' }}
               onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) addSheets(f); }}
             />
-            <button onClick={async () => { if ((await confirmDialog({ title: 'Please confirm', message: 'Start a new takeoff? Previous results are saved.', danger: false }))) { setAutoSummary(null); setState('upload'); setSelectedFile(null); setResult(null); setTakeoffId(null); } }} style={{ padding: '11px 18px', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 13, cursor: 'pointer', marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <button onClick={async () => { if ((await confirmDialog({ title: 'Please confirm', message: 'Start a new takeoff? Previous results are saved.', danger: false }))) { setAutoSummary(null); setState('upload'); setSelectedFile(null); setResult(null); setTakeoffId(null); } }} style={{ padding: '11px 18px', background: 'transparent', border: 'none', color: 'var(--c-text-2)', fontWeight: 500, fontSize: 13, cursor: 'pointer', marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
               <Plus size={13} weight="bold" color="rgba(255,255,255,0.4)" /> New Analysis
             </button>
           </div>
@@ -2516,7 +2516,7 @@ export default function TakeoffPage() {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 17, letterSpacing: '-0.01em' }}>Sage is building your full package…</div>
-                <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13.5, marginTop: 3 }}>{progress.message || 'Working…'}</div>
+                <div style={{ color: 'var(--c-text-2)', fontSize: 13.5, marginTop: 3 }}>{progress.message || 'Working…'}</div>
               </div>
               <div style={{ color: GOLD_HI, fontWeight: 900, fontSize: 26, letterSpacing: '-0.02em' }}>{progress.pct}%</div>
             </div>
@@ -2599,7 +2599,7 @@ export default function TakeoffPage() {
                 setState('upload'); setSelectedFile(null); setResult(null); setTakeoffId(null);
               }
             }}
-            style={{ padding: '9px 18px', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 12, cursor: 'pointer', marginLeft: 'auto' }}>
+            style={{ padding: '9px 18px', background: 'transparent', border: 'none', color: 'var(--c-text-2)', fontWeight: 500, fontSize: 12, cursor: 'pointer', marginLeft: 'auto' }}>
             <Plus size={13} weight="bold" color="rgba(255,255,255,0.4)" style={{ marginRight: 4, verticalAlign: 'middle' }} /> New Analysis
           </button>
         </div>

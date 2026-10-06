@@ -340,7 +340,7 @@ export default function PurchaseOrdersPage() {
     border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, outline: 'none',
   };
   const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 6 };
-  const hint: React.CSSProperties = { fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 };
+  const hint: React.CSSProperties = { fontSize: 11, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 };
 
   // Toolbar-driven view of the PO log.
   const q = search.trim().toLowerCase();
@@ -581,7 +581,7 @@ export default function PurchaseOrdersPage() {
 
       <SectionCard title="All Purchase Orders" icon={<Package size={17} weight="duotone" color="var(--brand-primary)" />} flush>
         {loading ? (
-          <div style={{ padding: 48, textAlign: 'center', color: 'rgba(255,255,255,0.62)', fontSize: 13 }}>Loading purchase orders…</div>
+          <div style={{ padding: 48, textAlign: 'center', color: 'var(--c-text-2)', fontSize: 13 }}>Loading purchase orders…</div>
         ) : pos.length === 0 ? (
           <PremiumEmpty
             icon={<Package size={30} weight="duotone" color="var(--brand-primary)" />}

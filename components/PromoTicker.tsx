@@ -61,7 +61,7 @@ export default function PromoTicker() {
       <button
         onClick={() => setVisible(false)}
         aria-label="Dismiss"
-        style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(255,255,255,0.45)', cursor: 'pointer', fontSize: 17, lineHeight: 1, padding: 4 }}
+        style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--c-text-2)', cursor: 'pointer', fontSize: 17, lineHeight: 1, padding: 4 }}
       >
         &times;
       </button>

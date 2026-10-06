@@ -167,7 +167,7 @@ function Availability({ offer, compact = false, feedConnected = false }: { offer
     return (
       <span
         title={`${AVAILABILITY_UNTRACKED_LINE}. No inventory feed is connected for ${offer.vendor}.`}
-        style={{ display: 'inline-flex', alignItems: 'center', fontSize: compact ? 9.5 : 10, fontWeight: 600, color: 'rgba(255,255,255,0.42)', whiteSpace: 'nowrap' }}
+        style={{ display: 'inline-flex', alignItems: 'center', fontSize: compact ? 9.5 : 10, fontWeight: 600, color: 'var(--c-text-2)', whiteSpace: 'nowrap' }}
       >
         {compact ? AVAILABILITY_UNTRACKED_LABEL : AVAILABILITY_UNTRACKED_LINE}
       </span>
@@ -186,7 +186,7 @@ function Availability({ offer, compact = false, feedConnected = false }: { offer
         {qty}{label}
       </span>
       {/* A live number is only honest when it says whose feed and when. */}
-      <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.42)' }}>
+      <span style={{ fontSize: 9, color: 'var(--c-text-2)' }}>
         {offer.vendor} · {fmtDate(offer.asOf)}
       </span>
     </span>
@@ -235,7 +235,7 @@ function ProvPop({ offer, item }: { offer: Offer; item: CatalogItem }) {
           </a>
         )}
       </span>
-      <span style={{ display: 'block', fontSize: 9.5, color: 'rgba(255,255,255,0.4)', lineHeight: 1.45, marginTop: 7 }}>
+      <span style={{ display: 'block', fontSize: 9.5, color: 'var(--c-text-2)', lineHeight: 1.45, marginTop: 7 }}>
         {ORDER_PATH_SENTENCE}
       </span>
     </span>
@@ -776,7 +776,7 @@ export default function CatalogPage() {
                     <React.Fragment key={it.id}>
                       {showCat && it.category && (
                         <tr>
-                          <td colSpan={6} style={{ padding: '10px 12px 5px', fontSize: 10, fontWeight: 900, color: 'rgba(255,255,255,0.45)', borderBottom: `1px solid rgba(255,255,255,0.06)` }}>
+                          <td colSpan={6} style={{ padding: '10px 12px 5px', fontSize: 10, fontWeight: 900, color: 'var(--c-text-2)', borderBottom: `1px solid rgba(255,255,255,0.06)` }}>
                             {titleCase(it.category)}
                           </td>
                         </tr>
@@ -820,7 +820,7 @@ export default function CatalogPage() {
                             <div style={{ minWidth: 0, position: 'relative' }}>
                               <div style={{ fontWeight: 700, color: TEXT, fontSize: 12.5, lineHeight: 1.3 }}>{it.name}</div>
                               {(it.description || it.skuHint) && (
-                                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 2, lineHeight: 1.4 }}>
+                                <div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 2, lineHeight: 1.4 }}>
                                   {it.description}{it.description && it.skuHint ? ' · ' : ''}{it.skuHint ? `SKU ${it.skuHint}` : ''}
                                 </div>
                               )}
@@ -864,7 +864,7 @@ export default function CatalogPage() {
                                       <LinkSimple size={12} weight="bold" />
                                     </button>
                                   </div>
-                                  <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.4)', marginTop: 7, lineHeight: 1.45 }}>Images only, 5MB max. Paste a real vendor or manufacturer URL — never a guess.</div>
+                                  <div style={{ fontSize: 9.5, color: 'var(--c-text-2)', marginTop: 7, lineHeight: 1.45 }}>Images only, 5MB max. Paste a real vendor or manufacturer URL — never a guess.</div>
                                   {imgErr && <div style={{ fontSize: 10.5, color: RED, marginTop: 6 }}>{imgErr}</div>}
                                 </div>
                               )}
@@ -884,13 +884,13 @@ export default function CatalogPage() {
                               <Availability offer={best} compact feedConnected={!!data?.hasLiveStockFeed} />
                               {/* Lead time comes off the same seeded row as stock — only a real feed may show it. */}
                               {hasLiveStock(best) && best.leadTimeDays != null && best.leadTimeDays > 0 && (
-                                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', display: 'inline-flex', alignItems: 'center', gap: 3, marginTop: 1 }}>
+                                <div style={{ fontSize: 10, color: 'var(--c-text-2)', display: 'inline-flex', alignItems: 'center', gap: 3, marginTop: 1 }}>
                                   <Truck size={10} color="rgba(255,255,255,0.45)" />{best.leadTimeDays}d lead
                                 </div>
                               )}
                             </span>
                           ) : (
-                            <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11.5 }}>No quotes yet</span>
+                            <span style={{ color: 'var(--c-text-2)', fontSize: 11.5 }}>No quotes yet</span>
                           )}
                         </td>
 
@@ -916,7 +916,7 @@ export default function CatalogPage() {
                              column you had to scroll sideways to read. ── */}
                         <td style={{ padding: '9px 12px', verticalAlign: 'middle' }}>
                           {others.length === 0 ? (
-                            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
+                            <span style={{ fontSize: 11, color: 'var(--c-text-2)' }}>
                               {best ? 'Only quote on file' : '—'}
                             </span>
                           ) : (
@@ -942,7 +942,7 @@ export default function CatalogPage() {
                                   trying to be, but per row and actionable. */}
                               {best && overPct != null && (
                                 <span
-                                  style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap' as const, marginLeft: 2 }}
+                                  style={{ fontSize: 10, fontWeight: 800, color: 'var(--c-text-2)', whiteSpace: 'nowrap' as const, marginLeft: 2 }}
                                   title={`Highest quote on file is ${overPct}% above ${best.vendor}'s ${fmtMoney(best.price)}`}
                                 >
                                   +{overPct}% high

@@ -602,7 +602,7 @@ export default function WarrantyClaimsPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 320px', gap: 18, alignItems: 'start' }}>
         <SectionCard title="New Warranty Claim" subtitle={`${projects.find(p => p.id === selectedProject)?.name || 'This project'} — homeowner defect intake`} icon={<PlusCircle size={17} weight="duotone" color={GOLD} />}>
           <div style={css.row}>
-            <div style={css.field}><label style={css.label}>Claim #<AutoChip /></label><div style={{ ...css.input, display: 'flex', alignItems: 'center', color: GOLD, fontFamily: 'monospace', fontWeight: 700 }}>{`WC-${String(claims.length + 1).padStart(4, '0')}`}</div><div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>Numbered automatically — {claims.length} claim{claims.length === 1 ? '' : 's'} on this project so far.</div></div>
+            <div style={css.field}><label style={css.label}>Claim #<AutoChip /></label><div style={{ ...css.input, display: 'flex', alignItems: 'center', color: GOLD, fontFamily: 'monospace', fontWeight: 700 }}>{`WC-${String(claims.length + 1).padStart(4, '0')}`}</div><div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 4 }}>Numbered automatically — {claims.length} claim{claims.length === 1 ? '' : 's'} on this project so far.</div></div>
             <div style={css.field}><label style={css.label}>Title *</label><input style={css.input} value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="e.g. Master bath shower pan leak" /></div>
             <div style={css.field}><label style={css.label}>Category</label>
               <select style={css.select} value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
@@ -623,7 +623,7 @@ export default function WarrantyClaimsPage() {
           <div style={css.row}>
             <div style={css.field}><label style={css.label}>Location</label><input style={css.input} value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} /></div>
             <div style={css.field}><label style={css.label}>Reported By</label><input style={css.input} value={form.reported_by} onChange={e => setForm({ ...form, reported_by: e.target.value })} /></div>
-            <div style={css.field}><label style={css.label}>Reported Date{form.reported_date === today && <AutoChip />}</label><SaguaroDatePicker style={css.input} value={form.reported_date} onChange={v => setForm({ ...form, reported_date: v })} /><div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>Defaults to today — resolution time is measured from this date.</div></div>
+            <div style={css.field}><label style={css.label}>Reported Date{form.reported_date === today && <AutoChip />}</label><SaguaroDatePicker style={css.input} value={form.reported_date} onChange={v => setForm({ ...form, reported_date: v })} /><div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 4 }}>Defaults to today — resolution time is measured from this date.</div></div>
           </div>
 
           <div style={css.row}>
@@ -632,7 +632,7 @@ export default function WarrantyClaimsPage() {
                 <option value="">Not assigned yet</option>
                 {SUB_TRADES.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>Canonical trade list — drives the claims-by-trade cost rollup.</div>
+              <div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 4 }}>Canonical trade list — drives the claims-by-trade cost rollup.</div>
             </div>
             <div style={css.field}><label style={css.label}>Assigned Contractor</label><input style={css.input} value={form.assigned_contractor} onChange={e => setForm({ ...form, assigned_contractor: e.target.value })} /></div>
             <div style={css.field}><label style={css.label}>Scheduled Date</label><SaguaroDatePicker style={css.input} value={form.scheduled_date} onChange={v => setForm({ ...form, scheduled_date: v })} /></div>

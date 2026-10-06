@@ -496,7 +496,7 @@ export default function CloseoutPage() {
         style={{ marginBottom: 24 }}
       >
         <ProgressBar pct={pct} color={pct === 100 ? T.green : T.gold} height={10} />
-        <div style={{ marginTop: 10, fontSize: 12, color: 'rgba(255,255,255,0.62)' }}>
+        <div style={{ marginTop: 10, fontSize: 12, color: 'var(--c-text-2)' }}>
           {pct === 100 ? 'Ready to export the closeout package.' : `${total - completed} items remaining`}
         </div>
       </SectionCard>
@@ -523,7 +523,7 @@ export default function CloseoutPage() {
         flush
       >
         {visibleItems.length === 0 ? (
-          <div style={{ padding: '18px 20px', fontSize: 13, color: 'rgba(255,255,255,0.62)' }}>No checklist items match.</div>
+          <div style={{ padding: '18px 20px', fontSize: 13, color: 'var(--c-text-2)' }}>No checklist items match.</div>
         ) : visibleItems.map((item, idx) => { const sig = ITEM_SIGNALS[item.id]; return (
           <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderBottom: idx === visibleItems.length - 1 ? 'none' : `1px solid rgba(255,255,255,0.06)` }}>
             <button

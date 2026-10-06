@@ -14,7 +14,7 @@ const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDig
 
 const INP:React.CSSProperties = {padding:'8px 12px',background:'var(--bg-surface-2)',border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none',width:'100%',boxSizing:'border-box'};
 const LBL:React.CSSProperties = {display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:6};
-const HINT:React.CSSProperties = {fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:5,lineHeight:1.45};
+const HINT:React.CSSProperties = {fontSize:11,color:'var(--c-text-2)',marginTop:5,lineHeight:1.45};
 
 const POLICY_TYPES = ['GL','WC','Auto','Umbrella','E&O','Professional Liability','Other'];
 
@@ -377,7 +377,7 @@ export default function InsurancePage() {
               />
               {ctx && subs.length>0 && (
                 <div style={{borderLeft:'1px solid rgba(255,255,255,0.08)',padding:'22px 24px'}}>
-                  <div style={{fontSize:10.5,fontWeight:900,color:'rgba(255,255,255,0.45)',marginBottom:10}}>Roster Awaiting COIs</div>
+                  <div style={{fontSize:10.5,fontWeight:900,color:'var(--c-text-2)',marginBottom:10}}>Roster Awaiting COIs</div>
                   {subs.slice(0,7).map((s:any)=>(
                     <div key={s.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:10,padding:'5px 0'}}>
                       <span style={{fontSize:12.5,color:TEXT,fontWeight:600,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{s.companyName}</span>

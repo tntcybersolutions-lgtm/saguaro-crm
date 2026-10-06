@@ -33,7 +33,7 @@ const typeLabel = (t:string)=>WAIVER_TYPES.find(x=>x.key===normalizeType(t))?.la
 
 const INP:React.CSSProperties = {padding:'8px 12px',background:'var(--bg-surface-2)',border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none',width:'100%',boxSizing:'border-box'};
 const LBL:React.CSSProperties = {display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:6};
-const HINT:React.CSSProperties = {fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:5,lineHeight:1.45};
+const HINT:React.CSSProperties = {fontSize:11,color:'var(--c-text-2)',marginTop:5,lineHeight:1.45};
 const fmtDate = (d?:string|null) => d ? new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
 
 type WaiverStatus = 'signed'|'pending'|null;
@@ -94,7 +94,7 @@ function CellIcon({status,pdfUrl,onGenerate}:{status:string|undefined|null,pdfUr
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           minWidth: 34, minHeight: 26, padding: '0 8px', borderRadius: 6,
           background: 'transparent', border: '1px dashed rgba(255,255,255,0.18)',
-          color: 'rgba(255,255,255,0.42)', fontSize: 13, cursor: 'pointer',
+          color: 'var(--c-text-2)', fontSize: 13, cursor: 'pointer',
           transition: 'border-color .12s ease, color .12s ease, background .12s ease',
         }}
         onMouseEnter={(e) => {
@@ -449,7 +449,7 @@ export default function LienWaiversPage() {
                 <span><span style={{display:'inline-flex',verticalAlign:'middle',color:'var(--success)'}}><CheckCircle size={14} weight="fill" color="var(--success)" /></span> Signed</span>
                 <span><span style={{display:'inline-flex',verticalAlign:'middle',color:'var(--warning)'}}><Hourglass size={14} weight="fill" color="var(--warning)" /></span> Pending</span>
                 <span><span style={{color:BORDER}}>—</span> Not generated</span>
-                <span style={{marginLeft:'auto',fontSize:11.5,color:'rgba(255,255,255,0.45)'}}>Conditional waivers auto-generate on pay-app approval and gate mark-paid until signed</span>
+                <span style={{marginLeft:'auto',fontSize:11.5,color:'var(--c-text-2)'}}>Conditional waivers auto-generate on pay-app approval and gate mark-paid until signed</span>
               </div>
               <div style={{overflowX:'auto'}}>
                 <table className="k-table" style={{ width:'100%',borderCollapse:'collapse' as const }}>

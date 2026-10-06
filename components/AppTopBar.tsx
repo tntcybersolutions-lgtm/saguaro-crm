@@ -257,8 +257,8 @@ export default function AppTopBar({
           e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
         }}
       >
-        <MagnifyingGlass size={15} style={{ color: 'var(--text-tertiary)' }} />
-        <span>Search</span>
+        <MagnifyingGlass size={15} style={{ color: 'var(--c-orange)' }} />
+        <span className="sg-nav-label">Search</span>
         <kbd
           style={{
             marginLeft: 'auto',

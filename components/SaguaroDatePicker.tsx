@@ -53,7 +53,7 @@ const NAV_BTN: React.CSSProperties = {
   background: 'transparent',
   border: '1px solid transparent',
   borderRadius: 7,
-  color: 'rgba(255,255,255,0.65)',
+  color: 'var(--c-text-2)',
   fontSize: 14,
   lineHeight: 1,
   cursor: 'pointer',

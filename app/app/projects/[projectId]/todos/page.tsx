@@ -45,7 +45,7 @@ const RED = 'var(--danger)';
 
 const inp: React.CSSProperties = { width: '100%', padding: '8px 12px', background: T.surface2, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, outline: 'none' };
 const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 6 };
-const hint: React.CSSProperties = { fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 };
+const hint: React.CSSProperties = { fontSize: 11, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 };
 
 const localIso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
@@ -294,7 +294,7 @@ export default function TodosPage() {
       {/* Todo List */}
       <SectionCard title="Task List" icon={<Clipboard size={16} weight="duotone" style={{ color: GOLD }} />} flush>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.62)' }}>Loading…</div>
+          <div style={{ textAlign: 'center', padding: 40, color: 'var(--c-text-2)' }}>Loading…</div>
         ) : filtered.length === 0 ? (
           <PremiumEmpty
             icon={<Clipboard size={30} weight="duotone" style={{ color: GOLD }} />}

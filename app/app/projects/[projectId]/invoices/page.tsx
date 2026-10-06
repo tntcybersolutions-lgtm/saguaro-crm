@@ -317,7 +317,7 @@ export default function InvoicesPage() {
 
   const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: 'var(--bg-surface-2)', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
   const label: React.CSSProperties = { fontSize: 12, color: DIM, marginBottom: 4, display: 'block' };
-  const hint: React.CSSProperties = { fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 };
+  const hint: React.CSSProperties = { fontSize: 11, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 };
 
   return (
     <PremiumSurface maxWidth={2200}>
@@ -514,7 +514,7 @@ export default function InvoicesPage() {
             />
             {ctx && (
               <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', padding: '22px 24px' }}>
-                <div style={{ fontSize: 10.5, fontWeight: 900, color: 'rgba(255,255,255,0.45)', marginBottom: 10 }}>What Saguaro Already Knows</div>
+                <div style={{ fontSize: 10.5, fontWeight: 900, color: 'var(--c-text-2)', marginBottom: 10 }}>What Saguaro Already Knows</div>
                 <InsightRow label="Original Contract" value={fmt(original)} />
                 <InsightRow label="Approved COs" value={`${(coTotal > 0 ? '+' : '') + fmt(coTotal)} (${Number(money?.approvedCoCount) || 0})`} accent={coTotal > 0 ? GREEN : undefined} />
                 <InsightRow label="Revised Contract" value={fmt(revised)} strong />

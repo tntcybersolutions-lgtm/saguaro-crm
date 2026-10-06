@@ -100,8 +100,8 @@ function TickerItem({ a, ghost = false }: { a: ActivityRow; ghost?: boolean }) {
         {st.label}
       </span>
       <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--c-text-2)' }}>{label}</span>
-      {a.project_name && <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.5)' }}>· {a.project_name}</span>}
-      <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.4)', flexShrink: 0 }}>· {timeAgo(a.created_at)}</span>
+      {a.project_name && <span style={{ fontSize: 11.5, color: 'var(--c-text-2)' }}>· {a.project_name}</span>}
+      <span style={{ fontSize: 10.5, color: 'var(--c-text-2)', flexShrink: 0 }}>· {timeAgo(a.created_at)}</span>
     </Link>
   );
 }

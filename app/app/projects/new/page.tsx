@@ -18,7 +18,7 @@ import Suggest from '@/components/ui/Suggest';
 const GOLD='var(--brand-primary)',DARK='var(--bg-surface-2)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)';
 const INPUT_STYLE = {width:'100%',padding:'10px 12px',background:DARK,border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:13,outline:'none'};
 const SELECT_STYLE = {...INPUT_STYLE,cursor:'pointer'};
-const HINT:React.CSSProperties = {fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:6,lineHeight:1.45};
+const HINT:React.CSSProperties = {fontSize:11,color:'var(--c-text-2)',marginTop:6,lineHeight:1.45};
 const fmt = (n:number) => '$'+(Number(n)||0).toLocaleString('en-US',{maximumFractionDigits:0});
 const fmtDate = (d?:string|null) => d ? new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
 const todayIso = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
@@ -445,8 +445,8 @@ export default function NewProjectPage() {
                   }} />
                   <span style={{ fontSize: 14, fontWeight: 800, color: on ? 'var(--brand-primary)' : 'var(--text-primary)' }}>{t.name}</span>
                 </div>
-                <div style={{ fontSize: 12, lineHeight: 1.5, color: 'rgba(255,255,255,0.62)', marginBottom: 8 }}>{t.blurb}</div>
-                <div style={{ fontSize: 11.5, lineHeight: 1.45, color: 'rgba(255,255,255,0.38)', fontStyle: 'italic' }}>{t.example}</div>
+                <div style={{ fontSize: 12, lineHeight: 1.5, color: 'var(--c-text-2)', marginBottom: 8 }}>{t.blurb}</div>
+                <div style={{ fontSize: 11.5, lineHeight: 1.45, color: 'var(--c-text-2)', fontStyle: 'italic' }}>{t.example}</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
                   {[
                     `${t.retainagePct}% Retainage`,
@@ -456,7 +456,7 @@ export default function NewProjectPage() {
                   ].map((chip) => (
                     <span key={chip} style={{
                       fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 6,
-                      background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.55)',
+                      background: 'rgba(255,255,255,0.06)', color: 'var(--c-text-2)',
                     }}>{chip}</span>
                   ))}
                 </div>
@@ -465,7 +465,7 @@ export default function NewProjectPage() {
           })}
         </div>
         {tpl && (
-          <div style={{ marginTop: 10, fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>
+          <div style={{ marginTop: 10, fontSize: 12, color: 'var(--c-text-2)' }}>
             Creates {tpl.folders.length} document folders — {tpl.folders.slice(0, 5).join(', ')}
             {tpl.folders.length > 5 ? ` and ${tpl.folders.length - 5} more` : ''}. All of it editable afterwards.
           </div>
@@ -627,7 +627,7 @@ export default function NewProjectPage() {
               <div style={{fontSize:11,fontWeight:800, color:GOLD,marginBottom:6}}>
                 Step 3 · Add Your Drawings
               </div>
-              <div style={{fontSize:12.5,color:'rgba(255,255,255,0.5)',lineHeight:1.5,maxWidth:560}}>
+              <div style={{fontSize:12.5,color:'var(--c-text-2)',lineHeight:1.5,maxWidth:560}}>
                 Drop the plan set on the next screen and Saguaro measures every trade, prices it, and writes
                 your budget and bid packages from it. You can skip it and add plans later.
               </div>
@@ -658,7 +658,7 @@ export default function NewProjectPage() {
                 Cancel
               </button>
               {submitDisabled && !saving && (
-                <span style={{fontSize:12,color:'rgba(255,255,255,0.45)'}}>Name and address are required — everything else is pre-seeded or optional.</span>
+                <span style={{fontSize:12,color:'var(--c-text-2)'}}>Name and address are required — everything else is pre-seeded or optional.</span>
               )}
             </div>
           </div>
@@ -691,7 +691,7 @@ export default function NewProjectPage() {
               <InsightRow label="Retainage" value={`${Number(retainage)||10}%`}/>
               <InsightRow label="Start Date" value={fmtDate(startDate)}/>
               <InsightRow label="Jurisdiction" value={stateJurisdiction||'—'}/>
-              <div style={{fontSize:11.5,color:'rgba(255,255,255,0.45)',lineHeight:1.5,marginTop:10,paddingTop:10,borderTop:'1px solid rgba(255,255,255,0.08)'}}>
+              <div style={{fontSize:11.5,color:'var(--c-text-2)',lineHeight:1.5,marginTop:10,paddingTop:10,borderTop:'1px solid rgba(255,255,255,0.08)'}}>
                 Auto chips mark what Saguaro pre-filled. Every value stays editable — nothing locks until you create the project.
               </div>
             </SectionCard>

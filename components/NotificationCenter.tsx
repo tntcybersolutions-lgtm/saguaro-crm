@@ -285,7 +285,7 @@ export default function NotificationCenter() {
             right: 0,
             width: 400,
             maxHeight: 500,
-            backgroundColor: DARK,
+            backgroundColor: 'var(--bg-solid-2)', /* solid — it floats over page content */
             border: `1px solid ${BORDER}`,
             borderRadius: 10,
             boxShadow: '0 12px 40px rgba(0,0,0,0.5)',

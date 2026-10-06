@@ -282,7 +282,7 @@ export default function ProposalPage() {
               <div>
                 <label style={label}>Amount ($) *{auto.amt && <AutoChip />}</label>
                 <input type="number" value={form.amount} onChange={e => { setForm(p => ({ ...p, amount: Number(e.target.value) })); setAuto({}); }} style={inp} />
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 }}>
+                <div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 }}>
                   {seed
                     ? <>Seeded from {seed.source} ({fmt(seed.amount)}).{seedOptions.filter(o => o.amount > 0 && o.amount !== seed.amount && o.amount !== Number(form.amount)).slice(0, 2).map(o => (
                         <span key={o.source}> Use {o.source}: <span onClick={() => { setForm(p => ({ ...p, amount: o.amount })); setAuto({ amt: true }); }} style={{ color: 'var(--brand-primary-strong)', fontWeight: 700, cursor: 'pointer' }}>{fmt(o.amount)}</span>.</span>
@@ -293,7 +293,7 @@ export default function ProposalPage() {
               <div>
                 <label style={label}>Notes</label>
                 <input type="text" value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="e.g. Revised after value engineering" style={inp} />
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 }}>What changed in this version — shows in the history table.</div>
+                <div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 }}>What changed in this version — shows in the history table.</div>
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
