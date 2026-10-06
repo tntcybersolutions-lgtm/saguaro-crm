@@ -90,6 +90,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add tools/proof
           git commit -m "Design proof captured by run ${{ github.run_id }}" || exit 0
+          # A re-run checks out its original commit; earlier proof commits may
+          # have moved the branch on since, so land on top of them.
+          git pull --rebase -X theirs origin ${{ github.ref_name }}
           git push origin HEAD:${{ github.ref_name }}
       - name: Upload screenshots to App Store Connect
         if: env.MODE == 'screens-upload'
