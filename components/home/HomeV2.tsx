@@ -12,16 +12,14 @@ import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import useSWR from 'swr';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, ArrowRight, ArrowClockwise, CaretDown, CalendarBlank, WarningCircle } from '@phosphor-icons/react';
+import { Plus, ArrowRight, ArrowClockwise, CaretDown, CalendarBlank, WarningCircle, Check } from '@phosphor-icons/react';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { useProjectColors } from '@/lib/hooks/useProjectColor';
-import { jobStripeStyle, jobOptionStyle } from '@/lib/project-colors';
+import { jobStripeStyle, jobOptionStyle, jobDotStyle } from '@/lib/project-colors';
 import ActivityFeed from '@/components/ActivityFeed';
 import SalesOverview from '@/components/SalesOverview';
 import type { Metric, QueueItem, ScheduleEntry, HomeView, DataState } from '@/lib/home/rank';
 import { TIER_LABEL } from '@/lib/home/rank';
-import { neonText } from '@/lib/neon';
-import { accentForProject } from '@/lib/project-identity';
 
 interface HomePayload {
   context: {
@@ -85,6 +83,28 @@ function fmtTime(hhmm: string | null): string | null {
   return `${((h + 11) % 12) + 1}:${String(m || 0).padStart(2, '0')} ${ampm}`;
 }
 
+/** "Good morning" in the company's time zone, not the browser's. */
+function greeting(timeZone: string): string {
+  let h = 12;
+  try {
+    h = Number(new Intl.DateTimeFormat('en-US', { hour: 'numeric', hourCycle: 'h23', timeZone }).format(new Date()));
+  } catch (e) {
+    console.error('[home] unknown time zone for greeting', timeZone, e);
+  }
+  return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+}
+
+/** TUESDAY · OCT 6 */
+function eyebrowDate(ymd: string): string {
+  const d = new Date(ymd + 'T12:00:00Z');
+  const wd = d.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+  const md = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  return `${wd} · ${md}`;
+}
+
+/** Server words for "nothing recorded" — shown calm, never as a value. */
+const isNil = (v: unknown) => v == null || v === '—' || v === 'Not set' || v === 'None recorded' || String(v).startsWith('Unknown');
+
 /* ── Small pieces ─────────────────────────────────────────────────────── */
 
 /** A failing secondary section must not take the whole home down (spec §14:
@@ -112,23 +132,46 @@ function Segmented<T extends string>({ value, options, onChange, label }: { valu
   );
 }
 
-function MetricCard({ m }: { m: Metric }) {
-  // Same compact kit tile as the job overview (components/project): small label,
-  // prominent tabular value, one supporting line. A missing number is said in
-  // words and stays muted — never a bright zero.
+/** One cell of the hero strip. The lead cell (a money total with a share
+ *  billed) gets the big figure and a bar; the rest say what the number means
+ *  in a few words. A missing number is said in words and stays muted. */
+function HeroCell({ m, lead }: { m: Metric; lead: boolean }) {
   const shown = m.state === 'ok' || m.state === 'empty';
   const text = shown ? m.value : m.state === 'restricted' ? 'No access' : m.state === 'failed' ? 'Couldn\u2019t load' : 'Not available';
+  const first = (m.basis || '').split(' · ')[0];
+  let foot: React.ReactNode;
+  if (!shown) foot = <span className="hv2-hsub">{m.note || m.basis}</span>;
+  else if (m.key === 'risk') foot = m.state === 'empty'
+    ? <span className="hv2-chip hv2-chip-good"><Check size={12} weight="bold" /> All clear</span>
+    : <span className="hv2-chip hv2-chip-warn">of {first}</span>;
+  else if (m.key === 'billed') foot = <span className="hv2-hsub">{m.state === 'empty' ? 'No open receivables' : first}</span>;
+  else if (m.key === 'decisions' || m.key === 'approvals') foot = m.state === 'empty'
+    ? <span className="hv2-hsub">Nothing waiting on you</span>
+    : <span className="hv2-chip hv2-chip-warn">{first}</span>;
+  else foot = <span className="hv2-hsub">{m.basis}</span>;
+  const pct = m.progress != null ? Math.round(m.progress * 100) : null;
   const body = (
     <>
-      <span className="k-stat-top"><span className="k-stat-label">{m.label}</span></span>
-      <span className="k-stat-value" data-muted={shown ? undefined : 'true'}>{text}</span>
-      <span className="k-stat-sub">{shown ? m.basis : m.note || m.basis}</span>
+      <span className="hv2-hlabel">{m.label}</span>
+      <span className="hv2-hvalue" data-muted={shown ? undefined : 'true'}>{text}</span>
+      {shown && pct != null && (
+        <span className="hv2-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label={`${pct}% billed`}><i style={{ width: `${pct}%` }} /></span>
+      )}
+      {foot}
     </>
   );
-  return m.href && shown ? (
-    <Link href={m.href} className="k-stat" aria-label={`${m.label}: ${m.value}`}>{body}</Link>
-  ) : (
-    <div className="k-stat">{body}</div>
+  const cls = `hv2-hcell${lead ? ' hv2-hlead' : ''}`;
+  return m.href && shown
+    ? <Link href={m.href} className={`${cls} hv2-link`} title={m.basis} aria-label={`${m.label}: ${m.value}`}>{body}</Link>
+    : <div className={cls} title={m.basis || m.note}>{body}</div>;
+}
+
+function Hero({ metrics }: { metrics: Metric[] }) {
+  const lead = metrics[0]?.progress != null;
+  return (
+    <section className="hv2-hero" data-lead={lead ? 'true' : undefined} aria-label="Key numbers">
+      {metrics.map((m, i) => <HeroCell key={m.key} m={m} lead={lead && i === 0} />)}
+    </section>
   );
 }
 
@@ -175,7 +218,7 @@ function QueueRow({ it, today, canEdit, onChanged, colorFor }: { it: QueueItem; 
       <div className="hv2-qmain">
         <div className="hv2-qtitle">{it.title}{it.count ? <span className="hv2-count">{it.count}</span> : null}</div>
         <div className="hv2-qmeta">
-          {it.projectName ? <span className="hv2-proj" style={neonText(accentForProject(it.projectId).hex)}>{it.projectName}</span> : null}
+          {it.projectName ? <span className="hv2-proj"><span style={jobDotStyle(colorFor(it.projectId))} />{it.projectName}</span> : null}
           {ownerCell}
           <span>{it.reason}</span>
           {it.dueAt ? <span>Due {fmtDay(it.dueAt, today)}</span> : null}
@@ -190,7 +233,7 @@ function QueueRow({ it, today, canEdit, onChanged, colorFor }: { it: QueueItem; 
           </button>
         )}
         {it.href ? (
-          <Link href={it.href} className="hv2-btn hv2-btn-ghost">{it.actionLabel} <ArrowRight size={14} weight="bold" /></Link>
+          <Link href={it.href} className="hv2-btn hv2-btn-outline">{it.actionLabel} <ArrowRight size={14} weight="bold" /></Link>
         ) : (
           <span className="hv2-btn hv2-btn-disabled" title="This record type has no screen yet">{it.actionLabel}</span>
         )}
@@ -226,7 +269,7 @@ function NeedsAttention({ data, onChanged }: { data: HomePayload; onChanged: () 
   return (
     <section className="hv2-card hv2-pad" aria-labelledby="hv2-needs">
       <div className="hv2-sechead">
-        <h2 id="hv2-needs">Needs Attention</h2>
+        <h2 id="hv2-needs">Needs Attention{data.queue.total ? <span className="hv2-cnt">{data.queue.total}</span> : null}</h2>
         <Segmented label="Filter the queue" value={filter} options={opts} onChange={v => { setFilter(v); setExpanded(false); }} />
       </div>
       {data.queue.state === 'restricted' ? (
@@ -242,6 +285,17 @@ function NeedsAttention({ data, onChanged }: { data: HomePayload; onChanged: () 
         </button>
       )}
     </section>
+  );
+}
+
+/** A calendar tile: TODAY / WED over the day number. */
+function DateTile({ ymd, today }: { ymd: string; today: string }) {
+  const d = new Date(ymd + 'T12:00:00Z');
+  const top = ymd === today ? 'Today' : d.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
+  return (
+    <div className="hv2-dt" data-today={ymd === today ? 'true' : undefined} aria-hidden="true">
+      <span>{top}</span><b>{d.getUTCDate()}</b>
+    </div>
   );
 }
 
@@ -261,27 +315,38 @@ function Schedule({ data }: { data: HomePayload }) {
       {data.schedule.state === 'failed' ? (
         <p className="hv2-empty">Couldn&apos;t load the schedule.</p>
       ) : groups.length === 0 ? (
-        <p className="hv2-empty">Nothing scheduled in this view. {data.context.window === 'today' ? 'Try Next 7 Days.' : ''}</p>
+        <div className="hv2-day">
+          <DateTile ymd={today} today={today} />
+          <div className="hv2-dbody">
+            <p className="hv2-nothing">Nothing scheduled</p>
+            <p className="hv2-empty">{data.context.window === 'today' ? 'Try Next 7 Days, or add' : 'Add'} milestones, inspections or meetings to a job and they land here.</p>
+          </div>
+        </div>
       ) : (
         <div className="hv2-sched">
           {groups.slice(0, 7).map(([date, list]) => (
-            <div key={date}>
-              <div className="hv2-sday">{fmtDay(date, today)}</div>
-              <ul className="hv2-slist">
-                {list.slice(0, 8).map(e => {
-                  const inner = (
-                    <>
-                      <span className="hv2-skind">{fmtTime(e.time) || e.kind}</span>
-                      <span className="hv2-stext">
+            <div key={date} className="hv2-day">
+              <DateTile ymd={date} today={today} />
+              <div className="hv2-dbody">
+                <span className="sr-only">{fmtDay(date, today)}</span>
+                <ul className="hv2-slist">
+                  {list.slice(0, 8).map(e => {
+                    const inner = (
+                      <>
                         <span className="hv2-stitle">{e.title}</span>
-                        <span className="hv2-smeta">{fmtTime(e.time) ? e.kind + ' · ' : ''}{e.projectName ? <span className="hv2-proj" style={neonText(accentForProject(e.projectId).hex)}>{e.projectName}</span> : null}{e.who ? ' · ' + e.who : ''}</span>
-                      </span>
-                    </>
-                  );
-                  const stripe = e.projectId ? { ...jobStripeStyle(colorFor(e.projectId)), paddingLeft: 10 } : undefined;
-                  return <li key={e.id}>{e.href ? <Link href={e.href} className="hv2-srow hv2-link" style={stripe}>{inner}</Link> : <div className="hv2-srow" style={stripe}>{inner}</div>}</li>;
-                })}
-              </ul>
+                        <span className="hv2-smeta">
+                          {fmtTime(e.time) ? <b>{fmtTime(e.time)}</b> : null}
+                          <span>{e.kind}</span>
+                          {e.projectName ? <span className="hv2-proj"><span style={jobDotStyle(colorFor(e.projectId))} />{e.projectName}</span> : null}
+                          {e.who ? <span>{e.who}</span> : null}
+                        </span>
+                      </>
+                    );
+                    const stripe = e.projectId ? { ...jobStripeStyle(colorFor(e.projectId)), paddingLeft: 10 } : undefined;
+                    return <li key={e.id}>{e.href ? <Link href={e.href} className="hv2-srow hv2-link" style={stripe}>{inner}</Link> : <div className="hv2-srow" style={stripe}>{inner}</div>}</li>;
+                  })}
+                </ul>
+              </div>
             </div>
           ))}
         </div>
@@ -290,37 +355,91 @@ function Schedule({ data }: { data: HomePayload }) {
   );
 }
 
+/** Progress as a slim bar plus the number; '—' when the job has none. */
+function ProgressCell({ v }: { v: unknown }) {
+  const n = typeof v === 'string' && /^\d+%$/.test(v) ? parseInt(v, 10) : null;
+  if (n == null) return <span className="hv2-nil">—</span>;
+  return (
+    <span className="hv2-pcell">
+      <span className="hv2-bar hv2-bar-sm" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={n} aria-label={`${n}% complete`}><i style={{ width: `${n}%` }} /></span>
+      <span className="hv2-pnum">{n}%</span>
+    </span>
+  );
+}
+
 function WorkTable({ data }: { data: HomePayload }) {
   const colorFor = useProjectColors();
   const t = data.workTable;
   const today = data.context.today;
+  const isJobs = t.kind === 'jobs' || t.kind === 'my-jobs';
   const isDateCol = (k: string) => k === 'due' || k === 'nextDate' || k === 'when';
+  const rows = t.rows.slice(0, 25);
+  const cell = (key: string, raw: unknown) => {
+    if (key === 'progress') return <ProgressCell v={raw} />;
+    if (key === 'phase' && !isNil(raw)) return <span className="hv2-pill">{String(raw)}</span>;
+    const val = isDateCol(key) ? (raw ? fmtDay(String(raw), today) : '—') : raw ?? '—';
+    return isNil(val) ? <span className="hv2-nil">{String(val)}</span> : String(val);
+  };
+  const extra = t.columns.filter(c => !['job', 'phase', 'progress', 'contract'].includes(c.key) && c.key !== t.columns[0]?.key);
   return (
     <section className="hv2-card hv2-pad" aria-labelledby="hv2-table">
-      <div className="hv2-sechead"><h2 id="hv2-table">{t.title}</h2>{t.rows.length ? <span className="hv2-dim">{t.rows.length}</span> : null}</div>
+      <div className="hv2-sechead">
+        <h2 id="hv2-table">{t.title}{t.rows.length ? <span className="hv2-cnt">{t.rows.length}</span> : null}</h2>
+        {isJobs && t.rows.length > 0 && <Link href="/app/projects" className="hv2-linkbtn">View all jobs</Link>}
+      </div>
       {t.rows.length === 0 ? (
         <p className="hv2-empty">{t.state === 'failed' ? 'Couldn\'t load this table.' : t.note || 'Nothing here yet.'}</p>
       ) : (
-        <div className="hv2-tablewrap" role="region" aria-label={`${t.title} (scrolls sideways on small screens)`} tabIndex={0}>
-          <table className="hv2-table">
-            <thead><tr>{t.columns.map(c => <th key={c.key} style={{ textAlign: c.align || 'left' }}>{c.label}</th>)}</tr></thead>
-            <tbody>
-              {t.rows.slice(0, 25).map(r => (
-                <tr key={r.id} style={t.kind === 'jobs' || t.kind === 'my-jobs' ? jobStripeStyle(colorFor(String(r.id))) : undefined}>
-                  {t.columns.map((c, i) => {
-                    const raw = r[c.key];
-                    const val = isDateCol(c.key) ? (raw ? fmtDay(String(raw), today) : '—') : raw ?? '—';
-                    return (
-                      <td key={c.key} style={{ textAlign: c.align || 'left' }}>
-                        {i === 0 && r.href ? <Link href={r.href} className="hv2-tlink" style={t.kind === 'jobs' || t.kind === 'my-jobs' ? neonText(accentForProject(r.id).hex) : undefined}>{String(val)}</Link> : String(val)}
+        <>
+          <div className={`hv2-tablewrap${isJobs ? ' hv2-hide-sm' : ''}`} role="region" aria-label={`${t.title} (scrolls sideways on small screens)`} tabIndex={0}>
+            <table className="hv2-table">
+              <thead><tr>{t.columns.map(c => <th key={c.key} style={{ textAlign: c.align || 'left' }}>{c.label}</th>)}</tr></thead>
+              <tbody>
+                {rows.map(r => (
+                  <tr key={r.id}>
+                    {t.columns.map((c, i) => (
+                      <td key={c.key} style={{ textAlign: c.align || 'left' }} className={i === 0 ? 'hv2-tfirst' : undefined}>
+                        {i === 0 && r.href ? (
+                          <Link href={r.href} className="hv2-tlink">
+                            {isJobs && <span style={jobDotStyle(colorFor(String(r.id)))} />}
+                            {String(r[c.key] ?? '—')}
+                          </Link>
+                        ) : cell(c.key, r[c.key])}
                       </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {isJobs && (
+            <ul className="hv2-jobcards">
+              {rows.map(r => {
+                const first = t.columns[0]?.key || 'job';
+                const contract = t.columns.some(c => c.key === 'contract') && !isNil(r.contract) ? String(r.contract) : null;
+                const hasProgress = t.columns.some(c => c.key === 'progress');
+                return (
+                  <li key={r.id}>
+                    <Link href={r.href} className="hv2-jobcard hv2-link">
+                      <span className="hv2-jc-top">
+                        <span style={jobDotStyle(colorFor(String(r.id)))} />
+                        <span className="hv2-jc-name">{String(r[first] ?? '—')}</span>
+                        {contract && <span className="hv2-jc-money">{contract}</span>}
+                      </span>
+                      <span className="hv2-jc-meta">
+                        {!isNil(r.phase) && <span className="hv2-pill">{String(r.phase)}</span>}
+                        {extra.filter(c => !isNil(isDateCol(c.key) ? (r[c.key] ? fmtDay(String(r[c.key]), today) : null) : r[c.key])).map(c => (
+                          <span key={c.key}><em>{c.label}</em> {isDateCol(c.key) ? fmtDay(String(r[c.key]), today) : String(r[c.key])}</span>
+                        ))}
+                      </span>
+                      {hasProgress && !isNil(r.progress) && <ProgressCell v={r.progress} />}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </>
       )}
     </section>
   );
@@ -406,18 +525,13 @@ function HomeInner() {
     <div className="hv2">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
 
-      {/* Header */}
+      {/* Header: date, greeting, every control on one row, one primary action. */}
       <header className="hv2-header">
         <div className="hv2-titlewrap">
-          <h1>{ctx ? `${ctx.viewLabel} Home` : 'Home'}</h1>
-          {ctx?.firstName && <span className="hv2-greet">Hi {ctx.firstName}</span>}
+          {ctx && <div className="hv2-eyebrow">{eyebrowDate(ctx.today)} · {ctx.viewLabel} view</div>}
+          <h1>{ctx?.firstName ? `${greeting(ctx.timeZone)}, ${ctx.firstName}` : ctx ? `${ctx.viewLabel} Home` : 'Home'}</h1>
         </div>
-        <div className="hv2-actions">
-          {/* Search lives in the app top bar (⌘K) — one search box, not two. */}
-          <QuickCreate view={(ctx?.view || 'operations') as HomeView} projectId={sp.get('project')} />
-        </div>
-      </header>
-      <div className="hv2-controls">
+        <div className="hv2-controls">
           {ctx && ctx.views.length > 1 && (
             <Segmented label="Dashboard view" value={ctx.view} options={ctx.views} onChange={v => setParam('view', v)} />
           )}
@@ -434,10 +548,14 @@ function HomeInner() {
           {ctx && (
             <Segmented label="Date window" value={ctx.window} options={[{ key: 'today', label: 'Today' }, { key: '7d', label: 'Next 7 Days' }]} onChange={v => setParam('window', v)} />
           )}
-      </div>
-      {ctx && ctx.savedView !== ctx.view && (
+          {/* Search lives in the app top bar (⌘K) — one search box, not two. */}
+          <QuickCreate view={(ctx?.view || 'operations') as HomeView} projectId={sp.get('project')} />
+        </div>
+      </header>
+      {/* Offer to keep a view only when it differs from where they'd land. */}
+      {ctx && (ctx.savedView ? ctx.savedView !== ctx.view : ctx.view !== ctx.defaultView) && (
         <div className="hv2-hint">
-          {ctx.savedView ? `Your default is ${ctx.views.find(v => v.key === ctx.savedView)?.label || ctx.savedView}.` : `Showing ${ctx.viewLabel} because of your role.`}{' '}
+          {ctx.savedView ? `Your default is ${ctx.views.find(v => v.key === ctx.savedView)?.label || ctx.savedView}.` : null}{' '}
           <button type="button" className="hv2-linkbtn" onClick={saveDefault} disabled={saving}>{saving ? 'Saving…' : `Always start on ${ctx.viewLabel}`}</button>
         </div>
       )}
@@ -449,7 +567,7 @@ function HomeInner() {
         </div>
       ) : isLoading && !data ? (
         <div className="hv2-stack" aria-busy="true" aria-label="Loading your home dashboard">
-          <div className="pj-metrics">{[0, 1, 2, 3].map(i => <div key={i} className="k-stat hv2-skel" style={{ height: 96 }} />)}</div>
+          <div className="hv2-hero hv2-skel" style={{ height: 132 }} />
           <div className="hv2-primary"><div className="hv2-card hv2-skel" style={{ height: 380 }} /><div className="hv2-card hv2-skel" style={{ height: 380 }} /></div>
         </div>
       ) : data ? (
@@ -460,7 +578,7 @@ function HomeInner() {
               <button type="button" className="hv2-linkbtn" onClick={() => mutate()}>Retry</button>
             </div>
           )}
-          <div className="pj-metrics hv2-order-3">{data.metrics.map((m) => <MetricCard key={m.key} m={m} />)}</div>
+          <div className={data.context.view === 'owner' ? 'hv2-order-0' : 'hv2-order-3'}><Hero metrics={data.metrics} /></div>
           <div className="hv2-primary hv2-order-1">
             <NeedsAttention data={data} onChanged={() => mutate()} />
             <Schedule data={data} />
@@ -496,96 +614,168 @@ export default function HomeV2() {
 }
 
 const CSS = `
-.hv2 { padding: 24px clamp(16px, 1.67vw, 32px) 64px; max-width: 1600px; margin: 0 auto; color: var(--text-primary); font-size: 15px; }
-.sag-app .hv2 h1, .hv2 h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.015em; line-height: 1.15; margin: 0; }
-.sag-app .hv2 h2, .hv2 h2 { color: var(--brand-primary); font-size: 18px; font-weight: 800; letter-spacing: -0.01em; margin: 0; }
-.hv2 h1 { color: var(--text-primary); }
-.hv2-proj { font-weight: 700; }
-.hv2 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-.hv2-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; margin-bottom: 8px; }
-.hv2-titlewrap { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
-.hv2-greet { color: var(--text-tertiary); font-size: 14px; }
-.hv2-actions { display: flex; align-items: center; gap: 8px; }
-.hv2-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 4px 0 8px; }
-.hv2-seg { display: inline-flex; flex-wrap: wrap; background: var(--surface-card); border: 1px solid var(--border-default); border-radius: 999px; padding: 3px; gap: 2px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05); }
-.hv2-seg button { min-height: 34px; padding: 0 14px; border: 0; border-radius: 999px; background: transparent; color: var(--text-secondary); font-size: 13px; font-weight: 650; cursor: pointer; }
-.hv2-seg button.on { background: var(--brand-primary); color: var(--on-brand); font-weight: 800; box-shadow: inset 0 1px 0 rgba(255,255,255,0.5); }
-.hv2-seg button:focus-visible, .hv2-btn:focus-visible, .hv2-select select:focus-visible, .hv2-link:focus-visible, .hv2-tlink:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
-.hv2-select select { min-height: 40px; max-width: 240px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--border-default); background: var(--surface-raised); color: var(--text-primary); font-size: 14px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.06); }
+.hv2 { padding: 24px clamp(16px, 1.67vw, 32px) 64px; max-width: 1600px; margin: 0 auto; color: var(--c-text); font-size: 15px; }
+.sag-app .hv2 h1, .hv2 h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.025em; line-height: 1.1; margin: 0; }
+.sag-app .hv2 h2, .hv2 h2 { display: inline-flex; align-items: center; gap: 8px; color: var(--c-text); font-size: 17px; font-weight: 800; letter-spacing: -0.01em; margin: 0; }
+.hv2-eyebrow { color: var(--c-orange); font-size: 11.5px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px; }
+.hv2-cnt { font-size: 12px; font-weight: 800; letter-spacing: 0; padding: 2px 8px; border-radius: 999px; background: rgba(255,230,0,0.12); color: var(--c-yellow); }
+.hv2-proj { display: inline-flex; align-items: center; gap: 6px; color: var(--c-text); font-weight: 700; }
+.hv2 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.hv2-header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px 20px; margin-bottom: 18px; }
+.hv2-titlewrap { min-width: 0; }
+.hv2-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
+.hv2-seg { display: inline-flex; flex-wrap: wrap; gap: 2px; }
+.hv2-seg button { min-height: 34px; padding: 0 13px; border: 0; background: transparent; font-size: 13px; cursor: pointer; }
+.hv2-seg button:focus-visible, .hv2-btn:focus-visible, .hv2-select select:focus-visible, .hv2-link:focus-visible, .hv2-tlink:focus-visible { outline: 2px solid var(--c-yellow); outline-offset: 2px; }
+.hv2-select select { min-height: 42px; max-width: 240px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--border-subtle); background: rgba(255,255,255,0.04); color: var(--c-text); font-size: 16px; font-weight: 600; }
 .hv2-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: 10px; font-size: 14px; font-weight: 700; text-decoration: none; cursor: pointer; white-space: nowrap; border: 1px solid transparent; }
-.hv2-btn-primary { background: var(--grad-primary); color: var(--on-brand); border-color: rgba(0,0,0,0.25); box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.18), 0 8px 22px -10px rgba(255,200,0,0.8); }
-.hv2-btn-primary:hover { background: var(--grad-primary-hover); }
-.hv2-btn-ghost { background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)), var(--surface-raised); border-color: var(--border-default); color: var(--text-primary); box-shadow: inset 0 1px 0 rgba(255,255,255,0.08); }
-.hv2-btn-ghost:hover { border-color: var(--border-strong); }
-.hv2-btn-disabled { background: transparent; border-color: var(--glass-border); color: var(--text-tertiary); cursor: not-allowed; }
-.hv2-hint { color: var(--text-tertiary); font-size: 13px; margin: 0 0 16px; }
-.hv2-linkbtn { background: none; border: 0; padding: 0; color: var(--brand-primary); font-weight: 700; font-size: 13px; cursor: pointer; text-decoration: none; }
-.hv2-stack { display: flex; flex-direction: column; gap: 20px; margin-top: 12px; }
-/* Same layered card as .k-card: solid dark surface, a sharp upper-edge
-   highlight and a yellow-to-orange top edge; no broad glow. */
-.hv2-card { position: relative; background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.025) 48px, rgba(255,255,255,0) 160px), var(--surface-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); }
-.hv2-card::before { content: ''; position: absolute; left: 14px; right: 14px; top: -1px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, transparent, var(--brand-primary) 30%, #FF8A00 70%, transparent); opacity: .9; pointer-events: none; }
+.hv2-btn-primary { min-height: 42px; background: linear-gradient(180deg, var(--c-yellow-hi), var(--c-yellow) 55%, var(--c-yellow-hover)); color: var(--on-brand); border-color: rgba(0,0,0,0.25); box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 8px 22px -10px rgba(255,200,0,0.75); }
+.hv2-btn-primary:hover { filter: brightness(1.04); }
+.hv2-btn-ghost { background: rgba(255,255,255,0.04); border-color: var(--border-default); color: var(--c-text); }
+.hv2-btn-ghost:hover { background: rgba(255,255,255,0.07); }
+.hv2-btn-outline { background: rgba(255,230,0,0.05); border-color: rgba(255,230,0,0.38); color: var(--c-yellow); }
+.hv2-btn-outline:hover { background: rgba(255,230,0,0.11); border-color: rgba(255,230,0,0.6); }
+.hv2-btn-disabled { background: transparent; border-color: var(--border-subtle); color: var(--c-text-3); cursor: not-allowed; }
+.hv2-hint { color: var(--c-text-3); font-size: 13px; margin: -6px 0 16px; text-align: right; }
+.hv2-linkbtn { background: none; border: 0; padding: 0; color: var(--c-yellow); font-weight: 700; font-size: 13px; cursor: pointer; text-decoration: none; }
+.hv2-linkbtn:hover { text-decoration: underline; text-underline-offset: 3px; }
+.hv2-stack { display: flex; flex-direction: column; gap: 20px; }
+.hv2-card, .hv2-hero { position: relative; background: linear-gradient(180deg, var(--c-raised), var(--c-card)); border: 1px solid var(--border-subtle); border-radius: 18px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 18px 40px -24px rgba(0,0,0,0.9); }
 .hv2-pad { padding: 20px 22px; }
 .hv2-link { text-decoration: none; color: inherit; }
+/* Hero strip: one card, four figures. */
+.hv2-hero { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow: hidden; }
+.hv2-hero[data-lead] { grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(0, 1fr)); }
+.hv2-hcell { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 20px 22px; min-width: 0; }
+.hv2-hcell + .hv2-hcell { border-left: 1px solid var(--border-subtle); }
+a.hv2-hcell:hover { background: rgba(255,255,255,0.025); }
+.hv2-hlabel { color: var(--c-text-3); font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+.hv2-hvalue { color: var(--c-yellow); font-size: 28px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.hv2-hlead .hv2-hvalue { font-size: 38px; }
+.hv2-hvalue[data-muted] { color: var(--c-text-3); font-size: 18px; font-weight: 700; }
+.hv2-hsub { color: var(--c-text-2); font-size: 12.5px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.hv2-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 750; padding: 3px 9px; border-radius: 999px; }
+.hv2-chip-good { color: var(--c-green); background: rgba(44,255,122,0.10); }
+.hv2-chip-warn { color: var(--c-orange); background: rgba(255,138,0,0.12); }
+.hv2-chip-warn::before { content: ''; width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+.hv2-bar { display: block; position: relative; width: 100%; height: 6px; border-radius: 999px; background: rgba(255,255,255,0.07); overflow: hidden; margin: 4px 0 2px; }
+.hv2-bar > i { display: block; height: 100%; min-width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--c-yellow), var(--c-orange)); }
+.hv2-bar-sm { width: 96px; height: 5px; margin: 0; }
+.hv2-pcell { display: inline-flex; align-items: center; gap: 10px; }
+.hv2-pnum { color: var(--c-text-2); font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 34px; }
 .hv2-primary { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 20px; align-items: start; }
 .hv2-sechead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
-.hv2-dim { color: var(--text-tertiary); font-size: 13px; }
-.hv2-empty { color: var(--text-secondary); font-size: 14px; margin: 8px 0; }
+.hv2-dim { color: var(--c-text-3); font-size: 13px; }
+.hv2-empty { color: var(--c-text-2); font-size: 14px; margin: 4px 0; line-height: 1.45; }
+.hv2-nothing { color: var(--c-text); font-size: 15px; font-weight: 700; margin: 2px 0; }
+.hv2-nil { color: var(--c-text-4); }
 .hv2-qlist, .hv2-slist { list-style: none; margin: 0; padding: 0; }
 .hv2-qrow { display: grid; grid-template-columns: 112px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 12px 0; border-top: 1px solid var(--border-subtle); }
 .hv2-qrow:first-child { border-top: 0; }
-.hv2-tier { justify-self: start; font-size: 12px; font-weight: 750; padding: 4px 9px; border-radius: 999px; white-space: nowrap; }
-.hv2-qtitle { color: var(--title-color, #FFE600); font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
-.hv2-count { margin-left: 8px; font-size: 12px; font-weight: 750; padding: 1px 7px; border-radius: 999px; background: var(--bg-surface-2); color: var(--text-secondary); }
-.hv2-qmeta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 3px; font-size: 13px; color: var(--text-tertiary); }
-.hv2-unassigned { color: #FFE600; font-style: normal; font-weight: 700; }
+.hv2-tier { justify-self: start; font-size: 11.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; padding: 4px 9px; border-radius: 999px; white-space: nowrap; }
+.hv2-qtitle { color: var(--c-text); font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
+.hv2-count { margin-left: 8px; font-size: 12px; font-weight: 750; padding: 1px 7px; border-radius: 999px; background: rgba(255,255,255,0.06); color: var(--c-text-2); }
+.hv2-qmeta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 3px; font-size: 13px; color: var(--c-text-2); }
+.hv2-unassigned { color: var(--c-orange); font-style: normal; font-weight: 700; }
 .hv2-qactions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
-.hv2-qerr { margin-top: 6px; font-size: 13px; color: #FF3B30; }
-.hv2-qok { margin-top: 6px; font-size: 13px; color: #2CFF7A; }
-.hv2-more { margin-top: 10px; background: none; border: 0; color: var(--brand-primary); font-weight: 700; font-size: 14px; cursor: pointer; min-height: 36px; }
+.hv2-qerr { margin-top: 6px; font-size: 13px; color: var(--c-red); }
+.hv2-qok { margin-top: 6px; font-size: 13px; color: var(--c-green); }
+.hv2-more { margin-top: 10px; background: none; border: 0; color: var(--c-yellow); font-weight: 700; font-size: 14px; cursor: pointer; min-height: 36px; }
+/* Schedule: a date tile beside each day's entries. */
 .hv2-sched { display: flex; flex-direction: column; gap: 14px; }
-.hv2-sday { font-size: 12.5px; font-weight: 750; color: var(--text-secondary); margin-bottom: 6px; }
-.hv2-srow { display: flex; gap: 10px; padding: 8px 0; border-top: 1px solid var(--border-subtle); text-decoration: none; color: inherit; }
-.hv2-skind { flex: 0 0 74px; font-size: 12.5px; font-weight: 700; color: var(--text-secondary); }
-.hv2-stext { display: flex; flex-direction: column; min-width: 0; }
-.hv2-stitle { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
-.hv2-smeta { font-size: 12.5px; color: var(--text-tertiary); }
+.hv2-day { display: flex; gap: 14px; align-items: flex-start; }
+.hv2-dt { flex: 0 0 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 56px; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); }
+.hv2-dt span { color: var(--c-orange); font-size: 10.5px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+.hv2-dt b { color: var(--c-text); font-size: 20px; font-weight: 900; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.hv2-dt[data-today] { border-color: rgba(255,230,0,0.4); background: rgba(255,230,0,0.06); }
+.hv2-dt[data-today] span { color: var(--c-yellow); }
+.hv2-dbody { flex: 1; min-width: 0; }
+.hv2-srow { display: flex; flex-direction: column; gap: 2px; padding: 8px 0; border-top: 1px solid var(--border-subtle); text-decoration: none; color: inherit; }
+.hv2-slist li:first-child .hv2-srow { border-top: 0; padding-top: 2px; }
+.hv2-stitle { color: var(--c-text); font-size: 14px; font-weight: 650; overflow-wrap: anywhere; }
+.hv2-smeta { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 12.5px; color: var(--c-text-2); }
+.hv2-smeta b { color: var(--c-text); font-weight: 750; }
+/* Work table */
 .hv2-tablewrap { overflow-x: auto; }
 .hv2-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-.hv2-table th { font-size: 12.5px; font-weight: 700; color: var(--text-secondary); padding: 8px 10px; border-bottom: 1px solid var(--glass-border); white-space: nowrap; }
-.hv2-table td { padding: 11px 10px; border-bottom: 1px solid var(--border-subtle); color: var(--text-primary); font-variant-numeric: tabular-nums; }
-.hv2-table tr:hover td { background: rgba(255,255,255,0.025); }
-.hv2-tlink { color: var(--title-color, #FFE600); font-weight: 700; text-decoration: none; }
-.hv2-tlink:hover { color: var(--brand-primary); }
+.hv2-table th { font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--c-text-3); padding: 8px 12px; border-bottom: 1px solid var(--border-subtle); white-space: nowrap; }
+.hv2-table td { padding: 13px 12px; border-bottom: 1px solid var(--border-subtle); color: var(--c-text-2); font-variant-numeric: tabular-nums; vertical-align: middle; }
+.hv2-table tr:last-child td { border-bottom: 0; }
+.hv2-table tbody tr:hover td { background: rgba(255,230,0,0.025); }
+.hv2-tlink { display: inline-flex; align-items: center; gap: 10px; color: var(--c-text); font-weight: 750; text-decoration: none; }
+.hv2-tlink:hover { color: var(--c-yellow); }
+.hv2-pill { display: inline-flex; align-items: center; font-size: 12px; font-weight: 750; padding: 3px 10px; border-radius: 999px; color: var(--c-text); background: rgba(255,255,255,0.06); border: 1px solid var(--border-subtle); white-space: nowrap; }
+.hv2-jobcards { display: none; list-style: none; margin: 0; padding: 0; }
+.hv2-jobcard { display: flex; flex-direction: column; gap: 10px; padding: 14px 2px; border-top: 1px solid var(--border-subtle); min-height: 44px; }
+.hv2-jobcards li:first-child .hv2-jobcard { border-top: 0; padding-top: 4px; }
+.hv2-jc-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.hv2-jc-name { flex: 1; min-width: 0; color: var(--c-text); font-size: 15px; font-weight: 750; overflow-wrap: anywhere; }
+.hv2-jc-money { color: var(--c-text); font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.hv2-jc-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; font-size: 13px; color: var(--c-text-2); }
+.hv2-jc-meta em { font-style: normal; color: var(--c-text-3); font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; margin-right: 2px; }
+.hv2-jobcard .hv2-pcell { width: 100%; }
+.hv2-jobcard .hv2-bar-sm { flex: 1; width: auto; }
+/* Create menu */
 .hv2-create { position: relative; }
-.hv2-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; min-width: 220px; padding: 6px; border-radius: 12px; background: var(--c-raised); border: 1px solid var(--border-default); box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 16px 40px -12px rgba(0,0,0,.85); }
-.hv2-menu-hint { font-size: 12.5px; color: var(--text-tertiary); padding: 6px 10px 8px; }
-.hv2-menu-item { display: block; padding: 10px 12px; border-radius: 8px; font-size: 14px; font-weight: 600; color: var(--text-primary); text-decoration: none; }
-.hv2-menu-item:hover { background: var(--bg-surface-2); }
-.hv2-menu-item.off { color: var(--text-disabled); cursor: not-allowed; }
-.hv2-warn { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13.5px; color: #FFE600; background: rgba(255,230,0,.08); border: 1px solid rgba(255,230,0,.3); border-radius: 10px; padding: 10px 14px; }
-.hv2-error { display: flex; align-items: center; gap: 10px; color: #FF3B30; }
-.hv2-skel { background: linear-gradient(90deg, var(--bg-surface), var(--bg-surface-2), var(--bg-surface)); background-size: 200% 100%; animation: hv2sk 1.4s ease infinite; }
+.hv2-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; min-width: 220px; padding: 6px; border-radius: 14px; background: var(--c-raised); border: 1px solid var(--border-default); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 18px 44px -12px rgba(0,0,0,.9); }
+.hv2-menu-hint { font-size: 12.5px; color: var(--c-text-3); padding: 6px 10px 8px; }
+.hv2-menu-item { display: block; padding: 10px 12px; border-radius: 9px; font-size: 14px; font-weight: 600; color: var(--c-text-2); text-decoration: none; }
+.hv2-menu-item:hover { background: rgba(255,230,0,0.08); color: var(--c-text); }
+.hv2-menu-item.off { color: var(--c-text-4); cursor: not-allowed; }
+.hv2-menu-item.off:hover { background: transparent; color: var(--c-text-4); }
+.hv2-warn { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13.5px; color: var(--c-orange); background: rgba(255,138,0,.08); border: 1px solid rgba(255,138,0,.3); border-radius: 12px; padding: 10px 14px; }
+.hv2-error { display: flex; align-items: center; gap: 10px; color: var(--c-red); }
+.hv2-skel { background: linear-gradient(90deg, var(--c-card), var(--c-raised), var(--c-card)); background-size: 200% 100%; animation: hv2sk 1.4s ease infinite; }
 @keyframes hv2sk { to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .hv2-skel { animation: none; } }
 .hv2-lower-h { margin: 4px 0 12px !important; }
-.hv2-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; font-size: 13px; color: var(--text-tertiary); padding-bottom: 8px; }
+.hv2-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; font-size: 13px; color: var(--c-text-3); padding-bottom: 8px; }
 .hv2-foot span { display: inline-flex; align-items: center; gap: 6px; }
 @media (max-width: 1100px) {
   .hv2-primary { grid-template-columns: minmax(0, 1fr); }
+  .hv2-header { align-items: flex-start; flex-direction: column; }
+  .hv2-controls { justify-content: flex-start; }
+  .hv2-hint { text-align: left; }
+}
+@media (max-width: 900px) {
+  .hv2-hero, .hv2-hero[data-lead] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hv2-hero[data-lead] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .hv2-hero[data-lead] .hv2-hlead { grid-column: 1 / -1; border-bottom: 1px solid var(--border-subtle); }
+  .hv2-hero[data-lead] .hv2-hcell:nth-child(2) { border-left: 0; }
+  .hv2-hero:not([data-lead]) .hv2-hcell:nth-child(odd) { border-left: 0; }
+  .hv2-hero:not([data-lead]) .hv2-hcell:nth-child(n+3) { border-top: 1px solid var(--border-subtle); }
 }
 @media (max-width: 640px) {
   .hv2 { padding: 16px; }
-  .sag-app .hv2 h1, .hv2 h1 { font-size: 24px; }
+  .sag-app .hv2 h1, .hv2 h1 { font-size: 26px; }
+  .hv2-header { margin-bottom: 14px; }
+  .hv2-pad { padding: 16px; }
+  .hv2-hcell { padding: 14px 12px; }
+  .hv2-hlead { padding: 16px; }
+  .hv2-hvalue { font-size: 22px; }
+  .hv2-hlead .hv2-hvalue { font-size: 32px; }
+  .hv2-hlabel { font-size: 10px; letter-spacing: 0.1em; }
+  .hv2-chip { font-size: 11px; padding: 2px 7px; }
   .hv2-qrow { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .hv2-qrow .hv2-btn { min-height: 44px; }
   .hv2-qactions { justify-content: flex-start; }
-  .hv2-seg button { min-height: 44px; }
+  .hv2-seg { display: flex; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+  .hv2-seg { contain: inline-size; }
+  .hv2-seg::-webkit-scrollbar { display: none; }
+  .hv2-seg button { min-height: 44px; flex: 1 0 auto; padding: 0 8px; font-size: 12.5px; }
+  .hv2-sechead .hv2-seg { display: grid; grid-template-columns: 1fr 1fr; width: 100%; overflow: visible; contain: none; }
+  .hv2-chip { background: none; padding: 0; border-radius: 0; line-height: 1.35; }
+  .hv2-chip-warn::before { display: none; }
   .hv2-linkbtn, .hv2-more { min-height: 44px; display: inline-flex; align-items: center; }
   .hv2-hide-sm { display: none; }
+  .hv2-jobcards { display: block; }
+  .hv2-controls { width: 100%; }
   .hv2-select { display: block; min-width: 0; max-width: 100%; flex: 1 1 100%; }
-  .hv2-select select { max-width: 100%; width: 100%; }
+  .hv2-select select { max-width: 100%; width: 100%; min-height: 44px; }
   .hv2-controls .hv2-seg, .hv2-controls .hv2-btn { min-width: 0; max-width: 100%; }
-  .hv2-order-1 { order: 1; } .hv2-order-3 { order: 3; } .hv2-order-4 { order: 4; } .hv2-order-5 { order: 5; } .hv2-order-6 { order: 6; } .hv2-order-7 { order: 7; }
+  .hv2-controls > .hv2-seg:first-child { flex: 1 1 100%; }
+  .hv2-controls > .hv2-seg:not(:first-child) { flex: 1 1 auto; }
+  .hv2-create .hv2-btn { min-height: 44px; }
+  .hv2-order-0 { order: 0; } .hv2-order-1 { order: 1; } .hv2-order-3 { order: 3; } .hv2-order-4 { order: 4; } .hv2-order-5 { order: 5; } .hv2-order-6 { order: 6; } .hv2-order-7 { order: 7; }
 }
 `;
