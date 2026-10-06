@@ -681,7 +681,8 @@ export default function HelpMode() {
           style={{
             position: 'absolute', left: cx, top: cy, width: CALLOUT_W,
             pointerEvents: 'auto',
-            background: `linear-gradient(165deg, #12263C, ${CARD} 60%, #0A1524)`,
+            /* Solid: the callout floats over the page, so a glass stop let page text show through. */
+            background: 'linear-gradient(165deg, var(--c-raised), var(--c-card) 60%, var(--c-bg))',
             border: `1px solid ${GOLD}`,
             borderRadius: 14,
             padding: '15px 17px 14px',
@@ -795,7 +796,7 @@ export default function HelpMode() {
             position: 'absolute', right: 16, bottom: 16, pointerEvents: 'auto',
             display: 'inline-flex', alignItems: 'center', gap: 8,
             minHeight: 36, padding: '0 14px', borderRadius: 999, cursor: 'pointer',
-            background: 'rgba(13,29,46,0.95)', border: `1px solid ${GOLD}`,
+            background: 'var(--c-raised)', border: `1px solid ${GOLD}`,
             color: GOLD_HI, fontSize: 12.5, fontWeight: 800,
             boxShadow: '0 10px 30px -12px rgba(0,0,0,0.9)',
           }}

@@ -121,7 +121,7 @@ export default function NudgeRing({
               position: 'absolute', top: -11, right: 16, zIndex: 3,
               display: 'inline-flex', alignItems: 'center', gap: 6,
               padding: '3px 11px', borderRadius: 999, pointerEvents: 'none',
-              background: 'var(--bg-surface)', border: `1px solid ${color}`,
+              background: 'var(--bg-solid-2)', border: `1px solid ${color}`,
               boxShadow: `0 0 14px -4px ${color}`,
               fontSize: 10, fontWeight: 900,
               color, whiteSpace: 'nowrap',

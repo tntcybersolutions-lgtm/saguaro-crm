@@ -149,7 +149,7 @@ export default function PresenceIndicator({ projectId }: { projectId?: string })
                   transform: 'translateX(-50%)',
                   marginBottom: 6,
                   padding: '4px 10px',
-                  backgroundColor: RAISED,
+                  backgroundColor: 'var(--bg-solid-2)',
                   border: `1px solid ${BORDER}`,
                   borderRadius: 6,
                   fontSize: 12,

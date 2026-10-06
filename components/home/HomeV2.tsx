@@ -558,11 +558,11 @@ const CSS = `
 .hv2-tlink { color: var(--title-color, #FFE600); font-weight: 700; text-decoration: none; }
 .hv2-tlink:hover { color: var(--brand-primary); }
 .hv2-create { position: relative; }
-.hv2-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; min-width: 220px; padding: 6px; border-radius: 12px; background: var(--surface-raised); border: 1px solid var(--border-default); box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 16px 40px -12px rgba(0,0,0,.85); }
+.hv2-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; min-width: 220px; padding: 6px; border-radius: 12px; background: var(--c-raised); border: 1px solid var(--border-default); box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 16px 40px -12px rgba(0,0,0,.85); }
 .hv2-menu-hint { font-size: 12.5px; color: var(--text-tertiary); padding: 6px 10px 8px; }
 .hv2-menu-item { display: block; padding: 10px 12px; border-radius: 8px; font-size: 14px; font-weight: 600; color: var(--text-primary); text-decoration: none; }
 .hv2-menu-item:hover { background: var(--bg-surface-2); }
-.hv2-menu-item.off { color: var(--text-disabled, #7A8597); cursor: not-allowed; }
+.hv2-menu-item.off { color: var(--text-disabled); cursor: not-allowed; }
 .hv2-warn { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13.5px; color: #FFE600; background: rgba(255,230,0,.08); border: 1px solid rgba(255,230,0,.3); border-radius: 10px; padding: 10px 14px; }
 .hv2-error { display: flex; align-items: center; gap: 10px; color: #FF3B30; }
 .hv2-skel { background: linear-gradient(90deg, var(--bg-surface), var(--bg-surface-2), var(--bg-surface)); background-size: 200% 100%; animation: hv2sk 1.4s ease infinite; }

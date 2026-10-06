@@ -1611,7 +1611,7 @@ export function AccessManager() {
       {toast && (
         <div style={{
           position: 'fixed', bottom: 24, right: 24, zIndex: 9500,
-          background: RAISED, border: `1px solid ${toast.kind === 'err' ? RED : GREEN}`,
+          background: 'var(--bg-solid-2)', border: `1px solid ${toast.kind === 'err' ? RED : GREEN}`,
           borderLeft: `4px solid ${toast.kind === 'err' ? RED : GREEN}`, borderRadius: 8,
           padding: '12px 18px', color: TEXT, fontSize: 13, fontWeight: 600,
           boxShadow: 'var(--shadow-lg, 0 8px 28px rgba(0,0,0,0.45))', maxWidth: 340,
