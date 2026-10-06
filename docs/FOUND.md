@@ -161,3 +161,7 @@ converge. One line each, newest at the bottom.
   a local `npm run build` fails on "HEATMAP ENGINE DRIFT" whenever the dead copy differs; Vercel passes
   because the folder does not exist there. The canonical source should be this repo now. Not fixed
   (off-path); local builds use `npx next build` after running the gates by hand.
+- (6 Oct, Path 1 walk) `app/app/daily-logs/page.tsx:318` throws a generic 'Failed to create daily log' on any non-OK, discarding the 409 body that names the existing log (`existingLogId`) — a double-tap save shows no useful message. Not fixed (off-path).
+- (6 Oct, Path 1 walk) `app/app/daily-logs/page.tsx:639` marks Work Performed `required` but nothing enforces it, and `app/api/daily-logs/create/route.ts:87` accepts an empty string — a log can be filed with no narrative. Not fixed (off-path).
+- (6 Oct, Path 1 walk) bare `catch {}` returning generic 500s instead of `apiError()`: `app/api/daily-logs/list/route.ts:20` (also returns `{ logs: [] }` on failure), `app/api/daily-logs/[id]/route.ts:19,54,74`. Not fixed (off-path).
+- (6 Oct, Path 1 walk) UTC fallback date when the caller sends none: `app/api/daily-logs/create/route.ts:47` and `app/api/projects/[projectId]/daily-logs/prefill/route.ts:30` use `toISOString()` — wrong day for evening users. The web page always sends a local date, so only other callers are hit. Not fixed (off-path).
