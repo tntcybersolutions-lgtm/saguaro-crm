@@ -94,7 +94,13 @@ export default function NudgeRing({
   }, [anchorId]);
 
   return (
-    <div id={anchorId} style={{ position: 'relative', scrollMarginTop: 96, ...style }}>
+    <div id={anchorId} style={{
+      position: 'relative', scrollMarginTop: 96,
+      /* Room above for the badge, so it never lands on the row above or on
+         the section's own first row (it touched the Daily Logs sort bar). */
+      ...(active ? { marginTop: 14 } : null),
+      ...style,
+    }}>
       {active && (
         <>
           <style>{NUDGE_FX}</style>
@@ -118,7 +124,7 @@ export default function NudgeRing({
             aria-hidden
             title={matched.map((s) => s.finding).join('\n')}
             style={{
-              position: 'absolute', top: -11, right: 16, zIndex: 3,
+              position: 'absolute', top: -17, right: 16, zIndex: 3, /* straddles the ring line, clear of the content */
               display: 'inline-flex', alignItems: 'center', gap: 6,
               padding: '3px 11px', borderRadius: 999, pointerEvents: 'none',
               background: 'var(--bg-solid-2)', border: `1px solid ${color}`,
