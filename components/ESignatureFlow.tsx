@@ -7,7 +7,7 @@ const DARK = 'var(--bg-surface-2)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#D4D4D8';
-const TEXT = '#FFFFFF';
+const TEXT = 'var(--c-text)';
 const GREEN = '#2CFF7A';
 const RED = '#FF3B30';
 

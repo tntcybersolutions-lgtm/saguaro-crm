@@ -144,7 +144,7 @@ export default function PayAppPage() {
     const g702 = [['1. Original Contract Sum', result.originalContractCents], ['2. Net Change by Change Orders', result.changeOrdersCents], ['3. Contract Sum to Date', result.contractSumToDateCents], ['4. Total Completed & Stored to Date', result.totalCompletedStoredCents], ['5. Retainage', result.retainageCents], ['6. Total Earned Less Retainage', result.totalEarnedLessRetainageCents], ['7. Less Previous Certificates', result.previousCertificatesCents], ['8. CURRENT PAYMENT DUE', result.currentPaymentDueCents], ['9. Balance to Finish, Incl. Retainage', result.balanceToFinishCents]];
     w.document.write(`<!doctype html><html><head><title>Application ${appNo} — ${proj}</title><style>
       body{font-family:-apple-system,system-ui,sans-serif;color:#111;margin:0;padding:24px}
-      .band{background:linear-gradient(100deg,#0a0a0a,#161b22);color:#fff;padding:16px 22px;border-radius:4px;display:flex;justify-content:space-between;align-items:center}
+      .band{background:linear-gradient(100deg,#0a0a0a,#161b22);color:var(--c-text);padding:16px 22px;border-radius:4px;display:flex;justify-content:space-between;align-items:center}
       .tag{color:#FF8A00;font-size:10px;letter-spacing:1.4px;font-weight:700;text-transform:uppercase}
       h1{font-size:17px;margin:2px 0 0} h2{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#333;border-bottom:2px solid #FF8A00;padding-bottom:4px;display:inline-block;margin:20px 0 8px}
       table{width:100%;border-collapse:collapse;font-size:11px} td,th{border:1px solid #ccc;padding:5px 6px}.r{text-align:right}
@@ -210,7 +210,7 @@ export default function PayAppPage() {
           ))}
         </div>
         <div style={{ marginTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '16px 20px', borderRadius: 14, background: 'var(--brand-primary-08)', border: '1px solid var(--brand-primary-35)' }}>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.72)', fontWeight: 800 }}>Current Payment Due This Period</div>
+          <div style={{ fontSize: 12, color: 'var(--c-text-2)', fontWeight: 800 }}>Current Payment Due This Period</div>
           <div style={{ fontSize: 32, fontWeight: 900, color: GOLD, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>{usd(result.currentPaymentDueCents)}</div>
         </div>
       </SectionCard>

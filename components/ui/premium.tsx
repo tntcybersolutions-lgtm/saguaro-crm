@@ -67,7 +67,7 @@ export const PREMIUM_FX = `
 .pmGold{background:linear-gradient(180deg,var(--brand-primary-strong),var(--brand-primary) 60%,var(--brand-primary-hover));color:var(--on-brand);border:none;box-shadow:0 4px 14px var(--brand-primary-25),inset 0 1px 0 rgba(255,255,255,0.35);transition:transform .16s ease,box-shadow .16s ease,filter .16s ease,background .16s ease}
 .pmGold:hover{transform:translateY(-1px);filter:brightness(1.05);box-shadow:0 8px 22px var(--brand-primary-35),inset 0 1px 0 rgba(255,255,255,0.35)}
 .pmGold:active{transform:translateY(0.5px) scale(.985);filter:none;background:linear-gradient(180deg,var(--brand-primary) 0%,var(--brand-primary-hover) 55%,#CCB800 100%);box-shadow:0 2px 8px var(--brand-primary-25),inset 0 1px 3px rgba(0,0,0,0.2)}
-.pmGhost{background:linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.04));backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);color:#FFFFFF;border:1px solid ${BORDER};box-shadow:0 2px 10px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.07);transition:transform .16s ease,box-shadow .16s ease,background .16s ease,border-color .16s ease}
+.pmGhost{background:linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.04));backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);color:var(--c-text);border:1px solid ${BORDER};box-shadow:0 2px 10px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.07);transition:transform .16s ease,box-shadow .16s ease,background .16s ease,border-color .16s ease}
 .pmGhost:hover{transform:translateY(-1px);border-color:rgba(255,255,255,0.16)}
 .pmGhost:active{transform:translateY(0.5px) scale(.985);background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));box-shadow:inset 0 1px 3px rgba(0,0,0,0.25)}
 .pmDanger{background:linear-gradient(180deg,rgba(255,59,48,0.20),rgba(255,59,48,0.09));color:#FF3B30;border:1px solid rgba(255,59,48,0.50);box-shadow:0 2px 10px rgba(255,59,48,0.18),inset 0 1px 0 rgba(255,255,255,0.10);transition:transform .16s ease,box-shadow .16s ease,background .16s ease}
@@ -84,7 +84,7 @@ export const PREMIUM_FX = `
 /* Machined sortable table headers (premium DataTable). Color states live here so
    hover/active read as one material: dim chrome -> white on hover -> brand on sort. */
 .pmSortTh{cursor:pointer;transition:color .15s ease}
-.pmSortTh:hover{color:rgba(255,255,255,0.92)}
+.pmSortTh:hover{color:var(--c-text-2)}
 .pmSortTh .pmSortGlyph{font-size:10px;line-height:1;opacity:.35;transition:opacity .15s ease}
 .pmSortTh:hover .pmSortGlyph{opacity:.8}
 .pmSortTh[aria-sort="ascending"],.pmSortTh[aria-sort="descending"]{color:var(--brand-primary-strong)}

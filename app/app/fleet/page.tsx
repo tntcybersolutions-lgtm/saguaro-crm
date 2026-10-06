@@ -142,7 +142,7 @@ export default function FleetPage() {
         <div><b style="font-size:20px">${usd(summary.totalMaintenanceCostCents)}</b><br>Maint. Cost</div>
       </div>
       ${summary.needsAttention.length ? `<div style="background:#fff4e5;border-left:3px solid #b8860b;padding:8px 12px;margin-bottom:14px;font-size:13px"><b>Needs attention:</b> ${summary.needsAttention.join(', ')}</div>` : ''}
-      <table style="border-collapse:collapse;width:100%;font-size:12px"><thead><tr style="background:#0E0F12;color:#fff">${['Asset', 'Type', 'Odometer', 'Status', 'Next Maintenance', 'Expiring', ''].map((h) => `<th style="border:1px solid #ccc;padding:6px 8px;text-align:left">${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
+      <table style="border-collapse:collapse;width:100%;font-size:12px"><thead><tr style="background:#0E0F12;color:var(--c-text)">${['Asset', 'Type', 'Odometer', 'Status', 'Next Maintenance', 'Expiring', ''].map((h) => `<th style="border:1px solid #ccc;padding:6px 8px;text-align:left">${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
       </body></html>`);
     w.document.close(); w.focus(); w.print();
   };

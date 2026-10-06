@@ -285,7 +285,7 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
           </span>
         ) : monogram(36, 14)}
         <span style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 13, fontWeight: font.weight.black, color: colors.text, letterSpacing: '-0.01em', lineHeight: 1.2 }}>
+          <span className="sg-brand-name" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 13, fontWeight: font.weight.black, color: colors.gold, letterSpacing: '-0.01em', lineHeight: 1.2 }}>
             {wl.companyName || 'Your company'}
           </span>
           {planPill && <span style={{ display: 'flex' }}>{planPill}</span>}
@@ -910,7 +910,7 @@ export default function AppSidebar({
                   textAlign: 'left',
                 }}
               >
-                <span>{displayTitle(section.title)}</span>
+                <span className="sg-nav-head">{displayTitle(section.title)}</span>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                   {/* A closed section says how much is inside, so nothing feels
                       lost — you can see there are eleven tools in there. */}
@@ -926,7 +926,7 @@ export default function AppSidebar({
                   <CaretDown
                     size={10}
                     weight="bold"
-                    color={colors.textDim}
+                    color="var(--c-orange)"
                     style={{ transform: isOpen ? 'none' : 'rotate(-90deg)', transition: 'transform .15s' }}
                   />
                 </span>
@@ -958,7 +958,7 @@ export default function AppSidebar({
                     borderRadius: radius.lg,
                     fontSize: font.size.md,
                     fontWeight: active ? font.weight.semibold : font.weight.medium,
-                    color: active ? colors.gold : colors.textMuted,
+                    color: active ? colors.gold : 'var(--c-orange)',
                     background: active
                       ? 'linear-gradient(180deg, var(--brand-primary-18), var(--brand-primary-12))'
                       : 'transparent',
@@ -972,13 +972,13 @@ export default function AppSidebar({
                   onMouseEnter={(e) => {
                     if (!active) {
                       e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                      e.currentTarget.style.color = colors.text;
+                      e.currentTarget.style.color = colors.gold;
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!active) {
                       e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = colors.textMuted;
+                      e.currentTarget.style.color = 'var(--c-orange)';
                     }
                   }}
                 >
@@ -1047,7 +1047,7 @@ export default function AppSidebar({
                   {!collapsed && (
                     <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 7, minWidth: 0 }}>
 
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>
+                      <span className="sg-nav-label" data-active={active || undefined} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>
                     </span>
                   )}
                   {!collapsed && item.badge && (
@@ -1097,7 +1097,7 @@ export default function AppSidebar({
                 fontWeight: font.weight.semibold, cursor: 'pointer',
               }}
             >
-              <span>{showAllTools ? 'Show Fewer Tools' : 'All Tools'}</span>
+              <span className="sg-nav-label">{showAllTools ? 'Show Fewer Tools' : 'All Tools'}</span>
               {!showAllTools && (
                 <span style={{
                   fontVariantNumeric: 'tabular-nums', color: 'var(--brand-primary)', fontWeight: font.weight.bold,
@@ -1133,7 +1133,7 @@ export default function AppSidebar({
                 borderRadius: radius.lg,
                 fontSize: font.size.md,
                 fontWeight: active ? font.weight.semibold : font.weight.medium,
-                color: active ? colors.gold : colors.textMuted,
+                color: active ? colors.gold : 'var(--c-orange)',
                 background: active ? colors.goldDim : 'transparent',
                 textDecoration: 'none',
                 transition: 'background .15s ease, color .15s ease',
@@ -1143,13 +1143,13 @@ export default function AppSidebar({
               onMouseEnter={(e) => {
                 if (!active) {
                   e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                  e.currentTarget.style.color = colors.text;
+                  e.currentTarget.style.color = colors.gold;
                 }
               }}
               onMouseLeave={(e) => {
                 if (!active) {
                   e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = colors.textMuted;
+                  e.currentTarget.style.color = 'var(--c-orange)';
                 }
               }}
             >
@@ -1171,7 +1171,7 @@ export default function AppSidebar({
                   color and stays at full opacity. Dimming a neutral only muddies
                   it — the weight change from regular to fill already marks active. */}
               <Icon size={collapsed ? 20 : 18} weight={active ? 'fill' : 'regular'} style={{ flexShrink: 0, opacity: 1 }} />
-              {!collapsed && <span>{item.label}</span>}
+              {!collapsed && <span className="sg-nav-label" data-active={active || undefined}>{item.label}</span>}
             </Link>
           );
         })}
@@ -1192,7 +1192,7 @@ export default function AppSidebar({
             borderRadius: radius.lg,
             background: 'none',
             border: 'none',
-            color: colors.textDim,
+            color: 'var(--c-orange)',
             fontSize: font.size.md,
             fontWeight: font.weight.medium,
             cursor: 'pointer',
@@ -1200,14 +1200,14 @@ export default function AppSidebar({
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-            e.currentTarget.style.color = colors.text;
+            e.currentTarget.style.color = colors.gold;
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = 'transparent';
-            e.currentTarget.style.color = colors.textDim;
+            e.currentTarget.style.color = 'var(--c-orange)';
           }}
         >
-          {collapsed ? <CaretRight size={18} style={{ flexShrink: 0 }} /> : <><CaretLeft size={18} style={{ flexShrink: 0 }} /><span>Collapse</span></>}
+          {collapsed ? <CaretRight size={18} style={{ flexShrink: 0 }} /> : <><CaretLeft size={18} style={{ flexShrink: 0 }} /><span className="sg-nav-label">Collapse</span></>}
         </button>
       </div>
     </aside>

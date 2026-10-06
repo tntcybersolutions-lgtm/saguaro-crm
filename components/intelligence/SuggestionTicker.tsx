@@ -178,7 +178,7 @@ function TickerItem({
       }}>
         {s.moduleLabel}
       </span>
-      <span style={{ fontSize: 12.5, fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>
+      <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--c-text-2)' }}>
         <FindingText s={s} />
       </span>
       <span aria-hidden style={{ fontSize: 11, color: DIM, fontWeight: 900, flexShrink: 0 }}>&rarr;</span>
@@ -246,7 +246,7 @@ export default function SuggestionTicker({ style }: { style?: React.CSSPropertie
           boxShadow: `0 0 10px ${worst}`, animation: 'sgTickerDot 2s ease-in-out infinite',
         }} />
         <span style={{
-          fontSize: 10, fontWeight: 900, color: 'rgba(255,255,255,0.8)',
+          fontSize: 10, fontWeight: 900, color: 'var(--c-text-2)',
           whiteSpace: 'nowrap',
         }}>
           Live Signals

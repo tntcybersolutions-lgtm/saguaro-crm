@@ -125,7 +125,7 @@ export default function RouteError({
                 display: 'block',
                 fontSize: 12.5,
                 lineHeight: 1.5,
-                color: '#F4F4F5',
+                color: 'var(--c-text)',
                 wordBreak: 'break-word',
                 fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
               }}

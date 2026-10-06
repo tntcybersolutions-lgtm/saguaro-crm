@@ -739,7 +739,7 @@ export default function SaguaroChatWidget({
                     { label: 'Delete My Memory', action: clearMemory },
                   ].map(item => (
                     <button key={item.label} onClick={item.action}
-                      style={{ display: 'block', width: '100%', padding: '10px 14px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.75)', fontSize: 13, cursor: 'pointer', textAlign: 'left' }}
+                      style={{ display: 'block', width: '100%', padding: '10px 14px', background: 'none', border: 'none', color: 'var(--c-text-2)', fontSize: 13, cursor: 'pointer', textAlign: 'left' }}
                       onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.07)')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                     >{item.label}</button>
@@ -794,7 +794,7 @@ export default function SaguaroChatWidget({
                           ) : (
                             <div
                               className="sage-msg-bubble"
-                              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.88)', fontSize: 14, lineHeight: 1.65, padding: '12px 16px', borderRadius: '4px 18px 18px 18px', wordBreak: 'break-word' }}
+                              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'var(--c-text-2)', fontSize: 14, lineHeight: 1.65, padding: '12px 16px', borderRadius: '4px 18px 18px 18px', wordBreak: 'break-word' }}
                               dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }}
                             />
                           )}

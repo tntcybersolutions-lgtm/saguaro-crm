@@ -643,7 +643,7 @@ export default function NewProjectPage() {
               <button type="submit" onClick={() => { nextRef.current = 'overview'; }}
                 disabled={submitDisabled}
                 style={{padding:'13px 26px',background:'transparent',border:'1px solid rgba(255,255,255,0.18)',
-                        borderRadius:10,color:'rgba(255,255,255,0.72)',fontWeight:700,fontSize:14,minHeight:44,
+                        borderRadius:10,color:'var(--c-text-2)',fontWeight:700,fontSize:14,minHeight:44,
                         cursor:submitDisabled?'not-allowed':'pointer',opacity:submitDisabled?0.6:1}}>
                 {saving?'Creating…':'Create Without Drawings'}
               </button>
@@ -651,7 +651,7 @@ export default function NewProjectPage() {
 
               <button type="button" onClick={() => setShowDetails(v => !v)}
                 style={{padding:'13px 20px',background:'transparent',border:'1px solid rgba(255,255,255,0.14)',
-                        borderRadius:10,color:'rgba(255,255,255,0.7)',fontWeight:600,fontSize:13,minHeight:44,cursor:'pointer'}}>
+                        borderRadius:10,color:'var(--c-text-2)',fontWeight:600,fontSize:13,minHeight:44,cursor:'pointer'}}>
                 {showDetails ? 'Hide Contract Details' : 'Add Contract Details'}
               </button>
               <button type="button" onClick={()=>guard.requestClose(()=>router.back())} className="pmBtn" style={{...ghostButtonStyle,padding:'13px 20px'}}>

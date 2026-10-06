@@ -273,7 +273,7 @@ export default function ContractsPage() {
   const label: React.CSSProperties = { fontSize: 12, color: DIM, marginBottom: 4, display: 'block' };
   const hint: React.CSSProperties = { fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 };
   // Compact ghost action buttons for in-row actions (View PDF / Upload Signed).
-  const rowBtn: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 11px', background: 'rgba(255,255,255,0.05)', border: '1px solid ' + BORDER, borderRadius: 8, color: 'rgba(255,255,255,0.82)', fontSize: 12, fontWeight: 700, cursor: 'pointer' };
+  const rowBtn: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 11px', background: 'rgba(255,255,255,0.05)', border: '1px solid ' + BORDER, borderRadius: 8, color: 'var(--c-text-2)', fontSize: 12, fontWeight: 700, cursor: 'pointer' };
 
   return (
     <PremiumSurface maxWidth={2200}>

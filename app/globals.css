@@ -26,9 +26,9 @@
   --border-default: rgba(255,255,255,0.12);
   --border-strong: rgba(255,255,255,0.22);
   /* Text — high contrast on jet black (§6). */
-  --text-primary: #FFFFFF;
-  --text-secondary: #D4D4D8;
-  --text-tertiary: #A9B4C4;
+  --text-primary: #E6CF00;   /* NO WHITE TYPE (6 Oct 2026) — palette yellow */
+  --text-secondary: #A3ACBB; /* palette gray */
+  --text-tertiary: #A3ACBB;
   --text-disabled: #7A8597;
   /* ── Brand primary — the single white-label override point. Defaults to
      Saguaro NEON YELLOW (owner decision 2026-10-02, replaces gold);
@@ -42,9 +42,9 @@
   --c-bg: #000000;          /* page */
   --c-card: #0E0F12;        /* cards, nav */
   --c-raised: #15171C;      /* inputs, menus, raised surfaces */
-  --c-text: #FFFFFF;        /* primary text */
-  --c-text-2: #D4D4D8;      /* secondary text */
-  --c-text-3: #A9B4C4;      /* tertiary / dim */
+  --c-text: #E6CF00;        /* primary text — palette yellow, never white */
+  --c-text-2: #A3ACBB;      /* secondary text — palette gray */
+  --c-text-3: #A3ACBB;      /* tertiary / dim */
   --c-text-4: #7A8597;      /* disabled / faint */
   --c-yellow: #FFE600;      /* brand primary */
   --c-yellow-hi: #FFF04A;   /* highlight edge */
@@ -134,10 +134,10 @@ input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-  -webkit-text-fill-color: #FFFFFF !important;
+  -webkit-text-fill-color: var(--c-text) !important;
   -webkit-box-shadow: 0 0 0 1000px #15171C inset !important;
   box-shadow: 0 0 0 1000px #15171C inset !important;
-  caret-color: #FFFFFF !important;
+  caret-color: var(--c-text) !important;
   transition: background-color 9999s ease-out 0s;
 }
 
@@ -168,13 +168,13 @@ nav a:hover { color: var(--gold); }
    read as a faint box and its open list was hard to see. This raises the
    closed control onto a lighter machined surface with a brighter, heavier
    font, sizes it for a thumb (44px), and — critically — restyles the OPEN
-   option list with a solid light-raised background and near-white bold text so
+   option list with a solid raised background and bold palette-yellow text so
    the choices are legible on every device. */
 select {
   appearance: none;
   -webkit-appearance: none;
   background-color: #15171C;
-  color: #F4F7FB;
+  color: var(--c-text);
   border: 1px solid rgba(255,255,255,0.22);
   border-radius: 10px;
   min-height: 44px;
@@ -191,10 +191,10 @@ select {
   background-position: right 14px center;
 }
 select:hover { border-color: rgba(255,255,255,0.34); background-color: #1C1F25; }
-select:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 3px var(--brand-primary-18); color: #FFFFFF; }
+select:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 3px var(--brand-primary-18); color: var(--c-text); }
 /* The open list — Windows/Linux Chromium honour these; a solid lighter panel
-   with bold near-white text, and a clear brand-tinted highlight on the row. */
-select option { background-color: #15171C; color: #F4F7FB; font-size: 15px; font-weight: 600; padding: 12px 14px; }
+   with bold palette-yellow text, and a clear brand highlight on the row. */
+select option { background-color: #15171C; color: var(--c-text); font-size: 15px; font-weight: 600; padding: 12px 14px; }
 select option:checked, select option:hover, select option:focus {
   background: linear-gradient(0deg, rgba(255,230,0,0.9), rgba(255,230,0,0.9)); /* solid for OS lists */
   background-color: #FFE600;
@@ -210,7 +210,7 @@ select option:checked, select option:hover, select option:focus {
   border-radius: var(--radius-lg) !important;
   font-family: inherit !important;
   font-size: 13px !important;
-  color: #FFFFFF !important;
+  color: var(--c-text) !important;
   box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,0.04) !important;
 }
 .saguaro-calendar .react-datepicker__header {
@@ -220,11 +220,11 @@ select option:checked, select option:hover, select option:focus {
 }
 .saguaro-calendar .react-datepicker__current-month,
 .saguaro-calendar .react-datepicker__day-name {
-  color: #FFFFFF !important;
+  color: var(--c-text) !important;
   font-weight: 600 !important;
 }
 .saguaro-calendar .react-datepicker__day {
-  color: #FFFFFF !important;
+  color: var(--c-text) !important;
   border-radius: 8px !important;
   transition: all 0.15s ease !important;
 }
@@ -467,7 +467,7 @@ input, textarea {
   background: var(--bg-surface-2);
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 10px;
-  color: #FFFFFF;
+  color: var(--c-text);
   transition: all 0.2s ease;
 }
 input:hover, textarea:hover {
@@ -495,7 +495,7 @@ input::placeholder, textarea::placeholder {
 .tooltip { position: relative; }
 .tooltip::after {
   content: attr(data-tip); position: absolute; bottom: 100%; left: 50%;
-  transform: translateX(-50%); background: rgba(14,15,18,0.96); color: #FFFFFF;
+  transform: translateX(-50%); background: rgba(14,15,18,0.96); color: var(--c-text);
   padding: 6px 12px; border-radius: 8px; font-size: 11px; white-space: nowrap;
   opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
   border: 1px solid rgba(255,255,255,0.12); margin-bottom: 6px;
@@ -543,7 +543,7 @@ tbody td { border-bottom: 1px solid rgba(255,255,255,0.08) !important; }
 
 /* Ghost button — glass + white text */
 .btn-ghost {
-  background: var(--bg-surface-2); color: #FFFFFF;
+  background: var(--bg-surface-2); color: var(--c-text);
   border: 1px solid var(--glass-border); border-radius: 10px;
   padding: 10px 24px; cursor: pointer; transition: all 0.2s ease;
   backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
@@ -631,11 +631,11 @@ tbody td { border-bottom: 1px solid rgba(255,255,255,0.08) !important; }
    padding/size here, so checkboxes, radios and inline inputs are untouched.) */
 input, textarea, select {
   background-color: #15171C !important;
-  color: #FFFFFF !important;
-  -webkit-text-fill-color: #FFFFFF !important;
+  color: var(--c-text) !important;
+  -webkit-text-fill-color: var(--c-text) !important;
   caret-color: var(--brand-primary);
 }
-input::placeholder, textarea::placeholder { color: #A9B4C4 !important; opacity: 1; }
+input::placeholder, textarea::placeholder { color: var(--c-text-3) !important; opacity: 1; }
 /* FIX: Chrome/Safari autofill paints its OWN light background that background-color
    can't override — only an inset box-shadow can. Without this, autofilled email/
    password text is white-on-light = invisible (reported on the client portal). */
@@ -647,11 +647,11 @@ textarea:-webkit-autofill,
 select:-webkit-autofill {
   -webkit-box-shadow: 0 0 0 1000px #15171C inset !important;
   box-shadow: 0 0 0 1000px #15171C inset !important;
-  -webkit-text-fill-color: #FFFFFF !important;
-  caret-color: #FFFFFF !important;
+  -webkit-text-fill-color: var(--c-text) !important;
+  caret-color: var(--c-text) !important;
   transition: background-color 600000s 0s, color 600000s 0s;
 }
-input:-webkit-autofill::first-line { color: #FFFFFF !important; font-size: 15px; }
+input:-webkit-autofill::first-line { color: var(--c-text) !important; font-size: 15px; }
 
 /* Firefox implements NONE of the -webkit- rules above, so an autofilled field
    there still paints Firefox's own light background under our white text —
@@ -675,9 +675,9 @@ select:autofill {
   background-color: #15171C !important;
   background-image: none !important;
   box-shadow: 0 0 0 1000px #15171C inset !important;
-  color: #FFFFFF !important;
-  -webkit-text-fill-color: #FFFFFF !important;
-  caret-color: #FFFFFF !important;
+  color: var(--c-text) !important;
+  -webkit-text-fill-color: var(--c-text) !important;
+  caret-color: var(--c-text) !important;
   filter: none !important;
 }
 
@@ -760,7 +760,7 @@ input:-webkit-autofill:focus {
 ::-webkit-scrollbar-track { background: transparent; }
 
 /* Text selection: brand-tinted, readable everywhere. */
-::selection { background: var(--brand-primary-25); color: #FFFFFF; }
+::selection { background: var(--brand-primary-25); color: var(--c-text); }
 
 /* ── Tables: machined panel material (2026-08-22) ──────────────────────────
    Zebra-free milled rows: solid header band + Title Case labels,
@@ -1473,4 +1473,150 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 }
 @media (max-width: 480px) {
   .k-page { padding: var(--sp-3) var(--sp-3) var(--sp-6); }
+}
+
+/* ══ Brand type + dropdowns, app-wide (Chad, 6 Oct 2026) ═══════════════════
+   Site palette only. One block, so every page follows without per-page edits.
+
+   Titles: "wet" gloss — a bright #FFF04A cap, a hard gloss line at 50%, then
+   #FFE600 into an #E6CF00 → #FF8A00 base; a 1px dark drop for crispness and a
+   faint brand glow. -webkit-text-fill-color beats any inline `color` on a
+   page, which is what makes this reach all 148 screens. Text shadows don't
+   work on clipped text, so the edge and glow are drop-shadow filters. */
+.sag-app h1,
+.sag-app .k-title {
+  background: linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow) 49%, var(--c-yellow-hover) 51%, var(--c-orange) 115%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--c-yellow); /* icons inside a title follow currentColor */
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.75)) drop-shadow(0 0 14px rgba(255, 230, 0, 0.16));
+}
+/* Section titles: the same gloss, quieter — no orange base, no glow. */
+.sag-app h2 {
+  background: linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow) 50%, var(--c-yellow-hover) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--c-yellow);
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.7));
+}
+/* KPI figures with no status tone get the title gloss; a toned figure (red
+   overdue count, green paid) keeps its status colour. */
+.sag-app .pmStatValue[style*="var(--text-primary)"],
+.sag-app .k-stat-value:not([style*="color"]):not([data-muted="true"]) {
+  background: linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow) 49%, var(--c-yellow-hover) 51%, var(--c-orange) 125%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.75));
+}
+/* A heading sitting on a yellow fill keeps the on-brand ink. */
+.sag-app :is(button, .k-btn, [data-tone="brand"]) :is(h1, h2),
+.sag-app :is(button, .k-btn) .k-title {
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  filter: none;
+}
+
+/* No white type anywhere: the --c-text* scale at the top of this file is the
+   palette yellow (#E6CF00) over the palette gray (#A3ACBB / #7A8597).
+
+   Nav menus (sidebar, top bar, page tabs): the same wet gloss as the titles,
+   in the yellow family — a #FFF04A cap, a hard gloss line at the middle, an
+   #E6CF00 base. Hover lifts it; the current page is the solid brand yellow. */
+.sg-nav-label,
+.sg-nav-head,
+.sg-brand-name {
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.8));
+}
+.sg-nav-label {
+  background-image: linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow) 46%, var(--c-yellow-hover) 54%, var(--c-yellow-hover) 100%);
+}
+a:hover > * > .sg-nav-label,
+a:hover > .sg-nav-label,
+button:hover > .sg-nav-label {
+  background-image: linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow-hi) 46%, var(--c-yellow) 54%, var(--c-yellow) 100%);
+}
+[aria-current="page"] .sg-nav-label,
+.sg-nav-label[data-active="true"] {
+  background-image: linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow) 50%, var(--c-yellow) 100%);
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.8)) drop-shadow(0 0 10px rgba(255, 230, 0, 0.22));
+}
+/* Section headers (Home, Sales, Tools…) — the title gloss, yellow into orange. */
+.sg-nav-head {
+  background-image: linear-gradient(180deg, var(--c-yellow) 0%, var(--c-yellow-hover) 45%, var(--c-orange) 100%);
+}
+.sg-brand-name {
+  background-image: linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow) 49%, var(--c-yellow-hover) 51%, var(--c-orange) 120%);
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.8)) drop-shadow(0 0 10px rgba(255, 230, 0, 0.18));
+}
+/* Page tabs + the top-bar page name read as nav too. */
+.sag-app [role="tab"],
+.sag-app .k-tab {
+  color: var(--c-text);
+}
+.sag-app [role="tab"][aria-selected="true"],
+.sag-app .k-tab[aria-selected="true"] {
+  color: var(--c-yellow);
+}
+
+/* Dropdowns: the open list is ours, not the operating system's. Chrome and
+   Edge 135+ (customizable <select>) draw this panel — no Windows-blue
+   highlight, palette colours only. Safari/iOS keep their native picker. */
+@supports (appearance: base-select) {
+  .sag-app select:not([multiple]):not([size]),
+  .sag-app select:not([multiple]):not([size])::picker(select) {
+    appearance: base-select;
+  }
+  .sag-app select:not([multiple]):not([size])::picker-icon { display: none; } /* the yellow chevron is already drawn */
+  .sag-app select:not([multiple]):not([size])::picker(select) {
+    background: var(--c-raised);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
+    padding: 6px;
+    margin-block: 6px;
+    max-height: min(60vh, 440px);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+  .sag-app select:not([multiple]):not([size]) option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 40px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--c-text);
+    -webkit-text-fill-color: currentColor; /* the form reset paints select text with a fill colour; options follow their own colour */
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .sag-app select:not([multiple]):not([size]) option:hover,
+  .sag-app select:not([multiple]):not([size]) option:focus-visible {
+    background: rgba(255, 230, 0, 0.10);
+    color: var(--c-yellow-hi);
+  }
+  .sag-app select:not([multiple]):not([size]) option:checked {
+    background: rgba(255, 230, 0, 0.16);
+    color: var(--c-yellow);
+  }
+  .sag-app select:not([multiple]):not([size]) option::checkmark {
+    order: 2;
+    margin-inline-start: auto;
+    color: var(--c-yellow);
+  }
+}
+/* Job colour dot on job options: <option style={jobOptionStyle(p)}>. */
+.sag-app option[style*="--dot"]::before {
+  content: "";
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--dot);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
 }
