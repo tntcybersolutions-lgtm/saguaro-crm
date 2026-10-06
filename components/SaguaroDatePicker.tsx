@@ -60,7 +60,7 @@ const NAV_BTN: React.CSSProperties = {
 };
 
 const POP_CSS = `
-.sgdp-nav:hover { background: rgba(255,255,255,0.10); color: #FFFFFF; }
+.sgdp-nav:hover { background: rgba(255,255,255,0.10); color: var(--c-text); }
 .sgdp-day:hover { background: rgba(255,255,255,0.10); }
 .sgdp-day[data-sel="true"]:hover { background: var(--gold); }
 .sgdp-yr:hover { background: rgba(255,255,255,0.10); }

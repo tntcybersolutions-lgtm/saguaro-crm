@@ -285,17 +285,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <button
                 type="button"
                 onClick={() => { setMobileSidebarOpen(false); window.dispatchEvent(new Event('open-command-palette')); }}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 44, padding: '0 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 10, color: 'var(--text-secondary)', fontSize: 14, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 44, padding: '0 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 14, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}
               >
                 <MagnifyingGlass size={16} /> Search
               </button>
               <HeaderProjectPicker />
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <HelpModeButton />
-                <Link href="/app/notifications" onClick={() => setMobileSidebarOpen(false)} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '0 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 10, color: 'var(--text-secondary)', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
+                <Link href="/app/notifications" onClick={() => setMobileSidebarOpen(false)} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '0 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
                   <Bell size={16} /> Notifications
                 </Link>
-                <button type="button" onClick={() => { setMobileSidebarOpen(false); setAiOpen(true); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '0 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 10, color: 'var(--text-secondary)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                <button type="button" onClick={() => { setMobileSidebarOpen(false); setAiOpen(true); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '0 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                   <Star size={16} weight="fill" /> Sage AI Expert
                 </button>
               </div>
@@ -493,13 +493,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         ] as const).map((t) => {
           const Icon = t.icon;
           return (
-            <Link key={t.href} href={t.href} className="sag-tab" data-active={t.active ? 'true' : undefined} aria-current={t.active ? 'page' : undefined} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, height: 56, textDecoration: 'none', color: t.active ? 'var(--brand-primary)' : 'var(--text-tertiary)', fontSize: 11, fontWeight: t.active ? 800 : 600 }}>
+            <Link key={t.href} href={t.href} className="sag-tab" data-active={t.active ? 'true' : undefined} aria-current={t.active ? 'page' : undefined} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, height: 56, textDecoration: 'none', color: t.active ? 'var(--brand-primary)' : 'var(--c-orange)', fontSize: 11, fontWeight: t.active ? 800 : 600 }}>
               <Icon size={22} weight={t.active ? 'fill' : 'regular'} />
               <span>{t.label}</span>
             </Link>
           );
         })}
-        <button type="button" className="sag-tab" data-active={mobileSidebarOpen ? 'true' : undefined} onClick={() => setMobileSidebarOpen(v => !v)} aria-expanded={mobileSidebarOpen} aria-label="More" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, height: 56, background: 'none', border: 'none', color: mobileSidebarOpen ? 'var(--brand-primary)' : 'var(--text-tertiary)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+        <button type="button" className="sag-tab" data-active={mobileSidebarOpen ? 'true' : undefined} onClick={() => setMobileSidebarOpen(v => !v)} aria-expanded={mobileSidebarOpen} aria-label="More" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, height: 56, background: 'none', border: 'none', color: mobileSidebarOpen ? 'var(--brand-primary)' : 'var(--c-orange)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
           <DotsThreeOutline size={22} weight={mobileSidebarOpen ? 'fill' : 'regular'} />
           <span>More</span>
         </button>

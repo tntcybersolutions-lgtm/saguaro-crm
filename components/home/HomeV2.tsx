@@ -15,7 +15,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Plus, ArrowRight, ArrowClockwise, CaretDown, CalendarBlank, WarningCircle } from '@phosphor-icons/react';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { useProjectColors } from '@/lib/hooks/useProjectColor';
-import { jobStripeStyle } from '@/lib/project-colors';
+import { jobStripeStyle, jobOptionStyle } from '@/lib/project-colors';
 import ActivityFeed from '@/components/ActivityFeed';
 import SalesOverview from '@/components/SalesOverview';
 import type { Metric, QueueItem, ScheduleEntry, HomeView, DataState } from '@/lib/home/rank';
@@ -428,7 +428,7 @@ function HomeInner() {
             <span className="sr-only">Job</span>
             <select value={sp.get('project') || ''} onChange={e => setParam('project', e.target.value || null)} aria-label="Job">
               <option value="">All Jobs</option>
-              {activeProjects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              {activeProjects.map(p => <option key={p.id} value={p.id} style={jobOptionStyle(p)}>{p.name}</option>)}
             </select>
           </label>
           {ctx && (

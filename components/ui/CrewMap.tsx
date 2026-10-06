@@ -402,7 +402,7 @@ export function CrewMap({
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
           <MapTrifold size={26} color={GOLD_HI} weight="fill" />
         </div>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#FFFFFF', marginBottom: 4 }}>Pick a Project to Map</div>
+        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--c-text)', marginBottom: 4 }}>Pick a Project to Map</div>
         <div style={{ fontSize: 12.5, color: MUTED, maxWidth: 460, margin: '0 auto 14px' }}>
           The site map plots that crew’s live pins and shift heat.
         </div>
@@ -417,7 +417,7 @@ export function CrewMap({
                   display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 15px',
                   borderRadius: 999, border: '1px solid rgba(255,255,255,0.14)',
                   background: 'rgba(255,255,255,0.07)',
-                  color: '#FFFFFF', fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
+                  color: 'var(--c-text)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
                 }}
               >
                 <MapTrifold size={14} weight="fill" />{p.name}

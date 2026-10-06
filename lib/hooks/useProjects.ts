@@ -16,6 +16,8 @@ export interface Project {
   start_date: string;
   end_date: string;
   project_number: string;
+  /* The job's swatch (lib/project-colors.ts JOB_COLORS); null until picked. */
+  color?: string | null;
   phase?: string;
   owner_name?: string;
   owner_email?: string;

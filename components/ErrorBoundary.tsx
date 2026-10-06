@@ -64,7 +64,7 @@ export default class ErrorBoundary extends Component<Props, State> {
               <div style={{ fontSize: 10.5, fontWeight: 700, color: DIM, marginBottom: 6 }}>
                 What Went Wrong
               </div>
-              <code style={{ display: 'block', fontSize: 12.5, lineHeight: 1.5, color: '#F4F4F5', wordBreak: 'break-word', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
+              <code style={{ display: 'block', fontSize: 12.5, lineHeight: 1.5, color: 'var(--c-text)', wordBreak: 'break-word', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
                 {msg || 'No error message was provided.'}
               </code>
             </div>

@@ -10,7 +10,7 @@ import { enqueue } from '@/lib/field-db';
 const GOLD = 'var(--brand-primary)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = '#2A2A2E';
-const TEXT = '#F0F4FF';
+const TEXT = 'var(--c-text)';
 const DIM = '#A1A1AA';
 const GREEN = '#2CFF7A';
 const RED = '#FF3B30';

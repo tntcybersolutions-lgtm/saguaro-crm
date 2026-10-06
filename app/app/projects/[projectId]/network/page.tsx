@@ -326,7 +326,7 @@ export default function NetworkDashboard() {
               className="pmBtn"
               style={{
                 padding: '9px 16px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${KIT_BORDER}`,
-                borderRadius: 10, color: 'rgba(255,255,255,0.82)', fontSize: 12.5, fontWeight: 700, textDecoration: 'none',
+                borderRadius: 10, color: 'var(--c-text-2)', fontSize: 12.5, fontWeight: 700, textDecoration: 'none',
                 display: 'inline-flex', alignItems: 'center', gap: 7,
               }}
             >

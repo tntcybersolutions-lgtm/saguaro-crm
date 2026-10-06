@@ -221,7 +221,7 @@ export default function AppTopBar({
       {/* Current page — one title. The back button already names the parent,
           so a breadcrumb trail here repeated it twice. */}
       {crumbs.length > 0 && (
-        <span className="sag-crumb-last" style={{ fontSize: font.size.lg, fontWeight: font.weight.semibold, color: 'var(--text-primary)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <span className="sag-crumb-last sg-nav-label" style={{ fontSize: font.size.lg, fontWeight: font.weight.semibold, color: 'var(--text-primary)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {crumbs[crumbs.length - 1].label}
         </span>
       )}

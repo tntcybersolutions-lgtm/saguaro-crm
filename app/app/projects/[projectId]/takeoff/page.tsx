@@ -225,7 +225,7 @@ h2.tkH2{font-size:clamp(22px,3vw,30px)!important;font-weight:800!important;line-
    you cannot see where you are. Solid ring, not the hover tint. */
 .tkEditable:focus{outline:none;background:color-mix(in srgb, var(--brand-primary) 14%, transparent);box-shadow:inset 0 0 0 2px color-mix(in srgb, var(--brand-primary) 90%, transparent)}
 .tkEditable:focus-visible{outline:none;background:color-mix(in srgb, var(--brand-primary) 14%, transparent);box-shadow:inset 0 0 0 2px color-mix(in srgb, var(--brand-primary) 90%, transparent)}
-.tkCellInput{width:100%;background:var(--brand-primary-08);border:1px solid color-mix(in srgb, var(--brand-primary) 50%, transparent);border-radius:6px;color:#fff;font-size:13px;padding:4px 7px;outline:none;font-family:inherit}
+.tkCellInput{width:100%;background:var(--brand-primary-08);border:1px solid color-mix(in srgb, var(--brand-primary) 50%, transparent);border-radius:6px;color:var(--c-text);font-size:13px;padding:4px 7px;outline:none;font-family:inherit}
 .tkCellInput:focus{box-shadow:0 0 0 2px var(--brand-primary-25)}
 .tkCellInput::placeholder{color:rgba(255,255,255,0.35)}
 .tkIconBtn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:7px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.04);cursor:pointer;transition:border-color .15s ease,background .15s ease}
@@ -395,9 +395,9 @@ const EditableRow = memo(function EditableRow({ item, idx, sellMult, laborAlloc,
           )}
         </div>
         <EditableCell rawValue={item.description} display={item.description} align="left" disabled={!editable}
-          cellStyle={{ color: 'rgba(255,255,255,0.85)', marginRight: 8 }} onCommit={commitText('description')} />
+          cellStyle={{ color: 'var(--c-text-2)', marginRight: 8 }} onCommit={commitText('description')} />
         <EditableCell rawValue={String(item.quantity)} display={fmtN(item.quantity)} align="right" numeric disabled={!editable}
-          cellStyle={{ color: 'rgba(255,255,255,0.7)' }} onCommit={commitNum('quantity')} />
+          cellStyle={{ color: 'var(--c-text-2)' }} onCommit={commitNum('quantity')} />
         <EditableCell rawValue={item.unit} display={item.unit} align="right" disabled={!editable}
           cellStyle={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }} onCommit={commitText('unit')} />
         <EditableCell rawValue={String(item.unitCost)} display={`$${item.unitCost.toFixed(2)}`} align="right" numeric disabled={!editable}
@@ -1683,7 +1683,7 @@ export default function TakeoffPage() {
               <a href="/app/takeoff/measured" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 22px', borderRadius: 12, background: `linear-gradient(135deg, ${GOLD}, ${AMBER})`, color: 'var(--on-brand)', fontWeight: 800, fontSize: 14, textDecoration: 'none' }}>
                 Open in Takeoff Studio <ArrowRight size={16} weight="bold" />
               </a>
-              <button onClick={() => setMeasuredHandoff(null)} style={{ padding: '12px 22px', borderRadius: 12, background: 'transparent', border: `1px solid ${BORDER}`, color: 'rgba(255,255,255,0.72)', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
+              <button onClick={() => setMeasuredHandoff(null)} style={{ padding: '12px 22px', borderRadius: 12, background: 'transparent', border: `1px solid ${BORDER}`, color: 'var(--c-text-2)', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
                 Start an AI Blueprint Takeoff Instead
               </button>
             </div>
@@ -1817,7 +1817,7 @@ export default function TakeoffPage() {
                   </div>
                   <div style={{ display: 'inline-flex', gap: 7, flexWrap: 'wrap', justifyContent: 'center', marginTop: 18 }}>
                     {['PDF', 'PNG', 'JPG', 'TIFF', 'WEBP'].map((x) => (
-                      <span key={x} style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.72)', padding: '4px 11px', borderRadius: 7, background: 'rgba(255,255,255,0.06)', border: '1px solid color-mix(in srgb, var(--brand-primary) 22%, transparent)' }}>{x}</span>
+                      <span key={x} style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-text-2)', padding: '4px 11px', borderRadius: 7, background: 'rgba(255,255,255,0.06)', border: '1px solid color-mix(in srgb, var(--brand-primary) 22%, transparent)' }}>{x}</span>
                     ))}
                     <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', padding: '4px 6px' }}>Up to 200 MB</span>
                   </div>
@@ -2054,19 +2054,19 @@ export default function TakeoffPage() {
           {(result?.sheetsAnalyzed || result?.elapsedSec) && (
             <div style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
               {result?.sheetsAnalyzed != null && (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 700, color: 'rgba(255,255,255,0.72)', background: 'rgba(255,255,255,0.06)', border: '1px solid color-mix(in srgb, var(--brand-primary) 24%, transparent)', borderRadius: 8, padding: '4px 10px' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 700, color: 'var(--c-text-2)', background: 'rgba(255,255,255,0.06)', border: '1px solid color-mix(in srgb, var(--brand-primary) 24%, transparent)', borderRadius: 8, padding: '4px 10px' }}>
                   <Stack size={13} weight="duotone" color={GOLD_HI} />
                   {result.sheetsAnalyzed}{result.sheetsTotal && result.sheetsTotal !== result.sheetsAnalyzed ? ` of ${result.sheetsTotal}` : ''} sheet{result.sheetsAnalyzed === 1 ? '' : 's'} analyzed
                 </span>
               )}
               {result?.elapsedSec != null && (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 700, color: 'rgba(255,255,255,0.72)', background: 'rgba(255,255,255,0.06)', border: '1px solid color-mix(in srgb, var(--brand-primary) 24%, transparent)', borderRadius: 8, padding: '4px 10px' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 700, color: 'var(--c-text-2)', background: 'rgba(255,255,255,0.06)', border: '1px solid color-mix(in srgb, var(--brand-primary) 24%, transparent)', borderRadius: 8, padding: '4px 10px' }}>
                   <Timer size={13} weight="duotone" color={GOLD_HI} />
                   {result.elapsedSec < 90 ? `${Math.round(result.elapsedSec)}s` : `${(result.elapsedSec / 60).toFixed(1)} min`}
                 </span>
               )}
               {result?.disciplines && result.disciplines.length > 0 && (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 700, color: 'rgba(255,255,255,0.72)', background: 'rgba(255,255,255,0.06)', border: '1px solid color-mix(in srgb, var(--brand-primary) 24%, transparent)', borderRadius: 8, padding: '4px 10px' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 700, color: 'var(--c-text-2)', background: 'rgba(255,255,255,0.06)', border: '1px solid color-mix(in srgb, var(--brand-primary) 24%, transparent)', borderRadius: 8, padding: '4px 10px' }}>
                   {result.disciplines.join(' · ')}
                 </span>
               )}
@@ -2095,7 +2095,7 @@ export default function TakeoffPage() {
                 style={{
                   minHeight: 44, padding: '0 18px', borderRadius: 10, cursor: 'pointer',
                   background: 'transparent', border: '1px solid rgba(255,255,255,0.18)',
-                  color: 'rgba(255,255,255,0.72)', fontSize: 13.5, fontWeight: 700,
+                  color: 'var(--c-text-2)', fontSize: 13.5, fontWeight: 700,
                 }}
               >
                 Let Me Pick
@@ -2111,7 +2111,7 @@ export default function TakeoffPage() {
           {result?.truncated && result?.truncationNote && (
             <div style={{ display: 'flex', gap: 9, alignItems: 'flex-start', marginTop: 12, maxWidth: 500, background: 'color-mix(in srgb, var(--brand-primary) 10%, transparent)', border: '1px solid var(--brand-primary-35)', borderRadius: 10, padding: '10px 12px' }}>
               <Warning size={16} weight="fill" color={GOLD_HI} style={{ flex: '0 0 auto', marginTop: 1 }} />
-              <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, lineHeight: 1.5 }}>{result.truncationNote}</div>
+              <div style={{ color: 'var(--c-text-2)', fontSize: 12, lineHeight: 1.5 }}>{result.truncationNote}</div>
             </div>
           )}
         </div>
@@ -2305,7 +2305,7 @@ export default function TakeoffPage() {
                 return (
                   <div key={div} style={{ marginBottom: 11 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12 }}>
+                      <span style={{ color: 'var(--c-text-2)', fontSize: 12 }}>
                         <span style={{ color: GOLD_HI, fontFamily: 'monospace', marginRight: 6, fontWeight: 700 }}>{div}</span>
                         {name}
                       </span>
@@ -2403,7 +2403,7 @@ export default function TakeoffPage() {
       {undoDelete && (
         <div style={{ position: 'fixed', left: '50%', bottom: 26, transform: 'translateX(-50%)', zIndex: 60, display: 'flex', alignItems: 'center', gap: 14, padding: '12px 18px', borderRadius: 14, background: 'rgba(0,0,0,0.94)', border: '1px solid color-mix(in srgb, var(--brand-primary) 45%, transparent)', boxShadow: '0 18px 50px -12px var(--brand-primary-35)', animation: 'tkUndoIn .25s ease both', maxWidth: 'min(92vw, 560px)' }}>
           <Trash size={16} weight="duotone" color="var(--danger)" style={{ flexShrink: 0 }} />
-          <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <span style={{ color: 'var(--c-text-2)', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             Deleted “{undoDelete.item.description}” — {fmt$(Number(undoDelete.item.totalCost) || 0)}
           </span>
           <button onClick={undoPendingDelete} className="tkBtn" style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 9, border: 'none', background: `linear-gradient(135deg, ${GOLD}, ${AMBER})`, color: 'var(--on-brand)', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}>
@@ -2426,7 +2426,7 @@ export default function TakeoffPage() {
             <Sparkle size={13} weight="fill" color={GOLD} /> Estimator Recommendations
           </div>
           {result!.recommendations.map((rec, i) => (
-            <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', color: 'rgba(255,255,255,0.7)', fontSize: 13, lineHeight: 1.55, marginBottom: 6 }}>
+            <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', color: 'var(--c-text-2)', fontSize: 13, lineHeight: 1.55, marginBottom: 6 }}>
               <CheckCircle size={14} weight="fill" color={GOLD} style={{ flexShrink: 0, marginTop: 2 }} /> {rec}
             </div>
           ))}
@@ -2487,7 +2487,7 @@ export default function TakeoffPage() {
             <a href={`/app/projects/${projectId}/compliance`} style={{ textDecoration: 'none', padding: '11px 18px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 10, color: 'var(--text-primary)', fontWeight: 700, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 7 }}>
               <ShieldCheck size={15} weight="duotone" color="var(--text-primary)" /> View Compliance
             </a>
-            <button onClick={() => { setAutoSummary(null); setPickMode(true); }} style={{ padding: '11px 18px', background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, color: 'rgba(255,255,255,0.7)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+            <button onClick={() => { setAutoSummary(null); setPickMode(true); }} style={{ padding: '11px 18px', background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, color: 'var(--c-text-2)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
               Add More Manually
             </button>
             <button onClick={() => addSheetsRef.current?.click()} style={{ padding: '11px 18px', background: 'transparent', border: '1px solid color-mix(in srgb, var(--brand-primary) 50%, transparent)', borderRadius: 10, color: GOLD, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>

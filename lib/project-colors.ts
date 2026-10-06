@@ -81,6 +81,11 @@ export const jobDotStyle = (hex: string): CSSProperties => ({
   boxShadow: `0 0 0 1px ${alpha(hex, 0.35)}`,
 });
 
+/** The job's dot inside a native <option> (globals.css draws it from --dot in
+ *  the customizable select picker; browsers without it just ignore the var). */
+export const jobOptionStyle = (p: ProjectLike): CSSProperties =>
+  ({ ['--dot' as string]: projectColor(p) } as CSSProperties);
+
 /** 2. The 36px initials tile in the project header. */
 export const jobTileStyle = (hex: string): CSSProperties => ({
   display: 'inline-grid', placeItems: 'center', width: 36, height: 36, borderRadius: 10, flexShrink: 0,
