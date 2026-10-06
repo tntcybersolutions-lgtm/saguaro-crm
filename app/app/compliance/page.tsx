@@ -160,9 +160,9 @@ export default function CompliancePage(){
     {summary&&<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:14,marginBottom:24}}>
       <StatCard
         icon={<Gauge size={19} weight="duotone" color={GOLD} />}
-        label="Avg Compliance Score" value={summary.avg_score+'%'}
-        accent={summary.avg_score>=80?GREEN:summary.avg_score>=50?AMBER:RED}
-        sub="Portfolio average" delay={0.02}
+        label="Avg Compliance Score" value={typeof summary.avg_score==='number'?summary.avg_score+'%':'—'}
+        accent={typeof summary.avg_score!=='number'?undefined:summary.avg_score>=80?GREEN:summary.avg_score>=50?AMBER:RED}
+        sub={typeof summary.avg_score==='number'?'Portfolio average':'No subs scored yet'} delay={0.02}
        href="/app/compliance"/>
       <StatCard
         icon={<CheckCircle size={19} weight="duotone" color={GREEN} />}
