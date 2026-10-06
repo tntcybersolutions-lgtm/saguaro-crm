@@ -9,7 +9,7 @@
  * where a real hex is unavoidable (canvas, SVG export, PDF, charts). */
 export const paletteHex = {
   bg: '#000000', card: '#0E0F12', raised: '#15171C',
-  text: '#E6CF00', text2: '#A3ACBB', text3: '#A3ACBB', text4: '#7A8597',
+  text: '#FFE600', text2: '#A3ACBB', text3: '#A3ACBB', text4: '#7A8597',
   yellow: '#FFE600', yellowHi: '#FFF04A', yellowHover: '#E6CF00', onBrand: '#0A0A00',
   orange: '#FF8A00', green: '#2CFF7A', red: '#FF3B30', gray: '#A3ACBB',
 } as const;
@@ -54,9 +54,9 @@ export const colors = {
   borderDim:  'rgba(255,255,255,0.08)',
 
   // NO WHITE TYPE (owner decision 6 Oct 2026): primary text is the palette's
-  // deep brand yellow, supporting text the palette gray. Same values as the
+  // bright brand yellow, supporting text the palette gray. Same values as the
   // --c-text* variables in globals.css.
-  text:       '#E6CF00',
+  text:       '#FFE600',
   textMuted:  '#A3ACBB',
   textDim:    '#A3ACBB',
   textFaint:  '#7A8597',

@@ -26,7 +26,7 @@
   --border-default: rgba(255,255,255,0.12);
   --border-strong: rgba(255,255,255,0.22);
   /* Text — high contrast on jet black (§6). */
-  --text-primary: #E6CF00;   /* NO WHITE TYPE (6 Oct 2026) — palette yellow */
+  --text-primary: #FFE600;   /* NO WHITE TYPE (6 Oct 2026) — bright palette yellow */
   --text-secondary: #A3ACBB; /* palette gray */
   --text-tertiary: #A3ACBB;
   --text-disabled: #7A8597;
@@ -42,7 +42,7 @@
   --c-bg: #000000;          /* page */
   --c-card: #0E0F12;        /* cards, nav */
   --c-raised: #15171C;      /* inputs, menus, raised surfaces */
-  --c-text: #E6CF00;        /* primary text — palette yellow, never white */
+  --c-text: #FFE600;        /* primary text — bright palette yellow, never white */
   --c-text-2: #A3ACBB;      /* secondary text — palette gray */
   --c-text-3: #A3ACBB;      /* tertiary / dim */
   --c-text-4: #7A8597;      /* disabled / faint */
@@ -1478,23 +1478,22 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 /* ══ Brand type + dropdowns, app-wide (Chad, 6 Oct 2026) ═══════════════════
    Site palette only. One block, so every page follows without per-page edits.
 
-   Titles: "wet" gloss — a bright #FFF04A cap, a hard gloss line at 50%, then
-   #FFE600 into an #E6CF00 → #FF8A00 base; a 1px dark drop for crispness and a
-   faint brand glow. -webkit-text-fill-color beats any inline `color` on a
+   Titles: "wet" gloss — a bright #FFF04A cap melting into #FFE600 (bright,
+   never a dingy dark base); a 1px dark drop for crispness and a brand glow. -webkit-text-fill-color beats any inline `color` on a
    page, which is what makes this reach all 148 screens. Text shadows don't
    work on clipped text, so the edge and glow are drop-shadow filters. */
 .sag-app h1,
 .sag-app .k-title {
-  background: linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow) 49%, var(--c-yellow-hover) 51%, var(--c-orange) 115%);
+  background: linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow-hi) 40%, var(--c-yellow) 60%, var(--c-yellow) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: var(--c-yellow); /* icons inside a title follow currentColor */
   filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.75)) drop-shadow(0 0 14px rgba(255, 230, 0, 0.16));
 }
-/* Section titles: the same gloss, quieter — no orange base, no glow. */
+/* Section titles: the same gloss, quieter — no glow. */
 .sag-app h2 {
-  background: linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow) 50%, var(--c-yellow-hover) 100%);
+  background: linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow-hi) 40%, var(--c-yellow) 60%, var(--c-yellow) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -1505,7 +1504,7 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
    overdue count, green paid) keeps its status colour. */
 .sag-app .pmStatValue[style*="var(--text-primary)"],
 .sag-app .k-stat-value:not([style*="color"]):not([data-muted="true"]) {
-  background: linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow) 49%, var(--c-yellow-hover) 51%, var(--c-orange) 125%);
+  background: linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow-hi) 40%, var(--c-yellow) 60%, var(--c-yellow) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -1520,39 +1519,55 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 }
 
 /* No white type anywhere: the --c-text* scale at the top of this file is the
-   palette yellow (#E6CF00) over the palette gray (#A3ACBB / #7A8597).
+   bright palette yellow (#FFE600) over the palette gray (#A3ACBB / #7A8597).
 
-   Nav menus (sidebar, top bar, page tabs): the same wet gloss as the titles,
-   in the yellow family — a #FFF04A cap, a hard gloss line at the middle, an
-   #E6CF00 base. Hover lifts it; the current page is the solid brand yellow. */
+   Nav menus — BRIGHT, LIT, WET (owner, 6 Oct 2026: "brighter yellow, no
+   dingy… not flat dark and boring"). Labels: a #FFF04A cap over #FFE600
+   with a crisp black edge and a soft yellow glow. Section headers: small
+   caps, yellow into orange. The current page is a solid glossy yellow pill
+   with ink type (inline in AppSidebar); hover lays a yellow wash + ring. */
 .sg-nav-label,
 .sg-nav-head,
 .sg-brand-name {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.8));
 }
 .sg-nav-label {
-  background-image: linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow) 46%, var(--c-yellow-hover) 54%, var(--c-yellow-hover) 100%);
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  background-image: linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow-hi) 38%, var(--c-yellow) 62%, var(--c-yellow) 100%);
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.95)) drop-shadow(0 0 7px rgba(255, 230, 0, 0.28));
 }
-a:hover > * > .sg-nav-label,
-a:hover > .sg-nav-label,
-button:hover > .sg-nav-label {
-  background-image: linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow-hi) 46%, var(--c-yellow) 54%, var(--c-yellow) 100%);
+.sg-nav-item:hover .sg-nav-label {
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.95)) drop-shadow(0 0 10px rgba(255, 230, 0, 0.45));
 }
-[aria-current="page"] .sg-nav-label,
+.sg-nav-item[data-active="true"] .sg-nav-label,
 .sg-nav-label[data-active="true"] {
-  background-image: linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow) 50%, var(--c-yellow) 100%);
-  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.8)) drop-shadow(0 0 10px rgba(255, 230, 0, 0.22));
+  background: none;
+  -webkit-text-fill-color: var(--c-on-brand);
+  color: var(--c-on-brand);
+  filter: none;
+  font-weight: 800;
 }
-/* Section headers (Home, Sales, Tools…) — the title gloss, yellow into orange. */
+.sg-nav-item:not([data-active="true"]):hover {
+  background: linear-gradient(90deg, var(--brand-primary-12), rgba(255, 230, 0, 0.03));
+  box-shadow: inset 0 0 0 1px var(--brand-primary-25);
+}
+.sg-nav-item:not([data-active="true"]) svg {
+  filter: drop-shadow(0 0 6px rgba(255, 138, 0, 0.45));
+}
 .sg-nav-head {
-  background-image: linear-gradient(180deg, var(--c-yellow) 0%, var(--c-yellow-hover) 45%, var(--c-orange) 100%);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background-image: linear-gradient(180deg, var(--c-yellow) 0%, var(--c-orange) 100%);
+  filter: drop-shadow(0 0 6px rgba(255, 138, 0, 0.35));
 }
 .sg-brand-name {
-  background-image: linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow) 49%, var(--c-yellow-hover) 51%, var(--c-orange) 120%);
-  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.8)) drop-shadow(0 0 10px rgba(255, 230, 0, 0.18));
+  background-image: linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow-hi) 40%, var(--c-yellow) 60%, var(--c-yellow) 100%);
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.9)) drop-shadow(0 0 8px rgba(255, 230, 0, 0.3));
 }
 /* Page tabs + the top-bar page name read as nav too. */
 .sag-app [role="tab"],

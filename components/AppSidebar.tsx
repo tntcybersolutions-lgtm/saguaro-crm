@@ -267,8 +267,10 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
         style={{
           display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, textDecoration: 'none',
           padding: '8px 10px', borderRadius: 12,
-          background: hover ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.03)',
-          border: `1px solid ${hover ? 'var(--brand-primary-35)' : colors.borderDim}`,
+          background: hover
+            ? 'linear-gradient(180deg, var(--brand-primary-18), var(--brand-primary-08))'
+            : 'linear-gradient(180deg, var(--brand-primary-12), rgba(255,230,0,0.03))',
+          border: `1px solid ${hover ? 'var(--brand-primary-35)' : 'var(--brand-primary-25)'}`,
           transition: 'background .15s ease, border-color .15s ease',
         }}
       >
@@ -785,13 +787,14 @@ export default function AppSidebar({
         left: 0,
         bottom: 0,
         width,
-        // glass rail on jet black (COPY-STYLE §6): a faint white pane over the
-        // black page, one lit hairline on the content edge
-        background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025)), #000000',
+        // LIT rail (owner, 6 Oct 2026: "not flat dark and boring"): a warm
+        // brand glow off the top-left, an orange ember at the foot, raised
+        // graphite in between, and a yellow hairline on the content edge.
+        background: 'radial-gradient(130% 30% at 0% 0%, var(--brand-primary-12), transparent 62%), radial-gradient(120% 24% at 100% 100%, color-mix(in srgb, var(--c-orange) 10%, transparent), transparent 60%), linear-gradient(180deg, var(--c-raised) 0%, var(--c-card) 45%, var(--c-bg) 100%)',
         backdropFilter: 'blur(16px) saturate(140%)',
         WebkitBackdropFilter: 'blur(16px) saturate(140%)',
-        borderRight: '1px solid rgba(255,255,255,0.09)',
-        boxShadow: '14px 0 34px rgba(0,0,0,0.5)',
+        borderRight: '1px solid var(--brand-primary-25)',
+        boxShadow: '14px 0 34px rgba(0,0,0,0.5), inset -1px 0 0 var(--brand-primary-08), inset 0 1px 0 rgba(255,255,255,0.06)',
         display: 'flex',
         flexDirection: 'column',
         zIndex: z.sidebar,
@@ -874,8 +877,9 @@ export default function AppSidebar({
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '2px 8px 10px', padding: '0 8px 0 12px', minWidth: 0 }}>
                   <span style={{
-                    fontSize: 12, fontWeight: 800, letterSpacing: 'normal',
+                    fontSize: 10.5, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase',
                     color: zoneTone, whiteSpace: 'nowrap',
+                    textShadow: `0 0 10px ${zoneTone}`,
                   }}>{zoneLabel}</span>
                   <span aria-hidden style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${zoneTone}55, transparent)` }} />
                 </div>
@@ -947,6 +951,9 @@ export default function AppSidebar({
                   key={item.href}
                   href={item.href}
                   title={collapsed ? item.label : undefined}
+                  className="sg-nav-item"
+                  data-active={active || undefined}
+                  aria-current={active ? 'page' : undefined}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -958,92 +965,53 @@ export default function AppSidebar({
                     borderRadius: radius.lg,
                     fontSize: font.size.md,
                     fontWeight: active ? font.weight.semibold : font.weight.medium,
-                    color: active ? colors.gold : 'var(--c-orange)',
+                    color: active ? 'var(--on-brand)' : 'var(--c-orange)',
                     background: active
-                      ? 'linear-gradient(180deg, var(--brand-primary-18), var(--brand-primary-12))'
-                      : 'transparent',
-                    boxShadow: active ? 'inset 0 0 0 1px var(--brand-primary-25)' : 'none',
+                      ? 'linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow) 50%, var(--c-yellow) 100%)'
+                      : undefined,
+                    boxShadow: active
+                      ? '0 8px 22px -6px rgba(255,230,0,0.65), 0 0 0 1px var(--c-yellow-hi), inset 0 1px 0 rgba(255,255,255,0.65), inset 0 -2px 0 rgba(0,0,0,0.12)'
+                      : undefined,
                     textDecoration: 'none',
                     transition: 'background .15s ease, color .15s ease',
                     position: 'relative',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                   }}
-                  onMouseEnter={(e) => {
-                    if (!active) {
-                      e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                      e.currentTarget.style.color = colors.gold;
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!active) {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = 'var(--c-orange)';
-                    }
-                  }}
                 >
-                  {/* Active indicator — module vivid left rule (gold for un-accented items) */}
-                  {active && !collapsed && (
-                    <span
-                      aria-hidden
-                      style={{
-                        position: 'absolute',
-                        left: 0,
-                        top: 8,
-                        bottom: 8,
-                        width: 3,
-                        borderRadius: '0 3px 3px 0',
-                        background: vivid || colors.gold,
-                      }}
-                    />
-                  )}
-                  {vivid && active ? (
-                    /* vivid module chip — saturated hue UNDER a white glyph, never hue-on-hue */
-                    <span
-                      style={{
-                        flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                        width: collapsed ? 22 : 20, height: collapsed ? 22 : 20, borderRadius: 6,
-                        background: `linear-gradient(150deg, ${vivid}, color-mix(in srgb, ${vivid} 80%, #000000))`,
-                        border: `1px solid ${vivid}8C`,
-                        boxShadow: `0 0 12px -3px ${vivid}40, inset 0 1px 0 rgba(255,255,255,0.25)`,
-                      }}
-                    >
-                      <Icon size={collapsed ? 14 : 13} weight="fill" color="var(--text-primary)" />
-                    </span>
-                  ) : (
-                    <Icon
-                      size={collapsed ? 20 : 18}
-                      weight={active ? 'fill' : 'regular'}
-                      /* EACH MODULE IN ITS OWN COLOUR, at full strength.
-                       *
-                       * This was neutral for a while, and the note that made it
-                       * neutral blamed the hues: "#B8A98A parchment, #A9A2C4
-                       * lavender-gray, #FF8A00 steel, #8FB3A9 patina ... twelve
-                       * muted pastels do not read as restraint, they read as
-                       * muddy". That diagnosis was right about those values and
-                       * wrong about which values were in play — every one it
-                       * names is a module's `hex`, the SOFT tone meant for
-                       * fills and rings. `vivid` is the other half of the pair
-                       * and it is a different animal:
-                       *
-                       *   hex    19-51% saturation   the muddy pastels
-                       *   vivid  71-96% saturation   e.g. amber, blue, green
-                       *
-                       * Measured all 97 modules against this rail: every vivid
-                       * clears 3:1, most sit between 5:1 and 9:1. So the color
-                       * is confident AND legible, which is what the pastels
-                       * never were.
-                       *
-                       * Only the ICON wears it. Labels stay one uniform slate,
-                       * so the rail still reads as a list rather than a rainbow
-                       * of text, and the active item keeps its vivid chip and
-                       * gold rule to stay the loudest thing on screen. Full
-                       * opacity — dimming a saturated color is what produced
-                       * the mud in the first place. */
-                      color={vivid || undefined}
-                      style={{ flexShrink: 0, opacity: 1 }}
-                    />
-                  )}
+                  {/* The solid yellow pill marks the current page; the glyph on it is ink. */}
+                  <Icon
+                    size={collapsed ? 20 : 18}
+                    weight={active ? 'fill' : 'regular'}
+                    /* EACH MODULE IN ITS OWN COLOUR, at full strength.
+                     *
+                     * This was neutral for a while, and the note that made it
+                     * neutral blamed the hues: "#B8A98A parchment, #A9A2C4
+                     * lavender-gray, #FF8A00 steel, #8FB3A9 patina ... twelve
+                     * muted pastels do not read as restraint, they read as
+                     * muddy". That diagnosis was right about those values and
+                     * wrong about which values were in play — every one it
+                     * names is a module's `hex`, the SOFT tone meant for
+                     * fills and rings. `vivid` is the other half of the pair
+                     * and it is a different animal:
+                     *
+                     *   hex    19-51% saturation   the muddy pastels
+                     *   vivid  71-96% saturation   e.g. amber, blue, green
+                     *
+                     * Measured all 97 modules against this rail: every vivid
+                     * clears 3:1, most sit between 5:1 and 9:1. So the color
+                     * is confident AND legible, which is what the pastels
+                     * never were.
+                     *
+                     * Only the ICON wears it. Labels share one bright yellow
+                     * gloss, so the rail still reads as a list rather than a
+                     * rainbow of text, and the current page is the solid
+                     * yellow pill — the loudest thing on screen. Full
+                     * opacity — dimming a saturated color is what produced
+                     * the mud in the first place. */
+                    color={active ? 'var(--on-brand)' : (vivid || undefined)}
+                    style={{ flexShrink: 0, opacity: 1 }}
+                  />
                   {!collapsed && (
                     <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 7, minWidth: 0 }}>
 
@@ -1056,8 +1024,8 @@ export default function AppSidebar({
                         marginLeft: 'auto',
                         fontSize: font.size.xs,
                         fontWeight: font.weight.bold,
-                        background: active ? colors.gold : accent ? accent.soft : colors.raisedAlt,
-                        color: active ? 'var(--on-brand)' : accent ? accent.hex : colors.textMuted,
+                        background: active ? 'var(--on-brand)' : accent ? accent.soft : colors.raisedAlt,
+                        color: active ? 'var(--brand-primary)' : accent ? accent.hex : colors.textMuted,
                         borderRadius: radius.full,
                         padding: '1px 7px',
                         minWidth: 18,
@@ -1122,6 +1090,9 @@ export default function AppSidebar({
               key={item.href}
               href={item.href}
               title={collapsed ? item.label : undefined}
+              className="sg-nav-item"
+              data-active={active || undefined}
+              aria-current={active ? 'page' : undefined}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -1133,40 +1104,15 @@ export default function AppSidebar({
                 borderRadius: radius.lg,
                 fontSize: font.size.md,
                 fontWeight: active ? font.weight.semibold : font.weight.medium,
-                color: active ? colors.gold : 'var(--c-orange)',
-                background: active ? colors.goldDim : 'transparent',
+                color: active ? 'var(--on-brand)' : 'var(--c-orange)',
+                background: active ? 'linear-gradient(180deg, var(--c-yellow-hi) 0%, var(--c-yellow) 50%, var(--c-yellow) 100%)' : undefined,
+                boxShadow: active ? '0 8px 22px -6px rgba(255,230,0,0.65), 0 0 0 1px var(--c-yellow-hi), inset 0 1px 0 rgba(255,255,255,0.65)' : undefined,
                 textDecoration: 'none',
                 transition: 'background .15s ease, color .15s ease',
                 position: 'relative',
                 whiteSpace: 'nowrap',
               }}
-              onMouseEnter={(e) => {
-                if (!active) {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                  e.currentTarget.style.color = colors.gold;
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!active) {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = 'var(--c-orange)';
-                }
-              }}
             >
-              {active && !collapsed && (
-                <span
-                  aria-hidden
-                  style={{
-                    position: 'absolute',
-                    left: 0,
-                    top: 8,
-                    bottom: 8,
-                    width: 3,
-                    borderRadius: '0 3px 3px 0',
-                    background: colors.gold,
-                  }}
-                />
-              )}
               {/* Same rule as the main rail: the resting icon inherits the link
                   color and stays at full opacity. Dimming a neutral only muddies
                   it — the weight change from regular to fill already marks active. */}
@@ -1198,14 +1144,7 @@ export default function AppSidebar({
             cursor: 'pointer',
             transition: 'background .15s ease, color .15s ease',
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-            e.currentTarget.style.color = colors.gold;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent';
-            e.currentTarget.style.color = 'var(--c-orange)';
-          }}
+          className="sg-nav-item"
         >
           {collapsed ? <CaretRight size={18} style={{ flexShrink: 0 }} /> : <><CaretLeft size={18} style={{ flexShrink: 0 }} /><span className="sg-nav-label">Collapse</span></>}
         </button>
