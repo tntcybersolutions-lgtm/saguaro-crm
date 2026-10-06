@@ -33,9 +33,13 @@ import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
 import PhotoEditor from '../../../../../components/PhotoEditor';
+import MediaUploadPanel from '@/components/media/MediaUploadPanel';
+import ZoomLightbox, { type LightboxItem } from '@/components/media/ZoomLightbox';
+import { useUploadQueue } from '@/lib/useUploadQueue';
+import { uploadPhoto, uploadVideo, fmtDuration } from '@/lib/media-upload';
 import {
-  Camera, X, PencilSimple, Plus, Images, WarningCircle, ArrowClockwise, ArrowSquareOut, Trash,
-  Crop, CaretLeft, CaretRight, FolderSimple,
+  Camera, X, PencilSimple, Plus, Images, WarningCircle, ArrowClockwise, Trash,
+  Crop, CaretLeft, CaretRight, Play, ArrowsOut, LinkSimple,
 } from '@phosphor-icons/react';
 import {
   PageShell, Card, StatRow, Badge, Button, Toolbar, Tabs, EmptyState, RowActions,
@@ -47,7 +51,11 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { layout } from '@/lib/design-tokens';
 
-const ALBUMS=['General','Progress','Inspections','Closeout','Issues','Other'];
+const ALBUMS=['General','Progress','Inspections','Closeout','Issues','End of Day','Other'];
+/* Every project video, wherever it was uploaded (here, Files & Media, a sub's
+   end-of-day upload) — /api/photos/list files them under this album. */
+const VIDEO_ALBUM='Video';
+const isVideo=(p:any)=>p?.media==='video';
 /* Images that live in the project's Files & Media library. /api/photos/list
    merges them in read-only (source 'files', id 'file:<uuid>') so the gallery and
    the library show one picture of the job. They are edited in Files, not here. */
@@ -140,6 +148,17 @@ const CSS = `
 .phPreviewBar > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .phDateInput { width: 100%; }
 .phTabs .k-tabs { margin: 0; }
+.phViewer .phZoomHit { display: contents; cursor: zoom-in; }
+.phViewer img { cursor: zoom-in; }
+.phViewer video { width: 100%; max-height: min(70vh, 720px); display: block; background: #000; }
+.phPlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.phPlay > span { width: 44px; height: 44px; border-radius: 50%; background: rgba(8,9,12,0.72); border: 1px solid rgba(255,255,255,0.25); display: inline-flex; align-items: center; justify-content: center; color: #fff; }
+.phDur { position: absolute; right: 6px; bottom: 6px; padding: 2px 6px; border-radius: 6px; background: rgba(8,9,12,0.8); color: #fff; font-size: 11px; font-weight: 700; }
+.phUploading { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.04); color: var(--text-secondary); font: inherit; font-size: var(--fs-sm); font-weight: 700; cursor: pointer; }
+.phUploading i { display: block; width: 64px; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.1); overflow: hidden; }
+.phUploading i > b { display: block; height: 100%; background: var(--brand-primary); }
+.phLinkAlt { align-self: flex-start; background: none; border: none; padding: 6px 0; color: var(--text-tertiary); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; }
+.phLinkAlt:hover { color: var(--text-primary); }
 @media (max-width: 640px) {
   .phWs .k-btn, .phWs .k-stat, .phWs select.k-select, .phWs .k-input { min-height: 44px; }
   .phGrid, .phSplit[data-open="true"] .phGrid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
@@ -208,8 +227,8 @@ export default function PhotosPage(){
     reader.readAsDataURL(file);
   }
 
-  const load=useCallback(async()=>{
-    setLoading(true);
+  const load=useCallback(async(opts?:{silent?:boolean})=>{
+    if(!opts?.silent) setLoading(true);
     try{
       setLoadError('');
       const h=await getAuthHeaders();
@@ -217,9 +236,57 @@ export default function PhotosPage(){
       if (!r.ok) throw new Error('Failed to load data');
       const d=await r.json();
       setPhotos(d.photos||[]);
-    }catch{setPhotos([]);setLoadError('Failed to load. Please try again.');}
-    finally{setLoading(false);}
+    }catch{ if(!opts?.silent){setPhotos([]);setLoadError('Failed to load. Please try again.');} }
+    finally{ if(!opts?.silent) setLoading(false); }
   },[projectId]);
+
+  /* ── Add photos & video: many at once, any size, straight to storage ── */
+  const [uploadOpen,setUploadOpen]=useState(false);
+  const [uploadAlbum,setUploadAlbum]=useState('General');
+  const uploadAlbumRef=useRef('General');
+  uploadAlbumRef.current=uploadAlbum;
+  const reloadTimer=useRef<number|undefined>(undefined);
+  const softReload=useCallback(()=>{
+    window.clearTimeout(reloadTimer.current);
+    reloadTimer.current=window.setTimeout(()=>{ load({silent:true}); },700);
+  },[load]);
+  const queue=useUploadQueue(async(file,kind,onProgress)=>{
+    if(kind==='video'){
+      const f=await uploadVideo(file,{projectId,onProgress});
+      return {thumb:(f.poster_url as string)||null};
+    }
+    const ph=await uploadPhoto(file,{projectId,album:uploadAlbumRef.current,onProgress});
+    return {thumb:(ph.thumbnail_url as string)||(ph.url as string)||null};
+  },{
+    onItemDone:softReload,
+    onDrained:({done,failed})=>{
+      if(failed) showToast(`${done} saved, ${failed} didn't upload — open Add Photos & Video to retry.`,'bad');
+      else if(done) showToast(done===1?'1 item saved to the job.':`${done} items saved to the job.`);
+    },
+  });
+  function openUpload(){
+    setUploadAlbum(filterAlbum!=='All'&&filterAlbum!==FILES_ALBUM&&filterAlbum!==VIDEO_ALBUM?filterAlbum:'General');
+    setUploadOpen(true);
+  }
+  function addFiles(files:FileList|File[]){
+    const skipped=queue.add(files);
+    if(skipped) showToast(skipped===1?'1 file skipped — only photos and videos go here. Use Files & Media for documents.':`${skipped} files skipped — only photos and videos go here. Use Files & Media for documents.`,'bad');
+  }
+  // The Create menu links here with ?add=1 — open the picker straight away.
+  useEffect(()=>{
+    if(typeof window==='undefined') return;
+    const u=new URL(window.location.href);
+    if(u.searchParams.get('add')==='1'){
+      setUploadOpen(true);
+      u.searchParams.delete('add');
+      window.history.replaceState(null,'',u.pathname+(u.search?u.search:'')+u.hash);
+    }
+  },[]);
+  // Dragging files anywhere over the page opens the drop sheet.
+  const onPageDragEnter=(e:React.DragEvent)=>{
+    if(!uploadOpen&&!mode&&e.dataTransfer?.types?.includes('Files')){ e.preventDefault(); setUploadOpen(true); }
+  };
+  const [lightboxOpen,setLightboxOpen]=useState(false);
 
   useEffect(()=>{load();},[load]);
 
@@ -235,6 +302,7 @@ export default function PhotosPage(){
   const { ctx } = useProjectContext(projectId);
   const [auto,setAuto]=useState<{date?:boolean;album?:boolean}>({});
 
+  /** The by-link composer — for a photo that already lives on the web. */
   function openCreate(){
     // Prefill what the system already knows: today's date, and the album in view.
     const d=new Date();
@@ -370,14 +438,18 @@ export default function PhotosPage(){
   }
 
   async function deletePhoto(photo:any){
-    if(!(await confirmDialog({ title: 'Please confirm', message: `Delete "${photo.title}"?`, danger: true }))) return;
+    if(!(await confirmDialog({ title: 'Please confirm', message: `Delete "${photo.title||'this item'}"? This removes it from the job for everyone.`, danger: true }))) return;
     setDeleting(true);
     try{
       const h=await getAuthHeaders();
-      const dr=await fetch(`/api/photos/${photo.id}`,{method:'DELETE',headers:h});
+      // A video is a project_files row (the gallery shows it as `file:<id>`).
+      const dr=isVideo(photo)&&photo.file_id
+        ?await fetch(`/api/files/${photo.file_id}`,{method:'DELETE',headers:h})
+        :await fetch(`/api/photos/${photo.id}`,{method:'DELETE',headers:h});
+      if (dr.status===403) throw new Error('You need full Documents access to delete this.');
       if (!dr.ok) throw new Error('Delete failed');
-      showToast('Photo deleted.');closePanel();await load();
-    }catch{showToast('Delete failed.','bad');}
+      showToast(isVideo(photo)?'Video deleted.':'Photo deleted.');closePanel();await load();
+    }catch(e:any){showToast(e?.message==='Delete failed'||!e?.message?'Delete failed.':e.message,'bad');}
     finally{setDeleting(false);}
   }
 
@@ -390,6 +462,7 @@ export default function PhotosPage(){
   const thisMonth=photos.filter(inThisMonth).length;
   const albums=Array.from(new Set(photos.map((p:any)=>p.album).filter(Boolean))) as string[];
   const issueCount=photos.filter((p:any)=>p.album==='Issues'||(Array.isArray(p.tags)&&p.tags.some((t:string)=>t.toLowerCase().includes('issue')))).length;
+  const videoCount=photos.filter(isVideo).length;
   const lastPhoto=photos.reduce<any>((m,p)=>(p.taken_at&&(!m||p.taken_at>m.taken_at)?p:m),null);
 
   const filtered=photos.filter((p:any)=>{
@@ -427,14 +500,21 @@ export default function PhotosPage(){
   // ← / → step through the visible photos; Esc closes the viewer. Ignored while
   // typing, while the composer is open, and while the crop editor is up.
   const selIndex = selected ? ordered.findIndex(p=>p.id===selected.id) : -1;
+  const lightboxItems: LightboxItem[] = lightboxOpen
+    ? ordered.map((p:any)=>({ id:String(p.id), url:p.url||'', kind:isVideo(p)?'video':'image', title:p.title||null, poster:p.thumbnail_url||null }))
+    : [];
+  // Read the visible order through a ref: it's rebuilt every render, and as a
+  // dependency it would remake stepTo (and rebind the key handler) every time.
+  const orderedRef = useRef<any[]>(ordered);
+  orderedRef.current = ordered;
   const stepTo = useCallback((dir:1|-1)=>{
     if(selIndex<0) return;
-    const next = ordered[selIndex+dir];
+    const next = orderedRef.current[selIndex+dir];
     if(next) viewPhoto(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[selIndex, ordered]);
+  },[selIndex]);
   useEffect(()=>{
-    if(mode!=='view'||!selected||editingPhoto) return;
+    if(mode!=='view'||!selected||editingPhoto||lightboxOpen||uploadOpen) return;
     const onKey=(e:KeyboardEvent)=>{
       const t=e.target as HTMLElement|null;
       if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'||t.isContentEditable)) return;
@@ -445,21 +525,21 @@ export default function PhotosPage(){
     window.addEventListener('keydown',onKey);
     return ()=>window.removeEventListener('keydown',onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[mode, selected, editingPhoto, stepTo]);
+  },[mode, selected, editingPhoto, stepTo, lightboxOpen, uploadOpen]);
 
   // ── Stat tiles: each opens the gallery filtered to that slice ──
   const stats: StatItem[] = loading
     ? [
-        { label:'Photos', value:'—', sub:'Loading…' },
+        { label:'Photos & Video', value:'—', sub:'Loading…' },
         { label:'This Month', value:'—', sub:'Loading…' },
         { label:'Issues Tagged', value:'—', sub:'Loading…' },
-        { label:'Last Photo', value:'—', sub:'Loading…' },
+        { label:'Last Added', value:'—', sub:'Loading…' },
       ]
     : [
-        { label:'Photos', value:photos.length, sub: filtersActive ? 'Click to show everything' : albums.length>0 ? `${albums.length} album${albums.length===1?'':'s'} in use` : 'No albums yet', onClick: clearFilters },
+        { label:'Photos & Video', value:photos.length, sub: filtersActive ? 'Click to show everything' : videoCount>0 ? `${videoCount} video${videoCount===1?'':'s'} · ${albums.length} album${albums.length===1?'':'s'}` : albums.length>0 ? `${albums.length} album${albums.length===1?'':'s'} in use` : 'No albums yet', onClick: clearFilters },
         { label:'This Month', value:thisMonth, tone: thisMonth>0 ? 'good' : 'default', sub: periodFilter==='month' ? 'Filtered — click to clear' : 'Added since the 1st', onClick: () => setPeriodFilter(p => (p==='month' ? 'all' : 'month')) },
         { label:'Issues Tagged', value:issueCount, tone: issueCount>0 ? 'bad' : 'default', sub: filterAlbum==='Issues' ? 'Filtered — click to clear' : issueCount>0 ? 'Flagged for follow-up' : 'Clean so far', onClick: () => setFilterAlbum(a => (a==='Issues' ? 'All' : 'Issues')) },
-        { label:'Last Photo', value: lastPhoto ? fmtDate(lastPhoto.taken_at) : '—', sub: lastPhoto ? (lastPhoto.title || 'Most recent capture') : 'Nothing documented yet', onClick: lastPhoto ? () => viewPhoto(lastPhoto) : undefined },
+        { label:'Last Added', value: lastPhoto ? fmtDate(lastPhoto.taken_at) : '—', sub: lastPhoto ? `${isVideo(lastPhoto)?'Video':'Photo'} · ${lastPhoto.title || 'Most recent capture'}` : 'Nothing documented yet', onClick: lastPhoto ? () => viewPhoto(lastPhoto) : undefined },
       ];
 
   const detailOpen = !!selected && mode!=='create';
@@ -512,9 +592,9 @@ export default function PhotosPage(){
     galleryBody = (
       <EmptyState
         icon={<Camera size={22}/>}
-        title="No photos yet"
-        text="Photos are the project record — progress proof, inspection evidence, punch documentation, closeout backup. Add the first one to start the timeline."
-        action={<Button icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>Add First Photo</Button>}
+        title="No photos or video yet"
+        text="Photos and video are the project record — progress proof, inspection evidence, punch documentation, closeout backup. Add a whole day's worth at once, any size."
+        action={<Button icon={<Plus size={15} weight="bold"/>} onClick={openUpload}>Add Photos &amp; Video</Button>}
       />
     );
   } else if (filtered.length===0) {
@@ -557,10 +637,17 @@ export default function PhotosPage(){
           actions={<Button variant="ghost" size="sm" icon={<X size={16}/>} aria-label="Close viewer" title="Close viewer (Esc)" onClick={closePanel}/>}
         >
           <div className="phViewer" data-missing={selected.url?undefined:'true'}>
-            {selected.url ? (
+            {!selected.url ? 'No image on this record.' : isVideo(selected) ? (
+              /* Stored once, rewatchable any time: the signed URL is re-issued on
+                 every list, so an expired link just triggers a quiet re-sign. */
+              <video key={selected.id} src={selected.url} poster={selected.thumbnail_url||undefined} controls playsInline preload="metadata"
+                onError={()=>load({silent:true})}/>
+            ) : (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={selected.url} alt={selected.title||'Photo'} onError={e=>{(e.target as HTMLImageElement).style.display='none';}}/>
-            ) : 'No image on this record.'}
+              <img src={selected.url} alt={selected.title||'Photo'} title="Open full screen to zoom"
+                onClick={()=>setLightboxOpen(true)}
+                onError={e=>{(e.target as HTMLImageElement).style.display='none';}}/>
+            )}
             {ordered.length>1 && (
               <>
                 <div className="phNav" data-side="left"><Button variant="ghost" size="sm" icon={<CaretLeft size={18}/>} aria-label="Previous photo" title="Previous (←)" onClick={()=>stepTo(-1)} disabled={selIndex<=0}/></div>
@@ -596,9 +683,9 @@ export default function PhotosPage(){
             <div className="phSection">
               <div className="phBadges">
                 <Badge tone={albumBadge(selected.album).tone} dot>{albumBadge(selected.album).label}</Badge>
-                {selectedFromFiles && <Badge tone="closed">Read-Only</Badge>}
+                {selectedFromFiles && !isVideo(selected) && <Badge tone="closed">Read-Only</Badge>}
               </div>
-              {selectedFromFiles && (
+              {selectedFromFiles && !isVideo(selected) && (
                 <div className="phNext">
                   This image lives in the project&apos;s Files &amp; Media library. Rename, move or delete it there.{' '}
                   <a href={`/app/projects/${projectId}/files`}>Open Files &amp; Media</a>
@@ -611,7 +698,8 @@ export default function PhotosPage(){
                 ['Location', selected.location || ''],
                 ['Taken By', selected.taken_by || ''],
                 ['Album', selected.album || 'General'],
-                ['Source', selectedFromFiles ? 'Files & Media' : 'Site Photos'],
+                ...(isVideo(selected) && selected.duration_seconds ? [['Length', fmtDuration(selected.duration_seconds)] as [string,string]] : []),
+                ['Source', isVideo(selected) ? 'Video library' : selectedFromFiles ? 'Files & Media' : 'Site Photos'],
               ]}/>
             </div>
             <div className="phSection">
@@ -628,11 +716,11 @@ export default function PhotosPage(){
                 )}
                 <div className="phActionsRow">
                   {selected.url && (
-                    <a className="k-btn k-btn-secondary" href={selected.url} target="_blank" rel="noreferrer" style={{flex:'1 1 auto'}}>
-                      <ArrowSquareOut size={16}/> View Full Image
-                    </a>
+                    <Button icon={isVideo(selected)?<Play size={16}/>:<ArrowsOut size={16}/>} onClick={()=>setLightboxOpen(true)}>
+                      {isVideo(selected)?'Play Full Screen':'Full Screen & Zoom'}
+                    </Button>
                   )}
-                  {!selectedFromFiles && (
+                  {(!selectedFromFiles || isVideo(selected)) && (
                     <RowActions actions={[
                       { label:'Delete', icon:<Trash size={15}/>, onClick:()=>deletePhoto(selected), tone:'danger', disabled:deleting },
                     ]}/>
@@ -649,8 +737,39 @@ export default function PhotosPage(){
   const composerOpen = mode==='create'||mode==='edit';
 
   return(
-    <div className="phWs">
+    <div className="phWs" onDragEnter={onPageDragEnter}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
+
+      <MediaUploadPanel
+        open={uploadOpen}
+        onClose={()=>setUploadOpen(false)}
+        title="Add Photos & Video"
+        subtitle={ctx?.project?.name ? <>Filed to <strong style={{color:'var(--text-secondary)'}}>{ctx.project.name}</strong>. Pick as many as you like.</> : 'Pick as many as you like.'}
+        items={queue.items}
+        onFiles={addFiles}
+        onRetry={queue.retry}
+        onRemove={queue.remove}
+        hint="Photos at any size · videos up to 500 MB. They upload straight to storage, so big files are fine."
+        extra={queue.items.length===0 && (
+          <button type="button" className="phLinkAlt" onClick={()=>{ setUploadOpen(false); openCreate(); }}>
+            <LinkSimple size={15}/> Have a link instead? Add a photo by URL
+          </button>
+        )}
+      >
+        <Field label="Album for these photos" hint="Videos go to the Video album.">
+          <Select value={uploadAlbum} onChange={e=>setUploadAlbum(e.target.value)} options={ALBUMS}/>
+        </Field>
+      </MediaUploadPanel>
+
+      {lightboxOpen && selected && ordered.length>0 && (
+        <ZoomLightbox
+          items={lightboxItems}
+          index={Math.max(0, selIndex)}
+          onIndex={(i)=>{ const next=ordered[i]; if(next) viewPhoto(next); }}
+          onClose={()=>setLightboxOpen(false)}
+          onMediaError={()=>load({silent:true})}
+        />
+      )}
 
       {/* Photo Editor Modal */}
       {editingPhoto && (
@@ -689,14 +808,22 @@ export default function PhotosPage(){
           { label: ctx?.project?.name || 'Project', href:`/app/projects/${projectId}/overview` },
           { label:'Photos' },
         ]}
-        title="Site Photos"
+        title="Site Photos & Video"
         /* Always name the job on screen — never a bare "Photos" that leaves a GC
            guessing which project they are filing into. */
         subtitle={ctx?.project?.name ? `${ctx.project.name} — progress photos and documentation.` : (loading ? 'Loading project…' : 'Progress photos and documentation for this project.')}
         actions={
-          <Button variant="primary" icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>
-            Add Photo
-          </Button>
+          <>
+            {queue.busy && !uploadOpen && (
+              <button type="button" className="phUploading" onClick={()=>setUploadOpen(true)} aria-label="Show uploads">
+                Uploading {queue.counts.done} of {queue.counts.total - queue.counts.failed}
+                <i><b style={{width:`${Math.round(queue.overall*100)}%`}}/></i>
+              </button>
+            )}
+            <Button variant="primary" icon={<Plus size={15} weight="bold"/>} onClick={openUpload}>
+              Add Photos &amp; Video
+            </Button>
+          </>
         }
       >
         {!loadError && <StatRow items={stats}/>}
@@ -713,7 +840,7 @@ export default function PhotosPage(){
                   value={filterAlbum}
                   onChange={e=>setFilterAlbum(e.target.value)}
                   style={{ width:'auto', minWidth:150 }}
-                  options={[{ value:'All', label:'All Albums' }, ...(albums.includes(FILES_ALBUM)?[...ALBUMS,FILES_ALBUM]:ALBUMS)]}
+                  options={[{ value:'All', label:'All Albums' }, ...ALBUMS, ...(albums.includes(VIDEO_ALBUM)?[VIDEO_ALBUM]:[]), ...(albums.includes(FILES_ALBUM)?[FILES_ALBUM]:[])]}
                 />
                 {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
               </>
@@ -839,10 +966,18 @@ function PhotoCard({photo,selected,onClick,onEdit}:{
         {!missing ? (
           /* Grid tiles render the ~400px thumbnail; the full original is for the
              viewer only (see THUMBNAIL CONTRACT in /api/photos/list). */
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={photo.thumbnail_url||photo.url} alt={photo.title||'Photo'} loading="lazy" decoding="async" onError={()=>setMissing(true)}/>
+          isVideo(photo) && !photo.thumbnail_url
+            ? <span style={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%',color:'var(--text-tertiary)'}}><Play size={28} weight="fill"/></span>
+            // eslint-disable-next-line @next/next/no-img-element
+            : <img src={isVideo(photo)?photo.thumbnail_url:(photo.thumbnail_url||photo.url)} alt={photo.title||'Photo'} loading="lazy" decoding="async" onError={()=>setMissing(true)}/>
         ) : (
           <span><Images size={18}/> No image</span>
+        )}
+        {isVideo(photo) && !missing && (
+          <>
+            {photo.thumbnail_url && <div className="phPlay"><span><Play size={18} weight="fill"/></span></div>}
+            {photo.duration_seconds ? <span className="phDur">{fmtDuration(photo.duration_seconds)}</span> : null}
+          </>
         )}
       </div>
       <div className="phCardBody">

@@ -6238,6 +6238,48 @@ export type Database = {
           },
         ]
       }
+      customer_reviews: {
+        Row: {
+          body: string | null
+          created_at: string | null
+          created_by: string | null
+          customer_id: string | null
+          id: string
+          project_id: string | null
+          rating: number
+          reviewer_name: string | null
+          source: string | null
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_id?: string | null
+          id?: string
+          project_id?: string | null
+          rating: number
+          reviewer_name?: string | null
+          source?: string | null
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          body?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_id?: string | null
+          id?: string
+          project_id?: string | null
+          rating?: number
+          reviewer_name?: string | null
+          source?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       daily_log_crew: {
         Row: {
           company: string | null
@@ -6708,6 +6750,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      deal_media: {
+        Row: {
+          content_type: string | null
+          created_at: string | null
+          id: string
+          lead_id: string
+          name: string
+          path: string
+          size_bytes: number | null
+          tenant_id: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          content_type?: string | null
+          created_at?: string | null
+          id?: string
+          lead_id: string
+          name: string
+          path: string
+          size_bytes?: number | null
+          tenant_id: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          content_type?: string | null
+          created_at?: string | null
+          id?: string
+          lead_id?: string
+          name?: string
+          path?: string
+          size_bytes?: number | null
+          tenant_id?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
       }
       deliveries: {
         Row: {
