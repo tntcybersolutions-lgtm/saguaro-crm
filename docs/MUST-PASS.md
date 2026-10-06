@@ -44,7 +44,15 @@ to stop.
 - Reopen and confirm it persisted with today's practice date, not a UTC date
 - API: `app/api/daily-logs`
 - Taps at 390px: MEASURE
-- STATUS: NOT VERIFIED
+- Code walk (6 Oct 2026, no sign-in, nothing run):
+  - CODE-VERIFIED: page `app/app/daily-logs/page.tsx` and detail `[id]/page.tsx` exist.
+  - CODE-VERIFIED: list reads `logs`, route returns `{ logs }`; detail reads `log`, route returns `{ log }`; projects reads `projects`, route returns `{ projects }`.
+  - CODE-VERIFIED: create body keys (camelCase) match what `create/route.ts` reads; all 27 columns it inserts exist in `daily_logs` (checked via Supabase MCP).
+  - CODE-VERIFIED: every route calls `getUser`/`requirePermission` and filters `tenant_id`; create also runs `assertProjectInTenant`.
+  - CODE-VERIFIED: the client date is the local wall-clock day (`localToday`), and the list renders it with `T12:00:00`, so no UTC shift.
+  - CODE-VERIFIED: the only link, `/app/projects/[projectId]/daily-logs`, has a page.
+  - NEEDS-LIVE-RUN: save → reopen → fields persisted; tap count at 390px; NWS auto-weather stamp; "Same as Yesterday" prefill; duplicate-day save.
+- STATUS: CODE-VERIFIED — AWAITING LIVE RUN
 
 ### Path 2 — Clock in and clock out
 - Open `app/app/time/page.tsx` (474 lines), clock in, clock out
