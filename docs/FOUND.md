@@ -59,23 +59,32 @@ converge. One line each, newest at the bottom.
   "New Pay App" on a closed job and while bidding.
 - (2 Oct, audit verify) `app/app/projects/[projectId]/takeoff/page.tsx` — on load the upload hero
   ("Drop a plan") shows for ~3–5 s before a completed takeoff's results replace it.
-- (3 Oct, Pass 4 drive) `app/app/invoicing/[id]/page.tsx` — the project name never resolves
-  (lookup via `/api/projects?limit=200&fields=id,name` predates the rewrite); the header
-  falls back to "· Project" and the Details rail prints the raw project UUID.
+- ~~(3 Oct, Pass 4 drive) `app/app/invoicing/[id]/page.tsx` — the project name never resolves~~
+  **Closed 4 Oct (`fix/found-items`):** resolves on `main` since the Pass 4 rewrite — the detail
+  subtitle reads "Arizona Blueprint & Repro · Pima County Adult Detention Center — BAS
+  Modernization" and no UUID is printed. No code change.
 - (3 Oct, Pass 4 drive) Pima change orders carry `cost_impact` 0 on every row while the
   project context reports +$127,650 in approved COs — the two numbers disagree on screen.
-- (3 Oct, Pass 4 drive) Pay apps store `contract_sum` 0 (`contract_sum_to_date` is right), and
-  the rolled-forward SOV rows 7 and 9 on Mesa Flex have blank descriptions.
+- ~~(3 Oct, Pass 4 drive) Pay apps store `contract_sum` 0~~ **Fixed 4 Oct (`fix/found-items`):**
+  the wizard's Original Contract Sum is G702 line 1 when given, and a job with no contract on
+  file learns it from the first pay app. Driven on ZZ AUDIT 2: typed $10,000 → pay app
+  `contract_sum` 10000, project `original_contract_amount` / `contract_amount` 10000, overview
+  and Intelligence show $10,000. Still open from this entry: the rolled-forward SOV rows 7 and 9
+  on Mesa Flex have blank descriptions.
 - (3 Oct, Pass 4 drive) Project Daily Logs "Last Log" tile reads "11 workdays unlogged" on a
   closed job — the unlogged count should stop at closeout.
 - (3 Oct, Pass 4 drive) Preview session expires mid-walk (~30–40 min): /app/billing bounced to
   /login?next= seconds after /app/invoicing rendered; on-device QA has to re-sign-in each pass.
-- (3 Oct, Pass 4 drive) `/app/schedule` — all 15 Pima tasks carry `pct_complete` 100 with
-  `status` not_started, so every bar reads full while Complete says 0 and Overdue says 15.
-  The data disagree with themselves; one of the two writers is wrong.
-- (3 Oct, Pass 4 drive) `/app/intelligence` — the comparison cards show $0.00 contract /
-  billed / invoiced for ZZ AUDIT 2 Fix Check and ZZ AUDIT Mesa Flex Office although the
-  projects page carries contracts for them; the summary API returns zeros, not nulls.
+- ~~(3 Oct, Pass 4 drive) `/app/schedule` — all 15 Pima tasks carry `pct_complete` 100 with
+  `status` not_started~~ **Fixed at the writer 4 Oct (`fix/found-items`):** create and PUT keep
+  the two columns agreeing (100 → complete, started → in progress, complete → 100, not started
+  → 0; when both are sent and disagree the bar wins), and the inline editors send both. Driven
+  on a ZZ AUDIT 2 task: progress 100 → Complete; status Not Started → 0 %; a task created at 50 % with the composer's default Not Started is stored In Progress (second build, `8173b1ea`). **The 15 stored Pima rows are not rewritten by code** — reconciliation SQL is in
+  the PR description for someone with authority over that job.
+- ~~(3 Oct, Pass 4 drive) `/app/intelligence` — the comparison cards show $0.00 contract~~
+  **Fixed 4 Oct (`fix/found-items`):** all three contract columns were 0 on both ZZ AUDIT jobs;
+  the summary now falls back to Σ `budget_lines.revised_budget`. Driven: Mesa Flex card shows
+  Contract $1,166,132.84 (its budget total), ZZ AUDIT 2 shows $10,000 (seeded by its pay app).
 - (3 Oct, Pass 4 drive) `/app/portals` — the StatRow's sixth tile (Last Portal Visit) wraps
   to its own row at 1280; the kit StatRow has no "max 5 per row" rule for 6-tile pages.
 - (3 Oct, Pass 4 drive) `/app/takeoff` — per-division line-item tables need a horizontal
@@ -114,15 +123,28 @@ converge. One line each, newest at the bottom.
   auto-selected three.
 - (3 Oct, iOS QA) `app/app/time/page.tsx` — the entry row menu's Delete removes the shift with no
   confirm step (every other register asks first).
-- (3 Oct, iOS QA) `app/app/leads/[id]/page.tsx` Files & media — a file can be uploaded and
-  downloaded but never removed; deleting the lead (`DELETE /api/leads/[id]`) removes the lead and
-  its activities and leaves the storage objects under `project-files/deals/<id>/` behind.
-- (3 Oct, iOS QA) Projects — no archive / delete control anywhere in the UI; `DELETE
-  /api/projects/[projectId]` (archive) exists and works.
-- (3 Oct, iOS QA) `app/app/projects/[projectId]/pay-apps/new/page.tsx` — the Original Contract
-  Sum typed in step 1 is not on the created pay app (detail shows $0.00 original); same root as the
-  `contract_sum` 0 entry above.
+- ~~(3 Oct, iOS QA) `app/app/leads/[id]/page.tsx` Files & media — a file can never be removed;
+  lead delete leaves the bucket objects~~ **Fixed 4 Oct (`fix/found-items`):** Remove on the file
+  row (`DELETE /api/leads/[id]/media/[mediaId]`, object then index row) and lead delete clears
+  `deals/<id>/` first. Driven on a test lead: Remove → "File removed."; upload again → delete lead
+  → lead, `deal_media` and bucket objects all 0. The two objects left by the lead deleted on 3 Oct
+  (`deals/3fbf3884…`) predate the fix and still sit in the bucket.
+- ~~(3 Oct, iOS QA) Projects — no archive / delete control anywhere in the UI~~ **Fixed 4 Oct
+  (`fix/found-items`):** Archive Job in the overview's Project Details (kit confirm → archive →
+  portfolio, list cache dropped). Driven on a throwaway job: archived in the table, absent from
+  the list.
+- ~~(3 Oct, iOS QA) pay-app wizard — the Original Contract Sum typed in step 1 is not on the
+  created pay app~~ **Fixed 4 Oct** — same change as the `contract_sum` entry above.
 
+- ~~(4 Oct, marketing) `app/globals.css:250-253` — the app-wide `h1 { font-size: 18px !important }`
+  / `h2 { 15px !important }` / `h3 { 13.5px !important }` beat the `.mkt-page h1/h2/h3` scale at
+  `app/globals.css:825-847` (no `!important` there), so every page that opts into `mkt-page`
+  (roi-calculator, blog, intelligence, features, careers, api-docs, compare, switch-from-procore)
+  renders its headline at 18 px. `/get-the-app` is fixed locally on `marketing/phone-screens`.~~ FIXED by neon-glass M1: the app heading
+  scale is scoped to `.sag-app`, so marketing headings are no longer overridden.
+- ~~(4 Oct) `app/globals.css` `--status-completed` is `#FF8A00` (orange) but
+  `lib/status-colors.ts` `completed` is `#2CFF7A` (green) — two answers for one status.~~ FIXED by neon-glass M1:
+  `--status-completed` is green.
 - ~~(4 Oct, neon-glass walk) `app/app/projects/[projectId]/takeoff/page.tsx` on ZZ AUDIT 2 Fix Check — the
   takeoff hero showed "ZZ AUDIT — Mesa Flex Office".~~ FIXED on redesign/neon-glass (Chad: "FIX IT"): the
   hero was printing `project_name_detected` — the title the AI read off the drawings — as if it were the

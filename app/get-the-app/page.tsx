@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { GoldButton, PremiumFX } from '@/components/ui/premium';
-import { PhoneFrame, LaptopFrame } from '@/components/marketing/DeviceFrame';
+import { PhoneFrame } from '@/components/marketing/DeviceFrame';
 import MarketingNav from '@/components/MarketingNav';
 import { TRIAL_DAYS } from '@/lib/plans';
 
@@ -149,9 +149,11 @@ export default function GetTheAppPage() {
           animation: pulse 2s ease-in-out infinite;
         }
         @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(0.85)} }
+        /* globals.css forces h1 18px / h2 15px !important app-wide, which beat
+           the page's own sizes — these headings must win on the marketing page. */
         .hero-h1 {
-          font-size: clamp(32px, 4.5vw, 44px);
-          font-weight: 800;
+          font-size: clamp(32px, 4.5vw, 44px) !important;
+          font-weight: 800 !important;
           line-height: 1.12;
           letter-spacing: -0.02em;
           margin-bottom: 20px;
@@ -235,16 +237,47 @@ export default function GetTheAppPage() {
            and centred, the phones are bottom-anchored at the edges, and they
            overlap only its base. The login form is centred in the laptop screen,
            which is exactly the part that stays clear. */
-        .devices {
-          position: relative;
-          height: 760px;
+
+        /* Glow behind the hero phones — the neon palette, not flat black. */
+        /* The hero column is ~560px at 1440: a 232px phone in the middle and two
+           176px phones tucked behind it at the edges, all inside the glow. */
+        .devices { position: relative; height: 600px; }
+        .devices-glow {
+          position: absolute; inset: -60px -40px -30px;
+          background:
+            radial-gradient(ellipse 62% 58% at 50% 58%, rgba(255,230,0,0.55) 0%, rgba(255,230,0,0.22) 40%, transparent 70%),
+            radial-gradient(ellipse 48% 48% at 14% 78%, rgba(255,138,0,0.50) 0%, transparent 65%),
+            radial-gradient(ellipse 44% 44% at 88% 24%, rgba(255,138,0,0.38) 0%, transparent 65%);
+          filter: blur(12px); pointer-events: none;
         }
-        .dev-slot-phone-a { position: absolute; right: 0; bottom: 0; z-index: 3; animation: floatA 5s ease-in-out infinite; }
-        .dev-slot-phone-b { position: absolute; left: 0; bottom: 34px; z-index: 2; animation: floatB 5.5s ease-in-out infinite 0.4s; }
-        .dev-slot-laptop  { position: absolute; left: 50%; transform: translateX(-50%); top: 0; z-index: 1; animation: floatC 6s ease-in-out infinite 1s; }
-        @keyframes floatA { 0%,100%{transform:translateY(0) rotate(2deg)} 50%{transform:translateY(-12px) rotate(2deg)} }
-        @keyframes floatB { 0%,100%{transform:translateY(0) rotate(-2deg)} 50%{transform:translateY(-9px) rotate(-2deg)} }
-        @keyframes floatC { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(-6px)} }
+        .dev-slot-phone-a { position: absolute; left: 50%; transform: translateX(-50%); top: 0; z-index: 3; animation: floatA 5s ease-in-out infinite; }
+        .dev-slot-phone-b { position: absolute; left: 0; bottom: 0; z-index: 2; animation: floatB 5.5s ease-in-out infinite 0.4s; }
+        .dev-slot-phone-c { position: absolute; right: 0; bottom: 0; z-index: 2; animation: floatC 6s ease-in-out infinite 1s; }
+        @keyframes floatA { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(-10px)} }
+        @keyframes floatB { 0%,100%{transform:translateY(0) rotate(-3deg)} 50%{transform:translateY(-8px) rotate(-3deg)} }
+        @keyframes floatC { 0%,100%{transform:translateY(0) rotate(3deg)} 50%{transform:translateY(-8px) rotate(3deg)} }
+
+        /* ── PHONES strip ── */
+        .phones { position: relative; overflow: hidden; padding: 72px 0 80px; background: linear-gradient(180deg, #0A0A0C 0%, #141216 50%, #0A0A0C 100%); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+        .phones-glow {
+          position: absolute; inset: 0; pointer-events: none;
+          background:
+            radial-gradient(ellipse 70% 60% at 50% 70%, rgba(255,230,0,0.30) 0%, rgba(255,230,0,0.10) 40%, transparent 70%),
+            radial-gradient(ellipse 40% 50% at 8% 60%, rgba(255,138,0,0.30) 0%, transparent 65%),
+            radial-gradient(ellipse 40% 50% at 92% 60%, rgba(255,138,0,0.30) 0%, transparent 65%);
+          filter: blur(14px);
+        }
+        .phones-inner { position: relative; max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+        .phones-head { max-width: 640px; margin-bottom: 36px; }
+        .phones .eyebrow { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #FFE600; }
+        .phones-h2 { font-size: 40px !important; font-weight: 800 !important; letter-spacing: -0.02em; margin: 10px 0 12px; color: var(--text); }
+        .phones-sub { color: var(--dim); font-size: 16px; line-height: 1.6; margin: 0; }
+        .phones-strip { display: flex; gap: 28px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 24px 8px 18px; margin: 0 -8px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+        .phones-strip::-webkit-scrollbar { display: none; }
+        .phones-item { margin: 0; scroll-snap-align: center; flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+        .phones-item figcaption { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+        .phones-item figcaption strong { font-size: 14px; font-weight: 800; color: var(--text); }
+        .phones-item figcaption span { font-size: 12px; color: var(--dim); }
 
         /* ── NUMBERS BAR ── */
         .numbers-bar {
@@ -292,8 +325,8 @@ export default function GetTheAppPage() {
           margin-bottom: 56px;
         }
         .section-h2 {
-          font-size: clamp(20px, 2.4vw, 26px);
-          font-weight: 600;
+          font-size: clamp(20px, 2.4vw, 26px) !important;
+          font-weight: 600 !important;
           letter-spacing: -.02em;
           color: var(--text);
           margin-bottom: 14px;
@@ -529,8 +562,8 @@ export default function GetTheAppPage() {
           text-align: center;
         }
         .final-h2 {
-          font-size: clamp(24px, 3.4vw, 34px);
-          font-weight: 800;
+          font-size: clamp(24px, 3.4vw, 34px) !important;
+          font-weight: 800 !important;
           color: var(--text);
           letter-spacing: -0.02em;
           margin-bottom: 36px;
@@ -591,9 +624,12 @@ export default function GetTheAppPage() {
           .nav { padding: 0 16px; }
           .hero { padding: 80px 16px 60px; }
           .hero-inner { grid-template-columns: 1fr; gap: 48px; }
-          .devices { height: 640px; order: -1; }
-          .dev-slot-phone-b { display: none; }
-          .dev-slot-laptop { left: 0; }
+          .devices { height: 520px; order: -1; }
+          .dev-slot-phone-b, .dev-slot-phone-c { display: none; }
+          .phones { padding: 48px 0 56px; }
+          .phones-inner { padding: 0 16px; }
+          .phones-h2 { font-size: 30px !important; }
+          .phones-strip { gap: 18px; }
           .numbers-bar { padding: 32px 16px; }
           .numbers-inner { grid-template-columns: repeat(2,1fr); }
           .section-wrap { padding: 56px 16px; }
@@ -607,8 +643,8 @@ export default function GetTheAppPage() {
         @media (max-width: 480px) {
           .numbers-inner { grid-template-columns: 1fr 1fr; }
           .stat-number { font-size: 28px; }
-          .hero-h1 { font-size: 34px; }
-          .devices { display: none; }
+          .hero-h1 { font-size: 34px !important; }
+          .devices { height: 520px; }
         }
       ` }} />
 
@@ -663,26 +699,51 @@ export default function GetTheAppPage() {
               </div>
             </div>
 
-            {/* Devices — REAL screenshots, shipped in /public/marketing/, replacing
-                the placeholders that used to read "Drop phone-today.png here".
-                  phone-takeoff.png  iPhone 1290x2796 — Takeoff Studio
-                  phone-project.png  iPhone 1290x2796 — project overview
-                  web-login.png      the real /login page at 1440x900
-
-                The middle frame is a LAPTOP (430x270, aspect 1.59), so it takes a
-                DESKTOP capture. A portrait phone screenshot dropped in here
-                letterboxes into a sliver with black rails either side — which is
-                why the login shot is the web one, not the iOS one. */}
-            <div className="devices">
+            {/* Devices — 3× (1179 × 2556) neon renders of the phone app's screens
+                on a demo job (tools/marketing-phone-renders.mjs writes
+                /public/marketing/phone-*.png). Demo data only: no client names,
+                addresses or real dollar amounts. */}
+            <div className="devices" aria-label="The Saguaro field app on iPhone">
+              <div className="devices-glow" aria-hidden />
               <div className="dev-slot-phone-b">
-                <PhoneFrame src="/marketing/phone-takeoff.webp" alt="Takeoff Studio on iPhone — turn a blueprint into a priced estimate" width={232} />
+                <PhoneFrame src="/marketing/phone-daily-log.png" alt="Daily log on iPhone — crew, weather and work performed" width={176} />
               </div>
               <div className="dev-slot-phone-a">
-                <PhoneFrame src="/marketing/phone-project.webp" alt="Project overview on iPhone — contract value, quick add, progress" width={268} />
+                <PhoneFrame src="/marketing/phone-project.png" alt="Project overview on iPhone — phase, next step, money and what needs attention" width={232} />
               </div>
-              <div className="dev-slot-laptop">
-                <LaptopFrame src="/marketing/web-login.webp" alt="Signing in to Saguaro Control Systems on the web" width={536} height={336} />
+              <div className="dev-slot-phone-c">
+                <PhoneFrame src="/marketing/phone-time-clock.png" alt="Time clock on iPhone — GPS-stamped, cost-coded shifts" width={176} />
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── PHONES — every core screen, glowing stage ── */}
+        <section className="phones" aria-labelledby="phones-h2">
+          <div className="phones-glow" aria-hidden />
+          <div className="phones-inner">
+            <div className="phones-head">
+              <span className="eyebrow">The phone app</span>
+              <h2 id="phones-h2" className="phones-h2">Every screen, one thumb.</h2>
+              <p className="phones-sub">The same job your office sees — phase, money, logs, time — in a frame built for a job site.</p>
+            </div>
+            <div className="phones-strip" role="list">
+              {[
+                { src: '/marketing/phone-project.png',       alt: 'Project overview', cap: 'Project overview', sub: 'Phase, next step, needs attention' },
+                { src: '/marketing/phone-daily-log.png',     alt: 'Daily log',        cap: 'Daily log',        sub: 'Weather and crew auto-stamped' },
+                { src: '/marketing/phone-change-orders.png', alt: 'Change orders',    cap: 'Change orders',    sub: 'Priced before they are built' },
+                { src: '/marketing/phone-time-clock.png',    alt: 'Time clock',       cap: 'Time clock',       sub: 'GPS in, GPS out, cost-coded' },
+                { src: '/marketing/phone-punch-list.png',    alt: 'Punch list',       cap: 'Punch list',       sub: 'Tap to close, tap to reopen' },
+                { src: '/marketing/phone-takeoff.png',       alt: 'Takeoff Studio',   cap: 'Takeoff Studio',   sub: 'Blueprint in, estimate out' },
+              ].map((ph) => (
+                <figure key={ph.src} className="phones-item" role="listitem">
+                  <PhoneFrame src={ph.src} alt={`${ph.alt} on iPhone`} width={228} />
+                  <figcaption>
+                    <strong>{ph.cap}</strong>
+                    <span>{ph.sub}</span>
+                  </figcaption>
+                </figure>
+              ))}
             </div>
           </div>
         </section>

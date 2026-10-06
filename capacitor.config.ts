@@ -27,7 +27,11 @@ const PRODUCTION_URL = 'https://www.saguarocontrol.net/app';
 const serverUrl = process.env.CAPACITOR_SERVER_URL ?? PRODUCTION_URL;
 
 const config: CapacitorConfig = {
-  appId: 'com.saguaro.field',
+  // ONE app: this is the existing TestFlight app "Saguaro Field" (the same
+  // bundle id the retired React Native build in D:/Saguaro-Field used), so
+  // installs update in place to this shell, which loads the live site.
+  // tools/check-ios-mirror.mjs fails CI if this or the URL above drifts.
+  appId: 'net.saguarocontrol.field',
   appName: 'Saguaro Field',
 
   // webDir holds initial web assets; in server mode the live URL takes over
@@ -91,6 +95,29 @@ const config: CapacitorConfig = {
   },
 
   ios: {
+    // Native plugins compiled into the iOS app. @capacitor-mlkit/barcode-scanning
+    // is left out on purpose: it pins Google ML Kit 5.0.0, whose nanopb pod has
+    // no privacy manifest, and App Store Connect invalidates the binary the
+    // moment it is submitted for review (ITMS-91061; builds 1019 and 1027).
+    // Nothing calls scanBarcode() (lib/native.ts), so no screen loses anything.
+    // Add a plugin here when the app starts using it.
+    includePlugins: [
+      '@aparajita/capacitor-biometric-auth',
+      '@capacitor/app',
+      '@capacitor/camera',
+      '@capacitor/device',
+      '@capacitor/filesystem',
+      '@capacitor/geolocation',
+      '@capacitor/haptics',
+      '@capacitor/local-notifications',
+      '@capacitor/network',
+      '@capacitor/preferences',
+      '@capacitor/push-notifications',
+      '@capacitor/share',
+      '@capacitor/splash-screen',
+      '@capacitor/status-bar',
+      '@capacitor/toast',
+    ],
     // Allow WKWebView to reach the same-origin server
     contentInset: 'automatic',
     limitsNavigationsToAppBoundDomains: false,

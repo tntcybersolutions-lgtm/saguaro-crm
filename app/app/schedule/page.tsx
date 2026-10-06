@@ -395,10 +395,10 @@ export default function SchedulePage() {
     ) },
     // pct_complete can round-trip as TEXT — numeric sort, not lexicographic.
     { key: 'pct_complete', phone: 'show', header: 'Progress', accessor: t => Number(t.pct_complete) || 0, render: t => (
-      <PctEditor task={t} saving={savingId === t.id} onSave={(n) => patchTask(t.id, { pct_complete: n })} />
+      <PctEditor task={t} saving={savingId === t.id} onSave={(n) => patchTask(t.id, { pct_complete: n, status: n >= 100 ? 'complete' : n > 0 ? 'in_progress' : 'not_started' })} />
     ) },
     { key: 'status', phone: 'show', header: 'Status', accessor: t => STATUS_RANK[t.status] ?? 9, render: t => (
-      <StatusEditor task={t} saving={savingId === t.id} onSave={(s) => patchTask(t.id, s === 'complete' ? { status: s, pct_complete: 100 } : { status: s })} />
+      <StatusEditor task={t} saving={savingId === t.id} onSave={(s) => patchTask(t.id, s === 'complete' ? { status: s, pct_complete: 100 } : s === 'not_started' ? { status: s, pct_complete: 0 } : { status: s })} />
     ) },
   ];
   const rowActions = (t: ScheduleTask): Action[] => {
