@@ -65,6 +65,8 @@ export interface Metric {
   state: DataState;
   /** Shown when state is unavailable/failed/restricted. */
   note?: string;
+  /** 0–1 share for a progress bar under the value (e.g. billed of contract). */
+  progress?: number | null;
 }
 
 export interface ScheduleEntry {
@@ -149,4 +151,37 @@ export function isMine(values: Array<string | null | undefined>, me: { id: strin
     const s = String(v).trim().toLowerCase();
     return s === me.id.toLowerCase() || s === email || (!!name && s === name);
   });
+}
+
+/* ── Portfolio figures (Owner hero) ─────────────────────────────────────── */
+
+/** Hero figures: $4.75M / $475K; under $10K in full dollars. */
+export function fmtMoneyShort(n: number): string {
+  const a = Math.abs(n);
+  if (a >= 999_500) return '$' + String(a >= 1e8 ? Math.round(n / 1e6) : parseFloat((n / 1e6).toFixed(2))) + 'M';
+  if (a >= 1e4) return '$' + Math.round(n / 1e3) + 'K';
+  return '$' + Math.round(n).toLocaleString('en-US');
+}
+
+/** Contract total and billed-to-date across jobs. A job's billed-to-date is
+ *  its highest pay-app "completed and stored to date" (G702 line 4 is
+ *  cumulative, so the latest app carries it). Only jobs with a contract value
+ *  count, so "left to bill" never compares a bill against a missing contract. */
+export function summarisePortfolio(
+  jobs: Array<{ id: string; contract: number }>,
+  payApps: Array<{ project_id: string | null; total_completed_stored: number | string | null }>,
+): { total: number; billed: number; priced: number } {
+  const priced = jobs.filter(j => j.contract > 0);
+  const ids = new Set(priced.map(j => j.id));
+  const billedBy = new Map<string, number>();
+  for (const x of payApps) {
+    if (!x.project_id || !ids.has(x.project_id)) continue;
+    const v = Number(x.total_completed_stored || 0);
+    if (Number.isFinite(v) && v > (billedBy.get(x.project_id) || 0)) billedBy.set(x.project_id, v);
+  }
+  return {
+    total: priced.reduce((s, j) => s + j.contract, 0),
+    billed: [...billedBy.values()].reduce((s, v) => s + v, 0),
+    priced: priced.length,
+  };
 }

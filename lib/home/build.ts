@@ -16,7 +16,7 @@ import { CLOSED_PROJECT_STATUSES, PLACEHOLDER_WAIVER_PREFIX } from '@/lib/projec
 import { OPEN_STAGES, normaliseStage } from '@/lib/lead-stages';
 import { normalisePhase, PHASE_LABEL } from '@/lib/project-phase';
 import {
-  addDays, daysBetween, dueReason, isMine, rankQueue, tierForDue,
+  addDays, daysBetween, dueReason, fmtMoneyShort, isMine, rankQueue, summarisePortfolio, tierForDue,
   type DataState, type HomeView, type Metric, type QueueItem, type ScheduleEntry, type Tier,
 } from './rank';
 
@@ -93,12 +93,12 @@ async function rows(q: Promise<{ data: Row[] | null; error: unknown }> | Promise
 
 /* ── Shared loaders ─────────────────────────────────────────────────────── */
 
-interface ProjectInfo { id: string; name: string; status: string; phase: string; pm: string | null; address: string | null; contract: number; closed: boolean; bidDue: string | null }
+interface ProjectInfo { id: string; name: string; status: string; phase: string; pm: string | null; address: string | null; contract: number; closed: boolean; bidDue: string | null; pct: number | null }
 
 async function loadProjects(ctx: BuildCtx): Promise<Map<string, ProjectInfo>> {
   const r = await rows(
     loose(ctx.db).from('projects')
-      .select('id, name, status, phase, pm_name, project_manager, assigned_to_name, address, city, revised_contract_value, contract_amount, contract_value, is_archived, deleted_at, bid_due_date')
+      .select('id, name, status, phase, pm_name, project_manager, assigned_to_name, address, city, revised_contract_value, contract_amount, contract_value, is_archived, deleted_at, bid_due_date, percent_complete')
       .eq('tenant_id', ctx.tenantId)
       .is('deleted_at', null)
       .limit(1000),
@@ -115,6 +115,7 @@ async function loadProjects(ctx: BuildCtx): Promise<Map<string, ProjectInfo>> {
       contract: Number(p.revised_contract_value || p.contract_amount || p.contract_value || 0),
       closed: isClosedProject(p.status) || p.is_archived === true,
       bidDue: p.bid_due_date || null,
+      pct: p.percent_complete == null || !Number.isFinite(Number(p.percent_complete)) ? null : Math.max(0, Math.min(100, Math.round(Number(p.percent_complete)))),
     });
   }
   return m;
@@ -426,6 +427,32 @@ async function billedNotPaid(ctx: BuildCtx, projects: Map<string, ProjectInfo>):
   };
 }
 
+/** Portfolio under contract, and how much of it is billed. "Billed" is the
+ *  latest submitted-or-later pay app's completed-and-stored to date per job
+ *  (G702 line 4), counted only on jobs that carry a contract value — so
+ *  "left to bill" never compares a bill against a missing contract. */
+async function underContract(ctx: BuildCtx, jobs: ProjectInfo[]): Promise<Metric> {
+  const base = { key: 'contract', label: 'Under Contract', href: '/app/projects' };
+  if (!hasPermission(ctx.perms, 'Budget', 'View')) return { ...base, value: null, basis: '', href: null, state: 'restricted', note: 'Needs Budget access' };
+  const priced = jobs.filter(j => j.contract > 0);
+  const total = priced.reduce((s, j) => s + j.contract, 0);
+  const jobsTxt = plural(jobs.length, 'active job');
+  if (!total) return { ...base, value: fmtMoney(0), basis: `${jobsTxt} · no contract values entered yet`, state: 'empty' };
+  if (!hasPermission(ctx.perms, 'Pay Apps', 'View')) return { ...base, value: fmtMoneyShort(total), basis: `${plural(priced.length, 'job')} with a contract value · ${jobsTxt}`, state: 'ok' };
+  const r = await rows(
+    loose(ctx.db).from('pay_applications').select('project_id, total_completed_stored')
+      .eq('tenant_id', ctx.tenantId).is('deleted_at', null)
+      .in('status', ['submitted', 'approved', 'certified', 'paid'])
+      .in('project_id', priced.map(j => j.id)).limit(2000),
+  );
+  const { billed } = summarisePortfolio(priced, r.map(x => ({ project_id: x.project_id ?? null, total_completed_stored: x.total_completed_stored ?? null })));
+  return {
+    ...base, value: fmtMoneyShort(total), state: 'ok',
+    basis: `${fmtMoneyShort(billed)} billed · ${fmtMoneyShort(Math.max(0, total - billed))} left to bill · ${jobsTxt}`,
+    progress: Math.max(0, Math.min(1, billed / total)),
+  };
+}
+
 /* ── View builders ──────────────────────────────────────────────────────── */
 
 const emptyTable = (kind: WorkTable['kind'], title: string, note: string, state: DataState = 'empty'): WorkTable => ({ kind, title, columns: [], rows: [], state, note });
@@ -472,6 +499,7 @@ export async function buildOperations(ctx: BuildCtx, errors: Record<string, stri
         status: delayed ? `Behind (${delayed} late)` : hasTasks ? 'On track' : 'Unknown — no schedule',
         blocker: risk[0] || topByProject.get(p.id)?.title || 'None recorded',
         contract: showMoney ? (p.contract ? fmtMoney(p.contract) : '—') : null,
+        progress: p.pct == null ? null : `${p.pct}%`,
         _risk: risk.length,
       };
     })
@@ -668,7 +696,7 @@ export async function buildService(ctx: BuildCtx, errors: Record<string, string>
 }
 
 export async function buildOwner(ctx: BuildCtx, errors: Record<string, string>): Promise<HomeSections> {
-  const ops = await buildOperations({ ...ctx, scope: 'team' }, errors);
+  const [ops, projects] = await Promise.all([buildOperations({ ...ctx, scope: 'team' }, errors), loadProjects(ctx)]);
   const decisions = ops.queue.items.filter(i => ['change_order', 'pay_app', 'purchase_order', 'invoice'].includes(i.sourceType));
   const exceptions = ops.queue.items.filter(i => i.tier <= 2);
   const merged = rankQueue([...exceptions, ...decisions]);
@@ -677,15 +705,26 @@ export async function buildOwner(ctx: BuildCtx, errors: Record<string, string>):
   const billed = hasPermission(ctx.perms, 'Pay Apps', 'View')
     ? ops.metrics.find(m => m.key === 'billed') || { key: 'billed', label: 'Billed, Not Paid', value: null, basis: '', href: null, state: 'failed' as DataState }
     : { key: 'billed', label: 'Billed, Not Paid', value: null, basis: '', href: null, state: 'restricted' as DataState, note: 'Needs Pay Apps access' };
+  const activeJobs = [...projects.values()].filter(p => !p.closed && (!ctx.projectId || p.id === ctx.projectId));
+  const contract = await underContract(ctx, activeJobs).catch((e): Metric => {
+    console.error('[home:contract]', e);
+    return { key: 'contract', label: 'Under Contract', value: null, basis: '', href: null, state: 'failed', note: 'Could not load contract values.' };
+  });
+  // The owner's job table: who runs it, where it stands, how far along, what it's worth.
+  const keep = ['job', 'pm', 'phase', 'status', 'contract'];
+  const cols = ops.workTable.columns.filter(c => keep.includes(c.key));
+  const at = cols.findIndex(c => c.key === 'phase') + 1;
+  cols.splice(at, 0, { key: 'progress', label: 'Progress' });
   return {
     ...ops,
     metrics: [
+      contract,
       risk,
       billed,
-      { key: 'ready', label: 'Ready to Bill', value: null, basis: '', href: null, state: 'unavailable', note: 'No billing-readiness signal is recorded yet (completed work isn\'t tracked against unbilled value)' },
       { ...approvals, key: 'decisions', label: 'Decisions Waiting' },
     ],
     queue: { items: merged.slice(0, 50), total: merged.length, state: merged.length ? 'ok' : 'empty' },
+    workTable: { ...ops.workTable, columns: cols },
   };
 }
 

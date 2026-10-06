@@ -6,7 +6,7 @@
  * 2026-10-03.md §16): a blocked inspection today and an overdue RFI must rank
  * above a large volume of compliance reminders.
  */
-import { addDays, daysBetween, dueReason, isMine, rankQueue, tierForDue, ymdIn, type QueueItem } from './rank';
+import { addDays, daysBetween, dueReason, fmtMoneyShort, isMine, rankQueue, summarisePortfolio, tierForDue, ymdIn, type QueueItem } from './rank';
 
 let failed = 0;
 function check(name: string, cond: boolean, detail = '') {
@@ -74,6 +74,28 @@ const tie = rankQueue([
   base({ id: 'a', tier: 4, dueAt: '2026-10-05', updatedAt: '2026-09-01T00:00:00Z' }),
 ]);
 check('same tier & due → oldest update first', tie[0].id === 'a');
+
+// Owner hero money
+check('$0 stays $0', fmtMoneyShort(0) === '$0');
+check('under $10K in full', fmtMoneyShort(9999) === '$9,999');
+check('thousands as K', fmtMoneyShort(475000) === '$475K');
+check('rounds up into millions, not $1000K', fmtMoneyShort(999_500) === '$1M');
+check('millions to two places', fmtMoneyShort(4_750_000) === '$4.75M');
+check('no trailing zeros', fmtMoneyShort(5_000_000) === '$5M' && fmtMoneyShort(10_500_000) === '$10.5M');
+check('$100M is not shown as $1M', fmtMoneyShort(100_000_000) === '$100M');
+
+const jobs = [{ id: 'a', contract: 1_000_000 }, { id: 'b', contract: 500_000 }, { id: 'c', contract: 0 }];
+const pf = summarisePortfolio(jobs, [
+  { project_id: 'a', total_completed_stored: 100_000 },
+  { project_id: 'a', total_completed_stored: '250000' }, // cumulative: latest app wins, not the sum
+  { project_id: 'b', total_completed_stored: null },
+  { project_id: 'c', total_completed_stored: 80_000 }, // no contract value → not counted
+  { project_id: 'zzz', total_completed_stored: 9_999 }, // not an active job
+  { project_id: null, total_completed_stored: 5 },
+]);
+check('contract total counts priced jobs', pf.total === 1_500_000 && pf.priced === 2, JSON.stringify(pf));
+check('billed = latest cumulative per priced job', pf.billed === 250_000, JSON.stringify(pf));
+check('no pay apps → nothing billed', summarisePortfolio(jobs, []).billed === 0);
 
 if (failed) { console.error(`\n${failed} assertion(s) failed`); process.exit(1); }
 console.log('\nall home ranking assertions held');
