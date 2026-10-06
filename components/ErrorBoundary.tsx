@@ -24,7 +24,7 @@ interface Props { children: ReactNode; fallback?: ReactNode; }
 interface State { hasError: boolean; error: Error | null; }
 
 const GOLD = 'var(--brand-primary)';
-const DIM = '#A1A1AA';
+const DIM = 'var(--text-tertiary)';
 
 export default class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
@@ -50,7 +50,7 @@ export default class ErrorBoundary extends Component<Props, State> {
             <div style={{ fontSize: 11, fontWeight: 800, color: GOLD, marginBottom: 10 }}>
               Something Broke on This Screen
             </div>
-            <div style={{ color: '#F0F4FF', fontWeight: 700, fontSize: 19, marginBottom: 10, letterSpacing: '-0.01em' }}>
+            <div style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: 19, marginBottom: 10, letterSpacing: '-0.01em' }}>
               This section could not load.
             </div>
             <div style={{ color: DIM, fontSize: 14, lineHeight: 1.6, marginBottom: 18 }}>
@@ -74,13 +74,13 @@ export default class ErrorBoundary extends Component<Props, State> {
                   re-runs the same render and throws again. */}
               <button
                 onClick={() => this.setState({ hasError: false, error: null })}
-                style={{ height: 40, padding: '0 20px', background: GOLD, border: `1px solid ${GOLD}`, borderRadius: 10, color: '#0A0A00', fontWeight: 700, cursor: 'pointer', fontSize: 13.5 }}
+                style={{ height: 40, padding: '0 20px', background: GOLD, border: `1px solid ${GOLD}`, borderRadius: 10, color: 'var(--on-brand)', fontWeight: 700, cursor: 'pointer', fontSize: 13.5 }}
               >
                 Try Again
               </button>
               <a
                 href="/app"
-                style={{ display: 'inline-flex', alignItems: 'center', height: 40, padding: '0 20px', background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, color: '#F0F4FF', fontWeight: 700, fontSize: 13.5, textDecoration: 'none' }}
+                style={{ display: 'inline-flex', alignItems: 'center', height: 40, padding: '0 20px', background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, color: 'var(--text-primary)', fontWeight: 700, fontSize: 13.5, textDecoration: 'none' }}
               >
                 Back to Dashboard
               </a>

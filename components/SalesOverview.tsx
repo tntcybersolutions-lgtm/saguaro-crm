@@ -22,8 +22,8 @@ import {
 import { SectionCard, StatCard, PremiumEmpty } from '@/components/ui/premium';
 import { WinLossBar, DonutRatio } from '@/components/charts';
 
-const GOLD = 'var(--brand-primary)', TEXT = '#FFFFFF', DIM = 'rgba(255,255,255,0.62)';
-const BORDER = 'rgba(255,255,255,0.10)', RED = '#FF3B30', AMBER = '#FF8A00', GREEN = '#2CFF7A';
+const GOLD = 'var(--brand-primary)', TEXT = 'var(--text-primary)', DIM = 'rgba(255,255,255,0.62)';
+const BORDER = 'rgba(255,255,255,0.10)', RED = 'var(--danger)', AMBER = 'var(--warning)', GREEN = 'var(--success)';
 
 interface FollowUp {
   id: string; what: string; who: string; due: string;

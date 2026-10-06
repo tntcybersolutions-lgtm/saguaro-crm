@@ -21,17 +21,18 @@ import { accentForProject } from '@/lib/project-identity';
 import { usePathname, useRouter } from 'next/navigation';
 import { CaretUpDown, MagnifyingGlass, Buildings, Check } from '@phosphor-icons/react';
 import { useProjects } from '@/lib/hooks/useProjects';
+import { ProjectDot } from '@/components/ui/ProjectColor';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 
 const GOLD = 'var(--brand-primary)';
-const TEXT = '#FFFFFF';
-const DIM = '#A9B4C4';
+const TEXT = 'var(--text-primary)';
+const DIM = 'var(--text-tertiary)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const PANEL = 'rgba(22,24,29,0.94)'; // floating glass over the jet-black page
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-interface Proj { id: string; name?: string; project_name?: string; title?: string; status?: string; project_number?: string }
+interface Proj { id: string; name?: string; project_name?: string; title?: string; status?: string; project_number?: string; color?: string | null }
 
 const nameOf = (p: Proj) => p.name || p.project_name || p.title || 'Untitled project';
 
@@ -161,7 +162,8 @@ export default function HeaderProjectPicker() {
         }}
       >
         <Buildings size={15} weight="duotone" color={currentName ? GOLD : DIM} />
-        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0, ...(currentName && currentId ? { color: accentForProject(currentId).hex } : {}) }}>
+        {currentName && currentId && <ProjectDot project={list.find((p) => p.id === currentId) ?? currentId} />}
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
           {currentName ?? 'Choose a Job'}
         </span>
         <CaretUpDown size={13} weight="bold" color={DIM} />
@@ -219,6 +221,7 @@ export default function HeaderProjectPicker() {
                     color: TEXT, fontSize: 13.5, fontWeight: isCurrent ? 800 : 600,
                   }}
                 >
+                  <ProjectDot project={p} />
                   <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {nameOf(p)}
                     {p.project_number && (

@@ -11,13 +11,13 @@ const GOLD = 'var(--brand-primary)';
 const BG = 'var(--bg-base)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const TEXT = '#FFFFFF';
+const TEXT = 'var(--text-primary)';
 const DIM = '#D4D4D8';
 const GREEN = '#2CFF7A';
 const RED = '#FF3B30';
 const AMBER = 'var(--warning)';
 const BLUE = 'var(--brand-primary)';
-const ROLE_HEX = '#FF8A00'; // stored role color value (sent to the API) — must stay hex
+const ROLE_HEX = 'var(--warning)'; // stored role color value (sent to the API) — must stay hex
 const PURPLE = '#FF8A00';
 
 /* ── types ── */
@@ -75,7 +75,7 @@ const ROLE_PRESETS: { name: string; desc: string; color: string; perms: Permissi
       if (['Projects','Budget','Change Orders','Pay Apps','Reports'].includes(c)) return [c, 'View' as PermLevel];
       return [c, 'None' as PermLevel];
     })) },
-  { name: 'Foreman', desc: 'Daily field reporting and crew management.', color: '#FF8A00',
+  { name: 'Foreman', desc: 'Daily field reporting and crew management.', color: 'var(--warning)',
     perms: Object.fromEntries(CATEGORIES.map(c => {
       if (['Safety','Schedule'].includes(c)) return [c, 'Edit' as PermLevel];
       if (['Projects','Documents','RFIs','Submittals','Reports'].includes(c)) return [c, 'View' as PermLevel];
@@ -91,7 +91,7 @@ const ROLE_PRESETS: { name: string; desc: string; color: string; perms: Permissi
     perms: Object.fromEntries(CATEGORIES.map(c => [c, 'View' as PermLevel])) },
 ];
 
-const ROLE_COLORS = [ROLE_HEX, ROLE_HEX, GREEN, RED, ROLE_HEX, PURPLE, '#FF8A00', '#2CFF7A', '#FF8A00'];
+const ROLE_COLORS = [ROLE_HEX, ROLE_HEX, GREEN, RED, ROLE_HEX, PURPLE, 'var(--warning)', 'var(--success)', 'var(--warning)'];
 
 /* ── view types for the two lightweight lookup lists ── */
 interface TenantUser {
@@ -167,7 +167,7 @@ function permLevelColor(level: PermLevel): string {
     case 'Full': return GREEN;
     case 'Edit': return BLUE;
     case 'View': return AMBER;
-    default: return '#8094B0';
+    default: return 'var(--text-tertiary)';
   }
 }
 
@@ -794,7 +794,7 @@ export function AccessManager() {
       <h1 style={{ color: GOLD, fontSize: 26, margin: 0, marginBottom: 8 }}>Roles & Permissions</h1>
       <div style={{ ...card(), borderColor: RED }}>
         <p style={{ color: RED, margin: 0, marginBottom: 12 }}>Error: {error}</p>
-        <button onClick={loadData} style={btn(GOLD, '#0A0A00')}>Retry</button>
+        <button onClick={loadData} style={btn(GOLD, 'var(--on-brand)')}>Retry</button>
       </div>
     </div>
   );
@@ -809,7 +809,7 @@ export function AccessManager() {
             Manage access levels across {CATEGORIES.length} categories — {roles.length} roles configured
           </p>
         </div>
-        <button onClick={openCreateRole} style={{ ...btn(GOLD, '#0A0A00'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)' }}>+ New Role</button>
+        <button onClick={openCreateRole} style={{ ...btn(GOLD, 'var(--on-brand)'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)' }}>+ New Role</button>
       </div>
 
       {/* tab bar */}
@@ -835,7 +835,7 @@ export function AccessManager() {
             </span>
             <div style={{ flex: 1 }} />
             <button onClick={() => setShowInvite(true)} style={{ ...btn('transparent', GOLD), background: 'linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))', border: `1px solid ${BORDER}` }}>+ Invite User</button>
-            <button onClick={() => { setAssignUserId(''); setAssignRoleId(''); setAssignProjectId(''); setShowAssign(true); }} style={{ ...btn(GOLD, '#0A0A00'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)' }}>+ Assign Role</button>
+            <button onClick={() => { setAssignUserId(''); setAssignRoleId(''); setAssignProjectId(''); setShowAssign(true); }} style={{ ...btn(GOLD, 'var(--on-brand)'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)' }}>+ Assign Role</button>
           </div>
 
           <div style={{ ...card(), overflowX: 'auto' }}>
@@ -878,7 +878,7 @@ export function AccessManager() {
                       {/* Base role */}
                       <td style={{ padding: '10px 12px' }}>
                         <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700,
-                          color: isBypass ? '#0A0A00' : DIM,
+                          color: isBypass ? 'var(--on-brand)' : DIM,
                           background: isBypass ? `linear-gradient(135deg, ${GOLD}, var(--brand-primary-strong))` : 'rgba(255,255,255,0.05)',
                           border: isBypass ? 'none' : `1px solid ${BORDER}`, textTransform: 'capitalize' }}>
                           {r.baseRole || 'member'}
@@ -1083,7 +1083,7 @@ export function AccessManager() {
                               cursor: canEdit ? 'pointer' : 'default', transition: 'all .15s',
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                             }}>
-                              {isActive && <span style={{ color: level === 'None' ? DIM : '#fff', fontSize: 11, fontWeight: 700 }}>
+                              {isActive && <span style={{ color: level === 'None' ? DIM : 'var(--text-primary)', fontSize: 11, fontWeight: 700 }}>
                                 {level === 'None' ? '-' : '\u2713'}
                               </span>}
                             </div>
@@ -1161,7 +1161,7 @@ export function AccessManager() {
                         borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                         <span style={{
                           display: 'inline-block', padding: '3px 10px', borderRadius: 4, fontSize: 11,
-                          fontWeight: 600, color: level === 'None' ? DIM : '#fff',
+                          fontWeight: 600, color: level === 'None' ? DIM : 'var(--text-primary)',
                           background: level === 'None' ? `${DIM}15` : `color-mix(in srgb, ${permLevelColor(level)} 13%, transparent)`,
                           border: `1px solid ${level === 'None' ? 'transparent' : permLevelColor(level)}`,
                         }}>{level === 'Full' ? 'Full' : level}</span>
@@ -1194,7 +1194,7 @@ export function AccessManager() {
             </select>
             <div style={{ flex: 1 }} />
             <button onClick={() => setShowInvite(true)} style={{ ...btn('transparent', GOLD), background: 'linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))', border: `1px solid ${BORDER}` }}>+ Invite User</button>
-            <button onClick={() => setShowAssign(true)} style={{ ...btn(GOLD, '#0A0A00'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)' }}>+ Assign Role</button>
+            <button onClick={() => setShowAssign(true)} style={{ ...btn(GOLD, 'var(--on-brand)'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)' }}>+ Assign Role</button>
           </div>
 
           {/* ── Pending sent invites (expiry countdown + cancel / resend) ── */}
@@ -1350,7 +1350,7 @@ export function AccessManager() {
                         <td style={{ padding: '10px 12px', color: TEXT, fontWeight: 500, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)` }}>{cat}</td>
                         <td style={{ padding: '8px 12px', textAlign: 'center', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)` }}>
                           <span style={{ padding: '3px 12px', borderRadius: 4, fontSize: 12, fontWeight: 600,
-                            color: lA === 'None' ? DIM : '#fff', background: `color-mix(in srgb, ${permLevelColor(lA)} 13%, transparent)`,
+                            color: lA === 'None' ? DIM : 'var(--text-primary)', background: `color-mix(in srgb, ${permLevelColor(lA)} 13%, transparent)`,
                             border: `1px solid ${permLevelColor(lA)}` }}>{lA}</span>
                         </td>
                         <td style={{ padding: '8px 12px', textAlign: 'center', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)` }}>
@@ -1362,7 +1362,7 @@ export function AccessManager() {
                         </td>
                         <td style={{ padding: '8px 12px', textAlign: 'center', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)` }}>
                           <span style={{ padding: '3px 12px', borderRadius: 4, fontSize: 12, fontWeight: 600,
-                            color: lB === 'None' ? DIM : '#fff', background: `color-mix(in srgb, ${permLevelColor(lB)} 13%, transparent)`,
+                            color: lB === 'None' ? DIM : 'var(--text-primary)', background: `color-mix(in srgb, ${permLevelColor(lB)} 13%, transparent)`,
                             border: `1px solid ${permLevelColor(lB)}` }}>{lB}</span>
                         </td>
                       </tr>
@@ -1482,7 +1482,7 @@ export function AccessManager() {
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         transition: 'all .15s',
                       }}>
-                        {isActive && level !== 'None' && <span style={{ color: '#fff', fontSize: 10, fontWeight: 700 }}>{'\u2713'}</span>}
+                        {isActive && level !== 'None' && <span style={{ color: 'var(--text-primary)', fontSize: 10, fontWeight: 700 }}>{'\u2713'}</span>}
                       </div>
                     </div>
                   );
@@ -1506,7 +1506,7 @@ export function AccessManager() {
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
           <button onClick={() => setShowRoleModal(false)} style={btn(RAISED, DIM)}>Cancel</button>
           <button onClick={saveRole} disabled={!formName.trim()} style={{
-            ...btn(GOLD, '#0A0A00'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)', opacity: formName.trim() ? 1 : 0.5,
+            ...btn(GOLD, 'var(--on-brand)'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)', opacity: formName.trim() ? 1 : 0.5,
           }}>{editRoleId ? 'Save Changes' : 'Create Role'}</button>
         </div>
       </Modal>
@@ -1541,7 +1541,7 @@ export function AccessManager() {
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
           <button onClick={() => setShowAssign(false)} style={btn(RAISED, DIM)}>Cancel</button>
           <button onClick={assignRole} disabled={!assignUserId || !assignRoleId} style={{
-            ...btn(GOLD, '#0A0A00'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)', opacity: assignUserId && assignRoleId ? 1 : 0.5,
+            ...btn(GOLD, 'var(--on-brand)'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)', opacity: assignUserId && assignRoleId ? 1 : 0.5,
           }}>Assign</button>
         </div>
       </Modal>
@@ -1602,7 +1602,7 @@ export function AccessManager() {
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
           <button onClick={() => setShowInvite(false)} style={btn(RAISED, DIM)}>Cancel</button>
           <button onClick={sendInvite} disabled={!inviteEmailValid} style={{
-            ...btn(GOLD, '#0A0A00'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)', opacity: inviteEmailValid ? 1 : 0.5, cursor: inviteEmailValid ? 'pointer' : 'not-allowed',
+            ...btn(GOLD, 'var(--on-brand)'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)', opacity: inviteEmailValid ? 1 : 0.5, cursor: inviteEmailValid ? 'pointer' : 'not-allowed',
           }}>Send Invite</button>
         </div>
       </Modal>

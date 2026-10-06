@@ -121,7 +121,7 @@ function ProfitPanel() {
     {
       key: 'marginCents', header: 'Margin', align: 'right', accessor: (j) => j.marginCents ?? 0,
       render: (j) => (
-        <span style={{ fontWeight: 700, color: (j.marginCents ?? 0) >= 0 ? '#2CFF7A' : '#FF3B30' }}>
+        <span style={{ fontWeight: 700, color: (j.marginCents ?? 0) >= 0 ? 'var(--success)' : 'var(--danger)' }}>
           {usd(j.marginCents ?? 0)}{j.marginPct != null ? ` · ${j.marginPct}%` : ''}
         </span>
       ),

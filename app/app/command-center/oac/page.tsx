@@ -170,7 +170,7 @@ export default function OacPage() {
               const overdue = !done && d != null && d < 0;
               return (
                 <div key={a.id} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', background: C.card, border: `1px solid ${C.border}`, borderLeft: `3px solid ${done ? C.green : overdue ? C.red : C.blue}`, borderRadius: 12, padding: '12px 14px' }}>
-                  <button onClick={() => check(a)} aria-label="Toggle action item" style={{ marginTop: 1, width: 20, height: 20, borderRadius: 6, border: `2px solid ${done ? C.green : C.border}`, background: done ? C.green : 'var(--bg-surface-2)', color: '#fff', cursor: 'pointer', flexShrink: 0, fontSize: 12, fontWeight: 900, lineHeight: '16px' }}>{done ? <Check size={14} weight="bold" color="#fff" /> : ''}</button>
+                  <button onClick={() => check(a)} aria-label="Toggle action item" style={{ marginTop: 1, width: 20, height: 20, borderRadius: 6, border: `2px solid ${done ? C.green : C.border}`, background: done ? C.green : 'var(--bg-surface-2)', color: 'var(--text-primary)', cursor: 'pointer', flexShrink: 0, fontSize: 12, fontWeight: 900, lineHeight: '16px' }}>{done ? <Check size={14} weight="bold" color="var(--text-primary)" /> : ''}</button>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: done ? C.dim : C.text, textDecoration: done ? 'line-through' : 'none' }}>{a.title || a.description}</div>
                     <div style={{ fontSize: 12, color: C.dim, marginTop: 3, display: 'flex', gap: 12, flexWrap: 'wrap' }}>

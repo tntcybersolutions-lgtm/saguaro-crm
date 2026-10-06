@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useGuardedRouter } from '@/lib/navGuard';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF',RED='#FF3B30';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)',RED='var(--danger)';
 
 interface Notification {
   id: string;
@@ -132,7 +132,7 @@ export default function NotificationBell() {
         style={{ position: 'relative', background: 'rgba(255,255,255,0.06)', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '10px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <span style={{ fontSize: 18 }}>🔔</span>
         {displayCount > 0 && (
-          <span style={{ position: 'absolute', top: -4, right: -4, minWidth: 18, height: 18, background: RED, borderRadius: 9, fontSize: 10, fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', border: `2px solid ${DARK}` }}>
+          <span style={{ position: 'absolute', top: -4, right: -4, minWidth: 18, height: 18, background: RED, borderRadius: 9, fontSize: 10, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', border: `2px solid ${DARK}` }}>
             {displayCount > 99 ? '99+' : displayCount}
           </span>
         )}
@@ -146,7 +146,7 @@ export default function NotificationBell() {
             <span style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>Notifications</span>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               {displayCount > 0 && (
-                <span style={{ fontSize: 11, background: 'rgba(192,48,48,.15)', color: '#FF3B30', padding: '2px 7px', borderRadius: 4, fontWeight: 700 }}>{displayCount} new</span>
+                <span style={{ fontSize: 11, background: 'rgba(192,48,48,.15)', color: 'var(--danger)', padding: '2px 7px', borderRadius: 4, fontWeight: 700 }}>{displayCount} new</span>
               )}
               <button
                 onClick={markAllRead}

@@ -14,7 +14,7 @@ import { Plus, DownloadSimple, CheckCircle, FloppyDisk, Receipt, Calculator, Lis
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 import { openPdf } from '@/components/PdfViewer';
 
-const PANEL = 'var(--bg-surface-2)', LINE = 'rgba(255,255,255,0.09)', GOLD = 'var(--brand-primary)', TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#2CFF7A';
+const PANEL = 'var(--bg-surface-2)', LINE = 'rgba(255,255,255,0.09)', GOLD = 'var(--brand-primary)', TEXT = 'var(--text-secondary)', DIM = 'var(--text-tertiary)', GREEN = 'var(--success)';
 const uid = () => Math.random().toString(36).slice(2, 9);
 const c = (dollars: string) => Math.round((parseFloat(dollars) || 0) * 100);
 const d = (cents: number) => (cents / 100).toFixed(2);

@@ -32,6 +32,7 @@ import { toCents, toDollars, sumCents, subCents, summarizeContract } from '@/lib
 import { Badge, EmptyState, type BadgeTone } from '@/components/ui/kit';
 import NextAction from '@/components/project/NextAction';
 import ProjectHeader from '@/components/project/ProjectHeader';
+import JobColorPicker from '@/components/project/JobColorPicker';
 import ProjectOwnershipCard from '@/components/projects/ProjectOwnershipCard';
 import { normalisePhase } from '@/lib/project-phase';
 import { isClosedStatus } from '@/lib/project-lifecycle';
@@ -645,7 +646,7 @@ export default function OverviewPage() {
               <p className="pov-empty">No bid packages yet. <Link href={`${base}/bid-packages`} className="pov-inline">Create one</Link> to send the scope to subs.</p>
             ) : (
               <div className="pov-tablewrap" role="region" aria-label="Bid packages (scrolls sideways on small screens)" tabIndex={0}>
-                <table className="pov-table">
+                <table className="pov-table k-table-skin">
                   <thead><tr><th>Package</th><th>Trade</th><th>Status</th><th className="num">Invited</th><th className="num">Awarded</th></tr></thead>
                   <tbody>
                     {((ctx?.bidPackages || []) as any[]).slice(0, 12).map((b: any) => (
@@ -668,7 +669,7 @@ export default function OverviewPage() {
               <p className="pov-empty">No pay applications yet. Billing starts with App #1.</p>
             ) : (
               <div className="pov-tablewrap" role="region" aria-label="Pay applications (scrolls sideways on small screens)" tabIndex={0}>
-                <table className="pov-table">
+                <table className="pov-table k-table-skin">
                   <thead><tr><th>App</th><th>Period To</th><th>Status</th><th className="num">Completed &amp; Stored</th><th className="num">Retainage</th><th className="num">Amount Due</th></tr></thead>
                   <tbody>
                     {payApps.slice(0, 8).map((pa: any) => (
@@ -693,6 +694,10 @@ export default function OverviewPage() {
           <div className="pov-col">
             <ProjectOwnershipCard projectId={projectId} project={p} onSaved={() => { void revalidate(); }} />
             <Section id="pov-details" title="Project Details" action={<ArchiveButton projectId={projectId} name={p?.name || 'this job'} />}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px', alignItems: 'center', padding: '8px 0 12px', borderBottom: '1px solid var(--border-subtle)', marginBottom: 6 }}>
+                <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-tertiary)', minWidth: 110 }}>Job color</span>
+                <JobColorPicker projectId={projectId} color={p.color} onSaved={() => { void revalidate(); }} />
+              </div>
               <dl className="pov-dl">
                 {detailRows.map(([l, v]) => (
                   <div key={l} className="pov-dlrow"><dt>{l}</dt><dd>{v}</dd></div>

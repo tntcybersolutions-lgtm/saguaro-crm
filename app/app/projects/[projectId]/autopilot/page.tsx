@@ -27,9 +27,9 @@ const SEVERITY_BADGE: Record<string, 'red' | 'amber' | 'gold' | 'blue' | 'muted'
 
 // Palette aligned with the dashboard kit (desert-dusk semantic accents).
 const GOLD = 'var(--brand-primary)';
-const RED = '#FF3B30';
+const RED = 'var(--danger)';
 const AMBER = 'var(--warning)';
-const GREEN = '#2CFF7A';
+const GREEN = 'var(--success)';
 
 // The four deterministic checks the project-scoped engine runs
 // (lib/autopilot/scan, via /api/autopilot/run), in execution order — rendered as the pipeline rail.

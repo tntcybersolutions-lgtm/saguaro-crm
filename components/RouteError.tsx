@@ -30,8 +30,8 @@ import Link from 'next/link';
 
 const CARD = 'var(--bg-surface)';
 const GOLD = 'var(--brand-primary)';
-const TEXT = '#F0F4FF';
-const DIM = '#A1A1AA';
+const TEXT = 'var(--text-primary)';
+const DIM = 'var(--text-tertiary)';
 
 export default function RouteError({
   error,
@@ -140,7 +140,7 @@ export default function RouteError({
           </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-            <button onClick={() => reset()} style={{ ...btn, background: GOLD, color: '#0A0A00', border: `1px solid ${GOLD}` }}>
+            <button onClick={() => reset()} style={{ ...btn, background: GOLD, color: 'var(--on-brand)', border: `1px solid ${GOLD}` }}>
               Try Again
             </button>
             <Link href={homeHref} style={{ ...btn, background: 'transparent', color: TEXT }}>

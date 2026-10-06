@@ -20,8 +20,8 @@ const GOLD = 'var(--brand-primary)';
 const GREEN = '#2CFF7A';
 const RED = '#FF3B30';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#D4D4D8';
-const TEXT = '#FFFFFF';
+const DIM = 'var(--text-secondary)';
+const TEXT = 'var(--text-primary)';
 
 interface FirewallRule {
   id: string;
@@ -53,7 +53,7 @@ const categoryLabel = (c: string) => CATEGORY_LABELS[c] || c;
 const ACTION_STYLES: Record<string, { bg: string; text: string }> = {
   allow: { bg: `${GREEN}20`, text: GREEN },
   deny: { bg: `${RED}20`, text: RED },
-  drop: { bg: '#6B728020', text: '#9CA3AF' },
+  drop: { bg: '#6B728020', text: 'var(--status-closed)' },
 };
 
 const inputStyle: React.CSSProperties = {
@@ -419,7 +419,7 @@ export default function FirewallRulesPage() {
                   }}
                 >
                   <div style={{
-                    width: 16, height: 16, borderRadius: '50%', background: '#fff',
+                    width: 16, height: 16, borderRadius: '50%', background: 'var(--text-primary)',
                     position: 'absolute', top: 3, left: rule.enabled ? 21 : 3, transition: 'left .2s',
                   }} />
                 </button>

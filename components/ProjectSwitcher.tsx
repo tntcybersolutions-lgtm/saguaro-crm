@@ -8,8 +8,8 @@ const GOLD = 'var(--brand-primary)';
 const DARK = 'var(--bg-surface)';
 const RAISED = 'var(--bg-surface-2)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#D4D4D8';
-const TEXT = '#FFFFFF';
+const DIM = 'var(--text-secondary)';
+const TEXT = 'var(--text-primary)';
 
 const RECENT_KEY = 'saguaro_recent_projects';
 const MAX_RECENT = 5;
@@ -56,7 +56,7 @@ function statusColor(status?: string): string {
   if (!status) return DIM;
   const s = status.toLowerCase();
   if (s === 'active' || s === 'in_progress' || s === 'in progress') return '#3fb950';
-  if (s === 'completed' || s === 'closed') return '#8b949e';
+  if (s === 'completed' || s === 'closed') return 'var(--text-tertiary)';
   if (s === 'pending' || s === 'bidding') return GOLD;
   if (s === 'on_hold' || s === 'on hold') return '#f0883e';
   return DIM;

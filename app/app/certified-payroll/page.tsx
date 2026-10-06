@@ -8,9 +8,9 @@ import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, goldB
 
 const GOLD = 'var(--brand-primary)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#D4D4D8';
-const TEXT = '#FFFFFF';
-const RED = '#FF3B30';
+const DIM = 'var(--text-secondary)';
+const TEXT = 'var(--text-primary)';
+const RED = 'var(--danger)';
 
 interface Project {
   id: string;
@@ -23,8 +23,8 @@ interface Project {
 
 const statusStyle = (s: string): { color: string; bg: string } => {
   const k = (s || '').toLowerCase();
-  if (k.includes('active') || k.includes('progress')) return { color: '#2CFF7A', bg: 'rgba(44,255,122,.12)' };
-  if (k.includes('complete') || k.includes('closed')) return { color: '#FF8A00', bg: 'rgba(26,95,168,.12)' };
+  if (k.includes('active') || k.includes('progress')) return { color: 'var(--success)', bg: 'rgba(44,255,122,.12)' };
+  if (k.includes('complete') || k.includes('closed')) return { color: 'var(--warning)', bg: 'rgba(255,138,0,.12)' };
   return { color: 'var(--warning)', bg: 'color-mix(in srgb, var(--warning) 12%, transparent)' };
 };
 
@@ -77,7 +77,7 @@ export default function CertifiedPayrollPage() {
         <StatStrip items={[
           {href: '/app/certified-payroll',  label: 'Projects', value: String(projects.length), sub: projects.filter(p => ((p.status || '').toLowerCase().includes('active') || (p.status || '').toLowerCase().includes('progress'))).length + ' active' },
           {href: '/app/certified-payroll',  label: 'WH-347s Filed', value: String(records.length), sub: records.length > 0 ? 'Across all projects' : 'None filed yet' },
-          {href: '/app/certified-payroll',  label: 'Gross Wages Certified', value: fmt0(grossFiled), accent: grossFiled > 0 ? '#2CFF7A' : undefined, sub: 'Total across filed payrolls' },
+          {href: '/app/certified-payroll',  label: 'Gross Wages Certified', value: fmt0(grossFiled), accent: grossFiled > 0 ? 'var(--success)' : undefined, sub: 'Total across filed payrolls' },
           {href: '/app/certified-payroll',  label: 'Last Filed Week', value: lastFiled ? lastFiled.week_ending : '—', sub: lastFiled ? (Number(lastFiled.employee_count) || 0) + ' employees · ' + fmt0(Number(lastFiled.total_gross) || 0) : 'Open a project to file' },
           {href: '/app/certified-payroll',  label: 'Certified', value: String(certifiedCount), sub: (records.length - certifiedCount) + ' submitted / draft' },
         ]} />

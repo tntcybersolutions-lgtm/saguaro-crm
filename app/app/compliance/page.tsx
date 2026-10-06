@@ -1,14 +1,15 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import { useSort, useSortedRows, SortTh, SortBar } from '@/components/ui/sort';
+import { DataTable, type Column } from '@/components/ui/kit';
+import { StatusPill } from '@/components/ui/Status';
 import Link from 'next/link';
-import { ShieldCheck, Gauge, CheckCircle, WarningCircle, XCircle, FileText, Signature, MagnifyingGlass, Envelope, UsersThree, ArrowRight } from '@phosphor-icons/react';
+import { ShieldCheck, Gauge, CheckCircle, WarningCircle, XCircle, FileText, Signature, MagnifyingGlass, Envelope, UsersThree, ArrowRight, Check, X, Warning } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, IconChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 import { moduleAccent } from '@/lib/module-identity';
 import NudgeRing from '@/components/intelligence/NudgeRing';
 import { ANCHOR_INSURANCE_EXPIRING } from '@/lib/suggestions';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30',AMBER='var(--warning)';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)',GREEN='var(--success)',RED='var(--danger)',AMBER='var(--warning)';
 
 function ScoreBar({score}:{score:number}){
   const color = score>=80?GREEN:score>=50?AMBER:RED;
@@ -32,11 +33,6 @@ function StatusDot({ok,warn,label}:{ok?:boolean,warn?:boolean,label:string}){
   </div>;
 }
 
-const CMP_COLS: { key: string; label: string }[] = [
-  { key: 'name', label: 'Subcontractor' }, { key: 'trade', label: 'Trade' }, { key: 'contract_amount', label: 'Contract' }, { key: 'score', label: 'Score' },
-  { key: 'w9', label: 'W-9' }, { key: 'insurance', label: 'Insurance' }, { key: 'lien_waivers', label: 'Lien Waivers' }, { key: 'compliance', label: 'Status' }, { key: '', label: '' },
-];
-
 export default function CompliancePage(){
   const [subs, setSubs] = useState<any[]>([]);
   const [summary, setSummary] = useState<any>(null);
@@ -58,18 +54,31 @@ export default function CompliancePage(){
     if(search&&!s.name.toLowerCase().includes(search.toLowerCase())&&!s.trade?.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
-  const cmpSort = useSort(null);
-  const cmpSortValue = useCallback((sub: (typeof subs)[number], key: string): unknown => {
-    switch (key) {
-      case 'contract_amount': return Number(sub.contract_amount) || 0;
-      case 'score': return Number(sub.score) || 0;
-      case 'w9': return sub.w9.status === 'submitted' || sub.w9.status === 'approved' ? 2 : sub.w9.status === 'pending' ? 1 : 0;
-      case 'insurance': return sub.insurance.active_certs === 0 ? 0 : sub.insurance.expiring_certs > 0 ? 1 : 2;
-      case 'lien_waivers': return sub.lien_waivers.total === 0 ? null : sub.lien_waivers.signed / sub.lien_waivers.total;
-      default: return (sub as unknown as Record<string, unknown>)[key];
-    }
-  }, []);
-  const sortedCompliance = useSortedRows(filtered, cmpSort.sort, cmpSortValue);
+  const PI = { good: <Check size={11} weight="bold" />, warn: <Warning size={11} weight="fill" />, bad: <X size={11} weight="bold" /> };
+  const w9Status = (sub: any) => sub.w9.status === 'submitted' || sub.w9.status === 'approved' ? 'on_file' : sub.w9.status === 'pending' ? 'pending' : 'missing';
+  const columns: Column<any>[] = [
+    {
+      key: 'name', header: 'Subcontractor', primary: true, phone: 'show', accessor: sub => sub.name || '',
+      render: sub => (
+        <span className="k-name">
+          <span className="k-avatar" aria-hidden>{(sub.name || '?').split(/\s+/).slice(0, 2).map((w: string) => w[0]?.toUpperCase() || '').join('')}</span>
+          <span className="k-name-text"><span>{sub.name}</span>{sub.email && <span>{sub.email}</span>}</span>
+        </span>
+      ),
+    },
+    { key: 'trade', header: 'Trade', phone: 'show', accessor: sub => sub.trade || '', render: sub => sub.trade || '—' },
+    { key: 'contract_amount', header: 'Contract', align: 'right', phone: 'show', accessor: sub => (Number(sub.contract_amount) || 0) > 0 ? Number(sub.contract_amount) : null, render: sub => Number(sub.contract_amount) > 0 ? <span style={{ color: TEXT, fontWeight: 600 }}>{fmtMoney(sub.contract_amount)}</span> : '—' },
+    { key: 'score', header: 'Score', phone: 'show', accessor: sub => Number(sub.score) || 0, render: sub => <span style={{ display: 'inline-block', minWidth: 120 }}><ScoreBar score={sub.score} /></span> },
+    { key: 'w9', header: 'W-9', phone: 'show', accessor: sub => ({ on_file: 2, pending: 1, missing: 0 } as Record<string, number>)[w9Status(sub)], render: sub => { const st = w9Status(sub); return <StatusPill module="paperwork" status={st} size="sm" icon={st === 'on_file' ? PI.good : st === 'pending' ? PI.warn : PI.bad} />; } },
+    { key: 'insurance', header: 'Insurance', phone: 'show', accessor: sub => sub.insurance.active_certs === 0 ? 0 : sub.insurance.expiring_certs > 0 ? 1 : 2,
+      render: sub => sub.insurance.active_certs === 0
+        ? <StatusPill module="paperwork" status="not_on_file" label="None on File" size="sm" icon={PI.bad} />
+        : sub.insurance.expiring_certs > 0
+          ? <StatusPill module="paperwork" status="expiring" label={`${sub.insurance.expiring_certs} Expiring`} size="sm" icon={PI.warn} />
+          : <StatusPill module="paperwork" status="active" label={`${sub.insurance.active_certs} Active`} size="sm" icon={PI.good} /> },
+    { key: 'lien_waivers', header: 'Lien Waivers', phone: 'hide', accessor: sub => sub.lien_waivers.total === 0 ? null : sub.lien_waivers.signed / sub.lien_waivers.total, render: sub => sub.lien_waivers.total === 0 ? '—' : `${sub.lien_waivers.signed}/${sub.lien_waivers.total} signed` },
+    { key: 'compliance', header: 'Status', phone: 'show', accessor: sub => ({ compliant: 2, at_risk: 1, non_compliant: 0 } as Record<string, number>)[sub.compliance] ?? 0, render: sub => <StatusPill module="compliance" status={sub.compliance} size="sm" icon={sub.compliance === 'compliant' ? PI.good : sub.compliance === 'at_risk' ? PI.warn : PI.bad} /> },
+  ];
 
   // Cross-project intelligence — what the paperwork means in dollars and follow-ups.
   // contract_amount can round-trip as a string, so every sum coerces with Number().
@@ -85,14 +94,14 @@ export default function CompliancePage(){
 
   const complianceLabel = (c:string) => c==='compliant'?'Compliant':c==='at_risk'?'At Risk':'Non-Compliant';
   const complianceColor = (c:string) => c==='compliant'?GREEN:c==='at_risk'?AMBER:RED;
-  const complianceBg = (c:string) => c==='compliant'?'rgba(44,255,122,.14)':c==='at_risk'?'rgba(240,166,60,.14)':'rgba(224,100,78,.14)';
+  const complianceBg = (c:string) => c==='compliant'?'rgba(44,255,122,.14)':c==='at_risk'?'rgba(255,138,0,.14)':'rgba(255,59,48,.14)';
 
   return <PremiumSurface maxWidth={2200}>
 
     {/* Header */}
     <ModuleHero
       eyebrow="Compliance"
-      eyebrowIcon={<IconChip size={24} vivid={moduleAccent('compliance').vivid ?? moduleAccent('compliance').hex}><ShieldCheck size={13} weight="fill" color="#F8FAFC" /></IconChip>}
+      eyebrowIcon={<IconChip size={24} vivid={moduleAccent('compliance').vivid ?? moduleAccent('compliance').hex}><ShieldCheck size={13} weight="fill" color="var(--text-primary)" /></IconChip>}
       accentColor={moduleAccent('compliance').hex}
       title="Subcontractor"
       accent="Compliance"
@@ -205,54 +214,15 @@ export default function CompliancePage(){
             description={search||filter!=='all'?'Try clearing your search or filter to see all subcontractors.':'Add subs to your projects and Saguaro scores each one automatically — W-9 (25 pts), insurance certificates (40 pts), and lien waivers (35 pts) roll into a single compliance score across every project.'}
             compact
           />
-        :<div style={{border:`1px solid ${BORDER}`,borderRadius:12,overflow:'hidden',overflowX:'auto',WebkitOverflowScrolling:'touch' as const}}>
-          <SortBar columns={CMP_COLS.filter(c=>c.key)} sort={cmpSort.sort} onChange={cmpSort.setSort} />
-          <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
-            <thead><tr style={{background:'var(--bg-surface-2)'}}>
-              {CMP_COLS.map(c=>c.key
-                ? <SortTh key={c.key} col={c.key} label={c.label} sort={cmpSort.sort} onSort={cmpSort.cycle} style={{padding:'10px 14px',fontSize:10.5,fontWeight:700,color:'var(--text-tertiary)',borderBottom:`1px solid ${BORDER}`,whiteSpace:'nowrap'}} />
-                : <th key="actions" aria-label="Actions" style={{padding:'10px 14px',borderBottom:`1px solid ${BORDER}`}} />)}
-            </tr></thead>
-            <tbody>{sortedCompliance.map(sub=>(
-              <tr key={sub.id} onClick={()=>setSelected(selected?.id===sub.id?null:sub)} style={{borderBottom:`1px solid rgba(255,255,255,0.08)`,cursor:'pointer',background:selected?.id===sub.id?'var(--brand-primary-08)':'transparent'}}>
-                <td style={{padding:'11px 14px'}}>
-                  <div style={{display:'flex',alignItems:'center',gap:8}}>
-                    <div style={{width:30,height:30,borderRadius:'50%',background:'color-mix(in srgb, var(--brand-primary) 15%, transparent)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,color:GOLD,flexShrink:0}}>{sub.name?.[0]||'?'}</div>
-                    <div>
-                      <div style={{fontWeight:600,color:TEXT}}>{sub.name}</div>
-                      {sub.email&&<div style={{fontSize:11,color:DIM}}>{sub.email}</div>}
-                    </div>
-                  </div>
-                </td>
-                <td style={{padding:'11px 14px',color:DIM}}>{sub.trade||'—'}</td>
-                <td style={{padding:'11px 14px',color:Number(sub.contract_amount)>0?TEXT:DIM,fontWeight:600,whiteSpace:'nowrap'}}>{Number(sub.contract_amount)>0?fmtMoney(sub.contract_amount):'—'}</td>
-                <td style={{padding:'11px 14px',minWidth:120}}><ScoreBar score={sub.score}/></td>
-                <td style={{padding:'11px 14px'}}>
-                  <Badge label={sub.w9.status==='submitted'||sub.w9.status==='approved'?'On File':sub.w9.status==='pending'?'Pending':'Missing'}
-                    color={sub.w9.status==='submitted'||sub.w9.status==='approved'?GREEN:sub.w9.status==='pending'?AMBER:RED}
-                    bg={sub.w9.status==='submitted'||sub.w9.status==='approved'?'rgba(44,255,122,.14)':sub.w9.status==='pending'?'rgba(240,166,60,.14)':'rgba(224,100,78,.14)'}/>
-                </td>
-                <td style={{padding:'11px 14px'}}>
-                  {sub.insurance.active_certs===0
-                    ?<Badge label="None on File" color={RED} bg='rgba(224,100,78,.14)'/>
-                    :sub.insurance.expiring_certs>0
-                    ?<Badge label={`${sub.insurance.expiring_certs} Expiring`} color={AMBER} bg='rgba(240,166,60,.14)'/>
-                    :<Badge label={`${sub.insurance.active_certs} Active`} color={GREEN} bg='rgba(44,255,122,.14)'/>
-                  }
-                </td>
-                <td style={{padding:'11px 14px',color:DIM,fontSize:12}}>
-                  {sub.lien_waivers.total===0?'—':`${sub.lien_waivers.signed}/${sub.lien_waivers.total} signed`}
-                </td>
-                <td style={{padding:'11px 14px'}}>
-                  <Badge label={complianceLabel(sub.compliance)} color={complianceColor(sub.compliance)} bg={complianceBg(sub.compliance)}/>
-                </td>
-                <td style={{padding:'11px 14px'}}>
-                  <button onClick={e=>{e.stopPropagation();setSelected(selected?.id===sub.id?null:sub);}} style={{background:'rgba(255,255,255,0.04)',border:`1px solid ${BORDER}`,borderRadius:6,color:DIM,fontSize:11,padding:'4px 10px',cursor:'pointer'}}>Details</button>
-                </td>
-              </tr>
-            ))}</tbody>
-          </table>
-        </div>}
+        :<DataTable<any>
+          columns={columns}
+          rows={filtered}
+          rowKey={sub => sub.id}
+          defaultSort={{ key: 'score', dir: 'asc' }}
+          onRowClick={sub => setSelected(selected?.id === sub.id ? null : sub)}
+          isSelected={sub => selected?.id === sub.id}
+          empty="No subcontractors match."
+        />}
       </SectionCard>
       </NudgeRing>
 

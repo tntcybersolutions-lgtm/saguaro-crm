@@ -77,7 +77,7 @@ export default function QCPage() {
                 const d = isDone(it);
                 return (
                   <button key={it.id} onClick={() => toggle(it)} className="pmBtn" style={{ display: 'flex', gap: 12, alignItems: 'center', width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: `1px solid rgba(255,255,255,0.07)`, cursor: 'pointer', padding: '11px 4px' }}>
-                    <span style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${d ? C.green : C.border}`, background: d ? C.green : 'var(--bg-surface-2)', color: '#fff', flexShrink: 0, fontSize: 12, fontWeight: 900, lineHeight: '17px', textAlign: 'center' }}>{d ? <Check size={13} weight="bold" color="#fff" style={{ verticalAlign: 'middle' }} /> : ''}</span>
+                    <span style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${d ? C.green : C.border}`, background: d ? C.green : 'var(--bg-surface-2)', color: 'var(--text-primary)', flexShrink: 0, fontSize: 12, fontWeight: 900, lineHeight: '17px', textAlign: 'center' }}>{d ? <Check size={13} weight="bold" color="var(--text-primary)" style={{ verticalAlign: 'middle' }} /> : ''}</span>
                     <span style={{ fontSize: 15, fontWeight: 600, color: d ? C.faint : C.text, textDecoration: d ? 'line-through' : 'none', flex: 1 }}>{it.title}</span>
                     {d && <span style={{ fontSize: 12, fontWeight: 700, color: C.green }}>Passed</span>}
                   </button>

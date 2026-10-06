@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
 import { accentForProject } from '@/lib/project-identity';
+import { ProjectDot } from '@/components/ui/ProjectColor';
+import { useProjectColor } from '@/lib/hooks/useProjectColor';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { isToolVisible, hiddenToolCount, type ToolSignals } from '@/lib/project-tools';
 import { moduleAccent } from '@/lib/module-identity';
@@ -18,7 +20,7 @@ import {
 } from '@phosphor-icons/react';
 
 const GOLD = 'var(--brand-primary)'; const DARK = 'var(--bg-base)'; const RAISED = 'var(--bg-surface-2)';
-const BORDER = 'rgba(255,255,255,0.12)'; const DIM = '#D4D4D8'; const TEXT = '#FFFFFF';
+const BORDER = 'rgba(255,255,255,0.12)'; const DIM = 'var(--text-secondary)'; const TEXT = 'var(--text-primary)';
 
 // ALL sidebar nav items — every module Buildertrend has + more.
 // `accent` = module-identity key (lib/module-identity): the item's icon wears
@@ -196,6 +198,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
   }, [pathname]);
 
   const { ctx } = useProjectContext(projectId || null);
+  const projectColorValue = useProjectColor(projectId as string);
   const signals = (ctx || null) as ToolSignals | null;
 
   /* Every one of the 46 rail items carried `badge: null`, and this component was
@@ -254,7 +257,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
       <div style={{ padding: '14px 12px', borderBottom: `1px solid ${BORDER}` }}>
         {!isCollapsed && (
           <>
-            <div style={{ fontSize: 12, fontWeight: 700, color: accentForProject(projectId as string).hex, marginBottom: 2, lineHeight: 1.3 }}>{projectName || '—'}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 700, color: accentForProject(projectId as string).hex, marginBottom: 2, lineHeight: 1.3 }}><ProjectDot project={{ id: projectId as string, color: projectColorValue }} /><span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{projectName || '—'}</span></div>
             <div style={{ fontSize: 10, color: DIM, marginBottom: 8 }}>{projectNumber}</div>
             {/* Progress */}
             <div style={{ height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 2, marginBottom: 3 }}>
@@ -315,20 +318,20 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
                   transition: 'background .12s ease, color .12s ease',
                   position: 'relative',
                 }}
-                onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#FFFFFF'; } }}
+                onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text-primary)'; } }}
                 onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = DIM; } }}
               >
                 {vivid && active ? (
                   /* vivid module chip — saturated hue UNDER a white glyph, never hue-on-hue */
                   <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, width: 20, height: 20, borderRadius: 6, background: `linear-gradient(150deg, ${vivid}, color-mix(in srgb, ${vivid} 80%, #000000))`, border: `1px solid ${vivid}8C`, boxShadow: `0 0 12px -3px ${vivid}40, inset 0 1px 0 rgba(255,255,255,0.25)` }}>
-                    <Icon size={13} weight="fill" color="#F8FAFC" />
+                    <Icon size={13} weight="fill" color="var(--text-primary)" />
                   </span>
                 ) : (
                   <span style={{ display: 'inline-flex', flexShrink: 0 }}><Icon size={16} weight="regular" color={vivid || undefined} /></span>
                 )}
                 {!isCollapsed && <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label}</span>}
                 {!isCollapsed && ((item as { badge?: string }).badge || railCounts[item.href]) && (
-                  <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 5px', borderRadius: 8, background: active ? GOLD : '#FF8A00', color: active ? '#0A0A00' : '#1C1C1E' }}>
+                  <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 5px', borderRadius: 8, background: active ? GOLD : 'var(--warning)', color: active ? 'var(--on-brand)' : 'var(--surface-raised)' }}>
                     {(item as { badge?: string }).badge || railCounts[item.href]}
                   </span>
                 )}
@@ -350,7 +353,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
               border: `1px dashed ${BORDER}`, borderRadius: 8,
               color: DIM, fontSize: 11.5, fontWeight: 600, cursor: 'pointer',
             }}
-            onMouseEnter={e => { e.currentTarget.style.color = '#FFFFFF'; e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
             onMouseLeave={e => { e.currentTarget.style.color = DIM; e.currentTarget.style.background = 'transparent'; }}
           >
             <span>{showAllTools ? 'Show Fewer Tools' : 'All Tools'}</span>
@@ -362,7 +365,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
       {/* Back to projects */}
       <div style={{ padding: '8px 12px', borderTop: `1px solid ${BORDER}`, marginTop: 8 }}>
         <Link href="/app/projects" style={{ display: 'flex', alignItems: 'center', gap: 8, color: DIM, fontSize: 12, fontWeight: 600, textDecoration: 'none', padding: '6px 8px', margin: '-6px -8px', borderRadius: 8, transition: 'background .12s ease, color .12s ease' }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#FFFFFF'; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = DIM; }}>
           <span style={{ display: 'inline-flex' }}><ArrowLeft size={14} weight="regular" /></span>{!isCollapsed && <span>All Projects</span>}
         </Link>

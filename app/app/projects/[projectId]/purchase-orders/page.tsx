@@ -362,7 +362,7 @@ export default function PurchaseOrdersPage() {
   const smallDanger: React.CSSProperties = {
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
     padding: '7px 12px', borderRadius: 9, cursor: 'pointer',
-    background: 'rgba(255,59,48,0.12)', color: '#FF3B30', border: '1px solid rgba(255,59,48,0.35)',
+    background: 'rgba(255,59,48,0.12)', color: 'var(--danger)', border: '1px solid rgba(255,59,48,0.35)',
     fontWeight: 800, fontSize: 12.5,
   };
 
@@ -409,12 +409,12 @@ export default function PurchaseOrdersPage() {
           label="Draft" value={String(draftCount)} delay={0.06}
          href={`/app/projects/${projectId}/purchase-orders`}/>
         <StatCard
-          icon={<Export size={19} weight="duotone" color="#F0A63C" />}
-          label="Sent" value={String(sentCount)} accent={sentCount > 0 ? '#F0A63C' : undefined} delay={0.10}
+          icon={<Export size={19} weight="duotone" color="var(--warning)" />}
+          label="Sent" value={String(sentCount)} accent={sentCount > 0 ? 'var(--warning)' : undefined} delay={0.10}
          href={`/app/projects/${projectId}/purchase-orders`}/>
         <StatCard
-          icon={<Package size={19} weight="duotone" color="#2CFF7A" />}
-          label="Received" value={String(receivedCount)} accent={receivedCount > 0 ? '#2CFF7A' : undefined} delay={0.14}
+          icon={<Package size={19} weight="duotone" color="var(--success)" />}
+          label="Received" value={String(receivedCount)} accent={receivedCount > 0 ? 'var(--success)' : undefined} delay={0.14}
          href={`/app/projects/${projectId}/purchase-orders`}/>
       </div>
 

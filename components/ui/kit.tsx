@@ -182,7 +182,7 @@ export function StatRow({ items }: { items: StatItem[] }) {
 
 export type BadgeTone = StatusKind | 'neutral' | 'gold';
 
-const BADGE_NEUTRAL = { color: '#D4D4D8', bg: 'rgba(255,255,255,0.08)', border: 'rgba(255,255,255,0.18)' };
+const BADGE_NEUTRAL = { color: 'var(--text-secondary)', bg: 'rgba(255,255,255,0.08)', border: 'rgba(255,255,255,0.18)' };
 const BADGE_GOLD = { color: 'var(--brand-primary)', bg: 'var(--brand-primary-12)', border: 'var(--brand-primary-35)' };
 
 /** Status badge. Tones are the six fixed status colors (lib/status-colors). */
@@ -408,6 +408,8 @@ export function DataTable<T>({
   empty,
   defaultSort,
   loading,
+  isSelected,
+  rowStyle,
 }: {
   columns: Column<T>[];
   rows: T[];
@@ -420,6 +422,10 @@ export function DataTable<T>({
   defaultSort?: { key: string; dir: SortDir };
   /** Shows placeholder rows instead of data (never computed zeros). */
   loading?: boolean;
+  /** Highlights the row the page is currently showing (detail panel open, etc.). */
+  isSelected?: (row: T) => boolean;
+  /** Per-row inline style — e.g. rowStripe(project) from components/ui/ProjectColor for the 3px job-colour edge. */
+  rowStyle?: (row: T) => React.CSSProperties | undefined;
 }) {
   const [sort, setSort] = React.useState<SortState>(defaultSort ?? null);
   const byKey = React.useMemo(() => new Map(columns.map((c) => [c.key, c])), [columns]);
@@ -477,7 +483,7 @@ export function DataTable<T>({
             </tr>
           ) : (
             sorted.map((row) => (
-              <tr key={rowKey(row)} data-clickable={!!onRowClick} onClick={onRowClick ? () => onRowClick(row) : undefined}>
+              <tr key={rowKey(row)} style={rowStyle?.(row)} data-clickable={!!onRowClick} data-selected={isSelected?.(row) ? 'true' : undefined} aria-selected={isSelected ? !!isSelected(row) : undefined} onClick={onRowClick ? () => onRowClick(row) : undefined}>
                 {columns.map((c, ci) => {
                   const v = valueOf(c, row);
                   const phone = c.phone ?? (ci < 4 ? 'show' : 'hide');

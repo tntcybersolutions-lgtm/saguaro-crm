@@ -5,7 +5,7 @@ import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, goldB
 import { Plugs, ArrowsClockwise, ListChecks, SlidersHorizontal, ClockCounterClockwise, ArrowsLeftRight } from '@phosphor-icons/react';
 
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-surface-2)', BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#D4D4D8', TEXT = '#FFFFFF', GREEN = '#2CFF7A', RED = '#FF3B30', QB_GREEN = '#2CFF7A';
+const DIM = 'var(--text-secondary)', TEXT = 'var(--text-primary)', GREEN = 'var(--success)', RED = 'var(--danger)', QB_GREEN = 'var(--success)';
 
 type SyncHistoryEntry = {
   timestamp: string;
@@ -404,7 +404,7 @@ export default function QuickBooksPage() {
               />
             ) : (
               <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
                       {['Date', 'Direction', 'Entities', 'Records', 'Status', 'By'].map((h) => (
@@ -458,7 +458,7 @@ export default function QuickBooksPage() {
             icon={<ArrowsLeftRight size={17} weight="duotone" color={GOLD} />}
           >
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+              <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
                     <th style={{ padding: '10px 12px', textAlign: 'left', color: DIM, fontWeight: 600, fontSize: 11 }}>Entity</th>

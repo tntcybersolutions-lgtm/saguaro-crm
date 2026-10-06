@@ -43,21 +43,21 @@ const STATUS_TONE:Record<string,BadgeTone>={
 };
 
 const DISCIPLINE_COLORS:Record<string,string>={
-  General:'#A9B4C4',
+  General:'var(--text-tertiary)',
   Architectural:'var(--brand-primary-strong)',
-  Sitework:'#2CFF7A',
-  Demolition:'#FF3B30',
-  'Fire Protection':'#FF3B30',
-  'Low Voltage / Technology':'#FF8A00',
+  Sitework:'var(--success)',
+  Demolition:'var(--danger)',
+  'Fire Protection':'var(--danger)',
+  'Low Voltage / Technology':'var(--warning)',
   Interiors:'#e879b9',
-  Specialties:'#94a3b8',
-  Structural:'#FF8A00',
-  Mechanical:'#FF8A00',
+  Specialties:'var(--status-closed)',
+  Structural:'var(--warning)',
+  Mechanical:'var(--warning)',
   Electrical:'var(--brand-primary)',
-  Plumbing:'#FF8A00',
-  Civil:'#2CFF7A',
-  Landscape:'#2CFF7A',
-  Other:'#A9B4C4',
+  Plumbing:'var(--warning)',
+  Civil:'var(--success)',
+  Landscape:'var(--success)',
+  Other:'var(--text-tertiary)',
 };
 
 const inp:React.CSSProperties={
@@ -509,7 +509,7 @@ export default function DrawingsPage(){
     )},
     {key:'discipline',header:'Discipline',accessor:d=>d.discipline||'Other',render:d=>(
       <span style={{display:'inline-flex',alignItems:'center',gap:6,whiteSpace:'nowrap'}}>
-        <span className="dw-dot" style={{background:DISCIPLINE_COLORS[d.discipline]||'#A9B4C4'}}/>{d.discipline||'Other'}
+        <span className="dw-dot" style={{background:DISCIPLINE_COLORS[d.discipline]||'var(--text-tertiary)'}}/>{d.discipline||'Other'}
       </span>
     )},
     {key:'rev',header:'Rev',align:'right',accessor:d=>revOf(d),render:d=><span style={{fontVariantNumeric:'tabular-nums'}}>R{revOf(d)}</span>},
@@ -599,7 +599,7 @@ export default function DrawingsPage(){
         ):groupByDiscipline?(
           groupOrder.map(disc=>(
             <div key={disc}>
-              <div className="dw-group"><span className="dw-dot" style={{background:DISCIPLINE_COLORS[disc]||'#A9B4C4'}}/>{disc}<span style={{fontWeight:600}}>{grouped[disc].length}</span></div>
+              <div className="dw-group"><span className="dw-dot" style={{background:DISCIPLINE_COLORS[disc]||'var(--text-tertiary)'}}/>{disc}<span style={{fontWeight:600}}>{grouped[disc].length}</span></div>
               {grouped[disc].map(d=><RailItem key={d.id} drawing={d}/>)}
             </div>
           ))
@@ -636,7 +636,7 @@ export default function DrawingsPage(){
         <div className="dw-meta-h">Details</div>
         <DetailList items={[
           ['Discipline',active.discipline?(
-            <span style={{display:'inline-flex',alignItems:'center',gap:6}}><span className="dw-dot" style={{background:DISCIPLINE_COLORS[active.discipline]||'#A9B4C4'}}/>{active.discipline}</span>
+            <span style={{display:'inline-flex',alignItems:'center',gap:6}}><span className="dw-dot" style={{background:DISCIPLINE_COLORS[active.discipline]||'var(--text-tertiary)'}}/>{active.discipline}</span>
           ):null],
           ['Revision',`R${revOf(active)}`],
           ['Revision Date',fmtDate(active.revision_date)==='—'?null:fmtDate(active.revision_date)],
@@ -862,7 +862,7 @@ export default function DrawingsPage(){
             ):(
               groupOrder.map(disc=>(
                 <Card key={disc} flush
-                  title={<span style={{display:'inline-flex',alignItems:'center',gap:8}}><span className="dw-dot" style={{background:DISCIPLINE_COLORS[disc]||'#A9B4C4'}}/>{disc}</span>}
+                  title={<span style={{display:'inline-flex',alignItems:'center',gap:8}}><span className="dw-dot" style={{background:DISCIPLINE_COLORS[disc]||'var(--text-tertiary)'}}/>{disc}</span>}
                   subtitle={`${grouped[disc].length} sheet${grouped[disc].length===1?'':'s'}`}>
                   <DataTable columns={columns} rows={grouped[disc]} rowKey={d=>d.id} onRowClick={viewDrawing} rowActions={rowActions}/>
                 </Card>
@@ -903,8 +903,8 @@ export default function DrawingsPage(){
                 <label style={{display:'block',cursor:'pointer',border:`1.5px dashed ${saveError&&uploadFile?'rgba(255,59,48,0.6)':uploadFile?'rgba(44,255,122,0.5)':'color-mix(in srgb, var(--brand-primary) 40%, transparent)'}`,borderRadius:12,padding:'16px 14px',textAlign:'center',background:saveError&&uploadFile?'rgba(255,59,48,0.06)':uploadFile?'rgba(44,255,122,0.06)':'color-mix(in srgb, var(--brand-primary) 5%, transparent)'}}>
                   <input type="file" accept=".pdf,image/*" style={{display:'none'}}
                     onChange={e=>pickFile(e.target.files?.[0]||null)}/>
-                  <UploadSimple size={20} weight="bold" color={saveError&&uploadFile?'#FF3B30':uploadFile?'#2CFF7A':'var(--brand-primary-strong)'}/>
-                  <div style={{fontSize:13,fontWeight:800,color:saveError&&uploadFile?'#FF3B30':uploadFile?'#2CFF7A':'var(--brand-primary-strong)',marginTop:6,overflowWrap:'anywhere'}}>
+                  <UploadSimple size={20} weight="bold" color={saveError&&uploadFile?'var(--danger)':uploadFile?'var(--success)':'var(--brand-primary-strong)'}/>
+                  <div style={{fontSize:13,fontWeight:800,color:saveError&&uploadFile?'var(--danger)':uploadFile?'var(--success)':'var(--brand-primary-strong)',marginTop:6,overflowWrap:'anywhere'}}>
                     {uploadFile?uploadFile.name:'Upload the Sheet PDF'}
                   </div>
                   <div style={{fontSize:12,color:DIM,marginTop:4,lineHeight:1.5}}>
@@ -984,7 +984,7 @@ export default function DrawingsPage(){
                 </div>
               )}
               {saveError&&(
-                <div role="alert" style={{display:'flex',gap:8,alignItems:'flex-start',background:'rgba(255,59,48,0.10)',border:'1px solid rgba(255,59,48,0.45)',borderRadius:10,padding:'10px 12px',fontSize:13,color:'#FFB3BB',lineHeight:1.5}}>
+                <div role="alert" style={{display:'flex',gap:8,alignItems:'flex-start',background:'rgba(255,59,48,0.10)',border:'1px solid rgba(255,59,48,0.45)',borderRadius:10,padding:'10px 12px',fontSize:13,color:'var(--danger)',lineHeight:1.5}}>
                   <Warning size={16} color={RED} style={{flexShrink:0,marginTop:2}}/>
                   <div><strong style={{color:TEXT}}>{mode==='create'&&uploadFile?'Upload Failed':'Save Failed'}</strong> — {saveError}</div>
                 </div>

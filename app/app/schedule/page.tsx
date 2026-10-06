@@ -1,4 +1,5 @@
 'use client';
+import { projectColor, jobRowVar } from '@/lib/project-colors';
 /**
  * Schedule — full construction schedule module, Pass 4 on the kit.
  *
@@ -423,6 +424,7 @@ export default function SchedulePage() {
       <div className="scList">
         <Card flush>
           <DataTable
+            rowStyle={(t: ScheduleTask) => (t.project_id ? jobRowVar(projectColor(projects.find(p => p.id === t.project_id) ?? t.project_id)) : undefined)}
             columns={columns}
             rows={filtered}
             rowKey={t => t.id}

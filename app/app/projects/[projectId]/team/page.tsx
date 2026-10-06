@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import { useSort, useSortedRows, SortTh, SortBar } from '@/components/ui/sort';
+import { DataTable, type Column } from '@/components/ui/kit';
+import { StatusPill } from '@/components/ui/Status';
 import useSWR from 'swr';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import Link from 'next/link';
@@ -13,18 +14,11 @@ import { moduleAccent } from '@/lib/module-identity';
 import { Button, Input } from '@/components/ui/kit';
 import ProjectOwnershipCard from '@/components/projects/ProjectOwnershipCard';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30',BLUE='#1a5fa8';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)',GREEN='var(--success)',RED='var(--danger)',BLUE='var(--warning)';
 const fmt = (n:number) => '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-function Badge({label,color='#D4D4D8',bg='rgba(148,163,184,.12)'}:{label:string,color?:string,bg?:string}){
+function Badge({label,color='var(--text-secondary)',bg='rgba(163,172,187,.12)'}:{label:string,color?:string,bg?:string}){
   return <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:bg,color}}>{label}</span>;
 }
-
-const MEMBER_COLS: { key: string; label: string }[] = [
-  { key: 'name', label: 'Name' }, { key: 'role', label: 'Role' }, { key: 'email', label: 'Email' }, { key: 'access', label: 'Access Level' }, { key: '', label: 'Work Assignments' }, { key: 'last', label: 'Last Active' },
-];
-const TEAM_SUB_COLS: { key: string; label: string }[] = [
-  { key: 'name', label: 'Company' }, { key: 'trade', label: 'Trade' }, { key: 'email', label: 'Contact Email' }, { key: 'contract', label: 'Contract' }, { key: 'access', label: 'Portal Access' }, { key: '', label: 'Actions' },
-];
 
 export default function TeamPage(){
   const params = useParams();
@@ -275,17 +269,45 @@ export default function TeamPage(){
     !qT || [p.name, p.role, p.email].some(v => String(v || '').toLowerCase().includes(qT));
   const filteredMembers = members.filter(matchPerson);
   const filteredSubs = subs.filter(s => matchPerson(s) || String(findCtxSub(s.name)?.trade || '').toLowerCase().includes(qT));
-  const memberSort = useSort(null);
-  const sortedMembers = useSortedRows(filteredMembers, memberSort.sort);
-  const teamSubSort = useSort(null);
-  const teamSubValue = (s: { name: string; email: string }, key: string): unknown => {
-    const cs = findCtxSub(s.name);
-    if (key === 'trade') return cs?.trade || '';
-    if (key === 'email') return s.email || cs?.email || '';
-    if (key === 'contract') return Number(cs?.contractAmount) || 0;
-    return (s as unknown as Record<string, unknown>)[key];
-  };
-  const sortedTeamSubs = useSortedRows(filteredSubs, teamSubSort.sort, teamSubValue);
+  type Member = (typeof members)[number];
+  type TeamSub = (typeof subs)[number];
+  const memberColumns: Column<Member>[] = [
+    { key: 'name', header: 'Name', primary: true, phone: 'show', accessor: m => m.name, render: m => (
+      <span className="k-name"><span className="k-avatar" aria-hidden>{m.name[0]}</span><span className="k-name-text"><span>{m.name}</span><span>{m.email}</span></span></span>
+    ) },
+    { key: 'role', header: 'Role', phone: 'show', accessor: m => m.role, render: m => m.role },
+    { key: 'access', header: 'Access Level', phone: 'show', accessor: m => m.access, render: m => <StatusPill module="team_access" status={m.access} size="sm" /> },
+    { key: 'assignments', header: 'Work Assignments', sortable: false, phone: 'show', render: m => (
+      <span style={{display:'inline-flex',alignItems:'center',gap:6,flexWrap:'wrap'}} onClick={e=>e.stopPropagation()}>
+        {assignmentsFor(m.userId).map(a=>(
+          <span key={a.id} style={{display:'inline-flex',alignItems:'center',gap:5,padding:'3px 6px 3px 9px',borderRadius:999,background:WORK.soft,border:`1px solid ${WORK.ring}`,color:WORK.hex,fontSize:10.5,fontWeight:800,letterSpacing:.3,whiteSpace:'nowrap' as const}}>
+            {assignRoleLabel(a.role)}
+            <button onClick={()=>endAssignment(a)} title="End this assignment" aria-label={`End ${assignRoleLabel(a.role)} assignment`} style={{display:'inline-flex',alignItems:'center',justifyContent:'center',width:18,height:18,padding:0,borderRadius:999,background:WORK.soft,border:'none',color:WORK.hex,cursor:'pointer'}}><X size={9} weight="bold"/></button>
+          </span>
+        ))}
+        {m.userId ? (
+          <select value="" disabled={assignBusy} onChange={e=>{const r=e.target.value; if(r) assignWork(m.userId!, r, m.name);}} title="Assign work on this project" aria-label={`Assign work to ${m.name}`} className="k-input" style={{height:30,fontSize:12,padding:'0 8px',width:'auto'}}>
+            <option value="">+ Assign…</option>
+            {ASSIGN_ROLES.map(r=><option key={r.value} value={r.value}>{r.label}</option>)}
+          </select>
+        ) : (
+          <span title="They can be assigned work once they accept their invite" style={{fontSize:11,color:DIM,fontStyle:'italic' as const,whiteSpace:'nowrap' as const}}>Invite Pending</span>
+        )}
+      </span>
+    ) },
+    { key: 'last', header: 'Last Active', phone: 'hide', accessor: m => m.last, render: m => <span style={{color:'var(--success)',fontSize:12,fontWeight:700}}>{m.last}</span> },
+  ];
+  const teamSubColumns: Column<TeamSub>[] = [
+    { key: 'name', header: 'Company', primary: true, phone: 'show', accessor: s => s.name, render: s => (
+      <span className="k-name"><span className="k-avatar" aria-hidden>{(s.name||'?').split(/\s+/).slice(0,2).map(w=>w[0]?.toUpperCase()||'').join('')}</span><span className="k-name-text"><span>{s.name}</span><span>{s.email || findCtxSub(s.name)?.email || ''}</span></span></span>
+    ) },
+    { key: 'trade', header: 'Trade', phone: 'show', accessor: s => findCtxSub(s.name)?.trade || '', render: s => findCtxSub(s.name)?.trade || '—' },
+    { key: 'contract', header: 'Contract', align: 'right', phone: 'show', accessor: s => Number(findCtxSub(s.name)?.contractAmount) > 0 ? Number(findCtxSub(s.name)?.contractAmount) : null, render: s => { const a = Number(findCtxSub(s.name)?.contractAmount); return a > 0 ? <span style={{color:TEXT,fontWeight:700}}>{fmtMoney(a)}</span> : '—'; } },
+    { key: 'access', header: 'Portal Access', phone: 'show', accessor: s => s.access, render: s => <StatusPill module="team_access" status="sub portal" size="sm" /> },
+    { key: 'actions', header: 'Actions', sortable: false, phone: 'show', render: s => (
+      <button className="k-btn k-btn-secondary k-btn-sm" onClick={e=>{e.stopPropagation();handleSendPortalLink(s);}} disabled={sendingPortal===s.name}>{sendingPortal===s.name?'Working…':'Copy Portal Link'}</button>
+    ) },
+  ];
   function inviteFromDirectory(l:{role:string;name:string;email:string}){
     setInviteName(l.name||'');
     setInviteEmail(l.email||'');
@@ -312,14 +334,14 @@ export default function TeamPage(){
             {href: `/app/projects/${projectId}/team`, label:'Project', value: ctx.project?.name || '—', sub: ctx.project?.projectNumber ? `#${ctx.project.projectNumber}` : (ctx.project?.status || 'active')},
             {href: `/app/projects/${projectId}/team`, label:'Owner', value: ctx.defaults?.ownerName || '—', sub: ctx.defaults?.ownerEmail || 'No email on file'},
             {href: `/app/projects/${projectId}/team`, label:'Architect', value: ctx.defaults?.architectName || '—', sub: 'Design contact'},
-            {href: `/app/projects/${projectId}/team`, label:'Leadership', value: `${leadersAssigned}/5`, accent: leadersAssigned>=3?'#2CFF7A':GOLD, sub: leadersAssigned>0?'Directory roles assigned':'Set them in the directory below'},
+            {href: `/app/projects/${projectId}/team`, label:'Leadership', value: `${leadersAssigned}/5`, accent: leadersAssigned>=3?'var(--success)':GOLD, sub: leadersAssigned>0?'Directory roles assigned':'Set them in the directory below'},
             {href: `/app/projects/${projectId}/subs`, label:'Trades on the Job', value: String(subTrades.length), sub: ctxSubs.length?`Across ${ctxSubs.length} sub${ctxSubs.length===1?'':'s'}`:'No subs yet'},
           ]}/>
         )}
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
           <StatCard icon={<UsersThree size={19} weight="duotone" color={GOLD} />} label="Team Members" value={String(members.length)} accent={GOLD} sub={members.length===1?'1 with access':`${members.length} with access`}  href={`/app/projects/${projectId}/team`}/>
           <StatCard icon={<HardHat size={19} weight="duotone" color={BLUE} />} label="Subcontractors" value={String(subs.length)} accent={subs.length?BLUE:undefined} sub={subTrades.length?`${subTrades.length} trade${subTrades.length===1?'':'s'} — portal access`:'Portal access'}  href={`/app/projects/${projectId}/subs`}/>
-          <StatCard icon={<IdentificationBadge size={19} weight="duotone" color={leadersAssigned>=3?'#2CFF7A':GOLD} />} label="Field Leadership" value={`${leadersAssigned}/5`} accent={leadersAssigned>=3?'#2CFF7A':GOLD} sub="PM · super · foreman · owner · architect"  href={`/app/projects/${projectId}/team`}/>
+          <StatCard icon={<IdentificationBadge size={19} weight="duotone" color={leadersAssigned>=3?'var(--success)':GOLD} />} label="Field Leadership" value={`${leadersAssigned}/5`} accent={leadersAssigned>=3?'var(--success)':GOLD} sub="PM · super · foreman · owner · architect"  href={`/app/projects/${projectId}/team`}/>
         </div>
       </>
     )}
@@ -427,41 +449,7 @@ export default function TeamPage(){
             compact
           />
         ) : (
-          <div style={{overflowX:'auto',WebkitOverflowScrolling:'touch' as const}}>
-            <SortBar columns={MEMBER_COLS.filter(c=>c.key)} sort={memberSort.sort} onChange={memberSort.setSort} />
-            <table style={{width:'100%',borderCollapse:'collapse' as const,fontSize:13}}>
-              <thead><tr>
-                {MEMBER_COLS.map(c=>c.key
-                  ? <SortTh key={c.key} col={c.key} label={c.label} sort={memberSort.sort} onSort={memberSort.cycle} style={{padding:'8px 12px',fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}} />
-                  : <th key={c.label} style={{padding:'8px 12px',textAlign:'left' as const,fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{c.label}</th>)}
-              </tr></thead>
-              <tbody>{sortedMembers.map(m=><tr key={m.userId||m.name} style={{borderBottom:`1px solid rgba(255,255,255,0.08)`}}>
-                <td style={{padding:'11px 12px'}}><div style={{display:'flex',alignItems:'center',gap:10}}><div style={{width:32,height:32,borderRadius:'50%',background:GOLD,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800,color:'#0A0A00'}}>{m.name[0]}</div><span style={{color:TEXT,fontWeight:600}}>{m.name}</span></div></td>
-                <td style={{padding:'11px 12px',color:DIM}}>{m.role}</td>
-                <td style={{padding:'11px 12px',color:DIM}}>{m.email}</td>
-                <td style={{padding:'11px 12px'}}><Badge label={m.access} color={m.access==='Admin'?GOLD:m.access==='Manager'?'#FF8A00':'#D4D4D8'} bg={m.access==='Admin'?'var(--brand-primary-12)':m.access==='Manager'?'rgba(26,95,168,.12)':'rgba(148,163,184,.08)'}/></td>
-                <td style={{padding:'11px 12px'}}>
-                  <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap' as const}}>
-                    {assignmentsFor(m.userId).map(a=>(
-                      <span key={a.id} style={{display:'inline-flex',alignItems:'center',gap:5,padding:'3px 6px 3px 9px',borderRadius:999,background:WORK.soft,border:`1px solid ${WORK.ring}`,color:WORK.hex,fontSize:10.5,fontWeight:800,letterSpacing:.3,whiteSpace:'nowrap' as const}}>
-                        {assignRoleLabel(a.role)}
-                        <button onClick={()=>endAssignment(a)} title="End this assignment" aria-label={`End ${assignRoleLabel(a.role)} assignment`} style={{display:'inline-flex',alignItems:'center',justifyContent:'center',width:14,height:14,padding:0,borderRadius:999,background:WORK.soft,border:'none',color:WORK.hex,cursor:'pointer'}}><X size={9} weight="bold"/></button>
-                      </span>
-                    ))}
-                    {m.userId ? (
-                      <select value="" disabled={assignBusy} onChange={e=>{const r=e.target.value; if(r) assignWork(m.userId!, r, m.name);}} title="Assign work on this project" aria-label={`Assign work to ${m.name}`} style={{padding:'3px 6px',background:'rgba(255,255,255,0.04)',border:`1px solid ${BORDER}`,borderRadius:7,color:DIM,fontSize:11,cursor:'pointer',outline:'none'}}>
-                        <option value="">+ Assign…</option>
-                        {ASSIGN_ROLES.map(r=><option key={r.value} value={r.value}>{r.label}</option>)}
-                      </select>
-                    ) : (
-                      <span title="They can be assigned work once they accept their invite" style={{fontSize:10.5,color:'rgba(255,255,255,0.35)',fontStyle:'italic' as const,whiteSpace:'nowrap' as const}}>Invite Pending</span>
-                    )}
-                  </div>
-                </td>
-                <td style={{padding:'11px 12px',color:'#2CFF7A',fontSize:12}}>{m.last}</td>
-              </tr>)}</tbody>
-            </table>
-          </div>
+          <DataTable<Member> columns={memberColumns} rows={filteredMembers} rowKey={m => m.userId || m.name} defaultSort={{ key: 'name', dir: 'asc' }} empty="No one matches." />
         )}
       </SectionCard>
       )}
@@ -526,26 +514,7 @@ export default function TeamPage(){
             compact
           />
         ) : (
-          <div style={{overflowX:'auto',WebkitOverflowScrolling:'touch' as const}}>
-            <SortBar columns={TEAM_SUB_COLS.filter(c=>c.key)} sort={teamSubSort.sort} onChange={teamSubSort.setSort} />
-            <table style={{width:'100%',borderCollapse:'collapse' as const,fontSize:13}}>
-              <thead><tr>
-                {TEAM_SUB_COLS.map(c=>c.key
-                  ? <SortTh key={c.key} col={c.key} label={c.label} sort={teamSubSort.sort} onSort={teamSubSort.cycle} style={{padding:'8px 12px',fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}} />
-                  : <th key={c.label} style={{padding:'8px 12px',textAlign:'left' as const,fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{c.label}</th>)}
-              </tr></thead>
-              <tbody>{sortedTeamSubs.map(s=>{const cs=findCtxSub(s.name);return <tr key={s.name} style={{borderBottom:`1px solid rgba(255,255,255,0.08)`}}>
-                <td style={{padding:'11px 12px',color:TEXT,fontWeight:600}}>{s.name}</td>
-                <td style={{padding:'11px 12px',color:DIM,fontSize:12}}>{cs?.trade || '—'}</td>
-                <td style={{padding:'11px 12px',color:DIM}}>{s.email || cs?.email || ''}</td>
-                <td style={{padding:'11px 12px',color:Number(cs?.contractAmount)>0?TEXT:DIM,fontWeight:Number(cs?.contractAmount)>0?700:400}}>{Number(cs?.contractAmount)>0?fmtMoney(Number(cs?.contractAmount)):'—'}</td>
-                <td style={{padding:'11px 12px'}}><Badge label="Sub Portal" color='#FF8A00' bg='rgba(255,138,0,.12)'/></td>
-                <td style={{padding:'11px 12px',display:'flex',gap:6}}>
-                  <button onClick={()=>handleSendPortalLink(s)} disabled={sendingPortal===s.name} style={{background:'none',border:`1px solid ${BORDER}`,borderRadius:5,color:GOLD,fontSize:11,padding:'3px 8px',cursor:sendingPortal===s.name?'default':'pointer',opacity:sendingPortal===s.name?.6:1}}>{sendingPortal===s.name?'Working…':'Copy Portal Link'}</button>
-                </td>
-              </tr>;})}</tbody>
-            </table>
-          </div>
+          <DataTable<TeamSub> columns={teamSubColumns} rows={filteredSubs} rowKey={s => s.name} defaultSort={{ key: 'name', dir: 'asc' }} empty="No subcontractors match." />
         )}
       </SectionCard>
       )}

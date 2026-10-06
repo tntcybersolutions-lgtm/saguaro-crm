@@ -1,4 +1,5 @@
 'use client';
+import { StatusPill } from '@/components/ui/Status';
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -11,12 +12,12 @@ import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
 const BASE = 'var(--bg-surface-2)';
 const GOLD = 'var(--brand-primary)';
-const GREEN = '#2CFF7A';
+const GREEN = 'var(--success)';
 const BLUE = 'var(--brand-primary)';
-const RED = '#FF3B30';
+const RED = 'var(--danger)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#D4D4D8';
-const TEXT = '#FFFFFF';
+const DIM = 'var(--text-secondary)';
+const TEXT = 'var(--text-primary)';
 
 interface Device {
   id: string;
@@ -71,7 +72,7 @@ function DeviceTypeIcon({ type, size, color }: { type: string; size: number; col
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  online: GREEN, offline: RED, planned: '#6B7280', warning: 'var(--warning)', maintenance: BLUE,
+  online: GREEN, offline: RED, planned: 'var(--status-closed)', warning: 'var(--warning)', maintenance: BLUE,
 };
 
 const inputStyle: React.CSSProperties = {
@@ -239,8 +240,8 @@ export default function DeviceInventoryPage() {
           sub="Not reporting" delay={0.10}
          href={`/app/projects/${projectId}/network/devices`}/>
         <StatCard
-          icon={<Clock size={19} weight="duotone" color="#94A3B8" />}
-          label="Planned" value={String(plannedCount)} accent={plannedCount ? '#94A3B8' : undefined}
+          icon={<Clock size={19} weight="duotone" color="var(--status-closed)" />}
+          label="Planned" value={String(plannedCount)} accent={plannedCount ? 'var(--status-closed)' : undefined}
           sub="Not yet deployed" delay={0.14}
          href={`/app/projects/${projectId}/network/devices`}/>
       </div>
@@ -433,7 +434,7 @@ export default function DeviceInventoryPage() {
           </div>
         ) : (
           <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
                   {['', 'Hostname', 'Type', 'Manufacturer', 'Model', 'IP Address', 'MAC', 'VLAN', 'Location', 'Status'].map(col => (
@@ -460,12 +461,7 @@ export default function DeviceInventoryPage() {
                     <td style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 12 }}>{dev.vlan_name || '—'}</td>
                     <td style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 12 }}>{dev.location || '—'}</td>
                     <td style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}` }}>
-                      <span style={{
-                        fontSize: 11, padding: '3px 10px', borderRadius: 10, fontWeight: 600,
-                        background: `color-mix(in srgb, ${STATUS_COLORS[dev.status] || '#6B7280'} 8%, transparent)`,
-                        color: STATUS_COLORS[dev.status] || '#6B7280',
-                        textTransform: 'capitalize',
-                      }}>{dev.status}</span>
+                      <StatusPill module="network_devices" status={dev.status} size="sm" />
                     </td>
                   </tr>
                 ))}

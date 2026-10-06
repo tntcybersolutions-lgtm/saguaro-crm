@@ -146,14 +146,14 @@ export default function HeaderMessages() {
             }}
           >
             <Icon size={16} weight="fill" />
-            <span style={{ flex: 1, minWidth: 0, color: '#FFFFFF', fontWeight: 600 }}>{m.text}</span>
+            <span style={{ flex: 1, minWidth: 0, color: 'var(--text-primary)', fontWeight: 600 }}>{m.text}</span>
 
             {m.action && (m.action.href ? (
               <Link
                 href={m.action.href}
                 style={{
                   flexShrink: 0, padding: '4px 11px', borderRadius: 7, textDecoration: 'none',
-                  background: t.fg, color: '#0A0A00', fontSize: 12, fontWeight: 800,
+                  background: t.fg, color: 'var(--on-brand)', fontSize: 12, fontWeight: 800,
                 }}
               >
                 {m.action.label}
@@ -163,7 +163,7 @@ export default function HeaderMessages() {
                 onClick={m.action.onClick}
                 style={{
                   flexShrink: 0, padding: '4px 11px', borderRadius: 7, border: 'none', cursor: 'pointer',
-                  background: t.fg, color: '#0A0A00', fontSize: 12, fontWeight: 800,
+                  background: t.fg, color: 'var(--on-brand)', fontSize: 12, fontWeight: 800,
                 }}
               >
                 {m.action.label}

@@ -223,7 +223,7 @@ function LineTable({ headers, rows }: { headers: string[]; rows: (string | numbe
   if (rows.length === 0) return null;
   return (
     <div className="tmLines">
-      <table>
+      <table className="k-table">
         <thead><tr>{headers.map((h) => <th key={h}>{h}</th>)}</tr></thead>
         <tbody>
           {rows.map((r, ri) => (

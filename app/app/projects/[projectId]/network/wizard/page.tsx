@@ -12,8 +12,8 @@ const GREEN = '#2CFF7A';
 const BLUE = 'var(--brand-primary)';
 const RED = '#FF3B30';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#D4D4D8';
-const TEXT = '#FFFFFF';
+const DIM = 'var(--text-secondary)';
+const TEXT = 'var(--text-primary)';
 
 interface WizardResult {
   vlans: Array<{ vlan_id: number; name: string; subnet: string; gateway: string; purpose: string }>;
@@ -256,12 +256,12 @@ export default function NetworkWizardPage() {
         }}>
           {generating ? (
             <>
-              <span style={{ display: 'inline-flex', animation: 'spin 1s linear infinite' }}><Gear size={16} weight="regular" color="#0A0A00" /></span>
+              <span style={{ display: 'inline-flex', animation: 'spin 1s linear infinite' }}><Gear size={16} weight="regular" color="var(--on-brand)" /></span>
               Generating Network Design…
             </>
           ) : (
             <>
-              <Robot size={16} weight="regular" color="#0A0A00" />
+              <Robot size={16} weight="regular" color="var(--on-brand)" />
               Generate Network Design
             </>
           )}
@@ -296,7 +296,7 @@ export default function NetworkWizardPage() {
           {result.vlans && result.vlans.length > 0 && (
             <SectionCard title="VLAN Plan" icon={<TreeStructure size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 16 }}>
               <div style={{ overflow: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
                       {['VLAN', 'Name', 'Subnet', 'Gateway', 'Purpose'].map(h => (
@@ -331,7 +331,7 @@ export default function NetworkWizardPage() {
               style={{ marginBottom: 16 }}
             >
               <div style={{ overflow: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
                       {['Type', 'Manufacturer', 'Model', 'Qty', 'Unit Cost', 'Total'].map(h => (
@@ -360,7 +360,7 @@ export default function NetworkWizardPage() {
           {result.ip_scheme && result.ip_scheme.length > 0 && (
             <SectionCard title="IP Addressing Scheme" icon={<Globe size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 16 }}>
               <div style={{ overflow: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
                       {['VLAN', 'Subnet', 'Gateway', 'DHCP Range', 'Reserved'].map(h => (

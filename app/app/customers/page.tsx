@@ -1,7 +1,8 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSort, useSortedRows, SortTh, SortBar } from '@/components/ui/sort';
+import { DataTable, type Column } from '@/components/ui/kit';
+import { StatusPill } from '@/components/ui/Status';
 import { useProjects } from '@/lib/hooks/useProjects';
 import UserPicker from '@/components/UserPicker';
 import { SkeletonRow } from '../../../components/ui/Skeleton';
@@ -11,17 +12,13 @@ import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldBu
 import { ListToolbar } from '@/components/ui/ListToolbar';
 
 /* ─── Palette ─── */
-const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#2CFF7A';
-const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#D4D4D8', DARK = 'var(--bg-base)';
-const RED = '#FF3B30', AMBER = 'var(--warning)', BLUE = 'var(--brand-primary)', PURPLE = '#FF8A00';
+const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = 'var(--success)';
+const BORDER = 'rgba(255,255,255,0.12)', TEXT = 'var(--text-primary)', DIM = 'var(--text-secondary)', DARK = 'var(--bg-base)';
+const RED = 'var(--danger)', AMBER = 'var(--warning)', BLUE = 'var(--brand-primary)', PURPLE = 'var(--warning)';
 /* Colors are CSS vars now, so a hex alpha suffix no longer works — tint with color-mix. */
 const mix = (c: string, pct: number) => `color-mix(in srgb, ${c} ${pct}%, transparent)`;
 
 /* ─── Types ─── */
-const CUSTOMER_COLS = [
-  { key: 'name', label: 'Name' }, { key: 'email', label: 'Email' }, { key: 'state', label: 'State' }, { key: 'status', label: 'Status' },
-  { key: 'lead_score', label: 'Score' }, { key: 'projects', label: 'Projects' }, { key: 'ltv', label: 'Lifetime Value' }, { key: 'source', label: 'Source' }, { key: 'created_at', label: 'Created' },
-];
 type CustomerStatus = 'lead' | 'qualified' | 'proposal' | 'customer' | 'lost';
 type Customer = {
   id: string; name: string; email: string; phone: string; state: string;
@@ -179,16 +176,23 @@ export default function CustomersPage() {
     return map;
   }, [customers, projects]);
 
-  // Sorting covers the whole filtered list (every column, both directions);
-  // Score descending is the default, as before.
-  const { sort: custSort, setSort: setCustSort, cycle: cycleCustSort } = useSort({ key: 'lead_score', dir: 'desc' });
-  const custSortValue = useCallback((c: Customer, key: string): unknown => {
-    if (key === 'projects') return projectRollup.get(c.id)?.count || 0;
-    if (key === 'ltv') return projectRollup.get(c.id)?.value || 0;
-    if (key === 'lead_score') return Number(c.lead_score) || 0;
-    return (c as unknown as Record<string, unknown>)[key];
-  }, [projectRollup]);
-  const sortedCustomers = useSortedRows(filtered, custSort, custSortValue);
+  const scoreColor = (s: number) => s >= 80 ? GREEN : s >= 50 ? AMBER : RED;
+  const custColumns = useMemo<Column<Customer>[]>(() => [
+    { key: 'name', header: 'Name', primary: true, phone: 'show', accessor: c => c.name,
+      render: c => (
+        <span className="k-name">
+          <span className="k-avatar" aria-hidden>{(c.name || '?').split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() || '').join('')}</span>
+          <span className="k-name-text"><span>{c.name}</span><span>{c.email}</span></span>
+        </span>
+      ) },
+    { key: 'state', header: 'State', phone: 'hide', accessor: c => c.state, render: c => <span style={{ fontWeight: 600 }}>{c.state}</span> },
+    { key: 'status', header: 'Status', phone: 'show', accessor: c => c.status, render: c => <StatusPill module="customers" status={c.status} size="sm" /> },
+    { key: 'lead_score', header: 'Score', phone: 'show', accessor: c => Number(c.lead_score) || 0, render: c => <span style={{ fontWeight: 800, color: scoreColor(c.lead_score) }}>{c.lead_score}</span> },
+    { key: 'projects', header: 'Projects', phone: 'hide', accessor: c => projectRollup.get(c.id)?.count || 0, render: c => { const n = projectRollup.get(c.id)?.count || 0; return <span style={{ color: n > 0 ? TEXT : DIM, fontWeight: 600 }}>{n}</span>; } },
+    { key: 'ltv', header: 'Lifetime Value', align: 'right', phone: 'show', accessor: c => (projectRollup.get(c.id)?.value || 0) > 0 ? projectRollup.get(c.id)?.value : null, render: c => { const v = projectRollup.get(c.id)?.value || 0; return v > 0 ? <span style={{ color: GOLD, fontWeight: 700 }}>{fmt(v)}</span> : '—'; } },
+    { key: 'source', header: 'Source', phone: 'hide', accessor: c => c.source, render: c => c.source || '—' },
+    { key: 'created_at', header: 'Created', phone: 'hide', accessor: c => c.created_at, render: c => fmtDate(c.created_at) },
+  ], [projectRollup]);
 
   // Portfolio lifetime value across every customer with matched projects.
   const lifetimeTotals = useMemo(() => {
@@ -197,8 +201,6 @@ export default function CustomersPage() {
     return { value, withProjects };
   }, [projectRollup]);
 
-  /* ─── Score Color ─── */
-  const scoreColor = (s: number) => s >= 80 ? GREEN : s >= 50 ? AMBER : RED;
 
   /* ─── Assign customer to a project (idempotent) + route a team member ───
      The old handler POSTed straight to /api/projects/create, which ALWAYS
@@ -405,7 +407,7 @@ export default function CustomersPage() {
                   onClick={(e) => e.stopPropagation()}
                   style={{ width: '100%', maxWidth: 520, background: 'var(--bg-surface)', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20, boxShadow: '0 30px 80px -20px rgba(0,0,0,0.8)' }}
                 >
-                  <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Email {c.name}</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>Email {c.name}</div>
                   <div style={{ fontSize: 12, color: DIM, marginBottom: 16 }}>To: {c.email}</div>
                   <div style={{ display: 'grid', gap: 12 }}>
                     <input
@@ -726,57 +728,14 @@ export default function CustomersPage() {
               description="No customers match your filters."
             />
           ) : (
-            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
-              <SortBar columns={CUSTOMER_COLS} sort={custSort} onChange={setCustSort} />
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 880 }}>
-                <thead>
-                  <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
-                    {CUSTOMER_COLS.map(c => (
-                      <SortTh key={c.key} col={c.key} label={c.label} sort={custSort} onSort={cycleCustSort} style={{ padding: '12px 14px', fontSize: 10.5, color: 'var(--text-tertiary)', fontWeight: 700 }} />
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedCustomers.map((c, idx) => (
-                    <tr
-                      key={c.id}
-                      onClick={() => { setSelected(c); setDetailTab('overview'); }}
-                      style={{
-                        borderBottom: `1px solid ${BORDER}`,
-                        background: idx % 2 === 0 ? 'transparent' : mix(BG, 19),
-                        cursor: 'pointer', transition: 'background .15s',
-                      }}
-                      onMouseEnter={e => (e.currentTarget.style.background = mix(GOLD, 3))}
-                      onMouseLeave={e => (e.currentTarget.style.background = idx % 2 === 0 ? 'transparent' : mix(BG, 19))}
-                    >
-                      <td style={{ padding: '12px 14px', fontSize: 14, fontWeight: 600 }}>{c.name}</td>
-                      <td style={{ padding: '12px 14px', fontSize: 13, color: DIM }}>{c.email}</td>
-                      <td style={{ padding: '12px 14px', fontSize: 13, fontWeight: 600 }}>{c.state}</td>
-                      <td style={{ padding: '12px 14px' }}>
-                        <span style={{
-                          padding: '3px 10px', borderRadius: 99, fontSize: 11, fontWeight: 700,
-                          background: mix(STATUS_COLORS[c.status], 13), color: STATUS_COLORS[c.status],
-                          textTransform: 'capitalize',
-                        }}>{c.status}</span>
-                      </td>
-                      <td style={{ padding: '12px 14px' }}>
-                        <span style={{
-                          fontSize: 14, fontWeight: 800, color: scoreColor(c.lead_score),
-                        }}>{c.lead_score}</span>
-                      </td>
-                      <td style={{ padding: '12px 14px', fontSize: 13, fontWeight: 600, color: (projectRollup.get(c.id)?.count || 0) > 0 ? TEXT : DIM }}>
-                        {projectRollup.get(c.id)?.count || 0}
-                      </td>
-                      <td style={{ padding: '12px 14px', fontSize: 13, fontWeight: 700, color: (projectRollup.get(c.id)?.value || 0) > 0 ? GOLD : DIM }}>
-                        {(projectRollup.get(c.id)?.value || 0) > 0 ? fmt(projectRollup.get(c.id)?.value) : '—'}
-                      </td>
-                      <td style={{ padding: '12px 14px', fontSize: 13, color: DIM }}>{c.source}</td>
-                      <td style={{ padding: '12px 14px', fontSize: 13, color: DIM }}>{fmtDate(c.created_at)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable<Customer>
+              columns={custColumns}
+              rows={filtered}
+              rowKey={c => c.id}
+              defaultSort={{ key: 'lead_score', dir: 'desc' }}
+              onRowClick={c => { setSelected(c); setDetailTab('overview'); }}
+              empty="No customers match your filters."
+            />
           )}
         </SectionCard>
       )}

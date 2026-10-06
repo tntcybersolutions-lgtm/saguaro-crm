@@ -28,11 +28,12 @@
  * which are vendors a GC contracts with.
  */
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useSort, useSortedRows, SortTh, SortBar } from '@/components/ui/sort';
+import { DataTable, type Column } from '@/components/ui/kit';
+import { StatusPill } from '@/components/ui/Status';
 import Link from 'next/link';
 import {
   UsersThree, ShieldCheck, WarningCircle, SealCheck, Buildings,
-  MagnifyingGlass, Phone, EnvelopeSimple, IdentificationCard, Package,
+  MagnifyingGlass, Phone, EnvelopeSimple, IdentificationCard, Package, Check, X, Warning,
 } from '@phosphor-icons/react';
 import {
   PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty,
@@ -41,7 +42,7 @@ import {
 import { SkeletonRow } from '../../../components/ui/Skeleton';
 
 const GOLD = 'var(--brand-primary)', CARD = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
-const TEXT = '#FFFFFF', DIM = '#D4D4D8', GREEN = '#2CFF7A', RED = '#FF3B30', AMBER = '#FF8A00';
+const TEXT = 'var(--text-primary)', DIM = 'var(--text-secondary)', GREEN = 'var(--success)', RED = 'var(--danger)', AMBER = 'var(--warning)';
 
 interface Sub {
   id: string;
@@ -73,19 +74,23 @@ function parseDay(iso: string | null): Date | null {
 }
 
 /** Expiry read the way a GC reads it: gone, going, or fine. */
-const SUB_COLS = [
-  { key: 'company_name', label: 'Company' }, { key: 'trade', label: 'Trade' }, { key: 'contact', label: 'Contact' },
-  { key: 'license_number', label: 'License' }, { key: 'insurance_expiry', label: 'Insurance' }, { key: 'w9_on_file', label: 'W-9' },
-];
-
-function expiryState(iso: string | null): { label: string; tone: string } {
+function expiryState(iso: string | null): { label: string; status: 'not_on_file' | 'expired' | 'expiring' | 'active' } {
   const d = parseDay(iso);
-  if (!d) return { label: 'Not on File', tone: RED };
+  if (!d) return { label: 'Not on File', status: 'not_on_file' };
   const days = Math.ceil((d.getTime() - Date.now()) / 86_400_000);
-  if (days < 0) return { label: `Expired ${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`, tone: RED };
-  if (days <= 30) return { label: `${days}d left`, tone: AMBER };
-  return { label: d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }), tone: GREEN };
+  if (days < 0) return { label: `Expired ${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`, status: 'expired' };
+  if (days <= 30) return { label: `${days}d left`, status: 'expiring' };
+  return { label: `Through ${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}`, status: 'active' };
 }
+
+const PILL_ICON = {
+  good: <Check size={11} weight="bold" />,
+  warn: <Warning size={11} weight="fill" />,
+  bad: <X size={11} weight="bold" />,
+} as const;
+const iconFor = (status: string) => status === 'active' || status === 'on_file' ? PILL_ICON.good : status === 'expiring' || status === 'pending' ? PILL_ICON.warn : PILL_ICON.bad;
+
+const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]?.toUpperCase() || '').join('') || '?';
 
 export default function SubsAndVendorsPage() {
   const [subs, setSubs] = useState<Sub[]>([]);
@@ -93,6 +98,7 @@ export default function SubsAndVendorsPage() {
   const [error, setError] = useState<string | null>(null);
   const [q, setQ] = useState('');
   const [trade, setTrade] = useState('');
+  const [paperFilter, setPaperFilter] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -118,29 +124,77 @@ export default function SubsAndVendorsPage() {
     [subs],
   );
 
+  const lacksPaper = (s: Sub) => s.w9_on_file !== true || !s.insurance_expiry || (parseDay(s.insurance_expiry)?.getTime() ?? 0) < Date.now();
   const shown = useMemo(() => {
     const needle = q.trim().toLowerCase();
     return subs.filter(s => {
+      if (paperFilter && !lacksPaper(s)) return false;
       if (trade && (s.trade || '') !== trade) return false;
       if (!needle) return true;
       return [s.company_name, s.trade, s.contact_name, s.email || s.contact_email]
         .some(v => (v || '').toLowerCase().includes(needle));
     });
-  }, [subs, q, trade]);
+  }, [subs, q, trade, paperFilter]);
 
-  const { sort: subSort, setSort: setSubSort, cycle: cycleSubSort } = useSort(null);
-  const subSortValue = useCallback((s: (typeof subs)[number], key: string): unknown => {
-    if (key === 'contact') return s.contact_name || s.email || s.contact_email || '';
-    if (key === 'w9_on_file') return s.w9_on_file === true ? 1 : 0;
-    return (s as unknown as Record<string, unknown>)[key];
-  }, []);
-  const sortedSubs = useSortedRows(shown, subSort, subSortValue);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const columns = useMemo<Column<Sub>[]>(() => [
+    {
+      key: 'company_name', header: 'Company', primary: true, phone: 'show',
+      accessor: s => s.company_name || '',
+      render: s => (
+        <span className="k-name">
+          <span className="k-avatar" aria-hidden>{initials(s.company_name || '')}</span>
+          <span className="k-name-text">
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              {s.company_name || 'Unnamed Company'}
+              {s.blacklisted && <StatusPill module="paperwork" status="missing" label="Do Not Use" size="sm" icon={PILL_ICON.bad} />}
+            </span>
+            {s.prequalified === true && <span>Prequalified</span>}
+          </span>
+        </span>
+      ),
+    },
+    { key: 'trade', header: 'Trade', phone: 'show', accessor: s => s.trade || '' , render: s => s.trade || '—' },
+    {
+      key: 'contact', header: 'Contact', phone: 'show',
+      accessor: s => s.contact_name || s.email || s.contact_email || '',
+      render: s => {
+        const email = s.email || s.contact_email;
+        const phone = s.phone || s.contact_phone;
+        if (!s.contact_name && !email && !phone) return '—';
+        return (
+          <span className="k-cell-stack">
+            {s.contact_name && <span style={{ color: TEXT, fontWeight: 600 }}>{s.contact_name}</span>}
+            {email && <span><EnvelopeSimple size={12} weight="bold" color={DIM} />{email}</span>}
+            {phone && <span><Phone size={12} weight="bold" color={DIM} />{phone}</span>}
+          </span>
+        );
+      },
+    },
+    {
+      key: 'license_number', header: 'License', phone: 'hide',
+      accessor: s => s.license_number || '',
+      render: s => s.license_number
+        ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}><IdentificationCard size={13} weight="bold" color={DIM} />{s.license_number}</span>
+        : <StatusPill module="paperwork" status="not_on_file" size="sm" icon={PILL_ICON.bad} />,
+    },
+    {
+      key: 'insurance_expiry', header: 'Insurance', phone: 'show',
+      accessor: s => s.insurance_expiry || '',
+      render: s => { const ins = expiryState(s.insurance_expiry); return <StatusPill module="paperwork" status={ins.status} label={ins.label} size="sm" icon={iconFor(ins.status)} />; },
+    },
+    {
+      key: 'w9_on_file', header: 'W-9', phone: 'show',
+      accessor: s => (s.w9_on_file === true ? 1 : 0),
+      render: s => s.w9_on_file === true
+        ? <StatusPill module="paperwork" status="on_file" size="sm" icon={PILL_ICON.good} />
+        : <StatusPill module="paperwork" status="missing" size="sm" icon={PILL_ICON.bad} />,
+    },
+  ], []);
 
   /* The number that matters is not how many subs there are, it is how many
      cannot be awarded work today. */
-  const missingPaper = subs.filter(
-    s => s.w9_on_file !== true || !s.insurance_expiry || (parseDay(s.insurance_expiry)?.getTime() ?? 0) < Date.now(),
-  ).length;
+  const missingPaper = subs.filter(lacksPaper).length;
   const prequalified = subs.filter(s => s.prequalified === true).length;
 
   return (
@@ -154,10 +208,10 @@ export default function SubsAndVendorsPage() {
       />
 
       <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', marginBottom: 22 }}>
-        <StatCard label="On File" value={String(subs.length)} sub="Companies tenant-wide" icon={<Buildings size={17} weight="duotone" color={GOLD} />}  href="/app/subs"/>
-        <StatCard label="Paperwork Missing" value={String(missingPaper)} sub={missingPaper ? 'Cannot be awarded without override' : 'Everyone is current'} icon={<WarningCircle size={17} weight="duotone" color={missingPaper ? RED : GREEN} />}  href="/app/subs"/>
-        <StatCard label="Prequalified" value={String(prequalified)} sub="Passed prequalification" icon={<SealCheck size={17} weight="duotone" color={GOLD} />}  href="/app/subs"/>
-        <StatCard label="Trades Covered" value={String(trades.length)} sub="Distinct trades on file" icon={<Package size={17} weight="duotone" color={GOLD} />}  href="/app/subs"/>
+        <StatCard label="On File" value={String(subs.length)} sub="Companies tenant-wide" icon={<Buildings size={17} weight="duotone" color={GOLD} />} onClick={() => { setQ(''); setTrade(''); setPaperFilter(false); }} />
+        <StatCard label="Paperwork Missing" value={String(missingPaper)} sub={missingPaper ? 'Cannot be awarded without override' : 'Everyone is current'} icon={<WarningCircle size={17} weight="duotone" color={missingPaper ? 'var(--text-primary)' : GOLD} />} tone={missingPaper ? 'bad' : undefined} active={paperFilter} onClick={() => setPaperFilter(v => !v)} />
+        <StatCard label="Prequalified" value={String(prequalified)} sub="Passed prequalification" icon={<SealCheck size={17} weight="duotone" color={GOLD} />} tone={prequalified > 0 ? 'good' : undefined} href="/app/prequalification" />
+        <StatCard label="Trades Covered" value={String(trades.length)} sub="Distinct trades on file" icon={<Package size={17} weight="duotone" color={GOLD} />} onClick={() => document.getElementById('subs-trade-filter')?.focus()} />
       </div>
 
       <SectionCard
@@ -178,6 +232,7 @@ export default function SubsAndVendorsPage() {
             />
           </div>
           <select
+            id="subs-trade-filter"
             value={trade}
             onChange={e => setTrade(e.target.value)}
             style={{ padding: '9px 12px', background: 'var(--bg-surface-2)', border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, outline: 'none', minWidth: 170 }}
@@ -212,55 +267,15 @@ export default function SubsAndVendorsPage() {
             action={<button onClick={() => { setQ(''); setTrade(''); }} style={goldButtonStyle}>Clear Filters</button>}
           />
         ) : (
-          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
-            <SortBar columns={SUB_COLS} sort={subSort} onChange={setSubSort} />
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-              <thead>
-                <tr>
-                  {SUB_COLS.map(c => (
-                    <SortTh key={c.key} col={c.key} label={c.label} sort={subSort} onSort={cycleSubSort} style={{ padding: '11px 16px', color: DIM, fontSize: 10.5, fontWeight: 800, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }} />
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {sortedSubs.map(s => {
-                  const ins = expiryState(s.insurance_expiry);
-                  const email = s.email || s.contact_email;
-                  const phone = s.phone || s.contact_phone;
-                  return (
-                    <tr key={s.id} style={{ borderBottom: `1px solid rgba(255,255,255,0.055)` }}>
-                      <td style={{ padding: '12px 16px', color: TEXT, fontWeight: 700 }}>
-                        {s.company_name || 'Unnamed Company'}
-                        {s.blacklisted && (
-                          <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 800, padding: '2px 7px', borderRadius: 999, background: 'rgba(255,59,48,0.14)', color: RED, border: `1px solid rgba(255,59,48,0.3)` }}>Do Not Use</span>
-                        )}
-                      </td>
-                      <td style={{ padding: '12px 16px', color: DIM }}>{s.trade || '—'}</td>
-                      <td style={{ padding: '12px 16px', color: DIM }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                          {s.contact_name && <span style={{ color: TEXT }}>{s.contact_name}</span>}
-                          {email && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><EnvelopeSimple size={12} weight="duotone" color={DIM} />{email}</span>}
-                          {phone && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Phone size={12} weight="duotone" color={DIM} />{phone}</span>}
-                          {!s.contact_name && !email && !phone && '—'}
-                        </div>
-                      </td>
-                      <td style={{ padding: '12px 16px', color: DIM, whiteSpace: 'nowrap' }}>
-                        {s.license_number
-                          ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><IdentificationCard size={13} weight="duotone" color={DIM} />{s.license_number}</span>
-                          : <span style={{ color: RED }}>Not on File</span>}
-                      </td>
-                      <td style={{ padding: '12px 16px', whiteSpace: 'nowrap', color: ins.tone, fontWeight: 600 }}>{ins.label}</td>
-                      <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
-                        {s.w9_on_file === true
-                          ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: GREEN, fontWeight: 700 }}><ShieldCheck size={13} weight="fill" color={GREEN} />On File</span>
-                          : <span style={{ color: RED, fontWeight: 700 }}>Missing</span>}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <DataTable<Sub>
+            columns={columns}
+            rows={shown}
+            rowKey={s => s.id}
+            defaultSort={{ key: 'company_name', dir: 'asc' }}
+            onRowClick={s => setSelectedId(id => (id === s.id ? null : s.id))}
+            isSelected={s => s.id === selectedId}
+            empty="Nothing matches that."
+          />
         )}
       </SectionCard>
     </PremiumSurface>

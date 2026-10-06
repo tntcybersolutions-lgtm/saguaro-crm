@@ -458,7 +458,7 @@ export default function LeadsPage() {
     {
       key: 'next_action_date', header: 'Follow-Up', accessor: (l) => l.next_action_date || null,
       render: (l) => l.next_action_date
-        ? <span style={{ color: isOverdue(l) ? '#FF3B30' : undefined, fontWeight: isOverdue(l) ? 700 : undefined }}>{fmtDate(l.next_action_date)}</span>
+        ? <span style={{ color: isOverdue(l) ? 'var(--danger)' : undefined, fontWeight: isOverdue(l) ? 700 : undefined }}>{fmtDate(l.next_action_date)}</span>
         : '—',
     },
     { key: 'created_at', header: 'Created', render: (l) => fmtDate(l.created_at) },
@@ -468,14 +468,14 @@ export default function LeadsPage() {
     { key: 'open', header: 'Open', align: 'right' },
     { key: 'openVal', header: 'Pipeline', align: 'right', render: (r) => fmt(r.openVal) },
     { key: 'won', header: 'Won', align: 'right' },
-    { key: 'wonVal', header: 'Won Value', align: 'right', render: (r) => <span style={{ color: r.wonVal > 0 ? '#2CFF7A' : undefined }}>{fmt(r.wonVal)}</span> },
+    { key: 'wonVal', header: 'Won Value', align: 'right', render: (r) => <span style={{ color: r.wonVal > 0 ? 'var(--success)' : undefined }}>{fmt(r.wonVal)}</span> },
     {
       key: 'rate', header: 'Win Rate', align: 'right', accessor: (r) => (r.won + r.lost > 0 ? Math.round((r.won / (r.won + r.lost)) * 100) : null),
       render: (r) => {
         const closed = r.won + r.lost;
         if (!closed) return '—';
         const rate = Math.round((r.won / closed) * 100);
-        return <span style={{ fontWeight: 700, color: rate >= 50 ? '#2CFF7A' : 'var(--warning)' }}>{rate}%</span>;
+        return <span style={{ fontWeight: 700, color: rate >= 50 ? 'var(--success)' : 'var(--warning)' }}>{rate}%</span>;
       },
     },
   ];
@@ -608,7 +608,7 @@ export default function LeadsPage() {
                       </div>
                       {rate != null && (
                         <div className="k-hint" style={{ marginLeft: 108, padding: '2px 0' }}>
-                          <span style={{ fontWeight: 700, color: rate >= 50 ? '#2CFF7A' : rate >= 25 ? 'var(--warning)' : '#FF3B30' }}>{rate}%</span> ↓ convert to {conversionRates[idx].to}
+                          <span style={{ fontWeight: 700, color: rate >= 50 ? 'var(--success)' : rate >= 25 ? 'var(--warning)' : 'var(--danger)' }}>{rate}%</span> ↓ convert to {conversionRates[idx].to}
                         </div>
                       )}
                     </div>
@@ -667,7 +667,7 @@ export default function LeadsPage() {
                           <div className="k-hint" style={{ display: 'flex', justifyContent: 'space-between', gap: 6, flexWrap: 'wrap' }}>
                             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lead.project_type || ''}</span>
                             {lead.next_action_date && (
-                              <span style={{ color: isOverdue(lead) ? '#FF3B30' : undefined, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                              <span style={{ color: isOverdue(lead) ? 'var(--danger)' : undefined, fontWeight: 600, whiteSpace: 'nowrap' }}>
                                 Follow-Up {fmtDate(lead.next_action_date)}
                               </span>
                             )}

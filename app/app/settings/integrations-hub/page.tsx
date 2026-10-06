@@ -28,12 +28,12 @@ import { WEBHOOK_EVENT_NAMES } from '@/lib/webhook-events';
 
 const GOLD = 'var(--brand-primary)';
 const GOLD_HI = 'var(--brand-primary-strong)';
-const WHITE = '#FFFFFF';
+const WHITE = 'var(--text-primary)';
 const MUTED = 'rgba(255,255,255,0.62)';
 const FAINT = 'rgba(255,255,255,0.42)';
 const BORDER = 'rgba(255,255,255,0.08)';
-const GREEN = '#2CFF7A';
-const RED = '#FF3B30';
+const GREEN = 'var(--success)';
+const RED = 'var(--danger)';
 
 type MarketState = 'connect' | 'request';
 type Market = { key: string; name: string; desc: string; state: MarketState; href: string };

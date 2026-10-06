@@ -20,10 +20,10 @@ import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/t
 
 const GOLD = 'var(--brand-primary)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#D4D4D8';
-const TEXT = '#FFFFFF';
-const GREEN = '#2CFF7A';
-const RED = '#FF3B30';
+const DIM = 'var(--text-secondary)';
+const TEXT = 'var(--text-primary)';
+const GREEN = 'var(--success)';
+const RED = 'var(--danger)';
 
 const fmt = (n: number | string | null | undefined) =>
   '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -33,11 +33,11 @@ const fmt = (n: number | string | null | undefined) =>
 const fmtDay = (d: string | null | undefined) =>
   d ? new Date(String(d).includes('T') ? d : `${d}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null;
 
-function Badge({ label, color = '#D4D4D8', bg = 'rgba(148,163,184,.12)' }: { label: string; color?: string; bg?: string }) {
+function Badge({ label, color = 'var(--text-secondary)', bg = 'rgba(163,172,187,.12)' }: { label: string; color?: string; bg?: string }) {
   return (
     <span style={{
-      fontSize: 10, fontWeight: 700, padding: '2px 8px',
-      borderRadius: 4, background: bg, color,
+      display: 'inline-flex', alignItems: 'center', fontSize: 11, fontWeight: 700, padding: '2px 9px',
+      borderRadius: 999, background: bg, color, border: `1px solid color-mix(in srgb, ${color} 50%, transparent)`, whiteSpace: 'nowrap',
     }}>{label ? String(label).replace(/_/g, ' ').replace(/\b[a-z]/g, c => c.toUpperCase()) : label}</span>
   );
 }
@@ -115,11 +115,11 @@ const isCloseoutDone = (s: string) => s === 'accepted';
 
 const CLOSEOUT_STATUS: Record<string, { label: string; color: string; bg: string }> = {
   pending:      { label: 'Pending',      color: 'var(--warning)', bg: 'color-mix(in srgb, var(--warning) 10%, transparent)' },
-  submitted:    { label: 'Submitted',    color: '#FF8A00', bg: 'rgba(26,95,168,.12)' },
-  under_review: { label: 'Under Review', color: '#FF8A00', bg: 'rgba(26,95,168,.12)' },
+  submitted:    { label: 'Submitted',    color: 'var(--warning)', bg: 'rgba(255,138,0,.12)' },
+  under_review: { label: 'Under Review', color: 'var(--warning)', bg: 'rgba(255,138,0,.12)' },
   accepted:     { label: 'Complete',     color: GREEN,     bg: 'rgba(44,255,122,.12)' },
   rejected:     { label: 'Rejected',     color: RED,       bg: 'rgba(255,59,48,.12)' },
-  na:           { label: 'N/A',          color: DIM,       bg: 'rgba(148,163,184,.12)' },
+  na:           { label: 'N/A',          color: DIM,       bg: 'rgba(163,172,187,.12)' },
 };
 
 const CLOSEOUT_TYPE_LABEL: Record<string, string> = {
@@ -130,11 +130,11 @@ const CLOSEOUT_TYPE_LABEL: Record<string, string> = {
 
 const statusConfig: Record<string, { color: string; bg: string }> = {
   paid:      { color: GREEN,   bg: 'rgba(44,255,122,.12)' },
-  approved:  { color: '#FF8A00', bg: 'rgba(26,95,168,.12)' },
+  approved:  { color: 'var(--warning)', bg: 'rgba(255,138,0,.12)' },
   draft:     { color: 'var(--warning)', bg: 'color-mix(in srgb, var(--warning) 12%, transparent)' },
   executed:  { color: GREEN,   bg: 'rgba(44,255,122,.12)' },
   pending:   { color: 'var(--warning)', bg: 'color-mix(in srgb, var(--warning) 12%, transparent)' },
-  submitted: { color: '#FF8A00', bg: 'rgba(26,95,168,.12)' },
+  submitted: { color: 'var(--warning)', bg: 'rgba(255,138,0,.12)' },
 };
 
 // AIA bond/form card code -> { route, body } using existing /api/documents/* generators.
@@ -347,7 +347,7 @@ export default function DocumentsPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Compliance"
-        eyebrowIcon={<IconChip size={24} vivid={moduleAccent('documents').vivid ?? moduleAccent('documents').hex}><FileText size={13} weight="fill" color="#F8FAFC" /></IconChip>}
+        eyebrowIcon={<IconChip size={24} vivid={moduleAccent('documents').vivid ?? moduleAccent('documents').hex}><FileText size={13} weight="fill" color="var(--text-primary)" /></IconChip>}
         accentColor={moduleAccent('documents').hex}
         title="Project"
         accent="Documents"
@@ -437,7 +437,7 @@ export default function DocumentsPage() {
             }
           >
             <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr>
                     {([
@@ -510,7 +510,7 @@ export default function DocumentsPage() {
             }
           >
             <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr>
                     {([
@@ -658,7 +658,7 @@ export default function DocumentsPage() {
             }
           >
             <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr>
                     {([

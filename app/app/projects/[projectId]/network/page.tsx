@@ -9,12 +9,12 @@ import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, IconCh
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 
 const GOLD = 'var(--brand-primary)';
-const GREEN = '#2CFF7A';
+const GREEN = 'var(--success)';
 const BLUE = 'var(--brand-primary)';
 const RED = '#FF3B30';
-const TEXT = '#FFFFFF';
+const TEXT = 'var(--text-primary)';
 // Premium kit surface tokens (match components/ui/premium.tsx) ------------------
-const WHITE = '#FFFFFF';
+const WHITE = 'var(--text-primary)';
 const MUTED = 'rgba(255,255,255,0.62)';
 const KIT_BORDER = 'rgba(255,255,255,0.08)';
 const KIT_SURFACE = 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))';
@@ -73,7 +73,7 @@ const DEVICE_TYPE_ICONS: Record<string, React.ComponentType<any>> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  online: GREEN, offline: RED, planned: '#6B7280', warning: 'var(--warning)',
+  online: GREEN, offline: RED, planned: 'var(--status-closed)', warning: 'var(--warning)',
 };
 
 const NAV_ITEMS = [
@@ -284,7 +284,7 @@ export default function NetworkDashboard() {
             className="pmBtn"
             style={goldButtonStyle}
           >
-            <Robot size={16} weight="fill" color="#0A0A00" /> AI Network Wizard
+            <Robot size={16} weight="fill" color="var(--on-brand)" /> AI Network Wizard
           </button>
         }
       />
@@ -293,7 +293,7 @@ export default function NetworkDashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 16, marginBottom: 28 }}>
         <StatCard icon={<Devices size={19} weight="duotone" color={BLUE} />} label="Total Devices" value={String(devices.length)} accent={BLUE} delay={0.02}  href={`/app/projects/${projectId}/network/devices`}/>
         <StatCard icon={<Circle size={19} weight="duotone" color={GREEN} />} label="Online" value={String(devices.filter(d => d.status === 'online').length)} accent={GREEN} sub={`Of ${devices.length} total`} delay={0.06}  href={`/app/projects/${projectId}/network`}/>
-        <StatCard icon={<Shuffle size={19} weight="duotone" color="#FF8A00" />} label="VLANs" value={String(vlans.length)} accent="#FF8A00" delay={0.10}  href={`/app/projects/${projectId}/network/vlans`}/>
+        <StatCard icon={<Shuffle size={19} weight="duotone" color="var(--warning)" />} label="VLANs" value={String(vlans.length)} accent="var(--warning)" delay={0.10}  href={`/app/projects/${projectId}/network/vlans`}/>
         <StatCard icon={<Plug size={19} weight="duotone" color={GOLD} />} label="Cable Runs" value={`${testedCables}/${cables.length}`} accent={GOLD} sub="Tested" delay={0.14}  href={`/app/projects/${projectId}/network/cables`}/>
         <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Pass Rate" value={cables.length > 0 ? `${Math.round((passedCables / Math.max(testedCables, 1)) * 100)}%` : 'N/A'} accent={GREEN} delay={0.18}  href={`/app/projects/${projectId}/network`}/>
         <StatCard icon={<Warning size={19} weight="duotone" color={openAlerts > 0 ? RED : GREEN} />} label="Open Alerts" value={String(openAlerts)} accent={openAlerts > 0 ? RED : GREEN} delay={0.22}  href={`/app/projects/${projectId}/network`}/>
@@ -396,7 +396,7 @@ export default function NetworkDashboard() {
             icon={<Devices size={30} weight="duotone" color={GOLD} />}
             title="No devices added yet"
             description={`This ${(networkProject?.site_type || 'site').replace(/_/g, ' ')} covers ${(networkProject?.total_sq_ft || 0).toLocaleString()} SF — add devices by hand, or let the AI wizard draft the full design in one pass.`}
-            action={<Link href={`/app/projects/${projectId}/network/devices`} className="pmBtn" style={goldButtonStyle}><Plus size={15} weight="bold" color="#0A0A00" /> Add Your First Device</Link>}
+            action={<Link href={`/app/projects/${projectId}/network/devices`} className="pmBtn" style={goldButtonStyle}><Plus size={15} weight="bold" color="var(--on-brand)" /> Add Your First Device</Link>}
             compact
           />
         ) : (
@@ -425,7 +425,7 @@ export default function NetworkDashboard() {
                   >
                     <div style={{
                       width: 8, height: 8, borderRadius: '50%',
-                      background: STATUS_COLORS[dev.status] || '#6B7280',
+                      background: STATUS_COLORS[dev.status] || 'var(--status-closed)',
                       flexShrink: 0,
                     }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -434,8 +434,8 @@ export default function NetworkDashboard() {
                     </div>
                     <span style={{
                       fontSize: 10, padding: '2px 8px', borderRadius: 10, fontWeight: 600,
-                      background: `color-mix(in srgb, ${STATUS_COLORS[dev.status] || '#6B7280'} 13%, transparent)`,
-                      color: STATUS_COLORS[dev.status] || '#6B7280',
+                      background: `color-mix(in srgb, ${STATUS_COLORS[dev.status] || 'var(--status-closed)'} 13%, transparent)`,
+                      color: STATUS_COLORS[dev.status] || 'var(--status-closed)',
                       textTransform: 'capitalize',
                     }}>{dev.status}</span>
                   </Link>

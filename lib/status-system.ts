@@ -110,6 +110,143 @@ export interface ModuleDef {
 }
 
 export const MODULES: Record<string, ModuleDef> = {
+  /* Paperwork a sub must have before they can be awarded work: W-9, insurance
+     certificate, licence, prequal documents. Pill-only — a document has no
+     process rail, it is either in hand, going stale, or gone. */
+  /* Generic vocabulary for the status-to-pill codemod and for one-off pills
+     where no module applies. Tone follows the word's meaning everywhere. */
+  generic: {
+    noun: 'item',
+    stages: [],
+    statuses: {
+      missing: { label: 'Missing', tone: 'bad' }, not_on_file: { label: 'Not on File', tone: 'bad' }, on_file: { label: 'On File', tone: 'good' },
+      overdue: { label: 'Overdue', tone: 'bad' }, late: { label: 'Late', tone: 'bad' }, on_time: { label: 'On Time', tone: 'good' }, due_today: { label: 'Due Today', tone: 'warn' },
+      approved: { label: 'Approved', tone: 'good' }, paid: { label: 'Paid', tone: 'done' }, pending: { label: 'Pending', tone: 'waiting' }, rejected: { label: 'Rejected', tone: 'bad' },
+      expired: { label: 'Expired', tone: 'bad' }, expiring: { label: 'Expiring', tone: 'warn' }, draft: { label: 'Draft', tone: 'draft' }, submitted: { label: 'Submitted', tone: 'waiting' },
+      sent: { label: 'Sent', tone: 'waiting' }, open: { label: 'Open', tone: 'active' }, closed: { label: 'Closed', tone: 'done' }, active: { label: 'Active', tone: 'good' }, inactive: { label: 'Inactive', tone: 'draft' },
+      complete: { label: 'Complete', tone: 'done' }, completed: { label: 'Completed', tone: 'done' }, done: { label: 'Done', tone: 'done' }, in_progress: { label: 'In Progress', tone: 'active' }, under_review: { label: 'Under Review', tone: 'waiting' },
+      signed: { label: 'Signed', tone: 'good' }, unsigned: { label: 'Unsigned', tone: 'warn' }, certified: { label: 'Certified', tone: 'good' }, verified: { label: 'Verified', tone: 'good' }, unverified: { label: 'Unverified', tone: 'warn' },
+      declined: { label: 'Declined', tone: 'bad' }, cancelled: { label: 'Cancelled', tone: 'bad' }, canceled: { label: 'Canceled', tone: 'bad' }, awarded: { label: 'Awarded', tone: 'good' }, won: { label: 'Won', tone: 'good' }, lost: { label: 'Lost', tone: 'bad' },
+      not_started: { label: 'Not Started', tone: 'draft' }, scheduled: { label: 'Scheduled', tone: 'waiting' },
+    },
+  },
+  paperwork: {
+    noun: 'document',
+    stages: [],
+    statuses: {
+      on_file:     { label: 'On File',     tone: 'good' },
+      active:      { label: 'Active',      tone: 'good' },
+      verified:    { label: 'Verified',    tone: 'good' },
+      current:     { label: 'Current',     tone: 'good' },
+      pending:     { label: 'Pending',     tone: 'waiting', action: 'Requested — waiting on the sub' },
+      expiring:    { label: 'Expiring',    tone: 'warn',    action: 'Expires within 30 days — ask for the renewal now' },
+      expired:     { label: 'Expired',     tone: 'bad',     action: 'Lapsed — nothing can be awarded until it is renewed' },
+      missing:     { label: 'Missing',     tone: 'bad',     action: 'Not on file — request it before award' },
+      not_on_file: { label: 'Not on File', tone: 'bad',     action: 'Not on file — request it before award' },
+    },
+  },
+  bills: {
+    noun: 'bill',
+    stages: ['Pending', 'Approved', 'Paid'],
+    staleAfterDays: 14,
+    statuses: {
+      draft:    { label: 'Draft',    tone: 'draft',   stage: 0 },
+      pending:  { label: 'Pending',  tone: 'waiting', stage: 0, action: 'Waiting on approval' },
+      approved: { label: 'Approved', tone: 'good',    stage: 1, action: 'Approved — schedule the payment' },
+      paid:     { label: 'Paid',     tone: 'done',    stage: 2 },
+      overdue:  { label: 'Overdue',  tone: 'bad',               action: 'Past due — pay it or dispute it' },
+      disputed: { label: 'Disputed', tone: 'warn',              action: 'In dispute with the vendor' },
+    },
+  },
+  contracts: {
+    noun: 'contract',
+    stages: ['Draft', 'Sent', 'Executed', 'Complete'],
+    staleAfterDays: 7,
+    statuses: {
+      draft:    { label: 'Draft',    tone: 'draft',   stage: 0, action: 'Finish the terms and send it' },
+      sent:     { label: 'Sent',     tone: 'waiting', stage: 1, action: 'Out for signature' },
+      executed: { label: 'Executed', tone: 'good',    stage: 2 },
+      active:   { label: 'Active',   tone: 'good',    stage: 2 },
+      complete: { label: 'Complete', tone: 'done',    stage: 3 },
+      expired:  { label: 'Expired',  tone: 'bad' },
+      terminated: { label: 'Terminated', tone: 'bad' },
+    },
+  },
+  network_devices: {
+    noun: 'device',
+    stages: [],
+    statuses: {
+      online:      { label: 'Online',      tone: 'good' },
+      offline:     { label: 'Offline',     tone: 'bad',     action: 'Down — check power and uplink' },
+      planned:     { label: 'Planned',     tone: 'draft' },
+      warning:     { label: 'Warning',     tone: 'warn' },
+      maintenance: { label: 'Maintenance', tone: 'waiting' },
+    },
+  },
+  portal_users: {
+    noun: 'portal user',
+    stages: [],
+    statuses: {
+      active:   { label: 'Active',   tone: 'good' },
+      pending:  { label: 'Pending',  tone: 'waiting', action: 'Invited — waiting on them to sign in' },
+      disabled: { label: 'Disabled', tone: 'bad' },
+    },
+  },
+  resource_assignments: {
+    noun: 'assignment',
+    stages: [],
+    statuses: {
+      assigned:    { label: 'Assigned',    tone: 'active' },
+      tentative:   { label: 'Tentative',   tone: 'waiting' },
+      confirmed:   { label: 'Confirmed',   tone: 'good' },
+      released:    { label: 'Released',    tone: 'draft' },
+      unavailable: { label: 'Unavailable', tone: 'bad' },
+    },
+  },
+  customers: {
+    noun: 'customer',
+    stages: ['Lead', 'Qualified', 'Proposal', 'Customer'],
+    statuses: {
+      lead:      { label: 'Lead',      tone: 'active',  stage: 0, action: 'New — qualify them' },
+      qualified: { label: 'Qualified', tone: 'waiting', stage: 1, action: 'Qualified — get a proposal out' },
+      proposal:  { label: 'Proposal',  tone: 'waiting', stage: 2, action: 'Proposal out — follow up' },
+      customer:  { label: 'Customer',  tone: 'good',    stage: 3 },
+      lost:      { label: 'Lost',      tone: 'bad' },
+    },
+  },
+  team_access: {
+    noun: 'member',
+    stages: [],
+    statuses: {
+      admin:   { label: 'Admin',   tone: 'active' },
+      manager: { label: 'Manager', tone: 'waiting' },
+      member:  { label: 'Member',  tone: 'draft' },
+      client:  { label: 'Client',  tone: 'good' },
+      guest:   { label: 'Guest',   tone: 'draft' },
+      'sub portal': { label: 'Sub Portal', tone: 'waiting' },
+    },
+  },
+  compliance: {
+    noun: 'subcontractor',
+    stages: [],
+    statuses: {
+      compliant:     { label: 'Compliant',     tone: 'good' },
+      at_risk:       { label: 'At Risk',       tone: 'warn', action: 'Something is expiring or unsigned — chase it before award' },
+      non_compliant: { label: 'Non-Compliant', tone: 'bad',  action: 'Cannot be awarded or paid until the paperwork is in' },
+    },
+  },
+  prequalification: {
+    noun: 'prequalification',
+    stages: ['Pending', 'Under review', 'Approved'],
+    staleAfterDays: 10,
+    statuses: {
+      pending:      { label: 'Pending',      tone: 'waiting', stage: 0, action: 'Sent — waiting on the sub to submit' },
+      under_review: { label: 'Under review', tone: 'active',  stage: 1, action: 'Submitted — review and decide' },
+      approved:     { label: 'Approved',     tone: 'good',    stage: 2 },
+      rejected:     { label: 'Rejected',     tone: 'bad',               action: 'Rejected — tell the sub what fell short' },
+      expired:      { label: 'Expired',      tone: 'bad',               action: 'Lapsed — ask for a fresh package' },
+    },
+  },
   pay_applications: {
     noun: 'pay application',
     stages: ['Draft', 'Submitted', 'Approved', 'Certified', 'Paid'],

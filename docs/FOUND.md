@@ -150,3 +150,14 @@ converge. One line each, newest at the bottom.
   hero was printing `project_name_detected` — the title the AI read off the drawings — as if it were the
   job. It now names the job from project context and shows the drawing title beneath, labelled, only
   when it differs.
+- ~~(5 Oct, polish walk) ZZ AUDIT 2 Fix Check — `/takeoff` complete but `/estimate` says "No Takeoff Data
+  Yet".~~ FIXED on redesign/neon-glass (Chad: "FIX ESTIMATE AND TAKEOFF READING"): `/api/takeoffs/latest`
+  answers `{ data }` but the estimate page read `data.takeoff`, so EVERY estimate was empty; the route also
+  only read `takeoff_materials` (measured takeoffs write `takeoff_line_items`) and named the field
+  `takeoff_materials` while readers expect `materials`. Page reads `data.data`, route falls back to line
+  items like `/api/takeoff/[id]` and returns `materials`.
+- (5 Oct, platform migration) `scripts/sync-heatmap-engine.mjs --check` (in `prebuild`) still treats
+  D:\Saguaro-Field as the canonical heatmap engine. That repo is retired (dead-repo note, EAS paused), so
+  a local `npm run build` fails on "HEATMAP ENGINE DRIFT" whenever the dead copy differs; Vercel passes
+  because the folder does not exist there. The canonical source should be this repo now. Not fixed
+  (off-path); local builds use `npx next build` after running the gates by hand.

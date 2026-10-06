@@ -29,9 +29,9 @@ import { Handshake, CaretDown, CaretUp, Check, ArrowRight } from '@phosphor-icon
 import { SectionCard } from '@/components/ui/premium';
 import { SALES_STEPS, salesStepsDone, type SalesSignals } from '@/lib/sales-journey';
 
-const BLUE = '#FF8A00';
-const BLUE_HI = '#FF8A00';
-const TEXT = '#FFFFFF';
+const BLUE = 'var(--warning)';
+const BLUE_HI = 'var(--warning)';
+const TEXT = 'var(--text-primary)';
 const MUTED = 'rgba(255,255,255,0.62)';
 const FAINT = 'rgba(255,255,255,0.42)';
 

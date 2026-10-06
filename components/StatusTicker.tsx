@@ -136,7 +136,7 @@ export default function StatusTicker({ style }: { style?: React.CSSProperties })
         padding: '10px 16px', borderRight: '1px solid rgba(255,255,255,0.08)',
         background: 'rgba(20,20,22,0.6)', position: 'relative', zIndex: 1,
       }}>
-        <span aria-hidden style={{ width: 8, height: 8, borderRadius: 999, background: '#2CFF7A', boxShadow: '0 0 10px #2CFF7A', animation: 'stTickerDot 2s ease-in-out infinite' }} />
+        <span aria-hidden style={{ width: 8, height: 8, borderRadius: 999, background: 'var(--success)', boxShadow: '0 0 10px #2CFF7A', animation: 'stTickerDot 2s ease-in-out infinite' }} />
         <span style={{ fontSize: 10, fontWeight: 900, color: 'rgba(255,255,255,0.8)', whiteSpace: 'nowrap' }}>
           New Activity
         </span>

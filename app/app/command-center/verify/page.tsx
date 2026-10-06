@@ -153,7 +153,7 @@ export default function VerifyHubPage() {
 
                     {st === 'pending' ? (
                       <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-                        <button onClick={() => decide(v, 'verified')} disabled={busy[v.id]} className="pmBtn" style={{ flex: 1, padding: '8px', borderRadius: 9, border: 'none', background: C.green, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}><span style={{ display: 'inline-flex', verticalAlign: 'middle' }}><CheckCircle size={15} weight="regular" color="#fff" /></span> Verify</button>
+                        <button onClick={() => decide(v, 'verified')} disabled={busy[v.id]} className="pmBtn" style={{ flex: 1, padding: '8px', borderRadius: 9, border: 'none', background: C.green, color: 'var(--text-primary)', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}><span style={{ display: 'inline-flex', verticalAlign: 'middle' }}><CheckCircle size={15} weight="regular" color="var(--text-primary)" /></span> Verify</button>
                         <button onClick={() => decide(v, 'rejected')} disabled={busy[v.id]} className="pmBtn" style={{ flex: 1, padding: '8px', borderRadius: 9, border: `1px solid ${C.red}`, background: 'var(--bg-surface)', color: C.red, fontWeight: 800, fontSize: 13, cursor: 'pointer' }}><span style={{ display: 'inline-flex', verticalAlign: 'middle' }}><XCircle size={15} weight="regular" color={C.red} /></span> Reject</button>
                       </div>
                     ) : (

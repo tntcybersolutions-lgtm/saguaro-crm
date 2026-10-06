@@ -22,8 +22,8 @@ import { StatusPill } from '@/components/ui/Status';
 
 // Semantic accents — tuned to match the dashboard's Sonoran palette.
 const GOLD = 'var(--brand-primary)';
-const GREEN = '#2CFF7A';
-const RED = '#FF3B30';
+const GREEN = 'var(--success)';
+const RED = 'var(--danger)';
 const AMBER = 'var(--warning)';
 
 interface Incident {
@@ -567,7 +567,7 @@ export default function SafetyPage() {
                 <div style={hint}>Drives the OSHA-recordable flag below.</div>
               </div>
               <div style={{ gridColumn: 'span 3' }}>
-                <div style={{ padding: '9px 12px', borderRadius: 8, fontSize: 12, lineHeight: 1.5, background: formIsRecordable ? 'rgba(224,100,78,0.10)' : 'rgba(44,255,122,0.08)', border: `1px solid ${formIsRecordable ? 'rgba(224,100,78,0.35)' : 'rgba(44,255,122,0.3)'}`, color: formIsRecordable ? '#F0A092' : GREEN }}>
+                <div style={{ padding: '9px 12px', borderRadius: 8, fontSize: 12, lineHeight: 1.5, background: formIsRecordable ? 'rgba(255,59,48,0.10)' : 'rgba(44,255,122,0.08)', border: `1px solid ${formIsRecordable ? 'rgba(255,59,48,0.35)' : 'rgba(44,255,122,0.3)'}`, color: formIsRecordable ? '#F0A092' : GREEN }}>
                   {formIsRecordable
                     ? 'OSHA-recordable: this incident will be flagged for the 300 log. Recordables generally must be logged within 7 calendar days; fatalities reported within 8 hours, in-patient hospitalizations within 24.'
                     : 'Not OSHA-recordable as classified — it will be saved for internal tracking and trend analysis only.'}
@@ -734,7 +734,7 @@ export default function SafetyPage() {
       {/* Corrective Actions Section */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.01em' }}>Corrective Actions</h2>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>Corrective Actions</h2>
           <p style={{ margin: '3px 0 0', fontSize: 12.5, color: 'rgba(255,255,255,0.62)' }}>Track and verify corrective actions from incidents</p>
         </div>
         <button onClick={() => { if (showCAForm) { setShowCAForm(false); setErrorMsg(''); } else { openCA(); } }} style={goldButtonStyle} className="pmBtn">
@@ -778,7 +778,7 @@ export default function SafetyPage() {
           ) : actions.length === 0 ? (
             <div style={{ padding: 20 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
-                <div style={{ fontSize: 13.5, fontWeight: 800, color: '#FFFFFF' }}>
+                <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text-primary)' }}>
                   <Wrench size={16} weight="duotone" color={GOLD} style={{ marginRight: 7, verticalAlign: 'text-bottom' }} />
                   No corrective actions
                   <span style={{ fontWeight: 400, color: 'rgba(255,255,255,0.62)' }}>{showCAForm ? ' — describe the first one in the form above; the due date is already a week out.' : ' — incidents auto-create them, or add one directly.'}</span>
@@ -808,7 +808,7 @@ export default function SafetyPage() {
                   <span key="assign" style={{ color: a.assigned_to ? T.white : T.muted }}>{a.assigned_to || 'Unassigned'}</span>,
                   <span key="due" style={{ color: overdue ? T.red : T.muted, fontWeight: overdue ? 700 : 400, whiteSpace: 'nowrap' }}>
                     {a.due_date || 'No date'}
-                    {overdue && <span style={{ display: 'block', fontSize: 10, color: T.red }}>Overdue</span>}
+                    {overdue && <StatusPill module="generic" status="overdue" size="sm" />}
                   </span>,
                   <Badge key="st" label={CA_STATUS_LABELS[a.status] || a.status} color={CA_STATUS_BADGE[a.status] || 'muted'} />,
                   <span key="action">
@@ -821,7 +821,7 @@ export default function SafetyPage() {
                         <ArrowRight size={12} weight="bold" /> {nextLabel}
                       </button>
                     ) : (
-                      <span style={{ fontSize: 11, color: GREEN, fontWeight: 700 }}>Complete</span>
+                      <StatusPill module="generic" status="complete" size="sm" />
                     )}
                   </span>,
                 ];

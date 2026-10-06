@@ -1,5 +1,6 @@
 'use client';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
+import { StatusPill } from '@/components/ui/Status';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
@@ -13,7 +14,7 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 
-const GOLD='var(--brand-primary)', DARK='var(--bg-base)', RAISED='var(--bg-surface)', BORDER='rgba(255,255,255,0.12)', DIM='#D4D4D8', TEXT='#FFFFFF', GREEN='#2CFF7A', RED='#FF3B30';
+const GOLD='var(--brand-primary)', DARK='var(--bg-base)', RAISED='var(--bg-surface)', BORDER='rgba(255,255,255,0.12)', DIM='var(--text-secondary)', TEXT='var(--text-primary)', GREEN='var(--success)', RED='var(--danger)';
 
 interface Bill {
   id: string;
@@ -31,14 +32,7 @@ interface Bill {
 const EMPTY_FORM = { invoice_num: '', vendor: '', description: '', amount: 0, tax: 0, due_date: '', category: '03 - Concrete', cost_code: '' };
 
 function statusBadge(status: string) {
-  const map: Record<string, { bg: string; color: string }> = {
-    Pending: { bg: 'color-mix(in srgb, var(--warning) 18%, transparent)', color: 'var(--warning)' },
-    Approved: { bg: 'var(--brand-primary-18)', color: 'var(--brand-primary-strong)' },
-    Paid: { bg: 'rgba(44,255,122,.2)', color: GREEN },
-    Overdue: { bg: 'rgba(255,59,48,.2)', color: RED },
-  };
-  const s = map[status] || { bg: 'rgba(143,163,192,.2)', color: DIM };
-  return <span style={{ padding: '3px 10px', borderRadius: 20, background: s.bg, color: s.color, fontSize: 11, fontWeight: 700 }}>{status}</span>;
+  return <StatusPill module="bills" status={status} size="sm" />;
 }
 
 function isOverdue(dueDate: string, status: string): boolean {
@@ -495,7 +489,7 @@ export default function BillsPage() {
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
                   {([
@@ -524,7 +518,7 @@ export default function BillsPage() {
                         ) : editId === b.id ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                             <input value={editVal} onChange={e => setEditVal(e.target.value)} type="number" autoFocus onKeyDown={e => { if (e.key === 'Enter') handleEditBill(b.id); if (e.key === 'Escape') setEditId(null); }} style={{ width: 100, padding: '4px 8px', background: DARK, border: `1px solid ${GOLD}`, borderRadius: 5, color: TEXT, fontSize: 12, outline: 'none', textAlign: 'right' }} />
-                            <button onClick={() => handleEditBill(b.id)} style={{ padding: '3px 8px', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 5, color: '#0A0A00', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Save</button>
+                            <button onClick={() => handleEditBill(b.id)} style={{ padding: '3px 8px', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 5, color: 'var(--on-brand)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Save</button>
                             <button onClick={() => setEditId(null)} style={{ padding: '3px 8px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
                           </div>
                         ) : adjustId === b.id ? (
@@ -572,7 +566,7 @@ export default function BillsPage() {
                             {actionLoading === b.id + '-pay' ? '…' : 'Mark Paid'}
                           </button>
                         )}
-                        {b.status === 'Paid' && <span style={{ color: GREEN, fontSize: 12 }}>Paid</span>}
+                        {b.status === 'Paid' && <StatusPill module="generic" status="paid" size="sm" />}
                       </td>
                     </tr>
                   );

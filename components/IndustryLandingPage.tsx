@@ -7,11 +7,11 @@ import type { Industry } from '@/lib/industries';
 const DARK = 'var(--bg-base)';
 const GOLD = 'var(--brand-primary)';
 const GOLD_DARK = 'var(--brand-primary-hover)';
-const TEXT = '#FFFFFF';
-const DIM = '#D4D4D8';
+const TEXT = 'var(--text-primary)';
+const DIM = 'var(--text-secondary)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const GREEN = '#2CFF7A';
-const RED = '#FF3B30';
+const GREEN = 'var(--success)';
+const RED = 'var(--danger)';
 
 const OLD_WAY_VS_SAGUARO = [
   ['Manual blueprint takeoff — 4 to 8 hours per bid', 'AI blueprint takeoff — complete estimate in under 60 seconds'],
@@ -86,7 +86,7 @@ export default function IndustryLandingPage({ industry }: Props) {
             }}>Log In</Link>
             <Link href="/signup" style={{
               padding: '7px 18px', background: GOLD_DARK, border: 'none', borderRadius: '6px',
-              color: '#0A0A00', fontSize: '13px', fontWeight: 600, letterSpacing: '0.03em', textDecoration: 'none',
+              color: 'var(--on-brand)', fontSize: '13px', fontWeight: 600, letterSpacing: '0.03em', textDecoration: 'none',
             }}>Free Trial</Link>
           </div>
 
@@ -103,7 +103,7 @@ export default function IndustryLandingPage({ industry }: Props) {
         <div style={{ position: 'fixed', top: '58px', left: 0, right: 0, zIndex: 9998, background: 'rgba(20,20,22,0.99)', borderBottom: `1px solid ${BORDER}`, padding: '16px', backdropFilter: 'blur(12px)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <Link href="/login" onClick={() => setMobileOpen(false)} style={{ padding: '13px', textAlign: 'center', border: `1px solid ${BORDER}`, borderRadius: '8px', color: TEXT, textDecoration: 'none', fontWeight: 500 }}>Log In</Link>
-            <Link href="/signup" onClick={() => setMobileOpen(false)} style={{ padding: '13px', textAlign: 'center', background: GOLD_DARK, borderRadius: '8px', color: '#0A0A00', textDecoration: 'none', fontWeight: 600 }}>Start Free Trial</Link>
+            <Link href="/signup" onClick={() => setMobileOpen(false)} style={{ padding: '13px', textAlign: 'center', background: GOLD_DARK, borderRadius: '8px', color: 'var(--on-brand)', textDecoration: 'none', fontWeight: 600 }}>Start Free Trial</Link>
           </div>
         </div>
       )}
@@ -147,7 +147,7 @@ export default function IndustryLandingPage({ industry }: Props) {
             <Link href="/signup" style={{
               padding: '10px 22px',
               background: GOLD,
-              borderRadius: '8px', color: '#0A0A00', fontWeight: 600, fontSize: '15px',
+              borderRadius: '8px', color: 'var(--on-brand)', fontWeight: 600, fontSize: '15px',
               textDecoration: 'none', letterSpacing: '0.01em',
             }}>
               Start Free Trial
@@ -358,7 +358,7 @@ export default function IndustryLandingPage({ industry }: Props) {
             <Link href="/signup" style={{
               padding: '10px 22px',
               background: GOLD,
-              borderRadius: '8px', color: '#0A0A00', fontWeight: 600, fontSize: '15px',
+              borderRadius: '8px', color: 'var(--on-brand)', fontWeight: 600, fontSize: '15px',
               textDecoration: 'none', letterSpacing: '0.01em',
             }}>
               Start Free Trial
@@ -390,7 +390,7 @@ export default function IndustryLandingPage({ industry }: Props) {
           <Link href="/privacy" style={{ color: DIM, fontSize: '13px', textDecoration: 'none' }}>Privacy</Link>
           <Link href="/terms" style={{ color: DIM, fontSize: '13px', textDecoration: 'none' }}>Terms</Link>
         </div>
-        <p style={{ color: '#475569', fontSize: '12px', margin: 0 }}>
+        <p style={{ color: 'var(--text-disabled)', fontSize: '12px', margin: 0 }}>
           &copy; {new Date().getFullYear()} Saguaro Control Systems. All rights reserved.
         </p>
       </footer>

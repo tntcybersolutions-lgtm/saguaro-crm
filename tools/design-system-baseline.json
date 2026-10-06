@@ -1,0 +1,587 @@
+{
+  "app/about/page.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "app/accept-invite/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/api-docs/page.tsx": {
+    "hex": 14,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/_shared/table-sort.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/approval-workflows/page.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/bids/leveling/page.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/billing/payapp/page.tsx": {
+    "hex": 5,
+    "table": 1,
+    "status": 0
+  },
+  "app/app/client-portal/page.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/command-center/budget/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/custom-fields/page.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/dashboard-config/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/fleet/page.tsx": {
+    "hex": 8,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/integrations/api-docs/page.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/intelligence/command-center/page.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/drawings/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/intelligence/page.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/layout.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/network/cables/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/network/firewall/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/network/page.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/network/vlans/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/network/wifi/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/network/wizard/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/overview/page.tsx": {
+    "hex": 11,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/safety/page.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/selections/page.tsx": {
+    "hex": 3,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/[projectId]/takeoff/estimate/page.tsx": {
+    "hex": 10,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/projects/new/page.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/radio/page.tsx": {
+    "hex": 8,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/reports/showcase/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/resource-planning/page.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/service/page.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/settings/branding/page.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/settings/integrations-hub/page.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/settings/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/app/takeoff/measured/page.tsx": {
+    "hex": 12,
+    "table": 0,
+    "status": 0
+  },
+  "app/bids/page.tsx": {
+    "hex": 11,
+    "table": 0,
+    "status": 0
+  },
+  "app/blog/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/careers/page.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "app/changelog/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/compare/page.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "app/compare/procore/page.tsx": {
+    "hex": 13,
+    "table": 0,
+    "status": 0
+  },
+  "app/contact/page.tsx": {
+    "hex": 9,
+    "table": 0,
+    "status": 0
+  },
+  "app/design/discover/page.tsx": {
+    "hex": 8,
+    "table": 0,
+    "status": 0
+  },
+  "app/design/materials/page.tsx": {
+    "hex": 34,
+    "table": 0,
+    "status": 0
+  },
+  "app/design/packages/page.tsx": {
+    "hex": 9,
+    "table": 0,
+    "status": 0
+  },
+  "app/design/page.tsx": {
+    "hex": 131,
+    "table": 0,
+    "status": 0
+  },
+  "app/design/roi/page.tsx": {
+    "hex": 16,
+    "table": 0,
+    "status": 0
+  },
+  "app/design/sage/page.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "app/features/page.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "app/forgot-password/page.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "app/franchise-portal/[token]/page.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "app/global-error.tsx": {
+    "hex": 11,
+    "table": 0,
+    "status": 0
+  },
+  "app/help-center/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/how-it-works/page.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "app/how-to-get-started/page.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "app/industry/page.tsx": {
+    "hex": 3,
+    "table": 0,
+    "status": 0
+  },
+  "app/intelligence/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/layout.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "app/onboarding/step-1/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/onboarding/step-2/page.tsx": {
+    "hex": 10,
+    "table": 0,
+    "status": 0
+  },
+  "app/onboarding/step-3/page.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "app/onboarding/step-4/page.tsx": {
+    "hex": 8,
+    "table": 0,
+    "status": 0
+  },
+  "app/owner-portal/approve/[token]/page.tsx": {
+    "hex": 13,
+    "table": 0,
+    "status": 0
+  },
+  "app/page.tsx": {
+    "hex": 17,
+    "table": 0,
+    "status": 0
+  },
+  "app/partners/page.tsx": {
+    "hex": 18,
+    "table": 0,
+    "status": 0
+  },
+  "app/prequal/[token]/page.tsx": {
+    "hex": 8,
+    "table": 0,
+    "status": 0
+  },
+  "app/pricing/page.tsx": {
+    "hex": 9,
+    "table": 0,
+    "status": 0
+  },
+  "app/privacy/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/product/page.tsx": {
+    "hex": 15,
+    "table": 0,
+    "status": 0
+  },
+  "app/reports/page.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "app/reset-password/page.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "app/roi-calculator/page.tsx": {
+    "hex": 10,
+    "table": 0,
+    "status": 0
+  },
+  "app/sandbox/page.tsx": {
+    "hex": 10,
+    "table": 0,
+    "status": 0
+  },
+  "app/security/page.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "app/share/heatmap/[id]/page.tsx": {
+    "hex": 31,
+    "table": 0,
+    "status": 0
+  },
+  "app/share/takeoff/[id]/page.tsx": {
+    "hex": 18,
+    "table": 0,
+    "status": 0
+  },
+  "app/sla/page.tsx": {
+    "hex": 12,
+    "table": 0,
+    "status": 0
+  },
+  "app/switch-from-procore/page.tsx": {
+    "hex": 8,
+    "table": 0,
+    "status": 0
+  },
+  "app/takeoff/page.tsx": {
+    "hex": 38,
+    "table": 0,
+    "status": 0
+  },
+  "app/terms/page.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "app/welcome/page.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "components/AppSidebar.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "components/AuditTimeline.tsx": {
+    "hex": 10,
+    "table": 0,
+    "status": 0
+  },
+  "components/BackToTop.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "components/BidPackageWizard.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "components/BulkActionBar.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "components/DataTable.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "components/ErrorBoundary.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "components/FileCropper.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "components/FilePreview.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "components/FileTypeBadge.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "components/GetStartedTour.tsx": {
+    "hex": 3,
+    "table": 0,
+    "status": 0
+  },
+  "components/GettingStartedRail.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "components/HeaderMessages.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "components/HelpMode.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "components/Integrations.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "components/MarketingFooter.tsx": {
+    "hex": 8,
+    "table": 0,
+    "status": 0
+  },
+  "components/NextStepBar.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "components/ProjectSwitcher.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "components/RouteError.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "components/SaguaroChatWidget.tsx": {
+    "hex": 7,
+    "table": 0,
+    "status": 0
+  },
+  "components/SaguaroDatePicker.tsx": {
+    "hex": 2,
+    "table": 0,
+    "status": 0
+  },
+  "components/SalesJourneyRail.tsx": {
+    "hex": 3,
+    "table": 0,
+    "status": 0
+  },
+  "components/StatusTicker.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "components/ThemeToggle.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "components/Toast.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "components/documents/DocumentLibrary.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "components/home/HomeV2.tsx": {
+    "hex": 9,
+    "table": 0,
+    "status": 0
+  },
+  "components/intelligence/SuggestionTicker.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "components/marketing/DeviceFrame.tsx": {
+    "hex": 21,
+    "table": 0,
+    "status": 0
+  },
+  "components/team/AccessManager.tsx": {
+    "hex": 4,
+    "table": 0,
+    "status": 0
+  },
+  "components/ui/FileTypeIcon.tsx": {
+    "hex": 5,
+    "table": 0,
+    "status": 0
+  },
+  "components/ui/SMeter.tsx": {
+    "hex": 6,
+    "table": 0,
+    "status": 0
+  },
+  "components/ui/cinematic.tsx": {
+    "hex": 1,
+    "table": 0,
+    "status": 0
+  },
+  "components/ui/fx.tsx": {
+    "hex": 13,
+    "table": 0,
+    "status": 0
+  },
+  "components/ui/premium.tsx": {
+    "hex": 13,
+    "table": 0,
+    "status": 0
+  }
+}

@@ -20,7 +20,7 @@ import {
 } from '@phosphor-icons/react';
 
 const GOLD = 'var(--brand-primary)', GOLD_HI = 'var(--brand-primary-strong)', DARK = 'var(--bg-base)', BORDER = 'rgba(255,255,255,0.08)', HAIRLINE = 'rgba(255,255,255,0.07)';
-const DIM = '#D4D4D8', MUTED = 'rgba(255,255,255,0.45)', TEXT = '#FFFFFF', GREEN = '#2CFF7A', RED = '#FF3B30';
+const DIM = 'var(--text-secondary)', MUTED = 'rgba(255,255,255,0.45)', TEXT = 'var(--text-primary)', GREEN = 'var(--success)', RED = 'var(--danger)';
 
 // Module accent — bids family (desert rose). Chips / eyebrows / badges ONLY.
 const BIDS = moduleAccent('bids');
@@ -296,7 +296,7 @@ export default function IntelligencePage() {
             <div style={{padding:'32px 24px',fontSize:13,color:DIM,lineHeight:1.6}}>No bids logged yet. Mark opportunities Won or Lost to build your history.</div>
           ) : (
           <div style={{overflowX:'auto',WebkitOverflowScrolling:'touch',maxWidth:'100%'}}>
-          <table style={{width:'100%',minWidth:640,borderCollapse:'collapse' as const,fontSize:12}}>
+          <table className="k-table" style={{ width:'100%',borderCollapse:'collapse' as const }}>
             <thead><tr style={{background:DARK}}>
               {['Project','Type','Bid','Margin','Result'].map((h,i)=><th key={h} style={{...TH,textAlign:(i===2||i===3)?'right' as const:'left' as const}}>{h}</th>)}
             </tr></thead>

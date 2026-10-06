@@ -1,6 +1,8 @@
 'use client';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSort, useSortedRows, SortTh, SortBar } from '@/components/ui/sort';
+import { jobBarStyle } from '@/lib/project-colors';
+import { useProjectColor } from '@/lib/hooks/useProjectColor';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
@@ -16,8 +18,8 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF';
-const GREEN='#2CFF7A',RED='#FF3B30',ORANGE='#FF8A00',BLUE='var(--brand-primary)';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)';
+const GREEN='var(--success)',RED='var(--danger)',ORANGE='var(--warning)',BLUE='var(--brand-primary)';
 
 const STATUSES=['not_started','in_progress','completed','delayed','on_hold'];
 const STATUS_LABELS:Record<string,string>={
@@ -32,7 +34,7 @@ const PHASES=['Pre-Construction','Foundation','Framing','MEP Rough','Insulation'
 
 const inp:React.CSSProperties={
   width:'100%',padding:'9px 12px',background:'var(--bg-surface-2)',
-  border:'1px solid rgba(255,255,255,0.12)',borderRadius:7,color:'#FFFFFF',
+  border:'1px solid rgba(255,255,255,0.12)',borderRadius:7,color:'var(--text-primary)',
   fontSize:13,outline:'none',boxSizing:'border-box',
 };
 const EMPTY:Record<string,any>={
@@ -69,7 +71,7 @@ function fmtShort(d?:string|null){
 }
 
 /* ── Gantt bar chart ────────────────────────────────────────────── */
-function GanttChart({tasks}:{tasks:any[]}){
+function GanttChart({tasks, jobHex}:{tasks:any[]; jobHex:string}){
   const withDates = tasks.filter(t=>
     t.start_date&&t.end_date
     &&!Number.isNaN(Date.parse(t.start_date))
@@ -146,8 +148,8 @@ function GanttChart({tasks}:{tasks:any[]}){
                 width:1,background:'color-mix(in srgb, var(--brand-primary) 50%, transparent)',zIndex:1}}/>
               {/* Bar background */}
               <div style={{position:'absolute',left:`${left}%`,width:`${width}%`,
-                top:4,height:16,borderRadius:3,
-                background:`color-mix(in srgb, ${color} 20%, transparent)`,border:`1px solid color-mix(in srgb, ${color} 40%, transparent)`}}>
+                top:4,height:16,borderRadius:3,boxSizing:'border-box',
+                ...jobBarStyle(jobHex),border:`1px solid color-mix(in srgb, ${jobHex} 40%, transparent)`,borderLeft:`3px solid ${jobHex}`}}>
                 {/* Progress fill */}
                 <div style={{
                   height:'100%',borderRadius:2,
@@ -158,7 +160,7 @@ function GanttChart({tasks}:{tasks:any[]}){
                 {/* Label on bar */}
                 {width>8&&(
                   <div style={{position:'absolute',top:0,left:4,right:4,
-                    fontSize:9,fontWeight:700,color:'#fff',
+                    fontSize:9,fontWeight:700,color:'var(--text-primary)',
                     lineHeight:'16px',overflow:'hidden',whiteSpace:'nowrap',
                     textOverflow:'ellipsis',textShadow:'0 1px 2px rgba(0,0,0,.6)'}}>
                     {task.pct_complete??0}%
@@ -180,6 +182,7 @@ const TASK_COLS = [
 
 export default function SchedulePage(){
   const {projectId}=useParams() as {projectId:string};
+  const jobHex = useProjectColor(projectId);
   const [tasks,setTasks]=useState<any[]>([]);
   const [loading,setLoading]=useState(true);
   const [loadError,setLoadError]=useState('');
@@ -413,7 +416,7 @@ export default function SchedulePage(){
     <div style={{display:'flex',height:'100%',minHeight:0,position:'relative'}}>
       {toast&&(
         <div style={{position:'fixed',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:99999,
-          padding:'12px 20px',borderRadius:8,color:'#fff',fontWeight:700,fontSize:14,pointerEvents:'none',
+          padding:'12px 20px',borderRadius:8,color:'var(--text-primary)',fontWeight:700,fontSize:14,pointerEvents:'none',
           background:toast.type==='success'?'rgba(26,138,74,.92)':'rgba(192,48,48,.92)'}}>
           {toast.msg}
         </div>
@@ -468,7 +471,7 @@ export default function SchedulePage(){
             <SectionCard flat title="Timeline" subtitle="Today is marked with a yellow line."
               icon={<CalendarBlank size={17} weight="duotone" color={moduleAccent('schedule').hex} />}
               style={{marginBottom:20}} bodyStyle={{overflowX:'auto'}}>
-              <GanttChart tasks={filtered.length?filtered:tasks}/>
+              <GanttChart tasks={filtered.length?filtered:tasks} jobHex={jobHex}/>
             </SectionCard>
           )}
 
@@ -557,7 +560,7 @@ export default function SchedulePage(){
               action={<span style={{fontSize:12,color:DIM,fontWeight:700}}>{filtered.length} shown</span>}>
               <div style={{overflowX:'auto'}}>
               <SortBar columns={TASK_COLS} sort={taskSort.sort} onChange={taskSort.setSort} />
-              <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+              <table className="k-table" style={{ width:'100%',borderCollapse:'collapse' }}>
                 <thead>
                   <tr style={{background:DARK}}>
                     {TASK_COLS.map(c=>(
@@ -635,7 +638,7 @@ export default function SchedulePage(){
                 </>
               )}
               <button onClick={closePanel}
-                style={{padding:'6px 10px',background:'rgba(143,163,192,.1)',
+                style={{padding:'6px 10px',background:'rgba(163,172,187,.1)',
                   border:`1px solid ${BORDER}`,borderRadius:6,color:DIM,fontSize:12,cursor:'pointer'}}>
                 <X size={14} weight="regular" color={DIM} />
               </button>
@@ -772,7 +775,7 @@ export default function SchedulePage(){
                     {saving?'Saving…':mode==='create'?'Add Task':'Save Changes'}
                   </button>
                   <button onClick={closePanel}
-                    style={{padding:'11px 16px',background:'rgba(143,163,192,.1)',
+                    style={{padding:'11px 16px',background:'rgba(163,172,187,.1)',
                       border:`1px solid ${BORDER}`,borderRadius:8,color:DIM,
                       fontSize:14,cursor:'pointer'}}>
                     Cancel

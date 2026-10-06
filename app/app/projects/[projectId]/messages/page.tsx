@@ -9,11 +9,11 @@ import { ListToolbar } from '@/components/ui/ListToolbar';
 
 // Premium surface palette (matches components/ui/premium.tsx + the dashboard) ----
 const GOLD = 'var(--brand-primary)';
-const WHITE = '#FFFFFF';
+const WHITE = 'var(--text-primary)';
 const MUTED = 'rgba(255,255,255,0.62)';
 const FAINT = 'rgba(255,255,255,0.42)';
 const BORDER = 'rgba(255,255,255,0.08)';
-const RED = '#FF3B30';
+const RED = 'var(--danger)';
 const ME_BG = 'linear-gradient(135deg, var(--brand-primary-18), color-mix(in srgb, var(--brand-primary) 5%, transparent))';
 const ME_BORDER = 'var(--brand-primary-35)';
 const OTHER_BG = 'linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.015))';

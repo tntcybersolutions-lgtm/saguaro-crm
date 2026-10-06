@@ -45,7 +45,7 @@ export default function PreSitePage() {
 
   const pill = (active: boolean, color: string): React.CSSProperties => ({
     padding: '5px 11px', borderRadius: 8, fontSize: 12, fontWeight: 800, cursor: 'pointer',
-    border: `1px solid ${active ? color : C.border}`, background: active ? color : 'var(--bg-surface-2)', color: active ? '#fff' : C.dim,
+    border: `1px solid ${active ? color : C.border}`, background: active ? color : 'var(--bg-surface-2)', color: active ? 'var(--text-primary)' : C.dim,
   });
 
   return (

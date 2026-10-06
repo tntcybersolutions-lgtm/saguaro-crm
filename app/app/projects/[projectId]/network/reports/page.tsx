@@ -10,11 +10,11 @@ import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, FlowS
 
 const BASE = 'var(--bg-surface-2)';
 const GOLD = 'var(--brand-primary)';
-const GREEN = '#2CFF7A';
+const GREEN = 'var(--success)';
 const BLUE = 'var(--brand-primary)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#D4D4D8';
-const TEXT = '#FFFFFF';
+const DIM = 'var(--text-secondary)';
+const TEXT = 'var(--text-primary)';
 
 interface ReportHistory {
   id: string;
@@ -46,14 +46,14 @@ const REPORT_TYPES = [
     label: 'Port Map',
     icon: Shuffle,
     description: 'Switch port assignments showing device connections, VLANs, and PoE status per port.',
-    color: '#FF8A00',
+    color: 'var(--warning)',
   },
   {
     type: 'wifi_survey',
     label: 'WiFi Survey',
     icon: WifiHigh,
     description: 'WiFi coverage survey with AP locations, channels, power levels, and signal coverage estimates.',
-    color: '#2CFF7A',
+    color: 'var(--success)',
   },
   {
     type: 'as_built',
@@ -67,7 +67,7 @@ const REPORT_TYPES = [
     label: 'Executive Summary',
     icon: ChartBar,
     description: 'High-level project summary with equipment counts, costs, timeline, and key metrics.',
-    color: '#FF8A00',
+    color: 'var(--warning)',
   },
 ];
 
@@ -102,7 +102,7 @@ export default function ReportsPage() {
   const [showBranding, setShowBranding] = useState(false);
   const [branding, setBranding] = useState({
     company_name: '', logo_url: '', // Hex on purpose: these feed <input type="color"> and are sent to the report API.
-    primary_color: '#FF8A00', secondary_color: '#FF8A00',
+    primary_color: 'var(--warning)', secondary_color: 'var(--warning)',
   });
 
   const fetchData = useCallback(async () => {

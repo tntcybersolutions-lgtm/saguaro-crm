@@ -58,7 +58,7 @@ const fmtDate = (d?: string | null) => {
   const dt = new Date(String(d).length <= 10 ? String(d) + 'T00:00:00' : String(d));
   return isNaN(dt.getTime()) ? '—' : dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
-const spreadTone = (s: number) => (s <= 10 ? '#2CFF7A' : s <= 25 ? 'var(--warning)' : '#FF3B30');
+const spreadTone = (s: number) => (s <= 10 ? 'var(--success)' : s <= 25 ? 'var(--warning)' : 'var(--danger)');
 
 function packageTone(status: string): BadgeTone {
   const st = status.toLowerCase();
@@ -488,7 +488,7 @@ function BidsPageInner() {
           <>
             {fmtDate(due)}
             {dd != null && (
-              <span style={{ marginLeft: 6, fontSize: 'var(--fs-xs)', fontWeight: 700, color: dd < 0 ? '#FF3B30' : dd <= 3 ? 'var(--warning)' : 'var(--text-tertiary)' }}>
+              <span style={{ marginLeft: 6, fontSize: 'var(--fs-xs)', fontWeight: 700, color: dd < 0 ? 'var(--danger)' : dd <= 3 ? 'var(--warning)' : 'var(--text-tertiary)' }}>
                 {dd < 0 ? `${Math.abs(dd)}d overdue` : dd === 0 ? 'due today' : `${dd}d left`}
               </span>
             )}
@@ -500,7 +500,7 @@ function BidsPageInner() {
       key: 'responses', header: 'Bids In', align: 'right', accessor: (p) => Number(p.num_responded ?? p.bid_count) || 0,
       render: (p) => {
         const n = Number(p.num_responded ?? p.bid_count) || 0;
-        return <><span style={{ color: n > 0 ? '#2CFF7A' : undefined, fontWeight: 700 }}>{n}</span> / {Number(p.num_invited) || 0}</>;
+        return <><span style={{ color: n > 0 ? 'var(--success)' : undefined, fontWeight: 700 }}>{n}</span> / {Number(p.num_invited) || 0}</>;
       },
     },
     {
@@ -528,7 +528,7 @@ function BidsPageInner() {
       key: 'margin_pct', header: 'Margin', align: 'right', accessor: (b) => Number(b.margin_pct) || 0,
       render: (b) => {
         const m = Number(b.margin_pct) || 0;
-        return <span style={{ fontWeight: 700, color: m >= 15 ? '#2CFF7A' : m >= 10 ? 'var(--warning)' : '#FF3B30' }}>{m}%</span>;
+        return <span style={{ fontWeight: 700, color: m >= 15 ? 'var(--success)' : m >= 10 ? 'var(--warning)' : 'var(--danger)' }}>{m}%</span>;
       },
     },
     { key: 'location', header: 'Location' },
@@ -679,7 +679,7 @@ function BidsPageInner() {
             ]} />
             <Card><strong>{scoreResult.recommendation}</strong></Card>
             <span className="k-hint" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              <CheckCircle size={14} weight="fill" color="#2CFF7A" /> Saved to your bid history as a pending bid.
+              <CheckCircle size={14} weight="fill" color="var(--success)" /> Saved to your bid history as a pending bid.
             </span>
           </div>
         ) : (

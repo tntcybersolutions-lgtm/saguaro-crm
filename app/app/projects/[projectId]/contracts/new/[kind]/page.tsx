@@ -24,9 +24,9 @@ import { openPdf } from '@/components/PdfViewer';
  */
 
 const GOLD = 'var(--brand-primary)';
-const TEXT = '#F0F4FF';
-const DIM = '#A1A1AA';
-const BORDER = '#2A2A2E';
+const TEXT = 'var(--text-primary)';
+const DIM = 'var(--text-tertiary)';
+const BORDER = 'var(--surface-raised)';
 const BASE = 'var(--bg-base)';
 
 /** What the signature tables call each kind. */
@@ -143,21 +143,21 @@ export default function NewContractFromTemplate() {
           /* Generated. The document is the point, so it gets the whole screen —
              and the GC can go straight back and change something if it is wrong. */
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#2CFF7A', fontSize: 15, fontWeight: 700 }}>
-              <CheckCircle size={18} weight="fill" color="#2CFF7A" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--success)', fontSize: 15, fontWeight: 700 }}>
+              <CheckCircle size={18} weight="fill" color="var(--success)" />
               {spec.title} generated
             </div>
 
             <iframe
               src={pdfUrl}
               title={`${spec.title} preview`}
-              style={{ width: '100%', height: '72vh', border: `1px solid ${BORDER}`, borderRadius: 12, background: '#fff' }}
+              style={{ width: '100%', height: '72vh', border: `1px solid ${BORDER}`, borderRadius: 12, background: 'var(--text-primary)' }}
             />
 
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               <button type="button" onClick={() => openPdf({ url: pdfUrl, title: 'Contract' })}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '0 22px', borderRadius: 9, background: GOLD, color: '#0A0A00', fontWeight: 800, fontSize: 14, textDecoration: 'none' }}>
-                <DownloadSimple size={16} weight="bold" color="#0A0A00" /> Open the PDF
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '0 22px', borderRadius: 9, background: GOLD, color: 'var(--on-brand)', fontWeight: 800, fontSize: 14, textDecoration: 'none' }}>
+                <DownloadSimple size={16} weight="bold" color="var(--on-brand)" /> Open the PDF
               </button>
               <button onClick={() => setSigning((v) => !v)}
                 style={{ minHeight: 44, padding: '0 22px', borderRadius: 9, background: 'transparent', border: `1px solid ${GOLD}`, color: GOLD, fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>
@@ -198,7 +198,7 @@ export default function NewContractFromTemplate() {
           </div>
         ) : (
           <>
-            {error && <p style={{ color: '#FF3B30', fontSize: 13.5 }}>{error}</p>}
+            {error && <p style={{ color: 'var(--danger)', fontSize: 13.5 }}>{error}</p>}
             <ContractForm
               kind={kind}
               projectId={projectId}

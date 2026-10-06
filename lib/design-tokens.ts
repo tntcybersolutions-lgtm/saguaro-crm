@@ -4,6 +4,23 @@
  */
 
 /* ── Colors ────────────────────────────────────────────────────────── */
+/* ── THE PALETTE — typed mirror of the `--c-*` variables in app/globals.css.
+ * Use `palette.*` (a CSS variable) in style props; use `paletteHex.*` only
+ * where a real hex is unavoidable (canvas, SVG export, PDF, charts). */
+export const paletteHex = {
+  bg: '#000000', card: '#0E0F12', raised: '#15171C',
+  text: '#FFFFFF', text2: '#D4D4D8', text3: '#A9B4C4', text4: '#7A8597',
+  yellow: '#FFE600', yellowHi: '#FFF04A', yellowHover: '#E6CF00', onBrand: '#0A0A00',
+  orange: '#FF8A00', green: '#2CFF7A', red: '#FF3B30', gray: '#A3ACBB',
+} as const;
+export const palette = {
+  bg: 'var(--c-bg)', card: 'var(--c-card)', raised: 'var(--c-raised)',
+  text: 'var(--c-text)', text2: 'var(--c-text-2)', text3: 'var(--c-text-3)', text4: 'var(--c-text-4)',
+  yellow: 'var(--c-yellow)', yellowHi: 'var(--c-yellow-hi)', yellowHover: 'var(--c-yellow-hover)', onBrand: 'var(--c-on-brand)',
+  orange: 'var(--c-orange)', green: 'var(--c-green)', red: 'var(--c-red)', gray: 'var(--c-gray)',
+} as const;
+export type PaletteKey = keyof typeof palette;
+
 export const colors = {
   // Brand accent (historically "gold", now NEON YELLOW #FFE600 — owner decision
   // 2026-10-02) — resolves through the --brand-primary CSS variable defined in

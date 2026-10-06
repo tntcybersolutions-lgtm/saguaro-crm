@@ -131,7 +131,7 @@ export default function PermitCorrespondence({ projectId }: { projectId: string 
         <div style={{ display: 'grid', gap: 8 }}>
           {items.map((c) => {
             const inbound = c.direction === 'inbound';
-            const tone = inbound ? '#2CFF7A' : GOLD;
+            const tone = inbound ? 'var(--success)' : GOLD;
             const n = Array.isArray(c.document_ids) ? c.document_ids.length : 0;
             return (
               <div key={c.id} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '11px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: `1px solid ${BORDER}` }}>
@@ -139,7 +139,7 @@ export default function PermitCorrespondence({ projectId }: { projectId: string 
                   {inbound ? <DownloadSimple size={16} weight="bold" /> : <PaperPlaneTilt size={16} weight="bold" />}
                 </span>
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontSize: 13.5, fontWeight: 700, color: '#fff' }}>{c.subject}</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text-primary)' }}>{c.subject}</div>
                   <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
                     <span style={{ color: tone, fontWeight: 700 }}>{inbound ? 'From' : 'To'} {c.party_name || c.party || 'AHJ'}</span>
                     {' · '}{new Date(c.created_at).toLocaleDateString()}

@@ -12,8 +12,8 @@ import {
   Table as TableIcon, Buildings, WarningCircle, CaretDown, ArrowsClockwise,
 } from '@phosphor-icons/react';
 
-const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)', DIM = '#D4D4D8', TEXT = '#FFFFFF';
-const GREEN = '#2CFF7A', RED = '#FF3B30';
+const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)', DIM = 'var(--text-secondary)', TEXT = 'var(--text-primary)';
+const GREEN = 'var(--success)', RED = 'var(--danger)';
 
 const fmt = (n: number) => '$' + (n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtK = (n: number) => {
@@ -191,8 +191,8 @@ function CashFlowContent() {
       {toast && (
         <div style={{
           position: 'fixed', top: 24, right: 24, zIndex: 9999,
-          background: toast.ok ? '#2CFF7A' : '#FF3B30',
-          color: '#fff', padding: '12px 24px', borderRadius: 8,
+          background: toast.ok ? 'var(--success)' : 'var(--danger)',
+          color: 'var(--text-primary)', padding: '12px 24px', borderRadius: 8,
           border: `1px solid ${toast.ok ? GREEN : RED}`,
           fontSize: 13, fontWeight: 600, boxShadow: '0 4px 20px rgba(0,0,0,.5)',
         }}>
@@ -204,8 +204,8 @@ function CashFlowContent() {
       {summary.danger_zone && (
         <style>{`
           @keyframes dangerPulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(224,100,78,0.4); }
-            50% { box-shadow: 0 0 20px 4px rgba(224,100,78,0.6); }
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255,59,48,0.4); }
+            50% { box-shadow: 0 0 20px 4px rgba(255,59,48,0.6); }
           }
         `}</style>
       )}
@@ -245,13 +245,13 @@ function CashFlowContent() {
       {/* Danger Zone Banner */}
       {summary.danger_zone && (
         <div style={{
-          background: 'rgba(224,100,78,0.12)', border: `1px solid ${RED}`, borderRadius: 12,
+          background: 'rgba(255,59,48,0.12)', border: `1px solid ${RED}`, borderRadius: 12,
           padding: '14px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12,
           animation: 'dangerPulse 2s ease-in-out infinite',
         }}>
-          <WarningCircle size={22} weight="fill" color="#ff6b6b" />
+          <WarningCircle size={22} weight="fill" color="var(--danger)" />
           <div>
-            <div style={{ color: '#ff6b6b', fontWeight: 700, fontSize: 14 }}>Negative Cash Flow Detected</div>
+            <div style={{ color: 'var(--danger)', fontWeight: 700, fontSize: 14 }}>Negative Cash Flow Detected</div>
             <div style={{ color: DIM, fontSize: 12 }}>Running balance goes negative in projected periods. Review payment schedules.</div>
           </div>
         </div>
@@ -313,7 +313,7 @@ function CashFlowContent() {
                   {/* Payables bar */}
                   <div style={{
                     width: 24, height: Math.max(payHeight, 4), borderRadius: '4px 4px 0 0',
-                    background: `linear-gradient(180deg, ${RED}, rgba(224,100,78,0.45))`,
+                    background: `linear-gradient(180deg, ${RED}, rgba(255,59,48,0.45))`,
                     transition: 'height 0.4s ease',
                   }} title={`Payables: ${fmt(period.payables)}`} />
                 </div>
@@ -327,7 +327,7 @@ function CashFlowContent() {
 
                 {/* Month label */}
                 <div style={{
-                  fontSize: 10, color: isDanger ? '#ff6b6b' : DIM, fontWeight: isDanger ? 700 : 500,
+                  fontSize: 10, color: isDanger ? 'var(--danger)' : DIM, fontWeight: isDanger ? 700 : 500,
                   marginTop: 6, textAlign: 'center' as const,
                 }}>
                   {period.month}
@@ -377,7 +377,7 @@ function CashFlowContent() {
                   display: 'grid', gridTemplateColumns: '160px 1fr 1fr 1fr 1fr 40px',
                   padding: '14px 20px', borderBottom: `1px solid rgba(255,255,255,0.08)`,
                   cursor: 'pointer', fontSize: 13,
-                  background: isDanger ? 'rgba(224,100,78,0.08)' : 'transparent',
+                  background: isDanger ? 'rgba(255,59,48,0.08)' : 'transparent',
                   transition: 'background 0.2s',
                 }}
                 onMouseEnter={(e) => { if (!isDanger) e.currentTarget.style.background = 'color-mix(in srgb, var(--brand-primary) 5%, transparent)'; }}
@@ -394,7 +394,7 @@ function CashFlowContent() {
                 </div>
                 <div style={{
                   textAlign: 'right' as const, fontWeight: 700,
-                  color: isDanger ? '#ff6b6b' : TEXT,
+                  color: isDanger ? 'var(--danger)' : TEXT,
                 }}>
                   {fmt(period.running_balance)}
                 </div>

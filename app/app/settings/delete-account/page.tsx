@@ -21,10 +21,10 @@ import { Warning, ArrowLeft } from '@phosphor-icons/react';
 import { PremiumSurface, SectionCard, DangerButton } from '@/components/ui/premium';
 
 const GOLD = 'var(--brand-primary)';
-const TEXT = '#F0F4FF';
-const DIM = '#A1A1AA';
-const RED = '#FF3B30';
-const BORDER = '#2A2A2E';
+const TEXT = 'var(--text-primary)';
+const DIM = 'var(--text-tertiary)';
+const RED = 'var(--danger)';
+const BORDER = 'var(--surface-raised)';
 const CARD = 'var(--bg-surface-2)';
 
 type Preview = {

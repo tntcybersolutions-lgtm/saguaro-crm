@@ -12,13 +12,13 @@ const GOLD = 'var(--brand-primary)';
 const BG = 'var(--bg-base)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const TEXT = '#FFFFFF';
-const DIM = '#D4D4D8';
-const GREEN = '#2CFF7A';
-const RED = '#FF3B30';
+const TEXT = 'var(--text-primary)';
+const DIM = 'var(--text-secondary)';
+const GREEN = 'var(--success)';
+const RED = 'var(--danger)';
 const AMBER = 'var(--warning)';
 const BLUE = 'var(--brand-primary)';
-const PURPLE = '#FF8A00';
+const PURPLE = 'var(--warning)';
 
 /* ── types ── */
 type SubStatus = 'active' | 'pending' | 'disabled';
@@ -125,7 +125,7 @@ const ALL_PERMISSIONS_LIST: { key: PortalPermission; label: string }[] = [
   { key: 'submittals', label: 'Submittals' },
   { key: 'pay_apps', label: 'Pay Applications' },
 ];
-const AVATAR_COLORS = [GOLD, BLUE, GREEN, PURPLE, AMBER, '#FF8A00', '#2CFF7A', '#FF8A00'];
+const AVATAR_COLORS = [GOLD, BLUE, GREEN, PURPLE, AMBER, 'var(--warning)', 'var(--success)', 'var(--warning)'];
 const DOC_CATEGORIES = ['Drawings', 'Specifications', 'Schedules', 'Safety Plans', 'Meeting Minutes', 'Reports', 'Contracts', 'Photos'];
 
 /* ── map a real portal_users row → the roster shape the UI renders (was a
@@ -175,7 +175,7 @@ const inputStyle: React.CSSProperties = {
 };
 const selectStyle: React.CSSProperties = { ...inputStyle, appearance: 'auto' as React.CSSProperties['appearance'] };
 const btnPrimary: React.CSSProperties = {
-  padding: '9px 20px', background: GOLD, color: '#0A0A00', border: 'none', borderRadius: 6,
+  padding: '9px 20px', background: GOLD, color: 'var(--on-brand)', border: 'none', borderRadius: 6,
   fontWeight: 600, cursor: 'pointer', fontSize: 14,
 };
 const btnSecondary: React.CSSProperties = {
@@ -623,7 +623,7 @@ export default function SubPortalPage() {
       {tab === 'users' && (
         <SectionCard flush icon={<UsersThree size={17} weight="duotone" color={GOLD} />} title="Sub Users">
           <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
                 {['Contact', 'Company', 'Trade', 'Status', 'Last Login', 'Projects', 'Actions'].map(h => (
@@ -782,7 +782,7 @@ export default function SubPortalPage() {
       {tab === 'permissions' && (
         <SectionCard flush icon={<ListChecks size={17} weight="duotone" color={GOLD} />} title="Portal Access Permissions" subtitle="Control what each subcontractor can see in their portal">
           <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
                 <th style={{ padding: '12px 16px', textAlign: 'left', color: DIM, fontSize: 12, fontWeight: 600}}>Subcontractor</th>
@@ -875,7 +875,7 @@ export default function SubPortalPage() {
       {tab === 'documents' && (
         <SectionCard flush icon={<FileText size={17} weight="duotone" color={GOLD} />} title="Document Sharing Controls" subtitle="Control which documents are visible to subcontractors">
           <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
                 {['Document', 'Category', 'Project', 'Size', 'Uploaded', 'Visibility', 'Actions'].map(h => (
@@ -945,7 +945,7 @@ export default function SubPortalPage() {
 
           <SectionCard flush icon={<ShieldCheck size={17} weight="duotone" color={GOLD} />} title="Compliance Tracking" subtitle="Insurance, W-9, and license expiration tracking">
             <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
                   {['Subcontractor', 'Company', 'Document Type', 'Status', 'Expiration', 'File', 'Uploaded'].map(h => (

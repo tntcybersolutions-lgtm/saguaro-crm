@@ -371,8 +371,8 @@ export default function SpecsPage() {
         style={{ marginBottom: 16 }}
         extra={
           <div style={{ display: 'flex', background: 'rgba(255,255,255,0.04)', border: `1px solid ${T.border}`, borderRadius: 10, overflow: 'hidden' }}>
-            <button onClick={() => setGrouped(true)} style={{ padding: '7px 13px', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: grouped ? T.gold : 'transparent', color: grouped ? '#0A0A00' : T.muted }}>By Division</button>
-            <button onClick={() => setGrouped(false)} style={{ padding: '7px 13px', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: !grouped ? T.gold : 'transparent', color: !grouped ? '#0A0A00' : T.muted }}>Flat List</button>
+            <button onClick={() => setGrouped(true)} style={{ padding: '7px 13px', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: grouped ? T.gold : 'transparent', color: grouped ? 'var(--on-brand)' : T.muted }}>By Division</button>
+            <button onClick={() => setGrouped(false)} style={{ padding: '7px 13px', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: !grouped ? T.gold : 'transparent', color: !grouped ? 'var(--on-brand)' : T.muted }}>Flat List</button>
           </div>
         }
       />

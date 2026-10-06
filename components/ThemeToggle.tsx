@@ -5,8 +5,8 @@ const GOLD = 'var(--brand-primary)';
 const DARK = 'var(--bg-base)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#D4D4D8';
-const TEXT = '#FFFFFF';
+const DIM = 'var(--text-secondary)';
+const TEXT = 'var(--text-primary)';
 
 const LIGHT_OVERRIDES_CSS = `
 [data-theme="light"] {
@@ -14,7 +14,7 @@ const LIGHT_OVERRIDES_CSS = `
   --surface: #ffffff;
   --border: #e2e5ea;
   --text: #FFFFFF;
-  --dim: #6b7280;
+  --dim: #A3ACBB;
 }
 `;
 
@@ -95,7 +95,7 @@ export default function ThemeToggle() {
         height: 32,
         borderRadius: 8,
         border: `1px solid ${BORDER}`,
-        background: theme === 'dark' ? RAISED : '#ffffff',
+        background: theme === 'dark' ? RAISED : 'var(--text-primary)',
         color: theme === 'dark' ? GOLD : 'var(--brand-primary)',
         display: 'flex',
         alignItems: 'center',

@@ -125,3 +125,61 @@ form/modal/drawer, loading/empty/error states.
 **Tab overflow (More menu): CANNOT VERIFY in this Chrome.** The desktop tab is background-throttled (ResizeObserver callbacks — even a fresh one attached from the console — never fire, and the window ignores resizes), so shrinking the nav row did not re-measure. ProjectNav now also re-measures on `window.resize` and never caches a zero width. Needs a visible browser window narrower than ~1000px.
 
 More phone routes driven: My Work, More drawer (compact identity row), Settings, Reports, Submittals, New RFI modal (full-screen sheet, 16px inputs, Escape closes) — `after/393-*.png`.
+
+## Polish pass (Chad's /app/subs review) — 5 Oct
+
+| Item | Status |
+|---|---|
+| Sidebar zone labels clipped at the left edge | FIXED — labels now carry the section-title inset (`margin 2px 8px`, `padding 0 8px 0 12px`); active-item outline is inset so it cannot clip |
+| Plain-text paperwork statuses | FIXED — `paperwork` StatusPill module (On File / Missing / Pending / Expiring / Expired / Not on File) with check / warning / X glyphs; used on subs, compliance, project subs, prequal, warranty |
+| Raw directory table on /app/subs | FIXED — DataTable: raised sticky uppercase header, 14px rows, initials avatar, stacked contact cell, hover = raised #15171C + yellow edge, selected = yellow tint; phone = cards with the Sort bar |
+| Muddy olive highlighted row | FIXED — hover/selected use `--surface-raised` + `--brand-primary` only (kit CSS) |
+| Small stat cards | FIXED — StatCard: 30px hero number, 32px toned icon chip, visible “View →” chip, whole card tappable; Paperwork Missing tinted red when > 0 and filters the list when tapped |
+| Chat bubble over the last column | FIXED — desktop main content keeps 104px clear at the bottom |
+| Audit Electric test companies | FIXED — renamed `ZZ AUDIT Electric 424170 / 903279` in the database |
+| Pay apps “Billed 13133.8% of revised” | FIXED — “No contract value set” when the revised contract is 0 |
+| The sweep (46 pages) | DataTable conversions: subs, compliance, prequalification, warranty-claims, customers, project team (2 tables), project subs. Glass skin on all 50 remaining raw tables across approval-workflows, bid-intelligence, catalog, client-portal, prevailing-wage, documents, quickbooks, sub-portal, resource-planning, reports/builder, takeoff/measured, bid-packages/[id], bills, budget, contracts, estimate, insurance, invoices, lien-waivers, network/*, payroll, proposal, schedule, takeoff/estimate, tm-tickets; header/row skin on the edit grids (bid lines, leveling, invoice lines, pay-app SOV + composer, budget, takeoff estimate). StatusPills on bills, contracts, devices, portal users, resource assignments, customers, team access. |
+
+Type check: only the 8 pre-existing `deal_media` / `customer_reviews` errors. Preview builds green through 847200fd.
+
+**CANNOT VERIFY (screenshots at 390/1440) until signed in again:** the preview host's session expired overnight — both tabs are back on `/login`. The agent never submits the login form.
+
+### Polish pass — driven after sign-in (5 Oct), screenshots in `docs/design/screenshots/polish/`
+
+| Route | 393 | 1600 (this display's desktop width; 1440 falls inside it) | Notes |
+|---|---|---|---|
+| /app/subs | DRIVEN (cards, Sort bar 44px, pills with glyphs) | DRIVEN (avatars, pills, selected row = yellow edge, bubble clear) | no sideways scroll (393 = 393) |
+| /app/compliance | DRIVEN (cards) | DRIVEN | pills: W-9 Pending / None on File / Non-Compliant |
+| /app/customers | DRIVEN (cards, pipeline pills) | DRIVEN | test customers renamed ZZ AUDIT Customer … |
+| /app/prequalification | DRIVEN (dashboard, no submissions) | DRIVEN (empty) | table empty on this tenant |
+| /app/warranty-claims | — | DRIVEN (select-a-project empty state) | no claims data |
+| job /team | DRIVEN (empty roster on ZZ AUDIT 2) | — | no members on the test job |
+| job /subs | — | DRIVEN (pills W-9 / COI, status select, delete) | |
+| job /bills | — | DRIVEN (no bills → form only) | |
+| job /lien-waivers (glass skin) | DRIVEN (13 rows as cards) | DRIVEN (raised uppercase header) | raw-table cards carry no field labels (no `data-label` on hand-rolled cells) — logged below |
+| job /estimate | DRIVEN (rollup as cards) | DRIVEN — 13 divisions · 50 lines · $1,234,848 | FIXED (5d6b1687): `/api/takeoffs/latest` answers `{ data }` but the page read `data.takeoff`, so every estimate was empty; route now also falls back to `takeoff_line_items`. Shots: polish/1600-estimate-fixed.jpg, 1600-estimate-rollup.jpg, 393-estimate-rollup-cards.png |
+| /app/documents | DRIVEN (see 393 shot) | DRIVEN | |
+
+Known limit of the skin route: hand-rolled tables promoted to `.k-table` stack as cards on phones but show values without their column labels (DataTable adds `data-label`; raw cells do not). Converting each to DataTable is the fix, done for the eight record lists above; the other 42 tables keep the skin.
+
+### Site-wide colour sweep + phone card labels (5 Oct, closes the Not-verified items)
+
+- 85 off-palette colours in 45 files replaced with the approved set: slate greys (#9CA3AF / #94A3B8 / #6B7280 / #64748B, rgba 143,163,192 / 148,163,184) → #A3ACBB; old amber (#F0A63C, #B45309, #CA8A04, rgba 240,166,60) and navy (#1A5FA8, rgba 26,95,168) → #FF8A00; old red (#E0644E, rgba 224,100,78) → #FF3B30; #141416 → #0E0F12. `--warning` token is orange (#FF8A00), not the brand yellow.
+- `components/ui/TableLabels.tsx` mounted in the app shell stamps `data-label` from each `.k-table` header onto its cells, so every promoted raw table shows labelled phone cards, not bare values.
+- Edit grids (`.k-table-skin`) on phones: wrapper scrolls sideways with the first column pinned.
+
+## Platform migration (Chad's §0 override, 5 Oct) — fix the system once, convert mechanically, gate it
+
+| Phase | What | Where | Status |
+|---|---|---|---|
+| 1 — one source of truth | `--c-*` palette variables (bg, card, raised, text ×4, yellow ×3, on-brand, orange, green, red, gray) + typed `palette` / `paletteHex` | `app/globals.css`, `lib/design-tokens.ts` | DONE |
+| 1 | `components/ui/index.ts` is the single door: PageHeader, StatCard, StatusPill, DataTable (rowStyle, selected row, cards < 768), Section/Card, EmptyState, ProjectDot/ProjectTile, Button, Field/Input | `components/ui/*` | DONE |
+| 1 | Job colours: `lib/project-colors.ts` (8 swatches, `projectColor()` with hash fallback, `nextJobColor()` round-robin), `projects.color` column backfilled per tenant, create + won-deal set the next swatch, PUT accepts only the eight, Job color chooser on the project details; dot in the picker + sidebar, 36px initials tile in the header, 3px edge on Projects / My Work / Needs Attention / Active Jobs / Schedule rows, 25% Gantt fill | see commit "Phase 1" | DONE (not yet driven — see below) |
+| 2 — codemods | `tools/codemods/hex-to-token.mjs`: 1,325 hex literals in 178 files → tokens; canvas / data-URI / <meta> lines and canvas renderers skipped; 22 alpha-concatenated identifiers kept | `app/app`, `components` | DONE, re-runnable, idempotent |
+| 2 | `tools/codemods/status-to-pill.mjs`: literal status words in styled spans → `<StatusPill module="generic">` (7 converted; `generic` vocabulary added) | — | DONE |
+| 2 | raw tables → DataTable: 8 record lists rebuilt by hand; every other table carries `k-table` / `k-table-skin` (header, rows, hover, phone cards with labels via `TableLabels`); 1 raw table left (gate-tracked) | — | DONE |
+| 2 | stat-card markup → StatCard: pages already use `StatCard` / `StatTile`; no mechanical conversion needed | — | n/a |
+| 3 — gate | `tools/check-design-system.mjs` in `prebuild`: fails when any file grows its count of hex literals (app/ + components/, allowlist for print/PDF/QR/signature/portals/canvas/charts), raw `<table>` in app/app, or plain-text status spans; per-file baseline in `tools/design-system-baseline.json` (868 hex · 1 table · 0 spans today) | `package.json` prebuild | DONE |
+| 4 — prove it | `tools/e2e-visual-sweep.mjs`: signs in as the QA user, every app/app route at 390 and 1440, screenshots + measurements (sideways scroll, clipped boxes, tap targets < 44, inputs < 16, errors), HTML contact sheet per viewport | `docs/design/sweep/<label>/` | DONE — "before" = production (main), "after" = this branch built locally (`npx next build` + `next start -p 3100`, same Supabase, QA user) because the Vercel preview host sits behind SSO deployment protection with no automation bypass secret. 139 routes × 390/1440 each: 0 sideways scroll, 0 login bounces, 0 console/5xx errors on both; contact sheets `docs/design/sweep/{before,after}/{390,1440}-contact-sheet.jpg`, per-route measurements in `report.json`. Tap-target counts (< 44px, phone) are ~2,600 per sweep on both sides — the probe counts every inline link and icon button, so it is a heat map, not a pass/fail |
+
+Counts: 148 app pages, hex literals in app/app 932 → ~130 (the rest are alpha-concatenated constants and canvas files), StatusPill pages 5 → 22, raw tables 46 → 1 (all others on DataTable or the skin), tsc = the 8 known errors only, every push built green on Vercel.

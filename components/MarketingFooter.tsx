@@ -29,8 +29,8 @@ const SOCIAL_LINKS: { name: 'Instagram' | 'Facebook' | 'TikTok' | 'X'; href: str
 /** A link is real once it is not the placeholder and points somewhere. */
 const isLive = (href: string) => href.trim() !== '' && href.trim() !== '#';
 
-const DIM = '#D4D4D8';
-const TEXT = '#FFFFFF';
+const DIM = 'var(--text-secondary)';
+const TEXT = 'var(--text-primary)';
 const GOLD = 'var(--brand-primary)';
 
 /* Accurate brand glyphs (simple-icons paths), true brand colors on the dark ground. */
@@ -64,14 +64,14 @@ function SocialGlyph({ name, size }: { name: string; size: number }) {
       <svg viewBox="-1.5 -1.5 27 27" width={size} height={size} aria-hidden="true">
         <path fill="#25F4EE" d={d} transform="translate(-0.9,-0.9)" />
         <path fill="#FE2C55" d={d} transform="translate(0.9,0.9)" />
-        <path fill="#FFFFFF" d={d} />
+        <path fill="var(--text-primary)" d={d} />
       </svg>
     );
   }
   /* X — brand mark is black; white on the dark ground */
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true">
-      <path fill="#FFFFFF" d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" />
+      <path fill="var(--text-primary)" d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" />
     </svg>
   );
 }

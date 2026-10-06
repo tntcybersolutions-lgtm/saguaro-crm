@@ -76,7 +76,7 @@ const LOW_BATTERY = 20;
  * without hardcoding the taxonomy here. Red is reserved for panic. */
 const PIN_PALETTE = ['#FFE600', '#FF8A00', '#2CFF7A', '#FF8A00', '#FF8A00', '#FF8A00', '#2CFF7A', '#FF8A00', '#2CFF7A', '#FF8A00'];
 function tradeColor(trade: string | null | undefined): string {
-  if (!trade) return '#94A3B8';
+  if (!trade) return '#A3ACBB';
   let h = 0;
   for (let i = 0; i < trade.length; i++) h = (h * 31 + trade.charCodeAt(i)) >>> 0;
   return PIN_PALETTE[h % PIN_PALETTE.length];

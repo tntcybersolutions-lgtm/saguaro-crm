@@ -21,6 +21,7 @@ import {
   type Column, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
 import { accentForProject, projectMonogram } from '@/lib/project-identity';
+import { rowStripe, stripeStyle } from '@/components/ui/ProjectColor';
 import { statusKindForProject } from '@/lib/status-colors';
 // One vocabulary for "this job is over", shared with the close API — see
 // lib/project-lifecycle.ts. 'complete' is a bucket that has to catch every
@@ -174,6 +175,7 @@ export default function ProjectsPage() {
     body = (
       <Card flush>
         <DataTable
+          rowStyle={(p: any) => rowStripe(p)}
           columns={columns}
           rows={filtered}
           rowKey={(p) => p.id}
@@ -190,8 +192,7 @@ export default function ProjectsPage() {
           const contract = Number(p.contract_amount || 0);
           const acc = accentForProject(p.id);
           return (
-            <Link key={p.id} data-tour="project-card" href={`/app/projects/${p.id}`} className="prCard">
-              <div aria-hidden className="prAccent" style={{ background: `linear-gradient(180deg, ${acc.hex}, transparent)` }} />
+            <Link key={p.id} data-tour="project-card" href={`/app/projects/${p.id}`} className="prCard" style={stripeStyle(p)}>
               <div className="prHead">
                 <div className="prId">
                   <div aria-hidden className="prMono" style={{ background: acc.soft, borderColor: acc.ring, color: acc.hex }}>{projectMonogram(p.name)}</div>

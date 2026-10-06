@@ -17,7 +17,7 @@ import { costControl, usd, type CostLine } from '@/lib/finance';
 import { humanError } from '@/lib/errors';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 
-const BG = 'var(--bg-base)', PANEL = 'var(--bg-surface-2)', LINE = 'rgba(255,255,255,0.09)', GOLD = 'var(--brand-primary)', TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#2CFF7A', RED = '#FF3B30';
+const BG = 'var(--bg-base)', PANEL = 'var(--bg-surface-2)', LINE = 'rgba(255,255,255,0.09)', GOLD = 'var(--brand-primary)', TEXT = 'var(--text-secondary)', DIM = 'var(--text-tertiary)', GREEN = 'var(--success)', RED = 'var(--danger)';
 const uid = () => Math.random().toString(36).slice(2, 9);
 const c = (s: string) => Math.round((parseFloat(s) || 0) * 100);   // dollars string → cents
 const d = (cents: number) => (cents / 100).toFixed(2);             // cents → dollars string

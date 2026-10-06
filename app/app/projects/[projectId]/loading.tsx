@@ -1,9 +1,9 @@
 'use client';
 
-const RAISED = '#141416';
+const RAISED = 'var(--surface-card)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const GOLD = '#FF8A00';
-const DARK = '#0a0a0a';
+const GOLD = 'var(--warning)';
+const DARK = 'var(--bg-base)';
 
 function Pulse({ w, h, mb }: { w: string; h: number; mb?: number }) {
   return (
@@ -70,7 +70,7 @@ export default function ProjectLoading() {
         <div style={{ padding: '16px 24px 40px' }}>
           <div
             style={{
-              background: '#0a0a0a',
+              background: 'var(--bg-base)',
               padding: '10px 14px',
               borderBottom: `1px solid ${BORDER}`,
               display: 'flex',

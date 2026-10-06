@@ -1,4 +1,5 @@
 'use client';
+import { StatusPill } from '@/components/ui/Status';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
@@ -14,7 +15,7 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { openPdf } from '@/components/PdfViewer';
 
-const GOLD='var(--brand-primary)', DARK='var(--bg-base)', RAISED='var(--bg-surface)', BORDER='rgba(255,255,255,0.12)', DIM='#D4D4D8', TEXT='#FFFFFF', GREEN='#2CFF7A', RED='#FF3B30';
+const GOLD='var(--brand-primary)', DARK='var(--bg-base)', RAISED='var(--bg-surface)', BORDER='rgba(255,255,255,0.12)', DIM='var(--text-secondary)', TEXT='var(--text-primary)', GREEN='var(--success)', RED='var(--danger)';
 
 interface Contract {
   id: string;
@@ -57,14 +58,7 @@ function normalizeContract(r: any): Contract {
 }
 
 function statusBadge(status: string) {
-  const map: Record<string, { bg: string; color: string }> = {
-    Draft: { bg: 'rgba(143,163,192,.2)', color: DIM },
-    Sent: { bg: 'var(--brand-primary-18)', color: 'var(--brand-primary-strong)' },
-    Executed: { bg: 'rgba(44,255,122,.2)', color: GREEN },
-    Complete: { bg: 'var(--brand-primary-18)', color: GOLD },
-  };
-  const s = map[status] || { bg: 'rgba(143,163,192,.2)', color: DIM };
-  return <span style={{ padding: '3px 10px', borderRadius: 20, background: s.bg, color: s.color, fontSize: 11, fontWeight: 700 }}>{status}</span>;
+  return <StatusPill module="contracts" status={status} size="sm" />;
 }
 
 export default function ContractsPage() {
@@ -307,14 +301,14 @@ export default function ContractsPage() {
                 className="pmBtn"
                 style={i === 0
                   ? { ...goldButtonStyle, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7 }
-                  : { minHeight: 44, display: 'inline-flex', alignItems: 'center', padding: '0 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.16)', background: 'transparent', color: '#A1A1AA', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}
+                  : { minHeight: 44, display: 'inline-flex', alignItems: 'center', padding: '0 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.16)', background: 'transparent', color: 'var(--text-tertiary)', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}
               >
                 {i === 0 && <Plus size={15} weight="bold" />} {label}
               </a>
             ))}
             <button
               onClick={() => { setShowForm(p => !p); setErrorMsg(''); }}
-              style={{ minHeight: 44, padding: '0 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.16)', background: 'transparent', color: '#A1A1AA', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+              style={{ minHeight: 44, padding: '0 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.16)', background: 'transparent', color: 'var(--text-tertiary)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
             >
               Record Existing
             </button>
@@ -533,7 +527,7 @@ export default function ContractsPage() {
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
                   {([

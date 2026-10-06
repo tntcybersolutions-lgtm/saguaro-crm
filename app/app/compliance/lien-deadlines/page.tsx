@@ -30,13 +30,13 @@ import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
 const GOLD = 'var(--brand-primary)';
 const AMBER = 'var(--warning)';
-const GREEN = '#2CFF7A';
+const GREEN = 'var(--success)';
 const BLUE = 'var(--brand-primary)';
-const RED = '#FF3B30';
-const TEXT = '#FFFFFF';
-const DIM = '#D4D4D8';
+const RED = 'var(--danger)';
+const TEXT = 'var(--text-primary)';
+const DIM = 'var(--text-secondary)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const GRAY = '#8094B0';
+const GRAY = 'var(--text-tertiary)';
 const ROW_BG = 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))';
 
 const STATES = ['AZ', 'CA', 'TX', 'NV', 'CO', 'FL'];
@@ -461,7 +461,7 @@ export default function LienDeadlinePage() {
                       {dl.state}
                     </span>
                     {/* Reminder badges */}
-                    {dl.reminder_sent_30 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(107,114,128,0.12)', color: GRAY }}>30d sent</span>}
+                    {dl.reminder_sent_30 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(163,172,187,0.12)', color: GRAY }}>30d sent</span>}
                     {dl.reminder_sent_14 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'var(--brand-primary-12)', color: GOLD }}>14d sent</span>}
                     {dl.reminder_sent_7 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(255,59,48,0.12)', color: RED }}>7d sent</span>}
                   </div>

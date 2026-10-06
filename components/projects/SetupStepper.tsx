@@ -88,11 +88,11 @@ export default function SetupStepper({ steps, active }: { steps: SetupStep[]; ac
                       state === 'todo'
                         ? '1px solid rgba(255,255,255,0.16)'
                         : `1px solid ${GOLD}`,
-                    color: state === 'done' ? '#0A0A00' : state === 'active' ? GOLD_HI : 'rgba(255,255,255,0.45)',
+                    color: state === 'done' ? 'var(--on-brand)' : state === 'active' ? GOLD_HI : 'rgba(255,255,255,0.45)',
                     boxShadow: isActive ? `0 0 0 4px var(--brand-primary-12)` : 'none',
                   }}
                 >
-                  {s.done ? <Check size={15} weight="bold" color="#0A0A00" /> : s.n}
+                  {s.done ? <Check size={15} weight="bold" color="var(--on-brand)" /> : s.n}
                 </span>
 
                 <span style={{ minWidth: 0 }}>
@@ -102,7 +102,7 @@ export default function SetupStepper({ steps, active }: { steps: SetupStep[]; ac
                       fontSize: 13.5,
                       fontWeight: 800,
                       lineHeight: 1.3,
-                      color: state === 'todo' ? 'rgba(255,255,255,0.55)' : '#F0F4FF',
+                      color: state === 'todo' ? 'rgba(255,255,255,0.55)' : 'var(--text-primary)',
                     }}
                   >
                     {s.title}

@@ -40,10 +40,10 @@ const optValue = (o: StandardOption) => (typeof o === 'string' ? o : o.value);
 const optLabel = (o: StandardOption) =>
   typeof o === 'string' ? o : o.count != null ? `${o.label} (${o.count})` : o.label;
 
-const SURFACE = '#15171C'; // solid: the OS option list cannot show glass
+const SURFACE = 'var(--surface-raised)'; // solid: the OS option list cannot show glass
 const HAIRLINE = '1px solid rgba(255,255,255,0.12)';
-const WHITE = '#FFFFFF';
-const MUTED = '#A9B4C4';
+const WHITE = 'var(--text-primary)';
+const MUTED = 'var(--text-tertiary)';
 
 const SIZES = {
   md: { padding: '9px 12px', fontSize: 13 },

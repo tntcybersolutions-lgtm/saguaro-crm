@@ -19,7 +19,7 @@ import {
 } from '@phosphor-icons/react';
 
 const GOLD = 'var(--brand-primary)', CARD = 'var(--bg-surface)', INSET = 'var(--bg-base)', BORDER = 'rgba(255,255,255,0.12)', HAIRLINE = 'rgba(255,255,255,0.07)';
-const DIM = '#D4D4D8', MUTED = 'rgba(255,255,255,0.45)', TEXT = '#FFFFFF', GREEN = '#2CFF7A';
+const DIM = 'var(--text-secondary)', MUTED = 'rgba(255,255,255,0.45)', TEXT = 'var(--text-primary)', GREEN = 'var(--success)';
 
 // Integrations accent — steel blue, local because 'integrations' is not a key in
 // lib/module-identity (owned elsewhere). Chips / eyebrows / badges ONLY.
@@ -50,10 +50,10 @@ type APIModule = {
 };
 
 const METHOD_COLORS: Record<string, string> = {
-  GET: '#2CFF7A',
+  GET: 'var(--success)',
   POST: 'var(--brand-primary)',
   PATCH: 'var(--brand-primary)',
-  DELETE: '#FF3B30',
+  DELETE: 'var(--danger)',
 };
 
 // Only the GET /api/v1/* endpoints below are LIVE — they accept sk_live_ keys
@@ -258,7 +258,7 @@ export default function ApiDocsPage() {
               padding: '8px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer',
               border: 'none', whiteSpace: 'nowrap',
               background: activeSection === s.key ? `linear-gradient(180deg, var(--brand-primary-strong), ${GOLD})` : 'transparent',
-              color: activeSection === s.key ? '#0A0A00' : DIM,
+              color: activeSection === s.key ? 'var(--on-brand)' : DIM,
             }}
           >
             {s.icon}{s.label}
@@ -402,7 +402,7 @@ export default function ApiDocsPage() {
                     padding: '6px 16px', borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: 'pointer',
                     border: 'none', textTransform: 'capitalize',
                     background: codeTab === lang ? `linear-gradient(180deg, var(--brand-primary-strong), ${GOLD})` : 'transparent',
-                    color: codeTab === lang ? '#0A0A00' : DIM,
+                    color: codeTab === lang ? 'var(--on-brand)' : DIM,
                   }}
                 >
                   {lang}
@@ -440,7 +440,7 @@ export default function ApiDocsPage() {
             </div>
 
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: INSET }}>
                     <th style={TH}>Event</th>

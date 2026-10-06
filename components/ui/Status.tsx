@@ -33,10 +33,15 @@ export interface StatusPillProps {
   /** Flash briefly — the row just changed under you. */
   changed?: boolean;
   style?: React.CSSProperties;
+  /** Replace the module's label with specific words ("Expired Sep 3", "14d left"); tone and glyph stay. */
+  label?: string;
+  /** A glyph in place of the dot — a check for on file, an X for missing, etc. */
+  icon?: React.ReactNode;
 }
 
-export function StatusPill({ module, status, size = 'md', changed, style }: StatusPillProps) {
-  const r = resolveStatus(module, status);
+export function StatusPill({ module, status, size = 'md', changed, style, label, icon }: StatusPillProps) {
+  const r0 = resolveStatus(module, status);
+  const r = label ? { ...r0, label } : r0;
   const pad = size === 'sm' ? '2px 7px' : '3px 9px';
   const fs = size === 'sm' ? 11 : 12;
 
@@ -56,13 +61,17 @@ export function StatusPill({ module, status, size = 'md', changed, style }: Stat
         ...style,
       }}
     >
-      <span
-        aria-hidden
-        style={{
-          width: 5, height: 5, borderRadius: 999, background: r.style.fg,
-          boxShadow: `0 0 6px ${r.style.fg}`, flexShrink: 0,
-        }}
-      />
+      {icon ? (
+        <span aria-hidden style={{ display: 'inline-flex', flexShrink: 0 }}>{icon}</span>
+      ) : (
+        <span
+          aria-hidden
+          style={{
+            width: 5, height: 5, borderRadius: 999, background: r.style.fg,
+            boxShadow: `0 0 6px ${r.style.fg}`, flexShrink: 0,
+          }}
+        />
+      )}
       {r.label}
     </span>
   );
@@ -161,7 +170,7 @@ export function LifecycleRail({
       </div>
 
       {showAction && r.action && !compact && (
-        <div style={{ fontSize: 11.5, color: '#A9B4C4', marginTop: 3, lineHeight: 1.35 }}>
+        <div style={{ fontSize: 11.5, color: 'var(--text-tertiary)', marginTop: 3, lineHeight: 1.35 }}>
           {r.action}
         </div>
       )}

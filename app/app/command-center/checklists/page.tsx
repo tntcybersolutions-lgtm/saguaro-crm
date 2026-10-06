@@ -108,7 +108,7 @@ export default function ChecklistsPage() {
                     const d = isDone(it);
                     return (
                       <button key={it.id} onClick={() => check(it)} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0', color: 'inherit', fontFamily: 'inherit' }}>
-                        <span style={{ marginTop: 1, width: 18, height: 18, borderRadius: 5, border: `2px solid ${d ? C.green : C.border}`, background: d ? C.green : 'var(--bg-surface-2)', color: '#fff', flexShrink: 0, fontSize: 11, fontWeight: 900, lineHeight: '15px', textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{d ? <Check size={12} weight="bold" color="#fff" /> : ''}</span>
+                        <span style={{ marginTop: 1, width: 18, height: 18, borderRadius: 5, border: `2px solid ${d ? C.green : C.border}`, background: d ? C.green : 'var(--bg-surface-2)', color: 'var(--text-primary)', flexShrink: 0, fontSize: 11, fontWeight: 900, lineHeight: '15px', textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{d ? <Check size={12} weight="bold" color="var(--text-primary)" /> : ''}</span>
                         <span style={{ fontSize: 14, color: d ? C.faint : C.text, textDecoration: d ? 'line-through' : 'none' }}>{it.title}</span>
                       </button>
                     );

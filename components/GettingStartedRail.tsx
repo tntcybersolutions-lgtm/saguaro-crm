@@ -27,7 +27,7 @@ import { useProjectContext } from '@/lib/hooks/useProjectContext';
 
 const GOLD = 'var(--brand-primary)';
 const GOLD_HI = 'var(--brand-primary-strong)';
-const TEXT = '#FFFFFF';
+const TEXT = 'var(--text-primary)';
 const MUTED = 'rgba(255,255,255,0.62)';
 const FAINT = 'rgba(255,255,255,0.42)';
 /* Versioned on purpose.
@@ -256,9 +256,9 @@ export default function GettingStartedRail({ projectId, compact = false }: { pro
                       background: s.done ? `linear-gradient(180deg,${GOLD_HI},${GOLD})` : '#101011',
                       border: s.done ? 'none' : `1px solid rgba(255,138,0,${isCur ? 0.85 : 0.45})`,
                       boxShadow: isCur ? '0 0 12px var(--brand-primary-35)' : undefined,
-                      color: s.done ? '#0A0A00' : GOLD_HI, fontSize: 10, fontWeight: 900,
+                      color: s.done ? 'var(--on-brand)' : GOLD_HI, fontSize: 10, fontWeight: 900,
                     }}>
-                      {s.done ? <Check size={12} weight="bold" color="#0A0A00" /> : i + 1}
+                      {s.done ? <Check size={12} weight="bold" color="var(--on-brand)" /> : i + 1}
                     </div>
                     <div style={{ minWidth: 0, paddingTop: 1, flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
@@ -306,7 +306,7 @@ export default function GettingStartedRail({ projectId, compact = false }: { pro
                 </Link>
               ) : (
                 <Link href={next.href} style={{ ...goldButtonStyle, marginTop: 18 }} className="pmBtn">
-                  Next: {next.title} <ArrowRight size={15} weight="bold" color="#0A0A00" />
+                  Next: {next.title} <ArrowRight size={15} weight="bold" color="var(--on-brand)" />
                 </Link>
               )
             )}

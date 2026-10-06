@@ -135,7 +135,7 @@ const CSI_DIVISION_NAMES: Record<string, string> = {
 const GOLD = 'var(--brand-primary)';
 const GOLD_HI = 'var(--brand-primary-strong)';
 const AMBER = 'var(--brand-primary-hover)';
-const GREEN = '#2CFF7A';
+const GREEN = 'var(--success)';
 const SURFACE = 'rgba(255,255,255,0.02)';
 const BORDER = 'rgba(255,255,255,0.05)';
 
@@ -390,7 +390,7 @@ const EditableRow = memo(function EditableRow({ item, idx, sellMult, laborAlloc,
           {item.csiCode}
           {qtyCheck && (
             <span title={item.notes} aria-label="Quantity flagged for review" style={{ display: 'inline-flex', cursor: 'help' }}>
-              <Warning size={14} weight="fill" color="#FF3B30" />
+              <Warning size={14} weight="fill" color="var(--danger)" />
             </span>
           )}
         </div>
@@ -406,7 +406,7 @@ const EditableRow = memo(function EditableRow({ item, idx, sellMult, laborAlloc,
           title={`Material ${fmt$(item.totalCost)} + labor ${fmt$(labor)}${item.laborHours ? ` (${fmtN(item.laborHours)} hrs)` : ''}`}>
           {fmt$(direct)}
         </div>
-        <div style={{ textAlign: 'right', color: '#2CFF7A', fontWeight: 600 }}>{fmt$(direct * sellMult)}</div>
+        <div style={{ textAlign: 'right', color: 'var(--success)', fontWeight: 600 }}>{fmt$(direct * sellMult)}</div>
         <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
           <button className="tkIconBtn" disabled={!editable} title={hasNote ? 'Edit note' : 'Add note'}
             onClick={() => { setNoteDraft(item.notes || ''); setNoteOpen((o) => !o); }}>
@@ -503,7 +503,7 @@ function DivisionComposer({ div, divName, onAdd, onClose }: {
           onChange={(e) => setNotes(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') submit(); }} style={{ marginTop: 8, textAlign: 'left' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 10, flexWrap: 'wrap' }}>
           <button onClick={submit} disabled={!valid || busy} className="tkBtn"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 9, border: 'none', background: valid ? `linear-gradient(135deg, ${GOLD}, ${AMBER})` : 'rgba(255,255,255,0.06)', color: valid ? '#0A0A00' : 'rgba(255,255,255,0.35)', fontWeight: 800, fontSize: 12.5, cursor: valid && !busy ? 'pointer' : 'not-allowed' }}>
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 9, border: 'none', background: valid ? `linear-gradient(135deg, ${GOLD}, ${AMBER})` : 'rgba(255,255,255,0.06)', color: valid ? 'var(--on-brand)' : 'rgba(255,255,255,0.35)', fontWeight: 800, fontSize: 12.5, cursor: valid && !busy ? 'pointer' : 'not-allowed' }}>
             {busy ? <CircleNotch size={14} weight="bold" style={{ animation: 'tkSpin .9s linear infinite' }} /> : <Plus size={14} weight="bold" />} Add Line
           </button>
           <span style={{ fontSize: 12, fontWeight: 700, color: valid ? GOLD : 'rgba(255,255,255,0.35)' }}>
@@ -1668,7 +1668,7 @@ export default function TakeoffPage() {
             </div>
           </div>
           <div style={{ animation: 'tkRise .55s ease .05s both', borderRadius: 20, border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', background: SURFACE, padding: '36px 28px', textAlign: 'center' }}>
-            <h1 style={{ color: '#fff', fontSize: 26, fontWeight: 800, margin: 0, lineHeight: 1.25 }}>{measuredHandoff.name}</h1>
+            <h1 style={{ color: 'var(--text-primary)', fontSize: 26, fontWeight: 800, margin: 0, lineHeight: 1.25 }}>{measuredHandoff.name}</h1>
             <p style={{ color: 'rgba(255,255,255,0.62)', fontSize: 14.5, lineHeight: 1.6, margin: '14px auto 0', maxWidth: 460 }}>
               The latest takeoff on this project was traced and priced in Takeoff Studio.
               Its conditions, plan scale and markup stack live there — open it to review or keep measuring.
@@ -1680,7 +1680,7 @@ export default function TakeoffPage() {
               </div>
             )}
             <div style={{ marginTop: 26, display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-              <a href="/app/takeoff/measured" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 22px', borderRadius: 12, background: `linear-gradient(135deg, ${GOLD}, ${AMBER})`, color: '#0A0A00', fontWeight: 800, fontSize: 14, textDecoration: 'none' }}>
+              <a href="/app/takeoff/measured" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 22px', borderRadius: 12, background: `linear-gradient(135deg, ${GOLD}, ${AMBER})`, color: 'var(--on-brand)', fontWeight: 800, fontSize: 14, textDecoration: 'none' }}>
                 Open in Takeoff Studio <ArrowRight size={16} weight="bold" />
               </a>
               <button onClick={() => setMeasuredHandoff(null)} style={{ padding: '12px 22px', borderRadius: 12, background: 'transparent', border: `1px solid ${BORDER}`, color: 'rgba(255,255,255,0.72)', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
@@ -1719,7 +1719,7 @@ export default function TakeoffPage() {
             <div style={{ animation: 'tkRise .5s ease both', display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 16px', borderRadius: 999, background: 'linear-gradient(90deg, var(--brand-primary-18), color-mix(in srgb, var(--brand-primary) 6%, transparent))', border: '1px solid color-mix(in srgb, var(--brand-primary) 45%, transparent)', color: GOLD_HI, fontSize: 11, fontWeight: 800, boxShadow: '0 0 34px -8px color-mix(in srgb, var(--brand-primary) 55%, transparent)' }}>
               <Sparkle size={13} weight="fill" /> AI Blueprint Takeoff
             </div>
-            <h1 className="tkH1" style={{ animation: 'tkRise .55s ease .05s both', color: '#fff', margin: '18px 0 0' }}>
+            <h1 className="tkH1" style={{ animation: 'tkRise .55s ease .05s both', color: 'var(--text-primary)', margin: '18px 0 0' }}>
               Drop a plan.<br />
               <span className="tkShine" style={{ background: `linear-gradient(100deg, ${GOLD} 8%, ${GOLD_HI} 40%, var(--brand-primary-hover) 58%, ${GOLD} 90%)`, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' }}>
                 Get a priced bid in minutes.
@@ -1809,7 +1809,7 @@ export default function TakeoffPage() {
                     <div aria-hidden style={{ position: 'absolute', inset: -1, borderRadius: '50%', border: `1px solid ${GOLD}`, animation: 'tkRing 3s ease-out infinite' }} />
                     <Blueprint size={46} weight="duotone" color={GOLD_HI} />
                   </div>
-                  <div style={{ color: '#fff', fontWeight: 800, fontSize: 24, marginBottom: 8, letterSpacing: '-0.02em' }}>
+                  <div style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 24, marginBottom: 8, letterSpacing: '-0.02em' }}>
                     {isDragging ? 'Release to Upload' : 'Drop Your Blueprint Here'}
                   </div>
                   <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14.5 }}>
@@ -1840,7 +1840,7 @@ export default function TakeoffPage() {
               <div key={s.big} className="tkHover" style={{ animation: `tkRise .5s ease ${(0.12 + i * 0.07).toFixed(2)}s both`, display: 'flex', alignItems: 'center', gap: 12, background: 'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015))', border: '1px solid var(--brand-primary-18)', borderRadius: 14, padding: '14px 16px' }}>
                 <div className="tkIcon" style={{ flex: '0 0 auto', display: 'inline-flex', width: 40, height: 40, borderRadius: 11, alignItems: 'center', justifyContent: 'center', background: 'var(--brand-primary-12)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', transition: 'box-shadow .2s' }}>{s.icon}</div>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ color: '#fff', fontWeight: 800, fontSize: 16, letterSpacing: '-0.01em' }}>{s.big}</div>
+                  <div style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 16, letterSpacing: '-0.01em' }}>{s.big}</div>
                   <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 1 }}>{s.small}</div>
                 </div>
               </div>
@@ -1865,7 +1865,7 @@ export default function TakeoffPage() {
                   <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${GOLD}, transparent)` }} />
                   <div className="tkIcon" style={{ flex: '0 0 auto', display: 'inline-flex', width: 42, height: 42, borderRadius: 11, alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(150deg, var(--brand-primary-18), color-mix(in srgb, var(--brand-primary) 5%, transparent))', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', transition: 'box-shadow .2s' }}>{c.icon}</div>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ color: '#fff', fontWeight: 700, fontSize: 14, lineHeight: 1.3 }}>{c.t}</div>
+                    <div style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: 14, lineHeight: 1.3 }}>{c.t}</div>
                     <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12.5, marginTop: 3 }}>{c.s}</div>
                   </div>
                 </div>
@@ -1885,7 +1885,7 @@ export default function TakeoffPage() {
               background: selectedFile ? `linear-gradient(135deg, ${GOLD}, ${AMBER})` : 'rgba(255,255,255,0.05)',
               border: selectedFile ? 'none' : '1px solid rgba(255,255,255,0.08)',
               borderRadius: 14,
-              color: selectedFile ? '#0A0A00' : 'rgba(255,255,255,0.35)',
+              color: selectedFile ? 'var(--on-brand)' : 'rgba(255,255,255,0.35)',
               fontSize: 16,
               fontWeight: 800,
               cursor: selectedFile ? 'pointer' : 'not-allowed',
@@ -1895,7 +1895,7 @@ export default function TakeoffPage() {
           >
             {selectedFile && <span aria-hidden className="tkShine" style={{ position: 'absolute', inset: 0, background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.45) 50%, transparent 70%)' }} />}
             <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}>
-              {selectedFile ? <><MagicWand size={19} weight="fill" color="#0A0A00" /> Start AI Analysis <ArrowRight size={18} weight="bold" color="#0A0A00" /></> : 'Select a Blueprint to Continue'}
+              {selectedFile ? <><MagicWand size={19} weight="fill" color="var(--on-brand)" /> Start AI Analysis <ArrowRight size={18} weight="bold" color="var(--on-brand)" /></> : 'Select a Blueprint to Continue'}
             </span>
           </button>
         </div>
@@ -1940,7 +1940,7 @@ export default function TakeoffPage() {
             </div>
           </div>
 
-          <h2 className="tkH2" style={{ color: '#fff', marginBottom: 8 }}>
+          <h2 className="tkH2" style={{ color: 'var(--text-primary)', marginBottom: 8 }}>
             Reading your blueprint…
           </h2>
           <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 15, marginBottom: lane ? 16 : 30 }}>
@@ -2036,7 +2036,7 @@ export default function TakeoffPage() {
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, color: GOLD_HI, fontSize: 11, fontWeight: 800 }}>
             <CheckCircle size={13} weight="fill" color={GREEN} /> Takeoff Complete
           </div>
-          <div style={{ color: '#fff', fontWeight: 800, fontSize: 22, marginTop: 6, letterSpacing: '-0.02em' }}>
+          <div style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 22, marginTop: 6, letterSpacing: '-0.02em' }}>
             {jobName || result?.projectName || 'Material Takeoff'}
           </div>
           <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12.5, marginTop: 3 }}>
@@ -2084,10 +2084,10 @@ export default function TakeoffPage() {
                   display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44,
                   padding: '0 22px', borderRadius: 10, border: 'none', cursor: 'pointer',
                   background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))',
-                  color: '#0A0A00', fontSize: 14, fontWeight: 800,
+                  color: 'var(--on-brand)', fontSize: 14, fontWeight: 800,
                 }}
               >
-                <MagicWand size={16} weight="fill" color="#0A0A00" />
+                <MagicWand size={16} weight="fill" color="var(--on-brand)" />
                 Build the Bid + Compliance Package
               </button>
               <button
@@ -2148,8 +2148,8 @@ export default function TakeoffPage() {
               { label: 'Labor Cost', value: computedCosts.labCost, color: 'var(--brand-primary-strong)', icon: <Lightning size={15} weight="duotone" color="var(--brand-primary-strong)" /> },
               /* Direct cost = material + labor = the Cost column's footer. Tax and
                  burden (when set) are markups below, not part of this number. */
-              { label: 'Direct Cost', value: computedCosts.directCost, color: '#fff', icon: <Table size={15} weight="duotone" color="rgba(255,255,255,0.8)" /> },
-              { label: 'Bid Price', value: computedCosts.totalJobCost, color: '#2CFF7A', icon: <TrendUp size={15} weight="duotone" color={GREEN} /> },
+              { label: 'Direct Cost', value: computedCosts.directCost, color: 'var(--text-primary)', icon: <Table size={15} weight="duotone" color="rgba(255,255,255,0.8)" /> },
+              { label: 'Bid Price', value: computedCosts.totalJobCost, color: 'var(--success)', icon: <TrendUp size={15} weight="duotone" color={GREEN} /> },
             ].map((card, ci) => (
               <div key={card.label} className="tkHover" style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.014))', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '15px 16px', animation: `tkPop .45s ease ${(0.05 * ci).toFixed(2)}s both` }}>
                 <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${card.color}, transparent)` }} />
@@ -2165,12 +2165,12 @@ export default function TakeoffPage() {
                  the way the arithmetic actually runs: tax rides material,
                  burden rides labor, GC on direct, OH on cost-of-work,
                  contingency on that, fee pre-bond, bond on contract value. */
-              { label: 'Sales Tax', pct: salesTaxPct, setPct: setSalesTaxPct, value: computedCosts.materialTax, color: '#FF8A00', max: 15 },
-              { label: 'Labor Burden', pct: laborBurdenPct, setPct: setLaborBurdenPct, value: computedCosts.laborBurden, color: '#FF8A00', max: 60 },
-              { label: 'General Conditions', pct: generalConditionsPct, setPct: setGeneralConditionsPct, value: computedCosts.generalConditions, color: '#FF8A00', max: 25 },
-              { label: 'Overhead', pct: overheadPct, setPct: setOverheadPct, value: computedCosts.overhead, color: '#FF8A00', max: 25 },
-              { label: 'Contingency', pct: contingencyPct, setPct: setContingencyPct, value: computedCosts.contingency, color: '#FF8A00', max: 25 },
-              { label: 'Profit', pct: profitPct, setPct: setProfitPct, value: computedCosts.profit, color: '#2CFF7A', max: 25 },
+              { label: 'Sales Tax', pct: salesTaxPct, setPct: setSalesTaxPct, value: computedCosts.materialTax, color: 'var(--warning)', max: 15 },
+              { label: 'Labor Burden', pct: laborBurdenPct, setPct: setLaborBurdenPct, value: computedCosts.laborBurden, color: 'var(--warning)', max: 60 },
+              { label: 'General Conditions', pct: generalConditionsPct, setPct: setGeneralConditionsPct, value: computedCosts.generalConditions, color: 'var(--warning)', max: 25 },
+              { label: 'Overhead', pct: overheadPct, setPct: setOverheadPct, value: computedCosts.overhead, color: 'var(--warning)', max: 25 },
+              { label: 'Contingency', pct: contingencyPct, setPct: setContingencyPct, value: computedCosts.contingency, color: 'var(--warning)', max: 25 },
+              { label: 'Profit', pct: profitPct, setPct: setProfitPct, value: computedCosts.profit, color: 'var(--success)', max: 25 },
               { label: 'Bond', pct: bondPct, setPct: setBondPct, value: computedCosts.bond, color: 'var(--brand-primary-strong)', max: 5 },
             ].map((ctrl) => (
               <div key={ctrl.label} style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.014))', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '14px 16px' }}>
@@ -2324,7 +2324,7 @@ export default function TakeoffPage() {
               })}
               <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
                 <span style={{ color: 'rgba(255,255,255,0.4)' }}>Cost → Sell breakdown across {Object.keys(groupedItems).length} divisions</span>
-                <span style={{ color: '#2CFF7A', fontWeight: 600 }}>Bid Price: {fmt$(totalSell)}</span>
+                <span style={{ color: 'var(--success)', fontWeight: 600 }}>Bid Price: {fmt$(totalSell)}</span>
               </div>
             </div>
           </div>
@@ -2337,10 +2337,10 @@ export default function TakeoffPage() {
           <NotePencil size={15} weight="duotone" color={GOLD_HI} />
           Click any description, qty, unit or $/unit to edit. Every line takes a note; deletes hold 6s for undo.
         </div>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 700, color: saveState === 'saving' ? GOLD_HI : saveState === 'confirmed' ? GREEN : saveState === 'error' ? '#FF3B30' : 'rgba(255,255,255,0.45)' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 700, color: saveState === 'saving' ? GOLD_HI : saveState === 'confirmed' ? GREEN : saveState === 'error' ? 'var(--danger)' : 'rgba(255,255,255,0.45)' }}>
           {saveState === 'saving' ? (<><CircleNotch size={14} weight="bold" style={{ animation: 'tkSpin .9s linear infinite' }} /> Saving…</>)
             : saveState === 'confirmed' ? (<><CheckCircle size={14} weight="fill" color={GREEN} /> Saved — totals server-confirmed</>)
-            : saveState === 'error' ? (<><Warning size={14} weight="fill" color="#FF3B30" /> Save failed — change rolled back</>)
+            : saveState === 'error' ? (<><Warning size={14} weight="fill" color="var(--danger)" /> Save failed — change rolled back</>)
             : (<><CheckCircle size={14} weight="regular" /> {fmtN(result?.itemCount || 0)} lines · in sync</>)}
         </div>
       </div>
@@ -2368,7 +2368,7 @@ export default function TakeoffPage() {
           <div style={{ textAlign: 'right' }}>Unit</div>
           <div style={{ textAlign: 'right' }}>$/Unit</div>
           <div style={{ textAlign: 'right' }} title="Material + labor">Cost (M+L)</div>
-          <div style={{ textAlign: 'right', color: '#2CFF7A' }} title="This line's share of the bid price">Bid</div>
+          <div style={{ textAlign: 'right', color: 'var(--success)' }} title="This line's share of the bid price">Bid</div>
           <div aria-hidden />
         </div>
 
@@ -2390,7 +2390,7 @@ export default function TakeoffPage() {
           <div style={{ textAlign: 'right', color: GOLD, fontSize: 16 }} title="Direct cost — material + labor">
             {fmt$(computedCosts?.directCost ?? 0)}
           </div>
-          <div style={{ textAlign: 'right', color: '#2CFF7A', fontSize: 16 }} title="Bid price — direct cost with every markup above">
+          <div style={{ textAlign: 'right', color: 'var(--success)', fontSize: 16 }} title="Bid price — direct cost with every markup above">
             {fmt$(bidPrice)}
           </div>
           <div aria-hidden />
@@ -2402,11 +2402,11 @@ export default function TakeoffPage() {
       {/* Delete undo bar — the DELETE only fires after this 6s window passes */}
       {undoDelete && (
         <div style={{ position: 'fixed', left: '50%', bottom: 26, transform: 'translateX(-50%)', zIndex: 60, display: 'flex', alignItems: 'center', gap: 14, padding: '12px 18px', borderRadius: 14, background: 'rgba(0,0,0,0.94)', border: '1px solid color-mix(in srgb, var(--brand-primary) 45%, transparent)', boxShadow: '0 18px 50px -12px var(--brand-primary-35)', animation: 'tkUndoIn .25s ease both', maxWidth: 'min(92vw, 560px)' }}>
-          <Trash size={16} weight="duotone" color="#FF3B30" style={{ flexShrink: 0 }} />
+          <Trash size={16} weight="duotone" color="var(--danger)" style={{ flexShrink: 0 }} />
           <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             Deleted “{undoDelete.item.description}” — {fmt$(Number(undoDelete.item.totalCost) || 0)}
           </span>
-          <button onClick={undoPendingDelete} className="tkBtn" style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 9, border: 'none', background: `linear-gradient(135deg, ${GOLD}, ${AMBER})`, color: '#0A0A00', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}>
+          <button onClick={undoPendingDelete} className="tkBtn" style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 9, border: 'none', background: `linear-gradient(135deg, ${GOLD}, ${AMBER})`, color: 'var(--on-brand)', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}>
             Undo
           </button>
         </div>
@@ -2444,7 +2444,7 @@ export default function TakeoffPage() {
             </div>
             <div style={{ minWidth: 0 }}>
               <div style={{ color: GREEN, fontSize: 11, fontWeight: 800 }}>Package Complete</div>
-              <div style={{ color: '#fff', fontWeight: 800, fontSize: 20, letterSpacing: '-0.01em', marginTop: 2 }}>Sage Built Your Full Bid + Compliance Package</div>
+              <div style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 20, letterSpacing: '-0.01em', marginTop: 2 }}>Sage Built Your Full Bid + Compliance Package</div>
             </div>
           </div>
           <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 12 }}>
@@ -2469,7 +2469,7 @@ export default function TakeoffPage() {
             ].map((s) => (
               <div key={s.label} style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.014))', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '14px 16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'rgba(255,255,255,0.55)', fontSize: 10.5, marginBottom: 8, fontWeight: 700 }}>{s.icon}{s.label}</div>
-                <div style={{ color: s.big ? '#fff' : 'rgba(255,255,255,0.45)', fontWeight: 800, fontSize: 26, letterSpacing: '-0.02em' }}>{fmtN(s.big)}</div>
+                <div style={{ color: s.big ? 'var(--text-primary)' : 'rgba(255,255,255,0.45)', fontWeight: 800, fontSize: 26, letterSpacing: '-0.02em' }}>{fmtN(s.big)}</div>
                 {!s.big && (
                   <div style={{ color: 'rgba(255,255,255,0.42)', fontSize: 11, lineHeight: 1.35, marginTop: 4 }}>{s.zeroNote}</div>
                 )}
@@ -2481,11 +2481,11 @@ export default function TakeoffPage() {
             {autoSummary.packages} bid package{autoSummary.packages !== 1 ? 's' : ''} written{autoSummary.sov ? ', Schedule of Values built' : autoSummary.sovDeferred ? ' (pay application waits until the job is won)' : ''} — everything filed to Documents / Compliance.
           </div>
           <div style={{ position: 'relative', display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 18 }}>
-            <a href={`/app/projects/${projectId}/bid-packages`} className="tkBtn" style={{ textDecoration: 'none', padding: '11px 20px', background: `linear-gradient(135deg, ${GOLD}, ${AMBER})`, borderRadius: 10, color: '#0A0A00', fontWeight: 800, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 12px 30px -12px color-mix(in srgb, var(--brand-primary) 60%, transparent)' }}>
-              <Package size={15} weight="duotone" color="#0A0A00" /> View Bid Packages
+            <a href={`/app/projects/${projectId}/bid-packages`} className="tkBtn" style={{ textDecoration: 'none', padding: '11px 20px', background: `linear-gradient(135deg, ${GOLD}, ${AMBER})`, borderRadius: 10, color: 'var(--on-brand)', fontWeight: 800, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 12px 30px -12px color-mix(in srgb, var(--brand-primary) 60%, transparent)' }}>
+              <Package size={15} weight="duotone" color="var(--on-brand)" /> View Bid Packages
             </a>
-            <a href={`/app/projects/${projectId}/compliance`} style={{ textDecoration: 'none', padding: '11px 18px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 10, color: '#fff', fontWeight: 700, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 7 }}>
-              <ShieldCheck size={15} weight="duotone" color="#fff" /> View Compliance
+            <a href={`/app/projects/${projectId}/compliance`} style={{ textDecoration: 'none', padding: '11px 18px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 10, color: 'var(--text-primary)', fontWeight: 700, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+              <ShieldCheck size={15} weight="duotone" color="var(--text-primary)" /> View Compliance
             </a>
             <button onClick={() => { setAutoSummary(null); setPickMode(true); }} style={{ padding: '11px 18px', background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, color: 'rgba(255,255,255,0.7)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
               Add More Manually
@@ -2515,7 +2515,7 @@ export default function TakeoffPage() {
                 <Robot size={30} weight="duotone" color={GOLD_HI} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ color: '#fff', fontWeight: 800, fontSize: 17, letterSpacing: '-0.01em' }}>Sage is building your full package…</div>
+                <div style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 17, letterSpacing: '-0.01em' }}>Sage is building your full package…</div>
                 <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13.5, marginTop: 3 }}>{progress.message || 'Working…'}</div>
               </div>
               <div style={{ color: GOLD_HI, fontWeight: 900, fontSize: 26, letterSpacing: '-0.02em' }}>{progress.pct}%</div>
@@ -2559,8 +2559,8 @@ export default function TakeoffPage() {
               how a GC ends up guessing. The individual actions below remain for
               anyone who genuinely wants one piece. */}
           <button onClick={exportXLS} disabled={!!generating}
-            style={{ padding: '11px 22px', background: 'rgba(44,255,122,0.12)', border: '1px solid rgba(44,255,122,0.3)', borderRadius: 8, color: '#2CFF7A', fontWeight: 600, fontSize: 13, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'xls') ? 0.5 : 1 }}>
-            {generating === 'xls' ? 'Generating…' : <><FileXls size={16} weight="duotone" color="#2CFF7A" style={{marginRight:4, verticalAlign:'middle'}} /> Export Excel</>}
+            style={{ padding: '11px 22px', background: 'rgba(44,255,122,0.12)', border: '1px solid rgba(44,255,122,0.3)', borderRadius: 8, color: 'var(--success)', fontWeight: 600, fontSize: 13, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'xls') ? 0.5 : 1 }}>
+            {generating === 'xls' ? 'Generating…' : <><FileXls size={16} weight="duotone" color="var(--success)" style={{marginRight:4, verticalAlign:'middle'}} /> Export Excel</>}
           </button>
           {/* The sheet-by-sheet estimate workspace shipped UNREACHABLE — no link
               anywhere in the app pointed at it (takeoff/estimate). This is its door. */}
@@ -2574,24 +2574,24 @@ export default function TakeoffPage() {
         {/* Secondary actions */}
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
           <button onClick={handleGenerateBidPackages} disabled={!!generating}
-            style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'bid-packages') ? 0.5 : 1 }}>
-            {generating === 'bid-packages' ? 'Creating…' : <><Package size={16} weight="duotone" color="#fff" style={{marginRight:4, verticalAlign:'middle'}} /> Bid Packages</>}
+            style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: 'var(--text-primary)', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'bid-packages') ? 0.5 : 1 }}>
+            {generating === 'bid-packages' ? 'Creating…' : <><Package size={16} weight="duotone" color="var(--text-primary)" style={{marginRight:4, verticalAlign:'middle'}} /> Bid Packages</>}
           </button>
           <button onClick={handleGenerateSOV} disabled={!!generating}
-            style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'sov') ? 0.5 : 1 }}>
-            {generating === 'sov' ? 'Creating…' : <><Table size={16} weight="duotone" color="#fff" style={{marginRight:4, verticalAlign:'middle'}} /> SOV</>}
+            style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: 'var(--text-primary)', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'sov') ? 0.5 : 1 }}>
+            {generating === 'sov' ? 'Creating…' : <><Table size={16} weight="duotone" color="var(--text-primary)" style={{marginRight:4, verticalAlign:'middle'}} /> SOV</>}
           </button>
           {/* Wrapped, not passed by reference: React hands an onClick handler the
               MouseEvent as its first argument, which would arrive as `nested`
               and be truthy — silently turning the standalone Budget button into
               one that never shows its own progress. */}
           <button onClick={() => handleCreateBudget()} disabled={!!generating}
-            style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'budget') ? 0.5 : 1 }}>
-            {generating === 'budget' ? 'Creating…' : <><CurrencyDollar size={16} weight="duotone" color="#fff" style={{marginRight:4, verticalAlign:'middle'}} /> Budget</>}
+            style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: 'var(--text-primary)', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'budget') ? 0.5 : 1 }}>
+            {generating === 'budget' ? 'Creating…' : <><CurrencyDollar size={16} weight="duotone" color="var(--text-primary)" style={{marginRight:4, verticalAlign:'middle'}} /> Budget</>}
           </button>
           <button onClick={handleGenerateLienWaivers} disabled={!!generating}
-            style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'lien-waivers') ? 0.5 : 1 }}>
-            {generating === 'lien-waivers' ? 'Creating…' : <><Blueprint size={16} weight="duotone" color="#fff" style={{marginRight:4, verticalAlign:'middle'}} /> Lien Waivers</>}
+            style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: 'var(--text-primary)', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'lien-waivers') ? 0.5 : 1 }}>
+            {generating === 'lien-waivers' ? 'Creating…' : <><Blueprint size={16} weight="duotone" color="var(--text-primary)" style={{marginRight:4, verticalAlign:'middle'}} /> Lien Waivers</>}
           </button>
           <button
             onClick={async () => {

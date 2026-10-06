@@ -371,7 +371,7 @@ function WizardModal({ projectId, ctx, open, onClose, onCreated }: { projectId: 
         <div>
           <div className="bpHint" style={{ marginBottom: 12 }}>Add line items for this bid package. Subs will price against these when submitting.</div>
           <div style={{ overflowX: 'auto' }}>
-            <table className="bpLines">
+            <table className="bpLines k-table-skin">
               <thead><tr><th style={{ width: '45%' }}>Description</th><th>Qty</th><th>Unit</th><th>Unit Price</th><th aria-label="Remove" /></tr></thead>
               <tbody>
                 {w.lineItems.map(li => (

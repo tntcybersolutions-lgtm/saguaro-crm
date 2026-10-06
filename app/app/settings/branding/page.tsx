@@ -31,17 +31,17 @@ import { deriveTheme, contrast, parseHex, AA_TEXT } from '@/lib/brand-theme';
 import { PageShell, Card, Badge, Button, Field, Input } from '@/components/ui/kit';
 import { layout } from '@/lib/design-tokens';
 
-const SAGUARO_GOLD = '#FFE600'; // Saguaro default brand: neon yellow
+const SAGUARO_GOLD = 'var(--brand-primary)'; // Saguaro default brand: neon yellow
 const PLATFORM_BASE = '#0d1117';
 
 /* Grounds that are known-good starting points, so nobody has to guess a hex. */
 const GROUND_PRESETS = [
   { label: 'Platform Dark', value: '' },
-  { label: 'True Black', value: '#000000' },
+  { label: 'True Black', value: 'var(--bg-base)' },
   { label: 'Charcoal', value: '#14171C' },
   { label: 'Navy', value: '#0B1524' },
   { label: 'Warm Dark', value: '#161310' },
-  { label: 'Light', value: '#F7F8FA' },
+  { label: 'Light', value: 'var(--text-primary)' },
 ];
 
 const CSS = `

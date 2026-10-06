@@ -103,7 +103,7 @@ export const MODULE_ACCENTS: Record<string, ModuleAccent> = Object.fromEntries([
   A('fieldissues',    'Field Issues',       '#D97E6A', '#F0653F'),
   A('observations',   'Observations',       '#9FB8A0', '#2CFF7A'),
   A('closeout',       'Closeout',           '#8CC0A8', '#2CFF7A'),
-  A('warranty',       'Warranty',           '#CFA96B', '#CA8A04'),
+  A('warranty',       'Warranty',           '#CFA96B', '#FF8A00'),
   A('selections',     'Selections',         '#C79BB0', '#FF8A00'),
   A('insurance',      'Insurance',          '#93B8B0', '#2CFF7A'),
 
@@ -156,7 +156,7 @@ export const MODULE_ACCENTS: Record<string, ModuleAccent> = Object.fromEntries([
   A('w9',             'W-9',                '#B8A98A', '#FF8A00'),
 ].map((a) => [a.key, a]));
 
-const FALLBACK = A('default', 'Module', '#D4D4D8', '#64748B');
+const FALLBACK = A('default', 'Module', '#D4D4D8', '#A3ACBB');
 const UNIFORM = A('brand', 'Brand', '#FFE600', '#FF8A00'); // vivid ground carries a WHITE glyph — orange, not yellow, for contrast
 
 /** Accent for a module key (route-ish string ok: '/daily', 'punch-list'...). */

@@ -59,11 +59,11 @@ export default function MarketingNav() {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }} className="mn-desktop">
             <Link href="/login" style={{ padding: '7px 18px', background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '6px', color: 'rgba(255,255,255,0.8)', fontSize: '13px', fontWeight: 400, textDecoration: 'none' }}>Log In</Link>
-            <Link href="/signup" style={{ padding: '7px 18px', background: 'var(--brand-primary)', border: 'none', borderRadius: '6px', color: '#0A0A00', fontSize: '13px', fontWeight: 600, letterSpacing: '0.03em', textDecoration: 'none' }}>Free Trial</Link>
+            <Link href="/signup" style={{ padding: '7px 18px', background: 'var(--brand-primary)', border: 'none', borderRadius: '6px', color: 'var(--on-brand)', fontSize: '13px', fontWeight: 600, letterSpacing: '0.03em', textDecoration: 'none' }}>Free Trial</Link>
           </div>
 
           <button onClick={() => setMobileOpen(!mobileOpen)} className="mn-mobile"
-            style={{ display: 'none', background: 'none', border: 'none', color: '#FFFFFF', fontSize: '22px', cursor: 'pointer', padding: '8px', minWidth: '44px', minHeight: '44px', alignItems: 'center', justifyContent: 'center' }}
+            style={{ display: 'none', background: 'none', border: 'none', color: 'var(--text-primary)', fontSize: '22px', cursor: 'pointer', padding: '8px', minWidth: '44px', minHeight: '44px', alignItems: 'center', justifyContent: 'center' }}
             aria-label="Menu">{mobileOpen ? '✕' : '☰'}</button>
         </div>
       </nav>
@@ -72,13 +72,13 @@ export default function MarketingNav() {
         <div style={{ position: 'fixed', top: '58px', left: 0, right: 0, zIndex: 9998, background: 'rgba(20,20,22,0.99)', borderBottom: '1px solid rgba(255,255,255,0.12)', padding: '8px 0', backdropFilter: 'blur(12px)' }}>
           {[...navLinks, { label: 'Log In', href: '/login' }].map(link => (
             <button key={link.href} onClick={() => scrollTo(link.href)}
-              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 24px', fontSize: '15px', fontWeight: 600, color: '#FFFFFF', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}>
+              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 24px', fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}>
               {link.label}
             </button>
           ))}
           <div style={{ padding: '16px' }}>
             <Link href="/signup" onClick={() => setMobileOpen(false)}
-              style={{ display: 'block', textAlign: 'center', padding: '13px', background: 'var(--brand-primary)', borderRadius: '9px', color: '#0A0A00', fontWeight: 600, textDecoration: 'none', fontSize: '15px' }}>
+              style={{ display: 'block', textAlign: 'center', padding: '13px', background: 'var(--brand-primary)', borderRadius: '9px', color: 'var(--on-brand)', fontWeight: 600, textDecoration: 'none', fontSize: '15px' }}>
               Start Free Trial →
             </Link>
           </div>

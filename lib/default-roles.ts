@@ -44,7 +44,7 @@ export const DEFAULT_ROLE_DEFINITIONS: DefaultRole[] = [
   },
   {
     name: 'Read-Only',
-    color: '#94A3B8',
+    color: '#A3ACBB',
     description: 'Can see everything, change nothing.',
     permissions: { Projects: 'View', Budget: 'View', Schedule: 'View', Safety: 'View', Documents: 'View', RFIs: 'View', Submittals: 'View', 'Change Orders': 'View', 'Pay Apps': 'View', Reports: 'View', Sales: 'View', Admin: 'None' },
   },

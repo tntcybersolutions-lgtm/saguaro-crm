@@ -11,16 +11,16 @@ import React from 'react';
  * grey icons.
  */
 const MAP: Record<string, { label: string; color: string }> = {
-  pdf:  { label: 'PDF',  color: '#FF3B30' },
-  doc:  { label: 'DOC',  color: '#FF8A00' }, docx: { label: 'DOCX', color: '#FF8A00' }, rtf: { label: 'RTF', color: '#FF8A00' },
+  pdf:  { label: 'PDF',  color: 'var(--danger)' },
+  doc:  { label: 'DOC',  color: 'var(--warning)' }, docx: { label: 'DOCX', color: 'var(--warning)' }, rtf: { label: 'RTF', color: 'var(--warning)' },
   xls:  { label: 'XLS',  color: '#217346' }, xlsx: { label: 'XLSX', color: '#217346' }, csv: { label: 'CSV', color: '#217346' },
   ppt:  { label: 'PPT',  color: '#D24726' }, pptx: { label: 'PPTX', color: '#D24726' },
-  png:  { label: 'PNG',  color: '#FF8A00' }, jpg: { label: 'JPG', color: '#FF8A00' }, jpeg: { label: 'JPG', color: '#FF8A00' },
-  gif:  { label: 'GIF',  color: '#FF8A00' }, webp: { label: 'WEBP', color: '#FF8A00' }, heic: { label: 'HEIC', color: '#FF8A00' }, svg: { label: 'SVG', color: '#FF8A00' },
-  mp4:  { label: 'MP4',  color: '#FF8A00' }, mov: { label: 'MOV', color: '#FF8A00' }, webm: { label: 'WEBM', color: '#FF8A00' }, m4v: { label: 'M4V', color: '#FF8A00' },
-  zip:  { label: 'ZIP',  color: '#64748B' },
-  dwg:  { label: 'DWG',  color: '#FF8A00' }, dxf: { label: 'DXF', color: '#FF8A00' }, rvt: { label: 'RVT', color: '#FF8A00' },
-  txt:  { label: 'TXT',  color: '#94A3B8' },
+  png:  { label: 'PNG',  color: 'var(--warning)' }, jpg: { label: 'JPG', color: 'var(--warning)' }, jpeg: { label: 'JPG', color: 'var(--warning)' },
+  gif:  { label: 'GIF',  color: 'var(--warning)' }, webp: { label: 'WEBP', color: 'var(--warning)' }, heic: { label: 'HEIC', color: 'var(--warning)' }, svg: { label: 'SVG', color: 'var(--warning)' },
+  mp4:  { label: 'MP4',  color: 'var(--warning)' }, mov: { label: 'MOV', color: 'var(--warning)' }, webm: { label: 'WEBM', color: 'var(--warning)' }, m4v: { label: 'M4V', color: 'var(--warning)' },
+  zip:  { label: 'ZIP',  color: 'var(--status-closed)' },
+  dwg:  { label: 'DWG',  color: 'var(--warning)' }, dxf: { label: 'DXF', color: 'var(--warning)' }, rvt: { label: 'RVT', color: 'var(--warning)' },
+  txt:  { label: 'TXT',  color: 'var(--status-closed)' },
 };
 
 /** Best-effort extension from a filename/URL, falling back to a MIME type. */
@@ -47,7 +47,7 @@ export function FileTypeBadge({
   name?: string | null; url?: string | null; mime?: string | null; size?: number; style?: React.CSSProperties;
 }) {
   const ext = fileExt(name || url, mime);
-  const meta = MAP[ext] || { label: (ext || 'FILE').toUpperCase().slice(0, 4), color: '#64748B' };
+  const meta = MAP[ext] || { label: (ext || 'FILE').toUpperCase().slice(0, 4), color: 'var(--status-closed)' };
   return (
     <span
       aria-label={`${meta.label} file`}

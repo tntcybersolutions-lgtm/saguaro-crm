@@ -12,7 +12,7 @@ import { UsersThree, Plus, PencilSimple, Trash, X, SealCheck, Warning, Star, Fir
 import { ListToolbar } from '@/components/ui/ListToolbar';
 
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#D4D4D8', TEXT = '#FFFFFF', GREEN = '#2CFF7A', RED = '#FF3B30', AMBER = 'var(--warning)';
+const DIM = 'var(--text-secondary)', TEXT = 'var(--text-primary)', GREEN = 'var(--success)', RED = 'var(--danger)', AMBER = 'var(--warning)';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const nameOf = (e: any) => (e?.full_name || `${e?.first_name ?? ''} ${e?.last_name ?? ''}`).trim() || 'Unnamed';
 const initials = (n: string) => n.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
@@ -100,7 +100,7 @@ export function PeopleDirectory() {
   const saveInc = async () => { if (!selId || (!inc.description?.trim() && !inc.title?.trim())) return; await sb.from('employee_incidents').insert({ employee_id: selId, incident_type: inc.incident_type, title: inc.title || null, description: inc.description || null, severity: inc.severity, equipment_involved: inc.equipment_involved || null, occurred_at: new Date(inc.occurred_at).toISOString(), action_taken: inc.action_taken || null, status: 'open' }); setLoggingInc(false); setInc({ incident_type: 'incident', severity: 'low', occurred_at: new Date().toISOString().slice(0, 10) }); loadDetail(selId); };
 
   const inp: React.CSSProperties = { background: DARK, border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, padding: '9px 11px', fontSize: 14, width: '100%' };
-  const btn: React.CSSProperties = { background: GOLD, color: '#0A0A00', fontWeight: 700, border: 'none', borderRadius: 8, padding: '9px 16px', cursor: 'pointer', fontSize: 14 };
+  const btn: React.CSSProperties = { background: GOLD, color: 'var(--on-brand)', fontWeight: 700, border: 'none', borderRadius: 8, padding: '9px 16px', cursor: 'pointer', fontSize: 14 };
   const unassigned = projects.filter((p) => !assigns.some((a) => a.project_id === p.id));
 
   return (

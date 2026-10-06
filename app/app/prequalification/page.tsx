@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useSort, useSortedRows, SortTh, SortBar } from '@/components/ui/sort';
+import { DataTable, type Column } from '@/components/ui/kit';
+import { StatusPill } from '@/components/ui/Status';
 import { humanError } from '@/lib/errors';
 import { SUB_TRADES as TRADES } from '@/lib/construction-intelligence';
 import { Clipboard, NotePencil, Envelope, CheckCircle, XCircle, CaretUp, CaretDown, X, ShieldCheck, Plus, WarningCircle, ChartBar, Clock } from '@phosphor-icons/react';
@@ -8,8 +9,8 @@ import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatSt
 
 /* ─── Palette ─── */
 const GOLD = 'var(--brand-primary)', BG = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)',
-  TEXT = '#FFFFFF', DIM = '#D4D4D8', GREEN = '#2CFF7A', RED = '#FF3B30',
-  AMBER = 'var(--warning)', BLUE = 'var(--brand-primary)', PURPLE = '#FF8A00';
+  TEXT = 'var(--text-primary)', DIM = 'var(--text-secondary)', GREEN = 'var(--success)', RED = 'var(--danger)',
+  AMBER = 'var(--warning)', BLUE = 'var(--brand-primary)', PURPLE = 'var(--warning)';
 
 /* ─── Types ─── */
 type QType = 'text' | 'number' | 'yes_no' | 'rating' | 'file_upload' | 'multi_choice';
@@ -51,7 +52,7 @@ function pctColor(pct: number) { return pct >= 80 ? GREEN : pct >= 60 ? AMBER : 
 
 /* ─── Shared Styles ─── */
 const inputS: React.CSSProperties = { padding: '9px 13px', background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' };
-const btnS = (bg: string, c: string = '#000'): React.CSSProperties => ({ padding: '8px 18px', background: bg, color: c, border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' });
+const btnS = (bg: string, c: string = 'var(--bg-base)'): React.CSSProperties => ({ padding: '8px 18px', background: bg, color: c, border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' });
 const cardS: React.CSSProperties = { background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: 16, marginBottom: 10 };
 const chipS = (bg: string, c: string): React.CSSProperties => ({ display: 'inline-block', padding: '3px 10px', borderRadius: 99, fontSize: 11, fontWeight: 700, background: `color-mix(in srgb, ${bg} 13%, transparent)`, color: c });
 const modalOverlay: React.CSSProperties = { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 };
@@ -167,11 +168,6 @@ function normalizeInvite(i: any): Invite {
 /* ════════════════════════════════════════════════════════════════════
    MAIN PAGE
    ════════════════════════════════════════════════════════════════════ */
-const PQ_COLS: { key: string; label: string }[] = [
-  { key: 'sub_name', label: 'Subcontractor' }, { key: 'sub_trade', label: 'Trade' }, { key: 'score', label: 'Score' }, { key: 'status', label: 'Status' },
-  { key: 'submitted_at', label: 'Submitted' }, { key: 'expires_at', label: 'Prequal Expires' }, { key: 'docs', label: 'Docs' }, { key: '', label: 'Actions' },
-];
-
 export default function PrequalificationPage() {
   const [tab, setTab] = useState<'dashboard' | 'submissions' | 'templates' | 'invites'>('dashboard');
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -239,13 +235,34 @@ export default function PrequalificationPage() {
       return true;
     });
   }, [submissions, statusFilter, tradeFilter, scoreMin, search]);
-  const pqSort = useSort(null);
-  const pqSortValue = useCallback((s: (typeof submissions)[number], key: string): unknown => {
-    if (key === 'score') return s.max_score > 0 ? s.total_score / s.max_score : 0;
-    if (key === 'docs') return s.documents.length ? s.documents.filter(d => d.uploaded).length / s.documents.length : null;
-    return (s as unknown as Record<string, unknown>)[key];
-  }, []);
-  const sortedSubmissions = useSortedRows(filtered, pqSort.sort, pqSortValue);
+  const columns: Column<Submission>[] = [
+    { key: 'sub_name', header: 'Subcontractor', primary: true, phone: 'show', accessor: s => s.sub_name || '',
+      render: s => (
+        <span className="k-name">
+          <span className="k-avatar" aria-hidden>{(s.sub_name || '?').split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() || '').join('')}</span>
+          <span className="k-name-text"><span>{s.sub_name}</span><span>{s.sub_email}</span></span>
+        </span>
+      ) },
+    { key: 'sub_trade', header: 'Trade', phone: 'show', accessor: s => s.sub_trade || '', render: s => s.sub_trade || '—' },
+    { key: 'score', header: 'Score', phone: 'show', accessor: s => (s.max_score > 0 ? s.total_score / s.max_score : 0),
+      render: s => { const pct = s.max_score > 0 ? Math.round((s.total_score / s.max_score) * 100) : 0; return <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><span style={{ fontWeight: 800, color: pctColor(pct) }}>{pct}%</span><span style={{ fontSize: 12, color: DIM }}>({s.total_score}/{s.max_score})</span></span>; } },
+    { key: 'status', header: 'Status', phone: 'show', accessor: s => s.status, render: s => <StatusPill module="prequalification" status={s.status} size="sm" /> },
+    { key: 'submitted_at', header: 'Submitted', phone: 'hide', accessor: s => s.submitted_at || '', render: s => fmtDate(s.submitted_at) },
+    { key: 'expires_at', header: 'Prequal Expires', phone: 'show', accessor: s => s.expires_at || '',
+      render: s => { if (!s.expires_at) return '—'; const dl = daysUntil(s.expires_at); return dl <= 0 ? <StatusPill module="paperwork" status="expired" size="sm" /> : dl <= 30 ? <StatusPill module="paperwork" status="expiring" label={`${fmtDate(s.expires_at)} · ${dl}d`} size="sm" /> : <span>{fmtDate(s.expires_at)}</span>; } },
+    { key: 'docs', header: 'Docs', phone: 'show', accessor: s => (s.documents.length ? s.documents.filter(d => d.uploaded).length / s.documents.length : null),
+      render: s => { const ok = s.documents.filter(d => d.uploaded).length; const t = s.documents.length; return <span style={{ color: ok === t ? GREEN : AMBER, fontWeight: 700 }}>{ok}/{t}</span>; } },
+    { key: 'actions', header: 'Actions', sortable: false, phone: 'show',
+      render: s => (
+        <span style={{ display: 'inline-flex', gap: 6 }} onClick={e => e.stopPropagation()}>
+          {s.status === 'pending' && <button className="k-btn k-btn-secondary k-btn-sm" onClick={() => updateStatus(s.id, 'under_review')}>Start Review</button>}
+          {s.status === 'under_review' && <>
+            <button className="k-btn k-btn-primary k-btn-sm" onClick={() => updateStatus(s.id, 'approved')}>Approve</button>
+            <button className="k-btn k-btn-secondary k-btn-sm" style={{ color: RED }} onClick={() => updateStatus(s.id, 'rejected')}>Reject</button>
+          </>}
+        </span>
+      ) },
+  ];
 
   /* ─── Dashboard stats ─── */
   const stats = useMemo(() => {
@@ -690,59 +707,15 @@ export default function PrequalificationPage() {
                 </SectionCard>
               ) : (
                 <SectionCard flush>
-                <div style={{ overflowX: 'auto' }}>
-                  <SortBar columns={PQ_COLS.filter(c => c.key)} sort={pqSort.sort} onChange={pqSort.setSort} />
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                      <tr style={{ background: RAISED }}>
-                        {PQ_COLS.map(c => c.key
-                          ? <SortTh key={c.key} col={c.key} label={c.label} sort={pqSort.sort} onSort={pqSort.cycle} style={tableHeaderS} />
-                          : <th key={c.label} style={tableHeaderS}>{c.label}</th>)}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {sortedSubmissions.map(s => {
-                        const pct = s.max_score > 0 ? Math.round((s.total_score / s.max_score) * 100) : 0;
-                        const docsOk = s.documents.filter(d => d.uploaded).length;
-                        const docsTotal = s.documents.length;
-                        return (
-                          <tr key={s.id} style={{ cursor: 'pointer', transition: 'background .1s' }} onClick={() => setShowDetail(s.id)} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                            <td style={tableCellS}>
-                              <div style={{ fontWeight: 600 }}>{s.sub_name}</div>
-                              <div style={{ fontSize: 11, color: DIM }}>{s.sub_email}</div>
-                            </td>
-                            <td style={tableCellS}><span style={chipS(PURPLE, PURPLE)}>{s.sub_trade}</span></td>
-                            <td style={tableCellS}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <span style={{ fontWeight: 700, color: pctColor(pct) }}>{pct}%</span>
-                                <span style={{ fontSize: 11, color: DIM }}>({s.total_score}/{s.max_score})</span>
-                              </div>
-                            </td>
-                            <td style={tableCellS}><StatusBadge status={s.status} /></td>
-                            <td style={tableCellS}>{fmtDate(s.submitted_at)}</td>
-                            <td style={tableCellS}>{s.expires_at ? (() => { const dl = daysUntil(s.expires_at); return (
-                              <span style={{ color: dl <= 0 ? RED : dl <= 30 ? AMBER : DIM, fontWeight: dl <= 30 ? 700 : 500 }}>
-                                {dl <= 0 ? 'Expired' : `${fmtDate(s.expires_at)} · ${dl}d`}
-                              </span>
-                            ); })() : <span style={{ color: DIM }}>—</span>}</td>
-                            <td style={tableCellS}>
-                              <span style={{ color: docsOk === docsTotal ? GREEN : AMBER, fontWeight: 600, fontSize: 12 }}>{docsOk}/{docsTotal}</span>
-                            </td>
-                            <td style={tableCellS} onClick={e => e.stopPropagation()}>
-                              <div style={{ display: 'flex', gap: 6 }}>
-                                {s.status === 'pending' && <button style={{ ...btnS(`color-mix(in srgb, ${BLUE} 20%, transparent)`, BLUE), padding: '4px 10px', fontSize: 11 }} onClick={() => updateStatus(s.id, 'under_review')}>Review</button>}
-                                {s.status === 'under_review' && <>
-                                  <button style={{ ...btnS(`color-mix(in srgb, ${GREEN} 20%, transparent)`, GREEN), padding: '4px 10px', fontSize: 11 }} onClick={() => updateStatus(s.id, 'approved')}>Approve</button>
-                                  <button style={{ ...btnS(`color-mix(in srgb, ${RED} 20%, transparent)`, RED), padding: '4px 10px', fontSize: 11 }} onClick={() => updateStatus(s.id, 'rejected')}>Reject</button>
-                                </>}
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                <DataTable<Submission>
+                  columns={columns}
+                  rows={filtered}
+                  rowKey={s => s.id}
+                  defaultSort={{ key: 'submitted_at', dir: 'desc' }}
+                  onRowClick={s => setShowDetail(s.id)}
+                  isSelected={s => showDetail === s.id}
+                  empty="No submissions match."
+                />
                 </SectionCard>
               )}
             </div>
@@ -832,7 +805,7 @@ export default function PrequalificationPage() {
               ) : (
                 <SectionCard flush>
                 <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: RAISED }}>
                       <th style={tableHeaderS}>Subcontractor</th>
@@ -994,10 +967,10 @@ export default function PrequalificationPage() {
               {detailSub.status === 'pending' && <button style={btnS(BLUE, TEXT)} onClick={() => { updateStatus(detailSub.id, 'under_review'); }}>Start Review</button>}
               {detailSub.status === 'under_review' && <>
                 <button style={btnS(RED, TEXT)} onClick={() => { updateStatus(detailSub.id, 'rejected'); }}>Reject</button>
-                <button style={btnS(GREEN, '#000')} onClick={() => { updateStatus(detailSub.id, 'approved'); }}>Approve</button>
+                <button style={btnS(GREEN, 'var(--bg-base)')} onClick={() => { updateStatus(detailSub.id, 'approved'); }}>Approve</button>
               </>}
               {(detailSub.status === 'approved' || detailSub.status === 'rejected') && (
-                <button style={btnS(AMBER, '#000')} onClick={() => { updateStatus(detailSub.id, 'under_review'); }}>Reopen Review</button>
+                <button style={btnS(AMBER, 'var(--bg-base)')} onClick={() => { updateStatus(detailSub.id, 'under_review'); }}>Reopen Review</button>
               )}
               <button style={btnS(BORDER, TEXT)} onClick={() => handleExport('pdf')}>Print / Export</button>
             </div>

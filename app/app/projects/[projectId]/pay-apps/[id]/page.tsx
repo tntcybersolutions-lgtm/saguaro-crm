@@ -480,7 +480,7 @@ export default function PayAppDetailPage() {
                   <span>{fmt(sovCompleted)} of {fmt(contractToDate)} · balance {fmt(contractToDate - sovCompleted)}</span>
                 </div>
                 <div className="pdTableWrap">
-                  <table className="pdTable">
+                  <table className="pdTable k-table-skin">
                     <thead>
                       <tr>
                         <th>#</th>

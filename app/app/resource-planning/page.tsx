@@ -1,4 +1,5 @@
 'use client';
+import { StatusPill } from '@/components/ui/Status';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useProjects } from '@/lib/hooks/useProjects';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
@@ -12,7 +13,7 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 
-const GOLD='var(--brand-primary)',BG = 'var(--bg-base)',RAISED = 'var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',TEXT='#FFFFFF',DIM='#D4D4D8',GREEN='#2CFF7A',RED='#FF3B30',AMBER ='var(--warning)',BLUE='var(--brand-primary)',PURPLE='#FF8A00';
+const GOLD='var(--brand-primary)',BG = 'var(--bg-base)',RAISED = 'var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',TEXT='var(--text-primary)',DIM='var(--text-secondary)',GREEN='var(--success)',RED='var(--danger)',AMBER ='var(--warning)',BLUE='var(--brand-primary)',PURPLE='var(--warning)';
 
 /* ===== TYPES ===== */
 interface Assignment {
@@ -45,14 +46,14 @@ type Tab = 'grid' | 'timeline' | 'people' | 'staffing' | 'utilization' | 'availa
 /* ===== STYLE HELPERS ===== */
 function btn(primary?: boolean): React.CSSProperties {
   return primary
-    ? { padding: '8px 18px', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 7, color: '#0A0A00', fontSize: 13, fontWeight: 800, cursor: 'pointer', transition: 'opacity .15s' }
+    ? { padding: '8px 18px', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 7, color: 'var(--on-brand)', fontSize: 13, fontWeight: 800, cursor: 'pointer', transition: 'opacity .15s' }
     : { padding: '8px 18px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 7, color: DIM, fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'opacity .15s' };
 }
 function inp(): React.CSSProperties {
   return { width: '100%', padding: '8px 12px', background: BG, border: `1px solid ${BORDER}`, borderRadius: 7, color: TEXT, fontSize: 13, outline: 'none', boxSizing: 'border-box' as const };
 }
 function Badge({ label, color }: { label: string; color: string }) {
-  return <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, background: `color-mix(in srgb, ${color} 13%, transparent)`, color }}>{String(label).replace(/_/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase())}</span>;
+  return <span style={{ display: 'inline-flex', alignItems: 'center', fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 999, background: `color-mix(in srgb, ${color} 16%, transparent)`, border: `1px solid color-mix(in srgb, ${color} 50%, transparent)`, color, whiteSpace: 'nowrap' }}>{String(label).replace(/_/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase())}</span>;
 }
 function Card({ title, children, action, icon }: { title: string; children: React.ReactNode; action?: React.ReactNode; icon?: React.ReactNode }) {
   return <SectionCard flat title={title} action={action} icon={icon} style={{ marginBottom: 18 }}>{children}</SectionCard>;
@@ -704,7 +705,7 @@ export default function ResourcePlanningPage() {
                   const isCurrentWeek = wStart <= isoDate(new Date()) && wEnd >= isoDate(new Date());
                   const active = asns.filter(a => a.start_date <= wEnd && a.end_date >= wStart && a.status !== 'released');
                   return <div key={wi} style={{ borderLeft: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)`, height: '100%', padding: '2px 1px', display: 'flex', flexDirection: 'column', gap: 1, background: isCurrentWeek ? `color-mix(in srgb, ${GOLD} 2%, transparent)` : 'transparent' }}>
-                    {active.map((a, ai) => <div key={ai} title={`${projMap[a.project_id] || '?'} (${a.role}) — ${a.hours_per_day}h/day`} onClick={() => editAssignment(a)} style={{ height: active.length > 1 ? 10 : 20, borderRadius: 3, background: STATUS_COLORS[a.status] || BLUE, opacity: .85, fontSize: 8, color: '#fff', overflow: 'hidden', whiteSpace: 'nowrap', padding: '0 3px', lineHeight: active.length > 1 ? '10px' : '20px', fontWeight: 700, cursor: 'pointer' }}>
+                    {active.map((a, ai) => <div key={ai} title={`${projMap[a.project_id] || '?'} (${a.role}) — ${a.hours_per_day}h/day`} onClick={() => editAssignment(a)} style={{ height: active.length > 1 ? 10 : 20, borderRadius: 3, background: STATUS_COLORS[a.status] || BLUE, opacity: .85, fontSize: 8, color: 'var(--text-primary)', overflow: 'hidden', whiteSpace: 'nowrap', padding: '0 3px', lineHeight: active.length > 1 ? '10px' : '20px', fontWeight: 700, cursor: 'pointer' }}>
                       {active.length <= 2 ? (projMap[a.project_id] || '').slice(0, 12) : ''}
                     </div>)}
                   </div>;
@@ -735,7 +736,7 @@ export default function ResourcePlanningPage() {
           return <div key={name} style={{ background: `color-mix(in srgb, ${BG} 50%, transparent)`, border: `1px solid ${isConflict ? RED : BORDER}`, borderRadius: 8, padding: 16, marginBottom: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 36, height: 36, borderRadius: '50%', background: `linear-gradient(135deg,${GOLD},#FF8A00)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: '#1C1C1E' }}>{name.charAt(0)}</div>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', background: `linear-gradient(135deg,${GOLD},#FF8A00)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: 'var(--surface-raised)' }}>{name.charAt(0)}</div>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>{name}</div>
                   <div style={{ fontSize: 11, color: DIM }}>{asns[0]?.trade} - {asns[0]?.role}</div>
@@ -757,14 +758,14 @@ export default function ResourcePlanningPage() {
               {asns[0].certifications.map(c => <span key={c} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: `color-mix(in srgb, ${PURPLE} 9%, transparent)`, color: PURPLE, fontWeight: 600 }}>{c}</span>)}
             </div>}
             {/* Assignment rows */}
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead><tr>{['Project', 'Dates', 'Hrs/Day', 'Rate', 'Status', 'Actions'].map(h => <th key={h} style={{ padding: '5px 8px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: DIM, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 19%, transparent)` }}>{h}</th>)}</tr></thead>
               <tbody>{asns.map(a => <tr key={a.id || a.project_id + a.start_date}>
                 <td style={{ padding: '6px 8px', color: TEXT, fontWeight: 600 }}>{projMap[a.project_id] || a.project_id}</td>
                 <td style={{ padding: '6px 8px', color: DIM }}>{fmtDate(a.start_date)} – {fmtDate(a.end_date)}</td>
                 <td style={{ padding: '6px 8px', color: DIM }}>{a.hours_per_day}h x {a.days_per_week}d</td>
                 <td style={{ padding: '6px 8px', color: GOLD, fontWeight: 600 }}>{fmtMoney(a.hourly_rate)}/hr</td>
-                <td style={{ padding: '6px 8px' }}><Badge label={a.status} color={STATUS_COLORS[a.status]} /></td>
+                <td style={{ padding: '6px 8px' }}><StatusPill module="resource_assignments" status={a.status} size="sm" /></td>
                 <td style={{ padding: '6px 8px' }}>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button onClick={() => editAssignment(a)} style={{ ...btn(), padding: '3px 8px', fontSize: 11 }}>Edit</button>
@@ -790,7 +791,7 @@ export default function ResourcePlanningPage() {
             <Badge label={proj.status || 'active'} color={GREEN} />
           </div>}>
             {projAsns.length === 0 ? <div style={{ padding: 16, textAlign: 'center', color: DIM, fontSize: 13 }}>No assignments for this project.</div>
-              : <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+              : <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead><tr>{['Person', 'Role', 'Trade', 'Dates', 'Hours', 'Rate', 'Status', 'Reassign', 'Actions'].map(h => <th key={h} style={{ padding: '5px 8px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: DIM, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 19%, transparent)` }}>{h}</th>)}</tr></thead>
                 <tbody>{projAsns.map(a => <tr key={a.id || a.person_name + a.start_date} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)`, background: conflictPersons.has(a.person_name) ? `color-mix(in srgb, ${RED} 2%, transparent)` : 'transparent' }}>
                   <td style={{ padding: '6px 8px', color: conflictPersons.has(a.person_name) ? RED : TEXT, fontWeight: 600 }}>
@@ -802,7 +803,7 @@ export default function ResourcePlanningPage() {
                   <td style={{ padding: '6px 8px', color: DIM }}>{fmtDate(a.start_date)} – {fmtDate(a.end_date)}</td>
                   <td style={{ padding: '6px 8px', color: DIM }}>{a.hours_per_day}h/{a.days_per_week}d</td>
                   <td style={{ padding: '6px 8px', color: GOLD, fontWeight: 600 }}>{fmtMoney(a.hourly_rate)}</td>
-                  <td style={{ padding: '6px 8px' }}><Badge label={a.status} color={STATUS_COLORS[a.status]} /></td>
+                  <td style={{ padding: '6px 8px' }}><StatusPill module="resource_assignments" status={a.status} size="sm" /></td>
                   <td style={{ padding: '6px 8px' }}>
                     <button onClick={() => setReassignTarget({ assignment: a, show: true })} style={{ ...btn(), padding: '3px 8px', fontSize: 10 }}>Move</button>
                   </td>
@@ -936,7 +937,7 @@ export default function ResourcePlanningPage() {
         </div>
         {/* Forecast table */}
         <Card title="Forecast Detail" icon={<ClipboardText size={17} weight="duotone" color="var(--brand-primary)" />}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr>{['Month', 'Headcount', 'FTEs', 'Labor Cost', 'Avg Cost/Person', 'Trend'].map(h => <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>)}</tr></thead>
             <tbody>{forecast.map((f, fi) => {
               const prevCount = fi > 0 ? forecast[fi - 1].count : f.count;
@@ -960,7 +961,7 @@ export default function ResourcePlanningPage() {
       {!loading && tab === 'costs' && <div>
         <Card title="Labor Cost by Project" icon={<CurrencyDollar size={17} weight="duotone" color="var(--brand-primary)" />}>
           {projectCosts.length === 0 && <div style={{ padding: 32, textAlign: 'center', color: DIM }}>No cost data available.</div>}
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr>{['Project', 'Headcount', 'Total Hours', 'Labor Cost', 'Avg Rate', 'Cost Bar'].map(h => <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>)}</tr></thead>
             <tbody>{projectCosts.map(pc => <tr key={pc.project} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
               <td style={{ padding: '10px 12px', color: TEXT, fontWeight: 700 }}>{pc.project}</td>
@@ -1008,7 +1009,7 @@ export default function ResourcePlanningPage() {
               });
               const trades = Object.entries(tradeMap).sort((a, b) => b[1].cost - a[1].cost);
               const maxTradeCost = Math.max(1, ...trades.map(([, v]) => v.cost));
-              return <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              return <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead><tr>{['Trade', 'Assignments', 'Hours', 'Cost', 'Avg Rate', ''].map(h => <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>)}</tr></thead>
                 <tbody>{trades.map(([trade, v]) => <tr key={trade} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                   <td style={{ padding: '8px 12px', color: TEXT, fontWeight: 600 }}>{trade}</td>

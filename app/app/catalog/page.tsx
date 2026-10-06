@@ -58,7 +58,7 @@ import {
   ORDER_PATH_SENTENCE,
 } from '@/app/api/catalog/stock';
 
-const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', BORDER = 'rgba(255,255,255,0.12)', DIM = '#D4D4D8', TEXT = '#FFFFFF', GREEN = '#2CFF7A', AMBER = 'var(--brand-primary-strong)', RED = '#FF3B30';
+const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', BORDER = 'rgba(255,255,255,0.12)', DIM = 'var(--text-secondary)', TEXT = 'var(--text-primary)', GREEN = 'var(--success)', AMBER = 'var(--brand-primary-strong)', RED = 'var(--danger)';
 
 const fmtMoney = (n: number) => '$' + ((Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 const fmtDate = (d?: string | null) => {
@@ -249,18 +249,18 @@ function ProvPop({ offer, item }: { offer: Offer; item: CatalogItem }) {
 /** Vertical accent + icon for the monogram chip. Keys mirror the catalog's
  *  seeded verticals; unknown verticals fall back to gold + Package. */
 const VERTICAL_VISUAL: Record<string, { icon: React.ElementType; hue: string }> = {
-  'Low Voltage & Networking': { icon: PlugsConnected, hue: '#FF8A00' },
-  Electrical: { icon: Lightning, hue: '#FFE600' },
-  Plumbing: { icon: Drop, hue: '#FF8A00' },
-  HVAC: { icon: Fan, hue: '#2CFF7A' },
-  'Flooring & Carpet': { icon: SquaresFour, hue: '#FF8A00' },
-  Drywall: { icon: Wall, hue: '#FF8A00' },
-  Paint: { icon: PaintRoller, hue: '#FB7185' },
-  'Framing & Lumber': { icon: Tree, hue: '#2CFF7A' },
-  Concrete: { icon: Cube, hue: '#94A3B8' },
-  Roofing: { icon: HouseLine, hue: '#FF8A00' },
-  'Doors & Windows': { icon: Door, hue: '#2CFF7A' },
-  Insulation: { icon: Snowflake, hue: '#FF8A00' },
+  'Low Voltage & Networking': { icon: PlugsConnected, hue: 'var(--warning)' },
+  Electrical: { icon: Lightning, hue: 'var(--brand-primary)' },
+  Plumbing: { icon: Drop, hue: 'var(--warning)' },
+  HVAC: { icon: Fan, hue: 'var(--success)' },
+  'Flooring & Carpet': { icon: SquaresFour, hue: 'var(--warning)' },
+  Drywall: { icon: Wall, hue: 'var(--warning)' },
+  Paint: { icon: PaintRoller, hue: 'var(--danger)' },
+  'Framing & Lumber': { icon: Tree, hue: 'var(--success)' },
+  Concrete: { icon: Cube, hue: 'var(--status-closed)' },
+  Roofing: { icon: HouseLine, hue: 'var(--warning)' },
+  'Doors & Windows': { icon: Door, hue: 'var(--success)' },
+  Insulation: { icon: Snowflake, hue: 'var(--warning)' },
 };
 
 /** 40px image slot: the real product image when one exists (click opens the
@@ -578,7 +578,7 @@ export default function CatalogPage() {
       `}</style>
       <ModuleHero
         eyebrow="Pre-Construction"
-        eyebrowIcon={<IconChip size={24} vivid={moduleAccent('catalog').vivid ?? moduleAccent('catalog').hex}><Storefront size={13} weight="fill" color="#F8FAFC" /></IconChip>}
+        eyebrowIcon={<IconChip size={24} vivid={moduleAccent('catalog').vivid ?? moduleAccent('catalog').hex}><Storefront size={13} weight="fill" color="var(--text-primary)" /></IconChip>}
         accentColor={moduleAccent('catalog').hex}
         title="Materials"
         accent="Catalog"
@@ -737,7 +737,7 @@ export default function CatalogPage() {
           />
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: 12, minWidth: 1040 }}>
+            <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' as const }}>
               <thead>
                 <tr>
                   <SortableTh label="Add to Order" sort={colSort} onSort={cycleSort} style={{ padding: '9px 12px', minWidth: 132 }} />
@@ -795,7 +795,7 @@ export default function CatalogPage() {
                               style={{
                                 display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 13px',
                                 background: it.prices.length ? `linear-gradient(180deg,var(--brand-primary-strong),${GOLD} 60%,var(--brand-primary-hover))` : 'rgba(255,255,255,0.06)',
-                                border: 'none', borderRadius: 8, color: it.prices.length ? '#0A0A00' : 'rgba(255,255,255,0.3)',
+                                border: 'none', borderRadius: 8, color: it.prices.length ? 'var(--on-brand)' : 'rgba(255,255,255,0.3)',
                                 fontSize: 11.5, fontWeight: 900, cursor: it.prices.length ? 'pointer' : 'not-allowed',
                                 boxShadow: it.prices.length ? '0 2px 8px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' : 'none',
                               }}

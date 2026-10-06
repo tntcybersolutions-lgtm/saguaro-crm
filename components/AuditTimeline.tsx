@@ -5,25 +5,25 @@ const GOLD = 'var(--brand-primary)';
 const DARK = 'var(--bg-surface-2)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#D4D4D8';
-const TEXT = '#FFFFFF';
+const DIM = 'var(--text-secondary)';
+const TEXT = 'var(--text-primary)';
 
 const ACTION_COLORS: Record<string, string> = {
   create: '#2ea043',
   created: '#2ea043',
   insert: '#2ea043',
-  update: '#FF8A00',
-  updated: '#FF8A00',
-  edit: '#FF8A00',
+  update: 'var(--warning)',
+  updated: 'var(--warning)',
+  edit: 'var(--warning)',
   status_change: '#d29922',
   status_updated: '#d29922',
   approved: '#d29922',
   rejected: '#d29922',
   submitted: '#d29922',
-  delete: '#FF3B30',
-  deleted: '#FF3B30',
-  removed: '#FF3B30',
-  archive: '#FF3B30',
+  delete: 'var(--danger)',
+  deleted: 'var(--danger)',
+  removed: 'var(--danger)',
+  archive: 'var(--danger)',
 };
 
 function getActionColor(action: string): string {
@@ -138,7 +138,7 @@ export default function AuditTimeline({ entityType, entityId }: AuditTimelinePro
 
   if (error) {
     return (
-      <div style={{ padding: 16, color: '#FF3B30', fontSize: 13 }}>
+      <div style={{ padding: 16, color: 'var(--danger)', fontSize: 13 }}>
         Error: {error}
       </div>
     );
@@ -262,7 +262,7 @@ export default function AuditTimeline({ entityType, entityId }: AuditTimelinePro
                         <span style={{ color: DIM }}>{fieldLabel}: </span>
                         {prevVal !== undefined ? (
                           <>
-                            <span style={{ color: '#FF3B30', textDecoration: 'line-through' }}>
+                            <span style={{ color: 'var(--danger)', textDecoration: 'line-through' }}>
                               {formatValue(prevVal)}
                             </span>
                             <span style={{ color: DIM, margin: '0 4px' }}>&rarr;</span>

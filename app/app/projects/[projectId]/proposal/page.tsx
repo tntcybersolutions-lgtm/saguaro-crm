@@ -9,7 +9,7 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { openPdf } from '@/components/PdfViewer';
 
-const GOLD='var(--brand-primary)', RAISED='var(--bg-surface-2)', BORDER='rgba(255,255,255,0.12)', DIM='#D4D4D8', TEXT='#FFFFFF', GREEN='#2CFF7A', RED='#FF3B30';
+const GOLD='var(--brand-primary)', RAISED='var(--bg-surface-2)', BORDER='rgba(255,255,255,0.12)', DIM='var(--text-secondary)', TEXT='var(--text-primary)', GREEN='var(--success)', RED='var(--danger)';
 
 interface Proposal {
   id: string;
@@ -23,11 +23,11 @@ interface Proposal {
 }
 
 const STATUS_MAP: Record<string, { bg: string; color: string }> = {
-  Draft: { bg: 'rgba(143,163,192,.2)', color: DIM },
+  Draft: { bg: 'rgba(163,172,187,.2)', color: DIM },
   Sent: { bg: 'color-mix(in srgb, var(--brand-primary) 20%, transparent)', color: 'var(--brand-primary-strong)' },
   Under_Review: { bg: 'color-mix(in srgb, var(--warning) 20%, transparent)', color: 'var(--warning)' },
   Accepted: { bg: 'rgba(44,255,122,.2)', color: GREEN },
-  Superseded: { bg: 'rgba(143,163,192,.2)', color: DIM },
+  Superseded: { bg: 'rgba(163,172,187,.2)', color: DIM },
   Rejected: { bg: 'rgba(255,59,48,.2)', color: RED },
   Declined: { bg: 'rgba(255,59,48,.2)', color: RED },
 };
@@ -42,7 +42,7 @@ const EMPTY_FORM = { amount: 0, notes: '' };
 const statusKey = (s: string | null | undefined) => String(s || '').trim().toLowerCase().replace(/\s+/g, '_');
 const statusLabel = (s: string | null | undefined) =>
   statusKey(s).split('_').filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || '—';
-const statusStyle = (s: string | null | undefined) => STATUS_MAP[statusLabel(s).replace(/ /g, '_')] || { bg: 'rgba(143,163,192,.2)', color: DIM };
+const statusStyle = (s: string | null | undefined) => STATUS_MAP[statusLabel(s).replace(/ /g, '_')] || { bg: 'rgba(163,172,187,.2)', color: DIM };
 
 // The API returns raw `proposals` rows (proposal_number / created_at /
 // description) that don't match this page's display fields (version /
@@ -352,7 +352,7 @@ export default function ProposalPage() {
           />
         ) : (
           <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: 'rgba(255,255,255,0.03)' }}>
                   {['Version','Created','Amount','Status','Notes','Actions'].map(h => (

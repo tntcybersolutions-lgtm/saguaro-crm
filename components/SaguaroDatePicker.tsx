@@ -11,10 +11,10 @@ import { createPortal } from 'react-dom';
    LOCAL time (never UTC-shifted).
    ──────────────────────────────────────────────────────────────────── */
 
-const FIELD_BG = '#1c1c1e';
+const FIELD_BG = 'var(--surface-raised)';
 const SURFACE = '#101011';
 const BORDER = 'var(--border-default)';
-const TEXT = '#FFFFFF';
+const TEXT = 'var(--text-primary)';
 const TEXT_DIM = 'rgba(255,255,255,0.55)';
 const TEXT_FAINT = 'rgba(255,255,255,0.30)';
 const GOLD = 'var(--gold)';
