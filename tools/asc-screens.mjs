@@ -161,6 +161,9 @@ const PROOF = [
   ['project-overview', '/app/projects/{project}/overview', null, false],
   ['job-picker-open', '/app/projects/{project}/pay-apps', 'picker', false],
   ['menu-with-job-button', '/app/projects/{project}/overview', 'menu', false],
+  ['photos', '/app/projects/{project}/photos', null, false],
+  ['photos-add-open', '/app/projects/{project}/photos', 'addphoto', false],
+  ['files-upload-video', '/app/projects/{project}/files', null, false],
   ['pay-apps', '/app/projects/{project}/pay-apps', null, false],
   ['rfis', '/app/projects/{project}/rfis', null, false],
   ['projects', '/app/projects', null, false],
@@ -209,6 +212,7 @@ async function proof() {
         if (action === 'create') await page.click('.hv2-create button');
         // The phone keeps the job button in the menu drawer; desktop has it in the top bar already.
         if (action === 'menu' && kind === 'phone') await page.click('.mobile-hamburger-topbar').catch(() => {});
+        if (action === 'addphoto') await page.click('button:has-text("Add Photo"), button:has-text("Add First Photo")');
         if (action === 'picker') {
           // On a phone the picker lives in the menu drawer.
           if (kind === 'phone') { await page.click('.mobile-hamburger-topbar').catch(() => {}); await page.waitForTimeout(600); }
