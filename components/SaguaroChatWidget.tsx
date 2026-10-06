@@ -657,12 +657,12 @@ export default function SaguaroChatWidget({
           )}
           <button
             onClick={handleOpen}
-            onMouseEnter={(e) => { handleLauncherMouseEnter(); e.currentTarget.style.borderColor = 'rgba(255,255,255,0.24)'; e.currentTarget.style.background = '#18222f'; }}
-            onMouseLeave={(e) => { handleLauncherMouseLeave(); e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.background = '#131A24'; }}
+            onMouseEnter={(e) => { handleLauncherMouseEnter(); e.currentTarget.style.borderColor = 'rgba(255,255,255,0.24)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--c-yellow) 10%, var(--c-raised))'; }}
+            onMouseLeave={(e) => { handleLauncherMouseLeave(); e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.background = 'var(--c-raised)'; }}
             aria-label="Chat with Sage"
             style={{
               width: 52, height: 52, borderRadius: '50%',
-              background: '#131A24', border: '1px solid rgba(255,255,255,0.12)',
+              background: 'var(--c-raised)', border: '1px solid var(--brand-primary-25)',
               cursor: 'pointer', padding: 0, position: 'relative',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: '0 6px 20px rgba(0,0,0,0.45)',

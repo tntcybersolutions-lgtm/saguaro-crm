@@ -1627,15 +1627,29 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
     background: rgba(255, 230, 0, 0.16);
     color: var(--c-yellow);
   }
+  /* A long job name ends in "…" instead of running off a phone screen; the
+     list itself never grows past the viewport. The checked row is already
+     marked by its fill, so the tick is dropped to give the name the room. */
+  .sag-app select:not([multiple]):not([size])::picker(select) {
+    max-width: calc(100vw - 24px);
+  }
+  .sag-app select:not([multiple]):not([size]) option {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 22px;
+  }
   .sag-app select:not([multiple]):not([size]) option::checkmark {
-    order: 2;
-    margin-inline-start: auto;
-    color: var(--c-yellow);
+    display: none;
   }
 }
 /* Job colour dot on job options: <option style={jobOptionStyle(p)}>. */
 .sag-app option[style*="--dot"]::before {
   content: "";
+  display: inline-block;
+  vertical-align: middle;
+  margin: -2px 10px 0 0;
   flex: none;
   width: 9px;
   height: 9px;
@@ -1650,4 +1664,19 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 .k-modal,
 .k-menu-list {
   background-color: var(--c-card);
+}
+
+/* Desktop: the Sage launcher peeks from the right edge instead of sitting on
+   the page, so it never covers the last row of a table (it hid the W-9 pill
+   on /app/subs at 1440). Hover or keyboard focus slides it fully out. */
+@media (min-width: 768px) {
+  .sag-chat-launcher {
+    right: 0 !important;
+    transform: translateX(24px);
+    transition: transform .22s ease;
+  }
+  .sag-chat-launcher:hover,
+  .sag-chat-launcher:focus-within {
+    transform: translateX(-16px);
+  }
 }
