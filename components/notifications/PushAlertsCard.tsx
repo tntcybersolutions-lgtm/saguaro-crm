@@ -62,8 +62,13 @@ export default function PushAlertsCard() {
       setState(s);
       if (s === 'on') setMsg({ tone: 'good', text: 'Alerts are on. Send yourself a test to see one.' });
       else if (s === 'blocked') setMsg({ tone: 'bad', text: 'Notifications were blocked for Saguaro on this device.' });
-    } catch {
-      setMsg({ tone: 'bad', text: 'Couldn’t turn alerts on. Check your connection and try again.' });
+    } catch (e) {
+      // Chrome refuses push in private / incognito windows with an AbortError
+      // ("Registration failed - permission denied") even when notifications are allowed.
+      const denied = e instanceof DOMException && (e.name === 'AbortError' || e.name === 'NotAllowedError');
+      setMsg({ tone: 'bad', text: denied
+        ? 'This browser won’t allow alerts here. Private or incognito windows can’t get them — open Saguaro in a normal window and try again.'
+        : 'Couldn’t turn alerts on. Check your connection and try again.' });
     } finally { setBusy(''); }
   };
   const off = async () => {
