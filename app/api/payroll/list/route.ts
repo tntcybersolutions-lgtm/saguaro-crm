@@ -7,7 +7,7 @@ import { apiError } from '@/lib/api-error';
  *
  * Returns the certified-payroll (WH-347) history for a project, tenant-scoped.
  * Shape matches exactly what the Certified Payroll page reads (`d.records`):
- *   { records: [{ id, week_ending, employee_count, total_gross, status, pdf_url }] }
+ *   { records: [{ id, project_id, week_ending, employee_count, total_gross, status, pdf_url }] }
  */
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     const db = createServerClient();
     let query = db
       .from('certified_payroll')
-      .select('id, week_ending, total_gross, status, pdf_url, entries, payroll_number, created_at')
+      .select('id, project_id, week_ending, total_gross, status, pdf_url, entries, payroll_number, created_at')
       .eq('tenant_id', user.tenantId)
       .order('week_ending', { ascending: false });
     if (projectId) query = query.eq('project_id', projectId);
@@ -32,6 +32,7 @@ export async function GET(req: NextRequest) {
       const entries = (r as { entries?: unknown }).entries;
       return {
         id: r.id,
+        project_id: (r as { project_id?: string | null }).project_id ?? null,
         week_ending: r.week_ending,
         employee_count: Array.isArray(entries) ? entries.length : 0,
         total_gross: Number(r.total_gross) || 0,

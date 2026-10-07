@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateCloseoutPackage, saveDocument } from '@/lib/pdf-engine';
-import { createServerClient, getUser } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Documents', 'Edit');
   if (!g.ok) return g.res;
   try {
-    const user = await getUser(req);
     const body = await req.json();
     const db = createServerClient();
     const { data: project } = await db.from('projects').select('*').eq('id', body.projectId).eq('tenant_id', g.user.tenantId).single();
@@ -40,9 +40,12 @@ export async function POST(req: NextRequest) {
       checklist,
     });
 
-    const pdfUrl = await saveDocument(body.projectId, 'closeout-package', pdfBytes, body, user?.id || p?.tenant_id);
+    // The last argument is the TENANT. It was `user?.id || p?.tenant_id`, so every
+    // closeout package was filed under the user's id: saved, but invisible in the
+    // tenant's document library. Every other generator passes the tenant id.
+    const pdfUrl = await saveDocument(body.projectId, 'closeout-package', pdfBytes, body, g.user.tenantId);
     return NextResponse.json({ pdfUrl, success: true });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('documents/closeout', e, "Couldn't build the closeout package");
   }
 }
