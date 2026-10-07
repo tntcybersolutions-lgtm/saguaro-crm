@@ -51,12 +51,14 @@ const CSS = `
 .muSum { flex: 1; min-width: 0; font-size: 13px; color: var(--text-secondary); }
 .muDone { min-height: 44px; padding: 0 20px; border-radius: 12px; border: none; background: var(--brand-primary); color: var(--on-brand); font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; }
 .muDone:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
-@media (pointer: coarse) { .muCamHide { display: none; } }
-@media (pointer: fine) {
-  .muPick { grid-template-columns: minmax(0, 1fr); }
-  .muCam { display: none; }
-  .muBig { min-height: 64px; flex-direction: row; }
-}
+/* Camera buttons show on touch devices, the drop zone on mouse ones. Decided
+   in script (touch points or any coarse pointer), not by (pointer: fine): a
+   phone in a desktop-ish browser mode, or a tablet with a trackpad attached,
+   must never lose Take Photo. */
+.mu:not([data-touch]) .muCam, .muInline:not([data-touch]) .muCam { display: none; }
+.mu:not([data-mouse]) .muCamHide, .muInline:not([data-mouse]) .muCamHide { display: none; }
+.mu:not([data-touch]) .muPick, .muInline:not([data-touch]) .muPick { grid-template-columns: minmax(0, 1fr); }
+.mu:not([data-touch]) .muBig, .muInline:not([data-touch]) .muBig { min-height: 64px; flex-direction: row; }
 @media (max-width: 640px) {
   .mu { align-items: flex-end; padding: 0; }
   .muSheet { width: 100%; max-height: 94vh; border-radius: 20px 20px 0 0; border-bottom: none; }
@@ -92,6 +94,19 @@ export default function MediaUploadPanel(p: MediaUploadPanelProps) {
   const vidRef = useRef<HTMLInputElement>(null);
   const libRef = useRef<HTMLInputElement>(null);
   const [drag, setDrag] = useState(false);
+  // Touch → camera buttons. A mouse or trackpad → the drop zone. A touch
+  // laptop gets both.
+  const [touch, setTouch] = useState(false);
+  const [mouse, setMouse] = useState(true);
+  useEffect(() => {
+    try {
+      setTouch((navigator.maxTouchPoints || 0) > 0 || window.matchMedia('(any-pointer: coarse)').matches);
+      setMouse(window.matchMedia('(any-pointer: fine)').matches);
+    } catch {
+      setTouch(false); // no navigator/matchMedia: treat as a mouse device
+      setMouse(true);
+    }
+  }, []);
   const depth = useRef(0);
 
   useEffect(() => {
@@ -163,7 +178,7 @@ export default function MediaUploadPanel(p: MediaUploadPanelProps) {
 
   if (p.inline) {
     return (
-      <div className="muInline" data-drag={drag ? 'true' : undefined} {...dropProps}>
+      <div className="muInline" data-drag={drag ? 'true' : undefined} data-touch={touch ? 'true' : undefined} data-mouse={mouse ? 'true' : undefined} {...dropProps}>
         <style dangerouslySetInnerHTML={{ __html: CSS }} />
         {body}
         {p.items.length > 0 && <div className="muSum" style={{ marginTop: 10 }}>{summary}</div>}
@@ -175,6 +190,8 @@ export default function MediaUploadPanel(p: MediaUploadPanelProps) {
     <div
       className="mu"
       data-drag={drag ? 'true' : undefined}
+      data-touch={touch ? 'true' : undefined}
+      data-mouse={mouse ? 'true' : undefined}
       onMouseDown={(e) => { if (e.target === e.currentTarget) p.onClose(); }}
       {...dropProps}
     >
