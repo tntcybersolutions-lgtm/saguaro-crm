@@ -1446,8 +1446,8 @@ export default function SubPortal(){
             <div style={{fontSize:13,fontWeight:700,color:TEXT}}>{companyName}</div>
             <div style={{fontSize:11,color:DIM}}>{sub?.trade||''}</div>
           </div>
-          {/* Health Badge mini */}
-          <div style={{width:36,height:36,borderRadius:'50%',border:`2px solid ${healthColor}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:800,color:healthColor}} title={`Health Score: ${healthScore.toFixed(1)}`}>{healthScore>0?healthScore.toFixed(1):'--'}</div>
+          {/* Health Badge mini — only once there is a score to show */}
+          {healthScore>0&&<div style={{width:36,height:36,borderRadius:'50%',border:`2px solid ${healthColor}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:800,color:healthColor}} title={`Health Score: ${healthScore.toFixed(1)}`}>{healthScore.toFixed(1)}</div>}
           {isPreferred&&<span style={{fontSize:18,color:GOLD}} title="Preferred Subcontractor">{'\u2B50'}</span>}
         </div>
       </header>

@@ -152,7 +152,7 @@ export default function SubInbox({
   const lb: LightboxItem[] = view ? view.batch.items.map((i) => ({ id: i.id, url: i.url || '', kind: i.kind, title: `${view.batch.who} · ${i.file_name}`, poster: i.thumbnail_url })) : [];
 
   return (
-    <div ref={ref} id="from-subs">
+    <div ref={ref} id="from-subs" style={{ scrollMarginTop: 84 }}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <Card
         title={<span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>From your subs {newTotal > 0 && <Badge tone="gold" dot>{newTotal} new</Badge>}</span>}
