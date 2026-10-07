@@ -56,6 +56,19 @@ jobs:
         env:
           BCRYPT_DIR: /tmp/bc
         run: node tools/asc.mjs "$MODE"
+      # A proof run started right after a merge used to shoot the OLD build:
+      # Vercel takes ~3 minutes to put a new main live. Give the newest main
+      # commit 5 minutes before the first shot.
+      - name: Wait for the newest main to be live
+        if: env.MODE == 'screens-proof'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          d=$(curl -fsS -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/${{ github.repository }}/commits/main" \
+            | node -e 'let s="";process.stdin.on("data",c=>s+=c).on("end",()=>console.log(JSON.parse(s).commit.committer.date))')
+          age=$(( $(date +%s) - $(date -d "$d" +%s) ))
+          echo "newest main: $d (${age}s ago)"
+          if [ "$age" -lt 300 ]; then sleep $((300 - age)); fi
       # screens-capture: real screens from the live site at App Store sizes.
       - name: Install Playwright
         if: env.MODE == 'screens-capture' || env.MODE == 'screens-proof'
