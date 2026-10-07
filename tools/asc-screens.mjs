@@ -139,6 +139,7 @@ async function capture() {
       } catch (e) {
         console.log(`  ✗ ${name}: ${e.message.split('\n')[0]}`);
       }
+      await page.close();
     }
     await ctx.close();
   }
@@ -206,9 +207,14 @@ async function proof() {
       const idOf = (h) => h && h.match(/\/app\/projects\/([0-9a-f-]{36})/i)?.[1];
       project = idOf(links.find(([h, t]) => idOf(h) && t.includes(PROJECT_NAME))?.[0]) || links.map(([h]) => idOf(h)).find(Boolean) || null;
     }
+    await page.close();
     let n = 0;
     for (const [name, route, action, full] of PROOF) {
       if (route.includes('{project}') && !project) { console.log(`  skip ${name} (no project)`); continue; }
+      // A fresh tab per shot: a full-page screenshot switches touch emulation
+      // off for the rest of its tab, so later phone shots acted like a mouse.
+      const page = await ctx.newPage();
+      page.on('pageerror', (e) => errors.push(String(e.message || e).slice(0, 160)));
       try {
         await page.goto(SITE + route.replace('{project}', project), { waitUntil: 'networkidle', timeout: 45000 });
         await page.waitForTimeout(2500);
