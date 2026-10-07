@@ -171,6 +171,7 @@ const PROOF = [
   ['my-work', '/app/my-work', null, false],
   ['compliance', '/app/compliance', null, false],
   ['documents', '/app/documents', null, true],
+  ['documents-one-job', '/app/documents?project={project}', null, true],
 ];
 
 async function proof() {
