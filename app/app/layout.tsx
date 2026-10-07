@@ -84,6 +84,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     setMobileSidebarOpen(false);
   }, [pathname]);
 
+  // iPhone app: tapping an alert opens the page it's about. No-op in a browser
+  // (push-sw.js handles taps there).
+  useEffect(() => {
+    let off: (() => void) | undefined;
+    import('@/lib/native').then(({ isNative, setupPushListeners }) => {
+      if (!isNative()) return;
+      off = setupPushListeners({
+        onTap: (d) => {
+          const url = typeof d?.url === 'string' ? d.url : typeof d?.route === 'string' ? d.route : '';
+          if (url.startsWith('/')) window.location.assign(url);
+        },
+      });
+    }).catch(() => { /* not in the app shell */ });
+    return () => off?.();
+  }, []);
+
   // Single init effect (W-9): refresh + me + projects all fire concurrently —
   // refresh only gates the 401 redirect, and a sessionStorage cache paints the
   // shell identity instantly on repeat hard loads.

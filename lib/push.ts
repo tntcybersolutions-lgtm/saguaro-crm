@@ -25,6 +25,7 @@
 import webpush, { WebPushError, type PushSubscription } from 'web-push';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { must } from '@/lib/db-write';
+import { apnsConfigFromEnv, isApnsToken, sendApns } from '@/lib/push-apns';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -46,14 +47,17 @@ export interface PushMessage {
 
 export interface PushResult {
   vapidConfigured: boolean;
+  apnsConfigured: boolean;
   tokens: number;
   webSent: number;
   webFailed: number;
   expoSent: number;
   expoFailed: number;
+  apnsSent: number;         // iPhone app (Apple Push)
+  apnsFailed: number;
   skippedNoVapid: number;   // web tokens present but VAPID not configured
   skippedNoKeys: number;    // legacy web tokens missing p256dh/auth
-  skippedFcmApns: number;   // native raw tokens with no delivery path (needs FCM/APNS)
+  skippedFcmApns: number;   // native raw tokens with no delivery path (APNs key not set, or Android FCM)
   pruned: number;           // dead subscriptions removed
 }
 
@@ -93,14 +97,17 @@ function ensureVapid(): boolean {
   return _vapidReady;
 }
 
-function emptyResult(vapidConfigured: boolean): PushResult {
+function emptyResult(vapidConfigured: boolean, apnsConfigured = false): PushResult {
   return {
     vapidConfigured,
+    apnsConfigured,
     tokens: 0,
     webSent: 0,
     webFailed: 0,
     expoSent: 0,
     expoFailed: 0,
+    apnsSent: 0,
+    apnsFailed: 0,
     skippedNoVapid: 0,
     skippedNoKeys: 0,
     skippedFcmApns: 0,
@@ -222,7 +229,8 @@ export async function sendPushToUsers(
 ): Promise<PushResult> {
   const uniqueIds = Array.from(new Set(userIds.filter(Boolean)));
   const vapidConfigured = ensureVapid();
-  const result = emptyResult(vapidConfigured);
+  const apns = apnsConfigFromEnv();
+  const result = emptyResult(vapidConfigured, !!apns);
   if (uniqueIds.length === 0) return result;
 
   const rows = await tokensForUsers(db, uniqueIds);
@@ -232,14 +240,27 @@ export async function sendPushToUsers(
   // Classify tokens.
   const expoRows: TokenRow[] = [];
   const webRows: TokenRow[] = [];
+  const apnsRows: TokenRow[] = [];
   for (const r of rows) {
     if (EXPO_TOKEN_RE.test(r.token)) {
       expoRows.push(r);
     } else if (r.platform === 'web' || (r.p256dh && r.auth)) {
       webRows.push(r);
+    } else if (apns && isApnsToken(r.token, r.platform)) {
+      apnsRows.push(r);
     } else {
-      // Native raw FCM/APNS token — no delivery path without Firebase/APNs creds.
+      // Raw native token with no delivery path: APNs key not set, or an Android FCM token.
       result.skippedFcmApns++;
+    }
+  }
+
+  // ── Apple Push (iPhone app) ──
+  if (apns && apnsRows.length > 0) {
+    const outcomes = await sendApns(apns, apnsRows.map((r) => r.token), msg);
+    for (let i = 0; i < apnsRows.length; i++) {
+      if (outcomes[i] === 'sent') result.apnsSent++;
+      else if (outcomes[i] === 'dead') { await pruneToken(db, apnsRows[i].id); result.pruned++; }
+      else result.apnsFailed++;
     }
   }
 

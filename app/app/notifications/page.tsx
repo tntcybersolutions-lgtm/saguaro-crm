@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { CurrencyDollar, CheckCircle, ArrowsClockwise, Warning, Question, NotePencil, Trophy, Handshake, Buildings, FileText, WarningOctagon, Clock, Bell, X, ArrowRight } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, goldOutlineButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import PushAlertsCard from '@/components/notifications/PushAlertsCard';
 
 const GOLD = 'var(--brand-primary)';
 const DARK = 'var(--bg-base)';
@@ -164,6 +165,9 @@ export default function NotificationsPage() {
           </button>
         }
       />
+
+      {/* Phone / computer alerts for this device */}
+      <PushAlertsCard />
 
       {/* Activity intelligence strip — what the feed holds right now */}
       {!loading && notifications.length > 0 && (

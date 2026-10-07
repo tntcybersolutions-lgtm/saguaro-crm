@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { checkRateLimit, getClientIP } from '@/lib/rate-limit';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 /** Authenticate a sub portal session via token */
 async function authenticateSubPortal(req: NextRequest) {
@@ -19,6 +20,33 @@ async function authenticateSubPortal(req: NextRequest) {
     .single();
 
   return session;
+}
+
+/**
+ * Who the portal is for. A sub invited by email before they were added to the
+ * company's sub list has no subcontractors row (sub_id is null) — the session
+ * itself still carries the company and contact the GC typed, so use those
+ * rather than showing a nameless "Subcontractor".
+ */
+async function subProfile(db: ReturnType<typeof createServerClient>, session: { sub_id: string | null; tenant_id: string; sub_company?: string | null; sub_contact_name?: string | null; sub_email?: string | null }) {
+  if (session.sub_id) {
+    const { data } = await db
+      .from('subcontractors')
+      .select('id, company_name, contact_name, email, phone, trade')
+      .eq('id', session.sub_id)
+      .eq('tenant_id', session.tenant_id)
+      .maybeSingle();
+    if (data) return data;
+  }
+  if (!session.sub_company && !session.sub_contact_name) return null;
+  return {
+    id: null,
+    company_name: session.sub_company || session.sub_contact_name || null,
+    contact_name: session.sub_contact_name || null,
+    email: session.sub_email || null,
+    phone: null,
+    trade: null,
+  };
 }
 
 /** POST — Validate token, update last_login_at, return session info */
@@ -51,13 +79,7 @@ export async function POST(req: NextRequest) {
       .eq('id', session.id)
       .eq('tenant_id', session.tenant_id), 'portal_sub_sessions write');
 
-    // Fetch sub details
-    const { data: sub } = await db
-      .from('subcontractors')
-      .select('id, company_name, contact_name, email, phone, trade')
-      .eq('id', session.sub_id!)
-      .eq('tenant_id', session.tenant_id)
-      .single();
+    const sub = await subProfile(db, session);
 
     // The job this link is for, so the portal can name it ("End of day for …").
     const { data: project } = session.project_id
@@ -77,10 +99,7 @@ export async function POST(req: NextRequest) {
       sub: sub || null,
     });
   } catch (err) {
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return apiError('portal/sub/auth', err);
   }
 }
 
@@ -97,12 +116,7 @@ export async function GET(req: NextRequest) {
 
     const db = createServerClient();
 
-    const { data: sub } = await db
-      .from('subcontractors')
-      .select('id, company_name, contact_name, email, phone, trade')
-      .eq('id', session.sub_id!)
-      .eq('tenant_id', session.tenant_id)
-      .single();
+    const sub = await subProfile(db, session);
 
     return NextResponse.json({
       session: {
@@ -116,9 +130,6 @@ export async function GET(req: NextRequest) {
       sub: sub || null,
     });
   } catch (err) {
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return apiError('portal/sub/auth', err);
   }
 }
