@@ -161,3 +161,9 @@ converge. One line each, newest at the bottom.
   a local `npm run build` fails on "HEATMAP ENGINE DRIFT" whenever the dead copy differs; Vercel passes
   because the folder does not exist there. The canonical source should be this repo now. Not fixed
   (off-path); local builds use `npx next build` after running the gates by hand.
+- (7 Oct, Path 1 code walk) `app/app/daily-logs/page.tsx:318` — on a 409 (log already exists for that project+date) the client throws a generic 'Failed to create daily log' and never reads the route's `error` / `existingLogId` (route: `app/api/daily-logs/create/route.ts:152`), so the user is not told to open the existing log. Not fixed (off-path).
+- (7 Oct, Path 1) `app/app/daily-logs/page.tsx:639` — Work Performed is marked `required` but `submitCreate` (line 289) only checks projectId and the route (`create/route.ts:87`) defaults it to '' — an empty log saves silently. Not fixed.
+- (7 Oct, Path 1) `app/api/daily-logs/list/route.ts:20`, `[id]/route.ts:19,55,74` — bare `catch {}` swallows the error (no apiError, nothing logged); list returns `{logs: []}` with 500. Violates CLAUDE.md §3. Not fixed.
+- (7 Oct, Path 1) `app/api/daily-logs/list/route.ts:6` and `[id]/route.ts:7` — GET uses getUser only, no requirePermission, while create/PUT require Projects/Edit. Not fixed.
+- (7 Oct, Path 1) `app/api/daily-logs/create/route.ts:47` and `prefill/route.ts:33` — server fallback date is the UTC day (`toISOString`); only matters for non-web callers that omit logDate. Not fixed.
+- (7 Oct, Path 1) `app/api/daily-logs/create/route.ts:83-84` — `||` coerces a 0° temperature to null/autoWx; `high_temp`/`low_temp` columns are text. Not fixed.
