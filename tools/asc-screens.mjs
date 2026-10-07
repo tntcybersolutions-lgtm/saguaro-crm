@@ -13,6 +13,7 @@
  */
 import crypto from 'node:crypto';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
@@ -359,12 +360,17 @@ async function pushProof(review, root) {
 
 async function pushProofOnce(chromium, review, root, headed) {
   console.log(`push-e2e: ${headed ? 'headed Chrome on Xvfb' : 'headless Chrome'}`);
-  let chrome;
-  try { chrome = await chromium.launch({ channel: 'chrome', headless: !headed, env: headed ? { ...process.env, DISPLAY: ':99' } : process.env }); }
-  catch (e) { console.log(`push-e2e: Google Chrome not available — ${e.message.split('\n')[0]}`); return false; }
+  // A normal (persistent) profile: browser.newContext() is incognito, and
+  // Chrome refuses push subscriptions in incognito ("permission denied").
+  const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'sag-push-'));
+  let ctx;
+  try {
+    ctx = await chromium.launchPersistentContext(profile, { channel: 'chrome', headless: !headed, ...PROOF_DEVICES.desktop, colorScheme: 'dark',
+      env: headed ? { ...process.env, DISPLAY: ':99' } : process.env });
+  } catch (e) { console.log(`push-e2e: Google Chrome not available — ${e.message.split('\n')[0]}`); return false; }
+  const chrome = { close: async () => { fs.rmSync(profile, { recursive: true, force: true }); } };
   let delivered = false;
   const dir = path.join(root, 'desktop');
-  const ctx = await chrome.newContext({ ...PROOF_DEVICES.desktop, colorScheme: 'dark' });
   await ctx.grantPermissions(['notifications'], { origin: SITE });
   const page = await ctx.newPage();
   try {
