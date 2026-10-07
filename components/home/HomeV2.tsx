@@ -21,7 +21,7 @@ import SalesOverview from '@/components/SalesOverview';
 import AlertTicker from '@/components/home/AlertTicker';
 import type { TickerItem, TickerSummary } from '@/lib/home/ticker';
 import type { Metric, QueueItem, ScheduleEntry, HomeView, DataState } from '@/lib/home/rank';
-import { TIER_LABEL } from '@/lib/home/rank';
+import { TIER_LABEL, fmtMoneyShort } from '@/lib/home/rank';
 
 interface HomePayload {
   context: {
@@ -154,10 +154,17 @@ function HeroCell({ m, lead }: { m: Metric; lead: boolean }) {
     : <span className="hv2-chip hv2-chip-warn">{first}</span>;
   else foot = <span className="hv2-hsub">{m.basis}</span>;
   const pct = m.progress != null ? Math.round(m.progress * 100) : null;
+  const money = shown && !lead && typeof text === 'string' && /^\$[\d,]+(\.\d+)?$/.test(text) ? Number(text.replace(/[$,]/g, '')) : null;
+  const short = money != null && money >= 100_000 ? fmtMoneyShort(money) : null;
   const body = (
     <>
       <span className="hv2-hlabel">{m.label}</span>
-      <span className="hv2-hvalue" data-muted={shown ? undefined : 'true'}>{text}</span>
+      <span className="hv2-hvalue" data-muted={shown ? undefined : 'true'}>
+        {/* A full dollar figure ("$1,351,800") is wider than a third of a
+            phone; the small cells show it short ("$1.35M") there instead of
+            spilling over the next cell's number. */}
+        {short ? <><span className="hv2-vfull">{text}</span><span className="hv2-vshort">{short}</span></> : text}
+      </span>
       {shown && pct != null && (
         <span className="hv2-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label={`${pct}% billed`}><i style={{ width: `${pct}%` }} /></span>
       )}
@@ -661,7 +668,8 @@ const CSS = `
 .hv2-hcell + .hv2-hcell { border-left: 1px solid var(--border-subtle); }
 a.hv2-hcell:hover { background: rgba(255,255,255,0.025); }
 .hv2-hlabel { color: var(--c-text-3); font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
-.hv2-hvalue { color: var(--c-yellow); font-size: 28px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.hv2-hvalue { color: var(--c-yellow); font-size: 28px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.05; font-variant-numeric: tabular-nums; max-width: 100%; overflow-wrap: anywhere; }
+.hv2-vshort { display: none; }
 .hv2-hlead .hv2-hvalue { font-size: 38px; }
 .hv2-hvalue[data-muted] { color: var(--c-text-3); font-size: 18px; font-weight: 700; }
 .hv2-hsub { color: var(--c-text-2); font-size: 12.5px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -765,6 +773,8 @@ a.hv2-hcell:hover { background: rgba(255,255,255,0.025); }
   .hv2-hlead { padding: 16px; }
   .hv2-hvalue { font-size: 22px; }
   .hv2-hlead .hv2-hvalue { font-size: 32px; }
+  .hv2-vfull { display: none; }
+  .hv2-vshort { display: inline; }
   .hv2-hlabel { font-size: 10px; letter-spacing: 0.1em; }
   .hv2-chip { font-size: 11px; padding: 2px 7px; }
   .hv2-qrow { grid-template-columns: minmax(0, 1fr); gap: 8px; }
