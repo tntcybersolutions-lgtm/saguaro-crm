@@ -17,6 +17,10 @@ import { moduleAccent } from '@/lib/module-identity';
 import { docTypeLabel } from '@/lib/document-types';
 import { PdfIcon } from '@/components/ui/FileTypeIcon';
 import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/table-sort';
+import JobDocsBoard from '@/components/documents/JobDocsBoard';
+import type { JobDocs, WaiverState } from '@/lib/documents-by-job';
+import { projectColor, jobDotStyle } from '@/lib/project-colors';
+import { fmtMoneyShort } from '@/lib/home/rank';
 
 const GOLD = 'var(--brand-primary)';
 const BORDER = 'rgba(255,255,255,0.12)';
@@ -78,6 +82,26 @@ function SkeletonRows({ rows = 4, cols }: { rows?: number; cols: number }) {
     </>
   );
 }
+
+/* lien_waivers.waiver_type values → words ("conditional_progress" → "Conditional · Progress"). */
+const waiverTypeLabel = (t: string | null | undefined) => {
+  const v = String(t || '').toLowerCase();
+  if (!v) return '—';
+  const [kind, stage] = v.split('_');
+  const cap = (x?: string) => (x ? x.charAt(0).toUpperCase() + x.slice(1) : '');
+  return stage ? `${cap(kind)} · ${cap(stage)}` : cap(kind);
+};
+
+/* Who signs a waiver: the sub's company when it's linked, else the claimant on the waiver. */
+const waiverParty = (lw: any) =>
+  lw?.subcontractors?.company_name ?? lw?.company_name ?? lw?.claimant_name ?? lw?.subName ?? lw?.sub_name ?? '—';
+
+const WAIVER_BADGE: Record<WaiverState, { label: string; color: string; bg: string }> = {
+  signed:       { label: 'Waiver signed',  color: GREEN, bg: 'rgba(44,255,122,.12)' },
+  waiting:      { label: 'Waiver waiting', color: 'var(--warning)', bg: 'rgba(255,138,0,.12)' },
+  missing:      { label: 'No waiver',      color: RED,   bg: 'rgba(255,59,48,.12)' },
+  'not-needed': { label: '—',              color: DIM,   bg: 'transparent' },
+};
 
 const TABS = ['Library', 'Pay Applications', 'Lien Waivers', 'Bonds & Forms', 'Payroll', 'Closeout'] as const;
 type Tab = typeof TABS[number];
@@ -163,6 +187,41 @@ export default function DocumentsPage() {
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [query, setQuery] = useState('');
 
+  /* ── Job-first ──────────────────────────────────────────────────────
+     Which job the page shows (null = every job). Kept in ?project= so a
+     link opens straight to one job, and it drives the Bonds and Closeout
+     generators too, so a form can't be made for a different job than the
+     one on screen. */
+  const [jobId, setJobIdState] = useState<string | null>(null);
+  const setJobId = useCallback((id: string | null) => {
+    setJobIdState(id);
+    if (id) setSelectedProject(id);
+    try {
+      const u = new URL(window.location.href);
+      if (id) u.searchParams.set('project', id); else u.searchParams.delete('project');
+      window.history.replaceState(null, '', u.pathname + u.search + u.hash);
+    } catch (e) {
+      console.error('[documents] could not update the URL', e);
+    }
+  }, []);
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search).get('project');
+    if (p) { setJobIdState(p); setSelectedProject(p); }
+  }, []);
+  const [byJob, setByJob] = useState<{ jobs: JobDocs[]; payAppWaiver: Record<string, WaiverState> } | null>(null);
+  const [loadingByJob, setLoadingByJob] = useState(true);
+  const [errorByJob, setErrorByJob] = useState(false);
+  const loadByJob = useCallback(() => {
+    setLoadingByJob(true);
+    setErrorByJob(false);
+    fetch('/api/documents/by-job')
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(d => setByJob({ jobs: d.jobs ?? [], payAppWaiver: d.payAppWaiver ?? {} }))
+      .catch(() => setErrorByJob(true))
+      .finally(() => setLoadingByJob(false));
+  }, []);
+  useEffect(() => { loadByJob(); }, [loadByJob]);
+
   // Closeout tab — real per-project closeout items from the `closeout` table.
   const [closeoutItems, setCloseoutItems] = useState<CloseoutItem[]>([]);
   const [loadingCloseout, setLoadingCloseout] = useState(false);
@@ -230,9 +289,13 @@ export default function DocumentsPage() {
   const loadPayroll = useCallback(() => {
     setLoadingPayroll(true);
     setErrorPayroll(false);
-    fetch('/api/documents/list?type=payroll')
+    /* Certified payroll lives in certified_payroll. This tab used to ask
+       generated_documents for doc_type 'payroll' — a type no generator writes
+       ('wh347' / 'wh347-certified-payroll') and rows without week / gross —
+       so it could never show a single filing. */
+    fetch('/api/payroll/list')
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then(d => setPayroll(d.payroll ?? d.documents ?? d.items ?? []))
+      .then(d => setPayroll(d.records ?? []))
       .catch(() => setErrorPayroll(true))
       .finally(() => setLoadingPayroll(false));
   }, []);
@@ -302,30 +365,53 @@ export default function DocumentsPage() {
   const q = query.trim().toLowerCase();
   const rowMatch = (...vals: (string | number | null | undefined)[]) =>
     !q || vals.some(v => String(v ?? '').toLowerCase().includes(q));
-  const visPayApps = payApps.filter(pa => rowMatch(pa.app_number ?? pa.application_number, fmtDay(pa.period_from), fmtDay(pa.period_to), pa.current_payment_due ?? pa.net_payment_due, pa.status));
-  const visLienWaivers = lienWaivers.filter(lw => rowMatch(lw.subName ?? lw.sub_name, lw.type, lw.amount, lw.throughDate ?? lw.through_date, lw.status));
-  const visPayroll = payroll.filter(pr => rowMatch(pr.weekEnding ?? pr.week_ending, pr.employees, pr.totalGross ?? pr.total_gross, pr.status));
+  const inJob = (pid: string | null | undefined) => !jobId || pid === jobId;
+  const projectById = (id: string | null | undefined) => (id ? projects.find(p => p.id === id) : undefined);
+  const jobName = (id: string | null | undefined) =>
+    projectById(id)?.name ?? byJob?.jobs.find(j => j.id === id)?.name ?? (id ? 'Unknown job' : 'No job');
+  const jobColor = (id: string | null | undefined) => projectColor(projectById(id) ?? id ?? null);
+  const payAppNo = (id: string | null | undefined) => {
+    const pa = id ? payApps.find(x => x.id === id) : null;
+    const n = pa?.app_number ?? pa?.application_number;
+    return n != null ? `#${String(n).padStart(3, '0')}` : null;
+  };
+  const visPayApps = payApps.filter(pa => inJob(pa.project_id) && rowMatch(pa.app_number ?? pa.application_number, fmtDay(pa.period_from), fmtDay(pa.period_to), pa.current_payment_due ?? pa.net_payment_due, pa.status, jobName(pa.project_id)));
+  const visLienWaivers = lienWaivers.filter(lw => inJob(lw.project_id) && rowMatch(waiverParty(lw), waiverTypeLabel(lw.waiver_type ?? lw.type), lw.amount, lw.through_date ?? lw.throughDate, lw.status, jobName(lw.project_id), payAppNo(lw.pay_application_id)));
+  const visPayroll = payroll.filter(pr => inJob(pr.project_id) && rowMatch(pr.week_ending, pr.employee_count, pr.total_gross, pr.status, jobName(pr.project_id)));
+  const showJobCol = !jobId;
+  const scopeJobs = (byJob?.jobs ?? []).filter(j => inJob(j.id));
+  const billedAll = scopeJobs.reduce((s, j) => s + j.billed, 0);
+  const jobsWithPayApps = scopeJobs.filter(j => j.payApps.total > 0).length;
+  const waitingAll = scopeJobs.reduce((s, j) => s + j.waivers.waiting, 0);
+  const signedAll = scopeJobs.reduce((s, j) => s + j.waivers.signed, 0);
+  const noWaiverAll = scopeJobs.reduce((s, j) => s + j.paidNoWaiver, 0);
   const visCloseout = closeoutItems.filter(i => rowMatch(i.title, i.item_type, i.trade, i.responsible_party, i.status));
 
   // Sortable columns per tab (R11 sweep) — money on Number()-coerced values,
   // dates on the raw ISO strings. Each table persists its own sort.
-  const { sort: paSort, cycleSort: paCycle } = usePersistedSort('documents-payapps', { key: 'app', dir: 'desc' });
+  // Grouped by job by default (newest application first inside each job), so
+  // two jobs' first applications never sit next to each other looking like one.
+  const { sort: paSort, cycleSort: paCycle } = usePersistedSort('documents-payapps-v2', { key: 'job', dir: 'asc' });
   const sortedPayApps = useSortedRows(visPayApps, paSort, (pa: any, key: string) => {
     switch (key) {
       case 'app':    return Number(pa.app_number ?? pa.application_number) || 0;
       case 'period': return pa.period_from ?? pa.period_to ?? null;
       case 'amount': return Number(pa.current_payment_due ?? pa.net_payment_due) || 0;
       case 'status': return pa.status ?? null;
+      case 'job':    return `${jobName(pa.project_id)}|${String(99999 - (Number(pa.app_number ?? pa.application_number) || 0)).padStart(5, '0')}`;
+      case 'waiver': return byJob?.payAppWaiver[pa.id] ?? null;
       default:       return pa[key];
     }
   });
   const { sort: lwSort, cycleSort: lwCycle } = usePersistedSort('documents-lienwaivers', { key: 'through', dir: 'desc' });
   const sortedLienWaivers = useSortedRows(visLienWaivers, lwSort, (lw: any, key: string) => {
     switch (key) {
-      case 'sub':     return lw.subName ?? lw.sub_name ?? null;
-      case 'type':    return lw.type ?? null;
+      case 'sub':     return waiverParty(lw);
+      case 'type':    return waiverTypeLabel(lw.waiver_type ?? lw.type);
+      case 'job':     return jobName(lw.project_id);
+      case 'payapp':  return payAppNo(lw.pay_application_id);
       case 'amount':  return Number(lw.amount) || 0;
-      case 'through': return lw.throughDate ?? lw.through_date ?? null;
+      case 'through': return lw.through_date ?? lw.throughDate ?? null;
       case 'status':  return lw.status ?? null;
       default:        return lw[key];
     }
@@ -333,13 +419,27 @@ export default function DocumentsPage() {
   const { sort: prSort, cycleSort: prCycle } = usePersistedSort('documents-payroll', { key: 'week', dir: 'desc' });
   const sortedPayroll = useSortedRows(visPayroll, prSort, (pr: any, key: string) => {
     switch (key) {
-      case 'week':      return pr.weekEnding ?? pr.week_ending ?? null;
-      case 'employees': return Number(pr.employees) || 0;
-      case 'gross':     return Number(pr.totalGross ?? pr.total_gross) || 0;
+      case 'week':      return pr.week_ending ?? null;
+      case 'employees': return Number(pr.employee_count) || 0;
+      case 'gross':     return Number(pr.total_gross) || 0;
+      case 'job':       return jobName(pr.project_id);
       case 'status':    return pr.status ?? null;
       default:          return pr[key];
     }
   });
+
+  // The job a row belongs to — its colour dot and name; tap to see only that job.
+  const jobCell = (pid: string | null | undefined) => (
+    <td style={{ padding: '12px 16px', maxWidth: 260 }}>
+      {pid ? (
+        <button type="button" onClick={() => setJobId(pid)} title={`Show only ${jobName(pid)}`}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 8, maxWidth: '100%', background: 'none', border: 0, padding: 0, color: TEXT, fontWeight: 700, fontSize: 13, cursor: 'pointer', textAlign: 'left' }}>
+          <span style={jobDotStyle(jobColor(pid))} />
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{jobName(pid)}</span>
+        </button>
+      ) : <span style={{ color: DIM }}>No job</span>}
+    </td>
+  );
 
   return (
     <PremiumSurface maxWidth={2200}>
@@ -351,25 +451,38 @@ export default function DocumentsPage() {
         accentColor={moduleAccent('documents').hex}
         title="Project"
         accent="Documents"
-        subtitle="Generated contracts, forms, and compliance documents across all projects."
+        subtitle={jobId
+          ? `Pay apps, lien waivers, payroll and closeout for ${jobName(jobId)}.`
+          : 'Every job’s pay apps, lien waivers, payroll and closeout — the ones that need you first.'}
+      />
+
+      <JobDocsBoard
+        jobs={byJob?.jobs ?? []}
+        colors={Object.fromEntries(projects.map((p: any) => [p.id, p.color ?? null]))}
+        selectedId={jobId}
+        onPick={(id) => setJobId(id)}
+        onClear={() => setJobId(null)}
+        loading={loadingByJob}
+        error={errorByJob}
+        onRetry={loadByJob}
       />
 
       {/* KPI stat row — live counts across the document library */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 26 }}>
         <StatCard
           icon={<Receipt size={19} weight="duotone" color={GOLD} />}
-          label="Pay Applications" value={statVal(loadingPayApps, errorPayApps, payApps.length)}
-          sub="AIA G702 / G703" accent={GOLD} delay={0.02}
+          label="Pay Applications" value={statVal(loadingPayApps, errorPayApps, payApps.filter(pa => inJob(pa.project_id)).length)}
+          sub={byJob && billedAll > 0 ? `${fmtMoneyShort(billedAll)} billed${jobId ? '' : ` across ${jobsWithPayApps} job${jobsWithPayApps === 1 ? '' : 's'}`}` : 'AIA G702 / G703'} accent={GOLD} delay={0.02}
          onClick={() => setActiveTab('Pay Applications')}/>
         <StatCard
           icon={<Shield size={19} weight="duotone" color={GOLD} />}
-          label="Lien Waivers" value={statVal(loadingLienWaivers, errorLienWaivers, lienWaivers.length)}
-          sub="signed & pending" delay={0.06}
+          label="Lien Waivers" value={statVal(loadingLienWaivers, errorLienWaivers, lienWaivers.filter(lw => inJob(lw.project_id)).length)}
+          sub={byJob ? `${signedAll} signed · ${waitingAll} waiting${noWaiverAll ? ` · ${noWaiverAll} paid with none` : ''}` : 'signed & pending'} delay={0.06}
          onClick={() => setActiveTab('Lien Waivers')}/>
         <StatCard
           icon={<NotePencil size={19} weight="duotone" color={GOLD} />}
-          label="Certified Payroll" value={statVal(loadingPayroll, errorPayroll, payroll.length)}
-          sub="WH-347 filings" delay={0.10}
+          label="Certified Payroll" value={statVal(loadingPayroll, errorPayroll, payroll.filter(pr => inJob(pr.project_id)).length)}
+          sub="WH-347 weeks filed" delay={0.10}
          onClick={() => setActiveTab('Payroll')}/>
         <StatCard
           icon={<Clipboard size={19} weight="duotone" color={GOLD} />}
@@ -423,7 +536,7 @@ export default function DocumentsPage() {
       <div>
 
         {/* ── Pay Applications ──────────────────────────────────────── */}
-        {activeTab === 'Library' && <DocumentLibrary />}
+        {activeTab === 'Library' && <DocumentLibrary jobId={jobId} />}
 
         {activeTab === 'Pay Applications' && (
           <SectionCard
@@ -441,7 +554,8 @@ export default function DocumentsPage() {
                 <thead>
                   <tr>
                     {([
-                      ['Application #','app'],['Period','period'],['Amount Due','amount'],['Status','status'],['Download',undefined],
+                      ...(showJobCol ? [['Job','job']] : []),
+                      ['Application #','app'],['Period','period'],['Amount Due','amount'],['Status','status'],['Lien Waiver','waiver'],['Download',undefined],
                     ] as [string, string|undefined][]).map(([h,k]) => (
                       <SortableTh key={h} label={h} sortKey={k} sort={paSort} onSort={paCycle} style={{ padding: '10px 16px' }} />
                     ))}
@@ -449,23 +563,25 @@ export default function DocumentsPage() {
                 </thead>
                 <tbody>
                   {loadingPayApps ? (
-                    <SkeletonRows cols={5} />
+                    <SkeletonRows cols={showJobCol ? 7 : 6} />
                   ) : errorPayApps ? (
-                    <ErrorRow colSpan={5} message="Couldn't Load Pay Applications" onRetry={loadPayApps} />
+                    <ErrorRow colSpan={showJobCol ? 7 : 6} message="Couldn't Load Pay Applications" onRetry={loadPayApps} />
                   ) : visPayApps.length === 0 ? (
-                    <tr><td colSpan={5} style={{ padding: 0 }}>
+                    <tr><td colSpan={showJobCol ? 7 : 6} style={{ padding: 0 }}>
                       <PremiumEmpty
                         compact
                         icon={<Receipt size={30} weight="duotone" color={GOLD} />}
-                        title={payApps.length > 0 ? 'No Pay Applications Match' : 'No Pay Applications Yet'}
-                        description={payApps.length > 0 ? 'Clear the search above to see every record.' : 'Generated AIA G702 / G703 pay applications will appear here.'}
+                        title={payApps.length > 0 ? (jobId && !q ? 'No Pay Applications on This Job' : 'No Pay Applications Match') : 'No Pay Applications Yet'}
+                        description={payApps.length > 0 ? (jobId && !q ? 'Tap Show all jobs above to see every job.' : 'Clear the search above to see every record.') : 'Generated AIA G702 / G703 pay applications will appear here.'}
                         action={<Link href="/app/projects" style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Generate New</Link>}
                       />
                     </td></tr>
                   ) : sortedPayApps.map(pa => {
                     const sc = statusConfig[pa.status] || statusConfig.draft;
+                    const wv = WAIVER_BADGE[(byJob?.payAppWaiver[pa.id] ?? 'not-needed') as WaiverState];
                     return (
                       <tr key={pa.id} style={{ borderBottom: `1px solid rgba(255,255,255,0.08)` }}>
+                        {showJobCol && jobCell(pa.project_id)}
                         {/* Real pay_applications columns (the list route returns raw rows):
                             app_number, period_from/period_to, current_payment_due — the old
                             appNo/period/amount keys never existed, so every row read #000 / $0.00. */}
@@ -473,6 +589,9 @@ export default function DocumentsPage() {
                         <td style={{ padding: '12px 16px', color: DIM }}>{[fmtDay(pa.period_from), fmtDay(pa.period_to)].filter(Boolean).join(' – ') || '—'}</td>
                         <td style={{ padding: '12px 16px', color: GOLD, fontWeight: 700 }}>{fmt(pa.current_payment_due ?? pa.net_payment_due)}</td>
                         <td style={{ padding: '12px 16px' }}><Badge label={pa.status} color={sc.color} bg={sc.bg} /></td>
+                        <td style={{ padding: '12px 16px' }}>
+                          {wv.label === '—' ? <span style={{ color: DIM }}>—</span> : <Badge label={wv.label} color={wv.color} bg={wv.bg} />}
+                        </td>
                         <td style={{ padding: '12px 16px' }}>
                           <button
                             disabled={busyKey === `payapp-${pa.id}`}
@@ -514,7 +633,8 @@ export default function DocumentsPage() {
                 <thead>
                   <tr>
                     {([
-                      ['Sub Name','sub'],['Type','type'],['Amount','amount'],['Through Date','through'],['Status','status'],['Download',undefined],
+                      ...(showJobCol ? [['Job','job']] : []),
+                      ['Sub / Claimant','sub'],['Type','type'],['Pay App','payapp'],['Amount','amount'],['Through Date','through'],['Status','status'],['Download',undefined],
                     ] as [string, string|undefined][]).map(([h,k]) => (
                       <SortableTh key={h} label={h} sortKey={k} sort={lwSort} onSort={lwCycle} style={{ padding: '10px 16px' }} />
                     ))}
@@ -522,11 +642,11 @@ export default function DocumentsPage() {
                 </thead>
                 <tbody>
                   {loadingLienWaivers ? (
-                    <SkeletonRows cols={6} />
+                    <SkeletonRows cols={showJobCol ? 8 : 7} />
                   ) : errorLienWaivers ? (
-                    <ErrorRow colSpan={6} message="Couldn't Load Lien Waivers" onRetry={loadLienWaivers} />
+                    <ErrorRow colSpan={showJobCol ? 8 : 7} message="Couldn't Load Lien Waivers" onRetry={loadLienWaivers} />
                   ) : visLienWaivers.length === 0 ? (
-                    <tr><td colSpan={6} style={{ padding: 0 }}>
+                    <tr><td colSpan={showJobCol ? 8 : 7} style={{ padding: 0 }}>
                       <PremiumEmpty
                         compact
                         icon={<Shield size={30} weight="duotone" color={GOLD} />}
@@ -539,10 +659,14 @@ export default function DocumentsPage() {
                     const sc = statusConfig[lw.status] || statusConfig.pending;
                     return (
                       <tr key={lw.id} style={{ borderBottom: `1px solid rgba(255,255,255,0.08)` }}>
-                        <td style={{ padding: '12px 16px', color: TEXT, fontWeight: 600 }}>{lw.subName ?? lw.sub_name}</td>
-                        <td style={{ padding: '12px 16px', color: DIM }}>{lw.type}</td>
+                        {showJobCol && jobCell(lw.project_id)}
+                        {/* Real lien_waivers columns. The old sub_name / type keys don't
+                            exist, so Sub Name and Type rendered blank on every row. */}
+                        <td style={{ padding: '12px 16px', color: TEXT, fontWeight: 600 }}>{waiverParty(lw)}</td>
+                        <td style={{ padding: '12px 16px', color: DIM }}>{waiverTypeLabel(lw.waiver_type ?? lw.type)}</td>
+                        <td style={{ padding: '12px 16px', color: payAppNo(lw.pay_application_id) ? GOLD : DIM, fontWeight: 700 }}>{payAppNo(lw.pay_application_id) ?? '—'}</td>
                         <td style={{ padding: '12px 16px', color: TEXT }}>{fmt(lw.amount)}</td>
-                        <td style={{ padding: '12px 16px', color: DIM }}>{lw.throughDate ?? lw.through_date}</td>
+                        <td style={{ padding: '12px 16px', color: DIM }}>{fmtDay(lw.through_date ?? lw.throughDate) ?? '—'}</td>
                         <td style={{ padding: '12px 16px' }}><Badge label={lw.status} color={sc.color} bg={sc.bg} /></td>
                         <td style={{ padding: '12px 16px' }}>
                           <button
@@ -555,7 +679,7 @@ export default function DocumentsPage() {
                                 body: {
                                   projectId: lw.project_id ?? lw.projectId,
                                   waiverType: lw.waiver_type ?? lw.type,
-                                  claimantName: lw.claimant_name ?? lw.subName ?? lw.sub_name,
+                                  claimantName: lw.claimant_name ?? waiverParty(lw),
                                   amount: lw.amount,
                                   throughDate: lw.through_date ?? lw.throughDate,
                                   state: lw.state,
@@ -662,6 +786,7 @@ export default function DocumentsPage() {
                 <thead>
                   <tr>
                     {([
+                      ...(showJobCol ? [['Job','job']] : []),
                       ['Week Ending','week'],['# Employees','employees'],['Total Gross','gross'],['Status','status'],['Download',undefined],
                     ] as [string, string|undefined][]).map(([h,k]) => (
                       <SortableTh key={h} label={h} sortKey={k} sort={prSort} onSort={prCycle} style={{ padding: '10px 16px' }} />
@@ -670,11 +795,11 @@ export default function DocumentsPage() {
                 </thead>
                 <tbody>
                   {loadingPayroll ? (
-                    <SkeletonRows cols={5} />
+                    <SkeletonRows cols={showJobCol ? 6 : 5} />
                   ) : errorPayroll ? (
-                    <ErrorRow colSpan={5} message="Couldn't Load Certified Payroll" onRetry={loadPayroll} />
+                    <ErrorRow colSpan={showJobCol ? 6 : 5} message="Couldn't Load Certified Payroll" onRetry={loadPayroll} />
                   ) : visPayroll.length === 0 ? (
-                    <tr><td colSpan={5} style={{ padding: 0 }}>
+                    <tr><td colSpan={showJobCol ? 6 : 5} style={{ padding: 0 }}>
                       <PremiumEmpty
                         compact
                         icon={<NotePencil size={30} weight="duotone" color={GOLD} />}
@@ -687,15 +812,16 @@ export default function DocumentsPage() {
                     const sc = statusConfig[pr.status] || statusConfig.draft;
                     return (
                       <tr key={pr.id} style={{ borderBottom: `1px solid rgba(255,255,255,0.08)` }}>
-                        <td style={{ padding: '12px 16px', color: TEXT, fontWeight: 600 }}>{pr.weekEnding ?? pr.week_ending}</td>
-                        <td style={{ padding: '12px 16px', color: DIM }}>{pr.employees}</td>
-                        <td style={{ padding: '12px 16px', color: TEXT }}>{fmt(pr.totalGross ?? pr.total_gross ?? 0)}</td>
+                        {showJobCol && jobCell(pr.project_id)}
+                        <td style={{ padding: '12px 16px', color: TEXT, fontWeight: 600 }}>{fmtDay(pr.week_ending) ?? '—'}</td>
+                        <td style={{ padding: '12px 16px', color: DIM }}>{pr.employee_count ?? 0}</td>
+                        <td style={{ padding: '12px 16px', color: TEXT }}>{fmt(pr.total_gross ?? 0)}</td>
                         <td style={{ padding: '12px 16px' }}><Badge label={pr.status} color={sc.color} bg={sc.bg} /></td>
                         <td style={{ padding: '12px 16px' }}>
                           <button
                             onClick={() => openOrGenerate(
                               `pr-${pr.id}`,
-                              pr.pdf_url ?? pr.pdfUrl ?? pr.url ?? pr.file_url,
+                              pr.pdf_url,
                               null,
                             )}
                             style={{

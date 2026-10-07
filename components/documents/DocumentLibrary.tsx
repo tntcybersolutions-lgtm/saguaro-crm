@@ -51,12 +51,15 @@ function shortTitle(d: { title: string | null; doc_type: string | null }): { mai
 
 const safeName = (s: string) => s.replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120) || 'document';
 
-export default function DocumentLibrary({ externalQuery = '' }: { externalQuery?: string }) {
+export default function DocumentLibrary({ externalQuery = '', jobId = null }: { externalQuery?: string; /** The Documents page's selected job, if any. */ jobId?: string | null }) {
   const [docs, setDocs] = useState<LibDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [cat, setCat] = useState<DocCategory | 'all'>('all');
-  const [job, setJob] = useState('');
+  const [job, setJob] = useState(jobId || '');
+  // Follow the page's job selection (the job board / ?project=); the library's
+  // own picker still works on its own when nothing is selected up top.
+  useEffect(() => { setJob(jobId || ''); }, [jobId]);
   const [win, setWin] = useState<Window>('all');
   const [q, setQ] = useState('');
   const [grouped, setGrouped] = useState(false);
