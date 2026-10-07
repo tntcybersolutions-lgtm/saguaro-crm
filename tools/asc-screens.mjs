@@ -170,6 +170,7 @@ const PROOF = [
   ['projects', '/app/projects', null, false],
   ['my-work', '/app/my-work', null, false],
   ['compliance', '/app/compliance', null, false],
+  ['documents', '/app/documents', null, true],
 ];
 
 async function proof() {
