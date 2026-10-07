@@ -44,7 +44,7 @@ to stop.
 - Reopen and confirm it persisted with today's practice date, not a UTC date
 - API: `app/api/daily-logs`
 - Taps at 390px: MEASURE
-- STATUS: NOT VERIFIED
+- STATUS: CODE-VERIFIED — AWAITING LIVE RUN (7 Oct: page reads `logs` = route returns `logs`; create sends the keys the route reads; tenant_id + auth/permission + assertProjectInTenant present; every insert column exists in the live daily_logs table; date sent is the local day. NEEDS-LIVE-RUN: save, reopen persistence, tap count, NWS auto-weather)
 
 ### Path 2 — Clock in and clock out
 - Open `app/app/time/page.tsx` (474 lines), clock in, clock out
