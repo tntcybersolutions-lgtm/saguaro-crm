@@ -183,6 +183,7 @@ export default function DocumentLibrary({ externalQuery = '', jobId = null }: { 
             <span className="dl-meta">
               <span className="dl-cat" style={{ color: DOC_CATEGORY_COLOR[c] }}>{DOC_CATEGORY_LABEL[c]}</span>
               {!st.dupType && <span>{docTypeLabel(d.doc_type)}</span>}
+              {!job && d.projectName && <span className="dl-metaJob">{d.projectName}</span>}
             </span>
           </span>
         </span>
@@ -210,7 +211,7 @@ export default function DocumentLibrary({ externalQuery = '', jobId = null }: { 
 
   return (
     <section className="dl" aria-labelledby="dl-h">
-      <style>{CSS}</style>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="dl-head">
         <div>
           <h2 id="dl-h">Document Library</h2>
@@ -258,7 +259,7 @@ export default function DocumentLibrary({ externalQuery = '', jobId = null }: { 
       <div className="dl-table" role="table" aria-label="Generated documents">
         <div role="row" className="dl-row dl-hrow">
           <span role="columnheader" className="dl-check"><input type="checkbox" checked={allVisibleSelected} onChange={toggleAll} aria-label="Select all shown" disabled={!visible.length} /></span>
-          <span role="columnheader">Document</span>
+          <span role="columnheader" className="dl-doc">Document</span>
           <span role="columnheader" className="dl-job">Job</span>
           <span role="columnheader" className="dl-date">Generated</span>
           <span role="columnheader" className="dl-status">Status</span>
@@ -350,13 +351,23 @@ const CSS = `
 .dl-gname { color: var(--title-color, #FFE600); }
 .dl-gcount { margin-left: auto; font-size: 12.5px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
 .dl-more { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; font-size: 13px; color: var(--text-tertiary); }
-@media (max-width: 1100px) { .dl-row { grid-template-columns: 36px minmax(0, 1fr) 110px 150px; } .dl-job, .dl-status { display: none; } }
+.dl-metaJob { display: none; }
+@media (max-width: 1100px) { .dl-row { grid-template-columns: 36px minmax(0, 1fr) 110px 150px; } .dl-job, .dl-status { display: none; } .dl-metaJob { display: inline; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; } }
+/* Phone: the title gets the whole width; its buttons sit on a line under it. */
 @media (max-width: 640px) {
   .dl { padding: 14px; }
-  .dl-row { grid-template-columns: 32px minmax(0, 1fr) auto; min-height: 64px; }
-  .dl-date { display: none; }
-  .dl-actions span { display: none; }
+  .dl-row { grid-template-columns: 32px minmax(0, 1fr); grid-template-areas: "check doc" ". actions"; row-gap: 10px; min-height: 64px; padding: 12px; }
+  .dl-check { grid-area: check; align-self: start; padding-top: 10px; }
+  .dl-doc { grid-area: doc; }
+  .dl-actions { grid-area: actions; justify-content: flex-start; }
+  .dl-hrow { grid-template-areas: "check doc"; }
+  .dl-hrow .dl-check { padding-top: 0; align-self: center; }
+  .dl-hrow .dl-actions, .dl-date { display: none; }
+  .dl-skel { grid-template-areas: none; }
+  .dl-skel span:nth-child(n+3) { display: none; }
+  .dl-meta { flex-wrap: wrap; white-space: normal; row-gap: 2px; }
   .dl-btn, .dl-primary, .dl-chips button, .dl-viewtoggle button, .dl-toolbar select, .dl-search { min-height: 44px; }
-  .dl-icon, .dl-actions .dl-btn { width: 44px; padding: 0; }
+  .dl-actions .dl-btn { min-width: 44px; }
+  .dl-icon { width: 44px; padding: 0; }
 }
 `;
