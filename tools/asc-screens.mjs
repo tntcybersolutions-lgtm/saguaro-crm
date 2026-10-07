@@ -244,6 +244,67 @@ async function proof() {
         console.log(`  ✗ ${name}: ${e.message.split('\n')[0]}`);
       }
     }
+    // Subs & crews, end to end on the live site: the GC makes a ZZ AUDIT sub
+    // link, a sub on a phone (no GC sign-in) sends a labelled test photo + clip
+    // to the GC only, the GC finds them in the job's inbox and gets the
+    // notification, then the test items are dismissed and the link revoked.
+    if (kind === 'phone' && project) {
+      const gc = await ctx.newPage();
+      let session = null;
+      const shotOf = async (pg, name) => {
+        const file = path.join(dir, `${String(++n).padStart(2, '0')}-${name}.png`);
+        await pg.screenshot({ path: file });
+        console.log(`  ${path.basename(file)}`);
+      };
+      try {
+        const r = await gc.request.post(`${SITE}/api/portal/sub/create`, { data: {
+          projectId: project, companyName: 'ZZ AUDIT Sub', contactName: 'ZZ Audit', email: 'delivered@resend.dev' } });
+        const j = await r.json().catch(() => ({}));
+        session = j.session || null;
+        console.log(`  sub-e2e: GC made a sub link → ${r.status()} ${session ? 'ok' : JSON.stringify(j).slice(0, 160)}`);
+        if (!session?.token) throw new Error('no sub link');
+        const subCtx = await browser.newContext({ ...dev, colorScheme: 'dark' });
+        const sub = await subCtx.newPage();
+        sub.on('pageerror', (e) => errors.push('sub portal: ' + String(e.message || e).slice(0, 160)));
+        await sub.goto(`${SITE}/portals/sub/${session.token}?tab=photos`, { waitUntil: 'networkidle', timeout: 45000 });
+        await sub.waitForTimeout(2000);
+        await shotOf(sub, 'sub-end-of-day');
+        await sub.click('button[role="radio"]:has-text("Send to the GC only")');
+        await sub.fill('#eod-note', 'ZZ AUDIT — automated end-of-day test, not a real upload');
+        await sub.setInputFiles('input[type="file"][multiple][accept="image/*,video/*"]',
+          [path.join(ROOT, 'tools/fixtures/zz-audit-photo.jpg'), path.join(ROOT, 'tools/fixtures/zz-audit-clip.webm')]);
+        const sent = await sub.waitForSelector('text=/Sent 2 to the GC/', { timeout: 120000 }).then(() => true).catch(() => false);
+        console.log(`  sub-e2e: sub sent photo + clip to the GC → ${sent ? 'ok' : 'NO CONFIRMATION'}`);
+        await sub.waitForTimeout(1500);
+        await shotOf(sub, 'sub-sent-to-gc');
+        await subCtx.close();
+
+        // The GC's side: the job's inbox, and the notification.
+        await gc.goto(`${SITE}/app/projects/${project}/photos?inbox=1`, { waitUntil: 'networkidle', timeout: 45000 });
+        await gc.waitForTimeout(2500);
+        const inbox = await gc.evaluate(() => document.body.innerText.includes('ZZ AUDIT Sub'));
+        console.log(`  sub-e2e: GC inbox shows ZZ AUDIT Sub → ${inbox ? 'ok' : 'NOT FOUND'}`);
+        await shotOf(gc, 'gc-inbox-from-sub');
+        const nr = await gc.request.get(`${SITE}/api/notifications`);
+        const note = ((await nr.json().catch(() => ({}))).notifications || []).find((x) => String(x.title || '').startsWith('ZZ AUDIT Sub'));
+        console.log(`  sub-e2e: GC notification → ${note ? JSON.stringify({ title: note.title, link: String(note.link || '').replace(/[0-9a-f-]{36}/gi, ':id') }) : 'NOT FOUND'}`);
+
+        // Clean up: dismiss the test items, revoke the link.
+        const list = await (await gc.request.get(`${SITE}/api/projects/${project}/sub-media`)).json().catch(() => ({}));
+        const ids = (list.items || list.submissions || list.data || []).filter((x) => x.portal_session_id === session.id).map((x) => x.id);
+        if (ids.length) {
+          const d = await gc.request.patch(`${SITE}/api/projects/${project}/sub-media`, { data: { ids, action: 'dismiss' } });
+          console.log(`  sub-e2e: dismissed ${ids.length} test item(s) → ${d.status()}`);
+        } else console.log(`  sub-e2e: no test items listed to dismiss (keys: ${Object.keys(list).join(',')})`);
+      } catch (e) {
+        console.log(`  ✗ sub-e2e: ${e.message.split('\n')[0]}`);
+      }
+      if (session?.id) {
+        const rv = await gc.request.post(`${SITE}/api/portal/revoke`, { data: { sessionId: session.id, type: 'sub' } });
+        console.log(`  sub-e2e: test sub link revoked → ${rv.status()}`);
+      }
+      await gc.close();
+    }
     if (errors.length) console.log(`  page errors: ${[...new Set(errors)].join(' | ')}`);
     await ctx.close();
   }
