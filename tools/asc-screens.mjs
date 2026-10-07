@@ -173,6 +173,7 @@ const PROOF = [
   ['compliance', '/app/compliance', null, false],
   ['documents', '/app/documents', null, true],
   ['documents-one-job', '/app/documents?project={project}', null, true],
+  ['notifications-alerts', '/app/notifications', null, false],
 ];
 
 async function proof() {
@@ -309,6 +310,66 @@ async function proof() {
     await ctx.close();
   }
   await browser.close();
+  await pushProof(review, root);
+}
+
+// Alerts, end to end: real Google Chrome (it has a push service; open-source
+// Chromium doesn't) turns alerts on from the Notifications page, sends itself
+// a test, and we wait for the alert to land in the browser — then turn it off
+// so the demo account keeps no device.
+async function pushProof(review, root) {
+  const require = createRequire(path.join(process.env.PLAYWRIGHT_DIR, 'noop.js'));
+  const { chromium } = require('playwright');
+  let chrome;
+  try { chrome = await chromium.launch({ channel: 'chrome' }); }
+  catch (e) { console.log(`push-e2e: Google Chrome not available — ${e.message.split('\n')[0]}`); return; }
+  const dir = path.join(root, 'desktop');
+  const ctx = await chrome.newContext({ ...PROOF_DEVICES.desktop, colorScheme: 'dark' });
+  await ctx.grantPermissions(['notifications'], { origin: SITE });
+  const page = await ctx.newPage();
+  try {
+    await page.goto(`${SITE}/login`, { waitUntil: 'networkidle' });
+    await page.fill('input[name="email"]', review.demoAccountName);
+    await page.fill('input[name="password"]', review.demoAccountPassword);
+    await page.click('button[type="submit"]');
+    await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 60000 });
+    await page.goto(`${SITE}/app/notifications`, { waitUntil: 'networkidle' });
+    const card = page.locator('.pac');
+    if (!(await card.count())) { console.log('push-e2e: no alerts card on the Notifications page'); return; }
+    console.log(`push-e2e: card state → ${await card.getAttribute('data-state')}`);
+    if ((await card.getAttribute('data-state')) === 'off') {
+      await page.click('.pac button:has-text("Turn on alerts")');
+      await page.waitForSelector('.pac[data-state="on"], .pacMsg', { timeout: 30000 });
+    }
+    console.log(`push-e2e: after turn-on → ${await card.getAttribute('data-state')} ${(await page.locator('.pacMsg').textContent().catch(() => '')) || ''}`);
+    if ((await card.getAttribute('data-state')) !== 'on') return;
+    await page.click('.pac button:has-text("Send a test alert")');
+    await page.waitForSelector('.pacMsg', { timeout: 30000 });
+    console.log(`push-e2e: test → ${await page.locator('.pacMsg').textContent()}`);
+    const landed = await page.evaluate(async () => {
+      const reg = await navigator.serviceWorker.getRegistration('/');
+      for (let i = 0; i < 30; i++) {
+        const list = reg ? await reg.getNotifications() : [];
+        const n = list.find((x) => x.title === 'Saguaro alerts are on');
+        if (n) return { title: n.title, body: n.body };
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+      return null;
+    });
+    console.log(`push-e2e: alert delivered to the browser → ${landed ? JSON.stringify(landed) : 'NOT RECEIVED in 30s'}`);
+    await card.screenshot({ path: path.join(dir, '90-alerts-on-test-sent.png') });
+  } catch (e) {
+    console.log(`push-e2e: ✗ ${e.message.split('\n')[0]}`);
+  } finally {
+    // Leave the demo account with no signed-up device.
+    if (await page.locator('.pac button:has-text("Turn off")').count().catch(() => 0)) {
+      await page.click('.pac button:has-text("Turn off")').catch(() => {});
+      await page.waitForTimeout(1500);
+      console.log(`push-e2e: turned off again → ${await page.locator('.pac').getAttribute('data-state').catch(() => '?')}`);
+    }
+    await ctx.close();
+    await chrome.close();
+  }
 }
 
 // ── upload ───────────────────────────────────────────────────────────────────
