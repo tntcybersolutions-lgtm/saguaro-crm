@@ -317,12 +317,52 @@ async function proof() {
 // Chromium doesn't) turns alerts on from the Notifications page, sends itself
 // a test, and we wait for the alert to land in the browser — then turn it off
 // so the demo account keeps no device.
+// Each step of turning alerts on, in the page, reporting the first that throws.
+const PUSH_STEPS = async () => {
+  const out = { steps: [] };
+  const step = async (name, fn) => { try { const v = await fn(); out.steps.push(`${name}: ok${v !== undefined ? ' ' + v : ''}`); return v; } catch (e) { out.steps.push(`${name}: FAILED ${e && e.name}: ${e && e.message}`); throw e; } };
+  try {
+    const cfg = await step('push-config', async () => { const r = await fetch('/api/notifications/push-config'); const j = await r.json(); out.cfg = { status: r.status, hasKey: !!j.webPublicKey }; return JSON.stringify(out.cfg); });
+    await step('support', async () => `${'serviceWorker' in navigator}/${'PushManager' in window}/${'Notification' in window}`);
+    await step('permission', async () => Notification.requestPermission());
+    const reg = await step('register', async () => { const r = await navigator.serviceWorker.register('/push-sw.js', { scope: '/' }); await navigator.serviceWorker.ready; return r; });
+    const key = (await (await fetch('/api/notifications/push-config')).json()).webPublicKey;
+    const pad = '='.repeat((4 - (key.length % 4)) % 4);
+    const bytes = Uint8Array.from(atob((key + pad).replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
+    const sub = await step('subscribe', async () => (await reg.pushManager.getSubscription()) || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: bytes }));
+    out.endpointHost = new URL(sub.endpoint).host;
+    await step('save', async () => { const r = await fetch('/api/notifications/push-subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription: sub.toJSON() }) }); return r.status; });
+    void cfg;
+  } catch { /* first failure recorded */ }
+  return out;
+};
+
 async function pushProof(review, root) {
   const require = createRequire(path.join(process.env.PLAYWRIGHT_DIR, 'noop.js'));
   const { chromium } = require('playwright');
+  // Headless Chrome can't always reach a push service; a real window on a
+  // virtual display (Xvfb) can. Try headless, then headed.
+  for (const headed of [false, true]) {
+    let xvfb = null;
+    if (headed) {
+      try {
+        const { spawn } = await import('node:child_process');
+        xvfb = spawn('Xvfb', [':99', '-screen', '0', '1440x900x24'], { stdio: 'ignore' });
+        await new Promise((r) => setTimeout(r, 1500));
+      } catch (e) { console.log(`push-e2e: no Xvfb — ${e.message}`); return; }
+    }
+    const done = await pushProofOnce(chromium, review, root, headed);
+    if (xvfb) xvfb.kill();
+    if (done) return;
+  }
+}
+
+async function pushProofOnce(chromium, review, root, headed) {
+  console.log(`push-e2e: ${headed ? 'headed Chrome on Xvfb' : 'headless Chrome'}`);
   let chrome;
-  try { chrome = await chromium.launch({ channel: 'chrome' }); }
-  catch (e) { console.log(`push-e2e: Google Chrome not available — ${e.message.split('\n')[0]}`); return; }
+  try { chrome = await chromium.launch({ channel: 'chrome', headless: !headed, env: headed ? { ...process.env, DISPLAY: ':99' } : process.env }); }
+  catch (e) { console.log(`push-e2e: Google Chrome not available — ${e.message.split('\n')[0]}`); return false; }
+  let delivered = false;
   const dir = path.join(root, 'desktop');
   const ctx = await chrome.newContext({ ...PROOF_DEVICES.desktop, colorScheme: 'dark' });
   await ctx.grantPermissions(['notifications'], { origin: SITE });
@@ -335,14 +375,17 @@ async function pushProof(review, root) {
     await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 60000 });
     await page.goto(`${SITE}/app/notifications`, { waitUntil: 'networkidle' });
     const card = page.locator('.pac');
-    if (!(await card.count())) { console.log('push-e2e: no alerts card on the Notifications page'); return; }
+    if (!(await card.count())) { console.log('push-e2e: no alerts card on the Notifications page'); return false; }
     console.log(`push-e2e: card state → ${await card.getAttribute('data-state')}`);
+    console.log(`push-e2e: steps → ${JSON.stringify(await page.evaluate(PUSH_STEPS))}`);
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForSelector('.pac', { timeout: 15000 });
     if ((await card.getAttribute('data-state')) === 'off') {
       await page.click('.pac button:has-text("Turn on alerts")');
       await page.waitForSelector('.pac[data-state="on"], .pacMsg', { timeout: 30000 });
     }
     console.log(`push-e2e: after turn-on → ${await card.getAttribute('data-state')} ${(await page.locator('.pacMsg').textContent().catch(() => '')) || ''}`);
-    if ((await card.getAttribute('data-state')) !== 'on') return;
+    if ((await card.getAttribute('data-state')) !== 'on') return false;
     await page.click('.pac button:has-text("Send a test alert")');
     await page.waitForSelector('.pacMsg', { timeout: 30000 });
     console.log(`push-e2e: test → ${await page.locator('.pacMsg').textContent()}`);
@@ -357,6 +400,7 @@ async function pushProof(review, root) {
       return null;
     });
     console.log(`push-e2e: alert delivered to the browser → ${landed ? JSON.stringify(landed) : 'NOT RECEIVED in 30s'}`);
+    delivered = !!landed;
     await card.screenshot({ path: path.join(dir, '90-alerts-on-test-sent.png') });
   } catch (e) {
     console.log(`push-e2e: ✗ ${e.message.split('\n')[0]}`);
@@ -370,6 +414,7 @@ async function pushProof(review, root) {
     await ctx.close();
     await chrome.close();
   }
+  return delivered;
 }
 
 // ── upload ───────────────────────────────────────────────────────────────────
