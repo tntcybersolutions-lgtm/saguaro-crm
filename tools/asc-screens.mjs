@@ -222,6 +222,14 @@ async function proof() {
           await page.click('[data-tour="project-picker"]:visible');
         }
         if (action) await page.waitForTimeout(800);
+        // What the upload sheet decided about this browser (camera buttons vs drop zone).
+        if (action === 'addphoto') console.log('  touch-check', JSON.stringify(await page.evaluate(() => {
+          const mu = document.querySelector('.mu');
+          return { mtp: navigator.maxTouchPoints, coarse: matchMedia('(any-pointer: coarse)').matches, fine: matchMedia('(any-pointer: fine)').matches,
+            dataTouch: mu?.getAttribute('data-touch') ?? null, dataMouse: mu?.getAttribute('data-mouse') ?? null,
+            cams: [...document.querySelectorAll('.muCam')].map((e) => getComputedStyle(e).display),
+            newCss: [...document.querySelectorAll('style')].some((t) => t.textContent.includes('.mu:not([data-touch]) .muCam')) };
+        })));
         const file = path.join(dir, `${String(++n).padStart(2, '0')}-${name}.png`);
         await page.screenshot({ path: file, fullPage: !!full });
         const m = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth }));
