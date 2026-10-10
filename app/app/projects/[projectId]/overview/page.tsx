@@ -491,21 +491,21 @@ function JobSkeleton({ css }: { css: React.ReactNode }) {
 /* Injected with dangerouslySetInnerHTML (tools/check-style-escapes.mjs), so the
    server and client text match. */
 const CSS = `
-.jx{width:100%;max-width:1240px;box-sizing:border-box;padding:4px 0 32px;color:var(--sg-text);background:var(--bg-base);min-height:calc(100vh - 120px)}
+.jx{width:100%;max-width:1240px;box-sizing:border-box;padding:4px 0 32px;color:var(--fl-text);background:var(--bg-base);min-height:calc(100vh - 120px)}
 .jx-head{padding:12px 16px 4px}
-.jx-head h1{margin:0;font-size:20px !important;font-weight:700;line-height:1.2;color:var(--sg-text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
-.jx-sub-line{margin:4px 0 0;font-size:13px;color:var(--sg-text-2);line-height:1.4}
+.jx-head h1{margin:0;font-size:20px !important;font-weight:700;line-height:1.2;color:var(--fl-text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.jx-sub-line{margin:4px 0 0;font-size:13px;color:var(--fl-text-2);line-height:1.4}
 .jx-sub-line [data-late]{color:var(--warning)}
-.jx-money{display:flex;gap:18px;padding:10px 16px 10px;font-size:13px;color:var(--sg-text-2)}
+.jx-money{display:flex;gap:18px;padding:10px 16px 10px;font-size:13px;color:var(--fl-text-2)}
 .jx-money>div{min-width:0}
-.jx-money b{display:block;font-size:16px;font-weight:700;color:var(--sg-text);font-variant-numeric:tabular-nums;white-space:nowrap}
-.jx-bar{height:3px;margin:0 16px 12px;background:var(--sg-border);border-radius:2px;overflow:hidden}
+.jx-money b{display:block;font-size:16px;font-weight:700;color:var(--fl-text);font-variant-numeric:tabular-nums;white-space:nowrap}
+.jx-bar{height:3px;margin:0 16px 12px;background:var(--fl-line);border-radius:2px;overflow:hidden}
 .jx-bar i{display:block;height:100%;background:var(--brand-primary)}
 .jx .fl-brief{margin-top:2px}
-.jx-skel,.jx-skel-val,.jx-brief-skel i{display:block;border-radius:5px;background:var(--sg-border);animation:jx-pulse 1.2s ease-in-out infinite}
+.jx-skel,.jx-skel-val,.jx-brief-skel i{display:block;border-radius:5px;background:var(--fl-line);animation:jx-pulse 1.2s ease-in-out infinite}
 .jx-skel-val{display:inline-block;width:44px;height:12px;vertical-align:middle}
 .jx-money .jx-skel-val{display:block;height:16px;width:56px;margin-bottom:4px}
-.jx-brief-skel{margin:8px 16px 12px;padding:2px 0 2px 12px;border-left:2px solid var(--sg-border)}
+.jx-brief-skel{margin:8px 16px 12px;padding:2px 0 2px 12px;border-left:2px solid var(--fl-line)}
 .jx-brief-skel i{height:12px;width:92%;margin:4px 0 8px}
 .jx-brief-skel i+i{width:60%}
 @keyframes jx-pulse{50%{opacity:.45}}
@@ -519,11 +519,11 @@ const CSS = `
 .jx-chev[data-open]{transform:rotate(90deg)}
 .jx-panel{padding:0 0 8px}
 .jx-sub{list-style:none;margin:0;padding:0 0 0 12px}
-.jx-sub>li{border-top:1px solid var(--sg-border)}
+.jx-sub>li{border-top:1px solid var(--fl-line)}
 .jx-dl{margin:0;padding:0 16px}
-.jx-dl>div{display:flex;justify-content:space-between;gap:16px;min-height:40px;align-items:center;border-top:1px solid var(--sg-border);font-size:14px}
-.jx-dl dt{color:var(--sg-text-2)}
-.jx-dl dd{margin:0;color:var(--sg-text);font-weight:600;text-align:right;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;min-width:0}
+.jx-dl>div{display:flex;justify-content:space-between;gap:16px;min-height:40px;align-items:center;border-top:1px solid var(--fl-line);font-size:14px}
+.jx-dl dt{color:var(--fl-text-2)}
+.jx-dl dd{margin:0;color:var(--fl-text);font-weight:600;text-align:right;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;min-width:0}
 .jx-own{padding:0 16px}
 .jx-own .k-card{background:none !important;border:0 !important;box-shadow:none !important;padding:0 !important;border-radius:0 !important}
 .jx-color{padding:6px 16px 10px}
@@ -534,7 +534,6 @@ const CSS = `
 /* The brief's one action sits inside the sentence; its tap area reaches 44px without moving a word. */
 .jx .fl-brief-act{position:relative;display:inline-block}
 .jx .fl-brief-act::after{content:"";position:absolute;inset:-12px -6px}
-@media (pointer:coarse){.jx .fl-sec .fl-sec-act{min-height:44px}}
 @media (min-width:1100px){
   .jx{padding:12px 8px 48px}
   .jx-head h1{font-size:22px !important}

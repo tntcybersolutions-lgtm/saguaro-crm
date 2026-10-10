@@ -156,25 +156,25 @@ export default function JobsPage() {
 /* Theme variables only; injected with dangerouslySetInnerHTML so the server
    and client text match (tools/check-style-escapes.mjs). */
 const CSS = `
-.jl{max-width:1040px;box-sizing:border-box;padding:4px 0 32px;color:var(--sg-text);background:var(--bg-base);min-height:calc(100vh - 120px)}
+.jl{max-width:1040px;box-sizing:border-box;padding:4px 0 32px;color:var(--fl-text);background:var(--bg-base);min-height:calc(100vh - 120px)}
 .jl-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px 6px}
 .jl-title{min-width:0}
-.jl-title h1{margin:0;font-size:22px !important;font-weight:700;line-height:1.2;color:var(--sg-text)}
-.jl-title p{margin:2px 0 0;font-size:13px;color:var(--sg-text-2);min-height:18px}
+.jl-title h1{margin:0;font-size:22px !important;font-weight:700;line-height:1.2;color:var(--fl-text)}
+.jl-title p{margin:2px 0 0;font-size:13px;color:var(--fl-text-2);min-height:18px}
 .jl-tools{display:flex;gap:8px;padding:6px 16px 4px}
 /* 16px beats the app-wide 13px !important on fields: under 16px iOS zooms the page on focus. */
-.jl-search,.jl-sort{height:44px;min-height:44px;box-sizing:border-box;border:1px solid var(--sg-border);border-radius:10px;background-color:var(--bg-base);color:var(--sg-text);font-family:inherit;font-size:16px !important}
+.jl-search,.jl-sort{height:44px;min-height:44px;box-sizing:border-box;border:1px solid var(--fl-line);border-radius:10px;background-color:var(--bg-base);color:var(--fl-text);font-family:inherit;font-size:16px !important}
 .jl-search{flex:1;min-width:0;padding:0 12px}
-.jl-search::placeholder{color:var(--sg-text-3)}
+.jl-search::placeholder{color:var(--fl-text-3)}
 .jl-sort{flex:none;width:auto;max-width:42%;padding:0 34px 0 12px}
 .jl-search:focus-visible,.jl-sort:focus-visible,.jl-chip:focus-visible{outline:2px solid var(--brand-primary);outline-offset:1px}
 .jl-chips{display:flex;flex-wrap:wrap;align-items:center;gap:5px;padding:8px 16px 12px}
-.jl-chip{position:relative;display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 9px;border-radius:16px;border:1px solid var(--sg-border);background:none;color:var(--sg-text-2);font:inherit;font-size:13px;font-weight:600;letter-spacing:0;cursor:pointer;white-space:nowrap}
+.jl-chip{position:relative;display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 9px;border-radius:16px;border:1px solid var(--fl-line);background:none;color:var(--fl-text-2);font:inherit;font-size:13px;font-weight:600;letter-spacing:0;cursor:pointer;white-space:nowrap}
 .jl-chip::after{content:"";position:absolute;inset:-6px -3px}
-.jl-chip span{font-variant-numeric:tabular-nums;color:var(--sg-text-3);font-weight:600}
-.jl-chip[aria-pressed=true]{background:var(--sg-border);color:var(--sg-text);border-color:var(--sg-border-strong)}
-.jl-chip[aria-pressed=true] span{color:var(--sg-text-2)}
-.jl-count{margin-left:auto;font-size:12.5px;color:var(--sg-text-3)}
+.jl-chip span{font-variant-numeric:tabular-nums;color:var(--fl-text-3);font-weight:600}
+.jl-chip[aria-pressed=true]{background:var(--fl-line);color:var(--fl-text);border-color:var(--fl-line-strong)}
+.jl-chip[aria-pressed=true] span{color:var(--fl-text-2)}
+.jl-count{margin-left:auto;font-size:12.5px;color:var(--fl-text-3)}
 .jl-inline{color:var(--brand-primary);font-weight:650;text-decoration:none;background:none;border:0;padding:0;font:inherit;cursor:pointer;min-height:44px}
 /* The brief's one action sits inside the sentence; its tap area reaches 44px without moving a word. */
 .jl .fl-brief-act{position:relative;display:inline-block}

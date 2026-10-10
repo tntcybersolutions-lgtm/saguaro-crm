@@ -74,7 +74,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
 /* Theme variables only; injected with dangerouslySetInnerHTML so the server
    and client text match (tools/check-style-escapes.mjs). */
 const CSS = `
-.pjx-bar{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 8px 0 4px;border-bottom:1px solid var(--sg-border,var(--border-default));min-width:0}
+.pjx-bar{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 8px 0 4px;border-bottom:1px solid var(--fl-line,var(--border-default));min-width:0}
 .pjx-back{display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 10px 0 8px;color:var(--brand-primary);font-size:15px;font-weight:600;text-decoration:none;min-width:0;flex:0 1 auto;-webkit-tap-highlight-color:transparent}
 .pjx-back>span:first-child{font-size:22px;line-height:1;margin-top:-2px}
 .pjx-back-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(60vw,420px)}
@@ -86,9 +86,9 @@ const CSS = `
   .pjx-bar{padding:0 clamp(8px,1.2vw,20px) 0 4px}
   .pjx-tabs{display:flex;align-items:stretch;gap:2px;margin-left:auto;min-width:0;overflow-x:auto;scrollbar-width:none}
   .pjx-tabs::-webkit-scrollbar{display:none}
-  .pjx-tab{display:inline-flex;align-items:center;min-height:44px;padding:0 10px;border-bottom:2px solid transparent;color:var(--sg-text-2,var(--text-secondary));font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap}
-  .pjx-tab:hover{color:var(--sg-text,var(--text-primary))}
-  .pjx-tab[data-active]{color:var(--sg-text,var(--text-primary));border-bottom-color:var(--brand-primary)}
+  .pjx-tab{display:inline-flex;align-items:center;min-height:44px;padding:0 10px;border-bottom:2px solid transparent;color:var(--fl-text-2,var(--text-secondary));font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap}
+  .pjx-tab:hover{color:var(--fl-text,var(--text-primary))}
+  .pjx-tab[data-active]{color:var(--fl-text,var(--text-primary));border-bottom-color:var(--brand-primary)}
   .pjx-bar[data-on-job] .pjx-tabs{margin-left:0}
 }
 `;

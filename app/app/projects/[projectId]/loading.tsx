@@ -23,8 +23,8 @@ export default function JobLoading() {
 }
 
 const CSS = `
-.jl-head{padding:14px 16px 10px;border-bottom:1px solid var(--sg-border)}
-.jl-head i{display:block;border-radius:5px;background:var(--sg-border);animation:jl-pulse 1.2s ease-in-out infinite}
+.jl-head{padding:14px 16px 10px;border-bottom:1px solid var(--fl-line)}
+.jl-head i{display:block;border-radius:5px;background:var(--fl-line);animation:jl-pulse 1.2s ease-in-out infinite}
 @keyframes jl-pulse{50%{opacity:.45}}
 @media (prefers-reduced-motion:reduce){.jl-head i{animation:none}}
 `;

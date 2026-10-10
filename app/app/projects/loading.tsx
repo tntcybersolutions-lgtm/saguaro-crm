@@ -19,8 +19,8 @@ export default function JobsLoading() {
 }
 
 const CSS = `
-.jsl-head{padding:14px 16px 12px;border-bottom:1px solid var(--sg-border)}
-.jsl-head i{display:block;border-radius:5px;background:var(--sg-border);animation:jsl-pulse 1.2s ease-in-out infinite}
+.jsl-head{padding:14px 16px 12px;border-bottom:1px solid var(--fl-line)}
+.jsl-head i{display:block;border-radius:5px;background:var(--fl-line);animation:jsl-pulse 1.2s ease-in-out infinite}
 @keyframes jsl-pulse{50%{opacity:.45}}
 @media (prefers-reduced-motion:reduce){.jsl-head i{animation:none}}
 `;
