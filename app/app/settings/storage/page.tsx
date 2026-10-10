@@ -136,9 +136,11 @@ function StorageSettings() {
     } catch { flash('Save failed — could not reach the service', false); }
   };
 
-  const oneClick = providers.filter((p) => p.auth === 'oauth');
+  // Only providers whose sign-in app is configured — an unconfigured one is a
+  // card that can't connect, so it isn't shown.
+  const oneClick = providers.filter((p) => p.auth === 'oauth' && p.available);
   const advanced = providers.filter((p) => p.auth !== 'oauth');
-  const anyOneClick = oneClick.some((p) => p.available);
+  const anyOneClick = oneClick.length > 0;
   const healthy = connectors.filter((c) => c.connected).length;
 
   return (
@@ -156,7 +158,7 @@ function StorageSettings() {
         <StatStrip items={[
           {href: '/app/settings/storage', label: 'Connections', value: String(connectors.length), sub: connectors.length ? 'Linked to this workspace' : 'None yet' },
           {href: '/app/settings/storage', label: 'Healthy', value: String(healthy), accent: connectors.length > 0 && healthy < connectors.length ? RED : (healthy > 0 ? GREEN : undefined), sub: connectors.length > 0 && healthy < connectors.length ? `${connectors.length - healthy} need attention` : 'Verified reachable' },
-          {href: '/app/settings/storage', label: 'One-Click Providers', value: String(oneClick.filter((p) => p.available).length), sub: `Of ${oneClick.length} sign-in providers` },
+          {href: '/app/settings/storage', label: 'One-Click Providers', value: String(oneClick.length), sub: oneClick.map((p) => p.label).join(', ') || 'None set up' },
           {href: '/app/settings/storage', label: 'Bring Your Own', value: String(advanced.length), sub: 'Key-based options (S3, Egnyte)' },
         ]} />
       )}
@@ -192,22 +194,21 @@ function StorageSettings() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 12 }}>
           {loading && <><SkeletonRow h={110} /><SkeletonRow h={110} /><SkeletonRow h={110} /></>}
           {!loading && oneClick.map((p) => (
-            <button key={p.id} disabled={!p.available} onClick={() => startAdd(p.id, p.auth)}
-              className={p.available ? 'pmHover' : undefined}
+            <button key={p.id} onClick={() => startAdd(p.id, p.auth)}
+              className="pmHover"
               style={{
                 textAlign: 'left', fontFamily: 'inherit',
                 background: 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))',
-                border: `1px solid ${p.available ? BORDER : 'rgba(255,255,255,0.05)'}`,
-                borderRadius: 12, padding: 14, cursor: p.available ? 'pointer' : 'default',
-                opacity: p.available ? 1 : 0.5, color: WHITE,
+                border: `1px solid ${BORDER}`,
+                borderRadius: 12, padding: 14, cursor: 'pointer', color: WHITE,
               }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><CloudArrowUp size={18} color={GOLD} weight="fill" /><span style={{ fontWeight: 700, fontSize: 14 }}>{p.label}</span></div>
               <div style={{ color: MUTED, fontSize: 12, marginTop: 6, lineHeight: 1.4 }}>{p.blurb}</div>
-              <div style={{ marginTop: 8, fontSize: 11.5, color: p.available ? GOLD_HI : MUTED }}>{p.available ? 'Connect with Sign-In →' : 'Enabling Soon'}</div>
+              <div style={{ marginTop: 8, fontSize: 11.5, color: GOLD_HI }}>Connect with Sign-In →</div>
             </button>
           ))}
         </div>
-        {!loading && !anyOneClick && <div style={{ fontSize: 12, color: MUTED, marginTop: 10 }}>One-click providers activate once your Saguaro workspace is configured. Use an advanced option below in the meantime.</div>}
+        {!loading && !anyOneClick && <div style={{ fontSize: 12, color: MUTED, marginTop: 10 }}>No sign-in providers are set up for this workspace. Use an advanced option below.</div>}
 
         {/* advanced: self-managed keys (S3 bucket, Egnyte token) */}
         <button onClick={() => setAdvOpen((v) => !v)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', color: MUTED, marginTop: 22, padding: 0, fontSize: 13, fontWeight: 700, fontFamily: 'inherit' }}>
