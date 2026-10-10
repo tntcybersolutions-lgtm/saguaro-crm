@@ -1,8 +1,8 @@
 {
-  "run": "38061182499",
-  "tag": "ZZ AUDIT 182499",
-  "job": "50f77a5f-9d49-4a2a-86ac-1a9b9f2f1afc",
-  "package": "d8931614-ea0d-49b6-889e-d60eb0326a1a",
+  "run": "38063878436",
+  "tag": "ZZ AUDIT 878436",
+  "job": "a7c8c3ff-482b-4f69-bfdc-3224e9509461",
+  "package": "4ee6b31f-85a2-44de-9433-5cbc4c126896",
   "doors": {
     "files": 200,
     "drawings": 200,
@@ -38,8 +38,8 @@
       "required": true,
       "count": 2,
       "docs": [
-        "E-101 — ZZ AUDIT 182499 Power Plan",
-        "ZZ AUDIT 182499 PLAN SET — ZZ AUDIT 182499 Plan Set"
+        "E-101 — ZZ AUDIT 878436 Power Plan",
+        "ZZ AUDIT 878436 PLAN SET — ZZ AUDIT 878436 Plan Set"
       ],
       "pages": []
     },
@@ -83,8 +83,8 @@
       "required": false,
       "count": 2,
       "docs": [
-        "ZZ AUDIT 182499 E-401 Panel Schedules.pdf",
-        "ZZ AUDIT 182499 Site Logistics Plan.pdf"
+        "ZZ AUDIT 878436 E-401 Panel Schedules.pdf",
+        "ZZ AUDIT 878436 Site Logistics Plan.pdf"
       ],
       "pages": []
     },
@@ -102,42 +102,42 @@
     {
       "name": "start a job",
       "pass": true,
-      "detail": "200 {\"projectId\":\"50f77a5f-9d49-4a2a-86ac-1a9b9f2f1afc\",\"project\":{\"id\":\"50f77a5f-9d49-4a2a-86ac-1a9b9f2f1afc\",\"tenant_id\":\"4a3342d3-bed9-4cf4-b2ae-d92961841878\",\"name\":\"ZZ AUDIT 182499 Jacket Job\",\"addre"
+      "detail": "200 {\"projectId\":\"a7c8c3ff-482b-4f69-bfdc-3224e9509461\",\"project\":{\"id\":\"a7c8c3ff-482b-4f69-bfdc-3224e9509461\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"name\":\"ZZ AUDIT 878436 Jacket Job\",\"addre"
     },
     {
       "name": "files page: upload",
       "pass": true,
-      "detail": "200 {\"success\":true,\"files\":[{\"id\":\"a91877a3-a75f-4d87-9278-adda0073e134\",\"tenant_id\":\"4a3342d3-bed9-4cf4-b2ae-d92961841878\",\"project_id\":\"50f77a5f-9d49-4a2a-86ac-1a9b9f2f1afc\",\"file_name\":\"ZZ AUDIT 18249"
+      "detail": "200 {\"success\":true,\"files\":[{\"id\":\"af697ba9-6b60-407d-9073-2e8b1c6f58ed\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"project_id\":\"a7c8c3ff-482b-4f69-bfdc-3224e9509461\",\"file_name\":\"ZZ AUDIT 87843"
     },
     {
       "name": "drawings page: sheet upload",
       "pass": true,
-      "detail": "200 {\"success\":true,\"drawing\":{\"id\":\"71f3af07-a54e-4ab2-8036-73a2617899ff\",\"tenant_id\":\"4a3342d3-bed9-4cf4-b2ae-d92961841878\",\"project_id\":\"50f77a5f-9d49-4a2a-86ac-1a9b9f2f1afc\",\"name\":\"ZZ AUDIT 182499 Po"
+      "detail": "200 {\"success\":true,\"drawing\":{\"id\":\"11a4e69f-de2c-46be-b8d4-9412b05c18cb\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"project_id\":\"a7c8c3ff-482b-4f69-bfdc-3224e9509461\",\"name\":\"ZZ AUDIT 878436 Po"
     },
     {
       "name": "specs page: add section",
       "pass": true,
-      "detail": "200 {\"success\":true,\"spec\":{\"id\":\"adf32446-f17d-4893-b1e6-1c69687f0e2c\",\"tenant_id\":\"4a3342d3-bed9-4cf4-b2ae-d92961841878\",\"project_id\":\"50f77a5f-9d49-4a2a-86ac-1a9b9f2f1afc\",\"section_number\":\"26 05 00\",\""
+      "detail": "200 {\"success\":true,\"spec\":{\"id\":\"5ff6acb4-d160-4a81-9f06-ec8121329655\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"project_id\":\"a7c8c3ff-482b-4f69-bfdc-3224e9509461\",\"section_number\":\"26 05 00\",\""
     },
     {
       "name": "specs page: attach file",
       "pass": true,
-      "detail": "200 {\"success\":true,\"spec\":{\"id\":\"adf32446-f17d-4893-b1e6-1c69687f0e2c\",\"tenant_id\":\"4a3342d3-bed9-4cf4-b2ae-d92961841878\",\"project_id\":\"50f77a5f-9d49-4a2a-86ac-1a9b9f2f1afc\",\"section_number\":\"26 05 00\",\""
+      "detail": "200 {\"success\":true,\"spec\":{\"id\":\"5ff6acb4-d160-4a81-9f06-ec8121329655\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"project_id\":\"a7c8c3ff-482b-4f69-bfdc-3224e9509461\",\"section_number\":\"26 05 00\",\""
     },
     {
       "name": "takeoff: start",
       "pass": true,
-      "detail": "200 {\"data\":{\"id\":\"2702719b-a8f4-4b19-bbde-b9031b93f3bb\",\"project_id\":\"50f77a5f-9d49-4a2a-86ac-1a9b9f2f1afc\",\"name\":\"Takeoff Oct 10, 2026\",\"file_url\":null,\"file_name\":null,\"file_type\":null,\"file_size\":nul"
+      "detail": "200 {\"data\":{\"id\":\"e6e0e14c-e042-480d-bbd9-83605136e8d7\",\"project_id\":\"a7c8c3ff-482b-4f69-bfdc-3224e9509461\",\"name\":\"Takeoff Oct 10, 2026\",\"file_url\":null,\"file_name\":null,\"file_type\":null,\"file_size\":nul"
     },
     {
       "name": "takeoff: blueprint uploaded",
       "pass": true,
-      "detail": "200/200/200 {\"bucket\":\"blueprints\",\"path\":\"50f77a5f-9d49-4a2a-86ac-1a9b9f2f1afc/blueprints/2702719b-a8f4-4b19-bbde-b9031b93f3bb/sour"
+      "detail": "200/200/200 {\"bucket\":\"blueprints\",\"path\":\"a7c8c3ff-482b-4f69-bfdc-3224e9509461/blueprints/e6e0e14c-e042-480d-bbd9-83605136e8d7/sour"
     },
     {
       "name": "create bid package (wizard)",
       "pass": true,
-      "detail": "200 {\"success\":true,\"bidPackage\":{\"id\":\"d8931614-ea0d-49b6-889e-d60eb0326a1a\",\"tenant_id\":\"4a3342d3-bed9-4cf4-b2ae-d92961841878\",\"project_id\":\"50f77a5f-9d49-4a2a-86ac-1a9b9f2f1afc\",\"name\":\"ZZ AUDIT 182499"
+      "detail": "200 {\"success\":true,\"bidPackage\":{\"id\":\"4ee6b31f-85a2-44de-9433-5cbc4c126896\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"project_id\":\"a7c8c3ff-482b-4f69-bfdc-3224e9509461\",\"name\":\"ZZ AUDIT 878436"
     },
     {
       "name": "jacket Add Document (drawing)",
@@ -152,7 +152,7 @@
     {
       "name": "jacket opens",
       "pass": true,
-      "detail": "200 {\"package\":{\"id\":\"d8931614-ea0d-49b6-889e-d60eb0326a1a\",\"name\":\"ZZ AUDIT 182499 Electrical\",\"number\":null,\"trade\":\"Electrical\",\"status\":\"open\",\"dueDate\":\"2026-10-24\",\"validityDays\":60,\"preBidDate\":nul"
+      "detail": "200 {\"package\":{\"id\":\"4ee6b31f-85a2-44de-9433-5cbc4c126896\",\"name\":\"ZZ AUDIT 878436 Electrical\",\"number\":null,\"trade\":\"Electrical\",\"status\":\"open\",\"dueDate\":\"2026-10-24\",\"validityDays\":60,\"preBidDate\":nul"
     },
     {
       "name": "files-page plan (A-201) is in Drawings",
