@@ -1,15 +1,22 @@
 'use client';
 
 /**
- * <SectionCard> — premium container panel.
- * Gradient surface + subtle border + soft inner glow, with an optional header
- * (icon chip · title · subtitle · right-aligned actions slot). Set `glow` for
- * an ambient gold inner glow, `hover` for a lift-on-hover, `accentBar` for the
- * left gold edge. Theme-aware. Presentational only.
+ * <SectionCard> — a section of a page, flat by default (owner approved
+ * 2026-10-10): the content sits on the page under a small caps label and a
+ * hairline. No tray, no gradient, no glow, no radius, no shadow, no hover
+ * lift. The body keeps the page's own inset (16px on a phone, set by the
+ * page), so nothing is padded twice.
+ *
+ * `tray` is the opt-in for the rare thing that must stay raised — a dialog
+ * body, a picker: a solid surface with a hairline border, padded by `padding`.
+ *
+ * Same API as the premium SectionCard (components/ui/premium.tsx), and every
+ * existing prop still works: `flat` is the default now; `glow`, `hover` and
+ * `accentBar` are accepted and not drawn; `padding` pads a tray's body.
+ * Styles: the FLAT SHARED PARTS block in app/globals.css.
  */
 
-import React, { useState } from 'react';
-import { gold, GOLD } from './fx';
+import React from 'react';
 
 export interface SectionCardProps {
   title?: React.ReactNode;
@@ -17,19 +24,18 @@ export interface SectionCardProps {
   icon?: React.ReactNode;
   actions?: React.ReactNode;
   children?: React.ReactNode;
+  /** Body padding of a `tray`. A flat section sits at the page's own inset. */
   padding?: number;
+  /** Not drawn — the flat section has no glow. */
   glow?: boolean;
+  /** Not drawn — nothing lifts on hover. */
   hover?: boolean;
+  /** Not drawn — no accent edge. */
   accentBar?: boolean;
-  /**
-   * Content on the page rather than an object on a tray.
-   *
-   * Same meaning as the `flat` on the premium SectionCard, and written to match
-   * it: header kept as a small Title Case label over a hairline, tray dropped —
-   * no fill, no border, no radius, no shadow. Raised is reserved for things you
-   * would point at and name.
-   */
+  /** Kept for callers: flat is the default now. */
   flat?: boolean;
+  /** The rare raised surface (dialogs, pickers): solid fill + hairline border. */
+  tray?: boolean;
   onClick?: () => void;
   className?: string;
   style?: React.CSSProperties;
@@ -42,134 +48,32 @@ export function SectionCard({
   icon,
   actions,
   children,
-  padding = 20,
-  glow = false,
-  hover = false,
-  accentBar = false,
-  flat = false,
+  padding = 16,
+  tray = false,
   onClick,
   className,
   style,
   bodyStyle,
 }: SectionCardProps) {
-  const [hovered, setHovered] = useState(false);
-  const lift = hover && hovered;
-
-  if (flat) {
-    return (
-      <div className={className} onClick={onClick} style={{ position: 'relative', ...style }}>
-        {(title != null || icon != null || actions != null || subtitle != null) && (
-          <div
-            style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              paddingBottom: 9, marginBottom: 14,
-              borderBottom: '1px solid var(--sg-border)',
-            }}
-          >
-            {icon != null && <span style={{ display: 'inline-flex', flexShrink: 0, opacity: 0.9, color: GOLD }}>{icon}</span>}
-            <div style={{ minWidth: 0, flex: 1 }}>
-              {title != null && (
-                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--sg-text-2)', lineHeight: 1.3 }}>
-                  {title}
-                </div>
-              )}
-              {subtitle != null && (
-                <div style={{ fontSize: 12.5, color: 'var(--sg-text-3)', marginTop: 3, fontWeight: 400 }}>
-                  {subtitle}
-                </div>
-              )}
-            </div>
-            {actions != null && <div style={{ flex: '0 0 auto', display: 'flex', gap: 8, alignItems: 'center' }}>{actions}</div>}
-          </div>
-        )}
-        {children != null && <div style={bodyStyle}>{children}</div>}
-      </div>
-    );
-  }
-
-  const boxShadow = [
-    glow ? `inset 0 0 60px ${gold(5)}` : `inset 0 1px 0 var(--sg-inner-glow)`,
-    lift
-      ? `0 22px 50px -22px rgba(0,0,0,0.5), 0 0 0 1px ${gold(35)}`
-      : 'var(--sg-shadow)',
-  ].join(', ');
-
-  const hasHeader = title != null || icon != null || actions != null || subtitle != null;
-
+  const hasHead = title != null || subtitle != null || actions != null;
   return (
     <div
-      className={`sgUi${className ? ` ${className}` : ''}`}
+      className={`${tray ? 'pmSec pmSecTray' : 'pmSec'}${className ? ` ${className}` : ''}`}
       onClick={onClick}
-      onMouseEnter={() => hover && setHovered(true)}
-      onMouseLeave={() => hover && setHovered(false)}
-      style={{
-        position: 'relative',
-        overflow: 'hidden',
-        borderRadius: 16,
-        border: `1px solid ${lift ? gold(45) : 'var(--sg-border)'}`,
-        background: 'linear-gradient(160deg, var(--sg-surface-from), var(--sg-surface-to))',
-        backdropFilter: 'blur(16px) saturate(140%)',
-        WebkitBackdropFilter: 'blur(16px) saturate(140%)',
-        boxShadow,
-        cursor: onClick ? 'pointer' : undefined,
-        transform: lift ? 'translateY(-4px)' : 'none',
-        transition: 'transform .2s cubic-bezier(.2,.7,.3,1), box-shadow .2s ease, border-color .2s ease',
-        ...style,
-      }}
+      style={{ cursor: onClick ? 'pointer' : undefined, ...style }}
     >
-      {accentBar && (
-        <div
-          aria-hidden
-          style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${GOLD}, transparent)` }}
-        />
-      )}
-
-      {hasHeader && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            padding: `${Math.min(padding, 18)}px ${padding}px`,
-            borderBottom: children != null ? `1px solid var(--sg-border)` : undefined,
-          }}
-        >
-          {icon != null && (
-            <div
-              style={{
-                flex: '0 0 auto',
-                display: 'inline-flex',
-                width: 40,
-                height: 40,
-                borderRadius: 11,
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: `linear-gradient(150deg, ${gold(18)}, ${gold(5)})`,
-                border: `1px solid ${gold(30)}`,
-                color: GOLD,
-              }}
-            >
-              {icon}
-            </div>
-          )}
+      {hasHead && (
+        <div className="pmSecHead">
+          {tray && icon != null && <span aria-hidden style={{ display: 'inline-flex', flexShrink: 0, color: 'var(--sg-text-3)' }}>{icon}</span>}
           <div style={{ minWidth: 0, flex: 1 }}>
-            {title != null && (
-              <h2 className="sgSectionTitle" style={{ margin: 0, color: 'var(--sg-text)' }}>
-                {title}
-              </h2>
-            )}
-            {subtitle != null && (
-              <div style={{ color: 'var(--sg-text-2)', fontSize: 12.5, marginTop: title != null ? 2 : 0, lineHeight: 1.4 }}>
-                {subtitle}
-              </div>
-            )}
+            {title != null && <div className="pmSecTitle" role="heading" aria-level={2}>{title}</div>}
+            {subtitle != null && <div className="pmSecSub">{subtitle}</div>}
           </div>
           {actions != null && <div style={{ flex: '0 0 auto', display: 'flex', gap: 8, alignItems: 'center' }}>{actions}</div>}
         </div>
       )}
-
       {children != null && (
-        <div style={{ padding, position: 'relative', zIndex: 1, ...bodyStyle }}>{children}</div>
+        <div style={{ padding: tray ? padding : 0, minWidth: 0, ...bodyStyle }}>{children}</div>
       )}
     </div>
   );
