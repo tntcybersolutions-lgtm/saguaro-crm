@@ -16,7 +16,10 @@ import { NON_WORKED_ENTRY_TYPES } from '@/lib/leave-entry';
  *   carryForward        phase / equipment / superintendent off the last log
  *
  * Partial-tolerant by design: every source runs in its own try so one missing
- * table or empty system never blanks the rest of the draft.
+ * table or empty system never blanks the rest of the draft. A source that
+ * fails is logged with the project and date (console.error) and left empty;
+ * supabase-js returns { error } instead of throwing, so each result's error is
+ * thrown into its catch rather than read as "nothing there".
  */
 
 export async function GET(
@@ -93,23 +96,30 @@ export async function GET(
 
   // ── Manpower by trade — active crews joined with their rosters ──
   try {
-    const { data: crews } = await db
+    const { data: crews, error: crewsErr } = await db
       .from('crews')
       .select('id, name, trade, status')
       .eq('tenant_id', user.tenantId)
       .eq('project_id', projectId)
       .is('deleted_at', null);
+    if (crewsErr) throw crewsErr;
     const active = ((crews ?? []) as any[]).filter(
       (c) => !c.status || String(c.status).toLowerCase() === 'active'
     );
     if (active.length > 0) {
       const byId: Record<string, any> = Object.fromEntries(active.map((c) => [c.id, c]));
-      const { data: members } = await db
+      const { data: members, error: membersErr } = await db
         .from('crew_members')
         .select('crew_id, trade')
         .eq('tenant_id', user.tenantId)
         .in('crew_id', active.map((c) => c.id))
         .is('deleted_at', null);
+      // The crews themselves loaded, so they still surface (count 0, the same
+      // as an empty roster) for the GC to type the headcount — the failed
+      // roster read is logged rather than passed off as nobody on the crew.
+      if (membersErr) {
+        console.error('[daily-logs/prefill] crew rosters failed; crews listed with no headcount', { source: 'crew_members', projectId, date, error: membersErr });
+      }
       const groups: Record<string, { trade: string; count: number; crews: Set<string> }> = {};
       const groupFor = (trade: string) => (groups[trade] ||= { trade, count: 0, crews: new Set<string>() });
       for (const m of (members ?? []) as any[]) {
@@ -129,15 +139,18 @@ export async function GET(
         .map((gr) => ({ trade: gr.trade, count: gr.count, crews: Array.from(gr.crews) }))
         .sort((a, b) => b.count - a.count || a.trade.localeCompare(b.trade));
     }
-  } catch { /* crews tables unavailable */ }
+  } catch (e) {
+    console.error('[daily-logs/prefill] manpower by trade failed; left empty', { source: 'crews', projectId, date, error: e });
+  }
 
   // ── Subcontractors on site — distinct companies on the project team ──
   try {
-    const { data: team } = await db
+    const { data: team, error } = await db
       .from('project_team')
       .select('company')
       .eq('tenant_id', user.tenantId)
       .eq('project_id', projectId);
+    if (error) throw error;
     out.subcontractorsOnSite = Array.from(
       new Set(
         ((team ?? []) as any[])
@@ -145,7 +158,9 @@ export async function GET(
           .filter(Boolean)
       )
     ).sort((a, b) => a.localeCompare(b));
-  } catch { /* project_team unavailable */ }
+  } catch (e) {
+    console.error('[daily-logs/prefill] subcontractors on site failed; left empty', { source: 'project_team', projectId, date, error: e });
+  }
 
   // ── Deliveries logged for the date — probe the table, tolerate absence ──
   try {
@@ -158,12 +173,16 @@ export async function GET(
       .eq('project_id', projectId)
       .gte('delivered_at', `${date}T00:00:00`)
       .lt('delivered_at', `${next}T00:00:00`);
-    if (!error) out.deliveriesToday = deliveries ?? [];
-  } catch { /* deliveries table absent — fine */ }
+    if (error) throw error;
+    out.deliveriesToday = deliveries ?? [];
+  } catch (e) {
+    // Includes the table not existing on this database — logged, and the draft opens without it.
+    console.error('[daily-logs/prefill] deliveries for the date failed; left empty', { source: 'deliveries', projectId, date, error: e });
+  }
 
   // ── Carry-forward off the most recent prior log ──
   try {
-    const { data: prev } = await db
+    const { data: prev, error } = await db
       .from('daily_logs')
       .select('log_date, phase_of_work, equipment, superintendent')
       .eq('tenant_id', user.tenantId)
@@ -172,6 +191,7 @@ export async function GET(
       .order('log_date', { ascending: false })
       .limit(1)
       .maybeSingle();
+    if (error) throw error;
     if (prev) {
       out.carryForward = {
         log_date: prev.log_date ?? null,
@@ -180,7 +200,10 @@ export async function GET(
         superintendent: prev.superintendent ?? null,
       };
     }
-  } catch { /* no prior log */ }
+  } catch (e) {
+    // "No prior log" is data: null, not an error — this is a failed read.
+    console.error('[daily-logs/prefill] carry-forward from the prior log failed; left empty', { source: 'daily_logs', projectId, date, error: e });
+  }
 
   return NextResponse.json(out);
 }

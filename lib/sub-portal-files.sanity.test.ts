@@ -5,6 +5,7 @@
 import {
   checkComplianceFileName, complianceFolder, complianceUploadPath, expiryDay, isComplianceDocType,
   ownsPath, safeFileName, subPortalFilePrefix, SUB_FILES_BUCKET,
+  checkDocumentFileName, documentContentType, documentUploadPath, ownsDocumentPath, DOCUMENT_MAX_BYTES, DOCUMENT_MAX_MB,
 } from './sub-portal-files';
 import { fileNameFromUrl } from './sub-portal-view';
 
@@ -68,6 +69,25 @@ check('null → null', e3.ok && e3.day === null);
 check('Feb 30 refused', !expiryDay('2027-02-30').ok);
 check('free text refused', !expiryDay('next year').ok);
 check('number refused', !expiryDay(20270331).ok);
+
+// Documents tab — straight-to-storage uploads into the session's own folder
+const docPath = documentUploadPath(prefix, 'Site_walk.mp4', 1760000000000);
+check('document path sits directly in the session folder', docPath === `${prefix}1760000000000-Site_walk.mp4`);
+check('document name reads back without the upload time', fileNameFromUrl(docPath) === 'Site_walk.mp4');
+check('own document accepted', ownsDocumentPath(prefix, docPath));
+check('compliance subfolder refused for a document', !ownsDocumentPath(prefix, path));
+check('another session refused', !ownsDocumentPath(`${T}/projects/${P}/sub-portal/${SESSION}/`, docPath));
+check('../ escape refused for a document', !ownsDocumentPath(prefix, `${prefix}../x/1-a.pdf`));
+check('unsupported type refused for a document', !ownsDocumentPath(prefix, `${prefix}1-run.exe`));
+check('pdf / xlsx / csv / heic / mov documents allowed',
+  ['a.pdf', 'b.XLSX', 'c.csv', 'd.heic', 'e.MOV', 'f.docx', 'g.webm'].every((n) => checkDocumentFileName(n).ok));
+const gif = checkDocumentFileName('anim.gif');
+check('gif refused with a reason', !gif.ok && /Unsupported/.test(gif.message));
+check('blank document refused', !checkDocumentFileName('').ok);
+check('limit is the 100 MB the tab states', DOCUMENT_MAX_MB === 100 && DOCUMENT_MAX_BYTES === 100 * 1024 * 1024);
+check('content type from extension', documentContentType(docPath) === 'video/mp4' && documentContentType('x.PDF') === 'application/pdf'
+  && documentContentType('x.mov') === 'video/quicktime' && documentContentType('x.heic') === 'image/heic');
+check('unknown extension → octet-stream', documentContentType('x.bin') === 'application/octet-stream');
 
 if (failed) { console.error(`\n${failed} assertion(s) failed`); process.exit(1); }
 console.log('\nall sub portal file assertions held');

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(
   req: NextRequest,
@@ -45,8 +46,8 @@ export async function GET(
 
     // GET /api/portals/w9/:token — handled by specific route file
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (err) {
+    return apiError('portals', err, "Couldn't open this page. Please try again.");
   }
 }
 
@@ -87,7 +88,7 @@ export async function POST(
 
     // POST /api/portals/w9/:token — handled by specific route file
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (err) {
+    return apiError('portals', err, "Couldn't save that. Please try again.");
   }
 }
