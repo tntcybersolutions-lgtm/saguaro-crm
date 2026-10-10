@@ -9,7 +9,7 @@
  * saved cost report. The shared lib/finance engine forecasts final cost + variance
  * (same numbers as iOS). Snapshots are saved/loaded via /api/cost-control/reports.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useProjects } from '@/lib/hooks/useProjects';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { CheckCircle, FloppyDisk, ClockCounterClockwise, ArrowClockwise, ArrowUUpLeft, X, Sparkle, ChartLineUp, Wallet, Handshake, Receipt, TrendUp, Scales, Table, Plus } from '@phosphor-icons/react';
@@ -27,6 +27,7 @@ type Row = {
   _b: string; _ch: string;                 // budget / approved-changes (dollars, editable)
   comAuto: number; actAuto: number;         // auto committed / actual (cents, from POs / invoices)
   comOv: string | null; actOv: string | null; // optional overrides (dollars string, null = use auto)
+  manual: boolean;                          // added by hand / from a takeoff — lives only on saved reports
 };
 type Report = { id: string; report_date: string; title: string | null; lines: any[]; totals: any; created_at: string };
 
@@ -49,7 +50,24 @@ export default function CostControlPage() {
   const [err, setErr] = useState('');
 
   const { projects: liveProjects } = useProjects();
-  useEffect(() => { const ps = liveProjects; setProjects(ps); if (ps[0]) setProjectId((prev) => prev || ps[0].id); }, [liveProjects]);
+  /* The chosen job rides the URL (?project=…). It used to reset to the first
+     job on every load, so a report saved on any other job looked lost after a
+     reload — the screen had quietly switched projects. */
+  const urlProject = useRef<string | null>(null);
+  useEffect(() => { try { urlProject.current = new URLSearchParams(window.location.search).get('project'); } catch { /* no URL */ } }, []);
+  useEffect(() => {
+    const ps = liveProjects; setProjects(ps);
+    if (!ps[0]) return;
+    setProjectId((prev) => prev || (urlProject.current && ps.some((p) => p.id === urlProject.current) ? urlProject.current : ps[0].id));
+  }, [liveProjects]);
+  useEffect(() => {
+    if (!projectId) return;
+    try {
+      const u = new URL(window.location.href);
+      u.searchParams.set('project', projectId);
+      window.history.replaceState(null, '', `${u.pathname}${u.search}${u.hash}`);
+    } catch { /* URL sync is cosmetic */ }
+  }, [projectId]);
   useEffect(() => { if (projectId) fetch('/api/takeoff?limit=30').then((r) => r.json()).then((x) => setTakeoffs((x.takeoffs || x.data || []).filter((t: any) => !t.project_id || t.project_id === projectId))).catch(() => setTakeoffs([])); }, [projectId]);
 
   const loadLive = useCallback(async (pid: string) => {
@@ -65,6 +83,7 @@ export default function CostControlPage() {
         comAuto: l.committedCents || 0, actAuto: l.actualCents || 0,
         comOv: ov[l.costCode]?.committedCents != null ? d(ov[l.costCode].committedCents) : null,
         actOv: ov[l.costCode]?.actualCents != null ? d(ov[l.costCode].actualCents) : null,
+        manual: !!l.manual,
       })));
       setSources(x.sources || {});
     } catch (e) { console.error(e); setErr(humanError(e, "Couldn't load the cost report. Please try again.")); setRows([]); }
@@ -92,7 +111,7 @@ export default function CostControlPage() {
         for (const [code, cents] of byCode) {
           const i = next.findIndex((r) => r.costCode === code);
           if (i >= 0) next[i] = { ...next[i], _b: d(cents) };
-          else next.push({ id: uid(), costCode: code, description: code, _b: d(cents), _ch: '0', comAuto: 0, actAuto: 0, comOv: null, actOv: null });
+          else next.push({ id: uid(), costCode: code, description: code, _b: d(cents), _ch: '0', comAuto: 0, actAuto: 0, comOv: null, actOv: null, manual: true });
         }
         return next;
       });
@@ -101,7 +120,7 @@ export default function CostControlPage() {
     } catch (e) { console.error(e); setErr(humanError(e, "Something went wrong. Please try again.")); }
   };
 
-  const addRow = () => setRows((x) => [...x, { id: uid(), costCode: '', description: '', _b: '0', _ch: '0', comAuto: 0, actAuto: 0, comOv: null, actOv: null }]);
+  const addRow = () => setRows((x) => [...x, { id: uid(), costCode: '', description: '', _b: '0', _ch: '0', comAuto: 0, actAuto: 0, comOv: null, actOv: null, manual: true }]);
   const upd = (id: string, patch: Partial<Row>) => setRows((x) => x.map((l) => l.id === id ? { ...l, ...patch } : l));
   const removeRow = (id: string) => setRows((x) => x.filter((l) => l.id !== id));
 
@@ -115,7 +134,10 @@ export default function CostControlPage() {
       const payloadLines = rows.map((l) => {
         const rr = r.rows.find((x) => x.id === l.id)!;
         return {
-          costCode: l.costCode, description: l.description || l.costCode,
+          /* A hand-added line has no code of its own — the text typed in its
+             box is its code, so it keeps one identity from save to reload. */
+          costCode: l.costCode || l.description.trim(), description: l.description || l.costCode,
+          manual: l.manual,
           originalBudgetCents: c(l._b), approvedChangesCents: c(l._ch),
           committedCents: effCom(l), actualCents: effAct(l),
           committedOverrideCents: l.comOv !== null ? c(l.comOv) : null,
@@ -137,6 +159,7 @@ export default function CostControlPage() {
       id: uid(), costCode: l.costCode, description: l.description || l.costCode,
       _b: d(l.originalBudgetCents || 0), _ch: d(l.approvedChangesCents || 0),
       comAuto: l.committedCents || 0, actAuto: l.actualCents || 0, comOv: null, actOv: null,
+      manual: l.manual === true || !l.costCode,
     })));
     setViewingId(rep.id); setShowHistory(false); setMsg(''); setErr('');
   };
@@ -239,7 +262,7 @@ export default function CostControlPage() {
                     style={{ ...inp, borderColor: l.comOv !== null ? GOLD : LINE }} />
                   {!ro && (l.comOv !== null
                     ? <button onClick={() => upd(l.id, { comOv: null })} title="Reset to auto" style={{ background: 'none', border: 'none', color: GOLD, cursor: 'pointer', fontSize: 10, display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 0' }}><ArrowUUpLeft size={11} weight="bold" />Override · auto {usd(l.comAuto)}</button>
-                    : <span style={{ fontSize: 10, color: DIM }}>Auto · POs</span>)}
+                    : <span style={{ fontSize: 10, color: DIM }}>{l.manual ? 'Manual line' : 'Auto · POs'}</span>)}
                 </div>
                 {/* Actual — auto from invoices, optional override */}
                 <div>
@@ -247,7 +270,7 @@ export default function CostControlPage() {
                     style={{ ...inp, borderColor: l.actOv !== null ? GOLD : LINE }} />
                   {!ro && (l.actOv !== null
                     ? <button onClick={() => upd(l.id, { actOv: null })} title="Reset to auto" style={{ background: 'none', border: 'none', color: GOLD, cursor: 'pointer', fontSize: 10, display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 0' }}><ArrowUUpLeft size={11} weight="bold" />Override · auto {usd(l.actAuto)}</button>
-                    : <span style={{ fontSize: 10, color: DIM }}>Auto · invoices</span>)}
+                    : <span style={{ fontSize: 10, color: DIM }}>{l.manual ? 'Manual line' : 'Auto · invoices'}</span>)}
                 </div>
                 {cell(rr.projectedFinalCents)}{cell(rr.varianceCents, true)}
                 {ro ? <span /> : <button onClick={() => removeRow(l.id)} title="Remove line" style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', display: 'inline-flex', justifyContent: 'center' }}><X size={13} weight="bold" /></button>}
