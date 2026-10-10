@@ -19,6 +19,9 @@ import {
 import { must } from '@/lib/db-write';
 import { INSURANCE_ALERT_SELECT, insuranceAlertParties } from '@/lib/insurance-alert';
 import { withComm } from '@/lib/comm-log';
+import { bidAmount } from '@/lib/bid-amount';
+import { bidDueDay } from '@/lib/bid-deadline';
+import { orValue } from '@/lib/pg-filter';
 
 /* Fallback is the live domain. It used to be a Vercel preview URL that no
    longer resolves, so any email sent without NEXT_PUBLIC_APP_URL set carried
@@ -310,40 +313,82 @@ export async function onBidPackageCreated(bidPackageId: string): Promise<void> {
   }
 }
 
-export async function onSubInvitedToBid(bidPackageId: string, inviteId: string): Promise<void> {
+/**
+ * Email one bidder their jacket link, and say whether it really went.
+ *
+ * This used to return nothing and catch everything, so /issue recorded
+ * `sent: true` for every invitee — including the ones whose mail bounced or
+ * was never sent because email is not configured. The GC read "issued to 6 of
+ * 6" when nobody had been reached. It now reports the truth for this one
+ * invitee, and stamps invited_at ONLY when the mail left: that stamp is what
+ * lib/bid-issue reads to decide who already holds the issued jacket, so a
+ * failed send is retried by the next send instead of being skipped for good.
+ */
+export async function onSubInvitedToBid(bidPackageId: string, inviteId: string): Promise<{ sent: boolean; error?: string }> {
+  let inv: any;
+  let pkg: any;
+  let project: any;
   try {
     const db = adminClient();
-    const { data: invite } = await db
+    const { data: invite, error } = await db
       .from('bid_package_invites')
       .select('*, bid_packages(*, projects(*))')
       .eq('id', inviteId)
-      .single();
-    if (!invite) return;
-    const inv = invite as any;
-    const pkg = inv.bid_packages;
-    const project = pkg?.projects;
-    if (!project || !inv.sub_email) return;
+      .maybeSingle();
+    if (error) throw error;
+    if (!invite) return { sent: false, error: 'This invitation no longer exists.' };
+    inv = invite;
+    pkg = inv.bid_packages;
+    project = pkg?.projects;
+  } catch (err) {
+    console.error('[onSubInvitedToBid] invite read failed', inviteId, err);
+    return { sent: false, error: 'The invitation could not be read.' };
+  }
+  if (!pkg || pkg.id !== bidPackageId) return { sent: false, error: 'This invitation belongs to a different bid package.' };
+  if (!project) return { sent: false, error: 'This bid package is not on a project.' };
+  if (!inv.sub_email) return { sent: false, error: 'No email address on file.' };
+  if (!inv.token) return { sent: false, error: 'This invitation has no bid link.' };
 
-    /* /portals/bid/<invite token> — the bidder's own jacket, keyed by the token
-       on THIS invite. It used to point at /portals/sub/<token>, which has no
-       page at all (404) and whose auth route validates portal_sub_sessions.token
-       — a different token type entirely. Every bid invitation ever sent carried
-       a link that could not resolve. */
-    const mail = await withComm(
+  /* /portals/bid/<invite token> — the bidder's own jacket, keyed by the token
+     on THIS invite. It used to point at /portals/sub/<token>, which has no
+     page at all (404) and whose auth route validates portal_sub_sessions.token
+     — a different token type entirely. Every bid invitation ever sent carried
+     a link that could not resolve. */
+  let mail: { sent: boolean; error?: string };
+  try {
+    mail = await withComm(
       { tenantId: project.tenant_id, projectId: project.id, bidPackageId: pkg.id, subId: inv.sub_id ?? null,
         relatedType: 'bid_invite', relatedId: inviteId, toName: inv.company_name || inv.sub_name || null },
       () => sendSubInvitedToBid(
-        inv.sub_email, inv.sub_name, project.name, pkg.trade,
-        pkg.bid_due_date || pkg.due_date || '', pkg.scope_summary || pkg.scope_narrative || '',
+        inv.sub_email, inv.company_name || inv.sub_name || 'there', project.name, pkg.trade || pkg.name || 'Bid package',
+        bidDueDay(pkg) || '', pkg.scope_summary || pkg.scope_narrative || pkg.scope_of_work || '',
         `${APP_URL}/portals/bid/${inv.token}`
       ),
     );
-    if (!mail.sent) {
-      console.error('[onSubInvitedToBid] invitation not delivered to', inv.sub_email, '-', mail.error);
-    }
+  } catch (err) {
+    console.error('[onSubInvitedToBid] send threw', inv.sub_email, err);
+    return { sent: false, error: 'The invitation could not be sent.' };
+  }
+  if (!mail.sent) {
+    console.error('[onSubInvitedToBid] invitation not delivered to', inv.sub_email, '-', mail.error);
+    return { sent: false, error: mail.error || 'The invitation was not delivered.' };
+  }
 
-    await must(db.from('bid_package_invites').update({ invited_at: new Date().toISOString() }).eq('id', inviteId), 'bid_package_invites update');
-
+  /* The mail has left. A failure from here on is logged, never reported as
+     "not sent" — that would invite the GC to send it twice. */
+  try {
+    const now = new Date().toISOString();
+    await must(
+      adminClient().from('bid_package_invites')
+        .update({ invited_at: now, invitation_sent_at: inv.invitation_sent_at || now } as never)
+        .eq('id', inviteId)
+        .eq('tenant_id', inv.tenant_id),
+      'bid_package_invites sent stamp',
+    );
+  } catch (err) {
+    console.error('[onSubInvitedToBid] delivered but not stamped', inviteId, err);
+  }
+  try {
     await dispatchWebhookEvent(project.tenant_id, 'bid.invited', {
       invite_id: inviteId,
       bid_package_id: pkg.id,
@@ -354,8 +399,9 @@ export async function onSubInvitedToBid(bidPackageId: string, inviteId: string):
       sub_email: inv.sub_email,
     });
   } catch (err) {
-    console.error('[onSubInvitedToBid]', err);
+    console.error('[onSubInvitedToBid] webhook', err);
   }
+  return { sent: true };
 }
 
 export async function onBidSubmitted(bidSubmissionId: string): Promise<void> {
@@ -375,23 +421,23 @@ export async function onBidSubmitted(bidSubmissionId: string): Promise<void> {
     /* bid_submissions has no bid_amount column — it is base_amount / amount /
        base_bid. Reading a column that does not exist yielded undefined, so the
        GC's "new bid received" email and in-app alert both reported $0 for every
-       bid that arrived. base_amount leads: amount defaults to 0 rather than
-       null, so it cannot be trusted as the first term of a coalesce. */
-    const bidAmount = Number(s.base_amount ?? s.amount ?? s.base_bid ?? 0) || 0;
+       bid that arrived. lib/bid-amount takes the first positive figure. */
+    const amountBid = bidAmount(s);
+    const bidder = s.company_name || s.sub_name || s.contact_email || 'A subcontractor';
 
     const gcEmail = project.gc_email;
     if (gcEmail) {
       await withComm(
         { tenantId: project.tenant_id, projectId: project.id, bidPackageId: pkg.id, subId: s.sub_id ?? null,
           relatedType: 'bid_received', relatedId: bidSubmissionId, toName: project.gc_name || null },
-        () => sendBidSubmitted(gcEmail, project.gc_name || 'GC', s.sub_name, project.name, bidAmount),
+        () => sendBidSubmitted(gcEmail, project.gc_name || 'GC', bidder, project.name, amountBid),
       );
     }
 
     await createNotification(
       project.tenant_id, null, 'bid_submitted',
-      `New bid received from ${s.sub_name}`,
-      `${s.sub_name} submitted a bid of $${bidAmount.toLocaleString()} for ${pkg.trade} on ${project.name}`,
+      `New bid received from ${bidder}`,
+      `${bidder} submitted a bid of $${amountBid.toLocaleString()} for ${pkg.trade || pkg.name} on ${project.name}`,
       `${APP_URL}/app/projects/${project.id}/bid-packages/${pkg.id}`, project.id
     );
     await dispatchWebhookEvent(project.tenant_id, 'bid.submitted', {
@@ -401,168 +447,254 @@ export async function onBidSubmitted(bidSubmissionId: string): Promise<void> {
       project_name: project.name,
       trade: pkg.trade,
       sub_name: s.sub_name,
-      bid_amount: bidAmount,
+      bid_amount: amountBid,
     });
   } catch (err) {
     console.error('[onBidSubmitted]', err);
   }
 }
 
-export async function onBidAwarded(bidSubmissionId: string): Promise<void> {
+export type AwardNotice = { id?: string; email: string | null; name: string | null; sent: boolean; error?: string };
+export type AwardNotices = {
+  winner: AwardNotice | null;
+  losers: AwardNotice[];
+  /** Losing bids moved to 'not_awarded'. */
+  losersMarked: number;
+  /** Set when the notices could not be worked out at all. */
+  error?: string;
+};
+
+/**
+ * The award notices and the award chain.
+ *
+ * The notices had never reached anyone. The winner's address was read from
+ * `w.invite_id` — bid_submissions has no such column, so the lookup was
+ * `id = undefined` and the winner was never told. The losers' addresses came
+ * from embedding bid_package_invites inside bid_submissions, and no foreign
+ * key links those tables, so PostgREST refused the embed and nobody else was
+ * told either. The amount put `amount` ahead of base_amount (amount defaults
+ * to 0), which drafted subcontracts at $0.
+ *
+ * A bid row carries its own address (contact_email / sub_email — both bid
+ * portals write them), with the package's invite matched by roster sub as the
+ * fallback. Losing bids are marked 'not_awarded' BEFORE any email, so the
+ * record is right even when a send fails. What happened to each notice is
+ * returned, so the award route can tell the GC.
+ */
+export async function onBidAwarded(bidSubmissionId: string): Promise<AwardNotices> {
+  const out: AwardNotices = { winner: null, losers: [], losersMarked: 0 };
+  let w: any;
+  let pkg: any;
+  let project: any;
+  let tenantId: string;
+  let awardAmount = 0;
+  let winnerEmail: string | null = null;
+  const db = adminClient();
+
   try {
-    const db = adminClient();
-    const { data: winner } = await db
+    const { data: winner, error: wErr } = await db
       .from('bid_submissions')
       .select('*, bid_packages(*, projects(*))')
       .eq('id', bidSubmissionId)
-      .single();
-    if (!winner) return;
-    const w = winner as any;
-    const pkg = w.bid_packages;
-    const project = pkg?.projects;
-    if (!project) return;
+      .maybeSingle();
+    if (wErr) throw wErr;
+    if (!winner) return { ...out, error: 'The awarded bid was not found.' };
+    w = winner;
+    pkg = w.bid_packages;
+    project = pkg?.projects;
+    if (!pkg || !project) return { ...out, error: 'The awarded bid is not on a bid package with a project.' };
+    tenantId = w.tenant_id || pkg.tenant_id || project.tenant_id;
+    awardAmount = bidAmount(w);
 
-    // Live bid_submissions carries the money in `amount` (there is no
-    // bid_amount column) — coalesce so the subcontract is never drafted at $0.
-    const awardAmount = Number(w.bid_amount ?? w.amount ?? w.base_amount ?? w.base_bid) || 0;
-
-    // Email winner
-    const { data: winnerInvite } = await db
+    /* The package's invites are only the fallback for a bid row with no
+       address of its own, so a failed read here costs that fallback, not the
+       award — logged, not thrown. */
+    const { data: invRows, error: invErr } = await db
       .from('bid_package_invites')
-      .select('sub_email')
-      .eq('id', w.invite_id)
-      .single();
-    if (winnerInvite) {
-      await withComm(
-        { tenantId: project.tenant_id, projectId: project.id, bidPackageId: pkg.id, subId: w.sub_id ?? null,
-          relatedType: 'bid_award', relatedId: bidSubmissionId, toName: w.company_name || w.sub_name || null },
-        () => sendBidAwarded(
-          (winnerInvite as any).sub_email, w.sub_name, project.name,
-          awardAmount, project.start_date || ''
-        ),
-      );
-    }
-
-    // Email losers
-    const { data: losers } = await db
-      .from('bid_submissions')
-      .select('*, bid_package_invites(sub_email)')
+      .select('id, sub_id, sub_email')
       .eq('bid_package_id', pkg.id)
+      .eq('tenant_id', tenantId);
+    if (invErr) console.error('[onBidAwarded] invite read (address fallback)', invErr);
+    const invites = (invRows || []) as Array<{ sub_id: string | null; sub_email: string | null }>;
+    const emailOf = (s: any): string | null => {
+      const own = String(s?.contact_email || s?.sub_email || '').trim().toLowerCase();
+      if (own) return own;
+      const byRoster = s?.sub_id ? invites.find((i) => i.sub_id === s.sub_id && i.sub_email) : null;
+      return byRoster?.sub_email ? String(byRoster.sub_email).trim().toLowerCase() : null;
+    };
+    const nameOf = (s: any): string => s?.company_name || s?.sub_name || s?.contact_name || 'Subcontractor';
+
+    // ── Losers: on the record first ──
+    const { data: loserRows, error: lErr } = await db
+      .from('bid_submissions')
+      .select('*')
+      .eq('bid_package_id', pkg.id)
+      .eq('tenant_id', tenantId)
       .neq('id', bidSubmissionId);
-    if (losers) {
-      for (const loser of losers as any[]) {
-        const loserEmail = loser.bid_package_invites?.sub_email;
-        if (loserEmail) {
-          await withComm(
-            { tenantId: project.tenant_id, projectId: project.id, bidPackageId: pkg.id, subId: loser.sub_id ?? null,
-              relatedType: 'bid_not_awarded', relatedId: loser.id, toName: loser.company_name || loser.sub_name || null },
-            () => sendBidNotAwarded(loserEmail, loser.sub_name, project.name),
-          );
-        }
-      }
+    if (lErr) throw lErr;
+    const losers = (loserRows || []) as any[];
+    if (losers.length) {
+      await must(
+        db.from('bid_submissions')
+          .update({ status: 'not_awarded', is_awarded: false } as never)
+          .eq('bid_package_id', pkg.id)
+          .eq('tenant_id', tenantId)
+          .neq('id', bidSubmissionId),
+        'bid_submissions not_awarded',
+      );
+      out.losersMarked = losers.length;
     }
 
-    await must(db.from('bid_submissions').update({ status: 'not_awarded' }).eq('bid_package_id', pkg.id).neq('id', bidSubmissionId), 'bid_submissions update');
+    // ── Winner ──
+    winnerEmail = emailOf(w);
+    if (winnerEmail) {
+      const to = winnerEmail;
+      const r = await withComm(
+        { tenantId, projectId: project.id, bidPackageId: pkg.id, subId: w.sub_id ?? null,
+          relatedType: 'bid_award', relatedId: bidSubmissionId, toName: nameOf(w) },
+        () => sendBidAwarded(to, nameOf(w), project.name, awardAmount, project.start_date || ''),
+      );
+      out.winner = { id: w.id, email: to, name: nameOf(w), sent: r.sent, error: r.sent ? undefined : r.error || 'Not delivered.' };
+    } else {
+      out.winner = { id: w.id, email: null, name: nameOf(w), sent: false, error: 'No email address on file.' };
+    }
 
-    // ── THE AWARD CHAIN — an award is a MONEY event, not just an email. ──
-    // (a) Draft subcontract at the awarded amount, linked to the package.
-    const winnerEmail = (winnerInvite as any)?.sub_email || null;
-    const { data: existingContract } = await db
+    // ── Losers: told ──
+    for (const loser of losers) {
+      const email = emailOf(loser);
+      if (!email) {
+        out.losers.push({ id: loser.id, email: null, name: nameOf(loser), sent: false, error: 'No email address on file.' });
+        continue;
+      }
+      const r = await withComm(
+        { tenantId, projectId: project.id, bidPackageId: pkg.id, subId: loser.sub_id ?? null,
+          relatedType: 'bid_not_awarded', relatedId: loser.id, toName: nameOf(loser) },
+        () => sendBidNotAwarded(email, nameOf(loser), project.name),
+      );
+      out.losers.push({ id: loser.id, email, name: nameOf(loser), sent: r.sent, error: r.sent ? undefined : r.error || 'Not delivered.' });
+    }
+  } catch (err) {
+    console.error('[onBidAwarded] notices', err);
+    return { ...out, error: 'The award notices could not be sent.' };
+  }
+
+  // ── THE AWARD CHAIN — an award is a MONEY event, not just an email. ──
+  // Each link is its own step: one failing must not skip the rest.
+  const winnerName = w.company_name || w.sub_name || w.contact_name || 'Subcontractor';
+
+  // (a) Draft subcontract at the awarded amount, linked to the package.
+  try {
+    const { data: existingContract, error: cErr } = await db
       .from('contracts')
       .select('id')
       .eq('bid_package_id', pkg.id)
-      .eq('tenant_id', project.tenant_id)
+      .eq('tenant_id', tenantId)
       .maybeSingle();
+    if (cErr) throw cErr;
     if (!existingContract) {
-      const { error: writeErr } = await db.from('contracts').insert({
-        tenant_id: project.tenant_id,
+      await must(db.from('contracts').insert({
+        tenant_id: tenantId,
         project_id: project.id,
         bid_package_id: pkg.id,
         contract_type: 'subcontract',
         status: 'draft',
-        title: `${pkg.trade || pkg.name} — ${w.sub_name}`,
+        title: `${pkg.trade || pkg.name} — ${winnerName}`,
         amount: awardAmount,
         contract_amount: awardAmount,
         original_amount: String(awardAmount), // TEXT column in the live schema
-        party_name: w.sub_name,
-        party_company: w.sub_name,
+        party_name: winnerName,
+        party_company: winnerName,
         party_email: winnerEmail,
-        counterparty_name: w.sub_name,
+        counterparty_name: winnerName,
         counterparty_email: winnerEmail,
         notes: `Auto-created on bid award (package: ${pkg.name}).`,
-      } as never);
-      if (writeErr) console.error('[triggers/award-subcontract]', writeErr);
+      } as never), 'contracts award subcontract');
     }
-    // (b) Budget commitment — same cost-code/division matching the CO cascade uses.
+  } catch (e) { console.error('[onBidAwarded] subcontract', e); }
+
+  // (b) Budget commitment — same cost-code/division matching the CO cascade uses.
+  try {
     const csi = (pkg.csi_codes && pkg.csi_codes[0]) || pkg.csi_division || null;
-    if (csi) {
+    if (csi && awardAmount > 0) {
       const div = String(csi).slice(0, 2);
-      const { data: bLine } = await db
+      const { data: bLine, error: bErr } = await db
         .from('budget_lines')
         .select('id, committed')
         .eq('project_id', project.id)
-        .or(`cost_code.eq.${csi},division.eq.${div}`)
+        .eq('tenant_id', tenantId)
+        .or(`cost_code.eq.${orValue(csi)},division.eq.${orValue(div)}`)
         .limit(1)
         .maybeSingle();
+      if (bErr) throw bErr;
       if (bLine) {
         await must(db
           .from('budget_lines')
           .update({ committed: (Number((bLine as any).committed) || 0) + awardAmount })
-          .eq('id', (bLine as any).id), 'budget_lines write');
+          .eq('id', (bLine as any).id)
+          .eq('tenant_id', tenantId), 'budget_lines write');
       }
     }
-    // (c) Kick off the sub's W-9 request via the existing onboarding cascade.
-    if (w.sub_id) {
-      onSubAddedToProject(project.id, w.sub_id).catch(() => {});
-    }
-    // (d) FIRST award on the project → AI Auto-Build: 24 schedule tasks,
-    //     CSI-coded budget, draft sub packages, safety plan, QC checkpoints,
-    //     and the contact directory. Proven by scripts/proof-autobuild.ts.
-    try {
-      const { data: awardedPkgs } = await db
-        .from('bid_packages')
-        .select('id, status, awarded_at')
-        .eq('project_id', project.id);
-      const awardedCount = (awardedPkgs || []).filter(
-        (bp: any) => bp.awarded_at || bp.status === 'awarded' || bp.status === 'contracted'
-      ).length;
-      if (awardedCount <= 1) {
-        const { runKickoffAutoBuild } = await import('./kickoff');
-        const built = await runKickoffAutoBuild(db, {
-          tenantId: project.tenant_id, projectId: project.id, project, pkg,
-          subName: w.sub_name, subId: w.sub_id || null, subEmail: winnerEmail,
-        });
-        if (built.ran) {
-          const { recordLearning } = await import('./learning');
-          recordLearning(db, { tenantId: project.tenant_id, kind: 'auto_build', projectId: project.id, dollarsSurfaced: 0, meta: { tasks: built.tasks, budgetLines: built.budgetLines, packages: built.packages, qc: built.qcCheckpoints, contacts: built.contacts } });
-          await createNotification(
-            project.tenant_id, null, 'project_autobuild',
-            `Project auto-built on first award`,
-            `Saguaro created ${built.tasks} schedule tasks, ${built.budgetLines} budget lines, ${built.packages} sub packages, a safety plan, ${built.qcCheckpoints} QC checkpoints and ${built.contacts} contacts on ${project.name}.`,
-            `${APP_URL}/app/projects/${project.id}/schedule`, project.id
-          );
-        }
-      }
-    } catch (e) { console.error('[kickoff-autobuild]', e); }
+  } catch (e) { console.error('[onBidAwarded] budget commitment', e); }
 
+  // (c) Kick off the sub's W-9 request via the existing onboarding cascade.
+  //     Awaited: a serverless function is frozen once the route responds.
+  if (w.sub_id) {
+    try { await onSubAddedToProject(project.id, w.sub_id); }
+    catch (e) { console.error('[onBidAwarded] sub onboarding', e); }
+  }
+
+  // (d) FIRST award on the project → AI Auto-Build: 24 schedule tasks,
+  //     CSI-coded budget, draft sub packages, safety plan, QC checkpoints,
+  //     and the contact directory. Proven by scripts/proof-autobuild.ts.
+  try {
+    const { data: awardedPkgs, error: aErr } = await db
+      .from('bid_packages')
+      .select('id, status, awarded_at')
+      .eq('project_id', project.id)
+      .eq('tenant_id', tenantId);
+    if (aErr) throw aErr;
+    const awardedCount = (awardedPkgs || []).filter(
+      (bp: any) => bp.awarded_at || bp.status === 'awarded' || bp.status === 'contracted'
+    ).length;
+    if (awardedCount <= 1) {
+      const { runKickoffAutoBuild } = await import('./kickoff');
+      const built = await runKickoffAutoBuild(db, {
+        tenantId, projectId: project.id, project, pkg,
+        subName: winnerName, subId: w.sub_id || null, subEmail: winnerEmail,
+      });
+      if (built.errors?.length) console.error('[onBidAwarded] auto-build steps failed:', built.errors.join(' | '));
+      if (built.ran) {
+        const { recordLearning } = await import('./learning');
+        recordLearning(db, { tenantId, kind: 'auto_build', projectId: project.id, dollarsSurfaced: 0, meta: { tasks: built.tasks, budgetLines: built.budgetLines, packages: built.packages, qc: built.qcCheckpoints, contacts: built.contacts } });
+        await createNotification(
+          tenantId, null, 'project_autobuild',
+          `Project auto-built on first award`,
+          `Saguaro created ${built.tasks} schedule tasks, ${built.budgetLines} budget lines, ${built.packages} sub packages, a safety plan, ${built.qcCheckpoints} QC checkpoints and ${built.contacts} contacts on ${project.name}.`,
+          `${APP_URL}/app/projects/${project.id}/schedule`, project.id
+        );
+      }
+    }
+  } catch (e) { console.error('[onBidAwarded] kickoff auto-build', e); }
+
+  try {
     await createNotification(
-      project.tenant_id, null, 'bid_awarded',
-      `Bid awarded to ${w.sub_name}`,
-      `${w.sub_name} awarded ${pkg.trade} contract for $${awardAmount.toLocaleString()} on ${project.name}`,
+      tenantId, null, 'bid_awarded',
+      `Bid awarded to ${winnerName}`,
+      `${winnerName} awarded ${pkg.trade || pkg.name} contract for $${awardAmount.toLocaleString()} on ${project.name}`,
       `${APP_URL}/app/projects/${project.id}/bid-packages/${pkg.id}`, project.id
     );
-    await dispatchWebhookEvent(project.tenant_id, 'bid.awarded', {
+    await dispatchWebhookEvent(tenantId, 'bid.awarded', {
       id: bidSubmissionId,
       bid_package_id: pkg.id,
       project_id: project.id,
       project_name: project.name,
       trade: pkg.trade,
-      sub_name: w.sub_name,
+      sub_name: winnerName,
       bid_amount: awardAmount,
     });
-  } catch (err) {
-    console.error('[onBidAwarded]', err);
-  }
+  } catch (e) { console.error('[onBidAwarded] notification / webhook', e); }
+
+  return out;
 }
 
 // ─── Subcontractors ───────────────────────────────────────────────────────────

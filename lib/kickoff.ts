@@ -10,6 +10,8 @@
  * failing artifact never blocks the others. All writes use LIVE schema columns.
  */
 
+import { companyDay } from './time-zone';
+
 type Db = any;
 
 export interface KickoffArgs {
@@ -113,7 +115,21 @@ export async function runKickoffAutoBuild(db: Db, a: KickoffArgs): Promise<Kicko
   if (prior && prior.length) return res;
   res.ran = true;
 
-  const start = a.project?.start_date ? new Date(a.project.start_date + 'T00:00:00') : new Date();
+  /* Day 1 is the project's start date, else TODAY on the company's calendar
+     (tenants.time_zone) — the server's clock made an evening award in Iowa
+     start the schedule tomorrow. Dates are then counted as calendar days at
+     UTC midnight, so iso() returns the same day whatever zone the server is in. */
+  let startDay = a.project?.start_date ? String(a.project.start_date).slice(0, 10) : '';
+  if (!startDay) {
+    try {
+      startDay = (await companyDay(db, t, 'kickoff')).today;
+    } catch (e: any) {
+      res.errors.push('time zone: ' + (e?.message || e));
+      startDay = new Date().toISOString().slice(0, 10);
+      console.warn('[kickoff] company time zone unreadable — schedule starts on the UTC day', t);
+    }
+  }
+  const start = new Date(startDay + 'T00:00:00Z');
 
   // ── 1) 24 schedule tasks, predecessor-linked, critical spine ──
   try {

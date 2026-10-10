@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { must, tryWrite } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
+import { bidDueDay, biddingClosed, bidRefusal, deadlineZone } from '@/lib/bid-deadline';
+import { inviteState } from '@/lib/bid-invite-state';
+import { onBidSubmitted } from '@/lib/triggers';
 
 /**
  * Subcontractor portal — bid invitations and bid submission.
@@ -77,29 +80,41 @@ export async function GET(req: NextRequest) {
       .order('created_at', { ascending: false });
     if (error) throw error;
 
-    const rows = (invites || []) as Record<string, string>[];
+    /* A revoked link is gone for this sub — the GC cut it off. */
+    const rows = ((invites || []) as Record<string, string>[]).filter((r) => inviteState(r) !== 'revoked');
     if (!rows.length) return NextResponse.json({ bids: [] });
 
     /* Package detail fetched separately rather than through an embed. The embed
        named a column that does not exist, and a join failure took the whole
        list down; a second scoped read cannot. */
     const pkgIds = [...new Set(rows.map((r) => r.bid_package_id).filter(Boolean))];
-    const { data: pkgs } = await db
+    const { data: pkgs, error: pkgErr } = await db
       .from('bid_packages')
-      .select('id, name, trade, description, status, bid_due_date, due_date, project_id, addendum_count')
+      .select('id, name, trade, description, scope_of_work, scope_summary, status, bid_due_date, due_date, project_id, addendum_count, sub_portal_enabled, sub_portal_expires_at, projects(name, state)')
       .in('id', pkgIds)
       .eq('tenant_id', session.tenant_id);
+    if (pkgErr) throw pkgErr;
 
+    /* Deadlines are the GC company's, in its own time zone (else the job's state). */
+    const zoneByState = new Map<string, string>();
+    const zoneFor = async (pkg: Record<string, unknown>) => {
+      const st = String((pkg.projects as Record<string, unknown> | null)?.state ?? '');
+      if (!zoneByState.has(st)) zoneByState.set(st, await deadlineZone(db, session.tenant_id, st));
+      return zoneByState.get(st)!;
+    };
+    const zones = new Map<string, string>();
+    for (const pk of (pkgs || []) as Record<string, unknown>[]) zones.set(pk.id as string, await zoneFor(pk));
     const byId = new Map((pkgs || []).map((p: Record<string, unknown>) => [p.id as string, p]));
 
     /* Whether this sub has already bid — the portal has to show "submitted"
        rather than inviting them to bid twice. */
-    const { data: mine } = await db
+    const { data: mine, error: mineErr } = await db
       .from('bid_submissions')
       .select('id, bid_package_id, base_amount, amount, status, submitted_at')
       .in('bid_package_id', pkgIds)
       .eq('tenant_id', session.tenant_id)
       .eq('contact_email', (session.sub_email || '').toLowerCase());
+    if (mineErr) throw mineErr;
 
     const submittedFor = new Map(
       ((mine || []) as Record<string, unknown>[]).map((s) => [s.bid_package_id as string, s]),
@@ -108,7 +123,8 @@ export async function GET(req: NextRequest) {
     const bids = rows.map((inv) => {
       const pkg = byId.get(inv.bid_package_id) as Record<string, unknown> | undefined;
       const sub = submittedFor.get(inv.bid_package_id) as Record<string, unknown> | undefined;
-      const due = (pkg?.bid_due_date as string) || (pkg?.due_date as string) || null;
+      /* The due DAY, closing at the end of it in the GC's zone (lib/bid-deadline). */
+      const due = pkg ? bidDueDay(pkg) : null;
       return {
         id: inv.id,
         token: inv.token,
@@ -117,7 +133,9 @@ export async function GET(req: NextRequest) {
         viewedAt: inv.invitation_viewed_at || null,
         respondedAt: inv.responded_at || null,
         dueDate: due,
-        isOverdue: !!due && new Date(due).getTime() < Date.now(),
+        isOverdue: !!pkg && biddingClosed(pkg, zones.get(pkg.id as string) || 'UTC'),
+        /* Whether this sub can price it right now — the same rule POST applies. */
+        canBid: !!pkg && bidRefusal(pkg, zones.get(pkg.id as string) || 'UTC') === null,
         addendumCount: (pkg?.addendum_count as number) ?? 0,
         bidPackage: pkg
           ? {
@@ -126,8 +144,10 @@ export async function GET(req: NextRequest) {
               name: pkg.name,
               trade: pkg.trade,
               description: pkg.description,
+              scope: (pkg.scope_of_work as string) || (pkg.scope_summary as string) || null,
               status: pkg.status,
               projectId: pkg.project_id,
+              projectName: ((pkg.projects as Record<string, unknown> | null)?.name as string) || null,
             }
           : null,
         submitted: sub
@@ -158,13 +178,17 @@ export async function POST(req: NextRequest) {
     }
 
     /* The invite must belong to this session before anything is written. */
-    const { data: invite } = await invitesForSession(db, session).eq('id', inviteId).maybeSingle();
+    const { data: invite, error: invErr } = await invitesForSession(db, session).eq('id', inviteId).maybeSingle();
+    if (invErr) throw invErr;
     if (!invite) return NextResponse.json({ error: 'Invitation not found' }, { status: 404 });
     const inv = invite as Record<string, string>;
+    if (inviteState(inv) === 'revoked') {
+      return NextResponse.json({ error: 'This invitation is no longer open to you. Contact the general contractor.' }, { status: 403 });
+    }
 
     const { data: pkg, error: pkgErr } = await db
       .from('bid_packages')
-      .select('id, project_id, tenant_id, bid_due_date, due_date, status, sub_portal_enabled, sub_portal_expires_at')
+      .select('id, project_id, tenant_id, bid_due_date, due_date, status, sub_portal_enabled, sub_portal_expires_at, projects(state)')
       .eq('id', inv.bid_package_id)
       .eq('tenant_id', session.tenant_id)
       .maybeSingle();
@@ -172,31 +196,13 @@ export async function POST(req: NextRequest) {
     if (!pkg) return NextResponse.json({ error: 'Bid package not found' }, { status: 404 });
     const p = pkg as Record<string, any>;
 
-    /* The package's own state was never checked here, so a sub could land a
-       bid on a draft the GC had not issued, or on a package already closed or
-       awarded. Same rule as the bidder link (portal/[token]/respond), plus the
-       portal switch and link expiry the bidder's jacket honours. */
-    const pkgStatus = String(p.status || 'draft').toLowerCase();
-    if (pkgStatus === 'draft' || pkgStatus === 'pending') {
-      return NextResponse.json(
-        { error: 'This bid package has not been issued yet. The general contractor will send it when the documents are ready.' },
-        { status: 409 },
-      );
-    }
-    if (['closed', 'awarded', 'cancelled', 'canceled', 'archived'].includes(pkgStatus)) {
-      return NextResponse.json({ error: 'Bidding for this package has closed.' }, { status: 409 });
-    }
-    if (p.sub_portal_enabled === false) {
-      return NextResponse.json({ error: 'This bid package is no longer accepting bids.' }, { status: 409 });
-    }
-    if (p.sub_portal_expires_at && new Date(p.sub_portal_expires_at).getTime() < Date.now()) {
-      return NextResponse.json({ error: 'This link has expired. Contact the general contractor.' }, { status: 410 });
-    }
-
-    const due = p.bid_due_date || p.due_date;
-    if (due && new Date(due).getTime() < Date.now()) {
-      return NextResponse.json({ error: 'Bidding for this package has closed.' }, { status: 409 });
-    }
+    /* This took a bid whatever state the package was in — draft (never
+       issued), closed, awarded — and ignored the GC's portal switch, so a bid
+       could land on a leveling sheet somebody had already awarded from. Same
+       rule as the token portal (lib/bid-deadline): issued, portal on, link not
+       expired, and the due DAY not over in the GC company's time zone. */
+    const refusal = bidRefusal(p, await deadlineZone(db, session.tenant_id, p.projects?.state));
+    if (refusal) return NextResponse.json({ error: refusal.error }, { status: refusal.status });
 
     const amount = Number(body.total_amount ?? body.amount ?? body.base_amount ?? 0) || 0;
     if (amount <= 0) {
@@ -294,6 +300,11 @@ export async function POST(req: NextRequest) {
         .eq('tenant_id', session.tenant_id),
       'bid_packages num_responded',
     );
+
+    /* Tell the GC — the token portal always did; a bid priced from the sub
+       portal arrived in silence. Awaited so the email (and its place on the
+       jacket's record) is not cut off when the function freezes. */
+    await onBidSubmitted(submissionId);
 
     return NextResponse.json({ success: true, submissionId });
   } catch (e) {

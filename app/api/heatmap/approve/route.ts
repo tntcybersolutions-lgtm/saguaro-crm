@@ -7,6 +7,7 @@ import { DEVICE_REGISTRY } from '@/lib/heatmap/models';
 import type { HeatmapProject, Device } from '@/lib/heatmap/types';
 import type { Pt } from '@/lib/heatmap/geometry';
 import { must } from '@/lib/db-write';
+import { requestDay } from '@/lib/time-zone';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -102,9 +103,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, bidPackageId: null, budget: Math.round(budget), note: "Approval recorded — this design isn't linked to a project, so the team will create the bid manually." });
   }
 
+  // The day it was approved, on the contractor's calendar (approver's device zone, else the company's).
+  const { today: approvedOn } = await requestDay(req.headers, db, row.tenant_id, 'heatmap/approve');
   const scope = `CLIENT-APPROVED low-voltage design (${allDevices.length} devices across ${floors.length} floor${floors.length !== 1 ? 's' : ''}): ${countLine}. `
     + `Includes ${cableFeet.toLocaleString()} ft structured cabling home-run to the MDF, PoE from ${bom.recSwitch?.model || 'the PoE switch'}${bom.recNvr ? ` + ${bom.recNvr.model} recorder` : ''}; terminate, test and certify all runs. `
-    + `Approved by ${approverName}${approverEmail ? ` (${approverEmail})` : ''} via share link on ${new Date().toISOString().slice(0, 10)}.`;
+    + `Approved by ${approverName}${approverEmail ? ` (${approverEmail})` : ''} via share link on ${approvedOn}.`;
 
   const { data: pkg, error: pkgErr } = await db.from('bid_packages').insert({
     tenant_id: row.tenant_id,

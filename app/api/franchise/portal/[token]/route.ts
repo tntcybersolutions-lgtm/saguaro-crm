@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { computeHealth } from '@/lib/portfolio-health';
 import { STAGE_META } from '@/lib/franchise-template';
+import { requestDay } from '@/lib/time-zone';
 
 /**
  * PUBLIC franchisee portal feed. Access control IS the unguessable token — it maps
@@ -28,7 +29,8 @@ export async function GET(_req: NextRequest, { params }: { params: { token: stri
     ]);
 
     const h = computeHealth(proj);
-    const nowMs = Date.parse(new Date().toISOString().slice(0, 10));
+    // "Next up" from the contractor's day (the viewer's device zone, else the company's), not the server's.
+    const nowMs = Date.parse((await requestDay(_req.headers, db, tid, 'franchise/portal')).today);
     const upcoming = (ms || [])
       .map((m: any) => ({ title: m.title || m.name, date: m.actual_date || m.current_date || m.baseline_date, done: !!m.actual_date || /complete|done/i.test(String(m.status || '')) }))
       .filter((m: any) => m.date)

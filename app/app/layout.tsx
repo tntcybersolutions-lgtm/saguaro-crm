@@ -34,6 +34,7 @@ import { HelpModeButton } from '../../components/HelpMode';
 import { X, ArrowRight, House, Briefcase, FolderSimple, Clock, DotsThreeOutline, MagnifyingGlass, Bell, Star } from '@phosphor-icons/react';
 import { colors, font, sidebar as sidebarTokens, z } from '../../lib/design-tokens';
 import { ensureBrowserSession } from '../../lib/supabase-browser';
+import { recordCompanyTimeZoneOnce } from '@/lib/ui/company-time-zone';
 import TableLabels from '@/components/ui/TableLabels';
 import MobileSelectSheet from '@/components/MobileSelectSheet';
 
@@ -178,6 +179,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       if (!proj) proj = await fetchJson('/api/projects?limit=15&fields=id,name');
 
       if (cancelled) return;
+
+      // A company with no time zone yet takes its owner's/admin's device zone,
+      // once per session and silently — so an Iowa company works on Central
+      // days everywhere, not UTC's (lib/ui/company-time-zone).
+      if (me) void recordCompanyTimeZoneOnce();
 
       let initials = '';
       const company = me && typeof me.company === 'string' && me.company.trim() ? me.company.trim() : null;

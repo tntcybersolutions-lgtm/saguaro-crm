@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/supabase-server';
 import { sendSubInvitedToBid } from '@/lib/email';
 import { requirePermission } from '@/lib/permissions';
 import { withComm } from '@/lib/comm-log';
 import { apiError } from '@/lib/api-error';
+import { bidDueDay, bidRefusal, deadlineZone } from '@/lib/bid-deadline';
+import { inviteState } from '@/lib/bid-invite-state';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,14 +27,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const body = await req.json().catch(() => ({}));
     const inviteId: string | undefined = body?.inviteId;
     const subId: string | undefined = body?.subId;
-    const packageId: string = body?.packageId || id;
+    /* The package is the one in the URL — the permission and tenant checks are
+       about it; a body field naming another package is not honoured. */
+    const packageId: string = id;
 
     const db = createServerClient();
 
     // Load the bid package (tenant-scoped) along with its project name.
     const { data: pkg, error: pkgErr } = await db
       .from('bid_packages')
-      .select('*, projects(name)')
+      .select('*, projects(name, state)')
       .eq('id', packageId)
       .eq('tenant_id', user.tenantId)
       .maybeSingle();
@@ -66,6 +70,24 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (!invite) return NextResponse.json({ error: 'Invited subcontractor not found' }, { status: 404 });
 
     const inv = invite as Record<string, any>;
+
+    /* A reminder carries the bid link, so it is only sent when that link
+       works and there is still a bid to give. */
+    if (inviteState(inv) === 'revoked') {
+      return NextResponse.json({ error: 'This bidder\'s link was revoked. Invite them again to restore it.' }, { status: 409 });
+    }
+    const refusal = bidRefusal(p, await deadlineZone(db, user.tenantId, p.projects?.state, req.headers));
+    if (refusal) {
+      const why = {
+        not_issued: 'This package has not been issued yet — issue the jacket first.',
+        over: 'Bidding on this package is closed.',
+        portal_off: 'The bid portal for this package is switched off, so the link would not open. Invite the sub again to switch it back on.',
+        expired: 'The bid links for this package have expired.',
+        past_due: 'The bid due date has passed.',
+      }[refusal.reason];
+      return NextResponse.json({ error: why }, { status: 409 });
+    }
+
     const to: string | undefined = inv.sub_email;
     if (!to) return NextResponse.json({ error: 'No email address on file for this subcontractor' }, { status: 400 });
 
@@ -84,7 +106,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         subName,
         projectName,
         p.trade || 'Trade',
-        p.bid_due_date || p.due_date || '',
+        bidDueDay(p) || '',
         p.scope_summary || p.scope_of_work || '',
         portalUrl,
       ),

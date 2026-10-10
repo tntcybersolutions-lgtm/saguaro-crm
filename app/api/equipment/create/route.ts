@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import type { Database } from '@/lib/database.types';
+import { requestDay } from '@/lib/time-zone';
 
 export async function POST(req: NextRequest) {
   const user = await getUser(req);
@@ -25,11 +26,13 @@ export async function POST(req: NextRequest) {
       body.log_date ||
       body.work_date ||
       body.workDate ||
-      new Date().toISOString().split('T')[0],
+      null,
   };
 
   try {
     const db = createServerClient();
+    // Dated the operator's day (device, else company zone) unless the form sent one.
+    if (!row.log_date) row.log_date = (await requestDay(req.headers, db, user.tenantId, 'equipment/create')).today;
     const { data, error } = await db
       .from('equipment_log')
       .insert(row as Database['public']['Tables']['equipment_log']['Insert'])

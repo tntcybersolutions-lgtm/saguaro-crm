@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import type { Json } from '@/lib/database.types';
 import { must, tryWrite } from '@/lib/db-write';
+import { dayIn, requestDay } from '@/lib/time-zone';
 
 /* ------------------------------------------------------------------ */
 /*  Intuit developer credentials (env). Without these QuickBooks is    */
@@ -104,12 +105,15 @@ export async function POST(req: NextRequest) {
     const realmId = integration.realm_id as string;
     const accessToken = tokenResult.accessToken;
     const syncResults: Record<string, EntityResult> = {};
+    // A transaction's date is the company's calendar day it happened on (device, else
+    // company zone) — the UTC day of created_at dated every evening invoice tomorrow.
+    const { zone } = await requestDay(req.headers, db, user.tenantId, 'quickbooks/sync');
 
     // Process each entity type against the real Intuit API.
     for (const entity of entities) {
       try {
         if (direction === 'push') {
-          syncResults[entity] = await pushToQuickBooks(db, user.tenantId, entity, realmId, accessToken);
+          syncResults[entity] = await pushToQuickBooks(db, user.tenantId, entity, realmId, accessToken, zone);
         } else {
           syncResults[entity] = await pullFromQuickBooks(entity, realmId, accessToken);
         }
@@ -229,6 +233,7 @@ async function pushToQuickBooks(
   entity: string,
   realmId: string,
   accessToken: string,
+  zone: string,
 ): Promise<EntityResult> {
   const meta = QB_ENTITY[entity];
   if (!meta) return { count: 0, status: 'skipped', details: `Unknown entity: ${entity}` };
@@ -259,7 +264,7 @@ async function pushToQuickBooks(
   const errors: string[] = [];
 
   for (const record of records) {
-    const payload = formatForQuickBooks(entity, record);
+    const payload = formatForQuickBooks(entity, record, zone);
     const res = await fetch(
       `${QB_BASE}/v3/company/${realmId}/${meta.path}?minorversion=${QB_MINOR_VERSION}`,
       {
@@ -327,7 +332,12 @@ async function pullFromQuickBooks(
   };
 }
 
-function formatForQuickBooks(entity: string, record: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+function formatForQuickBooks(entity: string, record: any, zone: string) { // eslint-disable-line @typescript-eslint/no-explicit-any
+  /** The company's calendar day an instant fell on ('' when there is none). */
+  const dayOf = (iso: unknown): string => {
+    const d = typeof iso === 'string' && iso ? new Date(iso) : null;
+    return d && !Number.isNaN(d.getTime()) ? dayIn(zone, d) : '';
+  };
   switch (entity) {
     case 'invoices':
       return {
@@ -343,7 +353,7 @@ function formatForQuickBooks(entity: string, record: any) { // eslint-disable-li
         ],
         CustomerRef: { value: '1' },
         DocNumber: record.invoice_number || '',
-        TxnDate: record.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+        TxnDate: dayOf(record.created_at) || dayIn(zone),
         DueDate: record.due_date?.split('T')[0] || '',
       };
     case 'bills':
@@ -360,7 +370,7 @@ function formatForQuickBooks(entity: string, record: any) { // eslint-disable-li
           },
         ],
         DocNumber: record.bill_number || '',
-        TxnDate: record.created_at?.split('T')[0] || '',
+        TxnDate: dayOf(record.created_at),
         DueDate: record.due_date?.split('T')[0] || '',
       };
     case 'customers':

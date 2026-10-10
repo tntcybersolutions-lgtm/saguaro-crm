@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
 import { apiError } from '@/lib/api-error';
+import { requestDay } from '@/lib/time-zone';
 
 /**
  * POST /api/safety/create
@@ -21,6 +22,16 @@ export async function POST(req: NextRequest) {
 
   const { db, user } = g;
 
+  // Dated the reporter's day (device, else company zone) unless the form sent one.
+  let incidentDate = (body.incident_date || body.incidentDate) as string | undefined;
+  if (!incidentDate) {
+    try {
+      incidentDate = (await requestDay(req.headers, db, user.tenantId, 'safety/create')).today;
+    } catch (e) {
+      return apiError('safety/create', e, 'Failed to log safety incident');
+    }
+  }
+
   const row = {
     // tenant_id is taken from the authenticated session, never from the body.
     tenant_id:     user.tenantId,
@@ -30,7 +41,7 @@ export async function POST(req: NextRequest) {
     injury_type:   body.injury_type  || body.injuryType  || 'No Injury',
     location:      body.location     || '',
     reported_to:   body.reported_to  || body.reportedTo  || '',
-    incident_date: body.incident_date || body.incidentDate || new Date().toISOString().split('T')[0],
+    incident_date: incidentDate,
     reported_by:   user.email        || 'Field User',
     status:        'open',
   };

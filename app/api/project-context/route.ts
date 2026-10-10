@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { applyMarkupStack } from '@/lib/takeoff/engine';
+import { requestDay } from '@/lib/time-zone';
+import { apiError } from '@/lib/api-error';
 
 /**
  * GET ?projectId= — the project intelligence snapshot every add/create screen
@@ -129,7 +131,13 @@ export async function GET(req: NextRequest) {
   const vendorNames = Array.from(new Set(
     [...invoices, ...bills, ...pos].map((r) => r.vendor_name).filter(Boolean)
   )).sort() as string[];
-  const today = new Date().toISOString().slice(0, 10);
+  // Upcoming on the company's day (device, else company zone), not the server's.
+  let today: string;
+  try {
+    ({ today } = await requestDay(req.headers, db, t, 'project-context'));
+  } catch (e) {
+    return apiError('project-context', e, "Couldn't load this job.");
+  }
   const upcoming = tasks.filter((tk) => (tk.end_date ?? tk.start_date ?? '') >= today && tk.status !== 'complete');
 
   const res = NextResponse.json({

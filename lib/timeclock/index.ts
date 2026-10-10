@@ -20,7 +20,7 @@ export interface TimeEntry {
   clockOut?: string;  // ISO 8601; absent = still open
   breakMinutes?: number;
   hours?: number;     // explicit hours for non-clock types (pto/sick/holiday…)
-  timezone: string;   // IANA, e.g. 'America/Phoenix'
+  timezone: string;   // IANA, e.g. 'America/Chicago' — the zone the shift was worked in
   notes?: string;
 }
 

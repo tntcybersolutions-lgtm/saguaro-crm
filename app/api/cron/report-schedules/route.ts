@@ -3,6 +3,7 @@ import { createServerClient } from '@/lib/supabase-server';
 import { sendEmail } from '@/lib/email';
 import { runReport } from '@/lib/reports/run';
 import { generateReportData, isRunnableReportType } from '@/lib/reports/generate';
+import { companyDay } from '@/lib/time-zone';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
@@ -77,8 +78,10 @@ export async function GET(req: NextRequest) {
       let rowCount = 0;
 
       try {
-        // ── Resolve + run the report against live tenant data ──
-        const rendered = await runScheduledReport(db, t.tenant_id, t, td);
+        // ── Resolve + run the report against live tenant data, on the company's
+        //    own calendar (tenants.time_zone; the UTC day, logged, when unset) ──
+        const { today: companyToday, zone } = await companyDay(db, t.tenant_id, 'cron/report-schedules', now);
+        const rendered = await runScheduledReport(db, t.tenant_id, t, td, zone);
         if (!rendered) {
           status = 'skipped: no runnable report definition';
           skippedNotRunnable++;
@@ -92,13 +95,13 @@ export async function GET(req: NextRequest) {
             status = 'ran, email skipped: RESEND_API_KEY not configured';
             emailSkippedNoResend++;
           } else {
-            const subject = `${rendered.title} — ${now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+            const subject = `${rendered.title} — ${now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: zone })}`;
             const csv = toCsv(rendered.columns, rendered.rows);
             const res = await sendEmail({
               to: recipients,
               subject,
               html: buildReportEmail(rendered.title, rendered.columns, rendered.rows, t.name),
-              attachments: [{ filename: `${safeName(rendered.title)}-${now.toISOString().slice(0, 10)}.csv`, content: Buffer.from(csv, 'utf8') }],
+              attachments: [{ filename: `${safeName(rendered.title)}-${companyToday}.csv`, content: Buffer.from(csv, 'utf8') }],
             });
             if (res) {
               delivered++;
@@ -166,6 +169,7 @@ async function runScheduledReport(
   tenantId: string,
   template: any,
   td: Record<string, any>,
+  timeZone: string,
 ): Promise<RenderedReport | null> {
   // 1) Entity-based definition → reuse lib/reports/run (same as POST /api/reports/run).
   const entity = typeof td.entity === 'string' ? td.entity : (typeof td.config?.entity === 'string' ? td.config.entity : null);
@@ -190,7 +194,7 @@ async function runScheduledReport(
   ).trim();
   if (reportType && isRunnableReportType(reportType)) {
     const projectId = typeof td.projectId === 'string' ? td.projectId : null;
-    const gen = await generateReportData(db as any, tenantId, reportType, projectId);
+    const gen = await generateReportData(db as any, tenantId, reportType, projectId, { timeZone });
     return { title: template.name || gen.title, columns: gen.columns, rows: gen.rows, rowCount: gen.count };
   }
 

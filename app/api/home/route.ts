@@ -14,6 +14,7 @@ import { apiError } from '@/lib/api-error';
 import { getEffectivePermissions, hasPermission, type PermissionMap } from '@/lib/permissions';
 import { BUILDERS, type BuildCtx, type Scope, type Window } from '@/lib/home/build';
 import { HOME_VIEWS, VIEW_LABEL, ymdIn, type HomeView } from '@/lib/home/rank';
+import { TIME_ZONE_HEADER, isTimeZone } from '@/lib/time-zone';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -47,21 +48,33 @@ export async function GET(req: NextRequest) {
 
     const [perms, profileRes, prefRes, rolesRes, tenantRes] = await Promise.all([
       getEffectivePermissions(db, user.id, user.tenantId),
-      db.from('profiles').select('full_name, role, timezone').eq('id', user.id).eq('tenant_id', user.tenantId).maybeSingle(),
-      db.from('user_preferences').select('custom_settings, timezone').eq('user_id', user.id).eq('tenant_id', user.tenantId).maybeSingle(),
+      db.from('profiles').select('full_name, role').eq('id', user.id).eq('tenant_id', user.tenantId).maybeSingle(),
+      db.from('user_preferences').select('custom_settings').eq('user_id', user.id).eq('tenant_id', user.tenantId).maybeSingle(),
       db.from('user_role_assignments').select('role_definitions(name)').eq('user_id', user.id).eq('tenant_id', user.tenantId),
-      db.from('tenants').select('settings').eq('id', user.tenantId).maybeSingle(),
+      db.from('tenants').select('settings, time_zone').eq('id', user.tenantId).maybeSingle(),
     ]);
     if (profileRes.error) throw profileRes.error;
 
-    const profile = (profileRes.data || {}) as { full_name?: string | null; role?: string | null; timezone?: string | null };
+    const profile = (profileRes.data || {}) as { full_name?: string | null; role?: string | null };
     const baseRole = String(profile.role || '').toLowerCase();
     const custom = ((prefRes.data as { custom_settings?: Record<string, unknown> } | null)?.custom_settings || {}) as Record<string, unknown>;
     const roleNames = ((rolesRes.data || []) as Array<{ role_definitions: { name?: string } | { name?: string }[] | null }>)
       .flatMap(r => (Array.isArray(r.role_definitions) ? r.role_definitions : [r.role_definitions]))
       .map(r => r?.name || '')
       .filter(Boolean);
-    const timeZone = String((prefRes.data as { timezone?: string } | null)?.timezone || profile.timezone || 'America/Phoenix');
+    /* Whose day: the device's zone (x-time-zone), else the company's
+       (tenants.time_zone), else UTC — logged. profiles.timezone and
+       user_preferences.timezone are NOT read: nothing in the app writes them,
+       and both columns default to 'America/Phoenix' in the database, so every
+       person "had" Phoenix — an Iowa GC's home screen stayed on yesterday
+       until 2 AM Central (1 AM in winter), so "today" was the wrong day for
+       the first hours of every morning. */
+    const deviceZone = req.headers.get(TIME_ZONE_HEADER);
+    const companyZone = (tenantRes.data as { time_zone?: string | null } | null)?.time_zone ?? null;
+    const timeZone = isTimeZone(deviceZone) ? deviceZone : isTimeZone(companyZone) ? companyZone : 'UTC';
+    if (timeZone === 'UTC' && !isTimeZone(deviceZone) && !isTimeZone(companyZone)) {
+      console.warn(`[home] no device or company time zone for tenant ${user.tenantId} — using the UTC day`);
+    }
     const features = (((tenantRes.data as { settings?: { features?: Record<string, unknown> } } | null)?.settings?.features) || {}) as Record<string, unknown>;
 
     const available = availableViews(perms, baseRole);

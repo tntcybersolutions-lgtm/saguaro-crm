@@ -15,6 +15,7 @@ import { useToast } from '@/components/Toast';
 import { humanError } from '@/lib/errors';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import { localDay } from '@/lib/calendar-day';
 
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
 const DIM = 'var(--text-secondary)', TEXT = 'var(--text-primary)', GREEN = 'var(--success)', RED = 'var(--danger)', AMBER = 'var(--warning)';
@@ -50,7 +51,7 @@ export default function FleetPage() {
   const [addingMaint, setAddingMaint] = useState(false);
   const [addingDoc, setAddingDoc] = useState(false);
   const [f, setF] = useState<any>({ type: 'vehicle' });
-  const [m, setM] = useState<any>({ kind: 'service', performed_at: new Date().toISOString().slice(0, 10) });
+  const [m, setM] = useState<any>(() => ({ kind: 'service', performed_at: localDay() }));
   const [doc, setDoc] = useState<any>({ category: 'warranty' });
   const [vinBusy, setVinBusy] = useState(false);
   const [showIntegrate, setShowIntegrate] = useState(false);
@@ -120,7 +121,7 @@ export default function FleetPage() {
     if (!selId) return;
     const { error } = await sb.from('fleet_maintenance').insert({ asset_id: selId, kind: m.kind, description: m.description || null, vendor: m.vendor || null, performed_at: m.performed_at ? new Date(m.performed_at).toISOString() : null, odometer_at: parseFloat(m.odometer_at) || null, cost_cents: Math.round((parseFloat(m.cost) || 0) * 100), next_due_odometer: parseFloat(m.next_due_odometer) || null, next_due_date: m.next_due_date || null });
     if (error) { console.error(error); showToast(humanError(error, 'Could not log that service record.'), 'error'); return; }
-    setAddingMaint(false); setM({ kind: 'service', performed_at: new Date().toISOString().slice(0, 10) }); load();
+    setAddingMaint(false); setM({ kind: 'service', performed_at: localDay() }); load();
   };
   const [docUploading, setDocUploading] = useState(false);
   const uploadDocFile = async (file: File) => {

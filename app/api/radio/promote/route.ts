@@ -18,6 +18,7 @@ import {
   type RadioProvenance,
 } from '@/lib/radio-promote';
 import { must, tryWrite } from '@/lib/db-write';
+import { requestDay } from '@/lib/time-zone';
 
 /**
  * Saguaro Radio — ONE-TAP PROMOTE.
@@ -197,7 +198,17 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const prov = buildProvenance(msg, { channelName });
+  // The record reads the time — and a log files under the day — on the filer's clock
+  // (device, else company zone): the old Phoenix default filed an Iowa call made at
+  // 12:30 AM Central under the day before.
+  let zone: string;
+  try {
+    ({ zone } = await requestDay(req.headers, db, tenantId, 'radio/promote'));
+  } catch (e) {
+    console.error('[radio/promote] time zone read failed', e);
+    return fail("Couldn't read your company's time zone — try again.", 500);
+  }
+  const prov = buildProvenance(msg, { channelName, tz: zone });
 
   let recordId = '';
   let label = '';
@@ -256,7 +267,7 @@ export async function POST(req: NextRequest) {
       // log for the same date. Append when the day already has one.
       const logDate = typeof fields.logDate === 'string' && fields.logDate.trim()
         ? fields.logDate.trim()
-        : localLogDate(msg.created_at);
+        : localLogDate(msg.created_at, zone);
 
       const { data: dayRows, error: dayErr } = await db.from('daily_logs')
         .select('id, log_date, work_performed, delays, safety_notes, visitors, materials_delivered, quality_issues, notes, voice_transcript')
@@ -414,7 +425,14 @@ export async function GET(req: NextRequest) {
     .order('created_at', { ascending: true });
   if (error) return fail(`Could not read the links for this transmission: ${error.message}`, 500);
 
-  const prov: RadioProvenance = buildProvenance(msg, { channelName });
+  let zone: string;
+  try {
+    ({ zone } = await requestDay(req.headers, db, tenantId, 'radio/promote'));
+  } catch (e) {
+    console.error('[radio/promote] time zone read failed', e);
+    return fail("Couldn't read your company's time zone — try again.", 500);
+  }
+  const prov: RadioProvenance = buildProvenance(msg, { channelName, tz: zone });
   const links = ((data || []) as Record<string, any>[]).map((l) => ({
     id: l.id,
     recordType: l.record_type as PromoteRecordType,

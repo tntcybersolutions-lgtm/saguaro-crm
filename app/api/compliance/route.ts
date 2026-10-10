@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { addDays, requestDay } from '@/lib/time-zone';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,8 +57,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ subs: [], summary: { total: 0, compliant: 0, at_risk: 0, non_compliant: 0, avg_score: null } });
   }
 
-  const today = new Date().toISOString().split('T')[0];
-  const in30 = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+  // Current / expiring on the company's day (device, else company zone) — not the server's UTC day.
+  let today: string;
+  try {
+    ({ today } = await requestDay(req.headers, db, tenantId, 'compliance'));
+  } catch (e) {
+    return apiError('compliance', e, "Couldn't load compliance.");
+  }
+  const in30 = addDays(today, 30);
   const subIds = subs.map((s: any) => s.id);
 
   // Fetch all insurance certificates for these subs

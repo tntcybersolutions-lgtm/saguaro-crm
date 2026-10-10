@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { addDays, requestDay } from '@/lib/time-zone';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,8 +14,14 @@ export async function GET(_req: NextRequest) {
 
   const db = createServerClient();
   const t = user.tenantId;
-  const today = new Date().toISOString().slice(0, 10);
-  const inThirty = new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10);
+  // COI and punch windows on the company's day (device, else company zone), not the server's.
+  let today: string;
+  try {
+    ({ today } = await requestDay(_req.headers, db, t, 'dashboard/metrics'));
+  } catch (e) {
+    return apiError('dashboard/metrics', e, "Couldn't load the alerts.");
+  }
+  const inThirty = addDays(today, 30);
 
   const guard = async (fn: () => Promise<number>) => {
     try { return await fn(); } catch { return 0; }
