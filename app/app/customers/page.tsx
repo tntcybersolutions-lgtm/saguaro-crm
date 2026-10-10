@@ -668,9 +668,9 @@ export default function CustomersPage() {
         />
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: 6, marginBottom: 20, overflowX: 'auto', paddingBottom: 4 }}>
+        <div role="tablist" aria-label="Customer details" style={{ display: 'flex', gap: 6, marginBottom: 20, overflowX: 'auto', paddingBottom: 4 }}>
           {(['overview', 'discovery', 'recommendations', 'designs', 'materials', 'conversations'] as const).map(tab => (
-            <button key={tab} onClick={() => setDetailTab(tab)} className="pmBtn" style={{
+            <button key={tab} type="button" role="tab" aria-selected={detailTab === tab} onClick={() => setDetailTab(tab)} className="pmBtn" style={{
               padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600,
               border: `1px solid ${detailTab === tab ? GOLD : BORDER}`,
               background: detailTab === tab ? mix(GOLD, 9) : 'transparent',
