@@ -548,6 +548,8 @@ async function walk() {
   // Phase 2 runs beside the tap walk in its own browser: every Add/New, every
   // record button, payments, archive and Sign Out, on ZZ AUDIT test records.
   const writeP = writeWalk(pw, device, session, outDir, real).catch((e) => console.log(`write-walk: ✗ ${String(e.message || e).split('\n')[0]}`));
+  // Break-in test: the same signed-in user asks for other companies' records.
+  const breakP = breakIn(pw, session, outDir).catch((e) => console.log(`break-in: ✗ ${String(e.message || e).split('\n')[0]}`));
   const routes = [...WALK_TOP, ...(project ? WALK_JOB.map((t) => `/app/projects/${project}/${t}`) : [])];
   const shortUrl = (u) => u.replace(SITE, '').replace(/[0-9a-f-]{36}/gi, ':id');
   const results = [];
@@ -696,6 +698,7 @@ async function walk() {
 
   writeReport();
   console.log(fs.readFileSync(path.join(outDir, 'report.md'), 'utf8').split('\n').slice(0, 3).join('\n'));
+  await breakP;
   await writeP;
   process.exit(0);
 }
@@ -1527,6 +1530,73 @@ async function writeWalk(pw, device, session, outDir, real) {
   writeReport();
   console.log(`write-walk: done in ${Math.round((Date.now() - started) / 60000)} min — tools/walk/write-report.md`);
   await Promise.race([browser.close(), new Promise((r) => setTimeout(r, 15000))]);
+}
+
+// ── break-in test ────────────────────────────────────────────────────────────
+// Signed in as one company, ask the API for another company's jobs and records
+// by id. Every answer must be a refusal (or an answer with none of that
+// company's rows). Only status codes and pass/fail are written — never a body.
+const PROJECT_PROBES = ['', '/bills', '/budget', '/invoices', '/todos', '/closeout', '/commissioning', '/coordination-issues',
+  '/folders', '/incidents', '/permits', '/purchase-orders', '/specs', '/submittals', '/waste-tracking', '/daily-logs', '/photos/link'];
+const PROJECT_QUERY_PROBES = ['/api/daily-logs/list?projectId=', '/api/punch-list/list?projectId=', '/api/photos/list?projectId=',
+  '/api/rfis?projectId=', '/api/takeoff?projectId=', '/api/takeoffs/latest?projectId='];
+
+async function breakIn(pw, session, outDir) {
+  const targets = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/isolation-targets.json'), 'utf8'));
+  const api = await pw.request.newContext({ baseURL: SITE, storageState: session });
+  const rows = [];
+  const get = async (url) => {
+    try {
+      const r = await api.get(url, { timeout: 30000, maxRedirects: 0 });
+      return { status: r.status(), text: await r.text().catch(() => '') };
+    } catch (e) { return { status: 0, text: '', err: String(e.message || e).split('\n')[0].slice(0, 100) }; }
+  };
+  // 1) The test only means something if this user can read its OWN data.
+  const mine = await get('/api/projects?limit=200&fields=id,name');
+  let own = [];
+  try { const d = JSON.parse(mine.text); own = (d.projects || d.data || []).map((p) => p.id); } catch { /* not JSON */ }
+  const control = own[0] ? await get(`/api/projects/${own[0]}`) : { status: 0, text: '' };
+  const valid = mine.status === 200 && own.length > 0 && control.status === 200 && control.text.includes(own[0]);
+  const verdict = (id, res) => {
+    if (res.status === 0) return { pass: null, note: `no answer (${res.err || 'network'})` };
+    if ([400, 401, 403, 404, 405, 410, 422].includes(res.status)) return { pass: true, note: `refused (${res.status})` };
+    if (res.status >= 500) return { pass: true, note: `server error ${res.status} — no data, but fix the error` };
+    if (res.status >= 300 && res.status < 400) return { pass: true, note: `redirected (${res.status})` };
+    if (res.text.includes(id)) return { pass: false, note: `LEAK — ${res.status} and the answer contains the other company's id` };
+    return { pass: true, note: `${res.status} with none of the other company's rows` };
+  };
+  const ownSet = new Set(own);
+  for (const pid of targets.projects || []) {
+    if (ownSet.has(pid)) { rows.push({ url: `/api/projects/:other${''}`, pass: null, note: 'skipped — that job belongs to the signed-in company' }); continue; }
+    for (const suffix of PROJECT_PROBES) {
+      const res = await get(`/api/projects/${pid}${suffix}`);
+      rows.push({ url: `/api/projects/:other${suffix}`, ...verdict(pid, res) });
+    }
+    for (const q of PROJECT_QUERY_PROBES) {
+      const res = await get(`${q}${pid}`);
+      rows.push({ url: `${q}:other`, ...verdict(pid, res) });
+    }
+  }
+  for (const [kind, ids] of Object.entries(targets.records || {})) {
+    for (const id of ids || []) {
+      const res = await get(`/api/${kind}/${id}`);
+      rows.push({ url: `/api/${kind}/:other`, ...verdict(id, res) });
+    }
+  }
+  await api.dispose();
+  const leaks = rows.filter((r) => r.pass === false);
+  const errors = rows.filter((r) => /server error/.test(r.note));
+  const lines = [
+    '# Break-in test — one company asking for another company\'s data', '',
+    `Signed in as the demo company. ${valid ? 'Control passed: it can read its own job, so a refusal below is real.' : '**CONTROL FAILED — the test account could not read its own job, so these results prove nothing.**'}`, '',
+    `**${rows.length} requests · ${leaks.length} leaks · ${rows.filter((r) => r.pass).length} refused / empty · ${errors.length} refused with a server error**`, '',
+    '| Request | Result |', '|---|---|',
+    ...rows.map((r) => `| \`${r.url}\` | ${r.pass === false ? '❌ ' : r.pass ? '✅ ' : '⚠️ '}${r.note} |`),
+  ];
+  fs.writeFileSync(path.join(outDir, 'break-in.md'), lines.join('\n') + '\n');
+  fs.writeFileSync(path.join(outDir, 'break-in.json'), JSON.stringify({ valid, rows }, null, 1));
+  console.log(`break-in: ${valid ? 'control ok' : 'CONTROL FAILED'} · ${rows.length} requests · ${leaks.length} leaks · ${errors.length} server errors`);
+  for (const l of leaks) console.log(`break-in LEAK: ${l.url} — ${l.note}`);
 }
 
 // Run last: every const above is initialised before a mode starts.

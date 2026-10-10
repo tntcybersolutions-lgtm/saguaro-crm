@@ -1,0 +1,16 @@
+{
+  "_what": "Record ids that belong to OTHER companies than the App Review demo company (Sonoran Ridge Builders). The walk signs in as the demo company and asks for each one; every answer must be a refusal. Ids only; refreshed from the database by the session that maintains the walk.",
+  "refreshed": "2026-10-10",
+  "projects": ["818b0efb-7957-453e-a259-b860ea91932c", "df61cca6-5f73-40d5-9c48-fbc063778bda", "c64f209e-3bc5-4892-b058-89860a392cee", "a2aad352-02ef-41ad-9012-a8bf442118a4", "25b4f926-57b1-403a-967b-4e2bb9e6693d", "c0728312-f1a0-47f3-870d-9ad9d72f7e00"],
+  "records": {
+    "daily-logs": ["fe85a732-ae1b-4ee4-82f2-d59b0a534118", "3a31ab77-71e4-4aad-b65c-5bda3a10dfbd"],
+    "rfis": ["e51523a8-d5da-40c0-a4ef-5572e831694b", "770c0fa7-bbb4-4192-8ae0-bcb813fb9b5f"],
+    "change-orders": ["4bd50a58-90a5-4ddd-b66e-54452f1d67ba", "461cda48-8c9a-457c-96f5-14314b072994"],
+    "pay-apps": ["ce604fc1-0cd7-42a6-84db-5b13c3a6a5ca", "837d1308-9a0d-4e51-8a0a-ae1cbf70aef1"],
+    "contracts": ["7532c1de-1eea-406c-a952-4bc47abd629b", "c79770e8-0169-4d19-84b7-c5e151ddb642"],
+    "inspections": ["a74aae28-8ca0-42ed-a71c-cadbbf22f920", "50bedcfe-3dc7-49fe-9b3a-28c1c07fb813"],
+    "invoices": ["7353b33f-1b60-4037-b19e-a2c14e079165", "3db88e87-0059-46fd-b3e4-6fbe2a167002"],
+    "bid-packages": ["0a57ff68-3685-4a97-9a4a-4042b2d8a1d9", "63104463-0ce2-46df-99be-f78bbb8e55c0"],
+    "takeoff": ["314023ac-ef35-4f09-9dc2-095b4b5a5f46", "fd7c2383-8fca-42dc-b641-bc57508e6a90"]
+  }
+}
