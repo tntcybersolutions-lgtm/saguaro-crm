@@ -30,10 +30,12 @@ export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Admin', 'Full');
   if (!g.ok) return g.res;
   const user = g.user;
+  let what = 'role';
   try {
     const supabase = createServerClient();
     const body = await req.json();
     if (body._type === 'assignment') {
+      what = 'role assignment';
       const userId = body.user_id ?? body.userId;
       const roleId = body.role_id ?? body.roleId;
       if (!userId || !roleId) {
@@ -56,7 +58,7 @@ export async function POST(req: NextRequest) {
     }).select().single();
     if (error) throw error;
     return NextResponse.json({ role: data }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('roles POST', e, `Could not save the ${what}. Please try again.`);
   }
 }

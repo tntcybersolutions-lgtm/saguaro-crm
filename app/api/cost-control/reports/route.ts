@@ -73,8 +73,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ success: true, report: data });
-  } catch (err) {
-    console.error('[cost-control/reports/POST]', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('cost-control/reports POST', e, 'Could not save the cost report. Please try saving it again.');
   }
 }
