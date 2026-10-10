@@ -8,6 +8,7 @@ import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, StatSt
 import { SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 import { leaveOf } from '@/lib/leave-entry';
 
+import { inAppFileClick } from '@/lib/media-save';
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)',GREEN='var(--success)',RED='var(--danger)';
 const fmt = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmt0 = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
@@ -715,7 +716,7 @@ export default function PayrollPage() {
                     </td>
                     <td style={{ padding: '12px 16px' }}>
                       {record.pdf_url ? (
-                        <a href={`/api/files/open?u=${encodeURIComponent(record.pdf_url || '')}`} target="_blank" rel="noopener noreferrer" style={{ background: 'none', border: `1px solid ${BORDER}`, borderRadius: 5, color: GOLD, fontSize: 11, padding: '3px 10px', textDecoration: 'none', fontWeight: 700 }}><span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 4 }}><FileText size={13} weight="regular" color={GOLD} /></span>WH-347 PDF</a>
+                        <a href={`/api/files/open?u=${encodeURIComponent(record.pdf_url || '')}`} target="_blank" rel="noopener noreferrer" onClick={inAppFileClick(`/api/files/open?u=${encodeURIComponent(record.pdf_url || '')}`, 'WH-347 certified payroll', setError)} style={{ background: 'none', border: `1px solid ${BORDER}`, borderRadius: 5, color: GOLD, fontSize: 11, padding: '3px 10px', textDecoration: 'none', fontWeight: 700 }}><span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 4 }}><FileText size={13} weight="regular" color={GOLD} /></span>WH-347 PDF</a>
                       ) : (
                         <span style={{ fontSize: 11, color: DIM }}>—</span>
                       )}

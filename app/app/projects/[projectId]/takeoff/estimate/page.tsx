@@ -17,6 +17,8 @@ import {
 } from '@/components/ui/premium';
 import { SHEET_DISCIPLINES } from '@/lib/construction-intelligence';
 
+import { inAppFileClick } from '@/lib/media-save';
+import { useToast } from '@/components/Toast';
 const GOLD = 'var(--brand-primary)';
 const DARK = 'var(--bg-base)';
 const RAISED = 'var(--bg-surface-2)';
@@ -135,6 +137,7 @@ const emptyLineItem: Omit<LineItem, 'id' | 'takeoff_project_id'> = {
 };
 
 function EstimatePage() {
+  const { showToast } = useToast();
   const { projectId } = useParams() as { projectId: string };
 
   const [project, setProject] = useState<Project | null>(null);
@@ -904,6 +907,7 @@ function EstimatePage() {
                   <a
                     href={`/api/takeoff-projects/${selectedTakeoff.id}/export/pdf`}
                     target="_blank"
+                    onClick={inAppFileClick(`/api/takeoff-projects/${selectedTakeoff.id}/export/pdf`, 'Takeoff estimate', (m) => showToast(m, 'error'))}
                     rel="noopener noreferrer"
                     style={{ ...ghostButtonStyle, padding: '9px 15px', fontSize: 12.5, borderRadius: 10 }}
                     className="pmBtn"
@@ -913,6 +917,7 @@ function EstimatePage() {
                   <a
                     href={`/api/takeoff-projects/${selectedTakeoff.id}/export/excel`}
                     target="_blank"
+                    onClick={inAppFileClick(`/api/takeoff-projects/${selectedTakeoff.id}/export/excel`, 'Takeoff estimate', (m) => showToast(m, 'error'))}
                     rel="noopener noreferrer"
                     style={{ ...ghostButtonStyle, padding: '9px 15px', fontSize: 12.5, borderRadius: 10 }}
                     className="pmBtn"
