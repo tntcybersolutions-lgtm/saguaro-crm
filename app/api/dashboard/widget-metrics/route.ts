@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { signUrl } from '@/lib/storage-signing';
 
 export const dynamic = 'force-dynamic';
 
@@ -156,7 +157,9 @@ export async function GET(req: NextRequest) {
       const { data } = await db.from('photos')
         .select('url, caption, created_at').eq('tenant_id', t).not('url', 'is', null)
         .order('created_at', { ascending: false }).limit(9);
-      const recent = (data || []).map(r => ({ url: r.url as string, caption: r.caption ?? null }));
+      // The photo bucket is private: hand the widget signed links, not the stored public ones.
+      const recent = (await Promise.all((data || []).map(async r => ({ url: await signUrl(r.url as string), caption: r.caption ?? null }))))
+        .filter(r => r.url);
       const { count } = await db.from('photos').select('id', { count: 'exact', head: true }).eq('tenant_id', t);
       return { count: count || recent.length, recent };
     }, { count: 0, recent: [] as { url: string; caption: string | null }[] }),
