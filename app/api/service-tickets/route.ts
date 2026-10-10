@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
-import { TICKET_PRIORITIES, noteLine } from '@/lib/service-tickets';
+import { TICKET_PRIORITIES, ARCHIVED_TICKET_STATUS, noteLine } from '@/lib/service-tickets';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -18,10 +18,17 @@ export async function GET(req: NextRequest) {
   const { user } = g;
   const db = g.db as unknown as Loose;
   try {
+    // Archived calls (DELETE /api/service-tickets/[id]) leave every list;
+    // ?archived=1 returns only them, for the Archived filter / restore.
+    const archivedOnly = req.nextUrl.searchParams.get('archived') === '1';
+    const ticketQ = db.from('service_tickets')
+      .select('id, ticket_number, project_id, title, description, category, system_type, priority, sla_hours, status, scheduled_window_start, scheduled_window_end, assigned_tech_id, dispatch_notes, resolution, closed_at, created_at, updated_at')
+      .eq('tenant_id', user.tenantId);
     const [tickets, techs, projects] = await Promise.all([
-      db.from('service_tickets')
-        .select('id, ticket_number, project_id, title, description, category, system_type, priority, sla_hours, status, scheduled_window_start, scheduled_window_end, assigned_tech_id, dispatch_notes, resolution, closed_at, created_at, updated_at')
-        .eq('tenant_id', user.tenantId)
+      // status is nullable: `neq` alone would drop NULL-status rows too.
+      (archivedOnly
+        ? ticketQ.eq('status', ARCHIVED_TICKET_STATUS)
+        : ticketQ.or(`status.is.null,status.neq.${ARCHIVED_TICKET_STATUS}`))
         .order('created_at', { ascending: false })
         .limit(500),
       // service_tickets.assigned_tech_id references public.users (not profiles),

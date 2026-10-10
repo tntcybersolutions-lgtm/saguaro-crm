@@ -4,6 +4,15 @@ import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { createNotification } from '@/lib/notifications';
 import { sendInviteTeamMember } from '@/lib/email';
+import { apiError } from '@/lib/api-error';
+import { writeWithOptionalColumns } from '@/lib/optional-column';
+
+/* The invitee's name. team_invites had no `name` column, so the name typed on
+   the invite form was thrown away and the roster could only show an email. The
+   column exists now (supabase/migrations/20261010_team_invite_name_radio_edited_at.sql);
+   the insert still sends it as an OPTIONAL column (dropped and retried only if
+   the database says the column is missing), so a database without that
+   migration keeps the invite itself.                                          */
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
 
@@ -24,16 +33,27 @@ export async function GET(req: NextRequest) {
   const user = g.user;
   try {
     const db = createServerClient();
-    const { data, error } = await db
+    // Optional ?projectId= narrows to the invites sent from one job's Team page.
+    const projectId = req.nextUrl.searchParams.get('projectId') || req.nextUrl.searchParams.get('project_id');
+    // `*` rather than a column list, so a database without the `name` column
+    // still answers (the name then reads as null).
+    let q = db
       .from('team_invites')
-      .select('id, email, role, created_at, invited_by')
+      .select('*')
       .eq('tenant_id', user.tenantId)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false });
+      .eq('status', 'pending');
+    if (projectId) q = q.eq('project_id', projectId);
+    const { data, error } = await q.order('created_at', { ascending: false });
     if (error) throw error;
-    return NextResponse.json({ invites: data ?? [] });
-  } catch {
-    return NextResponse.json({ invites: [] }, { status: 500 });
+    // Never hand the single-use accept token back to the browser.
+    const invites = (data ?? []).map((r: Record<string, unknown>) => ({
+      id: r.id, email: r.email, name: (r.name as string | null | undefined) ?? null, role: r.role,
+      project_id: r.project_id ?? null, created_at: r.created_at, invited_by: r.invited_by,
+    }));
+    return NextResponse.json({ invites });
+  } catch (e) {
+    // A failed read must not look like "no pending invites".
+    return apiError('team/invite', e, 'Could not load pending invites');
   }
 }
 
@@ -135,13 +155,14 @@ async function createAndSendInvite(
     // Secure, single-use accept token (persisted so the invitee can actually accept).
     const token = randomBytes(24).toString('hex');
 
-    // Insert using ONLY real team_invites columns. `name` is NOT a column on this
-    // table — persisting it here previously caused the whole insert to fail while
-    // the route still (wrongly) reported success. We store the token so the invite
-    // is real, and surface any DB error honestly instead of swallowing it.
-    const { data: invite, error: insertErr } = await db
-      .from('team_invites')
-      .insert({
+    // Insert the real team_invites columns, plus `name` as an OPTIONAL column:
+    // on a database without it, a "no such column" answer drops just the name
+    // and retries, so the invite itself is never lost over it. We store
+    // the token so the invite is real, and surface any other DB error honestly.
+    const cleanName = typeof name === 'string' && name.trim() && name.trim().toLowerCase() !== String(email).toLowerCase()
+      ? name.trim() : null;
+    const { result: { data: invite, error: insertErr } } = await writeWithOptionalColumns(
+      {
         tenant_id: tenantId,
         email,
         role,
@@ -150,9 +171,12 @@ async function createAndSendInvite(
         token,
         status: 'pending',
         created_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
+        name: cleanName,
+      },
+      ['name'],
+      // `as never`: the generated types predate team_invites.name (optional above).
+      (row) => db.from('team_invites').insert(row as never).select().single(),
+    );
 
     if (insertErr || !invite) {
       // The database's words stay in the log; the caller gets ours.

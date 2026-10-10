@@ -1,17 +1,27 @@
 /**
  * PATCH /api/service-tickets/[id]
  * Body (any of): { status, assigned_tech_id, scheduled_window_start,
- *   scheduled_window_end, waiting_reason, resolution, note, force }
+ *   scheduled_window_end, waiting_reason, resolution, note, force,
+ *   title, description, category, priority, sla_hours, project_id }
  *
  * - Waiting needs a reason; Completed needs a resolution (spec §7).
  * - Assigning a tech to a window that overlaps another open ticket for the
  *   same tech returns 409 with the conflicting ticket unless force: true.
+ * - The call's own details (title … project_id) are editable — they were
+ *   set once at creation and could never be corrected.
  * - Every change is appended to dispatch_notes as a dated line.
+ * - status 'archived' is refused here; archiving is DELETE (below), and an
+ *   archived call is restored with { status: 'triaged' }.
+ *
+ * DELETE /api/service-tickets/[id] — archive the call (soft delete). A service
+ * call carries a dispatch trail and may already have been billed, so it is
+ * never hard-deleted: status becomes 'archived', the trail gets a dated line,
+ * and the call leaves every list (GET ?archived=1 still finds it).
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
-import { OPEN_TICKET_STATUSES, TICKET_STATUSES, TICKET_STATUS_LABEL, noteLine, normaliseTicketStatus, windowsOverlap, type TicketStatus } from '@/lib/service-tickets';
+import { ARCHIVED_TICKET_STATUS, OPEN_TICKET_STATUSES, TICKET_PRIORITIES, TICKET_STATUSES, TICKET_STATUS_LABEL, noteLine, normaliseTicketStatus, windowsOverlap, type TicketStatus } from '@/lib/service-tickets';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -28,7 +38,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const b = await req.json().catch(() => ({}));
 
     const { data: t, error: readErr } = await db.from('service_tickets')
-      .select('id, ticket_number, status, assigned_tech_id, scheduled_window_start, scheduled_window_end, dispatch_notes, resolution, updated_at')
+      .select('id, ticket_number, status, assigned_tech_id, scheduled_window_start, scheduled_window_end, dispatch_notes, resolution, updated_at, title, description, category, priority, sla_hours, project_id')
       .eq('id', id).eq('tenant_id', user.tenantId).maybeSingle();
     if (readErr) throw readErr;
     if (!t) return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
@@ -41,6 +51,47 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const now = new Date();
     const patch: Record<string, unknown> = { updated_at: now.toISOString() };
     const notes: string[] = [];
+
+    // An archived call only comes back by restoring it (status → triaged).
+    if (normaliseTicketStatus(t.status) === ARCHIVED_TICKET_STATUS && b.status !== 'triaged') {
+      return NextResponse.json({ error: 'This call is archived — restore it before changing it.' }, { status: 409 });
+    }
+
+    // Details — the call's own fields, editable after creation.
+    const edited: string[] = [];
+    if ('title' in b) {
+      const v = String(b.title ?? '').trim();
+      if (!v) return NextResponse.json({ error: 'title is required' }, { status: 400 });
+      if (v !== t.title) { patch.title = v; edited.push('title'); }
+    }
+    for (const k of ['description', 'category'] as const) {
+      if (!(k in b)) continue;
+      const v = String(b[k] ?? '').trim() || null;
+      if (v !== (t[k] ?? null)) { patch[k] = v; edited.push(k); }
+    }
+    if ('priority' in b) {
+      if (!(TICKET_PRIORITIES as readonly string[]).includes(String(b.priority))) return NextResponse.json({ error: 'priority must be one of ' + TICKET_PRIORITIES.join(', ') }, { status: 400 });
+      if (b.priority !== (t.priority || 'normal')) { patch.priority = b.priority; edited.push(`priority ${t.priority || 'normal'} → ${b.priority}`); }
+    }
+    if ('sla_hours' in b) {
+      const raw = b.sla_hours;
+      const n = raw === null || raw === '' || raw === undefined ? null : Number(raw);
+      if (n !== null && (!Number.isFinite(n) || n <= 0)) return NextResponse.json({ error: 'sla_hours must be a positive number of hours' }, { status: 400 });
+      const v = n === null ? null : Math.round(n);
+      if (v !== (t.sla_hours ?? null)) { patch.sla_hours = v; edited.push('SLA'); }
+    }
+    if ('project_id' in b) {
+      let pid: string | null = null;
+      if (b.project_id) {
+        if (!UUID_RE.test(String(b.project_id))) return NextResponse.json({ error: 'project_id must be a job id' }, { status: 400 });
+        const { data: p, error } = await db.from('projects').select('id').eq('id', b.project_id).eq('tenant_id', user.tenantId).maybeSingle();
+        if (error) throw error;
+        if (!p) return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+        pid = p.id;
+      }
+      if (pid !== (t.project_id ?? null)) { patch.project_id = pid; edited.push('job'); }
+    }
+    if (edited.length) notes.push(`Details edited: ${edited.join(', ')}`);
 
     // Tech
     let techId: string | null | undefined;
@@ -88,7 +139,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     // Status
     if ('status' in b) {
       const raw = String(b.status || '');
-      if (!(TICKET_STATUSES as readonly string[]).includes(raw)) return NextResponse.json({ error: 'status must be one of ' + TICKET_STATUSES.join(', ') }, { status: 400 });
+      if (raw === ARCHIVED_TICKET_STATUS) return NextResponse.json({ error: 'Archive a call with DELETE, not a status change' }, { status: 400 });
+      if (!(TICKET_STATUSES as readonly string[]).includes(raw)) return NextResponse.json({ error: 'status must be one of ' + TICKET_STATUSES.filter(s => s !== ARCHIVED_TICKET_STATUS).join(', ') }, { status: 400 });
       const next = raw as TicketStatus;
       const prev = normaliseTicketStatus(t.status);
       if (next === 'waiting') {
@@ -121,5 +173,35 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ ticket: data });
   } catch (e) {
     return apiError('service-tickets/update', e, 'Could not update the service call.');
+  }
+}
+
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const g = await requirePermission(req, 'Projects', 'Edit');
+  if (!g.ok) return g.res;
+  const { user } = g;
+  const db = g.db as unknown as Loose;
+  try {
+    if (!UUID_RE.test(id)) return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
+    const { data: t, error: readErr } = await db.from('service_tickets')
+      .select('id, status, dispatch_notes')
+      .eq('id', id).eq('tenant_id', user.tenantId).maybeSingle();
+    if (readErr) throw readErr;
+    if (!t) return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
+    const prev = normaliseTicketStatus(t.status);
+    if (prev === ARCHIVED_TICKET_STATUS) return NextResponse.json({ ok: true, alreadyArchived: true });
+
+    const now = new Date();
+    const line = noteLine(now, `Archived — was ${TICKET_STATUS_LABEL[prev]} (${user.email})`);
+    const { error } = await db.from('service_tickets').update({
+      status: ARCHIVED_TICKET_STATUS,
+      updated_at: now.toISOString(),
+      dispatch_notes: t.dispatch_notes ? `${t.dispatch_notes}\n${line}` : line,
+    }).eq('id', id).eq('tenant_id', user.tenantId);
+    if (error) throw error;
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    return apiError('service-tickets/archive', e, 'Could not archive the service call.');
   }
 }

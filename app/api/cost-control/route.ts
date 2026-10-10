@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { costControl, type CostLine } from '@/lib/finance';
+import { manualLinesFromReport, savedOverrides } from '@/lib/cost-report-lines';
+import { apiError } from '@/lib/api-error';
 
 /**
  * GET /api/cost-control?project_id=…
@@ -85,19 +87,17 @@ export async function GET(req: NextRequest) {
     }
 
     // Persisted manual overrides from the latest saved report (keyed by cost code)
-    const overrides: Record<string, { committedCents?: number; actualCents?: number }> = {};
     const latest = reportRes.data?.[0];
-    if (latest && Array.isArray(latest.lines)) {
-      for (const l of latest.lines as any[]) {
-        const code = codeOf(l?.costCode);
-        const o: { committedCents?: number; actualCents?: number } = {};
-        if (typeof l?.committedOverrideCents === 'number') o.committedCents = l.committedOverrideCents;
-        if (typeof l?.actualOverrideCents === 'number') o.actualCents = l.actualOverrideCents;
-        if (o.committedCents !== undefined || o.actualCents !== undefined) overrides[code] = o;
-      }
-    }
+    const overrides = savedOverrides(latest?.lines);
+    /* Lines the user ADDED by hand ("Add Cost Code") on the latest saved report.
+       They exist nowhere but that report — no budget line, PO or invoice — so
+       the live rebuild above never produced them: you saved a report with your
+       new code in it, reloaded, and the code was gone. They are carried
+       forward from the report until a later save leaves them out. */
+    const manual: Acc[] = manualLinesFromReport(latest?.lines, new Set(acc.keys()));
 
-    const lines = [...acc.values()]
+    const manualCodes = new Set(manual.map((m) => m.code));
+    const lines = [...acc.values(), ...manual]
       .sort((a, b) => a.code.localeCompare(b.code))
       .map((a) => ({
         costCode: a.code,
@@ -106,6 +106,8 @@ export async function GET(req: NextRequest) {
         approvedChangesCents: a.changeCents,
         committedCents: a.committedCents,
         actualCents: a.actualCents,
+        /* true = added by hand on a saved report, not from budget/POs/invoices */
+        manual: manualCodes.has(a.code),
       }));
 
     // Server-side computed report (single source of truth = lib/finance), applying overrides
@@ -140,7 +142,6 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (err) {
-    console.error('[cost-control/GET]', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('cost-control/GET', err, "Couldn't load the cost report");
   }
 }

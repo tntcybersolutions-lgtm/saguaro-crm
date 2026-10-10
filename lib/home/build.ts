@@ -74,7 +74,7 @@ const TODO_CLOSED = ['done', 'completed', 'complete', 'cancelled'];
 const ISSUE_CLOSED = ['resolved', 'closed', 'converted', 'cancelled'];
 const INSPECTION_DONE = ['passed', 'completed', 'approved', 'closed', 'cancelled'];
 const SCHEDULE_DONE = ['complete', 'completed', 'done'];
-const TICKET_CLOSED = ['closed', 'resolved', 'cancelled', 'completed'];
+const TICKET_CLOSED = ['closed', 'resolved', 'cancelled', 'completed', 'archived'];
 const CLAIM_CLOSED = ['resolved', 'closed', 'denied', 'cancelled'];
 
 const loose = (db: ServerDb) => db as unknown as Loose;

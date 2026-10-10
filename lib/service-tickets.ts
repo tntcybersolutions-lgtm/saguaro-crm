@@ -8,12 +8,16 @@
  * dated line — a readable trail without a schema change.
  */
 
-export const TICKET_STATUSES = ['new', 'triaged', 'scheduled', 'en_route', 'on_site', 'waiting', 'completed', 'closed'] as const;
+/* 'archived' is the soft delete (DELETE /api/service-tickets/[id]): the call
+   leaves every list but its dispatch trail is kept. It is set only by that
+   route — PATCH refuses it — and restoring returns the call to Triaged. */
+export const TICKET_STATUSES = ['new', 'triaged', 'scheduled', 'en_route', 'on_site', 'waiting', 'completed', 'closed', 'archived'] as const;
 export type TicketStatus = (typeof TICKET_STATUSES)[number];
+export const ARCHIVED_TICKET_STATUS = 'archived' as const;
 
 export const TICKET_STATUS_LABEL: Record<TicketStatus, string> = {
   new: 'New', triaged: 'Triaged', scheduled: 'Scheduled', en_route: 'En Route',
-  on_site: 'On Site', waiting: 'Waiting', completed: 'Completed', closed: 'Closed',
+  on_site: 'On Site', waiting: 'Waiting', completed: 'Completed', closed: 'Closed', archived: 'Archived',
 };
 
 export const TICKET_PRIORITIES = ['emergency', 'high', 'normal', 'low'] as const;
