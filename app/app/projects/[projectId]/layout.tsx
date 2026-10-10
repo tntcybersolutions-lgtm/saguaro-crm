@@ -1,452 +1,94 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+/**
+ * The frame around every screen inside a job.
+ *
+ * The job page (./overview) IS the job's navigation now — every tool, grouped,
+ * with its count — so nothing here repeats it:
+ *
+ *   phone    no tab strip, no card grid, no module drawer. A tool page gets one
+ *            thin "‹ <Job>" row that goes back to the job's tool list; the job
+ *            page itself gets nothing (the app's bar and tab bar already lead
+ *            to Jobs).
+ *   desktop  the same back row on tool pages, plus a compact flat row of the
+ *            job's phases (Overview · Preconstruction · … · Closeout) as text
+ *            tabs, the active one underlined. The full tool list sits in the
+ *            app's left rail (components/AppSidebar, from lib/project-nav).
+ *
+ * The bar carries `data-job-bar` so the app frame can hide it if its own top
+ * bar starts naming the job.
+ */
+import React from 'react';
 import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
-import { accentForProject } from '@/lib/project-identity';
-import { ProjectDot } from '@/components/ui/ProjectColor';
-import { useProjectColor } from '@/lib/hooks/useProjectColor';
-import { useProjectContext } from '@/lib/hooks/useProjectContext';
-import { isToolVisible, hiddenToolCount, type ToolSignals } from '@/lib/project-tools';
-import { moduleAccent } from '@/lib/module-identity';
 import { useProject } from '@/lib/hooks/useProjects';
-import ProjectPhaseBar from '@/components/ProjectPhaseBar';
-import {
-  SquaresFour, Ruler, Calculator, FileText, CalendarBlank, Package, Palette,
-  Clipboard, NotePencil, Wallet, ArrowsClockwise, Money, Receipt, Signature,
-  ShieldCheck, IdentificationBadge, ClipboardText, Camera, MagnifyingGlass,
-  HardHat, CheckCircle, CheckSquare, Timer, Question, Export, ChatCircle,
-  Folder, Bank, BookOpen, Users, Globe, Laptop, ArrowsSplit, Plug, Shield,
-  WifiHigh, Broadcast, Gear, Robot, ChartBar, Brain, CaretLeft, CaretRight, ArrowLeft, X,
-} from '@phosphor-icons/react';
-
-const GOLD = 'var(--brand-primary)'; const DARK = 'var(--bg-base)'; const RAISED = 'var(--bg-surface-2)';
-const BORDER = 'rgba(255,255,255,0.12)'; const DIM = 'var(--text-secondary)'; const TEXT = 'var(--text-primary)';
-
-// ALL sidebar nav items — every module Buildertrend has + more.
-// `accent` = module-identity key (lib/module-identity): the item's icon wears
-// the module's VIVID chip when active and a vivid-tinted glyph when inactive.
-const NAV_SECTIONS = [
-  {
-    /* Overview is the project's home, not a preconstruction tool, so it sits
-       alone above the phases — the same place Procore puts Project Home. */
-    label: 'Project',
-    items: [
-      { label: 'Overview',        href: '',                   icon: SquaresFour, badge: null },
-    ],
-  },
-  {
-    /* Bid Packages moved here from EXECUTION. You send bid packages to price
-       the job, before anyone is awarded anything — filing it under Execution
-       put a preconstruction activity after contracts in a nav that otherwise
-       reads as the order work happens. */
-    label: 'Preconstruction',
-    items: [
-      { label: 'Takeoff',         href: '/takeoff',           icon: Ruler, badge: null, accent: 'takeoff' },
-      { label: 'Estimate',        href: '/estimate',          icon: Calculator, badge: null, accent: 'estimates' },
-      { label: 'Bid Packages',          href: '/bid-packages',      icon: Package, badge: null, accent: 'bids' },
-      { label: 'Proposal',        href: '/proposal',          icon: FileText, badge: null },
-    ],
-  },
-  {
-    label: 'Execution',
-    items: [
-      { label: 'Schedule',              href: '/schedule',          icon: CalendarBlank, badge: null, accent: 'schedule' },
-      { label: 'Selections & Allowances', href: '/selections',      icon: Palette, badge: null },
-      { label: 'Contracts',             href: '/contracts',         icon: Clipboard, badge: null, accent: 'contracts' },
-      { label: 'Subcontractors',        href: '/subs',              icon: Users, badge: null, accent: 'subs' },
-      { label: 'PO & Subcontracts',     href: '/purchase-orders',   icon: NotePencil, badge: null },
-    ],
-  },
-  {
-    // FIELD before FINANCIAL — run the work, then bill from it. Mirrors
-    // lib/project-nav.tsx (the desktop rail) so phone and desktop agree.
-    label: 'Field',
-    items: [
-      { label: 'Daily Logs',      href: '/daily-logs',        icon: ClipboardText, badge: null, accent: 'daily' },
-      { label: 'T&M Tickets',     href: '/tm-tickets',        icon: Money, badge: null, accent: 'tm' },
-      { label: 'Photos',          href: '/photos',            icon: Camera, badge: null, accent: 'photos' },
-      { label: 'Inspections',     href: '/inspections',       icon: MagnifyingGlass, badge: null, accent: 'inspections' },
-      { label: 'Safety',          href: '/safety',            icon: HardHat, badge: null, accent: 'safety' },
-      { label: 'Punch List',      href: '/punch-list',        icon: CheckCircle, badge: null, accent: 'punch' },
-      { label: 'To-Dos',          href: '/todos',             icon: CheckSquare,  badge: null, accent: 'todos' },
-      { label: 'Timesheets',      href: '/timesheets',        icon: Timer,  badge: null, accent: 'time' },
-      { label: 'Crews',           href: '/crews',             icon: Users,  badge: null, accent: 'crews' },
-    ],
-  },
-  {
-    label: 'Financial',
-    items: [
-      { label: 'Budget',          href: '/budget',            icon: Wallet, badge: null, accent: 'budget' },
-      { label: 'Change Orders',   href: '/change-orders',     icon: ArrowsClockwise, accent: 'changeorders' },
-      { label: 'Pay Applications', href: '/pay-apps',         icon: Money, badge: null, accent: 'payapps' },
-      { label: 'Client Invoices', href: '/invoices',          icon: Receipt, badge: null, accent: 'invoices' },
-      { label: 'Bills',           href: '/bills',             icon: FileText, badge: null, accent: 'bills' },
-      { label: 'Lien Waivers',    href: '/lien-waivers',      icon: Signature, badge: null, accent: 'waivers' },
-      { label: 'Insurance',       href: '/insurance',         icon: ShieldCheck,  badge: null },
-      { label: 'Certified Payroll', href: '/payroll',         icon: IdentificationBadge, badge: null },
-      { label: 'W-9 Requests',    href: '/w9',                icon: FileText, badge: null },
-    ],
-  },
-  {
-    label: 'Communication',
-    items: [
-      { label: 'RFIs',            href: '/rfis',              icon: Question, accent: 'rfis' },
-      { label: 'Submittals',      href: '/submittals',        icon: Export, badge: null },
-      { label: 'Messages',        href: '/messages',          icon: ChatCircle, badge: null, accent: 'messages' },
-    ],
-  },
-  {
-    label: 'Documents',
-    items: [
-      { label: 'Files',           href: '/files',             icon: Folder, badge: null, accent: 'documents' },
-      { label: 'Drawings',        href: '/drawings',          icon: Ruler, badge: null, accent: 'drawings' },
-      { label: 'Permits',         href: '/permits',           icon: Bank,  badge: null, accent: 'permits' },
-      { label: 'Specifications',  href: '/specs',             icon: BookOpen, badge: null, accent: 'specs' },
-    ],
-  },
-  {
-    /* Closeout is a PHASE, not a document type. It sat fifth under
-       DOCUMENTS, which meant a GC finishing a job had to already know it
-       lived there. The rest of this nav reads as the lifecycle —
-       precon, execution, financial, field — so the last phase gets the
-       last section.
-
-       Punch List deliberately stays under FIELD rather than being
-       duplicated here: punch items are written all through execution, and
-       two nav entries pointing at one page just makes "which one is
-       highlighted" a question. The closeout screen links straight to the
-       punch list, and to every other open item, from its readiness gate. */
-    label: 'Closeout',
-    items: [
-      { label: 'Closeout',        href: '/closeout',          icon: CheckCircle, badge: null },
-    ],
-  },
-  {
-    label: 'Team',
-    items: [
-      { label: 'Directory',       href: '/directory',         icon: Users, badge: null, accent: 'team' },
-      { label: 'Team',            href: '/team',              icon: Users, badge: null, accent: 'team' },
-      { label: 'Compliance',      href: '/compliance',        icon: ShieldCheck,  badge: null, accent: 'compliance' },
-    ],
-  },
-  {
-    label: 'Low Voltage / IT',
-    items: [
-      { label: 'Network',          href: '/network',            icon: Globe, badge: null },
-      { label: 'Devices',          href: '/network/devices',    icon: Laptop, badge: null },
-      { label: 'VLANs',            href: '/network/vlans',      icon: ArrowsSplit, badge: null },
-      { label: 'Cables',           href: '/network/cables',     icon: Plug, badge: null },
-      { label: 'Firewall',         href: '/network/firewall',   icon: Shield,  badge: null },
-      { label: 'WiFi',             href: '/network/wifi',       icon: WifiHigh, badge: null },
-      { label: 'Signal Studio',    href: '/app/signal-studio',  icon: Broadcast, badge: null, accent: 'signal' },
-      { label: 'Config Gen',       href: '/network/config',     icon: Gear,  badge: null },
-      { label: 'AI Wizard',        href: '/network/wizard',     icon: Robot, badge: null },
-      { label: 'Reports',          href: '/network/reports',    icon: ChartBar, badge: null },
-    ],
-  },
-  {
-    label: 'Intelligence',
-    items: [
-      { label: 'Bid Intelligence', href: '/intelligence',    icon: Brain, badge: null },
-      { label: 'Autopilot Alerts', href: '/autopilot',       icon: Robot  },
-    ],
-  },
-];
+import { PROJECT_PHASES, phaseForPath } from '@/lib/project-nav';
 
 export default function ProjectLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+  const pathname = usePathname() || '';
   const params = useParams();
-  const projectId = params['projectId'] as string;
+  const projectId = String(params?.projectId || '');
   const base = `/app/projects/${projectId}`;
-  const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  /* The phone phase bar carries the Modules button; it asks for the drawer here. */
-  useEffect(() => {
-    const open = () => setMobileOpen(true);
-    window.addEventListener('saguaro:project-menu', open);
-    return () => window.removeEventListener('saguaro:project-menu', open);
-  }, []);
+  const rel = pathname.startsWith(base) ? pathname.slice(base.length) : '';
+  const onJobPage = rel === '' || rel === '/' || rel.startsWith('/overview');
+  const real = !!projectId && projectId !== 'new';
 
-  /* Forty-nine modules on every job is why a GC cannot find the three they
-     need. Six core tools always show, anything carrying real work shows
-     itself, and the rest sit behind "All tools". The preference is per
-     browser rather than per project — a GC who wants everything wants it
-     everywhere. */
-  const [showAllTools, setShowAllTools] = useState(false);
-  useEffect(() => {
-    try { setShowAllTools(localStorage.getItem('sag_all_tools') === '1'); } catch { /* private mode */ }
-  }, []);
-  const toggleAllTools = () => {
-    setShowAllTools(v => {
-      const next = !v;
-      try { localStorage.setItem('sag_all_tools', next ? '1' : '0'); } catch { /* private mode */ }
-      return next;
-    });
-  };
-  // W-2: the sidebar header reads the same '/api/projects/{id}' SWR cache
-  // entry as the overview page — opening a project costs ONE aggregate request.
-  const { project } = useProject(projectId || null);
-  const proj = project as any;
-  const projectName = proj?.name || '';
-  const projectNumber = proj?.project_number || '';
-  const pctDenom = Number(proj?.contractSumToDate) || Number(proj?.contract_amount) || 1;
-  const pctComplete = parseFloat((((Number(proj?.totalBilledToDate) || 0) / pctDenom) * 100).toFixed(1));
-
-  // Close mobile module menu on route change
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
-
-  const { ctx } = useProjectContext(projectId || null);
-  const projectColorValue = useProjectColor(projectId as string);
-  const signals = (ctx || null) as ToolSignals | null;
-
-  /* Every one of the 46 rail items carried `badge: null`, and this component was
-     already loading the project context that holds the counts. So a GC opened a
-     job and saw forty tool names with no idea where any work was — the one thing
-     Procore's sidebar does that made it legible. The numbers were sitting here
-     unused.
-
-     Only counts that mean "there is something here for you" are shown. A zero is
-     not rendered: a badge reading 0 is noise, and its absence already says it. */
-  const c = (ctx as Record<string, any> | null) || null;
-  const n = (v: unknown) => {
-    const x = Number(v) || 0;
-    return x > 0 ? String(x) : null;
-  };
-  const railCounts: Record<string, string | null> = {
-    '/takeoff':          n(c?.takeoff?.count),
-    '/bid-packages':     n(c?.bidPackages?.length),
-    '/budget':           n(c?.budget?.lineCount),
-    '/pay-apps':         n(c?.money?.payAppCount),
-    '/invoices':         n(c?.counts?.invoices),
-    '/bills':            n(c?.counts?.bills),
-    '/purchase-orders':  n(c?.counts?.purchaseOrders),
-    '/rfis':             n(c?.counts?.openRfis),
-    '/submittals':       n(c?.counts?.openSubmittals),
-    '/schedule':         n(c?.counts?.scheduleTasks),
-    '/punch-list':       n(c?.counts?.openPunch),
-    '/subs':             n(c?.subs?.length),
-    '/directory':        n(c?.contactCount),
-    '/crews':            n(c?.subs?.length),
-    '/change-orders':    n(c?.money?.pendingCoCount),
-  };
-  /* The href of the page being viewed — passed to isToolVisible so the nav can
-     never hide the row you are standing on, however you got here. */
-  const activeHref = React.useMemo(() => {
-    const all = NAV_SECTIONS.flatMap(sec => sec.items.map(i => i.href));
-    const rel = pathname.startsWith(base) ? pathname.slice(base.length) : pathname;
-    return all.find(h => h !== '' && rel.startsWith(h)) ?? (pathname === base ? '' : '');
-  }, [pathname, base]);
-  const allHrefs = React.useMemo(() => NAV_SECTIONS.flatMap(sec => sec.items.map(i => i.href)), []);
-  const hiddenCount = hiddenToolCount(allHrefs, signals, activeHref);
-
-  const isActive = (href: string) => {
-    if (href === '') return pathname === base;
-    // App-level modules (absolute /app/... hrefs) live outside the project base.
-    const full = href.startsWith('/app/') ? href : base + href;
-    return pathname.startsWith(full);
-  };
-
-  // Shared sidebar contents — rendered by both the desktop <aside> and the
-  // mobile slide-over overlay. `isCollapsed` only ever true on desktop; the
-  // mobile overlay always renders fully expanded.
-  const renderSidebarBody = (isCollapsed: boolean) => (
-    <>
-      {/* Project header */}
-      <div style={{ padding: '14px 12px', borderBottom: `1px solid ${BORDER}` }}>
-        {!isCollapsed && (
-          <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 700, color: accentForProject(projectId as string).hex, marginBottom: 2, lineHeight: 1.3 }}><ProjectDot project={{ id: projectId as string, color: projectColorValue }} /><span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{projectName || '—'}</span></div>
-            <div style={{ fontSize: 10, color: DIM, marginBottom: 8 }}>{projectNumber}</div>
-            {/* Progress */}
-            <div style={{ height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 2, marginBottom: 3 }}>
-              <div style={{ height: '100%', width: `${pctComplete}%`, background: `linear-gradient(90deg,${GOLD},var(--brand-primary-strong))`, borderRadius: 2 }} />
-            </div>
-            {/* "billed", not "complete". This is money invoiced against the
-                contract sum — it says nothing about how much work is done or
-                how far through setup the job is, and calling it "complete"
-                put it in direct contradiction with the journey's step count
-                a few inches to the right. */}
-            <div style={{ fontSize: 10, color: DIM }}>{pctComplete}% billed</div>
-          </>
-        )}
-        <button onClick={() => setCollapsed(!collapsed)} style={{ marginTop: isCollapsed ? 0 : 8, background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 16, padding: 0, display: 'flex' }}>
-          {isCollapsed ? <CaretRight size={16} weight="regular" color={DIM} /> : <CaretLeft size={16} weight="regular" color={DIM} />}
-        </button>
-      </div>
-
-      {/* Nav sections */}
-      {NAV_SECTIONS.map(section => {
-        const visible = section.items.filter(i => isToolVisible(i.href, signals, activeHref, showAllTools));
-        if (visible.length === 0) return null;
-        return (
-        <div key={section.label} style={{ padding: '8px 0' }}>
-          {!isCollapsed && (
-            <div style={{ padding: '6px 12px 3px', fontSize: 10, fontWeight: 700, color: 'var(--text-tertiary)' }}>
-              {section.label}
-            </div>
-          )}
-          {visible.map(item => {
-            const active = isActive(item.href);
-            const Icon = item.icon;
-            const acc = (item as { accent?: string }).accent ? moduleAccent((item as { accent?: string }).accent) : null;
-            const vivid = acc ? (acc.vivid ?? acc.hex) : null;
-            return (
-              <Link
-                key={item.href}
-                /* Stable handle for Help Mode: "budget", "pay-apps", "rfis" …
-                   Five walkthroughs point at links in this rail, and matching
-                   them by label meant the arrow hunted for the word "Budget"
-                   anywhere on the page. One attribute here anchors all of
-                   them. */
-                data-tour={`project-nav-${item.href.replace(/^.*\//, '') || 'overview'}`}
-                href={item.href.startsWith('/app/') ? `${item.href}?projectId=${projectId}` : base + item.href}
-                title={isCollapsed ? item.label : undefined}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: isCollapsed ? '8px 16px' : '7px 12px',
-                  color: active ? GOLD : DIM,
-                  background: active ? 'linear-gradient(180deg, var(--brand-primary-18), var(--brand-primary-12))' : 'transparent',
-                  borderLeft: `2px solid ${active ? (vivid || GOLD) : 'transparent'}`,
-                  boxShadow: active ? 'inset 0 0 0 1px var(--brand-primary-25)' : 'none',
-                  fontSize: 12.5,
-                  fontWeight: active ? 700 : 500,
-                  textDecoration: 'none',
-                  transition: 'background .12s ease, color .12s ease',
-                  position: 'relative',
-                }}
-                onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text-primary)'; } }}
-                onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = DIM; } }}
-              >
-                {vivid && active ? (
-                  /* vivid module chip — saturated hue UNDER a white glyph, never hue-on-hue */
-                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, width: 20, height: 20, borderRadius: 6, background: `linear-gradient(150deg, ${vivid}, color-mix(in srgb, ${vivid} 80%, #000000))`, border: `1px solid ${vivid}8C`, boxShadow: `0 0 12px -3px ${vivid}40, inset 0 1px 0 rgba(255,255,255,0.25)` }}>
-                    <Icon size={13} weight="fill" color="var(--text-primary)" />
-                  </span>
-                ) : (
-                  <span style={{ display: 'inline-flex', flexShrink: 0 }}><Icon size={16} weight="regular" color={vivid || undefined} /></span>
-                )}
-                {!isCollapsed && <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label}</span>}
-                {!isCollapsed && ((item as { badge?: string }).badge || railCounts[item.href]) && (
-                  <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 5px', borderRadius: 8, background: active ? GOLD : 'var(--warning)', color: active ? 'var(--on-brand)' : 'var(--surface-raised)' }}>
-                    {(item as { badge?: string }).badge || railCounts[item.href]}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </div>
-        );
-      })}
-
-      {/* Everything not shown above is one click away — nothing was removed. */}
-      {!isCollapsed && hiddenCount > 0 && (
-        <div style={{ padding: '4px 12px 14px' }}>
-          <button
-            onClick={toggleAllTools}
-            style={{
-              width: '100%', minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              gap: 8, padding: '0 10px', background: 'transparent',
-              border: `1px dashed ${BORDER}`, borderRadius: 8,
-              color: DIM, fontSize: 11.5, fontWeight: 600, cursor: 'pointer',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
-            onMouseLeave={e => { e.currentTarget.style.color = DIM; e.currentTarget.style.background = 'transparent'; }}
-          >
-            <span>{showAllTools ? 'Show Fewer Tools' : 'All Tools'}</span>
-            {!showAllTools && <span style={{ opacity: 0.7 }}>+{hiddenCount}</span>}
-          </button>
-        </div>
-      )}
-
-      {/* Back to projects */}
-      <div style={{ padding: '8px 12px', borderTop: `1px solid ${BORDER}`, marginTop: 8 }}>
-        <Link href="/app/projects" style={{ display: 'flex', alignItems: 'center', gap: 8, color: DIM, fontSize: 12, fontWeight: 600, textDecoration: 'none', padding: '6px 8px', margin: '-6px -8px', borderRadius: 8, transition: 'background .12s ease, color .12s ease' }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = DIM; }}>
-          <span style={{ display: 'inline-flex' }}><ArrowLeft size={14} weight="regular" /></span>{!isCollapsed && <span>All Projects</span>}
-        </Link>
-      </div>
-    </>
-  );
+  /* Same SWR key as the job page's aggregate — opening a job costs one request. */
+  const { project } = useProject(real ? projectId : null);
+  const name = String((project as { name?: string } | null)?.name || '');
+  const activeKey = onJobPage ? 'overview' : phaseForPath(rel);
 
   return (
-    <div style={{ display: 'flex', minHeight: 'calc(100vh - 56px)' }}>
-
-      {/* ── Responsive: hide desktop sidebar, expose mobile menu trigger ── */}
-      <style>{`
-        @media (max-width: 768px) {
-          .sidebar-desktop { display: none !important; }
-          /* The phase bar carries the Modules button on phones now; the old
-             module bar stays off so a job shows one bar above its title. */
-        }
-      `}</style>
-
-      {/* ── No second desktop rail ───────────────────────────────────────
-          This used to render a project rail beside the company rail, so every
-          project page carried two navigations at once: about twenty company
-          tools that do nothing from inside a job, next to about forty project
-          tools. Two columns of links competing is what made the product read
-          as scattered, and it is the one thing Procore never does.
-
-          The company rail (components/AppSidebar) now switches to this
-          project's tools whenever the URL is inside a project, reading the same
-          list from lib/project-nav. One rail, same position, contents that
-          match where you are.
-
-          The mobile slide-over below is untouched — on a phone there is only
-          ever one rail on screen, so it was never the problem. */}
-
-      {/* ── Page Content ─────────────────────────────────────────────── */}
-      <div style={{ flex: 1, minWidth: 0, background: 'var(--bg-base)' }}>
-
-        {/* Lifecycle phase bar — the left-to-right flow across the top of every
-            project screen (win → build → bill → close), phase you're in lit. */}
-        <ProjectPhaseBar />
-
-        {children}
-      </div>
-
-      {/* ── Project Sidebar (Mobile Slide-over Overlay) ──────────────── */}
-      {mobileOpen && (
-        <>
-          {/* Backdrop */}
-          <div
-            onClick={() => setMobileOpen(false)}
-            style={{ position: 'fixed', inset: 0, background: 'var(--bg-base)', zIndex: 199 }}
-          />
-          {/* Panel */}
-          <aside style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            bottom: 0,
-            width: 250,
-            maxWidth: '82vw',
-            background: 'var(--bg-base)',
-            borderRight: `1px solid ${BORDER}`,
-            overflowY: 'auto',
-            overflowX: 'hidden',
-            zIndex: 200,
-            scrollbarWidth: 'thin',
-          }}>
-            {/* Close row */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 10px 0' }}>
-              <button
-                onClick={() => setMobileOpen(false)}
-                aria-label="Close project menu"
-                style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 24, lineHeight: 1, padding: '2px 6px', display: 'inline-flex' }}
-              >
-                <X size={24} weight="regular" color={DIM} />
-              </button>
-            </div>
-            {renderSidebarBody(false)}
-          </aside>
-        </>
+    <div className="pjx" style={{ minWidth: 0, background: 'var(--bg-base)', minHeight: 'calc(100vh - 56px)' }}>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      {real && (
+        <nav className="pjx-bar" data-job-bar="" data-on-job={onJobPage || undefined} aria-label="Job">
+          {!onJobPage && (
+            <Link href={`${base}/overview`} className="pjx-back" aria-label={`Back to ${name || 'the job'}`}>
+              <span aria-hidden="true">‹</span><span className="pjx-back-name">{name || 'Job'}</span>
+            </Link>
+          )}
+          <div className="pjx-tabs">
+            {PROJECT_PHASES.map((ph) => {
+              const active = ph.key === activeKey;
+              return (
+                <Link
+                  key={ph.key}
+                  href={base + (ph.key === 'overview' ? '/overview' : ph.href)}
+                  className="pjx-tab"
+                  data-active={active || undefined}
+                  aria-current={active ? 'page' : undefined}
+                  title={ph.tagline}
+                >
+                  {ph.label}
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
       )}
+      {children}
     </div>
   );
 }
+
+/* Theme variables only; injected with dangerouslySetInnerHTML so the server
+   and client text match (tools/check-style-escapes.mjs). */
+const CSS = `
+.pjx-bar{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 8px 0 4px;border-bottom:1px solid var(--sg-border,var(--border-default));min-width:0}
+.pjx-back{display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 10px 0 8px;color:var(--brand-primary);font-size:15px;font-weight:600;text-decoration:none;min-width:0;flex:0 1 auto;-webkit-tap-highlight-color:transparent}
+.pjx-back>span:first-child{font-size:22px;line-height:1;margin-top:-2px}
+.pjx-back-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(60vw,420px)}
+.pjx-tabs{display:none}
+@media (max-width:767px){
+  .pjx-bar[data-on-job]{display:none}
+}
+@media (min-width:768px){
+  .pjx-bar{padding:0 clamp(8px,1.2vw,20px) 0 4px}
+  .pjx-tabs{display:flex;align-items:stretch;gap:2px;margin-left:auto;min-width:0;overflow-x:auto;scrollbar-width:none}
+  .pjx-tabs::-webkit-scrollbar{display:none}
+  .pjx-tab{display:inline-flex;align-items:center;min-height:44px;padding:0 10px;border-bottom:2px solid transparent;color:var(--sg-text-2,var(--text-secondary));font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap}
+  .pjx-tab:hover{color:var(--sg-text,var(--text-primary))}
+  .pjx-tab[data-active]{color:var(--sg-text,var(--text-primary));border-bottom-color:var(--brand-primary)}
+  .pjx-bar[data-on-job] .pjx-tabs{margin-left:0}
+}
+`;

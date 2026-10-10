@@ -27,7 +27,13 @@
 import React, { useRef, useState } from 'react';
 import Link from 'next/link';
 
+/* The --sg-* tokens these rules read were only ever defined inside .sgUi
+   (components/ui/fx) or by a white-label tenant that chose a ground — so on an
+   ordinary page every hairline was "1px solid <undefined>" and vanished. They
+   default here to the theme's own tokens. A stylesheet :root rule is the
+   weakest there is: .sgUi and the white-label inline values still win. */
 const CSS = `
+:root{--sg-text:var(--text-primary);--sg-text-2:var(--text-secondary);--sg-text-3:var(--text-tertiary);--sg-border:var(--border-default);--sg-border-strong:var(--border-strong);--sg-surface-solid:var(--bg-solid)}
 .fl-brief{margin:8px 16px 12px;padding:2px 0 2px 12px;border-left:2px solid var(--brand-primary);font-size:14.5px;line-height:1.45;color:var(--sg-text)}
 .fl-brief b{font-weight:700}
 .fl-brief .fl-brief-act{color:var(--brand-primary);font-weight:650;white-space:nowrap;background:none;border:0;padding:0;font:inherit;cursor:pointer;text-decoration:none}
