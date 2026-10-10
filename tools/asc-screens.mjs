@@ -476,9 +476,209 @@ async function upload() {
   }
 }
 
+
+// ── walk ─────────────────────────────────────────────────────────────────────
+// Tap every control on every screen of the iPhone app (WebKit, iPhone profile,
+// demo sign-in) and report what does nothing, what errors, and what 404s.
+// Never taps anything that writes data or leaves the account.
+const WALK_TOP = ['/app', '/app/my-work', '/app/projects', '/app/time', '/app/notifications', '/app/documents', '/app/daily-logs',
+  '/app/schedule', '/app/compliance', '/app/takeoff', '/app/reports', '/app/people', '/app/subs', '/app/customers', '/app/leads',
+  '/app/sales', '/app/bids', '/app/billing', '/app/billing/payapp', '/app/billing/cost-control', '/app/invoicing', '/app/catalog',
+  '/app/certified-payroll', '/app/command-center', '/app/command-center/daily-logs', '/app/command-center/directory',
+  '/app/command-center/financials', '/app/command-center/budget', '/app/command-center/checklists', '/app/command-center/escalations',
+  '/app/command-center/kpis', '/app/command-center/long-lead', '/app/command-center/milestones', '/app/command-center/oac',
+  '/app/command-center/owner-updates', '/app/command-center/portals', '/app/command-center/pre-site', '/app/command-center/qc',
+  '/app/command-center/risks', '/app/command-center/rollout', '/app/command-center/vendors', '/app/command-center/verify',
+  '/app/document-versions', '/app/fleet', '/app/intelligence', '/app/portals', '/app/prequalification', '/app/radio',
+  '/app/resource-planning', '/app/reviews', '/app/service', '/app/settings', '/app/signal-studio', '/app/warranty-claims', '/app/ask'];
+const WALK_JOB = ['overview', 'photos', 'files', 'daily-logs', 'rfis', 'submittals', 'punch-list', 'change-orders', 'pay-apps',
+  'lien-waivers', 'schedule', 'drawings', 'specs', 'inspections', 'safety', 'todos', 'messages', 'team', 'directory', 'subs',
+  'crews', 'timesheets', 'tm-tickets', 'budget', 'cash-flow', 'bills', 'invoices', 'contracts', 'purchase-orders', 'estimate',
+  'proposal', 'bid-packages', 'closeout', 'compliance', 'insurance', 'permits', 'payroll', 'selections', 'w9', 'takeoff',
+  'intelligence', 'autopilot', 'network'];
+// Anything that writes, sends, pays, signs or leaves is listed, never tapped.
+const WALK_DENY = /\b(delete|remove|archive|trash|send|submit|approve|reject|decline|pay|void|log ?out|sign ?out|revoke|disconnect|reset|unsubscribe|deactivate|terminate|cancel (plan|subscription)|save|create|generate|sync|import|duplicate|clone|copy to|convert|clock (in|out)|start|run|accept|assign|notify|remind|request|upload|post|publish|award|execute|e-?sign|sign|invite|resend|mark (as )?(paid|complete|done|read)|complete|finali[sz]e|close (out|job)|reopen|restore|apply|confirm|place order|purchase|buy|subscribe|upgrade|checkout|book)\b/i;
+
+async function walk() {
+  // Chad's real account when the E2E_EMAIL / E2E_PASSWORD secrets are set,
+  // otherwise the App Review demo sign-in. Never printed.
+  const real = !!(process.env.E2E_EMAIL && process.env.E2E_PASSWORD);
+  const review = real
+    ? { demoAccountName: process.env.E2E_EMAIL.trim(), demoAccountPassword: process.env.E2E_PASSWORD }
+    : process.env.APP_REVIEW_DEMO_EMAIL && process.env.APP_REVIEW_DEMO_PASS
+      ? { demoAccountName: process.env.APP_REVIEW_DEMO_EMAIL.trim(), demoAccountPassword: process.env.APP_REVIEW_DEMO_PASS }
+      : (await api('GET', `/v1/apps/${(await findApp()).id}/betaAppReviewDetail`)).data.attributes;
+  console.log(`walk: signed in as ${real ? 'the real account (E2E secrets)' : 'the demo account (E2E secrets not set)'}`);
+  const require = createRequire(path.join(process.env.PLAYWRIGHT_DIR, 'noop.js'));
+  const pw = require('playwright');
+  const outDir = path.join(ROOT, 'tools/walk');
+  fs.rmSync(outDir, { recursive: true, force: true });
+  fs.mkdirSync(path.join(outDir, 'shots'), { recursive: true });
+  const browser = await pw.webkit.launch();
+  const device = { ...pw.devices['iPhone 15'], colorScheme: 'dark' };
+
+  async function signedInContext() {
+    const ctx = await browser.newContext(device);
+    const page = await ctx.newPage();
+    await page.goto(`${SITE}/login`, { waitUntil: 'networkidle' });
+    await page.fill('input[name="email"]', review.demoAccountName);
+    await page.fill('input[name="password"]', review.demoAccountPassword);
+    await page.click('button[type="submit"]');
+    await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 60000 });
+    await page.close();
+    return ctx;
+  }
+
+  // The demo job.
+  const ctx0 = await signedInContext();
+  const p0 = await ctx0.newPage();
+  await p0.goto(`${SITE}/app/projects`, { waitUntil: 'networkidle' });
+  const links = await p0.$$eval('a[href*="/app/projects/"]', (as) => as.map((a) => [a.getAttribute('href'), a.innerText]));
+  const idOf = (h) => h && h.match(/\/app\/projects\/([0-9a-f-]{36})/i)?.[1];
+  const project = idOf(links.find(([h, t]) => idOf(h) && /ZZ AUDIT/i.test(t))?.[0])
+    || idOf(links.find(([h, t]) => idOf(h) && t.includes(PROJECT_NAME))?.[0]) || links.map(([h]) => idOf(h)).find(Boolean);
+  await ctx0.close();
+  const routes = [...WALK_TOP, ...(project ? WALK_JOB.map((t) => `/app/projects/${project}/${t}`) : [])];
+  const shortUrl = (u) => u.replace(SITE, '').replace(/[0-9a-f-]{36}/gi, ':id');
+  const results = [];
+  const chromeSeen = new Set(); // controls in the shared top/bottom bars: test once
+
+  async function walkRoute(ctx, route, idx) {
+    const res = { route: shortUrl(route), status: null, loadErrors: [], apiErrors: [], dead: [], covered: [], erroring: [], notTapped: [], tapped: 0, ok: 0 };
+    const page = await ctx.newPage();
+    let reqs = 0; const apiErrs = []; const pageErrs = [];
+    page.on('request', (r) => { if (['fetch', 'xhr', 'document'].includes(r.resourceType())) reqs++; });
+    page.on('response', (r) => { const u = r.url(); if (u.startsWith(SITE + '/api/') && r.status() >= 400 && r.status() !== 401) apiErrs.push(`${r.request().method()} ${shortUrl(u).replace(/\?.*$/, '')} → ${r.status()}`); });
+    page.on('pageerror', (e) => pageErrs.push(String(e.message || e).slice(0, 180)));
+    let popups = 0, dialogs = 0, downloads = 0;
+    ctx.on('page', () => { popups++; });
+    page.on('dialog', (d) => { dialogs++; d.dismiss().catch(() => {}); });
+    page.on('download', () => { downloads++; });
+    const open = async () => {
+      const r = await page.goto(SITE + route, { waitUntil: 'networkidle', timeout: 45000 }).catch(() => null);
+      await page.waitForTimeout(1200);
+      await page.evaluate(() => {
+        window.__mut = 0;
+        new MutationObserver((ms) => { window.__mut += ms.length; }).observe(document.body, { subtree: true, childList: true, attributes: true, characterData: true });
+      });
+      return r;
+    };
+    try {
+      const r = await open();
+      res.status = r ? r.status() : 'no response';
+      const notFound = await page.evaluate(() => /could not be found|404|page not found/i.test(document.body.innerText.slice(0, 2000)));
+      if (notFound) res.loadErrors.push('page says not found');
+      res.loadErrors.push(...pageErrs.splice(0));
+      res.apiErrors.push(...apiErrs.splice(0));
+      await page.screenshot({ path: path.join(outDir, 'shots', `${String(idx).padStart(3, '0')}${route.replace(/[^a-z0-9]+/gi, '_').slice(0, 60)}.png`) });
+      // Tag every visible control once, in DOM order.
+      const list = await page.evaluate(() => {
+        const sel = 'button, a[href], [role="button"], [role="tab"], [role="menuitem"], [role="switch"], summary, select, input[type="checkbox"], input[type="radio"]';
+        const out = [];
+        let i = 0;
+        for (const el of document.querySelectorAll(sel)) {
+          const r = el.getBoundingClientRect();
+          const st = getComputedStyle(el);
+          if (r.width < 4 || r.height < 4 || st.visibility === 'hidden' || st.display === 'none' || el.closest('[aria-hidden="true"]')) continue;
+          const label = (el.getAttribute('aria-label') || el.innerText || el.getAttribute('title') || el.getAttribute('name') || el.getAttribute('placeholder') || el.tagName).replace(/\s+/g, ' ').trim().slice(0, 70);
+          const chrome = !!el.closest('header, nav, aside, footer, [class*="bottom-nav"], [class*="BottomNav"], [class*="topbar"], [class*="TopBar"], [class*="sidebar"], [class*="Sidebar"]');
+          el.setAttribute('data-walk', String(i));
+          out.push({ i, label, tag: el.tagName.toLowerCase(), href: el.getAttribute('href'), disabled: el.disabled || el.getAttribute('aria-disabled') === 'true', chrome, target: el.getAttribute('target'), html: el.outerHTML.slice(0, 160) });
+          i++;
+        }
+        return out;
+      });
+      const baseDialogs = await page.locator('[role="dialog"], [aria-modal="true"]').count();
+      let tapped = 0;
+      for (const c of list) {
+        if (tapped >= 70) break;
+        const key = `${c.label}|${c.href || ''}`;
+        if (c.chrome) { if (chromeSeen.has(key)) continue; chromeSeen.add(key); }
+        if (c.disabled) continue;
+        if (c.href && /^(tel:|mailto:|sms:|https?:\/\/(?!www\.saguarocontrol\.net))/.test(c.href)) continue;
+        if (WALK_DENY.test(c.label)) { res.notTapped.push(c.label); continue; }
+        tapped++;
+        const el = page.locator(`[data-walk="${c.i}"]`).first();
+        if (!(await el.count())) continue; // gone after an earlier reload
+        const url0 = page.url();
+        const m0 = await page.evaluate(() => window.__mut).catch(() => 0);
+        const r0 = reqs, p0 = popups, d0 = dialogs, dl0 = downloads, e0 = pageErrs.length, a0 = apiErrs.length;
+        try {
+          await el.scrollIntoViewIfNeeded({ timeout: 2000 });
+          await el.click({ timeout: 3000 });
+        } catch (e) {
+          const m = String(e.message || e);
+          if (/intercepts pointer events|not visible|outside of the viewport/i.test(m)) res.covered.push({ label: c.label, why: m.match(/<[^>]{0,80}>[^\n]{0,40} intercepts pointer events/)?.[0] || m.split('\n')[0].slice(0, 120), html: c.html });
+          continue;
+        }
+        await page.waitForTimeout(1300);
+        const moved = page.url() !== url0;
+        const m1 = await page.evaluate(() => window.__mut).catch(() => m0 + 1);
+        const responded = moved || (m1 - m0) > 0 || reqs > r0 || popups > p0 || dialogs > d0 || downloads > dl0;
+        if (!responded) res.dead.push({ label: c.label, tag: c.tag, href: c.href, html: c.html });
+        else res.ok++;
+        const newErr = pageErrs.slice(e0).concat(apiErrs.slice(a0));
+        if (newErr.length) res.erroring.push({ label: c.label, errors: [...new Set(newErr)].slice(0, 3) });
+        // Put the page back the way it was.
+        if (moved) { await open(); await page.evaluate((list) => { const sel = 'button, a[href], [role="button"], [role="tab"], [role="menuitem"], [role="switch"], summary, select, input[type="checkbox"], input[type="radio"]'; let i = 0; for (const el of document.querySelectorAll(sel)) { const r = el.getBoundingClientRect(); const st = getComputedStyle(el); if (r.width < 4 || r.height < 4 || st.visibility === 'hidden' || st.display === 'none' || el.closest('[aria-hidden="true"]')) continue; el.setAttribute('data-walk', String(i)); i++; } }, null); continue; }
+        await page.keyboard.press('Escape').catch(() => {});
+        await page.waitForTimeout(250);
+        if ((await page.locator('[role="dialog"], [aria-modal="true"]').count()) > baseDialogs) {
+          await open();
+          await page.evaluate(() => { const sel = 'button, a[href], [role="button"], [role="tab"], [role="menuitem"], [role="switch"], summary, select, input[type="checkbox"], input[type="radio"]'; let i = 0; for (const el of document.querySelectorAll(sel)) { const r = el.getBoundingClientRect(); const st = getComputedStyle(el); if (r.width < 4 || r.height < 4 || st.visibility === 'hidden' || st.display === 'none' || el.closest('[aria-hidden="true"]')) continue; el.setAttribute('data-walk', String(i)); i++; } });
+        }
+      }
+      res.tapped = tapped;
+    } catch (e) {
+      res.loadErrors.push(`walk stopped: ${String(e.message || e).split('\n')[0].slice(0, 160)}`);
+    }
+    res.loadErrors = [...new Set(res.loadErrors.concat(pageErrs))].slice(0, 8);
+    res.apiErrors = [...new Set(res.apiErrors.concat(apiErrs))].slice(0, 12);
+    res.notTapped = [...new Set(res.notTapped)];
+    await page.close();
+    console.log(`walk ${idx + 1}/${routes.length} ${res.route}: ${res.tapped} tapped, ${res.dead.length} dead, ${res.covered.length} covered, ${res.erroring.length} erroring, ${res.apiErrors.length} api errors${res.loadErrors.length ? ', load: ' + res.loadErrors[0] : ''}`);
+    return res;
+  }
+
+  // Four signed-in phones in parallel; the shared bars are walked on the first screen only.
+  const WORKERS = 4;
+  const queue = routes.map((r, i) => [r, i]);
+  const first = queue.shift();
+  const ctxA = await signedInContext();
+  results[first[1]] = await walkRoute(ctxA, first[0], first[1]);
+  await ctxA.close();
+  await Promise.all(Array.from({ length: WORKERS }, async () => {
+    const ctx = await signedInContext();
+    while (queue.length) {
+      const [r, i] = queue.shift();
+      results[i] = await walkRoute(ctx, r, i);
+    }
+    await ctx.close();
+  }));
+  await browser.close();
+
+  fs.writeFileSync(path.join(outDir, 'report.json'), JSON.stringify(results, null, 1));
+  const lines = ['# App walk — iPhone (WebKit), demo account', '', `${results.length} screens · ${results.reduce((n, r) => n + r.tapped, 0)} controls tapped · ${results.reduce((n, r) => n + r.dead.length, 0)} dead · ${results.reduce((n, r) => n + r.covered.length, 0)} covered · ${results.reduce((n, r) => n + r.erroring.length, 0)} erroring · ${results.reduce((n, r) => n + r.apiErrors.length, 0)} API errors`, ''];
+  for (const r of results) {
+    if (!r.dead.length && !r.covered.length && !r.erroring.length && !r.apiErrors.length && !r.loadErrors.length) continue;
+    lines.push(`## ${r.route}  (HTTP ${r.status})`);
+    for (const e of r.loadErrors) lines.push(`- LOAD: ${e}`);
+    for (const e of r.apiErrors) lines.push(`- API: ${e}`);
+    for (const d of r.dead) lines.push(`- DEAD: "${d.label}" <${d.tag}${d.href ? ' href=' + d.href : ''}>  \`${d.html.replace(/`/g, "'")}\``);
+    for (const d of r.covered) lines.push(`- COVERED: "${d.label}" — ${d.why}`);
+    for (const d of r.erroring) lines.push(`- ERRORS after "${d.label}": ${d.errors.join(' | ')}`);
+    lines.push('');
+  }
+  lines.push('## Not tapped (would write data or leave)', '');
+  for (const r of results) if (r.notTapped.length) lines.push(`- ${r.route}: ${r.notTapped.slice(0, 20).join(' · ')}`);
+  fs.writeFileSync(path.join(outDir, 'report.md'), lines.join('\n') + '\n');
+  console.log(lines.slice(0, 3).join('\n'));
+}
+
 if (MODE === 'capture') await capture();
 else if (MODE === 'upload') await upload();
 else if (MODE === 'proof') await proof();
+else if (MODE === 'walk') await walk();
 else { console.error('use: node tools/asc-screens.mjs capture|upload|proof'); process.exit(1); }
 
 // Photos & video, end to end on the live site, the way the iPhone app does it:
@@ -502,7 +702,7 @@ async function photosProof(review, root, project) {
     const errs = [];
     const short = (u) => u.replace(SITE, '').replace(/https:\/\/[a-z0-9]+\.supabase\.co/, 'SUPABASE').replace(/[0-9a-f-]{36}/gi, ':id').replace(/\?.*$/, '');
     page.on('response', (r) => { const u = r.url(); if (/\/api\/(photos|files)|supabase\.co\/storage/.test(u)) net.push(`${r.request().method()} ${short(u)} → ${r.status()}`); });
-    page.on('requestfailed', (r) => { const u = r.url(); if (/\/api\/|supabase/.test(u)) net.push(`${r.request().method()} ${short(u)} → FAILED ${r.failure()?.errorText || ''}`); });
+    page.on('requestfailed', (r) => { const u = r.url(); if (/\/api\/|supabase/.test(u)) net.push(`${r.method()} ${short(u)} → FAILED ${r.failure()?.errorText || ''}`); });
     page.on('pageerror', (e) => errs.push(String(e.message || e).slice(0, 200)));
     page.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text().slice(0, 200)); });
     const dir = path.join(root, 'phone');
