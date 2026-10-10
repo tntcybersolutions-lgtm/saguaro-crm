@@ -824,7 +824,8 @@ async function photosProof(review, root, project) {
 const TEST_EMAIL = 'delivered@resend.dev';
 const PEOPLE_TOP = ['/app/subs', '/app/people', '/app/customers'];
 const PEOPLE_JOB = ['directory', 'subs', 'team', 'crews'];
-const ADD_RE = /^\s*(\+\s*)?(new|add|create|log|report|record|start|upload|invite|schedule|request|draft|import|capture|take)\b/i;
+// "Blank Log" is how Daily Logs starts one without Auto-Fill — the offline path.
+const ADD_RE = /^\s*(\+\s*)?(new|add|create|log|report|record|start|upload|invite|schedule|request|draft|import|capture|take|blank)\b/i;
 const SAVE_RE = /^\s*(save|create|add|submit|log|post|record|done|confirm|finish|send|invite|upload|continue|next|apply|yes|ok)\b/i;
 const CANCEL_RE = /^\s*(cancel|close|back|no|not now|dismiss|skip|×|✕|x)\s*$/i;
 const DELETE_RE = /^\s*(delete|remove|archive|trash)\b/i;
@@ -1188,10 +1189,18 @@ async function writeWalk(pw, device, session, outDir, real) {
         const bad = badWrite(f.writes);
         r.create = bad ? `FAILED (${bad.m} ${bad.u} → ${bad.s || 'network'})` : goodWrite(f.writes) ? 'saved' : f.clicked.length ? 'NOTHING SENT on save' : `form opened (${f.typed.length} fields) but no Save button`;
         if (!goodWrite(f.writes)) continue;
-        // Reload → back? → reopen → every field back?
-        await go(listUrl);
-        r.persisted = (await bodyHas(marker)) ? 'yes' : 'NOT ON LIST after reload';
-        const open = await openRecord(listUrl, marker);
+        // Reload → back? → reopen → every field back? A person reloads the page
+        // the app left them on (People keeps ?view=roles after a new role), so
+        // that page counts; the screen's bare list address is the fallback.
+        const here = page.url();
+        await page.reload({ waitUntil: 'domcontentloaded' }).catch(() => {});
+        await settle(1500);
+        let shown = await bodyHas(marker);
+        // Where the record was found is where it is reopened, edited and deleted.
+        let recUrl = shown && here.startsWith(SITE) ? here.slice(SITE.length) : listUrl;
+        if (!shown) { await go(listUrl); shown = await bodyHas(marker); recUrl = listUrl; }
+        r.persisted = shown ? 'yes' : 'NOT ON LIST after reload';
+        const open = await openRecord(recUrl, marker);
         if (!open) { if (r.persisted === 'yes') r.persisted = 'listed, but tapping it opened nothing'; leftovers.push(`${label}: "${marker}"`); continue; }
         const expect = [...new Set(f.typed.filter((t) => ['text', 'textarea', 'email', 'tel', 'url', 'input'].includes(t.kind) || /zz audit/i.test(t.value)).map((t) => t.value))];
         const missing = [];
@@ -1226,12 +1235,12 @@ async function writeWalk(pw, device, session, outDir, real) {
             if (sv) await page.locator(`[data-we="${sv.i}"]`).first().click({ timeout: 4000 }).catch(() => {});
             await settle(2000);
             const be = badWrite(net.writes);
-            await go(listUrl);
+            await go(recUrl);
             r.edit = !sv ? 'edit form has no Save' : be ? `FAILED (${be.m} ${be.u} → ${be.s || 'network'})` : !goodWrite(net.writes) ? 'NOTHING SENT on save' : (await bodyHas(marker + ' edited')) ? 'yes' : 'saved, but the change is NOT on screen after reload';
           } else r.edit = 'edit form did not show the saved title';
         } else r.edit = 'no Edit button on the record';
         // Every other button on the record, one at a time, terminal ones last.
-        if (!(await openRecord(listUrl, marker))) { r.errors.push('could not reopen the record after editing'); leftovers.push(`${label}: "${marker}"`); continue; }
+        if (!(await openRecord(recUrl, marker))) { r.errors.push('could not reopen the record after editing'); leftovers.push(`${label}: "${marker}"`); continue; }
         const { controls: ac } = await page.evaluate(tagControlsInPage, { attr: 'data-wr', chrome: false });
         const labels = [...new Set(ac.map((b) => b.t).filter((t) => !NOT_ACTION_RE.test(t) && !t.includes(marker)))].slice(0, 16);
         labels.sort((a, b) => Number(LAST_RE.test(a)) - Number(LAST_RE.test(b)));
@@ -1240,7 +1249,7 @@ async function writeWalk(pw, device, session, outDir, real) {
           const a = { label: al, result: '' };
           r.actions.push(a);
           try {
-            if (!(await openRecord(listUrl, marker))) { a.result = 'record no longer on the list (an earlier button closed/moved it)'; break; }
+            if (!(await openRecord(recUrl, marker))) { a.result = 'record no longer on the list (an earlier button closed/moved it)'; break; }
             await page.evaluate(tagControlsInPage, { attr: 'data-wr', chrome: false });
             const btn = page.locator('[data-wr]').filter({ hasText: al }).first();
             const exists = await btn.count();
@@ -1248,6 +1257,9 @@ async function writeWalk(pw, device, session, outDir, real) {
             if (!(await b2.count())) { a.result = 'gone after reopening (state changed)'; continue; }
             const u0 = page.url(); const d0 = await dialogCount(); const dl0 = net.downloads; const pp0 = net.popups.length; const fc0 = net.chooser;
             const m0 = (await menuItems()).length;
+            // An inline form or a switched view counts as working: "Add Someone"
+            // opens its form in the page, a tab swaps the content below it.
+            const in0 = await inputCount(); const txt0 = await page.evaluate(() => document.body.innerText).catch(() => '');
             net.writes.length = 0; net.errs.length = 0;
             await b2.click({ timeout: 4000 });
             await settle(1500);
@@ -1270,13 +1282,15 @@ async function writeWalk(pw, device, session, outDir, real) {
                 : net.popups.length > pp0 ? `opened ${net.popups[net.popups.length - 1].slice(0, 80)}`
                 : net.chooser > fc0 ? 'opened the file picker'
                 : page.url() !== u0 ? `went to ${short(page.url())}`
+                : (await inputCount()) > in0 ? 'opened a form in the page (nothing to save here)'
+                : (await page.evaluate(() => document.body.innerText).catch(() => txt0)) !== txt0 ? 'changed what the page shows (no write)'
                 : 'nothing happened (dead button?)';
             }
             if (net.errs.length) a.result += ` · page error: ${net.errs[0]}`;
           } catch (e) { a.result = `error: ${String(e.message || e).split('\n')[0].slice(0, 120)}`; }
         }
-        if (deferred) { deferred.push({ label, listUrl, marker, r }); r.del = '(at the end — used by the pickers)'; continue; }
-        await deleteRecord(label, listUrl, marker, r);
+        if (deferred) { deferred.push({ label, listUrl: recUrl, marker, r }); r.del = '(at the end — used by the pickers)'; continue; }
+        await deleteRecord(label, recUrl, marker, r);
       } catch (e) {
         r.errors.push(String(e.message || e).split('\n')[0].slice(0, 160));
         if (r.create === 'saved') leftovers.push(`${label}: "${marker}"`);
@@ -1474,6 +1488,9 @@ async function writeWalk(pw, device, session, outDir, real) {
           await page.waitForTimeout(1000);
         }
         r.fieldsBack = tab === 'photos' ? (/waiting|on this phone/i.test(final) ? 'still waiting' : 'uploaded') : final.includes(marker) && !/on this phone/i.test(final) ? 'on the server' : final.includes(marker) ? 'STILL only on the phone' : 'GONE';
+        // The offline worker sends from its own thread, where the page cannot see
+        // the request: arriving on the server is the proof it was sent.
+        if (!b && !goodWrite(net.writes) && /^(uploaded|on the server)$/.test(r.fieldsBack)) r.edit = 'sent in the background by the offline worker';
         if (tab !== 'photos' && final.includes(marker)) await deleteRecord(`offline ${tab}`, url, marker, r);
       })()]); } catch (e) {
         r.errors.push(String(e.message || e).split('\n')[0].slice(0, 160));
