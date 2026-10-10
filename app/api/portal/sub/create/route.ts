@@ -83,12 +83,13 @@ export async function POST(req: NextRequest) {
     const db = createServerClient();
 
     // Verify project belongs to this tenant
-    const { data: project } = await db
+    const { data: project, error: projectErr } = await db
       .from('projects')
       .select('id, name')
       .eq('id', projectId)
       .eq('tenant_id', user.tenantId)
       .maybeSingle();
+    if (projectErr) throw projectErr;
 
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
@@ -101,7 +102,20 @@ export async function POST(req: NextRequest) {
     // sub whose address sat in contact_email was missed, and it ignored the
     // lookup's error: two subs sharing the address made maybeSingle() fail,
     // the error was dropped, and the invite silently went out email-only.
-    let resolvedSubId = subId;
+    /* A subId from the request must be one of THIS company's subs — it used to
+       be stored as sent, so a crafted request could tie the portal session
+       (and everything the sub files through it) to another company's sub. */
+    if (subId) {
+      const { data: own, error: ownErr } = await db
+        .from('subcontractors')
+        .select('id')
+        .eq('id', subId)
+        .eq('tenant_id', user.tenantId)
+        .maybeSingle();
+      if (ownErr) throw ownErr;
+      if (!own) return NextResponse.json({ error: 'Subcontractor not found' }, { status: 404 });
+    }
+    let resolvedSubId: string | null = subId || null;
     if (!resolvedSubId && inviteEmail) {
       resolvedSubId = await rosterSubForEmail(db, user.tenantId, projectId, inviteEmail);
     }
@@ -155,33 +169,35 @@ export async function POST(req: NextRequest) {
     const portalUrl = `${appUrl}/portals/sub/${token}`;
 
     // Get GC company name for the email
-    const { data: profile } = await db
+    const { data: profile, error: profileErr } = await db
       .from('profiles')
       .select('full_name, company')
       .eq('id', user.id)
+      .eq('tenant_id', user.tenantId)
       .maybeSingle();
+    if (profileErr) console.error('[portal/sub/create] profile read', profileErr);
     const gcCompanyName = (profile as { company?: string; full_name?: string } | null)?.company
       || (profile as { company?: string; full_name?: string } | null)?.full_name
       || 'Your General Contractor';
 
-    // Fire invite email — track actual send result
+    // The invite email — reported as sent only when the provider accepted it.
     let emailSent = false;
-    if (process.env.RESEND_API_KEY && email) {
-      try {
-        await sendSubPortalInvite({
-          to: inviteEmail,
-          contactName: contactName || '',
-          companyName: companyName || email,
-          gcCompanyName,
-          projectName: project.name,
-          portalUrl,
-        });
-        emailSent = true;
-      } catch (err) {
-        console.warn('[portal/sub/create] email send failed:', err);
-        emailSent = false;
-      }
+    let emailError: string | undefined;
+    try {
+      const mail = await sendSubPortalInvite({
+        to: inviteEmail,
+        contactName: contactName || '',
+        companyName: companyName || email,
+        gcCompanyName,
+        projectName: project.name,
+        portalUrl,
+      });
+      emailSent = mail.sent;
+      emailError = mail.error;
+    } catch (err) {
+      console.error('[portal/sub/create] email send failed:', err);
     }
+    if (!emailSent) console.error('[portal/sub/create] invite not emailed to', inviteEmail, '-', emailError);
 
     return NextResponse.json({
       session,

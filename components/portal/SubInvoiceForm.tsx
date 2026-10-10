@@ -8,6 +8,7 @@
  */
 import React, { useMemo, useState } from 'react';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
+import { localDay } from '@/lib/calendar-day';
 import { blankLine, draftTotals, invoiceBody, linesFromLast, type DraftLine } from '@/lib/sub-invoice-draft';
 
 const box: React.CSSProperties = { background: 'var(--bg-surface)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, padding: 16, display: 'grid', gap: 14, minWidth: 0 };
@@ -24,7 +25,8 @@ export default function SubInvoiceForm({ token, lastLines, onFiled, onFixComplia
 }) {
   const [open, setOpen] = useState(false);
   const [from, setFrom] = useState('');
-  const [to, setTo] = useState(new Date().toISOString().slice(0, 10));
+  // The sub's own day (it was the UTC day — tomorrow, every evening in the US).
+  const [to, setTo] = useState(localDay());
   const [ret, setRet] = useState('10');
   const [lines, setLines] = useState<DraftLine[]>(() => linesFromLast(lastLines));
   const [saving, setSaving] = useState(false);
