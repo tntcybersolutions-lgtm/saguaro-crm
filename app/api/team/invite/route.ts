@@ -164,6 +164,7 @@ async function createAndSendInvite(
     // the token so the invite is real, and surface any other DB error honestly.
     const cleanName = typeof name === 'string' && name.trim() && name.trim().toLowerCase() !== String(email).toLowerCase()
       ? name.trim() : null;
+
     const { result: { data: invite, error: insertErr } } = await writeWithOptionalColumns(
       {
         tenant_id: tenantId,
@@ -186,6 +187,17 @@ async function createAndSendInvite(
       console.error('[team/invite] insert failed for', email, '-', insertErr?.message);
       return { ok: false, email, error: "Couldn't create the invite. Please try again." };
     }
+
+    // One live invite per address (per job, or company-wide): once the new one
+    // is saved, it replaces any older pending invite to the same email instead
+    // of stacking beside it, so People shows — and Edit opens — the one just sent.
+    // Escape ilike's wildcards so "a_b@x.com" matches only itself.
+    const emailPattern = String(email).replace(/[\\%_]/g, (c) => `\\${c}`);
+    let older = db.from('team_invites').update({ status: 'cancelled' } as never)
+      .eq('tenant_id', tenantId).neq('id', (invite as { id: string }).id).eq('status', 'pending').ilike('email', emailPattern);
+    older = projectId ? older.eq('project_id', projectId) : older.is('project_id', null);
+    const { error: supersedeErr } = await older;
+    if (supersedeErr) console.error('[team/invite] could not retire the older invite for', email, '-', supersedeErr.message);
 
     const acceptUrl = `${APP_URL}/accept-invite?token=${token}`;
 

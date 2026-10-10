@@ -873,7 +873,14 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
       const em = (inv.email || '').toLowerCase();
       const existing = em ? byEmail.get(em) : undefined;
       if (existing) {
-        if (existing.status !== 'active') { existing.status = 'invited'; existing.invite = inv; }
+        // Two pending invites to one address: the newest is the live one, and
+        // the row shows its name — before, the row kept the first invite's name
+        // while Edit opened the last one, so the form looked empty or wrong.
+        const newer = !existing.invite || new Date(inv.created_at || 0).getTime() >= new Date(existing.invite.created_at || 0).getTime();
+        if (existing.status !== 'active' && newer) {
+          existing.status = 'invited'; existing.invite = inv;
+          if (existing.key.startsWith('invite:')) existing.name = inv.name?.trim() || inv.email;
+        }
       } else if (em) {
         const row: PersonRow = {
           key: `invite:${inv.id}`, userId: null, name: inv.name?.trim() || inv.email, email: inv.email,
