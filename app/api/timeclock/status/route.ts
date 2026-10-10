@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { computeTimesheet, dayKey, weekKey, liveElapsed, type TimeEntry } from '@/lib/timeclock';
+import { leaveHoursOf } from '@/lib/leave-entry';
 import {
   SHIFT_COLUMNS,
   findOpenShift,
@@ -75,7 +76,8 @@ export async function GET(req: NextRequest) {
             id: e.id,
             employeeId: employee.id,
             type: e.entry_type as TimeEntry['type'],
-            hours: Number(e.total_hours ?? e.hours_worked ?? 0) || 0,
+            // hours_worked — total_hours is generated from regular+OT and is 0 on a leave row.
+            hours: leaveHoursOf(e) ?? undefined,
             timezone: rowTz,
             clockIn: `${e.work_date}T12:00:00`,
           };

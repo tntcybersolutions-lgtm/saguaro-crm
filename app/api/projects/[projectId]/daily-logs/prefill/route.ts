@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { NON_WORKED_ENTRY_TYPES } from '@/lib/leave-entry';
 
 /**
  * Daily-log prefill — assembles the one-tap draft the auto-first composer
@@ -55,7 +56,9 @@ export async function GET(
       .select('employee_id')
       .eq('tenant_id', user.tenantId)
       .eq('project_id', projectId)
-      .eq('work_date', date);
+      .eq('work_date', date)
+      // PTO / sick rows are filed on a job's timesheet too; someone on leave was not on site.
+      .not('entry_type', 'in', `(${NON_WORKED_ENTRY_TYPES.join(',')})`);
     for (const r of (data ?? []) as any[]) {
       if (r.employee_id) people.add(`e:${String(r.employee_id).trim().toLowerCase()}`);
     }

@@ -26,6 +26,7 @@ import { humanError } from '@/lib/errors';
 import { getSupabaseBrowser, ensureBrowserSession } from '@/lib/supabase-browser';
 import { computeTimesheet, weekKey, fmtHours, liveElapsed, type TimeEntry } from '@/lib/timeclock';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
+import { LEAVE_LABEL, LEAVE_TYPES, checkLeave, leaveHoursOf, leaveInsertRow, type LeaveField } from '@/lib/leave-entry';
 import { Clock, Play, Stop, Plus, Trash, PaperPlaneRight, Sun, MapPin, HardHat, Timer, PencilSimple } from '@phosphor-icons/react';
 import {
   PageShell, Card, StatRow, Badge, Button, DataTable, EmptyState, DetailList,
@@ -98,7 +99,7 @@ function entryStatus(s: string | null | undefined): { label: string; tone: Badge
   if (k === 'rejected') return { label: 'Rejected', tone: 'overdue' };
   return { label: k ? k.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : '—', tone: 'neutral' };
 }
-const LEAVE_LABEL: Record<string, string> = { pto: 'PTO', sick: 'Sick', holiday: 'Holiday', vacation: 'Vacation' };
+const LEAVE_FIELD_ID: Record<LeaveField, string> = { type: 'tc-leave-type', project: 'tc-leave-project', date: 'tc-leave-date', hours: 'tc-leave-hours' };
 
 const CSS = `
 .tcWs > .k-page { max-width: none; }
@@ -142,6 +143,7 @@ const CSS = `
 .tcNote { font-size: var(--fs-xs); color: var(--text-tertiary); line-height: 1.5; margin-top: 8px; }
 @media (max-width: 640px) {
   .tcWs .k-btn, .tcWs .k-stat, .tcWs select.k-select, .tcWs .k-input { min-height: 44px; }
+  .tcWs .tcDateInput input { min-height: 44px !important; } /* beats the picker's inline 40px — a thumb target */
   .tcWs .k-table td { height: 48px; }
   .tcClock { font-size: 38px; }
 }
@@ -169,6 +171,7 @@ export default function TimeClockPage() {
   const [csiDiv, setCsiDiv] = useState('');
   const [savingEntry, setSavingEntry] = useState(false);
   const [manualErr, setManualErr] = useState('');
+  const [leaveErr, setLeaveErr] = useState('');
   // Server truth for the clock. `statusLoaded` stays false until /status answers once,
   // so an unreachable API falls back to the read path instead of faking "clocked out".
   const [shift, setShift] = useState<Shift | null>(null);
@@ -273,7 +276,8 @@ export default function TimeClockPage() {
       const worked = !e.entry_type || e.entry_type === 'regular';
       return worked
         ? { id: e.id, employeeId: emp?.id ?? '', projectId: e.project_id, type: 'regular', clockIn: e.clock_in, clockOut: e.clock_out, breakMinutes: e.meal_break_mins || 0, timezone: e.timezone || TZ }
-        : { id: e.id, employeeId: emp?.id ?? '', type: e.entry_type, hours: Number(e.total_hours ?? e.hours_worked ?? 8), timezone: e.timezone || TZ, clockIn: (e.work_date || localDay()) + 'T12:00:00' };
+        // Leave hours live in hours_worked — total_hours is generated from regular+OT and is 0 on a leave row.
+        : { id: e.id, employeeId: emp?.id ?? '', type: e.entry_type, hours: leaveHoursOf(e) ?? undefined, timezone: e.timezone || TZ, clockIn: (e.work_date || localDay()) + 'T12:00:00' };
     });
     return computeTimesheet(te, { weeklyOtThreshold: 40 });
   }, [entries, emp]);
@@ -391,14 +395,28 @@ export default function TimeClockPage() {
     } catch (e: any) { console.error(e); setManualErr(humanError(e, "Couldn't save that time entry.")); }
     finally { setSavingEntry(false); }
   };
+  /* Log PTO / Sick never saved once: the insert left out project_id (NOT NULL
+     on time_entries) and wrote total_hours, which is a GENERATED column. Both
+     rejections landed in the console card behind the dialog, so the dialog sat
+     there looking dead. The form now asks for the job, the row is built by
+     lib/leave-entry (hours in hours_worked only), and every failure is said
+     inside the dialog beside its Save button. */
   const saveLeave = async () => {
-    if (!emp || !leave) return;
+    if (!leave) return;
+    if (!emp || !tenantId) { setLeaveErr('Your employee record is still loading. Try again in a moment.'); return; }
+    const c = checkLeave(leave, { hasProjects: projects.length > 0 });
+    if (!c.ok) {
+      setLeaveErr(c.message);
+      window.setTimeout(() => document.getElementById(LEAVE_FIELD_ID[c.field])?.focus(), 0);
+      return;
+    }
+    setLeaveErr('');
     setSavingEntry(true);
     try {
-      const { error } = await sb.from('time_entries').insert({ tenant_id: tenantId, employee_id: emp.id, work_date: leave.date, entry_type: leave.type, hours_worked: parseFloat(leave.hours) || 8, total_hours: parseFloat(leave.hours) || 8, status: 'pending', timezone: TZ });
+      const { error } = await sb.from('time_entries').insert(leaveInsertRow({ tenantId, employeeId: emp.id, projectId: c.projectId, type: c.type, date: c.date, hours: c.hours, timezone: TZ }));
       if (error) throw error;
-      setLeave(null); await loadEntries(emp.id); say('Logged');
-    } catch (e: any) { console.error(e); say(humanError(e, "Couldn't log that leave."), 'err'); }
+      setLeave(null); await loadEntries(emp.id); say(`${LEAVE_LABEL[c.type]} logged — ${c.hours} h on ${fmtDate(c.date)}`);
+    } catch (e: any) { console.error(e); setLeaveErr(humanError(e, "Couldn't log that leave.")); }
     finally { setSavingEntry(false); }
   };
   const del = async (id: string) => {
@@ -420,7 +438,8 @@ export default function TimeClockPage() {
   // The job is picked in the dialog (time_entries.project_id is required) —
   // pre-filled from the console picker when one is already chosen.
   const openAddTime = () => { setManualErr(''); setManual({ date: localDay(), in: '07:00', out: '15:30', meal: '30', csi: csiDiv, project: projectId || (projects.length === 1 ? projects[0].id : '') }); };
-  const openLeave = () => setLeave({ date: localDay(), type: 'pto', hours: '8' });
+  // Leave is filed on a job's timesheet (time_entries.project_id is required) — same pre-fill as Add Time.
+  const openLeave = () => { setLeaveErr(''); setLeave({ date: localDay(), type: 'pto', hours: '8', project: projectId || (projects.length === 1 ? projects[0].id : '') }); };
 
   const elapsed = (() => {
     if (!clockedIn) return null;
@@ -440,6 +459,7 @@ export default function TimeClockPage() {
   ];
 
   // ── Entries register ──
+  const entryHours = (e: any) => (e.entry_type && e.entry_type !== 'regular') ? (leaveHoursOf(e) ?? 0) : (Number(e.total_hours ?? e.hours_worked ?? 0) || 0);
   const columns: Column<any>[] = [
     { key: 'work_date', header: 'Date', accessor: (e) => `${e.work_date || ''}|${e.clock_in || ''}`, width: 130, render: (e) => <span className="tcDate">{fmtDate(e.work_date)}</span> },
     { key: 'kind', header: 'Project / Type', accessor: (e) => (e.entry_type && e.entry_type !== 'regular') ? e.entry_type : (projects.find((p) => p.id === e.project_id)?.name || ''), render: (e) => {
@@ -450,11 +470,11 @@ export default function TimeClockPage() {
     } },
     { key: 'span', header: 'In – Out', accessor: (e) => e.clock_in || '', render: (e) => {
       const leaveType = e.entry_type && e.entry_type !== 'regular';
-      if (leaveType) return <span className="tcMuted">{`${e.hours_worked ?? e.total_hours ?? 8}h logged`}</span>;
+      if (leaveType) { const h = leaveHoursOf(e); return <span className="tcMuted">{h == null ? 'Hours not recorded' : `${h}h logged`}</span>; }
       return <span className="tcNum">{fmtTime(e.clock_in)} – {e.status === 'clocked_in' ? 'now' : fmtTime(e.clock_out)}</span>;
     } },
     { key: 'csi', phone: 'hide', header: 'Cost Code', accessor: (e) => e.csi_division || '', render: (e) => e.csi_division ? <Badge tone="neutral">Div {e.csi_division} · {e.cost_code_description || CSI_DIVISIONS[e.csi_division]?.name || 'Cost coded'}</Badge> : <span className="tcMuted">—</span> },
-    { key: 'hours', phone: 'show', header: 'Hours', accessor: (e) => Number(e.total_hours ?? e.hours_worked ?? 0) || 0, align: 'right', render: (e) => <span className="tcNum" style={{ fontWeight: 800, color: 'var(--text-primary)' }}>{e.status === 'clocked_in' ? '—' : `${(Number(e.total_hours ?? e.hours_worked ?? 0) || 0).toFixed(2)}h`}</span> },
+    { key: 'hours', phone: 'show', header: 'Hours', accessor: (e) => entryHours(e), align: 'right', render: (e) => <span className="tcNum" style={{ fontWeight: 800, color: 'var(--text-primary)' }}>{e.status === 'clocked_in' ? '—' : `${entryHours(e).toFixed(2)}h`}</span> },
     { key: 'status', phone: 'show', header: 'Status', accessor: (e) => entryStatus(e.status).label, render: (e) => { const s = entryStatus(e.status); return <Badge tone={s.tone} dot={e.status === 'clocked_in'}>{s.label}</Badge>; } },
   ];
   const rowActions = (e: any): Action[] => {
@@ -654,21 +674,32 @@ export default function TimeClockPage() {
         onSubmit={saveLeave}
         submitLabel={leave ? `Log ${LEAVE_LABEL[leave.type] || leave.type}` : 'Log'}
         busy={savingEntry}
+        error={leaveErr || null}
       >
         {leave && (
           <FormGrid cols={2}>
             <Field label="Type" span>
               <div className="tcSegRow" role="group" aria-label="Leave type">
-                {['pto', 'sick', 'holiday', 'vacation'].map((t) => (
-                  <Button key={t} className="tcSeg" aria-pressed={leave.type === t} onClick={() => setLeave({ ...leave, type: t })}>{LEAVE_LABEL[t]}</Button>
+                {LEAVE_TYPES.map((t, i) => (
+                  <Button key={t} id={i === 0 ? LEAVE_FIELD_ID.type : undefined} className="tcSeg" aria-pressed={leave.type === t} onClick={() => { setLeave({ ...leave, type: t }); setLeaveErr(''); }}>{LEAVE_LABEL[t]}</Button>
                 ))}
               </div>
             </Field>
-            <Field label="Date">
-              <div className="tcDateInput"><SaguaroDatePicker value={leave.date} onChange={(v) => setLeave({ ...leave, date: v })} style={DATE_INPUT_STYLE} /></div>
+            <Field label="Job" required span hint="The job whose timesheet this leave is approved on. Leave hours never post to job cost.">
+              <Select
+                id={LEAVE_FIELD_ID.project}
+                value={leave.project ?? ''}
+                onChange={(e) => { setLeave({ ...leave, project: e.target.value }); setLeaveErr(''); }}
+                placeholder="Select job…"
+                options={projects.map((p) => ({ value: p.id, label: p.name }))}
+                aria-invalid={leaveErr && !leave.project ? true : undefined}
+              />
             </Field>
-            <Field label="Hours">
-              <Input inputMode="decimal" value={leave.hours} onChange={(e) => setLeave({ ...leave, hours: e.target.value })} placeholder="8" />
+            <Field label="Date" required>
+              <div className="tcDateInput"><SaguaroDatePicker id={LEAVE_FIELD_ID.date} value={leave.date} onChange={(v) => { setLeave({ ...leave, date: v }); setLeaveErr(''); }} style={DATE_INPUT_STYLE} /></div>
+            </Field>
+            <Field label="Hours" required>
+              <Input id={LEAVE_FIELD_ID.hours} inputMode="decimal" value={leave.hours} onChange={(e) => { setLeave({ ...leave, hours: e.target.value }); setLeaveErr(''); }} placeholder="8" />
             </Field>
           </FormGrid>
         )}
