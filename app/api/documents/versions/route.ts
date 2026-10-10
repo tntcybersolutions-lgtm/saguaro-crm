@@ -71,11 +71,15 @@ export async function GET(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const db = createServerClient() as any;
-    const { data: docs, error } = await db
+    /* Archived documents (DELETE /api/documents/versions/[id]) leave the
+       register; ?archived=1 lists only them, for the Archived view / restore. */
+    const archivedOnly = req.nextUrl.searchParams.get('archived') === '1';
+    let q = db
       .from('document_control')
       .select('*')
-      .eq('tenant_id', user.tenantId)
-      .order('updated_at', { ascending: false });
+      .eq('tenant_id', user.tenantId);
+    q = archivedOnly ? q.eq('status', 'Archived') : q.neq('status', 'Archived');
+    const { data: docs, error } = await q.order('updated_at', { ascending: false });
     if (error) throw error;
     const list = docs || [];
     const ids = list.map((d: any) => d.id);

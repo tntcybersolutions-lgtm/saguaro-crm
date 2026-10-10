@@ -17,6 +17,9 @@
  *   workflow  POST   /api/documents/versions/approve    { documentId, versionId, action }
  *   access    POST / DELETE /api/documents/versions/access
  *   download  POST   /api/documents/versions/download   { versionId }
+ *   edit      PATCH  /api/documents/versions/[id]       { name, description, category, tags, projectId }
+ *   archive   DELETE /api/documents/versions/[id]       (status → Archived; restore = PATCH { restore: true })
+ *   archived  GET    /api/documents/versions?archived=1
  */
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -27,7 +30,9 @@ import {
   UploadSimple, ClockCounterClockwise, ArrowsLeftRight, Info, Users,
   LockSimple, LockSimpleOpen, DownloadSimple, CheckCircle, PaperPlaneTilt, Plus, X,
   MagnifyingGlass, FileText, Trash, Files, Fingerprint, WarningCircle, ArrowsClockwise,
+  PencilSimple, Archive, ArrowCounterClockwise,
 } from '@phosphor-icons/react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { getAuthHeaders, getSupabaseBrowser } from '@/lib/supabase-browser';
 import RevisionCompare, { overlaySupported } from '@/components/drawings/RevisionCompare';
 import {
@@ -46,7 +51,7 @@ const ACCEPT = [
 ].join(',');
 
 // ─── Types (mirror the /api/documents/versions response) ──────────
-type DocStatus = 'Draft' | 'Under Review' | 'Approved' | 'Superseded';
+type DocStatus = 'Draft' | 'Under Review' | 'Approved' | 'Superseded' | 'Archived';
 
 type DocVersion = {
   id: string;
@@ -89,15 +94,15 @@ type Document = {
 };
 
 type ProjectOpt = { id: string; name: string };
-type ModalView = 'none' | 'upload' | 'history' | 'compare' | 'metadata' | 'access' | 'bulk';
+type ModalView = 'none' | 'upload' | 'history' | 'compare' | 'metadata' | 'access' | 'bulk' | 'edit';
 type StatusFilter = 'all' | DocStatus | 'checkedOut';
 
 const CATEGORIES = ['All', 'Contracts', 'Drawings', 'Specs', 'Submittals', 'RFIs', 'Change Orders', 'Safety', 'Uncategorized'];
 const UPLOAD_CATS = CATEGORIES.filter((c) => c !== 'All');
 
 /** One status → one badge. Draft neutral, Under Review amber, Approved green, Superseded grey. */
-const STATUS_TONE: Record<DocStatus, BadgeTone> = { Draft: 'neutral', 'Under Review': 'under_contract', Approved: 'ongoing', Superseded: 'closed' };
-const STATUS_RANK: Record<string, number> = { 'Under Review': 0, Draft: 1, Approved: 2, Superseded: 3 };
+const STATUS_TONE: Record<DocStatus, BadgeTone> = { Draft: 'neutral', 'Under Review': 'under_contract', Approved: 'ongoing', Superseded: 'closed', Archived: 'closed' };
+const STATUS_RANK: Record<string, number> = { 'Under Review': 0, Draft: 1, Approved: 2, Superseded: 3, Archived: 4 };
 
 // ─── Helpers ──────────────────────────────────────────────────────
 function fmtDate(iso: string | null): string {
@@ -225,6 +230,17 @@ export default function DocumentVersionsPage() {
   const [accessEmail, setAccessEmail] = useState('');
   const [accessRole, setAccessRole] = useState<'viewer' | 'editor' | 'admin'>('viewer');
 
+  // edit details (PATCH /api/documents/versions/[id]) — pre-filled from the saved document
+  const [editTitle, setEditTitle] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+  const [editCategory, setEditCategory] = useState('Uncategorized');
+  const [editTags, setEditTags] = useState('');
+  const [editProjectId, setEditProjectId] = useState('');
+
+  // archive — archived documents leave the register; the Archived view lists them for restore
+  const [archivedDocs, setArchivedDocs] = useState<Document[] | null>(null);
+  const [archiving, setArchiving] = useState<string | null>(null);
+
   // revision overlay (Bluebeam-style slip-sheet compare)
   const [overlay, setOverlay] = useState<{ doc: Document; aId: string; bId: string } | null>(null);
   const [overlayUrls, setOverlayUrls] = useState<{ a: string; b: string } | null>(null);
@@ -261,6 +277,21 @@ export default function DocumentVersionsPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  /* The Archived view reads its own list (the register never includes them). */
+  const loadArchived = useCallback(async () => {
+    try {
+      const h = await getAuthHeaders();
+      const r = await fetch('/api/documents/versions?archived=1', { headers: h, cache: 'no-store' });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({})))?.error || 'Could not load archived documents');
+      const data = await r.json();
+      setArchivedDocs((data.documents || []) as Document[]);
+    } catch (e: any) {
+      setArchivedDocs([]);
+      showToast(humanError(e, 'Could not load archived documents.'), true);
+    }
+  }, [showToast]);
+  useEffect(() => { if (statusFilter === 'Archived') void loadArchived(); }, [statusFilter, loadArchived]);
+
   // Keep the open modal's doc in sync after a reload.
   useEffect(() => {
     if (selectedDoc) {
@@ -271,10 +302,10 @@ export default function DocumentVersionsPage() {
 
   // ─ Filtering ─
   const filtered = useMemo(() => {
-    let list = documents;
+    let list = statusFilter === 'Archived' ? (archivedDocs ?? []) : documents;
     if (activeCategory !== 'All') list = list.filter((d) => d.category === activeCategory);
     if (statusFilter === 'checkedOut') list = list.filter((d) => !!d.checkedOutBy);
-    else if (statusFilter !== 'all') list = list.filter((d) => d.status === statusFilter);
+    else if (statusFilter !== 'all' && statusFilter !== 'Archived') list = list.filter((d) => d.status === statusFilter);
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter((d) =>
@@ -285,7 +316,7 @@ export default function DocumentVersionsPage() {
       );
     }
     return list;
-  }, [documents, activeCategory, statusFilter, search]);
+  }, [documents, archivedDocs, activeCategory, statusFilter, search]);
 
   const catCounts = useMemo(() => {
     const map: Record<string, number> = { All: documents.length };
@@ -314,6 +345,11 @@ export default function DocumentVersionsPage() {
     }
     if (view === 'bulk') { setBulkFiles([]); setBulkCategory('Uncategorized'); setBulkProjectId(''); }
     if (view === 'access') { setAccessEmail(''); setAccessRole('viewer'); }
+    if (view === 'edit' && doc) {
+      setEditTitle(doc.title); setEditDesc(doc.description || '');
+      setEditCategory(doc.category || 'Uncategorized'); setEditTags(doc.tags.join(', '));
+      setEditProjectId(doc.projectId || '');
+    }
   };
   const closeModal = () => { setModalView('none'); setSelectedDoc(null); setUploadFile(null); setBulkFiles([]); setFormError(''); };
 
@@ -501,6 +537,75 @@ export default function DocumentVersionsPage() {
     } catch (e: any) { showToast(e?.message || 'Revoke failed.', true); }
   };
 
+  /* Edit the document's details — the same fields New Document asks for. */
+  const saveDetails = async () => {
+    if (!selectedDoc || busy) return;
+    if (!editTitle.trim()) { setFormError('Document name is required.'); return; }
+    setBusy(true); setFormError('');
+    try {
+      const h = await getAuthHeaders();
+      const r = await fetch(`/api/documents/versions/${encodeURIComponent(selectedDoc.id)}`, {
+        method: 'PATCH', headers: { ...h, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editTitle.trim(), description: editDesc.trim(), category: editCategory,
+          tags: editTags.split(',').map((t) => t.trim()).filter(Boolean), projectId: editProjectId || null,
+        }),
+      });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({})))?.error || 'Could not save the document');
+      closeModal();
+      showToast('Document details saved.');
+      await load();
+    } catch (e: any) {
+      setFormError(humanError(e, 'Could not save the document.'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /* Archive — the soft delete for a controlled document. Versions, checksums
+     and approvals stay; it leaves the register and can be restored. */
+  const archiveDoc = async (doc: Document) => {
+    const ok = await confirmDialog({
+      title: `Archive "${doc.title}"?`,
+      message: `It leaves the register. All ${doc.versions.length} version${doc.versions.length === 1 ? '' : 's'}, checksums and approvals are kept, and you can restore it from Status → Archived.`,
+      confirmLabel: 'Archive',
+      danger: true,
+    });
+    if (!ok) return;
+    setArchiving(doc.id);
+    try {
+      const h = await getAuthHeaders();
+      const r = await fetch(`/api/documents/versions/${encodeURIComponent(doc.id)}`, { method: 'DELETE', headers: h });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({})))?.error || 'Could not archive the document');
+      if (selectedDoc?.id === doc.id) closeModal();
+      showToast(`"${doc.title}" archived.`);
+      await load();
+      if (archivedDocs) void loadArchived();
+    } catch (e: any) {
+      showToast(humanError(e, 'Could not archive the document.'), true);
+    } finally {
+      setArchiving(null);
+    }
+  };
+
+  const restoreDoc = async (doc: Document) => {
+    setArchiving(doc.id);
+    try {
+      const h = await getAuthHeaders();
+      const r = await fetch(`/api/documents/versions/${encodeURIComponent(doc.id)}`, {
+        method: 'PATCH', headers: { ...h, 'Content-Type': 'application/json' }, body: JSON.stringify({ restore: true }),
+      });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({})))?.error || 'Could not restore the document');
+      if (selectedDoc?.id === doc.id) closeModal();
+      showToast(`"${doc.title}" is back on the register.`);
+      await Promise.all([load(), loadArchived()]);
+    } catch (e: any) {
+      showToast(humanError(e, 'Could not restore the document.'), true);
+    } finally {
+      setArchiving(null);
+    }
+  };
+
   const download = async (ver: DocVersion) => {
     try {
       const h = await getAuthHeaders();
@@ -553,26 +658,31 @@ export default function DocumentVersionsPage() {
     { key: 'status', phone: 'show', header: 'Status', accessor: (d) => STATUS_RANK[d.status] ?? 9, render: (d) => <Badge tone={STATUS_TONE[d.status] ?? 'neutral'} dot>{d.status}</Badge> },
     { key: 'lastModified', header: 'Modified', accessor: (d) => d.lastModified || '', render: (d) => <div><div style={{ color: 'var(--text-primary)' }}>{fmtDate(d.lastModified)}</div><div className="dvMuted" style={{ fontSize: 'var(--fs-xs)' }}>{d.modifiedBy}</div></div> },
   ];
-  const rowActions = (d: Document): Action[] => [
+  const rowActions = (d: Document): Action[] => d.status === 'Archived' ? [
     { label: 'Version History', icon: <ClockCounterClockwise size={15} />, onClick: () => openModal(d, 'history') },
+    { label: archiving === d.id ? 'Restoring…' : 'Restore', icon: <ArrowCounterClockwise size={15} />, onClick: () => restoreDoc(d), disabled: archiving === d.id },
+  ] : [
+    { label: 'Version History', icon: <ClockCounterClockwise size={15} />, onClick: () => openModal(d, 'history') },
+    { label: 'Edit Details', icon: <PencilSimple size={15} />, onClick: () => openModal(d, 'edit') },
     { label: 'Compare Versions', icon: <ArrowsLeftRight size={15} />, onClick: () => openModal(d, 'compare'), hidden: d.versions.length < 2 },
     { label: 'Upload New Version', icon: <UploadSimple size={15} />, onClick: () => openModal(d, 'upload') },
     { label: d.checkedOutBy ? 'Check In' : 'Check Out', icon: d.checkedOutBy ? <LockSimple size={15} /> : <LockSimpleOpen size={15} />, onClick: () => doCheckout(d.id, d.checkedOutBy ? 'checkin' : 'checkout') },
     { label: 'Metadata', icon: <Info size={15} />, onClick: () => openModal(d, 'metadata') },
     { label: 'Access Control', icon: <Users size={15} />, onClick: () => openModal(d, 'access') },
+    { label: archiving === d.id ? 'Archiving…' : 'Archive', icon: <Archive size={15} />, tone: 'danger', onClick: () => archiveDoc(d), disabled: archiving === d.id },
   ];
 
   // ─── Register body ───
   let body: React.ReactNode;
   if (!loading && error) {
     body = <EmptyState icon={<WarningCircle size={22} />} title="Couldn't load documents" text={`${error} Nothing has been lost — try again.`} action={<Button icon={<ArrowsClockwise size={15} />} onClick={load}>Retry</Button>} />;
-  } else if (!loading && documents.length === 0) {
+  } else if (!loading && documents.length === 0 && statusFilter !== 'Archived') {
     body = (
       <EmptyState
         icon={<FileText size={22} />}
         title="Nothing under version control yet"
         text="Contracts, drawings, specs, and submittals belong here. Every upload becomes v1; each revision after that is checksummed and comparable, approvals gate what's current, and check-out locks stop two people revising the same file."
-        action={<div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}><Button icon={<Plus size={15} weight="bold" />} onClick={() => openModal(null, 'upload')}>New Document</Button><Button icon={<Files size={15} weight="bold" />} onClick={() => openModal(null, 'bulk')}>Bulk Upload</Button></div>}
+        action={<div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}><Button icon={<Plus size={15} weight="bold" />} onClick={() => openModal(null, 'upload')}>New Document</Button><Button icon={<Files size={15} weight="bold" />} onClick={() => openModal(null, 'bulk')}>Bulk Upload</Button><Button variant="ghost" icon={<Archive size={15} />} onClick={() => setStatusFilter('Archived')}>View Archived</Button></div>}
       />
     );
   } else {
@@ -609,7 +719,7 @@ export default function DocumentVersionsPage() {
       >
         {!error && <StatRow items={stats} />}
 
-        {!loading && !error && documents.length > 0 && (
+        {!loading && !error && (documents.length > 0 || statusFilter === 'Archived') && (
           <Toolbar
             search={search}
             onSearch={setSearch}
@@ -617,11 +727,11 @@ export default function DocumentVersionsPage() {
             filters={
               <>
                 <Select aria-label="Category" value={activeCategory} onChange={(e) => setActiveCategory(e.target.value)} style={{ width: 'auto', minWidth: 170 }} options={CATEGORIES.map((c) => ({ value: c, label: c === 'All' ? `All Categories (${catCounts.All})` : `${c} (${catCounts[c] || 0})` }))} />
-                <Select aria-label="Status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as StatusFilter)} style={{ width: 'auto', minWidth: 150 }} options={[{ value: 'all', label: 'All Statuses' }, { value: 'Draft', label: 'Draft' }, { value: 'Under Review', label: 'Under Review' }, { value: 'Approved', label: 'Approved' }, { value: 'Superseded', label: 'Superseded' }, { value: 'checkedOut', label: 'Checked Out' }]} />
+                <Select aria-label="Status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as StatusFilter)} style={{ width: 'auto', minWidth: 150 }} options={[{ value: 'all', label: 'All Statuses' }, { value: 'Draft', label: 'Draft' }, { value: 'Under Review', label: 'Under Review' }, { value: 'Approved', label: 'Approved' }, { value: 'Superseded', label: 'Superseded' }, { value: 'checkedOut', label: 'Checked Out' }, { value: 'Archived', label: 'Archived' }]} />
                 {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
               </>
             }
-            actions={<span className="dvMuted" style={{ fontSize: 'var(--fs-sm)' }}>{filtered.length} of {documents.length}</span>}
+            actions={<span className="dvMuted" style={{ fontSize: 'var(--fs-sm)' }}>{statusFilter === 'Archived' ? `${filtered.length} archived` : `${filtered.length} of ${documents.length}`}</span>}
           />
         )}
 
@@ -629,7 +739,25 @@ export default function DocumentVersionsPage() {
       </PageShell>
 
       {/* ── History ── */}
-      <FormModal open={modalView === 'history' && !!selectedDoc} onClose={closeModal} title="Version History" subtitle={selectedDoc?.title}>
+      <FormModal
+        open={modalView === 'history' && !!selectedDoc}
+        onClose={closeModal}
+        title="Version History"
+        subtitle={selectedDoc?.title}
+        footer={selectedDoc ? (selectedDoc.status === 'Archived' ? (
+          <>
+            <span className="dvMuted" style={{ marginRight: 'auto', alignSelf: 'center', fontSize: 'var(--fs-sm)' }}>Archived — not on the register.</span>
+            <Button variant="ghost" onClick={closeModal}>Close</Button>
+            <Button variant="primary" icon={<ArrowCounterClockwise size={15} />} onClick={() => restoreDoc(selectedDoc)} disabled={archiving === selectedDoc.id}>{archiving === selectedDoc.id ? 'Restoring…' : 'Restore'}</Button>
+          </>
+        ) : (
+          <>
+            <Button variant="danger" icon={<Archive size={15} />} style={{ marginRight: 'auto' }} onClick={() => archiveDoc(selectedDoc)} disabled={archiving === selectedDoc.id}>{archiving === selectedDoc.id ? 'Archiving…' : 'Archive'}</Button>
+            <Button variant="ghost" onClick={closeModal}>Close</Button>
+            <Button icon={<PencilSimple size={15} />} onClick={() => openModal(selectedDoc, 'edit')}>Edit Details</Button>
+          </>
+        )) : undefined}
+      >
         {selectedDoc && (selectedDoc.versions.length === 0 ? (
           <div className="dvMuted" style={{ fontSize: 'var(--fs-sm)' }}>No versions yet.</div>
         ) : (
@@ -747,7 +875,18 @@ export default function DocumentVersionsPage() {
       </FormModal>
 
       {/* ── Metadata ── */}
-      <FormModal open={modalView === 'metadata' && !!selectedDoc} onClose={closeModal} title="Document Metadata" subtitle={selectedDoc?.title}>
+      <FormModal
+        open={modalView === 'metadata' && !!selectedDoc}
+        onClose={closeModal}
+        title="Document Metadata"
+        subtitle={selectedDoc?.title}
+        footer={selectedDoc && selectedDoc.status !== 'Archived' ? (
+          <>
+            <Button variant="ghost" onClick={closeModal}>Close</Button>
+            <Button icon={<PencilSimple size={15} />} onClick={() => openModal(selectedDoc, 'edit')}>Edit Details</Button>
+          </>
+        ) : undefined}
+      >
         {selectedDoc && (
           <>
             <DetailList items={[
@@ -771,6 +910,28 @@ export default function DocumentVersionsPage() {
               </div>
             </div>
           </>
+        )}
+      </FormModal>
+
+      {/* ── Edit details — pre-filled from the saved document ── */}
+      <FormModal
+        open={modalView === 'edit' && !!selectedDoc}
+        onClose={closeModal}
+        title="Edit Document Details"
+        subtitle={selectedDoc ? `${selectedDoc.currentVersion} · files and versions are not changed here` : undefined}
+        onSubmit={saveDetails}
+        submitLabel={busy ? 'Saving…' : 'Save Changes'}
+        busy={busy}
+        error={formError || null}
+      >
+        {selectedDoc && (
+          <FormGrid cols={2}>
+            <Field label="Title" required span><Input placeholder="Document title" value={editTitle} onChange={(e) => { setEditTitle(e.target.value); if (formError) setFormError(''); }} /></Field>
+            <Field label="Description" span><Textarea rows={2} placeholder="Brief description…" value={editDesc} onChange={(e) => setEditDesc(e.target.value)} /></Field>
+            <Field label="Category"><Select aria-label="Category" value={editCategory} onChange={(e) => setEditCategory(e.target.value)} options={UPLOAD_CATS.includes(editCategory) ? UPLOAD_CATS : [...UPLOAD_CATS, editCategory]} /></Field>
+            <Field label="Project"><Select aria-label="Project" value={editProjectId} onChange={(e) => setEditProjectId(e.target.value)} placeholder="Unassigned" options={editProjectId && !projectOptions.some((p) => p.value === editProjectId) ? [...projectOptions, { value: editProjectId, label: selectedDoc.project }] : projectOptions} /></Field>
+            <Field label="Tags" span hint="Comma-separated — structural, concrete, phase-1"><Input placeholder="structural, concrete, phase-1" value={editTags} onChange={(e) => setEditTags(e.target.value)} /></Field>
+          </FormGrid>
         )}
       </FormModal>
 
