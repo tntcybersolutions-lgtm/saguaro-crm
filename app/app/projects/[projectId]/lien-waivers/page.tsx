@@ -213,12 +213,17 @@ export default function LienWaiversPage() {
           : 'Every sub already has a conditional partial for this period.');
         return;
       }
+      // Each one is checked: a refused waiver used to count as made.
+      const failed:string[] = [];
       for(const sub of targets){
-        await fetch('/api/lien-waivers/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-          projectId,waiverType:'conditional_partial',claimantName:sub.companyName||sub.name||'',throughDate:fThrough,amount:0,subId:sub.id,
+        const name = sub.companyName||sub.name||'';
+        const r = await fetch('/api/lien-waivers/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+          projectId,waiverType:'conditional_partial',claimantName:name,throughDate:fThrough,amount:0,subId:sub.id,
         })});
+        if(!r.ok){ const d = await r.json().catch(()=>({})); failed.push(`${name||'A sub'}: ${d.error||'not saved'}`); }
       }
       await load();
+      if(failed.length) setError(`${failed.length} of ${targets.length} waivers were not saved — ${failed.slice(0,3).join('; ')}${failed.length>3?'…':''}`);
     }catch(e:any){
       console.error(e); setError(humanError(e, 'Failed to generate all waivers. Please try again.'));
     }finally{
