@@ -116,12 +116,19 @@ const css = {
   overlay: { position: 'fixed' as const, inset: 0, background: 'var(--bg-base)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' } as React.CSSProperties,
   modal: { background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 28, width: '90%', maxWidth: 820, maxHeight: '90vh', overflowY: 'auto' as const, position: 'relative' as const } as React.CSSProperties,
   close: { position: 'absolute' as const, top: 12, right: 16, background: 'none', border: 'none', color: DIM, fontSize: 22, cursor: 'pointer' } as React.CSSProperties,
-  tab: (active: boolean) => ({ padding: '8px 18px', border: 'none', borderBottom: active ? `2px solid ${GOLD}` : '2px solid transparent', background: 'transparent', color: active ? GOLD : DIM, fontWeight: active ? 700 : 500, fontSize: 13, cursor: 'pointer' }) as React.CSSProperties,
+  tab: (active: boolean) => ({ minHeight: 44, padding: '8px 18px', border: 'none', borderBottom: active ? `2px solid ${GOLD}` : '2px solid transparent', background: 'transparent', color: active ? GOLD : DIM, fontWeight: active ? 700 : 500, fontSize: 13, cursor: 'pointer' }) as React.CSSProperties,
   photoThumb: { width: 64, height: 64, objectFit: 'cover' as const, borderRadius: 6, border: `1px solid ${BORDER}`, cursor: 'pointer' } as React.CSSProperties,
   timeline: { borderLeft: `2px solid ${BORDER}`, marginLeft: 8, paddingLeft: 20 } as React.CSSProperties,
   timelineDot: (c: string) => ({ width: 12, height: 12, borderRadius: '50%', background: c, position: 'absolute' as const, left: -27, top: 4 }) as React.CSSProperties,
   expiredTag: { display: 'inline-block', padding: '2px 8px', borderRadius: 8, fontSize: 10, fontWeight: 700, background: `color-mix(in srgb, ${RED} 13%, transparent)`, color: RED, border: `1px solid color-mix(in srgb, ${RED} 27%, transparent)`, marginLeft: 8 } as React.CSSProperties,
 };
+
+/* The create form sits beside a context rail on desktop; on a phone the rail
+   drops below it (a fixed 320px rail left the form ~20px wide at 390px). */
+const CREATE_CSS = `
+.wcCreate { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; align-items: start; }
+@media (max-width: 900px) { .wcCreate { grid-template-columns: minmax(0, 1fr); } }
+`;
 
 /* ───── COMPONENT ───── */
 export default function WarrantyClaimsPage() {
@@ -417,6 +424,7 @@ export default function WarrantyClaimsPage() {
   /* ──────── RENDER ──────── */
   return (
     <PremiumSurface maxWidth={2200}>
+      <style dangerouslySetInnerHTML={{ __html: CREATE_CSS }} />
       {/* header */}
       <ModuleHero
         eyebrow="Warranty Program"
@@ -470,7 +478,8 @@ export default function WarrantyClaimsPage() {
         </>
       )}
 
-      {!selectedProject && (
+      {/* New Claim works without a project picked first — the form asks for one. */}
+      {!selectedProject && activeTab !== 'create' && (
         <SectionCard flat>
           <PremiumEmpty
             icon={<Buildings size={30} weight="duotone" color={GOLD} />}
@@ -480,14 +489,14 @@ export default function WarrantyClaimsPage() {
         </SectionCard>
       )}
 
-      {selectedProject && loading && (
+      {selectedProject && loading && activeTab !== 'create' && (
         <div style={{ textAlign: 'center', padding: 60, color: DIM }}>Loading warranty claims…</div>
       )}
 
       {/* A failed read is its OWN state — visually distinct from a project that
           genuinely has no claims, because "no claims" is an all-clear we have
           not earned when the query never came back. */}
-      {selectedProject && !loading && loadError && (
+      {selectedProject && !loading && loadError && activeTab !== 'create' && (
         <SectionCard>
           <div style={{ padding: '28px 20px', textAlign: 'center' }}>
             <ShieldSlash size={30} weight="duotone" color={RED} />
@@ -598,11 +607,20 @@ export default function WarrantyClaimsPage() {
       )}
 
       {/* ═══ CREATE CLAIM TAB ═══ */}
-      {selectedProject && !loading && !loadError && activeTab === 'create' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 320px', gap: 18, alignItems: 'start' }}>
-        <SectionCard title="New Warranty Claim" subtitle={`${projects.find(p => p.id === selectedProject)?.name || 'This project'} — homeowner defect intake`} icon={<PlusCircle size={17} weight="duotone" color={GOLD} />}>
+      {activeTab === 'create' && (
+        <div className="wcCreate">
+        <SectionCard title="New Warranty Claim" subtitle={selectedProject ? `${projects.find(p => p.id === selectedProject)?.name || 'This project'} — homeowner defect intake` : 'Homeowner defect intake — pick the project it belongs to'} icon={<PlusCircle size={17} weight="duotone" color={GOLD} />}>
           <div style={css.row}>
-            <div style={css.field}><label style={css.label}>Claim #<AutoChip /></label><div style={{ ...css.input, display: 'flex', alignItems: 'center', color: GOLD, fontFamily: 'monospace', fontWeight: 700 }}>{`WC-${String(claims.length + 1).padStart(4, '0')}`}</div><div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 4 }}>Numbered automatically — {claims.length} claim{claims.length === 1 ? '' : 's'} on this project so far.</div></div>
+            <div style={css.field}>
+              <label style={css.label} htmlFor="wc-project">Project *</label>
+              <select id="wc-project" style={{ ...css.select, minHeight: 44 }} value={selectedProject} onChange={e => setSelectedProject(e.target.value)}>
+                <option value="">Select a project…</option>
+                {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div style={css.field}><label style={css.label}>Claim #<AutoChip /></label>{selectedProject && !loading && !loadError ? (<><div style={{ ...css.input, display: 'flex', alignItems: 'center', color: GOLD, fontFamily: 'monospace', fontWeight: 700 }}>{`WC-${String(claims.length + 1).padStart(4, '0')}`}</div><div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 4 }}>Numbered automatically — {claims.length} claim{claims.length === 1 ? '' : 's'} on this project so far.</div></>) : (<><div style={{ ...css.input, display: 'flex', alignItems: 'center', color: DIM }}>Assigned on save</div><div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 4 }}>{selectedProject && loading ? 'Reading this project\u2019s claims…' : 'Numbered automatically once the project is picked.'}</div></>)}</div>
+          </div>
+          <div style={css.row}>
             <div style={css.field}><label style={css.label}>Title *</label><input style={css.input} value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="e.g. Master bath shower pan leak" /></div>
             <div style={css.field}><label style={css.label}>Category</label>
               <select style={css.select} value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
