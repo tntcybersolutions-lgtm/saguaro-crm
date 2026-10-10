@@ -2781,10 +2781,22 @@ export default function RadioDispatchPage() {
       }
     }, 50);
   };
+  /* A quick tap on a hold-to-fire button did nothing visible, so it read as a
+   * dead button. Released before the hold completes → say how it works. The
+   * hold itself is unchanged. Throttled so repeated taps do not stack toasts. */
+  const panicHintAtRef = useRef(0);
+  const showPanicHint = () => {
+    const now = Date.now();
+    if (now - panicHintAtRef.current < 2500) return;
+    panicHintAtRef.current = now;
+    pushToast(`Hold the Panic button for ${PANIC_HOLD_MS / 1000} seconds to send a panic alarm — a quick tap never sends one.`, 'err');
+  };
   const panicUp = () => {
+    const wasHolding = panicTimerRef.current !== null;
     if (panicTimerRef.current) clearInterval(panicTimerRef.current);
     panicTimerRef.current = null;
     setPanicHold(0);
+    if (wasHolding && !panicFiredRef.current) showPanicHint();
   };
   useEffect(() => () => { if (panicTimerRef.current) clearInterval(panicTimerRef.current); }, []);
 
@@ -3411,12 +3423,21 @@ export default function RadioDispatchPage() {
               onPointerUp={panicUp}
               onPointerLeave={panicUp}
               onPointerCancel={panicUp}
+              /* Keyboard activation (Enter/Space, detail 0) cannot hold — explain instead of doing nothing. */
+              onClick={(e) => { if (e.detail === 0) showPanicHint(); }}
               disabled={panicFiring}
               title="Hold to send a panic alarm to every channel member"
               style={panicSent ? { color: GREEN, borderColor: GREEN_BORDER, background: GREEN_SOFT } : undefined}
             >
               <span aria-hidden className="rdPanicFill" style={{ width: `${panicHold * 100}%`, transition: panicHold === 0 ? 'width .2s ease' : 'none' }} />
-              <span style={{ position: 'relative' }}>{panicFiring ? 'Sending…' : panicSent ? 'Panic Sent' : 'Hold — Panic'}</span>
+              {/* Fixed min-width: the countdown must not resize the button under
+                * the finger (a reflow that moved it would cancel the hold). */}
+              <span style={{ position: 'relative', display: 'inline-block', minWidth: '7.5em', textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>
+                {panicFiring ? 'Sending…'
+                  : panicSent ? 'Panic Sent'
+                  : panicHold > 0 ? `Holding… ${(((1 - panicHold) * PANIC_HOLD_MS) / 1000).toFixed(1)}s`
+                  : 'Hold — Panic'}
+              </span>
             </KitButton>
           </>
         }
