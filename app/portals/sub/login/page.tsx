@@ -16,14 +16,15 @@ export default function SubPortalLogin() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [found, setFound] = useState<{ token: string; companyName: string; contactName: string; projectName: string } | null>(null);
+  // The link is emailed to the address on file — never shown here (the token is the sub's access).
+  const [sentTo, setSentTo] = useState('');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim()) return;
     setLoading(true);
     setError('');
-    setFound(null);
+    setSentTo('');
 
     try {
       const res = await fetch('/api/portal/sub/lookup', {
@@ -36,10 +37,7 @@ export default function SubPortalLogin() {
       if (!res.ok) {
         setError(data.error || 'Access not found. Please try again.');
       } else {
-        setFound(data);
-        setTimeout(() => {
-          window.location.href = `/portals/sub/${data.token}`;
-        }, 1500);
+        setSentTo(email.trim());
       }
     } catch {
       setError('Connection error. Please try again.');
@@ -97,28 +95,21 @@ export default function SubPortalLogin() {
           Manage bids, submit daily logs, track pay applications, and stay compliant.
         </p>
 
-        {found ? (
-          <div style={{ textAlign: 'center' }}>
+        {sentTo ? (
+          <div style={{ textAlign: 'center' }} role="status">
             <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(44,255,122,0.12)', border: '1.5px solid rgba(44,255,122,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
               <svg viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={24} height={24}>
-                <polyline points="20 6 9 17 4 12"/>
+                <path d="M4 4h16v16H4z" /><polyline points="22 6 12 13 2 6" />
               </svg>
             </div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 4 }}>
-              Welcome, {found.contactName || found.companyName}!
+            <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 6 }}>Check your email</div>
+            <div style={{ fontSize: 13.5, color: DIM, lineHeight: 1.55, marginBottom: 16 }}>
+              If <strong style={{ color: TEXT }}>{sentTo}</strong> has portal access, we just sent the link to it. Open it on this phone to go straight to your portal.
             </div>
-            {found.companyName && found.contactName && (
-              <div style={{ fontSize: 13, color: DIM, marginBottom: 4 }}>{found.companyName}</div>
-            )}
-            <div style={{ fontSize: 13, color: DIM, marginBottom: 16 }}>{found.projectName}</div>
-            <div style={{ fontSize: 12, color: DIM }}>Redirecting to your portal…</div>
-            <div style={{ marginTop: 16, height: 3, background: BORDER, borderRadius: 4, overflow: 'hidden' }}>
-              <div style={{ height: '100%', background: BLUE, borderRadius: 4, animation: 'progress 1.4s linear forwards' }} />
-            </div>
-            <style>{`@keyframes progress { from { width: 0% } to { width: 100% } }`}</style>
-            <Link href={`/portals/sub/${found.token}`} style={{ display: 'inline-block', marginTop: 12, fontSize: 12, color: BLUE, textDecoration: 'none' }}>
-              Click Here If Not Redirected →
-            </Link>
+            <button type="button" onClick={() => { setSentTo(''); setError(''); }}
+              style={{ minHeight: 44, padding: '10px 18px', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 14, cursor: 'pointer' }}>
+              Use a different email
+            </button>
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
@@ -139,7 +130,7 @@ export default function SubPortalLogin() {
                 border: `1px solid ${error ? RED : BORDER}`,
                 borderRadius: 8,
                 color: TEXT,
-                fontSize: 15,
+                fontSize: 16, // iOS zooms into any input under 16 px
                 outline: 'none',
                 boxSizing: 'border-box',
                 transition: 'border-color 0.2s',
