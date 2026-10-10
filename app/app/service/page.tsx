@@ -9,11 +9,12 @@ import React, { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import useSWR from 'swr';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, X, ArrowLeft, WarningCircle } from '@phosphor-icons/react';
+import { Plus, X, ArrowLeft, WarningCircle, PencilSimple, Archive, ArrowCounterClockwise } from '@phosphor-icons/react';
 import {
   TICKET_STATUS_LABEL, TICKET_PRIORITIES, WAITING_REASONS, OPEN_TICKET_STATUSES,
   normaliseTicketStatus, type TicketStatus,
 } from '@/lib/service-tickets';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 
 interface Ticket {
   id: string; ticket_number: string; project_id: string | null; title: string; description: string | null;
@@ -30,10 +31,11 @@ const fetcher = async (u: string): Promise<Payload> => {
   return j as Payload;
 };
 
-type Filter = 'open' | 'unassigned' | 'today' | 'waiting' | 'completed' | 'all';
+type Filter = 'open' | 'unassigned' | 'today' | 'waiting' | 'completed' | 'all' | 'archived';
 const FILTERS: Array<{ key: Filter; label: string }> = [
   { key: 'open', label: 'Open' }, { key: 'unassigned', label: 'Unassigned' }, { key: 'today', label: 'Today' },
   { key: 'waiting', label: 'Waiting' }, { key: 'completed', label: 'Completed' }, { key: 'all', label: 'All' },
+  { key: 'archived', label: 'Archived' },
 ];
 
 /* Which buttons to offer from each status. Waiting and Completed collect
@@ -47,6 +49,7 @@ const NEXT: Record<TicketStatus, TicketStatus[]> = {
   waiting: ['triaged', 'scheduled', 'completed'],
   completed: ['closed', 'on_site'],
   closed: ['triaged'],
+  archived: [], // restored with the Restore button (→ Triaged), never a status hop
 };
 
 const todayYmd = () => new Date().toLocaleDateString('en-CA');
@@ -71,8 +74,71 @@ async function patch(id: string, body: Record<string, unknown>) {
   return { ok: r.ok, status: r.status, body: j };
 }
 
+type CallForm = { title: string; project_id: string; priority: string; category: string; description: string; sla_hours: string };
+
+/* The call's own fields — one set of inputs for New and Edit, so an edit
+   shows exactly what was entered at creation. */
+function CallFields({ f, setF, data, autoFocus }: { f: CallForm; setF: (f: CallForm) => void; data: Payload; autoFocus?: boolean }) {
+  const activeJobs = data.projects.filter(p => !['completed', 'closed', 'cancelled', 'archived', 'lost'].includes(String(p.status || '').toLowerCase()));
+  // Keep the saved job selectable even when it is no longer an active one.
+  const saved = f.project_id && !activeJobs.some(p => p.id === f.project_id) ? data.projects.find(p => p.id === f.project_id) : undefined;
+  const jobs = saved ? [...activeJobs, saved] : activeJobs;
+  return (
+    <div className="sv-grid">
+      <label className="sv-field sv-span2"><span>Title *</span><input value={f.title} onChange={e => setF({ ...f, title: e.target.value })} placeholder="e.g. RTU-2 not cooling" autoFocus={autoFocus} /></label>
+      <label className="sv-field"><span>Job / Site</span>
+        <select value={f.project_id} onChange={e => setF({ ...f, project_id: e.target.value })}>
+          <option value="">No job</option>
+          {jobs.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </select>
+      </label>
+      <label className="sv-field"><span>Priority</span>
+        <select value={f.priority} onChange={e => setF({ ...f, priority: e.target.value })}>
+          {TICKET_PRIORITIES.map(p => <option key={p} value={p}>{p[0].toUpperCase() + p.slice(1)}</option>)}
+        </select>
+      </label>
+      <label className="sv-field"><span>Category</span><input value={f.category} onChange={e => setF({ ...f, category: e.target.value })} placeholder="HVAC, electrical, warranty callback…" /></label>
+      <label className="sv-field"><span>SLA Hours</span><input inputMode="numeric" value={f.sla_hours} onChange={e => setF({ ...f, sla_hours: e.target.value.replace(/[^0-9]/g, '') })} placeholder="Only if a contract SLA applies" /></label>
+      <label className="sv-field sv-span2"><span>What&apos;s wrong</span><textarea rows={3} value={f.description} onChange={e => setF({ ...f, description: e.target.value })} /></label>
+    </div>
+  );
+}
+
+/* Edit a call's details through PATCH /api/service-tickets/[id] — pre-filled
+   from the saved call; the server logs what changed on the dispatch trail. */
+function EditCall({ t, data, onClose, onSaved }: { t: Ticket; data: Payload; onClose: () => void; onSaved: () => Promise<unknown> }) {
+  const [f, setF] = useState<CallForm>({
+    title: t.title || '', project_id: t.project_id || '', priority: t.priority || 'normal',
+    category: t.category || '', description: t.description || '', sla_hours: t.sla_hours ? String(t.sla_hours) : '',
+  });
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (busy) return;
+    if (!f.title.trim()) { setErr('Give the call a short title.'); return; }
+    setBusy(true); setErr('');
+    const r = await patch(t.id, { ...f, project_id: f.project_id || null, sla_hours: f.sla_hours || null, expected_updated_at: t.updated_at });
+    if (!r.ok) { setErr(r.body?.error || 'Could not save the call.'); setBusy(false); return; }
+    await onSaved();
+    setBusy(false);
+    onClose();
+  };
+  return (
+    <form className="sv-card sv-pad" onSubmit={submit} aria-labelledby="sv-edit-h">
+      <div className="sv-head"><h2 id="sv-edit-h">Edit {t.ticket_number}</h2><button type="button" className="sv-icon" onClick={onClose} aria-label="Cancel editing"><X size={18} /></button></div>
+      <CallFields f={f} setF={setF} data={data} autoFocus />
+      {err && <p className="sv-err" role="alert">{err}</p>}
+      <div className="sv-actions">
+        <button type="button" className="sv-btn sv-ghost" onClick={onClose}>Cancel</button>
+        <button type="submit" className="sv-btn sv-primary" disabled={busy}>{busy ? 'Saving…' : 'Save Changes'}</button>
+      </div>
+    </form>
+  );
+}
+
 function NewCall({ data, onClose, onCreated }: { data: Payload; onClose: () => void; onCreated: (id: string) => void }) {
-  const [f, setF] = useState({ title: '', project_id: '', priority: 'normal', category: '', description: '', sla_hours: '' });
+  const [f, setF] = useState<CallForm>({ title: '', project_id: '', priority: 'normal', category: '', description: '', sla_hours: '' });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const submit = async (e: React.FormEvent) => {
@@ -87,27 +153,10 @@ function NewCall({ data, onClose, onCreated }: { data: Payload; onClose: () => v
       onCreated(j.ticket.id);
     } catch (e2) { setErr((e2 as Error).message); setBusy(false); }
   };
-  const activeJobs = data.projects.filter(p => !['completed', 'closed', 'cancelled', 'archived', 'lost'].includes(String(p.status || '').toLowerCase()));
   return (
     <form className="sv-card sv-pad" onSubmit={submit} aria-labelledby="sv-new-h">
       <div className="sv-head"><h2 id="sv-new-h">New Service Call</h2><button type="button" className="sv-icon" onClick={onClose} aria-label="Close"><X size={18} /></button></div>
-      <div className="sv-grid">
-        <label className="sv-field sv-span2"><span>Title *</span><input value={f.title} onChange={e => setF({ ...f, title: e.target.value })} placeholder="e.g. RTU-2 not cooling" autoFocus /></label>
-        <label className="sv-field"><span>Job / Site</span>
-          <select value={f.project_id} onChange={e => setF({ ...f, project_id: e.target.value })}>
-            <option value="">No job</option>
-            {activeJobs.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
-        </label>
-        <label className="sv-field"><span>Priority</span>
-          <select value={f.priority} onChange={e => setF({ ...f, priority: e.target.value })}>
-            {TICKET_PRIORITIES.map(p => <option key={p} value={p}>{p[0].toUpperCase() + p.slice(1)}</option>)}
-          </select>
-        </label>
-        <label className="sv-field"><span>Category</span><input value={f.category} onChange={e => setF({ ...f, category: e.target.value })} placeholder="HVAC, electrical, warranty callback…" /></label>
-        <label className="sv-field"><span>SLA Hours</span><input inputMode="numeric" value={f.sla_hours} onChange={e => setF({ ...f, sla_hours: e.target.value.replace(/[^0-9]/g, '') })} placeholder="Only if a contract SLA applies" /></label>
-        <label className="sv-field sv-span2"><span>What&apos;s wrong</span><textarea rows={3} value={f.description} onChange={e => setF({ ...f, description: e.target.value })} /></label>
-      </div>
+      <CallFields f={f} setF={setF} data={data} autoFocus />
       {err && <p className="sv-err" role="alert">{err}</p>}
       <div className="sv-actions">
         <button type="button" className="sv-btn sv-ghost" onClick={onClose}>Cancel</button>
@@ -117,8 +166,12 @@ function NewCall({ data, onClose, onCreated }: { data: Payload; onClose: () => v
   );
 }
 
-function Detail({ t, data, onClose, onSaved }: { t: Ticket; data: Payload; onClose: () => void; onSaved: () => Promise<unknown> }) {
+function Detail({ t, data, onClose, onSaved, onEdit, onArchived, onRestored }: {
+  t: Ticket; data: Payload; onClose: () => void; onSaved: () => Promise<unknown>;
+  onEdit: () => void; onArchived: () => Promise<unknown>; onRestored: () => Promise<unknown>;
+}) {
   const status = normaliseTicketStatus(t.status);
+  const archived = status === 'archived';
   const [tech, setTech] = useState(t.assigned_tech_id || '');
   const [start, setStart] = useState(toLocalInput(t.scheduled_window_start));
   const [end, setEnd] = useState(toLocalInput(t.scheduled_window_end));
@@ -171,6 +224,54 @@ function Detail({ t, data, onClose, onSaved }: { t: Ticket; data: Payload; onClo
   const job = data.projects.find(p => p.id === t.project_id);
   const notes = (t.dispatch_notes || '').split('\n').filter(Boolean).reverse();
 
+  /* Archive = the soft delete (DELETE /api/service-tickets/[id]). The call and
+     its dispatch trail are kept; it leaves every list but Archived. */
+  const archive = async () => {
+    const ok = await confirmDialog({
+      title: `Archive ${t.ticket_number}?`,
+      message: `"${t.title}" leaves every service list. Its dispatch history is kept, and you can restore it from the Archived filter.`,
+      confirmLabel: 'Archive Call',
+      danger: true,
+    });
+    if (!ok) return;
+    setBusy(true); setMsg(null);
+    try {
+      const r = await fetch(`/api/service-tickets/${t.id}`, { method: 'DELETE' });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) { setMsg({ kind: 'err', text: j?.error || 'Could not archive the call.' }); setBusy(false); return; }
+      setBusy(false);
+      await onArchived();
+    } catch { setMsg({ kind: 'err', text: 'Could not archive the call — check your connection.' }); setBusy(false); }
+  };
+  const restore = async () => {
+    setBusy(true); setMsg(null);
+    const r = await patch(t.id, { status: 'triaged', expected_updated_at: t.updated_at });
+    setBusy(false);
+    if (!r.ok) { setMsg({ kind: 'err', text: r.body?.error || 'Could not restore the call.' }); return; }
+    await onRestored();
+  };
+
+  if (archived) {
+    return (
+      <section className="sv-card sv-pad sv-detail" aria-labelledby="sv-detail-h">
+        <div className="sv-head">
+          <div>
+            <div className="sv-dim">{t.ticket_number} · Archived</div>
+            <h2 id="sv-detail-h">{t.title}</h2>
+          </div>
+          <button type="button" className="sv-icon" onClick={onClose} aria-label="Close ticket"><X size={18} /></button>
+        </div>
+        <p className="sv-dim">This call is archived — it is off every service list. Restore it to schedule or update it again.</p>
+        <div className="sv-actions" style={{ justifyContent: 'flex-start' }}>
+          <button type="button" className="sv-btn sv-primary" disabled={busy} onClick={restore}><ArrowCounterClockwise size={15} weight="bold" /> {busy ? 'Restoring…' : 'Restore Call'}</button>
+        </div>
+        {msg && <div className={`sv-msg sv-${msg.kind}`} role="alert">{msg.text}</div>}
+        <h3>Notes &amp; History</h3>
+        <ul className="sv-notes">{notes.map((n, i) => <li key={i}>{n}</li>)}</ul>
+      </section>
+    );
+  }
+
   return (
     <section className="sv-card sv-pad sv-detail" aria-labelledby="sv-detail-h">
       <div className="sv-head">
@@ -178,7 +279,10 @@ function Detail({ t, data, onClose, onSaved }: { t: Ticket; data: Payload; onClo
           <div className="sv-dim">{t.ticket_number} · {TICKET_STATUS_LABEL[status]}{t.priority ? ` · ${t.priority} priority` : ''}</div>
           <h2 id="sv-detail-h">{t.title}</h2>
         </div>
-        <button type="button" className="sv-icon" onClick={onClose} aria-label="Close ticket"><X size={18} /></button>
+        <div className="sv-headbtns">
+          <button type="button" className="sv-btn sv-ghost" onClick={onEdit} disabled={busy}><PencilSimple size={15} weight="bold" /> Edit Call</button>
+          <button type="button" className="sv-icon" onClick={onClose} aria-label="Close ticket"><X size={18} /></button>
+        </div>
       </div>
       <dl className="sv-dl">
         <div><dt>Job / Site</dt><dd>{job ? <Link href={`/app/projects/${job.id}/overview`} className="sv-link">{job.name}</Link> : 'No job'}{job && (job.address || job.city) ? <span className="sv-dim"> · {[job.address, job.city].filter(Boolean).join(', ')}</span> : null}</dd></div>
@@ -258,6 +362,10 @@ function Detail({ t, data, onClose, onSaved }: { t: Ticket; data: Payload; onClo
       </div>
       {t.resolution && <p className="sv-res"><strong>Resolution:</strong> {t.resolution}</p>}
       <ul className="sv-notes">{notes.map((n, i) => <li key={i}>{n}</li>)}</ul>
+
+      <div className="sv-actions sv-danger-zone">
+        <button type="button" className="sv-btn sv-danger" disabled={busy} onClick={archive}><Archive size={15} weight="bold" /> Archive Call</button>
+      </div>
     </section>
   );
 }
@@ -265,10 +373,12 @@ function Detail({ t, data, onClose, onSaved }: { t: Ticket; data: Payload; onClo
 function ServiceInner() {
   const sp = useSearchParams();
   const router = useRouter();
-  const { data, error, isLoading, mutate } = useSWR<Payload>('/api/service-tickets', fetcher, { revalidateOnFocus: true });
   const filter = (sp.get('filter') as Filter) || 'open';
+  // Archived calls are a separate read (the main list never includes them).
+  const { data, error, isLoading, mutate } = useSWR<Payload>(filter === 'archived' ? '/api/service-tickets?archived=1' : '/api/service-tickets', fetcher, { revalidateOnFocus: true });
   const selected = sp.get('ticket');
   const creating = sp.get('new') === '1';
+  const editing = sp.get('edit') === '1';
   const setParams = (p: Record<string, string | null>) => {
     const next = new URLSearchParams(sp.toString());
     Object.entries(p).forEach(([k, v]) => (v ? next.set(k, v) : next.delete(k)));
@@ -287,7 +397,7 @@ function ServiceInner() {
       if (filter === 'today') return open && !!t.scheduled_window_start && new Date(t.scheduled_window_start).toLocaleDateString('en-CA') === today;
       if (filter === 'waiting') return s === 'waiting';
       if (filter === 'completed') return s === 'completed';
-      return true;
+      return true; // 'all', and 'archived' (already an archived-only list)
     }).sort((a, b) => {
       const pr = (p: string | null) => ({ emergency: 0, high: 1, normal: 2, low: 3 } as Record<string, number>)[String(p || 'normal')] ?? 2;
       return pr(a.priority) - pr(b.priority) || String(a.scheduled_window_start || '9999').localeCompare(String(b.scheduled_window_start || '9999'));
@@ -297,11 +407,11 @@ function ServiceInner() {
 
   return (
     <div className="sv">
-      <style>{CSS}</style>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <Link href="/app?view=service" className="sv-back"><ArrowLeft size={14} /> Service Home</Link>
       <div className="sv-top">
         <h1>Service &amp; Dispatch</h1>
-        <button type="button" className="sv-btn sv-primary" onClick={() => setParams({ new: '1', ticket: null })}><Plus size={15} weight="bold" /> New Service Call</button>
+        <button type="button" className="sv-btn sv-primary" onClick={() => setParams({ new: '1', ticket: null, edit: null })}><Plus size={15} weight="bold" /> New Service Call</button>
       </div>
       <div role="group" aria-label="Filter calls" className="sv-seg">
         {FILTERS.map(f => <button key={f.key} type="button" aria-pressed={filter === f.key} className={filter === f.key ? 'on' : ''} onClick={() => setParams({ filter: f.key })}>{f.label}</button>)}
@@ -315,7 +425,7 @@ function ServiceInner() {
         <div className={`sv-layout ${sel || creating ? 'with-side' : ''}`}>
           <section className="sv-card sv-pad" aria-label="Service calls">
             {rows.length === 0 ? (
-              <p className="sv-dim">{filter === 'open' ? 'No open service calls. Create one when a customer calls in.' : 'Nothing in this filter.'}</p>
+              <p className="sv-dim">{filter === 'open' ? 'No open service calls. Create one when a customer calls in.' : filter === 'archived' ? 'No archived calls.' : 'Nothing in this filter.'}</p>
             ) : (
               <ul className="sv-list">
                 {rows.map(t => {
@@ -323,7 +433,7 @@ function ServiceInner() {
                   const tn = techName(t.assigned_tech_id);
                   return (
                     <li key={t.id}>
-                      <button type="button" className={`sv-row ${t.id === selected ? 'sel' : ''}`} onClick={() => setParams({ ticket: t.id, new: null })}>
+                      <button type="button" className={`sv-row ${t.id === selected ? 'sel' : ''}`} onClick={() => setParams({ ticket: t.id, new: null, edit: null })}>
                         <span className="sv-rowtop"><span className="sv-num">{t.ticket_number}</span><span className={`sv-pill sv-p-${t.priority || 'normal'}`}>{t.priority || 'normal'}</span><span className="sv-pill">{TICKET_STATUS_LABEL[s]}</span></span>
                         <span className="sv-rowtitle">{t.title}</span>
                         <span className="sv-rowmeta">{jobName(t.project_id)} · {tn || <em className="sv-unassigned">Unassigned</em>} · {fmtWindow(t.scheduled_window_start, t.scheduled_window_end)}</span>
@@ -336,8 +446,17 @@ function ServiceInner() {
           </section>
           {creating ? (
             <NewCall data={data} onClose={() => setParams({ new: null })} onCreated={async id => { await mutate(); setParams({ new: null, ticket: id, filter: 'open' }); }} />
+          ) : sel && editing && normaliseTicketStatus(sel.status) !== 'archived' ? (
+            <EditCall t={sel} data={data} onClose={() => setParams({ edit: null })} onSaved={() => mutate()} />
           ) : sel ? (
-            <Detail t={sel} data={data} onClose={() => setParams({ ticket: null })} onSaved={() => mutate()} />
+            <Detail
+              t={sel} data={data}
+              onClose={() => setParams({ ticket: null, edit: null })}
+              onSaved={() => mutate()}
+              onEdit={() => setParams({ edit: '1' })}
+              onArchived={async () => { await mutate(); setParams({ ticket: null, edit: null }); }}
+              onRestored={async () => { await mutate(); setParams({ filter: 'open', ticket: sel.id, edit: null }); }}
+            />
           ) : null}
         </div>
       ) : null}
@@ -377,6 +496,9 @@ const CSS = `
 .sv-p-emergency { background: rgba(255,59,48,.16); color: #FF3B30; }
 .sv-p-high { background: rgba(255,138,0,.16); color: #FF8A00; }
 .sv-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+.sv-headbtns { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.sv-danger { background: transparent; border-color: color-mix(in srgb, var(--danger) 45%, transparent); color: var(--danger); }
+.sv-danger-zone { justify-content: flex-start; margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--border-subtle); }
 .sv-icon { background: none; border: 0; color: var(--text-tertiary); cursor: pointer; min-width: 44px; min-height: 44px; }
 .sv-dim { color: var(--text-tertiary); font-size: 13px; }
 .sv-dl { display: grid; gap: 8px; margin: 0; }
@@ -405,5 +527,5 @@ const CSS = `
 .sv-notes { list-style: none; margin: 10px 0 0; padding: 0; font-size: 13px; color: var(--text-tertiary); display: flex; flex-direction: column; gap: 6px; }
 .sv-res { font-size: 14px; margin: 10px 0 0; }
 @media (max-width: 1100px) { .sv-layout.with-side { grid-template-columns: minmax(0, 1fr); } .sv-detail { order: -1; } }
-@media (max-width: 640px) { .sv { padding: 16px; } .sv-seg button, .sv-linkbtn { min-height: 44px; } .sv-grid { grid-template-columns: minmax(0, 1fr); } .sv-span2 { grid-column: auto; } .sv-dl div { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
+@media (max-width: 640px) { .sv-head { flex-wrap: wrap; } .sv-head > div:first-child { min-width: 0; flex: 1 1 200px; } .sv { padding: 16px; } .sv-seg button, .sv-linkbtn { min-height: 44px; } .sv-grid { grid-template-columns: minmax(0, 1fr); } .sv-span2 { grid-column: auto; } .sv-dl div { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
 `;
