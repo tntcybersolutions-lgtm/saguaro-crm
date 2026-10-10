@@ -1,0 +1,17 @@
+# AFTER (this branch)
+ok   POST saves every field
+ok   GET list brings the ZIP back (it was dropped)
+ok   GET list: this company only
+ok   GET one: 200 with the row
+ok   GET one: another company's → 404
+ok   PATCH saves name, ZIP, and clears the phone
+ok   PATCH blank name → 400
+ok   PATCH bad email → 400
+ok   PATCH another company's → 404, untouched
+ok   PATCH without Sales Edit → 403
+ok   DELETE without Sales Full → 403
+ok   DELETE another company's → 404, still there
+ok   DELETE → 200 and gone
+ok   DELETE again → 404
+
+all passed

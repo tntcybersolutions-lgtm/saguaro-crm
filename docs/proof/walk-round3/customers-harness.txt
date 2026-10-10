@@ -1,0 +1,34 @@
+# AFTER = this fix
+phone   ok   no sideways scroll (list) — 393>393
+phone   ok   Add Customer → POST with the ZIP
+phone   ok   listed after a reload
+phone   ok   tapping the row opens the record, and the URL names it — http://localhost:4632/app/customers?e=customers&customer=c2-831
+phone   ok   every field is back: email, phone, city, state, ZIP 85001 — Back to Customers Customer Profile ZZ AUDIT customers phone 91204 delivered@resend.dev · 602-555-0100 Edit Delete Customer 0 Overview Discovery Recommendations Designs Materials Conversations Location & Geo City Phoenix 
+phone   ok   no sideways scroll (record) — 393>393
+phone   ok   a reload lands back on the same record
+phone   ok   Edit opens pre-filled (name, ZIP)
+phone   ok   edit form controls are 44px+
+phone   ok   Save → PATCH /api/customers/:id with every field — [{"m":"PATCH","p":"/api/customers/c2-831","body":{"name":"ZZ AUDIT customers phone 91204 edited","status":"customer","source":"Direct","email":"delivered@resend.dev","phone":"602-555-0100","city":"Phoenix","state":"AZ","
+phone   ok   the record shows the change at once
+phone   ok   the list shows the edit after a reload
+phone   ok   reopened after the edit: ZIP 85004
+phone   ok   Delete asks first
+phone   ok   Delete → DELETE /api/customers/:id, back on the list, gone from it — ZZ AUDIT Existing Owner
+phone   ok   still gone after a reload
+phone   ok   no console errors
+desktop ok   no sideways scroll (list) — 1440>1440
+desktop ok   Add Customer → POST with the ZIP
+desktop ok   listed after a reload
+desktop ok   tapping the row opens the record, and the URL names it — http://localhost:4632/app/customers?e=customers&customer=c2-503
+desktop ok   every field is back: email, phone, city, state, ZIP 85001 — Back to Customers Customer Profile ZZ AUDIT customers desktop 5291 delivered@resend.dev · 602-555-0100 Edit Delete Customer 0 Overview Discovery Recommendations Designs Materials Conversations Location & Geo City Phoenix
+desktop ok   no sideways scroll (record) — 1440>1440
+desktop ok   a reload lands back on the same record
+desktop ok   Edit opens pre-filled (name, ZIP)
+desktop ok   Save → PATCH /api/customers/:id with every field — [{"m":"PATCH","p":"/api/customers/c2-503","body":{"name":"ZZ AUDIT customers desktop 5291 edited","status":"customer","source":"Direct","email":"delivered@resend.dev","phone":"602-555-0100","city":"Phoenix","state":"AZ",
+desktop ok   the record shows the change at once
+desktop ok   the list shows the edit after a reload
+desktop ok   reopened after the edit: ZIP 85004
+desktop ok   Delete asks first
+desktop ok   Delete → DELETE /api/customers/:id, back on the list, gone from it — ZZ AUDIT Existing Owner
+desktop ok   still gone after a reload
+desktop ok   no console errors
