@@ -5,6 +5,7 @@ import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
 import { notOnRoster, subRecordScope } from '@/lib/sub-portal-scope';
 import { LOCAL_DAY_HEADER, isPastDay, plausibleToday } from '@/lib/calendar-day';
+import { createNotification } from '@/lib/notifications';
 
 async function authenticateSubPortal(req: NextRequest) {
   const token =
@@ -59,6 +60,8 @@ export async function GET(req: NextRequest) {
     return apiError('portal/sub/pay-apps', err, "Couldn't load your invoices.");
   }
 }
+
+const toUsd = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 
 /** POST — Submit new pay application with line items tied to SOV */
 export async function POST(req: NextRequest) {
@@ -240,6 +243,15 @@ export async function POST(req: NextRequest) {
       description: `Submitted pay application (${lineItemRows.length} lines)`,
       metadata: { pay_app_id: payApp.id, amount: (payApp as { amount?: number }).amount, period_end, lines: lineItemRows.length, by: session.sub_company },
     } as never), 'portal_activity insert');
+
+    // The GC hears about it — the bell opens the inbox's invoices to approve.
+    await createNotification(
+      scope.tenantId, null, 'sub_invoice',
+      `Invoice from ${session.sub_company || 'a sub'}`,
+      `${toUsd(netAmount)} net for the period through ${period_end}. Review and approve it in the Sub Portal inbox.`,
+      '/app/sub-portal?tab=inbox&view=invoices',
+      scope.projectId,
+    );
 
     return NextResponse.json(
       { pay_app: payApp, message: 'Pay application submitted successfully' },
