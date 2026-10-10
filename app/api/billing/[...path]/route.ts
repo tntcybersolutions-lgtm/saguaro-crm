@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { apiError } from '@/lib/api-error';
 import {
   createCheckoutHandler,
   cancelHandler,
@@ -29,12 +30,27 @@ export async function POST(
 ) {
   const { path } = await params;
   const [segment] = path;
+  const handler = {
+    checkout: createCheckoutHandler,
+    cancel: cancelHandler,
+    'change-plan': changePlanHandler,
+    portal: billingPortalHandler,
+    webhook: webhookHandler,
+  }[segment];
+  if (!handler) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  if (segment === 'checkout')    return createCheckoutHandler(req);
-  if (segment === 'cancel')      return cancelHandler(req);
-  if (segment === 'change-plan') return changePlanHandler(req);
-  if (segment === 'portal')      return billingPortalHandler(req);
-  if (segment === 'webhook')     return webhookHandler(req);
-
-  return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  // Until Stripe is connected every one of these would throw inside stripe()
+  // and reach the user as a bare 500. Say what is true instead; Stripe itself
+  // retries a 503 webhook.
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return NextResponse.json({
+      error: "Online checkout isn't switched on yet. Email sales@saguarocontrol.net and we'll start your plan today.",
+      code: 'billing_not_configured',
+    }, { status: 503 });
+  }
+  try {
+    return await handler(req);
+  } catch (e) {
+    return apiError(`billing/${segment}`, e, "Stripe didn't answer. Nothing was charged — please try again in a minute.");
+  }
 }
