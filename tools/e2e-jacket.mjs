@@ -227,7 +227,9 @@ try {
   const shoot = async (p, name) => { await p.screenshot({ path: path.join(SHOTS, `${name}.png`) }); };
   const openJacket = async (p, label) => {
     await p.goto(`${SITE}/app/projects/${projectId}/bid-packages/${packageId}/jacket`, { waitUntil: 'networkidle' });
-    await p.waitForSelector('text=Drawings', { timeout: 30000 });
+    // The divider button, not any text "Drawings" — a hidden <option> in a
+    // job dropdown matched that first and the wait timed out on a working page.
+    await p.getByRole('button', { name: /^\s*Drawings/ }).first().waitFor({ state: 'visible', timeout: 30000 });
     await shoot(p, `${label}-1-cover`);
     for (const d of ['Drawings', 'Specifications', 'Bid Form', 'Insurance & Bonding']) {
       const t = p.getByRole('button', { name: new RegExp(`^\\s*${d.replace(/&/g, '&')}`) }).first();
