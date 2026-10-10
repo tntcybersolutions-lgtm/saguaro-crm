@@ -18,7 +18,7 @@ const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','
 const HOW_IT_WORKS = [
   { title: 'Create Your Account', desc: 'Fill out the form — takes about 30 seconds. No credit card needed.', icon: User },
   { title: 'Log In — It\'s Ready Instantly', desc: 'No download. No install. Open your browser, go to saguarocontrol.net, and log in. Your full platform is live.', icon: Monitor },
-  { title: 'Install on Your Phone (Optional)', desc: 'Download Saguaro Control Systems free from Apple TestFlight on your iPhone. Android coming soon.', icon: DeviceMobile },
+  { title: 'Install on Your Phone (Optional)', desc: 'Download Saguaro Control Systems free from Apple TestFlight on your iPhone. On Android, open it in Chrome.', icon: DeviceMobile },
   { title: 'Invite Your Team', desc: 'Add unlimited users — PMs, estimators, field crew. Everyone gets access for free.', icon: UsersThree },
 ];
 

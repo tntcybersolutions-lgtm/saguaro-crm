@@ -704,7 +704,7 @@ export default function BillingPage() {
             actions={<Button icon={<DeviceMobile size={15} />} href="/get-the-app">Get Install Instructions</Button>}
           >
             <div className="blProse" style={{ maxWidth: 560 }}>
-              Native iOS app, free on Apple TestFlight for every team member on your plan (App Store &amp; Android coming soon). The full platform also runs in any browser.
+              Native iOS app, free on Apple TestFlight for every team member on your plan The full platform also runs in any browser, Android included.
             </div>
           </Card>
 

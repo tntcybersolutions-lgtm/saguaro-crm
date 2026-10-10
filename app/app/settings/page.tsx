@@ -37,7 +37,7 @@ const SETTINGS_SECTIONS = [
     sectionIcon: CreditCard,
     items: [
       { icon: CreditCard, label: 'Subscription & Plan', desc: 'Manage your plan, upgrade, view invoices', href: '/app/billing', highlight: true },
-      { icon: DeviceMobile, label: 'Get the iOS App', desc: 'Download Saguaro Control Systems for iPhone & iPad on Apple TestFlight — Android coming soon', href: '/get-the-app' },
+      { icon: DeviceMobile, label: 'Get the iOS App', desc: 'Download Saguaro Control Systems for iPhone & iPad on Apple TestFlight. On Android, open it in Chrome.', href: '/get-the-app' },
       { icon: Bell, label: 'Notifications', desc: 'Configure email and push notification preferences', href: '/app/notification-settings' },
     ],
   },
@@ -556,7 +556,7 @@ export default function SettingsPage() {
               <DeviceMobile size={40} weight="duotone" />
               <div style={{ flex: 1, minWidth: 200 }}>
                 <div className="stRowLabel" style={{ fontSize: 'var(--fs-lg)' }}>Get the Saguaro Control Systems iOS App</div>
-                <div className="stRowDesc">Native iOS app on Apple TestFlight — free for your entire team. Android coming soon.</div>
+                <div className="stRowDesc">Native iOS app on Apple TestFlight — free for your entire team. On Android it runs in Chrome.</div>
               </div>
               <Button href="/get-the-app">Get Install Guide</Button>
             </div>
