@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { apiError } from '@/lib/api-error';
 import { generateA310, saveDocument } from '@/lib/pdf-engine';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
 
     const pdfUrl = await saveDocument(body.projectId, 'a310-bid-bond', pdfBytes, body, g.user.tenantId);
     return NextResponse.json({ pdfUrl, success: true });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('documents/a310', e, "Couldn't generate the A310 bid bond. Please try again.");
   }
 }
