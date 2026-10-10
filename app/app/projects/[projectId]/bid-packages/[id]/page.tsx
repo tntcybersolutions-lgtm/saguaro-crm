@@ -109,6 +109,10 @@ export default function BidPackageDetailPage() {
 
   const [pkg, setPkg] = useState<BidPackage | null>(null);
   const [loading, setLoading] = useState(true);
+  /* A failed load is not "not found". It used to be: any error, network or
+     server, fell into an empty catch and the page said the package may have
+     been removed. */
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [reminding, setReminding] = useState<string | null>(null);
   const [awarding, setAwarding] = useState<string | null>(null);
   const [closing, setClosing] = useState(false);
@@ -170,9 +174,11 @@ export default function BidPackageDetailPage() {
 
   async function loadPackage() {
     setLoading(true);
+    setLoadError(null);
     try {
       const r = await fetch(`/api/bid-packages/${id}`);
-      const d = await r.json() as any;
+      const d = await r.json().catch(() => ({})) as any;
+      if (!r.ok && r.status !== 404) throw new Error(d.error || `The server answered ${r.status}.`);
       if (d.bidPackage) {
         // GET route returns items / invites / submissions at the TOP LEVEL (not nested on
         // bidPackage) and with DB column names. Map them onto the page's interfaces so SOV,
@@ -205,7 +211,10 @@ export default function BidPackageDetailPage() {
         }));
         setPkg({ ...d.bidPackage, sov_items, invited_subs, bid_submissions });
       }
-    } catch { /* leave null */ } finally { setLoading(false); }
+    } catch (e) {
+      console.error('[bid-package] load', id, e);
+      setLoadError(e instanceof Error && e.message ? e.message : "Couldn't load this bid package.");
+    } finally { setLoading(false); }
   }
 
   async function sendReminder(inviteId: string, companyName: string) {
@@ -353,12 +362,18 @@ export default function BidPackageDetailPage() {
         <PremiumEmpty
           tone="error"
           icon={<Envelope size={30} weight="duotone" color={GOLD} />}
-          title="Bid Package Not Found"
-          description="We couldn't load this bid package. It may have been removed, or the link is out of date."
+          title={loadError ? "Couldn't Load This Bid Package" : 'Bid Package Not Found'}
+          description={loadError
+            ? `${loadError} Nothing has been changed.`
+            : "We couldn't find this bid package. It may have been removed, or the link is out of date."}
           action={
-            <button onClick={() => router.push(`/app/projects/${projectId}/bid-packages`)} style={ghostButtonStyle} className="pmBtn">
-              <ArrowLeft size={15} weight="bold" /> Go Back
-            </button>
+            loadError ? (
+              <button onClick={loadPackage} style={{ ...ghostButtonStyle, minHeight: 44 }} className="pmBtn">Try Again</button>
+            ) : (
+              <button onClick={() => router.push(`/app/projects/${projectId}/bid-packages`)} style={{ ...ghostButtonStyle, minHeight: 44 }} className="pmBtn">
+                <ArrowLeft size={15} weight="bold" /> Go Back
+              </button>
+            )
           }
         />
       </SectionCard>
