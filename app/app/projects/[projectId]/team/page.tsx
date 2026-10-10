@@ -26,7 +26,31 @@ export default function TeamPage(){
   const { showToast } = useToast();
   const [sendingPortal, setSendingPortal] = useState<string | null>(null);
   const [showInvite, setShowInvite] = useState(false);
-  const [members, setMembers] = useState<{name:string,role:string,email:string,access:string,last:string,userId:string|null}[]>([]);
+  const [rosterMembers, setRosterMembers] = useState<{key:string,name:string,role:string,email:string,access:string,last:string,userId:string|null,inviteId?:string}[]>([]);
+  /* Invites sent from this page. They are team_invites rows (project_id = this
+     job) and only become project_team rows when accepted — so the roster, which
+     read project_team alone, never showed anyone you had just invited. */
+  const [pendingInvites, setPendingInvites] = useState<{id:string,email:string,name?:string|null,role?:string|null,created_at?:string}[]>([]);
+  const loadPendingInvites = React.useCallback(async () => {
+    if (!projectId) return;
+    try {
+      const r = await fetch(`/api/team/invite?projectId=${encodeURIComponent(projectId)}`);
+      if (!r.ok) return; // 403 for non-admins: they simply see accepted members
+      const j = await r.json();
+      setPendingInvites(Array.isArray(j?.invites) ? j.invites : []);
+    } catch { /* the roster still shows accepted members */ }
+  }, [projectId]);
+  useEffect(() => { void loadPendingInvites(); }, [loadPendingInvites]);
+  const members = React.useMemo(() => {
+    const have = new Set(rosterMembers.map(m => (m.email || '').toLowerCase()).filter(Boolean));
+    const invited = pendingInvites
+      .filter(i => i.email && !have.has(i.email.toLowerCase()))
+      .map(i => ({
+        key: `invite:${i.id}`, name: (i.name || '').trim() || i.email, role: i.role || 'Member', email: i.email,
+        access: i.role || 'Member', last: 'Invite sent', userId: null as string | null, inviteId: i.id,
+      }));
+    return [...rosterMembers, ...invited];
+  }, [rosterMembers, pendingInvites]);
   const [subs, setSubs] = useState<{name:string,role:string,email:string,access:string,last:string}[]>([]);
   const [loading, setLoading] = useState(true);
   const [inviteEmail, setInviteEmail] = useState('');
@@ -56,7 +80,8 @@ export default function TeamPage(){
         if (d.project) setProj(d.project);
         // The API returns the internal roster under `team` (from project_team),
         // not `members`. Map each row to the shape this table renders.
-        setMembers((d.team ?? []).map((t: any) => ({
+        setRosterMembers((d.team ?? []).map((t: any) => ({
+          key: String(t.id || t.user_id || t.email || t.name),
           name: t.name || t.email || 'Team Member',
           role: t.role || 'Member',
           email: t.email || '',
@@ -68,7 +93,7 @@ export default function TeamPage(){
         })));
         setSubs((d.subs ?? []).map((s: any) => ({ name: s.name, role: 'Subcontractor', email: s.primary_email || s.email || '', access: 'Sub Portal', last: 'Active' })));
       } catch {
-        setMembers([]);
+        setRosterMembers([]);
         setSubs([]);
       } finally {
         setLoading(false);
@@ -101,6 +126,8 @@ export default function TeamPage(){
       if (!res.ok) { setInviteMsg(json.error || 'Invite failed.'); }
       else {
         setInviteMsg('Invitation sent.');
+        // The invitee joins the roster now (as Invite sent), not only once they accept.
+        void loadPendingInvites();
         setInviteEmail(''); setInviteName(''); setInviteRole('Member'); setInviteAuto({});
         setTimeout(() => { setShowInvite(false); setInviteMsg(''); }, 1500);
       }
@@ -295,7 +322,7 @@ export default function TeamPage(){
         )}
       </span>
     ) },
-    { key: 'last', header: 'Last Active', phone: 'hide', accessor: m => m.last, render: m => <span style={{color:'var(--success)',fontSize:12,fontWeight:700}}>{m.last}</span> },
+    { key: 'last', header: 'Last Active', phone: 'hide', accessor: m => m.last, render: m => <span style={{color:m.inviteId?'var(--warning)':'var(--success)',fontSize:12,fontWeight:700}}>{m.last}</span> },
   ];
   const teamSubColumns: Column<TeamSub>[] = [
     { key: 'name', header: 'Company', primary: true, phone: 'show', accessor: s => s.name, render: s => (
@@ -339,7 +366,7 @@ export default function TeamPage(){
           ]}/>
         )}
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
-          <StatCard icon={<UsersThree size={19} weight="duotone" color={GOLD} />} label="Team Members" value={String(members.length)} accent={GOLD} sub={members.length===1?'1 with access':`${members.length} with access`}  href={`/app/projects/${projectId}/team`}/>
+          <StatCard icon={<UsersThree size={19} weight="duotone" color={GOLD} />} label="Team Members" value={String(members.length)} accent={GOLD} sub={(() => { const inv = members.filter(m=>m.inviteId).length; const acc = members.length - inv; return `${acc} with access${inv ? ` · ${inv} invited` : ''}`; })()}  href={`/app/projects/${projectId}/team`}/>
           <StatCard icon={<HardHat size={19} weight="duotone" color={BLUE} />} label="Subcontractors" value={String(subs.length)} accent={subs.length?BLUE:undefined} sub={subTrades.length?`${subTrades.length} trade${subTrades.length===1?'':'s'} — portal access`:'Portal access'}  href={`/app/projects/${projectId}/subs`}/>
           <StatCard icon={<IdentificationBadge size={19} weight="duotone" color={leadersAssigned>=3?'var(--success)':GOLD} />} label="Field Leadership" value={`${leadersAssigned}/5`} accent={leadersAssigned>=3?'var(--success)':GOLD} sub="PM · super · foreman · owner · architect"  href={`/app/projects/${projectId}/team`}/>
         </div>
@@ -347,9 +374,11 @@ export default function TeamPage(){
     )}
 
     {showInvite && <div ref={inviteFormRef} style={{marginBottom:24}}>
-      <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) 320px',gap:18,alignItems:'start'}}>
+      {/* Wraps to one column on a phone. A fixed 320px side panel left the
+          invite form ~30px wide at 390px — the Email box could not be tapped. */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,320px),1fr))',gap:18,alignItems:'start'}}>
       <SectionCard title="Invite Team Member" icon={<UserPlus size={17} weight="duotone" color={GOLD} />} subtitle={ctx?.project?.name ? `Grants access to ${ctx.project.name}` : 'Send a role-scoped invitation to this project.'}>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:14,marginBottom:16}}>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,180px),1fr))',gap:14,marginBottom:16}}>
           <div>
             <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5}}>Email{inviteAuto.email && <AutoChip/>}</label>
             <input type="email" value={inviteEmail} onChange={e=>{setInviteEmail(e.target.value);setInviteAuto(a=>({...a,email:false}));}} placeholder="email@company.com" style={inputStyle}/>
@@ -449,7 +478,7 @@ export default function TeamPage(){
             compact
           />
         ) : (
-          <DataTable<Member> columns={memberColumns} rows={filteredMembers} rowKey={m => m.userId || m.name} defaultSort={{ key: 'name', dir: 'asc' }} empty="No one matches." />
+          <DataTable<Member> columns={memberColumns} rows={filteredMembers} rowKey={m => m.key}defaultSort={{ key: 'name', dir: 'asc' }} empty="No one matches." />
         )}
       </SectionCard>
       )}
