@@ -21,6 +21,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       if (body[k] !== undefined) updates[k] = body[k];
     }
 
+    /* Moving an invoice to another job: the job must be one of this tenant's.
+       The id comes from the browser, so it is checked, never trusted. */
+    if (updates.project_id) {
+      const { data: proj } = await db.from('projects').select('id')
+        .eq('id', updates.project_id).eq('tenant_id', user.tenantId).maybeSingle();
+      if (!proj) return NextResponse.json({ error: 'project_id is not a project on this account' }, { status: 400 });
+    }
+
     if (updates.status !== undefined && updates.status !== null) updates.status = String(updates.status).toLowerCase();
     // Money is server-canonical: any amount/tax change recomputes total from
     // the merged row — client-sent totals are never trusted.

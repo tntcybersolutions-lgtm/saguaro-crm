@@ -22,6 +22,7 @@ import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { humanError } from '@/lib/errors';
 import { useParams, useRouter } from 'next/navigation';
+import { useProjects } from '@/lib/hooks/useProjects';
 import {
   ArrowLeft, PaperPlaneTilt, Trash, PencilSimple, Receipt, FilePdf, ArrowSquareOut, ArrowsClockwise, WarningCircle,
 } from '@phosphor-icons/react';
@@ -64,6 +65,10 @@ interface Project { id: string; name: string; }
  *  clean baseline for the unsaved-work guard. */
 function formFromInvoice(inv: Invoice) {
   return {
+    /* The job the invoice was created on. The edit form had no Project field
+       at all, so an invoice created against a job reopened for editing with
+       the job blank and no way to move it to the right one. */
+    project_id: inv.project_id ?? '',
     invoice_number: inv.invoice_number ?? '',
     vendor_name: inv.vendor_name ?? '',
     vendor_email: inv.vendor_email ?? '',
@@ -195,13 +200,15 @@ export default function InvoiceDetailPage() {
   const [notFound, setNotFound] = useState(false);
 
   const [busy, setBusy] = useState<'' | 'send' | 'delete' | 'save' | 'pdf'>('');
+  /* Tenant jobs for the edit form's Project picker (same source as the register). */
+  const { projects: jobList } = useProjects();
   const { toast, show } = useToast(4000);
   const showToast = (msg: string, bad = false) => show(msg, bad ? 'bad' : 'good');
 
   // Edit modal
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
-    invoice_number: '', vendor_name: '', vendor_email: '', description: '',
+    project_id: '', invoice_number: '', vendor_name: '', vendor_email: '', description: '',
     category: '', cost_code: '', amount: '', tax: '', due_date: '', status: 'draft', notes: '',
   });
 
@@ -272,6 +279,7 @@ export default function InvoiceDetailPage() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          project_id: form.project_id || null,
           invoice_number: form.invoice_number || null,
           vendor_name: form.vendor_name || null,
           vendor_email: form.vendor_email || null,
@@ -289,7 +297,9 @@ export default function InvoiceDetailPage() {
       });
       if (!res.ok) throw new Error('Failed to update invoice');
       const data = await res.json();
-      setInvoice(data.invoice ?? data);
+      const saved: Invoice = data.invoice ?? data;
+      setInvoice(saved);
+      setProjectName(jobList.find(p => p.id === saved?.project_id)?.name ?? null);
       setEditing(false);
       showToast('Invoice updated.');
       return true;
@@ -577,6 +587,20 @@ export default function InvoiceDetailPage() {
         busy={busy === 'save'}
       >
         <FormGrid cols={2}>
+          <Field label="Project" span>
+            <Select
+              value={form.project_id}
+              onChange={(e) => setForm({ ...form, project_id: e.target.value })}
+              placeholder="Select project…"
+              options={[
+                ...jobList.map(p => ({ value: p.id, label: p.name })),
+                /* Keep the saved job selectable even if it is not in the active list. */
+                ...(form.project_id && !jobList.some(p => p.id === form.project_id)
+                  ? [{ value: form.project_id, label: projectName || 'Current project' }]
+                  : []),
+              ]}
+            />
+          </Field>
           <Field label="Invoice #">
             <Input value={form.invoice_number} onChange={(e) => setForm({ ...form, invoice_number: e.target.value })} placeholder="INV-001" />
           </Field>
