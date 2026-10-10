@@ -136,6 +136,7 @@ const cois = coiItems([
 const valley = cois.find((c) => c.key === 'coi:s-valley')!;
 check('one COI row per sub, its soonest certificate (Auto, Oct 18)', cois.filter((c) => c.key === 'coi:s-valley').length === 1 && valley.day === '2026-10-18' && valley.title === 'Request COI from Valley Sheet Metal Co.');
 check('8 days out → Today, amber, with Request (Ask for it)', valley.now && valley.tone === 'amber' && valley.action?.kind === 'ask_coi');
+check('…and says which policy and when, month capitalised', valley.meta === 'Auto expires Oct 18 · Copper Ridge Data Center Phase II', valley.meta);
 check('expired yesterday → red', cois.find((c) => c.key === 'coi:s-sonoran')!.tone === 'red');
 check('22 days out → Later, grey, not now', (() => { const d = cois.find((c) => c.key === 'coi:s-desert')!; return !d.now && d.tone === 'grey' && bucketOf(d, T) === 'later'; })());
 check('51 days out and the [Award pending] placeholder → nothing', !cois.some((c) => c.key === 'coi:s-canyon') && cois.length === 3);

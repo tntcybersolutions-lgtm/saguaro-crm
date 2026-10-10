@@ -20,7 +20,7 @@
  */
 import {
   type BuildCtx, type MyWorkItem, type MyWorkSource, type Snooze,
-  COI_NOW_DAYS, COI_WINDOW_DAYS, JOB_START_DAYS, REMIND_WITHIN_DAYS,
+  COI_NOW_DAYS, COI_WINDOW_DAYS, JOB_START_DAYS, REMIND_WITHIN_DAYS, SOURCE_LABEL,
   assistItems, bidItems, coiItems, dailyLogItems, followUpItems, inspectionItems, issueItems, jobStartItems,
   payAppItems, punchItems, rfiItems, scheduleItems, shortJob, submittalItems, tmItems, todoItems,
 } from '@/lib/my-work';
@@ -306,6 +306,10 @@ export async function collectMyWork(a: CollectArgs): Promise<Collected> {
       snoozes = ((data as Snooze[] | null) || []).map((s) => ({ item_key: s.item_key, until: String(s.until).slice(0, 10) }));
     })(),
   ]);
+
+  // Failures in a fixed order, so the page names them the same way every time.
+  const order = Object.keys(SOURCE_LABEL);
+  failures.sort((x, y) => order.indexOf(x) - order.indexOf(y));
 
   // One row per thing to do, whichever query found it.
   const seen = new Set<string>();

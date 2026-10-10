@@ -494,7 +494,7 @@ export function coiItems(rows: CoiRow[], ctx: BuildCtx): MyWorkItem[] {
     return {
       key: `coi:${r.sub_id || r.id}`, source: 'cois' as const, projectId: r.project_id,
       title: `Request COI from ${name}`,
-      meta: join(r.policy_type ? `${r.policy_type} ${when.toLowerCase()}` : when, ctx.job(r.project_id)),
+      meta: join(r.policy_type ? `${r.policy_type} ${when[0].toLowerCase()}${when.slice(1)}` : when, ctx.job(r.project_id)),
       day, now: days <= COI_NOW_DAYS, tone: (days < 0 ? 'red' : days <= COI_NOW_DAYS ? 'amber' : 'grey') as Tone, amount: null, href,
       action: r.sub_id ? { kind: 'ask_coi' as const, subId: r.sub_id, label: 'Request' } : null,
       done: null,
