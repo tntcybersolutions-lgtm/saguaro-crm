@@ -136,7 +136,7 @@ export async function POST(req: NextRequest) {
       'sub_message',
       `Message from ${senderName}`,
       text.length > 240 ? `${text.slice(0, 237)}…` : text,
-      `/app/projects/${scope.projectId}/subs`,
+      '/app/sub-portal?tab=inbox&view=messages',
       scope.projectId,
     );
 

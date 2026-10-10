@@ -4,6 +4,7 @@ import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
 import SubEndOfDay from '@/components/portal/SubEndOfDay';
+import SubInvoiceForm from '@/components/portal/SubInvoiceForm';
 import {
   fmtDay, sequenceLabels, invoiceView, fmtPercent, dailyLogView, fileNameFromUrl,
   expiryLevel, isUnreadForSub, SCORE_CATEGORIES, overallRating, complianceDocFor,
@@ -908,6 +909,9 @@ export default function SubPortal(){
     return(
       <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
         {!onRoster&&rosterNote('Invoices')}
+        {onRoster&&<SubInvoiceForm token={String(token)} lastLines={payApps.length?(payApps[0] as any).line_items:null}
+          onFiled={()=>{fetch(`/api/portal/sub/pay-apps?token=${token}`,{headers}).then(r=>r.json()).then(d=>setPayApps(d.pay_apps||[])).catch(e=>console.error('[sub-portal] reload invoices',e));showToast('Invoice sent — your GC has it now.');refreshActivity();}}
+          onFixCompliance={()=>setTab('compliance')}/>}
         {otherWaivers.length>0&&(
           <div style={card()}>
             <div style={{fontSize:16,fontWeight:700,color:TEXT,marginBottom:4}}>Lien Waivers</div>
@@ -931,7 +935,7 @@ export default function SubPortal(){
         {payApps.length===0?(
           <div style={{...card(),textAlign:'center',padding:40}}>
             <div style={{fontSize:15,fontWeight:700,color:TEXT}}>No Pay Applications Yet</div>
-            <div style={{fontSize:13,color:DIM,marginTop:6}}>Pay applications will appear here once submitted.</div>
+            <div style={{fontSize:13,color:DIM,marginTop:6}}>Tap New invoice to bill your GC for this period's work.</div>
           </div>
         ):payApps.map((pa:any)=>{const iv=invoiceView(pa);return(
           <div key={pa.id} style={card()}>

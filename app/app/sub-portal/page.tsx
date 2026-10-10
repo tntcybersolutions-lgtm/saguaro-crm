@@ -5,6 +5,7 @@ import { SUB_TRADES as ALL_TRADES } from '@/lib/construction-intelligence';
 import { humanError } from '@/lib/errors';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
+import SubInbox from '@/components/sub-portal/SubInbox';
 import { UsersThree, CheckCircle, Clock, Prohibit, WarningCircle, XCircle, FileX, Plus, UploadSimple, ListChecks, ClockCounterClockwise, FileText, ShieldCheck, AddressBook, Megaphone, Envelope } from '@phosphor-icons/react';
 
 /* ── palette ── */
@@ -25,7 +26,7 @@ type SubStatus = 'active' | 'pending' | 'disabled';
 type PortalPermission = 'contract' | 'schedule' | 'daily_logs' | 'rfis' | 'submittals' | 'pay_apps';
 type ComplianceDocType = 'insurance' | 'w9' | 'license';
 type ComplianceStatus = 'valid' | 'expiring' | 'expired' | 'missing';
-type Tab = 'users' | 'invite' | 'permissions' | 'activity' | 'documents' | 'compliance' | 'directory' | 'messages';
+type Tab = 'inbox' | 'users' | 'invite' | 'permissions' | 'activity' | 'documents' | 'compliance' | 'directory' | 'messages';
 
 interface SubUser {
   id: string;
@@ -204,7 +205,14 @@ function StatusBadge({ status }: { status: string }) {
 export default function SubPortalPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>('users');
+  // The inbox is what needs the GC today, so the screen opens on it.
+  const [tab, setTab] = useState<Tab>('inbox');
+  // ?tab=… opens a tab directly (the inbox's bell notifications link here).
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get('tab');
+    if (t && ['inbox', 'users', 'invite', 'permissions', 'activity', 'documents', 'compliance', 'directory', 'messages'].includes(t)) setTab(t as Tab);
+  }, []);
+  const [inboxCount, setInboxCount] = useState(0);
 
   /* Deep-link support (?tab=invite|users|permissions|...) — read once on mount,
      client-only so there is no prerender/Suspense requirement from
@@ -496,6 +504,7 @@ export default function SubPortalPage() {
 
   /* ── tab list ── */
   const TABS: { key: Tab; label: string }[] = [
+    { key: 'inbox', label: inboxCount > 0 ? `Inbox (${inboxCount})` : 'Inbox' },
     { key: 'users', label: 'Sub Users' },
     { key: 'invite', label: 'Invite' },
     { key: 'permissions', label: 'Permissions' },
@@ -503,7 +512,7 @@ export default function SubPortalPage() {
     { key: 'documents', label: 'Documents' },
     { key: 'compliance', label: 'Compliance' },
     { key: 'directory', label: 'Directory' },
-    { key: 'messages', label: 'Messages' },
+    { key: 'messages', label: 'Announcements' },
   ];
 
   if (loading) {
@@ -543,7 +552,9 @@ export default function SubPortalPage() {
       />
 
       {/* ── stat cards ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 28 }}>
+      {/* Two to a row on a phone, so the inbox below is reached without two screens of cards. */}
+      <style dangerouslySetInnerHTML={{ __html: '@media (max-width: 640px){.sp-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;margin-bottom:16px!important}.sp-intel{display:none}}' }} />
+      <div className="sp-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 28 }}>
         {[
           { label: 'Total Subs', value: stats.total, color: GOLD, icon: <UsersThree size={19} weight="duotone" color={GOLD} /> },
           { label: 'Active', value: stats.active, color: GREEN, icon: <CheckCircle size={19} weight="duotone" color={GREEN} /> },
@@ -559,7 +570,7 @@ export default function SubPortalPage() {
 
       {/* ── roster intelligence strip — adoption, engagement, compliance health ── */}
       {users.length > 0 && (
-        <StatStrip items={[
+        <div className="sp-intel"><StatStrip items={[
           {href: '/app/sub-portal', 
             label: 'Portal Adoption', value: `${intel.adoption}%`,
             accent: intel.adoption >= 70 ? GREEN : AMBER,
@@ -581,7 +592,7 @@ export default function SubPortalPage() {
             label: 'Activity (7d)', value: String(intel.events7),
             sub: intel.lastEventTs > 0 ? `Last event ${fmtDateTime(new Date(intel.lastEventTs).toISOString())}` : 'No portal events yet',
           },
-        ]} />
+        ]} /></div>
       )}
 
       {/* ── tabs ── */}
@@ -616,6 +627,9 @@ export default function SubPortalPage() {
           </select>
         </div>
       )}
+
+      {/* ── what subs sent in: invoices, RFIs, messages, logs, waivers ── */}
+      {tab === 'inbox' && <SubInbox onCounts={setInboxCount} />}
 
       {/* ════════════════════════════════════════════ */}
       {/*  TAB: SUB USERS                             */}
