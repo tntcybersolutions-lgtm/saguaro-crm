@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -8,16 +9,23 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const db = createServerClient();
-    const [{ data: pkg }, { data: items }, { data: invites }, { data: submissions }] = await Promise.all([
-      db.from('bid_packages').select('*, projects(*)').eq('id', id).eq('tenant_id', user.tenantId).single(),
-      db.from('bid_package_items').select('*').eq('bid_package_id', id).order('id'),
-      db.from('bid_package_invites').select('*').eq('bid_package_id', id).order('created_at', { ascending: false }),
-      db.from('bid_submissions').select('*').eq('bid_package_id', id).order('base_amount'),
+    /* Every read carries the tenant (the child rows used to be read by
+       package id alone), and a refused read is an error: it used to come back
+       as "Not found" or as a package with no line items, invites or bids. The
+       bid form is in the order the jacket shows it (sort_order, then entry
+       order), not by uuid. */
+    const [pkgRes, itemsRes, invitesRes, subsRes] = await Promise.all([
+      db.from('bid_packages').select('*, projects(*)').eq('id', id).eq('tenant_id', user.tenantId).maybeSingle(),
+      db.from('bid_package_items').select('*').eq('bid_package_id', id).eq('tenant_id', user.tenantId)
+        .order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
+      db.from('bid_package_invites').select('*').eq('bid_package_id', id).eq('tenant_id', user.tenantId).order('created_at', { ascending: false }),
+      db.from('bid_submissions').select('*').eq('bid_package_id', id).eq('tenant_id', user.tenantId).order('base_amount'),
     ]);
-    if (!pkg) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    return NextResponse.json({ bidPackage: pkg, items: items || [], invites: invites || [], submissions: submissions || [] });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    for (const r of [pkgRes, itemsRes, invitesRes, subsRes]) if (r.error) throw r.error;
+    if (!pkgRes.data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return NextResponse.json({ bidPackage: pkgRes.data, items: itemsRes.data || [], invites: invitesRes.data || [], submissions: subsRes.data || [] });
+  } catch (e) {
+    return apiError('bid-packages/[id] GET', e, "Couldn't load this bid package. Please try again.");
   }
 }
 
@@ -48,8 +56,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       .single();
     if (error) throw error;
     return NextResponse.json({ success: true, bidPackage: data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('bid-packages/[id] PATCH', e, "Couldn't save this bid package. Please try again.");
   }
 }
 
@@ -71,7 +79,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       .eq('tenant_id', user.tenantId);
     if (error) throw error;
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('bid-packages/[id] DELETE', e, "Couldn't delete this bid package. Please try again.");
   }
 }

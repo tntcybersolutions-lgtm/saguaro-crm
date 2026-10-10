@@ -10,8 +10,14 @@ import {
   expiryLevel, isUnreadForSub, SCORE_CATEGORIES, overallRating, complianceDocFor,
 } from '@/lib/sub-portal-view';
 import { invoiceWaiver, isSignedWaiver, isSignableWaiver, waiverTypeForInvoice, waiverTypeLabel } from '@/lib/sub-lien-waiver';
-import { COMPLIANCE_ACCEPT, COMPLIANCE_MAX_BYTES, checkComplianceFileName } from '@/lib/sub-portal-files';
+import {
+  COMPLIANCE_ACCEPT, COMPLIANCE_MAX_BYTES, checkComplianceFileName,
+  DOCUMENT_ACCEPT, DOCUMENT_MAX_BYTES, DOCUMENT_MAX_MB, checkDocumentFileName,
+} from '@/lib/sub-portal-files';
 import { putSigned } from '@/lib/media-upload';
+import { LOCAL_DAY_HEADER, isPastDay, localDay } from '@/lib/calendar-day';
+import { TIME_ZONE_HEADER, deviceTimeZone } from '@/lib/time-zone';
+import { sendOrSave, listSaved, savedRowId, startOfflineWatch } from '@/lib/offline/outbox';
 
 /* ── Design Tokens ── */
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF';
@@ -30,6 +36,13 @@ const labelS:React.CSSProperties={display:'block',fontSize:11,fontWeight:700,col
 const inputS:React.CSSProperties={width:'100%',background:DARK,border:`1px solid ${BORDER}`,borderRadius:7,padding:'10px 14px',color:TEXT,fontSize:16,minHeight:44,outline:'none',boxSizing:'border-box'};
 const textareaS:React.CSSProperties={...inputS,minHeight:80,resize:'vertical' as const};
 const badge=(status:string):React.CSSProperties=>{const m:Record<string,string>={approved:GREEN,paid:GREEN,signed:GREEN,accepted:GREEN,awarded:GREEN,valid:GREEN,submitted:BLUE,open:BLUE,pending:AMBER,under_review:AMBER,pending_review:AMBER,draft:DIM,expiring_soon:AMBER,correction_requested:AMBER,rejected:RED,disputed:RED,expired:RED,declined:RED,missing:RED};const c=m[status]||DIM;return{display:'inline-block',padding:'3px 10px',borderRadius:20,fontSize:11,fontWeight:700,background:`color-mix(in srgb, ${c} 13%, transparent)`,color:c,textTransform:'capitalize' as const}};
+
+/** Every panel the portal loads: [route under /api/portal/sub, the name a sub reads if it fails]. Order matters (see val(i)). */
+const PANELS:ReadonlyArray<readonly [string,string]>=[
+  ['compliance','Compliance'],['pay-apps','Invoices'],['daily-logs','Daily logs'],['rfis','RFIs'],['schedule','Schedule'],
+  ['scorecard','Scorecard'],['documents','Documents'],['messages','Messages'],['bids','Bids'],['drawings','Drawings'],
+  ['punch','Punch list'],['activity','Activity'],['lien-waivers','Lien waivers'],['clock','Clock'],
+];
 
 function Stars({rating,max=5,size=18}:{rating:number;max?:number;size?:number}){
   return <span style={{display:'inline-flex',gap:2}}>{Array.from({length:max},(_,i)=><span key={i} style={{fontSize:size,color:i<Math.round(rating)?GOLD:BORDER}}>{i<Math.round(rating)?'\u2605':'\u2606'}</span>)}</span>;
@@ -140,11 +153,13 @@ export default function SubPortal(){
   const [punchItems,setPunchItems]=useState<any[]>([]);
   const [activity,setActivity]=useState<any[]>([]);
   const [uploading,setUploading]=useState(false);
+  /* Documents upload progress, 0–100 while the bytes go to storage; null when idle. */
+  const [uploadProgress,setUploadProgress]=useState<number|null>(null);
   const [docCategory,setDocCategory]=useState('other');
   // docExpiry is declared with the compliance form states below — shared by both upload paths.
 
   /* ── Form states ── */
-  const [dlForm,setDlForm]=useState({log_date:new Date().toISOString().split('T')[0],crew_count:'',hours_worked:'',work_completed:'',work_planned:'',weather:'',delays:'',safety_incidents:'',notes:''});
+  const [dlForm,setDlForm]=useState({log_date:localDay(),crew_count:'',hours_worked:'',work_completed:'',work_planned:'',weather:'',delays:'',safety_incidents:'',notes:''});
   const [dlSaving,setDlSaving]=useState(false);
   const [rfiForm,setRfiForm]=useState({subject:'',question:'',priority:'normal',reference_drawing:'',reference_spec:''});
   const [rfiSaving,setRfiSaving]=useState(false);
@@ -190,7 +205,27 @@ export default function SubPortal(){
 
   const showToast=useCallback((msg:string)=>{setToast(msg);setTimeout(()=>setToast(''),3500)},[]);
 
-  const headers:Record<string,string>={'Content-Type':'application/json','x-portal-token':token||''};
+  /* Every call carries this device's calendar day: a COI's expiry_date is good
+     through the end of that day where the sub is, which only the browser knows
+     (lib/calendar-day). The server takes it within reason and falls back to Phoenix. */
+  const headers:Record<string,string>={'Content-Type':'application/json','x-portal-token':token||'',[LOCAL_DAY_HEADER]:localDay(),[TIME_ZONE_HEADER]:deviceTimeZone()||''};
+  /** Panels that didn't load, by name — an empty tab must never read as "nothing on file". */
+  const [unloaded,setUnloaded]=useState<string[]>([]);
+
+  /* Daily logs saved on this phone send themselves when the signal is back
+     (lib/offline/outbox — the same outbox the app uses). */
+  useEffect(()=>startOfflineWatch(),[]);
+  useEffect(()=>{
+    const synced=(e:Event)=>{
+      const d=(e as CustomEvent).detail||{};
+      if(d.kind!=='portal-daily-log')return;
+      const row=d.result?.daily_log;
+      setDailyLogs(prev=>row?prev.map(l=>l.id===savedRowId(d.id)?row:l):prev.filter(l=>l.id!==savedRowId(d.id)));
+      showToast('A daily log saved on this phone was sent.');
+    };
+    window.addEventListener('saguaro:outbox-synced',synced);
+    return()=>window.removeEventListener('saguaro:outbox-synced',synced);
+  },[showToast]);
 
   useEffect(()=>{
     const on=()=>setIsOnline(true),off=()=>setIsOnline(false);
@@ -208,25 +243,18 @@ export default function SubPortal(){
       .then(authData=>{
         setSession(authData.session);
         setSub(authData.sub);
-        // Load everything in parallel
-        return Promise.allSettled([
-          fetch(`/api/portal/sub/compliance?token=${token}`,{headers}).then(r=>r.json()),
-          fetch(`/api/portal/sub/pay-apps?token=${token}`,{headers}).then(r=>r.json()),
-          fetch(`/api/portal/sub/daily-logs?token=${token}`,{headers}).then(r=>r.json()),
-          fetch(`/api/portal/sub/rfis?token=${token}`,{headers}).then(r=>r.json()),
-          fetch(`/api/portal/sub/schedule?token=${token}`,{headers}).then(r=>r.json()),
-          fetch(`/api/portal/sub/scorecard?token=${token}`,{headers}).then(r=>r.json()),
-          fetch(`/api/portal/sub/documents?token=${token}`,{headers}).then(r=>r.json()),
-          fetch(`/api/portal/sub/messages?token=${token}`,{headers}).then(r=>r.json()),
-          fetch(`/api/portal/sub/bids?token=${token}`,{headers}).then(r=>r.json()),
-          fetch(`/api/portal/sub/drawings?token=${token}`,{headers}).then(r=>r.json()),
-          fetch(`/api/portal/sub/punch?token=${token}`,{headers}).then(r=>r.json()),
-          fetch(`/api/portal/sub/activity?token=${token}`,{headers}).then(r=>r.json()),
-          fetch(`/api/portal/sub/lien-waivers?token=${token}`,{headers}).then(r=>r.json()),
-        ]);
+        // Load everything in parallel. A refused or failed panel is named, not shown empty.
+        const get=(path:string)=>fetch(`/api/portal/sub/${path}?token=${token}`,{headers}).then(async r=>{
+          const d=await r.json().catch(()=>({}));
+          if(!r.ok)throw new Error(d?.error||`HTTP ${r.status}`);
+          return d;
+        });
+        return Promise.allSettled(PANELS.map(([path])=>get(path)));
       })
       .then(results=>{
         const val=(i:number)=>(results[i] as any)?.value||{};
+        setUnloaded(results.flatMap((r,i)=>r.status==='rejected'?[PANELS[i][1]]:[]));
+        results.forEach((r,i)=>{if(r.status==='rejected')console.error('[sub portal] did not load',PANELS[i][0],(r as PromiseRejectedResult).reason);});
         setComplianceDocs(val(0).compliance_docs||[]);
         setPayApps(val(1).pay_apps||[]);
         setDailyLogs(val(2).daily_logs||[]);
@@ -240,6 +268,17 @@ export default function SubPortal(){
         setPunchItems(val(10).punch_items||[]);
         setActivity(val(11).events||[]);
         setLienWaivers(val(12).lien_waivers||[]);
+        // The clock is the server's: after a reload a sub on the clock still reads "on the clock".
+        const clock=val(13);
+        if(typeof clock.onClock==='boolean'){
+          setGpsStatus(clock.onClock?'clocked_in':(clock.lastPunch?'clocked_out':'idle'));
+          if(clock.onClock&&clock.lastPunch?.punched_at)setClockInTime(clock.lastPunch.punched_at);
+        }
+        // Daily logs written with no signal are on this phone until they send.
+        void listSaved(null,'portal-daily-log').then(saved=>{
+          const mine=saved.filter(r=>r.url.includes(`token=${token}`));
+          if(mine.length)setDailyLogs(prev=>[...mine.map(r=>({...(r.row||{}),id:savedRowId(r.id),status:r.attempts>=5?'not_sent':'waiting_to_send',_error:r.lastError})),...prev]);
+        });
       })
       .catch(e=>{ console.error(e); setError(humanError(e, 'Failed to load the portal. Please try again.')); })
       .finally(()=>setLoading(false));
@@ -329,7 +368,8 @@ export default function SubPortal(){
   const refreshActivity=()=>fetch(`/api/portal/sub/activity?token=${token}`,{headers}).then(r=>r.json()).then(d=>setActivity(d.events||[])).catch(()=>{});
   /* Compliance gate: invoices are held until required docs are current. */
   const requiredDocs=['insurance','w9'];
-  const docCurrent=(type:string)=>complianceDocs.some((d:any)=>d.doc_type===type&&d.status!=='rejected'&&d.status!=='expired'&&(!d.expiry_date||new Date(d.expiry_date).getTime()>Date.now()));
+  /* expiry_date is a calendar day, current through its end (it used to lapse at midnight UTC — the evening before, in the US). */
+  const docCurrent=(type:string)=>complianceDocs.some((d:any)=>d.doc_type===type&&d.status!=='rejected'&&d.status!=='expired'&&(!d.expiry_date||!isPastDay(d.expiry_date,localDay())));
   const complianceMissing=requiredDocs.filter(t=>!docCurrent(t));
   const complianceGateOpen=complianceMissing.length===0;
 
@@ -385,8 +425,9 @@ export default function SubPortal(){
   const submitDailyLog=async()=>{
     if(!dlForm.work_completed.trim()){showToast('Please describe work completed.');return;}
     setDlSaving(true);
+    const blank={log_date:localDay(),crew_count:'',hours_worked:'',work_completed:'',work_planned:'',weather:'',delays:'',safety_incidents:'',notes:''};
     try{
-      const result=await apiPost('daily-logs',{
+      const body={
         log_date:dlForm.log_date,
         crew_count:parseInt(dlForm.crew_count)||0,
         hours_worked:parseFloat(dlForm.hours_worked)||0,
@@ -398,14 +439,28 @@ export default function SubPortal(){
         notes:dlForm.notes,
         gps_clock_in:clockInTime||null,
         gps_clock_out:clockOutTime||null,
+      };
+      /* No signal: kept on this phone and sent by itself when the signal is back
+         (it used to say "queued for sync" while keeping nothing). */
+      const sent=await sendOrSave({
+        url:`/api/portal/sub/daily-logs?token=${token}`,method:'POST',body,kind:'portal-daily-log',label:'Daily log',
+        projectId:session?.project_id??null,
+        row:{log_date:body.log_date,crew_count:body.crew_count,hours:body.hours_worked,work_performed:body.work_completed,delays:body.delays||null,notes:[body.work_planned&&`Planned: ${body.work_planned}`,body.weather&&`Weather: ${body.weather}`,body.safety_incidents&&`Safety: ${body.safety_incidents}`,body.notes].filter(Boolean).join('\n')||null},
       });
-      if(result.daily_log){
-        showToast('Daily log submitted.');
-        setDailyLogs(prev=>[result.daily_log,...prev]);
-        setDlForm({log_date:new Date().toISOString().split('T')[0],crew_count:'',hours_worked:'',work_completed:'',work_planned:'',weather:'',delays:'',safety_incidents:'',notes:''});
-        setGpsStatus('idle');setClockInTime('');setClockOutTime('');
-      } else showToast(result.error||'Failed to submit.');
-    }catch{showToast('Network error — log queued for sync.');}
+      if(sent.saved){
+        showToast("No signal — the log is saved on this phone and sends by itself when you're back online.");
+        setDailyLogs(prev=>[{log_date:body.log_date,crew_count:body.crew_count,hours:body.hours_worked,work_performed:body.work_completed,delays:body.delays||null,id:savedRowId(sent.id),status:'waiting_to_send'},...prev]);
+        setDlForm(blank);
+      }else{
+        const result=await sent.response.json().catch(()=>({}));
+        if(sent.response.ok&&result.daily_log){
+          showToast('Daily log submitted.');
+          setDailyLogs(prev=>[result.daily_log,...prev]);
+          setDlForm(blank);
+          setGpsStatus('idle');setClockInTime('');setClockOutTime('');
+        } else showToast(result.error||"The log wasn't saved. Check it and try again.");
+      }
+    }catch{showToast("The log wasn't saved — this phone couldn't keep a copy. Try again when you have signal.");}
     setDlSaving(false);
   };
 
@@ -731,7 +786,7 @@ export default function SubPortal(){
               const c=a.level==='critical'?RED:a.level==='warning'?AMBER:BLUE;
               return <div key={i} style={{padding:'8px 0',borderBottom:i<alerts.length-1?`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`:'none',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
                 <div style={{fontSize:13,color:TEXT}}><strong style={{color:c}}>{a.doc.doc_type}</strong> &mdash; {docFileLabel(a.doc)}</div>
-                <div style={{fontSize:12,fontWeight:700,color:c}}>{days<=0?'Expired':days<=30?`${days}d — Urgent`:days<=60?`${days}d — Warning`:`${days}d — Notice`}</div>
+                <div style={{fontSize:12,fontWeight:700,color:c}}>{days<0?'Expired':days===0?'Expires today':days<=30?`${days}d — Urgent`:days<=60?`${days}d — Warning`:`${days}d — Notice`}</div>
               </div>;
             })}
           </div>
@@ -837,10 +892,10 @@ export default function SubPortal(){
             {alerts.map((a,i)=>{
               const days=a.doc.days_until_expiry;
               const c=a.level==='critical'?RED:a.level==='warning'?AMBER:BLUE;
-              const levelLabel=days<=0?'Expired':days<=30?'30-Day Alert':days<=60?'60-Day Alert':'90-Day Alert';
+              const levelLabel=days<0?'Expired':days<=30?'30-Day Alert':days<=60?'60-Day Alert':'90-Day Alert';
               return <div key={i} style={{padding:'10px 12px',background:`color-mix(in srgb, ${c} 7%, transparent)`,border:`1px solid color-mix(in srgb, ${c} 20%, transparent)`,borderRadius:6,marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
                 <div><div style={{fontSize:13,fontWeight:700,color:TEXT}}>{docLabels[a.doc.doc_type]||a.doc.doc_type}</div><div style={{fontSize:11,color:DIM}}>{docFileLabel(a.doc)} &middot; Expires: {fmtDate(a.doc.expiry_date)}</div></div>
-                <div style={{padding:'4px 12px',borderRadius:20,background:`color-mix(in srgb, ${c} 13%, transparent)`,color:c,fontSize:11,fontWeight:700}}>{levelLabel} ({days<=0?'Overdue':`${days}d`})</div>
+                <div style={{padding:'4px 12px',borderRadius:20,background:`color-mix(in srgb, ${c} 13%, transparent)`,color:c,fontSize:11,fontWeight:700}}>{levelLabel} ({days<0?'Overdue':days===0?'expires today':`${days}d`})</div>
               </div>;
             })}
           </div>
@@ -860,7 +915,7 @@ export default function SubPortal(){
                   <div style={{fontSize:14,fontWeight:700,color:TEXT,marginBottom:6}}>{docLabels[type]||type}</div>
                   {doc?(<div>
                     <div style={{fontSize:12,color:DIM,marginBottom:4,overflowWrap:'anywhere'}}>File: {docFileLabel(doc)}</div>
-                    {doc.expiry_date&&<div style={{fontSize:12,color:c,fontWeight:600,marginBottom:4}}>{doc.days_until_expiry!==null&&doc.days_until_expiry<=0?'Expired':doc.days_until_expiry!==null&&doc.days_until_expiry<=30?`Expires in ${doc.days_until_expiry} days`:`Expires: ${fmtDate(doc.expiry_date)}`}</div>}
+                    {doc.expiry_date&&<div style={{fontSize:12,color:c,fontWeight:600,marginBottom:4}}>{doc.days_until_expiry!=null&&doc.days_until_expiry<0?'Expired':doc.days_until_expiry===0?'Expires today':doc.days_until_expiry!=null&&doc.days_until_expiry<=30?`Expires in ${doc.days_until_expiry} day${doc.days_until_expiry===1?'':'s'}`:`Expires: ${fmtDate(doc.expiry_date)}`}</div>}
                     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,flexWrap:'wrap'}}>
                       <span style={badge(doc.status)}>{(doc.status||'').replace(/_/g,' ')}</span>
                       {doc.file_url&&<a href={doc.file_url} target="_blank" rel="noopener noreferrer" style={{...btnS(BORDER,true),minHeight:44,display:'inline-flex',alignItems:'center',textDecoration:'none',color:TEXT}}>View file</a>}
@@ -1011,7 +1066,7 @@ export default function SubPortal(){
   /* ================================================================ */
   const renderDaily=()=>(
     <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
-      {!isOnline&&<div style={{padding:'10px 16px',background:`color-mix(in srgb, ${AMBER} 13%, transparent)`,border:`1px solid ${AMBER}`,borderRadius:8,display:'flex',alignItems:'center',gap:10}}><div style={{width:10,height:10,borderRadius:'50%',background:AMBER}}/><span style={{fontSize:13,color:AMBER,fontWeight:600}}>You are offline. Logs will be queued and submitted when connection is restored.</span></div>}
+      {!isOnline&&<div style={{padding:'10px 16px',background:`color-mix(in srgb, ${AMBER} 13%, transparent)`,border:`1px solid ${AMBER}`,borderRadius:8,display:'flex',alignItems:'center',gap:10}}><div style={{width:10,height:10,borderRadius:'50%',background:AMBER}}/><span style={{fontSize:13,color:AMBER,fontWeight:600}}>You&apos;re offline. Daily logs you submit are saved on this phone and send by themselves when you&apos;re back online.</span></div>}
 
       {/* GPS Clock */}
       <div style={card()}>
@@ -1369,24 +1424,37 @@ export default function SubPortal(){
   /* ── DOCUMENTS: multi-type uploads by category, expiry-tracked, media grid ── */
   const DOC_CATS=[['insurance','Insurance / COI'],['w9','W-9'],['lien_waiver','Lien Waiver'],['safety_cert','Safety Cert'],['license','License'],['bond','Bond'],['closeout','Closeout Doc'],['photo','Photo'],['video','Video'],['other','Other']];
   const isMedia=(d:any)=>/^(image|video)\//.test(d.doc_type||'')||d.category==='photo'||d.category==='video';
+  /* Documents upload: the bytes go straight to storage through a one-time signed
+     URL (the compliance upload's road), then the record is saved with the path.
+     It used to post the file through the server, where the ~4.5 MB serverless
+     request cap refused anything bigger although this tab says 100 MB. */
   const handleDocUpload=async(file:File|null)=>{
-    if(!file)return;
-    setUploading(true);
+    if(!file||uploading)return;
+    const name=checkDocumentFileName(file.name);
+    if(!name.ok){showToast(name.message);return;}
+    if(file.size>DOCUMENT_MAX_BYTES){showToast(`That file is over ${DOCUMENT_MAX_MB} MB. Upload a smaller file.`);return;}
+    setUploading(true);setUploadProgress(0);
     try{
-      const form=new FormData();
-      form.append('file',file);form.append('category',docCategory);
-      if(docExpiry)form.append('expiry_date',docExpiry);
-      const res=await apiUpload('documents',form);
-      if(res.success){
+      const urlRes=await fetch(`/api/portal/sub/documents/upload-url?token=${token}`,{method:'POST',headers,body:JSON.stringify({fileName:file.name,size:file.size})});
+      const up=await urlRes.json().catch(()=>null);
+      if(!urlRes.ok||!up?.path){showToast(up?.error||"Couldn't start the upload. Please try again.");return;}
+      await putSigned(up,file,f=>setUploadProgress(Math.round(f*100)));
+      const recRes=await fetch(`/api/portal/sub/documents?token=${token}`,{method:'POST',headers,body:JSON.stringify({path:up.path,category:docCategory,title:file.name,size:file.size,expiry_date:docExpiry||null})});
+      const res=await recRes.json().catch(()=>null);
+      if(recRes.ok&&res?.success){
         setDocuments((ds:any[])=>[res.document,...ds]);
         showToast('Uploaded — the GC can see it now.');
         if(['insurance','w9','lien_waiver','safety_cert','license','bond'].includes(docCategory)){
-          fetch(`/api/portal/sub/compliance?token=${token}`,{headers}).then(r=>r.json()).then(d=>setComplianceDocs(d.compliance_docs||[])).catch(()=>{});
+          fetch(`/api/portal/sub/compliance?token=${token}`,{headers}).then(r=>r.json()).then(d=>setComplianceDocs(d.compliance_docs||[])).catch(e=>console.error('[sub-portal] compliance refresh failed',e));
         }
         refreshActivity();
-      } else showToast(res.error||'Upload failed.');
-    }catch{showToast('Upload failed.');}
-    setUploading(false);
+      } else showToast(res?.error||"Couldn't save the document. Please try again.");
+    }catch(e){
+      console.error('[sub-portal] document upload failed',e);
+      showToast(e instanceof Error&&e.message?`Upload failed: ${e.message}`:'No connection — the file was not uploaded. Try again.');
+    }finally{
+      setUploading(false);setUploadProgress(null);
+    }
   };
   const renderDocuments=()=>{
     const files=documents.filter((d:any)=>!isMedia(d));
@@ -1395,7 +1463,7 @@ export default function SubPortal(){
       <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
         <div style={card()}>
           <div style={{fontSize:16,fontWeight:800,color:TEXT,marginBottom:4}}>Upload a Document</div>
-          <div style={{fontSize:12,color:DIM,marginBottom:14}}>PDF, Excel, Word, CSV, photos or video &middot; 100 MB max. Insurance, W-9 and other compliance docs update your payment status automatically.</div>
+          <div style={{fontSize:12,color:DIM,marginBottom:14}}>PDF, Excel, Word, CSV, photos or video &middot; {DOCUMENT_MAX_MB} MB max. Insurance, W-9 and other compliance docs update your payment status automatically.</div>
           <div style={{display:'flex',gap:10,flexWrap:'wrap',alignItems:'flex-end'}}>
             <div><label style={labelS}>Category</label>
               <select value={docCategory} onChange={e=>setDocCategory(e.target.value)} style={{...inputS,width:200}}>
@@ -1405,9 +1473,9 @@ export default function SubPortal(){
               <div><label style={labelS}>Expiration Date</label>
                 <SaguaroDatePicker value={docExpiry} onChange={v=>setDocExpiry(v)} style={{...inputS,width:170}}/></div>
             )}
-            <label style={{...btnS(GOLD),display:'inline-flex',alignItems:'center',gap:8,opacity:uploading?0.6:1}}>
-              {uploading?'Uploading\u2026':'\u2191 Choose File & Upload'}
-              <input type="file" accept=".pdf,.xls,.xlsx,.doc,.docx,.csv,image/*,video/*" style={{display:'none'}} disabled={uploading}
+            <label style={{...btnS(GOLD),display:'inline-flex',alignItems:'center',gap:8,minHeight:44,boxSizing:'border-box',opacity:uploading?0.6:1,cursor:uploading?'wait':'pointer'}}>
+              {uploading?(uploadProgress!=null&&uploadProgress<100?`Uploading\u2026 ${uploadProgress}%`:'Saving\u2026'):'\u2191 Choose File & Upload'}
+              <input type="file" accept={DOCUMENT_ACCEPT} style={{display:'none'}} disabled={uploading}
                 onChange={e=>{handleDocUpload(e.target.files?.[0]||null);e.currentTarget.value='';}}/>
             </label>
           </div>
@@ -1577,7 +1645,12 @@ export default function SubPortal(){
   return(
     <div style={{minHeight:'100vh',background:DARK,fontFamily:'system-ui,-apple-system,sans-serif',color:TEXT}}>
       {toast&&<div role="status" style={{position:'fixed',left:16,right:16,bottom:'max(20px, env(safe-area-inset-bottom))',margin:'0 auto',width:'fit-content',maxWidth:520,textAlign:'center',zIndex:9999,background:RAISED,border:`1px solid ${GOLD}`,borderRadius:10,padding:'12px 20px',color:TEXT,fontSize:13,fontWeight:600,boxShadow:'0 8px 32px rgba(0,0,0,.5)',animation:'fadeIn .3s ease'}}>{toast}</div>}
-      {!isOnline&&<div style={{background:RED,color:'#fff',textAlign:'center',padding:'6px 16px',fontSize:12,fontWeight:700}}>You are currently offline. Changes will sync when connection is restored.</div>}
+      {!isOnline&&<div style={{background:RED,color:'#fff',textAlign:'center',padding:'6px 16px',fontSize:12,fontWeight:700}}>You&apos;re offline. Daily logs are saved on this phone until you&apos;re back; everything else needs a connection.</div>}
+
+      {unloaded.length>0&&<div role="alert" style={{display:'flex',flexWrap:'wrap',alignItems:'center',justifyContent:'space-between',gap:10,padding:'10px 16px',background:RAISED,borderBottom:`1px solid ${AMBER}`}}>
+        <span style={{fontSize:13,color:AMBER,fontWeight:600}}>{unloaded.join(', ')} didn&apos;t load — those tabs may be missing things.</span>
+        <button onClick={()=>window.location.reload()} style={{minHeight:44,padding:'0 16px',borderRadius:8,border:`1px solid ${AMBER}`,background:'transparent',color:AMBER,fontWeight:700,fontSize:13,cursor:'pointer'}}>Reload</button>
+      </div>}
 
       {/* Header */}
       <header style={{background:RAISED,borderBottom:`1px solid ${BORDER}`,padding:'12px 24px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>

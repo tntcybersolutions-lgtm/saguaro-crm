@@ -8,6 +8,7 @@ import {
   SUB_FILES_BUCKET, complianceFolder, expiryDay, isComplianceDocType, ownsPath, subPortalFilePrefix,
 } from '@/lib/sub-portal-files';
 import { fileNameFromUrl } from '@/lib/sub-portal-view';
+import { LOCAL_DAY_HEADER, daysUntilDay, plausibleToday } from '@/lib/calendar-day';
 
 async function authenticateSubPortal(req: NextRequest) {
   const token =
@@ -28,14 +29,18 @@ async function authenticateSubPortal(req: NextRequest) {
 
 type ComplianceRow = { expiry_date?: string | null; file_url?: string | null } & Record<string, unknown>;
 
-/** Expiration status + days left, and a live link to the file (the bucket is private). */
-async function present(doc: ComplianceRow) {
+/**
+ * Expiration status + days left, and a live link to the file (the bucket is private).
+ * expiry_date is a calendar day, good through its end (lib/calendar-day): 0 days
+ * left is the last valid day, not "expired". `today` is the sub's own day.
+ */
+async function present(doc: ComplianceRow, today: string) {
   let expiration_status = 'valid';
   let days_until_expiry: number | null = null;
   if (doc.expiry_date) {
-    days_until_expiry = Math.ceil((new Date(doc.expiry_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-    if (days_until_expiry < 0) expiration_status = 'expired';
-    else if (days_until_expiry <= 30) expiration_status = 'expiring_soon';
+    days_until_expiry = daysUntilDay(doc.expiry_date, today);
+    if (days_until_expiry !== null && days_until_expiry < 0) expiration_status = 'expired';
+    else if (days_until_expiry !== null && days_until_expiry <= 30) expiration_status = 'expiring_soon';
   }
   const file_url = doc.file_url ? (await signUrl(doc.file_url, 3600)) || null : null;
   return { ...doc, file_url, expiration_status, days_until_expiry };
@@ -67,7 +72,8 @@ export async function GET(req: NextRequest) {
 
     if (error) throw error;
 
-    const compliance_docs = await Promise.all(((docs || []) as ComplianceRow[]).map(present));
+    const today = plausibleToday(req.headers.get(LOCAL_DAY_HEADER));
+    const compliance_docs = await Promise.all(((docs || []) as ComplianceRow[]).map((d) => present(d, today)));
     return NextResponse.json({ compliance_docs });
   } catch (err) {
     return apiError('portal/sub/compliance', err, "Couldn't load your compliance documents.");
@@ -156,7 +162,7 @@ export async function POST(req: NextRequest) {
       metadata: { title: fileName, category: docType, compliance_doc_id: (doc as { id: string }).id, expiry_date: expiry.day, by: session.sub_company },
     } as never), 'portal_activity insert');
 
-    const presented = await present(doc as ComplianceRow);
+    const presented = await present(doc as ComplianceRow, plausibleToday(req.headers.get(LOCAL_DAY_HEADER)));
     return NextResponse.json(
       { compliance_doc: { ...presented, file_url: viewUrl }, message: 'Document uploaded successfully' },
       { status: 201 }

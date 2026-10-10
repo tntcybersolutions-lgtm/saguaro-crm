@@ -162,14 +162,36 @@ export async function POST(req: NextRequest) {
     if (!invite) return NextResponse.json({ error: 'Invitation not found' }, { status: 404 });
     const inv = invite as Record<string, string>;
 
-    const { data: pkg } = await db
+    const { data: pkg, error: pkgErr } = await db
       .from('bid_packages')
-      .select('id, project_id, tenant_id, bid_due_date, due_date, status')
+      .select('id, project_id, tenant_id, bid_due_date, due_date, status, sub_portal_enabled, sub_portal_expires_at')
       .eq('id', inv.bid_package_id)
       .eq('tenant_id', session.tenant_id)
       .maybeSingle();
+    if (pkgErr) throw pkgErr;
     if (!pkg) return NextResponse.json({ error: 'Bid package not found' }, { status: 404 });
-    const p = pkg as Record<string, string>;
+    const p = pkg as Record<string, any>;
+
+    /* The package's own state was never checked here, so a sub could land a
+       bid on a draft the GC had not issued, or on a package already closed or
+       awarded. Same rule as the bidder link (portal/[token]/respond), plus the
+       portal switch and link expiry the bidder's jacket honours. */
+    const pkgStatus = String(p.status || 'draft').toLowerCase();
+    if (pkgStatus === 'draft' || pkgStatus === 'pending') {
+      return NextResponse.json(
+        { error: 'This bid package has not been issued yet. The general contractor will send it when the documents are ready.' },
+        { status: 409 },
+      );
+    }
+    if (['closed', 'awarded', 'cancelled', 'canceled', 'archived'].includes(pkgStatus)) {
+      return NextResponse.json({ error: 'Bidding for this package has closed.' }, { status: 409 });
+    }
+    if (p.sub_portal_enabled === false) {
+      return NextResponse.json({ error: 'This bid package is no longer accepting bids.' }, { status: 409 });
+    }
+    if (p.sub_portal_expires_at && new Date(p.sub_portal_expires_at).getTime() < Date.now()) {
+      return NextResponse.json({ error: 'This link has expired. Contact the general contractor.' }, { status: 410 });
+    }
 
     const due = p.bid_due_date || p.due_date;
     if (due && new Date(due).getTime() < Date.now()) {

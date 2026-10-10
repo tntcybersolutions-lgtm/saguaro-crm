@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 /** Mark a pay app PAID — with the two links the old route dropped:
  *  1. GATE: unsigned conditional waivers that block payment stop the action
@@ -17,11 +18,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const body = await req.json().catch(() => ({} as { overrideWaivers?: boolean }));
 
     // ── Waiver gate ──
-    const { data: waivers } = await db
+    const { data: waivers, error: waiverErr } = await db
       .from('lien_waivers')
       .select('id, sub_id, status, amount, blocks_payment, claimant_name, company_name')
       .eq('pay_application_id', id)
       .eq('tenant_id', user.tenantId);
+    /* A failed read must stop the payment, not wave it through: with no rows
+       the gate saw no unsigned waivers and marked the pay app paid. */
+    if (waiverErr) throw waiverErr;
     const blocking = (waivers || []).filter(
       (w: { status: string | null; blocks_payment: boolean | null }) =>
         w.blocks_payment !== false && (w.status === 'pending' || w.status === 'sent'),
@@ -50,7 +54,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (paDue > 0) {
       // paid_amount exists in the LIVE schema (migration 017) — the generated
       // types predate it, hence the unknown casts.
-      const { data: prime } = await db
+      const { data: prime, error: primeErr } = await db
         .from('contracts')
         .select('id, paid_amount, invoiced_amount')
         .eq('tenant_id', user.tenantId)
@@ -58,6 +62,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         .eq('contract_type', 'prime')
         .limit(1)
         .maybeSingle();
+      if (primeErr) throw primeErr;
       if (prime) {
         const p = prime as unknown as { id: string; paid_amount: number | null };
         await must(db.from('contracts')
@@ -88,7 +93,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       unconditionalWaivers: signed.length,
       overrode: blocking.length > 0 && !!body.overrideWaivers,
     });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (err) {
+    return apiError('pay-apps/paid', err, "Couldn't mark the pay app paid. Please try again.");
   }
 }
