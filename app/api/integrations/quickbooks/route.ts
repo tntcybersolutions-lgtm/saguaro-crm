@@ -8,7 +8,7 @@ import { requestDay } from '@/lib/time-zone';
 import { publicQuickBooksConfig, quickBooksConfig } from '@/lib/quickbooks/config';
 import {
   QBO_STATE_COOKIE, QBO_STATE_COOKIE_PATH, QBO_STATE_MAX_AGE_SECONDS,
-  buildAuthorizeUrl, isNavigation, newOAuthState, stateCookieValue,
+  buildAuthorizeUrl, isNavigation, newOAuthState, stateCookieSecure, stateCookieValue,
 } from '@/lib/quickbooks/oauth';
 import { QBO_PAGE_PATH, QBO_RETURN_MESSAGES, qboReturnPath, type QboReturnCode } from '@/lib/quickbooks/return-codes';
 import { NEEDS_RECONNECT, isConnectedRow, loadQboRow, revokeAtIntuit } from '@/lib/quickbooks/client';
@@ -73,7 +73,7 @@ async function connect(req: NextRequest) {
   const res = NextResponse.redirect(buildAuthorizeUrl({ clientId: cfg.clientId, redirectUri: cfg.redirectUri, state }));
   res.cookies.set(QBO_STATE_COOKIE, stateCookieValue(state, g.user.id), {
     httpOnly: true,
-    secure: req.nextUrl.protocol === 'https:',
+    secure: stateCookieSecure(req.nextUrl.protocol),
     sameSite: 'lax',
     maxAge: QBO_STATE_MAX_AGE_SECONDS,
     path: QBO_STATE_COOKIE_PATH,

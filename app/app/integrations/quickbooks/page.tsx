@@ -383,8 +383,8 @@ export default function QuickBooksPage() {
 
           {lastRun && failuresFirst.length > 0 && (
             <SectionCard title="This send" subtitle={lastRun.counts ? countLine(lastRun.counts) : undefined} style={{ marginBottom: 24 }}>
-              {failuresFirst.map((r) => (
-                <div key={`${r.entity}-${r.id}`} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '10px 0', borderBottom: `1px solid ${LINE}`, flexWrap: 'wrap' }}>
+              {failuresFirst.map((r, i) => (
+                <div key={`${r.entity}-${r.id}-${i}`} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '10px 0', borderBottom: `1px solid ${LINE}`, flexWrap: 'wrap' }}>
                   <Pill tone={OUTCOME_TONE[r.outcome]}>{OUTCOME_WORD[r.outcome]}</Pill>
                   <div style={{ flex: 1, minWidth: 200 }}>
                     <div style={{ fontSize: 14, color: TEXT, fontWeight: 600 }}>{ENTITY_WORD[r.entity]} · {r.label}</div>

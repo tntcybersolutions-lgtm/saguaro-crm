@@ -9,7 +9,7 @@ import {
 } from './config';
 import {
   accessTokenExpired, buildAuthorizeUrl, checkOAuthState, isNavigation, newOAuthState, parseStateCookie,
-  safeEqual, stateCookieValue, tokenColumnsFromGrant,
+  safeEqual, stateCookieSecure, stateCookieValue, tokenColumnsFromGrant,
 } from './oauth';
 import {
   cleanName, countOutcomes, customerPayload, invoiceDocNumber, invoiceMarker, invoicePayload, normalizeEntities,
@@ -18,6 +18,8 @@ import {
 } from './mapping';
 import { cacheFor, companyChanged, pushHistory, stripSecrets, MAX_HISTORY, type QboHistoryEntry } from './settings';
 import { QBO_RETURN_MESSAGES, qboReturnPath } from './return-codes';
+import { QboApiError, QboReconnectError } from './client';
+import { runQuickBooksPush } from './sync';
 
 let failed = 0;
 function check(name: string, cond: boolean, detail = '') {
@@ -72,6 +74,8 @@ check('authorize host', auth.origin + auth.pathname === 'https://appcenter.intui
 check('authorize params', auth.searchParams.get('client_id') === 'ABC' && auth.searchParams.get('response_type') === 'code'
   && auth.searchParams.get('scope') === QBO_SCOPE && auth.searchParams.get('state') === s1
   && auth.searchParams.get('redirect_uri') === 'https://www.saguarocontrol.net/api/integrations/quickbooks/callback');
+check('state cookie Secure in production and on https', stateCookieSecure('http:', 'production') && stateCookieSecure('https:', 'development'));
+check('state cookie not Secure only on plain-http dev', !stateCookieSecure('http:', 'development'));
 check('isNavigation: sec-fetch-mode navigate', isNavigation(new Headers({ 'sec-fetch-mode': 'navigate' })));
 check('isNavigation: fetch is not', !isNavigation(new Headers({ 'sec-fetch-mode': 'cors', accept: 'text/html' })));
 check('isNavigation: old browser by Accept', isNavigation(new Headers({ accept: 'text/html,application/xhtml+xml' })));
@@ -204,5 +208,146 @@ for (const code of ['connected', 'denied', 'state', 'signin', 'forbidden', 'miss
   check(`return code ${code}`, !!QBO_RETURN_MESSAGES[code]?.msg && qboReturnPath(code) === `/app/integrations/quickbooks?qb=${code}`);
 }
 
-if (failed) { console.error(`\n${failed} assertion(s) failed`); process.exit(1); }
-console.log('\nall quickbooks assertions held');
+/* ── 10. The push itself, against a fake QuickBooks and a fake database ── */
+type Row = Record<string, unknown>;
+type Write = { table: string; patch: Row; filters: [string, unknown][] };
+/** Just enough of supabase-js: reads return the table's rows, updates are recorded. */
+function fakeDb(tables: Record<string, Row[]>) {
+  const writes: Write[] = [];
+  const from = (table: string) => {
+    let patch: Row | null = null;
+    const filters: [string, unknown][] = [];
+    const q: Record<string, unknown> = {};
+    for (const m of ['select', 'in', 'is', 'or', 'order', 'limit', 'not']) q[m] = () => q;
+    q.eq = (c: string, v: unknown) => { filters.push([c, v]); return q; };
+    q.update = (p: Row) => { patch = p; return q; };
+    q.then = (res: (v: unknown) => unknown, rej: (e: unknown) => unknown) => Promise.resolve(
+      patch ? (writes.push({ table, patch, filters }), { error: null }) : { data: tables[table] ?? [], error: null, count: (tables[table] ?? []).length },
+    ).then(res, rej);
+    return q;
+  };
+  return { db: { from } as unknown as Parameters<typeof runQuickBooksPush>[0]['db'], writes };
+}
+type QRec = { Id: string; DisplayName?: string; Name?: string; DocNumber?: string; PrivateNote?: string; Active?: boolean; AccountType?: string };
+/** A QuickBooks company: query by the one field the push filters on, create appends. */
+function fakeQbo(seed: Partial<Record<'Customer' | 'Vendor' | 'Invoice' | 'Item' | 'Account', QRec[]>>, opts: { failCreate?: (entity: string, payload: Row) => QboApiError | QboReconnectError | null } = {}) {
+  const store: Record<string, QRec[]> = { Customer: [], Vendor: [], Invoice: [], Item: [], Account: [], ...seed };
+  const created: { entity: string; payload: Row; Id: string }[] = [];
+  let next = 500;
+  const client = {
+    realmId: 'R1',
+    async query(entity: string, where: string) {
+      const m = where.match(/^(\w+) = '((?:[^'\\]|\\.)*)'$/);
+      const [, field, raw] = m ?? [];
+      const val = (raw ?? '').replace(/\\(.)/g, '$1');
+      return (store[entity] ?? []).filter((r) => (r as Record<string, unknown>)[field] === val);
+    },
+    async create(entity: string, payload: Row) {
+      const err = opts.failCreate?.(entity, payload);
+      if (err) throw err;
+      const rec = { Id: String(next++), ...payload } as QRec;
+      (store[entity] ??= []).push(rec);
+      created.push({ entity, payload, Id: rec.Id });
+      return rec;
+    },
+  };
+  return { client: client as unknown as Parameters<typeof runQuickBooksPush>[0]['client'], store, created };
+}
+const emptyCache = () => ({ realm: 'R1', item: null, customers: {} as Record<string, string> });
+
+async function pushChecks() {
+  const subRow = { ...sub, id: 'sub-1' };
+  const t = () => ({ pay_applications: [pa() as unknown as Row], projects: [project as unknown as Row], subcontractors: [subRow as unknown as Row] });
+
+  // 10a. First send: existing customer linked, Services item used, invoice + vendor created, ids saved.
+  {
+    const { db, writes } = fakeDb(t());
+    const q = fakeQbo({ Customer: [{ Id: '58', DisplayName: 'Pima County' }], Item: [{ Id: '7', Name: 'Services' }] });
+    const run = await runQuickBooksPush({ db, tenantId: 'T1', client: q.client, entities: ['customers', 'vendors', 'invoices'], zone, startDay: null, cache: emptyCache() });
+    const invCreate = q.created.find((c) => c.entity === 'Invoice');
+    const body = invCreate?.payload as { CustomerRef?: { value: string }; Line?: { Amount: number; SalesItemLineDetail: { ItemRef: { value: string } } }[] } | undefined;
+    check('push: invoice billed to the existing owner customer (linked, not created)', body?.CustomerRef?.value === '58' && !q.created.some((c) => c.entity === 'Customer'), JSON.stringify(q.created.map((c) => c.entity)));
+    check('push: invoice amount is line 8, item is Services', body?.Line?.[0].Amount === 48250.5 && body?.Line?.[0].SalesItemLineDetail.ItemRef.value === '7');
+    const paWrite = writes.find((w) => w.table === 'pay_applications');
+    check('push: qbo_invoice_id saved, tenant-scoped', paWrite?.patch.qbo_invoice_id === invCreate?.Id && paWrite?.filters.some(([c, v]) => c === 'tenant_id' && v === 'T1') === true, JSON.stringify(paWrite));
+    const subWrite = writes.find((w) => w.table === 'subcontractors');
+    check('push: vendor created and qbo_vendor_id saved', !!subWrite && subWrite.patch.qbo_vendor_id === q.created.find((c) => c.entity === 'Vendor')?.Id);
+    check('push: results per record', run.results.filter((r) => r.entity === 'invoice' && r.outcome === 'created').length === 1
+      && run.results.some((r) => r.entity === 'vendor' && r.outcome === 'created')
+      && run.results.some((r) => r.entity === 'customer' && r.outcome === 'linked'), JSON.stringify(run.results));
+    check('push: customer + item remembered for next time', run.cache.customers['pima county'] === '58' && run.cache.item?.id === '7');
+    check('push: not a reconnect', run.reconnect === null);
+  }
+
+  // 10b. Re-send after a crash between "created in QuickBooks" and "id saved": linked, not duplicated.
+  {
+    const { db, writes } = fakeDb(t());
+    const q = fakeQbo({
+      Customer: [{ Id: '58', DisplayName: 'Pima County' }], Item: [{ Id: '7', Name: 'Services' }],
+      Invoice: [{ Id: '900', DocNumber: '2026-014-PA4', PrivateNote: `${invoiceMarker('pa-1')} · Pima` }],
+      Vendor: [{ Id: '77', DisplayName: 'Sonoran Electric LLC' }],
+    });
+    const run = await runQuickBooksPush({ db, tenantId: 'T1', client: q.client, entities: ['vendors', 'invoices'], zone, startDay: null, cache: emptyCache() });
+    check('re-send: no invoice or vendor created', !q.created.some((c) => c.entity === 'Invoice' || c.entity === 'Vendor'), JSON.stringify(q.created));
+    check('re-send: invoice 900 linked and saved', writes.some((w) => w.table === 'pay_applications' && w.patch.qbo_invoice_id === '900') && run.results.some((r) => r.entity === 'invoice' && r.outcome === 'linked'));
+    check('re-send: vendor 77 linked and saved', writes.some((w) => w.table === 'subcontractors' && w.patch.qbo_vendor_id === '77'));
+  }
+
+  // 10c. Same invoice number but NOT ours (no marker): never adopted.
+  {
+    const { db } = fakeDb(t());
+    const q = fakeQbo({ Customer: [{ Id: '58', DisplayName: 'Pima County' }], Item: [{ Id: '7', Name: 'Services' }], Invoice: [{ Id: '901', DocNumber: '2026-014-PA4', PrivateNote: 'keyed by hand' }] });
+    await runQuickBooksPush({ db, tenantId: 'T1', client: q.client, entities: ['invoices'], zone, startDay: null, cache: emptyCache() });
+    check('foreign invoice with the same number is not adopted', q.created.some((c) => c.entity === 'Invoice'));
+  }
+
+  // 10d. New owner, no item: customer created, Progress Billing item created on a real income account.
+  {
+    const { db } = fakeDb(t());
+    const q = fakeQbo({ Account: [{ Id: '1', Name: 'Uncategorized Income', AccountType: 'Income' }, { Id: '2', Name: 'Job Materials', AccountType: 'Cost of Goods Sold' }, { Id: '4', Name: 'Construction Income', AccountType: 'Income' }] });
+    await runQuickBooksPush({ db, tenantId: 'T1', client: q.client, entities: ['invoices'], zone, startDay: null, cache: emptyCache() });
+    const item = q.created.find((c) => c.entity === 'Item')?.payload as { Name?: string; Type?: string; IncomeAccountRef?: { value: string } } | undefined;
+    check('item: Progress Billing created as a Service on Construction Income', item?.Name === 'Progress Billing' && item?.Type === 'Service' && item?.IncomeAccountRef?.value === '4', JSON.stringify(item));
+    check('customer: created from the job owner', (q.created.find((c) => c.entity === 'Customer')?.payload as { DisplayName?: string })?.DisplayName === 'Pima County');
+  }
+
+  // 10e. Start date holds earlier pay apps back; nothing is sent for them.
+  {
+    const { db, writes } = fakeDb(t());
+    const q = fakeQbo({ Customer: [{ Id: '58', DisplayName: 'Pima County' }], Item: [{ Id: '7', Name: 'Services' }] });
+    const run = await runQuickBooksPush({ db, tenantId: 'T1', client: q.client, entities: ['invoices'], zone, startDay: '2026-10-01', cache: emptyCache() });
+    check('start date: held back, counted, nothing created or written', run.beforeStart === 1 && q.created.length === 0 && writes.length === 0);
+  }
+
+  // 10f. One record refused by QuickBooks: reported with the reason; the others still go.
+  {
+    const two = { ...t(), subcontractors: [subRow as unknown as Row, { ...subRow, id: 'sub-2', company_name: 'Desert Test & Balance' } as unknown as Row] };
+    const { db, writes } = fakeDb(two);
+    const q = fakeQbo({}, { failCreate: (e, p) => (e === 'Vendor' && p.DisplayName === 'Sonoran Electric LLC' ? new QboApiError(400, 'Duplicate Name Exists Error — Another customer, vendor or employee is already using this name.', '6240') : null) });
+    const run = await runQuickBooksPush({ db, tenantId: 'T1', client: q.client, entities: ['vendors'], zone, startDay: null, cache: emptyCache() });
+    const bad = run.results.find((r) => r.id === 'sub-1');
+    check('refused record: failed with Intuit\'s reason, no id saved', bad?.outcome === 'failed' && (bad.message ?? '').includes('Duplicate Name') && !writes.some((w) => w.filters.some(([, v]) => v === 'sub-1')));
+    check('refused record: the next one still sent', run.results.some((r) => r.id === 'sub-2' && r.outcome === 'created'));
+  }
+
+  // 10g. Authorization lost mid-run: stops, reports what it did, says reconnect.
+  {
+    const { db } = fakeDb(t());
+    const q = fakeQbo({}, { failCreate: () => new QboReconnectError('QuickBooks authorization expired or was revoked. Connect QuickBooks again.') });
+    const run = await runQuickBooksPush({ db, tenantId: 'T1', client: q.client, entities: ['vendors', 'invoices'], zone, startDay: null, cache: emptyCache() });
+    check('reconnect: run stops with the reason', (run.reconnect ?? '').includes('Connect QuickBooks again') && !run.results.some((r) => r.entity === 'invoice'));
+  }
+
+  // 10h. A job with no owner: the invoice fails loudly — never billed to customer "1".
+  {
+    const { db } = fakeDb({ ...t(), projects: [{ ...project, owner_entity: null, owner_name: null } as unknown as Row], pay_applications: [pa({ owner_name: null }) as unknown as Row] });
+    const q = fakeQbo({ Item: [{ Id: '7', Name: 'Services' }] });
+    const run = await runQuickBooksPush({ db, tenantId: 'T1', client: q.client, entities: ['invoices'], zone, startDay: null, cache: emptyCache() });
+    check('no owner: failed, nothing created', q.created.length === 0 && run.results[0]?.outcome === 'failed' && (run.results[0]?.message ?? '').includes('no owner'));
+  }
+}
+
+pushChecks().then(() => {
+  if (failed) { console.error(`\n${failed} assertion(s) failed`); process.exit(1); }
+  console.log('\nall quickbooks assertions held');
+}, (e) => { console.error('FAIL push checks threw', e); process.exit(1); });

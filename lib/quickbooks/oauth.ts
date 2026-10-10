@@ -11,6 +11,11 @@ export const QBO_STATE_COOKIE = 'qbo_oauth_state';
 export const QBO_STATE_MAX_AGE_SECONDS = 600;
 /** Scoped to the QuickBooks routes; the callback lives under this path. */
 export const QBO_STATE_COOKIE_PATH = '/api/integrations/quickbooks';
+/** Secure everywhere except plain-http local development. */
+export function stateCookieSecure(protocol: string, nodeEnv: string | undefined = process.env.NODE_ENV): boolean {
+  return nodeEnv === 'production' || protocol === 'https:';
+}
+
 /** Refresh this long before Intuit's stated expiry so a call never lands on a dead token. */
 export const QBO_EXPIRY_SKEW_MS = 5 * 60 * 1000;
 

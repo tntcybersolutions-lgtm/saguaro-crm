@@ -4,7 +4,7 @@ import { must, tryWrite } from '@/lib/db-write';
 import type { Json } from '@/lib/database.types';
 import { requestDay } from '@/lib/time-zone';
 import { quickBooksConfig } from '@/lib/quickbooks/config';
-import { QBO_STATE_COOKIE, QBO_STATE_COOKIE_PATH, checkOAuthState, tokenColumnsFromGrant } from '@/lib/quickbooks/oauth';
+import { QBO_STATE_COOKIE, QBO_STATE_COOKIE_PATH, checkOAuthState, stateCookieSecure, tokenColumnsFromGrant } from '@/lib/quickbooks/oauth';
 import { QBO_PAGE_PATH, qboReturnPath, type QboReturnCode } from '@/lib/quickbooks/return-codes';
 import { QBO_PROVIDER, QboApiError, QboClient, exchangeCode, loadQboRow, type QboRow } from '@/lib/quickbooks/client';
 import { asSettings, cacheFor, companyChanged, stripSecrets, type QboSettings } from '@/lib/quickbooks/settings';
@@ -22,7 +22,7 @@ import { asSettings, cacheFor, companyChanged, stripSecrets, type QboSettings } 
 /* ------------------------------------------------------------------ */
 export async function GET(req: NextRequest) {
   const url = req.nextUrl;
-  const secure = url.protocol === 'https:';
+  const secure = stateCookieSecure(url.protocol);
   const clearState = (res: NextResponse) => {
     res.cookies.set(QBO_STATE_COOKIE, '', { httpOnly: true, secure, sameSite: 'lax', maxAge: 0, path: QBO_STATE_COOKIE_PATH });
     return res;
