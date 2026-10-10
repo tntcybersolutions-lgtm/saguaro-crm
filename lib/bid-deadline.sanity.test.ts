@@ -64,12 +64,15 @@ check('every refusal is a 409 with words for the bidder', ['draft', 'closed'].ev
   const db = (tz: string | null, err: unknown = null) => ({ from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { time_zone: tz }, error: err }) }) }) }) });
   const hdr = (v: string | null) => ({ get: (n: string) => (n === 'x-time-zone' ? v : null) });
   check('the company zone decides', (await deadlineZone(db(CHI), 't1')) === CHI);
-  check("a bidder's device never moves the GC's deadline (company wins over header)", (await deadlineZone(db(CHI), 't1', hdr(PHX))) === CHI);
-  check("no company zone: the GC's own device stands in", (await deadlineZone(db(null), 't1', hdr('America/Denver'))) === 'America/Denver');
+  check("a bidder's device never moves the GC's deadline (company wins over header)", (await deadlineZone(db(CHI), 't1', 'AZ', hdr(PHX))) === CHI);
+  check("no company zone: the job's state decides (Iowa → Chicago)", (await deadlineZone(db(null), 't1', 'IA')) === CHI);
+  check('…by state name too', (await deadlineZone(db(null), 't1', 'Iowa')) === CHI);
+  check("the job's state beats the GC's device", (await deadlineZone(db(null), 't1', 'IA', hdr('America/Denver'))) === CHI);
+  check("no company zone, no job state: the GC's own device stands in", (await deadlineZone(db(null), 't1', null, hdr('America/Denver'))) === 'America/Denver');
   const errs: string[] = []; const ce = console.error; console.error = (...a: unknown[]) => { errs.push(a.join(' ')); };
-  const z = await deadlineZone(db(null), 't1');
+  const z = await deadlineZone(db(null), 't1', 'Ontario');
   console.error = ce;
-  check('neither: UTC, and it is logged — never Phoenix', z === 'UTC' && errs.some((e) => /UTC/.test(e)), z);
+  check('none of them (not a US state): UTC, and it is logged — never Phoenix', z === 'UTC' && errs.some((e) => /UTC/.test(e)), z);
   let threw = false; try { await deadlineZone(db(null, new Error('boom')), 't1'); } catch { threw = true; }
   check('a failed company read throws rather than guess', threw);
 

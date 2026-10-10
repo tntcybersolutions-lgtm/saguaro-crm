@@ -2,7 +2,7 @@
  * Each company's own time zone — days, day ranges and deadlines in any zone.
  * Run: npx -y tsx lib/time-zone.sanity.test.ts   (also with TZ=America/Phoenix and TZ=Pacific/Kiritimati)
  */
-import { isTimeZone, dayIn, startOfDayIn, dayRangeIn, endOfDayIn, zoneOffsetMs, requestTimeZone, TIME_ZONE_HEADER } from './time-zone';
+import { isTimeZone, dayIn, startOfDayIn, dayRangeIn, endOfDayIn, zoneOffsetMs, requestTimeZone, TIME_ZONE_HEADER, stateTimeZone, jobTimeZone } from './time-zone';
 
 let failed = 0;
 function check(name: string, cond: boolean, detail = '') {
@@ -53,6 +53,14 @@ check('month end rolls over', iso(dayRangeIn('UTC', '2026-12-31').to) === '2027-
   check('junk stored company zone ignored', (await requestTimeZone(null, db('Phoenix'), 't1')).source === 'utc');
   let threw = false; try { await requestTimeZone(null, db(null, new Error('boom')), 't1'); } catch { threw = true; }
   check('a failed company read throws, not guesses', threw);
+
+  // A job's deadlines: the company's zone, else the job's state, else UTC.
+  check('Iowa job → Chicago', stateTimeZone('IA') === 'America/Chicago' && stateTimeZone(' iowa ') === 'America/Chicago');
+  check('every state + DC has a zone', ['AL','AK','AZ','AR','CA','CO','CT','DE','DC','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'].every((c) => isTimeZone(stateTimeZone(c))));
+  check('unknown state → null, not a home zone', stateTimeZone('') === null && stateTimeZone(null) === null && stateTimeZone('Ontario') === null);
+  check('company zone beats job state', JSON.stringify(await jobTimeZone(db('America/Denver'), 't1', 'IA')) === JSON.stringify({ zone: 'America/Denver', source: 'company' }));
+  check('no company zone → job state', JSON.stringify(await jobTimeZone(db(null), 't1', 'IA')) === JSON.stringify({ zone: 'America/Chicago', source: 'state' }));
+  check('neither → UTC, said so', JSON.stringify(await jobTimeZone(db(null), 't1', '')) === JSON.stringify({ zone: 'UTC', source: 'utc' }));
 
   if (failed) { console.error(`\n${failed} failed`); process.exit(1); }
   console.log('\nall passed');

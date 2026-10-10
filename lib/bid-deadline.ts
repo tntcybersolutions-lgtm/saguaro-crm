@@ -11,9 +11,9 @@
  * US zone (5 PM in Phoenix, 7 PM in Iowa) — and stayed shut through the whole
  * of the due day itself. Here the due day is read as a day and bidding stays
  * open until the last moment of that day IN THE GC COMPANY'S OWN TIME ZONE
- * (tenants.time_zone, lib/time-zone): a contractor in Iowa closes at midnight
- * Central, one in Phoenix at midnight Arizona. The deadline is the GC's, so a
- * bidder's device zone never moves it.
+ * (tenants.time_zone, else the job's state — lib/time-zone jobTimeZone): a
+ * contractor in Iowa closes at midnight Central, one in Phoenix at midnight
+ * Arizona. The deadline is the GC's, so a bidder's device zone never moves it.
  *
  * The day is the one at the front of `bid_due_date || due_date` — the same day
  * every screen displays, so what the GC typed, what the invite says and when
@@ -22,7 +22,7 @@
  * Pure except deadlineZone(), which reads the company's zone.
  */
 import { daysUntilDay, toDay } from '@/lib/calendar-day';
-import { companyTimeZone, dayIn, endOfDayIn, isTimeZone, TIME_ZONE_HEADER } from '@/lib/time-zone';
+import { dayIn, endOfDayIn, isTimeZone, jobTimeZone, stateTimeZone, TIME_ZONE_HEADER } from '@/lib/time-zone';
 
 type DueFields = { bid_due_date?: unknown; due_date?: unknown } | null | undefined;
 
@@ -53,23 +53,29 @@ export function daysUntilBidDue(p: DueFields, timeZone: string, now: Date = new 
 }
 
 /**
- * The zone a package's deadline is kept in: the GC company's (tenants.time_zone).
- * On a GC's own request, their device zone (x-time-zone) stands in when the
- * company has none recorded yet. A bidder's device never decides it. With
- * neither, UTC — logged, because it is a stand-in, not a place.
+ * The zone a package's deadline is kept in — lib/time-zone jobTimeZone: the GC
+ * company's own zone (tenants.time_zone), else the zone of the job's state
+ * (projects.state). On a GC's own request, their device zone (x-time-zone)
+ * stands in when neither is known. A bidder's device never decides it. With
+ * none of those, UTC — logged, because it is a stand-in, not a place. Never a
+ * guessed home zone.
  */
 export async function deadlineZone(
   db: { from: (t: string) => any },
   tenantId: string | null | undefined,
+  jobState?: unknown,
   gcHeaders?: { get(name: string): string | null } | null,
 ): Promise<string> {
   if (tenantId) {
-    const company = await companyTimeZone(db, tenantId);
-    if (company) return company;
+    const job = await jobTimeZone(db, tenantId, jobState);
+    if (job.source !== 'utc') return job.zone;
+  } else {
+    const byState = stateTimeZone(jobState);
+    if (byState) return byState;
   }
   const device = gcHeaders?.get(TIME_ZONE_HEADER) ?? null;
   if (isTimeZone(device)) return device;
-  console.error(`[bid-deadline] no time zone recorded for tenant ${tenantId ?? '(none)'} — bid deadline computed in UTC`);
+  console.error(`[bid-deadline] no time zone recorded for tenant ${tenantId ?? '(none)'} and no job state — bid deadline computed in UTC`);
   return 'UTC';
 }
 
@@ -80,7 +86,7 @@ export function isBiddingStatus(status: unknown): boolean {
   return (BIDDING_STATUSES as readonly string[]).includes(String(status ?? '').toLowerCase().trim());
 }
 
-export type BidRefusal = { status: number; error: string; reason: 'not_issued' | 'over' | 'portal_off' | 'past_due' };
+export type BidRefusal = { status: number; error: string; reason: 'not_issued' | 'over' | 'portal_off' | 'expired' | 'past_due' };
 
 /**
  * Whether a bid may land on this package right now — the one rule the token
@@ -90,10 +96,11 @@ export type BidRefusal = { status: number; error: string; reason: 'not_issued' |
  *   not issued yet  draft / pending — the GC is still assembling the jacket
  *   over            closed / awarded / cancelled / anything not open or sent
  *   switched off    sub_portal_enabled is the GC's kill switch for the package
+ *   expired         sub_portal_expires_at has passed (410, as the jacket read answers)
  *   past due        the due day is over in the GC company's zone
  */
 export function bidRefusal(
-  p: DueFields & { status?: unknown; sub_portal_enabled?: unknown },
+  p: DueFields & { status?: unknown; sub_portal_enabled?: unknown; sub_portal_expires_at?: unknown },
   timeZone: string,
   now: Date = new Date(),
 ): BidRefusal | null {
@@ -106,6 +113,10 @@ export function bidRefusal(
   }
   if (p?.sub_portal_enabled !== true) {
     return { status: 409, reason: 'portal_off', error: 'This bid package is not accepting bids online. Contact the general contractor.' };
+  }
+  const expires = typeof p?.sub_portal_expires_at === 'string' ? Date.parse(p.sub_portal_expires_at) : NaN;
+  if (Number.isFinite(expires) && expires < now.getTime()) {
+    return { status: 410, reason: 'expired', error: 'This link has expired. Contact the general contractor.' };
   }
   if (biddingClosed(p, timeZone, now)) {
     return { status: 409, reason: 'past_due', error: 'Bidding for this package has closed.' };

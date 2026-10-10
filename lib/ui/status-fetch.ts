@@ -16,6 +16,7 @@
  */
 import { describeRequest, type StatusWords } from './status-labels';
 import { step, getStatusGroups } from './status';
+import { TIME_ZONE_HEADER, deviceTimeZone } from '@/lib/time-zone';
 
 export const STATUS_HEADER = 'x-saguaro-status';
 
@@ -43,6 +44,29 @@ function withoutHeader(input: RequestInfo | URL, init?: RequestInit): [RequestIn
     if (h.has(STATUS_HEADER)) { h.delete(STATUS_HEADER); init = { ...init, headers: h }; }
   }
   return [input, init];
+}
+
+/**
+ * Every call to our own API says which time zone this device is in, so the
+ * server computes "today", deadlines and clock windows where the person is
+ * (lib/time-zone) — a contractor in Iowa gets Central days, not the server's.
+ */
+function withTimeZone(input: RequestInfo | URL, init: RequestInit | undefined, origin: string): [RequestInfo | URL, RequestInit | undefined] {
+  const zone = deviceTimeZone();
+  if (!zone) return [input, init];
+  let u: URL;
+  try { u = new URL(input instanceof Request ? input.url : String(input), origin); } catch { return [input, init]; }
+  if (u.origin !== origin || !u.pathname.startsWith('/api/')) return [input, init];
+  if (input instanceof Request && !init?.headers) {
+    if (input.headers.has(TIME_ZONE_HEADER)) return [input, init];
+    const h = new Headers(input.headers);
+    h.set(TIME_ZONE_HEADER, zone);
+    return [new Request(input, { headers: h }), init];
+  }
+  const h = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined));
+  if (h.has(TIME_ZONE_HEADER)) return [input, init];
+  h.set(TIME_ZONE_HEADER, zone);
+  return [input, { ...init, headers: h }];
 }
 
 /** Plain words for a refusal when the server didn't give any. */
@@ -115,6 +139,7 @@ export function installStatusFetch(): void {
   window.fetch = async function statusFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
     const flag = headerOf(input, init);
     if (flag != null) [input, init] = withoutHeader(input, init);
+    [input, init] = withTimeZone(input, init, window.location.origin);
     if (flag === 'off' || init?.keepalive) return original(input, init);
 
     const method = (init?.method || (input instanceof Request ? input.method : 'GET')).toUpperCase();

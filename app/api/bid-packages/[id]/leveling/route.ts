@@ -67,7 +67,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         .eq('bid_package_id', id).eq('tenant_id', user.tenantId),
       db.from('bid_package_items')
         .select('id, description, title, csi_code, quantity, unit, uom')
-        .eq('bid_package_id', id).eq('tenant_id', user.tenantId).order('sort_order'),
+        .eq('bid_package_id', id).eq('tenant_id', user.tenantId).order('sort_order').order('created_at').order('id'),
       /* Any stored AI reading. The page renders it as a SUGGESTION beside each
          bid — the GC accepts a figure into scope_gap_amount or ignores it. */
       db.from('bid_leveling_analyses')

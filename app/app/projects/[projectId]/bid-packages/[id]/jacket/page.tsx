@@ -21,6 +21,7 @@ import { WarningCircle } from '@phosphor-icons/react';
 import { PremiumSurface, SectionCard, PremiumEmpty, ghostButtonStyle } from '@/components/ui/premium';
 import BidJacketView, { type Jacket } from '@/components/BidJacketView';
 import BidJacketAssembly, { type Drift, type Issued } from '@/components/BidJacketAssembly';
+import JacketPdfButton from '@/components/JacketPdfButton';
 
 const DIM = 'var(--text-tertiary)';
 const AMBER = 'var(--warning)';
@@ -86,10 +87,18 @@ export default function BidJacketPage() {
   return (
     <PremiumSurface>
       <BidJacketView
-        jacket={jacket}
+        /* The view's "Printed Jacket" opens the stored PDF, which is right for
+           a bidder (no login, it is the copy they were sent). The GC gets
+           Download PDF below instead, built from the jacket on this screen,
+           so the stored copy's button is not offered twice here. */
+        jacket={{ ...jacket, package: { ...jacket.package, jacketPdfUrl: null } }}
         projectId={projectId}
         packageId={id}
         slot={
+          <>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+            <JacketPdfButton packageId={id} title={`${jacket.package.trade || jacket.package.name} — Bid Jacket`} />
+          </div>
           <BidJacketAssembly
             packageId={id}
             projectId={projectId}
@@ -103,6 +112,7 @@ export default function BidJacketPage() {
                server that holds it. */
             onChanged={load}
           />
+          </>
         }
       />
     </PremiumSurface>

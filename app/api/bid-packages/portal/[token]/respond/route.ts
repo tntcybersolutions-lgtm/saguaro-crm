@@ -55,7 +55,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
       /* name and trade are read so the history can say WHICH package the bid
          landed on. Without them the feed read "bid $11,450 on a package",
          which is the one detail that makes the line worth reading. */
-      .select('id, tenant_id, project_id, status, bid_due_date, due_date, name, trade, sub_portal_enabled')
+      .select('id, tenant_id, project_id, status, bid_due_date, due_date, name, trade, sub_portal_enabled, sub_portal_expires_at, projects(state)')
       .eq('id', inv.bid_package_id)
       .eq('tenant_id', tenantId)
       .maybeSingle();
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
        due DAY not yet over in the GC company's time zone. The deadline was
        new Date(due_date) — midnight UTC, the evening before in every US zone —
        so bidding shut before the day the invite named. */
-    const refusal = bidRefusal(p, await deadlineZone(db, tenantId));
+    const refusal = bidRefusal(p, await deadlineZone(db, tenantId, p.projects?.state));
     if (refusal) return NextResponse.json({ error: refusal.error }, { status: refusal.status });
 
     const now = new Date().toISOString();

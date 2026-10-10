@@ -26,11 +26,14 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
 import { buildComplianceForBidPackages } from '@/lib/compliance-autofile';
 import type { Database } from '@/lib/database.types';
-import { must, tryWrite } from '@/lib/db-write';
+import { must } from '@/lib/db-write';
 import { logActivity, money } from '@/lib/activity';
 import { laborAllocation, lineDirectCost } from '@/lib/takeoff-line-cost';
 import { resolveTenantCompany } from '@/lib/tenant-company';
+import { ownerOf } from '@/lib/bid-jacket-pdf';
 import { normalisePhase } from '@/lib/project-phase';
+import { insuranceSentence } from '@/lib/jacket-insurance';
+import { planRebuild, NOT_THIS_BUILDS, type ExistingPackage } from '@/lib/sage-package-guard';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -188,9 +191,11 @@ export async function GET(
         const company    = await resolveTenantCompany(supabase, tenantId, proj);
         const gcName     = company.name;
         const isBuilding = normalisePhase(proj.phase) === 'building';
-        const ownerName  = String(proj.owner_entity?.name || '');
-        const ownerAddr  = String(proj.owner_entity?.address || '');
-        const projAddr   = String(proj.address || '');
+        /* owner_entity is a TEXT column, so owner_entity.name was always
+           undefined and every pay app was written with a blank owner. */
+        const owner      = ownerOf(proj);
+        const ownerName  = owner?.name || '';
+        const ownerAddr  = owner?.address || '';
         const projState  = String(proj.state || '');
 
         // ── 3. Group by CSI division (skip trivial items < $500) ────────────
@@ -229,7 +234,8 @@ export async function GET(
         const divisionSummaries = divisions.map(([div, items]) => {
           const total   = items.reduce((s, i) => s + (i.total_cost || 0), 0);
           const divName = CSI_DIVISIONS[div]?.name || `Division ${div}`;
-          const lines   = items
+          /* A copy: sorting `items` in place reordered the bid form by cost. */
+          const lines   = [...items]
             .sort((a, b) => (b.total_cost || 0) - (a.total_cost || 0))
             .slice(0, 10)
             .map(i => `  ${i.description}: ${i.quantity} ${i.unit} @ $${i.unit_cost?.toFixed(2)}`)
@@ -325,18 +331,45 @@ Rules:
           send('progress', { step: 2, pct: 30, message: 'Using rule-based defaults (AI content unavailable)' });
         }
 
-        // Remove any existing packages for this project before regenerating (idempotent)
-        const { data: existingPkgs } = await supabase
+        /* REPLACE ONLY WHAT THIS BUILD WROTE AND NOBODY HAS TOUCHED.
+           This used to delete every bid package on the project before writing
+           new ones, and the delete cascades to invites, bids and documents —
+           issued and awarded packages included. lib/sage-package-guard decides:
+           an untouched draft from an earlier build is replaced; anything issued,
+           invited, bid, filed into or edited is kept, and its division is not
+           written twice. Every read here must succeed — a guard that cannot see
+           the invites must not guess that there are none. */
+        const { data: existingPkgs, error: existingErr } = await supabase
           .from('bid_packages')
-          .select('id')
+          .select('id, status, takeoff_id, ai_generated, insurance_requirements, csi_codes, csi_division, jacket_generated_at, addendum_count, jacket_edits')
           .eq('project_id', takeoff.project_id)
           .eq('tenant_id', tenantId);
+        if (existingErr) throw existingErr;
 
-        if (existingPkgs && existingPkgs.length > 0) {
-          send('progress', { step: 3, pct: 32, message: `Replacing ${existingPkgs.length} existing packages...` });
-          const existingIds = existingPkgs.map((p: { id: string }) => p.id);
-          await tryWrite(supabase.from('bid_package_items').delete().eq('tenant_id', tenantId).in('bid_package_id', existingIds), 'bid_package_items delete');
-          await tryWrite(supabase.from('bid_packages').delete().eq('project_id', takeoff.project_id).eq('tenant_id', tenantId), 'bid_packages delete');
+        const existingList = (existingPkgs || []) as ExistingPackage[];
+        let plan: ReturnType<typeof planRebuild> = { replace: [], keep: [], keepDivisions: new Set<string>() };
+        if (existingList.length > 0) {
+          const ids = existingList.map((p) => p.id);
+          const [inv, bids, docs] = await Promise.all([
+            supabase.from('bid_package_invites').select('bid_package_id').eq('tenant_id', tenantId).in('bid_package_id', ids),
+            supabase.from('bid_submissions').select('bid_package_id').eq('tenant_id', tenantId).in('bid_package_id', ids),
+            supabase.from('bid_package_documents').select('bid_package_id').eq('tenant_id', tenantId).in('bid_package_id', ids),
+          ]);
+          if (inv.error) throw inv.error;
+          if (bids.error) throw bids.error;
+          if (docs.error) throw docs.error;
+          const idsOf = (rows: unknown) => new Set(((rows || []) as Array<{ bid_package_id: string }>).map((r) => r.bid_package_id));
+          plan = planRebuild(existingList, { invited: idsOf(inv.data), bids: idsOf(bids.data), documents: idsOf(docs.data) });
+        }
+
+        if (plan.replace.length > 0) {
+          send('progress', { step: 3, pct: 32, message: `Replacing ${plan.replace.length} untouched draft package${plan.replace.length === 1 ? '' : 's'} from the last build...` });
+          await must(supabase.from('bid_package_items').delete().eq('tenant_id', tenantId).in('bid_package_id', plan.replace), 'bid_package_items delete');
+          await must(supabase.from('bid_packages').delete().eq('tenant_id', tenantId).eq('project_id', takeoff.project_id).in('id', plan.replace), 'bid_packages delete');
+        }
+        const inUse = plan.keep.filter((k) => k.reason !== NOT_THIS_BUILDS).length;
+        if (inUse > 0) {
+          send('progress', { step: 3, pct: 33, message: `Keeping ${inUse} package${inUse === 1 ? '' : 's'} already in use (issued, invited, bid or edited).` });
         }
 
         send('progress', { step: 3, pct: 35, message: `Creating ${divisions.length} bid packages in database...` });
@@ -346,15 +379,20 @@ Rules:
           id: string; name: string; div: string; total: number;
           trade: string; requiresBond: boolean; insGl: number; insAuto: number; insWork: number;
         }> = [];
+        /* Divisions whose package could not be written whole. Reported, never
+           left half-built. */
+        const failedPackages: Array<{ div: string; name: string }> = [];
+        const skippedDivisions: string[] = [];
 
         for (const [div, items] of divisions) {
+          if (plan.keepDivisions.has(div)) { skippedDivisions.push(div); continue; }
           const total    = items.reduce((s, i) => s + (i.total_cost || 0), 0);
           const divName  = CSI_DIVISIONS[div]?.name || `Division ${div}`;
           const ai       = sagePackages[div];
 
           // Use Sage-written content, fall back to rules-based defaults
           const packageName   = ai?.name || `Division ${div} — ${divName}`;
-          const scopeSummary  = items
+          const scopeSummary  = [...items]
             .sort((a, b) => (b.total_cost || 0) - (a.total_cost || 0))
             .slice(0, 8)
             .map(i => `${i.description}: ${i.quantity} ${i.unit}`)
@@ -388,11 +426,19 @@ Rules:
                  invite route opens a package when invites actually go out. */
               status:                'draft',
               requires_bond:         requiresBond,
-              insurance_requirements: {
-                general_liability:   insGl,
-                auto_liability:      insAuto,
-                workers_compensation: insWork,
-              },
+              /* Readable words for the bidder, figures in the three limit
+                 columns. This used to pass an object to a TEXT column, and
+                 the jacket printed the JSON to every sub. */
+              insurance_requirements: insuranceSentence({ gl: insGl, auto: insAuto, wc: insWork }),
+              general_liability:     String(insGl),
+              auto_liability:        String(insAuto),
+              workers_compensation:  String(insWork),
+              csi_division:          div,
+              /* Marks the package as this build's, so a rebuild can tell it
+                 from one a GC made (lib/sage-package-guard). */
+              takeoff_id:            takeoffId,
+              ai_generated:          true,
+              ai_generated_at:       new Date().toISOString(),
             } as unknown as Database['public']['Tables']['bid_packages']['Insert'])
             .select()
             .single();
@@ -404,12 +450,15 @@ Rules:
 
           const pkgId = (pkg as any).id as string;
 
-          // Insert line items
+          /* The bid form, in the takeoff's order. A package whose lines will
+             not save is deleted again rather than left as a header with an
+             empty bid form that nobody can price. */
           if (items.length > 0) {
-            await must(supabase.from('bid_package_items').insert(
-              items.map(item => ({
+            const { error: itemsErr } = await supabase.from('bid_package_items').insert(
+              items.map((item, index) => ({
                 tenant_id:      tenantId,
                 bid_package_id: pkgId,
+                sort_order:     index,
                 description:    item.description,
                 quantity:       item.quantity,
                 unit:           item.unit,
@@ -418,7 +467,14 @@ Rules:
                 csi_code:       item.csi_code,
                 notes:          '',
               }))
-            ), 'bid_package_items insert');
+            );
+            if (itemsErr) {
+              console.error('[sage-auto-docs] line items insert failed — removing the package:', itemsErr);
+              await must(supabase.from('bid_packages').delete().eq('id', pkgId).eq('tenant_id', tenantId), 'bid_packages rollback');
+              failedPackages.push({ div, name: packageName });
+              send('progress', { step: 3, pct: 40, message: `Could not save the bid form for ${packageName} — that package was not created.` });
+              continue;
+            }
           }
 
           createdPackages.push({ id: pkgId, name: packageName, div, total, trade: divName, requiresBond, insGl, insAuto, insWork });
@@ -446,87 +502,29 @@ Rules:
         // ── 7. Generate bid jacket PDFs ──────────────────────────────────────
         let jacketsGenerated = 0;
 
-        try {
-          const { generateBidJacket, saveDocument } = await import('@/lib/pdf-engine');
-
-          for (const pkg of createdPackages) {
-            try {
-              const div   = pkg.div;
-              const items = divisionMap.get(div) || [];
-              const ai    = sagePackages[div];
-
-              const pdfBytes = await (generateBidJacket as any)({
-                projectName,
-                projectAddress:       projAddr,
-                ownerName,
-                ownerAddress:         ownerAddr,
-                gcName,
-                // The contractor's OFFICE — never the job address (that is projectAddress).
-                gcAddress:            company.address,
-                gcLicense:            company.license || undefined,
-                tradeName:            CSI_DIVISIONS[div]?.name || `Division ${div}`,
-                dueDate:              addDays(pkg.total > 250_000 ? 21 : 14),
-                scopeNarrative:       ai?.scope || `${pkg.name} scope of work for ${projectName}.`,
-                csiSections:          items.map(i => `${i.csi_code} — ${i.description}`).slice(0, 20),
-                lineItems: items.map(i => ({
-                  description: i.description,
-                  quantity:    i.quantity,
-                  unit:        i.unit,
-                  unitPrice:   i.unit_cost,
-                })),
-                requiresBond:         ai?.bond ?? (pkg.total > 100_000),
-                insuranceRequirements: {
-                  gl:   ai?.ins_gl  ?? 1_000_000,
-                  wc:   'Statutory',
-                  auto: ai?.ins_auto ?? 1_000_000,
-                },
-              });
-
-              /* TITLE AND SOURCE, OR THE LIBRARY IS A WALL OF ONE SENTENCE.
-                 This called saveDocument with five arguments and skipped the
-                 sixth, so every jacket filed under the doc kind's default
-                 label. Fifteen packages produced fifteen rows in Documents all
-                 reading "Bid Jacket", and a GC looking for the electrical one
-                 had no way to tell them apart. saveDocument's own header warns
-                 about exactly this — it was written after eight pay
-                 applications filed as eight identical "AIA G702" lines.
-                 sourceId matters as much: the library's "Open jacket" link is
-                 gated on source_id, so without it the row could only ever be a
-                 flat PDF, never a route back to the live package. */
-              const pdfUrl = await (saveDocument as any)(
-                takeoff.project_id,
-                'bid-jacket',
-                pdfBytes,
-                { bidPackageId: pkg.id, takeoffId },
-                tenantId,
-                {
-                  title: `Bid Jacket — ${pkg.name || pkg.trade || `Division ${pkg.div}`}`,
-                  sourceType: 'bid_package',
-                  sourceId: pkg.id,
-                }
-              );
-
-              await must(supabase
-                .from('bid_packages')
-                .update({ jacket_pdf_url: pdfUrl })
-                .eq('tenant_id', tenantId)
-                .eq('id', pkg.id), 'bid_packages write');
-
-              jacketsGenerated++;
-
-              send('progress', {
-                step: 4,
-                pct: 55 + Math.round((jacketsGenerated / createdPackages.length) * 20),
-                message: `Bid jacket ${jacketsGenerated}/${createdPackages.length}: ${pkg.name}`,
-              });
-            } catch (jacketErr) {
-              console.error(`[sage-auto-docs] jacket error for pkg ${pkg.id}:`, jacketErr);
-              // Non-fatal — package exists, jacket can be generated from bid packages page
-            }
+        /* ONE PRINTED JACKET, MADE FROM THE LIVE ONE.
+           This used to render its own PDF from Sage's in-memory values rather
+           than the package: its GL limit defaulted to $1,000,000 where the
+           package row just written says $2,000,000 for divisions 03/05/07/22/
+           23/26, the scope came from the AI reply, and the engine added
+           boilerplate instructions and no drawings, specs or addenda.
+           storeJacketPdf builds the PDF from the package rows just written,
+           the same assembly the jacket screen and the bidder portal show.
+           Per-package failures are logged and do not stop the run; the GC can
+           press Download PDF on the package. */
+        const { storeJacketPdf } = await import('@/lib/bid-jacket-pdf');
+        for (const pkg of createdPackages) {
+          try {
+            await storeJacketPdf(supabase, { packageId: pkg.id, tenantId });
+            jacketsGenerated++;
+            send('progress', {
+              step: 4,
+              pct: 55 + Math.round((jacketsGenerated / createdPackages.length) * 20),
+              message: `Bid jacket ${jacketsGenerated}/${createdPackages.length}: ${pkg.name}`,
+            });
+          } catch (jacketErr) {
+            console.error(`[sage-auto-docs] jacket PDF not made for pkg ${pkg.id}:`, jacketErr);
           }
-        } catch (engineErr) {
-          console.error('[sage-auto-docs] pdf-engine load error:', engineErr);
-          // Non-fatal — skip jackets entirely if engine unavailable
         }
 
         // ── 7.5 Auto-file compliance docs (lien waivers, W-9, COI) ──────────
@@ -675,6 +673,11 @@ Rules:
         // ── 9. Done ──────────────────────────────────────────────────────────
         done({
           packagesCreated: createdPackages.length,
+          /* Kept because they are in use; their divisions were not rewritten. */
+          packagesKept:    inUse,
+          packagesReplaced: plan.replace.length,
+          divisionsSkipped: skippedDivisions,
+          packagesFailed:  failedPackages,
           jacketsGenerated,
           sovCreated:      !!sovId && sovLines > 0,
           // true while the project is bidding: no pay app/SOV by design, not a failure.

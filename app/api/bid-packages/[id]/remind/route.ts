@@ -36,7 +36,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // Load the bid package (tenant-scoped) along with its project name.
     const { data: pkg, error: pkgErr } = await db
       .from('bid_packages')
-      .select('*, projects(name)')
+      .select('*, projects(name, state)')
       .eq('id', packageId)
       .eq('tenant_id', user.tenantId)
       .maybeSingle();
@@ -76,12 +76,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (inviteState(inv) === 'revoked') {
       return NextResponse.json({ error: 'This bidder\'s link was revoked. Invite them again to restore it.' }, { status: 409 });
     }
-    const refusal = bidRefusal(p, await deadlineZone(db, user.tenantId, req.headers));
+    const refusal = bidRefusal(p, await deadlineZone(db, user.tenantId, p.projects?.state, req.headers));
     if (refusal) {
       const why = {
         not_issued: 'This package has not been issued yet — issue the jacket first.',
         over: 'Bidding on this package is closed.',
         portal_off: 'The bid portal for this package is switched off, so the link would not open. Invite the sub again to switch it back on.',
+        expired: 'The bid links for this package have expired.',
         past_due: 'The bid due date has passed.',
       }[refusal.reason];
       return NextResponse.json({ error: why }, { status: 409 });

@@ -6,9 +6,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { toCents, toDollars, sumCents } from '@/lib/calc';
-import { FolderOpen, Envelope, ArrowLeft, FileText, Lock, Trophy, Star, Plus, CheckCircle, XCircle, CurrencyDollar, UsersThree, Receipt, ClipboardText, Scales } from '@phosphor-icons/react';
+import { FolderOpen, Envelope, ArrowLeft, FileText, Lock, Trophy, Star, Plus, CheckCircle, XCircle, CurrencyDollar, UsersThree, Receipt, Scales } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, FlowStrip, ghostButtonStyle, goldButtonStyle } from '@/components/ui/premium';
-import { openPdf } from '@/components/PdfViewer';
+import BidPackageDetails from '@/components/BidPackageDetails';
+import BidFormEditor, { toBidFormLines, type BidFormLine } from '@/components/BidFormEditor';
+import JacketPdfButton from '@/components/JacketPdfButton';
 import { JacketGatePrompt, JacketSendResult, type SendPayload } from '@/components/JacketSendPanels';
 import { inviteState, jacketDelivery, type InviteState, type JacketDelivery } from '@/lib/bid-invite-state';
 import { bidAmount } from '@/lib/bid-amount';
@@ -26,14 +28,8 @@ const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDig
    ('viewed'), and reading status alone meant a GC never saw "Viewed". */
 type SubStatus = InviteState;
 
-interface SovItem {
-  id: string;
-  description: string;
-  quantity: number;
-  unit: string;
-  unit_cost: number;
-  total: number;
-}
+/** A bid-form line (components/BidFormEditor owns the shape and the mapping). */
+type SovItem = BidFormLine;
 
 interface InvitedSub {
   id: string;
@@ -228,14 +224,7 @@ export default function BidPackageDetailPage() {
         // GET route returns items / invites / submissions at the TOP LEVEL (not nested on
         // bidPackage) and with DB column names. Map them onto the page's interfaces so SOV,
         // invited subs and submissions render — and the Award button appears when bids exist.
-        const sov_items: SovItem[] = (d.items || []).map((it: any) => ({
-          id: String(it.id),
-          description: it.description || it.title || '',
-          quantity: Number(it.quantity) || 0,
-          unit: it.unit || it.uom || '',
-          unit_cost: Number(it.unit_price ?? it.unit_cost_estimate ?? it.estimated_cost) || 0,
-          total: Number(it.total_amount ?? it.total_estimate) || 0,
-        }));
+        const sov_items: SovItem[] = toBidFormLines(d.items || []);
         const bid_submissions: BidSubmission[] = (d.submissions || []).map((sb: any) => ({
           id: String(sb.id),
           sub_name: sb.company_name || sb.sub_name || sb.contact_name || '—',
@@ -439,23 +428,6 @@ export default function BidPackageDetailPage() {
     } finally { setRevoking(null); }
   }
 
-  async function downloadPDF() {
-    if (pkg?.jacket_pdf_url) {
-      openPdf({ url: `/api/files/open?u=${encodeURIComponent(pkg.jacket_pdf_url)}` });
-      return;
-    }
-    try {
-      const r = await fetch('/api/documents/bid-package', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ packageId: id, projectId }),
-      });
-      const d = await r.json().catch(() => ({})) as any;
-      const url = d.url || d.pdfUrl;
-      if (!r.ok || !url) throw new Error(d.error || 'generation failed');
-      openPdf({ url });
-    } catch { showToast('Could not generate the bid package PDF. Please try again.', 'var(--danger)'); }
-  }
-
   // ── Loading / Not Found ──────────────────────────────────────────────────
 
   if (loading) return (
@@ -527,12 +499,6 @@ export default function BidPackageDetailPage() {
   const statusWord = isBiddingStatus(pkg.status) ? 'open' : (pkg.status || 'draft');
   const liveInvites = pkg.invited_subs.filter((s) => s.status !== 'revoked');
 
-  /* Which column the scope landed in depends on how the package was made —
-     the AI builder, the manual form, and the import each pick a different one.
-     Same order the contract prefill uses, so the card and the subcontract agree
-     about what the sub is being asked to do. */
-  const scopeText = pkg.scope_of_work || pkg.scope_narrative || pkg.scope_summary || pkg.description || '';
-
   const totalSov = toDollars(sumCents(pkg.sov_items.map(i => toCents(i.total))));
   const submittedSubs = liveInvites.filter(s => s.status === 'submitted');
   const submissions = pkg.bid_submissions || [];
@@ -554,9 +520,16 @@ export default function BidPackageDetailPage() {
       >
         <FolderOpen size={16} weight="duotone" /> Open Bid Jacket
       </Link>
-      <button onClick={downloadPDF} style={ghostButtonStyle} className="pmBtn">
-        <FileText size={16} weight="regular" /> Printed Jacket PDF
-      </button>
+      {/* Download PDF builds the printed jacket from the jacket as it is now.
+          It used to open whatever PDF was stored (most were the snapshot Sage
+          took at creation), and with none stored it posted to a generator
+          that answered 400 every time. */}
+      <JacketPdfButton
+        packageId={id}
+        title={`${pkg.name || pkg.trade || 'Bid package'} — Bid Jacket`}
+        onBuilt={(pdf) => setPkg((cur) => (cur ? { ...cur, jacket_pdf_url: pdf.storedUrl } : cur))}
+        onError={(msg) => showToast(msg, 'var(--danger)')}
+      />
       {/* LEVELLING BELONGS WHERE THE BIDS ARE.
           This page lists every bid received and an Award button beside each
           one, and had no route to the screen that compares them — spread, low
@@ -590,7 +563,9 @@ export default function BidPackageDetailPage() {
     <>
       {/* Toast */}
       {toast && (
-        <div style={{ position: 'fixed', top: 20, right: 24, zIndex: 9999, background: 'var(--bg-solid-2)', border: `1px solid ${toast.color}`, borderRadius: 10, padding: '12px 20px', color: toast.color, fontSize: 14, fontWeight: 700, boxShadow: '0 4px 24px rgba(0,0,0,.4)' }}>
+        /* maxWidth: pinned to the right with no limit, a long message on a
+           phone ran off the left edge of the screen. */
+        <div role="status" style={{ position: 'fixed', top: 20, right: 24, maxWidth: 'calc(100vw - 48px)', zIndex: 9999, background: 'var(--bg-solid-2)', border: `1px solid ${toast.color}`, borderRadius: 10, padding: '12px 20px', color: toast.color, fontSize: 14, fontWeight: 700, boxShadow: '0 4px 24px rgba(0,0,0,.4)' }}>
           {toast.msg}
         </div>
       )}
@@ -688,48 +663,23 @@ export default function BidPackageDetailPage() {
           </div>
         )}
 
-        {/* Scope */}
-        {scopeText && (
-          <div style={{ marginBottom: 20 }}>
-            <SectionCard flat title="Scope of Work" icon={<ClipboardText size={17} weight="duotone" color={GOLD} />}>
-              <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{scopeText}</div>
-            </SectionCard>
-          </div>
-        )}
+        {/* Package details — instructions, scope, due date, insurance and
+            bonding. The jacket's written dividers are made of these, and its
+            empty-divider links land here (?edit=details#package-details). */}
+        <BidPackageDetails
+          pkg={pkg}
+          packageId={id}
+          onSaved={(row) => setPkg((prev) => (prev ? { ...prev, ...row } : prev))}
+          onToast={showToast}
+        />
 
-        {/* SOV Line Items */}
-        {pkg.sov_items.length > 0 && (
-          <div style={{ marginBottom: 20 }}>
-            <SectionCard title="Line Items" icon={<FileText size={17} weight="duotone" color={GOLD} />} flush>
-              <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
-                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ background: TH_BG }}>
-                      {['Description', 'Qty', 'Unit', 'Unit Cost', 'Total'].map(h => (
-                        <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: `1px solid ${HAIR}` }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pkg.sov_items.map(item => (
-                      <tr key={item.id} style={{ borderBottom: `1px solid ${HAIR}` }}>
-                        <td style={{ padding: '11px 16px', color: TEXT }}>{item.description}</td>
-                        <td style={{ padding: '11px 16px', color: DIM }}>{item.quantity}</td>
-                        <td style={{ padding: '11px 16px', color: DIM }}>{item.unit}</td>
-                        <td style={{ padding: '11px 16px', color: DIM }}>{fmt(item.unit_cost)}</td>
-                        <td style={{ padding: '11px 16px', color: TEXT, fontWeight: 600 }}>{fmt(item.total)}</td>
-                      </tr>
-                    ))}
-                    <tr style={{ background: 'color-mix(in srgb, var(--brand-primary) 5%, transparent)', borderTop: `1px solid ${HAIR}` }}>
-                      <td colSpan={4} style={{ padding: '11px 16px', color: DIM, fontWeight: 700, fontSize: 11 }}>Total</td>
-                      <td style={{ padding: '11px 16px', color: GOLD, fontWeight: 800, fontSize: 15 }}>{fmt(totalSov)}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </SectionCard>
-          </div>
-        )}
+        {/* The bid form — add, edit, reorder and remove the lines bidders price. */}
+        <BidFormEditor
+          packageId={id}
+          lines={pkg.sov_items}
+          onLinesChanged={(lines) => setPkg((prev) => (prev ? { ...prev, sov_items: lines } : prev))}
+          onToast={showToast}
+        />
 
         {/* Bid Submissions */}
         {submissions.length > 0 && (

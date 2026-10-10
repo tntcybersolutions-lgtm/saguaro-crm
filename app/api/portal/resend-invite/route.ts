@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { sendClientPortalInvite, sendSubPortalInvite } from '@/lib/email';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,25 +35,27 @@ export async function POST(req: NextRequest) {
       .from('profiles')
       .select('full_name, company')
       .eq('id', user.id)
+      .eq('tenant_id', user.tenantId)
       .maybeSingle();
     const gcCompanyName = (profile as { company?: string; full_name?: string } | null)?.company
       || (profile as { company?: string; full_name?: string } | null)?.full_name
       || 'Your General Contractor';
 
     if (type === 'client') {
-      const { data: session } = await db
+      const { data: session, error: sessErr } = await db
         .from('portal_client_sessions')
         .select('*')
         .eq('id', sessionId)
         .eq('tenant_id', user.tenantId)
-        .single();
+        .maybeSingle();
+      if (sessErr) throw sessErr;
 
       if (!session) return NextResponse.json({ error: 'Session not found' }, { status: 404 });
 
       const { data: project } = await db
-        .from('projects').select('name').eq('id', session.project_id).maybeSingle();
+        .from('projects').select('name').eq('id', session.project_id).eq('tenant_id', user.tenantId).maybeSingle();
 
-      await sendClientPortalInvite({
+      const mail = await sendClientPortalInvite({
         to: session.client_email,
         clientName: session.client_name,
         gcCompanyName,
@@ -61,45 +64,50 @@ export async function POST(req: NextRequest) {
         expiresAt: session.expires_at,
         isResend: true,
       });
+      if (!mail.sent) return NextResponse.json({ error: mail.error || 'The invite was not sent.', sentTo: session.client_email }, { status: 502 });
 
       return NextResponse.json({ success: true, sentTo: session.client_email });
 
     } else {
-      const { data: session } = await db
+      const { data: session, error: sessErr } = await db
         .from('portal_sub_sessions')
         .select('*')
         .eq('id', sessionId)
         .eq('tenant_id', user.tenantId)
-        .single();
+        .maybeSingle();
+      if (sessErr) throw sessErr;
 
       if (!session) return NextResponse.json({ error: 'Session not found' }, { status: 404 });
 
       const [{ data: project }, { data: sub }] = await Promise.all([
-        db.from('projects').select('name').eq('id', session.project_id!).maybeSingle(),
+        db.from('projects').select('name').eq('id', session.project_id!).eq('tenant_id', user.tenantId).maybeSingle(),
         session.sub_id
-          ? db.from('subcontractors').select('company_name, contact_name, email').eq('id', session.sub_id).maybeSingle()
+          ? db.from('subcontractors').select('company_name, contact_name, email').eq('id', session.sub_id).eq('tenant_id', user.tenantId).maybeSingle()
           : Promise.resolve({ data: null }),
       ]);
 
-      if (!sub?.email) {
+      /* An email-only invite has no roster sub — its address is on the session.
+         Requiring a roster email made "Resend" fail for every one of those. */
+      const s = session as Record<string, string | null>;
+      const to = sub?.email || s.sub_email;
+      if (!to) {
         return NextResponse.json({ error: 'No email address found for this subcontractor' }, { status: 400 });
       }
 
-      await sendSubPortalInvite({
-        to: sub.email,
-        contactName: sub.contact_name || '',
-        companyName: sub.company_name || sub.email,
+      const mail = await sendSubPortalInvite({
+        to,
+        contactName: sub?.contact_name || s.sub_contact_name || '',
+        companyName: sub?.company_name || s.sub_company || to,
         gcCompanyName,
         projectName: project?.name || 'Your Project',
-        portalUrl: `${appUrl}/portals/subcontractor/${session.token}`,
+        portalUrl: `${appUrl}/portals/sub/${session.token}`,
         isResend: true,
       });
+      if (!mail.sent) return NextResponse.json({ error: mail.error || 'The invite was not sent.', sentTo: to }, { status: 502 });
 
-      return NextResponse.json({ success: true, sentTo: sub.email });
+      return NextResponse.json({ success: true, sentTo: to });
     }
   } catch (err: unknown) {
-    const msg = 'Internal server error';
-    console.error('[portal/resend-invite]', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('portal/resend-invite', err);
   }
 }

@@ -4,7 +4,7 @@ import { sendSubInvitedToBid } from '@/lib/email';
 import { withComm } from '@/lib/comm-log';
 import { apiError } from '@/lib/api-error';
 import { bidDueDay, daysUntilBidDue, BIDDING_STATUSES } from '@/lib/bid-deadline';
-import { companyTimeZone } from '@/lib/time-zone';
+import { jobTimeZone } from '@/lib/time-zone';
 import { inviteState } from '@/lib/bid-invite-state';
 
 export async function GET(req: NextRequest) {
@@ -23,8 +23,8 @@ export async function GET(req: NextRequest) {
     const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
 
     /* Packages taking bids whose due DAY is today or within 3 days, counted in
-       each GC company's own time zone (tenants.time_zone) — a job has no
-       device here, and the deadline is the company's.
+       each GC company's own time zone (tenants.time_zone, else the job's
+       state) — a job has no device here, and the deadline is the company's.
 
        This selected status 'open' only, so an issued package ('sent') — the
        state /issue and invite-subs put a package in — was never reminded. It
@@ -37,18 +37,21 @@ export async function GET(req: NextRequest) {
     const floor = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
     const { data: candidates, error: pkgErr } = await db
       .from('bid_packages')
-      .select('*, projects(name), bid_submissions(count)')
+      .select('*, projects(name, state), bid_submissions(count)')
       .in('status', [...BIDDING_STATUSES])
       .eq('sub_portal_enabled', true)
       .or(`bid_due_date.gte.${floor},due_date.gte.${floor}`);
     if (pkgErr) throw pkgErr;
-    const zoneByTenant = new Map<string, string>();
-    for (const t of new Set(((candidates || []) as any[]).map((p) => p.tenant_id).filter(Boolean))) {
-      const tz = await companyTimeZone(db, t as string);
-      if (!tz) console.error(`[cron/bid-reminders] tenant ${t} has no time zone recorded — its bid due days are counted in UTC`);
-      zoneByTenant.set(t as string, tz ?? 'UTC');
+    /* Each package's zone: its company's, else its job's state (jobTimeZone). */
+    const zoneByKey = new Map<string, string>();
+    const keyOf = (p: any) => `${p.tenant_id}|${p.projects?.state ?? ''}`;
+    for (const p of (candidates || []) as any[]) {
+      if (!p.tenant_id || zoneByKey.has(keyOf(p))) continue;
+      const tz = await jobTimeZone(db, p.tenant_id, p.projects?.state);
+      if (tz.source === 'utc') console.error(`[cron/bid-reminders] tenant ${p.tenant_id} has no time zone and its job no state — bid due days counted in UTC`);
+      zoneByKey.set(keyOf(p), tz.zone);
     }
-    const zoneOf = (p: any) => zoneByTenant.get(p.tenant_id) ?? 'UTC';
+    const zoneOf = (p: any) => zoneByKey.get(keyOf(p)) ?? 'UTC';
     const packages = ((candidates || []) as any[]).filter((p) => {
       const d = daysUntilBidDue(p, zoneOf(p));
       return d !== null && d >= 0 && d <= 3;

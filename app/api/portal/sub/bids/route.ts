@@ -90,13 +90,20 @@ export async function GET(req: NextRequest) {
     const pkgIds = [...new Set(rows.map((r) => r.bid_package_id).filter(Boolean))];
     const { data: pkgs, error: pkgErr } = await db
       .from('bid_packages')
-      .select('id, name, trade, description, scope_of_work, scope_summary, status, bid_due_date, due_date, project_id, addendum_count, sub_portal_enabled, projects(name)')
+      .select('id, name, trade, description, scope_of_work, scope_summary, status, bid_due_date, due_date, project_id, addendum_count, sub_portal_enabled, sub_portal_expires_at, projects(name, state)')
       .in('id', pkgIds)
       .eq('tenant_id', session.tenant_id);
     if (pkgErr) throw pkgErr;
 
-    /* Deadlines are the GC company's, in its own time zone. */
-    const zone = await deadlineZone(db, session.tenant_id);
+    /* Deadlines are the GC company's, in its own time zone (else the job's state). */
+    const zoneByState = new Map<string, string>();
+    const zoneFor = async (pkg: Record<string, unknown>) => {
+      const st = String((pkg.projects as Record<string, unknown> | null)?.state ?? '');
+      if (!zoneByState.has(st)) zoneByState.set(st, await deadlineZone(db, session.tenant_id, st));
+      return zoneByState.get(st)!;
+    };
+    const zones = new Map<string, string>();
+    for (const pk of (pkgs || []) as Record<string, unknown>[]) zones.set(pk.id as string, await zoneFor(pk));
     const byId = new Map((pkgs || []).map((p: Record<string, unknown>) => [p.id as string, p]));
 
     /* Whether this sub has already bid — the portal has to show "submitted"
@@ -126,9 +133,9 @@ export async function GET(req: NextRequest) {
         viewedAt: inv.invitation_viewed_at || null,
         respondedAt: inv.responded_at || null,
         dueDate: due,
-        isOverdue: !!pkg && biddingClosed(pkg, zone),
+        isOverdue: !!pkg && biddingClosed(pkg, zones.get(pkg.id as string) || 'UTC'),
         /* Whether this sub can price it right now — the same rule POST applies. */
-        canBid: !!pkg && bidRefusal(pkg, zone) === null,
+        canBid: !!pkg && bidRefusal(pkg, zones.get(pkg.id as string) || 'UTC') === null,
         addendumCount: (pkg?.addendum_count as number) ?? 0,
         bidPackage: pkg
           ? {
@@ -181,7 +188,7 @@ export async function POST(req: NextRequest) {
 
     const { data: pkg, error: pkgErr } = await db
       .from('bid_packages')
-      .select('id, project_id, tenant_id, bid_due_date, due_date, status, sub_portal_enabled')
+      .select('id, project_id, tenant_id, bid_due_date, due_date, status, sub_portal_enabled, sub_portal_expires_at, projects(state)')
       .eq('id', inv.bid_package_id)
       .eq('tenant_id', session.tenant_id)
       .maybeSingle();
@@ -192,9 +199,9 @@ export async function POST(req: NextRequest) {
     /* This took a bid whatever state the package was in — draft (never
        issued), closed, awarded — and ignored the GC's portal switch, so a bid
        could land on a leveling sheet somebody had already awarded from. Same
-       rule as the token portal (lib/bid-deadline): issued, portal on, and the
-       due DAY not over in the GC company's time zone. */
-    const refusal = bidRefusal(p, await deadlineZone(db, session.tenant_id));
+       rule as the token portal (lib/bid-deadline): issued, portal on, link not
+       expired, and the due DAY not over in the GC company's time zone. */
+    const refusal = bidRefusal(p, await deadlineZone(db, session.tenant_id, p.projects?.state));
     if (refusal) return NextResponse.json({ error: refusal.error }, { status: refusal.status });
 
     const amount = Number(body.total_amount ?? body.amount ?? body.base_amount ?? 0) || 0;

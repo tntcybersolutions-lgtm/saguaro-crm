@@ -7,6 +7,7 @@ import { LOCAL_DAY_HEADER, localDay } from '@/lib/calendar-day';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 import SubInbox from '@/components/sub-portal/SubInbox';
+import ComplianceChecklist from '@/components/sub-portal/ComplianceChecklist';
 import { UsersThree, CheckCircle, Clock, Prohibit, WarningCircle, XCircle, FileX, Plus, UploadSimple, ListChecks, ClockCounterClockwise, FileText, ShieldCheck, AddressBook, Megaphone, Envelope } from '@phosphor-icons/react';
 
 /* ── palette ── */
@@ -206,6 +207,8 @@ function StatusBadge({ status }: { status: string }) {
 export default function SubPortalPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  /** Panels the server could not load (named), so an empty tab isn't read as "nothing on file". */
+  const [unavailable, setUnavailable] = useState<string[]>([]);
   // The inbox is what needs the GC today, so the screen opens on it.
   const [tab, setTab] = useState<Tab>('inbox');
   // ?tab=… opens a tab directly (the inbox's bell notifications link here).
@@ -299,6 +302,7 @@ export default function SubPortalPage() {
         setCompliance(Array.isArray(data?.compliance) ? data.compliance : []);
         setAnnouncements(Array.isArray(data?.announcements) ? data.announcements : []);
         setProjects(Array.isArray(data?.projects) ? data.projects : []);
+        setUnavailable(Array.isArray(data?.unavailable) ? data.unavailable.map(String) : []);
       } catch {
         setUsers([]);
         setActivity([]);
@@ -552,6 +556,16 @@ export default function SubPortalPage() {
           <button onClick={() => setInviteModal(true)} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Invite Sub</button>
         </>}
       />
+
+      {unavailable.length > 0 && (
+        <div role="alert" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, justifyContent: 'space-between', border: `1px solid ${AMBER}`, borderRadius: 12, background: RAISED, padding: '12px 16px', marginBottom: 18 }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: AMBER, fontSize: 14, fontWeight: 600, minWidth: 0 }}>
+            <WarningCircle size={18} weight="fill" color={AMBER} />
+            <span>{unavailable.join(', ')} didn&apos;t load — what those tabs show may be incomplete.</span>
+          </span>
+          <button onClick={() => window.location.reload()} style={{ ...ghostButtonStyle, minHeight: 44 }}>Reload</button>
+        </div>
+      )}
 
       {/* ── stat cards ── */}
       {/* Two to a row on a phone, so the inbox below is reached without two screens of cards. */}
@@ -947,6 +961,8 @@ export default function SubPortalPage() {
       {/* ════════════════════════════════════════════ */}
       {tab === 'compliance' && (
         <div>
+          {/* Who owes a COI or W-9 — including ones never uploaded — with Ask for it. */}
+          <div style={{ marginBottom: 24 }}><ComplianceChecklist /></div>
           {/* compliance summary */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
             {[

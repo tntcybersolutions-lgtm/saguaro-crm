@@ -16,6 +16,8 @@ import {
 } from '@/lib/sub-portal-files';
 import { putSigned } from '@/lib/media-upload';
 import { LOCAL_DAY_HEADER, isPastDay, localDay } from '@/lib/calendar-day';
+import { TIME_ZONE_HEADER, deviceTimeZone } from '@/lib/time-zone';
+import { sendOrSave, listSaved, savedRowId, startOfflineWatch } from '@/lib/offline/outbox';
 
 /* ── Design Tokens ── */
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF';
@@ -34,6 +36,13 @@ const labelS:React.CSSProperties={display:'block',fontSize:11,fontWeight:700,col
 const inputS:React.CSSProperties={width:'100%',background:DARK,border:`1px solid ${BORDER}`,borderRadius:7,padding:'10px 14px',color:TEXT,fontSize:16,minHeight:44,outline:'none',boxSizing:'border-box'};
 const textareaS:React.CSSProperties={...inputS,minHeight:80,resize:'vertical' as const};
 const badge=(status:string):React.CSSProperties=>{const m:Record<string,string>={approved:GREEN,paid:GREEN,signed:GREEN,accepted:GREEN,awarded:GREEN,valid:GREEN,submitted:BLUE,open:BLUE,pending:AMBER,under_review:AMBER,pending_review:AMBER,draft:DIM,expiring_soon:AMBER,correction_requested:AMBER,rejected:RED,disputed:RED,expired:RED,declined:RED,missing:RED};const c=m[status]||DIM;return{display:'inline-block',padding:'3px 10px',borderRadius:20,fontSize:11,fontWeight:700,background:`color-mix(in srgb, ${c} 13%, transparent)`,color:c,textTransform:'capitalize' as const}};
+
+/** Every panel the portal loads: [route under /api/portal/sub, the name a sub reads if it fails]. Order matters (see val(i)). */
+const PANELS:ReadonlyArray<readonly [string,string]>=[
+  ['compliance','Compliance'],['pay-apps','Invoices'],['daily-logs','Daily logs'],['rfis','RFIs'],['schedule','Schedule'],
+  ['scorecard','Scorecard'],['documents','Documents'],['messages','Messages'],['bids','Bids'],['drawings','Drawings'],
+  ['punch','Punch list'],['activity','Activity'],['lien-waivers','Lien waivers'],['clock','Clock'],
+];
 
 function Stars({rating,max=5,size=18}:{rating:number;max?:number;size?:number}){
   return <span style={{display:'inline-flex',gap:2}}>{Array.from({length:max},(_,i)=><span key={i} style={{fontSize:size,color:i<Math.round(rating)?GOLD:BORDER}}>{i<Math.round(rating)?'\u2605':'\u2606'}</span>)}</span>;
@@ -150,7 +159,7 @@ export default function SubPortal(){
   // docExpiry is declared with the compliance form states below — shared by both upload paths.
 
   /* ── Form states ── */
-  const [dlForm,setDlForm]=useState({log_date:new Date().toISOString().split('T')[0],crew_count:'',hours_worked:'',work_completed:'',work_planned:'',weather:'',delays:'',safety_incidents:'',notes:''});
+  const [dlForm,setDlForm]=useState({log_date:localDay(),crew_count:'',hours_worked:'',work_completed:'',work_planned:'',weather:'',delays:'',safety_incidents:'',notes:''});
   const [dlSaving,setDlSaving]=useState(false);
   const [rfiForm,setRfiForm]=useState({subject:'',question:'',priority:'normal',reference_drawing:'',reference_spec:''});
   const [rfiSaving,setRfiSaving]=useState(false);
@@ -199,7 +208,24 @@ export default function SubPortal(){
   /* Every call carries this device's calendar day: a COI's expiry_date is good
      through the end of that day where the sub is, which only the browser knows
      (lib/calendar-day). The server takes it within reason and falls back to Phoenix. */
-  const headers:Record<string,string>={'Content-Type':'application/json','x-portal-token':token||'',[LOCAL_DAY_HEADER]:localDay()};
+  const headers:Record<string,string>={'Content-Type':'application/json','x-portal-token':token||'',[LOCAL_DAY_HEADER]:localDay(),[TIME_ZONE_HEADER]:deviceTimeZone()||''};
+  /** Panels that didn't load, by name — an empty tab must never read as "nothing on file". */
+  const [unloaded,setUnloaded]=useState<string[]>([]);
+
+  /* Daily logs saved on this phone send themselves when the signal is back
+     (lib/offline/outbox — the same outbox the app uses). */
+  useEffect(()=>startOfflineWatch(),[]);
+  useEffect(()=>{
+    const synced=(e:Event)=>{
+      const d=(e as CustomEvent).detail||{};
+      if(d.kind!=='portal-daily-log')return;
+      const row=d.result?.daily_log;
+      setDailyLogs(prev=>row?prev.map(l=>l.id===savedRowId(d.id)?row:l):prev.filter(l=>l.id!==savedRowId(d.id)));
+      showToast('A daily log saved on this phone was sent.');
+    };
+    window.addEventListener('saguaro:outbox-synced',synced);
+    return()=>window.removeEventListener('saguaro:outbox-synced',synced);
+  },[showToast]);
 
   useEffect(()=>{
     const on=()=>setIsOnline(true),off=()=>setIsOnline(false);
@@ -217,25 +243,18 @@ export default function SubPortal(){
       .then(authData=>{
         setSession(authData.session);
         setSub(authData.sub);
-        // Load everything in parallel
-        return Promise.allSettled([
-          fetch(`/api/portal/sub/compliance?token=${token}`,{headers}).then(r=>r.json()),
-          fetch(`/api/portal/sub/pay-apps?token=${token}`,{headers}).then(r=>r.json()),
-          fetch(`/api/portal/sub/daily-logs?token=${token}`,{headers}).then(r=>r.json()),
-          fetch(`/api/portal/sub/rfis?token=${token}`,{headers}).then(r=>r.json()),
-          fetch(`/api/portal/sub/schedule?token=${token}`,{headers}).then(r=>r.json()),
-          fetch(`/api/portal/sub/scorecard?token=${token}`,{headers}).then(r=>r.json()),
-          fetch(`/api/portal/sub/documents?token=${token}`,{headers}).then(r=>r.json()),
-          fetch(`/api/portal/sub/messages?token=${token}`,{headers}).then(r=>r.json()),
-          fetch(`/api/portal/sub/bids?token=${token}`,{headers}).then(r=>r.json()),
-          fetch(`/api/portal/sub/drawings?token=${token}`,{headers}).then(r=>r.json()),
-          fetch(`/api/portal/sub/punch?token=${token}`,{headers}).then(r=>r.json()),
-          fetch(`/api/portal/sub/activity?token=${token}`,{headers}).then(r=>r.json()),
-          fetch(`/api/portal/sub/lien-waivers?token=${token}`,{headers}).then(r=>r.json()),
-        ]);
+        // Load everything in parallel. A refused or failed panel is named, not shown empty.
+        const get=(path:string)=>fetch(`/api/portal/sub/${path}?token=${token}`,{headers}).then(async r=>{
+          const d=await r.json().catch(()=>({}));
+          if(!r.ok)throw new Error(d?.error||`HTTP ${r.status}`);
+          return d;
+        });
+        return Promise.allSettled(PANELS.map(([path])=>get(path)));
       })
       .then(results=>{
         const val=(i:number)=>(results[i] as any)?.value||{};
+        setUnloaded(results.flatMap((r,i)=>r.status==='rejected'?[PANELS[i][1]]:[]));
+        results.forEach((r,i)=>{if(r.status==='rejected')console.error('[sub portal] did not load',PANELS[i][0],(r as PromiseRejectedResult).reason);});
         setComplianceDocs(val(0).compliance_docs||[]);
         setPayApps(val(1).pay_apps||[]);
         setDailyLogs(val(2).daily_logs||[]);
@@ -249,6 +268,17 @@ export default function SubPortal(){
         setPunchItems(val(10).punch_items||[]);
         setActivity(val(11).events||[]);
         setLienWaivers(val(12).lien_waivers||[]);
+        // The clock is the server's: after a reload a sub on the clock still reads "on the clock".
+        const clock=val(13);
+        if(typeof clock.onClock==='boolean'){
+          setGpsStatus(clock.onClock?'clocked_in':(clock.lastPunch?'clocked_out':'idle'));
+          if(clock.onClock&&clock.lastPunch?.punched_at)setClockInTime(clock.lastPunch.punched_at);
+        }
+        // Daily logs written with no signal are on this phone until they send.
+        void listSaved(null,'portal-daily-log').then(saved=>{
+          const mine=saved.filter(r=>r.url.includes(`token=${token}`));
+          if(mine.length)setDailyLogs(prev=>[...mine.map(r=>({...(r.row||{}),id:savedRowId(r.id),status:r.attempts>=5?'not_sent':'waiting_to_send',_error:r.lastError})),...prev]);
+        });
       })
       .catch(e=>{ console.error(e); setError(humanError(e, 'Failed to load the portal. Please try again.')); })
       .finally(()=>setLoading(false));
@@ -395,8 +425,9 @@ export default function SubPortal(){
   const submitDailyLog=async()=>{
     if(!dlForm.work_completed.trim()){showToast('Please describe work completed.');return;}
     setDlSaving(true);
+    const blank={log_date:localDay(),crew_count:'',hours_worked:'',work_completed:'',work_planned:'',weather:'',delays:'',safety_incidents:'',notes:''};
     try{
-      const result=await apiPost('daily-logs',{
+      const body={
         log_date:dlForm.log_date,
         crew_count:parseInt(dlForm.crew_count)||0,
         hours_worked:parseFloat(dlForm.hours_worked)||0,
@@ -408,14 +439,28 @@ export default function SubPortal(){
         notes:dlForm.notes,
         gps_clock_in:clockInTime||null,
         gps_clock_out:clockOutTime||null,
+      };
+      /* No signal: kept on this phone and sent by itself when the signal is back
+         (it used to say "queued for sync" while keeping nothing). */
+      const sent=await sendOrSave({
+        url:`/api/portal/sub/daily-logs?token=${token}`,method:'POST',body,kind:'portal-daily-log',label:'Daily log',
+        projectId:session?.project_id??null,
+        row:{log_date:body.log_date,crew_count:body.crew_count,hours:body.hours_worked,work_performed:body.work_completed,delays:body.delays||null,notes:[body.work_planned&&`Planned: ${body.work_planned}`,body.weather&&`Weather: ${body.weather}`,body.safety_incidents&&`Safety: ${body.safety_incidents}`,body.notes].filter(Boolean).join('\n')||null},
       });
-      if(result.daily_log){
-        showToast('Daily log submitted.');
-        setDailyLogs(prev=>[result.daily_log,...prev]);
-        setDlForm({log_date:new Date().toISOString().split('T')[0],crew_count:'',hours_worked:'',work_completed:'',work_planned:'',weather:'',delays:'',safety_incidents:'',notes:''});
-        setGpsStatus('idle');setClockInTime('');setClockOutTime('');
-      } else showToast(result.error||'Failed to submit.');
-    }catch{showToast('Network error — log queued for sync.');}
+      if(sent.saved){
+        showToast("No signal — the log is saved on this phone and sends by itself when you're back online.");
+        setDailyLogs(prev=>[{log_date:body.log_date,crew_count:body.crew_count,hours:body.hours_worked,work_performed:body.work_completed,delays:body.delays||null,id:savedRowId(sent.id),status:'waiting_to_send'},...prev]);
+        setDlForm(blank);
+      }else{
+        const result=await sent.response.json().catch(()=>({}));
+        if(sent.response.ok&&result.daily_log){
+          showToast('Daily log submitted.');
+          setDailyLogs(prev=>[result.daily_log,...prev]);
+          setDlForm(blank);
+          setGpsStatus('idle');setClockInTime('');setClockOutTime('');
+        } else showToast(result.error||"The log wasn't saved. Check it and try again.");
+      }
+    }catch{showToast("The log wasn't saved — this phone couldn't keep a copy. Try again when you have signal.");}
     setDlSaving(false);
   };
 
@@ -1021,7 +1066,7 @@ export default function SubPortal(){
   /* ================================================================ */
   const renderDaily=()=>(
     <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
-      {!isOnline&&<div style={{padding:'10px 16px',background:`color-mix(in srgb, ${AMBER} 13%, transparent)`,border:`1px solid ${AMBER}`,borderRadius:8,display:'flex',alignItems:'center',gap:10}}><div style={{width:10,height:10,borderRadius:'50%',background:AMBER}}/><span style={{fontSize:13,color:AMBER,fontWeight:600}}>You are offline. Logs will be queued and submitted when connection is restored.</span></div>}
+      {!isOnline&&<div style={{padding:'10px 16px',background:`color-mix(in srgb, ${AMBER} 13%, transparent)`,border:`1px solid ${AMBER}`,borderRadius:8,display:'flex',alignItems:'center',gap:10}}><div style={{width:10,height:10,borderRadius:'50%',background:AMBER}}/><span style={{fontSize:13,color:AMBER,fontWeight:600}}>You&apos;re offline. Daily logs you submit are saved on this phone and send by themselves when you&apos;re back online.</span></div>}
 
       {/* GPS Clock */}
       <div style={card()}>
@@ -1608,7 +1653,12 @@ export default function SubPortal(){
   return(
     <div style={{minHeight:'100vh',background:DARK,fontFamily:'system-ui,-apple-system,sans-serif',color:TEXT}}>
       {toast&&<div role="status" style={{position:'fixed',left:16,right:16,bottom:'max(20px, env(safe-area-inset-bottom))',margin:'0 auto',width:'fit-content',maxWidth:520,textAlign:'center',zIndex:9999,background:RAISED,border:`1px solid ${GOLD}`,borderRadius:10,padding:'12px 20px',color:TEXT,fontSize:13,fontWeight:600,boxShadow:'0 8px 32px rgba(0,0,0,.5)',animation:'fadeIn .3s ease'}}>{toast}</div>}
-      {!isOnline&&<div style={{background:RED,color:'#fff',textAlign:'center',padding:'6px 16px',fontSize:12,fontWeight:700}}>You are currently offline. Changes will sync when connection is restored.</div>}
+      {!isOnline&&<div style={{background:RED,color:'#fff',textAlign:'center',padding:'6px 16px',fontSize:12,fontWeight:700}}>You&apos;re offline. Daily logs are saved on this phone until you&apos;re back; everything else needs a connection.</div>}
+
+      {unloaded.length>0&&<div role="alert" style={{display:'flex',flexWrap:'wrap',alignItems:'center',justifyContent:'space-between',gap:10,padding:'10px 16px',background:RAISED,borderBottom:`1px solid ${AMBER}`}}>
+        <span style={{fontSize:13,color:AMBER,fontWeight:600}}>{unloaded.join(', ')} didn&apos;t load — those tabs may be missing things.</span>
+        <button onClick={()=>window.location.reload()} style={{minHeight:44,padding:'0 16px',borderRadius:8,border:`1px solid ${AMBER}`,background:'transparent',color:AMBER,fontWeight:700,fontSize:13,cursor:'pointer'}}>Reload</button>
+      </div>}
 
       {/* Header */}
       <header style={{background:RAISED,borderBottom:`1px solid ${BORDER}`,padding:'12px 24px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>

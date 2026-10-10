@@ -82,7 +82,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const [itemsRes, subsRes] = await Promise.all([
       db.from('bid_package_items')
         .select('id, description, title, csi_code, quantity, unit, uom')
-        .eq('bid_package_id', id).eq('tenant_id', user.tenantId).order('sort_order'),
+        .eq('bid_package_id', id).eq('tenant_id', user.tenantId).order('sort_order').order('created_at').order('id'),
       db.from('bid_submissions')
         .select('id, company_name, sub_name, contact_email, base_amount, amount, base_bid, exclusions, inclusions, clarifications, schedule_days, bid_bond_submitted, insurance_meets')
         .eq('bid_package_id', id).eq('tenant_id', user.tenantId),
