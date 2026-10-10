@@ -33,7 +33,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     // Verify project belongs to this tenant
     const { data: project, error: projectError } = await supabase
       .from('projects')
-      .select('id')
+      .select('id, revised_contract_value, contract_amount, contract_value')
       .eq('id', params.projectId)
       .eq('tenant_id', user.tenantId)
       .single();
@@ -43,9 +43,14 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
       .from('budget_lines')
       .select('*')
       .eq('project_id', params.projectId)
+      .eq('tenant_id', user.tenantId)
       .order('cost_code', { ascending: true });
     if (error) throw error;
-    return NextResponse.json({ lines: data ?? [] });
+    // The job's contract (what the owner pays), the same figure Home and the
+    // job list show. The budget lines are COST; their total is not the contract.
+    const p = project as { revised_contract_value?: number | null; contract_amount?: number | null; contract_value?: number | null };
+    const contract = Number(p.revised_contract_value || p.contract_amount || p.contract_value || 0);
+    return NextResponse.json({ lines: data ?? [], contract });
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e);
     console.error('[projects/[projectId]/budget] read failed:', detail);

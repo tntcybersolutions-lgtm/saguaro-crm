@@ -47,6 +47,7 @@ interface AddLineForm {
 export default function BudgetPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const [lines, setLines] = useState<BudgetLine[]>([]);
+  const [contract, setContract] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -93,6 +94,7 @@ export default function BudgetPage() {
       if (!r.ok) { console.error('budget load failed', r.status); throw new Error('Request failed'); }
       const d = await r.json();
       setLines(Array.isArray(d.lines) ? d.lines : []);
+      setContract(Number(d.contract) || 0);
     } catch (e: any) {
       console.error(e);
       setError(humanError(e, 'Failed to load the budget. Please try again.'));
@@ -323,7 +325,7 @@ export default function BudgetPage() {
       note="This is where the money truth lives"
       actions={<>
         <HeroButton variant="ghost" onClick={() => setShowAddForm(v => !v)} icon={<Plus size={15} weight="bold" color={CIN.goldHi} />}>Add Line</HeroButton>
-        <HeroButton onClick={exportReport} disabled={exporting} icon={<DownloadSimple size={15} weight="bold" color="var(--on-brand)" />}>{exporting ? 'Exporting…' : 'Export'}</HeroButton>
+        <HeroButton onClick={exportReport} disabled={exporting || lines.length === 0} icon={<DownloadSimple size={15} weight="bold" color="var(--on-brand)" />}>{exporting ? 'Exporting…' : 'Export'}</HeroButton>
       </>}
     />
   );
@@ -391,8 +393,9 @@ export default function BudgetPage() {
       {/* KPI stat tiles — forecasting rollup */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 22 }}>
         {[
-          { l: 'Total Contract', v: fmt(totalRevised), c: TEXT, ac: CIN.gold, icon: <Scroll size={17} weight="duotone" color={CIN.goldHi} /> },
+          { l: 'Total Contract', v: fmt(contract), c: TEXT, ac: CIN.gold, icon: <Scroll size={17} weight="duotone" color={CIN.goldHi} /> },
           { l: 'Original Budget', v: fmt(totalOriginal), c: TEXT, ac: CIN.gold, icon: <ClipboardText size={17} weight="duotone" color={CIN.goldHi} /> },
+          { l: 'Revised Budget', v: fmt(totalRevised), c: TEXT, ac: CIN.gold, icon: <ClipboardText size={17} weight="duotone" color={CIN.goldHi} /> },
           { l: 'Committed', v: fmt(totalCommitted), c: 'var(--warning)', ac: 'var(--warning)', icon: <Handshake size={17} weight="duotone" color={CIN.goldHi} /> },
           { l: 'Actual to Date', v: fmt(totalActual), c: 'var(--warning)', ac: 'var(--warning)', icon: <Receipt size={17} weight="duotone" color={CIN.goldHi} /> },
           { l: 'Cost to Complete', v: fmt(totalCostToComplete), c: totalCostToComplete < 0 ? 'var(--danger)' : TEXT, ac: CIN.gold, icon: <Hourglass size={17} weight="duotone" color={CIN.goldHi} /> },
