@@ -8,8 +8,13 @@ export async function GET(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const supabase = createServerClient();
-    const { data: roles } = await supabase.from('role_definitions').select('*').eq('tenant_id', user.tenantId).order('name');
-    const { data: assignments } = await supabase.from('user_role_assignments').select('*').eq('tenant_id', user.tenantId);
+    /* A refused read must throw, not resolve to []: the Roles screen re-seeds
+       the six built-ins when this list comes back empty, so a silent failure
+       here would both hide every saved role and write duplicates. */
+    const { data: roles, error: rErr } = await supabase.from('role_definitions').select('*').eq('tenant_id', user.tenantId).order('name');
+    if (rErr) throw rErr;
+    const { data: assignments, error: aErr } = await supabase.from('user_role_assignments').select('*').eq('tenant_id', user.tenantId);
+    if (aErr) throw aErr;
     return NextResponse.json({ roles: roles ?? [], assignments: assignments ?? [] });
   } catch (e) {
     // A failed read must NOT render as an empty list. The screen would say

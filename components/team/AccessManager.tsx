@@ -24,6 +24,7 @@ const PURPLE = '#FF8A00';
 type PermLevel = 'None' | 'View' | 'Edit' | 'Full';
 type PermissionMap = Record<string, PermLevel>;
 type Tab = 'team' | 'roles' | 'matrix' | 'users' | 'compare' | 'audit';
+const TAB_KEYS: Tab[] = ['team', 'roles', 'matrix', 'users', 'compare', 'audit'];
 
 interface Role {
   id: string;
@@ -129,6 +130,9 @@ interface PersonRow {
 interface PendingInvite {
   id: string;
   email: string;
+  /* The name typed on the invite form — null until team_invites.name exists
+     (see app/api/team/invite/route.ts) and for invites sent before it did. */
+  name?: string | null;
   role: string | null;
   created_at: string;
   invited_by: string | null;
@@ -308,7 +312,25 @@ function Spinner() {
 /* ======================================================================== */
 export function AccessManager() {
   // Land on Team — the people-first view. Everything else is one tab away.
-  const [tab, setTab] = useState<Tab>('team');
+  const [tab, setTabState] = useState<Tab>('team');
+  /* The open tab rides the URL (?view=roles …) so a reload, a shared link or
+     the back button lands on the same tab. Before this, every reload dropped
+     you on Team — a role you had just created was "gone" until you found the
+     Roles tab again. Read once on mount (client-only, no Suspense needed). */
+  useEffect(() => {
+    try {
+      const v = new URLSearchParams(window.location.search).get('view');
+      if (v && (TAB_KEYS as string[]).includes(v)) setTabState(v as Tab);
+    } catch { /* no URL — stay on Team */ }
+  }, []);
+  const setTab = useCallback((t: Tab) => {
+    setTabState(t);
+    try {
+      const u = new URL(window.location.href);
+      if (t === 'team') u.searchParams.delete('view'); else u.searchParams.set('view', t);
+      window.history.replaceState(null, '', `${u.pathname}${u.search}${u.hash}`);
+    } catch { /* URL sync is cosmetic */ }
+  }, []);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [roles, setRoles] = useState<Role[]>([]);
@@ -510,9 +532,15 @@ export function AccessManager() {
         ? await fetch(`/api/roles/${editRoleId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...headers }, body })
         : await fetch('/api/roles', { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body });
       if (!res.ok) throw new Error('save failed');
+      const saved = await res.json().catch(() => null);
+      const savedId: string | null = saved?.role?.id ?? editRoleId ?? null;
       setShowRoleModal(false);
       notify(editRoleId ? 'Role updated.' : 'Role created.');
       await loadData();
+      /* Show the role you just saved: open the Roles tab with it selected.
+         The tab is in the URL, so a reload lands right back here. */
+      if (savedId) setSelectedRoleId(savedId);
+      setTab('roles');
     } catch {
       notify('Could not save the role. Please try again.', 'err');
     }
@@ -633,6 +661,8 @@ export function AccessManager() {
       setInviteRole('');
       notify('Invite sent.');
       await loadData();
+      /* The invitee is listed on Team (status Invited) — take you there. */
+      setTab('team');
     } catch {
       notify('Could not send the invite.', 'err');
     }
@@ -760,7 +790,7 @@ export function AccessManager() {
         if (existing.status !== 'active') { existing.status = 'invited'; existing.invite = inv; }
       } else if (em) {
         const row: PersonRow = {
-          key: `invite:${inv.id}`, userId: null, name: inv.email, email: inv.email,
+          key: `invite:${inv.id}`, userId: null, name: inv.name?.trim() || inv.email, email: inv.email,
           avatarUrl: null, baseRole: inv.role ?? null, title: null,
           status: 'invited', lastSignInAt: null,
           globalGrants: [], projectGrants: [], projectNames: [], invite: inv,
@@ -893,7 +923,10 @@ export function AccessManager() {
                         <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700,
                           color: isBypass ? 'var(--on-brand)' : DIM,
                           background: isBypass ? `linear-gradient(135deg, ${GOLD}, var(--brand-primary-strong))` : 'rgba(255,255,255,0.05)',
-                          border: isBypass ? 'none' : `1px solid ${BORDER}`, textTransform: 'capitalize' }}>
+                          border: isBypass ? 'none' : `1px solid ${BORDER}`,
+                          /* Title-case the built-in lowercase base roles ("member");
+                             a role name you typed is shown exactly as you typed it. */
+                          textTransform: (r.baseRole || 'member') === (r.baseRole || 'member').toLowerCase() ? 'capitalize' : 'none' }}>
                           {r.baseRole || 'member'}
                         </span>
                       </td>
@@ -1227,7 +1260,7 @@ export function AccessManager() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
                   <tr>
-                    {['Email', 'Role', 'Sent', 'Expires', ''].map(h => (
+                    {['Invitee', 'Role', 'Sent', 'Expires', ''].map(h => (
                       <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: DIM, fontWeight: 600,
                         borderBottom: `2px solid ${BORDER}`, fontSize: 12 }}>{h}</th>
                     ))}
@@ -1238,7 +1271,14 @@ export function AccessManager() {
                     const exp = inviteExpiry(inv.created_at);
                     return (
                       <tr key={inv.id} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)` }}>
-                        <td style={{ padding: '10px 12px', color: TEXT, fontWeight: 500 }}>{inv.email}</td>
+                        <td style={{ padding: '10px 12px', color: TEXT, fontWeight: 500 }}>
+                          {inv.name?.trim() ? (
+                            <span style={{ display: 'inline-flex', flexDirection: 'column', lineHeight: 1.3 }}>
+                              <span>{inv.name}</span>
+                              <span style={{ color: DIM, fontSize: 11.5, fontWeight: 400 }}>{inv.email}</span>
+                            </span>
+                          ) : inv.email}
+                        </td>
                         <td style={{ padding: '10px 12px', color: DIM }}>{inv.role || 'member'}</td>
                         <td style={{ padding: '10px 12px', color: DIM, fontSize: 12 }}>{relTimeAgo(inv.created_at)}</td>
                         <td style={{ padding: '10px 12px' }}>
