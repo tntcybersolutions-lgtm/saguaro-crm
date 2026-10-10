@@ -1,8 +1,8 @@
 {
-  "run": "38064651618",
-  "tag": "ZZ AUDIT 651618",
-  "job": "4f9732e7-e3d5-4cfe-ab3e-d0fe2f9f1b76",
-  "package": "0152e567-b90f-4a4b-8d7f-d4237fa047e1",
+  "run": "38069913731",
+  "tag": "ZZ AUDIT 913731",
+  "job": "ee71b121-60bc-4c2e-9800-8f319c7494c9",
+  "package": "5becb40a-4fdb-4ffa-9f0d-93fc03f3e73a",
   "doors": {
     "files": 200,
     "drawings": 200,
@@ -38,10 +38,10 @@
       "required": true,
       "count": 4,
       "docs": [
-        "ZZ AUDIT 651618 E-401 Panel Schedules",
-        "E-101 — ZZ AUDIT 651618 Power Plan",
-        "ZZ AUDIT 651618 A-201 Electrical Plan",
-        "ZZ AUDIT 651618 Plan Set"
+        "ZZ AUDIT 913731 E-401 Panel Schedules",
+        "E-101 — ZZ AUDIT 913731 Power Plan",
+        "ZZ AUDIT 913731 A-201 Electrical Plan",
+        "ZZ AUDIT 913731 Plan Set"
       ],
       "pages": []
     },
@@ -51,7 +51,7 @@
       "required": true,
       "count": 1,
       "docs": [
-        "26 05 00 — ZZ AUDIT 651618 Common Work Results for Electrical"
+        "26 05 00 — ZZ AUDIT 913731 Common Work Results for Electrical"
       ],
       "pages": []
     },
@@ -87,7 +87,7 @@
       "required": false,
       "count": 1,
       "docs": [
-        "ZZ AUDIT 651618 Site Logistics Plan"
+        "ZZ AUDIT 913731 Site Logistics Plan"
       ],
       "pages": []
     },
@@ -803,42 +803,42 @@
     {
       "name": "start a job",
       "pass": true,
-      "detail": "200 {\"projectId\":\"4f9732e7-e3d5-4cfe-ab3e-d0fe2f9f1b76\",\"project\":{\"id\":\"4f9732e7-e3d5-4cfe-ab3e-d0fe2f9f1b76\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"name\":\"ZZ AUDIT 651618 Jacket Job\",\"addre"
+      "detail": "200 {\"projectId\":\"ee71b121-60bc-4c2e-9800-8f319c7494c9\",\"project\":{\"id\":\"ee71b121-60bc-4c2e-9800-8f319c7494c9\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"name\":\"ZZ AUDIT 913731 Jacket Job\",\"addre"
     },
     {
       "name": "files page: upload",
       "pass": true,
-      "detail": "200 {\"success\":true,\"files\":[{\"id\":\"a9cb2960-22fc-4c37-95f1-1a2c82c8b576\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"project_id\":\"4f9732e7-e3d5-4cfe-ab3e-d0fe2f9f1b76\",\"file_name\":\"ZZ AUDIT 65161"
+      "detail": "200 {\"success\":true,\"files\":[{\"id\":\"4df07919-ef5e-4b47-b4f0-41d34cc1683b\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"project_id\":\"ee71b121-60bc-4c2e-9800-8f319c7494c9\",\"file_name\":\"ZZ AUDIT 91373"
     },
     {
       "name": "drawings page: sheet upload",
       "pass": true,
-      "detail": "200 {\"success\":true,\"drawing\":{\"id\":\"3999f063-510e-441d-9b68-2a1026df3d98\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"project_id\":\"4f9732e7-e3d5-4cfe-ab3e-d0fe2f9f1b76\",\"name\":\"ZZ AUDIT 651618 Po"
+      "detail": "200 {\"success\":true,\"drawing\":{\"id\":\"17384fc3-7eca-4178-be5e-f5d468e215af\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"project_id\":\"ee71b121-60bc-4c2e-9800-8f319c7494c9\",\"name\":\"ZZ AUDIT 913731 Po"
     },
     {
       "name": "specs page: add section",
       "pass": true,
-      "detail": "200 {\"success\":true,\"spec\":{\"id\":\"251963b6-f5b4-4144-8a9f-e290df22bc01\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"project_id\":\"4f9732e7-e3d5-4cfe-ab3e-d0fe2f9f1b76\",\"section_number\":\"26 05 00\",\""
+      "detail": "200 {\"success\":true,\"spec\":{\"id\":\"9814f2c3-1968-4e19-a98b-f77f250ab3cd\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"project_id\":\"ee71b121-60bc-4c2e-9800-8f319c7494c9\",\"section_number\":\"26 05 00\",\""
     },
     {
       "name": "specs page: attach file",
       "pass": true,
-      "detail": "200 {\"success\":true,\"spec\":{\"id\":\"251963b6-f5b4-4144-8a9f-e290df22bc01\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"project_id\":\"4f9732e7-e3d5-4cfe-ab3e-d0fe2f9f1b76\",\"section_number\":\"26 05 00\",\""
+      "detail": "200 {\"success\":true,\"spec\":{\"id\":\"9814f2c3-1968-4e19-a98b-f77f250ab3cd\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"project_id\":\"ee71b121-60bc-4c2e-9800-8f319c7494c9\",\"section_number\":\"26 05 00\",\""
     },
     {
       "name": "takeoff: start",
       "pass": true,
-      "detail": "200 {\"data\":{\"id\":\"f808faf2-5a46-4763-bcbb-ccd5b46c08f4\",\"project_id\":\"4f9732e7-e3d5-4cfe-ab3e-d0fe2f9f1b76\",\"name\":\"Takeoff Oct 10, 2026\",\"file_url\":null,\"file_name\":null,\"file_type\":null,\"file_size\":nul"
+      "detail": "200 {\"data\":{\"id\":\"3e381e89-103e-4d25-9148-29452fc32c6e\",\"project_id\":\"ee71b121-60bc-4c2e-9800-8f319c7494c9\",\"name\":\"Takeoff Oct 10, 2026\",\"file_url\":null,\"file_name\":null,\"file_type\":null,\"file_size\":nul"
     },
     {
       "name": "takeoff: blueprint uploaded",
       "pass": true,
-      "detail": "200/200/200 {\"bucket\":\"blueprints\",\"path\":\"4f9732e7-e3d5-4cfe-ab3e-d0fe2f9f1b76/blueprints/f808faf2-5a46-4763-bcbb-ccd5b46c08f4/sour"
+      "detail": "200/200/200 {\"bucket\":\"blueprints\",\"path\":\"ee71b121-60bc-4c2e-9800-8f319c7494c9/blueprints/3e381e89-103e-4d25-9148-29452fc32c6e/sour"
     },
     {
       "name": "create bid package (wizard)",
       "pass": true,
-      "detail": "200 {\"success\":true,\"bidPackage\":{\"id\":\"0152e567-b90f-4a4b-8d7f-d4237fa047e1\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"project_id\":\"4f9732e7-e3d5-4cfe-ab3e-d0fe2f9f1b76\",\"name\":\"ZZ AUDIT 651618"
+      "detail": "200 {\"success\":true,\"bidPackage\":{\"id\":\"5becb40a-4fdb-4ffa-9f0d-93fc03f3e73a\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"project_id\":\"ee71b121-60bc-4c2e-9800-8f319c7494c9\",\"name\":\"ZZ AUDIT 913731"
     },
     {
       "name": "jacket Add Document (drawing)",
@@ -853,7 +853,7 @@
     {
       "name": "jacket opens",
       "pass": true,
-      "detail": "200 {\"package\":{\"id\":\"0152e567-b90f-4a4b-8d7f-d4237fa047e1\",\"name\":\"ZZ AUDIT 651618 Electrical\",\"number\":null,\"trade\":\"Electrical\",\"status\":\"open\",\"dueDate\":\"2026-10-24\",\"validityDays\":60,\"preBidDate\":nul"
+      "detail": "200 {\"package\":{\"id\":\"5becb40a-4fdb-4ffa-9f0d-93fc03f3e73a\",\"name\":\"ZZ AUDIT 913731 Electrical\",\"number\":null,\"trade\":\"Electrical\",\"status\":\"open\",\"dueDate\":\"2026-10-24\",\"validityDays\":60,\"preBidDate\":nul"
     },
     {
       "name": "files-page plan (A-201) is in Drawings",
