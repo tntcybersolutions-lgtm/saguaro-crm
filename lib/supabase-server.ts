@@ -6,6 +6,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import type { Database } from './database.types';
+import { withDbRetry } from './db-retry-fetch';
 
 const _URL     = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const _ANON    = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -34,7 +35,10 @@ export function createServerClient(): SupabaseClient<Database> {
     // fetch — so a parameterless read (e.g. "select * from platform_integrations")
     // gets frozen at its first result. Force no-store so service-role reads are
     // ALWAYS fresh (correct for a data API; avoids stale-empty reads after a write).
-    global: { fetch: (input: any, init?: any) => fetch(input, { ...(init || {}), cache: 'no-store' }) }, // eslint-disable-line @typescript-eslint/no-explicit-any
+    // withDbRetry: a 503 that says the query never started (schema-cache reload
+    // after a migration, a pool timeout) is retried for ~3.5 s instead of
+    // reaching the user as a 500.
+    global: { fetch: withDbRetry((input: any, init?: any) => fetch(input, { ...(init || {}), cache: 'no-store' })) }, // eslint-disable-line @typescript-eslint/no-explicit-any
   });
   return _serviceClient;
 }
