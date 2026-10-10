@@ -89,6 +89,8 @@ export async function POST(req: NextRequest) {
       deficiency_count:  deficiencyCount,
       items:             body.results           || body.checklist || '[]',
       status:            status,
+      // The column defaults to now(); a booked inspection has not been held yet.
+      inspected_at:      body.inspected_at ?? body.inspectedAt ?? (result && result !== 'pending' ? new Date().toISOString() : null),
     };
 
     // QC-before-inspections gate (per SCS spec: "QC occurs before inspections").

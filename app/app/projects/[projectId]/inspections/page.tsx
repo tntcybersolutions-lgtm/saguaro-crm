@@ -37,6 +37,7 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 import { layout } from '@/lib/design-tokens';
+import { canonInspectionResult, isUnheldDefault } from '@/lib/inspection-result';
 
 interface Inspection {
   id: string;
@@ -66,7 +67,7 @@ const fmtDate = (d?: string | null) => d ? new Date(String(d).slice(0, 10) + 'T1
 // Results arrive in two dialects: the web form writes 'Passed'/'Failed'/'Pending'
 // while the wizard/mobile route writes 'passed'/'conditional_pass'. Canonicalize
 // before comparing so stats and re-inspection tracking see both.
-const canonResult = (r: string) => String(r || '').toLowerCase().replace(/[\s_]+/g, ' ').trim();
+const canonResult = (r: string) => { const c = canonInspectionResult(r); return c === 'conditional' ? 'conditional pass' : c; };
 
 // The API returns raw `inspections` rows whose columns don't match this page's
 // display fields (scheduled_date/inspection_type/inspector_name). Normalize so
@@ -78,7 +79,8 @@ function normalizeInspection(r: Record<string, unknown>): Inspection {
     date: String(r.date ?? r.scheduled_date ?? ''),
     inspector: String(r.inspector ?? r.inspector_name ?? ''),
     agency: String(r.agency ?? r.inspector_agency ?? ''),
-    result: String(r.result ?? ''),
+    // A booked row can carry the column's old 'pass' default — that is no result yet.
+    result: isUnheldDefault(r.result, r.status) ? 'pending' : String(r.result ?? ''),
     notes: String(r.notes ?? ''),
     status: String(r.status ?? ''),
     re_inspection_date: (r.re_inspection_date as string | null) ?? null,

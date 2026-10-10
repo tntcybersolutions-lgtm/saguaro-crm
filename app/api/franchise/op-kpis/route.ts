@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { hasFeature } from '@/lib/entitlements-server';
+import { inspectionOutcome } from '@/lib/inspection-result';
 
 const DAY = 86400000;
 const days = (a: any, b: any): number | null => {
@@ -50,8 +51,9 @@ export async function GET(req: NextRequest) {
     const planReviewTimes = (permits || []).map((p: any) => days(p.plan_review_submitted_date, p.plan_review_approved_date)).filter((x: any): x is number => x != null);
 
     // Inspection pass rate
-    const withResult = (insp || []).filter((i: any) => i.result || /pass|fail/i.test(String(i.status || '')));
-    const passed = withResult.filter((i: any) => /pass|approv|complete/i.test(String(i.result || i.status || '')));
+    // A booked inspection is not a result (it may carry the column's old 'pass' default).
+    const withResult = (insp || []).filter((i: any) => inspectionOutcome(i) !== 'pending');
+    const passed = withResult.filter((i: any) => inspectionOutcome(i) !== 'failed');
     const passRate = withResult.length ? Math.round((passed.length / withResult.length) * 100) : null;
 
     // Punch-list resolution duration (created → completed) — only closed items.
