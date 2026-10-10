@@ -5,6 +5,8 @@ import { must, tryWrite } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
 import { onBidSubmitted } from '@/lib/triggers';
 import { logActivity, money } from '@/lib/activity';
+import { bidRefusal, deadlineZone } from '@/lib/bid-deadline';
+import { inviteState } from '@/lib/bid-invite-state';
 
 /**
  * POST /api/bid-packages/portal/[token]/respond
@@ -37,25 +39,27 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
     const body = await req.json().catch(() => ({}));
     const action = body.action === 'decline' ? 'decline' : 'submit';
 
-    const { data: invite } = await db
+    const { data: invite, error: invErr } = await db
       .from('bid_package_invites').select('*').eq('token', token).maybeSingle();
+    if (invErr) throw invErr;
     if (!invite) return NextResponse.json({ error: 'This link is no longer valid.' }, { status: 404 });
     const inv = invite as Record<string, any>;
-    if (['revoked', 'withdrawn'].includes(String(inv.status || ''))) {
+    if (inviteState(inv) === 'revoked') {
       return NextResponse.json({ error: 'This link is no longer valid.' }, { status: 404 });
     }
 
     const tenantId = inv.tenant_id as string;
 
-    const { data: pkg } = await db
+    const { data: pkg, error: pkgErr } = await db
       .from('bid_packages')
       /* name and trade are read so the history can say WHICH package the bid
          landed on. Without them the feed read "bid $11,450 on a package",
          which is the one detail that makes the line worth reading. */
-      .select('id, tenant_id, project_id, status, bid_due_date, due_date, name, trade')
+      .select('id, tenant_id, project_id, status, bid_due_date, due_date, name, trade, sub_portal_enabled')
       .eq('id', inv.bid_package_id)
       .eq('tenant_id', tenantId)
       .maybeSingle();
+    if (pkgErr) throw pkgErr;
     if (!pkg) return NextResponse.json({ error: 'This link is no longer valid.' }, { status: 404 });
     const p = pkg as Record<string, any>;
 
@@ -77,22 +81,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
        who closes early, or awards before the date, leaves the window open.
 
        'sent' is what /issue sets. Anything earlier is not open yet; anything
-       later is over. */
-    const pkgStatus = String(p.status || 'draft').toLowerCase();
-    if (pkgStatus === 'draft' || pkgStatus === 'pending') {
-      return NextResponse.json(
-        { error: 'This bid package has not been issued yet. The general contractor will send it when the documents are ready.' },
-        { status: 409 },
-      );
-    }
-    if (['closed', 'awarded', 'cancelled', 'canceled', 'archived'].includes(pkgStatus)) {
-      return NextResponse.json({ error: 'Bidding for this package has closed.' }, { status: 409 });
-    }
+       later is over.
 
-    const due = p.bid_due_date || p.due_date;
-    if (due && new Date(due).getTime() < Date.now()) {
-      return NextResponse.json({ error: 'Bidding for this package has closed.' }, { status: 409 });
-    }
+       That rule now lives in lib/bid-deadline, shared with the sub portal and
+       the jacket read: issued ('open' or 'sent'), portal switched on, and the
+       due DAY not yet over in the GC company's time zone. The deadline was
+       new Date(due_date) — midnight UTC, the evening before in every US zone —
+       so bidding shut before the day the invite named. */
+    const refusal = bidRefusal(p, await deadlineZone(db, tenantId));
+    if (refusal) return NextResponse.json({ error: refusal.error }, { status: refusal.status });
 
     const now = new Date().toISOString();
     const email = String(inv.sub_email || '').toLowerCase();
