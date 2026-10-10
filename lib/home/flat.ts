@@ -16,6 +16,7 @@
 import { addDays, daysBetween, fmtMoneyShort, type Metric } from './rank';
 import { isClosedStatus, isDoneStatus, PLACEHOLDER_WAIVER_PREFIX } from '@/lib/project-lifecycle';
 import { pickerSection } from '@/lib/job-picker';
+import { isBiddingStatus } from '@/lib/bid-deadline';
 
 /* ── Shared shapes ──────────────────────────────────────────────────────── */
 
@@ -121,7 +122,8 @@ export interface BidRow {
   vsBudgetPct: number | null;
   due: string | null;
   daysLeft: number | null;
-  /** The GC switched the package's bid portal off: invited subs can't open it. */
+  /** Invited subs can't bid online: the package is taking bids but its portal isn't on
+   *  (lib/bid-deadline bidRefusal — only `true` is on; sending the jacket turns it on). */
   portalOff: boolean;
   dot: DotTone;
   meta: TextPart[];
@@ -172,7 +174,7 @@ export function bidRows(input: {
       const vs = low != null && budget ? Math.round(((low - budget) / budget) * 100) : null;
       const due = ymdOf(p.bid_due_date) || ymdOf(p.due_date);
       const daysLeft = due ? daysBetween(input.today, due) : null;
-      const portalOff = p.sub_portal_enabled === false && inv > 0;
+      const portalOff = inv > 0 && isBiddingStatus(p.status) && p.sub_portal_enabled !== true;
       const job = input.jobNames.get(p.project_id) ?? null;
 
       const meta: TextPart[] = [];

@@ -78,8 +78,12 @@ const quiet = bidRows({ packages: [{ ...packages[0], sub_portal_enabled: true, d
 check('portal on, due later, nobody bid yet → grey, "no bids yet"', quiet.dot === 'grey' && text(quiet.meta).includes('no bids yet'), `${quiet.dot} ${text(quiet.meta)}`);
 const soonOk = bidRows({ packages: [{ ...packages[0], sub_portal_enabled: true }], invites: inv('crac', 5), submissions, jobNames, today, showMoney: true })[0];
 check('portal on, closing in 10 days with bids missing → amber', soonOk.dot === 'amber' && !soonOk.portalOff);
-const allIn = bidRows({ packages: [{ ...packages[0], sub_portal_enabled: null }], invites: inv('crac', 3), submissions, jobNames, today, showMoney: true })[0];
-check('null portal flag is ON (the portal only refuses false); all bid → green', !allIn.portalOff && allIn.dot === 'green', `${allIn.portalOff} ${allIn.dot}`);
+const neverOn = bidRows({ packages: [{ ...packages[0], sub_portal_enabled: null }], invites: inv('crac', 5), submissions, jobNames, today, showMoney: true })[0];
+check('portal never switched on (null) counts as off, as bidRefusal does', neverOn.portalOff && neverOn.dot === 'red');
+const allIn = bidRows({ packages: [{ ...packages[0], sub_portal_enabled: true }], invites: inv('crac', 3), submissions, jobNames, today, showMoney: true })[0];
+check('portal on and every invitee has bid → green', !allIn.portalOff && allIn.dot === 'green', `${allIn.portalOff} ${allIn.dot}`);
+const lev = bidRows({ packages: [{ ...packages[0], status: 'leveling' }], invites: inv('crac', 5), submissions, jobNames, today, showMoney: true })[0];
+check('leveling: no longer taking bids, so the portal flag is not a problem', lev && !lev.portalOff, String(lev?.portalOff));
 const noMoney = bidRows({ packages, invites, submissions, jobNames, today, showMoney: false });
 check('no Budget access → no low bid or budget in the row', noMoney.every(b => b.low === null && b.budget === null && !text(b.meta).includes('$')));
 const past = bidRows({ packages: [{ ...packages[0], due_date: '2026-10-07' }], invites, submissions, jobNames, today, showMoney: true })[0];
