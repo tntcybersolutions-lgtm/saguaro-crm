@@ -17,6 +17,7 @@ import {
   sendW9Request,
 } from './email';
 import { must } from '@/lib/db-write';
+import { INSURANCE_ALERT_SELECT, insuranceAlertParties } from '@/lib/insurance-alert';
 
 /* Fallback is the live domain. It used to be a Vercel preview URL that no
    longer resolves, so any email sent without NEXT_PUBLIC_APP_URL set carried
@@ -748,47 +749,59 @@ export async function onChangeOrderApproved(changeOrderId: string): Promise<void
 }
 
 // ─── Insurance ────────────────────────────────────────────────────────────────
+/* This embedded subcontractors(name, email). There is no `name` column (it is
+   company_name), so PostgREST rejected the select, the error was never read,
+   `cert` came back null and the function returned quietly — the COI-expiring
+   email never went out. The select and the recipient rules now live in
+   lib/insurance-alert, and a failed read is thrown into the catch, which logs it. */
 export async function onInsuranceExpiring(certId: string, daysLeft: number): Promise<void> {
   try {
     const db = adminClient();
-    const { data: cert } = await db
+    const { data: cert, error: certErr } = await db
       .from('insurance_certificates')
-      .select('*, subcontractors(name, email), projects(name, gc_email, tenant_id)')
+      .select(INSURANCE_ALERT_SELECT)
       .eq('id', certId)
-      .single();
-    if (!cert) return;
-    const c = cert as any;
-    const sub = c.subcontractors;
-    const project = c.projects;
-    if (!project) return;
-
-    const subEmail = sub?.email;
-    if (subEmail) {
-      await sendInsuranceExpiring(subEmail, sub.name, project.name, c.policy_type, c.expiry_date, daysLeft);
+      .maybeSingle();
+    if (certErr) throw certErr;
+    if (!cert) {
+      console.warn('[onInsuranceExpiring] certificate not found', certId);
+      return;
     }
-    const gcEmail = project.gc_email;
-    if (gcEmail) {
-      await sendInsuranceExpiring(gcEmail, sub?.name || 'Subcontractor', project.name, c.policy_type, c.expiry_date, daysLeft);
+    const c = cert as any;
+    const parties = insuranceAlertParties(c);
+    if (!parties) {
+      console.warn('[onInsuranceExpiring] certificate has no project — no alert sent', certId);
+      return;
+    }
+    const projectName = parties.projectName || 'your project';
+
+    if (parties.subEmail) {
+      await sendInsuranceExpiring(parties.subEmail, parties.subName, projectName, c.policy_type, c.expiry_date, daysLeft);
+    }
+    if (parties.gcEmail) {
+      await sendInsuranceExpiring(parties.gcEmail, parties.subName, projectName, c.policy_type, c.expiry_date, daysLeft);
     }
 
     await must(db.from('insurance_certificates').update({ last_checked_at: new Date().toISOString() }).eq('id', certId), 'insurance_certificates update');
-    await createNotification(
-      project.tenant_id, null, 'insurance_expiring',
-      `Insurance expiring in ${daysLeft} days — ${sub?.name || 'Subcontractor'}`,
-      `${c.policy_type} expires on ${c.expiry_date}`,
-      `${APP_URL}/app/projects/${c.project_id}/insurance`, c.project_id
-    );
-    await dispatchWebhookEvent(project.tenant_id, 'insurance.expiring', {
-      cert_id: certId,
-      project_id: c.project_id,
-      project_name: project.name,
-      sub_name: sub?.name ?? null,
-      policy_type: c.policy_type,
-      expiry_date: c.expiry_date,
-      days_left: daysLeft,
-    });
+    if (parties.tenantId) {
+      await createNotification(
+        parties.tenantId, null, 'insurance_expiring',
+        `Insurance expiring in ${daysLeft} days — ${parties.subName}`,
+        `${c.policy_type} expires on ${c.expiry_date}`,
+        `${APP_URL}/app/projects/${c.project_id}/insurance`, c.project_id
+      );
+      await dispatchWebhookEvent(parties.tenantId, 'insurance.expiring', {
+        cert_id: certId,
+        project_id: c.project_id,
+        project_name: parties.projectName,
+        sub_name: parties.subName,
+        policy_type: c.policy_type,
+        expiry_date: c.expiry_date,
+        days_left: daysLeft,
+      });
+    }
   } catch (err) {
-    console.error('[onInsuranceExpiring]', err);
+    console.error('[onInsuranceExpiring] cert', certId, err);
   }
 }
 
