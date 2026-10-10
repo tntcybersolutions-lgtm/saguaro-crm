@@ -128,7 +128,10 @@ const config: CapacitorConfig = {
     // Service workers only run in WKWebView for App-Bound Domains (iOS 14+).
     // Offline mode (public/push-sw.js) needs them, so the app's own domains
     // are listed in Info.plist → WKAppBoundDomains and navigation is limited
-    // to them; any other site opens in Safari.
+    // to them; any other site opens in Safari. Intuit's sign-in domains are
+    // app-bound too: allowNavigation keeps QuickBooks Connect in the webview,
+    // and WebKit refuses an in-webview navigation to a domain that is not
+    // app-bound, so without them Connect would fail on the iPhone.
     limitsNavigationsToAppBoundDomains: true,
     // Scroll elastic behaviour matches native feel
     scrollEnabled: true,

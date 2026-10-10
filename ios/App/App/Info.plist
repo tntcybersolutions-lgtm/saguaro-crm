@@ -51,6 +51,9 @@
 	<array>
 		<string>www.saguarocontrol.net</string>
 		<string>saguarocontrol.net</string>
+		<string>intuit.com</string>
+		<string>appcenter.intuit.com</string>
+		<string>accounts.intuit.com</string>
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Saguaro Field uses the camera to capture jobsite photos, daily logs, punch lists, and inspections.</string>
