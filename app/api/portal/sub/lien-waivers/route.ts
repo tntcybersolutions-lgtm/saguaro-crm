@@ -231,10 +231,9 @@ export async function POST(req: NextRequest) {
       scope.tenantId,
       { title: `Signed ${waiverTypeLabel(type).toLowerCase()} — ${company}`, sourceType: 'lien_waiver', sourceId: id },
     );
-    /* saveDocument never throws: a failed upload comes back as demo:// or as a
-       URL for an object that isn't there. Signing it is the check — signUrl
-       returns '' when the object can't be found. A waiver whose PDF didn't
-       file is not recorded as signed. */
+    /* saveDocument throws when the upload is refused. Signing the stored URL
+       is a second check — signUrl returns '' when the object can't be found.
+       A waiver whose PDF didn't file is not recorded as signed. */
     const key = storageObjectKey(stored);
     const viewUrl = key ? await signUrl(stored, 3600) : '';
     if (!key || !viewUrl) throw new Error(`signed lien waiver PDF did not reach storage (${stored.slice(0, 40)})`);
