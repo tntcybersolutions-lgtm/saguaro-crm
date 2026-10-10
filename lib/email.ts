@@ -98,7 +98,16 @@ async function deliver(to: string | string[], subject: string, html: string): Pr
     return { sent: false, error: NOT_CONFIGURED };
   }
   try {
-    await resend.emails.send({ from: FROM, to: Array.isArray(to) ? to : [to], subject, html });
+    /* Resend's SDK does not throw when the API refuses a send (bad address,
+       unverified domain, rate limit) — it resolves with { error }. Awaiting it
+       and returning sent:true reported every refused invitation, award notice
+       and reminder as delivered. Read the error it hands back. */
+    const { error } = await resend.emails.send({ from: FROM, to: Array.isArray(to) ? to : [to], subject, html });
+    if (error) {
+      const msg = typeof error === 'string' ? error : (error as { message?: string }).message || 'Email provider rejected the send.';
+      console.error('[Email] Send refused:', msg);
+      return { sent: false, error: msg };
+    }
     return { sent: true };
   } catch (err) {
     console.error('[Email] Send failed:', err);
@@ -205,8 +214,8 @@ export async function sendBidSubmitted(to: string, gcName: string, subName: stri
   `));
 }
 
-export async function sendBidAwarded(to: string, subName: string, projectName: string, amount: number, startDate: string) {
-  await send(to, `Bid Awarded — Congratulations! — ${projectName}`, layout(`
+export async function sendBidAwarded(to: string, subName: string, projectName: string, amount: number, startDate: string): Promise<SendResult> {
+  return send(to, `Bid Awarded — Congratulations! — ${projectName}`, layout(`
     ${h('🏆 Congratulations — Bid Awarded!')}
     ${p(`Dear <strong>${subName}</strong>, we are pleased to inform you that your bid has been selected for <strong>${projectName}</strong>.`)}
     ${table(row('Project', projectName) + row('Contract Amount', fmt(amount)) + row('Anticipated Start', startDate))}
@@ -215,8 +224,8 @@ export async function sendBidAwarded(to: string, subName: string, projectName: s
   `));
 }
 
-export async function sendBidNotAwarded(to: string, subName: string, projectName: string) {
-  await send(to, `Bid Result — ${projectName}`, layout(`
+export async function sendBidNotAwarded(to: string, subName: string, projectName: string): Promise<SendResult> {
+  return send(to, `Bid Result — ${projectName}`, layout(`
     ${h('Bid Result')}
     ${p(`Dear <strong>${subName}</strong>, thank you for submitting your bid on <strong>${projectName}</strong>.`)}
     ${p('After careful review, we have selected another subcontractor for this scope. We appreciate your time and look forward to working with you on future opportunities.')}
