@@ -2,17 +2,23 @@
  * GET  /api/home?view=&scope=mine|team&project=<uuid>&window=today|7d
  *      The role-based home: context, metrics, ranked action queue, schedule,
  *      work table, per-section errors. docs/SPEC-dashboard-2026-10-03.md.
+ *      `flat` carries what the list-first Home draws (lib/home/flat-build):
+ *      Sage's brief, the number strip, Bidding / Jobs / Money rows.
  * POST /api/home  { view }  — remember the user's chosen home view.
  *
  * Views are filtered by the caller's effective permissions on the server.
  * Asking for a view you do not hold returns your default instead — switching
  * views never widens access.
+ *
+ * "Today" is a day where the person is (lib/time-zone: the device's zone from
+ * the x-time-zone header, else the company's, else UTC) — never a guessed zone.
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { getEffectivePermissions, hasPermission, type PermissionMap } from '@/lib/permissions';
 import { BUILDERS, type BuildCtx, type Scope, type Window } from '@/lib/home/build';
+import { buildFlat } from '@/lib/home/flat-build';
 import { HOME_VIEWS, VIEW_LABEL, ymdIn, type HomeView } from '@/lib/home/rank';
 import { TIME_ZONE_HEADER, isTimeZone } from '@/lib/time-zone';
 
@@ -81,8 +87,8 @@ export async function GET(req: NextRequest) {
     if (!available.length) {
       return NextResponse.json({ error: 'Your role has no home views yet. Ask an admin for Projects or Sales access.' }, { status: 403 });
     }
-    const saved = typeof custom.home_view === 'string' && available.includes(custom.home_view as HomeView) ? (custom.home_view as HomeView) : null;
-    const defaultView = saved || roleDefault(perms, baseRole, roleNames, available);
+    const savedView = typeof custom.home_view === 'string' && available.includes(custom.home_view as HomeView) ? (custom.home_view as HomeView) : null;
+    const defaultView = savedView || roleDefault(perms, baseRole, roleNames, available);
     const requested = sp.get('view') as HomeView | null;
     const view: HomeView = requested && available.includes(requested) ? requested : defaultView;
 
@@ -105,11 +111,12 @@ export async function GET(req: NextRequest) {
       perms, scope, projectId, today: ymdIn(timeZone), window, timeZone,
     };
     const errors: Record<string, string> = {};
-    const sections = await BUILDERS[view](ctx, errors);
+    const { internal: _internal, ...sections } = await BUILDERS[view](ctx, errors);
+    const flat = await buildFlat(ctx, view, { ...sections, internal: _internal }, errors);
 
     return NextResponse.json({
       context: {
-        view, viewLabel: VIEW_LABEL[view], defaultView, savedView: saved,
+        view, viewLabel: VIEW_LABEL[view], defaultView, savedView,
         views: HOME_VIEWS.filter(v => available.includes(v)).map(v => ({ key: v, label: VIEW_LABEL[v] })),
         scope, window, projectId, today: ctx.today, timeZone,
         firstName: (profile.full_name || '').split(' ')[0] || null,
@@ -118,6 +125,7 @@ export async function GET(req: NextRequest) {
         classicHome: features.classic_home === true,
       },
       ...sections,
+      flat,
       generatedAt: new Date().toISOString(),
     }, { headers: { 'Cache-Control': 'private, no-store' } });
   } catch (e) {

@@ -216,21 +216,21 @@ const CSS = `
 .rpMuted { color: var(--text-tertiary); }
 .rpText { display: inline-block; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
 .rpExports { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.rpGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
-.rpCard { all: unset; box-sizing: border-box; display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: var(--radius-sm); background: var(--bg-surface-2); border: 1px solid var(--glass-border); cursor: pointer; min-width: 0; }
-.rpCard:hover { border-color: var(--brand-primary-35); background: var(--brand-primary-08); }
+/* The library is a list of rows on hairlines (flat UI), two columns on a wide screen. */
+.rpGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); column-gap: 28px; }
+.rpCard { all: unset; box-sizing: border-box; display: flex; align-items: flex-start; gap: 12px; padding: 12px 4px; min-height: 58px; border-bottom: 1px solid var(--sg-border); cursor: pointer; min-width: 0; -webkit-tap-highlight-color: transparent; }
+.rpCard:hover, .rpCard:active { background: rgba(255,255,255,0.03); }
 .rpCard:focus-visible { outline: 2px solid var(--brand-primary); }
-.rpCard:disabled { opacity: .55; cursor: not-allowed; }
-.rpCardIcon { width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0; display: grid; place-items: center; background: var(--bg-solid-2); border: 1px solid var(--glass-border); color: var(--brand-primary); }
+.rpCardIcon { width: 24px; height: 24px; flex-shrink: 0; display: grid; place-items: center; margin-top: 1px; color: var(--brand-primary); }
 .rpCardTitle { font-weight: 700; font-size: var(--fs-md); color: var(--text-primary); margin-bottom: 3px; }
 .rpCardDesc { font-size: var(--fs-xs); color: var(--text-tertiary); line-height: 1.5; }
 .rpCardAsk { font-size: var(--fs-xs); color: var(--brand-primary); line-height: 1.45; margin-top: 5px; }
-.rpHist { all: unset; box-sizing: border-box; display: block; width: 100%; padding: 9px 11px; border-radius: var(--radius-sm); background: var(--bg-surface-2); border: 1px solid var(--glass-border); cursor: pointer; min-height: 44px; }
-.rpHist:hover { border-color: var(--brand-primary-35); }
+.rpHist { all: unset; box-sizing: border-box; display: block; width: 100%; padding: 10px 4px; border-bottom: 1px solid var(--sg-border); cursor: pointer; min-height: 44px; }
+.rpHist:hover { background: rgba(255,255,255,0.03); }
 .rpHist:focus-visible { outline: 2px solid var(--brand-primary); }
 .rpHistTitle { font-size: var(--fs-sm); font-weight: 600; color: var(--text-primary); line-height: 1.3; }
 .rpHistSub { font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 3px; }
-.rpStack { display: flex; flex-direction: column; gap: 8px; }
+.rpStack { display: flex; flex-direction: column; gap: 0; }
 @media (max-width: 640px) {
   .rpWs .k-btn, .rpWs .k-stat, .rpWs select.k-select, .rpWs .k-input, .rpChip { min-height: 44px; }
   .rpWs .k-table td { height: 48px; }
@@ -341,12 +341,11 @@ export default function ReportsPage() {
   // Cleanup on unmount
   useEffect(() => () => { esRef.current?.close(); }, []);
 
-  // Bring the result into view once it is in the DOM.
-  useEffect(() => {
-    if (pageState !== 'results') return;
-    const el = resultsRef.current;
-    if (el && el.getBoundingClientRect().top > window.innerHeight * 0.6) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, [pageState]);
+  /* No auto-scroll to the result. The page used to scrollIntoView the result
+     card the moment it landed — on a phone that yanked the page out from
+     under a thumb already reaching for the next chip (the live walk's
+     "covered" Job Cost / Punch List / Bid Analysis taps). The progress and
+     result cards open directly under the Ask Sage bar instead. */
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') runSageReport();
@@ -441,21 +440,20 @@ export default function ReportsPage() {
                 onChange={e => setSageQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder='Ask Sage anything… "Show me all open RFIs on Project Alpha" or "Cost breakdown this month"'
-                disabled={busy}
                 aria-label="Report question"
               />
             </div>
             {projects.length > 0 && (
-              <Select aria-label="Project" value={projectFilter} onChange={e => setProjectFilter(e.target.value)} disabled={busy} placeholder="All Projects" style={{ width: 'auto', minWidth: 170 }} options={projects.map(p => ({ value: p.id, label: p.name }))} />
+              <Select aria-label="Project" value={projectFilter} onChange={e => setProjectFilter(e.target.value)} placeholder="All Projects" style={{ width: 'auto', minWidth: 170 }} options={projects.map(p => ({ value: p.id, label: p.name }))} />
             )}
-            <Button variant="primary" onClick={() => runSageReport()} disabled={busy || !sageQuery.trim()}>{busy ? 'Running…' : 'Ask Sage'}</Button>
+            <Button variant="primary" onClick={() => runSageReport()} disabled={!sageQuery.trim()} aria-busy={busy || undefined}>{busy ? 'Running…' : 'Ask Sage'}</Button>
           </div>
 
           {/* Date-range chips - the range resolves to real dates and rides along with every query and card run */}
           <div className="rpChips">
             <span className="rpChipLabel"><CalendarBlank size={13} weight="bold" /> Period</span>
             {['', ...DATE_RANGES].map(rg => (
-              <button key={rg || 'all-time'} type="button" className="rpChip" aria-pressed={dateRange === rg} onClick={() => setDateRange(rg)} disabled={busy}>{rg || 'All time'}</button>
+              <button key={rg || 'all-time'} type="button" className="rpChip" aria-pressed={dateRange === rg} onClick={() => setDateRange(rg)}>{rg || 'All time'}</button>
             ))}
             {rd && <span className="rpMuted" style={{ fontSize: 'var(--fs-xs)' }}>{rd.from} to {rd.to} <AutoChip /></span>}
           </div>
@@ -464,7 +462,7 @@ export default function ReportsPage() {
           <div className="rpChips">
             <span className="rpChipLabel"><Sparkle size={13} weight="bold" /> Try</span>
             {SUGGESTION_CHIPS.map(chip => (
-              <button key={chip} type="button" className="rpChip" onClick={() => handleChipClick(chip)} disabled={busy}>{chip}</button>
+              <button key={chip} type="button" className="rpChip" onClick={() => handleChipClick(chip)}>{chip}</button>
             ))}
           </div>
         </Card>
@@ -530,12 +528,13 @@ export default function ReportsPage() {
                 </div>
               )}
 
-              {/* Standard report library */}
-              {!busy && (
+              {/* Standard report library — stays put while a report runs, so
+                  nothing under a thumb moves; a tap starts that report instead. */}
+              {(
                 <Card title={pageState === 'results' ? 'Run Another Report' : 'Standard Reports'} subtitle="One tap each — Sage runs the report with the project and period above.">
                   <div className="rpGrid">
                     {STANDARD_REPORTS.map(r => (
-                      <button key={r.id} type="button" className="rpCard" onClick={() => handleCardClick(r.query)} disabled={busy}>
+                      <button key={r.id} type="button" className="rpCard" onClick={() => handleCardClick(r.query)}>
                         <div className="rpCardIcon"><r.icon size={18} /></div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div className="rpCardTitle">{r.title}</div>

@@ -1,118 +1,30 @@
 'use client';
+/**
+ * While any screen inside a job loads: a title, a line under it and flat
+ * rows — the outline every job screen shares. Never a blank screen and never a
+ * grid of grey boxes. Covers every route under the job
+ * (the nested segments have no boundary of their own between here and them).
+ */
+import React from 'react';
+import { FlatStyles, RowSkeleton } from '@/components/ui/flat';
 
-const RAISED = 'var(--surface-card)';
-const BORDER = 'rgba(255,255,255,0.12)';
-const GOLD = 'var(--warning)';
-const DARK = 'var(--bg-base)';
-
-function Pulse({ w, h, mb }: { w: string; h: number; mb?: number }) {
+export default function JobLoading() {
   return (
-    <div
-      style={{
-        width: w,
-        height: h,
-        borderRadius: 4,
-        background: BORDER,
-        animation: 'skeletonPulse 1.4s ease-in-out infinite',
-        marginBottom: mb ?? 0,
-      }}
-    />
-  );
-}
-
-export default function ProjectLoading() {
-  return (
-    <>
-      <style>{`
-        @keyframes skeletonPulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: .3; }
-        }
-      `}</style>
-      <div style={{ minHeight: '100vh', background: DARK }}>
-        {/* Page header skeleton */}
-        <div
-          style={{
-            padding: '16px 24px',
-            borderBottom: `1px solid ${BORDER}`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <div>
-            <Pulse w="180px" h={20} mb={6} />
-            <Pulse w="240px" h={12} />
-          </div>
-          <Pulse w="120px" h={36} />
-        </div>
-
-        {/* KPI row */}
-        <div style={{ padding: '20px 24px 0', display: 'flex', gap: 12 }}>
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div
-              key={i}
-              style={{
-                background: RAISED,
-                borderRadius: 8,
-                padding: '14px 24px',
-                border: `1px solid ${BORDER}`,
-                flex: 1,
-              }}
-            >
-              <Pulse w="50%" h={20} mb={6} />
-              <Pulse w="60%" h={11} />
-            </div>
-          ))}
-        </div>
-
-        {/* Table skeleton */}
-        <div style={{ padding: '16px 24px 40px' }}>
-          <div
-            style={{
-              background: 'var(--bg-base)',
-              padding: '10px 14px',
-              borderBottom: `1px solid ${BORDER}`,
-              display: 'flex',
-              gap: 20,
-            }}
-          >
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Pulse key={i} w={`${60 + i * 15}px`} h={11} />
-            ))}
-          </div>
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div
-              key={i}
-              style={{
-                padding: '12px 14px',
-                borderBottom: `1px solid rgba(255,255,255,0.12)`,
-                display: 'flex',
-                gap: 20,
-                alignItems: 'center',
-              }}
-            >
-              {Array.from({ length: 6 }).map((_, j) => (
-                <Pulse key={j} w={`${50 + j * 12}px`} h={13} />
-              ))}
-            </div>
-          ))}
-        </div>
-
-        {/* Gold loading bar */}
-        <div
-          style={{
-            position: 'fixed',
-            top: 56,
-            left: 0,
-            right: 0,
-            height: 2,
-            zIndex: 200,
-            background: `linear-gradient(90deg, transparent, ${GOLD}, transparent)`,
-            animation: 'skeletonPulse 1s ease-in-out infinite',
-          }}
-        />
+    <div aria-busy="true" aria-label="Loading" style={{ background: 'var(--bg-base)', minHeight: '60vh' }}>
+      <FlatStyles />
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <div className="jl-head">
+        <i style={{ width: '62%', height: 18 }} />
+        <i style={{ width: '44%', height: 11, marginTop: 10 }} />
       </div>
-    </>
+      <RowSkeleton rows={9} />
+    </div>
   );
 }
+
+const CSS = `
+.jl-head{padding:14px 16px 10px;border-bottom:1px solid var(--fl-line)}
+.jl-head i{display:block;border-radius:5px;background:var(--fl-line);animation:jl-pulse 1.2s ease-in-out infinite}
+@keyframes jl-pulse{50%{opacity:.45}}
+@media (prefers-reduced-motion:reduce){.jl-head i{animation:none}}
+`;

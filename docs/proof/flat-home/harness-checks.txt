@@ -1,0 +1,103 @@
+ok   live @390: no sideways scroll
+ok   live @390: no page errors
+ok   live @390: brief says the live sentence
+ok   live @390: strip $7.29M · $2.54M Billed · 35% · 3 · 4/4
+ok   live @390: no Today / Next 7 Days switch
+ok   empty @390: no sideways scroll
+ok   empty @390: no page errors
+ok   empty @390: calm brief + one-line empties
+ok   failed @390: no sideways scroll
+ok   failed @390: no page errors
+ok   failed @390: Bidding says it failed, the rest renders
+ok   loading @390: no sideways scroll
+ok   loading @390: no page errors
+ok   loading @390: skeleton, not blank
+ok   error @390: no sideways scroll
+ok   error @390: no page errors
+ok   error @390: honest message + Retry
+ok   busy-ops @390: no sideways scroll
+ok   busy-ops @390: no page errors
+ok   busy-ops @390: failed inspection leads the brief
+ok   busy-owner @390: no sideways scroll
+ok   busy-owner @390: no page errors
+ok   old-live @390: no sideways scroll
+ok   old-live @390: no page errors
+ok   live @1440: no sideways scroll
+ok   live @1440: no page errors
+ok   live @1440: brief says the live sentence
+ok   live @1440: strip $7.29M · $2.54M Billed · 35% · 3 · 4/4
+ok   live @1440: no Today / Next 7 Days switch
+ok   empty @1440: no sideways scroll
+ok   empty @1440: no page errors
+ok   empty @1440: calm brief + one-line empties
+ok   failed @1440: no sideways scroll
+ok   failed @1440: no page errors
+ok   failed @1440: Bidding says it failed, the rest renders
+ok   loading @1440: no sideways scroll
+ok   loading @1440: no page errors
+ok   loading @1440: skeleton, not blank
+ok   error @1440: no sideways scroll
+ok   error @1440: no page errors
+ok   error @1440: honest message + Retry
+ok   busy-ops @1440: no sideways scroll
+ok   busy-ops @1440: no page errors
+ok   busy-ops @1440: failed inspection leads the brief
+ok   busy-owner @1440: no sideways scroll
+ok   busy-owner @1440: no page errors
+ok   old-live @1440: no sideways scroll
+ok   old-live @1440: no page errors
+ok   44px hit area: .fh-chip (81x30, 82x30)
+ok   44px hit area: .fh-plus (30x30)
+ok   44px hit area: .fl-act (68x36)
+ok   44px hit area: .fl-sec-act (33x32)
+ok   44px hit area: .fl-brief-act (100x21)
+ok   rows are at least 44px tall (min 65)
+ok   brief "Turn links on" opens the CRAC jacket
+ok   bid row opens its package
+ok   Invite opens the package (its invite composer)
+ok   job row opens the job
+ok   Jobs "All 3" opens Projects
+ok   money row opens the job’s pay apps
+ok   empty Needs attention → My Work
+ok   Coming up → My Work
+ok   Pipeline & win rate → /app/sales
+ok   activity row opens its job
+ok   footer Refresh reloads Home
+ok   footer Classic dashboard → /app/classic
+ok   view chip opens its menu
+ok   view menu sits inside the screen (30–250)
+ok   choosing Operations changes the view (URL + reload), no scroll
+ok   Operations strip shows its own figures
+ok   Whose work → My work sets scope=mine
+ok   "Always start on Operations" saves the view
+ok   …and says so
+ok   job chip filters Home to Copper Ridge, no scroll
+ok   job chip shows the job
+ok   + opens Create
+ok   Create → RFI on the picked job
+ok   with All jobs, job items are off and say why
+ok   Create → Job
+ok   no tap scrolled the page by itself
+ok   phone: no page errors while tapping
+ok   390: attention filter tabs shown (All · 11 / Urgent · 7 / Today · 1 / No owner · 2)
+ok   390: every filter label fits its tab
+ok   390: Today filter narrows the list (6 → 1), no scroll
+ok   390: Urgent filter shows the red rows
+ok   390: to-do has a Done button
+ok   390: Done PATCHes the to-do
+ok   390: …and it leaves the list after the refresh
+ok   390: All N expands in place
+ok   390: no page errors
+ok   1440: attention filter tabs shown (All · 11 / Urgent · 7 / Today · 1 / No owner · 2)
+ok   1440: every filter label fits its tab
+ok   1440: Today filter narrows the list (6 → 1), no scroll
+ok   1440: Urgent filter shows the red rows
+ok   1440: to-do has a Done button
+ok   1440: Done PATCHes the to-do
+ok   1440: …and it leaves the list after the refresh
+ok   1440: All N expands in place
+ok   1440: no page errors
+ok   failed: Retry asks again
+ok   error: Retry asks again
+
+all harness checks passed

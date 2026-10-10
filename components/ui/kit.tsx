@@ -18,7 +18,7 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { CaretRight, DotsThree, MagnifyingGlass, X, Tray } from '@phosphor-icons/react';
+import { CaretRight, DotsThree, MagnifyingGlass, X } from '@phosphor-icons/react';
 import { useSortedRows, type SortState, type SortDir } from './premium';
 import { SortBar } from './sort';
 import { STATUS_COLORS, type StatusKind } from '@/lib/status-colors';
@@ -525,13 +525,17 @@ export function DetailList({ items }: { items: [string, React.ReactNode][] }) {
 
 // ─── EmptyState ──────────────────────────────────────────────────────────────
 
-export function EmptyState({ icon, title, text, action }: { icon?: React.ReactNode; title: string; text?: React.ReactNode; action?: React.ReactNode }) {
+/** Nothing here yet — flat (2026-10-10): one plain line and one action. The
+ *  title leads the line, the text finishes it; `icon` is accepted and not drawn. */
+export function EmptyState({ title, text, action }: { icon?: React.ReactNode; title: string; text?: React.ReactNode; action?: React.ReactNode }) {
+  const t = title.trim();
   return (
     <div className="k-empty">
-      <div className="k-empty-icon">{icon ?? <Tray size={22} />}</div>
-      <div className="k-empty-title">{title}</div>
-      {text && <div className="k-empty-text">{text}</div>}
-      {action && <div style={{ marginTop: 8 }}>{action}</div>}
+      <p className="k-empty-line">
+        <span className="k-empty-title">{t}</span>
+        {text ? <>{/[.!?…]$/.test(t) ? ' ' : '. '}<span className="k-empty-text">{text}</span></> : null}
+      </p>
+      {action && <div className="k-empty-act">{action}</div>}
     </div>
   );
 }
