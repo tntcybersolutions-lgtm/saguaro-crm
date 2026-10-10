@@ -111,7 +111,12 @@ async function send(url: string, method: string, body: unknown): Promise<Row> {
 export default function SubInbox({ onCounts }: { onCounts?: (n: number) => void }) {
   const [data, setData] = useState<Inbox | null>(null);
   const [error, setError] = useState('');
-  const [view, setView] = useState<View>('invoices');
+  // A bell notification links to ?view=invoices|rfis|messages|logs|waivers.
+  const [view, setView] = useState<View>(() => {
+    if (typeof window === 'undefined') return 'invoices';
+    const v = new URLSearchParams(window.location.search).get('view');
+    return v === 'rfis' || v === 'messages' || v === 'logs' || v === 'waivers' ? v : 'invoices';
+  });
   const [job, setJob] = useState('');
   const [q, setQ] = useState('');
 

@@ -207,6 +207,11 @@ export default function SubPortalPage() {
   const [error, setError] = useState<string | null>(null);
   // The inbox is what needs the GC today, so the screen opens on it.
   const [tab, setTab] = useState<Tab>('inbox');
+  // ?tab=… opens a tab directly (the inbox's bell notifications link here).
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get('tab');
+    if (t && ['inbox', 'users', 'invite', 'permissions', 'activity', 'documents', 'compliance', 'directory', 'messages'].includes(t)) setTab(t as Tab);
+  }, []);
   const [inboxCount, setInboxCount] = useState(0);
 
   /* Deep-link support (?tab=invite|users|permissions|...) — read once on mount,
