@@ -1,0 +1,86 @@
+# BEFORE = code at the base commit
+phone   walk  create=saved | back after reload=yes | fields back=4/4 | edit pre-filled=4/4 | edit saved=yes (Save Changes)
+phone   walk  record button "Add Someone": nothing happened (dead button?) — but the page changed (2 DOM mutations)
+phone   ok   walk: Add saves, comes back, edit pre-filled and saved — {"add":"Add Someone","actions":[{"label":"Add Someone","result":"nothing happened (dead button?) — but the page changed (2 DOM mutations)"}],"errors":[],"filled":4,"saveClicked":["Add to Directory"],"writes":["POST /api/projects/proj1/direc
+phone   FAIL Role shows the real roles to pick from (it showed one option, "r") — r
+phone   FAIL typing "super" narrows it to Superintendent
+phone   FAIL picking it fills the field — super
+phone   FAIL Phone brings up the phone keypad (type=tel)
+phone   ok   form controls are 44px+
+phone   ok   inputs are 16px (no iOS zoom) — 16,16,16,16,16
+phone   ok   no sideways scroll (form) — 393>393
+phone   FAIL the keyboard's Go/Enter saves (it did nothing) — []
+phone   FAIL after a reload every field is on the card: role, name, company, email, phone — super ZZ AUDIT directory phone 67408 ZZ AUDIT Builders delivered@resend.dev 602-555-0100 Edit Remove
+phone   ok   no sideways scroll (list) — 393>393
+phone   FAIL Edit opens pre-filled with all five fields — ZZ AUDIT directory phone 67408 | super | ZZ AUDIT Builders | delivered@resend.dev | 602-555-0100
+phone   ok   Save Changes → PATCH with the change (phone cleared) — [{"m":"PATCH","p":"/api/projects/proj1/directory/k70049","body":{"name":"ZZ AUDIT directory phone 67408","role":"super","company":"ZZ AUDIT Builders West","email":"delivered@resend.dev","phone":""}}]
+phone   ok   after a reload the card shows the edit and no phone — super ZZ AUDIT directory phone 67408 ZZ AUDIT Builders West delivered@resend.dev Edit Remove
+phone   ok   Remove asks first
+phone   ok   Remove → DELETE, gone from the list
+phone   ok   still gone after a reload
+phone   FAIL a failed load says so — not "Nobody on this job yet" — Directory Everyone on this job. Contracts, RFIs, submittals and pay applications read these names instead of asking for them again. Could not load the job directory. Please try again. Add Someone Nobody on this job yet. The owner and archit
+phone   FAIL Try Again loads the list
+phone   ok   no console errors
+desktop walk  create=saved | back after reload=yes | fields back=4/4 | edit pre-filled=4/4 | edit saved=yes (Save Changes)
+desktop walk  record button "Add Someone": nothing happened (dead button?) — but the page changed (2 DOM mutations)
+desktop ok   walk: Add saves, comes back, edit pre-filled and saved — {"add":"Add Someone","actions":[{"label":"Add Someone","result":"nothing happened (dead button?) — but the page changed (2 DOM mutations)"}],"errors":[],"filled":4,"saveClicked":["Add to Directory"],"writes":["POST /api/projects/proj1/direc
+desktop FAIL Role shows the real roles to pick from (it showed one option, "r") — r
+desktop FAIL typing "super" narrows it to Superintendent
+desktop FAIL picking it fills the field — super
+desktop FAIL Phone brings up the phone keypad (type=tel)
+desktop ok   no sideways scroll (form) — 1440>1440
+desktop FAIL the keyboard's Go/Enter saves (it did nothing) — []
+desktop FAIL after a reload every field is on the card: role, name, company, email, phone — super ZZ AUDIT directory desktop 15386 ZZ AUDIT Builders delivered@resend.dev 602-555-0100 Edit Remove
+desktop ok   no sideways scroll (list) — 1440>1440
+desktop FAIL Edit opens pre-filled with all five fields — ZZ AUDIT directory desktop 15386 | super | ZZ AUDIT Builders | delivered@resend.dev | 602-555-0100
+desktop ok   Save Changes → PATCH with the change (phone cleared) — [{"m":"PATCH","p":"/api/projects/proj1/directory/k17936","body":{"name":"ZZ AUDIT directory desktop 15386","role":"super","company":"ZZ AUDIT Builders West","email":"delivered@resend.dev","phone":""}}]
+desktop ok   after a reload the card shows the edit and no phone — super ZZ AUDIT directory desktop 15386 ZZ AUDIT Builders West delivered@resend.dev Edit Remove
+desktop ok   Remove asks first
+desktop ok   Remove → DELETE, gone from the list
+desktop ok   still gone after a reload
+desktop FAIL a failed load says so — not "Nobody on this job yet" — Directory Everyone on this job. Contracts, RFIs, submittals and pay applications read these names instead of asking for them again. Could not load the job directory. Please try again. Add Someone Nobody on this job yet. The owner and archit
+desktop FAIL Try Again loads the list
+desktop ok   no console errors
+# AFTER = this fix
+phone   walk  create=saved | back after reload=yes | fields back=4/4 | edit pre-filled=4/4 | edit saved=yes (Save Changes)
+phone   walk  record button "Add Someone": nothing happened (dead button?) — but the page changed (2 DOM mutations)
+phone   ok   walk: Add saves, comes back, edit pre-filled and saved — {"add":"Add Someone","actions":[{"label":"Add Someone","result":"nothing happened (dead button?) — but the page changed (2 DOM mutations)"}],"errors":[],"filled":4,"saveClicked":["Add to Directory"],"writes":["POST /api/projects/proj1/direc
+phone   ok   Role shows the real roles to pick from (it showed one option, "r") — Owner, Owner Rep, Architect, Structural Engineer, MEP Engineer, Civil Engineer, Project Manager, Superintendent, Estimator, Inspector, Building Official, Lender, Insurer
+phone   ok   typing "super" narrows it to Superintendent — Superintendent
+phone   ok   picking it fills the field — Superintendent
+phone   ok   Phone brings up the phone keypad (type=tel)
+phone   ok   form controls are 44px+
+phone   ok   inputs are 16px (no iOS zoom) — 16,16,16,16,16
+phone   ok   no sideways scroll (form) — 393>393
+phone   ok   the keyboard's Go/Enter saves (it did nothing) — [{"m":"POST","p":"/api/projects/proj1/directory","body":{"name":"ZZ AUDIT directory phone 63874","role":"Superintendent","company":"ZZ AUDIT Builders","email":"delivered@resend.dev","phone":"602-555-0100"}}]
+phone   ok   after a reload every field is on the card: role, name, company, email, phone — Superintendent ZZ AUDIT directory phone 63874 ZZ AUDIT Builders delivered@resend.dev 602-555-0100 Edit Remove
+phone   ok   no sideways scroll (list) — 393>393
+phone   ok   Edit opens pre-filled with all five fields — ZZ AUDIT directory phone 63874 | Superintendent | ZZ AUDIT Builders | delivered@resend.dev | 602-555-0100
+phone   ok   Save Changes → PATCH with the change (phone cleared) — [{"m":"PATCH","p":"/api/projects/proj1/directory/k66154","body":{"name":"ZZ AUDIT directory phone 63874","role":"Superintendent","company":"ZZ AUDIT Builders West","email":"delivered@resend.dev","phone":""}}]
+phone   ok   after a reload the card shows the edit and no phone — Superintendent ZZ AUDIT directory phone 63874 ZZ AUDIT Builders West delivered@resend.dev Edit Remove
+phone   ok   Remove asks first
+phone   ok   Remove → DELETE, gone from the list
+phone   ok   still gone after a reload
+phone   ok   a failed load says so — not "Nobody on this job yet" — Directory Everyone on this job. Contracts, RFIs, submittals and pay applications read these names instead of asking for them again. Add Someone Could not load the job directory. Please try again. Try Again
+phone   ok   Try Again loads the list
+phone   ok   no console errors
+desktop walk  create=saved | back after reload=yes | fields back=4/4 | edit pre-filled=4/4 | edit saved=yes (Save Changes)
+desktop walk  record button "Add Someone": nothing happened (dead button?) — but the page changed (2 DOM mutations)
+desktop ok   walk: Add saves, comes back, edit pre-filled and saved — {"add":"Add Someone","actions":[{"label":"Add Someone","result":"nothing happened (dead button?) — but the page changed (2 DOM mutations)"}],"errors":[],"filled":4,"saveClicked":["Add to Directory"],"writes":["POST /api/projects/proj1/direc
+desktop ok   Role shows the real roles to pick from (it showed one option, "r") — Owner, Owner Rep, Architect, Structural Engineer, MEP Engineer, Civil Engineer, Project Manager, Superintendent, Estimator, Inspector, Building Official, Lender, Insurer
+desktop ok   typing "super" narrows it to Superintendent — Superintendent
+desktop ok   picking it fills the field — Superintendent
+desktop ok   Phone brings up the phone keypad (type=tel)
+desktop ok   no sideways scroll (form) — 1440>1440
+desktop ok   the keyboard's Go/Enter saves (it did nothing) — [{"m":"POST","p":"/api/projects/proj1/directory","body":{"name":"ZZ AUDIT directory desktop 12017","role":"Superintendent","company":"ZZ AUDIT Builders","email":"delivered@resend.dev","phone":"602-555-0100"}}]
+desktop ok   after a reload every field is on the card: role, name, company, email, phone — Superintendent ZZ AUDIT directory desktop 12017 ZZ AUDIT Builders delivered@resend.dev 602-555-0100 Edit Remove
+desktop ok   no sideways scroll (list) — 1440>1440
+desktop ok   Edit opens pre-filled with all five fields — ZZ AUDIT directory desktop 12017 | Superintendent | ZZ AUDIT Builders | delivered@resend.dev | 602-555-0100
+desktop ok   Save Changes → PATCH with the change (phone cleared) — [{"m":"PATCH","p":"/api/projects/proj1/directory/k14164","body":{"name":"ZZ AUDIT directory desktop 12017","role":"Superintendent","company":"ZZ AUDIT Builders West","email":"delivered@resend.dev","phone":""}}]
+desktop ok   after a reload the card shows the edit and no phone — Superintendent ZZ AUDIT directory desktop 12017 ZZ AUDIT Builders West delivered@resend.dev Edit Remove
+desktop ok   Remove asks first
+desktop ok   Remove → DELETE, gone from the list
+desktop ok   still gone after a reload
+desktop ok   a failed load says so — not "Nobody on this job yet" — Directory Everyone on this job. Contracts, RFIs, submittals and pay applications read these names instead of asking for them again. Add Someone Could not load the job directory. Please try again. Try Again
+desktop ok   Try Again loads the list
+desktop ok   no console errors

@@ -610,10 +610,10 @@ export default function InspectionsPage() {
             <div className="inDateInput"><SaguaroDatePicker value={form.date} onChange={v => setForm(p => ({ ...p, date: v }))} style={DATE_INPUT_STYLE} /></div>
           </Field>
           <Field label="Inspector" required hint={<>{auto.insp && <AutoChip />} {auto.insp ? `Carried from the last inspection (${fmtDate(lastRecord?.date)}).` : 'Who performs the inspection.'}</>}>
-            <Suggest className="k-input" type="text" value={form.inspector} onChange={e => { setForm(p => ({ ...p, inspector: e.target.value })); if (errorMsg) setErrorMsg(''); }} options={['n']} placeholder="Inspector name" />
+            <Suggest className="k-input" type="text" value={form.inspector} onChange={e => { setForm(p => ({ ...p, inspector: e.target.value })); if (errorMsg) setErrorMsg(''); }} options={inspections.map((i) => i.inspector || '').filter(Boolean)} placeholder="Inspector name" />
           </Field>
           <Field label="Agency" hint={<>{auto.agency && <AutoChip />} {auto.agency ? 'Same authority as the last inspection.' : 'The authority having jurisdiction.'}</>}>
-            <Suggest className="k-input" type="text" value={form.agency} onChange={e => setForm(p => ({ ...p, agency: e.target.value }))} placeholder="e.g. City of Phoenix" options={['n']} />
+            <Suggest className="k-input" type="text" value={form.agency} onChange={e => setForm(p => ({ ...p, agency: e.target.value }))} placeholder="e.g. City of Phoenix" options={inspections.map((i) => i.agency || '').filter(Boolean)} />
           </Field>
           <Field label="Notes" span hint="Anything the inspector needs on arrival.">
             <Input value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="Gate code, area under inspection, permit reference…" />

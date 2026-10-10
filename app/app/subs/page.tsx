@@ -208,12 +208,16 @@ export default function SubsAndVendorsPage() {
       />
 
       <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', marginBottom: 22 }}>
-        <StatCard label="On File" value={String(subs.length)} sub="Companies tenant-wide" icon={<Buildings size={17} weight="duotone" color={GOLD} />} onClick={() => { setQ(''); setTrade(''); setPaperFilter(false); }} />
+        {/* "On File" shows them: every company (filters cleared) and the list
+            brought into view. It only cleared filters, so with none set the
+            tap did nothing at all. */}
+        <StatCard label="On File" value={String(subs.length)} sub="Companies tenant-wide" icon={<Buildings size={17} weight="duotone" color={GOLD} />} href="#subs-directory" onClick={() => { setQ(''); setTrade(''); setPaperFilter(false); }} />
         <StatCard label="Paperwork Missing" value={String(missingPaper)} sub={missingPaper ? 'Cannot be awarded without override' : 'Everyone is current'} icon={<WarningCircle size={17} weight="duotone" color={missingPaper ? 'var(--text-primary)' : GOLD} />} tone={missingPaper ? 'bad' : undefined} active={paperFilter} onClick={() => setPaperFilter(v => !v)} />
         <StatCard label="Prequalified" value={String(prequalified)} sub="Passed prequalification" icon={<SealCheck size={17} weight="duotone" color={GOLD} />} tone={prequalified > 0 ? 'good' : undefined} href="/app/prequalification" />
         <StatCard label="Trades Covered" value={String(trades.length)} sub="Distinct trades on file" icon={<Package size={17} weight="duotone" color={GOLD} />} onClick={() => document.getElementById('subs-trade-filter')?.focus()} />
       </div>
 
+      <div id="subs-directory" style={{ scrollMarginTop: 76 }} />
       <SectionCard
         title="Directory"
         subtitle="Added from any job; available on every job after."

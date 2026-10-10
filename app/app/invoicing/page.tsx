@@ -556,7 +556,7 @@ export default function InvoicingPage() {
             <Select value={form.project_id} onChange={(e) => { setForm({ ...form, project_id: e.target.value }); if (error) setError(''); }} required placeholder="Select project…" options={projects.map(p => ({ value: p.id, label: p.name }))} />
           </Field>
           <Field label="Vendor Name" required hint={<>{auto.billto && <AutoChip />} {ctxVendors.length > 0 ? `${ctxVendors.length} known vendor${ctxVendors.length === 1 ? '' : 's'} on this project — start typing.` : 'Vendors suggest once a project is picked.'}</>}>
-            <Suggest className="k-input" value={form.vendor_name} onChange={(e) => { setForm({ ...form, vendor_name: e.target.value }); if (error) setError(''); }} required placeholder="Vendor name" options={['v']} />
+            <Suggest className="k-input" value={form.vendor_name} onChange={(e) => { setForm({ ...form, vendor_name: e.target.value }); if (error) setError(''); }} required placeholder="Vendor name" options={ctxVendors} />
           </Field>
           <Field label="Invoice #" hint={<>{auto.num && <AutoChip />} {auto.num ? 'Next in sequence on this project.' : 'Auto-suggested when you pick a project.'}</>}>
             <Input value={form.invoice_number} onChange={(e) => setForm({ ...form, invoice_number: e.target.value })} placeholder="INV-001" />

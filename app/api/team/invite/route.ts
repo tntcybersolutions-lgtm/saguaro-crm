@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
       if (entries.length === 0) {
         return NextResponse.json({ error: 'At least one email address is required.' }, { status: 400 });
       }
-      const results: Array<{ email: string; status: 'sent' | 'failed'; error?: string }> = [];
+      const results: Array<{ email: string; status: 'sent' | 'failed'; error?: string; emailed?: boolean }> = [];
       for (const entry of entries) {
         if (!EMAIL_RE.test(String(entry.email).trim())) {
           results.push({ email: String(entry.email).trim(), status: 'failed', error: 'Not a valid email address.' });
@@ -99,8 +99,9 @@ export async function POST(req: NextRequest) {
           role: entry.role || 'member',
           projectId,
         });
+        // 'sent' = the invite exists; `emailed` says whether its email went out.
         results.push(r.ok
-          ? { email: r.email, status: 'sent' }
+          ? { email: r.email, status: 'sent', emailed: r.emailed, ...(r.emailed ? {} : { error: r.emailError }) }
           : { email: r.email, status: 'failed', error: r.error });
       }
       const sent = results.filter(r => r.status === 'sent').length;
@@ -127,16 +128,18 @@ export async function POST(req: NextRequest) {
     if (!single.ok) {
       return NextResponse.json({ error: single.error }, { status: 500 });
     }
-    return NextResponse.json({ success: true, invite: single.invite, acceptUrl: single.acceptUrl });
+    /* `emailed` is the truth about the email: the invite row exists either way
+       (the accept link works), but "Invitation sent" must not be said when no
+       mail went out — no RESEND_API_KEY, or the mail service refused it. */
+    return NextResponse.json({ success: true, invite: single.invite, acceptUrl: single.acceptUrl, emailed: single.emailed, ...(single.emailed ? {} : { emailError: single.emailError }) });
   } catch (err) {
-    console.error('[team/invite] POST failed:', err instanceof Error ? err.message : err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('team/invite POST', err, "Couldn't send the invite. Please try again.");
   }
 }
 
 type InviteInput = { email: string; name?: string; role?: string; projectId?: string };
 type InviteResult =
-  | { ok: true; email: string; invite: unknown; acceptUrl: string }
+  | { ok: true; email: string; invite: unknown; acceptUrl: string; emailed: boolean; emailError?: string }
   | { ok: false; email: string; error: string };
 
 /**
@@ -201,8 +204,8 @@ async function createAndSendInvite(
       }
     } catch { /* non-fatal — fall back to defaults */ }
 
-    // Send the real invitation email (no-ops gracefully if RESEND_API_KEY is unset).
-    await sendInviteTeamMember(email, inviterName, companyName, role, acceptUrl);
+    // Send the real invitation email, and keep the answer: it may not go out.
+    const mail = await sendInviteTeamMember(email, inviterName, companyName, role, acceptUrl);
 
     // In-app notification for the inviter's org.
     await createNotification(
@@ -216,7 +219,7 @@ async function createAndSendInvite(
         : `${APP_URL}/app`,
     );
 
-    return { ok: true, email, invite, acceptUrl };
+    return { ok: true, email, invite, acceptUrl, emailed: mail.sent, emailError: mail.sent ? undefined : (mail.error || "The email didn't go out.") };
   } catch (err) {
     // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
     console.error('[team/invite]', err);

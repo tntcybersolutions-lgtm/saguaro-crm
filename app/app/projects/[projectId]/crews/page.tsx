@@ -35,6 +35,7 @@ import {
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
+import { SUB_TRADES } from '@/lib/construction-intelligence';
 import { layout } from '@/lib/design-tokens';
 
 interface CrewMember { id: string; person_name: string; role: string | null; trade: string | null; }
@@ -501,7 +502,7 @@ export default function CrewsPage() {
             <Input value={form.foremanName} onChange={(e) => setForm(f => ({ ...f, foremanName: e.target.value }))} placeholder="Who runs this crew" />
           </Field>
           <Field label="Trade">
-            <Suggest className="k-input" value={form.trade} onChange={(e) => setForm(f => ({ ...f, trade: e.target.value }))} placeholder="Pick or type a trade" options={['t']} />
+            <Suggest className="k-input" value={form.trade} onChange={(e) => setForm(f => ({ ...f, trade: e.target.value }))} placeholder="Pick or type a trade" options={SUB_TRADES} />
           </Field>
           <Field label="Status">
             <Select value={form.status} onChange={(e) => setForm(f => ({ ...f, status: e.target.value }))} options={[{ value: 'active', label: 'Active' }, { value: 'standby', label: 'Standby' }, { value: 'inactive', label: 'Inactive' }]} />

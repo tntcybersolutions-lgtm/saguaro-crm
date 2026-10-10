@@ -1,0 +1,31 @@
+# BEFORE (base commit code)
+[rfis/id GET] ref=YQ36VRPF {
+FAIL another company's RFI → 404, not 500 500
+ok   …and none of its data
+[rfis/id GET] ref=TNBRTTFY {
+FAIL your own RFI → 200 with its project name 500 {"error":"Couldn't load this RFI. Please try again.","ref":"TNBRTTFY"}
+[rfis/id GET] ref=7HU4XWLJ {
+FAIL a deleted / unknown RFI → 404 500
+ok   signed out → 401
+FAIL RFI Log: your RFI, with its project, not the other company's []
+FAIL Change Order Log: the CO with its project and days []
+FAIL Job Cost: actual and forecast come from actual / projected ["03-300","ZZ AUDIT Concrete","$10,000","$8,000","$0","$10,000","$0"]
+FAIL Lien Waiver Log: cells line up with the headers ["ZZ AUDIT Ruiz Drywall","Drywall","conditional_progress","$7,200","PENDING","Pending"]
+FAIL Insurance: GL policy under GL, WC empty, CURRENT ["ZZ AUDIT Ruiz Drywall","Drywall","GL-77","2030-01-01","General Liability","2030-01-01","CURRENT"]
+FAIL a failed report query throws (route → apiError), not an empty report 
+
+9 failed
+# AFTER (this branch)
+ok   another company's RFI → 404, not 500
+ok   …and none of its data
+ok   your own RFI → 200 with its project name
+ok   a deleted / unknown RFI → 404
+ok   signed out → 401
+ok   RFI Log: your RFI, with its project, not the other company's
+ok   Change Order Log: the CO with its project and days
+ok   Job Cost: actual and forecast come from actual / projected
+ok   Lien Waiver Log: cells line up with the headers
+ok   Insurance: GL policy under GL, WC empty, CURRENT
+ok   a failed report query throws (route → apiError), not an empty report
+
+all passed

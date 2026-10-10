@@ -1,0 +1,41 @@
+# BEFORE = code at the base commit
+BEFORE phone   ok   phone: the sheet takes over drop-downs here
+BEFORE phone   ok   daily-logs "Sort by": the walk's click lands (not covered) — clicked
+BEFORE phone   FAIL daily-logs "Sort by": the button comes up on the drop-down itself, not on a sheet under the finger — released over: ms-scrim
+BEFORE phone   ok   daily-logs "Sort by": our sheet is open
+BEFORE phone   ok   daily-logs "Sort by": Escape closes it
+BEFORE phone   ok   daily-logs "Sort by": the page is free again
+BEFORE phone   ok   catalog sort: the walk's click lands (not covered) — clicked
+BEFORE phone   FAIL catalog sort: the button comes up on the drop-down itself, not on a sheet under the finger — released over: ms-scrim
+BEFORE phone   ok   catalog sort: our sheet is open
+BEFORE phone   ok   catalog sort: Escape closes it
+BEFORE phone   ok   catalog sort: the page is free again
+BEFORE phone   ok   choosing "Crew" sorts by crew and closes the sheet — sort=crew:asc
+BEFORE phone   ok   Ascending → descending toggle works — sort=crew:desc
+BEFORE phone   ok   tapping outside closes it, value unchanged
+BEFORE phone   ok   a real tap (touch) opens the sheet
+BEFORE phone   ok   a real tap picks "Best Price"
+BEFORE phone   ok   no sideways scroll — 393>393
+BEFORE phone   ok   no page errors
+# AFTER = this fix
+AFTER  phone   ok   phone: the sheet takes over drop-downs here
+AFTER  phone   ok   daily-logs "Sort by": the walk's click lands (not covered) — clicked
+AFTER  phone   ok   daily-logs "Sort by": the button comes up on the drop-down itself, not on a sheet under the finger — released over: k-sortbar-select
+AFTER  phone   ok   daily-logs "Sort by": our sheet is open
+AFTER  phone   ok   daily-logs "Sort by": Escape closes it
+AFTER  phone   ok   daily-logs "Sort by": the page is free again
+AFTER  phone   ok   catalog sort: the walk's click lands (not covered) — clicked
+AFTER  phone   ok   catalog sort: the button comes up on the drop-down itself, not on a sheet under the finger — released over: pmBtn
+AFTER  phone   ok   catalog sort: our sheet is open
+AFTER  phone   ok   catalog sort: Escape closes it
+AFTER  phone   ok   catalog sort: the page is free again
+AFTER  phone   ok   choosing "Crew" sorts by crew and closes the sheet — sort=crew:asc
+AFTER  phone   ok   Ascending → descending toggle works — sort=crew:desc
+AFTER  phone   ok   tapping outside closes it, value unchanged
+AFTER  phone   ok   a real tap (touch) opens the sheet
+AFTER  phone   ok   a real tap picks "Best Price"
+AFTER  phone   ok   no sideways scroll — 393>393
+AFTER  phone   ok   no page errors
+AFTER  desktop ok   desktop keeps the native drop-down (no sheet) — clicked
+AFTER  desktop ok   desktop: choosing works
+AFTER  desktop ok   no page errors

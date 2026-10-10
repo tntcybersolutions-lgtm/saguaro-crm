@@ -7,12 +7,13 @@ import { StatusPill } from '@/components/ui/Status';
 import { useProjects } from '@/lib/hooks/useProjects';
 import UserPicker from '@/components/UserPicker';
 import { SkeletonRow } from '../../../components/ui/Skeleton';
-import { UsersThree, WarningCircle, Buildings, CurrencyDollar, Target, CalendarBlank, Robot, Clipboard, CheckCircle, XCircle, Hourglass, House, Cactus, ArrowLeft, Gauge, MapPin, Lightning, Package, DownloadSimple, Plus } from '@phosphor-icons/react';
+import { UsersThree, WarningCircle, Buildings, CurrencyDollar, Target, CalendarBlank, Robot, Clipboard, CheckCircle, XCircle, Hourglass, House, Cactus, ArrowLeft, Gauge, MapPin, Lightning, Package, DownloadSimple, Plus, PencilSimple, Trash } from '@phosphor-icons/react';
 import { useToast } from '@/components/Toast';
 import { getAuthHeaders } from '@/lib/supabase-browser';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { useEscapeClose } from '@/lib/ui/use-escape-close';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 
 /* ─── Palette ─── */
 const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = 'var(--success)';
@@ -25,7 +26,7 @@ const mix = (c: string, pct: number) => `color-mix(in srgb, ${c} ${pct}%, transp
 type CustomerStatus = 'lead' | 'qualified' | 'proposal' | 'customer' | 'lost';
 type Customer = {
   id: string; name: string; email: string; phone: string; state: string;
-  city: string; climate_zone: string; utility_rate: number;
+  city: string; zip_code: string; country: string; climate_zone: string; utility_rate: number;
   status: CustomerStatus; lead_score: number; source: string;
   created_at: string; updated_at: string;
   discovery_answers?: Record<string, string>;
@@ -47,8 +48,9 @@ const SOURCES = ['Website', 'Design Studio', 'Referral', 'Social Media', 'Sage C
 const US_STATES = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/* The New Customer form. Keys are the customer_profiles columns
-   POST /api/customers/profiles accepts, so the body is the draft as typed. */
+/* The New / Edit Customer form. Keys are the customer_profiles columns
+   POST /api/customers/profiles and PATCH /api/customers/:id accept, so the
+   body is the draft as typed and a reload brings back exactly these fields. */
 type NewCustomerDraft = {
   name: string; email: string; phone: string; city: string; state: string; zip_code: string;
   status: CustomerStatus; source: string;
@@ -69,6 +71,8 @@ function fromProfileRow(c: any): Customer {
     phone: c.phone || '',
     state: c.state || '',
     city: c.city || '',
+    zip_code: c.zip_code || '',
+    country: c.country || '',
     climate_zone: c.climate_zone || '',
     utility_rate: c.utility_cost_kwh != null ? Number(c.utility_cost_kwh) : 0,
     status: (c.status || 'lead') as CustomerStatus,
@@ -121,6 +125,48 @@ export default function CustomersPage() {
   // The customer just added: listed newest-first and highlighted so it is
   // the first thing on screen, not somewhere under a lead-score sort.
   const [justAdded, setJustAdded] = useState<string | null>(null);
+  // Set while the form edits an existing customer instead of adding one.
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  /* The open customer rides the URL (?customer=<id>): a reload, a shared link
+     or the phone's Back gesture lands where you were. It used to live only in
+     this component — a reload dropped you on the list and Back left the page. */
+  const pendingOpen = useRef<string | null>(null);
+  useEffect(() => {
+    try { pendingOpen.current = new URLSearchParams(window.location.search).get('customer'); } catch { /* no URL */ }
+    const onPop = () => {
+      let id: string | null = null;
+      try { id = new URLSearchParams(window.location.search).get('customer'); } catch { /* no URL */ }
+      if (!id) setSelected(null);
+      else pendingOpen.current = id;
+      setCustomersTick((n) => n + 1);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+  const [customersTick, setCustomersTick] = useState(0);
+  const openCustomer = useCallback((c: Customer) => {
+    setSelected(c);
+    setDetailTab('overview');
+    try {
+      const u = new URL(window.location.href);
+      if (u.searchParams.get('customer') !== c.id) {
+        u.searchParams.set('customer', c.id);
+        window.history.pushState(null, '', `${u.pathname}${u.search}${u.hash}`);
+      }
+    } catch { /* URL sync is a convenience */ }
+  }, []);
+  const closeCustomer = useCallback(() => {
+    setSelected(null);
+    try {
+      const u = new URL(window.location.href);
+      if (u.searchParams.has('customer')) {
+        u.searchParams.delete('customer');
+        window.history.replaceState(null, '', `${u.pathname}${u.search}${u.hash}`);
+      }
+    } catch { /* URL sync is a convenience */ }
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -144,6 +190,15 @@ export default function CustomersPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Open the customer named in the URL once the list has it.
+  useEffect(() => {
+    const id = pendingOpen.current;
+    if (!id || !customers.length) return;
+    const c = customers.find((x) => x.id === id);
+    if (c) { setSelected(c); setDetailTab('overview'); }
+    pendingOpen.current = null;
+  }, [customers, customersTick]);
 
   // Clear the chosen assignee when the open profile changes — the picker
   // belongs to the customer currently in view, not the last one.
@@ -261,7 +316,21 @@ export default function CustomersPage() {
      was buried in a project's Ownership card. Same endpoint, same fields that
      route accepts, so a customer added here is the same record either way. */
   const openAdd = useCallback(() => {
+    setEditingId(null);
     setDraft(EMPTY_DRAFT);
+    setAddErr(null);
+    setFieldErr({});
+    setAddOpen(true);
+  }, []);
+
+  const openEdit = useCallback((c: Customer) => {
+    setEditingId(c.id);
+    setDraft({
+      name: c.name || '', email: c.email || '', phone: c.phone || '', city: c.city || '',
+      state: c.state || '', zip_code: c.zip_code || '',
+      status: (STATUSES.includes(c.status) ? c.status : 'lead') as CustomerStatus,
+      source: c.source || 'Direct',
+    });
     setAddErr(null);
     setFieldErr({});
     setAddOpen(true);
@@ -287,6 +356,37 @@ export default function CustomersPage() {
     setFieldErr({});
     setAddErr(null);
     setAddBusy(true);
+    if (editingId) {
+      try {
+        // Every field as it stands, blanks included: clearing a phone clears it.
+        const payload: Record<string, string> = { name, status: draft.status, source: draft.source };
+        (['email', 'phone', 'city', 'state', 'zip_code'] as const).forEach((k) => { payload[k] = draft[k].trim(); });
+        const auth = await getAuthHeaders();
+        const res = await fetch(`/api/customers/${editingId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', ...auth },
+          body: JSON.stringify(payload),
+        });
+        const body = await res.json().catch(() => ({} as Record<string, unknown>));
+        const saved = (body as { customer?: { id?: string } }).customer;
+        if (!res.ok || !saved?.id) {
+          const msg = typeof body?.error === 'string' ? body.error : 'Couldn’t save the customer. Please try again.';
+          throw new Error(typeof body?.ref === 'string' ? `${msg} (ref ${body.ref})` : msg);
+        }
+        const row = fromProfileRow(saved);
+        setCustomers((prev) => prev.map((c) => (c.id === row.id ? { ...c, ...row } : c)));
+        setSelected((cur) => (cur && cur.id === row.id ? { ...cur, ...row } : cur));
+        setAddOpen(false);
+        setEditingId(null);
+        showToast(`${row.name || 'Customer'} saved.`, 'success');
+      } catch (err) {
+        console.error('[customers] save', err);
+        setAddErr(err instanceof Error && err.message ? err.message : 'Couldn’t save the customer. Please try again.');
+      } finally {
+        setAddBusy(false);
+      }
+      return;
+    }
     try {
       const payload: Record<string, string> = { name, status: draft.status, source: draft.source };
       (['email', 'phone', 'city', 'state', 'zip_code'] as const).forEach((k) => {
@@ -324,7 +424,33 @@ export default function CustomersPage() {
     } finally {
       setAddBusy(false);
     }
-  }, [addBusy, draft, filterStatus, filterSource, filterState, search, showToast]);
+  }, [addBusy, draft, editingId, filterStatus, filterSource, filterState, search, showToast]);
+
+  /* Delete the open customer. Their discovery answers, recommendations and
+     material picks go with them; linked projects stay and just lose the link. */
+  const deleteCustomer = useCallback(async (c: Customer) => {
+    if (deleting) return;
+    const ok = await confirmDialog({
+      title: 'Delete this customer?',
+      message: `Delete ${c.name || 'this customer'}? Their discovery answers and recommendations go with them. Projects stay — they just lose the link.`,
+      danger: true,
+    });
+    if (!ok) return;
+    setDeleting(true);
+    try {
+      const auth = await getAuthHeaders();
+      const res = await fetch(`/api/customers/${c.id}`, { method: 'DELETE', headers: auth });
+      const body = await res.json().catch(() => ({} as Record<string, unknown>));
+      if (!res.ok) throw new Error(typeof body?.error === 'string' ? body.error : 'Couldn’t delete the customer. Please try again.');
+      setCustomers((prev) => prev.filter((x) => x.id !== c.id));
+      closeCustomer();
+      showToast(`${c.name || 'Customer'} deleted.`, 'success');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Couldn’t delete the customer. Please try again.', 'error');
+    } finally {
+      setDeleting(false);
+    }
+  }, [deleting, closeCustomer, showToast]);
 
   /* ─── Assign customer to a project (idempotent) + route a team member ───
      The old handler POSTed straight to /api/projects/create, which ALWAYS
@@ -404,14 +530,111 @@ export default function CustomersPage() {
     }
   }, [emailSending, emailSubject, emailMessage, showToast]);
 
+  /* The New / Edit Customer form — the same fields both ways. */
+  const customerForm = (
+    <>
+      {/* Portalled to <body>: PremiumSurface's content wrapper is a z-index:1
+          stacking context, so a modal rendered inside it paints under the
+          fixed top bar and the phone tab bar — which on a phone is exactly
+          where this form's title and its Add Customer button sit. */}
+      {addOpen && createPortal(<FormModal
+        open={addOpen}
+        onClose={() => { if (!addBusy) { setAddOpen(false); setEditingId(null); } }}
+        title={editingId ? 'Edit Customer' : 'New Customer'}
+        subtitle={editingId ? 'Change anything and save — the profile, the list and their projects all read the same record.' : 'Who you are building for. Link them to a job from their profile once they are saved.'}
+        onSubmit={createCustomer}
+        submitLabel={editingId ? 'Save Changes' : 'Add Customer'}
+        busy={addBusy}
+        error={addErr}
+      >
+        <FormGrid cols={2}>
+          <Field label="Name" required error={fieldErr.name} span>
+            <Input
+              id="new-customer-name"
+              value={draft.name}
+              onChange={(e) => setDraftField('name', e.target.value)}
+              autoComplete="name"
+              maxLength={200}
+              required
+              aria-invalid={fieldErr.name ? true : undefined}
+            />
+          </Field>
+          <Field label="Email" error={fieldErr.email}>
+            <Input
+              id="new-customer-email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              value={draft.email}
+              onChange={(e) => setDraftField('email', e.target.value)}
+              maxLength={200}
+              aria-invalid={fieldErr.email ? true : undefined}
+            />
+          </Field>
+          <Field label="Phone">
+            <Input
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              value={draft.phone}
+              onChange={(e) => setDraftField('phone', e.target.value)}
+              maxLength={40}
+            />
+          </Field>
+          <Field label="City">
+            <Input
+              autoComplete="address-level2"
+              value={draft.city}
+              onChange={(e) => setDraftField('city', e.target.value)}
+              maxLength={120}
+            />
+          </Field>
+          <Field label="State">
+            <Select
+              value={draft.state}
+              onChange={(e) => setDraftField('state', e.target.value)}
+              options={US_STATES}
+              placeholder="Choose a state"
+              autoComplete="address-level1"
+            />
+          </Field>
+          <Field label="ZIP">
+            <Input
+              inputMode="numeric"
+              autoComplete="postal-code"
+              value={draft.zip_code}
+              onChange={(e) => setDraftField('zip_code', e.target.value)}
+              maxLength={10}
+            />
+          </Field>
+          <Field label="Status" hint="Lead, Qualified and Proposal count as pipeline.">
+            <Select
+              value={draft.status}
+              onChange={(e) => setDraftField('status', e.target.value as CustomerStatus)}
+              options={STATUSES.map((s) => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) }))}
+            />
+          </Field>
+          <Field label="Source">
+            <Select
+              value={draft.source}
+              onChange={(e) => setDraftField('source', e.target.value)}
+              options={SOURCES}
+            />
+          </Field>
+        </FormGrid>
+      </FormModal>, document.body)}
+    </>
+  );
+
   /* ─── Detail View ─── */
   if (selected) {
     const c = selected;
-    const sb = c.score_breakdown || { engagement: 0, budget: 0, timeline: 0, fit: 0 };
+    // No breakdown on file is said as such — not drawn as four zero bars.
+    const sb = c.score_breakdown || null;
     return (
       <PremiumSurface maxWidth={1000}>
         {/* Back button */}
-        <button onClick={() => setSelected(null)} className="pmBtn" style={{ ...ghostButtonStyle, marginBottom: 20 }}>
+        <button onClick={closeCustomer} className="pmBtn" style={{ ...ghostButtonStyle, marginBottom: 20, minHeight: 44 }}>
           <ArrowLeft size={15} weight="bold" /> Back to Customers
         </button>
 
@@ -420,9 +643,15 @@ export default function CustomersPage() {
           eyebrow="Customer Profile"
           eyebrowIcon={<UsersThree size={13} weight="fill" color={GOLD} />}
           title={c.name}
-          subtitle={`${c.email} · ${c.phone}`}
+          subtitle={[c.email, c.phone].filter(Boolean).join(' · ') || 'No email or phone on file'}
           actions={
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+              <button type="button" onClick={() => openEdit(c)} className="pmBtn" style={{ ...goldOutlineButtonStyle, minHeight: 44 }}>
+                <PencilSimple size={15} weight="bold" /> Edit
+              </button>
+              <button type="button" onClick={() => deleteCustomer(c)} disabled={deleting} className="pmBtn" style={{ ...ghostButtonStyle, minHeight: 44, color: RED }}>
+                <Trash size={15} weight="bold" /> {deleting ? 'Deleting…' : 'Delete'}
+              </button>
               <div style={{
                 padding: '4px 14px', borderRadius: 99, fontSize: 12, fontWeight: 700,
                 background: mix(STATUS_COLORS[c.status], 13), color: STATUS_COLORS[c.status],
@@ -452,6 +681,8 @@ export default function CustomersPage() {
           ))}
         </div>
 
+        {customerForm}
+
         {/* Tab Content */}
         {detailTab === 'overview' && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
@@ -460,10 +691,13 @@ export default function CustomersPage() {
               <div style={{ display: 'grid', gap: 10 }}>
                 {[
                   ['City', c.city || '—'],
-                  ['State', c.state],
+                  ['State', c.state || '—'],
+                  ['ZIP', c.zip_code || '—'],
+                  ['Email', c.email || '—'],
+                  ['Phone', c.phone || '—'],
                   ['Climate Zone', c.climate_zone || '—'],
                   ['Utility Rate', c.utility_rate ? `$${c.utility_rate}/kWh` : '—'],
-                  ['Source', c.source],
+                  ['Source', c.source || '—'],
                   ['Created', fmtDate(c.created_at)],
                 ].map(([label, val]) => (
                   <div key={label as string} style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -476,7 +710,12 @@ export default function CustomersPage() {
 
             {/* Lead Score Breakdown */}
             <SectionCard flat title="Lead Score Breakdown" icon={<Gauge size={17} weight="duotone" color={GOLD} />}>
-              {Object.entries(sb).map(([key, val]) => (
+              {!sb && (
+                <div style={{ fontSize: 12.5, color: DIM, lineHeight: 1.6 }}>
+                  Lead score {c.lead_score}. No breakdown on file yet — it fills in as this customer answers discovery questions.
+                </div>
+              )}
+              {sb && Object.entries(sb).map(([key, val]) => (
                 <div key={key} style={{ marginBottom: 12 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                     <span style={{ fontSize: 13, textTransform: 'capitalize', color: DIM }}>{key}</span>
@@ -533,7 +772,7 @@ export default function CustomersPage() {
                   ref={emailDialogRef}
                   role="dialog" aria-modal="true" aria-label={`Email ${c.name}`}
                   onClick={(e) => e.stopPropagation()}
-                  style={{ width: '100%', maxWidth: 520, background: 'var(--bg-surface)', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20, boxShadow: '0 30px 80px -20px rgba(0,0,0,0.8)' }}
+                  style={{ width: '100%', maxWidth: 520, background: 'var(--bg-solid-2)', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20, boxShadow: '0 30px 80px -20px rgba(0,0,0,0.8)' }}
                 >
                   <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>Email {c.name}</div>
                   <div style={{ fontSize: 12, color: DIM, marginBottom: 16 }}>To: {c.email}</div>
@@ -779,96 +1018,7 @@ export default function CustomersPage() {
         }
       />
 
-      {/* Portalled to <body>: PremiumSurface's content wrapper is a z-index:1
-          stacking context, so a modal rendered inside it paints under the
-          fixed top bar and the phone tab bar — which on a phone is exactly
-          where this form's title and its Add Customer button sit. */}
-      {addOpen && createPortal(<FormModal
-        open={addOpen}
-        onClose={() => { if (!addBusy) setAddOpen(false); }}
-        title="New Customer"
-        subtitle="Who you are building for. Link them to a job from their profile once they are saved."
-        onSubmit={createCustomer}
-        submitLabel="Add Customer"
-        busy={addBusy}
-        error={addErr}
-      >
-        <FormGrid cols={2}>
-          <Field label="Name" required error={fieldErr.name} span>
-            <Input
-              id="new-customer-name"
-              value={draft.name}
-              onChange={(e) => setDraftField('name', e.target.value)}
-              autoComplete="name"
-              maxLength={200}
-              required
-              aria-invalid={fieldErr.name ? true : undefined}
-            />
-          </Field>
-          <Field label="Email" error={fieldErr.email}>
-            <Input
-              id="new-customer-email"
-              type="email"
-              inputMode="email"
-              autoComplete="email"
-              value={draft.email}
-              onChange={(e) => setDraftField('email', e.target.value)}
-              maxLength={200}
-              aria-invalid={fieldErr.email ? true : undefined}
-            />
-          </Field>
-          <Field label="Phone">
-            <Input
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              value={draft.phone}
-              onChange={(e) => setDraftField('phone', e.target.value)}
-              maxLength={40}
-            />
-          </Field>
-          <Field label="City">
-            <Input
-              autoComplete="address-level2"
-              value={draft.city}
-              onChange={(e) => setDraftField('city', e.target.value)}
-              maxLength={120}
-            />
-          </Field>
-          <Field label="State">
-            <Select
-              value={draft.state}
-              onChange={(e) => setDraftField('state', e.target.value)}
-              options={US_STATES}
-              placeholder="Choose a state"
-              autoComplete="address-level1"
-            />
-          </Field>
-          <Field label="ZIP">
-            <Input
-              inputMode="numeric"
-              autoComplete="postal-code"
-              value={draft.zip_code}
-              onChange={(e) => setDraftField('zip_code', e.target.value)}
-              maxLength={10}
-            />
-          </Field>
-          <Field label="Status" hint="Lead, Qualified and Proposal count as pipeline.">
-            <Select
-              value={draft.status}
-              onChange={(e) => setDraftField('status', e.target.value as CustomerStatus)}
-              options={STATUSES.map((s) => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) }))}
-            />
-          </Field>
-          <Field label="Source">
-            <Select
-              value={draft.source}
-              onChange={(e) => setDraftField('source', e.target.value)}
-              options={SOURCES}
-            />
-          </Field>
-        </FormGrid>
-      </FormModal>, document.body)}
+      {customerForm}
 
       {/* KPI Row */}
       {!loading && !error && (
@@ -967,7 +1117,7 @@ export default function CustomersPage() {
               rowKey={c => c.id}
               defaultSort={justAdded ? { key: 'created_at', dir: 'desc' } : { key: 'lead_score', dir: 'desc' }}
               isSelected={justAdded ? (c => c.id === justAdded) : undefined}
-              onRowClick={c => { setSelected(c); setDetailTab('overview'); }}
+              onRowClick={c => openCustomer(c)}
               empty="No customers match your filters."
             />
           )}

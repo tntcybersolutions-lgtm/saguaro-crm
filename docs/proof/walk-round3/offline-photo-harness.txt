@@ -1,0 +1,104 @@
+# Offline photo harness — real Photos page + offline bar + status box, real HTTP server, Chromium setOffline
+# BEFORE = code as of the base commit; AFTER = this fix. webkit-private = IndexedDB refuses a File the way WebKit ephemeral sessions do.
+BEFORE webkit-private phone   ok   the offline worker controls the page
+BEFORE webkit-private phone   ok   offline bar shows — You're offline Photos, daily logs and punch items you add are saved on this phone and send when you're back.
+BEFORE webkit-private phone   FAIL the sheet says it is saved on this phone — zz-photo.jpg Upload failed · 197 KB Retry
+BEFORE webkit-private phone   FAIL the bar counts it — You're offline Photos, daily logs and punch items you add are saved on this phone and send when you're back.
+BEFORE webkit-private phone   ok   (WebKit refusal was simulated)
+BEFORE webkit-private phone   FAIL the page shows it as "On This Phone" — Photos, daily logs and punch items you add are saved on this phone and send when you're back.
+BEFORE webkit-private phone   ok   no sideways scroll — 393>393
+BEFORE webkit-private phone   FAIL uploaded by itself when the signal came back — NOTHING was sent
+BEFORE webkit-private phone   FAIL sent once, not twice — 0 ingests
+BEFORE webkit-private phone   FAIL back-online bar says it went
+BEFORE webkit-private phone   FAIL status box shows the send as a step — NEEDS ATTENTION ! 1. 1 of 1 photo didn't upload Tap Retry on the ones marked red.
+BEFORE webkit-private phone   FAIL after a reload it is listed once, and nothing is still waiting — 0 tiles, 0 on the server
+BEFORE webkit-private phone   ok   no console errors
+BEFORE chromium      phone   ok   the offline worker controls the page
+BEFORE chromium      phone   ok   offline bar shows — You're offline Photos, daily logs and punch items you add are saved on this phone and send when you're back.
+BEFORE chromium      phone   ok   the sheet says it is saved on this phone — zz-photo.jpg Saved on this phone — uploads when you're back online · 197 KB
+BEFORE chromium      phone   ok   the bar counts it — You're offline 1 item saved on this phone — it sends when you're back.
+BEFORE chromium      phone   FAIL the page shows it as "On This Phone" — 1 item saved on this phone — it sends when you're back.
+BEFORE chromium      phone   ok   no sideways scroll — 393>393
+BEFORE chromium      phone   ok   uploaded by itself when the signal came back — POST /api/photos/upload-url · POST /api/photos/upload-url · POST /api/photos/upload-url · POST /api/photos/upload-url · PUT /storage/27 · PUT /storage/28 · PUT /storage/29 · PUT /storage/30 ·   bytes 202359 · POST /api/p
+BEFORE chromium      phone   FAIL sent once, not twice — 4 ingests
+BEFORE chromium      phone   ok   back-online bar says it went — Back online 1 item sent from this phone.
+BEFORE chromium      phone   ok   status box shows the send as a step — DONE 1. 1 saved item sent from this phone 2. 1 saved item sent from this phone 3. 1 saved item sent from this phone 4. 1 saved item sent from this phone
+BEFORE chromium      phone   FAIL after a reload it is listed once, and nothing is still waiting — 4 tiles, 4 on the server
+BEFORE chromium      phone   ok   no console errors
+AFTER  webkit-private phone   ok   the offline worker controls the page
+AFTER  webkit-private phone   ok   offline bar shows — You're offline Photos, daily logs and punch items you add are saved on this phone and send when you're back.
+AFTER  webkit-private phone   ok   the sheet says it is saved on this phone — zz-photo.jpg Saved on this phone — uploads when you're back online · 197 KB
+AFTER  webkit-private phone   ok   the bar counts it — You're offline 1 item saved on this phone — it sends when you're back.
+AFTER  webkit-private phone   ok   (WebKit refusal was simulated)
+AFTER  webkit-private phone   ok   the page shows it as "On This Phone" — 1 item saved on this phone — it sends when you're back.
+AFTER  webkit-private phone   ok   its own picture is drawn from the copy on the phone
+AFTER  webkit-private phone   ok   tile buttons are 44px+ — 0
+AFTER  webkit-private phone   ok   no sideways scroll — 393>393
+AFTER  webkit-private phone   ok   uploaded by itself when the signal came back — POST /api/photos/upload-url · PUT /storage/31 ·   bytes 202359 · POST /api/photos/ingest
+AFTER  webkit-private phone   ok   sent once, not twice — 1 ingests
+AFTER  webkit-private phone   ok   back-online bar says it went — Back online 1 item sent from this phone.
+AFTER  webkit-private phone   ok   status box shows the send as a step — DONE 1. 1 saved item sent from this phone
+AFTER  webkit-private phone   ok   after a reload it is listed once, and nothing is still waiting — 1 tiles, 1 on the server
+AFTER  webkit-private phone   ok   no console errors
+AFTER  webkit-private desktop ok   the offline worker controls the page
+AFTER  webkit-private desktop ok   offline bar shows — You're offline Photos, daily logs and punch items you add are saved on this phone and send when you're back.
+AFTER  webkit-private desktop ok   the sheet says it is saved on this phone — zz-photo.jpg Saved on this phone — uploads when you're back online · 197 KB
+AFTER  webkit-private desktop ok   the bar counts it — You're offline 1 item saved on this phone — it sends when you're back.
+AFTER  webkit-private desktop ok   (WebKit refusal was simulated)
+AFTER  webkit-private desktop ok   the page shows it as "On This Phone" — 1 item saved on this phone — it sends when you're back.
+AFTER  webkit-private desktop ok   its own picture is drawn from the copy on the phone
+AFTER  webkit-private desktop ok   tile buttons are 44px+ — 0
+AFTER  webkit-private desktop ok   no sideways scroll — 1440>1440
+AFTER  webkit-private desktop ok   uploaded by itself when the signal came back — POST /api/photos/upload-url · PUT /storage/32 ·   bytes 202359 · POST /api/photos/ingest
+AFTER  webkit-private desktop ok   sent once, not twice — 1 ingests
+AFTER  webkit-private desktop ok   back-online bar says it went — Back online 1 item sent from this phone.
+AFTER  webkit-private desktop ok   status box shows the send as a step — DONE 1. 1 saved item sent from this phone
+AFTER  webkit-private desktop ok   after a reload it is listed once, and nothing is still waiting — 1 tiles, 1 on the server
+AFTER  webkit-private desktop ok   no console errors
+AFTER  chromium      phone   ok   the offline worker controls the page
+AFTER  chromium      phone   ok   offline bar shows — You're offline Photos, daily logs and punch items you add are saved on this phone and send when you're back.
+AFTER  chromium      phone   ok   the sheet says it is saved on this phone — zz-photo.jpg Saved on this phone — uploads when you're back online · 197 KB
+AFTER  chromium      phone   ok   the bar counts it — You're offline 1 item saved on this phone — it sends when you're back.
+AFTER  chromium      phone   ok   the page shows it as "On This Phone" — 1 item saved on this phone — it sends when you're back.
+AFTER  chromium      phone   ok   its own picture is drawn from the copy on the phone
+AFTER  chromium      phone   ok   tile buttons are 44px+ — 0
+AFTER  chromium      phone   ok   no sideways scroll — 393>393
+AFTER  chromium      phone   ok   uploaded by itself when the signal came back — POST /api/photos/upload-url · PUT /storage/33 ·   bytes 202359 · POST /api/photos/ingest
+AFTER  chromium      phone   ok   sent once, not twice — 1 ingests
+AFTER  chromium      phone   ok   back-online bar says it went — Back online 1 item sent from this phone.
+AFTER  chromium      phone   ok   status box shows the send as a step — DONE 1. 1 saved item sent from this phone
+AFTER  chromium      phone   ok   after a reload it is listed once, and nothing is still waiting — 1 tiles, 1 on the server
+AFTER  chromium      phone   ok   no console errors
+AFTER  chromium      desktop ok   the offline worker controls the page
+AFTER  chromium      desktop ok   offline bar shows — You're offline Photos, daily logs and punch items you add are saved on this phone and send when you're back.
+AFTER  chromium      desktop ok   the sheet says it is saved on this phone — zz-photo.jpg Saved on this phone — uploads when you're back online · 197 KB
+AFTER  chromium      desktop ok   the bar counts it — You're offline 1 item saved on this phone — it sends when you're back.
+AFTER  chromium      desktop ok   the page shows it as "On This Phone" — 1 item saved on this phone — it sends when you're back.
+AFTER  chromium      desktop ok   its own picture is drawn from the copy on the phone
+AFTER  chromium      desktop ok   tile buttons are 44px+ — 0
+AFTER  chromium      desktop ok   no sideways scroll — 1440>1440
+AFTER  chromium      desktop ok   uploaded by itself when the signal came back — POST /api/photos/upload-url · PUT /storage/34 ·   bytes 202359 · POST /api/photos/ingest
+AFTER  chromium      desktop ok   sent once, not twice — 1 ingests
+AFTER  chromium      desktop ok   back-online bar says it went — Back online 1 item sent from this phone.
+AFTER  chromium      desktop ok   status box shows the send as a step — DONE 1. 1 saved item sent from this phone
+AFTER  chromium      desktop ok   after a reload it is listed once, and nothing is still waiting — 1 tiles, 1 on the server
+AFTER  chromium      desktop ok   no console errors
+# Tile buttons (AFTER)
+phone   ok   refused 5 times: the tile says Couldn't Send and why — zz photo Couldn't Send ZZ AUDIT: this job is archived — photos can't be added. Retry Remove
+phone   ok   a refused photo is not counted as waiting — Back online
+phone   ok   Retry sends it — POST /api/photos/upload-url · PUT /storage/40 ·   bytes 202359 · POST /api/photos/ingest · GET /api/photos/list
+phone   ok   Retry: off the phone and in the gallery
+phone   ok   second photo waits on the phone — You're offline 1 item saved on this phone — it sends when you're back.
+phone   ok   Remove asks first, saying it is the only copy — Remove from this phone? "zz-photo.jpg" hasn't uploaded yet. This phone has the only copy — removing it deletes it. Cancel Confirm
+phone   ok   Remove: tile gone, bar no longer counts it — You're offline Photos, daily logs and punch items you add are saved on this phone and send when you're back.
+phone   ok   nothing extra was sent after Remove
+phone   ok   no console errors
+desktop ok   refused 5 times: the tile says Couldn't Send and why — zz photo Couldn't Send ZZ AUDIT: this job is archived — photos can't be added. Retry Remove
+desktop ok   a refused photo is not counted as waiting — Back online
+desktop ok   Retry sends it — POST /api/photos/upload-url · PUT /storage/46 ·   bytes 202359 · POST /api/photos/ingest · GET /api/photos/list
+desktop ok   Retry: off the phone and in the gallery
+desktop ok   second photo waits on the phone — You're offline 1 item saved on this phone — it sends when you're back.
+desktop ok   Remove asks first, saying it is the only copy — Remove from this phone? "zz-photo.jpg" hasn't uploaded yet. This phone has the only copy — removing it deletes it. Cancel Confirm
+desktop ok   Remove: tile gone, bar no longer counts it — You're offline Photos, daily logs and punch items you add are saved on this phone and send when you're back.
+desktop ok   nothing extra was sent after Remove
+desktop ok   no console errors

@@ -133,7 +133,12 @@ export default function Suggest({
         value={value}
         onChange={(e) => { onChange(e); setOpen(true); setActive(-1); }}
         onFocus={(e) => { if (openOnFocus) setOpen(true); onFocus?.(e); }}
-        onBlur={onBlur}
+        /* Leaving the field closes the panel. It only closed on a click
+           elsewhere, so moving on by Tab, the phone keyboard's Next, or a
+           programmatic focus left it floating over the fields below. Picking
+           an option does not blur (its mousedown is prevented), so a pick
+           still lands. */
+        onBlur={(e) => { setOpen(false); setActive(-1); onBlur?.(e); }}
         onKeyDown={keys}
         role="combobox"
         aria-expanded={open}
@@ -147,6 +152,9 @@ export default function Suggest({
         <ul
           id={listId}
           role="listbox"
+          /* Pressing the panel itself (its scrollbar, the gap between rows)
+             must not blur the field, or the panel would close under the finger. */
+          onMouseDown={(e) => e.preventDefault()}
           style={{
             position: 'absolute', zIndex: 60, top: 'calc(100% + 4px)', left: 0, right: 0,
             margin: 0, padding: 4, listStyle: 'none',

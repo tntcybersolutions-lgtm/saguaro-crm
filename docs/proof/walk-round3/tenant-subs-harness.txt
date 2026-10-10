@@ -1,0 +1,30 @@
+# BEFORE = code at the base commit
+phone   FAIL 2 companies: tapping "On File" responds the way the walk sees it (URL unchanged, scrolled 0→0, 0 DOM changes)
+phone   FAIL 2 companies: the Directory list is brought into view — list top at null (top, viewport)
+phone   ok   with Paperwork Missing on, "On File" clears it and shows every company — 1 → 2
+phone   FAIL 0 companies: tapping "On File" responds the way the walk sees it (URL unchanged, scrolled 0→0, 0 DOM changes)
+phone   FAIL 0 companies: the Directory list is brought into view — list top at null (top, viewport)
+phone   ok   no sideways scroll — 393>393
+phone   ok   no page errors
+desktop FAIL 2 companies: tapping "On File" responds the way the walk sees it (URL unchanged, scrolled 0→0, 0 DOM changes)
+desktop FAIL 2 companies: the Directory list is brought into view — list top at null (top, viewport)
+desktop ok   with Paperwork Missing on, "On File" clears it and shows every company — 1 → 2
+desktop FAIL 0 companies: tapping "On File" responds the way the walk sees it (URL unchanged, scrolled 0→0, 0 DOM changes)
+desktop FAIL 0 companies: the Directory list is brought into view — list top at null (top, viewport)
+desktop ok   no sideways scroll — 1440>1440
+desktop ok   no page errors
+# AFTER = this fix
+phone   ok   2 companies: tapping "On File" responds the way the walk sees it (URL changed to /subs?e=tsubs&n=2#subs-directory, scrolled 0→676, 0 DOM changes)
+phone   ok   2 companies: the Directory list is brought into view — list top at 76,659 (top, viewport)
+phone   ok   with Paperwork Missing on, "On File" clears it and shows every company — 1 → 2
+phone   ok   0 companies: tapping "On File" responds the way the walk sees it (URL changed to /subs?e=tsubs&n=0#subs-directory, scrolled 0→676, 0 DOM changes)
+phone   ok   0 companies: the Directory list is brought into view — list top at 76,659 (top, viewport)
+phone   ok   no sideways scroll — 393>393
+phone   ok   no page errors
+desktop ok   2 companies: tapping "On File" responds the way the walk sees it (URL changed to /subs?e=tsubs&n=2#subs-directory, scrolled 0→0, 0 DOM changes)
+desktop ok   2 companies: the Directory list is brought into view — list top at 346,900 (top, viewport)
+desktop ok   with Paperwork Missing on, "On File" clears it and shows every company — 1 → 2
+desktop ok   0 companies: tapping "On File" responds the way the walk sees it (URL changed to /subs?e=tsubs&n=0#subs-directory, scrolled 0→33, 0 DOM changes)
+desktop ok   0 companies: the Directory list is brought into view — list top at 313,900 (top, viewport)
+desktop ok   no sideways scroll — 1440>1440
+desktop ok   no page errors

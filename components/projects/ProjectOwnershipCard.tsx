@@ -139,9 +139,13 @@ export default function ProjectOwnershipCard({
   if (project.customer_id && customers && !customers.some((c) => c.id === project.customer_id)) {
     customerOptions.unshift({ value: project.customer_id, label: 'Linked Customer' });
   }
+  const linked = project.customer_id ? (customers ?? []).find((c) => c.id === project.customer_id) : undefined;
 
   return (
     <Card title="Ownership" subtitle="Who runs this job, and whose job it is">
+      {/* 44px buttons on a phone (kit's small button is 30px). */}
+      <style dangerouslySetInnerHTML={{ __html: '@media (max-width: 767px) { .pocRoot .k-btn { min-height: 44px; } }' }} />
+      <div className="pocRoot">
       <FormGrid cols={2}>
         <Field
           label="Assigned To"
@@ -169,7 +173,8 @@ export default function ProjectOwnershipCard({
         </Field>
       </FormGrid>
       {customers !== null && (adding ? (
-        <div style={{ marginTop: 12 }}>
+        /* A real form: the keyboard's Go/Enter adds the customer, like the button. */
+        <form style={{ marginTop: 12 }} aria-label="New customer" noValidate onSubmit={(e) => { e.preventDefault(); void createCustomer(); }}>
           <FormGrid cols={2}>
             <Field label="Customer Name" required error={addErr?.field === 'name' ? addErr.text : null}>
               <Input id="own-new-customer-name" value={newName} onChange={(e) => { setNewName(e.target.value); setAddErr(null); }} placeholder="Owner or company name" autoComplete="organization" />
@@ -180,21 +185,26 @@ export default function ProjectOwnershipCard({
           </FormGrid>
           {addErr && !addErr.field && <div className="k-error" role="alert" style={{ marginTop: 8 }}>{addErr.text}</div>}
           <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-            <Button variant="primary" onClick={() => { void createCustomer(); }} disabled={creating}>{creating ? 'Adding…' : 'Add Customer'}</Button>
+            <Button variant="primary" type="submit" disabled={creating}>{creating ? 'Adding…' : 'Add Customer'}</Button>
             <Button variant="ghost" onClick={() => { setAdding(false); setAddErr(null); }} disabled={creating}>Cancel</Button>
           </div>
-        </div>
+        </form>
       ) : (
         <div style={{ marginTop: 10 }}>
           <Button size="sm" variant="secondary" onClick={() => { setAdding(true); window.setTimeout(() => document.getElementById('own-new-customer-name')?.focus(), 0); }}>New Customer</Button>
         </div>
       ))}
       {loadErr && <div className="k-hint" style={{ marginTop: 8 }}>{loadErr}</div>}
+      {/* The linked customer opens their own record — "Open Customers" went to
+          the whole list, so the customer chosen here could not be reached from it. */}
       {project.customer_id && (
         <div style={{ marginTop: 10 }}>
-          <Button size="sm" variant="ghost" href="/app/customers">Open Customers</Button>
+          <Button size="sm" variant="ghost" href={`/app/customers?customer=${encodeURIComponent(project.customer_id)}`}>
+            Open {linked?.name || 'Customer'}
+          </Button>
         </div>
       )}
+      </div>
       <Toast message={toast?.message ?? null} tone={toast?.tone} />
     </Card>
   );

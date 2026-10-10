@@ -1,0 +1,21 @@
+# AFTER (this branch)
+ok   invite: name + role saved
+ok   invite: the answer never carries the accept token
+ok   invite: email cannot be changed through it
+ok   invite: blank role → 400 naming the field
+ok   invite: nothing to change → 400
+ok   invite: an accepted invite → 404 (only pending can change)
+ok   invite: another company's invite → 404, untouched
+ok   invite: without Admin → 403
+ok   invite: cancel still works
+ok   user: title saved
+ok   user: blank name → 400
+ok   user: an over-long title → 400
+ok   user: role is not editable here (ignored)
+ok   user: another company's person → 404, untouched
+ok   user: anyone can edit themselves
+ok   user: a non-admin can't edit someone else → 403
+ok   user: signed out → 401
+ok   GET /api/team/users: this company only, with phone
+
+all passed

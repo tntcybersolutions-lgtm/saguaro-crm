@@ -359,7 +359,7 @@ export default function BillsPage() {
               </div>
               <div>
                 <label style={label}>Vendor *</label>
-                <Suggest type="text" value={form.vendor} onChange={e => setForm(p => ({ ...p, vendor: e.target.value }))} style={inp} options={['v']} />
+                <Suggest type="text" value={form.vendor} onChange={e => setForm(p => ({ ...p, vendor: e.target.value }))} style={inp} options={vendors} />
                 <div style={hint}>{vendors.length > 0 ? `${vendors.length} known vendor${vendors.length === 1 ? '' : 's'} on this project — start typing.` : 'New vendors are remembered for next time.'}</div>
               </div>
               <div>

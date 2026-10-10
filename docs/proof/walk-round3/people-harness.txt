@@ -1,0 +1,45 @@
+# AFTER = this fix
+phone   ok   no sideways scroll (Team tab) — 393>393
+phone   ok   Create Role → POST /api/roles
+phone   ok   the Roles Defined count went up with it — ROLES DEFINED
+3
+Permission templates in force
+phone   ok   lands on Roles with the new role listed — http://localhost:4632/app/people?e=people&view=roles
+phone   ok   no sideways scroll (Roles tab) — 393>393
+phone   ok   after a reload the role is still on the list
+phone   ok   the Roles Defined tile opens the role list (with the new role) — http://localhost:4632/app/people?tab=access&view=roles
+phone   ok   Send Invite → POST /api/team/invite
+phone   ok   the invitee is on the Team list after a reload
+phone   ok   tapping the person opens their record — ZZ AUDIT invitee phone 58854 × Name ZZ AUDIT invitee phone 58854 Email delivered@resend.dev Status Invited — not accepted yet Role on accepting member Job title — Phone — Projects — Last active — Edit Details Resend Invi
+phone   ok   Edit is pre-filled with the saved name — ZZ AUDIT invitee phone 58854
+phone   ok   dialog controls are 44px+
+phone   ok   inputs are 16px (no iOS zoom)
+phone   ok   Save sends PATCH /api/team/invite/:id with name and role — [{"m":"PATCH","p":"/api/team/invite/i1","body":{"name":"ZZ AUDIT invitee phone 58854 edited","role":"Superintendent"}}]
+phone   ok   the edit is on the list after a reload
+phone   ok   reopened: role on accepting = Superintendent — ZZ AUDIT invitee phone 58854 edited × Name ZZ AUDIT invitee phone 58854 edited Email delivered@resend.dev Status Invited — not accepted yet Role on accepting Superintendent Job title — Phone — Projects — Last active — Ed
+phone   ok   sign-in edit pre-filled (name, title, phone)
+phone   ok   Save sends PATCH /api/team/users/u2
+phone   ok   reopened after reload: the new title is there
+phone   ok   no sideways scroll (person record) — 393>393
+phone   ok   no console errors
+desktop ok   no sideways scroll (Team tab) — 1440>1440
+desktop ok   Create Role → POST /api/roles
+desktop ok   the Roles Defined count went up with it — ROLES DEFINED
+3
+Permission templates in force
+desktop ok   lands on Roles with the new role listed — http://localhost:4632/app/people?e=people&view=roles
+desktop ok   no sideways scroll (Roles tab) — 1440>1440
+desktop ok   after a reload the role is still on the list
+desktop ok   the Roles Defined tile opens the role list (with the new role) — http://localhost:4632/app/people?tab=access&view=roles
+desktop ok   Send Invite → POST /api/team/invite
+desktop ok   the invitee is on the Team list after a reload
+desktop ok   tapping the person opens their record — ZZ AUDIT invitee desktop 84037 × Name ZZ AUDIT invitee desktop 84037 Email delivered@resend.dev Status Invited — not accepted yet Role on accepting member Job title — Phone — Projects — Last active — Edit Details Resend 
+desktop ok   Edit is pre-filled with the saved name — ZZ AUDIT invitee desktop 84037
+desktop ok   Save sends PATCH /api/team/invite/:id with name and role — [{"m":"PATCH","p":"/api/team/invite/i1","body":{"name":"ZZ AUDIT invitee desktop 84037 edited","role":"Superintendent"}}]
+desktop ok   the edit is on the list after a reload
+desktop ok   reopened: role on accepting = Superintendent — ZZ AUDIT invitee desktop 84037 edited × Name ZZ AUDIT invitee desktop 84037 edited Email delivered@resend.dev Status Invited — not accepted yet Role on accepting Superintendent Job title — Phone — Projects — Last active 
+desktop ok   sign-in edit pre-filled (name, title, phone)
+desktop ok   Save sends PATCH /api/team/users/u2
+desktop ok   reopened after reload: the new title is there
+desktop ok   no sideways scroll (person record) — 1440>1440
+desktop ok   no console errors

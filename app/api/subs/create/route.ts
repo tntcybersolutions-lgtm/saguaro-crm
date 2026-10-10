@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/supabase-server';
+import { requirePermission } from '@/lib/permissions';
 import { onSubAddedToProject } from '@/lib/triggers';
 import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const g = await requirePermission(req, 'Projects', 'Edit');
+  if (!g.ok) return g.res;
+  const user = g.user;
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Send the subcontractor as JSON.' }, { status: 400 });
+    if (!String(body.name ?? body.companyName ?? '').trim()) {
+      return NextResponse.json({ error: 'name: enter the company name.' }, { status: 400 });
+    }
     const db = createServerClient();
 
     const tenantId = user.tenantId;
@@ -49,8 +55,16 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
 
-    // Triggers (W9, preliminary notice)
-    if (body.projectId) onSubAddedToProject(body.projectId, (sub as any).id).catch(console.error);
+    // Triggers (W9, preliminary notice). The trigger runs on the service-role
+    // client and writes to whatever project id it is given, so the id from the
+    // body is checked against this tenant first — another company's project
+    // id must not get this company's notification or webhook.
+    if (body.projectId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(body.projectId))) {
+      const { data: own, error: pErr } = await db.from('projects').select('id')
+        .eq('id', String(body.projectId)).eq('tenant_id', tenantId).maybeSingle();
+      if (pErr) throw pErr;
+      if (own) onSubAddedToProject(String(body.projectId), (sub as { id: string }).id).catch(console.error);
+    }
 
     return NextResponse.json({ sub, success: true });
   } catch (e) {

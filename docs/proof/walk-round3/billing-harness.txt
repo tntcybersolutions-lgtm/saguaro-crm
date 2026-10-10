@@ -1,0 +1,24 @@
+# AFTER = this fix
+phone   ok   the plans card says plainly that online checkout is off and what happens instead — Online checkout isn't switched on yet.
+Pick a plan and tap Request Plan — we set it up and email you an invoice within 1 business day. Nothing is charged here.
+phone   ok   Starter / Professional offer Request Plan; Enterprise still Contact Sales; no plan removed — Request Plan | Request Plan | Contact Sales
+phone   ok   tap sends the plan request — not checkout — [{"path":"/api/billing/plan-request","body":{"planId":"professional","interval":"monthly"}}]
+phone   ok   the status box shows the step and the outcome — DONE 1. Professional plan requested Sales has it and emails your invoice within 1 business day. Nothing was charged.
+phone   ok   the button now says Requested — Requested — We'll Invoice You
+phone   ok   after a reload Professional still shows Requested (disabled) and the notice names it
+phone   ok   switching to Annual offers Request Plan again
+phone   ok   no sideways scroll — 393>393
+phone   ok   plan buttons 44px+ — 0
+phone   ok   if checkout refuses as switched off, the screen switches to Request Plan
+phone   ok   no console errors
+desktop ok   the plans card says plainly that online checkout is off and what happens instead — Online checkout isn't switched on yet.
+Pick a plan and tap Request Plan — we set it up and email you an invoice within 1 business day. Nothing is charged here.
+desktop ok   Starter / Professional offer Request Plan; Enterprise still Contact Sales; no plan removed — Request Plan | Request Plan | Contact Sales
+desktop ok   tap sends the plan request — not checkout — [{"path":"/api/billing/plan-request","body":{"planId":"professional","interval":"monthly"}}]
+desktop ok   the status box shows the step and the outcome — DONE 1. Professional plan requested Sales has it and emails your invoice within 1 business day. Nothing was charged.
+desktop ok   the button now says Requested — Requested — We'll Invoice You
+desktop ok   after a reload Professional still shows Requested (disabled) and the notice names it
+desktop ok   switching to Annual offers Request Plan again
+desktop ok   no sideways scroll — 1440>1440
+desktop ok   if checkout refuses as switched off, the screen switches to Request Plan
+desktop ok   no console errors

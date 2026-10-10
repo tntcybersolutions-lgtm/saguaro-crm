@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
  * /app/customers CRM page consumes (lead_score, utility_rate, …).
  *
  * The page reads `data.customers` as an array of:
- *   { id, name, email, phone, state, city, climate_zone, utility_rate,
+ *   { id, name, email, phone, state, city, zip_code, country, climate_zone, utility_rate,
  *     status, lead_score, source, created_at, updated_at }
  * with several optional nested collections it degrades gracefully without.
  */
@@ -54,6 +54,8 @@ export async function GET(req: NextRequest) {
       phone: c.phone || '',
       state: c.state || '',
       city: c.city || '',
+      zip_code: c.zip_code || '',
+      country: c.country || '',
       climate_zone: c.climate_zone || '',
       utility_rate: c.utility_cost_kwh != null ? Number(c.utility_cost_kwh) : 0,
       status: c.status || 'lead',

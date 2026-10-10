@@ -1,0 +1,108 @@
+# BEFORE = code at the base commit
+phone   walk  Invite Member: create=saved | back=yes | opened=in place | fields back=4/5 missing ‹marker› note | pre-filled=3/5 empty ‹marker›,‹marker› note | edit=edit form did not show the saved title | sent: PATCH /api/projects/proj1 · POST /api/team/invite
+phone   walk    record button "Invite Member": nothing happened (dead button?) — but the page changed (1 DOM mutations)
+phone   walk    record button "PROJECT → ZZ AUDIT Desert Vista active": gone after reopening (state changed)
+phone   walk    record button "OWNER → — No email on file": gone after reopening (state changed)
+phone   walk    record button "ARCHITECT → — Design contact": gone after reopening (state changed)
+phone   walk    record button "LEADERSHIP → 1/5 Directory roles assigned": gone after reopening (state changed)
+phone   walk    record button "TRADES ON THE JOB → 0 No subs yet": gone after reopening (state changed)
+phone   walk    record button "TEAM MEMBERS → 2 1 with access · 1 invited": gone after reopening (state changed)
+phone   walk    record button "SUBCONTRACTORS → 0 Portal access": gone after reopening (state changed)
+phone   walk    record button "FIELD LEADERSHIP → 1/5 PM · super · foreman · owner · archit": gone after reopening (state changed)
+phone   walk    record button "New Customer": nothing happened (dead button?) — but the page changed (4 DOM mutations)
+phone   walk    record button "Set Superintendent": nothing happened (dead button?) — but the page changed (3 DOM mutations)
+phone   walk    record button "Set Foreman": nothing happened (dead button?) — but the page changed (3 DOM mutations)
+phone   walk    record button "Set Owner": nothing happened (dead button?) — but the page changed (3 DOM mutations)
+phone   walk    record button "Set Architect": nothing happened (dead button?) — but the page changed (3 DOM mutations)
+phone   walk    record button "Ascending — switch to descending": nothing happened (dead button?) — but the page changed (8 DOM mutations)
+phone   FAIL walk: Invite Member saves only the invite, it comes back, opens, every field back, edit pre-filled and saved — {"add":"Invite Member","actions":[{"label":"Invite Member","result":"nothing happened (dead button?) — but the page changed (1 DOM mutations)"},{"label":"PROJECT → ZZ AUDIT Desert Vista active","result":"gone after reopening (state changed)"},{"label":"OWNER →
+phone   walk  New Customer: create=saved | back=yes | opened=in place | sent: POST /api/customers/profiles · PATCH /api/projects/proj1
+phone   FAIL walk: New Customer saves (customer + link only), is on the page after a reload, and tapping it opens something — {"add":"New Customer","actions":[],"errors":[],"filled":5,"saveClicked":["Add Customer"],"writes":["POST /api/customers/profiles","PATCH /api/projects/proj1"],"create":"saved","persisted":"yes","opened":"in place","fieldsBack":"3/4","missing":["‹marker› note"]
+phone   ok   no console errors
+desktop walk  Invite Member: create=saved | back=yes | opened=in place | fields back=4/5 missing ‹marker› note | pre-filled=3/5 empty ‹marker›,‹marker› note | edit=edit form did not show the saved title | sent: PATCH /api/projects/proj1 · POST /api/team/invite
+desktop walk    record button "Invite Member": nothing happened (dead button?) — but the page changed (1 DOM mutations)
+desktop walk    record button "PROJECT → ZZ AUDIT Desert Vista active": gone after reopening (state changed)
+desktop walk    record button "OWNER → — No email on file": gone after reopening (state changed)
+desktop walk    record button "ARCHITECT → — Design contact": gone after reopening (state changed)
+desktop walk    record button "LEADERSHIP → 1/5 Directory roles assigned": gone after reopening (state changed)
+desktop walk    record button "TRADES ON THE JOB → 0 No subs yet": gone after reopening (state changed)
+desktop walk    record button "TEAM MEMBERS → 2 1 with access · 1 invited": gone after reopening (state changed)
+desktop walk    record button "SUBCONTRACTORS → 0 Portal access": gone after reopening (state changed)
+desktop walk    record button "FIELD LEADERSHIP → 1/5 PM · super · foreman · owner · archit": gone after reopening (state changed)
+desktop walk    record button "New Customer": nothing happened (dead button?) — but the page changed (4 DOM mutations)
+desktop walk    record button "Set Superintendent": nothing happened (dead button?) — but the page changed (3 DOM mutations)
+desktop walk    record button "Set Foreman": nothing happened (dead button?) — but the page changed (3 DOM mutations)
+desktop walk    record button "Set Owner": nothing happened (dead button?) — but the page changed (3 DOM mutations)
+desktop walk    record button "Set Architect": nothing happened (dead button?) — but the page changed (3 DOM mutations)
+desktop FAIL walk: Invite Member saves only the invite, it comes back, opens, every field back, edit pre-filled and saved — {"add":"Invite Member","actions":[{"label":"Invite Member","result":"nothing happened (dead button?) — but the page changed (1 DOM mutations)"},{"label":"PROJECT → ZZ AUDIT Desert Vista active","result":"gone after reopening (state changed)"},{"label":"OWNER →
+desktop walk  New Customer: create=saved | back=yes | opened=in place | sent: POST /api/customers/profiles · PATCH /api/projects/proj1
+desktop FAIL walk: New Customer saves (customer + link only), is on the page after a reload, and tapping it opens something — {"add":"New Customer","actions":[],"errors":[],"filled":5,"saveClicked":["Add Customer"],"writes":["POST /api/customers/profiles","PATCH /api/projects/proj1"],"create":"saved","persisted":"yes","opened":"in place","fieldsBack":"3/4","missing":["‹marker› note"]
+desktop ok   no console errors
+# AFTER = this fix
+phone   walk  Invite Member: create=saved | back=yes | opened=opened (dialog or page) | fields back=2/2 | pre-filled=2/2 | edit=yes | sent: POST /api/team/invite
+phone   walk    record button "Resend Invite": saved (POST /api/team/invite/i34896)
+phone   ok   walk: Invite Member saves only the invite, it comes back, opens, every field back, edit pre-filled and saved — {"add":"Invite Member","actions":[{"label":"Resend Invite","result":"saved (POST /api/team/invite/i34896)"}],"errors":[],"filled":2,"saveClicked":["Send Invitation"],"writes":["POST /api/team/invite"],"create":"saved","persisted":"yes","opened":"opened (dialog
+phone   walk  New Customer: create=saved | back=yes | opened=opened (dialog or page) | sent: POST /api/customers/profiles · PATCH /api/projects/proj1
+phone   ok   walk: New Customer saves (customer + link only), is on the page after a reload, and tapping it opens something — {"add":"New Customer","actions":[],"errors":[],"filled":2,"saveClicked":["Add Customer"],"writes":["POST /api/customers/profiles","PATCH /api/projects/proj1"],"create":"saved","persisted":"yes","opened":"opened (dialog or page)","fieldsBack":"2/2","editButton"
+phone   ok   Invite Member brings the form up with the cursor in Email
+phone   ok   tapping Invite Member again keeps the form open (it used to close it)
+phone   ok   invite form controls are 44px+
+phone   ok   invite inputs are 16px (no iOS zoom) — 16,16,16
+phone   ok   no sideways scroll (invite form) — 393>393
+phone   ok   the keyboard's Go/Enter sends the invite (POST /api/team/invite with name and role) — [{"m":"POST","p":"/api/team/invite","body":{"projectId":"proj1","email":"delivered@resend.dev","name":"ZZ AUDIT invitee phone 66204","role":"Manager"}}]
+phone   ok   it says "Invitation sent." when the email went out
+phone   ok   the invitee is on the roster after a reload
+phone   ok   tapping the row opens the invite: email, role, status; the URL names it — ZZ AUDIT invitee phone 66204 Invited Oct 10, 2026 — not accepted yet Email delivered@resend.dev Role When They Accept Manager Status Invite sent Edit Resend Invite Remove Invite Close
+phone   ok   a reload lands back on the same invite
+phone   ok   Edit opens pre-filled: name, the address (read-only), role
+phone   ok   Save Changes → PATCH /api/team/invite/:id with the name and role — [{"m":"PATCH","p":"/api/team/invite/i66400","body":{"name":"ZZ AUDIT invitee phone 66204 edited","role":"Guest"}}]
+phone   ok   the invite shows the change at once — ZZ AUDIT invitee phone 66204 edited Invited Oct 10, 2026 — not accepted yet Email delivered@resend.dev Role When They Accept Guest Status Invite sent Saved. Edit Resend Invite Remove Invite Close
+phone   ok   Resend Invite → POST /api/team/invite/:id and says it was emailed
+phone   ok   after a reload the roster shows the edited name
+phone   ok   with email off: "Invite saved, but the email didn't go out" — not "Invitation sent."
+phone   ok   with email off, Resend says the email didn't go out
+phone   ok   Remove Invite asks first
+phone   ok   Remove → DELETE /api/team/invite/:id; gone from the roster
+phone   ok   still gone after a reload
+phone   ok   a team member opens: email, role, company, phone — ZZ AUDIT Field Lead On this job since Sep 1, 2026 Email field@zz.test Role Member Company ZZ AUDIT GC Phone 602-555-0100 Work Assignments None yet Status Active Manage Access in People Close
+phone   ok   Set Superintendent opens name + email fields
+phone   ok   Save → PATCH /api/projects/:id leadership, and the slot shows it
+phone   ok   the keyboard's Go/Enter adds the customer and links it to the job
+phone   ok   after a reload the linked customer has an "Open <name>" link to their own record — /app/customers?customer=c87183
+phone   ok   every small button on the page is 44px+ on a phone
+phone   ok   no sideways scroll (page) — 393>393
+phone   ok   a failed load says so with Try Again — not "No team members yet" — ZZ AUDIT Desert Vista Project Team Manage project team members and access Invite Member PROJECT → ZZ AUDIT Desert Vista active OWNER → ZZ AUDIT Owner Co phone No email on file ARCHITECT → — Design c
+phone   ok   Try Again loads the team
+phone   ok   no console errors
+desktop walk  Invite Member: create=saved | back=yes | opened=opened (dialog or page) | fields back=2/2 | pre-filled=2/2 | edit=yes | sent: POST /api/team/invite
+desktop walk    record button "Resend Invite": saved (POST /api/team/invite/i96868)
+desktop ok   walk: Invite Member saves only the invite, it comes back, opens, every field back, edit pre-filled and saved — {"add":"Invite Member","actions":[{"label":"Resend Invite","result":"saved (POST /api/team/invite/i96868)"}],"errors":[],"filled":2,"saveClicked":["Send Invitation"],"writes":["POST /api/team/invite"],"create":"saved","persisted":"yes","opened":"opened (dialog
+desktop walk  New Customer: create=saved | back=yes | opened=opened (dialog or page) | sent: POST /api/customers/profiles · PATCH /api/projects/proj1
+desktop ok   walk: New Customer saves (customer + link only), is on the page after a reload, and tapping it opens something — {"add":"New Customer","actions":[],"errors":[],"filled":2,"saveClicked":["Add Customer"],"writes":["POST /api/customers/profiles","PATCH /api/projects/proj1"],"create":"saved","persisted":"yes","opened":"opened (dialog or page)","fieldsBack":"2/2","editButton"
+desktop ok   Invite Member brings the form up with the cursor in Email
+desktop ok   tapping Invite Member again keeps the form open (it used to close it)
+desktop ok   no sideways scroll (invite form) — 1440>1440
+desktop ok   the keyboard's Go/Enter sends the invite (POST /api/team/invite with name and role) — [{"m":"POST","p":"/api/team/invite","body":{"projectId":"proj1","email":"delivered@resend.dev","name":"ZZ AUDIT invitee desktop 29054","role":"Manager"}}]
+desktop ok   it says "Invitation sent." when the email went out
+desktop ok   the invitee is on the roster after a reload
+desktop ok   tapping the row opens the invite: email, role, status; the URL names it — ZZ AUDIT invitee desktop 29054 Invited Oct 10, 2026 — not accepted yet Email delivered@resend.dev Role When They Accept Manager Status Invite sent Edit Resend Invite Remove Invite Close
+desktop ok   a reload lands back on the same invite
+desktop ok   Edit opens pre-filled: name, the address (read-only), role
+desktop ok   Save Changes → PATCH /api/team/invite/:id with the name and role — [{"m":"PATCH","p":"/api/team/invite/i29274","body":{"name":"ZZ AUDIT invitee desktop 29054 edited","role":"Guest"}}]
+desktop ok   the invite shows the change at once — ZZ AUDIT invitee desktop 29054 edited Invited Oct 10, 2026 — not accepted yet Email delivered@resend.dev Role When They Accept Guest Status Invite sent Saved. Edit Resend Invite Remove Invite Close
+desktop ok   Resend Invite → POST /api/team/invite/:id and says it was emailed
+desktop ok   after a reload the roster shows the edited name
+desktop ok   with email off: "Invite saved, but the email didn't go out" — not "Invitation sent."
+desktop ok   with email off, Resend says the email didn't go out
+desktop ok   Remove Invite asks first
+desktop ok   Remove → DELETE /api/team/invite/:id; gone from the roster
+desktop ok   still gone after a reload
+desktop ok   a team member opens: email, role, company, phone — ZZ AUDIT Field Lead On this job since Sep 1, 2026 Email field@zz.test Role Member Company ZZ AUDIT GC Phone 602-555-0100 Work Assignments None yet Status Active Manage Access in People Close
+desktop ok   Set Superintendent opens name + email fields
+desktop ok   Save → PATCH /api/projects/:id leadership, and the slot shows it
+desktop ok   the keyboard's Go/Enter adds the customer and links it to the job
+desktop ok   after a reload the linked customer has an "Open <name>" link to their own record — /app/customers?customer=c49665
+desktop ok   no sideways scroll (page) — 1440>1440
+desktop ok   a failed load says so with Try Again — not "No team members yet" — ZZ AUDIT Desert Vista Project Team Manage project team members and access Invite Member PROJECT → ZZ AUDIT Desert Vista active OWNER → ZZ AUDIT Owner Co desktop No email on file ARCHITECT → — Design
+desktop ok   Try Again loads the team
+desktop ok   no console errors

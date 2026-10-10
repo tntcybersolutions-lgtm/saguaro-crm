@@ -1,7 +1,63 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase-server';
+import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
-import { apiError } from '@/lib/api-error';
+import { apiError, apiFail } from '@/lib/api-error';
+
+/**
+ * PATCH /api/team/users/[id]  { full_name?, title?, phone? }
+ *
+ * Correct a person's name, job title or phone on the company roster. Their
+ * access (base role and role grants) is NOT edited here — that is Assign Role.
+ * Admins can edit anyone in the company; everyone can edit themselves.
+ * Scoped by id AND tenant_id: another company's person is a 404.
+ */
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const self = await getUser(req);
+  if (!self) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (self.id !== id) {
+    const g = await requirePermission(req, 'Admin', 'Full');
+    if (!g.ok) return g.res;
+  }
+  try {
+    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+    const patch: Record<string, string | null> = {};
+    const text = (k: string, max: number): string | null | undefined => {
+      if (body[k] === undefined) return undefined;
+      const v = String(body[k] ?? '').trim();
+      if (v.length > max) throw new RangeError(`${k}: keep it under ${max} characters.`);
+      return v || null;
+    };
+    try {
+      const fullName = text('full_name', 120);
+      const title = text('title', 80);
+      const phone = text('phone', 40);
+      if (fullName !== undefined) {
+        if (!fullName) return apiFail('full_name: a person needs a name.', 400);
+        patch.full_name = fullName;
+      }
+      if (title !== undefined) patch.title = title;
+      if (phone !== undefined) patch.phone = phone;
+    } catch (e) {
+      if (e instanceof RangeError) return apiFail(e.message, 400);
+      throw e;
+    }
+    if (!Object.keys(patch).length) return apiFail('Send the name, title or phone to change.', 400);
+    const db = createServerClient();
+    const { data, error } = await db
+      .from('profiles')
+      .update({ ...patch, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .eq('tenant_id', self.tenantId)
+      .select('id, full_name, email, role, title, phone')
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return apiFail('Not found', 404);
+    return NextResponse.json({ user: { id: data.id, name: data.full_name ?? data.email ?? '', email: data.email ?? '', role: data.role ?? null, title: data.title ?? null, phone: data.phone ?? null } });
+  } catch (e) {
+    return apiError('team/users PATCH', e, "Couldn't save this person. Please try again.");
+  }
+}
 
 /**
  * DELETE /api/team/users/[id] — remove a person from the company account.

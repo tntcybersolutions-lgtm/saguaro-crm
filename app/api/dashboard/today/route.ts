@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { getEffectivePermissions, hasPermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
+import { embed } from '@/lib/db-embeds';
 import { addDays, requestDay } from '@/lib/time-zone';
 import { daysUntilDay } from '@/lib/calendar-day';
 
@@ -55,7 +56,7 @@ export async function GET(req: NextRequest) {
     });
 
     // Overdue RFIs
-    const { data: rfis } = await db.from('rfis').select('*, projects(name, id)').eq('tenant_id', tenantId).eq('status', 'open').lt('due_date', today).limit(3);
+    const { data: rfis } = await db.from('rfis').select(`*, ${embed('rfis', 'projects')}(name, id)`).eq('tenant_id', tenantId).eq('status', 'open').lt('due_date', today).limit(3);
     if ((rfis || []).length > 0) {
       actions.push({
         type: 'rfi',

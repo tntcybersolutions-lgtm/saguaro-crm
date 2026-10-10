@@ -439,7 +439,7 @@ export default function PurchaseOrdersPage() {
               </div>
               <div>
                 <label style={lbl}>Vendor *{vendorAuto && <AutoChip />}</label>
-                <Suggest value={form.vendor} onChange={e => setForm(p => ({ ...p, vendor: e.target.value }))} style={inp} options={['v']} />
+                <Suggest value={form.vendor} onChange={e => setForm(p => ({ ...p, vendor: e.target.value }))} style={inp} options={vendors} />
                 <div style={hint}>{vendorAuto ? 'Your last PO here used this vendor — type to change.' : vendors.length > 0 ? `${vendors.length} known vendor${vendors.length === 1 ? '' : 's'} on this project — start typing.` : 'New vendors are remembered for next time.'}</div>
               </div>
               <div>

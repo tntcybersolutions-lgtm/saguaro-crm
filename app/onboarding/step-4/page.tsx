@@ -55,9 +55,13 @@ export default function OnboardingStep4() {
         body: JSON.stringify({invites: toSend}),
       });
       const data = await res.json().catch(()=>null) as
-        | { error?: string; sent?: number; failed?: number; results?: Array<{email:string;status:string;error?:string}> }
+        | { error?: string; sent?: number; failed?: number; results?: Array<{email:string;status:string;error?:string;emailed?:boolean}> }
         | null;
-      if (!res.ok) {
+      // An invite can exist without its email having gone out — say so by name.
+      const unmailed = (data?.results||[]).filter(r=>r.status==='sent' && r.emailed===false).map(r=>r.email);
+      if (res.ok && !data?.failed && unmailed.length) {
+        setError(`Invites saved, but the email didn't go out to ${unmailed.join(', ')}. Resend them from People → Pending Invites once email is working.`);
+      } else if (!res.ok) {
         setError(data?.error || 'Failed to send invites. You can add team members from Settings later.');
       } else if (data?.failed) {
         // Partial batch — name exactly who did NOT get an invite rather than

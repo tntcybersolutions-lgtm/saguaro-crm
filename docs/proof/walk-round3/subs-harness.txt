@@ -1,0 +1,56 @@
+# BEFORE = code at the base commit
+phone   walk  create=DEAD — tapping it did nothing | back after reload= | opened= | fields back= | edit pre-filled= | edit saved=
+phone   FAIL walk: Add Subcontractor opens a form that saves, comes back, opens, edits — {"add":"Add Subcontractor","actions":[],"errors":[],"create":"DEAD — tapping it did nothing"}
+desktop walk  create=DEAD — tapping it did nothing | back after reload= | opened= | fields back= | edit pre-filled= | edit saved=
+desktop FAIL walk: Add Subcontractor opens a form that saves, comes back, opens, edits — {"add":"Add Subcontractor","actions":[],"errors":[],"create":"DEAD — tapping it did nothing"}
+# AFTER = this fix
+phone   walk  create=saved | back after reload=yes | opened=opened (dialog or page) | fields back=5/5 | edit pre-filled=5/5 | edit saved=yes | save: Add Subcontractor
+phone   ok   walk: Add Subcontractor opens a form that saves, comes back, opens, edits — {"add":"Add Subcontractor","actions":[],"errors":[],"filled":7,"saveClicked":["Add Subcontractor"],"writes":["POST /api/projects/proj1/subs"],"create":"saved","persisted":"yes","opened":"opened (dialog or page)","fieldsBack":"5/5","editButton":"Edit","prefille
+phone   ok   an empty job shows "No subcontractors on this job yet" with an Add button (the form is not pre-opened)
+phone   ok   no sideways scroll (empty) — 393>393
+phone   ok   Add Subcontractor brings the form up with the cursor in Company Name — {"id":"sb-company-name","inView":true}
+phone   ok   add form controls are 44px+
+phone   ok   add form inputs are 16px (no iOS zoom) — 16,16,16,16,16,16,16
+phone   ok   no sideways scroll (add form) — 393>393
+phone   ok   Add Subcontractor → POST /api/projects/:id/subs with every field and the amount — [{"m":"POST","p":"/api/projects/proj1/subs","body":{"name":"ZZ AUDIT subs phone 31010","trade":"Drywall","contact_name":"ZZ AUDIT Dee","contact_email":"delivered@resend.dev","contact_phone":"602-555-0100","license_number":"ROC-1234","contract_amount":"12500"}}
+phone   ok   listed on the job after a reload, with its $12,500 contract
+phone   ok   tapping the row opens the record (URL names it) with every field — ZZ AUDIT subs phone 31010 Drywall Contract on This Job $12,500 Paid on This Job $0 Contact ZZ AUDIT Dee Email delivered@resend.dev Phone 602-555-0100 License ROC-1234 W-9 Missing Insurance COI not on file Directory Status Active Edit Remove From Job Close
+phone   ok   a reload lands back on the same record
+phone   ok   Edit opens pre-filled with every field — ZZ AUDIT subs phone 31010|ZZ AUDIT Dee|delivered@resend.dev|602-555-0100|ROC-1234|12500|Drywall
+phone   ok   Save Changes → PATCH /api/projects/:id/subs/:id (name, cleared phone, amount) — [{"m":"PATCH","p":"/api/projects/proj1/subs/d31670","body":{"company_name":"ZZ AUDIT subs phone 31010 edited","trade":"Drywall","contact_name":"ZZ AUDIT Dee","contact_email":"delivered@resend.dev","contact_phone":"","license_number":"ROC-1234","contract_amount
+phone   ok   the record shows the edit at once — ZZ AUDIT subs phone 31010 edited Drywall Contract on This Job $15,000 Paid on This Job $0 Contact ZZ AUDIT Dee Email delivered@resend.dev Phone Not on file License ROC-1234 W-9 Missing Insurance COI not on file Directory Status Active Edit 
+phone   ok   after a reload the list shows the edit
+phone   ok   the Company field suggests directory companies not on the job — ZZ AUDIT Existing Electric
+phone   ok   picking it fills contact, email, phone, license from the directory
+phone   ok   Add sends the directory id — the company is put on the job, not copied — [{"m":"POST","p":"/api/projects/proj1/subs","body":{"name":"ZZ AUDIT Existing Electric","trade":"Electrical","contact_name":"ZZ AUDIT Ed","contact_email":"delivered@resend.dev","contact_phone":"602-555-0100","license_number":"ROC-777","contract_amount":"","sub
+phone   ok   Remove asks first, and says the company stays in the directory
+phone   ok   Remove → DELETE /api/projects/:id/subs/:id; off the job, still in the directory
+phone   ok   after a reload it is gone from the job; the other company is still there
+phone   ok   no sideways scroll (list) — 393>393
+phone   ok   a failed load says so with Try Again — not "No subcontractors" — Subcontractors Subs on This Job Who is working this job, what they are contracted for, what they have been paid, and whether their paperwork is current. Add Subcontractor SUBS ON JOB → — On this job SUB CONTRACTS → — Not loaded COMPLIANCE → — Not loaded DIRE
+phone   ok   Try Again loads the job
+phone   ok   no console errors
+desktop walk  create=saved | back after reload=yes | opened=opened (dialog or page) | fields back=5/5 | edit pre-filled=5/5 | edit saved=yes | save: Add Subcontractor
+desktop ok   walk: Add Subcontractor opens a form that saves, comes back, opens, edits — {"add":"Add Subcontractor","actions":[],"errors":[],"filled":7,"saveClicked":["Add Subcontractor"],"writes":["POST /api/projects/proj1/subs"],"create":"saved","persisted":"yes","opened":"opened (dialog or page)","fieldsBack":"5/5","editButton":"Edit","prefille
+desktop ok   an empty job shows "No subcontractors on this job yet" with an Add button (the form is not pre-opened)
+desktop ok   no sideways scroll (empty) — 1440>1440
+desktop ok   Add Subcontractor brings the form up with the cursor in Company Name — {"id":"sb-company-name","inView":true}
+desktop ok   no sideways scroll (add form) — 1440>1440
+desktop ok   Add Subcontractor → POST /api/projects/:id/subs with every field and the amount — [{"m":"POST","p":"/api/projects/proj1/subs","body":{"name":"ZZ AUDIT subs desktop 69677","trade":"Drywall","contact_name":"ZZ AUDIT Dee","contact_email":"delivered@resend.dev","contact_phone":"602-555-0100","license_number":"ROC-1234","contract_amount":"12500"
+desktop ok   listed on the job after a reload, with its $12,500 contract
+desktop ok   tapping the row opens the record (URL names it) with every field — ZZ AUDIT subs desktop 69677 Drywall Contract on This Job $12,500 Paid on This Job $0 Contact ZZ AUDIT Dee Email delivered@resend.dev Phone 602-555-0100 License ROC-1234 W-9 Missing Insurance COI not on file Directory Status Active Edit Remove From Job Close
+desktop ok   a reload lands back on the same record
+desktop ok   Edit opens pre-filled with every field — ZZ AUDIT subs desktop 69677|ZZ AUDIT Dee|delivered@resend.dev|602-555-0100|ROC-1234|12500|Drywall
+desktop ok   Save Changes → PATCH /api/projects/:id/subs/:id (name, cleared phone, amount) — [{"m":"PATCH","p":"/api/projects/proj1/subs/d70222","body":{"company_name":"ZZ AUDIT subs desktop 69677 edited","trade":"Drywall","contact_name":"ZZ AUDIT Dee","contact_email":"delivered@resend.dev","contact_phone":"","license_number":"ROC-1234","contract_amou
+desktop ok   the record shows the edit at once — ZZ AUDIT subs desktop 69677 edited Drywall Contract on This Job $15,000 Paid on This Job $0 Contact ZZ AUDIT Dee Email delivered@resend.dev Phone Not on file License ROC-1234 W-9 Missing Insurance COI not on file Directory Status Active Edi
+desktop ok   after a reload the list shows the edit
+desktop ok   the Company field suggests directory companies not on the job — ZZ AUDIT Existing Electric
+desktop ok   picking it fills contact, email, phone, license from the directory
+desktop ok   Add sends the directory id — the company is put on the job, not copied — [{"m":"POST","p":"/api/projects/proj1/subs","body":{"name":"ZZ AUDIT Existing Electric","trade":"Electrical","contact_name":"ZZ AUDIT Ed","contact_email":"delivered@resend.dev","contact_phone":"602-555-0100","license_number":"ROC-777","contract_amount":"","sub
+desktop ok   Remove asks first, and says the company stays in the directory
+desktop ok   Remove → DELETE /api/projects/:id/subs/:id; off the job, still in the directory
+desktop ok   after a reload it is gone from the job; the other company is still there
+desktop ok   no sideways scroll (list) — 1440>1440
+desktop ok   a failed load says so with Try Again — not "No subcontractors" — Subcontractors Subs on This Job Who is working this job, what they are contracted for, what they have been paid, and whether their paperwork is current. Add Subcontractor SUBS ON JOB → — On this job SUB CONTRACTS → — Not loaded COMPLIANCE → — Not loaded DIRE
+desktop ok   Try Again loads the job
+desktop ok   no console errors

@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
 import { apiError, apiFail } from '@/lib/api-error';
+import { embed } from '@/lib/db-embeds';
 
 const ALLOWED_RFI_COLUMNS = [
   'project_id', 'subject', 'question', 'answer', 'spec_section', 'due_date', 'status',
@@ -34,7 +35,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const db = createServerClient();
     // maybeSingle: someone else's (or a deleted) RFI is "not found", not a server error.
-    const { data, error } = await db.from('rfis').select('*, projects(name)').eq('id', id).eq('tenant_id', user.tenantId).maybeSingle();
+    // The project is embedded through a named constraint: rfis has two identical
+    // FKs to projects, and a bare projects(name) failed every read (lib/db-embeds).
+    const { data, error } = await db.from('rfis').select(`*, ${embed('rfis', 'projects')}(name)`).eq('id', id).eq('tenant_id', user.tenantId).maybeSingle();
     if (error) throw error;
     if (!data) return apiFail('RFI not found', 404);
     return NextResponse.json({ rfi: data });

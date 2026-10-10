@@ -176,6 +176,12 @@ export default function PermitsPage() {
   // -> "Mesa". Only a prefill; the GC corrects it once and moves on.
   const addr = String(ctx?.project?.address || '');
   const city = (addr.split(',')[1] || '').trim().replace(/\d.*$/, '').trim();
+  /* The AHJ suggestions: the project city's usual agencies, then every agency
+     this job has already pulled a permit from. */
+  const authorityOptions = [
+    ...(city ? [`City of ${city}`, `City of ${city} Building Department`, `${city} County Development Services`] : []),
+    ...permits.map((p) => p.issuing_authority).filter(Boolean),
+  ];
 
   // Effective status: the stored stage, flipped to expired once past expiry.
   const effStatus = (p: Permit) => (p.expiry_date && p.expiry_date < today && p.status !== 'closed') ? 'expired' : (p.status || 'applied');
@@ -480,7 +486,7 @@ export default function PermitsPage() {
             <Input value={form.number} onChange={e => { setForm(p => ({ ...p, number: e.target.value })); if (errorMsg) setErrorMsg(''); }} placeholder="e.g. BLD-2026-01423" autoFocus />
           </Field>
           <Field label="Issuing Agency (AHJ)" required hint={<>{autoF.authority && <AutoChip />} {autoF.authority ? 'Guessed from the project address — correct it if another agency has jurisdiction.' : city ? `Project sits in ${city} — its building department is the usual AHJ.` : 'The authority having jurisdiction over the site.'}</>}>
-            <Suggest className="k-input" value={form.authority} onChange={e => { const v = e.target.value; setAutoF(a => ({ ...a, authority: false })); setForm(p => ({ ...p, authority: v })); if (errorMsg) setErrorMsg(''); }} placeholder="e.g. City Building Department" options={['a']} />
+            <Suggest className="k-input" value={form.authority} onChange={e => { const v = e.target.value; setAutoF(a => ({ ...a, authority: false })); setForm(p => ({ ...p, authority: v })); if (errorMsg) setErrorMsg(''); }} placeholder="e.g. City Building Department" options={authorityOptions} />
           </Field>
           <Field label="Fee ($)" hint="Plan-check and permit fees — rolls into Fees to Date.">
             <Input type="number" step="0.01" value={form.fee} onChange={e => setForm(p => ({ ...p, fee: Number(e.target.value) }))} />

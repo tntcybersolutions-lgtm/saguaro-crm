@@ -11,8 +11,10 @@ import { UsersThree, UserPlus, HardHat, EnvelopeSimple, Phone, IdentificationBad
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, StatStrip, FlowSteps, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { moduleAccent } from '@/lib/module-identity';
-import { Button, Input } from '@/components/ui/kit';
+import { Button, Input, FormModal, FormGrid, Field, Select } from '@/components/ui/kit';
 import ProjectOwnershipCard from '@/components/projects/ProjectOwnershipCard';
+import { createPortal } from 'react-dom';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)',GREEN='var(--success)',RED='var(--danger)',BLUE='var(--warning)';
 const fmt = (n:number) => '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -26,6 +28,10 @@ const TEAM_CSS = `
 .tmInviteGrid button { min-height: 44px; }
 @media (max-width: 900px) { .tmInviteGrid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 700px) { .tmInviteFields { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 767px) { .tmScope .k-btn { min-height: 44px; } .tmInviteGrid input, .tmInviteGrid select { font-size: 16px !important; min-height: 44px; } }
+.tmRec { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 4px 18px; }
+.tmRecActs { display: flex; gap: 10px; flex-wrap: wrap; width: 100%; }
+.tmRecActs .k-btn { min-height: 44px; }
 `;
 function Badge({label,color='var(--text-secondary)',bg='rgba(163,172,187,.12)'}:{label:string,color?:string,bg?:string}){
   return <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:bg,color}}>{label}</span>;
@@ -37,7 +43,10 @@ export default function TeamPage(){
   const { showToast } = useToast();
   const [sendingPortal, setSendingPortal] = useState<string | null>(null);
   const [showInvite, setShowInvite] = useState(false);
-  const [rosterMembers, setRosterMembers] = useState<{key:string,name:string,role:string,email:string,access:string,last:string,userId:string|null,inviteId?:string}[]>([]);
+  const [rosterMembers, setRosterMembers] = useState<{key:string,name:string,role:string,email:string,access:string,last:string,userId:string|null,inviteId?:string,company?:string,phone?:string,since?:string}[]>([]);
+  /** The project read failed — said in place of the roster, with Try Again. */
+  const [loadError, setLoadError] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
   /* Invites sent from this page. They are team_invites rows (project_id = this
      job) and only become project_team rows when accepted — so the roster, which
      read project_team alone, never showed anyone you had just invited. */
@@ -59,10 +68,38 @@ export default function TeamPage(){
       .map(i => ({
         key: `invite:${i.id}`, name: (i.name || '').trim() || i.email, role: i.role || 'Member', email: i.email,
         access: i.role || 'Member', last: 'Invite sent', userId: null as string | null, inviteId: i.id,
+        company: '', phone: '', since: i.created_at || '',
       }));
     return [...rosterMembers, ...invited];
   }, [rosterMembers, pendingInvites]);
   const [subs, setSubs] = useState<{name:string,role:string,email:string,access:string,last:string}[]>([]);
+
+  /* ── The open roster record (?member=<key> in the URL, so a reload lands on it).
+     Rows opened nothing: an invite sent from here could not be checked,
+     corrected, resent or withdrawn from this page. ── */
+  const [openKey, setOpenKey] = useState<string | null>(null);
+  const [recEditing, setRecEditing] = useState(false);
+  const [recName, setRecName] = useState('');
+  const [recRole, setRecRole] = useState('Member');
+  const [recBusy, setRecBusy] = useState(false);
+  const [recMsg, setRecMsg] = useState<{ text: string; bad?: boolean } | null>(null);
+  useEffect(() => {
+    const sync = () => {
+      try { setOpenKey(new URLSearchParams(window.location.search).get('member')); } catch { setOpenKey(null); }
+      setRecEditing(false); setRecMsg(null);
+    };
+    sync();
+    window.addEventListener('popstate', sync);
+    return () => window.removeEventListener('popstate', sync);
+  }, []);
+  const openMember = (key: string) => {
+    try { const u = new URL(window.location.href); u.searchParams.set('member', key); window.history.pushState(null, '', u.toString()); } catch { /* URL sync is a convenience */ }
+    setOpenKey(key); setRecEditing(false); setRecMsg(null);
+  };
+  const closeMember = () => {
+    try { const u = new URL(window.location.href); u.searchParams.delete('member'); window.history.replaceState(null, '', u.toString()); } catch { /* URL sync is a convenience */ }
+    setOpenKey(null); setRecEditing(false); setRecMsg(null);
+  };
   const [loading, setLoading] = useState(true);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteName, setInviteName] = useState('');
@@ -85,9 +122,13 @@ export default function TeamPage(){
   useEffect(() => {
     if (!projectId) return;
     (async () => {
+      setLoading(true);
       try {
         const r = await fetch(`/api/projects/${projectId}`);
-        const d = await r.json();
+        const d = await r.json().catch(() => ({}));
+        // A failed read is not an empty team: say so (it used to show "No team members yet").
+        if (!r.ok) throw new Error(d.error || 'Could not load this job’s team.');
+        setLoadError('');
         if (d.project) setProj(d.project);
         // The API returns the internal roster under `team` (from project_team),
         // not `members`. Map each row to the shape this table renders.
@@ -101,16 +142,16 @@ export default function TeamPage(){
           // Work assignments key off the auth user id — null until the invite
           // is accepted, which is exactly when assigning becomes possible.
           userId: t.user_id || null,
+          company: t.company || '', phone: t.phone || '', since: t.added_at || '',
         })));
         setSubs((d.subs ?? []).map((s: any) => ({ name: s.name, role: 'Subcontractor', email: s.primary_email || s.email || '', access: 'Sub Portal', last: 'Active' })));
-      } catch {
-        setRosterMembers([]);
-        setSubs([]);
+      } catch (err) {
+        setLoadError(err instanceof Error && err.message ? err.message : 'Could not load this job’s team.');
       } finally {
         setLoading(false);
       }
     })();
-  }, [projectId]);
+  }, [projectId, reloadKey]);
 
   /* Opening the invite form has to take you to it. */
   const inviteFormRef = useRef<HTMLDivElement | null>(null);
@@ -140,6 +181,13 @@ export default function TeamPage(){
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) { setInviteMsg(json.error || 'Invite failed.'); }
+      else if (json.emailed === false) {
+        // The invite exists (they are on the roster as Invite sent), but no
+        // email went out — say that, and leave the form's message up.
+        void loadPendingInvites();
+        setInviteEmail(''); setInviteName(''); setInviteRole('Member'); setInviteAuto({});
+        setInviteMsg(`Invite saved, but the email didn't go out (${json.emailError || 'email is not set up'}). Open them on the roster to resend.`);
+      }
       else {
         setInviteMsg('Invitation sent.');
         // The invitee joins the roster now (as Invite sent), not only once they accept.
@@ -351,6 +399,61 @@ export default function TeamPage(){
       <button className="k-btn k-btn-secondary k-btn-sm" onClick={e=>{e.stopPropagation();handleSendPortalLink(s);}} disabled={sendingPortal===s.name}>{sendingPortal===s.name?'Working…':'Copy Portal Link'}</button>
     ) },
   ];
+  const openRec = openKey ? members.find(m => m.key === openKey) ?? null : null;
+  const startRecEdit = (m: Member) => { setRecName(m.name === m.email ? '' : m.name); setRecRole(m.role || 'Member'); setRecMsg(null); setRecEditing(true); };
+  async function saveRecEdit() {
+    if (!openRec?.inviteId || recBusy) return;
+    setRecBusy(true); setRecMsg(null);
+    try {
+      const res = await fetch(`/api/team/invite/${openRec.inviteId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: recName.trim(), role: recRole }) });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error || 'Could not save the invite.');
+      await loadPendingInvites();
+      setRecEditing(false);
+      setRecMsg({ text: 'Saved.' });
+    } catch (err) {
+      setRecMsg({ text: err instanceof Error && err.message ? err.message : 'Could not save the invite.', bad: true });
+    } finally { setRecBusy(false); }
+  }
+  async function resendRec() {
+    if (!openRec?.inviteId || recBusy) return;
+    setRecBusy(true); setRecMsg(null);
+    try {
+      const res = await fetch(`/api/team/invite/${openRec.inviteId}`, { method: 'POST' });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error || 'Could not resend the invite.');
+      setRecMsg(j.emailed === false
+        ? { text: `The 7-day clock was reset, but the email didn't go out (${j.emailError || 'email is not set up'}).`, bad: true }
+        : { text: `Invite emailed again to ${openRec.email} — the 7-day clock starts over.` });
+      void loadPendingInvites();
+    } catch (err) {
+      setRecMsg({ text: err instanceof Error && err.message ? err.message : 'Could not resend the invite.', bad: true });
+    } finally { setRecBusy(false); }
+  }
+  async function removeRecInvite() {
+    if (!openRec?.inviteId || recBusy) return;
+    const ok = await confirmDialog({
+      title: `Remove the invite to ${openRec.email}?`,
+      message: 'Their link stops working. You can invite them again any time.',
+      confirmLabel: 'Remove',
+      danger: true,
+    });
+    if (!ok) return;
+    setRecBusy(true); setRecMsg(null);
+    try {
+      const res = await fetch(`/api/team/invite/${openRec.inviteId}`, { method: 'DELETE' });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error || 'Could not remove the invite.');
+      closeMember();
+      await loadPendingInvites();
+      showToast(`Invite to ${openRec.email} removed`, 'success');
+    } catch (err) {
+      setRecMsg({ text: err instanceof Error && err.message ? err.message : 'Could not remove the invite.', bad: true });
+      void loadPendingInvites();
+    } finally { setRecBusy(false); }
+  }
+  const fmtDay = (iso?: string) => { if (!iso) return '—'; const d = new Date(iso); return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); };
+
   function inviteFromDirectory(l:{role:string;name:string;email:string}){
     setInviteName(l.name||'');
     setInviteEmail(l.email||'');
@@ -362,30 +465,33 @@ export default function TeamPage(){
 
   return <PremiumSurface maxWidth={2200}>
     <style dangerouslySetInnerHTML={{ __html: TEAM_CSS }} />
+    <div className="tmScope">
     <ModuleHero
       eyebrow={ctx?.project?.name || 'Project Team'}
       eyebrowIcon={<UsersThree size={13} weight="fill" color={GOLD} />}
       title="Project"
       accent="Team"
       subtitle="Manage project team members and access"
-      actions={<button onClick={()=>{ if (showInvite) { setShowInvite(false); } else { openInvite(); } }} style={goldButtonStyle} className="pmBtn"><UserPlus size={15} weight="bold" /> Invite Member</button>}
+      actions={<button type="button" onClick={openInvite} style={goldButtonStyle} className="pmBtn"><UserPlus size={15} weight="bold" /> Invite Member</button>}
     />
 
     {!loading && (
       <>
         {ctx && (
           <StatStrip items={[
-            {href: `/app/projects/${projectId}/team`, label:'Project', value: ctx.project?.name || '—', sub: ctx.project?.projectNumber ? `#${ctx.project.projectNumber}` : (ctx.project?.status || 'active')},
-            {href: `/app/projects/${projectId}/team`, label:'Owner', value: ctx.defaults?.ownerName || '—', sub: ctx.defaults?.ownerEmail || 'No email on file'},
-            {href: `/app/projects/${projectId}/team`, label:'Architect', value: ctx.defaults?.architectName || '—', sub: 'Design contact'},
-            {href: `/app/projects/${projectId}/team`, label:'Leadership', value: `${leadersAssigned}/5`, accent: leadersAssigned>=3?'var(--success)':GOLD, sub: leadersAssigned>0?'Directory roles assigned':'Set them in the directory below'},
+            /* These tiles linked back to this same page, so a tap only reloaded it.
+               Each now goes where its number lives. */
+            {href: `/app/projects/${projectId}/overview`, label:'Project', value: ctx.project?.name || '—', sub: ctx.project?.projectNumber ? `#${ctx.project.projectNumber}` : (ctx.project?.status || 'active')},
+            {href: proj?.customer_id ? `/app/customers?customer=${encodeURIComponent(proj.customer_id)}` : '#project-directory', label:'Owner', value: ctx.defaults?.ownerName || '—', sub: ctx.defaults?.ownerEmail || 'No email on file'},
+            {href: '#project-directory', label:'Architect', value: ctx.defaults?.architectName || '—', sub: 'Design contact'},
+            {href: '#project-directory', label:'Leadership', value: `${leadersAssigned}/5`, accent: leadersAssigned>=3?'var(--success)':GOLD, sub: leadersAssigned>0?'Directory roles assigned':'Set them in the directory below'},
             {href: `/app/projects/${projectId}/subs`, label:'Trades on the Job', value: String(subTrades.length), sub: ctxSubs.length?`Across ${ctxSubs.length} sub${ctxSubs.length===1?'':'s'}`:'No subs yet'},
           ]}/>
         )}
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
-          <StatCard icon={<UsersThree size={19} weight="duotone" color={GOLD} />} label="Team Members" value={String(members.length)} accent={GOLD} sub={(() => { const inv = members.filter(m=>m.inviteId).length; const acc = members.length - inv; return `${acc} with access${inv ? ` · ${inv} invited` : ''}`; })()}  href={`/app/projects/${projectId}/team`}/>
+          <StatCard icon={<UsersThree size={19} weight="duotone" color={GOLD} />} label="Team Members" value={String(members.length)} accent={GOLD} sub={(() => { const inv = members.filter(m=>m.inviteId).length; const acc = members.length - inv; return `${acc} with access${inv ? ` · ${inv} invited` : ''}`; })()}  href="#internal-team"/>
           <StatCard icon={<HardHat size={19} weight="duotone" color={BLUE} />} label="Subcontractors" value={String(subs.length)} accent={subs.length?BLUE:undefined} sub={subTrades.length?`${subTrades.length} trade${subTrades.length===1?'':'s'} — portal access`:'Portal access'}  href={`/app/projects/${projectId}/subs`}/>
-          <StatCard icon={<IdentificationBadge size={19} weight="duotone" color={leadersAssigned>=3?'var(--success)':GOLD} />} label="Field Leadership" value={`${leadersAssigned}/5`} accent={leadersAssigned>=3?'var(--success)':GOLD} sub="PM · super · foreman · owner · architect"  href={`/app/projects/${projectId}/team`}/>
+          <StatCard icon={<IdentificationBadge size={19} weight="duotone" color={leadersAssigned>=3?'var(--success)':GOLD} />} label="Field Leadership" value={`${leadersAssigned}/5`} accent={leadersAssigned>=3?'var(--success)':GOLD} sub="PM · super · foreman · owner · architect"  href="#project-directory"/>
         </div>
       </>
     )}
@@ -393,6 +499,8 @@ export default function TeamPage(){
     {showInvite && <div ref={inviteFormRef} style={{marginBottom:24}}>
       <div className="tmInviteGrid">
       <SectionCard title="Invite Team Member" icon={<UserPlus size={17} weight="duotone" color={GOLD} />} subtitle={ctx?.project?.name ? `Grants access to ${ctx.project.name}` : 'Send a role-scoped invitation to this project.'}>
+        {/* A real form: the keyboard's Go/Enter sends, the same as the button. */}
+        <form noValidate aria-label="Invite team member" onSubmit={(e) => { e.preventDefault(); void handleInvite(); }}>
         <div className="tmInviteFields">
           <div>
             <label htmlFor="tm-invite-email" style={{display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5}}>Email *{inviteAuto.email && <AutoChip/>}</label>
@@ -414,9 +522,10 @@ export default function TeamPage(){
         </div>
         {inviteMsg&&<div role={inviteMsg==='Invitation sent.'?'status':'alert'} style={{fontSize:13,marginBottom:12,color:inviteMsg==='Invitation sent.'?GREEN:RED}}>{inviteMsg}</div>}
         <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
-          <button onClick={handleInvite} disabled={inviting} style={{...goldButtonStyle,opacity:inviting?.6:1}} className="pmBtn">{inviting?'Sending…':'Send Invitation'}</button>
-          <button onClick={()=>{setShowInvite(false);setInviteMsg('');}} style={ghostButtonStyle} className="pmBtn">Cancel</button>
+          <button type="submit" disabled={inviting} style={{...goldButtonStyle,opacity:inviting?.6:1}} className="pmBtn">{inviting?'Sending…':'Send Invitation'}</button>
+          <button type="button" onClick={()=>{setShowInvite(false);setInviteMsg('');}} style={ghostButtonStyle} className="pmBtn">Cancel</button>
         </div>
+        </form>
       </SectionCard>
       <SectionCard flat title="After You Send" icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}>
         <FlowSteps title="" steps={[
@@ -444,6 +553,7 @@ export default function TeamPage(){
 
     <div style={{display:'flex',flexDirection:'column',gap:20}}>
       {proj && <ProjectOwnershipCard projectId={projectId} project={proj} onSaved={(p)=>{ if (p && (p as any).id) setProj(p); }}/>}
+      <div id="project-directory" style={{ scrollMarginTop: 76 }} />
       <SectionCard title="Project Directory" subtitle="Field leadership and parties of record — set or edit any slot right here" icon={<IdentificationBadge size={17} weight="duotone" color={GOLD} />}>
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(210px,1fr))',gap:12}}>
           {leadership.map(l=>(
@@ -480,10 +590,20 @@ export default function TeamPage(){
           ))}
         </div>
       </SectionCard>
+      <div id="internal-team" style={{ scrollMarginTop: 76 }} />
       {(showGroup === 'all' || showGroup === 'team') && (
       <SectionCard title="Internal Team" icon={<UsersThree size={17} weight="duotone" color={GOLD} />}>
         {loading ? (
           <div style={{padding:'28px 12px',textAlign:'center',color:DIM,fontSize:13}}>Loading team members…</div>
+        ) : loadError ? (
+          <PremiumEmpty
+            icon={<UsersThree size={30} weight="duotone" color={RED} />}
+            title="Couldn’t load this job’s team"
+            description={loadError}
+            tone="error"
+            action={<button type="button" onClick={() => setReloadKey(k => k + 1)} style={goldButtonStyle} className="pmBtn">Try Again</button>}
+            compact
+          />
         ) : members.length === 0 ? (
           <PremiumEmpty
             icon={<UsersThree size={30} weight="duotone" color={GOLD} />}
@@ -493,7 +613,7 @@ export default function TeamPage(){
             compact
           />
         ) : (
-          <DataTable<Member> columns={memberColumns} rows={filteredMembers} rowKey={m => m.key}defaultSort={{ key: 'name', dir: 'asc' }} empty="No one matches." />
+          <DataTable<Member> columns={memberColumns} rows={filteredMembers} rowKey={m => m.key} onRowClick={m => openMember(m.key)} isSelected={m => m.key === openKey} defaultSort={{ key: 'name', dir: 'asc' }} empty="No one matches." />
         )}
       </SectionCard>
       )}
@@ -563,5 +683,69 @@ export default function TeamPage(){
       </SectionCard>
       )}
     </div>
+    </div>
+
+    {openRec && typeof document !== 'undefined' && createPortal(
+      openRec.inviteId && recEditing ? (
+        <FormModal
+          open
+          onClose={() => { if (!recBusy) setRecEditing(false); }}
+          title={`Edit invite — ${openRec.email}`}
+          subtitle="The name it was sent under and the role they get when they accept."
+          onSubmit={saveRecEdit}
+          submitLabel="Save Changes"
+          busy={recBusy}
+          error={recMsg?.bad ? recMsg.text : null}
+        >
+          <FormGrid cols={2}>
+            <Field label="Name">
+              <Input id="tm-rec-name" value={recName} onChange={e => setRecName(e.target.value)} placeholder="Full name" maxLength={120} />
+            </Field>
+            <Field label="Email" hint="The link went to this address — to use another, remove this invite and invite them again.">
+              <Input id="tm-rec-email" type="email" value={openRec.email} readOnly />
+            </Field>
+            <Field label="Role">
+              <Select id="tm-rec-role" value={recRole} onChange={e => setRecRole(e.target.value)} options={Array.from(new Set(['Admin','Manager','Member','Guest','Client','Sub', recRole]))} />
+            </Field>
+          </FormGrid>
+        </FormModal>
+      ) : (
+        <FormModal
+          open
+          onClose={closeMember}
+          title={openRec.name}
+          subtitle={openRec.inviteId ? `Invited ${fmtDay(openRec.since)} — not accepted yet` : `On this job${openRec.since ? ` since ${fmtDay(openRec.since)}` : ''}`}
+          footer={(
+            <div className="tmRecActs">
+              {recMsg && <span className={recMsg.bad ? 'k-error' : 'k-hint'} role={recMsg.bad ? 'alert' : 'status'} style={{ width: '100%' }}>{recMsg.text}</span>}
+              {openRec.inviteId ? (<>
+                <Button variant="primary" onClick={() => startRecEdit(openRec)} disabled={recBusy}>Edit</Button>
+                <Button variant="secondary" onClick={() => { void resendRec(); }} disabled={recBusy}>{recBusy ? 'Working…' : 'Resend Invite'}</Button>
+                <Button variant="ghost" onClick={() => { void removeRecInvite(); }} disabled={recBusy}>Remove Invite</Button>
+              </>) : (
+                <Button variant="secondary" href="/app/people?tab=access">Manage Access in People</Button>
+              )}
+              <Button variant="ghost" onClick={closeMember}>Close</Button>
+            </div>
+          )}
+        >
+          <div className="tmRec">
+            <div><div style={{fontSize:11,fontWeight:700,color:DIM}}>Email</div><div style={{fontSize:14,color:TEXT,fontWeight:600,overflowWrap:'anywhere'}}>{openRec.email || '—'}</div></div>
+            <div><div style={{fontSize:11,fontWeight:700,color:DIM}}>{openRec.inviteId ? 'Role When They Accept' : 'Role'}</div><div style={{fontSize:14,color:TEXT,fontWeight:600}}>{openRec.role || 'Member'}</div></div>
+            {!openRec.inviteId && <div><div style={{fontSize:11,fontWeight:700,color:DIM}}>Company</div><div style={{fontSize:14,color:TEXT,fontWeight:600}}>{openRec.company || '—'}</div></div>}
+            {!openRec.inviteId && <div><div style={{fontSize:11,fontWeight:700,color:DIM}}>Phone</div><div style={{fontSize:14,color:TEXT,fontWeight:600}}>{openRec.phone || '—'}</div></div>}
+            {!openRec.inviteId && <div><div style={{fontSize:11,fontWeight:700,color:DIM}}>Work Assignments</div><div style={{fontSize:14,color:TEXT,fontWeight:600}}>{assignmentsFor(openRec.userId).map(a => assignRoleLabel(a.role)).join(', ') || 'None yet'}</div></div>}
+            <div><div style={{fontSize:11,fontWeight:700,color:DIM}}>Status</div><div style={{fontSize:14,color:openRec.inviteId?'var(--warning)':'var(--success)',fontWeight:700}}>{openRec.last}</div></div>
+          </div>
+        </FormModal>
+      ),
+      document.body,
+    )}
+    {openKey && !openRec && !loading && typeof document !== 'undefined' && createPortal(
+      <FormModal open onClose={closeMember} title="Not on this job any more" footer={<Button variant="ghost" onClick={closeMember}>Close</Button>}>
+        <p style={{ margin: 0, color: DIM, fontSize: 14, lineHeight: 1.55 }}>That person or invite isn’t on this job’s roster now — the invite may have been accepted, removed or expired.</p>
+      </FormModal>,
+      document.body,
+    )}
   </PremiumSurface>;
 }

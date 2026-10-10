@@ -458,7 +458,9 @@ export default function ReportsPage() {
             {rd && <span className="rpMuted" style={{ fontSize: 'var(--fs-xs)' }}>{rd.from} to {rd.to} <AutoChip /></span>}
           </div>
 
-          {/* Quick suggestion chips */}
+          {/* Quick suggestion chips. They stay live while a report is building:
+              picking another one replaces it (runSageReport closes the running
+              stream). Disabled, a second tap did nothing for the whole run. */}
           <div className="rpChips">
             <span className="rpChipLabel"><Sparkle size={13} weight="bold" /> Try</span>
             {SUGGESTION_CHIPS.map(chip => (

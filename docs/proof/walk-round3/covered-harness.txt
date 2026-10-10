@@ -1,0 +1,34 @@
+# BEFORE = code at the base commit
+phone   FAIL the open template builder is a dialog the walk (and a screen reader) can see — 0 dialogs
+phone   FAIL Escape closes it — 1 still open
+phone   ok   then Submissions and Dashboard tabs take the tap — tapped / tapped
+phone   FAIL each chip takes the tap while the previous report is still building — Pay App Status: tapped | Job Cost: COVERED: locator.click: Timeout 2500ms exceeded. | Punch List: COVERED: locator.click: Timeout 2500ms exceeded. | Bid Analysis: COVERED: locator.click: Timeout 2500ms exceeded.
+phone   FAIL each tap started its report and closed the one it replaced — [["pay app status for all",true]]
+phone   FAIL the report on screen is the last one picked (Bid Analysis)
+phone   ok   no sideways scroll — 393>393
+phone   FAIL no page errors — TypeError: Cannot read properties of undefined (reading 'toLocaleString')
+desktop FAIL the open template builder is a dialog the walk (and a screen reader) can see — 0 dialogs
+desktop FAIL Escape closes it — 1 still open
+desktop ok   then Submissions and Dashboard tabs take the tap — tapped / tapped
+desktop FAIL each chip takes the tap while the previous report is still building — Pay App Status: tapped | Job Cost: COVERED: locator.click: Timeout 2500ms exceeded. | Punch List: COVERED: locator.click: Timeout 2500ms exceeded. | Bid Analysis: COVERED: locator.click: Timeout 2500ms exceeded.
+desktop FAIL each tap started its report and closed the one it replaced — [["pay app status for all",true]]
+desktop FAIL the report on screen is the last one picked (Bid Analysis)
+desktop ok   no sideways scroll — 1440>1440
+desktop FAIL no page errors — TypeError: Cannot read properties of undefined (reading 'toLocaleString')
+# AFTER = this fix
+phone   ok   the open template builder is a dialog the walk (and a screen reader) can see — 1 dialogs
+phone   ok   Escape closes it — 0 still open
+phone   ok   then Submissions and Dashboard tabs take the tap — tapped / tapped
+phone   ok   each chip takes the tap while the previous report is still building — Pay App Status: tapped | Job Cost: tapped | Punch List: tapped | Bid Analysis: tapped
+phone   ok   each tap started its report and closed the one it replaced — [["pay app status for all",true],["job cost for all proje",true],["punch list for all pro",true],["bid analysis for all p",false]]
+phone   FAIL the report on screen is the last one picked (Bid Analysis)
+phone   ok   no sideways scroll — 393>393
+phone   FAIL no page errors — TypeError: Cannot read properties of undefined (reading 'toLocaleString')
+desktop ok   the open template builder is a dialog the walk (and a screen reader) can see — 1 dialogs
+desktop ok   Escape closes it — 0 still open
+desktop ok   then Submissions and Dashboard tabs take the tap — tapped / tapped
+desktop ok   each chip takes the tap while the previous report is still building — Pay App Status: tapped | Job Cost: tapped | Punch List: tapped | Bid Analysis: tapped
+desktop ok   each tap started its report and closed the one it replaced — [["pay app status for all",true],["job cost for all proje",true],["punch list for all pro",true],["bid analysis for all p",false]]
+desktop FAIL the report on screen is the last one picked (Bid Analysis)
+desktop ok   no sideways scroll — 1440>1440
+desktop FAIL no page errors — TypeError: Cannot read properties of undefined (reading 'toLocaleString')

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { generateReportData } from '@/lib/reports/generate';
+import { apiError } from '@/lib/api-error';
 import { requestDay } from '@/lib/time-zone';
 
 export const dynamic = 'force-dynamic';
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
       rows: report.rows,
       source: report.source,
     });
-  } catch {
-    return NextResponse.json({ error: 'Report generation failed' }, { status: 500 });
+  } catch (e) {
+    return apiError('reports/generate', e, "Couldn't run this report. Please try again.");
   }
 }

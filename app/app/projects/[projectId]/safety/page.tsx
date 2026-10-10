@@ -669,7 +669,7 @@ export default function SafetyPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
               <div>
                 <label style={lbl}>Topic *</label>
-                <Suggest value={talkForm.topic} onChange={e => setTalkForm(p => ({ ...p, topic: e.target.value }))} style={inp} placeholder="e.g. Fall Protection" options={['t']} />
+                <Suggest value={talkForm.topic} onChange={e => setTalkForm(p => ({ ...p, topic: e.target.value }))} style={inp} placeholder="e.g. Fall Protection" options={TALK_TOPICS} />
                 <div style={hint}>OSHA focus-four topics suggested first.</div>
               </div>
               <div>
@@ -753,7 +753,7 @@ export default function SafetyPage() {
               </div>
               <div>
                 <label style={lbl}>Assigned To</label>
-                <Suggest value={caForm.assigned_to} onChange={e => setCaForm(p => ({ ...p, assigned_to: e.target.value }))} style={inp} placeholder="Name or email" options={['s.companyName']} />
+                <Suggest value={caForm.assigned_to} onChange={e => setCaForm(p => ({ ...p, assigned_to: e.target.value }))} style={inp} placeholder="Name or email" options={((ctx?.subs || []) as { companyName?: string | null }[]).map((s) => s.companyName || '').filter(Boolean)} />
                 <div style={hint}>{subCount > 0 ? `${subCount} sub${subCount === 1 ? '' : 's'} on the roster to pick from.` : 'Who owns the fix.'}</div>
               </div>
               <div>

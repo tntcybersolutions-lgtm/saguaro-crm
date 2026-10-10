@@ -21,7 +21,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       })
       .eq('id', id)
       .eq('tenant_id', user.tenantId)
-      .select('*, projects!fk_change_orders_project(*)')
+      // change_orders has two identical FKs to projects; name the *_fkey one (see lib/db-embeds).
+      .select('*, projects!change_orders_project_id_fkey(*)')
       .single();
 
     if (error) throw error;

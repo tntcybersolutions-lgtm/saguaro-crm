@@ -1,0 +1,37 @@
+# BEFORE (the invite routes before this fix; same email stub)
+FAIL Invite with email working → 200, emailed: true {"success":true,"invite":{"id":"new-team_invites-1-ab13","created_at":"2026-10-10T16:44:50.069Z","tenant_id":"T1","email":"delivered@resend.dev","role":"Manager","project_id":"P1","invited_by":"u1","t
+FAIL Invite with email NOT going out → the invite exists, emailed: false with the reason (it said sent) {"success":true,"invite":{"id":"new-team_invites-5-r81d","created_at":"2026-10-10T16:44:50.073Z","tenant_id":"T1","email":"delivered@resend.dev","role":"member","project_id":"P1","invited_by":"u1","to
+FAIL Batch invite says per address whether it was emailed {"success":true,"sent":1,"failed":0,"results":[{"email":"delivered@resend.dev","status":"sent"}]}
+ok   Invite with a bad address → 400
+ok   List: this job’s pending invites, and never a token
+ok   Edit a pending invite → name and role saved
+ok   Edit an accepted invite → 404
+FAIL Resend a pending invite → 200, emailed: true 
+FAIL Resend when email is off → emailed: false (it said success) 
+FAIL Resend an ACCEPTED invite → 409, and it stays accepted (it was reopened as pending) 
+ok   Resend another company's invite → 404
+ok   Cancel a pending invite → 200, cancelled
+FAIL Cancel it again → 404 (was a quiet success) 
+FAIL Resend a cancelled invite → 409 (it came back to life) 
+FAIL Cancel another company's invite → 404, untouched 
+ok   Invite without Admin Full → 403
+9 failed
+
+# AFTER (this branch)
+ok   Invite with email working → 200, emailed: true
+ok   Invite with email NOT going out → the invite exists, emailed: false with the reason (it said sent)
+ok   Batch invite says per address whether it was emailed
+ok   Invite with a bad address → 400
+ok   List: this job’s pending invites, and never a token
+ok   Edit a pending invite → name and role saved
+ok   Edit an accepted invite → 404
+ok   Resend a pending invite → 200, emailed: true
+ok   Resend when email is off → emailed: false (it said success)
+ok   Resend an ACCEPTED invite → 409, and it stays accepted (it was reopened as pending)
+ok   Resend another company's invite → 404
+ok   Cancel a pending invite → 200, cancelled
+ok   Cancel it again → 404 (was a quiet success)
+ok   Resend a cancelled invite → 409 (it came back to life)
+ok   Cancel another company's invite → 404, untouched
+ok   Invite without Admin Full → 403
+all passed

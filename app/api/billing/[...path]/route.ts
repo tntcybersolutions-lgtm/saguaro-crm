@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { apiError } from '@/lib/api-error';
+import { getUser } from '@/lib/supabase-server';
 import {
   createCheckoutHandler,
   cancelHandler,
@@ -20,6 +21,14 @@ export async function GET(
   const [segment] = path;
 
   if (segment === 'subscription') return getSubscriptionHandler(req);
+  // Whether "Select Plan" can open Stripe yet. The billing screen asks first, so
+  // with no Stripe key it offers "Request Plan" (POST /api/billing/plan-request)
+  // instead of sending people into a checkout that can only refuse.
+  if (segment === 'status') {
+    const user = await getUser(req);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ checkoutEnabled: !!process.env.STRIPE_SECRET_KEY });
+  }
 
   return NextResponse.json({ error: 'Not found' }, { status: 404 });
 }

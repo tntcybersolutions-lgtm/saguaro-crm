@@ -14,7 +14,9 @@
  *   GET  /api/billing/subscription   (nested envelope, flattened below)
  *   GET  /api/entitlements
  *   POST /api/billing/addon-request  { featureKey, action }
+ *   GET  /api/billing/status         { checkoutEnabled } — is online checkout switched on?
  *   POST /api/billing/checkout       { planId, interval, successUrl, cancelUrl }
+ *   POST /api/billing/plan-request   { planId, interval } — while checkout is off
  *   POST /api/billing/portal         { returnUrl }
  *   POST /api/billing/cancel
  */
@@ -26,6 +28,8 @@ import {
   type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
 import { ADDONS, type AddonDef } from '@/lib/addons';
+import { step } from '@/lib/ui/status';
+import { STATUS_HEADER, reasonForStatus } from '@/lib/ui/status-fetch';
 
 interface Subscription {
   plan_id: string | null;
@@ -140,6 +144,9 @@ const CSS = `
 .blFaqA { font-size: var(--fs-sm); color: var(--text-tertiary); line-height: 1.65; }
 .blOffer { padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid var(--brand-primary-18); background: var(--brand-primary-08); font-size: var(--fs-sm); color: var(--text-primary); }
 .blProse { font-size: var(--fs-sm); color: var(--text-secondary); line-height: 1.65; }
+.blCheckoutOff { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 16px; padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid var(--brand-primary-35); background: var(--brand-primary-08); font-size: var(--fs-sm); color: var(--text-primary); line-height: 1.55; }
+.blCheckoutOff > svg { color: var(--brand-primary); flex-shrink: 0; margin-top: 2px; }
+.blCheckoutOff b { display: block; }
 @media (max-width: 640px) {
   .blWs .k-btn, .blWs .k-stat { min-height: 44px; }
 }
@@ -178,6 +185,19 @@ export default function BillingPage() {
   // stays 'active' until support processes them), so the pending chip state
   // lives in localStorage — honest copy explains it below.
   const [disableReqs, setDisableReqs] = useState<Record<string, string>>({});
+
+  // Online checkout needs Stripe. Until it is switched on, "Select Plan" is
+  // "Request Plan": the request is kept, admins are notified and sales invoices
+  // the company — instead of a checkout that can only refuse. null = not known yet.
+  const [checkoutEnabled, setCheckoutEnabled] = useState<boolean | null>(null);
+  const loadBillingStatus = useCallback(async () => {
+    try {
+      const res = await fetch('/api/billing/status');
+      if (!res.ok) return; // unknown: Select Plan tries checkout and learns from its answer
+      const d = await res.json().catch(() => ({}));
+      if (typeof d.checkoutEnabled === 'boolean') setCheckoutEnabled(d.checkoutEnabled);
+    } catch { /* unknown — same as above */ }
+  }, []);
 
   const loadSubscription = useCallback(async () => {
     setLoading(true);
@@ -242,10 +262,11 @@ export default function BillingPage() {
   useEffect(() => {
     loadSubscription();
     loadEntitlements();
+    loadBillingStatus();
     try {
       setDisableReqs(safeJsonParse<Record<string, any>>(window.localStorage.getItem('saguaro_addon_disable_requests'), {}));
     } catch { /* unreadable localStorage — start clean */ }
-  }, [loadSubscription, loadEntitlements]);
+  }, [loadSubscription, loadEntitlements, loadBillingStatus]);
 
   // Mirror of the server gate (lib/entitlements.ts hasEntitlement) so chips
   // match what routes will actually allow.
@@ -291,11 +312,51 @@ export default function BillingPage() {
     return diff > 0 ? diff : 0;
   };
 
+  // The plan this company has asked for while checkout is off (kept as a
+  // tenant_entitlements 'requested' row by /api/billing/plan-request).
+  const requestedPlan = (() => {
+    const row = (ents || []).find(e => e.feature_key.startsWith('plan_request:') && e.status === 'requested');
+    if (!row) return null;
+    const [, planId, interval] = row.feature_key.split(':');
+    return { planId, interval: interval === 'annual' ? 'annual' : 'monthly' };
+  })();
+
+  const handleRequestPlan = async (planId: string) => {
+    const plan = PLANS.find(p => p.id === planId);
+    const name = plan?.name || planId;
+    const interval = annual ? 'annual' : 'monthly';
+    setUpgrading(planId);
+    const h = step(`Requesting the ${name} plan (${interval})`);
+    try {
+      const res = await fetch('/api/billing/plan-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', [STATUS_HEADER]: 'off' },
+        body: JSON.stringify({ planId, interval }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) {
+        h.done(`${name} plan requested`, data.emailed
+          ? "Sales has it and emails your invoice within 1 business day. Nothing was charged."
+          : "It's saved and your admins were notified, but the email to sales didn't go out — email sales@saguarocontrol.net to speed it up. Nothing was charged.");
+        await loadEntitlements();
+      } else {
+        const why = data.error || reasonForStatus(res.status);
+        h.fail(`Couldn't send the ${name} plan request`, why);
+        setActionError(why);
+      }
+    } catch {
+      h.fail(`Couldn't send the ${name} plan request`, "No signal — it didn't reach us. Try again when you have signal.", true);
+      setActionError('Could not send the plan request. Please check your connection and try again.');
+    }
+    setUpgrading(null);
+  };
+
   const handleUpgrade = async (planId: string) => {
     if (planId === 'enterprise') {
       window.location.href = 'mailto:sales@saguarocontrol.net?subject=Enterprise Inquiry';
       return;
     }
+    if (checkoutEnabled === false) { await handleRequestPlan(planId); return; }
     setUpgrading(planId);
     setCheckoutError(null);
     try {
@@ -309,13 +370,20 @@ export default function BillingPage() {
         window.location.href = data.checkoutUrl;
         return; // navigating away — keep the spinner until the page unloads
       }
-      // 503 = online billing is not set up on this deployment (the route says
-      // so in words); anything else is Stripe or the network. Either way the
-      // reason stays on screen beside the plans, with the reference to quote.
+      if (res.status === 503) {
+        // Online checkout isn't set up on this deployment (no Stripe key): offer
+        // the request instead — a real plan request we invoice, not a dead end.
+        setCheckoutEnabled(false);
+        show("Online checkout isn't switched on yet — tap Request Plan and we'll invoice you.", 'bad');
+        setUpgrading(null);
+        return;
+      }
+      // Anything else is Stripe or the network: the reason stays on screen
+      // beside the plans, with the reference to quote.
       setCheckoutError({
         message: data.error || 'Could not start checkout. Please try again or contact support.',
         ref: typeof data.ref === 'string' ? data.ref : undefined,
-        notConfigured: res.status === 503,
+        notConfigured: false,
       });
     } catch {
       setCheckoutError({ message: 'Could not reach the server — check your connection and try again. Nothing was charged.', notConfigured: false });
@@ -477,6 +545,16 @@ export default function BillingPage() {
               <Tabs value={annual ? 'annual' : 'monthly'} onChange={k => setAnnual(k === 'annual')} tabs={[{ key: 'monthly', label: 'Monthly' }, { key: 'annual', label: 'Annual' }]} />
             }
           >
+            {checkoutEnabled === false && (
+              <div className="blCheckoutOff" role="status">
+                <CreditCard size={18} weight="bold" />
+                <div>
+                  <b>Online checkout isn&apos;t switched on yet.</b>
+                  Pick a plan and tap Request Plan — we set it up and email you an invoice within 1 business day. Nothing is charged here.
+                  {requestedPlan && <> You asked for <strong>{PLANS.find(p => p.id === requestedPlan.planId)?.name || requestedPlan.planId}</strong> ({requestedPlan.interval}).</>}
+                </div>
+              </div>
+            )}
             {checkoutError && (
               <div className="blCheckoutErr" role="alert">
                 <Warning size={16} weight="fill" />
@@ -493,6 +571,8 @@ export default function BillingPage() {
               {PLANS.map(plan => {
                 const isCurrent = currentPlanName.includes(plan.id) && sub?.status === 'active';
                 const isUpgrade = plan.id === 'professional' && currentPlanName.includes('starter');
+                const requestMode = checkoutEnabled === false && plan.id !== 'enterprise';
+                const isRequested = requestMode && requestedPlan?.planId === plan.id && requestedPlan.interval === (annual ? 'annual' : 'monthly');
                 return (
                   <div key={plan.id} className="blPlan" data-popular={plan.popular ? 'true' : undefined} data-current={isCurrent ? 'true' : undefined}>
                     {plan.popular && !isCurrent && <div className="blPlanRibbon">Most Popular</div>}
@@ -512,10 +592,15 @@ export default function BillingPage() {
                       )}
                       <Button
                         variant={isCurrent ? 'secondary' : plan.popular ? 'primary' : 'secondary'}
-                        onClick={() => !isCurrent && handleUpgrade(plan.id)}
-                        disabled={isCurrent || upgrading === plan.id}
+                        onClick={() => !isCurrent && !isRequested && handleUpgrade(plan.id)}
+                        disabled={isCurrent || isRequested || upgrading === plan.id}
                       >
-                        {isCurrent ? 'Current Plan' : upgrading === plan.id ? 'Opening checkout…' : plan.id === 'enterprise' ? 'Contact Sales' : isUpgrade ? 'Upgrade Now' : 'Select Plan'}
+                        {isCurrent ? 'Current Plan'
+                          : isRequested ? 'Requested — We\'ll Invoice You'
+                          : upgrading === plan.id ? (requestMode ? 'Sending request…' : 'Opening checkout…')
+                          : plan.id === 'enterprise' ? 'Contact Sales'
+                          : requestMode ? 'Request Plan'
+                          : isUpgrade ? 'Upgrade Now' : 'Select Plan'}
                       </Button>
                       <div className="blFeatures">
                         {plan.features.map(f => (
