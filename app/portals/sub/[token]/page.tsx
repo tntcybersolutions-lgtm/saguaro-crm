@@ -8,6 +8,7 @@ import {
   fmtDay, sequenceLabels, invoiceView, fmtPercent, dailyLogView, fileNameFromUrl,
   expiryLevel, isUnreadForSub, SCORE_CATEGORIES, overallRating, complianceDocFor,
 } from '@/lib/sub-portal-view';
+import { invoiceWaiver, isSignedWaiver, isSignableWaiver, waiverTypeForInvoice, waiverTypeLabel } from '@/lib/sub-lien-waiver';
 
 /* ── Design Tokens ── */
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF';
@@ -22,9 +23,10 @@ type Tab='dashboard'|'photos'|'punch'|'daily'|'schedule'|'rfis'|'radio'|'payapps
 const card=(extra?:React.CSSProperties):React.CSSProperties=>({background:RAISED,backgroundImage:'linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015))',border:`1px solid ${BORDER}`,borderRadius:12,padding:20,boxShadow:'0 4px 14px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.06)',...extra});
 const btnS=(color:string,small?:boolean):React.CSSProperties=>({background:color,backgroundImage:color===GOLD?'linear-gradient(180deg,var(--brand-primary-strong),var(--brand-primary) 60%,var(--brand-primary-hover))':'linear-gradient(180deg,rgba(255,255,255,0.16),rgba(255,255,255,0) 55%)',color:color===GOLD?'#0A0A00':'#fff',border:'none',borderRadius:9,padding:small?'6px 14px':'11px 20px',fontWeight:800,fontSize:small?12:14,cursor:'pointer',boxShadow:color===GOLD?'0 4px 14px color-mix(in srgb, var(--brand-primary) 28%, transparent), inset 0 1px 0 rgba(255,255,255,0.35)':'0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)'});
 const labelS:React.CSSProperties={display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5};
-const inputS:React.CSSProperties={width:'100%',background:DARK,border:`1px solid ${BORDER}`,borderRadius:7,padding:'10px 14px',color:TEXT,fontSize:14,outline:'none',boxSizing:'border-box'};
+/* 16px text: iOS zooms the page into any input set smaller. 44px: a fingertip target. */
+const inputS:React.CSSProperties={width:'100%',background:DARK,border:`1px solid ${BORDER}`,borderRadius:7,padding:'10px 14px',color:TEXT,fontSize:16,minHeight:44,outline:'none',boxSizing:'border-box'};
 const textareaS:React.CSSProperties={...inputS,minHeight:80,resize:'vertical' as const};
-const badge=(status:string):React.CSSProperties=>{const m:Record<string,string>={approved:GREEN,paid:GREEN,accepted:GREEN,awarded:GREEN,valid:GREEN,submitted:BLUE,open:BLUE,pending:AMBER,under_review:AMBER,pending_review:AMBER,draft:DIM,expiring_soon:AMBER,correction_requested:AMBER,rejected:RED,disputed:RED,expired:RED,declined:RED,missing:RED};const c=m[status]||DIM;return{display:'inline-block',padding:'3px 10px',borderRadius:20,fontSize:11,fontWeight:700,background:`color-mix(in srgb, ${c} 13%, transparent)`,color:c,textTransform:'capitalize' as const}};
+const badge=(status:string):React.CSSProperties=>{const m:Record<string,string>={approved:GREEN,paid:GREEN,signed:GREEN,accepted:GREEN,awarded:GREEN,valid:GREEN,submitted:BLUE,open:BLUE,pending:AMBER,under_review:AMBER,pending_review:AMBER,draft:DIM,expiring_soon:AMBER,correction_requested:AMBER,rejected:RED,disputed:RED,expired:RED,declined:RED,missing:RED};const c=m[status]||DIM;return{display:'inline-block',padding:'3px 10px',borderRadius:20,fontSize:11,fontWeight:700,background:`color-mix(in srgb, ${c} 13%, transparent)`,color:c,textTransform:'capitalize' as const}};
 
 function Stars({rating,max=5,size=18}:{rating:number;max?:number;size?:number}){
   return <span style={{display:'inline-flex',gap:2}}>{Array.from({length:max},(_,i)=><span key={i} style={{fontSize:size,color:i<Math.round(rating)?GOLD:BORDER}}>{i<Math.round(rating)?'\u2605':'\u2606'}</span>)}</span>;
@@ -46,22 +48,58 @@ function RadioWave({seed,color}:{seed:string;color:string}){
   );
 }
 
-function SignatureCanvas({onSign}:{onSign:(data:string)=>void}){
+function SignatureCanvas({onSign,onClear}:{onSign:(data:string)=>void;onClear?:()=>void}){
   const ref=useRef<HTMLCanvasElement>(null);
   const [drawing,setDrawing]=useState(false);
   const [has,setHas]=useState(false);
-  const pos=(e:React.MouseEvent|React.TouchEvent)=>{const r=ref.current!.getBoundingClientRect();const cx='touches' in e?e.touches[0].clientX:e.clientX;const cy='touches' in e?e.touches[0].clientY:e.clientY;return{x:cx-r.left,y:cy-r.top}};
+  /* The canvas is 400×120 but shrinks to fit a phone; map the finger from CSS
+     pixels to canvas pixels or the stroke lands off to the side of it. */
+  const pos=(e:React.MouseEvent|React.TouchEvent)=>{const c=ref.current!;const r=c.getBoundingClientRect();const cx='touches' in e?e.touches[0].clientX:e.clientX;const cy='touches' in e?e.touches[0].clientY:e.clientY;return{x:(cx-r.left)*(c.width/(r.width||c.width)),y:(cy-r.top)*(c.height/(r.height||c.height))}};
   const start=(e:React.MouseEvent|React.TouchEvent)=>{setDrawing(true);const ctx=ref.current!.getContext('2d')!;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)};
   const draw=(e:React.MouseEvent|React.TouchEvent)=>{if(!drawing)return;const ctx=ref.current!.getContext('2d')!;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.strokeStyle=TEXT;ctx.lineWidth=2;ctx.lineCap='round';ctx.stroke();setHas(true)};
-  const stop=()=>{setDrawing(false);if(has)onSign(ref.current!.toDataURL())};
-  const clear=()=>{ref.current!.getContext('2d')!.clearRect(0,0,400,120);setHas(false)};
+  /* The pad draws light ink for the dark screen; the waiver is printed on white
+     paper, so the saved image is the same strokes recoloured to dark ink. */
+  const inkPng=()=>{const src=ref.current!;const c=document.createElement('canvas');c.width=src.width;c.height=src.height;const x=c.getContext('2d')!;x.drawImage(src,0,0);x.globalCompositeOperation='source-in';x.fillStyle='rgb(13,17,22)';x.fillRect(0,0,c.width,c.height);return c.toDataURL('image/png')};
+  const stop=()=>{setDrawing(false);if(has)onSign(inkPng())};
+  const clear=()=>{const c=ref.current!;c.getContext('2d')!.clearRect(0,0,c.width,c.height);setHas(false);onClear?.()};
   return(
     <div>
-      <canvas ref={ref} width={400} height={120} style={{background:DARK,border:`1px solid ${BORDER}`,borderRadius:7,cursor:'crosshair',touchAction:'none',maxWidth:'100%'}} onMouseDown={start} onMouseMove={draw} onMouseUp={stop} onMouseLeave={stop} onTouchStart={start} onTouchMove={draw} onTouchEnd={stop}/>
-      <div style={{marginTop:6,display:'flex',gap:8}}>
-        <button onClick={clear} style={btnS(BORDER,true)}>Clear</button>
-        {has&&<span style={{color:GREEN,fontSize:12,alignSelf:'center'}}>Signature captured</span>}
+      <canvas ref={ref} width={400} height={120} aria-label="Signature pad — draw your signature" style={{background:DARK,border:`1px solid ${BORDER}`,borderRadius:7,cursor:'crosshair',touchAction:'none',maxWidth:'100%',display:'block'}} onMouseDown={start} onMouseMove={draw} onMouseUp={stop} onMouseLeave={stop} onTouchStart={start} onTouchMove={draw} onTouchEnd={stop}/>
+      <div style={{marginTop:6,display:'flex',gap:8,alignItems:'center'}}>
+        <button type="button" onClick={clear} style={{...btnS(BORDER,true),minHeight:44,minWidth:64}}>Clear</button>
+        {has&&<span style={{color:GREEN,fontSize:12}}>Signature captured</span>}
       </div>
+    </div>
+  );
+}
+
+/* One waiver to sign: the signer's name and title, the drawn signature, and a
+   Submit that saves it (the caller posts to /api/portal/sub/lien-waivers and
+   returns an error message, or null once it is saved). */
+function LienWaiverSigner({defaultName,onSubmit}:{defaultName:string;onSubmit:(v:{signed_name:string;signer_title:string;signature:string})=>Promise<string|null>}){
+  const uid=React.useId();
+  const [name,setName]=useState(defaultName);
+  const [title,setTitle]=useState('');
+  const [sig,setSig]=useState<string|null>(null);
+  const [saving,setSaving]=useState(false);
+  const [err,setErr]=useState('');
+  const submit=async()=>{
+    if(name.trim().length<2){setErr('Type your full name to sign.');return;}
+    if(!sig){setErr('Draw your signature in the box first.');return;}
+    setSaving(true);setErr('');
+    const e=await onSubmit({signed_name:name.trim(),signer_title:title.trim(),signature:sig});
+    setSaving(false);
+    if(e)setErr(e);
+  };
+  return(
+    <div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:12,marginBottom:10}}>
+        <div><label htmlFor={`${uid}-n`} style={labelS}>Your full name *</label><input id={`${uid}-n`} value={name} onChange={e=>setName(e.target.value)} autoComplete="name" style={inputS}/></div>
+        <div><label htmlFor={`${uid}-t`} style={labelS}>Title</label><input id={`${uid}-t`} value={title} onChange={e=>setTitle(e.target.value)} placeholder="Owner, Project Manager…" autoComplete="organization-title" style={inputS}/></div>
+      </div>
+      <div style={{marginBottom:10}}><div style={labelS}>Signature *</div><SignatureCanvas onSign={setSig} onClear={()=>setSig(null)}/></div>
+      {err&&<div role="alert" style={{color:RED,fontSize:13,fontWeight:600,marginBottom:10}}>{err}</div>}
+      <button type="button" onClick={submit} disabled={saving} style={{...btnS(PURPLE),minHeight:44,opacity:saving?0.6:1}}>{saving?'Saving…':'Submit Signed Lien Waiver'}</button>
     </div>
   );
 }
@@ -112,7 +150,8 @@ export default function SubPortal(){
   const [docUploading,setDocUploading]=useState(false);
   const [msgContent,setMsgContent]=useState('');
   const [msgSending,setMsgSending]=useState(false);
-  const [lienSig,setLienSig]=useState<string|null>(null);
+  /* This sub's lien_waivers rows on this job (signed and waiting), from /api/portal/sub/lien-waivers. */
+  const [lienWaivers,setLienWaivers]=useState<any[]>([]);
 
   /* ── GPS Clock ── */
   const [gpsStatus,setGpsStatus]=useState<'idle'|'clocked_in'|'clocked_out'>('idle');
@@ -177,6 +216,7 @@ export default function SubPortal(){
           fetch(`/api/portal/sub/drawings?token=${token}`,{headers}).then(r=>r.json()),
           fetch(`/api/portal/sub/punch?token=${token}`,{headers}).then(r=>r.json()),
           fetch(`/api/portal/sub/activity?token=${token}`,{headers}).then(r=>r.json()),
+          fetch(`/api/portal/sub/lien-waivers?token=${token}`,{headers}).then(r=>r.json()),
         ]);
       })
       .then(results=>{
@@ -193,6 +233,7 @@ export default function SubPortal(){
         setDrawings(val(9).drawings||[]);
         setPunchItems(val(10).punch_items||[]);
         setActivity(val(11).events||[]);
+        setLienWaivers(val(12).lien_waivers||[]);
       })
       .catch(e=>{ console.error(e); setError(humanError(e, 'Failed to load the portal. Please try again.')); })
       .finally(()=>setLoading(false));
@@ -408,6 +449,26 @@ export default function SubPortal(){
       } else showToast(result.error||'Failed to send.');
     }catch{showToast('Network error.');}
     setMsgSending(false);
+  };
+
+  /* Sign a lien waiver — for an approved / paid invoice ({pay_app_id}) or one the
+     GC filed and is waiting on ({waiver_id}). Saved as a lien_waivers row with a
+     signed PDF; the GC is notified. Returns an error to show, or null when saved. */
+  const signLienWaiver=async(target:{pay_app_id?:string;waiver_id?:string},v:{signed_name:string;signer_title:string;signature:string}):Promise<string|null>=>{
+    try{
+      const res=await fetch(`/api/portal/sub/lien-waivers?token=${token}`,{method:'POST',headers,body:JSON.stringify({...target,...v})});
+      const json=await res.json().catch(()=>null);
+      const saved=json?.lien_waiver;
+      if(saved&&(res.ok||res.status===409)){
+        setLienWaivers(prev=>[saved,...prev.filter((w:any)=>w.id!==saved.id)]);
+        showToast(res.ok?'Lien waiver signed — your GC has it now.':(json?.error||'This lien waiver is already signed.'));
+        if(res.ok)refreshActivity();
+        return null;
+      }
+      return json?.error||"Couldn't save your signed lien waiver. Please try again.";
+    }catch{
+      return 'No connection — the waiver was not sent. Try again.';
+    }
   };
 
   const sendRadioText=async()=>{
@@ -810,11 +871,42 @@ export default function SubPortal(){
   /* ================================================================ */
   /*  PAY APPS TAB                                                     */
   /* ================================================================ */
+  /* A signed waiver as the sub sees it back: who signed, when, and the signed PDF. */
+  const renderSignedWaiver=(w:any)=>(
+    <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+      <div style={{fontSize:12,color:DIM,flex:1,minWidth:200,lineHeight:1.5}}>{waiverTypeLabel(w.waiver_type)} for {fmt(Number(w.amount)||0)}{w.through_date?` through ${fmtDate(w.through_date)}`:''} — signed by {w.signed_name||'your company'}{w.signer_title?`, ${w.signer_title}`:''} on {fmtDate(w.signed_at)}.</div>
+      {w.file_url?<a href={w.file_url} target="_blank" rel="noopener noreferrer" style={{...btnS(BORDER,true),minHeight:44,display:'inline-flex',alignItems:'center',textDecoration:'none',color:TEXT}}>View signed PDF</a>
+        :<span style={{fontSize:11,color:DIM}}>No PDF on file</span>}
+    </div>
+  );
   const renderPayApps=()=>{
     const statusOrder=['submitted','under_review','approved','paid'];
+    /* Waivers not tied to one of the invoices below — ones the GC filed for this sub on this job. */
+    const invoiceWaiverIds=new Set(payApps.map((pa:any)=>invoiceWaiver(pa,lienWaivers)?.id).filter(Boolean));
+    const otherWaivers=lienWaivers.filter((w:any)=>!invoiceWaiverIds.has(w.id));
     return(
       <div style={{display:'grid',gap:20}}>
         {!onRoster&&rosterNote('Invoices')}
+        {otherWaivers.length>0&&(
+          <div style={card()}>
+            <div style={{fontSize:16,fontWeight:700,color:TEXT,marginBottom:4}}>Lien Waivers</div>
+            <div style={{fontSize:12,color:DIM,marginBottom:12}}>Waivers your general contractor filed for {companyName} on this job.</div>
+            {otherWaivers.map((w:any,i:number)=>{
+              const signed=isSignedWaiver(w);
+              return(
+                <div key={w.id} style={{padding:'12px 0',borderTop:i>0?`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`:'none'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:10,flexWrap:'wrap',marginBottom:8}}>
+                    <div style={{fontSize:13,fontWeight:700,color:TEXT}}>{waiverTypeLabel(w.waiver_type)} &mdash; {fmt(Number(w.amount)||0)}{w.through_date?` through ${fmtDate(w.through_date)}`:''}</div>
+                    <span style={badge(signed?'signed':(w.status||'pending'))}>{signed?'signed':(w.status||'pending')}</span>
+                  </div>
+                  {signed?renderSignedWaiver(w)
+                    :isSignableWaiver(w)?<LienWaiverSigner defaultName={sub?.contact_name||''} onSubmit={v=>signLienWaiver({waiver_id:w.id},v)}/>
+                    :null}
+                </div>
+              );
+            })}
+          </div>
+        )}
         {payApps.length===0?(
           <div style={{...card(),textAlign:'center',padding:40}}>
             <div style={{fontSize:15,fontWeight:700,color:TEXT}}>No Pay Applications Yet</div>
@@ -867,15 +959,22 @@ export default function SubPortal(){
               </div>
             )}
 
-            {/* Lien Waiver */}
-            {(pa.status==='approved'||pa.status==='paid')&&(
-              <div style={{marginTop:14,padding:'12px 16px',background:`color-mix(in srgb, ${PURPLE} 7%, transparent)`,border:`1px solid color-mix(in srgb, ${PURPLE} 27%, transparent)`,borderRadius:8}}>
-                <div style={{fontSize:13,fontWeight:700,color:PURPLE,marginBottom:4}}>Lien Waiver: {pa.status==='paid'?'Unconditional':'Conditional'} Required</div>
-                <div style={{fontSize:12,color:DIM,marginBottom:10}}>{pa.status==='paid'?`Unconditional lien waiver for ${fmt(pa.net_amount)} is ready for execution.`:`Conditional lien waiver for ${fmt(pa.net_amount)} — will convert to unconditional upon payment.`}</div>
-                <div style={{marginBottom:10}}><div style={labelS}>Digital Signature</div><SignatureCanvas onSign={sig=>setLienSig(sig)}/></div>
-                {lienSig&&<button onClick={()=>{showToast('Lien waiver signed and submitted.');setLienSig(null);}} style={btnS(PURPLE)}>Submit Signed Lien Waiver</button>}
-              </div>
-            )}
+            {/* Lien Waiver — saved as a lien_waivers row (the GC's Lien Waivers page) with a signed PDF.
+                This button used to show a toast and save nothing. */}
+            {waiverTypeForInvoice(pa.status)&&(()=>{
+              const w=invoiceWaiver(pa,lienWaivers);
+              const signed=!!w&&isSignedWaiver(w);
+              const c=signed?GREEN:PURPLE;
+              return(
+                <div style={{marginTop:14,padding:'12px 16px',background:`color-mix(in srgb, ${c} 7%, transparent)`,border:`1px solid color-mix(in srgb, ${c} 27%, transparent)`,borderRadius:8}}>
+                  <div style={{fontSize:13,fontWeight:700,color:c,marginBottom:4}}>{signed?'Lien Waiver Signed':`Lien Waiver: ${pa.status==='paid'?'Unconditional':'Conditional'} Required`}</div>
+                  {signed&&w?renderSignedWaiver(w):(<>
+                    <div style={{fontSize:12,color:DIM,marginBottom:10}}>{pa.status==='paid'?`Unconditional lien waiver for ${fmt(iv.net)} through ${fmtDate(iv.periodTo)} — sign it to confirm this payment was received.`:`Conditional lien waiver for ${fmt(iv.net)} through ${fmtDate(iv.periodTo)} — it takes effect once you are paid.`}</div>
+                    <LienWaiverSigner defaultName={sub?.contact_name||''} onSubmit={v=>signLienWaiver({pay_app_id:pa.id},v)}/>
+                  </>)}
+                </div>
+              );
+            })()}
           </div>
         );})}
       </div>
