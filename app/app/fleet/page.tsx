@@ -5,7 +5,8 @@
  * NHTSA). Math from the proven lib/fleet engine. RLS-scoped browser client.
  * À-la-carte: hidden from the sidebar unless the tenant has features.fleet.
  */
-import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef, useId } from 'react';
+import { z } from '@/lib/design-tokens';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { getSupabaseBrowser, ensureBrowserSession } from '@/lib/supabase-browser';
 import { fleetSummary, assetHealth, expiryStatus, tripStats, STATUS_COLOR, type Asset, type MaintenanceRecord, type AssetDoc } from '@/lib/fleet';
@@ -23,6 +24,16 @@ const fmt = (s: string | null) => s ? new Date(s + (s.length === 10 ? 'T12:00:00
 const EXPIRIES: [string, string][] = [['warranty_expires', 'Warranty'], ['registration_expires', 'Registration'], ['insurance_expires', 'Insurance'], ['contract_expires', 'Contract']];
 const ago = (iso: string | null | undefined) => { if (!iso) return null; const ms = Date.now() - Date.parse(iso); if (!Number.isFinite(ms)) return null; const m = Math.max(0, Math.round(ms / 60000)); if (m < 60) return `${m}m ago`; const h = Math.round(m / 60); if (h < 24) return `${h}h ago`; const d = Math.round(h / 24); return d < 30 ? `${d}d ago` : `${Math.round(d / 30)}mo ago`; };
 const STATUS_LABEL: Record<string, string> = { active: 'Active', in_shop: 'In Shop', retired: 'Retired', out_of_service: 'Out of Service' };
+
+/* Registry beside the asset record on desktop; stacked on a phone. The fixed
+   320px registry column left the record ~22px wide at 390px, with its Log
+   Service / Add Doc buttons pushed off the right edge. */
+const FLEET_CSS = `
+.flSplit { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 16px; margin-top: 16px; align-items: start; }
+.flDetail { scroll-margin-top: 76px; min-width: 0; }
+@media (max-width: 900px) { .flSplit { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 767px) { .flAct { min-height: 44px; } }
+`;
 
 export default function FleetPage() {
   const { showToast } = useToast();
@@ -78,6 +89,13 @@ export default function FleetPage() {
   }, [sb]);
   const sign = useCallback((u: string | null | undefined) => (u ? signed[u] || u : u), [signed]);
   useEffect(() => { load(); }, [load]);
+  // On a phone the record sits under the registry: bring it up when an asset is picked.
+  const detailRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!selId) return;
+    const el = detailRef.current;
+    if (el && el.getBoundingClientRect().top > window.innerHeight * 0.6) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [selId]);
   useEffect(() => { if (selId) sb.from('fleet_locations').select('*').eq('asset_id', selId).order('at', { ascending: false }).limit(50).then(({ data }) => setPings(data ?? [])); else setPings([]); }, [selId, sb]);
 
   const summary = useMemo(() => fleetSummary(assets as Asset[], records as MaintenanceRecord[], docs as AssetDoc[], now()), [assets, records, docs]);
@@ -152,6 +170,7 @@ export default function FleetPage() {
 
   return (
     <>
+      <style dangerouslySetInnerHTML={{ __html: FLEET_CSS }} />
       <PremiumSurface maxWidth={2200}>
 
         {/* Header */}
@@ -170,17 +189,17 @@ export default function FleetPage() {
 
         {/* KPIs */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12, marginBottom: 20 }}>
-          <StatCard icon={<Truck size={19} weight="duotone" color={GOLD} />} label="Assets" value={summary.total} accent={GOLD} sub={`${summary.byType.vehicle || 0} vehicle${(summary.byType.vehicle || 0) === 1 ? '' : 's'} · ${summary.byType.equipment || 0} equipment${summary.byStatus.in_shop ? ` · ${summary.byStatus.in_shop} in shop` : ''}`} delay={0.02}  href="/app/fleet"/>
-          <StatCard icon={<Warning size={19} weight="duotone" color={summary.maintenanceOverdue ? RED : GOLD} />} label="Maint. Overdue" value={summary.maintenanceOverdue} accent={summary.maintenanceOverdue ? RED : undefined} sub={summary.needsAttention.length ? summary.needsAttention.slice(0, 2).join(', ') + (summary.needsAttention.length > 2 ? ` +${summary.needsAttention.length - 2}` : '') : 'All caught up'} delay={0.06}  href="/app/fleet"/>
-          <StatCard icon={<Wrench size={19} weight="duotone" color={summary.maintenanceSoon ? AMBER : GOLD} />} label="Due Soon" value={summary.maintenanceSoon} accent={summary.maintenanceSoon ? AMBER : undefined} sub="Within 500 mi or 14 days" delay={0.10}  href="/app/fleet"/>
-          <StatCard icon={<FileText size={19} weight="duotone" color={summary.docsExpired ? RED : GOLD} />} label="Docs Expired" value={summary.docsExpired} accent={summary.docsExpired ? RED : undefined} sub={summary.docsExpired ? 'Renew to stay road-legal' : 'Registrations & insurance current'} delay={0.14}  href="/app/fleet"/>
-          <StatCard icon={<CalendarBlank size={19} weight="duotone" color={summary.docsExpiringSoon ? AMBER : GOLD} />} label="Expiring" value={summary.docsExpiringSoon} accent={summary.docsExpiringSoon ? AMBER : undefined} sub="Docs inside the 30-day window" delay={0.18}  href="/app/fleet"/>
-          <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />} label="Maint. Cost" value={usd(summary.totalMaintenanceCostCents)} sub={`Across ${records.length} service record${records.length === 1 ? '' : 's'}`} delay={0.22}  href="/app/fleet"/>
+          <StatCard icon={<Truck size={19} weight="duotone" color={GOLD} />} label="Assets" value={summary.total} accent={GOLD} sub={`${summary.byType.vehicle || 0} vehicle${(summary.byType.vehicle || 0) === 1 ? '' : 's'} · ${summary.byType.equipment || 0} equipment${summary.byStatus.in_shop ? ` · ${summary.byStatus.in_shop} in shop` : ''}`} delay={0.02} />
+          <StatCard icon={<Warning size={19} weight="duotone" color={summary.maintenanceOverdue ? RED : GOLD} />} label="Maint. Overdue" value={summary.maintenanceOverdue} accent={summary.maintenanceOverdue ? RED : undefined} sub={summary.needsAttention.length ? summary.needsAttention.slice(0, 2).join(', ') + (summary.needsAttention.length > 2 ? ` +${summary.needsAttention.length - 2}` : '') : 'All caught up'} delay={0.06} />
+          <StatCard icon={<Wrench size={19} weight="duotone" color={summary.maintenanceSoon ? AMBER : GOLD} />} label="Due Soon" value={summary.maintenanceSoon} accent={summary.maintenanceSoon ? AMBER : undefined} sub="Within 500 mi or 14 days" delay={0.10} />
+          <StatCard icon={<FileText size={19} weight="duotone" color={summary.docsExpired ? RED : GOLD} />} label="Docs Expired" value={summary.docsExpired} accent={summary.docsExpired ? RED : undefined} sub={summary.docsExpired ? 'Renew to stay road-legal' : 'Registrations & insurance current'} delay={0.14} />
+          <StatCard icon={<CalendarBlank size={19} weight="duotone" color={summary.docsExpiringSoon ? AMBER : GOLD} />} label="Expiring" value={summary.docsExpiringSoon} accent={summary.docsExpiringSoon ? AMBER : undefined} sub="Docs inside the 30-day window" delay={0.18} />
+          <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />} label="Maint. Cost" value={usd(summary.totalMaintenanceCostCents)} sub={`Across ${records.length} service record${records.length === 1 ? '' : 's'}`} delay={0.22} />
         </div>
 
         {assets.some((a) => a.last_lat) ? <SectionCard flat title="Live Map" icon={<MapPin size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 16 }}><FleetMap assets={assets} pings={selId ? pings : []} selId={selId} onSelect={setSelId} /></SectionCard> : null}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 320px) minmax(0, 1fr)', gap: 16, marginTop: 16, alignItems: 'start' }}>
+        <div className="flSplit">
           {/* registry */}
           <SectionCard title="Fleet Registry" icon={<Truck size={17} weight="duotone" color={GOLD} />} bodyStyle={{ padding: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '8px 12px', marginBottom: 10 }}><MagnifyingGlass size={16} color={DIM} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search fleet…" style={{ background: 'none', border: 'none', color: TEXT, outline: 'none', flex: 1, fontSize: 14 }} /></div>
@@ -214,7 +233,7 @@ export default function FleetPage() {
           </SectionCard>
 
           {/* detail */}
-          <div>
+          <div ref={detailRef} className="flDetail">
             {!sel ? <SectionCard flat><PremiumEmpty icon={<Truck size={30} weight="duotone" color={GOLD} />} title="Select an asset" description="Choose a vehicle or piece of equipment from the registry to view its full record — maintenance history, documents, warnings, and last-known location." /></SectionCard> : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <SectionCard>
@@ -248,7 +267,7 @@ export default function FleetPage() {
                 </SectionCard>
 
                 {/* maintenance */}
-                <SectionCard flat title="Maintenance" icon={<Wrench size={17} weight="duotone" color={GOLD} />} action={<button onClick={() => setAddingMaint(true)} style={{ ...goldButtonStyle, padding: '7px 13px', fontSize: 13 }} className="pmBtn">+ Log Service</button>}>
+                <SectionCard flat title="Maintenance" icon={<Wrench size={17} weight="duotone" color={GOLD} />} action={<button type="button" onClick={() => setAddingMaint(true)} style={{ ...goldButtonStyle, padding: '7px 13px', fontSize: 13 }} className="pmBtn flAct">+ Log Service</button>}>
                   {selRecords.length === 0 ? <span style={{ color: DIM, fontSize: 13 }}>No maintenance logged.</span> : selRecords.map((r) => (
                     <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: `1px solid ${BORDER}`, fontSize: 13.5 }}>
                       <Wrench size={15} color={DIM} />
@@ -259,7 +278,7 @@ export default function FleetPage() {
                 </SectionCard>
 
                 {/* documents */}
-                <SectionCard title="Documents" icon={<FileText size={17} weight="duotone" color={GOLD} />} action={<button onClick={() => setAddingDoc(true)} style={{ ...goldButtonStyle, padding: '7px 13px', fontSize: 13 }} className="pmBtn">+ Add Doc</button>}>
+                <SectionCard title="Documents" icon={<FileText size={17} weight="duotone" color={GOLD} />} action={<button type="button" onClick={() => setAddingDoc(true)} style={{ ...goldButtonStyle, padding: '7px 13px', fontSize: 13 }} className="pmBtn flAct">+ Add Doc</button>}>
                   {selDocs.length === 0 ? <span style={{ color: DIM, fontSize: 13 }}>No documents. Add titles, warranties, insurance, contracts — with expirations for auto-warnings.</span> : selDocs.map((d) => { const e = expiryStatus(d.expires_at, now()); return (
                     <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: `1px solid ${BORDER}`, fontSize: 13.5 }}>
                       <FileText size={15} color={DIM} />
@@ -389,6 +408,16 @@ function FleetMap({ assets, pings, selId, onSelect }: { assets: any[]; pings: an
   return <div ref={ref} style={{ height: 340, borderRadius: 12, overflow: 'hidden', border: `1px solid ${BORDER}` }} />;
 }
 
+/* Every fleet window (Add Asset, Log Service, Add Document, GPS Integration).
+   It sat at z-index 50 — under the fixed top bar and the phone tab bar (60),
+   which then covered its top and its Save button — and was not announced as a
+   dialog. Now: above both bars, role=dialog, Escape closes, 44px Close. */
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
-  return <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}><div onClick={(e) => e.stopPropagation()} style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 18, width: 'min(500px, 100%)', maxHeight: '90vh', overflowY: 'auto', boxShadow: 'var(--shadow-lg)' }}><div style={{ display: 'flex', alignItems: 'center', marginBottom: 14 }}><div style={{ fontWeight: 800, fontSize: 17, flex: 1 }}>{title}</div><button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} color={DIM} /></button></div>{children}</div></div>;
+  const titleId = useId();
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+  return <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: z.modal, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}><div role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={(e) => e.stopPropagation()} style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 18, width: 'min(500px, 100%)', maxHeight: '90vh', overflowY: 'auto', boxShadow: 'var(--shadow-lg)' }}><div style={{ display: 'flex', alignItems: 'center', marginBottom: 14 }}><div id={titleId} style={{ fontWeight: 800, fontSize: 17, flex: 1 }}>{title}</div><button type="button" aria-label="Close" onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', minWidth: 44, minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', margin: '-10px -10px -10px 0' }}><X size={20} color={DIM} /></button></div>{children}</div></div>;
 }

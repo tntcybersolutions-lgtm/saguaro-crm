@@ -266,21 +266,33 @@ function Modal({ open, onClose, title, width, children }: {
   open: boolean; onClose: () => void; title: string; width?: number;
   children: React.ReactNode;
 }) {
+  const titleId = React.useId();
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
   if (!open) return null;
+  // A fixed 480–520px box ran ~45px off each side of a 390px phone; it now
+  // fits the screen with a 16px gutter and is announced as a dialog.
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)' }} onClick={onClose} />
-      <div style={{ position: 'relative', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 'var(--radius-lg, 12px)',
-        width: width ?? 520, maxHeight: '85vh', overflowY: 'auto', padding: 28, zIndex: 1, boxShadow: 'var(--shadow-lg)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-          <h3 style={{ color: GOLD, margin: 0, fontSize: 18 }}>{title}</h3>
-          <button onClick={onClose} style={{ ...btn('transparent', DIM), fontSize: 20, padding: '2px 8px', lineHeight: 1 }}>×</button>
+      <div role="dialog" aria-modal="true" aria-labelledby={titleId} style={{ position: 'relative', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 'var(--radius-lg, 12px)',
+        width: `min(${width ?? 520}px, 100%)`, boxSizing: 'border-box', maxHeight: '85vh', overflowY: 'auto', padding: 'clamp(18px, 5vw, 28px)', zIndex: 1, boxShadow: 'var(--shadow-lg)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, gap: 8 }}>
+          <h3 id={titleId} style={{ color: GOLD, margin: 0, fontSize: 18 }}>{title}</h3>
+          <button type="button" onClick={onClose} aria-label="Close" style={{ ...btn('transparent', DIM), fontSize: 20, padding: '2px 8px', lineHeight: 1, minWidth: 44, minHeight: 44 }}>×</button>
         </div>
         {children}
       </div>
     </div>
   );
 }
+
+/* Invite User / Assign Role are 44px tap targets on a phone (33px before). */
+const AM_CSS = `@media (max-width: 767px) { .amTap { min-height: 44px; } }`;
 
 /* ── loading spinner ── */
 function Spinner() {
@@ -801,6 +813,7 @@ export function AccessManager() {
 
   return (
     <div style={{ minHeight: '100vh', background: BG, padding: 32 }}>
+      <style dangerouslySetInnerHTML={{ __html: AM_CSS }} />
       {/* header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <div>
@@ -834,8 +847,8 @@ export function AccessManager() {
               {teamRows.length} {teamRows.length === 1 ? 'person' : 'people'} · {teamRows.filter(r => r.status === 'active').length} sign-ins · {teamRows.filter(r => r.status === 'invited').length} invited · {teamRows.filter(r => r.status === 'contact').length} project contacts
             </span>
             <div style={{ flex: 1 }} />
-            <button onClick={() => setShowInvite(true)} style={{ ...btn('transparent', GOLD), background: 'linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))', border: `1px solid ${BORDER}` }}>+ Invite User</button>
-            <button onClick={() => { setAssignUserId(''); setAssignRoleId(''); setAssignProjectId(''); setShowAssign(true); }} style={{ ...btn(GOLD, 'var(--on-brand)'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)' }}>+ Assign Role</button>
+            <button type="button" className="amTap" onClick={() => setShowInvite(true)} style={{ ...btn('transparent', GOLD), background: 'linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))', border: `1px solid ${BORDER}` }}>+ Invite User</button>
+            <button type="button" className="amTap" onClick={() => { setAssignUserId(''); setAssignRoleId(''); setAssignProjectId(''); setShowAssign(true); }} style={{ ...btn(GOLD, 'var(--on-brand)'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)' }}>+ Assign Role</button>
           </div>
 
           <div style={{ ...card(), overflowX: 'auto' }}>
@@ -944,7 +957,7 @@ export function AccessManager() {
                       <td style={{ padding: '10px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                         {r.status === 'active' && r.userId ? (
                           <>
-                            <button onClick={() => openAssignFor(r.userId!)}
+                            <button type="button" className="amTap" onClick={() => openAssignFor(r.userId!)}
                               style={{ ...btn('transparent', GOLD), padding: '6px 12px' }}>Assign Role</button>
                             <button onClick={() => resetUserPassword(r.userId!, r.name)}
                               style={{ ...btn('transparent', DIM), padding: '6px 12px', marginLeft: 4 }}>Reset Password</button>
@@ -1193,8 +1206,8 @@ export function AccessManager() {
               {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
             </select>
             <div style={{ flex: 1 }} />
-            <button onClick={() => setShowInvite(true)} style={{ ...btn('transparent', GOLD), background: 'linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))', border: `1px solid ${BORDER}` }}>+ Invite User</button>
-            <button onClick={() => setShowAssign(true)} style={{ ...btn(GOLD, 'var(--on-brand)'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)' }}>+ Assign Role</button>
+            <button type="button" className="amTap" onClick={() => setShowInvite(true)} style={{ ...btn('transparent', GOLD), background: 'linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))', border: `1px solid ${BORDER}` }}>+ Invite User</button>
+            <button type="button" className="amTap" onClick={() => setShowAssign(true)} style={{ ...btn(GOLD, 'var(--on-brand)'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)' }}>+ Assign Role</button>
           </div>
 
           {/* ── Pending sent invites (expiry countdown + cancel / resend) ── */}

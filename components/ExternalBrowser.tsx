@@ -5,8 +5,9 @@
  * provider server-side and stores it as a project_files row). Calls onImported
  * with each new file row so the media library can prepend it.
  */
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useId } from 'react';
 import { T } from '@/components/ui/shell';
+import { z } from '@/lib/design-tokens';
 import { Folder, FileText, X, CaretRight, House, DownloadSimple, CloudArrowDown, Spinner } from '@phosphor-icons/react';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -21,8 +22,31 @@ export function ExternalBrowser({ projectId, onImported, onClose }: { projectId?
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
   const [importing, setImporting] = useState<string | null>(null);
+  const [connState, setConnState] = useState<'loading' | 'ok' | 'error'>('loading');
+  const titleId = useId();
 
-  useEffect(() => { fetch('/api/storage/connectors').then((r) => r.json()).then((j) => setConnectors((j.connectors || []).filter((c: any) => c.connected))); }, []);
+  // Until the list is back, "No connected storage" would be a guess — and a
+  // failed read is not the same as having none.
+  const loadConnectors = useCallback(async () => {
+    setConnState('loading');
+    try {
+      const r = await fetch('/api/storage/connectors');
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j?.error || `Request failed (${r.status})`);
+      setConnectors((j.connectors || []).filter((c: any) => c.connected));
+      setConnState('ok');
+    } catch (e) {
+      console.error('[external-browser] connectors failed to load', e);
+      setConnState('error');
+    }
+  }, []);
+  useEffect(() => { void loadConnectors(); }, [loadConnectors]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   const browse = useCallback(async (conn: any, p: string | null) => {
     setLoading(true); setErr('');
@@ -51,20 +75,27 @@ export function ExternalBrowser({ projectId, onImported, onClose }: { projectId?
   };
 
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)', zIndex: 70, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-elevated)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: `1px solid ${T.border}`, borderRadius: 14, width: 'min(680px,100%)', maxHeight: '88vh', display: 'flex', flexDirection: 'column' }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)', zIndex: z.modal, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-elevated)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: `1px solid ${T.border}`, borderRadius: 14, width: 'min(680px,100%)', maxHeight: '88vh', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', borderBottom: `1px solid ${T.border}` }}>
           <CloudArrowDown size={20} color={T.gold} weight="fill" />
-          <div style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: T.white }}>Import from Cloud Storage</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} color={T.muted} /></button>
+          <div id={titleId} style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: T.white }}>Import from Cloud Storage</div>
+          <button type="button" onClick={onClose} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', minWidth: 44, minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', margin: '-10px -10px -10px 0' }}><X size={20} color={T.muted} /></button>
         </div>
 
         {!active ? (
           <div style={{ padding: 16 }}>
-            {connectors.length === 0 ? (
-              <div style={{ color: T.muted, fontSize: 14, padding: 12 }}>No connected storage. Add one in <a href="/app/settings/storage" style={{ color: T.gold }}>Settings → External Storage</a>.</div>
+            {connState === 'loading' ? (
+              <div role="status" style={{ display: 'flex', alignItems: 'center', gap: 10, color: T.muted, fontSize: 14, padding: 12 }}><Spinner size={18} color={T.gold} className="spin" /> Loading your connected storage…</div>
+            ) : connState === 'error' ? (
+              <div role="alert" style={{ color: T.muted, fontSize: 14, padding: 12 }}>
+                Couldn&apos;t load your connected storage.{' '}
+                <button type="button" onClick={() => void loadConnectors()} style={{ background: 'none', border: 'none', color: T.gold, cursor: 'pointer', fontWeight: 700, fontSize: 14, minHeight: 44, padding: 0 }}>Try again</button>
+              </div>
+            ) : connectors.length === 0 ? (
+              <div style={{ color: T.muted, fontSize: 14, padding: 12, lineHeight: 1.5 }}>No cloud storage is connected yet. Connect Google Drive, Dropbox, OneDrive, Box or Egnyte in <a href="/app/settings/storage" style={{ color: T.gold, fontWeight: 700 }}>Settings → External Storage</a>, then come back to import.</div>
             ) : connectors.map((c) => (
-              <button key={c.id} onClick={() => open(c)} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left', background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: 12, marginBottom: 8, cursor: 'pointer', color: T.white }}>
+              <button type="button" key={c.id} onClick={() => open(c)} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', minHeight: 48, textAlign: 'left', background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: 12, marginBottom: 8, cursor: 'pointer', color: T.white }}>
                 <Folder size={18} color={T.gold} /><span style={{ flex: 1, fontWeight: 600, fontSize: 14 }}>{c.display_name}</span><CaretRight size={15} color={T.muted} />
               </button>
             ))}
@@ -86,7 +117,7 @@ export function ExternalBrowser({ projectId, onImported, onClose }: { projectId?
                         {it.kind === 'folder' ? <Folder size={17} color={T.gold} /> : <FileText size={17} color={T.muted} />}
                         <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 13.5, color: T.white, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.name}</div>{it.kind === 'file' && it.size ? <div style={{ fontSize: 11.5, color: T.muted }}>{fmtSize(it.size)}</div> : null}</div>
                         {it.kind === 'folder' ? <CaretRight size={14} color={T.muted} />
-                          : <button onClick={(e) => { e.stopPropagation(); importFile(it); }} disabled={!!importing} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: T.gold, color: T.bg, border: 'none', borderRadius: 7, padding: '6px 11px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>{importing === it.path ? '…' : <><DownloadSimple size={13} weight="bold" />Import</>}</button>}
+                          : <button onClick={(e) => { e.stopPropagation(); importFile(it); }} disabled={!!importing} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: T.gold, color: T.bg, border: 'none', borderRadius: 7, padding: '6px 11px', minHeight: 44, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>{importing === it.path ? '…' : <><DownloadSimple size={13} weight="bold" />Import</>}</button>}
                       </div>
                     ))}
             </div>

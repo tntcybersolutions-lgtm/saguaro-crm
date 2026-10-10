@@ -498,31 +498,31 @@ export default function PrequalificationPage() {
               {/* Pipeline intelligence strip — funnel, decisions, compliance, expiry */}
               {(submissions.length > 0 || invites.length > 0 || templates.length > 0) && (
                 <StatStrip items={[
-                  {href: '/app/prequalification', 
+                  {
                     label: 'Invite Funnel', value: `${inviteFunnel.completed}/${inviteFunnel.sent}`,
                     sub: inviteFunnel.sent > 0 ? `${inviteFunnel.rate}% submitted${inviteFunnel.opened ? ` · ${inviteFunnel.opened} opened` : ''}` : 'No invites sent yet',
                     accent: inviteFunnel.sent > 0 && inviteFunnel.rate < 50 ? AMBER : undefined,
                   },
-                  {href: '/app/prequalification', 
+                  {
                     label: 'Approval Rate', value: `${decidedRate}%`,
                     accent: stats.approved + stats.rejected === 0 ? undefined : decidedRate >= 70 ? GREEN : AMBER,
                     sub: stats.approved + stats.rejected > 0 ? `${stats.approved} approved · ${stats.rejected} rejected` : 'No decisions yet',
                   },
-                  {href: '/app/prequalification', 
+                  {
                     label: 'Docs on File', value: docStats.tot > 0 ? `${docStats.pct}%` : '—',
                     accent: docStats.tot === 0 ? undefined : docStats.pct >= 80 ? GREEN : AMBER,
                     sub: docStats.tot > 0 ? `${docStats.up} of ${docStats.tot} required documents` : 'No document requests yet',
                   },
-                  {href: '/app/prequalification', 
+                  {
                     label: 'Expiry Pressure', value: String(docStats.expired + docStats.exp30),
                     accent: docStats.expired + docStats.exp30 > 0 ? RED : GREEN,
                     sub: `${docStats.expired} expired · ${docStats.exp30} in 30d · ${docStats.exp60} in 60d`,
                   },
-                  {href: '/app/prequalification', 
+                  {
                     label: 'Templates', value: String(templates.length),
                     sub: templates.length > 0 ? `Avg pass threshold ${avgThreshold}%` : 'Create your first form',
                   },
-                  {href: '/app/prequalification', 
+                  {
                     label: 'Approved Bench', value: String(stats.approved),
                     accent: stats.approved > 0 ? GREEN : undefined,
                     sub: approvedTrades > 0 ? `Covering ${approvedTrades} trade${approvedTrades === 1 ? '' : 's'}` : 'No approved subs yet',
@@ -541,7 +541,7 @@ export default function PrequalificationPage() {
                   { label: 'Avg Score', value: `${stats.avgScore}%`, icon: <ChartBar size={19} weight="duotone" color={pctColor(stats.avgScore)} />, accent: pctColor(stats.avgScore) },
                   { label: 'Expiring Soon', value: String(stats.expiring), icon: <WarningCircle size={19} weight="duotone" color={stats.expiring > 0 ? RED : GREEN} />, accent: stats.expiring > 0 ? RED : GREEN },
                 ].map((s, i) => (
-                  <StatCard key={s.label} icon={s.icon} label={s.label} value={s.value} accent={s.accent} delay={i * 0.04}  href="/app/prequalification"/>
+                  <StatCard key={s.label} icon={s.icon} label={s.label} value={s.value} accent={s.accent} delay={i * 0.04} />
                 ))}
               </div>
 
@@ -693,10 +693,10 @@ export default function PrequalificationPage() {
                 const fExpiring = filtered.filter(s => s.expires_at && daysUntil(s.expires_at) <= 30).length;
                 return (
                   <StatStrip items={[
-                    {href: '/app/prequalification',  label: 'Showing', value: `${filtered.length} of ${submissions.length}`, sub: `${fPending} pending · ${fReview} in review · ${fApproved} approved` },
-                    {href: '/app/prequalification', label: 'Avg Score (shown)', value: fScored.length > 0 ? `${fAvg}%` : '—', accent: fScored.length > 0 ? pctColor(fAvg) : undefined, sub: avgThreshold > 0 && fScored.length > 0 ? `${fPass} of ${fScored.length} clear the ${avgThreshold}% threshold` : 'No scored submissions in view' },
-                    {href: '/app/prequalification', label: 'Docs Complete', value: fDocsTot > 0 ? `${Math.round((fDocsUp / fDocsTot) * 100)}%` : '—', accent: fDocsTot === 0 ? undefined : fDocsUp === fDocsTot ? GREEN : AMBER, sub: fDocsTot > 0 ? `${fDocsUp} of ${fDocsTot} required documents uploaded` : 'No documents requested' },
-                    {href: '/app/prequalification', label: 'Prequals Expiring', value: String(fExpiring), accent: fExpiring > 0 ? RED : GREEN, sub: fExpiring > 0 ? 'Within 30 days — request a renewal' : 'None within 30 days' },
+                    { label: 'Showing', value: `${filtered.length} of ${submissions.length}`, sub: `${fPending} pending · ${fReview} in review · ${fApproved} approved` },
+                    { label: 'Avg Score (shown)', value: fScored.length > 0 ? `${fAvg}%` : '—', accent: fScored.length > 0 ? pctColor(fAvg) : undefined, sub: avgThreshold > 0 && fScored.length > 0 ? `${fPass} of ${fScored.length} clear the ${avgThreshold}% threshold` : 'No scored submissions in view' },
+                    { label: 'Docs Complete', value: fDocsTot > 0 ? `${Math.round((fDocsUp / fDocsTot) * 100)}%` : '—', accent: fDocsTot === 0 ? undefined : fDocsUp === fDocsTot ? GREEN : AMBER, sub: fDocsTot > 0 ? `${fDocsUp} of ${fDocsTot} required documents uploaded` : 'No documents requested' },
+                    { label: 'Prequals Expiring', value: String(fExpiring), accent: fExpiring > 0 ? RED : GREEN, sub: fExpiring > 0 ? 'Within 30 days — request a renewal' : 'None within 30 days' },
                   ]} />
                 );
               })()}
@@ -785,10 +785,10 @@ export default function PrequalificationPage() {
                 const oldestDays = oldest > 0 ? Math.floor((Date.now() - oldest) / 86400000) : 0;
                 return (
                   <StatStrip items={[
-                    {href: '/app/prequalification', label: 'Forms Sent', value: String(invites.length), sub: tplUsed > 0 ? `${tplUsed} template${tplUsed === 1 ? '' : 's'} in use` : 'Awaiting template link' },
-                    {href: '/app/prequalification', label: 'Opened', value: String(iOpened), sub: 'Clicked the secure link, not yet submitted' },
-                    {href: '/app/prequalification',  label: 'Submitted', value: String(iDone), accent: iDone > 0 ? GREEN : undefined, sub: `${Math.round((iDone / invites.length) * 100)}% completion rate` },
-                    {href: '/app/prequalification', label: 'Still Waiting', value: String(iWaiting), accent: iWaiting > 0 ? AMBER : GREEN, sub: iWaiting === 0 ? 'Every invite came back' : oldestDays > 0 ? `Oldest outstanding ${oldestDays}d — resend below` : 'Resend from the table below' },
+                    { label: 'Forms Sent', value: String(invites.length), sub: tplUsed > 0 ? `${tplUsed} template${tplUsed === 1 ? '' : 's'} in use` : 'Awaiting template link' },
+                    { label: 'Opened', value: String(iOpened), sub: 'Clicked the secure link, not yet submitted' },
+                    { label: 'Submitted', value: String(iDone), accent: iDone > 0 ? GREEN : undefined, sub: `${Math.round((iDone / invites.length) * 100)}% completion rate` },
+                    { label: 'Still Waiting', value: String(iWaiting), accent: iWaiting > 0 ? AMBER : GREEN, sub: iWaiting === 0 ? 'Every invite came back' : oldestDays > 0 ? `Oldest outstanding ${oldestDays}d — resend below` : 'Resend from the table below' },
                   ]} />
                 );
               })()}
@@ -1183,30 +1183,39 @@ function QuestionEditor({ initial, onSave, onClose }: { initial: Question | null
 /* ════════════════════════════════════════════════════════════════════
    INVITE MODAL
    ════════════════════════════════════════════════════════════════════ */
-function InviteModal({ templates, onSend, onClose }: { templates: Template[]; onSend: (email: string, subName: string, templateId: string) => void; onClose: () => void }) {
+function InviteModal({ templates, onSend, onClose }: { templates: Template[]; onSend: (email: string, subName: string, templateId: string) => Promise<void> | void; onClose: () => void }) {
   const [email, setEmail] = useState('');
   const [subName, setSubName] = useState('');
   const [templateId, setTemplateId] = useState(templates[0]?.id || '');
   const [err, setErr] = useState('');
   const [sending, setSending] = useState(false);
+  const titleId = React.useId();
 
-  const handleSend = () => {
+  // Announced as a dialog and closable with Escape (it was an unlabelled
+  // overlay with a ~22px close glyph).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !sending) onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose, sending]);
+
+  // "Sending…" now covers the real request, not a fixed 600ms pause before it.
+  const handleSend = async () => {
     if (!EMAIL_RE.test(email.trim())) { setErr('Enter a valid email address — the secure invite link is delivered there.'); return; }
     if (!subName.trim()) { setErr('Subcontractor name is required.'); return; }
     if (!templateId) { setErr('Select a template.'); return; }
+    setErr('');
     setSending(true);
-    setTimeout(() => {
-      onSend(email.trim(), subName.trim(), templateId);
-      setSending(false);
-    }, 600);
+    try { await onSend(email.trim(), subName.trim(), templateId); }
+    finally { setSending(false); }
   };
 
   return (
     <div style={modalOverlay} onClick={onClose}>
-      <div style={{ ...modalBox, maxWidth: 480 }} onClick={e => e.stopPropagation()}>
+      <div role="dialog" aria-modal="true" aria-labelledby={titleId} style={{ ...modalBox, maxWidth: 480 }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: GOLD }}>Send Prequal Form</h2>
-          <button style={{ background: 'none', border: 'none', color: DIM, fontSize: 22, cursor: 'pointer' }} onClick={onClose}><X size={20} weight="regular" color={DIM} /></button>
+          <h2 id={titleId} style={{ margin: 0, fontSize: 18, fontWeight: 800, color: GOLD }}>Send Prequal Form</h2>
+          <button type="button" aria-label="Close" style={{ background: 'none', border: 'none', color: DIM, fontSize: 22, cursor: 'pointer', minWidth: 44, minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', margin: '-10px -10px -10px 0' }} onClick={onClose}><X size={20} weight="regular" color={DIM} /></button>
         </div>
         {err && <div style={{ background: `color-mix(in srgb, ${RED} 13%, transparent)`, color: RED, padding: '6px 12px', borderRadius: 6, fontSize: 12, marginBottom: 10 }}>{err}</div>}
 
@@ -1244,8 +1253,8 @@ function InviteModal({ templates, onSend, onClose }: { templates: Template[]; on
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-          <button style={btnS(BORDER, TEXT)} onClick={onClose}>Cancel</button>
-          <button style={btnS(BLUE, TEXT)} onClick={handleSend} disabled={sending}>{sending ? 'Sending…' : 'Send Invitation'}</button>
+          <button type="button" style={{ ...btnS(BORDER, TEXT), minHeight: 44 }} onClick={onClose} disabled={sending}>Cancel</button>
+          <button type="button" style={{ ...btnS(BLUE, TEXT), minHeight: 44 }} onClick={() => void handleSend()} disabled={sending}>{sending ? 'Sending…' : 'Send Invitation'}</button>
         </div>
       </div>
     </div>

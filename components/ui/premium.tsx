@@ -355,6 +355,11 @@ export function StatCard({
       onClick={onClick}
       className={interactive ? 'pmHover' : undefined}
       aria-pressed={onClick ? active : undefined}
+      // A card that runs code (filter, tab switch) is a button to keyboards
+      // and screen readers; inside an <a> the link already is.
+      role={onClick && !href ? 'button' : undefined}
+      tabIndex={onClick && !href ? 0 : undefined}
+      onKeyDown={onClick && !href ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } } : undefined}
       style={{
         position: 'relative', overflow: 'hidden',
         background: ring
@@ -695,7 +700,10 @@ export function AutoChip({ label = 'Auto' }: { label?: string }) {
 /** Dense full-width stat band for the top of create screens — kills dead space
  *  by surfacing what the system already knows (sums, counts, prior records). */
 export function StatStrip({ items }: {
-  items: { label: string; value: React.ReactNode; sub?: React.ReactNode; accent?: string; icon?: React.ReactNode; href?: string; onClick?: () => void }[];
+  /** `active` marks a tile acting as the list's current filter: it gets a ring
+   *  and a ✓ in place of the arrow (its `sub` should say how to clear it), so
+   *  the tap visibly did something. No chip: a 150px phone tile has no room. */
+  items: { label: string; value: React.ReactNode; sub?: React.ReactNode; accent?: string; icon?: React.ReactNode; href?: string; onClick?: () => void; active?: boolean }[];
 }) {
   return (
     <div style={{
@@ -706,16 +714,24 @@ export function StatStrip({ items }: {
     }}>
       {items.map((it, i) => {
         const clickable = !!(it.href || it.onClick);
+        const button = !it.href && !!it.onClick;
+        const ring = it.active ? (it.accent || 'var(--c-yellow)') : null;
         // Each tile lit in its own neon (owner 2026-10-03); a caller accent wins.
         const body = (
           <div
             className="pmTile"
             onClick={it.onClick}
-            style={{ position: 'relative', background: 'linear-gradient(180deg, var(--c-raised), var(--c-card))', border: '1px solid var(--border-subtle)', borderRadius: 14, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 18px 40px -24px rgba(0,0,0,0.9)', padding: '13px 16px', minWidth: 0, cursor: clickable ? 'pointer' : 'default', height: '100%', boxSizing: 'border-box' }}
+            // A tile that runs code (a filter) is a real button to keyboards and
+            // screen readers, not a clickable div.
+            role={button ? 'button' : undefined}
+            tabIndex={button ? 0 : undefined}
+            aria-pressed={button && it.active != null ? it.active : undefined}
+            onKeyDown={button ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); it.onClick?.(); } } : undefined}
+            style={{ position: 'relative', background: 'linear-gradient(180deg, var(--c-raised), var(--c-card))', border: `1px solid ${ring || 'var(--border-subtle)'}`, borderRadius: 14, boxShadow: ring ? `0 0 0 1px ${ring}, inset 0 1px 0 rgba(255,255,255,0.05)` : 'inset 0 1px 0 rgba(255,255,255,0.05), 0 18px 40px -24px rgba(0,0,0,0.9)', padding: '13px 16px', minWidth: 0, minHeight: clickable ? 44 : undefined, cursor: clickable ? 'pointer' : 'default', height: '100%', boxSizing: 'border-box' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--c-text-3)', marginBottom: 6, whiteSpace: 'nowrap' }}>
               {it.icon}{it.label}
-              {clickable && <span aria-hidden style={{ marginLeft: 'auto', color: FAINT, fontWeight: 700 }}>→</span>}
+              {clickable && <span aria-hidden style={{ marginLeft: 'auto', color: ring || FAINT, fontWeight: 700 }}>{ring ? '✓' : '→'}</span>}
             </div>
             <div style={{ fontSize: 20, fontWeight: 900, color: it.accent || 'var(--c-text)', letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.value}</div>
             {it.sub && <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.sub}</div>}

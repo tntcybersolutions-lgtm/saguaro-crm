@@ -128,6 +128,8 @@ function Detail({ t, data, onClose, onSaved }: { t: Ticket; data: Payload; onClo
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ kind: 'ok' | 'err' | 'conflict'; text: string } | null>(null);
+  // Which save a tech-conflict "Assign anyway" should repeat with force.
+  const [forceAction, setForceAction] = useState<'schedule' | 'scheduled'>('schedule');
 
   useEffect(() => {
     setTech(t.assigned_tech_id || ''); setStart(toLocalInput(t.scheduled_window_start)); setEnd(toLocalInput(t.scheduled_window_end));
@@ -143,9 +145,27 @@ function Detail({ t, data, onClose, onSaved }: { t: Ticket; data: Payload; onClo
     setMsg({ kind: 'err', text: r.body?.error || 'Could not save.' });
   };
 
-  const saveSchedule = (force = false) => run({ assigned_tech_id: tech || null, scheduled_window_start: fromLocalInput(start), scheduled_window_end: fromLocalInput(end), ...(force ? { force: true } : {}) }, 'Schedule saved.');
+  const saveSchedule = (force = false) => { setForceAction('schedule'); return run({ assigned_tech_id: tech || null, scheduled_window_start: fromLocalInput(start), scheduled_window_end: fromLocalInput(end), ...(force ? { force: true } : {}) }, 'Schedule saved.'); };
+  /* Scheduled needs a visit window — the API answers 400 without one, which is
+     what the button used to run into on a fresh call. It now saves the window
+     shown above (only the parts that changed, so the trail stays clean) with
+     the status in one write, or asks for the window first. */
+  const markScheduled = (force = false) => {
+    const body: Record<string, unknown> = { status: 'scheduled' };
+    if ((tech || null) !== (t.assigned_tech_id || null)) body.assigned_tech_id = tech || null;
+    if (start !== toLocalInput(t.scheduled_window_start)) body.scheduled_window_start = fromLocalInput(start);
+    if (end !== toLocalInput(t.scheduled_window_end)) body.scheduled_window_end = fromLocalInput(end);
+    if (force) body.force = true;
+    setForceAction('scheduled');
+    return run(body, 'Marked Scheduled.');
+  };
   const setStatus = (s: TicketStatus) => {
     if (s === 'waiting' || s === 'completed') { setPending(s); return; }
+    if (s === 'scheduled') {
+      if (!start) { setMsg(null); setPending('scheduled'); return; }
+      void markScheduled();
+      return;
+    }
     run({ status: s }, `Marked ${TICKET_STATUS_LABEL[s]}.`);
   };
   const job = data.projects.find(p => p.id === t.project_id);
@@ -186,6 +206,25 @@ function Detail({ t, data, onClose, onSaved }: { t: Ticket; data: Payload; onClo
           <button key={s} type="button" className="sv-btn sv-ghost" disabled={busy} onClick={() => setStatus(s)}>{TICKET_STATUS_LABEL[s]}</button>
         ))}
       </div>
+      {pending === 'scheduled' && (
+        <div className="sv-inline sv-col" role="group" aria-label="Visit window">
+          <p className="sv-dim" style={{ margin: 0 }}>A scheduled call needs a visit window. Set it here and the call is scheduled in one save.</p>
+          <div className="sv-grid">
+            <label className="sv-field sv-span2"><span>Technician</span>
+              <select value={tech} onChange={e => setTech(e.target.value)}>
+                <option value="">Unassigned</option>
+                {data.techs.map(u => <option key={u.id} value={u.id}>{u.full_name || u.email}</option>)}
+              </select>
+            </label>
+            <label className="sv-field"><span>Window Start *</span><input type="datetime-local" value={start} onChange={e => setStart(e.target.value)} autoFocus /></label>
+            <label className="sv-field"><span>Window End</span><input type="datetime-local" value={end} onChange={e => setEnd(e.target.value)} /></label>
+          </div>
+          <div className="sv-actions">
+            <button type="button" className="sv-btn sv-ghost" onClick={() => setPending(null)}>Cancel</button>
+            <button type="button" className="sv-btn sv-primary" disabled={busy || !start} onClick={() => void markScheduled()}>{busy ? 'Saving…' : 'Schedule Visit'}</button>
+          </div>
+        </div>
+      )}
       {pending === 'waiting' && (
         <div className="sv-inline">
           <label className="sv-field"><span>Waiting on</span>
@@ -208,7 +247,7 @@ function Detail({ t, data, onClose, onSaved }: { t: Ticket; data: Payload; onClo
       {msg && (
         <div className={`sv-msg sv-${msg.kind}`} role={msg.kind === 'ok' ? 'status' : 'alert'}>
           {msg.kind !== 'ok' && <WarningCircle size={15} weight="fill" />} {msg.text}
-          {msg.kind === 'conflict' && <button type="button" className="sv-linkbtn" onClick={() => saveSchedule(true)}>Assign anyway</button>}
+          {msg.kind === 'conflict' && <button type="button" className="sv-linkbtn" onClick={() => (forceAction === 'scheduled' ? markScheduled(true) : saveSchedule(true))}>Assign anyway</button>}
         </div>
       )}
 

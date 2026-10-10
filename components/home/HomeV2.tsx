@@ -797,6 +797,7 @@ a.hv2-hcell:hover { background: rgba(255,255,255,0.025); }
   .hv2-controls > .hv2-seg:first-child { flex: 1 1 100%; }
   .hv2-controls > .hv2-seg:not(:first-child) { flex: 1 1 auto; }
   .hv2-create .hv2-btn { min-height: 44px; }
+  .hv2-menu-item { display: flex; align-items: center; min-height: 44px; }
   .hv2-order-0 { order: 0; } .hv2-order-1 { order: 1; } .hv2-order-3 { order: 3; } .hv2-order-4 { order: 4; } .hv2-order-5 { order: 5; } .hv2-order-6 { order: 6; } .hv2-order-7 { order: 7; }
 }
 `;
