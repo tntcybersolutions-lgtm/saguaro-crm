@@ -19,9 +19,10 @@
  * full each jacket is (read-only).
  *
  * Writes tools/walk/jacket-e2e.md, jacket-e2e.json and tools/walk/jacket-shots/.
- * Exit 1 when any check fails. Needs APP_REVIEW_DEMO_EMAIL / APP_REVIEW_DEMO_PASS
- * and PLAYWRIGHT_DIR. Never prints the sign-in.
+ * Exit 1 when any check fails. Signs in as the demo company (APP_REVIEW_DEMO_*,
+ * else App Store Connect via ASC_*); needs PLAYWRIGHT_DIR. Never prints the sign-in.
  */
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
@@ -34,9 +35,34 @@ const SITE = 'https://www.saguarocontrol.net';
 const RUN = process.env.GITHUB_RUN_ID || String(Date.now());
 const TAG = `ZZ AUDIT ${RUN.slice(-6)}`;
 
-const email = (process.env.APP_REVIEW_DEMO_EMAIL || '').trim();
-const pass = process.env.APP_REVIEW_DEMO_PASS || '';
-if (!email || !pass) { console.error('APP_REVIEW_DEMO_EMAIL / APP_REVIEW_DEMO_PASS not set'); process.exit(2); }
+// The demo sign-in, from where the walk gets it (tools/asc-screens.mjs): the
+// APP_REVIEW_DEMO_* env when set, else App Store Connect's betaAppReviewDetail.
+// Never printed.
+function ascToken() {
+  const b64url = (buf) => Buffer.from(buf).toString('base64url');
+  const key = Buffer.from(process.env.ASC_KEY_P8_BASE64 || '', 'base64').toString('utf8');
+  const head = b64url(JSON.stringify({ alg: 'ES256', kid: process.env.ASC_KEY_ID, typ: 'JWT' }));
+  const now = Math.floor(Date.now() / 1000);
+  const body = b64url(JSON.stringify({ iss: process.env.ASC_ISSUER_ID, iat: now, exp: now + 900, aud: 'appstoreconnect-v1' }));
+  const sig = crypto.sign('sha256', Buffer.from(`${head}.${body}`), { key, dsaEncoding: 'ieee-p1363' });
+  return `${head}.${body}.${b64url(sig)}`;
+}
+async function asc(p) {
+  const res = await fetch(`https://api.appstoreconnect.apple.com${p}`, { headers: { Authorization: `Bearer ${ascToken()}` } });
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(`App Store Connect ${p.split('?')[0]} → ${res.status}`);
+  return j;
+}
+let email = (process.env.APP_REVIEW_DEMO_EMAIL || '').trim();
+let pass = process.env.APP_REVIEW_DEMO_PASS || '';
+if (!email || !pass) {
+  const app = (await asc('/v1/apps?filter[bundleId]=net.saguarocontrol.field')).data?.[0];
+  if (!app) { console.error('no App Store app for net.saguarocontrol.field'); process.exit(2); }
+  const d = (await asc(`/v1/apps/${app.id}/betaAppReviewDetail`)).data?.attributes || {};
+  email = String(d.demoAccountName || '').trim();
+  pass = String(d.demoAccountPassword || '');
+}
+if (!email || !pass) { console.error('no demo sign-in available'); process.exit(2); }
 
 const require = createRequire(path.join(process.env.PLAYWRIGHT_DIR || '/tmp/pw', 'noop.js'));
 const { webkit, chromium, devices } = require('playwright');
