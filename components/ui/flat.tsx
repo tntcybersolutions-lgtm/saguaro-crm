@@ -29,7 +29,7 @@ import Link from 'next/link';
 
 const CSS = `
 :root{--fl-line:var(--border-default);--fl-line-strong:var(--border-strong);--fl-text:var(--text-primary);--fl-text-2:var(--text-secondary);--fl-text-3:var(--text-tertiary);--fl-surface:var(--surface-card);--fl-neutral:var(--c-gray)}
-.sgUi{--fl-line:var(--fl-line);--fl-line-strong:var(--sg-border-strong);--fl-text:var(--fl-text);--fl-text-2:var(--fl-text-2);--fl-text-3:var(--fl-text-3);--fl-surface:var(--sg-surface-solid)}
+.sgUi{--fl-line:var(--sg-border);--fl-line-strong:var(--sg-border-strong);--fl-text:var(--sg-text);--fl-text-2:var(--sg-text-2);--fl-text-3:var(--sg-text-3);--fl-surface:var(--sg-surface-solid)}
 .fl-brief{margin:8px 16px 12px;padding:2px 0 2px 12px;border-left:2px solid var(--brand-primary);font-size:14.5px;line-height:1.45;color:var(--fl-text)}
 .fl-brief b{font-weight:700}
 .fl-brief .fl-brief-act{color:var(--brand-primary);font-weight:650;white-space:nowrap;background:none;border:0;padding:0;font:inherit;cursor:pointer;text-decoration:none}
