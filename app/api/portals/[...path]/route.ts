@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(
   req: NextRequest,
@@ -27,26 +28,26 @@ export async function GET(
       });
     }
 
-    // GET /api/portals/sub/:token
+    /* GET /api/portals/sub/:token: retired. With no login it returned the
+       whole bid_packages row for any invite token (budget_estimate, the GC's
+       notes, leveling notes) plus bid_package_items(*) with the GC's unit
+       prices. No page calls it; the bidder's jacket is /portals/bid/<token>.
+       It answers 410 without reading anything, so it cannot be used to test
+       which tokens exist. */
     if (portalType === 'sub' && token && path.length === 2) {
-      const { data } = await db.from('bid_package_invites').select('*, bid_packages(*, projects(*), bid_package_items(*))').eq('token', token).single();
-      if (!data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-      const invite = data as any;
-      const pkg = invite.bid_packages;
-      return NextResponse.json({
-        package: {
-          ...pkg,
-          projectName: pkg?.projects?.name,
-          items: pkg?.bid_package_items || [],
-          invite: { status: invite.status },
+      return NextResponse.json(
+        {
+          error: 'This bid link is out of date. Open the bid invitation link from your email instead.',
+          portal: `/portals/bid/${encodeURIComponent(token)}`,
         },
-      });
+        { status: 410 },
+      );
     }
 
     // GET /api/portals/w9/:token — handled by specific route file
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError(`portals/${portalType || ''} GET`, e);
   }
 }
 
@@ -87,7 +88,7 @@ export async function POST(
 
     // POST /api/portals/w9/:token — handled by specific route file
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError(`portals/${portalType || ''} POST`, e);
   }
 }
