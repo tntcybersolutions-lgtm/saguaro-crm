@@ -6,6 +6,7 @@ import { humanError } from '@/lib/errors';
 import { SUB_TRADES as TRADES } from '@/lib/construction-intelligence';
 import { Clipboard, NotePencil, Envelope, CheckCircle, XCircle, CaretUp, CaretDown, X, ShieldCheck, Plus, WarningCircle, ChartBar, Clock } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
+import { FlatStyles, Tabs } from '@/components/ui/flat';
 
 /* ─── Palette ─── */
 const GOLD = 'var(--brand-primary)', BG = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)',
@@ -452,6 +453,13 @@ export default function PrequalificationPage() {
 
   /* ─── Detail sub ─── */
   const detailSub = submissions.find(s => s.id === showDetail);
+  // The submission dialog closes with Escape too.
+  useEffect(() => {
+    if (!showDetail) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setShowDetail(null); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [showDetail]);
   const detailTemplate = detailSub ? templates.find(t => t.id === detailSub.template_id) : null;
 
   /* ═══════════════════════════ RENDER ═══════════════════════════ */
@@ -474,11 +482,22 @@ export default function PrequalificationPage() {
         </>}
       />
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: 0, marginBottom: 24, borderBottom: `2px solid ${BORDER}` }}>
-        {(['dashboard', 'submissions', 'templates', 'invites'] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)} style={{ padding: '10px 24px', background: 'none', border: 'none', color: tab === t ? GOLD : DIM, fontWeight: 700, fontSize: 14, cursor: 'pointer', borderBottom: tab === t ? `2px solid ${GOLD}` : '2px solid transparent', marginBottom: -2, textTransform: 'capitalize' }}>{t}</button>
-        ))}
+      {/* Tabs — one segmented row that fits a 390px phone (the old row of
+          24px-padded buttons ran past the edge: "Templates" was cut and
+          "Invites" could not be reached). Switches in place, never scrolls. */}
+      <FlatStyles />
+      <div style={{ margin: '0 -16px 20px', maxWidth: 592 }}>
+        <Tabs
+          label="Prequalification views"
+          value={tab}
+          onChange={setTab}
+          options={[
+            { key: 'dashboard', label: 'Dashboard' },
+            { key: 'submissions', label: 'Submissions', count: submissions.length || undefined },
+            { key: 'templates', label: 'Templates' },
+            { key: 'invites', label: 'Invites' },
+          ]}
+        />
       </div>
 
       {loading ? <Spinner /> : error && submissions.length === 0 ? (
@@ -856,7 +875,7 @@ export default function PrequalificationPage() {
       {/* ════════ DETAIL MODAL ════════ */}
       {showDetail && detailSub && (
         <div style={modalOverlay} onClick={() => setShowDetail(null)}>
-          <div style={{ ...modalBox, maxWidth: 880 }} onClick={e => e.stopPropagation()}>
+          <div role="dialog" aria-modal="true" aria-label={`Submission — ${detailSub.sub_name}`} style={{ ...modalBox, maxWidth: 880 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
               <div>
                 <h2 style={{ fontSize: 22, fontWeight: 800, color: TEXT, margin: 0 }}>{detailSub.sub_name}</h2>
@@ -1003,6 +1022,17 @@ function TemplateBuilderModal({ initial, onSave, onClose }: { initial: Template 
   const [editQIdx, setEditQIdx] = useState<number | null>(null);
   const [err, setErr] = useState('');
 
+  /* A dialog the keyboard can leave. It had no role and ignored Escape, so
+     it stayed open over the page: the live walk found the Dashboard tab under
+     this dialog's description box. While a question editor is open on top,
+     Escape closes that one first. */
+  useEffect(() => {
+    if (showAddQ) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose, showAddQ]);
+
   const addOrUpdateQuestion = (q: Question) => {
     if (editQIdx !== null) {
       setQuestions(prev => prev.map((p, i) => i === editQIdx ? q : p));
@@ -1040,7 +1070,7 @@ function TemplateBuilderModal({ initial, onSave, onClose }: { initial: Template 
 
   return (
     <div style={modalOverlay} onClick={onClose}>
-      <div style={{ ...modalBox, maxWidth: 800 }} onClick={e => e.stopPropagation()}>
+      <div role="dialog" aria-modal="true" aria-label={initial ? 'Edit Template' : 'New Prequal Template'} style={{ ...modalBox, maxWidth: 800 }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: GOLD }}>{initial ? 'Edit Template' : 'New Prequal Template'}</h2>
           <button aria-label="Close" style={{ background: 'none', border: 'none', color: DIM, fontSize: 22, cursor: 'pointer', minWidth: 44, minHeight: 44 }} onClick={onClose}><X size={20} weight="regular" color={DIM} /></button>
@@ -1121,6 +1151,12 @@ function QuestionEditor({ initial, onSave, onClose }: { initial: Question | null
   const [options, setOptions] = useState(initial?.options?.join(', ') || '');
   const [err, setErr] = useState('');
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
   const handleSave = () => {
     if (!label.trim()) { setErr('Question text is required.'); return; }
     if (type === 'multi_choice' && !options.trim()) { setErr('Options are required for multiple choice.'); return; }
@@ -1134,7 +1170,7 @@ function QuestionEditor({ initial, onSave, onClose }: { initial: Question | null
 
   return (
     <div style={modalOverlay} onClick={onClose}>
-      <div style={{ ...modalBox, maxWidth: 500 }} onClick={e => e.stopPropagation()}>
+      <div role="dialog" aria-modal="true" aria-label={initial ? 'Edit Question' : 'Add Question'} style={{ ...modalBox, maxWidth: 500 }} onClick={e => e.stopPropagation()}>
         <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, color: GOLD }}>{initial ? 'Edit Question' : 'Add Question'}</h3>
         {err && <div role="alert" style={{ background: `color-mix(in srgb, ${RED} 13%, transparent)`, color: RED, padding: '6px 12px', borderRadius: 6, fontSize: 12, marginBottom: 10 }}>{err}</div>}
 

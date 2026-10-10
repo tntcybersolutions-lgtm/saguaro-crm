@@ -52,16 +52,14 @@ export function PageWrap({ children }: { children: React.ReactNode }) {
 }
 
 // ─── Card ─────────────────────────────────────────────────────────────────────
+// Flat (2026-10-10): content on the page under a hairline — no tray, no blur,
+// no radius, no shadow.
 export function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
     <div
       style={{
-        background: T.surface2,
-        backdropFilter: T.glassBlur, WebkitBackdropFilter: T.glassBlur,
-        border: `1px solid ${T.borderSubtle}`,
-        borderRadius: 14,
-        boxShadow: T.shadowMd,
-        overflow: 'hidden',
+        borderTop: '1px solid var(--sg-border)',
+        minWidth: 0,
         ...style,
       }}
     >
@@ -74,11 +72,12 @@ export function CardHeader({ children, style }: { children: React.ReactNode; sty
   return (
     <div
       style={{
-        padding: '16px 20px',
-        borderBottom: `1px solid ${T.borderSubtle}`,
+        padding: '10px 0 8px',
+        borderBottom: '1px solid var(--sg-border)',
         display: 'flex',
         alignItems: 'center',
         gap: 12,
+        minHeight: 36,
         ...style,
       }}
     >
@@ -89,7 +88,7 @@ export function CardHeader({ children, style }: { children: React.ReactNode; sty
 
 export function CardBody({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <div style={{ padding: '20px', ...style }}>
+    <div style={{ padding: '12px 0', ...style }}>
       {children}
     </div>
   );
@@ -137,51 +136,18 @@ export function Badge({ label, color = 'muted' }: { label: string; color?: Badge
 }
 
 // ─── StatCard ─────────────────────────────────────────────────────────────────
-export function StatCard({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub?: string }) {
+// One figure, flat (2026-10-10): value 17px bold over an 11px label, a hairline
+// on its left. `icon` is accepted and not drawn — no icon chips.
+export function StatCard({ label, value, sub }: { icon?: React.ReactNode; label: string; value: string; sub?: string }) {
   return (
-    <div
-      style={{
-        background: T.surface2,
-        backdropFilter: T.glassBlur, WebkitBackdropFilter: T.glassBlur,
-        border: `1px solid ${T.borderSubtle}`,
-        borderRadius: 14,
-        boxShadow: T.shadowSm,
-        padding: '16px 18px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 10,
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 28,
-            height: 28,
-            borderRadius: 8,
-            background: T.surface,
-            border: `1px solid ${T.borderSubtle}`,
-            fontSize: 15,
-            color: T.muted,
-            flexShrink: 0,
-          }}
-        >
-          {icon}
+    <div className="pmFig pmFigSolo">
+      <span className="pmFigIn">
+        <span className="pmFigV">{value}</span>
+        <span className="pmFigText">
+          <span className="pmFigL"><span>{label}</span></span>
+          {sub && <span className="pmFigS">{sub}</span>}
         </span>
-        <span
-          style={{
-            fontSize: 12.5,
-            color: T.muted,
-            fontWeight: 600,
-          }}
-        >
-          {label}
-        </span>
-      </div>
-      <div style={{ fontSize: 24, fontWeight: 700, color: T.white, letterSpacing: '-0.02em', lineHeight: 1.1 }}>{value}</div>
-      {sub && <div style={{ fontSize: 12, color: T.faint }}>{sub}</div>}
+      </span>
     </div>
   );
 }
@@ -197,10 +163,10 @@ export function SectionHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
+    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
       <div>
-        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: T.white, letterSpacing: '-0.02em', lineHeight: 1.2 }}>{title}</h2>
-        {sub && <p style={{ margin: '6px 0 0', fontSize: 13, color: T.muted, lineHeight: 1.5 }}>{sub}</p>}
+        <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: 'var(--sg-text)', letterSpacing: '-0.01em', lineHeight: 1.25 }}>{title}</h2>
+        {sub && <p style={{ margin: '3px 0 0', fontSize: 13, color: 'var(--sg-text-2)', lineHeight: 1.45 }}>{sub}</p>}
       </div>
       {action && <div>{action}</div>}
     </div>
@@ -227,8 +193,8 @@ const btnBase: React.CSSProperties = {
 };
 
 const btnVariants: Record<BtnVariant, React.CSSProperties> = {
-  primary: { background: T.gold, color: 'var(--on-brand)', boxShadow: T.shadowSm },
-  ghost: { background: T.elevated, backdropFilter: T.glassBlur, WebkitBackdropFilter: T.glassBlur, color: T.white, border: `1px solid ${T.border}` },
+  primary: { background: T.gold, color: 'var(--on-brand)' },
+  ghost: { background: 'none', color: 'var(--sg-text)', border: '1px solid var(--sg-border-strong)' },
   danger: { background: T.redDim, color: T.red, border: `1px solid rgba(255,59,48,0.50)` },
 };
 

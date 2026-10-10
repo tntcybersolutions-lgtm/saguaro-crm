@@ -112,6 +112,30 @@
   --page-max: 1680px;
   --modal-w: min(1040px, 94vw);
   --modal-w-sm: min(560px, 94vw);
+  /* ── FLAT UI (owner approved 2026-10-10) ─────────────────────────────────
+     The tokens components/ui/flat.tsx and the flat shared parts read. They
+     were only ever defined inside `.sgUi` (components/ui/fx.tsx), so a flat
+     row outside one had no hairline and inherited its colours by accident.
+     They live on :root now and follow the palette above; a white-label
+     surface theme (WhiteLabelProvider) still overrides them on <html>. */
+  --sg-text: var(--c-text);
+  --sg-text-2: var(--c-text-2);
+  --sg-text-3: var(--c-text-3);
+  --sg-border: rgba(255,255,255,0.09);
+  --sg-border-strong: rgba(255,255,255,0.16);
+  --sg-surface-solid: var(--c-card);
+  /* Fixed chrome heights — the page keeps clear of both, and so does every
+     scrollIntoView (scroll-padding below), so nothing lands under a bar. */
+  --sag-topbar-h: calc(56px + env(safe-area-inset-top, 0px));
+  --sag-tabbar-h: 0px;
+}
+
+/* A field the keyboard focuses, a row a page brings into view, a control a
+   test taps: the browser scrolls it clear of the fixed top bar and, on a
+   phone, the tab bar. */
+html {
+  scroll-padding-top: calc(var(--sag-topbar-h) + var(--sag-header-msg-h, 0px) + 8px);
+  scroll-padding-bottom: calc(var(--sag-tabbar-h) + 8px);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
@@ -938,9 +962,11 @@ input:-webkit-autofill:focus {
 .k-crumbs { display: none; }
 .k-crumbs a { color: var(--text-tertiary); }
 .k-crumbs a:hover { color: var(--text-primary); }
-.k-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--sp-3) var(--sp-4); }
-.k-title { font-size: var(--fs-2xl); font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; color: var(--text-primary); }
-.k-sub { margin-top: 4px; font-size: var(--fs-md); color: var(--text-tertiary); max-width: 760px; }
+/* Page header — compact (flat UI): a 20–22px title, one line under it, the
+   actions on the right. No eyebrow, no hero art. */
+.k-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2) var(--sp-4); }
+.sag-app .k-title, .k-title { font-size: 22px; font-weight: 700; letter-spacing: -0.015em; line-height: 1.2; color: var(--sg-text); }
+.k-sub { margin-top: 3px; font-size: 13.5px; line-height: 1.45; color: var(--sg-text-2); max-width: 760px; }
 .k-head-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
 
 /* Buttons — one family, four variants, two sizes */
@@ -959,35 +985,34 @@ input:-webkit-autofill:focus {
 /* A finger needs 44 × 44 (Apple HIG): the dialog close X and every other icon-only kit button. */
 @media (pointer: coarse) { .k-icon-btn { min-width: 44px; min-height: 44px; } }
 
-/* Card */
-.k-card { background: var(--bg-surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-border); box-shadow: var(--glass-highlight); border-radius: var(--radius-md); min-width: 0; }
-.k-card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border-bottom: 1px solid var(--border-subtle); }
-.k-card-title { font-size: var(--fs-md); font-weight: 700; color: var(--text-primary); }
-.k-card-sub { font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 2px; }
-.k-card-body { padding: var(--sp-4); }
+/* Card — flat (2026-10-10): content on the page, not on a tray. The head is a
+   small caps label over a hairline; the body sits at the page's own inset.
+   Raised is reserved for modals and menus (.k-modal, .k-menu-list). */
+.k-card { position: relative; min-width: 0; background: none; border: 0; border-radius: 0; box-shadow: none; }
+.k-card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); min-height: 36px; padding: 10px 0 6px; border-bottom: 1px solid var(--sg-border); }
+.k-card-title { font-size: 11.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--sg-text-3); line-height: 1.3; }
+.k-card-sub { font-size: 12.5px; color: var(--sg-text-3); margin-top: 2px; letter-spacing: normal; text-transform: none; }
+.k-card-body { padding: 12px 0 4px; }
 .k-card-flush { padding: 0; }
 
-/* Stat tiles — one compact KPI tile, laid out in a StatRow */
-.k-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--sp-3); }
-.k-stat { background: var(--bg-surface); /* no blur per tile — five or six stacked blur layers per page cost paint for nothing on a solid surface */ box-shadow: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: var(--sp-3) var(--sp-4); display: flex; flex-direction: column; gap: 2px; min-width: 0; text-decoration: none; color: inherit; }
-a.k-stat:hover, button.k-stat:hover { border-color: var(--border-strong); background: var(--bg-surface-2); }
-button.k-stat { text-align: left; font: inherit; }
-.k-stat-label { font-size: var(--fs-xs); font-weight: 600; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.k-stat-value { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; color: var(--text-primary); font-variant-numeric: tabular-nums; line-height: 1.25; }
-.k-stat-sub { font-size: var(--fs-xs); color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* ── Professional card lift (owner 2026-10-03, revised: no rainbow) ──────────
-   One accent — brand yellow — as a thin top edge; raised charcoal surface;
-   bold white figures; grey labels. Status colors stay for status only. */
-.k-stat { border-top: 2px solid color-mix(in srgb, var(--brand-primary) 80%, transparent); background: linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.03)), var(--bg-surface); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 12px 28px -18px rgba(0,0,0,0.9); }
-.k-stat .k-stat-value { color: var(--text-primary); }
-.k-stat .k-stat-label { color: var(--text-secondary); font-weight: 700; }
-a.k-stat:hover, button.k-stat:hover { border-color: var(--border-strong); border-top-color: var(--brand-primary); background: linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.045)), var(--bg-surface-2); }
-.k-card { border-top: 2px solid color-mix(in srgb, var(--brand-primary) 70%, transparent); background: linear-gradient(180deg, rgba(255,255,255,0.04), transparent 120px), var(--bg-surface); }
-.k-card-head { border-bottom: 1px solid var(--border-subtle); }
+/* Stat figures — flat (2026-10-10): one thin row of numbers with hairline
+   separators, like the number strip on Home. Value 17px bold, label 11px,
+   no icon chips, no tile, no glow. */
+.k-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); border-top: 1px solid var(--sg-border); border-bottom: 1px solid var(--sg-border); overflow: hidden; }
+.k-stat { position: relative; display: flex; flex-direction: column; gap: 1px; min-width: 0; padding: 9px 12px; margin: 0 0 -1px -1px; border-left: 1px solid var(--sg-border); border-bottom: 1px solid var(--sg-border); background: none; border-radius: 0; box-shadow: none; text-decoration: none; color: inherit; }
+a.k-stat:hover, button.k-stat:hover { background: rgba(255,255,255,0.03); }
+button.k-stat { text-align: left; font: inherit; border-top: 0; border-right: 0; cursor: pointer; }
+.k-stat-top { order: 2; display: flex; align-items: center; gap: 6px; min-width: 0; }
+.k-stat-icon { display: none; }
+.k-stat-label { font-size: 11px; font-weight: 500; letter-spacing: normal; text-transform: none; color: var(--sg-text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.k-stat-value { order: 1; font-size: 17px; font-weight: 700; letter-spacing: -0.01em; color: var(--sg-text); font-variant-numeric: tabular-nums; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.k-stat-sub { order: 3; font-size: 11px; color: var(--sg-text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.k-stat[data-tone="good"] .k-stat-value { color: var(--success); }
+.k-stat[data-tone="warn"] .k-stat-value { color: var(--warning); }
+.k-stat[data-tone="bad"] .k-stat-value { color: var(--danger); }
 /* Job palette (owner 2026-10-03): black + neon yellow + neon orange + neon green.
    Card titles and row titles use ONE title color — never white or grey. */
 :root { --title-color: var(--c-text); --accent-orange: #FF8A00; --accent-green: #2CFF7A; --danger-red: #FF3B30; }
-.k-card-title { color: var(--title-color); }
 .k-table td:first-child { color: var(--title-color); font-weight: 700; }
 
 /* Badge */
@@ -1087,15 +1112,18 @@ select.k-select { padding-right: 36px; }
 .k-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 10001; max-width: min(520px, calc(100vw - 32px)); padding: 10px 16px; border-radius: var(--radius-sm); background: var(--bg-elevated); border: 1px solid var(--border-default); box-shadow: var(--shadow-lg); font-size: var(--fs-sm); font-weight: 600; color: var(--success); backdrop-filter: blur(20px) saturate(150%); -webkit-backdrop-filter: blur(20px) saturate(150%); }
 .k-toast[data-tone="bad"] { color: var(--danger); }
 
-/* Empty state */
-.k-empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--sp-2); padding: 48px var(--sp-4); }
-.k-empty-icon { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: rgba(255,255,255,0.05); color: var(--text-tertiary); margin-bottom: 4px; }
-.k-empty-title { font-size: var(--fs-lg); font-weight: 700; color: var(--text-primary); }
-.k-empty-text { font-size: var(--fs-md); color: var(--text-tertiary); max-width: 420px; }
+/* Empty state — flat (2026-10-10): one plain line and one action. */
+.k-empty { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 14px 0; text-align: left; }
+.k-empty-icon { display: none; }
+.k-empty-line { flex: 1 1 260px; min-width: 0; margin: 0; font-size: 14px; line-height: 1.45; color: var(--sg-text-2); }
+.sag-app .k-empty-title, .k-empty-title { font-size: inherit; font-weight: 600; color: var(--sg-text); }
+.k-empty-text { font-size: inherit; color: var(--sg-text-2); }
+.k-empty-act { flex: 0 0 auto; }
+.k-table-empty .k-empty { padding: 4px 0; }
 
 @media (max-width: 720px) {
   .k-page { padding: var(--sp-4) var(--sp-4) var(--sp-6); }
-  .k-title { font-size: var(--fs-xl); }
+  .sag-app .k-title, .k-title { font-size: 20px; }
   .k-form-grid { grid-template-columns: minmax(0, 1fr); }
   .k-search { flex: 1 1 100%; }
   /* Row actions stay reachable while the rest of the row scrolls sideways. */
@@ -1128,13 +1156,6 @@ select.k-select { padding-right: 36px; }
   --shadow-card: 0 1px 0 rgba(255,255,255,0.06) inset, 0 18px 40px -24px rgba(0,0,0,0.9);
 }
 
-/* Warm ambient light at the top of every app screen — the reference's halo. */
-.sag-app {
-  background:
-    radial-gradient(70% 36% at 50% -4%, var(--glow-y) 0%, rgba(255,230,0,0.06) 45%, transparent 72%),
-    radial-gradient(40% 26% at 92% 4%, var(--glow-o) 0%, transparent 70%),
-    #000 !important;
-}
 
 /* Buttons — glossy primary (bright upper highlight, warm dimensional shadow) */
 .k-btn { border-radius: var(--radius-sm); }
@@ -1149,40 +1170,7 @@ select.k-select { padding-right: 36px; }
 .k-btn-secondary:hover { background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.05)), var(--surface-raised); border-color: var(--border-strong); }
 .k-btn-danger { background: linear-gradient(180deg, rgba(255,59,48,0.22), rgba(255,59,48,0.12)); box-shadow: inset 0 1px 0 rgba(255,255,255,0.08); }
 
-/* Cards — dark translucent, crisp edge, restrained warm reflection, real depth */
-.k-card {
-  position: relative; border-top-width: 1px; border-color: var(--border-default);
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 28%, rgba(255,255,255,0) 60%),
-    radial-gradient(120% 60% at 0% 0%, rgba(255,230,0,0.09) 0%, transparent 55%),
-    rgba(14,15,18,0.86);
-  box-shadow: var(--shadow-card), 0 0 0 1px rgba(255,230,0,0.04);
-}
-.k-card::before { content: ''; position: absolute; left: 14px; right: 14px; top: -1px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, transparent, var(--brand-primary) 30%, #FF8A00 70%, transparent); opacity: .9; pointer-events: none; }
-.k-card-head { border-bottom: 1px solid var(--border-subtle); }
-.k-card-title { color: var(--brand-primary); font-weight: 800; letter-spacing: -0.01em; }
-
-/* Stat tiles — compact: colored icon tile, label, prominent figure, context.
-   The accent edge follows the tone the page gives the tile. */
-.k-stat {
-  position: relative; border: 1px solid var(--border-default); border-top-width: 1px; padding: 12px 14px 12px; gap: 3px;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.025) 40%, rgba(255,255,255,0) 100%),
-    rgba(14,15,18,0.9);
-  box-shadow: var(--shadow-card);
-}
-.k-stat::before { content: ''; position: absolute; left: 12px; right: 12px; top: -1px; height: 2px; border-radius: 2px; background: var(--brand-primary); opacity: .85; pointer-events: none; box-shadow: 0 0 12px var(--glow-y); }
-.k-stat[data-tone="good"]::before { background: var(--status-ongoing); box-shadow: 0 0 12px var(--glow-g); }
-.k-stat[data-tone="warn"]::before { background: #FF8A00; box-shadow: 0 0 12px var(--glow-o); }
-.k-stat[data-tone="bad"]::before { background: var(--status-overdue); box-shadow: 0 0 12px var(--glow-r); }
-.k-stat-top { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.k-stat-icon { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; flex-shrink: 0; color: var(--brand-primary); background: rgba(255,230,0,0.16); border: 1px solid rgba(255,230,0,0.45); }
-.k-stat[data-tone="good"] .k-stat-icon { color: var(--status-ongoing); background: rgba(44,255,122,0.16); border-color: rgba(44,255,122,0.5); }
-.k-stat[data-tone="warn"] .k-stat-icon { color: #FF8A00; background: rgba(255,138,0,0.16); border-color: rgba(255,138,0,0.5); }
-.k-stat[data-tone="bad"] .k-stat-icon { color: var(--status-overdue); background: rgba(255,59,48,0.16); border-color: rgba(255,59,48,0.5); }
-.k-stat .k-stat-label { font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--text-tertiary); font-weight: 700; }
-.k-stat .k-stat-value { font-size: 24px; line-height: 1.15; }
-a.k-stat:hover, button.k-stat:hover { border-color: var(--border-strong); background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.04)), rgba(21,23,28,0.95); }
+/* Cards and stat tiles: flat — see the kit block above (2026-10-10). */
 
 /* Tabs — pills; the selected pill is yellow on a dark track (reference chips) */
 .k-tabs { gap: 6px; border-bottom: 0; padding: 4px 0; }
@@ -1208,24 +1196,8 @@ a.k-stat:hover, button.k-stat:hover { border-color: var(--border-strong); backgr
 .k-modal-title { color: var(--brand-primary); }
 .k-modal-foot { background: rgba(255,255,255,0.025); }
 .k-toast { background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)), rgba(14,15,18,0.96); border: 1px solid var(--border-default); border-radius: var(--radius-md); box-shadow: 0 18px 40px -16px rgba(0,0,0,0.9); }
-.k-empty-icon { background: rgba(255,230,0,0.12); border: 1px solid rgba(255,230,0,0.35); color: var(--brand-primary); border-radius: 12px; }
-.k-empty-title { color: var(--brand-primary); }
 
-/* Bottom navigation — floating dark glass bar, luminous yellow active item */
-@media (max-width: 767px) {
-  .sag-tabbar {
-    left: 10px !important; right: 10px !important; bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
-    height: 64px !important; padding: 6px 6px calc(6px) !important; border-radius: 22px !important;
-    background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)), rgba(14,15,18,0.92) !important;
-    border: 1px solid var(--border-default) !important; border-top: 1px solid rgba(255,255,255,0.14) !important;
-    box-shadow: 0 18px 40px -14px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,0.06);
-    --sag-tabbar-h: 84px;
-  }
-  .sag-tab { flex: 1 1 0; min-width: 0; height: 52px !important; margin: 0 1px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: var(--text-tertiary); font-size: 11px; font-weight: 600; background: none; border: none; cursor: pointer; box-shadow: none !important; transition: background .15s ease, color .15s ease; }
-  .sag-tab[data-active="true"] { color: var(--on-brand); font-weight: 800; background: var(--grad-primary); box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 0 10px 24px -8px rgba(255,200,0,0.85) !important; }
-  .sag-tab[data-active="true"] svg { color: var(--on-brand); }
-  :root { --sag-tabbar-h: 84px; }
-}
+/* Bottom navigation: see PHONE FRAME below — flat, solid, flush to the edge. */
 
 /* ── Project shell components (components/project/*) ───────────────────────
    ProjectNav: navigation only. NextAction: guidance once. ProjectHeader: one
@@ -1368,11 +1340,40 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 @media (max-width: 420px) { .pj-metrics { grid-template-columns: minmax(0, 1fr); } }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   TOP BAR — flat (2026-10-10). Solid ground, one hairline. A back link only
+   on a sub-page ("‹ Compliance"), never on a tab's own page; the page title
+   takes the rest of the row; Sage and the account are small round buttons
+   with a 44px hit area.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.sag-topbar { background: var(--bg-base); border-bottom: 1px solid var(--sg-border); }
+.sag-tb-back { display: inline-flex; align-items: center; gap: 1px; flex: 0 1 auto; min-width: 0; max-width: 280px; min-height: 44px; padding: 0 6px; margin-right: 2px; background: none; border: 0; border-radius: 8px; color: var(--brand-primary); font-size: 15px; font-weight: 500; letter-spacing: normal; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.sag-tb-back:hover { background: rgba(255,255,255,0.04); }
+.sag-tb-back:active { transform: none; opacity: .7; }
+.sag-tb-back > svg { flex: none; margin-left: -4px; }
+.sag-tb-back-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sag-tb-title { flex: 1 1 auto; min-width: 0; margin: 0; font-size: 16px; font-weight: 650; letter-spacing: -0.01em; color: var(--sg-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sag-tb-icon { flex: none; width: 44px; height: 44px; display: inline-grid; place-items: center; padding: 0; background: none; border: 0; border-radius: 22px; color: var(--sg-text-2); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.sag-tb-icon:active { transform: none; }
+.sag-tb-icon:hover { border-color: transparent; }
+.sag-tb-dot { width: 32px; height: 32px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; font-weight: 700; line-height: 1; }
+.sag-tb-sage .sag-tb-dot { border: 1px solid var(--brand-primary-35); color: var(--brand-primary); }
+.sag-tb-sage:hover .sag-tb-dot { background: var(--brand-primary-08); }
+.sag-tb-avatar .sag-tb-dot { background: var(--c-raised); border: 1px solid var(--sg-border); color: var(--sg-text); letter-spacing: .02em; }
+.sag-tb-avatar[aria-expanded="true"] .sag-tb-dot, .sag-tb-avatar:hover .sag-tb-dot { border-color: var(--sg-border-strong); }
+@media (min-width: 768px) {
+  .sag-tb-sage { width: auto; padding: 0 4px; }
+  .sag-tb-sage .sag-tb-dot { width: auto; padding: 0 12px; font-size: 13px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    PHONE FRAME — one mobile shell for every screen (handoff §5 "Mobile").
    Everything below is scoped to < 768px. The desktop shell is untouched.
    ═══════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 767px) {
-  :root { --sag-tabbar-h: calc(84px + env(safe-area-inset-bottom, 0px)); /* floating bar: 64px tall + 8px lift + breathing room */ }
+  /* Flat tab bar: 56px of tabs, flush to the bottom edge, plus the home
+     indicator's safe area. Everything that floats (toasts, the Sage panel,
+     sheets) and the page's own bottom padding read this one number. */
+  :root { --sag-tabbar-h: calc(56px + env(safe-area-inset-bottom, 0px)); }
 
   /* Inputs at 16px so iOS never zooms into a field. This beats the compact
      13px rule above because it comes later with the same !important weight. */
@@ -1380,18 +1381,23 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 
   /* The desktop sidebar is gone on phones — the tab bar and the menu replace it. */
   .sidebar-desktop { display: none !important; }
-  .main-content-area { margin-left: 0 !important; padding-bottom: var(--sag-tabbar-h) !important; }
+  /* The last row always clears the tab bar, with room to breathe. */
+  .main-content-area { margin-left: 0 !important; padding-bottom: calc(var(--sag-tabbar-h) + 24px) !important; }
   .topbar-area { left: 0 !important; }
 
-  /* Top bar: menu · back / page title · Sage · account. Search, Help Me, the job
-     picker and notifications live in the menu. The <header> is fixed with an
-     inline left equal to the sidebar width — on a phone there is no sidebar. */
-  .sag-topbar { left: 0 !important; padding-left: 10px !important; padding-right: 10px !important; gap: 6px !important; }
+  /* Top bar: back (sub-pages only) / page title · Sage · account. Search, Help
+     Me, the job picker and notifications live in the More menu. The <header>
+     is fixed with an inline left equal to the sidebar width — on a phone
+     there is no sidebar. */
+  .sag-topbar { left: 0 !important; padding-left: 16px !important; padding-right: 6px !important; gap: 4px !important; }
   .sag-topbar-desktop { display: none !important; }
-  .sag-topbar-back { padding: 0 8px !important; }
-  .sag-topbar-back span { max-width: 72px !important; }
+  .sag-topbar .mobile-hamburger-topbar { display: none !important; }
+  .sag-tb-back { max-width: 46%; margin-left: -6px; }
+  .sag-tb-title { font-size: 17px !important; }
+  .sag-tb-sage-label { display: none; }
   .sag-crumb-prev { display: none !important; }
-  .sag-crumb-last { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  /* A toast sits above the tab bar, not on it. */
+  .k-toast { bottom: calc(var(--sag-tabbar-h) + 12px) !important; }
 
   /* "You Are Here" and the phase strip: one short line, tap for the details. */
   .sag-nsb .sag-nsb-detail { display: none !important; }
@@ -1425,10 +1431,17 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
   .sidebar-mobile-overlay aside { position: static !important; width: 100% !important; height: auto !important; min-height: 0 !important; flex: 1 1 auto; box-shadow: none !important; border-right: 0 !important; overflow: visible !important; }
   .sidebar-mobile-overlay { padding-bottom: var(--sag-tabbar-h); }
 
-  /* Bottom tab bar. */
+  /* Bottom tab bar — flat: solid ground, one hairline on top, flush to the
+     bottom edge (the safe area is padding inside it), the current tab in
+     the brand colour. Not a floating pill. */
   .sag-tabbar { display: flex !important; }
-  /* Room under the last row so it can scroll above the tab bar and the chat bubble. */
-  .k-page { padding-bottom: calc(var(--sp-8) + 72px); }
+  .sag-tab { flex: 1 1 0; min-width: 0; height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 0 2px; text-decoration: none; color: var(--sg-text-3); font-size: 10.5px; font-weight: 600; line-height: 1.1; background: none; border: 0; border-radius: 0; box-shadow: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .sag-tab:active { transform: none; background: rgba(255,255,255,0.04); }
+  .sag-tab[data-active="true"] { color: var(--brand-primary); font-weight: 700; }
+  .sag-tab-label { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; white-space: nowrap; }
+  .sag-tab-badge { display: inline-block; min-width: 17px; height: 17px; padding: 0 5px; border-radius: 9px; background: var(--danger); color: #FFFFFF; font-size: 10.5px; font-weight: 700; line-height: 17px; text-align: center; font-variant-numeric: tabular-nums; }
+  /* The page's own bottom room: the frame already clears the tab bar. */
+  .k-page { padding-bottom: var(--sp-6); }
   .k-crumbs a, .k-crumbs span { max-width: 48vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   /* The chat launcher steps aside while the page scrolls (see SaguaroChatWidget). */
   /* No floating bubble on phones at all — the top-bar Sage button opens the chat. */
@@ -1491,60 +1504,33 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
    soft top highlight and a real shadow, over a black page with a warm glow.
    This one block is the last word for every page — nothing below it. */
 
-/* Page */
+/* Page — flat (2026-10-10): one solid ground, no halo behind the text. */
 .sag-app {
-  background:
-    radial-gradient(900px 420px at 85% -10%, rgba(255,230,0,0.09), transparent 60%),
-    radial-gradient(700px 500px at 0% 110%, rgba(255,138,0,0.06), transparent 60%),
-    var(--c-bg) !important;
+  background: var(--c-bg) !important;
 }
 
-/* Type */
+/* Type — page titles read in the body colour, not as a yellow billboard;
+   yellow is kept for the one primary action and the current tab. */
 .sag-app h1,
 .sag-app .k-title {
-  color: var(--c-yellow);
-  -webkit-text-fill-color: var(--c-yellow); /* beats an inline colour on page titles */
-  font-weight: 900;
-  letter-spacing: -0.025em;
+  color: var(--c-text);
+  -webkit-text-fill-color: var(--c-text); /* beats an inline colour on page titles */
+  font-weight: 700;
+  letter-spacing: -0.015em;
 }
 .sag-app h2 { color: var(--c-text); font-weight: 800; }
 .sag-app :is(button, .k-btn, [data-tone="brand"]) :is(h1, h2),
 .sag-app :is(button, .k-btn) .k-title { -webkit-text-fill-color: currentColor; color: inherit; }
 .sag-app .k-eyebrow { font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: var(--c-orange); }
 
-/* Cards — layered, soft top light, real shadow, no yellow stripe */
-.sag-app .k-card {
-  background: linear-gradient(180deg, var(--c-raised), var(--c-card));
-  border: 1px solid var(--border-subtle);
-  border-radius: 18px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 24px 48px -28px rgba(0,0,0,0.9);
-}
-.sag-app .k-card::before { display: none; }
-.sag-app .k-card-head { border-bottom: 1px solid var(--border-subtle); }
-.sag-app .k-card-title { color: var(--c-text); font-weight: 800; }
-.sag-app .k-card-sub { color: var(--c-text-3); }
-
-/* KPI tiles */
-.sag-app .k-stat {
-  background: linear-gradient(180deg, var(--c-raised), var(--c-card));
-  border: 1px solid var(--border-subtle);
-  border-radius: 16px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 20px 40px -26px rgba(0,0,0,0.9);
-}
-.sag-app .k-stat::before { display: none; }
-.sag-app .k-stat .k-stat-label { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--c-text-3); }
-.sag-app .k-stat .k-stat-value { color: var(--c-text); font-weight: 900; letter-spacing: -0.02em; }
-.sag-app .k-stat[data-tone="good"] .k-stat-value { color: var(--c-green); }
-.sag-app .k-stat[data-tone="warn"] .k-stat-value { color: var(--c-orange); }
-.sag-app .k-stat[data-tone="bad"] .k-stat-value { color: var(--c-red); }
-.sag-app .k-stat .k-stat-sub { color: var(--c-text-2); }
-.sag-app a.k-stat:hover, .sag-app button.k-stat:hover { border-color: rgba(255,230,0,0.28); }
+/* Cards and KPI tiles — flat (2026-10-10). The kit block near the top of the
+   file is the whole definition; nothing here raises them again. */
 
 /* Segmented tabs — one track, the selected segment raised with a yellow ring */
 .sag-app .k-tabs { display: inline-flex; max-width: 100%; gap: 2px; padding: 4px; border: 1px solid var(--border-subtle); border-radius: 12px; background: rgba(255,255,255,0.04); }
 .sag-app .k-tab { border: 0; border-radius: 9px; background: transparent; color: var(--c-text-2); font-weight: 700; min-height: 32px; padding: 0 14px; box-shadow: none; }
 .sag-app .k-tab:hover { color: var(--c-text); background: rgba(255,255,255,0.04); }
-.sag-app .k-tab[aria-selected="true"] { background: var(--c-raised); color: var(--c-text); box-shadow: 0 0 0 1px rgba(255,230,0,0.35), 0 4px 12px -4px rgba(0,0,0,0.8); }
+.sag-app .k-tab[aria-selected="true"] { background: var(--sg-border); color: var(--sg-text); box-shadow: none; } /* flat: the selected segment is a step lighter, no ring */
 .sag-app .k-tab[aria-selected="true"] .k-tab-count { background: rgba(255,230,0,0.14); color: var(--c-yellow); }
 .sag-app .hv2-seg { background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 4px; }
 .sag-app .hv2-seg button { color: var(--c-text-2); border-radius: 9px; font-weight: 700; }
@@ -1559,10 +1545,12 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 
 /* Buttons — ONE yellow primary; everything else steps back */
 .sag-app .k-btn-primary {
-  background: linear-gradient(180deg, var(--c-yellow-hi), var(--c-yellow) 55%, var(--c-yellow-hover));
+  /* flat (2026-10-10): one solid brand fill, no gloss, no glow */
+  background: var(--c-yellow);
   color: var(--c-on-brand); border: 0; text-shadow: none;
-  box-shadow: 0 10px 24px -10px rgba(255,230,0,0.7), inset 0 1px 0 rgba(255,255,255,0.6);
+  box-shadow: none;
 }
+.sag-app .k-btn-primary:hover { background: var(--c-yellow-hover); box-shadow: none; }
 .sag-app .k-btn-secondary { background: rgba(255,255,255,0.03); border: 1px solid var(--border-default); color: var(--c-text); box-shadow: none; }
 .sag-app .k-btn-secondary:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,230,0,0.3); color: var(--c-text); }
 .sag-app .k-btn-ghost { color: var(--c-text-2); }
@@ -1596,13 +1584,8 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 .sg-nav-head { font-size: 10.5px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--c-text-3); }
 .sg-brand-name { color: var(--c-text); }
 
-/* Phone tab bar — the current tab is a raised segment with a yellow ring,
-   not a solid yellow slab; the screen's own primary keeps the solid fill. */
-@media (max-width: 767px) {
-  .sag-app .sag-tab { color: var(--c-text-2); }
-  .sag-app .sag-tab[data-active="true"] { color: var(--c-yellow); background: var(--c-raised); box-shadow: 0 0 0 1px rgba(255,230,0,0.35), 0 4px 12px -4px rgba(0,0,0,0.8) !important; }
-  .sag-app .sag-tab[data-active="true"] svg { color: var(--c-yellow); }
-}
+/* Phone tab bar: flat — see PHONE FRAME above. The current tab is the brand
+   colour on the bar itself; no raised segment, no ring. */
 
 /* Dropdowns: the open list is ours, not the operating system's. Chrome and
    Edge 135+ (customizable <select>) draw this panel — no Windows-blue
@@ -1705,3 +1688,74 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
     transform: translateX(-16px);
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FLAT SHARED PARTS (owner approved 2026-10-10) — components/ui/premium.tsx,
+   SectionCard, StatCard, ModuleHero, PremiumEmpty. Content on the page in
+   rows and hairlines: no trays, no gradients, no glow, no hover lift, no
+   billboard numbers. Here rather than in PREMIUM_FX so the parts look the
+   same with or without a <PremiumSurface> around them.
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* Page padding: the caller's on desktop, a 16px gutter on a phone. */
+.pmPage{padding:var(--pm-pad,20px 24px 48px)}
+@media (max-width:767px){.pmPage{padding:14px 16px 24px!important}}
+/* Compact page header (ModuleHero). */
+.pmHead{display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;margin-bottom:16px;min-width:0}
+.pmHead[data-align=center]{flex-direction:column;text-align:center}
+.pmHeadText{min-width:0;flex:1 1 320px}
+.pmHeadSub{margin:3px 0 0;font-size:13.5px;line-height:1.45;color:var(--sg-text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:760px}
+.pmHeadAux{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px}
+.pmHeadActs{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end;flex:0 1 auto;min-width:0}
+@media (max-width:767px){
+  .pmHeadText{flex-basis:100%}
+  .pmHeadSub{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  /* One row of controls under the title, at most: it scrolls sideways
+     inside itself rather than stacking three rows of buttons. */
+  .pmHeadActs{flex:1 1 100%;flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+  .pmHeadActs::-webkit-scrollbar{display:none}
+  .pmHeadActs>*{flex:0 0 auto}
+}
+/* Flat section: a small caps label over a hairline, then the content. */
+.pmSec{position:relative;min-width:0}
+.pmSecHead{display:flex;align-items:center;gap:10px;min-height:34px;padding:8px 0 6px;margin-bottom:10px;border-bottom:1px solid var(--sg-border)}
+.pmSecTitle{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sg-text-3);line-height:1.3}
+.pmSecSub{font-size:12.5px;color:var(--sg-text-3);margin-top:2px;line-height:1.4}
+.pmSecTray{background:var(--c-card);border:1px solid var(--sg-border);border-radius:12px}
+.pmSecTray>.pmSecHead{padding:10px 14px 8px;margin-bottom:0}
+/* Number strip (StatStrip / StatCard): figures in one thin row, hairlines between. */
+.pmStrip{border-top:1px solid var(--sg-border);border-bottom:1px solid var(--sg-border);overflow:hidden;margin-bottom:16px;min-width:0}
+.pmStripGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));margin:0 0 -1px -1px}
+.pmFig{position:relative;display:flex;flex-direction:column;gap:1px;min-width:0;min-height:44px;padding:9px 12px;border-left:1px solid var(--sg-border);border-bottom:1px solid var(--sg-border);background:none;color:inherit;text-decoration:none;text-align:left;font:inherit;box-sizing:border-box}
+button.pmFig,a.pmFig,div.pmFig[role=button]{cursor:pointer}
+button.pmFig{border-top:0;border-right:0;border-radius:0;width:100%}
+a.pmFig:hover,button.pmFig:hover,div.pmFig[role=button]:hover{background:rgba(255,255,255,0.03)}
+.pmFig[aria-pressed=true]{box-shadow:inset 0 -2px 0 var(--brand-primary)}
+.pmFigV{font-size:17px;font-weight:700;line-height:1.3;letter-spacing:-0.01em;color:var(--sg-text);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pmFigL{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:500;color:var(--sg-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pmFigL>span:first-child{overflow:hidden;text-overflow:ellipsis}
+.pmFigS{font-size:11px;color:var(--sg-text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pmFigGo{margin-left:auto;flex:none;color:var(--sg-text-3);font-size:12px}
+.pmFig[aria-pressed=true] .pmFigGo{color:var(--brand-primary)}
+/* A StatCard on its own (callers lay several out in their own grid). Narrow
+   (a strip of 2–4 across): value over label with a hairline on the left.
+   Full width (the caller's grid fell to one column on a phone): a list row —
+   label on the left, value on the right, a hairline under it. */
+.pmFig.pmFigSolo{display:block;padding:0;border:0;height:100%;container-type:inline-size}
+.pmFigIn{display:flex;flex-direction:column;gap:1px;min-width:0;height:100%;min-height:44px;padding:9px 12px;border-left:1px solid var(--sg-border);box-sizing:border-box}
+.pmFigText{display:contents}
+@container (min-width:320px){
+  .pmFigIn{flex-direction:row;align-items:center;gap:12px;padding:10px 0;border-left:0;border-bottom:1px solid var(--sg-border)}
+  .pmFigIn>.pmFigV{order:2;flex:none;max-width:55%}
+  .pmFigText{display:flex;flex-direction:column;gap:2px;order:1;flex:1;min-width:0}
+  .pmFigIn .pmFigL{font-size:13.5px;color:var(--sg-text)}
+  .pmFigIn .pmFigS{font-size:12px}
+}
+/* Empty state: one plain line and one action. */
+.pmEmpty{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:12px 0;min-width:0}
+.pmEmptyLine{flex:1 1 260px;min-width:0;margin:0;font-size:14px;line-height:1.45;color:var(--sg-text-2)}
+.pmEmptyLine b{font-weight:600;color:var(--sg-text)}
+.pmEmpty[data-tone=error] .pmEmptyLine b{color:var(--danger)}
+.pmEmptyActs{display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex:0 0 auto}
+
+.sag-app .pmHead h1, .pmHead h1 { margin: 0; font-size: 22px; font-weight: 700; line-height: 1.2; letter-spacing: -0.015em; color: var(--sg-text); -webkit-text-fill-color: var(--sg-text); }
+@media (max-width: 767px) { .sag-app .pmHead h1, .pmHead h1 { font-size: 20px; } }

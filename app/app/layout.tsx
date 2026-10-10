@@ -69,6 +69,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [userInitials, setUserInitials] = useState('?');
+  const [companyName, setCompanyName] = useState<string | null>(null);
+  const [myWorkCount, setMyWorkCount] = useState<number | null>(null);
   const [sageUserId, setSageUserId] = useState<string | null>(null);
   const [sageProjects, setSageProjects] = useState<Array<{ id: string; name: string }>>([]);
   const [showProjectSwitcher, setShowProjectSwitcher] = useState(false);
@@ -94,6 +96,28 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setMobileSidebarOpen(false);
   }, [pathname]);
+
+  /* My Work badge on the phone tab bar: GET /api/my-work/count → { count }.
+     Asked on every route change and every two minutes — not on every render —
+     and only while the tab bar is on screen. A missing route, a failed call or
+     an odd answer shows no badge, never an error. */
+  const loadMyWorkCount = React.useCallback(async () => {
+    if (typeof window === 'undefined' || !window.matchMedia('(max-width: 767px)').matches) return;
+    try {
+      const r = await fetch('/api/my-work/count', { cache: 'no-store' });
+      if (!r.ok) { setMyWorkCount(null); return; }
+      const d = await r.json().catch(() => null);
+      const n = Number(d?.count);
+      setMyWorkCount(Number.isFinite(n) && n > 0 ? Math.floor(n) : null);
+    } catch {
+      setMyWorkCount(null); // offline or the route is not deployed yet — no badge
+    }
+  }, []);
+  useEffect(() => { void loadMyWorkCount(); }, [pathname, loadMyWorkCount]);
+  useEffect(() => {
+    const id = window.setInterval(() => { void loadMyWorkCount(); }, 120_000);
+    return () => window.clearInterval(id);
+  }, [loadMyWorkCount]);
 
   // iPhone app: tapping an alert opens the page it's about. No-op in a browser
   // (push-sw.js handles taps there).
@@ -124,6 +148,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       if (cached) {
         const c = JSON.parse(cached);
         if (c.initials) setUserInitials(c.initials);
+        if (typeof c.company === 'string' && c.company) setCompanyName(c.company);
         if (c.userId) setSageUserId(c.userId);
         if (Array.isArray(c.projects)) setSageProjects(c.projects);
       }
@@ -161,7 +186,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       if (me) void recordCompanyTimeZoneOnce();
 
       let initials = '';
+      const company = me && typeof me.company === 'string' && me.company.trim() ? me.company.trim() : null;
       if (me) {
+        setCompanyName(company);
         if (me.id) setSageUserId(me.id);
         if (me.name) {
           const parts = me.name.trim().split(/\s+/);
@@ -186,6 +213,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       try {
         sessionStorage.setItem('sag_shell_cache', JSON.stringify({
           initials: initials || undefined,
+          company: company || undefined,
           userId: me && me.id ? me.id : undefined,
           projects: projList ? projList.map(p => ({ id: p.id, name: p.name })) : undefined,
         }));
@@ -278,7 +306,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         @media (max-width: 768px) {
           .sidebar-desktop { display: none !important; }
           .sidebar-mobile-overlay { display: block !important; }
-          .mobile-hamburger-topbar { display: flex !important; }
           .main-content-area { margin-left: 0 !important; }
           .topbar-area { left: 0 !important; }
         }
@@ -360,6 +387,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           onOpenCommandPalette={() => window.dispatchEvent(new Event('open-command-palette'))}
           onLogout={handleLogout}
           userInitials={userInitials}
+          companyName={companyName}
         />
         {/* Anything the GC must see lands here — one strip, same place, every
             screen. It sits inside the fixed header and publishes its height so
@@ -520,28 +548,42 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </ErrorBoundary>
       </main>
 
-      {/* ── Phone tab bar: Home · My Work · Projects · Time · More ──────────
-          Hidden on desktop by its own display:none; the phone-frame block in
-          globals.css shows it under 768px and reserves its height as
-          --sag-tabbar-h so content, the chat bubble and the Sage panel clear it. */}
-      <nav className="sag-tabbar" aria-label="Primary" style={{ display: 'none', position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: z.topbar, height: 'var(--sag-tabbar-h, 56px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)', boxSizing: 'border-box', background: 'var(--bg-solid)', borderTop: '1px solid var(--border-default)', backdropFilter: 'blur(16px) saturate(140%)', WebkitBackdropFilter: 'blur(16px) saturate(140%)' }}>
+      {/* ── Phone tab bar: Home · My Work · Jobs · Time · More ──────────────
+          Flat: a solid bar with one hairline on top, flush to the bottom edge
+          (the home-indicator safe area is padding inside it), the current tab
+          in the brand colour. Hidden on desktop by its own display:none; the
+          phone-frame block in globals.css shows it under 768px and reserves
+          its height as --sag-tabbar-h so content and every floating sheet
+          clear it. "Jobs" is only the label — the route stays /app/projects. */}
+      <nav className="sag-tabbar" aria-label="Primary" style={{ display: 'none', position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: z.topbar, height: 'var(--sag-tabbar-h, 56px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)', boxSizing: 'border-box', background: 'var(--bg-base)', borderTop: '1px solid var(--sg-border)' }}>
         {([
           { label: 'Home', href: '/app', icon: House, active: pathname === '/app' || pathname === '/app/' },
           { label: 'My Work', href: '/app/my-work', icon: Briefcase, active: pathname.startsWith('/app/my-work') },
-          { label: 'Projects', href: '/app/projects', icon: FolderSimple, active: pathname.startsWith('/app/projects') },
+          { label: 'Jobs', href: '/app/projects', icon: FolderSimple, active: pathname.startsWith('/app/projects') },
           { label: 'Time', href: '/app/time', icon: Clock, active: pathname.startsWith('/app/time') },
         ] as const).map((t) => {
           const Icon = t.icon;
+          const badge = t.href === '/app/my-work' && myWorkCount ? (myWorkCount > 99 ? '99+' : String(myWorkCount)) : null;
           return (
-            <Link key={t.href} href={t.href} className="sag-tab" data-active={t.active ? 'true' : undefined} aria-current={t.active ? 'page' : undefined} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, height: 56, textDecoration: 'none', color: t.active ? 'var(--brand-primary)' : 'var(--c-text-2)', fontSize: 11, fontWeight: t.active ? 800 : 600 }}>
-              <Icon size={22} weight={t.active ? 'fill' : 'regular'} />
-              <span>{t.label}</span>
+            <Link
+              key={t.href}
+              href={t.href}
+              className="sag-tab"
+              data-active={t.active ? 'true' : undefined}
+              aria-current={t.active ? 'page' : undefined}
+              aria-label={badge ? `${t.label}, ${badge} to do` : undefined}
+            >
+              <Icon size={22} weight={t.active ? 'fill' : 'regular'} aria-hidden />
+              <span className="sag-tab-label">
+                {t.label}
+                {badge && <span className="sag-tab-badge" aria-hidden>{badge}</span>}
+              </span>
             </Link>
           );
         })}
-        <button type="button" className="sag-tab" data-active={mobileSidebarOpen ? 'true' : undefined} onClick={() => setMobileSidebarOpen(v => !v)} aria-expanded={mobileSidebarOpen} aria-label="More" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, height: 56, background: 'none', border: 'none', color: mobileSidebarOpen ? 'var(--brand-primary)' : 'var(--c-text-2)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
-          <DotsThreeOutline size={22} weight={mobileSidebarOpen ? 'fill' : 'regular'} />
-          <span>More</span>
+        <button type="button" className="sag-tab" data-active={mobileSidebarOpen ? 'true' : undefined} onClick={() => setMobileSidebarOpen(v => !v)} aria-expanded={mobileSidebarOpen} aria-label="More">
+          <DotsThreeOutline size={22} weight={mobileSidebarOpen ? 'fill' : 'regular'} aria-hidden />
+          <span className="sag-tab-label">More</span>
         </button>
       </nav>
 
