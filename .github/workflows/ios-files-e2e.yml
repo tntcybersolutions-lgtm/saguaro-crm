@@ -1,0 +1,68 @@
+name: iPhone files e2e
+
+# Export / print / file buttons in the iPhone app, on the LIVE site as Chad's
+# real company, with the native bridge stood in (tools/e2e-ios-files.mjs).
+# Reads only. Report: tools/walk/ios-files.md. Runs when tools/ios-files-run.txt
+# changes on this branch (write the commit being checked into it).
+
+on:
+  push:
+    branches: [ops/testflight]
+    paths: ['tools/ios-files-run.txt']
+
+permissions:
+  contents: write
+  statuses: read
+
+concurrency:
+  group: ios-files-e2e
+  cancel-in-progress: false
+
+jobs:
+  files:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PLAYWRIGHT_DIR: /tmp/pw
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Wait for the newest main to be live
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          api="https://api.github.com/repos/${{ github.repository }}"
+          for i in $(seq 1 80); do
+            st=$(curl -fsS -H "Authorization: Bearer $GH_TOKEN" "$api/commits/main/status" \
+              | node -e 'let s="";process.stdin.on("data",c=>s+=c).on("end",()=>{const j=JSON.parse(s);const v=(j.statuses||[]).find(x=>x.context==="Vercel");console.log(j.sha.slice(0,8)+" "+(v?v.state:"none"))})')
+            echo "main $st"
+            case "$st" in *" success") sleep 30; exit 0;; *" failure"|*" error") echo "main failed to deploy"; exit 1;; esac
+            sleep 15
+          done
+          echo "main not live after 20 minutes"; exit 1
+      - name: Install Playwright
+        run: |
+          mkdir -p /tmp/pw && cd /tmp/pw && npm init -y > /dev/null
+          npm i --no-audit --no-fund playwright@1.49.1 bcryptjs@2.4.3
+          npx playwright install --with-deps chromium webkit
+      - name: Real-company login
+        env:
+          E2E_SECRET_EMAIL: ${{ secrets.E2E_EMAIL }}
+          E2E_SECRET_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+          BCRYPT_DIR: /tmp/pw
+        run: node tools/e2e-login.mjs
+      - name: Files out of the iPhone app
+        run: node tools/e2e-ios-files.mjs
+      - name: Commit the report to this branch
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          [ -f tools/walk/ios-files.md ] || exit 0
+          git add tools/walk/ios-files.md tools/walk/ios-files-shots
+          git commit -m "iPhone files e2e by run ${{ github.run_id }}" || exit 0
+          git pull --rebase -X theirs origin ${{ github.ref_name }}
+          git push origin HEAD:${{ github.ref_name }}
