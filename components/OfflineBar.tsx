@@ -8,6 +8,7 @@
 import React, { useEffect, useState, useSyncExternalStore } from 'react';
 import { CloudSlash, CloudCheck, ArrowsClockwise } from '@phosphor-icons/react';
 import { getNetState, getServerNetState, subscribeNet, startOfflineWatch } from '@/lib/offline/outbox';
+import { startAppWorker } from '@/lib/offline/worker';
 
 const CSS = `
 .offb { position: fixed; left: 50%; transform: translateX(-50%); top: var(--offb-top, 12px); z-index: 10050;
@@ -28,7 +29,7 @@ export default function OfflineBar({ top }: { top?: string }) {
   const net = useSyncExternalStore(subscribeNet, getNetState, getServerNetState);
   const [showBack, setShowBack] = useState(false);
 
-  useEffect(() => startOfflineWatch(), []);
+  useEffect(() => { void startAppWorker(); return startOfflineWatch(); }, []);
 
   // "Back online" stays up while the waiting items upload, then 4 more seconds.
   useEffect(() => {
