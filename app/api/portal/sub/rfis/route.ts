@@ -3,6 +3,7 @@ import { createServerClient } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { notOnRoster, subRecordScope } from '@/lib/sub-portal-scope';
 import { rfiQuestionWithRefs } from '@/lib/sub-portal-view';
+import { createNotification } from '@/lib/notifications';
 
 async function authenticateSubPortal(req: NextRequest) {
   const token =
@@ -131,6 +132,15 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) throw error;
+
+    // The GC hears about it — the bell opens the inbox's RFIs, where it can be answered.
+    await createNotification(
+      scope.tenantId, null, 'sub_rfi',
+      `RFI from ${session.sub_company || 'a sub'}`,
+      String(subject).trim().slice(0, 240),
+      '/app/sub-portal?tab=inbox&view=rfis',
+      scope.projectId,
+    );
 
     return NextResponse.json(
       { rfi, message: `RFI ${rfiNumber} created successfully` },

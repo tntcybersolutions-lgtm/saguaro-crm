@@ -261,6 +261,20 @@ export const MODULES: Record<string, ModuleDef> = {
     },
   },
 
+  /* A sub's invoice filed from the sub portal (portal_sub_pay_apps), as the GC moves it along. */
+  sub_invoices: {
+    noun: 'sub invoice',
+    stages: ['Submitted', 'Under review', 'Approved', 'Paid'],
+    staleAfterDays: 5,
+    statuses: {
+      submitted:    { label: 'Submitted',    tone: 'waiting', stage: 0, action: 'Waiting on your review' },
+      under_review: { label: 'Under review', tone: 'waiting', stage: 1, action: 'Check the lines, then approve or send it back' },
+      approved:     { label: 'Approved',     tone: 'good',    stage: 2, action: 'Approved — the sub can sign a conditional waiver; pay it, then mark it paid' },
+      paid:         { label: 'Paid',         tone: 'done',    stage: 3 },
+      rejected:     { label: 'Sent back',    tone: 'bad',               action: 'Sent back to the sub with your reason' },
+    },
+  },
+
   change_orders: {
     noun: 'change order',
     stages: ['Draft', 'Priced', 'Submitted', 'Review', 'Approved'],
