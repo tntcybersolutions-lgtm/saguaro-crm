@@ -2454,15 +2454,18 @@ export default function RadioDispatchPage() {
         const sentIds: string[] = Array.isArray(j?.messages)
           ? j.messages.map((m: { channel_id?: string }) => String(m?.channel_id || '')).filter(Boolean)
           : [];
-        const landed = sentIds.length ? sentIds : ids;
-        setBcSent(landed.map((id) => channelName(id)));
+        // Only the channels the server says it sent to — never assume.
+        setBcSent(sentIds.map((id) => channelName(id)));
         setBcText(''); setBcSel(new Set());
-        const skipped = ids.filter((id) => sentIds.length && !sentIds.includes(id));
-        if (skipped.length) pushToast(`Skipped ${skipped.map((id) => channelName(id)).join(', ')} — you are not a member`, 'err');
+        const skipped: { channelId: string; reason: string }[] = Array.isArray(j?.skipped) ? j.skipped : [];
+        const notMember = skipped.filter((x) => x.reason === 'not_member').map((x) => channelName(x.channelId));
+        const failed = skipped.filter((x) => x.reason !== 'not_member').map((x) => channelName(x.channelId));
+        if (notMember.length) pushToast(`Skipped ${notMember.join(', ')} — you are not a member`, 'err');
+        if (failed.length) pushToast(`Didn't reach ${failed.join(', ')} — try those again`, 'err');
         await mutateMessages();
         void mutateChannels();
       } else {
-        pushToast(`Broadcast failed (${r.status})`, 'err');
+        pushToast(j?.error || `Broadcast failed (${r.status})`, 'err');
       }
     } catch { pushToast('Broadcast failed — check your connection', 'err'); }
     setBcBusy(false);
