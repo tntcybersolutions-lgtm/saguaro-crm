@@ -478,9 +478,10 @@ async function upload() {
 
 
 // ── walk ─────────────────────────────────────────────────────────────────────
-// Tap every control on every screen of the iPhone app (WebKit, iPhone profile,
-// demo sign-in) and report what does nothing, what errors, and what 404s.
-// Never taps anything that writes data or leaves the account.
+// Phase 1: tap every control on every screen of the iPhone app (WebKit, iPhone
+// profile) and report what does nothing, what errors, and what 404s. It reads a
+// job with real data, so it lists — never taps — anything that writes. Phase 2
+// (writeWalk) does every one of those writes on ZZ AUDIT test records.
 const WALK_TOP = ['/app', '/app/my-work', '/app/projects', '/app/time', '/app/notifications', '/app/documents', '/app/daily-logs',
   '/app/schedule', '/app/compliance', '/app/takeoff', '/app/reports', '/app/people', '/app/subs', '/app/customers', '/app/leads',
   '/app/sales', '/app/bids', '/app/billing', '/app/billing/payapp', '/app/billing/cost-control', '/app/invoicing', '/app/catalog',
@@ -541,9 +542,12 @@ async function walk() {
   await p0.goto(`${SITE}/app`, { waitUntil: 'networkidle' });
   let jobs = [];
   try { const d = await (await p0.request.get(`${SITE}/api/projects?limit=200&fields=id,name`)).json(); jobs = d.projects || d.data || (Array.isArray(d) ? d : []); } catch (e) { console.log(`walk: jobs list failed — ${e.message}`); }
-  const project = (jobs.find((j) => /ZZ AUDIT/i.test(j.name || '')) || jobs.find((j) => (j.name || '').includes(PROJECT_NAME)) || jobs[0] || {}).id || null;
+  const project = (jobs.find((j) => (j.name || '').includes(PROJECT_NAME)) || jobs.find((j) => !/ZZ AUDIT/i.test(j.name || '')) || jobs[0] || {}).id || null;
   console.log(`walk: ${jobs.length} jobs; walking job screens on ${project ? (jobs.find((j) => j.id === project) || {}).name : 'NO JOB FOUND'}`);
   await ctx0.close();
+  // Phase 2 runs beside the tap walk in its own browser: every Add/New, every
+  // record button, payments, archive and Sign Out, on ZZ AUDIT test records.
+  const writeP = writeWalk(pw, device, session, outDir, real).catch((e) => console.log(`write-walk: ✗ ${String(e.message || e).split('\n')[0]}`));
   const routes = [...WALK_TOP, ...(project ? WALK_JOB.map((t) => `/app/projects/${project}/${t}`) : [])];
   const shortUrl = (u) => u.replace(SITE, '').replace(/[0-9a-f-]{36}/gi, ':id');
   const results = [];
@@ -679,6 +683,8 @@ async function walk() {
 
   writeReport();
   console.log(fs.readFileSync(path.join(outDir, 'report.md'), 'utf8').split('\n').slice(0, 3).join('\n'));
+  await writeP;
+  process.exit(0);
 }
 
 function writeWalkReport(outDir, rawResults, signedInAs) {
@@ -700,11 +706,6 @@ function writeWalkReport(outDir, rawResults, signedInAs) {
   fs.writeFileSync(path.join(outDir, 'report.md'), lines.join('\n') + '\n');
 }
 
-if (MODE === 'capture') await capture();
-else if (MODE === 'upload') await upload();
-else if (MODE === 'proof') await proof();
-else if (MODE === 'walk') await walk();
-else { console.error('use: node tools/asc-screens.mjs capture|upload|proof'); process.exit(1); }
 
 // Photos & video, end to end on the live site, the way the iPhone app does it:
 // WebKit (the engine inside the iPhone app) with an iPhone profile, then
@@ -792,3 +793,649 @@ async function photosProof(review, root, project) {
     }
   }
 }
+
+// ── write walk ───────────────────────────────────────────────────────────────
+// Phase 2, the Definition of Done on every screen, on test records only:
+//   a fresh "ZZ AUDIT Walk Job" made through the real New Project form, then on
+//   every screen: each Add/New → fill every field (files too) → save → reload →
+//   reopen → every field back? → Edit (pre-filled?) → save → reload → every
+//   other button on the record (send, submit, approve, status…) → delete.
+//   Then the payment buttons, archiving the test job, and Sign Out last.
+// Mail and texts only ever go to a test inbox / reserved number: email fields
+// get delivered@resend.dev (accepted and thrown away), phones 555-0100, and
+// person pickers choose the ZZ AUDIT contact made first — never a real sub.
+const TEST_EMAIL = 'delivered@resend.dev';
+const PEOPLE_TOP = ['/app/subs', '/app/people', '/app/customers'];
+const PEOPLE_JOB = ['directory', 'subs', 'team', 'crews'];
+const ADD_RE = /^\s*(\+\s*)?(new|add|create|log|report|record|start|upload|invite|schedule|request|draft|import|capture|take)\b/i;
+const SAVE_RE = /^\s*(save|create|add|submit|log|post|record|done|confirm|finish|send|invite|upload|continue|next|apply|yes|ok)\b/i;
+const CANCEL_RE = /^\s*(cancel|close|back|no|not now|dismiss|skip|×|✕|x)\s*$/i;
+const DELETE_RE = /^\s*(delete|remove|archive|trash)\b/i;
+const NOT_ACTION_RE = /^\s*(edit|delete|remove|archive|trash|cancel|close|back|×|✕|x|sign out|log ?out)\b/i;
+const LAST_RE = /\b(close|complete|approve|reject|void|cancel|decline|finali[sz]e|archive|lock|sign|execute|award)\b/i;
+const WRITE_BUDGET_MS = 270 * 60 * 1000;
+const SCREEN_BUDGET_MS = 10 * 60 * 1000;
+
+function writeWalkPdf(dir) {
+  // A one-page PDF for document/drawing uploads.
+  const f = path.join(dir, 'ZZ AUDIT document.pdf');
+  if (!fs.existsSync(f)) {
+    const objs = ['<< /Type /Catalog /Pages 2 0 R >>', '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>',
+      null, '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>'];
+    const text = 'BT /F1 24 Tf 72 700 Td (ZZ AUDIT test document) Tj ET';
+    objs[3] = `<< /Length ${text.length} >>\nstream\n${text}\nendstream`;
+    let out = '%PDF-1.4\n'; const offs = [];
+    objs.forEach((o, k) => { offs.push(out.length); out += `${k + 1} 0 obj\n${o}\nendobj\n`; });
+    const xref = out.length;
+    out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n${offs.map((o) => String(o).padStart(10, '0') + ' 00000 n \n').join('')}trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+    fs.writeFileSync(f, out);
+  }
+  return f;
+}
+
+// Runs in the page: fill every empty field of the open form (the top dialog,
+// else the visible form, else the page). Returns what it typed.
+function fillFormInPage({ marker, email }) {
+  const vis = (el) => { const r = el.getBoundingClientRect(); const st = getComputedStyle(el); return r.width > 1 && r.height > 1 && st.visibility !== 'hidden' && st.display !== 'none'; };
+  const dialogs = [...document.querySelectorAll('[role="dialog"], [role="alertdialog"], [aria-modal="true"]')].filter(vis);
+  const root = dialogs[dialogs.length - 1] || [...document.querySelectorAll('form')].filter(vis).pop() || document.querySelector('main') || document.body;
+  const set = (el, v) => {
+    const proto = el.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : el.tagName === 'SELECT' ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
+    Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, v);
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+    el.dispatchEvent(new Event('blur', { bubbles: true }));
+  };
+  const labelOf = (el) => {
+    const id = el.id && document.querySelector(`label[for="${CSS.escape(el.id)}"]`);
+    return [el.name, el.placeholder, el.getAttribute('aria-label'), id && id.innerText, el.closest('label') && el.closest('label').innerText].filter(Boolean).join(' ').toLowerCase();
+  };
+  const today = new Date().toISOString().slice(0, 10);
+  const fields = [...root.querySelectorAll('input, textarea, select')].filter((el) => {
+    if (el.disabled || el.readOnly) return false;
+    if (el.tagName === 'SELECT') return vis(el) || (el.parentElement && vis(el.parentElement));
+    return vis(el);
+  });
+  // The marker goes in the title/name/subject field; the rest get labelled values.
+  const textLike = (el) => el.tagName === 'TEXTAREA' || ['text', ''].includes((el.getAttribute('type') || '').toLowerCase());
+  const titleField = fields.find((el) => textLike(el) && /title|subject|name|company|summary|description|item|question/.test(labelOf(el)) && !/first|last|email/.test(labelOf(el))) || fields.find(textLike);
+  const typed = [];
+  for (const el of fields) {
+    const type = (el.getAttribute('type') || el.tagName).toLowerCase();
+    if (['hidden', 'file', 'checkbox', 'radio', 'submit', 'button', 'search', 'password', 'range', 'color'].includes(type)) continue;
+    if (el.value && el.tagName !== 'SELECT') continue; // keep what the form pre-filled
+    const lab = labelOf(el);
+    if (el.tagName === 'SELECT') {
+      const opts = [...el.options].filter((o) => o.value && !o.disabled);
+      const zz = opts.find((x) => /zz audit/i.test(x.text));
+      if (el.value && (!zz || el.value === zz.value)) continue;
+      const o = zz || opts[0];
+      if (o) { set(el, o.value); typed.push({ kind: 'select', label: lab, value: o.text }); }
+      continue;
+    }
+    let v;
+    if (type === 'date') v = today;
+    else if (type === 'time') v = '09:00';
+    else if (type === 'datetime-local') v = `${today}T09:00`;
+    else if (type === 'month') v = today.slice(0, 7);
+    else if (type === 'week') v = `${today.slice(0, 4)}-W20`;
+    else if (type === 'number') v = /percent|%/.test(lab) ? '10' : /year/.test(lab) ? '2026' : '100';
+    else if (type === 'email' || /e-?mail/.test(lab)) v = email;
+    else if (type === 'tel' || /phone|mobile|cell/.test(lab)) v = '6025550100';
+    else if (type === 'url' || /website|url|link/.test(lab)) v = 'https://example.com';
+    else if (/zip|postal/.test(lab)) v = '85001';
+    else if (/\bcity\b/.test(lab)) v = 'Phoenix';
+    else if (/\bstate\b/.test(lab)) v = 'AZ';
+    else if (/address|street/.test(lab)) v = '100 Test Way, Phoenix, AZ 85001';
+    else if (/amount|price|cost|total|rate|qty|quantity|hours|value|budget|sum|\$/.test(lab)) v = '100';
+    else if (/\bein\b|tax id|tin\b/.test(lab)) v = '12-3456789';
+    else if (/license|lic\.? ?#|number|#/.test(lab)) v = `ZZ-${Date.now() % 100000}`;
+    else if (el === titleField) v = marker;
+    else v = `${marker} note`;
+    set(el, v);
+    typed.push({ kind: type, label: lab, value: v });
+  }
+  return typed;
+}
+
+// Runs in the page: is this value on screen (or in a field)? Phone numbers
+// match on digits, links without https://.
+function looseHasInPage({ x, inputsOnly }) {
+  const vals = [...document.querySelectorAll('input, textarea, select')].map((e) => e.tagName === 'SELECT' ? (e.selectedOptions[0]?.text || '') : (e.value || ''));
+  const hay = (inputsOnly ? '' : document.body.innerText + '\n') + vals.join('\n');
+  if (hay.includes(x)) return true;
+  if (/^[\d\s()+.-]{7,}$/.test(x)) { const d = x.replace(/\D/g, ''); return hay.replace(/\D/g, '').includes(d); }
+  if (/^https?:\/\//.test(x)) return hay.includes(x.replace(/^https?:\/\//, ''));
+  return false;
+}
+
+// Runs in the page: tag the visible controls of the open dialog (or the page
+// body outside the app's header/nav/tab bar) and return their labels.
+function tagControlsInPage({ attr, chrome }) {
+  const vis = (el) => { const r = el.getBoundingClientRect(); const st = getComputedStyle(el); return r.width > 3 && r.height > 3 && st.visibility !== 'hidden' && st.display !== 'none' && !el.closest('[aria-hidden="true"]'); };
+  const dialogs = [...document.querySelectorAll('[role="dialog"], [role="alertdialog"], [aria-modal="true"]')].filter(vis);
+  const root = dialogs[dialogs.length - 1] || document.body;
+  // The app's own bars: the fixed, full-width strip at the top (it holds the
+  // Notifications bell) or bottom (the tab bar), plus nav/tab strips.
+  const isChrome = (el) => {
+    if (el.closest('nav, [role="navigation"], [role="tablist"], [role="banner"]')) return true;
+    for (let a = el.parentElement; a && a !== document.body; a = a.parentElement) {
+      const st = getComputedStyle(a);
+      if (st.position !== 'fixed' && st.position !== 'sticky') continue;
+      const r = a.getBoundingClientRect();
+      if (r.width > innerWidth * 0.8 && r.height < 160 && (r.top < 130 || r.bottom > innerHeight - 130)
+        && (a.querySelector('[aria-label="Notifications"]') || a.querySelectorAll('a[href^="/app/"]').length >= 3)) return true;
+    }
+    return false;
+  };
+  document.querySelectorAll(`[${attr}]`).forEach((e) => e.removeAttribute(attr));
+  const out = [];
+  let i = 0;
+  for (const el of root.querySelectorAll('button, a[href], [role="button"], [role="menuitem"], [role="tab"]')) {
+    if (!vis(el) || el.disabled || el.getAttribute('aria-disabled') === 'true') continue;
+    if (!dialogs.length && !chrome && isChrome(el)) continue;
+    const t = (el.getAttribute('aria-label') || el.innerText || el.getAttribute('title') || '').replace(/\s+/g, ' ').trim();
+    if (!t) continue;
+    el.setAttribute(attr, String(i));
+    out.push({ i, t: t.slice(0, 60), submit: el.getAttribute('type') === 'submit', tag: el.tagName.toLowerCase(), href: el.getAttribute('href') || '' });
+    i++;
+  }
+  return { inDialog: dialogs.length > 0, controls: out };
+}
+
+async function writeWalk(pw, device, session, outDir, real) {
+  const started = Date.now();
+  const fixtures = path.join(ROOT, 'tools/fixtures');
+  const files = { image: path.join(fixtures, 'ZZ AUDIT phone photo.jpg'), video: path.join(fixtures, 'ZZ AUDIT clip.mp4'), doc: writeWalkPdf(outDir) };
+  const browser = await pw.webkit.launch();
+  // A phone in Phoenix with location allowed, so the time clock's GPS check can pass.
+  const ctx = await browser.newContext({ ...device, storageState: session, acceptDownloads: true, geolocation: { latitude: 33.4484, longitude: -112.074, accuracy: 20 }, permissions: ['geolocation'] })
+    .catch(() => browser.newContext({ ...device, storageState: session, acceptDownloads: true }));
+  let page = null;
+  const stamp = new Date().toISOString().slice(5, 16).replace(/[-:T]/g, '');
+  const net = { writes: [], errs: [], popups: [], downloads: 0, chooser: 0 };
+  const isWrite = (r) => r.method() !== 'GET' && r.method() !== 'HEAD' && r.method() !== 'OPTIONS' && (r.url().startsWith(SITE + '/api/') || /supabase\.co\/(rest|storage)\//.test(r.url()));
+  const short = (u) => u.replace(SITE, '').replace(/https:\/\/[a-z0-9]+\.supabase\.co/, 'supabase').replace(/[0-9a-f-]{36}/gi, ':id').replace(/\?.*$/, '');
+  async function newPage() {
+    if (page) await page.close().catch(() => {});
+    page = await ctx.newPage();
+    page.setDefaultTimeout(15000);
+    page.on('dialog', (d) => d.accept(d.type() === 'prompt' ? 'ZZ AUDIT' : undefined).catch(() => {}));
+    page.on('response', (r) => { const q = r.request(); if (isWrite(q)) net.writes.push({ m: q.method(), u: short(r.url()), s: r.status() }); });
+    page.on('requestfailed', (q) => { if (isWrite(q)) net.writes.push({ m: q.method(), u: short(q.url()), s: 0 }); });
+    page.on('pageerror', (e) => net.errs.push(String(e.message || e).slice(0, 160)));
+    page.on('popup', (p) => { net.popups.push(p.url()); p.close().catch(() => {}); });
+    page.on('download', () => { net.downloads++; });
+    page.on('filechooser', async (fc) => {
+      net.chooser++;
+      const accept = ((await fc.element().getAttribute('accept').catch(() => '')) || '').toLowerCase();
+      const f = /video/.test(accept) && !/image/.test(accept) ? files.video : /image/.test(accept) && !/pdf|application/.test(accept) ? files.image : /pdf|application|\.doc/.test(accept) ? files.doc : files.image;
+      await fc.setFiles(fc.isMultiple() ? [f] : f).catch(() => {});
+    });
+    return page;
+  }
+  await newPage();
+  const settle = async (ms = 1200) => { await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {}); await page.waitForTimeout(ms); };
+  const go = async (u) => { await page.goto(u.startsWith('http') ? u : SITE + u, { waitUntil: 'domcontentloaded', timeout: 45000 }); await settle(); };
+  const bodyHas = (t) => page.evaluate(looseHasInPage, { x: t, inputsOnly: false }).catch(() => false);
+  const formHas = (t) => page.evaluate(looseHasInPage, { x: t, inputsOnly: true }).catch(() => false);
+  const inputCount = () => page.locator('input:visible, textarea:visible, select:visible').count().catch(() => 0);
+  const dialogCount = () => page.locator('[role="dialog"]:visible, [role="alertdialog"]:visible, [aria-modal="true"]:visible').count().catch(() => 0);
+  const writeSummary = (w) => w.slice(0, 8).map((x) => `${x.m} ${x.u} → ${x.s || 'failed'}`);
+  const badWrite = (w) => w.find((x) => x.s === 0 || x.s >= 400);
+  const goodWrite = (w) => w.find((x) => x.s >= 200 && x.s < 400);
+
+  async function pickCombos() {
+    // Our own pickers (role=combobox / listbox buttons): open, choose ZZ AUDIT or the first option.
+    const scopeSel = (await dialogCount()) ? '[role="dialog"]:visible, [aria-modal="true"]:visible' : 'main, body';
+    const scope = page.locator(scopeSel).last();
+    const combos = scope.locator('[role="combobox"]:visible, button[aria-haspopup="listbox"]:visible');
+    const n = Math.min(await combos.count().catch(() => 0), 8);
+    let picked = 0;
+    for (let k = 0; k < n; k++) {
+      const c = combos.nth(k);
+      const cur = ((await c.inputValue().catch(() => null)) ?? (await c.innerText().catch(() => ''))).trim();
+      if (cur && !/select|choose|pick|^—|^-+$|none/i.test(cur)) continue;
+      await c.click({ timeout: 3000 }).catch(() => {});
+      await page.waitForTimeout(400);
+      const opts = page.locator('[role="option"]:visible');
+      if (!(await opts.count().catch(() => 0))) continue;
+      const zz = opts.filter({ hasText: /ZZ AUDIT/i });
+      await ((await zz.count()) ? zz.first() : opts.first()).click({ timeout: 3000 }).catch(() => {});
+      picked++;
+      await page.waitForTimeout(250);
+    }
+    return picked;
+  }
+
+  // Fill and submit the open form, through up to 4 steps (Next → Next → Save).
+  async function fillAndSave(marker) {
+    const typed = [];
+    let clicked = [];
+    net.writes.length = 0; net.errs.length = 0;
+    for (let step = 0; step < 4; step++) {
+      typed.push(...await page.evaluate(fillFormInPage, { marker, email: TEST_EMAIL }).catch(() => []));
+      await pickCombos();
+      // Native file inputs in the form get a test file too.
+      const fileInputs = page.locator('input[type="file"]');
+      for (let k = 0; k < Math.min(await fileInputs.count().catch(() => 0), 3); k++) {
+        const fi = fileInputs.nth(k);
+        if (!(await fi.evaluate((e) => { const d = [...document.querySelectorAll('[role="dialog"], [aria-modal="true"]')].pop(); return !d || d.contains(e); }).catch(() => false))) continue;
+        const accept = ((await fi.getAttribute('accept').catch(() => '')) || '').toLowerCase();
+        const f = /video/.test(accept) && !/image/.test(accept) ? files.video : /pdf|application/.test(accept) ? files.doc : files.image;
+        await fi.setInputFiles(f).catch(() => {});
+      }
+      const { controls } = await page.evaluate(tagControlsInPage, { attr: 'data-ws', chrome: false });
+      const save = controls.find((b) => b.submit && SAVE_RE.test(b.t) && !CANCEL_RE.test(b.t))
+        || [...controls].reverse().find((b) => SAVE_RE.test(b.t) && !CANCEL_RE.test(b.t) && !ADD_RE.test(b.t))
+        || [...controls].reverse().find((b) => SAVE_RE.test(b.t) && !CANCEL_RE.test(b.t));
+      if (!save) break;
+      const before = net.writes.length;
+      await page.locator(`[data-ws="${save.i}"]`).first().click({ timeout: 5000 }).catch(() => {});
+      clicked.push(save.t);
+      await settle(2000);
+      if (net.writes.length > before) break; // it sent something
+      // Still on a form with a different next button? go round again.
+      const errs = await page.evaluate(() => [...document.querySelectorAll('[role="alert"], [aria-invalid="true"], .error, [data-error]')].map((e) => (e.innerText || e.getAttribute('aria-label') || e.getAttribute('name') || '').trim()).filter(Boolean).slice(0, 4)).catch(() => []);
+      if (errs.length) { clicked.push(`(form says: ${errs.join(' / ').slice(0, 160)})`); }
+    }
+    return { typed, clicked, writes: [...net.writes], errors: [...net.errs] };
+  }
+
+  // Find the record on the list screen and open it.
+  async function openRecord(listUrl, marker) {
+    await go(listUrl);
+    for (let tries = 0; tries < 2; tries++) {
+      const found = await page.evaluate((m) => {
+        const vis = (el) => { const r = el.getBoundingClientRect(); return r.width > 1 && r.height > 1; };
+        let best = null;
+        const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+        for (let n = w.nextNode(); n; n = w.nextNode()) {
+          if (n.nodeValue.includes(m) && n.parentElement && vis(n.parentElement) && !n.parentElement.closest('[aria-hidden="true"]')) { best = n.parentElement; break; }
+        }
+        if (!best) return false;
+        document.querySelectorAll('[data-wopen]').forEach((e) => e.removeAttribute('data-wopen'));
+        (best.closest('a[href], button, [role="button"], tr, li, [role="row"]') || best).setAttribute('data-wopen', '1');
+        best.setAttribute('data-wopen', '2');
+        return true;
+      }, marker).catch(() => false);
+      if (found) {
+        const url0 = page.url(); const d0 = await dialogCount();
+        await page.locator('[data-wopen="2"]').first().scrollIntoViewIfNeeded().catch(() => {});
+        await page.locator('[data-wopen="2"]').first().click({ timeout: 4000 }).catch(() => {});
+        await settle(1200);
+        if (page.url() !== url0 || (await dialogCount()) > d0) return true;
+        await page.locator('[data-wopen="1"]').first().click({ timeout: 4000 }).catch(() => {});
+        await settle(1200);
+        return page.url() !== url0 || (await dialogCount()) > d0 ? true : 'in place';
+      }
+      // Lists that hide closed items: try an "All" filter once.
+      const all = page.locator('button:visible, [role="tab"]:visible').filter({ hasText: /^\s*All\b/ });
+      if (tries === 0 && (await all.count())) { await all.first().click().catch(() => {}); await settle(800); } else break;
+    }
+    return false;
+  }
+
+  const out = [];
+  const leftovers = [];
+  const writeReport = () => {
+    fs.writeFileSync(path.join(outDir, 'write-report.json'), JSON.stringify({ results: out, leftovers }, null, 1));
+    const L = [`# Action walk — every Add/New, save, reload, reopen, edit, every record button, delete (${real ? 'real account' : 'demo account'}, iPhone WebKit)`, '',
+      'Test records only (ZZ AUDIT). Mail goes to delivered@resend.dev, phones to 602-555-0100.', '',
+      '| Screen | Add/New | Create | Back after reload | Fields back | Edit pre-filled | Edit saved | Record buttons | Delete |', '|---|---|---|---|---|---|---|---|---|'];
+    for (const r of out) {
+      const acts = (r.actions || []);
+      const bad = acts.filter((a) => /FAILED|nothing happened|error/i.test(a.result)).length;
+      L.push(`| ${r.screen} | ${r.add || ''} | ${r.create || ''} | ${r.persisted || ''} | ${r.fieldsBack || ''} | ${r.prefilled || ''} | ${r.edit || ''} | ${acts.length ? `${acts.length} tapped${bad ? `, **${bad} bad**` : ''}` : ''} | ${r.del || ''} |`);
+    }
+    L.push('', '## Details', '');
+    for (const r of out) {
+      const lines = [];
+      if (r.saveClicked?.length) lines.push(`  - save: ${r.saveClicked.join(' → ')}`);
+      if (r.writes?.length) lines.push(`  - sent: ${r.writes.join(' · ')}`);
+      if (r.missing?.length) lines.push(`  - NOT BACK after reload: ${r.missing.join(', ')}`);
+      if (r.notPrefilled?.length) lines.push(`  - edit form EMPTY for: ${r.notPrefilled.join(', ')}`);
+      for (const a of r.actions || []) lines.push(`  - "${a.label}": ${a.result}${a.writes?.length ? ' — ' + a.writes.join(' · ') : ''}`);
+      for (const e of r.errors || []) lines.push(`  - ERROR: ${e}`);
+      if (lines.length) L.push(`- **${r.screen}**`, ...lines);
+    }
+    if (leftovers.length) L.push('', '## Test records left behind', '', ...leftovers.map((x) => `- ${x}`));
+    fs.writeFileSync(path.join(outDir, 'write-report.md'), L.join('\n') + '\n');
+  };
+
+  // One full cycle on one screen. deferDelete keeps people records for pickers.
+  async function cycle(screen, listUrl, deferred) {
+    const label = screen.replace(/^\/app\/?/, '') || 'home';
+    const tag = label.replace(/^projects\/:id\//, '').replace(/[^a-z0-9]+/gi, ' ').trim();
+    const results = [];
+    await go(listUrl);
+    const { controls } = await page.evaluate(tagControlsInPage, { attr: 'data-wa', chrome: false });
+    const adds = [];
+    for (const c of controls) if (ADD_RE.test(c.t) && c.t.length < 44 && !adds.some((a) => a.t === c.t)) adds.push(c);
+    if (!adds.length) { out.push({ screen: label, add: 'no Add/New on this screen' }); return; }
+    for (const [n, add] of adds.slice(0, 4).entries()) {
+      const marker = `ZZ AUDIT ${tag} ${n ? n + 1 + ' ' : ''}${stamp}`;
+      const r = { screen: label, add: add.t, errors: [], actions: [] };
+      results.push(r); out.push(r);
+      try {
+        if (n) { await go(listUrl); await page.evaluate(tagControlsInPage, { attr: 'data-wa', chrome: false }); }
+        const target = page.locator(`[data-wa]`).filter({ hasText: add.t }).first();
+        const url0 = page.url(); const chooser0 = net.chooser; const in0 = await inputCount();
+        net.writes.length = 0;
+        await target.scrollIntoViewIfNeeded().catch(() => {});
+        await target.click({ timeout: 5000 });
+        await settle(1500);
+        if (net.chooser > chooser0) { await settle(4000); }
+        const opened = page.url() !== url0 || (await dialogCount()) > 0 || net.chooser > chooser0 || (await inputCount()) > in0;
+        if (!opened && !net.writes.length) { r.create = 'DEAD — tapping it did nothing'; continue; }
+        if (net.chooser > chooser0 && !(await dialogCount())) {
+          r.create = goodWrite(net.writes) && !badWrite(net.writes) ? 'uploaded' : badWrite(net.writes) ? `FAILED (${writeSummary([badWrite(net.writes)])})` : 'picked a file but nothing was sent';
+          r.writes = writeSummary(net.writes);
+          leftovers.push(`${label}: uploaded test file "ZZ AUDIT …" (left on the test job, archived with it)`);
+          continue;
+        }
+        const f = await fillAndSave(marker);
+        r.filled = f.typed.length; r.saveClicked = f.clicked; r.writes = writeSummary(f.writes);
+        if (f.errors.length) r.errors.push(...f.errors.slice(0, 3));
+        const bad = badWrite(f.writes);
+        r.create = bad ? `FAILED (${bad.m} ${bad.u} → ${bad.s || 'network'})` : goodWrite(f.writes) ? 'saved' : f.clicked.length ? 'NOTHING SENT on save' : `form opened (${f.typed.length} fields) but no Save button`;
+        if (!goodWrite(f.writes)) continue;
+        // Reload → back? → reopen → every field back?
+        await go(listUrl);
+        r.persisted = (await bodyHas(marker)) ? 'yes' : 'NOT ON LIST after reload';
+        const open = await openRecord(listUrl, marker);
+        if (!open) { if (r.persisted === 'yes') r.persisted = 'listed, but tapping it opened nothing'; leftovers.push(`${label}: "${marker}"`); continue; }
+        const expect = [...new Set(f.typed.filter((t) => ['text', 'textarea', 'email', 'tel', 'url', 'input'].includes(t.kind) || /zz audit/i.test(t.value)).map((t) => t.value))];
+        const missing = [];
+        for (const v of expect) if (!(await bodyHas(v))) missing.push(v.replace(marker, '‹marker›'));
+        r.fieldsBack = `${expect.length - missing.length}/${expect.length}`;
+        if (missing.length) r.missing = missing;
+        // Edit: pre-filled? save → reload → edited?
+        const { controls: rc } = await page.evaluate(tagControlsInPage, { attr: 'data-wr', chrome: false });
+        const edit = rc.find((b) => /^\s*edit\b/i.test(b.t));
+        if (edit) {
+          await page.locator(`[data-wr="${edit.i}"]`).first().click({ timeout: 4000 }).catch(() => {});
+          await settle(1000);
+          const notPre = [];
+          for (const v of expect) if (!(await formHas(v))) notPre.push(v.replace(marker, '‹marker›'));
+          r.prefilled = `${expect.length - notPre.length}/${expect.length}`;
+          if (notPre.length) r.notPrefilled = notPre;
+          const changed = await page.evaluate(({ m }) => {
+            for (const el of document.querySelectorAll('input, textarea')) {
+              if (el.value === m) {
+                const proto = el.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+                Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, m + ' edited');
+                el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true }));
+                return true;
+              }
+            }
+            return false;
+          }, { m: marker });
+          if (changed) {
+            net.writes.length = 0;
+            const { controls: ec } = await page.evaluate(tagControlsInPage, { attr: 'data-we', chrome: false });
+            const sv = ec.find((b) => b.submit && !CANCEL_RE.test(b.t)) || [...ec].reverse().find((b) => /^\s*(save|update|done)\b/i.test(b.t));
+            if (sv) await page.locator(`[data-we="${sv.i}"]`).first().click({ timeout: 4000 }).catch(() => {});
+            await settle(2000);
+            const be = badWrite(net.writes);
+            await go(listUrl);
+            r.edit = !sv ? 'edit form has no Save' : be ? `FAILED (${be.m} ${be.u} → ${be.s || 'network'})` : !goodWrite(net.writes) ? 'NOTHING SENT on save' : (await bodyHas(marker + ' edited')) ? 'yes' : 'saved, but the change is NOT on screen after reload';
+          } else r.edit = 'edit form did not show the saved title';
+        } else r.edit = 'no Edit button on the record';
+        // Every other button on the record, one at a time, terminal ones last.
+        if (!(await openRecord(listUrl, marker))) { r.errors.push('could not reopen the record after editing'); leftovers.push(`${label}: "${marker}"`); continue; }
+        const { controls: ac } = await page.evaluate(tagControlsInPage, { attr: 'data-wr', chrome: false });
+        const labels = [...new Set(ac.map((b) => b.t).filter((t) => !NOT_ACTION_RE.test(t) && !t.includes(marker)))].slice(0, 16);
+        labels.sort((a, b) => Number(LAST_RE.test(a)) - Number(LAST_RE.test(b)));
+        for (const al of labels) {
+          if (Date.now() - started > WRITE_BUDGET_MS) break;
+          const a = { label: al, result: '' };
+          r.actions.push(a);
+          try {
+            if (!(await openRecord(listUrl, marker))) { a.result = 'record no longer on the list (an earlier button closed/moved it)'; break; }
+            await page.evaluate(tagControlsInPage, { attr: 'data-wr', chrome: false });
+            const btn = page.locator('[data-wr]').filter({ hasText: al }).first();
+            const exists = await btn.count();
+            const b2 = exists ? btn : page.locator(`[data-wr][aria-label="${al.replace(/"/g, '\\"')}"]`).first();
+            if (!(await b2.count())) { a.result = 'gone after reopening (state changed)'; continue; }
+            const u0 = page.url(); const d0 = await dialogCount(); const dl0 = net.downloads; const pp0 = net.popups.length; const fc0 = net.chooser;
+            net.writes.length = 0; net.errs.length = 0;
+            await b2.click({ timeout: 4000 });
+            await settle(1500);
+            if ((await dialogCount()) > d0) {
+              // It opened a form or a confirm: fill it and go ahead.
+              const f2 = await fillAndSave(`${marker} ${al}`.slice(0, 80));
+              a.writes = writeSummary(f2.writes);
+              const b = badWrite(f2.writes);
+              a.result = b ? `FAILED (${b.m} ${b.u} → ${b.s || 'network'})` : goodWrite(f2.writes) ? 'opened a form → saved' : f2.clicked.length ? `opened a form → "${f2.clicked.join(' → ')}" sent NOTHING` : 'opened a panel (no form to save)';
+            } else {
+              a.writes = writeSummary(net.writes);
+              const b = badWrite(net.writes);
+              a.result = b ? `FAILED (${b.m} ${b.u} → ${b.s || 'network'})`
+                : goodWrite(net.writes) ? 'saved'
+                : net.downloads > dl0 ? 'downloaded a file'
+                : net.popups.length > pp0 ? `opened ${net.popups[net.popups.length - 1].slice(0, 80)}`
+                : net.chooser > fc0 ? 'opened the file picker'
+                : page.url() !== u0 ? `went to ${short(page.url())}`
+                : 'nothing happened (dead button?)';
+            }
+            if (net.errs.length) a.result += ` · page error: ${net.errs[0]}`;
+          } catch (e) { a.result = `error: ${String(e.message || e).split('\n')[0].slice(0, 120)}`; }
+        }
+        if (deferred) { deferred.push({ label, listUrl, marker, r }); r.del = '(at the end — used by the pickers)'; continue; }
+        await deleteRecord(label, listUrl, marker, r);
+      } catch (e) {
+        r.errors.push(String(e.message || e).split('\n')[0].slice(0, 160));
+        if (r.create === 'saved') leftovers.push(`${label}: "${marker}"`);
+        await newPage();
+      }
+      writeReport();
+    }
+  }
+
+  // Every other button on the screen that writes (Clock In → Clock Out, Sync,
+  // Generate, Mark all read…), re-scanning after each tap so what appears next
+  // gets tapped too. On the test job everything is ours; on company-wide
+  // screens row buttons (a real record's Approve/Pay) are left to the record
+  // pass, and with the real account nothing that mails or pays real people.
+  async function pageActions(screen, listUrl, onTestJob) {
+    const label = screen.replace(/^\/app\/?/, '') || 'home';
+    const r = { screen: `${label} — page buttons`, add: '', errors: [], actions: [] };
+    const tried = new Set();
+    try {
+      for (let round = 0; round < 10; round++) {
+        await go(listUrl);
+        const { controls } = await page.evaluate(tagControlsInPage, { attr: 'data-wx', chrome: false });
+        const inRow = await page.evaluate(() => [...document.querySelectorAll('[data-wx]')].filter((e) => e.closest('tr, li, [role="row"], [role="listitem"], article')).map((e) => e.getAttribute('data-wx'))).catch(() => []);
+        const next = controls.find((b) => !tried.has(b.t) && WALK_DENY.test(b.t) && !ADD_RE.test(b.t) && !DELETE_RE.test(b.t) && !/(sign|log) ?out/i.test(b.t)
+          && !CANCEL_RE.test(b.t) && b.t.length < 50 && (onTestJob || !inRow.includes(String(b.i)))
+          && !(real && !onTestJob && /send|e-?mail|text|sms|notify|remind|invite|publish|\bpay\b|charge/i.test(b.t)));
+        if (!next) break;
+        tried.add(next.t);
+        const a = { label: next.t, result: '' };
+        r.actions.push(a);
+        const u0 = page.url(); const d0 = await dialogCount(); const dl0 = net.downloads; const pp0 = net.popups.length; const fc0 = net.chooser;
+        net.writes.length = 0; net.errs.length = 0;
+        await page.locator(`[data-wx="${next.i}"]`).first().click({ timeout: 4000 }).catch((e) => { a.result = 'could not tap: ' + e.message.split('\n')[0].slice(0, 80); });
+        if (a.result) continue;
+        await settle(2000);
+        if ((await dialogCount()) > d0) {
+          const f = await fillAndSave(`ZZ AUDIT ${label} ${next.t} ${stamp}`.slice(0, 80));
+          a.writes = writeSummary(f.writes);
+          const b = badWrite(f.writes);
+          a.result = b ? `FAILED (${b.m} ${b.u} → ${b.s || 'network'})` : goodWrite(f.writes) ? 'opened a form → saved' : f.clicked.length ? `opened a form → "${f.clicked.join(' → ')}" sent NOTHING` : 'opened a panel (nothing to save)';
+        } else {
+          a.writes = writeSummary(net.writes);
+          const b = badWrite(net.writes);
+          a.result = b ? `FAILED (${b.m} ${b.u} → ${b.s || 'network'})` : goodWrite(net.writes) ? 'saved'
+            : net.downloads > dl0 ? 'downloaded a file' : net.popups.length > pp0 ? `opened ${net.popups[net.popups.length - 1].slice(0, 80)}`
+            : net.chooser > fc0 ? 'opened the file picker' : page.url() !== u0 ? `went to ${short(page.url())}` : 'nothing happened (dead button?)';
+        }
+        if (net.errs.length) a.result += ` · page error: ${net.errs[0]}`;
+        if (/^(saved|opened a form → saved)/.test(a.result) && !onTestJob) leftovers.push(`${label}: "${next.t}" changed company data (test values only)`);
+      }
+    } catch (e) { r.errors.push(String(e.message || e).split('\n')[0].slice(0, 160)); await newPage(); }
+    if (r.actions.length || r.errors.length) { r.add = `${r.actions.length} write buttons`; out.push(r); }
+  }
+
+  async function deleteRecord(label, listUrl, marker, r) {
+    if (!(await openRecord(listUrl, marker))) { r.del = (await bodyHas(marker)) ? 'listed but would not open' : 'not on the list any more (closed/moved by a button)'; if (r.del.startsWith('listed')) leftovers.push(`${label}: "${marker}"`); return; }
+    const { controls } = await page.evaluate(tagControlsInPage, { attr: 'data-wd', chrome: false });
+    let del = controls.find((b) => DELETE_RE.test(b.t));
+    if (!del) {
+      // Often behind a ⋯ / More menu.
+      const more = controls.find((b) => /^(more|⋯|…|\.\.\.|options|actions|menu)$/i.test(b.t) || /more|options|actions/i.test(b.t));
+      if (more) { await page.locator(`[data-wd="${more.i}"]`).first().click().catch(() => {}); await settle(500); const again = await page.evaluate(tagControlsInPage, { attr: 'data-wd', chrome: true }); del = again.controls.find((b) => DELETE_RE.test(b.t)); }
+    }
+    if (!del) { r.del = 'NO DELETE on the record'; leftovers.push(`${label}: "${marker}"`); return; }
+    net.writes.length = 0;
+    await page.locator(`[data-wd="${del.i}"]`).first().click({ timeout: 4000 }).catch(() => {});
+    await settle(800);
+    const confirm = page.locator('[role="alertdialog"]:visible button, [role="dialog"]:visible button').filter({ hasText: /^\s*(delete|remove|archive|yes|confirm|ok)\b/i }).last();
+    if (await confirm.count()) { await confirm.click({ timeout: 4000 }).catch(() => {}); await settle(1500); }
+    const bd = badWrite(net.writes);
+    await go(listUrl);
+    r.del = bd ? `FAILED (${bd.m} ${bd.u} → ${bd.s || 'network'})` : (await bodyHas(marker)) ? 'STILL THERE after delete' : 'yes';
+    if (r.del !== 'yes') leftovers.push(`${label}: "${marker}"`);
+  }
+
+  // 1) The test job, through the real New Project form.
+  const jobName = `ZZ AUDIT Walk Job ${stamp}`;
+  const jr = { screen: 'projects/new (New Job form)', errors: [], actions: [] };
+  out.push(jr);
+  await go('/app/projects/new');
+  await page.fill('[data-tour="project-name"]', jobName).catch((e) => jr.errors.push('name: ' + e.message.split('\n')[0]));
+  await page.fill('[data-tour="project-address"]', '100 Test Way, Phoenix, AZ 85001').catch((e) => jr.errors.push('address: ' + e.message.split('\n')[0]));
+  const jf = await page.evaluate(fillFormInPage, { marker: jobName, email: TEST_EMAIL }).catch(() => []);
+  net.writes.length = 0;
+  const submits = page.locator('button[type="submit"]:visible');
+  await submits.last().click({ timeout: 5000 }).catch((e) => jr.errors.push('submit: ' + e.message.split('\n')[0]));
+  await settle(3000);
+  const jobId = page.url().match(/\/app\/projects\/([0-9a-f-]{36})/i)?.[1] || null;
+  jr.add = 'New Job form'; jr.filled = jf.length + 2; jr.writes = writeSummary(net.writes);
+  jr.create = jobId ? 'saved' : badWrite(net.writes) ? `FAILED (${writeSummary([badWrite(net.writes)])})` : 'NOTHING SENT on save';
+  writeReport();
+  if (!jobId) { console.log(`write-walk: the New Job form did not make a job — ${jr.create}`); }
+  console.log(`write-walk: test job ${jobId ? jobName : 'NOT CREATED'}`);
+  if (jobId) {
+    await go(`/app/projects/${jobId}/overview`);
+    jr.persisted = (await bodyHas(jobName)) ? 'yes' : 'NOT SHOWN on the job after reload';
+  }
+
+  // 2) People first (kept until the end so pickers can choose them), then everything else.
+  const deferred = [];
+  const jobUrl = (t) => `/app/projects/${jobId}/${t}`;
+  const plan = [
+    ...PEOPLE_TOP.map((u) => [u, u, true]),
+    ...(jobId ? PEOPLE_JOB.map((t) => [`projects/:id/${t}`, jobUrl(t), true]) : []),
+    ...WALK_TOP.filter((u) => !PEOPLE_TOP.includes(u)).map((u) => [u, u, false]),
+    ...(jobId ? WALK_JOB.filter((t) => !PEOPLE_JOB.includes(t)).map((t) => [`projects/:id/${t}`, jobUrl(t), false]) : []),
+  ];
+  let done = 0;
+  for (const [screen, url, people] of plan) {
+    if (Date.now() - started > WRITE_BUDGET_MS) { out.push({ screen: screen.replace(/^\/app\/?/, ''), add: 'NOT REACHED — out of time', errors: [] }); continue; }
+    const timer = new Promise((res) => setTimeout(() => res('timeout'), SCREEN_BUDGET_MS));
+    const res = await Promise.race([cycle(screen, url, people ? deferred : null).then(() => pageActions(screen, url, url.includes(`/projects/${jobId}/`))).then(() => 'ok', (e) => `error: ${String(e.message || e).split('\n')[0]}`), timer]);
+    if (res !== 'ok') { out.push({ screen: screen.replace(/^\/app\/?/, '') || 'home', add: res === 'timeout' ? 'STOPPED — took over 10 minutes' : res, errors: [] }); await newPage(); }
+    done++;
+    const shown = screen.replace(/^\/app\/?/, '') || 'home';
+    console.log(`write-walk ${done}/${plan.length} ${screen}: ${out.filter((r) => r.screen === shown || r.screen === `${shown} — page buttons`).map((r) => `${r.add} → ${r.create || '-'} / reload ${r.persisted || '-'} / edit ${r.edit || '-'} / delete ${r.del || '-'}`).join(' ; ')}`);
+    writeReport();
+  }
+  for (const d of deferred) { try { await deleteRecord(d.label, d.listUrl, d.marker, d.r); } catch (e) { d.r.del = `error: ${String(e.message || e).split('\n')[0]}`; } }
+  writeReport();
+
+  // 3) Payments: every upgrade / checkout / billing button (no card is entered).
+  const pay = { screen: 'payments (/app/billing, /app/settings)', add: 'plan & billing buttons', errors: [], actions: [] };
+  out.push(pay);
+  for (const u of ['/app/billing', '/app/settings']) {
+    try {
+      await go(u);
+      const { controls } = await page.evaluate(tagControlsInPage, { attr: 'data-wp', chrome: false });
+      const buys = [...new Set(controls.filter((b) => /upgrade|subscribe|checkout|choose|select plan|start (plan|trial|subscription)|buy|pay now|manage (billing|subscription|plan)|billing portal|change plan|add card|payment method/i.test(b.t)).map((b) => b.t))].slice(0, 8);
+      for (const t of buys) {
+        await go(u);
+        await page.evaluate(tagControlsInPage, { attr: 'data-wp', chrome: false });
+        const u0 = page.url(); const pp0 = net.popups.length;
+        net.writes.length = 0;
+        let nav = null;
+        page.once('framenavigated', (fr) => { if (fr === page.mainFrame()) nav = fr.url(); });
+        await page.locator('[data-wp]').filter({ hasText: t }).first().click({ timeout: 4000 }).catch(() => {});
+        await page.waitForTimeout(5000);
+        const now = page.url();
+        const b = badWrite(net.writes);
+        const where = net.popups.length > pp0 ? net.popups[net.popups.length - 1] : now !== u0 ? now : nav;
+        const msg = await page.evaluate(() => [...document.querySelectorAll('[role="alert"], [role="status"], [data-sonner-toast], .toast')].map((e) => e.innerText.trim()).filter(Boolean).join(' / ').slice(0, 160)).catch(() => '');
+        pay.actions.push({ label: `${u} · ${t}`, result: where && /stripe\.com/.test(where) ? `opened Stripe (${new URL(where).host}${new URL(where).pathname.slice(0, 20)}…)` : b ? `FAILED (${b.m} ${b.u} → ${b.s || 'network'})${msg ? ' — ' + msg : ''}` : where && where !== u0 ? `went to ${short(where)}` : msg ? `showed: ${msg}` : 'nothing happened (dead button?)', writes: writeSummary(net.writes) });
+        if (!page.url().startsWith(SITE)) await go(u);
+      }
+      if (!buys.length) pay.actions.push({ label: u, result: 'no plan / billing buttons on this screen' });
+    } catch (e) { pay.errors.push(`${u}: ${String(e.message || e).split('\n')[0]}`); await newPage(); }
+  }
+  writeReport();
+
+  // 4) Archive the test job (and any left by earlier runs) through the job's own button.
+  const arch = { screen: 'archive the test job', add: 'Archive Job', errors: [], actions: [] };
+  out.push(arch);
+  try {
+    const d = await (await page.request.get(`${SITE}/api/projects?limit=200&fields=id,name`)).json();
+    const zz = (d.projects || d.data || []).filter((j) => /^ZZ AUDIT Walk Job/i.test(j.name || ''));
+    for (const j of zz) {
+      await go(`/app/projects/${j.id}/overview`);
+      net.writes.length = 0;
+      const btn = page.locator('button:visible').filter({ hasText: /archive job/i }).first();
+      if (!(await btn.count())) { arch.actions.push({ label: j.name, result: 'NO Archive Job button on the overview' }); continue; }
+      await btn.click({ timeout: 4000 });
+      await settle(800);
+      const ok = page.locator('[role="alertdialog"]:visible button, [role="dialog"]:visible button').filter({ hasText: /archive|confirm|yes/i }).last();
+      if (await ok.count()) await ok.click({ timeout: 4000 }).catch(() => {});
+      await settle(2000);
+      const after = await (await page.request.get(`${SITE}/api/projects?limit=200&fields=id,name`)).json().catch(() => ({}));
+      const still = (after.projects || after.data || []).some((x) => x.id === j.id);
+      const b = badWrite(net.writes);
+      arch.actions.push({ label: j.name, result: b ? `FAILED (${b.m} ${b.u} → ${b.s || 'network'})` : still ? 'STILL in the job list after archiving' : 'archived (gone from the job list)', writes: writeSummary(net.writes) });
+    }
+    arch.create = arch.actions.every((a) => a.result.startsWith('archived')) ? 'yes' : 'see below';
+  } catch (e) { arch.errors.push(String(e.message || e).split('\n')[0]); }
+  writeReport();
+
+  // 5) Sign Out, last.
+  const so = { screen: 'Sign Out', add: 'Sign Out', errors: [], actions: [] };
+  out.push(so);
+  try {
+    await go('/app');
+    let target = page.locator(':is(button, a, [role="menuitem"]):visible').filter({ hasText: /^\s*(sign|log) ?out\s*$/i }).first();
+    if (!(await target.count())) {
+      // The initials button opens the account menu.
+      const initials = page.locator('header button:visible, button:visible').filter({ hasText: /^\s*[A-Z]{1,3}\s*$/ }).first();
+      if (await initials.count()) { await initials.click().catch(() => {}); await settle(400); }
+      target = page.locator(':is(button, a, [role="menuitem"]):visible').filter({ hasText: /(sign|log) ?out/i }).first();
+    }
+    if (!(await target.count())) {
+      const menu = page.locator('button:visible[aria-label*="menu" i], button:visible[aria-label*="more" i], a:visible[href="/app/more"]').first();
+      if (await menu.count()) { await menu.click().catch(() => {}); await settle(600); }
+      target = page.locator(':is(button, a, [role="menuitem"]):visible').filter({ hasText: /(sign|log) ?out/i }).first();
+    }
+    if (!(await target.count())) so.create = 'NO Sign Out reachable on the phone';
+    else {
+      await target.click({ timeout: 4000 });
+      await page.waitForURL((u) => /\/(login|$)/.test(u.pathname) || u.pathname === '/', { timeout: 15000 }).catch(() => {});
+      const at = short(page.url());
+      await go('/app');
+      const back = short(page.url());
+      so.create = /login|^\/$/.test(at) ? `signed out → ${at}` : `tapped, but stayed on ${at}`;
+      so.persisted = /login/.test(back) ? 'yes — /app now asks for sign-in' : `NO — /app still opens (${back})`;
+    }
+  } catch (e) { so.errors.push(String(e.message || e).split('\n')[0]); }
+  writeReport();
+  console.log(`write-walk: done in ${Math.round((Date.now() - started) / 60000)} min — tools/walk/write-report.md`);
+  await Promise.race([browser.close(), new Promise((r) => setTimeout(r, 15000))]);
+}
+
+// Run last: every const above is initialised before a mode starts.
+if (MODE === 'capture') await capture();
+else if (MODE === 'upload') await upload();
+else if (MODE === 'proof') await proof();
+else if (MODE === 'walk') await walk();
+else { console.error('use: node tools/asc-screens.mjs capture|upload|proof|walk'); process.exit(1); }

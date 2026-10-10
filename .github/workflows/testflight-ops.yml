@@ -31,7 +31,7 @@ concurrency:
 jobs:
   asc:
     runs-on: ubuntu-latest
-    timeout-minutes: 100
+    timeout-minutes: 340
     env:
       ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
@@ -92,10 +92,12 @@ jobs:
       # walk: tap every control on every screen of the iPhone app (WebKit) and
       # report dead buttons, errors and 404s to tools/walk/report.md. Signs in
       # with Chad's real account when the E2E_EMAIL / E2E_PASSWORD secrets are
-      # set, otherwise the App Review demo account. Never taps anything that
-      # writes data, sends, pays, approves, deletes or logs out.
+      # set, otherwise the App Review demo account. Phase 1 taps every control
+      # read-only; phase 2 does every write (create, edit, send, submit,
+      # approve, delete, payments, archive, Sign Out) on ZZ AUDIT test records.
       - name: Walk the app
         if: env.MODE == 'walk'
+        timeout-minutes: 300
         env:
           PLAYWRIGHT_DIR: /tmp/pw
           E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
