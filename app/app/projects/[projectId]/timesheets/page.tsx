@@ -25,6 +25,8 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 import { StatusPill } from '@/components/ui/Status';
+import { localDay } from '@/lib/calendar-day';
+import { addDays } from '@/lib/time-zone';
 
 interface TimeEntry {
   id: string;
@@ -63,12 +65,14 @@ function getWeekStart(date: Date): string {
   const day = d.getDay();
   const diff = d.getDate() - day + (day === 0 ? -6 : 1);
   d.setDate(diff);
-  return d.toISOString().split('T')[0];
+  // The local Monday's own day — toISOString() was the UTC day, which after 7 PM in Iowa is Tuesday.
+  return localDay(d);
 }
 
 const CLASSIFICATIONS = ['Laborer', 'Carpenter', 'Electrician', 'Plumber', 'Ironworker', 'Operator', 'Superintendent', 'Foreman'];
 
-const EMPTY_FORM = { employee: '', date: new Date().toISOString().split('T')[0], regular_hrs: 8, ot_hrs: 0, classification: 'Laborer', costCode: '' };
+/** A blank entry dated today on this device — fresh each time, not frozen at page load (or at the server's UTC day). */
+const emptyForm = () => ({ employee: '', date: localDay(), regular_hrs: 8, ot_hrs: 0, classification: 'Laborer', costCode: '' });
 
 const fmt = (n: number) => '$' + ((Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 }));
 
@@ -78,7 +82,7 @@ export default function TimesheetsPage() {
   const [entries, setEntries] = useState<TimeEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [form, setForm] = useState(emptyForm);
 
   /* ── Unsaved-work guard: the composer holds real typing, so leaving the
    *    page (sidebar, field nav, ⌘K, back) confirms first and the draft is
@@ -125,7 +129,7 @@ export default function TimesheetsPage() {
   }, [loading, entries.length]);
 
   const currentWeekStart = getWeekStart(new Date());
-  const lastWeekStart = (() => { const d = new Date(currentWeekStart); d.setDate(d.getDate() - 7); return d.toISOString().split('T')[0]; })();
+  const lastWeekStart = addDays(currentWeekStart, -7);
 
   const filtered = entries.filter(e => {
     if (weekFilter === 'all') return true;
@@ -173,7 +177,7 @@ export default function TimesheetsPage() {
       });
       if (!res.ok) throw new Error('save failed');
       setShowForm(false);
-      setForm(EMPTY_FORM);
+      setForm(emptyForm());
       setToast('Timesheet entry added.');
       setTimeout(() => setToast(''), 4000);
       fetchEntries();

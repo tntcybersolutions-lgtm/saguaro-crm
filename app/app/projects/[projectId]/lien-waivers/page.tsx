@@ -10,6 +10,7 @@ import { ListToolbar } from '@/components/ui/ListToolbar';
 import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/table-sort';
 import { StatusPill } from '@/components/ui/Status';
 import { openPdf } from '@/components/PdfViewer';
+import { localDay } from '@/lib/calendar-day';
 
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)',GREEN='var(--success)',RED='var(--danger)',ORANGE='var(--warning)';
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
@@ -131,7 +132,7 @@ export default function LienWaiversPage() {
   const [fState,setFState]       = useState('AZ');
   const [fClaimant,setFClaimant] = useState('');
   const [fAmount,setFAmount]     = useState('');
-  const [fThrough,setFThrough]   = useState(new Date().toISOString().slice(0,10));
+  const [fThrough,setFThrough]   = useState(localDay);
   const [fSubId,setFSubId]       = useState('');
   const [fPayAppId,setFPayAppId] = useState('');
   const [autoAmt,setAutoAmt]     = useState(false);
@@ -181,7 +182,7 @@ export default function LienWaiversPage() {
       })});
       const d = await r.json();
       if(d.error) throw new Error(d.error);
-      setFClaimant(''); setFAmount(''); setFThrough(new Date().toISOString().slice(0,10));
+      setFClaimant(''); setFAmount(''); setFThrough(localDay());
       setFSubId(''); setFPayAppId(''); setAutoAmt(false);
       setShowForm(false);
       await load();
