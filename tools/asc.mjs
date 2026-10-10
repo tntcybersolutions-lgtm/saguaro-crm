@@ -18,6 +18,7 @@
  * Never prints a secret, a tester's name or a tester's email.
  */
 import crypto from 'node:crypto';
+import { existsSync, readFileSync } from 'node:fs';
 import { DESCRIPTION, KEYWORDS, PROMO, REVIEW_NOTES, SUBTITLE } from './asc-listing.mjs';
 
 const BUNDLE_ID = 'net.saguarocontrol.field';
@@ -182,7 +183,10 @@ if (MODE === 'diagnose') {
 
 const snap = await snapshot();
 // Never fall back to an older build: the newest upload (or TARGET_BUILD) or nothing.
-const wanted = process.env.TARGET_BUILD || snap.builds[0]?.build;
+// tools/asc-target.txt pins the build to act on, so a submit pushed before
+// the new upload shows up can never send an older build instead.
+const pinned = existsSync('tools/asc-target.txt') ? readFileSync('tools/asc-target.txt', 'utf8').trim() : '';
+const wanted = process.env.TARGET_BUILD || pinned || snap.builds[0]?.build;
 const pick = snap.builds.find((b) => String(b.build) === String(wanted));
 const target = pick && pick.processing === 'VALID' && !pick.expired ? pick : null;
 if (pick && !target) console.log(`\nBuild ${pick.version} (${pick.build}) is ${pick.processing}${pick.expired ? ', expired' : ''} — internal ${pick.internal}, external ${pick.external}.`);
