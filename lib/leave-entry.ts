@@ -54,6 +54,20 @@ export function leaveHoursOf(row: { hours_worked?: unknown; total_hours?: unknow
   return t != null && t > 0 ? t : null;
 }
 
+/**
+ * How a leave row reads in a list of worked time: its label ("PTO", "Sick")
+ * and its hours (from hours_worked). Null for a worked shift.
+ *
+ * Only the NON_WORKED_ENTRY_TYPES count. entry_type is NOT NULL with default
+ * 'regular', and this is used to drop rows from certified payroll, so an
+ * unknown type is treated as worked rather than silently removed.
+ */
+export function leaveOf(row: { entry_type?: string | null; hours_worked?: unknown; total_hours?: unknown }): { type: string; label: string; hours: number } | null {
+  const t = String(row.entry_type ?? '').trim().toLowerCase();
+  if (!(NON_WORKED_ENTRY_TYPES as readonly string[]).includes(t)) return null;
+  return { type: t, label: LEAVE_LABEL[t] || t.toUpperCase(), hours: leaveHoursOf(row) ?? 0 };
+}
+
 export type LeaveDraft = { type: string; date: string; hours: string; project: string };
 export type LeaveField = 'type' | 'project' | 'date' | 'hours';
 export type LeaveCheck =

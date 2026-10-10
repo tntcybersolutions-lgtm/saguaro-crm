@@ -4,12 +4,20 @@ import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
 import SubEndOfDay from '@/components/portal/SubEndOfDay';
+import {
+  fmtDay, sequenceLabels, invoiceView, fmtPercent, dailyLogView, fileNameFromUrl,
+  expiryLevel, isUnreadForSub, SCORE_CATEGORIES, overallRating, complianceDocFor,
+} from '@/lib/sub-portal-view';
+import { invoiceWaiver, isSignedWaiver, isSignableWaiver, waiverTypeForInvoice, waiverTypeLabel } from '@/lib/sub-lien-waiver';
+import { COMPLIANCE_ACCEPT, COMPLIANCE_MAX_BYTES, checkComplianceFileName } from '@/lib/sub-portal-files';
+import { putSigned } from '@/lib/media-upload';
 
 /* ── Design Tokens ── */
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF';
 const GREEN='#2CFF7A',RED='#FF3B30',AMBER='#FF8A00',BLUE='var(--brand-primary)',PURPLE='#FF8A00';
 const fmt=(n:number)=>'$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}));
-const fmtDate=(d:string)=>d?new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'--';
+/* A date column ('YYYY-MM-DD') is a calendar day — fmtDay keeps it on that day in every timezone. */
+const fmtDate=(d:string|null|undefined)=>fmtDay(d);
 
 type Tab='dashboard'|'photos'|'punch'|'daily'|'schedule'|'rfis'|'radio'|'payapps'|'bids'|'documents'|'drawings'|'compliance'|'scorecard'|'messages'|'history';
 
@@ -17,9 +25,10 @@ type Tab='dashboard'|'photos'|'punch'|'daily'|'schedule'|'rfis'|'radio'|'payapps
 const card=(extra?:React.CSSProperties):React.CSSProperties=>({background:RAISED,backgroundImage:'linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015))',border:`1px solid ${BORDER}`,borderRadius:12,padding:20,boxShadow:'0 4px 14px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.06)',...extra});
 const btnS=(color:string,small?:boolean):React.CSSProperties=>({background:color,backgroundImage:color===GOLD?'linear-gradient(180deg,var(--brand-primary-strong),var(--brand-primary) 60%,var(--brand-primary-hover))':'linear-gradient(180deg,rgba(255,255,255,0.16),rgba(255,255,255,0) 55%)',color:color===GOLD?'#0A0A00':'#fff',border:'none',borderRadius:9,padding:small?'6px 14px':'11px 20px',fontWeight:800,fontSize:small?12:14,cursor:'pointer',boxShadow:color===GOLD?'0 4px 14px color-mix(in srgb, var(--brand-primary) 28%, transparent), inset 0 1px 0 rgba(255,255,255,0.35)':'0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)'});
 const labelS:React.CSSProperties={display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5};
-const inputS:React.CSSProperties={width:'100%',background:DARK,border:`1px solid ${BORDER}`,borderRadius:7,padding:'10px 14px',color:TEXT,fontSize:14,outline:'none',boxSizing:'border-box'};
+/* 16px text: iOS zooms the page into any input set smaller. 44px: a fingertip target. */
+const inputS:React.CSSProperties={width:'100%',background:DARK,border:`1px solid ${BORDER}`,borderRadius:7,padding:'10px 14px',color:TEXT,fontSize:16,minHeight:44,outline:'none',boxSizing:'border-box'};
 const textareaS:React.CSSProperties={...inputS,minHeight:80,resize:'vertical' as const};
-const badge=(status:string):React.CSSProperties=>{const m:Record<string,string>={approved:GREEN,paid:GREEN,accepted:GREEN,awarded:GREEN,valid:GREEN,submitted:BLUE,open:BLUE,pending:AMBER,under_review:AMBER,pending_review:AMBER,draft:DIM,expiring_soon:AMBER,correction_requested:AMBER,rejected:RED,disputed:RED,expired:RED,declined:RED,missing:RED};const c=m[status]||DIM;return{display:'inline-block',padding:'3px 10px',borderRadius:20,fontSize:11,fontWeight:700,background:`color-mix(in srgb, ${c} 13%, transparent)`,color:c,textTransform:'capitalize' as const}};
+const badge=(status:string):React.CSSProperties=>{const m:Record<string,string>={approved:GREEN,paid:GREEN,signed:GREEN,accepted:GREEN,awarded:GREEN,valid:GREEN,submitted:BLUE,open:BLUE,pending:AMBER,under_review:AMBER,pending_review:AMBER,draft:DIM,expiring_soon:AMBER,correction_requested:AMBER,rejected:RED,disputed:RED,expired:RED,declined:RED,missing:RED};const c=m[status]||DIM;return{display:'inline-block',padding:'3px 10px',borderRadius:20,fontSize:11,fontWeight:700,background:`color-mix(in srgb, ${c} 13%, transparent)`,color:c,textTransform:'capitalize' as const}};
 
 function Stars({rating,max=5,size=18}:{rating:number;max?:number;size?:number}){
   return <span style={{display:'inline-flex',gap:2}}>{Array.from({length:max},(_,i)=><span key={i} style={{fontSize:size,color:i<Math.round(rating)?GOLD:BORDER}}>{i<Math.round(rating)?'\u2605':'\u2606'}</span>)}</span>;
@@ -41,22 +50,62 @@ function RadioWave({seed,color}:{seed:string;color:string}){
   );
 }
 
-function SignatureCanvas({onSign}:{onSign:(data:string)=>void}){
+function SignatureCanvas({onSign,onClear}:{onSign:(data:string)=>void;onClear?:()=>void}){
   const ref=useRef<HTMLCanvasElement>(null);
-  const [drawing,setDrawing]=useState(false);
+  // Refs, not state, decide whether a stroke counts: a quick stroke can end
+  // before React re-renders, and a stale `has` would drop the signature while
+  // the pad still says "Signature captured".
+  const drawingRef=useRef(false);
+  const hasRef=useRef(false);
   const [has,setHas]=useState(false);
-  const pos=(e:React.MouseEvent|React.TouchEvent)=>{const r=ref.current!.getBoundingClientRect();const cx='touches' in e?e.touches[0].clientX:e.clientX;const cy='touches' in e?e.touches[0].clientY:e.clientY;return{x:cx-r.left,y:cy-r.top}};
-  const start=(e:React.MouseEvent|React.TouchEvent)=>{setDrawing(true);const ctx=ref.current!.getContext('2d')!;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)};
-  const draw=(e:React.MouseEvent|React.TouchEvent)=>{if(!drawing)return;const ctx=ref.current!.getContext('2d')!;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.strokeStyle=TEXT;ctx.lineWidth=2;ctx.lineCap='round';ctx.stroke();setHas(true)};
-  const stop=()=>{setDrawing(false);if(has)onSign(ref.current!.toDataURL())};
-  const clear=()=>{ref.current!.getContext('2d')!.clearRect(0,0,400,120);setHas(false)};
+  /* The canvas is 400×120 but shrinks to fit a phone; map the finger from CSS
+     pixels to canvas pixels or the stroke lands off to the side of it. */
+  const pos=(e:React.MouseEvent|React.TouchEvent)=>{const c=ref.current!;const r=c.getBoundingClientRect();const cx='touches' in e?e.touches[0].clientX:e.clientX;const cy='touches' in e?e.touches[0].clientY:e.clientY;return{x:(cx-r.left)*(c.width/(r.width||c.width)),y:(cy-r.top)*(c.height/(r.height||c.height))}};
+  const start=(e:React.MouseEvent|React.TouchEvent)=>{drawingRef.current=true;const ctx=ref.current!.getContext('2d')!;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)};
+  const draw=(e:React.MouseEvent|React.TouchEvent)=>{if(!drawingRef.current)return;const ctx=ref.current!.getContext('2d')!;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.strokeStyle=TEXT;ctx.lineWidth=2;ctx.lineCap='round';ctx.stroke();hasRef.current=true;setHas(true)};
+  /* The pad draws light ink for the dark screen; the waiver is printed on white
+     paper, so the saved image is the same strokes recoloured to dark ink. */
+  const inkPng=()=>{const src=ref.current!;const c=document.createElement('canvas');c.width=src.width;c.height=src.height;const x=c.getContext('2d')!;x.drawImage(src,0,0);x.globalCompositeOperation='source-in';x.fillStyle='rgb(13,17,22)';x.fillRect(0,0,c.width,c.height);return c.toDataURL('image/png')};
+  const stop=()=>{if(!drawingRef.current)return;drawingRef.current=false;if(hasRef.current)onSign(inkPng())};
+  const clear=()=>{const c=ref.current!;c.getContext('2d')!.clearRect(0,0,c.width,c.height);hasRef.current=false;setHas(false);onClear?.()};
   return(
     <div>
-      <canvas ref={ref} width={400} height={120} style={{background:DARK,border:`1px solid ${BORDER}`,borderRadius:7,cursor:'crosshair',touchAction:'none',maxWidth:'100%'}} onMouseDown={start} onMouseMove={draw} onMouseUp={stop} onMouseLeave={stop} onTouchStart={start} onTouchMove={draw} onTouchEnd={stop}/>
-      <div style={{marginTop:6,display:'flex',gap:8}}>
-        <button onClick={clear} style={btnS(BORDER,true)}>Clear</button>
-        {has&&<span style={{color:GREEN,fontSize:12,alignSelf:'center'}}>Signature captured</span>}
+      <canvas ref={ref} width={400} height={120} aria-label="Signature pad — draw your signature" style={{background:DARK,border:`1px solid ${BORDER}`,borderRadius:7,cursor:'crosshair',touchAction:'none',maxWidth:'100%',display:'block'}} onMouseDown={start} onMouseMove={draw} onMouseUp={stop} onMouseLeave={stop} onTouchStart={start} onTouchMove={draw} onTouchEnd={stop}/>
+      <div style={{marginTop:6,display:'flex',gap:8,alignItems:'center'}}>
+        <button type="button" onClick={clear} style={{...btnS(BORDER,true),minHeight:44,minWidth:64}}>Clear</button>
+        {has&&<span style={{color:GREEN,fontSize:12}}>Signature captured</span>}
       </div>
+    </div>
+  );
+}
+
+/* One waiver to sign: the signer's name and title, the drawn signature, and a
+   Submit that saves it (the caller posts to /api/portal/sub/lien-waivers and
+   returns an error message, or null once it is saved). */
+function LienWaiverSigner({defaultName,onSubmit}:{defaultName:string;onSubmit:(v:{signed_name:string;signer_title:string;signature:string})=>Promise<string|null>}){
+  const uid=React.useId();
+  const [name,setName]=useState(defaultName);
+  const [title,setTitle]=useState('');
+  const [sig,setSig]=useState<string|null>(null);
+  const [saving,setSaving]=useState(false);
+  const [err,setErr]=useState('');
+  const submit=async()=>{
+    if(name.trim().length<2){setErr('Type your full name to sign.');return;}
+    if(!sig){setErr('Draw your signature in the box first.');return;}
+    setSaving(true);setErr('');
+    const e=await onSubmit({signed_name:name.trim(),signer_title:title.trim(),signature:sig});
+    setSaving(false);
+    if(e)setErr(e);
+  };
+  return(
+    <div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:12,marginBottom:10}}>
+        <div><label htmlFor={`${uid}-n`} style={labelS}>Your full name *</label><input id={`${uid}-n`} value={name} onChange={e=>setName(e.target.value)} autoComplete="name" style={inputS}/></div>
+        <div><label htmlFor={`${uid}-t`} style={labelS}>Title</label><input id={`${uid}-t`} value={title} onChange={e=>setTitle(e.target.value)} placeholder="Owner, Project Manager…" autoComplete="organization-title" style={inputS}/></div>
+      </div>
+      <div style={{marginBottom:10}}><div style={labelS}>Signature *</div><SignatureCanvas onSign={setSig} onClear={()=>setSig(null)}/></div>
+      {err&&<div role="alert" style={{color:RED,fontSize:13,fontWeight:600,marginBottom:10}}>{err}</div>}
+      <button type="button" onClick={submit} disabled={saving} style={{...btnS(PURPLE),minHeight:44,opacity:saving?0.6:1}}>{saving?'Saving…':'Submit Signed Lien Waiver'}</button>
     </div>
   );
 }
@@ -99,15 +148,15 @@ export default function SubPortal(){
   const [rfiForm,setRfiForm]=useState({subject:'',question:'',priority:'normal',reference_drawing:'',reference_spec:''});
   const [rfiSaving,setRfiSaving]=useState(false);
   const [docUploadType,setDocUploadType]=useState('');
-  const [docFileName,setDocFileName]=useState('');
+  const [docFile,setDocFile]=useState<File|null>(null);
   const [docExpiry,setDocExpiry]=useState('');
-  const [docCarrier,setDocCarrier]=useState('');
-  const [docPolicyNum,setDocPolicyNum]=useState('');
-  const [docCoverage,setDocCoverage]=useState('');
   const [docUploading,setDocUploading]=useState(false);
+  const [docProgress,setDocProgress]=useState<number|null>(null);
+  const [docErr,setDocErr]=useState('');
   const [msgContent,setMsgContent]=useState('');
   const [msgSending,setMsgSending]=useState(false);
-  const [lienSig,setLienSig]=useState<string|null>(null);
+  /* This sub's lien_waivers rows on this job (signed and waiting), from /api/portal/sub/lien-waivers. */
+  const [lienWaivers,setLienWaivers]=useState<any[]>([]);
 
   /* ── GPS Clock ── */
   const [gpsStatus,setGpsStatus]=useState<'idle'|'clocked_in'|'clocked_out'>('idle');
@@ -172,6 +221,7 @@ export default function SubPortal(){
           fetch(`/api/portal/sub/drawings?token=${token}`,{headers}).then(r=>r.json()),
           fetch(`/api/portal/sub/punch?token=${token}`,{headers}).then(r=>r.json()),
           fetch(`/api/portal/sub/activity?token=${token}`,{headers}).then(r=>r.json()),
+          fetch(`/api/portal/sub/lien-waivers?token=${token}`,{headers}).then(r=>r.json()),
         ]);
       })
       .then(results=>{
@@ -188,6 +238,7 @@ export default function SubPortal(){
         setDrawings(val(9).drawings||[]);
         setPunchItems(val(10).punch_items||[]);
         setActivity(val(11).events||[]);
+        setLienWaivers(val(12).lien_waivers||[]);
       })
       .catch(e=>{ console.error(e); setError(humanError(e, 'Failed to load the portal. Please try again.')); })
       .finally(()=>setLoading(false));
@@ -371,25 +422,35 @@ export default function SubPortal(){
     setRfiSaving(false);
   };
 
+  /* Compliance upload: the file itself goes to storage through a one-time signed
+     URL (no serverless size cap), then the record is saved with its URL. This
+     used to post a typed file name and store no file at all. */
   const uploadComplianceDoc=async()=>{
-    if(!docUploadType||!docFileName){showToast('Document type and file name are required.');return;}
-    setDocUploading(true);
+    if(!docUploadType){setDocErr('Pick the document type.');return;}
+    if(!docFile){setDocErr('Choose the file to upload.');return;}
+    const name=checkComplianceFileName(docFile.name);
+    if(!name.ok){setDocErr(name.message);return;}
+    if(docFile.size>COMPLIANCE_MAX_BYTES){setDocErr('That file is over 50 MB. Upload a smaller scan or PDF.');return;}
+    setDocUploading(true);setDocErr('');setDocProgress(0);
     try{
-      const result=await apiPost('compliance',{
-        doc_type:docUploadType,
-        file_name:docFileName,
-        expires_at:docExpiry||null,
-        carrier:docCarrier||null,
-        policy_number:docPolicyNum||null,
-        coverage_amount:docCoverage?parseFloat(docCoverage):null,
-      });
-      if(result.compliance_doc){
-        showToast('Document uploaded.');
-        setComplianceDocs(prev=>[{...result.compliance_doc,expiration_status:'valid',days_until_expiry:null},...prev]);
-        setDocUploadType('');setDocFileName('');setDocExpiry('');setDocCarrier('');setDocPolicyNum('');setDocCoverage('');
-      } else showToast(result.error||'Upload failed.');
-    }catch{showToast('Network error.');}
-    setDocUploading(false);
+      const urlRes=await fetch(`/api/portal/sub/compliance/upload-url?token=${token}`,{method:'POST',headers,body:JSON.stringify({fileName:docFile.name})});
+      const up=await urlRes.json().catch(()=>null);
+      if(!urlRes.ok||!up?.path){setDocErr(up?.error||"Couldn't start the upload. Please try again.");return;}
+      await putSigned(up,docFile,f=>setDocProgress(Math.round(f*100)));
+      const recRes=await fetch(`/api/portal/sub/compliance?token=${token}`,{method:'POST',headers,body:JSON.stringify({doc_type:docUploadType,path:up.path,expiry_date:docExpiry||null})});
+      const result=await recRes.json().catch(()=>null);
+      if(recRes.ok&&result?.compliance_doc){
+        showToast('Document uploaded — your GC can see it now.');
+        setComplianceDocs(prev=>[result.compliance_doc,...prev]);
+        setDocUploadType('');setDocFile(null);setDocExpiry('');setDocProgress(null);
+        refreshActivity();
+      } else setDocErr(result?.error||"Couldn't save the document. Please try again.");
+    }catch(e){
+      console.error('[sub-portal] compliance upload failed',e);
+      setDocErr(e instanceof Error&&e.message?`Upload failed: ${e.message}`:'No connection — the file was not uploaded. Try again.');
+    }finally{
+      setDocUploading(false);
+    }
   };
 
   const sendMessage=async()=>{
@@ -403,6 +464,26 @@ export default function SubPortal(){
       } else showToast(result.error||'Failed to send.');
     }catch{showToast('Network error.');}
     setMsgSending(false);
+  };
+
+  /* Sign a lien waiver — for an approved / paid invoice ({pay_app_id}) or one the
+     GC filed and is waiting on ({waiver_id}). Saved as a lien_waivers row with a
+     signed PDF; the GC is notified. Returns an error to show, or null when saved. */
+  const signLienWaiver=async(target:{pay_app_id?:string;waiver_id?:string},v:{signed_name:string;signer_title:string;signature:string}):Promise<string|null>=>{
+    try{
+      const res=await fetch(`/api/portal/sub/lien-waivers?token=${token}`,{method:'POST',headers,body:JSON.stringify({...target,...v})});
+      const json=await res.json().catch(()=>null);
+      const saved=json?.lien_waiver;
+      if(saved&&(res.ok||res.status===409)){
+        setLienWaivers(prev=>[saved,...prev.filter((w:any)=>w.id!==saved.id)]);
+        showToast(res.ok?'Lien waiver signed — your GC has it now.':(json?.error||'This lien waiver is already signed.'));
+        if(res.ok)refreshActivity();
+        return null;
+      }
+      return json?.error||"Couldn't save your signed lien waiver. Please try again.";
+    }catch{
+      return 'No connection — the waiver was not sent. Try again.';
+    }
   };
 
   const sendRadioText=async()=>{
@@ -495,20 +576,22 @@ export default function SubPortal(){
       <div style={{fontSize:13,color:DIM,lineHeight:1.6}}>{companyName} was invited to this job by email and isn’t on the contractor’s subcontractor list yet. Ask them to add you as a subcontractor and send you a new portal link. End-of-day photos, documents, drawings, the punch list, radio and the clock all work from this link now.</div>
     </div>
   );
-  const overallScore=scorecard?.averages?.overall||0;
+  /* The GC's rating on the roster (subcontractors.rating), else the scorecard average. */
+  const overallScore=overallRating(scorecard);
   const isPreferred=scorecard?.preferred_status||false;
+  /* portal_sub_rfis / _pay_apps have no number column: number them in filing order. */
+  const rfiNo=sequenceLabels(rfis,'RFI-SUB-');
+  const invoiceNo=sequenceLabels(payApps,'#',1);
+  const unreadCount=messages.filter(isUnreadForSub).length;
+  const docFileLabel=(doc:any)=>fileNameFromUrl(doc?.file_url)||'No file attached';
 
-  // Insurance expiration alerts
+  // Insurance expiration alerts — expiry_date is the column (expires_at never existed, so these never fired).
   const getExpirationAlerts=()=>{
     const alerts:{doc:any;level:'critical'|'warning'|'notice'}[]=[];
     complianceDocs.forEach(doc=>{
-      if(!doc.expires_at)return;
-      const days=doc.days_until_expiry;
-      if(days===null)return;
-      if(days<=0) alerts.push({doc,level:'critical'});
-      else if(days<=30) alerts.push({doc,level:'critical'});
-      else if(days<=60) alerts.push({doc,level:'warning'});
-      else if(days<=90) alerts.push({doc,level:'notice'});
+      if(!doc.expiry_date)return;
+      const level=expiryLevel(doc.days_until_expiry);
+      if(level)alerts.push({doc,level});
     });
     return alerts.sort((a,b)=>(a.doc.days_until_expiry||0)-(b.doc.days_until_expiry||0));
   };
@@ -548,9 +631,17 @@ export default function SubPortal(){
   // Mark unread messages as read once the sub is actually looking at them.
   useEffect(()=>{
     if(tab!=='messages') return;
-    const unread=messages.filter((m:any)=>m.sender_type!=='sub'&&!m.read).map((m:any)=>m.id);
+    /* Read state is read_at (null = unread). This read `m.read`, which the table
+       doesn't have, so every GC message stayed "unread" and was re-sent here on
+       every render of the tab. */
+    const unread=messages.filter(isUnreadForSub).map((m:any)=>m.id);
     if(unread.length>0){
       fetch(`/api/portal/sub/messages?token=${token}`,{method:'PATCH',headers,body:JSON.stringify({message_ids:unread})})
+        .then(r=>{
+          if(!r.ok)throw new Error(`mark read answered ${r.status}`);
+          const at=new Date().toISOString();
+          setMessages(prev=>prev.map((m:any)=>unread.includes(m.id)?{...m,read_at:at}:m));
+        })
         .catch((e)=>console.error('[sub-portal] mark read failed',e));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -602,9 +693,9 @@ export default function SubPortal(){
     const alerts=getExpirationAlerts();
     const pendingPayApps=payApps.filter((p:any)=>p.status==='submitted'||p.status==='under_review').length;
     const openRfis=rfis.filter((r:any)=>r.status==='open').length;
-    const unreadMsgs=messages.filter((m:any)=>m.sender_type!=='sub'&&!m.read).length;
+    const unreadMsgs=unreadCount;
     return(
-      <div style={{display:'grid',gap:20}}>
+      <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
         {/* Welcome + Health Badge */}
         <div style={{...card(),background:`linear-gradient(135deg,${RAISED},${DARK})`,position:'relative',overflow:'hidden'}}>
           <div style={{position:'absolute',right:-30,top:-30,width:140,height:140,background:`color-mix(in srgb, ${GOLD} 3%, transparent)`,borderRadius:'50%'}}/>
@@ -638,7 +729,7 @@ export default function SubPortal(){
               const days=a.doc.days_until_expiry;
               const c=a.level==='critical'?RED:a.level==='warning'?AMBER:BLUE;
               return <div key={i} style={{padding:'8px 0',borderBottom:i<alerts.length-1?`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`:'none',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
-                <div style={{fontSize:13,color:TEXT}}><strong style={{color:c}}>{a.doc.doc_type}</strong> &mdash; {a.doc.file_name}</div>
+                <div style={{fontSize:13,color:TEXT}}><strong style={{color:c}}>{a.doc.doc_type}</strong> &mdash; {docFileLabel(a.doc)}</div>
                 <div style={{fontSize:12,fontWeight:700,color:c}}>{days<=0?'Expired':days<=30?`${days}d — Urgent`:days<=60?`${days}d — Warning`:`${days}d — Notice`}</div>
               </div>;
             })}
@@ -689,7 +780,7 @@ export default function SubPortal(){
             dailyLogs.slice(0,3).map((log:any)=>(
               <div key={log.id} style={{padding:'10px 0',borderBottom:`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`}}>
                 <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}><span style={{fontSize:13,fontWeight:600,color:TEXT}}>{fmtDate(log.log_date)}</span><span style={badge(log.status)}>{log.status}</span></div>
-                <div style={{fontSize:12,color:DIM}}>{log.crew_count} crew &middot; {log.hours_worked}h</div>
+                <div style={{fontSize:12,color:DIM}}>{dailyLogView(log).crew} crew &middot; {dailyLogView(log).hours}h</div>
               </div>
             ))}
           </div>
@@ -698,7 +789,7 @@ export default function SubPortal(){
             {rfis.filter((r:any)=>r.status==='open').length===0?<div style={{color:DIM,fontSize:13,textAlign:'center',padding:20}}>No open RFIs</div>:
             rfis.filter((r:any)=>r.status==='open').slice(0,5).map((rfi:any)=>(
               <div key={rfi.id} style={{padding:'8px 0',borderBottom:`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                <div><div style={{fontSize:13,fontWeight:600,color:TEXT}}>{rfi.rfi_number}</div><div style={{fontSize:11,color:DIM}}>{rfi.subject}</div></div>
+                <div><div style={{fontSize:13,fontWeight:600,color:TEXT}}>{rfiNo[rfi.id]}</div><div style={{fontSize:11,color:DIM}}>{rfi.subject}</div></div>
                 <span style={badge(rfi.status)}>{rfi.status}</span>
               </div>
             ))}
@@ -716,23 +807,26 @@ export default function SubPortal(){
     const docLabels:Record<string,string>={insurance:'Insurance Certificate',w9:'W-9',lien_waiver:'Lien Waiver',business_license:'Business License',bond:'Bond',safety_certification:'Safety Certification'};
     const alerts=getExpirationAlerts();
     return(
-      <div style={{display:'grid',gap:20}}>
+      <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
         {/* Upload Form */}
         {!onRoster?rosterNote('Compliance uploads'):<div style={card()}>
           <div style={{fontSize:17,fontWeight:700,color:TEXT,marginBottom:16}}>Upload Compliance Document</div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:16,marginBottom:16}}>
-            <div><div style={labelS}>Document Type *</div><select value={docUploadType} onChange={e=>setDocUploadType(e.target.value)} style={{...inputS,cursor:'pointer'}}><option value="">Select type…</option>{docTypes.map(t=><option key={t} value={t}>{docLabels[t]||t}</option>)}</select></div>
-            <div><div style={labelS}>File Name *</div><input value={docFileName} onChange={e=>setDocFileName(e.target.value)} placeholder="insurance_cert_2026.pdf" style={inputS}/></div>
+            <div><label htmlFor="cd-type" style={labelS}>Document Type *</label><select id="cd-type" value={docUploadType} onChange={e=>{setDocUploadType(e.target.value);setDocErr('');}} style={{...inputS,cursor:'pointer'}}><option value="">Select type…</option>{docTypes.map(t=><option key={t} value={t}>{docLabels[t]||t}</option>)}</select></div>
+            <div><div style={labelS}>File *</div>
+              {/* The real file — PDF, photo of the certificate, or Word. */}
+              <label style={{...btnS(BORDER),minHeight:44,display:'flex',alignItems:'center',gap:8,width:'100%',boxSizing:'border-box',color:TEXT,opacity:docUploading?0.6:1,cursor:docUploading?'wait':'pointer',overflow:'hidden'}}>
+                <span aria-hidden>{'↑'}</span>
+                <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',minWidth:0}}>{docFile?docFile.name:'Choose file'}</span>
+                <input type="file" accept={COMPLIANCE_ACCEPT} style={{display:'none'}} disabled={docUploading}
+                  onChange={e=>{setDocFile(e.target.files?.[0]||null);setDocErr('');e.currentTarget.value='';}}/>
+              </label>
+              {docFile&&<div style={{fontSize:11,color:DIM,marginTop:4}}>{(docFile.size/1024/1024).toFixed(1)} MB</div>}
+            </div>
             <div><div style={labelS}>Expiration Date</div><SaguaroDatePicker value={docExpiry} onChange={v=>setDocExpiry(v)} style={inputS}/></div>
           </div>
-          {docUploadType==='insurance'&&(
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:16,marginBottom:16}}>
-              <div><div style={labelS}>Carrier</div><input value={docCarrier} onChange={e=>setDocCarrier(e.target.value)} placeholder="State Farm, Liberty Mutual…" style={inputS}/></div>
-              <div><div style={labelS}>Policy Number</div><input value={docPolicyNum} onChange={e=>setDocPolicyNum(e.target.value)} placeholder="POL-123456" style={inputS}/></div>
-              <div><div style={labelS}>Coverage Amount</div><input type="number" value={docCoverage} onChange={e=>setDocCoverage(e.target.value)} placeholder="1000000" style={inputS}/></div>
-            </div>
-          )}
-          <button onClick={uploadComplianceDoc} disabled={docUploading} style={btnS(BLUE)}>{docUploading?'Uploading…':'Upload Document'}</button>
+          {docErr&&<div role="alert" style={{color:RED,fontSize:13,fontWeight:600,marginBottom:12}}>{docErr}</div>}
+          <button onClick={uploadComplianceDoc} disabled={docUploading} style={{...btnS(BLUE),minHeight:44}}>{docUploading?(docProgress!=null&&docProgress<100?`Uploading… ${docProgress}%`:'Saving…'):'Upload Document'}</button>
         </div>}
 
         {/* 30/60/90 Day Expiration Alerts */}
@@ -744,7 +838,7 @@ export default function SubPortal(){
               const c=a.level==='critical'?RED:a.level==='warning'?AMBER:BLUE;
               const levelLabel=days<=0?'Expired':days<=30?'30-Day Alert':days<=60?'60-Day Alert':'90-Day Alert';
               return <div key={i} style={{padding:'10px 12px',background:`color-mix(in srgb, ${c} 7%, transparent)`,border:`1px solid color-mix(in srgb, ${c} 20%, transparent)`,borderRadius:6,marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
-                <div><div style={{fontSize:13,fontWeight:700,color:TEXT}}>{docLabels[a.doc.doc_type]||a.doc.doc_type}</div><div style={{fontSize:11,color:DIM}}>{a.doc.file_name} &middot; Expires: {fmtDate(a.doc.expires_at)}</div></div>
+                <div><div style={{fontSize:13,fontWeight:700,color:TEXT}}>{docLabels[a.doc.doc_type]||a.doc.doc_type}</div><div style={{fontSize:11,color:DIM}}>{docFileLabel(a.doc)} &middot; Expires: {fmtDate(a.doc.expiry_date)}</div></div>
                 <div style={{padding:'4px 12px',borderRadius:20,background:`color-mix(in srgb, ${c} 13%, transparent)`,color:c,fontSize:11,fontWeight:700}}>{levelLabel} ({days<=0?'Overdue':`${days}d`})</div>
               </div>;
             })}
@@ -756,7 +850,7 @@ export default function SubPortal(){
           <div style={{fontSize:17,fontWeight:700,color:TEXT,marginBottom:16}}>Compliance Status</div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:14}}>
             {docTypes.map(type=>{
-              const doc=complianceDocs.find((d:any)=>d.doc_type===type);
+              const doc=complianceDocFor(complianceDocs,type);
               const status=doc?doc.expiration_status:'missing';
               const c=status==='valid'?GREEN:status==='expiring_soon'?AMBER:status==='expired'?RED:doc?.status==='approved'?GREEN:doc?.status==='pending_review'?AMBER:RED;
               return(
@@ -764,12 +858,12 @@ export default function SubPortal(){
                   <div style={{position:'absolute',top:12,right:12,width:10,height:10,borderRadius:'50%',background:c}}/>
                   <div style={{fontSize:14,fontWeight:700,color:TEXT,marginBottom:6}}>{docLabels[type]||type}</div>
                   {doc?(<div>
-                    <div style={{fontSize:12,color:DIM,marginBottom:4}}>File: {doc.file_name}</div>
-                    {doc.carrier&&<div style={{fontSize:12,color:DIM,marginBottom:4}}>Carrier: {doc.carrier}</div>}
-                    {doc.policy_number&&<div style={{fontSize:12,color:DIM,marginBottom:4}}>Policy: {doc.policy_number}</div>}
-                    {doc.coverage_amount&&<div style={{fontSize:12,color:DIM,marginBottom:4}}>Coverage: {fmt(doc.coverage_amount)}</div>}
-                    {doc.expires_at&&<div style={{fontSize:12,color:c,fontWeight:600,marginBottom:4}}>{doc.days_until_expiry!==null&&doc.days_until_expiry<=0?'Expired':doc.days_until_expiry!==null&&doc.days_until_expiry<=30?`Expires in ${doc.days_until_expiry} days`:`Expires: ${fmtDate(doc.expires_at)}`}</div>}
-                    <span style={badge(doc.status)}>{(doc.status||'').replace(/_/g,' ')}</span>
+                    <div style={{fontSize:12,color:DIM,marginBottom:4,overflowWrap:'anywhere'}}>File: {docFileLabel(doc)}</div>
+                    {doc.expiry_date&&<div style={{fontSize:12,color:c,fontWeight:600,marginBottom:4}}>{doc.days_until_expiry!==null&&doc.days_until_expiry<=0?'Expired':doc.days_until_expiry!==null&&doc.days_until_expiry<=30?`Expires in ${doc.days_until_expiry} days`:`Expires: ${fmtDate(doc.expiry_date)}`}</div>}
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,flexWrap:'wrap'}}>
+                      <span style={badge(doc.status)}>{(doc.status||'').replace(/_/g,' ')}</span>
+                      {doc.file_url&&<a href={doc.file_url} target="_blank" rel="noopener noreferrer" style={{...btnS(BORDER,true),minHeight:44,display:'inline-flex',alignItems:'center',textDecoration:'none',color:TEXT}}>View file</a>}
+                    </div>
                   </div>):(<div style={{fontSize:12,color:RED,fontWeight:600}}>Not uploaded — action required</div>)}
                 </div>
               );
@@ -784,7 +878,7 @@ export default function SubPortal(){
             <div style={{display:'grid',gap:8}}>
               {documents.map((doc:any)=>(
                 <div key={doc.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}>
-                  <div><div style={{fontSize:13,fontWeight:600,color:TEXT}}>{doc.name||doc.file_name||'Document'}</div><div style={{fontSize:11,color:DIM}}>{doc.category||'General'} &middot; {fmtDate(doc.created_at)}</div></div>
+                  <div><div style={{fontSize:13,fontWeight:600,color:TEXT}}>{doc.title||fileNameFromUrl(doc.file_url)||'Document'}</div><div style={{fontSize:11,color:DIM}}>{doc.category||'General'} &middot; {fmtDate(doc.created_at)}</div></div>
                   {doc.file_url&&<a href={doc.file_url} target="_blank" rel="noopener noreferrer" style={{...btnS(BLUE,true),textDecoration:'none'}}>Download</a>}
                 </div>
               ))}
@@ -798,20 +892,51 @@ export default function SubPortal(){
   /* ================================================================ */
   /*  PAY APPS TAB                                                     */
   /* ================================================================ */
+  /* A signed waiver as the sub sees it back: who signed, when, and the signed PDF. */
+  const renderSignedWaiver=(w:any)=>(
+    <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+      <div style={{fontSize:12,color:DIM,flex:1,minWidth:200,lineHeight:1.5}}>{waiverTypeLabel(w.waiver_type)} for {fmt(Number(w.amount)||0)}{w.through_date?` through ${fmtDate(w.through_date)}`:''} — signed by {w.signed_name||'your company'}{w.signer_title?`, ${w.signer_title}`:''} on {fmtDate(w.signed_at)}.</div>
+      {w.file_url?<a href={w.file_url} target="_blank" rel="noopener noreferrer" style={{...btnS(BORDER,true),minHeight:44,display:'inline-flex',alignItems:'center',textDecoration:'none',color:TEXT}}>View signed PDF</a>
+        :<span style={{fontSize:11,color:DIM}}>No PDF on file</span>}
+    </div>
+  );
   const renderPayApps=()=>{
     const statusOrder=['submitted','under_review','approved','paid'];
+    /* Waivers not tied to one of the invoices below — ones the GC filed for this sub on this job. */
+    const invoiceWaiverIds=new Set(payApps.map((pa:any)=>invoiceWaiver(pa,lienWaivers)?.id).filter(Boolean));
+    const otherWaivers=lienWaivers.filter((w:any)=>!invoiceWaiverIds.has(w.id));
     return(
-      <div style={{display:'grid',gap:20}}>
+      <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
         {!onRoster&&rosterNote('Invoices')}
+        {otherWaivers.length>0&&(
+          <div style={card()}>
+            <div style={{fontSize:16,fontWeight:700,color:TEXT,marginBottom:4}}>Lien Waivers</div>
+            <div style={{fontSize:12,color:DIM,marginBottom:12}}>Waivers your general contractor filed for {companyName} on this job.</div>
+            {otherWaivers.map((w:any,i:number)=>{
+              const signed=isSignedWaiver(w);
+              return(
+                <div key={w.id} style={{padding:'12px 0',borderTop:i>0?`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`:'none'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:10,flexWrap:'wrap',marginBottom:8}}>
+                    <div style={{fontSize:13,fontWeight:700,color:TEXT}}>{waiverTypeLabel(w.waiver_type)} &mdash; {fmt(Number(w.amount)||0)}{w.through_date?` through ${fmtDate(w.through_date)}`:''}</div>
+                    <span style={badge(signed?'signed':(w.status||'pending'))}>{signed?'signed':(w.status||'pending')}</span>
+                  </div>
+                  {signed?renderSignedWaiver(w)
+                    :isSignableWaiver(w)?<LienWaiverSigner defaultName={sub?.contact_name||''} onSubmit={v=>signLienWaiver({waiver_id:w.id},v)}/>
+                    :null}
+                </div>
+              );
+            })}
+          </div>
+        )}
         {payApps.length===0?(
           <div style={{...card(),textAlign:'center',padding:40}}>
             <div style={{fontSize:15,fontWeight:700,color:TEXT}}>No Pay Applications Yet</div>
             <div style={{fontSize:13,color:DIM,marginTop:6}}>Pay applications will appear here once submitted.</div>
           </div>
-        ):payApps.map((pa:any)=>(
+        ):payApps.map((pa:any)=>{const iv=invoiceView(pa);return(
           <div key={pa.id} style={card()}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14,flexWrap:'wrap',gap:10}}>
-              <div><div style={{fontSize:16,fontWeight:700,color:TEXT}}>Pay App #{pa.application_number||pa.id?.slice(0,6)}</div><div style={{fontSize:12,color:DIM}}>Period: {fmtDate(pa.period_start)} - {fmtDate(pa.period_end)}</div></div>
+              <div><div style={{fontSize:16,fontWeight:700,color:TEXT}}>Invoice {invoiceNo[pa.id]}</div><div style={{fontSize:12,color:DIM}}>Period: {iv.periodFrom?`${fmtDate(iv.periodFrom)} – `:'through '}{fmtDate(iv.periodTo)}</div></div>
               <span style={badge(pa.status)}>{(pa.status||'').replace(/_/g,' ')}</span>
             </div>
 
@@ -830,41 +955,49 @@ export default function SubPortal(){
 
             {/* Amounts */}
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:12,marginBottom:14}}>
-              <div style={{padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}><div style={{fontSize:10,color:DIM}}>Requested</div><div style={{fontSize:16,fontWeight:700,color:TEXT}}>{fmt(pa.total_requested||0)}</div></div>
-              <div style={{padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}><div style={{fontSize:10,color:DIM}}>Retainage ({pa.retainage_percent||10}%)</div><div style={{fontSize:16,fontWeight:700,color:AMBER}}>{fmt(pa.retainage_amount||0)}</div></div>
-              <div style={{padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}><div style={{fontSize:10,color:DIM}}>Net Amount</div><div style={{fontSize:16,fontWeight:700,color:GREEN}}>{fmt(pa.net_amount||0)}</div></div>
+              <div style={{padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}><div style={{fontSize:10,color:DIM}}>Requested</div><div style={{fontSize:16,fontWeight:700,color:TEXT}}>{fmt(iv.requested)}</div></div>
+              <div style={{padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}><div style={{fontSize:10,color:DIM}}>Retainage Held</div><div style={{fontSize:16,fontWeight:700,color:AMBER}}>{fmt(iv.retainage)}</div></div>
+              <div style={{padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}><div style={{fontSize:10,color:DIM}}>Net Amount</div><div style={{fontSize:16,fontWeight:700,color:GREEN}}>{fmt(iv.net)}</div></div>
             </div>
 
-            {/* Line items */}
-            {pa.line_items&&pa.line_items.length>0&&(
+            {/* Line items — prev_completed / this_period / total_completed / percent_complete / balance are the real columns */}
+            {iv.lines.length>0&&(
               <div style={{overflowX:'auto'}}>
-                <table style={{width:'100%',borderCollapse:'collapse',minWidth:600}}>
-                  <thead><tr>{['Description','Scheduled Value','Previous','This Period','Requested','GC Status'].map(h=><th key={h} style={{textAlign:'left',padding:'6px 10px',fontSize:10,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}</tr></thead>
-                  <tbody>{pa.line_items.map((li:any)=>(
+                <table style={{width:'100%',borderCollapse:'collapse',minWidth:640}}>
+                  <thead><tr>{['Description','Scheduled Value','Previous','This Period','Completed to Date','% Complete','Balance'].map(h=><th key={h} style={{textAlign:'left',padding:'6px 10px',fontSize:10,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}</tr></thead>
+                  <tbody>{iv.lines.map(li=>(
                     <tr key={li.id} style={{borderBottom:`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`}}>
                       <td style={{padding:'8px 10px',fontSize:12,color:TEXT}}>{li.description}</td>
-                      <td style={{padding:'8px 10px',fontSize:12,color:DIM}}>{fmt(li.scheduled_value)}</td>
-                      <td style={{padding:'8px 10px',fontSize:12,color:DIM}}>{fmt(li.previous_completed)}</td>
-                      <td style={{padding:'8px 10px',fontSize:12,color:TEXT,fontWeight:600}}>{fmt(li.this_period)}</td>
-                      <td style={{padding:'8px 10px',fontSize:12,color:TEXT}}>{fmt(li.amount_requested)}</td>
-                      <td style={{padding:'8px 10px'}}><span style={badge(li.gc_status||'pending')}>{(li.gc_status||'pending').replace(/_/g,' ')}</span>{li.gc_notes&&<div style={{fontSize:10,color:AMBER,marginTop:2}}>{li.gc_notes}</div>}</td>
+                      <td style={{padding:'8px 10px',fontSize:12,color:DIM}}>{fmt(li.scheduled)}</td>
+                      <td style={{padding:'8px 10px',fontSize:12,color:DIM}}>{fmt(li.previous)}</td>
+                      <td style={{padding:'8px 10px',fontSize:12,color:TEXT,fontWeight:600}}>{fmt(li.thisPeriod)}</td>
+                      <td style={{padding:'8px 10px',fontSize:12,color:TEXT}}>{fmt(li.completedToDate)}</td>
+                      <td style={{padding:'8px 10px',fontSize:12,color:DIM}}>{fmtPercent(li.percent)}</td>
+                      <td style={{padding:'8px 10px',fontSize:12,color:DIM}}>{fmt(li.balance)}</td>
                     </tr>
                   ))}</tbody>
                 </table>
               </div>
             )}
 
-            {/* Lien Waiver */}
-            {(pa.status==='approved'||pa.status==='paid')&&(
-              <div style={{marginTop:14,padding:'12px 16px',background:`color-mix(in srgb, ${PURPLE} 7%, transparent)`,border:`1px solid color-mix(in srgb, ${PURPLE} 27%, transparent)`,borderRadius:8}}>
-                <div style={{fontSize:13,fontWeight:700,color:PURPLE,marginBottom:4}}>Lien Waiver: {pa.status==='paid'?'Unconditional':'Conditional'} Required</div>
-                <div style={{fontSize:12,color:DIM,marginBottom:10}}>{pa.status==='paid'?`Unconditional lien waiver for ${fmt(pa.net_amount)} is ready for execution.`:`Conditional lien waiver for ${fmt(pa.net_amount)} — will convert to unconditional upon payment.`}</div>
-                <div style={{marginBottom:10}}><div style={labelS}>Digital Signature</div><SignatureCanvas onSign={sig=>setLienSig(sig)}/></div>
-                {lienSig&&<button onClick={()=>{showToast('Lien waiver signed and submitted.');setLienSig(null);}} style={btnS(PURPLE)}>Submit Signed Lien Waiver</button>}
-              </div>
-            )}
+            {/* Lien Waiver — saved as a lien_waivers row (the GC's Lien Waivers page) with a signed PDF.
+                This button used to show a toast and save nothing. */}
+            {waiverTypeForInvoice(pa.status)&&(()=>{
+              const w=invoiceWaiver(pa,lienWaivers);
+              const signed=!!w&&isSignedWaiver(w);
+              const c=signed?GREEN:PURPLE;
+              return(
+                <div style={{marginTop:14,padding:'12px 16px',background:`color-mix(in srgb, ${c} 7%, transparent)`,border:`1px solid color-mix(in srgb, ${c} 27%, transparent)`,borderRadius:8}}>
+                  <div style={{fontSize:13,fontWeight:700,color:c,marginBottom:4}}>{signed?'Lien Waiver Signed':`Lien Waiver: ${pa.status==='paid'?'Unconditional':'Conditional'} Required`}</div>
+                  {signed&&w?renderSignedWaiver(w):(<>
+                    <div style={{fontSize:12,color:DIM,marginBottom:10}}>{pa.status==='paid'?`Unconditional lien waiver for ${fmt(iv.net)} through ${fmtDate(iv.periodTo)} — sign it to confirm this payment was received.`:`Conditional lien waiver for ${fmt(iv.net)} through ${fmtDate(iv.periodTo)} — it takes effect once you are paid.`}</div>
+                    <LienWaiverSigner defaultName={sub?.contact_name||''} onSubmit={v=>signLienWaiver({pay_app_id:pa.id},v)}/>
+                  </>)}
+                </div>
+              );
+            })()}
           </div>
-        ))}
+        );})}
       </div>
     );
   };
@@ -873,7 +1006,7 @@ export default function SubPortal(){
   /*  DAILY LOGS TAB                                                   */
   /* ================================================================ */
   const renderDaily=()=>(
-    <div style={{display:'grid',gap:20}}>
+    <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
       {!isOnline&&<div style={{padding:'10px 16px',background:`color-mix(in srgb, ${AMBER} 13%, transparent)`,border:`1px solid ${AMBER}`,borderRadius:8,display:'flex',alignItems:'center',gap:10}}><div style={{width:10,height:10,borderRadius:'50%',background:AMBER}}/><span style={{fontSize:13,color:AMBER,fontWeight:600}}>You are offline. Logs will be queued and submitted when connection is restored.</span></div>}
 
       {/* GPS Clock */}
@@ -911,22 +1044,23 @@ export default function SubPortal(){
       <div style={card()}>
         <div style={{fontSize:17,fontWeight:700,color:TEXT,marginBottom:16}}>Previous Daily Logs</div>
         {dailyLogs.length===0?<div style={{color:DIM,fontSize:13,textAlign:'center',padding:40}}>No daily logs submitted yet. Submit your first log above.</div>:
-        dailyLogs.map((log:any)=>(
+        dailyLogs.map((log:any)=>{const v=dailyLogView(log);return(
           <div key={log.id} style={{padding:16,background:DARK,borderRadius:8,border:`1px solid ${BORDER}`,marginBottom:12}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10,flexWrap:'wrap',gap:8}}>
               <div style={{fontSize:15,fontWeight:700,color:TEXT}}>{fmtDate(log.log_date)}</div>
               <span style={badge(log.status)}>{(log.status||'').replace(/_/g,' ')}</span>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(120px,1fr))',gap:10,marginBottom:10}}>
-              <div style={{fontSize:12}}><span style={{color:DIM}}>Crew:</span> <span style={{color:TEXT,fontWeight:600}}>{log.crew_count}</span></div>
-              <div style={{fontSize:12}}><span style={{color:DIM}}>Hours:</span> <span style={{color:TEXT,fontWeight:600}}>{log.hours_worked}h</span></div>
-              {log.weather&&<div style={{fontSize:12}}><span style={{color:DIM}}>Weather:</span> <span style={{color:TEXT}}>{log.weather}</span></div>}
+              <div style={{fontSize:12}}><span style={{color:DIM}}>Crew:</span> <span style={{color:TEXT,fontWeight:600}}>{v.crew}</span></div>
+              <div style={{fontSize:12}}><span style={{color:DIM}}>Hours:</span> <span style={{color:TEXT,fontWeight:600}}>{v.hours}h</span></div>
             </div>
-            {log.work_completed&&<div style={{fontSize:13,color:TEXT,marginBottom:6,lineHeight:1.5}}>{log.work_completed}</div>}
-            {log.delays&&<div style={{fontSize:12,color:AMBER,marginTop:4}}>Delays: {log.delays}</div>}
-            {log.safety_incidents&&<div style={{fontSize:12,color:RED,marginTop:4}}>Safety: {log.safety_incidents}</div>}
+            {v.workPerformed&&<div style={{fontSize:13,color:TEXT,marginBottom:6,lineHeight:1.5,whiteSpace:'pre-wrap'}}>{v.workPerformed}</div>}
+            {v.materials&&<div style={{fontSize:12,color:DIM,marginTop:4,whiteSpace:'pre-wrap'}}>Materials: {v.materials}</div>}
+            {v.delays&&<div style={{fontSize:12,color:AMBER,marginTop:4,whiteSpace:'pre-wrap'}}>Delays: {v.delays}</div>}
+            {/* Planned work, weather and safety notes are saved into notes by the daily-log route. */}
+            {v.notes&&<div style={{fontSize:12,color:DIM,marginTop:6,lineHeight:1.5,whiteSpace:'pre-wrap'}}>{v.notes}</div>}
           </div>
-        ))}
+        );})}
       </div>
     </div>
   );
@@ -935,7 +1069,7 @@ export default function SubPortal(){
   /*  RFI TAB                                                          */
   /* ================================================================ */
   const renderRfis=()=>(
-    <div style={{display:'grid',gap:20}}>
+    <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
       {/* RFI Form */}
       {!onRoster?rosterNote('RFIs'):<div style={card()}>
         <div style={{fontSize:17,fontWeight:700,color:TEXT,marginBottom:16}}>Submit RFI (Request for Information)</div>
@@ -956,13 +1090,13 @@ export default function SubPortal(){
         rfis.map((rfi:any)=>(
           <div key={rfi.id} style={{padding:14,background:DARK,borderRadius:8,border:`1px solid ${BORDER}`,marginBottom:10}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6,flexWrap:'wrap',gap:8}}>
-              <div><span style={{fontSize:12,color:GOLD,fontWeight:700,marginRight:8}}>{rfi.rfi_number}</span><span style={{fontSize:14,fontWeight:700,color:TEXT}}>{rfi.subject}</span></div>
+              <div><span style={{fontSize:12,color:GOLD,fontWeight:700,marginRight:8}}>{rfiNo[rfi.id]}</span><span style={{fontSize:14,fontWeight:700,color:TEXT}}>{rfi.subject}</span></div>
               <span style={badge(rfi.status)}>{rfi.status}</span>
             </div>
-            <div style={{fontSize:12,color:DIM,marginBottom:4}}>Submitted: {fmtDate(rfi.submitted_at||rfi.created_at)} &middot; Priority: <span style={{color:rfi.priority==='critical'?RED:rfi.priority==='high'?AMBER:DIM,fontWeight:600}}>{rfi.priority}</span></div>
-            <div style={{fontSize:13,color:TEXT,lineHeight:1.5}}>{rfi.question}</div>
-            {rfi.reference_drawing&&<div style={{fontSize:11,color:DIM,marginTop:4}}>Ref Drawing: {rfi.reference_drawing}</div>}
-            {rfi.gc_response&&<div style={{marginTop:8,padding:'8px 12px',background:`color-mix(in srgb, ${GREEN} 7%, transparent)`,borderRadius:6,border:`1px solid color-mix(in srgb, ${GREEN} 27%, transparent)`}}><div style={{fontSize:11,fontWeight:700,color:GREEN,marginBottom:4}}>Response:</div><div style={{fontSize:12,color:TEXT,lineHeight:1.5}}>{rfi.gc_response}</div></div>}
+            <div style={{fontSize:12,color:DIM,marginBottom:4}}>Submitted: {fmtDate(rfi.submitted_at||rfi.created_at)}</div>
+            {/* Priority and drawing / spec references are saved inside the question (portal_sub_rfis has no columns for them). */}
+            <div style={{fontSize:13,color:TEXT,lineHeight:1.5,whiteSpace:'pre-wrap'}}>{rfi.question}</div>
+            {rfi.answer&&<div style={{marginTop:8,padding:'8px 12px',background:`color-mix(in srgb, ${GREEN} 7%, transparent)`,borderRadius:6,border:`1px solid color-mix(in srgb, ${GREEN} 27%, transparent)`}}><div style={{fontSize:11,fontWeight:700,color:GREEN,marginBottom:4}}>Answer{rfi.answered_at?` · ${fmtDate(rfi.answered_at)}`:''}:</div><div style={{fontSize:12,color:TEXT,lineHeight:1.5,whiteSpace:'pre-wrap'}}>{rfi.answer}</div></div>}
           </div>
         ))}
       </div>
@@ -975,7 +1109,7 @@ export default function SubPortal(){
   const renderSchedule=()=>{
     const sorted=[...tasks].sort((a:any,b:any)=>new Date(a.start_date).getTime()-new Date(b.start_date).getTime());
     return(
-      <div style={{display:'grid',gap:20}}>
+      <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
         <div style={card()}>
           <div style={{fontSize:17,fontWeight:700,color:TEXT,marginBottom:16}}>Assigned Tasks &amp; Schedule</div>
           {tasks.length===0?<div style={{color:DIM,fontSize:13,textAlign:'center',padding:40}}>No schedule data available</div>:(
@@ -1014,21 +1148,17 @@ export default function SubPortal(){
   /* ================================================================ */
   const renderScorecard=()=>{
     const avgs=scorecard?.averages||{};
-    const cats=[
-      {key:'quality_score',label:'Quality'},
-      {key:'schedule_score',label:'Schedule'},
-      {key:'safety_score',label:'Safety'},
-      {key:'communication_score',label:'Communication'},
-      {key:'cleanup_score',label:'Cleanup'},
-    ];
+    /* portal_sub_scorecards has quality / schedule / safety / communication — no cleanup score. */
+    const cats=SCORE_CATEGORIES;
+    const reviews=Number(scorecard?.total_reviews)||0;
     return(
-      <div style={{display:'grid',gap:20}}>
+      <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
         {/* Overall */}
         <div style={{...card(),background:`linear-gradient(135deg,${RAISED},${DARK})`,textAlign:'center'}}>
           {isPreferred&&<div style={{marginBottom:16,display:'inline-flex',alignItems:'center',gap:10,background:`color-mix(in srgb, ${GOLD} 13%, transparent)`,border:`1px solid ${GOLD}`,borderRadius:30,padding:'8px 20px'}}><span style={{fontSize:22}}>{'\u2B50'}</span><span style={{fontSize:15,fontWeight:800,color:GOLD}}>Preferred Subcontractor</span></div>}
           <div style={{fontSize:56,fontWeight:800,color:GOLD}}>{overallScore>0?overallScore.toFixed(1):'--'}</div>
           <Stars rating={overallScore} size={28}/>
-          <div style={{fontSize:14,color:DIM,marginTop:8}}>Overall Performance Rating ({scorecard?.total_reviews||0} reviews)</div>
+          <div style={{fontSize:14,color:DIM,marginTop:8}}>{reviews>0?`Overall Performance Rating (${reviews} review${reviews===1?'':'s'})`:overallScore>0?'Overall rating from your general contractor':'Not rated yet'}</div>
         </div>
 
         {/* Health Score Card */}
@@ -1038,7 +1168,7 @@ export default function SubPortal(){
             <div style={{fontSize:32,fontWeight:800,color:healthColor}}>{healthScore>0?healthScore.toFixed(1):'--'}</div>
           </div>
           <div style={{fontSize:13,fontWeight:700,color:healthColor}}>{healthLabel}</div>
-          <div style={{fontSize:12,color:DIM,marginTop:8,lineHeight:1.6}}>Based on: quality, schedule adherence, safety, communication, change order frequency, insurance compliance, lien waiver timeliness, and payment history.</div>
+          <div style={{fontSize:12,color:DIM,marginTop:8,lineHeight:1.6}}>Based on: your rating, compliance documents on file, invoices approved or paid, and daily logs submitted.</div>
         </div>
 
         {/* Category Cards */}
@@ -1065,16 +1195,12 @@ export default function SubPortal(){
             <div style={{fontSize:17,fontWeight:700,color:TEXT,marginBottom:16}}>Score History</div>
             <div style={{overflowX:'auto'}}>
               <table style={{width:'100%',borderCollapse:'collapse',minWidth:500}}>
-                <thead><tr>{['Date','Quality','Schedule','Safety','Communication','Cleanup','Comments'].map(h=><th key={h} style={{textAlign:'left',padding:'8px 12px',fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}</tr></thead>
+                <thead><tr>{['Date',...cats.map(c=>c.label),'Notes'].map(h=><th key={h} style={{textAlign:'left',padding:'8px 12px',fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}</tr></thead>
                 <tbody>{scorecard.scorecards.map((sc:any)=>(
                   <tr key={sc.id} style={{borderBottom:`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`}}>
-                    <td style={{padding:'8px 12px',fontSize:12,color:DIM}}>{fmtDate(sc.rated_at)}</td>
-                    <td style={{padding:'8px 12px'}}>{sc.quality_score!=null?<Stars rating={sc.quality_score} size={12}/>:'--'}</td>
-                    <td style={{padding:'8px 12px'}}>{sc.schedule_score!=null?<Stars rating={sc.schedule_score} size={12}/>:'--'}</td>
-                    <td style={{padding:'8px 12px'}}>{sc.safety_score!=null?<Stars rating={sc.safety_score} size={12}/>:'--'}</td>
-                    <td style={{padding:'8px 12px'}}>{sc.communication_score!=null?<Stars rating={sc.communication_score} size={12}/>:'--'}</td>
-                    <td style={{padding:'8px 12px'}}>{sc.cleanup_score!=null?<Stars rating={sc.cleanup_score} size={12}/>:'--'}</td>
-                    <td style={{padding:'8px 12px',fontSize:11,color:DIM,maxWidth:200}}>{sc.comments||'--'}</td>
+                    <td style={{padding:'8px 12px',fontSize:12,color:DIM}}>{fmtDate(sc.created_at)}</td>
+                    {cats.map(c=><td key={c.key} style={{padding:'8px 12px'}}>{sc[c.key]!=null?<Stars rating={Number(sc[c.key])} size={12}/>:'--'}</td>)}
+                    <td style={{padding:'8px 12px',fontSize:11,color:DIM,maxWidth:200}}>{sc.notes||'--'}</td>
                   </tr>
                 ))}</tbody>
               </table>
@@ -1090,7 +1216,7 @@ export default function SubPortal(){
   /* ================================================================ */
   const renderMessages=()=>{
     return(
-      <div style={{display:'grid',gap:20}}>
+      <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
         <div style={card()}>
           <div style={{fontSize:17,fontWeight:700,color:TEXT,marginBottom:16}}>Messages with GC</div>
           <div style={{maxHeight:500,overflowY:'auto',padding:'10px 0',marginBottom:16}}>
@@ -1135,7 +1261,7 @@ export default function SubPortal(){
       </div>
     );
     return(
-      <div style={{display:'grid',gap:20}}>
+      <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
         <div style={card()}>
           <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14,flexWrap:'wrap'}}>
             <div style={{width:10,height:10,borderRadius:'50%',background:GREEN,boxShadow:`0 0 8px ${GREEN}`,flexShrink:0}}/>
@@ -1262,7 +1388,7 @@ export default function SubPortal(){
     const files=documents.filter((d:any)=>!isMedia(d));
     const media=documents.filter(isMedia);
     return(
-      <div style={{display:'grid',gap:20}}>
+      <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
         <div style={card()}>
           <div style={{fontSize:16,fontWeight:800,color:TEXT,marginBottom:4}}>Upload a Document</div>
           <div style={{fontSize:12,color:DIM,marginBottom:14}}>PDF, Excel, Word, CSV, photos or video &middot; 100 MB max. Insurance, W-9 and other compliance docs update your payment status automatically.</div>
@@ -1318,7 +1444,7 @@ export default function SubPortal(){
   const renderDrawings=()=>{
     const groups=drawings.reduce((m:Record<string,any[]>,d:any)=>{const k=d.discipline||'General';(m[k]=m[k]||[]).push(d);return m;},{} as Record<string,any[]>);
     return(
-      <div style={{display:'grid',gap:20}}>
+      <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
         {drawings.length===0&&<div style={card()}><div style={{color:DIM,fontSize:13}}>No current drawings shared for this project yet.</div></div>}
         {Object.entries(groups).map(([disc,list]:[string,any[]])=>(
           <div key={disc} style={card()}>
@@ -1351,7 +1477,7 @@ export default function SubPortal(){
     const open=punchItems.filter((p:any)=>p.status!=='completed'&&p.status!=='verified');
     const done=punchItems.filter((p:any)=>p.status==='completed'||p.status==='verified');
     return(
-      <div style={{display:'grid',gap:20}}>
+      <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
         <div style={card()}>
           <div style={{fontSize:15,fontWeight:800,color:TEXT,marginBottom:12}}>Open Items ({open.length})</div>
           {open.length===0&&<div style={{color:DIM,fontSize:13}}>Nothing open — you're clear on this project.</div>}
@@ -1405,7 +1531,7 @@ export default function SubPortal(){
   };
   /* ── BID INVITES: open invitations \u2192 scope \u2192 respond ── */
   const renderBids=()=>(
-    <div style={{display:'grid',gap:20}}>
+    <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
       {bids.length===0&&<div style={card()}><div style={{color:DIM,fontSize:13}}>No open bid invitations right now.</div></div>}
       {bids.map((b:any)=>(
         <div key={b.id} style={card()}>
@@ -1473,7 +1599,7 @@ export default function SubPortal(){
           {i>0&&TABS[i-1].section!==t.section&&<span style={{width:1,height:20,background:BORDER,margin:'0 4px',flexShrink:0}}/>}
           <button onClick={()=>setTab(t.key)} style={{padding:'8px 14px',background:tab===t.key?'linear-gradient(180deg,color-mix(in srgb, var(--brand-primary) 22%, transparent),var(--brand-primary-12))':'rgba(255,255,255,0.03)',border:`1px solid ${tab===t.key?'color-mix(in srgb, var(--brand-primary) 50%, transparent)':BORDER}`,borderRadius:999,color:tab===t.key?'var(--brand-primary-strong)':DIM,fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap',transition:'all .15s',display:'flex',alignItems:'center',gap:6,flexShrink:0,boxShadow:tab===t.key?'0 0 0 3px var(--brand-primary-12)':'none'}}>
             <span style={{fontSize:14}}>{t.icon}</span><span>{t.label}</span>
-            {t.key==='messages'&&messages.filter((m:any)=>m.sender_type!=='sub'&&!m.read).length>0&&(
+            {t.key==='messages'&&unreadCount>0&&(
               <span style={{width:8,height:8,borderRadius:'50%',background:RED,flexShrink:0}}/>
             )}
           </button>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
+import { leaveOf } from '@/lib/leave-entry';
 
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
   const user = await getUser(req);
@@ -32,15 +33,24 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
         names[e.id] = e.name || [e.first_name, e.last_name].filter(Boolean).join(' ') || e.email || '';
       }
     }
-    const entries = rows.map((r) => ({
-      ...r,
-      employee: names[r.employee_id] || r.employee_name || '—',
-      date: r.work_date,
-      regular_hrs: Number(r.regular_hours ?? r.hours_worked ?? 0),
-      ot_hrs: Number(r.overtime_hours ?? 0),
-      classification: r.trade ?? r.classification ?? r.csi_division ?? '',
-      status: r.status || 'pending',
-    }));
+    const entries = rows.map((r) => {
+      /* PTO / sick rows are filed on the job's timesheet too (lib/leave-entry):
+         hours in hours_worked, regular / OT 0. They used to come through as an
+         unlabeled 0-hour shift. Say what they are and how many hours, and keep
+         them out of worked hours. */
+      const leave = leaveOf(r);
+      return {
+        ...r,
+        employee: names[r.employee_id] || r.employee_name || '—',
+        date: r.work_date,
+        regular_hrs: leave ? 0 : Number(r.regular_hours ?? r.hours_worked ?? 0),
+        ot_hrs: leave ? 0 : Number(r.overtime_hours ?? 0),
+        leave_label: leave?.label ?? null,
+        leave_hrs: leave?.hours ?? null,
+        classification: leave ? '' : (r.trade ?? r.classification ?? r.csi_division ?? ''),
+        status: r.status || 'pending',
+      };
+    });
     return NextResponse.json({ entries, timesheets: entries });
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e);

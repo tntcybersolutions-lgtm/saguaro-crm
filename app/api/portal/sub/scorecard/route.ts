@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
-import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
-import { notOnRoster, rosterSubId } from '@/lib/sub-portal-scope';
+import { rosterSubId } from '@/lib/sub-portal-scope';
 
 async function authenticateSubPortal(req: NextRequest) {
   const token =
@@ -52,20 +51,21 @@ export async function GET(req: NextRequest) {
 
     const cards = scorecards || [];
 
-    // Calculate averages
+    // Calculate averages. These are the score columns portal_sub_scorecards
+    // has — there is no cleanup_score, so it is not averaged (or shown).
     const scoreFields = [
       'quality_score',
       'schedule_score',
       'safety_score',
       'communication_score',
-      'cleanup_score',
     ];
 
     const averages: Record<string, number | null> = {};
     for (const field of scoreFields) {
       const values = cards
         .map((c: any) => c[field])
-        .filter((v: any) => v !== null && v !== undefined);
+        .filter((v: any) => v !== null && v !== undefined)
+        .map(Number);
       averages[field] =
         values.length > 0
           ? Math.round((values.reduce((a: number, b: number) => a + b, 0) / values.length) * 10) / 10
@@ -77,6 +77,7 @@ export async function GET(req: NextRequest) {
       cards
         .map((c: any) => c[field])
         .filter((v: any) => v !== null && v !== undefined)
+        .map(Number)
     );
     const overallAverage =
       allScoreValues.length > 0
@@ -110,7 +111,16 @@ export async function GET(req: NextRequest) {
   }
 }
 
-/** POST — Submit a scorecard rating (GC side, but accessible through portal for now) */
+/**
+ * POST — refused. A sub cannot rate itself.
+ *
+ * This used to take scores from anyone holding the portal link, insert them as
+ * a scorecard and then overwrite subcontractors.rating with the average — so a
+ * sub could give itself five stars and show as "Preferred". A rating is the
+ * GC's call: it is set on the GC side (PUT / PATCH /api/subs/[id] with
+ * `rating`, behind a Saguaro login and pinned to the GC's tenant). The portal
+ * only reads it back (GET above).
+ */
 export async function POST(req: NextRequest) {
   try {
     const session = await authenticateSubPortal(req);
@@ -120,106 +130,11 @@ export async function POST(req: NextRequest) {
         { status: 401 }
       );
     }
-
-    const subId = rosterSubId(session);
-    if (!subId) {
-      const r = notOnRoster(session, 'a rating');
-      return NextResponse.json(r.body, { status: r.status });
-    }
-
-    const db = createServerClient();
-    const body = await req.json();
-    const {
-      quality_score,
-      schedule_score,
-      safety_score,
-      communication_score,
-      cleanup_score,
-      comments,
-      rated_by,
-    } = body;
-
-    // Validate scores are 1-5
-    const scores = { quality_score, schedule_score, safety_score, communication_score, cleanup_score };
-    for (const [key, val] of Object.entries(scores)) {
-      if (val !== undefined && val !== null) {
-        const num = Number(val);
-        if (num < 1 || num > 5) {
-          return NextResponse.json(
-            { error: `${key} must be between 1 and 5` },
-            { status: 400 }
-          );
-        }
-      }
-    }
-
-    // Live portal_sub_scorecards columns: quality_score, safety_score,
-    // schedule_score, communication_score, overall_score, notes, reviewed_by.
-    // There is no cleanup_score column (and no jsonb to fold it into), so it is
-    // dropped. comments -> notes, rated_by -> reviewed_by. overall_score is
-    // computed from the provided dimensions.
-    const providedScores = [quality_score, schedule_score, safety_score, communication_score, cleanup_score]
-      .map((v) => (v === undefined || v === null ? null : Number(v)))
-      .filter((v): v is number => v !== null && !Number.isNaN(v));
-    const overallScore =
-      providedScores.length > 0
-        ? Math.round((providedScores.reduce((a, b) => a + b, 0) / providedScores.length) * 10) / 10
-        : null;
-
-    const { data: scorecard, error } = await db
-      .from('portal_sub_scorecards')
-      .insert({
-        sub_id: subId,
-        project_id: session.project_id,
-        tenant_id: session.tenant_id,
-        quality_score: quality_score || null,
-        schedule_score: schedule_score || null,
-        safety_score: safety_score || null,
-        communication_score: communication_score || null,
-        overall_score: overallScore,
-        notes: comments || null,
-        reviewed_by: rated_by || null,
-        created_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    // Update overall rating on subcontractor record. The subcontractors table
-    // exposes `rating` (not overall_rating) and has no preferred_status column.
-    const { data: allCards } = await db
-      .from('portal_sub_scorecards')
-      .select('quality_score, schedule_score, safety_score, communication_score, overall_score')
-      .eq('sub_id', subId)
-      .eq('tenant_id', session.tenant_id);
-
-    if (allCards && allCards.length > 0) {
-      const allVals = allCards.flatMap((c: any) =>
-        [c.quality_score, c.schedule_score, c.safety_score, c.communication_score]
-          .filter((v: any) => v !== null && v !== undefined)
-      );
-      if (allVals.length > 0) {
-        const newOverall =
-          Math.round(
-            (allVals.reduce((a: number, b: number) => a + b, 0) / allVals.length) * 10
-          ) / 10;
-
-        await must(db
-          .from('subcontractors')
-          .update({
-            rating: newOverall,
-          })
-          .eq('id', subId)
-          .eq('tenant_id', session.tenant_id), 'subcontractors write');
-      }
-    }
-
     return NextResponse.json(
-      { scorecard, message: 'Rating submitted successfully' },
-      { status: 201 }
+      { error: 'Ratings come from your general contractor. A subcontractor can’t rate their own work from the portal.' },
+      { status: 403 }
     );
   } catch (err) {
-    return apiError('portal/sub/scorecard', err, "Couldn't save the rating. Please try again.");
+    return apiError('portal/sub/scorecard', err, "Couldn't check your portal link. Please try again.");
   }
 }

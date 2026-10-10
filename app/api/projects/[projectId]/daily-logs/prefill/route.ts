@@ -50,8 +50,13 @@ export async function GET(
   // in clock_punches can exist without one (geofence auto-punches), so both
   // are counted and de-duplicated by identity.
   const people = new Set<string>();
+  /* Each source still fails soft — the draft opens with whatever loaded — but
+     a failure is now logged. supabase-js returns { error } instead of
+     throwing, so the error is thrown into the catch rather than read as an
+     empty day; before, both a rejected query and a thrown one vanished and
+     the crew count silently came out low. */
   try {
-    const { data } = await db
+    const { data, error } = await db
       .from('time_entries')
       .select('employee_id')
       .eq('tenant_id', user.tenantId)
@@ -59,24 +64,31 @@ export async function GET(
       .eq('work_date', date)
       // PTO / sick rows are filed on a job's timesheet too; someone on leave was not on site.
       .not('entry_type', 'in', `(${NON_WORKED_ENTRY_TYPES.join(',')})`);
+    if (error) throw error;
     for (const r of (data ?? []) as any[]) {
       if (r.employee_id) people.add(`e:${String(r.employee_id).trim().toLowerCase()}`);
     }
-  } catch { /* shift table unavailable — punches still count */ }
+  } catch (e) {
+    // Punches below still count toward the crew.
+    console.error('[daily-logs/prefill] time_entries headcount failed; crew count uses punches only', { projectId, date, error: e });
+  }
   try {
     // Punch audit trail: keyed by name (its only identity column), counted on
     // the punch's local date.
-    const { data } = await db
+    const { data, error } = await db
       .from('clock_punches')
       .select('employee_name, punched_at')
       .eq('tenant_id', user.tenantId)
       .eq('project_id', projectId)
       .gte('punched_at', `${date}T00:00:00`)
       .lte('punched_at', `${date}T23:59:59.999`);
+    if (error) throw error;
     for (const r of (data ?? []) as any[]) {
       if (r.employee_name) people.add(`n:${String(r.employee_name).trim().toLowerCase()}`);
     }
-  } catch { /* punch trail unavailable */ }
+  } catch (e) {
+    console.error('[daily-logs/prefill] clock_punches headcount failed; crew count uses time entries only', { projectId, date, error: e });
+  }
   out.crewCount = people.size;
 
   // ── Manpower by trade — active crews joined with their rosters ──
