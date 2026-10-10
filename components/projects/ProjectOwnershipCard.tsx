@@ -10,7 +10,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Card, Field, Select, Button, FormGrid, Toast, useToast } from '@/components/ui/kit';
+import { Card, Field, Select, Input, Button, FormGrid, Toast, useToast } from '@/components/ui/kit';
 import { getAuthHeaders } from '@/lib/supabase-browser';
 
 type TeamUser = { id: string; name: string; email: string };
@@ -38,6 +38,14 @@ export default function ProjectOwnershipCard({
   const [customer, setCustomer] = useState(project.customer_id ?? '');
   const [saving, setSaving] = useState<'assignee' | 'customer' | null>(null);
   const { toast, show } = useToast();
+  /* "No customers yet — add one" linked to /app/customers, which has no way to
+     add one: a dead end, and a Customer field nobody could fill. The customer
+     is now created right here and linked to the job in one step. */
+  const [adding, setAdding] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [addErr, setAddErr] = useState<{ text: string; field?: 'name' | 'email' } | null>(null);
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => { setAssignee(project.assigned_to ?? ''); }, [project.assigned_to]);
   useEffect(() => { setCustomer(project.customer_id ?? ''); }, [project.customer_id]);
@@ -93,6 +101,35 @@ export default function ProjectOwnershipCard({
     }
   }
 
+  async function createCustomer() {
+    const name = newName.trim();
+    const email = newEmail.trim();
+    if (!name) { setAddErr({ text: 'Enter the customer’s name.', field: 'name' }); document.getElementById('own-new-customer-name')?.focus(); return; }
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setAddErr({ text: 'That email doesn’t look right — fix it or leave it blank.', field: 'email' }); document.getElementById('own-new-customer-email')?.focus(); return; }
+    setAddErr(null);
+    setCreating(true);
+    try {
+      const auth = await getAuthHeaders();
+      const res = await fetch('/api/customers/profiles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...auth },
+        body: JSON.stringify({ name, email: email || null, status: 'customer', source: 'Direct' }),
+      });
+      const body = await res.json().catch(() => ({}));
+      const made = body?.customer as { id?: string; name?: string; email?: string } | undefined;
+      if (!res.ok || !made?.id) throw new Error(body?.error || 'Could not add the customer');
+      setCustomers((prev) => [{ id: made.id as string, name: made.name || name, email: made.email || email }, ...(prev ?? [])]);
+      setCustomer(made.id);
+      setAdding(false); setNewName(''); setNewEmail('');
+      await save('customer', made.id);
+    } catch (err) {
+      console.error('[ProjectOwnershipCard] create customer', err);
+      setAddErr({ text: err instanceof Error && err.message ? err.message : 'Could not add the customer. Please try again.' });
+    } finally {
+      setCreating(false);
+    }
+  }
+
   const userOptions = (users ?? []).map((u) => ({ value: u.id, label: u.email && u.name !== u.email ? `${u.name} — ${u.email}` : u.name }));
   // Keep a saved assignee visible even if they're no longer in the roster list.
   if (project.assigned_to && users && !users.some((u) => u.id === project.assigned_to)) {
@@ -120,7 +157,7 @@ export default function ProjectOwnershipCard({
         </Field>
         <Field
           label="Customer"
-          hint={customers && customers.length === 0 ? <>No customers yet — <Link href="/app/customers">add one</Link>.</> : project.customer_id ? 'Billing and the owner portal follow this customer.' : 'Link the customer this job is for.'}
+          hint={customers && customers.length === 0 ? 'No customers yet — add the first one below.' : project.customer_id ? 'Billing and the owner portal follow this customer.' : 'Link the customer this job is for.'}
         >
           <Select
             value={customer}
@@ -131,6 +168,27 @@ export default function ProjectOwnershipCard({
           />
         </Field>
       </FormGrid>
+      {customers !== null && (adding ? (
+        <div style={{ marginTop: 12 }}>
+          <FormGrid cols={2}>
+            <Field label="Customer Name" required error={addErr?.field === 'name' ? addErr.text : null}>
+              <Input id="own-new-customer-name" value={newName} onChange={(e) => { setNewName(e.target.value); setAddErr(null); }} placeholder="Owner or company name" autoComplete="organization" />
+            </Field>
+            <Field label="Email" hint="Optional — used for the owner portal." error={addErr?.field === 'email' ? addErr.text : null}>
+              <Input id="own-new-customer-email" type="email" inputMode="email" value={newEmail} onChange={(e) => { setNewEmail(e.target.value); setAddErr(null); }} placeholder="owner@company.com" />
+            </Field>
+          </FormGrid>
+          {addErr && !addErr.field && <div className="k-error" role="alert" style={{ marginTop: 8 }}>{addErr.text}</div>}
+          <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+            <Button variant="primary" onClick={() => { void createCustomer(); }} disabled={creating}>{creating ? 'Adding…' : 'Add Customer'}</Button>
+            <Button variant="ghost" onClick={() => { setAdding(false); setAddErr(null); }} disabled={creating}>Cancel</Button>
+          </div>
+        </div>
+      ) : (
+        <div style={{ marginTop: 10 }}>
+          <Button size="sm" variant="secondary" onClick={() => { setAdding(true); window.setTimeout(() => document.getElementById('own-new-customer-name')?.focus(), 0); }}>New Customer</Button>
+        </div>
+      ))}
       {loadErr && <div className="k-hint" style={{ marginTop: 8 }}>{loadErr}</div>}
       {project.customer_id && (
         <div style={{ marginTop: 10 }}>
