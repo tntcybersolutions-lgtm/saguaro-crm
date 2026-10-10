@@ -9,7 +9,7 @@
  * Command-center anatomy: ModuleHero, live StatStrip (keys/webhooks from the
  * API), SectionCards, skeletons, honest empty states. Every marketplace card
  * goes somewhere real — QuickBooks and Cloud Storage connect in-product,
- * Zapier and Procore open a request line to support. Nothing dead ships here.
+ * Zapier runs on the signed webhooks below. Nothing dead ships here.
  */
 import React, { useEffect, useState, useCallback } from 'react';
 import { humanError } from '@/lib/errors';
@@ -44,8 +44,7 @@ type Market = { key: string; name: string; desc: string; state: MarketState; hre
 const MARKETPLACE: Market[] = [
   { key: 'quickbooks', name: 'QuickBooks Online', desc: 'Sync invoices, bills, vendors, and customers with QuickBooks.', state: 'connect', href: '/app/integrations/quickbooks' },
   { key: 'storage', name: 'Cloud Storage', desc: 'Connect S3, OneDrive, SharePoint, Egnyte, Dropbox, Google Drive, or Box.', state: 'connect', href: '/app/settings/storage' },
-  { key: 'zapier', name: 'Zapier', desc: 'Automate 6,000+ apps with Saguaro triggers and actions.', state: 'request', href: 'mailto:support@saguarocontrol.net?subject=Zapier%20Integration%20Access' },
-  { key: 'procore', name: 'Procore Import', desc: 'Migrate projects, contacts, and documents from Procore.', state: 'request', href: 'mailto:support@saguarocontrol.net?subject=Procore%20Import' },
+  { key: 'zapier', name: 'Zapier', desc: 'Paste a Zapier "Catch Hook" URL as a webhook below and Saguaro events start your Zaps.', state: 'connect', href: '#webhooks' },
 ];
 
 // Subscribe only to events Saguaro actually emits (single source of truth:
@@ -284,6 +283,7 @@ export default function IntegrationsHubPage() {
       </div>
 
       {/* API Keys */}
+      <div id="api-keys" style={{ scrollMarginTop: 72 }} />
       <SectionCard
         title="API Keys"
         subtitle="REST API keys. The full key is shown once and never again."
@@ -373,6 +373,7 @@ export default function IntegrationsHubPage() {
       </SectionCard>
 
       {/* Outbound Webhooks */}
+      <div id="webhooks" style={{ scrollMarginTop: 72 }} />
       <SectionCard
         title="Outbound Webhooks"
         subtitle={<>Saguaro POSTs a JSON event to your URL with an <code style={{ fontFamily: 'monospace', color: WHITE }}>X-Saguaro-Signature</code> HMAC-SHA256 header you can verify with the endpoint&apos;s secret.</>}

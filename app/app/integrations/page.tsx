@@ -39,8 +39,6 @@ const ICONS: Record<string, string> = {
   quickbooks: 'QB',
   sage300: 'S3',
   xero: 'XO',
-  procore: 'PC',
-  plangrid: 'PG',
   docusign: 'DS',
   microsoft365: 'MS',
   google_workspace: 'GW',
@@ -88,7 +86,9 @@ export default function IntegrationsPage() {
       const res = await fetch('/api/integrations/marketplace');
       if (!res.ok) throw new Error('Failed to load integrations');
       const data = await res.json();
-      setIntegrations(data.integrations || []);
+      // Only what can really be connected: a catalog entry that isn't built yet
+      // is not a card with a dead "Coming Soon" button.
+      setIntegrations(((data.integrations || []) as Integration[]).filter((i) => i.available || i.connected));
     } catch (e: any) {
       console.error(e); setError(humanError(e, 'Something went wrong. Please try again.'));
     } finally {
@@ -157,10 +157,12 @@ export default function IntegrationsPage() {
       return;
     }
 
+    // Zapier runs on Saguaro's signed webhooks (a Zapier "Catch Hook" URL is
+    // added as a webhook); the Custom API runs on keys minted in the same hub.
     if (intg.key === 'zapier' || intg.key === 'custom_api') {
       window.location.href = intg.key === 'zapier'
-        ? '/app/integrations/api-docs'
-        : '/app/integrations/api-docs';
+        ? '/app/settings/integrations-hub#webhooks'
+        : '/app/settings/integrations-hub#api-keys';
       return;
     }
 
@@ -276,7 +278,6 @@ export default function IntegrationsPage() {
 
   const connectedCount = integrations.filter((i) => i.connected).length;
   const availableCount = integrations.filter((i) => i.available && !i.connected).length;
-  const comingSoonCount = integrations.filter((i) => !i.available).length;
   const categoryCount = new Set(integrations.map((i) => i.category)).size;
   const lastSynced = integrations
     .filter((i) => i.connected && i.last_sync_at)
@@ -332,7 +333,6 @@ export default function IntegrationsPage() {
         <StatStrip items={[
           {href: '/app/integrations',  label: 'Connected', value: String(connectedCount), accent: connectedCount > 0 ? GREEN : undefined, sub: connectedCount > 0 ? 'Live and syncing' : 'None connected yet' },
           {href: '/app/integrations',  label: 'Available Now', value: String(availableCount), sub: 'Ready to connect' },
-          {href: '/app/integrations',  label: 'Coming Soon', value: String(comingSoonCount), sub: 'On the roadmap' },
           {href: '/app/integrations',  label: 'Categories', value: String(categoryCount), sub: 'Accounting to storage' },
           {href: '/app/integrations',  label: 'Last Sync', value: lastSynced ? timeAgo(lastSynced.last_sync_at) : 'Never', sub: lastSynced ? lastSynced.name : 'No syncs recorded' },
         ]} />
@@ -426,13 +426,9 @@ export default function IntegrationsPage() {
                       <span style={{ fontSize: 10, fontWeight: 700, color: GREEN, background: 'rgba(44,255,122,0.12)', border: '1px solid rgba(44,255,122,0.3)', padding: '2px 8px', borderRadius: 10, whiteSpace: 'nowrap' }}>
                         Connected
                       </span>
-                    ) : intg.available ? (
+                    ) : (
                       <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--brand-primary-strong)', background: 'var(--brand-primary-12)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', padding: '2px 8px', borderRadius: 10, whiteSpace: 'nowrap' }}>
                         Available
-                      </span>
-                    ) : (
-                      <span style={{ fontSize: 10, fontWeight: 700, color: DIM, background: 'rgba(255,255,255,0.06)', border: `1px solid ${BORDER}`, padding: '2px 8px', borderRadius: 10, whiteSpace: 'nowrap' }}>
-                        Coming Soon
                       </span>
                     )}
                   </div>
@@ -501,7 +497,7 @@ export default function IntegrationsPage() {
                       Disconnect
                     </button>
                   </>
-                ) : intg.available ? (
+                ) : (
                   <button
                     onClick={() => handleConnect(intg)}
                     disabled={connectingKey === intg.key}
@@ -513,14 +509,6 @@ export default function IntegrationsPage() {
                   >
                     {connectingKey === intg.key ? 'Connecting…' : 'Connect'}
                   </button>
-                ) : (
-                  <div style={{
-                    flex: 1, padding: '9px 0', textAlign: 'center', borderRadius: 8,
-                    background: 'rgba(163,172,187,0.08)', border: `1px solid ${BORDER}`,
-                    color: DIM, fontSize: 13, fontWeight: 600,
-                  }}>
-                    Coming Soon
-                  </div>
                 )}
               </div>
             </div>

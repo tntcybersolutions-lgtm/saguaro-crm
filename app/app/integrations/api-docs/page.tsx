@@ -143,6 +143,12 @@ const API_MODULES: APIModule[] = [
   },
 ];
 
+/** Only endpoints that answer an sk_live_ key today are documented on the page;
+ *  the rest stay in the catalog above until they ship. */
+const LIVE_MODULES: APIModule[] = API_MODULES
+  .map((m) => ({ ...m, endpoints: m.endpoints.filter((e) => e.status === 'live') }))
+  .filter((m) => m.endpoints.length > 0);
+
 // The real, emittable event catalog — every one of these actually fires from
 // lib/triggers.ts via the dispatcher, so a subscription to any of them delivers.
 const WEBHOOK_EVENTS = WEBHOOK_EVENT_CATALOG;
@@ -206,9 +212,7 @@ export default function ApiDocsPage() {
   }
 
   // Honest platform counts, derived from the catalog above — nothing invented.
-  const liveCount = API_MODULES.reduce((n, m) => n + m.endpoints.filter((e) => e.status === 'live').length, 0);
-  const totalEndpoints = API_MODULES.reduce((n, m) => n + m.endpoints.length, 0);
-  const soonCount = totalEndpoints - liveCount;
+  const liveCount = LIVE_MODULES.reduce((n, m) => n + m.endpoints.length, 0);
 
   return (
     <PremiumSurface maxWidth={2200}>
@@ -226,7 +230,7 @@ export default function ApiDocsPage() {
         eyebrowIcon={<Plugs size={13} weight="fill" color={API_ACCENT} />}
         title="API"
         accent="Documentation"
-        subtitle="Tenant-scoped keys. Every endpoint labeled live or coming soon."
+        subtitle="Tenant-scoped keys. Every endpoint below answers a live key today."
         actions={
           <Link href="/app/settings/integrations-hub" style={goldOutlineButtonStyle} className="pmBtn">
             <Key size={15} weight="bold" /> Mint an API Key
@@ -237,8 +241,7 @@ export default function ApiDocsPage() {
       {/* Stat strip — the platform surface at a glance, counted from the catalog */}
       <StatStrip items={[
         {href: '/app/integrations/api-docs',  label: 'Live Endpoints', value: String(liveCount), accent: GREEN, sub: 'Accepting sk_live_ keys today', icon: <Broadcast size={11} weight="bold" color={GREEN} /> },
-        {href: '/app/integrations/api-docs',  label: 'Coming Soon', value: String(soonCount), sub: 'Documented, on the roadmap', icon: <Code size={11} weight="bold" color={API_ACCENT} /> },
-        {href: '/app/integrations/api-docs',  label: 'API Modules', value: String(API_MODULES.length), sub: 'Projects to takeoffs', icon: <Cube size={11} weight="bold" color={API_ACCENT} /> },
+        {href: '/app/integrations/api-docs',  label: 'API Modules', value: String(LIVE_MODULES.length), sub: 'Projects to takeoffs', icon: <Cube size={11} weight="bold" color={API_ACCENT} /> },
         {href: '/app/integrations/api-docs',  label: 'Webhook Events', value: String(WEBHOOK_EVENTS.length), sub: 'All emitted by the dispatcher', icon: <WebhooksLogo size={11} weight="bold" color={API_ACCENT} /> },
       ]} />
 
@@ -269,7 +272,7 @@ export default function ApiDocsPage() {
       {/* ============ ENDPOINTS ============ */}
       {activeSection === 'endpoints' && (
         <div>
-          {API_MODULES.map((mod) => (
+          {LIVE_MODULES.map((mod) => (
             <div key={mod.name} style={{ marginBottom: 14 }}>
               <button
                 onClick={() => setActiveModule(activeModule === mod.name ? null : mod.name)}
@@ -292,16 +295,7 @@ export default function ApiDocsPage() {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 15, fontWeight: 800, color: TEXT, letterSpacing: '-0.01em' }}>{mod.name}</div>
-                  {(() => {
-                    const modLive = mod.endpoints.filter((e) => e.status === 'live').length;
-                    const modSoon = mod.endpoints.length - modLive;
-                    return (
-                      <div style={{ fontSize: 12, color: DIM }}>
-                        {modLive > 0 ? <span style={{ color: GREEN }}>{modLive} live</span> : <span>No live endpoints yet</span>}
-                        {modSoon > 0 && <span> · {modSoon} coming soon</span>}
-                      </div>
-                    );
-                  })()}
+                  <div style={{ fontSize: 12, color: GREEN }}>{mod.endpoints.length} live</div>
                 </div>
                 <span style={{ color: DIM, fontSize: 18, transform: activeModule === mod.name ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }}>
                   {'\u25BC'}
@@ -314,7 +308,6 @@ export default function ApiDocsPage() {
                   borderRadius: '0 0 14px 14px', padding: '4px 0', overflowX: 'auto',
                 }}>
                   {mod.endpoints.map((ep, i) => {
-                    const soon = ep.status === 'soon';
                     return (
                       <div
                         key={i}
@@ -323,7 +316,6 @@ export default function ApiDocsPage() {
                         style={{
                           display: 'flex', alignItems: 'center', gap: 14, padding: '12px 20px', minWidth: 620,
                           borderBottom: i < mod.endpoints.length - 1 ? `1px solid ${HAIRLINE}` : 'none',
-                          opacity: soon ? 0.55 : 1,
                         }}
                       >
                         <span style={{
@@ -341,11 +333,11 @@ export default function ApiDocsPage() {
                         <span style={{
                           padding: '3px 9px', borderRadius: 20, fontSize: 10, fontWeight: 700,
                           whiteSpace: 'nowrap',
-                          background: soon ? 'rgba(203,213,225,0.12)' : `${GREEN}1e`,
-                          color: soon ? DIM : GREEN,
-                          border: `1px solid ${soon ? BORDER : GREEN + '55'}`,
+                          background: `${GREEN}1e`,
+                          color: GREEN,
+                          border: `1px solid ${GREEN + '55'}`,
                         }}>
-                          {soon ? 'Coming Soon' : 'Live'}
+                          Live
                         </span>
                       </div>
                     );
@@ -374,7 +366,7 @@ export default function ApiDocsPage() {
             </p>
 
             <div style={{ ...CODE_PANEL, fontSize: 13, color: GREEN, marginBottom: 20 }}>
-              <div style={{ color: DIM, marginBottom: 8 }}>// Include in every request:</div>
+              <div style={{ color: DIM, marginBottom: 8 }}>{'// Include in every request:'}</div>
               <div>Authorization: Bearer {'sk_live_<your_secret_key>'}</div>
             </div>
 
