@@ -4,8 +4,60 @@ import { sendSubPortalInvite } from '@/lib/email';
 import { randomUUID } from 'crypto';
 import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
+import { orValue } from '@/lib/pg-filter';
 
 export const dynamic = 'force-dynamic';
+
+type Db = ReturnType<typeof createServerClient>;
+type SubMatch = { id: string; email: string | null; contact_email: string | null; updated_at: string | null; created_at: string | null };
+
+/** Newest first by updated_at, then created_at (missing dates last), then id — a total order. */
+function newestFirst(a: SubMatch, b: SubMatch): number {
+  const t = (v: string | null) => {
+    const n = v ? Date.parse(v) : NaN;
+    return Number.isFinite(n) ? n : -Infinity;
+  };
+  return (t(b.updated_at) - t(a.updated_at)) || (t(b.created_at) - t(a.created_at)) || a.id.localeCompare(b.id);
+}
+
+/**
+ * The roster subcontractor an invited email belongs to, or null when none.
+ * Matches subcontractors.email OR contact_email, case-insensitively, inside
+ * this tenant only. A real lookup error is thrown, never read as "no sub".
+ *
+ * When more than one sub carries the address (two divisions of one company,
+ * a bookkeeper who files for several), the pick is deterministic: a sub on
+ * THIS project's roster (project_subcontractors) wins; among several — or
+ * when none is on the job — the most recently updated one, then the most
+ * recently created, then the lowest id.
+ */
+async function rosterSubForEmail(db: Db, tenantId: string, projectId: string, inviteEmail: string): Promise<string | null> {
+  const v = orValue(inviteEmail);
+  if (!v) return null;
+  const { data, error } = await db
+    .from('subcontractors')
+    .select('id, email, contact_email, updated_at, created_at')
+    .eq('tenant_id', tenantId)
+    .or(`email.ilike.${v},contact_email.ilike.${v}`)
+    .limit(50);
+  if (error) throw error;
+  // ilike reads _ and % as wildcards; keep only real (case-insensitive) matches.
+  const same = (e: string | null) => String(e ?? '').trim().toLowerCase() === inviteEmail;
+  const matches = ((data ?? []) as SubMatch[]).filter((s) => same(s.email) || same(s.contact_email));
+  if (matches.length === 0) return null;
+  if (matches.length === 1) return matches[0].id;
+
+  const { data: onJob, error: rosterErr } = await db
+    .from('project_subcontractors')
+    .select('subcontractor_id')
+    .eq('tenant_id', tenantId)
+    .eq('project_id', projectId)
+    .in('subcontractor_id', matches.map((m) => m.id));
+  if (rosterErr) throw rosterErr;
+  const onJobIds = new Set(((onJob ?? []) as { subcontractor_id: string }[]).map((r) => r.subcontractor_id));
+  const pool = matches.some((m) => onJobIds.has(m.id)) ? matches.filter((m) => onJobIds.has(m.id)) : matches;
+  return [...pool].sort(newestFirst)[0].id;
+}
 
 /**
  * POST /api/portal/sub/create
@@ -42,16 +94,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
-    // Look up or resolve sub_id
+    const inviteEmail = String(email).toLowerCase().trim();
+
+    // Look up or resolve sub_id from the invited email — on either email
+    // column of the roster. This used to match subcontractors.email only, so a
+    // sub whose address sat in contact_email was missed, and it ignored the
+    // lookup's error: two subs sharing the address made maybeSingle() fail,
+    // the error was dropped, and the invite silently went out email-only.
     let resolvedSubId = subId;
-    if (!resolvedSubId && email) {
-      const { data: sub } = await db
-        .from('subcontractors')
-        .select('id')
-        .eq('email', email.toLowerCase().trim())
-        .eq('tenant_id', user.tenantId)
-        .maybeSingle();
-      resolvedSubId = sub?.id || null;
+    if (!resolvedSubId && inviteEmail) {
+      resolvedSubId = await rosterSubForEmail(db, user.tenantId, projectId, inviteEmail);
     }
 
     // Retire this company's earlier links on this job before issuing a new one,
@@ -61,7 +113,6 @@ export async function POST(req: NextRequest) {
     //    the sub_id pass alone never matched it and every re-invite stacked
     //    another active token. sub_email is stored lower-cased and trimmed
     //    (see the insert below), so an exact match finds every earlier one.
-    const inviteEmail = String(email).toLowerCase().trim();
     if (resolvedSubId) {
       await must(db
         .from('portal_sub_sessions')
@@ -118,7 +169,7 @@ export async function POST(req: NextRequest) {
     if (process.env.RESEND_API_KEY && email) {
       try {
         await sendSubPortalInvite({
-          to: email.toLowerCase().trim(),
+          to: inviteEmail,
           contactName: contactName || '',
           companyName: companyName || email,
           gcCompanyName,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 /** Mark a pay app PAID — with the two links the old route dropped:
  *  1. GATE: unsigned conditional waivers that block payment stop the action
@@ -88,7 +89,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       unconditionalWaivers: signed.length,
       overrode: blocking.length > 0 && !!body.overrideWaivers,
     });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (err) {
+    return apiError('pay-apps/paid', err, "Couldn't mark the pay app paid. Please try again.");
   }
 }
