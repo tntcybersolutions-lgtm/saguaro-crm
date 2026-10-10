@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { addDays, requestDay, startOfDayIn } from '@/lib/time-zone';
 
 /**
  * GET /api/widgets/summary
@@ -22,7 +23,8 @@ export async function GET(req: NextRequest) {
       .eq('status', 'active');
 
     // Get today's stats
-    const today = new Date().toISOString().split('T')[0];
+    // The company's day (device, else company zone); "logged today" runs from its local midnight.
+    const { today, zone } = await requestDay(req.headers, db, user.tenantId, 'widgets/summary');
 
     // Open RFIs
     const { count: openRfis } = await db
@@ -64,10 +66,10 @@ export async function GET(req: NextRequest) {
       .from('daily_logs')
       .select('*', { count: 'exact', head: true })
       .eq('tenant_id', user.tenantId)
-      .gte('created_at', `${today}T00:00:00`);
+      .gte('created_at', startOfDayIn(zone, today).toISOString());
 
     // Expiring insurance (next 30 days)
-    const thirtyDays = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+    const thirtyDays = addDays(today, 30);
     const { count: expiringInsurance } = await db
       .from('insurance_certificates')
       .select('*', { count: 'exact', head: true })

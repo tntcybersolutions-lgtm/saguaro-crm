@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { getEffectivePermissions, hasPermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
+import { addDays, requestDay } from '@/lib/time-zone';
 
 /* THE RAIL HID FINANCIAL; THIS ROUTE STILL HANDED IT OVER.
    Every module is guarded and the navigation now renders only the categories a
@@ -28,6 +29,8 @@ export async function GET(req: NextRequest) {
     const tenantId = user.tenantId;
 
     const perms = await getEffectivePermissions(db, user.id, tenantId);
+    // "Expiring within 30 days" from the company's day (device, else company zone).
+    const in30 = addDays((await requestDay(req.headers, db, tenantId, 'dashboard/stats')).today, 30);
     const canMoney   = hasPermission(perms, 'Budget', 'View');
     const canPayApps = hasPermission(perms, 'Pay Apps', 'View');
     const canRFIs    = hasPermission(perms, 'RFIs', 'View');
@@ -54,7 +57,7 @@ export async function GET(req: NextRequest) {
         ? db.from('rfis').select('*', HEAD).eq('tenant_id', tenantId).eq('status', 'open')
         : null,
       db.from('subcontractor_insurance').select('*', HEAD).eq('tenant_id', tenantId)
-        .lte('expiry_date', new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0]),
+        .lte('expiry_date', in30),
     ]);
 
     const totalContractValue = canMoney

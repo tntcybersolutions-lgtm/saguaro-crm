@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { NON_WORKED_ENTRY_TYPES } from '@/lib/leave-entry';
+import { dayRangeIn, requestDay } from '@/lib/time-zone';
+import { apiError } from '@/lib/api-error';
 
 /**
  * Daily-log prefill — assembles the one-tap draft the auto-first composer
@@ -32,11 +34,25 @@ export async function GET(
   const { projectId } = await params;
 
   const url = new URL(req.url);
-  const date = /^\d{4}-\d{2}-\d{2}$/.test(url.searchParams.get('date') ?? '')
-    ? (url.searchParams.get('date') as string)
-    : new Date().toISOString().split('T')[0];
-
   const db = createServerClient() as any;
+
+  /* The day is the company's: the device's zone, else the company's
+     (lib/time-zone). The UTC day rolled over at 7 PM in Iowa, so an evening
+     draft opened tomorrow's empty log; and the punch and delivery windows ran
+     midnight to midnight UTC — 7 PM to 7 PM Central — counting last night's
+     late shift and missing tonight's. */
+  let zone: string;
+  let date: string;
+  try {
+    const day = await requestDay(req.headers, db, user.tenantId, 'daily-logs/prefill');
+    zone = day.zone;
+    date = /^\d{4}-\d{2}-\d{2}$/.test(url.searchParams.get('date') ?? '')
+      ? (url.searchParams.get('date') as string)
+      : day.today;
+  } catch (e) {
+    return apiError('daily-logs/prefill', e, "Couldn't start today's log.");
+  }
+  const dayWindow = dayRangeIn(zone, date);
 
   const out: Record<string, any> = {
     date,
@@ -83,8 +99,8 @@ export async function GET(
       .select('employee_name, punched_at')
       .eq('tenant_id', user.tenantId)
       .eq('project_id', projectId)
-      .gte('punched_at', `${date}T00:00:00`)
-      .lte('punched_at', `${date}T23:59:59.999`);
+      .gte('punched_at', dayWindow.from.toISOString())
+      .lt('punched_at', dayWindow.to.toISOString());
     if (error) throw error;
     for (const r of (data ?? []) as any[]) {
       if (r.employee_name) people.add(`n:${String(r.employee_name).trim().toLowerCase()}`);
@@ -164,15 +180,13 @@ export async function GET(
 
   // ── Deliveries logged for the date — probe the table, tolerate absence ──
   try {
-    const next = new Date(new Date(`${date}T12:00:00Z`).getTime() + 86400000)
-      .toISOString().split('T')[0];
     const { data: deliveries, error } = await db
       .from('deliveries')
       .select('id, item_name, vendor, quantity')
       .eq('tenant_id', user.tenantId)
       .eq('project_id', projectId)
-      .gte('delivered_at', `${date}T00:00:00`)
-      .lt('delivered_at', `${next}T00:00:00`);
+      .gte('delivered_at', dayWindow.from.toISOString())
+      .lt('delivered_at', dayWindow.to.toISOString());
     if (error) throw error;
     out.deliveriesToday = deliveries ?? [];
   } catch (e) {

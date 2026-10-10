@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
+import { requestDay } from '@/lib/time-zone';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,9 +57,12 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     const projectId: string | null = body.projectId || null;
     const notes: string = body.notes ?? '';
-    const weekStart = mondayOf(body.date ? new Date(body.date) : new Date());
-
     const db = createServerClient();
+    // No date sent: this week on the planner's calendar (device, else company zone) —
+    // the server's clock put a Sunday-evening note in Iowa into next week.
+    const weekStart = mondayOf(new Date(body.date
+      ? body.date
+      : `${(await requestDay(req.headers, db, user.tenantId, 'resource-planning/weather-notes')).today}T00:00:00Z`));
 
     // Reuse the forecast row for this project/week if it exists; else insert one.
     let existing = db

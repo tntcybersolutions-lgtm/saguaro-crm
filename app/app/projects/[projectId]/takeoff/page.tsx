@@ -16,6 +16,8 @@ import { Blueprint, Copy, Table, ArrowRight, DownloadSimple, FileXls, Package, C
 import { SectionCard } from '@/components/ui/SectionCard';
 import { UiFx } from '@/components/ui/fx';
 import Suggest from '@/components/ui/Suggest';
+import { localDay } from '@/lib/calendar-day';
+import { addDays } from '@/lib/time-zone';
 
 interface TakeoffItem {
   /** takeoff_materials.id — present once loaded/hydrated from the DB. Editing requires it. */
@@ -1286,7 +1288,7 @@ export default function TakeoffPage() {
             trade:        divName,
             csiCodes:     [...new Set(divItems.map(i => i.csiCode))],
             scopeSummary: divItems.map(i => `${i.description}: ${fmtN(i.quantity)} ${i.unit}`).join('\n'),
-            dueDate:      new Date(Date.now() + (divTotal > 250_000 ? 21 : 14) * 86_400_000).toISOString().split('T')[0],
+            dueDate:      addDays(localDay(), divTotal > 250_000 ? 21 : 14),
             requiresBond: divTotal > 100_000,
             lineItems: divItems.map(i => ({
               description: i.description,
@@ -1322,8 +1324,8 @@ export default function TakeoffPage() {
         },
         body: JSON.stringify({
           projectId,
-          periodFrom:    new Date().toISOString().split('T')[0],
-          periodTo:      new Date().toISOString().split('T')[0],
+          periodFrom:    localDay(),
+          periodTo:      localDay(),
           contractSum:   bidPrice,
           // lineItems is what the API reads — each item maps to a schedule_of_values row
           lineItems: result.items.map(i => ({
@@ -1569,7 +1571,7 @@ export default function TakeoffPage() {
             claimantName: divName,
             waiverType: 'conditional_partial',
             amount: divTotal,
-            throughDate: new Date().toISOString().split('T')[0],
+            throughDate: localDay(),
             state: 'AZ',
           }),
         });

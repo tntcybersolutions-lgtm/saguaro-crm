@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { ok, unauthorized, notFound, serverError } from '@/lib/api-response';
+import { requestDay } from '@/lib/time-zone';
 
 /**
  * GET /api/network/cables/[id]
@@ -53,13 +54,13 @@ export async function PATCH(
 
     // If marking as tested, record the test date (cable_runs has a `test_date` date column).
     if (updates.tested === true && !updates.test_date) {
-      updates.test_date = new Date().toISOString().slice(0, 10);
+      updates.test_date = (await requestDay(req.headers, db, user.tenantId, 'network/cables')).today;
     }
 
     // If test_result is being set, auto-set tested to true
     if (updates.test_result && updates.tested === undefined) {
       updates.tested = true;
-      if (!updates.test_date) updates.test_date = new Date().toISOString().slice(0, 10);
+      if (!updates.test_date) updates.test_date = (await requestDay(req.headers, db, user.tenantId, 'network/cables')).today;
     }
 
     const { data, error } = await db

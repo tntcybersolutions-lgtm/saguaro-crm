@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { signUrl } from '@/lib/storage-signing';
+import { addDays, requestDay } from '@/lib/time-zone';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,8 +19,14 @@ export async function GET(req: NextRequest) {
 
   const db = createServerClient();
   const t = user.tenantId;
-  const today = new Date().toISOString().slice(0, 10);
-  const in7 = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10);
+  // Delayed / at-risk / due on the company's day (device, else company zone), not the server's.
+  let today: string;
+  try {
+    ({ today } = await requestDay(req.headers, db, t, 'dashboard/widget-metrics'));
+  } catch (e) {
+    return apiError('dashboard/widget-metrics', e, "Couldn't load the dashboard.");
+  }
+  const in7 = addDays(today, 7);
 
   const guard = async <T,>(fn: () => Promise<T>, fallback: T): Promise<T> => {
     try { return await fn(); } catch { return fallback; }

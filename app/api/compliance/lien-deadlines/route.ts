@@ -3,6 +3,8 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 
 import { apiError } from '@/lib/api-error';
+import { addDays } from '@/lib/time-zone';
+import { toDay } from '@/lib/calendar-day';
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
@@ -59,22 +61,17 @@ export async function POST(req: NextRequest) {
   let calculated_deadlines: Record<string, string> = {};
   if (state === 'AZ') {
     if (first_work_date) {
-      const fw = new Date(first_work_date);
-      const prelim = new Date(fw);
-      prelim.setDate(prelim.getDate() + 20);
-      calculated_deadlines.preliminary_notice = prelim.toISOString().split('T')[0];
+      // Calendar arithmetic on the day entered (no instant, no server zone).
+      const fw = toDay(first_work_date);
+      if (fw) calculated_deadlines.preliminary_notice = addDays(fw, 20);
     }
     if (completion_date) {
-      const cd = new Date(completion_date);
-      const mechLien = new Date(cd);
-      mechLien.setDate(mechLien.getDate() + 120);
-      calculated_deadlines.mechanics_lien = mechLien.toISOString().split('T')[0];
+      const cd = toDay(completion_date);
+      if (cd) calculated_deadlines.mechanics_lien = addDays(cd, 120);
     }
     if (last_work_date) {
-      const lw = new Date(last_work_date);
-      const bondClaim = new Date(lw);
-      bondClaim.setDate(bondClaim.getDate() + 90);
-      calculated_deadlines.payment_bond_claim = bondClaim.toISOString().split('T')[0];
+      const lw = toDay(last_work_date);
+      if (lw) calculated_deadlines.payment_bond_claim = addDays(lw, 90);
     }
   }
 

@@ -9,6 +9,7 @@ import {
 } from '@/lib/sub-portal-files';
 import { fileNameFromUrl } from '@/lib/sub-portal-view';
 import { LOCAL_DAY_HEADER, daysUntilDay, plausibleToday } from '@/lib/calendar-day';
+import { requestDay } from '@/lib/time-zone';
 
 async function authenticateSubPortal(req: NextRequest) {
   const token =
@@ -72,7 +73,8 @@ export async function GET(req: NextRequest) {
 
     if (error) throw error;
 
-    const today = plausibleToday(req.headers.get(LOCAL_DAY_HEADER));
+    // The sub's own day; with no day header, their phone's zone, else their GC's company zone.
+    const today = plausibleToday(req.headers.get(LOCAL_DAY_HEADER), (await requestDay(req.headers, db, session.tenant_id, 'portal/sub/compliance')).zone);
     const compliance_docs = await Promise.all(((docs || []) as ComplianceRow[]).map((d) => present(d, today)));
     return NextResponse.json({ compliance_docs });
   } catch (err) {
@@ -162,7 +164,7 @@ export async function POST(req: NextRequest) {
       metadata: { title: fileName, category: docType, compliance_doc_id: (doc as { id: string }).id, expiry_date: expiry.day, by: session.sub_company },
     } as never), 'portal_activity insert');
 
-    const presented = await present(doc as ComplianceRow, plausibleToday(req.headers.get(LOCAL_DAY_HEADER)));
+    const presented = await present(doc as ComplianceRow, plausibleToday(req.headers.get(LOCAL_DAY_HEADER), (await requestDay(req.headers, db, scope.tenantId, 'portal/sub/compliance')).zone));
     return NextResponse.json(
       { compliance_doc: { ...presented, file_url: viewUrl }, message: 'Document uploaded successfully' },
       { status: 201 }

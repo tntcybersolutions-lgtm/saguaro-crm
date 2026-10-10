@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import Anthropic from '@anthropic-ai/sdk';
 import { apiError } from '@/lib/api-error';
+import { addDays, requestDay } from '@/lib/time-zone';
 
 export async function GET(req: NextRequest) {
   try {
@@ -18,7 +19,7 @@ export async function GET(req: NextRequest) {
     }
 
     const db = createServerClient();
-    const today = new Date().toISOString().split('T')[0];
+    const { today } = await requestDay(req.headers, db, user.tenantId, 'field/briefing');
 
     // Check for cached briefing from today
     const { data: cached } = await db
@@ -41,7 +42,7 @@ export async function GET(req: NextRequest) {
         .eq('project_id', projectId).eq('tenant_id', user.tenantId).eq('status', 'open'),
       db.from('insurance_certificates').select('id, sub_name, policy_type, expiry_date')
         .eq('project_id', projectId).eq('tenant_id', user.tenantId)
-        .lte('expiry_date', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]),
+        .lte('expiry_date', addDays(today, 30)),
       db.from('change_orders').select('id, title, status, amount')
         .eq('project_id', projectId).eq('tenant_id', user.tenantId).eq('status', 'pending'),
       db.from('punch_list').select('id, title, status, location')

@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { sendSubInvitedToBid } from '@/lib/email';
 import { withComm } from '@/lib/comm-log';
+import { apiError } from '@/lib/api-error';
+import { bidDueDay, daysUntilBidDue, BIDDING_STATUSES } from '@/lib/bid-deadline';
+import { jobTimeZone } from '@/lib/time-zone';
+import { inviteState } from '@/lib/bid-invite-state';
 
 export async function GET(req: NextRequest) {
   /* Every other cron route in this directory carries this guard; this one was
@@ -18,35 +22,67 @@ export async function GET(req: NextRequest) {
     const db = createServerClient();
     const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
 
-    // Find bid packages due in 3 days
-    const in3 = new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0];
-    const today = new Date().toISOString().split('T')[0];
+    /* Packages taking bids whose due DAY is today or within 3 days, counted in
+       each GC company's own time zone (tenants.time_zone, else the job's
+       state) — a job has no device here, and the deadline is the company's.
 
-    const { data: packages } = await db
+       This selected status 'open' only, so an issued package ('sent') — the
+       state /issue and invite-subs put a package in — was never reminded. It
+       read due_date only, so a package dated by bid_due_date was never
+       reminded either. Both columns are read (the same day every screen
+       shows); the window is decided below on the due day, so a bid_due_date
+       timestamp and a due_date DATE count the same way. */
+    /* A coarse lower bound for the query (yesterday in UTC covers every zone
+       west of it); the day count below is exact, per company. */
+    const floor = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+    const { data: candidates, error: pkgErr } = await db
       .from('bid_packages')
-      .select('*, projects(name), bid_submissions(count)')
-      .eq('status', 'open')
-      .lte('due_date', in3)
-      .gte('due_date', today);
+      .select('*, projects(name, state), bid_submissions(count)')
+      .in('status', [...BIDDING_STATUSES])
+      .eq('sub_portal_enabled', true)
+      .or(`bid_due_date.gte.${floor},due_date.gte.${floor}`);
+    if (pkgErr) throw pkgErr;
+    /* Each package's zone: its company's, else its job's state (jobTimeZone). */
+    const zoneByKey = new Map<string, string>();
+    const keyOf = (p: any) => `${p.tenant_id}|${p.projects?.state ?? ''}`;
+    for (const p of (candidates || []) as any[]) {
+      if (!p.tenant_id || zoneByKey.has(keyOf(p))) continue;
+      const tz = await jobTimeZone(db, p.tenant_id, p.projects?.state);
+      if (tz.source === 'utc') console.error(`[cron/bid-reminders] tenant ${p.tenant_id} has no time zone and its job no state — bid due days counted in UTC`);
+      zoneByKey.set(keyOf(p), tz.zone);
+    }
+    const zoneOf = (p: any) => zoneByKey.get(keyOf(p)) ?? 'UTC';
+    const packages = ((candidates || []) as any[]).filter((p) => {
+      const d = daysUntilBidDue(p, zoneOf(p));
+      return d !== null && d >= 0 && d <= 3;
+    });
 
     let sent = 0;
-    for (const pkg of (packages || []) as any[]) {
-      // Get invites that haven't submitted
-      const { data: invites } = await db
+    let failed = 0;
+    for (const pkg of packages) {
+      /* Still to answer: response_status invited or viewed. This filtered
+         status = 'invited', which missed every bidder who had opened the link
+         (the portal writes response_status 'viewed') and would have chased a
+         revoked one. */
+      const { data: invites, error: invErr } = await db
         .from('bid_package_invites')
         .select('*')
         .eq('bid_package_id', pkg.id)
-        .eq('status', 'invited');
+        .eq('tenant_id', pkg.tenant_id)
+        .in('response_status', ['invited', 'viewed']);
+      if (invErr) throw invErr;
 
+      const due = bidDueDay(pkg) || '';
       for (const invite of (invites || []) as any[]) {
-        await withComm(
+        if (inviteState(invite) === 'revoked' || !invite.sub_email || !invite.token) continue;
+        const mail = await withComm(
           { tenantId: pkg.tenant_id, projectId: pkg.project_id ?? null, bidPackageId: pkg.id, subId: invite.sub_id ?? null,
             relatedType: 'bid_reminder', relatedId: invite.id ?? null, toName: invite.company_name || invite.sub_name || null },
           () => sendSubInvitedToBid(
-            invite.sub_email, invite.sub_name,
+            invite.sub_email, invite.company_name || invite.sub_name || 'there',
             pkg.projects?.name || 'Project',
-            pkg.trade, pkg.due_date,
-            `REMINDER: Bid due ${pkg.bid_due_date || pkg.due_date}. ${pkg.scope_summary || ''}`,
+            pkg.trade || pkg.name || 'Bid package', due,
+            `REMINDER: Bid due ${due}. ${pkg.scope_summary || ''}`,
             /* /portals/bid/<invite token> — the bidder's own jacket. This pointed
                at /portals/sub/<token>, which has no page (404) and whose auth
                route validates portal_sub_sessions.token, a different token
@@ -54,7 +90,9 @@ export async function GET(req: NextRequest) {
             `${APP_URL}/portals/bid/${invite.token}`
           ),
         );
-        sent++;
+        /* Counted by what actually left, not by what was attempted. */
+        if (mail.sent) sent++;
+        else failed++;
       }
     }
 
@@ -73,7 +111,7 @@ export async function GET(req: NextRequest) {
      * strip the next time they are in the app.
      */
     const byTenant = new Map<string, any[]>();
-    for (const pkg of (packages || []) as any[]) {
+    for (const pkg of packages) {
       if (!pkg.tenant_id) continue;
       const list = byTenant.get(pkg.tenant_id) ?? [];
       list.push(pkg);
@@ -82,13 +120,10 @@ export async function GET(req: NextRequest) {
 
     let notified = 0;
     for (const [tenantId, pkgs] of byTenant) {
-      const soonest = pkgs
-        .map((p) => p.due_date)
-        .filter(Boolean)
-        .sort()[0];
-      const days = soonest
-        ? Math.max(0, Math.ceil((new Date(soonest + 'T12:00:00').getTime() - Date.now()) / 86400000))
-        : null;
+      const days = pkgs
+        .map((p) => daysUntilBidDue(p, zoneOf(p)))
+        .filter((d): d is number => d !== null)
+        .sort((x, y) => x - y)[0] ?? null;
 
       const title = pkgs.length === 1
         ? `${pkgs[0].trade || 'A bid package'} closes ${days === 0 ? 'today' : `in ${days} day${days === 1 ? '' : 's'}`}`
@@ -112,8 +147,8 @@ export async function GET(req: NextRequest) {
       else notified++;
     }
 
-    return NextResponse.json({ success: true, sent, notified });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ success: true, packages: packages.length, sent, failed, notified });
+  } catch (e) {
+    return apiError('cron/bid-reminders', e);
   }
 }

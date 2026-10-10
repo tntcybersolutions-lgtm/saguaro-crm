@@ -7,6 +7,7 @@ import { computeLongLead, computeRisk, milestoneSlip, type Severity } from '@/li
 import { C, font, fmtDate, fmtMoneyShort, useFranchiseGate, GateLoading, SevBadge } from '@/components/franchise/kit';
 import { PremiumSurface, ModuleHero, StatStrip, SectionCard, PremiumEmpty, GoldButton, GhostButton } from '@/components/ui/premium';
 import { CheckCircle, Warning, EnvelopeSimple, Buildings } from '@phosphor-icons/react';
+import { localDay } from '@/lib/calendar-day';
 
 const SEV_WORD: Record<Severity, string> = { green: 'On Track', yellow: 'Needs Attention', red: 'At Risk' };
 const weekEnding = () => { const d = new Date(); return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); };
@@ -46,7 +47,7 @@ export default function OwnerUpdatesPage() {
       const critRisks = rk.filter((r) => r.severity === 'red').length;
       const ms = ((milestones as any[]) || []).filter((m) => m.project_id === p.id);
       const slipping = ms.map((m) => milestoneSlip(m.baseline_date, m.current_date, m.actual_date, m.float_days)).filter((s) => s.severity !== 'green').length;
-      const nowMs = Date.parse(new Date().toISOString().slice(0, 10));
+      const nowMs = Date.parse(localDay()); // This device's day — toISOString() is the UTC day, tomorrow from 7 PM on in Iowa.
       const upcoming = ms.filter((m) => { const t = Date.parse(String(m.current_date || m.baseline_date || '')); return !isNaN(t) && t >= nowMs && t <= nowMs + 30 * 86400000; })
         .sort((a, b) => Date.parse(String(a.current_date || a.baseline_date)) - Date.parse(String(b.current_date || b.baseline_date)))
         .slice(0, 3);

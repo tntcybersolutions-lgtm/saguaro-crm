@@ -7,6 +7,7 @@ import {
   rgb,
   PageSizes,
 } from 'pdf-lib';
+import { requestDay } from '@/lib/time-zone';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -65,7 +66,7 @@ function wrap(page: any, text: string, x: number, startY: number, font: any, siz
   return y;
 }
 
-async function buildRfiPdf(rfis: Row[], projectName: string): Promise<Uint8Array> {
+async function buildRfiPdf(rfis: Row[], projectName: string, today10: string): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
   const reg = await doc.embedFont(StandardFonts.Helvetica);
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
@@ -115,8 +116,6 @@ async function buildRfiPdf(rfis: Row[], projectName: string): Promise<Uint8Array
     footer(page, pageNum);
     return await doc.save();
   }
-
-  const today10 = new Date().toISOString().split('T')[0];
 
   for (const r of list) {
     ensureSpace(120);
@@ -199,8 +198,8 @@ async function projectName(projectId: string, tenantId: string): Promise<string>
   }
 }
 
-async function respond(rfis: Row[], pname: string): Promise<NextResponse> {
-  const bytes = await buildRfiPdf(rfis, pname);
+async function respond(rfis: Row[], pname: string, today: string): Promise<NextResponse> {
+  const bytes = await buildRfiPdf(rfis, pname, today);
   return new NextResponse(Buffer.from(bytes), {
     headers: {
       'Content-Type': 'application/pdf',
@@ -227,12 +226,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
         ? (body.ids as unknown[]).map((x) => String(x))
         : [];
 
-    const [rfis, pname] = await Promise.all([
+    const [rfis, pname, day] = await Promise.all([
       loadRfis(projectId, user.tenantId, ids),
       projectName(projectId, user.tenantId),
+      requestDay(req.headers, createServerClient(), user.tenantId, 'rfis/export'),
     ]);
 
-    return await respond(rfis, pname);
+    return await respond(rfis, pname, day.today);
   } catch {
     return NextResponse.json({ error: 'RFI export failed' }, { status: 500 });
   }
@@ -248,12 +248,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
     const idsParam = req.nextUrl.searchParams.get('ids') || '';
     const ids = idsParam.split(',').map((s) => s.trim()).filter(Boolean);
 
-    const [rfis, pname] = await Promise.all([
+    const [rfis, pname, day] = await Promise.all([
       loadRfis(projectId, user.tenantId, ids),
       projectName(projectId, user.tenantId),
+      requestDay(req.headers, createServerClient(), user.tenantId, 'rfis/export'),
     ]);
 
-    return await respond(rfis, pname);
+    return await respond(rfis, pname, day.today);
   } catch {
     return NextResponse.json({ error: 'RFI export failed' }, { status: 500 });
   }

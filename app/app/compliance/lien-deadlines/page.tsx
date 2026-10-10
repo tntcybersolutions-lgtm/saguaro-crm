@@ -27,6 +27,8 @@ import {
 } from '@phosphor-icons/react';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
+import { toDay } from '@/lib/calendar-day';
+import { addDays as addCalendarDays } from '@/lib/time-zone';
 
 const GOLD = 'var(--brand-primary)';
 const AMBER = 'var(--warning)';
@@ -96,10 +98,12 @@ function urgencyLabel(days: number): string {
   return `${days}d remaining`;
 }
 
+/* Calendar arithmetic on the day entered. The old version moved a UTC-midnight
+   instant by local days and read the UTC date back, which lost a day across the
+   spring DST change in every US zone that keeps DST (Mar 1 + 20 came out Mar 20). */
 function addDays(dateStr: string, days: number): string {
-  const d = new Date(dateStr);
-  d.setDate(d.getDate() + days);
-  return d.toISOString().split('T')[0];
+  const day = toDay(dateStr);
+  return day ? addCalendarDays(day, days) : '';
 }
 
 export default function LienDeadlinePage() {
