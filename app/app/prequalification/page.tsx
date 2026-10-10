@@ -55,7 +55,8 @@ const inputS: React.CSSProperties = { padding: '9px 13px', background: BG, borde
 const btnS = (bg: string, c: string = 'var(--bg-base)'): React.CSSProperties => ({ padding: '8px 18px', background: bg, color: c, border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' });
 const cardS: React.CSSProperties = { background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: 16, marginBottom: 10 };
 const chipS = (bg: string, c: string): React.CSSProperties => ({ display: 'inline-block', padding: '3px 10px', borderRadius: 99, fontSize: 11, fontWeight: 700, background: `color-mix(in srgb, ${bg} 13%, transparent)`, color: c });
-const modalOverlay: React.CSSProperties = { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 };
+// 10000 = the kit overlay layer: above the chat launcher (9999), which otherwise sits on a phone dialog's buttons.
+const modalOverlay: React.CSSProperties = { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 };
 const modalBox: React.CSSProperties = { background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 'var(--radius-lg)', padding: 28, width: '90%', maxWidth: 700, maxHeight: '85vh', overflowY: 'auto', color: TEXT, boxShadow: 'var(--shadow-lg)' };
 const selectS: React.CSSProperties = { ...inputS, appearance: 'auto' as any };
 const labelS: React.CSSProperties = { fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 6, display: 'block', fontWeight: 700};
@@ -458,7 +459,7 @@ export default function PrequalificationPage() {
     <>
     <PremiumSurface maxWidth={2200}>
       {/* Toast */}
-      {toast && <div style={{ position: 'fixed', top: 20, right: 20, background: `color-mix(in srgb, ${GREEN} 13%, transparent)`, border: `1px solid ${GREEN}`, color: GREEN, padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 600, zIndex: 2000 }}>{toast}</div>}
+      {toast && <div role="status" style={{ position: 'fixed', top: 20, right: 20, background: `color-mix(in srgb, ${GREEN} 13%, transparent)`, border: `1px solid ${GREEN}`, color: GREEN, padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 600, zIndex: 10010 }}>{toast}</div>}
 
       {/* Header */}
       <ModuleHero
@@ -1022,9 +1023,14 @@ function TemplateBuilderModal({ initial, onSave, onClose }: { initial: Template 
     setRequiredDocs(prev => prev.includes(doc) ? prev.filter(d => d !== doc) : [...prev, doc]);
   };
 
+  /* The reason a save is refused used to print at the TOP of the dialog — on a
+     phone, a screen above the Save button the user just tapped, so the tap
+     looked dead. It now sits beside the buttons and the cursor goes to the
+     thing to fix. */
   const handleSave = () => {
-    if (!name.trim()) { setErr('Template name is required.'); return; }
-    if (questions.length === 0) { setErr('Add at least one question.'); return; }
+    if (!name.trim()) { setErr('Give the template a name.'); document.getElementById('pq-tpl-name')?.focus(); return; }
+    if (questions.length === 0) { setErr('Add at least one question — the form is scored on its questions.'); document.getElementById('pq-add-question')?.focus(); return; }
+    setErr('');
     const tpl: Template = {
       id: initial?.id || `tpl-${uid()}`, name: name.trim(), description: description.trim(),
       questions, threshold, requiredDocs, created_at: initial?.created_at || new Date().toISOString(),
@@ -1037,13 +1043,12 @@ function TemplateBuilderModal({ initial, onSave, onClose }: { initial: Template 
       <div style={{ ...modalBox, maxWidth: 800 }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: GOLD }}>{initial ? 'Edit Template' : 'New Prequal Template'}</h2>
-          <button style={{ background: 'none', border: 'none', color: DIM, fontSize: 22, cursor: 'pointer' }} onClick={onClose}><X size={20} weight="regular" color={DIM} /></button>
+          <button aria-label="Close" style={{ background: 'none', border: 'none', color: DIM, fontSize: 22, cursor: 'pointer', minWidth: 44, minHeight: 44 }} onClick={onClose}><X size={20} weight="regular" color={DIM} /></button>
         </div>
-        {err && <div style={{ background: `color-mix(in srgb, ${RED} 13%, transparent)`, border: `1px solid ${RED}`, color: RED, padding: '8px 14px', borderRadius: 8, fontSize: 13, marginBottom: 14 }}>{err}</div>}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 18 }}>
-          <div><label style={labelS}>Template Name</label><input value={name} onChange={e => setName(e.target.value)} style={inputS} placeholder="e.g., Standard Subcontractor Prequal" /></div>
-          <div><label style={labelS}>Pass Threshold (%)</label><input type="number" value={threshold} onChange={e => setThreshold(Number(e.target.value))} style={inputS} min={0} max={100} /></div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 18 }}>
+          <div><label htmlFor="pq-tpl-name" style={labelS}>Template Name *</label><input id="pq-tpl-name" value={name} onChange={e => { setName(e.target.value); if (err) setErr(''); }} style={inputS} placeholder="e.g., Standard Subcontractor Prequal" aria-required="true" aria-invalid={err && !name.trim() ? true : undefined} /></div>
+          <div><label htmlFor="pq-tpl-threshold" style={labelS}>Pass Threshold (%)</label><input id="pq-tpl-threshold" type="number" inputMode="numeric" value={threshold} onChange={e => setThreshold(Math.max(0, Math.min(100, Number(e.target.value) || 0)))} style={inputS} min={0} max={100} /></div>
         </div>
         <div style={{ marginBottom: 18 }}>
           <label style={labelS}>Description</label>
@@ -1063,11 +1068,11 @@ function TemplateBuilderModal({ initial, onSave, onClose }: { initial: Template 
         {/* Questions */}
         <div style={{ marginBottom: 18 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <label style={labelS}>Questions ({questions.length})</label>
-            <button style={{ ...btnS(BLUE, TEXT), padding: '5px 14px', fontSize: 12 }} onClick={() => { setEditQIdx(null); setShowAddQ(true); }}>+ Add Question</button>
+            <label style={labelS}>Questions ({questions.length}) *</label>
+            <button id="pq-add-question" style={{ ...btnS(BLUE, TEXT), padding: '5px 14px', fontSize: 12, minHeight: 44 }} onClick={() => { setEditQIdx(null); setShowAddQ(true); if (err) setErr(''); }}>+ Add Question</button>
           </div>
           {questions.length === 0 ? (
-            <div style={{ padding: 20, textAlign: 'center', color: DIM, fontSize: 13, background: BG, borderRadius: 8, border: `1px solid ${BORDER}` }}>No questions yet. Click "+ Add Question" to get started.</div>
+            <div style={{ padding: 20, textAlign: 'center', color: DIM, fontSize: 13, background: BG, borderRadius: 8, border: `1px solid ${BORDER}` }}>No questions yet — a template needs at least one. Tap &ldquo;+ Add Question&rdquo; to start.</div>
           ) : (
             <div style={{ maxHeight: 300, overflowY: 'auto' }}>
               {questions.map((q, i) => (
@@ -1093,9 +1098,10 @@ function TemplateBuilderModal({ initial, onSave, onClose }: { initial: Template 
           )}
         </div>
 
+        {err && <div role="alert" style={{ background: `color-mix(in srgb, ${RED} 13%, transparent)`, border: `1px solid ${RED}`, color: RED, padding: '8px 14px', borderRadius: 8, fontSize: 13, marginBottom: 12 }}>{err}</div>}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, paddingTop: 14, borderTop: `1px solid ${BORDER}` }}>
-          <button style={btnS(BORDER, TEXT)} onClick={onClose}>Cancel</button>
-          <button style={btnS(GOLD)} onClick={handleSave}>Save Template</button>
+          <button style={{ ...btnS(BORDER, TEXT), minHeight: 44 }} onClick={onClose}>Cancel</button>
+          <button style={{ ...btnS(GOLD), minHeight: 44 }} onClick={handleSave}>Save Template</button>
         </div>
 
         {/* Add/Edit Question sub-modal */}
@@ -1130,7 +1136,7 @@ function QuestionEditor({ initial, onSave, onClose }: { initial: Question | null
     <div style={modalOverlay} onClick={onClose}>
       <div style={{ ...modalBox, maxWidth: 500 }} onClick={e => e.stopPropagation()}>
         <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, color: GOLD }}>{initial ? 'Edit Question' : 'Add Question'}</h3>
-        {err && <div style={{ background: `color-mix(in srgb, ${RED} 13%, transparent)`, color: RED, padding: '6px 12px', borderRadius: 6, fontSize: 12, marginBottom: 10 }}>{err}</div>}
+        {err && <div role="alert" style={{ background: `color-mix(in srgb, ${RED} 13%, transparent)`, color: RED, padding: '6px 12px', borderRadius: 6, fontSize: 12, marginBottom: 10 }}>{err}</div>}
 
         <div style={{ marginBottom: 12 }}>
           <label style={labelS}>Question Text</label>
@@ -1217,7 +1223,7 @@ function InviteModal({ templates, onSend, onClose }: { templates: Template[]; on
           <h2 id={titleId} style={{ margin: 0, fontSize: 18, fontWeight: 800, color: GOLD }}>Send Prequal Form</h2>
           <button type="button" aria-label="Close" style={{ background: 'none', border: 'none', color: DIM, fontSize: 22, cursor: 'pointer', minWidth: 44, minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', margin: '-10px -10px -10px 0' }} onClick={onClose}><X size={20} weight="regular" color={DIM} /></button>
         </div>
-        {err && <div style={{ background: `color-mix(in srgb, ${RED} 13%, transparent)`, color: RED, padding: '6px 12px', borderRadius: 6, fontSize: 12, marginBottom: 10 }}>{err}</div>}
+        {err && <div role="alert" style={{ background: `color-mix(in srgb, ${RED} 13%, transparent)`, color: RED, padding: '6px 12px', borderRadius: 6, fontSize: 12, marginBottom: 10 }}>{err}</div>}
 
         <div style={{ marginBottom: 14 }}>
           <label style={labelS}>Subcontractor Name</label>

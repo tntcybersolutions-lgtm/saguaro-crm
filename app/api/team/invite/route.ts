@@ -7,12 +7,12 @@ import { sendInviteTeamMember } from '@/lib/email';
 import { apiError } from '@/lib/api-error';
 import { writeWithOptionalColumns } from '@/lib/optional-column';
 
-/* The invitee's name. team_invites has no `name` column yet, so the name typed
-   on the invite form was thrown away and the roster could only show an email.
-   The insert below sends it as an OPTIONAL column (dropped and retried only if
-   the database says the column is missing), so it starts persisting the moment
-   this migration runs:
-     ALTER TABLE public.team_invites ADD COLUMN IF NOT EXISTS name text;        */
+/* The invitee's name. team_invites had no `name` column, so the name typed on
+   the invite form was thrown away and the roster could only show an email. The
+   column exists now (supabase/migrations/20261010_team_invite_name_radio_edited_at.sql);
+   the insert still sends it as an OPTIONAL column (dropped and retried only if
+   the database says the column is missing), so a database without that
+   migration keeps the invite itself.                                          */
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
 
@@ -35,8 +35,8 @@ export async function GET(req: NextRequest) {
     const db = createServerClient();
     // Optional ?projectId= narrows to the invites sent from one job's Team page.
     const projectId = req.nextUrl.searchParams.get('projectId') || req.nextUrl.searchParams.get('project_id');
-    // `*` rather than a column list so the invitee's `name` comes back once the
-    // column exists (see INVITE_NAME_SQL) without breaking the read before it does.
+    // `*` rather than a column list, so a database without the `name` column
+    // still answers (the name then reads as null).
     let q = db
       .from('team_invites')
       .select('*')
@@ -69,6 +69,8 @@ export async function GET(req: NextRequest) {
  * status:'failed' with the actual reason. There is no invite queue in this
  * codebase, so no invite is ever reported as 'queued'.
  */
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export async function POST(req: NextRequest) {
   // Inviting a teammate expands who can access the tenant — access-control action.
   const g = await requirePermission(req, 'Admin', 'Full');
@@ -87,6 +89,10 @@ export async function POST(req: NextRequest) {
       }
       const results: Array<{ email: string; status: 'sent' | 'failed'; error?: string }> = [];
       for (const entry of entries) {
+        if (!EMAIL_RE.test(String(entry.email).trim())) {
+          results.push({ email: String(entry.email).trim(), status: 'failed', error: 'Not a valid email address.' });
+          continue;
+        }
         const r = await createAndSendInvite(user, {
           email: String(entry.email).trim(),
           name: entry.name,
@@ -102,17 +108,22 @@ export async function POST(req: NextRequest) {
       if (sent === 0) {
         return NextResponse.json(
           { success: false, sent, failed, results, error: results[0]?.error || 'No invites could be sent.' },
-          { status: 500 },
+          // Every address malformed is the caller's to fix (400), not a server fault.
+          { status: results.every(r => r.error === 'Not a valid email address.') ? 400 : 500 },
         );
       }
       return NextResponse.json({ success: failed === 0, sent, failed, results });
     }
 
     // ── Single shape ───────────────────────────────────────────────────────────
-    if (!email) {
-      return NextResponse.json({ error: 'email is required' }, { status: 400 });
+    if (!email || !String(email).trim()) {
+      return NextResponse.json({ error: 'Enter the email address to send the invite to.' }, { status: 400 });
     }
-    const single = await createAndSendInvite(user, { email, name, role, projectId });
+    // An invite row and an email to a non-address helps no one — say so instead.
+    if (!EMAIL_RE.test(String(email).trim())) {
+      return NextResponse.json({ error: 'Enter a valid email address — the invite link is sent there.' }, { status: 400 });
+    }
+    const single = await createAndSendInvite(user, { email: String(email).trim(), name, role, projectId });
     if (!single.ok) {
       return NextResponse.json({ error: single.error }, { status: 500 });
     }
@@ -145,8 +156,8 @@ async function createAndSendInvite(
     const token = randomBytes(24).toString('hex');
 
     // Insert the real team_invites columns, plus `name` as an OPTIONAL column:
-    // until the migration above runs, a "no such column" answer drops just the
-    // name and retries, so the invite itself is never lost over it. We store
+    // on a database without it, a "no such column" answer drops just the name
+    // and retries, so the invite itself is never lost over it. We store
     // the token so the invite is real, and surface any other DB error honestly.
     const cleanName = typeof name === 'string' && name.trim() && name.trim().toLowerCase() !== String(email).toLowerCase()
       ? name.trim() : null;
@@ -168,8 +179,9 @@ async function createAndSendInvite(
     );
 
     if (insertErr || !invite) {
+      // The database's words stay in the log; the caller gets ours.
       console.error('[team/invite] insert failed for', email, '-', insertErr?.message);
-      return { ok: false, email, error: insertErr?.message || 'Failed to create invite' };
+      return { ok: false, email, error: "Couldn't create the invite. Please try again." };
     }
 
     const acceptUrl = `${APP_URL}/accept-invite?token=${token}`;

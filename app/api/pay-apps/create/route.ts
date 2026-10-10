@@ -6,6 +6,14 @@ import { recordLearning } from '@/lib/learning';
 import { toCents, toDollars, percentOf, subCents, computePayApp } from '@/lib/calc';
 import { must } from '@/lib/db-write';
 import { logActivity, money } from '@/lib/activity';
+import { apiError, apiFail } from '@/lib/api-error';
+
+/** A real calendar date in YYYY-MM-DD — what a Postgres DATE column accepts. */
+function isIsoDate(v: unknown): boolean {
+  if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
+  const d = new Date(`${v}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
+}
 
 /** GET ?projectId= — seed data for a NEW pay app: next number, the prior app's
  *  schedule of values (rolled forward), and the approved-CO total. The new-app
@@ -52,6 +60,8 @@ export async function GET(req: NextRequest) {
       nextAppNumber: (prior?.app_number || 0) + 1,
       retainagePercent: prior?.retainage_percent ?? 10,
       changeOrdersTotal,
+      // G702 line 7 of this app = line 6 of the last one.
+      previousCertificates: Number(prior?.total_earned_less_retainage) || 0,
       priorSov: priorSov.map((r) => ({
         description: r.description,
         scheduledValue: Number(r.scheduled_value) || 0,
@@ -61,8 +71,8 @@ export async function GET(req: NextRequest) {
         csiCode: r.cost_code,
       })),
     });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('pay-apps/create GET', e, "Couldn't load the last pay application. Please try again.");
   }
 }
 
@@ -75,7 +85,10 @@ export async function POST(req: NextRequest) {
     const db = g.db;
 
     const projectId = body.projectId ?? body.project_id;
-    if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 });
+    if (!projectId) return apiFail('Pick a project for this pay application.', 400);
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(projectId))) {
+      return apiFail('Pick a project for this pay application.', 400);
+    }
 
     /* projectId is caller-supplied and db is the service role, so without the
        tenant filter this read any project by id — and its contract amount and
@@ -110,8 +123,13 @@ export async function POST(req: NextRequest) {
     const changeOrdersTotal = body.changeOrdersTotal != null ? Number(body.changeOrdersTotal) || 0 : derivedCoTotal;
 
     // Accept both camelCase and snake_case for the keys the mobile form sends.
+    // period_from / period_to are DATE columns: a typed phrase ("October
+    // billing") used to reach Postgres and come back as a bare 500. Say which
+    // field is wrong instead.
     const periodTo = body.periodTo ?? body.period_to ?? null;
     const periodFrom = body.periodFrom ?? body.period_from ?? null;
+    if (periodTo && !isIsoDate(periodTo)) return apiFail('Period To must be a date, like 2026-10-31.', 400);
+    if (periodFrom && !isIsoDate(periodFrom)) return apiFail('Period From must be a date, like 2026-10-01.', 400);
     const retainagePercent = Number(body.retainagePercent ?? body.retainage_percent ?? 10) || 0;
     // AIA roll-forward: G702 line 7 (LESS PREVIOUS CERTIFICATES) of app N = line 6 (TOTAL EARNED
     // LESS RETAINAGE) of app N-1, and prior completed-to-date carries forward. The mobile lump-sum
@@ -295,7 +313,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ payApp, success: true, rolledForward, changeOrdersTotal });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('pay-apps/create', e, "Couldn't save the pay application. Please try again.");
   }
 }

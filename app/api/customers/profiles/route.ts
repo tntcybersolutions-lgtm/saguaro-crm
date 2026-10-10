@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -78,7 +79,11 @@ export async function POST(req: NextRequest) {
     if (!g.ok) return g.res;
     const user = g.user;
 
-    const body = await req.json();
+    const body = await req.json().catch(() => ({}));
+    // A profile with no name and no email is a row nobody can find or pick.
+    if (!String(body?.name ?? '').trim() && !String(body?.email ?? '').trim()) {
+      return NextResponse.json({ error: 'Enter the customer’s name.' }, { status: 400 });
+    }
     const db = createServerClient();
 
     const allowed = [
@@ -110,7 +115,7 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
     return NextResponse.json({ customer: data }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('customers/profiles POST', e, "Couldn't add the customer. Please try again.");
   }
 }

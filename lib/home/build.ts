@@ -21,6 +21,7 @@ import {
   type DataState, type HomeView, type Metric, type QueueItem, type ScheduleEntry, type Tier,
 } from './rank';
 import { buildTicker, zonedMidnightIso, type ReviewGroup, type TickerItem, type TickerSummary } from './ticker';
+import { inspectionOutcome } from '@/lib/inspection-result';
 
 type ServerDb = ReturnType<typeof createServerClient>;
 /* The generated Database type makes some of these selects blow the TS
@@ -287,13 +288,12 @@ async function buildOps(ctx: BuildCtx, projects: Map<string, ProjectInfo>, peopl
     for (const x of r) {
       if (!live(x.project_id)) continue;
       const status = String(x.status || '').toLowerCase();
-      const result = String(x.result || '').toLowerCase();
       const date = (x.re_inspection_date || (x.scheduled_date ? String(x.scheduled_date).slice(0, 10) : null)) as string | null;
       const name = x.inspection_type || 'Inspection';
       if (date && date >= today && date <= horizon && !INSPECTION_DONE.includes(status)) {
         inspSchedule.push({ id: `insp-s:${x.id}`, kind: 'Inspection', title: name, date, time: x.scheduled_date && String(x.scheduled_date).length > 10 ? String(x.scheduled_date).slice(11, 16) : null, projectId: x.project_id, projectName: pname(x.project_id), who: x.inspector_name || x.inspector || null, href: `/app/projects/${x.project_id}/inspections?inspection=${x.id}` });
       }
-      const failed = result === 'failed' || result === 'fail' || status === 'failed';
+      const failed = inspectionOutcome(x) === 'failed';
       if (INSPECTION_DONE.includes(status) && !failed) continue;
       if (failed) {
         addRisk(x.project_id, 'Failed inspection');

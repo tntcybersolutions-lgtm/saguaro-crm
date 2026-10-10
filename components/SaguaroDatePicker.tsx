@@ -75,6 +75,8 @@ interface SaguaroDatePickerProps {
   onChange: (value: string) => void;
   style?: React.CSSProperties;
   placeholder?: string;
+  /** Lets a <label htmlFor> point at the field and a form focus it. */
+  id?: string;
 }
 
 /* Local-time ISO parsing — a YYYY-MM-DD is a calendar date, never UTC-shift it. */
@@ -105,7 +107,7 @@ function sameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
-export default function SaguaroDatePicker({ value, onChange, style, placeholder }: SaguaroDatePickerProps) {
+export default function SaguaroDatePicker({ value, onChange, style, placeholder, id }: SaguaroDatePickerProps) {
   const selected = parseISOString(value);
   const today = new Date();
   const inputStyle = { ...DEFAULT_INPUT_STYLE, ...style };
@@ -227,6 +229,7 @@ export default function SaguaroDatePicker({ value, onChange, style, placeholder 
     <>
       <input
         ref={inputRef}
+        id={id}
         value={formatDisplay(value)}
         placeholder={placeholder ?? 'MM/DD/YYYY'}
         style={inputStyle}

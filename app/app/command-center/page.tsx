@@ -8,6 +8,7 @@ import { computeHealth, TRIAGE_ORDER, type HealthStatus } from '@/lib/portfolio-
 import { useRisks, useEscalations, useLongLead, useMilestones } from '@/lib/hooks/useFranchise';
 import { computeRisk, computeLongLead, milestoneSlip } from '@/lib/franchise';
 import { PremiumSurface, ModuleHero, StatStrip, SectionCard } from '@/components/ui/premium';
+import { inspectionOutcome } from '@/lib/inspection-result';
 import {
   Warning, SquaresFour, ChartLineUp, Wallet, Bank, ShieldWarning, Siren, Package, FlagCheckered,
   NotePencil, UsersThree, PaperPlaneTilt, Truck, AddressBook, ListChecks, LinkSimple, MapPin,
@@ -76,10 +77,10 @@ export default function CommandCenterPage() {
       (j.inspections || []).forEach((i: any) => {
         const pid = i.project_id; if (!pid) return;
         const m = map[pid] || (map[pid] = { passed: 0, failed: 0, pending: 0, total: 0 });
-        const v = String(i.result || i.status || '').toLowerCase();
+        const o = inspectionOutcome(i);
         m.total++;
-        if (/pass|approv|complete/.test(v)) m.passed++;
-        else if (/fail|reject|deficien/.test(v)) m.failed++;
+        if (o === 'passed' || o === 'conditional') m.passed++;
+        else if (o === 'failed') m.failed++;
         else m.pending++;
       });
       setInspByProj(map);

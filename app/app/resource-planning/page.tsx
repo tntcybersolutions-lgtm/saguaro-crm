@@ -61,9 +61,12 @@ function Card({ title, children, action, icon }: { title: string; children: Reac
 function Spinner() {
   return <div style={{ display: 'inline-block', width: 16, height: 16, border: `2px solid ${BORDER}`, borderTopColor: GOLD, borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />;
 }
+/* minWidth 520 pushed the dialog off both sides of a 390px phone — Create
+   Assignment started left of the screen edge. It now fits the viewport, and
+   sits on the kit overlay layer, above the chat launcher (9999). */
 function ModalOverlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
-  return <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-    <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 28, minWidth: 520, maxWidth: 720, maxHeight: '85vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+  return <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 12 }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+    <div role="dialog" aria-modal="true" style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 'clamp(16px, 4vw, 28px)', width: 'min(720px, 100%)', maxHeight: '88vh', overflowY: 'auto', boxSizing: 'border-box' }} onClick={e => e.stopPropagation()}>
       {children}
     </div>
   </div>;
@@ -78,6 +81,8 @@ function mondayOf(d: Date) { const r = new Date(d); r.setDate(r.getDate() - ((r.
 function addWeeks(d: Date, n: number) { const r = new Date(d); r.setDate(r.getDate() + n * 7); return r; }
 function addDays(d: Date, n: number) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
 function isoDate(d: Date) { return d.toISOString().slice(0, 10); }
+/** Today on the user's calendar (toISOString is UTC — after 5 pm in Arizona it is already tomorrow). */
+function localToday() { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
 function weeksRange(startWeek: Date, count: number) { return Array.from({ length: count }, (_, i) => addWeeks(startWeek, i)); }
 
 /* ===== MAIN COMPONENT ===== */
@@ -100,6 +105,8 @@ export default function ResourcePlanningPage() {
   const [filterDateEnd, setFilterDateEnd] = useState('');
   const [filterPerson, setFilterPerson] = useState('');
   const [form, setForm] = useState<Partial<Assignment>>({ status: 'assigned', hours_per_day: 8, days_per_week: 5, hourly_rate: 0, certifications: [], trade: 'General', role: 'Laborer' });
+  /** Why Create Assignment refused, shown inside the dialog (the page banner sits under it). */
+  const [formErr, setFormErr] = useState<{ text: string; field?: string } | null>(null);
 
   /* ── Unsaved-work guard: an assignment half-typed is real work, so leaving
    *    this module (sidebar, ⌘K, breadcrumb, back) confirms first and the
@@ -338,10 +345,20 @@ export default function ResourcePlanningPage() {
 
   /* ---- CRUD handlers ---- */
   const saveAssignment = async (): Promise<boolean> => {
-    if (!form.person_name || !form.project_id || !form.start_date || !form.end_date) {
-      setError('Please fill in all required fields: Person Name, Project, Start Date, End Date.');
+    /* The refusal used to go to the page banner — underneath this dialog, so
+       Create Assignment looked dead. Each missing field is now named in the
+       dialog and the cursor goes to it (a date field opens its calendar). */
+    const stop = (text: string, field: string) => {
+      setFormErr({ text, field });
+      window.setTimeout(() => document.getElementById(field)?.focus(), 0);
       return false;
-    }
+    };
+    if (!String(form.person_name || '').trim()) return stop('Enter the person’s name.', 'rp-person');
+    if (!form.project_id) return stop('Pick the project they are assigned to.', 'rp-project');
+    if (!form.start_date) return stop('Pick a Start Date.', 'rp-start');
+    if (!form.end_date) return stop('Pick an End Date.', 'rp-end');
+    if (form.end_date < form.start_date) return stop('End Date must be on or after the Start Date.', 'rp-end');
+    setFormErr(null);
     setSaving(true);
     setError(null);
     try {
@@ -350,7 +367,11 @@ export default function ResourcePlanningPage() {
         : '/api/projects/all/resource-planning';
       const method = editId ? 'PATCH' : 'POST';
       const res = await fetch(endpoint, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
-      if (!res.ok) { console.error('save assignment failed', res.status); throw new Error('save failed'); }
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        console.error('save assignment failed', res.status, j?.error);
+        throw new Error(j?.error || 'save failed');
+      }
       setShowForm(false);
       setEditId(null);
       setForm({ status: 'assigned', hours_per_day: 8, days_per_week: 5, hourly_rate: 0, certifications: [], trade: 'General', role: 'Laborer' });
@@ -359,7 +380,7 @@ export default function ResourcePlanningPage() {
       return true;
     } catch (err: unknown) {
       console.error(err);
-      setError(humanError(err, 'Failed to save the assignment. Please try again.'));
+      setFormErr({ text: humanError(err, 'Failed to save the assignment. Please try again.') });
     } finally {
       setSaving(false);
     }
@@ -383,6 +404,7 @@ export default function ResourcePlanningPage() {
   };
 
   const editAssignment = (a: Assignment) => {
+    setFormErr(null);
     setForm({ ...a });
     setEditId(a.id || null);
     setShowForm(true);
@@ -464,7 +486,7 @@ export default function ResourcePlanningPage() {
         {saving && <Spinner />}
         <button onClick={exportCSV} style={ghostButtonStyle} className="pmBtn"><DownloadSimple size={15} weight="bold" /> Export CSV</button>
         <button onClick={() => { load(); }} style={ghostButtonStyle} className="pmBtn"><ArrowsClockwise size={15} weight="bold" /> Refresh</button>
-        <button onClick={() => { setEditId(null); setForm({ status: 'assigned', hours_per_day: 8, days_per_week: 5, hourly_rate: 0, certifications: [], trade: 'General', role: 'Laborer' }); setShowForm(true); }} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> New Assignment</button>
+        <button onClick={() => { setEditId(null); setFormErr(null); setForm({ status: 'assigned', hours_per_day: 8, days_per_week: 5, hourly_rate: 0, certifications: [], trade: 'General', role: 'Laborer', start_date: localToday() }); setShowForm(true); }} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> New Assignment</button>
       </>}
     />
 
@@ -542,14 +564,15 @@ export default function ResourcePlanningPage() {
       {/* ========== ASSIGNMENT FORM MODAL ========== */}
       {showForm && <ModalOverlay onClose={() => { setShowForm(false); setEditId(null); }}>
         <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 20, color: TEXT }}>{editId ? 'Edit Assignment' : 'New Assignment'}</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 14 }}>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Person Name *</label>
-            <Suggest value={form.person_name || ''} onChange={e => setForm({ ...form, person_name: e.target.value })} placeholder="Full name" style={inp()} options={['n']} />
+            <label htmlFor="rp-person" style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Person Name *</label>
+            {/* Suggestions are the people already on the board (it offered a lone "n" — a datalist id). */}
+            <Suggest id="rp-person" value={form.person_name || ''} onChange={e => { const v = e.target.value; setForm(f => ({ ...f, person_name: v })); setFormErr(null); }} placeholder="Full name" style={inp()} options={allPersonNames.filter(Boolean)} aria-required="true" aria-invalid={formErr?.field === 'rp-person' || undefined} />
             </div>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Project *</label>
-            <StandardSelect value={form.project_id || ''} onChange={v => setForm({ ...form, project_id: v })} ariaLabel="Project" placeholder="Select project…" width="100%"
+            <label htmlFor="rp-project" style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Project *</label>
+            <StandardSelect id="rp-project" value={form.project_id || ''} onChange={v => { setForm(f => ({ ...f, project_id: v })); setFormErr(null); }} ariaLabel="Project" placeholder="Select project…" width="100%"
               options={projects.map(p => ({ value: p.id, label: p.name }))} />
           </div>
           <div>
@@ -561,21 +584,21 @@ export default function ResourcePlanningPage() {
             <StandardSelect value={form.trade || ''} onChange={v => setForm({ ...form, trade: v })} ariaLabel="Trade" width="100%" options={TRADE_OPTIONS} />
           </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14, marginBottom: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 14, marginBottom: 14 }}>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Start Date *</label>
-            <SaguaroDatePicker value={form.start_date || ''} onChange={v => setForm({ ...form, start_date: v })} style={inp()} />
+            <label htmlFor="rp-start" style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Start Date *</label>
+            <SaguaroDatePicker id="rp-start" value={form.start_date || ''} onChange={v => { setForm(f => ({ ...f, start_date: v })); setFormErr(null); }} style={inp()} />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>End Date *</label>
-            <SaguaroDatePicker value={form.end_date || ''} onChange={v => setForm({ ...form, end_date: v })} style={inp()} />
+            <label htmlFor="rp-end" style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>End Date *</label>
+            <SaguaroDatePicker id="rp-end" value={form.end_date || ''} onChange={v => { setForm(f => ({ ...f, end_date: v })); setFormErr(null); }} style={inp()} />
           </div>
           <div>
             <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Status</label>
             <StandardSelect value={form.status || 'assigned'} onChange={v => setForm({ ...form, status: v as Assignment['status'] })} ariaLabel="Status" width="100%" options={STATUS_OPTS.map(s => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) }))} />
           </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14, marginBottom: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 14, marginBottom: 14 }}>
           <div>
             <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Hours/Day</label>
             <input type="number" value={form.hours_per_day ?? 8} onChange={e => setForm({ ...form, hours_per_day: +e.target.value })} style={inp()} min={1} max={16} />
@@ -599,9 +622,10 @@ export default function ResourcePlanningPage() {
           <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Notes</label>
           <textarea value={form.notes || ''} onChange={e => setForm({ ...form, notes: e.target.value })} rows={3} style={{ ...inp(), resize: 'vertical' as const }} />
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={saveAssignment} disabled={saving} style={{ ...btn(true), opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : editId ? 'Update Assignment' : 'Create Assignment'}</button>
-          <button onClick={() => { setShowForm(false); setEditId(null); }} style={btn()}>Cancel</button>
+        {formErr && <div role="alert" style={{ marginBottom: 12, padding: '10px 12px', borderRadius: 8, background: `color-mix(in srgb, ${RED} 10%, transparent)`, border: `1px solid color-mix(in srgb, ${RED} 45%, transparent)`, color: RED, fontSize: 13, lineHeight: 1.5 }}>{formErr.text}</div>}
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <button onClick={saveAssignment} disabled={saving} style={{ ...btn(true), minHeight: 44, opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : editId ? 'Update Assignment' : 'Create Assignment'}</button>
+          <button onClick={() => { setShowForm(false); setEditId(null); setFormErr(null); }} style={{ ...btn(), minHeight: 44 }}>Cancel</button>
         </div>
       </ModalOverlay>}
 

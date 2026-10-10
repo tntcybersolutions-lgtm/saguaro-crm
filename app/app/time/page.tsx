@@ -168,6 +168,7 @@ export default function TimeClockPage() {
   const [leave, setLeave] = useState<any | null>(null);
   const [csiDiv, setCsiDiv] = useState('');
   const [savingEntry, setSavingEntry] = useState(false);
+  const [manualErr, setManualErr] = useState('');
   // Server truth for the clock. `statusLoaded` stays false until /status answers once,
   // so an unreachable API falls back to the read path instead of faking "clocked out".
   const [shift, setShift] = useState<Shift | null>(null);
@@ -346,10 +347,32 @@ export default function TimeClockPage() {
     inflight.current = false; setBusy(false);
   };
 
+  /** Say what is missing inside the dialog, and put the cursor on it. */
+  const manualStop = (text: string, fieldId: string) => {
+    setManualErr(text);
+    window.setTimeout(() => document.getElementById(fieldId)?.focus(), 0);
+  };
+
   const saveManual = async () => {
-    if (!emp || !manual) return;
-    const inISO = new Date(`${manual.date}T${manual.in}:00`).toISOString();
-    const outISO = new Date(`${manual.date}T${manual.out}:00`).toISOString();
+    if (!manual) return;
+    if (!emp) { setManualErr('Your employee record is still loading. Try again in a moment.'); return; }
+    /* A cleared time field used to reach `new Date('…T:00').toISOString()`,
+       which throws — outside the try, so the tap did nothing and said nothing.
+       Each required value is now checked here and named in the dialog. */
+    const entryProject = manual.id ? null : (manual.project || '');
+    if (!manual.id && !entryProject) { manualStop('Pick the project these hours go to.', 'tc-manual-project'); return; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(manual.date || ''))) { manualStop('Pick the date you worked.', 'tc-manual-date'); return; }
+    if (!/^\d{2}:\d{2}/.test(String(manual.in || ''))) { manualStop('Enter the Clock In time.', 'tc-manual-in'); return; }
+    if (!/^\d{2}:\d{2}/.test(String(manual.out || ''))) { manualStop('Enter the Clock Out time.', 'tc-manual-out'); return; }
+    const inAt = new Date(`${manual.date}T${manual.in}:00`);
+    let outAt = new Date(`${manual.date}T${manual.out}:00`);
+    if (Number.isNaN(inAt.getTime()) || Number.isNaN(outAt.getTime())) { manualStop('Enter the Clock In and Clock Out times.', 'tc-manual-in'); return; }
+    if (outAt.getTime() === inAt.getTime()) { manualStop('Clock Out must be later than Clock In.', 'tc-manual-out'); return; }
+    // Out earlier than in is a night shift that ended the next morning.
+    if (outAt.getTime() < inAt.getTime()) outAt = new Date(outAt.getTime() + 24 * 3600000);
+    setManualErr('');
+    const inISO = inAt.toISOString();
+    const outISO = outAt.toISOString();
     const meal = Math.max(0, parseInt(manual.meal) || 0);
     const gross = Math.max(0, (Date.parse(outISO) - Date.parse(inISO)) / 3600000);
     const hrs = round2(Math.max(0, gross - meal / 60)); const { regular, overtime } = splitOT(hrs);
@@ -362,10 +385,10 @@ export default function TimeClockPage() {
     try {
       const { error } = manual.id
         ? await sb.from('time_entries').update({ work_date: manual.date, clock_in: inISO, clock_out: outISO, hours_worked: hrs, regular_hours: round2(regular), overtime_hours: round2(overtime), meal_break_mins: meal, csi_division: manual.csi || null, cost_code_description: manual.csi ? (CSI_DIVISIONS[manual.csi]?.name || null) : null, ...rates() }).eq('id', manual.id)
-        : await sb.from('time_entries').insert({ tenant_id: tenantId, employee_id: emp.id, project_id: projectId, work_date: manual.date, clock_in: inISO, clock_out: outISO, hours_worked: hrs, regular_hours: round2(regular), overtime_hours: round2(overtime), meal_break_mins: meal, status: 'pending', timezone: TZ, entry_type: 'regular', ...(manual.csi ? { csi_division: manual.csi, cost_code_description: CSI_DIVISIONS[manual.csi]?.name || null } : {}), ...rates() });
+        : await sb.from('time_entries').insert({ tenant_id: tenantId, employee_id: emp.id, project_id: entryProject, work_date: manual.date, clock_in: inISO, clock_out: outISO, hours_worked: hrs, regular_hours: round2(regular), overtime_hours: round2(overtime), meal_break_mins: meal, status: 'pending', timezone: TZ, entry_type: 'regular', ...(manual.csi ? { csi_division: manual.csi, cost_code_description: CSI_DIVISIONS[manual.csi]?.name || null } : {}), ...rates() });
       if (error) throw error;
       setManual(null); await loadEntries(emp.id);
-    } catch (e: any) { console.error(e); say(humanError(e, "Couldn't save that time entry."), 'err'); }
+    } catch (e: any) { console.error(e); setManualErr(humanError(e, "Couldn't save that time entry.")); }
     finally { setSavingEntry(false); }
   };
   const saveLeave = async () => {
@@ -393,8 +416,10 @@ export default function TimeClockPage() {
   };
 
   const clockedIn = !!openShift;
-  const openManualFor = (e: any) => setManual({ id: e.id, date: e.work_date, in: e.clock_in ? new Date(e.clock_in).toTimeString().slice(0, 5) : '07:00', out: e.clock_out ? new Date(e.clock_out).toTimeString().slice(0, 5) : '15:30', meal: String(e.meal_break_mins ?? 30), csi: e.csi_division || '' });
-  const openAddTime = () => setManual({ date: localDay(), in: '07:00', out: '15:30', meal: '30', csi: csiDiv });
+  const openManualFor = (e: any) => { setManualErr(''); setManual({ id: e.id, date: e.work_date, in: e.clock_in ? new Date(e.clock_in).toTimeString().slice(0, 5) : '07:00', out: e.clock_out ? new Date(e.clock_out).toTimeString().slice(0, 5) : '15:30', meal: String(e.meal_break_mins ?? 30), csi: e.csi_division || '' }); };
+  // The job is picked in the dialog (time_entries.project_id is required) —
+  // pre-filled from the console picker when one is already chosen.
+  const openAddTime = () => { setManualErr(''); setManual({ date: localDay(), in: '07:00', out: '15:30', meal: '30', csi: csiDiv, project: projectId || (projects.length === 1 ? projects[0].id : '') }); };
   const openLeave = () => setLeave({ date: localDay(), type: 'pto', hours: '8' });
 
   const elapsed = (() => {
@@ -577,21 +602,34 @@ export default function TimeClockPage() {
         open={!!manual}
         onClose={() => setManual(null)}
         title={manual?.id ? 'Edit Time' : 'Add Time'}
-        subtitle={projName ? `Logged to ${projName}.` : 'Backfill a day or correct a shift.'}
+        subtitle={manual?.id ? 'Correct a shift.' : 'Backfill a day.'}
         onSubmit={saveManual}
         submitLabel={manual?.id ? 'Save' : 'Log Time'}
         busy={savingEntry}
+        error={manualErr || null}
       >
         {manual && (
           <FormGrid cols={2}>
-            <Field label="Date" span>
-              <div className="tcDateInput"><SaguaroDatePicker value={manual.date} onChange={(v) => setManual({ ...manual, date: v })} style={DATE_INPUT_STYLE} /></div>
+            {!manual.id && (
+              <Field label="Project" required span hint="Labor cost lands in this job’s budget.">
+                <Select
+                  id="tc-manual-project"
+                  value={manual.project ?? ''}
+                  onChange={(e) => { setManual({ ...manual, project: e.target.value }); setManualErr(''); }}
+                  placeholder="Select project…"
+                  options={projects.map((p) => ({ value: p.id, label: p.name }))}
+                  aria-invalid={manualErr && !manual.project ? true : undefined}
+                />
+              </Field>
+            )}
+            <Field label="Date" required span>
+              <div className="tcDateInput"><SaguaroDatePicker id="tc-manual-date" value={manual.date} onChange={(v) => { setManual({ ...manual, date: v }); setManualErr(''); }} style={DATE_INPUT_STYLE} /></div>
             </Field>
-            <Field label="Clock In">
-              <Input type="time" value={manual.in} onChange={(e) => setManual({ ...manual, in: e.target.value })} />
+            <Field label="Clock In" required>
+              <Input id="tc-manual-in" type="time" value={manual.in} onChange={(e) => { setManual({ ...manual, in: e.target.value }); setManualErr(''); }} />
             </Field>
-            <Field label="Clock Out">
-              <Input type="time" value={manual.out} onChange={(e) => setManual({ ...manual, out: e.target.value })} />
+            <Field label="Clock Out" required>
+              <Input id="tc-manual-out" type="time" value={manual.out} onChange={(e) => { setManual({ ...manual, out: e.target.value }); setManualErr(''); }} />
             </Field>
             <Field label="Meal Break (min)">
               <Input inputMode="numeric" value={manual.meal} onChange={(e) => setManual({ ...manual, meal: e.target.value })} placeholder="30" />

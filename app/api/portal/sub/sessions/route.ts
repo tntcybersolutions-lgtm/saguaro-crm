@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 
     const { data: sessions, error } = await db
       .from('portal_sub_sessions')
-      .select('id, sub_id, project_id, token, status, last_login_at, created_at, tenant_id')
+      .select('id, sub_id, sub_company, sub_contact_name, sub_email, project_id, token, status, last_login_at, created_at, tenant_id')
       .eq('tenant_id', user.tenantId)
       .order('created_at', { ascending: false })
       .limit(100);
@@ -46,12 +46,18 @@ export async function GET(req: NextRequest) {
         : Promise.resolve(),
     ]);
 
-    const enriched = (sessions || []).map(s => ({
-      ...s,
-      company_name: subMap[s.sub_id!]?.company_name || null,
-      contact_name: subMap[s.sub_id!]?.contact_name || null,
-      project_name: projectMap[s.project_id!] || null,
-    }));
+    /* A sub invited by an email that is not on the roster has no sub_id —
+       the company and contact typed on the invite live on the session row.
+       Reading only the roster showed every such invite as "—". */
+    const enriched = (sessions || []).map(s => {
+      const row = s as typeof s & { sub_company?: string | null; sub_contact_name?: string | null; sub_email?: string | null };
+      return {
+        ...s,
+        company_name: (s.sub_id && subMap[s.sub_id]?.company_name) || row.sub_company || row.sub_email || null,
+        contact_name: (s.sub_id && subMap[s.sub_id]?.contact_name) || row.sub_contact_name || null,
+        project_name: projectMap[s.project_id!] || null,
+      };
+    });
 
     return NextResponse.json({ sessions: enriched });
   } catch (e) {
