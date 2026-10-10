@@ -1,0 +1,18 @@
+# BEFORE (base commit code)
+ok   200
+FAIL read the sub's certificates: GL and WC are active, so neither is flagged ["General Liability insurance missing","Workers Compensation insurance missing","W-9 not on file"]
+FAIL read the sub's W-9 (on file), so it is not flagged ["General Liability insurance missing","Workers Compensation insurance missing","W-9 not on file"]
+FAIL score reflects the real file (GL 30 + WC 30 + W-9 20 + license 20 = 100) 0
+FAIL the subcontractors read did not fail *, insurance_certificates(policy_type, expiry_date, status), w9_requests(status, submitted_at), lien_waivers(status, signed_at)
+ok   another company's sub: not read, not written
+
+4 failed
+# AFTER (this branch)
+ok   200
+ok   read the sub's certificates: GL and WC are active, so neither is flagged
+ok   read the sub's W-9 (on file), so it is not flagged
+ok   score reflects the real file (GL 30 + WC 30 + W-9 20 + license 20 = 100)
+ok   the subcontractors read did not fail
+ok   another company's sub: not read, not written
+
+all passed

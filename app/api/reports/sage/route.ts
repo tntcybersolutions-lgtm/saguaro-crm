@@ -19,6 +19,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { SAGE_CONDUCT_MANDATE } from '@/lib/sage-prompts';
 import type { Database } from '@/lib/database.types';
+import { qualifyEmbeds } from '@/lib/db-embeds';
 
 // Tables that have a direct project_id column
 const TABLES_WITH_PROJECT_ID = new Set([
@@ -216,6 +217,10 @@ async function executeQuery(
     }
   }
 
+  // rfis / punch_list / change_orders / daily_logs… carry two FKs to projects:
+  // name the one to embed through, or PostgREST refuses the whole query.
+  selectStr = qualifyEmbeds(query.table, selectStr);
+
   let q = supabase.from(query.table as keyof Database['public']['Tables']).select(selectStr);
 
   // Apply tenant isolation — always filter by tenant_id when the table supports it
@@ -364,6 +369,7 @@ function buildSageStream(q: string, projectId?: string, tenantId?: string): Resp
         // ── 4. Execute queries ────────────────────────────────────────────
         const supabase = createServerClient();
         const allRows: any[][] = [];
+        let failedQueries = 0;
 
         for (let i = 0; i < plan.queries.length; i++) {
           const query = plan.queries[i];
@@ -378,9 +384,16 @@ function buildSageStream(q: string, projectId?: string, tenantId?: string): Resp
           if (error) {
             console.error(`[sage] Query error on table ${query.table}:`, error);
             // Non-fatal for multi-query plans — continue with other queries
+            failedQueries++;
           }
 
           allRows.push(data);
+        }
+
+        // Every query failed: that is not "no rows", it is no report. Say so.
+        if (failedQueries === plan.queries.length) {
+          send('error', { message: "Sage couldn't read the data for this report. Try asking it a different way, or try again in a minute." });
+          return done();
         }
 
         // ── 5. Merge and flatten results ──────────────────────────────────

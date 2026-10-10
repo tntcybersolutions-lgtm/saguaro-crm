@@ -1,0 +1,16 @@
+ok   rfis → projects names its constraint
+ok   either direction
+ok   takeoff_materials → takeoffs
+ok   a single-FK pair is left bare
+ok   lien_waivers → subcontractors is two DIFFERENT columns: not ours to guess
+ok   Sage join appended to a column list
+ok   star + spaced embed
+ok   aliased embed keeps its alias
+ok   already named: unchanged
+ok   unrelated table: unchanged
+ok   nested embed belongs to its own parent
+ok   nested under an ambiguous one: only the top level changes
+ok   column names that contain the word are not embeds
+ok   no embeds at all
+
+all passed

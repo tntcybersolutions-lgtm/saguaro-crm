@@ -13,6 +13,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { toCents, toDollars, subCents } from '@/lib/calc';
+import { embed } from '@/lib/db-embeds';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -21,7 +22,7 @@ export const REPORT_CONFIGS: Record<string, { title: string; columns: string[] }
   'bid-win-loss':         { title: 'Bid Win/Loss Analysis',         columns: ['Trade', 'Total Bids', 'Won', 'Lost', 'Win Rate', 'Avg Winning Margin'] },
   'schedule-variance':    { title: 'Schedule Variance Report',      columns: ['Milestone', 'Planned Date', 'Forecast Date', 'Variance (Days)', 'Status'] },
   'pay-app-status':       { title: 'Pay Application Log',           columns: ['Pay App #', 'Project', 'Period', 'Billed', 'Net Due', 'Status'] },
-  'lien-waiver-log':      { title: 'Lien Waiver Status Matrix',     columns: ['Subcontractor', 'Trade', 'Pay App #1', 'Pay App #2', 'Pay App #3', 'Final'] },
+  'lien-waiver-log':      { title: 'Lien Waiver Log',               columns: ['Subcontractor', 'Project', 'Waiver Type', 'Amount', 'Through', 'Status'] },
   'insurance-compliance': { title: 'Insurance Compliance Matrix',   columns: ['Subcontractor', 'Trade', 'GL Policy', 'GL Expiry', 'WC Policy', 'WC Expiry', 'Status'] },
   'autopilot-alerts':     { title: 'Autopilot Alert History',       columns: ['Alert', 'Severity', 'Type', 'Project', 'Status', 'Date'] },
   'rfi-log':              { title: 'RFI Log',                       columns: ['RFI #', 'Project', 'Title', 'Status', 'Due Date'] },
@@ -91,13 +92,20 @@ export async function generateReportData(
   const timestamp = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   const config = REPORT_CONFIGS[reportType] || { title: reportTypeRaw || 'Report', columns: ['Item', 'Value'] };
   const anyDb = db as any;
+  // A failed query is a failed report, not an empty one: the caller turns it
+  // into an error the person sees (and the scheduled run records it).
+  const rowsOf = async (q: any): Promise<any[]> => {
+    const { data, error } = await q;
+    if (error) throw error;
+    return data || [];
+  };
 
-  try {
+  {
     if (reportType === 'pay-app-status') {
       let q = anyDb.from('pay_applications').select('*, projects(name)').eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(50);
       if (projectId) q = q.eq('project_id', projectId);
-      const { data: payApps } = await q;
-      const rows = (payApps || []).map((pa: any) => [
+      const payApps = await rowsOf(q);
+      const rows = payApps.map((pa: any) => [
         `#${pa.application_number ?? pa.app_number}`,
         pa.projects?.name ?? 'Unknown',
         pa.period_to ?? '',
@@ -109,10 +117,10 @@ export async function generateReportData(
     }
 
     if (reportType === 'rfi-log') {
-      let q = anyDb.from('rfis').select('*, projects(name)').eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(100);
+      let q = anyDb.from('rfis').select(`*, ${embed('rfis', 'projects')}(name)`).eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(100);
       if (projectId) q = q.eq('project_id', projectId);
-      const { data: rfis } = await q;
-      const rows = (rfis || []).map((r: any) => [
+      const rfis = await rowsOf(q);
+      const rows = rfis.map((r: any) => [
         r.rfi_number ?? r.number ?? '#',
         r.projects?.name ?? 'Unknown',
         r.subject ?? r.title ?? '',
@@ -123,16 +131,16 @@ export async function generateReportData(
     }
 
     if (reportType === 'change-order-log') {
-      let q = anyDb.from('change_orders').select('*, projects(name)').eq('tenant_id', tenantId).order('co_number', { ascending: false }).limit(100);
+      let q = anyDb.from('change_orders').select(`*, ${embed('change_orders', 'projects')}(name)`).eq('tenant_id', tenantId).order('co_number', { ascending: false }).limit(100);
       if (projectId) q = q.eq('project_id', projectId);
-      const { data: cos } = await q;
-      const rows = (cos || []).map((co: any) => [
+      const cos = await rowsOf(q);
+      const rows = cos.map((co: any) => [
         `CO-${co.co_number ?? '?'}`,
         co.projects?.name ?? 'Unknown',
         co.title ?? '',
         (co.status ?? '').toUpperCase(),
         `$${(co.cost_impact ?? 0).toLocaleString()}`,
-        co.schedule_impact ? `${co.schedule_impact} days` : '0',
+        (co.schedule_impact_days ?? co.schedule_impact) ? `${co.schedule_impact_days ?? co.schedule_impact} days` : '0',
       ]);
       return { reportType, title: config.title, columns: config.columns, rows, count: rows.length, source: 'live', message: `Change Order Log — ${rows.length} records (${timestamp})` };
     }
@@ -140,14 +148,14 @@ export async function generateReportData(
     if (reportType === 'lien-waiver-log') {
       let q = anyDb.from('lien_waivers').select('*, subcontractors!subcontractor_id(company_name, trade), projects!project_id(name)').eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(100);
       if (projectId) q = q.eq('project_id', projectId);
-      const { data: waivers } = await q;
-      const rows = (waivers || []).map((w: any) => [
-        w.subcontractors?.company_name ?? 'Unknown',
-        w.subcontractors?.trade ?? '',
-        w.waiver_type ?? w.type ?? '',
-        w.amount ? `$${w.amount.toLocaleString()}` : '',
-        (w.status ?? '').toUpperCase(),
-        w.signed_at ? 'Signed' : 'Pending',
+      const waivers = await rowsOf(q);
+      const rows = waivers.map((w: any) => [
+        w.subcontractors?.company_name ?? w.company_name ?? w.claimant_name ?? 'Unknown',
+        w.projects?.name ?? '',
+        String(w.waiver_type ?? '').replace(/_/g, ' '),
+        w.amount != null ? `$${Number(w.amount).toLocaleString()}` : '',
+        w.through_date ?? '',
+        w.signed_at ? 'SIGNED' : (w.status ?? 'pending').toUpperCase(),
       ]);
       return { reportType, title: config.title, columns: config.columns, rows, count: rows.length, source: 'live', message: `Lien Waiver Log — ${rows.length} records (${timestamp})` };
     }
@@ -155,19 +163,28 @@ export async function generateReportData(
     if (reportType === 'insurance-compliance') {
       let q = anyDb.from('insurance_certificates').select('*, subcontractors!sub_id(company_name, trade), projects!project_id(name)').eq('tenant_id', tenantId).order('expiry_date', { ascending: true }).limit(100);
       if (projectId) q = q.eq('project_id', projectId);
-      const { data: certs } = await q;
+      const certs = await rowsOf(q);
       const today = new Date().toISOString().split('T')[0];
-      const rows = (certs || []).map((c: any) => {
-        const expiring = c.expiry_date && c.expiry_date < new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
-        const expired = c.expiry_date && c.expiry_date < today;
+      const soon = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+      const rows = certs.map((c: any) => {
+        // GL / WC from their own columns (an ACORD read fills them), else from the
+        // single policy the certificate is for.
+        const type = String(c.policy_type ?? '');
+        const isGL = /general|\bgl\b/i.test(type);
+        const isWC = /workers|\bwc\b/i.test(type);
+        const glNo = c.gl_policy_number ?? (isGL ? c.policy_number : null);
+        const glExp = c.gl_expiry ?? (isGL ? c.expiry_date : null);
+        const wcNo = c.wc_policy_number ?? (isWC ? c.policy_number : null);
+        const wcExp = c.wc_expiry ?? (isWC ? c.expiry_date : null);
+        const first = [glExp, wcExp, c.expiry_date].filter(Boolean).sort()[0] as string | undefined;
         return [
-          c.subcontractors?.company_name ?? 'Unknown',
+          c.subcontractors?.company_name ?? c.sub_name ?? c.vendor_name ?? 'Unknown',
           c.subcontractors?.trade ?? '',
-          c.policy_number ?? '',
-          c.expiry_date ?? '',
-          c.policy_type ?? '',
-          c.expiry_date ?? '',
-          expired ? 'EXPIRED' : expiring ? 'EXPIRING SOON' : 'CURRENT',
+          glNo ?? '',
+          glExp ?? '',
+          wcNo ?? '',
+          wcExp ?? '',
+          !first ? 'NO EXPIRY ON FILE' : first < today ? 'EXPIRED' : first < soon ? 'EXPIRING SOON' : 'CURRENT',
         ];
       });
       return { reportType, title: config.title, columns: config.columns, rows, count: rows.length, source: 'live', message: `Insurance Compliance — ${rows.length} records (${timestamp})` };
@@ -176,17 +193,19 @@ export async function generateReportData(
     if (reportType === 'job-cost') {
       let q = anyDb.from('budget_lines').select('*, projects(name)').eq('tenant_id', tenantId).order('created_at', { ascending: true }).limit(100);
       if (projectId) q = q.eq('project_id', projectId);
-      const { data: lines } = await q;
-      const rows = (lines || []).map((l: any) => {
+      const lines = await rowsOf(q);
+      const rows = lines.map((l: any) => {
+        // budget_lines has actual / projected (there is no actual_cost or forecast_cost):
+        // reading those names printed $0 actual and a zero variance on every line.
         const originalBudgetCents = toCents(l.original_budget ?? 0);
-        const forecastCents = toCents(l.forecast_cost ?? l.original_budget ?? 0);
+        const forecastCents = toCents(l.projected ?? l.revised_budget ?? l.original_budget ?? 0);
         const varianceCents = subCents(originalBudgetCents, forecastCents);
         return [
           l.cost_code ?? '',
           l.description ?? '',
           `$${(l.original_budget ?? 0).toLocaleString()}`,
           `$${(l.committed ?? 0).toLocaleString()}`,
-          `$${(l.actual_cost ?? 0).toLocaleString()}`,
+          `$${(l.actual ?? 0).toLocaleString()}`,
           `$${toDollars(forecastCents).toLocaleString()}`,
           `$${toDollars(varianceCents).toLocaleString()}`,
         ];
@@ -195,13 +214,13 @@ export async function generateReportData(
     }
 
     if (reportType === 'autopilot-alerts') {
-      const { data: alerts } = await anyDb
+      const alerts = await rowsOf(anyDb
         .from('notifications')
         .select('id, title, message, created_at, type')
         .eq('tenant_id', tenantId)
         .order('created_at', { ascending: false })
-        .limit(50);
-      const rows = (alerts || []).map((a: any) => [
+        .limit(50));
+      const rows = alerts.map((a: any) => [
         a.title ?? '',
         a.message ?? '',
         a.type ?? '',
@@ -214,8 +233,5 @@ export async function generateReportData(
 
     // No live query exists for this reportType — return an honest empty result.
     return { reportType, title: config.title, columns: config.columns, rows: [], count: 0, source: 'empty', message: `${config.title} — no live data source (${timestamp})` };
-  } catch {
-    // A query failed — report honestly as empty rather than fabricating rows.
-    return { reportType, title: config.title, columns: config.columns, rows: [], count: 0, source: 'empty', message: `${config.title} — no data yet (${timestamp})` };
   }
 }
