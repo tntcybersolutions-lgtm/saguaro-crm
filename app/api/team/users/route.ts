@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +23,7 @@ export async function GET(req: NextRequest) {
     const db = createServerClient();
     const { data, error } = await db
       .from('profiles')
-      .select('id, full_name, email, role, title, avatar_url, created_at')
+      .select('id, full_name, email, role, title, phone, avatar_url, created_at')
       .eq('tenant_id', user.tenantId)
       .order('full_name', { ascending: true });
     if (error) throw error;
@@ -41,13 +42,15 @@ export async function GET(req: NextRequest) {
       email: p.email ?? '',
       role: p.role ?? null,
       title: p.title ?? null,
+      phone: p.phone ?? null,
       avatarUrl: p.avatar_url ?? null,
       createdAt: p.created_at ?? null,
       lastSignInAt: lastSign.get(p.id) ?? null,
     }));
 
     return NextResponse.json({ users });
-  } catch {
-    return NextResponse.json({ users: [] }, { status: 500 });
+  } catch (e) {
+    // Not an empty team: a failed read says so (the roster screen shows it).
+    return apiError('team/users', e, 'Could not load your team');
   }
 }

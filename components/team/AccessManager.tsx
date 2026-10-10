@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { textPrompt } from '@/lib/ui/async-dialog';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { CATEGORIES } from '@/lib/permission-categories';
@@ -24,6 +24,7 @@ const PURPLE = '#FF8A00';
 type PermLevel = 'None' | 'View' | 'Edit' | 'Full';
 type PermissionMap = Record<string, PermLevel>;
 type Tab = 'team' | 'roles' | 'matrix' | 'users' | 'compare' | 'audit';
+export type AccessTab = Tab;
 const TAB_KEYS: Tab[] = ['team', 'roles', 'matrix', 'users', 'compare', 'audit'];
 
 interface Role {
@@ -98,7 +99,7 @@ const ROLE_COLORS = [ROLE_HEX, ROLE_HEX, GREEN, RED, ROLE_HEX, PURPLE, 'var(--wa
 interface TenantUser {
   id: string; name: string; email: string;
   role?: string | null; title?: string | null; avatarUrl?: string | null;
-  createdAt?: string | null; lastSignInAt?: string | null;
+  createdAt?: string | null; lastSignInAt?: string | null; phone?: string | null;
 }
 interface TenantProject { id: string; name: string }
 
@@ -283,7 +284,8 @@ function Modal({ open, onClose, title, width, children }: {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)' }} onClick={onClose} />
-      <div role="dialog" aria-modal="true" aria-labelledby={titleId} style={{ position: 'relative', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 'var(--radius-lg, 12px)',
+      {/* Solid surface: --bg-surface is a 4.5% glass tint, so every form read through to the page under it. */}
+      <div role="dialog" aria-modal="true" aria-labelledby={titleId} style={{ position: 'relative', background: 'var(--bg-solid-2)', border: `1px solid ${BORDER}`, borderRadius: 'var(--radius-lg, 12px)',
         width: `min(${width ?? 520}px, 100%)`, boxSizing: 'border-box', maxHeight: '85vh', overflowY: 'auto', padding: 'clamp(18px, 5vw, 28px)', zIndex: 1, boxShadow: 'var(--shadow-lg)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, gap: 8 }}>
           <h3 id={titleId} style={{ color: GOLD, margin: 0, fontSize: 18 }}>{title}</h3>
@@ -295,8 +297,24 @@ function Modal({ open, onClose, title, width, children }: {
   );
 }
 
-/* Invite User / Assign Role are 44px tap targets on a phone (33px before). */
-const AM_CSS = `@media (max-width: 767px) { .amTap { min-height: 44px; } }`;
+/* Phone: every button a 44px tap target, 16px inputs (no iOS zoom), the tab
+   strip scrolls instead of the page, and the Roles list / role detail stack.
+   Before, the 320px + detail grid and 32px padding pushed the page sideways. */
+const AM_CSS = `@media (max-width: 767px) {
+  .amTap, .amRoot button { min-height: 44px; }
+  .amRoot { padding: 16px !important; }
+  .amHead { flex-wrap: wrap; gap: 12px; }
+  .amTabs { overflow-x: auto; scrollbar-width: none; }
+  .amTabs > button { flex: 0 0 auto; padding: 10px 14px !important; }
+  .amRolesGrid { grid-template-columns: minmax(0, 1fr) !important; }
+  .amPermGrid { grid-template-columns: minmax(92px, 1.3fr) repeat(4, minmax(34px, 1fr)) !important; }
+  .amBar { flex-wrap: wrap; }
+  .amRoot input:not([type=checkbox]):not([type=radio]), .amRoot select, .amRoot textarea { font-size: 16px !important; min-height: 44px; }
+  .amPersonGrid { grid-template-columns: minmax(0, 1fr) !important; }
+}
+.amPerson { background: none; border: 0; padding: 0; margin: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; }
+.amPerson:hover .amPersonName { text-decoration: underline; }
+.amPerson:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; border-radius: 6px; }`;
 
 /* ── loading spinner ── */
 function Spinner() {
@@ -310,7 +328,9 @@ function Spinner() {
 }
 
 /* ======================================================================== */
-export function AccessManager() {
+/** `jump` opens a tab from outside (the People hub's stat tiles); `n` makes a
+ *  second tap on the same tile count. */
+export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: number }; onChanged?: () => void } = {}) {
   // Land on Team — the people-first view. Everything else is one tab away.
   const [tab, setTabState] = useState<Tab>('team');
   /* The open tab rides the URL (?view=roles …) so a reload, a shared link or
@@ -331,6 +351,7 @@ export function AccessManager() {
       window.history.replaceState(null, '', `${u.pathname}${u.search}${u.hash}`);
     } catch { /* URL sync is cosmetic */ }
   }, []);
+  useEffect(() => { if (jump) setTab(jump.tab); }, [jump, setTab]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [roles, setRoles] = useState<Role[]>([]);
@@ -409,6 +430,12 @@ export function AccessManager() {
     } catch { /* non-fatal — leave the list as-is */ }
   }, []);
 
+  /* Every reload here follows a change (or the first load): the People hub's
+     counts above re-read with it, so "Roles Defined" never lags the list. */
+  const onChangedRef = useRef(onChanged);
+  onChangedRef.current = onChanged;
+  const loadedOnceRef = useRef(false);
+
   /* ── load data (100% real, tenant-scoped; no mock fallbacks) ── */
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -424,9 +451,9 @@ export function AccessManager() {
         sb.from('project_team').select('id, user_id, email, name, project_id, role'),
       ]);
 
-      const loadedUsers: TenantUser[] = usersRes.ok
-        ? (((await usersRes.json())?.users ?? []) as TenantUser[])
-        : [];
+      // A failed roster read is an error on screen, never an empty team.
+      if (!usersRes.ok) throw new Error('Unable to load your team. Please try again.');
+      const loadedUsers: TenantUser[] = (((await usersRes.json())?.users ?? []) as TenantUser[]);
       setUsers(loadedUsers);
 
       const loadedProjects: TenantProject[] = (projRes.data ?? []).map((p) => ({ id: p.id as string, name: (p.name as string) ?? 'Project' }));
@@ -482,6 +509,9 @@ export function AccessManager() {
 
       /* Pending sent invites — tenant-scoped; may legitimately be empty. */
       await loadInvites();
+      // Not on the first load: the hub read its own counts when it mounted.
+      if (loadedOnceRef.current) onChangedRef.current?.();
+      loadedOnceRef.current = true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load roles data.');
     } finally {
@@ -726,6 +756,55 @@ export function AccessManager() {
     }
   };
 
+  /* ── one person: open from the Team list, see everything, edit what is theirs ──
+     A sign-in's name, job title and phone (PATCH /api/team/users/:id); a pending
+     invite's name and the role they get on accepting (PATCH /api/team/invite/:id).
+     Access itself stays with Assign Role. A project contact has no sign-in here —
+     they are edited on the job's Team page. */
+  const [personKey, setPersonKey] = useState<string | null>(null);
+  const [personEditing, setPersonEditing] = useState(false);
+  const [pName, setPName] = useState('');
+  const [pTitle, setPTitle] = useState('');
+  const [pPhone, setPPhone] = useState('');
+  const [pRole, setPRole] = useState('');
+  const [pSaving, setPSaving] = useState(false);
+  const [pError, setPError] = useState('');
+  const openPerson = (r: PersonRow) => { setPersonKey(r.key); setPersonEditing(false); setPError(''); };
+  const closePerson = () => { if (!pSaving) { setPersonKey(null); setPersonEditing(false); setPError(''); } };
+  const startPersonEdit = () => {
+    if (!person) return;
+    setPName(person.status === 'invited' ? (person.invite?.name?.trim() || '') : person.name);
+    setPTitle(person.title ?? '');
+    setPPhone(users.find(u => u.id === person.userId)?.phone ?? '');
+    setPRole(person.invite?.role || person.baseRole || 'member');
+    setPError('');
+    setPersonEditing(true);
+  };
+  const savePerson = async () => {
+    if (!person) return;
+    setPSaving(true);
+    setPError('');
+    try {
+      const headers = await getAuthHeaders();
+      let res: Response;
+      if (person.status === 'invited' && person.invite) {
+        res = await fetch(`/api/team/invite/${person.invite.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify({ name: pName.trim(), role: pRole || 'member' }) });
+      } else if (person.status === 'active' && person.userId) {
+        if (!pName.trim()) { setPError('A person needs a name.'); setPSaving(false); return; }
+        res = await fetch(`/api/team/users/${person.userId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify({ full_name: pName.trim(), title: pTitle.trim(), phone: pPhone.trim() }) });
+      } else { setPSaving(false); return; }
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) { setPError(body?.error || 'Could not save. Please try again.'); return; }
+      notify('Saved.');
+      setPersonEditing(false);
+      await loadData();
+    } catch {
+      setPError('Could not reach the server. Check your connection and try again.');
+    } finally {
+      setPSaving(false);
+    }
+  };
+
   /* ── filtered assignments ── */
   const filteredAssignments = useMemo(() => {
     let list = assignments;
@@ -740,7 +819,7 @@ export function AccessManager() {
   /* ── Team roster: EVERYONE — profiles + project_team merged, with the real
         grant rollup per person. Grants come straight from user_role_assignments;
         project memberships from project_team; invite status from team_invites. ── */
-  const teamRows = useMemo<PersonRow[]>(() => {
+  const allTeamRows = useMemo<PersonRow[]>(() => {
     const projName = (pid: string) => projects.find(p => p.id === pid)?.name ?? 'Project';
     const rows = new Map<string, PersonRow>();
 
@@ -808,11 +887,15 @@ export function AccessManager() {
     }
 
     const rank = { active: 0, invited: 1, contact: 2 } as const;
-    let list = Array.from(rows.values()).sort((x, y) => rank[x.status] - rank[y.status] || x.name.localeCompare(y.name));
+    return Array.from(rows.values()).sort((x, y) => rank[x.status] - rank[y.status] || x.name.localeCompare(y.name));
+  }, [users, projTeam, pendingInvites, assignments, projects]);
+  const teamRows = useMemo<PersonRow[]>(() => {
     const q = teamSearch.trim().toLowerCase();
-    if (q) list = list.filter(r => r.name.toLowerCase().includes(q) || r.email.toLowerCase().includes(q) || (r.baseRole ?? '').toLowerCase().includes(q));
-    return list;
-  }, [users, projTeam, pendingInvites, assignments, projects, teamSearch]);
+    if (!q) return allTeamRows;
+    return allTeamRows.filter(r => r.name.toLowerCase().includes(q) || r.email.toLowerCase().includes(q) || (r.baseRole ?? '').toLowerCase().includes(q));
+  }, [allTeamRows, teamSearch]);
+  // The open person, from the whole roster (the search box never hides the one you opened).
+  const person = personKey ? allTeamRows.find(r => r.key === personKey) ?? null : null;
 
   /* ── tab bar ── */
   const tabs: { key: Tab; label: string }[] = [
@@ -825,14 +908,14 @@ export function AccessManager() {
   ];
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: BG, padding: 32 }}>
+    <div className="amRoot" style={{ minHeight: '100vh', background: BG, padding: 32 }}>
       <h1 style={{ color: GOLD, fontSize: 26, margin: 0, marginBottom: 8 }}>Roles & Permissions</h1>
       <Spinner />
     </div>
   );
 
   if (error) return (
-    <div style={{ minHeight: '100vh', background: BG, padding: 32 }}>
+    <div className="amRoot" style={{ minHeight: '100vh', background: BG, padding: 32 }}>
       <h1 style={{ color: GOLD, fontSize: 26, margin: 0, marginBottom: 8 }}>Roles & Permissions</h1>
       <div style={{ ...card(), borderColor: RED }}>
         <p style={{ color: RED, margin: 0, marginBottom: 12 }}>Error: {error}</p>
@@ -842,10 +925,10 @@ export function AccessManager() {
   );
 
   return (
-    <div style={{ minHeight: '100vh', background: BG, padding: 32 }}>
+    <div className="amRoot" style={{ minHeight: '100vh', background: BG, padding: 32 }}>
       <style dangerouslySetInnerHTML={{ __html: AM_CSS }} />
       {/* header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+      <div className="amHead" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <div>
           <h1 style={{ color: GOLD, fontSize: 26, margin: 0 }}>Roles & Permissions</h1>
           <p style={{ color: DIM, fontSize: 13, margin: '4px 0 0' }}>
@@ -856,9 +939,9 @@ export function AccessManager() {
       </div>
 
       {/* tab bar */}
-      <div style={{ display: 'flex', gap: 0, borderBottom: `2px solid ${BORDER}`, marginBottom: 22 }}>
+      <div className="amTabs" role="tablist" aria-label="Roles and access" style={{ display: 'flex', gap: 0, borderBottom: `2px solid ${BORDER}`, marginBottom: 22 }}>
         {tabs.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{
+          <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)} style={{
             background: 'transparent', border: 'none', color: tab === t.key ? GOLD : DIM,
             fontWeight: tab === t.key ? 700 : 500, fontSize: 14, padding: '10px 20px',
             borderBottom: tab === t.key ? `2px solid ${GOLD}` : '2px solid transparent',
@@ -904,7 +987,7 @@ export function AccessManager() {
                     <tr key={r.key} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)` }}>
                       {/* Person */}
                       <td style={{ padding: '10px 12px' }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                        <button type="button" className="amPerson" onClick={() => openPerson(r)} aria-label={`Open ${r.name}`}>
                           {r.avatarUrl ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={r.avatarUrl} alt="" style={{ width: 32, height: 32, borderRadius: 16, objectFit: 'cover', flexShrink: 0 }} />
@@ -913,10 +996,10 @@ export function AccessManager() {
                               display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 12, flexShrink: 0 }}>{ini}</span>
                           )}
                           <span style={{ display: 'inline-flex', flexDirection: 'column', lineHeight: 1.3 }}>
-                            <span style={{ color: TEXT, fontWeight: 600 }}>{r.name}</span>
+                            <span className="amPersonName" style={{ color: TEXT, fontWeight: 600 }}>{r.name}</span>
                             <span style={{ color: DIM, fontSize: 11.5 }}>{[r.email, r.title].filter(Boolean).join(' · ') || '—'}</span>
                           </span>
-                        </span>
+                        </button>
                       </td>
                       {/* Base role */}
                       <td style={{ padding: '10px 12px' }}>
@@ -1035,7 +1118,7 @@ export function AccessManager() {
 
       {/* ── TAB: ROLES ── */}
       {tab === 'roles' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: 20 }}>
+        <div className="amRolesGrid" style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: 20 }}>
           {/* left: role list */}
           <div>
             {roles.map(r => {
@@ -1105,7 +1188,7 @@ export function AccessManager() {
 
                 {/* permission grid for selected role */}
                 <h4 style={{ color: GOLD, fontSize: 14, marginBottom: 10 }}>Permissions</h4>
-                <div style={{ display: 'grid', gridTemplateColumns: '160px repeat(4, 1fr)', gap: 0, fontSize: 12 }}>
+                <div className="amPermGrid" style={{ display: 'grid', gridTemplateColumns: '160px repeat(4, 1fr)', gap: 0, fontSize: 12 }}>
                   {/* header */}
                   <div style={{ padding: '8px 10px', fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}` }}>Category</div>
                   {PERM_LEVELS.map(l => (
@@ -1230,7 +1313,7 @@ export function AccessManager() {
       {/* ── TAB: USER ASSIGNMENTS ── */}
       {tab === 'users' && (
         <div>
-          <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center' }}>
+          <div className="amBar" style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center' }}>
             <input placeholder="Search users…" value={userSearch} onChange={e => setUserSearch(e.target.value)}
               style={{ ...inputStyle(), maxWidth: 260 }} />
             <select value={filterRoleId} onChange={e => setFilterRoleId(e.target.value)}
@@ -1658,6 +1741,88 @@ export function AccessManager() {
             ...btn(GOLD, 'var(--on-brand)'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)', opacity: inviteEmailValid ? 1 : 0.5, cursor: inviteEmailValid ? 'pointer' : 'not-allowed',
           }}>Send Invite</button>
         </div>
+      </Modal>
+
+      {/* ── MODAL: ONE PERSON ── */}
+      <Modal open={!!person} onClose={closePerson} title={person ? (personEditing ? `Edit ${person.status === 'invited' ? 'Invite' : 'Person'}` : person.name) : ''} width={520}>
+        {person && !personEditing && (
+          <div>
+            <div className="amPersonGrid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+              {([
+                ['Name', person.name],
+                ['Email', person.email || '—'],
+                ['Status', person.status === 'active' ? 'Active sign-in' : person.status === 'invited' ? (person.invite && inviteExpiry(person.invite.created_at).expired ? 'Invite expired' : 'Invited — not accepted yet') : 'Project contact (no sign-in)'],
+                [person.status === 'invited' ? 'Role on accepting' : 'Base role', person.invite?.role || person.baseRole || 'member'],
+                ['Job title', person.title || '—'],
+                ['Phone', users.find(u => u.id === person.userId)?.phone || '—'],
+                ['Projects', person.projectNames.length ? person.projectNames.join(', ') : '—'],
+                ['Last active', person.lastSignInAt ? relTimeAgo(person.lastSignInAt) : person.status === 'active' ? 'never signed in' : '—'],
+              ] as [string, string][]).map(([k, v]) => (
+                <div key={k} style={{ minWidth: 0 }}>
+                  <div style={labelStyle()}>{k}</div>
+                  <div style={{ color: TEXT, fontSize: 14, overflowWrap: 'anywhere' }}>{v}</div>
+                </div>
+              ))}
+            </div>
+            {person.status === 'contact' && (
+              <p style={{ color: DIM, fontSize: 12.5, lineHeight: 1.5, margin: '0 0 12px' }}>
+                No sign-in — this person is a contact on {person.projectNames.length === 1 ? 'a job' : 'jobs'}. Edit them on that job&apos;s Team page, or invite them to give them a sign-in.
+              </p>
+            )}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-end' }}>
+              {(person.status === 'active' || person.status === 'invited') && (
+                <button type="button" onClick={startPersonEdit} style={{ ...btn(GOLD, 'var(--on-brand)') }}>Edit Details</button>
+              )}
+              {person.status === 'active' && person.userId && (
+                <button type="button" onClick={() => { const id = person.userId!; setPersonKey(null); openAssignFor(id); }} style={btn(RAISED, GOLD)}>Assign Role</button>
+              )}
+              {person.status === 'invited' && person.invite && (
+                <>
+                  <button type="button" onClick={() => resendInvite(person.invite!.id)} style={btn(RAISED, GOLD)}>Resend Invite</button>
+                  <button type="button" onClick={async () => { await cancelInvite(person.invite!.id); setPersonKey(null); await loadData(); }} style={btn(RAISED, RED)}>Cancel Invite</button>
+                </>
+              )}
+              {person.status === 'contact' && (
+                <button type="button" onClick={() => { setInviteEmail(person.email); setInviteName(person.name); setPersonKey(null); setShowInvite(true); }} style={btn(RAISED, GOLD)} disabled={!person.email}>Invite to Sign In</button>
+              )}
+            </div>
+          </div>
+        )}
+        {person && personEditing && (
+          <form onSubmit={(e) => { e.preventDefault(); void savePerson(); }}>
+            <div style={{ marginBottom: 14 }}>
+              <label style={labelStyle()} htmlFor="am-p-name">Name</label>
+              <input id="am-p-name" value={pName} onChange={e => setPName(e.target.value)} placeholder={person.status === 'invited' ? 'Full name (optional)' : 'Full name'} style={inputStyle()} />
+            </div>
+            {person.status === 'active' ? (
+              <>
+                <div style={{ marginBottom: 14 }}>
+                  <label style={labelStyle()} htmlFor="am-p-title">Job title</label>
+                  <input id="am-p-title" value={pTitle} onChange={e => setPTitle(e.target.value)} placeholder="e.g. Superintendent" style={inputStyle()} />
+                </div>
+                <div style={{ marginBottom: 14 }}>
+                  <label style={labelStyle()} htmlFor="am-p-phone">Phone</label>
+                  <input id="am-p-phone" type="tel" value={pPhone} onChange={e => setPPhone(e.target.value)} placeholder="Mobile" style={inputStyle()} />
+                </div>
+              </>
+            ) : (
+              <div style={{ marginBottom: 14 }}>
+                <label style={labelStyle()} htmlFor="am-p-role">Role when they accept</label>
+                <select id="am-p-role" value={pRole} onChange={e => setPRole(e.target.value)} style={inputStyle()}>
+                  <option value="member">Member (Default)</option>
+                  {roles.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}
+                  {pRole && pRole !== 'member' && !roles.some(r => r.name === pRole) && <option value={pRole}>{pRole}</option>}
+                </select>
+                <p style={{ color: DIM, fontSize: 11, margin: '6px 0 0' }}>The email address can&apos;t change — the link already went there. Cancel and invite the right address instead.</p>
+              </div>
+            )}
+            {pError && <p role="alert" style={{ color: RED, fontSize: 12.5, margin: '0 0 12px' }}>{pError}</p>}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+              <button type="button" onClick={() => setPersonEditing(false)} disabled={pSaving} style={btn(RAISED, DIM)}>Cancel</button>
+              <button type="submit" disabled={pSaving} style={{ ...btn(GOLD, 'var(--on-brand)'), opacity: pSaving ? 0.6 : 1 }}>{pSaving ? 'Saving…' : 'Save Changes'}</button>
+            </div>
+          </form>
+        )}
       </Modal>
 
       {/* ── TOAST ── */}

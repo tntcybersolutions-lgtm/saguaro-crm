@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { sendInviteTeamMember } from '@/lib/email';
+import { apiError, apiFail } from '@/lib/api-error';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
 
@@ -27,8 +28,53 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       .eq('tenant_id', user.tenantId);
     if (error) throw error;
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('team/invite DELETE', e, "Couldn't cancel the invite. Please try again.");
+  }
+}
+
+/**
+ * PATCH /api/team/invite/[id]  { name?, role? }
+ * Correct a pending invite before it is accepted — the name it was sent under
+ * and the role the person gets when they accept. The address is not editable
+ * here (the link already went to it): cancel and invite the right address.
+ * Tenant-scoped; only a pending invite can change. Never returns the token.
+ */
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  // The role on an invite becomes the person's access when they accept — access-control action.
+  const g = await requirePermission(req, 'Admin', 'Full');
+  if (!g.ok) return g.res;
+  const user = g.user;
+  try {
+    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+    const patch: Record<string, string | null> = {};
+    if (body.name !== undefined) {
+      const name = String(body.name ?? '').trim();
+      if (name.length > 120) return apiFail('name: keep it under 120 characters.', 400);
+      patch.name = name || null;
+    }
+    if (body.role !== undefined) {
+      const role = String(body.role ?? '').trim();
+      if (!role) return apiFail('role: choose the role they get when they accept.', 400);
+      if (role.length > 60) return apiFail('role: keep it under 60 characters.', 400);
+      patch.role = role;
+    }
+    if (!Object.keys(patch).length) return apiFail('Send the name or role to change.', 400);
+    const db = createServerClient();
+    const { data, error } = await db
+      .from('team_invites')
+      .update(patch)
+      .eq('id', id)
+      .eq('tenant_id', user.tenantId)
+      .eq('status', 'pending')
+      .select('id, email, name, role, project_id, created_at, invited_by')
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return apiFail('That invite is not pending any more (accepted or cancelled).', 404);
+    return NextResponse.json({ invite: data });
+  } catch (e) {
+    return apiError('team/invite PATCH', e, "Couldn't save the invite. Please try again.");
   }
 }
 
@@ -87,7 +133,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     await sendInviteTeamMember(invite.email, inviterName, companyName, invite.role || 'member', acceptUrl);
 
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('team/invite resend', e, "Couldn't resend the invite. Please try again.");
   }
 }

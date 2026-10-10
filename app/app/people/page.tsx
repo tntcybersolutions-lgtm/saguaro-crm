@@ -14,7 +14,7 @@
 import { useState, useEffect } from 'react';
 import { PageShell, StatRow, Tabs, type StatItem } from '@/components/ui/kit';
 import { PeopleDirectory } from '@/components/team/PeopleDirectory';
-import { AccessManager } from '@/components/team/AccessManager';
+import { AccessManager, type AccessTab } from '@/components/team/AccessManager';
 import { getAuthHeaders, getSupabaseBrowser } from '@/lib/supabase-browser';
 
 type Tab = 'directory' | 'access';
@@ -37,6 +37,10 @@ export default function PeopleAccessHub() {
   // Default landing = Roles & Access (the RBAC platform). Directory is one tap away.
   const [tab, setTab] = useState<Tab>('access');
   const [snap, setSnap] = useState<HubSnap | null>(null);
+  // A stat tile opens the Roles & Access tab that holds what it counts.
+  const [jump, setJump] = useState<{ tab: AccessTab; n: number } | undefined>(undefined);
+  // Bumped by Roles & Access after every change, so the counts re-read with it.
+  const [snapRev, setSnapRev] = useState(0);
 
   useEffect(() => {
     let alive = true;
@@ -69,7 +73,7 @@ export default function PeopleAccessHub() {
       } catch { /* non-fatal — the row hides */ }
     })();
     return () => { alive = false; };
-  }, []);
+  }, [snapRev]);
 
   // Deep-link support (?tab=directory|access) — read once on mount, client-only
   // so no prerender/Suspense requirement from useSearchParams.
@@ -81,8 +85,9 @@ export default function PeopleAccessHub() {
     } catch { /* no-op */ }
   }, []);
 
-  const select = (t: Tab) => {
+  const select = (t: Tab, sub?: AccessTab) => {
     setTab(t);
+    if (sub) setJump((j) => ({ tab: sub, n: (j?.n ?? 0) + 1 }));
     // keep the URL honest so refresh / share lands on the same tab
     try {
       const url = t === 'access' ? '/app/people?tab=access' : '/app/people';
@@ -91,10 +96,10 @@ export default function PeopleAccessHub() {
   };
 
   const stats: StatItem[] | null = snap && [
-    { label: 'Team Members', value: snap.users, sub: 'Platform sign-ins', onClick: () => select('access') },
-    { label: 'Roles Defined', value: snap.roles, sub: snap.roles > 0 ? 'Permission templates in force' : 'Built-ins seed on first visit', onClick: () => select('access') },
-    { label: 'Role Assignments', value: snap.assigns, tone: snap.users > 0 && snap.assigns === 0 ? 'warn' : 'default', sub: snap.assigns > 0 ? 'Users mapped to roles' : snap.users > 0 ? 'No roles assigned yet — start in Users' : 'Assign roles from Roles & Access', onClick: () => select('access') },
-    { label: 'Pending Invites', value: snap.invites, tone: snap.expired > 0 ? 'bad' : snap.invites > 0 ? 'warn' : 'default', sub: snap.expired > 0 ? `${snap.expired} expired — resend from Users` : snap.invites > 0 ? 'Invites expire after 7 days' : 'None outstanding', onClick: () => select('access') },
+    { label: 'Team Members', value: snap.users, sub: 'Platform sign-ins', onClick: () => select('access', 'team') },
+    { label: 'Roles Defined', value: snap.roles, sub: snap.roles > 0 ? 'Permission templates in force' : 'Built-ins seed on first visit', onClick: () => select('access', 'roles') },
+    { label: 'Role Assignments', value: snap.assigns, tone: snap.users > 0 && snap.assigns === 0 ? 'warn' : 'default', sub: snap.assigns > 0 ? 'Users mapped to roles' : snap.users > 0 ? 'No roles assigned yet — start in Users' : 'Assign roles from Roles & Access', onClick: () => select('access', 'users') },
+    { label: 'Pending Invites', value: snap.invites, tone: snap.expired > 0 ? 'bad' : snap.invites > 0 ? 'warn' : 'default', sub: snap.expired > 0 ? `${snap.expired} expired — resend from Users` : snap.invites > 0 ? 'Invites expire after 7 days' : 'None outstanding', onClick: () => select('access', 'users') },
     { label: 'Crew Directory', value: snap.crew, sub: snap.crew > 0 ? `${snap.osha} OSHA certified` : 'Add employees in Directory', onClick: () => select('directory') },
   ];
 
@@ -120,7 +125,7 @@ export default function PeopleAccessHub() {
         </div>
 
         {/* ── active surface (unchanged child components) ── */}
-        {tab === 'directory' ? <PeopleDirectory /> : <AccessManager />}
+        {tab === 'directory' ? <PeopleDirectory /> : <AccessManager jump={jump} onChanged={() => setSnapRev((n) => n + 1)} />}
       </PageShell>
     </div>
   );
