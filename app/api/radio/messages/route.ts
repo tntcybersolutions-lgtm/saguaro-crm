@@ -150,8 +150,8 @@ export async function POST(req: NextRequest) {
         .map((m) => createNotification(t, m.user_id, 'radio_alert', `ALERT — ${(ch as any)?.name || 'Radio'}`, text, `/app/radio?channel=${channelId}`, (ch as any)?.project_id ?? undefined)));
     }
     return NextResponse.json({ message: msg }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('radio/messages POST', e, 'Your message did not go out. Please try sending it again.');
   }
 }
 

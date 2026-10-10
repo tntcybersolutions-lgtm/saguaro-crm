@@ -6,6 +6,7 @@ import { toCents, toDollars, sumCents, summarizeContract } from '@/lib/calc';
 import { PUNCH_DONE } from '@/lib/project-lifecycle';
 import { apiError } from '@/lib/api-error';
 import { assignProjectToUser, endProjectAssignment } from '@/lib/project-assignment';
+import { pickProjectUpdate } from '@/lib/project-update';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
@@ -158,66 +159,51 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
   }
 }
 
+/**
+ * PUT /api/projects/[projectId] — edit the facts about a job.
+ *
+ * Writes only the columns in lib/project-update (EDITABLE_PROJECT_COLUMNS).
+ * Anything else in the body — id, tenant_id, created_by, deleted_at, a
+ * rollup, a lifecycle field that has its own route — is dropped and named
+ * back in `ignored`. A body with nothing writable is a 400, not a silent 200.
+ *
+ * Caller today: components/project/JobColorPicker ({ color }).
+ */
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
   try {
     const g = await requirePermission(req, 'Projects', 'Edit');
     if (!g.ok) return g.res;
     const user = g.user;
-    const body = await req.json();
-    const db = createServerClient();
-    const ALLOWED_PROJECT_COLUMNS = [
-      'name', 'address', 'type', 'contract_value', 'description', 'owner_name', 'owner_email',
-      'architect', 'architect_email', 'contract_type', 'retainage_pct', 'start_date', 'end_date',
-      'status', 'architect_entity', 'architect_license', 'gc_license', 'project_number', 'bid_date',
-      'substantial_completion', 'final_completion', 'contract_date', 'notice_to_proceed', 'bonded',
-      'prevailing_wage', 'county', 'state', 'zip', 'latitude', 'longitude', 'gc_name', 'gc_email',
-      'gc_phone', 'sub_name', 'sub_email', 'sub_phone', 'project_manager', 'superintendent', 'foreman',
-      'scope_of_work', 'divisions', 'tags', 'architect_name', 'architect_phone', 'architect_contact',
-      'engineer_name', 'engineer_email', 'engineer_phone', 'engineer_entity', 'inspector_name',
-      'inspector_email', 'inspector_phone', 'owner_phone', 'owner_entity', 'owner_address', 'gc_entity',
-      'gc_address', 'gc_license_number', 'gc_license_expiry', 'gc_insurance_expiry', 'sub_entity',
-      'sub_address', 'sub_license', 'pm_name', 'pm_email', 'pm_phone', 'super_name', 'super_email',
-      'super_phone', 'foreman_name', 'foreman_email', 'foreman_phone', 'bid_number', 'permit_number',
-      'permit_expiry', 'aia_project_number', 'federal_project_number', 'davis_bacon_wage_decision',
-      'liquidated_damages', 'liquidated_damages_per', 'mobilization_pct', 'stored_materials_allowed',
-      'certified_payroll_required', 'osha_required', 'leed_required', 'leed_level', 'insurance_required',
-      'performance_bond_required', 'payment_bond_required', 'bond_amount', 'work_hours_start',
-      'work_hours_end', 'work_days', 'logo_url', 'cover_photo_url', 'notes', 'internal_notes', 'phase',
-      'percent_complete', 'original_contract_value', 'approved_change_orders', 'revised_contract_value',
-      'billed_to_date', 'retainage_held', 'balance_to_finish', 'contract_amount', 'total_contract_amount',
-      'original_contract_amount', 'contract_sum', 'scheduled_value', 'total_earned', 'total_billed',
-      'total_paid', 'total_retainage', 'total_pending', 'cost_to_date', 'estimated_cost', 'projected_cost',
-      'contingency', 'overhead_pct', 'profit_pct', 'tax_pct', 'insurance_pct', 'bond_pct', 'sq_footage',
-      'num_floors', 'num_units', 'building_type', 'occupancy_type', 'construction_type', 'zoning',
-      'parcel_number', 'legal_description', 'created_by', 'updated_by', 'deleted_at', 'deleted_by',
-      'archived_at', 'archived_by', 'created_by_name', 'updated_by_name', 'assigned_to', 'assigned_to_name',
-      'project_lead', 'project_lead_name', 'last_activity_at', 'last_log_at', 'last_photo_at', 'last_rfi_at',
-      'last_pay_app_at', 'rfi_count', 'change_order_count', 'photo_count', 'punch_count', 'open_punch_count',
-      'pay_app_count', 'current_pay_app_number', 'is_archived', 'is_deleted', 'is_template', 'template_name',
-      'source', 'external_id', 'integration_source', 'custom_fields', 'metadata', 'final_completion_date',
-      'substantial_completion_date', 'notice_to_proceed_date', 'bid_due_date', 'award_date',
-      'contract_execution_date', 'groundbreaking_date', 'occupancy_date', 'warranty_expiry_date',
-      'closeout_date', 'projected_start_date', 'projected_end_date', 'actual_start_date', 'actual_end_date',
-      'revised_completion_date', 'owner_occupancy_date', 'punch_list_due_date', 'punch_list_complete_date',
-      'lien_deadline_date', 'retention_release_date', 'state_jurisdiction', 'project_type',
-      'original_contract', 'ntp_date', 'substantial_date', 'is_public_project', 'geofence_lat',
-      'geofence_lng', 'geofence_radius_meters', 'net_change_by_co', 'approved_co_count', 'city',
-      'estimated_completion', 'square_footage', 'architect_firm', 'completeness_score', 'setup_complete',
-      'setup_step', 'setup_dismissed', 'health_score', 'target_finish_date', 'updated_at', 'color',
-    ];
-    const updates: Record<string, any> = {};
-    for (const k of ALLOWED_PROJECT_COLUMNS) {
-      if (body[k] !== undefined) updates[k] = body[k];
+    const body = await req.json().catch(() => null);
+    const { updates, ignored } = pickProjectUpdate(body);
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json(
+        {
+          error: ignored.length
+            ? `None of those fields can be changed here: ${ignored.slice(0, 10).join(', ')}`
+            : 'Nothing to update — send at least one project field',
+          ignored: ignored.slice(0, 20),
+        },
+        { status: 400 },
+      );
     }
     if (updates.color !== undefined && updates.color !== null && !isJobColor(updates.color)) {
       return NextResponse.json({ error: 'color must be one of the eight job colours' }, { status: 400 });
     }
-    const { data, error } = await db.from('projects').update(updates).eq('id', projectId).eq('tenant_id', user.tenantId).select().single();
+    const db = createServerClient();
+    const { data, error } = await db
+      .from('projects')
+      .update({ ...updates, updated_at: new Date().toISOString() } as never)
+      .eq('id', projectId)
+      .eq('tenant_id', user.tenantId)
+      .select()
+      .maybeSingle();
     if (error) throw error;
-    return NextResponse.json({ project: data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    if (!data) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+    return NextResponse.json({ project: data, ...(ignored.length ? { ignored: ignored.slice(0, 20) } : {}) });
+  } catch (e) {
+    return apiError('projects/[projectId] PUT', e, 'Could not save the change to this project. Please try again.');
   }
 }
 

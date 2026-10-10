@@ -1,13 +1,15 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { DataTable, type Column } from '@/components/ui/kit';
+import { DataTable, FormModal, FormGrid, Field, Input, Select, type Column } from '@/components/ui/kit';
 import { StatusPill } from '@/components/ui/Status';
 import { useProjects } from '@/lib/hooks/useProjects';
 import UserPicker from '@/components/UserPicker';
 import { SkeletonRow } from '../../../components/ui/Skeleton';
-import { UsersThree, WarningCircle, Buildings, CurrencyDollar, Target, CalendarBlank, Robot, Clipboard, CheckCircle, XCircle, Hourglass, House, Cactus, ArrowLeft, Gauge, MapPin, Lightning, Package, DownloadSimple } from '@phosphor-icons/react';
+import { UsersThree, WarningCircle, Buildings, CurrencyDollar, Target, CalendarBlank, Robot, Clipboard, CheckCircle, XCircle, Hourglass, House, Cactus, ArrowLeft, Gauge, MapPin, Lightning, Package, DownloadSimple, Plus } from '@phosphor-icons/react';
 import { useToast } from '@/components/Toast';
+import { getAuthHeaders } from '@/lib/supabase-browser';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 
@@ -40,6 +42,43 @@ const STATUSES: CustomerStatus[] = ['lead', 'qualified', 'proposal', 'customer',
 const SOURCES = ['Website', 'Design Studio', 'Referral', 'Social Media', 'Sage Chat', 'ROI Calculator', 'Direct'];
 const STATES_LIST = ['AZ', 'CA', 'CO', 'FL', 'GA', 'IL', 'MA', 'MI', 'MN', 'NC', 'NJ', 'NV', 'NY', 'OH', 'OR', 'PA', 'TX', 'VA', 'WA', 'WI'];
 
+/* Every state for the New Customer form — the filter list above only carries
+   the states the pipeline has historically held. */
+const US_STATES = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'];
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/* The New Customer form. Keys are the customer_profiles columns
+   POST /api/customers/profiles accepts, so the body is the draft as typed. */
+type NewCustomerDraft = {
+  name: string; email: string; phone: string; city: string; state: string; zip_code: string;
+  status: CustomerStatus; source: string;
+};
+const EMPTY_DRAFT: NewCustomerDraft = {
+  name: '', email: '', phone: '', city: '', state: '', zip_code: '', status: 'customer', source: 'Direct',
+};
+
+/* POST returns the raw customer_profiles row; the list reads the shape GET
+   maps it to (score → lead_score, utility_cost_kwh → utility_rate). Same
+   mapping, so the row added on screen is the row a reload brings back. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function fromProfileRow(c: any): Customer {
+  return {
+    id: String(c.id),
+    name: c.name || '',
+    email: c.email || '',
+    phone: c.phone || '',
+    state: c.state || '',
+    city: c.city || '',
+    climate_zone: c.climate_zone || '',
+    utility_rate: c.utility_cost_kwh != null ? Number(c.utility_cost_kwh) : 0,
+    status: (c.status || 'lead') as CustomerStatus,
+    lead_score: c.score != null ? Number(c.score) : 0,
+    source: c.source || '',
+    created_at: c.created_at || new Date().toISOString(),
+    updated_at: c.updated_at || c.created_at || new Date().toISOString(),
+  };
+}
+
 /* ─── Helpers ─── */
 const fmt = (n: number | string | null | undefined) => '$' + (Number(n) || 0).toLocaleString();
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
@@ -67,6 +106,15 @@ export default function CustomersPage() {
   const [filterState, setFilterState] = useState<string>('all');
   const [selected, setSelected] = useState<Customer | null>(null);
   const [detailTab, setDetailTab] = useState<'overview' | 'discovery' | 'recommendations' | 'designs' | 'materials' | 'conversations'>('overview');
+  // New Customer form.
+  const [addOpen, setAddOpen] = useState(false);
+  const [addBusy, setAddBusy] = useState(false);
+  const [addErr, setAddErr] = useState<string | null>(null);
+  const [fieldErr, setFieldErr] = useState<{ name?: string; email?: string }>({});
+  const [draft, setDraft] = useState<NewCustomerDraft>(EMPTY_DRAFT);
+  // The customer just added: listed newest-first and highlighted so it is
+  // the first thing on screen, not somewhere under a lead-score sort.
+  const [justAdded, setJustAdded] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -201,6 +249,76 @@ export default function CustomersPage() {
     return { value, withProjects };
   }, [projectRollup]);
 
+
+  /* ─── New Customer ───
+     The page listed customers and had no way to add one; the only create path
+     was buried in a project's Ownership card. Same endpoint, same fields that
+     route accepts, so a customer added here is the same record either way. */
+  const openAdd = useCallback(() => {
+    setDraft(EMPTY_DRAFT);
+    setAddErr(null);
+    setFieldErr({});
+    setAddOpen(true);
+  }, []);
+
+  const setDraftField = <K extends keyof NewCustomerDraft>(k: K, v: NewCustomerDraft[K]) => {
+    setDraft((d) => ({ ...d, [k]: v }));
+    if (k === 'name' || k === 'email') setFieldErr((f) => ({ ...f, [k]: undefined }));
+  };
+
+  const createCustomer = useCallback(async () => {
+    if (addBusy) return;
+    const name = draft.name.trim();
+    const email = draft.email.trim();
+    const errs: { name?: string; email?: string } = {};
+    if (!name) errs.name = 'Enter the customer’s name.';
+    if (email && !EMAIL_RE.test(email)) errs.email = 'That email doesn’t look right — fix it or leave it blank.';
+    if (errs.name || errs.email) {
+      setFieldErr(errs);
+      document.getElementById(errs.name ? 'new-customer-name' : 'new-customer-email')?.focus();
+      return;
+    }
+    setFieldErr({});
+    setAddErr(null);
+    setAddBusy(true);
+    try {
+      const payload: Record<string, string> = { name, status: draft.status, source: draft.source };
+      (['email', 'phone', 'city', 'state', 'zip_code'] as const).forEach((k) => {
+        const v = draft[k].trim();
+        if (v) payload[k] = v;
+      });
+      const auth = await getAuthHeaders();
+      const res = await fetch('/api/customers/profiles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...auth },
+        body: JSON.stringify(payload),
+      });
+      const body = await res.json().catch(() => ({} as Record<string, unknown>));
+      const made = (body as { customer?: { id?: string } }).customer;
+      if (!res.ok || !made?.id) {
+        const msg = typeof body?.error === 'string' ? body.error : 'Couldn’t add the customer. Please try again.';
+        throw new Error(typeof body?.ref === 'string' ? `${msg} (ref ${body.ref})` : msg);
+      }
+      const row = fromProfileRow(made);
+      setCustomers((prev) => [row, ...prev.filter((c) => c.id !== row.id)]);
+      // Clear only the filters that would hide the new row.
+      if (filterStatus !== 'all' && filterStatus !== row.status) setFilterStatus('all');
+      if (filterSource !== 'all' && filterSource !== row.source) setFilterSource('all');
+      if (filterState !== 'all' && filterState !== row.state) setFilterState('all');
+      if (search) {
+        const q = search.toLowerCase();
+        if (!row.name.toLowerCase().includes(q) && !row.email.toLowerCase().includes(q)) setSearch('');
+      }
+      setJustAdded(row.id);
+      setAddOpen(false);
+      showToast(`${row.name || 'Customer'} added to your customers.`, 'success');
+    } catch (err) {
+      console.error('[customers] create', err);
+      setAddErr(err instanceof Error && err.message ? err.message : 'Couldn’t add the customer. Please try again.');
+    } finally {
+      setAddBusy(false);
+    }
+  }, [addBusy, draft, filterStatus, filterSource, filterState, search, showToast]);
 
   /* ─── Assign customer to a project (idempotent) + route a team member ───
      The old handler POSTed straight to /api/projects/create, which ALWAYS
@@ -637,11 +755,107 @@ export default function CustomersPage() {
         accent="CRM"
         subtitle={loading ? 'Loading profiles…' : error ? 'Unable to load profiles' : `${customers.length} total profiles in your pipeline${lifetimeTotals.value > 0 ? ` · ${fmt(lifetimeTotals.value)} lifetime contract value` : ''}`}
         actions={
-          <button onClick={exportCSV} className="pmBtn" style={goldOutlineButtonStyle}>
-            <DownloadSimple size={15} weight="bold" /> Export Leads (CSV)
-          </button>
+          <>
+            <button type="button" onClick={openAdd} className="pmBtn" style={{ ...goldButtonStyle, minHeight: 44 }}>
+              <Plus size={15} weight="bold" /> New Customer
+            </button>
+            <button type="button" onClick={exportCSV} className="pmBtn" style={{ ...goldOutlineButtonStyle, minHeight: 44 }}>
+              <DownloadSimple size={15} weight="bold" /> Export Leads (CSV)
+            </button>
+          </>
         }
       />
+
+      {/* Portalled to <body>: PremiumSurface's content wrapper is a z-index:1
+          stacking context, so a modal rendered inside it paints under the
+          fixed top bar and the phone tab bar — which on a phone is exactly
+          where this form's title and its Add Customer button sit. */}
+      {addOpen && createPortal(<FormModal
+        open={addOpen}
+        onClose={() => { if (!addBusy) setAddOpen(false); }}
+        title="New Customer"
+        subtitle="Who you are building for. Link them to a job from their profile once they are saved."
+        onSubmit={createCustomer}
+        submitLabel="Add Customer"
+        busy={addBusy}
+        error={addErr}
+      >
+        <FormGrid cols={2}>
+          <Field label="Name" required error={fieldErr.name} span>
+            <Input
+              id="new-customer-name"
+              value={draft.name}
+              onChange={(e) => setDraftField('name', e.target.value)}
+              autoComplete="name"
+              maxLength={200}
+              required
+              aria-invalid={fieldErr.name ? true : undefined}
+            />
+          </Field>
+          <Field label="Email" error={fieldErr.email}>
+            <Input
+              id="new-customer-email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              value={draft.email}
+              onChange={(e) => setDraftField('email', e.target.value)}
+              maxLength={200}
+              aria-invalid={fieldErr.email ? true : undefined}
+            />
+          </Field>
+          <Field label="Phone">
+            <Input
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              value={draft.phone}
+              onChange={(e) => setDraftField('phone', e.target.value)}
+              maxLength={40}
+            />
+          </Field>
+          <Field label="City">
+            <Input
+              autoComplete="address-level2"
+              value={draft.city}
+              onChange={(e) => setDraftField('city', e.target.value)}
+              maxLength={120}
+            />
+          </Field>
+          <Field label="State">
+            <Select
+              value={draft.state}
+              onChange={(e) => setDraftField('state', e.target.value)}
+              options={US_STATES}
+              placeholder="Choose a state"
+              autoComplete="address-level1"
+            />
+          </Field>
+          <Field label="ZIP">
+            <Input
+              inputMode="numeric"
+              autoComplete="postal-code"
+              value={draft.zip_code}
+              onChange={(e) => setDraftField('zip_code', e.target.value)}
+              maxLength={10}
+            />
+          </Field>
+          <Field label="Status" hint="Lead, Qualified and Proposal count as pipeline.">
+            <Select
+              value={draft.status}
+              onChange={(e) => setDraftField('status', e.target.value as CustomerStatus)}
+              options={STATUSES.map((s) => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) }))}
+            />
+          </Field>
+          <Field label="Source">
+            <Select
+              value={draft.source}
+              onChange={(e) => setDraftField('source', e.target.value)}
+              options={SOURCES}
+            />
+          </Field>
+        </FormGrid>
+      </FormModal>, document.body)}
 
       {/* KPI Row */}
       {!loading && !error && (
@@ -706,7 +920,12 @@ export default function CustomersPage() {
           <PremiumEmpty
             icon={<UsersThree size={30} weight="duotone" color={GOLD} />}
             title="No customers yet"
-            description="Customer profiles appear here as leads come in through your design studio, Sage chat, and other sources. Each one tracks lead score, project count, and lifetime contract value once you assign them to projects."
+            description="Add the people you build for, or let leads arrive from your design studio, Sage chat and other sources. Each one tracks lead score, project count and lifetime contract value once you assign them to projects."
+            action={
+              <button type="button" onClick={openAdd} className="pmBtn" style={{ ...goldButtonStyle, minHeight: 44 }}>
+                <Plus size={15} weight="bold" /> New Customer
+              </button>
+            }
           />
         </SectionCard>
       ) : (
@@ -729,10 +948,12 @@ export default function CustomersPage() {
             />
           ) : (
             <DataTable<Customer>
+              key={justAdded ? `added-${justAdded}` : 'by-score'}
               columns={custColumns}
               rows={filtered}
               rowKey={c => c.id}
-              defaultSort={{ key: 'lead_score', dir: 'desc' }}
+              defaultSort={justAdded ? { key: 'created_at', dir: 'desc' } : { key: 'lead_score', dir: 'desc' }}
+              isSelected={justAdded ? (c => c.id === justAdded) : undefined}
               onRowClick={c => { setSelected(c); setDetailTab('overview'); }}
               empty="No customers match your filters."
             />
