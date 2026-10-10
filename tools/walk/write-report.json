@@ -10,8 +10,178 @@
     "POST /api/projects/create → 200",
     "POST /api/autopilot/run → 200"
    ],
-   "create": "saved"
+   "create": "saved",
+   "persisted": "yes"
+  },
+  {
+   "screen": "OFFLINE · projects/:id/daily-logs",
+   "add": "daily log with no signal",
+   "errors": [],
+   "actions": [
+    {
+     "label": "the offline worker controls the page",
+     "result": "yes"
+    },
+    {
+     "label": "offline bar shows",
+     "result": "yes — \"You're offline Photos, daily logs and punch items you add are saved on this phone and send\""
+    },
+    {
+     "label": "bar counts it",
+     "result": "yes — \"You're offline 1 item saved on this phone — it sends when you're back.\""
+    },
+    {
+     "label": "reload offline",
+     "result": "failed: page.reload: WebKit encountered an internal error"
+    },
+    {
+     "label": "back-online bar shows",
+     "result": "yes — \"Back online 1 item sent from this phone.\""
+    }
+   ],
+   "create": "kept on the phone (shows On This Phone)",
+   "persisted": "yes — still there after an offline reload",
+   "writes": [
+    "POST /api/daily-logs/create → 200"
+   ],
+   "edit": "sent by itself when the signal came back",
+   "fieldsBack": "GONE"
+  },
+  {
+   "screen": "OFFLINE · projects/:id/punch-list",
+   "add": "punch item with no signal",
+   "errors": [],
+   "actions": [
+    {
+     "label": "the offline worker controls the page",
+     "result": "yes"
+    },
+    {
+     "label": "offline bar shows",
+     "result": "yes — \"You're offline Photos, daily logs and punch items you add are saved on this phone and send\""
+    },
+    {
+     "label": "bar counts it",
+     "result": "yes — \"You're offline 2 items saved on this phone — they send when you're back.\""
+    },
+    {
+     "label": "reload offline",
+     "result": "failed: page.reload: WebKit encountered an internal error"
+    },
+    {
+     "label": "back-online bar shows",
+     "result": "yes — \"Back online Sending what you saved offline…\""
+    }
+   ],
+   "create": "kept on the phone (shows On This Phone)",
+   "persisted": "yes — still there after an offline reload",
+   "writes": [
+    "POST /api/punch-list/create → 200",
+    "POST /api/punch-list/create → 200"
+   ],
+   "edit": "sent by itself when the signal came back",
+   "fieldsBack": "GONE"
+  },
+  {
+   "screen": "OFFLINE · projects/:id/photos",
+   "add": "photo with no signal",
+   "errors": [],
+   "actions": [
+    {
+     "label": "the offline worker controls the page",
+     "result": "yes"
+    },
+    {
+     "label": "offline bar shows",
+     "result": "yes — \"You're offline Photos, daily logs and punch items you add are saved on this phone and send\""
+    },
+    {
+     "label": "bar counts it",
+     "result": "yes — \"You're offline Photos, daily logs and punch items you add are saved on this phone and send\""
+    },
+    {
+     "label": "reload offline",
+     "result": "failed: page.reload: WebKit encountered an internal error"
+    },
+    {
+     "label": "back-online bar shows",
+     "result": "yes — \"Back online\""
+    }
+   ],
+   "create": "the file picker did not open",
+   "persisted": "still waiting after an offline reload",
+   "writes": [],
+   "edit": "NOTHING was sent after coming back online",
+   "fieldsBack": "uploaded"
+  },
+  {
+   "screen": "subs",
+   "add": "no Add/New on this screen"
+  },
+  {
+   "screen": "people",
+   "add": "no Add/New on this screen"
+  },
+  {
+   "screen": "people — page buttons",
+   "add": "1 write buttons",
+   "errors": [],
+   "actions": [
+    {
+     "label": "TEAM MEMBERS 1 Platform sign-ins",
+     "result": "went to /app/people",
+     "writes": []
+    }
+   ]
+  },
+  {
+   "screen": "customers",
+   "add": "no Add/New on this screen"
+  },
+  {
+   "screen": "projects/:id/directory",
+   "add": "Add Someone",
+   "errors": [
+    "could not reopen the record after editing"
+   ],
+   "actions": [],
+   "filled": 4,
+   "saveClicked": [
+    "Add to Directory"
+   ],
+   "writes": [
+    "POST /api/projects/:id/directory → 200"
+   ],
+   "create": "saved",
+   "persisted": "yes",
+   "fieldsBack": "4/4",
+   "edit": "no Edit button on the record"
+  },
+  {
+   "screen": "projects/:id/subs",
+   "add": "Add Subcontractor",
+   "errors": [
+    "locator.click: Timeout 5000ms exceeded."
+   ],
+   "actions": []
+  },
+  {
+   "screen": "projects/:id/team",
+   "add": "Invite Member",
+   "errors": [],
+   "actions": [],
+   "filled": 3,
+   "saveClicked": [
+    "Send Invitation",
+    "Send Invitation",
+    "Send Invitation",
+    "Send Invitation"
+   ],
+   "writes": [],
+   "create": "NOTHING SENT on save"
   }
  ],
- "leftovers": []
+ "leftovers": [
+  "projects/:id/directory: \"ZZ AUDIT directory 10100216\""
+ ]
 }

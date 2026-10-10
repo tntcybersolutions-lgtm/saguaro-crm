@@ -10,10 +10,11 @@
   "notTapped": [
    "Create",
    "1 pay app waiting for your decision · Desert Vista Medical Plaza",
-   "Mark done: Drywall corner bead damaged"
+   "Mark done: Drywall corner bead damaged",
+   "4 days late confirm roof warranty registration Project task"
   ],
-  "tapped": 48,
-  "ok": 41
+  "tapped": 60,
+  "ok": 53
  },
  {
   "route": "/app/my-work",
@@ -49,7 +50,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 2,
-  "ok": 1
+  "ok": 0
  },
  {
   "route": "/app/notifications",
@@ -61,7 +62,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 4,
-  "ok": 2
+  "ok": 4
  },
  {
   "route": "/app/documents",
@@ -75,7 +76,7 @@
    "Pay Applications"
   ],
   "tapped": 10,
-  "ok": 5
+  "ok": 4
  },
  {
   "route": "/app/daily-logs",
@@ -87,7 +88,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 3,
-  "ok": 2
+  "ok": 0
  },
  {
   "route": "/app/schedule",
@@ -95,22 +96,11 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "Sort by",
-    "why": "<input value=\"\" id=\":r2:\" class=\"k-input\" placeholder=\"Phase 1, Rough-in, etc.\"/> from <div class=\"k-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<select class=\"k-sortbar-select\" aria-label=\"Sort by\" data-walk=\"5\"><option value=\"\">Default order</option><option value=\"name\">Task</option><option value=\"trad"
-   },
-   {
-    "label": "Ascending — switch to descending",
-    "why": "<input value=\"\" id=\":r2:\" class=\"k-input\" placeholder=\"Phase 1, Rough-in, etc.\"/> from <div class=\"k-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<button type=\"button\" class=\"k-sortbar-dir\" aria-label=\"Ascending — switch to descending\" data-walk=\"6\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" heigh"
-   }
-  ],
+  "covered": [],
   "erroring": [],
   "notTapped": [],
   "tapped": 3,
-  "ok": 0
+  "ok": 3
  },
  {
   "route": "/app/compliance",
@@ -136,7 +126,7 @@
    "Upload Blueprint"
   ],
   "tapped": 4,
-  "ok": 3
+  "ok": 0
  },
  {
   "route": "/app/reports",
@@ -162,7 +152,7 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 2,
+  "tapped": 1,
   "ok": 1
  },
  {
@@ -186,8 +176,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 5,
-  "ok": 5
+  "tapped": 4,
+  "ok": 4
  },
  {
   "route": "/app/leads",
@@ -211,7 +201,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 8,
-  "ok": 6
+  "ok": 2
  },
  {
   "route": "/app/bids",
@@ -222,7 +212,7 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 0,
+  "tapped": 7,
   "ok": 0
  },
  {
@@ -249,8 +239,8 @@
    }
   ],
   "notTapped": [],
-  "tapped": 6,
-  "ok": 6
+  "tapped": 5,
+  "ok": 5
  },
  {
   "route": "/app/billing/payapp",
@@ -263,8 +253,8 @@
   "notTapped": [
    "% COMPLETE → 0%"
   ],
-  "tapped": 8,
-  "ok": 3
+  "tapped": 9,
+  "ok": 4
  },
  {
   "route": "/app/billing/cost-control",
@@ -272,57 +262,11 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "Refresh",
-    "why": "<div class=\"ms-scrim\" aria-hidden=\"true\"></div> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button style=\"display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 14px;border-radius:10px;cursor:pointer;background:rgba(255,255,"
-   },
-   {
-    "label": "SELECT",
-    "why": "<div class=\"ms-scrim\" aria-hidden=\"true\"></div> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<select style=\"background:var(--bg-base);border:1px solid rgba(255,255,255,0.09);border-radius:6px;color:var(--text-secondary);padding:6px 8px;font-size:12.5px;"
-   },
-   {
-    "label": "History",
-    "why": "<div class=\"ms-scrim\" aria-hidden=\"true\"></div> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button style=\"display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 14px;border-radius:10px;cursor:pointer;background:rgba(255,255,"
-   },
-   {
-    "label": "REVISED BUDGET → $0.00",
-    "why": "<div class=\"ms-scrim\" aria-hidden=\"true\"></div> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/billing/cost-control\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"9\"><div class=\"pmHover\" style=\"position:relative;overflow:"
-   },
-   {
-    "label": "COMMITTED → $0.00",
-    "why": "<div class=\"ms-scrim\" aria-hidden=\"true\"></div> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/billing/cost-control\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"10\"><div class=\"pmHover\" style=\"position:relative;overflow"
-   },
-   {
-    "label": "SPENT TO DATE → $0.00",
-    "why": "<div class=\"ms-scrim\" aria-hidden=\"true\"></div> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/billing/cost-control\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"11\"><div class=\"pmHover\" style=\"position:relative;overflow"
-   },
-   {
-    "label": "PROJECTED FINAL → $0.00",
-    "why": "<div class=\"ms-scrim\" aria-hidden=\"true\"></div> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/billing/cost-control\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"12\"><div class=\"pmHover\" style=\"position:relative;overflow"
-   },
-   {
-    "label": "VARIANCE → $0.00 Under budget",
-    "why": "<div class=\"ms-scrim\" aria-hidden=\"true\"></div> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/billing/cost-control\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"13\"><div class=\"pmHover\" style=\"position:relative;overflow"
-   },
-   {
-    "label": "Add Cost Code",
-    "why": "<div class=\"ms-scrim\" aria-hidden=\"true\"></div> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button style=\"display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 14px;border-radius:10px;cursor:pointer;background:rgba(255,255,"
-   }
-  ],
+  "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 11,
-  "ok": 6
+  "tapped": 10,
+  "ok": 3
  },
  {
   "route": "/app/invoicing",
@@ -334,7 +278,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 3,
-  "ok": 3
+  "ok": 2
  },
  {
   "route": "/app/catalog",
@@ -594,19 +538,13 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "New Document",
-    "why": "<div class=\"k-input\" aria-live=\"polite\">…</div> from <div class=\"k-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"k-btn k-btn-primary\" type=\"button\" data-walk=\"5\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" fill=\"currentColor\" viewBox=\"0 0 "
-   }
-  ],
+  "covered": [],
   "erroring": [],
   "notTapped": [
    "Bulk Upload"
   ],
   "tapped": 3,
-  "ok": 0
+  "ok": 2
  },
  {
   "route": "/app/fleet",
@@ -618,7 +556,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 9,
-  "ok": 4
+  "ok": 2
  },
  {
   "route": "/app/intelligence",
@@ -644,8 +582,8 @@
    "Invite Subcontractor",
    "Invite Client"
   ],
-  "tapped": 4,
-  "ok": 2
+  "tapped": 3,
+  "ok": 1
  },
  {
   "route": "/app/prequalification",
@@ -659,7 +597,7 @@
    "Send Prequal Form"
   ],
   "tapped": 5,
-  "ok": 2
+  "ok": 1
  },
  {
   "route": "/app/radio",
@@ -674,11 +612,17 @@
     "html": "<button class=\"k-btn k-btn-danger rdPanic\" type=\"button\" title=\"Hold to send a panic alarm to every channel member\" data-walk=\"5\"><svg xmlns=\"http://www.w3.org/"
    }
   ],
-  "covered": [],
+  "covered": [
+   {
+    "label": "Broadcast",
+    "why": "<div>Channels</div> from <div role=\"dialog\" aria-modal=\"true\" aria-label=\"BROADCAST — 0/8 CHANNELS\">…</div> subtree intercepts pointer events",
+    "html": "<button title=\"Broadcast — one message onto up to eight channels\" style=\"display:inline-flex;align-items:center;justify-content:center;gap:6px;height:100%;paddi"
+   }
+  ],
   "erroring": [],
   "notTapped": [],
   "tapped": 5,
-  "ok": 4
+  "ok": 3
  },
  {
   "route": "/app/resource-planning",
@@ -690,7 +634,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 22,
-  "ok": 4
+  "ok": 2
  },
  {
   "route": "/app/reviews",
@@ -722,7 +666,11 @@
   "loadErrors": [
    "TypeError: Load failed"
   ],
-  "apiErrors": [],
+  "apiErrors": [
+   "GET /api/projects/list → 500",
+   "GET /api/projects → 500",
+   "GET /api/branding/tenant → 500"
+  ],
   "dead": [],
   "covered": [],
   "erroring": [],
@@ -774,43 +722,64 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 7,
-  "ok": 3
+  "ok": 6
  },
  {
   "route": "/app/projects/:id/overview",
   "status": 200,
   "loadErrors": [],
-  "apiErrors": [],
+  "apiErrors": [
+   "GET /api/branding/tenant → 500",
+   "GET /api/projects/list → 500",
+   "GET /api/projects/:id → 404",
+   "GET /api/projects → 500",
+   "GET /api/project-context → 404"
+  ],
   "dead": [],
   "covered": [
    {
-    "label": "Open project modules",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<button type=\"button\" class=\"pj-nav-modules\" aria-label=\"Open project modules\" data-walk=\"4\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill"
+    "label": "Preconstruction",
+    "why": "<div></div> intercepts pointer events",
+    "html": "<a class=\"pj-nav-item\" title=\"Price &amp; win the work\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/takeoff\" data-walk=\"6\"><svg xmlns=\"http://www.w"
    }
   ],
   "erroring": [],
   "notTapped": [],
-  "tapped": 5,
-  "ok": 4
+  "tapped": 4,
+  "ok": 3
  },
  {
   "route": "/app/projects/:id/photos",
   "status": 200,
   "loadErrors": [],
-  "apiErrors": [],
+  "apiErrors": [
+   "GET /api/projects → 500",
+   "GET /api/projects/:id/sub-media → 404",
+   "GET /api/projects/:id → 404",
+   "GET /api/branding/tenant → 500",
+   "GET /api/projects/list → 500",
+   "GET /api/photos/list → 500",
+   "GET /api/project-context → 404"
+  ],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 3,
-  "ok": 3
+  "tapped": 4,
+  "ok": 4
  },
  {
   "route": "/app/projects/:id/files",
   "status": 200,
   "loadErrors": [],
-  "apiErrors": [],
+  "apiErrors": [
+   "GET /api/projects → 500",
+   "GET /api/projects/list → 500",
+   "GET /api/projects/:id/folders → 404",
+   "GET /api/projects/:id/files → 500",
+   "GET /api/projects/:id → 404",
+   "GET /api/branding/tenant → 500"
+  ],
   "dead": [],
   "covered": [],
   "erroring": [],
@@ -818,8 +787,8 @@
    "Import from Cloud",
    "Trash"
   ],
-  "tapped": 8,
-  "ok": 2
+  "tapped": 14,
+  "ok": 1
  },
  {
   "route": "/app/projects/:id/rfis",
@@ -831,7 +800,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 2,
-  "ok": 0
+  "ok": 1
  },
  {
   "route": "/app/projects/:id/submittals",
@@ -856,6 +825,18 @@
   "notTapped": [],
   "tapped": 2,
   "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/change-orders",
+  "status": 200,
+  "loadErrors": [],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 3,
+  "ok": 3
  },
  {
   "route": "/app/projects/:id/pay-apps",
@@ -892,38 +873,23 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "Add Task",
-    "why": "<div>…</div> from <div class=\"sag-side-panel\">…</div> subtree intercepts pointer events",
-    "html": "<button style=\"display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;border-radius:12px;border:none;cursor:pointer;background:"
-   }
-  ],
+  "covered": [],
   "erroring": [],
   "notTapped": [],
   "tapped": 3,
-  "ok": 2
+  "ok": 3
  },
  {
   "route": "/app/projects/:id/drawings",
   "status": 200,
   "loadErrors": [],
   "apiErrors": [],
-  "dead": [
-   {
-    "label": "Sheet",
-    "tag": "button",
-    "href": null,
-    "html": "<button type=\"button\" role=\"tab\" class=\"k-tab\" aria-selected=\"true\" data-walk=\"12\">Sheet</button>"
-   }
-  ],
+  "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "Upload First Sheet"
-  ],
-  "tapped": 4,
-  "ok": 3
+  "notTapped": [],
+  "tapped": 5,
+  "ok": 5
  },
  {
   "route": "/app/projects/:id/specs",
@@ -938,29 +904,6 @@
   "ok": 2
  },
  {
-  "route": "/app/projects/:id/inspections",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [
-   {
-    "label": "Sort by",
-    "why": "<span class=\"ms-label\">Type</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<select class=\"k-sortbar-select\" aria-label=\"Sort by\" data-walk=\"13\"><option value=\"\">Default order</option><option value=\"type\">Type</option><option value=\"dat"
-   },
-   {
-    "label": "Descending — switch to ascending",
-    "why": "<span class=\"ms-label\">Type</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button type=\"button\" class=\"k-sortbar-dir\" aria-label=\"Descending — switch to ascending\" data-walk=\"14\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" heig"
-   }
-  ],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 3,
-  "ok": 3
- },
- {
   "route": "/app/projects/:id/safety",
   "status": 200,
   "loadErrors": [],
@@ -972,7 +915,7 @@
    "Generate JHA"
   ],
   "tapped": 12,
-  "ok": 2
+  "ok": 3
  },
  {
   "route": "/app/projects/:id/todos",
@@ -984,7 +927,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 7,
-  "ok": 0
+  "ok": 2
  },
  {
   "route": "/app/projects/:id/messages",
@@ -1009,7 +952,7 @@
   "notTapped": [
    "Invite Member"
   ],
-  "tapped": 22,
+  "tapped": 19,
   "ok": 1
  },
  {
@@ -1022,7 +965,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 1,
-  "ok": 0
+  "ok": 1
  },
  {
   "route": "/app/projects/:id/subs",
@@ -1033,8 +976,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 5,
-  "ok": 1
+  "tapped": 10,
+  "ok": 2
  },
  {
   "route": "/app/projects/:id/crews",
@@ -1057,8 +1000,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 8,
-  "ok": 2
+  "tapped": 14,
+  "ok": 4
  },
  {
   "route": "/app/projects/:id/tm-tickets",
@@ -1080,11 +1023,9 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "Cost to Complete $412,000.00"
-  ],
-  "tapped": 14,
-  "ok": 3
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/cash-flow",
@@ -1107,23 +1048,11 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 3,
+  "tapped": 14,
   "ok": 3
  },
  {
   "route": "/app/projects/:id/invoices",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 20,
-  "ok": 5
- },
- {
-  "route": "/app/projects/:id/contracts",
   "status": 200,
   "loadErrors": [],
   "apiErrors": [],
@@ -1139,10 +1068,7 @@
  {
   "route": "/app/projects/:id/contracts",
   "status": 200,
-  "loadErrors": [
-   "/www.saguarocontrol.net/api/projects/d3e0a111-0001-4d00-9000-5a6775a0de00 due to access control checks.",
-   "/www.saguarocontrol.net/api/contracts/prefill?kind=subcontract&projectId=d3e0a111-0001-4d00-9000-5a6775a0de00 due to access control checks."
-  ],
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
@@ -1151,7 +1077,7 @@
    "Purchase Order"
   ],
   "tapped": 4,
-  "ok": 2
+  "ok": 4
  },
  {
   "route": "/app/projects/:id/purchase-orders",
@@ -1161,7 +1087,9 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
+  "notTapped": [
+   "New Purchase Order"
+  ],
   "tapped": 12,
   "ok": 3
  },
@@ -1174,8 +1102,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "tapped": 6,
+  "ok": 6
  },
  {
   "route": "/app/projects/:id/proposal",
@@ -1197,49 +1125,28 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "Sort by",
-    "why": "<button type=\"button\" role=\"option\" class=\"ms-opt\" aria-selected=\"true\" data-selected=\"true\">…</button> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<select class=\"k-sortbar-select\" aria-label=\"Sort by\" data-walk=\"13\"><option value=\"\">Default order</option><option value=\"name\">Package</option><option value=\""
-   },
-   {
-    "label": "Ascending — switch to descending",
-    "why": "<button type=\"button\" role=\"option\" class=\"ms-opt\" aria-selected=\"true\" data-selected=\"true\">…</button> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button type=\"button\" class=\"k-sortbar-dir\" aria-label=\"Ascending — switch to descending\" data-walk=\"14\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" heig"
-   }
-  ],
+  "covered": [],
   "erroring": [],
   "notTapped": [
    "Create Bid Package"
   ],
   "tapped": 2,
-  "ok": 0
+  "ok": 2
  },
  {
   "route": "/app/projects/:id/closeout",
   "status": 200,
   "loadErrors": [],
-  "apiErrors": [
-   "POST /api/projects/:id/close → 409"
-  ],
+  "apiErrors": [],
   "dead": [],
   "covered": [],
-  "erroring": [
-   {
-    "label": "Close Project",
-    "errors": [
-     "POST /api/projects/:id/close → 409"
-    ]
-   }
-  ],
+  "erroring": [],
   "notTapped": [
    "Generate G704",
-   "Generate G706",
-   "2 unfinalized pay applications"
+   "Generate G706"
   ],
-  "tapped": 28,
-  "ok": 6
+  "tapped": 18,
+  "ok": 1
  },
  {
   "route": "/app/projects/:id/compliance",
@@ -1252,8 +1159,8 @@
   "notTapped": [
    "Request All COIs"
   ],
-  "tapped": 4,
-  "ok": 1
+  "tapped": 12,
+  "ok": 2
  },
  {
   "route": "/app/projects/:id/insurance",
@@ -1273,18 +1180,7 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "Ascending — switch to descending",
-    "why": "<select id=\":r0:\" class=\"k-select\">…</select> from <div class=\"k-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<button type=\"button\" class=\"k-sortbar-dir\" aria-label=\"Ascending — switch to descending\" data-walk=\"14\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" heig"
-   },
-   {
-    "label": "Log Correspondence",
-    "why": "<select id=\":r0:\" class=\"k-select\">…</select> from <div class=\"k-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn\" style=\"display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;border-radius:12px;border:none;cursor:point"
-   }
-  ],
+  "covered": [],
   "erroring": [],
   "notTapped": [],
   "tapped": 14,
@@ -1303,7 +1199,7 @@
    "Remove",
    "Generate WH-347 PDF"
   ],
-  "tapped": 7,
+  "tapped": 13,
   "ok": 1
  },
  {
@@ -1327,10 +1223,11 @@
   "covered": [],
   "erroring": [],
   "notTapped": [
-   "Send W-9 Request"
+   "Send W-9 Request",
+   "Request W-9"
   ],
-  "tapped": 3,
-  "ok": 3
+  "tapped": 9,
+  "ok": 9
  },
  {
   "route": "/app/projects/:id/takeoff",
@@ -1356,7 +1253,7 @@
    "What OSHA requirements apply to my site?"
   ],
   "tapped": 7,
-  "ok": 6
+  "ok": 7
  },
  {
   "route": "/app/projects/:id/autopilot",
@@ -1369,8 +1266,8 @@
   "notTapped": [
    "Run Autopilot Scan"
   ],
-  "tapped": 4,
-  "ok": 0
+  "tapped": 10,
+  "ok": 7
  },
  {
   "route": "/app/projects/:id/network",

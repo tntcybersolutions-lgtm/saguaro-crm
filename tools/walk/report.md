@@ -1,38 +1,50 @@
 # App walk — iPhone (WebKit), demo account
 
-96 screens · 573 controls tapped · 2 dead · 4 covered · 3 erroring · 2 API errors
-
-## /app/schedule  (HTTP 200)
-- COVERED: "Sort by" — <input value="" id=":r2:" class="k-input" placeholder="Phase 1, Rough-in, etc."/> from <div class="k-overlay">…</div> subtree intercepts pointer events
-- COVERED: "Ascending — switch to descending" — <input value="" id=":r2:" class="k-input" placeholder="Phase 1, Rough-in, etc."/> from <div class="k-overlay">…</div> subtree intercepts pointer events
+96 screens · 536 controls tapped · 1 dead · 2 covered · 2 erroring · 22 API errors
 
 ## /app/billing  (HTTP 200)
 - API: POST /api/billing/checkout → 503
 - ERRORS after "Select Plan": POST /api/billing/checkout → 503
 - ERRORS after "Select Plan": POST /api/billing/checkout → 503
 
-## /app/document-versions  (HTTP 200)
-- COVERED: "New Document" — <div class="k-input" aria-live="polite">…</div> from <div class="k-overlay">…</div> subtree intercepts pointer events
-
 ## /app/radio  (HTTP 200)
 - DEAD: "Hold — Panic" <button>  `<button class="k-btn k-btn-danger rdPanic" type="button" title="Hold to send a panic alarm to every channel member" data-walk="5"><svg xmlns="http://www.w3.org/`
+- COVERED: "Broadcast" — <div>Channels</div> from <div role="dialog" aria-modal="true" aria-label="BROADCAST — 0/8 CHANNELS">…</div> subtree intercepts pointer events
 
 ## /app/settings  (HTTP 200)
 - LOAD: TypeError: Load failed
+- API: GET /api/projects/list → 500
+- API: GET /api/projects → 500
+- API: GET /api/branding/tenant → 500
 
 ## /app/projects/:id/overview  (HTTP 200)
-- COVERED: "Open project modules" — <div>…</div> from <aside>…</aside> subtree intercepts pointer events
+- API: GET /api/branding/tenant → 500
+- API: GET /api/projects/list → 500
+- API: GET /api/projects/:id → 404
+- API: GET /api/projects → 500
+- API: GET /api/project-context → 404
+- COVERED: "Preconstruction" — <div></div> intercepts pointer events
 
-## /app/projects/:id/drawings  (HTTP 200)
-- DEAD: "Sheet" <button>  `<button type="button" role="tab" class="k-tab" aria-selected="true" data-walk="12">Sheet</button>`
+## /app/projects/:id/photos  (HTTP 200)
+- API: GET /api/projects → 500
+- API: GET /api/projects/:id/sub-media → 404
+- API: GET /api/projects/:id → 404
+- API: GET /api/branding/tenant → 500
+- API: GET /api/projects/list → 500
+- API: GET /api/photos/list → 500
+- API: GET /api/project-context → 404
 
-## /app/projects/:id/closeout  (HTTP 200)
-- API: POST /api/projects/:id/close → 409
-- ERRORS after "Close Project": POST /api/projects/:id/close → 409
+## /app/projects/:id/files  (HTTP 200)
+- API: GET /api/projects → 500
+- API: GET /api/projects/list → 500
+- API: GET /api/projects/:id/folders → 404
+- API: GET /api/projects/:id/files → 500
+- API: GET /api/projects/:id → 404
+- API: GET /api/branding/tenant → 500
 
 ## Not tapped (would write data or leave)
 
-- /app: Create · 1 pay app waiting for your decision · Desert Vista Medical Plaza · Mark done: Drywall corner bead damaged
+- /app: Create · 1 pay app waiting for your decision · Desert Vista Medical Plaza · Mark done: Drywall corner bead damaged · 4 days late confirm roof warranty registration Project task
 - /app/documents: Pay Applications
 - /app/takeoff: Upload Blueprint
 - /app/reports: Pay App Status · Pay App Status Pay applications with amounts and status Answers: How m
@@ -45,17 +57,16 @@
 - /app/projects/:id/files: Import from Cloud · Trash
 - /app/projects/:id/pay-apps: New Pay Application
 - /app/projects/:id/lien-waivers: + Generate Waiver · Generate All
-- /app/projects/:id/drawings: Upload First Sheet
 - /app/projects/:id/safety: Generate JHA
 - /app/projects/:id/team: Invite Member
-- /app/projects/:id/budget: Cost to Complete $412,000.00
-- /app/projects/:id/cash-flow: Generate Projection · COLLECTED → $2,574,000 6 pay apps
-- /app/projects/:id/contracts: Purchase Order · READY TO PAPER → 0 Every award is contracted
+- /app/projects/:id/invoices: TOTAL BILLED → $3,730,000 Project billed to date (pay apps)
+- /app/projects/:id/contracts: Purchase Order
+- /app/projects/:id/purchase-orders: New Purchase Order
 - /app/projects/:id/proposal: Start v1.0 at $28,400
 - /app/projects/:id/bid-packages: Create Bid Package
-- /app/projects/:id/closeout: Generate G704 · Generate G706 · 2 unfinalized pay applications
+- /app/projects/:id/closeout: Generate G704 · Generate G706
 - /app/projects/:id/compliance: Request All COIs
 - /app/projects/:id/payroll: Generate WH-347 · Remove · Generate WH-347 PDF
-- /app/projects/:id/w9: Send W-9 Request
+- /app/projects/:id/w9: Send W-9 Request · Request W-9
 - /app/projects/:id/intelligence: What OSHA requirements apply to my site?
 - /app/projects/:id/autopilot: Run Autopilot Scan
