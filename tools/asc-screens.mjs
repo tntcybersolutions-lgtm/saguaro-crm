@@ -517,14 +517,20 @@ async function walk() {
   const browser = await pw.webkit.launch();
   const device = { ...pw.devices['iPhone 15'], colorScheme: 'dark' };
 
+  // Sign in ONCE; every walker phone reuses that session (parallel sign-ins
+  // with one account timed out and took the whole run down).
+  let session = null;
   async function signedInContext() {
+    if (session) return browser.newContext({ ...device, storageState: session });
     const ctx = await browser.newContext(device);
     const page = await ctx.newPage();
     await page.goto(`${SITE}/login`, { waitUntil: 'networkidle' });
     await page.fill('input[name="email"]', review.demoAccountName);
     await page.fill('input[name="password"]', review.demoAccountPassword);
     await page.click('button[type="submit"]');
-    await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 60000 });
+    await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 90000 });
+    await page.waitForLoadState('networkidle').catch(() => {});
+    session = await ctx.storageState();
     await page.close();
     return ctx;
   }
@@ -532,15 +538,16 @@ async function walk() {
   // The demo job.
   const ctx0 = await signedInContext();
   const p0 = await ctx0.newPage();
-  await p0.goto(`${SITE}/app/projects`, { waitUntil: 'networkidle' });
-  const links = await p0.$$eval('a[href*="/app/projects/"]', (as) => as.map((a) => [a.getAttribute('href'), a.innerText]));
-  const idOf = (h) => h && h.match(/\/app\/projects\/([0-9a-f-]{36})/i)?.[1];
-  const project = idOf(links.find(([h, t]) => idOf(h) && /ZZ AUDIT/i.test(t))?.[0])
-    || idOf(links.find(([h, t]) => idOf(h) && t.includes(PROJECT_NAME))?.[0]) || links.map(([h]) => idOf(h)).find(Boolean);
+  await p0.goto(`${SITE}/app`, { waitUntil: 'networkidle' });
+  let jobs = [];
+  try { const d = await (await p0.request.get(`${SITE}/api/projects?limit=200&fields=id,name`)).json(); jobs = d.projects || d.data || (Array.isArray(d) ? d : []); } catch (e) { console.log(`walk: jobs list failed — ${e.message}`); }
+  const project = (jobs.find((j) => /ZZ AUDIT/i.test(j.name || '')) || jobs.find((j) => (j.name || '').includes(PROJECT_NAME)) || jobs[0] || {}).id || null;
+  console.log(`walk: ${jobs.length} jobs; walking job screens on ${project ? (jobs.find((j) => j.id === project) || {}).name : 'NO JOB FOUND'}`);
   await ctx0.close();
   const routes = [...WALK_TOP, ...(project ? WALK_JOB.map((t) => `/app/projects/${project}/${t}`) : [])];
   const shortUrl = (u) => u.replace(SITE, '').replace(/[0-9a-f-]{36}/gi, ':id');
   const results = [];
+  const writeReport = () => writeWalkReport(outDir, results, real ? 'real account' : 'demo account');
   const chromeSeen = new Set(); // controls in the shared top/bottom bars: test once
 
   async function walkRoute(ctx, route, idx) {
@@ -603,12 +610,22 @@ async function walk() {
         const url0 = page.url();
         const m0 = await page.evaluate(() => window.__mut).catch(() => 0);
         const r0 = reqs, p0 = popups, d0 = dialogs, dl0 = downloads, e0 = pageErrs.length, a0 = apiErrs.length;
-        try {
-          await el.scrollIntoViewIfNeeded({ timeout: 2000 });
-          await el.click({ timeout: 3000 });
-        } catch (e) {
-          const m = String(e.message || e);
-          if (/intercepts pointer events|not visible|outside of the viewport/i.test(m)) res.covered.push({ label: c.label, why: m.match(/<[^>]{0,80}>[^\n]{0,40} intercepts pointer events/)?.[0] || m.split('\n')[0].slice(0, 120), html: c.html });
+        let clicked = false, lastErr = '';
+        for (const attempt of [0, 1]) {
+          try {
+            // A real thumb scrolls the button into the open middle of the screen,
+            // not under the fixed top bar or the tab bar.
+            await el.evaluate((n) => n.scrollIntoView({ block: 'center', inline: 'center' }));
+            await page.waitForTimeout(attempt ? 400 : 120);
+            await el.click({ timeout: 2500 });
+            clicked = true;
+            break;
+          } catch (e) { lastErr = String(e.message || e); }
+        }
+        if (!clicked) {
+          if (/intercepts pointer events|not visible|outside of the viewport|not stable/i.test(lastErr)) {
+            res.covered.push({ label: c.label, why: (lastErr.match(/<[^\n]{0,140}> (?:from <[^\n]{0,80}> )?(?:subtree )?intercepts pointer events/) || [lastErr.split('\n')[0]])[0].slice(0, 220), html: c.html });
+          }
           continue;
         }
         await page.waitForTimeout(1300);
@@ -645,20 +662,29 @@ async function walk() {
   const queue = routes.map((r, i) => [r, i]);
   const first = queue.shift();
   const ctxA = await signedInContext();
-  results[first[1]] = await walkRoute(ctxA, first[0], first[1]);
+  try { results[first[1]] = await walkRoute(ctxA, first[0], first[1]); } catch (e) { results[first[1]] = { route: shortUrl(first[0]), status: 'walk error', loadErrors: [String(e.message || e).split('\n')[0]], apiErrors: [], dead: [], covered: [], erroring: [], notTapped: [], tapped: 0, ok: 0 }; }
+  writeReport();
   await ctxA.close();
   await Promise.all(Array.from({ length: WORKERS }, async () => {
     const ctx = await signedInContext();
     while (queue.length) {
       const [r, i] = queue.shift();
-      results[i] = await walkRoute(ctx, r, i);
+      try { results[i] = await walkRoute(ctx, r, i); }
+      catch (e) { results[i] = { route: shortUrl(r), status: 'walk error', loadErrors: [String(e.message || e).split('\n')[0]], apiErrors: [], dead: [], covered: [], erroring: [], notTapped: [], tapped: 0, ok: 0 }; }
+      writeReport();
     }
     await ctx.close();
   }));
   await browser.close();
 
+  writeReport();
+  console.log(fs.readFileSync(path.join(outDir, 'report.md'), 'utf8').split('\n').slice(0, 3).join('\n'));
+}
+
+function writeWalkReport(outDir, rawResults, signedInAs) {
+  const results = rawResults.filter(Boolean);
   fs.writeFileSync(path.join(outDir, 'report.json'), JSON.stringify(results, null, 1));
-  const lines = ['# App walk — iPhone (WebKit), demo account', '', `${results.length} screens · ${results.reduce((n, r) => n + r.tapped, 0)} controls tapped · ${results.reduce((n, r) => n + r.dead.length, 0)} dead · ${results.reduce((n, r) => n + r.covered.length, 0)} covered · ${results.reduce((n, r) => n + r.erroring.length, 0)} erroring · ${results.reduce((n, r) => n + r.apiErrors.length, 0)} API errors`, ''];
+  const lines = [`# App walk — iPhone (WebKit), ${signedInAs}`, '', `${results.length} screens · ${results.reduce((n, r) => n + r.tapped, 0)} controls tapped · ${results.reduce((n, r) => n + r.dead.length, 0)} dead · ${results.reduce((n, r) => n + r.covered.length, 0)} covered · ${results.reduce((n, r) => n + r.erroring.length, 0)} erroring · ${results.reduce((n, r) => n + r.apiErrors.length, 0)} API errors`, ''];
   for (const r of results) {
     if (!r.dead.length && !r.covered.length && !r.erroring.length && !r.apiErrors.length && !r.loadErrors.length) continue;
     lines.push(`## ${r.route}  (HTTP ${r.status})`);
@@ -672,7 +698,6 @@ async function walk() {
   lines.push('## Not tapped (would write data or leave)', '');
   for (const r of results) if (r.notTapped.length) lines.push(`- ${r.route}: ${r.notTapped.slice(0, 20).join(' · ')}`);
   fs.writeFileSync(path.join(outDir, 'report.md'), lines.join('\n') + '\n');
-  console.log(lines.slice(0, 3).join('\n'));
 }
 
 if (MODE === 'capture') await capture();
