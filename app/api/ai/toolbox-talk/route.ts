@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import Anthropic from '@anthropic-ai/sdk';
 import { apiError } from '@/lib/api-error';
+import { requestDay } from '@/lib/time-zone';
 
 export async function POST(req: NextRequest) {
   try {
@@ -48,8 +49,9 @@ export async function POST(req: NextRequest) {
       .eq('tenant_id', user.tenantId)
       .single();
 
-    const today = new Date();
-    const month = today.toLocaleString('en-US', { month: 'long' });
+    // The company's day and month, not the server's (UTC rolls over at 7 PM in Iowa).
+    const { today, zone } = await requestDay(req.headers, db, user.tenantId, 'ai/toolbox-talk');
+    const month = new Date().toLocaleString('en-US', { month: 'long', timeZone: zone });
 
     const client = new Anthropic();
     const message = await client.messages.create({
@@ -60,7 +62,7 @@ export async function POST(req: NextRequest) {
         content: `Generate an OSHA-compliant toolbox talk for a construction project.
 
 Project: ${projectData?.name || 'Construction Project'}
-Date: ${today.toISOString().split('T')[0]}
+Date: ${today}
 Month: ${month}
 Active Trades: ${activeTrades.join(', ') || 'General construction'}
 ${topic ? `Specific Topic Requested: ${topic}` : 'Select an appropriate seasonal/trade-relevant topic'}
@@ -124,7 +126,7 @@ Return as JSON: {
         osha_standard: oshaRefs,
         trades: activeTrades,
         conducted_by: user.id,
-        conducted_at: today.toISOString(),
+        conducted_at: new Date().toISOString(),
       })
       .select()
       .single();

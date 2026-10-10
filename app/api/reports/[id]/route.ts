@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { requestDay } from '@/lib/time-zone';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,7 +55,7 @@ async function update(req: NextRequest, id: string, tenantId: string) {
     .eq('tenant_id', tenantId)
     .single();
   const prev = (existing?.template_data && typeof existing.template_data === 'object') ? existing.template_data : {};
-  const merged = { ...prev, ...body, updatedAt: new Date().toISOString().slice(0, 10) };
+  const merged = { ...prev, ...body, updatedAt: (await requestDay(req.headers, supabase, tenantId, 'reports')).today };
 
   const update: Record<string, unknown> = { template_data: merged };
   if (body.name !== undefined) update.name = body.name;

@@ -6,6 +6,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { must } from '@/lib/db-write';
+import { addDays, companyDay } from '@/lib/time-zone';
 
 export interface AutopilotAlert {
   tenant_id: string;
@@ -21,10 +22,14 @@ export interface AutopilotAlert {
  * Run every autopilot check for one tenant (optionally scoped to a project), replace that
  * tenant's open alerts, and return a summary. `db` is a Supabase client (service-role for cron,
  * or the RLS client for the on-demand path).
+ *
+ * "Overdue" and "expiring" are judged on the company's day: `opts.today` when the caller
+ * already knows it (the on-demand run: the person's device zone, else the company's), else
+ * the company's own zone (tenants.time_zone), else the UTC day — logged.
  */
-export async function runAutopilotScan(db: any, tenantId: string, projectId?: string | null): Promise<{ alertsCreated: number; summary: string }> {
-  const today = new Date().toISOString().split('T')[0];
-  const in30 = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+export async function runAutopilotScan(db: any, tenantId: string, projectId?: string | null, opts: { today?: string } = {}): Promise<{ alertsCreated: number; summary: string }> {
+  const today = opts.today ?? (await companyDay(db, tenantId, 'autopilot/scan')).today;
+  const in30 = addDays(today, 30);
   const twoWeeksAgo = new Date(Date.now() - 14 * 86400000).toISOString();
   const velocityCutoff = twoWeeksAgo;
   const scope = (q: any) => (projectId ? q.eq('project_id', projectId) : q);

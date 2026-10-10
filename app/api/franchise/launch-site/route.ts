@@ -5,6 +5,7 @@ import { hasFeature } from '@/lib/entitlements-server';
 import { buildTemplateRows, GOLF_TEMPLATE } from '@/lib/franchise-template';
 
 import { apiError } from '@/lib/api-error';
+import { requestDay } from '@/lib/time-zone';
 /**
  * Launch a new franchise location from the standardized golf playbook.
  * Creates the project, then seeds phases, milestones, long-lead items, and
@@ -43,7 +44,7 @@ export async function POST(req: NextRequest) {
 
     // 2) Seed the playbook, dated from the start date (default today).
     const startISO = body.start_date && !isNaN(Date.parse(body.start_date))
-      ? String(body.start_date) : new Date().toISOString().slice(0, 10);
+      ? String(body.start_date) : (await requestDay(req.headers, db, user.tenantId, 'franchise/launch-site')).today;
     const startMs = Date.parse(startISO);
     const rows = buildTemplateRows(user.tenantId, (proj as any).id, startMs);
 

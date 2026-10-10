@@ -16,6 +16,7 @@ import {
   type ShiftRow,
 } from '@/lib/timeclock/server';
 import { must } from '@/lib/db-write';
+import { TIME_ZONE_HEADER } from '@/lib/time-zone';
 
 /**
  * POST /api/timeclock/in
@@ -65,7 +66,7 @@ export async function POST(req: NextRequest) {
     }
 
     const nowIso = new Date().toISOString();
-    const timezone = await resolveTimezone(db, t, employee.id, (body as { timezone?: unknown }).timezone);
+    const timezone = await resolveTimezone(db, t, employee.id, (body as { timezone?: unknown }).timezone, req.headers.get(TIME_ZONE_HEADER));
     const csiDivision = typeof body.csiDivision === 'string' && body.csiDivision.trim() ? body.csiDivision.trim() : null;
     const costCodeId = typeof body.costCodeId === 'string' && body.costCodeId.trim() ? body.costCodeId.trim() : null;
 

@@ -7,6 +7,7 @@ import { useDailyLogs, submitDailyLog } from '@/lib/hooks/useFranchise';
 import { C, font, fmtDate, useFranchiseGate, GateLoading, SevBadge } from '@/components/franchise/kit';
 import { PremiumSurface, ModuleHero, StatStrip, SectionCard, PremiumEmpty, GoldButton, GhostButton } from '@/components/ui/premium';
 import { Circle, Warning, CheckCircle, Clipboard, HardHat, CloudSun, Camera, Plus } from '@phosphor-icons/react';
+import { localDay } from '@/lib/calendar-day';
 
 const ACTIVE = (p: any) => !/complete|closed|closeout|won|archiv/i.test(String(p.status || ''));
 
@@ -115,7 +116,7 @@ export default function DailyLogsPage() {
 }
 
 function SubmitForm({ projects, onDone }: { projects: any[]; onDone: () => void }) {
-  const [f, setF] = useState<Record<string, any>>({ log_date: new Date().toISOString().slice(0, 10) });
+  const [f, setF] = useState<Record<string, any>>(() => ({ log_date: localDay() }));
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));

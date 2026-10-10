@@ -21,6 +21,7 @@ import { Clipboard, Circle, CheckCircle, Warning, Check, Plus, ClockCounterClock
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
+import { localDay } from '@/lib/calendar-day';
 
 interface TodoItem {
   id: string;
@@ -81,7 +82,7 @@ export default function TodosPage() {
   const [search, setSearch] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('all');
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDay(); // This device's day — toISOString() is the UTC day, tomorrow from 7 PM on in Iowa.
 
   const fetchTodos = useCallback(async () => {
     setLoading(true);

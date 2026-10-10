@@ -20,6 +20,7 @@ import {
   FormModal, Field, Input, Select, Textarea, DateInput, FormGrid, FormSection,
   type Column, type BadgeTone, type Action,
 } from '@/components/ui/kit';
+import { localDay } from '@/lib/calendar-day';
 
 /* ─── Constants ─── */
 const STAGES = ['New', 'Contacted', 'Qualified', 'Proposal', 'Negotiation', 'Won', 'Lost'] as const;
@@ -852,7 +853,7 @@ export default function LeadsPage() {
                   type="time"
                   aria-label="Scheduled time"
                   value={(actForm.scheduled_at || '').split('T')[1] || ''}
-                  onChange={e => setActForm({ ...actForm, scheduled_at: `${(actForm.scheduled_at || '').split('T')[0] || new Date().toISOString().slice(0, 10)}T${e.target.value}` })}
+                  onChange={e => setActForm({ ...actForm, scheduled_at: `${(actForm.scheduled_at || '').split('T')[0] || localDay()}T${e.target.value}` })}
                   style={{ width: 120 }}
                 />
                 <Input aria-label="Activity description" value={actForm.description} onChange={e => setActForm({ ...actForm, description: e.target.value })} placeholder="Describe this activity…" style={{ flex: '1 1 200px', width: 'auto' }} />

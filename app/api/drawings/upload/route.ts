@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 import { revisionDateValue } from '@/lib/drawing-register';
+import { requestDay } from '@/lib/time-zone';
 
 export const dynamic = 'force-dynamic';
 
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest) {
       discipline,
       status: 'current',
       // Dated today unless the client sends the title-block date.
-      revision_date: revisionDateValue(field('revision_date', 'revisionDate'), { defaultToday: true }),
+      revision_date: revisionDateValue(field('revision_date', 'revisionDate'), { defaultToday: true, timeZone: (await requestDay(req.headers, db, user.tenantId, 'drawings/upload')).zone }),
     };
 
     // Optional metadata if the client supplies it.

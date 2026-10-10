@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import { signUrl } from '@/lib/storage-signing';
 import { apiError } from '@/lib/api-error';
 import { revisionDateValue } from '@/lib/drawing-register';
+import { requestDay } from '@/lib/time-zone';
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Documents', 'Edit');
   if (!g.ok) return g.res;
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
       discipline: body.discipline || 'Architectural',
       version: body.revision ?? 0,
       // A new sheet is dated today unless the title block says otherwise.
-      revision_date: revisionDateValue(body.revision_date ?? body.revisionDate, { defaultToday: true }),
+      revision_date: revisionDateValue(body.revision_date ?? body.revisionDate, { defaultToday: true, timeZone: (await requestDay(req.headers, db, user.tenantId, 'drawings/create')).zone }),
       status: body.status || 'current',
       url: body.url || '',
       notes: body.notes || '',

@@ -148,6 +148,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       bucket: BUCKET,
       sources,
       takeoffName: row.name ?? null,
+      headers: req.headers,
     });
 
     /* Page count and thumbnail from the stored bytes. Both are recorded on the

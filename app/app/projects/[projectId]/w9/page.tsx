@@ -10,6 +10,7 @@ import {
   goldButtonStyle, ghostButtonStyle,
 } from '@/components/ui/premium';
 import { Users, CheckCircle, Clock, XCircle, FileText, PaperPlaneTilt, Plus, SealCheck } from '@phosphor-icons/react';
+import { localDay } from '@/lib/calendar-day';
 
 interface W9Sub {
   id: string;
@@ -190,7 +191,7 @@ export default function W9Page() {
         body: JSON.stringify({ projectId, subId, vendorName: subName, vendorEmail: subEmail }),
       });
       if (!res.ok) throw new Error('request failed');
-      setSubs(prev => prev.map(s => s.id === subId ? { ...s, w9_status: 'pending', requested_date: new Date().toISOString().split('T')[0] } : s));
+      setSubs(prev => prev.map(s => s.id === subId ? { ...s, w9_status: 'pending', requested_date: localDay() } : s));
       setToast(`W-9 request sent to ${subName}.`);
     } catch {
       setToast(`Could not send the W-9 request to ${subName}. Please try again.`);

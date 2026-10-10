@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { createServerClient } from '@/lib/supabase-server';
+import { addDays, requestDay } from '@/lib/time-zone';
 
 /**
  * Work Routing Engine — the "My Work" hub feed.
@@ -96,10 +97,11 @@ export async function GET(req: NextRequest) {
   const t = g.user.tenantId;
   const uid = g.user.id;
   const email = g.user.email || '';
-  const today = new Date().toISOString().split('T')[0];
 
   try {
     const db = createServerClient() as any;
+    // Overdue / due today on the person's day (device, else company zone) — not the server's UTC day.
+    const { today } = await requestDay(req.headers, db, t, 'my-work');
 
     /* 0) SALES FOLLOW-UPS — deliberately computed BEFORE the assignments check
        below. They hang off a lead, not a project, so a salesperson who holds no
@@ -121,7 +123,7 @@ export async function GET(req: NextRequest) {
 
     /* Horizon: two weeks. The hub is a queue, not an archive — a call booked for
        March is not work you can do today, and listing it only buries what is. */
-    const horizon = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0];
+    const horizon = addDays(today, 14);
 
     const followUps: FollowUp[] = leadRows
       .map((r: any) => {

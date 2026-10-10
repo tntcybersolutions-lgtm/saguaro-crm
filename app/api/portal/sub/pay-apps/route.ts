@@ -5,6 +5,7 @@ import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
 import { notOnRoster, subRecordScope } from '@/lib/sub-portal-scope';
 import { LOCAL_DAY_HEADER, isPastDay, plausibleToday } from '@/lib/calendar-day';
+import { requestDay } from '@/lib/time-zone';
 import { createNotification } from '@/lib/notifications';
 
 async function authenticateSubPortal(req: NextRequest) {
@@ -99,7 +100,7 @@ export async function POST(req: NextRequest) {
         .eq('tenant_id', scope.tenantId)
         .eq('sub_id', scope.subId);
       if (cdocsErr) throw cdocsErr;
-      const today = plausibleToday(req.headers.get(LOCAL_DAY_HEADER));
+      const today = plausibleToday(req.headers.get(LOCAL_DAY_HEADER), (await requestDay(req.headers, db, scope.tenantId, 'portal/sub/pay-apps')).zone);
       const ok = (type: string) => (cdocs || []).some((d: { doc_type: string; expiry_date: string | null; status: string | null }) =>
         d.doc_type === type && d.status !== 'rejected' && d.status !== 'expired' &&
         (!d.expiry_date || !isPastDay(d.expiry_date, today)));

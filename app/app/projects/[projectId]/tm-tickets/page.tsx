@@ -44,6 +44,7 @@ import {
   FileCsv, FileXls, FilePdf, HardHat, Package, Wrench, Signature, Trash, WarningCircle, ArrowClockwise,
 } from '@phosphor-icons/react';
 import { layout } from '@/lib/design-tokens';
+import { localDay } from '@/lib/calendar-day';
 
 // Legacy vocab: old rows carry 'disputed' — displayed as rejected everywhere.
 const STATUS_ORDER = ['draft', 'submitted', 'approved', 'rejected', 'billed'] as const;
@@ -274,7 +275,7 @@ export default function TmTicketsPage() {
   const detailRef = useRef<HTMLDivElement>(null);
 
   // ── Composer state ──────────────────────────────────────────────────────
-  const [fDate, setFDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [fDate, setFDate] = useState(() => localDay());
   const [fDesc, setFDesc] = useState('');
   const [fRef, setFRef] = useState('');
   const [fNotes, setFNotes] = useState('');
@@ -287,7 +288,7 @@ export default function TmTicketsPage() {
   const [ownerSig, setOwnerSig] = useState('');
 
   const resetForm = () => {
-    setFDate(new Date().toISOString().slice(0, 10));
+    setFDate(localDay());
     setFDesc(''); setFRef(''); setFNotes('');
     setFLabor([{ id: uid(), worker: '', trade: DEFAULT_TRADE, regHours: '', otHours: '', rate: '' }]);
     setFMaterials([{ id: uid(), description: '', qty: '', unit: 'EA', unitCost: '' }]);

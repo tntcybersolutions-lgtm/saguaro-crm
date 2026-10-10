@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { onInsuranceExpiring } from '@/lib/triggers';
 import { apiError } from '@/lib/api-error';
+import { addDays, companyDayLookup, companyTimeZones } from '@/lib/time-zone';
+import { daysOnEarth, daysUntilDay } from '@/lib/calendar-day';
 
 export async function GET(req: NextRequest) {
   // Vercel cron auth
@@ -12,22 +14,31 @@ export async function GET(req: NextRequest) {
 
   try {
     const db = createServerClient();
-    const today = new Date();
-    const in30 = new Date(today.getTime() + 30 * 86400000).toISOString().split('T')[0];
+    const now = new Date();
+    /* "Expires in N days" counts from each company's own day (tenants.time_zone;
+       the UTC day, logged, when a company has none) — a date-only expiry is good
+       through the end of its day. One read covers every company (earliest day
+       on Earth through 30 days past the latest), then each certificate is
+       decided against its own company's day. */
+    const earth = daysOnEarth(now);
 
     /* The error used to be dropped here: a failed read looked like "no
        certificates expiring" and the run reported success with nothing sent. */
     const { data: certs, error } = await db
       .from('insurance_certificates')
-      .select('id, expiry_date')
+      .select('id, tenant_id, expiry_date')
       .eq('status', 'active')
-      .lte('expiry_date', in30)
-      .gte('expiry_date', today.toISOString().split('T')[0]);
+      .lte('expiry_date', addDays(earth.latest, 30))
+      .gte('expiry_date', earth.earliest);
     if (error) throw error;
+
+    const zones = await companyTimeZones(db, ((certs || []) as { tenant_id: string }[]).map((c) => c.tenant_id));
+    const todayFor = companyDayLookup(zones, 'cron/insurance-check', now);
 
     let processed = 0;
     for (const cert of (certs || []) as any[]) {
-      const days = Math.ceil((new Date(cert.expiry_date).getTime() - today.getTime()) / 86400000);
+      const days = daysUntilDay(cert.expiry_date, todayFor(cert.tenant_id));
+      if (days === null || days < 0 || days > 30) continue;
       await onInsuranceExpiring(cert.id, days);
       processed++;
     }

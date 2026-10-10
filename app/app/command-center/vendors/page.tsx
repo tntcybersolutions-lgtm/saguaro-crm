@@ -6,8 +6,9 @@ import { computeLongLead, num, type Severity } from '@/lib/franchise';
 import { C, font, fmtDate, fmtMoneyShort, useFranchiseGate, GateLoading, SevBadge } from '@/components/franchise/kit';
 import { PremiumSurface, ModuleHero, StatStrip, SectionCard, PremiumEmpty } from '@/components/ui/premium';
 import { Truck, Wrench, Package } from '@phosphor-icons/react';
+import { localDay } from '@/lib/calendar-day';
 
-const todayMs = () => Date.parse(new Date().toISOString().slice(0, 10));
+const todayMs = () => Date.parse(localDay()); // This device's day — toISOString() is the UTC day, tomorrow from 7 PM on in Iowa.
 const bestDate = (it: any) => it.expected_delivery_date || it.delivery_appointment || it.needed_by_date || null;
 const daysOut = (d: any) => { if (!d) return null; const t = Date.parse(String(d)); return isNaN(t) ? null : Math.round((t - todayMs()) / 86400000); };
 const isInstall = (desc: string) => /full-?swing|simulat|launch monitor|projector|\bav\b|screen|turf|signage|hvac|rtu|switchgear|elevator/i.test(String(desc || ''));

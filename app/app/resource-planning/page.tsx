@@ -12,6 +12,7 @@ import { UsersThree, ClipboardText, UserGear, Warning, Gauge, Scales, Plus, Down
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
+import { localDay, toDay } from '@/lib/calendar-day';
 
 const GOLD='var(--brand-primary)',BG = 'var(--bg-base)',RAISED = 'var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',TEXT='var(--text-primary)',DIM='var(--text-secondary)',GREEN='var(--success)',RED='var(--danger)',AMBER ='var(--warning)',BLUE='var(--brand-primary)',PURPLE='var(--warning)';
 
@@ -75,14 +76,16 @@ function ModalOverlay({ children, onClose }: { children: React.ReactNode; onClos
 /* ===== UTILITY FUNCTIONS ===== */
 function weeksBetween(a: string, b: string) { return Math.max(1, Math.ceil((new Date(b).getTime() - new Date(a).getTime()) / (7 * 864e5))); }
 function daysBetween(a: string, b: string) { return Math.max(1, Math.ceil((new Date(b).getTime() - new Date(a).getTime()) / 864e5)); }
-function fmtDate(d: string) { if (!d) return ''; const p = new Date(d); return `${p.getMonth() + 1}/${p.getDate()}/${p.getFullYear()}`; }
+/** 'YYYY-MM-DD' → M/D/YYYY, read as the calendar day it is (new Date(ymd) is UTC midnight — the evening before in the US). */
+function fmtDate(d: string) { const day = toDay(d); if (!day) return ''; const [y, m, dd] = day.split('-').map(Number); return `${m}/${dd}/${y}`; }
 function fmtMoney(n: number) { return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function mondayOf(d: Date) { const r = new Date(d); r.setDate(r.getDate() - ((r.getDay() + 6) % 7)); r.setHours(0, 0, 0, 0); return r; }
 function addWeeks(d: Date, n: number) { const r = new Date(d); r.setDate(r.getDate() + n * 7); return r; }
 function addDays(d: Date, n: number) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
-function isoDate(d: Date) { return d.toISOString().slice(0, 10); }
-/** Today on the user's calendar (toISOString is UTC — after 5 pm in Arizona it is already tomorrow). */
-function localToday() { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
+/** The calendar day of a local Date on this device (toISOString is UTC — after 7 PM in Iowa it is already tomorrow). */
+function isoDate(d: Date) { return localDay(d); }
+/** Today on the user's calendar. */
+function localToday() { return localDay(); }
 function weeksRange(startWeek: Date, count: number) { return Array.from({ length: count }, (_, i) => addWeeks(startWeek, i)); }
 
 /* ===== MAIN COMPONENT ===== */
@@ -173,7 +176,7 @@ export default function ResourcePlanningPage() {
     if (filterDateStart) list = list.filter(a => a.end_date >= filterDateStart);
     if (filterDateEnd) list = list.filter(a => a.start_date <= filterDateEnd);
     if (filterAvail) {
-      const now = new Date().toISOString().slice(0, 10);
+      const now = localToday();
       const busyNames = new Set(list.filter(a => a.start_date <= now && a.end_date >= now && a.status !== 'released').map(a => a.person_name));
       const allNames = new Set(assignments.map(a => a.person_name));
       const freeNames = [...allNames].filter(n => !busyNames.has(n));
@@ -215,7 +218,7 @@ export default function ResourcePlanningPage() {
   const timelineStart = useMemo(() => {
     if (!assignments.length) return mondayOf(new Date());
     const earliest = assignments.reduce((m, a) => a.start_date < m ? a.start_date : m, assignments[0].start_date);
-    return mondayOf(new Date(earliest));
+    return mondayOf(new Date(`${String(earliest).slice(0, 10)}T00:00:00`)); // local midnight of that day, not UTC's
   }, [assignments]);
   const TIMELINE_WEEKS = 20;
   const weeks = useMemo(() => weeksRange(timelineStart, TIMELINE_WEEKS), [timelineStart]);
