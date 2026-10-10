@@ -271,9 +271,6 @@
   "route": "/app/my-work",
   "status": 200,
   "loadErrors": [
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0002-4d00-9000-5a6775a0de00?_rsc=1tfck due to access control checks.",
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00?_rsc=1tfck due to access control checks.",
-   "/www.saguarocontrol.net/app/projects/new?_rsc=1tfck due to access control checks.",
    "/www.saguarocontrol.net/app?_rsc=1tfck due to access control checks.",
    "/www.saguarocontrol.net/app/my-work?_rsc=1tfck due to access control checks.",
    "/www.saguarocontrol.net/app/time?_rsc=1tfck due to access control checks."
@@ -283,16 +280,13 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 2,
-  "ok": 2
+  "tapped": 1,
+  "ok": 1
  },
  {
   "route": "/app/projects",
   "status": 200,
-  "loadErrors": [
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/rfis?_rsc=ziv81 due to access control checks.",
-   "/www.saguarocontrol.net/app/approval-workflows?_rsc=ziv81 due to access control checks."
-  ],
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
@@ -321,11 +315,9 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "MONEY EVENTS → 0 Pay apps + change orders"
-  ],
-  "tapped": 20,
-  "ok": 1
+  "notTapped": [],
+  "tapped": 4,
+  "ok": 3
  },
  {
   "route": "/app/documents",
@@ -336,12 +328,10 @@
   "covered": [],
   "erroring": [],
   "notTapped": [
-   "Desert Vista Medical Plaza: 4 paid pay apps with no lien waiver on fil",
-   "Camelback Fire Station 34: 2 paid pay apps with no lien waiver on file",
    "Pay Applications"
   ],
-  "tapped": 65,
-  "ok": 5
+  "tapped": 10,
+  "ok": 4
  },
  {
   "route": "/app/daily-logs",
@@ -352,8 +342,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 14,
-  "ok": 1
+  "tapped": 3,
+  "ok": 2
  },
  {
   "route": "/app/schedule",
@@ -361,14 +351,17 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [
-   "COMPLETE 3 27% of the plan",
-   "OVERDUE 3 Past their end date, not complete"
+  "covered": [
+   {
+    "label": "Sort by",
+    "why": "locator.click: Timeout 2500ms exceeded.",
+    "html": "<select class=\"k-sortbar-select\" aria-label=\"Sort by\" data-walk=\"5\"><option value=\"\">Default order</option><option value=\"name\">Task</option><option value=\"trad"
+   }
   ],
-  "tapped": 31,
-  "ok": 7
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 3,
+  "ok": 2
  },
  {
   "route": "/app/compliance",
@@ -379,7 +372,7 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 10,
+  "tapped": 6,
   "ok": 3
  },
  {
@@ -394,7 +387,7 @@
    "Upload Blueprint"
   ],
   "tapped": 4,
-  "ok": 4
+  "ok": 3
  },
  {
   "route": "/app/reports",
@@ -402,30 +395,14 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "Change Orders",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<button type=\"button\" class=\"rpChip\" data-walk=\"15\">Change Orders</button>"
-   },
-   {
-    "label": "Job Cost",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<button type=\"button\" class=\"rpChip\" data-walk=\"17\">Job Cost</button>"
-   },
-   {
-    "label": "Punch List",
-    "why": "<button data-walk=\"2\">…</button> from <div class=\"topbar-area\">…</div> subtree intercepts pointer events",
-    "html": "<button type=\"button\" class=\"rpChip\" data-walk=\"19\">Punch List</button>"
-   }
-  ],
+  "covered": [],
   "erroring": [],
   "notTapped": [
    "Pay App Status",
    "Pay App Status Pay applications with amounts and status Answers: How m"
   ],
-  "tapped": 28,
-  "ok": 13
+  "tapped": 27,
+  "ok": 0
  },
  {
   "route": "/app/people",
@@ -435,16 +412,9 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "TEAM MEMBERS 1 Platform sign-ins",
-   "ROLE ASSIGNMENTS 0 No roles assigned yet — start in Users",
-   "+ Invite User",
-   "+ Assign Role",
-   "Assign Role",
-   "Reset Password"
-  ],
-  "tapped": 12,
-  "ok": 5
+  "notTapped": [],
+  "tapped": 2,
+  "ok": 1
  },
  {
   "route": "/app/subs",
@@ -456,7 +426,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 2,
-  "ok": 2
+  "ok": 1
  },
  {
   "route": "/app/customers",
@@ -479,8 +449,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 10,
-  "ok": 6
+  "tapped": 8,
+  "ok": 4
  },
  {
   "route": "/app/sales",
@@ -492,7 +462,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 8,
-  "ok": 8
+  "ok": 6
  },
  {
   "route": "/app/bids",
@@ -530,8 +500,8 @@
    }
   ],
   "notTapped": [],
-  "tapped": 12,
-  "ok": 12
+  "tapped": 6,
+  "ok": 6
  },
  {
   "route": "/app/billing/payapp",
@@ -553,11 +523,57 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [],
+  "covered": [
+   {
+    "label": "Refresh",
+    "why": "<div class=\"ms-scrim\" aria-hidden=\"true\"></div> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
+    "html": "<button style=\"display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 14px;border-radius:10px;cursor:pointer;background:rgba(255,255,"
+   },
+   {
+    "label": "SELECT",
+    "why": "<div class=\"ms-scrim\" aria-hidden=\"true\"></div> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
+    "html": "<select style=\"background:var(--bg-base);border:1px solid rgba(255,255,255,0.09);border-radius:6px;color:var(--text-secondary);padding:6px 8px;font-size:12.5px;"
+   },
+   {
+    "label": "History",
+    "why": "<div class=\"ms-scrim\" aria-hidden=\"true\"></div> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
+    "html": "<button style=\"display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 14px;border-radius:10px;cursor:pointer;background:rgba(255,255,"
+   },
+   {
+    "label": "REVISED BUDGET → $0.00",
+    "why": "<div class=\"ms-scrim\" aria-hidden=\"true\"></div> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
+    "html": "<a href=\"/app/billing/cost-control\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"9\"><div class=\"pmHover\" style=\"position:relative;overflow:"
+   },
+   {
+    "label": "COMMITTED → $0.00",
+    "why": "<div class=\"ms-scrim\" aria-hidden=\"true\"></div> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
+    "html": "<a href=\"/app/billing/cost-control\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"10\"><div class=\"pmHover\" style=\"position:relative;overflow"
+   },
+   {
+    "label": "SPENT TO DATE → $0.00",
+    "why": "<div class=\"ms-scrim\" aria-hidden=\"true\"></div> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
+    "html": "<a href=\"/app/billing/cost-control\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"11\"><div class=\"pmHover\" style=\"position:relative;overflow"
+   },
+   {
+    "label": "PROJECTED FINAL → $0.00",
+    "why": "<div class=\"ms-scrim\" aria-hidden=\"true\"></div> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
+    "html": "<a href=\"/app/billing/cost-control\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"12\"><div class=\"pmHover\" style=\"position:relative;overflow"
+   },
+   {
+    "label": "VARIANCE → $0.00 Under budget",
+    "why": "<div class=\"ms-scrim\" aria-hidden=\"true\"></div> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
+    "html": "<a href=\"/app/billing/cost-control\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"13\"><div class=\"pmHover\" style=\"position:relative;overflow"
+   },
+   {
+    "label": "Add Cost Code",
+    "why": "<div class=\"ms-scrim\" aria-hidden=\"true\"></div> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
+    "html": "<button style=\"display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 14px;border-radius:10px;cursor:pointer;background:rgba(255,255,"
+   }
+  ],
   "erroring": [],
   "notTapped": [],
-  "tapped": 9,
-  "ok": 3
+  "tapped": 10,
+  "ok": 0
  },
  {
   "route": "/app/invoicing",
@@ -565,22 +581,11 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "Sort by",
-    "why": "<button type=\"button\" role=\"option\" class=\"ms-opt\" aria-selected=\"false\">…</button> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<select class=\"k-sortbar-select\" aria-label=\"Sort by\" data-walk=\"5\"><option value=\"\">Default order</option><option value=\"invoice_number\">Invoice #</option><opt"
-   },
-   {
-    "label": "Descending — switch to ascending",
-    "why": "<button type=\"button\" role=\"option\" class=\"ms-opt\" aria-selected=\"false\">…</button> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button type=\"button\" class=\"k-sortbar-dir\" aria-label=\"Descending — switch to ascending\" data-walk=\"6\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" heigh"
-   }
-  ],
+  "covered": [],
   "erroring": [],
   "notTapped": [],
   "tapped": 3,
-  "ok": 1
+  "ok": 2
  },
  {
   "route": "/app/catalog",
@@ -588,361 +593,10 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "Filter by vertical",
-    "why": "<button type=\"button\" role=\"option\" class=\"ms-opt\" aria-selected=\"false\">…</button> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<select style=\"padding: 8px 10px; background: var(--bg-base); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 9px; color: var(--text-primary); font-"
-   },
-   {
-    "label": "SELECT",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<select style=\"padding:8px 10px;background:var(--bg-base);border:1px solid rgba(255,255,255,0.12);border-radius:9px;color:var(--text-primary);font-size:12.5px;o"
-   },
-   {
-    "label": "How Pricing Works",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn\" style=\"display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 12px;border-radius:12px;cursor:pointer;background"
-   },
-   {
-    "label": "16 Vendor Sites",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button type=\"button\" class=\"pmBtn\" style=\"margin-left: auto; font-size: 10px; font-weight: 800; color: var(--text-secondary); background: none; border: 1px sol"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   },
-   {
-    "label": "Add",
-    "why": "<span class=\"ms-label\">Concrete (12)</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn catAdd\" style=\"display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; background: linear-gradient(180deg,var(--brand-prima"
-   }
-  ],
+  "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 70,
+  "tapped": 2,
   "ok": 0
  },
  {
@@ -954,19 +608,14 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 7,
-  "ok": 1
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/command-center",
   "status": 200,
   "loadErrors": [],
-  "apiErrors": [
-   "GET /api/franchise/risks → 403",
-   "GET /api/franchise/long-lead → 403",
-   "GET /api/franchise/milestones → 403",
-   "GET /api/franchise/escalations → 403"
-  ],
+  "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
@@ -992,9 +641,7 @@
   "route": "/app/command-center/directory",
   "status": 200,
   "loadErrors": [],
-  "apiErrors": [
-   "GET /api/franchise/stakeholders → 403"
-  ],
+  "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
@@ -1018,10 +665,7 @@
   "route": "/app/command-center/budget",
   "status": 200,
   "loadErrors": [],
-  "apiErrors": [
-   "GET /api/franchise/change-orders → 403",
-   "GET /api/franchise/budget → 403"
-  ],
+  "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
@@ -1045,9 +689,7 @@
   "route": "/app/command-center/escalations",
   "status": 200,
   "loadErrors": [],
-  "apiErrors": [
-   "GET /api/franchise/escalations → 403"
-  ],
+  "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
@@ -1059,13 +701,7 @@
   "route": "/app/command-center/kpis",
   "status": 200,
   "loadErrors": [],
-  "apiErrors": [
-   "GET /api/franchise/op-kpis → 403",
-   "GET /api/franchise/milestones → 403",
-   "GET /api/franchise/risks → 403",
-   "GET /api/franchise/escalations → 403",
-   "GET /api/franchise/long-lead → 403"
-  ],
+  "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
@@ -1077,9 +713,7 @@
   "route": "/app/command-center/long-lead",
   "status": 200,
   "loadErrors": [],
-  "apiErrors": [
-   "GET /api/franchise/long-lead → 403"
-  ],
+  "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
@@ -1091,9 +725,7 @@
   "route": "/app/command-center/milestones",
   "status": 200,
   "loadErrors": [],
-  "apiErrors": [
-   "GET /api/franchise/milestones → 403"
-  ],
+  "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
@@ -1119,12 +751,7 @@
   "route": "/app/command-center/owner-updates",
   "status": 200,
   "loadErrors": [],
-  "apiErrors": [
-   "GET /api/franchise/milestones → 403",
-   "GET /api/franchise/long-lead → 403",
-   "GET /api/franchise/escalations → 403",
-   "GET /api/franchise/risks → 403"
-  ],
+  "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
@@ -1136,9 +763,7 @@
   "route": "/app/command-center/portals",
   "status": 200,
   "loadErrors": [],
-  "apiErrors": [
-   "GET /api/franchise/portals → 403"
-  ],
+  "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
@@ -1150,9 +775,7 @@
   "route": "/app/command-center/pre-site",
   "status": 200,
   "loadErrors": [],
-  "apiErrors": [
-   "GET /api/franchise/pre-site → 403"
-  ],
+  "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
@@ -1164,9 +787,7 @@
   "route": "/app/command-center/qc",
   "status": 200,
   "loadErrors": [],
-  "apiErrors": [
-   "GET /api/franchise/qc → 403"
-  ],
+  "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
@@ -1177,130 +798,26 @@
  {
   "route": "/app/command-center/risks",
   "status": 200,
-  "loadErrors": [
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/proposal?_rsc=o1psl due to access control checks.",
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/bid-packages?_rsc=o1psl due to access control checks.",
-   "/www.saguarocontrol.net/api/team/users due to access control checks.",
-   "/www.saguarocontrol.net/api/customers/profiles?limit=500 due to access control checks."
-  ],
-  "apiErrors": [
-   "GET /api/franchise/risks → 403"
-  ],
+  "loadErrors": [],
+  "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "5 RFIs past response date · Desert Vista Medical Plaza",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a class=\"atkItem\" data-tone=\"red\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/rfis\" data-walk=\"12\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\""
-   },
-   {
-    "label": "5 punch items overdue · Desert Vista Medical Plaza",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a class=\"atkItem\" data-tone=\"red\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/punch-list\" data-walk=\"13\"><svg xmlns=\"http://www.w3.org/2000/svg\" w"
-   },
-   {
-    "label": "4 inspections with no result recorded · Desert Vista Medical Plaza",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a class=\"atkItem\" data-tone=\"red\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/inspections\" data-walk=\"14\"><svg xmlns=\"http://www.w3.org/2000/svg\" "
-   },
-   {
-    "label": "4 to-dos overdue · Desert Vista Medical Plaza",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a class=\"atkItem\" data-tone=\"red\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/todos\" data-walk=\"15\"><svg xmlns=\"http://www.w3.org/2000/svg\" width="
-   },
-   {
-    "label": "1 RFI past response date · Camelback Fire Station 34",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a class=\"atkItem\" data-tone=\"red\" href=\"/app/projects/d3e0a111-0002-4d00-9000-5a6775a0de00/rfis\" data-walk=\"16\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\""
-   },
-   {
-    "label": "1 punch item overdue · Camelback Fire Station 34",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a class=\"atkItem\" data-tone=\"red\" href=\"/app/projects/d3e0a111-0002-4d00-9000-5a6775a0de00/punch-list\" data-walk=\"17\"><svg xmlns=\"http://www.w3.org/2000/svg\" w"
-   },
-   {
-    "label": "5 change orders waiting for your decision · Desert Vista Medical Plaza",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a class=\"atkItem\" data-tone=\"yellow\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/change-orders\" data-walk=\"18\"><svg xmlns=\"http://www.w3.org/2000/"
-   },
-   {
-    "label": "4 invoices waiting for your decision · Desert Vista Medical Plaza",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a class=\"atkItem\" data-tone=\"yellow\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/invoices\" data-walk=\"19\"><svg xmlns=\"http://www.w3.org/2000/svg\" "
-   }
-  ],
+  "covered": [],
   "erroring": [],
-  "notTapped": [
-   "1 pay app waiting for your decision · Desert Vista Medical Plaza",
-   "Mark done: Drywall corner bead damaged",
-   "4 days late confirm roof warranty registration Project task"
-  ],
-  "tapped": 33,
-  "ok": 18
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/command-center/rollout",
   "status": 200,
-  "loadErrors": [
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/takeoff?_rsc=o1psl due to access control checks.",
-   "/www.saguarocontrol.net/api/team/users due to access control checks.",
-   "/www.saguarocontrol.net/api/customers/profiles?limit=500 due to access control checks.",
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0002-4d00-9000-5a6775a0de00?_rsc=1tfck due to access control checks.",
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00?_rsc=1tfck due to access control checks.",
-   "/www.saguarocontrol.net/app/projects/new?_rsc=1tfck due to access control checks."
-  ],
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "5 RFIs past response date · Desert Vista Medical Plaza",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a class=\"atkItem\" data-tone=\"red\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/rfis\" data-walk=\"12\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\""
-   },
-   {
-    "label": "5 punch items overdue · Desert Vista Medical Plaza",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a class=\"atkItem\" data-tone=\"red\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/punch-list\" data-walk=\"13\"><svg xmlns=\"http://www.w3.org/2000/svg\" w"
-   },
-   {
-    "label": "4 inspections with no result recorded · Desert Vista Medical Plaza",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a class=\"atkItem\" data-tone=\"red\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/inspections\" data-walk=\"14\"><svg xmlns=\"http://www.w3.org/2000/svg\" "
-   },
-   {
-    "label": "4 to-dos overdue · Desert Vista Medical Plaza",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a class=\"atkItem\" data-tone=\"red\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/todos\" data-walk=\"15\"><svg xmlns=\"http://www.w3.org/2000/svg\" width="
-   },
-   {
-    "label": "1 RFI past response date · Camelback Fire Station 34",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a class=\"atkItem\" data-tone=\"red\" href=\"/app/projects/d3e0a111-0002-4d00-9000-5a6775a0de00/rfis\" data-walk=\"16\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\""
-   },
-   {
-    "label": "1 punch item overdue · Camelback Fire Station 34",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a class=\"atkItem\" data-tone=\"red\" href=\"/app/projects/d3e0a111-0002-4d00-9000-5a6775a0de00/punch-list\" data-walk=\"17\"><svg xmlns=\"http://www.w3.org/2000/svg\" w"
-   },
-   {
-    "label": "5 change orders waiting for your decision · Desert Vista Medical Plaza",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a class=\"atkItem\" data-tone=\"yellow\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/change-orders\" data-walk=\"18\"><svg xmlns=\"http://www.w3.org/2000/"
-   },
-   {
-    "label": "4 invoices waiting for your decision · Desert Vista Medical Plaza",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a class=\"atkItem\" data-tone=\"yellow\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/invoices\" data-walk=\"19\"><svg xmlns=\"http://www.w3.org/2000/svg\" "
-   }
-  ],
+  "covered": [],
   "erroring": [],
-  "notTapped": [
-   "1 pay app waiting for your decision · Desert Vista Medical Plaza",
-   "Mark done: Drywall corner bead damaged",
-   "4 days late confirm roof warranty registration Project task"
-  ],
-  "tapped": 33,
-  "ok": 18
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/command-center/vendors",
@@ -1318,9 +835,7 @@
   "route": "/app/command-center/verify",
   "status": 200,
   "loadErrors": [],
-  "apiErrors": [
-   "GET /api/franchise/verifications → 403"
-  ],
+  "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
@@ -1333,21 +848,14 @@
   "status": 200,
   "loadErrors": [],
   "apiErrors": [],
-  "dead": [
-   {
-    "label": "DOCUMENTS 0 0 revisions on file",
-    "tag": "button",
-    "href": null,
-    "html": "<button type=\"button\" class=\"k-stat\" data-tone=\"default\" data-walk=\"6\"><span class=\"k-stat-top\"><span class=\"k-stat-label\">Documents</span></span><span class=\"k"
-   }
-  ],
+  "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [
    "Bulk Upload"
   ],
-  "tapped": 7,
-  "ok": 6
+  "tapped": 3,
+  "ok": 0
  },
  {
   "route": "/app/fleet",
@@ -1360,11 +868,6 @@
     "label": "Add Asset",
     "why": "<p>…</p> from <div>…</div> subtree intercepts pointer events",
     "html": "<button data-tour=\"add-asset\" style=\"display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;border-radius:12px;border:none;curs"
-   },
-   {
-    "label": "ASSETS → 0 0 vehicles · 0 equipment",
-    "why": "<code>https://www.saguarocontrol.net/api/fleet/ingest</code> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/fleet\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"6\"><div class=\"pmHover\" style=\"position:relative;overflow:hidden;backgrou"
    },
    {
     "label": "MAINT. OVERDUE → 0 All caught up",
@@ -1400,57 +903,19 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 9,
-  "ok": 1
+  "ok": 0
  },
  {
   "route": "/app/intelligence",
   "status": 200,
-  "loadErrors": [
-   "/www.saguarocontrol.net/api/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/inspections due to access control checks.",
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/overview?_rsc=o1psl due to access control checks.",
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/takeoff?_rsc=o1psl due to access control checks."
-  ],
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "Dismiss suggestion",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<button type=\"button\" class=\"sgTickerX\" aria-label=\"Dismiss suggestion\" title=\"Dismiss — won't resurface for 30 days\" style=\"background: none; border: medium; p"
-   },
-   {
-    "label": "Dismiss suggestion",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<button type=\"button\" class=\"sgTickerX\" aria-label=\"Dismiss suggestion\" title=\"Dismiss — won't resurface for 30 days\" style=\"background: none; border: medium; p"
-   },
-   {
-    "label": "Daily Logs Desert Vista Medical Plaza has gone 10 workdays without a d",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a title=\"Last log was filed 14 days ago. Daily logs are the record that wins delay and change-order disputes — a gap here is documentation you can't get back.\""
-   },
-   {
-    "label": "Dismiss suggestion",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<button type=\"button\" class=\"sgTickerX\" aria-label=\"Dismiss suggestion\" title=\"Dismiss — won't resurface for 30 days\" style=\"background: none; border: medium; p"
-   },
-   {
-    "label": "Daily Logs Camelback Fire Station 34 has gone 11 workdays without a da",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a title=\"Last log was filed 16 days ago. Daily logs are the record that wins delay and change-order disputes — a gap here is documentation you can't get back.\""
-   },
-   {
-    "label": "Dismiss suggestion",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<button type=\"button\" class=\"sgTickerX\" aria-label=\"Dismiss suggestion\" title=\"Dismiss — won't resurface for 30 days\" style=\"background: none; border: medium; p"
-   }
-  ],
+  "covered": [],
   "erroring": [],
-  "notTapped": [
-   "Pay Apps Pay App #5 on Desert Vista Medical Plaza was approved 15 days",
-   "Pay Apps Pay App #3 on Camelback Fire Station 34 was approved 15 days "
-  ],
-  "tapped": 10,
-  "ok": 4
+  "notTapped": [],
+  "tapped": 2,
+  "ok": 0
  },
  {
   "route": "/app/portals",
@@ -1473,69 +938,13 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "Dashboard",
-    "why": "<button>Certificate of Insurance (COI)</button> from <div>…</div> subtree intercepts pointer events",
-    "html": "<button style=\"padding:10px 24px;background:none;border:none;color:var(--brand-primary);font-weight:700;font-size:14px;cursor:pointer;border-bottom:2px solid va"
-   },
-   {
-    "label": "Submissions",
-    "why": "<button>Certificate of Insurance (COI)</button> from <div>…</div> subtree intercepts pointer events",
-    "html": "<button style=\"padding:10px 24px;background:none;border:none;color:var(--text-secondary);font-weight:700;font-size:14px;cursor:pointer;border-bottom:2px solid t"
-   },
-   {
-    "label": "Templates",
-    "why": "<button>Certificate of Insurance (COI)</button> from <div>…</div> subtree intercepts pointer events",
-    "html": "<button style=\"padding:10px 24px;background:none;border:none;color:var(--text-secondary);font-weight:700;font-size:14px;cursor:pointer;border-bottom:2px solid t"
-   },
-   {
-    "label": "Invites",
-    "why": "<div>…</div> from <div>…</div> subtree intercepts pointer events",
-    "html": "<button style=\"padding:10px 24px;background:none;border:none;color:var(--text-secondary);font-weight:700;font-size:14px;cursor:pointer;border-bottom:2px solid t"
-   },
-   {
-    "label": "TOTAL SUBMISSIONS → 0",
-    "why": "<button>Certificate of Insurance (COI)</button> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/prequalification\" style=\"text-decoration: none; display: block; height: 100%;\" data-walk=\"10\"><div class=\"pmHover\" style=\"position: relative; over"
-   },
-   {
-    "label": "PENDING → 0",
-    "why": "<button>Certificate of Insurance (COI)</button> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/prequalification\" style=\"text-decoration: none; display: block; height: 100%;\" data-walk=\"11\"><div class=\"pmHover\" style=\"position: relative; over"
-   },
-   {
-    "label": "UNDER REVIEW → 0",
-    "why": "<button>Certificate of Insurance (COI)</button> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/prequalification\" style=\"text-decoration: none; display: block; height: 100%;\" data-walk=\"12\"><div class=\"pmHover\" style=\"position: relative; over"
-   },
-   {
-    "label": "APPROVED → 0",
-    "why": "<button>Certificate of Insurance (COI)</button> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/prequalification\" style=\"text-decoration: none; display: block; height: 100%;\" data-walk=\"13\"><div class=\"pmHover\" style=\"position: relative; over"
-   },
-   {
-    "label": "REJECTED → 0",
-    "why": "<button>Certificate of Insurance (COI)</button> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/prequalification\" style=\"text-decoration: none; display: block; height: 100%;\" data-walk=\"14\"><div class=\"pmHover\" style=\"position: relative; over"
-   },
-   {
-    "label": "AVG SCORE → 0%",
-    "why": "<button>Certificate of Insurance (COI)</button> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/prequalification\" style=\"text-decoration: none; display: block; height: 100%;\" data-walk=\"15\"><div class=\"pmHover\" style=\"position: relative; over"
-   },
-   {
-    "label": "EXPIRING SOON → 0",
-    "why": "<button>Certificate of Insurance (COI)</button> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/prequalification\" style=\"text-decoration: none; display: block; height: 100%;\" data-walk=\"16\"><div class=\"pmHover\" style=\"position: relative; over"
-   }
-  ],
+  "covered": [],
   "erroring": [],
   "notTapped": [
    "Send Prequal Form"
   ],
-  "tapped": 12,
-  "ok": 1
+  "tapped": 5,
+  "ok": 0
  },
  {
   "route": "/app/radio",
@@ -1556,6 +965,11 @@
   "apiErrors": [],
   "dead": [],
   "covered": [
+   {
+    "label": "New Assignment",
+    "why": "locator.click: Timeout 2500ms exceeded.",
+    "html": "<button style=\"display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;border-radius:12px;border:none;cursor:pointer;background:"
+   },
    {
     "label": "TOTAL PEOPLE → 0 In workforce",
     "why": "<input readonly value=\"\" aria-expanded=\"false\" aria-haspopup=\"dialog\" placeholder=\"MM/DD/YYYY\"/> from <div>…</div> subtree intercepts pointer events",
@@ -1655,7 +1069,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 22,
-  "ok": 3
+  "ok": 0
  },
  {
   "route": "/app/reviews",
@@ -1678,14 +1092,16 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 8,
-  "ok": 8
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/settings",
   "status": 200,
   "loadErrors": [
-   "/www.saguarocontrol.net/?_rsc=wn2x8 due to access control checks."
+   "/www.saguarocontrol.net/?_rsc=y1ld3 due to access control checks.",
+   "/www.saguarocontrol.net/login?_rsc=y1ld3 due to access control checks.",
+   "/www.saguarocontrol.net/signup?_rsc=y1ld3 due to access control checks."
   ],
   "apiErrors": [],
   "dead": [],
@@ -1700,8 +1116,8 @@
    "Sign Out",
    "Delete account"
   ],
-  "tapped": 17,
-  "ok": 17
+  "tapped": 13,
+  "ok": 13
  },
  {
   "route": "/app/signal-studio",
@@ -1714,8 +1130,8 @@
   "notTapped": [
    "Start Without a Project"
   ],
-  "tapped": 2,
-  "ok": 2
+  "tapped": 3,
+  "ok": 3
  },
  {
   "route": "/app/warranty-claims",
@@ -1739,29 +1155,9 @@
   "dead": [],
   "covered": [
    {
-    "label": "PROJECTS → 2 Searchable right now",
-    "why": "<div>Sage learns how you write from your real messages…</div> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/ask\" class=\"pmStripLink\" style=\"text-decoration: none; display: block; min-width: 0px;\" data-walk=\"6\"><div class=\"pmTile\" style=\"position: relativ"
-   },
-   {
-    "label": "DOC TYPES → 12 RFIs to T&M tickets",
+    "label": "Sage Settings",
     "why": "<div>…</div> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/ask\" class=\"pmStripLink\" style=\"text-decoration: none; display: block; min-width: 0px;\" data-walk=\"7\"><div class=\"pmTile\" style=\"position: relativ"
-   },
-   {
-    "label": "QUESTIONS ASKED → 0 This session",
-    "why": "<div>Sage learns how you write from your real messages…</div> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/ask\" class=\"pmStripLink\" style=\"text-decoration: none; display: block; min-width: 0px;\" data-walk=\"8\"><div class=\"pmTile\" style=\"position: relativ"
-   },
-   {
-    "label": "RECORDS SEARCHED → 0 Across your questions",
-    "why": "<div>…</div> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/ask\" class=\"pmStripLink\" style=\"text-decoration: none; display: block; min-width: 0px;\" data-walk=\"9\"><div class=\"pmTile\" style=\"position: relativ"
-   },
-   {
-    "label": "SOURCES CITED → 0 Every answer grounded",
-    "why": "<div>Sage learns how you write from your real messages…</div> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/ask\" class=\"pmStripLink\" style=\"text-decoration: none; display: block; min-width: 0px;\" data-walk=\"10\"><div class=\"pmTile\" style=\"position: relati"
+    "html": "<button title=\"Sage settings — style profile, automation rules, activity trail, bid brain\" style=\"display:inline-flex;align-items:center;gap:6px;background:var("
    },
    {
     "label": "What tile is specified in the lobby?",
@@ -1791,8 +1187,8 @@
   ],
   "erroring": [],
   "notTapped": [],
-  "tapped": 12,
-  "ok": 2
+  "tapped": 7,
+  "ok": 1
  },
  {
   "route": "/app/projects/:id/overview",
@@ -1835,215 +1231,11 @@
     "label": "Closeout",
     "why": "<div></div> intercepts pointer events",
     "html": "<a class=\"pj-nav-item\" title=\"Finish &amp; hand over\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/closeout\" data-walk=\"11\"><svg xmlns=\"http://www.w"
-   },
-   {
-    "label": "Open Takeoff",
-    "why": "<a data-tour=\"project-nav-takeoff\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/takeoff\">…</a> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"k-btn k-btn-secondary\" data-quick=\"true\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/takeoff\" data-walk=\"12\"><svg xmlns=\"http://www.w3.or"
-   },
-   {
-    "label": "Measure the Drawings",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"k-btn k-btn-primary\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/takeoff\" data-walk=\"13\">Measure the Drawings <svg xmlns=\"http://www.w3.o"
-   },
-   {
-    "label": "All 4 steps",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<button type=\"button\" class=\"pj-next-toggle\" aria-expanded=\"false\" aria-controls=\"pj-next-list\" data-walk=\"14\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14"
-   },
-   {
-    "label": "BID PRICE Not priced No takeoff on this job yet",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"k-stat\" data-tone=\"default\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/takeoff\" data-walk=\"15\"><span class=\"k-stat-top\"><span class=\"k-s"
-   },
-   {
-    "label": "PROPOSAL None yet No proposal sent on this job",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"k-stat\" data-tone=\"default\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/proposal\" data-walk=\"16\"><span class=\"k-stat-top\"><span class=\"k-"
-   },
-   {
-    "label": "BID PACKAGES OUT 1 of 2 2 sub invites sent",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"k-stat\" data-tone=\"warn\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/bid-packages\" data-walk=\"17\"><span class=\"k-stat-top\"><span class=\"k"
-   },
-   {
-    "label": "OPEN RFIS 5 5 past due · respond first",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"k-stat\" data-tone=\"bad\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/rfis\" data-walk=\"18\"><span class=\"k-stat-top\"><span class=\"k-stat-lab"
-   },
-   {
-    "label": "Open Schedule",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"pov-btn pov-btn-ghost pov-qbtn\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/schedule\" data-walk=\"19\">Open Schedule <svg xmlns=\"http://www"
-   },
-   {
-    "label": "Respond",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"pov-btn pov-btn-ghost pov-qbtn\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/rfis\" data-walk=\"20\">Respond <svg xmlns=\"http://www.w3.org/20"
-   },
-   {
-    "label": "Respond",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"pov-btn pov-btn-ghost pov-qbtn\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/rfis\" data-walk=\"21\">Respond <svg xmlns=\"http://www.w3.org/20"
-   },
-   {
-    "label": "Respond",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"pov-btn pov-btn-ghost pov-qbtn\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/rfis\" data-walk=\"22\">Respond <svg xmlns=\"http://www.w3.org/20"
-   },
-   {
-    "label": "Respond",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"pov-btn pov-btn-ghost pov-qbtn\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/rfis\" data-walk=\"23\">Respond <svg xmlns=\"http://www.w3.org/20"
-   },
-   {
-    "label": "Respond",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"pov-btn pov-btn-ghost pov-qbtn\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/rfis\" data-walk=\"24\">Respond <svg xmlns=\"http://www.w3.org/20"
-   },
-   {
-    "label": "Review",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"pov-btn pov-btn-ghost pov-qbtn\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/change-orders\" data-walk=\"25\">Review <svg xmlns=\"http://www.w"
-   },
-   {
-    "label": "Show all 9",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<button type=\"button\" class=\"pov-more\" data-walk=\"26\">Show all 9</button>"
-   },
-   {
-    "label": "Full Schedule",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"pov-seclink\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/schedule\" data-walk=\"27\">Full Schedule <svg xmlns=\"http://www.w3.org/2000/svg\" w"
-   },
-   {
-    "label": "Inspections",
-    "why": "<div></div> intercepts pointer events",
-    "html": "<a class=\"pov-seclink\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/inspections\" data-walk=\"28\">Inspections <svg xmlns=\"http://www.w3.org/2000/svg\" "
-   },
-   {
-    "label": "Task Due roofing installation Not Started",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"pov-srow pov-link\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/schedule\" data-walk=\"29\"><span class=\"pov-skind\">Task Due</span><span clas"
-   },
-   {
-    "label": "Task Due roofing installation Not Started",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"pov-srow pov-link\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/schedule\" data-walk=\"30\"><span class=\"pov-skind\">Task Due</span><span clas"
-   },
-   {
-    "label": "Task Due roofing installation Not Started",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"pov-srow pov-link\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/schedule\" data-walk=\"31\"><span class=\"pov-skind\">Task Due</span><span clas"
-   },
-   {
-    "label": "Task Due roofing installation Not Started",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"pov-srow pov-link\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/schedule\" data-walk=\"32\"><span class=\"pov-skind\">Task Due</span><span clas"
-   },
-   {
-    "label": "Task Due Interior finishes Not Started",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"pov-srow pov-link\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/schedule\" data-walk=\"33\"><span class=\"pov-skind\">Task Due</span><span clas"
-   },
-   {
-    "label": "All Bid Packages",
-    "why": "<div></div> intercepts pointer events",
-    "html": "<a class=\"pov-seclink\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/bid-packages\" data-walk=\"34\">All Bid Packages <svg xmlns=\"http://www.w3.org/2000"
-   },
-   {
-    "label": "Division 08 - Openings",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"pov-tlink\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/bid-packages/fb9d3f01-bafe-462c-890f-51ab107ee842\" data-walk=\"35\">Division 08 - Op"
-   },
-   {
-    "label": "Division 09 — Interior Finishes",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"pov-tlink\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/bid-packages/c7986355-df05-4fbd-8dcc-476907fa01d7\" data-walk=\"36\">Division 09 — In"
-   },
-   {
-    "label": "Copper",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<button type=\"button\" role=\"radio\" aria-checked=\"true\" aria-label=\"Copper\" title=\"Copper\" style=\"width: 28px; height: 28px; border-radius: 8px; cursor: pointer;"
-   },
-   {
-    "label": "Sandstone",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<button type=\"button\" role=\"radio\" aria-checked=\"false\" aria-label=\"Sandstone\" title=\"Sandstone\" style=\"width: 28px; height: 28px; border-radius: 8px; cursor: p"
-   },
-   {
-    "label": "Sage",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<button type=\"button\" role=\"radio\" aria-checked=\"false\" aria-label=\"Sage\" title=\"Sage\" style=\"width: 28px; height: 28px; border-radius: 8px; cursor: pointer; pa"
-   },
-   {
-    "label": "Agave",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<button type=\"button\" role=\"radio\" aria-checked=\"false\" aria-label=\"Agave\" title=\"Agave\" style=\"width: 28px; height: 28px; border-radius: 8px; cursor: pointer; "
-   },
-   {
-    "label": "Mesa Rose",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<button type=\"button\" role=\"radio\" aria-checked=\"false\" aria-label=\"Mesa Rose\" title=\"Mesa Rose\" style=\"width: 28px; height: 28px; border-radius: 8px; cursor: p"
-   },
-   {
-    "label": "Plum",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<button type=\"button\" role=\"radio\" aria-checked=\"false\" aria-label=\"Plum\" title=\"Plum\" style=\"width: 28px; height: 28px; border-radius: 8px; cursor: pointer; pa"
-   },
-   {
-    "label": "Clay",
-    "why": "<div></div> intercepts pointer events",
-    "html": "<button type=\"button\" role=\"radio\" aria-checked=\"false\" aria-label=\"Clay\" title=\"Clay\" style=\"width: 28px; height: 28px; border-radius: 8px; cursor: pointer; pa"
-   },
-   {
-    "label": "Ironwood",
-    "why": "<div></div> intercepts pointer events",
-    "html": "<button type=\"button\" role=\"radio\" aria-checked=\"false\" aria-label=\"Ironwood\" title=\"Ironwood\" style=\"width: 28px; height: 28px; border-radius: 8px; cursor: poi"
-   },
-   {
-    "label": "Contracts",
-    "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"pov-seclink\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/contracts\" data-walk=\"48\">Contracts <svg xmlns=\"http://www.w3.org/2000/svg\" widt"
-   },
-   {
-    "label": "View Budget",
-    "why": "<div></div> intercepts pointer events",
-    "html": "<a class=\"pov-seclink\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/budget\" data-walk=\"50\">View Budget <svg xmlns=\"http://www.w3.org/2000/svg\" width"
-   },
-   {
-    "label": "Manage",
-    "why": "<div></div> intercepts pointer events",
-    "html": "<a class=\"pov-seclink\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/team\" data-walk=\"51\">Manage <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"13\" h"
-   },
-   {
-    "label": "Files",
-    "why": "<div></div> intercepts pointer events",
-    "html": "<a class=\"pov-seclink\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/files\" data-walk=\"52\">Files <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"13\" h"
-   },
-   {
-    "label": "1 change order approved 5 pending decision +$28,400",
-    "why": "<div>Execution</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"pov-arow pov-link\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/change-orders\" data-walk=\"54\"><span class=\"pov-stext\"><span class=\"pov-sti"
-   },
-   {
-    "label": "Daily log filed 14 days ago Sep 26",
-    "why": "<a data-tour=\"project-nav-contracts\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/contracts\">…</a> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"pov-arow pov-link\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/daily-logs\" data-walk=\"55\"><span class=\"pov-stext\"><span class=\"pov-stitle"
-   },
-   {
-    "label": "Outstanding receivable 4 invoices · 4 bills · 0 POs $1,156,000",
-    "why": "<span>Daily Logs</span> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"pov-arow pov-link\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/invoices\" data-walk=\"56\"><span class=\"pov-stext\"><span class=\"pov-stitle\">"
    }
   ],
   "erroring": [],
-  "notTapped": [
-   "Archive Job",
-   "Pay Apps",
-   "Pay App #6 · Submitted Billed through Jul 31 $23,400"
-  ],
-  "tapped": 48,
+  "notTapped": [],
+  "tapped": 8,
   "ok": 1
  },
  {
@@ -2056,7 +1248,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 1,
-  "ok": 1
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/files",
@@ -2071,7 +1263,7 @@
    "Trash"
   ],
   "tapped": 7,
-  "ok": 1
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/daily-logs",
@@ -2083,7 +1275,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 4,
-  "ok": 4
+  "ok": 3
  },
  {
   "route": "/app/projects/:id/rfis",
@@ -2095,7 +1287,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 2,
-  "ok": 2
+  "ok": 1
  },
  {
   "route": "/app/projects/:id/submittals",
@@ -2107,7 +1299,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 3,
-  "ok": 3
+  "ok": 2
  },
  {
   "route": "/app/projects/:id/punch-list",
@@ -2115,13 +1307,7 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "Sort by",
-    "why": "<button type=\"button\" role=\"option\" class=\"ms-opt\" aria-selected=\"false\">…</button> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<select class=\"k-sortbar-select\" aria-label=\"Sort by\" data-walk=\"13\"><option value=\"\" selected=\"\">Default order</option><option value=\"title\">Item</option><opti"
-   }
-  ],
+  "covered": [],
   "erroring": [],
   "notTapped": [],
   "tapped": 2,
@@ -2130,45 +1316,34 @@
  {
   "route": "/app/projects/:id/change-orders",
   "status": 200,
-  "loadErrors": [
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/overview?_rsc=thpxl due to access control checks.",
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/takeoff?_rsc=thpxl due to access control checks.",
-   "/www.saguarocontrol.net/api/projects/d3e0a111-0001-4d00-9000-5a6775a0de00?fields=id,name due to access control checks.",
-   "/www.saguarocontrol.net/api/auth/me due to access control checks."
-  ],
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [],
+  "covered": [
+   {
+    "label": "Ascending — switch to descending",
+    "why": "<span class=\"k-hint\">Optional — ties this CO to one of the 2 bid packa…</span> from <div class=\"k-overlay\">…</div> subtree intercepts pointer events",
+    "html": "<button type=\"button\" class=\"k-sortbar-dir\" aria-label=\"Ascending — switch to descending\" data-walk=\"14\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" heig"
+   }
+  ],
   "erroring": [],
   "notTapped": [],
-  "tapped": 14,
-  "ok": 14
+  "tapped": 3,
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/pay-apps",
   "status": 200,
-  "loadErrors": [
-   "/www.saguarocontrol.net/app?_rsc=thpxl due to access control checks.",
-   "/www.saguarocontrol.net/app/my-work?_rsc=thpxl due to access control checks.",
-   "/www.saguarocontrol.net/app/projects?_rsc=thpxl due to access control checks.",
-   "/www.saguarocontrol.net/app/time?_rsc=thpxl due to access control checks."
-  ],
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [
-   "New Pay Application",
-   "LIEN WAIVERS — Generate at owner approval",
-   "Select pay app #6",
-   "Select pay app #5",
-   "Select pay app #4",
-   "Select pay app #3",
-   "Select pay app #2",
-   "Select pay app #1"
+   "New Pay Application"
   ],
-  "tapped": 16,
-  "ok": 5
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/lien-waivers",
@@ -2180,8 +1355,7 @@
   "erroring": [],
   "notTapped": [
    "+ Generate Waiver",
-   "Generate All",
-   "+ Generate a Waiver Manually"
+   "Generate All"
   ],
   "tapped": 0,
   "ok": 0
@@ -2192,18 +1366,24 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [],
+  "covered": [
+   {
+    "label": "Add Task",
+    "why": "<div>…</div> from <div class=\"sag-side-panel\">…</div> subtree intercepts pointer events",
+    "html": "<button style=\"display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;border-radius:12px;border:none;cursor:pointer;background:"
+   }
+  ],
   "erroring": [],
   "notTapped": [],
   "tapped": 3,
-  "ok": 3
+  "ok": 2
  },
  {
   "route": "/app/projects/:id/drawings",
   "status": 200,
   "loadErrors": [
-   "/www.saguarocontrol.net/api/auth/me due to access control checks.",
-   "/www.saguarocontrol.net/api/projects/d3e0a111-0001-4d00-9000-5a6775a0de00?fields=id,name due to access control checks."
+   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/rfis?_rsc=ziv81 due to access control checks.",
+   "/www.saguarocontrol.net/app/approval-workflows?_rsc=ziv81 due to access control checks."
   ],
   "apiErrors": [],
   "dead": [],
@@ -2221,12 +1401,9 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "OPEN SUBMITTALS → 4 Reviewed against the book",
-   "Upload"
-  ],
-  "tapped": 13,
-  "ok": 2
+  "notTapped": [],
+  "tapped": 8,
+  "ok": 1
  },
  {
   "route": "/app/projects/:id/inspections",
@@ -2234,11 +1411,22 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [],
+  "covered": [
+   {
+    "label": "Sort by",
+    "why": "<span class=\"ms-label\">Type</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
+    "html": "<select class=\"k-sortbar-select\" aria-label=\"Sort by\" data-walk=\"13\"><option value=\"\">Default order</option><option value=\"type\">Type</option><option value=\"dat"
+   },
+   {
+    "label": "Descending — switch to ascending",
+    "why": "<span class=\"ms-label\">Type</span> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
+    "html": "<button type=\"button\" class=\"k-sortbar-dir\" aria-label=\"Descending — switch to ascending\" data-walk=\"14\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" heig"
+   }
+  ],
   "erroring": [],
   "notTapped": [],
-  "tapped": 12,
-  "ok": 8
+  "tapped": 3,
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/safety",
@@ -2251,8 +1439,8 @@
   "notTapped": [
    "Generate JHA"
   ],
-  "tapped": 20,
-  "ok": 3
+  "tapped": 12,
+  "ok": 2
  },
  {
   "route": "/app/projects/:id/todos",
@@ -2262,11 +1450,9 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "UNASSIGNED → 4 No owner yet — assign below"
-  ],
-  "tapped": 16,
-  "ok": 2
+  "notTapped": [],
+  "tapped": 7,
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/messages",
@@ -2277,8 +1463,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 3,
-  "ok": 3
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/team",
@@ -2292,7 +1478,7 @@
    "Invite Member"
   ],
   "tapped": 6,
-  "ok": 3
+  "ok": 1
  },
  {
   "route": "/app/projects/:id/directory",
@@ -2304,7 +1490,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 1,
-  "ok": 1
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/subs",
@@ -2315,43 +1501,32 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 10,
-  "ok": 2
+  "tapped": 5,
+  "ok": 1
  },
  {
   "route": "/app/projects/:id/crews",
   "status": 200,
   "loadErrors": [],
   "apiErrors": [],
-  "dead": [
-   {
-    "label": "CREWS 0 On this project",
-    "tag": "button",
-    "href": null,
-    "html": "<button type=\"button\" class=\"k-stat\" data-tone=\"default\" data-walk=\"14\"><span class=\"k-stat-top\"><span class=\"k-stat-label\">Crews</span></span><span class=\"k-st"
-   }
-  ],
+  "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 6,
-  "ok": 4
+  "tapped": 4,
+  "ok": 2
  },
  {
   "route": "/app/projects/:id/timesheets",
   "status": 200,
-  "loadErrors": [
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/overview?_rsc=mdi90 due to access control checks.",
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/takeoff?_rsc=mdi90 due to access control checks.",
-   "/www.saguarocontrol.net/api/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/crews due to access control checks."
-  ],
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 15,
-  "ok": 4
+  "tapped": 8,
+  "ok": 2
  },
  {
   "route": "/app/projects/:id/tm-tickets",
@@ -2362,8 +1537,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 7,
-  "ok": 7
+  "tapped": 3,
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/budget",
@@ -2385,12 +1560,9 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "Generate Projection",
-   "COLLECTED → $2,574,000 6 pay apps"
-  ],
-  "tapped": 9,
-  "ok": 2
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/bills",
@@ -2401,39 +1573,41 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 14,
+  "tapped": 3,
   "ok": 3
  },
  {
   "route": "/app/projects/:id/invoices",
   "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 20,
-  "ok": 1
- },
- {
-  "route": "/app/projects/:id/contracts",
-  "status": 200,
   "loadErrors": [
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/overview?_rsc=rfk81 due to access control checks.",
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/takeoff?_rsc=rfk81 due to access control checks.",
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/contracts?_rsc=rfk81 due to access control checks."
+   "/www.saguarocontrol.net/app/time?_rsc=thpxl due to access control checks."
   ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [
-   "Purchase Order",
-   "READY TO PAPER → 0 Every award is contracted"
+   "TOTAL BILLED → $3,730,000 Project billed to date (pay apps)"
   ],
-  "tapped": 11,
+  "tapped": 10,
   "ok": 5
+ },
+ {
+  "route": "/app/projects/:id/contracts",
+  "status": 200,
+  "loadErrors": [
+   "/www.saguarocontrol.net/api/projects/d3e0a111-0001-4d00-9000-5a6775a0de00 due to access control checks.",
+   "/www.saguarocontrol.net/api/contracts/prefill?kind=subcontract&projectId=d3e0a111-0001-4d00-9000-5a6775a0de00 due to access control checks."
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [
+   "Purchase Order"
+  ],
+  "tapped": 4,
+  "ok": 2
  },
  {
   "route": "/app/projects/:id/purchase-orders",
@@ -2443,42 +1617,33 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "New Purchase Order"
-  ],
-  "tapped": 12,
-  "ok": 3
+  "notTapped": [],
+  "tapped": 7,
+  "ok": 2
  },
  {
   "route": "/app/projects/:id/estimate",
   "status": 200,
-  "loadErrors": [
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/overview?_rsc=a3jbm due to access control checks.",
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/takeoff?_rsc=a3jbm due to access control checks.",
-   "/www.saguarocontrol.net/api/projects/d3e0a111-0001-4d00-9000-5a6775a0de00 due to access control checks.",
-   "/www.saguarocontrol.net/api/takeoff?projectId=d3e0a111-0001-4d00-9000-5a6775a0de00&limit=5 due to access control checks."
-  ],
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 6,
-  "ok": 6
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/proposal",
   "status": 200,
-  "loadErrors": [
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/takeoff?_rsc=1qvo4 due to access control checks."
-  ],
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 7,
-  "ok": 5
+  "tapped": 1,
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/bid-packages",
@@ -2486,45 +1651,39 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [],
+  "covered": [
+   {
+    "label": "Sort by",
+    "why": "<button type=\"button\" role=\"option\" class=\"ms-opt\" aria-selected=\"true\" data-selected=\"true\">…</button> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
+    "html": "<select class=\"k-sortbar-select\" aria-label=\"Sort by\" data-walk=\"13\"><option value=\"\">Default order</option><option value=\"name\">Package</option><option value=\""
+   },
+   {
+    "label": "Ascending — switch to descending",
+    "why": "<button type=\"button\" role=\"option\" class=\"ms-opt\" aria-selected=\"true\" data-selected=\"true\">…</button> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
+    "html": "<button type=\"button\" class=\"k-sortbar-dir\" aria-label=\"Ascending — switch to descending\" data-walk=\"14\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" heig"
+   }
+  ],
   "erroring": [],
   "notTapped": [
    "Create Bid Package"
   ],
   "tapped": 2,
-  "ok": 2
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/closeout",
   "status": 200,
-  "loadErrors": [
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/overview?_rsc=dss6q due to access control checks.",
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/overview?_rsc=1qvo4 due to access control checks.",
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/takeoff?_rsc=1qvo4 due to access control checks.",
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/overview?_rsc=ifbsc due to access control checks.",
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/takeoff?_rsc=ifbsc due to access control checks.",
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/overview?_rsc=thpxl due to access control checks.",
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/takeoff?_rsc=thpxl due to access control checks."
-  ],
-  "apiErrors": [
-   "POST /api/projects/:id/close → 409"
-  ],
+  "loadErrors": [],
+  "apiErrors": [],
   "dead": [],
   "covered": [],
-  "erroring": [
-   {
-    "label": "OPEN PUNCH → 10 Blocks final inspection",
-    "errors": [
-     "POST /api/projects/:id/close → 409"
-    ]
-   }
-  ],
+  "erroring": [],
   "notTapped": [
    "Generate G704",
    "Generate G706"
   ],
-  "tapped": 24,
-  "ok": 7
+  "tapped": 18,
+  "ok": 1
  },
  {
   "route": "/app/projects/:id/compliance",
@@ -2549,7 +1708,7 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 6,
+  "tapped": 5,
   "ok": 2
  },
  {
@@ -2558,11 +1717,22 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [],
+  "covered": [
+   {
+    "label": "Ascending — switch to descending",
+    "why": "<select id=\":r0:\" class=\"k-select\">…</select> from <div class=\"k-overlay\">…</div> subtree intercepts pointer events",
+    "html": "<button type=\"button\" class=\"k-sortbar-dir\" aria-label=\"Ascending — switch to descending\" data-walk=\"14\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" heig"
+   },
+   {
+    "label": "Log Correspondence",
+    "why": "<select id=\":r0:\" class=\"k-select\">…</select> from <div class=\"k-overlay\">…</div> subtree intercepts pointer events",
+    "html": "<button class=\"pmBtn\" style=\"display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;border-radius:12px;border:none;cursor:point"
+   }
+  ],
   "erroring": [],
   "notTapped": [],
   "tapped": 4,
-  "ok": 4
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/payroll",
@@ -2577,7 +1747,7 @@
    "Remove",
    "Generate WH-347 PDF"
   ],
-  "tapped": 13,
+  "tapped": 7,
   "ok": 1
  },
  {
@@ -2621,7 +1791,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 7,
-  "ok": 1
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/w9",
@@ -2646,33 +1816,27 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 1,
+  "tapped": 0,
   "ok": 0
  },
  {
   "route": "/app/projects/:id/intelligence",
   "status": 200,
-  "loadErrors": [
-   "/www.saguarocontrol.net/api/projects/d3e0a111-0001-4d00-9000-5a6775a0de00?fields=id,name due to access control checks."
-  ],
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [
-   "Walk me through the 5 pending change orders - approve or push back?",
    "What OSHA requirements apply to my site?"
   ],
-  "tapped": 16,
-  "ok": 2
+  "tapped": 7,
+  "ok": 6
  },
  {
   "route": "/app/projects/:id/autopilot",
   "status": 200,
-  "loadErrors": [
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/overview?_rsc=dss6q due to access control checks.",
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/takeoff?_rsc=dss6q due to access control checks."
-  ],
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
@@ -2680,8 +1844,8 @@
   "notTapped": [
    "Run Autopilot Scan"
   ],
-  "tapped": 10,
-  "ok": 7
+  "tapped": 4,
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/network",
