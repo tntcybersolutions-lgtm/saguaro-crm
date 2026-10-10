@@ -312,6 +312,7 @@ async function proof() {
   }
   await browser.close();
   await pushProof(review, root);
+  await photosProof(review, root, project);
 }
 
 // Alerts, end to end: real Google Chrome (it has a push service; open-source
@@ -479,3 +480,90 @@ if (MODE === 'capture') await capture();
 else if (MODE === 'upload') await upload();
 else if (MODE === 'proof') await proof();
 else { console.error('use: node tools/asc-screens.mjs capture|upload|proof'); process.exit(1); }
+
+// Photos & video, end to end on the live site, the way the iPhone app does it:
+// WebKit (the engine inside the iPhone app) with an iPhone profile, then
+// Chromium as a control. Upload a labelled photo + clip, wait for the queue,
+// check every thumbnail actually draws, open one, then delete the test items.
+async function photosProof(review, root, project) {
+  if (!project) { console.log('photos-e2e: no project'); return; }
+  const require = createRequire(path.join(process.env.PLAYWRIGHT_DIR, 'noop.js'));
+  const pw = require('playwright');
+  const runs = [
+    ['webkit-iphone', pw.webkit, { ...pw.devices['iPhone 15'] }, 'tools/fixtures/ZZ AUDIT clip.mp4'],
+    ['chromium-phone', pw.chromium, { ...PROOF_DEVICES.phone }, 'tools/fixtures/zz-audit-clip.webm'],
+  ];
+  for (const [label, engine, device, clip] of runs) {
+    let browser;
+    try { browser = await engine.launch(); } catch (e) { console.log(`photos-e2e[${label}]: cannot launch — ${e.message.split('\n')[0]}`); continue; }
+    const ctx = await browser.newContext({ ...device, colorScheme: 'dark' });
+    const page = await ctx.newPage();
+    const net = [];
+    const errs = [];
+    const short = (u) => u.replace(SITE, '').replace(/https:\/\/[a-z0-9]+\.supabase\.co/, 'SUPABASE').replace(/[0-9a-f-]{36}/gi, ':id').replace(/\?.*$/, '');
+    page.on('response', (r) => { const u = r.url(); if (/\/api\/(photos|files)|supabase\.co\/storage/.test(u)) net.push(`${r.request().method()} ${short(u)} → ${r.status()}`); });
+    page.on('requestfailed', (r) => { const u = r.url(); if (/\/api\/|supabase/.test(u)) net.push(`${r.request().method()} ${short(u)} → FAILED ${r.failure()?.errorText || ''}`); });
+    page.on('pageerror', (e) => errs.push(String(e.message || e).slice(0, 200)));
+    page.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text().slice(0, 200)); });
+    const dir = path.join(root, 'phone');
+    const shot = async (name) => { await page.screenshot({ path: path.join(dir, `95-${label}-${name}.png`) }).catch(() => {}); };
+    try {
+      await page.goto(`${SITE}/login`, { waitUntil: 'networkidle' });
+      await page.fill('input[name="email"]', review.demoAccountName);
+      await page.fill('input[name="password"]', review.demoAccountPassword);
+      await page.click('button[type="submit"]');
+      await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 60000 });
+      await page.goto(`${SITE}/app/projects/${project}/photos`, { waitUntil: 'networkidle', timeout: 45000 });
+      await page.waitForTimeout(2000);
+      await page.click('button:has-text("Add Photos & Video"), button:has-text("Add Photo"), button:has-text("Add First Photo")');
+      await page.waitForSelector('.muSheet', { timeout: 10000 });
+      await page.setInputFiles('.mu input[type="file"][multiple][accept="image/*,video/*"]',
+        [path.join(ROOT, 'tools/fixtures/ZZ AUDIT phone photo.jpg'), path.join(ROOT, clip)]);
+      // Wait until no row is still uploading (or 90 s).
+      const t0 = Date.now();
+      let rows = [];
+      while (Date.now() - t0 < 90000) {
+        rows = await page.$$eval('.muRow', (rs) => rs.map((r) => r.innerText.replace(/\s+/g, ' ').trim()));
+        if (rows.length >= 2 && !rows.some((t) => /Uploading|Waiting|Preparing|Saving|%/.test(t))) break;
+        await page.waitForTimeout(1000);
+      }
+      console.log(`photos-e2e[${label}]: queue after ${Math.round((Date.now() - t0) / 1000)}s → ${JSON.stringify(rows)}`);
+      await shot('1-queue');
+      await page.click('.muDone').catch(() => {});
+      await page.waitForTimeout(3000);
+      const tiles = await page.$$eval('.phCard img', (imgs) => imgs.map((i) => ({ ok: i.complete && i.naturalWidth > 0, src: (i.currentSrc || i.src).replace(/\?.*$/, '').slice(-60) })));
+      const missing = await page.locator('.phCard .phThumb[data-missing="true"]').count().catch(() => 0);
+      console.log(`photos-e2e[${label}]: gallery thumbnails → ${tiles.filter((t) => t.ok).length} drawn, ${tiles.filter((t) => !t.ok).length} broken, ${missing} marked missing`);
+      await shot('2-gallery');
+      // Open the newest tile.
+      await page.locator('.phCard').first().click({ timeout: 10000 });
+      await page.waitForTimeout(2500);
+      const viewer = await page.evaluate(() => {
+        const img = document.querySelector('.zl img, [role="dialog"] img');
+        const vid = document.querySelector('.zl video, [role="dialog"] video');
+        return { img: img ? { ok: img.complete && img.naturalWidth > 0 } : null, video: vid ? { readyState: vid.readyState, error: vid.error ? vid.error.code : null } : null, dialogs: document.querySelectorAll('[role="dialog"]').length };
+      });
+      console.log(`photos-e2e[${label}]: tap thumbnail → ${JSON.stringify(viewer)}`);
+      await shot('3-open');
+    } catch (e) {
+      console.log(`photos-e2e[${label}]: ✗ ${e.message.split('\n')[0]}`);
+      await shot('x-failed');
+    } finally {
+      console.log(`photos-e2e[${label}]: requests → ${JSON.stringify(net.slice(0, 40))}`);
+      if (errs.length) console.log(`photos-e2e[${label}]: page errors → ${JSON.stringify([...new Set(errs)].slice(0, 10))}`);
+      // Delete every ZZ AUDIT test item on this job.
+      try {
+        const list = await (await page.request.get(`${SITE}/api/photos/list?projectId=${project}&include=files`)).json();
+        const mine = (list.photos || []).filter((p) => /zz.?audit/i.test(`${p.title || ''} ${p.filename || ''} ${p.file_name || ''}`));
+        for (const p of mine) {
+          const r = p.file_id
+            ? await page.request.delete(`${SITE}/api/files/${p.file_id}?hard=1`)
+            : await page.request.delete(`${SITE}/api/photos/${p.id}`);
+          console.log(`photos-e2e[${label}]: deleted test item ${p.file_id ? 'file' : 'photo'} → ${r.status()}`);
+        }
+      } catch (e) { console.log(`photos-e2e[${label}]: cleanup ✗ ${e.message.split('\n')[0]}`); }
+      await ctx.close();
+      await browser.close();
+    }
+  }
+}

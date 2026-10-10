@@ -75,7 +75,7 @@ jobs:
         run: |
           mkdir -p /tmp/pw && cd /tmp/pw && npm init -y > /dev/null
           npm i --no-audit --no-fund playwright@1.49.1
-          npx playwright install --with-deps chromium
+          npx playwright install --with-deps chromium webkit
       - name: Capture screenshots
         if: env.MODE == 'screens-capture'
         env:
