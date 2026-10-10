@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,8 +42,10 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ subs: data || [] });
-  } catch {
-    return NextResponse.json({ subs: [], error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    /* Was a bare catch answering { subs: [] } with no log: a failed read left
+       no trace, and a caller reading only `subs` saw an empty directory. */
+    return apiError('subcontractors GET', e, 'Could not load your subs and vendors. Please try again.');
   }
 }
 
@@ -86,7 +89,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ sub, success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('subcontractors POST', e, 'Could not add the subcontractor. Please try again.');
   }
 }
