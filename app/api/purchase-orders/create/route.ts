@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
+import { assertProjectInTenant } from '@/lib/assert-project';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Budget', 'Edit');
@@ -16,6 +18,9 @@ export async function POST(req: NextRequest) {
     }
 
     const db = createServerClient();
+    // project_id comes from the body: it must be one of the caller's jobs.
+    const notOurs = await assertProjectInTenant(db, user.tenantId, body.project_id);
+    if (notOurs) return notOurs;
 
     const { data, error } = await db.from('purchase_orders').insert({
       tenant_id: user.tenantId,
@@ -61,7 +66,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ purchaseOrder: data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('purchase-orders/create', e, "Couldn't create the purchase order. Please try again.");
   }
 }
