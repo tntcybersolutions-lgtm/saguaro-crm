@@ -46,8 +46,8 @@ export async function GET(
 
     // GET /api/portals/w9/:token — handled by specific route file
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  } catch (e) {
-    return apiError(`portals/${portalType || ''} GET`, e);
+  } catch (err) {
+    return apiError('portals', err, "Couldn't open this page. Please try again.");
   }
 }
 
@@ -88,7 +88,7 @@ export async function POST(
 
     // POST /api/portals/w9/:token — handled by specific route file
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  } catch (e) {
-    return apiError(`portals/${portalType || ''} POST`, e);
+  } catch (err) {
+    return apiError('portals', err, "Couldn't save that. Please try again.");
   }
 }
