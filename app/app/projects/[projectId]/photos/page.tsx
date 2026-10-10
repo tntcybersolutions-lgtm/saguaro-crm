@@ -38,7 +38,8 @@ import ZoomLightbox, { type LightboxItem } from '@/components/media/ZoomLightbox
 import SubInbox from '@/components/media/SubInbox';
 import { useUploadQueue } from '@/lib/useUploadQueue';
 import { uploadPhoto, uploadVideo, fmtDuration } from '@/lib/media-upload';
-import {
+import { addToOutbox, isOffline, looksLikeNetworkError, listOutbox } from '@/lib/offline/outbox';
+import { CloudArrowUp,
   Camera, X, PencilSimple, Plus, Images, WarningCircle, ArrowClockwise, Trash,
   Crop, CaretLeft, CaretRight, Play, ArrowsOut, LinkSimple,
 } from '@phosphor-icons/react';
@@ -271,20 +272,47 @@ export default function PhotosPage(){
     window.clearTimeout(reloadTimer.current);
     reloadTimer.current=window.setTimeout(()=>{ load({silent:true}); },700);
   },[load]);
+  /* No signal on site is normal: keep the file on this phone and upload it
+     when the connection is back (lib/offline/outbox). */
+  const keptOffline=useRef(0);
+  const [waiting,setWaiting]=useState(0);
+  const refreshWaiting=useCallback(()=>{ listOutbox(projectId).then(l=>setWaiting(l.length)).catch(()=>setWaiting(0)); },[projectId]);
+  const keepOnPhone=async(file:File,kind:'image'|'video')=>{
+    await addToOutbox({projectId,kind,album:kind==='video'?null:uploadAlbumRef.current,name:file.name||(kind==='video'?'video.mov':'photo.jpg'),type:file.type,size:file.size,file});
+    keptOffline.current++;
+    refreshWaiting();
+    return {doneLabel:'Saved on this phone — uploads when you\'re back online'};
+  };
   const queue=useUploadQueue(async(file,kind,onProgress)=>{
-    if(kind==='video'){
-      const f=await uploadVideo(file,{projectId,onProgress});
-      return {thumb:(f.poster_url as string)||null};
+    if(isOffline()) return keepOnPhone(file,kind);
+    try{
+      if(kind==='video'){
+        const f=await uploadVideo(file,{projectId,onProgress});
+        return {thumb:(f.poster_url as string)||null};
+      }
+      const ph=await uploadPhoto(file,{projectId,album:uploadAlbumRef.current,onProgress});
+      return {thumb:(ph.thumbnail_url as string)||(ph.url as string)||null};
+    }catch(e){
+      if(looksLikeNetworkError(e)) return keepOnPhone(file,kind);
+      throw e;
     }
-    const ph=await uploadPhoto(file,{projectId,album:uploadAlbumRef.current,onProgress});
-    return {thumb:(ph.thumbnail_url as string)||(ph.url as string)||null};
   },{
     onItemDone:softReload,
     onDrained:({done,failed})=>{
+      const kept=keptOffline.current; keptOffline.current=0;
+      const sent=done-kept;
       if(failed) showToast(`${done} saved, ${failed} didn't upload — open Add Photos & Video to retry.`,'bad');
+      else if(kept&&!sent) showToast(kept===1?'Saved on this phone — it uploads when you\'re back online.':`${kept} saved on this phone — they upload when you're back online.`);
+      else if(kept) showToast(`${sent} saved to the job, ${kept} saved on this phone until you're back online.`);
       else if(done) showToast(done===1?'1 item saved to the job.':`${done} items saved to the job.`);
     },
   });
+  useEffect(()=>{
+    refreshWaiting();
+    const synced=(e:Event)=>{ const d=(e as CustomEvent).detail; if(!d||d.projectId===projectId){ softReload(); refreshWaiting(); } };
+    window.addEventListener('saguaro:outbox-synced',synced);
+    return()=>window.removeEventListener('saguaro:outbox-synced',synced);
+  },[projectId,softReload,refreshWaiting]);
   function openUpload(){
     setUploadAlbum(filterAlbum!=='All'&&filterAlbum!==FILES_ALBUM&&filterAlbum!==VIDEO_ALBUM?filterAlbum:'General');
     setUploadOpen(true);
@@ -860,6 +888,12 @@ export default function PhotosPage(){
         }
       >
         {!loadError && <StatRow items={stats}/>}
+        {waiting>0 && (
+          <div role="status" style={{display:'flex',alignItems:'center',gap:8,margin:'10px 0 4px',padding:'10px 14px',borderRadius:12,border:'1px solid var(--border-default)',background:'var(--bg-surface-2)',fontSize:14,fontWeight:700,color:'var(--text-primary)'}}>
+            <CloudArrowUp size={18} weight="bold" style={{color:'var(--c-orange)',flex:'0 0 auto'}}/>
+            {waiting===1?'1 photo or video is':`${waiting} photos/videos are`} saved on this phone — {waiting===1?'it uploads':'they upload'} when you&apos;re back online.
+          </div>
+        )}
 
         <SubInbox projectId={projectId} focus={inboxFocus} onChanged={()=>load({silent:true})} onToast={(m,t)=>showToast(m,t)}/>
 
