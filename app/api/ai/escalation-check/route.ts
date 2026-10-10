@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
+import { requestDay } from '@/lib/time-zone';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -116,7 +117,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Find RFIs past their due date
-    const today = new Date().toISOString().split('T')[0];
+    const { today } = await requestDay(req.headers, db, user.tenantId, 'ai/escalation-check');
     const { data: pastDueRfis } = await db
       .from('rfis')
       .select('id, rfi_number, subject, status, due_date, assigned_to, created_at')

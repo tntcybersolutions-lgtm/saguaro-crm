@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import Anthropic from '@anthropic-ai/sdk';
 import { apiError } from '@/lib/api-error';
+import { requestDay } from '@/lib/time-zone';
 
 export async function GET(req: NextRequest) {
   try {
@@ -75,7 +76,8 @@ export async function GET(req: NextRequest) {
 
     const atRiskPhases = phaseAnalysis.filter((p: any) => p.at_risk);
 
-    // Generate AI risk assessment
+    // Generate AI risk assessment — "today" is the company's day, not the server's.
+    const { today: todayDay } = await requestDay(req.headers, db, user.tenantId, 'ai/schedule-risk');
     const client = new Anthropic();
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
@@ -86,7 +88,7 @@ export async function GET(req: NextRequest) {
 
 Project: ${project?.name || 'Unknown'}
 Project Timeline: ${project?.start_date} to ${project?.end_date}
-Today: ${today.toISOString().split('T')[0]}
+Today: ${todayDay}
 
 Phase Analysis:
 ${JSON.stringify(phaseAnalysis, null, 2)}

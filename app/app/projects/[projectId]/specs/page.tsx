@@ -13,6 +13,7 @@ import { ListToolbar } from '@/components/ui/ListToolbar';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
+import { localDay } from '@/lib/calendar-day';
 
 interface Spec {
   id: string;
@@ -140,7 +141,7 @@ export default function SpecsPage() {
     if (!form.section || !form.title) { setErrorMsg('Section number and title are required.'); return false; }
     setSaving(true);
     setErrorMsg('');
-    const today = new Date().toISOString().split('T')[0];
+    const today = localDay(); // This device's day — toISOString() is the UTC day, tomorrow from 7 PM on in Iowa.
     try {
       const res = await fetch('/api/specs/create', {
         method: 'POST',

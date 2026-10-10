@@ -10,8 +10,9 @@ import {
 } from '@/components/franchise/kit';
 import { PremiumSurface, ModuleHero, StatStrip, SectionCard, PremiumEmpty, GoldButton, GhostButton, Pill } from '@/components/ui/premium';
 import { OAC_AGENDA } from '@/lib/franchise-template';
+import { localDay } from '@/lib/calendar-day';
 
-const todayMs = () => Date.parse(new Date().toISOString().slice(0, 10));
+const todayMs = () => Date.parse(localDay()); // This device's day — toISOString() is the UTC day, tomorrow from 7 PM on in Iowa.
 const daysToDue = (d: any) => { if (!d) return null; const t = Date.parse(String(d)); return isNaN(t) ? null : Math.round((t - todayMs()) / 86400000); };
 
 export default function OacPage() {
@@ -195,7 +196,7 @@ export default function OacPage() {
 }
 
 function LogMeetingModal({ projects, onClose }: { projects: any[]; onClose: () => void }) {
-  const [f, setF] = useState<Record<string, any>>({ meeting_type: 'OAC', meeting_date: new Date().toISOString().slice(0, 10), agenda: OAC_AGENDA.map((a) => `• ${a}`).join('\n') });
+  const [f, setF] = useState<Record<string, any>>({ meeting_type: 'OAC', meeting_date: localDay(), agenda: OAC_AGENDA.map((a) => `• ${a}`).join('\n') });
   const [attendees, setAttendees] = useState<any[]>([{ name: '', company: '', role: 'Owner' }]);
   const [items, setItems] = useState<any[]>([{ description: '', assigned_to_name: '', due_date: '' }]);
   const [busy, setBusy] = useState(false);

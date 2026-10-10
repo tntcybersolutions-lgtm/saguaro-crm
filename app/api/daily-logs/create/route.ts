@@ -4,6 +4,7 @@ import { assertProjectInTenant } from '@/lib/assert-project';
 import { requirePermission } from '@/lib/permissions';
 import { recordLearning } from '@/lib/learning';
 import { apiError } from '@/lib/api-error';
+import { requestDay } from '@/lib/time-zone';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Projects', 'Edit');
@@ -44,9 +45,11 @@ export async function POST(req: NextRequest) {
      Every field now reads both spellings, which is what the rest of the create
      endpoints in this codebase already do. */
   const pick = (camel: string, snake: string) => body[camel] ?? body[snake];
-  const pickedLogDate: string = pick('logDate', 'log_date') || new Date().toISOString().split('T')[0];
+  let pickedLogDate: string = pick('logDate', 'log_date') || '';
 
   try {
+    // No date sent: the logger's day (device, else company zone) — not the UTC day, which is tomorrow by 7 PM in Iowa.
+    if (!pickedLogDate) pickedLogDate = (await requestDay(req.headers, db, tenantId, 'daily-logs/create')).today;
 
     // Structured field-log data (was dropped before — only a scalar crew_count survived).
     const manpower = Array.isArray(body.manpowerByTrade ?? body.manpower_by_trade) ? (body.manpowerByTrade ?? body.manpower_by_trade) : null;

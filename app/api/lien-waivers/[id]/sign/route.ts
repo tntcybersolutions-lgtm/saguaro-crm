@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
+import { requestDay } from '@/lib/time-zone';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getUser(req);
@@ -13,7 +14,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const signer = body.signedBy ?? body.signed_by ?? body.signedName ?? body.signed_name;
     const { data, error } = await db.from('lien_waivers').update({
       status: 'signed',
-      signed_date: now.toISOString().split('T')[0],
+      // The signer's day (device, else company zone): a 7:30 PM signature in Iowa is dated that day, not tomorrow.
+      signed_date: (await requestDay(req.headers, db, user.tenantId, 'lien-waivers/sign', now)).today,
       signed_at: now.toISOString(),
       signed_by: signer,
       signed_name: body.signedName ?? body.signed_name ?? signer,

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import Anthropic from '@anthropic-ai/sdk';
 import { tryWrite } from '@/lib/db-write';
+import { requestDay } from '@/lib/time-zone';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const user = await getUser(req);
@@ -25,7 +27,13 @@ export async function POST(req: NextRequest) {
     if (data) sub = data as Record<string, unknown>;
   }
 
-  const today = new Date().toISOString().split('T')[0];
+  // Active certs are judged on the company's day (device, else company zone), not UTC's.
+  let today: string;
+  try {
+    ({ today } = await requestDay(req.headers, db, tenantId, 'ai/sub-prequal'));
+  } catch (e) {
+    return apiError('ai/sub-prequal', e);
+  }
   const certs = (sub.insurance_certificates as any[]) || [];
   const activeCerts = certs.filter((c: any) => c.expiry_date && c.expiry_date >= today);
   const hasGL = activeCerts.some((c: any) => c.policy_type?.toLowerCase().includes('gl') || c.policy_type?.toLowerCase().includes('general'));

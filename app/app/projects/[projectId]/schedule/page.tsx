@@ -17,6 +17,7 @@ import { moduleAccent } from '@/lib/module-identity';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
+import { localDay } from '@/lib/calendar-day';
 
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)';
 const GREEN='var(--success)',RED='var(--danger)',ORANGE='var(--warning)',BLUE='var(--brand-primary)';
@@ -84,16 +85,21 @@ function GanttChart({tasks, jobHex}:{tasks:any[]; jobHex:string}){
   );
 
   const allDates = withDates.flatMap(t=>[t.start_date,t.end_date]);
+  /* Calendar days, counted as days: new Date('YYYY-MM-DD') is UTC midnight,
+     so the padding and week steps move in UTC days and labels read in UTC —
+     mixing in local setDate/toLocaleDateString labelled every week one day
+     early in the US. Only "today" is local: this device's day. */
   const minDate  = new Date(allDates.reduce((m,d)=>d<m?d:m));
   const maxDate  = new Date(allDates.reduce((m,d)=>d>m?d:m));
   // Add padding
-  minDate.setDate(minDate.getDate()-2);
-  maxDate.setDate(maxDate.getDate()+5);
-  const totalDays = daysBetween(minDate.toISOString().split('T')[0], maxDate.toISOString().split('T')[0]);
+  minDate.setUTCDate(minDate.getUTCDate()-2);
+  maxDate.setUTCDate(maxDate.getUTCDate()+5);
+  const ymd = (d:Date) => d.toISOString().split('T')[0]; // a UTC-midnight calendar day
+  const totalDays = daysBetween(ymd(minDate), ymd(maxDate));
 
   function pct(date:string){
     return Math.max(0,Math.min(100,
-      daysBetween(minDate.toISOString().split('T')[0],date)/totalDays*100
+      daysBetween(ymd(minDate),date)/totalDays*100
     ));
   }
 
@@ -102,10 +108,10 @@ function GanttChart({tasks, jobHex}:{tasks:any[]; jobHex:string}){
   const cur=new Date(minDate);
   while(cur<=maxDate){
     markers.push(new Date(cur));
-    cur.setDate(cur.getDate()+7);
+    cur.setUTCDate(cur.getUTCDate()+7);
   }
 
-  const today=new Date().toISOString().split('T')[0];
+  const today=localDay();
   const todayPct=pct(today);
 
   return(
@@ -116,10 +122,10 @@ function GanttChart({tasks, jobHex}:{tasks:any[]; jobHex:string}){
         {markers.map(m=>(
           <div key={m.toISOString()} style={{
             position:'absolute',
-            left:`calc(200px + ${pct(m.toISOString().split('T')[0])}%)`,
+            left:`calc(200px + ${pct(ymd(m))}%)`,
             fontSize:10,color:DIM,whiteSpace:'nowrap',transform:'translateX(-50%)',
           }}>
-            {m.toLocaleDateString('en-US',{month:'short',day:'numeric'})}
+            {m.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'})}
           </div>
         ))}
         &nbsp;
@@ -404,7 +410,7 @@ export default function SchedulePage(){
   }, []);
   const sortedTasks = useSortedRows(filtered, taskSort.sort, taskSortValue);
 
-  const today=new Date().toISOString().split('T')[0];
+  const today=localDay(); // this device's day, not the UTC day (tomorrow from 7 PM on in Iowa)
   const allEnds=tasks.filter((t:any)=>t.end_date).map((t:any)=>t.end_date);
   const projectEnd=allEnds.length?allEnds.reduce((m,d)=>d>m?d:m):'';
   const daysLeft=projectEnd?Math.max(0,daysBetween(today,projectEnd)):0;

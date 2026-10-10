@@ -35,6 +35,8 @@ import { ANCHOR_BID_DECISION } from '@/lib/suggestions';
 import { openPdf } from '@/components/PdfViewer';
 import { buildJacketPdf } from '@/lib/jacket-pdf-client';
 import { layout } from '@/lib/design-tokens';
+import { isBiddingStatus } from '@/lib/bid-deadline';
+import { JacketGatePrompt, JacketSendResult, type SendPayload } from '@/components/JacketSendPanels';
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmt = (n: number) => money.format(Number(n) || 0);
@@ -46,21 +48,24 @@ interface BidPackageRow {
   trade: string;
   name: string;
   bid_due_date: string | null;
-  status: 'draft' | 'open' | 'closed' | 'awarded';
+  /* 'sent' = issued (lib/bid-issue): open for bids, same as 'open'. */
+  status: 'draft' | 'open' | 'sent' | 'closed' | 'awarded';
   jacket_pdf_url?: string | null;
   bid_package_invites?: { count: number }[];
   bid_submissions?: { count: number }[];
 }
 type Leveling = { invited: number; responded: number; low: number | null; lowWho: string | null; spread: number | null };
 
-/** One status → one badge. Draft neutral, Open blue (with the subs), Closed amber (waiting on you), Awarded green. */
+/** One status → one badge. Draft neutral, Open blue (with the subs), Closed amber (waiting on you), Awarded green.
+ *  'sent' is what issuing the jacket writes — it is open for bids. It fell to the
+ *  default and an issued package read "Draft". */
 function statusBadge(s: string): { label: string; tone: BadgeTone } {
-  if (s === 'open') return { label: 'Open', tone: 'lead' };
+  if (s === 'open' || s === 'sent') return { label: 'Open', tone: 'lead' };
   if (s === 'closed') return { label: 'Closed — Award Pending', tone: 'under_contract' };
   if (s === 'awarded') return { label: 'Awarded', tone: 'ongoing' };
   return { label: 'Draft', tone: 'neutral' };
 }
-const STATUS_RANK: Record<string, number> = { closed: 0, open: 1, draft: 2, awarded: 3 };
+const STATUS_RANK: Record<string, number> = { closed: 0, open: 1, sent: 1, draft: 2, awarded: 3 };
 
 // ─── Wizard Types ─────────────────────────────────────────────────────────────
 
@@ -277,7 +282,48 @@ function WizardModal({ projectId, ctx, open, onClose, onCreated }: { projectId: 
     }
   }
 
+  /* The send step. invite-subs issues the jacket as it sends (lib/bid-issue),
+     so it can answer 409 with the sections that are empty — then nothing has
+     gone out and the GC decides: send anyway, or save the package and fill
+     the jacket first. Whatever is sent, the wizard shows exactly who was
+     emailed and who was not before it closes. The package itself is created
+     once: a retry only re-sends. */
+  const [createdId, setCreatedId] = useState<string | null>(null);
+  const [sendGate, setSendGate] = useState<{ missing: string[] } | null>(null);
+  const [sendOutcome, setSendOutcome] = useState<SendPayload | null>(null);
+
+  const inviteList = () => [
+    ...w.suggestedSubs.filter(s => s.checked).map(s => ({ name: s.name, email: s.email, subId: /^[0-9a-f-]{36}$/i.test(s.id) ? s.id : undefined })),
+    ...w.extraInvites,
+  ];
+
+  async function sendToSubs(pkgId: string, force: boolean) {
+    setField('submitting', true);
+    setField('error', '');
+    try {
+      const ir = await fetch(`/api/bid-packages/${pkgId}/invite-subs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subs: inviteList(), force }),
+      });
+      const d = await ir.json().catch(() => ({})) as any;
+      if (ir.status === 409 && Array.isArray(d.missing) && d.missing.length) {
+        setSendGate({ missing: d.missing });
+        return;
+      }
+      if (!ir.ok) throw new Error(d.error || 'The invitations were not sent.');
+      setSendGate(null);
+      setSendOutcome(d as SendPayload);
+    } catch (err: any) {
+      console.error('invite-subs failed', err);
+      setField('error', `The package is saved, but the invitations did not go out: ${humanError(err, 'please try again.')}`);
+    } finally {
+      setField('submitting', false);
+    }
+  }
+
   async function handleSubmit() {
+    if (createdId) { await sendToSubs(createdId, false); return; }
     setField('submitting', true);
     setField('error', '');
     try {
@@ -308,24 +354,17 @@ function WizardModal({ projectId, ctx, open, onClose, onCreated }: { projectId: 
       const cd = await cr.json() as any;
       if (!cr.ok) throw new Error(cd.error || 'Failed to create package');
       const pkgId = cd.bidPackage?.id || cd.bidPackageId || cd.id;
+      if (!pkgId) throw new Error('The package was not created.');
+      setCreatedId(pkgId);
 
-      // Invite checked subs + extras
-      const toInvite = [
-        ...w.suggestedSubs.filter(s => s.checked).map(s => ({ name: s.name, email: s.email })),
-        ...w.extraInvites,
-      ];
-      if (toInvite.length > 0 && pkgId) {
-        // The package is saved either way; a failed invite is logged and the
-        // package page shows who was (and was not) invited.
-        const ir = await fetch(`/api/bid-packages/${pkgId}/invite-subs`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ subs: toInvite }),
-        }).catch((e) => { console.error('invite-subs failed', e); return null; });
-        if (ir && !ir.ok) console.error('invite-subs failed', ir.status);
+      /* Invite checked subs + extras — which issues the jacket. The wizard
+         stays open to show the gate or who was emailed. */
+      if (inviteList().length > 0) {
+        await sendToSubs(pkgId, false);
+        return;
       }
 
-      onCreated(pkgId || 'new');
+      onCreated(pkgId);
     } catch (err: any) {
       console.error(err); setField('error', humanError(err, 'Submission failed. Please try again.'));
       setField('submitting', false);
@@ -345,7 +384,7 @@ function WizardModal({ projectId, ctx, open, onClose, onCreated }: { projectId: 
       const st = String(sub.trade || '').toLowerCase();
       return st.length > 0 && (st.includes(tl) || tl.includes(st));
     }).length;
-    const live = twins.some((b: any) => ['open', 'bidding', 'closed', 'awarded'].includes(String(b.status || '').toLowerCase()));
+    const live = twins.some((b: any) => ['open', 'sent', 'bidding', 'closed', 'awarded'].includes(String(b.status || '').toLowerCase()));
     return (
       <>
         {est > 0 && <>Budget carries <b>{fmt(est)}</b> for this trade — incoming bids will level against it. </>}
@@ -357,7 +396,19 @@ function WizardModal({ projectId, ctx, open, onClose, onCreated }: { projectId: 
     );
   })();
 
-  const footer = (
+  /* After the package exists, the footer is about the send, not the steps. */
+  const sendFooter = createdId && (sendGate || sendOutcome || w.error) ? (
+    <div className="bpFoot" style={{ flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+      {!sendOutcome && w.error && (
+        <Button variant="ghost" disabled={w.submitting} onClick={() => void sendToSubs(createdId, false)}>Try Sending Again</Button>
+      )}
+      <Button variant={sendOutcome ? 'primary' : 'ghost'} disabled={w.submitting} onClick={() => onCreated(createdId)}>
+        {sendOutcome ? 'Open Package' : 'Save Without Sending'}
+      </Button>
+    </div>
+  ) : null;
+
+  const footer = sendFooter ?? (
     <div className="bpFoot" style={{ flexWrap: 'wrap' }}>
       {w.error && step < 4 && <div className="bpErr" role="alert" style={{ width: '100%' }}>{w.error}</div>}
       <Button variant="ghost" icon={step > 1 ? <ArrowLeft size={14} weight="bold" /> : undefined} onClick={() => step > 1 ? setStep(s => s - 1) : onClose()} disabled={w.submitting}>{step === 1 ? 'Cancel' : 'Back'}</Button>
@@ -496,6 +547,20 @@ function WizardModal({ projectId, ctx, open, onClose, onCreated }: { projectId: 
               <div className="bpScope">{w.instructions}</div>
             </div>
           )}
+          {!createdId && inviteCount > 0 && (
+            <div className="bpHint">
+              Creating sends the bid jacket to {inviteCount} sub{inviteCount === 1 ? '' : 's'} — once it has been checked for empty sections. Each gets their own bid link.
+            </div>
+          )}
+          {sendGate && createdId && (
+            <JacketGatePrompt
+              missing={sendGate.missing}
+              busy={w.submitting}
+              onSendAnyway={() => void sendToSubs(createdId, true)}
+              jacketHref={`/app/projects/${projectId}/bid-packages/${createdId}/jacket`}
+            />
+          )}
+          {sendOutcome && <JacketSendResult result={sendOutcome} />}
           {w.error && <div className="bpErr" role="alert">{w.error}</div>}
         </div>
       )}
@@ -559,7 +624,7 @@ export default function BidPackagesPage() {
   }
 
   const totalAwarded = packages.filter(p => p.status === 'awarded').length;
-  const openCount = packages.filter(p => p.status === 'open').length;
+  const openCount = packages.filter(p => isBiddingStatus(p.status)).length;
   const closedCount = packages.filter(p => p.status === 'closed').length;
 
   const totalInvited = packages.reduce((s, p) => {
@@ -728,7 +793,9 @@ export default function BidPackagesPage() {
         projectId={projectId}
         ctx={ctx}
         open={showWizard}
-        onClose={() => setShowWizard(false)}
+        /* Reloaded on close: a package created before the GC chose not to send
+           still belongs in the list. */
+        onClose={() => { setShowWizard(false); void loadPackages(); }}
         onCreated={(id) => {
           setShowWizard(false);
           router.push(`/app/projects/${projectId}/bid-packages/${id}`);

@@ -4,7 +4,7 @@
  * Also run it with TZ=America/Phoenix: the device-clock checks change with the zone.
  */
 import {
-  daysOnEarth, dayInZone, daysUntilDay, isPastDay, localDay, plausibleToday, toDay, HOME_TIME_ZONE, LOCAL_DAY_HEADER,
+  daysOnEarth, dayInZone, daysUntilDay, isPastDay, localDay, plausibleToday, toDay, LOCAL_DAY_HEADER,
 } from './calendar-day';
 
 let failed = 0;
@@ -70,21 +70,26 @@ check('DST zone reads its own day (New York 12:30 AM Nov 1)', dayInZone('America
 
 // ── Server "today": the portal's claimed day, within reason ──
 check('header name', LOCAL_DAY_HEADER === 'x-local-day');
-check('home zone is Phoenix', HOME_TIME_ZONE === 'America/Phoenix');
+const PHX = 'America/Phoenix', CHI = 'America/Chicago';
 const earth = daysOnEarth(phxEvening);
 check('days on Earth at 03:30Z Oct 11', earth.earliest === '2026-10-10' && earth.latest === '2026-10-11', JSON.stringify(earth));
-check('Phoenix sub’s day accepted', plausibleToday('2026-10-10', phxEvening) === '2026-10-10');
-check('a day it is somewhere else accepted', plausibleToday('2026-10-11', phxEvening) === '2026-10-11');
-check('a week ago refused → Phoenix day', plausibleToday('2026-10-03', phxEvening) === '2026-10-10');
-check('a day not yet begun anywhere refused', plausibleToday('2026-10-12', phxEvening) === '2026-10-10');
-check('no header → Phoenix day', plausibleToday(null, phxEvening) === '2026-10-10');
-check('timestamp-shaped header refused', plausibleToday('2026-10-11T00:00', phxEvening) === '2026-10-10');
-check('Feb 30 header refused', plausibleToday('2026-02-30', new Date('2026-03-01T12:00:00Z')) === dayInZone('America/Phoenix', new Date('2026-03-01T12:00:00Z')));
+check('Phoenix sub’s day accepted', plausibleToday('2026-10-10', PHX, phxEvening) === '2026-10-10');
+check('a day it is somewhere else accepted', plausibleToday('2026-10-11', PHX, phxEvening) === '2026-10-11');
+check('a week ago refused → the fallback zone’s day', plausibleToday('2026-10-03', PHX, phxEvening) === '2026-10-10');
+check('a day not yet begun anywhere refused', plausibleToday('2026-10-12', PHX, phxEvening) === '2026-10-10');
+check('no header → the fallback zone’s day', plausibleToday(null, PHX, phxEvening) === '2026-10-10');
+check('timestamp-shaped header refused', plausibleToday('2026-10-11T00:00', PHX, phxEvening) === '2026-10-10');
+check('Feb 30 header refused', plausibleToday('2026-02-30', PHX, new Date('2026-03-01T12:00:00Z')) === dayInZone(PHX, new Date('2026-03-01T12:00:00Z')));
 // 10:30 PM Oct 10 in Honolulu — already Oct 11 in Phoenix. The sub's own day governs.
 const hnlLate = new Date('2026-10-11T08:30:00Z');
-check('Phoenix has moved on', dayInZone('America/Phoenix', hnlLate) === '2026-10-11');
-check('Honolulu sub’s last day accepted', plausibleToday('2026-10-10', hnlLate) === '2026-10-10');
-check('Honolulu sub not past on the last day', !isPastDay('2026-10-10', plausibleToday('2026-10-10', hnlLate)));
+check('Phoenix has moved on', dayInZone(PHX, hnlLate) === '2026-10-11');
+check('Honolulu sub’s last day accepted', plausibleToday('2026-10-10', PHX, hnlLate) === '2026-10-10');
+check('Honolulu sub not past on the last day', !isPastDay('2026-10-10', plausibleToday('2026-10-10', PHX, hnlLate)));
+// No header, Iowa company: 11:30 PM Central Oct 10 is 04:30Z Oct 11 (and 9:30 PM in Phoenix).
+const iowaLate = new Date('2026-10-11T04:30:00Z');
+check('Iowa, no header: the company’s own day (Oct 10), not UTC’s', plausibleToday(null, CHI, iowaLate) === '2026-10-10');
+check('Iowa, no header: never Phoenix — 12:30 AM Central Oct 11 is Oct 11 in Iowa', plausibleToday(null, CHI, new Date('2026-10-11T05:30:00Z')) === '2026-10-11' && dayInZone(PHX, new Date('2026-10-11T05:30:00Z')) === '2026-10-10');
+check('Iowa COI expiring Oct 10 still good at 11:30 PM Central', !isPastDay('2026-10-10', plausibleToday(null, CHI, iowaLate)));
 
 // ── The device's own clock ──
 check('local 11:59 PM is that day', localDay(new Date(2026, 9, 10, 23, 59)) === '2026-10-10');

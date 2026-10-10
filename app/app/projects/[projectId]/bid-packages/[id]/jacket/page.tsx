@@ -53,7 +53,11 @@ export default function BidJacketPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  if (loading) {
+  /* Only the FIRST load blanks the page. A refresh after Issue or an addendum
+     used to swap the whole jacket for "Opening jacket…", which unmounted the
+     assembly controls and threw away the very result the GC needed to read —
+     who was emailed and who was not. */
+  if (loading && !jacket) {
     return (
       <PremiumSurface>
         <div style={{ padding: 40, color: DIM }}>Opening jacket…</div>

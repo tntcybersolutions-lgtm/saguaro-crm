@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { requirePermission } from '@/lib/permissions';
+import { requestDay } from '@/lib/time-zone';
 
 /**
  * Cost-report snapshots (the monthly CM cost report), tenant-scoped.
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
     const { data, error } = await db.from('cost_reports').insert({
       tenant_id: user.tenantId,
       project_id: projectId,
-      report_date: body.report_date || new Date().toISOString().slice(0, 10),
+      report_date: body.report_date || (await requestDay(req.headers, db, user.tenantId, 'cost-control/reports')).today,
       title: body.title || null,
       lines: body.lines,
       totals: body.totals ?? {},

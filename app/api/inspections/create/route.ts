@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
+import { requestDay } from '@/lib/time-zone';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Safety', 'Edit');
@@ -38,7 +39,7 @@ export async function POST(req: NextRequest) {
     const permitNumber     = body.permit_number     ?? body.permitNumber     ?? null;
     // The web schedule form posts `date`; honor it so the inspector's chosen
     // date is persisted instead of being silently overwritten with today.
-    const scheduledDate    = body.scheduled_date    ?? body.scheduledDate     ?? body.date ?? new Date().toISOString().split('T')[0];
+    const scheduledDate    = body.scheduled_date    ?? body.scheduledDate     ?? body.date ?? (await requestDay(req.headers, supabase, user.tenantId, 'inspections/create')).today;
     const notes            = body.notes             ?? null;
     const weather          = body.weather           ?? null;
 

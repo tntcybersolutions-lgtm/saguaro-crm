@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUser, createServerClient } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import type { Database } from '@/lib/database.types';
+import { requestDay } from '@/lib/time-zone';
 
 /**
  * Timesheet / time-clock create.
@@ -112,7 +113,8 @@ export async function POST(req: NextRequest) {
     const clockOut    = body.clock_out    ?? body.clockOut    ?? null;
     const gpsClockIn  = body.gps_clock_in ?? body.gpsClockIn  ?? null;
     const gpsClockOut = body.gps_clock_out?? body.gpsClockOut ?? null;
-    const workDate    = body.work_date    ?? body.workDate    ?? new Date().toISOString().split('T')[0];
+    // The worker's day (device, else company zone) — not the UTC day, which is tomorrow by 7 PM in Iowa.
+    const workDate    = body.work_date    ?? body.workDate    ?? (await requestDay(req.headers, supabase, user.tenantId, 'timesheets/create')).today;
     /* Same split as clock_in above. 'active' means "on the clock right now",
        which is true of a punch-in and false of a foreman typing up hours that
        were worked yesterday. The web timesheet screen only renders 'pending'

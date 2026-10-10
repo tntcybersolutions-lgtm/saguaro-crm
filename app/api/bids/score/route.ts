@@ -3,6 +3,7 @@ import { getUser } from '@/lib/supabase-server';
 import { scoreBidOpportunity, buildBidHistoryContext } from '@/lib/construction-intelligence';
 import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { requestDay } from '@/lib/time-zone';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Projects', 'Edit');
@@ -74,7 +75,7 @@ export async function POST(req: NextRequest) {
         location: body.location || null,
         trades: normalized.trade ? [normalized.trade] : null,
         notes: summaryLine,
-        bid_date: new Date().toISOString().slice(0, 10),
+        bid_date: (await requestDay(req.headers, db, user.tenantId, 'bids/score')).today,
       })
       .select('id')
       .single();

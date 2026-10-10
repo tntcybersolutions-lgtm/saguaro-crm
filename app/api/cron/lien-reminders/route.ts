@@ -5,6 +5,8 @@ import { sendLienDeadlineReminder } from '@/lib/email';
 
 import { apiError } from '@/lib/api-error';
 import { must } from '@/lib/db-write';
+import { addDays, companyDayLookup, companyTimeZones } from '@/lib/time-zone';
+import { daysOnEarth, daysUntilDay } from '@/lib/calendar-day';
 export const dynamic = 'force-dynamic';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
@@ -33,23 +35,28 @@ export async function GET(req: NextRequest) {
 
   try {
     const db = createServerClient();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayStr = today.toISOString().split('T')[0];
-    const in30Str = new Date(today.getTime() + 30 * 86400000).toISOString().split('T')[0];
+    const now = new Date();
+    /* "Days left" counts from each company's own day (tenants.time_zone; the
+       UTC day, logged, when a company has none). One read covers every
+       company: from the earliest day it is anywhere on Earth to 30 days past
+       the latest — then each deadline is decided against its own company's day. */
+    const earth = daysOnEarth(now);
 
-    // All tenants' deadlines coming due within the next 30 days.
+    // All tenants' deadlines that can be coming due within 30 days of their own today.
     // NOTE: lien_deadlines has no FK to projects, so we can't embed projects(...) —
     // fetch the related projects separately and join in memory.
     const { data: deadlines, error } = await db
       .from('lien_deadlines')
       .select('id, tenant_id, project_id, state, deadline_type, description, due_date, status, reminder_sent_30, reminder_sent_14, reminder_sent_7')
-      .gte('due_date', todayStr)
-      .lte('due_date', in30Str);
+      .gte('due_date', earth.earliest)
+      .lte('due_date', addDays(earth.latest, 30));
 
     if (error) {
       return apiError('cron/lien-reminders', error, undefined, 500);
     }
+
+    const zones = await companyTimeZones(db, (deadlines || []).map((d: { tenant_id: string }) => d.tenant_id));
+    const todayFor = companyDayLookup(zones, 'cron/lien-reminders', now);
 
     // Resolve project name + GC contact for every referenced project.
     const projectIds = Array.from(new Set((deadlines || []).map(d => d.project_id).filter(Boolean)));
@@ -70,10 +77,8 @@ export async function GET(req: NextRequest) {
     for (const dl of (deadlines || []) as any[]) { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (TERMINAL.has(String(dl.status || '').toLowerCase())) continue;
 
-      const due = new Date(dl.due_date + 'T00:00:00');
-      if (isNaN(due.getTime())) continue;
-      const daysLeft = Math.ceil((due.getTime() - today.getTime()) / 86400000);
-      if (daysLeft < 0) continue;
+      const daysLeft = daysUntilDay(dl.due_date, todayFor(dl.tenant_id));
+      if (daysLeft === null || daysLeft < 0 || daysLeft > 30) continue;
 
       // Active stage = the smallest threshold that is still >= daysLeft.
       // (e.g. 20d out → 30-day stage; 10d out → 14-day stage; 5d out → 7-day stage)

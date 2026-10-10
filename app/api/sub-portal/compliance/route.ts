@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { must } from '@/lib/db-write';
 import { LOCAL_DAY_HEADER, plausibleToday } from '@/lib/calendar-day';
+import { requestDay } from '@/lib/time-zone';
 import { resolveTenantCompany } from '@/lib/tenant-company';
 import { gcSenderName } from '@/lib/sub-inbox';
 import {
@@ -69,7 +70,7 @@ export async function GET(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const db = createServerClient();
-    const today = plausibleToday(req.headers.get(LOCAL_DAY_HEADER));
+    const today = plausibleToday(req.headers.get(LOCAL_DAY_HEADER), (await requestDay(req.headers, db, user.tenantId, 'sub-portal/compliance')).zone);
     const r = await roster(db, user.tenantId);
     const subName = new Map(r.subs.map((s) => [s.id, s.company_name || s.contact_name || 'Subcontractor']));
     const projName = new Map(r.projects.map((p) => [p.id, p.name || 'Job']));
@@ -108,7 +109,7 @@ export async function POST(req: NextRequest) {
     if (Array.isArray(body?.docs) && !wanted!.length) return NextResponse.json({ error: 'Pick which document to ask for.' }, { status: 400 });
 
     const db = createServerClient();
-    const today = plausibleToday(req.headers.get(LOCAL_DAY_HEADER));
+    const today = plausibleToday(req.headers.get(LOCAL_DAY_HEADER), (await requestDay(req.headers, db, user.tenantId, 'sub-portal/compliance')).zone);
     const r = await roster(db, user.tenantId, subId);
     const sub = r.subs.find((s) => s.id === subId);
     if (!sub) return NextResponse.json({ error: 'That sub is not one of this company\'s subs.' }, { status: 404 });

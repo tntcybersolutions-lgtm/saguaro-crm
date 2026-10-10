@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { LOCAL_DAY_HEADER, daysUntilDay, plausibleToday } from '@/lib/calendar-day';
+import { requestDay } from '@/lib/time-zone';
 import { fileNameFromUrl } from '@/lib/sub-portal-view';
 import { apiError } from '@/lib/api-error';
 
@@ -198,8 +199,9 @@ export async function GET(req: NextRequest) {
 
   // ── compliance ──
   let compliance: unknown[] = [];
-  const today = plausibleToday(req.headers.get(LOCAL_DAY_HEADER));
   try {
+    // The GC's own day (device, else company zone) when the page sends no day.
+    const today = plausibleToday(req.headers.get(LOCAL_DAY_HEADER), (await requestDay(req.headers, db, tenantId, 'sub-portal')).zone);
     const { data, error } = await db
       .from('portal_sub_compliance_docs')
       .select('*')

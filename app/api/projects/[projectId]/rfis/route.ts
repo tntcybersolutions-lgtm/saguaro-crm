@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
 import { apiError } from '@/lib/api-error';
+import { requestDay } from '@/lib/time-zone';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,13 +15,14 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
-  const today = new Date().toISOString().split('T')[0];
 
   try {
     const user = await getUser(req);
     if (!user) return NextResponse.json({ rfis: [] }, { status: 401 });
 
     const db = createServerClient();
+    // Overdue on the company's day (device, else company zone) — not the server's UTC day.
+    const { today } = await requestDay(req.headers, db, user.tenantId, 'projects/rfis');
     const { data, error } = await db
       .from('rfis')
       .select('*')

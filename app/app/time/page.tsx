@@ -307,6 +307,8 @@ export default function TimeClockPage() {
         ...(csiDiv ? { csiDivision: csiDiv } : {}),
         ...(g ? { lat: g.lat, lng: g.lng } : {}),
         clientTime: new Date().toISOString(),
+        // The shift's day is this device's day (a 7:30 PM Iowa clock-in is Oct 10, not the UTC Oct 11).
+        timezone: TZ,
       });
       if (status >= 200 && status < 300 && json?.ok && json?.shift) {
         setShift(json.shift as Shift); setStatusLoaded(true);

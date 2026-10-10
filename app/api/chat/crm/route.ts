@@ -9,6 +9,7 @@ import {
   logSageActivity,
   SAGE_ENGINE_UNCONFIGURED_MESSAGE,
 } from '@/lib/sage-brain';
+import { requestDay } from '@/lib/time-zone';
 
 const client = new Anthropic();
 
@@ -2278,7 +2279,8 @@ export async function POST(req: NextRequest) {
     ]);
 
     // Build structured context for the Sage prompt
-    const today = new Date().toISOString().split('T')[0];
+    // Overdue on the company's day (device, else company zone), not the server's UTC day.
+    const { today } = await requestDay(req.headers, db, user.tenantId, 'chat/crm');
     const activeProjects = (projects ?? []).filter((p: any) => p.status === 'active' || p.status === 'in_progress');
     const currentProjectData = projectId
       ? (projects ?? []).find((p: any) => p.id === projectId)
