@@ -72,7 +72,7 @@ export function alertDialog(opts: AlertOptions): Promise<void> {
 
 /* ── shared chrome ──────────────────────────────────────────────────── */
 const overlayS: React.CSSProperties = {
-  position: 'fixed', inset: 0, zIndex: 1000,
+  position: 'fixed', inset: 0, zIndex: 10200, // above everything — incl. the full-screen photo viewer (10050)
   background: 'rgba(2,4,8,0.72)', backdropFilter: 'blur(4px)',
   display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
 };
