@@ -15,15 +15,12 @@
  */
 
 import React from 'react';
-import { neonCard } from '@/lib/neon';
 import { Check } from '@phosphor-icons/react';
 import { moduleAccent } from '@/lib/module-identity';
-import { ScribbleNote } from '@/components/Scribble';
 import { STATUS_COLORS } from '@/lib/status-colors';
 
 // Brand hooks (white-label re-themes these via WhiteLabelProvider) ------------
 const GOLD = 'var(--brand-primary)';        // #FFE600 neon yellow default
-const GOLD_HI = 'var(--brand-primary-strong)'; // #FFF04A default
 const ON_GOLD = 'var(--on-brand)';             // #0A0A00 — text/icons on a yellow fill
 // Brand alpha steps — tokens, so a white-label override re-themes them too.
 const A08 = 'var(--brand-primary-08)';
@@ -33,13 +30,9 @@ const A22 = 'var(--brand-primary-18)';
 const A30 = 'var(--brand-primary-25)';
 const A45 = 'var(--brand-primary-35)';
 const BORDER = 'rgba(255,255,255,0.09)';
-// Glass (COPY-STYLE §6): translucent white over jet black, blurred.
-const SURFACE = 'linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.03))';
-const GLASS_BLUR = 'blur(16px) saturate(140%)';
 const WHITE = 'var(--text-primary)';
 const MUTED = 'var(--text-secondary)';
 const FAINT = 'var(--text-tertiary)';
-const RED = STATUS_COLORS.overdue;
 
 // ─── FX keyframes + interaction classes ──────────────────────────────────────
 // Rendered once per page. All motion is disabled under prefers-reduced-motion.

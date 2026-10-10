@@ -286,12 +286,14 @@ export default function AppTopBar({
       </div>
 
       {/* At exactly 768px there is no sidebar and no tab bar — the menu button is the way in. */}
-      <style>{`
-        @media (min-width: 768px) and (max-width: 768px) {
-          .sag-topbar .mobile-hamburger-topbar { display: inline-grid !important; }
-        }
-        .sag-tb-menuitem:hover { background: rgba(255,255,255,0.05); }
-      `}</style>
+      <style dangerouslySetInnerHTML={{ __html: TOPBAR_CSS }} />
     </header>
   );
 }
+
+const TOPBAR_CSS = `
+@media (min-width: 768px) and (max-width: 768px) {
+  .sag-topbar .mobile-hamburger-topbar { display: inline-grid !important; }
+}
+.sag-tb-menuitem:hover { background: rgba(255,255,255,0.05); }
+`;
