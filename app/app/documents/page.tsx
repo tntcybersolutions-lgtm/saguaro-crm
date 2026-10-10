@@ -691,14 +691,8 @@ export default function DocumentsPage() {
                               lw.signed_pdf_url ?? lw.pdf_url ?? lw.pdfUrl,
                               {
                                 path: '/api/lien-waivers/generate',
-                                body: {
-                                  projectId: lw.project_id ?? lw.projectId,
-                                  waiverType: lw.waiver_type ?? lw.type,
-                                  claimantName: lw.claimant_name ?? waiverParty(lw),
-                                  amount: lw.amount,
-                                  throughDate: lw.through_date ?? lw.throughDate,
-                                  state: lw.state,
-                                },
+                                // This waiver is already on file — build its PDF, don't file a second waiver.
+                                body: { projectId: lw.project_id ?? lw.projectId, waiverId: lw.id },
                               },
                             )}
                             style={{
