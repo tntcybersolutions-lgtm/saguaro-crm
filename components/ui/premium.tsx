@@ -701,7 +701,8 @@ export function AutoChip({ label = 'Auto' }: { label?: string }) {
  *  by surfacing what the system already knows (sums, counts, prior records). */
 export function StatStrip({ items }: {
   /** `active` marks a tile acting as the list's current filter: it gets a ring
-   *  and a "Filtering" chip, so the tap visibly did something. */
+   *  and a ✓ in place of the arrow (its `sub` should say how to clear it), so
+   *  the tap visibly did something. No chip: a 150px phone tile has no room. */
   items: { label: string; value: React.ReactNode; sub?: React.ReactNode; accent?: string; icon?: React.ReactNode; href?: string; onClick?: () => void; active?: boolean }[];
 }) {
   return (
@@ -730,9 +731,7 @@ export function StatStrip({ items }: {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--c-text-3)', marginBottom: 6, whiteSpace: 'nowrap' }}>
               {it.icon}{it.label}
-              {ring
-                ? <span aria-hidden style={{ marginLeft: 'auto', fontSize: 10.5, fontWeight: 800, letterSpacing: 0, textTransform: 'none', color: 'var(--on-brand)', background: ring, padding: '2px 7px', borderRadius: 999 }}>Filtering</span>
-                : clickable && <span aria-hidden style={{ marginLeft: 'auto', color: FAINT, fontWeight: 700 }}>→</span>}
+              {clickable && <span aria-hidden style={{ marginLeft: 'auto', color: ring || FAINT, fontWeight: 700 }}>{ring ? '✓' : '→'}</span>}
             </div>
             <div style={{ fontSize: 20, fontWeight: 900, color: it.accent || 'var(--c-text)', letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.value}</div>
             {it.sub && <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.sub}</div>}
