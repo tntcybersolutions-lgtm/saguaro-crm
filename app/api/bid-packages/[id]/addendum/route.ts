@@ -5,6 +5,7 @@ import { must, tryWrite } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
 import { assembleJacket, snapshotJacket } from '@/lib/bid-jacket';
 import { sendCorrespondenceEmail } from '@/lib/email';
+import { withComm } from '@/lib/comm-log';
 
 /**
  * POST /api/bid-packages/[id]/addendum — issue a numbered addendum.
@@ -103,7 +104,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const { data: invites } = await db
       .from('bid_package_invites')
-      .select('id, sub_email, company_name, sub_name, token, response_status')
+      .select('id, sub_id, sub_email, company_name, sub_name, token, response_status')
       .eq('bid_package_id', id)
       .eq('tenant_id', user.tenantId);
 
@@ -117,7 +118,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const delivery: Array<{ email: string; sent: boolean }> = [];
     for (const inv of recipients) {
       try {
-        const res = await sendCorrespondenceEmail({
+        const res = await withComm(
+          { tenantId: user.tenantId, projectId: p.project_id ?? null, bidPackageId: id, subId: inv.sub_id || null,
+            relatedType: 'addendum', relatedId: inv.id || null,
+            toName: inv.company_name || inv.sub_name || null, createdBy: user.id },
+          () => sendCorrespondenceEmail({
           to: [inv.sub_email],
           subject: `Addendum ${n} — ${p.trade || p.name} — ${project.name || 'Project'}`,
           body:
@@ -127,7 +132,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           correspondenceType: 'Addendum',
           referenceNumber: `ADD-${String(n).padStart(2, '0')}`,
           projectName: project.name || null,
-        });
+        }));
         delivery.push({ email: inv.sub_email, sent: res?.sent !== false });
       } catch (e) {
         console.error('[bid addendum] send failed', inv.sub_email, e);

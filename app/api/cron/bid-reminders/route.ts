@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { sendSubInvitedToBid } from '@/lib/email';
+import { withComm } from '@/lib/comm-log';
 
 export async function GET(req: NextRequest) {
   /* Every other cron route in this directory carries this guard; this one was
@@ -38,16 +39,20 @@ export async function GET(req: NextRequest) {
         .eq('status', 'invited');
 
       for (const invite of (invites || []) as any[]) {
-        await sendSubInvitedToBid(
-          invite.sub_email, invite.sub_name,
-          pkg.projects?.name || 'Project',
-          pkg.trade, pkg.due_date,
-          `REMINDER: Bid due ${pkg.bid_due_date || pkg.due_date}. ${pkg.scope_summary || ''}`,
-          /* /portals/bid/<invite token> — the bidder's own jacket. This pointed
-             at /portals/sub/<token>, which has no page (404) and whose auth
-             route validates portal_sub_sessions.token, a different token
-             entirely. Every reminder ever sent carried a dead link. */
-          `${APP_URL}/portals/bid/${invite.token}`
+        await withComm(
+          { tenantId: pkg.tenant_id, projectId: pkg.project_id ?? null, bidPackageId: pkg.id, subId: invite.sub_id ?? null,
+            relatedType: 'bid_reminder', relatedId: invite.id ?? null, toName: invite.company_name || invite.sub_name || null },
+          () => sendSubInvitedToBid(
+            invite.sub_email, invite.sub_name,
+            pkg.projects?.name || 'Project',
+            pkg.trade, pkg.due_date,
+            `REMINDER: Bid due ${pkg.bid_due_date || pkg.due_date}. ${pkg.scope_summary || ''}`,
+            /* /portals/bid/<invite token> — the bidder's own jacket. This pointed
+               at /portals/sub/<token>, which has no page (404) and whose auth
+               route validates portal_sub_sessions.token, a different token
+               entirely. Every reminder ever sent carried a dead link. */
+            `${APP_URL}/portals/bid/${invite.token}`
+          ),
         );
         sent++;
       }

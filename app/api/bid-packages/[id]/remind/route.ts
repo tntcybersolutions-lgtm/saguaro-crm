@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { sendSubInvitedToBid } from '@/lib/email';
 import { requirePermission } from '@/lib/permissions';
+import { withComm } from '@/lib/comm-log';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,19 +58,27 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (!to) return NextResponse.json({ error: 'No email address on file for this subcontractor' }, { status: 400 });
 
     const subName = inv.contact_name || inv.company_name || inv.sub_name || 'Subcontractor';
-    const portalUrl = inv.token
-      ? `${APP_URL}/portals/sub/${inv.token}`
-      : `${APP_URL}/portals/sub/login`;
+    /* /portals/bid/<invite token> is the bidder's jacket. This sent
+       /portals/sub/<token>, a page that does not exist — the same dead link
+       the cron reminders and invites had until they were fixed. */
+    if (!inv.token) return NextResponse.json({ error: 'This invite has no bid link yet — re-send the invitation.' }, { status: 409 });
+    const portalUrl = `${APP_URL}/portals/bid/${inv.token}`;
 
-    await sendSubInvitedToBid(
-      to,
-      subName,
-      projectName,
-      p.trade || 'Trade',
-      p.due_date || '',
-      p.scope_summary || p.scope_of_work || '',
-      portalUrl,
+    const mail = await withComm(
+      { tenantId: user.tenantId, projectId: p.project_id ?? null, bidPackageId: packageId, subId: inv.sub_id ?? null,
+        relatedType: 'bid_reminder', relatedId: inv.id ?? null, toName: subName, createdBy: user.id },
+      () => sendSubInvitedToBid(
+        to,
+        subName,
+        projectName,
+        p.trade || 'Trade',
+        p.bid_due_date || p.due_date || '',
+        p.scope_summary || p.scope_of_work || '',
+        portalUrl,
+      ),
     );
+    // Say so when it didn't go — a reminder "sent" that never left is worse than none.
+    if (!mail.sent) return NextResponse.json({ error: mail.error || 'The reminder was not sent.', sentTo: to }, { status: 502 });
 
     return NextResponse.json({ success: true, sentTo: to });
   } catch (err) {

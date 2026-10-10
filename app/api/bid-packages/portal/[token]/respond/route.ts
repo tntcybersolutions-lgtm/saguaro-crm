@@ -185,8 +185,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
     );
 
     /* Tell the GC. onBidSubmitted has existed with zero callers, which is why a
-       bid arriving was never announced to anyone. */
-    onBidSubmitted(submissionId).catch((e) => console.error('[bid respond] notify failed', e));
+       bid arriving was never announced to anyone. Awaited so the email (and
+       its place on the jacket's record) isn't cut off when the function
+       freezes after responding. */
+    await onBidSubmitted(submissionId).catch((e) => console.error('[bid respond] notify failed', e));
 
     /* A bid arriving is the event a GC most wants to see without being told.
        No user_id here on purpose — this half of the loop is the SUBCONTRACTOR
