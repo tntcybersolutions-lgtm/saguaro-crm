@@ -23,6 +23,7 @@ import { parseDxf, dxfLinearFeet, insUnitsToFeet } from '@/lib/takeoff/dxf';
 import { humanError } from '@/lib/errors';
 import { PremiumSurface, ModuleHero, SectionCard, ghostButtonStyle } from '@/components/ui/premium';
 
+import { printHtml } from '@/lib/print-doc';
 // W-16: the 1,160-line PlanTracer workspace (canvas tracer) loads only when the user opens
 // the tracer — out of this route's first-paint chunk (same lazy pattern as pdfjs at PlanTracer.tsx:430).
 // Targeted-measure contract with the tracer: while `targetConditionId` is set, finishing a draft
@@ -454,10 +455,8 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
 <table><thead><tr><th>Action</th><th>Scope item</th><th>Quantity</th><th>Cost impact</th></tr></thead><tbody>${rows}</tbody></table>
 <div class="net"><div><div class="lbl">Net change to contract</div></div><div><div class="amt">${netStr(net)}</div><div class="was">was ${usd(revDiff.oldSellCents)} → now ${usd(revDiff.newSellCents)}</div></div></div>
 <div class="foot">Priced deterministically by the Saguaro takeoff engine — added scope, revised quantities, and credits reconciled against the baseline revision. This document is a draft for review and is not a contract amendment until executed by both parties.</div></body></html>`;
-    const w = window.open('', '_blank');
-    if (!w) { setCoMsg('Allow pop-ups to print the change order.'); return; }
-    w.document.write(html); w.document.close();
-    setTimeout(() => { try { w.print(); } catch { /* */ } }, 400);
+    printHtml(html, `Change Order — ${name || proj?.name || 'Measured Takeoff'}`)
+      .catch((e) => { console.error(e); setCoMsg(humanError(e, "Couldn't open the change order to print. Try again.")); });
   };
 
   // ── ONE-TAP CHAIN: saved takeoff → Sage auto-docs (bid packages + jackets + SOV/pay app) via the existing SSE route ──
@@ -726,11 +725,8 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
       ...(exclusionsTxt.trim() ? { exclusions: lines(exclusionsTxt) } : {}),
       ...(clarifTxt.trim() ? { clarifications: lines(clarifTxt) } : {}),
     });
-    const w = window.open('', '_blank');
-    if (!w) { setMsg('Allow pop-ups to export the estimate PDF'); return; }
-    w.document.write(html);
-    w.document.close();
-    setTimeout(() => { try { w.print(); } catch { /* */ } }, 500);
+    printHtml(html, `Estimate — ${name || 'Measured Takeoff'}`)
+      .catch((e) => { console.error(e); setMsg(humanError(e, "Couldn't open the estimate to print. Try again.")); });
   };
 
   const exportExcel = async () => {

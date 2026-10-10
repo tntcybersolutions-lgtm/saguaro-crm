@@ -26,6 +26,7 @@ import { levelBids, usd, TRADE_TEMPLATES, type ScopeLine, type Bidder, type Scop
 import { PageShell, Card, Button, Badge, StatRow, Tabs, EmptyState, Input, Textarea, Menu, type StatItem } from '@/components/ui/kit';
 import { Plus, Trash, Sparkle, Warning, Info, FilePdf, Target, CaretDown, CaretRight, Scales, ArrowRight, Lock, EyeSlash, Trophy } from '@phosphor-icons/react';
 
+import { printHtml } from '@/lib/print-doc';
 const uid = () => Math.random().toString(36).slice(2, 9);
 const toCents = (s: string) => Math.round((parseFloat(String(s).replace(/[^0-9.]/g, '')) || 0) * 100);
 /* Scope status colors — the semantic tokens, never page hex. */
@@ -284,12 +285,11 @@ function BidLevelingBoard() {
 
   /* Printed bid tab — print layout, so it keeps its own light print colors. */
   const exportPdf = () => {
-    const w = window.open('', '_blank'); if (!w) return;
     const cell = (t: string, c = '#111') => `<td style="padding:6px 9px;border:1px solid #ccc;text-align:right;color:${c}">${t}</td>`;
     const head = `<th style="padding:6px 9px;border:1px solid #ccc;background:#0E0F12;color:var(--c-text)">${''}</th>` + result.bidders.map((b) => `<th style="padding:6px 9px;border:1px solid #ccc;background:${b.id === rec?.id ? 'var(--success)' : 'var(--surface-card)'};color:var(--c-text)">${b.name}${b.id === rec?.id ? ' ★' : ''}</th>`).join('');
     const row = (label: string, fn: (b: typeof result.bidders[number]) => string) => `<tr><td style="padding:6px 9px;border:1px solid #ccc;font-weight:600">${label}</td>${result.bidders.map((b) => cell(fn(b))).join('')}</tr>`;
     const matrix = scopeLines.map((l) => `<tr><td style="padding:5px 9px;border:1px solid #ccc">${l.description}</td>${result.bidders.map((b) => { const it = b.lines.find((s) => s.scopeLineId === l.id); const st: ScopeStatus = (it && it.status !== 'missing') ? it.status : 'excluded'; const col = st === 'included' ? 'var(--success)' : st === 'excluded' ? 'var(--danger)' : st === 'clarify' ? 'var(--brand-primary-strong)' : 'var(--warning)'; return `<td style="padding:5px 9px;border:1px solid #ccc;text-align:center;color:${col};font-weight:600">${STL[st]}${it?.valueCents ? ' · ' + usd(it.valueCents) : ''}</td>`; }).join('')}</tr>`).join('');
-    w.document.write(`<html><head><title>Bid Tabulation</title></head><body style="font-family:Arial;padding:24px;color:#111">
+    const html = (`<html><head><title>Bid Tabulation</title></head><body style="font-family:Arial;padding:24px;color:#111">
       <h2 style="margin:0">Bid Tabulation</h2><div style="color:#555;font-size:12px;margin-bottom:14px">Leveled — allowances fill scope gaps for apples-to-apples comparison${result.budgetCents ? ` · Budget ${usd(result.budgetCents)}` : ''}</div>
       <table style="border-collapse:collapse;font-size:12px;width:100%"><thead><tr>${head}</tr></thead><tbody>
       ${row('Base Bid', (b) => usd(b.baseBidCents))}${row('+ Gap Allowances', (b) => b.gapAllowanceCents ? '+' + usd(b.gapAllowanceCents) : '—')}${row('+ Alternates', (b) => b.alternatesAdjCents ? usd(b.alternatesAdjCents) : '—')}${row('+ Adjustments', (b) => b.adjustmentsCents ? '+' + usd(b.adjustmentsCents) : '—')}
@@ -300,7 +300,8 @@ function BidLevelingBoard() {
       <table style="border-collapse:collapse;font-size:11px;width:100%"><thead><tr>${head}</tr></thead><tbody>${matrix}</tbody></table>
       ${rec ? `<div style="margin-top:16px;padding:10px 12px;border-left:3px solid #2CFF7A;background:#f0faf4"><b>Recommendation:</b> ${result.recommendation.rationale}</div>` : ''}
       </body></html>`);
-    w.document.close(); w.focus(); w.print();
+    printHtml(html, 'Bid Tabulation')
+      .catch((e) => { console.error(e); setMsg("Couldn't open the bid tab to print. Try again."); });
   };
 
   const style = <style dangerouslySetInnerHTML={{ __html: CSS }} />;

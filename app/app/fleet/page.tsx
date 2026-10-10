@@ -17,6 +17,7 @@ import { confirmDialog } from '@/lib/ui/async-dialog';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 import { localDay } from '@/lib/calendar-day';
 
+import { printHtml } from '@/lib/print-doc';
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
 const DIM = 'var(--text-secondary)', TEXT = 'var(--text-primary)', GREEN = 'var(--success)', RED = 'var(--danger)', AMBER = 'var(--warning)';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -169,9 +170,8 @@ export default function FleetPage() {
   };
 
   const exportReport = () => {
-    const w = window.open('', '_blank'); if (!w) return;
     const rows = assets.map((a) => { const h = assetHealth(a as Asset, records as MaintenanceRecord[], docs as AssetDoc[], now()); const col = (STATUS_COLOR as any)[h.overall]; const nextM = h.maintenance.status !== 'unknown' && h.maintenance.status !== 'ok' ? `${h.maintenance.label || 'service'} (${h.maintenance.remainingMiles != null ? (h.maintenance.remainingMiles < 0 ? Math.abs(h.maintenance.remainingMiles) + ' mi over' : h.maintenance.remainingMiles + ' mi') : ''}${h.maintenance.remainingDays != null ? ` ${h.maintenance.remainingDays}d` : ''})` : '—'; const exp = EXPIRIES.map(([c, l]) => { const e = expiryStatus(a[c], now()); return e.status === 'expired' ? `${l} expired` : e.status === 'soon' ? `${l} ${e.daysUntil}d` : null; }).filter(Boolean).join(', ') || '—'; return `<tr><td style="border:1px solid #ccc;padding:5px 8px"><b>${a.name}</b><div style="color:#666;font-size:10px">${[a.make, a.model, a.year].filter(Boolean).join(' ')}</div></td><td style="border:1px solid #ccc;padding:5px 8px">${a.type}</td><td style="border:1px solid #ccc;padding:5px 8px;text-align:right">${a.odometer ? Math.round(a.odometer).toLocaleString() : '—'}</td><td style="border:1px solid #ccc;padding:5px 8px">${a.status}</td><td style="border:1px solid #ccc;padding:5px 8px;color:${nextM === '—' ? '#111' : 'var(--brand-primary-strong)'}">${nextM}</td><td style="border:1px solid #ccc;padding:5px 8px">${exp}</td><td style="border:1px solid #ccc;padding:5px 8px"><span style="display:inline-block;width:9px;height:9px;border-radius:5px;background:${col}"></span></td></tr>`; }).join('');
-    w.document.write(`<html><head><title>Fleet Report</title></head><body style="font-family:Arial;padding:24px;color:#111">
+    const html = (`<html><head><title>Fleet Report</title></head><body style="font-family:Arial;padding:24px;color:#111">
       <h2 style="margin:0">Fleet Report</h2><div style="color:#555;font-size:12px;margin-bottom:16px">Generated ${new Date().toLocaleString()}</div>
       <div style="display:flex;gap:24px;margin-bottom:18px;font-size:13px">
         <div><b style="font-size:20px">${summary.total}</b><br>Assets</div>
@@ -184,7 +184,8 @@ export default function FleetPage() {
       ${summary.needsAttention.length ? `<div style="background:#fff4e5;border-left:3px solid #b8860b;padding:8px 12px;margin-bottom:14px;font-size:13px"><b>Needs attention:</b> ${summary.needsAttention.join(', ')}</div>` : ''}
       <table style="border-collapse:collapse;width:100%;font-size:12px"><thead><tr style="background:#0E0F12;color:var(--c-text)">${['Asset', 'Type', 'Odometer', 'Status', 'Next Maintenance', 'Expiring', ''].map((h) => `<th style="border:1px solid #ccc;padding:6px 8px;text-align:left">${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
       </body></html>`);
-    w.document.close(); w.focus(); w.print();
+    printHtml(html, 'Fleet Report')
+      .catch((e) => { console.error(e); showToast("Couldn't open the fleet report to print. Try again.", 'error'); });
   };
 
   const inp: React.CSSProperties = { background: DARK, border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, padding: '9px 11px', fontSize: 14, width: '100%' };
