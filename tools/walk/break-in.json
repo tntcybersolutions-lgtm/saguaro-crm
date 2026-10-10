@@ -3,83 +3,83 @@
  "rows": [
   {
    "url": "/api/projects/:other",
-   "pass": true,
-   "note": "refused (404)"
+   "pass": false,
+   "note": "LEAK — 200 and the answer contains the other company's id"
   },
   {
    "url": "/api/projects/:other/bills",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/budget",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/invoices",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/todos",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/closeout",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/commissioning",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/coordination-issues",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/folders",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/incidents",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/permits",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/purchase-orders",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/specs",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/submittals",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/waste-tracking",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/daily-logs",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/photos/link",
@@ -118,83 +118,83 @@
   },
   {
    "url": "/api/projects/:other",
-   "pass": true,
-   "note": "refused (404)"
+   "pass": false,
+   "note": "LEAK — 200 and the answer contains the other company's id"
   },
   {
    "url": "/api/projects/:other/bills",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/budget",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/invoices",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/todos",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/closeout",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/commissioning",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/coordination-issues",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/folders",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/incidents",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/permits",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/purchase-orders",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/specs",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/submittals",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/waste-tracking",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/daily-logs",
    "pass": true,
-   "note": "refused (404)"
+   "note": "200 with none of the other company's rows"
   },
   {
    "url": "/api/projects/:other/photos/link",
@@ -233,513 +233,73 @@
   },
   {
    "url": "/api/projects/:other",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/bills",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/budget",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/invoices",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/todos",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/closeout",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/commissioning",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/coordination-issues",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/folders",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/incidents",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/permits",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/purchase-orders",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/specs",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/submittals",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/waste-tracking",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/daily-logs",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/photos/link",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
-  },
-  {
-   "url": "/api/daily-logs/list?projectId=:other",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
-  },
-  {
-   "url": "/api/punch-list/list?projectId=:other",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
-  },
-  {
-   "url": "/api/photos/list?projectId=:other",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
-  },
-  {
-   "url": "/api/rfis?projectId=:other",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
-  },
-  {
-   "url": "/api/takeoff?projectId=:other",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
-  },
-  {
-   "url": "/api/takeoffs/latest?projectId=:other",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
+   "pass": null,
+   "note": "skipped — that job belongs to the signed-in company"
   },
   {
    "url": "/api/projects/:other",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/bills",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/budget",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/invoices",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/todos",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/closeout",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/commissioning",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/coordination-issues",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/folders",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/incidents",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/permits",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/purchase-orders",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/specs",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/submittals",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/waste-tracking",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/daily-logs",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/photos/link",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
-  },
-  {
-   "url": "/api/daily-logs/list?projectId=:other",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
-  },
-  {
-   "url": "/api/punch-list/list?projectId=:other",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
-  },
-  {
-   "url": "/api/photos/list?projectId=:other",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
-  },
-  {
-   "url": "/api/rfis?projectId=:other",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
-  },
-  {
-   "url": "/api/takeoff?projectId=:other",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
-  },
-  {
-   "url": "/api/takeoffs/latest?projectId=:other",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
+   "pass": null,
+   "note": "skipped — that job belongs to the signed-in company"
   },
   {
    "url": "/api/projects/:other",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/bills",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/budget",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/invoices",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/todos",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/closeout",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/commissioning",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/coordination-issues",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/folders",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/incidents",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/permits",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/purchase-orders",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/specs",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/submittals",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/waste-tracking",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/daily-logs",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/photos/link",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
-  },
-  {
-   "url": "/api/daily-logs/list?projectId=:other",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
-  },
-  {
-   "url": "/api/punch-list/list?projectId=:other",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
-  },
-  {
-   "url": "/api/photos/list?projectId=:other",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
-  },
-  {
-   "url": "/api/rfis?projectId=:other",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
-  },
-  {
-   "url": "/api/takeoff?projectId=:other",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
-  },
-  {
-   "url": "/api/takeoffs/latest?projectId=:other",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
+   "pass": null,
+   "note": "skipped — that job belongs to the signed-in company"
   },
   {
    "url": "/api/projects/:other",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/bills",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/budget",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/invoices",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/todos",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/closeout",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/commissioning",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/coordination-issues",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/folders",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/incidents",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/permits",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/purchase-orders",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/specs",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/submittals",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/waste-tracking",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/daily-logs",
-   "pass": true,
-   "note": "refused (404)"
-  },
-  {
-   "url": "/api/projects/:other/photos/link",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
-  },
-  {
-   "url": "/api/daily-logs/list?projectId=:other",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
-  },
-  {
-   "url": "/api/punch-list/list?projectId=:other",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
-  },
-  {
-   "url": "/api/photos/list?projectId=:other",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
-  },
-  {
-   "url": "/api/rfis?projectId=:other",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
-  },
-  {
-   "url": "/api/takeoff?projectId=:other",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
-  },
-  {
-   "url": "/api/takeoffs/latest?projectId=:other",
-   "pass": true,
-   "note": "200 with none of the other company's rows"
+   "pass": null,
+   "note": "skipped — that job belongs to the signed-in company"
   },
   {
    "url": "/api/daily-logs/:other",
-   "pass": true,
-   "note": "refused (404)"
+   "pass": false,
+   "note": "LEAK — 200 and the answer contains the other company's id"
   },
   {
    "url": "/api/daily-logs/:other",
-   "pass": true,
-   "note": "refused (404)"
+   "pass": false,
+   "note": "LEAK — 200 and the answer contains the other company's id"
   },
   {
    "url": "/api/rfis/:other",
-   "pass": true,
-   "note": "server error 500 — no data, but fix the error"
+   "pass": false,
+   "note": "LEAK — 200 and the answer contains the other company's id"
   },
   {
    "url": "/api/rfis/:other",
-   "pass": true,
-   "note": "server error 500 — no data, but fix the error"
+   "pass": false,
+   "note": "LEAK — 200 and the answer contains the other company's id"
   },
   {
    "url": "/api/change-orders/:other",
-   "pass": true,
-   "note": "refused (404)"
+   "pass": false,
+   "note": "LEAK — 200 and the answer contains the other company's id"
   },
   {
    "url": "/api/change-orders/:other",
-   "pass": true,
-   "note": "refused (404)"
+   "pass": false,
+   "note": "LEAK — 200 and the answer contains the other company's id"
   },
   {
    "url": "/api/pay-apps/:other",
-   "pass": true,
-   "note": "refused (404)"
+   "pass": false,
+   "note": "LEAK — 200 and the answer contains the other company's id"
   },
   {
    "url": "/api/pay-apps/:other",
-   "pass": true,
-   "note": "refused (404)"
+   "pass": false,
+   "note": "LEAK — 200 and the answer contains the other company's id"
   },
   {
    "url": "/api/contracts/:other",
-   "pass": true,
-   "note": "refused (404)"
+   "pass": false,
+   "note": "LEAK — 200 and the answer contains the other company's id"
   },
   {
    "url": "/api/contracts/:other",
-   "pass": true,
-   "note": "refused (404)"
+   "pass": false,
+   "note": "LEAK — 200 and the answer contains the other company's id"
   },
   {
    "url": "/api/inspections/:other",
@@ -753,13 +313,13 @@
   },
   {
    "url": "/api/invoices/:other",
-   "pass": true,
-   "note": "refused (404)"
+   "pass": false,
+   "note": "LEAK — 200 and the answer contains the other company's id"
   },
   {
    "url": "/api/invoices/:other",
-   "pass": true,
-   "note": "refused (404)"
+   "pass": false,
+   "note": "LEAK — 200 and the answer contains the other company's id"
   },
   {
    "url": "/api/bid-packages/:other",
@@ -768,8 +328,8 @@
   },
   {
    "url": "/api/bid-packages/:other",
-   "pass": true,
-   "note": "refused (404)"
+   "pass": false,
+   "note": "LEAK — 200 and the answer contains the other company's id"
   },
   {
    "url": "/api/takeoff/:other",

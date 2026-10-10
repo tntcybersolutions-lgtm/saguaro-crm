@@ -8,13 +8,10 @@
   "covered": [],
   "erroring": [],
   "notTapped": [
-   "Create",
-   "1 pay app waiting 14+ days for a decision · Desert Vista Medical Plaza",
-   "Mark done: Drywall corner bead damaged",
-   "4 days late confirm roof warranty registration Project task"
+   "Create"
   ],
-  "tapped": 70,
-  "ok": 56
+  "tapped": 7,
+  "ok": 7
  },
  {
   "route": "/app/my-work",
@@ -33,12 +30,21 @@
   "status": 200,
   "loadErrors": [],
   "apiErrors": [],
-  "dead": [],
+  "dead": [
+   {
+    "label": "All",
+    "tag": "button",
+    "href": null,
+    "html": "<button type=\"button\" class=\"jl-chip\" aria-pressed=\"true\" data-walk=\"4\">All</button>"
+   }
+  ],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 1,
-  "ok": 1
+  "notTapped": [
+   "Complete"
+  ],
+  "tapped": 5,
+  "ok": 4
  },
  {
   "route": "/app/time",
@@ -49,7 +55,7 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 3,
+  "tapped": 2,
   "ok": 2
  },
  {
@@ -73,11 +79,11 @@
   "covered": [],
   "erroring": [],
   "notTapped": [
-   "PAY APPLICATIONS → — AIA G702 / G703",
+   "— Pay Applications › AIA G702 / G703",
    "Pay Applications"
   ],
   "tapped": 12,
-  "ok": 6
+  "ok": 7
  },
  {
   "route": "/app/daily-logs",
@@ -89,7 +95,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 3,
-  "ok": 2
+  "ok": 0
  },
  {
   "route": "/app/schedule",
@@ -101,7 +107,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 3,
-  "ok": 3
+  "ok": 1
  },
  {
   "route": "/app/compliance",
@@ -127,7 +133,7 @@
    "Upload Blueprint"
   ],
   "tapped": 4,
-  "ok": 1
+  "ok": 4
  },
  {
   "route": "/app/reports",
@@ -135,30 +141,14 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "Job Cost",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<button type=\"button\" class=\"rpChip\" data-walk=\"16\">Job Cost</button>"
-   },
-   {
-    "label": "Punch List",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<button type=\"button\" class=\"rpChip\" data-walk=\"18\">Punch List</button>"
-   },
-   {
-    "label": "Bid Analysis",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<button type=\"button\" class=\"rpChip\" data-walk=\"20\">Bid Analysis</button>"
-   }
-  ],
+  "covered": [],
   "erroring": [],
   "notTapped": [
    "Pay App Status",
    "Pay App Status Pay applications with amounts and status Answers: How m"
   ],
   "tapped": 27,
-  "ok": 12
+  "ok": 26
  },
  {
   "route": "/app/people",
@@ -182,7 +172,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 5,
-  "ok": 2
+  "ok": 5
  },
  {
   "route": "/app/customers",
@@ -193,8 +183,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 6,
-  "ok": 6
+  "tapped": 8,
+  "ok": 8
  },
  {
   "route": "/app/leads",
@@ -205,8 +195,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 7,
-  "ok": 4
+  "tapped": 18,
+  "ok": 5
  },
  {
   "route": "/app/sales",
@@ -229,35 +219,20 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 7,
-  "ok": 7
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/billing",
   "status": 200,
   "loadErrors": [],
-  "apiErrors": [
-   "POST /api/billing/checkout → 503"
-  ],
+  "apiErrors": [],
   "dead": [],
   "covered": [],
-  "erroring": [
-   {
-    "label": "Select Plan",
-    "errors": [
-     "POST /api/billing/checkout → 503"
-    ]
-   },
-   {
-    "label": "Select Plan",
-    "errors": [
-     "POST /api/billing/checkout → 503"
-    ]
-   }
-  ],
+  "erroring": [],
   "notTapped": [],
   "tapped": 5,
-  "ok": 5
+  "ok": 4
  },
  {
   "route": "/app/billing/payapp",
@@ -275,18 +250,6 @@
   "ok": 4
  },
  {
-  "route": "/app/billing/cost-control",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 10,
-  "ok": 9
- },
- {
   "route": "/app/invoicing",
   "status": 200,
   "loadErrors": [],
@@ -296,7 +259,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 3,
-  "ok": 2
+  "ok": 3
  },
  {
   "route": "/app/catalog",
@@ -319,8 +282,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 13,
-  "ok": 1
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/command-center",
@@ -344,7 +307,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 1,
-  "ok": 1
+  "ok": 0
  },
  {
   "route": "/app/command-center/directory",
@@ -414,13 +377,9 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "1 pay app waiting 14+ days for a decision · Desert Vista Medical Plaza",
-   "Mark done: Drywall corner bead damaged",
-   "4 days late confirm roof warranty registration Project task"
-  ],
-  "tapped": 55,
-  "ok": 1
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/command-center/long-lead",
@@ -461,7 +420,9 @@
  {
   "route": "/app/command-center/owner-updates",
   "status": 200,
-  "loadErrors": [],
+  "loadErrors": [
+   "walk stopped: ENOSPC: no space left on device, write"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
@@ -473,7 +434,9 @@
  {
   "route": "/app/command-center/portals",
   "status": 200,
-  "loadErrors": [],
+  "loadErrors": [
+   "walk stopped: ENOSPC: no space left on device, write"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
@@ -485,7 +448,9 @@
  {
   "route": "/app/command-center/pre-site",
   "status": 200,
-  "loadErrors": [],
+  "loadErrors": [
+   "walk stopped: ENOSPC: no space left on device, write"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
@@ -566,7 +531,7 @@
    "Bulk Upload"
   ],
   "tapped": 3,
-  "ok": 3
+  "ok": 0
  },
  {
   "route": "/app/fleet",
@@ -578,7 +543,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 3,
-  "ok": 2
+  "ok": 3
  },
  {
   "route": "/app/intelligence",
@@ -590,22 +555,29 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 2,
-  "ok": 2
+  "ok": 0
  },
  {
   "route": "/app/portals",
   "status": 200,
   "loadErrors": [],
   "apiErrors": [],
-  "dead": [],
+  "dead": [
+   {
+    "label": "Active Client Portals 2 Showing — owners with access",
+    "tag": "button",
+    "href": null,
+    "html": "<button type=\"button\" class=\"k-stat\" data-tone=\"good\" data-walk=\"4\"><span class=\"k-stat-top\"><span class=\"k-stat-label\">Active Client Portals</span></span><span"
+   }
+  ],
   "covered": [],
   "erroring": [],
   "notTapped": [
    "Invite Subcontractor",
    "Invite Client"
   ],
-  "tapped": 3,
-  "ok": 1
+  "tapped": 7,
+  "ok": 4
  },
  {
   "route": "/app/prequalification",
@@ -613,18 +585,12 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "Dashboard",
-    "why": "<textarea placeholder=\"Brief description of this form…\"></textarea> from <div>…</div> subtree intercepts pointer events",
-    "html": "<button style=\"padding:10px 24px;background:none;border:none;color:var(--brand-primary);font-weight:700;font-size:14px;cursor:pointer;border-bottom:2px solid va"
-   }
-  ],
+  "covered": [],
   "erroring": [],
   "notTapped": [
    "Send Prequal Form"
   ],
-  "tapped": 5,
+  "tapped": 4,
   "ok": 4
  },
  {
@@ -636,20 +602,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 5,
-  "ok": 5
- },
- {
-  "route": "/app/resource-planning",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 22,
-  "ok": 4
+  "tapped": 11,
+  "ok": 10
  },
  {
   "route": "/app/reviews",
@@ -672,8 +626,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "tapped": 9,
+  "ok": 9
  },
  {
   "route": "/app/settings",
@@ -685,15 +639,10 @@
   "erroring": [],
   "notTapped": [
    "Upload company logo",
-   "Save Branding",
-   "Subscription & Plan Manage your plan, upgrade, view invoices",
-   "Guided Onboarding Book a hands-on setup session with a Saguaro special",
-   "Contact Support Send us a message — we respond within 48 hours",
-   "Sign Out",
-   "Delete account"
+   "Save Branding"
   ],
-  "tapped": 13,
-  "ok": 13
+  "tapped": 70,
+  "ok": 70
  },
  {
   "route": "/app/signal-studio",
@@ -703,9 +652,11 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Start Without a Project"
+  ],
+  "tapped": 9,
+  "ok": 9
  },
  {
   "route": "/app/warranty-claims",
@@ -730,7 +681,7 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 7,
+  "tapped": 12,
   "ok": 3
  },
  {
@@ -741,9 +692,13 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 2,
-  "ok": 2
+  "notTapped": [
+   "Start takeoff ›",
+   "Pay Apps None yet ›",
+   "Archive"
+  ],
+  "tapped": 30,
+  "ok": 30
  },
  {
   "route": "/app/projects/:id/photos",
@@ -754,8 +709,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 3,
-  "ok": 2
+  "tapped": 5,
+  "ok": 5
  },
  {
   "route": "/app/projects/:id/files",
@@ -769,7 +724,19 @@
    "Import from Cloud",
    "Trash"
   ],
-  "tapped": 6,
+  "tapped": 7,
+  "ok": 7
+ },
+ {
+  "route": "/app/projects/:id/daily-logs",
+  "status": 200,
+  "loadErrors": [],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 5,
   "ok": 5
  },
  {
@@ -780,9 +747,12 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 2,
-  "ok": 1
+  "notTapped": [
+   "Answered 0 Ready to close out",
+   "Create First RFI"
+  ],
+  "tapped": 4,
+  "ok": 4
  },
  {
   "route": "/app/projects/:id/submittals",
@@ -793,8 +763,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 3,
-  "ok": 3
+  "tapped": 5,
+  "ok": 5
  },
  {
   "route": "/app/projects/:id/punch-list",
@@ -806,7 +776,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 2,
-  "ok": 2
+  "ok": 1
  },
  {
   "route": "/app/projects/:id/change-orders",
@@ -817,8 +787,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 3,
-  "ok": 3
+  "tapped": 4,
+  "ok": 4
  },
  {
   "route": "/app/projects/:id/pay-apps",
@@ -829,10 +799,12 @@
   "covered": [],
   "erroring": [],
   "notTapped": [
-   "New Pay Application"
+   "New Pay Application",
+   "Lien Waivers — Generate at owner approval",
+   "Create Application #1"
   ],
-  "tapped": 0,
-  "ok": 0
+  "tapped": 1,
+  "ok": 1
  },
  {
   "route": "/app/projects/:id/lien-waivers",
@@ -855,11 +827,27 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [],
+  "covered": [
+   {
+    "label": "Gantt",
+    "why": "<span class=\"pmFigV\">—</span> from <div class=\"sag-side-panel\">…</div> subtree intercepts pointer events",
+    "html": "<button class=\"pmBtn\" style=\"padding:9px 16px;background:var(--brand-primary-12);border:none;color:var(--brand-primary);font-size:12px;font-weight:700;cursor:po"
+   },
+   {
+    "label": "List",
+    "why": "<span class=\"pmFigV\">—</span> from <div class=\"sag-side-panel\">…</div> subtree intercepts pointer events",
+    "html": "<button class=\"pmBtn\" style=\"padding:9px 16px;background:transparent;border:none;color:var(--text-secondary);font-size:12px;font-weight:700;cursor:pointer\" data"
+   },
+   {
+    "label": "Add Task",
+    "why": "<div class=\"pmStripGrid\">…</div> from <div class=\"sag-side-panel\">…</div> subtree intercepts pointer events",
+    "html": "<button style=\"display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:10px;border:none;cursor:pointer;background:"
+   }
+  ],
   "erroring": [],
   "notTapped": [],
   "tapped": 3,
-  "ok": 3
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/drawings",
@@ -869,21 +857,11 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 5,
-  "ok": 5
- },
- {
-  "route": "/app/projects/:id/specs",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 8,
-  "ok": 2
+  "notTapped": [
+   "Upload First Sheet"
+  ],
+  "tapped": 3,
+  "ok": 3
  },
  {
   "route": "/app/projects/:id/inspections",
@@ -894,380 +872,7 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 12,
-  "ok": 8
- },
- {
-  "route": "/app/projects/:id/safety",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [
-   "Generate JHA"
-  ],
-  "tapped": 12,
-  "ok": 3
- },
- {
-  "route": "/app/projects/:id/todos",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 7,
-  "ok": 2
- },
- {
-  "route": "/app/projects/:id/messages",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/team",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [
-   "Invite Member"
-  ],
-  "tapped": 22,
-  "ok": 1
- },
- {
-  "route": "/app/projects/:id/directory",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 1,
-  "ok": 1
- },
- {
-  "route": "/app/projects/:id/subs",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 10,
-  "ok": 2
- },
- {
-  "route": "/app/projects/:id/crews",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 4,
-  "ok": 2
- },
- {
-  "route": "/app/projects/:id/timesheets",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 14,
-  "ok": 4
- },
- {
-  "route": "/app/projects/:id/tm-tickets",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 3,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/budget",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/cash-flow",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/bills",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 3,
-  "ok": 3
- },
- {
-  "route": "/app/projects/:id/invoices",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 6,
-  "ok": 2
- },
- {
-  "route": "/app/projects/:id/contracts",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [
-   "Purchase Order",
-   "READY TO PAPER → 0 Every award is contracted"
-  ],
-  "tapped": 11,
-  "ok": 5
- },
- {
-  "route": "/app/projects/:id/purchase-orders",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 12,
-  "ok": 3
- },
- {
-  "route": "/app/projects/:id/estimate",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/proposal",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 7,
-  "ok": 5
- },
- {
-  "route": "/app/projects/:id/bid-packages",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [
-   "Create Bid Package"
-  ],
-  "tapped": 2,
-  "ok": 2
- },
- {
-  "route": "/app/projects/:id/closeout",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [
-   "Generate G704",
-   "Generate G706"
-  ],
-  "tapped": 18,
-  "ok": 1
- },
- {
-  "route": "/app/projects/:id/compliance",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [
-   "Request All COIs"
-  ],
-  "tapped": 12,
-  "ok": 2
- },
- {
-  "route": "/app/projects/:id/insurance",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
   "tapped": 5,
-  "ok": 2
- },
- {
-  "route": "/app/projects/:id/permits",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 4,
-  "ok": 4
- },
- {
-  "route": "/app/projects/:id/payroll",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [
-   "Generate WH-347",
-   "Remove",
-   "Generate WH-347 PDF"
-  ],
-  "tapped": 7,
-  "ok": 1
- },
- {
-  "route": "/app/projects/:id/selections",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 7,
-  "ok": 2
- },
- {
-  "route": "/app/projects/:id/w9",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [
-   "Send W-9 Request"
-  ],
-  "tapped": 4,
-  "ok": 4
- },
- {
-  "route": "/app/projects/:id/takeoff",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/intelligence",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [
-   "Walk me through the 5 pending change orders - approve or push back?",
-   "What OSHA requirements apply to my site?"
-  ],
-  "tapped": 16,
-  "ok": 2
- },
- {
-  "route": "/app/projects/:id/autopilot",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [
-   "Run Autopilot Scan"
-  ],
-  "tapped": 10,
-  "ok": 7
- },
- {
-  "route": "/app/projects/:id/network",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "ok": 5
  }
 ]
