@@ -5,276 +5,20 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "Sage",
-    "why": "<svg width=\"20\" height=\"20\" fill=\"currentColor\" viewBox=\"0 0 256 256\" xmlns=\"http://www.w3.org/2000/svg\">…</svg> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<button style=\"display:flex;align-items:center;gap:7px;height:36px;padding:0 14px;background:rgba(255,230,0,0.06);border:1px solid rgba(255,230,0,0.35);border-r"
-   },
-   {
-    "label": "AR",
-    "why": "<div></div> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<button style=\"width:34px;height:34px;border-radius:9999px;background:linear-gradient(135deg, var(--brand-primary-strong), var(--brand-primary));display:flex;al"
-   },
-   {
-    "label": "Operations",
-    "why": "<button type=\"button\">…</button> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<button type=\"button\" aria-pressed=\"false\" class=\"\" data-walk=\"3\">Operations</button>"
-   },
-   {
-    "label": "Sales",
-    "why": "<button type=\"button\">…</button> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<button type=\"button\" aria-pressed=\"false\" class=\"\" data-walk=\"4\">Sales</button>"
-   },
-   {
-    "label": "Service",
-    "why": "<div>…</div> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<button type=\"button\" aria-pressed=\"false\" class=\"\" data-walk=\"5\">Service</button>"
-   },
-   {
-    "label": "Owner",
-    "why": "<div>…</div> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<button type=\"button\" aria-pressed=\"true\" class=\"on\" data-walk=\"6\">Owner</button>"
-   },
-   {
-    "label": "Field",
-    "why": "<div></div> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<button type=\"button\" aria-pressed=\"false\" class=\"\" data-walk=\"7\">Field</button>"
-   },
-   {
-    "label": "Job",
-    "why": "<span class=\"sg-brand-name\">Sonoran Ridge Builders</span> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<select aria-label=\"Job\" data-walk=\"8\"><option value=\"\">All Jobs</option><option value=\"d3e0a111-0001-4d00-9000-5a6775a0de00\" style=\"--dot: #D98B4E;\">Desert Vis"
-   },
-   {
-    "label": "Today",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<button type=\"button\" aria-pressed=\"false\" class=\"\" data-walk=\"9\">Today</button>"
-   },
-   {
-    "label": "Next 7 Days",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<button type=\"button\" aria-pressed=\"true\" class=\"on\" data-walk=\"10\">Next 7 Days</button>"
-   },
-   {
-    "label": "5 RFIs past response date · Desert Vista Medical Plaza",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a class=\"atkItem\" data-tone=\"red\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/rfis\" data-walk=\"12\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\""
-   },
-   {
-    "label": "5 punch items overdue · Desert Vista Medical Plaza",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a class=\"atkItem\" data-tone=\"red\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/punch-list\" data-walk=\"13\"><svg xmlns=\"http://www.w3.org/2000/svg\" w"
-   },
-   {
-    "label": "4 inspections with no result recorded · Desert Vista Medical Plaza",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a class=\"atkItem\" data-tone=\"red\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/inspections\" data-walk=\"14\"><svg xmlns=\"http://www.w3.org/2000/svg\" "
-   },
-   {
-    "label": "4 to-dos overdue · Desert Vista Medical Plaza",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a class=\"atkItem\" data-tone=\"red\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/todos\" data-walk=\"15\"><svg xmlns=\"http://www.w3.org/2000/svg\" width="
-   },
-   {
-    "label": "1 RFI past response date · Camelback Fire Station 34",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a class=\"atkItem\" data-tone=\"red\" href=\"/app/projects/d3e0a111-0002-4d00-9000-5a6775a0de00/rfis\" data-walk=\"16\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\""
-   },
-   {
-    "label": "1 punch item overdue · Camelback Fire Station 34",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a class=\"atkItem\" data-tone=\"red\" href=\"/app/projects/d3e0a111-0002-4d00-9000-5a6775a0de00/punch-list\" data-walk=\"17\"><svg xmlns=\"http://www.w3.org/2000/svg\" w"
-   },
-   {
-    "label": "5 change orders waiting for your decision · Desert Vista Medical Plaza",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a class=\"atkItem\" data-tone=\"yellow\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/change-orders\" data-walk=\"18\"><svg xmlns=\"http://www.w3.org/2000/"
-   },
-   {
-    "label": "4 invoices waiting for your decision · Desert Vista Medical Plaza",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<a class=\"atkItem\" data-tone=\"yellow\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/invoices\" data-walk=\"19\"><svg xmlns=\"http://www.w3.org/2000/svg\" "
-   },
-   {
-    "label": "Under Contract: $11.62M",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<a class=\"hv2-hcell hv2-hlead hv2-link\" title=\"$5.37M billed · $6.25M left to bill · 2 active jobs\" aria-label=\"Under Contract: $11.62M\" href=\"/app/projects\" da"
-   },
-   {
-    "label": "Decisions Waiting: 10",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<a class=\"hv2-hcell hv2-link\" title=\"Oldest waiting 14 days\" aria-label=\"Decisions Waiting: 10\" href=\"/app/approval-workflows\" data-walk=\"22\"><span class=\"hv2-h"
-   },
-   {
-    "label": "All 30",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<button type=\"button\" aria-pressed=\"true\" class=\"on\" data-walk=\"23\">All 30</button>"
-   },
-   {
-    "label": "Overdue 20",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<button type=\"button\" aria-pressed=\"false\" class=\"\" data-walk=\"24\">Overdue 20</button>"
-   },
-   {
-    "label": "Due Today 0",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<button type=\"button\" aria-pressed=\"false\" class=\"\" data-walk=\"25\">Due Today 0</button>"
-   },
-   {
-    "label": "Unassigned 14",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<button type=\"button\" aria-pressed=\"false\" class=\"\" data-walk=\"26\">Unassigned 14</button>"
-   },
-   {
-    "label": "Answer RFI",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<a class=\"hv2-btn hv2-btn-outline\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/rfis\" data-walk=\"27\">Answer RFI <svg xmlns=\"http://www.w3.org/2000/s"
-   },
-   {
-    "label": "Record Result",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<a class=\"hv2-btn hv2-btn-outline\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/inspections\" data-walk=\"28\">Record Result <svg xmlns=\"http://www.w3."
-   },
-   {
-    "label": "Record Result",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<a class=\"hv2-btn hv2-btn-outline\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/inspections\" data-walk=\"29\">Record Result <svg xmlns=\"http://www.w3."
-   },
-   {
-    "label": "Record Result",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<a class=\"hv2-btn hv2-btn-outline\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/inspections\" data-walk=\"30\">Record Result <svg xmlns=\"http://www.w3."
-   },
-   {
-    "label": "Record Result",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<a class=\"hv2-btn hv2-btn-outline\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/inspections\" data-walk=\"31\">Record Result <svg xmlns=\"http://www.w3."
-   },
-   {
-    "label": "Open Punch Item",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<a class=\"hv2-btn hv2-btn-outline\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/punch-list\" data-walk=\"33\">Open Punch Item <svg xmlns=\"http://www.w3"
-   },
-   {
-    "label": "Show all 30",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<button type=\"button\" class=\"hv2-more\" data-walk=\"34\">Show all 30</button>"
-   },
-   {
-    "label": "roofing installation Starts Desert Vista Medical Plaza",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<a class=\"hv2-srow hv2-link\" style=\"box-shadow: rgb(217, 139, 78) 3px 0px 0px inset; padding-left: 10px;\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de"
-   },
-   {
-    "label": "roofing installation Starts Desert Vista Medical Plaza",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<a class=\"hv2-srow hv2-link\" style=\"box-shadow: rgb(217, 139, 78) 3px 0px 0px inset; padding-left: 10px;\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de"
-   },
-   {
-    "label": "roofing installation Starts Desert Vista Medical Plaza",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<a class=\"hv2-srow hv2-link\" style=\"box-shadow: rgb(217, 139, 78) 3px 0px 0px inset; padding-left: 10px;\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de"
-   },
-   {
-    "label": "roofing installation Starts Desert Vista Medical Plaza",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<a class=\"hv2-srow hv2-link\" style=\"box-shadow: rgb(217, 139, 78) 3px 0px 0px inset; padding-left: 10px;\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de"
-   },
-   {
-    "label": "View all jobs",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<a class=\"hv2-linkbtn\" href=\"/app/projects\" data-walk=\"39\">View all jobs</a>"
-   },
-   {
-    "label": "Desert Vista Medical Plaza $8,478,400 Bidding PM Dana Whitfield SCHEDU",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<a class=\"hv2-jobcard hv2-link\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/overview\" data-walk=\"40\"><span class=\"hv2-jc-top\"><span style=\"display:"
-   },
-   {
-    "label": "Camelback Fire Station 34 $3,136,800 Bidding PM Dana Whitfield SCHEDUL",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<a class=\"hv2-jobcard hv2-link\" href=\"/app/projects/d3e0a111-0002-4d00-9000-5a6775a0de00/overview\" data-walk=\"41\"><span class=\"hv2-jc-top\"><span style=\"display:"
-   },
-   {
-    "label": "CONTRACT VALUE → $11,570,000 2 active jobs",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/projects\" style=\"text-decoration: none; display: block; height: 100%;\" data-walk=\"42\"><div class=\"pmHover\" style=\"position: relative; overflow: hi"
-   },
-   {
-    "label": "PIPELINE → $0 0 open · $0 weighted",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/leads\" style=\"text-decoration: none; display: block; height: 100%;\" data-walk=\"43\"><div class=\"pmHover\" style=\"position: relative; overflow: hidde"
-   },
-   {
-    "label": "PAST DUE → 4 follow-ups already late",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/my-work\" style=\"text-decoration: none; display: block; height: 100%;\" data-walk=\"44\"><div class=\"pmHover\" style=\"position: relative; overflow: hid"
-   },
-   {
-    "label": "WIN RATE → — nothing decided yet",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/leads\" style=\"text-decoration: none; display: block; height: 100%;\" data-walk=\"45\"><div class=\"pmHover\" style=\"position: relative; overflow: hidde"
-   },
-   {
-    "label": "Open leads",
-    "why": "<a href=\"/app/settings#branding\" title=\"Company branding — open Settings\" aria-label=\"Sonoran Ridge Builders — brand settings\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<a style=\"font-size: 12.5px; font-weight: 700; color: var(--brand-primary); text-decoration: none; display: inline-flex; align-items: center; gap: 5px;\" href=\"/"
-   },
-   {
-    "label": "Refresh",
-    "why": "<a class=\"sg-nav-item\" href=\"/app/projects\">…</a> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<button type=\"button\" class=\"hv2-linkbtn\" data-walk=\"51\">Refresh</button>"
-   },
-   {
-    "label": "Classic dashboard",
-    "why": "<div>…</div> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<a class=\"hv2-linkbtn\" href=\"/app/classic\" data-walk=\"52\">Classic dashboard</a>"
-   },
-   {
-    "label": "Home",
-    "why": "<button title=\"Collapse\" class=\"sg-nav-item\">…</button> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<a class=\"sag-tab\" data-active=\"true\" aria-current=\"page\" style=\"flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center"
-   },
-   {
-    "label": "My Work",
-    "why": "<button title=\"Collapse\" class=\"sg-nav-item\">…</button> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<a class=\"sag-tab\" style=\"flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:56px;text-decoration:no"
-   },
-   {
-    "label": "Projects",
-    "why": "<button title=\"Collapse\" class=\"sg-nav-item\">…</button> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<a class=\"sag-tab\" style=\"flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:56px;text-decoration:no"
-   },
-   {
-    "label": "Time",
-    "why": "<button title=\"Collapse\" class=\"sg-nav-item\">…</button> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<a class=\"sag-tab\" style=\"flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:56px;text-decoration:no"
-   },
-   {
-    "label": "More",
-    "why": "<div></div> from <div class=\"sidebar-mobile-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<button type=\"button\" class=\"sag-tab\" aria-expanded=\"false\" aria-label=\"More\" style=\"flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;ju"
-   }
-  ],
+  "covered": [],
   "erroring": [],
   "notTapped": [
    "Create",
    "1 pay app waiting for your decision · Desert Vista Medical Plaza",
-   "Mark done: Drywall corner bead damaged",
-   "4 days late confirm roof warranty registration Project task"
+   "Mark done: Drywall corner bead damaged"
   ],
-  "tapped": 51,
-  "ok": 1
+  "tapped": 48,
+  "ok": 41
  },
  {
   "route": "/app/my-work",
   "status": 200,
-  "loadErrors": [
-   "/www.saguarocontrol.net/app?_rsc=1tfck due to access control checks.",
-   "/www.saguarocontrol.net/app/my-work?_rsc=1tfck due to access control checks.",
-   "/www.saguarocontrol.net/app/time?_rsc=1tfck due to access control checks."
-  ],
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
@@ -305,7 +49,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 2,
-  "ok": 0
+  "ok": 1
  },
  {
   "route": "/app/notifications",
@@ -317,7 +61,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 4,
-  "ok": 3
+  "ok": 2
  },
  {
   "route": "/app/documents",
@@ -331,7 +75,7 @@
    "Pay Applications"
   ],
   "tapped": 10,
-  "ok": 4
+  "ok": 5
  },
  {
   "route": "/app/daily-logs",
@@ -354,14 +98,19 @@
   "covered": [
    {
     "label": "Sort by",
-    "why": "locator.click: Timeout 2500ms exceeded.",
+    "why": "<input value=\"\" id=\":r2:\" class=\"k-input\" placeholder=\"Phase 1, Rough-in, etc.\"/> from <div class=\"k-overlay\">…</div> subtree intercepts pointer events",
     "html": "<select class=\"k-sortbar-select\" aria-label=\"Sort by\" data-walk=\"5\"><option value=\"\">Default order</option><option value=\"name\">Task</option><option value=\"trad"
+   },
+   {
+    "label": "Ascending — switch to descending",
+    "why": "<input value=\"\" id=\":r2:\" class=\"k-input\" placeholder=\"Phase 1, Rough-in, etc.\"/> from <div class=\"k-overlay\">…</div> subtree intercepts pointer events",
+    "html": "<button type=\"button\" class=\"k-sortbar-dir\" aria-label=\"Ascending — switch to descending\" data-walk=\"6\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" heigh"
    }
   ],
   "erroring": [],
   "notTapped": [],
   "tapped": 3,
-  "ok": 2
+  "ok": 0
  },
  {
   "route": "/app/compliance",
@@ -437,8 +186,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 4,
-  "ok": 4
+  "tapped": 5,
+  "ok": 5
  },
  {
   "route": "/app/leads",
@@ -450,7 +199,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 8,
-  "ok": 4
+  "ok": 5
  },
  {
   "route": "/app/sales",
@@ -481,7 +230,7 @@
   "status": 200,
   "loadErrors": [],
   "apiErrors": [
-   "POST /api/billing/checkout → 500"
+   "POST /api/billing/checkout → 503"
   ],
   "dead": [],
   "covered": [],
@@ -489,13 +238,13 @@
    {
     "label": "Select Plan",
     "errors": [
-     "POST /api/billing/checkout → 500"
+     "POST /api/billing/checkout → 503"
     ]
    },
    {
     "label": "Select Plan",
     "errors": [
-     "POST /api/billing/checkout → 500"
+     "POST /api/billing/checkout → 503"
     ]
    }
   ],
@@ -514,8 +263,8 @@
   "notTapped": [
    "% COMPLETE → 0%"
   ],
-  "tapped": 9,
-  "ok": 4
+  "tapped": 8,
+  "ok": 3
  },
  {
   "route": "/app/billing/cost-control",
@@ -572,8 +321,8 @@
   ],
   "erroring": [],
   "notTapped": [],
-  "tapped": 10,
-  "ok": 0
+  "tapped": 11,
+  "ok": 6
  },
  {
   "route": "/app/invoicing",
@@ -585,7 +334,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 3,
-  "ok": 2
+  "ok": 3
  },
  {
   "route": "/app/catalog",
@@ -627,9 +376,7 @@
   "route": "/app/command-center/daily-logs",
   "status": 200,
   "loadErrors": [],
-  "apiErrors": [
-   "GET /api/franchise/daily-logs → 403"
-  ],
+  "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
@@ -737,9 +484,7 @@
   "route": "/app/command-center/oac",
   "status": 200,
   "loadErrors": [],
-  "apiErrors": [
-   "GET /api/franchise/meetings → 403"
-  ],
+  "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
@@ -849,7 +594,13 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [],
+  "covered": [
+   {
+    "label": "New Document",
+    "why": "<div class=\"k-input\" aria-live=\"polite\">…</div> from <div class=\"k-overlay\">…</div> subtree intercepts pointer events",
+    "html": "<button class=\"k-btn k-btn-primary\" type=\"button\" data-walk=\"5\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" fill=\"currentColor\" viewBox=\"0 0 "
+   }
+  ],
   "erroring": [],
   "notTapped": [
    "Bulk Upload"
@@ -863,47 +614,11 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "Add Asset",
-    "why": "<p>…</p> from <div>…</div> subtree intercepts pointer events",
-    "html": "<button data-tour=\"add-asset\" style=\"display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;border-radius:12px;border:none;curs"
-   },
-   {
-    "label": "MAINT. OVERDUE → 0 All caught up",
-    "why": "<code>https://www.saguarocontrol.net/api/fleet/ingest</code> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/fleet\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"7\"><div class=\"pmHover\" style=\"position:relative;overflow:hidden;backgrou"
-   },
-   {
-    "label": "DUE SOON → 0 Within 500 mi or 14 days",
-    "why": "<code>https://www.saguarocontrol.net/api/fleet/ingest</code> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/fleet\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"8\"><div class=\"pmHover\" style=\"position:relative;overflow:hidden;backgrou"
-   },
-   {
-    "label": "DOCS EXPIRED → 0 Registrations & insurance current",
-    "why": "<code>https://www.saguarocontrol.net/api/fleet/ingest</code> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/fleet\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"9\"><div class=\"pmHover\" style=\"position:relative;overflow:hidden;backgrou"
-   },
-   {
-    "label": "EXPIRING → 0 Docs inside the 30-day window",
-    "why": "<code>https://www.saguarocontrol.net/api/fleet/ingest</code> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/fleet\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"10\"><div class=\"pmHover\" style=\"position:relative;overflow:hidden;backgro"
-   },
-   {
-    "label": "MAINT. COST → $0 Across 0 service records",
-    "why": "<code>https://www.saguarocontrol.net/api/fleet/ingest</code> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/fleet\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"11\"><div class=\"pmHover\" style=\"position:relative;overflow:hidden;backgro"
-   },
-   {
-    "label": "Add Asset",
-    "why": "<code>https://www.saguarocontrol.net/api/fleet/ingest</code> from <div>…</div> subtree intercepts pointer events",
-    "html": "<button style=\"display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:8px 14px;border-radius:12px;border:none;cursor:pointer;background:l"
-   }
-  ],
+  "covered": [],
   "erroring": [],
   "notTapped": [],
   "tapped": 9,
-  "ok": 0
+  "ok": 4
  },
  {
   "route": "/app/intelligence",
@@ -915,7 +630,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 2,
-  "ok": 0
+  "ok": 2
  },
  {
   "route": "/app/portals",
@@ -944,19 +659,26 @@
    "Send Prequal Form"
   ],
   "tapped": 5,
-  "ok": 0
+  "ok": 2
  },
  {
   "route": "/app/radio",
   "status": 200,
   "loadErrors": [],
   "apiErrors": [],
-  "dead": [],
+  "dead": [
+   {
+    "label": "Hold — Panic",
+    "tag": "button",
+    "href": null,
+    "html": "<button class=\"k-btn k-btn-danger rdPanic\" type=\"button\" title=\"Hold to send a panic alarm to every channel member\" data-walk=\"5\"><svg xmlns=\"http://www.w3.org/"
+   }
+  ],
   "covered": [],
   "erroring": [],
   "notTapped": [],
   "tapped": 5,
-  "ok": 5
+  "ok": 4
  },
  {
   "route": "/app/resource-planning",
@@ -964,112 +686,11 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "New Assignment",
-    "why": "locator.click: Timeout 2500ms exceeded.",
-    "html": "<button style=\"display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;border-radius:12px;border:none;cursor:pointer;background:"
-   },
-   {
-    "label": "TOTAL PEOPLE → 0 In workforce",
-    "why": "<input readonly value=\"\" aria-expanded=\"false\" aria-haspopup=\"dialog\" placeholder=\"MM/DD/YYYY\"/> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/resource-planning\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"7\"><div class=\"pmHover\" style=\"position:relative;overflow:hid"
-   },
-   {
-    "label": "ACTIVE ASSIGNMENTS → 0 Not released",
-    "why": "<input readonly value=\"\" aria-expanded=\"false\" aria-haspopup=\"dialog\" placeholder=\"MM/DD/YYYY\"/> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/resource-planning\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"8\"><div class=\"pmHover\" style=\"position:relative;overflow:hid"
-   },
-   {
-    "label": "CURRENT FTES → 0.0 Full-time equiv",
-    "why": "<input readonly value=\"\" aria-expanded=\"false\" aria-haspopup=\"dialog\" placeholder=\"MM/DD/YYYY\"/> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/resource-planning\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"9\"><div class=\"pmHover\" style=\"position:relative;overflow:hid"
-   },
-   {
-    "label": "CONFLICTS → 0 Scheduling overlaps",
-    "why": "<input readonly value=\"\" aria-expanded=\"false\" aria-haspopup=\"dialog\" placeholder=\"MM/DD/YYYY\"/> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/resource-planning\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"10\"><div class=\"pmHover\" style=\"position:relative;overflow:hi"
-   },
-   {
-    "label": "AVG UTILIZATION → 0% Next 4 weeks",
-    "why": "<input readonly value=\"\" aria-expanded=\"false\" aria-haspopup=\"dialog\" placeholder=\"MM/DD/YYYY\"/> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/resource-planning\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"11\"><div class=\"pmHover\" style=\"position:relative;overflow:hi"
-   },
-   {
-    "label": "OVERBOOKED / AVAILABLE → 0 / 0 This week",
-    "why": "<input readonly value=\"\" aria-expanded=\"false\" aria-haspopup=\"dialog\" placeholder=\"MM/DD/YYYY\"/> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/resource-planning\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"12\"><div class=\"pmHover\" style=\"position:relative;overflow:hi"
-   },
-   {
-    "label": "Project",
-    "why": "<input readonly value=\"\" aria-expanded=\"false\" aria-haspopup=\"dialog\" placeholder=\"MM/DD/YYYY\"/> from <div>…</div> subtree intercepts pointer events",
-    "html": "<select aria-label=\"Project\" style=\"padding:9px 12px;background:var(--surface-raised);border:1px solid rgba(255,255,255,0.12);border-radius:9px;color:var(--text"
-   },
-   {
-    "label": "Trade",
-    "why": "<input readonly value=\"\" aria-expanded=\"false\" aria-haspopup=\"dialog\" placeholder=\"MM/DD/YYYY\"/> from <div>…</div> subtree intercepts pointer events",
-    "html": "<select aria-label=\"Trade\" style=\"padding:9px 12px;background:var(--surface-raised);border:1px solid rgba(255,255,255,0.12);border-radius:9px;color:var(--text-t"
-   },
-   {
-    "label": "Role",
-    "why": "<div>…</div> from <div>…</div> subtree intercepts pointer events",
-    "html": "<select aria-label=\"Role\" style=\"padding:9px 12px;background:var(--surface-raised);border:1px solid rgba(255,255,255,0.12);border-radius:9px;color:var(--text-te"
-   },
-   {
-    "label": "Certification",
-    "why": "<input readonly value=\"\" aria-expanded=\"false\" aria-haspopup=\"dialog\" placeholder=\"MM/DD/YYYY\"/> from <div>…</div> subtree intercepts pointer events",
-    "html": "<select aria-label=\"Certification\" style=\"padding:9px 12px;background:var(--surface-raised);border:1px solid rgba(255,255,255,0.12);border-radius:9px;color:var("
-   },
-   {
-    "label": "INPUT",
-    "why": "<input readonly value=\"\" aria-expanded=\"false\" aria-haspopup=\"dialog\" placeholder=\"MM/DD/YYYY\"/> from <div>…</div> subtree intercepts pointer events",
-    "html": "<input type=\"checkbox\" style=\"accent-color: var(--brand-primary);\" data-walk=\"17\">"
-   },
-   {
-    "label": "Assignment Grid",
-    "why": "<input readonly value=\"\" aria-expanded=\"false\" aria-haspopup=\"dialog\" placeholder=\"MM/DD/YYYY\"/> from <div>…</div> subtree intercepts pointer events",
-    "html": "<button style=\"padding:10px 18px;border:none;border-bottom:2px solid var(--brand-primary);background:transparent;color:var(--brand-primary);font-size:13px;font-"
-   },
-   {
-    "label": "Timeline / Gantt",
-    "why": "<input readonly value=\"\" aria-expanded=\"false\" aria-haspopup=\"dialog\" placeholder=\"MM/DD/YYYY\"/> from <div>…</div> subtree intercepts pointer events",
-    "html": "<button style=\"padding:10px 18px;border:none;border-bottom:2px solid transparent;background:transparent;color:var(--text-secondary);font-size:13px;font-weight:5"
-   },
-   {
-    "label": "People",
-    "why": "<input readonly value=\"\" aria-expanded=\"false\" aria-haspopup=\"dialog\" placeholder=\"MM/DD/YYYY\"/> from <div>…</div> subtree intercepts pointer events",
-    "html": "<button style=\"padding:10px 18px;border:none;border-bottom:2px solid transparent;background:transparent;color:var(--text-secondary);font-size:13px;font-weight:5"
-   },
-   {
-    "label": "Project Staffing",
-    "why": "<input readonly value=\"\" aria-expanded=\"false\" aria-haspopup=\"dialog\" placeholder=\"MM/DD/YYYY\"/> from <div>…</div> subtree intercepts pointer events",
-    "html": "<button style=\"padding:10px 18px;border:none;border-bottom:2px solid transparent;background:transparent;color:var(--text-secondary);font-size:13px;font-weight:5"
-   },
-   {
-    "label": "Utilization",
-    "why": "<input readonly value=\"\" aria-expanded=\"false\" aria-haspopup=\"dialog\" placeholder=\"MM/DD/YYYY\"/> from <div>…</div> subtree intercepts pointer events",
-    "html": "<button style=\"padding:10px 18px;border:none;border-bottom:2px solid transparent;background:transparent;color:var(--text-secondary);font-size:13px;font-weight:5"
-   },
-   {
-    "label": "Availability",
-    "why": "<input readonly value=\"\" aria-expanded=\"false\" aria-haspopup=\"dialog\" placeholder=\"MM/DD/YYYY\"/> from <div>…</div> subtree intercepts pointer events",
-    "html": "<button style=\"padding:10px 18px;border:none;border-bottom:2px solid transparent;background:transparent;color:var(--text-secondary);font-size:13px;font-weight:5"
-   },
-   {
-    "label": "Headcount Forecast",
-    "why": "<input readonly value=\"\" aria-expanded=\"false\" aria-haspopup=\"dialog\" placeholder=\"MM/DD/YYYY\"/> from <div>…</div> subtree intercepts pointer events",
-    "html": "<button style=\"padding:10px 18px;border:none;border-bottom:2px solid transparent;background:transparent;color:var(--text-secondary);font-size:13px;font-weight:5"
-   },
-   {
-    "label": "Labor Costs",
-    "why": "<select aria-label=\"Status\">…</select> from <div>…</div> subtree intercepts pointer events",
-    "html": "<button style=\"padding:10px 18px;border:none;border-bottom:2px solid transparent;background:transparent;color:var(--text-secondary);font-size:13px;font-weight:5"
-   }
-  ],
+  "covered": [],
   "erroring": [],
   "notTapped": [],
   "tapped": 22,
-  "ok": 0
+  "ok": 4
  },
  {
   "route": "/app/reviews",
@@ -1099,9 +720,7 @@
   "route": "/app/settings",
   "status": 200,
   "loadErrors": [
-   "/www.saguarocontrol.net/?_rsc=y1ld3 due to access control checks.",
-   "/www.saguarocontrol.net/login?_rsc=y1ld3 due to access control checks.",
-   "/www.saguarocontrol.net/signup?_rsc=y1ld3 due to access control checks."
+   "TypeError: Load failed"
   ],
   "apiErrors": [],
   "dead": [],
@@ -1127,11 +746,9 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "Start Without a Project"
-  ],
-  "tapped": 3,
-  "ok": 3
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/warranty-claims",
@@ -1153,42 +770,11 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "Sage Settings",
-    "why": "<div>…</div> from <div>…</div> subtree intercepts pointer events",
-    "html": "<button title=\"Sage settings — style profile, automation rules, activity trail, bid brain\" style=\"display:inline-flex;align-items:center;gap:6px;background:var("
-   },
-   {
-    "label": "What tile is specified in the lobby?",
-    "why": "<div>Sage learns how you write from your real messages…</div> from <div>…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn\" style=\"display:flex;align-items:center;gap:10px;text-align:left;background:var(--bg-base);border:1px solid rgba(255,255,255,0.12);border-r"
-   },
-   {
-    "label": "Any open RFIs about the footing rebar?",
-    "why": "<div>Sage learns how you write from your real messages…</div> from <div>…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn\" style=\"display:flex;align-items:center;gap:10px;text-align:left;background:var(--bg-base);border:1px solid rgba(255,255,255,0.12);border-r"
-   },
-   {
-    "label": "What did the latest daily log say about weather?",
-    "why": "<div>Sage learns how you write from your real messages…</div> from <div>…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn\" style=\"display:flex;align-items:center;gap:10px;text-align:left;background:var(--bg-base);border:1px solid rgba(255,255,255,0.12);border-r"
-   },
-   {
-    "label": "Were there any safety incidents this month?",
-    "why": "<div>Sage learns how you write from your real messages…</div> from <div>…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn\" style=\"display:flex;align-items:center;gap:10px;text-align:left;background:var(--bg-base);border:1px solid rgba(255,255,255,0.12);border-r"
-   },
-   {
-    "label": "What change orders affect the schedule?",
-    "why": "<div>Sage learns how you write from your real messages…</div> from <div>…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn\" style=\"display:flex;align-items:center;gap:10px;text-align:left;background:var(--bg-base);border:1px solid rgba(255,255,255,0.12);border-r"
-   }
-  ],
+  "covered": [],
   "erroring": [],
   "notTapped": [],
   "tapped": 7,
-  "ok": 1
+  "ok": 3
  },
  {
   "route": "/app/projects/:id/overview",
@@ -1198,45 +784,15 @@
   "dead": [],
   "covered": [
    {
-    "label": "Overview",
+    "label": "Open project modules",
     "why": "<div>…</div> from <aside>…</aside> subtree intercepts pointer events",
-    "html": "<a class=\"pj-nav-item\" data-active=\"true\" aria-current=\"page\" title=\"The job at a glance\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/overview\" dat"
-   },
-   {
-    "label": "Preconstruction",
-    "why": "<div></div> intercepts pointer events",
-    "html": "<a class=\"pj-nav-item\" title=\"Price &amp; win the work\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/takeoff\" data-walk=\"6\"><svg xmlns=\"http://www.w"
-   },
-   {
-    "label": "Execution",
-    "why": "<aside>…</aside> intercepts pointer events",
-    "html": "<a class=\"pj-nav-item\" title=\"Set up &amp; buy out\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/schedule\" data-walk=\"7\"><svg xmlns=\"http://www.w3.o"
-   },
-   {
-    "label": "Field",
-    "why": "<div></div> intercepts pointer events",
-    "html": "<a class=\"pj-nav-item\" title=\"Build &amp; track daily\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/daily-logs\" data-walk=\"8\"><svg xmlns=\"http://www"
-   },
-   {
-    "label": "Financials",
-    "why": "<aside>…</aside> intercepts pointer events",
-    "html": "<a class=\"pj-nav-item\" title=\"Cost, bill &amp; get paid\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/budget\" data-walk=\"9\"><svg xmlns=\"http://www.w"
-   },
-   {
-    "label": "Docs & Comms",
-    "why": "<div></div> intercepts pointer events",
-    "html": "<a class=\"pj-nav-item\" title=\"Drawings, RFIs, files\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/files\" data-walk=\"10\"><svg xmlns=\"http://www.w3.or"
-   },
-   {
-    "label": "Closeout",
-    "why": "<div></div> intercepts pointer events",
-    "html": "<a class=\"pj-nav-item\" title=\"Finish &amp; hand over\" href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/closeout\" data-walk=\"11\"><svg xmlns=\"http://www.w"
+    "html": "<button type=\"button\" class=\"pj-nav-modules\" aria-label=\"Open project modules\" data-walk=\"4\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill"
    }
   ],
   "erroring": [],
   "notTapped": [],
-  "tapped": 8,
-  "ok": 1
+  "tapped": 5,
+  "ok": 4
  },
  {
   "route": "/app/projects/:id/photos",
@@ -1247,8 +803,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 1,
-  "ok": 0
+  "tapped": 3,
+  "ok": 3
  },
  {
   "route": "/app/projects/:id/files",
@@ -1262,20 +818,8 @@
    "Import from Cloud",
    "Trash"
   ],
-  "tapped": 7,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/daily-logs",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 4,
-  "ok": 3
+  "tapped": 8,
+  "ok": 2
  },
  {
   "route": "/app/projects/:id/rfis",
@@ -1287,7 +831,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 2,
-  "ok": 1
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/submittals",
@@ -1311,24 +855,6 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 2,
-  "ok": 1
- },
- {
-  "route": "/app/projects/:id/change-orders",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [
-   {
-    "label": "Ascending — switch to descending",
-    "why": "<span class=\"k-hint\">Optional — ties this CO to one of the 2 bid packa…</span> from <div class=\"k-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<button type=\"button\" class=\"k-sortbar-dir\" aria-label=\"Ascending — switch to descending\" data-walk=\"14\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" heig"
-   }
-  ],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 3,
   "ok": 0
  },
  {
@@ -1381,17 +907,23 @@
  {
   "route": "/app/projects/:id/drawings",
   "status": 200,
-  "loadErrors": [
-   "/www.saguarocontrol.net/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/rfis?_rsc=ziv81 due to access control checks.",
-   "/www.saguarocontrol.net/app/approval-workflows?_rsc=ziv81 due to access control checks."
-  ],
+  "loadErrors": [],
   "apiErrors": [],
-  "dead": [],
+  "dead": [
+   {
+    "label": "Sheet",
+    "tag": "button",
+    "href": null,
+    "html": "<button type=\"button\" role=\"tab\" class=\"k-tab\" aria-selected=\"true\" data-walk=\"12\">Sheet</button>"
+   }
+  ],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 6,
-  "ok": 6
+  "notTapped": [
+   "Upload First Sheet"
+  ],
+  "tapped": 4,
+  "ok": 3
  },
  {
   "route": "/app/projects/:id/specs",
@@ -1403,7 +935,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 8,
-  "ok": 1
+  "ok": 2
  },
  {
   "route": "/app/projects/:id/inspections",
@@ -1426,7 +958,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 3,
-  "ok": 0
+  "ok": 3
  },
  {
   "route": "/app/projects/:id/safety",
@@ -1477,7 +1009,7 @@
   "notTapped": [
    "Invite Member"
   ],
-  "tapped": 6,
+  "tapped": 22,
   "ok": 1
  },
  {
@@ -1538,7 +1070,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 3,
-  "ok": 0
+  "ok": 1
  },
  {
   "route": "/app/projects/:id/budget",
@@ -1548,9 +1080,11 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Cost to Complete $412,000.00"
+  ],
+  "tapped": 14,
+  "ok": 3
  },
  {
   "route": "/app/projects/:id/cash-flow",
@@ -1579,9 +1113,19 @@
  {
   "route": "/app/projects/:id/invoices",
   "status": 200,
-  "loadErrors": [
-   "/www.saguarocontrol.net/app/time?_rsc=thpxl due to access control checks."
-  ],
+  "loadErrors": [],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 20,
+  "ok": 5
+ },
+ {
+  "route": "/app/projects/:id/contracts",
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
@@ -1618,8 +1162,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 7,
-  "ok": 2
+  "tapped": 12,
+  "ok": 3
  },
  {
   "route": "/app/projects/:id/estimate",
@@ -1641,9 +1185,11 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 1,
-  "ok": 0
+  "notTapped": [
+   "Start v1.0 at $28,400"
+  ],
+  "tapped": 7,
+  "ok": 5
  },
  {
   "route": "/app/projects/:id/bid-packages",
@@ -1674,16 +1220,26 @@
   "route": "/app/projects/:id/closeout",
   "status": 200,
   "loadErrors": [],
-  "apiErrors": [],
+  "apiErrors": [
+   "POST /api/projects/:id/close → 409"
+  ],
   "dead": [],
   "covered": [],
-  "erroring": [],
+  "erroring": [
+   {
+    "label": "Close Project",
+    "errors": [
+     "POST /api/projects/:id/close → 409"
+    ]
+   }
+  ],
   "notTapped": [
    "Generate G704",
-   "Generate G706"
+   "Generate G706",
+   "2 unfinalized pay applications"
   ],
-  "tapped": 18,
-  "ok": 1
+  "tapped": 28,
+  "ok": 6
  },
  {
   "route": "/app/projects/:id/compliance",
@@ -1731,8 +1287,8 @@
   ],
   "erroring": [],
   "notTapped": [],
-  "tapped": 4,
-  "ok": 0
+  "tapped": 14,
+  "ok": 10
  },
  {
   "route": "/app/projects/:id/payroll",
@@ -1756,42 +1312,11 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "TOTAL ITEMS → 0",
-    "why": "<div>…</div> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/selections\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"13\"><div class=\"pmHove"
-   },
-   {
-    "label": "PENDING DECISION → 0",
-    "why": "<div>…</div> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/selections\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"14\"><div class=\"pmHove"
-   },
-   {
-    "label": "OWNER APPROVED → 0",
-    "why": "<div>…</div> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/selections\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"15\"><div class=\"pmHove"
-   },
-   {
-    "label": "UNDER ALLOWANCE → +$0",
-    "why": "<input min=\"0\" value=\"\" type=\"number\" placeholder=\"0\"/> from <div>…</div> subtree intercepts pointer events",
-    "html": "<a href=\"/app/projects/d3e0a111-0001-4d00-9000-5a6775a0de00/selections\" style=\"text-decoration:none;display:block;height:100%\" data-walk=\"16\"><div class=\"pmHove"
-   },
-   {
-    "label": "Category",
-    "why": "<textarea rows=\"3\" placeholder=\"Additional notes…\"></textarea> from <div>…</div> subtree intercepts pointer events",
-    "html": "<select aria-label=\"Category\" style=\"padding:9px 12px;background:var(--surface-raised);border:1px solid rgba(255,255,255,0.12);border-radius:9px;color:var(--tex"
-   },
-   {
-    "label": "Status",
-    "why": "<input id=\"oa\" type=\"checkbox\"/> from <div>…</div> subtree intercepts pointer events",
-    "html": "<select aria-label=\"Status\" style=\"padding:9px 12px;background:var(--surface-raised);border:1px solid rgba(255,255,255,0.12);border-radius:9px;color:var(--text-"
-   }
-  ],
+  "covered": [],
   "erroring": [],
   "notTapped": [],
   "tapped": 7,
-  "ok": 0
+  "ok": 2
  },
  {
   "route": "/app/projects/:id/w9",
@@ -1804,8 +1329,8 @@
   "notTapped": [
    "Send W-9 Request"
   ],
-  "tapped": 0,
-  "ok": 0
+  "tapped": 3,
+  "ok": 3
  },
  {
   "route": "/app/projects/:id/takeoff",
@@ -1856,7 +1381,7 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "tapped": 7,
+  "ok": 1
  }
 ]
