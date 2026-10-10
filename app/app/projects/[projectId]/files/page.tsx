@@ -5,8 +5,10 @@
  * to folders, crop images, share (link/email/SMS/Slack/Teams), soft-delete + trash.
  * Backed by the canonical project_files table via /api/files/* (signed URLs).
  */
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { textPrompt, confirmDialog } from '@/lib/ui/async-dialog';
+import { useEscapeClose } from '@/lib/ui/use-escape-close';
+import { z } from '@/lib/design-tokens';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
@@ -91,6 +93,9 @@ export default function FilesPage() {
   const [cropping, setCropping] = useState<any | null>(null);
   const [shareFor, setShareFor] = useState<any | null>(null);
   const [exportFor, setExportFor] = useState<any | null>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const closePreview = useCallback(() => setSel(null), []);
+  useEscapeClose(previewRef, closePreview, !!sel);
   const [showImport, setShowImport] = useState(false);
   const [toast, setToast] = useState('');
   const [view, setView] = useState<'list' | 'grid'>('list');
@@ -374,14 +379,14 @@ export default function FilesPage() {
 
       {/* preview + actions */}
       {sel && (
-        <div onClick={() => setSel(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-elevated)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: `1px solid ${T.border}`, borderRadius: 14, padding: 16, width: 'min(820px,100%)', maxHeight: '92vh', overflow: 'auto' }}>
+        <div onClick={closePreview} style={OVERLAY}>
+          <div ref={previewRef} role="dialog" aria-modal="true" aria-label={sel.file_name || 'File'} onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-elevated)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: `1px solid ${T.border}`, borderRadius: 14, padding: 16, width: 'min(820px,100%)', maxHeight: '92vh', overflow: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 800, fontSize: 17, color: T.white, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sel.file_name}</div>
                 <div style={{ fontSize: 12.5, color: T.muted }}>{KIND_LABEL[kindOf(sel)]} · {fmtSize(sel.file_size)} · {fmtDate(sel.created_at)}{sel.uploaded_by_name ? ` · ${sel.uploaded_by_name}` : ''}</div>
               </div>
-              <button onClick={() => setSel(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} color={T.muted} /></button>
+              <button onClick={closePreview} aria-label="Close" style={CLOSE_BTN}><X size={20} color={T.muted} /></button>
             </div>
             <FilePreview kind={kindOf(sel)} url={sel.file_url} name={sel.file_name} />
             <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
@@ -418,6 +423,8 @@ export default function FilesPage() {
 function ExportMenu({ file, onClose, onToast }: { file: any; onClose: () => void; onToast: (m: string) => void }) {
   const [connectors, setConnectors] = useState<any[]>([]);
   const [busy, setBusy] = useState('');
+  const ref = useRef<HTMLDivElement>(null);
+  useEscapeClose(ref, onClose);
   useEffect(() => { fetch('/api/storage/connectors').then((r) => r.json()).then((j) => setConnectors((j.connectors || []).filter((c: any) => c.connected))); }, []);
   const exportTo = async (c: any) => {
     setBusy(c.id);
@@ -426,11 +433,11 @@ function ExportMenu({ file, onClose, onToast }: { file: any; onClose: () => void
     setBusy('');
   };
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-elevated)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: `1px solid ${T.border}`, borderRadius: 14, padding: 18, width: 'min(360px,100%)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}><CloudArrowUp size={18} color={T.gold} weight="fill" /><div style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: T.white }}>Export to Cloud</div><button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={18} color={T.muted} /></button></div>
+    <div onClick={onClose} style={OVERLAY}>
+      <div ref={ref} role="dialog" aria-modal="true" aria-label="Export to Cloud" onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-elevated)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: `1px solid ${T.border}`, borderRadius: 14, padding: 18, width: 'min(360px,100%)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}><CloudArrowUp size={18} color={T.gold} weight="fill" /><div style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: T.white }}>Export to Cloud</div><button onClick={onClose} aria-label="Close" style={CLOSE_BTN}><X size={18} color={T.muted} /></button></div>
         {connectors.length === 0 ? <div style={{ color: T.muted, fontSize: 13 }}>No connected storage. Add one in <a href="/app/settings/storage" style={{ color: T.gold }}>Settings → External Storage</a>.</div>
-          : <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{connectors.map((c) => <button key={c.id} disabled={!!busy} onClick={() => exportTo(c)} style={{ display: 'flex', alignItems: 'center', gap: 10, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: '11px 14px', cursor: 'pointer', color: T.white, fontSize: 14, textAlign: 'left' }}><Folder size={16} color={T.gold} />{busy === c.id ? 'Uploading…' : c.display_name}</button>)}</div>}
+          : <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{connectors.map((c) => <button key={c.id} disabled={!!busy} onClick={() => exportTo(c)} style={{ display: 'flex', alignItems: 'center', gap: 10, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: '11px 14px', minHeight: 44, cursor: 'pointer', color: T.white, fontSize: 14, textAlign: 'left' }}><Folder size={16} color={T.gold} />{busy === c.id ? 'Uploading…' : c.display_name}</button>)}</div>}
       </div>
     </div>
   );
@@ -438,6 +445,8 @@ function ExportMenu({ file, onClose, onToast }: { file: any; onClose: () => void
 
 function ShareMenu({ file, onClose, onToast }: { file: any; onClose: () => void; onToast: (m: string) => void }) {
   const [busy, setBusy] = useState('');
+  const ref = useRef<HTMLDivElement>(null);
+  useEscapeClose(ref, onClose);
   const share = async (channel: string) => {
     setBusy(channel);
     try {
@@ -463,12 +472,12 @@ function ShareMenu({ file, onClose, onToast }: { file: any; onClose: () => void;
     { c: 'teams', label: 'Teams', icon: <MicrosoftTeamsLogo size={16} /> },
   ];
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-elevated)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: `1px solid ${T.border}`, borderRadius: 14, padding: 18, width: 'min(360px,100%)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}><ShareNetwork size={18} color={T.gold} weight="fill" /><div style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: T.white }}>Share File</div><button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={18} color={T.muted} /></button></div>
+    <div onClick={onClose} style={OVERLAY}>
+      <div ref={ref} role="dialog" aria-modal="true" aria-label="Share File" onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-elevated)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: `1px solid ${T.border}`, borderRadius: 14, padding: 18, width: 'min(360px,100%)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}><ShareNetwork size={18} color={T.gold} weight="fill" /><div style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: T.white }}>Share File</div><button onClick={onClose} aria-label="Close" style={CLOSE_BTN}><X size={18} color={T.muted} /></button></div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {opts.map((o) => (
-            <button key={o.c} disabled={!!busy} onClick={() => share(o.c)} style={{ display: 'flex', alignItems: 'center', gap: 11, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: '11px 14px', cursor: 'pointer', color: T.white, fontSize: 14, textAlign: 'left' }}>
+            <button key={o.c} disabled={!!busy} onClick={() => share(o.c)} style={{ display: 'flex', alignItems: 'center', gap: 11, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: '11px 14px', minHeight: 44, cursor: 'pointer', color: T.white, fontSize: 14, textAlign: 'left' }}>
               <span style={{ color: T.gold }}>{o.icon}</span>{busy === o.c ? 'Working…' : o.label}
             </button>
           ))}
@@ -478,3 +487,8 @@ function ShareMenu({ file, onClose, onToast }: { file: any; onClose: () => void;
     </div>
   );
 }
+
+/* Every window here sits on the modal layer (z.modal) — above the job bar, the
+   top bar and the phone tab bar — and clear of the notch and home indicator. */
+const OVERLAY: React.CSSProperties = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: z.modal, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom))' };
+const CLOSE_BTN: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', minWidth: 44, minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', margin: -10 };
