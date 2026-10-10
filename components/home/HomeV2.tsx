@@ -310,7 +310,11 @@ function DateTile({ ymd, today }: { ymd: string; today: string }) {
   );
 }
 
-function Schedule({ data }: { data: HomePayload }) {
+/** The Today / Next 7 Days switch lives here, on the list it changes — in the
+ *  page header it sat two screens above the schedule on a phone, so a tap
+ *  looked like it did nothing. `win` is the one tapped (from the URL), so
+ *  the switch moves at once; `pending` dims the list until its data arrives. */
+function Schedule({ data, win, pending, onWindow }: { data: HomePayload; win: 'today' | '7d'; pending: boolean; onWindow: (w: 'today' | '7d') => void }) {
   const colorFor = useProjectColors();
   const today = data.context.today;
   const groups = useMemo(() => {
@@ -319,10 +323,13 @@ function Schedule({ data }: { data: HomePayload }) {
     return [...m.entries()];
   }, [data.schedule.entries]);
   return (
-    <section className="hv2-card hv2-pad" aria-labelledby="hv2-sched">
+    <section className="hv2-card hv2-pad" aria-labelledby="hv2-sched" aria-busy={pending || undefined}>
       <div className="hv2-sechead">
-        <h2 id="hv2-sched">{data.context.window === 'today' ? "Today's Schedule" : 'Next 7 Days'}</h2>
+        <h2 id="hv2-sched">{win === 'today' ? "Today's Schedule" : 'Next 7 Days'}</h2>
+        <Segmented label="Date window" value={win} options={[{ key: 'today', label: 'Today' }, { key: '7d', label: 'Next 7 Days' }]} onChange={onWindow} />
       </div>
+      {pending && <p className="hv2-empty" role="status">Loading {win === 'today' ? "today's" : 'the next 7 days of'} schedule…</p>}
+      <div className={pending ? 'hv2-dim' : undefined}>
       {data.schedule.state === 'failed' ? (
         <p className="hv2-empty">Couldn&apos;t load the schedule.</p>
       ) : groups.length === 0 ? (
@@ -330,7 +337,7 @@ function Schedule({ data }: { data: HomePayload }) {
           <DateTile ymd={today} today={today} />
           <div className="hv2-dbody">
             <p className="hv2-nothing">Nothing scheduled</p>
-            <p className="hv2-empty">{data.context.window === 'today' ? 'Try Next 7 Days, or add' : 'Add'} milestones, inspections or meetings to a job and they land here.</p>
+            <p className="hv2-empty">{win === 'today' ? 'Try Next 7 Days, or add' : 'Add'} milestones, inspections or meetings to a job and they land here.</p>
           </div>
         </div>
       ) : (
@@ -362,6 +369,7 @@ function Schedule({ data }: { data: HomePayload }) {
           ))}
         </div>
       )}
+      </div>
     </section>
   );
 }
@@ -520,6 +528,11 @@ function HomeInner() {
   };
 
   const ctx = data?.context;
+  // The window the person tapped (URL) wins over the last answer, so the switch
+  // moves on the tap; until the new answer arrives the schedule says it's loading.
+  const urlWindow = sp.get('window');
+  const shownWindow: 'today' | '7d' = urlWindow === 'today' || urlWindow === '7d' ? urlWindow : (ctx?.window ?? '7d');
+  const windowPending = !!ctx && shownWindow !== ctx.window;
   const activeProjects = projects.filter(p => !['completed', 'complete', 'closed', 'cancelled', 'archived', 'lost'].includes(String(p.status || '').toLowerCase()));
 
   const saveDefault = async () => {
@@ -557,9 +570,6 @@ function HomeInner() {
               {activeProjects.map(p => <option key={p.id} value={p.id} style={jobOptionStyle(p)}>{p.name}</option>)}
             </select>
           </label>
-          {ctx && (
-            <Segmented label="Date window" value={ctx.window} options={[{ key: 'today', label: 'Today' }, { key: '7d', label: 'Next 7 Days' }]} onChange={v => setParam('window', v)} />
-          )}
           {/* Search lives in the app top bar (⌘K) — one search box, not two. */}
           <QuickCreate view={(ctx?.view || 'operations') as HomeView} projectId={sp.get('project')} />
         </div>
@@ -598,7 +608,7 @@ function HomeInner() {
           <div className={data.context.view === 'owner' ? 'hv2-order-0' : 'hv2-order-3'}><Hero metrics={data.metrics} /></div>
           <div className="hv2-primary hv2-order-1">
             <NeedsAttention data={data} onChanged={() => mutate()} />
-            <Schedule data={data} />
+            <Schedule data={data} win={shownWindow} pending={windowPending} onWindow={v => setParam('window', v)} />
           </div>
           <div className="hv2-order-4"><WorkTable data={data} /></div>
           {(data.context.view === 'sales' || data.context.view === 'owner') && (
@@ -644,6 +654,7 @@ const CSS = `
 .hv2-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
 .hv2-seg { display: inline-flex; flex-wrap: wrap; gap: 2px; }
 .hv2-seg button { min-height: 34px; padding: 0 13px; border: 0; background: transparent; font-size: 13px; cursor: pointer; }
+.hv2-dim { opacity: .45; transition: opacity .15s; }
 .hv2-seg button:focus-visible, .hv2-btn:focus-visible, .hv2-select select:focus-visible, .hv2-link:focus-visible, .hv2-tlink:focus-visible { outline: 2px solid var(--c-yellow); outline-offset: 2px; }
 .hv2-select select { min-height: 42px; max-width: 240px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--border-subtle); background: rgba(255,255,255,0.04); color: var(--c-text); font-size: 16px; font-weight: 600; }
 .hv2-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: 10px; font-size: 14px; font-weight: 700; text-decoration: none; cursor: pointer; white-space: nowrap; border: 1px solid transparent; }
