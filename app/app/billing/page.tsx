@@ -94,16 +94,16 @@ const CSS = `
 .blFill { height: 100%; border-radius: 3px; background: var(--status-under-contract); }
 .blTrackLabel { display: flex; justify-content: space-between; margin-top: 6px; font-size: var(--fs-xs); color: var(--text-tertiary); }
 .blPlans { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
-.blPlan { position: relative; display: flex; flex-direction: column; border-radius: var(--radius-md); border: 1px solid var(--border-default); background: var(--bg-surface-2); overflow: hidden; }
+.blPlan { position: relative; display: flex; flex-direction: column; border-radius: 10px; border: 1px solid var(--sg-border); background: none; overflow: hidden; }
 .blPlan[data-popular="true"] { border-color: var(--brand-primary-35); }
 .blPlan[data-current="true"] { border-color: rgba(46,229,157,.5); }
 .blPlanRibbon { text-align: center; padding: 5px 0; font-size: var(--fs-xs); font-weight: 800; background: var(--brand-primary); color: var(--on-brand); }
 .blPlanRibbon[data-current="true"] { background: rgba(46,229,157,.15); color: var(--status-ongoing); border-bottom: 1px solid rgba(46,229,157,.25); }
-.blPlanBody { padding: 22px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+.blPlanBody { padding: 16px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
 .blPlanTitle { font-size: var(--fs-md); font-weight: 800; color: var(--text-primary); }
 .blPlanTag { font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 2px; }
 .blPrice { display: flex; align-items: flex-end; gap: 3px; }
-.blPrice > b { font-size: 36px; font-weight: 900; color: var(--text-primary); line-height: 1; font-variant-numeric: tabular-nums; }
+.blPrice > b { font-size: 24px; font-weight: 700; color: var(--sg-text); line-height: 1; font-variant-numeric: tabular-nums; }
 .blPrice > span { font-size: var(--fs-sm); color: var(--text-tertiary); padding-bottom: 5px; }
 .blSave { font-size: var(--fs-xs); color: var(--status-ongoing); margin-top: 4px; }
 .blContact { font-size: var(--fs-lg); font-weight: 900; color: var(--text-primary); }
@@ -111,11 +111,11 @@ const CSS = `
 .blFeature { display: flex; gap: 8px; align-items: flex-start; font-size: var(--fs-xs); color: var(--text-secondary); }
 .blFeature > svg { color: var(--status-ongoing); flex-shrink: 0; margin-top: 1px; }
 .blPlan .k-btn { width: 100%; justify-content: center; }
-.blSummary { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 16px 18px; border-radius: var(--radius-sm); border: 1px solid var(--border-default); background: var(--bg-surface-2); margin-bottom: 16px; }
+.blSummary { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 4px 0 14px; border-bottom: 1px solid var(--sg-border); margin-bottom: 14px; }
 .blSummary > div:first-child { flex: 1; min-width: 220px; }
 .blLabel { font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); margin-bottom: 4px; }
-.blAddons { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
-.blAddon { display: flex; flex-direction: column; gap: 8px; padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-default); background: var(--bg-surface-2); }
+.blAddons { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); column-gap: 24px; }
+.blAddon { display: flex; flex-direction: column; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--sg-border); }
 .blAddon[data-on="true"] { border-color: rgba(46,229,157,.35); }
 .blAddonHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .blAddonName { font-size: var(--fs-md); font-weight: 800; color: var(--text-primary); line-height: 1.3; }
@@ -125,7 +125,12 @@ const CSS = `
 .blAddonState { font-size: var(--fs-xs); color: var(--text-secondary); font-weight: 600; line-height: 1.5; }
 .blSkel { height: 14px; border-radius: 4px; background: var(--border-subtle); }
 .blInlineErr { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--status-overdue); margin-top: 12px; }
-.blDowngrade { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 16px; padding: 14px 18px; border-radius: var(--radius-sm); border: 1px solid var(--border-default); background: var(--bg-surface-2); }
+.blDowngrade { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 16px; padding: 12px 0 0; border-top: 1px solid var(--sg-border); }
+/* Why checkout did not open — said in plain words, where the button was tapped. */
+.blCheckoutErr { display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; padding: 8px 0 8px 12px; border-left: 2px solid var(--danger); font-size: var(--fs-sm); line-height: 1.5; color: var(--sg-text); }
+.blCheckoutErr > svg { color: var(--danger); flex-shrink: 0; margin-top: 2px; }
+.blCheckoutErr > div { flex: 1 1 220px; min-width: 0; }
+.blCheckoutErr b { color: var(--danger); }
 .blDowngrade > div:first-child { flex: 1; min-width: 240px; }
 .blDowngrade b { display: block; font-size: var(--fs-sm); color: var(--text-primary); margin-bottom: 3px; }
 .blFaq { display: flex; flex-direction: column; }
@@ -152,6 +157,9 @@ export default function BillingPage() {
   const [canceling, setCanceling] = useState(false);
   const [showCancel, setShowCancel] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
+  // Why the last "Select Plan" did not reach Stripe, kept on screen beside
+  // the plans until the next try — a toast alone was gone before it was read.
+  const [checkoutError, setCheckoutError] = useState<{ message: string; ref?: string; notConfigured: boolean } | null>(null);
   const { toast, show } = useToast(8000);
   const setActionError = (msg: string | null) => { if (msg) show(msg, 'bad'); };
   const [success, setSuccess] = useState(false);
@@ -289,6 +297,7 @@ export default function BillingPage() {
       return;
     }
     setUpgrading(planId);
+    setCheckoutError(null);
     try {
       const res = await fetch('/api/billing/checkout', {
         method: 'POST',
@@ -300,9 +309,16 @@ export default function BillingPage() {
         window.location.href = data.checkoutUrl;
         return; // navigating away — keep the spinner until the page unloads
       }
-      setActionError(data.error || 'Could not start checkout. Please try again or contact support.');
+      // 503 = online billing is not set up on this deployment (the route says
+      // so in words); anything else is Stripe or the network. Either way the
+      // reason stays on screen beside the plans, with the reference to quote.
+      setCheckoutError({
+        message: data.error || 'Could not start checkout. Please try again or contact support.',
+        ref: typeof data.ref === 'string' ? data.ref : undefined,
+        notConfigured: res.status === 503,
+      });
     } catch {
-      setActionError('Could not start checkout. Please check your connection and try again.');
+      setCheckoutError({ message: 'Could not reach the server — check your connection and try again. Nothing was charged.', notConfigured: false });
     }
     setUpgrading(null);
   };
@@ -461,6 +477,18 @@ export default function BillingPage() {
               <Tabs value={annual ? 'annual' : 'monthly'} onChange={k => setAnnual(k === 'annual')} tabs={[{ key: 'monthly', label: 'Monthly' }, { key: 'annual', label: 'Annual' }]} />
             }
           >
+            {checkoutError && (
+              <div className="blCheckoutErr" role="alert">
+                <Warning size={16} weight="fill" />
+                <div>
+                  <b>Checkout didn&apos;t open.</b> {checkoutError.message}
+                  {checkoutError.ref ? <> Reference {checkoutError.ref}.</> : null}
+                </div>
+                {checkoutError.notConfigured && (
+                  <Button size="sm" variant="primary" href="mailto:sales@saguarocontrol.net?subject=Start%20my%20Saguaro%20plan">Email Sales</Button>
+                )}
+              </div>
+            )}
             <div className="blPlans">
               {PLANS.map(plan => {
                 const isCurrent = currentPlanName.includes(plan.id) && sub?.status === 'active';
