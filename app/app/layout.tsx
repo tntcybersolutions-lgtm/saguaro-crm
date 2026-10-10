@@ -16,6 +16,7 @@ import PoweredBy from '../../components/PoweredBy';
 import PdfViewer from '../../components/PdfViewer';
 import SaguaroChatWidget from '../../components/SaguaroChatWidget';
 import SubscriptionWall from '../../components/SubscriptionWall';
+import OfflineBar from '../../components/OfflineBar';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import GlobalShortcuts from '../../components/GlobalShortcuts';
 import ProjectSwitcher from '../../components/ProjectSwitcher';
@@ -473,6 +474,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* ── Global Keyboard Shortcuts ─────────────────────────────────── */}
       <GlobalShortcuts onProjectSwitch={() => setShowProjectSwitcher(true)} />
+
+      {/* Offline / back-online status, on every screen */}
+      <OfflineBar top={`calc(${sidebarTokens.headerHeight}px + env(safe-area-inset-top, 0px) + var(--sag-header-msg-h, 0px) + 8px)`} />
 
       {/* ── Project Switcher Modal ─────────────────────────────────────── */}
       <ProjectSwitcher open={showProjectSwitcher} onClose={() => setShowProjectSwitcher(false)} />
