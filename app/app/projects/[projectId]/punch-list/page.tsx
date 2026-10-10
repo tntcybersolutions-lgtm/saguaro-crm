@@ -23,6 +23,14 @@ import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
+import { sendOrSave, listSaved, updateSaved, removeSaved, savedRowId, savedIdOf, isOffline } from '@/lib/offline/outbox';
+
+/** A row as the create route takes it — without the screen's own markers. */
+function asCreateBody(row: Record<string, any>, projectId: string) {
+  const { id: _id, _offline, _offlineError, project_id: _p, ...fields } = row;
+  void _id; void _offline; void _offlineError; void _p;
+  return { ...fields, projectId };
+}
 import { SUB_TRADES } from '@/lib/construction-intelligence';
 import {
   CheckCircle, Check, MapPin, User, X, ArrowUUpLeft, Plus, WarningCircle, ListChecks, Camera,
@@ -174,6 +182,19 @@ export default function PunchListPage(){
   const [assignOther,setAssignOther]=useState(false);
   const detailRef = useRef<HTMLDivElement>(null);
 
+  /** The server's items with what is saved on this phone laid over them:
+   *  items added offline, and changes/deletes that haven't been sent yet. */
+  const withSaved=useCallback(async(server:any[])=>{
+    let rows=server.slice();
+    for(const w of await listSaved(projectId,'punch')){
+      const mark={_offline:true,_offlineError:w.lastError};
+      if(w.method==='POST') rows.unshift({...(w.row||{}),id:savedRowId(w.id),...mark});
+      else if(w.method==='PUT'&&w.recordId) rows=rows.map((i:any)=>i.id===w.recordId?{...i,...(w.row||{}),...mark}:i);
+      else if(w.method==='DELETE'&&w.recordId) rows=rows.filter((i:any)=>i.id!==w.recordId);
+    }
+    return rows;
+  },[projectId]);
+
   const load=useCallback(async()=>{
     setLoading(true);
     try{
@@ -182,10 +203,14 @@ export default function PunchListPage(){
       const r=await fetch(`/api/punch-list/list?projectId=${projectId}`,{headers:h});
       if (!r.ok) throw new Error('Failed to load data');
       const d=await r.json();
-      setItems(d.items||[]);
-    }catch{setItems([]);setLoadError('Failed to load. Please try again.');}
+      setItems(await withSaved(d.items||[]));
+    }catch{
+      // Offline with nothing saved for this screen: still show the items added on this phone.
+      setItems(await withSaved([]));
+      setLoadError(isOffline()?'':'Failed to load. Please try again.');
+    }
     finally{setLoading(false);}
-  },[projectId]);
+  },[projectId,withSaved]);
 
   // Background revalidate — reconciles server truth after an optimistic write
   // without flipping the list back into its loading state.
@@ -195,11 +220,18 @@ export default function PunchListPage(){
       const r=await fetch(`/api/punch-list/list?projectId=${projectId}`,{headers:h});
       if(!r.ok) return;
       const d=await r.json();
-      setItems(d.items||[]);
+      setItems(await withSaved(d.items||[]));
     }catch{/* background refresh — keep the optimistic rows */}
-  },[projectId]);
+  },[projectId,withSaved]);
 
   useEffect(()=>{load();},[load]);
+
+  // Items saved offline went up: show the server's copies.
+  useEffect(()=>{
+    const onSynced=(e:Event)=>{const d=(e as CustomEvent).detail||{}; if(d.kind==='punch'&&(!d.projectId||d.projectId===projectId)) revalidate();};
+    window.addEventListener('saguaro:outbox-synced',onSynced);
+    return ()=>window.removeEventListener('saguaro:outbox-synced',onSynced);
+  },[projectId,revalidate]);
 
   // Keep the selected row pointed at the live record once a revalidate swaps rows in.
   useEffect(()=>{
@@ -271,35 +303,46 @@ export default function PunchListPage(){
     const prevMode=mode,prevSelected=selected;
     setSaving(true);
     try{
-      const h=await getAuthHeaders();
+      const label=`Punch item "${String(snapshot.title||'').slice(0,40)}"`;
       if(mode==='create'){
         const tempId=`temp-${Date.now()}`;
         setItems(prev=>[{id:tempId,...snapshot,project_id:projectId},...prev]);
         closePanel();
         showToast('Item added.');
-        const r=await fetch('/api/punch-list/create',{
-          method:'POST',
-          headers:{...h,'Content-Type':'application/json'},
-          body:JSON.stringify({...form,projectId}),
-        });
-        if(!r.ok){setItems(prev=>prev.filter((i:any)=>i.id!==tempId));throw new Error(await r.text());}
-        const d=await r.json();
-        if(d.item) setItems(prev=>prev.map((i:any)=>i.id===tempId?d.item:i));
+        // No signal on site is normal: the item is kept on this phone and sent when it's back.
+        const res=await sendOrSave({url:'/api/punch-list/create',method:'POST',body:{...form,projectId},projectId,kind:'punch',label,row:{...snapshot,project_id:projectId}});
+        if(res.saved){
+          setItems(prev=>prev.map((i:any)=>i.id===tempId?{...i,id:savedRowId(res.id),_offline:true}:i));
+          showToast("Saved on this phone — it sends when you're back online.");
+        }else{
+          const r=res.response;
+          if(!r.ok){setItems(prev=>prev.filter((i:any)=>i.id!==tempId));throw new Error(await r.text());}
+          const d=await r.json();
+          if(d.item) setItems(prev=>prev.map((i:any)=>i.id===tempId?d.item:i));
+          revalidate();
+        }
         guard.clearDraft();
-        revalidate();
       }else if(mode==='edit'&&selected){
         const prevItem=selected;
         setItems(prev=>prev.map((i:any)=>i.id===prevItem.id?{...i,...snapshot}:i));
         // Stay on the item — it re-renders with the saved values.
         setSelected({...prevItem,...snapshot}); setMode('view');
         showToast('Item updated.');
-        const r=await fetch(`/api/punch-list/${prevItem.id}`,{
-          method:'PUT',
-          headers:{...h,'Content-Type':'application/json'},
-          body:JSON.stringify(form),
-        });
-        if(!r.ok){setItems(prev=>prev.map((i:any)=>i.id===prevItem.id?prevItem:i));throw new Error(await r.text());}
-        revalidate();
+        const localId=savedIdOf(String(prevItem.id));
+        if(localId){
+          // Added offline and not sent yet: change what will be sent.
+          await updateSaved(localId,{body:JSON.stringify({...form,projectId}),row:{...snapshot,project_id:projectId},label});
+          showToast("Updated on this phone — it sends when you're back online.");
+        }else{
+          const res=await sendOrSave({url:`/api/punch-list/${prevItem.id}`,method:'PUT',body:form,projectId,kind:'punch',label:`Changes to ${label.toLowerCase()}`,row:snapshot,recordId:prevItem.id});
+          if(res.saved){
+            setItems(prev=>prev.map((i:any)=>i.id===prevItem.id?{...i,_offline:true}:i));
+            showToast("Saved on this phone — it sends when you're back online.");
+          }else{
+            if(!res.response.ok){setItems(prev=>prev.map((i:any)=>i.id===prevItem.id?prevItem:i));throw new Error(await res.response.text());}
+            revalidate();
+          }
+        }
       }
       return true;
     }catch(e:any){
@@ -319,13 +362,20 @@ export default function PunchListPage(){
     setItems(prev=>prev.map((i:any)=>i.id===item.id?{...i,status:newStatus}:i));
     setSelected((s:any)=>s?.id===item.id?{...s,status:newStatus}:s);
     try{
-      const h=await getAuthHeaders();
-      const tr=await fetch(`/api/punch-list/${item.id}`,{
-        method:'PUT',
-        headers:{...h,'Content-Type':'application/json'},
-        body:JSON.stringify({status:newStatus}),
-      });
-      if (!tr.ok) throw new Error('Update failed');
+      const localId=savedIdOf(String(item.id));
+      if(localId){
+        // Added offline: the item goes up already marked.
+        const row={...item,status:newStatus};
+        await updateSaved(localId,{body:JSON.stringify(asCreateBody(row,projectId)),row:{...asCreateBody(row,projectId),project_id:projectId}});
+        return;
+      }
+      const res=await sendOrSave({url:`/api/punch-list/${item.id}`,method:'PUT',body:{status:newStatus},projectId,kind:'punch',label:`${newStatus==='completed'?'Complete':'Reopen'} punch item "${String(item.title||'').slice(0,40)}"`,row:{status:newStatus},recordId:item.id});
+      if(res.saved){
+        setItems(prev=>prev.map((i:any)=>i.id===item.id?{...i,_offline:true}:i));
+        showToast("Saved on this phone — it sends when you're back online.");
+        return;
+      }
+      if (!res.response.ok) throw new Error('Update failed');
       revalidate();
     }catch(e:any){
       setItems(prev=>prev.map((i:any)=>i.id===item.id?{...i,status:prevStatus}:i));
@@ -343,9 +393,11 @@ export default function PunchListPage(){
     showToast('Item deleted.');closePanel();
     setDeleting(true);
     try{
-      const h=await getAuthHeaders();
-      const dr=await fetch(`/api/punch-list/${item.id}`,{method:'DELETE',headers:h});
-      if (!dr.ok) throw new Error('Delete failed');
+      const localId=savedIdOf(String(item.id));
+      if(localId){await removeSaved(localId);return;} // never left this phone
+      const res=await sendOrSave({url:`/api/punch-list/${item.id}`,method:'DELETE',projectId,kind:'punch',label:`Delete punch item "${String(item.title||'').slice(0,40)}"`,recordId:item.id});
+      if(res.saved){showToast("Deleted on this phone — it syncs when you're back online.");return;}
+      if (!res.response.ok) throw new Error('Delete failed');
       revalidate();
     }catch{setItems(prevItems);showToast('Delete failed.','bad');}
     finally{setDeleting(false);}
@@ -430,7 +482,13 @@ export default function PunchListPage(){
     },
   };
   const priorityCol: Column<any> = { key:'priority', header:'Priority', accessor:i=>PR_RANK[prKey(i.priority)]??9, render:i=>{const b=priorityBadge(i.priority);return <Badge tone={b.tone}>{b.label}</Badge>;} };
-  const statusCol: Column<any> = { key:'status', header:'Status', accessor:i=>STATUS_RANK[i.status]??9, render:i=>{const b=statusBadge(i.status);return <Badge tone={b.tone}>{b.label}</Badge>;} };
+  const statusCol: Column<any> = { key:'status', header:'Status', accessor:i=>STATUS_RANK[i.status]??9, render:i=>{
+    const b=statusBadge(i.status);
+    if(!i._offline) return <Badge tone={b.tone}>{b.label}</Badge>;
+    return <span style={{display:'inline-flex',gap:6,flexWrap:'wrap'}} title={i._offlineError?`Couldn't send: ${i._offlineError}`:"Saved on this phone — it sends when you're back online."}>
+      <Badge tone={b.tone}>{b.label}</Badge><Badge tone={i._offlineError?'overdue':'gold'}>{i._offlineError?"Couldn't Send":'On This Phone'}</Badge>
+    </span>;
+  } };
   const tradeCol: Column<any> = { key:'trade', header:'Trade', accessor:i=>(i.trade||'').toLowerCase(), render:i=>i.trade?<span>{i.trade}</span>:<span className="plMuted">—</span> };
   const locationCol: Column<any> = { key:'location', header:'Location', accessor:i=>(i.location||'').toLowerCase(), render:i=>i.location?<span style={{display:'inline-flex',alignItems:'center',gap:4}}><MapPin size={12}/>{i.location}</span>:<span className="plMuted">—</span> };
   const assignedCol: Column<any> = { key:'assigned_to', header:'Assigned To', accessor:i=>(i.assigned_to||'').toLowerCase(), render:i=>i.assigned_to?<span style={{color:'var(--text-primary)'}}>{i.assigned_to}</span>:<span className="plMuted">Unassigned</span> };

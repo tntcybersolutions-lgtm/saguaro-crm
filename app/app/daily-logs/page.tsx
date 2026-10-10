@@ -33,6 +33,7 @@ import { getLastUsed, setLastUsed, postLearningEvent } from '@/lib/last-used';
 import NudgeRing from '@/components/intelligence/NudgeRing';
 import { ANCHOR_DAILY_LOG_GAP } from '@/lib/suggestions';
 import Suggest from '@/components/ui/Suggest';
+import { sendOrSave, listSaved, savedRowId, savedIdOf, isOffline } from '@/lib/offline/outbox';
 
 interface DailyLog {
   id: string;
@@ -110,6 +111,7 @@ const CSS = `
 .dlBadges { display: inline-flex; align-items: center; gap: 6px; }
 .dlNum { font-variant-numeric: tabular-nums; }
 .dlInlineErr { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--status-overdue); padding: 10px 14px; border: 1px solid rgba(255,77,94,.35); border-radius: var(--radius-sm); background: rgba(255,77,94,.08); }
+.dlInlineErr[data-tone="info"] { color: var(--text-primary); border-color: var(--border-default); background: var(--bg-solid-2); }
 .dlBanner { border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--bg-surface-2); }
 .dlBanner[data-gap="true"] { border-color: rgba(255,77,94,.35); background: rgba(255,77,94,.07); }
 .dlBannerTitle { font-size: var(--fs-md); font-weight: 700; color: var(--text-primary); }
@@ -134,6 +136,8 @@ export default function DailyLogsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  /** "Saved on this phone…" after a log written with no signal. */
+  const [notice, setNotice] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [autoCrew, setAutoCrew] = useState(false);
@@ -177,18 +181,35 @@ export default function DailyLogsPage() {
   // form walks in knowing the job.
   const { ctx } = useProjectContext(form.projectId || null);
 
+  // Logs written on this phone with no signal, shown until they've gone up.
+  const savedLogs = useCallback(async (): Promise<DailyLog[]> =>
+    (await listSaved(null, 'daily-log')).filter((w) => w.method === 'POST')
+      .map((w) => ({ ...(w.row || {}), id: savedRowId(w.id), _offline: true, _offlineError: w.lastError } as unknown as DailyLog)), []);
+
+  const projectName = useCallback((pid: string) => projects.find(p => p.id === pid)?.name || '', [projects]);
+
   const fetchLogs = useCallback(async () => {
     try {
       const res = await fetch('/api/daily-logs/list');
       if (!res.ok) throw new Error('Failed to load daily logs');
       const data = await res.json();
-      setLogs(Array.isArray(data) ? data : data.logs ?? data.daily_logs ?? []);
+      const server: DailyLog[] = Array.isArray(data) ? data : data.logs ?? data.daily_logs ?? [];
+      setLogs([...(await savedLogs()), ...server]);
     } catch (e: any) {
-      console.error(e); setError(humanError(e, 'Something went wrong. Please try again.'));
+      const local = await savedLogs();
+      if (local.length) setLogs((prev) => [...local, ...prev.filter((l) => !savedIdOf(String(l.id)))]);
+      if (!isOffline()) { console.error(e); setError(humanError(e, 'Something went wrong. Please try again.')); }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [savedLogs]);
+
+  // Logs written offline went up: show the server's copies.
+  useEffect(() => {
+    const onSynced = (e: Event) => { if ((e as CustomEvent).detail?.kind === 'daily-log') void fetchLogs(); };
+    window.addEventListener('saguaro:outbox-synced', onSynced);
+    return () => window.removeEventListener('saguaro:outbox-synced', onSynced);
+  }, [fetchLogs]);
 
   useEffect(() => {
     fetchLogs();
@@ -292,10 +313,7 @@ export default function DailyLogsPage() {
     }
     setCreating(true);
     try {
-      const res = await fetch('/api/daily-logs/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const body = {
           projectId: form.projectId,
           logDate: form.logDate,
           weather: form.weather || null,
@@ -313,9 +331,22 @@ export default function DailyLogsPage() {
           windConditions: form.windConditions || null,
           phaseOfWork: form.phaseOfWork || null,
           equipment: form.equipment || null,
-        }),
+        };
+      // No signal on site is normal: the log is kept on this phone and sent when it's back.
+      const sent = await sendOrSave({
+        url: '/api/daily-logs/create', method: 'POST', body, projectId: form.projectId, kind: 'daily-log',
+        label: `Daily log ${form.logDate} · ${projectName(form.projectId) || 'job'}`,
+        row: {
+          project_id: form.projectId, log_date: form.logDate, status: 'draft', weather: body.weather,
+          high_temp: body.temperatureHigh, low_temp: body.temperatureLow, crew_count: body.crewCount,
+          work_performed: body.workPerformed, delays: body.delays, safety_notes: body.safetyNotes,
+          materials_delivered: body.materialsDelivered, visitors: body.visitors, notes: body.notes,
+          superintendent: body.superintendent, precipitation: body.precipitation,
+          wind_conditions: body.windConditions, phase_of_work: body.phaseOfWork,
+        },
       });
-      if (!res.ok) throw new Error('Failed to create daily log');
+      if (!sent.saved && !sent.response.ok) throw new Error('Failed to create daily log');
+      setNotice(sent.saved ? "Saved on this phone — it sends when you're back online." : '');
       // Remember what was saved for next time, and receipt what was accepted.
       setLastUsed('daily-log', { projectId: form.projectId, superintendent: form.superintendent });
       const acceptedLast = [
@@ -347,7 +378,6 @@ export default function DailyLogsPage() {
     if (await submitCreate()) guard.clearDraft();
   }
 
-  const projectName = useCallback((pid: string) => projects.find(p => p.id === pid)?.name || '', [projects]);
 
   // ── Register metrics ──
   const monthIso = localToday().slice(0, 7);
@@ -397,7 +427,11 @@ export default function DailyLogsPage() {
   const columns: Column<DailyLog>[] = [
     { key: 'log_date', header: 'Date', accessor: l => l.log_date || '', width: 130, render: l => <span className="dlDate">{fmtDate(l.log_date)}</span> },
     { key: 'project', header: 'Project', accessor: l => projectName(l.project_id).toLowerCase(), render: l => <span className="dlClamp" style={{ maxWidth: 260, color: 'var(--text-primary)', fontWeight: 600 }} title={projectName(l.project_id)}>{projectName(l.project_id) || <span className="dlMuted">Unknown project</span>}</span> },
-    { key: 'status', phone: 'show', header: 'Status', accessor: l => logStatus(l).label, render: l => { const s = logStatus(l); return <Badge tone={s.tone}>{s.label}</Badge>; } },
+    { key: 'status', phone: 'show', header: 'Status', accessor: l => ((l as any)._offline ? 'On This Phone' : logStatus(l).label), render: l => {
+      const off = l as DailyLog & { _offline?: boolean; _offlineError?: string };
+      if (off._offline) return <span title={off._offlineError ? `Couldn't send: ${off._offlineError}` : "Saved on this phone — it sends when you're back online."}><Badge tone={off._offlineError ? 'overdue' : 'gold'}>{off._offlineError ? "Couldn't Send" : 'On This Phone'}</Badge></span>;
+      const s = logStatus(l); return <Badge tone={s.tone}>{s.label}</Badge>;
+    } },
     { key: 'crew_count', header: 'Crew', accessor: l => Number(l.crew_count) || 0, align: 'right', render: l => <span className="dlNum" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><UsersThree size={14} style={{ color: 'var(--text-tertiary)' }} />{Number(l.crew_count) || 0}</span> },
     { key: 'work_performed', header: 'Work Performed', accessor: l => (l.work_performed || '').toLowerCase(), render: l => l.work_performed ? <span className="dlClamp" style={{ maxWidth: 320 }} title={l.work_performed}>{l.work_performed}</span> : <span className="dlMuted">—</span> },
     { key: 'flags', header: 'Flags', accessor: l => ((l.delays || '').trim() ? 2 : 0) + ((l.safety_notes || '').trim() ? 1 : 0), render: l => {
@@ -446,7 +480,9 @@ export default function DailyLogsPage() {
         rowKey={l => l.id}
         loading={loading}
         defaultSort={{ key: 'log_date', dir: 'desc' }}
-        onRowClick={(row) => guard.requestLeave(`/app/daily-logs/${row.id}`)}
+        onRowClick={(row) => savedIdOf(String(row.id))
+          ? setNotice("This log is still on this phone — it opens once it's sent.")
+          : guard.requestLeave(`/app/daily-logs/${row.id}`)}
         rowActions={rowActions}
         empty={
           <EmptyState
@@ -476,6 +512,13 @@ export default function DailyLogsPage() {
         }
       >
         <StatRow items={stats} />
+
+        {notice && (
+          <div className="dlInlineErr" role="status" data-tone="info">
+            <CloudSun size={15} /> {notice}
+            <Button size="sm" variant="ghost" onClick={() => setNotice('')}>Dismiss</Button>
+          </div>
+        )}
 
         {error && !showCreate && logs.length > 0 && (
           <div className="dlInlineErr" role="alert">

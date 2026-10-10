@@ -2,7 +2,7 @@
 /**
  * Says, plainly and on every screen, when the app is offline and when it is
  * back. Offline: a bar that stays until the connection returns, with how many
- * photos/videos are waiting on this phone. Back online: a short green notice
+ * photos, videos, daily logs and punch items are waiting on this phone. Back online: a short green notice
  * while the waiting items upload, then how many went up.
  */
 import React, { useEffect, useState, useSyncExternalStore } from 'react';
@@ -44,13 +44,13 @@ export default function OfflineBar({ top }: { top?: string }) {
   let tone = '';
   if (!net.online) {
     tone = 'off';
-    body = (<><CloudSlash size={20} weight="bold" /><span>You&apos;re offline<small>{net.pending ? `${net.pending} photo${net.pending === 1 ? '' : 's'}/video saved on this phone — they upload when you're back.` : 'Photos and video you add are saved on this phone and upload when you\'re back.'}</small></span></>);
+    body = (<><CloudSlash size={20} weight="bold" /><span>You&apos;re offline<small>{net.pending ? `${net.pending} item${net.pending === 1 ? '' : 's'} saved on this phone — ${net.pending === 1 ? 'it sends' : 'they send'} when you're back.` : 'Photos, daily logs and punch items you add are saved on this phone and send when you\'re back.'}</small></span></>);
   } else if (showBack && net.syncing) {
     tone = 'sync';
-    body = (<><ArrowsClockwise size={20} weight="bold" /><span>Back online<small>Uploading what you saved offline… {net.synced ? `${net.synced} done` : ''}</small></span></>);
+    body = (<><ArrowsClockwise size={20} weight="bold" /><span>Back online<small>Sending what you saved offline… {net.synced ? `${net.synced} done` : ''}</small></span></>);
   } else if (showBack) {
     tone = 'on';
-    body = (<><CloudCheck size={20} weight="bold" /><span>Back online{net.synced ? <small>{net.synced} item{net.synced === 1 ? '' : 's'} uploaded from this phone.</small> : null}</span></>);
+    body = (<><CloudCheck size={20} weight="bold" /><span>Back online{net.synced ? <small>{net.synced} item{net.synced === 1 ? '' : 's'} sent from this phone.</small> : null}</span></>);
   }
   if (!body) return null;
   return (

@@ -24,6 +24,7 @@ import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
+import { sendOrSave, listSaved, updateSaved, removeSaved, savedRowId, savedIdOf, isOffline } from '@/lib/offline/outbox';
 import {
   ClipboardText, Thermometer, HardHat, WarningCircle, Plus, X, Sparkle, CopySimple, CloudSun,
   UsersThree, PencilSimple, Trash, ArrowSquareOut, ArrowClockwise, ShieldCheck, Package, Wrench,
@@ -256,6 +257,19 @@ export default function DailyLogsPage(){
   const [auto,setAuto]       = useState<{date?:boolean;crew?:boolean;manpower?:boolean;subs?:boolean;carry?:boolean}>({});
   const [prefilling,setPrefilling] = useState(false);
 
+  /** The server's logs with what is saved on this phone laid over them:
+   *  logs written offline, edits and deletes that haven't been sent yet. */
+  const withSaved = useCallback(async(server:any[])=>{
+    let rows = server.slice();
+    for(const w of await listSaved(projectId,'daily-log')){
+      const mark = { _offline:true, _offlineError:w.lastError };
+      if(w.method==='POST') rows.unshift({...(w.row||{}), id:savedRowId(w.id), ...mark});
+      else if(w.method==='PUT'&&w.recordId) rows = rows.map((l:any)=>l.id===w.recordId?{...l,...(w.row||{}),...mark}:l);
+      else if(w.method==='DELETE'&&w.recordId) rows = rows.filter((l:any)=>l.id!==w.recordId);
+    }
+    return rows.sort((a:any,b:any)=>(b.log_date||'').localeCompare(a.log_date||''));
+  },[projectId]);
+
   const load = useCallback(async()=>{
     setLoading(true);
     try{
@@ -264,10 +278,14 @@ export default function DailyLogsPage(){
       const r = await fetch(`/api/daily-logs/list?projectId=${projectId}`,{headers:h});
       if (!r.ok) throw new Error('Failed to load data');
       const d = await r.json();
-      setLogs(d.logs||[]);
-    }catch{setLogs([]);setLoadError('Failed to load. Please try again.');}
+      setLogs(await withSaved(d.logs||[]));
+    }catch{
+      // Offline with nothing saved for this screen: still show the logs written on this phone.
+      setLogs(await withSaved([]));
+      setLoadError(isOffline() ? '' : 'Failed to load. Please try again.');
+    }
     finally{setLoading(false);}
-  },[projectId]);
+  },[projectId, withSaved]);
 
   // Background revalidate — reconciles server truth after an optimistic write
   // without flipping the list back into its loading state.
@@ -277,11 +295,18 @@ export default function DailyLogsPage(){
       const r = await fetch(`/api/daily-logs/list?projectId=${projectId}`,{headers:h});
       if(!r.ok) return;
       const d = await r.json();
-      setLogs(d.logs||[]);
+      setLogs(await withSaved(d.logs||[]));
     }catch{/* background refresh — keep the optimistic rows */}
-  },[projectId]);
+  },[projectId, withSaved]);
 
   useEffect(()=>{load();},[load]);
+
+  // Logs written offline went up: show the server's copies.
+  useEffect(()=>{
+    const onSynced = (e: Event) => { const d = (e as CustomEvent).detail || {}; if(d.kind==='daily-log' && (!d.projectId || d.projectId===projectId)) revalidate(); };
+    window.addEventListener('saguaro:outbox-synced', onSynced);
+    return () => window.removeEventListener('saguaro:outbox-synced', onSynced);
+  },[projectId, revalidate]);
 
   // Keep the selected row pointed at the live record once a revalidate swaps rows in.
   useEffect(()=>{
@@ -405,7 +430,6 @@ export default function DailyLogsPage(){
     const prevMode = mode, prevSelected = selected;
     setSaving(true);
     try{
-      const h = await getAuthHeaders();
       // Structured sections — empty arrays go up as null: the create route
       // rolls crew_count up from manpower lines whenever an array is present,
       // so an empty [] would zero the typed headcount.
@@ -421,39 +445,52 @@ export default function DailyLogsPage(){
         subcontractors_on_site: (form.subcontractors_on_site||[]).length>0 ? form.subcontractors_on_site : null,
         equipment_on_site: (form.equipment_on_site||[]).length>0 ? form.equipment_on_site : null,
       };
+      const createBody = {...payload,projectId,
+        logDate:payload.log_date,workPerformed:payload.work_performed,
+        safetyNotes:payload.safety_notes,materialsDelivered:payload.materials_delivered,
+        crewCount:payload.crew_count,
+        temperatureHigh:payload.high_temp,temperatureLow:payload.low_temp,
+      };
+      const row = {...payload,project_id:projectId};
       if(mode==='create'){
         const tempId = `temp-${Date.now()}`;
-        setLogs(prev=>[{id:tempId,...payload,project_id:projectId},...prev]
+        setLogs(prev=>[{id:tempId,...row},...prev]
           .sort((a:any,b:any)=>(b.log_date||'').localeCompare(a.log_date||'')));
         closePanel();
         showToast('Daily log created.');
-        const r = await fetch('/api/daily-logs/create',{
-          method:'POST',
-          headers:{...h,'Content-Type':'application/json'},
-          body:JSON.stringify({...payload,projectId,
-            logDate:payload.log_date,workPerformed:payload.work_performed,
-            safetyNotes:payload.safety_notes,materialsDelivered:payload.materials_delivered,
-            crewCount:payload.crew_count,
-            temperatureHigh:payload.high_temp,temperatureLow:payload.low_temp,
-          }),
-        });
-        if(!r.ok){ setLogs(prev=>prev.filter((l:any)=>l.id!==tempId)); throw new Error(await r.text()); }
-        const d = await r.json();
-        if(d.log) setLogs(prev=>prev.map((l:any)=>l.id===tempId?d.log:l));
-        revalidate();
+        // No signal on site is normal: the log is kept on this phone and sent when it's back.
+        const res = await sendOrSave({ url:'/api/daily-logs/create', method:'POST', body:createBody, projectId, kind:'daily-log', label:`Daily log ${payload.log_date||''}`.trim(), row });
+        if(res.saved){
+          setLogs(prev=>prev.map((l:any)=>l.id===tempId?{...l,id:savedRowId(res.id),_offline:true}:l));
+          showToast("Saved on this phone — it sends when you're back online.");
+        } else {
+          const r = res.response;
+          if(!r.ok){ setLogs(prev=>prev.filter((l:any)=>l.id!==tempId)); throw new Error(await r.text()); }
+          const d = await r.json();
+          if(d.log) setLogs(prev=>prev.map((l:any)=>l.id===tempId?d.log:l));
+          revalidate();
+        }
       } else if(mode==='edit'&&selected){
         const prevLog = selected;
         setLogs(prev=>prev.map((l:any)=>l.id===prevLog.id?{...l,...payload}:l));
         // Stay on the day's record — it re-renders with the saved values.
         setSelected({...prevLog,...payload}); setMode('view');
         showToast('Log updated.');
-        const r = await fetch(`/api/daily-logs/${prevLog.id}`,{
-          method:'PUT',
-          headers:{...h,'Content-Type':'application/json'},
-          body:JSON.stringify(payload),
-        });
-        if(!r.ok){ setLogs(prev=>prev.map((l:any)=>l.id===prevLog.id?prevLog:l)); throw new Error(await r.text()); }
-        revalidate();
+        const localId = savedIdOf(String(prevLog.id));
+        if(localId){
+          // Written offline and not sent yet: change what will be sent.
+          await updateSaved(localId,{ body:JSON.stringify(createBody), row, label:`Daily log ${payload.log_date||''}`.trim() });
+          showToast("Updated on this phone — it sends when you're back online.");
+        } else {
+          const res = await sendOrSave({ url:`/api/daily-logs/${prevLog.id}`, method:'PUT', body:payload, projectId, kind:'daily-log', label:`Changes to the ${payload.log_date||''} daily log`, row:payload, recordId:prevLog.id });
+          if(res.saved){
+            setLogs(prev=>prev.map((l:any)=>l.id===prevLog.id?{...l,_offline:true}:l));
+            showToast("Saved on this phone — it sends when you're back online.");
+          } else {
+            if(!res.response.ok){ setLogs(prev=>prev.map((l:any)=>l.id===prevLog.id?prevLog:l)); throw new Error(await res.response.text()); }
+            revalidate();
+          }
+        }
       }
       guard.clearDraft();
       return true;
@@ -476,9 +513,11 @@ export default function DailyLogsPage(){
     closePanel();
     setDeleting(true);
     try{
-      const h = await getAuthHeaders();
-      const dr = await fetch(`/api/daily-logs/${log.id}`,{method:'DELETE',headers:h});
-      if (!dr.ok) throw new Error('Delete failed');
+      const localId = savedIdOf(String(log.id));
+      if(localId){ await removeSaved(localId); return; } // never left this phone
+      const res = await sendOrSave({ url:`/api/daily-logs/${log.id}`, method:'DELETE', projectId, kind:'daily-log', label:`Delete the ${log.log_date||''} daily log`, recordId:log.id });
+      if(res.saved){ showToast("Deleted on this phone — it syncs when you're back online."); return; }
+      if (!res.response.ok) throw new Error('Delete failed');
       revalidate();
     }catch{setLogs(prevLogs);showToast('Delete failed. Please try again.','bad');}
     finally{setDeleting(false);}
@@ -534,7 +573,10 @@ export default function DailyLogsPage(){
   // ── Register columns: full register, or a compact one beside the day's record ──
   const isSel = (l:any) => selected?.id===l.id && mode!=='create';
   const dateCol: Column<any> = { key:'log_date', header:'Date', accessor:l=>l.log_date||'', width:130, render:l=><span className="pdlDate" data-sel={isSel(l)?'true':undefined}>{fmtDate(l.log_date)}</span> };
-  const statusCol: Column<any> = { key:'status', header:'Status', accessor:l=>logStatus(l).label, render:l=>{const s=logStatus(l);return <Badge tone={s.tone}>{s.label}</Badge>;} };
+  const statusCol: Column<any> = { key:'status', header:'Status', accessor:l=>l._offline?'On This Phone':logStatus(l).label, render:l=>{
+    if(l._offline) return <span title={l._offlineError?`Couldn't send: ${l._offlineError}`:"Saved on this phone — it sends when you're back online."}><Badge tone={l._offlineError?'overdue':'gold'}>{l._offlineError?"Couldn't Send":'On This Phone'}</Badge></span>;
+    const s=logStatus(l);return <Badge tone={s.tone}>{s.label}</Badge>;
+  } };
   const weatherCol: Column<any> = { key:'weather', header:'Weather', accessor:l=>l.weather||'', render:l=>l.weather?<span className="pdlClamp" style={{maxWidth:160}} title={l.weather}>{l.weather}</span>:<span className="pdlMuted">—</span> };
   const tempCol: Column<any> = { key:'temp', header:'Temp', accessor:l=>Number(l.high_temp)||0, align:'right', render:l=><span className="pdlMuted pdlNum">{tempStr(l)}</span> };
   const crewCol: Column<any> = { key:'crew_count', header:'Crew', accessor:l=>Number(l.crew_count)||0, align:'right', render:l=><span className="pdlNum" style={{display:'inline-flex',alignItems:'center',gap:4}}><UsersThree size={14} style={{color:'var(--text-tertiary)'}}/>{Number(l.crew_count)||0}</span> };
@@ -552,10 +594,11 @@ export default function DailyLogsPage(){
   /** The record's verbs — shared by the row overflow and the rail. */
   function logActions(log:any): Action[] {
     const temp = String(log.id).startsWith('temp-');
+    const local = !!savedIdOf(String(log.id));
     return [
       { label:'Open Day', icon:<ClipboardText size={15}/>, onClick:()=>viewLog(log) },
       { label:'Edit Log', icon:<PencilSimple size={15}/>, onClick:()=>openEdit(log), disabled:temp },
-      { label:'Open Full Record', icon:<ArrowSquareOut size={15}/>, href:`/app/daily-logs/${log.id}`, hidden:temp },
+      { label:'Open Full Record', icon:<ArrowSquareOut size={15}/>, href:`/app/daily-logs/${log.id}`, hidden:temp||local },
       { label:'Delete', icon:<Trash size={15}/>, onClick:()=>deleteLog(log), tone:'danger', disabled:temp||deleting },
     ];
   }
@@ -656,7 +699,7 @@ export default function DailyLogsPage(){
                   Edit Log
                 </Button>
                 <div className="pdlActionsRow">
-                  <Button icon={<ArrowSquareOut size={16}/>} href={String(selected.id).startsWith('temp-')?undefined:`/app/daily-logs/${selected.id}`} disabled={String(selected.id).startsWith('temp-')}>
+                  <Button icon={<ArrowSquareOut size={16}/>} href={String(selected.id).startsWith('temp-')||savedIdOf(String(selected.id))?undefined:`/app/daily-logs/${selected.id}`} disabled={String(selected.id).startsWith('temp-')||!!savedIdOf(String(selected.id))} title={savedIdOf(String(selected.id))?"Opens once it's sent from this phone":undefined}>
                     Open Full Record
                   </Button>
                   <RowActions actions={[
