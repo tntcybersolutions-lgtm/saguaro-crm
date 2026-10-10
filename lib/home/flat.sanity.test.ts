@@ -8,7 +8,7 @@
  * three open bid packages — two on Copper Ridge with their portal switched off.
  */
 import {
-  bidRows, coiSummary, jobRows, moneyRows, ownerStrip, stripFromMetrics, shortJobName, jobTitle, fmtDowMonDay, fmtMonDay,
+  bidRows, coiSummary, jobRows, moneyRows, ownerStrip, stripFromMetrics, stripMoney, shortJobName, jobTitle, fmtDowMonDay, fmtMonDay,
   type BidPackageIn, type InviteIn, type SubmissionIn, type PayAppIn, type JobIn, type TextPart,
 } from './flat';
 
@@ -125,7 +125,7 @@ const jobsIn: JobIn[] = [
   { id: 'arch', name: 'ZZ TAP TEST Job', status: 'active', phase: 'bidding', city: null, start: null, finish: null, actualFinish: null, contract: 0, archived: true },
 ];
 const jobs = jobRows({ jobs: jobsIn, apps: pimaApps, bids, today, showMoney: true, showBilling: true });
-check('active + recently complete; old, lost and archived left out', jobs.map(j => j.id).join(',') === [CR, PIMA2, PIMA].join(','), jobs.map(j => j.title).join(' | '));
+check('building, then recently complete, then bidding; old, lost and archived left out', jobs.map(j => j.id).join(',') === [CR, PIMA, PIMA2].join(','), jobs.map(j => j.title).join(' | '));
 const cr = jobs[0], pima = jobs.find(j => j.id === PIMA)!, p2 = jobs.find(j => j.id === PIMA2)!;
 check('Copper Ridge: Building · starts Nov 2 · 0% billed', text(cr.meta) === 'Building · starts Nov 2 · 0% billed' && cr.billedPct === 0, text(cr.meta));
 check('Copper Ridge: $4.75M, Chandler', cr.right === '$4.75M' && cr.rightSub === 'Chandler' && cr.title === 'Copper Ridge Data Center Phase II');
@@ -173,7 +173,9 @@ const ops = stripFromMetrics([
 check('ops strip: overdue > 0 is red', ops[0].value === '7' && ops[0].tone === 'bad' && ops[0].label === 'Overdue');
 check('ops strip: zero at risk is calm', ops[1].value === '0' && !ops[1].tone);
 check('ops strip: restricted figure is null with the reason', ops[2].value === null && ops[2].note === 'Needs Change Order access');
-check('ops strip: money is short on a phone', ops[3].value === '$1.35M', String(ops[3].value));
+check('ops strip: money is short on a phone, label fits', ops[3].value === '$1.35M' && ops[3].label === 'Unpaid bills', String(ops[3].value));
+
+check('strip money: one decimal from $10M so it fits a phone', stripMoney(10_489_650) === '$10.5M' && stripMoney(7_289_650) === '$7.29M' && stripMoney(12_000_000) === '$12M' && stripMoney(150_000_000) === '$150M', stripMoney(10_489_650));
 
 if (failed) { console.error(`\n${failed} assertion(s) failed`); process.exit(1); }
 console.log('\nall flat home assertions held');

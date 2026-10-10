@@ -179,7 +179,8 @@ function queueCandidates(queue: QueueItem[], today: string): Candidate[] {
     const more = crit.length - 1;
     out.push({
       key: `critical:${top.id}`, tier: 0, date: top.dueAt ? top.dueAt.slice(0, 10) : null, amount: crit.length,
-      parts: [B(top.title), ...onJob(top.projectName), T(`: ${lowerFirst(top.reason)}.`),
+      // "Inspection failed: failed — no re-inspection date" says it twice; keep the second half.
+      parts: [B(top.title), ...onJob(top.projectName), T(`: ${lowerFirst(top.reason.replace(/^failed\s*[—–-]\s*/i, ''))}.`),
         ...(more ? [T(` ${more} more ${more === 1 ? 'needs' : 'need'} you today.`)] : [])],
       action: { label: top.actionLabel, href: top.href },
     });

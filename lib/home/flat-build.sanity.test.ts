@@ -125,7 +125,7 @@ const sections = (): HomeSections => ({
   const j = await buildFlat(ctx({ projectId: CR }), 'owner', sections(), errors);
   const jobLevel = calls.filter(c => ['bid_packages', 'pay_applications', 'insurance_certificates'].includes(c.table));
   check('job filter: bids, pay apps and COIs filtered by project', jobLevel.length === 3 && jobLevel.every(c => c.eqs.some(([k, v]) => k === 'project_id' && v === CR)), JSON.stringify(jobLevel));
-  check('job filter: only that job', j.jobs?.rows.map(r => r.id).join(',') === CR && j.bidding?.rows.every(r => r.projectId === CR));
+  check('job filter: only that job', j.jobs?.rows.map(r => r.id).join(',') === CR && !!j.bidding?.rows.every(r => r.projectId === CR));
 
   // 5. Permissions: no Pay Apps → no pay-app read, Money restricted; no Budget → no money in rows.
   seed();

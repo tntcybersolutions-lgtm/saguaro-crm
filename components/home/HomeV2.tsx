@@ -85,6 +85,7 @@ function HomeInner() {
     const next = new URLSearchParams(sp.toString());
     if (v) next.set(k, v); else next.delete(k);
     next.delete('window'); // the schedule switch moved to My Work
+    setSaveNote(null);
     router.replace(`/app${next.toString() ? '?' + next.toString() : ''}`, { scroll: false });
   };
 
@@ -174,6 +175,7 @@ function HomeInner() {
         <style dangerouslySetInnerHTML={{ __html: HOME_CSS }} />
         <HomeHeader
           ctx={ctx}
+          loading={!data && !error}
           projects={activeProjects}
           projectId={projectId}
           onParam={setParam}

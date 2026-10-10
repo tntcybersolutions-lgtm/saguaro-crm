@@ -180,7 +180,9 @@ function QueueRow({ it, today, canEdit, onChanged }: { it: QueueItem; today: str
   return <Row dot={tierDot(it.tier)} title={title} meta={meta} href={it.href || undefined} />;
 }
 
-type QFilter = 'all' | 'critical' | 'overdue' | 'today' | 'unassigned';
+/** Four filters at most, so they fit a phone: urgent = critical, blocking today, or overdue. */
+type QFilter = 'all' | 'urgent' | 'today' | 'unassigned';
+const FILTER_LABEL: Record<QFilter, string> = { all: 'All', urgent: 'Urgent', today: 'Today', unassigned: 'No owner' };
 
 export function AttentionSection({ items, total, restricted, today, canEdit, review, onChanged }: {
   items: QueueItem[]; total: number; restricted: boolean; today: string; canEdit: boolean;
@@ -190,23 +192,23 @@ export function AttentionSection({ items, total, restricted, today, canEdit, rev
 }) {
   const [filter, setFilter] = useState<QFilter>('all');
   const [all, setAll] = useState(false);
-  const counts: Record<QFilter, number> = {
-    all: total,
-    critical: items.filter(i => i.tier <= 1).length,
-    overdue: items.filter(i => i.tier === 2).length,
-    today: items.filter(i => i.tier === 3).length,
-    unassigned: items.filter(i => !i.owner && !ownerless(i)).length,
+  const test: Record<QFilter, (i: QueueItem) => boolean> = {
+    all: () => true,
+    urgent: i => i.tier <= 2,
+    today: i => i.tier === 3,
+    unassigned: i => !i.owner && !ownerless(i),
   };
-  const match = (i: QueueItem) => filter === 'all' || (filter === 'critical' ? i.tier <= 1 : filter === 'overdue' ? i.tier === 2 : filter === 'today' ? i.tier === 3 : !i.owner && !ownerless(i));
-  const filtered = items.filter(match);
+  const counts = { all: total } as Record<QFilter, number>;
+  for (const k of ['urgent', 'today', 'unassigned'] as QFilter[]) counts[k] = items.filter(test[k]).length;
+  const filtered = items.filter(test[filter]);
   const shown = all ? filtered : filtered.slice(0, 6);
-  const opts = (['all', 'critical', 'overdue', 'today', 'unassigned'] as QFilter[])
+  const opts = (['all', 'urgent', 'today', 'unassigned'] as QFilter[])
     .filter(k => k === 'all' || counts[k] > 0)
-    .map(k => ({ key: k, label: { all: 'All', critical: 'Critical', overdue: 'Overdue', today: 'Today', unassigned: 'Unassigned' }[k], count: counts[k] }));
+    .map(k => ({ key: k, label: FILTER_LABEL[k], count: counts[k] }));
   const reviewRows = filter === 'all' ? review : [];
   return (
     <>
-      <SectionLabel id="fh-attn" action={filtered.length > 6 ? { label: all ? 'Fewer' : `All ${filtered.length}`, onClick: () => setAll(a => !a) } : undefined}>Needs attention</SectionLabel>
+      <SectionLabel id="fh-attn" action={filtered.length > 6 ? { label: all ? 'Show fewer' : `Show all ${filtered.length}`, onClick: () => setAll(a => !a) } : undefined}>Needs attention</SectionLabel>
       {restricted ? <FlatEmpty>Your role doesn&apos;t include this work area.</FlatEmpty> : (
         <>
           {items.length > 6 && opts.length > 2 && <Tabs label="Filter what needs attention" value={filter} options={opts} onChange={k => { setFilter(k); setAll(false); }} />}

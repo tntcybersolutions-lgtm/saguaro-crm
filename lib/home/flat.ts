@@ -361,7 +361,7 @@ export const RECENT_DONE_DAYS = 60;
 
 /**
  * Jobs for Home: every active job, plus jobs completed in the last 60 days.
- * Building first, then closeout, bidding, and recently complete; biggest
+ * Building first, then closeout, recently complete, and bidding; biggest
  * contract first within each.
  */
 export function jobRows(input: {
@@ -386,7 +386,8 @@ export function jobRows(input: {
   for (const b of input.bids) if (b.due && b.due >= input.today && (!nextBid.has(b.projectId) || b.due < nextBid.get(b.projectId)!)) nextBid.set(b.projectId, b.due);
   const since = addDays(input.today, -RECENT_DONE_DAYS);
 
-  const ORDER = { Building: 0, Closeout: 1, Bidding: 2, Complete: 3 } as const;
+  // Work in hand first, then what just finished (its money is still moving), then what's being chased.
+  const ORDER = { Building: 0, Closeout: 1, Complete: 2, Bidding: 3 } as const;
   const out: Array<JobRow & { _o: number }> = [];
   for (const j of input.jobs) {
     if (j.archived) continue;
@@ -475,6 +476,13 @@ export function coiSummary(certs: CertIn[], today: string): CoiSummary {
 
 /* ── Number strip ───────────────────────────────────────────────────────── */
 
+/** A strip figure fits a quarter of a phone: one decimal from $10M ($10.5M, not $10.49M). */
+export function stripMoney(n: number): string {
+  const a = Math.abs(n);
+  if (a >= 9_950_000 && a < 99_950_000) return `$${parseFloat((n / 1e6).toFixed(1))}M`;
+  return fmtMoneyShort(n);
+}
+
 /** Owner: under contract · billed % · open bids · COIs current. */
 export function ownerStrip(input: {
   jobs: JobRow[];
@@ -491,10 +499,10 @@ export function ownerStrip(input: {
   const coi = input.coi;
   return [
     input.canBudget
-      ? { key: 'contract', value: fmtMoneyShort(total), label: 'Under contract', note: `${plural(won.length, 'job')} won, incl. finished in the last ${RECENT_DONE_DAYS} days` }
+      ? { key: 'contract', value: stripMoney(total), label: 'Under contract', note: `${plural(won.length, 'job')} won, incl. finished in the last ${RECENT_DONE_DAYS} days` }
       : { key: 'contract', value: null, label: 'Under contract', note: 'Needs Budget access' },
     input.canPayApps && input.canBudget
-      ? { key: 'billed', value: fmtMoneyShort(billed), label: `Billed · ${pct}%`, note: 'Latest pay app to date on each job, of the contract' }
+      ? { key: 'billed', value: stripMoney(billed), label: `Billed · ${pct}%`, note: 'Latest pay app to date on each job, of the contract' }
       : { key: 'billed', value: null, label: 'Billed', note: 'Needs Pay Apps and Budget access' },
     input.openBids == null
       ? { key: 'bids', value: null, label: 'Open bids', note: 'Could not load bid packages' }
@@ -509,7 +517,7 @@ export function ownerStrip(input: {
 
 /** Short strip labels for the other views' existing metrics. */
 const STRIP_LABEL: Record<string, string> = {
-  overdue: 'Overdue', risk: 'Jobs at risk', approvals: 'Approvals', billed: 'Billed, not paid', milestones: 'Milestones 14d',
+  overdue: 'Overdue', risk: 'Jobs at risk', approvals: 'Approvals', billed: 'Unpaid bills', milestones: 'Milestones 14d',
   first: 'No contact yet', follow: 'Follow-ups late', bids: 'Bids due 7d', proposals: 'Proposals out',
   unassigned: 'Unassigned', today: 'Due today', sla: 'SLA breached', invoice: 'Done, not closed',
   jobs: 'My jobs', week: 'This week',
@@ -525,7 +533,7 @@ export function stripFromMetrics(metrics: Metric[], view: string): StripFigure[]
     // "$1,351,800" is wider than a quarter of a phone.
     if (value && /^\$[\d,]+(\.\d+)?$/.test(value)) {
       const n = Number(value.replace(/[$,]/g, ''));
-      if (n >= 10_000) value = fmtMoneyShort(n);
+      if (n >= 10_000) value = stripMoney(n);
     }
     const n = Number(value);
     const label = view === 'service' && m.key === 'today' ? 'Visits today' : STRIP_LABEL[m.key] || m.label;

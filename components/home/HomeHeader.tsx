@@ -64,7 +64,7 @@ function ViewChip({ ctx, onView, onScope, onSaveDefault, saving }: {
         <span>{ctx.viewLabel}{hasScope && ctx.scope === 'mine' ? ' · Mine' : ''}</span><i aria-hidden="true">▾</i>
       </button>
       {open && (
-        <div className="fh-menu" data-side="left" role="menu" aria-label="Dashboard view">
+        <div className="fh-menu" data-side="right" role="menu" aria-label="Dashboard view">
           {ctx.views.length > 1 && <h3>View</h3>}
           {ctx.views.length > 1 && ctx.views.map(v => (
             <button key={v.key} type="button" role="menuitemradio" aria-checked={v.key === ctx.view} onClick={() => { setOpen(false); if (v.key !== ctx.view) onView(v.key); }}>{v.label}</button>
@@ -130,8 +130,10 @@ function CreateMenu({ view, projectId }: { view: HomeView; projectId: string | n
   );
 }
 
-export default function HomeHeader({ ctx, projects, projectId, onParam, onSaveDefault, saving }: {
+export default function HomeHeader({ ctx, loading, projects, projectId, onParam, onSaveDefault, saving }: {
   ctx: HeaderContext | null;
+  /** True until the first answer; a failed load shows a plain title, not skeletons. */
+  loading: boolean;
   projects: Project[];
   projectId: string | null;
   onParam: (k: 'view' | 'scope' | 'project', v: string | null) => void;
@@ -141,7 +143,7 @@ export default function HomeHeader({ ctx, projects, projectId, onParam, onSaveDe
   return (
     <header className="fh-head">
       <div className="fh-top">
-        {ctx ? <div className="fh-date">{dateLine(ctx.today)}</div> : <span className="fh-skel-line" style={{ width: 120 }} aria-hidden="true" />}
+        {ctx ? <div className="fh-date">{dateLine(ctx.today)}</div> : loading ? <span className="fh-skel-line" style={{ width: 120 }} aria-hidden="true" /> : <span />}
         <div className="fh-ctrls">
           {ctx && <ViewChip ctx={ctx} onView={v => onParam('view', v)} onScope={s => onParam('scope', s)} onSaveDefault={onSaveDefault} saving={saving} />}
           <JobChip projects={projects} value={projectId || ''} onChange={id => onParam('project', id)} />
@@ -150,7 +152,8 @@ export default function HomeHeader({ ctx, projects, projectId, onParam, onSaveDe
       </div>
       {ctx
         ? <h1 className="fh-hello">{ctx.firstName ? `${greeting(ctx.timeZone)}, ${ctx.firstName}` : `${ctx.viewLabel} home`}</h1>
-        : <span className="fh-skel-line" style={{ width: 220, height: 20, marginTop: 6 }} aria-hidden="true" />}
+        : loading ? <span className="fh-skel-line" style={{ width: 220, height: 20, marginTop: 6 }} aria-hidden="true" />
+        : <h1 className="fh-hello">Home</h1>}
     </header>
   );
 }

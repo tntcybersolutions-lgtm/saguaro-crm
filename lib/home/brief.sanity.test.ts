@@ -72,7 +72,7 @@ check('two late pay apps: total and the oldest', say(two.parts) === 'Two pay app
 // 4. Critical work beats everything.
 const crit = buildBrief(base({ queue: [q({ id: 'insp:1', tier: 0, sourceType: 'inspection', title: 'Framing inspection failed', projectName: 'Desert Vista Medical Plaza', reason: 'Failed — no re-inspection date set', actionLabel: 'Open Inspection', href: '/app/projects/dv/inspections' })] }));
 check('failed inspection beats links off', crit.key === 'critical:insp:1', crit.key);
-check('critical sentence', say(crit.parts) === 'Framing inspection failed on Desert Vista: failed — no re-inspection date set.', say(crit.parts));
+check('critical sentence (no "failed: failed")', say(crit.parts) === 'Framing inspection failed on Desert Vista: no re-inspection date set.', say(crit.parts));
 check('critical action is the record', crit.action?.label === 'Open Inspection' && crit.action.href === '/app/projects/dv/inspections');
 
 // 5. RFIs overdue, grouped.
