@@ -4,32 +4,13 @@ import { requirePermission } from '@/lib/permissions';
 import { hasFeature } from '@/lib/entitlements-server';
 
 import { apiError } from '@/lib/api-error';
-import { companyTimeZone, dayIn, requestDay } from '@/lib/time-zone';
-// Map a US state (name or 2-letter code) to its primary IANA timezone so the
-// "before 4 PM local" deadline is judged in each site's own time. A site with
-// no (or an unknown) state is judged in the company's own zone (tenants.time_zone,
-// else the viewer's device) — never a built-in home market.
-const STATE_TZ: Record<string, string> = {
-  az: 'America/Phoenix', ca: 'America/Los_Angeles', wa: 'America/Los_Angeles', or: 'America/Los_Angeles', nv: 'America/Los_Angeles',
-  ut: 'America/Denver', co: 'America/Denver', nm: 'America/Denver', wy: 'America/Denver', mt: 'America/Denver', id: 'America/Denver',
-  tx: 'America/Chicago', il: 'America/Chicago', mo: 'America/Chicago', mn: 'America/Chicago', wi: 'America/Chicago', ia: 'America/Chicago',
-  ks: 'America/Chicago', ne: 'America/Chicago', ok: 'America/Chicago', ar: 'America/Chicago', la: 'America/Chicago', ms: 'America/Chicago',
-  al: 'America/Chicago', tn: 'America/Chicago', nd: 'America/Chicago', sd: 'America/Chicago',
-  fl: 'America/New_York', ga: 'America/New_York', ny: 'America/New_York', nj: 'America/New_York', pa: 'America/New_York', oh: 'America/New_York',
-  mi: 'America/New_York', nc: 'America/New_York', sc: 'America/New_York', va: 'America/New_York', md: 'America/New_York', dc: 'America/New_York',
-  ma: 'America/New_York', ct: 'America/New_York', me: 'America/New_York', nh: 'America/New_York', vt: 'America/New_York', ri: 'America/New_York',
-  de: 'America/New_York', wv: 'America/New_York', ky: 'America/New_York', in: 'America/New_York', hi: 'Pacific/Honolulu', ak: 'America/Anchorage',
-};
-const STATE_NAME_TO_CODE: Record<string, string> = {
-  arizona: 'az', california: 'ca', washington: 'wa', oregon: 'or', nevada: 'nv', utah: 'ut', colorado: 'co', 'new mexico': 'nm',
-  texas: 'tx', illinois: 'il', missouri: 'mo', minnesota: 'mn', florida: 'fl', georgia: 'ga', 'new york': 'ny', ohio: 'oh',
-  michigan: 'mi', 'north carolina': 'nc', virginia: 'va', pennsylvania: 'pa', tennessee: 'tn', 'new jersey': 'nj', massachusetts: 'ma',
-};
-function tzForState(state: any, fallback: string): string {
-  const s = String(state || '').trim().toLowerCase();
-  if (!s) return fallback;
-  const code = s.length === 2 ? s : (STATE_NAME_TO_CODE[s] || s);
-  return STATE_TZ[code] || fallback;
+import { companyTimeZone, dayIn, requestDay, stateTimeZone } from '@/lib/time-zone';
+// Each site's "before 4 PM local" deadline is judged in that site's own time:
+// the zone its US state keeps (lib/time-zone stateTimeZone — code or full name).
+// A site with no (or an unknown) state is judged in the company's own zone
+// (tenants.time_zone, else the viewer's device) — never a built-in home market.
+function tzForState(state: unknown, fallback: string): string {
+  return stateTimeZone(state) ?? fallback;
 }
 
 /**
