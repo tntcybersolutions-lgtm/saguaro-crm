@@ -525,7 +525,7 @@ export default function DocumentVersionsPage() {
   const stats: StatItem[] = loading
     ? ['Documents', 'Approved', 'Under Review', 'Drafts', 'Checked Out', 'Last Activity'].map((label) => ({ label, value: '—', sub: 'Loading…' }))
     : [
-        { label: 'Documents', value: documents.length, sub: filtersActive ? 'Click to show everything' : `${revisionCount} revision${revisionCount === 1 ? '' : 's'} on file`, onClick: clearFilters },
+        { label: 'Documents', value: documents.length, sub: filtersActive ? 'Click to show everything' : `${revisionCount} revision${revisionCount === 1 ? '' : 's'} on file`, onClick: filtersActive ? clearFilters : undefined },
         { label: 'Approved', value: approvedN, tone: approvedN > 0 ? 'good' : 'default', sub: statusFilter === 'Approved' ? 'Filtered — click to clear' : 'Released & current', onClick: () => toggleStatus('Approved') },
         { label: 'Under Review', value: reviewN, tone: reviewN > 0 ? 'warn' : 'default', sub: statusFilter === 'Under Review' ? 'Filtered — click to clear' : 'Awaiting approval', onClick: () => toggleStatus('Under Review') },
         { label: 'Drafts', value: draftN, sub: statusFilter === 'Draft' ? 'Filtered — click to clear' : 'Not yet submitted', onClick: () => toggleStatus('Draft') },

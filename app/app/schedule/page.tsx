@@ -373,7 +373,7 @@ export default function SchedulePage() {
         { label: 'Overdue', value: '—', sub: 'Loading…' },
       ]
     : [
-        { label: 'Total Tasks', value: stats.total, sub: statusFilter !== 'all' || search ? 'Click to show everything' : projectFilter ? 'On this project' : 'Across every project', onClick: () => { setStatusFilter('all'); setSearch(''); } },
+        { label: 'Total Tasks', value: stats.total, sub: statusFilter !== 'all' || search ? 'Click to show everything' : projectFilter ? 'On this project' : 'Across every project', onClick: statusFilter !== 'all' || search ? () => { setStatusFilter('all'); setSearch(''); } : undefined },
         { label: 'In Progress', value: stats.inProgress, tone: stats.inProgress > 0 ? 'good' : 'default', sub: statusFilter === 'in_progress' ? 'Filtered — click to clear' : 'Crews on it now', onClick: () => toggleStatus('in_progress') },
         { label: 'Complete', value: stats.complete, tone: stats.complete > 0 ? 'good' : 'default', sub: statusFilter === 'complete' ? 'Filtered — click to clear' : stats.total > 0 ? `${Math.round((stats.complete / stats.total) * 100)}% of the plan` : 'Nothing planned yet', onClick: () => toggleStatus('complete') },
         { label: 'Overdue', value: stats.overdue, tone: stats.overdue > 0 ? 'bad' : 'default', sub: statusFilter === 'overdue' ? 'Filtered — click to clear' : stats.overdue > 0 ? 'Past their end date, not complete' : 'Nothing slipped', onClick: () => toggleStatus('overdue') },

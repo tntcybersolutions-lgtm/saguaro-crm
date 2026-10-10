@@ -301,7 +301,7 @@ export default function CrewsPage() {
         { label: 'Trades Covered', value: '—', sub: 'Loading…' },
       ]
     : [
-        { label: showArchived ? 'Archived Crews' : 'Crews', value: crews.length, sub: filtersActive ? 'Click to show everything' : showArchived ? 'Rosters kept, restorable' : 'On this project', onClick: clearFilters },
+        { label: showArchived ? 'Archived Crews' : 'Crews', value: crews.length, sub: filtersActive ? 'Click to show everything' : showArchived ? 'Rosters kept, restorable' : 'On this project', onClick: filtersActive ? clearFilters : undefined },
         { label: 'Active', value: activeCount, tone: activeCount > 0 ? 'good' : 'default', sub: statusFilter === 'active' ? 'Filtered — click to clear' : standbyCount > 0 ? `${standbyCount} on standby` : 'Ready for the field', onClick: showArchived ? undefined : () => toggleStatus('active') },
         { label: 'Workers Rostered', value: totalMembers, sub: 'Across all crews' },
         { label: 'Trades Covered', value: tradesCovered, sub: 'Distinct crew trades', href: `/app/projects/${projectId}/subs` },

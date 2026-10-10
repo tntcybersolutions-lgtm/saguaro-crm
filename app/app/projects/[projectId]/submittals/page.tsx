@@ -339,7 +339,7 @@ export default function SubmittalsPage(){
         { label:'Overdue', value:'—', sub:'Loading…' },
       ]
     : [
-        { label:'Total', value:total, sub: filtersActive ? 'Click to show everything' : 'Submittals on the log', onClick: clearFilters },
+        { label:'Total', value:total, sub: filtersActive ? 'Click to show everything' : 'Submittals on the log', onClick: filtersActive ? clearFilters : undefined },
         { label:'Pending', value:pending, sub: filterStatus==='pending' ? 'Filtered — click to clear' : 'Awaiting submission', onClick:()=>toggleStatus('pending') },
         { label:'Under Review', value:underReview, tone: underReview>0 ? 'warn' : 'default', sub: filterStatus==='under_review' ? 'Filtered — click to clear' : 'With the reviewer', onClick:()=>toggleStatus('under_review') },
         { label:'Overdue', value:overdue, tone: overdue>0 ? 'bad' : 'default', sub: filterStatus==='overdue' ? 'Filtered — click to clear' : overdue>0 ? 'Past required date' : 'None overdue', onClick:()=>toggleStatus('overdue') },
