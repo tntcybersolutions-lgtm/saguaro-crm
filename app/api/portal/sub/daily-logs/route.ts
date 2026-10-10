@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
+import { notOnRoster, subRecordScope } from '@/lib/sub-portal-scope';
 
 async function authenticateSubPortal(req: NextRequest) {
   const token =
@@ -29,6 +31,10 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // An email-only invite has no roster sub, so no log can belong to it (lib/sub-portal-scope).
+    const scope = subRecordScope(session);
+    if (!scope) return NextResponse.json({ daily_logs: [] });
+
     const db = createServerClient();
 
     const date = req.nextUrl.searchParams.get('date');
@@ -37,9 +43,9 @@ export async function GET(req: NextRequest) {
     let query = db
       .from('portal_sub_daily_logs')
       .select('*')
-      .eq('sub_id', session.sub_id!)
-      .eq('project_id', session.project_id!)
-      .eq('tenant_id', session.tenant_id)
+      .eq('sub_id', scope.subId)
+      .eq('project_id', scope.projectId)
+      .eq('tenant_id', scope.tenantId)
       .order('log_date', { ascending: false })
       .limit(limit);
 
@@ -53,10 +59,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ daily_logs: logs || [] });
   } catch (err) {
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return apiError('portal/sub/daily-logs', err, "Couldn't load your daily logs.");
   }
 }
 
@@ -69,6 +72,12 @@ export async function POST(req: NextRequest) {
         { error: 'Invalid or expired portal token' },
         { status: 401 }
       );
+    }
+
+    const scope = subRecordScope(session);
+    if (!scope) {
+      const r = notOnRoster(session, 'a daily log');
+      return NextResponse.json(r.body, { status: r.status });
     }
 
     const db = createServerClient();
@@ -111,9 +120,9 @@ export async function POST(req: NextRequest) {
     const { data: log, error } = await db
       .from('portal_sub_daily_logs')
       .insert({
-        sub_id: session.sub_id,
-        project_id: session.project_id,
-        tenant_id: session.tenant_id,
+        sub_id: scope.subId,
+        project_id: scope.projectId,
+        tenant_id: scope.tenantId,
         log_date,
         crew_count: crew_count || 0,
         hours: hours_worked || 0,
@@ -133,10 +142,7 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (err) {
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return apiError('portal/sub/daily-logs', err, "Couldn't submit the daily log. Please try again.");
   }
 }
 
@@ -149,6 +155,12 @@ export async function PATCH(req: NextRequest) {
         { error: 'Invalid or expired portal token' },
         { status: 401 }
       );
+    }
+
+    const scope = subRecordScope(session);
+    if (!scope) {
+      const r = notOnRoster(session, 'a daily log');
+      return NextResponse.json(r.body, { status: r.status });
     }
 
     const db = createServerClient();
@@ -167,8 +179,8 @@ export async function PATCH(req: NextRequest) {
       .from('portal_sub_daily_logs')
       .select('id, status')
       .eq('id', log_id)
-      .eq('sub_id', session.sub_id!)
-      .eq('tenant_id', session.tenant_id)
+      .eq('sub_id', scope.subId)
+      .eq('tenant_id', scope.tenantId)
       .single();
 
     if (!existing) {
@@ -209,7 +221,8 @@ export async function PATCH(req: NextRequest) {
       .from('portal_sub_daily_logs')
       .update(updateData)
       .eq('id', log_id)
-      .eq('tenant_id', session.tenant_id)
+      .eq('sub_id', scope.subId)
+      .eq('tenant_id', scope.tenantId)
       .select()
       .single();
 
@@ -217,9 +230,6 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ daily_log: updated });
   } catch (err) {
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return apiError('portal/sub/daily-logs', err, "Couldn't update the daily log. Please try again.");
   }
 }

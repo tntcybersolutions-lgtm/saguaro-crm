@@ -5,6 +5,8 @@ import { translateRadioMessage } from '@/lib/translate';
 import { transcribeRadioVoice } from '@/lib/transcribe';
 import { stampPresentAtSend, receiptsByMessage } from '@/lib/radio-receipts';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
+import { portalMemberId } from '@/lib/sub-portal-scope';
 
 const BUCKET = 'project-files';
 const MAX_BYTES = 25 * 1024 * 1024;
@@ -16,6 +18,10 @@ const IMAGE_ALLOWED = /\.(png|jpe?g|webp|heic|pdf)$/i;
  * channels). Token-authenticated; scoped to the sub's project's sub-enabled
  * channels only. GET lists traffic (signed audio/images); POST sends text,
  * voice, or a photo/PDF attachment.
+ *
+ * A portal user's radio identity is portalMemberId(): the roster sub, or the
+ * session itself for an email-only invite. It used to be sub_id alone, so an
+ * email-only link queried `portal_sub_id=eq.null` and the tab never loaded.
  */
 async function auth(req: NextRequest) {
   const token = req.nextUrl.searchParams.get('token') || req.headers.get('x-portal-token');
@@ -38,10 +44,11 @@ async function subChannel(db: any, session: any) {
 }
 
 async function ensureMember(db: any, session: any, channelId: string) {
-  const { data } = await db.from('radio_members').select('id').eq('channel_id', channelId).eq('portal_sub_id', session.sub_id).limit(1);
+  const member = portalMemberId(session);
+  const { data } = await db.from('radio_members').select('id').eq('channel_id', channelId).eq('portal_sub_id', member).limit(1);
   if (!data || !data.length) {
     await must(db.from('radio_members').insert({
-      channel_id: channelId, tenant_id: session.tenant_id, portal_sub_id: session.sub_id,
+      channel_id: channelId, tenant_id: session.tenant_id, portal_sub_id: member,
       display_name: session.sub_company || 'Subcontractor',
     } as never), 'radio_members insert');
   }
@@ -60,7 +67,7 @@ export async function GET(req: NextRequest) {
     const nowIso = new Date().toISOString();
     await must(a.db.from('radio_members')
       .update({ last_seen_at: nowIso, last_read_at: nowIso } as never)
-      .eq('channel_id', ch.id).eq('portal_sub_id', a.session.sub_id), 'radio_members write');
+      .eq('channel_id', ch.id).eq('portal_sub_id', portalMemberId(a.session)), 'radio_members write');
     const presenceCutoff = new Date(Date.now() - 90 * 1000).toISOString();
     const { count: onChannel } = await a.db.from('radio_members')
       .select('id', { count: 'exact', head: true })
@@ -79,8 +86,8 @@ export async function GET(req: NextRequest) {
       image_url: m.image_path ? await signStoredUrl('project-files', m.image_path, 3600) : null,
     })));
     return NextResponse.json({ channel: { id: ch.id, name: ch.name, on_channel: onChannel ?? 0 }, messages });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('portal/sub/radio', e, "Couldn't load the radio channel.");
   }
 }
 
@@ -121,7 +128,7 @@ export async function POST(req: NextRequest) {
         // row with image_path so the feed signs and renders it inline.
         const { data: msg, error } = await a.db.from('radio_messages').insert({
           tenant_id: a.session.tenant_id, channel_id: ch.id, project_id: ch.project_id,
-          sender_portal_sub_id: a.session.sub_id, sender_name: sender,
+          sender_portal_sub_id: portalMemberId(a.session), sender_name: sender,
           kind: 'image', image_path: path,
         } as never).select().single();
         if (error) throw error;
@@ -130,7 +137,7 @@ export async function POST(req: NextRequest) {
       }
       const { data: msg, error } = await a.db.from('radio_messages').insert({
         tenant_id: a.session.tenant_id, channel_id: ch.id, project_id: ch.project_id,
-        sender_portal_sub_id: a.session.sub_id, sender_name: sender,
+        sender_portal_sub_id: portalMemberId(a.session), sender_name: sender,
         kind: 'voice', audio_path: path, audio_duration_secs: durationSecs,
       } as never).select().single();
       if (error) throw error;
@@ -155,11 +162,11 @@ export async function POST(req: NextRequest) {
           .select('id, tenant_id, channel_id, sender_portal_sub_id').in('id', ids);
         for (const m of ((msgs || []) as any[])) {
           if (m.tenant_id !== a.session.tenant_id || m.channel_id !== ch.id) continue;
-          if (m.sender_portal_sub_id === a.session.sub_id) continue;
+          if (m.sender_portal_sub_id === portalMemberId(a.session)) continue;
           try {
             const { error } = await a.db.from('radio_receipts').insert({
               tenant_id: a.session.tenant_id, channel_id: ch.id, message_id: m.id,
-              portal_sub_id: a.session.sub_id, display_name: sender, action: 'played',
+              portal_sub_id: portalMemberId(a.session), display_name: sender, action: 'played',
             } as never);
             if (!error) stored += 1;
           } catch { /* tolerant: receipts never fail the caller */ }
@@ -172,14 +179,14 @@ export async function POST(req: NextRequest) {
     if (!text) return NextResponse.json({ error: 'body required' }, { status: 400 });
     const { data: msg, error } = await a.db.from('radio_messages').insert({
       tenant_id: a.session.tenant_id, channel_id: ch.id, project_id: ch.project_id,
-      sender_portal_sub_id: a.session.sub_id, sender_name: sender, kind: 'text', body: text,
+      sender_portal_sub_id: portalMemberId(a.session), sender_name: sender, kind: 'text', body: text,
     } as never).select().single();
     if (error) throw error;
     // Translation brain: fire-and-forget (env-gated inside; never blocks the send).
     void translateRadioMessage(a.db, (msg as any)?.id, text);
     void stampPresentAtSend(a.db, a.session.tenant_id, ch.id, (msg as any)?.id);
     return NextResponse.json({ message: msg }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('portal/sub/radio', e, "Couldn't send that. Please try again.");
   }
 }

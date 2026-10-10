@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
+import { notOnRoster, rosterSubId } from '@/lib/sub-portal-scope';
 
 async function authenticateSubPortal(req: NextRequest) {
   const token =
@@ -30,13 +32,19 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // Scores belong to a roster sub; an email-only invite has none yet (lib/sub-portal-scope).
+    const subId = rosterSubId(session);
+    if (!subId) {
+      return NextResponse.json({ scorecards: [], averages: { overall: null }, total_reviews: 0, preferred_status: false, overall_rating: null });
+    }
+
     const db = createServerClient();
 
     // Get all scorecards for this sub across projects
     const { data: scorecards, error } = await db
       .from('portal_sub_scorecards')
       .select('*')
-      .eq('sub_id', session.sub_id!)
+      .eq('sub_id', subId)
       .eq('tenant_id', session.tenant_id)
       .order('created_at', { ascending: false });
 
@@ -83,7 +91,7 @@ export async function GET(req: NextRequest) {
     const { data: subRecord } = await db
       .from('subcontractors')
       .select('rating')
-      .eq('id', session.sub_id!)
+      .eq('id', subId)
       .eq('tenant_id', session.tenant_id)
       .single();
 
@@ -98,10 +106,7 @@ export async function GET(req: NextRequest) {
       overall_rating: subRecord?.rating || overallAverage,
     });
   } catch (err) {
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return apiError('portal/sub/scorecard', err, "Couldn't load your scorecard.");
   }
 }
 
@@ -114,6 +119,12 @@ export async function POST(req: NextRequest) {
         { error: 'Invalid or expired portal token' },
         { status: 401 }
       );
+    }
+
+    const subId = rosterSubId(session);
+    if (!subId) {
+      const r = notOnRoster(session, 'a rating');
+      return NextResponse.json(r.body, { status: r.status });
     }
 
     const db = createServerClient();
@@ -158,7 +169,7 @@ export async function POST(req: NextRequest) {
     const { data: scorecard, error } = await db
       .from('portal_sub_scorecards')
       .insert({
-        sub_id: session.sub_id,
+        sub_id: subId,
         project_id: session.project_id,
         tenant_id: session.tenant_id,
         quality_score: quality_score || null,
@@ -180,7 +191,7 @@ export async function POST(req: NextRequest) {
     const { data: allCards } = await db
       .from('portal_sub_scorecards')
       .select('quality_score, schedule_score, safety_score, communication_score, overall_score')
-      .eq('sub_id', session.sub_id!)
+      .eq('sub_id', subId)
       .eq('tenant_id', session.tenant_id);
 
     if (allCards && allCards.length > 0) {
@@ -199,7 +210,7 @@ export async function POST(req: NextRequest) {
           .update({
             rating: newOverall,
           })
-          .eq('id', session.sub_id!)
+          .eq('id', subId)
           .eq('tenant_id', session.tenant_id), 'subcontractors write');
       }
     }
@@ -209,9 +220,6 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (err) {
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return apiError('portal/sub/scorecard', err, "Couldn't save the rating. Please try again.");
   }
 }
