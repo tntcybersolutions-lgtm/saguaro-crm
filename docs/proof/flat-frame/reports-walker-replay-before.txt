@@ -1,0 +1,28 @@
+ok      All time
+ok      Last 30 days
+ok      This month
+ok      Last month
+ok      This quarter
+ok      Year to date
+ok      Pay App Status
+fail    Open RFIs  ← locator.click: Timeout 2500ms exceeded.
+ok      Change Orders
+fail    Insurance Compliance  ← locator.click: Timeout 2500ms exceeded.
+ok      Job Cost
+fail    Daily Log Summary  ← locator.click: Timeout 2500ms exceeded.
+ok      Punch List
+fail    Sub Performance  ← locator.click: Timeout 2500ms exceeded.
+ok      Bid Analysis
+fail    Safety Incidents  ← locator.click: Timeout 2500ms exceeded.
+ok      Pay App Status
+ok      Job Cost Report
+ok      RFI Log
+ok      Change Order Log
+ok      Lien Waiver Log
+ok      Insurance Compliance
+ok      Daily Log Summary
+ok      Punch List Report
+ok      Subcontractor Performance
+ok      Safety Incidents
+ok      Bid Package Summary
+ok      Timesheet Report
