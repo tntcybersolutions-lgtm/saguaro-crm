@@ -30,6 +30,7 @@ import { must, tryWrite } from '@/lib/db-write';
 import { logActivity, money } from '@/lib/activity';
 import { laborAllocation, lineDirectCost } from '@/lib/takeoff-line-cost';
 import { resolveTenantCompany } from '@/lib/tenant-company';
+import { ownerOf } from '@/lib/bid-jacket-pdf';
 import { normalisePhase } from '@/lib/project-phase';
 import { addDays, monthOf, requestDay } from '@/lib/time-zone';
 
@@ -191,9 +192,11 @@ export async function GET(
         const company    = await resolveTenantCompany(supabase, tenantId, proj);
         const gcName     = company.name;
         const isBuilding = normalisePhase(proj.phase) === 'building';
-        const ownerName  = String(proj.owner_entity?.name || '');
-        const ownerAddr  = String(proj.owner_entity?.address || '');
-        const projAddr   = String(proj.address || '');
+        /* owner_entity is a TEXT column, so owner_entity.name was always
+           undefined and every pay app was written with a blank owner. */
+        const owner      = ownerOf(proj);
+        const ownerName  = owner?.name || '';
+        const ownerAddr  = owner?.address || '';
         const projState  = String(proj.state || '');
 
         // ── 3. Group by CSI division (skip trivial items < $500) ────────────
@@ -449,87 +452,29 @@ Rules:
         // ── 7. Generate bid jacket PDFs ──────────────────────────────────────
         let jacketsGenerated = 0;
 
-        try {
-          const { generateBidJacket, saveDocument } = await import('@/lib/pdf-engine');
-
-          for (const pkg of createdPackages) {
-            try {
-              const div   = pkg.div;
-              const items = divisionMap.get(div) || [];
-              const ai    = sagePackages[div];
-
-              const pdfBytes = await (generateBidJacket as any)({
-                projectName,
-                projectAddress:       projAddr,
-                ownerName,
-                ownerAddress:         ownerAddr,
-                gcName,
-                // The contractor's OFFICE — never the job address (that is projectAddress).
-                gcAddress:            company.address,
-                gcLicense:            company.license || undefined,
-                tradeName:            CSI_DIVISIONS[div]?.name || `Division ${div}`,
-                dueDate:              addDays(today, pkg.total > 250_000 ? 21 : 14),
-                scopeNarrative:       ai?.scope || `${pkg.name} scope of work for ${projectName}.`,
-                csiSections:          items.map(i => `${i.csi_code} — ${i.description}`).slice(0, 20),
-                lineItems: items.map(i => ({
-                  description: i.description,
-                  quantity:    i.quantity,
-                  unit:        i.unit,
-                  unitPrice:   i.unit_cost,
-                })),
-                requiresBond:         ai?.bond ?? (pkg.total > 100_000),
-                insuranceRequirements: {
-                  gl:   ai?.ins_gl  ?? 1_000_000,
-                  wc:   'Statutory',
-                  auto: ai?.ins_auto ?? 1_000_000,
-                },
-              });
-
-              /* TITLE AND SOURCE, OR THE LIBRARY IS A WALL OF ONE SENTENCE.
-                 This called saveDocument with five arguments and skipped the
-                 sixth, so every jacket filed under the doc kind's default
-                 label. Fifteen packages produced fifteen rows in Documents all
-                 reading "Bid Jacket", and a GC looking for the electrical one
-                 had no way to tell them apart. saveDocument's own header warns
-                 about exactly this — it was written after eight pay
-                 applications filed as eight identical "AIA G702" lines.
-                 sourceId matters as much: the library's "Open jacket" link is
-                 gated on source_id, so without it the row could only ever be a
-                 flat PDF, never a route back to the live package. */
-              const pdfUrl = await (saveDocument as any)(
-                takeoff.project_id,
-                'bid-jacket',
-                pdfBytes,
-                { bidPackageId: pkg.id, takeoffId },
-                tenantId,
-                {
-                  title: `Bid Jacket — ${pkg.name || pkg.trade || `Division ${pkg.div}`}`,
-                  sourceType: 'bid_package',
-                  sourceId: pkg.id,
-                }
-              );
-
-              await must(supabase
-                .from('bid_packages')
-                .update({ jacket_pdf_url: pdfUrl })
-                .eq('tenant_id', tenantId)
-                .eq('id', pkg.id), 'bid_packages write');
-
-              jacketsGenerated++;
-
-              send('progress', {
-                step: 4,
-                pct: 55 + Math.round((jacketsGenerated / createdPackages.length) * 20),
-                message: `Bid jacket ${jacketsGenerated}/${createdPackages.length}: ${pkg.name}`,
-              });
-            } catch (jacketErr) {
-              console.error(`[sage-auto-docs] jacket error for pkg ${pkg.id}:`, jacketErr);
-              // Non-fatal — package exists, jacket can be generated from bid packages page
-            }
+        /* ONE PRINTED JACKET, MADE FROM THE LIVE ONE.
+           This used to render its own PDF from Sage's in-memory values rather
+           than the package: its GL limit defaulted to $1,000,000 where the
+           package row just written says $2,000,000 for divisions 03/05/07/22/
+           23/26, the scope came from the AI reply, and the engine added
+           boilerplate instructions and no drawings, specs or addenda.
+           storeJacketPdf builds the PDF from the package rows just written,
+           the same assembly the jacket screen and the bidder portal show.
+           Per-package failures are logged and do not stop the run; the GC can
+           press Download PDF on the package. */
+        const { storeJacketPdf } = await import('@/lib/bid-jacket-pdf');
+        for (const pkg of createdPackages) {
+          try {
+            await storeJacketPdf(supabase, { packageId: pkg.id, tenantId });
+            jacketsGenerated++;
+            send('progress', {
+              step: 4,
+              pct: 55 + Math.round((jacketsGenerated / createdPackages.length) * 20),
+              message: `Bid jacket ${jacketsGenerated}/${createdPackages.length}: ${pkg.name}`,
+            });
+          } catch (jacketErr) {
+            console.error(`[sage-auto-docs] jacket PDF not made for pkg ${pkg.id}:`, jacketErr);
           }
-        } catch (engineErr) {
-          console.error('[sage-auto-docs] pdf-engine load error:', engineErr);
-          // Non-fatal — skip jackets entirely if engine unavailable
         }
 
         // ── 7.5 Auto-file compliance docs (lien waivers, W-9, COI) ──────────

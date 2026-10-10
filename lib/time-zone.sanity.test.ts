@@ -4,7 +4,7 @@
  */
 import {
   isTimeZone, dayIn, startOfDayIn, dayRangeIn, endOfDayIn, zoneOffsetMs, requestTimeZone, TIME_ZONE_HEADER,
-  addDays, monthOf, requestDay, companyDay, companyTimeZones, companyDayLookup,
+  addDays, monthOf, requestDay, companyDay, companyTimeZones, companyDayLookup, stateTimeZone, jobTimeZone,
 } from './time-zone';
 
 let failed = 0;
@@ -109,6 +109,14 @@ check('monthOf December', monthOf('2026-12-31').last === '2026-12-31');
   } finally {
     console.warn = origWarn;
   }
+
+  // A job's deadlines: the company's zone, else the job's state, else UTC.
+  check('Iowa job → Chicago', stateTimeZone('IA') === 'America/Chicago' && stateTimeZone(' iowa ') === 'America/Chicago');
+  check('every state + DC has a zone', ['AL','AK','AZ','AR','CA','CO','CT','DE','DC','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'].every((c) => isTimeZone(stateTimeZone(c))));
+  check('unknown state → null, not a home zone', stateTimeZone('') === null && stateTimeZone(null) === null && stateTimeZone('Ontario') === null);
+  check('company zone beats job state', JSON.stringify(await jobTimeZone(db('America/Denver'), 't1', 'IA')) === JSON.stringify({ zone: 'America/Denver', source: 'company' }));
+  check('no company zone → job state', JSON.stringify(await jobTimeZone(db(null), 't1', 'IA')) === JSON.stringify({ zone: 'America/Chicago', source: 'state' }));
+  check('neither → UTC, said so', JSON.stringify(await jobTimeZone(db(null), 't1', '')) === JSON.stringify({ zone: 'UTC', source: 'utc' }));
 
   if (failed) { console.error(`\n${failed} failed`); process.exit(1); }
   console.log('\nall passed');

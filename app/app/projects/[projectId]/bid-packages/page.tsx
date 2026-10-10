@@ -33,6 +33,7 @@ import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intellige
 import NudgeRing from '@/components/intelligence/NudgeRing';
 import { ANCHOR_BID_DECISION } from '@/lib/suggestions';
 import { openPdf } from '@/components/PdfViewer';
+import { buildJacketPdf } from '@/lib/jacket-pdf-client';
 import { layout } from '@/lib/design-tokens';
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -620,7 +621,18 @@ export default function BidPackagesPage() {
     const r = rowOf(p);
     return [
       { label: r.isAwarded ? 'View Award' : r.responded >= 2 ? 'Level Bids' : 'Open Package', icon: r.isAwarded ? <Trophy size={15} /> : r.responded >= 2 ? <Scales size={15} /> : <ArrowSquareOut size={15} />, href: `/app/projects/${projectId}/bid-packages/${p.id}` },
-      { label: 'Bid Jacket (PDF)', icon: <FileText size={15} />, onClick: () => openPdf({ url: p.jacket_pdf_url! }), hidden: !p.jacket_pdf_url },
+      /* Built from the live jacket on every press. This opened jacket_pdf_url
+         as stored (an expired signed link, or a private-bucket address the
+         reader cannot fetch) and was hidden on packages that had none. The
+         status box reports a failure in the server's words; it is also logged. */
+      {
+        label: 'Bid Jacket (PDF)', icon: <FileText size={15} />,
+        onClick: () => {
+          buildJacketPdf(p.id)
+            .then((pdf) => openPdf({ url: pdf.openUrl, title: `${p.name || p.trade || 'Bid package'} — Bid Jacket` }))
+            .catch((e) => console.error('[bid-packages] jacket PDF', p.id, e));
+        },
+      },
     ];
   };
 
