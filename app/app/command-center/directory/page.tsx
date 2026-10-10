@@ -7,6 +7,7 @@ import { C, font, useFranchiseGate, GateLoading, Chip, SearchInput } from '@/com
 import { PremiumSurface, ModuleHero, StatStrip, SectionCard, PremiumEmpty, GoldButton, GhostButton } from '@/components/ui/premium';
 import { Users, X, Buildings, Envelope, Phone, MapPin, Plus } from '@phosphor-icons/react';
 
+import { FlatStyles, RowSkeleton } from '@/components/ui/flat';
 const ROLES = ['Owner / Franchisee', 'PM / Franchisor Rep', 'Saguaro Coordinator', 'General Contractor', 'Project Superintendent', 'Architect / Engineer', 'Municipality / City', 'Material / Equipment Vendor', 'Golf Simulator (Full-Swing)', 'IT / AV', 'Signage'];
 const roleColor = (r: string) => {
   const s = String(r || '').toLowerCase();
@@ -81,7 +82,7 @@ export default function DirectoryPage() {
         <SearchInput value={q} onChange={setQ} placeholder="Search name, company, role…" />
       </div>
 
-      {loading ? <div style={{ color: C.dim, padding: 40, textAlign: 'center' }}>Loading…</div>
+      {loading ? <><FlatStyles /><RowSkeleton rows={6} /></>
       : filtered.length === 0 ? (
         list.length === 0 ? (
           <SectionCard>

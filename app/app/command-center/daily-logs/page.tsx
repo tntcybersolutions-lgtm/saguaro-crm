@@ -9,6 +9,7 @@ import { PremiumSurface, ModuleHero, StatStrip, SectionCard, PremiumEmpty, GoldB
 import { Circle, Warning, CheckCircle, Clipboard, HardHat, CloudSun, Camera, Plus } from '@phosphor-icons/react';
 import { localDay } from '@/lib/calendar-day';
 
+import { FlatStyles, RowSkeleton } from '@/components/ui/flat';
 const ACTIVE = (p: any) => !/complete|closed|closeout|won|archiv/i.test(String(p.status || ''));
 
 export default function DailyLogsPage() {
@@ -79,7 +80,7 @@ export default function DailyLogsPage() {
       </SectionCard>
 
       <SectionCard title="Recent Reports" subtitle="Last 21 days, newest first" icon={<Clipboard size={16} weight="duotone" color={C.gold} />}>
-        {loading ? <div style={{ color: C.dim, padding: 40, textAlign: 'center' }}>Loading…</div>
+        {loading ? <><FlatStyles /><RowSkeleton rows={6} /></>
         : (logs as any[]).length === 0 ? (
           <PremiumEmpty icon={<Clipboard size={32} weight="duotone" color={C.gold} />} title="No daily reports yet"
             description="Every superintendent submits a daily report — photos, manpower, weather, progress, and problems — by 4 PM local. They roll up here across all sites."

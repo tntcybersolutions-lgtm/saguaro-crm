@@ -7,6 +7,7 @@ import { C, font, useFranchiseGate, GateLoading } from '@/components/franchise/k
 import { PremiumSurface, ModuleHero, StatStrip, SectionCard, PremiumEmpty } from '@/components/ui/premium';
 import { Clipboard, Flag, CheckCircle } from '@phosphor-icons/react';
 
+import { FlatStyles, RowSkeleton } from '@/components/ui/flat';
 type PState = 'open' | 'passed' | 'flagged';
 
 export default function PreSitePage() {
@@ -65,7 +66,7 @@ export default function PreSitePage() {
         />
 
         {loading ? (
-          <div style={{ color: C.dim, padding: 40, textAlign: 'center' }}>Loading…</div>
+          <><FlatStyles /><RowSkeleton rows={6} /></>
         ) : view.list.length === 0 ? (
           <SectionCard flat>
             <PremiumEmpty

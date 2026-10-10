@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ShieldCheck, Gauge, CheckCircle, WarningCircle, XCircle, FileText, Signature, MagnifyingGlass, Envelope, UsersThree, ArrowRight, Check, X, Warning } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, IconChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 import { moduleAccent } from '@/lib/module-identity';
+import { FlatStyles, FlatList, Row } from '@/components/ui/flat';
 import NudgeRing from '@/components/intelligence/NudgeRing';
 import { ANCHOR_INSURANCE_EXPIRING } from '@/lib/suggestions';
 
@@ -115,26 +116,16 @@ export default function CompliancePage(){
         pages that nothing in the codebase linked to — not the sidebar, not
         this page, which is their own parent route. The only way to reach
         either was to type the URL. */}
-    <div style={{display:'flex',gap:10,flexWrap:'wrap',marginBottom:22}}>
-      {[
-        {href:'/app/compliance/lien-deadlines', icon:<Signature size={15} weight="duotone" color={GOLD} />,
-         title:'Lien Deadlines', sub:'Statutory dates by state — miss one and the lien right is gone'},
-        {href:'/app/compliance/prevailing-wage', icon:<FileText size={15} weight="duotone" color={GOLD} />,
-         title:'Prevailing Wage', sub:'Davis-Bacon rates and certified payroll status'},
-      ].map(l=>(
-        <Link key={l.href} href={l.href} className="pmBtn" style={{
-          display:'flex',alignItems:'center',gap:11,textDecoration:'none',
-          background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,
-          padding:'11px 15px',minWidth:260,flex:'1 1 260px',
-        }}>
-          {l.icon}
-          <span style={{minWidth:0}}>
-            <span style={{display:'block',fontSize:13,fontWeight:800,color:TEXT}}>{l.title}</span>
-            <span style={{display:'block',fontSize:11.5,color:DIM,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{l.sub}</span>
-          </span>
-          <ArrowRight size={13} weight="bold" color={DIM} style={{marginLeft:'auto',flexShrink:0}} />
-        </Link>
-      ))}
+    <div style={{marginBottom:22}}>
+      <FlatStyles />
+      <FlatList label="More compliance">
+        {[
+          {href:'/app/compliance/lien-deadlines', title:'Lien Deadlines', sub:'Statutory dates by state — miss one and the lien right is gone'},
+          {href:'/app/compliance/prevailing-wage', title:'Prevailing Wage', sub:'Davis-Bacon rates and certified payroll status'},
+        ].map(l=>(
+          <li key={l.href}><Row title={l.title} meta={l.sub} href={l.href} /></li>
+        ))}
+      </FlatList>
     </div>
 
     {/* Risk intelligence strip — the paperwork translated into dollars */}

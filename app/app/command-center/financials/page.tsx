@@ -6,6 +6,7 @@ import { C, font, fmtMoney, fmtMoneyShort, useFranchiseGate, GateLoading } from 
 import { PremiumSurface, ModuleHero, StatStrip, PremiumEmpty } from '@/components/ui/premium';
 import { CheckCircle, FileText, Bank } from '@phosphor-icons/react';
 
+import { FlatStyles, RowSkeleton } from '@/components/ui/flat';
 export default function FinancialsPage() {
   const { ready, loading: gateLoading } = useFranchiseGate();
   const { financials, loading } = useFinancials();
@@ -45,7 +46,7 @@ export default function FinancialsPage() {
         {href: '/app/command-center/financials',  label: 'Sites TI-Ready', value: String(totals.tiReady), accent: totals.tiReady ? C.green : undefined, sub: 'Reimbursement package complete' },
       ]} />
 
-      {loading ? <div style={{ color: C.dim, padding: 40, textAlign: 'center' }}>Loading…</div>
+      {loading ? <><FlatStyles /><RowSkeleton rows={6} /></>
       : (financials as any[]).length === 0 ? (
         <PremiumEmpty
           icon={<FileText size={34} weight="duotone" color={C.gold} />}
