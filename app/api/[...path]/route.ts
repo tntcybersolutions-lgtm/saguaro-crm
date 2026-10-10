@@ -8,7 +8,6 @@ import { getProjectContext } from '../../../project-context';
 import { generatePreliminaryNoticeHandler } from '../../../wh347-generator';
 import { createCertifiedPayrollHandler, getCertifiedPayrollHandler } from '../../../wh347-generator';
 import { loginHandler } from '../../../sandbox-manager-route';
-import { POST as bidJacketPost, GET as bidJacketGet } from '../../../bid-jacket-route';
 
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -444,10 +443,11 @@ export async function GET(
     }
   }
 
-  // GET /api/projects/:projectId/bid-packages/:bidPackageId/generate-jacket
-  if (seg0 === 'projects' && seg1 && seg2 === 'bid-packages' && seg3 && seg4 === 'generate-jacket') {
-    return bidJacketGet(req, { params: { projectId: seg1, bidPackageId: seg3 } });
-  }
+  /* GET/POST /api/projects/:projectId/bid-packages/:bidPackageId/generate-jacket
+     used to stream an AI "jacket" into a bid_jackets table that does not exist,
+     taking the tenant from the request body and deleting the package's line
+     items without a tenant filter. Nothing called it. Removed with
+     ai-bid-jacket.ts; the jacket PDF is POST /api/bid-packages/:id/generate-jacket. */
 
   return NextResponse.json({ error: 'Not found' }, { status: 404 });
 }
@@ -615,11 +615,6 @@ export async function POST(
       if (!data) return NextResponse.json({ error: 'Change order not found' }, { status: 404 });
     } catch (err) { console.error('[api/change-orders/approve] failed:', err); return NextResponse.json({ error: 'Failed to approve change order' }, { status: 500 }); }
     return NextResponse.json({ success: true });
-  }
-
-  // POST /api/projects/:projectId/bid-packages/:bidPackageId/generate-jacket
-  if (seg0 === 'projects' && seg1 && seg2 === 'bid-packages' && seg3 && seg4 === 'generate-jacket') {
-    return bidJacketPost(req, { params: { projectId: seg1, bidPackageId: seg3 } });
   }
 
   // POST /api/reports/generate is served by the REAL handler at
