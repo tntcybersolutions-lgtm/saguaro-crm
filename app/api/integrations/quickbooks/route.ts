@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
 
     if (body.action === 'disconnect') {
       const row = await loadQboRow(db, user.tenantId);
-      if (!row) return NextResponse.json({ ok: true, revoked: false, message: 'QuickBooks was not connected.' });
+      if (!row) return NextResponse.json({ ok: true, revoked: false, warning: false, message: 'QuickBooks was not connected.' });
 
       const token = row.refresh_token || row.access_token;
       const cfg = quickBooksConfig(req.nextUrl.origin);
@@ -192,6 +192,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         ok: true,
         revoked,
+        warning: !!token && !revoked,
         message: !token || revoked
           ? 'QuickBooks disconnected.'
           : 'QuickBooks disconnected in Saguaro, but Intuit did not confirm it. To be sure, remove Saguaro under Apps in QuickBooks.',

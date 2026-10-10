@@ -1,509 +1,440 @@
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+/**
+ * QuickBooks Online — connect, send, disconnect.
+ *
+ * Every control here does something real on the server:
+ *   Connect / Reconnect  → GET /api/integrations/quickbooks?action=connect, in
+ *                          THIS window (the iPhone app is a webview; popups
+ *                          never open there). The server holds the Intuit keys
+ *                          and the CSRF state — the browser holds neither.
+ *   Send to QuickBooks   → POST /api/integrations/quickbooks/sync with the
+ *                          record types ticked; one result per record comes back.
+ *   Invoice start date   → POST { action: 'settings', startDate }.
+ *   Disconnect           → POST { action: 'disconnect' }: revoked at Intuit,
+ *                          tokens cleared.
+ * The old direction (pull / bi-directional) and frequency (hourly / daily /
+ * real-time) buttons are gone: nothing imported from QuickBooks and nothing
+ * ever ran on a schedule. Bills are gone: they could not be sent correctly.
+ */
+import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, goldButtonStyle } from '@/components/ui/premium';
-import { Plugs, ArrowsClockwise, ListChecks, SlidersHorizontal, ClockCounterClockwise, ArrowsLeftRight } from '@phosphor-icons/react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
+import { humanError } from '@/lib/errors';
+import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, Pill, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import { Plugs, ArrowsClockwise, ArrowSquareOut } from '@phosphor-icons/react';
+import { QBO_RETURN_MESSAGES, QBO_PAGE_PATH } from '@/lib/quickbooks/return-codes';
 
-const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-surface-2)', BORDER = 'rgba(255,255,255,0.12)';
-const DIM = 'var(--text-secondary)', TEXT = 'var(--text-primary)', GREEN = 'var(--success)', RED = 'var(--danger)', QB_GREEN = 'var(--success)';
+const GOLD = 'var(--brand-primary)';
+const DIM = 'var(--text-secondary)';
+const TEXT = 'var(--text-primary)';
+const GREEN = 'var(--success)';
+const RED = 'var(--danger)';
+const LINE = 'rgba(255,255,255,0.08)';
 
-type SyncHistoryEntry = {
-  timestamp: string;
-  direction: string;
-  entities: string[];
-  results: Record<string, { count: number; status: string; details?: string }>;
-  initiated_by: string;
-};
-
-type QBIntegration = {
-  key: string;
-  name: string;
+type Entity = 'customers' | 'vendors' | 'invoices';
+type Counts = { created: number; linked: number; skipped: number; failed: number };
+type HistoryEntry = { at: string; by: string; entities: Entity[]; counts: Counts; errors: { label: string; message: string }[]; remaining: number };
+type Status = {
+  configured: boolean;
+  environment: 'sandbox' | 'production';
   connected: boolean;
   status: string | null;
-  last_sync_at: string | null;
-  integration_id: string | null;
-  settings: {
-    sync_invoices?: boolean;
-    sync_bills?: boolean;
-    sync_customers?: boolean;
-    sync_vendors?: boolean;
-    sync_direction?: string;
-    sync_frequency?: string;
-    sync_history?: SyncHistoryEntry[];
-  };
+  needsReconnect: boolean;
+  reconnectReason: string | null;
+  companyName: string | null;
+  connectedAt: string | null;
+  lastSyncAt: string | null;
+  startDate: string | null;
+  itemName: string | null;
+  history: HistoryEntry[];
+  pending: { invoices: number; invoicesBeforeStart: number; vendors: number; customers: number } | null;
+  canManage: boolean;
+};
+type RecordResult = { entity: 'customer' | 'vendor' | 'invoice'; id: string; label: string; outcome: 'created' | 'linked' | 'skipped' | 'failed'; qboId?: string; message?: string };
+type RunResponse = {
+  ok?: boolean;
+  results?: RecordResult[];
+  counts?: Counts;
+  remaining?: Record<Entity, number>;
+  beforeStart?: number;
+  needsReconnect?: boolean;
+  error?: string;
 };
 
-const SYNC_ENTITIES = [
-  { key: 'invoices', label: 'Invoices', description: 'AR invoices sent to clients' },
-  { key: 'bills', label: 'Bills', description: 'AP bills from subcontractors' },
-  { key: 'customers', label: 'Customers', description: 'Client/owner contacts' },
-  { key: 'vendors', label: 'Vendors', description: 'Subcontractor records' },
-];
+const btn44: React.CSSProperties = { minHeight: 44 };
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
-const FIELD_MAPPINGS = [
-  { saguaro: 'invoice_number', quickbooks: 'DocNumber', entity: 'Invoice' },
-  { saguaro: 'total', quickbooks: 'TotalAmt', entity: 'Invoice' },
-  { saguaro: 'due_date', quickbooks: 'DueDate', entity: 'Invoice' },
-  { saguaro: 'description', quickbooks: 'Line[0].Description', entity: 'Invoice' },
-  { saguaro: 'vendor_name', quickbooks: 'VendorRef.name', entity: 'Bill' },
-  { saguaro: 'amount', quickbooks: 'TotalAmt', entity: 'Bill' },
-  { saguaro: 'name', quickbooks: 'DisplayName', entity: 'Customer' },
-  { saguaro: 'email', quickbooks: 'PrimaryEmailAddr.Address', entity: 'Customer' },
-  { saguaro: 'company_name', quickbooks: 'CompanyName', entity: 'Vendor' },
-  { saguaro: 'phone', quickbooks: 'PrimaryPhone.FreeFormNumber', entity: 'Vendor' },
-];
-
-function formatDate(d: string | null) {
-  if (!d) return '-';
+function when(d: string | null): string {
+  if (!d) return 'Never';
   return new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
 }
 
-function timeAgo(dateStr: string | null): string {
-  if (!dateStr) return 'Never';
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'Just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
+function day(d: string | null): string {
+  if (!d) return '';
+  const [y, m, dd] = d.split('-').map(Number);
+  return new Date(y, m - 1, dd).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function countLine(c: Counts): string {
+  const parts = [
+    c.created ? `${c.created} added` : '',
+    c.linked ? `${c.linked} linked` : '',
+    c.skipped ? `${c.skipped} skipped` : '',
+    c.failed ? `${c.failed} failed` : '',
+  ].filter(Boolean);
+  return parts.length ? parts.join(' · ') : 'Nothing to send';
+}
+
+const OUTCOME_TONE: Record<RecordResult['outcome'], 'green' | 'neutral' | 'amber' | 'red'> = { created: 'green', linked: 'neutral', skipped: 'amber', failed: 'red' };
+const OUTCOME_WORD: Record<RecordResult['outcome'], string> = { created: 'Added', linked: 'Linked', skipped: 'Skipped', failed: 'Failed' };
+const ENTITY_WORD: Record<RecordResult['entity'], string> = { customer: 'Customer', vendor: 'Vendor', invoice: 'Invoice' };
+
+function SkeletonRow({ h = 52 }: { h?: number }) {
+  return <div className="pmSkeleton" style={{ height: h, borderRadius: 10, background: 'rgba(255,255,255,0.05)', marginBottom: 10 }} />;
 }
 
 export default function QuickBooksPage() {
-  const [integration, setIntegration] = useState<QBIntegration | null>(null);
+  const [st, setSt] = useState<Status | null>(null);
   const [loading, setLoading] = useState(true);
-  const [syncing, setSyncing] = useState(false);
-  const [notification, setNotification] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+  const [loadError, setLoadError] = useState('');
+  const [busy, setBusy] = useState<null | 'connect' | 'sync' | 'disconnect' | 'date'>(null);
+  const [toast, setToast] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [send, setSend] = useState<Record<Entity, boolean>>({ invoices: true, vendors: true, customers: true });
+  const [lastRun, setLastRun] = useState<RunResponse | null>(null);
+  const [startDraft, setStartDraft] = useState('');
 
-  // Editable sync settings
-  const [syncInvoices, setSyncInvoices] = useState(true);
-  const [syncBills, setSyncBills] = useState(true);
-  const [syncCustomers, setSyncCustomers] = useState(true);
-  const [syncVendors, setSyncVendors] = useState(true);
-  const [syncDirection, setSyncDirection] = useState('bidirectional');
-  const [syncFrequency, setSyncFrequency] = useState('manual');
-
-  const fetchIntegration = useCallback(async () => {
+  const load = useCallback(async () => {
+    setLoadError('');
     try {
-      const res = await fetch('/api/integrations/marketplace');
-      if (!res.ok) throw new Error('Failed');
-      const data = await res.json();
-      const qb = data.integrations?.find((i: any) => i.key === 'quickbooks');
-      setIntegration(qb || null);
-      if (qb?.settings) {
-        setSyncInvoices(qb.settings.sync_invoices ?? true);
-        setSyncBills(qb.settings.sync_bills ?? true);
-        setSyncCustomers(qb.settings.sync_customers ?? true);
-        setSyncVendors(qb.settings.sync_vendors ?? true);
-        setSyncDirection(qb.settings.sync_direction || 'bidirectional');
-        setSyncFrequency(qb.settings.sync_frequency || 'manual');
-      }
-    } catch {
-      // ignore
+      const res = await fetch('/api/integrations/quickbooks?action=status');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Could not load QuickBooks.');
+      setSt(data as Status);
+      setStartDraft((data as Status).startDate ?? '');
+    } catch (e) {
+      console.error(e);
+      setLoadError(humanError(e, 'Could not load QuickBooks. Please try again.'));
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { fetchIntegration(); }, [fetchIntegration]);
+  useEffect(() => { load(); }, [load]);
+
+  // Back from Intuit with the browser's Back button: the page comes out of the
+  // back-forward cache still saying "Opening Intuit…". Make it pressable again.
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => { if (e.persisted) { setBusy(null); load(); } };
+    window.addEventListener('pageshow', onShow);
+    return () => window.removeEventListener('pageshow', onShow);
+  }, [load]);
+
+  // Back from Intuit: ?qb=<code> says how it went.
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get('qb');
+    if (!code) return;
+    const m = (QBO_RETURN_MESSAGES as Record<string, { ok: boolean; msg: string }>)[code];
+    setToast(m ? { ok: m.ok, msg: m.msg } : { ok: false, msg: 'QuickBooks could not be connected. Please try again.' });
+    window.history.replaceState({}, '', QBO_PAGE_PATH);
+  }, []);
 
   useEffect(() => {
-    if (notification) {
-      const t = setTimeout(() => setNotification(null), 5000);
-      return () => clearTimeout(t);
-    }
-    return undefined;
-  }, [notification]);
+    if (!toast) return undefined;
+    const t = setTimeout(() => setToast(null), 7000);
+    return () => clearTimeout(t);
+  }, [toast]);
 
-  function handleConnectQB() {
-    const clientId = process.env.NEXT_PUBLIC_QUICKBOOKS_CLIENT_ID || '';
-    const redirectUri = encodeURIComponent(window.location.origin + '/api/integrations/quickbooks/callback');
-    const scope = encodeURIComponent('com.intuit.quickbooks.accounting');
-    const authUrl = `https://appcenter.intuit.com/connect/oauth2?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&state=`;
-    window.open(authUrl, '_blank', 'width=600,height=700');
+  function connect() {
+    setBusy('connect');
+    // Same window, on purpose — see the header comment.
+    window.location.href = '/api/integrations/quickbooks?action=connect';
   }
 
-  async function handleSyncNow() {
-    const entities: string[] = [];
-    if (syncInvoices) entities.push('invoices');
-    if (syncBills) entities.push('bills');
-    if (syncCustomers) entities.push('customers');
-    if (syncVendors) entities.push('vendors');
-
-    if (entities.length === 0) {
-      setNotification({ type: 'error', msg: 'Select at least one entity to sync.' });
-      return;
-    }
-
-    setSyncing(true);
-
+  async function sync() {
+    const entities = (['customers', 'vendors', 'invoices'] as Entity[]).filter((e) => send[e]);
+    if (!entities.length) { setToast({ ok: false, msg: 'Tick at least one thing to send.' }); return; }
+    setBusy('sync');
+    setLastRun(null);
     try {
-      const direction = syncDirection === 'pull' ? 'pull' : 'push';
       const res = await fetch('/api/integrations/quickbooks/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ direction, entities }),
+        body: JSON.stringify({ entities }),
       });
-
-      const data = await res.json().catch(() => ({}));
-
-      // Honest handling of the server's real response. The API returns an
-      // explicit not-configured / not-connected message when QuickBooks cannot
-      // actually be reached — surface it verbatim instead of a fake "complete".
+      const data = (await res.json().catch(() => ({}))) as RunResponse;
+      if (Array.isArray(data.results)) setLastRun(data);
       if (!res.ok) {
-        setNotification({ type: 'error', msg: data.error || 'Sync failed. Check your QuickBooks connection.' });
-        setSyncing(false);
-        return;
-      }
-
-      const results = (data.results || {}) as Record<string, { count: number; status: string; details?: string }>;
-      const totalRecords = Object.values(results).reduce((sum, r) => sum + (r.count || 0), 0);
-      const failed = Object.values(results).filter((r) => r.status === 'error' || r.status === 'partial');
-
-      if (failed.length) {
-        const firstDetail = failed[0]?.details ? ` (${failed[0].details})` : '';
-        setNotification({
-          type: 'error',
-          msg: `Synced ${totalRecords} record${totalRecords === 1 ? '' : 's'}; some failed${firstDetail}. See sync history.`,
-        });
+        setToast({ ok: false, msg: data.error || 'QuickBooks sync failed. Please try again.' });
       } else {
-        setNotification({
-          type: 'success',
-          msg: `Synced ${totalRecords} record${totalRecords === 1 ? '' : 's'} with QuickBooks.`,
+        const c = data.counts ?? { created: 0, linked: 0, skipped: 0, failed: 0 };
+        const left = data.remaining ? data.remaining.customers + data.remaining.vendors + data.remaining.invoices : 0;
+        setToast({
+          ok: c.failed === 0,
+          msg: `${countLine(c)}.${left ? ` ${plural(left, 'record')} left — press Send again.` : ''}`,
         });
       }
-      fetchIntegration();
-    } catch {
-      setNotification({ type: 'error', msg: 'Sync failed. Check your connection.' });
+    } catch (e) {
+      console.error(e);
+      setToast({ ok: false, msg: 'QuickBooks sync failed — check your connection and try again.' });
     }
-
-    setSyncing(false);
+    setBusy(null);
+    load();
   }
 
-  const syncHistory = integration?.settings?.sync_history || [];
-
-  if (loading) {
-    return (
-      <PremiumSurface maxWidth={2200}>
-        <div style={{ color: DIM, fontSize: 14 }}>Loading QuickBooks integration…</div>
-      </PremiumSurface>
-    );
+  async function saveStart(value: string | null) {
+    setBusy('date');
+    try {
+      const res = await fetch('/api/integrations/quickbooks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'settings', startDate: value }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Could not save the start date.');
+      setToast({ ok: true, msg: value ? `Pay apps dated ${day(value)} or later will be invoiced.` : 'Every approved, certified or paid pay app will be invoiced.' });
+      await load();
+    } catch (e) {
+      console.error(e);
+      setToast({ ok: false, msg: humanError(e, 'Could not save the start date.') });
+      setStartDraft(st?.startDate ?? '');
+    }
+    setBusy(null);
   }
 
-  const connected = !!integration?.connected;
+  async function disconnect() {
+    const yes = await confirmDialog({
+      title: 'Disconnect QuickBooks?',
+      message: 'Saguaro stops sending to QuickBooks and Intuit revokes its access. Invoices and vendors already in QuickBooks stay there.',
+      confirmLabel: 'Disconnect',
+      danger: true,
+    });
+    if (!yes) return;
+    setBusy('disconnect');
+    try {
+      const res = await fetch('/api/integrations/quickbooks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'disconnect' }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Could not disconnect QuickBooks.');
+      setToast({ ok: !data.warning, msg: data.message || 'QuickBooks disconnected.' });
+      setLastRun(null);
+      await load();
+    } catch (e) {
+      console.error(e);
+      setToast({ ok: false, msg: humanError(e, 'Could not disconnect QuickBooks.') });
+    }
+    setBusy(null);
+  }
+
+  const connected = !!st?.connected;
+  const canManage = !!st?.canManage;
+  const p = st?.pending;
+  const sandbox = st?.environment === 'sandbox';
+
+  const connectButton = (label: string) => (
+    <button type="button" onClick={connect} disabled={busy === 'connect'} className="pmBtn"
+      style={{ ...goldButtonStyle, ...btn44, opacity: busy === 'connect' ? 0.6 : 1 }}>
+      <Plugs size={16} weight="fill" /> {busy === 'connect' ? 'Opening Intuit…' : label}
+    </button>
+  );
+
+  const failuresFirst = (lastRun?.results ?? []).slice().sort((a, b) => Number(b.outcome === 'failed') - Number(a.outcome === 'failed'));
 
   return (
     <PremiumSurface maxWidth={2200}>
-      {/* Notification */}
-      {notification && (
-        <div style={{
-          position: 'fixed', top: 20, right: 20, zIndex: 1000, padding: '14px 24px',
-          background: notification.type === 'success' ? 'rgba(44,255,122,0.15)' : 'rgba(255,59,48,0.15)',
-          border: `1px solid ${notification.type === 'success' ? GREEN : RED}`,
-          borderRadius: 10, color: notification.type === 'success' ? GREEN : RED,
-          fontSize: 13, fontWeight: 600, backdropFilter: 'blur(12px)',
+      {toast && (
+        <div role="status" style={{
+          position: 'fixed', top: 16, left: 16, right: 16, margin: '0 auto', maxWidth: 560, zIndex: 1000,
+          padding: '14px 18px', borderRadius: 10, fontSize: 14, fontWeight: 600, lineHeight: 1.45,
+          background: 'var(--bg-surface)', border: `1px solid ${toast.ok ? GREEN : RED}`, color: toast.ok ? GREEN : RED,
+          display: 'flex', alignItems: 'center', gap: 12,
         }}>
-          {notification.msg}
+          <span style={{ flex: 1 }}>{toast.msg}</span>
+          <button type="button" onClick={() => setToast(null)} aria-label="Dismiss"
+            style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', fontSize: 20, minWidth: 44, minHeight: 44 }}>×</button>
         </div>
       )}
 
-      {/* Breadcrumb */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18, fontSize: 13, color: DIM }}>
-        <Link href="/app/integrations" style={{ color: GOLD, textDecoration: 'none' }}>Integrations</Link>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, fontSize: 14, color: DIM }}>
+        <Link href="/app/integrations" style={{ color: GOLD, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 44 }}>Integrations</Link>
         <span>/</span>
         <span style={{ color: TEXT }}>QuickBooks Online</span>
       </div>
 
-      {/* Header */}
       <ModuleHero
-        eyebrow="Integration"
-        eyebrowIcon={<Plugs size={13} weight="fill" color={GOLD} />}
         title="QuickBooks"
         accent="Online"
-        subtitle="Two-way sync of invoices, bills, customers, and vendors."
-        actions={connected ? (
-          <button
-            onClick={handleSyncNow}
-            disabled={syncing}
-            className="pmBtn"
-            style={{ ...goldButtonStyle, opacity: syncing ? 0.6 : 1, cursor: syncing ? 'not-allowed' : 'pointer' }}
-          >
-            <ArrowsClockwise size={15} weight="bold" /> {syncing ? 'Syncing…' : 'Sync Now'}
-          </button>
-        ) : (
-          <button onClick={handleConnectQB} className="pmBtn" style={goldButtonStyle}>
-            <Plugs size={15} weight="fill" /> Connect to QuickBooks
-          </button>
-        )}
+        subtitle={connected
+          ? `Connected to ${st?.companyName || 'your QuickBooks company'}${sandbox ? ' (sandbox)' : ''}.`
+          : 'Send approved pay apps to QuickBooks as invoices, and your subs as vendors.'}
       />
 
-      {/* What the integration already knows — every figure derived from live state */}
-      <StatStrip items={[
-        {href: '/app/integrations/quickbooks',  label: 'Connection', value: connected ? 'Connected' : 'Not Connected', accent: connected ? GREEN : RED, sub: 'QuickBooks Online' },
-        {href: '/app/integrations/quickbooks',  label: 'Last Sync', value: timeAgo(integration?.last_sync_at ?? null), sub: 'Most recent run' },
-        {href: '/app/integrations/quickbooks',  label: 'Syncs Recorded', value: String(syncHistory.length), sub: 'Kept in history below' },
-        {href: '/app/integrations/quickbooks',  label: 'Records Synced', value: String(syncHistory.reduce((s, h) => s + Object.values(h.results).reduce((x, r) => x + (r.count || 0), 0), 0)), sub: 'Across all runs' },
-        {href: '/app/integrations/quickbooks',  label: 'Entities Enabled', value: `${[syncInvoices, syncBills, syncCustomers, syncVendors].filter(Boolean).length}/${SYNC_ENTITIES.length}`, sub: 'Invoices to vendors' },
-      ]} />
+      {loading && <SectionCard><SkeletonRow /><SkeletonRow /><SkeletonRow h={120} /></SectionCard>}
 
-      {/* Connection Status */}
-      <SectionCard flat accent={connected ? GREEN : GOLD} style={{ marginBottom: 24 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{
-              width: 56, height: 56, borderRadius: 14,
-              background: `linear-gradient(135deg, ${QB_GREEN}22, ${QB_GREEN}44)`,
-              border: `1px solid ${QB_GREEN}55`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 18, fontWeight: 900, color: QB_GREEN,
-            }}>
-              QB
-            </div>
-            <div>
-              <div style={{ fontSize: 15.5, fontWeight: 800, color: TEXT }}>QuickBooks Online</div>
-              <div style={{ fontSize: 13, color: DIM, marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{
-                  width: 8, height: 8, borderRadius: '50%',
-                  background: connected ? GREEN : RED, display: 'inline-block',
-                }} />
-                {connected ? 'Connected' : 'Not Connected'}
-                {integration?.last_sync_at && (
-                  <span> &middot; Last sync: {timeAgo(integration.last_sync_at)}</span>
-                )}
-              </div>
-            </div>
-          </div>
+      {!loading && loadError && (
+        <SectionCard>
+          <PremiumEmpty tone="error" title="QuickBooks didn't load." description={loadError}
+            action={<button type="button" onClick={() => { setLoading(true); load(); }} className="pmBtn" style={{ ...ghostButtonStyle, ...btn44 }}>Try again</button>} />
+        </SectionCard>
+      )}
 
-          <span style={{
-            padding: '5px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800,
-            background: connected ? 'rgba(44,255,122,0.12)' : 'rgba(255,59,48,0.12)',
-            border: `1px solid ${connected ? 'rgba(44,255,122,0.35)' : 'rgba(255,59,48,0.35)'}`,
-            color: connected ? GREEN : RED,
-          }}>
-            {connected ? 'Active' : 'Inactive'}
-          </span>
-        </div>
+      {!loading && st && !st.configured && !connected && (
+        <SectionCard>
+          <PremiumEmpty
+            title="QuickBooks isn't set up on this server yet."
+            description="The Intuit app keys have not been added to the hosting settings. Once they are, this page connects in one step."
+            action={<Link href="/app/integrations" className="pmBtn" style={{ ...ghostButtonStyle, ...btn44 }}>Back to integrations</Link>}
+          />
+        </SectionCard>
+      )}
 
-        {/* Sync indicator — honest indeterminate state. A single sync request
-            gives no real per-record progress, so we never fabricate a %. */}
-        {syncing && (
-          <div style={{ marginTop: 16 }}>
-            <style>{`@keyframes qbSyncBar{0%{left:-40%}100%{left:100%}}`}</style>
-            <div style={{ fontSize: 12, color: DIM, marginBottom: 6 }}>Contacting QuickBooks&hellip;</div>
-            <div style={{ position: 'relative', height: 6, background: DARK, borderRadius: 3, overflow: 'hidden' }}>
-              <div style={{
-                position: 'absolute', top: 0, height: '100%', width: '40%', borderRadius: 3,
-                background: `linear-gradient(90deg, ${GOLD}, ${GREEN})`,
-                animation: 'qbSyncBar 1.1s linear infinite',
-              }} />
-            </div>
-          </div>
-        )}
-      </SectionCard>
+      {!loading && st && st.configured && !connected && (
+        <SectionCard>
+          {st.needsReconnect ? (
+            <PremiumEmpty
+              tone="error"
+              title="QuickBooks needs to be connected again."
+              description={`${st.reconnectReason || 'The authorization expired or was revoked.'} Nothing is sent until it is reconnected; records already in QuickBooks stay linked.`}
+              action={canManage ? connectButton('Reconnect QuickBooks') : undefined}
+            />
+          ) : (
+            <PremiumEmpty
+              title="Connect QuickBooks Online."
+              description={`You sign in at Intuit and pick the company${sandbox ? ' (sandbox)' : ''}. Saguaro then sends approved pay apps as invoices to each job's owner, and your subs as vendors.`}
+              action={canManage ? connectButton('Connect QuickBooks') : undefined}
+            />
+          )}
+          {!canManage && <p style={{ margin: '10px 0 0', fontSize: 14, color: DIM }}>Only a company admin can connect QuickBooks.</p>}
+        </SectionCard>
+      )}
 
-      {/* Only show settings if connected */}
-      {connected && (
+      {!loading && st && connected && (
         <>
-          {/* Sync Settings */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 24 }}>
-            {/* Entities to Sync */}
-            <SectionCard title="Sync Entities" icon={<ListChecks size={17} weight="duotone" color={GOLD} />}>
-              {SYNC_ENTITIES.map((ent) => {
-                const checked = ent.key === 'invoices' ? syncInvoices
-                  : ent.key === 'bills' ? syncBills
-                  : ent.key === 'customers' ? syncCustomers
-                  : syncVendors;
-                const toggle = ent.key === 'invoices' ? setSyncInvoices
-                  : ent.key === 'bills' ? setSyncBills
-                  : ent.key === 'customers' ? setSyncCustomers
-                  : setSyncVendors;
-                return (
-                  <label
-                    key={ent.key}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px',
-                      borderRadius: 8, cursor: 'pointer', marginBottom: 6,
-                      background: checked ? 'color-mix(in srgb, var(--brand-primary) 6%, transparent)' : 'transparent',
-                      border: `1px solid ${checked ? 'color-mix(in srgb, var(--brand-primary) 20%, transparent)' : 'transparent'}`,
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={(e) => toggle(e.target.checked)}
-                      style={{ accentColor: GOLD, width: 16, height: 16 }}
-                    />
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{ent.label}</div>
-                      <div style={{ fontSize: 11, color: DIM }}>{ent.description}</div>
-                    </div>
+          <StatStrip items={[
+            { label: 'Company', value: st.companyName || 'Connected', sub: sandbox ? 'Sandbox' : `Since ${when(st.connectedAt)}`, accent: GREEN },
+            { label: 'Pay apps to invoice', value: String(p?.invoices ?? 0), sub: st.startDate ? `Dated ${day(st.startDate)} or later` : 'Approved, certified or paid' },
+            { label: 'Subs to add', value: String(p?.vendors ?? 0), sub: 'Not in QuickBooks yet' },
+            { label: 'Last send', value: st.lastSyncAt ? when(st.lastSyncAt) : 'Never', sub: st.history[0] ? countLine(st.history[0].counts) : 'Nothing sent yet' },
+          ]} />
+
+          {canManage ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 18, marginBottom: 24 }}>
+              <SectionCard title="What to send" subtitle="Tick what this press of Send includes. Nothing already in QuickBooks is sent twice.">
+                {([
+                  { key: 'invoices', label: 'Pay apps → Invoices', sub: `${plural(p?.invoices ?? 0, 'pay app')} ready. Amount is the current payment due (G702 line 8), billed to the job's owner.` },
+                  { key: 'vendors', label: 'Subs → Vendors', sub: `${plural(p?.vendors ?? 0, 'sub')} not in QuickBooks yet. A vendor with the same name is linked, not duplicated.` },
+                  { key: 'customers', label: 'Job owners → Customers', sub: `${plural(p?.customers ?? 0, 'owner')} not linked yet. Owners are also added with their first invoice.` },
+                ] as { key: Entity; label: string; sub: string }[]).map((row) => (
+                  <label key={row.key} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 4px', minHeight: 44, cursor: 'pointer', borderBottom: `1px solid ${LINE}` }}>
+                    <input type="checkbox" checked={send[row.key]} onChange={(e) => setSend((s) => ({ ...s, [row.key]: e.target.checked }))}
+                      style={{ accentColor: GOLD, width: 20, height: 20, marginTop: 2, flexShrink: 0 }} />
+                    <span>
+                      <span style={{ display: 'block', fontSize: 15, fontWeight: 600, color: TEXT }}>{row.label}</span>
+                      <span style={{ display: 'block', fontSize: 13, color: DIM, marginTop: 2, lineHeight: 1.45 }}>{row.sub}</span>
+                    </span>
                   </label>
-                );
-              })}
-            </SectionCard>
-
-            {/* Direction & Frequency */}
-            <SectionCard title="Sync Settings" icon={<SlidersHorizontal size={17} weight="duotone" color={GOLD} />}>
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: DIM, marginBottom: 8 }}>Direction</div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {[
-                    { key: 'push', label: 'Push to QB', icon: '→' },
-                    { key: 'pull', label: 'Pull from QB', icon: '←' },
-                    { key: 'bidirectional', label: 'Bi-Directional', icon: '⇄' },
-                  ].map((d) => (
-                    <button
-                      key={d.key}
-                      onClick={() => setSyncDirection(d.key)}
-                      style={{
-                        flex: 1, padding: '10px 8px', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600,
-                        border: syncDirection === d.key ? `1px solid ${GOLD}` : `1px solid ${BORDER}`,
-                        background: syncDirection === d.key ? 'color-mix(in srgb, var(--brand-primary) 10%, transparent)' : 'transparent',
-                        color: syncDirection === d.key ? GOLD : DIM,
-                      }}
-                    >
-                      <div style={{ fontSize: 18, marginBottom: 4 }}>{d.icon}</div>
-                      {d.label}
-                    </button>
-                  ))}
+                ))}
+                <div style={{ marginTop: 14 }}>
+                  <button type="button" onClick={sync} disabled={busy === 'sync'} className="pmBtn"
+                    style={{ ...goldButtonStyle, ...btn44, width: '100%', opacity: busy === 'sync' ? 0.6 : 1 }}>
+                    <ArrowsClockwise size={16} weight="bold" /> {busy === 'sync' ? 'Sending to QuickBooks…' : 'Send to QuickBooks'}
+                  </button>
                 </div>
-              </div>
+              </SectionCard>
 
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: DIM, marginBottom: 8 }}>Frequency</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                  {['manual', 'hourly', 'daily', 'realtime'].map((f) => (
-                    <button
-                      key={f}
-                      onClick={() => setSyncFrequency(f)}
-                      style={{
-                        padding: '10px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600,
-                        border: syncFrequency === f ? `1px solid ${GOLD}` : `1px solid ${BORDER}`,
-                        background: syncFrequency === f ? 'color-mix(in srgb, var(--brand-primary) 10%, transparent)' : 'transparent',
-                        color: syncFrequency === f ? GOLD : DIM,
-                        textTransform: 'capitalize',
-                      }}
-                    >
-                      {f === 'realtime' ? 'Real-time' : f}
+              <SectionCard title="Invoice pay apps from" subtitle="Pay apps dated before this are not sent, so invoices the office already keyed into QuickBooks are not billed twice.">
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <input
+                    type="date"
+                    value={startDraft}
+                    onChange={(e) => setStartDraft(e.target.value)}
+                    aria-label="Invoice pay apps dated on or after"
+                    style={{ flex: '1 1 180px', minHeight: 44, padding: '8px 12px', fontSize: 16, borderRadius: 10, background: 'var(--bg-surface-2)', color: TEXT, border: `1px solid ${LINE}`, colorScheme: 'dark', boxSizing: 'border-box' }}
+                  />
+                  <button type="button" onClick={() => saveStart(startDraft || null)} disabled={busy === 'date' || (startDraft || null) === (st.startDate ?? null)} className="pmBtn"
+                    style={{ ...goldButtonStyle, ...btn44, opacity: busy === 'date' || (startDraft || null) === (st.startDate ?? null) ? 0.5 : 1 }}>
+                    Save date
+                  </button>
+                  {st.startDate && (
+                    <button type="button" onClick={() => { setStartDraft(''); saveStart(null); }} disabled={busy === 'date'} className="pmBtn" style={{ ...ghostButtonStyle, ...btn44 }}>
+                      Send all
                     </button>
-                  ))}
+                  )}
                 </div>
-              </div>
+                <p style={{ margin: '12px 0 0', fontSize: 14, color: DIM, lineHeight: 1.5 }}>
+                  {st.startDate
+                    ? (p?.invoicesBeforeStart
+                      ? `${plural(p.invoicesBeforeStart, 'earlier pay app')} dated before ${day(st.startDate)} ${p.invoicesBeforeStart === 1 ? 'is' : 'are'} held back. Move the date back to send ${p.invoicesBeforeStart === 1 ? 'it' : 'them'}.`
+                      : `No pay apps are held back by this date.`)
+                    : 'No start date — every approved, certified or paid pay app not yet in QuickBooks is sent.'}
+                </p>
+                <p style={{ margin: '8px 0 0', fontSize: 13, color: DIM, lineHeight: 1.5 }}>
+                  Invoices post to the QuickBooks item {st.itemName ? <b style={{ color: TEXT }}>{st.itemName}</b> : <>named <b style={{ color: TEXT }}>Progress Billing</b> (or <b style={{ color: TEXT }}>Services</b>; Saguaro creates Progress Billing if neither exists)</>}. A paid pay app arrives as an open invoice — receive the payment against it in QuickBooks.
+                </p>
+              </SectionCard>
+            </div>
+          ) : (
+            <SectionCard style={{ marginBottom: 24 }}>
+              <p style={{ margin: 0, fontSize: 14, color: DIM }}>Only a company admin can send to or disconnect QuickBooks.</p>
             </SectionCard>
-          </div>
+          )}
 
-          {/* Sync History */}
-          <SectionCard title="Sync History" icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 24 }}>
-            {syncHistory.length === 0 ? (
-              <PremiumEmpty
-                icon={<ClockCounterClockwise size={30} weight="duotone" color={GOLD} />}
-                title="No sync history yet"
-                description="Run your first sync above to see results here."
-                compact
-              />
-            ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
-                      {['Date', 'Direction', 'Entities', 'Records', 'Status', 'By'].map((h) => (
-                        <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: DIM, fontWeight: 600, fontSize: 11 }}>
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {syncHistory.slice(0, 20).map((entry, i) => {
-                      const totalCount = Object.values(entry.results).reduce((s, r) => s + (r.count || 0), 0);
-                      const allSuccess = Object.values(entry.results).every((r) => r.status === 'success');
-                      return (
-                        <tr key={i} style={{ borderBottom: `1px solid rgba(255,255,255,0.06)` }}>
-                          <td style={{ padding: '10px 12px', color: TEXT }}>{formatDate(entry.timestamp)}</td>
-                          <td style={{ padding: '10px 12px', color: DIM }}>
-                            <span style={{
-                              padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
-                              background: entry.direction === 'push' ? 'var(--brand-primary-12)' : 'var(--brand-primary-12)',
-                              color: entry.direction === 'push' ? GOLD : GOLD,
-                            }}>
-                              {entry.direction === 'push' ? '→ Push' : '← Pull'}
-                            </span>
-                          </td>
-                          <td style={{ padding: '10px 12px', color: DIM }}>{entry.entities.join(', ')}</td>
-                          <td style={{ padding: '10px 12px', color: TEXT, fontWeight: 600 }}>{totalCount}</td>
-                          <td style={{ padding: '10px 12px' }}>
-                            <span style={{
-                              padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
-                              background: allSuccess ? 'rgba(44,255,122,0.12)' : 'rgba(255,59,48,0.12)',
-                              color: allSuccess ? GREEN : RED,
-                            }}>
-                              {allSuccess ? 'Success' : 'Partial Error'}
-                            </span>
-                          </td>
-                          <td style={{ padding: '10px 12px', color: DIM }}>{entry.initiated_by?.split('@')[0] || '-'}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+          {lastRun && failuresFirst.length > 0 && (
+            <SectionCard title="This send" subtitle={lastRun.counts ? countLine(lastRun.counts) : undefined} style={{ marginBottom: 24 }}>
+              {failuresFirst.map((r) => (
+                <div key={`${r.entity}-${r.id}`} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '10px 0', borderBottom: `1px solid ${LINE}`, flexWrap: 'wrap' }}>
+                  <Pill tone={OUTCOME_TONE[r.outcome]}>{OUTCOME_WORD[r.outcome]}</Pill>
+                  <div style={{ flex: 1, minWidth: 200 }}>
+                    <div style={{ fontSize: 14, color: TEXT, fontWeight: 600 }}>{ENTITY_WORD[r.entity]} · {r.label}</div>
+                    {(r.message || r.qboId) && (
+                      <div style={{ fontSize: 13, color: r.outcome === 'failed' ? RED : DIM, marginTop: 2, lineHeight: 1.45, overflowWrap: 'anywhere' }}>
+                        {r.message || `QuickBooks id ${r.qboId}`}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </SectionCard>
+          )}
+
+          <SectionCard title="Send history" subtitle="The last 25 sends." style={{ marginBottom: 24 }}>
+            {st.history.length === 0 ? (
+              <PremiumEmpty compact title="Nothing sent yet." description={canManage ? 'Press Send to QuickBooks to make the first send.' : undefined} />
+            ) : st.history.map((h) => (
+              <div key={h.at} style={{ padding: '10px 0', borderBottom: `1px solid ${LINE}` }}>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <span style={{ fontSize: 14, color: TEXT, fontWeight: 600 }}>{when(h.at)}</span>
+                  <Pill tone={h.counts.failed ? 'red' : 'green'}>{h.counts.failed ? `${h.counts.failed} failed` : 'All sent'}</Pill>
+                </div>
+                <div style={{ fontSize: 13, color: DIM, marginTop: 4, lineHeight: 1.45, overflowWrap: 'anywhere' }}>
+                  {countLine(h.counts)} · {h.entities.join(', ')}{h.by ? ` · by ${h.by.split('@')[0]}` : ''}{h.remaining ? ` · ${h.remaining} left for the next send` : ''}
+                </div>
+                {h.errors.slice(0, 3).map((e, i) => (
+                  <div key={i} style={{ fontSize: 13, color: RED, marginTop: 4, lineHeight: 1.45, overflowWrap: 'anywhere' }}>{e.label}: {e.message}</div>
+                ))}
               </div>
-            )}
+            ))}
           </SectionCard>
 
-          {/* Field Mapping */}
-          <SectionCard
-            title="Field Mapping"
-            subtitle="How Saguaro fields map to QuickBooks fields."
-            icon={<ArrowsLeftRight size={17} weight="duotone" color={GOLD} />}
-          >
-            <div style={{ overflowX: 'auto' }}>
-              <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
-                    <th style={{ padding: '10px 12px', textAlign: 'left', color: DIM, fontWeight: 600, fontSize: 11 }}>Entity</th>
-                    <th style={{ padding: '10px 12px', textAlign: 'left', color: DIM, fontWeight: 600, fontSize: 11 }}>Saguaro Control Systems</th>
-                    <th style={{ padding: '10px 12px', textAlign: 'center', color: DIM, fontWeight: 600 }}>{'⇄'}</th>
-                    <th style={{ padding: '10px 12px', textAlign: 'left', color: DIM, fontWeight: 600, fontSize: 11 }}>QuickBooks Field</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {FIELD_MAPPINGS.map((m, i) => (
-                    <tr key={i} style={{ borderBottom: `1px solid rgba(255,255,255,0.06)` }}>
-                      <td style={{ padding: '10px 12px' }}>
-                        <span style={{
-                          padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
-                          background: 'color-mix(in srgb, var(--brand-primary) 10%, transparent)', color: GOLD,
-                        }}>
-                          {m.entity}
-                        </span>
-                      </td>
-                      <td style={{ padding: '10px 12px', color: TEXT, fontFamily: 'monospace', fontSize: 12 }}>{m.saguaro}</td>
-                      <td style={{ padding: '10px 12px', textAlign: 'center', color: DIM }}>{'→'}</td>
-                      <td style={{ padding: '10px 12px', color: QB_GREEN, fontFamily: 'monospace', fontSize: 12 }}>{m.quickbooks}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <SectionCard title="Connection" style={{ marginBottom: 24 }}>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ flex: '1 1 240px', fontSize: 14, color: DIM, lineHeight: 1.5 }}>
+                {st.companyName || 'QuickBooks company'}{sandbox ? ' (sandbox)' : ''} · connected {when(st.connectedAt)}. Access renews by itself; if Intuit ever ends it, this page asks you to reconnect.
+              </div>
+              <a href={sandbox ? 'https://app.sandbox.qbo.intuit.com/app/invoices' : 'https://app.qbo.intuit.com/app/invoices'} target="_blank" rel="noreferrer" className="pmBtn" style={{ ...ghostButtonStyle, ...btn44 }}>
+                <ArrowSquareOut size={15} weight="bold" /> Open QuickBooks
+              </a>
+              {canManage && (
+                <button type="button" onClick={disconnect} disabled={busy === 'disconnect'} className="pmBtn"
+                  style={{ ...ghostButtonStyle, ...btn44, color: RED, borderColor: 'color-mix(in srgb, var(--danger) 45%, transparent)', opacity: busy === 'disconnect' ? 0.6 : 1 }}>
+                  {busy === 'disconnect' ? 'Disconnecting…' : 'Disconnect'}
+                </button>
+              )}
             </div>
           </SectionCard>
         </>
-      )}
-
-      {/* Not connected state */}
-      {!connected && (
-        <SectionCard>
-          <PremiumEmpty
-            icon={<Plugs size={34} weight="duotone" color={GOLD} />}
-            title="Connect QuickBooks Online"
-            description="Sync invoices, bills, customers, and vendors between Saguaro and QuickBooks. Set up bi-directional sync to keep your accounting data in perfect harmony."
-            action={
-              <button onClick={handleConnectQB} className="pmBtn" style={goldButtonStyle}>
-                <Plugs size={16} weight="fill" /> Connect to QuickBooks
-              </button>
-            }
-          />
-        </SectionCard>
       )}
     </PremiumSurface>
   );
