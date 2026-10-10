@@ -13,6 +13,7 @@ import { humanError } from '@/lib/errors';
 import { Plus, DownloadSimple, CheckCircle, FloppyDisk, Receipt, Calculator, ListNumbers, Buildings, CurrencyDollar, Percent, Coins, Scales, ChartPieSlice } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 import { openPdf } from '@/components/PdfViewer';
+import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 
 const PANEL = 'var(--bg-surface-2)', LINE = 'rgba(255,255,255,0.09)', GOLD = 'var(--brand-primary)', TEXT = 'var(--text-secondary)', DIM = 'var(--text-tertiary)', GREEN = 'var(--success)';
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -238,7 +239,7 @@ export default function PayAppPage() {
           {/* The server assigns the number — shown, not typed. */}
           <label style={{ fontSize: 11, color: DIM, fontWeight: 700 }}>App #<input value={appNo} readOnly aria-readonly="true" title="Numbered automatically — the next application on this job." style={{ ...inp, marginTop: 5, width: 60, opacity: 0.75 }} /></label>
           {/* period_to is a DATE column — a date picker, not free text. */}
-          <label style={{ fontSize: 11, color: DIM, fontWeight: 700 }}>Period To<input id="payapp-period-to" type="date" value={period} onChange={(e) => { setPeriod(e.target.value); setFormErr(''); }} style={{ ...inp, marginTop: 5, width: 160 }} /></label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}><label htmlFor="payapp-period-to" style={{ fontSize: 11, color: DIM, fontWeight: 700 }}>Period To</label><SaguaroDatePicker id="payapp-period-to" value={period} onChange={(v) => { setPeriod(v); setFormErr(''); }} style={{ ...inp, width: 160 }} placeholder="Pick a date" /></div>
           {[['Contract $', contract, setContract, 130], ['Change Orders $', cos, setCos, 130], ['Retainage %', ret, setRet, 90], ['Prev. Certs $', prevCerts, setPrevCerts, 130]].map(([lbl, val, set, w]: any) => (
             <label key={lbl} style={{ fontSize: 11, color: DIM, fontWeight: 700 }}>{lbl}<input inputMode="decimal" value={val} onChange={(e) => set(e.target.value)} style={{ ...inp, marginTop: 5, width: w }} /></label>
           ))}
