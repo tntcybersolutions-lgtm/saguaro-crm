@@ -1,217 +1,223 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { getUser } from '@/lib/supabase-server';
-import { requirePermission } from '@/lib/permissions';
+import { createServerClient, getUser } from '@/lib/supabase-server';
+import { getEffectivePermissions, hasPermission, requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
+import { apiError, apiFail } from '@/lib/api-error';
+import type { Json } from '@/lib/database.types';
+import { requestDay } from '@/lib/time-zone';
+import { publicQuickBooksConfig, quickBooksConfig } from '@/lib/quickbooks/config';
+import {
+  QBO_STATE_COOKIE, QBO_STATE_COOKIE_PATH, QBO_STATE_MAX_AGE_SECONDS,
+  buildAuthorizeUrl, isNavigation, newOAuthState, stateCookieValue,
+} from '@/lib/quickbooks/oauth';
+import { QBO_PAGE_PATH, QBO_RETURN_MESSAGES, qboReturnPath, type QboReturnCode } from '@/lib/quickbooks/return-codes';
+import { NEEDS_RECONNECT, isConnectedRow, loadQboRow, revokeAtIntuit } from '@/lib/quickbooks/client';
+import { asSettings, cacheFor, stripSecrets } from '@/lib/quickbooks/settings';
+import { nameKey, parseStartDay } from '@/lib/quickbooks/mapping';
+import { jobOwners, pendingInvoices, pendingVendors } from '@/lib/quickbooks/sync';
 
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
-
-const QB_CLIENT_ID     = process.env.QB_CLIENT_ID ?? '';
-const QB_REDIRECT_URI  = process.env.QB_REDIRECT_URI ?? '';
-const QB_CLIENT_SECRET = process.env.QB_CLIENT_SECRET ?? '';
-const QB_SANDBOX       = process.env.QB_SANDBOX === 'true';
-const QB_BASE          = QB_SANDBOX
-  ? 'https://sandbox-quickbooks.api.intuit.com'
-  : 'https://quickbooks.api.intuit.com';
-const AUTH_BASE = 'https://appcenter.intuit.com/connect/oauth2';
-
-// Helper: read the connection regardless of legacy storage shape (some rows
-// stored tokens top-level, some under settings{}). Always tenant-scoped.
-function tokenOf(row: any): { access_token?: string; realm_id?: string; expires_at?: string } {
-  if (!row) return {};
-  return {
-    access_token: row.access_token ?? row.settings?.access_token,
-    realm_id: row.realm_id ?? row.settings?.realm_id,
-    expires_at: row.token_expires_at ?? row.settings?.expires_at,
-  };
-}
-
+/* ------------------------------------------------------------------ */
+/*  GET /api/integrations/quickbooks?action=connect                    */
+/*    Starts OAuth ON THE SERVER: random state in an httpOnly cookie,  */
+/*    then a redirect to Intuit. Opened in the SAME window (the iPhone */
+/*    app is a webview — popups do not work there).                    */
+/*  GET /api/integrations/quickbooks?action=status                     */
+/*    The connection as the page may see it. Never a token.            */
+/* ------------------------------------------------------------------ */
 export async function GET(req: NextRequest) {
-  // AUTH + TENANT: these endpoints read tenant financial data and integration
-  // tokens. Previously unauthenticated + service-role with no tenant filter,
-  // which leaked every tenant's pay-app amounts and QB connection state.
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-
-  const { searchParams } = new URL(req.url);
-  const action = searchParams.get('action') ?? 'status';
-
-  if (action === 'connect') {
-    // The callback resolves the tenant from the authed session (cookies), not
-    // from `state`; state is a CSRF nonce only.
-    const scope = 'com.intuit.quickbooks.accounting';
-    const state = crypto.randomUUID();
-    const url = `${AUTH_BASE}?client_id=${QB_CLIENT_ID}&redirect_uri=${encodeURIComponent(QB_REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent(scope)}&state=${state}`;
-    return NextResponse.redirect(url);
-  }
-
-  if (action === 'status') {
-    const { data } = await getSupabase()
-      .from('integrations')
-      .select('id, access_token, token_expires_at, settings')
-      .eq('provider', 'quickbooks')
-      .eq('tenant_id', user.tenantId)
-      .maybeSingle();
-    const t = tokenOf(data);
-    return NextResponse.json({ connected: !!t.access_token, expiresAt: t.expires_at ?? null, sandbox: QB_SANDBOX });
-  }
-
-  if (action === 'sync_preview') {
-    const { data: invoices } = await getSupabase()
-      .from('pay_applications')
-      .select('id, app_number, net_payment_due, status, project_id')
-      .eq('tenant_id', user.tenantId)
-      .in('status', ['approved', 'submitted'])
-      .limit(20);
-
-    const { data: vendors } = await getSupabase()
-      .from('subcontractors')
-      .select('id, company_name')
-      .eq('tenant_id', user.tenantId)
-      .limit(20);
-
-    return NextResponse.json({
-      invoicesToSync:  (invoices ?? []).length,
-      vendorsToSync:   (vendors ?? []).length,
-      items: invoices ?? [],
-    });
-  }
-
-  return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
+  const action = req.nextUrl.searchParams.get('action') ?? 'status';
+  if (action === 'connect') return connect(req);
+  if (action === 'status') return status(req);
+  return apiFail('Unknown action', 400);
 }
 
+async function connect(req: NextRequest) {
+  const nav = isNavigation(req.headers);
+  const fail = (code: QboReturnCode, httpStatus: number) =>
+    nav
+      ? NextResponse.redirect(new URL(qboReturnPath(code), req.url))
+      : NextResponse.json({ error: QBO_RETURN_MESSAGES[code].msg, code }, { status: httpStatus });
+
+  const g = await requirePermission(req, 'Admin', 'Full');
+  if (!g.ok) {
+    if (!nav) return g.res;
+    if (g.res.status === 401) {
+      const login = new URL('/login', req.url);
+      login.searchParams.set('next', QBO_PAGE_PATH);
+      return NextResponse.redirect(login);
+    }
+    return fail('forbidden', 403);
+  }
+
+  const cfg = quickBooksConfig(req.nextUrl.origin);
+  if (!cfg || !cfg.redirectUri) return fail('not_configured', 503);
+
+  // The state cookie (and the session) must live on the host Intuit sends the
+  // browser back to. If the registered redirect URI is on another host (www vs
+  // apex), start again there once.
+  let target: URL;
+  try {
+    target = new URL(cfg.redirectUri);
+  } catch (e) {
+    console.error('[quickbooks/connect] QUICKBOOKS_REDIRECT_URI is not an absolute URL', e);
+    return fail('not_configured', 503);
+  }
+  if (target.origin !== req.nextUrl.origin && !req.nextUrl.searchParams.has('hop')) {
+    const hop = new URL('/api/integrations/quickbooks', target.origin);
+    hop.searchParams.set('action', 'connect');
+    hop.searchParams.set('hop', '1');
+    return NextResponse.redirect(hop);
+  }
+
+  const state = newOAuthState();
+  const res = NextResponse.redirect(buildAuthorizeUrl({ clientId: cfg.clientId, redirectUri: cfg.redirectUri, state }));
+  res.cookies.set(QBO_STATE_COOKIE, stateCookieValue(state, g.user.id), {
+    httpOnly: true,
+    secure: req.nextUrl.protocol === 'https:',
+    sameSite: 'lax',
+    maxAge: QBO_STATE_MAX_AGE_SECONDS,
+    path: QBO_STATE_COOKIE_PATH,
+  });
+  return res;
+}
+
+async function status(req: NextRequest) {
+  const user = await getUser(req);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  try {
+    const db = createServerClient();
+    const pub = publicQuickBooksConfig();
+    const [row, perms] = await Promise.all([
+      loadQboRow(db, user.tenantId),
+      getEffectivePermissions(db, user.id, user.tenantId),
+    ]);
+    const settings = asSettings(row?.settings);
+    // Tokens issued in sandbox do not work against production (and back).
+    const wrongEnvironment = !!settings.environment && settings.environment !== pub.environment;
+    const connected = pub.configured && isConnectedRow(row) && !wrongEnvironment;
+    const startDate = settings.invoice_start_date ?? null;
+    const cache = row?.realm_id ? cacheFor(settings, row.realm_id) : null;
+
+    let pending: { invoices: number; invoicesBeforeStart: number; vendors: number; customers: number } | null = null;
+    if (connected) {
+      const { zone } = await requestDay(req.headers, db, user.tenantId, 'quickbooks/status');
+      const [inv, subs, owners] = await Promise.all([
+        pendingInvoices(db, user.tenantId, startDate, zone),
+        pendingVendors(db, user.tenantId, 1),
+        jobOwners(db, user.tenantId),
+      ]);
+      pending = {
+        invoices: inv.ready.length,
+        invoicesBeforeStart: inv.beforeStart,
+        vendors: subs.total,
+        customers: owners.filter((o) => !cache?.customers[nameKey(o.owner.name)]).length,
+      };
+    }
+
+    const history = Array.isArray(settings.sync_history) ? stripSecrets(settings.sync_history) : [];
+    return NextResponse.json({
+      configured: pub.configured,
+      environment: pub.environment,
+      connected,
+      status: row?.status ?? null,
+      needsReconnect: !!row && (row.status === NEEDS_RECONNECT || (row.status === 'active' && wrongEnvironment)),
+      reconnectReason: wrongEnvironment
+        ? `Connected to a QuickBooks ${settings.environment} company, but this server is set to ${pub.environment}. Connect again.`
+        : row?.status === NEEDS_RECONNECT ? row.last_error : null,
+      companyName: settings.company_name ?? null,
+      connectedAt: row?.connected_at ?? null,
+      lastSyncAt: row?.last_sync_at ?? null,
+      startDate,
+      itemName: cache?.item?.name ?? null,
+      history,
+      pending,
+      canManage: hasPermission(perms, 'Admin', 'Full'),
+    });
+  } catch (e) {
+    return apiError('quickbooks/status', e, 'Could not load the QuickBooks connection. Please try again.');
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  POST /api/integrations/quickbooks                                  */
+/*    { action: 'disconnect' }  revoke at Intuit, forget the tokens    */
+/*    { action: 'settings', startDate: 'YYYY-MM-DD' | null }           */
+/* ------------------------------------------------------------------ */
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Admin', 'Full');
   if (!g.ok) return g.res;
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  const user = g.user;
 
-  const body = await req.json().catch(() => ({}));
-  const { action } = body as { action: string };
+  try {
+    const body = (await req.json().catch(() => ({}))) as { action?: string; startDate?: unknown };
+    const db = g.db;
 
-  if (action === 'callback') {
-    // Exchange code for tokens and store them for THIS tenant (resolved from
-    // the authed session — never from a client-supplied field).
-    const { code, realmId } = body as { code: string; realmId: string };
-    if (!code || !realmId) {
-      return NextResponse.json({ error: 'Missing code or realmId' }, { status: 400 });
-    }
+    if (body.action === 'disconnect') {
+      const row = await loadQboRow(db, user.tenantId);
+      if (!row) return NextResponse.json({ ok: true, revoked: false, message: 'QuickBooks was not connected.' });
 
-    const tokenRes = await fetch('https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Authorization: `Basic ${Buffer.from(`${QB_CLIENT_ID}:${QB_CLIENT_SECRET}`).toString('base64')}`,
-      },
-      body: new URLSearchParams({
-        grant_type:   'authorization_code',
-        code,
-        redirect_uri: QB_REDIRECT_URI,
-      }).toString(),
-    });
-
-    if (!tokenRes.ok) {
-      return NextResponse.json({ error: 'Token exchange failed' }, { status: 502 });
-    }
-
-    const tokens = await tokenRes.json() as { access_token: string; refresh_token: string; expires_in: number };
-    const expiresAt = new Date(Date.now() + tokens.expires_in * 1000).toISOString();
-
-    // Tenant-scoped upsert via select-then-write (no global onConflict:'provider').
-    const db = getSupabase();
-    const { data: existing } = await db.from('integrations')
-      .select('id').eq('provider', 'quickbooks').eq('tenant_id', user.tenantId).maybeSingle();
-    const row = {
-      provider: 'quickbooks',
-      tenant_id: user.tenantId,
-      access_token: tokens.access_token,
-      refresh_token: tokens.refresh_token,
-      token_expires_at: expiresAt,
-      realm_id: realmId,
-      status: 'active',
-    };
-    if (existing) await must(db.from('integrations').update(row).eq('id', existing.id), 'integrations update');
-    else await must(db.from('integrations').insert(row), 'integrations insert');
-
-    return NextResponse.json({ ok: true, expiresAt });
-  }
-
-  if (action === 'sync') {
-    const { data: integration } = await getSupabase()
-      .from('integrations')
-      .select('access_token, realm_id, settings')
-      .eq('provider', 'quickbooks')
-      .eq('tenant_id', user.tenantId)
-      .maybeSingle();
-
-    const t = tokenOf(integration);
-    if (!t.access_token) {
-      return NextResponse.json({ error: 'QuickBooks not connected' }, { status: 401 });
-    }
-
-    const realmId     = t.realm_id as string;
-    const accessToken = t.access_token as string;
-
-    const { data: payApps } = await getSupabase()
-      .from('pay_applications')
-      .select('id, app_number, net_payment_due, project_id, projects(name)')
-      .eq('tenant_id', user.tenantId)
-      .eq('status', 'approved')
-      .is('qbo_invoice_id', null)
-      .limit(50);
-
-    let synced = 0;
-    const errors: string[] = [];
-
-    for (const pa of payApps ?? []) {
-      const invoicePayload = {
-        Line: [{
-          Amount: pa.net_payment_due,
-          DetailType: 'SalesItemLineDetail',
-          SalesItemLineDetail: { ItemRef: { value: '1', name: 'Services' } },
-        }],
-        CustomerRef: { value: '1' }, // TODO: map to QB customer by project
-        DocNumber: `PAY-${(pa as any).app_number}`,
-        PrivateNote: `Saguaro Pay App #${(pa as any).app_number} | Project: ${(Array.isArray(pa.projects) ? (pa.projects as { name: string }[])[0]?.name : (pa.projects as unknown as { name: string } | null)?.name) ?? pa.project_id}`,
-      };
-
-      const res = await fetch(`${QB_BASE}/v3/company/${realmId}/invoice`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type':  'application/json',
-          Accept:          'application/json',
-        },
-        body: JSON.stringify(invoicePayload),
-      });
-
-      if (res.ok) {
-        const qbData = await res.json() as { Invoice?: { Id: string } };
-        await must(getSupabase()
-          .from('pay_applications')
-          .update({ qbo_invoice_id: qbData.Invoice?.Id })
-          .eq('id', pa.id)
-          .eq('tenant_id', user.tenantId), 'pay_applications write');
-        synced++;
-      } else {
-        const errText = await res.text();
-        errors.push(`PayApp ${(pa as any).app_number}: ${errText.slice(0, 100)}`);
+      const token = row.refresh_token || row.access_token;
+      const cfg = quickBooksConfig(req.nextUrl.origin);
+      let revoked = false;
+      let note = '';
+      if (token && cfg) {
+        try {
+          const r = await revokeAtIntuit(cfg, token);
+          revoked = r.ok;
+          if (!r.ok) {
+            note = r.message || `HTTP ${r.status}`;
+            console.error('[quickbooks/disconnect] Intuit refused the revoke', r.status, r.message);
+          }
+        } catch (e) {
+          note = 'Intuit could not be reached';
+          console.error('[quickbooks/disconnect] revoke call failed', e);
+        }
+      } else if (token) {
+        note = 'the Intuit app keys are not set on this server';
       }
+
+      await must(db.from('integrations')
+        .update({
+          status: 'disconnected',
+          access_token: null,
+          refresh_token: null,
+          token_expires_at: null,
+          last_error: !token || revoked ? null : `Intuit did not confirm the revoke (${note}).`,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('tenant_id', user.tenantId)
+        .eq('id', row.id), 'integrations disconnect');
+
+      return NextResponse.json({
+        ok: true,
+        revoked,
+        message: !token || revoked
+          ? 'QuickBooks disconnected.'
+          : 'QuickBooks disconnected in Saguaro, but Intuit did not confirm it. To be sure, remove Saguaro under Apps in QuickBooks.',
+      });
     }
 
-    return NextResponse.json({ ok: true, synced, errors, total: (payApps ?? []).length });
-  }
+    if (body.action === 'settings') {
+      if (!Object.prototype.hasOwnProperty.call(body, 'startDate')) {
+        return apiFail('startDate is required — a date like 2026-10-01, or null to send every pay app.', 400);
+      }
+      const raw = body.startDate;
+      const startDay = raw === null || raw === '' ? null : parseStartDay(raw);
+      if (raw !== null && raw !== '' && !startDay) return apiFail('startDate must be a date like 2026-10-01.', 400);
 
-  if (action === 'disconnect') {
-    await must(getSupabase().from('integrations').delete()
-      .eq('provider', 'quickbooks').eq('tenant_id', user.tenantId), 'integrations delete');
-    return NextResponse.json({ ok: true });
-  }
+      const row = await loadQboRow(db, user.tenantId);
+      if (!row) return apiFail('Connect QuickBooks first.', 409);
+      const next = { ...(stripSecrets(asSettings(row.settings)) as Record<string, unknown>), invoice_start_date: startDay };
+      await must(db.from('integrations')
+        .update({ settings: next as unknown as Json, updated_at: new Date().toISOString() })
+        .eq('tenant_id', user.tenantId)
+        .eq('id', row.id), 'integrations settings');
+      return NextResponse.json({ ok: true, startDate: startDay });
+    }
 
-  return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
+    return apiFail('Unknown action', 400);
+  } catch (e) {
+    return apiError('quickbooks/post', e, 'QuickBooks could not be updated. Please try again.');
+  }
 }

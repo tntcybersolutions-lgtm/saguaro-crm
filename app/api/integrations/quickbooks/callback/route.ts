@@ -1,137 +1,149 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
-import { must } from '@/lib/db-write';
-
-const QB_CLIENT_ID = process.env.QUICKBOOKS_CLIENT_ID || '';
-const QB_CLIENT_SECRET = process.env.QUICKBOOKS_CLIENT_SECRET || '';
-const QB_REDIRECT_URI = process.env.QUICKBOOKS_REDIRECT_URI || '';
-const QB_TOKEN_URL = 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer';
+import { requirePermission } from '@/lib/permissions';
+import { must, tryWrite } from '@/lib/db-write';
+import type { Json } from '@/lib/database.types';
+import { requestDay } from '@/lib/time-zone';
+import { quickBooksConfig } from '@/lib/quickbooks/config';
+import { QBO_STATE_COOKIE, QBO_STATE_COOKIE_PATH, checkOAuthState, tokenColumnsFromGrant } from '@/lib/quickbooks/oauth';
+import { QBO_PAGE_PATH, qboReturnPath, type QboReturnCode } from '@/lib/quickbooks/return-codes';
+import { QBO_PROVIDER, QboApiError, QboClient, exchangeCode, loadQboRow, type QboRow } from '@/lib/quickbooks/client';
+import { asSettings, cacheFor, companyChanged, stripSecrets, type QboSettings } from '@/lib/quickbooks/settings';
 
 /* ------------------------------------------------------------------ */
-/*  GET  /api/integrations/quickbooks/callback                        */
-/*  OAuth2 callback — exchanges code for tokens, saves to DB          */
+/*  GET /api/integrations/quickbooks/callback                          */
+/*  Intuit sends the browser here after sign-in. In order:             */
+/*    1. the state Intuit echoes must equal the httpOnly cookie set by */
+/*       ?action=connect, for the SAME signed-in user (CSRF / login    */
+/*       swap) — the cookie is cleared on every outcome;               */
+/*    2. the tenant comes ONLY from the signed-in session — never from */
+/*       state or any other query value;                               */
+/*    3. the code is exchanged; tokens + realm id are stored.          */
+/*  Always ends on the QuickBooks page with ?qb=<code>.                */
 /* ------------------------------------------------------------------ */
 export async function GET(req: NextRequest) {
-  const url = new URL(req.url);
+  const url = req.nextUrl;
+  const secure = url.protocol === 'https:';
+  const clearState = (res: NextResponse) => {
+    res.cookies.set(QBO_STATE_COOKIE, '', { httpOnly: true, secure, sameSite: 'lax', maxAge: 0, path: QBO_STATE_COOKIE_PATH });
+    return res;
+  };
+  const back = (code: QboReturnCode) => clearState(NextResponse.redirect(new URL(qboReturnPath(code), req.url)));
+
+  if (url.searchParams.get('error')) return back('denied');
+
+  const g = await requirePermission(req, 'Admin', 'Full');
+  if (!g.ok) {
+    if (g.res.status === 401) {
+      const login = new URL('/login', req.url);
+      login.searchParams.set('next', QBO_PAGE_PATH);
+      return clearState(NextResponse.redirect(login));
+    }
+    return back('forbidden');
+  }
+  const user = g.user;
+
+  const check = checkOAuthState(req.cookies.get(QBO_STATE_COOKIE)?.value, url.searchParams.get('state'), user.id);
+  if (!check.ok) {
+    console.warn(`[quickbooks/callback] state rejected (${check.reason}) for tenant ${user.tenantId}`);
+    return back('state');
+  }
+
   const code = url.searchParams.get('code');
   const realmId = url.searchParams.get('realmId');
-  const state = url.searchParams.get('state'); // contains tenantId
-  const errorParam = url.searchParams.get('error');
+  if (!code || !realmId) return back('missing');
 
-  if (errorParam) {
-    return NextResponse.redirect(
-      new URL('/app/integrations?error=quickbooks_denied', req.url),
-    );
-  }
-
-  if (!code || !realmId) {
-    return NextResponse.redirect(
-      new URL('/app/integrations?error=missing_params', req.url),
-    );
-  }
+  const cfg = quickBooksConfig(url.origin);
+  if (!cfg) return back('not_configured');
 
   try {
-    const basicAuth = Buffer.from(`${QB_CLIENT_ID}:${QB_CLIENT_SECRET}`).toString('base64');
-
-    const tokenRes = await fetch(QB_TOKEN_URL, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': `Basic ${basicAuth}`,
-      },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri: QB_REDIRECT_URI,
-      }).toString(),
-    });
-
-    if (!tokenRes.ok) {
-      const errBody = await tokenRes.text();
-      console.error('QuickBooks token exchange failed:', errBody);
-      return NextResponse.redirect(
-        new URL('/app/integrations?error=token_exchange_failed', req.url),
-      );
+    let grant;
+    try {
+      grant = await exchangeCode(cfg, code);
+    } catch (e) {
+      console.error('[quickbooks/callback] code exchange refused', e instanceof QboApiError ? `${e.status} ${e.code} ${e.message}` : e);
+      return back('exchange');
+    }
+    const cols = tokenColumnsFromGrant(grant);
+    if (!cols || !cols.refresh_token) {
+      console.error('[quickbooks/callback] Intuit returned no usable tokens');
+      return back('exchange');
     }
 
-    const tokens = await tokenRes.json();
-    const accessToken = tokens.access_token;
-    const refreshToken = tokens.refresh_token;
-    const expiresIn = tokens.expires_in || 3600;
-    const tokenExpiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
-
-    const db = createServerClient();
-
-    // SECURITY: resolve the tenant from the authenticated session ONLY. The
-    // callback runs in the GC's browser (auth cookie present). This previously
-    // trusted the client-supplied `state` as tenant_id, letting an attacker
-    // bind their QuickBooks tokens to ANY tenant (IDOR). `state` is a CSRF
-    // nonce only — never an identity.
-    void state;
-    const user = await getUser(req);
-    if (!user) {
-      return NextResponse.redirect(
-        new URL('/app/integrations?error=auth_required', req.url),
-      );
-    }
+    const db = g.db;
     const tenantId = user.tenantId;
+    const existing = await loadQboRow(db, tenantId);
+    const prev = stripSecrets(asSettings(existing?.settings)) as QboSettings;
 
-    // Upsert integration record
-    const { data: existing } = await db
-      .from('integrations')
-      .select('id')
-      .eq('tenant_id', tenantId)
-      .eq('provider', 'quickbooks')
-      .maybeSingle();
-
-    if (existing) {
-      await must(db
-        .from('integrations')
-        .update({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-          token_expires_at: tokenExpiresAt,
-          realm_id: realmId,
-          status: 'active',
-          settings: {
-            sync_invoices: true,
-            sync_bills: true,
-            sync_customers: true,
-            sync_vendors: true,
-            sync_direction: 'bidirectional',
-            sync_frequency: 'manual',
-          },
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', existing.id), 'integrations write');
-    } else {
-      await must(db.from('integrations').insert({
-        tenant_id: tenantId,
-        provider: 'quickbooks',
-        access_token: accessToken,
-        refresh_token: refreshToken,
-        token_expires_at: tokenExpiresAt,
-        realm_id: realmId,
-        status: 'active',
-        settings: {
-          sync_invoices: true,
-          sync_bills: true,
-          sync_customers: true,
-          sync_vendors: true,
-          sync_direction: 'bidirectional',
-          sync_frequency: 'manual',
-        },
-      }), 'integrations insert');
+    // Another QuickBooks company (or sandbox ↔ production): the ids stored from
+    // the old company mean nothing here. Forget them, or every record already
+    // pushed to the old company would be skipped as "already in QuickBooks".
+    const changed = companyChanged(
+      { realmId: existing?.realm_id, environment: prev.environment },
+      { realmId, environment: cfg.environment },
+    );
+    if (changed) {
+      await must(db.from('pay_applications').update({ qbo_invoice_id: null })
+        .eq('tenant_id', tenantId).not('qbo_invoice_id', 'is', null), 'pay_applications qbo_invoice_id reset');
+      await must(db.from('subcontractors').update({ qbo_vendor_id: null })
+        .eq('tenant_id', tenantId).not('qbo_vendor_id', 'is', null), 'subcontractors qbo_vendor_id reset');
     }
 
-    return NextResponse.redirect(
-      new URL('/app/integrations?success=quickbooks_connected', req.url),
-    );
-  } catch (err) {
-    console.error('QuickBooks callback error:', err);
-    return NextResponse.redirect(
-      new URL('/app/integrations?error=internal_error', req.url),
-    );
+    // First connection: invoice pay apps from today on, so pay apps the office
+    // already keyed into QuickBooks by hand are not billed twice. The page
+    // shows how many earlier ones exist and lets an admin move the date back.
+    const { today } = await requestDay(req.headers, db, tenantId, 'quickbooks/callback');
+    const settings: QboSettings = {
+      ...prev,
+      environment: cfg.environment,
+      company_name: changed ? null : prev.company_name ?? null,
+      invoice_start_date: prev.invoice_start_date !== undefined ? prev.invoice_start_date : today,
+      qbo_cache: changed ? { realm: realmId, item: null, customers: {} } : cacheFor(prev, realmId),
+    };
+    const now = new Date().toISOString();
+    const fields = {
+      ...cols,
+      realm_id: realmId,
+      status: 'active',
+      connected_at: now,
+      connected_by: user.id,
+      last_error: null,
+      settings: settings as unknown as Json,
+      updated_at: now,
+    };
+
+    let rowId: string;
+    if (existing) {
+      await must(db.from('integrations').update(fields).eq('tenant_id', tenantId).eq('id', existing.id), 'integrations connect');
+      rowId = existing.id;
+    } else {
+      const { data } = await must(db.from('integrations')
+        .insert({ tenant_id: tenantId, provider: QBO_PROVIDER, ...fields })
+        .select('id')
+        .single(), 'integrations insert');
+      rowId = (data as { id: string }).id;
+    }
+
+    // The company's name, so the page can say WHICH QuickBooks company is linked.
+    // Best effort: the connection already works without it.
+    try {
+      const row: QboRow = {
+        id: rowId, tenant_id: tenantId, status: 'active', access_token: cols.access_token, refresh_token: cols.refresh_token,
+        token_expires_at: cols.token_expires_at, realm_id: realmId, settings: settings as unknown as Json,
+        last_sync_at: existing?.last_sync_at ?? null, last_error: null, connected_at: now,
+      };
+      const name = await new QboClient(db, tenantId, cfg, row).companyName();
+      if (name) {
+        await tryWrite(db.from('integrations')
+          .update({ settings: { ...settings, company_name: name } as unknown as Json })
+          .eq('tenant_id', tenantId).eq('id', rowId), 'integrations company name');
+      }
+    } catch (e) {
+      console.error('[quickbooks/callback] company name lookup failed (connection kept)', e);
+    }
+
+    return back('connected');
+  } catch (e) {
+    console.error('[quickbooks/callback] connect failed', e);
+    return back('failed');
   }
 }
