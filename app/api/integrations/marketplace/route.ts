@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError, apiFail } from '@/lib/api-error';
+import { isQuickBooksConfigured } from '@/lib/quickbooks/config';
+import { stripSecrets } from '@/lib/quickbooks/settings';
 
 /* ------------------------------------------------------------------ */
 /*  GET  /api/integrations/marketplace                                */
@@ -28,10 +31,14 @@ export async function GET(req: NextRequest) {
         key: 'quickbooks',
         name: 'QuickBooks Online',
         category: 'accounting',
-        description: 'Sync invoices, bills, and payments bi-directionally',
+        description: 'Send approved pay apps to QuickBooks as invoices, and your subs as vendors',
         icon_color: '#2CFF7A',
         auth_type: 'oauth2',
-        available: true,
+        // Only offered when the server holds the Intuit app keys — otherwise
+        // Connect would send the GC to a broken Intuit page. A tenant that is
+        // already connected still sees its card (the page filters on
+        // available || connected).
+        available: isQuickBooksConfigured(),
       },
       {
         // Coming soon: no working sync path yet, and we will not persist AP
@@ -133,15 +140,20 @@ export async function GET(req: NextRequest) {
         status: conn?.status || null,
         last_sync_at: conn?.last_sync_at || null,
         integration_id: conn?.id || null,
-        settings: conn?.settings || {},
+        // Settings reach the browser: never a token, secret or password, at
+        // any depth (older QuickBooks rows kept their tokens in here).
+        settings: stripSecrets(conn?.settings || {}),
       };
     });
 
     return NextResponse.json({ integrations });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('integrations/marketplace', e, 'Could not load integrations. Please try again.');
   }
 }
+
+/** What a POST hands back — never the token columns. */
+const SAFE_COLUMNS = 'id, provider, status, settings, last_sync_at, created_at, updated_at';
 
 /* ------------------------------------------------------------------ */
 /*  POST  /api/integrations/marketplace                               */
@@ -159,6 +171,13 @@ export async function POST(req: NextRequest) {
 
     if (!provider) {
       return NextResponse.json({ error: 'provider is required' }, { status: 400 });
+    }
+
+    // QuickBooks connects only through Intuit sign-in (/api/integrations/quickbooks)
+    // and disconnects through the same route, which revokes the token. A generic
+    // write here would mark it active with no tokens, or overwrite its settings.
+    if (provider === 'quickbooks') {
+      return apiFail('QuickBooks connects and disconnects through its own page: /app/integrations/quickbooks.', 400);
     }
 
     // The page uses THIS route to disconnect generic providers too, POSTing
@@ -190,12 +209,13 @@ export async function POST(req: NextRequest) {
           settings: settings || {},
           updated_at: new Date().toISOString(),
         })
+        .eq('tenant_id', user.tenantId)
         .eq('id', existing.id)
-        .select()
+        .select(SAFE_COLUMNS)
         .single();
 
       if (error) throw error;
-      return NextResponse.json({ integration: data });
+      return NextResponse.json({ integration: { ...data, settings: stripSecrets(data?.settings ?? {}) } });
     }
 
     // Create new integration record
@@ -207,13 +227,13 @@ export async function POST(req: NextRequest) {
         status: 'pending',
         settings: settings || {},
       })
-      .select()
+      .select(SAFE_COLUMNS)
       .single();
 
     if (error) throw error;
 
-    return NextResponse.json({ integration: data }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ integration: { ...data, settings: stripSecrets(data?.settings ?? {}) } }, { status: 201 });
+  } catch (e) {
+    return apiError('integrations/marketplace POST', e, 'Could not update the integration. Please try again.');
   }
 }
