@@ -8,6 +8,7 @@ import {
   UnsupportedImageError,
 } from '@/lib/image-thumb';
 import { apiError } from '@/lib/api-error';
+import { signUrl } from '@/lib/storage-signing';
 
 // sharp is a native module and a 12MP re-encode takes ~1-2s.
 export const runtime = 'nodejs';
@@ -143,15 +144,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return apiError('photos/id/upload', updateError, 'Failed to update photo');
     }
 
+    // Stored as public URLs, but the bucket is private — return links that load.
+    const [signedUrl, signedThumb] = await Promise.all([signUrl(url), thumbnailUrl ? signUrl(thumbnailUrl) : Promise.resolve(thumbnailUrl)]);
     return NextResponse.json({
       ok: true,
-      url,
-      thumbnailUrl,
+      url: signedUrl || url,
+      thumbnailUrl: signedThumb || thumbnailUrl,
       ...(warning ? { warning } : {}),
     });
   } catch (err: unknown) {
-    console.error('[photos/[id]/upload] error: Internal server error');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('photos/id/upload', err, "Couldn't save the photo");
   }
 }
 

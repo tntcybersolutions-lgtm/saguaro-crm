@@ -237,9 +237,29 @@ export default function PhotosPage(){
       if (!r.ok) throw new Error('Failed to load data');
       const d=await r.json();
       setPhotos(d.photos||[]);
+      signedAt.current=Date.now();
     }catch{ if(!opts?.silent){setPhotos([]);setLoadError('Failed to load. Please try again.');} }
     finally{ if(!opts?.silent) setLoading(false); }
   },[projectId]);
+
+  /* Photo links are signed for an hour (the bucket is private). The phone app
+     stays open for days, so a page left in the background came back with every
+     thumbnail dead and nothing would open. Re-sign when the page comes back
+     after 45 minutes, and when a tile's link fails (at most once a minute). */
+  const signedAt=useRef(0);
+  const lastResign=useRef(0);
+  const resign=useCallback(()=>{
+    if(Date.now()-lastResign.current<60_000) return;
+    lastResign.current=Date.now();
+    load({silent:true});
+  },[load]);
+  useEffect(()=>{
+    const back=()=>{ if(document.visibilityState==='visible'&&signedAt.current&&Date.now()-signedAt.current>45*60_000) resign(); };
+    document.addEventListener('visibilitychange',back);
+    window.addEventListener('pageshow',back);
+    window.addEventListener('focus',back);
+    return()=>{ document.removeEventListener('visibilitychange',back); window.removeEventListener('pageshow',back); window.removeEventListener('focus',back); };
+  },[resign]);
 
   /* ── Add photos & video: many at once, any size, straight to storage ── */
   const [uploadOpen,setUploadOpen]=useState(false);
@@ -331,6 +351,15 @@ export default function PhotosPage(){
   }
   function viewPhoto(photo:any){
     setSelected(photo);setMode('view');
+  }
+  /* On a phone a tap means "show me the picture": straight to the full-screen
+     viewer (swipe, pinch, play). The details card used to open instead, with
+     the picture under it behind the tab bar — it looked like nothing opened. */
+  const isPhone = () => typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
+  const [lightboxFromTap,setLightboxFromTap]=useState(false);
+  function openPhoto(photo:any){
+    viewPhoto(photo);
+    if(isPhone()){ setLightboxFromTap(true); setLightboxOpen(true); }
   }
   function closePanel(){setSelected(null);setMode(null);clearUpload();}
   /** Abandoning an edit keeps the photo in the viewer. */
@@ -561,8 +590,9 @@ export default function PhotosPage(){
       key={photo.id}
       photo={photo}
       selected={selected?.id===photo.id&&mode!=='create'}
-      onClick={()=>viewPhoto(photo)}
+      onClick={()=>openPhoto(photo)}
       onEdit={(id,url)=>setEditingPhoto({id,url})}
+      onStale={resign}
     />
   );
 
@@ -631,7 +661,7 @@ export default function PhotosPage(){
   }
 
   const detailWorkspace = detailOpen && (
-    <div ref={detailRef} className="phDetailCq">
+    <div ref={detailRef} className="phDetailCq" style={{ scrollMarginTop: 84 }}>
       <div className="phDetail">
         <Card
           title={selected.title||'Untitled'}
@@ -768,7 +798,8 @@ export default function PhotosPage(){
           items={lightboxItems}
           index={Math.max(0, selIndex)}
           onIndex={(i)=>{ const next=ordered[i]; if(next) viewPhoto(next); }}
-          onClose={()=>setLightboxOpen(false)}
+          onClose={()=>{ setLightboxOpen(false); if(lightboxFromTap){ setLightboxFromTap(false); closePanel(); } }}
+          onInfo={()=>{ setLightboxOpen(false); setLightboxFromTap(false); }}
           onMediaError={()=>load({silent:true})}
         />
       )}
@@ -955,10 +986,19 @@ export default function PhotosPage(){
   );
 }
 
-function PhotoCard({photo,selected,onClick,onEdit}:{
-  photo:any;selected:boolean;onClick:()=>void;onEdit?:(id:string,url:string)=>void;
+function PhotoCard({photo,selected,onClick,onEdit,onStale}:{
+  photo:any;selected:boolean;onClick:()=>void;onEdit?:(id:string,url:string)=>void;onStale?:()=>void;
 }){
+  const src=isVideo(photo)?photo.thumbnail_url:(photo.thumbnail_url||photo.url);
   const [missing,setMissing]=useState(!photo.url);
+  // A dead link is usually an expired signature: ask for fresh links once,
+  // and only call it missing if the fresh link fails too.
+  const retried=useRef(false);
+  useEffect(()=>{ retried.current=false; if(photo.url) setMissing(false); },[src,photo.url]);
+  const onImgError=()=>{
+    if(!retried.current&&onStale){ retried.current=true; onStale(); return; }
+    setMissing(true);
+  };
   const badge=albumBadge(photo.album);
   return(
     <div className="phCard" data-sel={selected?'true':undefined} role="button" tabIndex={0}
@@ -973,7 +1013,7 @@ function PhotoCard({photo,selected,onClick,onEdit}:{
           isVideo(photo) && !photo.thumbnail_url
             ? <span style={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%',color:'var(--text-tertiary)'}}><Play size={28} weight="fill"/></span>
             // eslint-disable-next-line @next/next/no-img-element
-            : <img src={isVideo(photo)?photo.thumbnail_url:(photo.thumbnail_url||photo.url)} alt={photo.title||'Photo'} loading="lazy" decoding="async" onError={()=>setMissing(true)}/>
+            : <img src={src} alt={photo.title||'Photo'} loading="lazy" decoding="async" onError={onImgError}/>
         ) : (
           <span><Images size={18}/> No image</span>
         )}

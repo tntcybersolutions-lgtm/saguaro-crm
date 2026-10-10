@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 import { requirePermission } from '@/lib/permissions';
 
 /** POST — Link a photo to an entity */
@@ -54,9 +55,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
     if (error) throw error;
     return NextResponse.json({ link: data });
   } catch (err: unknown) {
-    const msg = 'Internal server error';
-    console.error('[photos/link POST]', msg);
-    return NextResponse.json({ error: `Failed to link photo: ${msg}` }, { status: 500 });
+    return apiError('photos/link POST', err, "Couldn't link the photo");
   }
 }
 
