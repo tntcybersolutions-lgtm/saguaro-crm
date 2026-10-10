@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
+import { orValue } from '@/lib/pg-filter';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Budget', 'Edit');
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
         .select('id, actual')
         .eq('project_id', projectId)
         .eq('tenant_id', user.tenantId)
-        .or(`cost_code.eq.${body.cost_code},division.eq.${div}`)
+        .or(`cost_code.eq.${orValue(body.cost_code)},division.eq.${orValue(div)}`)
         .limit(1)
         .maybeSingle();
       if (bLine) {
