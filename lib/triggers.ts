@@ -269,21 +269,32 @@ export async function onPayAppCertified(payAppId: string): Promise<void> {
 export async function onBidPackageCreated(bidPackageId: string): Promise<void> {
   try {
     const db = adminClient();
-    const { data: pkg } = await db.from('bid_packages').select('*, projects(*)').eq('id', bidPackageId).single();
+    const { data: pkg, error: pkgErr } = await db.from('bid_packages').select('*, projects(*)').eq('id', bidPackageId).maybeSingle();
+    if (pkgErr) throw pkgErr;
     if (!pkg) return;
     const bp = pkg as any;
     const project = bp.projects;
     if (!project) return;
+    const what = bp.trade || bp.name || 'Bid package';
 
-    // Generate bid jacket PDF
+    /* The printed jacket. This was an HTTP call to /generate-jacket with no
+       login, which that route's permission check refused every time, inside
+       an empty catch, so no new package ever got a PDF from here. A direct
+       call has no login to lose. A failure is logged and does not stop the
+       notification: the GC can still press Download PDF. */
     try {
-      await fetch(`${APP_URL}/api/bid-packages/${bidPackageId}/generate-jacket`, { method: 'POST' });
-    } catch { /* non-blocking */ }
+      const { storeJacketPdf } = await import('@/lib/bid-jacket-pdf');
+      await storeJacketPdf(db, { packageId: bidPackageId, tenantId: bp.tenant_id });
+    } catch (e) {
+      console.error('[onBidPackageCreated] jacket PDF not made for', bidPackageId, e);
+    }
 
     await createNotification(
       project.tenant_id, null, 'bid_package_created',
-      `Bid package created: ${bp.trade}`,
-      `Bid package for ${bp.trade} on ${project.name} created. Invitations are being sent.`,
+      `Bid package created: ${what}`,
+      /* It used to add "Invitations are being sent." Nothing here sends any:
+         invitations go out when the GC invites subs or issues the jacket. */
+      `Bid package for ${what} on ${project.name} created.`,
       `${APP_URL}/app/projects/${project.id}/bid-packages/${bidPackageId}`, project.id
     );
     await dispatchWebhookEvent(project.tenant_id, 'bid_package.created', {
@@ -291,7 +302,8 @@ export async function onBidPackageCreated(bidPackageId: string): Promise<void> {
       project_id: project.id,
       project_name: project.name,
       trade: bp.trade,
-      due_date: bp.due_date ?? null,
+      // The jacket, the portal and the reminder cron all read bid_due_date first.
+      due_date: bp.bid_due_date ?? bp.due_date ?? null,
     });
   } catch (err) {
     console.error('[onBidPackageCreated]', err);

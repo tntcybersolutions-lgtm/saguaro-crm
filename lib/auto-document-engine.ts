@@ -201,30 +201,36 @@ export async function onPayAppApproved(payAppId: string): Promise<void> {
 export async function onBidPackageCreated(bidPackageId: string): Promise<void> {
   try {
     const client = db();
-    const { data: pkg } = await client
+    const { data: pkg, error: pkgErr } = await client
       .from('bid_packages')
       .select('*, projects(*)')
       .eq('id', bidPackageId)
-      .single();
+      .maybeSingle();
+    if (pkgErr) throw pkgErr;
 
     if (!pkg) return;
     const bp = pkg as any;
     const project = bp.projects;
     if (!project) return;
+    const what = bp.trade || bp.name || 'Bid package';
 
-    // Trigger bid jacket PDF generation (non-blocking)
+    /* The printed jacket, by direct call. This was a fetch to /generate-jacket
+       with no login (refused by its permission check) whose failure went to
+       an empty .catch, so it never made a PDF. */
+    let pdfMade = false;
     try {
-      fetch(`${APP_URL}/api/bid-packages/${bidPackageId}/generate-jacket`, {
-        method: 'POST',
-      }).catch(() => {});
-    } catch { /* non-blocking */ }
+      const { storeJacketPdf } = await import('@/lib/bid-jacket-pdf');
+      pdfMade = !!(await storeJacketPdf(client, { packageId: bidPackageId, tenantId: bp.tenant_id }));
+    } catch (e) {
+      console.error('[auto-doc] onBidPackageCreated: jacket PDF not made for', bidPackageId, e);
+    }
 
     await createNotification(
       project.tenant_id,
       null,
       'bid_package_created',
-      `Bid package created: ${bp.trade}`,
-      `Bid package for ${bp.trade} on ${project.name} is ready. Bid jacket PDF generating.`,
+      `Bid package created: ${what}`,
+      `Bid package for ${what} on ${project.name} is ready.${pdfMade ? ' The bid jacket PDF is attached to it.' : ''}`,
       `${APP_URL}/app/projects/${project.id}/bid-packages/${bidPackageId}`,
       project.id
     );

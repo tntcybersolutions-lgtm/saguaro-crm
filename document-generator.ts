@@ -15,9 +15,6 @@
  *   AIA A310       — Bid Bond (form)
  *   Lien Waivers   — Conditional/Unconditional Partial/Final (all states)
  *   Pay Application — Full G702/G703 with SOV
- *   Instructions to Bidders — Formal bid instructions
- *   Bid Form       — Formal line-item bid form for subs
- *   Non-Collusion Affidavit — Government bids
  *   Subcontractor List — Required for public projects
  *   W-9 Request    — Vendor onboarding letter
  *   ACORD 25 Checklist — Insurance verification
@@ -511,245 +508,13 @@ export async function generateLienWaiver(opts: {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 3. Full Bid Document Package — everything a sub gets in the bid folder
+// 3. Bid Document Package: removed
 // ─────────────────────────────────────────────────────────────────────────────
-
-export async function generateBidDocumentPackage(opts: {
-  tenantId: string;
-  projectId: string;
-  bidPackageId: string;
-}): Promise<{ documentsCreated: number; documentIds: string[] }> {
-  const ctx = await fetchProjectContext(opts.tenantId, opts.projectId);
-  const project = ctx.project as Record<string,unknown>;
-  const now = new Date().toISOString();
-
-  // Fetch bid package + jacket
-  const [pkgRes, jacketRes] = await Promise.all([
-    supabaseAdmin.from('bid_packages').select('*, bid_package_items(*)').eq('id', opts.bidPackageId).single(),
-    supabaseAdmin.from('bid_jackets').select('*').eq('bid_package_id', opts.bidPackageId).maybeSingle(),
-  ]);
-
-  const pkg    = pkgRes.data    as Record<string,unknown>;
-  const jacket = jacketRes.data as Record<string,unknown> | null;
-
-  const ownerContact = (ctx.contacts as Record<string,unknown>[]).find(c => c.contact_type === 'owner');
-  const archContact  = (ctx.contacts as Record<string,unknown>[]).find(c => c.contact_type === 'architect');
-  const dueDate      = pkg.due_at ? new Date(pkg.due_at as string).toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) : 'TBD';
-
-  const items = (pkg.bid_package_items as Record<string,unknown>[]) ?? [];
-
-  const documentIds: string[] = [];
-
-  // ── Document 1: Instructions to Bidders ────────────────────────────────────
-  const itbContent = `
-    <h2>Instructions to Bidders</h2>
-
-    <h3>1. Project Information</h3>
-    ${field('Project', project.name as string)}
-    ${field('Location', project.address as string)}
-    ${field('Owner', (ownerContact?.company_name ?? '') as string)}
-    ${field('Architect', (archContact?.company_name ?? '') as string)}
-    ${field('Package', `${pkg.code as string} — ${pkg.name as string}`)}
-
-    <h3>2. Bid Submission</h3>
-    <p>Sealed bids will be received until <strong>${dueDate} at 5:00 PM local time</strong>. Bids submitted after this time will not be accepted.</p>
-    ${field('Submit bids to', 'project manager via Saguaro CRM portal')}
-    ${field('Bid Portal URL', `${APP_URL}/bid-portal`)}
-
-    <h3>3. Bid Requirements</h3>
-    <p>Each bid must include:</p>
-    <ol style="margin-left:20pt;margin-bottom:8pt">
-      <li>Completed Bid Form (attached)</li>
-      <li>Bid Bond (AIA A310) — 5% of base bid, if contract value &gt; $100,000</li>
-      <li>List of proposed subcontractors</li>
-      <li>Contractor's license number(s)</li>
-      <li>Experience with similar projects (minimum 3 references)</li>
-      <li>Certificate of Insurance — GC and Owner named as Additional Insured</li>
-    </ol>
-
-    <h3>4. Bid Bond</h3>
-    <p>A Bid Bond in the amount of five percent (5%) of the Total Base Bid is required from a surety company licensed to do business in this state and acceptable to the Owner. AIA Document A310 or equivalent form shall be used.</p>
-
-    <h3>5. Examination of Documents</h3>
-    <p>Before submitting a bid, each Bidder shall carefully examine the Contract Documents, visit the site, and fully inform themselves of all existing conditions and limitations under which the Work is to be performed. Submission of a bid constitutes the Bidder's agreement that they have examined all documents and are satisfied regarding the nature and amount of work required.</p>
-
-    <h3>6. Scope of Work</h3>
-    ${jacket?.scope_of_work ? `<p>${(jacket.scope_of_work as string).replace(/\n/g,'</p><p>')}</p>` : '<p>See attached Scope of Work.</p>'}
-
-    <h3>7. Questions</h3>
-    <p>Questions regarding the bid documents must be submitted in writing via the Saguaro CRM portal at least 5 business days prior to the bid due date. Verbal questions will not be accepted. All responses will be issued as addenda to all registered bidders.</p>
-
-    <h3>8. Rejection of Bids</h3>
-    <p>The Owner reserves the right to reject any and all bids, to waive informalities in bidding, and to accept the bid that, in the Owner's judgment, is in the Owner's best interest.</p>
-
-    ${jacket?.bid_instructions ? `<h3>9. Additional Instructions</h3><p>${(jacket.bid_instructions as string).replace(/\n/g,'</p><p>')}</p>` : ''}
-  `;
-
-  const itbHtml = documentShell('Instructions to Bidders', itbContent, {
-    documentNumber: `ITB-${pkg.code as string}`,
-    date: now.split('T')[0],
-    projectName: project.name as string,
-  });
-
-  const { data: itbDoc } = await supabaseAdmin.from('project_documents').insert({
-    tenant_id: opts.tenantId, project_id: opts.projectId,
-    template_code: 'INSTRUCTIONS_TO_BIDDERS',
-    entity_type: 'bid_package', entity_id: opts.bidPackageId,
-    document_type: 'Instructions to Bidders',
-    document_number: `ITB-${pkg.code as string}`,
-    title: `Instructions to Bidders — ${pkg.name as string}`,
-    content_html: itbHtml, ai_generated: true, status: 'draft',
-    requires_signature: false, created_at: now, updated_at: now,
-  }).select('id').single();
-
-  if (itbDoc) documentIds.push(itbDoc.id as string);
-
-  await supabaseAdmin.from('bid_documents').insert({
-    tenant_id: opts.tenantId, bid_package_id: opts.bidPackageId,
-    document_type: 'instructions_to_bidders', document_number: `ITB-${pkg.code as string}`,
-    title: 'Instructions to Bidders', content_html: itbHtml,
-    ai_generated: true, status: 'draft', created_at: now, updated_at: now,
-  });
-
-  // ── Document 2: Bid Form ───────────────────────────────────────────────────
-  const bidFormContent = `
-    <h2>Bid Form</h2>
-    <p>TO: ${(project.name as string)} — ${(ownerContact?.company_name ?? 'Owner') as string}</p>
-    <p>RE: ${(pkg.code as string)} — ${(pkg.name as string)}</p>
-    <p>BID DUE: ${dueDate}</p>
-
-    ${field('Bidder Company Name', '')}
-    ${field('Bidder Address', '')}
-    ${field('License Number', '')}
-    ${field('License Expiration', '')}
-    ${field('Contact Name', '')}
-    ${field('Contact Phone', '')}
-    ${field('Contact Email', '')}
-
-    <h3>Base Bid — Line Item Pricing</h3>
-    <table>
-      <tr>
-        <th>Item #</th>
-        <th>Description</th>
-        <th>UOM</th>
-        <th>Quantity</th>
-        <th>Unit Price</th>
-        <th>Extended Amount</th>
-      </tr>
-      ${items.map((item, idx) => `
-        <tr>
-          <td class="center">${item.code as string || String(idx + 1)}</td>
-          <td>${item.title as string}</td>
-          <td class="center">${item.uom as string}</td>
-          <td class="center">${item.quantity as number}</td>
-          <td class="amount">$_____________</td>
-          <td class="amount">$_____________</td>
-        </tr>
-      `).join('')}
-      ${items.length === 0 ? '<tr><td colspan="6" class="center">See scope of work — provide lump sum bid</td></tr>' : ''}
-      <tr class="total-row">
-        <td colspan="5">BASE BID TOTAL</td>
-        <td class="amount">$_____________</td>
-      </tr>
-    </table>
-
-    <h3>Bid Amount in Words</h3>
-    ${field('Total Base Bid (written)', '')}
-
-    <h3>Alternates (if applicable)</h3>
-    ${field('Alternate 1 (add/deduct)', '')}
-    ${field('Alternate 2 (add/deduct)', '')}
-
-    <h3>Completion Schedule</h3>
-    ${field('Days to Complete (calendar)', '')}
-    ${field('Can meet required schedule?', 'Yes / No')}
-
-    <h3>Qualifications and Exceptions</h3>
-    <p>List any qualifications or exceptions to the base bid (if none, write "None"):</p>
-    <div style="border:1px solid #000;min-height:60pt;margin:8pt 0;padding:4pt"></div>
-
-    <div class="signature-block">
-      <div class="sig-box">
-        <p>The undersigned, having examined the Contract Documents and the site, hereby proposes to furnish all labor, materials, equipment, and services required to complete the work described in the above Bid Package for the prices indicated above.</p>
-        <div class="sig-line"></div>
-        <div class="sig-label">Authorized Signature</div>
-        <div class="sig-line" style="height:14pt"></div>
-        <div class="sig-label">Printed Name and Title</div>
-        <div class="sig-line" style="height:14pt"></div>
-        <div class="sig-label">Date</div>
-      </div>
-      <div></div>
-    </div>
-  `;
-
-  const bidFormHtml = documentShell('Bid Form', bidFormContent, {
-    documentNumber: `BF-${pkg.code as string}`,
-    date: now.split('T')[0],
-    projectName: project.name as string,
-  });
-
-  const { data: bfDoc } = await supabaseAdmin.from('project_documents').insert({
-    tenant_id: opts.tenantId, project_id: opts.projectId,
-    template_code: 'BID_FORM', entity_type: 'bid_package', entity_id: opts.bidPackageId,
-    document_type: 'Bid Form', document_number: `BF-${pkg.code as string}`,
-    title: `Bid Form — ${pkg.name as string}`,
-    content_html: bidFormHtml, ai_generated: true, status: 'draft',
-    requires_signature: true, created_at: now, updated_at: now,
-  }).select('id').single();
-
-  if (bfDoc) documentIds.push(bfDoc.id as string);
-
-  // ── Document 3: Non-Collusion Affidavit ───────────────────────────────────
-  const nca = `
-    <h2>Non-Collusion Affidavit</h2>
-    <p>The undersigned certifies, under oath, the following:</p>
-    <ol style="margin-left:20pt">
-      <li>The bid submitted by the bidder is genuine and not made in the interest of or on behalf of any undisclosed person, firm, or corporation.</li>
-      <li>The bidder has not directly or indirectly induced or solicited any other bidder to put in a false or sham bid.</li>
-      <li>The bidder has not solicited or induced any person, firm, or corporation to refrain from bidding.</li>
-      <li>The bidder has not sought by collusion to obtain for itself any advantage over any other bidder or over the Owner.</li>
-    </ol>
-    ${field('Company Name', '')}
-    ${field('Business Address', '')}
-    ${field('By (Printed Name)', '')}
-    ${field('Title', '')}
-    <div class="signature-block">
-      <div class="sig-box">
-        <div class="sig-line"></div>
-        <div class="sig-label">Signature</div>
-        <div class="sig-line" style="height:14pt"></div>
-        <div class="sig-label">Date</div>
-      </div>
-      <div class="sig-box">
-        <div class="sig-label">NOTARY PUBLIC</div>
-        <p>Subscribed and sworn before me this ___ day of __________, 20___</p>
-        <div class="sig-line"></div>
-        <div class="sig-label">Notary Signature / Seal</div>
-        <div class="sig-line" style="height:14pt"></div>
-        <div class="sig-label">Commission Expires</div>
-      </div>
-    </div>
-  `;
-
-  const ncaHtml = documentShell('Non-Collusion Affidavit', nca, {
-    documentNumber: `NCA-${pkg.code as string}`,
-    date: now.split('T')[0],
-    projectName: project.name as string,
-  });
-
-  const { data: ncaDoc } = await supabaseAdmin.from('project_documents').insert({
-    tenant_id: opts.tenantId, project_id: opts.projectId,
-    template_code: 'NON_COLLUSION_AFFIDAVIT', entity_type: 'bid_package', entity_id: opts.bidPackageId,
-    document_type: 'Non-Collusion Affidavit', document_number: `NCA-${pkg.code as string}`,
-    title: `Non-Collusion Affidavit — ${pkg.name as string}`,
-    content_html: ncaHtml, ai_generated: true, status: 'draft',
-    requires_signature: true, created_at: now, updated_at: now,
-  }).select('id').single();
-
-  if (ncaDoc) documentIds.push(ncaDoc.id as string);
-
-  return { documentsCreated: documentIds.length, documentIds };
-}
+/* generateBidDocumentPackage lived here. It read a bid_jackets table that does
+   not exist and a due_at column bid_packages does not have, fetched the
+   package without its tenant, and returned no file, so it never made a usable
+   document. The bid jacket PDF is made in one place now, from the live jacket:
+   lib/bid-jacket-pdf (POST /api/bid-packages/<id>/generate-jacket). */
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 4. AIA G704 — Certificate of Substantial Completion
@@ -1074,7 +839,6 @@ export async function seedDocumentTemplates(): Promise<void> {
 export const DocumentGenerator = {
   generatePayApplication,
   generateLienWaiver,
-  generateBidDocumentPackage,
   generateSubstantialCompletionCertificate,
   generateCloseoutPackage,
   generateW9Request,

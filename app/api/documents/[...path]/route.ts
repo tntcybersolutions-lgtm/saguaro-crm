@@ -83,15 +83,22 @@ export async function POST(
     authTenantId = user.tenantId;
   }
 
+  /* Retired. This built a second, different jacket: it read a bid_jackets
+     table that does not exist and a due_at column bid_packages does not have,
+     looked the package up without its tenant, and returned no file. The only
+     caller (the package page) sent packageId where this read bidPackageId, so
+     it answered 400 every time. There is one jacket PDF now, made from the
+     live jacket by POST /api/bid-packages/<id>/generate-jacket. */
   if (segment === 'bid-package') {
-    const body         = await req.json().catch(() => ({})) as Record<string, unknown>;
-    const tenantId     = authTenantId; // never body.tenantId — the caller does not choose the tenant
-    const projectId    = String(body.projectId    ?? '');
-    const bidPackageId = String(body.bidPackageId ?? '');
-    if (!tenantId || !projectId || !bidPackageId)
-      return NextResponse.json({ error: 'tenantId, projectId, bidPackageId required' }, { status: 400 });
-    const result = await DocumentGenerator.generateBidDocumentPackage({ tenantId, projectId, bidPackageId });
-    return NextResponse.json(result);
+    const body = await req.json().catch(() => ({})) as Record<string, unknown>;
+    const id = String(body.bidPackageId ?? body.packageId ?? '').trim();
+    return NextResponse.json(
+      {
+        error: 'This way of making a bid jacket PDF has been retired. Use Download PDF on the bid package.',
+        use: id ? `/api/bid-packages/${encodeURIComponent(id)}/generate-jacket` : '/api/bid-packages/<id>/generate-jacket',
+      },
+      { status: 410 },
+    );
   }
 
   if (segment === 'closeout') {
