@@ -6,7 +6,8 @@
  * No database: jacketToPdfInput takes an assembled Jacket, generateBidJacket takes its output.
  */
 import { PDFDocument } from 'pdf-lib';
-import { fmtWhen, fmtCoverage, readInsuranceText, ownerOf, linkWindow, jacketToPdfInput, stableStorageUrl, zoneFor } from './bid-jacket-pdf';
+import { fmtWhen, fmtCoverage, readInsuranceText, ownerOf, linkWindow, jacketToPdfInput, stableStorageUrl } from './bid-jacket-pdf';
+import { stateTimeZone } from './time-zone';
 import { generateBidJacket } from './pdf-engine';
 import type { Jacket } from './bid-jacket';
 
@@ -21,7 +22,7 @@ check('date-only due date is that day, not the day before in Arizona', fmtWhen('
 check('midnight-UTC stamp is a date typed without a time', fmtWhen('2026-10-20T00:00:00+00:00', 'America/Phoenix') === 'Tuesday, October 20, 2026');
 check('timestamp shows its time and zone', fmtWhen('2026-10-20T21:00:00+00:00', 'America/Phoenix') === 'Tuesday, October 20, 2026, 2:00 PM MST');
 check('unparseable date shown as entered, not dropped', fmtWhen('next Friday', 'UTC') === 'next Friday');
-check('zone from the job state, Phoenix by default', zoneFor('ca') === 'America/Los_Angeles' && zoneFor('') === 'America/Phoenix');
+check('zone from the job state; none when unknown (never Phoenix by default)', stateTimeZone('ca') === 'America/Los_Angeles' && stateTimeZone('IA') === 'America/Chicago' && stateTimeZone('Iowa') === 'America/Chicago' && stateTimeZone('') === null && stateTimeZone('ZZ') === null);
 
 // Coverage: as entered.
 check('numeric text reads as dollars', fmtCoverage('2000000') === '$2,000,000' && fmtCoverage('$1,000,000') === '$1,000,000');

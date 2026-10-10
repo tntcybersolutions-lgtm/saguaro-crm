@@ -29,6 +29,7 @@ import {
 import { resolveTenantCompany, type TenantCompany } from '@/lib/tenant-company';
 import { signUrl } from '@/lib/storage-signing';
 import { must } from '@/lib/db-write';
+import { jobTimeZone } from '@/lib/time-zone';
 
 type Db = SupabaseClient<any, any, any>;
 
@@ -39,14 +40,8 @@ const DAY = 86_400_000;
 /* ── Formatting ─────────────────────────────────────────────────────────── */
 
 /* Deadlines print with their zone named, so the instant is never ambiguous.
-   The zone is the job's (by state) because that is where bids are due;
-   anywhere unlisted uses the product's default. */
-const ZONE_BY_STATE: Record<string, string> = {
-  AZ: 'America/Phoenix', CA: 'America/Los_Angeles', NV: 'America/Los_Angeles', OR: 'America/Los_Angeles',
-  WA: 'America/Los_Angeles', UT: 'America/Denver', CO: 'America/Denver', NM: 'America/Denver', TX: 'America/Chicago',
-};
-export const DEFAULT_ZONE = 'America/Phoenix';
-export const zoneFor = (state: unknown) => ZONE_BY_STATE[String(state ?? '').trim().toUpperCase()] || DEFAULT_ZONE;
+   The zone is the company's own (the GC set the deadline where they work),
+   else the job's state, else UTC — never a guessed home zone (lib/time-zone). */
 
 const LONG_DATE: Intl.DateTimeFormatOptions = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
 
@@ -365,8 +360,12 @@ export async function storeJacketPdf(db: Db, opts: { packageId: string; tenantId
   // here; they are signed for the PDF only when a new one is actually made.
   const jacket = await assembleJacket(db, { packageId, tenantId, pkg: p, resolveUrl: (u) => u ?? null });
 
-  const [gc, branding] = await Promise.all([resolveTenantCompany(db, tenantId, project), resolveBranding(tenantId)]);
-  const base = jacketToPdfInput(jacket, { gc, owner: ownerOf(project), zone: zoneFor(project.state), preparedOn: now });
+  const [gc, branding, tz] = await Promise.all([
+    resolveTenantCompany(db, tenantId, project), resolveBranding(tenantId), jobTimeZone(db, tenantId, project.state),
+  ]);
+  if (tz.source === 'utc') console.warn(`[bid-jacket-pdf] package ${packageId}: no company zone or job state — dates print in UTC`);
+  const zone = tz.zone;
+  const base = jacketToPdfInput(jacket, { gc, owner: ownerOf(project), zone, preparedOn: now });
   const hash = contentHash(base, branding);
 
   const { data: prev, error: prevErr } = await db
@@ -396,7 +395,7 @@ export async function storeJacketPdf(db: Db, opts: { packageId: string; tenantId
   const anyLink = signedInput.index.some((s) => s.docs.some((d) => d.url));
   const input: BidJacketPdfInput = {
     ...signedInput,
-    linksValidUntil: anyLink ? win.until.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: zoneFor(project.state) }) : null,
+    linksValidUntil: anyLink ? win.until.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: zone }) : null,
   };
 
   const bytes = await generateBidJacket(input, branding);
