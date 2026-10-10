@@ -12,6 +12,7 @@ import { PremiumSurface, ModuleHero, StatStrip, SectionCard, PremiumEmpty, GoldB
 import { OAC_AGENDA } from '@/lib/franchise-template';
 import { localDay } from '@/lib/calendar-day';
 
+import { FlatStyles, RowSkeleton } from '@/components/ui/flat';
 const todayMs = () => Date.parse(localDay()); // This device's day — toISOString() is the UTC day, tomorrow from 7 PM on in Iowa.
 const daysToDue = (d: any) => { if (!d) return null; const t = Date.parse(String(d)); return isNaN(t) ? null : Math.round((t - todayMs()) / 86400000); };
 
@@ -126,7 +127,7 @@ export default function OacPage() {
       </div>
 
       {loading ? (
-        <div style={{ color: C.dim, padding: 40, textAlign: 'center' }}>Loading…</div>
+        <><FlatStyles /><RowSkeleton rows={6} /></>
       ) : tab === 'meetings' ? (
         filteredMeetings.length === 0 ? (
           <SectionCard>

@@ -35,7 +35,7 @@ const ROWS: {
   { feature: 'Lien Waivers (All 50 States)', saguaro: 'Included', procore: 'Add-on', saguaroWin: true, note: 'Saguaro generates state-compliant lien waivers instantly.' },
   { feature: 'Certified Payroll WH-347', saguaro: 'Included', procore: 'Not available', saguaroWin: true, note: 'Procore does not natively generate WH-347 forms.' },
   { feature: 'AI Autopilot / Automation', saguaro: 'Included', procore: 'Limited', saguaroWin: true, note: 'Saguaro automates RFI routing, CO triggers, insurance alerts, and more.' },
-  { feature: 'Mobile Field App', saguaro: 'Free native iOS', procore: 'Native (extra cost)', saguaroWin: true, note: 'Native iOS app — free on TestFlight, App Store release coming soon (Android coming soon).' },
+  { feature: 'Mobile Field App', saguaro: 'Free native iOS', procore: 'Native (extra cost)', saguaroWin: true, note: 'Native iOS app, free on TestFlight; on Android it runs in the browser.' },
   { feature: 'Offline Mode', saguaro: 'Full offline', procore: 'Limited', saguaroWin: true, note: 'Saguaro works without signal — syncs when back online.' },
   { feature: 'Field App Included Free', saguaro: 'Yes', procore: 'No — paid add-on', saguaroWin: true, note: 'Saguaro Control Systems is free for your whole crew — Procore charges for field access.' },
   { feature: 'AI Field Assistant (Sage)', saguaro: 'Included', procore: 'Not available', saguaroWin: true, note: 'Sage answers field questions, drafts RFIs, and surfaces project data.' },

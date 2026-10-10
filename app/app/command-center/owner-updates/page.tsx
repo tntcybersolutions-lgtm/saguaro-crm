@@ -9,6 +9,7 @@ import { PremiumSurface, ModuleHero, StatStrip, SectionCard, PremiumEmpty, GoldB
 import { CheckCircle, Warning, EnvelopeSimple, Buildings } from '@phosphor-icons/react';
 import { localDay } from '@/lib/calendar-day';
 
+import { FlatStyles, RowSkeleton } from '@/components/ui/flat';
 const SEV_WORD: Record<Severity, string> = { green: 'On Track', yellow: 'Needs Attention', red: 'At Risk' };
 const weekEnding = () => { const d = new Date(); return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); };
 
@@ -116,7 +117,7 @@ export default function OwnerUpdatesPage() {
         )}
 
         {loading ? (
-          <div style={{ color: C.dim, padding: 40, textAlign: 'center' }}>Loading…</div>
+          <><FlatStyles /><RowSkeleton rows={6} /></>
         ) : updates.length === 0 ? (
           <SectionCard flat>
             <PremiumEmpty

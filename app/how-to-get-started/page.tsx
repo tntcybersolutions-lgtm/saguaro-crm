@@ -197,7 +197,7 @@ export default function HowToGetStartedPage() {
         <div className="section">
           <div className="section-label">Step 3 (Recommended)</div>
           <h2>Get the Field App on Your Phone</h2>
-          <p className="sub">Saguaro Control Systems is a native iOS app — free on Apple TestFlight while we finish the public App Store release. Your crew gets GPS clock-in, daily logs, photos, and RFIs, fully offline-capable. (Android coming soon.)</p>
+          <p className="sub">Saguaro Control Systems is a native iOS app — free on Apple TestFlight while we finish the public App Store release. Your crew gets GPS clock-in, daily logs, photos, and RFIs, fully offline-capable. On Android, the same app runs in Chrome.</p>
           <div className="device-grid">
             <div className="device-card">
               <div className="icon"><AppleLogo size={22} weight="duotone" color="var(--gold)" /></div>
@@ -214,9 +214,9 @@ export default function HowToGetStartedPage() {
               <div className="icon"><AndroidLogo size={22} weight="duotone" color="var(--gold)" /></div>
               <h4>Android</h4>
               <ol>
-                <li><strong>Coming soon</strong></li>
-                <li>An Android build is on the roadmap</li>
-                <li>For now, open the field app in Chrome at <strong>saguarocontrol.net/field</strong></li>
+                <li>Open Chrome and go to <strong>saguarocontrol.net</strong></li>
+                <li>Sign in with your work email</li>
+                <li>Tap the ⋮ menu → <strong>Add to Home screen</strong></li>
               </ol>
             </div>
             <div className="device-card">

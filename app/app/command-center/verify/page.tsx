@@ -8,6 +8,7 @@ import { C, font, fmtDate, useFranchiseGate, GateLoading, Chip, SearchInput } fr
 import { PremiumSurface, ModuleHero, StatStrip, SectionCard, PremiumEmpty, GoldButton, GhostButton, Pill } from '@/components/ui/premium';
 import { VideoCamera, MapPin, Camera, CheckCircle, XCircle, AirplaneTilt, Globe, House, FilmSlate, Phone, LinkSimple, Plus } from '@phosphor-icons/react';
 
+import { FlatStyles, RowSkeleton } from '@/components/ui/flat';
 type VStatus = 'pending' | 'verified' | 'rejected';
 const STATUS_COLOR: Record<VStatus, string> = { pending: C.gold, verified: C.green, rejected: C.red };
 const STATUS_LABEL: Record<VStatus, string> = { pending: 'Pending', verified: 'Verified', rejected: 'Rejected' };
@@ -102,7 +103,7 @@ export default function VerifyHubPage() {
         </div>
 
         {loading ? (
-          <div style={{ color: C.dim, padding: 40, textAlign: 'center' }}>Loading…</div>
+          <><FlatStyles /><RowSkeleton rows={6} /></>
         ) : filtered.length === 0 ? (
           (verifications as any[]).length === 0 ? (
             <SectionCard>

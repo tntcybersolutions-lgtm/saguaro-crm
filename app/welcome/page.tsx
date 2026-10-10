@@ -90,7 +90,7 @@ export default function WelcomePage() {
                 step: '3',
                 icon: DeviceMobile,
                 title: 'Install on Your Phone',
-                desc: 'Download Saguaro Control Systems free from Apple TestFlight on your iPhone or iPad. Android coming soon.',
+                desc: 'Download Saguaro Control Systems free from Apple TestFlight on your iPhone or iPad. On Android, open it in Chrome.',
                 href: '/get-the-app',
                 cta: 'See Install Guide →',
                 primary: false,
@@ -131,7 +131,7 @@ export default function WelcomePage() {
             {([
               { icon: Laptop, device: 'Desktop / Laptop', how: 'Open your browser → saguarocontrol.net/app' },
               { icon: DeviceMobile, device: 'iPhone / iPad', how: 'Download free on TestFlight' },
-              { icon: AndroidLogo, device: 'Android', how: 'Coming soon' },
+              { icon: AndroidLogo, device: 'Android', how: 'Open saguarocontrol.net in Chrome' },
               { icon: DeviceTablet, device: 'Tablet', how: 'Any browser → works full screen' },
             ] as { icon: Icon; device: string; how: string }[]).map((d, i) => (
               <div key={i}>

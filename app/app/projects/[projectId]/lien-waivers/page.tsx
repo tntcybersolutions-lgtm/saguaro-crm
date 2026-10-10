@@ -12,6 +12,8 @@ import { StatusPill } from '@/components/ui/Status';
 import { openPdf } from '@/components/PdfViewer';
 import { localDay } from '@/lib/calendar-day';
 
+import { inAppFileClick } from '@/lib/media-save';
+import { useToast } from '@/components/Toast';
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)',GREEN='var(--success)',RED='var(--danger)',ORANGE='var(--warning)';
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
 
@@ -117,6 +119,7 @@ function CellIcon({status,pdfUrl,onGenerate}:{status:string|undefined|null,pdfUr
 }
 
 export default function LienWaiversPage() {
+  const { showToast } = useToast();
   const params    = useParams();
   const projectId = params['projectId'] as string;
 
@@ -542,6 +545,7 @@ export default function LienWaiversPage() {
                           <td style={{padding:'10px 14px'}}>
                             {w.pdf_url && (
                               <a href={`/api/files/open?u=${encodeURIComponent(w.pdf_url || '')}`} target="_blank" rel="noreferrer"
+                                onClick={inAppFileClick(`/api/files/open?u=${encodeURIComponent(w.pdf_url || '')}`, 'Lien waiver', (m) => showToast(m, 'error'))}
                                 style={{background:'none',border:`1px solid ${BORDER}`,borderRadius:5,color:GOLD,fontSize:11,padding:'3px 9px',textDecoration:'none',cursor:'pointer'}}>
                                 <span style={{display:'inline-flex',alignItems:'center',gap:5,verticalAlign:'middle'}}><DownloadSimple size={12} weight="regular" color={GOLD} /> Download</span>
                               </a>

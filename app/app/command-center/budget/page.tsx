@@ -8,6 +8,7 @@ import { C, font, fmtMoney, fmtMoneyShort, useFranchiseGate, GateLoading, Chip, 
 import { PremiumSurface, ModuleHero, StatStrip, SectionCard, PremiumEmpty, FlowSteps, GoldButton, GhostButton } from '@/components/ui/premium';
 import { CurrencyDollar, NotePencil, ArrowRight, Plus } from '@phosphor-icons/react';
 
+import { FlatStyles, RowSkeleton } from '@/components/ui/flat';
 const CO_STAGES: Record<string, { label: string; color: string }> = {
   draft: { label: 'Issued', color: C.dim }, pricing: { label: 'GC Pricing', color: '#5AC8FA' },
   pm_review: { label: 'PM Review', color: C.blue }, architect_review: { label: 'Architect Review', color: 'var(--warning)' },
@@ -89,7 +90,7 @@ export default function BudgetPage() {
 
       {tab === 'cos' && adding && <COForm projects={projects} onDone={() => setAdding(false)} />}
 
-      {loading ? <div style={{ color: C.dim, padding: 40, textAlign: 'center' }}>Loading…</div>
+      {loading ? <><FlatStyles /><RowSkeleton rows={6} /></>
       : tab === 'budget' ? (
         (budgets as any[]).length === 0 ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.4fr) minmax(250px,1fr)', gap: 14, alignItems: 'start' }}>

@@ -119,6 +119,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return () => window.clearInterval(id);
   }, [loadMyWorkCount]);
 
+  // iPhone app: every "Export" download goes to the share sheet instead of
+  // being silently ignored by the web view. No-op in a browser.
+  useEffect(() => {
+    import('@/lib/native-downloads').then(({ installNativeDownloads }) => installNativeDownloads())
+      .catch((e) => console.error('native downloads', e));
+  }, []);
+
   // iPhone app: tapping an alert opens the page it's about. No-op in a browser
   // (push-sw.js handles taps there).
   useEffect(() => {

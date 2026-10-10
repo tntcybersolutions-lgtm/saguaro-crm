@@ -7,6 +7,7 @@ import { C, font, fmtDate, useFranchiseGate, GateLoading } from '@/components/fr
 import { PremiumSurface, ModuleHero, StatStrip, SectionCard, PremiumEmpty, GoldButton, DangerButton, Pill, ghostButtonStyle } from '@/components/ui/premium';
 import { LinkSimple, CheckCircle, Buildings, Eye } from '@phosphor-icons/react';
 
+import { FlatStyles, RowSkeleton } from '@/components/ui/flat';
 export default function PortalsPage() {
   const { ready, loading: gateLoading } = useFranchiseGate();
   const { portals, loading } = usePortals();
@@ -84,7 +85,7 @@ export default function PortalsPage() {
         </SectionCard>
 
         {loading ? (
-          <div style={{ color: C.dim, padding: 40, textAlign: 'center' }}>Loading…</div>
+          <><FlatStyles /><RowSkeleton rows={6} /></>
         ) : list.length === 0 ? (
           <SectionCard flat>
             <PremiumEmpty

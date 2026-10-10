@@ -108,7 +108,7 @@ function bidCandidates(bids: BidRow[]): Candidate[] {
       date: first.due, amount: missing,
       parts,
       action: m > 0
-        ? { label: m > 1 ? 'Turn links on' : 'Turn the link on', href: off[0].jacketHref }
+        ? { label: m > 1 ? 'Turn links on' : 'Turn the link on', href: off[0].jacketHref, portalIds: off.map(r => r.id) }
         : { label: 'Remind bidders', href: most.href },
     });
   }

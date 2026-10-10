@@ -9,6 +9,7 @@ import { useRisks, useEscalations, useLongLead, useMilestones } from '@/lib/hook
 import { computeRisk, computeLongLead, milestoneSlip } from '@/lib/franchise';
 import { PremiumSurface, ModuleHero, StatStrip, SectionCard } from '@/components/ui/premium';
 import { inspectionOutcome } from '@/lib/inspection-result';
+import { FlatStyles, RowSkeleton } from '@/components/ui/flat';
 import {
   Warning, SquaresFour, ChartLineUp, Wallet, Bank, ShieldWarning, Siren, Package, FlagCheckered,
   NotePencil, UsersThree, PaperPlaneTilt, Truck, AddressBook, ListChecks, LinkSimple, MapPin,
@@ -128,7 +129,7 @@ export default function CommandCenterPage() {
   const needsAttention = summary.red + summary.yellow;
 
   // Gate: while checking, show nothing heavy; if not entitled, we're redirecting.
-  if (gateLoading) return <div style={{ padding: 48, textAlign: 'center', color: C.dim, fontFamily: font }}>Loading…</div>;
+  if (gateLoading) return <div style={{ padding: 16 }}><FlatStyles /><RowSkeleton rows={6} /></div>;
   if (!enabled) return null;
 
   return (

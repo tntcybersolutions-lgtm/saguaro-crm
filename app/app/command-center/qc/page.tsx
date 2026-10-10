@@ -7,6 +7,7 @@ import { C, font, useFranchiseGate, GateLoading } from '@/components/franchise/k
 import { PremiumSurface, ModuleHero, StatStrip, SectionCard, PremiumEmpty } from '@/components/ui/premium';
 import { MagnifyingGlass, Check } from '@phosphor-icons/react';
 
+import { FlatStyles, RowSkeleton } from '@/components/ui/flat';
 export default function QCPage() {
   const { ready, loading: gateLoading } = useFranchiseGate();
   const { items, loading } = useQC();
@@ -51,7 +52,7 @@ export default function QCPage() {
         />
 
         {loading ? (
-          <div style={{ color: C.dim, padding: 40, textAlign: 'center' }}>Loading…</div>
+          <><FlatStyles /><RowSkeleton rows={6} /></>
         ) : trades.list.length === 0 ? (
           <SectionCard flat>
             <PremiumEmpty

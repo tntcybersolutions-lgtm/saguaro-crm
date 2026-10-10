@@ -33,12 +33,12 @@ const INTEGRATIONS = [
     status: 'Live',
     accent: '#2CFF7A',
     abbr: 'QB',
-    desc: 'Bidirectional sync of budgets, pay applications, and change orders with QuickBooks Online and Desktop. Cost codes map to your chart of accounts so AIA G702/G703 draws post straight to your books.',
+    desc: 'Approved AIA G702/G703 pay applications go to QuickBooks Online as invoices to the job owner, and your subcontractors as vendors — entered once in Saguaro, never typed twice.',
     bullets: [
-      'Two-way sync of pay apps & change orders',
-      'Cost-code to chart-of-accounts mapping',
-      'Vendor & customer record matching',
-      'Retention and lien-release tracking',
+      'Pay apps sent as invoices to the job owner',
+      'Subcontractors sent as vendors',
+      'Matches customers & vendors already in QuickBooks',
+      'Never sends the same pay app twice',
     ],
   },
   {

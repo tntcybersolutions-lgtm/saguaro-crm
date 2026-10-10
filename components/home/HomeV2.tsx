@@ -26,6 +26,7 @@ import type { FlatHome } from '@/lib/home/flat-build';
 import HomeHeader from './HomeHeader';
 import { ActivitySection, AttentionSection, BiddingSection, JobsSection, LinksSection, MoneySection, Prose, WorkRowsSection } from './HomeSections';
 import { HOME_CSS } from './home-css';
+import { STATUS_HEADER, reasonFromResponse, isNetworkError, NO_SIGNAL_DETAIL } from '@/lib/ui/status-fetch';
 
 export interface HomePayload {
   context: {
@@ -103,6 +104,34 @@ function HomeInner() {
     } finally { setSaving(false); }
   };
 
+  /* The brief's "Turn links on" does the switch here (the same route My Work's
+     Turn on uses) instead of only opening the jacket. */
+  const [turning, setTurning] = useState(false);
+  const turnLinksOn = async (ids: string[]) => {
+    setTurning(true); setSaveNote(null);
+    let on = 0;
+    let why: string | null = null;
+    try {
+      for (const id of ids) {
+        const r = await fetch(`/api/bid-packages/${id}/portal`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', [STATUS_HEADER]: "Turning on the bid link|Bid link on|Couldn't turn on the bid link" },
+          body: JSON.stringify({ enabled: true }),
+        });
+        if (r.ok) on++; else why = await reasonFromResponse(r);
+      }
+    } catch (e) {
+      why = isNetworkError(e) ? NO_SIGNAL_DETAIL : 'Something stopped it before it reached the server. Try again.';
+    } finally {
+      setTurning(false);
+    }
+    const left = ids.length - on;
+    setSaveNote(why == null
+      ? (ids.length > 1 ? 'Bid links on — your bidders can open the jackets now.' : 'Bid link on — your bidders can open the jacket now.')
+      : `${on ? `${on} of ${ids.length} bid links on. ` : ''}Couldn't turn on ${left > 1 ? `${left} bid links` : 'the bid link'}: ${why}`);
+    void mutate();
+  };
+
   const ctx = data?.context || null;
   const projectId = sp.get('project');
   const activeProjects = projects.filter(p => !CLOSED.includes(String(p.status || '').toLowerCase()));
@@ -129,7 +158,13 @@ function HomeInner() {
     const review = (data.ticker?.items || []).filter(t => t.tone === 'review');
     const done = (data.ticker?.items || []).filter(t => t.tone === 'green' && t.id !== 'clear');
     const render: Record<SectionKey, React.ReactNode> = {
-      brief: f?.brief ? <Brief action={f.brief.action || undefined}><Prose parts={f.brief.parts} /></Brief> : null,
+      brief: f?.brief ? (
+        <Brief action={f.brief.action?.portalIds?.length
+          ? { label: turning ? 'Turning on…' : f.brief.action.label, onClick: () => { if (!turning) void turnLinksOn(f.brief.action!.portalIds!); } }
+          : f.brief.action || undefined}>
+          <Prose parts={f.brief.parts} />
+        </Brief>
+      ) : null,
       strip: f?.strip?.length ? (
         <NumberStrip items={f.strip.map(s => ({
           value: <span title={s.note}>{s.value ?? '—'}</span>,

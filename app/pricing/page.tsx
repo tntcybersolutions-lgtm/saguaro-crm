@@ -54,7 +54,7 @@ const FAQS = [
   { q: 'What is annual billing and how much do I save?', a: `Annual billing locks in your rate for 12 months and saves you up to 13%: Starter drops from $${STARTER.priceMo} to $${STARTER.priceYr}/mo ($${(STARTER.priceMo - STARTER.priceYr) * 12} saved), Professional drops from $${PROFESSIONAL.priceMo} to $${PROFESSIONAL.priceYr}/mo ($${((PROFESSIONAL.priceMo - PROFESSIONAL.priceYr) * 12).toLocaleString()} saved). Billed as one upfront payment.` },
   { q: 'Can I cancel anytime?', a: 'Yes. Cancel anytime from your billing settings. Monthly plans retain access until end of period. Annual plans are non-refundable but can be paused.' },
   { q: 'What is the White Label add-on?', a: 'Your GC firm or software company can use Saguaro under your own brand, domain, and logo. Each of your clients receives their own sandboxed account. Available as an add-on or included in Enterprise.' },
-  { q: 'Do you integrate with QuickBooks?', a: `QuickBooks sync is available as an add-on (${QB_PRICE}) or included in Enterprise. Budget line items, pay applications, and change orders sync bidirectionally with your QuickBooks company file.` },
+  { q: 'Do you integrate with QuickBooks?', a: `QuickBooks sync is available as an add-on (${QB_PRICE}) or included in Enterprise. Approved pay applications go to QuickBooks Online as invoices to the job owner, and subcontractors as vendors.` },
 ];
 
 function CheckIcon({ size = 16, color = C.green }: { size?: number; color?: string }) {

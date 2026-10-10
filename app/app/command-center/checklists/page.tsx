@@ -7,6 +7,7 @@ import { C, font, useFranchiseGate, GateLoading } from '@/components/franchise/k
 import { PremiumSurface, ModuleHero, StatStrip, SectionCard, PremiumEmpty, Pill } from '@/components/ui/premium';
 import { CheckCircle, Check, ListChecks, Flag } from '@phosphor-icons/react';
 
+import { FlatStyles, RowSkeleton } from '@/components/ui/flat';
 const PHASE_ORDER = CHECKLIST_TEMPLATE.map((g) => g.phase);
 
 export default function ChecklistsPage() {
@@ -76,7 +77,7 @@ export default function ChecklistsPage() {
         ]} />
       )}
 
-      {loading ? <div style={{ color: C.dim, padding: 40, textAlign: 'center' }}>Loading…</div>
+      {loading ? <><FlatStyles /><RowSkeleton rows={6} /></>
       : groups.length === 0 ? (
         <SectionCard flat>
           <PremiumEmpty icon={<CheckCircle size={32} weight="duotone" color={C.gold} />} title="No checklist for this site"
