@@ -14,23 +14,18 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
       .eq('project_id', params.projectId)
       .eq('tenant_id', user.tenantId)
       .order('name');
-    if (error) {
-      // Fallback: try team table
-      const { data: team } = await supabase
-        .from('project_team')
-        .select('*')
-        .eq('project_id', params.projectId)
-        .eq('tenant_id', user.tenantId)
-        .order('name');
-      return NextResponse.json({ contacts: team || [] });
-    }
+    /* This used to answer a failed contacts read by reading project_team
+       instead and returning 200. That was an error handler, not a "no rows
+       here, look there" design: an empty contacts table returned [] and never
+       reached it. So a real failure showed the job's signed-in team members as
+       if they were its directory (owner, architect, engineers), and the
+       project_team read's own error was dropped, which could turn a failure
+       into an empty directory. The directory is contacts; a failed read is an
+       error the page shows with a retry. */
+    if (error) throw error;
     return NextResponse.json({ contacts: data || [] });
   } catch (e) {
-    const detail = e instanceof Error ? e.message : String(e);
-    console.error('[projects/[projectId]/directory] read failed:', detail);
-    // A failed read must not render as an empty result — return a real
-    // status so the UI can show an error state with a retry.
-    return apiError('projects/projectId/directory', e, 'Failed to load contacts');
+    return apiError('projects/projectId/directory', e, 'Could not load the job directory. Please try again.');
   }
 }
 
