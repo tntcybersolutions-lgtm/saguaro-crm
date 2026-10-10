@@ -355,6 +355,11 @@ export function StatCard({
       onClick={onClick}
       className={interactive ? 'pmHover' : undefined}
       aria-pressed={onClick ? active : undefined}
+      // A card that runs code (filter, tab switch) is a button to keyboards
+      // and screen readers; inside an <a> the link already is.
+      role={onClick && !href ? 'button' : undefined}
+      tabIndex={onClick && !href ? 0 : undefined}
+      onKeyDown={onClick && !href ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } } : undefined}
       style={{
         position: 'relative', overflow: 'hidden',
         background: ring
