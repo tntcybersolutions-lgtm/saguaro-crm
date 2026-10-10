@@ -141,6 +141,9 @@ export type StatItem = {
   tone?: 'default' | 'good' | 'warn' | 'bad';
   href?: string;
   onClick?: () => void;
+  /** A tile that filters the list below: true while its filter is the one
+   *  showing (aria-pressed, gold underline). Tapping it again changes nothing. */
+  active?: boolean;
   /** Colored icon tile (neon glass) — a phosphor icon at 14–15px. */
   icon?: React.ReactNode;
 };
@@ -154,7 +157,7 @@ const TONE_COLOR: Record<NonNullable<StatItem['tone']>, string | undefined> = {
   bad: STATUS_COLORS.overdue.color,
 };
 
-export function StatTile({ label, value, sub, tone = 'default', href, onClick, icon }: StatItem) {
+export function StatTile({ label, value, sub, tone = 'default', href, onClick, active, icon }: StatItem) {
   const inner = (
     <>
       <span className="k-stat-top">
@@ -166,7 +169,7 @@ export function StatTile({ label, value, sub, tone = 'default', href, onClick, i
     </>
   );
   if (href) return <a className="k-stat" data-tone={tone} href={href}>{inner}</a>;
-  if (onClick) return <button type="button" className="k-stat" data-tone={tone} onClick={onClick}>{inner}</button>;
+  if (onClick) return <button type="button" className="k-stat" data-tone={tone} onClick={onClick} aria-pressed={active === undefined ? undefined : active}>{inner}</button>;
   return <div className="k-stat" data-tone={tone}>{inner}</div>;
 }
 

@@ -252,13 +252,24 @@ export default function SchedulePage(){
 
   // Dead-space kill (spec 4.1): an empty schedule auto-opens the create panel —
   // the composer is the zero state. One-shot per visit so Cancel sticks.
+  // Not on a phone: there the panel is a full-screen sheet, and opening it
+  // unasked hid the whole page (and its Gantt / List / Add Task) on arrival.
+  // The empty state's Add Task button is one tap away instead.
   const autoOpenedRef=useRef(false);
   useEffect(()=>{
     if(!loading&&!loadError&&tasks.length===0&&mode===null&&!autoOpenedRef.current){
       autoOpenedRef.current=true;
-      openCreate();
+      const phone=typeof window!=='undefined'&&window.matchMedia('(max-width: 767px)').matches;
+      if(!phone) openCreate();
     }
   },[loading,loadError,tasks.length,mode]);
+  // Escape closes the task panel (on a phone it covers the whole screen).
+  useEffect(()=>{
+    if(mode===null) return;
+    const onKey=(e:KeyboardEvent)=>{ if(e.key==='Escape'&&!e.defaultPrevented){ setSelected(null); setMode(null); } };
+    window.addEventListener('keydown',onKey);
+    return ()=>window.removeEventListener('keydown',onKey);
+  },[mode]);
 
   function openCreate(){setForm({...EMPTY});setDuration('');setAuto({});setMode('create');setSelected(null);}
   function openEdit(task:any){
