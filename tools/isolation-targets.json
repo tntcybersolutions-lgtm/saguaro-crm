@@ -1,16 +1,151 @@
 {
-  "_what": "Record ids that belong to OTHER companies than the App Review demo company (Sonoran Ridge Builders). The walk signs in as the demo company and asks for each one; every answer must be a refusal. Ids only; refreshed from the database by the session that maintains the walk.",
-  "refreshed": "2026-10-10",
-  "projects": ["818b0efb-7957-453e-a259-b860ea91932c", "df61cca6-5f73-40d5-9c48-fbc063778bda", "c64f209e-3bc5-4892-b058-89860a392cee", "a2aad352-02ef-41ad-9012-a8bf442118a4", "25b4f926-57b1-403a-967b-4e2bb9e6693d", "c0728312-f1a0-47f3-870d-9ad9d72f7e00"],
-  "records": {
-    "daily-logs": ["fe85a732-ae1b-4ee4-82f2-d59b0a534118", "3a31ab77-71e4-4aad-b65c-5bda3a10dfbd"],
-    "rfis": ["e51523a8-d5da-40c0-a4ef-5572e831694b", "770c0fa7-bbb4-4192-8ae0-bcb813fb9b5f"],
-    "change-orders": ["4bd50a58-90a5-4ddd-b66e-54452f1d67ba", "461cda48-8c9a-457c-96f5-14314b072994"],
-    "pay-apps": ["ce604fc1-0cd7-42a6-84db-5b13c3a6a5ca", "837d1308-9a0d-4e51-8a0a-ae1cbf70aef1"],
-    "contracts": ["7532c1de-1eea-406c-a952-4bc47abd629b", "c79770e8-0169-4d19-84b7-c5e151ddb642"],
-    "inspections": ["a74aae28-8ca0-42ed-a71c-cadbbf22f920", "50bedcfe-3dc7-49fe-9b3a-28c1c07fb813"],
-    "invoices": ["7353b33f-1b60-4037-b19e-a2c14e079165", "3db88e87-0059-46fd-b3e4-6fbe2a167002"],
-    "bid-packages": ["0a57ff68-3685-4a97-9a4a-4042b2d8a1d9", "63104463-0ce2-46df-99be-f78bbb8e55c0"],
-    "takeoff": ["314023ac-ef35-4f09-9dc2-095b4b5a5f46", "fd7c2383-8fca-42dc-b641-bc57508e6a90"]
+ "_what": "Record ids from five companies, each with the company (tenant) that owns it. The walk signs in as one company (the real one or the demo one), reads its own tenant id from /api/auth/me, skips that company's ids, and asks for every other one; every answer must be a refusal. Ids only; refreshed from the database by the session that maintains the walk.",
+ "refreshed": "2026-10-10",
+ "targets": [
+  {
+   "kind": "bid-packages",
+   "id": "d8931614-ea0d-49b6-889e-d60eb0326a1a",
+   "tenant": "4a3342d3-bed9-4cf4-b2ae-d92961841878"
+  },
+  {
+   "kind": "bid-packages",
+   "id": "5becb40a-4fdb-4ffa-9f0d-93fc03f3e73a",
+   "tenant": "692d8793-4d9f-4c43-a935-bf56cc637553"
+  },
+  {
+   "kind": "bid-packages",
+   "id": "e85b80b9-cf99-4ef4-b759-1ad8e7bc7037",
+   "tenant": "841b5d9c-a363-475c-ac41-2620ac5dda0b"
+  },
+  {
+   "kind": "change-orders",
+   "id": "b14d1de1-f538-4a33-87b7-d6e701f89b39",
+   "tenant": "4a3342d3-bed9-4cf4-b2ae-d92961841878"
+  },
+  {
+   "kind": "change-orders",
+   "id": "0fc0240b-11fa-4f19-968d-b9d2a03dd9a6",
+   "tenant": "692d8793-4d9f-4c43-a935-bf56cc637553"
+  },
+  {
+   "kind": "contracts",
+   "id": "c5f9c944-6947-4121-9122-552203661fad",
+   "tenant": "4a3342d3-bed9-4cf4-b2ae-d92961841878"
+  },
+  {
+   "kind": "contracts",
+   "id": "65418fe8-674b-4856-b947-8f0f08f67daf",
+   "tenant": "692d8793-4d9f-4c43-a935-bf56cc637553"
+  },
+  {
+   "kind": "contracts",
+   "id": "5cad8bd5-1600-42c1-929d-a3da8c432b5d",
+   "tenant": "841b5d9c-a363-475c-ac41-2620ac5dda0b"
+  },
+  {
+   "kind": "daily-logs",
+   "id": "e2370774-efc6-4c0d-9a8f-b01d21e21160",
+   "tenant": "4a3342d3-bed9-4cf4-b2ae-d92961841878"
+  },
+  {
+   "kind": "daily-logs",
+   "id": "545d8f6b-8175-474c-a32b-759aea5cdffd",
+   "tenant": "692d8793-4d9f-4c43-a935-bf56cc637553"
+  },
+  {
+   "kind": "inspections",
+   "id": "7654a73e-e395-40bb-9041-7bab1c488973",
+   "tenant": "4a3342d3-bed9-4cf4-b2ae-d92961841878"
+  },
+  {
+   "kind": "inspections",
+   "id": "23279107-8ecb-4a4d-b516-9af30d1fcb86",
+   "tenant": "841b5d9c-a363-475c-ac41-2620ac5dda0b"
+  },
+  {
+   "kind": "invoices",
+   "id": "83aa8694-e417-4350-baa0-dee939eaa1d6",
+   "tenant": "4a3342d3-bed9-4cf4-b2ae-d92961841878"
+  },
+  {
+   "kind": "invoices",
+   "id": "ab120fe0-5151-4f88-ad70-a7c5d69b692f",
+   "tenant": "692d8793-4d9f-4c43-a935-bf56cc637553"
+  },
+  {
+   "kind": "pay-apps",
+   "id": "cb687bfd-38b4-4d28-bf5d-b608c6d7ec65",
+   "tenant": "4a3342d3-bed9-4cf4-b2ae-d92961841878"
+  },
+  {
+   "kind": "pay-apps",
+   "id": "3801c7f4-c65a-459f-ae09-e7455b368450",
+   "tenant": "692d8793-4d9f-4c43-a935-bf56cc637553"
+  },
+  {
+   "kind": "pay-apps",
+   "id": "09b429bb-4cd8-4a5d-ad2b-82f1afab4dbc",
+   "tenant": "841b5d9c-a363-475c-ac41-2620ac5dda0b"
+  },
+  {
+   "kind": "projects",
+   "id": "50f77a5f-9d49-4a2a-86ac-1a9b9f2f1afc",
+   "tenant": "4a3342d3-bed9-4cf4-b2ae-d92961841878"
+  },
+  {
+   "kind": "projects",
+   "id": "335c0ea3-66c0-49a5-970e-06654c845953",
+   "tenant": "692d8793-4d9f-4c43-a935-bf56cc637553"
+  },
+  {
+   "kind": "projects",
+   "id": "055a83ba-c6cf-4415-a6eb-1ef79638a33e",
+   "tenant": "841b5d9c-a363-475c-ac41-2620ac5dda0b"
+  },
+  {
+   "kind": "projects",
+   "id": "1a80b0a8-c80e-4060-ad9f-44ca41ec5a4a",
+   "tenant": "abb3a382-c593-44c4-ad2a-7fbbf2574c96"
+  },
+  {
+   "kind": "projects",
+   "id": "de6d5b98-26d2-441e-9b23-95f1a649b6fa",
+   "tenant": "b2e2e711-845a-4684-8354-75538fc725cd"
+  },
+  {
+   "kind": "rfis",
+   "id": "e2bd03e2-69d8-4bde-8ff8-649b46363336",
+   "tenant": "4a3342d3-bed9-4cf4-b2ae-d92961841878"
+  },
+  {
+   "kind": "rfis",
+   "id": "c86ea426-5dd4-41d4-945d-bf78b20c412e",
+   "tenant": "692d8793-4d9f-4c43-a935-bf56cc637553"
+  },
+  {
+   "kind": "takeoff",
+   "id": "2702719b-a8f4-4b19-bbde-b9031b93f3bb",
+   "tenant": "4a3342d3-bed9-4cf4-b2ae-d92961841878"
+  },
+  {
+   "kind": "takeoff",
+   "id": "3e381e89-103e-4d25-9148-29452fc32c6e",
+   "tenant": "692d8793-4d9f-4c43-a935-bf56cc637553"
+  },
+  {
+   "kind": "takeoff",
+   "id": "dd964fc7-cba4-45f9-8b27-b53895330c82",
+   "tenant": "841b5d9c-a363-475c-ac41-2620ac5dda0b"
+  },
+  {
+   "kind": "takeoff",
+   "id": "dc3ff37f-6424-4cda-892e-6ea0c0262d14",
+   "tenant": "abb3a382-c593-44c4-ad2a-7fbbf2574c96"
+  },
+  {
+   "kind": "takeoff",
+   "id": "eadc44fd-630e-412f-b96a-7246c615b135",
+   "tenant": "b2e2e711-845a-4684-8354-75538fc725cd"
   }
+ ]
 }

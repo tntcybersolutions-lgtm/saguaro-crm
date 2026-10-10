@@ -564,9 +564,11 @@ async function walk() {
     // "Load failed" — the walker leaving, not the app failing.
     page.on('pageerror', (e) => { const m = String(e.message || e); if (!/due to access control checks|^AbortError|Fetch is aborted|The operation was aborted|^(TypeError: )?Load failed$/i.test(m)) pageErrs.push(m.slice(0, 180)); });
     let popups = 0, dialogs = 0, downloads = 0;
-    ctx.on('page', () => { popups++; });
+    // A popup or a download each count as the control working; neither is kept —
+    // five hours of open tabs and saved exports filled the runner's disk (run 80).
+    ctx.on('page', (p) => { popups++; setTimeout(() => p.close().catch(() => {}), 1500); });
     page.on('dialog', (d) => { dialogs++; d.dismiss().catch(() => {}); });
-    page.on('download', () => { downloads++; });
+    page.on('download', (d) => { downloads++; d.delete().catch(() => {}); });
     const open = async () => {
       const r = await page.goto(SITE + route, { waitUntil: 'networkidle', timeout: 45000 }).catch(() => null);
       await page.waitForTimeout(1200);
@@ -597,7 +599,7 @@ async function walk() {
           const chrome = !!el.closest('header, nav, aside, footer, [class*="bottom-nav"], [class*="BottomNav"], [class*="topbar"], [class*="TopBar"], [class*="sidebar"], [class*="Sidebar"]');
           el.setAttribute('data-walk', String(i));
           out.push({ i, label, tag: el.tagName.toLowerCase(), href: el.getAttribute('href'), disabled: el.disabled || el.getAttribute('aria-disabled') === 'true', chrome,
-            selected: (el.getAttribute('role') === 'tab' && el.getAttribute('aria-selected') === 'true') || el.getAttribute('aria-current') === 'page', target: el.getAttribute('target'), html: el.outerHTML.slice(0, 160) });
+            selected: (el.getAttribute('role') === 'tab' && el.getAttribute('aria-selected') === 'true') || el.getAttribute('aria-current') === 'page' || el.getAttribute('aria-pressed') === 'true', target: el.getAttribute('target'), html: el.outerHTML.slice(0, 160) });
           i++;
         }
         return out;
@@ -983,7 +985,7 @@ async function writeWalk(pw, device, session, outDir, real) {
     page.on('requestfailed', (q) => { if (isWrite(q)) net.writes.push({ m: q.method(), u: short(q.url()), s: 0 }); });
     page.on('pageerror', (e) => net.errs.push(String(e.message || e).slice(0, 160)));
     page.on('popup', (p) => { net.popups.push(p.url()); p.close().catch(() => {}); });
-    page.on('download', () => { net.downloads++; });
+    page.on('download', (d) => { net.downloads++; d.delete().catch(() => {}); });
     page.on('filechooser', async (fc) => {
       net.chooser++;
       const accept = ((await fc.element().getAttribute('accept').catch(() => '')) || '').toLowerCase();
@@ -1615,7 +1617,7 @@ async function breakIn(pw, session, outDir) {
   let own = [];
   try { const d = JSON.parse(mine.text); own = (d.projects || d.data || []).map((p) => p.id); } catch { /* not JSON */ }
   const control = own[0] ? await get(`/api/projects/${own[0]}`) : { status: 0, text: '' };
-  const valid = mine.status === 200 && own.length > 0 && control.status === 200 && control.text.includes(own[0]);
+  const validControl = mine.status === 200 && own.length > 0 && control.status === 200 && control.text.includes(own[0]);
   const verdict = (id, res) => {
     if (res.status === 0) return { pass: null, note: `no answer (${res.err || 'network'})` };
     if ([400, 401, 403, 404, 405, 410, 422].includes(res.status)) return { pass: true, note: `refused (${res.status})` };
@@ -1624,30 +1626,37 @@ async function breakIn(pw, session, outDir) {
     if (res.text.includes(id)) return { pass: false, note: `LEAK — ${res.status} and the answer contains the other company's id` };
     return { pass: true, note: `${res.status} with none of the other company's rows` };
   };
+  // The signed-in company (real or demo) is read from the session, never assumed:
+  // its own ids are skipped, everyone else's must be refused.
+  const me = await get('/api/auth/me');
+  let myTenant = '';
+  try { myTenant = JSON.parse(me.text).tenantId || ''; } catch { /* not JSON */ }
   const ownSet = new Set(own);
-  for (const pid of targets.projects || []) {
-    if (ownSet.has(pid)) { rows.push({ url: `/api/projects/:other${''}`, pass: null, note: 'skipped — that job belongs to the signed-in company' }); continue; }
-    for (const suffix of PROJECT_PROBES) {
-      const res = await get(`/api/projects/${pid}${suffix}`);
-      rows.push({ url: `/api/projects/:other${suffix}`, ...verdict(pid, res) });
-    }
-    for (const q of PROJECT_QUERY_PROBES) {
-      const res = await get(`${q}${pid}`);
-      rows.push({ url: `${q}:other`, ...verdict(pid, res) });
-    }
-  }
-  for (const [kind, ids] of Object.entries(targets.records || {})) {
-    for (const id of ids || []) {
+  const list = Array.isArray(targets.targets) ? targets.targets : [];
+  const theirs = list.filter((x) => myTenant && x.tenant !== myTenant && !ownSet.has(x.id));
+  const skipped = list.length - theirs.length;
+  for (const { kind, id } of theirs) {
+    if (kind === 'projects') {
+      for (const suffix of PROJECT_PROBES) {
+        const res = await get(`/api/projects/${id}${suffix}`);
+        rows.push({ url: `/api/projects/:other${suffix}`, ...verdict(id, res) });
+      }
+      for (const q of PROJECT_QUERY_PROBES) {
+        const res = await get(`${q}${id}`);
+        rows.push({ url: `${q}:other`, ...verdict(id, res) });
+      }
+    } else {
       const res = await get(`/api/${kind}/${id}`);
       rows.push({ url: `/api/${kind}/:other`, ...verdict(id, res) });
     }
   }
   await api.dispose();
+  const valid = validControl && !!myTenant && theirs.length > 0;
   const leaks = rows.filter((r) => r.pass === false);
   const errors = rows.filter((r) => /server error/.test(r.note));
   const lines = [
     '# Break-in test — one company asking for another company\'s data', '',
-    `Signed in as the demo company. ${valid ? 'Control passed: it can read its own job, so a refusal below is real.' : '**CONTROL FAILED — the test account could not read its own job, so these results prove nothing.**'}`, '',
+    `Signed in as company \`${myTenant ? myTenant.slice(0, 8) : 'unknown'}…\`. ${valid ? 'Control passed: it can read its own job, so a refusal below is real.' : '**CONTROL FAILED — the test account could not read its own job or its company id, so these results prove nothing.**'} ${skipped} of ${list.length} target records belong to the signed-in company and were skipped.`, '',
     `**${rows.length} requests · ${leaks.length} leaks · ${rows.filter((r) => r.pass).length} refused / empty · ${errors.length} refused with a server error**`, '',
     '| Request | Result |', '|---|---|',
     ...rows.map((r) => `| \`${r.url}\` | ${r.pass === false ? '❌ ' : r.pass ? '✅ ' : '⚠️ '}${r.note} |`),
