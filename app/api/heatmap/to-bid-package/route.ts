@@ -100,9 +100,10 @@ export async function POST(req: NextRequest) {
   const pkgId = (pkg as any).id;
   if (lineItems.length) {
     const { error: itemsErr } = await db.from('bid_package_items').insert(
-      lineItems.map((item) => ({
+      lineItems.map((item, index) => ({
         tenant_id: user.tenantId,
         bid_package_id: pkgId,
+        sort_order: index, // materials, cabling, then labor — the bid form's order
         description: item.description,
         quantity: item.quantity,
         unit: item.unit,

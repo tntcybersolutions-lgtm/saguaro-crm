@@ -40,6 +40,8 @@ export type Drift = {
   added: Array<{ section: string; name: string }>;
   removed: Array<{ section: string; name: string }>;
   revised: Array<{ section: string; name: string; from: string | null; to: string | null }>;
+  /** Written parts edited since issue — instructions, scope, line items, insurance, dates. */
+  changed?: Array<{ section: string; name: string }>;
   issuedVersion: number | null;
   issuedAt: string | null;
 };
@@ -168,7 +170,7 @@ export default function BidJacketAssembly({
     }
   }
 
-  const driftCount = drift ? drift.added.length + drift.removed.length + drift.revised.length : 0;
+  const driftCount = drift ? drift.added.length + drift.removed.length + drift.revised.length + (drift.changed?.length ?? 0) : 0;
 
   return (
     <SectionCard
@@ -227,6 +229,9 @@ export default function BidJacketAssembly({
                 ))}
                 {drift.removed.slice(0, 4).map((d, i) => (
                   <li key={`x${i}`}>Removed <strong>{d.name}</strong><span style={{ color: DIM }}> · {d.section}</span></li>
+                ))}
+                {(drift.changed ?? []).map((d, i) => (
+                  <li key={`c${i}`}>Edited <strong>{d.name}</strong><span style={{ color: DIM }}> · {d.section}</span></li>
                 ))}
               </ul>
             </div>
