@@ -43,6 +43,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       packageId: id,
       tenantId: user.tenantId,
       pkg: p,
+      // The GC's own view carries the whole conversation; bidders never get it.
+      includeCorrespondence: true,
       /* Private buckets hand out expiring links, so documents open through the
          signing proxy rather than by their stored URL. */
       resolveUrl: (u) => (u ? `/api/files/open?u=${encodeURIComponent(u)}` : null),
