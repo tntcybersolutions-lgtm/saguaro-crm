@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { LOCAL_DAY_HEADER, daysUntilDay, plausibleToday } from '@/lib/calendar-day';
+import { fileNameFromUrl } from '@/lib/sub-portal-view';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,18 +45,6 @@ function fmtBytes(n: number | null): string {
     i++;
   }
   return `${i === 0 || v >= 10 ? Math.round(v) : v.toFixed(1)} ${units[i]}`;
-}
-
-function basename(url: string | null): string | null {
-  if (!url) return null;
-  try {
-    const clean = url.split('?')[0].split('#')[0];
-    const parts = clean.split('/');
-    const last = decodeURIComponent(parts[parts.length - 1] || '');
-    return last || null;
-  } catch {
-    return null;
-  }
 }
 
 function normalizeDocType(dt: string): string {
@@ -216,7 +205,9 @@ export async function GET(req: NextRequest) {
         docType: normalizeDocType((row.doc_type as string) || ''),
         status: complianceStatus((row.expiry_date as string) ?? null, hasFile, today),
         expirationDate: (row.expiry_date as string) ?? null,
-        fileName: basename((row.file_url as string) ?? null),
+        // The file's own name: portal uploads are stored as "<13-digit upload
+        // time>-<name>", and that stamp used to show on this screen.
+        fileName: fileNameFromUrl((row.file_url as string) ?? null) || null,
         uploadedDate: (row.created_at as string) ?? null,
       };
     });
