@@ -154,8 +154,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
       })),
       alerts: (alerts || []).map((a: any) => ({ ...a, title: a.alert_type, message: a.body })),
     });
-  } catch {
-    return NextResponse.json({ error: 'Failed to load project' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/projectId GET', e, "Couldn't load this job. Please try again.");
   }
 }
 
@@ -172,7 +172,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
   try {
-    const g = await requirePermission(req, 'Projects', 'Edit');
+    // Project-scoped: a job-level role on THIS job counts, like PATCH below.
+    const g = await requirePermission(req, 'Projects', 'Edit', { projectId });
     if (!g.ok) return g.res;
     const user = g.user;
     const body = await req.json().catch(() => null);
@@ -350,12 +351,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ pr
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
   try {
-    const g = await requirePermission(req, 'Projects', 'Full');
+    const g = await requirePermission(req, 'Projects', 'Full', { projectId });
     if (!g.ok) return g.res;
     const user = g.user;
 
     const db = createServerClient();
-    const { error } = await db
+    const { data, error } = await db
       .from('projects')
       .update({
         is_archived: true,
@@ -363,11 +364,14 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ p
         archived_by: user.id ?? null,
       })
       .eq('id', projectId)
-      .eq('tenant_id', user.tenantId);
+      .eq('tenant_id', user.tenantId)
+      .select('id');
     if (error) throw error;
+    // Nothing matched: not this company's job (or no such job) — don't report success.
+    if (!data || data.length === 0) return NextResponse.json({ error: 'Job not found' }, { status: 404 });
 
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/projectId DELETE', e, "Couldn't archive this job. Please try again.");
   }
 }
