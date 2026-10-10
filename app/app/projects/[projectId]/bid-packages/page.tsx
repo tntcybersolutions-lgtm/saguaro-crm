@@ -103,6 +103,8 @@ function defaultDue(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function newLineItem(): LineItem {
   return { id: String(Date.now() + Math.random()), description: '', qty: '1', unit: 'LS', unitPrice: '0' };
 }
@@ -229,25 +231,63 @@ function WizardModal({ projectId, ctx, open, onClose, onCreated }: { projectId: 
   }
 
   function addExtra() {
-    if (!w.addEmail) return;
+    const email = w.addEmail.trim();
+    if (!email) return;
+    if (!EMAIL_RE.test(email)) { setField('error', 'Enter a valid email address to invite.'); return; }
     setW(prev => ({
       ...prev,
-      extraInvites: [...prev.extraInvites, { name: prev.addName, email: prev.addEmail }],
-      addName: '', addEmail: '',
+      extraInvites: [...prev.extraInvites, { name: prev.addName.trim(), email }],
+      addName: '', addEmail: '', error: '',
     }));
+  }
+
+  /* Next / Create used to skip over what the user left half-done: Step 1's
+     Next sat disabled without a trade, and an email typed in "Add by Email"
+     but never Added was silently dropped on the way to Review. Each step now
+     says what it needs, beside the button, and keeps the typed invite. */
+  function next() {
+    if (step === 1) {
+      if (!w.trade) {
+        setField('error', 'Pick the trade this package goes out to.');
+        window.setTimeout(() => document.getElementById('bp-trade')?.focus(), 0);
+        return;
+      }
+      setField('error', '');
+      setStep(2);
+    } else if (step === 2) {
+      setField('error', '');
+      void goStep3();
+    } else if (step === 3) {
+      const email = w.addEmail.trim();
+      if (email) {
+        if (!EMAIL_RE.test(email)) {
+          setField('error', 'That email doesn’t look right — fix it or clear the field.');
+          window.setTimeout(() => document.getElementById('bp-add-email')?.focus(), 0);
+          return;
+        }
+        addExtra();
+      }
+      setField('error', '');
+      setStep(4);
+    } else {
+      void handleSubmit();
+    }
   }
 
   async function handleSubmit() {
     setField('submitting', true);
     setField('error', '');
     try {
-      const lineItems = w.lineItems.map(li => ({
-        description: li.description,
-        quantity: Number(li.qty),
-        unit: li.unit,
-        unitPrice: Number(li.unitPrice),
-        totalAmount: toDollars(extend(Number(li.qty), toCents(li.unitPrice))),
-      }));
+      // A row left blank (the wizard starts with one) is not a line item.
+      const lineItems = w.lineItems
+        .filter(li => li.description.trim() || Number(li.unitPrice) > 0)
+        .map(li => ({
+          description: li.description.trim() || 'Line item',
+          quantity: Number(li.qty) || 0,
+          unit: li.unit,
+          unitPrice: Number(li.unitPrice) || 0,
+          totalAmount: toDollars(extend(Number(li.qty) || 0, toCents(li.unitPrice))),
+        }));
       const cr = await fetch('/api/bid-packages/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -271,11 +311,14 @@ function WizardModal({ projectId, ctx, open, onClose, onCreated }: { projectId: 
         ...w.extraInvites,
       ];
       if (toInvite.length > 0 && pkgId) {
-        await fetch(`/api/bid-packages/${pkgId}/invite-subs`, {
+        // The package is saved either way; a failed invite is logged and the
+        // package page shows who was (and was not) invited.
+        const ir = await fetch(`/api/bid-packages/${pkgId}/invite-subs`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ subs: toInvite }),
-        }).catch(() => null);
+        }).catch((e) => { console.error('invite-subs failed', e); return null; });
+        if (ir && !ir.ok) console.error('invite-subs failed', ir.status);
       }
 
       onCreated(pkgId || 'new');
@@ -311,18 +354,14 @@ function WizardModal({ projectId, ctx, open, onClose, onCreated }: { projectId: 
   })();
 
   const footer = (
-    <div className="bpFoot">
+    <div className="bpFoot" style={{ flexWrap: 'wrap' }}>
+      {w.error && step < 4 && <div className="bpErr" role="alert" style={{ width: '100%' }}>{w.error}</div>}
       <Button variant="ghost" icon={step > 1 ? <ArrowLeft size={14} weight="bold" /> : undefined} onClick={() => step > 1 ? setStep(s => s - 1) : onClose()} disabled={w.submitting}>{step === 1 ? 'Cancel' : 'Back'}</Button>
       <Button
         variant="primary"
         icon={step < 4 ? <ArrowRight size={14} weight="bold" /> : undefined}
-        disabled={w.submitting || (step === 1 && !w.trade)}
-        onClick={() => {
-          if (step === 1) { if (!w.trade) return; setStep(2); }
-          else if (step === 2) goStep3();
-          else if (step === 3) setStep(4);
-          else handleSubmit();
-        }}
+        disabled={w.submitting}
+        onClick={next}
       >
         {step < 4 ? 'Next' : w.submitting ? 'Creating…' : 'Create Bid Package'}
       </Button>
@@ -340,7 +379,7 @@ function WizardModal({ projectId, ctx, open, onClose, onCreated }: { projectId: 
         <div className="bpStack">
           <Field label="Trade" required hint={tradeHint}>
             {/* Native select — the trade list is grouped by CSI division, which the kit Select does not render. */}
-            <select className="k-select" aria-label="Trade" value={w.trade} onChange={e => setField('trade', e.target.value)}>
+            <select id="bp-trade" className="k-select" aria-label="Trade" aria-required="true" aria-invalid={step === 1 && !!w.error && !w.trade ? true : undefined} value={w.trade} onChange={e => { const v = e.target.value; setW(prev => ({ ...prev, trade: v, error: '' })); }}>
               <option value="">— Select Trade —</option>
               {w.trade && !SUB_TRADES.includes(w.trade) && <option value={w.trade}>{w.trade}</option>}
               {SUB_TRADES_BY_DIVISION.map(g => (
@@ -415,7 +454,7 @@ function WizardModal({ projectId, ctx, open, onClose, onCreated }: { projectId: 
           <div className="bpSection">Add by Email</div>
           <div className="bpAddRow">
             <Field label="Name"><Input value={w.addName} onChange={e => setField('addName', e.target.value)} placeholder="Name" /></Field>
-            <Field label="Email"><Input type="email" value={w.addEmail} onChange={e => setField('addEmail', e.target.value)} placeholder="email@company.com" /></Field>
+            <Field label="Email"><Input id="bp-add-email" type="email" inputMode="email" value={w.addEmail} onChange={e => { const v = e.target.value; setW(prev => ({ ...prev, addEmail: v, error: '' })); }} placeholder="email@company.com" /></Field>
             <Button icon={<Plus size={14} weight="bold" />} onClick={addExtra} disabled={!w.addEmail}>Add</Button>
           </div>
           {w.extraInvites.map((ei, i) => (
