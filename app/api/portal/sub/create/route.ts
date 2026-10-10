@@ -54,7 +54,14 @@ export async function POST(req: NextRequest) {
       resolvedSubId = sub?.id || null;
     }
 
-    // Deactivate existing sessions for this email + project
+    // Retire this company's earlier links on this job before issuing a new one,
+    // so a re-invite never leaves two working tokens behind.
+    //  • by roster sub, when there is one;
+    //  • by invited email, always. An email-only invite has sub_id = null, so
+    //    the sub_id pass alone never matched it and every re-invite stacked
+    //    another active token. sub_email is stored lower-cased and trimmed
+    //    (see the insert below), so an exact match finds every earlier one.
+    const inviteEmail = String(email).toLowerCase().trim();
     if (resolvedSubId) {
       await must(db
         .from('portal_sub_sessions')
@@ -62,6 +69,15 @@ export async function POST(req: NextRequest) {
         .eq('sub_id', resolvedSubId)
         .eq('project_id', projectId)
         .eq('tenant_id', user.tenantId), 'portal_sub_sessions write');
+    }
+    if (inviteEmail) {
+      await must(db
+        .from('portal_sub_sessions')
+        .update({ status: 'inactive' })
+        .eq('sub_email', inviteEmail)
+        .eq('project_id', projectId)
+        .eq('tenant_id', user.tenantId)
+        .eq('status', 'active'), 'portal_sub_sessions write');
     }
 
     const token = randomUUID().replace(/-/g, '') + randomUUID().replace(/-/g, '');
@@ -74,7 +90,7 @@ export async function POST(req: NextRequest) {
         sub_id:     resolvedSubId,
         sub_company: companyName || null,
         sub_contact_name: contactName || null,
-        sub_email: email ? email.toLowerCase().trim() : null,
+        sub_email: inviteEmail || null,
         token,
         status:     'active',
         created_by: user.id,
