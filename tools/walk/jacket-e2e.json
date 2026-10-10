@@ -1,8 +1,8 @@
 {
-  "run": "38063878436",
-  "tag": "ZZ AUDIT 878436",
-  "job": "a7c8c3ff-482b-4f69-bfdc-3224e9509461",
-  "package": "4ee6b31f-85a2-44de-9433-5cbc4c126896",
+  "run": "38064651618",
+  "tag": "ZZ AUDIT 651618",
+  "job": "4f9732e7-e3d5-4cfe-ab3e-d0fe2f9f1b76",
+  "package": "0152e567-b90f-4a4b-8d7f-d4237fa047e1",
   "doors": {
     "files": 200,
     "drawings": 200,
@@ -16,7 +16,7 @@
       "key": "invitation",
       "label": "Invitation & Instructions",
       "required": true,
-      "count": 2,
+      "count": 1,
       "docs": [],
       "pages": [
         "Instructions to Bidders"
@@ -36,10 +36,12 @@
       "key": "drawings",
       "label": "Drawings",
       "required": true,
-      "count": 2,
+      "count": 4,
       "docs": [
-        "E-101 — ZZ AUDIT 878436 Power Plan",
-        "ZZ AUDIT 878436 PLAN SET — ZZ AUDIT 878436 Plan Set"
+        "ZZ AUDIT 651618 E-401 Panel Schedules",
+        "E-101 — ZZ AUDIT 651618 Power Plan",
+        "ZZ AUDIT 651618 A-201 Electrical Plan",
+        "ZZ AUDIT 651618 Plan Set"
       ],
       "pages": []
     },
@@ -47,8 +49,10 @@
       "key": "specs",
       "label": "Specifications",
       "required": true,
-      "count": 0,
-      "docs": [],
+      "count": 1,
+      "docs": [
+        "26 05 00 — ZZ AUDIT 651618 Common Work Results for Electrical"
+      ],
       "pages": []
     },
     {
@@ -81,10 +85,9 @@
       "key": "attachments",
       "label": "Attachments",
       "required": false,
-      "count": 2,
+      "count": 1,
       "docs": [
-        "ZZ AUDIT 878436 E-401 Panel Schedules.pdf",
-        "ZZ AUDIT 878436 Site Logistics Plan.pdf"
+        "ZZ AUDIT 651618 Site Logistics Plan"
       ],
       "pages": []
     },
@@ -97,47 +100,745 @@
       "pages": []
     }
   ],
-  "existing": [],
+  "existing": [
+    {
+      "job": "ZZ AUDIT 2 Fix Check",
+      "package": "Exterior Improvements — Paving Markings & Landscaping",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 1,
+        "specs": 0,
+        "bidform": 2,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT 2 Fix Check",
+      "package": "Electronic Safety & Security — Fire Alarm System",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 1,
+        "specs": 0,
+        "bidform": 1,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT 2 Fix Check",
+      "package": "Electrical — Power Distribution, Lighting & Branch Wiring",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 1,
+        "specs": 0,
+        "bidform": 5,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT 2 Fix Check",
+      "package": "HVAC — Mechanical Ventilation & Comfort Cooling",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 1,
+        "specs": 0,
+        "bidform": 3,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT 2 Fix Check",
+      "package": "Plumbing — Sanitary, Domestic Water & Fixtures",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 1,
+        "specs": 0,
+        "bidform": 3,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT 2 Fix Check",
+      "package": "Fire Suppression — Wet Pipe Sprinkler System",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 1,
+        "specs": 0,
+        "bidform": 1,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT 2 Fix Check",
+      "package": "Finishes — Drywall, Ceilings, Flooring & Coatings",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 1,
+        "specs": 0,
+        "bidform": 7,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT 2 Fix Check",
+      "package": "Doors, Frames, Hardware & Storefront Glazing",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 1,
+        "specs": 0,
+        "bidform": 5,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT 2 Fix Check",
+      "package": "Roofing, Insulation, Waterproofing & Joint Sealants",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 1,
+        "specs": 0,
+        "bidform": 6,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT 2 Fix Check",
+      "package": "Structural Steel — Joists, Deck & Columns",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 1,
+        "specs": 0,
+        "bidform": 3,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT 2 Fix Check",
+      "package": "Structural Concrete — Tilt-Up Panels & Slab on Grade",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 1,
+        "specs": 0,
+        "bidform": 8,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT 2 Fix Check",
+      "package": "Earthwork, Demolition & Site Preparation",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 1,
+        "specs": 0,
+        "bidform": 4,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT 2 Fix Check",
+      "package": "General Requirements & Temporary Facilities",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 1,
+        "specs": 0,
+        "bidform": 2,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT Mesa Flex Office",
+      "package": "Site Paving, Concrete Flatwork, Landscaping & Fencing",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 2,
+        "specs": 0,
+        "bidform": 4,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT Mesa Flex Office",
+      "package": "Earthwork, Excavation & Site Grading",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 2,
+        "specs": 0,
+        "bidform": 3,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT Mesa Flex Office",
+      "package": "Fire Alarm & Life Safety Systems",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 2,
+        "specs": 0,
+        "bidform": 1,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT Mesa Flex Office",
+      "package": "Electrical Distribution, Lighting & Power",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 2,
+        "specs": 0,
+        "bidform": 6,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT Mesa Flex Office",
+      "package": "HVAC, Mechanical & Sheet Metal",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 2,
+        "specs": 0,
+        "bidform": 4,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT Mesa Flex Office",
+      "package": "Plumbing & Mechanical Piping",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 2,
+        "specs": 0,
+        "bidform": 5,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT Mesa Flex Office",
+      "package": "Fire Suppression & Sprinkler Systems",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 2,
+        "specs": 0,
+        "bidform": 2,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT Mesa Flex Office",
+      "package": "Dock Equipment & Material Handling",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 2,
+        "specs": 0,
+        "bidform": 1,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT Mesa Flex Office",
+      "package": "Signage & Building Specialties",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 2,
+        "specs": 0,
+        "bidform": 1,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT Mesa Flex Office",
+      "package": "Drywall, Ceilings, Flooring & Interior Finishes",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 2,
+        "specs": 0,
+        "bidform": 6,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT Mesa Flex Office",
+      "package": "Doors, Frames, Glazing & Overhead Openings",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 2,
+        "specs": 0,
+        "bidform": 3,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT Mesa Flex Office",
+      "package": "Roofing, Insulation & Moisture Protection",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 2,
+        "specs": 0,
+        "bidform": 4,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT Mesa Flex Office",
+      "package": "Structural Steel, Joists & Metal Roof Deck",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 2,
+        "specs": 0,
+        "bidform": 3,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT Mesa Flex Office",
+      "package": "Structural Concrete, Tilt-Up Panels & Slab on Grade",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 2,
+        "specs": 0,
+        "bidform": 9,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT Mesa Flex Office",
+      "package": "Site Demolition & Earthwork Preparation",
+      "counts": {
+        "invitation": 1,
+        "scope": 1,
+        "drawings": 2,
+        "specs": 0,
+        "bidform": 3,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Specifications"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT Job 903279",
+      "package": "Audit Package 903279",
+      "counts": {
+        "invitation": 0,
+        "scope": 0,
+        "drawings": 0,
+        "specs": 0,
+        "bidform": 0,
+        "requirements": 0,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 1
+      },
+      "missing": [
+        "Invitation & Instructions",
+        "Scope of Work",
+        "Drawings",
+        "Specifications",
+        "Bid Form",
+        "Insurance & Bonding"
+      ]
+    },
+    {
+      "job": "ZZ AUDIT Job 424170",
+      "package": "Audit Package 424170",
+      "counts": {
+        "invitation": 0,
+        "scope": 0,
+        "drawings": 0,
+        "specs": 0,
+        "bidform": 0,
+        "requirements": 0,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 1
+      },
+      "missing": [
+        "Invitation & Instructions",
+        "Scope of Work",
+        "Drawings",
+        "Specifications",
+        "Bid Form",
+        "Insurance & Bonding"
+      ]
+    },
+    {
+      "job": "Copper Ridge Data Center Phase II — Critical Environment Controls",
+      "package": "Containment Instrumentation",
+      "counts": {
+        "invitation": 0,
+        "scope": 1,
+        "drawings": 0,
+        "specs": 0,
+        "bidform": 0,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 9
+      },
+      "missing": [
+        "Invitation & Instructions",
+        "Drawings",
+        "Specifications",
+        "Bid Form"
+      ]
+    },
+    {
+      "job": "Copper Ridge Data Center Phase II — Critical Environment Controls",
+      "package": "CRAC Controls & Sequencing",
+      "counts": {
+        "invitation": 0,
+        "scope": 1,
+        "drawings": 0,
+        "specs": 0,
+        "bidform": 0,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 12
+      },
+      "missing": [
+        "Invitation & Instructions",
+        "Drawings",
+        "Specifications",
+        "Bid Form"
+      ]
+    },
+    {
+      "job": "Pima County Adult Detention Center — BAS Modernization",
+      "package": "Housing Unit C — Low Voltage",
+      "counts": {
+        "invitation": 0,
+        "scope": 1,
+        "drawings": 0,
+        "specs": 0,
+        "bidform": 29,
+        "requirements": 0,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 0
+      },
+      "missing": [
+        "Invitation & Instructions",
+        "Drawings",
+        "Specifications",
+        "Insurance & Bonding"
+      ]
+    },
+    {
+      "job": "Pima County Adult Detention Center — BAS Modernization",
+      "package": "Fire Alarm Interface",
+      "counts": {
+        "invitation": 0,
+        "scope": 1,
+        "drawings": 0,
+        "specs": 0,
+        "bidform": 0,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 6
+      },
+      "missing": [
+        "Invitation & Instructions",
+        "Drawings",
+        "Specifications",
+        "Bid Form"
+      ]
+    },
+    {
+      "job": "Pima County Adult Detention Center — BAS Modernization",
+      "package": "Test, Adjust & Balance",
+      "counts": {
+        "invitation": 0,
+        "scope": 1,
+        "drawings": 0,
+        "specs": 0,
+        "bidform": 0,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 6
+      },
+      "missing": [
+        "Invitation & Instructions",
+        "Drawings",
+        "Specifications",
+        "Bid Form"
+      ]
+    },
+    {
+      "job": "Pima County Adult Detention Center — BAS Modernization",
+      "package": "Controls Rough-in & Power",
+      "counts": {
+        "invitation": 0,
+        "scope": 1,
+        "drawings": 0,
+        "specs": 0,
+        "bidform": 0,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 12
+      },
+      "missing": [
+        "Invitation & Instructions",
+        "Drawings",
+        "Specifications",
+        "Bid Form"
+      ]
+    },
+    {
+      "job": "Pima County Adult Detention Center — BAS Modernization",
+      "package": "Ductwork & Terminal Units",
+      "counts": {
+        "invitation": 0,
+        "scope": 1,
+        "drawings": 0,
+        "specs": 0,
+        "bidform": 0,
+        "requirements": 1,
+        "addenda": 0,
+        "attachments": 0,
+        "correspondence": 9
+      },
+      "missing": [
+        "Invitation & Instructions",
+        "Drawings",
+        "Specifications",
+        "Bid Form"
+      ]
+    }
+  ],
   "checks": [
     {
       "name": "start a job",
       "pass": true,
-      "detail": "200 {\"projectId\":\"a7c8c3ff-482b-4f69-bfdc-3224e9509461\",\"project\":{\"id\":\"a7c8c3ff-482b-4f69-bfdc-3224e9509461\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"name\":\"ZZ AUDIT 878436 Jacket Job\",\"addre"
+      "detail": "200 {\"projectId\":\"4f9732e7-e3d5-4cfe-ab3e-d0fe2f9f1b76\",\"project\":{\"id\":\"4f9732e7-e3d5-4cfe-ab3e-d0fe2f9f1b76\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"name\":\"ZZ AUDIT 651618 Jacket Job\",\"addre"
     },
     {
       "name": "files page: upload",
       "pass": true,
-      "detail": "200 {\"success\":true,\"files\":[{\"id\":\"af697ba9-6b60-407d-9073-2e8b1c6f58ed\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"project_id\":\"a7c8c3ff-482b-4f69-bfdc-3224e9509461\",\"file_name\":\"ZZ AUDIT 87843"
+      "detail": "200 {\"success\":true,\"files\":[{\"id\":\"a9cb2960-22fc-4c37-95f1-1a2c82c8b576\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"project_id\":\"4f9732e7-e3d5-4cfe-ab3e-d0fe2f9f1b76\",\"file_name\":\"ZZ AUDIT 65161"
     },
     {
       "name": "drawings page: sheet upload",
       "pass": true,
-      "detail": "200 {\"success\":true,\"drawing\":{\"id\":\"11a4e69f-de2c-46be-b8d4-9412b05c18cb\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"project_id\":\"a7c8c3ff-482b-4f69-bfdc-3224e9509461\",\"name\":\"ZZ AUDIT 878436 Po"
+      "detail": "200 {\"success\":true,\"drawing\":{\"id\":\"3999f063-510e-441d-9b68-2a1026df3d98\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"project_id\":\"4f9732e7-e3d5-4cfe-ab3e-d0fe2f9f1b76\",\"name\":\"ZZ AUDIT 651618 Po"
     },
     {
       "name": "specs page: add section",
       "pass": true,
-      "detail": "200 {\"success\":true,\"spec\":{\"id\":\"5ff6acb4-d160-4a81-9f06-ec8121329655\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"project_id\":\"a7c8c3ff-482b-4f69-bfdc-3224e9509461\",\"section_number\":\"26 05 00\",\""
+      "detail": "200 {\"success\":true,\"spec\":{\"id\":\"251963b6-f5b4-4144-8a9f-e290df22bc01\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"project_id\":\"4f9732e7-e3d5-4cfe-ab3e-d0fe2f9f1b76\",\"section_number\":\"26 05 00\",\""
     },
     {
       "name": "specs page: attach file",
       "pass": true,
-      "detail": "200 {\"success\":true,\"spec\":{\"id\":\"5ff6acb4-d160-4a81-9f06-ec8121329655\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"project_id\":\"a7c8c3ff-482b-4f69-bfdc-3224e9509461\",\"section_number\":\"26 05 00\",\""
+      "detail": "200 {\"success\":true,\"spec\":{\"id\":\"251963b6-f5b4-4144-8a9f-e290df22bc01\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"project_id\":\"4f9732e7-e3d5-4cfe-ab3e-d0fe2f9f1b76\",\"section_number\":\"26 05 00\",\""
     },
     {
       "name": "takeoff: start",
       "pass": true,
-      "detail": "200 {\"data\":{\"id\":\"e6e0e14c-e042-480d-bbd9-83605136e8d7\",\"project_id\":\"a7c8c3ff-482b-4f69-bfdc-3224e9509461\",\"name\":\"Takeoff Oct 10, 2026\",\"file_url\":null,\"file_name\":null,\"file_type\":null,\"file_size\":nul"
+      "detail": "200 {\"data\":{\"id\":\"f808faf2-5a46-4763-bcbb-ccd5b46c08f4\",\"project_id\":\"4f9732e7-e3d5-4cfe-ab3e-d0fe2f9f1b76\",\"name\":\"Takeoff Oct 10, 2026\",\"file_url\":null,\"file_name\":null,\"file_type\":null,\"file_size\":nul"
     },
     {
       "name": "takeoff: blueprint uploaded",
       "pass": true,
-      "detail": "200/200/200 {\"bucket\":\"blueprints\",\"path\":\"a7c8c3ff-482b-4f69-bfdc-3224e9509461/blueprints/e6e0e14c-e042-480d-bbd9-83605136e8d7/sour"
+      "detail": "200/200/200 {\"bucket\":\"blueprints\",\"path\":\"4f9732e7-e3d5-4cfe-ab3e-d0fe2f9f1b76/blueprints/f808faf2-5a46-4763-bcbb-ccd5b46c08f4/sour"
     },
     {
       "name": "create bid package (wizard)",
       "pass": true,
-      "detail": "200 {\"success\":true,\"bidPackage\":{\"id\":\"4ee6b31f-85a2-44de-9433-5cbc4c126896\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"project_id\":\"a7c8c3ff-482b-4f69-bfdc-3224e9509461\",\"name\":\"ZZ AUDIT 878436"
+      "detail": "200 {\"success\":true,\"bidPackage\":{\"id\":\"0152e567-b90f-4a4b-8d7f-d4237fa047e1\",\"tenant_id\":\"692d8793-4d9f-4c43-a935-bf56cc637553\",\"project_id\":\"4f9732e7-e3d5-4cfe-ab3e-d0fe2f9f1b76\",\"name\":\"ZZ AUDIT 651618"
     },
     {
       "name": "jacket Add Document (drawing)",
@@ -152,12 +853,12 @@
     {
       "name": "jacket opens",
       "pass": true,
-      "detail": "200 {\"package\":{\"id\":\"4ee6b31f-85a2-44de-9433-5cbc4c126896\",\"name\":\"ZZ AUDIT 878436 Electrical\",\"number\":null,\"trade\":\"Electrical\",\"status\":\"open\",\"dueDate\":\"2026-10-24\",\"validityDays\":60,\"preBidDate\":nul"
+      "detail": "200 {\"package\":{\"id\":\"0152e567-b90f-4a4b-8d7f-d4237fa047e1\",\"name\":\"ZZ AUDIT 651618 Electrical\",\"number\":null,\"trade\":\"Electrical\",\"status\":\"open\",\"dueDate\":\"2026-10-24\",\"validityDays\":60,\"preBidDate\":nul"
     },
     {
       "name": "files-page plan (A-201) is in Drawings",
-      "pass": false,
-      "detail": "found in: nowhere"
+      "pass": true,
+      "detail": "found in: drawings"
     },
     {
       "name": "drawings-page sheet (E-101) is in Drawings",
@@ -171,13 +872,13 @@
     },
     {
       "name": "spec section (26 05 00) is in Specifications",
-      "pass": false,
-      "detail": "found in: nowhere"
+      "pass": true,
+      "detail": "found in: specs"
     },
     {
       "name": "jacket-added drawing (E-401) is in Drawings",
-      "pass": false,
-      "detail": "found in: attachments"
+      "pass": true,
+      "detail": "found in: drawings"
     },
     {
       "name": "jacket-added other file is in Attachments",
@@ -187,7 +888,7 @@
     {
       "name": "Instructions to bidders filled",
       "pass": true,
-      "detail": "{\"key\":\"invitation\",\"label\":\"Invitation & Instructions\",\"required\":true,\"count\":2,\"pages\":[{\"id\":\"instructions-to-bidders\",\"title\":\"Instructions to Bidders\",\"body\":\"Bid on the attached form. Include a"
+      "detail": "{\"key\":\"invitation\",\"label\":\"Invitation & Instructions\",\"required\":true,\"count\":1,\"pages\":[{\"id\":\"instructions-to-bidders\",\"title\":\"Instructions to Bidders\",\"body\":\"Bid on the attached form. Include a"
     },
     {
       "name": "Scope filled",
@@ -202,22 +903,37 @@
     {
       "name": "Insurance reads as entered (no raw JSON)",
       "pass": true,
-      "detail": "{\"bond\":true,\"prevailingWage\":false,\"insuranceAmount\":1000000,\"generalLiability\":null,\"autoLiability\":null,\"workersComp\":null,\"insuranceText\":\"General liability $1,000,000 per occurrence; auto $1,000,"
+      "detail": "{\"bond\":true,\"prevailingWage\":false,\"insuranceAmount\":null,\"generalLiability\":null,\"autoLiability\":null,\"workersComp\":null,\"insuranceText\":\"General liability $1,000,000 per occurrence; auto $1,000,000"
     },
     {
       "name": "Bond required shows",
       "pass": true,
-      "detail": "{\"bond\":true,\"prevailingWage\":false,\"insuranceAmount\":1000000,\"generalLiability\":null,\"autoLiability\":null,\"workersComp\""
+      "detail": "{\"bond\":true,\"prevailingWage\":false,\"insuranceAmount\":null,\"generalLiability\":null,\"autoLiability\":null,\"workersComp\":nu"
     },
     {
       "name": "nothing required is missing",
-      "pass": false,
-      "detail": "{\"complete\":5,\"total\":6,\"missing\":[\"Specifications\"]}"
+      "pass": true,
+      "detail": "{\"complete\":6,\"total\":6,\"missing\":[]}"
     },
     {
-      "name": "run completed",
-      "pass": false,
-      "detail": "page.waitForSelector: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('text=Drawings') to be visible\n    64 × locator resolved to 2 elements. Proceeding with the first one: <option value=\"drawing\">Drawings</option>\n"
+      "name": "phone: page shows the uploaded plans",
+      "pass": true,
+      "detail": "E-101 / A-201 not visible on the page"
+    },
+    {
+      "name": "phone: no sideways scroll",
+      "pass": true,
+      "detail": "393>393"
+    },
+    {
+      "name": "desktop: page shows the uploaded plans",
+      "pass": true,
+      "detail": "E-101 / A-201 not visible on the page"
+    },
+    {
+      "name": "desktop: no sideways scroll",
+      "pass": true,
+      "detail": "1440>1440"
     },
     {
       "name": "no page errors",
