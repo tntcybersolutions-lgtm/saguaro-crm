@@ -566,7 +566,7 @@ export function Field({
         {required && <span className="k-req">*</span>}
       </label>
       {child ? React.cloneElement(child, { id }) : children}
-      {error ? <span className="k-error">{error}</span> : hint ? <span className="k-hint">{hint}</span> : null}
+      {error ? <span className="k-error" role="alert">{error}</span> : hint ? <span className="k-hint">{hint}</span> : null}
     </div>
   );
 }
@@ -616,6 +616,14 @@ export function FormSection({ children }: { children: React.ReactNode }) {
 
 // ─── FormModal ───────────────────────────────────────────────────────────────
 
+/** "Task Name: Fill out this field." — the field's own label, then the browser's reason. */
+function describeInvalid(el: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement): string {
+  const label = (el.labels?.[0]?.textContent || el.getAttribute('aria-label') || el.getAttribute('placeholder') || el.name || '')
+    .replace(/\*\s*$/, '').trim();
+  const why = el.validationMessage || 'Check this field.';
+  return label ? `${label}: ${why}` : why;
+}
+
 export function FormModal({
   open,
   onClose,
@@ -645,6 +653,35 @@ export function FormModal({
   footer?: React.ReactNode;
 }) {
   const titleId = React.useId();
+  /* The browser's own constraint check (required, min/max, type=email…) stops
+     a submit before onSubmit runs, and its bubble is easy to miss — on a phone
+     the tap just looked dead. The first invalid field is named here instead,
+     beside the submit button, and the browser still focuses it. */
+  const formRef = React.useRef<HTMLFormElement | null>(null);
+  const [nativeErr, setNativeErr] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    const f = formRef.current;
+    if (!open) { setNativeErr(null); return; }
+    if (!f) return;
+    let reported = false;
+    const onInvalid = (e: Event) => {
+      if (reported) return; // one submit fires `invalid` on every bad field — name the first
+      reported = true;
+      // A task, not a microtask: microtasks run between the browser's per-field
+      // `invalid` dispatches, which would let the last bad field win.
+      window.setTimeout(() => { reported = false; }, 0);
+      setNativeErr(describeInvalid(e.target as HTMLInputElement));
+    };
+    const onEdit = () => setNativeErr(null);
+    f.addEventListener('invalid', onInvalid, true);
+    f.addEventListener('input', onEdit);
+    f.addEventListener('change', onEdit);
+    return () => {
+      f.removeEventListener('invalid', onInvalid, true);
+      f.removeEventListener('input', onEdit);
+      f.removeEventListener('change', onEdit);
+    };
+  }, [open, !!onSubmit]); // eslint-disable-line react-hooks/exhaustive-deps -- re-bind when the <form> mounts, not on every new onSubmit closure
 
   React.useEffect(() => {
     if (!open) return;
@@ -660,9 +697,11 @@ export function FormModal({
 
   if (!open) return null;
 
+  const shownErr = error || nativeErr;
   const foot = footer ?? (onSubmit ? (
     <>
-      {error && <span className="k-error" style={{ marginRight: 'auto', alignSelf: 'center' }}>{error}</span>}
+      {/* role="alert": a blocked save is announced, not just painted red. */}
+      {shownErr && <span className="k-error" role="alert" style={{ marginRight: 'auto', alignSelf: 'center' }}>{shownErr}</span>}
       <Button variant="ghost" onClick={onClose} disabled={busy}>Cancel</Button>
       <Button variant="primary" type="submit" disabled={busy}>{busy ? 'Saving…' : submitLabel}</Button>
     </>
@@ -687,8 +726,9 @@ export function FormModal({
         </div>
         {onSubmit ? (
           <form
+            ref={formRef}
             style={{ display: 'contents' }}
-            onSubmit={(e) => { e.preventDefault(); void onSubmit(); }}
+            onSubmit={(e) => { e.preventDefault(); setNativeErr(null); void onSubmit(); }}
           >
             {body}
           </form>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import type { Database } from '@/lib/database.types';
 import { apiError } from '@/lib/api-error';
+import { assertProjectInTenant } from '@/lib/assert-project';
 
 export const dynamic = 'force-dynamic';
 
@@ -105,7 +106,19 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     const row = toDb(body, user.tenantId);
 
+    /* resource_name and project_id are NOT NULL: a missing one used to reach
+       Postgres and come back as a 500. Name the field instead. */
+    if (!String(row.resource_name ?? '').trim()) {
+      return NextResponse.json({ error: 'Enter the person’s name.' }, { status: 400 });
+    }
+    if (!row.project_id) {
+      return NextResponse.json({ error: 'Pick the project they are assigned to.' }, { status: 400 });
+    }
+
     const db = createServerClient();
+    // project_id comes from the body: it must be one of the caller's jobs.
+    const notOurs = await assertProjectInTenant(db, user.tenantId, String(row.project_id));
+    if (notOurs) return notOurs;
     const { data, error } = await db
       .from('resource_assignments')
       .insert(row as Database['public']['Tables']['resource_assignments']['Insert'])
@@ -115,6 +128,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ data: toPage(data as DbRow) }, { status: 201 });
   } catch (e) {
-    return apiError('projects/all/resource-planning', e, 'Internal server error');
+    return apiError('projects/all/resource-planning', e, "Couldn't save the assignment. Please try again.");
   }
 }

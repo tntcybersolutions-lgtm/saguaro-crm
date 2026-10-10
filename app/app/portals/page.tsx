@@ -463,12 +463,15 @@ export default function PortalsPage() {
 function SuccessCard({ url, name, type, emailSent, onCopied, onAnother, onClose }: { url: string; name: string; type: Tab; emailSent?: boolean; onCopied: () => void; onAnother: () => void; onClose: () => void; }) {
   const [linkCopied, setLinkCopied] = useState(false);
 
+  const [copyFailed, setCopyFailed] = useState(false);
   function copyUrl() {
+    // A refused clipboard (iOS in some contexts) used to reject unhandled — the tap did nothing.
     navigator.clipboard.writeText(url).then(() => {
       setLinkCopied(true);
+      setCopyFailed(false);
       onCopied();
       setTimeout(() => setLinkCopied(false), 2500);
-    });
+    }, () => setCopyFailed(true));
   }
 
   return (
@@ -488,6 +491,7 @@ function SuccessCard({ url, name, type, emailSent, onCopied, onAnother, onClose 
         <div className="poLinkLabel">Portal Link</div>
         <div className="poLinkUrl">{url}</div>
         <Button size="sm" icon={linkCopied ? <CheckCircle size={14} weight="fill" /> : <Copy size={14} />} onClick={copyUrl}>{linkCopied ? 'Copied' : 'Copy Portal Link'}</Button>
+        {copyFailed && <div className="k-error" role="alert" style={{ marginTop: 6 }}>Couldn&apos;t copy — press and hold the link above to copy it.</div>}
       </div>
 
       <div className="poSuccessNote">

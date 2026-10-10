@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { sendSubPortalInvite } from '@/lib/email';
 import { randomUUID } from 'crypto';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -125,8 +126,6 @@ export async function POST(req: NextRequest) {
       emailWarning: !emailSent ? 'Email could not be sent. Share the portal link manually.' : undefined,
     });
   } catch (err: unknown) {
-    const msg = 'Internal server error';
-    console.error('[portal/sub/create]', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('portal/sub/create', err, "Couldn't create the portal link. Please try again.");
   }
 }

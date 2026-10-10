@@ -161,3 +161,15 @@ converge. One line each, newest at the bottom.
   a local `npm run build` fails on "HEATMAP ENGINE DRIFT" whenever the dead copy differs; Vercel passes
   because the folder does not exist there. The canonical source should be this repo now. Not fixed
   (off-path); local builds use `npx next build` after running the gates by hand.
+- (10 Oct, walk-2 form fixes) `app/app/time/page.tsx:394` `saveLeave` inserts a `time_entries` row
+  with no `project_id`, which is NOT NULL — Log PTO / Sick can never save (0 non-`regular` rows in the
+  table). Needs a decision: charge leave to a job, or make `project_id` nullable for leave rows.
+- (10 Oct) `/portals/sub/[token]` for a sub invited by an email not on the roster: the
+  `portal_sub_sessions.sub_id` is null and every portal module queries `sub_id=eq.null` (rfis, daily
+  logs, pay apps, tasks, messages, compliance, scorecards → PostgREST 400; edge log 00:08:45). The
+  portal opens empty.
+- (10 Oct) `lib/triggers.ts:756` selects `subcontractors(name, email)`; the column is `company_name`
+  ("column subcontractors_1.name does not exist" in the postgres log), so `onInsuranceExpiring` never
+  finds the sub and the COI-expiring email never goes.
+- (10 Oct) `/app/customers` has no way to create a customer — nothing in the UI posts to
+  `/api/customers/profiles` except the project Ownership card's new inline form.

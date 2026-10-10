@@ -49,6 +49,8 @@ export async function GET(req: NextRequest) {
  * status:'failed' with the actual reason. There is no invite queue in this
  * codebase, so no invite is ever reported as 'queued'.
  */
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export async function POST(req: NextRequest) {
   // Inviting a teammate expands who can access the tenant — access-control action.
   const g = await requirePermission(req, 'Admin', 'Full');
@@ -67,6 +69,10 @@ export async function POST(req: NextRequest) {
       }
       const results: Array<{ email: string; status: 'sent' | 'failed'; error?: string }> = [];
       for (const entry of entries) {
+        if (!EMAIL_RE.test(String(entry.email).trim())) {
+          results.push({ email: String(entry.email).trim(), status: 'failed', error: 'Not a valid email address.' });
+          continue;
+        }
         const r = await createAndSendInvite(user, {
           email: String(entry.email).trim(),
           name: entry.name,
@@ -82,17 +88,22 @@ export async function POST(req: NextRequest) {
       if (sent === 0) {
         return NextResponse.json(
           { success: false, sent, failed, results, error: results[0]?.error || 'No invites could be sent.' },
-          { status: 500 },
+          // Every address malformed is the caller's to fix (400), not a server fault.
+          { status: results.every(r => r.error === 'Not a valid email address.') ? 400 : 500 },
         );
       }
       return NextResponse.json({ success: failed === 0, sent, failed, results });
     }
 
     // ── Single shape ───────────────────────────────────────────────────────────
-    if (!email) {
-      return NextResponse.json({ error: 'email is required' }, { status: 400 });
+    if (!email || !String(email).trim()) {
+      return NextResponse.json({ error: 'Enter the email address to send the invite to.' }, { status: 400 });
     }
-    const single = await createAndSendInvite(user, { email, name, role, projectId });
+    // An invite row and an email to a non-address helps no one — say so instead.
+    if (!EMAIL_RE.test(String(email).trim())) {
+      return NextResponse.json({ error: 'Enter a valid email address — the invite link is sent there.' }, { status: 400 });
+    }
+    const single = await createAndSendInvite(user, { email: String(email).trim(), name, role, projectId });
     if (!single.ok) {
       return NextResponse.json({ error: single.error }, { status: 500 });
     }
@@ -144,8 +155,9 @@ async function createAndSendInvite(
       .single();
 
     if (insertErr || !invite) {
+      // The database's words stay in the log; the caller gets ours.
       console.error('[team/invite] insert failed for', email, '-', insertErr?.message);
-      return { ok: false, email, error: insertErr?.message || 'Failed to create invite' };
+      return { ok: false, email, error: "Couldn't create the invite. Please try again." };
     }
 
     const acceptUrl = `${APP_URL}/accept-invite?token=${token}`;

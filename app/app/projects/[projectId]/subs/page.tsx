@@ -15,6 +15,17 @@ import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 const GOLD='var(--brand-primary)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)';
 const cap = (s:string) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
+/* The add form was a fixed `1fr 320px` grid with three fields abreast. On a
+   390px phone the 320px compliance rail took the row: the form collapsed to a
+   sliver and the rail lay over its Add Subcontractor button (the walk's tap
+   timed out on it). One column below 900px / 700px; 44px buttons. */
+const SUBS_CSS = `
+.sbAddGrid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; align-items: start; margin-bottom: 20px; }
+.sbFields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.sbAddGrid button { min-height: 44px; }
+@media (max-width: 900px) { .sbAddGrid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 700px) { .sbFields { grid-template-columns: minmax(0, 1fr); } }
+`;
 
 interface Sub {
   id: string; name: string; trade: string; contact_name: string; contact_email: string;
@@ -76,6 +87,8 @@ export default function SubsPage() {
   const [filterTrade, setFilterTrade] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [form, setForm] = useState({ name:'', trade:'', contact_name:'', contact_email:'', contact_phone:'', license_number:'', contract_amount:'' });
+  /** Why Add Subcontractor refused, said beside the button (role="alert"). */
+  const [formErr, setFormErr] = useState('');
 
   /* ── Unsaved-work guard: the composer holds real typing, so leaving the
    *    page (sidebar, field nav, ⌘K, back) confirms first and the draft is
@@ -122,6 +135,18 @@ export default function SubsPage() {
 
   const handleCreate = async (e?: React.FormEvent): Promise<boolean> => {
     e?.preventDefault();
+    // The page owns the rule (the native `required` bubble was easy to miss on a phone).
+    if (!form.name.trim()) {
+      setFormErr('Enter the company name.');
+      document.getElementById('sb-company-name')?.focus();
+      return false;
+    }
+    if (form.contact_email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.contact_email.trim())) {
+      setFormErr('That email doesn’t look right — fix it or leave it blank.');
+      document.getElementById('sb-contact-email')?.focus();
+      return false;
+    }
+    setFormErr('');
     try {
       const r = await fetch('/api/subs/create', {
         method: 'POST', headers: {'Content-Type':'application/json'},
@@ -129,7 +154,7 @@ export default function SubsPage() {
         // /api/subs/create actually persists; the original field names stay intact.
         body: JSON.stringify({ ...form, projectId, contract_amount: parseFloat(form.contract_amount)||0, status:'active', email: form.contact_email || undefined, phone: form.contact_phone || undefined, licenseNumber: form.license_number || undefined }),
       });
-      if (!r.ok) { const b = await r.json(); throw new Error(b.error||'Failed'); }
+      if (!r.ok) { const b = await r.json().catch(() => ({})); throw new Error(b.error||'Failed'); }
       setShowForm(false);
       setForm({ name:'', trade:'', contact_name:'', contact_email:'', contact_phone:'', license_number:'', contract_amount:'' });
       setPickId(''); setAuto({});
@@ -137,7 +162,7 @@ export default function SubsPage() {
       load();
       guard.clearDraft();
       return true;
-    } catch (err: unknown) { console.error(err); setToast({msg:humanError(err,'Something went wrong. Please try again.'),type:'error'}); }
+    } catch (err: unknown) { console.error(err); setFormErr(humanError(err,'Could not add the subcontractor. Please try again.')); }
     return false;
   };
 
@@ -220,7 +245,8 @@ export default function SubsPage() {
 
   return (
     <PremiumSurface maxWidth={2200}>
-      {toast && <div style={{position:'fixed',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:8,background:toast.type==='success'?'rgba(44,255,122,0.9)':'rgba(255,59,48,0.9)',color:'var(--text-primary)',fontWeight:600,fontSize:14}}>{toast.msg}</div>}
+      <style dangerouslySetInnerHTML={{ __html: SUBS_CSS }} />
+      {toast && <div role={toast.type==='error'?'alert':'status'} style={{position:'fixed',bottom:'calc(24px + var(--sag-tabbar-h, 0px))',left:'50%',transform:'translateX(-50%)',zIndex:99999,maxWidth:'calc(100vw - 32px)',padding:'12px 20px',borderRadius:8,background:toast.type==='success'?'rgba(44,255,122,0.9)':'rgba(255,59,48,0.9)',color:'var(--text-primary)',fontWeight:600,fontSize:14}}>{toast.msg}</div>}
 
       {/* Header */}
       <ModuleHero
@@ -230,7 +256,7 @@ export default function SubsPage() {
         accent="Management"
         subtitle="Manage subs, track compliance, monitor health scores."
         actions={
-          <button onClick={()=>setShowForm(!showForm)} style={goldButtonStyle} className="pmBtn">
+          <button onClick={()=>{setShowForm(!showForm);setFormErr('');}} style={goldButtonStyle} className="pmBtn">
             {showForm ? 'Cancel' : <><Plus size={15} weight="bold" /> Add Subcontractor</>}
           </button>
         }
@@ -259,7 +285,7 @@ export default function SubsPage() {
 
       {/* Create Form — SmartCreate: pick from the directory, the system fills the rest */}
       {showForm && (
-        <div style={{marginBottom:20,display:'grid',gridTemplateColumns:'minmax(0,1fr) 320px',gap:18,alignItems:'start'}}>
+        <div className="sbAddGrid">
           <SectionCard title="Add Subcontractor" subtitle="Pick from your directory — or enter a new company" icon={<Handshake size={17} weight="duotone" color={GOLD} />}>
             <form onSubmit={handleCreate}>
               <div style={{marginBottom:14}}>
@@ -276,10 +302,10 @@ export default function SubsPage() {
                 </select>
                 <div style={hintS}>Picking a directory company pre-fills contacts, license, and compliance — and pulls their award amount when a bid package names them.</div>
               </div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12}}>
+              <div className="sbFields">
                 <div>
-                  <label style={lblS}>Company Name<span style={{color:'var(--danger)'}}> *</span>{auto.name&&<AutoChip/>}</label>
-                  <input required type="text" placeholder="ABC Electric LLC" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} style={inpS} />
+                  <label htmlFor="sb-company-name" style={lblS}>Company Name<span style={{color:'var(--danger)'}}> *</span>{auto.name&&<AutoChip/>}</label>
+                  <input id="sb-company-name" type="text" placeholder="ABC Electric LLC" value={form.name} onChange={e=>{const v=e.target.value;setForm(p=>({...p,name:v}));if(formErr)setFormErr('');}} style={inpS} aria-required="true" aria-invalid={formErr && !form.name.trim() ? true : undefined} />
                 </div>
                 <div>
                   <label style={lblS}>Trade{auto.trade&&<AutoChip/>}</label>
@@ -300,7 +326,7 @@ export default function SubsPage() {
                 </div>
                 <div>
                   <label style={lblS}>Email{auto.contact&&<AutoChip/>}</label>
-                  <input type="email" placeholder="john@abc.com" value={form.contact_email} onChange={e=>setForm(p=>({...p,contact_email:e.target.value}))} style={inpS} />
+                  <input id="sb-contact-email" type="email" inputMode="email" placeholder="john@abc.com" value={form.contact_email} onChange={e=>{const v=e.target.value;setForm(p=>({...p,contact_email:v}));if(formErr)setFormErr('');}} style={inpS} />
                   <div style={hintS}>Contracts over $600 auto-send a W-9 request here.</div>
                 </div>
                 <div>
@@ -312,7 +338,8 @@ export default function SubsPage() {
                   <input type="text" placeholder="ROC-123456" value={form.license_number} onChange={e=>setForm(p=>({...p,license_number:e.target.value}))} style={inpS} />
                 </div>
               </div>
-              <div style={{marginTop:16,display:'flex',gap:10}}>
+              {formErr && <div role="alert" style={{marginTop:14,padding:'10px 12px',borderRadius:8,background:'rgba(255,59,48,0.10)',border:'1px solid rgba(255,59,48,0.45)',color:'var(--danger)',fontSize:13,lineHeight:1.5}}>{formErr}</div>}
+              <div style={{marginTop:16,display:'flex',gap:10,flexWrap:'wrap'}}>
                 <button type="submit" style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add Subcontractor</button>
                 <button type="button" onClick={()=>setShowForm(false)} style={ghostButtonStyle} className="pmBtn">Cancel</button>
               </div>

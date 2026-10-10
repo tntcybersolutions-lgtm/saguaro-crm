@@ -104,6 +104,10 @@ function coerce(raw: any): ScheduleTask {
 }
 const isLate = (t: ScheduleTask) => !!t.end_date && ymdToUTC(t.end_date) < todayUTC() && t.status !== 'complete';
 
+const NEED_NAME = 'Give the task a name.';
+const NEED_PROJECT = 'Pick the project this task belongs to.';
+const focusSoon = (id: string) => window.setTimeout(() => document.getElementById(id)?.focus(), 0);
+
 const EMPTY_FORM = {
   name: '', projectId: '', phase: '', trade: '',
   startDate: '', endDate: '', pctComplete: '0',
@@ -298,7 +302,11 @@ export default function SchedulePage() {
 
   async function handleCreate(e?: React.FormEvent): Promise<boolean> {
     e?.preventDefault();
-    if (!form.name || !form.projectId) { setError('Task name and project are required.'); return false; }
+    /* One message per missing field, under that field, with the cursor put
+       there — "Task name and project are required." in the footer read as
+       nothing at all on a phone. */
+    if (!form.name.trim()) { setError(NEED_NAME); focusSoon('sc-task-name'); return false; }
+    if (!form.projectId) { setError(NEED_PROJECT); focusSoon('sc-task-project'); return false; }
     setCreating(true);
     setError('');
     try {
@@ -317,7 +325,10 @@ export default function SchedulePage() {
           predecessor_id: form.predecessorId || null,
         }),
       });
-      if (!res.ok) throw new Error('Failed to create task');
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j?.error || 'Failed to create task');
+      }
       setShowCreate(false);
       setForm({ ...EMPTY_FORM });
       setDuration(''); setAuto({});
@@ -496,7 +507,7 @@ export default function SchedulePage() {
         onSubmit={async () => { await handleCreate(); }}
         submitLabel="Create Task"
         busy={creating}
-        error={showCreate && error ? error : null}
+        error={showCreate && error && error !== NEED_NAME && error !== NEED_PROJECT ? error : null}
       >
         {form.projectId && (
           <div className="scLadder">
@@ -506,20 +517,20 @@ export default function SchedulePage() {
           </div>
         )}
         <FormGrid cols={2}>
-          <Field label="Task Name" required span>
-            <Input value={form.name} onChange={(e) => { setForm({ ...form, name: e.target.value }); if (error) setError(''); }} placeholder="Foundation pour, framing, etc." autoFocus />
+          <Field label="Task Name" required span error={error === NEED_NAME ? NEED_NAME : null}>
+            <Input id="sc-task-name" value={form.name} onChange={(e) => { const v = e.target.value; setForm(f => ({ ...f, name: v })); if (error) setError(''); }} placeholder="Foundation pour, framing, etc." autoFocus aria-invalid={error === NEED_NAME || undefined} />
           </Field>
-          <Field label="Project" required>
-            <Select aria-label="Project" value={form.projectId} onChange={(e) => { setForm({ ...form, projectId: e.target.value, predecessorId: '' }); if (error) setError(''); }} placeholder="Select project…" options={projectOptions} />
+          <Field label="Project" required error={error === NEED_PROJECT ? NEED_PROJECT : null} hint={projects.length === 0 ? 'Loading your jobs…' : undefined}>
+            <Select id="sc-task-project" aria-label="Project" value={form.projectId} onChange={(e) => { const v = e.target.value; setForm(f => ({ ...f, projectId: v, predecessorId: '' })); if (error) setError(''); }} placeholder="Select project…" options={projectOptions} aria-invalid={error === NEED_PROJECT || undefined} />
           </Field>
           <Field label="Phase" hint="Phase 1, Rough-in, etc.">
-            <Input value={form.phase} onChange={(e) => setForm({ ...form, phase: e.target.value })} placeholder="Phase 1, Rough-in, etc." />
+            <Input value={form.phase} onChange={(e) => { const v = e.target.value; setForm(f => ({ ...f, phase: v })); }} placeholder="Phase 1, Rough-in, etc." />
           </Field>
           <Field label="Trade">
-            <Select aria-label="Trade" value={form.trade} onChange={(e) => setForm({ ...form, trade: e.target.value })} placeholder="Select trade…" options={TRADE_OPTIONS} />
+            <Select aria-label="Trade" value={form.trade} onChange={(e) => { const v = e.target.value; setForm(f => ({ ...f, trade: v })); }} placeholder="Select trade…" options={TRADE_OPTIONS} />
           </Field>
           <Field label="Status">
-            <Select aria-label="Status" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} options={STATUS_SELECT_OPTIONS} />
+            <Select aria-label="Status" value={form.status} onChange={(e) => { const v = e.target.value; setForm(f => ({ ...f, status: v })); }} options={STATUS_SELECT_OPTIONS} />
           </Field>
           <Field label="Start Date" hint={auto.start ? <><AutoChip /> Day after the predecessor ends — edit freely.</> : undefined}>
             <div className="scDateInput"><SaguaroDatePicker value={form.startDate} onChange={(v) => setStartDate(v)} style={DATE_INPUT_STYLE} /></div>
@@ -531,7 +542,7 @@ export default function SchedulePage() {
             <div className="scDateInput"><SaguaroDatePicker value={form.endDate} onChange={(v) => setEndDate(v)} style={DATE_INPUT_STYLE} /></div>
           </Field>
           <Field label="% Complete">
-            <Input type="number" min="0" max="100" value={form.pctComplete} onChange={(e) => setForm({ ...form, pctComplete: e.target.value })} />
+            <Input type="number" min="0" max="100" value={form.pctComplete} onChange={(e) => { const v = e.target.value; setForm(f => ({ ...f, pctComplete: v })); }} />
           </Field>
           <Field label="Predecessor" hint={form.predecessorId ? (() => {
             const p = taskById.get(form.predecessorId);

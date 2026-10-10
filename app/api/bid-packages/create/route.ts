@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { assertProjectInTenant } from '@/lib/assert-project';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Projects', 'Edit');
@@ -100,7 +101,7 @@ export async function POST(req: NextRequest) {
     } catch (e) { console.error('budget seed skipped:', e); }
 
     return NextResponse.json({ success: true, bidPackage: pkg });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('bid-packages/create', e, "Couldn't create the bid package. Please try again.");
   }
 }

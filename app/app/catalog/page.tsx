@@ -16,6 +16,7 @@
  */
 import React, { useState, useEffect, useMemo } from 'react';
 import { useProjects } from '@/lib/hooks/useProjects';
+import { humanError } from '@/lib/errors';
 import { VERTICAL_COST_CODE } from '@/lib/taxonomy';
 import {
   Package,
@@ -514,7 +515,14 @@ export default function CatalogPage() {
 
   /** Issue vendor-grouped POs from the cart — each at the item's best offer. */
   async function placeOrders() {
-    if (!projectId || cartLines.length === 0) return;
+    if (cartLines.length === 0) return;
+    /* The button used to be disabled until a project was picked, with nothing
+       saying so — on a phone it was a grey button that ignored taps. */
+    if (!projectId) {
+      setPlaceErr('Pick the project these materials are for.');
+      window.setTimeout(() => document.getElementById('cat-po-project')?.focus(), 0);
+      return;
+    }
     setPlacing(true); setPlaceErr('');
     try {
       const byVendor = new Map<string, { line: typeof cartLines[number]; offer: Offer }[]>();
@@ -550,14 +558,15 @@ export default function CatalogPage() {
             notes: `Created from the Materials Catalog. Prices are reference pricing captured ${fmtDate(data?.asOfMax)}; availability is not tracked (no vendor inventory feed connected). Confirm price and stock with ${vendor} before issuing.`,
           }),
         });
-        const d = await r.json();
-        if (d.error) throw new Error(d.error);
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || d.error) throw new Error(d.error || `Could not create the purchase order for ${vendor}.`);
         made++; grand += subtotal;
       }
       setPlaced({ pos: made, total: grand });
       setCart({});
     } catch (e: any) {
-      setPlaceErr(e?.message || 'Could not create the purchase orders. Please try again.');
+      console.error(e);
+      setPlaceErr(humanError(e, 'Could not create the purchase orders. Please try again.'));
     } finally {
       setPlacing(false);
     }
@@ -996,12 +1005,13 @@ export default function CatalogPage() {
       {/* ── Sticky order bar — appears the moment anything is selected ── */}
       {cartCount > 0 && (
         <div style={{
-          position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 5000,
+          // Above the chat launcher (9999), which otherwise sits on this bar's buttons on a phone.
+          position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 10000,
           background: 'linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0) 46%), rgba(12,12,13,0.97)',
           borderTop: `1px solid var(--brand-primary-35)`,
           boxShadow: '0 -8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)',
-          padding: '14px 24px',
-          display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+          padding: '14px 16px calc(14px + env(safe-area-inset-bottom, 0px))',
+          display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
           animation: 'pmRise .2s cubic-bezier(.2,.7,.3,1)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1012,29 +1022,29 @@ export default function CatalogPage() {
             </div>
           </div>
           <div style={{ flex: 1 }} />
-          <select value={projectId} onChange={(e) => setProjectId(e.target.value)} style={{ ...SEL, minWidth: 220 }} className="pmBtn">
+          <select id="cat-po-project" aria-label="Project" aria-required="true" aria-invalid={placeErr && !projectId ? true : undefined} value={projectId} onChange={(e) => { setProjectId(e.target.value); setPlaceErr(''); }} style={{ ...SEL, minWidth: 0, flex: '1 1 220px', minHeight: 44 }} className="pmBtn">
             <option value="">Select project…</option>
             {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
           <button
             onClick={placeOrders}
-            disabled={!projectId || placing}
+            disabled={placing}
             className="pmBtn"
-            style={{ ...goldButtonStyle, opacity: !projectId || placing ? 0.55 : 1, cursor: !projectId || placing ? 'not-allowed' : 'pointer' }}
+            style={{ ...goldButtonStyle, minHeight: 44, opacity: !projectId || placing ? 0.55 : 1, cursor: placing ? 'not-allowed' : 'pointer' }}
           >
             {placing ? 'Creating POs…' : `Create Purchase Order${cartLines.length > 1 ? 's' : ''}`}
           </button>
-          <button onClick={() => { setCart({}); setPlaceErr(''); }} className="pmBtn" style={{ ...ghostButtonStyle, padding: '9px 12px' }} title="Clear selection">
+          <button onClick={() => { setCart({}); setPlaceErr(''); }} className="pmBtn" style={{ ...ghostButtonStyle, padding: '9px 12px', minHeight: 44, minWidth: 44 }} title="Clear selection" aria-label="Clear selection">
             <X size={14} weight="bold" />
           </button>
-          {placeErr && <div style={{ width: '100%', color: RED, fontSize: 12 }}>{placeErr}</div>}
+          {placeErr && <div role="alert" style={{ width: '100%', color: RED, fontSize: 13 }}>{placeErr}</div>}
         </div>
       )}
       {/* ── Lightbox — real product images only, never a placeholder blowup ── */}
       {lightbox && lightbox.imageUrl && (
         <div
           onClick={() => setLightbox(null)}
-          style={{ position: 'fixed', inset: 0, zIndex: 6000, background: 'rgba(2,4,8,0.72)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 28, cursor: 'zoom-out' }}
+          style={{ position: 'fixed', inset: 0, zIndex: 10002, background: 'rgba(2,4,8,0.72)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 28, cursor: 'zoom-out' }}
         >
           <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: 'min(760px, 92vw)', background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 24px 64px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)', cursor: 'default' }}>
             <img src={lightbox.imageUrl} alt={lightbox.name} style={{ display: 'block', maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain', margin: '0 auto', background: DARK }} />

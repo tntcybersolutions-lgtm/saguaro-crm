@@ -16,6 +16,17 @@ import ProjectOwnershipCard from '@/components/projects/ProjectOwnershipCard';
 
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)',GREEN='var(--success)',RED='var(--danger)',BLUE='var(--warning)';
 const fmt = (n:number) => '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+/* The invite form was a fixed `1fr 320px` grid with three fields abreast: on a
+   390px phone the 320px rail left the form a sliver, the inputs collapsed and
+   the rail sat over Send Invitation. One column below 900px / 700px. */
+const TEAM_CSS = `
+.tmInviteGrid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; align-items: start; }
+.tmInviteFields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 16px; }
+.tmInviteGrid button { min-height: 44px; }
+@media (max-width: 900px) { .tmInviteGrid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 700px) { .tmInviteFields { grid-template-columns: minmax(0, 1fr); } }
+`;
 function Badge({label,color='var(--text-secondary)',bg='rgba(163,172,187,.12)'}:{label:string,color?:string,bg?:string}){
   return <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:bg,color}}>{label}</span>;
 }
@@ -88,7 +99,12 @@ export default function TeamPage(){
   };
 
   async function handleInvite() {
-    if (!inviteEmail.trim()) { setInviteMsg('Email is required.'); return; }
+    const email = inviteEmail.trim();
+    if (!EMAIL_RE.test(email)) {
+      setInviteMsg(email ? 'Enter a valid email address — the invite link is sent there.' : 'Enter the email address to send the invite to.');
+      document.getElementById('tm-invite-email')?.focus();
+      return;
+    }
     setInviting(true);
     setInviteMsg('');
     try {
@@ -97,7 +113,7 @@ export default function TeamPage(){
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId, email: inviteEmail.trim(), name: inviteName.trim(), role: inviteRole }),
       });
-      const json = await res.json();
+      const json = await res.json().catch(() => ({}));
       if (!res.ok) { setInviteMsg(json.error || 'Invite failed.'); }
       else {
         setInviteMsg('Invitation sent.');
@@ -318,6 +334,7 @@ export default function TeamPage(){
   }
 
   return <PremiumSurface maxWidth={2200}>
+    <style dangerouslySetInnerHTML={{ __html: TEAM_CSS }} />
     <ModuleHero
       eyebrow={ctx?.project?.name || 'Project Team'}
       eyebrowIcon={<UsersThree size={13} weight="fill" color={GOLD} />}
@@ -347,29 +364,29 @@ export default function TeamPage(){
     )}
 
     {showInvite && <div ref={inviteFormRef} style={{marginBottom:24}}>
-      <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) 320px',gap:18,alignItems:'start'}}>
+      <div className="tmInviteGrid">
       <SectionCard title="Invite Team Member" icon={<UserPlus size={17} weight="duotone" color={GOLD} />} subtitle={ctx?.project?.name ? `Grants access to ${ctx.project.name}` : 'Send a role-scoped invitation to this project.'}>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:14,marginBottom:16}}>
+        <div className="tmInviteFields">
           <div>
-            <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5}}>Email{inviteAuto.email && <AutoChip/>}</label>
-            <input type="email" value={inviteEmail} onChange={e=>{setInviteEmail(e.target.value);setInviteAuto(a=>({...a,email:false}));}} placeholder="email@company.com" style={inputStyle}/>
+            <label htmlFor="tm-invite-email" style={{display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5}}>Email *{inviteAuto.email && <AutoChip/>}</label>
+            <input id="tm-invite-email" type="email" inputMode="email" autoComplete="email" value={inviteEmail} onChange={e=>{setInviteEmail(e.target.value);setInviteAuto(a=>({...a,email:false}));if(inviteMsg&&inviteMsg!=='Invitation sent.')setInviteMsg('');}} placeholder="email@company.com" style={inputStyle} aria-required="true" aria-invalid={!!inviteMsg && inviteMsg!=='Invitation sent.' ? true : undefined}/>
             <div style={hintStyle}>They get a secure accept link by email — it expires after 7 days.</div>
           </div>
           <div>
-            <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5}}>Name{inviteAuto.name && <AutoChip/>}</label>
-            <input type="text" value={inviteName} onChange={e=>{setInviteName(e.target.value);setInviteAuto(a=>({...a,name:false}));}} placeholder="Full name" style={inputStyle}/>
+            <label htmlFor="tm-invite-name" style={{display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5}}>Name{inviteAuto.name && <AutoChip/>}</label>
+            <input id="tm-invite-name" type="text" value={inviteName} onChange={e=>{setInviteName(e.target.value);setInviteAuto(a=>({...a,name:false}));}} placeholder="Full name" style={inputStyle}/>
             <div style={hintStyle}>Shown on the roster and in notifications.</div>
           </div>
           <div>
-            <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5}}>Role{inviteAuto.role && <AutoChip/>}</label>
-            <select value={inviteRole} onChange={e=>{setInviteRole(e.target.value);setInviteAuto(a=>({...a,role:false}));}} style={{...inputStyle,cursor:'pointer'}}>
+            <label htmlFor="tm-invite-role" style={{display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5}}>Role{inviteAuto.role && <AutoChip/>}</label>
+            <select id="tm-invite-role" value={inviteRole} onChange={e=>{setInviteRole(e.target.value);setInviteAuto(a=>({...a,role:false}));}} style={{...inputStyle,cursor:'pointer'}}>
               {['Admin','Manager','Member','Guest','Client','Sub'].map(r=><option key={r}>{r}</option>)}
             </select>
             <div style={hintStyle}>{ROLE_HINTS[inviteRole] || 'Access level for this member.'}</div>
           </div>
         </div>
-        {inviteMsg&&<div style={{fontSize:13,marginBottom:12,color:inviteMsg==='Invitation sent.'?GREEN:RED}}>{inviteMsg}</div>}
-        <div style={{display:'flex',gap:10}}>
+        {inviteMsg&&<div role={inviteMsg==='Invitation sent.'?'status':'alert'} style={{fontSize:13,marginBottom:12,color:inviteMsg==='Invitation sent.'?GREEN:RED}}>{inviteMsg}</div>}
+        <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
           <button onClick={handleInvite} disabled={inviting} style={{...goldButtonStyle,opacity:inviting?.6:1}} className="pmBtn">{inviting?'Sending…':'Send Invitation'}</button>
           <button onClick={()=>{setShowInvite(false);setInviteMsg('');}} style={ghostButtonStyle} className="pmBtn">Cancel</button>
         </div>
