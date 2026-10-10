@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
   push:
     branches: [ops/testflight]
-    paths: ['tools/e2e-jacket.mjs', '.github/workflows/jacket-e2e.yml']
+    paths: ['tools/e2e-jacket.mjs', 'tools/e2e-login.mjs', '.github/workflows/jacket-e2e.yml']
 
 permissions:
   contents: write
@@ -25,9 +25,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      # Chad's real company on the live app (never the App Store demo company).
-      E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
-      E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
       PLAYWRIGHT_DIR: /tmp/pw
     steps:
       - uses: actions/checkout@v4
@@ -37,8 +34,17 @@ jobs:
       - name: Install Playwright
         run: |
           mkdir -p /tmp/pw && cd /tmp/pw && npm init -y > /dev/null
-          npm i --no-audit --no-fund playwright@1.49.1
+          npm i --no-audit --no-fund playwright@1.49.1 bcryptjs@2.4.3
           npx playwright install --with-deps chromium webkit
+      # Chad's real company on the live app (never the App Store demo company):
+      # the E2E_* secrets when set, else the company's CI user. Masked.
+      - name: Real-company login
+        env:
+          E2E_SECRET_EMAIL: ${{ secrets.E2E_EMAIL }}
+          E2E_SECRET_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+          BCRYPT_DIR: /tmp/pw
+        run: node tools/e2e-login.mjs
       - name: Jacket end to end
         run: node tools/e2e-jacket.mjs
       - name: Commit the report to this branch
