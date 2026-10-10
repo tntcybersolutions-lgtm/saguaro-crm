@@ -60,6 +60,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const now = new Date().toISOString();
     const results: Array<{ email: string; status: string; error?: string }> = [];
+    const mails: Promise<void>[] = [];
 
     for (const sub of subs as Array<Record<string, string | undefined>>) {
       const email = String(sub.email || '').trim().toLowerCase();
@@ -100,10 +101,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       }
 
       results.push({ email, status: 'invited' });
-      onSubInvitedToBid(id, (invite as Record<string, string>).id).catch((e) =>
+      mails.push(onSubInvitedToBid(id, (invite as Record<string, string>).id).catch((e) =>
         console.error('[bid-packages/invite-subs] email failed', email, e),
-      );
+      ));
     }
+    /* Wait for the invitations to go out (and onto the jacket's record) before
+       answering: a serverless function is frozen once it has responded, so an
+       un-awaited send could be cut off half way. */
+    await Promise.all(mails);
 
     /* Who was asked to bid, and when — the record a GC needs when a package
        comes back with two responses and they cannot remember who else was on

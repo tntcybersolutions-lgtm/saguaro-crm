@@ -22,14 +22,16 @@
  * Every document opens in the in-app reader, never a browser tab.
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   FileText, Stack, ClipboardText, Ruler, ShieldCheck, Note,
-  Paperclip, WarningCircle, CheckCircle, CaretLeft, ArrowSquareOut,
+  Paperclip, WarningCircle, CheckCircle, CaretLeft, ArrowSquareOut, ChatsCircle,
 } from '@phosphor-icons/react';
 import { SectionCard, PremiumEmpty, ghostButtonStyle, goldButtonStyle } from '@/components/ui/premium';
 import { openPdf } from '@/components/PdfViewer';
+import JacketCorrespondence from '@/components/JacketCorrespondence';
+import type { CommItem } from '@/lib/jacket-correspondence';
 
 const GOLD = 'var(--brand-primary)';
 const TEXT = 'var(--text-primary)';
@@ -66,6 +68,8 @@ export type Jacket = {
     }>;
   };
   bidders: { invited: number; responded: number };
+  /** GC view only: every email, chat, ask and bid on the package, newest first. */
+  correspondence?: CommItem[] | null;
   completeness: { complete: number; total: number; missing: string[] };
 };
 
@@ -78,6 +82,7 @@ const ICON: Record<string, React.ReactNode> = {
   requirements: <ShieldCheck size={16} weight="duotone" />,
   addenda: <WarningCircle size={16} weight="duotone" />,
   attachments: <Paperclip size={16} weight="duotone" />,
+  correspondence: <ChatsCircle size={16} weight="duotone" />,
 };
 
 /**
@@ -134,6 +139,15 @@ export default function BidJacketView({
 }) {
   const firstFilled = jacket.sections.find((s) => s.count > 0)?.key ?? 'invitation';
   const [tab, setTab] = useState(firstFilled);
+  const shelf = useRef<HTMLDivElement>(null);
+  /* On a phone the dividers sit above the shelf, so opening one scrolls to
+     what it holds instead of leaving it below the fold. */
+  const open = (key: string) => {
+    setTab(key);
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 760px)').matches) {
+      requestAnimationFrame(() => shelf.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    }
+  };
   const active = useMemo(() => jacket.sections.find((s) => s.key === tab) ?? null, [jacket, tab]);
 
   const { package: pkg, project, completeness, requirements, lineItems, bidders } = jacket;
@@ -257,11 +271,28 @@ export default function BidJacketView({
         {slot ? <div style={{ marginBottom: 18 }}>{slot}</div> : null}
 
         {/* ── Dividers + shelf ─────────────────────────────────────────────── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 240px) minmax(0, 1fr)', gap: 18, alignItems: 'start' }}>
+        {/* Narrow screens: the dividers stack above the shelf, every one in
+            view at 44px — side by side left the shelf a sliver that wrapped
+            one word per line. Two-up on a small tablet, one column on a phone
+            so no divider name is cut off. */}
+        <style>{`
+          @media (max-width: 760px) {
+            .bjv-grid { grid-template-columns: minmax(0, 1fr) !important; }
+            .bjv-nav { position: static !important; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .bjv-tab { min-height: 44px; }
+            .bjv-shelf { scroll-margin-top: 72px; }
+          }
+          @media (max-width: 520px) {
+            .bjv-nav { grid-template-columns: minmax(0, 1fr); }
+            .bjv-tab { font-size: 14px !important; }
+          }
+        `}</style>
+        <div className="bjv-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 240px) minmax(0, 1fr)', gap: 18, alignItems: 'start' }}>
 
           {/* Tabs. Count and an empty-marker on each, so the shape of the whole
               jacket is visible without opening every divider. */}
           <nav
+            className="bjv-nav"
             style={{
               border: `1px solid ${HAIR}`, borderRadius: 14, overflow: 'hidden',
               background: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015))',
@@ -274,7 +305,9 @@ export default function BidJacketView({
               return (
                 <button
                   key={s.key}
-                  onClick={() => setTab(s.key)}
+                  className="bjv-tab"
+                  aria-pressed={on}
+                  onClick={() => open(s.key)}
                   style={{
                     width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                     padding: '11px 14px', border: 'none', cursor: 'pointer', textAlign: 'left',
@@ -302,7 +335,7 @@ export default function BidJacketView({
           </nav>
 
           {/* Shelf */}
-          <div style={{ minWidth: 0, display: 'grid', gap: 14 }}>
+          <div ref={shelf} className="bjv-shelf" style={{ minWidth: 0, display: 'grid', gap: 14 }}>
             {active && active.key === 'bidform' && (
               <SectionCard flat title="Bid Form" icon={<FileText size={17} weight="duotone" color={GOLD} />} flush>
                 {lineItems.length === 0 ? (
@@ -398,6 +431,12 @@ export default function BidJacketView({
               </SectionCard>
             )}
 
+            {active && active.key === 'correspondence' && active.count > 0 && (
+              <SectionCard flat title="Correspondence" icon={<ChatsCircle size={17} weight="duotone" color={GOLD} />}>
+                <JacketCorrespondence items={jacket.correspondence || []} />
+              </SectionCard>
+            )}
+
             {/* An empty divider says what belongs in it and where to go. */}
             {active && active.count === 0 && (
               <SectionCard>
@@ -409,6 +448,7 @@ export default function BidJacketView({
                     : active.key === 'scope' ? 'Write the scope on the package — it becomes the first pages of the jacket.'
                     : active.key === 'requirements' ? 'Set the insurance limits and bonding on the package.'
                     : active.key === 'invitation' ? 'Add instructions to bidders on the package.'
+                    : active.key === 'correspondence' ? 'Invitations, reminders, addenda, award notices, bids and messages with invited subs land here as they happen.'
                     : 'Attach files to this package and they land in the jacket.'
                   }
                   required={active.required}

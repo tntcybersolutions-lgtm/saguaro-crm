@@ -99,7 +99,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       await tryWrite(db.from('bid_packages').update({ status: 'awarded' }).eq('id', id).eq('tenant_id', user.tenantId), 'bid_packages update');
     }
 
-    onBidAwarded(body.submissionId).catch(console.error);
+    /* Awaited: the award notices and the award chain (subcontract, PO, budget)
+       run here, and a serverless function is frozen once it has responded. */
+    await onBidAwarded(body.submissionId).catch((e) => console.error('[bid-packages/award] onBidAwarded', e));
     return NextResponse.json({ success: true, purchaseOrderId: poId });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

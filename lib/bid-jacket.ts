@@ -19,6 +19,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { buildCorrespondence, type CommItem } from './jacket-correspondence';
 
 export type JacketDoc = {
   id: string;
@@ -65,9 +66,13 @@ const written = (title: string, body: unknown): JacketPage | null => {
 
 export async function assembleJacket(
   db: Db,
-  opts: { packageId: string; tenantId: string; pkg: Record<string, any>; resolveUrl: ResolveUrl },
+  opts: {
+    packageId: string; tenantId: string; pkg: Record<string, any>; resolveUrl: ResolveUrl;
+    /** GC view only: every email, chat, ask and bid on the package. Never for a bidder, the PDF or the issued snapshot. */
+    includeCorrespondence?: boolean;
+  },
 ) {
-  const { packageId, tenantId, pkg, resolveUrl } = opts;
+  const { packageId, tenantId, pkg, resolveUrl, includeCorrespondence = false } = opts;
   const p = pkg;
   const project = p.projects || {};
   const projectId = p.project_id;
@@ -82,9 +87,9 @@ export async function assembleJacket(
       .eq('bid_package_id', packageId).eq('tenant_id', tenantId).is('deleted_at', null).order('sort_order'),
     db.from('bid_package_requirements').select('id,requirement_type,description,min_coverage,is_required,notes')
       .eq('bid_package_id', packageId).eq('tenant_id', tenantId),
-    db.from('bid_package_invites').select('id,company_name,sub_name,sub_email,trade,status,response_status,invited_at')
+    db.from('bid_package_invites').select('id,sub_id,company_name,sub_name,sub_email,trade,status,response_status,invited_at,invitation_sent_at,invitation_viewed_at')
       .eq('bid_package_id', packageId).eq('tenant_id', tenantId),
-    db.from('bid_submissions').select('id,company_name,sub_name,base_amount,amount,status,submitted_at')
+    db.from('bid_submissions').select('id,sub_id,company_name,sub_name,base_amount,amount,base_bid,status,submitted_at,received_at,created_at,clarifications,exclusions,notes')
       .eq('bid_package_id', packageId).eq('tenant_id', tenantId),
   ]);
 
@@ -216,6 +221,35 @@ export async function assembleJacket(
     { key: 'attachments', label: 'Attachments', required: false, count: attached.length, pages: [], docs: attached },
   ];
 
+  /* Correspondence (GC only): the emails Saguaro sent about this package, the
+     portal chats and Ask-for-it requests with its invited subs, bids as they
+     came in, and when invitations were opened — the whole conversation, so the
+     jacket is the complete record. It holds no documents, so the issued
+     manifest's drift check is untouched by new mail. */
+  let correspondence: CommItem[] | null = null;
+  if (includeCorrespondence) {
+    const inviteRows = (invites.data || []) as Record<string, any>[];
+    const subIds = [...new Set(inviteRows.map((i) => i.sub_id).filter(Boolean))] as string[];
+    const [log, chats] = await Promise.all([
+      db.from('communication_log').select('*').eq('tenant_id', tenantId).eq('bid_package_id', packageId)
+        .order('created_at', { ascending: false }).limit(1000),
+      subIds.length && projectId
+        ? db.from('portal_sub_messages').select('id,sub_id,sender_type,sender_name,content,created_at')
+          .eq('tenant_id', tenantId).eq('project_id', projectId).in('sub_id', subIds)
+          .order('created_at', { ascending: false }).limit(1000)
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+    if (log.error) throw log.error;
+    if (chats.error) throw chats.error;
+    correspondence = buildCorrespondence({
+      log: (log.data || []) as Record<string, any>[],
+      chats: (chats.data || []) as Record<string, any>[],
+      invites: inviteRows,
+      submissions: (submissions.data || []) as Record<string, any>[],
+    });
+    sections.push({ key: 'correspondence', label: 'Correspondence', required: false, count: correspondence.length, pages: [], docs: [] });
+  }
+
   /* Completeness counts only the sections a jacket must have, and names the
      empty ones. "82% complete" tells a GC nothing they can act on; "Drawings,
      Specifications" tells them exactly what to go and fix. */
@@ -254,6 +288,8 @@ export async function assembleJacket(
       invited: (invites.data || []).length,
       responded: (submissions.data || []).length,
     },
+    /** GC view only (null otherwise). */
+    correspondence,
     completeness: {
       complete: requiredSections.length - missing.length,
       total: requiredSections.length,

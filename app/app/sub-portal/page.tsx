@@ -7,6 +7,7 @@ import { LOCAL_DAY_HEADER, localDay } from '@/lib/calendar-day';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 import SubInbox from '@/components/sub-portal/SubInbox';
+import ComplianceChecklist from '@/components/sub-portal/ComplianceChecklist';
 import { UsersThree, CheckCircle, Clock, Prohibit, WarningCircle, XCircle, FileX, Plus, UploadSimple, ListChecks, ClockCounterClockwise, FileText, ShieldCheck, AddressBook, Megaphone, Envelope } from '@phosphor-icons/react';
 
 /* ── palette ── */
@@ -960,6 +961,8 @@ export default function SubPortalPage() {
       {/* ════════════════════════════════════════════ */}
       {tab === 'compliance' && (
         <div>
+          {/* Who owes a COI or W-9 — including ones never uploaded — with Ask for it. */}
+          <div style={{ marginBottom: 24 }}><ComplianceChecklist /></div>
           {/* compliance summary */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
             {[

@@ -18,6 +18,7 @@ import {
 } from './email';
 import { must } from '@/lib/db-write';
 import { INSURANCE_ALERT_SELECT, insuranceAlertParties } from '@/lib/insurance-alert';
+import { withComm } from '@/lib/comm-log';
 
 /* Fallback is the live domain. It used to be a Vercel preview URL that no
    longer resolves, so any email sent without NEXT_PUBLIC_APP_URL set carried
@@ -316,10 +317,14 @@ export async function onSubInvitedToBid(bidPackageId: string, inviteId: string):
        page at all (404) and whose auth route validates portal_sub_sessions.token
        — a different token type entirely. Every bid invitation ever sent carried
        a link that could not resolve. */
-    const mail = await sendSubInvitedToBid(
-      inv.sub_email, inv.sub_name, project.name, pkg.trade,
-      pkg.bid_due_date || pkg.due_date || '', pkg.scope_summary || pkg.scope_narrative || '',
-      `${APP_URL}/portals/bid/${inv.token}`
+    const mail = await withComm(
+      { tenantId: project.tenant_id, projectId: project.id, bidPackageId: pkg.id, subId: inv.sub_id ?? null,
+        relatedType: 'bid_invite', relatedId: inviteId, toName: inv.company_name || inv.sub_name || null },
+      () => sendSubInvitedToBid(
+        inv.sub_email, inv.sub_name, project.name, pkg.trade,
+        pkg.bid_due_date || pkg.due_date || '', pkg.scope_summary || pkg.scope_narrative || '',
+        `${APP_URL}/portals/bid/${inv.token}`
+      ),
     );
     if (!mail.sent) {
       console.error('[onSubInvitedToBid] invitation not delivered to', inv.sub_email, '-', mail.error);
@@ -364,7 +369,11 @@ export async function onBidSubmitted(bidSubmissionId: string): Promise<void> {
 
     const gcEmail = project.gc_email;
     if (gcEmail) {
-      await sendBidSubmitted(gcEmail, project.gc_name || 'GC', s.sub_name, project.name, bidAmount);
+      await withComm(
+        { tenantId: project.tenant_id, projectId: project.id, bidPackageId: pkg.id, subId: s.sub_id ?? null,
+          relatedType: 'bid_received', relatedId: bidSubmissionId, toName: project.gc_name || null },
+        () => sendBidSubmitted(gcEmail, project.gc_name || 'GC', s.sub_name, project.name, bidAmount),
+      );
     }
 
     await createNotification(
@@ -412,9 +421,13 @@ export async function onBidAwarded(bidSubmissionId: string): Promise<void> {
       .eq('id', w.invite_id)
       .single();
     if (winnerInvite) {
-      await sendBidAwarded(
-        (winnerInvite as any).sub_email, w.sub_name, project.name,
-        awardAmount, project.start_date || ''
+      await withComm(
+        { tenantId: project.tenant_id, projectId: project.id, bidPackageId: pkg.id, subId: w.sub_id ?? null,
+          relatedType: 'bid_award', relatedId: bidSubmissionId, toName: w.company_name || w.sub_name || null },
+        () => sendBidAwarded(
+          (winnerInvite as any).sub_email, w.sub_name, project.name,
+          awardAmount, project.start_date || ''
+        ),
       );
     }
 
@@ -428,7 +441,11 @@ export async function onBidAwarded(bidSubmissionId: string): Promise<void> {
       for (const loser of losers as any[]) {
         const loserEmail = loser.bid_package_invites?.sub_email;
         if (loserEmail) {
-          await sendBidNotAwarded(loserEmail, loser.sub_name, project.name);
+          await withComm(
+            { tenantId: project.tenant_id, projectId: project.id, bidPackageId: pkg.id, subId: loser.sub_id ?? null,
+              relatedType: 'bid_not_awarded', relatedId: loser.id, toName: loser.company_name || loser.sub_name || null },
+            () => sendBidNotAwarded(loserEmail, loser.sub_name, project.name),
+          );
         }
       }
     }

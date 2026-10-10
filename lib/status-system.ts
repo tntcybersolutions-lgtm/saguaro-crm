@@ -275,6 +275,17 @@ export const MODULES: Record<string, ModuleDef> = {
     },
   },
 
+  /* An email Saguaro sent (communication_log.status). */
+  emails: {
+    noun: 'email',
+    stages: [],
+    statuses: {
+      sent:     { label: 'Sent',     tone: 'good', action: 'Handed to the mail service' },
+      failed:   { label: 'Failed',   tone: 'bad',  action: "Didn't send — check the address and send it again" },
+      not_sent: { label: 'Not sent', tone: 'warn', action: "Email isn't set up on this account, so nothing left Saguaro" },
+    },
+  },
+
   change_orders: {
     noun: 'change order',
     stages: ['Draft', 'Priced', 'Submitted', 'Review', 'Approved'],
