@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { sendSubPortalInvite } from '@/lib/email';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,12 +25,13 @@ export async function POST(req: NextRequest) {
     const db = createServerClient();
 
     // Look up the sub portal user (tenant-scoped).
-    const { data: portalUser } = await db
+    const { data: portalUser, error: puErr } = await db
       .from('portal_users')
       .select('*')
       .eq('id', userId)
       .eq('tenant_id', user.tenantId)
       .maybeSingle();
+    if (puErr) throw puErr;
 
     if (!portalUser) return NextResponse.json({ error: 'Portal user not found' }, { status: 404 });
 
@@ -42,6 +44,7 @@ export async function POST(req: NextRequest) {
       .from('profiles')
       .select('full_name, company')
       .eq('id', user.id)
+      .eq('tenant_id', user.tenantId)
       .maybeSingle();
     const prof = (profile || {}) as Record<string, any>;
     const gcCompanyName = prof.company || prof.full_name || 'Your General Contractor';
@@ -53,6 +56,7 @@ export async function POST(req: NextRequest) {
         .from('projects')
         .select('name')
         .eq('id', pu.project_id)
+        .eq('tenant_id', user.tenantId)
         .maybeSingle();
       projectName = (project as Record<string, any> | null)?.name || projectName;
     }
@@ -61,7 +65,7 @@ export async function POST(req: NextRequest) {
       ? `${APP_URL}/portals/sub/${pu.token}`
       : `${APP_URL}/portals/sub/login`;
 
-    await sendSubPortalInvite({
+    const mail = await sendSubPortalInvite({
       to,
       contactName: pu.name || '',
       companyName: pu.company || pu.name || to,
@@ -70,10 +74,11 @@ export async function POST(req: NextRequest) {
       portalUrl,
       isResend: true,
     });
+    // "Sent" only when it was: the button used to say so even when nothing left.
+    if (!mail.sent) return NextResponse.json({ error: mail.error || 'The invite was not sent.', sentTo: to }, { status: 502 });
 
     return NextResponse.json({ success: true, sentTo: to });
   } catch (err) {
-    console.error('[sub-portal/resend]', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('sub-portal/resend', err);
   }
 }

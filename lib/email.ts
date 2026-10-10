@@ -589,14 +589,14 @@ export async function sendClientPortalInvite(opts: {
   portalUrl: string;
   expiresAt?: string | null;
   isResend?: boolean;
-}): Promise<void> {
+}): Promise<SendResult> {
   const { to, clientName, gcCompanyName, projectName, portalUrl, expiresAt, isResend } = opts;
   const subjectPrefix = isResend ? 'Reminder: ' : '';
   const expiryLine = expiresAt
     ? `<tr><td style="padding:8px 0;font-size:13px;color:#6b7280;width:180px;">Access Valid Until</td><td style="padding:8px 0;font-size:13px;color:#111827;font-weight:600;">${new Date(expiresAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</td></tr>`
     : '';
 
-  await send(to, `${subjectPrefix}Your Project Portal is Ready — ${projectName}`, layout(`
+  return send(to, `${subjectPrefix}Your Project Portal is Ready — ${projectName}`, layout(`
     <div style="background:#0D1116;border-radius:8px;padding:20px 24px;margin-bottom:24px;">
       <p style="margin:0;font-size:12px;color:#FFE600;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Client Portal Access</p>
       <h1 style="margin:6px 0 0;font-size:24px;font-weight:800;color:#ffffff;line-height:1.2;">${projectName}</h1>
@@ -646,12 +646,12 @@ export async function sendSubPortalInvite(opts: {
   projectName: string;
   portalUrl: string;
   isResend?: boolean;
-}): Promise<void> {
+}): Promise<SendResult> {
   const { to, contactName, companyName, gcCompanyName, projectName, portalUrl, isResend } = opts;
   const subjectPrefix = isResend ? 'Reminder: ' : '';
   const displayName = contactName || companyName;
 
-  await send(to, `${subjectPrefix}Subcontractor Portal Access — ${projectName}`, layout(`
+  return send(to, `${subjectPrefix}Subcontractor Portal Access — ${projectName}`, layout(`
     <div style="background:#0D1116;border-radius:8px;padding:20px 24px;margin-bottom:24px;">
       <p style="margin:0;font-size:12px;color:#FF8A00;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Subcontractor Portal Access</p>
       <h1 style="margin:6px 0 0;font-size:24px;font-weight:800;color:#ffffff;line-height:1.2;">${projectName}</h1>

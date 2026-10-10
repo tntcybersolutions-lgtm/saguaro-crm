@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { LOCAL_DAY_HEADER, daysUntilDay, plausibleToday } from '@/lib/calendar-day';
+import { fileNameFromUrl } from '@/lib/sub-portal-view';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,18 +48,6 @@ function fmtBytes(n: number | null): string {
   return `${i === 0 || v >= 10 ? Math.round(v) : v.toFixed(1)} ${units[i]}`;
 }
 
-function basename(url: string | null): string | null {
-  if (!url) return null;
-  try {
-    const clean = url.split('?')[0].split('#')[0];
-    const parts = clean.split('/');
-    const last = decodeURIComponent(parts[parts.length - 1] || '');
-    return last || null;
-  } catch {
-    return null;
-  }
-}
-
 function normalizeDocType(dt: string): string {
   const s = (dt || '').toLowerCase();
   if (s.includes('insur') || s === 'coi' || s.includes('liab')) return 'insurance';
@@ -65,14 +56,20 @@ function normalizeDocType(dt: string): string {
   return s || 'license';
 }
 
+/**
+ * expiry_date is a calendar day, good through its end (lib/calendar-day) —
+ * compared as a day against the GC's own day, not as midnight UTC, which
+ * showed a COI "expired" from the evening before its last day.
+ */
 function complianceStatus(
   expiry: string | null,
   hasFile: boolean,
+  today: string,
 ): 'valid' | 'expiring' | 'expired' | 'missing' {
   if (!hasFile) return 'missing';
   if (expiry) {
-    const days = Math.ceil((new Date(expiry).getTime() - Date.now()) / 86_400_000);
-    if (!Number.isNaN(days)) {
+    const days = daysUntilDay(expiry, today);
+    if (days !== null) {
       if (days < 0) return 'expired';
       if (days <= 30) return 'expiring';
     }
@@ -95,10 +92,18 @@ export async function GET(req: NextRequest) {
     .eq('tenant_id', tenantId)
     .eq('portal_type', 'sub')
     .order('created_at', { ascending: false });
-  if (rosterErr) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+  if (rosterErr) return apiError('sub-portal/roster', rosterErr);
   const roster = rosterRows || [];
+
+  /* The other panels load independently. One that fails is named in
+     `unavailable` (and logged) so the page can say "Compliance didn't load"
+     — these used to be swallowed into empty lists that read as "nothing on
+     file", which for compliance is a lie with consequences. */
+  const unavailable: string[] = [];
+  const failed = (label: string, e: unknown) => {
+    console.error(`[sub-portal] ${label} did not load`, e);
+    unavailable.push(label);
+  };
 
   // sub id -> { name, company, trade } lookup for joins
   const subById = new Map<string, { name: string; company: string; trade: string }>();
@@ -114,12 +119,13 @@ export async function GET(req: NextRequest) {
   // ── activity ──
   let activity: unknown[] = [];
   try {
-    const { data } = await db
+    const { data, error } = await db
       .from('portal_activity')
       .select('*')
       .eq('tenant_id', tenantId)
       .order('created_at', { ascending: false })
       .limit(200);
+    if (error) throw error;
     activity = (data || []).map((a) => {
       const row = a as Record<string, unknown>;
       const meta =
@@ -145,31 +151,34 @@ export async function GET(req: NextRequest) {
         timestamp: (row.created_at as string) || new Date().toISOString(),
       };
     });
-  } catch {
-    activity = [];
+  } catch (e) {
+    failed('Recent activity', e);
   }
 
   // ── project-name lookup for documents ──
   const projMap = new Map<string, string>();
   try {
-    const { data } = await db.from('projects').select('id, name').eq('tenant_id', tenantId);
+    const { data, error } = await db.from('projects').select('id, name').eq('tenant_id', tenantId);
+    if (error) throw error;
     for (const p of data || []) {
       const row = p as Record<string, unknown>;
       projMap.set(String(row.id), (row.name as string) || '');
     }
-  } catch {
-    /* project names are cosmetic; fall back to '--' below */
+  } catch (e) {
+    // Names only label rows ('--' below) — but the job pickers need them too.
+    failed('Job names', e);
   }
 
   // ── shared documents ──
   let documents: unknown[] = [];
   try {
-    const { data } = await db
+    const { data, error } = await db
       .from('portal_documents')
       .select('*')
       .eq('tenant_id', tenantId)
       .order('created_at', { ascending: false })
       .limit(500);
+    if (error) throw error;
     documents = (data || []).map((d) => {
       const row = d as Record<string, unknown>;
       const projectId = row.project_id ? String(row.project_id) : '';
@@ -183,19 +192,21 @@ export async function GET(req: NextRequest) {
         size: fmtBytes((row.file_size as number) ?? null),
       };
     });
-  } catch {
-    documents = [];
+  } catch (e) {
+    failed('Shared documents', e);
   }
 
   // ── compliance ──
   let compliance: unknown[] = [];
+  const today = plausibleToday(req.headers.get(LOCAL_DAY_HEADER));
   try {
-    const { data } = await db
+    const { data, error } = await db
       .from('portal_sub_compliance_docs')
       .select('*')
       .eq('tenant_id', tenantId)
       .order('created_at', { ascending: false })
       .limit(500);
+    if (error) throw error;
     compliance = (data || []).map((c) => {
       const row = c as Record<string, unknown>;
       const sub = row.sub_id ? subById.get(String(row.sub_id)) : undefined;
@@ -206,26 +217,29 @@ export async function GET(req: NextRequest) {
         subName: sub?.name || 'Unknown Sub',
         company: sub?.company || '',
         docType: normalizeDocType((row.doc_type as string) || ''),
-        status: complianceStatus((row.expiry_date as string) ?? null, hasFile),
+        status: complianceStatus((row.expiry_date as string) ?? null, hasFile, today),
         expirationDate: (row.expiry_date as string) ?? null,
-        fileName: basename((row.file_url as string) ?? null),
+        // The file's own name: portal uploads are stored as "<13-digit upload
+        // time>-<name>", and that stamp used to show on this screen.
+        fileName: fileNameFromUrl((row.file_url as string) ?? null) || null,
         uploadedDate: (row.created_at as string) ?? null,
       };
     });
-  } catch {
-    compliance = [];
+  } catch (e) {
+    failed('Compliance documents', e);
   }
 
   // ── announcements (portal_messages tagged sender_type='announcement') ──
   let announcements: unknown[] = [];
   try {
-    const { data } = await db
+    const { data, error } = await db
       .from('portal_messages')
       .select('*')
       .eq('tenant_id', tenantId)
       .eq('sender_type', 'announcement')
       .order('created_at', { ascending: false })
       .limit(200);
+    if (error) throw error;
     announcements = (data || []).map((m) => {
       const row = m as Record<string, unknown>;
       const att =
@@ -241,8 +255,8 @@ export async function GET(req: NextRequest) {
         sentBy: (row.sender_name as string) || 'You',
       };
     });
-  } catch {
-    announcements = [];
+  } catch (e) {
+    failed('Announcements', e);
   }
 
   // Real tenant project names for the roster filters / invite project-access
@@ -251,5 +265,5 @@ export async function GET(req: NextRequest) {
     .filter((n): n is string => !!n)
     .sort((a, b) => a.localeCompare(b));
 
-  return NextResponse.json({ data: roster, activity, documents, compliance, announcements, projects });
+  return NextResponse.json({ data: roster, activity, documents, compliance, announcements, projects, unavailable });
 }

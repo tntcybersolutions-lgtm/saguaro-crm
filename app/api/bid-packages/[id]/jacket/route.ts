@@ -35,8 +35,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       .eq('id', id)
       .eq('tenant_id', user.tenantId)
       .maybeSingle();
-    /* A failed read is an error, not "this package does not exist" — a 404
-       here sent the GC back to the list for what was really an outage. */
+    // A refused read is an error, not "Not found".
     if (pkgErr) throw pkgErr;
     if (!pkg) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 

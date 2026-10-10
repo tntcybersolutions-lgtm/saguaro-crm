@@ -8,9 +8,9 @@ import { useParams, useRouter } from 'next/navigation';
 import { toCents, toDollars, sumCents } from '@/lib/calc';
 import { FolderOpen, Envelope, ArrowLeft, FileText, Lock, Trophy, Star, Plus, CheckCircle, XCircle, CurrencyDollar, UsersThree, Receipt, Scales } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, FlowStrip, ghostButtonStyle, goldButtonStyle } from '@/components/ui/premium';
-import { openPdf } from '@/components/PdfViewer';
 import BidPackageDetails from '@/components/BidPackageDetails';
 import BidFormEditor, { toBidFormLines, type BidFormLine } from '@/components/BidFormEditor';
+import JacketPdfButton from '@/components/JacketPdfButton';
 
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)',GREEN='var(--success)',RED='var(--danger)';
 const MUTED='rgba(255,255,255,0.62)';        // section-header meta text
@@ -105,6 +105,10 @@ export default function BidPackageDetailPage() {
 
   const [pkg, setPkg] = useState<BidPackage | null>(null);
   const [loading, setLoading] = useState(true);
+  /* A failed load is not "not found". It used to be: any error, network or
+     server, fell into an empty catch and the page said the package may have
+     been removed. */
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [reminding, setReminding] = useState<string | null>(null);
   const [awarding, setAwarding] = useState<string | null>(null);
   const [closing, setClosing] = useState(false);
@@ -166,9 +170,11 @@ export default function BidPackageDetailPage() {
 
   async function loadPackage() {
     setLoading(true);
+    setLoadError(null);
     try {
       const r = await fetch(`/api/bid-packages/${id}`);
-      const d = await r.json() as any;
+      const d = await r.json().catch(() => ({})) as any;
+      if (!r.ok && r.status !== 404) throw new Error(d.error || `The server answered ${r.status}.`);
       if (d.bidPackage) {
         // GET route returns items / invites / submissions at the TOP LEVEL (not nested on
         // bidPackage) and with DB column names. Map them onto the page's interfaces so SOV,
@@ -194,7 +200,10 @@ export default function BidPackageDetailPage() {
         }));
         setPkg({ ...d.bidPackage, sov_items, invited_subs, bid_submissions });
       }
-    } catch { /* leave null */ } finally { setLoading(false); }
+    } catch (e) {
+      console.error('[bid-package] load', id, e);
+      setLoadError(e instanceof Error && e.message ? e.message : "Couldn't load this bid package.");
+    } finally { setLoading(false); }
   }
 
   async function sendReminder(inviteId: string, companyName: string) {
@@ -309,23 +318,6 @@ export default function BidPackageDetailPage() {
     } finally { setInviting(false); }
   }
 
-  async function downloadPDF() {
-    if (pkg?.jacket_pdf_url) {
-      openPdf({ url: `/api/files/open?u=${encodeURIComponent(pkg.jacket_pdf_url)}` });
-      return;
-    }
-    try {
-      const r = await fetch('/api/documents/bid-package', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ packageId: id, projectId }),
-      });
-      const d = await r.json().catch(() => ({})) as any;
-      const url = d.url || d.pdfUrl;
-      if (!r.ok || !url) throw new Error(d.error || 'generation failed');
-      openPdf({ url });
-    } catch { showToast('Could not generate the bid package PDF. Please try again.', 'var(--danger)'); }
-  }
-
   // ── Loading / Not Found ──────────────────────────────────────────────────
 
   if (loading) return (
@@ -359,12 +351,18 @@ export default function BidPackageDetailPage() {
         <PremiumEmpty
           tone="error"
           icon={<Envelope size={30} weight="duotone" color={GOLD} />}
-          title="Bid Package Not Found"
-          description="We couldn't load this bid package. It may have been removed, or the link is out of date."
+          title={loadError ? "Couldn't Load This Bid Package" : 'Bid Package Not Found'}
+          description={loadError
+            ? `${loadError} Nothing has been changed.`
+            : "We couldn't find this bid package. It may have been removed, or the link is out of date."}
           action={
-            <button onClick={() => router.push(`/app/projects/${projectId}/bid-packages`)} style={ghostButtonStyle} className="pmBtn">
-              <ArrowLeft size={15} weight="bold" /> Go Back
-            </button>
+            loadError ? (
+              <button onClick={loadPackage} style={{ ...ghostButtonStyle, minHeight: 44 }} className="pmBtn">Try Again</button>
+            ) : (
+              <button onClick={() => router.push(`/app/projects/${projectId}/bid-packages`)} style={{ ...ghostButtonStyle, minHeight: 44 }} className="pmBtn">
+                <ArrowLeft size={15} weight="bold" /> Go Back
+              </button>
+            )
           }
         />
       </SectionCard>
@@ -391,9 +389,16 @@ export default function BidPackageDetailPage() {
       >
         <FolderOpen size={16} weight="duotone" /> Open Bid Jacket
       </Link>
-      <button onClick={downloadPDF} style={ghostButtonStyle} className="pmBtn">
-        <FileText size={16} weight="regular" /> Printed Jacket PDF
-      </button>
+      {/* Download PDF builds the printed jacket from the jacket as it is now.
+          It used to open whatever PDF was stored (most were the snapshot Sage
+          took at creation), and with none stored it posted to a generator
+          that answered 400 every time. */}
+      <JacketPdfButton
+        packageId={id}
+        title={`${pkg.name || pkg.trade || 'Bid package'} — Bid Jacket`}
+        onBuilt={(pdf) => setPkg((cur) => (cur ? { ...cur, jacket_pdf_url: pdf.storedUrl } : cur))}
+        onError={(msg) => showToast(msg, 'var(--danger)')}
+      />
       {/* LEVELLING BELONGS WHERE THE BIDS ARE.
           This page lists every bid received and an Award button beside each
           one, and had no route to the screen that compares them — spread, low
@@ -427,7 +432,9 @@ export default function BidPackageDetailPage() {
     <>
       {/* Toast */}
       {toast && (
-        <div style={{ position: 'fixed', top: 20, right: 24, zIndex: 9999, background: 'var(--bg-solid-2)', border: `1px solid ${toast.color}`, borderRadius: 10, padding: '12px 20px', color: toast.color, fontSize: 14, fontWeight: 700, boxShadow: '0 4px 24px rgba(0,0,0,.4)' }}>
+        /* maxWidth: pinned to the right with no limit, a long message on a
+           phone ran off the left edge of the screen. */
+        <div role="status" style={{ position: 'fixed', top: 20, right: 24, maxWidth: 'calc(100vw - 48px)', zIndex: 9999, background: 'var(--bg-solid-2)', border: `1px solid ${toast.color}`, borderRadius: 10, padding: '12px 20px', color: toast.color, fontSize: 14, fontWeight: 700, boxShadow: '0 4px 24px rgba(0,0,0,.4)' }}>
           {toast.msg}
         </div>
       )}
