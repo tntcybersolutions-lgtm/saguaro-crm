@@ -104,9 +104,9 @@ export default function ReviewsPage() {
         <div style={{ fontSize: 11, fontWeight: 700, color: DIM, letterSpacing: 0.3, marginBottom: 10 }}>Add a Review</div>
         <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
           {[1, 2, 3, 4, 5].map((n) => (
-            <button key={n} onClick={() => setRating(n)} aria-label={`${n} star`} style={{
+            <button key={n} type="button" onClick={() => setRating(n)} aria-label={`${n} star`} aria-pressed={n <= rating} style={{
               background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
-              fontSize: 24, color: n <= rating ? GOLD : BORDER,
+              minWidth: 44, minHeight: 44, fontSize: 24, color: n <= rating ? GOLD : BORDER,
             }}>★</button>
           ))}
         </div>
@@ -115,7 +115,7 @@ export default function ReviewsPage() {
         <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="What did they say?" rows={3}
           style={{ width: '100%', boxSizing: 'border-box', padding: '9px 13px', background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-          <button onClick={submit} disabled={saving} style={{ padding: '9px 18px', background: GOLD, color: 'var(--bg-base)', border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
+          <button type="button" onClick={submit} disabled={saving} style={{ minHeight: 44, padding: '9px 18px', background: GOLD, color: 'var(--bg-base)', border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
             {saving ? 'Saving…' : 'Add Review'}
           </button>
         </div>

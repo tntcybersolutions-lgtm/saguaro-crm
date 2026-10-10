@@ -291,24 +291,24 @@ async function buildOps(ctx: BuildCtx, projects: Map<string, ProjectInfo>, peopl
       const date = (x.re_inspection_date || (x.scheduled_date ? String(x.scheduled_date).slice(0, 10) : null)) as string | null;
       const name = x.inspection_type || 'Inspection';
       if (date && date >= today && date <= horizon && !INSPECTION_DONE.includes(status)) {
-        inspSchedule.push({ id: `insp-s:${x.id}`, kind: 'Inspection', title: name, date, time: x.scheduled_date && String(x.scheduled_date).length > 10 ? String(x.scheduled_date).slice(11, 16) : null, projectId: x.project_id, projectName: pname(x.project_id), who: x.inspector_name || x.inspector || null, href: `/app/projects/${x.project_id}/inspections` });
+        inspSchedule.push({ id: `insp-s:${x.id}`, kind: 'Inspection', title: name, date, time: x.scheduled_date && String(x.scheduled_date).length > 10 ? String(x.scheduled_date).slice(11, 16) : null, projectId: x.project_id, projectName: pname(x.project_id), who: x.inspector_name || x.inspector || null, href: `/app/projects/${x.project_id}/inspections?inspection=${x.id}` });
       }
       const failed = inspectionOutcome(x) === 'failed';
       if (INSPECTION_DONE.includes(status) && !failed) continue;
       if (failed) {
         addRisk(x.project_id, 'Failed inspection');
-        items.push({ id: `insp:${x.id}`, sourceType: 'inspection', sourceId: x.id, title: `${name} failed`, projectId: x.project_id, projectName: pname(x.project_id), owner: x.inspector_name || null, dueAt: x.re_inspection_date || null, tier: 0, reason: x.re_inspection_date ? `Re-inspection ${dueReason(x.re_inspection_date, today).toLowerCase()}` : 'Failed — no re-inspection date set', actionLabel: 'Open Inspection', href: `/app/projects/${x.project_id}/inspections`, updatedAt: x.created_at || null });
+        items.push({ id: `insp:${x.id}`, sourceType: 'inspection', sourceId: x.id, title: `${name} failed`, projectId: x.project_id, projectName: pname(x.project_id), owner: x.inspector_name || null, dueAt: x.re_inspection_date || null, tier: 0, reason: x.re_inspection_date ? `Re-inspection ${dueReason(x.re_inspection_date, today).toLowerCase()}` : 'Failed — no re-inspection date set', actionLabel: 'Open Inspection', href: `/app/projects/${x.project_id}/inspections?inspection=${x.id}`, updatedAt: x.created_at || null });
         continue;
       }
       if (!date) continue;
       if (date === today) {
-        items.push({ id: `insp:${x.id}`, sourceType: 'inspection', sourceId: x.id, title: `${name} today`, projectId: x.project_id, projectName: pname(x.project_id), owner: x.inspector_name || null, dueAt: date, tier: 1, reason: 'Scheduled today — result not recorded yet', actionLabel: 'Open Inspection', href: `/app/projects/${x.project_id}/inspections`, updatedAt: x.created_at || null });
+        items.push({ id: `insp:${x.id}`, sourceType: 'inspection', sourceId: x.id, title: `${name} today`, projectId: x.project_id, projectName: pname(x.project_id), owner: x.inspector_name || null, dueAt: date, tier: 1, reason: 'Scheduled today — result not recorded yet', actionLabel: 'Open Inspection', href: `/app/projects/${x.project_id}/inspections?inspection=${x.id}`, updatedAt: x.created_at || null });
       } else if (date < today) {
         overdueWork++;
         addRisk(x.project_id, 'Inspection date passed with no result');
-        items.push({ id: `insp:${x.id}`, sourceType: 'inspection', sourceId: x.id, title: name, projectId: x.project_id, projectName: pname(x.project_id), owner: x.inspector_name || null, dueAt: date, tier: 2, reason: `Scheduled ${plural(daysBetween(date, today), 'day')} ago — no result recorded`, actionLabel: 'Record Result', href: `/app/projects/${x.project_id}/inspections`, updatedAt: x.created_at || null });
+        items.push({ id: `insp:${x.id}`, sourceType: 'inspection', sourceId: x.id, title: name, projectId: x.project_id, projectName: pname(x.project_id), owner: x.inspector_name || null, dueAt: date, tier: 2, reason: `Scheduled ${plural(daysBetween(date, today), 'day')} ago — no result recorded`, actionLabel: 'Record Result', href: `/app/projects/${x.project_id}/inspections?inspection=${x.id}&record=1`, updatedAt: x.created_at || null });
       } else if (date <= horizon) {
-        items.push({ id: `insp:${x.id}`, sourceType: 'inspection', sourceId: x.id, title: name, projectId: x.project_id, projectName: pname(x.project_id), owner: x.inspector_name || null, dueAt: date, tier: 4, reason: dueReason(date, today), actionLabel: 'Open Inspection', href: `/app/projects/${x.project_id}/inspections`, updatedAt: x.created_at || null });
+        items.push({ id: `insp:${x.id}`, sourceType: 'inspection', sourceId: x.id, title: name, projectId: x.project_id, projectName: pname(x.project_id), owner: x.inspector_name || null, dueAt: date, tier: 4, reason: dueReason(date, today), actionLabel: 'Open Inspection', href: `/app/projects/${x.project_id}/inspections?inspection=${x.id}`, updatedAt: x.created_at || null });
       }
     }
   });

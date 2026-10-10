@@ -15,16 +15,21 @@
  * Every read / write is the one this screen already used:
  *   list    GET  /api/projects/[id]/inspections
  *   create  POST /api/inspections/create   (409 requiresQcOverride → confirm → override)
+ *   result  PATCH /api/inspections/[id]    (Record Result: result, status, held date,
+ *                                           deficiencies, re-inspection date, notes)
+ *
+ * Deep link: ?inspection=<id> opens that record; &record=1 also opens its
+ * Record Result form (the Home queue's "Record Result" lands here).
  */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
-import { ClipboardText, Plus, Warning, ArrowsClockwise, X } from '@phosphor-icons/react';
+import { ClipboardText, Plus, Warning, ArrowsClockwise, X, CheckCircle } from '@phosphor-icons/react';
 import {
   PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState,
-  FormModal, Field, Input, Select, FormGrid, DetailList, Toast, useToast,
+  FormModal, Field, Input, Select, Textarea, FormGrid, DetailList, Toast, useToast,
   type Column, type Action, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
 import { FlowSteps, InsightRow, AutoChip } from '@/components/ui/premium';
@@ -52,6 +57,9 @@ interface Inspection {
 
 const INSPECTION_TYPES = ['Foundation','Framing','Rough Electrical','Rough Plumbing','Rough HVAC','Insulation','Drywall','Final Electrical','Final Plumbing','Final Building'];
 const EMPTY_FORM = { type: 'Framing', date: '', inspector: '', agency: '', notes: '' };
+const RESULT_OPTIONS = ['Passed', 'Failed', 'Conditional Pass'] as const;
+type ResultChoice = typeof RESULT_OPTIONS[number];
+const EMPTY_RESULT = { result: 'Passed' as ResultChoice, heldOn: '', deficiencies: '0', reinspect: '', notes: '' };
 
 const localIso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 /** Date-only values parse at local noon ('T12:00:00') so they never shift a day under UTC. */
@@ -184,6 +192,11 @@ export default function InspectionsPage() {
   const [search, setSearch] = useState('');
   const [filterResult, setFilterResult] = useState<ResultFilter>('all');
   const [filterType, setFilterType] = useState('all');
+  // Record Result — the PATCH this screen never had a form for.
+  const [recordId, setRecordId] = useState<string | null>(null);
+  const [resultForm, setResultForm] = useState(EMPTY_RESULT);
+  const [resultSaving, setResultSaving] = useState(false);
+  const [resultError, setResultError] = useState('');
 
   const fetchInspections = useCallback(async () => {
     setLoading(true);
@@ -277,6 +290,73 @@ export default function InspectionsPage() {
   }
   function closeComposer() { guard.requestClose(() => { setShowForm(false); setErrorMsg(''); }); }
 
+  // Record Result — prefilled from the record: its result if one is on file
+  // (Passed otherwise), the day it was held (today if it was booked ahead),
+  // the deficiency count and the notes already there.
+  function openRecord(i: Inspection) {
+    const k = canonResult(i.result);
+    const current: ResultChoice = k === 'failed' ? 'Failed' : k === 'conditional pass' ? 'Conditional Pass' : 'Passed';
+    const booked = (i.date || '').slice(0, 10);
+    setResultForm({
+      result: current,
+      heldOn: booked && booked <= todayIso ? booked : todayIso,
+      deficiencies: String(Number(i.deficiency_count) || 0),
+      reinspect: i.re_inspection_date ? String(i.re_inspection_date).slice(0, 10) : '',
+      notes: i.notes || '',
+    });
+    setResultError('');
+    setRecordId(i.id);
+  }
+  function closeRecord() { if (!resultSaving) { setRecordId(null); setResultError(''); } }
+
+  async function saveResult() {
+    const target = recordId ? inspections.find(i => i.id === recordId) : null;
+    if (!target) return;
+    if (!resultForm.heldOn) { setResultError('Pick the date the inspection was held.'); return; }
+    const defCount = Number(resultForm.deficiencies);
+    if (!Number.isInteger(defCount) || defCount < 0) { setResultError('Deficiencies must be a whole number, 0 or more.'); return; }
+    setResultSaving(true);
+    setResultError('');
+    const failedResult = resultForm.result === 'Failed';
+    const body: Record<string, unknown> = {
+      result: resultForm.result,
+      // Home and this log read status: a fail stays open, anything else is done.
+      status: failedResult ? 'Failed' : 'Completed',
+      inspected_at: `${resultForm.heldOn}T12:00:00`,
+      deficiency_count: defCount,
+      notes: resultForm.notes.trim() || null,
+    };
+    if (failedResult) body.re_inspection_date = resultForm.reinspect || null;
+    try {
+      const res = await fetch(`/api/inspections/${target.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.inspection) throw new Error(json.error || `Could not save the result (${res.status}).`);
+      const saved = normalizeInspection(json.inspection);
+      setInspections(prev => prev.map(i => (i.id === saved.id ? saved : i)));
+      setSelectedId(saved.id);
+      setRecordId(null);
+      show(failedResult ? 'Result recorded — flagged for re-inspection.' : 'Result recorded.');
+    } catch (e) {
+      setResultError(e instanceof Error ? e.message : 'Could not save the result. Please try again.');
+    } finally {
+      setResultSaving(false);
+    }
+  }
+
+  // Deep link from Home: open the record (and its result form) once the log is in.
+  const deepLinkDone = useRef(false);
+  useEffect(() => {
+    if (loading || deepLinkDone.current || typeof window === 'undefined') return;
+    deepLinkDone.current = true;
+    const q = new URLSearchParams(window.location.search);
+    const target = q.get('inspection') ? inspections.find(i => i.id === q.get('inspection')) : null;
+    if (!target) return;
+    setSelectedId(target.id);
+    if (q.get('record') === '1') openRecord(target);
+    // openRecord reads only its argument and stable values; run once per load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, inspections]);
+
   async function handleSave(): Promise<boolean> {
     if (!form.type || !form.date || !form.inspector) { setErrorMsg('Type, date, and inspector are required.'); return false; }
     setSaving(true);
@@ -346,8 +426,10 @@ export default function InspectionsPage() {
   const notesCol: Column<Inspection> = { key: 'notes', phone: 'hide', header: 'Notes', accessor: i => (i.notes || '').toLowerCase(), render: i => i.notes ? <span className="inClamp" title={i.notes}>{i.notes}</span> : <span className="inMuted">—</span> };
   const statusCol: Column<Inspection> = { key: 'status', phone: 'show', header: 'Status', accessor: i => (i.status || '').toLowerCase(), render: i => { const b = statusBadge(i.status); return <Badge tone={b.tone}>{b.label}</Badge>; } };
   const columns: Column<Inspection>[] = detailOpen ? [typeCol, dateCol, resultCol, statusCol] : [typeCol, dateCol, inspectorCol, agencyCol, resultCol, defCol, notesCol, statusCol];
+  const isResulted = (i: Inspection) => ['passed', 'failed', 'conditional pass'].includes(canonResult(i.result));
   const rowActions = (i: Inspection): Action[] => [
     { label: 'Open Record', icon: <ClipboardText size={15} />, onClick: () => setSelectedId(i.id) },
+    { label: isResulted(i) ? 'Change Result' : 'Record Result', icon: <CheckCircle size={15} />, onClick: () => openRecord(i) },
     { label: 'Schedule Re-Inspection', icon: <ArrowsClockwise size={15} />, onClick: () => openCreate(i.type), hidden: !needsReinspect(i) },
   ];
 
@@ -387,13 +469,16 @@ export default function InspectionsPage() {
               <div className="inProse">{selected.notes}</div>
             </div>
           )}
-          {needsReinspect(selected) && (
-            <div className="inSection">
-              <div className="inActions">
+          <div className="inSection">
+            <div className="inActions">
+              <Button variant={isResulted(selected) ? 'secondary' : 'primary'} icon={<CheckCircle size={16} />} onClick={() => openRecord(selected)}>
+                {isResulted(selected) ? 'Change Result' : 'Record Result'}
+              </Button>
+              {needsReinspect(selected) && (
                 <Button icon={<ArrowsClockwise size={16} />} onClick={() => openCreate(selected.type)}>Schedule Re-Inspection</Button>
-              </div>
+              )}
             </div>
-          )}
+          </div>
         </Card>
       </aside>
     );
@@ -543,6 +628,43 @@ export default function InspectionsPage() {
           ]} />
         </div>
       </FormModal>
+
+      {/* ── Record Result ── */}
+      {(() => {
+        const target = recordId ? inspections.find(i => i.id === recordId) : null;
+        return (
+          <FormModal
+            open={!!target}
+            onClose={closeRecord}
+            title="Record Result"
+            subtitle={target ? `${target.type || 'Inspection'} · booked ${fmtDate(target.date)}${target.inspector ? ` · ${target.inspector}` : ''}` : undefined}
+            onSubmit={saveResult}
+            submitLabel="Save Result"
+            busy={resultSaving}
+            error={resultError || null}
+          >
+            <FormGrid cols={2}>
+              <Field label="Result" required hint="A fail stays flagged here until a later inspection of this type passes.">
+                <Select value={resultForm.result} onChange={e => setResultForm(p => ({ ...p, result: e.target.value as ResultChoice }))} options={[...RESULT_OPTIONS]} />
+              </Field>
+              <Field label="Held On" required hint="The day the inspector came out.">
+                <div className="inDateInput"><SaguaroDatePicker value={resultForm.heldOn} onChange={v => setResultForm(p => ({ ...p, heldOn: v }))} style={DATE_INPUT_STYLE} /></div>
+              </Field>
+              <Field label="Deficiencies" hint="Items the inspector wrote up. 0 if none.">
+                <Input type="number" inputMode="numeric" min={0} step={1} value={resultForm.deficiencies} onChange={e => setResultForm(p => ({ ...p, deficiencies: e.target.value }))} />
+              </Field>
+              {resultForm.result === 'Failed' && (
+                <Field label="Re-Inspection Date" hint="When the inspector is coming back, if booked.">
+                  <div className="inDateInput"><SaguaroDatePicker value={resultForm.reinspect} onChange={v => setResultForm(p => ({ ...p, reinspect: v }))} style={DATE_INPUT_STYLE} /></div>
+                </Field>
+              )}
+              <Field label="Notes" span hint="What was written up, conditions of approval, the card number.">
+                <Textarea rows={3} value={resultForm.notes} onChange={e => setResultForm(p => ({ ...p, notes: e.target.value }))} placeholder="Corrections required, conditions, sign-off reference…" />
+              </Field>
+            </FormGrid>
+          </FormModal>
+        );
+      })()}
 
       <div style={{ position: 'relative', zIndex: 10001 }}><UnsavedGuardModal guard={guard} /></div>
       <Toast message={toast?.message ?? null} tone={toast?.tone} />

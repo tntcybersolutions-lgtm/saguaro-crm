@@ -94,6 +94,8 @@ export default function FilesPage() {
   const [showImport, setShowImport] = useState(false);
   const [toast, setToast] = useState('');
   const [view, setView] = useState<'list' | 'grid'>('list');
+  // "Added This Week" tile: narrows the library to the last 7 days of uploads.
+  const [recentOnly, setRecentOnly] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -139,7 +141,10 @@ export default function FilesPage() {
     const extra = Array.from(new Set(fromFiles.filter((x) => !seededFolders.includes(x)))).sort();
     return [...seededFolders, ...extra];
   }, [files, seededFolders]);
+  const weekAgo = Date.now() - 7 * 86400000;
+  const isThisWeek = (f: any) => !!f.created_at && new Date(f.created_at).getTime() >= weekAgo;
   const filtered = files.filter((f) => {
+    if (recentOnly && !isThisWeek(f)) return false;
     if (kindFilter !== 'all' && kindOf(f) !== kindFilter) return false;
     if (folder !== 'all' && (f.folder || '') !== folder) return false;
     if (search && !(`${f.file_name} ${f.category || ''}`).toLowerCase().includes(search.toLowerCase())) return false;
@@ -166,8 +171,13 @@ export default function FilesPage() {
   const counts = { total: files.length, video: files.filter((f) => kindOf(f) === 'video').length, image: files.filter((f) => kindOf(f) === 'image').length };
   const docCount = Math.max(0, counts.total - counts.video - counts.image);
   const bytesTotal = ownFiles.reduce((s, f) => s + (Number(f.file_size) || 0), 0);
-  const weekAgo = Date.now() - 7 * 86400000;
-  const addedThisWeek = files.filter((f) => f.created_at && new Date(f.created_at).getTime() >= weekAgo).length;
+  const addedThisWeek = files.filter(isThisWeek).length;
+  /* Stat tiles that point at this same screen were links back to itself — a
+     tap reloaded the page and changed nothing. They now filter the library
+     below (and say so), clear the filters, or are plain figures. */
+  const filtersActive = !!search || kindFilter !== 'all' || folder !== 'all' || recentOnly;
+  const clearFilters = () => { setSearch(''); setKindFilter('all'); setFolder('all'); setRecentOnly(false); };
+  const toggleVideos = () => setKindFilter((k) => (k === 'video' ? 'all' : 'video'));
   const lastUpload = files.reduce<string | null>((m, f) => (f.created_at && (!m || f.created_at > m) ? f.created_at : m), null);
 
   return (
@@ -191,20 +201,20 @@ export default function FilesPage() {
         {/* Library intelligence — what the system already knows */}
         {!loading && (
           <StatStrip items={[
-            {href: `/app/projects/${projectId}/files`,  label: 'Library', value: String(counts.total), sub: bytesTotal > 0 ? `${fmtSize(bytesTotal)} stored` : 'No storage used yet' },
-            {href: `/app/projects/${projectId}/files`,  label: 'Added This Week', value: String(addedThisWeek), accent: addedThisWeek > 0 ? 'var(--success)' : undefined, sub: lastUpload ? `Last upload ${fmtDate(lastUpload)}` : 'Nothing uploaded yet' },
+            { label: 'Library', value: String(counts.total), onClick: filtersActive ? clearFilters : undefined, sub: filtersActive ? 'Filtered — tap to show all' : bytesTotal > 0 ? `${fmtSize(bytesTotal)} stored` : 'No storage used yet' },
+            { label: 'Added This Week', value: String(addedThisWeek), accent: addedThisWeek > 0 ? 'var(--success)' : undefined, onClick: addedThisWeek > 0 || recentOnly ? () => setRecentOnly((v) => !v) : undefined, active: recentOnly, sub: recentOnly ? 'Showing this week — tap to clear' : lastUpload ? `Last upload ${fmtDate(lastUpload)}` : 'Nothing uploaded yet' },
             {href: `/app/projects/${projectId}/photos`,  label: 'Photos', value: String(counts.image), sub: 'Site + progress shots' },
-            {href: `/app/projects/${projectId}/files`,  label: 'Videos', value: String(counts.video), sub: 'Walkthroughs, site video' },
+            { label: 'Videos', value: String(counts.video), onClick: counts.video > 0 || kindFilter === 'video' ? toggleVideos : undefined, active: kindFilter === 'video', sub: kindFilter === 'video' ? 'Showing videos — tap to clear' : 'Walkthroughs, site video' },
             {href: `/app/projects/${projectId}/drawings`,  label: 'Docs & Drawings', value: String(docCount), sub: 'PDFs, sheets, CAD, docs' },
-            {href: `/app/projects/${projectId}/files`,  label: 'Folders', value: String(folders.length), sub: folders.length > 0 ? folders.slice(0, 2).join(', ') + (folders.length > 2 ? '…' : '') : 'Organize with Move' },
+            { label: 'Folders', value: String(folders.length), sub: folders.length > 0 ? folders.slice(0, 2).join(', ') + (folders.length > 2 ? '…' : '') : 'Organize with Move' },
           ]} />
         )}
 
         {/* KPI row */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
-          <StatCard icon={<Folder size={19} weight="duotone" color={T.gold} />} label="Total Files" value={String(counts.total)} accent={T.gold} delay={0.02}  href={`/app/projects/${projectId}/files`}/>
+          <StatCard icon={<Folder size={19} weight="duotone" color={T.gold} />} label="Total Files" value={String(counts.total)} accent={T.gold} delay={0.02} onClick={filtersActive ? clearFilters : undefined} sub={filtersActive ? 'Filtered — tap to show all' : undefined}/>
           <StatCard icon={<ImageSquare size={19} weight="duotone" color={KIND_TINT.image} />} label="Photos" value={String(counts.image)} accent={KIND_TINT.image} delay={0.06}  href={`/app/projects/${projectId}/photos`}/>
-          <StatCard icon={<FilmSlate size={19} weight="duotone" color={KIND_TINT.video} />} label="Videos" value={String(counts.video)} accent={KIND_TINT.video} delay={0.10}  href={`/app/projects/${projectId}/files`}/>
+          <StatCard icon={<FilmSlate size={19} weight="duotone" color={KIND_TINT.video} />} label="Videos" value={String(counts.video)} accent={KIND_TINT.video} delay={0.10} onClick={counts.video > 0 || kindFilter === 'video' ? toggleVideos : undefined} active={kindFilter === 'video'}/>
         </div>
 
         {!trash && (
@@ -224,7 +234,7 @@ export default function FilesPage() {
         <SectionCard
           icon={<Folder size={17} weight="duotone" color={T.gold} />}
           title={trash ? 'Trash' : 'Library'}
-          subtitle={`${filtered.length} ${filtered.length === 1 ? 'file' : 'files'}${!trash && folder !== 'all' ? ` · ${folder}` : ''}`}
+          subtitle={`${filtered.length} ${filtered.length === 1 ? 'file' : 'files'}${recentOnly ? ' · added this week' : ''}${!trash && folder !== 'all' ? ` · ${folder}` : ''}`}
           action={
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div className="fl-views" role="group" aria-label="View">
@@ -259,6 +269,7 @@ export default function FilesPage() {
                   icon={trash ? <Trash size={30} weight="duotone" color={T.gold} /> : <MagnifyingGlass size={30} weight="duotone" color={T.gold} />}
                   title={trash ? 'Trash Is Empty' : 'No Files Match'}
                   description={trash ? 'Deleted files show up here and can be restored before permanent removal.' : 'Try a different search term or filter to find what you’re looking for.'}
+                  action={!trash && filtersActive ? <button type="button" onClick={clearFilters} style={{ ...ghostButtonStyle, minHeight: 44 }} className="pmBtn">Clear Filters</button> : undefined}
                   compact
                 />
               ) : (

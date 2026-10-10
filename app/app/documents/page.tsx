@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { alertDialog } from '@/lib/ui/async-dialog';
 import { useProjects } from '@/lib/hooks/useProjects';
 import Link from 'next/link';
@@ -173,6 +173,14 @@ const BOND_ROUTES: Record<string, { path: string; body: (projectId: string) => R
 
 export default function DocumentsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('Library');
+  /* The stat cards sit above the job board and the tab bar — on a phone the
+     tab they switch to is a screen or two below, so a tap changed something
+     the user could not see. A card now switches the tab AND brings it up. */
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const openTab = (tab: Tab) => {
+    setActiveTab(tab);
+    requestAnimationFrame(() => tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  };
   const [payApps, setPayApps] = useState<any[]>([]);
   const [lienWaivers, setLienWaivers] = useState<any[]>([]);
   const [payroll, setPayroll] = useState<any[]>([]);
@@ -473,30 +481,33 @@ export default function DocumentsPage() {
           icon={<Receipt size={19} weight="duotone" color={GOLD} />}
           label="Pay Applications" value={statVal(loadingPayApps, errorPayApps, payApps.filter(pa => inJob(pa.project_id)).length)}
           sub={byJob && billedAll > 0 ? `${fmtMoneyShort(billedAll)} billed${jobId ? '' : ` across ${jobsWithPayApps} job${jobsWithPayApps === 1 ? '' : 's'}`}` : 'AIA G702 / G703'} accent={GOLD} delay={0.02}
-         onClick={() => setActiveTab('Pay Applications')}/>
+         onClick={() => openTab('Pay Applications')}/>
         <StatCard
           icon={<Shield size={19} weight="duotone" color={GOLD} />}
           label="Lien Waivers" value={statVal(loadingLienWaivers, errorLienWaivers, lienWaivers.filter(lw => inJob(lw.project_id)).length)}
           sub={byJob ? `${signedAll} signed · ${waitingAll} waiting${noWaiverAll ? ` · ${noWaiverAll} paid with none` : ''}` : 'signed & pending'} delay={0.06}
-         onClick={() => setActiveTab('Lien Waivers')}/>
+         onClick={() => openTab('Lien Waivers')}/>
         <StatCard
           icon={<NotePencil size={19} weight="duotone" color={GOLD} />}
           label="Certified Payroll" value={statVal(loadingPayroll, errorPayroll, payroll.filter(pr => inJob(pr.project_id)).length)}
           sub="WH-347 weeks filed" delay={0.10}
-         onClick={() => setActiveTab('Payroll')}/>
+         onClick={() => openTab('Payroll')}/>
         <StatCard
           icon={<Clipboard size={19} weight="duotone" color={GOLD} />}
           label="AIA Forms" value={String(BOND_CARDS.length)}
           sub="bond & closeout templates" delay={0.14}
-         onClick={() => setActiveTab('Bonds & Forms')}/>
+         onClick={() => openTab('Bonds & Forms')}/>
       </div>
 
       {/* Tab bar + search */}
-      <div style={{
+      <div ref={tabsRef} style={{
         display: 'flex', gap: 4, alignItems: 'center',
         borderBottom: `1px solid rgba(255,255,255,0.08)`,
         marginBottom: 24, overflowX: 'auto',
+        // Clears the fixed top bar when a stat card scrolls the tabs into view.
+        scrollMarginTop: 76,
       }}>
+        <div role="tablist" aria-label="Document type" style={{ display: 'contents' }}>
         {TABS.map(tab => {
           const active = activeTab === tab;
           return (
@@ -507,9 +518,12 @@ export default function DocumentsPage() {
                  label meant hunting for the words "Lien Waivers" anywhere on
                  a page that also lists lien waivers by name. */
               data-tour={`docs-tab-${tab.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+              type="button"
+              role="tab"
+              aria-selected={active}
               onClick={() => setActiveTab(tab)}
               style={{
-                padding: '12px 20px',
+                padding: '12px 20px', minHeight: 44,
                 background: 'none',
                 border: 'none',
                 borderBottom: `2px solid ${active ? GOLD : 'transparent'}`,
@@ -521,6 +535,7 @@ export default function DocumentsPage() {
             >{tab}</button>
           );
         })}
+        </div>
         {activeTab !== 'Library' && <div style={{ marginLeft: 'auto', position: 'relative', minWidth: 230, flexShrink: 0, alignSelf: 'center', marginBottom: 6 }}>
           <MagnifyingGlass size={14} color={DIM} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
           <input

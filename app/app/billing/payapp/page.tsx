@@ -166,6 +166,8 @@ export default function PayAppPage() {
   const num: React.CSSProperties = { ...inp, textAlign: 'right' as const };
 
   // G702 summary metrics → premium StatCards (values still computed live by the finance engine).
+  // Plain figures: they used to link to this same page, so a tap reloaded it
+  // and threw away every number typed into the form.
   const g702Stats: { label: string; value: string; icon: React.ReactNode; accent?: string }[] = [
     { label: 'Contract w/ COs', value: usd(result.contractSumToDateCents), icon: <CurrencyDollar size={19} weight="duotone" color={GOLD} />, accent: GOLD },
     { label: 'Completed & Stored', value: usd(result.totalCompletedStoredCents), icon: <CheckCircle size={19} weight="duotone" color={GREEN} />, accent: GREEN },
@@ -206,7 +208,7 @@ export default function PayAppPage() {
       <SectionCard flat title="G702 — Application Summary" icon={<Calculator size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 20 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
           {g702Stats.map((s) => (
-            <StatCard key={s.label} label={s.label} value={s.value} icon={s.icon} accent={s.accent}  href="/app/billing/payapp"/>
+            <StatCard key={s.label} label={s.label} value={s.value} icon={s.icon} accent={s.accent} />
           ))}
         </div>
         <div style={{ marginTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '16px 20px', borderRadius: 14, background: 'var(--brand-primary-08)', border: '1px solid var(--brand-primary-35)' }}>
