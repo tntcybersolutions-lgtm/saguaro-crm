@@ -81,6 +81,10 @@ function missedWorkdays(fromIso: string, toIso: string) {
 }
 
 /** Today as YYYY-MM-DD on the user's wall clock — never the UTC day. */
+const PICK_PROJECT = 'Pick the project this log is for.';
+/* Shortcuts for the Weather field. It offered a single "w" — the id of the
+   datalist it replaced, carried over as if it were the list. */
+const WEATHER_SUGGESTIONS = ['Clear', 'Sunny', 'Partly Cloudy', 'Overcast', 'Light Rain', 'Rain', 'Thunderstorms', 'Snow', 'Windy', 'Fog', 'Hot', 'Cold'];
 const localToday = () => new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 const tempHigh = (l: DailyLog) => l.high_temp ?? l.temperature_high ?? null;
 const tempLow = (l: DailyLog) => l.low_temp ?? l.temperature_low ?? null;
@@ -134,6 +138,8 @@ const DATE_INPUT_STYLE: React.CSSProperties = {
 export default function DailyLogsPage() {
   const [logs, setLogs] = useState<DailyLog[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  /** The job picker says whether jobs are still coming, failed, or truly none. */
+  const [projectsState, setProjectsState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   /** "Saved on this phone…" after a log written with no signal. */
@@ -215,8 +221,12 @@ export default function DailyLogsPage() {
     fetchLogs();
     fetch('/api/projects?limit=100&fields=id,name')
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d) setProjects(Array.isArray(d) ? d : d.projects ?? []); })
-      .catch(() => {});
+      .then(d => {
+        if (!d) { setProjectsState('error'); return; }
+        setProjects(Array.isArray(d) ? d : d.projects ?? []);
+        setProjectsState('ready');
+      })
+      .catch((e) => { console.error(e); setProjectsState('error'); });
     // Deep link from the command palette: /app/daily-logs?new=1 opens the composer.
     try {
       if (new URLSearchParams(window.location.search).get('new') === '1') openCreate();
@@ -302,13 +312,18 @@ export default function DailyLogsPage() {
 
   /** Close paths (backdrop / × / Cancel / Esc) run through the guard. */
   function closeCreate() {
-    guard.requestClose(() => setShowCreate(false));
+    guard.requestClose(() => { setShowCreate(false); setError((e) => (e === PICK_PROJECT ? '' : e)); });
   }
 
   /** POST the form — shared by the form submit and the guard's "Save & leave". */
   async function submitCreate(): Promise<boolean> {
     if (!form.projectId) {
-      setError('Pick a project before the log can be saved.');
+      /* The select used to carry the native `required` attribute, so the
+         browser blocked the submit with its own bubble before this check ran:
+         nothing was sent and nothing on the page said why. The page owns the
+         rule now — the message sits under the field and the cursor goes to it. */
+      setError(PICK_PROJECT);
+      window.setTimeout(() => document.getElementById('dl-project')?.focus(), 0);
       return false;
     }
     setCreating(true);
@@ -589,7 +604,7 @@ export default function DailyLogsPage() {
         onSubmit={handleCreate}
         submitLabel="Create Log"
         busy={creating}
-        error={error || null}
+        error={error && error !== PICK_PROJECT ? error : null}
       >
         {form.projectId && ctx ? (() => {
           const lastLog = ctx.recent?.lastDailyLogDate as string | null;
@@ -631,8 +646,19 @@ export default function DailyLogsPage() {
         })() : null}
 
         <FormGrid cols={2}>
-          <Field label="Project" required hint={lastApplied.projectId && form.projectId === lastApplied.projectId ? 'Remembered from your last log.' : undefined}>
+          <Field
+            label="Project"
+            required
+            error={error === PICK_PROJECT ? PICK_PROJECT : null}
+            hint={
+              projectsState === 'loading' && projects.length === 0 ? 'Loading your jobs…'
+              : projectsState === 'error' && projects.length === 0 ? "Couldn't load your jobs. Close this and try again."
+              : projects.length === 0 ? <>No jobs yet — <a href="/app/projects/new" style={{ color: 'var(--brand-primary)' }}>create a project</a> first.</>
+              : lastApplied.projectId && form.projectId === lastApplied.projectId ? 'Remembered from your last log.' : undefined
+            }
+          >
             <Select
+              id="dl-project"
               value={form.projectId}
               onChange={(e) => {
                 const pid = e.target.value;
@@ -643,10 +669,10 @@ export default function DailyLogsPage() {
                 setAutoCrew(!!(prev?.crew_count));
                 if (error) setError('');
               }}
-              required
               placeholder="Select project…"
               options={projects.map(p => ({ value: p.id, label: p.name }))}
-              aria-invalid={error === 'Pick a project before the log can be saved.' || undefined}
+              aria-required="true"
+              aria-invalid={error === PICK_PROJECT || undefined}
             />
           </Field>
           <Field label="Date" hint="Defaulted to today — backfill any missed day.">
@@ -662,7 +688,7 @@ export default function DailyLogsPage() {
             <Input type="number" min={0} value={form.crewCount} onChange={(e) => setForm({ ...form, crewCount: e.target.value })} placeholder="0" />
           </Field>
           <Field label="Weather">
-            <Suggest className="k-input" value={form.weather} onChange={(e) => setForm({ ...form, weather: e.target.value })} placeholder="Clear, 10 mph W, dusty…" options={['w']} />
+            <Suggest className="k-input" value={form.weather} onChange={(e) => setForm({ ...form, weather: e.target.value })} placeholder="Clear, 10 mph W, dusty…" options={WEATHER_SUGGESTIONS} />
           </Field>
           <Field label="Temp High (°F)">
             <Input type="number" value={form.temperatureHigh} onChange={(e) => setForm({ ...form, temperatureHigh: e.target.value })} placeholder="95" />
