@@ -52,18 +52,22 @@ function RadioWave({seed,color}:{seed:string;color:string}){
 
 function SignatureCanvas({onSign,onClear}:{onSign:(data:string)=>void;onClear?:()=>void}){
   const ref=useRef<HTMLCanvasElement>(null);
-  const [drawing,setDrawing]=useState(false);
+  // Refs, not state, decide whether a stroke counts: a quick stroke can end
+  // before React re-renders, and a stale `has` would drop the signature while
+  // the pad still says "Signature captured".
+  const drawingRef=useRef(false);
+  const hasRef=useRef(false);
   const [has,setHas]=useState(false);
   /* The canvas is 400×120 but shrinks to fit a phone; map the finger from CSS
      pixels to canvas pixels or the stroke lands off to the side of it. */
   const pos=(e:React.MouseEvent|React.TouchEvent)=>{const c=ref.current!;const r=c.getBoundingClientRect();const cx='touches' in e?e.touches[0].clientX:e.clientX;const cy='touches' in e?e.touches[0].clientY:e.clientY;return{x:(cx-r.left)*(c.width/(r.width||c.width)),y:(cy-r.top)*(c.height/(r.height||c.height))}};
-  const start=(e:React.MouseEvent|React.TouchEvent)=>{setDrawing(true);const ctx=ref.current!.getContext('2d')!;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)};
-  const draw=(e:React.MouseEvent|React.TouchEvent)=>{if(!drawing)return;const ctx=ref.current!.getContext('2d')!;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.strokeStyle=TEXT;ctx.lineWidth=2;ctx.lineCap='round';ctx.stroke();setHas(true)};
+  const start=(e:React.MouseEvent|React.TouchEvent)=>{drawingRef.current=true;const ctx=ref.current!.getContext('2d')!;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)};
+  const draw=(e:React.MouseEvent|React.TouchEvent)=>{if(!drawingRef.current)return;const ctx=ref.current!.getContext('2d')!;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.strokeStyle=TEXT;ctx.lineWidth=2;ctx.lineCap='round';ctx.stroke();hasRef.current=true;setHas(true)};
   /* The pad draws light ink for the dark screen; the waiver is printed on white
      paper, so the saved image is the same strokes recoloured to dark ink. */
   const inkPng=()=>{const src=ref.current!;const c=document.createElement('canvas');c.width=src.width;c.height=src.height;const x=c.getContext('2d')!;x.drawImage(src,0,0);x.globalCompositeOperation='source-in';x.fillStyle='rgb(13,17,22)';x.fillRect(0,0,c.width,c.height);return c.toDataURL('image/png')};
-  const stop=()=>{setDrawing(false);if(has)onSign(inkPng())};
-  const clear=()=>{const c=ref.current!;c.getContext('2d')!.clearRect(0,0,c.width,c.height);setHas(false);onClear?.()};
+  const stop=()=>{if(!drawingRef.current)return;drawingRef.current=false;if(hasRef.current)onSign(inkPng())};
+  const clear=()=>{const c=ref.current!;c.getContext('2d')!.clearRect(0,0,c.width,c.height);hasRef.current=false;setHas(false);onClear?.()};
   return(
     <div>
       <canvas ref={ref} width={400} height={120} aria-label="Signature pad — draw your signature" style={{background:DARK,border:`1px solid ${BORDER}`,borderRadius:7,cursor:'crosshair',touchAction:'none',maxWidth:'100%',display:'block'}} onMouseDown={start} onMouseMove={draw} onMouseUp={stop} onMouseLeave={stop} onTouchStart={start} onTouchMove={draw} onTouchEnd={stop}/>
@@ -691,7 +695,7 @@ export default function SubPortal(){
     const openRfis=rfis.filter((r:any)=>r.status==='open').length;
     const unreadMsgs=unreadCount;
     return(
-      <div style={{display:'grid',gap:20}}>
+      <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
         {/* Welcome + Health Badge */}
         <div style={{...card(),background:`linear-gradient(135deg,${RAISED},${DARK})`,position:'relative',overflow:'hidden'}}>
           <div style={{position:'absolute',right:-30,top:-30,width:140,height:140,background:`color-mix(in srgb, ${GOLD} 3%, transparent)`,borderRadius:'50%'}}/>
@@ -803,7 +807,7 @@ export default function SubPortal(){
     const docLabels:Record<string,string>={insurance:'Insurance Certificate',w9:'W-9',lien_waiver:'Lien Waiver',business_license:'Business License',bond:'Bond',safety_certification:'Safety Certification'};
     const alerts=getExpirationAlerts();
     return(
-      <div style={{display:'grid',gap:20}}>
+      <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
         {/* Upload Form */}
         {!onRoster?rosterNote('Compliance uploads'):<div style={card()}>
           <div style={{fontSize:17,fontWeight:700,color:TEXT,marginBottom:16}}>Upload Compliance Document</div>
@@ -902,7 +906,7 @@ export default function SubPortal(){
     const invoiceWaiverIds=new Set(payApps.map((pa:any)=>invoiceWaiver(pa,lienWaivers)?.id).filter(Boolean));
     const otherWaivers=lienWaivers.filter((w:any)=>!invoiceWaiverIds.has(w.id));
     return(
-      <div style={{display:'grid',gap:20}}>
+      <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
         {!onRoster&&rosterNote('Invoices')}
         {otherWaivers.length>0&&(
           <div style={card()}>
@@ -1002,7 +1006,7 @@ export default function SubPortal(){
   /*  DAILY LOGS TAB                                                   */
   /* ================================================================ */
   const renderDaily=()=>(
-    <div style={{display:'grid',gap:20}}>
+    <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
       {!isOnline&&<div style={{padding:'10px 16px',background:`color-mix(in srgb, ${AMBER} 13%, transparent)`,border:`1px solid ${AMBER}`,borderRadius:8,display:'flex',alignItems:'center',gap:10}}><div style={{width:10,height:10,borderRadius:'50%',background:AMBER}}/><span style={{fontSize:13,color:AMBER,fontWeight:600}}>You are offline. Logs will be queued and submitted when connection is restored.</span></div>}
 
       {/* GPS Clock */}
@@ -1065,7 +1069,7 @@ export default function SubPortal(){
   /*  RFI TAB                                                          */
   /* ================================================================ */
   const renderRfis=()=>(
-    <div style={{display:'grid',gap:20}}>
+    <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
       {/* RFI Form */}
       {!onRoster?rosterNote('RFIs'):<div style={card()}>
         <div style={{fontSize:17,fontWeight:700,color:TEXT,marginBottom:16}}>Submit RFI (Request for Information)</div>
@@ -1105,7 +1109,7 @@ export default function SubPortal(){
   const renderSchedule=()=>{
     const sorted=[...tasks].sort((a:any,b:any)=>new Date(a.start_date).getTime()-new Date(b.start_date).getTime());
     return(
-      <div style={{display:'grid',gap:20}}>
+      <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
         <div style={card()}>
           <div style={{fontSize:17,fontWeight:700,color:TEXT,marginBottom:16}}>Assigned Tasks &amp; Schedule</div>
           {tasks.length===0?<div style={{color:DIM,fontSize:13,textAlign:'center',padding:40}}>No schedule data available</div>:(
@@ -1148,7 +1152,7 @@ export default function SubPortal(){
     const cats=SCORE_CATEGORIES;
     const reviews=Number(scorecard?.total_reviews)||0;
     return(
-      <div style={{display:'grid',gap:20}}>
+      <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
         {/* Overall */}
         <div style={{...card(),background:`linear-gradient(135deg,${RAISED},${DARK})`,textAlign:'center'}}>
           {isPreferred&&<div style={{marginBottom:16,display:'inline-flex',alignItems:'center',gap:10,background:`color-mix(in srgb, ${GOLD} 13%, transparent)`,border:`1px solid ${GOLD}`,borderRadius:30,padding:'8px 20px'}}><span style={{fontSize:22}}>{'\u2B50'}</span><span style={{fontSize:15,fontWeight:800,color:GOLD}}>Preferred Subcontractor</span></div>}
@@ -1212,7 +1216,7 @@ export default function SubPortal(){
   /* ================================================================ */
   const renderMessages=()=>{
     return(
-      <div style={{display:'grid',gap:20}}>
+      <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
         <div style={card()}>
           <div style={{fontSize:17,fontWeight:700,color:TEXT,marginBottom:16}}>Messages with GC</div>
           <div style={{maxHeight:500,overflowY:'auto',padding:'10px 0',marginBottom:16}}>
@@ -1257,7 +1261,7 @@ export default function SubPortal(){
       </div>
     );
     return(
-      <div style={{display:'grid',gap:20}}>
+      <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
         <div style={card()}>
           <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14,flexWrap:'wrap'}}>
             <div style={{width:10,height:10,borderRadius:'50%',background:GREEN,boxShadow:`0 0 8px ${GREEN}`,flexShrink:0}}/>
@@ -1384,7 +1388,7 @@ export default function SubPortal(){
     const files=documents.filter((d:any)=>!isMedia(d));
     const media=documents.filter(isMedia);
     return(
-      <div style={{display:'grid',gap:20}}>
+      <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
         <div style={card()}>
           <div style={{fontSize:16,fontWeight:800,color:TEXT,marginBottom:4}}>Upload a Document</div>
           <div style={{fontSize:12,color:DIM,marginBottom:14}}>PDF, Excel, Word, CSV, photos or video &middot; 100 MB max. Insurance, W-9 and other compliance docs update your payment status automatically.</div>
@@ -1440,7 +1444,7 @@ export default function SubPortal(){
   const renderDrawings=()=>{
     const groups=drawings.reduce((m:Record<string,any[]>,d:any)=>{const k=d.discipline||'General';(m[k]=m[k]||[]).push(d);return m;},{} as Record<string,any[]>);
     return(
-      <div style={{display:'grid',gap:20}}>
+      <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
         {drawings.length===0&&<div style={card()}><div style={{color:DIM,fontSize:13}}>No current drawings shared for this project yet.</div></div>}
         {Object.entries(groups).map(([disc,list]:[string,any[]])=>(
           <div key={disc} style={card()}>
@@ -1473,7 +1477,7 @@ export default function SubPortal(){
     const open=punchItems.filter((p:any)=>p.status!=='completed'&&p.status!=='verified');
     const done=punchItems.filter((p:any)=>p.status==='completed'||p.status==='verified');
     return(
-      <div style={{display:'grid',gap:20}}>
+      <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
         <div style={card()}>
           <div style={{fontSize:15,fontWeight:800,color:TEXT,marginBottom:12}}>Open Items ({open.length})</div>
           {open.length===0&&<div style={{color:DIM,fontSize:13}}>Nothing open — you're clear on this project.</div>}
@@ -1527,7 +1531,7 @@ export default function SubPortal(){
   };
   /* ── BID INVITES: open invitations \u2192 scope \u2192 respond ── */
   const renderBids=()=>(
-    <div style={{display:'grid',gap:20}}>
+    <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
       {bids.length===0&&<div style={card()}><div style={{color:DIM,fontSize:13}}>No open bid invitations right now.</div></div>}
       {bids.map((b:any)=>(
         <div key={b.id} style={card()}>
