@@ -287,8 +287,8 @@ export default function PortalsPage() {
   const stats: StatItem[] = loading
     ? ['Active Client Portals', 'Active Sub Portals', 'Projects Covered', 'Never Opened', 'Expiring in 30 Days', 'Last Portal Visit'].map(label => ({ label, value: '—', sub: 'Loading…' }))
     : [
-        { label: 'Active Client Portals', value: clientActive, tone: clientActive > 0 ? 'good' : 'default', sub: tab === 'client' ? 'Showing — owners with access' : 'Owners with access', onClick: () => setTab('client') },
-        { label: 'Active Sub Portals', value: subActive, tone: subActive > 0 ? 'good' : 'default', sub: tab === 'sub' ? 'Showing — subs with access' : 'Subcontractors with access', onClick: () => setTab('sub') },
+        { label: 'Active Client Portals', value: clientActive, tone: clientActive > 0 ? 'good' : 'default', sub: tab === 'client' ? 'Showing — owners with access' : 'Owners with access', onClick: () => setTab('client'), active: tab === 'client' },
+        { label: 'Active Sub Portals', value: subActive, tone: subActive > 0 ? 'good' : 'default', sub: tab === 'sub' ? 'Showing — subs with access' : 'Subcontractors with access', onClick: () => setTab('sub'), active: tab === 'sub' },
         { label: 'Projects Covered', value: `${coveredProjects} of ${projects.length}`, tone: projects.length > 0 && coveredProjects < projects.length ? 'warn' : coveredProjects > 0 ? 'good' : 'default', sub: coveredProjects < projects.length ? `${projects.length - coveredProjects} project${projects.length - coveredProjects === 1 ? '' : 's'} without portal access` : 'Every project has a live portal' },
         { label: 'Never Opened', value: neverOpened, tone: neverOpened > 0 ? 'warn' : 'default', sub: neverOpened > 0 ? 'Links sent but never visited — resend the invite' : 'Every active link has been visited' },
         { label: 'Expiring in 30 Days', value: expiring30, tone: expiring30 > 0 ? 'bad' : 'default', sub: expiring30 > 0 ? 'Client links auto-expire — reinvite to extend' : 'No client links expiring soon' },
