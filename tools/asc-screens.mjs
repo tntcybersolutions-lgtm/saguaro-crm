@@ -562,9 +562,10 @@ async function walk() {
     let reqs = 0; const apiErrs = []; const pageErrs = [];
     page.on('request', (r) => { if (['fetch', 'xhr', 'document'].includes(r.resourceType())) reqs++; });
     page.on('response', (r) => { const u = r.url(); if (u.startsWith(SITE + '/api/') && r.status() >= 400 && r.status() !== 401) apiErrs.push(`${r.request().method()} ${shortUrl(u).replace(/\?.*$/, '')} → ${r.status()}`); });
-    // WebKit reports a fetch cut off by leaving the page as "…due to access
-    // control checks" — the walker leaving, not the app failing.
-    page.on('pageerror', (e) => { const m = String(e.message || e); if (!/due to access control checks|^AbortError|Fetch is aborted|The operation was aborted/i.test(m)) pageErrs.push(m.slice(0, 180)); });
+    // WebKit reports a fetch cut off by leaving the page (a link prefetch, a
+    // background refresh) as "…due to access control checks" or a bare
+    // "Load failed" — the walker leaving, not the app failing.
+    page.on('pageerror', (e) => { const m = String(e.message || e); if (!/due to access control checks|^AbortError|Fetch is aborted|The operation was aborted|^(TypeError: )?Load failed$/i.test(m)) pageErrs.push(m.slice(0, 180)); });
     let popups = 0, dialogs = 0, downloads = 0;
     ctx.on('page', () => { popups++; });
     page.on('dialog', (d) => { dialogs++; d.dismiss().catch(() => {}); });
