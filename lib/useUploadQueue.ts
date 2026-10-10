@@ -25,7 +25,8 @@ export interface QueueItem {
 
 export type Uploader = (file: File, kind: MediaKind, onProgress: (f: number) => void) => Promise<{ thumb?: string | null; doneLabel?: string } | void>;
 
-const CONCURRENCY = 2;
+/** Photos are shrunk on the phone before they go, so three at once is still light on a cell signal. */
+const CONCURRENCY = 3;
 
 export function useUploadQueue(uploader: Uploader, opts: { onItemDone?: () => void; onDrained?: (n: { done: number; failed: number }) => void } = {}) {
   const [items, setItems] = useState<QueueItem[]>([]);

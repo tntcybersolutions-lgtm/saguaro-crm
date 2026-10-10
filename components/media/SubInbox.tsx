@@ -149,7 +149,7 @@ export default function SubInbox({
   if (!loaded || !batches.length) return null;
   const newTotal = batches.reduce((s, b) => s + b.fresh, 0);
   const shown = showAll ? batches : batches.slice(0, 3);
-  const lb: LightboxItem[] = view ? view.batch.items.map((i) => ({ id: i.id, url: i.url || '', kind: i.kind, title: `${view.batch.who} · ${i.file_name}`, poster: i.thumbnail_url })) : [];
+  const lb: LightboxItem[] = view ? view.batch.items.map((i) => ({ id: i.id, url: i.url || '', kind: i.kind, title: `${view.batch.who} · ${i.file_name}`, poster: i.thumbnail_url, thumb: i.kind === 'image' ? i.thumbnail_url : null })) : [];
 
   return (
     <div ref={ref} id="from-subs" style={{ scrollMarginTop: 84 }}>

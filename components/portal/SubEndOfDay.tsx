@@ -139,7 +139,7 @@ export default function SubEndOfDay({ token, jobName, onToast }: { token: string
   };
 
   const visible = sent.filter((s) => s.status !== 'dismissed');
-  const lightbox: LightboxItem[] = visible.map((s) => ({ id: s.id, url: s.url || '', kind: s.kind, title: s.file_name, poster: s.thumbnail_url }));
+  const lightbox: LightboxItem[] = visible.map((s) => ({ id: s.id, url: s.url || '', kind: s.kind, title: s.file_name, poster: s.thumbnail_url, thumb: s.kind === 'image' ? s.thumbnail_url : null }));
 
   return (
     <div className="eod">

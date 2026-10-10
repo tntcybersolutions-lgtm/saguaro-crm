@@ -496,8 +496,10 @@ export default function PhotosPage(){
     return false;
   }
 
-  async function deletePhoto(photo:any){
-    if(!(await confirmDialog({ title: 'Please confirm', message: `Delete "${photo.title||'this item'}"? This removes it from the job for everyone.`, danger: true }))) return;
+  /** Delete one photo / video. From the full-screen viewer it stays open on
+   *  the next one instead of dropping you back on the grid. */
+  async function deletePhoto(photo:any, fromViewer=false):Promise<boolean>{
+    if(!(await confirmDialog({ title: 'Please confirm', message: `Delete "${photo.title||'this item'}"? This removes it from the job for everyone.`, danger: true }))) return false;
     setDeleting(true);
     try{
       const h=await getAuthHeaders();
@@ -507,8 +509,16 @@ export default function PhotosPage(){
         :await fetch(`/api/photos/${photo.id}`,{method:'DELETE',headers:h});
       if (dr.status===403) throw new Error('You need full Documents access to delete this.');
       if (!dr.ok) throw new Error('Delete failed');
-      showToast(isVideo(photo)?'Video deleted.':'Photo deleted.');closePanel();await load();
-    }catch(e:any){showToast(e?.message==='Delete failed'||!e?.message?'Delete failed.':e.message,'bad');}
+      if(fromViewer){
+        const at=ordered.findIndex((p:any)=>p.id===photo.id);
+        const neighbour=ordered[at+1]||ordered[at-1];
+        if(neighbour) viewPhoto(neighbour); else { setLightboxOpen(false); setLightboxFromTap(false); closePanel(); }
+        await load({silent:true});
+      } else {
+        showToast(isVideo(photo)?'Video deleted.':'Photo deleted.');closePanel();await load();
+      }
+      return true;
+    }catch(e:any){showToast(e?.message==='Delete failed'||!e?.message?'Delete failed.':e.message,'bad');return false;}
     finally{setDeleting(false);}
   }
 
@@ -560,7 +570,13 @@ export default function PhotosPage(){
   // typing, while the composer is open, and while the crop editor is up.
   const selIndex = selected ? ordered.findIndex(p=>p.id===selected.id) : -1;
   const lightboxItems: LightboxItem[] = lightboxOpen
-    ? ordered.map((p:any)=>({ id:String(p.id), url:p.url||'', kind:isVideo(p)?'video':'image', title:p.title||null, poster:p.thumbnail_url||null }))
+    ? ordered.map((p:any)=>({
+        id:String(p.id), url:p.url||'', kind:isVideo(p)?'video':'image', title:p.title||null,
+        poster:p.thumbnail_url||null,
+        // The grid already loaded this: the viewer opens on it instantly.
+        thumb:isVideo(p)?null:(p.thumbnail_url||null),
+        subtitle:[p.taken_at?new Date(p.taken_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'', p.album||'', p.taken_by||''].filter(Boolean).join(' · ')||null,
+      }))
     : [];
   // Read the visible order through a ref: it's rebuilt every render, and as a
   // dependency it would remake stepTo (and rebind the key handler) every time.
@@ -829,6 +845,7 @@ export default function PhotosPage(){
           onClose={()=>{ setLightboxOpen(false); if(lightboxFromTap){ setLightboxFromTap(false); closePanel(); } }}
           onInfo={()=>{ setLightboxOpen(false); setLightboxFromTap(false); }}
           onMediaError={()=>load({silent:true})}
+          onDelete={(it)=>{ const p=ordered.find((x:any)=>String(x.id)===it.id); return p?deletePhoto(p,true):false; }}
         />
       )}
 

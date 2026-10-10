@@ -12,6 +12,7 @@
  */
 import { getAuthHeaders, getSupabaseBrowser } from '@/lib/supabase-browser';
 import { classifyKind } from '@/lib/filekind';
+import { shrinkForUpload } from '@/lib/image-shrink';
 
 export type MediaKind = 'image' | 'video';
 
@@ -177,7 +178,9 @@ export interface PhotoUploadOpts {
 }
 
 /** One photo, any size, into the project's gallery. Returns the signed photos row. */
-export async function uploadPhoto(file: File, o: PhotoUploadOpts): Promise<Record<string, unknown>> {
+export async function uploadPhoto(original: File, o: PhotoUploadOpts): Promise<Record<string, unknown>> {
+  // Send ~a fifth of the bytes: the server only keeps a 2000 px copy anyway.
+  const file = await shrinkForUpload(original);
   const h = await getAuthHeaders();
   const start = await jsonOrThrow(
     await fetch('/api/photos/upload-url', {
@@ -198,9 +201,9 @@ export async function uploadPhoto(file: File, o: PhotoUploadOpts): Promise<Recor
         fileName: file.name || 'photo.jpg',
         contentType: file.type || null,
         album: o.album,
-        title: o.title ?? titleFromFileName(file.name || 'Photo'),
+        title: o.title ?? titleFromFileName(original.name || 'Photo'),
         description: o.description,
-        takenAt: file.lastModified ? new Date(file.lastModified).toISOString() : undefined,
+        takenAt: original.lastModified ? new Date(original.lastModified).toISOString() : undefined,
       }),
     }),
     "The photo didn't save.",
