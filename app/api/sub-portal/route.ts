@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { LOCAL_DAY_HEADER, daysUntilDay, plausibleToday } from '@/lib/calendar-day';
 
 export const dynamic = 'force-dynamic';
 
@@ -65,14 +66,20 @@ function normalizeDocType(dt: string): string {
   return s || 'license';
 }
 
+/**
+ * expiry_date is a calendar day, good through its end (lib/calendar-day) —
+ * compared as a day against the GC's own day, not as midnight UTC, which
+ * showed a COI "expired" from the evening before its last day.
+ */
 function complianceStatus(
   expiry: string | null,
   hasFile: boolean,
+  today: string,
 ): 'valid' | 'expiring' | 'expired' | 'missing' {
   if (!hasFile) return 'missing';
   if (expiry) {
-    const days = Math.ceil((new Date(expiry).getTime() - Date.now()) / 86_400_000);
-    if (!Number.isNaN(days)) {
+    const days = daysUntilDay(expiry, today);
+    if (days !== null) {
       if (days < 0) return 'expired';
       if (days <= 30) return 'expiring';
     }
@@ -189,6 +196,7 @@ export async function GET(req: NextRequest) {
 
   // ── compliance ──
   let compliance: unknown[] = [];
+  const today = plausibleToday(req.headers.get(LOCAL_DAY_HEADER));
   try {
     const { data } = await db
       .from('portal_sub_compliance_docs')
@@ -206,7 +214,7 @@ export async function GET(req: NextRequest) {
         subName: sub?.name || 'Unknown Sub',
         company: sub?.company || '',
         docType: normalizeDocType((row.doc_type as string) || ''),
-        status: complianceStatus((row.expiry_date as string) ?? null, hasFile),
+        status: complianceStatus((row.expiry_date as string) ?? null, hasFile, today),
         expirationDate: (row.expiry_date as string) ?? null,
         fileName: basename((row.file_url as string) ?? null),
         uploadedDate: (row.created_at as string) ?? null,

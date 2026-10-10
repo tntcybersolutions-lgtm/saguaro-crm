@@ -4,6 +4,7 @@ import { computePayApp, toCents, toDollars } from '@/lib/calc';
 import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
 import { notOnRoster, subRecordScope } from '@/lib/sub-portal-scope';
+import { LOCAL_DAY_HEADER, isPastDay, plausibleToday } from '@/lib/calendar-day';
 
 async function authenticateSubPortal(req: NextRequest) {
   const token =
@@ -83,17 +84,22 @@ export async function POST(req: NextRequest) {
 
     // ── COMPLIANCE GATE — the reason GCs force subs onto portals: an invoice
     //    cannot be submitted while required compliance docs are missing or
-    //    expired. Required: current insurance (COI) + W9 on file. ──
+    //    expired. Required: current insurance (COI) + W9 on file.
+    //    expiry_date is a calendar day, good through its end — compared as a
+    //    day against the sub's own day (lib/calendar-day), not as midnight UTC,
+    //    which held invoices on the COI's last valid day in every US zone. A
+    //    failed read is an error, not "documents missing". ──
     {
-      const { data: cdocs } = await db
+      const { data: cdocs, error: cdocsErr } = await db
         .from('portal_sub_compliance_docs')
         .select('doc_type, expiry_date, status')
         .eq('tenant_id', scope.tenantId)
         .eq('sub_id', scope.subId);
-      const now = Date.now();
+      if (cdocsErr) throw cdocsErr;
+      const today = plausibleToday(req.headers.get(LOCAL_DAY_HEADER));
       const ok = (type: string) => (cdocs || []).some((d: { doc_type: string; expiry_date: string | null; status: string | null }) =>
         d.doc_type === type && d.status !== 'rejected' && d.status !== 'expired' &&
-        (!d.expiry_date || new Date(d.expiry_date).getTime() > now));
+        (!d.expiry_date || !isPastDay(d.expiry_date, today)));
       const missing = ['insurance', 'w9'].filter((t) => !ok(t));
       if (missing.length) {
         return NextResponse.json({

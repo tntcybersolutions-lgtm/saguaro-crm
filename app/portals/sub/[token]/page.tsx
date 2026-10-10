@@ -14,6 +14,7 @@ import {
   DOCUMENT_ACCEPT, DOCUMENT_MAX_BYTES, DOCUMENT_MAX_MB, checkDocumentFileName,
 } from '@/lib/sub-portal-files';
 import { putSigned } from '@/lib/media-upload';
+import { LOCAL_DAY_HEADER, isPastDay, localDay } from '@/lib/calendar-day';
 
 /* ── Design Tokens ── */
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF';
@@ -194,7 +195,10 @@ export default function SubPortal(){
 
   const showToast=useCallback((msg:string)=>{setToast(msg);setTimeout(()=>setToast(''),3500)},[]);
 
-  const headers:Record<string,string>={'Content-Type':'application/json','x-portal-token':token||''};
+  /* Every call carries this device's calendar day: a COI's expiry_date is good
+     through the end of that day where the sub is, which only the browser knows
+     (lib/calendar-day). The server takes it within reason and falls back to Phoenix. */
+  const headers:Record<string,string>={'Content-Type':'application/json','x-portal-token':token||'',[LOCAL_DAY_HEADER]:localDay()};
 
   useEffect(()=>{
     const on=()=>setIsOnline(true),off=()=>setIsOnline(false);
@@ -333,7 +337,8 @@ export default function SubPortal(){
   const refreshActivity=()=>fetch(`/api/portal/sub/activity?token=${token}`,{headers}).then(r=>r.json()).then(d=>setActivity(d.events||[])).catch(()=>{});
   /* Compliance gate: invoices are held until required docs are current. */
   const requiredDocs=['insurance','w9'];
-  const docCurrent=(type:string)=>complianceDocs.some((d:any)=>d.doc_type===type&&d.status!=='rejected'&&d.status!=='expired'&&(!d.expiry_date||new Date(d.expiry_date).getTime()>Date.now()));
+  /* expiry_date is a calendar day, current through its end (it used to lapse at midnight UTC — the evening before, in the US). */
+  const docCurrent=(type:string)=>complianceDocs.some((d:any)=>d.doc_type===type&&d.status!=='rejected'&&d.status!=='expired'&&(!d.expiry_date||!isPastDay(d.expiry_date,localDay())));
   const complianceMissing=requiredDocs.filter(t=>!docCurrent(t));
   const complianceGateOpen=complianceMissing.length===0;
 
@@ -735,7 +740,7 @@ export default function SubPortal(){
               const c=a.level==='critical'?RED:a.level==='warning'?AMBER:BLUE;
               return <div key={i} style={{padding:'8px 0',borderBottom:i<alerts.length-1?`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`:'none',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
                 <div style={{fontSize:13,color:TEXT}}><strong style={{color:c}}>{a.doc.doc_type}</strong> &mdash; {docFileLabel(a.doc)}</div>
-                <div style={{fontSize:12,fontWeight:700,color:c}}>{days<=0?'Expired':days<=30?`${days}d — Urgent`:days<=60?`${days}d — Warning`:`${days}d — Notice`}</div>
+                <div style={{fontSize:12,fontWeight:700,color:c}}>{days<0?'Expired':days===0?'Expires today':days<=30?`${days}d — Urgent`:days<=60?`${days}d — Warning`:`${days}d — Notice`}</div>
               </div>;
             })}
           </div>
@@ -841,10 +846,10 @@ export default function SubPortal(){
             {alerts.map((a,i)=>{
               const days=a.doc.days_until_expiry;
               const c=a.level==='critical'?RED:a.level==='warning'?AMBER:BLUE;
-              const levelLabel=days<=0?'Expired':days<=30?'30-Day Alert':days<=60?'60-Day Alert':'90-Day Alert';
+              const levelLabel=days<0?'Expired':days<=30?'30-Day Alert':days<=60?'60-Day Alert':'90-Day Alert';
               return <div key={i} style={{padding:'10px 12px',background:`color-mix(in srgb, ${c} 7%, transparent)`,border:`1px solid color-mix(in srgb, ${c} 20%, transparent)`,borderRadius:6,marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
                 <div><div style={{fontSize:13,fontWeight:700,color:TEXT}}>{docLabels[a.doc.doc_type]||a.doc.doc_type}</div><div style={{fontSize:11,color:DIM}}>{docFileLabel(a.doc)} &middot; Expires: {fmtDate(a.doc.expiry_date)}</div></div>
-                <div style={{padding:'4px 12px',borderRadius:20,background:`color-mix(in srgb, ${c} 13%, transparent)`,color:c,fontSize:11,fontWeight:700}}>{levelLabel} ({days<=0?'Overdue':`${days}d`})</div>
+                <div style={{padding:'4px 12px',borderRadius:20,background:`color-mix(in srgb, ${c} 13%, transparent)`,color:c,fontSize:11,fontWeight:700}}>{levelLabel} ({days<0?'Overdue':days===0?'expires today':`${days}d`})</div>
               </div>;
             })}
           </div>
@@ -864,7 +869,7 @@ export default function SubPortal(){
                   <div style={{fontSize:14,fontWeight:700,color:TEXT,marginBottom:6}}>{docLabels[type]||type}</div>
                   {doc?(<div>
                     <div style={{fontSize:12,color:DIM,marginBottom:4,overflowWrap:'anywhere'}}>File: {docFileLabel(doc)}</div>
-                    {doc.expiry_date&&<div style={{fontSize:12,color:c,fontWeight:600,marginBottom:4}}>{doc.days_until_expiry!==null&&doc.days_until_expiry<=0?'Expired':doc.days_until_expiry!==null&&doc.days_until_expiry<=30?`Expires in ${doc.days_until_expiry} days`:`Expires: ${fmtDate(doc.expiry_date)}`}</div>}
+                    {doc.expiry_date&&<div style={{fontSize:12,color:c,fontWeight:600,marginBottom:4}}>{doc.days_until_expiry!=null&&doc.days_until_expiry<0?'Expired':doc.days_until_expiry===0?'Expires today':doc.days_until_expiry!=null&&doc.days_until_expiry<=30?`Expires in ${doc.days_until_expiry} day${doc.days_until_expiry===1?'':'s'}`:`Expires: ${fmtDate(doc.expiry_date)}`}</div>}
                     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,flexWrap:'wrap'}}>
                       <span style={badge(doc.status)}>{(doc.status||'').replace(/_/g,' ')}</span>
                       {doc.file_url&&<a href={doc.file_url} target="_blank" rel="noopener noreferrer" style={{...btnS(BORDER,true),minHeight:44,display:'inline-flex',alignItems:'center',textDecoration:'none',color:TEXT}}>View file</a>}

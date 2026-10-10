@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { alertDialog } from '@/lib/ui/async-dialog';
 import { SUB_TRADES as ALL_TRADES } from '@/lib/construction-intelligence';
 import { humanError } from '@/lib/errors';
+import { LOCAL_DAY_HEADER, localDay } from '@/lib/calendar-day';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 import { UsersThree, CheckCircle, Clock, Prohibit, WarningCircle, XCircle, FileX, Plus, UploadSimple, ListChecks, ClockCounterClockwise, FileText, ShieldCheck, AddressBook, Megaphone, Envelope } from '@phosphor-icons/react';
@@ -272,7 +273,8 @@ export default function SubPortalPage() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch('/api/sub-portal');
+        // This device's calendar day: a COI is good through the end of its expiry day (lib/calendar-day).
+        const res = await fetch('/api/sub-portal', { headers: { [LOCAL_DAY_HEADER]: localDay() } });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         // The GET returns everything tenant-scoped and already mapped to the
