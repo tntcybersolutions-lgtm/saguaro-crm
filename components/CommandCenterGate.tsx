@@ -9,12 +9,16 @@
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFeature } from '@/lib/hooks/useEntitlements';
+import { RouteSkeleton } from '@/components/ui/PageSkeleton';
 
 export default function CommandCenterGate({ children }: { children: React.ReactNode }) {
   const { enabled, loading, known } = useFeature('command_center');
   const router = useRouter();
   const refused = !loading && known && !enabled;
   useEffect(() => { if (refused) router.replace('/app'); }, [refused, router]);
-  if (loading || refused) return null;
+  /* While the plan is checked, paint the section's shape — this used to be
+     null, and the live iPhone walk saw a pure black screen until it answered. */
+  if (loading) return <RouteSkeleton title="Command Center" />;
+  if (refused) return null; // on the way back to Home
   return <>{children}</>;
 }
