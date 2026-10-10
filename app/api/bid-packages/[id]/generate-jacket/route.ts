@@ -19,6 +19,9 @@ import { storeJacketPdf } from '@/lib/bid-jacket-pdf';
  * a signed-in GC.
  */
 export const dynamic = 'force-dynamic';
+/* Every document in the jacket gets a signed link in the index; a job with a
+   full drawing set is a lot of signing on top of the render and upload. */
+export const maxDuration = 60;
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const g = await requirePermission(req, 'Projects', 'Edit');
