@@ -1,0 +1,109 @@
+ok   phone loading: skeleton rows, never blank
+ok   phone error: honest message + Retry
+ok   phone error: Retry asks again and the page stays honest
+ok   phone error: no page errors
+ok   phone empty: "Nothing needs you today." + This week
+ok   phone empty: Today · 0
+ok   phone empty: the link switches to This week
+ok   phone live: tabs read Today · 6 / This week · 0 / Later
+ok   phone live: the tab bar badge (count route) says 6
+ok   phone live: Do first then the rest, like the mock
+ok   phone live: section and day labels
+ok   phone live: Bids due · 2 packages, CRAC first
+ok   phone live: no sideways scroll
+ok   phone live: every control has a 44px tap area
+ok   phone live: scrolled to the end, the last row clears the tab bar
+ok   phone live: switching tabs never moves the page (scrollY 0 → 0,0,0,0,0,0)
+ok   phone live (scrolled, tabs on screen): switching tabs never moves the page (scrollY 40 → 40,40,40,40,40,40)
+ok   phone live (scrolled to the end): switching tabs never moves the page (scrollY 159 → 159,159,159,159,159,159)
+ok   phone live: This week is honest about being empty
+ok   phone live: Later has Oct 20 bids and the Nov 2 start, by day
+ok   phone live: "Coming up · Later ›" switches tabs without moving the page
+ok   phone live: no Remind button while the CRAC link is off
+ok   phone live: Turn on → POST /portal {enabled:true}
+ok   phone live: the Turn on row is gone, the toast says so
+ok   phone live: and the CRAC remind row now has Remind
+ok   phone live: Today · 5 after the link went on
+ok   phone live: swiping left reveals Remind and Snooze
+ok   phone live: Remind → one POST per silent bidder (Apex, Vertex)
+ok   phone live: "Reminder sent to all 2 bidders." and the row says so
+ok   phone live: a partial reminder is reported honestly (1 of 2, who and why)
+ok   phone live: a row with only Snooze reveals just Snooze
+ok   phone live: Snooze → POST /api/my-work/snooze until tomorrow
+ok   phone live: the row is gone and Today drops to 3
+ok   phone live: the toast offers Undo
+ok   phone live: Undo → DELETE and the row is back
+ok   phone live: Invite opens the package (its invite composer opens itself)
+ok   phone live: Set a bid due date opens the details form
+ok   phone live: no page errors
+ok   phone busy: Today carries RFIs, punch, schedule, COIs and the pay app
+ok   phone busy: tabs
+ok   phone busy: no sideways scroll
+ok   phone busy: every control has a 44px tap area
+ok   phone busy (scrolled, tabs on screen): switching tabs never moves the page (scrollY 40 → 40,40,40,40,40,40)
+ok   phone busy (scrolled to the end): switching tabs never moves the page (scrollY 618 → 618,618,618,618,618,618)
+ok   phone busy: Request → POST compliance Ask for it (insurance)
+ok   phone busy: …and says it went
+ok   phone busy: a refused ask says why
+ok   phone busy: a punch item swipes to Done + Snooze
+ok   phone busy: Done → PATCH punch complete, row gone
+ok   phone busy: Done on a schedule task → PUT status complete
+ok   phone busy: This week by day — Mon Oct 12 to-do, Tue 13 submittal + call, Wed 14 RFI 15, Thu 15 inspection
+ok   phone busy: Done on a to-do → PATCH todos complete
+ok   phone busy: an RFI row opens the job's RFIs
+ok   phone busy: no page errors
+ok   phone partial: "Couldn't load RFIs and pay apps · Retry"
+ok   phone partial: the rest still renders
+ok   phone partial: no page errors
+ok   desktop loading: skeleton rows, never blank
+ok   desktop error: honest message + Retry
+ok   desktop error: Retry asks again and the page stays honest
+ok   desktop error: no page errors
+ok   desktop empty: "Nothing needs you today." + This week
+ok   desktop empty: Today · 0
+ok   desktop empty: the link switches to This week
+ok   desktop live: tabs read Today · 6 / This week · 0 / Later
+ok   desktop live: Do first then the rest, like the mock
+ok   desktop live: section and day labels
+ok   desktop live: Bids due · 2 packages, CRAC first
+ok   desktop live: no sideways scroll
+ok   desktop live: switching tabs never moves the page (scrollY 0 → 0,0,0,0,0,0)
+ok   desktop live (scrolled, tabs on screen): switching tabs never moves the page (scrollY 40 → 40,40,40,40,40,40)
+ok   desktop live: This week is honest about being empty
+ok   desktop live: Later has Oct 20 bids and the Nov 2 start, by day
+ok   desktop live: "Coming up · Later ›" switches tabs without moving the page
+ok   desktop live: no Remind button while the CRAC link is off
+ok   desktop live: Turn on → POST /portal {enabled:true}
+ok   desktop live: the Turn on row is gone, the toast says so
+ok   desktop live: and the CRAC remind row now has Remind
+ok   desktop live: Today · 5 after the link went on
+ok   desktop live: Remind → one POST per silent bidder (Apex, Vertex)
+ok   desktop live: "Reminder sent to all 2 bidders." and the row says so
+ok   desktop live: a partial reminder is reported honestly (1 of 2, who and why)
+ok   desktop live: Snooze shows inline on hover
+ok   desktop live: Snooze → POST /api/my-work/snooze until tomorrow
+ok   desktop live: the row is gone and Today drops to 3
+ok   desktop live: the toast offers Undo
+ok   desktop live: Undo → DELETE and the row is back
+ok   desktop live: Invite opens the package (its invite composer opens itself)
+ok   desktop live: Set a bid due date opens the details form
+ok   desktop live: no page errors
+ok   desktop busy: Today carries RFIs, punch, schedule, COIs and the pay app
+ok   desktop busy: tabs
+ok   desktop busy: no sideways scroll
+ok   desktop busy (scrolled, tabs on screen): switching tabs never moves the page (scrollY 40 → 40,40,40,40,40,40)
+ok   desktop busy (scrolled to the end): switching tabs never moves the page (scrollY 574 → 574,574,574,574,574,574)
+ok   desktop busy: Request → POST compliance Ask for it (insurance)
+ok   desktop busy: …and says it went
+ok   desktop busy: a refused ask says why
+ok   desktop busy: Done → PATCH punch complete, row gone
+ok   desktop busy: Done on a schedule task → PUT status complete
+ok   desktop busy: This week by day — Mon Oct 12 to-do, Tue 13 submittal + call, Wed 14 RFI 15, Thu 15 inspection
+ok   desktop busy: Done on a to-do → PATCH todos complete
+ok   desktop busy: an RFI row opens the job's RFIs
+ok   desktop busy: no page errors
+ok   desktop partial: "Couldn't load RFIs and pay apps · Retry"
+ok   desktop partial: the rest still renders
+ok   desktop partial: no page errors
+
+all 107 passed

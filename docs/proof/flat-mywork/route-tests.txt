@@ -1,0 +1,25 @@
+ok   portal: signed out → 401
+ok   portal: enabled must be a boolean → 400
+ok   portal: another company's package → 404, untouched
+ok   portal: a draft is refused (issue the jacket first), untouched
+ok   portal: expired links are refused, untouched
+ok   portal: an open package switches on
+ok   portal: the read and the write are both tenant-scoped
+ok   portal: again → no write, changed:false
+ok   portal: and it switches back off
+ok   snooze: a junk key → 400
+ok   snooze: until today → 400
+ok   snooze: no until → tomorrow on the person's own day
+ok   snooze: stored for this tenant and this person
+ok   snooze: snoozing again moves the day (one row)
+ok   snooze: Undo removes mine and leaves someone else's
+ok   snooze: before the migration → 503 that says so
+ok   snooze: signed out → 401
+ok   count: signed out → 401
+ok   count: { count: 4 } for the owner
+ok   count: private, 30 s fresh, stale for a minute
+ok   count: someone with nothing assigned → 0
+ok   count: my snooze takes one off
+ok   feed: today in the device zone, items, snoozes, no failures
+ok   feed: before the migration, Snooze is off and nothing fails
+all passed
