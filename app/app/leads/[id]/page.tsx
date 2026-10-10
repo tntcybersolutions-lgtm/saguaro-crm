@@ -15,16 +15,17 @@
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowRight, EnvelopeSimple, UploadSimple, DownloadSimple, CheckCircle, WarningCircle, Trash } from '@phosphor-icons/react';
+import { ArrowRight, EnvelopeSimple, UploadSimple, DownloadSimple, CheckCircle, WarningCircle, Trash, PencilSimple } from '@phosphor-icons/react';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useToast } from '@/components/Toast';
 import { humanError } from '@/lib/errors';
 import { fmtDate as fmtDateSafe } from '@/lib/format-date';
-import { LEAD_STAGES } from '@/lib/lead-stages';
+import { LEAD_STAGES, LEAD_SOURCES } from '@/lib/lead-stages';
+import { BUILDING_TYPES } from '@/lib/contractor-trades';
 import { FileTypeBadge } from '@/components/FileTypeBadge';
 import {
   PageShell, Card, StatRow, Badge, Button, DataTable, EmptyState, DetailList,
-  FormModal, Field, Input, Textarea, Select, FormGrid,
+  FormModal, Field, Input, Textarea, Select, FormGrid, DateInput,
   type Column, type BadgeTone,
 } from '@/components/ui/kit';
 
@@ -67,6 +68,27 @@ const fmt = (n: unknown) =>
   '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 const fmtDate = (d: string | null) => (d ? fmtDateSafe(d) : '—');
 
+/* The deal's editable fields, as form strings. Stage is not here — the stage
+   bar moves it (and stamps won_at / lost_at). */
+type DealForm = {
+  company_name: string; contact_name: string; email: string; phone: string;
+  source: string; project_type: string; estimated_value: string; probability: string;
+  location: string; next_action: string; next_action_date: string; notes: string;
+};
+const str = (v: unknown) => (v === null || v === undefined ? '' : String(v));
+function formFromLead(l: Lead): DealForm {
+  return {
+    company_name: str(l.company_name), contact_name: str(l.contact_name), email: str(l.email), phone: str(l.phone),
+    source: str(l.source), project_type: str(l.project_type),
+    estimated_value: l.estimated_value != null && l.estimated_value !== '' ? str(Number(l.estimated_value)) : '',
+    probability: l.probability != null && l.probability !== '' ? str(Number(l.probability)) : '',
+    location: str(l.location), next_action: str(l.next_action),
+    next_action_date: l.next_action_date ? l.next_action_date.slice(0, 10) : '', notes: str(l.notes),
+  };
+}
+/** A select's options, keeping a saved value that is not in the list selectable. */
+const withCurrent = (list: readonly string[], cur: string) => (cur && !list.includes(cur) ? [...list, cur] : [...list]);
+
 const CRUMBS = [{ label: 'Sales', href: '/app/sales' }, { label: 'Pipeline', href: '/app/leads' }];
 
 export default function DealPage() {
@@ -96,6 +118,15 @@ export default function DealPage() {
   // Deal media hub: files/photos/docs/videos attached to this deal.
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [uploading, setUploading] = useState(false);
+
+  // Edit / delete the deal itself. The deal page could move a stage and log a
+  // call, but not fix a misspelled company or a wrong number, and not remove a
+  // dead deal — those lived only on the board's modal.
+  const [editOpen, setEditOpen] = useState(false);
+  const [form, setForm] = useState<DealForm | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -252,6 +283,67 @@ export default function DealPage() {
     }
   }, [lead, id, converting, router, showToast]);
 
+  const openEdit = useCallback(() => {
+    if (!lead) return;
+    setForm(formFromLead(lead));
+    setEditError(null);
+    setEditOpen(true);
+  }, [lead]);
+
+  /* Save through the same PATCH /api/leads/[id] the board's editor uses, with
+     the real lead_pipeline column names. */
+  const saveEdit = useCallback(async () => {
+    if (!form || savingEdit) return;
+    if (!form.company_name.trim()) { setEditError('Company name is required.'); return; }
+    const num = (v: string) => { const t = v.trim(); if (!t) return null; const n = Number(t); return Number.isFinite(n) ? n : null; };
+    const txt = (v: string) => v.trim() || null;
+    setSavingEdit(true); setEditError(null);
+    try {
+      const r = await fetch(`/api/leads/${id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          company_name: form.company_name.trim(),
+          contact_name: txt(form.contact_name), email: txt(form.email), phone: txt(form.phone),
+          source: txt(form.source), project_type: txt(form.project_type),
+          estimated_value: num(form.estimated_value), probability: num(form.probability),
+          location: txt(form.location), next_action: txt(form.next_action),
+          next_action_date: form.next_action_date || null, notes: txt(form.notes),
+        }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || 'Could not save the deal');
+      setLead(j.lead as Lead);
+      setEditOpen(false);
+      showToast('Deal updated.', 'success');
+    } catch (e) {
+      setEditError(humanError(e, 'Could not save the deal.'));
+    } finally {
+      setSavingEdit(false);
+    }
+  }, [form, savingEdit, id, showToast]);
+
+  const deleteDeal = useCallback(async () => {
+    if (!lead || deleting) return;
+    const ok = await confirmDialog({
+      title: 'Delete this deal?',
+      message: `${lead.company_name || 'This deal'}, its activity history and its files will be permanently removed. This can’t be undone.`,
+      confirmLabel: 'Delete Deal',
+      danger: true,
+    });
+    if (!ok) return;
+    setDeleting(true);
+    try {
+      const r = await fetch(`/api/leads/${id}`, { method: 'DELETE' });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || 'Could not delete the deal');
+      showToast('Deal deleted.', 'success');
+      router.push('/app/leads');
+    } catch (e) {
+      showToast(humanError(e, 'Could not delete the deal.'), 'error');
+      setDeleting(false);
+    }
+  }, [lead, deleting, id, router, showToast]);
+
   if (loading || error || !lead) {
     return (
       <PageShell crumbs={CRUMBS} title={loading ? 'Loading deal…' : 'Deal Unavailable'}>
@@ -293,6 +385,7 @@ export default function DealPage() {
       subtitle={`${lead.contact_name || 'No contact'}${lead.project_type ? ` · ${lead.project_type}` : ''}`}
       actions={
         <>
+          <Button icon={<PencilSimple size={15} />} onClick={openEdit}>Edit Deal</Button>
           <Button
             icon={<EnvelopeSimple size={15} />}
             onClick={() => setSendOpen(true)}
@@ -306,6 +399,7 @@ export default function DealPage() {
           ) : (
             <Button variant="primary" onClick={convert} disabled={converting} icon={<ArrowRight size={15} />}>{converting ? 'Opening…' : 'Open the Job'}</Button>
           ))}
+          <Button variant="danger" icon={<Trash size={15} />} onClick={deleteDeal} disabled={deleting}>{deleting ? 'Deleting…' : 'Delete Deal'}</Button>
         </>
       }
     >
@@ -441,6 +535,59 @@ export default function DealPage() {
             <Textarea value={sendMessage} onChange={(e) => setSendMessage(e.target.value)} placeholder="Write your message to the GC…" rows={8} />
           </Field>
         </FormGrid>
+      </FormModal>
+
+      {/* Edit the deal — every saved field comes back pre-filled */}
+      <FormModal
+        open={editOpen && !!form}
+        onClose={() => { if (!savingEdit) setEditOpen(false); }}
+        title="Edit Deal"
+        subtitle="Stage moves from the bar on the page."
+        busy={savingEdit}
+        error={editError}
+        onSubmit={saveEdit}
+        submitLabel="Save Changes"
+      >
+        {form && (
+          <FormGrid cols={2}>
+            <Field label="Company Name" required>
+              <Input value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} autoFocus />
+            </Field>
+            <Field label="Contact Name">
+              <Input value={form.contact_name} onChange={(e) => setForm({ ...form, contact_name: e.target.value })} />
+            </Field>
+            <Field label="Contact Email">
+              <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+            </Field>
+            <Field label="Contact Phone">
+              <Input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+            </Field>
+            <Field label="Estimated Value ($)">
+              <Input type="number" inputMode="decimal" value={form.estimated_value} onChange={(e) => setForm({ ...form, estimated_value: e.target.value })} />
+            </Field>
+            <Field label="Probability (%)">
+              <Input type="number" inputMode="numeric" min={0} max={100} value={form.probability} onChange={(e) => setForm({ ...form, probability: e.target.value })} />
+            </Field>
+            <Field label="Source">
+              <Select options={withCurrent(LEAD_SOURCES, form.source)} placeholder="Select source…" value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} />
+            </Field>
+            <Field label="Project Type">
+              <Select options={withCurrent(BUILDING_TYPES, form.project_type)} placeholder="Select building type…" value={form.project_type} onChange={(e) => setForm({ ...form, project_type: e.target.value })} />
+            </Field>
+            <Field label="Location">
+              <Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
+            </Field>
+            <Field label="Follow-Up Date">
+              <DateInput value={form.next_action_date} onChange={(e) => setForm({ ...form, next_action_date: e.target.value })} />
+            </Field>
+            <Field label="Next Action" span>
+              <Input value={form.next_action} onChange={(e) => setForm({ ...form, next_action: e.target.value })} placeholder="e.g. Send revised proposal" />
+            </Field>
+            <Field label="Notes" span>
+              <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={4} />
+            </Field>
+          </FormGrid>
+        )}
       </FormModal>
     </PageShell>
   );

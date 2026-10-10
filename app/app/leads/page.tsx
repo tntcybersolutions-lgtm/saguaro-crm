@@ -12,7 +12,7 @@ import { humanError } from '@/lib/errors';
 import { fmtDate as fmtDateSafe } from '@/lib/format-date';
 import MarkOutcomeModal from '@/components/bids/MarkOutcomeModal';
 import { BUILDING_TYPES } from '@/lib/contractor-trades';
-import { summariseByStage } from '@/lib/lead-stages';
+import { summariseByStage, LEAD_SOURCES } from '@/lib/lead-stages';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import {
@@ -29,7 +29,7 @@ const STAGE_TONE: Record<Stage, BadgeTone> = {
   New: 'lead', Contacted: 'lead', Qualified: 'lead', Proposal: 'lead',
   Negotiation: 'lead', Won: 'under_contract', Lost: 'closed',
 };
-const SOURCES = ['Website', 'Referral', 'Cold Call', 'Social Media', 'Trade Show', 'Advertisement', 'Repeat Client', 'Other'] as const;
+const SOURCES = LEAD_SOURCES; // shared with the deal page's Edit (lib/lead-stages)
 const ACTIVITY_TYPES = ['call', 'email', 'meeting', 'note'] as const;
 const ACTIVITY_LABELS: Record<string, string> = { call: 'Phone Call', email: 'Email', meeting: 'Meeting', note: 'Note' };
 

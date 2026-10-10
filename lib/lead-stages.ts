@@ -18,6 +18,11 @@ export const LEAD_STAGES = [
 ] as const;
 export type LeadStage = (typeof LEAD_STAGES)[number];
 
+/** Where a lead came from — the pick-list on the lead form and the deal page's Edit. */
+export const LEAD_SOURCES = [
+  'Website', 'Referral', 'Cold Call', 'Social Media', 'Trade Show', 'Advertisement', 'Repeat Client', 'Other',
+] as const;
+
 /** Stages that count as "qualified pipeline" (qualified through close). */
 export const QUALIFIED_STAGES = ['Qualified', 'Proposal', 'Negotiation', 'Won'] as const;
 export const OPEN_STAGES = ['New', 'Contacted', 'Qualified', 'Proposal', 'Negotiation'] as const;
