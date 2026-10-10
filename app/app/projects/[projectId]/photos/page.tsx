@@ -352,6 +352,15 @@ export default function PhotosPage(){
   function viewPhoto(photo:any){
     setSelected(photo);setMode('view');
   }
+  /* On a phone a tap means "show me the picture": straight to the full-screen
+     viewer (swipe, pinch, play). The details card used to open instead, with
+     the picture under it behind the tab bar — it looked like nothing opened. */
+  const isPhone = () => typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
+  const [lightboxFromTap,setLightboxFromTap]=useState(false);
+  function openPhoto(photo:any){
+    viewPhoto(photo);
+    if(isPhone()){ setLightboxFromTap(true); setLightboxOpen(true); }
+  }
   function closePanel(){setSelected(null);setMode(null);clearUpload();}
   /** Abandoning an edit keeps the photo in the viewer. */
   function closeComposer(){
@@ -581,7 +590,7 @@ export default function PhotosPage(){
       key={photo.id}
       photo={photo}
       selected={selected?.id===photo.id&&mode!=='create'}
-      onClick={()=>viewPhoto(photo)}
+      onClick={()=>openPhoto(photo)}
       onEdit={(id,url)=>setEditingPhoto({id,url})}
       onStale={resign}
     />
@@ -652,7 +661,7 @@ export default function PhotosPage(){
   }
 
   const detailWorkspace = detailOpen && (
-    <div ref={detailRef} className="phDetailCq">
+    <div ref={detailRef} className="phDetailCq" style={{ scrollMarginTop: 84 }}>
       <div className="phDetail">
         <Card
           title={selected.title||'Untitled'}
@@ -789,7 +798,8 @@ export default function PhotosPage(){
           items={lightboxItems}
           index={Math.max(0, selIndex)}
           onIndex={(i)=>{ const next=ordered[i]; if(next) viewPhoto(next); }}
-          onClose={()=>setLightboxOpen(false)}
+          onClose={()=>{ setLightboxOpen(false); if(lightboxFromTap){ setLightboxFromTap(false); closePanel(); } }}
+          onInfo={()=>{ setLightboxOpen(false); setLightboxFromTap(false); }}
           onMediaError={()=>load({silent:true})}
         />
       )}

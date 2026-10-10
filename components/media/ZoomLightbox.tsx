@@ -14,7 +14,7 @@
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, CaretLeft, CaretRight, MagnifyingGlassPlus, MagnifyingGlassMinus, ArrowSquareOut } from '@phosphor-icons/react';
+import { Info, X, CaretLeft, CaretRight, MagnifyingGlassPlus, MagnifyingGlassMinus, ArrowSquareOut } from '@phosphor-icons/react';
 
 export interface LightboxItem {
   id: string;
@@ -58,12 +58,15 @@ export default function ZoomLightbox({
   index,
   onIndex,
   onClose,
+  onInfo,
   onMediaError,
 }: {
   items: LightboxItem[];
   index: number;
   onIndex: (i: number) => void;
   onClose: () => void;
+  /** Show this item's details (date, location, album…). Adds an Info button. */
+  onInfo?: (item: LightboxItem) => void;
   /** A signed URL expired or the object is gone — let the page re-sign. */
   onMediaError?: (item: LightboxItem) => void;
 }) {
@@ -273,6 +276,7 @@ export default function ZoomLightbox({
             <button type="button" className="zlBtn zlHideSm" aria-label="Zoom in" onClick={() => zoomAt(t.current.s * 1.5, 0, 0, true)} disabled={pct >= MAX * 100}><MagnifyingGlassPlus size={18} /></button>
           </>
         )}
+        {onInfo && <button type="button" className="zlBtn" aria-label="Details" title="Details" onClick={() => onInfo(item)}><Info size={19} /></button>}
         <a className="zlBtn" href={item.url} target="_blank" rel="noreferrer" aria-label="Open the original in a new tab" title="Open original"><ArrowSquareOut size={18} /></a>
         <button type="button" className="zlBtn" aria-label="Close" title="Close (Esc)" onClick={onClose}><X size={20} weight="bold" /></button>
       </div>
