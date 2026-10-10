@@ -606,7 +606,7 @@ export default function CatalogPage() {
                 ))}
               </select>
             )}
-            <select value={sort} onChange={(e) => setSort(e.target.value as SortMode)} style={SEL} className="pmBtn">
+            <select value={sort} onChange={(e) => setSort(e.target.value as SortMode)} style={SEL} className="pmBtn" aria-label="Sort products">
               <option value="name">Sort: Name A–Z</option>
               <option value="price">Sort: Best Price</option>
               <option value="category">Sort: Category</option>

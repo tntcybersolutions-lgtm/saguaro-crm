@@ -119,14 +119,18 @@ export default function MobileSelectSheet() {
       if (e.cancelable) e.preventDefault();
       show(t.el);
     };
-    /* Anything that still reaches the element (a tap on its <label>, an
-       emulator sending mouse events): close the system picker and open ours. */
+    /* Anything that still reaches the element as mouse events (a stylus, a
+       trackpad on a tablet, an emulator): mousedown is cancelled so the system
+       picker never opens, and ours opens on the click — once the button is
+       back up. Opened on mousedown, the sheet appeared under a pointer that was
+       still pressed: the release landed on whatever row or backdrop was now
+       under it, and the walk's taps on "Sort by" read as covered. */
     const onMouse = (e: MouseEvent) => {
       if (!mq.matches) return;
       const el = eligible(e.target);
       if (!el) return;
       e.preventDefault();
-      if (e.type === 'mousedown') show(el);
+      if (e.type === 'click' && !openRef.current) show(el);
     };
     const onFocus = (e: FocusEvent) => {
       if (!mq.matches || openRef.current) return;
