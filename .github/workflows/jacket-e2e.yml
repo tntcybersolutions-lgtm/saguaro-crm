@@ -1,0 +1,51 @@
+name: Jacket e2e
+
+# The bid jacket, end to end on the LIVE app as the demo company: start a ZZ
+# AUDIT job, add documents through every door a GC has (Files, Drawings, Specs,
+# Takeoff, the jacket's Add Document), create a package like the wizard does,
+# and check every document lands in the right divider and nothing required is
+# empty. Also records how full every existing demo package's jacket is.
+# Report: tools/walk/jacket-e2e.md. Runs apart from the walk (own queue).
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ops/testflight]
+    paths: ['tools/e2e-jacket.mjs', '.github/workflows/jacket-e2e.yml']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: jacket-e2e
+  cancel-in-progress: false
+
+jobs:
+  jacket:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      APP_REVIEW_DEMO_EMAIL: ${{ secrets.APP_REVIEW_DEMO_EMAIL }}
+      APP_REVIEW_DEMO_PASS: ${{ secrets.APP_REVIEW_DEMO_PASS }}
+      PLAYWRIGHT_DIR: /tmp/pw
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Playwright
+        run: |
+          mkdir -p /tmp/pw && cd /tmp/pw && npm init -y > /dev/null
+          npm i --no-audit --no-fund playwright@1.49.1
+          npx playwright install --with-deps chromium webkit
+      - name: Jacket end to end
+        run: node tools/e2e-jacket.mjs
+      - name: Commit the report to this branch
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/walk/jacket-e2e.md tools/walk/jacket-e2e.json tools/walk/jacket-shots || exit 0
+          git commit -m "Jacket e2e by run ${{ github.run_id }}" || exit 0
+          git pull --rebase -X theirs origin ${{ github.ref_name }}
+          git push origin HEAD:${{ github.ref_name }}
