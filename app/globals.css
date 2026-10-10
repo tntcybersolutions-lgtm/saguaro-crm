@@ -1347,6 +1347,7 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
   .pj-header-actions .k-btn { min-height: 44px; flex: 1 1 auto; }
   .pj-next { padding: 16px 16px 12px; }
   .pj-next-actions .k-btn { min-height: 44px; flex: 1 1 auto; }
+  .pj-next-toggle { min-height: 44px; }
   .pj-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .k-sortbar { display: flex; align-items: center; gap: 8px; padding: 8px 12px 4px; }
   /* A desktop side panel (fixed 460px flex sibling — schedule task composer and
