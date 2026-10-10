@@ -1605,16 +1605,24 @@ export default function SubPortal(){
   const renderBids=()=>(
     <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
       {bids.length===0&&<div style={card()}><div style={{color:DIM,fontSize:13}}>No open bid invitations right now.</div></div>}
+      {/* /api/portal/sub/bids answers { bidPackage: { name, projectName, scope }, dueDate, token, canBid }.
+          This read bid_packages / due_date \u2014 names the route never sent \u2014 so every invitation showed
+          as an unnamed "Bid Package" with no due date and no way to open it. */}
       {bids.map((b:any)=>(
         <div key={b.id} style={card()}>
           <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
-            <div style={{flex:1,minWidth:220}}>
-              <div style={{fontSize:15,fontWeight:800,color:TEXT}}>{b.bid_packages?.name||b.package_name||'Bid Package'}</div>
-              <div style={{fontSize:12,color:DIM,marginTop:2}}>{b.bid_packages?.projects?.name||''}{b.due_date?` \u00b7 Due ${fmtDate(b.due_date)}`:''}</div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:15,fontWeight:800,color:TEXT}}>{b.bidPackage?.name||b.bidPackage?.trade||'Bid Package'}</div>
+              <div style={{fontSize:12,color:DIM,marginTop:2}}>{b.bidPackage?.projectName||''}{b.dueDate?`${b.bidPackage?.projectName?' \u00b7 ':''}Due ${fmtDate(b.dueDate)}`:''}{b.isOverdue?' \u00b7 bidding closed':''}</div>
             </div>
-            <span style={badge(b.status||'open')}>{b.status||'open'}</span>
+            <span style={badge(b.status||'invited')}>{b.submitted?'submitted':(b.status||'invited')}</span>
           </div>
-          {b.bid_packages?.scope_of_work&&<div style={{fontSize:12,color:DIM,marginTop:10,lineHeight:1.6}}>{b.bid_packages.scope_of_work}</div>}
+          {b.bidPackage?.scope&&<div style={{fontSize:12,color:DIM,marginTop:10,lineHeight:1.6}}>{b.bidPackage.scope}</div>}
+          {b.token&&(
+            <a href={`/portals/bid/${b.token}`} style={{display:'inline-flex',alignItems:'center',justifyContent:'center',minHeight:44,marginTop:12,padding:'0 16px',borderRadius:10,background:b.canBid?GOLD:'transparent',border:b.canBid?'none':`1px solid ${BORDER}`,color:b.canBid?'var(--on-brand)':TEXT,fontSize:13.5,fontWeight:800,textDecoration:'none'}}>
+              {b.canBid?(b.submitted?'Open the Jacket \u00b7 Revise Bid':'Open the Jacket \u00b7 Submit Bid'):'Open the Jacket'}
+            </a>
+          )}
         </div>
       ))}
     </div>

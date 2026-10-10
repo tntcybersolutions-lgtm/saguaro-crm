@@ -1,109 +1,211 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/supabase-server';
 import { onBidAwarded } from '@/lib/triggers';
 import { requirePermission } from '@/lib/permissions';
-import { must, tryWrite } from '@/lib/db-write';
+import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 import { logActivity, money } from '@/lib/activity';
+import { bidAmount } from '@/lib/bid-amount';
+import { isPastDay } from '@/lib/calendar-day';
+import { dayIn, requestTimeZone } from '@/lib/time-zone';
+import { orValue } from '@/lib/pg-filter';
 
+/**
+ * POST /api/bid-packages/[id]/award — award one bid.
+ *
+ * Body: { submissionId, overrideCompliance?: boolean }
+ *
+ * The compliance gate (no award to a sub with no W-9 or lapsed insurance)
+ * used to FAIL OPEN: if its own check errored, it logged and awarded anyway —
+ * the one moment the gate exists for, it stepped aside. It now refuses and
+ * says so; the GC can retry, or award with the override, knowingly.
+ *
+ * An insurance certificate's expiry_date is a DATE. `new Date(expiry_date)` is
+ * midnight UTC — the evening before in every US zone — so a certificate good
+ * through today read as expired since last night. It is compared as a day:
+ * today where the GC is (their device), else the company's zone.
+ *
+ * Also checked now: the submission belongs to THIS package (an id from another
+ * package awarded it here), and a package already awarded is not awarded again
+ * (a second award drafted a second PO and re-sent every notice).
+ */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const g = await requirePermission(req, 'Projects', 'Full');
   if (!g.ok) return g.res;
   const user = g.user;
   const { id } = await params;
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const submissionId = String(body.submissionId || '').trim();
+    if (!submissionId) return NextResponse.json({ error: 'submissionId is required' }, { status: 400 });
     const db = createServerClient();
 
+    const { data: pkg, error: pkgErr } = await db
+      .from('bid_packages')
+      .select('id, tenant_id, project_id, name, trade, csi_division, status, awarded_to')
+      .eq('id', id)
+      .eq('tenant_id', user.tenantId)
+      .maybeSingle();
+    if (pkgErr) throw pkgErr;
+    if (!pkg) return NextResponse.json({ error: 'Bid package not found' }, { status: 404 });
+    if (String(pkg.status || '').toLowerCase() === 'awarded') {
+      return NextResponse.json(
+        { error: `This package is already awarded${pkg.awarded_to ? ` to ${pkg.awarded_to}` : ''}.` },
+        { status: 409 },
+      );
+    }
+
+    const { data: sub, error: subErr } = await db
+      .from('bid_submissions')
+      .select('id, sub_id, sub_name, sub_email, company_name, contact_name, contact_email, amount, base_amount, base_bid')
+      .eq('id', submissionId)
+      .eq('bid_package_id', id)
+      .eq('tenant_id', user.tenantId)
+      .maybeSingle();
+    if (subErr) throw subErr;
+    if (!sub) return NextResponse.json({ error: 'That bid is not on this package.' }, { status: 404 });
+    const s = sub as Record<string, any>;
+    const vendor = s.company_name || s.sub_name || s.contact_name || 'Awarded subcontractor';
+
     // ── COMPLIANCE GATE: no award to a sub with no W-9 or lapsed insurance.
-    //    Soft gate — body.overrideCompliance = true proceeds (and is returned in
-    //    the result); query failures fail OPEN so schema drift can't block awards. ──
+    //    body.overrideCompliance = true proceeds knowingly (it is recorded). ──
     if (!body.overrideCompliance) {
+      let issues: string[];
       try {
-        const { data: subRow } = await db.from('bid_submissions').select('sub_id').eq('id', body.submissionId).eq('tenant_id', user.tenantId).single();
-        const subId = (subRow as { sub_id?: string | null } | null)?.sub_id;
-        if (subId) {
-          const issues: string[] = [];
-          const { data: subRec } = await db.from('subcontractors').select('w9_on_file').eq('tenant_id', user.tenantId).eq('id', subId).maybeSingle();
-          if (subRec && (subRec as { w9_on_file?: boolean | null }).w9_on_file !== true) issues.push('W-9 not on file');
-          const { data: certs } = await db.from('insurance_certificates').select('expiry_date, status').eq('tenant_id', user.tenantId).eq('sub_id', subId);
-          if (certs && certs.length > 0) {
-            const valid = (certs as { expiry_date: string | null; status: string | null }[]).some(
-              (c) => c.status !== 'expired' && (!c.expiry_date || new Date(c.expiry_date).getTime() > Date.now()));
-            if (!valid) issues.push('Insurance certificate expired');
-          }
-          if (issues.length > 0) {
-            return NextResponse.json({
-              error: `Compliance hold — ${issues.join(', ')}. Award anyway with override, or request the documents first.`,
-              complianceBlock: true,
-              issues,
-            }, { status: 409 });
-          }
-        }
-      } catch (e) { console.error('award compliance gate skipped:', e); }
-    }
-
-    // Award the winning submission. Tenant-scope the write — db is the service-role
-    // client (RLS bypassed), so matching by submissionId alone would let one tenant
-    // award another tenant's bid submission (cross-tenant IDOR).
-    await tryWrite(db.from('bid_submissions').update({ status: 'awarded', is_awarded: true, awarded_at: new Date().toISOString(), awarded_by: user.id }).eq('id', body.submissionId).eq('tenant_id', user.tenantId), 'bid_submissions update');
-
-    // Close the package AND record the award on it (was only status before → the awarded amount
-    // was then hand re-keyed into POs and the budget). Now the award writes committed cost directly.
-    let poId: string | null = null;
-    try {
-      const { data: sub } = await db.from('bid_submissions').select('sub_id, sub_name, sub_email, company_name, contact_name, contact_email, amount, base_amount').eq('id', body.submissionId).eq('tenant_id', user.tenantId).single();
-      const { data: pkg } = await db.from('bid_packages').select('tenant_id, project_id, name, trade, csi_division').eq('id', id).eq('tenant_id', user.tenantId).single();
-      /* base_amount FIRST. bid_submissions.amount defaults to 0 rather than
-         null, so `amount ?? base_amount` never falls through — ?? only skips
-         null and undefined, and 0 is neither. A bid that filled base_amount
-         (which is what a submission actually sets) awarded at $0, and the
-         `amount > 0` guard below then skipped creating the purchase order
-         silently. Read the authoritative column first and treat 0 as absent. */
-      const amount = Number(sub?.base_amount ?? sub?.amount ?? 0) || Number(sub?.amount ?? 0) || 0;
-      const vendor = sub?.company_name || sub?.sub_name || sub?.contact_name || 'Awarded subcontractor';
-      await must(db.from('bid_packages').update({
-        status: 'awarded', awarded_amount: amount, awarded_to: vendor, awarded_to_id: sub?.sub_id ?? null,
-        awarded_at: new Date().toISOString(), awarded_by: user.id,
-      }).eq('id', id).eq('tenant_id', user.tenantId), 'bid_packages update');
-
-      /* An award is the single most consequential thing that happens on a bid
-         package — money committed to a company — and until now it left no
-         trace anywhere a person could read. Deliberately not awaited: the row
-         is history, and the GC is waiting on the award, not on its record. */
-      void logActivity({
-        tenantId: user.tenantId,
-        projectId: pkg?.project_id ?? null,
-        userId: user.id,
-        userName: user.email,
-        action: 'awarded',
-        entityType: 'bid_package',
-        entityId: id,
-        description: `Awarded ${pkg?.name || pkg?.trade || 'a bid package'} to ${vendor} — ${money(amount)}`,
-        metadata: { amount, vendor, trade: pkg?.trade ?? null, overrideCompliance: !!body.overrideCompliance },
-      });
-
-      if (pkg && amount > 0) {
-        // A DRAFT subcontract PO = the committed cost (the GC reviews it before issuing). No re-keying.
-        const { data: po } = await db.from('purchase_orders').insert({
-          tenant_id: pkg.tenant_id, project_id: pkg.project_id,
-          vendor_name: vendor, vendor_email: sub?.sub_email || sub?.contact_email || null,
-          description: `${pkg.name || 'Bid package'} — awarded subcontract`,
-          subtotal: amount, total: amount, status: 'draft',
-          cost_code: pkg.csi_division || pkg.trade || null,
-          notes: `Auto-generated on bid award (package ${id}). Committed cost.`, created_by: user.id,
-        }).select('id').single();
-        poId = po?.id ?? null;
+        const tz = await requestTimeZone(req.headers, db, user.tenantId);
+        if (tz.source === 'utc') console.error(`[bid-packages/award] no device or company time zone for tenant ${user.tenantId} — COI expiry judged in UTC`);
+        issues = await complianceIssues(db, user.tenantId, s, dayIn(tz.zone));
+      } catch (e) {
+        console.error('[bid-packages/award] compliance check failed — award refused', e);
+        return NextResponse.json({
+          error: `Compliance hold — we could not check ${vendor}'s W-9 and insurance just now, so the award was not made. Try again, or award anyway with override.`,
+          complianceBlock: true,
+          complianceUnchecked: true,
+          issues: ['Compliance check unavailable'],
+        }, { status: 503 });
       }
-    } catch (e) {
-      console.error('award auto-PO failed (award still recorded):', e);
-      await tryWrite(db.from('bid_packages').update({ status: 'awarded' }).eq('id', id).eq('tenant_id', user.tenantId), 'bid_packages update');
+      if (issues.length > 0) {
+        return NextResponse.json({
+          error: `Compliance hold — ${issues.join(', ')}. Award anyway with override, or request the documents first.`,
+          complianceBlock: true,
+          issues,
+        }, { status: 409 });
+      }
     }
 
-    /* Awaited: the award notices and the award chain (subcontract, PO, budget)
-       run here, and a serverless function is frozen once it has responded. */
-    await onBidAwarded(body.submissionId).catch((e) => console.error('[bid-packages/award] onBidAwarded', e));
-    return NextResponse.json({ success: true, purchaseOrderId: poId });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    const nowIso = new Date().toISOString();
+    const amount = bidAmount(s);
+
+    /* must(), both: an award the database refused used to report success
+       (tryWrite on the bid, and a catch that set the status and carried on). */
+    await must(
+      db.from('bid_submissions')
+        .update({ status: 'awarded', is_awarded: true, awarded_at: nowIso, awarded_by: user.id } as never)
+        .eq('id', submissionId)
+        .eq('tenant_id', user.tenantId),
+      'bid_submissions award',
+    );
+    await must(
+      db.from('bid_packages').update({
+        status: 'awarded', awarded_amount: amount, awarded_to: vendor, awarded_to_id: s.sub_id ?? null,
+        awarded_at: nowIso, awarded_by: user.id,
+      } as never).eq('id', id).eq('tenant_id', user.tenantId),
+      'bid_packages award',
+    );
+
+    void logActivity({
+      tenantId: user.tenantId,
+      projectId: pkg.project_id ?? null,
+      userId: user.id,
+      userName: user.email,
+      action: 'awarded',
+      entityType: 'bid_package',
+      entityId: id,
+      description: `Awarded ${pkg.name || pkg.trade || 'a bid package'} to ${vendor} — ${money(amount)}`,
+      metadata: { amount, vendor, trade: pkg.trade ?? null, overrideCompliance: !!body.overrideCompliance },
+    });
+
+    /* A DRAFT subcontract PO = the committed cost (the GC reviews it before
+       issuing). The award stands if this fails — but the GC is told, instead
+       of finding the commitment missing from the budget later. */
+    let poId: string | null = null;
+    const warnings: string[] = [];
+    if (amount > 0) {
+      const { data: po, error: poErr } = await db.from('purchase_orders').insert({
+        tenant_id: user.tenantId, project_id: pkg.project_id,
+        vendor_name: vendor, vendor_email: s.contact_email || s.sub_email || null,
+        description: `${pkg.name || 'Bid package'} — awarded subcontract`,
+        subtotal: amount, total: amount, status: 'draft',
+        cost_code: pkg.csi_division || pkg.trade || null,
+        notes: `Auto-generated on bid award (package ${id}). Committed cost.`, created_by: user.id,
+      } as never).select('id').single();
+      if (poErr) {
+        console.error('[bid-packages/award] draft PO not created', poErr);
+        warnings.push('The draft purchase order could not be created — add it from Purchase Orders.');
+      }
+      poId = (po as { id?: string } | null)?.id ?? null;
+    } else {
+      warnings.push('This bid has no amount, so no purchase order was drafted.');
+    }
+
+    /* Awaited: the award notices and the award chain (subcontract, budget,
+       onboarding) run here, and a serverless function is frozen once it has
+       responded. What happened to each notice comes back to the GC. */
+    const notices = await onBidAwarded(submissionId);
+    if (notices.error) warnings.push(notices.error);
+
+    return NextResponse.json({ success: true, purchaseOrderId: poId, amount, awardedTo: vendor, notices, warnings });
+  } catch (e) {
+    return apiError('bid-packages/award', e, 'The award could not be recorded. Try again.');
   }
+}
+
+/**
+ * What stands between this sub and an award: no W-9 on file, or no insurance
+ * certificate still good today. Throws when it cannot tell — the caller
+ * refuses rather than award blind.
+ *
+ * The sub is the bid's roster record (sub_id) or, when the bid came in by
+ * email with no roster link, the directory record with that address. A bidder
+ * with no record at all has nothing on file to check against; that is not a
+ * hold here (the bid is still reviewable) — it is what override is for once a
+ * record exists.
+ */
+async function complianceIssues(db: ReturnType<typeof createServerClient>, tenantId: string, s: Record<string, any>, today: string): Promise<string[]> {
+  let subId: string | null = s.sub_id ?? null;
+  type SubRec = { id: string; w9_on_file: boolean | null };
+  let subRec: SubRec | null = null;
+  if (subId) {
+    const { data, error } = await db.from('subcontractors').select('id, w9_on_file').eq('tenant_id', tenantId).eq('id', subId).maybeSingle();
+    if (error) throw error;
+    subRec = (data as SubRec | null) ?? null;
+  } else {
+    const email = orValue(String(s.contact_email || s.sub_email || '').trim().toLowerCase());
+    if (email) {
+      const { data, error } = await db.from('subcontractors').select('id, w9_on_file')
+        .eq('tenant_id', tenantId).or(`email.eq.${email},contact_email.eq.${email}`).limit(1).maybeSingle();
+      if (error) throw error;
+      subRec = (data as SubRec | null) ?? null;
+      subId = subRec?.id ?? null;
+    }
+  }
+  if (!subId) return [];
+
+  const issues: string[] = [];
+  if (subRec && subRec.w9_on_file !== true) issues.push('W-9 not on file');
+
+  const { data: certs, error: certErr } = await db
+    .from('insurance_certificates')
+    .select('expiry_date, status')
+    .eq('tenant_id', tenantId)
+    .eq('sub_id', subId);
+  if (certErr) throw certErr;
+  if (certs && certs.length > 0) {
+    /* A certificate is good through the END of its expiry day (lib/calendar-day). */
+    const valid = (certs as { expiry_date: string | null; status: string | null }[]).some(
+      (c) => String(c.status || '').toLowerCase() !== 'expired' && (!c.expiry_date || !isPastDay(c.expiry_date, today)),
+    );
+    if (!valid) issues.push('Insurance certificate expired');
+  }
+  return issues;
 }

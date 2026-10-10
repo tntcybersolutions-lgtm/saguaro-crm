@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
+import { bidAmount } from '@/lib/bid-amount';
+import { inviteState } from '@/lib/bid-invite-state';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -24,18 +27,22 @@ export async function GET(req: NextRequest) {
     // set-based reads, replacing the client's former per-package detail N+1.
     const ids = rows.map((p: any) => p.id).filter(Boolean);
     if (ids.length) {
-      const [{ data: invites }, { data: submissions }] = await Promise.all([
-        db.from('bid_package_invites').select('bid_package_id').eq('tenant_id', user.tenantId).in('bid_package_id', ids),
+      const [{ data: invites, error: invErr }, { data: submissions, error: subErr }] = await Promise.all([
+        db.from('bid_package_invites').select('bid_package_id, status, response_status').eq('tenant_id', user.tenantId).in('bid_package_id', ids),
         db.from('bid_submissions').select('*').eq('tenant_id', user.tenantId).in('bid_package_id', ids),
       ]);
+      if (invErr) throw invErr;
+      if (subErr) throw subErr;
       const invitedBy: Record<string, number> = {};
       for (const inv of (invites || []) as any[]) {
-        if (inv.bid_package_id) invitedBy[inv.bid_package_id] = (invitedBy[inv.bid_package_id] || 0) + 1;
+        /* A revoked link is no longer an invitation. */
+        if (inv.bid_package_id && inviteState(inv) !== 'revoked') invitedBy[inv.bid_package_id] = (invitedBy[inv.bid_package_id] || 0) + 1;
       }
       const subsBy: Record<string, { amt: number; who: string }[]> = {};
       for (const s of (submissions || []) as any[]) {
         if (!s.bid_package_id || String(s.status || '').toLowerCase() === 'withdrawn') continue;
-        const amt = Number(s.amount ?? s.base_amount ?? s.total_amount) || 0;
+        /* amount defaults to 0, so amount ?? base_amount read every portal bid as $0. */
+        const amt = bidAmount(s);
         (subsBy[s.bid_package_id] = subsBy[s.bid_package_id] || []).push({ amt, who: s.company_name || s.sub_name || s.contact_name || '' });
       }
       for (const pkg of rows as any[]) {
@@ -53,7 +60,7 @@ export async function GET(req: NextRequest) {
       }
     }
     return NextResponse.json({ bidPackages: rows });
-  } catch {
-    return NextResponse.json({ bidPackages: [], error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('bid-packages/list', e, 'Bid packages could not be loaded. Try again.');
   }
 }
