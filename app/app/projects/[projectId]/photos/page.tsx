@@ -25,7 +25,7 @@
  * only ever drawn in the viewer. URLs are whatever the authorized list route
  * returned — nothing here publishes private media.
  */
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useSyncExternalStore } from 'react';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
@@ -38,8 +38,12 @@ import ZoomLightbox, { type LightboxItem } from '@/components/media/ZoomLightbox
 import SubInbox from '@/components/media/SubInbox';
 import { useUploadQueue } from '@/lib/useUploadQueue';
 import { uploadPhoto, uploadVideo, fmtDuration } from '@/lib/media-upload';
-import { addToOutbox, isOffline, looksLikeNetworkError, listOutbox } from '@/lib/offline/outbox';
-import { CloudArrowUp,
+import {
+  addToOutbox, isOffline, looksLikeNetworkError, listOutbox, removeFromOutbox, retryOutboxItem,
+  subscribeNet, getNetState, getServerNetState, type OutboxItem,
+} from '@/lib/offline/outbox';
+import OnThisPhone from '@/components/media/OnThisPhone';
+import {
   Camera, X, PencilSimple, Plus, Images, WarningCircle, ArrowClockwise, Trash,
   Crop, CaretLeft, CaretRight, Play, ArrowsOut, LinkSimple,
 } from '@phosphor-icons/react';
@@ -275,8 +279,24 @@ export default function PhotosPage(){
   /* No signal on site is normal: keep the file on this phone and upload it
      when the connection is back (lib/offline/outbox). */
   const keptOffline=useRef(0);
-  const [waiting,setWaiting]=useState(0);
-  const refreshWaiting=useCallback(()=>{ listOutbox(projectId).then(l=>setWaiting(l.length)).catch(()=>setWaiting(0)); },[projectId]);
+  const [waitingItems,setWaitingItems]=useState<OutboxItem[]>([]);
+  const refreshWaiting=useCallback(()=>{ listOutbox(projectId).then(setWaitingItems).catch(()=>setWaitingItems([])); },[projectId]);
+  /* The offline bar's store: every change in what is waiting (saved, sending,
+     sent, refused) re-reads this job's list, so a tile leaves the moment its
+     photo is on the server. */
+  const net=useSyncExternalStore(subscribeNet,getNetState,getServerNetState);
+  useEffect(()=>{ refreshWaiting(); },[net.pending,net.syncing,net.online,refreshWaiting]);
+  async function removeWaiting(it:OutboxItem){
+    if(!(await confirmDialog({ title:'Remove from this phone?', message:`"${it.name}" hasn't uploaded yet. This phone has the only copy — removing it deletes it.`, danger:true }))) return;
+    try{ await removeFromOutbox(it.id); showToast('Removed from this phone.'); }
+    catch{ showToast("Couldn't remove it. Try again.",'bad'); }
+    refreshWaiting();
+  }
+  async function retryWaiting(it:OutboxItem){
+    try{ await retryOutboxItem(it.id); showToast(isOffline()?'It tries again when you\'re back online.':'Trying again…'); }
+    catch{ showToast("Couldn't retry it. Try again.",'bad'); }
+    refreshWaiting();
+  }
   const keepOnPhone=async(file:File,kind:'image'|'video')=>{
     await addToOutbox({projectId,kind,album:kind==='video'?null:uploadAlbumRef.current,name:file.name||(kind==='video'?'video.mov':'photo.jpg'),type:file.type,size:file.size,file});
     keptOffline.current++;
@@ -668,7 +688,7 @@ export default function PhotosPage(){
     galleryBody = (
       <EmptyState
         icon={<Camera size={22}/>}
-        title="No photos or video yet"
+        title={waitingItems.length ? 'Nothing uploaded to this job yet' : 'No photos or video yet'}
         text="Photos and video are the project record — progress proof, inspection evidence, punch documentation, closeout backup. Add a whole day's worth at once, any size."
         action={<Button icon={<Plus size={15} weight="bold"/>} onClick={openUpload}>Add Photos &amp; Video</Button>}
       />
@@ -905,12 +925,7 @@ export default function PhotosPage(){
         }
       >
         {!loadError && <StatRow items={stats}/>}
-        {waiting>0 && (
-          <div role="status" style={{display:'flex',alignItems:'center',gap:8,margin:'10px 0 4px',padding:'10px 14px',borderRadius:12,border:'1px solid var(--border-default)',background:'var(--bg-surface-2)',fontSize:14,fontWeight:700,color:'var(--text-primary)'}}>
-            <CloudArrowUp size={18} weight="bold" style={{color:'var(--c-orange)',flex:'0 0 auto'}}/>
-            {waiting===1?'1 photo or video is':`${waiting} photos/videos are`} saved on this phone — {waiting===1?'it uploads':'they upload'} when you&apos;re back online.
-          </div>
-        )}
+        <OnThisPhone items={waitingItems} online={net.online} syncing={net.syncing} onRetry={retryWaiting} onRemove={removeWaiting}/>
 
         <SubInbox projectId={projectId} focus={inboxFocus} onChanged={()=>load({silent:true})} onToast={(m,t)=>showToast(m,t)}/>
 

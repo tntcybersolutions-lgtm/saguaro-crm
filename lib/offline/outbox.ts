@@ -25,10 +25,19 @@ export interface OutboxItem {
   name: string;
   type: string;
   size: number;
-  file: Blob;
+  /** The file itself, where this browser lets IndexedDB keep one… */
+  file?: Blob;
+  /** …or its bytes, where it doesn't (Safari in a private window, WebKit test browsers). */
+  bytes?: ArrayBuffer;
   createdAt: number;
   attempts: number;
   lastError?: string;
+}
+
+/** The waiting photo or video as a File again, whichever way it was kept. */
+export function outboxFile(item: OutboxItem): File {
+  const part: BlobPart = item.bytes ?? item.file ?? new Blob([]);
+  return new File([part], item.name, { type: item.type, lastModified: item.createdAt });
 }
 
 export interface NetState {
@@ -95,9 +104,27 @@ async function tx<T>(mode: IDBTransactionMode, run: (s: IDBObjectStore) => IDBRe
   }
 }
 
-export async function addToOutbox(o: Omit<OutboxItem, 'id' | 'createdAt' | 'attempts'>): Promise<string> {
+/** Said when neither way of keeping the file on the phone worked. */
+export const CANNOT_KEEP = "No signal, and this phone couldn't keep a copy of it. Try again when you have signal.";
+
+export async function addToOutbox(o: Omit<OutboxItem, 'id' | 'createdAt' | 'attempts' | 'file' | 'bytes'> & { file: Blob }): Promise<string> {
   const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-  await tx('readwrite', (s) => s.put({ ...o, id, createdAt: Date.now(), attempts: 0 }));
+  const { file, ...meta } = o;
+  const base = { ...meta, id, createdAt: Date.now(), attempts: 0 };
+  try {
+    await tx('readwrite', (s) => s.put({ ...base, file }));
+  } catch {
+    // WebKit with no saved website data — Safari in a private window, and the
+    // test browsers that walk the app — aborts any IndexedDB write holding a
+    // File ("Error preparing Blob/File data to be stored in object store").
+    // The photo was never kept and never sent. Its bytes always store.
+    try {
+      const bytes = await file.arrayBuffer();
+      await tx('readwrite', (s) => s.put({ ...base, bytes }));
+    } catch {
+      throw new Error(CANNOT_KEEP);
+    }
+  }
   await refreshPending();
   return id;
 }
@@ -105,6 +132,21 @@ export async function addToOutbox(o: Omit<OutboxItem, 'id' | 'createdAt' | 'atte
 export async function listOutbox(projectId?: string): Promise<OutboxItem[]> {
   const all = (await tx('readonly', (s) => s.getAll())) as OutboxItem[];
   return all.filter((i) => !projectId || i.projectId === projectId).sort((a, b) => a.createdAt - b.createdAt);
+}
+
+/** Take a photo or video off the phone without sending it. */
+export async function removeFromOutbox(id: string): Promise<void> {
+  await tx('readwrite', (s) => s.delete(id));
+  await refreshPending();
+}
+
+/** Try a photo or video again that stopped retrying, and send it now if there's signal. */
+export async function retryOutboxItem(id: string): Promise<void> {
+  const cur = (await tx('readonly', (s) => s.get(id))) as OutboxItem | undefined;
+  if (!cur) return;
+  await tx('readwrite', (s) => s.put({ ...cur, attempts: 0, lastError: undefined }));
+  await refreshPending();
+  if (!isOffline()) void drainOutbox();
 }
 
 // ── saved writes (daily logs, punch items) ───────────────────────────────────
@@ -172,10 +214,6 @@ export async function sendOrSave(r: {
   return { saved: true, id };
 }
 
-async function removeFromOutbox(id: string): Promise<void> {
-  await tx('readwrite', (s) => s.delete(id));
-}
-
 async function noteFailure(item: OutboxItem, message: string): Promise<void> {
   await tx('readwrite', (s) => s.put({ ...item, attempts: item.attempts + 1, lastError: message.slice(0, 200) }));
 }
@@ -204,17 +242,28 @@ export function looksLikeNetworkError(e: unknown): boolean {
 
 export async function refreshPending(): Promise<void> {
   try {
-    const media = (await listOutbox()).length;
+    const media = (await listOutbox()).filter((i) => i.attempts < MAX_ATTEMPTS).length;
     const writes = (await listSaved()).filter((r) => r.attempts < MAX_ATTEMPTS).length;
     set({ pending: media + writes });
   } catch { /* no IndexedDB (private mode): nothing can be pending */ }
 }
 
+/* One send at a time. The 'online' event, the start-up check and the minute
+   timer can all fire together; two runs reading the same list would upload the
+   same photo twice. The second caller just waits for the first. */
+let draining: Promise<{ done: number; failed: number }> | null = null;
+
 /** Send everything saved on this phone, oldest first. Stops at the first network failure. */
-export async function drainOutbox(): Promise<{ done: number; failed: number }> {
-  if (state.syncing || isOffline()) return { done: 0, failed: 0 };
+export function drainOutbox(): Promise<{ done: number; failed: number }> {
+  if (draining) return draining;
+  if (state.syncing || isOffline()) return Promise.resolve({ done: 0, failed: 0 });
+  draining = drainOnce().finally(() => { draining = null; });
+  return draining;
+}
+
+async function drainOnce(): Promise<{ done: number; failed: number }> {
   let items: OutboxItem[] = [];
-  try { items = await listOutbox(); } catch { return { done: 0, failed: 0 }; }
+  try { items = (await listOutbox()).filter((i) => i.attempts < MAX_ATTEMPTS); } catch { return { done: 0, failed: 0 }; }
   const writes = (await listSaved()).filter((r) => r.attempts < MAX_ATTEMPTS);
   if (!items.length && !writes.length) { set({ pending: 0 }); return { done: 0, failed: 0 }; }
   set({ syncing: true, synced: 0 });
@@ -251,10 +300,11 @@ export async function drainOutbox(): Promise<{ done: number; failed: number }> {
   }
   for (const item of offline ? [] : items) {
     try {
-      const file = new File([item.file], item.name, { type: item.type, lastModified: item.createdAt });
+      const file = outboxFile(item);
       if (item.kind === 'video') await uploadVideo(file, { projectId: item.projectId });
       else await uploadPhoto(file, { projectId: item.projectId, album: item.album || undefined });
-      await removeFromOutbox(item.id);
+      // Off the phone the moment it is on the server, so a later run can't send it again.
+      await tx('readwrite', (s) => s.delete(item.id));
       done++;
       set({ pending: Math.max(0, state.pending - 1), synced: done });
       h.update({ count: { done: done + failed, total } });
