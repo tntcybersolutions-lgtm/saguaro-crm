@@ -16,7 +16,7 @@ import { postLearningEvent } from '@/lib/last-used';
 import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 import {
   PageShell, Card, StatRow, Badge, Button, Tabs, Toolbar, DataTable, EmptyState,
-  FormModal, Field, Input, Textarea, FormGrid, Toast, useToast,
+  FormModal, Field, Input, Textarea, FormGrid, Toast, useToast, Select,
   type Column, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
 
@@ -173,6 +173,28 @@ function BidsPageInner() {
     [liveProjects],
   );
   const [pickProject, setPickProject] = useState('');
+
+  /* "New Bid Package" used to be a plain link to the projects list — the tap
+     landed on a page with no form and no hint of what to do next. A package
+     belongs to a job, so the button now asks which job and opens that job's
+     package wizard directly (/bid-packages?new=1). One job: straight there. */
+  const [showNewPkg, setShowNewPkg] = useState(false);
+  const [newPkgProject, setNewPkgProject] = useState('');
+  const [newPkgErr, setNewPkgErr] = useState('');
+  const startNewPackage = () => {
+    if (scoreProjects.length === 1) { router.push(`/app/projects/${scoreProjects[0].id}/bid-packages?new=1`); return; }
+    setNewPkgErr('');
+    setShowNewPkg(true);
+  };
+  const continueNewPackage = () => {
+    if (!newPkgProject) {
+      setNewPkgErr(scoreProjects.length === 0 ? 'Create a project first — a bid package goes out from a job.' : 'Pick the project this package is for.');
+      document.getElementById('new-pkg-project')?.focus();
+      return;
+    }
+    setShowNewPkg(false);
+    router.push(`/app/projects/${newPkgProject}/bid-packages?new=1`);
+  };
   const [autofilling, setAutofilling] = useState(false);
   const [scoreMeta, setScoreMeta] = useState<{ location?: string; dueDate?: string | null; ownerName?: string; projectType?: string; valueSource?: string | null; historyHint?: string }>({});
 
@@ -547,7 +569,7 @@ function BidsPageInner() {
           <Button href="/app/bid-intelligence" icon={<Brain size={15} />}>Bid Intelligence</Button>
           <Button href="/app/bids/leveling" icon={<ArrowRight size={15} />}>Bid Leveling</Button>
           {/* Score a Bid is de-featured: still reachable at /app/bids?tab=score (Bid Intelligence has its own scorer). */}
-          <Button variant="primary" href="/app/projects" title="Open a project to start a package." icon={<Plus size={15} weight="bold" />}>New Bid Package</Button>
+          <Button variant="primary" onClick={startNewPackage} icon={<Plus size={15} weight="bold" />}>New Bid Package</Button>
         </>
       }
     >
@@ -647,7 +669,7 @@ function BidsPageInner() {
                 text={needle
                   ? 'Clear the search to see every package.'
                   : 'Create a bid package on a project. Invites go out with portal links, and sub bids come back priced against your line items.'}
-                action={<Button variant="primary" onClick={() => router.push('/app/projects')}>Go to Projects</Button>}
+                action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={startNewPackage}>New Bid Package</Button>}
               />
             }
           />
@@ -774,6 +796,34 @@ function BidsPageInner() {
         <p style={{ color: 'var(--text-secondary)' }}>
           {confirmClose?.name || 'This package'} stops taking new bids and moves to history. You can still award a winner from inside the package.
         </p>
+      </FormModal>
+
+      {/* ── New bid package: pick the job, then its wizard opens ── */}
+      <FormModal
+        open={showNewPkg}
+        onClose={() => setShowNewPkg(false)}
+        size="sm"
+        title="New Bid Package"
+        subtitle="Packages go out from a job — pick it and the package wizard opens."
+        onSubmit={continueNewPackage}
+        submitLabel="Continue"
+      >
+        <Field
+          label="Project"
+          required
+          error={newPkgErr || null}
+          hint={scoreProjects.length === 0 ? <>No projects yet — <a href="/app/projects/new" style={{ color: 'var(--brand-primary)' }}>create one</a> first.</> : undefined}
+        >
+          <Select
+            id="new-pkg-project"
+            value={newPkgProject}
+            onChange={(e) => { setNewPkgProject(e.target.value); setNewPkgErr(''); }}
+            placeholder="Select project…"
+            options={scoreProjects.map((p) => ({ value: p.id, label: p.name }))}
+            aria-required="true"
+            aria-invalid={newPkgErr ? true : undefined}
+          />
+        </Field>
       </FormModal>
 
       {/* ── Delete confirmation ── */}

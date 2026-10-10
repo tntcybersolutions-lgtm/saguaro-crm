@@ -513,6 +513,17 @@ export default function BidPackagesPage() {
 
   useEffect(() => { loadPackages(); }, [projectId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Deep link from /app/bids "New Bid Package" (and the overview): ?new=1 opens
+  // the wizard. The param is dropped so a reload does not reopen it.
+  useEffect(() => {
+    try {
+      if (new URLSearchParams(window.location.search).get('new') !== '1') return;
+      setWizardKey(k => k + 1);
+      setShowWizard(true);
+      router.replace(`/app/projects/${projectId}/bid-packages`);
+    } catch { /* no window (prerender) — nothing to open */ }
+  }, [projectId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   async function loadPackages() {
     setLoading(true);
     setLoadError('');

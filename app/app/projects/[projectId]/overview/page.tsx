@@ -643,7 +643,7 @@ export default function OverviewPage() {
             ) : ctxState === 'failed' ? (
               <p className="pov-empty">Couldn&apos;t load bid packages. <button type="button" className="pov-linkbtn" onClick={() => { void revalidateCtx(); }}>Retry</button></p>
             ) : ((ctx?.bidPackages || []) as any[]).length === 0 ? (
-              <p className="pov-empty">No bid packages yet. <Link href={`${base}/bid-packages`} className="pov-inline">Create one</Link> to send the scope to subs.</p>
+              <p className="pov-empty">No bid packages yet. <Link href={`${base}/bid-packages?new=1`} className="pov-inline">Create one</Link> to send the scope to subs.</p>
             ) : (
               <div className="pov-tablewrap" role="region" aria-label="Bid packages (scrolls sideways on small screens)" tabIndex={0}>
                 <table className="pov-table k-table-skin">
