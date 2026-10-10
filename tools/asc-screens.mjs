@@ -1339,6 +1339,89 @@ async function writeWalk(pw, device, session, outDir, real) {
   // 2) People first (kept until the end so pickers can choose them), then everything else.
   const deferred = [];
   const jobUrl = (t) => `/app/projects/${jobId}/${t}`;
+
+  // 1b) Airplane mode, for real: on the test job, go offline, write a daily log,
+  // a punch item and a photo, reload with no signal, come back, and check each
+  // one reached the server. The offline bar must say so both ways.
+  if (jobId) {
+    const barText = () => page.evaluate(() => document.querySelector('.offb')?.innerText?.replace(/\s+/g, ' ').trim() || '').catch(() => '');
+    for (const [tab, what] of [['daily-logs', 'daily log'], ['punch-list', 'punch item'], ['photos', 'photo']]) {
+      const r = { screen: `OFFLINE · projects/:id/${tab}`, add: `${what} with no signal`, errors: [], actions: [] };
+      out.push(r);
+      const marker = `ZZ AUDIT offline ${what} ${stamp}`;
+      const step = (label, result) => r.actions.push({ label, result });
+      try {
+        const url = jobUrl(tab);
+        await go(url);
+        // Let the app's worker take over and save this screen (it registers on load).
+        await page.evaluate(() => navigator.serviceWorker && Promise.race([navigator.serviceWorker.ready, new Promise((x) => setTimeout(x, 8000))])).catch(() => {});
+        await go(url);
+        const sw = await page.evaluate(() => !!navigator.serviceWorker?.controller).catch(() => false);
+        step('the offline worker controls the page', sw ? 'yes' : 'NO — reloads with no signal will fail');
+        await ctx.setOffline(true);
+        await page.waitForTimeout(800);
+        const offBar = await barText();
+        step('offline bar shows', /offline/i.test(offBar) ? `yes — "${offBar.slice(0, 90)}"` : `NO bar (saw "${offBar}")`);
+        net.writes.length = 0;
+        if (tab === 'photos') {
+          const { controls } = await page.evaluate(tagControlsInPage, { attr: 'data-wo', chrome: false });
+          const up = controls.find((b) => /upload|add photo|take photo|add media|camera/i.test(b.t));
+          if (!up) { r.create = 'no upload button found'; }
+          else {
+            const fc0 = net.chooser;
+            await page.locator(`[data-wo="${up.i}"]`).first().click({ timeout: 4000 }).catch(() => {});
+            await page.waitForTimeout(2500);
+            // A sheet may ask for the album / confirm first.
+            const go2 = page.locator('[role="dialog"]:visible button').filter({ hasText: /^\s*(upload|save|add|done)\b/i }).last();
+            if (await go2.count()) { await go2.click().catch(() => {}); await page.waitForTimeout(2500); }
+            const body = await page.evaluate(() => document.body.innerText).catch(() => '');
+            r.create = net.chooser > fc0 && /saved on this phone|waiting|on this phone/i.test(body) ? 'kept on the phone' : net.chooser > fc0 ? 'picked, but the screen does NOT say it is saved on the phone' : 'the file picker did not open';
+          }
+        } else {
+          const { controls } = await page.evaluate(tagControlsInPage, { attr: 'data-wo', chrome: false });
+          const add = controls.find((b) => ADD_RE.test(b.t) && b.t.length < 44);
+          if (!add) { r.create = 'no Add/New button'; }
+          else {
+            await page.locator(`[data-wo="${add.i}"]`).first().click({ timeout: 4000 }).catch(() => {});
+            await page.waitForTimeout(1200);
+            const f = await fillAndSave(marker);
+            await page.waitForTimeout(1200);
+            const body = await page.evaluate(() => document.body.innerText).catch(() => '');
+            r.create = body.includes(marker) && /on this phone/i.test(body) ? 'kept on the phone (shows On This Phone)' : body.includes(marker) ? 'listed, but NO "On This Phone" mark' : `NOT on screen after saving offline (${f.clicked.join(' → ') || 'no save button'})`;
+          }
+        }
+        const pend = await barText();
+        step('bar counts it', /saved on this phone|waiting/i.test(pend) ? `yes — "${pend.slice(0, 90)}"` : `no count (saw "${pend}")`);
+        // Reload with no signal.
+        await page.reload({ waitUntil: 'domcontentloaded', timeout: 20000 }).catch((e) => step('reload offline', `failed: ${String(e.message).split('\n')[0]}`));
+        await page.waitForTimeout(2500);
+        const afterReload = await page.evaluate(() => document.body.innerText).catch(() => '');
+        r.persisted = tab === 'photos' ? (/waiting|on this phone/i.test(afterReload) ? 'still waiting after an offline reload' : /offline/i.test(afterReload) ? 'screen opened offline, but the waiting photo is not mentioned' : 'NOT shown offline')
+          : afterReload.includes(marker) ? 'yes — still there after an offline reload' : /hasn't been opened on this phone/i.test(afterReload) ? 'NO — offline page instead of the saved screen' : 'NO — gone after an offline reload';
+        // Back online: it must go up by itself.
+        net.writes.length = 0;
+        await ctx.setOffline(false);
+        let backBar = '';
+        for (let k = 0; k < 20 && !/back online/i.test(backBar); k++) { await page.waitForTimeout(500); backBar = await barText(); }
+        step('back-online bar shows', /back online/i.test(backBar) ? `yes — "${backBar.slice(0, 90)}"` : 'NO "Back online" notice');
+        for (let k = 0; k < 30 && !goodWrite(net.writes); k++) await page.waitForTimeout(1000);
+        r.writes = writeSummary(net.writes);
+        const b = badWrite(net.writes);
+        r.edit = b ? `FAILED to send (${b.m} ${b.u} → ${b.s || 'network'})` : goodWrite(net.writes) ? 'sent by itself when the signal came back' : 'NOTHING was sent after coming back online';
+        await go(url);
+        const final = await page.evaluate(() => document.body.innerText).catch(() => '');
+        r.fieldsBack = tab === 'photos' ? (/waiting|on this phone/i.test(final) ? 'still waiting' : 'uploaded') : final.includes(marker) && !/on this phone/i.test(final) ? 'on the server' : final.includes(marker) ? 'STILL only on the phone' : 'GONE';
+        if (tab !== 'photos' && final.includes(marker)) await deleteRecord(`offline ${tab}`, url, marker, r);
+      } catch (e) {
+        r.errors.push(String(e.message || e).split('\n')[0].slice(0, 160));
+        await ctx.setOffline(false).catch(() => {});
+        await newPage();
+      }
+      console.log(`write-walk offline ${tab}: ${r.create} / reload ${r.persisted} / ${r.edit} / ${r.fieldsBack}`);
+      writeReport();
+    }
+  }
+
   const plan = [
     ...PEOPLE_TOP.map((u) => [u, u, true]),
     ...(jobId ? PEOPLE_JOB.map((t) => [`projects/:id/${t}`, jobUrl(t), true]) : []),
