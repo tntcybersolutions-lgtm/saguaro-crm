@@ -17,6 +17,7 @@ import PdfViewer from '../../components/PdfViewer';
 import SaguaroChatWidget from '../../components/SaguaroChatWidget';
 import SubscriptionWall from '../../components/SubscriptionWall';
 import OfflineBar from '../../components/OfflineBar';
+import StatusCenter from '../../components/StatusCenter';
 import { clearOfflineCopies } from '@/lib/offline/worker';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import GlobalShortcuts from '../../components/GlobalShortcuts';
@@ -487,6 +488,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Offline / back-online status, on every screen */}
       <OfflineBar top={`calc(${sidebarTokens.headerHeight}px + env(safe-area-inset-top, 0px) + var(--sag-header-msg-h, 0px) + 8px)`} />
+      {/* What the app is doing right now — every save, send and upload, as numbered steps. */}
+      <StatusCenter />
 
       {/* ── Project Switcher Modal ─────────────────────────────────────── */}
       <ProjectSwitcher open={showProjectSwitcher} onClose={() => setShowProjectSwitcher(false)} />

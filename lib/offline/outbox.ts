@@ -13,6 +13,9 @@
  */
 import { uploadPhoto, uploadVideo } from '@/lib/media-upload';
 import { getAuthHeaders } from '@/lib/supabase-browser';
+import { step } from '@/lib/ui/status';
+import { describeRequest } from '@/lib/ui/status-labels';
+import { STATUS_HEADER, reasonFromResponse } from '@/lib/ui/status-fetch';
 
 export interface OutboxItem {
   id: string;
@@ -141,19 +144,30 @@ export async function sendOrSave(r: {
   url: string; method: SavedRequest['method']; body?: unknown; projectId?: string | null; kind: string; label: string; row?: Record<string, unknown>; recordId?: string;
 }): Promise<{ saved: true; id: string } | { saved: false; response: Response }> {
   const body = r.body === undefined ? null : typeof r.body === 'string' ? r.body : JSON.stringify(r.body);
+  // This write is one step in the status box; it says itself whether it went or stayed on the phone.
+  const words = describeRequest(r.method, r.url) ?? { doing: r.label, done: r.label, failed: `Couldn't send: ${r.label}` };
+  const h = step(words.doing);
   if (!isOffline()) {
     try {
-      const response = await fetch(r.url, { method: r.method, headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) }, body: body ?? undefined });
+      const response = await fetch(r.url, { method: r.method, headers: { 'Content-Type': 'application/json', [STATUS_HEADER]: 'off', ...(await getAuthHeaders()) }, body: body ?? undefined });
+      if (response.ok) h.done(words.done);
+      else void reasonFromResponse(response).then((why) => h.fail(words.failed, why));
       return { saved: false, response };
     } catch (e) {
-      if (!looksLikeNetworkError(e)) throw e;
+      if (!looksLikeNetworkError(e)) { h.fail(words.failed, 'Something stopped it before it reached the server. Try again.'); throw e; }
     }
   }
   const id = newId();
-  await tx('readwrite', (s) => s.put({
-    id, projectId: r.projectId ?? null, kind: r.kind, label: r.label, url: r.url, method: r.method, body,
-    row: r.row, recordId: r.recordId, createdAt: Date.now(), attempts: 0,
-  } satisfies SavedRequest), REQS);
+  try {
+    await tx('readwrite', (s) => s.put({
+      id, projectId: r.projectId ?? null, kind: r.kind, label: r.label, url: r.url, method: r.method, body,
+      row: r.row, recordId: r.recordId, createdAt: Date.now(), attempts: 0,
+    } satisfies SavedRequest), REQS);
+  } catch (e) {
+    h.fail(words.failed, 'No signal, and this phone could not keep a copy. Try again when you have signal.', true);
+    throw e;
+  }
+  h.offline(`${r.label} — saved on this phone`, "It sends by itself when you're back online.");
   await refreshPending();
   return { saved: true, id };
 }
@@ -206,10 +220,14 @@ export async function drainOutbox(): Promise<{ done: number; failed: number }> {
   set({ syncing: true, synced: 0 });
   let done = 0, failed = 0;
   let offline = false;
+  const total = items.length + writes.length;
+  const things = (n: number) => `${n} saved ${n === 1 ? 'item' : 'items'}`;
+  const h = step(`Sending ${things(total)} from this phone`);
+  h.update({ count: { done: 0, total } });
   // Written records first (a log is small and the office is waiting on it), then media.
   for (const w of writes) {
     try {
-      const res = await fetch(w.url, { method: w.method, headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) }, body: w.body ?? undefined });
+      const res = await fetch(w.url, { method: w.method, headers: { 'Content-Type': 'application/json', [STATUS_HEADER]: 'off', ...(await getAuthHeaders()) }, body: w.body ?? undefined });
       if (!res.ok && res.status !== 404) {
         // 404 on an edit/delete: the record is already gone — nothing left to do.
         const text = await res.text().catch(() => '');
@@ -223,6 +241,7 @@ export async function drainOutbox(): Promise<{ done: number; failed: number }> {
       await tx('readwrite', (s) => s.delete(w.id), REQS);
       done++;
       set({ pending: Math.max(0, state.pending - 1), synced: done });
+      h.update({ count: { done: done + failed, total } });
       window.dispatchEvent(new CustomEvent('saguaro:outbox-synced', { detail: { projectId: w.projectId, kind: w.kind, id: w.id, result } }));
     } catch (e) {
       if (looksLikeNetworkError(e)) { offline = true; break; }
@@ -238,6 +257,7 @@ export async function drainOutbox(): Promise<{ done: number; failed: number }> {
       await removeFromOutbox(item.id);
       done++;
       set({ pending: Math.max(0, state.pending - 1), synced: done });
+      h.update({ count: { done: done + failed, total } });
       window.dispatchEvent(new CustomEvent('saguaro:outbox-synced', { detail: { projectId: item.projectId } }));
     } catch (e) {
       if (looksLikeNetworkError(e)) break; // still no real connection — try again later
@@ -247,6 +267,9 @@ export async function drainOutbox(): Promise<{ done: number; failed: number }> {
   }
   set({ syncing: false, synced: done });
   await refreshPending();
+  if (failed) h.fail(`${failed} of ${things(total)} couldn't be sent`, done ? `${done} went through. The rest say why on their screens.` : 'Each one says why on its screen.');
+  else if (done < total) h.offline(`${done ? `${done} sent — ` : ''}${things(total - done)} still on this phone`, 'The signal dropped again. They go by themselves when it is back.');
+  else h.done(`${things(total)} sent from this phone`);
   return { done, failed };
 }
 
