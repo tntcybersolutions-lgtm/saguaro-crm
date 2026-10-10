@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
+import { notOnRoster, subRecordScope } from '@/lib/sub-portal-scope';
 
 async function authenticateSubPortal(req: NextRequest) {
   const token =
@@ -29,6 +31,10 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // An email-only invite has no roster sub, so no RFI can belong to it (lib/sub-portal-scope).
+    const scope = subRecordScope(session);
+    if (!scope) return NextResponse.json({ rfis: [] });
+
     const db = createServerClient();
 
     const status = req.nextUrl.searchParams.get('status');
@@ -36,9 +42,9 @@ export async function GET(req: NextRequest) {
     let query = db
       .from('portal_sub_rfis')
       .select('*')
-      .eq('sub_id', session.sub_id!)
-      .eq('project_id', session.project_id!)
-      .eq('tenant_id', session.tenant_id)
+      .eq('sub_id', scope.subId)
+      .eq('project_id', scope.projectId)
+      .eq('tenant_id', scope.tenantId)
       .order('created_at', { ascending: false });
 
     if (status) {
@@ -51,10 +57,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ rfis: rfis || [] });
   } catch (err) {
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return apiError('portal/sub/rfis', err, "Couldn't load your RFIs.");
   }
 }
 
@@ -69,15 +72,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const scope = subRecordScope(session);
+    if (!scope) {
+      const r = notOnRoster(session, 'an RFI');
+      return NextResponse.json(r.body, { status: r.status });
+    }
+
     const db = createServerClient();
     const body = await req.json();
     const {
       subject,
       question,
-      priority,
-      reference_drawing,
-      reference_spec,
-      attachments,
     } = body;
 
     if (!subject || !question) {
@@ -93,9 +98,9 @@ export async function POST(req: NextRequest) {
     const { count: existingCount } = await db
       .from('portal_sub_rfis')
       .select('id', { count: 'exact', head: true })
-      .eq('project_id', session.project_id!)
-      .eq('sub_id', session.sub_id!)
-      .eq('tenant_id', session.tenant_id);
+      .eq('project_id', scope.projectId)
+      .eq('sub_id', scope.subId)
+      .eq('tenant_id', scope.tenantId);
 
     const nextNum = (existingCount || 0) + 1;
     const rfiNumber = `RFI-SUB-${String(nextNum).padStart(3, '0')}`;
@@ -107,9 +112,9 @@ export async function POST(req: NextRequest) {
     const { data: rfi, error } = await db
       .from('portal_sub_rfis')
       .insert({
-        sub_id: session.sub_id,
-        project_id: session.project_id,
-        tenant_id: session.tenant_id,
+        sub_id: scope.subId,
+        project_id: scope.projectId,
+        tenant_id: scope.tenantId,
         subject,
         question,
         status: 'open',
@@ -126,9 +131,6 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (err) {
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return apiError('portal/sub/rfis', err, "Couldn't submit the RFI. Please try again.");
   }
 }

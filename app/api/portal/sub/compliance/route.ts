@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
+import { notOnRoster, rosterSubId } from '@/lib/sub-portal-scope';
 
 async function authenticateSubPortal(req: NextRequest) {
   const token =
@@ -29,12 +31,16 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // Compliance records belong to a roster sub; an email-only invite has none yet (lib/sub-portal-scope).
+    const subId = rosterSubId(session);
+    if (!subId) return NextResponse.json({ compliance_docs: [] });
+
     const db = createServerClient();
 
     const { data: docs, error } = await db
       .from('portal_sub_compliance_docs')
       .select('*')
-      .eq('sub_id', session.sub_id!)
+      .eq('sub_id', subId)
       .eq('tenant_id', session.tenant_id)
       .order('created_at', { ascending: false });
 
@@ -61,10 +67,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ compliance_docs: annotated });
   } catch (err) {
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return apiError('portal/sub/compliance', err, "Couldn't load your compliance documents.");
   }
 }
 
@@ -79,6 +82,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const subId = rosterSubId(session);
+    if (!subId) {
+      const r = notOnRoster(session, 'a compliance document');
+      return NextResponse.json(r.body, { status: r.status });
+    }
+
     const db = createServerClient();
     const body = await req.json();
     const {
@@ -86,10 +95,6 @@ export async function POST(req: NextRequest) {
       file_name,
       file_url,
       expires_at,
-      policy_number,
-      carrier,
-      coverage_amount,
-      notes,
     } = body;
 
     if (!doc_type || !file_name) {
@@ -107,7 +112,7 @@ export async function POST(req: NextRequest) {
     const { data: doc, error } = await db
       .from('portal_sub_compliance_docs')
       .insert({
-        sub_id: session.sub_id,
+        sub_id: subId,
         tenant_id: session.tenant_id,
         doc_type,
         file_url: file_url || null,
@@ -125,9 +130,6 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (err) {
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return apiError('portal/sub/compliance', err, "Couldn't save the document. Please try again.");
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { onInsuranceExpiring } from '@/lib/triggers';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   // Vercel cron auth
@@ -14,12 +15,15 @@ export async function GET(req: NextRequest) {
     const today = new Date();
     const in30 = new Date(today.getTime() + 30 * 86400000).toISOString().split('T')[0];
 
-    const { data: certs } = await db
+    /* The error used to be dropped here: a failed read looked like "no
+       certificates expiring" and the run reported success with nothing sent. */
+    const { data: certs, error } = await db
       .from('insurance_certificates')
       .select('id, expiry_date')
       .eq('status', 'active')
       .lte('expiry_date', in30)
       .gte('expiry_date', today.toISOString().split('T')[0]);
+    if (error) throw error;
 
     let processed = 0;
     for (const cert of (certs || []) as any[]) {
@@ -29,7 +33,7 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, processed });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('cron/insurance-check', e);
   }
 }

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { computePayApp, toCents, toDollars } from '@/lib/calc';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
+import { notOnRoster, subRecordScope } from '@/lib/sub-portal-scope';
 
 async function authenticateSubPortal(req: NextRequest) {
   const token =
@@ -31,6 +33,11 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // An email-only invite has no roster sub, so no invoice can belong to it (lib/sub-portal-scope).
+    // `.eq('sub_id', '')` used to stand in here — '' is not a uuid, so Postgres rejected it.
+    const scope = subRecordScope(session);
+    if (!scope) return NextResponse.json({ pay_apps: [] });
+
     const db = createServerClient();
 
     const { data: payApps, error } = await db
@@ -39,19 +46,16 @@ export async function GET(req: NextRequest) {
         `*,
          line_items:portal_sub_pay_app_line_items(*)`
       )
-      .eq('sub_id', session.sub_id ?? '')
-      .eq('project_id', session.project_id ?? '')
-      .eq('tenant_id', session.tenant_id)
+      .eq('sub_id', scope.subId)
+      .eq('project_id', scope.projectId)
+      .eq('tenant_id', scope.tenantId)
       .order('period_to', { ascending: false });
 
     if (error) throw error;
 
     return NextResponse.json({ pay_apps: payApps || [] });
   } catch (err) {
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return apiError('portal/sub/pay-apps', err, "Couldn't load your invoices.");
   }
 }
 
@@ -66,17 +70,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    /* No roster sub → no invoice. This used to fall through: the compliance
+       gate below only ran `if (session.sub_id)`, so an email-only link could
+       file an invoice with no COI or W-9 check at all. */
+    const scope = subRecordScope(session);
+    if (!scope) {
+      const r = notOnRoster(session, 'an invoice');
+      return NextResponse.json(r.body, { status: r.status });
+    }
+
     const db = createServerClient();
 
     // ── COMPLIANCE GATE — the reason GCs force subs onto portals: an invoice
     //    cannot be submitted while required compliance docs are missing or
     //    expired. Required: current insurance (COI) + W9 on file. ──
-    if (session.sub_id) {
+    {
       const { data: cdocs } = await db
         .from('portal_sub_compliance_docs')
         .select('doc_type, expiry_date, status')
-        .eq('tenant_id', session.tenant_id)
-        .eq('sub_id', session.sub_id);
+        .eq('tenant_id', scope.tenantId)
+        .eq('sub_id', scope.subId);
       const now = Date.now();
       const ok = (type: string) => (cdocs || []).some((d: { doc_type: string; expiry_date: string | null; status: string | null }) =>
         d.doc_type === type && d.status !== 'rejected' && d.status !== 'expired' &&
@@ -165,9 +178,9 @@ export async function POST(req: NextRequest) {
     const { data: payApp, error: payAppError } = await db
       .from('portal_sub_pay_apps')
       .insert({
-        sub_id: session.sub_id,
-        project_id: session.project_id,
-        tenant_id: session.tenant_id,
+        sub_id: scope.subId,
+        project_id: scope.projectId,
+        tenant_id: scope.tenantId,
         period_from: period_start || null,
         period_to: period_end,
         amount: amountDollars,
@@ -227,9 +240,6 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (err) {
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return apiError('portal/sub/pay-apps', err, "Couldn't submit the invoice. Please try again.");
   }
 }

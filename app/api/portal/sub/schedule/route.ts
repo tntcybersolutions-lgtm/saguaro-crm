@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
+import { notOnRoster, subRecordScope } from '@/lib/sub-portal-scope';
 
 async function authenticateSubPortal(req: NextRequest) {
   const token =
@@ -29,24 +31,25 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // An email-only invite has no roster sub, so no task is assigned to it (lib/sub-portal-scope).
+    const scope = subRecordScope(session);
+    if (!scope) return NextResponse.json({ tasks: [] });
+
     const db = createServerClient();
 
     const { data: tasks, error } = await db
       .from('portal_sub_tasks')
       .select('*')
-      .eq('sub_id', session.sub_id!)
-      .eq('project_id', session.project_id!)
-      .eq('tenant_id', session.tenant_id)
+      .eq('sub_id', scope.subId)
+      .eq('project_id', scope.projectId)
+      .eq('tenant_id', scope.tenantId)
       .order('due_date', { ascending: true });
 
     if (error) throw error;
 
     return NextResponse.json({ tasks: tasks || [] });
   } catch (err) {
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return apiError('portal/sub/schedule', err, "Couldn't load your schedule.");
   }
 }
 
@@ -61,9 +64,15 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
+    const scope = subRecordScope(session);
+    if (!scope) {
+      const r = notOnRoster(session, 'a task update');
+      return NextResponse.json(r.body, { status: r.status });
+    }
+
     const db = createServerClient();
     const body = await req.json();
-    const { task_id, percent_complete, checklist, status, notes } = body;
+    const { task_id, percent_complete, status } = body;
 
     if (!task_id) {
       return NextResponse.json(
@@ -77,8 +86,8 @@ export async function PATCH(req: NextRequest) {
       .from('portal_sub_tasks')
       .select('id')
       .eq('id', task_id)
-      .eq('sub_id', session.sub_id!)
-      .eq('tenant_id', session.tenant_id)
+      .eq('sub_id', scope.subId)
+      .eq('tenant_id', scope.tenantId)
       .single();
 
     if (!existing) {
@@ -106,7 +115,8 @@ export async function PATCH(req: NextRequest) {
       .from('portal_sub_tasks')
       .update(updateData)
       .eq('id', task_id)
-      .eq('tenant_id', session.tenant_id)
+      .eq('sub_id', scope.subId)
+      .eq('tenant_id', scope.tenantId)
       .select()
       .single();
 
@@ -114,9 +124,6 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ task: updated });
   } catch (err) {
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return apiError('portal/sub/schedule', err, "Couldn't update the task. Please try again.");
   }
 }

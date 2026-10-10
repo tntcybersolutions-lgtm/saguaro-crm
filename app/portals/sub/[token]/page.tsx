@@ -483,6 +483,18 @@ export default function SubPortal(){
 
   /* ── Computed ── */
   const companyName=sub?.company_name||'Subcontractor';
+  /* An email-only invite (no roster sub) can't file records that must belong to a
+     roster sub — the server refuses them (lib/sub-portal-scope). Say so where the
+     form would be, instead of letting someone fill one out for nothing. */
+  const onRoster=!!session?.sub_id;
+  /* Radio identity: the roster sub, or this session for an email-only invite. */
+  const radioMemberId=session?.sub_id||session?.id||null;
+  const rosterNote=(what:string)=>(
+    <div role="note" style={{...card(),borderColor:`color-mix(in srgb, ${AMBER} 33%, transparent)`,background:`color-mix(in srgb, ${AMBER} 4%, transparent)`}}>
+      <div style={{fontSize:15,fontWeight:700,color:AMBER,marginBottom:6}}>{what} open once you’re on the subcontractor list</div>
+      <div style={{fontSize:13,color:DIM,lineHeight:1.6}}>{companyName} was invited to this job by email and isn’t on the contractor’s subcontractor list yet. Ask them to add you as a subcontractor and send you a new portal link. End-of-day photos, documents, drawings, the punch list, radio and the clock all work from this link now.</div>
+    </div>
+  );
   const overallScore=scorecard?.averages?.overall||0;
   const isPreferred=scorecard?.preferred_status||false;
 
@@ -706,7 +718,7 @@ export default function SubPortal(){
     return(
       <div style={{display:'grid',gap:20}}>
         {/* Upload Form */}
-        <div style={card()}>
+        {!onRoster?rosterNote('Compliance uploads'):<div style={card()}>
           <div style={{fontSize:17,fontWeight:700,color:TEXT,marginBottom:16}}>Upload Compliance Document</div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:16,marginBottom:16}}>
             <div><div style={labelS}>Document Type *</div><select value={docUploadType} onChange={e=>setDocUploadType(e.target.value)} style={{...inputS,cursor:'pointer'}}><option value="">Select type…</option>{docTypes.map(t=><option key={t} value={t}>{docLabels[t]||t}</option>)}</select></div>
@@ -721,7 +733,7 @@ export default function SubPortal(){
             </div>
           )}
           <button onClick={uploadComplianceDoc} disabled={docUploading} style={btnS(BLUE)}>{docUploading?'Uploading…':'Upload Document'}</button>
-        </div>
+        </div>}
 
         {/* 30/60/90 Day Expiration Alerts */}
         {alerts.length>0&&(
@@ -790,6 +802,7 @@ export default function SubPortal(){
     const statusOrder=['submitted','under_review','approved','paid'];
     return(
       <div style={{display:'grid',gap:20}}>
+        {!onRoster&&rosterNote('Invoices')}
         {payApps.length===0?(
           <div style={{...card(),textAlign:'center',padding:40}}>
             <div style={{fontSize:15,fontWeight:700,color:TEXT}}>No Pay Applications Yet</div>
@@ -876,7 +889,7 @@ export default function SubPortal(){
       </div>
 
       {/* Daily Log Form */}
-      <div style={card()}>
+      {!onRoster?rosterNote('Daily logs'):<div style={card()}>
         <div style={{fontSize:17,fontWeight:700,color:TEXT,marginBottom:16}}>Submit Daily Log</div>
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:16,marginBottom:16}}>
           <div><div style={labelS}>Log Date *</div><SaguaroDatePicker value={dlForm.log_date} onChange={v=>setDlForm(f=>({...f,log_date:v}))} style={inputS}/></div>
@@ -892,7 +905,7 @@ export default function SubPortal(){
         </div>
         <div style={{marginBottom:16}}><div style={labelS}>Additional Notes</div><textarea value={dlForm.notes} onChange={e=>setDlForm(f=>({...f,notes:e.target.value}))} placeholder="Any additional notes…" style={{...textareaS,minHeight:50}}/></div>
         <button onClick={submitDailyLog} disabled={dlSaving} style={btnS(GREEN)}>{dlSaving?'Submitting…':'Submit Daily Log'}</button>
-      </div>
+      </div>}
 
       {/* Previous Logs */}
       <div style={card()}>
@@ -924,7 +937,7 @@ export default function SubPortal(){
   const renderRfis=()=>(
     <div style={{display:'grid',gap:20}}>
       {/* RFI Form */}
-      <div style={card()}>
+      {!onRoster?rosterNote('RFIs'):<div style={card()}>
         <div style={{fontSize:17,fontWeight:700,color:TEXT,marginBottom:16}}>Submit RFI (Request for Information)</div>
         <div style={{marginBottom:14}}><div style={labelS}>Subject *</div><input value={rfiForm.subject} onChange={e=>setRfiForm(f=>({...f,subject:e.target.value}))} placeholder="Brief description of the question" style={inputS}/></div>
         <div style={{marginBottom:14}}><div style={labelS}>Question / Details *</div><textarea value={rfiForm.question} onChange={e=>setRfiForm(f=>({...f,question:e.target.value}))} placeholder="Detailed question or request…" style={textareaS}/></div>
@@ -934,7 +947,7 @@ export default function SubPortal(){
           <div><div style={labelS}>Reference Spec Section</div><input value={rfiForm.reference_spec} onChange={e=>setRfiForm(f=>({...f,reference_spec:e.target.value}))} placeholder="e.g. 03 30 00" style={inputS}/></div>
         </div>
         <button onClick={submitRfi} disabled={rfiSaving} style={btnS(PURPLE)}>{rfiSaving?'Submitting…':'Submit RFI'}</button>
-      </div>
+      </div>}
 
       {/* RFI History */}
       <div style={card()}>
@@ -1095,11 +1108,12 @@ export default function SubPortal(){
             })}
             <div ref={msgEndRef}/>
           </div>
-          <div style={{display:'flex',gap:10}}>
+          {onRoster&&<div style={{display:'flex',gap:10}}>
             <input value={msgContent} onChange={e=>setMsgContent(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}} placeholder="Type a message…" style={{...inputS,flex:1}}/>
             <button onClick={sendMessage} disabled={msgSending} style={btnS(BLUE)}>{msgSending?'…':'Send'}</button>
-          </div>
+          </div>}
         </div>
+        {!onRoster&&rosterNote('Messages')}
       </div>
     );
   };
@@ -1139,7 +1153,7 @@ export default function SubPortal(){
           <div ref={radioFeedRef} style={{maxHeight:480,overflowY:'auto',padding:'4px 0',marginBottom:14}}>
             {radioMsgs.length===0&&<div style={{color:DIM,fontSize:13,textAlign:'center',padding:40}}>No radio traffic yet. Say something below.</div>}
             {radioMsgs.map((m:any)=>{
-              const mine=!!m.sender_portal_sub_id&&m.sender_portal_sub_id===session?.sub_id;
+              const mine=!!m.sender_portal_sub_id&&m.sender_portal_sub_id===radioMemberId;
               const t=m.translations||{};
               const shown=t[radioLang]||m.body||m.transcript||'';
               if(m.kind==='panic'||m.kind==='alert'){
