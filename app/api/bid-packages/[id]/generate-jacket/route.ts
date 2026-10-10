@@ -16,7 +16,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const db = createServerClient();
     const [{ data: pkg }, { data: items }] = await Promise.all([
       db.from('bid_packages').select('*, projects(*)').eq('id', id).eq('tenant_id', user.tenantId).single(),
-      db.from('bid_package_items').select('*').eq('bid_package_id', id).eq('tenant_id', user.tenantId),
+      db.from('bid_package_items').select('*').eq('bid_package_id', id).eq('tenant_id', user.tenantId)
+        .order('sort_order').order('created_at').order('id'), // the bid form's order, same as the live jacket
     ]);
     if (!pkg) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 

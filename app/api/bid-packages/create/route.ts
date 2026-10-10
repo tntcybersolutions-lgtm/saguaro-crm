@@ -52,9 +52,12 @@ export async function POST(req: NextRequest) {
 
     if (body.lineItems && Array.isArray(body.lineItems) && body.lineItems.length > 0) {
       await must(db.from('bid_package_items').insert(
-        body.lineItems.map((item: Record<string, unknown>) => ({
+        /* sort_order is the bid form's order. Left at its default every line
+           was 0 and the jacket showed them in whatever order the planner chose. */
+        body.lineItems.map((item: Record<string, unknown>, index: number) => ({
           tenant_id: user.tenantId,
           bid_package_id: (pkg as Record<string, unknown>).id,
+          sort_order: index,
           description: item.description,
           quantity: item.quantity,
           unit: item.unit,
