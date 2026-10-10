@@ -184,6 +184,8 @@ interface RadioMessage {
   receipts?: { user_id?: string | null; portal_sub_id?: string | null; display_name?: string | null; action?: string | null; created_at?: string }[] | null;
   /** R13 heard-by: who was live on the channel at send time (snapshot). */
   present_at_send?: { user_id?: string | null; portal_sub_id?: string | null; name?: string | null }[] | null;
+  /** Set when the sender corrected a typed message (absent until the column exists). */
+  edited_at?: string | null;
   created_at: string;
 }
 /** Guest sharing link (staff rows from GET /api/radio/guest?channelId=). */
@@ -891,6 +893,18 @@ export default function RadioDispatchPage() {
     }, null);
     setActiveId((fromUrl || busiest || channels[0]).id);
   }, [channels, activeId, urlChannel]);
+  /* The tuned channel rides the URL (?channel=…), so a reload comes back to
+   * the channel you were on. Before, a reload re-picked the "busiest" channel
+   * — a message you had just sent on another one looked lost. */
+  useEffect(() => {
+    if (!activeId) return;
+    try {
+      const u = new URL(window.location.href);
+      if (u.searchParams.get('channel') === activeId) return;
+      u.searchParams.set('channel', activeId);
+      window.history.replaceState(null, '', `${u.pathname}${u.search}${u.hash}`);
+    } catch { /* URL sync is cosmetic */ }
+  }, [activeId]);
   const active = channels.find((c) => c.id === activeId) || null;
 
   /* Monitor toggles — server flag merged with the local dispatch pref. */
@@ -2155,6 +2169,46 @@ export default function RadioDispatchPage() {
   const promoteMsg = promoteFor ? messages.find((m) => m.id === promoteFor) || null : null;
   const rowMenuMsg = rowMenu ? messages.find((m) => m.id === rowMenu.id) || null : null;
 
+  /* ── Edit a typed message you sent (PATCH /api/radio/messages) ─────────
+   * Only text/alert rows you sent, and never a patch-mirrored copy — voice,
+   * photos, tones and panics stay exactly as they went out. */
+  const canEditMsg = useCallback((m: RadioMessage) =>
+    !!myUserId && m.sender_user_id === myUserId && (m.kind === 'text' || m.kind === 'alert') && !m.patched_from,
+  [myUserId]);
+  const [editFor, setEditFor] = useState<RadioMessage | null>(null);
+  const [editText, setEditText] = useState('');
+  const [editBusy, setEditBusy] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const openEditMsg = (m: RadioMessage) => {
+    setRowMenu(null);
+    setEditFor(m);
+    setEditText(m.body || '');
+    setEditError(null);
+  };
+  const saveEditMsg = async () => {
+    if (!editFor || editBusy) return;
+    const text = editText.trim();
+    if (!text) { setEditError('A message cannot be empty.'); return; }
+    if (text === (editFor.body || '').trim()) { setEditFor(null); return; }
+    setEditBusy(true); setEditError(null);
+    try {
+      const r = await fetch('/api/radio/messages', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: editFor.id, body: text }),
+      });
+      const j = await r.json().catch(() => null);
+      if (!r.ok) { setEditError(j?.error || `Could not save the edit (${r.status})`); return; }
+      setEditFor(null);
+      pushToast('Message updated', 'ok');
+      await mutateMessages();
+    } catch {
+      setEditError('Could not save the edit — check your connection');
+    } finally {
+      setEditBusy(false);
+    }
+  };
+
   const openPromote = useCallback((m: RadioMessage) => {
     setRowMenu(null);
     setPromoteFor(m.id);
@@ -2995,6 +3049,7 @@ export default function RadioDispatchPage() {
             )}
             <span style={{ fontSize: 11, color: FAINT, marginLeft: 'auto', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
               {timeOf(m.created_at)}
+              {m.edited_at && <span title={`Edited ${timeOf(m.edited_at)}`} style={{ marginLeft: 6, fontStyle: 'italic' }}>edited</span>}
             </span>
             {/* Hover actions — quick reach for the two filing verbs. Neither is
               * hover-ONLY: both also live in the always-present overflow menu. */}
@@ -4743,14 +4798,19 @@ export default function RadioDispatchPage() {
               borderRadius: 12, boxShadow: '0 22px 48px rgba(12,12,16,0.65)', textAlign: 'left',
             }}
           >
-            <button role="menuitem" onClick={() => openPromote(rowMenuMsg)} style={menuItemStyle(true)}>
+            {canEditMsg(rowMenuMsg) && (
+              <button role="menuitem" onClick={() => openEditMsg(rowMenuMsg)} style={{ ...menuItemStyle(true), height: 44 }}>
+                <PencilSimple size={14} weight="bold" color={GOLD_HI} /> Edit message
+              </button>
+            )}
+            <button role="menuitem" onClick={() => openPromote(rowMenuMsg)} style={{ ...menuItemStyle(true), height: 44 }}>
               <NotePencil size={14} weight="bold" color={GOLD_HI} /> Make a record
             </button>
             <button
               role="menuitem"
               onClick={() => { setRowMenu(null); if (!filedIds.has(rowMenuMsg.id)) void fileToLog(rowMenuMsg); }}
               disabled={filedIds.has(rowMenuMsg.id) || filingId === rowMenuMsg.id}
-              style={menuItemStyle(!filedIds.has(rowMenuMsg.id) && filingId !== rowMenuMsg.id)}
+              style={{ ...menuItemStyle(!filedIds.has(rowMenuMsg.id) && filingId !== rowMenuMsg.id), height: 44 }}
             >
               {filedIds.has(rowMenuMsg.id)
                 ? <><Check size={14} weight="bold" color={GREEN} /> Filed to the daily log</>
@@ -4774,6 +4834,52 @@ export default function RadioDispatchPage() {
           </div>
         </>
       )}
+
+      {/* ── Edit message — correct a typed message you sent ─────────────── */}
+      <Dialog
+        open={!!editFor}
+        onClose={() => { if (!editBusy) setEditFor(null); }}
+        title="Edit Message"
+        icon={<PencilSimple size={15} weight="bold" color={GOLD_HI} />}
+        width={520}
+        footer={editFor ? (
+          <>
+            <button
+              onClick={() => { void saveEditMsg(); }}
+              disabled={editBusy || !editText.trim()}
+              className="pmBtn"
+              style={{ ...goldButtonStyle, minHeight: 44, padding: '10px 18px', fontSize: 12.5, opacity: editBusy || !editText.trim() ? 0.55 : 1 }}
+            >
+              <Check size={13} weight="bold" /> {editBusy ? 'Saving…' : 'Save'}
+            </button>
+            <button
+              onClick={() => { if (!editBusy) setEditFor(null); }}
+              style={{ minHeight: 44, background: 'none', border: 'none', color: FAINT, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+            >
+              Cancel
+            </button>
+            <span style={{ fontSize: 10.5, color: FAINT, lineHeight: 1.45, minWidth: 0 }}>
+              Everyone on {active?.name || 'the channel'} sees the corrected text. Voice, photos and tones can’t be edited.
+            </span>
+          </>
+        ) : undefined}
+      >
+        {editFor && (
+          <>
+            <label htmlFor="radio-edit-msg" style={{ ...eyebrowStyle, display: 'block', marginBottom: 6 }}>Message</label>
+            <textarea
+              id="radio-edit-msg"
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); void saveEditMsg(); } }}
+              rows={4}
+              autoFocus
+              style={{ ...fieldStyle, fontSize: 16, resize: 'vertical', minHeight: 96, lineHeight: 1.5 }}
+            />
+            {editError && <div role="alert" style={{ fontSize: 11.5, color: RED, marginTop: 8 }}>{editError}</div>}
+          </>
+        )}
+      </Dialog>
 
       {/* ── Make a record — the transmission becomes a tracked record ─────
         * The audio is the evidence. The server attaches the storage PATH (not
