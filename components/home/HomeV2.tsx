@@ -314,6 +314,18 @@ function DateTile({ ymd, today }: { ymd: string; today: string }) {
  *  page header it sat two screens above the schedule on a phone, so a tap
  *  looked like it did nothing. `win` is the one tapped (from the URL), so
  *  the switch moves at once; `pending` dims the list until its data arrives. */
+const WINDOW_OPTS: Array<{ key: 'today' | '7d'; label: string }> = [{ key: 'today', label: 'Today' }, { key: '7d', label: 'Next 7 Days' }];
+
+/** Scroll the schedule card into view (under the app's top bar). */
+function showSchedule() {
+  requestAnimationFrame(() => {
+    const el = document.getElementById('hv2-sched')?.closest('section');
+    if (!el) return;
+    const calm = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    el.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'start' });
+  });
+}
+
 function Schedule({ data, win, pending, onWindow }: { data: HomePayload; win: 'today' | '7d'; pending: boolean; onWindow: (w: 'today' | '7d') => void }) {
   const colorFor = useProjectColors();
   const today = data.context.today;
@@ -323,10 +335,10 @@ function Schedule({ data, win, pending, onWindow }: { data: HomePayload; win: 't
     return [...m.entries()];
   }, [data.schedule.entries]);
   return (
-    <section className="hv2-card hv2-pad" aria-labelledby="hv2-sched" aria-busy={pending || undefined}>
+    <section className="hv2-card hv2-pad hv2-schedcard" aria-labelledby="hv2-sched" aria-busy={pending || undefined}>
       <div className="hv2-sechead">
         <h2 id="hv2-sched">{win === 'today' ? "Today's Schedule" : 'Next 7 Days'}</h2>
-        <Segmented label="Date window" value={win} options={[{ key: 'today', label: 'Today' }, { key: '7d', label: 'Next 7 Days' }]} onChange={onWindow} />
+        <Segmented label="Date window" value={win} options={WINDOW_OPTS} onChange={onWindow} />
       </div>
       {pending && <p className="hv2-empty" role="status">Loading {win === 'today' ? "today's" : 'the next 7 days of'} schedule…</p>}
       <div className={pending ? 'hv2-dim' : undefined}>
@@ -533,6 +545,12 @@ function HomeInner() {
   const urlWindow = sp.get('window');
   const shownWindow: 'today' | '7d' = urlWindow === 'today' || urlWindow === '7d' ? urlWindow : (ctx?.window ?? '7d');
   const windowPending = !!ctx && shownWindow !== ctx.window;
+  // The new schedule can land mid-scroll and change the page under it; once it
+  // has, line the card up again.
+  const scrollWhenLoaded = useRef(false);
+  useEffect(() => {
+    if (!windowPending && scrollWhenLoaded.current) { scrollWhenLoaded.current = false; showSchedule(); }
+  }, [windowPending]);
   const activeProjects = projects.filter(p => !['completed', 'complete', 'closed', 'cancelled', 'archived', 'lost'].includes(String(p.status || '').toLowerCase()));
 
   const saveDefault = async () => {
@@ -562,6 +580,18 @@ function HomeInner() {
           )}
           {ctx && ctx.view !== 'field' && ctx.view !== 'owner' && (
             <Segmented label="Whose work" value={ctx.scope} options={[{ key: 'mine', label: 'My Work' }, { key: 'team', label: 'Team' }]} onChange={v => setParam('scope', v)} />
+          )}
+          {/* On a phone the schedule sits below Needs Attention, so the switch
+              stays up here where it is found — and a tap brings the schedule
+              into view so the change is seen. Wide screens keep it on the card,
+              beside Needs Attention. */}
+          {ctx && (
+            <div className="hv2-winctl">
+              <Segmented label="Schedule dates" value={shownWindow} options={WINDOW_OPTS} onChange={v => {
+                if (v !== shownWindow) { scrollWhenLoaded.current = true; setParam('window', v); }
+                showSchedule();
+              }} />
+            </div>
           )}
           <label className="hv2-select">
             <span className="sr-only">Job</span>
@@ -694,6 +724,8 @@ a.hv2-hcell:hover { background: rgba(255,255,255,0.025); }
 .hv2-pcell { display: inline-flex; align-items: center; gap: 10px; }
 .hv2-pnum { color: var(--c-text-2); font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 34px; }
 .hv2-primary { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.hv2-winctl { display: none; }
+.hv2-schedcard { scroll-margin-top: calc(56px + env(safe-area-inset-top, 0px) + var(--sag-header-msg-h, 0px) + 12px); }
 .hv2-sechead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
 .hv2-dim { color: var(--c-text-3); font-size: 13px; }
 .hv2-empty { color: var(--c-text-2); font-size: 14px; margin: 4px 0; line-height: 1.45; }
@@ -758,10 +790,12 @@ a.hv2-hcell:hover { background: rgba(255,255,255,0.025); }
 .hv2-skel { background: linear-gradient(90deg, var(--c-card), var(--c-raised), var(--c-card)); background-size: 200% 100%; animation: hv2sk 1.4s ease infinite; }
 @keyframes hv2sk { to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .hv2-skel { animation: none; } }
+@media (pointer: coarse) { .hv2-seg button { min-height: 44px; } }
 .hv2-lower-h { margin: 4px 0 12px !important; }
 .hv2-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; font-size: 13px; color: var(--c-text-3); padding-bottom: 8px; }
 .hv2-foot span { display: inline-flex; align-items: center; gap: 6px; }
 @media (max-width: 1100px) {
+  .hv2-winctl { display: block; }
   .hv2-primary { grid-template-columns: minmax(0, 1fr); }
   .hv2-header { align-items: flex-start; flex-direction: column; }
   .hv2-controls { justify-content: flex-start; }
@@ -800,6 +834,8 @@ a.hv2-hcell:hover { background: rgba(255,255,255,0.025); }
   .hv2-chip-warn::before { display: none; }
   .hv2-linkbtn, .hv2-more { min-height: 44px; display: inline-flex; align-items: center; }
   .hv2-hide-sm { display: none; }
+  .hv2-winctl { width: 100%; }
+  .hv2-winctl .hv2-seg { display: grid; grid-template-columns: 1fr 1fr; width: 100%; overflow: visible; contain: none; }
   .hv2-jobcards { display: block; }
   .hv2-controls { width: 100%; }
   .hv2-select { display: block; min-width: 0; max-width: 100%; flex: 1 1 100%; }
