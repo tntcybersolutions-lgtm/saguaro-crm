@@ -48,7 +48,7 @@ export function StatCard({ label, value, sub, trend, accent, onClick, href, styl
   const glyph = trend ? (trend.dir === 'up' ? '▲' : trend.dir === 'down' ? '▼' : '–') : null;
 
   const body = (
-    <>
+    <span className="pmFigIn">
       <span className="pmFigV" style={accent ? { color: accent } : undefined}>
         {value}
         {trend && (
@@ -57,12 +57,14 @@ export function StatCard({ label, value, sub, trend, accent, onClick, href, styl
           </span>
         )}
       </span>
-      <span className="pmFigL">
-        <span>{label}</span>
-        {(href || onClick) && <span className="pmFigGo" aria-hidden>›</span>}
+      <span className="pmFigText">
+        <span className="pmFigL">
+          <span>{label}</span>
+          {(href || onClick) && <span className="pmFigGo" aria-hidden>›</span>}
+        </span>
+        {sub != null && <span className="pmFigS">{sub}</span>}
       </span>
-      {sub != null && <span className="pmFigS">{sub}</span>}
-    </>
+    </span>
   );
 
   if (href) return <a className="pmFig pmFigSolo" href={href} onClick={onClick} style={style}>{body}</a>;
@@ -84,11 +86,7 @@ export function StatGrid({ children, min = 118, style }: StatGridProps) {
   return (
     <div className="pmStrip" style={style}>
       <div className="pmStripGrid" style={{ gridTemplateColumns: `repeat(auto-fit, minmax(${Math.min(min, 160)}px, 1fr))` }}>
-        {React.Children.map(children, (c) =>
-          React.isValidElement<{ style?: React.CSSProperties }>(c)
-            ? React.cloneElement(c, { style: { ...(c.props.style || {}), borderBottom: '1px solid var(--sg-border)' } })
-            : c,
-        )}
+        {children}
       </div>
     </div>
   );

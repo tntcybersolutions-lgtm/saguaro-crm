@@ -274,14 +274,16 @@ export function StatCard({
   const toneColor = tone === 'bad' ? 'var(--danger)' : tone === 'warn' ? 'var(--warning)' : tone === 'good' ? 'var(--success)' : null;
   const valueColor = toneColor || accent || undefined;
   const body = (
-    <>
+    <span className="pmFigIn">
       <span className="pmFigV" style={valueColor ? { color: valueColor } : undefined}>{value}</span>
-      <span className="pmFigL">
-        <span>{label}</span>
-        {interactive && <span className="pmFigGo" aria-hidden>{active ? '✓' : '›'}</span>}
+      <span className="pmFigText">
+        <span className="pmFigL">
+          <span>{label}</span>
+          {interactive && <span className="pmFigGo" aria-hidden>{active ? '✓' : '›'}</span>}
+        </span>
+        {sub != null && <span className="pmFigS">{sub}</span>}
       </span>
-      {sub != null && <span className="pmFigS">{sub}</span>}
-    </>
+    </span>
   );
   if (href) {
     // A plain <a> keeps the kit routing-agnostic; callers wrap with <Link> if they need to.

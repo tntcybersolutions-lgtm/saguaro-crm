@@ -69,7 +69,7 @@ const ROUTE_SKEL_CSS = `
 .sag-route-skel-head{margin-bottom:14px}
 .sag-route-skel-title{font-size:22px;font-weight:700;line-height:1.2;letter-spacing:-0.015em;color:var(--sg-text)}
 .sag-route-skel-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));border-top:1px solid var(--sg-border);border-bottom:1px solid var(--sg-border);overflow:hidden;margin-bottom:16px}
-.sag-route-skel-strip>div:first-child{margin-left:-1px}
+.sag-route-skel-strip>div{margin-left:-1px}
 .sag-route-skel-rows{border-top:1px solid var(--sg-border);margin:0 -24px}
 @media (max-width:767px){
   .sag-route-skel{padding:14px 16px 24px}

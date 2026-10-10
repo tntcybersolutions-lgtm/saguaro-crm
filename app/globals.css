@@ -1530,7 +1530,7 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 .sag-app .k-tabs { display: inline-flex; max-width: 100%; gap: 2px; padding: 4px; border: 1px solid var(--border-subtle); border-radius: 12px; background: rgba(255,255,255,0.04); }
 .sag-app .k-tab { border: 0; border-radius: 9px; background: transparent; color: var(--c-text-2); font-weight: 700; min-height: 32px; padding: 0 14px; box-shadow: none; }
 .sag-app .k-tab:hover { color: var(--c-text); background: rgba(255,255,255,0.04); }
-.sag-app .k-tab[aria-selected="true"] { background: var(--c-raised); color: var(--c-text); box-shadow: 0 0 0 1px rgba(255,230,0,0.35), 0 4px 12px -4px rgba(0,0,0,0.8); }
+.sag-app .k-tab[aria-selected="true"] { background: var(--sg-border); color: var(--sg-text); box-shadow: none; } /* flat: the selected segment is a step lighter, no ring */
 .sag-app .k-tab[aria-selected="true"] .k-tab-count { background: rgba(255,230,0,0.14); color: var(--c-yellow); }
 .sag-app .hv2-seg { background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 4px; }
 .sag-app .hv2-seg button { color: var(--c-text-2); border-radius: 9px; font-weight: 700; }
@@ -1545,10 +1545,12 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 
 /* Buttons — ONE yellow primary; everything else steps back */
 .sag-app .k-btn-primary {
-  background: linear-gradient(180deg, var(--c-yellow-hi), var(--c-yellow) 55%, var(--c-yellow-hover));
+  /* flat (2026-10-10): one solid brand fill, no gloss, no glow */
+  background: var(--c-yellow);
   color: var(--c-on-brand); border: 0; text-shadow: none;
-  box-shadow: 0 10px 24px -10px rgba(255,230,0,0.7), inset 0 1px 0 rgba(255,255,255,0.6);
+  box-shadow: none;
 }
+.sag-app .k-btn-primary:hover { background: var(--c-yellow-hover); box-shadow: none; }
 .sag-app .k-btn-secondary { background: rgba(255,255,255,0.03); border: 1px solid var(--border-default); color: var(--c-text); box-shadow: none; }
 .sag-app .k-btn-secondary:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,230,0,0.3); color: var(--c-text); }
 .sag-app .k-btn-ghost { color: var(--c-text-2); }
@@ -1734,8 +1736,20 @@ a.pmFig:hover,button.pmFig:hover,div.pmFig[role=button]:hover{background:rgba(25
 .pmFigS{font-size:11px;color:var(--sg-text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pmFigGo{margin-left:auto;flex:none;color:var(--sg-text-3);font-size:12px}
 .pmFig[aria-pressed=true] .pmFigGo{color:var(--brand-primary)}
-/* A StatCard on its own (callers lay several out in their own grid). */
-.pmFig.pmFigSolo{border:0;border-left:1px solid var(--sg-border);height:100%}
+/* A StatCard on its own (callers lay several out in their own grid). Narrow
+   (a strip of 2–4 across): value over label with a hairline on the left.
+   Full width (the caller's grid fell to one column on a phone): a list row —
+   label on the left, value on the right, a hairline under it. */
+.pmFig.pmFigSolo{display:block;padding:0;border:0;height:100%;container-type:inline-size}
+.pmFigIn{display:flex;flex-direction:column;gap:1px;min-width:0;height:100%;min-height:44px;padding:9px 12px;border-left:1px solid var(--sg-border);box-sizing:border-box}
+.pmFigText{display:contents}
+@container (min-width:320px){
+  .pmFigIn{flex-direction:row;align-items:center;gap:12px;padding:10px 0;border-left:0;border-bottom:1px solid var(--sg-border)}
+  .pmFigIn>.pmFigV{order:2;flex:none;max-width:55%}
+  .pmFigText{display:flex;flex-direction:column;gap:2px;order:1;flex:1;min-width:0}
+  .pmFigIn .pmFigL{font-size:13.5px;color:var(--sg-text)}
+  .pmFigIn .pmFigS{font-size:12px}
+}
 /* Empty state: one plain line and one action. */
 .pmEmpty{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:12px 0;min-width:0}
 .pmEmptyLine{flex:1 1 260px;min-width:0;margin:0;font-size:14px;line-height:1.45;color:var(--sg-text-2)}

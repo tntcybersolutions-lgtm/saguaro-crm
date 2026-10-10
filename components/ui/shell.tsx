@@ -141,9 +141,13 @@ export function Badge({ label, color = 'muted' }: { label: string; color?: Badge
 export function StatCard({ label, value, sub }: { icon?: React.ReactNode; label: string; value: string; sub?: string }) {
   return (
     <div className="pmFig pmFigSolo">
-      <span className="pmFigV">{value}</span>
-      <span className="pmFigL"><span>{label}</span></span>
-      {sub && <span className="pmFigS">{sub}</span>}
+      <span className="pmFigIn">
+        <span className="pmFigV">{value}</span>
+        <span className="pmFigText">
+          <span className="pmFigL"><span>{label}</span></span>
+          {sub && <span className="pmFigS">{sub}</span>}
+        </span>
+      </span>
     </div>
   );
 }
