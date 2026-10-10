@@ -17,6 +17,7 @@ import PdfViewer from '../../components/PdfViewer';
 import SaguaroChatWidget from '../../components/SaguaroChatWidget';
 import SubscriptionWall from '../../components/SubscriptionWall';
 import OfflineBar from '../../components/OfflineBar';
+import { clearOfflineCopies } from '@/lib/offline/worker';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import GlobalShortcuts from '../../components/GlobalShortcuts';
 import ProjectSwitcher from '../../components/ProjectSwitcher';
@@ -192,6 +193,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [aiOpen]);
 
   async function handleLogout() {
+    // 0. Drop this person's offline copies of screens and data from the phone.
+    clearOfflineCopies();
     // 1. Clear the server-side httpOnly session cookies.
     await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
     // 2. CRITICAL: also destroy the browser Supabase session in localStorage.

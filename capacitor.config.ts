@@ -120,7 +120,11 @@ const config: CapacitorConfig = {
     ],
     // Allow WKWebView to reach the same-origin server
     contentInset: 'automatic',
-    limitsNavigationsToAppBoundDomains: false,
+    // Service workers only run in WKWebView for App-Bound Domains (iOS 14+).
+    // Offline mode (public/push-sw.js) needs them, so the app's own domains
+    // are listed in Info.plist → WKAppBoundDomains and navigation is limited
+    // to them; any other site opens in Safari.
+    limitsNavigationsToAppBoundDomains: true,
     // Scroll elastic behaviour matches native feel
     scrollEnabled: true,
     backgroundColor: '#000000',
