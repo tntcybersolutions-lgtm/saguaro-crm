@@ -1,0 +1,228 @@
+{
+  "run": "38061182499",
+  "tag": "ZZ AUDIT 182499",
+  "job": "50f77a5f-9d49-4a2a-86ac-1a9b9f2f1afc",
+  "package": "d8931614-ea0d-49b6-889e-d60eb0326a1a",
+  "doors": {
+    "files": 200,
+    "drawings": 200,
+    "specs": 200,
+    "takeoff": 200,
+    "jacketDrawing": 200,
+    "jacketOther": 200
+  },
+  "jacket": [
+    {
+      "key": "invitation",
+      "label": "Invitation & Instructions",
+      "required": true,
+      "count": 2,
+      "docs": [],
+      "pages": [
+        "Instructions to Bidders"
+      ]
+    },
+    {
+      "key": "scope",
+      "label": "Scope of Work",
+      "required": true,
+      "count": 1,
+      "docs": [],
+      "pages": [
+        "Scope Narrative"
+      ]
+    },
+    {
+      "key": "drawings",
+      "label": "Drawings",
+      "required": true,
+      "count": 2,
+      "docs": [
+        "E-101 — ZZ AUDIT 182499 Power Plan",
+        "ZZ AUDIT 182499 PLAN SET — ZZ AUDIT 182499 Plan Set"
+      ],
+      "pages": []
+    },
+    {
+      "key": "specs",
+      "label": "Specifications",
+      "required": true,
+      "count": 0,
+      "docs": [],
+      "pages": []
+    },
+    {
+      "key": "bidform",
+      "label": "Bid Form",
+      "required": true,
+      "count": 3,
+      "docs": [],
+      "pages": []
+    },
+    {
+      "key": "requirements",
+      "label": "Insurance & Bonding",
+      "required": true,
+      "count": 1,
+      "docs": [],
+      "pages": [
+        "Insurance Requirements"
+      ]
+    },
+    {
+      "key": "addenda",
+      "label": "Addenda",
+      "required": false,
+      "count": 0,
+      "docs": [],
+      "pages": []
+    },
+    {
+      "key": "attachments",
+      "label": "Attachments",
+      "required": false,
+      "count": 2,
+      "docs": [
+        "ZZ AUDIT 182499 E-401 Panel Schedules.pdf",
+        "ZZ AUDIT 182499 Site Logistics Plan.pdf"
+      ],
+      "pages": []
+    },
+    {
+      "key": "correspondence",
+      "label": "Correspondence",
+      "required": false,
+      "count": 0,
+      "docs": [],
+      "pages": []
+    }
+  ],
+  "existing": [],
+  "checks": [
+    {
+      "name": "start a job",
+      "pass": true,
+      "detail": "200 {\"projectId\":\"50f77a5f-9d49-4a2a-86ac-1a9b9f2f1afc\",\"project\":{\"id\":\"50f77a5f-9d49-4a2a-86ac-1a9b9f2f1afc\",\"tenant_id\":\"4a3342d3-bed9-4cf4-b2ae-d92961841878\",\"name\":\"ZZ AUDIT 182499 Jacket Job\",\"addre"
+    },
+    {
+      "name": "files page: upload",
+      "pass": true,
+      "detail": "200 {\"success\":true,\"files\":[{\"id\":\"a91877a3-a75f-4d87-9278-adda0073e134\",\"tenant_id\":\"4a3342d3-bed9-4cf4-b2ae-d92961841878\",\"project_id\":\"50f77a5f-9d49-4a2a-86ac-1a9b9f2f1afc\",\"file_name\":\"ZZ AUDIT 18249"
+    },
+    {
+      "name": "drawings page: sheet upload",
+      "pass": true,
+      "detail": "200 {\"success\":true,\"drawing\":{\"id\":\"71f3af07-a54e-4ab2-8036-73a2617899ff\",\"tenant_id\":\"4a3342d3-bed9-4cf4-b2ae-d92961841878\",\"project_id\":\"50f77a5f-9d49-4a2a-86ac-1a9b9f2f1afc\",\"name\":\"ZZ AUDIT 182499 Po"
+    },
+    {
+      "name": "specs page: add section",
+      "pass": true,
+      "detail": "200 {\"success\":true,\"spec\":{\"id\":\"adf32446-f17d-4893-b1e6-1c69687f0e2c\",\"tenant_id\":\"4a3342d3-bed9-4cf4-b2ae-d92961841878\",\"project_id\":\"50f77a5f-9d49-4a2a-86ac-1a9b9f2f1afc\",\"section_number\":\"26 05 00\",\""
+    },
+    {
+      "name": "specs page: attach file",
+      "pass": true,
+      "detail": "200 {\"success\":true,\"spec\":{\"id\":\"adf32446-f17d-4893-b1e6-1c69687f0e2c\",\"tenant_id\":\"4a3342d3-bed9-4cf4-b2ae-d92961841878\",\"project_id\":\"50f77a5f-9d49-4a2a-86ac-1a9b9f2f1afc\",\"section_number\":\"26 05 00\",\""
+    },
+    {
+      "name": "takeoff: start",
+      "pass": true,
+      "detail": "200 {\"data\":{\"id\":\"2702719b-a8f4-4b19-bbde-b9031b93f3bb\",\"project_id\":\"50f77a5f-9d49-4a2a-86ac-1a9b9f2f1afc\",\"name\":\"Takeoff Oct 10, 2026\",\"file_url\":null,\"file_name\":null,\"file_type\":null,\"file_size\":nul"
+    },
+    {
+      "name": "takeoff: blueprint uploaded",
+      "pass": true,
+      "detail": "200/200/200 {\"bucket\":\"blueprints\",\"path\":\"50f77a5f-9d49-4a2a-86ac-1a9b9f2f1afc/blueprints/2702719b-a8f4-4b19-bbde-b9031b93f3bb/sour"
+    },
+    {
+      "name": "create bid package (wizard)",
+      "pass": true,
+      "detail": "200 {\"success\":true,\"bidPackage\":{\"id\":\"d8931614-ea0d-49b6-889e-d60eb0326a1a\",\"tenant_id\":\"4a3342d3-bed9-4cf4-b2ae-d92961841878\",\"project_id\":\"50f77a5f-9d49-4a2a-86ac-1a9b9f2f1afc\",\"name\":\"ZZ AUDIT 182499"
+    },
+    {
+      "name": "jacket Add Document (drawing)",
+      "pass": true,
+      "detail": "200/200 "
+    },
+    {
+      "name": "jacket Add Document (attachment)",
+      "pass": true,
+      "detail": "200/200 "
+    },
+    {
+      "name": "jacket opens",
+      "pass": true,
+      "detail": "200 {\"package\":{\"id\":\"d8931614-ea0d-49b6-889e-d60eb0326a1a\",\"name\":\"ZZ AUDIT 182499 Electrical\",\"number\":null,\"trade\":\"Electrical\",\"status\":\"open\",\"dueDate\":\"2026-10-24\",\"validityDays\":60,\"preBidDate\":nul"
+    },
+    {
+      "name": "files-page plan (A-201) is in Drawings",
+      "pass": false,
+      "detail": "found in: nowhere"
+    },
+    {
+      "name": "drawings-page sheet (E-101) is in Drawings",
+      "pass": true,
+      "detail": "found in: drawings"
+    },
+    {
+      "name": "takeoff plan set is in Drawings",
+      "pass": true,
+      "detail": "found in: drawings"
+    },
+    {
+      "name": "spec section (26 05 00) is in Specifications",
+      "pass": false,
+      "detail": "found in: nowhere"
+    },
+    {
+      "name": "jacket-added drawing (E-401) is in Drawings",
+      "pass": false,
+      "detail": "found in: attachments"
+    },
+    {
+      "name": "jacket-added other file is in Attachments",
+      "pass": true,
+      "detail": "found in: attachments"
+    },
+    {
+      "name": "Instructions to bidders filled",
+      "pass": true,
+      "detail": "{\"key\":\"invitation\",\"label\":\"Invitation & Instructions\",\"required\":true,\"count\":2,\"pages\":[{\"id\":\"instructions-to-bidders\",\"title\":\"Instructions to Bidders\",\"body\":\"Bid on the attached form. Include a"
+    },
+    {
+      "name": "Scope filled",
+      "pass": true,
+      "detail": "{\"key\":\"scope\",\"label\":\"Scope of Work\",\"required\":true,\"count\":1,\"pages\":[{\"id\":\"scope-narrative\",\"title\":\"Scope Narrative\",\"body\":\"Furnish and install power, lighting and low-voltage rough-in per the"
+    },
+    {
+      "name": "Bid form has the 3 lines in order",
+      "pass": true,
+      "detail": "[\"Power rough-in\",\"Lighting fixtures and controls\",\"Low-voltage rough-in\"]"
+    },
+    {
+      "name": "Insurance reads as entered (no raw JSON)",
+      "pass": true,
+      "detail": "{\"bond\":true,\"prevailingWage\":false,\"insuranceAmount\":1000000,\"generalLiability\":null,\"autoLiability\":null,\"workersComp\":null,\"insuranceText\":\"General liability $1,000,000 per occurrence; auto $1,000,"
+    },
+    {
+      "name": "Bond required shows",
+      "pass": true,
+      "detail": "{\"bond\":true,\"prevailingWage\":false,\"insuranceAmount\":1000000,\"generalLiability\":null,\"autoLiability\":null,\"workersComp\""
+    },
+    {
+      "name": "nothing required is missing",
+      "pass": false,
+      "detail": "{\"complete\":5,\"total\":6,\"missing\":[\"Specifications\"]}"
+    },
+    {
+      "name": "run completed",
+      "pass": false,
+      "detail": "page.waitForSelector: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('text=Drawings') to be visible\n    64 × locator resolved to 2 elements. Proceeding with the first one: <option value=\"drawing\">Drawings</option>\n"
+    },
+    {
+      "name": "no page errors",
+      "pass": true,
+      "detail": ""
+    }
+  ]
+}
