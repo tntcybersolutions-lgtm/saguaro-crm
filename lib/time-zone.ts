@@ -95,6 +95,25 @@ export function endOfDayIn(timeZone: string, day: string): Date {
   return new Date(dayRangeIn(timeZone, day).to.getTime() - 1);
 }
 
+/**
+ * 'YYYY-MM-DD' `n` calendar days after `day` (negative: before). Calendar
+ * arithmetic only — no zone and no DST inside it, so "30 days from today" is
+ * computed from whoever's today the caller already chose.
+ */
+export function addDays(day: string, n: number): string {
+  const [y, m, d] = day.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
+}
+
+/** 'YYYY-MM-01' … the first and last day of the month `day` falls in. */
+export function monthOf(day: string): { first: string; last: string } {
+  const [y, m] = day.split('-').map(Number);
+  return {
+    first: `${y}-${pad2(m)}-01`,
+    last: new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10),
+  };
+}
+
 type Db = { from: (t: string) => any };
 
 /** The company's recorded zone, or null when it has none yet (or it isn't a real zone). */
@@ -103,6 +122,72 @@ export async function companyTimeZone(db: Db, tenantId: string): Promise<string 
   if (error) throw error;
   const tz = (data as { time_zone?: string | null } | null)?.time_zone ?? null;
   return isTimeZone(tz) ? tz : null;
+}
+
+/**
+ * "Today" for a request handler: requestTimeZone() plus the calendar day in it.
+ * When neither the device nor the company says where they are, the answer is
+ * the UTC day and the fallback is logged under `scope` — never a silent stand-in.
+ */
+export async function requestDay(
+  headers: { get(name: string): string | null } | null | undefined,
+  db: Db,
+  tenantId: string | null | undefined,
+  scope: string,
+  now: Date = new Date(),
+): Promise<{ today: string; zone: string; source: 'device' | 'company' | 'utc' }> {
+  const tz = await requestTimeZone(headers, db, tenantId);
+  if (tz.source === 'utc') console.warn(`[${scope}] no device or company time zone for tenant ${tenantId ?? '(none)'} — using the UTC day`);
+  return { ...tz, today: dayIn(tz.zone, now) };
+}
+
+/**
+ * "Today" for a background job (cron, trigger) working for one company: the
+ * company's zone, else the UTC day — logged under `scope`.
+ */
+export async function companyDay(
+  db: Db,
+  tenantId: string,
+  scope: string,
+  now: Date = new Date(),
+): Promise<{ today: string; zone: string; source: 'company' | 'utc' }> {
+  const zone = await companyTimeZone(db, tenantId);
+  if (!zone) console.warn(`[${scope}] company ${tenantId} has no time zone yet — using the UTC day`);
+  return { today: dayIn(zone ?? 'UTC', now), zone: zone ?? 'UTC', source: zone ? 'company' : 'utc' };
+}
+
+/**
+ * Many companies' zones in one read, for a job that walks every company's
+ * rows (a cron). A company with no zone (or a junk one) is absent from the map.
+ */
+export async function companyTimeZones(db: Db, tenantIds: string[]): Promise<Map<string, string>> {
+  const ids = Array.from(new Set(tenantIds.filter(Boolean)));
+  const out = new Map<string, string>();
+  if (!ids.length) return out;
+  const { data, error } = await db.from('tenants').select('id, time_zone').in('id', ids);
+  if (error) throw error;
+  for (const r of (data ?? []) as { id: string; time_zone: string | null }[]) {
+    if (isTimeZone(r.time_zone)) out.set(r.id, r.time_zone);
+  }
+  return out;
+}
+
+/**
+ * A per-company "today" for a cron: looks each company up in `zones`
+ * (companyTimeZones), falls back to the UTC day for one that has none and logs
+ * that once per company under `scope`.
+ */
+export function companyDayLookup(zones: Map<string, string>, scope: string, now: Date = new Date()): (tenantId: string) => string {
+  const memo = new Map<string, string>();
+  return (tenantId: string) => {
+    const hit = memo.get(tenantId);
+    if (hit) return hit;
+    const zone = zones.get(tenantId);
+    if (!zone) console.warn(`[${scope}] company ${tenantId} has no time zone yet — using the UTC day`);
+    const day = dayIn(zone ?? 'UTC', now);
+    memo.set(tenantId, day);
+    return day;
+  };
 }
 
 /**

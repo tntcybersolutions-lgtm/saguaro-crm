@@ -9,11 +9,13 @@
  * Reads / writes (unchanged):
  *   GET /api/billing/subscription · GET/PUT /api/auth/me · GET /api/platform/me
  *   GET/PUT /api/branding · POST /api/branding/logo · POST /api/auth/logout
+ *   GET/PATCH /api/settings/time-zone (components/settings/TimeZoneCard)
  */
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { CreditCard, DeviceMobile, Bell, Users, Clipboard, FileText, Gear, Rocket, GraduationCap, Books, ChatCircle, Clock, ArrowRight, CloudArrowUp, ShieldCheck, Plugs, Palette, Lifebuoy, UploadSimple, CheckCircle, WarningCircle, CaretRight, SignOut } from '@phosphor-icons/react';
 import { PageShell, Card, StatRow, Badge, Button, Field, Input, FormGrid, type StatItem } from '@/components/ui/kit';
+import TimeZoneCard from '@/components/settings/TimeZoneCard';
 
 interface SubInfo {
   plan_name: string;
@@ -502,6 +504,11 @@ export default function SettingsPage() {
                 </div>
               </div>
             </Card>
+          </div>
+
+          {/* ── Company time zone — the clock "today" and every deadline run on ── */}
+          <div id="time-zone" style={{ scrollMarginTop: 72 }}>
+            <TimeZoneCard />
           </div>
 
           {/* Platform Owner section */}
