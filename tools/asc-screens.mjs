@@ -501,15 +501,12 @@ const WALK_JOB = ['overview', 'photos', 'files', 'daily-logs', 'rfis', 'submitta
 const WALK_DENY = /\b(delete|remove|archive|trash|send|submit|approve|reject|decline|pay|void|log ?out|sign ?out|revoke|disconnect|reset|unsubscribe|deactivate|terminate|cancel (plan|subscription)|save|create|generate|sync|import|duplicate|clone|copy to|convert|clock (in|out)|start|run|accept|assign|notify|remind|request|upload|post|publish|award|execute|e-?sign|sign|invite|resend|mark (as )?(paid|complete|done|read)|complete|finali[sz]e|close (out|job)|reopen|restore|apply|confirm|place order|purchase|buy|subscribe|upgrade|checkout|book)\b/i;
 
 async function walk() {
-  // Chad's real account when the E2E_EMAIL / E2E_PASSWORD secrets are set,
-  // otherwise the App Review demo sign-in. Never printed.
+  // Chad's REAL company only (tools/e2e-login.mjs sets E2E_EMAIL /
+  // E2E_PASSWORD). Never the App Store demo company. Never printed.
   const real = !!(process.env.E2E_EMAIL && process.env.E2E_PASSWORD);
-  const review = real
-    ? { demoAccountName: process.env.E2E_EMAIL.trim(), demoAccountPassword: process.env.E2E_PASSWORD }
-    : process.env.APP_REVIEW_DEMO_EMAIL && process.env.APP_REVIEW_DEMO_PASS
-      ? { demoAccountName: process.env.APP_REVIEW_DEMO_EMAIL.trim(), demoAccountPassword: process.env.APP_REVIEW_DEMO_PASS }
-      : (await api('GET', `/v1/apps/${(await findApp()).id}/betaAppReviewDetail`)).data.attributes;
-  console.log(`walk: signed in as ${real ? 'the real account (E2E secrets)' : 'the demo account (E2E secrets not set)'}`);
+  if (!real) throw new Error('walk: no real-company login — run tools/e2e-login.mjs first; the walk never falls back to the demo company');
+  const review = { demoAccountName: process.env.E2E_EMAIL.trim(), demoAccountPassword: process.env.E2E_PASSWORD };
+  console.log('walk: signed in as the real company');
   const require = createRequire(path.join(process.env.PLAYWRIGHT_DIR, 'noop.js'));
   const pw = require('playwright');
   const outDir = path.join(ROOT, 'tools/walk');
