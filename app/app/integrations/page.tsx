@@ -98,6 +98,14 @@ export default function IntegrationsPage() {
 
   useEffect(() => { fetchIntegrations(); }, [fetchIntegrations]);
 
+  // QuickBooks Connect leaves this page for Intuit; Back restores it from the
+  // back-forward cache still showing "Connecting…". Reset it.
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => { if (e.persisted) setConnectingKey(null); };
+    window.addEventListener('pageshow', onShow);
+    return () => window.removeEventListener('pageshow', onShow);
+  }, []);
+
   // Check for URL params (after OAuth callback)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -121,14 +129,12 @@ export default function IntegrationsPage() {
 
   async function handleConnect(intg: Integration) {
     if (intg.key === 'quickbooks') {
-      // OAuth flow - redirect
+      // OAuth starts on the server (it holds the Intuit keys and sets the CSRF
+      // state cookie) and runs in THIS window — the iPhone app is a webview
+      // where window.open popups never appear. Intuit returns to the
+      // QuickBooks page, which says how it went.
       setConnectingKey(intg.key);
-      const clientId = process.env.NEXT_PUBLIC_QUICKBOOKS_CLIENT_ID || '';
-      const redirectUri = encodeURIComponent(window.location.origin + '/api/integrations/quickbooks/callback');
-      const scope = encodeURIComponent('com.intuit.quickbooks.accounting');
-      const authUrl = `https://appcenter.intuit.com/connect/oauth2?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&state=`;
-      window.open(authUrl, '_blank', 'width=600,height=700');
-      setConnectingKey(null);
+      window.location.href = '/api/integrations/quickbooks?action=connect';
       return;
     }
 
@@ -186,19 +192,23 @@ export default function IntegrationsPage() {
   async function handleDisconnect(intg: Integration) {
     if (!(await confirmDialog({ title: 'Please confirm', message: `Disconnect ${intg.name}? This will stop all syncing.`, danger: true }))) return;
     try {
+      // QuickBooks disconnects through its own route, which revokes the token at Intuit.
       const endpoint = intg.key === 'sage300' ? '/api/integrations/sage300'
         : intg.key === 'xero' ? '/api/integrations/xero'
+        : intg.key === 'quickbooks' ? '/api/integrations/quickbooks'
         : '/api/integrations/marketplace';
-      const body = intg.key === 'sage300' || intg.key === 'xero'
+      const body = intg.key === 'sage300' || intg.key === 'xero' || intg.key === 'quickbooks'
         ? { action: 'disconnect' }
         : { provider: intg.key, settings: { status: 'disconnected' } };
 
-      await fetch(endpoint, {
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-      setNotification({ type: 'success', msg: `${intg.name} disconnected.` });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Disconnect failed');
+      setNotification({ type: data.warning ? 'error' : 'success', msg: data.message || `${intg.name} disconnected.` });
       fetchIntegrations();
     } catch {
       setNotification({ type: 'error', msg: `Failed to disconnect ${intg.name}.` });
@@ -212,29 +222,27 @@ export default function IntegrationsPage() {
       const res = await fetch('/api/integrations/quickbooks/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          direction: intg.settings?.sync_direction === 'pull' ? 'pull' : 'push',
-          entities: ['invoices', 'bills', 'customers', 'vendors'],
-        }),
+        // Push only: customers (job owners), vendors (subs), invoices (pay apps).
+        body: JSON.stringify({ entities: ['customers', 'vendors', 'invoices'] }),
       });
       const data = await res.json().catch(() => ({}));
 
       // Surface the server's honest state (e.g. "not configured" / "not
-      // connected") instead of a generic message.
+      // connected" / "reconnect") instead of a generic message.
       if (!res.ok) {
         setNotification({ type: 'error', msg: data.error || 'Sync failed. Check your QuickBooks connection.' });
         setSyncing(null);
+        fetchIntegrations();
         return;
       }
 
-      const results = (data.results || {}) as Record<string, { count: number; status: string; details?: string }>;
-      const total = Object.values(results).reduce((sum, r) => sum + (r.count || 0), 0);
-      const failed = Object.values(results).filter((r) => r.status === 'error' || r.status === 'partial');
+      const c = (data.counts || { created: 0, linked: 0, skipped: 0, failed: 0 }) as { created: number; linked: number; skipped: number; failed: number };
+      const firstFailure = ((data.results || []) as { outcome: string; label: string; message?: string }[]).find((r) => r.outcome === 'failed');
       setNotification({
-        type: failed.length ? 'error' : 'success',
-        msg: failed.length
-          ? `Synced ${total}; some records failed${failed[0]?.details ? ` (${failed[0].details})` : ''}.`
-          : `Synced ${total} record${total === 1 ? '' : 's'} with QuickBooks.`,
+        type: c.failed ? 'error' : 'success',
+        msg: c.failed
+          ? `Sent ${c.created + c.linked}; ${c.failed} failed${firstFailure ? ` (${firstFailure.label}: ${firstFailure.message})` : ''}. Details on the QuickBooks page.`
+          : `Sent ${c.created + c.linked} record${c.created + c.linked === 1 ? '' : 's'} to QuickBooks.`,
       });
       fetchIntegrations();
     } catch {
@@ -465,7 +473,8 @@ export default function IntegrationsPage() {
                         <Link
                           href="/app/integrations/quickbooks"
                           style={{
-                            flex: 1, padding: '8px 0', textAlign: 'center', borderRadius: 8,
+                            flex: 1, padding: '8px 0', textAlign: 'center', borderRadius: 8, minHeight: 44,
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                             background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, color: 'var(--on-brand)',
                             fontSize: 12, fontWeight: 700, textDecoration: 'none',
                           }}
@@ -476,7 +485,7 @@ export default function IntegrationsPage() {
                           onClick={() => handleSyncNow(intg)}
                           disabled={syncing === intg.key}
                           style={{
-                            flex: 1, padding: '8px 0', borderRadius: 8, cursor: 'pointer',
+                            flex: 1, padding: '8px 0', borderRadius: 8, cursor: 'pointer', minHeight: 44,
                             background: 'rgba(44,255,122,0.12)', border: `1px solid rgba(44,255,122,0.3)`,
                             color: GREEN, fontSize: 12, fontWeight: 700,
                             opacity: syncing === intg.key ? 0.6 : 1,
@@ -489,7 +498,7 @@ export default function IntegrationsPage() {
                     <button
                       onClick={() => handleDisconnect(intg)}
                       style={{
-                        padding: '8px 14px', borderRadius: 8, cursor: 'pointer',
+                        padding: '8px 14px', borderRadius: 8, cursor: 'pointer', minHeight: 44,
                         background: 'rgba(255,59,48,0.1)', border: `1px solid rgba(255,59,48,0.3)`,
                         color: RED, fontSize: 12, fontWeight: 600,
                       }}
@@ -503,11 +512,11 @@ export default function IntegrationsPage() {
                     disabled={connectingKey === intg.key}
                     className="btn-gold"
                     style={{
-                      flex: 1, justifyContent: 'center', padding: '9px 0', fontSize: 13,
+                      flex: 1, justifyContent: 'center', padding: '9px 0', fontSize: 13, minHeight: 44,
                       opacity: connectingKey === intg.key ? 0.6 : 1,
                     }}
                   >
-                    {connectingKey === intg.key ? 'Connecting…' : 'Connect'}
+                    {connectingKey === intg.key ? 'Connecting…' : intg.status === 'needs_reconnect' ? 'Reconnect' : 'Connect'}
                   </button>
                 )}
               </div>

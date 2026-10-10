@@ -42,7 +42,7 @@ type Market = { key: string; name: string; desc: string; state: MarketState; hre
 // 'request' opens a real support line. Integrations without a backend
 // (Slack, Teams, Autodesk) are intentionally absent — no dead cards.
 const MARKETPLACE: Market[] = [
-  { key: 'quickbooks', name: 'QuickBooks Online', desc: 'Sync invoices, bills, vendors, and customers with QuickBooks.', state: 'connect', href: '/app/integrations/quickbooks' },
+  { key: 'quickbooks', name: 'QuickBooks Online', desc: 'Send approved pay apps to QuickBooks as invoices, and your subs as vendors.', state: 'connect', href: '/app/integrations/quickbooks' },
   { key: 'storage', name: 'Cloud Storage', desc: 'Connect S3, OneDrive, SharePoint, Egnyte, Dropbox, Google Drive, or Box.', state: 'connect', href: '/app/settings/storage' },
   { key: 'zapier', name: 'Zapier', desc: 'Paste a Zapier "Catch Hook" URL as a webhook below and Saguaro events start your Zaps.', state: 'connect', href: '#webhooks' },
 ];
@@ -77,6 +77,10 @@ export default function IntegrationsHubPage() {
   const [keys, setKeys] = useState<any[]>([]);
   const [hooks, setHooks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  // QuickBooks is listed only when this server can actually connect it (the
+  // Intuit keys are set) or the company is already connected — the same rule
+  // as /app/integrations. Hidden until the marketplace says so.
+  const [qbListed, setQbListed] = useState(false);
 
   // API key create
   const [keyName, setKeyName] = useState('');
@@ -107,6 +111,16 @@ export default function IntegrationsHubPage() {
       setHooks(w.webhooks ?? []);
     } catch {
       flash('Couldn’t load integrations.', false);
+    }
+    try {
+      const res = await fetch('/api/integrations/marketplace');
+      const m = await res.json();
+      if (!res.ok) throw new Error(m.error || 'marketplace failed');
+      const qb = (m.integrations ?? []).find((i: any) => i.key === 'quickbooks');
+      setQbListed(!!qb && (qb.available || qb.connected));
+    } catch (e) {
+      console.error('[integrations-hub] marketplace', e);
+      setQbListed(false);
     }
     setLoading(false);
   }, []);
@@ -216,6 +230,7 @@ export default function IntegrationsHubPage() {
     return 'red';
   };
 
+  const market = MARKETPLACE.filter((m) => m.key !== 'quickbooks' || qbListed);
   const liveKeys = keys.filter((k) => !k.revoked_at);
   const activeHooks = hooks.filter((h) => h.active);
 
@@ -244,7 +259,7 @@ export default function IntegrationsHubPage() {
       {/* Live figures — keys and webhooks come straight from the API. */}
       {!loading && (
         <StatStrip items={[
-          {href: '/app/settings/integrations-hub', label: 'Marketplace', value: String(MARKETPLACE.length), sub: 'Live integrations' },
+          {href: '/app/settings/integrations-hub', label: 'Marketplace', value: String(market.length), sub: 'Live integrations' },
           {href: '/app/settings/integrations-hub', label: 'Active API Keys', value: String(liveKeys.length), sub: keys.length > liveKeys.length ? `${keys.length - liveKeys.length} revoked` : 'None revoked' },
           {href: '/app/settings/integrations-hub', label: 'Webhooks', value: String(hooks.length), sub: hooks.length ? `${activeHooks.length} active` : 'None configured' },
           {href: '/app/settings/integrations-hub', label: 'Events Emitted', value: String(WEBHOOK_EVENTS.length), sub: 'Subscribable event types' },
@@ -260,7 +275,7 @@ export default function IntegrationsHubPage() {
           marginBottom: 28,
         }}
       >
-        {MARKETPLACE.map((m) => (
+        {market.map((m) => (
           <SectionCard key={m.key} bodyStyle={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <IconChip size={40}><Plugs size={20} color={GOLD} weight="duotone" /></IconChip>
