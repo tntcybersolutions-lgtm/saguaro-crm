@@ -216,7 +216,7 @@ export const PLAN_ADDONS: PlanAddon[] = [
   {
     name: 'QuickBooks Sync',
     price: '$99', per: '/mo',
-    description: 'Bidirectional sync of budgets, pay apps, and change orders with QuickBooks.',
+    description: 'Approved pay applications go to QuickBooks Online as invoices to the job owner, and subcontractors as vendors — entered once, never sent twice.',
     available: 'Starter, Professional — included in Enterprise',
     mailSubject: 'QuickBooks Sync add-on',
   },
