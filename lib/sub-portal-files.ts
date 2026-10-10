@@ -11,7 +11,8 @@
  *   project-files / <tenant>/projects/<job>/sub-portal/<sub or session>/…
  *
  * The record route refuses any path outside that folder, so a portal link can
- * only ever point a compliance record at its own upload.
+ * only ever point a compliance record at its own upload. The Documents tab
+ * now uploads the same way (see "Documents tab" below).
  */
 
 export const SUB_FILES_BUCKET = 'project-files';
@@ -68,6 +69,75 @@ export function ownsPath(prefix: string, path: unknown): path is string {
   if (!path.startsWith(prefix) || path.length === prefix.length) return false;
   const rest = path.slice(prefix.length);
   return !rest.split('/').some((seg) => seg === '' || seg === '.' || seg === '..') && !/[\\\0]/.test(path);
+}
+
+/* ── Documents tab ──────────────────────────────────────────────────────────
+ * The Documents tab used to post the file itself to /api/portal/sub/documents
+ * (multipart), so the serverless request cap (~4.5 MB) refused anything bigger
+ * while the page promised 100 MB. Its bytes now take the compliance upload's
+ * road: a one-time signed URL from /api/portal/sub/documents/upload-url, a PUT
+ * straight to storage, then a small JSON call that records the path. The
+ * objects land where the multipart upload always put them — directly in the
+ * session's folder, "<upload time>-<name>".
+ */
+
+/** PDF, Excel, Word, CSV, photos and video — what the Documents tab takes. */
+export const DOCUMENT_FILE_RE = /\.(pdf|xlsx?|docx?|csv|png|jpe?g|webp|heic|mp4|mov|webm)$/i;
+export const DOCUMENT_ACCEPT = '.pdf,.xls,.xlsx,.doc,.docx,.csv,image/*,video/*';
+/** The limit the Documents tab states. The bucket itself takes more; this is the promise on screen. */
+export const DOCUMENT_MAX_MB = 100;
+export const DOCUMENT_MAX_BYTES = DOCUMENT_MAX_MB * 1024 * 1024;
+
+export function checkDocumentFileName(name: unknown): FileNameCheck {
+  const raw = typeof name === 'string' ? name.trim() : '';
+  if (!raw) return { ok: false, message: 'Choose the file to upload.' };
+  const safeName = safeFileName(raw);
+  if (!DOCUMENT_FILE_RE.test(safeName)) {
+    return { ok: false, message: 'Unsupported file type. Upload a PDF, Excel, Word or CSV file, a photo (JPG, PNG, HEIC) or a video (MP4, MOV).' };
+  }
+  return { ok: true, safeName };
+}
+
+/** "<upload time>-<name>" directly in the session's folder — where Documents uploads have always lived. */
+export function documentUploadPath(prefix: string, safeName: string, now = Date.now()): string {
+  return `${prefix}${now}-${safeName}`;
+}
+
+/**
+ * A Documents upload this session may record: directly in its own folder (not
+ * a subfolder such as compliance/), and a file type the tab takes.
+ */
+export function ownsDocumentPath(prefix: string, path: unknown): path is string {
+  if (!ownsPath(prefix, path)) return false;
+  const rest = path.slice(prefix.length);
+  return !rest.includes('/') && DOCUMENT_FILE_RE.test(rest);
+}
+
+const DOCUMENT_CONTENT_TYPES: Record<string, string> = {
+  pdf: 'application/pdf',
+  xls: 'application/vnd.ms-excel',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  doc: 'application/msword',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  csv: 'text/csv',
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  webp: 'image/webp',
+  heic: 'image/heic',
+  mp4: 'video/mp4',
+  mov: 'video/quicktime',
+  webm: 'video/webm',
+};
+
+/**
+ * The content type recorded for an upload, from its extension. The server no
+ * longer sees the bytes, and the tab sorts photos and video into the media grid
+ * by this value, so it is decided here rather than taken from the browser.
+ */
+export function documentContentType(name: string): string {
+  const ext = String(name || '').toLowerCase().split('.').pop() || '';
+  return DOCUMENT_CONTENT_TYPES[ext] || 'application/octet-stream';
 }
 
 /** 'YYYY-MM-DD' that is a real calendar day, or null for blank. Anything else is invalid. */
