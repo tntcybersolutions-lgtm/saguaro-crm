@@ -1075,10 +1075,15 @@ async function writeWalk(pw, device, session, outDir, real) {
         break;
       }
       const before = net.writes.length;
-      await page.locator(`[data-ws="${save.i}"]`).first().click({ timeout: 5000 }).catch(() => {});
+      const saveBtn = page.locator(`[data-ws="${save.i}"]`).first();
+      const inForm = await saveBtn.evaluate((e) => !!e.closest('[role="dialog"], [aria-modal="true"], form')).catch(() => false);
+      await saveBtn.click({ timeout: 5000 }).catch(() => {});
       clicked.push(save.t);
       await settle(2000);
       if (net.writes.length > before) break; // it sent something
+      // The form closed without a request (an offline save keeps it on the phone):
+      // that was the save — going round again would add a second copy.
+      if (inForm && !(await saveBtn.isVisible().catch(() => false))) break;
       // Still on a form with a different next button? go round again.
       const errs = await page.evaluate(() => [...document.querySelectorAll('[role="alert"], [aria-invalid="true"], .error, [data-error]')].map((e) => (e.innerText || e.getAttribute('aria-label') || e.getAttribute('name') || '').trim()).filter(Boolean).slice(0, 4)).catch(() => []);
       if (errs.length) { clicked.push(`(form says: ${errs.join(' / ').slice(0, 160)})`); }
@@ -1415,9 +1420,14 @@ async function writeWalk(pw, device, session, outDir, real) {
             const fc0 = net.chooser;
             await page.locator(`[data-wo="${up.i}"]`).first().click({ timeout: 4000 }).catch(() => {});
             await page.waitForTimeout(2500);
-            // A sheet may ask for the album / confirm first.
-            const go2 = page.locator('[role="dialog"]:visible button').filter({ hasText: /^\s*(upload|save|add|done)\b/i }).last();
-            if (await go2.count()) { await go2.click().catch(() => {}); await page.waitForTimeout(2500); }
+            // The Add Photos & Video sheet opens first: tap its "Choose…" picker
+            // (Take Photo as a fallback), or an upload/confirm button if that is all there is.
+            if (net.chooser === fc0) {
+              const pick = page.locator('[role="dialog"]:visible button, [aria-modal="true"]:visible button').filter({ hasText: /choose|library|from (your )?phone|take photo/i }).first();
+              const go2 = page.locator('[role="dialog"]:visible button').filter({ hasText: /^\s*(upload|save|add|done)\b/i }).last();
+              if (await pick.count()) { await pick.click().catch(() => {}); await page.waitForTimeout(4000); }
+              else if (await go2.count()) { await go2.click().catch(() => {}); await page.waitForTimeout(2500); }
+            }
             const body = await page.evaluate(() => document.body.innerText).catch(() => '');
             r.create = net.chooser > fc0 && /saved on this phone|waiting|on this phone/i.test(body) ? 'kept on the phone' : net.chooser > fc0 ? 'picked, but the screen does NOT say it is saved on the phone' : 'the file picker did not open';
           }
@@ -1437,10 +1447,14 @@ async function writeWalk(pw, device, session, outDir, real) {
         const pend = await barText();
         step('bar counts it', /saved on this phone|waiting/i.test(pend) ? `yes — "${pend.slice(0, 90)}"` : `no count (saw "${pend}")`);
         // Reload with no signal.
-        await page.reload({ waitUntil: 'domcontentloaded', timeout: 20000 }).catch((e) => step('reload offline', `failed: ${String(e.message).split('\n')[0]}`));
+        let reloadFailed = false;
+        await page.reload({ waitUntil: 'domcontentloaded', timeout: 20000 }).catch((e) => { reloadFailed = true; step('reload offline', `failed: ${String(e.message).split('\n')[0]}`); });
         await page.waitForTimeout(2500);
         const afterReload = await page.evaluate(() => document.body.innerText).catch(() => '');
-        r.persisted = tab === 'photos' ? (/waiting|on this phone/i.test(afterReload) ? 'still waiting after an offline reload' : /offline/i.test(afterReload) ? 'screen opened offline, but the waiting photo is not mentioned' : 'NOT shown offline')
+        // Playwright's WebKit refuses any navigation while offline ("internal error"),
+        // so the page on screen is still the old one — say so, don't read it as a pass.
+        r.persisted = reloadFailed ? 'NOT TESTED — the test browser cannot reload with no signal'
+          : tab === 'photos' ? (/waiting|on this phone/i.test(afterReload) ? 'still waiting after an offline reload' : /offline/i.test(afterReload) ? 'screen opened offline, but the waiting photo is not mentioned' : 'NOT shown offline')
           : afterReload.includes(marker) ? 'yes — still there after an offline reload' : /hasn't been opened on this phone/i.test(afterReload) ? 'NO — offline page instead of the saved screen' : 'NO — gone after an offline reload';
         // Back online: it must go up by itself.
         net.writes.length = 0;
@@ -1453,7 +1467,13 @@ async function writeWalk(pw, device, session, outDir, real) {
         const b = badWrite(net.writes);
         r.edit = b ? `FAILED to send (${b.m} ${b.u} → ${b.s || 'network'})` : goodWrite(net.writes) ? 'sent by itself when the signal came back' : 'NOTHING was sent after coming back online';
         await go(url);
-        const final = await page.evaluate(() => document.body.innerText).catch(() => '');
+        // The list loads after the page: give it up to 15 s to show the synced item.
+        let final = '';
+        for (let k = 0; k < 15; k++) {
+          final = await page.evaluate(() => document.body.innerText).catch(() => '');
+          if (tab === 'photos' ? !/waiting|on this phone/i.test(final) : final.includes(marker) && !/on this phone/i.test(final)) break;
+          await page.waitForTimeout(1000);
+        }
         r.fieldsBack = tab === 'photos' ? (/waiting|on this phone/i.test(final) ? 'still waiting' : 'uploaded') : final.includes(marker) && !/on this phone/i.test(final) ? 'on the server' : final.includes(marker) ? 'STILL only on the phone' : 'GONE';
         if (tab !== 'photos' && final.includes(marker)) await deleteRecord(`offline ${tab}`, url, marker, r);
       })()]); } catch (e) {
