@@ -29,12 +29,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const db = createServerClient();
 
-    const { data: pkg } = await db
+    const { data: pkg, error: pkgErr } = await db
       .from('bid_packages')
       .select('*, projects(*)')
       .eq('id', id)
       .eq('tenant_id', user.tenantId)
       .maybeSingle();
+    /* A failed read is an error, not "this package does not exist" — a 404
+       here sent the GC back to the list for what was really an outage. */
+    if (pkgErr) throw pkgErr;
     if (!pkg) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     const p = pkg as Record<string, any>;
