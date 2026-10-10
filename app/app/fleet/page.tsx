@@ -13,6 +13,7 @@ import { fleetSummary, assetHealth, expiryStatus, tripStats, STATUS_COLOR, type 
 import { Truck, Wrench, Plus, MagnifyingGlass, PencilSimple, Trash, X, Warning, MapPin, FileText, Barcode, ArrowSquareOut, CalendarBlank, FilePdf, Broadcast, Copy, Check, CurrencyDollar } from '@phosphor-icons/react';
 import { useToast } from '@/components/Toast';
 import { humanError } from '@/lib/errors';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
@@ -140,10 +141,30 @@ export default function FleetPage() {
     if (error) { console.error(error); showToast(humanError(error, 'Could not attach that document.'), 'error'); return; }
     setAddingDoc(false); setDoc({ category: 'warranty' }); load();
   };
-  const delAsset = async (id: string) => {
-    const { error } = await sb.from('fleet_assets').delete().eq('id', id);
+  /* Delete was a bare trash glyph — no label, no confirm — that hard-deleted
+     the asset and (ON DELETE CASCADE) its service history, documents and GPS
+     trail on one stray tap. It now names itself and asks first, and points at
+     Retire for an asset that should keep its history. RLS scopes the delete
+     to this tenant; .select() makes a refused/no-op delete visible. */
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const delAsset = async (asset: any) => {
+    const nRec = records.filter((r) => r.asset_id === asset.id).length;
+    const nDoc = docs.filter((d) => d.asset_id === asset.id).length;
+    const ok = await confirmDialog({
+      title: `Delete ${asset.name || 'this asset'}?`,
+      message: `This permanently removes the asset${nRec || nDoc ? ` with its ${[nRec ? `${nRec} service record${nRec === 1 ? '' : 's'}` : '', nDoc ? `${nDoc} document${nDoc === 1 ? '' : 's'}` : ''].filter(Boolean).join(' and ')}` : ''} and location history. To keep the history, Edit it and set Status to Retired instead.`,
+      confirmLabel: 'Delete Asset',
+      danger: true,
+    });
+    if (!ok) return;
+    setDeletingId(asset.id);
+    const { data, error } = await sb.from('fleet_assets').delete().eq('id', asset.id).select('id');
+    setDeletingId(null);
     if (error) { console.error(error); showToast(humanError(error, 'Could not delete that asset.'), 'error'); return; }
-    if (selId === id) setSelId(null); load();
+    if (!data || data.length === 0) { showToast('That asset could not be deleted — it may already be gone. Refreshing.', 'error'); load(); return; }
+    if (selId === asset.id) setSelId(null);
+    showToast(`${asset.name || 'Asset'} deleted.`, 'success');
+    load();
   };
 
   const exportReport = () => {
@@ -237,11 +258,20 @@ export default function FleetPage() {
             {!sel ? <SectionCard flat><PremiumEmpty icon={<Truck size={30} weight="duotone" color={GOLD} />} title="Select an asset" description="Choose a vehicle or piece of equipment from the registry to view its full record — maintenance history, documents, warnings, and last-known location." /></SectionCard> : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <SectionCard>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                     {sel.type === 'vehicle' ? <Truck size={26} weight="fill" color={GOLD} /> : <Wrench size={26} weight="fill" color={GOLD} />}
                     <div style={{ flex: 1 }}><div style={{ fontSize: 19, fontWeight: 800 }}>{sel.name}</div><div style={{ color: DIM, fontSize: 13.5 }}>{[sel.make, sel.model, sel.year].filter(Boolean).join(' · ') || sel.category}</div></div>
                     <button onClick={() => { setF({ ...sel, year: String(sel.year ?? ''), odometer: String(sel.odometer ?? '') }); setEditing(true); }} style={{ ...ghostButtonStyle, padding: '8px 13px', fontSize: 13 }} className="pmBtn"><PencilSimple size={14} />Edit</button>
-                    <button onClick={() => delAsset(sel.id)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><Trash size={17} color={RED} /></button>
+                    <button
+                      onClick={() => delAsset(sel)}
+                      disabled={deletingId === sel.id}
+                      aria-label={`Delete ${sel.name || 'this asset'}`}
+                      title="Delete this asset"
+                      className="pmBtn"
+                      style={{ ...ghostButtonStyle, minHeight: 44, padding: '8px 13px', fontSize: 13, color: RED, borderColor: 'color-mix(in srgb, var(--danger) 40%, transparent)', opacity: deletingId === sel.id ? 0.6 : 1 }}
+                    >
+                      <Trash size={14} color={RED} />{deletingId === sel.id ? 'Deleting…' : 'Delete'}
+                    </button>
                   </div>
                   <div style={{ display: 'flex', gap: 18, marginTop: 12, flexWrap: 'wrap', fontSize: 13 }}>
                     {[['VIN', sel.vin], ['Plate', sel.license_plate], ['S/N', sel.serial_number], ['Odometer', sel.odometer ? `${Math.round(sel.odometer).toLocaleString()} ${sel.odometer_unit || 'mi'}` : null], ['Status', STATUS_LABEL[sel.status] || sel.status], ['Services', selRecords.length ? `${selRecords.length} logged` : null], ['Lifetime Maint.', selRecords.some((r) => r.cost_cents) ? usd(selRecords.reduce((s, r) => s + (Number(r.cost_cents) || 0), 0)) : null], ['Docs', selDocs.length ? `${selDocs.length} on file` : null], ['Last Seen', ago(sel.last_location_at)]].filter((x) => x[1]).map(([k, v]) => <div key={k as string}><div style={{ color: DIM, fontSize: 11 }}>{k}</div><div style={{ fontWeight: 600 }}>{v}</div></div>)}
