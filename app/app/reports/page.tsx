@@ -460,11 +460,13 @@ export default function ReportsPage() {
             {rd && <span className="rpMuted" style={{ fontSize: 'var(--fs-xs)' }}>{rd.from} to {rd.to} <AutoChip /></span>}
           </div>
 
-          {/* Quick suggestion chips */}
+          {/* Quick suggestion chips. They stay live while a report is building:
+              picking another one replaces it (runSageReport closes the running
+              stream). Disabled, a second tap did nothing for the whole run. */}
           <div className="rpChips">
             <span className="rpChipLabel"><Sparkle size={13} weight="bold" /> Try</span>
             {SUGGESTION_CHIPS.map(chip => (
-              <button key={chip} type="button" className="rpChip" onClick={() => handleChipClick(chip)} disabled={busy}>{chip}</button>
+              <button key={chip} type="button" className="rpChip" onClick={() => handleChipClick(chip)}>{chip}</button>
             ))}
           </div>
         </Card>
@@ -535,7 +537,7 @@ export default function ReportsPage() {
                 <Card title={pageState === 'results' ? 'Run Another Report' : 'Standard Reports'} subtitle="One tap each — Sage runs the report with the project and period above.">
                   <div className="rpGrid">
                     {STANDARD_REPORTS.map(r => (
-                      <button key={r.id} type="button" className="rpCard" onClick={() => handleCardClick(r.query)} disabled={busy}>
+                      <button key={r.id} type="button" className="rpCard" onClick={() => handleCardClick(r.query)}>
                         <div className="rpCardIcon"><r.icon size={18} /></div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div className="rpCardTitle">{r.title}</div>

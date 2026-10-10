@@ -63,6 +63,32 @@ const labelS: React.CSSProperties = { fontSize: 11, color: 'var(--text-tertiary)
 const tableHeaderS: React.CSSProperties = { padding: '10px 14px', fontSize: 11, fontWeight: 700, color: 'var(--text-tertiary)', textAlign: 'left', borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' };
 const tableCellS: React.CSSProperties = { padding: '10px 14px', fontSize: 13, color: TEXT, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)`, whiteSpace: 'nowrap' };
 
+/* Escape closes the open dialog — only the most recently opened one (a
+   stack), so with the question editor open over the template builder, Escape
+   closes just the question editor. The handler reads the latest onClose from a
+   ref, so re-renders don't reorder the stack. */
+const escStack: Array<() => void> = [];
+function useEscapeToClose(onClose: () => void, enabled = true) {
+  const latest = React.useRef(onClose);
+  latest.current = onClose;
+  useEffect(() => {
+    if (!enabled) return;
+    const entry = () => latest.current();
+    escStack.push(entry);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || escStack[escStack.length - 1] !== entry) return;
+      e.preventDefault();
+      entry();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      const i = escStack.lastIndexOf(entry);
+      if (i >= 0) escStack.splice(i, 1);
+    };
+  }, [enabled]);
+}
+
 /* ─── Small Components ─── */
 function StatusBadge({ status }: { status: string }) {
   return <span style={chipS(STATUS_COLORS[status] || DIM, STATUS_COLORS[status] || DIM)}>{STATUS_LABELS[status] || status}</span>;
@@ -455,6 +481,7 @@ export default function PrequalificationPage() {
   const detailTemplate = detailSub ? templates.find(t => t.id === detailSub.template_id) : null;
 
   /* ═══════════════════════════ RENDER ═══════════════════════════ */
+  useEscapeToClose(() => setShowDetail(null), !!showDetail);
   return (
     <>
     <PremiumSurface maxWidth={2200}>
@@ -856,7 +883,7 @@ export default function PrequalificationPage() {
       {/* ════════ DETAIL MODAL ════════ */}
       {showDetail && detailSub && (
         <div style={modalOverlay} onClick={() => setShowDetail(null)}>
-          <div style={{ ...modalBox, maxWidth: 880 }} onClick={e => e.stopPropagation()}>
+          <div role="dialog" aria-modal="true" aria-label={`Prequalification — ${detailSub.sub_name}`} style={{ ...modalBox, maxWidth: 880 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
               <div>
                 <h2 style={{ fontSize: 22, fontWeight: 800, color: TEXT, margin: 0 }}>{detailSub.sub_name}</h2>
@@ -864,7 +891,7 @@ export default function PrequalificationPage() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <StatusBadge status={detailSub.status} />
-                <button style={{ background: 'none', border: 'none', color: DIM, fontSize: 22, cursor: 'pointer' }} onClick={() => setShowDetail(null)}><X size={20} weight="regular" color={DIM} /></button>
+                <button type="button" aria-label="Close" style={{ background: 'none', border: 'none', color: DIM, fontSize: 22, cursor: 'pointer', minWidth: 44, minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setShowDetail(null)}><X size={20} weight="regular" color={DIM} /></button>
               </div>
             </div>
 
@@ -1002,6 +1029,8 @@ function TemplateBuilderModal({ initial, onSave, onClose }: { initial: Template 
   const [showAddQ, setShowAddQ] = useState(false);
   const [editQIdx, setEditQIdx] = useState<number | null>(null);
   const [err, setErr] = useState('');
+  const builderTitleId = React.useId();
+  useEscapeToClose(onClose);
 
   const addOrUpdateQuestion = (q: Question) => {
     if (editQIdx !== null) {
@@ -1040,9 +1069,11 @@ function TemplateBuilderModal({ initial, onSave, onClose }: { initial: Template 
 
   return (
     <div style={modalOverlay} onClick={onClose}>
-      <div style={{ ...modalBox, maxWidth: 800 }} onClick={e => e.stopPropagation()}>
+      {/* A dialog to keyboards, screen readers and the phone: it was a bare
+          overlay, so nothing knew it was open over the page. */}
+      <div role="dialog" aria-modal="true" aria-labelledby={builderTitleId} style={{ ...modalBox, maxWidth: 800 }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: GOLD }}>{initial ? 'Edit Template' : 'New Prequal Template'}</h2>
+          <h2 id={builderTitleId} style={{ margin: 0, fontSize: 20, fontWeight: 800, color: GOLD }}>{initial ? 'Edit Template' : 'New Prequal Template'}</h2>
           <button aria-label="Close" style={{ background: 'none', border: 'none', color: DIM, fontSize: 22, cursor: 'pointer', minWidth: 44, minHeight: 44 }} onClick={onClose}><X size={20} weight="regular" color={DIM} /></button>
         </div>
 
@@ -1120,6 +1151,8 @@ function QuestionEditor({ initial, onSave, onClose }: { initial: Question | null
   const [points, setPoints] = useState(initial?.points || 10);
   const [options, setOptions] = useState(initial?.options?.join(', ') || '');
   const [err, setErr] = useState('');
+  const qTitleId = React.useId();
+  useEscapeToClose(onClose);
 
   const handleSave = () => {
     if (!label.trim()) { setErr('Question text is required.'); return; }
@@ -1134,8 +1167,8 @@ function QuestionEditor({ initial, onSave, onClose }: { initial: Question | null
 
   return (
     <div style={modalOverlay} onClick={onClose}>
-      <div style={{ ...modalBox, maxWidth: 500 }} onClick={e => e.stopPropagation()}>
-        <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, color: GOLD }}>{initial ? 'Edit Question' : 'Add Question'}</h3>
+      <div role="dialog" aria-modal="true" aria-labelledby={qTitleId} style={{ ...modalBox, maxWidth: 500 }} onClick={e => e.stopPropagation()}>
+        <h3 id={qTitleId} style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, color: GOLD }}>{initial ? 'Edit Question' : 'Add Question'}</h3>
         {err && <div role="alert" style={{ background: `color-mix(in srgb, ${RED} 13%, transparent)`, color: RED, padding: '6px 12px', borderRadius: 6, fontSize: 12, marginBottom: 10 }}>{err}</div>}
 
         <div style={{ marginBottom: 12 }}>
