@@ -23,6 +23,7 @@ on:
 # write: screens-capture commits the screenshots it takes back to this branch.
 permissions:
   contents: write
+  statuses: read
 
 concurrency:
   group: testflight-ops
@@ -56,19 +57,23 @@ jobs:
         env:
           BCRYPT_DIR: /tmp/bc
         run: node tools/asc.mjs "$MODE"
-      # A proof run started right after a merge used to shoot the OLD build:
-      # Vercel takes ~3 minutes to put a new main live. Give the newest main
-      # commit 5 minutes before the first shot.
+      # A proof run or walk started right after a merge used to test the OLD
+      # build. Wait until Vercel reports the newest main commit deployed (its
+      # "Vercel" commit status), up to 20 minutes.
       - name: Wait for the newest main to be live
-        if: env.MODE == 'screens-proof'
+        if: env.MODE == 'screens-proof' || env.MODE == 'walk'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          d=$(curl -fsS -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/${{ github.repository }}/commits/main" \
-            | node -e 'let s="";process.stdin.on("data",c=>s+=c).on("end",()=>console.log(JSON.parse(s).commit.committer.date))')
-          age=$(( $(date +%s) - $(date -d "$d" +%s) ))
-          echo "newest main: $d (${age}s ago)"
-          if [ "$age" -lt 300 ]; then sleep $((300 - age)); fi
+          api="https://api.github.com/repos/${{ github.repository }}"
+          for i in $(seq 1 80); do
+            st=$(curl -fsS -H "Authorization: Bearer $GH_TOKEN" "$api/commits/main/status" \
+              | node -e 'let s="";process.stdin.on("data",c=>s+=c).on("end",()=>{const j=JSON.parse(s);const v=(j.statuses||[]).find(x=>x.context==="Vercel");console.log(j.sha.slice(0,8)+" "+(v?v.state:"none"))})')
+            echo "main $st"
+            case "$st" in *" success") sleep 30; exit 0;; *" failure"|*" error") echo "main failed to deploy"; exit 1;; esac
+            sleep 15
+          done
+          echo "main not live after 20 minutes"; exit 1
       # screens-capture: real screens from the live site at App Store sizes.
       - name: Install Playwright
         if: env.MODE == 'screens-capture' || env.MODE == 'screens-proof' || env.MODE == 'walk'
