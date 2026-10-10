@@ -2,7 +2,7 @@
  * Leave entries on the web Time Clock: validation, the insert row, reading hours back.
  * Run: npx -y tsx lib/leave-entry.sanity.test.ts   (exit 0 = every assertion held)
  */
-import { checkLeave, isLeaveEntry, leaveHoursOf, leaveInsertRow, NON_WORKED_ENTRY_TYPES } from './leave-entry';
+import { checkLeave, isLeaveEntry, leaveHoursOf, leaveInsertRow, leaveOf, NON_WORKED_ENTRY_TYPES } from './leave-entry';
 
 let failed = 0;
 function check(name: string, cond: boolean, detail = '') {
@@ -61,6 +61,24 @@ check('regular is worked', !isLeaveEntry('regular'));
 check('overtime is worked', !isLeaveEntry('overtime'));
 check('missing type is worked', !isLeaveEntry(null) && !isLeaveEntry(''));
 check('every non-worked type is leave', NON_WORKED_ENTRY_TYPES.every((t) => isLeaveEntry(t)));
+
+// leaveOf — the timesheet approval list and the WH-347 import
+const pto = leaveOf({ entry_type: 'pto', hours_worked: 8, total_hours: 0 });
+check('PTO row → label + hours_worked', pto?.label === 'PTO' && pto.hours === 8 && pto.type === 'pto');
+const sick = leaveOf({ entry_type: ' Sick ', hours_worked: '4.5' });
+check('Sick (any case / spacing) → Sick 4.5', sick?.label === 'Sick' && sick.hours === 4.5);
+check('leave with no hours recorded → 0, still leave', leaveOf({ entry_type: 'holiday', hours_worked: null, total_hours: 0 })?.hours === 0);
+check('regular shift → null', leaveOf({ entry_type: 'regular', hours_worked: 8 }) === null);
+check('overtime shift → null', leaveOf({ entry_type: 'overtime' }) === null);
+check('missing type → null (worked)', leaveOf({ hours_worked: 8 }) === null);
+check('unknown type is not dropped as leave', leaveOf({ entry_type: 'manual', hours_worked: 8 }) === null);
+check('every non-worked type has a leaveOf', NON_WORKED_ENTRY_TYPES.every((t) => leaveOf({ entry_type: t }) !== null));
+const week = [
+  { entry_type: 'regular', regular_hrs: 8 },
+  { entry_type: 'pto', hours_worked: 8, regular_hrs: 0 },
+  { entry_type: 'regular', regular_hrs: 6 },
+];
+check('WH-347 import keeps only worked rows', week.filter((t) => !leaveOf(t)).length === 2);
 
 if (failed) { console.error(`\n${failed} assertion(s) failed`); process.exit(1); }
 console.log('\nall leave entry assertions held');

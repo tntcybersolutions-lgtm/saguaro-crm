@@ -6,6 +6,7 @@ import { XCircle, FileText, ShieldCheck, CurrencyDollar, Clock, Wallet, Calendar
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, StatStrip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
 import { SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
+import { leaveOf } from '@/lib/leave-entry';
 
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)',GREEN='var(--success)',RED='var(--danger)';
 const fmt = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -235,11 +236,16 @@ export default function PayrollPage() {
 
   // Field-time rollup for the selected week: time_entries whose work_date
   // falls in the 7 days ending on the Week Ending Date, per-employee.
+  // Worked shifts only: a PTO / sick row (lib/leave-entry) is filed on the
+  // job's timesheet with 0 regular / OT hours, and certified payroll is hours
+  // worked on the job — importing it added a 0-hour WH-347 line for someone
+  // who was on leave.
   const weekEntries = React.useMemo(() => {
     if (!weekEndingDate) return [] as any[];
     const end = new Date(weekEndingDate + 'T00:00:00');
     const start = new Date(end.getTime() - 6 * 86400000);
     return timeEntries.filter((t: any) => {
+      if (leaveOf(t)) return false;
       if (!t.date) return false;
       const d = new Date(String(t.date).slice(0, 10) + 'T00:00:00');
       return d >= start && d <= end;

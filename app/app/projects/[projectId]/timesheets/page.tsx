@@ -35,6 +35,10 @@ interface TimeEntry {
   classification: string;
   status: string;
   project_id: string;
+  /** "PTO" / "Sick" … on a leave row (its regular / OT are 0), else null. */
+  leave_label?: string | null;
+  /** Leave hours (hours_worked) on a leave row, else null. */
+  leave_hrs?: number | null;
 }
 
 type WeekFilter = 'current' | 'last' | 'all';
@@ -354,10 +358,19 @@ export default function TimesheetsPage() {
             rows={filtered.map(e => [
               <span key="emp" style={{ fontWeight: 600 }}>{e.employee}</span>,
               <span key="dt" style={{ color: T.muted, whiteSpace: 'nowrap' }}>{e.date}</span>,
-              <span key="rh" style={{ color: T.white }}>{e.regular_hrs}</span>,
-              <span key="oh" style={{ color: e.ot_hrs > 0 ? T.amber : T.muted }}>{e.ot_hrs}</span>,
-              <span key="th" style={{ fontWeight: 700, color: T.gold }}>{(e.regular_hrs + e.ot_hrs).toFixed(1)}h</span>,
-              <span key="cl" style={{ color: T.muted }}>{e.classification}</span>,
+              ...(e.leave_label ? [
+                /* A PTO / sick row: no worked hours. Show its leave hours and what kind of
+                   leave it is — it used to read as an unlabeled 0-hour shift. */
+                <span key="rh" style={{ color: T.muted }}>—</span>,
+                <span key="oh" style={{ color: T.muted }}>—</span>,
+                <span key="th" style={{ fontWeight: 700, color: T.white, whiteSpace: 'nowrap' }} title="Leave hours — not worked time, posts nothing to job cost">{Number(e.leave_hrs ?? 0).toFixed(1)}h</span>,
+                <Badge key="cl" label={`${e.leave_label} · leave`} color="blue" />,
+              ] : [
+                <span key="rh" style={{ color: T.white }}>{e.regular_hrs}</span>,
+                <span key="oh" style={{ color: e.ot_hrs > 0 ? T.amber : T.muted }}>{e.ot_hrs}</span>,
+                <span key="th" style={{ fontWeight: 700, color: T.gold }}>{(e.regular_hrs + e.ot_hrs).toFixed(1)}h</span>,
+                <span key="cl" style={{ color: T.muted }}>{e.classification}</span>,
+              ]),
               <StatusPill key="st" module="timesheets" status={e.status} size="sm" />,
               <div key="act" style={{ display: 'flex', gap: 6 }}>
                 {e.status === 'pending' && (
