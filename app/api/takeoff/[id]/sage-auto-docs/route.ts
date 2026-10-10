@@ -31,6 +31,7 @@ import { logActivity, money } from '@/lib/activity';
 import { laborAllocation, lineDirectCost } from '@/lib/takeoff-line-cost';
 import { resolveTenantCompany } from '@/lib/tenant-company';
 import { normalisePhase } from '@/lib/project-phase';
+import { addDays, monthOf, requestDay } from '@/lib/time-zone';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -40,16 +41,11 @@ export const maxDuration = 120;
 const fmt$ = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
-function addDays(d: number): string {
-  return new Date(Date.now() + d * 86_400_000).toISOString().split('T')[0];
-}
-
-/** Last day of the current billing month (YYYY-MM-DD). A pay app covers ONE
- *  billing period — this used to default to today + 365 days. */
-function endOfThisMonth(): string {
-  const now = new Date();
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).toISOString().split('T')[0];
-}
+/* Bid due dates and the pay-app period count from the company's day (device,
+   else company zone — lib/time-zone), computed once per request as `today`.
+   The UTC day was tomorrow by 7 PM in Iowa, and on the last evening of a month
+   the "current" billing month was already next month's. A pay app covers ONE
+   billing period: today through the last day of today's month. */
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -91,6 +87,13 @@ export async function GET(
   const { data: owned } = await supabase
     .from('takeoffs').select('id').eq('id', takeoffId).eq('tenant_id', user.tenantId).single();
   if (!owned) return new Response('Takeoff not found', { status: 404 });
+  let today: string;
+  try {
+    ({ today } = await requestDay(req.headers, supabase, user.tenantId, 'takeoff/sage-auto-docs'));
+  } catch (e) {
+    console.error('[takeoff/sage-auto-docs] time zone read failed', e);
+    return new Response("Couldn't read your company's time zone — try again.", { status: 500 });
+  }
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -365,7 +368,7 @@ Rules:
             || `Submit itemized bid with material specifications and proposed construction schedule. All substitutions must be approved 7 days prior to bid date.`;
           const requiresBond  = ai?.bond ?? (total > 100_000);
           // Larger packages get 21-day due date, smaller get 14
-          const dueDate       = addDays(total > 250_000 ? 21 : 14);
+          const dueDate       = addDays(today, total > 250_000 ? 21 : 14);
           const uniqueCsiCodes = [...new Set(items.map(i => i.csi_code))];
           const insGl   = ai?.ins_gl   ?? ((['03','05','07','22','23','26'].includes(div)) ? 2_000_000 : 1_000_000);
           const insAuto = ai?.ins_auto ?? 1_000_000;
@@ -465,7 +468,7 @@ Rules:
                 gcAddress:            company.address,
                 gcLicense:            company.license || undefined,
                 tradeName:            CSI_DIVISIONS[div]?.name || `Division ${div}`,
-                dueDate:              addDays(pkg.total > 250_000 ? 21 : 14),
+                dueDate:              addDays(today, pkg.total > 250_000 ? 21 : 14),
                 scopeNarrative:       ai?.scope || `${pkg.name} scope of work for ${projectName}.`,
                 csiSections:          items.map(i => `${i.csi_code} — ${i.description}`).slice(0, 20),
                 lineItems: items.map(i => ({
@@ -598,8 +601,8 @@ Rules:
                 tenant_id:                   tenantId,
                 project_id:                  takeoff.project_id,
                 app_number:                  appNumber,
-                period_from:                 new Date().toISOString().split('T')[0],
-                period_to:                   endOfThisMonth(),
+                period_from:                 today,
+                period_to:                   monthOf(today).last,
                 status:                      'draft',
                 original_contract_sum:       contractSum,
                 contract_sum:                contractSum,

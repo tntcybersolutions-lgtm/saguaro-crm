@@ -1,4 +1,5 @@
 import type { createServerClient } from '@/lib/supabase-server';
+import { dayIn, requestDay } from '@/lib/time-zone';
 
 type Db = ReturnType<typeof createServerClient>;
 
@@ -12,9 +13,14 @@ type Db = ReturnType<typeof createServerClient>;
  *
  * Accepts "2026-10-02", "2026-10-02T00:00:00+00:00", or a Date-parsable string.
  * Anything unreadable becomes null (or today when `defaultToday`), never a
- * value Postgres rejects with a 500.
+ * value Postgres rejects with a 500. "Today" is the day in `timeZone` — the
+ * uploader's (device, else company: lib/time-zone) — never the server's UTC
+ * day, which dated every evening upload in Iowa tomorrow.
  */
-export function revisionDateValue(input: unknown, opts: { defaultToday?: boolean } = {}): string | null {
+export function revisionDateValue(
+  input: unknown,
+  opts: { defaultToday?: false } | { defaultToday: true; timeZone: string } = {},
+): string | null {
   const s = typeof input === 'string' ? input.trim() : '';
   let day = '';
   const m = s.match(/^(\d{4}-\d{2}-\d{2})/);
@@ -23,7 +29,7 @@ export function revisionDateValue(input: unknown, opts: { defaultToday?: boolean
     const d = new Date(s);
     if (!Number.isNaN(d.getTime())) day = d.toISOString().slice(0, 10);
   }
-  if (!day && opts.defaultToday) day = new Date().toISOString().slice(0, 10);
+  if (!day && opts.defaultToday) day = dayIn(opts.timeZone);
   if (!day) return null;
   const check = new Date(`${day}T12:00:00.000Z`);
   return Number.isNaN(check.getTime()) ? null : `${day}T12:00:00.000Z`;
@@ -82,6 +88,8 @@ export async function registerTakeoffPlanDrawings(
     bucket: string;
     sources: PlanSource[];
     takeoffName?: string | null;
+    /** The request's headers — the sheets are dated the uploader's day (device, else company zone). */
+    headers?: { get(name: string): string | null } | null;
   },
 ): Promise<{ created: number; existing: number; error?: string }> {
   const { tenantId, projectId, bucket, sources, takeoffName } = args;
@@ -99,7 +107,8 @@ export async function registerTakeoffPlanDrawings(
       .in('url', withUrls.map((s) => s.url));
     if (readErr) throw readErr;
     const have = new Set(((already || []) as { url: string }[]).map((r) => r.url));
-    const today = revisionDateValue(null, { defaultToday: true });
+    const { zone } = await requestDay(args.headers, db, tenantId, 'drawing-register');
+    const today = revisionDateValue(null, { defaultToday: true, timeZone: zone });
     const rows = withUrls
       .filter((s) => !have.has(s.url))
       .map((s) => {

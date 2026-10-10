@@ -4,9 +4,11 @@ import { requirePermission } from '@/lib/permissions';
 import { hasFeature } from '@/lib/entitlements-server';
 
 import { apiError } from '@/lib/api-error';
+import { companyTimeZone, dayIn, requestDay } from '@/lib/time-zone';
 // Map a US state (name or 2-letter code) to its primary IANA timezone so the
-// "before 4 PM local" deadline is judged in each site's own time. Falls back to
-// Arizona (Rob's home market) for unknown/blank states.
+// "before 4 PM local" deadline is judged in each site's own time. A site with
+// no (or an unknown) state is judged in the company's own zone (tenants.time_zone,
+// else the viewer's device) — never a built-in home market.
 const STATE_TZ: Record<string, string> = {
   az: 'America/Phoenix', ca: 'America/Los_Angeles', wa: 'America/Los_Angeles', or: 'America/Los_Angeles', nv: 'America/Los_Angeles',
   ut: 'America/Denver', co: 'America/Denver', nm: 'America/Denver', wy: 'America/Denver', mt: 'America/Denver', id: 'America/Denver',
@@ -23,11 +25,11 @@ const STATE_NAME_TO_CODE: Record<string, string> = {
   texas: 'tx', illinois: 'il', missouri: 'mo', minnesota: 'mn', florida: 'fl', georgia: 'ga', 'new york': 'ny', ohio: 'oh',
   michigan: 'mi', 'north carolina': 'nc', virginia: 'va', pennsylvania: 'pa', tennessee: 'tn', 'new jersey': 'nj', massachusetts: 'ma',
 };
-function tzForState(state: any): string {
+function tzForState(state: any, fallback: string): string {
   const s = String(state || '').trim().toLowerCase();
-  if (!s) return 'America/Phoenix';
+  if (!s) return fallback;
   const code = s.length === 2 ? s : (STATE_NAME_TO_CODE[s] || s);
-  return STATE_TZ[code] || 'America/Phoenix';
+  return STATE_TZ[code] || fallback;
 }
 
 /**
@@ -41,9 +43,11 @@ export async function GET(req: NextRequest) {
     if (!(await hasFeature(user.tenantId, 'command_center')))
       return NextResponse.json({ logs: [], todayByProject: {}, gated: true }, { status: 403 });
 
-    const today = new Date().toISOString().slice(0, 10);
-    const since = new Date(Date.now() - 21 * 86400000).toISOString().slice(0, 10);
+    const since = new Date(Date.now() - 21 * 86400000).toISOString().slice(0, 10); // a 3-week read window, not a day boundary
     const db = createServerClient();
+    // A site with no state is judged in the company's zone, else the viewer's device zone (UTC, logged, only if neither is known).
+    const fallbackZone = (await companyTimeZone(db, user.tenantId))
+      ?? (await requestDay(req.headers, db, null, 'franchise/daily-logs')).zone;
     const { data: rows, error } = await db.from('daily_logs').select('*')
       .eq('tenant_id', user.tenantId).gte('log_date', since)
       .or('deleted_at.is.null')
@@ -57,16 +61,23 @@ export async function GET(req: NextRequest) {
       pmap = Object.fromEntries((projs || []).map((p: any) => [p.id, p]));
     }
     // Compliance: reported-today + whether it beat the 4 PM *local* deadline, using
-    // each site's timezone (derived from its US state; falls back to Arizona time).
+    // each site's timezone (derived from its US state; else the company's zone) — and
+    // "today" is each site's own day, not the server's UTC day.
     const hourInTz = (isoTs: string, tz: string): number | null => {
       try { return Number(new Intl.DateTimeFormat('en-US', { hour: 'numeric', hour12: false, timeZone: tz }).format(new Date(isoTs))); }
       catch { return null; }
     };
-    const tzForProject = (pid: string): string => tzForState(pmap[pid]?.state);
+    const tzForProject = (pid: string): string => tzForState(pmap[pid]?.state, fallbackZone);
+    const siteToday = new Map<string, string>();
+    const todayAt = (pid: string): string => {
+      let d = siteToday.get(pid);
+      if (!d) { d = dayIn(tzForProject(pid)); siteToday.set(pid, d); }
+      return d;
+    };
     const todayByProject: Record<string, boolean> = {};
     const lateByProject: Record<string, boolean> = {};
     (rows || []).forEach((r: any) => {
-      if (String(r.log_date) === today) {
+      if (String(r.log_date) === todayAt(r.project_id)) {
         todayByProject[r.project_id] = true;
         if (r.submitted_at) { const h = hourInTz(r.submitted_at, tzForProject(r.project_id)); if (h != null && h >= 16) lateByProject[r.project_id] = true; }
       }
@@ -103,7 +114,7 @@ export async function POST(req: NextRequest) {
     const row: Record<string, any> = {
       tenant_id: user.tenantId,
       project_id: body.project_id,
-      log_date: body.log_date || new Date().toISOString().slice(0, 10),
+      log_date: body.log_date || (await requestDay(req.headers, db, user.tenantId, 'franchise/daily-logs')).today,
       superintendent_name: s(body.superintendent_name, 160),
       superintendent: s(body.superintendent_name, 160),
       manpower_count: body.manpower_count != null && body.manpower_count !== '' ? parseInt(body.manpower_count, 10) : null,

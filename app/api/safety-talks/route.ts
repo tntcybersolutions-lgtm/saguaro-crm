@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import type { Database } from '@/lib/database.types';
 import { apiError } from '@/lib/api-error';
+import { requestDay } from '@/lib/time-zone';
 
 export const dynamic = 'force-dynamic';
 
@@ -111,7 +112,7 @@ export async function POST(req: NextRequest) {
       tenant_id: user.tenantId,
       project_id: body.projectId || body.project_id || null,
       topic: body.title || 'Safety Talk',
-      talk_date: new Date().toISOString().slice(0, 10),
+      talk_date: (await requestDay(req.headers, db, user.tenantId, 'safety-talks')).today,
       attendee_count: attendees.length,
       ai_generated_content: JSON.stringify(talkContent),
       signatures: attendees,

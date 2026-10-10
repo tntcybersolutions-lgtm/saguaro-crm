@@ -19,6 +19,7 @@ import {
   resolveBrandingValues,
 } from '@/lib/document-templates/exec-report-generator';
 import { apiError } from '@/lib/api-error';
+import { requestDay } from '@/lib/time-zone';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -71,6 +72,7 @@ async function resolveReport(
   row: Record<string, unknown>,
   td: Record<string, unknown>,
   title: string,
+  timeZone: string,
 ): Promise<ResolvedReport | null> {
   const reportTypeScalar = typeof row.report_type === 'string' ? row.report_type : '';
   const cfg = (td.config && typeof td.config === 'object') ? (td.config as Record<string, unknown>) : td;
@@ -129,7 +131,7 @@ async function resolveReport(
     const projectId = typeof td.projectId === 'string'
       ? td.projectId
       : (typeof cfg.projectId === 'string' ? (cfg.projectId as string) : null);
-    const gen = await generateReportData(db as never, tenantId, reportType, projectId);
+    const gen = await generateReportData(db as never, tenantId, reportType, projectId, { timeZone });
     // generateReportData returns positional, ALREADY-FORMATTED string cells (its
     // documented contract). Re-key into synthetic keys so the shared builders can
     // address each cell, and keep every column as 'text' — re-typing pre-formatted
@@ -181,7 +183,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     // Resolve the saved definition to REAL, tenant-scoped rows.
     let resolved: ResolvedReport | null;
     try {
-      resolved = await resolveReport(supabase, user.tenantId, row as Record<string, unknown>, td, title);
+      const { zone } = await requestDay(req.headers, supabase, user.tenantId, 'reports/export');
+      resolved = await resolveReport(supabase, user.tenantId, row as Record<string, unknown>, td, title, zone);
     } catch (e) {
       if (e instanceof ReportRunError) {
         return apiError('reports/id/export', e);
