@@ -4,7 +4,7 @@ import { signUrl } from '@/lib/storage-signing';
 import { checkRateLimit, getClientIP } from '@/lib/rate-limit';
 import { tryWrite } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
-import { assembleJacket } from '@/lib/bid-jacket';
+import { assembleJacket, forBidder } from '@/lib/bid-jacket';
 
 /**
  * GET /api/bid-packages/portal/[token] — the bidder's jacket.
@@ -141,7 +141,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
     }
 
     return NextResponse.json({
-      ...jacket,
+      /* The bidder's copy: no competitor counts, no GC budget, no GC checklist. */
+      ...forBidder(jacket),
       invite: {
         id: inv.id,
         company: inv.company_name || inv.sub_name || null,
