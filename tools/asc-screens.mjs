@@ -598,7 +598,8 @@ async function walk() {
           const label = (el.getAttribute('aria-label') || el.innerText || el.getAttribute('title') || el.getAttribute('name') || el.getAttribute('placeholder') || el.tagName).replace(/\s+/g, ' ').trim().slice(0, 70);
           const chrome = !!el.closest('header, nav, aside, footer, [class*="bottom-nav"], [class*="BottomNav"], [class*="topbar"], [class*="TopBar"], [class*="sidebar"], [class*="Sidebar"]');
           el.setAttribute('data-walk', String(i));
-          out.push({ i, label, tag: el.tagName.toLowerCase(), href: el.getAttribute('href'), disabled: el.disabled || el.getAttribute('aria-disabled') === 'true', chrome, target: el.getAttribute('target'), html: el.outerHTML.slice(0, 160) });
+          out.push({ i, label, tag: el.tagName.toLowerCase(), href: el.getAttribute('href'), disabled: el.disabled || el.getAttribute('aria-disabled') === 'true', chrome,
+            selected: (el.getAttribute('role') === 'tab' && el.getAttribute('aria-selected') === 'true') || el.getAttribute('aria-current') === 'page', target: el.getAttribute('target'), html: el.outerHTML.slice(0, 160) });
           i++;
         }
         return out;
@@ -609,7 +610,7 @@ async function walk() {
         if (tapped >= 70) break;
         const key = `${c.label}|${c.href || ''}`;
         if (c.chrome) { if (chromeSeen.has(key)) continue; chromeSeen.add(key); }
-        if (c.disabled) continue;
+        if (c.disabled || c.selected) continue; // the tab you're already on does nothing — by design
         if (c.href && /^(tel:|mailto:|sms:|https?:\/\/(?!www\.saguarocontrol\.net))/.test(c.href)) continue;
         if (WALK_DENY.test(c.label)) { res.notTapped.push(c.label); continue; }
         tapped++;
@@ -1382,19 +1383,23 @@ async function writeWalk(pw, device, session, outDir, real) {
   // a punch item and a photo, reload with no signal, come back, and check each
   // one reached the server. The offline bar must say so both ways.
   if (jobId) {
-    const barText = () => page.evaluate(() => document.querySelector('.offb')?.innerText?.replace(/\s+/g, ' ').trim() || '').catch(() => '');
+    const quick = (p, ms = 8000) => Promise.race([p, new Promise((res) => setTimeout(() => res(undefined), ms))]);
+    const barText = () => quick(page.evaluate(() => document.querySelector('.offb')?.innerText?.replace(/\s+/g, ' ').trim() || '').catch(() => ''), 5000).then((t) => t || '');
     for (const [tab, what] of [['daily-logs', 'daily log'], ['punch-list', 'punch item'], ['photos', 'photo']]) {
       const r = { screen: `OFFLINE · projects/:id/${tab}`, add: `${what} with no signal`, errors: [], actions: [] };
       out.push(r);
       const marker = `ZZ AUDIT offline ${what} ${stamp}`;
-      const step = (label, result) => r.actions.push({ label, result });
-      try {
+      const step = (label, result) => { r.actions.push({ label, result }); console.log(`write-walk offline ${tab}: ${label} — ${String(result).slice(0, 100)}`); };
+      // Nothing in here may hang the walk: the whole screen gets 4 minutes.
+      let timer = 0;
+      const limit = new Promise((_, rej) => { timer = setTimeout(() => rej(new Error('airplane test took over 4 minutes on this screen')), 4 * 60 * 1000); });
+      try { await Promise.race([limit, (async () => {
         const url = jobUrl(tab);
         await go(url);
         // Let the app's worker take over and save this screen (it registers on load).
-        await page.evaluate(() => navigator.serviceWorker && Promise.race([navigator.serviceWorker.ready, new Promise((x) => setTimeout(x, 8000))])).catch(() => {});
+        await quick(page.evaluate(() => navigator.serviceWorker && Promise.race([navigator.serviceWorker.ready.then(() => true), new Promise((x) => setTimeout(() => x(false), 8000))])).catch(() => {}), 10000);
         await go(url);
-        const sw = await page.evaluate(() => !!navigator.serviceWorker?.controller).catch(() => false);
+        const sw = await quick(page.evaluate(() => !!navigator.serviceWorker?.controller).catch(() => false), 5000);
         step('the offline worker controls the page', sw ? 'yes' : 'NO — reloads with no signal will fail');
         await ctx.setOffline(true);
         await page.waitForTimeout(800);
@@ -1450,11 +1455,12 @@ async function writeWalk(pw, device, session, outDir, real) {
         const final = await page.evaluate(() => document.body.innerText).catch(() => '');
         r.fieldsBack = tab === 'photos' ? (/waiting|on this phone/i.test(final) ? 'still waiting' : 'uploaded') : final.includes(marker) && !/on this phone/i.test(final) ? 'on the server' : final.includes(marker) ? 'STILL only on the phone' : 'GONE';
         if (tab !== 'photos' && final.includes(marker)) await deleteRecord(`offline ${tab}`, url, marker, r);
-      } catch (e) {
+      })()]); } catch (e) {
         r.errors.push(String(e.message || e).split('\n')[0].slice(0, 160));
+        console.log(`write-walk offline ${tab}: ✗ ${r.errors[r.errors.length - 1]}`);
         await ctx.setOffline(false).catch(() => {});
         await newPage();
-      }
+      } finally { clearTimeout(timer); }
       console.log(`write-walk offline ${tab}: ${r.create} / reload ${r.persisted} / ${r.edit} / ${r.fieldsBack}`);
       writeReport();
     }
