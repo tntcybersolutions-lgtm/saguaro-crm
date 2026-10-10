@@ -84,6 +84,8 @@ interface WizardState {
   // Step 1
   trade: string;
   scope: string;
+  /** Instructions to bidders — the jacket's first page. */
+  instructions: string;
   dueDate: string;
   requiresBond: boolean;
   // Step 2
@@ -182,7 +184,7 @@ function WizardModal({ projectId, ctx, open, onClose, onCreated }: { projectId: 
   const [step, setStep] = useState(1);
   const [subsLoading, setSubsLoading] = useState(false);
   const [w, setW] = useState<WizardState>({
-    trade: '', scope: '', dueDate: defaultDue(), requiresBond: false,
+    trade: '', scope: '', instructions: '', dueDate: defaultDue(), requiresBond: false,
     lineItems: [newLineItem()],
     suggestedSubs: [], addEmail: '', addName: '', extraInvites: [],
     submitting: false, error: '',
@@ -296,6 +298,7 @@ function WizardModal({ projectId, ctx, open, onClose, onCreated }: { projectId: 
           trade: w.trade,
           name: `${w.trade} Package`,
           scopeSummary: w.scope,
+          bidInstructions: w.instructions,
           dueDate: w.dueDate,
           requiresBond: w.requiresBond,
           lineItems,
@@ -395,6 +398,9 @@ function WizardModal({ projectId, ctx, open, onClose, onCreated }: { projectId: 
           <Field label="Scope Summary" hint="What the sub is pricing — subs see this on the portal.">
             <Textarea value={w.scope} onChange={e => setField('scope', e.target.value)} placeholder="Describe the work scope…" rows={4} />
           </Field>
+          <Field label="Instructions to Bidders" hint="How to bid, what to include, where questions go — the first page of the jacket every sub opens.">
+            <Textarea value={w.instructions} onChange={e => setField('instructions', e.target.value)} placeholder="Bid on the attached form. Price alternates separately. Send questions through the portal by…" rows={3} />
+          </Field>
           <Field label="Bid Due Date" hint={<>{w.dueDate === defaultDue() && <AutoChip />} Defaulted two weeks out — subs typically need 10–15 business days to price a scope. Adjust freely.</>}>
             <SaguaroDatePicker value={w.dueDate} onChange={v => setField('dueDate', v)} style={DATE_INPUT_STYLE} />
           </Field>
@@ -481,6 +487,12 @@ function WizardModal({ projectId, ctx, open, onClose, onCreated }: { projectId: 
             <div>
               <div className="bpSection" style={{ marginTop: 4 }}>Scope</div>
               <div className="bpScope">{w.scope}</div>
+            </div>
+          )}
+          {w.instructions.trim() && (
+            <div>
+              <div className="bpSection" style={{ marginTop: 4 }}>Instructions to Bidders</div>
+              <div className="bpScope">{w.instructions}</div>
             </div>
           )}
           {w.error && <div className="bpErr" role="alert">{w.error}</div>}

@@ -6,9 +6,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { toCents, toDollars, sumCents } from '@/lib/calc';
-import { FolderOpen, Envelope, ArrowLeft, FileText, Lock, Trophy, Star, Plus, CheckCircle, XCircle, CurrencyDollar, UsersThree, Receipt, ClipboardText, Scales } from '@phosphor-icons/react';
+import { FolderOpen, Envelope, ArrowLeft, FileText, Lock, Trophy, Star, Plus, CheckCircle, XCircle, CurrencyDollar, UsersThree, Receipt, Scales } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, FlowStrip, ghostButtonStyle, goldButtonStyle } from '@/components/ui/premium';
 import { openPdf } from '@/components/PdfViewer';
+import BidPackageDetails from '@/components/BidPackageDetails';
+import BidFormEditor, { toBidFormLines, type BidFormLine } from '@/components/BidFormEditor';
 
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)',GREEN='var(--success)',RED='var(--danger)';
 const MUTED='rgba(255,255,255,0.62)';        // section-header meta text
@@ -20,14 +22,8 @@ const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDig
 
 type SubStatus = 'invited' | 'viewed' | 'submitted' | 'declined';
 
-interface SovItem {
-  id: string;
-  description: string;
-  quantity: number;
-  unit: string;
-  unit_cost: number;
-  total: number;
-}
+/** A bid-form line (components/BidFormEditor owns the shape and the mapping). */
+type SovItem = BidFormLine;
 
 interface InvitedSub {
   id: string;
@@ -177,14 +173,7 @@ export default function BidPackageDetailPage() {
         // GET route returns items / invites / submissions at the TOP LEVEL (not nested on
         // bidPackage) and with DB column names. Map them onto the page's interfaces so SOV,
         // invited subs and submissions render — and the Award button appears when bids exist.
-        const sov_items: SovItem[] = (d.items || []).map((it: any) => ({
-          id: String(it.id),
-          description: it.description || '',
-          quantity: Number(it.quantity) || 0,
-          unit: it.unit || '',
-          unit_cost: Number(it.unit_price ?? it.unit_cost) || 0,
-          total: Number(it.total_amount ?? it.total) || 0,
-        }));
+        const sov_items: SovItem[] = toBidFormLines(d.items || []);
         const invited_subs: InvitedSub[] = (d.invites || []).map((iv: any) => ({
           id: String(iv.id),
           company_name: iv.sub_name || iv.company_name || '—',
@@ -382,12 +371,6 @@ export default function BidPackageDetailPage() {
     </PremiumSurface>
   );
 
-  /* Which column the scope landed in depends on how the package was made —
-     the AI builder, the manual form, and the import each pick a different one.
-     Same order the contract prefill uses, so the card and the subcontract agree
-     about what the sub is being asked to do. */
-  const scopeText = pkg.scope_of_work || pkg.scope_narrative || pkg.scope_summary || pkg.description || '';
-
   const totalSov = toDollars(sumCents(pkg.sov_items.map(i => toCents(i.total))));
   const submittedSubs = pkg.invited_subs.filter(s => s.status === 'submitted');
   const submissions = pkg.bid_submissions || [];
@@ -524,48 +507,23 @@ export default function BidPackageDetailPage() {
           </div>
         )}
 
-        {/* Scope */}
-        {scopeText && (
-          <div style={{ marginBottom: 20 }}>
-            <SectionCard flat title="Scope of Work" icon={<ClipboardText size={17} weight="duotone" color={GOLD} />}>
-              <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{scopeText}</div>
-            </SectionCard>
-          </div>
-        )}
+        {/* Package details — instructions, scope, due date, insurance and
+            bonding. The jacket's written dividers are made of these, and its
+            empty-divider links land here (?edit=details#package-details). */}
+        <BidPackageDetails
+          pkg={pkg}
+          packageId={id}
+          onSaved={(row) => setPkg((prev) => (prev ? { ...prev, ...row } : prev))}
+          onToast={showToast}
+        />
 
-        {/* SOV Line Items */}
-        {pkg.sov_items.length > 0 && (
-          <div style={{ marginBottom: 20 }}>
-            <SectionCard title="Line Items" icon={<FileText size={17} weight="duotone" color={GOLD} />} flush>
-              <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
-                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ background: TH_BG }}>
-                      {['Description', 'Qty', 'Unit', 'Unit Cost', 'Total'].map(h => (
-                        <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: `1px solid ${HAIR}` }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pkg.sov_items.map(item => (
-                      <tr key={item.id} style={{ borderBottom: `1px solid ${HAIR}` }}>
-                        <td style={{ padding: '11px 16px', color: TEXT }}>{item.description}</td>
-                        <td style={{ padding: '11px 16px', color: DIM }}>{item.quantity}</td>
-                        <td style={{ padding: '11px 16px', color: DIM }}>{item.unit}</td>
-                        <td style={{ padding: '11px 16px', color: DIM }}>{fmt(item.unit_cost)}</td>
-                        <td style={{ padding: '11px 16px', color: TEXT, fontWeight: 600 }}>{fmt(item.total)}</td>
-                      </tr>
-                    ))}
-                    <tr style={{ background: 'color-mix(in srgb, var(--brand-primary) 5%, transparent)', borderTop: `1px solid ${HAIR}` }}>
-                      <td colSpan={4} style={{ padding: '11px 16px', color: DIM, fontWeight: 700, fontSize: 11 }}>Total</td>
-                      <td style={{ padding: '11px 16px', color: GOLD, fontWeight: 800, fontSize: 15 }}>{fmt(totalSov)}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </SectionCard>
-          </div>
-        )}
+        {/* The bid form — add, edit, reorder and remove the lines bidders price. */}
+        <BidFormEditor
+          packageId={id}
+          lines={pkg.sov_items}
+          onLinesChanged={(lines) => setPkg((prev) => (prev ? { ...prev, sov_items: lines } : prev))}
+          onToast={showToast}
+        />
 
         {/* Bid Submissions */}
         {submissions.length > 0 && (
