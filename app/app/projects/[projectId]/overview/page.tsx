@@ -531,6 +531,9 @@ const CSS = `
 .jx-color [role=radio]::after{content:"";position:absolute;inset:-4px}
 .jx-danger{color:var(--danger) !important}
 .jx [data-tool] .fl-tc{max-width:52vw;overflow:hidden;text-overflow:ellipsis}
+/* The brief's one action sits inside the sentence; its tap area reaches 44px without moving a word. */
+.jx .fl-brief-act{position:relative;display:inline-block}
+.jx .fl-brief-act::after{content:"";position:absolute;inset:-12px -6px}
 @media (pointer:coarse){.jx .fl-sec .fl-sec-act{min-height:44px}}
 @media (min-width:1100px){
   .jx{padding:12px 8px 48px}
