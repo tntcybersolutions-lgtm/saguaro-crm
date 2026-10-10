@@ -291,6 +291,9 @@ function Modal({ open, onClose, title, width, children }: {
   );
 }
 
+/* Invite User / Assign Role are 44px tap targets on a phone (33px before). */
+const AM_CSS = `@media (max-width: 767px) { .amTap { min-height: 44px; } }`;
+
 /* ── loading spinner ── */
 function Spinner() {
   return (
@@ -810,6 +813,7 @@ export function AccessManager() {
 
   return (
     <div style={{ minHeight: '100vh', background: BG, padding: 32 }}>
+      <style dangerouslySetInnerHTML={{ __html: AM_CSS }} />
       {/* header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <div>
@@ -843,8 +847,8 @@ export function AccessManager() {
               {teamRows.length} {teamRows.length === 1 ? 'person' : 'people'} · {teamRows.filter(r => r.status === 'active').length} sign-ins · {teamRows.filter(r => r.status === 'invited').length} invited · {teamRows.filter(r => r.status === 'contact').length} project contacts
             </span>
             <div style={{ flex: 1 }} />
-            <button onClick={() => setShowInvite(true)} style={{ ...btn('transparent', GOLD), background: 'linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))', border: `1px solid ${BORDER}` }}>+ Invite User</button>
-            <button onClick={() => { setAssignUserId(''); setAssignRoleId(''); setAssignProjectId(''); setShowAssign(true); }} style={{ ...btn(GOLD, 'var(--on-brand)'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)' }}>+ Assign Role</button>
+            <button type="button" className="amTap" onClick={() => setShowInvite(true)} style={{ ...btn('transparent', GOLD), background: 'linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))', border: `1px solid ${BORDER}` }}>+ Invite User</button>
+            <button type="button" className="amTap" onClick={() => { setAssignUserId(''); setAssignRoleId(''); setAssignProjectId(''); setShowAssign(true); }} style={{ ...btn(GOLD, 'var(--on-brand)'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)' }}>+ Assign Role</button>
           </div>
 
           <div style={{ ...card(), overflowX: 'auto' }}>
@@ -953,7 +957,7 @@ export function AccessManager() {
                       <td style={{ padding: '10px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                         {r.status === 'active' && r.userId ? (
                           <>
-                            <button onClick={() => openAssignFor(r.userId!)}
+                            <button type="button" className="amTap" onClick={() => openAssignFor(r.userId!)}
                               style={{ ...btn('transparent', GOLD), padding: '6px 12px' }}>Assign Role</button>
                             <button onClick={() => resetUserPassword(r.userId!, r.name)}
                               style={{ ...btn('transparent', DIM), padding: '6px 12px', marginLeft: 4 }}>Reset Password</button>
@@ -1202,8 +1206,8 @@ export function AccessManager() {
               {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
             </select>
             <div style={{ flex: 1 }} />
-            <button onClick={() => setShowInvite(true)} style={{ ...btn('transparent', GOLD), background: 'linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))', border: `1px solid ${BORDER}` }}>+ Invite User</button>
-            <button onClick={() => setShowAssign(true)} style={{ ...btn(GOLD, 'var(--on-brand)'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)' }}>+ Assign Role</button>
+            <button type="button" className="amTap" onClick={() => setShowInvite(true)} style={{ ...btn('transparent', GOLD), background: 'linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))', border: `1px solid ${BORDER}` }}>+ Invite User</button>
+            <button type="button" className="amTap" onClick={() => setShowAssign(true)} style={{ ...btn(GOLD, 'var(--on-brand)'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)' }}>+ Assign Role</button>
           </div>
 
           {/* ── Pending sent invites (expiry countdown + cancel / resend) ── */}
