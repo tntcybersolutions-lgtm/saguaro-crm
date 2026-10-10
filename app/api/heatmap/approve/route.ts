@@ -130,8 +130,8 @@ export async function POST(req: NextRequest) {
 
   if (lineItems.length) {
     const { error: itemsErr } = await db.from('bid_package_items').insert(
-      lineItems.map((item) => ({
-        tenant_id: row.tenant_id, bid_package_id: pkgId,
+      lineItems.map((item, index) => ({
+        tenant_id: row.tenant_id, bid_package_id: pkgId, sort_order: index,
         description: item.description, quantity: item.quantity, unit: item.unit,
         unit_price: item.unitPrice, total_amount: item.totalAmount, csi_code: item.csiCode,
       })),

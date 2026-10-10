@@ -26,13 +26,15 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
 import { buildComplianceForBidPackages } from '@/lib/compliance-autofile';
 import type { Database } from '@/lib/database.types';
-import { must, tryWrite } from '@/lib/db-write';
+import { must } from '@/lib/db-write';
 import { logActivity, money } from '@/lib/activity';
 import { laborAllocation, lineDirectCost } from '@/lib/takeoff-line-cost';
 import { resolveTenantCompany } from '@/lib/tenant-company';
 import { ownerOf } from '@/lib/bid-jacket-pdf';
 import { normalisePhase } from '@/lib/project-phase';
 import { addDays, monthOf, requestDay } from '@/lib/time-zone';
+import { insuranceSentence } from '@/lib/jacket-insurance';
+import { planRebuild, NOT_THIS_BUILDS, type ExistingPackage } from '@/lib/sage-package-guard';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -43,7 +45,7 @@ const fmt$ = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
 /* Bid due dates and the pay-app period count from the company's day (device,
-   else company zone — lib/time-zone), computed once per request as `today`.
+   else company zone — lib/time-zone), computed once per request as `companyToday`.
    The UTC day was tomorrow by 7 PM in Iowa, and on the last evening of a month
    the "current" billing month was already next month's. A pay app covers ONE
    billing period: today through the last day of today's month. */
@@ -88,9 +90,12 @@ export async function GET(
   const { data: owned } = await supabase
     .from('takeoffs').select('id').eq('id', takeoffId).eq('tenant_id', user.tenantId).single();
   if (!owned) return new Response('Takeoff not found', { status: 404 });
-  let today: string;
+  /* Named companyToday, not today: the stream below already has a display-date
+     `today` ("October 10, 2026") in the same block, which would shadow it. */
+  let companyToday: string;
+  let companyZone: string;
   try {
-    ({ today } = await requestDay(req.headers, supabase, user.tenantId, 'takeoff/sage-auto-docs'));
+    ({ today: companyToday, zone: companyZone } = await requestDay(req.headers, supabase, user.tenantId, 'takeoff/sage-auto-docs'));
   } catch (e) {
     console.error('[takeoff/sage-auto-docs] time zone read failed', e);
     return new Response("Couldn't read your company's time zone — try again.", { status: 500 });
@@ -230,12 +235,13 @@ export async function GET(
 
         // ── 5. Batch Sage AI call — write ALL package content at once ────────
         //    Compact format keeps token usage low; we cover all divisions in 1 call.
-        const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: companyZone });
 
         const divisionSummaries = divisions.map(([div, items]) => {
           const total   = items.reduce((s, i) => s + (i.total_cost || 0), 0);
           const divName = CSI_DIVISIONS[div]?.name || `Division ${div}`;
-          const lines   = items
+          /* A copy: sorting `items` in place reordered the bid form by cost. */
+          const lines   = [...items]
             .sort((a, b) => (b.total_cost || 0) - (a.total_cost || 0))
             .slice(0, 10)
             .map(i => `  ${i.description}: ${i.quantity} ${i.unit} @ $${i.unit_cost?.toFixed(2)}`)
@@ -331,18 +337,45 @@ Rules:
           send('progress', { step: 2, pct: 30, message: 'Using rule-based defaults (AI content unavailable)' });
         }
 
-        // Remove any existing packages for this project before regenerating (idempotent)
-        const { data: existingPkgs } = await supabase
+        /* REPLACE ONLY WHAT THIS BUILD WROTE AND NOBODY HAS TOUCHED.
+           This used to delete every bid package on the project before writing
+           new ones, and the delete cascades to invites, bids and documents —
+           issued and awarded packages included. lib/sage-package-guard decides:
+           an untouched draft from an earlier build is replaced; anything issued,
+           invited, bid, filed into or edited is kept, and its division is not
+           written twice. Every read here must succeed — a guard that cannot see
+           the invites must not guess that there are none. */
+        const { data: existingPkgs, error: existingErr } = await supabase
           .from('bid_packages')
-          .select('id')
+          .select('id, status, takeoff_id, ai_generated, insurance_requirements, csi_codes, csi_division, jacket_generated_at, addendum_count, jacket_edits')
           .eq('project_id', takeoff.project_id)
           .eq('tenant_id', tenantId);
+        if (existingErr) throw existingErr;
 
-        if (existingPkgs && existingPkgs.length > 0) {
-          send('progress', { step: 3, pct: 32, message: `Replacing ${existingPkgs.length} existing packages...` });
-          const existingIds = existingPkgs.map((p: { id: string }) => p.id);
-          await tryWrite(supabase.from('bid_package_items').delete().eq('tenant_id', tenantId).in('bid_package_id', existingIds), 'bid_package_items delete');
-          await tryWrite(supabase.from('bid_packages').delete().eq('project_id', takeoff.project_id).eq('tenant_id', tenantId), 'bid_packages delete');
+        const existingList = (existingPkgs || []) as ExistingPackage[];
+        let plan: ReturnType<typeof planRebuild> = { replace: [], keep: [], keepDivisions: new Set<string>() };
+        if (existingList.length > 0) {
+          const ids = existingList.map((p) => p.id);
+          const [inv, bids, docs] = await Promise.all([
+            supabase.from('bid_package_invites').select('bid_package_id').eq('tenant_id', tenantId).in('bid_package_id', ids),
+            supabase.from('bid_submissions').select('bid_package_id').eq('tenant_id', tenantId).in('bid_package_id', ids),
+            supabase.from('bid_package_documents').select('bid_package_id').eq('tenant_id', tenantId).in('bid_package_id', ids),
+          ]);
+          if (inv.error) throw inv.error;
+          if (bids.error) throw bids.error;
+          if (docs.error) throw docs.error;
+          const idsOf = (rows: unknown) => new Set(((rows || []) as Array<{ bid_package_id: string }>).map((r) => r.bid_package_id));
+          plan = planRebuild(existingList, { invited: idsOf(inv.data), bids: idsOf(bids.data), documents: idsOf(docs.data) });
+        }
+
+        if (plan.replace.length > 0) {
+          send('progress', { step: 3, pct: 32, message: `Replacing ${plan.replace.length} untouched draft package${plan.replace.length === 1 ? '' : 's'} from the last build...` });
+          await must(supabase.from('bid_package_items').delete().eq('tenant_id', tenantId).in('bid_package_id', plan.replace), 'bid_package_items delete');
+          await must(supabase.from('bid_packages').delete().eq('tenant_id', tenantId).eq('project_id', takeoff.project_id).in('id', plan.replace), 'bid_packages delete');
+        }
+        const inUse = plan.keep.filter((k) => k.reason !== NOT_THIS_BUILDS).length;
+        if (inUse > 0) {
+          send('progress', { step: 3, pct: 33, message: `Keeping ${inUse} package${inUse === 1 ? '' : 's'} already in use (issued, invited, bid or edited).` });
         }
 
         send('progress', { step: 3, pct: 35, message: `Creating ${divisions.length} bid packages in database...` });
@@ -352,15 +385,20 @@ Rules:
           id: string; name: string; div: string; total: number;
           trade: string; requiresBond: boolean; insGl: number; insAuto: number; insWork: number;
         }> = [];
+        /* Divisions whose package could not be written whole. Reported, never
+           left half-built. */
+        const failedPackages: Array<{ div: string; name: string }> = [];
+        const skippedDivisions: string[] = [];
 
         for (const [div, items] of divisions) {
+          if (plan.keepDivisions.has(div)) { skippedDivisions.push(div); continue; }
           const total    = items.reduce((s, i) => s + (i.total_cost || 0), 0);
           const divName  = CSI_DIVISIONS[div]?.name || `Division ${div}`;
           const ai       = sagePackages[div];
 
           // Use Sage-written content, fall back to rules-based defaults
           const packageName   = ai?.name || `Division ${div} — ${divName}`;
-          const scopeSummary  = items
+          const scopeSummary  = [...items]
             .sort((a, b) => (b.total_cost || 0) - (a.total_cost || 0))
             .slice(0, 8)
             .map(i => `${i.description}: ${i.quantity} ${i.unit}`)
@@ -371,7 +409,7 @@ Rules:
             || `Submit itemized bid with material specifications and proposed construction schedule. All substitutions must be approved 7 days prior to bid date.`;
           const requiresBond  = ai?.bond ?? (total > 100_000);
           // Larger packages get 21-day due date, smaller get 14
-          const dueDate       = addDays(today, total > 250_000 ? 21 : 14);
+          const dueDate       = addDays(companyToday, total > 250_000 ? 21 : 14);
           const uniqueCsiCodes = [...new Set(items.map(i => i.csi_code))];
           const insGl   = ai?.ins_gl   ?? ((['03','05','07','22','23','26'].includes(div)) ? 2_000_000 : 1_000_000);
           const insAuto = ai?.ins_auto ?? 1_000_000;
@@ -394,11 +432,19 @@ Rules:
                  invite route opens a package when invites actually go out. */
               status:                'draft',
               requires_bond:         requiresBond,
-              insurance_requirements: {
-                general_liability:   insGl,
-                auto_liability:      insAuto,
-                workers_compensation: insWork,
-              },
+              /* Readable words for the bidder, figures in the three limit
+                 columns. This used to pass an object to a TEXT column, and
+                 the jacket printed the JSON to every sub. */
+              insurance_requirements: insuranceSentence({ gl: insGl, auto: insAuto, wc: insWork }),
+              general_liability:     String(insGl),
+              auto_liability:        String(insAuto),
+              workers_compensation:  String(insWork),
+              csi_division:          div,
+              /* Marks the package as this build's, so a rebuild can tell it
+                 from one a GC made (lib/sage-package-guard). */
+              takeoff_id:            takeoffId,
+              ai_generated:          true,
+              ai_generated_at:       new Date().toISOString(),
             } as unknown as Database['public']['Tables']['bid_packages']['Insert'])
             .select()
             .single();
@@ -410,12 +456,15 @@ Rules:
 
           const pkgId = (pkg as any).id as string;
 
-          // Insert line items
+          /* The bid form, in the takeoff's order. A package whose lines will
+             not save is deleted again rather than left as a header with an
+             empty bid form that nobody can price. */
           if (items.length > 0) {
-            await must(supabase.from('bid_package_items').insert(
-              items.map(item => ({
+            const { error: itemsErr } = await supabase.from('bid_package_items').insert(
+              items.map((item, index) => ({
                 tenant_id:      tenantId,
                 bid_package_id: pkgId,
+                sort_order:     index,
                 description:    item.description,
                 quantity:       item.quantity,
                 unit:           item.unit,
@@ -424,7 +473,14 @@ Rules:
                 csi_code:       item.csi_code,
                 notes:          '',
               }))
-            ), 'bid_package_items insert');
+            );
+            if (itemsErr) {
+              console.error('[sage-auto-docs] line items insert failed — removing the package:', itemsErr);
+              await must(supabase.from('bid_packages').delete().eq('id', pkgId).eq('tenant_id', tenantId), 'bid_packages rollback');
+              failedPackages.push({ div, name: packageName });
+              send('progress', { step: 3, pct: 40, message: `Could not save the bid form for ${packageName} — that package was not created.` });
+              continue;
+            }
           }
 
           createdPackages.push({ id: pkgId, name: packageName, div, total, trade: divName, requiresBond, insGl, insAuto, insWork });
@@ -546,8 +602,8 @@ Rules:
                 tenant_id:                   tenantId,
                 project_id:                  takeoff.project_id,
                 app_number:                  appNumber,
-                period_from:                 today,
-                period_to:                   monthOf(today).last,
+                period_from:                 companyToday,
+                period_to:                   monthOf(companyToday).last,
                 status:                      'draft',
                 original_contract_sum:       contractSum,
                 contract_sum:                contractSum,
@@ -623,6 +679,11 @@ Rules:
         // ── 9. Done ──────────────────────────────────────────────────────────
         done({
           packagesCreated: createdPackages.length,
+          /* Kept because they are in use; their divisions were not rewritten. */
+          packagesKept:    inUse,
+          packagesReplaced: plan.replace.length,
+          divisionsSkipped: skippedDivisions,
+          packagesFailed:  failedPackages,
           jacketsGenerated,
           sovCreated:      !!sovId && sovLines > 0,
           // true while the project is bidding: no pay app/SOV by design, not a failure.
