@@ -378,7 +378,36 @@ async function appStore(app, build, submit) {
   const EDITABLE = ['PREPARE_FOR_SUBMISSION', 'DEVELOPER_REJECTED', 'REJECTED', 'METADATA_REJECTED', 'INVALID_BINARY'];
   console.log(`\nApp Store — ${submit ? 'prepare and SUBMIT' : 'prepare (no submit)'} ${VERSION} (${build.build})`);
 
-  const versions = (await api('GET', `/v1/apps/${app.id}/appStoreVersions?limit=20`)).data.filter((v) => v.attributes.platform === 'IOS');
+  let versions = (await api('GET', `/v1/apps/${app.id}/appStoreVersions?limit=20`)).data.filter((v) => v.attributes.platform === 'IOS');
+  // A version already waiting for (or in) review can't take a new build. When
+  // submitting a newer build, pull the waiting one out of review first —
+  // Apple then marks it DEVELOPER_REJECTED, which is editable — and send the
+  // new build in its place.
+  const QUEUED = ['WAITING_FOR_REVIEW', 'IN_REVIEW', 'READY_FOR_REVIEW'];
+  const queued = versions.find((v) => QUEUED.includes(v.attributes.appStoreState));
+  if (queued && submit) {
+    const inReview = (await api('GET', `/v1/appStoreVersions/${queued.id}/build`)).data;
+    const inBuild = inReview?.attributes?.version;
+    if (String(inBuild) === String(build.build)) {
+      console.log(`  ${queued.attributes.versionString} is already ${queued.attributes.appStoreState} with build ${inBuild} — nothing to resubmit.`);
+      return;
+    }
+    console.log(`  ${queued.attributes.versionString} is ${queued.attributes.appStoreState} with build ${inBuild}; replacing it with build ${build.build}.`);
+    const pulled = await tryStep(`withdraw build ${inBuild} from App Review`, async () => {
+      const subs = (await api('GET', `/v1/reviewSubmissions?filter[app]=${app.id}&filter[platform]=IOS&limit=20`)).data
+        .filter((r) => ['WAITING_FOR_REVIEW', 'IN_REVIEW'].includes(r.attributes.state));
+      if (!subs.length) throw new Error('no review submission in WAITING_FOR_REVIEW / IN_REVIEW');
+      for (const r of subs) await api('PATCH', `/v1/reviewSubmissions/${r.id}`, { data: { type: 'reviewSubmissions', id: r.id, attributes: { canceled: true } } });
+      for (let i = 0; i < 40; i++) {
+        const st = (await api('GET', `/v1/appStoreVersions/${queued.id}`)).data.attributes.appStoreState;
+        if (EDITABLE.includes(st)) return `version ${queued.attributes.versionString} now ${st}`;
+        await new Promise((r) => setTimeout(r, 15000));
+      }
+      throw new Error('version did not become editable within 10 minutes');
+    });
+    if (!pulled) return;
+    versions = (await api('GET', `/v1/apps/${app.id}/appStoreVersions?limit=20`)).data.filter((v) => v.attributes.platform === 'IOS');
+  }
   let ver = versions.find((v) => EDITABLE.includes(v.attributes.appStoreState));
   if (!ver) {
     await tryStep(`create App Store version ${VERSION}`, async () => {
