@@ -9,6 +9,8 @@ import {
   expiryLevel, isUnreadForSub, SCORE_CATEGORIES, overallRating, complianceDocFor,
 } from '@/lib/sub-portal-view';
 import { invoiceWaiver, isSignedWaiver, isSignableWaiver, waiverTypeForInvoice, waiverTypeLabel } from '@/lib/sub-lien-waiver';
+import { COMPLIANCE_ACCEPT, COMPLIANCE_MAX_BYTES, checkComplianceFileName } from '@/lib/sub-portal-files';
+import { putSigned } from '@/lib/media-upload';
 
 /* ── Design Tokens ── */
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF';
@@ -142,12 +144,11 @@ export default function SubPortal(){
   const [rfiForm,setRfiForm]=useState({subject:'',question:'',priority:'normal',reference_drawing:'',reference_spec:''});
   const [rfiSaving,setRfiSaving]=useState(false);
   const [docUploadType,setDocUploadType]=useState('');
-  const [docFileName,setDocFileName]=useState('');
+  const [docFile,setDocFile]=useState<File|null>(null);
   const [docExpiry,setDocExpiry]=useState('');
-  const [docCarrier,setDocCarrier]=useState('');
-  const [docPolicyNum,setDocPolicyNum]=useState('');
-  const [docCoverage,setDocCoverage]=useState('');
   const [docUploading,setDocUploading]=useState(false);
+  const [docProgress,setDocProgress]=useState<number|null>(null);
+  const [docErr,setDocErr]=useState('');
   const [msgContent,setMsgContent]=useState('');
   const [msgSending,setMsgSending]=useState(false);
   /* This sub's lien_waivers rows on this job (signed and waiting), from /api/portal/sub/lien-waivers. */
@@ -417,25 +418,35 @@ export default function SubPortal(){
     setRfiSaving(false);
   };
 
+  /* Compliance upload: the file itself goes to storage through a one-time signed
+     URL (no serverless size cap), then the record is saved with its URL. This
+     used to post a typed file name and store no file at all. */
   const uploadComplianceDoc=async()=>{
-    if(!docUploadType||!docFileName){showToast('Document type and file name are required.');return;}
-    setDocUploading(true);
+    if(!docUploadType){setDocErr('Pick the document type.');return;}
+    if(!docFile){setDocErr('Choose the file to upload.');return;}
+    const name=checkComplianceFileName(docFile.name);
+    if(!name.ok){setDocErr(name.message);return;}
+    if(docFile.size>COMPLIANCE_MAX_BYTES){setDocErr('That file is over 50 MB. Upload a smaller scan or PDF.');return;}
+    setDocUploading(true);setDocErr('');setDocProgress(0);
     try{
-      const result=await apiPost('compliance',{
-        doc_type:docUploadType,
-        file_name:docFileName,
-        expires_at:docExpiry||null,
-        carrier:docCarrier||null,
-        policy_number:docPolicyNum||null,
-        coverage_amount:docCoverage?parseFloat(docCoverage):null,
-      });
-      if(result.compliance_doc){
-        showToast('Document uploaded.');
-        setComplianceDocs(prev=>[{...result.compliance_doc,expiration_status:'valid',days_until_expiry:null},...prev]);
-        setDocUploadType('');setDocFileName('');setDocExpiry('');setDocCarrier('');setDocPolicyNum('');setDocCoverage('');
-      } else showToast(result.error||'Upload failed.');
-    }catch{showToast('Network error.');}
-    setDocUploading(false);
+      const urlRes=await fetch(`/api/portal/sub/compliance/upload-url?token=${token}`,{method:'POST',headers,body:JSON.stringify({fileName:docFile.name})});
+      const up=await urlRes.json().catch(()=>null);
+      if(!urlRes.ok||!up?.path){setDocErr(up?.error||"Couldn't start the upload. Please try again.");return;}
+      await putSigned(up,docFile,f=>setDocProgress(Math.round(f*100)));
+      const recRes=await fetch(`/api/portal/sub/compliance?token=${token}`,{method:'POST',headers,body:JSON.stringify({doc_type:docUploadType,path:up.path,expiry_date:docExpiry||null})});
+      const result=await recRes.json().catch(()=>null);
+      if(recRes.ok&&result?.compliance_doc){
+        showToast('Document uploaded — your GC can see it now.');
+        setComplianceDocs(prev=>[result.compliance_doc,...prev]);
+        setDocUploadType('');setDocFile(null);setDocExpiry('');setDocProgress(null);
+        refreshActivity();
+      } else setDocErr(result?.error||"Couldn't save the document. Please try again.");
+    }catch(e){
+      console.error('[sub-portal] compliance upload failed',e);
+      setDocErr(e instanceof Error&&e.message?`Upload failed: ${e.message}`:'No connection — the file was not uploaded. Try again.');
+    }finally{
+      setDocUploading(false);
+    }
   };
 
   const sendMessage=async()=>{
@@ -797,18 +808,21 @@ export default function SubPortal(){
         {!onRoster?rosterNote('Compliance uploads'):<div style={card()}>
           <div style={{fontSize:17,fontWeight:700,color:TEXT,marginBottom:16}}>Upload Compliance Document</div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:16,marginBottom:16}}>
-            <div><div style={labelS}>Document Type *</div><select value={docUploadType} onChange={e=>setDocUploadType(e.target.value)} style={{...inputS,cursor:'pointer'}}><option value="">Select type…</option>{docTypes.map(t=><option key={t} value={t}>{docLabels[t]||t}</option>)}</select></div>
-            <div><div style={labelS}>File Name *</div><input value={docFileName} onChange={e=>setDocFileName(e.target.value)} placeholder="insurance_cert_2026.pdf" style={inputS}/></div>
+            <div><label htmlFor="cd-type" style={labelS}>Document Type *</label><select id="cd-type" value={docUploadType} onChange={e=>{setDocUploadType(e.target.value);setDocErr('');}} style={{...inputS,cursor:'pointer'}}><option value="">Select type…</option>{docTypes.map(t=><option key={t} value={t}>{docLabels[t]||t}</option>)}</select></div>
+            <div><div style={labelS}>File *</div>
+              {/* The real file — PDF, photo of the certificate, or Word. */}
+              <label style={{...btnS(BORDER),minHeight:44,display:'flex',alignItems:'center',gap:8,width:'100%',boxSizing:'border-box',color:TEXT,opacity:docUploading?0.6:1,cursor:docUploading?'wait':'pointer',overflow:'hidden'}}>
+                <span aria-hidden>{'↑'}</span>
+                <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',minWidth:0}}>{docFile?docFile.name:'Choose file'}</span>
+                <input type="file" accept={COMPLIANCE_ACCEPT} style={{display:'none'}} disabled={docUploading}
+                  onChange={e=>{setDocFile(e.target.files?.[0]||null);setDocErr('');e.currentTarget.value='';}}/>
+              </label>
+              {docFile&&<div style={{fontSize:11,color:DIM,marginTop:4}}>{(docFile.size/1024/1024).toFixed(1)} MB</div>}
+            </div>
             <div><div style={labelS}>Expiration Date</div><SaguaroDatePicker value={docExpiry} onChange={v=>setDocExpiry(v)} style={inputS}/></div>
           </div>
-          {docUploadType==='insurance'&&(
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:16,marginBottom:16}}>
-              <div><div style={labelS}>Carrier</div><input value={docCarrier} onChange={e=>setDocCarrier(e.target.value)} placeholder="State Farm, Liberty Mutual…" style={inputS}/></div>
-              <div><div style={labelS}>Policy Number</div><input value={docPolicyNum} onChange={e=>setDocPolicyNum(e.target.value)} placeholder="POL-123456" style={inputS}/></div>
-              <div><div style={labelS}>Coverage Amount</div><input type="number" value={docCoverage} onChange={e=>setDocCoverage(e.target.value)} placeholder="1000000" style={inputS}/></div>
-            </div>
-          )}
-          <button onClick={uploadComplianceDoc} disabled={docUploading} style={btnS(BLUE)}>{docUploading?'Uploading…':'Upload Document'}</button>
+          {docErr&&<div role="alert" style={{color:RED,fontSize:13,fontWeight:600,marginBottom:12}}>{docErr}</div>}
+          <button onClick={uploadComplianceDoc} disabled={docUploading} style={{...btnS(BLUE),minHeight:44}}>{docUploading?(docProgress!=null&&docProgress<100?`Uploading… ${docProgress}%`:'Saving…'):'Upload Document'}</button>
         </div>}
 
         {/* 30/60/90 Day Expiration Alerts */}
@@ -842,7 +856,10 @@ export default function SubPortal(){
                   {doc?(<div>
                     <div style={{fontSize:12,color:DIM,marginBottom:4,overflowWrap:'anywhere'}}>File: {docFileLabel(doc)}</div>
                     {doc.expiry_date&&<div style={{fontSize:12,color:c,fontWeight:600,marginBottom:4}}>{doc.days_until_expiry!==null&&doc.days_until_expiry<=0?'Expired':doc.days_until_expiry!==null&&doc.days_until_expiry<=30?`Expires in ${doc.days_until_expiry} days`:`Expires: ${fmtDate(doc.expiry_date)}`}</div>}
-                    <span style={badge(doc.status)}>{(doc.status||'').replace(/_/g,' ')}</span>
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,flexWrap:'wrap'}}>
+                      <span style={badge(doc.status)}>{(doc.status||'').replace(/_/g,' ')}</span>
+                      {doc.file_url&&<a href={doc.file_url} target="_blank" rel="noopener noreferrer" style={{...btnS(BORDER,true),minHeight:44,display:'inline-flex',alignItems:'center',textDecoration:'none',color:TEXT}}>View file</a>}
+                    </div>
                   </div>):(<div style={{fontSize:12,color:RED,fontWeight:600}}>Not uploaded — action required</div>)}
                 </div>
               );
