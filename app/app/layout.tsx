@@ -53,6 +53,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  // The phone menu closes with Escape too (keyboards on iPad, screen readers).
+  useEffect(() => {
+    if (!mobileSidebarOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMobileSidebarOpen(false); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [mobileSidebarOpen]);
   const [aiOpen, setAiOpen] = useState(false);
   const [aiMsg, setAiMsg] = useState('');
   const [aiMessages, setAiMessages] = useState<ChatMsg[]>([]);
@@ -295,7 +302,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             onClick={() => setMobileSidebarOpen(false)}
             style={{ position: 'fixed', inset: 0, background: 'color-mix(in srgb, var(--bg-base) 60%, transparent)', zIndex: 150 /* above the sticky project bar (90), below modals (200) */ }}
           />
-          <div style={{ position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 151, display: 'flex', flexDirection: 'column', maxWidth: '86vw', background: 'var(--bg-base)', overflowY: 'auto', WebkitOverflowScrolling: 'touch', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+          <div role="dialog" aria-modal="true" aria-label="Menu" style={{ position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 151, display: 'flex', flexDirection: 'column', maxWidth: '86vw', background: 'var(--bg-base)', overflowY: 'auto', WebkitOverflowScrolling: 'touch', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
             {/* The controls that leave the phone top bar live here: search,
                 the job picker, help mode and notifications. */}
             <div className="sag-menu-tools" style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 10px', borderBottom: '1px solid var(--border-default)' }}>
