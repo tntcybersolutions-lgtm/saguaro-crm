@@ -31,7 +31,7 @@ concurrency:
 jobs:
   asc:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 100
     env:
       ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
@@ -71,7 +71,7 @@ jobs:
           if [ "$age" -lt 300 ]; then sleep $((300 - age)); fi
       # screens-capture: real screens from the live site at App Store sizes.
       - name: Install Playwright
-        if: env.MODE == 'screens-capture' || env.MODE == 'screens-proof'
+        if: env.MODE == 'screens-capture' || env.MODE == 'screens-proof' || env.MODE == 'walk'
         run: |
           mkdir -p /tmp/pw && cd /tmp/pw && npm init -y > /dev/null
           npm i --no-audit --no-fund playwright@1.49.1
@@ -88,6 +88,27 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add tools/screens
           git commit -m "App Store screenshots captured by run ${{ github.run_id }}" || exit 0
+          git push origin HEAD:${{ github.ref_name }}
+      # walk: tap every control on every screen of the iPhone app (WebKit) and
+      # report dead buttons, errors and 404s to tools/walk/report.md. Signs in
+      # with Chad's real account when the E2E_EMAIL / E2E_PASSWORD secrets are
+      # set, otherwise the App Review demo account. Never taps anything that
+      # writes data, sends, pays, approves, deletes or logs out.
+      - name: Walk the app
+        if: env.MODE == 'walk'
+        env:
+          PLAYWRIGHT_DIR: /tmp/pw
+          E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
+          E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+        run: node tools/asc-screens.mjs walk
+      - name: Commit the walk report to this branch
+        if: always() && env.MODE == 'walk'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/walk
+          git commit -m "App walk by run ${{ github.run_id }}" || exit 0
+          git pull --rebase -X theirs origin ${{ github.ref_name }}
           git push origin HEAD:${{ github.ref_name }}
       # screens-proof: signed-in design proof at phone + desktop, kept apart
       # from the App Store set in tools/screens.
