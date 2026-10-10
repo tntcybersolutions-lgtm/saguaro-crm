@@ -4762,6 +4762,98 @@ export type Database = {
           },
         ]
       }
+      communication_log: {
+        Row: {
+          bid_package_id: string | null
+          body: string | null
+          channel: string
+          created_at: string
+          created_by: string | null
+          direction: string
+          error: string | null
+          from_name: string | null
+          id: string
+          project_id: string | null
+          related_id: string | null
+          related_type: string | null
+          status: string
+          sub_id: string | null
+          subject: string | null
+          tenant_id: string
+          to_address: string | null
+          to_name: string | null
+        }
+        Insert: {
+          bid_package_id?: string | null
+          body?: string | null
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          direction?: string
+          error?: string | null
+          from_name?: string | null
+          id?: string
+          project_id?: string | null
+          related_id?: string | null
+          related_type?: string | null
+          status?: string
+          sub_id?: string | null
+          subject?: string | null
+          tenant_id: string
+          to_address?: string | null
+          to_name?: string | null
+        }
+        Update: {
+          bid_package_id?: string | null
+          body?: string | null
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          direction?: string
+          error?: string | null
+          from_name?: string | null
+          id?: string
+          project_id?: string | null
+          related_id?: string | null
+          related_type?: string | null
+          status?: string
+          sub_id?: string | null
+          subject?: string | null
+          tenant_id?: string
+          to_address?: string | null
+          to_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_log_bid_package_id_fkey"
+            columns: ["bid_package_id"]
+            isOneToOne: false
+            referencedRelation: "bid_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_log_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_log_sub_id_fkey"
+            columns: ["sub_id"]
+            isOneToOne: false
+            referencedRelation: "subcontractors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_log_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commitments: {
         Row: {
           actual_completion: string | null

@@ -4,6 +4,7 @@
  * Graceful fallback to console.log when RESEND_API_KEY is not set
  */
 import { Resend } from 'resend';
+import { currentComm, htmlToText, logComm } from '@/lib/comm-log';
 
 // Fallbacks use the VERIFIED Resend domain (saguarocontrol.net). Prod sets EMAIL_FROM
 // explicitly; these defaults just keep sends valid if the env var is ever missing.
@@ -75,10 +76,26 @@ export type SendResult = { sent: boolean; error?: string };
  * unchanged; callers that need to tell the user the truth can now read it.
  */
 async function send(to: string | string[], subject: string, html: string): Promise<SendResult> {
+  const result = await deliver(to, subject, html);
+  // When the caller said what this mail is about (lib/comm-log withComm), it
+  // goes on the record — a bid jacket shows every email sent about it.
+  if (currentComm()) {
+    await logComm({
+      to, subject, body: htmlToText(html),
+      status: result.sent ? 'sent' : result.error === NOT_CONFIGURED ? 'not_sent' : 'failed',
+      error: result.sent ? null : result.error ?? null,
+    });
+  }
+  return result;
+}
+
+const NOT_CONFIGURED = 'Email is not configured on this deployment.';
+
+async function deliver(to: string | string[], subject: string, html: string): Promise<SendResult> {
   const resend = getResend();
   if (!resend) {
     console.log(`[Email SKIPPED — no RESEND_API_KEY] To: ${to} | Subject: ${subject}`);
-    return { sent: false, error: 'Email is not configured on this deployment.' };
+    return { sent: false, error: NOT_CONFIGURED };
   }
   try {
     await resend.emails.send({ from: FROM, to: Array.isArray(to) ? to : [to], subject, html });
@@ -353,7 +370,21 @@ export async function sendInvoiceEmail(opts: {
  * `sent: false` with a readable reason when email is unconfigured or rejected,
  * so the composer can say "logged but not emailed" instead of "sent".
  */
-export async function sendCorrespondenceEmail(opts: {
+/** Sends a correspondence email; on the record (lib/comm-log) when the caller set a context. */
+export async function sendCorrespondenceEmail(opts: Parameters<typeof correspondenceEmail>[0]): ReturnType<typeof correspondenceEmail> {
+  const res = await correspondenceEmail(opts);
+  if (currentComm()) {
+    await logComm({
+      to: [...(opts.to || []), ...(opts.cc || [])].filter(Boolean),
+      subject: opts.subject, body: String(opts.body || ''),
+      status: res.sent ? 'sent' : /not configured/i.test(res.error || '') ? 'not_sent' : 'failed',
+      error: res.sent ? null : res.error ?? null,
+    });
+  }
+  return res;
+}
+
+async function correspondenceEmail(opts: {
   to: string[];
   cc?: string[];
   subject: string;
