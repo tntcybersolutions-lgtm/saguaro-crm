@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
+import { apiError, apiFail } from '@/lib/api-error';
 
 const ALLOWED_CO_COLUMNS = [
   'project_id', 'title', 'description', 'amount', 'status', 'reason', 'submitted_by', 'co_number',
@@ -35,11 +36,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     const user = await getUser(_req);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const db = createServerClient();
-    const { data, error } = await db.from('change_orders').select('*').eq('id', id).eq('tenant_id', user.tenantId).single();
+    const { data, error } = await db.from('change_orders').select('*').eq('id', id).eq('tenant_id', user.tenantId).maybeSingle();
     if (error) throw error;
+    // Someone else's (or a deleted) change order is "not found"; a real failure is logged, not hidden as a 404.
+    if (!data) return apiFail('Change order not found', 404);
     return NextResponse.json({ data });
-  } catch {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  } catch (e) {
+    return apiError('change-orders/id GET', e, "Couldn't load this change order. Please try again.");
   }
 }
 

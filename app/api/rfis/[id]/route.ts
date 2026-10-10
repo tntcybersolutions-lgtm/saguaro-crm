@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
+import { apiError, apiFail } from '@/lib/api-error';
 
 const ALLOWED_RFI_COLUMNS = [
   'project_id', 'subject', 'question', 'answer', 'spec_section', 'due_date', 'status',
@@ -32,11 +33,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id } = await params;
   try {
     const db = createServerClient();
-    const { data, error } = await db.from('rfis').select('*, projects(name)').eq('id', id).eq('tenant_id', user.tenantId).single();
+    // maybeSingle: someone else's (or a deleted) RFI is "not found", not a server error.
+    const { data, error } = await db.from('rfis').select('*, projects(name)').eq('id', id).eq('tenant_id', user.tenantId).maybeSingle();
     if (error) throw error;
+    if (!data) return apiFail('RFI not found', 404);
     return NextResponse.json({ rfi: data });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('rfis/id GET', e, "Couldn't load this RFI. Please try again.");
   }
 }
 
@@ -48,11 +51,12 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const body = await req.json();
     const db = createServerClient();
-    const { data, error } = await db.from('rfis').update(filterRfiBody(body)).eq('id', id).eq('tenant_id', user.tenantId).select().single();
+    const { data, error } = await db.from('rfis').update(filterRfiBody(body)).eq('id', id).eq('tenant_id', user.tenantId).select().maybeSingle();
     if (error) throw error;
+    if (!data) return apiFail('RFI not found', 404);
     return NextResponse.json({ rfi: data });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('rfis/id PUT', e, "Couldn't save this RFI. Please try again.");
   }
 }
 
@@ -64,11 +68,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     const body = await req.json();
     const db = createServerClient();
-    const { data, error } = await db.from('rfis').update(filterRfiBody(body)).eq('id', id).eq('tenant_id', user.tenantId).select().single();
+    const { data, error } = await db.from('rfis').update(filterRfiBody(body)).eq('id', id).eq('tenant_id', user.tenantId).select().maybeSingle();
     if (error) throw error;
+    if (!data) return apiFail('RFI not found', 404);
     return NextResponse.json({ rfi: data });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('rfis/id PATCH', e, "Couldn't save this RFI. Please try again.");
   }
 }
 
@@ -80,14 +85,14 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   try {
     const db = createServerClient();
     // Verify the RFI belongs to the caller's tenant before touching anything (prevents cross-tenant IDOR)
-    const { data: owned } = await db.from('rfis').select('id').eq('id', id).eq('tenant_id', user.tenantId).single();
+    const { data: owned } = await db.from('rfis').select('id').eq('id', id).eq('tenant_id', user.tenantId).maybeSingle();
     if (!owned) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     // Delete responses first
     await must(db.from('rfi_responses').delete().eq('rfi_id', id), 'rfi_responses delete');
     const { error } = await db.from('rfis').delete().eq('id', id).eq('tenant_id', user.tenantId);
     if (error) throw error;
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('rfis/id DELETE', e, "Couldn't delete this RFI. Please try again.");
   }
 }
