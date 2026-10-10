@@ -266,15 +266,24 @@ function Modal({ open, onClose, title, width, children }: {
   open: boolean; onClose: () => void; title: string; width?: number;
   children: React.ReactNode;
 }) {
+  const titleId = React.useId();
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
   if (!open) return null;
+  // A fixed 480–520px box ran ~45px off each side of a 390px phone; it now
+  // fits the screen with a 16px gutter and is announced as a dialog.
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)' }} onClick={onClose} />
-      <div style={{ position: 'relative', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 'var(--radius-lg, 12px)',
-        width: width ?? 520, maxHeight: '85vh', overflowY: 'auto', padding: 28, zIndex: 1, boxShadow: 'var(--shadow-lg)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-          <h3 style={{ color: GOLD, margin: 0, fontSize: 18 }}>{title}</h3>
-          <button onClick={onClose} style={{ ...btn('transparent', DIM), fontSize: 20, padding: '2px 8px', lineHeight: 1 }}>×</button>
+      <div role="dialog" aria-modal="true" aria-labelledby={titleId} style={{ position: 'relative', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 'var(--radius-lg, 12px)',
+        width: `min(${width ?? 520}px, 100%)`, boxSizing: 'border-box', maxHeight: '85vh', overflowY: 'auto', padding: 'clamp(18px, 5vw, 28px)', zIndex: 1, boxShadow: 'var(--shadow-lg)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, gap: 8 }}>
+          <h3 id={titleId} style={{ color: GOLD, margin: 0, fontSize: 18 }}>{title}</h3>
+          <button type="button" onClick={onClose} aria-label="Close" style={{ ...btn('transparent', DIM), fontSize: 20, padding: '2px 8px', lineHeight: 1, minWidth: 44, minHeight: 44 }}>×</button>
         </div>
         {children}
       </div>
