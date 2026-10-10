@@ -2,8 +2,8 @@
 /**
  * e2e-jacket — does a bid jacket fill itself from a job, the way a GC builds one?
  *
- * Runs against the LIVE app, signed in as the App Review demo company (never a
- * real customer's account). It starts a ZZ AUDIT job and puts a document on it
+ * Runs against the LIVE app and LIVE database, signed in as Chad's real company
+ * (E2E_EMAIL / E2E_PASSWORD). It starts a ZZ AUDIT job and puts a document on it
  * through EVERY door a GC has:
  *
  *   files      Files / Documents page        POST /api/files/upload
@@ -15,14 +15,13 @@
  * then creates a bid package the way the wizard does, opens its jacket (the API
  * and the real page, iPhone WebKit + desktop) and checks every document landed
  * in the divider it belongs in, and that every required divider is filled.
- * Then it reads every bid package the demo company already has and records how
+ * Then it reads every bid package the company already has and records how
  * full each jacket is (read-only).
  *
  * Writes tools/walk/jacket-e2e.md, jacket-e2e.json and tools/walk/jacket-shots/.
- * Exit 1 when any check fails. Signs in as the demo company (APP_REVIEW_DEMO_*,
- * else App Store Connect via ASC_*); needs PLAYWRIGHT_DIR. Never prints the sign-in.
+ * Exit 1 when any check fails; exit 2 when the E2E secrets are missing. Needs
+ * PLAYWRIGHT_DIR. Never prints the sign-in.
  */
-import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
@@ -35,34 +34,17 @@ const SITE = 'https://www.saguarocontrol.net';
 const RUN = process.env.GITHUB_RUN_ID || String(Date.now());
 const TAG = `ZZ AUDIT ${RUN.slice(-6)}`;
 
-// The demo sign-in, from where the walk gets it (tools/asc-screens.mjs): the
-// APP_REVIEW_DEMO_* env when set, else App Store Connect's betaAppReviewDetail.
-// Never printed.
-function ascToken() {
-  const b64url = (buf) => Buffer.from(buf).toString('base64url');
-  const key = Buffer.from(process.env.ASC_KEY_P8_BASE64 || '', 'base64').toString('utf8');
-  const head = b64url(JSON.stringify({ alg: 'ES256', kid: process.env.ASC_KEY_ID, typ: 'JWT' }));
-  const now = Math.floor(Date.now() / 1000);
-  const body = b64url(JSON.stringify({ iss: process.env.ASC_ISSUER_ID, iat: now, exp: now + 900, aud: 'appstoreconnect-v1' }));
-  const sig = crypto.sign('sha256', Buffer.from(`${head}.${body}`), { key, dsaEncoding: 'ieee-p1363' });
-  return `${head}.${body}.${b64url(sig)}`;
-}
-async function asc(p) {
-  const res = await fetch(`https://api.appstoreconnect.apple.com${p}`, { headers: { Authorization: `Bearer ${ascToken()}` } });
-  const j = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(`App Store Connect ${p.split('?')[0]} → ${res.status}`);
-  return j;
-}
-let email = (process.env.APP_REVIEW_DEMO_EMAIL || '').trim();
-let pass = process.env.APP_REVIEW_DEMO_PASS || '';
+// Chad's real company, on the live site and live database — never the App
+// Store demo company. Every write is a ZZ AUDIT test record, archived after.
+// The login comes from the E2E_EMAIL / E2E_PASSWORD GitHub secrets and is
+// never printed; without them the test refuses to run rather than test a
+// different company.
+const email = (process.env.E2E_EMAIL || '').trim();
+const pass = process.env.E2E_PASSWORD || '';
 if (!email || !pass) {
-  const app = (await asc('/v1/apps?filter[bundleId]=net.saguarocontrol.field')).data?.[0];
-  if (!app) { console.error('no App Store app for net.saguarocontrol.field'); process.exit(2); }
-  const d = (await asc(`/v1/apps/${app.id}/betaAppReviewDetail`)).data?.attributes || {};
-  email = String(d.demoAccountName || '').trim();
-  pass = String(d.demoAccountPassword || '');
+  console.error('E2E_EMAIL / E2E_PASSWORD are not set as GitHub Actions secrets — add them to run this on your real company.');
+  process.exit(2);
 }
-if (!email || !pass) { console.error('no demo sign-in available'); process.exit(2); }
 
 const require = createRequire(path.join(process.env.PLAYWRIGHT_DIR || '/tmp/pw', 'noop.js'));
 const { webkit, chromium, devices } = require('playwright');
@@ -108,7 +90,7 @@ await page.fill('input[name="email"]', email);
 await page.fill('input[name="password"]', pass);
 await page.click('button[type="submit"]');
 await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 90000 });
-console.log('signed in (demo company)');
+console.log('signed in (real company)');
 const api = page.request;
 
 const result = { run: RUN, tag: TAG, job: null, package: null, doors: {}, jacket: null, existing: [], checks };
@@ -261,7 +243,7 @@ try {
   const dpage = await desk.newPage();
   await openJacket(dpage, 'desktop');
 
-  // ── 7. Every package the demo company already has (read-only) ────────────
+  // ── 7. Every package the company already has (read-only) ─────────────────
   const pr = await json(await api.get(`${SITE}/api/projects?limit=200&fields=id,name`));
   const projects = (pr.projects || []).filter((p) => p.id && p.id !== projectId); // app/api/projects GET → { projects }
   for (const p of projects) {
@@ -288,7 +270,7 @@ try {
 const failed = checks.filter((c) => !c.pass);
 const keys = ['invitation', 'scope', 'drawings', 'specs', 'bidform', 'requirements', 'addenda', 'attachments'];
 const md = [
-  '# Bid jacket end to end — every way a GC adds documents (live app, demo company)',
+  '# Bid jacket end to end — every way a GC adds documents (live app, real company)',
   '',
   `Run ${RUN} · ${checks.length - failed.length} of ${checks.length} checks passed · test job archived after the run.`,
   '',
@@ -299,7 +281,7 @@ const md = [
   '| Divider | Count | What is in it |', '|---|---|---|',
   ...(result.jacket || []).map((s) => `| ${s.label}${s.required ? ' *' : ''} | ${s.count} | ${[...s.pages, ...s.docs].join('; ').replace(/\|/g, '/').slice(0, 300)} |`),
   '',
-  `## Every existing package in the demo company (${result.existing.length})`, '',
+  `## Every existing bid package (${result.existing.length}) — read-only`, '',
   `| Job | Package | ${keys.join(' | ')} | Missing |`, `|---|---|${keys.map(() => '---').join('|')}|---|`,
   ...result.existing.map((x) => `| ${x.job} | ${x.package} | ${keys.map((k) => x.counts[k] ?? '–').join(' | ')} | ${Array.isArray(x.missing) ? x.missing.join(', ') || 'none' : String(x.missing)} |`),
   '',

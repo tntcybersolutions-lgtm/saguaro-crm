@@ -1,10 +1,10 @@
 name: Jacket e2e
 
-# The bid jacket, end to end on the LIVE app as the demo company: start a ZZ
+# The bid jacket, end to end on the LIVE app and LIVE database as Chad's real company: start a ZZ
 # AUDIT job, add documents through every door a GC has (Files, Drawings, Specs,
 # Takeoff, the jacket's Add Document), create a package like the wizard does,
 # and check every document lands in the right divider and nothing required is
-# empty. Also records how full every existing demo package's jacket is.
+# empty. Also records how full every existing package's jacket is (read-only).
 # Report: tools/walk/jacket-e2e.md. Runs apart from the walk (own queue).
 
 on:
@@ -25,11 +25,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-      ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
-      APP_REVIEW_DEMO_EMAIL: ${{ secrets.APP_REVIEW_DEMO_EMAIL }}
-      APP_REVIEW_DEMO_PASS: ${{ secrets.APP_REVIEW_DEMO_PASS }}
+      # Chad's real company on the live app (never the App Store demo company).
+      E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
+      E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
       PLAYWRIGHT_DIR: /tmp/pw
     steps:
       - uses: actions/checkout@v4
