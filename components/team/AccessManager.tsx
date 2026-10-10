@@ -684,12 +684,15 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
         method: 'POST', headers: { 'Content-Type': 'application/json', ...headers },
         body: JSON.stringify({ email: inviteEmail.trim(), name: inviteName.trim() || inviteEmail.trim(), role: inviteRole || 'member' }),
       });
-      if (!res.ok) throw new Error('invite failed');
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || 'invite failed');
       setShowInvite(false);
       setInviteEmail('');
       setInviteName('');
       setInviteRole('');
-      notify('Invite sent.');
+      // The invite exists either way; "sent" only when the email really went out.
+      if (body.emailed === false) notify(`Invite saved, but the email didn't go out (${body.emailError || 'email is not set up'}). Use Resend once email works.`, 'err');
+      else notify('Invite sent.');
       await loadData();
       /* The invitee is listed on Team (status Invited) — take you there. */
       setTab('team');
@@ -702,11 +705,13 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
     const headers = await getAuthHeaders();
     try {
       const res = await fetch(`/api/team/invite/${id}`, { method: 'DELETE', headers });
-      if (!res.ok) throw new Error('cancel failed');
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || 'Could not cancel the invite.');
       notify('Invite cancelled.');
       await loadInvites();
-    } catch {
-      notify('Could not cancel the invite.', 'err');
+    } catch (e) {
+      notify(e instanceof Error && e.message ? e.message : 'Could not cancel the invite.', 'err');
+      await loadInvites();
     }
   };
 
@@ -714,11 +719,13 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
     const headers = await getAuthHeaders();
     try {
       const res = await fetch(`/api/team/invite/${id}`, { method: 'POST', headers });
-      if (!res.ok) throw new Error('resend failed');
-      notify('Invite resent — the 7-day clock has been reset.');
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || 'Could not resend the invite.');
+      if (body.emailed === false) notify(`The 7-day clock was reset, but the email didn't go out (${body.emailError || 'email is not set up'}).`, 'err');
+      else notify('Invite resent — the 7-day clock has been reset.');
       await loadInvites();
-    } catch {
-      notify('Could not resend the invite.', 'err');
+    } catch (e) {
+      notify(e instanceof Error && e.message ? e.message : 'Could not resend the invite.', 'err');
     }
   };
 

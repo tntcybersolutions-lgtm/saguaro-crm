@@ -21,12 +21,17 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const user = g.user;
   try {
     const db = createServerClient();
-    const { error } = await db
+    // Only a pending invite is cancelled; anything else (accepted, already
+    // cancelled, another company's) is a 404 rather than a quiet success.
+    const { data, error } = await db
       .from('team_invites')
       .update({ status: 'cancelled' })
       .eq('id', id)
-      .eq('tenant_id', user.tenantId);
+      .eq('tenant_id', user.tenantId)
+      .eq('status', 'pending')
+      .select('id');
     if (error) throw error;
+    if (!data || data.length === 0) return NextResponse.json({ error: 'That invite is not pending any more (accepted or cancelled).' }, { status: 404 });
     return NextResponse.json({ success: true });
   } catch (e) {
     return apiError('team/invite DELETE', e, "Couldn't cancel the invite. Please try again.");
@@ -95,13 +100,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // Load the invite — MUST belong to this tenant (never touch another tenant's row).
     const { data: invite, error: findErr } = await db
       .from('team_invites')
-      .select('id, email, role, token')
+      .select('id, email, role, token, status')
       .eq('id', id)
       .eq('tenant_id', user.tenantId)
-      .single();
-
-    if (findErr || !invite) {
+      .maybeSingle();
+    if (findErr) throw findErr;
+    if (!invite) {
       return NextResponse.json({ error: 'Invite not found' }, { status: 404 });
+    }
+    /* Resend set status back to 'pending' whatever it was, so resending an
+       accepted invite reopened it and a cancelled one came back to life. Only
+       a pending invite is resent. */
+    const status = (invite as { status?: string | null }).status;
+    if (status !== 'pending') {
+      return NextResponse.json({ error: `That invite was ${status || 'closed'} — send a new one instead.` }, { status: 409 });
     }
 
     // Reset the 7-day clock and keep it pending (same token — no regeneration).
@@ -129,10 +141,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       }
     } catch { /* non-fatal — fall back to defaults */ }
 
-    // Re-send the real invitation email (no-ops gracefully if RESEND_API_KEY is unset).
-    await sendInviteTeamMember(invite.email, inviterName, companyName, invite.role || 'member', acceptUrl);
+    // Re-send the real invitation email, and say whether it went out.
+    const mail = await sendInviteTeamMember(invite.email, inviterName, companyName, invite.role || 'member', acceptUrl);
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, emailed: mail.sent, ...(mail.sent ? {} : { emailError: mail.error || "The email didn't go out." }) });
   } catch (e) {
     return apiError('team/invite resend', e, "Couldn't resend the invite. Please try again.");
   }
