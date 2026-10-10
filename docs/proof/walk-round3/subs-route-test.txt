@@ -1,0 +1,62 @@
+# BEFORE — the old page's own requests replayed against main's /api/subs/create and /api/subs/[id]
+BUG  picking a directory company and pressing Add made a SECOND company — status 200, 2 rows named ZZ AUDIT Electric
+BUG  …and never put it on the job (no project_subcontractors row)
+BUG  …and the $12,500 contract amount was not stored anywhere
+BUG  the row's trash button deleted the COMPANY (the DB cascades that to every job, its COI/W-9 documents and scorecards)
+BUG  deleting an id that does not exist answered success
+
+# AFTER — /api/projects/[projectId]/subs, /subs/[subId], and the hardened directory routes (fake DB, PostgREST rules)
+ok   Add a directory company → 201, on the job with the amount, NO second company
+ok   …a phone typed over the pre-filled form is saved to the company
+ok   …the W-9 / prelim trigger fires for this job
+ok   Add it again → 409 already on this job, nothing written
+ok   Add a new company → 201, in the directory with every field, on the job
+ok   Typing a name already in the directory → 409 with that company (no copy)
+ok   Add with no name → 400
+ok   Add with a bad email → 400
+ok   Add with a negative amount → 400
+ok   Add with a broken body → 400
+ok   Add another company's directory entry → 404, nothing linked
+ok   Add onto another company's job → 404, nothing written
+ok   Add without Projects Edit → 403
+ok   List: the three companies on this job, by name
+ok   List: contract on this job and paid = invoices marked Paid only ($3,800)
+ok   List another company's job → 404
+ok   Edit → name, cleared phone, status and this job’s amount saved
+ok   Edit with a blank name → 400
+ok   Edit with a bad status → 400
+ok   Edit a company that isn't on this job → 404
+ok   Edit on another company's job → 404
+ok   Remove an awarded company → 409 naming the package, link kept
+ok   Remove → 200, off the job, the company still in the directory
+ok   Remove again → 404
+ok   Remove without Projects Edit → 403
+ok   GET /api/subs/:id unknown → 404 (was a 500)
+ok   PATCH /api/subs/:id with nothing editable → 400
+ok   PATCH /api/subs/:id another company's → 404
+ok   DELETE /api/subs/:id without Projects Full → 403
+ok   DELETE /api/subs/:id another company's → 404, still there
+ok   POST /api/subs/create with another company's projectId → saved, but no trigger into that job
+ok   POST /api/subs/create with no name → 400 (was a DB error)
+ok   GET /api/subcontractors failure → 500 with a ref, through apiError (was a bare catch)
+ok   POST /api/subcontractors with no name → 400
+ok   List signed out → 401
+all passed
+
+# lib/job-subs.sanity.test.ts
+ok   one line per company, sorted by name
+ok   two awards on one job are summed and flagged
+ok   a numeric string amount counts
+ok   paid uses the net amount, falls back to the gross
+ok   contact falls back to the older email/phone columns
+ok   a row whose company is gone is skipped, not a crash
+ok   blank amount → null
+ok   "$12,500.00" → 12500
+ok   negative, letters, 3 decimals → invalid
+ok   cleanText trims and blanks to null
+ok   an Add sends only what changed and never blanks a field
+ok   the old email follows the contact when it was the same address
+ok   the old phone is kept when it was a different number
+ok   an Edit can clear a field, but never the name
+
+all passed

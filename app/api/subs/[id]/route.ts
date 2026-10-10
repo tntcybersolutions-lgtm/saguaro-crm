@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
@@ -40,8 +41,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       .select('*')
       .eq('id', id)
       .eq('tenant_id', user.tenantId)
-      .single();
+      .maybeSingle();
     if (error) throw error;
+    if (!data) return NextResponse.json({ error: 'Subcontractor not found' }, { status: 404 });
     return NextResponse.json({ sub: data });
   } catch (e) {
     // Was a silent `catch { 'Internal server error' }`. A failed read must not
@@ -51,21 +53,27 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const g = await requirePermission(req, 'Projects', 'Edit');
+  if (!g.ok) return g.res;
+  const user = g.user;
   const { id } = await params;
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Send the changes as JSON.' }, { status: 400 });
     const db = createServerClient();
     const updates = buildUpdates(body as Record<string, unknown>);
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: 'Nothing to update — none of the fields sent are subcontractor fields.' }, { status: 400 });
+    }
     const { data, error } = await db
       .from('subcontractors')
       .update(updates)
       .eq('id', id)
       .eq('tenant_id', user.tenantId)
       .select()
-      .single();
+      .maybeSingle();
     if (error) throw error;
+    if (!data) return NextResponse.json({ error: 'Subcontractor not found' }, { status: 404 });
     return NextResponse.json({ sub: data });
   } catch (e) {
     // Compliance edits (insurance_expiry, w9_on_file, license_expiry) land here.
@@ -75,21 +83,27 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const g = await requirePermission(req, 'Projects', 'Edit');
+  if (!g.ok) return g.res;
+  const user = g.user;
   const { id } = await params;
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Send the changes as JSON.' }, { status: 400 });
     const db = createServerClient();
     const updates = buildUpdates(body as Record<string, unknown>);
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: 'Nothing to update — none of the fields sent are subcontractor fields.' }, { status: 400 });
+    }
     const { data, error } = await db
       .from('subcontractors')
       .update(updates)
       .eq('id', id)
       .eq('tenant_id', user.tenantId)
       .select()
-      .single();
+      .maybeSingle();
     if (error) throw error;
+    if (!data) return NextResponse.json({ error: 'Subcontractor not found' }, { status: 404 });
     return NextResponse.json({ sub: data });
   } catch (e) {
     // Same compliance-update path as PUT; honest surface + correlation id.
@@ -98,17 +112,28 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  /* Deleting a company cascades to every job it is on and to its compliance
+     documents, insurance and scorecards — Full, not Edit. Taking a company
+     off one job is DELETE /api/projects/[projectId]/subs/[subId]. */
+  const g = await requirePermission(req, 'Projects', 'Full');
+  if (!g.ok) return g.res;
+  const user = g.user;
   const { id } = await params;
   try {
     const db = createServerClient();
-    const { error } = await db
+    const { data, error } = await db
       .from('subcontractors')
       .delete()
       .eq('id', id)
-      .eq('tenant_id', user.tenantId);
-    if (error) throw error;
+      .eq('tenant_id', user.tenantId)
+      .select('id');
+    if (error) {
+      if ((error as { code?: string }).code === '23503') {
+        return NextResponse.json({ error: 'This company has contracts, lien waivers or prequalification on file, so it stays. Set its status to Inactive instead.' }, { status: 409 });
+      }
+      throw error;
+    }
+    if (!data || data.length === 0) return NextResponse.json({ error: 'Subcontractor not found' }, { status: 404 });
     return NextResponse.json({ success: true });
   } catch (e) {
     // A failed delete (an FK from a project/compliance row still pointing here)
