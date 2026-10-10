@@ -729,7 +729,7 @@ export default function SchedulePage(){
                 <Field label="Assigned To">
                   <Suggest value={form.assigned_to}
                     onChange={e=>setForm(f=>({...f,assigned_to:e.target.value}))}
-                    style={inp} placeholder="Subcontractor or person" options={['s.companyName']} />
+                    style={inp} placeholder="Subcontractor or person" options={((ctx?.subs || []) as { companyName?: string | null }[]).map((s) => s.companyName || '').filter(Boolean)} />
                   {(ctx?.subs||[]).length>0&&(
                     <div style={HINT}>{ctx.subs.length} sub{ctx.subs.length===1?'':'s'} on the project roster — start typing to pick one.</div>
                   )}

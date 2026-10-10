@@ -465,7 +465,7 @@ export default function SelectionsPage(){
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
                   <Field label="Manufacturer / Vendor">
                     <Suggest value={form.manufacturer} onChange={e=>setForm(f=>({...f,manufacturer:e.target.value}))}
-                      style={inp} placeholder="Kohler, Moen…" options={['v']} />
+                      style={inp} placeholder="Kohler, Moen…" options={((ctx?.vendors || []) as string[]).filter(Boolean)} />
                     {(ctx?.vendors||[]).length>0&&<div style={HINT}>{(ctx.vendors||[]).length} known vendors on this project — start typing to match.</div>}
                   </Field>
                   <Field label="Model / SKU">

@@ -38,11 +38,14 @@ import { AutoChip, InsightRow } from '@/components/ui/premium';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
+import { SUB_TRADES } from '@/lib/construction-intelligence';
 import { layout } from '@/lib/design-tokens';
 
 /** Date-only values parse at local noon ('T12:00:00') so they never shift a day under UTC. */
 /** Today as YYYY-MM-DD on the user's wall clock. toISOString() is the UTC day —
  *  in Arizona every log started after 5 pm was dated tomorrow. */
+/* What the Weather field suggests (free text is still allowed). */
+const WEATHER_OPTS = ['Clear', 'Partly Cloudy', 'Overcast', 'Rain', 'Thunderstorm', 'Snow', 'Fog', 'Windy'];
 const localToday = () => new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 const fmtDay = (d?:string|null) => d ? new Date(d.slice(0,10)+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) : '—';
 const fmtDate = (d?:string|null) => d ? new Date(d.slice(0,10)+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
@@ -213,7 +216,7 @@ function ManpowerEditor({rows,onChange}:{rows:any[];onChange:(v:any[])=>void}){
       <div className="pdlRow">
         <Suggest className="k-input" value={trade} onChange={e=>setTrade(e.target.value)}
           onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();add();}}}
-          placeholder="Add a trade…" options={['t']} />
+          placeholder="Add a trade…" options={SUB_TRADES} />
         <Input type="number" value={count} min={0} data-narrow="true" aria-label="Headcount"
           onChange={e=>setCount(e.target.value)}
           onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();add();}}}
@@ -880,7 +883,7 @@ export default function DailyLogsPage(){
             <Input value={form.superintendent} onChange={e=>setForm(f=>({...f,superintendent:e.target.value}))} placeholder="Who ran the site today"/>
           </Field>
           <Field label="Weather">
-            <Suggest className="k-input" value={form.weather} onChange={e=>setForm(f=>({...f,weather:e.target.value}))} placeholder={mode==='create'?'Auto (NWS)':'Clear, 10 mph W, dusty…'} options={['w']} />
+            <Suggest className="k-input" value={form.weather} onChange={e=>setForm(f=>({...f,weather:e.target.value}))} placeholder={mode==='create'?'Auto (NWS)':'Clear, 10 mph W, dusty…'} options={WEATHER_OPTS} />
           </Field>
           <Field label="Crew Count" hint={mode==='create'&&auto.crew ? 'Counted from clock-ins (web + mobile) or carried from your last log — adjust for today.' : undefined}>
             <Input type="number" value={form.crew_count} onChange={e=>setForm(f=>({...f,crew_count:e.target.value}))} placeholder="0" min={0}/>

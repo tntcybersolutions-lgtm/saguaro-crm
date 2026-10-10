@@ -264,7 +264,7 @@ export default function TimesheetsPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
               <div>
                 <label style={lbl}>Employee *</label>
-                <Suggest type="text" value={form.employee} onChange={e => setForm(p => ({ ...p, employee: e.target.value }))} style={inp} placeholder="Crew member name" options={['n']} />
+                <Suggest type="text" value={form.employee} onChange={e => setForm(p => ({ ...p, employee: e.target.value }))} style={inp} placeholder="Crew member name" options={roster} />
                 {roster.length > 0 && <div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 4, lineHeight: 1.45 }}>{roster.length} crew name{roster.length === 1 ? '' : 's'} on file — start typing to pick.</div>}
               </div>
               <div>

@@ -381,7 +381,7 @@ export default function InvoicesPage() {
               </div>
               <div>
                 <label style={label}>Bill To *{auto.billto && <AutoChip />}</label>
-                <Suggest type="text" value={form.vendor_name} onChange={e => setForm(p => ({ ...p, vendor_name: e.target.value }))} placeholder="Client / owner name" style={inp} options={['ctx.defaults.ownerName', 'v']} />
+                <Suggest type="text" value={form.vendor_name} onChange={e => setForm(p => ({ ...p, vendor_name: e.target.value }))} placeholder="Client / owner name" style={inp} options={[ctx?.defaults?.ownerName, ...vendorNames].filter((n): n is string => !!n)} />
                 <div style={hint}>{auto.billto ? 'Owner of record from project setup.' : 'Who receives this invoice.'}</div>
               </div>
               <div>
