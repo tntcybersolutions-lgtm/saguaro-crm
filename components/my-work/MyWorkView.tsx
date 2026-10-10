@@ -58,6 +58,10 @@ const CSS = `
 .mw .mw-tl::after{content:'';position:absolute;inset:0}
 .mw .mw-tl:focus-visible::after{outline:2px solid var(--brand-primary);outline-offset:-2px}
 .mw .fl-act,.mw .mw-more,.mw .fl-chev{position:relative;z-index:1}
+.mw .fl-act::after{inset:-5px -2px}
+.mw .fl-sec-act{position:relative}
+.mw .fl-sec-act::after{content:'';position:absolute;inset:-6px -6px}
+.mw [role=tabpanel]{overflow-anchor:none}
 .mw .fl-chev{pointer-events:none}
 .mw-more{display:inline-flex;gap:2px;flex:none}
 .mw-sec{position:relative;height:36px;padding:0 10px;border:0;background:none;color:var(--sg-text-3);font:inherit;font-size:13px;font-weight:600;border-radius:8px;cursor:pointer}
