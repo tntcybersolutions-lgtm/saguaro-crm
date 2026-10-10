@@ -566,7 +566,7 @@ export function Field({
         {required && <span className="k-req">*</span>}
       </label>
       {child ? React.cloneElement(child, { id }) : children}
-      {error ? <span className="k-error">{error}</span> : hint ? <span className="k-hint">{hint}</span> : null}
+      {error ? <span className="k-error" role="alert">{error}</span> : hint ? <span className="k-hint">{hint}</span> : null}
     </div>
   );
 }
@@ -662,7 +662,8 @@ export function FormModal({
 
   const foot = footer ?? (onSubmit ? (
     <>
-      {error && <span className="k-error" style={{ marginRight: 'auto', alignSelf: 'center' }}>{error}</span>}
+      {/* role="alert": a blocked save is announced, not just painted red. */}
+      {error && <span className="k-error" role="alert" style={{ marginRight: 'auto', alignSelf: 'center' }}>{error}</span>}
       <Button variant="ghost" onClick={onClose} disabled={busy}>Cancel</Button>
       <Button variant="primary" type="submit" disabled={busy}>{busy ? 'Saving…' : submitLabel}</Button>
     </>
