@@ -190,6 +190,8 @@ export async function runKickoffAutoBuild(db: Db, a: KickoffArgs): Promise<Kicko
     if (!existing || !existing.length) {
       const { error } = await db.from('inspections').insert(QC_CHECKPOINTS.map((q) => ({
         tenant_id: t, project_id: p, inspection_type: q.name, status: 'scheduled', agency: 'Internal QC',
+        // Booked, not held: the columns' own defaults would record a pass, inspected today.
+        result: 'pending', inspected_at: null,
         scheduled_date: addDays(start, q.offsetDays).toISOString(),
         checklist: q.items.map((it) => ({ item: it, status: 'pending' })),
         checklist_total: q.items.length, checklist_passed: 0,
