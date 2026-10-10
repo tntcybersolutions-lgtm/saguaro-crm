@@ -1,8 +1,9 @@
 'use client';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { UsersThree, Plus, EnvelopeSimple, Phone, Buildings } from '@phosphor-icons/react';
+import { UsersThree, Plus, EnvelopeSimple, Phone, Buildings, PencilSimple, Trash } from '@phosphor-icons/react';
 import Suggest from '@/components/ui/Suggest';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 
 /**
  * The project directory — everyone on this job, in one place.
@@ -61,6 +62,42 @@ export default function ProjectDirectory() {
   const [saving, setSaving] = useState(false);
   const [draft, setDraft] = useState<Contact>({ name: '', role: 'Project Manager' });
   const [adding, setAdding] = useState(false);
+  /* Non-null while the form is editing an existing person (same form as Add). */
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const formRef = useRef<HTMLDivElement | null>(null);
+
+  const closeForm = () => { setAdding(false); setEditingId(null); setDraft({ name: '', role: 'Project Manager' }); };
+  const startEdit = (c: Contact) => {
+    if (!c.id) return;
+    setEditingId(c.id);
+    setDraft({ name: c.name || '', role: c.role ?? '', company: c.company ?? '', email: c.email ?? '', phone: c.phone ?? '' });
+    setAdding(true);
+    setError('');
+    requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+  };
+  const remove = async (c: Contact) => {
+    if (!c.id) return;
+    const ok = await confirmDialog({
+      title: `Remove ${c.name}?`,
+      message: `${c.name}${c.role ? ` (${c.role})` : ''} comes off this job's directory. Documents already written keep the name they were written with.`,
+      confirmLabel: 'Remove',
+      danger: true,
+    });
+    if (!ok) return;
+    setRemovingId(c.id);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/directory/${c.id}`, { method: 'DELETE' });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || 'Could not remove that contact.');
+      if (editingId === c.id) closeForm();
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not remove that contact.');
+    } finally {
+      setRemovingId(null);
+    }
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -83,15 +120,21 @@ export default function ProjectDirectory() {
     if (!draft.name.trim()) return;
     setSaving(true);
     try {
-      const res = await fetch(`/api/projects/${projectId}/directory`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(draft),
-      });
+      const res = editingId
+        ? await fetch(`/api/projects/${projectId}/directory/${editingId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: draft.name, role: draft.role ?? null, company: draft.company ?? null, email: draft.email ?? null, phone: draft.phone ?? null }),
+          })
+        : await fetch(`/api/projects/${projectId}/directory`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(draft),
+          });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error || 'Could not save that contact.');
-      setDraft({ name: '', role: 'Project Manager' });
-      setAdding(false);
+      closeForm();
+      setError('');
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not save that contact.');
@@ -128,8 +171,11 @@ export default function ProjectDirectory() {
         )}
 
         {adding && (
-          <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '16px 18px', marginBottom: 18 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 12 }}>
+          <div ref={formRef} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '16px 18px', marginBottom: 18 }}>
+            {editingId && (
+              <div style={{ fontSize: 12, fontWeight: 800, color: GOLD, marginBottom: 10 }}>Edit Contact</div>
+            )}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 190px), 1fr))', gap: 12 }}>
               <label style={{ display: 'block' }}>
                 <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 6 }}>Name</span>
                 <input autoFocus style={input} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
@@ -162,10 +208,10 @@ export default function ProjectDirectory() {
                   cursor: saving || !draft.name.trim() ? 'not-allowed' : 'pointer',
                 }}
               >
-                {saving ? 'Saving…' : 'Add to Directory'}
+                {saving ? 'Saving…' : editingId ? 'Save Changes' : 'Add to Directory'}
               </button>
               <button
-                onClick={() => { setAdding(false); setDraft({ name: '', role: 'Project Manager' }); }}
+                onClick={closeForm}
                 style={{ minHeight: 44, padding: '0 18px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: DIM, fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}
               >
                 Cancel
@@ -206,6 +252,25 @@ export default function ProjectDirectory() {
                   <a href={`tel:${c.phone}`} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: DIM, textDecoration: 'none', minHeight: 26 }}>
                     <Phone size={12} weight="duotone" color={DIM} /> {c.phone}
                   </a>
+                )}
+                {c.id && (
+                  <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+                    <button
+                      onClick={() => startEdit(c)}
+                      aria-label={`Edit ${c.name}`}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44, padding: '0 14px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      <PencilSimple size={13} weight="bold" /> Edit
+                    </button>
+                    <button
+                      onClick={() => remove(c)}
+                      disabled={removingId === c.id}
+                      aria-label={`Remove ${c.name} from the directory`}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44, padding: '0 14px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: 'var(--danger)', fontSize: 13, fontWeight: 700, cursor: removingId === c.id ? 'default' : 'pointer', opacity: removingId === c.id ? 0.6 : 1 }}
+                    >
+                      <Trash size={13} weight="bold" /> {removingId === c.id ? 'Removing…' : 'Remove'}
+                    </button>
+                  </div>
                 )}
               </div>
             ))}
