@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { must } from '@/lib/db-write';
+import { requestDay } from '@/lib/time-zone';
 
 /**
  * Timesheet / time-clock status transition.
@@ -70,7 +71,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
               tenant_id: user.tenantId,
               project_id: t.project_id,
               entry_type: 'labor',
-              entry_date: new Date().toISOString().slice(0, 10),
+              entry_date: (await requestDay(req.headers, db, user.tenantId, 'timesheets/status')).today,
               description: `Approved labor — ${t.cost_code_description || 'field time'} (${Number(t.hours_worked ?? t.total_hours) || 0} hrs)`,
               amount: laborCost,
               csi_division: t.csi_division || null,

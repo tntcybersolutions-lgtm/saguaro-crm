@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { generateReportData } from '@/lib/reports/generate';
 import { apiError } from '@/lib/api-error';
+import { requestDay } from '@/lib/time-zone';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +25,9 @@ export async function POST(req: NextRequest) {
     const user = await getUser(req);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const report = await generateReportData(createServerClient(), user.tenantId, reportType, projectId);
+    const db = createServerClient();
+    const { zone } = await requestDay(req.headers, db, user.tenantId, 'reports/generate');
+    const report = await generateReportData(db, user.tenantId, reportType, projectId, { timeZone: zone });
 
     return NextResponse.json({
       message: report.message,

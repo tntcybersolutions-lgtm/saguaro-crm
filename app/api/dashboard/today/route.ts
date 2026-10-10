@@ -3,6 +3,8 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { getEffectivePermissions, hasPermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 import { embed } from '@/lib/db-embeds';
+import { addDays, requestDay } from '@/lib/time-zone';
+import { daysUntilDay } from '@/lib/calendar-day';
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,8 +13,9 @@ export async function GET(req: NextRequest) {
 
     const db = createServerClient();
     const tenantId = user.tenantId;
-    const today = new Date().toISOString().split('T')[0];
-    const in30 = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+    // "Today" is the company's day (device, else company zone) — the UTC day is tomorrow by 7 PM in Iowa.
+    const { today } = await requestDay(req.headers, db, tenantId, 'dashboard/today');
+    const in30 = addDays(today, 30);
 
     const actions: any[] = [];
 
@@ -40,7 +43,8 @@ export async function GET(req: NextRequest) {
     // Expiring insurance
     const { data: certs } = await db.from('subcontractor_insurance').select('*, subcontractors(company_name), projects(name, id)').eq('tenant_id', tenantId).lte('expiry_date', in30).gte('expiry_date', today).eq('status', 'active').limit(3);
     (certs || []).forEach((cert: any) => {
-      const days = Math.ceil((new Date(cert.expiry_date).getTime() - Date.now()) / 86400000);
+      // Whole calendar days from the company's today (a COI expiring today is 0, not -1 after 7 PM in Iowa).
+      const days = daysUntilDay(cert.expiry_date, today) ?? 0;
       actions.push({
         type: 'insurance',
         title: `${cert.subcontractors?.company_name || 'Sub'} insurance expires in ${days} days`,

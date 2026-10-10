@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { recordLearning } from '@/lib/learning';
+import { requestDay } from '@/lib/time-zone';
 
 /**
  * Saguaro Radio — file-to-log.
@@ -27,9 +28,14 @@ export async function POST(req: NextRequest) {
     const text = String(m.transcript || m.body || '').trim();
     if (!text) return NextResponse.json({ error: 'Nothing to log yet (no transcript or text)' }, { status: 400 });
 
-    const at = String(m.created_at || '').slice(11, 16); // HH:MM from the ISO timestamp
-    const entry = `[Radio ${at} UTC] ${m.sender_name || 'Team member'}: ${text}`;
-    const today = new Date().toISOString().split('T')[0];
+    // Today's log and the time stamp are on the person's clock (device, else company zone) —
+    // the UTC day was tomorrow's log by 7 PM in Iowa, and "19:30 UTC" meant nothing on site.
+    const { today, zone } = await requestDay(req.headers, db, t, 'radio/file-to-log');
+    const sent = new Date(String(m.created_at || ''));
+    const at = Number.isNaN(sent.getTime())
+      ? ''
+      : new Intl.DateTimeFormat('en-US', { timeZone: zone, hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }).format(sent);
+    const entry = `[Radio${at ? ` ${at}` : ''}] ${m.sender_name || 'Team member'}: ${text}`;
 
     // Append to today's log — or open a minimal one if the day has no log yet.
     const { data: logs } = await db.from('daily_logs')

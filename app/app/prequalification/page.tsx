@@ -6,6 +6,7 @@ import { humanError } from '@/lib/errors';
 import { SUB_TRADES as TRADES } from '@/lib/construction-intelligence';
 import { Clipboard, NotePencil, Envelope, CheckCircle, XCircle, CaretUp, CaretDown, X, ShieldCheck, Plus, WarningCircle, ChartBar, Clock } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
+import { FlatStyles, Tabs } from '@/components/ui/flat';
 
 /* ─── Palette ─── */
 const GOLD = 'var(--brand-primary)', BG = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)',
@@ -478,6 +479,13 @@ export default function PrequalificationPage() {
 
   /* ─── Detail sub ─── */
   const detailSub = submissions.find(s => s.id === showDetail);
+  // The submission dialog closes with Escape too.
+  useEffect(() => {
+    if (!showDetail) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setShowDetail(null); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [showDetail]);
   const detailTemplate = detailSub ? templates.find(t => t.id === detailSub.template_id) : null;
 
   /* ═══════════════════════════ RENDER ═══════════════════════════ */
@@ -501,11 +509,22 @@ export default function PrequalificationPage() {
         </>}
       />
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: 0, marginBottom: 24, borderBottom: `2px solid ${BORDER}` }}>
-        {(['dashboard', 'submissions', 'templates', 'invites'] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)} style={{ padding: '10px 24px', background: 'none', border: 'none', color: tab === t ? GOLD : DIM, fontWeight: 700, fontSize: 14, cursor: 'pointer', borderBottom: tab === t ? `2px solid ${GOLD}` : '2px solid transparent', marginBottom: -2, textTransform: 'capitalize' }}>{t}</button>
-        ))}
+      {/* Tabs — one segmented row that fits a 390px phone (the old row of
+          24px-padded buttons ran past the edge: "Templates" was cut and
+          "Invites" could not be reached). Switches in place, never scrolls. */}
+      <FlatStyles />
+      <div style={{ margin: '0 -16px 20px', maxWidth: 592 }}>
+        <Tabs
+          label="Prequalification views"
+          value={tab}
+          onChange={setTab}
+          options={[
+            { key: 'dashboard', label: 'Dashboard' },
+            { key: 'submissions', label: 'Submissions', count: submissions.length || undefined },
+            { key: 'templates', label: 'Templates' },
+            { key: 'invites', label: 'Invites' },
+          ]}
+        />
       </div>
 
       {loading ? <Spinner /> : error && submissions.length === 0 ? (
@@ -1032,6 +1051,17 @@ function TemplateBuilderModal({ initial, onSave, onClose }: { initial: Template 
   const builderTitleId = React.useId();
   useEscapeToClose(onClose);
 
+  /* A dialog the keyboard can leave. It had no role and ignored Escape, so
+     it stayed open over the page: the live walk found the Dashboard tab under
+     this dialog's description box. While a question editor is open on top,
+     Escape closes that one first. */
+  useEffect(() => {
+    if (showAddQ) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose, showAddQ]);
+
   const addOrUpdateQuestion = (q: Question) => {
     if (editQIdx !== null) {
       setQuestions(prev => prev.map((p, i) => i === editQIdx ? q : p));
@@ -1153,6 +1183,12 @@ function QuestionEditor({ initial, onSave, onClose }: { initial: Question | null
   const [err, setErr] = useState('');
   const qTitleId = React.useId();
   useEscapeToClose(onClose);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   const handleSave = () => {
     if (!label.trim()) { setErr('Question text is required.'); return; }

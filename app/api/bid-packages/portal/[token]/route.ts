@@ -4,7 +4,8 @@ import { signUrl } from '@/lib/storage-signing';
 import { checkRateLimit, getClientIP } from '@/lib/rate-limit';
 import { tryWrite } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
-import { assembleJacket } from '@/lib/bid-jacket';
+import { assembleJacket, forBidder } from '@/lib/bid-jacket';
+import { bidRefusal, deadlineZone } from '@/lib/bid-deadline';
 
 /**
  * GET /api/bid-packages/portal/[token] — the bidder's jacket.
@@ -122,8 +123,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
       .eq('contact_email', String(inv.sub_email || '').toLowerCase())
       .maybeSingle();
 
-    const due = p.bid_due_date || p.due_date || null;
-    const closed = !!due && new Date(due).getTime() < Date.now();
+    /* Closed = the due DAY is over in the GC company's own time zone
+       (lib/bid-deadline), or the package is past taking bids (closed /
+       awarded) or its portal is off. new Date(due_date) was midnight UTC — the
+       evening before the due day in every US zone — and a closed or awarded
+       package still offered the bid form, which respond then refused. Same
+       rule as respond, so the page and the submit agree. */
+    const closed = bidRefusal(p, await deadlineZone(db, tenantId, p.projects?.state)) !== null;
 
     /* First open is worth recording — a GC chasing bids needs to know who has
        looked and who has not. Never overwrite the original timestamp. */
@@ -141,7 +147,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
     }
 
     return NextResponse.json({
-      ...jacket,
+      /* The bidder's copy: no competitor counts, no GC budget, no GC checklist. */
+      ...forBidder(jacket),
       invite: {
         id: inv.id,
         company: inv.company_name || inv.sub_name || null,

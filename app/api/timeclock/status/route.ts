@@ -10,6 +10,7 @@ import {
   toShift,
   type ShiftRow,
 } from '@/lib/timeclock/server';
+import { TIME_ZONE_HEADER } from '@/lib/time-zone';
 
 /**
  * GET /api/timeclock/status — "am I on the clock, and what have I logged?"
@@ -39,7 +40,7 @@ export async function GET(req: NextRequest) {
   try {
     const employee = await resolveEmployee(db, g.user);
     const open = await findOpenShift(db, t, employee.id);
-    const tz = open?.timezone || (await resolveTimezone(db, t, employee.id));
+    const tz = open?.timezone || (await resolveTimezone(db, t, employee.id, undefined, req.headers.get(TIME_ZONE_HEADER)));
     const nowIso = new Date().toISOString();
 
     // Two weeks of rows is enough to cover the current week in any timezone

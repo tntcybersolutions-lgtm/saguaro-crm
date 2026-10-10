@@ -2,18 +2,25 @@
  * GET  /api/home?view=&scope=mine|team&project=<uuid>&window=today|7d
  *      The role-based home: context, metrics, ranked action queue, schedule,
  *      work table, per-section errors. docs/SPEC-dashboard-2026-10-03.md.
+ *      `flat` carries what the list-first Home draws (lib/home/flat-build):
+ *      Sage's brief, the number strip, Bidding / Jobs / Money rows.
  * POST /api/home  { view }  — remember the user's chosen home view.
  *
  * Views are filtered by the caller's effective permissions on the server.
  * Asking for a view you do not hold returns your default instead — switching
  * views never widens access.
+ *
+ * "Today" is a day where the person is (lib/time-zone: the device's zone from
+ * the x-time-zone header, else the company's, else UTC) — never a guessed zone.
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { getEffectivePermissions, hasPermission, type PermissionMap } from '@/lib/permissions';
 import { BUILDERS, type BuildCtx, type Scope, type Window } from '@/lib/home/build';
+import { buildFlat } from '@/lib/home/flat-build';
 import { HOME_VIEWS, VIEW_LABEL, ymdIn, type HomeView } from '@/lib/home/rank';
+import { TIME_ZONE_HEADER, isTimeZone } from '@/lib/time-zone';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -47,29 +54,41 @@ export async function GET(req: NextRequest) {
 
     const [perms, profileRes, prefRes, rolesRes, tenantRes] = await Promise.all([
       getEffectivePermissions(db, user.id, user.tenantId),
-      db.from('profiles').select('full_name, role, timezone').eq('id', user.id).eq('tenant_id', user.tenantId).maybeSingle(),
-      db.from('user_preferences').select('custom_settings, timezone').eq('user_id', user.id).eq('tenant_id', user.tenantId).maybeSingle(),
+      db.from('profiles').select('full_name, role').eq('id', user.id).eq('tenant_id', user.tenantId).maybeSingle(),
+      db.from('user_preferences').select('custom_settings').eq('user_id', user.id).eq('tenant_id', user.tenantId).maybeSingle(),
       db.from('user_role_assignments').select('role_definitions(name)').eq('user_id', user.id).eq('tenant_id', user.tenantId),
-      db.from('tenants').select('settings').eq('id', user.tenantId).maybeSingle(),
+      db.from('tenants').select('settings, time_zone').eq('id', user.tenantId).maybeSingle(),
     ]);
     if (profileRes.error) throw profileRes.error;
 
-    const profile = (profileRes.data || {}) as { full_name?: string | null; role?: string | null; timezone?: string | null };
+    const profile = (profileRes.data || {}) as { full_name?: string | null; role?: string | null };
     const baseRole = String(profile.role || '').toLowerCase();
     const custom = ((prefRes.data as { custom_settings?: Record<string, unknown> } | null)?.custom_settings || {}) as Record<string, unknown>;
     const roleNames = ((rolesRes.data || []) as Array<{ role_definitions: { name?: string } | { name?: string }[] | null }>)
       .flatMap(r => (Array.isArray(r.role_definitions) ? r.role_definitions : [r.role_definitions]))
       .map(r => r?.name || '')
       .filter(Boolean);
-    const timeZone = String((prefRes.data as { timezone?: string } | null)?.timezone || profile.timezone || 'America/Phoenix');
+    /* Whose day: the device's zone (x-time-zone), else the company's
+       (tenants.time_zone), else UTC — logged. profiles.timezone and
+       user_preferences.timezone are NOT read: nothing in the app writes them,
+       and both columns default to 'America/Phoenix' in the database, so every
+       person "had" Phoenix — an Iowa GC's home screen stayed on yesterday
+       until 2 AM Central (1 AM in winter), so "today" was the wrong day for
+       the first hours of every morning. */
+    const deviceZone = req.headers.get(TIME_ZONE_HEADER);
+    const companyZone = (tenantRes.data as { time_zone?: string | null } | null)?.time_zone ?? null;
+    const timeZone = isTimeZone(deviceZone) ? deviceZone : isTimeZone(companyZone) ? companyZone : 'UTC';
+    if (timeZone === 'UTC' && !isTimeZone(deviceZone) && !isTimeZone(companyZone)) {
+      console.warn(`[home] no device or company time zone for tenant ${user.tenantId} — using the UTC day`);
+    }
     const features = (((tenantRes.data as { settings?: { features?: Record<string, unknown> } } | null)?.settings?.features) || {}) as Record<string, unknown>;
 
     const available = availableViews(perms, baseRole);
     if (!available.length) {
       return NextResponse.json({ error: 'Your role has no home views yet. Ask an admin for Projects or Sales access.' }, { status: 403 });
     }
-    const saved = typeof custom.home_view === 'string' && available.includes(custom.home_view as HomeView) ? (custom.home_view as HomeView) : null;
-    const defaultView = saved || roleDefault(perms, baseRole, roleNames, available);
+    const savedView = typeof custom.home_view === 'string' && available.includes(custom.home_view as HomeView) ? (custom.home_view as HomeView) : null;
+    const defaultView = savedView || roleDefault(perms, baseRole, roleNames, available);
     const requested = sp.get('view') as HomeView | null;
     const view: HomeView = requested && available.includes(requested) ? requested : defaultView;
 
@@ -92,11 +111,12 @@ export async function GET(req: NextRequest) {
       perms, scope, projectId, today: ymdIn(timeZone), window, timeZone,
     };
     const errors: Record<string, string> = {};
-    const sections = await BUILDERS[view](ctx, errors);
+    const { internal: _internal, ...sections } = await BUILDERS[view](ctx, errors);
+    const flat = await buildFlat(ctx, view, { ...sections, internal: _internal }, errors);
 
     return NextResponse.json({
       context: {
-        view, viewLabel: VIEW_LABEL[view], defaultView, savedView: saved,
+        view, viewLabel: VIEW_LABEL[view], defaultView, savedView,
         views: HOME_VIEWS.filter(v => available.includes(v)).map(v => ({ key: v, label: VIEW_LABEL[v] })),
         scope, window, projectId, today: ctx.today, timeZone,
         firstName: (profile.full_name || '').split(' ')[0] || null,
@@ -105,6 +125,7 @@ export async function GET(req: NextRequest) {
         classicHome: features.classic_home === true,
       },
       ...sections,
+      flat,
       generatedAt: new Date().toISOString(),
     }, { headers: { 'Cache-Control': 'private, no-store' } });
   } catch (e) {

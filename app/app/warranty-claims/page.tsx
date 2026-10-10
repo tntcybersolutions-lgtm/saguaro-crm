@@ -13,6 +13,7 @@ import { ListToolbar } from '@/components/ui/ListToolbar';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { StatusPill } from '@/components/ui/Status';
+import { localDay } from '@/lib/calendar-day';
 
 /* ───── PALETTE ───── */
 const GOLD = 'var(--brand-primary)', BG = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)',
@@ -81,14 +82,15 @@ const CATEGORY_ICONS: Record<string, string> = {
   landscaping: '\u2618', general: '\u2605', other: '\u2731',
 };
 
-const EMPTY_FORM: Omit<WarrantyClaim, 'id'> = {
+/** A blank claim reported today on this device — fresh each time, not frozen at page load. */
+const emptyForm = (): Omit<WarrantyClaim, 'id'> => ({
   claim_number: '', title: '', description: '', category: 'general', location: '',
-  reported_by: '', reported_date: new Date().toISOString().slice(0, 10),
+  reported_by: '', reported_date: localDay(),
   priority: 'medium', status: 'submitted', assigned_trade: '', assigned_contractor: '',
   scheduled_date: '', completed_date: '', resolution: '', cost: 0,
   covered_under_warranty: true, warranty_expiry: '', photos: [], notes: '',
   communication_log: [],
-};
+});
 
 /* ───── STYLE HELPERS ───── */
 const css = {
@@ -139,7 +141,7 @@ export default function WarrantyClaimsPage() {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard'|'claims'|'create'>('dashboard');
   const [detailClaim, setDetailClaim] = useState<WarrantyClaim | null>(null);
-  const [form, setForm] = useState<Omit<WarrantyClaim, 'id'>>(EMPTY_FORM);
+  const [form, setForm] = useState<Omit<WarrantyClaim, 'id'>>(emptyForm);
 
   /* ── Unsaved-work guard: the composer holds real typing, so leaving this
    *    module (sidebar, field nav, ⌘K, breadcrumb, back) confirms first, and
@@ -203,7 +205,7 @@ export default function WarrantyClaimsPage() {
 
   /* helpers */
   const flash = (text: string, type: 'ok' | 'err' = 'ok') => { setMsg({ text, type }); setTimeout(() => setMsg(null), 3500); };
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDay(); // This device's day — toISOString() is the UTC day, tomorrow from 7 PM on in Iowa.
   const isExpired = (d: string) => d && d < today;
 
   /* filtered claims */
@@ -310,7 +312,7 @@ export default function WarrantyClaimsPage() {
       const j = await res.json().catch(() => ({}));
       if (!res.ok || !j?.claim) throw new Error(j?.error || `Create failed (${res.status})`);
       setClaims(prev => [j.claim as WarrantyClaim, ...prev]);
-      setForm(EMPTY_FORM);
+      setForm(emptyForm());
       setActiveTab('claims');
       flash(`Warranty claim ${(j.claim as WarrantyClaim).claim_number} created.`);
       guard.clearDraft();
@@ -437,7 +439,7 @@ export default function WarrantyClaimsPage() {
             <option value="">Select a project…</option>
             {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
-          <button style={goldButtonStyle} className="pmBtn" onClick={() => { setForm(EMPTY_FORM); setActiveTab('create'); }}>
+          <button style={goldButtonStyle} className="pmBtn" onClick={() => { setForm(emptyForm()); setActiveTab('create'); }}>
             <PlusCircle size={16} weight="bold" /> New Claim
           </button>
         </>}
@@ -515,7 +517,7 @@ export default function WarrantyClaimsPage() {
             icon={<ShieldWarning size={30} weight="duotone" color={GOLD} />}
             title="No warranty claims on this project"
             description="Warranty claims track defects reported after closeout. Each one moves through a pipeline — submitted, acknowledged, scheduled, in progress, completed — with contractor dispatch, cost, and homeowner communication all on the record."
-            action={<button style={goldButtonStyle} className="pmBtn" onClick={() => { setForm(EMPTY_FORM); setActiveTab('create'); }}><PlusCircle size={16} weight="bold" /> Log the First Claim</button>}
+            action={<button style={goldButtonStyle} className="pmBtn" onClick={() => { setForm(emptyForm()); setActiveTab('create'); }}><PlusCircle size={16} weight="bold" /> Log the First Claim</button>}
           />
         </SectionCard>
       )}
@@ -587,7 +589,7 @@ export default function WarrantyClaimsPage() {
                 icon={<ClipboardText size={30} weight="duotone" color={GOLD} />}
                 title={claims.length > 0 ? 'No claims match these filters' : 'No warranty claims found'}
                 description={claims.length > 0 ? 'Clear the filters above to see the full pipeline again.' : 'Log the first homeowner defect — it enters the pipeline at submitted and tracks dispatch, cost, and communication through closeout.'}
-                action={<button style={goldButtonStyle} className="pmBtn" onClick={() => { setForm(EMPTY_FORM); setActiveTab('create'); }}><PlusCircle size={16} weight="bold" /> New Claim</button>}
+                action={<button style={goldButtonStyle} className="pmBtn" onClick={() => { setForm(emptyForm()); setActiveTab('create'); }}><PlusCircle size={16} weight="bold" /> New Claim</button>}
               />
             </SectionCard>
           ) : (

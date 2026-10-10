@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { requestDay } from '@/lib/time-zone';
 
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
   const user = await getUser(req);
@@ -98,7 +99,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
         description,
         corrective_actions: description,
         severity: 'N/A',
-        incident_date: due_date || new Date().toISOString().split('T')[0],
+        incident_date: due_date || (await requestDay(req.headers, supabase, user.tenantId, 'safety/corrective-actions')).today,
         status: 'open',
         created_at: new Date().toISOString(),
       };

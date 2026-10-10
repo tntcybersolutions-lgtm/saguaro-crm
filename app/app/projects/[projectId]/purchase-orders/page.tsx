@@ -18,6 +18,7 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 import { StatusPill } from '@/components/ui/Status';
+import { localDay } from '@/lib/calendar-day';
 
 interface LineItem {
   description: string;
@@ -58,7 +59,8 @@ function normalizePo(row: Record<string, unknown>): PurchaseOrder {
     vendor: (row.vendor_name as string) || '',
     description: (row.description as string) || '',
     amount: Number(row.total ?? row.subtotal ?? 0),
-    issued_date: created ? created.split('T')[0] : (new Date().toISOString().split('T')[0]),
+    // The day it was created on this device's calendar (created_at is an instant; its UTC date is tomorrow every evening).
+    issued_date: created && !Number.isNaN(new Date(created).getTime()) ? localDay(new Date(created)) : localDay(),
     delivery_date: (row.delivery_date as string) || null,
     status: (row.status as string) || 'draft',
     line_items: (row.line_items as LineItem[]) || [],

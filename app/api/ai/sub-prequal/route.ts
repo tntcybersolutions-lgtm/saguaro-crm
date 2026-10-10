@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import Anthropic from '@anthropic-ai/sdk';
 import { tryWrite } from '@/lib/db-write';
+import { requestDay } from '@/lib/time-zone';
 import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
@@ -21,7 +22,6 @@ export async function POST(req: NextRequest) {
      error was dropped, and the AI scored whatever the page sent instead. */
   let sub: Record<string, unknown> = subData || {};
   let onFile = false;
-  const today = new Date().toISOString().split('T')[0];
   let w9Status: 'submitted' | 'pending' | 'not_requested' = 'not_requested';
   // Only a real subcontractors id is looked up (the compliance roster can carry a project-only row).
   if (typeof subId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(subId)) {
@@ -52,6 +52,13 @@ export async function POST(req: NextRequest) {
     w9Status = w === 'on_file' || w === 'submitted' ? 'submitted' : w === 'pending' ? 'pending' : 'not_requested';
   }
 
+  // Active certs are judged on the company's day (device, else company zone), not UTC's.
+  let today: string;
+  try {
+    ({ today } = await requestDay(req.headers, db, tenantId, 'ai/sub-prequal'));
+  } catch (e) {
+    return apiError('ai/sub-prequal', e);
+  }
   const certs = (sub.insurance_certificates as any[]) || [];
   const live = (d: unknown) => typeof d === 'string' && d >= today;
   const hasGL = certs.some((c: any) => live(c.gl_expiry) || (live(c.expiry_date) && /\bgl\b|general/i.test(String(c.policy_type || ''))))

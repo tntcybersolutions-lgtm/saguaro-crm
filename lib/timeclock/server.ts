@@ -28,6 +28,7 @@ import {
   splitDailyHours,
   type HoursSplit,
 } from './index';
+import { companyTimeZone, isTimeZone } from '../time-zone';
 
 export type TimeclockDb = SupabaseClient<Database>;
 
@@ -281,17 +282,23 @@ export function workedHoursFor(clockIn: string, clockOut: string, mealBreakMins 
 /**
  * IANA timezone for a new shift. The server process runs in UTC, so guessing
  * from the server clock would mis-bucket every crew's day. Preference order:
- * caller-supplied → this employee's most recent entry → this tenant's most
- * recent entry → UTC (honest "we don't know" rather than a fabricated zone).
+ * caller-supplied (body) → the device's zone (the x-time-zone header every app
+ * call carries) → the company's zone (tenants.time_zone) → this employee's most
+ * recent entry → this tenant's most recent entry → UTC (honest "we don't know"
+ * rather than a fabricated zone).
  */
 export async function resolveTimezone(
   db: TimeclockDb,
   tenantId: string,
   employeeId: string,
   requested?: unknown,
+  deviceZone?: string | null,
 ): Promise<string> {
   const asked = typeof requested === 'string' ? requested.trim() : '';
   if (asked && isValidTimezone(asked)) return asked;
+  if (isTimeZone(deviceZone)) return deviceZone;
+  const company = await companyTimeZone(db, tenantId);
+  if (company) return company;
 
   const { data: mine } = await db
     .from('time_entries')

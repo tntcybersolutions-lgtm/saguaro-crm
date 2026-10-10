@@ -14,6 +14,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { toCents, toDollars, subCents } from '@/lib/calc';
 import { embed } from '@/lib/db-embeds';
+import { addDays, dayIn } from '@/lib/time-zone';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -81,15 +82,22 @@ export interface GeneratedReport {
  * Run a canned report against live tenant data. Returns real rows for the
  * supported reportTypes; for anything else returns an honest empty result
  * (source:'empty') rather than fabricating rows.
+ *
+ * `opts.timeZone` is the company's clock the report is dated on and judged in
+ * ("expired", "expiring soon") — the reader's device zone, else the company's
+ * (lib/time-zone). The server's UTC day called a COI expiring today EXPIRED
+ * from 7 PM on in Iowa.
  */
 export async function generateReportData(
   db: SupabaseClient,
   tenantId: string,
   reportTypeRaw: string,
-  projectId?: string | null,
+  projectId: string | null | undefined,
+  opts: { timeZone: string },
 ): Promise<GeneratedReport> {
   const reportType = normalizeReportType(reportTypeRaw);
-  const timestamp = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const timestamp = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: opts.timeZone });
+  const today = dayIn(opts.timeZone);
   const config = REPORT_CONFIGS[reportType] || { title: reportTypeRaw || 'Report', columns: ['Item', 'Value'] };
   const anyDb = db as any;
   // A failed query is a failed report, not an empty one: the caller turns it
@@ -164,8 +172,7 @@ export async function generateReportData(
       let q = anyDb.from('insurance_certificates').select('*, subcontractors!sub_id(company_name, trade), projects!project_id(name)').eq('tenant_id', tenantId).order('expiry_date', { ascending: true }).limit(100);
       if (projectId) q = q.eq('project_id', projectId);
       const certs = await rowsOf(q);
-      const today = new Date().toISOString().split('T')[0];
-      const soon = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+      const soon = addDays(today, 30);
       const rows = certs.map((c: any) => {
         // GL / WC from their own columns (an ACORD read fills them), else from the
         // single policy the certificate is for.

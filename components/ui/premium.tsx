@@ -15,15 +15,12 @@
  */
 
 import React from 'react';
-import { neonCard } from '@/lib/neon';
 import { Check } from '@phosphor-icons/react';
 import { moduleAccent } from '@/lib/module-identity';
-import { ScribbleNote } from '@/components/Scribble';
 import { STATUS_COLORS } from '@/lib/status-colors';
 
 // Brand hooks (white-label re-themes these via WhiteLabelProvider) ------------
 const GOLD = 'var(--brand-primary)';        // #FFE600 neon yellow default
-const GOLD_HI = 'var(--brand-primary-strong)'; // #FFF04A default
 const ON_GOLD = 'var(--on-brand)';             // #0A0A00 — text/icons on a yellow fill
 // Brand alpha steps — tokens, so a white-label override re-themes them too.
 const A08 = 'var(--brand-primary-08)';
@@ -33,13 +30,9 @@ const A22 = 'var(--brand-primary-18)';
 const A30 = 'var(--brand-primary-25)';
 const A45 = 'var(--brand-primary-35)';
 const BORDER = 'rgba(255,255,255,0.09)';
-// Glass (COPY-STYLE §6): translucent white over jet black, blurred.
-const SURFACE = 'linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.03))';
-const GLASS_BLUR = 'blur(16px) saturate(140%)';
 const WHITE = 'var(--text-primary)';
 const MUTED = 'var(--text-secondary)';
 const FAINT = 'var(--text-tertiary)';
-const RED = STATUS_COLORS.overdue;
 
 // ─── FX keyframes + interaction classes ──────────────────────────────────────
 // Rendered once per page. All motion is disabled under prefers-reduced-motion.
@@ -54,31 +47,30 @@ export const PREMIUM_FX = `
 @keyframes pmPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(1.4)}}
 @keyframes pmRing{0%{transform:scale(.85);opacity:.7}70%{opacity:0}100%{transform:scale(1.7);opacity:0}}
 @keyframes pmSkeleton{0%,100%{opacity:1}50%{opacity:.4}}
-.pmHover{transition:transform .2s cubic-bezier(.2,.7,.3,1),box-shadow .2s ease,border-color .2s ease,background .2s ease}
-/* !important on hover: outranks pmRise's held fill value (transform:none) and the inline resting shadow so the lift/elevation actually renders. Hover-only transforms are transient — the rest state stays transform:none, so no permanent stacking context. */
-.pmHover:hover{transform:translateY(-4px)!important;border-color:${A45};box-shadow:0 22px 44px -26px ${A30},inset 0 1px 0 rgba(255,255,255,0.08)!important}
-.pmHover:hover .pmChip{box-shadow:0 0 0 3px ${A12},0 0 22px ${A30}!important}
-.pmBtn{transition:transform .16s ease,box-shadow .16s ease,filter .16s ease}
-.pmBtn:hover{transform:translateY(-1px);filter:brightness(1.05)}
-.pmBtn:active{transform:scale(.98)}/* transient press; rest state stays transform:none */
-/* Machined button material (mobile MAT port — lib/theme goldGrad/ghostGrad/dangerGrad).
-   Class-based so :active gets REAL pressed depth: a full-step darker gradient with the
-   glow tucked in, not just a scale. Disabled: dimmed, glow off, faint top edge only. */
-.pmGold{background:linear-gradient(180deg,var(--brand-primary-strong),var(--brand-primary) 60%,var(--brand-primary-hover));color:var(--on-brand);border:none;box-shadow:0 4px 14px var(--brand-primary-25),inset 0 1px 0 rgba(255,255,255,0.35);transition:transform .16s ease,box-shadow .16s ease,filter .16s ease,background .16s ease}
-.pmGold:hover{transform:translateY(-1px);filter:brightness(1.05);box-shadow:0 8px 22px var(--brand-primary-35),inset 0 1px 0 rgba(255,255,255,0.35)}
-.pmGold:active{transform:translateY(0.5px) scale(.985);filter:none;background:linear-gradient(180deg,var(--brand-primary) 0%,var(--brand-primary-hover) 55%,#CCB800 100%);box-shadow:0 2px 8px var(--brand-primary-25),inset 0 1px 3px rgba(0,0,0,0.2)}
-.pmGhost{background:linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.04));backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);color:var(--c-text);border:1px solid ${BORDER};box-shadow:0 2px 10px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.07);transition:transform .16s ease,box-shadow .16s ease,background .16s ease,border-color .16s ease}
-.pmGhost:hover{transform:translateY(-1px);border-color:rgba(255,255,255,0.16)}
-.pmGhost:active{transform:translateY(0.5px) scale(.985);background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));box-shadow:inset 0 1px 3px rgba(0,0,0,0.25)}
-.pmDanger{background:linear-gradient(180deg,rgba(255,59,48,0.20),rgba(255,59,48,0.09));color:#FF3B30;border:1px solid rgba(255,59,48,0.50);box-shadow:0 2px 10px rgba(255,59,48,0.18),inset 0 1px 0 rgba(255,255,255,0.10);transition:transform .16s ease,box-shadow .16s ease,background .16s ease}
-.pmDanger:hover{transform:translateY(-1px);background:linear-gradient(180deg,rgba(255,59,48,0.26),rgba(255,59,48,0.12))}
-.pmDanger:active{transform:translateY(0.5px) scale(.985);background:linear-gradient(180deg,rgba(255,59,48,0.30),rgba(255,59,48,0.16));box-shadow:0 1px 6px rgba(255,59,48,0.15),inset 0 1px 3px rgba(0,0,0,0.25)}
-.pmGold:disabled,.pmGhost:disabled,.pmDanger:disabled{opacity:.45;cursor:not-allowed;transform:none;filter:none;box-shadow:inset 0 1px 0 rgba(255,255,255,0.06)}
-/* Interactive milled plates press in slightly (pairs with .pmHover lift). !important
-   outranks pmRise's held fill value, same as the :hover rule above. */
-.pmHover:active{transform:translateY(-1px) scale(.985)!important}
-.pmTile{transition:transform .18s ease}
-.pmTile:hover{transform:translateY(-1px)}
+/* Flat (2026-10-10): nothing lifts on hover and nothing glows. A tappable
+   surface answers with a faint wash; a button with a step darker fill. */
+.pmHover{transition:background .15s ease,border-color .15s ease}
+.pmHover:hover{background-color:rgba(255,255,255,0.03)}
+.pmBtn{transition:background .15s ease,filter .15s ease,opacity .15s ease}
+.pmBtn:hover{filter:brightness(1.05)}
+.pmBtn:active{transform:none;opacity:.85}
+/* Buttons: one solid brand fill for the primary, a hairline outline for the
+   rest. Class-based so :active and :disabled read the same everywhere. */
+.pmGold{background:var(--brand-primary);color:var(--on-brand);border:none;box-shadow:none;transition:background .15s ease,opacity .15s ease}
+.pmGold:hover{background:var(--brand-primary-hover)}
+.pmGold:active{transform:none;opacity:.85}
+.pmGhost{background:none;color:var(--c-text);border:1px solid var(--sg-border-strong);box-shadow:none;transition:background .15s ease,border-color .15s ease}
+.pmGhost:hover{background:rgba(255,255,255,0.04)}
+.pmGhost:active{transform:none;background:rgba(255,255,255,0.07)}
+.pmDanger{background:none;color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 50%,transparent);box-shadow:none;transition:background .15s ease}
+.pmDanger:hover{background:color-mix(in srgb,var(--danger) 10%,transparent)}
+.pmDanger:active{transform:none;background:color-mix(in srgb,var(--danger) 16%,transparent)}
+.pmGold:disabled,.pmGhost:disabled,.pmDanger:disabled{opacity:.45;cursor:not-allowed;transform:none;filter:none;box-shadow:none}
+.pmHover:active{transform:none}
+.pmTile{transition:background .15s ease}
+/* The flat section, header, figure-strip and empty-state rules live in
+   app/globals.css (FLAT SHARED PARTS) so they apply on every page, not only
+   under a <PremiumSurface>. */
 .pmShine{background-size:200% 100%;animation:pmShimmer 3.6s linear infinite}
 .pmSkeleton{animation:pmSkeleton 1.4s ease-in-out infinite}
 /* Machined sortable table headers (premium DataTable). Color states live here so
@@ -90,8 +82,8 @@ export const PREMIUM_FX = `
 .pmSortTh[aria-sort="ascending"],.pmSortTh[aria-sort="descending"]{color:var(--brand-primary-strong)}
 .pmSortTh[aria-sort="ascending"] .pmSortGlyph,.pmSortTh[aria-sort="descending"] .pmSortGlyph{opacity:1}
 /* Beat the global h1 !important size cap (globals.css) with higher specificity */
-@media (max-width:640px){.pmStatValue{font-size:26px!important}}
-h1.pmH1{font-size:clamp(24px,2.4vw,32px)!important;font-weight:800!important;line-height:1.12!important;letter-spacing:-0.02em!important;margin:0!important} /* page-title scale: 28–32 desktop, 24 phone */
+h1.pmH1{font-size:22px!important;font-weight:700!important;line-height:1.2!important;letter-spacing:-0.015em!important;margin:0!important}
+@media (max-width:767px){h1.pmH1{font-size:20px!important}} /* page-title scale: 22 desktop, 20 phone (flat header) */
 @media (prefers-reduced-motion: reduce){
   .pmRoot,.pmRoot *{animation:none!important;transition:none!important}
   .pmHover:hover,.pmHover:active,.pmBtn:hover,.pmBtn:active,.pmTile:hover,.pmGold:hover,.pmGold:active,.pmGhost:hover,.pmGhost:active,.pmDanger:hover,.pmDanger:active{transform:none!important}
@@ -126,38 +118,31 @@ export function PremiumFX() {
 }
 
 // ─── Aurora backdrop ─────────────────────────────────────────────────────────
-// Jet black (COPY-STYLE §6). The warm amber blobs, drifting blueprint grid and
-// vignette that used to live here sat behind text and made it hard to read;
-// the backdrop is now one faint, static, COOL sheen at the top of the column
-// and nothing else. Name and props kept so every caller keeps compiling.
-// position:absolute so it fills only the content column; pointer-events:none.
-export function Aurora({ soft = true }: { soft?: boolean }) {
-  return (
-    <div aria-hidden style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-      <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(120% 60% at 50% -12%, rgba(170,195,255,${soft ? 0.035 : 0.05}), transparent 60%)` }} />
-    </div>
-  );
+// Flat (2026-10-10): the page is one solid ground. The faint sheen that was
+// left of the old aurora is gone too; the name and props stay so every caller
+// keeps compiling.
+export function Aurora(_props: { soft?: boolean }) {
+  return null;
 }
 
 // ─── PremiumSurface ──────────────────────────────────────────────────────────
-// The relative wrapper that carries the Aurora + FX for a whole page. Content
-// sits above the backdrop at zIndex 1.
+// The page wrapper: the shared FX stylesheet, a max width, and the page
+// padding — the caller's on desktop, a 16px gutter on a phone (.pmPage).
 export function PremiumSurface({
   children,
   maxWidth = 2200,
-  soft = true,
-  pad = '32px 24px 56px',
+  pad = '20px 24px 48px',
 }: {
   children: React.ReactNode;
   maxWidth?: number;
+  /** Kept for callers; the surface is flat either way. */
   soft?: boolean;
   pad?: string;
 }) {
   return (
     <div className="pmRoot" style={{ position: 'relative', overflow: 'hidden', minHeight: 'calc(100vh - 56px)' }}>
       <PremiumFX />
-      <Aurora soft={soft} />
-      <div style={{ position: 'relative', zIndex: 1, padding: pad, maxWidth, margin: '0 auto' }}>
+      <div className="pmPage" style={{ position: 'relative', maxWidth, margin: '0 auto', ['--pm-pad' as string]: pad }}>
         {children}
       </div>
     </div>
@@ -165,17 +150,24 @@ export function PremiumSurface({
 }
 
 // ─── ModuleHero ──────────────────────────────────────────────────────────────
+/**
+ * The page header — compact (flat UI, 2026-10-10): a 20–22px title, one line
+ * under it, the actions on the right. No eyebrow pill, no gradient accent
+ * word, no module bar, no margin scribble. On a phone the actions are one
+ * row under the title that scrolls sideways inside itself.
+ *
+ * Every prop is still accepted so no caller breaks: `accent` reads as the
+ * rest of the title in the same colour; `eyebrow`, `eyebrowIcon`,
+ * `accentColor` and `note` are decoration the flat header leaves out; `aux`
+ * (a live control or badge) stays, under the subtitle.
+ */
 export function ModuleHero({
-  eyebrow,
-  eyebrowIcon,
   aux,
   title,
   accent,
   subtitle,
-  note,
   actions,
   align = 'left',
-  accentColor,
   style,
 }: {
   eyebrow?: string;
@@ -184,98 +176,25 @@ export function ModuleHero({
   title: React.ReactNode;
   accent?: React.ReactNode;
   subtitle?: React.ReactNode;
-  /** Handwritten margin note. Plain text, one short line. */
+  /** Handwritten margin note — not drawn in the flat header. */
   note?: string;
   actions?: React.ReactNode;
   align?: 'left' | 'center';
-  /** Module accent HEX (lib/module-identity moduleAccent). When set, the eyebrow
-   *  pill, title shine and a StatCard-style 3px left bar wash in the module hue
-   *  instead of gold. Money modules simply don't pass it — they stay gold. */
+  /** Module accent — not drawn in the flat header. */
   accentColor?: string;
   style?: React.CSSProperties;
 }) {
-  const centered = align === 'center';
-  const ac = accentColor;
   return (
-    <div
-      style={{
-        position: 'relative',
-        display: 'flex',
-        alignItems: centered ? 'center' : 'flex-end',
-        flexDirection: centered ? 'column' : 'row',
-        justifyContent: 'space-between',
-        gap: 16,
-        flexWrap: 'wrap',
-        marginBottom: 24,
-        paddingLeft: ac && !centered ? 18 : undefined,
-        textAlign: centered ? 'center' : 'left',
-        ...style,
-      }}
-    >
-      {/* module-accent left bar (StatCard-style) — only when accentColor is set */}
-      {ac && !centered && (
-        <div aria-hidden style={{ position: 'absolute', left: 0, top: 2, bottom: 6, width: 3, borderRadius: 2, background: `linear-gradient(180deg, ${ac}, transparent)`, opacity: 0.85 }} />
-      )}
-      <div style={{ minWidth: 0, maxWidth: centered ? 720 : undefined }}>
-        {(eyebrow || aux) && (
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 14, flexWrap: 'wrap', justifyContent: centered ? 'center' : 'flex-start' }}>
-            {eyebrow && (
-              <span
-                style={{
-                  animation: 'pmRise .5s ease both',
-                  display: 'inline-flex', alignItems: 'center', gap: 7,
-                  padding: '6px 14px', borderRadius: 999,
-                  background: ac ? `${ac}24` : A12,
-                  border: `1px solid ${ac ? ac + '73' : A45}`, color: ac || GOLD,
-                  fontSize: 12.5, fontWeight: 700, letterSpacing: 'normal',
-                }}
-              >
-                {eyebrowIcon}{eyebrow}
-              </span>
-            )}
-            {aux}
-          </div>
-        )}
-        <h1 className="pmH1" style={{ animation: 'pmRise .55s ease .05s both', color: WHITE }}>
+    <div className="pmHead" data-align={align === 'center' ? 'center' : undefined} style={style}>
+      <div className="pmHeadText">
+        <h1 className="pmH1">
           {title}
-          {accent != null && accent !== '' && (
-            <>
-              {' '}
-              <span
-                className="pmShine"
-                style={{
-                  background: ac
-                    ? `linear-gradient(100deg, ${ac} 6%, color-mix(in srgb, ${ac} 70%, #FFFFFF) 38%, color-mix(in srgb, ${ac} 42%, #FFFFFF) 56%, ${ac} 92%)`
-                    : `linear-gradient(100deg, ${GOLD} 6%, ${GOLD_HI} 38%, #FFF7A8 56%, ${GOLD} 92%)`,
-                  WebkitBackgroundClip: 'text', backgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent', color: 'transparent',
-                }}
-              >
-                {accent}
-              </span>
-            </>
-          )}
+          {accent != null && accent !== '' && <>{' '}{accent}</>}
         </h1>
-        {subtitle && (
-          <p style={{ animation: 'pmRise .6s ease .1s both', color: MUTED, fontSize: 15, margin: '12px 0 0', maxWidth: 620, lineHeight: 1.6, marginInline: centered ? 'auto' : undefined }}>
-            {subtitle}
-          </p>
-        )}
-        {/* A mark in the margin, the way a super writes on a drawing — the bit
-            the official subtitle leaves out. One line on a screen, never two:
-            the value is that it reads as a person, and a page covered in them
-            reads as a gimmick. */}
-        {note && (
-          <div style={{ margin: '9px 0 0', marginInline: centered ? 'auto' : undefined }}>
-            <ScribbleNote size={15} rotate={-3}>{note}</ScribbleNote>
-          </div>
-        )}
+        {subtitle && <p className="pmHeadSub" title={typeof subtitle === 'string' ? subtitle : undefined}>{subtitle}</p>}
+        {aux && <div className="pmHeadAux">{aux}</div>}
       </div>
-      {actions && (
-        <div style={{ animation: 'pmRise .6s ease .12s both', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', justifyContent: centered ? 'center' : 'flex-end', paddingBottom: centered ? 0 : 4 }}>
-          {actions}
-        </div>
-      )}
+      {actions && <div className="pmHeadActs">{actions}</div>}
     </div>
   );
 }
@@ -315,8 +234,18 @@ export function vividOf(accentKey?: string | null): string {
 }
 
 // ─── StatCard (premium) ──────────────────────────────────────────────────────
+/**
+ * One figure — flat (2026-10-10): value 17px bold over an 11px label, a
+ * hairline on its left, no tile, no icon chip, no glow, no big padding. Laid
+ * out several to a row by the caller's own grid, they read as the number
+ * strip on Home.
+ *
+ * Kept: `href` / `onClick` (it opens or filters something — a › says so),
+ * `active` (the filter it applies is on — a brand underline and ✓), `tone`
+ * and `accent` (the value's colour: red, amber, green or a status hue).
+ * `icon` and `delay` are accepted and not drawn.
+ */
 export function StatCard({
-  icon,
   label,
   value,
   sub,
@@ -325,90 +254,70 @@ export function StatCard({
   href,
   interactive: forceInteractive,
   active = false,
-  delay = 0,
   tone,
 }: {
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   label: string;
   value: React.ReactNode;
   sub?: React.ReactNode;
   accent?: string;
-  /** Tints the whole card: 'bad' for a count that must be zero (Paperwork Missing > 0), 'warn', 'good'. */
+  /** Colours the value: 'bad' for a count that must be zero, 'warn', 'good'. */
   tone?: 'bad' | 'warn' | 'good';
   onClick?: () => void;
   href?: string;
   interactive?: boolean;
-  /** Selected state — e.g. a card acting as the active filter on a list. */
+  /** Selected state — e.g. a figure acting as the active filter on a list. */
   active?: boolean;
   delay?: number;
 }) {
   const interactive = !!(onClick || href || forceInteractive);
-  /* Neon by default (owner 2026-10-03): every stat card is lit in its own
-     accent — a caller's accent wins, otherwise a stable neon from the label. */
   const toneColor = tone === 'bad' ? 'var(--danger)' : tone === 'warn' ? 'var(--warning)' : tone === 'good' ? 'var(--success)' : null;
-  const lit = accent || toneColor || 'var(--c-yellow)';
-  const numberColor = lit;
-  const ring = active ? lit : toneColor;
-  const glow = neonCard(lit);
-  const inner = (
-    <div
-      onClick={onClick}
-      className={interactive ? 'pmHover' : undefined}
-      aria-pressed={onClick ? active : undefined}
-      // A card that runs code (filter, tab switch) is a button to keyboards
-      // and screen readers; inside an <a> the link already is.
-      role={onClick && !href ? 'button' : undefined}
-      tabIndex={onClick && !href ? 0 : undefined}
-      onKeyDown={onClick && !href ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } } : undefined}
-      style={{
-        position: 'relative', overflow: 'hidden',
-        background: ring
-          ? `linear-gradient(160deg, color-mix(in srgb, ${ring} 24%, transparent), color-mix(in srgb, ${ring} 8%, transparent)), ${SURFACE}`
-          : `${glow.background}, ${SURFACE}`,
-        border: `1px solid ${ring || 'var(--border-subtle)'}`, borderRadius: 14,
-        padding: '14px 16px',
-        // compact plate — tight, not fat (Procore/JobTread density)
-        boxShadow: ring
-          ? `0 0 0 1px ${ring}, 0 8px 20px -14px color-mix(in srgb, ${ring} 45%, transparent), inset 0 1px 0 rgba(255,255,255,0.08)`
-          : glow.boxShadow,
-        cursor: interactive ? 'pointer' : 'default',
-        animation: `pmRise .5s ease ${delay.toFixed(2)}s both`,
-        height: '100%',
-        transition: 'border-color .15s ease, box-shadow .15s ease, background .15s ease',
-      }}
-    >
-      {/* Label row: icon, small-caps label, and — on a card that opens
-          something — the affordance at the end of the row, never on top of
-          the label (the old floating "View →" pill sat over long labels). */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, minWidth: 0 }}>
-        <IconChip size={30} vivid={toneColor || undefined}>{icon}</IconChip>
-        <span style={{ flex: 1, minWidth: 0, fontSize: 11, color: 'var(--c-text-3)', fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', lineHeight: 1.3 }}>{label}</span>
-        {interactive && (active
-          ? <span aria-hidden style={{ flexShrink: 0, fontSize: 11, fontWeight: 800, color: 'var(--on-brand)', background: lit, padding: '3px 8px', borderRadius: 999, lineHeight: 1.2 }}>Filtering</span>
-          : <span aria-hidden className="pmStatGo" style={{ flexShrink: 0, color: 'var(--c-text-3)', fontSize: 14, fontWeight: 800, lineHeight: 1 }}>→</span>)}
-      </div>
-      <div className="pmStatValue" style={{ fontSize: 30, fontWeight: 900, color: accent || toneColor ? numberColor : 'var(--c-text)', letterSpacing: '-0.02em', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
-      {sub != null && <div style={{ fontSize: 12.5, color: 'var(--c-text-2)', marginTop: 4 }}>{sub}</div>}
-    </div>
+  const valueColor = toneColor || accent || undefined;
+  const body = (
+    <span className="pmFigIn">
+      <span className="pmFigV" style={valueColor ? { color: valueColor } : undefined}>{value}</span>
+      <span className="pmFigText">
+        <span className="pmFigL">
+          <span>{label}</span>
+          {interactive && <span className="pmFigGo" aria-hidden>{active ? '✓' : '›'}</span>}
+        </span>
+        {sub != null && <span className="pmFigS">{sub}</span>}
+      </span>
+    </span>
   );
   if (href) {
-    // Link is intentionally not imported here to keep the kit routing-agnostic;
-    // callers wrap with their own <Link>. A plain <a> keeps it self-contained.
-    return <a href={href} style={{ textDecoration: 'none', display: 'block', height: '100%' }}>{inner}</a>;
+    // A plain <a> keeps the kit routing-agnostic; callers wrap with <Link> if they need to.
+    return <a className="pmFig pmFigSolo" href={href} onClick={onClick} aria-current={active ? 'true' : undefined}>{body}</a>;
   }
-  return inner;
+  if (onClick) {
+    // A figure that runs code (a filter, a tab switch) is a button to keyboards and screen readers.
+    return <button type="button" className="pmFig pmFigSolo" onClick={onClick} aria-pressed={active}>{body}</button>;
+  }
+  return <div className="pmFig pmFigSolo">{body}</div>;
 }
 
 // ─── SectionCard ─────────────────────────────────────────────────────────────
+/**
+ * A section of a page — flat by default (2026-10-10): the content sits on the
+ * page under a small caps label and a hairline. No tray, no gradient, no
+ * glow, no radius, no shadow, no hover lift. The body keeps the page's own
+ * inset (16px on a phone, set by the page), so nothing is double-padded.
+ *
+ * `tray` is the opt-in for the rare thing that must stay raised — a dialog
+ * body, a picker: a solid surface with a hairline border, still no glow.
+ *
+ * Every existing prop still works: `flat` is now the default and a no-op,
+ * `flush` drops the tray's body padding, `accent` is accepted and not drawn,
+ * `icon` sits small beside the label on a tray only.
+ */
 export function SectionCard({
   title,
   subtitle,
   icon,
   action,
   children,
-  accent = GOLD,
   flush = false,
-  flat = false,
+  tray = false,
   style,
   bodyStyle,
 }: {
@@ -419,144 +328,81 @@ export function SectionCard({
   children: React.ReactNode;
   accent?: string;
   flush?: boolean;
-  /**
-   * Content on the page rather than an object on a tray.
-   *
-   * Nine of these stacked on one screen, each with its own background, border,
-   * radius, drop shadow and inset light ring — and when everything is raised,
-   * nothing is. Elevation stops meaning "this is a thing you act on" and
-   * becomes wallpaper.
-   *
-   * flat keeps the header — the small Title Case label is still how you find
-   * your way down a page — and drops the tray: no fill, no border, no shadow,
-   * a hairline rule instead. Reserve the raised form for objects you would
-   * point at and name: the line-item table, the takeoff result, a form.
-   */
+  /** Kept for callers — flat is the default now. */
   flat?: boolean;
+  /** The rare raised surface (dialogs, pickers): solid fill + hairline border. */
+  tray?: boolean;
   style?: React.CSSProperties;
   bodyStyle?: React.CSSProperties;
 }) {
-  if (flat) {
-    return (
-      <div style={{ position: 'relative', ...style }}>
-        {(title || icon || action) && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingBottom: 9, marginBottom: 14, borderBottom: `1px solid ${BORDER}` }}>
-            {icon && <span style={{ display: 'inline-flex', flexShrink: 0, opacity: 0.9 }}>{icon}</span>}
-            <div style={{ minWidth: 0, flex: 1 }}>
-              {title && (
-                /* Section title: champagne, no underline bar (premium system —
-                   the page title is the one yellow heading). */
-                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--c-text)', lineHeight: 1.3, display: 'inline-block' }}>
-                  {title}
-                </div>
-              )}
-              {subtitle && <div style={{ fontSize: 12.5, color: FAINT, marginTop: 3, fontWeight: 400 }}>{subtitle}</div>}
-            </div>
-            {action && <div style={{ flex: '0 0 auto' }}>{action}</div>}
-          </div>
-        )}
-        <div style={bodyStyle}>{children}</div>
-      </div>
-    );
-  }
-
+  const hasHead = !!(title || subtitle || action);
   return (
-    <div
-      style={{
-        position: 'relative', overflow: 'hidden',
-        /* Glass, not paint.
-           A flat fill reads as a rectangle painted onto the page. A blurred,
-           slightly saturated pane with a lit top edge reads as something
-           sitting ABOVE it — which is what "raised" was supposed to mean, and
-           what makes the flat/raised distinction do any work. */
-        background: 'linear-gradient(180deg, var(--c-raised), var(--c-card))',
-        border: '1px solid var(--border-subtle)', borderRadius: 16,
-        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 18px 40px -24px rgba(0,0,0,0.9)',
-        ...style,
-      }}
-    >
-      {(title || icon || action) && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: `1px solid rgba(255,255,255,0.06)` }}>
-          {icon && <IconChip size={32}>{icon}</IconChip>}
+    <div className={tray ? 'pmSec pmSecTray' : 'pmSec'} style={style}>
+      {hasHead && (
+        <div className="pmSecHead">
+          {tray && icon && <span aria-hidden style={{ display: 'inline-flex', flexShrink: 0, color: 'var(--sg-text-3)' }}>{icon}</span>}
           <div style={{ minWidth: 0, flex: 1 }}>
-            {title && <div style={{ fontWeight: 800, fontSize: 15.5, color: 'var(--c-text)', letterSpacing: '-0.01em', lineHeight: 1.25 }}>{title}</div>}
-            {subtitle && <div style={{ fontSize: 12.5, color: 'var(--c-text-2)', marginTop: 2 }}>{subtitle}</div>}
+            {title && <div className="pmSecTitle" role="heading" aria-level={2}>{title}</div>}
+            {subtitle && <div className="pmSecSub">{subtitle}</div>}
           </div>
-          {action && <div style={{ flex: '0 0 auto' }}>{action}</div>}
+          {action && <div style={{ flex: '0 0 auto', display: 'flex', gap: 8, alignItems: 'center' }}>{action}</div>}
         </div>
       )}
-      <div style={{ padding: flush ? 0 : 16, ...bodyStyle }}>{children}</div>
+      <div style={{ padding: tray && !flush ? 14 : 0, minWidth: 0, ...bodyStyle }}>{children}</div>
     </div>
   );
 }
 
 // ─── PremiumEmpty ────────────────────────────────────────────────────────────
+/**
+ * Nothing here yet — flat (2026-10-10): one plain line and one action. No
+ * medallion, no halo, no ring. The title leads the line in the body colour
+ * (red for an error); the description finishes it.
+ */
 export function PremiumEmpty({
-  icon,
   title,
   description,
   action,
   tone = 'default',
   compact = false,
 }: {
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   title: string;
   description?: string;
   action?: React.ReactNode;
   tone?: 'default' | 'error';
   compact?: boolean;
 }) {
-  const ring = tone === 'error' ? RED.border : A45;
-  const halo = tone === 'error' ? RED.bg : A12;
-  const glow = tone === 'error' ? 'rgba(255,59,48,0.35)' : A30;
+  const t = title.trim();
+  const joiner = /[.!?…]$/.test(t) ? ' ' : '. ';
   return (
-    <div
-      style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
-        padding: compact ? '32px 24px' : '52px 24px',
-      }}
-    >
-      <div
-        style={{
-          position: 'relative', display: 'inline-flex', width: compact ? 66 : 84, height: compact ? 66 : 84,
-          borderRadius: '50%', alignItems: 'center', justifyContent: 'center', marginBottom: 18,
-          background: `radial-gradient(circle, ${halo}, transparent)`,
-          border: `1px solid ${ring}`,
-          boxShadow: `0 0 0 6px ${tone === 'error' ? 'rgba(255,59,48,0.07)' : A08}, 0 0 44px -10px ${glow}`,
-        }}
-      >
-        <span aria-hidden style={{ position: 'absolute', inset: -1, borderRadius: '50%', border: `1px solid ${ring}`, animation: 'pmRing 3s ease-out infinite' }} />
-        {icon}
-      </div>
-      <div style={{ fontSize: compact ? 16 : 18, fontWeight: 800, color: WHITE, marginBottom: 8, letterSpacing: '-0.01em' }}>{title}</div>
-      {description && <div style={{ fontSize: 13.5, color: MUTED, lineHeight: 1.55, maxWidth: 400, marginBottom: action ? 22 : 0 }}>{description}</div>}
-      {action}
+    <div className="pmEmpty" data-tone={tone === 'error' ? 'error' : undefined} role={tone === 'error' ? 'alert' : undefined} style={compact ? { padding: '8px 0' } : undefined}>
+      <p className="pmEmptyLine"><b>{t}</b>{description ? <>{joiner}{description}</> : null}</p>
+      {action && <div className="pmEmptyActs">{action}</div>}
     </div>
   );
 }
 
 // ─── PremiumButton (link-agnostic) ───────────────────────────────────────────
-// The neon-yellow primary CTA. Renders as a <button> unless the
-// caller wraps it. Kept here so pages don't re-derive the same gradient.
+// The brand primary CTA. Renders as a <button> unless the caller wraps it.
+// Flat (2026-10-10): one solid fill — no gradient, no glow.
 export const goldButtonStyle: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-  padding: '11px 20px', borderRadius: 12, border: 'none', cursor: 'pointer',
-  background: `linear-gradient(180deg, ${GOLD_HI}, ${GOLD} 60%, var(--brand-primary-hover))`, color: ON_GOLD,
-  fontWeight: 800, fontSize: 13.5, letterSpacing: '0.01em', textDecoration: 'none',
-  boxShadow: '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)',
+  padding: '11px 18px', borderRadius: 10, border: 'none', cursor: 'pointer',
+  background: GOLD, color: ON_GOLD,
+  fontWeight: 700, fontSize: 13.5, letterSpacing: '0.01em', textDecoration: 'none',
+  boxShadow: 'none',
 };
 
 export const ghostButtonStyle: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-  padding: '11px 18px', borderRadius: 12, cursor: 'pointer',
-  /* The quietest tier, still glass so it reads as the same material as the
-     cards and the outlined button rather than a flat grey chip. */
-  background: 'rgba(255,255,255,0.06)',
-  backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR,
-  color: 'var(--text-primary)',
-  border: '1px solid rgba(255,255,255,0.11)',
-  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.07)',
-  fontWeight: 700, fontSize: 13.5, textDecoration: 'none',
+  padding: '11px 16px', borderRadius: 10, cursor: 'pointer',
+  /* The quietest tier: a hairline outline on the page, no fill, no blur. */
+  background: 'none',
+  color: 'var(--sg-text)',
+  border: '1px solid var(--sg-border-strong)',
+  boxShadow: 'none',
+  fontWeight: 600, fontSize: 13.5, textDecoration: 'none',
 };
 
 /**
@@ -575,18 +421,16 @@ export const ghostButtonStyle: React.CSSProperties = {
  * project overview that is the difference between "Run Autopilot" and "New Pay
  * App" both demanding attention and one of them being the answer.
  *
- * Glass, like every other raised surface: a faint fill with a lit top edge
- * rather than a flat panel.
+ * Flat (2026-10-10): a hairline outline in the brand colour, no fill.
  */
 export const goldOutlineButtonStyle: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-  padding: '11px 18px', borderRadius: 12, cursor: 'pointer',
-  background: 'rgba(255,255,255,0.07)',
-  backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR,
-  color: 'var(--text-primary)',
-  border: '1px solid rgba(255,255,255,0.16)',
-  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.10)',
-  fontWeight: 700, fontSize: 13.5, textDecoration: 'none',
+  padding: '11px 16px', borderRadius: 10, cursor: 'pointer',
+  background: 'none',
+  color: GOLD,
+  border: `1px solid ${A30}`,
+  boxShadow: 'none',
+  fontWeight: 600, fontSize: 13.5, textDecoration: 'none',
 };
 
 // ─── Machined buttons (mobile Btn port) ──────────────────────────────────────
@@ -697,51 +541,39 @@ export function AutoChip({ label = 'Auto' }: { label?: string }) {
   );
 }
 
-/** Dense full-width stat band for the top of create screens — kills dead space
- *  by surfacing what the system already knows (sums, counts, prior records). */
+/** A row of figures — flat (2026-10-10): the number strip from Home. Value
+ *  17px bold over an 11px label, hairlines between, no tiles, no icon chips,
+ *  no glow. Wraps to two or three across on a phone. A figure that opens
+ *  something carries a ›; one acting as the list's current filter is
+ *  underlined in the brand colour with a ✓ (its `sub` says how to clear it). */
 export function StatStrip({ items }: {
-  /** `active` marks a tile acting as the list's current filter: it gets a ring
-   *  and a ✓ in place of the arrow (its `sub` should say how to clear it), so
-   *  the tap visibly did something. No chip: a 150px phone tile has no room. */
   items: { label: string; value: React.ReactNode; sub?: React.ReactNode; accent?: string; icon?: React.ReactNode; href?: string; onClick?: () => void; active?: boolean }[];
 }) {
   return (
-    <div style={{
-      // Same compact tiles as the kit stat grid: separate rounded cards, 12px
-      // apart, 2-up on phones (minmax 150 keeps two columns at 393).
-      display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(150px, 1fr))`, gap: 12,
-      marginBottom: 20, minWidth: 0,
-    }}>
-      {items.map((it, i) => {
-        const clickable = !!(it.href || it.onClick);
-        const button = !it.href && !!it.onClick;
-        const ring = it.active ? (it.accent || 'var(--c-yellow)') : null;
-        // Each tile lit in its own neon (owner 2026-10-03); a caller accent wins.
-        const body = (
-          <div
-            className="pmTile"
-            onClick={it.onClick}
-            // A tile that runs code (a filter) is a real button to keyboards and
-            // screen readers, not a clickable div.
-            role={button ? 'button' : undefined}
-            tabIndex={button ? 0 : undefined}
-            aria-pressed={button && it.active != null ? it.active : undefined}
-            onKeyDown={button ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); it.onClick?.(); } } : undefined}
-            style={{ position: 'relative', background: 'linear-gradient(180deg, var(--c-raised), var(--c-card))', border: `1px solid ${ring || 'var(--border-subtle)'}`, borderRadius: 14, boxShadow: ring ? `0 0 0 1px ${ring}, inset 0 1px 0 rgba(255,255,255,0.05)` : 'inset 0 1px 0 rgba(255,255,255,0.05), 0 18px 40px -24px rgba(0,0,0,0.9)', padding: '13px 16px', minWidth: 0, minHeight: clickable ? 44 : undefined, cursor: clickable ? 'pointer' : 'default', height: '100%', boxSizing: 'border-box' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--c-text-3)', marginBottom: 6, whiteSpace: 'nowrap' }}>
-              {it.icon}{it.label}
-              {clickable && <span aria-hidden style={{ marginLeft: 'auto', color: ring || FAINT, fontWeight: 700 }}>{ring ? '✓' : '→'}</span>}
-            </div>
-            <div style={{ fontSize: 20, fontWeight: 900, color: it.accent || 'var(--c-text)', letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.value}</div>
-            {it.sub && <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.sub}</div>}
-          </div>
-        );
-        if (it.href) {
-          return <a key={i} href={it.href} className="pmStripLink" style={{ textDecoration: 'none', display: 'block', minWidth: 0 }}>{body}</a>;
-        }
-        return <React.Fragment key={i}>{body}</React.Fragment>;
-      })}
+    <div className="pmStrip">
+      <div className="pmStripGrid">
+        {items.map((it, i) => {
+          const clickable = !!(it.href || it.onClick);
+          const body = (
+            <>
+              <span className="pmFigV" style={it.accent ? { color: it.accent } : undefined}>{it.value}</span>
+              <span className="pmFigL">
+                <span>{it.label}</span>
+                {clickable && <span className="pmFigGo" aria-hidden>{it.active ? '✓' : '›'}</span>}
+              </span>
+              {it.sub && <span className="pmFigS">{it.sub}</span>}
+            </>
+          );
+          if (it.href) {
+            return <a key={i} href={it.href} className="pmFig pmStripLink" aria-current={it.active ? 'true' : undefined}>{body}</a>;
+          }
+          if (it.onClick) {
+            // A figure that runs code (a filter) is a real button to keyboards and screen readers.
+            return <button key={i} type="button" className="pmFig" onClick={it.onClick} aria-pressed={it.active != null ? it.active : undefined}>{body}</button>;
+          }
+          return <div key={i} className="pmFig">{body}</div>;
+        })}
+      </div>
     </div>
   );
 }
@@ -763,9 +595,8 @@ export function FlowSteps({ title = 'What Happens Next', steps }: {
             <div style={{
               width: 21, height: 21, borderRadius: 999, flexShrink: 0, zIndex: 1,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: s.done ? `linear-gradient(180deg, ${GOLD_HI}, ${GOLD} 62%, var(--brand-primary-hover))` : 'var(--surface-card)',
+              background: s.done ? GOLD : 'var(--bg-base)',
               border: s.done ? 'none' : `1px solid ${A45}`,
-              boxShadow: s.done ? `inset 0 1px 0 rgba(255,255,255,0.35), 0 0 14px -2px ${A45}` : `0 0 0 3px ${A08}`,
               color: s.done ? ON_GOLD : GOLD, fontSize: 10, fontWeight: 900,
             }}>{s.done ? <Check size={11} weight="bold" /> : i + 1}</div>
             <div style={{ minWidth: 0, paddingTop: 1 }}>
@@ -789,10 +620,10 @@ export function FlowStrip({ steps, style }: {
 }) {
   return (
     <div style={{
+      // Flat (2026-10-10): a hairline above and below, no tinted band.
       display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px 14px',
-      padding: '11px 14px', borderRadius: 12,
-      background: `linear-gradient(180deg, ${A08}, rgba(255,255,255,0.02))`,
-      border: `1px solid ${BORDER}`,
+      padding: '10px 0',
+      borderTop: '1px solid var(--sg-border)', borderBottom: '1px solid var(--sg-border)',
       ...style,
     }}>
       {steps.map((s, i) => (

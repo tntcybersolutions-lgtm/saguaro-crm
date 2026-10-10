@@ -3,6 +3,8 @@ import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { must, tryWrite } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
+import { bidAmount } from '@/lib/bid-amount';
+import { inviteState, isPending } from '@/lib/bid-invite-state';
 
 /**
  * Bid leveling — comparing bids that are not comparable.
@@ -32,9 +34,9 @@ export const dynamic = 'force-dynamic';
 
 type Bid = Record<string, any>;
 
-/** Base figure for a bid. base_amount leads because bid_submissions.amount
- *  defaults to 0 rather than null, so it cannot be trusted as a first term. */
-const baseOf = (b: Bid) => Number(b.base_amount ?? b.amount ?? b.base_bid ?? 0) || 0;
+/** Base figure for a bid — the first positive of base_amount, amount, base_bid
+ *  (lib/bid-amount). amount defaults to 0, so a ?? chain stopped there. */
+const baseOf = (b: Bid) => bidAmount(b);
 const gapOf = (b: Bid) => Number(b.scope_gap_amount ?? 0) || 0;
 const adjustedOf = (b: Bid) => baseOf(b) + gapOf(b);
 
@@ -65,7 +67,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         .eq('bid_package_id', id).eq('tenant_id', user.tenantId),
       db.from('bid_package_items')
         .select('id, description, title, csi_code, quantity, unit, uom')
-        .eq('bid_package_id', id).eq('tenant_id', user.tenantId).order('sort_order'),
+        .eq('bid_package_id', id).eq('tenant_id', user.tenantId).order('sort_order').order('created_at').order('id'),
       /* Any stored AI reading. The page renders it as a SUGGESTION beside each
          bid — the GC accepts a figure into scope_gap_amount or ignores it. */
       db.from('bid_leveling_analyses')
@@ -99,7 +101,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const spreadPct = low > 0 ? Math.round(((high - low) / low) * 1000) / 10 : 0;
 
     const budget = Number(p.estimated_value ?? p.budget_estimate ?? 0) || 0;
-    const allInvites = (invites.data || []) as Bid[];
+    for (const r of [subs, invites, items]) if (r.error) throw r.error;
+    if (analysisRow.error) console.error('[bid_leveling] stored analysis not read', analysisRow.error);
+    /* A revoked link is not an invitation any more. */
+    const allInvites = ((invites.data || []) as Bid[]).filter((i) => inviteState(i) !== 'revoked');
     const responded = new Set(bids.map((b) => (b.email || '').toLowerCase()));
 
     return NextResponse.json({
@@ -122,10 +127,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
          date needs to know whether they are comparing three bids or three out
          of eight — the missing five are the risk. */
       awaiting: allInvites
-        .filter((i) => !responded.has(String(i.sub_email || '').toLowerCase()))
+        /* Still to answer — not the ones who declined, which is an answer. */
+        .filter((i) => isPending(i) && !responded.has(String(i.sub_email || '').toLowerCase()))
         .map((i) => ({
           company: i.company_name || i.sub_name || i.sub_email,
-          status: i.response_status || i.status || 'invited',
+          status: inviteState(i),
         })),
       analysis: analysisRow.data
         ? {

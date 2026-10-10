@@ -26,6 +26,8 @@
  *    recoverable from radio_message_records.message_id → radio_messages.
  */
 
+import { dayIn, isTimeZone } from './time-zone';
+
 export const PROMOTE_RECORD_TYPES = ['rfi', 'punch', 'field_issue', 'daily_log'] as const;
 export type PromoteRecordType = (typeof PROMOTE_RECORD_TYPES)[number];
 
@@ -40,9 +42,6 @@ export const RADIO_AUDIO_BUCKET = 'project-files';
 export const TRANSCRIPT_PENDING_NOTE =
   'Auto-transcription activates when OPENAI_API_KEY is configured on the server. '
   + 'Until then the attached audio is the record of what was said.';
-
-/** Default display timezone — the same fallback the franchise daily-log roll-up uses. */
-export const DEFAULT_TZ = 'America/Phoenix';
 
 /* ─────────────────────────── shapes ─────────────────────────── */
 
@@ -110,8 +109,11 @@ export function coordsFromLocation(loc: unknown): { latitude: number | null; lon
   return { latitude: lat, longitude: lng };
 }
 
-/** "Aug 24, 2026 2:14 PM" in the project's clock. Falls back to the raw ISO. */
-export function displayTime(iso: string, tz: string = DEFAULT_TZ): string {
+/**
+ * "Aug 24, 2026 2:14 PM" on the given clock — the caller's zone (device, else
+ * company: lib/time-zone). There is no default zone. Falls back to the raw ISO.
+ */
+export function displayTime(iso: string, tz: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
   try {
@@ -124,15 +126,15 @@ export function displayTime(iso: string, tz: string = DEFAULT_TZ): string {
   }
 }
 
-/** Calendar date in the project's clock, as `YYYY-MM-DD` (daily_logs.log_date). */
-export function localLogDate(iso: string, tz: string = DEFAULT_TZ): string {
+/**
+ * The calendar day a transmission was sent on, on the given clock, as
+ * `YYYY-MM-DD` (daily_logs.log_date) — the caller's zone (device, else
+ * company). An unreadable timestamp files to today on that same clock.
+ */
+export function localLogDate(iso: string, tz: string): string {
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return new Date().toISOString().slice(0, 10);
-  try {
-    return new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
-  } catch {
-    return d.toISOString().slice(0, 10);
-  }
+  const zone = isTimeZone(tz) ? tz : 'UTC';
+  return dayIn(zone, Number.isNaN(d.getTime()) ? new Date() : d);
 }
 
 /**
@@ -148,9 +150,9 @@ export function radioAudioHref(messageId: string): string {
 
 export function buildProvenance(
   msg: RadioMessageRow,
-  opts: { channelName?: string | null; tz?: string } = {},
+  opts: { channelName?: string | null; tz: string },
 ): RadioProvenance {
-  const tz = opts.tz || DEFAULT_TZ;
+  const tz = opts.tz;
   const { latitude, longitude } = coordsFromLocation(msg.location);
   const transcript = msg.transcript && msg.transcript.trim() ? msg.transcript.trim() : null;
   return {

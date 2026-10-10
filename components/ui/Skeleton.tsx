@@ -1,10 +1,11 @@
 'use client';
 import React from 'react';
-import { colors, radius, shadow } from '../../lib/design-tokens';
+import { radius } from '../../lib/design-tokens';
 
-// Shared skeleton system — raised surface base with a soft neutral shimmer
-// sweep. Tokens keep every loading state consistent with the design system.
-const SKEL_BASE = colors.raised;       // solid stand-in for the glass card surface
+// Shared skeleton system — flat (2026-10-10): hairline rows and bare bars on
+// the page, with a soft shimmer. No trays, no shadows: a loading screen has
+// the same shape as the flat page it stands in for.
+const SKEL_BASE = 'var(--sg-border)';
 const SKEL_SHEEN = 'rgba(255,255,255,0.06)';
 
 const keyframes = `
@@ -40,7 +41,7 @@ interface SkeletonProps {
 export function Skeleton({ width = '100%', height = 14, borderRadius = radius.sm, style }: SkeletonProps) {
   return (
     <>
-      <style>{keyframes}</style>
+      <style dangerouslySetInnerHTML={{ __html: keyframes }} />
       <div
         className="skel"
         style={{
@@ -65,65 +66,58 @@ export function SkeletonText({ lines = 3, gap = 8 }: { lines?: number; gap?: num
   );
 }
 
-export function SkeletonCard({ height = 80 }: { height?: number }) {
+/** A list row's stand-in: title and meta bars over a hairline. `height` is the row's height. */
+export function SkeletonCard({ height = 64 }: { height?: number }) {
   return (
     <div
+      aria-hidden
       style={{
-        background: colors.raised,
-        borderRadius: radius['2xl'],
-        padding: '16px 18px',
-        marginBottom: 12,
-        border: `1px solid ${colors.border}`,
-        boxShadow: shadow.sm,
-        height,
+        display: 'flex',
+        gap: 12,
+        alignItems: 'center',
+        minHeight: Math.min(Math.max(height, 52), 96),
+        padding: '10px 0',
+        borderBottom: '1px solid var(--sg-border)',
       }}
     >
-      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', height: '100%' }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <Skeleton width="55%" height={14} />
-          <Skeleton width="80%" height={11} />
-        </div>
-        <Skeleton width={64} height={24} borderRadius={radius.sm} />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <Skeleton width="55%" height={12} />
+        <Skeleton width="80%" height={9} />
       </div>
+      <Skeleton width={56} height={12} borderRadius={radius.sm} />
     </div>
   );
 }
 
+/** One figure's stand-in, the size of a number-strip figure. */
 export function SkeletonKPI() {
   return (
-    <div
-      style={{
-        background: colors.raised,
-        border: `1px solid ${colors.border}`,
-        borderRadius: radius['2xl'],
-        boxShadow: shadow.sm,
-        padding: '18px 20px',
-      }}
-    >
-      <Skeleton width="60%" height={10} style={{ marginBottom: 10 }} />
-      <Skeleton width="45%" height={28} style={{ marginBottom: 6 }} />
-      <Skeleton width="70%" height={10} />
+    <div aria-hidden style={{ padding: '9px 12px', borderLeft: '1px solid var(--sg-border)', minHeight: 44 }}>
+      <Skeleton width="45%" height={15} style={{ marginBottom: 6 }} />
+      <Skeleton width="65%" height={9} />
     </div>
   );
 }
 
+/** A list row's stand-in, full width with a hairline under it. */
 export function SkeletonRow() {
   return (
     <div
+      aria-hidden
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 14,
-        padding: '14px 18px',
-        borderBottom: `1px solid ${colors.borderDim}`,
+        gap: 12,
+        minHeight: 58,
+        padding: '10px 16px',
+        borderBottom: '1px solid var(--sg-border)',
       }}
     >
-      <Skeleton width={4} height={48} borderRadius={radius.full} style={{ flexShrink: 0 }} />
       <div style={{ flex: 1 }}>
-        <Skeleton width="55%" height={14} style={{ marginBottom: 8 }} />
-        <Skeleton width="75%" height={11} />
+        <Skeleton width="55%" height={12} style={{ marginBottom: 8 }} />
+        <Skeleton width="75%" height={9} />
       </div>
-      <Skeleton width={80} height={30} borderRadius={radius.sm} />
+      <Skeleton width={56} height={12} borderRadius={radius.sm} />
     </div>
   );
 }

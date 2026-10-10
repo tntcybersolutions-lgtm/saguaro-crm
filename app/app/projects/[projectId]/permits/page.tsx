@@ -33,6 +33,7 @@ import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 import PermitCorrespondence from '@/components/PermitCorrespondence';
 import { layout } from '@/lib/design-tokens';
+import { localDay } from '@/lib/calendar-day';
 
 interface Permit {
   id: string;
@@ -144,7 +145,7 @@ export default function PermitsPage() {
   const { toast, show } = useToast(4000);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDay(); // This device's day — toISOString() is the UTC day, tomorrow from 7 PM on in Iowa.
 
   const fetchPermits = useCallback(async () => {
     setLoading(true);

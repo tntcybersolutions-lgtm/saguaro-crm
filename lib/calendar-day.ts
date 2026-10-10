@@ -19,17 +19,16 @@
  *     portal page says it is (it sends localDay() in the x-local-day header),
  *     taken only when it is "today" somewhere on Earth right now — so a wrong
  *     device clock or a hand-made header moves the answer by at most the width
- *     of the world's time zones, never by weeks — else the app's home zone
- *     (America/Phoenix, the fallback the rest of the app uses) — plausibleToday().
+ *     of the world's time zones, never by weeks — else today in the zone the
+ *     caller passes: the device's x-time-zone, else the company's own zone
+ *     (lib/time-zone requestTimeZone) — plausibleToday(). There is no home
+ *     zone: a company in Iowa is never judged on Phoenix's day.
  *
  * Pure: every function takes `now` when it needs one.
  */
 
 /** The request header a portal page carries its local calendar day in. */
 export const LOCAL_DAY_HEADER = 'x-local-day';
-
-/** The app's home zone — the same fallback lib/radio-promote DEFAULT_TZ and the home screen use. */
-export const HOME_TIME_ZONE = 'America/Phoenix';
 
 const DAY_RE = /^(\d{4})-(\d{2})-(\d{2})(?:$|[T ])/;
 const MS_PER_DAY = 86_400_000;
@@ -85,7 +84,7 @@ export function localDay(now: Date = new Date()): string {
   return `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
 }
 
-/** Today in an IANA time zone, e.g. dayInZone('America/Phoenix'). */
+/** Today in an IANA time zone, e.g. dayInZone('America/Chicago'). */
 export function dayInZone(timeZone: string, now: Date = new Date()): string {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone, year: 'numeric', month: '2-digit', day: '2-digit',
@@ -107,9 +106,11 @@ export function daysOnEarth(now: Date = new Date()): { earliest: string; latest:
  * "Today" for a server deciding a date-only expiry for someone it cannot
  * locate. `claimed` is the day their device says it is (the x-local-day
  * header); it is used when it is exactly 'YYYY-MM-DD', a real day, and today
- * somewhere on Earth at `now`. Otherwise: today in `fallbackZone`.
+ * somewhere on Earth at `now`. Otherwise: today in `fallbackZone` — the
+ * caller's answer to "where is this company?" (requestTimeZone: the device's
+ * zone, else the company's), never a built-in default.
  */
-export function plausibleToday(claimed: unknown, now: Date = new Date(), fallbackZone: string = HOME_TIME_ZONE): string {
+export function plausibleToday(claimed: unknown, fallbackZone: string, now: Date = new Date()): string {
   const raw = typeof claimed === 'string' ? claimed.trim() : '';
   const day = /^\d{4}-\d{2}-\d{2}$/.test(raw) ? toDay(raw) : null;
   if (day) {

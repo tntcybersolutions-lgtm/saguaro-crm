@@ -78,6 +78,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { SMeter } from '@/components/ui/SMeter';
 import { CrewMap, type CrewPin, type HeatBin } from '@/components/ui/CrewMap';
 import { HAS_SUPABASE, getSupabaseBrowser, ensureBrowserSession, getSession } from '@/lib/supabase-browser';
+import { deviceTimeZone } from '@/lib/time-zone';
 /* Tier-1 dispatch console additions (separate import statement so the block
  * above stays byte-stable for parallel workstreams). */
 import {
@@ -2224,7 +2225,7 @@ export default function RadioDispatchPage() {
       ...emptyPromoteForm(),
       summary: seed,
       title: seed ? titleFrom(seed) : '',
-      logDate: localLogDate(m.created_at),
+      logDate: localLogDate(m.created_at, deviceTimeZone() ?? 'UTC'),
     });
     refreshLinks(m.id);
   }, [refreshLinks]);

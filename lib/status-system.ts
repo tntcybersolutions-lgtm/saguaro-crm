@@ -363,6 +363,22 @@ export const MODULES: Record<string, ModuleDef> = {
     },
   },
 
+  /* One bidder on a bid package — read as response_status, then status
+     (lib/bid-invite-state). */
+  bid_package_invites: {
+    noun: 'invitation',
+    stages: ['Invited', 'Viewed', 'Answered'],
+    staleAfterDays: 5,
+    statuses: {
+      suggested: { label: 'Suggested', tone: 'draft',   stage: 0, action: 'Not invited yet' },
+      invited:   { label: 'Invited',   tone: 'waiting', stage: 0, action: 'Has not opened the jacket yet' },
+      viewed:    { label: 'Viewed',    tone: 'active',  stage: 1, action: 'Opened the jacket — no bid yet' },
+      submitted: { label: 'Bid In',    tone: 'good',    stage: 2 },
+      declined:  { label: 'Declined',  tone: 'bad',     stage: 2, action: 'Not bidding — consider another sub' },
+      revoked:   { label: 'Revoked',   tone: 'draft',             action: 'Link cut off — it no longer opens the jacket' },
+    },
+  },
+
   purchase_orders: {
     noun: 'purchase order',
     stages: ['Draft', 'Sent', 'Received', 'Closed'],

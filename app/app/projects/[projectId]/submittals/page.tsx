@@ -34,6 +34,7 @@ import { CSI_DIVISIONS, SUB_TRADES } from '@/lib/construction-intelligence';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { layout } from '@/lib/design-tokens';
+import { localDay } from '@/lib/calendar-day';
 
 const STATUSES=['pending','submitted','under_review','approved','rejected','revise_resubmit'];
 const STATUS_LABELS:Record<string,string>={
@@ -160,7 +161,7 @@ export default function SubmittalsPage(){
   const { ctx } = useProjectContext(projectId);
   const [auto,setAuto]=useState<{num?:boolean;due?:boolean;bic?:boolean}>({});
 
-  const today=new Date().toISOString().split('T')[0];
+  const today=localDay(); // This device's day — toISOString() is the UTC day, tomorrow from 7 PM on in Iowa.
 
   const load=useCallback(async()=>{
     setLoading(true);

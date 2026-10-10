@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { toUi, type WarrantyRow } from '@/lib/warranty-claims-shape';
+import { requestDay } from '@/lib/time-zone';
 
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
   const user = await getUser(req);
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
       category: body.category || 'general',
       location: body.location || null,
       reported_by: body.reported_by || user.email || null,
-      reported_date: body.reported_date || new Date().toISOString().slice(0, 10),
+      reported_date: body.reported_date || (await requestDay(req.headers, supabase, user.tenantId, 'warranty-claims')).today,
       severity: body.priority || 'medium',
       status: body.status || 'submitted',
       trade: body.assigned_trade || null,

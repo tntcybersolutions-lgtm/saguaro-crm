@@ -1,0 +1,116 @@
+390  ok   Jobs (tab page): no back link — 0
+390  ok   Jobs: title reads "Jobs"
+390  ok   tab bar flush to the bottom edge, full width — {"top":603,"bottom":659,"left":0,"right":393,"h":56,"radius":"0px","bg":"rgb(5, 5, 6)","bt":"1px solid","shadow":"none"}
+390  ok   tab bar flat: no radius, no shadow, solid bg, hairline top — 0px none rgb(5, 5, 6) 1px solid
+390  ok   tabs: Home · My Work (badge) · Jobs · Time · More — Home | My Work 6 | Jobs | Time | More
+390  ok   active tab is Jobs, in --brand-primary — [["Jobs","rgb(255, 230, 0)"]] brand=rgb(255, 230, 0)
+390  ok   Sage/avatar/tabs are 44px+ targets — [["sag-tb-sage",44,44],["sag-tb-avatar",44,44],["sag-tab",79,56],["sag-tab",79,56],["sag-tab",79,56],["sag-tab",79,56],["sag-tab",79,56]]
+390  ok   Sage and avatar draw as 32px circles — [[32,32,"16px"],[32,32,"16px"]]
+390  ok   title has the row (≥ 240px wide at 390) — 275
+390  ok   Jobs: no sideways scroll — 393>393
+390  ok   Jobs: no console/page errors
+390  ok   Compliance (section): no back link — the "← Home" pill is gone
+390  ok   Compliance: title "Compliance"
+390  ok   Lien Deadlines (sub-page): back link reads "Compliance" — Compliance
+390  ok   Lien Deadlines: title
+390  ok   back link is a 44px target — {"x":10,"y":5.5,"width":115.296875,"height":44}
+390  ok   back link goes to /app/compliance
+390  ok   My Work count re-asked on route change (once) — 1→2
+390  ok   count route 404 → no badge
+390  ok   count route 404 → no error shown or thrown
+390  ok   not asked again inside two minutes; asked once at two minutes — 1,1,2
+390  ok   Sage opens the Sage chat
+390  ok   account menu opens with Settings + Sign Out — Signed In As CD Settings Sign Out
+390  ok   Escape closes the account menu
+390  ok   More opens the menu drawer
+390  ok   /app/compliance: last content clears the tab bar — 536 <= 603
+390  ok   /app/billing: last content clears the tab bar — 0 <= 603
+390  ok   /app/reports: last content clears the tab bar — 551 <= 603
+390  ok   /app/subs: last content clears the tab bar — 536 <= 603
+390  ok   /app/compliance: no sideways scroll — 393>393
+390  ok   /app/compliance: sections are flat (no shadow/radius/gradient) — 0
+390  ok   /app/compliance: page title 20–22px — 20
+390  ok   /app/compliance: figures are 17px — 17,17,17,17,17,17,17,17,17
+390  ok   /app/compliance: no console/page errors
+390  ok   /app/billing: no sideways scroll — 393>393
+390  ok   /app/billing: sections are flat (no shadow/radius/gradient) — 0
+390  ok   /app/billing: page title 20–22px — 20
+390  ok   /app/billing: figures are 17px — 17,17,17,17,17
+390  ok   /app/billing: no console/page errors
+390  ok   /app/subs: no sideways scroll — 393>393
+390  ok   /app/subs: sections are flat (no shadow/radius/gradient) — 0
+390  ok   /app/subs: page title 20–22px — 20
+390  ok   /app/subs: figures are 17px — 17,17,17,17
+390  ok   /app/subs: no console/page errors
+390  ok   reports: Open RFIs, Job Cost, Punch List, Bid Analysis all tappable back to back during runs — [["Open RFIs",""],["Job Cost",""],["Punch List",""],["Bid Analysis",""]]
+390  ok   each tap started its own report — 4 runs
+390  ok   result landing does not scroll the page — 585→585
+390  ok   library stays on screen during and after a run
+390  ok   result card rendered
+390  ok   /app/reports: no sideways scroll — 393>393
+390  ok   prequal: four tabs, all inside the screen — [["Dashboard",19,103,44],["Submissions · 2",103,224,44],["Templates",224,303,44],["Invites",303,374,44]]
+390  ok   prequal: tabs are 44px tall — 44,44,44,44
+390  ok   New Template opens a dialog
+390  ok   Escape closes it
+390  ok   Dashboard tab is not covered
+390  ok   prequal: Submissions tab switches in place — Submissions · 2
+390  ok   prequal: Templates tab switches in place — Templates
+390  ok   prequal: Invites tab switches in place — Invites
+390  ok   prequal: Dashboard tab switches in place — Dashboard
+390  ok   /app/prequalification: no sideways scroll — 393>393
+390  ok   billing: the reason stays on screen — Checkout didn't open. Online checkout isn't switched on yet. Email sales@saguarocontrol.net and we'll start your plan today. Reference ZZAUDIT2. Email Sales
+390  ok   billing: Email Sales action is a real mailto — mailto:sales@saguarocontrol.net?subject=Start%20my%20Saguaro%20plan
+390  ok   /app/daily-logs loading: names the page and paints rows — Daily Logs / 7 rows
+390  ok   /app/command-center loading: names the page and paints rows — Command Center / 7 rows
+390  ok   /app/compliance loading: names the page and paints rows — Compliance / 7 rows
+1440 ok   Jobs (tab page): no back link — 0
+1440 ok   Jobs: title reads "Jobs"
+1440 ok   desktop: no tab bar — none
+1440 ok   Jobs: no sideways scroll — 1440>1440
+1440 ok   Jobs: no console/page errors
+1440 ok   Compliance (section): no back link — the "← Home" pill is gone
+1440 ok   Compliance: title "Compliance"
+1440 ok   Lien Deadlines (sub-page): back link reads "Compliance" — Compliance
+1440 ok   Lien Deadlines: title
+1440 ok   back link goes to /app/compliance
+1440 ok   desktop: count not asked (no tab bar) — 0
+1440 ok   Sage opens the AI Expert panel
+1440 ok   account menu opens with Settings + Sign Out — Signed In As CD Settings Sign Out
+1440 ok   Escape closes the account menu
+1440 ok   /app/compliance: no sideways scroll — 1440>1440
+1440 ok   /app/compliance: sections are flat (no shadow/radius/gradient) — 0
+1440 ok   /app/compliance: page title 20–22px — 22
+1440 ok   /app/compliance: figures are 17px — 17,17,17,17,17,17,17,17,17
+1440 ok   /app/compliance: no console/page errors
+1440 ok   /app/billing: no sideways scroll — 1440>1440
+1440 ok   /app/billing: sections are flat (no shadow/radius/gradient) — 0
+1440 ok   /app/billing: page title 20–22px — 22
+1440 ok   /app/billing: figures are 17px — 17,17,17,17,17
+1440 ok   /app/billing: no console/page errors
+1440 ok   /app/subs: no sideways scroll — 1440>1440
+1440 ok   /app/subs: sections are flat (no shadow/radius/gradient) — 0
+1440 ok   /app/subs: page title 20–22px — 22
+1440 ok   /app/subs: figures are 17px — 17,17,17,17
+1440 ok   /app/subs: no console/page errors
+1440 ok   reports: Open RFIs, Job Cost, Punch List, Bid Analysis all tappable back to back during runs — [["Open RFIs",""],["Job Cost",""],["Punch List",""],["Bid Analysis",""]]
+1440 ok   each tap started its own report — 4 runs
+1440 ok   result landing does not scroll the page — 0→0
+1440 ok   library stays on screen during and after a run
+1440 ok   result card rendered
+1440 ok   /app/reports: no sideways scroll — 1440>1440
+1440 ok   prequal: four tabs, all inside the screen — [["Dashboard",267,406,36],["Submissions · 2",406,544,36],["Templates",544,683,36],["Invites",683,821,36]]
+1440 ok   New Template opens a dialog
+1440 ok   Escape closes it
+1440 ok   Dashboard tab is not covered
+1440 ok   prequal: Submissions tab switches in place — Submissions · 2
+1440 ok   prequal: Templates tab switches in place — Templates
+1440 ok   prequal: Invites tab switches in place — Invites
+1440 ok   prequal: Dashboard tab switches in place — Dashboard
+1440 ok   /app/prequalification: no sideways scroll — 1440>1440
+1440 ok   billing: the reason stays on screen — Checkout didn't open. Online checkout isn't switched on yet. Email sales@saguarocontrol.net and we'll start your plan today. Reference ZZAUDIT2. Email Sales
+1440 ok   billing: Email Sales action is a real mailto — mailto:sales@saguarocontrol.net?subject=Start%20my%20Saguaro%20plan
+1440 ok   /app/daily-logs loading: names the page and paints rows — Daily Logs / 7 rows
+1440 ok   /app/command-center loading: names the page and paints rows — Command Center / 7 rows
+1440 ok   /app/compliance loading: names the page and paints rows — Compliance / 7 rows
+
+0 FAIL / 114 checks
