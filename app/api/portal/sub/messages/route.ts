@@ -3,6 +3,8 @@ import { createServerClient } from '@/lib/supabase-server';
 import type { Database } from '@/lib/database.types';
 import { apiError } from '@/lib/api-error';
 import { notOnRoster, subRecordScope } from '@/lib/sub-portal-scope';
+import { portalSenderName } from '@/lib/sub-portal-sender';
+import { createNotification } from '@/lib/notifications';
 
 async function authenticateSubPortal(req: NextRequest) {
   const token =
@@ -92,6 +94,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // sender_name is NOT NULL with no default. It was never set, so Postgres
+    // rejected every message a sub sent. Name the sender from the roster sub,
+    // falling back to what the GC typed on the invite (lib/sub-portal-sender).
+    const { data: rosterSub, error: subErr } = await db
+      .from('subcontractors')
+      .select('company_name, contact_name, email, contact_email')
+      .eq('id', scope.subId)
+      .eq('tenant_id', scope.tenantId)
+      .maybeSingle();
+    if (subErr) console.error('[portal/sub/messages] roster sub lookup failed; naming the sender from the invite', { subId: scope.subId, error: subErr });
+    const senderName = portalSenderName(rosterSub, session);
+
     // Live portal_sub_messages columns: sub_id, project_id, tenant_id,
     // sender_name, sender_type, content, read_at, created_at. There is no
     // sender_id / attachments column, and read state is tracked via read_at
@@ -102,6 +116,7 @@ export async function POST(req: NextRequest) {
         sub_id: scope.subId,
         project_id: scope.projectId,
         tenant_id: scope.tenantId,
+        sender_name: senderName,
         sender_type: 'sub',
         content: content.trim(),
         created_at: new Date().toISOString(),
@@ -110,6 +125,20 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) throw error;
+
+    // No GC screen lists portal_sub_messages, so without this the message
+    // would be stored where nobody on the GC side ever sees it. The existing
+    // notification path (bell + push) carries the text to the GC's team.
+    const text = content.trim();
+    await createNotification(
+      scope.tenantId,
+      null,
+      'sub_message',
+      `Message from ${senderName}`,
+      text.length > 240 ? `${text.slice(0, 237)}…` : text,
+      `/app/projects/${scope.projectId}/subs`,
+      scope.projectId,
+    );
 
     return NextResponse.json(
       { message, status: 'sent' },
