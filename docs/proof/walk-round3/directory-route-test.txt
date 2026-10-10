@@ -1,0 +1,39 @@
+# BEFORE (base commit code)
+FAIL POST → 201 with every field, name trimmed {"contact":{"id":"new-contacts-1-hsj0","created_at":"2026-10-10T15:47:02.905Z","tenant_id":"T1","project_id":"P1","name":"ZZ AUDIT directory","role":"Architect","company":"ZZ AUDIT Design","phone":"602-555-0100","email":"delivered@resend.dev"}}
+FAIL POST stores blank fields as null (the same as Edit does) {"contact":{"id":"new-contacts-2-q8uf","created_at":"2026-10-10T15:47:02.909Z","tenant_id":"T1","project_id":"P1","name":"ZZ AUDIT blank","role":"","company":"   ","phone":"","email":""}}
+ok   POST with no name → 400
+[projects/projectId/directory POST] ref=TMESTEBW SyntaxError: Expected property name or '}' in JSON at position 1 (line 1 column 2)
+FAIL POST with a broken body → 400, not 500 
+FAIL POST onto another company's job → 404, nothing written (it was written before) 200
+ok   POST without Projects Edit → 403
+ok   GET lists this job, this company only, by name
+FAIL GET another company's job → nothing of theirs 
+ok   PATCH saves the edit and clears the phone
+ok   PATCH another company's contact → 404, untouched
+ok   PATCH a contact through the wrong job → 404
+ok   PATCH blank name → 400
+ok   DELETE another company's → 404, still there
+ok   DELETE → 200 and gone
+ok   DELETE again → 404
+ok   GET signed out → 401
+
+5 failed
+# AFTER (this branch)
+ok   POST → 201 with every field, name trimmed
+ok   POST stores blank fields as null (the same as Edit does)
+ok   POST with no name → 400
+ok   POST with a broken body → 400, not 500
+ok   POST onto another company's job → 404, nothing written (it was written before)
+ok   POST without Projects Edit → 403
+ok   GET lists this job, this company only, by name
+ok   GET another company's job → nothing of theirs
+ok   PATCH saves the edit and clears the phone
+ok   PATCH another company's contact → 404, untouched
+ok   PATCH a contact through the wrong job → 404
+ok   PATCH blank name → 400
+ok   DELETE another company's → 404, still there
+ok   DELETE → 200 and gone
+ok   DELETE again → 404
+ok   GET signed out → 401
+
+all passed

@@ -58,6 +58,11 @@ export default function ProjectDirectory() {
 
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
+  /* Three different failures, shown where the person is looking: the list
+     could not load (in place of the list, with Try Again), a save failed
+     (inside the form, beside Save), a remove failed (on the page). */
+  const [loadError, setLoadError] = useState('');
+  const [formError, setFormError] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [draft, setDraft] = useState<Contact>({ name: '', role: 'Project Manager' });
@@ -65,14 +70,15 @@ export default function ProjectDirectory() {
   /* Non-null while the form is editing an existing person (same form as Add). */
   const [editingId, setEditingId] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
-  const formRef = useRef<HTMLDivElement | null>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
 
-  const closeForm = () => { setAdding(false); setEditingId(null); setDraft({ name: '', role: 'Project Manager' }); };
+  const closeForm = () => { setAdding(false); setEditingId(null); setFormError(''); setDraft({ name: '', role: 'Project Manager' }); };
   const startEdit = (c: Contact) => {
     if (!c.id) return;
     setEditingId(c.id);
     setDraft({ name: c.name || '', role: c.role ?? '', company: c.company ?? '', email: c.email ?? '', phone: c.phone ?? '' });
     setAdding(true);
+    setFormError('');
     setError('');
     requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
   };
@@ -86,6 +92,7 @@ export default function ProjectDirectory() {
     });
     if (!ok) return;
     setRemovingId(c.id);
+    setError('');
     try {
       const res = await fetch(`/api/projects/${projectId}/directory/${c.id}`, { method: 'DELETE' });
       const body = await res.json().catch(() => ({}));
@@ -103,12 +110,12 @@ export default function ProjectDirectory() {
     setLoading(true);
     try {
       const res = await fetch(`/api/projects/${projectId}/directory`);
-      const body = await res.json();
+      const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error || 'Could not load the directory.');
       setContacts(body.contacts ?? []);
-      setError('');
+      setLoadError('');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not load the directory.');
+      setLoadError(e instanceof Error ? e.message : 'Could not load the directory.');
     } finally {
       setLoading(false);
     }
@@ -116,9 +123,11 @@ export default function ProjectDirectory() {
 
   useEffect(() => { load(); }, [load]);
 
-  const save = async () => {
-    if (!draft.name.trim()) return;
+  const save = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!draft.name.trim() || saving) return;
     setSaving(true);
+    setFormError('');
     try {
       const res = editingId
         ? await fetch(`/api/projects/${projectId}/directory/${editingId}`, {
@@ -136,8 +145,8 @@ export default function ProjectDirectory() {
       closeForm();
       setError('');
       await load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not save that contact.');
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Could not save that contact.');
     } finally {
       setSaving(false);
     }
@@ -155,11 +164,13 @@ export default function ProjectDirectory() {
           instead of asking for them again.
         </p>
 
-        {error && <p style={{ color: 'var(--danger)', fontSize: 13.5 }}>{error}</p>}
+        {error && <p role="alert" style={{ color: 'var(--danger)', fontSize: 13.5 }}>{error}</p>}
+        {loadError && contacts.length > 0 && <p role="alert" style={{ color: 'var(--danger)', fontSize: 13.5 }}>{loadError}</p>}
 
         {!adding && (
           <button
-            onClick={() => setAdding(true)}
+            type="button"
+            onClick={() => { setAdding(true); setFormError(''); }}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44,
               padding: '0 20px', borderRadius: 9, border: 'none', cursor: 'pointer',
@@ -171,35 +182,37 @@ export default function ProjectDirectory() {
         )}
 
         {adding && (
-          <div ref={formRef} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '16px 18px', marginBottom: 18 }}>
+          /* A real form: the keyboard's Go / Enter saves, the same as the button. */
+          <form ref={formRef} onSubmit={save} aria-label={editingId ? 'Edit contact' : 'Add someone to the directory'} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '16px 18px', marginBottom: 18 }}>
             {editingId && (
               <div style={{ fontSize: 12, fontWeight: 800, color: GOLD, marginBottom: 10 }}>Edit Contact</div>
             )}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 190px), 1fr))', gap: 12 }}>
               <label style={{ display: 'block' }}>
                 <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 6 }}>Name</span>
-                <input autoFocus style={input} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
+                <input autoFocus required aria-required="true" style={input} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
               </label>
               <label style={{ display: 'block' }}>
                 <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 6 }}>Role</span>
-                <Suggest style={input} value={draft.role ?? ''} onChange={(e) => setDraft({ ...draft, role: e.target.value })} options={['r']} />
-                </label>
+                <Suggest style={input} value={draft.role ?? ''} onChange={(e) => setDraft({ ...draft, role: e.target.value })} options={ROLES} placeholder="Pick or type a role" />
+              </label>
               <label style={{ display: 'block' }}>
                 <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 6 }}>Company</span>
                 <input style={input} value={draft.company ?? ''} onChange={(e) => setDraft({ ...draft, company: e.target.value })} />
               </label>
               <label style={{ display: 'block' }}>
                 <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 6 }}>Email</span>
-                <input type="email" style={input} value={draft.email ?? ''} onChange={(e) => setDraft({ ...draft, email: e.target.value })} />
+                <input type="email" inputMode="email" autoCapitalize="none" autoComplete="off" style={input} value={draft.email ?? ''} onChange={(e) => setDraft({ ...draft, email: e.target.value })} />
               </label>
               <label style={{ display: 'block' }}>
                 <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 6 }}>Phone</span>
-                <input style={input} value={draft.phone ?? ''} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} />
+                <input type="tel" inputMode="tel" autoComplete="off" style={input} value={draft.phone ?? ''} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} />
               </label>
             </div>
-            <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+            {formError && <p role="alert" style={{ color: 'var(--danger)', fontSize: 13.5, margin: '12px 0 0' }}>{formError}</p>}
+            <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
               <button
-                onClick={save}
+                type="submit"
                 disabled={saving || !draft.name.trim()}
                 style={{
                   minHeight: 44, padding: '0 22px', borderRadius: 9, border: 'none',
@@ -211,17 +224,30 @@ export default function ProjectDirectory() {
                 {saving ? 'Saving…' : editingId ? 'Save Changes' : 'Add to Directory'}
               </button>
               <button
+                type="button"
                 onClick={closeForm}
                 style={{ minHeight: 44, padding: '0 18px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: DIM, fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}
               >
                 Cancel
               </button>
             </div>
-          </div>
+          </form>
         )}
 
-        {loading ? (
+        {loading && contacts.length === 0 ? (
           <p style={{ color: DIM, fontSize: 13.5 }}>Loading the directory…</p>
+        ) : loadError && contacts.length === 0 ? (
+          /* A failed read is not an empty job: say so, and offer the retry. */
+          <div role="alert" style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '20px 22px', color: TEXT, fontSize: 13.5, lineHeight: 1.6 }}>
+            <div style={{ color: 'var(--danger)', fontWeight: 700, marginBottom: 10 }}>{loadError}</div>
+            <button
+              type="button"
+              onClick={() => load()}
+              style={{ minHeight: 44, padding: '0 18px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}
+            >
+              Try Again
+            </button>
+          </div>
         ) : contacts.length === 0 ? (
           <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '26px 22px', color: DIM, fontSize: 13.5, lineHeight: 1.6 }}>
             Nobody on this job yet. The owner and architect land here automatically when a project is
@@ -256,6 +282,7 @@ export default function ProjectDirectory() {
                 {c.id && (
                   <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
                     <button
+                      type="button"
                       onClick={() => startEdit(c)}
                       aria-label={`Edit ${c.name}`}
                       style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44, padding: '0 14px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
@@ -263,6 +290,7 @@ export default function ProjectDirectory() {
                       <PencilSimple size={13} weight="bold" /> Edit
                     </button>
                     <button
+                      type="button"
                       onClick={() => remove(c)}
                       disabled={removingId === c.id}
                       aria-label={`Remove ${c.name} from the directory`}

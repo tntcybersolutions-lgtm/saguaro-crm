@@ -29,12 +29,26 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
   }
 }
 
+/* Blank and whitespace-only become null, the same as PATCH, so an Add and an
+   Edit of the same person store the same thing. */
+const clean = (v: unknown): string | null => {
+  if (v === null || v === undefined) return null;
+  const s = String(v).trim();
+  return s ? s : null;
+};
+
 export async function POST(req: NextRequest, { params }: { params: { projectId: string } }) {
-  const g = await requirePermission(req, 'Projects', 'Edit');
+  /* projectId comes from the URL: the guard checks the job is this company's
+     (404 otherwise) and applies job-level grants, the same as PATCH/DELETE.
+     Without it a contact could be filed against another company's job id. */
+  const g = await requirePermission(req, 'Projects', 'Edit', { projectId: params.projectId });
   if (!g.ok) return g.res;
   const user = g.user;
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ error: 'Send the contact as JSON: name, role, company, email, phone' }, { status: 400 });
+    }
     if (!body.name || !String(body.name).trim()) {
       return NextResponse.json({ error: 'name is required' }, { status: 400 });
     }
@@ -49,19 +63,17 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
       tenant_id: user.tenantId,
       project_id: params.projectId,
       name: String(body.name).trim(),
-      role: body.role ?? body.title ?? body.role_on_project ?? null,
-      company: body.company ?? null,
-      phone: body.phone ?? null,
-      email: body.email ?? null,
+      role: clean(body.role ?? body.title ?? body.role_on_project),
+      company: clean(body.company),
+      phone: clean(body.phone),
+      email: clean(body.email),
       created_at: new Date().toISOString(),
     };
     const { data, error } = await supabase.from('contacts').insert(record as never).select().single();
     // Never fabricate a fake `dir-…` id — surface the real DB error instead.
-    if (error) {
-      console.error('[directory/POST]', error);
-      return apiError('projects/projectId/directory', error, "Failed to create contact", 500);
-    }
-    return NextResponse.json({ contact: data });
+    // apiError logs the real error with a reference id.
+    if (error) return apiError('projects/projectId/directory', error, "Couldn't add that contact. Please try again.", 500);
+    return NextResponse.json({ contact: data }, { status: 201 });
   } catch (e) {
     return apiError('projects/projectId/directory POST', e, "Couldn't add that contact. Please try again.");
   }
