@@ -4,12 +4,17 @@ import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
 import SubEndOfDay from '@/components/portal/SubEndOfDay';
+import {
+  fmtDay, sequenceLabels, invoiceView, fmtPercent, dailyLogView, fileNameFromUrl,
+  expiryLevel, isUnreadForSub, SCORE_CATEGORIES, overallRating, complianceDocFor,
+} from '@/lib/sub-portal-view';
 
 /* ── Design Tokens ── */
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF';
 const GREEN='#2CFF7A',RED='#FF3B30',AMBER='#FF8A00',BLUE='var(--brand-primary)',PURPLE='#FF8A00';
 const fmt=(n:number)=>'$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}));
-const fmtDate=(d:string)=>d?new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'--';
+/* A date column ('YYYY-MM-DD') is a calendar day — fmtDay keeps it on that day in every timezone. */
+const fmtDate=(d:string|null|undefined)=>fmtDay(d);
 
 type Tab='dashboard'|'photos'|'punch'|'daily'|'schedule'|'rfis'|'radio'|'payapps'|'bids'|'documents'|'drawings'|'compliance'|'scorecard'|'messages'|'history';
 
@@ -495,20 +500,22 @@ export default function SubPortal(){
       <div style={{fontSize:13,color:DIM,lineHeight:1.6}}>{companyName} was invited to this job by email and isn’t on the contractor’s subcontractor list yet. Ask them to add you as a subcontractor and send you a new portal link. End-of-day photos, documents, drawings, the punch list, radio and the clock all work from this link now.</div>
     </div>
   );
-  const overallScore=scorecard?.averages?.overall||0;
+  /* The GC's rating on the roster (subcontractors.rating), else the scorecard average. */
+  const overallScore=overallRating(scorecard);
   const isPreferred=scorecard?.preferred_status||false;
+  /* portal_sub_rfis / _pay_apps have no number column: number them in filing order. */
+  const rfiNo=sequenceLabels(rfis,'RFI-SUB-');
+  const invoiceNo=sequenceLabels(payApps,'#',1);
+  const unreadCount=messages.filter(isUnreadForSub).length;
+  const docFileLabel=(doc:any)=>fileNameFromUrl(doc?.file_url)||'No file attached';
 
-  // Insurance expiration alerts
+  // Insurance expiration alerts — expiry_date is the column (expires_at never existed, so these never fired).
   const getExpirationAlerts=()=>{
     const alerts:{doc:any;level:'critical'|'warning'|'notice'}[]=[];
     complianceDocs.forEach(doc=>{
-      if(!doc.expires_at)return;
-      const days=doc.days_until_expiry;
-      if(days===null)return;
-      if(days<=0) alerts.push({doc,level:'critical'});
-      else if(days<=30) alerts.push({doc,level:'critical'});
-      else if(days<=60) alerts.push({doc,level:'warning'});
-      else if(days<=90) alerts.push({doc,level:'notice'});
+      if(!doc.expiry_date)return;
+      const level=expiryLevel(doc.days_until_expiry);
+      if(level)alerts.push({doc,level});
     });
     return alerts.sort((a,b)=>(a.doc.days_until_expiry||0)-(b.doc.days_until_expiry||0));
   };
@@ -548,9 +555,17 @@ export default function SubPortal(){
   // Mark unread messages as read once the sub is actually looking at them.
   useEffect(()=>{
     if(tab!=='messages') return;
-    const unread=messages.filter((m:any)=>m.sender_type!=='sub'&&!m.read).map((m:any)=>m.id);
+    /* Read state is read_at (null = unread). This read `m.read`, which the table
+       doesn't have, so every GC message stayed "unread" and was re-sent here on
+       every render of the tab. */
+    const unread=messages.filter(isUnreadForSub).map((m:any)=>m.id);
     if(unread.length>0){
       fetch(`/api/portal/sub/messages?token=${token}`,{method:'PATCH',headers,body:JSON.stringify({message_ids:unread})})
+        .then(r=>{
+          if(!r.ok)throw new Error(`mark read answered ${r.status}`);
+          const at=new Date().toISOString();
+          setMessages(prev=>prev.map((m:any)=>unread.includes(m.id)?{...m,read_at:at}:m));
+        })
         .catch((e)=>console.error('[sub-portal] mark read failed',e));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -602,7 +617,7 @@ export default function SubPortal(){
     const alerts=getExpirationAlerts();
     const pendingPayApps=payApps.filter((p:any)=>p.status==='submitted'||p.status==='under_review').length;
     const openRfis=rfis.filter((r:any)=>r.status==='open').length;
-    const unreadMsgs=messages.filter((m:any)=>m.sender_type!=='sub'&&!m.read).length;
+    const unreadMsgs=unreadCount;
     return(
       <div style={{display:'grid',gap:20}}>
         {/* Welcome + Health Badge */}
@@ -638,7 +653,7 @@ export default function SubPortal(){
               const days=a.doc.days_until_expiry;
               const c=a.level==='critical'?RED:a.level==='warning'?AMBER:BLUE;
               return <div key={i} style={{padding:'8px 0',borderBottom:i<alerts.length-1?`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`:'none',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
-                <div style={{fontSize:13,color:TEXT}}><strong style={{color:c}}>{a.doc.doc_type}</strong> &mdash; {a.doc.file_name}</div>
+                <div style={{fontSize:13,color:TEXT}}><strong style={{color:c}}>{a.doc.doc_type}</strong> &mdash; {docFileLabel(a.doc)}</div>
                 <div style={{fontSize:12,fontWeight:700,color:c}}>{days<=0?'Expired':days<=30?`${days}d — Urgent`:days<=60?`${days}d — Warning`:`${days}d — Notice`}</div>
               </div>;
             })}
@@ -689,7 +704,7 @@ export default function SubPortal(){
             dailyLogs.slice(0,3).map((log:any)=>(
               <div key={log.id} style={{padding:'10px 0',borderBottom:`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`}}>
                 <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}><span style={{fontSize:13,fontWeight:600,color:TEXT}}>{fmtDate(log.log_date)}</span><span style={badge(log.status)}>{log.status}</span></div>
-                <div style={{fontSize:12,color:DIM}}>{log.crew_count} crew &middot; {log.hours_worked}h</div>
+                <div style={{fontSize:12,color:DIM}}>{dailyLogView(log).crew} crew &middot; {dailyLogView(log).hours}h</div>
               </div>
             ))}
           </div>
@@ -698,7 +713,7 @@ export default function SubPortal(){
             {rfis.filter((r:any)=>r.status==='open').length===0?<div style={{color:DIM,fontSize:13,textAlign:'center',padding:20}}>No open RFIs</div>:
             rfis.filter((r:any)=>r.status==='open').slice(0,5).map((rfi:any)=>(
               <div key={rfi.id} style={{padding:'8px 0',borderBottom:`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                <div><div style={{fontSize:13,fontWeight:600,color:TEXT}}>{rfi.rfi_number}</div><div style={{fontSize:11,color:DIM}}>{rfi.subject}</div></div>
+                <div><div style={{fontSize:13,fontWeight:600,color:TEXT}}>{rfiNo[rfi.id]}</div><div style={{fontSize:11,color:DIM}}>{rfi.subject}</div></div>
                 <span style={badge(rfi.status)}>{rfi.status}</span>
               </div>
             ))}
@@ -744,7 +759,7 @@ export default function SubPortal(){
               const c=a.level==='critical'?RED:a.level==='warning'?AMBER:BLUE;
               const levelLabel=days<=0?'Expired':days<=30?'30-Day Alert':days<=60?'60-Day Alert':'90-Day Alert';
               return <div key={i} style={{padding:'10px 12px',background:`color-mix(in srgb, ${c} 7%, transparent)`,border:`1px solid color-mix(in srgb, ${c} 20%, transparent)`,borderRadius:6,marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
-                <div><div style={{fontSize:13,fontWeight:700,color:TEXT}}>{docLabels[a.doc.doc_type]||a.doc.doc_type}</div><div style={{fontSize:11,color:DIM}}>{a.doc.file_name} &middot; Expires: {fmtDate(a.doc.expires_at)}</div></div>
+                <div><div style={{fontSize:13,fontWeight:700,color:TEXT}}>{docLabels[a.doc.doc_type]||a.doc.doc_type}</div><div style={{fontSize:11,color:DIM}}>{docFileLabel(a.doc)} &middot; Expires: {fmtDate(a.doc.expiry_date)}</div></div>
                 <div style={{padding:'4px 12px',borderRadius:20,background:`color-mix(in srgb, ${c} 13%, transparent)`,color:c,fontSize:11,fontWeight:700}}>{levelLabel} ({days<=0?'Overdue':`${days}d`})</div>
               </div>;
             })}
@@ -756,7 +771,7 @@ export default function SubPortal(){
           <div style={{fontSize:17,fontWeight:700,color:TEXT,marginBottom:16}}>Compliance Status</div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:14}}>
             {docTypes.map(type=>{
-              const doc=complianceDocs.find((d:any)=>d.doc_type===type);
+              const doc=complianceDocFor(complianceDocs,type);
               const status=doc?doc.expiration_status:'missing';
               const c=status==='valid'?GREEN:status==='expiring_soon'?AMBER:status==='expired'?RED:doc?.status==='approved'?GREEN:doc?.status==='pending_review'?AMBER:RED;
               return(
@@ -764,11 +779,8 @@ export default function SubPortal(){
                   <div style={{position:'absolute',top:12,right:12,width:10,height:10,borderRadius:'50%',background:c}}/>
                   <div style={{fontSize:14,fontWeight:700,color:TEXT,marginBottom:6}}>{docLabels[type]||type}</div>
                   {doc?(<div>
-                    <div style={{fontSize:12,color:DIM,marginBottom:4}}>File: {doc.file_name}</div>
-                    {doc.carrier&&<div style={{fontSize:12,color:DIM,marginBottom:4}}>Carrier: {doc.carrier}</div>}
-                    {doc.policy_number&&<div style={{fontSize:12,color:DIM,marginBottom:4}}>Policy: {doc.policy_number}</div>}
-                    {doc.coverage_amount&&<div style={{fontSize:12,color:DIM,marginBottom:4}}>Coverage: {fmt(doc.coverage_amount)}</div>}
-                    {doc.expires_at&&<div style={{fontSize:12,color:c,fontWeight:600,marginBottom:4}}>{doc.days_until_expiry!==null&&doc.days_until_expiry<=0?'Expired':doc.days_until_expiry!==null&&doc.days_until_expiry<=30?`Expires in ${doc.days_until_expiry} days`:`Expires: ${fmtDate(doc.expires_at)}`}</div>}
+                    <div style={{fontSize:12,color:DIM,marginBottom:4,overflowWrap:'anywhere'}}>File: {docFileLabel(doc)}</div>
+                    {doc.expiry_date&&<div style={{fontSize:12,color:c,fontWeight:600,marginBottom:4}}>{doc.days_until_expiry!==null&&doc.days_until_expiry<=0?'Expired':doc.days_until_expiry!==null&&doc.days_until_expiry<=30?`Expires in ${doc.days_until_expiry} days`:`Expires: ${fmtDate(doc.expiry_date)}`}</div>}
                     <span style={badge(doc.status)}>{(doc.status||'').replace(/_/g,' ')}</span>
                   </div>):(<div style={{fontSize:12,color:RED,fontWeight:600}}>Not uploaded — action required</div>)}
                 </div>
@@ -784,7 +796,7 @@ export default function SubPortal(){
             <div style={{display:'grid',gap:8}}>
               {documents.map((doc:any)=>(
                 <div key={doc.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}>
-                  <div><div style={{fontSize:13,fontWeight:600,color:TEXT}}>{doc.name||doc.file_name||'Document'}</div><div style={{fontSize:11,color:DIM}}>{doc.category||'General'} &middot; {fmtDate(doc.created_at)}</div></div>
+                  <div><div style={{fontSize:13,fontWeight:600,color:TEXT}}>{doc.title||fileNameFromUrl(doc.file_url)||'Document'}</div><div style={{fontSize:11,color:DIM}}>{doc.category||'General'} &middot; {fmtDate(doc.created_at)}</div></div>
                   {doc.file_url&&<a href={doc.file_url} target="_blank" rel="noopener noreferrer" style={{...btnS(BLUE,true),textDecoration:'none'}}>Download</a>}
                 </div>
               ))}
@@ -808,10 +820,10 @@ export default function SubPortal(){
             <div style={{fontSize:15,fontWeight:700,color:TEXT}}>No Pay Applications Yet</div>
             <div style={{fontSize:13,color:DIM,marginTop:6}}>Pay applications will appear here once submitted.</div>
           </div>
-        ):payApps.map((pa:any)=>(
+        ):payApps.map((pa:any)=>{const iv=invoiceView(pa);return(
           <div key={pa.id} style={card()}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14,flexWrap:'wrap',gap:10}}>
-              <div><div style={{fontSize:16,fontWeight:700,color:TEXT}}>Pay App #{pa.application_number||pa.id?.slice(0,6)}</div><div style={{fontSize:12,color:DIM}}>Period: {fmtDate(pa.period_start)} - {fmtDate(pa.period_end)}</div></div>
+              <div><div style={{fontSize:16,fontWeight:700,color:TEXT}}>Invoice {invoiceNo[pa.id]}</div><div style={{fontSize:12,color:DIM}}>Period: {iv.periodFrom?`${fmtDate(iv.periodFrom)} – `:'through '}{fmtDate(iv.periodTo)}</div></div>
               <span style={badge(pa.status)}>{(pa.status||'').replace(/_/g,' ')}</span>
             </div>
 
@@ -830,24 +842,25 @@ export default function SubPortal(){
 
             {/* Amounts */}
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:12,marginBottom:14}}>
-              <div style={{padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}><div style={{fontSize:10,color:DIM}}>Requested</div><div style={{fontSize:16,fontWeight:700,color:TEXT}}>{fmt(pa.total_requested||0)}</div></div>
-              <div style={{padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}><div style={{fontSize:10,color:DIM}}>Retainage ({pa.retainage_percent||10}%)</div><div style={{fontSize:16,fontWeight:700,color:AMBER}}>{fmt(pa.retainage_amount||0)}</div></div>
-              <div style={{padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}><div style={{fontSize:10,color:DIM}}>Net Amount</div><div style={{fontSize:16,fontWeight:700,color:GREEN}}>{fmt(pa.net_amount||0)}</div></div>
+              <div style={{padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}><div style={{fontSize:10,color:DIM}}>Requested</div><div style={{fontSize:16,fontWeight:700,color:TEXT}}>{fmt(iv.requested)}</div></div>
+              <div style={{padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}><div style={{fontSize:10,color:DIM}}>Retainage Held</div><div style={{fontSize:16,fontWeight:700,color:AMBER}}>{fmt(iv.retainage)}</div></div>
+              <div style={{padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}><div style={{fontSize:10,color:DIM}}>Net Amount</div><div style={{fontSize:16,fontWeight:700,color:GREEN}}>{fmt(iv.net)}</div></div>
             </div>
 
-            {/* Line items */}
-            {pa.line_items&&pa.line_items.length>0&&(
+            {/* Line items — prev_completed / this_period / total_completed / percent_complete / balance are the real columns */}
+            {iv.lines.length>0&&(
               <div style={{overflowX:'auto'}}>
-                <table style={{width:'100%',borderCollapse:'collapse',minWidth:600}}>
-                  <thead><tr>{['Description','Scheduled Value','Previous','This Period','Requested','GC Status'].map(h=><th key={h} style={{textAlign:'left',padding:'6px 10px',fontSize:10,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}</tr></thead>
-                  <tbody>{pa.line_items.map((li:any)=>(
+                <table style={{width:'100%',borderCollapse:'collapse',minWidth:640}}>
+                  <thead><tr>{['Description','Scheduled Value','Previous','This Period','Completed to Date','% Complete','Balance'].map(h=><th key={h} style={{textAlign:'left',padding:'6px 10px',fontSize:10,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}</tr></thead>
+                  <tbody>{iv.lines.map(li=>(
                     <tr key={li.id} style={{borderBottom:`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`}}>
                       <td style={{padding:'8px 10px',fontSize:12,color:TEXT}}>{li.description}</td>
-                      <td style={{padding:'8px 10px',fontSize:12,color:DIM}}>{fmt(li.scheduled_value)}</td>
-                      <td style={{padding:'8px 10px',fontSize:12,color:DIM}}>{fmt(li.previous_completed)}</td>
-                      <td style={{padding:'8px 10px',fontSize:12,color:TEXT,fontWeight:600}}>{fmt(li.this_period)}</td>
-                      <td style={{padding:'8px 10px',fontSize:12,color:TEXT}}>{fmt(li.amount_requested)}</td>
-                      <td style={{padding:'8px 10px'}}><span style={badge(li.gc_status||'pending')}>{(li.gc_status||'pending').replace(/_/g,' ')}</span>{li.gc_notes&&<div style={{fontSize:10,color:AMBER,marginTop:2}}>{li.gc_notes}</div>}</td>
+                      <td style={{padding:'8px 10px',fontSize:12,color:DIM}}>{fmt(li.scheduled)}</td>
+                      <td style={{padding:'8px 10px',fontSize:12,color:DIM}}>{fmt(li.previous)}</td>
+                      <td style={{padding:'8px 10px',fontSize:12,color:TEXT,fontWeight:600}}>{fmt(li.thisPeriod)}</td>
+                      <td style={{padding:'8px 10px',fontSize:12,color:TEXT}}>{fmt(li.completedToDate)}</td>
+                      <td style={{padding:'8px 10px',fontSize:12,color:DIM}}>{fmtPercent(li.percent)}</td>
+                      <td style={{padding:'8px 10px',fontSize:12,color:DIM}}>{fmt(li.balance)}</td>
                     </tr>
                   ))}</tbody>
                 </table>
@@ -864,7 +877,7 @@ export default function SubPortal(){
               </div>
             )}
           </div>
-        ))}
+        );})}
       </div>
     );
   };
@@ -911,22 +924,23 @@ export default function SubPortal(){
       <div style={card()}>
         <div style={{fontSize:17,fontWeight:700,color:TEXT,marginBottom:16}}>Previous Daily Logs</div>
         {dailyLogs.length===0?<div style={{color:DIM,fontSize:13,textAlign:'center',padding:40}}>No daily logs submitted yet. Submit your first log above.</div>:
-        dailyLogs.map((log:any)=>(
+        dailyLogs.map((log:any)=>{const v=dailyLogView(log);return(
           <div key={log.id} style={{padding:16,background:DARK,borderRadius:8,border:`1px solid ${BORDER}`,marginBottom:12}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10,flexWrap:'wrap',gap:8}}>
               <div style={{fontSize:15,fontWeight:700,color:TEXT}}>{fmtDate(log.log_date)}</div>
               <span style={badge(log.status)}>{(log.status||'').replace(/_/g,' ')}</span>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(120px,1fr))',gap:10,marginBottom:10}}>
-              <div style={{fontSize:12}}><span style={{color:DIM}}>Crew:</span> <span style={{color:TEXT,fontWeight:600}}>{log.crew_count}</span></div>
-              <div style={{fontSize:12}}><span style={{color:DIM}}>Hours:</span> <span style={{color:TEXT,fontWeight:600}}>{log.hours_worked}h</span></div>
-              {log.weather&&<div style={{fontSize:12}}><span style={{color:DIM}}>Weather:</span> <span style={{color:TEXT}}>{log.weather}</span></div>}
+              <div style={{fontSize:12}}><span style={{color:DIM}}>Crew:</span> <span style={{color:TEXT,fontWeight:600}}>{v.crew}</span></div>
+              <div style={{fontSize:12}}><span style={{color:DIM}}>Hours:</span> <span style={{color:TEXT,fontWeight:600}}>{v.hours}h</span></div>
             </div>
-            {log.work_completed&&<div style={{fontSize:13,color:TEXT,marginBottom:6,lineHeight:1.5}}>{log.work_completed}</div>}
-            {log.delays&&<div style={{fontSize:12,color:AMBER,marginTop:4}}>Delays: {log.delays}</div>}
-            {log.safety_incidents&&<div style={{fontSize:12,color:RED,marginTop:4}}>Safety: {log.safety_incidents}</div>}
+            {v.workPerformed&&<div style={{fontSize:13,color:TEXT,marginBottom:6,lineHeight:1.5,whiteSpace:'pre-wrap'}}>{v.workPerformed}</div>}
+            {v.materials&&<div style={{fontSize:12,color:DIM,marginTop:4,whiteSpace:'pre-wrap'}}>Materials: {v.materials}</div>}
+            {v.delays&&<div style={{fontSize:12,color:AMBER,marginTop:4,whiteSpace:'pre-wrap'}}>Delays: {v.delays}</div>}
+            {/* Planned work, weather and safety notes are saved into notes by the daily-log route. */}
+            {v.notes&&<div style={{fontSize:12,color:DIM,marginTop:6,lineHeight:1.5,whiteSpace:'pre-wrap'}}>{v.notes}</div>}
           </div>
-        ))}
+        );})}
       </div>
     </div>
   );
@@ -956,13 +970,13 @@ export default function SubPortal(){
         rfis.map((rfi:any)=>(
           <div key={rfi.id} style={{padding:14,background:DARK,borderRadius:8,border:`1px solid ${BORDER}`,marginBottom:10}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6,flexWrap:'wrap',gap:8}}>
-              <div><span style={{fontSize:12,color:GOLD,fontWeight:700,marginRight:8}}>{rfi.rfi_number}</span><span style={{fontSize:14,fontWeight:700,color:TEXT}}>{rfi.subject}</span></div>
+              <div><span style={{fontSize:12,color:GOLD,fontWeight:700,marginRight:8}}>{rfiNo[rfi.id]}</span><span style={{fontSize:14,fontWeight:700,color:TEXT}}>{rfi.subject}</span></div>
               <span style={badge(rfi.status)}>{rfi.status}</span>
             </div>
-            <div style={{fontSize:12,color:DIM,marginBottom:4}}>Submitted: {fmtDate(rfi.submitted_at||rfi.created_at)} &middot; Priority: <span style={{color:rfi.priority==='critical'?RED:rfi.priority==='high'?AMBER:DIM,fontWeight:600}}>{rfi.priority}</span></div>
-            <div style={{fontSize:13,color:TEXT,lineHeight:1.5}}>{rfi.question}</div>
-            {rfi.reference_drawing&&<div style={{fontSize:11,color:DIM,marginTop:4}}>Ref Drawing: {rfi.reference_drawing}</div>}
-            {rfi.gc_response&&<div style={{marginTop:8,padding:'8px 12px',background:`color-mix(in srgb, ${GREEN} 7%, transparent)`,borderRadius:6,border:`1px solid color-mix(in srgb, ${GREEN} 27%, transparent)`}}><div style={{fontSize:11,fontWeight:700,color:GREEN,marginBottom:4}}>Response:</div><div style={{fontSize:12,color:TEXT,lineHeight:1.5}}>{rfi.gc_response}</div></div>}
+            <div style={{fontSize:12,color:DIM,marginBottom:4}}>Submitted: {fmtDate(rfi.submitted_at||rfi.created_at)}</div>
+            {/* Priority and drawing / spec references are saved inside the question (portal_sub_rfis has no columns for them). */}
+            <div style={{fontSize:13,color:TEXT,lineHeight:1.5,whiteSpace:'pre-wrap'}}>{rfi.question}</div>
+            {rfi.answer&&<div style={{marginTop:8,padding:'8px 12px',background:`color-mix(in srgb, ${GREEN} 7%, transparent)`,borderRadius:6,border:`1px solid color-mix(in srgb, ${GREEN} 27%, transparent)`}}><div style={{fontSize:11,fontWeight:700,color:GREEN,marginBottom:4}}>Answer{rfi.answered_at?` · ${fmtDate(rfi.answered_at)}`:''}:</div><div style={{fontSize:12,color:TEXT,lineHeight:1.5,whiteSpace:'pre-wrap'}}>{rfi.answer}</div></div>}
           </div>
         ))}
       </div>
@@ -1014,13 +1028,9 @@ export default function SubPortal(){
   /* ================================================================ */
   const renderScorecard=()=>{
     const avgs=scorecard?.averages||{};
-    const cats=[
-      {key:'quality_score',label:'Quality'},
-      {key:'schedule_score',label:'Schedule'},
-      {key:'safety_score',label:'Safety'},
-      {key:'communication_score',label:'Communication'},
-      {key:'cleanup_score',label:'Cleanup'},
-    ];
+    /* portal_sub_scorecards has quality / schedule / safety / communication — no cleanup score. */
+    const cats=SCORE_CATEGORIES;
+    const reviews=Number(scorecard?.total_reviews)||0;
     return(
       <div style={{display:'grid',gap:20}}>
         {/* Overall */}
@@ -1028,7 +1038,7 @@ export default function SubPortal(){
           {isPreferred&&<div style={{marginBottom:16,display:'inline-flex',alignItems:'center',gap:10,background:`color-mix(in srgb, ${GOLD} 13%, transparent)`,border:`1px solid ${GOLD}`,borderRadius:30,padding:'8px 20px'}}><span style={{fontSize:22}}>{'\u2B50'}</span><span style={{fontSize:15,fontWeight:800,color:GOLD}}>Preferred Subcontractor</span></div>}
           <div style={{fontSize:56,fontWeight:800,color:GOLD}}>{overallScore>0?overallScore.toFixed(1):'--'}</div>
           <Stars rating={overallScore} size={28}/>
-          <div style={{fontSize:14,color:DIM,marginTop:8}}>Overall Performance Rating ({scorecard?.total_reviews||0} reviews)</div>
+          <div style={{fontSize:14,color:DIM,marginTop:8}}>{reviews>0?`Overall Performance Rating (${reviews} review${reviews===1?'':'s'})`:overallScore>0?'Overall rating from your general contractor':'Not rated yet'}</div>
         </div>
 
         {/* Health Score Card */}
@@ -1038,7 +1048,7 @@ export default function SubPortal(){
             <div style={{fontSize:32,fontWeight:800,color:healthColor}}>{healthScore>0?healthScore.toFixed(1):'--'}</div>
           </div>
           <div style={{fontSize:13,fontWeight:700,color:healthColor}}>{healthLabel}</div>
-          <div style={{fontSize:12,color:DIM,marginTop:8,lineHeight:1.6}}>Based on: quality, schedule adherence, safety, communication, change order frequency, insurance compliance, lien waiver timeliness, and payment history.</div>
+          <div style={{fontSize:12,color:DIM,marginTop:8,lineHeight:1.6}}>Based on: your rating, compliance documents on file, invoices approved or paid, and daily logs submitted.</div>
         </div>
 
         {/* Category Cards */}
@@ -1065,16 +1075,12 @@ export default function SubPortal(){
             <div style={{fontSize:17,fontWeight:700,color:TEXT,marginBottom:16}}>Score History</div>
             <div style={{overflowX:'auto'}}>
               <table style={{width:'100%',borderCollapse:'collapse',minWidth:500}}>
-                <thead><tr>{['Date','Quality','Schedule','Safety','Communication','Cleanup','Comments'].map(h=><th key={h} style={{textAlign:'left',padding:'8px 12px',fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}</tr></thead>
+                <thead><tr>{['Date',...cats.map(c=>c.label),'Notes'].map(h=><th key={h} style={{textAlign:'left',padding:'8px 12px',fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}</tr></thead>
                 <tbody>{scorecard.scorecards.map((sc:any)=>(
                   <tr key={sc.id} style={{borderBottom:`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`}}>
-                    <td style={{padding:'8px 12px',fontSize:12,color:DIM}}>{fmtDate(sc.rated_at)}</td>
-                    <td style={{padding:'8px 12px'}}>{sc.quality_score!=null?<Stars rating={sc.quality_score} size={12}/>:'--'}</td>
-                    <td style={{padding:'8px 12px'}}>{sc.schedule_score!=null?<Stars rating={sc.schedule_score} size={12}/>:'--'}</td>
-                    <td style={{padding:'8px 12px'}}>{sc.safety_score!=null?<Stars rating={sc.safety_score} size={12}/>:'--'}</td>
-                    <td style={{padding:'8px 12px'}}>{sc.communication_score!=null?<Stars rating={sc.communication_score} size={12}/>:'--'}</td>
-                    <td style={{padding:'8px 12px'}}>{sc.cleanup_score!=null?<Stars rating={sc.cleanup_score} size={12}/>:'--'}</td>
-                    <td style={{padding:'8px 12px',fontSize:11,color:DIM,maxWidth:200}}>{sc.comments||'--'}</td>
+                    <td style={{padding:'8px 12px',fontSize:12,color:DIM}}>{fmtDate(sc.created_at)}</td>
+                    {cats.map(c=><td key={c.key} style={{padding:'8px 12px'}}>{sc[c.key]!=null?<Stars rating={Number(sc[c.key])} size={12}/>:'--'}</td>)}
+                    <td style={{padding:'8px 12px',fontSize:11,color:DIM,maxWidth:200}}>{sc.notes||'--'}</td>
                   </tr>
                 ))}</tbody>
               </table>
@@ -1473,7 +1479,7 @@ export default function SubPortal(){
           {i>0&&TABS[i-1].section!==t.section&&<span style={{width:1,height:20,background:BORDER,margin:'0 4px',flexShrink:0}}/>}
           <button onClick={()=>setTab(t.key)} style={{padding:'8px 14px',background:tab===t.key?'linear-gradient(180deg,color-mix(in srgb, var(--brand-primary) 22%, transparent),var(--brand-primary-12))':'rgba(255,255,255,0.03)',border:`1px solid ${tab===t.key?'color-mix(in srgb, var(--brand-primary) 50%, transparent)':BORDER}`,borderRadius:999,color:tab===t.key?'var(--brand-primary-strong)':DIM,fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap',transition:'all .15s',display:'flex',alignItems:'center',gap:6,flexShrink:0,boxShadow:tab===t.key?'0 0 0 3px var(--brand-primary-12)':'none'}}>
             <span style={{fontSize:14}}>{t.icon}</span><span>{t.label}</span>
-            {t.key==='messages'&&messages.filter((m:any)=>m.sender_type!=='sub'&&!m.read).length>0&&(
+            {t.key==='messages'&&unreadCount>0&&(
               <span style={{width:8,height:8,borderRadius:'50%',background:RED,flexShrink:0}}/>
             )}
           </button>

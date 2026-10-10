@@ -51,20 +51,21 @@ export async function GET(req: NextRequest) {
 
     const cards = scorecards || [];
 
-    // Calculate averages
+    // Calculate averages. These are the score columns portal_sub_scorecards
+    // has — there is no cleanup_score, so it is not averaged (or shown).
     const scoreFields = [
       'quality_score',
       'schedule_score',
       'safety_score',
       'communication_score',
-      'cleanup_score',
     ];
 
     const averages: Record<string, number | null> = {};
     for (const field of scoreFields) {
       const values = cards
         .map((c: any) => c[field])
-        .filter((v: any) => v !== null && v !== undefined);
+        .filter((v: any) => v !== null && v !== undefined)
+        .map(Number);
       averages[field] =
         values.length > 0
           ? Math.round((values.reduce((a: number, b: number) => a + b, 0) / values.length) * 10) / 10
@@ -76,6 +77,7 @@ export async function GET(req: NextRequest) {
       cards
         .map((c: any) => c[field])
         .filter((v: any) => v !== null && v !== undefined)
+        .map(Number)
     );
     const overallAverage =
       allScoreValues.length > 0

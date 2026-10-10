@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { notOnRoster, subRecordScope } from '@/lib/sub-portal-scope';
+import { rfiQuestionWithRefs } from '@/lib/sub-portal-view';
 
 async function authenticateSubPortal(req: NextRequest) {
   const token =
@@ -83,9 +84,12 @@ export async function POST(req: NextRequest) {
     const {
       subject,
       question,
+      priority,
+      reference_drawing,
+      reference_spec,
     } = body;
 
-    if (!subject || !question) {
+    if (!subject || !question || !String(subject).trim() || !String(question).trim()) {
       return NextResponse.json(
         { error: 'subject and question are required' },
         { status: 400 }
@@ -108,15 +112,17 @@ export async function POST(req: NextRequest) {
     // Live portal_sub_rfis columns: subject, question, answer, status,
     // submitted_at, answered_at, created_at. rfi_number / priority /
     // reference_drawing / reference_spec / attachments have no column (and no
-    // jsonb to fold into) so they are dropped.
+    // jsonb). The number is derived on read; priority and the drawing / spec
+    // references the sub typed are kept as lines under the question
+    // (lib/sub-portal-view rfiQuestionWithRefs) instead of being dropped.
     const { data: rfi, error } = await db
       .from('portal_sub_rfis')
       .insert({
         sub_id: scope.subId,
         project_id: scope.projectId,
         tenant_id: scope.tenantId,
-        subject,
-        question,
+        subject: String(subject).trim(),
+        question: rfiQuestionWithRefs({ question: String(question), priority, reference_drawing, reference_spec }),
         status: 'open',
         submitted_at: new Date().toISOString(),
         created_at: new Date().toISOString(),
