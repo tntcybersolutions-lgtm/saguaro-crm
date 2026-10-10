@@ -128,7 +128,7 @@ export default function ProjectsPage() {
   const totalContract = projects.reduce((s: number, p: any) => s + (Number(p.contract_amount) || 0), 0);
 
   const stats: StatItem[] = [
-    { label: 'Projects', value: projects.length, sub: filtersActive ? 'Click to show everything' : 'In your portfolio', onClick: clearFilters },
+    { label: 'Projects', value: projects.length, sub: filtersActive ? 'Click to show everything' : 'In your portfolio', onClick: filtersActive ? clearFilters : undefined },
     { label: 'Active', value: active, tone: active > 0 ? 'good' : 'default', sub: statusFilter === 'active' ? 'Filtered — click to clear' : 'Under construction', onClick: () => toggleStatus('active') },
     { label: 'Bidding', value: bidding, tone: bidding > 0 ? 'warn' : 'default', sub: statusFilter === 'bidding' ? 'Filtered — click to clear' : 'In pursuit', onClick: () => toggleStatus('bidding') },
     { label: 'Complete / Closed', value: complete, sub: statusFilter === 'complete' ? 'Filtered — click to clear' : 'Delivered jobs', onClick: () => toggleStatus('complete') },

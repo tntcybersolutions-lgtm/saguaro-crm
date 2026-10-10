@@ -401,7 +401,7 @@ export default function InvoicingPage() {
         { label: 'Drafts', value: '—', sub: 'Loading…' },
       ]
     : [
-        { label: 'Total Billed', value: fmtUsd(pageBilled), sub: filtersActive ? 'Click to show everything' : `Across ${invoices.length} invoice${invoices.length === 1 ? '' : 's'}`, onClick: clearFilters },
+        { label: 'Total Billed', value: fmtUsd(pageBilled), sub: filtersActive ? 'Click to show everything' : `Across ${invoices.length} invoice${invoices.length === 1 ? '' : 's'}`, onClick: filtersActive ? clearFilters : undefined },
         { label: 'Collected', value: fmtUsd(pagePaid), tone: pagePaid > 0 ? 'good' : 'default', sub: statusFilter === 'paid' ? 'Filtered — click to clear' : 'Marked paid', onClick: () => toggleStatus('paid') },
         { label: 'Outstanding', value: fmtUsd(pageOutstanding), tone: pageOutstanding > 0 ? 'warn' : 'default', sub: statusFilter === 'outstanding' ? 'Filtered — click to clear' : 'Sent, awaiting payment', onClick: () => toggleStatus('outstanding') },
         { label: 'Overdue', value: pageOverdue, tone: pageOverdue > 0 ? 'bad' : 'default', sub: statusFilter === 'overdue' ? 'Filtered — click to clear' : pageOverdue > 0 ? 'Past due, excludes drafts' : 'Nothing past due', onClick: () => toggleStatus('overdue') },

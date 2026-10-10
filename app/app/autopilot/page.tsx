@@ -223,7 +223,7 @@ export default function AutopilotPage() {
         { label: 'Acknowledged', value: '—', sub: 'Loading…' },
       ]
     : [
-        { label: 'Open Alerts', value: liveAlerts.length, sub: filtersActive ? 'Click to show everything' : byProject.length > 0 ? `${SCAN_RULES.length} checks · ${byProject.length} project${byProject.length === 1 ? '' : 's'} affected` : `Across ${SCAN_RULES.length} automated checks`, onClick: clearFilters },
+        { label: 'Open Alerts', value: liveAlerts.length, sub: filtersActive ? 'Click to show everything' : byProject.length > 0 ? `${SCAN_RULES.length} checks · ${byProject.length} project${byProject.length === 1 ? '' : 's'} affected` : `Across ${SCAN_RULES.length} automated checks`, onClick: filtersActive ? clearFilters : undefined },
         { label: 'Critical', value: criticalCount, tone: criticalCount > 0 ? 'bad' : 'default', sub: filter === 'critical' ? 'Filtered — click to clear' : criticalCount > 0 ? 'Need immediate action' : 'None open', onClick: () => toggleFilter('critical') },
         { label: 'High', value: highCount, tone: highCount > 0 ? 'warn' : 'default', sub: filter === 'high' ? 'Filtered — click to clear' : highCount > 0 ? 'Review soon' : 'None open', onClick: () => toggleFilter('high') },
         { label: 'Acknowledged', value: acknowledgedCount, tone: acknowledgedCount > 0 ? 'good' : 'default', sub: filter === 'acknowledged' ? 'Filtered — click to clear' : 'Handled this session', onClick: () => toggleFilter('acknowledged') },

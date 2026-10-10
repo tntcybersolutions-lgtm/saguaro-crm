@@ -613,7 +613,7 @@ export default function TmTicketsPage() {
         { label: 'Billed', value: '—', sub: 'Loading…' },
       ]
     : [
-        { label: 'Total Value', value: fmtUSD(totalValue), sub: statusFilter !== 'all' || search ? 'Click to show everything' : `${tickets.length} ticket${tickets.length !== 1 ? 's' : ''}`, onClick: () => { setStatusFilter('all'); setSearch(''); } },
+        { label: 'Total Value', value: fmtUSD(totalValue), sub: statusFilter !== 'all' || search ? 'Click to show everything' : `${tickets.length} ticket${tickets.length !== 1 ? 's' : ''}`, onClick: statusFilter !== 'all' || search ? () => { setStatusFilter('all'); setSearch(''); } : undefined },
         { label: 'Approved', value: fmtUSD(approvedValue), tone: approvedValue > 0 ? 'good' : 'default', sub: statusFilter === 'approved' ? 'Filtered — click to clear' : `${statusCounts['approved'] || 0} approved`, onClick: () => toggleStatus('approved') },
         { label: 'Awaiting Approval', value: fmtUSD(awaitingValue), tone: awaitingCount > 0 ? 'warn' : 'default', sub: statusFilter === 'submitted' ? 'Filtered — click to clear' : awaitingCount > 0 ? `${awaitingCount} submitted` : 'None submitted', onClick: () => toggleStatus('submitted') },
         { label: 'Drafts', value: draftCount, sub: statusFilter === 'draft' ? 'Filtered — click to clear' : draftCount > 0 ? 'Not yet submitted' : 'All sent', onClick: () => toggleStatus('draft') },

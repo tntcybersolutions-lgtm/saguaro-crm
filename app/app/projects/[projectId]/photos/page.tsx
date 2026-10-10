@@ -595,7 +595,7 @@ export default function PhotosPage(){
         { label:'Last Added', value:'—', sub:'Loading…' },
       ]
     : [
-        { label:'Photos & Video', value:photos.length, sub: filtersActive ? 'Click to show everything' : videoCount>0 ? `${videoCount} video${videoCount===1?'':'s'} · ${albums.length} album${albums.length===1?'':'s'}` : albums.length>0 ? `${albums.length} album${albums.length===1?'':'s'} in use` : 'No albums yet', onClick: clearFilters },
+        { label:'Photos & Video', value:photos.length, sub: filtersActive ? 'Click to show everything' : videoCount>0 ? `${videoCount} video${videoCount===1?'':'s'} · ${albums.length} album${albums.length===1?'':'s'}` : albums.length>0 ? `${albums.length} album${albums.length===1?'':'s'} in use` : 'No albums yet', onClick: filtersActive ? clearFilters : undefined },
         { label:'This Month', value:thisMonth, tone: thisMonth>0 ? 'good' : 'default', sub: periodFilter==='month' ? 'Filtered — click to clear' : 'Added since the 1st', onClick: () => setPeriodFilter(p => (p==='month' ? 'all' : 'month')) },
         { label:'Issues Tagged', value:issueCount, tone: issueCount>0 ? 'bad' : 'default', sub: filterAlbum==='Issues' ? 'Filtered — click to clear' : issueCount>0 ? 'Flagged for follow-up' : 'Clean so far', onClick: () => setFilterAlbum(a => (a==='Issues' ? 'All' : 'Issues')) },
         { label:'Last Added', value: lastPhoto ? fmtDate(lastPhoto.taken_at) : '—', sub: lastPhoto ? `${isVideo(lastPhoto)?'Video':'Photo'} · ${lastPhoto.title || 'Most recent capture'}` : 'Nothing documented yet', onClick: lastPhoto ? () => viewPhoto(lastPhoto) : undefined },
