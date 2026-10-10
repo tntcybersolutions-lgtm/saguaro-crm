@@ -47,14 +47,13 @@
     "POST /api/daily-logs/create → 200"
    ],
    "edit": "sent by itself when the signal came back",
-   "fieldsBack": "on the server"
+   "fieldsBack": "on the server",
+   "del": "not on the list any more (closed/moved by a button)"
   },
   {
    "screen": "OFFLINE · projects/:id/punch-list",
    "add": "punch item with no signal",
-   "errors": [
-    "airplane test took over 4 minutes on this screen"
-   ],
+   "errors": [],
    "actions": [
     {
      "label": "the offline worker controls the page",
@@ -80,6 +79,7 @@
    "create": "kept on the phone (shows On This Phone)",
    "persisted": "NOT TESTED — the test browser cannot reload with no signal",
    "writes": [
+    "POST /api/punch-list/create → 200",
     "POST /api/punch-list/create → 200"
    ],
    "edit": "sent by itself when the signal came back",
@@ -124,108 +124,20 @@
   },
   {
    "screen": "people",
-   "add": "+ New Role",
-   "errors": [],
-   "actions": [],
-   "filled": 2,
-   "saveClicked": [
-    "Create Role"
-   ],
-   "writes": [
-    "POST /api/roles → 201"
-   ],
-   "create": "saved",
-   "persisted": "NOT ON LIST after reload"
-  },
-  {
-   "screen": "people",
-   "add": "+ Invite User",
-   "errors": [],
-   "actions": [
-    {
-     "label": "ROLES DEFINED 8 Permission templates in force",
-     "result": "gone after reopening (state changed)"
-    },
-    {
-     "label": "ROLE ASSIGNMENTS 1 Users mapped to roles",
-     "result": "gone after reopening (state changed)"
-    },
-    {
-     "label": "PENDING INVITES 4 Invites expire after 7 days",
-     "result": "gone after reopening (state changed)"
-    },
-    {
-     "label": "CREW DIRECTORY 3 0 OSHA certified",
-     "result": "gone after reopening (state changed)"
-    },
-    {
-     "label": "+ New Role",
-     "result": "opened a form → saved",
-     "writes": [
-      "POST /api/roles → 201"
-     ]
-    },
-    {
-     "label": "Team",
-     "result": "record no longer on the list (an earlier button closed/moved it)"
-    }
-   ],
-   "filled": 3,
-   "saveClicked": [
-    "Send Invite",
-    "Send Invite",
-    "Send Invite"
-   ],
-   "writes": [
-    "POST /api/team/invite → 200"
-   ],
-   "create": "saved",
-   "persisted": "yes",
-   "fieldsBack": "3/3",
-   "edit": "no Edit button on the record",
-   "del": "(at the end — used by the pickers)"
-  },
-  {
-   "screen": "people — page buttons",
-   "add": "2 write buttons",
-   "errors": [],
-   "actions": [
-    {
-     "label": "TEAM MEMBERS 1 Platform sign-ins",
-     "result": "went to /app/people",
-     "writes": []
-    },
-    {
-     "label": "+ Assign Role",
-     "result": "opened a panel (nothing to save)",
-     "writes": []
-    }
-   ]
+   "add": "no Add/New on this screen"
   },
   {
    "screen": "customers",
    "add": "New Customer",
-   "errors": [
-    "could not reopen the record after editing"
-   ],
+   "errors": [],
    "actions": [],
    "filled": 6,
    "saveClicked": [
     "Add Customer",
-    "Add Customer",
-    "Add Customer",
     "Add Customer"
    ],
-   "writes": [
-    "POST /api/customers/profiles → 201"
-   ],
-   "create": "saved",
-   "persisted": "yes",
-   "fieldsBack": "4/5",
-   "missing": [
-    "85001"
-   ],
-   "edit": "no Edit button on the record"
+   "writes": [],
+   "create": "NOTHING SENT on save"
   },
   {
    "screen": "projects/:id/directory",
@@ -249,7 +161,7 @@
    "persisted": "yes",
    "fieldsBack": "4/4",
    "prefilled": "4/4",
-   "edit": "NOTHING SENT on save",
+   "edit": "yes",
    "del": "(at the end — used by the pickers)"
   },
   {
@@ -262,89 +174,20 @@
   {
    "screen": "projects/:id/team",
    "add": "Invite Member",
-   "errors": [],
-   "actions": [
-    {
-     "label": "Invite Member",
-     "result": "nothing happened (dead button?)",
-     "writes": []
-    },
-    {
-     "label": "PROJECT → ZZ AUDIT Walk Job 10100251 #2026-007",
-     "result": "gone after reopening (state changed)"
-    },
-    {
-     "label": "OWNER → ZZ AUDIT customers 10100251 delivered@resend.dev",
-     "result": "gone after reopening (state changed)"
-    },
-    {
-     "label": "ARCHITECT → — Design contact",
-     "result": "gone after reopening (state changed)"
-    },
-    {
-     "label": "LEADERSHIP → 1/5 Directory roles assigned",
-     "result": "gone after reopening (state changed)"
-    },
-    {
-     "label": "TRADES ON THE JOB → 0 No subs yet",
-     "result": "gone after reopening (state changed)"
-    },
-    {
-     "label": "TEAM MEMBERS → 1 0 with access · 1 invited",
-     "result": "gone after reopening (state changed)"
-    },
-    {
-     "label": "SUBCONTRACTORS → 0 Portal access",
-     "result": "gone after reopening (state changed)"
-    },
-    {
-     "label": "FIELD LEADERSHIP → 1/5 PM · super · foreman · owner · archit",
-     "result": "gone after reopening (state changed)"
-    },
-    {
-     "label": "New Customer",
-     "result": "nothing happened (dead button?)",
-     "writes": []
-    },
-    {
-     "label": "Open Customers",
-     "result": "went to /app/customers",
-     "writes": []
-    },
-    {
-     "label": "Set Project Manager",
-     "result": "nothing happened (dead button?)",
-     "writes": []
-    },
-    {
-     "label": "Set Superintendent",
-     "result": "nothing happened (dead button?)",
-     "writes": []
-    },
-    {
-     "label": "Set Foreman",
-     "result": "nothing happened (dead button?)",
-     "writes": []
-    },
-    {
-     "label": "Set Architect",
-     "result": "nothing happened (dead button?)",
-     "writes": []
-    },
-    {
-     "label": "Ascending — switch to descending",
-     "result": "nothing happened (dead button?)",
-     "writes": []
-    }
+   "errors": [
+    "could not reopen the record after editing"
    ],
+   "actions": [],
    "filled": 5,
    "saveClicked": [
-    "Send Invitation"
+    "Send Invitation",
+    "Invite Member",
+    "Invite Member"
    ],
    "writes": [
+    "POST /api/team/invite → 200",
     "PATCH /api/projects/:id → 200",
-    "PATCH /api/projects/:id → 200",
-    "POST /api/team/invite → 200"
+    "PATCH /api/projects/:id → 200"
    ],
    "create": "saved",
    "persisted": "yes",
@@ -357,8 +200,7 @@
     "‹marker›",
     "‹marker› note"
    ],
-   "edit": "edit form did not show the saved title",
-   "del": "(at the end — used by the pickers)"
+   "edit": "edit form did not show the saved title"
   },
   {
    "screen": "projects/:id/team",
@@ -374,12 +216,11 @@
     "PATCH /api/projects/:id → 200"
    ],
    "create": "saved",
-   "persisted": "listed, but tapping it opened nothing"
+   "persisted": "NOT ON LIST after reload"
   }
  ],
  "leftovers": [
-  "people: \"ZZ AUDIT people 10100251\"",
-  "customers: \"ZZ AUDIT customers 10100251\"",
-  "projects/:id/team: \"ZZ AUDIT team 2 10100251\""
+  "projects/:id/team: \"ZZ AUDIT team 10101424\"",
+  "projects/:id/team: \"ZZ AUDIT team 2 10101424\""
  ]
 }

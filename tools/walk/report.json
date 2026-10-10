@@ -4,24 +4,17 @@
   "status": 200,
   "loadErrors": [],
   "apiErrors": [],
-  "dead": [
-   {
-    "label": "Projects",
-    "tag": "a",
-    "href": "/app/projects",
-    "html": "<a class=\"sag-tab\" style=\"flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:56px;text-decoration:no"
-   }
-  ],
+  "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [
    "Create",
-   "1 pay app waiting for your decision · Desert Vista Medical Plaza",
+   "1 pay app waiting 14+ days for a decision · Desert Vista Medical Plaza",
    "Mark done: Drywall corner bead damaged",
    "4 days late confirm roof warranty registration Project task"
   ],
-  "tapped": 62,
-  "ok": 54
+  "tapped": 70,
+  "ok": 56
  },
  {
   "route": "/app/my-work",
@@ -32,8 +25,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 5,
-  "ok": 5
+  "tapped": 2,
+  "ok": 2
  },
  {
   "route": "/app/projects",
@@ -43,11 +36,9 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "COMPLETE / CLOSED 0 Delivered jobs"
-  ],
-  "tapped": 15,
-  "ok": 7
+  "notTapped": [],
+  "tapped": 1,
+  "ok": 1
  },
  {
   "route": "/app/time",
@@ -59,7 +50,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 3,
-  "ok": 3
+  "ok": 2
  },
  {
   "route": "/app/notifications",
@@ -70,8 +61,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 4,
-  "ok": 4
+  "tapped": 3,
+  "ok": 3
  },
  {
   "route": "/app/documents",
@@ -82,13 +73,11 @@
   "covered": [],
   "erroring": [],
   "notTapped": [
-   "Desert Vista Medical Plaza: 4 paid pay apps with no lien waiver on fil",
-   "Camelback Fire Station 34: 2 paid pay apps with no lien waiver on file",
-   "PAY APPLICATIONS → 9 $5.37M billed across 2 jobs",
+   "PAY APPLICATIONS → — AIA G702 / G703",
    "Pay Applications"
   ],
-  "tapped": 70,
-  "ok": 13
+  "tapped": 12,
+  "ok": 6
  },
  {
   "route": "/app/daily-logs",
@@ -96,13 +85,7 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "Sort by",
-    "why": "<button type=\"button\" role=\"option\" class=\"ms-opt\" aria-selected=\"true\" data-selected=\"true\">…</button> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<select class=\"k-sortbar-select\" aria-label=\"Sort by\" data-walk=\"5\"><option value=\"\">Default order</option><option value=\"log_date\" selected=\"\">Date</option><op"
-   }
-  ],
+  "covered": [],
   "erroring": [],
   "notTapped": [],
   "tapped": 3,
@@ -116,12 +99,9 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "COMPLETE 3 27% of the plan",
-   "OVERDUE 3 Past their end date, not complete"
-  ],
-  "tapped": 30,
-  "ok": 6
+  "notTapped": [],
+  "tapped": 3,
+  "ok": 3
  },
  {
   "route": "/app/compliance",
@@ -132,7 +112,7 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 10,
+  "tapped": 6,
   "ok": 3
  },
  {
@@ -147,7 +127,7 @@
    "Upload Blueprint"
   ],
   "tapped": 4,
-  "ok": 4
+  "ok": 1
  },
  {
   "route": "/app/reports",
@@ -155,14 +135,30 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [],
+  "covered": [
+   {
+    "label": "Job Cost",
+    "why": "locator.click: Timeout 2500ms exceeded.",
+    "html": "<button type=\"button\" class=\"rpChip\" data-walk=\"16\">Job Cost</button>"
+   },
+   {
+    "label": "Punch List",
+    "why": "locator.click: Timeout 2500ms exceeded.",
+    "html": "<button type=\"button\" class=\"rpChip\" data-walk=\"18\">Punch List</button>"
+   },
+   {
+    "label": "Bid Analysis",
+    "why": "locator.click: Timeout 2500ms exceeded.",
+    "html": "<button type=\"button\" class=\"rpChip\" data-walk=\"20\">Bid Analysis</button>"
+   }
+  ],
   "erroring": [],
   "notTapped": [
    "Pay App Status",
    "Pay App Status Pay applications with amounts and status Answers: How m"
   ],
-  "tapped": 28,
-  "ok": 15
+  "tapped": 27,
+  "ok": 12
  },
  {
   "route": "/app/people",
@@ -172,30 +168,21 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "TEAM MEMBERS 1 Platform sign-ins"
-  ],
-  "tapped": 5,
-  "ok": 5
+  "notTapped": [],
+  "tapped": 1,
+  "ok": 1
  },
  {
   "route": "/app/subs",
   "status": 200,
   "loadErrors": [],
   "apiErrors": [],
-  "dead": [
-   {
-    "label": "ON FILE → 0 Companies tenant-wide",
-    "tag": "div",
-    "href": null,
-    "html": "<div class=\"pmHover\" aria-pressed=\"false\" role=\"button\" tabindex=\"0\" style=\"position:relative;overflow:hidden;background:linear-gradient(180deg, var(--c-raised)"
-   }
-  ],
+  "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
   "tapped": 5,
-  "ok": 4
+  "ok": 2
  },
  {
   "route": "/app/customers",
@@ -206,8 +193,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 5,
-  "ok": 5
+  "tapped": 6,
+  "ok": 6
  },
  {
   "route": "/app/leads",
@@ -297,7 +284,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 10,
-  "ok": 8
+  "ok": 9
  },
  {
   "route": "/app/invoicing",
@@ -309,7 +296,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 3,
-  "ok": 3
+  "ok": 2
  },
  {
   "route": "/app/catalog",
@@ -317,20 +304,26 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "SELECT",
-    "why": "<div class=\"ms-scrim\" aria-hidden=\"true\"></div> from <div class=\"ms-root\">…</div> subtree intercepts pointer events",
-    "html": "<select style=\"padding:8px 10px;background:var(--bg-base);border:1px solid rgba(255,255,255,0.12);border-radius:9px;color:var(--text-primary);font-size:12.5px;o"
-   }
-  ],
+  "covered": [],
   "erroring": [],
   "notTapped": [],
   "tapped": 2,
-  "ok": 0
+  "ok": 1
  },
  {
   "route": "/app/certified-payroll",
+  "status": 200,
+  "loadErrors": [],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 13,
+  "ok": 1
+ },
+ {
+  "route": "/app/command-center",
   "status": 200,
   "loadErrors": [],
   "apiErrors": [],
@@ -342,22 +335,6 @@
   "ok": 0
  },
  {
-  "route": "/app/command-center",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [
-   "1 pay app waiting for your decision · Desert Vista Medical Plaza",
-   "Mark done: Drywall corner bead damaged",
-   "4 days late confirm roof warranty registration Project task"
-  ],
-  "tapped": 47,
-  "ok": 8
- },
- {
   "route": "/app/command-center/daily-logs",
   "status": 200,
   "loadErrors": [],
@@ -367,7 +344,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 1,
-  "ok": 0
+  "ok": 1
  },
  {
   "route": "/app/command-center/directory",
@@ -377,13 +354,9 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "1 pay app waiting for your decision · Desert Vista Medical Plaza",
-   "Mark done: Drywall corner bead damaged",
-   "4 days late confirm roof warranty registration Project task"
-  ],
-  "tapped": 47,
-  "ok": 1
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/command-center/financials",
@@ -441,9 +414,13 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "1 pay app waiting 14+ days for a decision · Desert Vista Medical Plaza",
+   "Mark done: Drywall corner bead damaged",
+   "4 days late confirm roof warranty registration Project task"
+  ],
+  "tapped": 55,
+  "ok": 1
  },
  {
   "route": "/app/command-center/long-lead",
@@ -573,13 +550,9 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "1 pay app waiting for your decision · Desert Vista Medical Plaza",
-   "Mark done: Drywall corner bead damaged",
-   "4 days late confirm roof warranty registration Project task"
-  ],
-  "tapped": 47,
-  "ok": 5
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/document-versions",
@@ -645,11 +618,6 @@
     "label": "Dashboard",
     "why": "<textarea placeholder=\"Brief description of this form…\"></textarea> from <div>…</div> subtree intercepts pointer events",
     "html": "<button style=\"padding:10px 24px;background:none;border:none;color:var(--brand-primary);font-weight:700;font-size:14px;cursor:pointer;border-bottom:2px solid va"
-   },
-   {
-    "label": "Submissions",
-    "why": "<textarea placeholder=\"Brief description of this form…\"></textarea> from <div>…</div> subtree intercepts pointer events",
-    "html": "<button style=\"padding:10px 24px;background:none;border:none;color:var(--text-secondary);font-weight:700;font-size:14px;cursor:pointer;border-bottom:2px solid t"
    }
   ],
   "erroring": [],
@@ -657,7 +625,7 @@
    "Send Prequal Form"
   ],
   "tapped": 5,
-  "ok": 3
+  "ok": 4
  },
  {
   "route": "/app/radio",
@@ -751,7 +719,7 @@
    "Create Claim"
   ],
   "tapped": 4,
-  "ok": 3
+  "ok": 4
  },
  {
   "route": "/app/ask",
@@ -759,17 +727,11 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "Sage Settings",
-    "why": "<div>…</div> from <div>…</div> subtree intercepts pointer events",
-    "html": "<button title=\"Sage settings — style profile, automation rules, activity trail, bid brain\" style=\"display:inline-flex;align-items:center;gap:6px;background:var("
-   }
-  ],
+  "covered": [],
   "erroring": [],
   "notTapped": [],
   "tapped": 7,
-  "ok": 2
+  "ok": 3
  },
  {
   "route": "/app/projects/:id/overview",
@@ -780,8 +742,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 4,
-  "ok": 4
+  "tapped": 2,
+  "ok": 2
  },
  {
   "route": "/app/projects/:id/photos",
@@ -792,8 +754,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 6,
-  "ok": 6
+  "tapped": 3,
+  "ok": 2
  },
  {
   "route": "/app/projects/:id/files",
@@ -807,20 +769,8 @@
    "Import from Cloud",
    "Trash"
   ],
-  "tapped": 18,
-  "ok": 8
- },
- {
-  "route": "/app/projects/:id/daily-logs",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 4,
-  "ok": 4
+  "tapped": 6,
+  "ok": 5
  },
  {
   "route": "/app/projects/:id/rfis",
@@ -828,17 +778,11 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "Sort by",
-    "why": "<div class=\"k-form-grid\">…</div> from <div class=\"k-overlay\">…</div> subtree intercepts pointer events",
-    "html": "<select class=\"k-sortbar-select\" aria-label=\"Sort by\" data-walk=\"13\"><option value=\"\" selected=\"\">Default order</option><option value=\"rfi_number\">RFI #</option"
-   }
-  ],
+  "covered": [],
   "erroring": [],
   "notTapped": [],
   "tapped": 2,
-  "ok": 0
+  "ok": 1
  },
  {
   "route": "/app/projects/:id/submittals",
@@ -849,8 +793,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 14,
-  "ok": 8
+  "tapped": 3,
+  "ok": 3
  },
  {
   "route": "/app/projects/:id/punch-list",
@@ -863,6 +807,18 @@
   "notTapped": [],
   "tapped": 2,
   "ok": 2
+ },
+ {
+  "route": "/app/projects/:id/change-orders",
+  "status": 200,
+  "loadErrors": [],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 3,
+  "ok": 3
  },
  {
   "route": "/app/projects/:id/pay-apps",
@@ -888,8 +844,7 @@
   "erroring": [],
   "notTapped": [
    "+ Generate Waiver",
-   "Generate All",
-   "+ Generate a Waiver Manually"
+   "Generate All"
   ],
   "tapped": 0,
   "ok": 0
@@ -926,11 +881,8 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "OPEN SUBMITTALS → 4 Reviewed against the book",
-   "Upload"
-  ],
-  "tapped": 13,
+  "notTapped": [],
+  "tapped": 8,
   "ok": 2
  },
  {
@@ -942,8 +894,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 3,
-  "ok": 3
+  "tapped": 12,
+  "ok": 8
  },
  {
   "route": "/app/projects/:id/safety",
@@ -956,7 +908,7 @@
   "notTapped": [
    "Generate JHA"
   ],
-  "tapped": 20,
+  "tapped": 12,
   "ok": 3
  },
  {
@@ -994,7 +946,7 @@
   "notTapped": [
    "Invite Member"
   ],
-  "tapped": 19,
+  "tapped": 22,
   "ok": 1
  },
  {
@@ -1018,7 +970,7 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 7,
+  "tapped": 10,
   "ok": 2
  },
  {
@@ -1042,8 +994,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 8,
-  "ok": 2
+  "tapped": 14,
+  "ok": 4
  },
  {
   "route": "/app/projects/:id/tm-tickets",
@@ -1055,7 +1007,7 @@
   "erroring": [],
   "notTapped": [],
   "tapped": 3,
-  "ok": 1
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/budget",
@@ -1090,7 +1042,7 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 14,
+  "tapped": 3,
   "ok": 3
  },
  {
@@ -1129,8 +1081,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 7,
-  "ok": 2
+  "tapped": 12,
+  "ok": 3
  },
  {
   "route": "/app/projects/:id/estimate",
@@ -1152,9 +1104,7 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "Start v1.0 at $28,400"
-  ],
+  "notTapped": [],
   "tapped": 7,
   "ok": 5
  },
@@ -1167,11 +1117,10 @@
   "covered": [],
   "erroring": [],
   "notTapped": [
-   "Create Bid Package",
-   "SUB ROSTER 0 Invite by email works too"
+   "Create Bid Package"
   ],
-  "tapped": 5,
-  "ok": 5
+  "tapped": 2,
+  "ok": 2
  },
  {
   "route": "/app/projects/:id/closeout",
@@ -1199,8 +1148,8 @@
   "notTapped": [
    "Request All COIs"
   ],
-  "tapped": 4,
-  "ok": 1
+  "tapped": 12,
+  "ok": 2
  },
  {
   "route": "/app/projects/:id/insurance",
@@ -1211,7 +1160,7 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 6,
+  "tapped": 5,
   "ok": 2
  },
  {
@@ -1223,8 +1172,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 14,
-  "ok": 10
+  "tapped": 4,
+  "ok": 4
  },
  {
   "route": "/app/projects/:id/payroll",
@@ -1239,7 +1188,7 @@
    "Remove",
    "Generate WH-347 PDF"
   ],
-  "tapped": 13,
+  "tapped": 7,
   "ok": 1
  },
  {
@@ -1263,11 +1212,10 @@
   "covered": [],
   "erroring": [],
   "notTapped": [
-   "Send W-9 Request",
-   "Request W-9"
+   "Send W-9 Request"
   ],
-  "tapped": 9,
-  "ok": 9
+  "tapped": 4,
+  "ok": 4
  },
  {
   "route": "/app/projects/:id/takeoff",
@@ -1319,7 +1267,7 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 7,
-  "ok": 1
+  "tapped": 0,
+  "ok": 0
  }
 ]
