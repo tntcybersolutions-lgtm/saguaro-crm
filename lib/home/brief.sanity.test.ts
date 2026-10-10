@@ -49,11 +49,13 @@ check('live: bid links off wins', live.key === `bids:${CR}|2026-10-20` && !live.
 check('live: the exact sentence', say(live.parts) === "Two bid packages on Copper Ridge close Tue Oct 20. 4 of 9 subs haven't bid yet, and both bid links are switched off, so they can't open the jacket.", say(live.parts));
 check('live: job and date are bold', JSON.stringify(bold(live.parts)) === JSON.stringify(['Copper Ridge', 'Tue Oct 20']), JSON.stringify(bold(live.parts)));
 check('live: one action, to the first jacket (Issue turns the link on)', live.action?.label === 'Turn links on' && live.action.href === `/app/projects/${CR}/bid-packages/crac/jacket`, JSON.stringify(live.action));
+check('live: the action switches both links on', JSON.stringify(live.action?.portalIds) === JSON.stringify(['crac', 'cont']), JSON.stringify(live.action?.portalIds));
 
 // 2. One link on, one off.
 const half = buildBrief(base({ bids: bidsOf([{ ...livePk[0], sub_portal_enabled: true }, livePk[1], livePk[2]]) }));
 check('one of two links off: says which share', say(half.parts).endsWith("4 of 9 subs haven't bid yet, and 1 of the 2 bid links is switched off, so those subs can't open the jacket."), say(half.parts));
 check('one link off: singular action, to that jacket', half.action?.label === 'Turn the link on' && half.action.href.includes('/cont/jacket'));
+check('one link off: switches only that link on', JSON.stringify(half.action?.portalIds) === JSON.stringify(['cont']), JSON.stringify(half.action?.portalIds));
 
 // 3. Links on: missing bids still matter, as a reminder, and rank below a late pay app.
 const on = livePk.map(p => ({ ...p, sub_portal_enabled: true }));

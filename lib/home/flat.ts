@@ -23,7 +23,14 @@ import { isBiddingStatus } from '@/lib/bid-deadline';
 /** A run of text; `b` = emphasised (bold in the brief, brighter in a meta line). */
 export interface TextPart { t: string; b?: boolean; tone?: 'bad' | 'warn' | 'good' }
 export type DotTone = 'red' | 'amber' | 'green' | 'blue' | 'gold' | 'grey';
-export interface Link { label: string; href: string }
+export interface Link {
+  label: string;
+  href: string;
+  /** Bid packages whose bid link this action switches on (POST
+   *  /api/bid-packages/[id]/portal). The page does the switch; href is only
+   *  where the action leads when it can't. */
+  portalIds?: string[];
+}
 export type SectionState = 'ok' | 'empty' | 'restricted' | 'failed';
 
 export interface StripFigure {
