@@ -953,6 +953,8 @@ function tagControlsInPage({ attr, chrome }) {
     if (!dialogs.length && !chrome && isChrome(el)) continue;
     const t = (el.getAttribute('aria-label') || el.innerText || el.getAttribute('title') || '').replace(/\s+/g, ' ').trim();
     if (!t) continue;
+    // Phone / email links hand off to the phone app — nothing to judge here.
+    if (/^(mailto|tel|sms):/i.test(el.getAttribute('href') || '')) continue;
     el.setAttribute(attr, String(i));
     out.push({ i, t: t.slice(0, 60), submit: el.getAttribute('type') === 'submit', tag: el.tagName.toLowerCase(), href: el.getAttribute('href') || '' });
     i++;
@@ -993,11 +995,24 @@ async function writeWalk(pw, device, session, outDir, real) {
   }
   await newPage();
   const settle = async (ms = 1200) => { await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {}); await page.waitForTimeout(ms); };
-  const go = async (u) => { await page.goto(u.startsWith('http') ? u : SITE + u, { waitUntil: 'domcontentloaded', timeout: 45000 }); await settle(); };
+  const go = async (u) => {
+    const url = u.startsWith('http') ? u : SITE + u;
+    try { await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 }); }
+    catch (e) {
+      // One slow load (cold function, big bundle) is retried before it counts.
+      console.log(`write-walk: slow load ${short(url)} — retrying (${String(e.message || e).split('\n')[0].slice(0, 80)})`);
+      await newPage();
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    }
+    await settle();
+  };
   const bodyHas = (t) => page.evaluate(looseHasInPage, { x: t, inputsOnly: false }).catch(() => false);
   const formHas = (t) => page.evaluate(looseHasInPage, { x: t, inputsOnly: true }).catch(() => false);
   const inputCount = () => page.locator('input:visible, textarea:visible, select:visible').count().catch(() => 0);
   const dialogCount = () => page.locator('[role="dialog"]:visible, [role="alertdialog"]:visible, [aria-modal="true"]:visible').count().catch(() => 0);
+  const menuItems = () => page.evaluate(() => [...document.querySelectorAll('[role="menu"] [role="menuitem"], [role="listbox"] [role="option"]')]
+    .filter((e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; })
+    .map((e) => (e.getAttribute('aria-label') || e.innerText || '').replace(/\s+/g, ' ').trim()).filter(Boolean).slice(0, 12)).catch(() => []);
   const writeSummary = (w) => w.slice(0, 8).map((x) => `${x.m} ${x.u} → ${x.s || 'failed'}`);
   const badWrite = (w) => w.find((x) => x.s === 0 || x.s >= 400);
   const goodWrite = (w) => w.find((x) => x.s >= 200 && x.s < 400);
@@ -1046,7 +1061,17 @@ async function writeWalk(pw, device, session, outDir, real) {
       const save = controls.find((b) => b.submit && SAVE_RE.test(b.t) && !CANCEL_RE.test(b.t))
         || [...controls].reverse().find((b) => SAVE_RE.test(b.t) && !CANCEL_RE.test(b.t) && !ADD_RE.test(b.t))
         || [...controls].reverse().find((b) => SAVE_RE.test(b.t) && !CANCEL_RE.test(b.t));
-      if (!save) break;
+      if (!save) {
+        const off = await page.evaluate(() => {
+          const d = [...document.querySelectorAll('[role="dialog"], [aria-modal="true"], form')].pop() || document.body;
+          const b = [...d.querySelectorAll('button[disabled], button[aria-disabled="true"]')].map((x) => (x.innerText || x.getAttribute('aria-label') || '').trim()).filter(Boolean);
+          const said = [...d.querySelectorAll('[role="alert"], [aria-invalid="true"], .error, [data-error], small, .hint')].map((x) => (x.innerText || '').trim()).filter((t) => t && t.length < 140).slice(0, 3);
+          return { b, said };
+        }).catch(() => ({ b: [], said: [] }));
+        const dis = off.b.find((t) => /^\s*(save|create|add|submit|send|invite|log|post|record|done|confirm|finish|upload|continue|next)\b/i.test(t));
+        if (dis) clicked.push(`"${dis}" stays greyed out after filling every field${off.said.length ? ` — form says: ${off.said.join(' / ')}` : ' — and the form does not say why'}`);
+        break;
+      }
       const before = net.writes.length;
       await page.locator(`[data-ws="${save.i}"]`).first().click({ timeout: 5000 }).catch(() => {});
       clicked.push(save.t);
@@ -1216,10 +1241,15 @@ async function writeWalk(pw, device, session, outDir, real) {
             const b2 = exists ? btn : page.locator(`[data-wr][aria-label="${al.replace(/"/g, '\\"')}"]`).first();
             if (!(await b2.count())) { a.result = 'gone after reopening (state changed)'; continue; }
             const u0 = page.url(); const d0 = await dialogCount(); const dl0 = net.downloads; const pp0 = net.popups.length; const fc0 = net.chooser;
+            const m0 = (await menuItems()).length;
             net.writes.length = 0; net.errs.length = 0;
             await b2.click({ timeout: 4000 });
             await settle(1500);
-            if ((await dialogCount()) > d0) {
+            const menu = await menuItems();
+            if (menu.length > m0 && !(await dialogCount() > d0)) {
+              a.result = `opened a menu: ${menu.join(' · ').slice(0, 140)}`;
+              await page.keyboard.press('Escape').catch(() => {});
+            } else if ((await dialogCount()) > d0) {
               // It opened a form or a confirm: fill it and go ahead.
               const f2 = await fillAndSave(`${marker} ${al}`.slice(0, 80));
               a.writes = writeSummary(f2.writes);
@@ -1272,11 +1302,16 @@ async function writeWalk(pw, device, session, outDir, real) {
         const a = { label: next.t, result: '' };
         r.actions.push(a);
         const u0 = page.url(); const d0 = await dialogCount(); const dl0 = net.downloads; const pp0 = net.popups.length; const fc0 = net.chooser;
+        const m0 = (await menuItems()).length;
         net.writes.length = 0; net.errs.length = 0;
         await page.locator(`[data-wx="${next.i}"]`).first().click({ timeout: 4000 }).catch((e) => { a.result = 'could not tap: ' + e.message.split('\n')[0].slice(0, 80); });
         if (a.result) continue;
         await settle(2000);
-        if ((await dialogCount()) > d0) {
+        const menu = await menuItems();
+        if (menu.length > m0 && !(await dialogCount() > d0)) {
+          a.result = `opened a menu: ${menu.join(' · ').slice(0, 140)}`;
+          await page.keyboard.press('Escape').catch(() => {});
+        } else if ((await dialogCount()) > d0) {
           const f = await fillAndSave(`ZZ AUDIT ${label} ${next.t} ${stamp}`.slice(0, 80));
           a.writes = writeSummary(f.writes);
           const b = badWrite(f.writes);
