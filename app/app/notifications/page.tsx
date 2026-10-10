@@ -52,6 +52,12 @@ function getConfig(type: string) {
 }
 
 const TYPE_GROUPS = ['All', 'Pay App', 'RFI', 'Change Order', 'Bid', 'Alert', 'Insurance', 'Team', 'Document', 'Project'];
+/** The "Money Events" tile's filter: pay apps and change orders together. */
+const MONEY = 'Money';
+const MONEY_GROUPS = ['Pay App', 'Change Order'];
+
+/* Filter buttons are 44px tap targets on a phone. */
+const NT_CSS = `@media (max-width: 767px) { .ntFilter { min-height: 44px; } }`;
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -130,7 +136,9 @@ export default function NotificationsPage() {
   // Filter
   const displayed = notifications.filter(n => {
     if (readFilter === 'unread' && n.read) return false;
-    if (typeFilter !== 'All') {
+    if (typeFilter === MONEY) {
+      if (!MONEY_GROUPS.includes(getConfig(n.type).label)) return false;
+    } else if (typeFilter !== 'All') {
       const cfg = getConfig(n.type);
       if (cfg.label !== typeFilter) return false;
     }
@@ -144,9 +152,19 @@ export default function NotificationsPage() {
     acc[g] = g === 'All' ? notifications.length : notifications.filter(n => getConfig(n.type).label === g).length;
     return acc;
   }, {} as Record<string, number>);
+  const moneyCount = (typeCounts['Pay App'] || 0) + (typeCounts['Change Order'] || 0);
+  const alertCount = typeCounts['Alert'] || 0;
+
+  /* The tiles used to link to this same page: a tap reloaded the whole feed
+     and changed nothing (and the strip vanished while it reloaded). Each one
+     now filters the list below — tap again to clear — or is a plain figure. */
+  const filtersActive = readFilter !== 'all' || typeFilter !== 'All';
+  const showAll = () => { setReadFilter('all'); setTypeFilter('All'); };
+  const toggleType = (t: string) => setTypeFilter(prev => (prev === t ? 'All' : t));
 
   return (
     <PremiumSurface maxWidth={900}>
+      <style dangerouslySetInnerHTML={{ __html: NT_CSS }} />
       {/* Header */}
       <ModuleHero
         eyebrow="Activity Feed"
@@ -172,18 +190,18 @@ export default function NotificationsPage() {
       {/* Activity intelligence strip — what the feed holds right now */}
       {!loading && notifications.length > 0 && (
         <StatStrip items={[
-          {href: '/app/notifications', label: 'Unread', value: String(unreadCount), accent: unreadCount > 0 ? GOLD : undefined, sub: unreadCount > 0 ? 'Waiting on you' : 'All caught up' },
-          {href: '/app/notifications', label: 'In the Feed', value: String(notifications.length), sub: 'Most recent 100 events' },
-          {href: '/app/notifications', label: 'Money Events', value: String((typeCounts['Pay App'] || 0) + (typeCounts['Change Order'] || 0)), sub: 'Pay apps + change orders' },
-          {href: '/app/notifications', label: 'Alerts', value: String(typeCounts['Alert'] || 0), accent: (typeCounts['Alert'] || 0) > 0 ? RED : undefined, sub: (typeCounts['Alert'] || 0) > 0 ? 'Budget / overdue flags' : 'Nothing flagged' },
-          {href: '/app/notifications',  label: 'Latest', value: notifications[0] ? timeAgo(notifications[0].created_at) : '—', sub: notifications[0] ? getConfig(notifications[0].type).label : undefined },
+          { label: 'Unread', value: String(unreadCount), accent: unreadCount > 0 ? GOLD : undefined, onClick: unreadCount > 0 || readFilter === 'unread' ? () => setReadFilter(f => (f === 'unread' ? 'all' : 'unread')) : undefined, active: readFilter === 'unread', sub: readFilter === 'unread' ? 'Showing unread — tap to clear' : unreadCount > 0 ? 'Waiting on you' : 'All caught up' },
+          { label: 'In the Feed', value: String(notifications.length), onClick: filtersActive ? showAll : undefined, sub: filtersActive ? 'Filtered — tap to show all' : 'Most recent 100 events' },
+          { label: 'Money Events', value: String(moneyCount), onClick: moneyCount > 0 || typeFilter === MONEY ? () => toggleType(MONEY) : undefined, active: typeFilter === MONEY, sub: typeFilter === MONEY ? 'Showing money — tap to clear' : 'Pay apps + change orders' },
+          { label: 'Alerts', value: String(alertCount), accent: alertCount > 0 ? RED : undefined, onClick: alertCount > 0 || typeFilter === 'Alert' ? () => toggleType('Alert') : undefined, active: typeFilter === 'Alert', sub: typeFilter === 'Alert' ? 'Showing alerts — tap to clear' : alertCount > 0 ? 'Budget / overdue flags' : 'Nothing flagged' },
+          { label: 'Latest', value: notifications[0] ? timeAgo(notifications[0].created_at) : '—', sub: notifications[0] ? getConfig(notifications[0].type).label : undefined },
         ]} />
       )}
 
       {/* Read filter tabs */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
         {(['all', 'unread'] as const).map(f => (
-          <button key={f} onClick={() => setReadFilter(f)}
+          <button key={f} type="button" className="ntFilter" aria-pressed={readFilter === f} onClick={() => setReadFilter(f)}
             style={{ padding: '6px 16px', borderRadius: 'var(--radius-sm)', border: `1px solid ${readFilter === f ? 'var(--brand-primary-25)' : 'var(--border-default)'}`, background: readFilter === f ? 'var(--brand-primary-12)' : 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))', color: readFilter === f ? GOLD : DIM, fontSize: 13, fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize' }}>
             {f === 'all' ? `All (${notifications.length})` : `Unread (${unreadCount})`}
           </button>
@@ -193,11 +211,17 @@ export default function NotificationsPage() {
       {/* Type filter chips */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
         {TYPE_GROUPS.filter(g => g === 'All' || typeCounts[g] > 0).map(g => (
-          <button key={g} onClick={() => setTypeFilter(g)}
+          <button key={g} type="button" className="ntFilter" aria-pressed={typeFilter === g} onClick={() => setTypeFilter(g)}
             style={{ padding: '4px 12px', borderRadius: 'var(--radius-pill)', border: `1px solid ${typeFilter === g ? 'var(--brand-primary-25)' : 'var(--border-default)'}`, background: typeFilter === g ? 'var(--brand-primary-12)' : 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))', color: typeFilter === g ? GOLD : DIM, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
             {g}{typeCounts[g] > 0 && g !== 'All' ? ` (${typeCounts[g]})` : ''}
           </button>
         ))}
+        {typeFilter === MONEY && (
+          <button type="button" className="ntFilter" aria-pressed onClick={() => setTypeFilter('All')} aria-label="Clear the money events filter"
+            style={{ padding: '4px 12px', borderRadius: 'var(--radius-pill)', border: '1px solid var(--brand-primary-25)', background: 'var(--brand-primary-12)', color: GOLD, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            Money Events ({moneyCount}) <X size={12} weight="bold" color={GOLD} />
+          </button>
+        )}
       </div>
 
       {/* Notification list */}
@@ -207,14 +231,14 @@ export default function NotificationsPage() {
         ) : displayed.length === 0 ? (
           <PremiumEmpty
             icon={<Bell size={30} weight="duotone" color={GOLD} />}
-            title={readFilter === 'unread' ? 'No unread notifications' : typeFilter !== 'All' ? `No ${typeFilter} notifications` : 'No notifications yet'}
+            title={readFilter === 'unread' ? 'No unread notifications' : typeFilter === MONEY ? 'No money events' : typeFilter !== 'All' ? `No ${typeFilter} notifications` : 'No notifications yet'}
             description={readFilter === 'unread' && notifications.length > 0
               ? 'Everything in the feed has been read. New activity lands here the moment it happens.'
               : typeFilter !== 'All' && notifications.length > 0
-                ? `Nothing filed under ${typeFilter} yet — switch back to All to see the full feed.`
+                ? `Nothing filed under ${typeFilter === MONEY ? 'pay apps or change orders' : typeFilter} yet — switch back to All to see the full feed.`
                 : 'This feed fills itself as the job moves: pay apps submitted and approved, RFIs asked and answered, bids received, change orders signed, insurance expiring, and budget or overdue alerts — each with a one-click jump to the record.'}
             action={(readFilter === 'unread' || typeFilter !== 'All') && notifications.length > 0 ? (
-              <button onClick={() => { setReadFilter('all'); setTypeFilter('All'); }} style={ghostButtonStyle} className="pmBtn">Show All Notifications</button>
+              <button type="button" onClick={showAll} style={ghostButtonStyle} className="pmBtn">Show All Notifications</button>
             ) : undefined}
           />
         ) : (
