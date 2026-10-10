@@ -564,8 +564,9 @@ export async function sendTrialExpiring(to: string, userName: string, daysLeft: 
   `));
 }
 
-export async function sendInviteTeamMember(to: string, inviterName: string, companyName: string, role: string, acceptUrl: string) {
-  await send(to, `You're invited to join ${companyName} on Saguaro Control Systems`, layout(`
+/** Says whether the invitation email went out (the invite routes tell the GC). */
+export async function sendInviteTeamMember(to: string, inviterName: string, companyName: string, role: string, acceptUrl: string): Promise<SendResult> {
+  return send(to, `You're invited to join ${companyName} on Saguaro Control Systems`, layout(`
     ${h(`You've been invited to join ${companyName}`)}
     ${p(`<strong>${inviterName}</strong> has invited you to collaborate on <strong>${companyName}</strong>'s projects on Saguaro Control Systems.`)}
     ${table(row('Company', companyName) + row('Your Role', role) + row('Invited By', inviterName))}
