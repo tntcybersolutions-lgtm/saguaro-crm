@@ -8,7 +8,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { toCents, toDollars, sumCents } from '@/lib/calc';
 import { FolderOpen, Envelope, ArrowLeft, FileText, Lock, Trophy, Star, Plus, CheckCircle, XCircle, CurrencyDollar, UsersThree, Receipt, ClipboardText, Scales } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, FlowStrip, ghostButtonStyle, goldButtonStyle } from '@/components/ui/premium';
-import { openPdf } from '@/components/PdfViewer';
+import JacketPdfButton from '@/components/JacketPdfButton';
 
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)',GREEN='var(--success)',RED='var(--danger)';
 const MUTED='rgba(255,255,255,0.62)';        // section-header meta text
@@ -320,23 +320,6 @@ export default function BidPackageDetailPage() {
     } finally { setInviting(false); }
   }
 
-  async function downloadPDF() {
-    if (pkg?.jacket_pdf_url) {
-      openPdf({ url: `/api/files/open?u=${encodeURIComponent(pkg.jacket_pdf_url)}` });
-      return;
-    }
-    try {
-      const r = await fetch('/api/documents/bid-package', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ packageId: id, projectId }),
-      });
-      const d = await r.json().catch(() => ({})) as any;
-      const url = d.url || d.pdfUrl;
-      if (!r.ok || !url) throw new Error(d.error || 'generation failed');
-      openPdf({ url });
-    } catch { showToast('Could not generate the bid package PDF. Please try again.', 'var(--danger)'); }
-  }
-
   // ── Loading / Not Found ──────────────────────────────────────────────────
 
   if (loading) return (
@@ -408,9 +391,16 @@ export default function BidPackageDetailPage() {
       >
         <FolderOpen size={16} weight="duotone" /> Open Bid Jacket
       </Link>
-      <button onClick={downloadPDF} style={ghostButtonStyle} className="pmBtn">
-        <FileText size={16} weight="regular" /> Printed Jacket PDF
-      </button>
+      {/* Download PDF builds the printed jacket from the jacket as it is now.
+          It used to open whatever PDF was stored (most were the snapshot Sage
+          took at creation), and with none stored it posted to a generator
+          that answered 400 every time. */}
+      <JacketPdfButton
+        packageId={id}
+        title={`${pkg.name || pkg.trade || 'Bid package'} — Bid Jacket`}
+        onBuilt={(pdf) => setPkg((cur) => (cur ? { ...cur, jacket_pdf_url: pdf.storedUrl } : cur))}
+        onError={(msg) => showToast(msg, 'var(--danger)')}
+      />
       {/* LEVELLING BELONGS WHERE THE BIDS ARE.
           This page lists every bid received and an Award button beside each
           one, and had no route to the screen that compares them — spread, low
@@ -444,7 +434,9 @@ export default function BidPackageDetailPage() {
     <>
       {/* Toast */}
       {toast && (
-        <div style={{ position: 'fixed', top: 20, right: 24, zIndex: 9999, background: 'var(--bg-solid-2)', border: `1px solid ${toast.color}`, borderRadius: 10, padding: '12px 20px', color: toast.color, fontSize: 14, fontWeight: 700, boxShadow: '0 4px 24px rgba(0,0,0,.4)' }}>
+        /* maxWidth: pinned to the right with no limit, a long message on a
+           phone ran off the left edge of the screen. */
+        <div role="status" style={{ position: 'fixed', top: 20, right: 24, maxWidth: 'calc(100vw - 48px)', zIndex: 9999, background: 'var(--bg-solid-2)', border: `1px solid ${toast.color}`, borderRadius: 10, padding: '12px 20px', color: toast.color, fontSize: 14, fontWeight: 700, boxShadow: '0 4px 24px rgba(0,0,0,.4)' }}>
           {toast.msg}
         </div>
       )}
