@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { DataTable, FormModal, FormGrid, Field, Input, Select, type Column } from '@/components/ui/kit';
@@ -12,6 +12,7 @@ import { useToast } from '@/components/Toast';
 import { getAuthHeaders } from '@/lib/supabase-browser';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
 import { ListToolbar } from '@/components/ui/ListToolbar';
+import { useEscapeClose } from '@/lib/ui/use-escape-close';
 
 /* ─── Palette ─── */
 const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = 'var(--success)';
@@ -40,7 +41,6 @@ const STATUS_COLORS: Record<CustomerStatus, string> = {
 };
 const STATUSES: CustomerStatus[] = ['lead', 'qualified', 'proposal', 'customer', 'lost'];
 const SOURCES = ['Website', 'Design Studio', 'Referral', 'Social Media', 'Sage Chat', 'ROI Calculator', 'Direct'];
-const STATES_LIST = ['AZ', 'CA', 'CO', 'FL', 'GA', 'IL', 'MA', 'MI', 'MN', 'NC', 'NJ', 'NV', 'NY', 'OH', 'OR', 'PA', 'TX', 'VA', 'WA', 'WI'];
 
 /* Every state for the New Customer form — the filter list above only carries
    the states the pipeline has historically held. */
@@ -100,6 +100,12 @@ export default function CustomersPage() {
   const [emailSubject, setEmailSubject] = useState('');
   const [emailMessage, setEmailMessage] = useState('');
   const [emailSending, setEmailSending] = useState(false);
+  // Escape closes the email window (not while it is sending).
+  const emailDialogRef = useRef<HTMLDivElement>(null);
+  const emailSendingRef = useRef(false);
+  emailSendingRef.current = emailSending;
+  const closeEmail = useCallback(() => { if (!emailSendingRef.current) setEmailOpen(false); }, []);
+  useEscapeClose(emailDialogRef, closeEmail, emailOpen);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterSource, setFilterSource] = useState<string>('all');
@@ -516,12 +522,16 @@ export default function CustomersPage() {
             </SectionCard>
 
             {/* Compose & send — real email through the CRM, logged on the record */}
-            {emailOpen && (
+            {/* Rendered on <body>: drawn in place it sat inside the page's z-index:1
+                layer, under the top bar and the phone tab bar. */}
+            {emailOpen && createPortal(
               <div
                 onClick={() => !emailSending && setEmailOpen(false)}
-                style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+                style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom))' }}
               >
                 <div
+                  ref={emailDialogRef}
+                  role="dialog" aria-modal="true" aria-label={`Email ${c.name}`}
                   onClick={(e) => e.stopPropagation()}
                   style={{ width: '100%', maxWidth: 520, background: 'var(--bg-surface)', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20, boxShadow: '0 30px 80px -20px rgba(0,0,0,0.8)' }}
                 >
@@ -532,14 +542,16 @@ export default function CustomersPage() {
                       value={emailSubject}
                       onChange={(e) => setEmailSubject(e.target.value)}
                       placeholder="Subject"
-                      style={{ width: '100%', borderRadius: 10 }}
+                      aria-label="Subject"
+                      style={{ width: '100%', borderRadius: 10, fontSize: 16, minHeight: 44 }}
                     />
                     <textarea
                       value={emailMessage}
                       onChange={(e) => setEmailMessage(e.target.value)}
                       placeholder="Write your message…"
+                      aria-label="Message"
                       rows={7}
-                      style={{ width: '100%', borderRadius: 10, resize: 'vertical', padding: '10px 12px' }}
+                      style={{ width: '100%', borderRadius: 10, resize: 'vertical', padding: '10px 12px', fontSize: 16 }}
                     />
                   </div>
                   <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
@@ -549,7 +561,8 @@ export default function CustomersPage() {
                     </button>
                   </div>
                 </div>
-              </div>
+              </div>,
+              document.body,
             )}
 
             {/* Projects & lifetime value — matched from live project data */}
@@ -898,7 +911,7 @@ export default function CustomersPage() {
         filters={[
           { key: 'status', label: 'Status', value: filterStatus, onChange: setFilterStatus, allLabel: `All (${statusCounts.all})`, options: STATUSES.map(s => ({ value: s, label: `${s.charAt(0).toUpperCase() + s.slice(1)} (${statusCounts[s] || 0})` })) },
           { key: 'source', label: 'Source', value: filterSource, onChange: setFilterSource, allLabel: 'All Sources', options: [...SOURCES] },
-          { key: 'state', label: 'State', value: filterState, onChange: setFilterState, allLabel: 'All States', options: [...STATES_LIST] },
+          { key: 'state', label: 'State', value: filterState, onChange: setFilterState, allLabel: 'All States', options: [...US_STATES] },
         ]}
         count={{ shown: filtered.length, total: customers.length }}
         style={{ marginBottom: 20 }}

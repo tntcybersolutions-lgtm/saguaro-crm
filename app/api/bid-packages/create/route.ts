@@ -4,6 +4,7 @@ import { assertProjectInTenant } from '@/lib/assert-project';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
+import { orValue } from '@/lib/pg-filter';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Projects', 'Edit');
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
           .select('id')
           .eq('project_id', projectId)
           .eq('tenant_id', user.tenantId)
-          .or(`cost_code.eq.${csi},division.eq.${div}`)
+          .or(`cost_code.eq.${orValue(csi)},division.eq.${orValue(div)}`)
           .limit(1)
           .maybeSingle();
         if (!existing) {

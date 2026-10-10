@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
+import { orValue } from '@/lib/pg-filter';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,7 +40,8 @@ export async function GET(req: NextRequest) {
     if (status && status !== 'all') query = query.eq('status', status);
     if (state && state !== 'all') query = query.eq('state', state);
     if (source && source !== 'all') query = query.eq('source', source);
-    if (search) query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%`);
+    const term = orValue(search);
+    if (term) query = query.or(`name.ilike.%${term}%,email.ilike.%${term}%`);
 
     const { data, error } = await query;
     if (error) throw error;
@@ -62,8 +64,8 @@ export async function GET(req: NextRequest) {
     }));
 
     return NextResponse.json({ customers });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('customers/profiles GET', e, "Couldn't load customers. Please try again.");
   }
 }
 

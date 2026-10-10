@@ -956,6 +956,8 @@ input:-webkit-autofill:focus {
 .k-btn-danger { background: rgba(255,59,48,0.14); color: #FF3B30; border-color: rgba(255,59,48,0.45); }
 .k-btn-danger:hover { background: rgba(255,59,48,0.24); border-color: rgba(255,59,48,0.65); color: #FF7A87; }
 .k-icon-btn { width: 30px; padding: 0; }
+/* A finger needs 44 × 44 (Apple HIG): the dialog close X and every other icon-only kit button. */
+@media (pointer: coarse) { .k-icon-btn { min-width: 44px; min-height: 44px; } }
 
 /* Card */
 .k-card { background: var(--bg-surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-border); box-shadow: var(--glass-highlight); border-radius: var(--radius-md); min-width: 0; }

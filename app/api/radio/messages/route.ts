@@ -62,8 +62,8 @@ export async function GET(req: NextRequest) {
       image_url: m.image_path ? await signStoredUrl('project-files', m.image_path, 3600) : null,
     })));
     return NextResponse.json({ messages });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('radio/messages GET', e, "Couldn't load the channel. Please try again.");
   }
 }
 
@@ -79,14 +79,20 @@ export async function POST(req: NextRequest) {
       const text0 = String(body.body || '').trim();
       if (!text0) return NextResponse.json({ error: 'body required' }, { status: 400 });
       const sent: any[] = [];
+      // Every channel that did not get the message, and why — the page says so.
+      const skipped: { channelId: string; reason: 'not_member' | 'failed' }[] = [];
       for (const cid of body.channelIds.slice(0, 8)) {
-        if (!(await membership(db, t, g.user.id, cid))) continue;
+        if (!(await membership(db, t, g.user.id, cid))) { skipped.push({ channelId: cid, reason: 'not_member' }); continue; }
         const { data: chb } = await db.from('radio_channels').select('project_id').eq('tenant_id', t).eq('id', cid).single();
-        const { data: bm } = await db.from('radio_messages').insert({
+        const { data: bm, error: bmErr } = await db.from('radio_messages').insert({
           tenant_id: t, channel_id: cid, project_id: (chb as any)?.project_id ?? null,
           sender_user_id: g.user.id, sender_name: g.user.email || 'Team member',
           kind: body.kind === 'alert' ? 'alert' : 'text', body: text0,
         } as never).select().single();
+        if (bmErr || !bm) {
+          console.error('[radio/messages broadcast] insert failed for channel', cid, bmErr);
+          skipped.push({ channelId: cid, reason: 'failed' });
+        }
         if (bm) {
           sent.push(bm);
           void translateRadioMessage(db, (bm as any).id, text0);
@@ -95,7 +101,14 @@ export async function POST(req: NextRequest) {
           void stampPresentAtSend(db, t, cid, (bm as any).id);
         }
       }
-      return NextResponse.json({ messages: sent, broadcast: sent.length }, { status: 201 });
+      if (!sent.length) {
+        const allNotMember = skipped.length > 0 && skipped.every((x) => x.reason === 'not_member');
+        return NextResponse.json(
+          { error: allNotMember ? "You aren't a member of any of those channels." : "Couldn't send the broadcast. Please try again.", skipped },
+          { status: allNotMember ? 403 : 500 },
+        );
+      }
+      return NextResponse.json({ messages: sent, broadcast: sent.length, skipped }, { status: 201 });
     }
 
     const channelId = body.channelId;
@@ -140,7 +153,10 @@ export async function POST(req: NextRequest) {
           // snapshot for the patched channel. Fire-and-forget.
           if (pm) void stampPresentAtSend(db, t, other, (pm as any).id);
         }
-      } catch { /* mirroring is best-effort */ }
+      } catch (e) {
+        // Mirroring to patched channels is best-effort — the message itself is saved.
+        console.error('[radio/messages] mirror to patched channels failed', e);
+      }
     })();
 
     if (kind === 'alert') {

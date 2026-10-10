@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { ok, badRequest, unauthorized, serverError } from '@/lib/api-response';
 import type { Database } from '@/lib/database.types';
+import { orValue } from '@/lib/pg-filter';
 
 /**
  * GET /api/trade-knowledge?trade=electrical&category=installation&keyword=conduit&tags=NEC,grounding
@@ -30,7 +31,8 @@ export async function GET(req: NextRequest) {
 
     if (trade) query = query.eq('trade', trade);
     if (category) query = query.eq('category', category);
-    if (keyword) query = query.or(`title.ilike.%${keyword}%,content.ilike.%${keyword}%`);
+    const term = orValue(keyword);
+    if (term) query = query.or(`title.ilike.%${term}%,content.ilike.%${term}%`);
     if (tags) {
       const tagList = tags.split(',').map((t) => t.trim());
       query = query.overlaps('tags', tagList);
