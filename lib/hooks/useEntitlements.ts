@@ -16,11 +16,13 @@ export function useEntitlements() {
     features: (data?.features ?? {}) as Record<string, boolean>,
     plan: data?.plan ?? null,
     loading: isLoading,
+    /** The server actually answered (false while offline with nothing saved). */
+    known: !!data && typeof data.features === 'object' && data.features !== null,
   };
 }
 
 // Convenience: is a single feature enabled for this tenant?
 export function useFeature(flag: string) {
-  const { features, loading } = useEntitlements();
-  return { enabled: features[flag] === true, loading };
+  const { features, loading, known } = useEntitlements();
+  return { enabled: features[flag] === true, loading, known };
 }
