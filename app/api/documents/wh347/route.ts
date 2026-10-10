@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { apiError } from '@/lib/api-error';
 import { generateWH347, saveDocument } from '@/lib/pdf-engine';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
     }), 'certified_payroll insert');
 
     return NextResponse.json({ pdfUrl, success: true });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('documents/wh347', e, "Couldn't generate the WH-347. Please try again.");
   }
 }

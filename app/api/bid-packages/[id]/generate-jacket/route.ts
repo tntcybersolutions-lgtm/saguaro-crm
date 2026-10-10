@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { apiError } from '@/lib/api-error';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { generateBidJacket, saveDocument } from '@/lib/pdf-engine';
 import { generateBidJacketContent } from '@/lib/construction-intelligence';
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     await must(db.from('bid_packages').update({ jacket_pdf_url: pdfUrl }).eq('id', id).eq('tenant_id', user.tenantId), 'bid_packages update');
 
     return NextResponse.json({ pdfUrl, success: true });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('bid-packages/generate-jacket', e, "Couldn't build the bid jacket. Please try again.");
   }
 }
