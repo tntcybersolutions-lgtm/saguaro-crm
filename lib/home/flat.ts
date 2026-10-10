@@ -342,6 +342,10 @@ export interface JobRow {
   id: string;
   title: string;
   stage: 'Bidding' | 'Building' | 'Closeout' | 'Complete';
+  /** Why the job is at risk (overdue RFIs, late tasks, failed inspection…), or null. */
+  risk: string | null;
+  /** Red when at risk; otherwise no dot. */
+  dot: DotTone | null;
   meta: TextPart[];
   /** Billed of contract, 0–100; null when there is no contract or no right to see money. */
   billedPct: number | null;
@@ -367,6 +371,8 @@ export function jobRows(input: {
   today: string;
   showMoney: boolean;
   showBilling: boolean;
+  /** Jobs at risk → their reasons (lib/home/build). */
+  risk?: Map<string, string[]>;
 }): JobRow[] {
   const billed = billedByJob(input.apps);
   const byJob = new Map<string, PayAppIn[]>();
@@ -402,6 +408,8 @@ export function jobRows(input: {
     const paid = apps.filter(isPaid);
 
     const meta: TextPart[] = [{ t: stage }];
+    const risk = stage === 'Complete' ? null : input.risk?.get(j.id)?.[0] || null;
+    if (risk) meta.push({ t: risk, tone: 'bad' });
     if (stage === 'Complete') {
       if (input.showBilling && apps.length) {
         meta.push({ t: `${paid.length} of ${plural(apps.length, 'pay app')} paid` });
@@ -423,7 +431,7 @@ export function jobRows(input: {
     }
 
     out.push({
-      id: j.id, title: jobTitle(j.name), stage, meta,
+      id: j.id, title: jobTitle(j.name), stage, risk, dot: risk ? 'red' : null, meta,
       billedPct: pct, billed: input.showBilling && contract ? b : null,
       contract: input.showMoney ? contract : null,
       right: input.showMoney && contract ? fmtMoneyShort(contract) : null,

@@ -133,6 +133,9 @@ check('Pima: Complete · 5 of 5 pay apps paid · avg 18 days', text(pima.meta) =
 check('Pima: fully billed bar', pima.billedPct === 100 && pima.billed === 2539650);
 check('bidding job: no billing bar, no money', p2.billedPct === null && p2.right === null && text(p2.meta) === 'Bidding · no bids due', text(p2.meta));
 check('job row opens the job', cr.href === `/app/projects/${CR}/overview`);
+const risky = jobRows({ jobs: jobsIn, apps: pimaApps, bids, today, showMoney: true, showBilling: true, risk: new Map([[CR, ['2 RFIs past response date']], [PIMA, ['Failed inspection']]]) });
+check('job at risk: red dot, reason right after the stage', risky[0].dot === 'red' && text(risky[0].meta) === 'Building · 2 RFIs past response date · starts Nov 2 · 0% billed', text(risky[0].meta));
+check('a complete job carries no risk line', risky.find(j => j.id === PIMA)!.risk === null && jobs[0].dot === null);
 const noBudget = jobRows({ jobs: jobsIn, apps: pimaApps, bids, today, showMoney: false, showBilling: false });
 check('no Budget / Pay Apps access → no contract, no billed', noBudget.every(j => j.right === null && j.billedPct === null && j.contract === null));
 

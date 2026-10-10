@@ -114,6 +114,7 @@ export async function buildFlat(ctx: BuildCtx, view: HomeView, sections: HomeSec
         .filter(p => (!ctx.projectId || p.id === ctx.projectId) && (!mine || mine.has(p.id)))
         .map(p => ({ id: p.id, name: p.name, status: p.status, phase: p.rawPhase, city: p.city, start: p.start, finish: p.finish, actualFinish: p.actualFinish, contract: p.contract, archived: p.archived })),
       apps: apps || [], bids: bids || [], today: ctx.today, showMoney: canBudget, showBilling: canPayApps && !!apps,
+      risk: new Map((sections.internal?.risk || []).map(r => [r.projectId, r.reasons])),
     });
   }
 
