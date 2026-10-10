@@ -33,16 +33,32 @@ export async function POST(req: NextRequest) {
   let what = 'role';
   try {
     const supabase = createServerClient();
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ error: 'Send the role details as JSON.' }, { status: 400 });
+    }
     if (body._type === 'assignment') {
       what = 'role assignment';
       const userId = body.user_id ?? body.userId;
       const roleId = body.role_id ?? body.roleId;
+      const projectId = (body.project_id ?? body.projectId) || null;
       if (!userId || !roleId) {
         return NextResponse.json({ error: 'user_id and role_id are required' }, { status: 400 });
       }
+      // The role, the person and the job all come from the browser: each must be
+      // this company's, or one company could hand out another company's role.
+      const [{ data: role }, { data: member }, { data: job }] = await Promise.all([
+        supabase.from('role_definitions').select('id').eq('id', roleId).eq('tenant_id', user.tenantId).maybeSingle(),
+        supabase.from('profiles').select('id').eq('id', userId).eq('tenant_id', user.tenantId).maybeSingle(),
+        projectId
+          ? supabase.from('projects').select('id').eq('id', projectId).eq('tenant_id', user.tenantId).maybeSingle()
+          : Promise.resolve({ data: { id: null } }),
+      ]);
+      if (!role) return NextResponse.json({ error: 'That role is not one of this company\'s roles.' }, { status: 404 });
+      if (!member) return NextResponse.json({ error: 'That person is not on this company\'s team.' }, { status: 404 });
+      if (!job) return NextResponse.json({ error: 'That job is not one of this company\'s jobs.' }, { status: 404 });
       const { data, error } = await supabase.from('user_role_assignments').insert({
-        tenant_id: user.tenantId, user_id: userId, project_id: (body.project_id ?? body.projectId) || null,
+        tenant_id: user.tenantId, user_id: userId, project_id: projectId,
         role_id: roleId, assigned_by: user.id,
       }).select().single();
       if (error) throw error;

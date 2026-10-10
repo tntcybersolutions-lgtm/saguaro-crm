@@ -62,7 +62,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
       return apiError('projects/projectId/directory', error, "Failed to create contact", 500);
     }
     return NextResponse.json({ contact: data });
-  } catch {
-    return NextResponse.json({ error: 'Failed to create contact' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/projectId/directory POST', e, "Couldn't add that contact. Please try again.");
   }
 }
