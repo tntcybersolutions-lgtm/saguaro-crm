@@ -1,0 +1,17 @@
+# AFTER (this branch)
+ok   GET /api/billing/status → checkoutEnabled:false with no Stripe key
+ok   …true once Stripe is configured
+ok   …401 signed out
+ok   checkout with no Stripe → 503 + plain words + code billing_not_configured (not a 500)
+ok   unknown plan → 400 naming the field
+[Email] RESEND_API_KEY not set — skipping send: [Plan request] Professional (annual) — tenant T1 to sales@saguarocontrol.net
+ok   Request Professional (annual) → 200 ok
+ok   kept as one requested row for this company
+ok   both admins notified (not the field user, not the other company)
+ok   says honestly that the email did not go (no mail service in the test)
+[Email] RESEND_API_KEY not set — skipping send: [Plan request] Starter (monthly) — tenant T1 to sales@saguarocontrol.net
+ok   a new choice replaces the old request
+ok   the other company's request is untouched
+ok   a user without admin rights → 403
+
+all passed
