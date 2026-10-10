@@ -7,6 +7,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { mediaKindOf, type MediaKind } from '@/lib/media-upload';
+import { step, type StepHandle } from '@/lib/ui/status';
 
 export type QueueStatus = 'waiting' | 'uploading' | 'done' | 'failed';
 
@@ -92,6 +93,38 @@ export function useUploadQueue(uploader: Uploader, opts: { onItemDone?: () => vo
       });
     }
     wasBusy.current = busy;
+  }, [busy, items]);
+
+  // The whole batch is one step in the status box: "Uploading 3 photos — 2 of 3".
+  const statusStep = useRef<StepHandle | null>(null);
+  const before = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (busy && !statusStep.current) {
+      before.current = new Set(items.filter((i) => i.status === 'done' || i.status === 'failed').map((i) => i.id));
+      statusStep.current = step('Uploading');
+    }
+    const h = statusStep.current;
+    if (!h) return;
+    const batch = items.filter((i) => !before.current.has(i.id));
+    const total = batch.length;
+    const what = (n: number) => {
+      const kinds = new Set(batch.map((i) => i.kind));
+      const noun = kinds.size === 1 && kinds.has('video') ? 'video' : kinds.size === 1 ? 'photo' : 'file';
+      return `${n} ${noun}${n === 1 ? '' : 's'}`;
+    };
+    const done = batch.filter((i) => i.status === 'done');
+    const failed = batch.filter((i) => i.status === 'failed').length;
+    if (busy) {
+      const progress = total ? batch.reduce((a, i) => a + (i.status === 'done' || i.status === 'failed' ? 1 : i.progress), 0) / total : 0;
+      h.update({ label: `Uploading ${what(total)}`, count: { done: done.length + failed, total }, progress });
+      return;
+    }
+    statusStep.current = null;
+    if (!total) { h.drop(); return; }
+    const kept = done.filter((i) => /phone/i.test(i.doneLabel || '')).length;
+    if (failed) h.fail(`${failed} of ${what(total)} didn't upload`, done.length ? `${done.length} went up. Tap Retry on the ones marked red.` : 'Tap Retry on the ones marked red.');
+    else if (kept) h.offline(`${what(kept)} saved on this phone`, "They upload by themselves when you're back online.");
+    else h.done(`${what(total)} uploaded`, done[0]?.doneLabel && done.every((i) => i.doneLabel === done[0].doneLabel) ? done[0].doneLabel : undefined);
   }, [busy, items]);
 
   // Leaving the page mid-upload would drop it — ask first.
