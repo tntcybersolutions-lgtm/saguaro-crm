@@ -53,8 +53,14 @@ export type SyncRun = {
   cache: QboCache;
 };
 
-const errText = (e: unknown) =>
-  e instanceof QboApiError ? e.message : e instanceof Error ? e.message : 'unknown error';
+/** Intuit's reason, or plain words for a network failure — never a database message. */
+const errText = (e: unknown) => {
+  if (e instanceof QboApiError) return e.message;
+  if (e instanceof Error && (e.name === 'TimeoutError' || e.name === 'AbortError')) return 'QuickBooks did not answer in time. Press Send again.';
+  if (e instanceof TypeError) return 'QuickBooks could not be reached. Press Send again.';
+  console.error('[quickbooks/sync] unexpected error', e);
+  return 'Unexpected error sending this record. Press Send again.';
+};
 
 /** Pay apps the next run would invoice, and how many are held back by the start date. */
 export async function pendingInvoices(db: Db, tenantId: string, startDay: string | null, zone: string): Promise<{ ready: PayAppIn[]; beforeStart: number }> {
