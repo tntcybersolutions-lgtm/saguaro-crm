@@ -66,6 +66,17 @@ export interface HomeSections {
   errors: Record<string, string>;
   /** Owner view only: the alert ticker across the top of Home. */
   ticker?: { items: TickerItem[]; summary: TickerSummary; state: DataState };
+  /** Server-only hand-off to lib/home/flat-build (the route strips it before answering). */
+  internal?: HomeInternal;
+}
+
+/** What the flat Home needs from a builder that it would otherwise load twice. */
+export interface HomeInternal {
+  projects: Map<string, ProjectInfo>;
+  /** Jobs at risk and why (operations / owner). */
+  risk: Array<{ projectId: string; name: string; reasons: string[] }>;
+  /** 'Mine' scope: the jobs this person is assigned to; null = every job. */
+  mine: Set<string> | null;
 }
 
 const OPEN_RFI_EXCLUDE = ['closed', 'answered', 'void', 'voided', 'cancelled'];
@@ -100,12 +111,23 @@ async function rows(q: Promise<{ data: Row[] | null; error: unknown }> | Promise
 
 /* ── Shared loaders ─────────────────────────────────────────────────────── */
 
-interface ProjectInfo { id: string; name: string; status: string; phase: string; pm: string | null; address: string | null; contract: number; closed: boolean; bidDue: string | null; pct: number | null }
+export interface ProjectInfo {
+  id: string; name: string; status: string; phase: string; pm: string | null; address: string | null; contract: number; closed: boolean; bidDue: string | null; pct: number | null;
+  /** The stored phase, before normalising (closeout / warranty read differently from building). */
+  rawPhase: string | null;
+  city: string | null;
+  start: string | null;
+  finish: string | null;
+  actualFinish: string | null;
+  archived: boolean;
+}
 
-async function loadProjects(ctx: BuildCtx): Promise<Map<string, ProjectInfo>> {
+const day = (v: unknown): string | null => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}/.test(v) ? v.slice(0, 10) : null);
+
+export async function loadProjects(ctx: BuildCtx): Promise<Map<string, ProjectInfo>> {
   const r = await rows(
     loose(ctx.db).from('projects')
-      .select('id, name, status, phase, pm_name, project_manager, assigned_to_name, address, city, revised_contract_value, contract_amount, contract_value, is_archived, deleted_at, bid_due_date, percent_complete')
+      .select('id, name, status, phase, pm_name, project_manager, assigned_to_name, address, city, revised_contract_value, contract_amount, contract_value, is_archived, deleted_at, bid_due_date, percent_complete, start_date, actual_start_date, projected_start_date, end_date, target_finish_date, substantial_completion_date, projected_end_date, actual_end_date')
       .eq('tenant_id', ctx.tenantId)
       .is('deleted_at', null)
       .limit(1000),
@@ -124,6 +146,12 @@ async function loadProjects(ctx: BuildCtx): Promise<Map<string, ProjectInfo>> {
       bidDue: p.bid_due_date || null,
       // 0 is the column default, not a measurement: same rule as the job picker.
       pct: progressOf({ percent_complete: p.percent_complete }),
+      rawPhase: p.phase ?? null,
+      city: p.city || null,
+      start: day(p.start_date) || day(p.actual_start_date) || day(p.projected_start_date),
+      finish: day(p.end_date) || day(p.target_finish_date) || day(p.substantial_completion_date) || day(p.projected_end_date),
+      actualFinish: day(p.actual_end_date),
+      archived: p.is_archived === true,
     });
   }
   return m;
@@ -533,6 +561,11 @@ async function operationsWithItems(ctx: BuildCtx, errors: Record<string, string>
       rows: tableRows,
     },
     errors,
+    internal: {
+      projects,
+      risk: activeJobs.map(p => ({ projectId: p.id, name: p.name, reasons: ops.riskByProject.get(p.id) || [] })).filter(r => r.reasons.length),
+      mine: myProjects,
+    },
   };
   return { sections, items: queue };
 }
