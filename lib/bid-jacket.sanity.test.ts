@@ -87,8 +87,12 @@ r = req({ insurance_required_amount: 1_000_000, insurance_requirements: 'GL $1M'
 check('default shown beside other insurance terms', r.requirements.insuranceAmount === 1_000_000 && r.satisfied === true);
 r = req({ insurance_required_amount: 1_000_000, insurance_requirements: LIVE_JSON });
 check('live JSON row: GL/Auto/WC filled from it, text readable, satisfied', r.requirements.generalLiability === 2_000_000 && r.requirements.autoLiability === 1_000_000 && r.requirements.workersComp === 500_000 && /^Subcontractor must carry/.test(r.requirements.insuranceText || '') && r.satisfied);
-r = req({ general_liability: '$3,000,000', insurance_requirements: LIVE_JSON });
+r = req({ general_liability: '$3,000,000', workers_compensation: 'Statutory', insurance_requirements: LIVE_JSON });
 check('the GL column wins over the JSON', r.requirements.generalLiability === 3_000_000);
+check('…and the sentence is rebuilt from the figures in force, not the stale JSON', r.requirements.insuranceText === 'Subcontractor must carry commercial general liability $3,000,000; automobile liability $1,000,000; workers\' compensation Statutory.', r.requirements.insuranceText || '');
+check('parse marks JSON as structured, plain text as not', parsed.structured === true && parseInsuranceText('GL $1M').structured === false && JSON.stringify(odd.others) === '["Umbrella: $5,000,000","Additional insured: Required"]');
+r = req({ general_liability: '$3,000,000', insurance_requirements: 'Per Exhibit C.' });
+check('text a GC wrote is shown as written beside the column figure', r.requirements.insuranceText === 'Per Exhibit C.' && r.requirements.generalLiability === 3_000_000);
 r = req({ workers_compensation: 'Statutory' });
 check('text column "Statutory" survives', r.requirements.workersComp === 'Statutory' && r.satisfied);
 r = req({ requires_bond: true });

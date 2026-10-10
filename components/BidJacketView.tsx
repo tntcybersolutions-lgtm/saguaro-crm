@@ -261,7 +261,7 @@ export default function BidJacketView({
           {contents.length > 0 && (
             <div className="bjv-contents" style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${HAIR}` }}>
               <div style={{ fontSize: 10.5, fontWeight: 800, color: DIM, marginBottom: 6 }}>In This Jacket</div>
-              <div style={{ display: 'grid', gap: 2 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 2 }}>
                 {contents.map((s) => (
                   <button
                     key={s.key}
@@ -366,6 +366,7 @@ export default function BidJacketView({
           @media (max-width: 520px) {
             .bjv-nav { grid-template-columns: minmax(0, 1fr); }
             .bjv-tab { font-size: 14px !important; }
+            .bjv-bf th, .bjv-bf td { padding-left: 7px !important; padding-right: 7px !important; }
           }
         `}</style>
         <div className="bjv-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 240px) minmax(0, 1fr)', gap: 18, alignItems: 'start' }}>
@@ -418,7 +419,7 @@ export default function BidJacketView({
           </nav>
 
           {/* Shelf */}
-          <div ref={shelf} className="bjv-shelf" style={{ minWidth: 0, display: 'grid', gap: 14 }}>
+          <div ref={shelf} className="bjv-shelf" style={{ minWidth: 0, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
             {/* An empty divider says what belongs in it and — for the GC — where
                 that is done. Every link here goes to a screen that does it. */}
             {active && active.count === 0 && (
@@ -430,7 +431,7 @@ export default function BidJacketView({
             {active && active.count > 0 && active.key === 'bidform' && (
               <SectionCard flat title={`Bid Form · ${lineItems.length} line${lineItems.length === 1 ? '' : 's'}`} icon={<FileText size={17} weight="duotone" color={GOLD} />} flush>
                 <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                  <table className="bjv-bf" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                     <thead>
                       <tr>
                         {['#', 'Code', 'Description', 'Qty', 'Unit'].map((h) => (
@@ -445,7 +446,7 @@ export default function BidJacketView({
                         <tr key={li.id} style={{ borderBottom: `1px solid ${HAIR}` }}>
                           <td style={{ padding: '10px 14px', color: DIM, fontVariantNumeric: 'tabular-nums' }}>{i + 1}</td>
                           <td style={{ padding: '10px 14px', color: DIM, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{li.code || '—'}</td>
-                          <td style={{ padding: '10px 14px', color: TEXT, minWidth: 160 }}>{li.description || '—'}</td>
+                          <td style={{ padding: '10px 14px', color: TEXT, overflowWrap: 'anywhere' }}>{li.description || '—'}</td>
                           <td style={{ padding: '10px 14px', color: TEXT, fontVariantNumeric: 'tabular-nums' }}>{li.quantity ?? '—'}</td>
                           <td style={{ padding: '10px 14px', color: DIM }}>{li.unit || '—'}</td>
                         </tr>
@@ -489,7 +490,7 @@ export default function BidJacketView({
             {/* Documents — the actual contents of the divider. */}
             {active && active.docs.length > 0 && (
               <SectionCard flat title={`${active.label} · ${active.docs.length}`} icon={<span style={{ color: GOLD, display: 'flex' }}>{ICON[active.key]}</span>} flush>
-                <div style={{ display: 'grid', gap: 1, background: HAIR }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 1, background: HAIR }}>
                   {active.docs.map((d) => (
                     <button
                       key={d.id}

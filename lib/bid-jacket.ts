@@ -27,7 +27,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { buildCorrespondence, type CommItem } from './jacket-correspondence';
 import { projectDocuments, byNumber, type ProjectDocument } from './project-documents';
 import { storageObjectKey } from './storage-signing';
-import { coverageValue, parseInsuranceText, INSURANCE_AMOUNT_DEFAULT } from './jacket-insurance';
+import { coverageValue, parseInsuranceText, insuranceSentence, INSURANCE_AMOUNT_DEFAULT } from './jacket-insurance';
 
 export { coverageValue, parseInsuranceText, insuranceSentence, INSURANCE_AMOUNT_DEFAULT } from './jacket-insurance';
 
@@ -130,7 +130,13 @@ export function deriveRequirements(p: Row, reqRows: Row[]): { requirements: Jack
   const generalLiability = cov(reqOf(/general.?liab|\bgl\b|cgl/i)) ?? coverageValue(p.general_liability) ?? parsed.gl;
   const autoLiability = cov(reqOf(/auto/i)) ?? coverageValue(p.auto_liability) ?? parsed.auto;
   const workersComp = cov(reqOf(/workers?.?comp|\bwc\b/i)) ?? coverageValue(p.workers_compensation) ?? parsed.wc;
-  const insuranceText = parsed.text ?? (reqOf(/insurance/i)?.description ? String(reqOf(/insurance/i)!.description) : null);
+  /* A JSON value's sentence is derived, so it is rebuilt from the figures
+     actually in force — a GL column set to $3M must not sit under a sentence
+     still reading $2M. Text a GC wrote is shown as written. */
+  const fromJson = parsed.structured
+    ? [insuranceSentence({ gl: generalLiability, auto: autoLiability, wc: workersComp }), ...parsed.others].filter(Boolean).join('\n') || null
+    : parsed.text;
+  const insuranceText = fromJson ?? (reqOf(/insurance/i)?.description ? String(reqOf(/insurance/i)!.description) : null);
 
   const additional = reqRows
     .filter((r) => !SIX.test(String(r.requirement_type || '')))
@@ -251,7 +257,7 @@ export async function assembleJacket(
       id: String(f.id),
       /* `label` is the name the GC gave it when placing it in the jacket, which
          reads better on the shelf than the uploaded filename. */
-      name: String(f.label || f.file_name || 'Untitled'),
+      name: String(f.label || f.file_name || 'Untitled').replace(/\.(?:pdf|dwg|dxf|docx?|xlsx?|png|jpe?g|tiff?)$/i, '') || 'Untitled',
       url: await url(f.file_url),
       meta: f.file_type ? String(f.file_type).replace(/^application\//, '').toUpperCase() : undefined,
       sub: divider === 'attachments' && f.category && !/^attachment$/i.test(f.category) ? String(f.category) : 'Placed in this jacket',

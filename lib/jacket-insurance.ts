@@ -60,11 +60,18 @@ const humanKey = (k: string) => k.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').tr
  * printed it verbatim as the "Insurance Requirements" page. JSON is parsed: the
  * three standard limits come back as figures and a sentence, anything else as
  * "Key: value" lines. Plain text passes through untouched.
+ *
+ * `structured` says the value was that JSON: its sentence is then derived, not
+ * written, so a reader that has better figures (the limit columns) rebuilds it
+ * from those with `others` rather than repeating figures that disagree.
  */
-export function parseInsuranceText(raw: unknown): {
+export type ParsedInsurance = {
   text: string | null; gl: number | string | null; auto: number | string | null; wc: number | string | null;
-} {
-  const none = { text: null, gl: null, auto: null, wc: null };
+  structured: boolean; others: string[];
+};
+
+export function parseInsuranceText(raw: unknown): ParsedInsurance {
+  const none: ParsedInsurance = { text: null, gl: null, auto: null, wc: null, structured: false, others: [] };
   if (raw == null) return none;
   let obj: unknown = raw;
   if (typeof raw === 'string') {
@@ -98,6 +105,6 @@ export function parseInsuranceText(raw: unknown): {
     })
     .filter(Boolean) as string[];
   const text = [insuranceSentence({ gl, auto, wc }), ...others].filter(Boolean).join('\n') || null;
-  return { text, gl, auto, wc };
+  return { text, gl, auto, wc, structured: true, others };
 }
 

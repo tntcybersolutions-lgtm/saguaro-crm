@@ -111,7 +111,7 @@ export default function BidFormEditor({ packageId, lines, onLinesChanged, onToas
     if (await call('add', 'POST', payload(add))) { setAdd(blank); onToast?.('Line added to the bid form.'); }
   }
   async function remove(line: BidFormLine) {
-    if (!(await confirmDialog({ title: 'Remove this line?', message: `"${line.description}" comes off the bid form every bidder prices.`, danger: true }))) return;
+    if (!(await confirmDialog({ title: 'Remove this line?', message: `"${line.description}" comes off the bid form every bidder prices.`, danger: true, confirmLabel: 'Remove Line' }))) return;
     if (await call(`del:${line.id}`, 'DELETE', undefined, `?itemId=${encodeURIComponent(line.id)}`)) onToast?.('Line removed.');
   }
 

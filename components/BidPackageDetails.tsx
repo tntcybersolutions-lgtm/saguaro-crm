@@ -54,7 +54,9 @@ function initial(p: Pkg): Form {
     included: Array.isArray(p.work_included) ? p.work_included.join('\n') : '',
     excluded: Array.isArray(p.work_excluded) ? p.work_excluded.join('\n') : '',
     due: String(p.due_date || p.bid_due_date || '').slice(0, 10),
-    insurance: parsed.text || '',
+    /* Old packages hold the three limits as JSON in this column; those figures
+       are edited in their own fields, so only words the GC would write are here. */
+    insurance: parsed.structured ? parsed.others.join('\n') : parsed.text || '',
     gl: coverageText(gl) || '',
     auto: coverageText(auto) || '',
     wc: coverageText(wc) || '',
@@ -110,7 +112,16 @@ export default function BidPackageDetails({ pkg, packageId, onSaved, onToast }: 
          the GC means, so the older timestamp must not shadow it. */
       if (pkg.bid_due_date) body.bid_due_date = null;
     }
-    if (f.insurance !== start.insurance) body.insurance_requirements = f.insurance;
+    if (f.insurance !== start.insurance) {
+      body.insurance_requirements = f.insurance;
+      /* Replacing the old JSON must not lose the limits it carried: they move
+         into their own columns, where the jacket reads them first. */
+      if (parseInsuranceText(pkg.insurance_requirements).structured) {
+        if (!('general_liability' in body)) body.general_liability = f.gl || null;
+        if (!('auto_liability' in body)) body.auto_liability = f.auto || null;
+        if (!('workers_compensation' in body)) body.workers_compensation = f.wc || null;
+      }
+    }
     if (f.gl !== start.gl) body.general_liability = f.gl || null;
     if (f.auto !== start.auto) body.auto_liability = f.auto || null;
     if (f.wc !== start.wc) body.workers_compensation = f.wc || null;
