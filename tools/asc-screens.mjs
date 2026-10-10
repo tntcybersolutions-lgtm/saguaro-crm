@@ -560,7 +560,9 @@ async function walk() {
     let reqs = 0; const apiErrs = []; const pageErrs = [];
     page.on('request', (r) => { if (['fetch', 'xhr', 'document'].includes(r.resourceType())) reqs++; });
     page.on('response', (r) => { const u = r.url(); if (u.startsWith(SITE + '/api/') && r.status() >= 400 && r.status() !== 401) apiErrs.push(`${r.request().method()} ${shortUrl(u).replace(/\?.*$/, '')} → ${r.status()}`); });
-    page.on('pageerror', (e) => pageErrs.push(String(e.message || e).slice(0, 180)));
+    // WebKit reports a fetch cut off by leaving the page as "…due to access
+    // control checks" — the walker leaving, not the app failing.
+    page.on('pageerror', (e) => { const m = String(e.message || e); if (!/due to access control checks|^AbortError|Fetch is aborted|The operation was aborted/i.test(m)) pageErrs.push(m.slice(0, 180)); });
     let popups = 0, dialogs = 0, downloads = 0;
     ctx.on('page', () => { popups++; });
     page.on('dialog', (d) => { dialogs++; d.dismiss().catch(() => {}); });
@@ -612,19 +614,30 @@ async function walk() {
         const el = page.locator(`[data-walk="${c.i}"]`).first();
         if (!(await el.count())) continue; // gone after an earlier reload
         const url0 = page.url();
-        const m0 = await page.evaluate(() => window.__mut).catch(() => 0);
-        const r0 = reqs, p0 = popups, d0 = dialogs, dl0 = downloads, e0 = pageErrs.length, a0 = apiErrs.length;
+        let m0 = await page.evaluate(() => window.__mut).catch(() => 0);
+        let r0 = reqs, p0 = popups, d0 = dialogs, dl0 = downloads, e0 = pageErrs.length, a0 = apiErrs.length;
         let clicked = false, lastErr = '';
-        for (const attempt of [0, 1]) {
+        for (const attempt of [0, 1, 2]) {
           try {
+            // A menu or sheet an earlier tap left open is the walker's mess, not
+            // the app's: reload the screen and try once more before saying
+            // "covered". A moving ticker item is tapped where it is (force).
+            if (attempt === 1 && /intercepts pointer events/.test(lastErr)) {
+              await open();
+              await page.evaluate(() => { const sel = 'button, a[href], [role="button"], [role="tab"], [role="menuitem"], [role="switch"], summary, select, input[type="checkbox"], input[type="radio"]'; let i = 0; for (const el of document.querySelectorAll(sel)) { const r = el.getBoundingClientRect(); const st = getComputedStyle(el); if (r.width < 4 || r.height < 4 || st.visibility === 'hidden' || st.display === 'none' || el.closest('[aria-hidden="true"]')) continue; el.setAttribute('data-walk', String(i)); i++; } });
+              // The reload's own requests and changes are not the tap's answer.
+              m0 = await page.evaluate(() => window.__mut).catch(() => 0);
+              r0 = reqs; p0 = popups; d0 = dialogs; dl0 = downloads; e0 = pageErrs.length; a0 = apiErrs.length;
+            }
+            if (!(await el.count())) { lastErr = 'gone after reload'; break; }
             // A real thumb scrolls the button into the open middle of the screen,
             // not under the fixed top bar or the tab bar.
             await el.evaluate((n) => n.scrollIntoView({ block: 'center', inline: 'center' }));
             await page.waitForTimeout(attempt ? 400 : 120);
-            await el.click({ timeout: 2500 });
+            await el.click({ timeout: 2500, force: attempt === 2 && /not stable/.test(lastErr) });
             clicked = true;
             break;
-          } catch (e) { lastErr = String(e.message || e); }
+          } catch (e) { lastErr = String(e.message || e); if (attempt === 1 && !/not stable/.test(lastErr)) break; }
         }
         if (!clicked) {
           if (/intercepts pointer events|not visible|outside of the viewport|not stable/i.test(lastErr)) {
