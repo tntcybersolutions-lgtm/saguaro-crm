@@ -208,12 +208,12 @@ export default function BidPackageDetailPage() {
     } catch { /* leave null */ } finally { setLoading(false); }
   }
 
-  async function sendReminder(subId: string, companyName: string) {
-    setReminding(subId);
+  async function sendReminder(inviteId: string, companyName: string) {
+    setReminding(inviteId);
     try {
       const r = await fetch(`/api/bid-packages/${id}/remind`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subId, packageId: id }),
+        body: JSON.stringify({ inviteId, packageId: id }),
       });
       const d = await r.json().catch(() => ({})) as any;
       if (!r.ok || d.error) throw new Error(d.error || 'Reminder failed.');
