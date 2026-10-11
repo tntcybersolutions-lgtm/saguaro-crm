@@ -1,0 +1,76 @@
+{
+  "site": "https://www.saguarocontrol.net",
+  "phone": {
+    "steps": [
+      "jobs",
+      "cameraTab",
+      "sheet",
+      "uploadRow",
+      "landedOnA",
+      "movedToB"
+    ],
+    "jobs": {
+      "A": "ZZ AUDIT customers 10111621 edited Project",
+      "B": "ZZ AUDIT Walk Job 10111621"
+    },
+    "cameraTab": {
+      "shown": true,
+      "label": "Photo",
+      "bg": "rgb(255, 230, 0)",
+      "x": 164,
+      "vw": 393
+    },
+    "sheet": {
+      "buttons": [
+        "Take Photo",
+        "Record Video",
+        "Choose Photos & Videos"
+      ],
+      "jobs": 14,
+      "sendTo": "ZZ AUDIT customers 10111621 edited Project"
+    },
+    "uploadRow": "zz-audit-quick-mv44zbyd.pngSent to ZZ AUDIT customers 10111621 edited Project · 1 KB",
+    "landedOnA": {
+      "found": true,
+      "title": "zz audit quick mv44zbyd"
+    },
+    "movedToB": {
+      "onB": true,
+      "stillOnA": false
+    },
+    "cleanup": 200
+  },
+  "desktop": {
+    "steps": [
+      "topBarButton",
+      "sheetFromButton",
+      "searchPhoto",
+      "sheetFromSearch",
+      "dropStaged",
+      "afterClear"
+    ],
+    "topBarButton": {
+      "shown": true,
+      "text": "Photos"
+    },
+    "sheetFromButton": true,
+    "searchPhoto": [
+      "🔍",
+      "⌘K",
+      "to toggle",
+      "📷",
+      "Take Photo or Video",
+      "Camera, video or upload — send to any job",
+      "🖼️",
+      "Upload Photos & Videos",
+      "Choose or drop files and send them to any job",
+      "🔨"
+    ],
+    "sheetFromSearch": true,
+    "dropStaged": {
+      "staged": "1 file ready — send it to the job above? Clear Send",
+      "sendTo": "Loading jobs…"
+    },
+    "afterClear": 0
+  }
+}
