@@ -9,6 +9,11 @@
  *      table carrying the `k-table` / `k-table-skin` class.
  *   3. No status word drawn as plain text in a styled <span> — a status is a
  *      <StatusPill>.
+ *   4. No dim text, anywhere a person reads the app (portals included): text
+ *      is var(--text-primary|secondary|tertiary), pearl white. A grey literal
+ *      or a faded rgba(255,255,255,<.6) as a text colour fails — zero allowed,
+ *      no baseline. Print / PDF / email / canvas files and pages that paint a
+ *      white page keep their greys (grey on white is readable).
  *
  * Allowlisted on purpose (documented exceptions): print / PDF layouts, QR
  * canvases, signature pads, customer-facing portals, email templates, charts
@@ -33,7 +38,7 @@ const ALLOW_DIRS = [
 ];
 const ALLOW_FILE_RE = /(pdf|print|qr|signature|canvas|chart|email|invoice-template|letterhead|PlanTracer|DrawingViewer|RevisionCompare|PdfViewer|PhotoEditor|SignaturePad|CrewMap|Building3D|Designer)/i;
 // A palette value is still a hex literal; pages must use the token for it.
-const PALETTE = new Set(['#000000', '#050506', '#0E0F12', '#0E0F13', '#13151A', '#15171C', '#FFFFFF', '#F3EAC9', '#B9AE8C', '#8E866B', '#5E5948', '#D4D4D8', '#A9B4C4', '#7A8597', '#FFE600', '#FFF04A', '#E6CF00', '#0A0A00', '#FF8A00', '#2CFF7A', '#FF3B30', '#A3ACBB', '#FFF', '#000']);
+const PALETTE = new Set(['#000000', '#050506', '#0E0F12', '#0E0F13', '#13151A', '#15171C', '#FFFFFF', '#F3EAC9', '#B9AE8C', '#8E866B', '#5E5948', '#FAF8F2', '#E8E4D9', '#D2CDBF', '#8F8A7C', '#D4D4D8', '#A9B4C4', '#7A8597', '#FFE600', '#FFF04A', '#E6CF00', '#0A0A00', '#FF8A00', '#2CFF7A', '#FF3B30', '#A3ACBB', '#FFF', '#000']);
 const STATUS_WORDS = /^(Missing|Not on File|On File|Overdue|Approved|Paid|Pending|Rejected|Expired|Expiring|Draft|Submitted|Sent|Open|Closed|Active|Inactive|Complete|Completed|In Progress|Under Review|Signed|Unsigned|Certified|Declined|Cancelled|Canceled|Awarded|Won|Lost)$/i;
 
 function walk(dir, out = []) {
@@ -48,6 +53,39 @@ const rel = (p) => path.relative(ROOT, p).replace(/\\/g, '/');
 const allowed = (r) => ALLOW_DIRS.some((d) => r.startsWith(d)) || ALLOW_FILE_RE.test(path.basename(r));
 
 const files = [...walk(path.join(ROOT, 'app')), ...walk(path.join(ROOT, 'components'))].map(rel).filter((r) => !allowed(r));
+
+/* 4. Dim text. Wider net than rules 1–3: customer portals are read too. */
+const DIM_TEXT = new Set(['#d4d4d8', '#a9b4c4', '#b9ae8c', '#a1a1aa', '#a3acbb', '#9ca3af', '#8baac8', '#94a3b8', '#aaa', '#aaaaaa', '#999', '#999999', '#a3a3a3', '#cbd5e1', '#c9d1d9',
+  '#6b7280', '#8b949e', '#64748b', '#6e7681', '#8094b0', '#7a8597', '#8e866b', '#71717a', '#5b677a', '#888', '#888888', '#777', '#777777', '#666', '#666666', '#737373', '#475569', '#52525b', '#5e5948', '#7d8590']);
+const DIM_SKIP_FILE = /(pdf|print|qr|signature|canvas|chart|email|invoice-template|letterhead|Building3D|PlanTracer|DrawingViewer|RevisionCompare|PhotoEditor|SignaturePad|CrewMap)/i;
+const WHITE_PAGE = /background(Color)?\s*:\s*['"]?(#fff\b|#ffffff|white|#f9fafb|#fafafa)/i;
+const dimValue = (v) => {
+  const l = v.toLowerCase().replace(/\s+/g, '');
+  if (DIM_TEXT.has(l)) return true;
+  const a = l.match(/^rgba\(255,255,255,(0?\.\d+)\)$/);
+  return !!a && Number(a[1]) < 0.6;
+};
+const VAL = String.raw`(#[0-9a-fA-F]{3,6}\b|rgba\(\s*255\s*,\s*255\s*,\s*255\s*,\s*0?\.\d+\s*\))`;
+const DIM_RES = [
+  new RegExp(String.raw`\bcolor\s*:\s*(['"])` + VAL + String.raw`\1`, 'gi'),
+  new RegExp(String.raw`(?<![-\w])color\s*:\s*` + VAL + String.raw`(?=\s*[;}"'!])`, 'gi'),
+  new RegExp(String.raw`\b(?:DIM|MUTED|TEXT_DIM|TEXT_MED|TEXT_MUTED|SUBTLE|FAINT|dim|muted|faint|subtle|textDim|textMuted|text2|text3)\s*[:=]\s*(['"])` + VAL + String.raw`\1`, 'g'),
+];
+const dimFindings = [];
+for (const r of [...walk(path.join(ROOT, 'app')), ...walk(path.join(ROOT, 'components'))].map(rel)) {
+  if (!r.endsWith('.tsx') || r.startsWith('app/api/') || DIM_SKIP_FILE.test(path.basename(r))) continue;
+  const src = fs.readFileSync(path.join(ROOT, r), 'utf8');
+  if (WHITE_PAGE.test(src)) continue;
+  src.split('\n').forEach((line, i) => {
+    for (const re of DIM_RES) {
+      re.lastIndex = 0;
+      for (const m of line.matchAll(re)) {
+        const v = m[m.length - 1];
+        if (dimValue(v)) dimFindings.push({ r, line: i + 1, text: m[0] });
+      }
+    }
+  });
+}
 const counts = {};
 const findings = [];
 for (const r of files) {
@@ -92,7 +130,12 @@ for (const [r, c] of Object.entries(counts)) {
   for (const k of ['hex', 'table', 'status']) if (c[k] > b[k]) regressions.push({ r, k, was: b[k], now: c[k] });
 }
 const totals = Object.values(counts).reduce((a, c) => ({ hex: a.hex + c.hex, table: a.table + c.table, status: a.status + c.status }), { hex: 0, table: 0, status: 0 });
-console.log(`DESIGN-SYSTEM GATE — ${files.length} files scanned: ${totals.hex} hex literals, ${totals.table} raw tables, ${totals.status} plain status spans (baseline-tracked)`);
+console.log(`DESIGN-SYSTEM GATE — ${files.length} files scanned: ${totals.hex} hex literals, ${totals.table} raw tables, ${totals.status} plain status spans (baseline-tracked), ${dimFindings.length} dim text colours (none allowed)`);
+if (dimFindings.length) {
+  console.error('\nDIM TEXT (rule 4 — text is pearl white: var(--text-primary|secondary|tertiary)):');
+  for (const f of dimFindings.slice(0, 40)) console.error(`  ${f.r}:${f.line}  ${f.text}`);
+  if (!UPDATE) process.exit(1);
+}
 if (regressions.length) {
   console.error('\nREGRESSIONS (a file grew past its baseline):');
   for (const x of regressions) {

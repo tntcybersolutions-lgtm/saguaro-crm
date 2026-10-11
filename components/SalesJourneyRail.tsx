@@ -33,7 +33,7 @@ const BLUE = 'var(--warning)';
 const BLUE_HI = 'var(--warning)';
 const TEXT = 'var(--text-primary)';
 const MUTED = 'rgba(255,255,255,0.62)';
-const FAINT = 'rgba(255,255,255,0.42)';
+const FAINT = 'var(--text-secondary)';
 
 /* Versioned like the build rail's key, and for the same reason: the collapse
    preference is remembered forever and a hard refresh does not clear

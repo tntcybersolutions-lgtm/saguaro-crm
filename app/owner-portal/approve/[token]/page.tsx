@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Cactus, Check, CheckCircle, X, XCircle } from '@phosphor-icons/react';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF',GREEN='#22a85e',RED='#FF3B30';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='#FFFFFF',GREEN='#22a85e',RED='#FF3B30';
 
 export default function OwnerApprovePage() {
   const params = useParams();
@@ -84,7 +84,7 @@ export default function OwnerApprovePage() {
               </button>
             </div>
 
-            <div style={{marginTop:16,fontSize:11,color:'#D4D4D8',textAlign:'center' as const}}>
+            <div style={{marginTop:16,fontSize:11,color:'var(--text-secondary)',textAlign:'center' as const}}>
               This approval is legally binding. By clicking Approve you certify the work has been performed per the contract documents.
             </div>
           </div>

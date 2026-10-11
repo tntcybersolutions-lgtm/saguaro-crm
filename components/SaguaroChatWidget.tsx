@@ -779,7 +779,7 @@ export default function SaguaroChatWidget({
                         <div style={{ maxWidth: '80%', background: 'linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-hover) 100%)', color: 'var(--on-brand)', fontSize: 14, fontWeight: 500, padding: '10px 16px', borderRadius: '18px 18px 4px 18px', boxShadow: '0 2px 12px var(--brand-primary-18)', lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                           {msg.content}
                         </div>
-                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', paddingRight: 4 }}>
+                        <div style={{ fontSize: 10, color: 'var(--text-tertiary)', paddingRight: 4 }}>
                           {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       </>
@@ -818,7 +818,7 @@ export default function SaguaroChatWidget({
                             </div>
                           )}
                           {msg.content !== '__TYPING__' && (
-                            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', paddingLeft: 4 }}>
+                            <div style={{ fontSize: 10, color: 'var(--text-tertiary)', paddingLeft: 4 }}>
                               {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </div>
                           )}
@@ -884,7 +884,7 @@ export default function SaguaroChatWidget({
                     )}
                   </button>
                 </div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.16)', textAlign: 'center', marginTop: 8, letterSpacing: '0.3px' }}>
+                <div style={{ fontSize: 10, color: 'var(--text-tertiary)', textAlign: 'center', marginTop: 8, letterSpacing: '0.3px' }}>
                   Sage · Powered by Claude AI · Knows construction inside and out
                 </div>
               </div>

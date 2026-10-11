@@ -514,7 +514,7 @@ export default function GetTheAppPage() {
           color: var(--text);
           font-weight: 500;
         }
-        .compare-table td.app-store-col { color: #D4D4D8; }
+        .compare-table td.app-store-col { color: var(--text-secondary); }
         .compare-table td.saguaro-col {
           background: color-mix(in srgb, var(--brand-primary) 5%, transparent);
           color: var(--text);

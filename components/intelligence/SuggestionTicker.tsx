@@ -34,7 +34,7 @@ const RED = 'var(--danger)';
 const AMBER = 'var(--warning)';
 const INFO = 'rgba(255,255,255,0.45)';
 const BORDER = 'rgba(255,255,255,0.08)';
-const DIM = 'rgba(255,255,255,0.55)';
+const DIM = 'var(--text-secondary)';
 
 export const sevColor = (s: SuggestionSeverity): string =>
   s === 'red' ? RED : s === 'amber' ? AMBER : INFO;

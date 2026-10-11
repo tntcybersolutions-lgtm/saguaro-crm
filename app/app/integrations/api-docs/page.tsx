@@ -19,7 +19,7 @@ import {
 } from '@phosphor-icons/react';
 
 const GOLD = 'var(--brand-primary)', CARD = 'var(--bg-surface)', INSET = 'var(--bg-base)', BORDER = 'rgba(255,255,255,0.12)', HAIRLINE = 'rgba(255,255,255,0.07)';
-const DIM = 'var(--text-secondary)', MUTED = 'rgba(255,255,255,0.45)', TEXT = 'var(--text-primary)', GREEN = 'var(--success)';
+const DIM = 'var(--text-secondary)', MUTED = 'var(--text-secondary)', TEXT = 'var(--text-primary)', GREEN = 'var(--success)';
 
 // Integrations accent — steel blue, local because 'integrations' is not a key in
 // lib/module-identity (owned elsewhere). Chips / eyebrows / badges ONLY.

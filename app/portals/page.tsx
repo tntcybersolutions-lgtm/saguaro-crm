@@ -14,7 +14,7 @@ export default function PortalsHub() {
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
           <div style={{ color: 'var(--brand-primary)', fontWeight: 800, fontSize: 24, letterSpacing: '-0.01em', marginBottom: 8 }}>Saguaro</div>
           <h1 style={{ color: '#FFFFFF', fontSize: 32, fontWeight: 700, margin: '0 0 8px' }}>Portal Access</h1>
-          <p style={{ color: '#D4D4D8', fontSize: 14, margin: 0 }}>Select your portal below to get started.</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 14, margin: 0 }}>Select your portal below to get started.</p>
         </div>
 
         <div style={{ display: 'grid', gap: 16 }}>
@@ -26,12 +26,12 @@ export default function PortalsHub() {
               borderLeft: `4px solid ${p.color}`,
             }}>
               <div style={{ color: '#FFFFFF', fontSize: 18, fontWeight: 700, marginBottom: 4 }}>{p.title}</div>
-              <div style={{ color: '#D4D4D8', fontSize: 13 }}>{p.desc}</div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{p.desc}</div>
             </a>
           ))}
         </div>
 
-        <div style={{ textAlign: 'center', marginTop: 32 }}><a href="/" style={{ color: '#D4D4D8', fontSize: 13, textDecoration: 'none' }}>← Back to Saguaro</a></div>
+        <div style={{ textAlign: 'center', marginTop: 32 }}><a href="/" style={{ color: 'var(--text-secondary)', fontSize: 13, textDecoration: 'none' }}>← Back to Saguaro</a></div>
       </div>
     </div>
   );

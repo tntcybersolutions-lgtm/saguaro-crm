@@ -9,7 +9,7 @@ const DARK = 'var(--bg-base)';
 const ON_GOLD = '#0A0A00';
 const GOLD = 'var(--brand-primary)';
 const TEXT = '#FFFFFF';
-const DIM = '#D4D4D8';
+const DIM = 'var(--text-secondary)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const HAIRLINE = 'rgba(255,255,255,0.08)';
 const CARD = 'rgba(255,255,255,0.02)';
@@ -131,8 +131,8 @@ export default function ROICalculatorPage() {
         }}
       />
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-        <span style={{ color: '#8094B0', fontSize: 11 }}>{prefix}{min}{suffix}</span>
-        <span style={{ color: '#8094B0', fontSize: 11 }}>{prefix}{max.toLocaleString()}{suffix}</span>
+        <span style={{ color: 'var(--text-tertiary)', fontSize: 11 }}>{prefix}{min}{suffix}</span>
+        <span style={{ color: 'var(--text-tertiary)', fontSize: 11 }}>{prefix}{max.toLocaleString()}{suffix}</span>
       </div>
     </div>
   );
@@ -892,12 +892,12 @@ export default function ROICalculatorPage() {
               </div>
             </div>
             <div style={{ borderTop: `1px solid ${HAIRLINE}`, paddingTop: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-              <p style={{ margin: 0, color: '#8094B0', fontSize: 13 }}>
+              <p style={{ margin: 0, color: 'var(--text-tertiary)', fontSize: 13 }}>
                 &copy; {new Date().getFullYear()} Saguaro Control Systems. All rights reserved.
               </p>
               <div style={{ display: 'flex', gap: 20 }}>
                 {[['Privacy Policy', '/privacy'], ['Terms of Service', '/terms']].map(([label, href]) => (
-                  <Link key={label} href={href} style={{ color: '#8094B0', textDecoration: 'none', fontSize: 13 }}
+                  <Link key={label} href={href} style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: 13 }}
                     onMouseOver={(e) => (e.currentTarget.style.color = DIM)}
                     onMouseOut={(e) => (e.currentTarget.style.color = '#8094B0')}
                   >

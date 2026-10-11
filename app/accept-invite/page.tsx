@@ -16,7 +16,7 @@ import {
 } from '@phosphor-icons/react';
 
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)',
-  BORDER = 'rgba(255,255,255,0.12)', DIM = '#D4D4D8', TEXT = '#FFFFFF',
+  BORDER = 'rgba(255,255,255,0.12)', DIM = 'var(--text-secondary)', TEXT = '#FFFFFF',
   RED = '#FF3B30', GREEN = '#2CFF7A';
 
 type Reason = 'pending' | 'accepted' | 'expired' | 'invalid' | 'error';

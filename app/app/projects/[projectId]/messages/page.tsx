@@ -11,7 +11,7 @@ import { ListToolbar } from '@/components/ui/ListToolbar';
 const GOLD = 'var(--brand-primary)';
 const WHITE = 'var(--text-primary)';
 const MUTED = 'rgba(255,255,255,0.62)';
-const FAINT = 'rgba(255,255,255,0.42)';
+const FAINT = 'var(--text-secondary)';
 const BORDER = 'rgba(255,255,255,0.08)';
 const RED = 'var(--danger)';
 const ME_BG = 'linear-gradient(135deg, var(--brand-primary-18), color-mix(in srgb, var(--brand-primary) 5%, transparent))';

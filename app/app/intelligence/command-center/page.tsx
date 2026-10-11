@@ -18,7 +18,7 @@ const GREEN  = 'var(--success)';
 const RED    = 'var(--danger)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const TEXT   = 'var(--text-primary)';
-const DIM    = '#D4D4D8';
+const DIM    = 'var(--text-secondary)';
 const BLUE   = 'var(--brand-primary)';
 const AMBER  = 'var(--warning)';
 

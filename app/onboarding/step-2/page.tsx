@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Cactus, Check } from '@phosphor-icons/react';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF',RED='#FF3B30',GREEN='#2CFF7A';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='#FFFFFF',RED='#FF3B30',GREEN='#2CFF7A';
 
 const STEPS = [
   { num: 1, label: 'Welcome', done: true },
@@ -193,7 +193,7 @@ export default function OnboardingStep2() {
           </div>
         </div>
 
-        <div style={{textAlign:'center',marginTop:20,fontSize:12,color:'#D4D4D8'}}>
+        <div style={{textAlign:'center',marginTop:20,fontSize:12,color:'var(--text-secondary)'}}>
           <Link href="/app" style={{color:DIM,textDecoration:'none'}}>Skip Setup — Go to Dashboard</Link>
         </div>
       </div>

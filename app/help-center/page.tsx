@@ -7,7 +7,7 @@ const C = {
   gold: 'var(--brand-primary)',
   goldBright: 'var(--brand-primary-strong)',
   text: '#F5F5F7',
-  dim: '#A1A1AA',
+  dim: 'var(--text-secondary)',
   border: 'rgba(255,255,255,0.10)',
   raised: 'var(--bg-surface)',
   raisedAlt: 'var(--bg-surface-2)',

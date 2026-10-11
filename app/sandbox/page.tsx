@@ -7,7 +7,7 @@ import { CONTRACTOR_TRADES as TRADES } from '@/lib/contractor-trades';
 const DARK = 'var(--bg-base)';
 const GOLD = 'var(--brand-primary)';
 const TEXT = '#FFFFFF';
-const DIM = '#D4D4D8';
+const DIM = 'var(--text-secondary)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const RAISED = 'var(--bg-surface)';
 const GREEN = '#2CFF7A';

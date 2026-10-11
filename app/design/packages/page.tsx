@@ -5,7 +5,7 @@ import { Check } from '@phosphor-icons/react';
 
 /* ─── Palette ─── */
 const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#2CFF7A';
-const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#D4D4D8', DARK = 'var(--bg-base)';
+const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = 'var(--text-secondary)', DARK = 'var(--bg-base)';
 const BLUE = 'var(--brand-primary)', PURPLE = '#FF8A00', AMBER = '#FF8A00';
 
 const glass: React.CSSProperties = {

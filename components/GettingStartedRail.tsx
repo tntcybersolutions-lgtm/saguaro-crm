@@ -29,7 +29,7 @@ const GOLD = 'var(--brand-primary)';
 const GOLD_HI = 'var(--brand-primary-strong)';
 const TEXT = 'var(--text-primary)';
 const MUTED = 'rgba(255,255,255,0.62)';
-const FAINT = 'rgba(255,255,255,0.42)';
+const FAINT = 'var(--text-secondary)';
 /* Versioned on purpose.
    The collapse preference is remembered forever, and a hard refresh does not
    clear localStorage — so anybody who had ever expanded this rail kept the old

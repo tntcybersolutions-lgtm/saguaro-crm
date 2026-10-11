@@ -9,7 +9,7 @@ const C = {
   dark: 'var(--bg-base)',
   gold: 'var(--brand-primary)',
   text: '#FFFFFF',
-  dim: '#D4D4D8',
+  dim: 'var(--text-secondary)',
   border: 'rgba(255,255,255,0.12)',
   raised: 'var(--bg-surface)',
   green: '#2CFF7A',

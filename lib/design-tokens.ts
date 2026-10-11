@@ -9,7 +9,7 @@
  * where a real hex is unavoidable (canvas, SVG export, PDF, charts). */
 export const paletteHex = {
   bg: '#050506', card: '#0E0F13', raised: '#13151A',
-  text: '#F3EAC9', text2: '#B9AE8C', text3: '#8E866B', text4: '#5E5948',
+  text: '#FAF8F2', text2: '#E8E4D9', text3: '#D2CDBF', text4: '#8F8A7C',
   yellow: '#FFE600', yellowHi: '#FFF04A', yellowHover: '#E6CF00', onBrand: '#0A0A00',
   orange: '#FF8A00', green: '#2CFF7A', red: '#FF3B30', gray: '#A3ACBB',
 } as const;
@@ -53,13 +53,13 @@ export const colors = {
   border:     'rgba(255,255,255,0.10)',
   borderDim:  'rgba(255,255,255,0.07)',
 
-  // PREMIUM SYSTEM (owner-approved concept, 6 Oct 2026): champagne body type,
-  // sand supporting type, bronze labels — never white, never neon; yellow is
-  // the accent. Same values as the --c-text* variables in globals.css.
-  text:       '#F3EAC9',
-  textMuted:  '#B9AE8C',
-  textDim:    '#8E866B',
-  textFaint:  '#5E5948',
+  // Pearl white at every level (owner, 11 Oct 2026 — replaces the 6 Oct
+  // champagne / sand / bronze, which read as dark grey and hard to see).
+  // Same values as the --c-text* variables in globals.css.
+  text:       '#FAF8F2',
+  textMuted:  '#E8E4D9',
+  textDim:    '#D2CDBF',
+  textFaint:  '#8F8A7C',
 
   // Semantic — the same neon-on-black family as lib/status-colors.ts.
   green:      '#2CFF7A',

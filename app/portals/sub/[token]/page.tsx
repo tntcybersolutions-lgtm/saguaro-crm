@@ -20,7 +20,7 @@ import { TIME_ZONE_HEADER, deviceTimeZone } from '@/lib/time-zone';
 import { sendOrSave, listSaved, savedRowId, startOfflineWatch } from '@/lib/offline/outbox';
 
 /* ── Design Tokens ── */
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='#FFFFFF';
 const GREEN='#2CFF7A',RED='#FF3B30',AMBER='#FF8A00',BLUE='var(--brand-primary)',PURPLE='#FF8A00';
 const fmt=(n:number)=>'$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}));
 /* A date column ('YYYY-MM-DD') is a calendar day — fmtDay keeps it on that day in every timezone. */

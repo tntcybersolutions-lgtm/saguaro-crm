@@ -5,7 +5,7 @@ import { Check } from '@phosphor-icons/react';
 
 const C = {
   gold: 'var(--brand-primary)', green: '#2CFF7A', yellow: '#FF8A00', red: '#FF3B30', blue: 'var(--brand-primary)',
-  bg: 'var(--bg-base)', card: 'var(--bg-surface)', border: 'rgba(255,255,255,0.12)', dim: '#D4D4D8', text: '#FFFFFF', faint: '#8094B0',
+  bg: 'var(--bg-base)', card: 'var(--bg-surface)', border: 'rgba(255,255,255,0.12)', dim: 'var(--text-secondary)', text: '#FFFFFF', faint: 'var(--text-tertiary)',
 };
 const font = "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
 const STATUS = { green: { c: C.green, l: 'On Track' }, yellow: { c: C.yellow, l: 'In Progress' }, red: { c: C.red, l: 'Needs Attention' } } as const;
