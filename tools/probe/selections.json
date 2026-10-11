@@ -1,0 +1,77 @@
+{
+  "site": "https://www.saguarocontrol.net",
+  "job": "ZZ AUDIT Walk Job 10101543",
+  "item": "ZZ AUDIT Kitchen faucet mv47aisw",
+  "steps": [
+    "optionStandard",
+    "optionPremium",
+    "portalLink",
+    "portalBefore",
+    "portalOverflow",
+    "confirmSheet",
+    "pick",
+    "confirmSheet2",
+    "pick2",
+    "portalAfter",
+    "gcChangeOrder",
+    "gcPhonePanel",
+    "gcPhoneOverflow",
+    "photoCleanup"
+  ],
+  "optionStandard": 200,
+  "optionPremium": 200,
+  "portalLink": {
+    "status": 200,
+    "token": true
+  },
+  "portalBefore": "$650 Allowances $0 Chosen so far $0 Allowance left ",
+  "portalOverflow": {
+    "scrollW": 393,
+    "vw": 393,
+    "ok": true
+  },
+  "confirmSheet": "ZZ AUDIT Kitchen faucet mv47aisw Choose ZZ AUDIT Faucet Premium? $899.99 This is $449.99 over your $450 allowance. Choosing it adds a change order for $449.99 to your contract. Note for your contractor (optional) Back Choose — add $449.99 ",
+  "pick": {
+    "status": 200,
+    "price": 899.99,
+    "overage": 449.99,
+    "changeOrder": {
+      "id": "90b12301-0eea-45e8-9b9e-212a38c8ad3c",
+      "co_number": 1,
+      "amount": 449.99
+    }
+  },
+  "confirmSheet2": "ZZ AUDIT Vanity light mv47aisw Approve as specified? $150 Within your $200 allowance — $50 to spare. Note for your contractor (optional) Back Approve ",
+  "pick2": {
+    "price": 150,
+    "overage": 0,
+    "changeOrder": null
+  },
+  "portalAfter": "$650 Allowances $1,049.99 Chosen so far $399.99 Over allowance ",
+  "gcChangeOrder": {
+    "number": 1,
+    "title": "Selection upgrade — ZZ AUDIT Kitchen faucet mv47aisw: ZZ AUDIT Faucet Premium",
+    "status": "approved",
+    "amount": 449.99,
+    "approved_by": "ZZ AUDIT Client"
+  },
+  "gcPhonePanel": {
+    "width": 393,
+    "vw": 393,
+    "position": "fixed",
+    "text": "Selection Detail Edit Delete Flooring ZZ AUDIT Kitchen faucet mv47aisw Selected Owner Approved Options for Your Client The client has made this choice — reopen it by setting the status back to Pending. ZZ AUDIT Faucet Standard $300 $150 under ZZ AUDIT Faucet Premium $899.99 $449.99 over Cost $900 Al"
+  },
+  "gcPhoneOverflow": {
+    "scrollW": 393,
+    "vw": 393,
+    "ok": true
+  },
+  "photoCleanup": 200,
+  "ids": {
+    "job": "0ca5f539-f7ed-4daf-afc3-509a84770d96",
+    "selection": "b8f0d9d5-e643-445e-937c-1712154ea4a5",
+    "selection2": "f1a435c7-80e6-4204-ba87-56b20e0b9d3e",
+    "portalSession": "64594892-7e04-4283-bcc2-0bb9f1677ec1",
+    "changeOrder": "90b12301-0eea-45e8-9b9e-212a38c8ad3c"
+  }
+}
