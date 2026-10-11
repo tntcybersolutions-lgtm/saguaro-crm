@@ -1,0 +1,178 @@
+{
+  "site": "https://www.saguarocontrol.net",
+  "label": "before",
+  "screens": {
+    "home": {
+      "390": {
+        "textNodes": 169,
+        "dimText": 5,
+        "samples": [
+          "$10K → rgb(142, 134, 107)",
+          "$4.76M → rgb(142, 134, 107)",
+          "$2.54M → rgb(142, 134, 107)",
+          "· usually paid in → rgb(142, 134, 107)",
+          "Updated → rgb(142, 134, 107)"
+        ]
+      },
+      "1440": {
+        "textNodes": 211,
+        "dimText": 6,
+        "samples": [
+          "⌘K → rgb(142, 134, 107)",
+          "$10K → rgb(142, 134, 107)",
+          "$4.76M → rgb(142, 134, 107)",
+          "$2.54M → rgb(142, 134, 107)",
+          "· usually paid in → rgb(142, 134, 107)",
+          "Updated → rgb(142, 134, 107)"
+        ]
+      }
+    },
+    "job-overview": {
+      "390": {
+        "textNodes": 94,
+        "dimText": 1,
+        "samples": [
+          "Overview → rgb(10, 10, 0)"
+        ]
+      },
+      "1440": {
+        "textNodes": 118,
+        "dimText": 3,
+        "samples": [
+          "2026-005 · Building → rgb(142, 134, 107)",
+          "⌘K → rgb(142, 134, 107)",
+          "Overview → rgb(10, 10, 0)"
+        ]
+      }
+    },
+    "bills": {
+      "390": {
+        "textNodes": 52,
+        "dimText": 10,
+        "samples": [
+          "Financials → rgb(10, 10, 0)",
+          "Scan Receipt → rgb(10, 10, 0)",
+          "2 cost-coded lines → rgb(142, 134, 107)",
+          "POs + subcontracts → rgb(142, 134, 107)",
+          "Bills + invoices posted → rgb(142, 134, 107)",
+          "Original less actual → rgb(142, 134, 107)",
+          "Autocomplete in the form → rgb(142, 134, 107)",
+          "Showing 1 of 1 → rgb(142, 134, 107)"
+        ]
+      },
+      "1440": {
+        "textNodes": 83,
+        "dimText": 19,
+        "samples": [
+          "2026-005 · Building → rgb(142, 134, 107)",
+          "⌘K → rgb(142, 134, 107)",
+          "Financials → rgb(10, 10, 0)",
+          "Scan Receipt → rgb(10, 10, 0)",
+          "2 cost-coded lines → rgb(142, 134, 107)",
+          "POs + subcontracts → rgb(142, 134, 107)",
+          "Bills + invoices posted → rgb(142, 134, 107)",
+          "Original less actual → rgb(142, 134, 107)"
+        ]
+      }
+    },
+    "selections": {
+      "390": {
+        "textNodes": 47,
+        "dimText": 3,
+        "samples": [
+          "Execution → rgb(10, 10, 0)",
+          "Add Selection → rgb(10, 10, 0)",
+          "Showing 2 of 2 → rgb(142, 134, 107)"
+        ]
+      },
+      "1440": {
+        "textNodes": 72,
+        "dimText": 5,
+        "samples": [
+          "2026-005 · Building → rgb(142, 134, 107)",
+          "⌘K → rgb(142, 134, 107)",
+          "Execution → rgb(10, 10, 0)",
+          "Add Selection → rgb(10, 10, 0)",
+          "Showing 2 of 2 → rgb(142, 134, 107)"
+        ]
+      }
+    },
+    "schedule": {
+      "390": {
+        "textNodes": 44,
+        "dimText": 7,
+        "samples": [
+          "Execution → rgb(10, 10, 0)",
+          "Add Task → rgb(10, 10, 0)",
+          "Average completion → rgb(142, 134, 107)",
+          "To project end → rgb(142, 134, 107)",
+          "Tasks finished → rgb(142, 134, 107)",
+          "On track → rgb(142, 134, 107)",
+          "Add Task → rgb(10, 10, 0)"
+        ]
+      },
+      "1440": {
+        "textNodes": 94,
+        "dimText": 12,
+        "samples": [
+          "2026-005 · Building → rgb(142, 134, 107)",
+          "⌘K → rgb(142, 134, 107)",
+          "Execution → rgb(10, 10, 0)",
+          "Add Task → rgb(10, 10, 0)",
+          "Average completion → rgb(142, 134, 107)",
+          "To project end → rgb(142, 134, 107)",
+          "Tasks finished → rgb(142, 134, 107)",
+          "On track → rgb(142, 134, 107)"
+        ]
+      }
+    },
+    "leads": {
+      "390": {
+        "textNodes": 83,
+        "dimText": 33,
+        "samples": [
+          "New Lead → rgb(10, 10, 0)",
+          "5 leads → rgb(142, 134, 107)",
+          "Open stages only → rgb(142, 134, 107)",
+          "1 deals closed → rgb(142, 134, 107)",
+          "Of decided deals → rgb(142, 134, 107)",
+          "Won deals → rgb(142, 134, 107)",
+          "of → rgb(142, 134, 107)",
+          "$0 → rgb(142, 134, 107)"
+        ]
+      },
+      "1440": {
+        "textNodes": 127,
+        "dimText": 36,
+        "samples": [
+          "⌘K → rgb(142, 134, 107)",
+          "Sales → rgb(142, 134, 107)",
+          "Open My Work → rgb(10, 10, 0)",
+          "New Lead → rgb(10, 10, 0)",
+          "5 leads → rgb(142, 134, 107)",
+          "Open stages only → rgb(142, 134, 107)",
+          "1 deals closed → rgb(142, 134, 107)",
+          "Of decided deals → rgb(142, 134, 107)"
+        ]
+      }
+    },
+    "client-portal": {
+      "390": {
+        "textNodes": 56,
+        "dimText": 2,
+        "samples": [
+          "Secure client portal · All data encrypte → rgba(212, 212, 216, 0.376)",
+          "Tip: Use Alt+1 through Alt+7 to quickly  → rgba(212, 212, 216, 0.25)"
+        ]
+      },
+      "1440": {
+        "textNodes": 56,
+        "dimText": 2,
+        "samples": [
+          "Secure client portal · All data encrypte → rgba(212, 212, 216, 0.376)",
+          "Tip: Use Alt+1 through Alt+7 to quickly  → rgba(212, 212, 216, 0.25)"
+        ]
+      }
+    }
+  }
+}
