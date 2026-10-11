@@ -142,6 +142,15 @@ export default function ESignatureFlow({ projectId, docType, docTitle, pdfUrl, o
     }
   };
 
+  /* onComplete is usually an inline arrow — a new function every render of the
+     parent. With it in fetchStatus's deps, an all-signed status called
+     onComplete, the parent re-rendered, fetchStatus changed, the effect below
+     fetched again, and so on forever (the proposal page sat on "Loading…").
+     Read it through a ref, and call it once, when everyone has signed. */
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+  const completedRef = useRef(false);
+
   const fetchStatus = useCallback(async () => {
     try {
       const res = await fetch(`/api/documents/sign/status?project_id=${projectId}&doc_type=${docType}${sourceId ? `&source_id=${sourceId}` : ''}`);
@@ -150,9 +159,12 @@ export default function ESignatureFlow({ projectId, docType, docTitle, pdfUrl, o
       // Already sent (an earlier visit): open on the tracking view, not a blank form.
       if (sourceId && data.signatures?.length) setSent(true);
       const allSigned = data.signatures?.length > 0 && data.signatures.every((s: SignatureRecord) => s.status === 'signed');
-      if (allSigned && onComplete) onComplete();
+      if (allSigned && !completedRef.current) {
+        completedRef.current = true;
+        onCompleteRef.current?.();
+      }
     } catch { /* silent */ }
-  }, [projectId, docType, onComplete, sourceId]);
+  }, [projectId, docType, sourceId]);
 
   // A proposal remembers its sends: show their tracking on open.
   useEffect(() => {
@@ -183,6 +195,9 @@ export default function ESignatureFlow({ projectId, docType, docTitle, pdfUrl, o
 
   const signedCount = signatures.filter(s => s.status === 'signed').length;
   const totalCount = signatures.length;
+  // The header says where it stands: Signed once everyone has, Declined if anyone has, else Sent.
+  const overallStatus = totalCount > 0 && signedCount === totalCount ? 'signed'
+    : signatures.some(s => s.status === 'declined') ? 'declined' : 'sent';
   const progressPct = totalCount > 0 ? (signedCount / totalCount) * 100 : 0;
 
   // ─── Step 1: Add Signers ─────────────────────────────────────────────
@@ -363,7 +378,7 @@ export default function ESignatureFlow({ projectId, docType, docTitle, pdfUrl, o
         <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: TEXT }}>
           E-Signature — {docTitle}
         </h3>
-        {sent && <StatusPill module="generic" status="sent" size="sm" />}
+        {sent && <StatusPill module="generic" status={overallStatus} size="sm" />}
       </div>
       {!sent && renderStepper()}
       {sent ? renderDashboard() : step === 1 ? renderStep1() : step === 2 ? renderStep2() : renderStep3()}

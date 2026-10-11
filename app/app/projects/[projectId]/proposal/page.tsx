@@ -341,9 +341,11 @@ export default function ProposalPage() {
 
       {signing && (
         <SectionCard
-          title={`Send ${signing.version} to Your Client`}
+          title={signing.signed_at ? `${signing.version} — Signed` : signing.decline_reason || statusKey(signing.status) === 'declined' ? `${signing.version} — Declined` : statusKey(signing.status) === 'draft' ? `Send ${signing.version} to Your Client` : `${signing.version} — Waiting on Your Client`}
           icon={<SealCheck size={17} weight="duotone" style={{ color: GOLD }} />}
-          subtitle={`${fmt(signing.amount)} — they read the terms and sign online. Signing makes it the contract.`}
+          subtitle={signing.signed_at
+            ? `${fmt(signing.amount)} — signed by ${signing.signed_by || 'your client'}. This is the contract.`
+            : `${fmt(signing.amount)} — they read the terms and sign online. Signing makes it the contract.`}
           action={<button onClick={() => setSigningId(null)} style={ghostButtonStyle} className="pmBtn">Close</button>}
         >
           <ESignatureFlow
@@ -365,7 +367,7 @@ export default function ProposalPage() {
 
       {/* Version history */}
       <SectionCard title="Proposal Versions" icon={<ClockCounterClockwise size={17} weight="duotone" style={{ color: GOLD }} />} flush>
-        {loading ? (
+        {loading && proposals.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading…</div>
         ) : proposals.length === 0 ? (
           <PremiumEmpty
