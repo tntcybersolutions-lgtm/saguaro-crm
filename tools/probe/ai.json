@@ -1,0 +1,95 @@
+{
+  "site": "https://www.saguarocontrol.net",
+  "job": "ZZ AUDIT Walk Job 10101543",
+  "steps": [
+    "scan",
+    "formAfterScan",
+    "phoneFormOverflow",
+    "billSaved",
+    "rowOnDesktop",
+    "receiptOpens",
+    "draft",
+    "sent",
+    "toast",
+    "portalUpdate",
+    "portalOverflow",
+    "phoneModalOverflow"
+  ],
+  "scan": {
+    "status": 200,
+    "receipt": {
+      "vendor_name": "ZZ AUDIT LUMBER SUPPLY",
+      "vendor_email": "billing@zzauditlumber.example",
+      "bill_number": "ZZA-MV47ST1R",
+      "bill_date": "2026-10-10",
+      "due_date": null,
+      "subtotal": 555,
+      "tax": 47.73,
+      "total": 602.73,
+      "description": "2x4x8 studs (40) and 3/4 plywood (10 sheets)",
+      "cost_code": null,
+      "division": "06",
+      "confidence": "high"
+    },
+    "error": null
+  },
+  "formAfterScan": {
+    "vals": [
+      "ZZA-MV47ST1R",
+      "ZZ AUDIT LUMBER SUPPLY",
+      "",
+      "555",
+      "47.73",
+      "10/10/2026",
+      "2x4x8 studs (40) and 3/4 plywood (10 sheets)"
+    ],
+    "banner": ".pjx-bar{display:flex;flex-wrap:wrap;align-items:center;gap:0 8px;min-height:44px;padding:0 8px 0 4px;border-bottom:1px solid var(--fl-line,var(--border-default));min-width:0} .pjx-back{display:inline"
+  },
+  "phoneFormOverflow": {
+    "scrollW": 393,
+    "vw": 393,
+    "ok": true
+  },
+  "billSaved": {
+    "vendor": "ZZ AUDIT LUMBER SUPPLY",
+    "number": "ZZA-MV47ST1R",
+    "total": 602.73,
+    "tax": 47.73,
+    "receipt": true
+  },
+  "rowOnDesktop": "ZZA-MV47ST1R ZZ AUDIT LUMBER SUPPLY 2x4x8 studs (40) and 3/4 plywood (10 sheets) $603 ▾ 2026-10-10 Overdue ApproveMark PaidReceipt",
+  "receiptOpens": {
+    "url": "files/1791746840819-zz-audit-receipt.png",
+    "img": true
+  },
+  "draft": {
+    "status": 200,
+    "title": "Weekly Progress Update: Walk Job 10101543",
+    "body": "Hi there! Here's a quick update on your project for October 5–11.\n\nThis week the crew made great progress on the garage. They finished framing the walls and set the headers over both windows, then came back the next day to sheath the walls. While that was happening, plumbing rough-in work also got started in the kitchen.\n\nA delivery of roof trusses is scheduled to arrive soon, which will set things up for the next phase of work on the garage structure.\n\nWeather was clear and mild both days, so there were no delays from that side of things.\n\nAt this time, there are no specific tasks scheduled on the calendar for the next two weeks, but we'll keep you posted as soon as the schedule firms up. Thanks for your continued patience and trust as the project moves forward!",
+    "logDays": 2
+  },
+  "sent": {
+    "emailed": 1,
+    "failed": [],
+    "portalClients": 1,
+    "status": "sent"
+  },
+  "toast": "Sent — emailed 1 client and posted to their portal.",
+  "portalUpdate": "Weekly Progress Update: Walk Job 10101543 (ZZ AUDIT) Oct 5, 2026 – Oct 11, 2026 · Sent Oct 11, 2026 Hi there! Here's a quick update on your project for October 5–11. This week the crew made great progress on the garage. They finished framing the walls and set the headers over both windows, then came back the next day to sheath the walls. While that was happening, plumbing rough-in work also got st",
+  "portalOverflow": {
+    "scrollW": 393,
+    "vw": 393,
+    "ok": true
+  },
+  "phoneModalOverflow": {
+    "scrollW": 393,
+    "vw": 393,
+    "ok": true
+  },
+  "ids": {
+    "job": "0ca5f539-f7ed-4daf-afc3-509a84770d96",
+    "bill": "ef446b67-da93-48b6-8b89-e0fd50d859ec",
+    "update": "7004d11d-d76c-473d-860e-c8800d0e1123",
+    "portalSession": "b5aaf2b2-5143-42f4-97be-ecbbf8a6d542"
+  }
+}
