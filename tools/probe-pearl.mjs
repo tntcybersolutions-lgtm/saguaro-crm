@@ -51,6 +51,16 @@ const measure = (page) => page.evaluate(() => {
     const r = el.getBoundingClientRect();
     if (cs.visibility === 'hidden' || cs.display === 'none' || r.width === 0 || r.height === 0 || Number(cs.opacity) === 0) continue;
     if (el.closest('[aria-hidden="true"], svg, input, textarea, select, option, button[disabled]')) continue;
+    // Dark type on a bright fill (a gold button, a white chip) is readable, not dim.
+    let bgEl = el, bg = null;
+    while (bgEl && !bg) {
+      const b = getComputedStyle(bgEl);
+      const src = b.backgroundImage !== 'none' && /rgb/.test(b.backgroundImage) ? b.backgroundImage : b.backgroundColor;
+      const n = (src.match(/rgba?\(([^)]+)\)/) || [])[1]?.split(',').map(Number);
+      if (n && (n[3] === undefined || n[3] > 0.5)) bg = n;
+      bgEl = bgEl.parentElement;
+    }
+    if (bg && lum(bg) > 0.35) continue;
     const m = cs.color.match(/\d+(\.\d+)?/g);
     if (!m) continue;
     const [R, G, B, A = 1] = m.map(Number);
