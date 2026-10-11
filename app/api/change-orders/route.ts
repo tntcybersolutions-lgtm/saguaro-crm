@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
+import { nextCoNumber } from '@/lib/change-order-number';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,9 +43,7 @@ export async function POST(req: NextRequest) {
     }
 
     const db = createServerClient();
-    const { data: last } = await db.from('change_orders').select('co_number')
-      .eq('tenant_id', user.tenantId).eq('project_id', body.projectId).order('co_number', { ascending: false }).limit(1).maybeSingle();
-    const coNumber = ((last as any)?.co_number || 0) + 1;
+    const coNumber = await nextCoNumber(db, user.tenantId, body.projectId);
 
     const { data: co, error } = await db.from('change_orders').insert({
       tenant_id: user.tenantId,

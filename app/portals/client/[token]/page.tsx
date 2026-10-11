@@ -4,13 +4,14 @@ import { useParams } from 'next/navigation';
 import { openPdf } from '@/components/PdfViewer';
 import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 import Link from 'next/link';
+import ClientSelections from '@/components/portal/ClientSelections';
 import {
   ChartBar, CheckCircle, CurrencyDollar, ChatCircle, FolderOpen, Wrench, Robot,
   Lock, CalendarBlank, Money, ClipboardText, Sun, CloudRain, Camera, Receipt,
   CreditCard, Paperclip, MagnifyingGlass, Ruler, FileText, ListChecks,
   DownloadSimple, PaperPlaneTilt, List, X, ArrowUp, Check, Checks, XCircle,
   Cactus, Buildings, Target, EnvelopeSimple, Sparkle, Hammer, Files, Certificate,
-  Signature,
+  Signature, Palette,
 } from '@phosphor-icons/react';
 import type { Icon as PhosphorIcon } from '@phosphor-icons/react';
 
@@ -53,7 +54,7 @@ const fmtTime = (d: string | null | undefined) => {
 const pct = (v: number, t: number) => (t > 0 ? Math.round((v / t) * 100) : 0);
 
 /* ── Inline Types ─────────────────────────────────────────────────── */
-type TabId = 'dashboard' | 'approvals' | 'financials' | 'messages' | 'documents' | 'warranty' | 'ai';
+type TabId = 'dashboard' | 'selections' | 'approvals' | 'financials' | 'messages' | 'documents' | 'warranty' | 'ai';
 
 type ProjectInfo = {
   id: string;
@@ -195,6 +196,7 @@ type DashboardData = {
 /* ── Tab Config ───────────────────────────────────────────────────── */
 const TABS: { id: TabId; label: string; icon: IconCmp }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: ChartBar },
+  { id: 'selections', label: 'Selections', icon: Palette },
   { id: 'approvals', label: 'Approvals', icon: CheckCircle },
   { id: 'financials', label: 'Financials', icon: CurrencyDollar },
   { id: 'messages', label: 'Messages', icon: ChatCircle },
@@ -1997,6 +1999,7 @@ export default function ClientPortalPage() {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'dashboard': return renderDashboard();
+      case 'selections': return <ClientSelections token={token} onToast={showToast} />;
       case 'approvals': return renderApprovals();
       case 'financials': return renderFinancials();
       case 'messages': return renderMessages();

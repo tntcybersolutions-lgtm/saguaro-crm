@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
 import { apiError } from '@/lib/api-error';
+import { nextCoNumber } from '@/lib/change-order-number';
 
 export const dynamic = 'force-dynamic';
 
@@ -65,15 +66,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
 
   try {
     const db = createServerClient();
-    const { data: last } = await db
-      .from('change_orders')
-      .select('co_number')
-      .eq('project_id', projectId)
-      .eq('tenant_id', user.tenantId)
-      .order('co_number', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    const coNumber = (((last as Record<string, unknown> | null)?.co_number as number) || 0) + 1;
+    const coNumber = await nextCoNumber(db, user.tenantId, projectId);
 
     const { data: co, error } = await db
       .from('change_orders')

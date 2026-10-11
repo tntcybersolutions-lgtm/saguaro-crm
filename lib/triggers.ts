@@ -828,6 +828,10 @@ export async function onChangeOrderApproved(changeOrderId: string): Promise<void
     if (projErr) console.error('[onChangeOrderApproved] project fetch failed', projErr);
     const project = projectRow as any;
     if (!project) return;
+    /* change_orders.cost_impact is a TEXT column, so it reads back as "500".
+       Every sum below adds it to a number — `1000 + "500"` is "1000500" — so
+       read it as a number once, falling back to amount. */
+    const impact = Number(c.cost_impact) || Number(c.amount) || 0;
 
     // Update project contract sum
     const { data: currentProject } = await db.from('projects').select('contract_amount').eq('id', project.id).single();
@@ -835,7 +839,7 @@ export async function onChangeOrderApproved(changeOrderId: string): Promise<void
       // Number() both sides — contract_amount round-trips as a STRING from the
       // live column, and `"100000" + 5000` CONCATENATES ("1000005000"), silently
       // corrupting the project's contract value on every CO approval.
-      const newSum = (Number((currentProject as any).contract_amount) || 0) + (Number(c.cost_impact) || 0);
+      const newSum = (Number((currentProject as any).contract_amount) || 0) + impact;
       await must(db.from('projects').update({ contract_amount: newSum }).eq('id', project.id), 'projects update');
     }
 
@@ -852,7 +856,7 @@ export async function onChangeOrderApproved(changeOrderId: string): Promise<void
     if (prime) {
       await must(db
         .from('contracts')
-        .update({ approved_changes: ((prime as any).approved_changes || 0) + (c.cost_impact || 0) } as never)
+        .update({ approved_changes: (Number((prime as any).approved_changes) || 0) + impact } as never)
         .eq('id', (prime as any).id), 'contracts write');
     }
 
@@ -881,20 +885,20 @@ export async function onChangeOrderApproved(changeOrderId: string): Promise<void
         const bl = budgetLine as any;
         await must(db
           .from('budget_lines')
-          .update({ committed: (bl.committed || 0) + (c.cost_impact || 0) })
+          .update({ committed: (Number(bl.committed) || 0) + impact })
           .eq('id', bl.id), 'budget_lines write');
       }
     }
 
     const ownerEmail = project.owner_entity?.email;
     if (ownerEmail) {
-      await sendChangeOrderApproved(ownerEmail, project.name, c.co_number, c.cost_impact || 0);
+      await sendChangeOrderApproved(ownerEmail, project.name, c.co_number, impact);
     }
 
     await createNotification(
       project.tenant_id, null, 'change_order_approved',
       `Change Order #${c.co_number} approved`,
-      `CO #${c.co_number} approved — $${(c.cost_impact || 0).toLocaleString()} added to contract`,
+      `CO #${c.co_number} approved — $${impact.toLocaleString()} added to contract`,
       `${APP_URL}/app/projects/${project.id}/change-orders`, project.id
     );
     await dispatchWebhookEvent(project.tenant_id, 'change_order.approved', {
@@ -902,7 +906,7 @@ export async function onChangeOrderApproved(changeOrderId: string): Promise<void
       project_id: project.id,
       project_name: project.name,
       co_number: c.co_number,
-      cost_impact: c.cost_impact ?? 0,
+      cost_impact: impact,
     });
   } catch (err) {
     console.error('[onChangeOrderApproved]', err);
