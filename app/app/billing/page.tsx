@@ -28,6 +28,7 @@ import {
   type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
 import { ADDONS, type AddonDef } from '@/lib/addons';
+import { useInApp } from '@/lib/use-in-app';
 import { step } from '@/lib/ui/status';
 import { STATUS_HEADER, reasonForStatus } from '@/lib/ui/status-fetch';
 
@@ -153,6 +154,9 @@ const CSS = `
 `;
 
 export default function BillingPage() {
+  // In the iPhone app this screen shows the plan only — no way to buy, change
+  // or add to it (App Store 3.1.1 / 3.1.3; see lib/use-in-app.ts).
+  const inApp = useInApp();
   const [sub, setSub] = useState<Subscription | null>(null);
   // Raw envelope extras (plan limits + current-period usage + renewal countdown)
   // from GET /api/billing/subscription — surfaced in the account stat strip.
@@ -468,8 +472,8 @@ export default function BillingPage() {
       <PageShell
         crumbs={[{ label: 'Home', href: '/app' }, { label: 'Billing' }]}
         title="Billing & Subscription"
-        subtitle="Your plan, payment method, and invoices. Plan changes run in the secure Stripe billing portal."
-        actions={canPortal ? (
+        subtitle={inApp ? "Your company's plan and its status." : 'Your plan, payment method, and invoices. Plan changes run in the secure Stripe billing portal.'}
+        actions={canPortal && !inApp ? (
           sub!.status === 'past_due'
             ? <Button variant="danger" icon={<CreditCard size={15} />} onClick={handlePortal} disabled={portalLoading}>{portalLoading ? 'Opening…' : 'Update Payment Method'}</Button>
             : <Button variant="primary" icon={<ArrowSquareOut size={15} />} onClick={handlePortal} disabled={portalLoading}>{portalLoading ? 'Opening…' : 'Manage Payment & Invoices'}</Button>
@@ -513,7 +517,7 @@ export default function BillingPage() {
                 <Badge tone={statusBadge(sub.status).tone} dot>{statusBadge(sub.status).label}</Badge>
               </div>
               {sub.status === 'trialing' && trialDays !== null && (
-                <div className="blNote" data-tone={trialDays <= 5 ? 'bad' : 'warn'}>{trialDays > 0 ? `${trialDays} days left in your free trial.` : 'Trial expired — upgrade to continue.'}</div>
+                <div className="blNote" data-tone={trialDays <= 5 ? 'bad' : 'warn'}>{trialDays > 0 ? `${trialDays} days left in your free trial.` : inApp ? 'Trial ended — your account owner can choose a plan.' : 'Trial expired — upgrade to continue.'}</div>
               )}
               {sub.status === 'active' && periodDays !== null && (
                 <div className="blNote">Renews in {periodDays} days · {sub.billing_interval === 'annual' ? 'Annual' : 'Monthly'} billing.</div>
@@ -533,12 +537,18 @@ export default function BillingPage() {
             </Card>
           ) : (
             <Card flush>
-              <EmptyState icon={<CreditCard size={22} />} title="No active subscription" text="Choose a plan below to get started." />
+              <EmptyState icon={<CreditCard size={22} />} title="No active subscription" text={inApp ? 'No plan is on file for your company yet.' : 'Choose a plan below to get started.'} />
+            </Card>
+          )}
+
+          {inApp && (
+            <Card title="Plan Changes">
+              <div className="blProse">Your company&apos;s account owner manages the plan, payment and add-ons. Changes they make show here.</div>
             </Card>
           )}
 
           {/* Plan Selection */}
-          <Card
+          {!inApp && <Card
             title={sub?.status === 'trialing' ? 'Upgrade Your Plan' : 'Change Plan'}
             subtitle={annual ? 'Annual billing — about 17% less than monthly.' : 'Monthly billing. Switch to annual to save about 17%.'}
             actions={
@@ -612,11 +622,11 @@ export default function BillingPage() {
                 );
               })}
             </div>
-          </Card>
+          </Card>}
 
           {/* Plan & Add-ons — tenant self-service. No fake toggles: every action
               hits the real request route, and copy says exactly what happens. */}
-          <Card title="Plan & Add-ons" subtitle="Company-wide add-ons. Nothing is billed without confirmation.">
+          {!inApp && <Card title="Plan & Add-ons" subtitle="Company-wide add-ons. Nothing is billed without confirmation.">
             <div className="blSummary">
               <div>
                 <div className="blLabel">Current Plan</div>
@@ -695,10 +705,10 @@ export default function BillingPage() {
               </div>
               {canPortal && <Button onClick={handlePortal} disabled={portalLoading}>{portalLoading ? 'Opening…' : 'Open Billing Portal'}</Button>}
             </div>
-          </Card>
+          </Card>}
 
-          {/* Install App */}
-          <Card
+          {/* Install App — not shown inside the app itself */}
+          {!inApp && <Card
             title="Get the App for iPhone & iPad"
             subtitle="Saguaro Control Systems App"
             actions={<Button icon={<DeviceMobile size={15} />} href="/get-the-app">Get Install Instructions</Button>}
@@ -706,10 +716,10 @@ export default function BillingPage() {
             <div className="blProse" style={{ maxWidth: 560 }}>
               Native iOS app, free on Apple TestFlight for every team member on your plan The full platform also runs in any browser, Android included.
             </div>
-          </Card>
+          </Card>}
 
-          {/* FAQ */}
-          <Card title="Billing FAQ">
+          {/* FAQ — about buying and paying, so web only */}
+          {!inApp && <Card title="Billing FAQ">
             <div className="blFaq">
               {[
                 { q: 'When does my free trial end?', a: 'Your 30-day free trial gives you full access to all Professional features. No credit card is required until you decide to subscribe.' },
@@ -724,7 +734,7 @@ export default function BillingPage() {
                 </div>
               ))}
             </div>
-          </Card>
+          </Card>}
         </div>
       </PageShell>
 
