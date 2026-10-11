@@ -16,20 +16,22 @@
       "/www.saguarocontrol.net/api/auth/me due to access control checks.",
       "/www.saguarocontrol.net/api/projects?limit=15&fields=id,name due to access control checks.",
       "/www.saguarocontrol.net/push-sw.js due to access control checks.",
-      "console: native downloads ChunkLoadError: Loading chunk 76894 failed.\n(error: https://www.saguarocontrol.net/_next/static/chunks/76894.d64040e2be2e049c.js?dpl=dpl_EEvz4r",
+      "console: native downloads ChunkLoadError: Loading chunk 76894 failed.\n(error: https://www.saguarocontrol.net/_next/static/chunks/76894.d64040e2be2e049c.js?dpl=dpl_8zwwSK",
       "/www.saguarocontrol.net/api/auth/me due to access control checks.",
+      "/www.saguarocontrol.net/api/projects?limit=15&fields=id,name due to access control checks.",
+      "/www.saguarocontrol.net/api/home due to access control checks.",
       "console: Viewport argument key \"interactive-widget\" not recognized and ignored."
     ],
     "loginUrl": "www.saguarocontrol.net",
     "kpis": [
-      "UNDER CONTRACT $7.29M 2 jobs won",
-      "BILLED TO DATE $2.54M 35% of contract",
-      "COLLECTED $2.54M 100% of billed · $1.32M last 30 days",
-      "OWED TO YOU $0 All paid · paid in ~18 days",
-      "RETAINAGE HELD $0 None held now",
-      "BIDDING PIPELINE $10K 9 jobs out to bid",
-      "OPEN BID PACKAGES 5 Taking sub bids now",
-      "COIS CURRENT 4/4 Subs’ insurance on file"
+      "Under contract $7.29M 2 jobs won",
+      "Billed to date $2.54M 35% of contract",
+      "Collected $2.54M 100% of billed · $1.32M last 30 days",
+      "Owed to you $0 All paid · paid in ~18 days",
+      "Retainage held $0 None held now",
+      "Bidding pipeline $10K 11 jobs out to bid",
+      "Open bid packages 5 Taking sub bids now",
+      "COIs current 4/4 Subs’ insurance on file"
     ],
     "panels": [
       "Cash flow",
@@ -38,19 +40,22 @@
       "Jobs by stage"
     ],
     "chartSvgs": 4,
-    "ticker": "0 urgent 0 to review 2 coming up 0 done today",
-    "tickerItems": 2,
+    "ticker": "0 urgent 0 to review 2 coming up 1 done today",
+    "tickerItems": 3,
     "overflowX": false,
+    "homeWidth": 393,
+    "mainWidth": 393,
     "width": 393,
     "tickerLinks": [
       "/app/projects/:id/punch-list → 200",
-      "/app/projects/:id/change-orders → 200"
+      "/app/projects/:id/change-orders → 200",
+      "/app/daily-logs → 200"
     ],
     "tickerCounts": [
       "red:disabled",
       "review:disabled",
       "yellow:button",
-      "green:disabled"
+      "green:button"
     ],
     "afterCountTap": {
       "pressed": "yellow",
@@ -64,14 +69,14 @@
     "errors": [],
     "loginUrl": "www.saguarocontrol.net",
     "kpis": [
-      "UNDER CONTRACT $7.29M 2 jobs won",
-      "BILLED TO DATE $2.54M 35% of contract",
-      "COLLECTED $2.54M 100% of billed · $1.32M last 30 days",
-      "OWED TO YOU $0 All paid · paid in ~18 days",
-      "RETAINAGE HELD $0 None held now",
-      "BIDDING PIPELINE $10K 9 jobs out to bid",
-      "OPEN BID PACKAGES 5 Taking sub bids now",
-      "COIS CURRENT 4/4 Subs’ insurance on file"
+      "Under contract $7.29M 2 jobs won",
+      "Billed to date $2.54M 35% of contract",
+      "Collected $2.54M 100% of billed · $1.32M last 30 days",
+      "Owed to you $0 All paid · paid in ~18 days",
+      "Retainage held $0 None held now",
+      "Bidding pipeline $10K 11 jobs out to bid",
+      "Open bid packages 5 Taking sub bids now",
+      "COIs current 4/4 Subs’ insurance on file"
     ],
     "panels": [
       "Cash flow",
@@ -80,19 +85,67 @@
       "Jobs by stage"
     ],
     "chartSvgs": 4,
-    "ticker": "LIVE 0 urgent 0 to review 2 coming up 0 done today",
-    "tickerItems": 2,
+    "ticker": "Live 0 urgent 0 to review 2 coming up 1 done today",
+    "tickerItems": 3,
     "overflowX": false,
+    "homeWidth": 1200,
+    "mainWidth": 1200,
     "width": 1440,
     "tickerLinks": [
       "/app/projects/:id/punch-list → 200",
-      "/app/projects/:id/change-orders → 200"
+      "/app/projects/:id/change-orders → 200",
+      "/app/daily-logs → 200"
     ],
     "tickerCounts": [
       "red:disabled",
       "review:disabled",
       "yellow:button",
-      "green:disabled"
+      "green:button"
+    ],
+    "afterCountTap": {
+      "pressed": "yellow",
+      "shown": [
+        "yellow",
+        "yellow"
+      ]
+    }
+  },
+  "wide": {
+    "errors": [],
+    "loginUrl": "www.saguarocontrol.net",
+    "kpis": [
+      "Under contract $7.29M 2 jobs won",
+      "Billed to date $2.54M 35% of contract",
+      "Collected $2.54M 100% of billed · $1.32M last 30 days",
+      "Owed to you $0 All paid · paid in ~18 days",
+      "Retainage held $0 None held now",
+      "Bidding pipeline $10K 11 jobs out to bid",
+      "Open bid packages 5 Taking sub bids now",
+      "COIs current 4/4 Subs’ insurance on file"
+    ],
+    "panels": [
+      "Cash flow",
+      "Owed to you",
+      "Biggest jobs",
+      "Jobs by stage"
+    ],
+    "chartSvgs": 4,
+    "ticker": "Live 0 urgent 0 to review 2 coming up 1 done today",
+    "tickerItems": 3,
+    "overflowX": false,
+    "homeWidth": 1680,
+    "mainWidth": 1680,
+    "width": 1920,
+    "tickerLinks": [
+      "/app/projects/:id/punch-list → 200",
+      "/app/projects/:id/change-orders → 200",
+      "/app/daily-logs → 200"
+    ],
+    "tickerCounts": [
+      "red:disabled",
+      "review:disabled",
+      "yellow:button",
+      "green:button"
     ],
     "afterCountTap": {
       "pressed": "yellow",
