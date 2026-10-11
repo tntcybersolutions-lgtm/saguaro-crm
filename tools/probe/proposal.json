@@ -1,0 +1,75 @@
+{
+  "site": "https://www.saguarocontrol.net",
+  "job": "ZZ AUDIT Walk Job 10101543",
+  "steps": [
+    "declineSent",
+    "signPage",
+    "signPageOverflow",
+    "clientDeclined",
+    "gcDeclineRow",
+    "gcDeclineStatus",
+    "signSent",
+    "clientSigned",
+    "gcSignRow",
+    "gcSignStatus",
+    "jobAfter",
+    "notifications",
+    "gcPhoneOverflow",
+    "gcPhoneStatusOverflow"
+  ],
+  "declineSent": {
+    "status": 200,
+    "token": true,
+    "prefill": {
+      "name": "ZZ AUDIT customers 10101543",
+      "email": "delivered@resend.dev"
+    }
+  },
+  "signPage": {
+    "text": "Proposal for Your Signature From Saguaro Control Systems ZZ AUDIT Walk Job 10101543 — Proposal v1.0 Signer ZZ AUDIT customers 10101543 Contract amount $4,321.00 Scope of work ZZ AUDIT decline mv46l4jd Your Signature Draw Type Clear I agree to sign this document electronically. I understand this electronic signature is legally binding. Sign and AcceptDecline Powered by Saguaro "
+  },
+  "signPageOverflow": {
+    "scrollW": 393,
+    "vw": 393,
+    "ok": true
+  },
+  "clientDeclined": true,
+  "gcDeclineRow": "v1.0 2026-10-11 $4,321 Declined Opened Oct 11, 6:53 PM “ZZ AUDIT test - price is over our budget” ZZ AUDIT decline mv46l4jd E-Sign Status Upload PDF",
+  "gcDeclineStatus": "E-Signature — ZZ AUDIT Walk Job 10101543 — Proposal v1.0 Sent Sent to 1 signer Refresh 0 of 1 signed 0% ZZ AUDIT customers 10101543 delivered@resend.dev Declined Sent 10/11/2026 Opened 1× · last Oct 11, 6:53 PM Declined: ZZ AUDIT test - price is over our budget Resend",
+  "signSent": {
+    "status": 200,
+    "token": true
+  },
+  "clientSigned": "Proposal Signed ZZ AUDIT Walk Job 10101543 — Proposal v2.0 · $12,345.00 Saguaro Control Systems has been told — this is now your contract. You may close this page. ",
+  "gcSignRow": "v2.0 2026-10-11 $12,345 Accepted Signed by ZZ AUDIT customers 10101543 · Oct 11, 6:53 PM ZZ AUDIT sign mv46ldrm E-Sign Status Upload PDF",
+  "gcSignStatus": "E-Signature — ZZ AUDIT Walk Job 10101543 — Proposal v2.0 Sent Sent to 1 signer Refresh 1 of 1 signed 100% ZZ AUDIT customers 10101543 delivered@resend.dev Signed Sent 10/11/2026 Opened 2× · last Oct 11, 6:53 PM Signed 10/11/2026",
+  "jobAfter": {
+    "phase": "building",
+    "originalContract": 12345,
+    "budgetOriginal": 9000
+  },
+  "notifications": [
+    "proposal_signed: ZZ AUDIT customers 10101543 signed ZZ AUDIT Walk Job 10101543 — Proposal v2.0",
+    "document_viewed: ZZ AUDIT customers 10101543 opened ZZ AUDIT Walk Job 10101543 — Proposal v2.0",
+    "document_declined: ZZ AUDIT customers 10101543 declined ZZ AUDIT Walk Job 10101543 — Proposal v1.0",
+    "document_viewed: ZZ AUDIT customers 10101543 opened ZZ AUDIT Walk Job 10101543 — Proposal v1.0",
+    "sub_added: Team invite sent to ZZ AUDIT team 10111621"
+  ],
+  "gcPhoneOverflow": {
+    "scrollW": 393,
+    "vw": 393,
+    "ok": true
+  },
+  "gcPhoneStatusOverflow": {
+    "scrollW": 393,
+    "vw": 393,
+    "ok": true
+  },
+  "ids": {
+    "proposals": [
+      "94619b16-4331-42f5-9071-6d179fe7d9df",
+      "98bb7c93-6e79-43e3-8644-5f3e2babeb15"
+    ],
+    "job": "0ca5f539-f7ed-4daf-afc3-509a84770d96"
+  }
+}
