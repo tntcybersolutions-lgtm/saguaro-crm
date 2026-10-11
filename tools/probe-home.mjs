@@ -61,7 +61,17 @@ async function run(name, browserType, ctxOpts) {
       await page.waitForTimeout(400);
       r.afterCountTap = await page.evaluate(() => ({ pressed: document.querySelector('.atk button.atkN[aria-pressed="true"]')?.dataset.tone || null, shown: [...document.querySelectorAll('.atk .atkSet:not(.atkDup) a.atkItem')].map((a) => a.dataset.tone) }));
       await page.screenshot({ path: path.join(OUT, `${name}-ticker-filtered.png`) });
+      const state = () => page.evaluate(() => ({ pressed: document.querySelector('.atk button.atkN[aria-pressed="true"]')?.dataset.tone || null, shown: [...document.querySelectorAll('.atk .atkSet:not(.atkDup) a.atkItem')].map((a) => a.dataset.tone) }));
+      // Tap the same count again: every alert comes back.
       await firstCount.click();
+      await page.waitForTimeout(500);
+      r.afterSecondTap = await state();
+      // And the Show all alerts button does the same.
+      await firstCount.click();
+      await page.waitForTimeout(400);
+      const showAll = page.locator('.atk .atkShowAll');
+      r.showAllButton = await showAll.count();
+      if (r.showAllButton) { await showAll.click(); await page.waitForTimeout(500); r.afterShowAll = await state(); }
     }
     await page.screenshot({ path: path.join(OUT, `${name}-top.png`) });
     await page.screenshot({ path: path.join(OUT, `${name}-full.png`), fullPage: true });
