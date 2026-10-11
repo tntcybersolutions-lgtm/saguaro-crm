@@ -78,6 +78,7 @@ export async function POST(req: NextRequest) {
     pdf_url,
     signers,
     message,
+    source_id,
   } = body as {
     project_id: string;
     doc_type: string;
@@ -85,10 +86,28 @@ export async function POST(req: NextRequest) {
     pdf_url: string;
     signers: { name: string; email: string; company: string; role: string }[];
     message?: string;
+    /** The record being signed when it is not a documents row — a proposal. */
+    source_id?: string;
   };
 
-  if (!project_id || !doc_type || !doc_title || !pdf_url || !signers?.length) {
+  /* A proposal can be signed on its own terms (the signing page shows its
+     amount and scope) — the PDF is optional. Everything else signs a PDF. */
+  const isProposal = doc_type === 'proposal';
+  if (!project_id || !doc_type || !doc_title || (!pdf_url && !isProposal) || !signers?.length) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+  }
+  if (isProposal && !source_id) {
+    return NextResponse.json({ error: 'source_id (the proposal) is required' }, { status: 400 });
+  }
+  if (isProposal) {
+    const { data: prop } = await db
+      .from('proposals')
+      .select('id')
+      .eq('id', source_id as string)
+      .eq('project_id', project_id)
+      .eq('tenant_id', user.tenantId)
+      .maybeSingle();
+    if (!prop) return apiFail('Proposal not found', 404);
   }
 
   /* Names for the email. The signer is a sub or an owner with no login here,
@@ -123,7 +142,8 @@ export async function POST(req: NextRequest) {
         tenant_id: user.tenantId,
         doc_type,
         doc_title,
-        pdf_url,
+        pdf_url: pdf_url || null,
+        source_id: source_id || null,
         signer_name: signer.name,
         signer_email: signer.email,
         signer_company: signer.company || null,
@@ -168,6 +188,15 @@ export async function POST(req: NextRequest) {
     });
 
     created.push({ ...sig, token });
+  }
+
+  /* A proposal sent for signature is Sent, to the first signer. */
+  if (isProposal && signers[0]) {
+    await must(db
+      .from('proposals')
+      .update({ status: 'sent', sent_at: new Date().toISOString(), client_name: signers[0].name, client_email: signers[0].email })
+      .eq('id', source_id as string)
+      .eq('tenant_id', user.tenantId), 'proposals write');
   }
 
   return NextResponse.json({ success: true, signatures: created });
