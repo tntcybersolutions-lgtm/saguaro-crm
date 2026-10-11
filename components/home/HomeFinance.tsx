@@ -122,16 +122,15 @@ function CashFlow({ f }: { f: FinanceHome }) {
                   <stop offset="0%" stopColor={GOLD} stopOpacity={0.5} />
                   <stop offset="100%" stopColor={GOLD} stopOpacity={0.02} />
                 </linearGradient>
-                <linearGradient id="hf-coll" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={GREEN} stopOpacity={0.35} />
-                  <stop offset="100%" stopColor={GREEN} stopOpacity={0} />
-                </linearGradient>
               </defs>
               <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: CHART.textTertiary, fontSize: 11 }} interval="preserveStartEnd" minTickGap={14} />
               <YAxis tickFormatter={axisMoney} tickLine={false} axisLine={false} width={46} tick={{ fill: CHART.textTertiary, fontSize: 11 }} />
               <Tooltip content={<CashTip />} cursor={{ stroke: 'rgba(255,255,255,0.18)' }} />
               <Area type="monotone" dataKey="billed" stroke={GOLD} strokeWidth={2.2} fill="url(#hf-billed)" isAnimationActive={false} />
-              <Area type="monotone" dataKey="collected" stroke={GREEN} strokeWidth={2} fill="url(#hf-coll)" isAnimationActive={false} />
+              {/* Collected is a dashed line over the billed area: when an owner pays every
+                  app in the month it was sent, the two match and a second filled area
+                  would hide billed completely. */}
+              <Area type="monotone" dataKey="collected" stroke={GREEN} strokeWidth={2.4} strokeDasharray="6 5" fill="none" isAnimationActive={false} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -310,6 +309,7 @@ a.hf-card:focus-visible{outline:2px solid ${GOLD};outline-offset:2px}
 .hf-chart{height:210px;margin:0 -4px}
 .hf-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:6px;font-size:12px;color:var(--text-secondary)}
 .hf-legend i,.hf-tip i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.hf-legend span:last-child i{height:0;width:14px;border-radius:0;border-top:2.4px dashed ${GREEN};background:none !important;vertical-align:3px}
 .hf-tip{display:grid;gap:3px;padding:8px 10px;border-radius:10px;background:rgba(10,11,13,.94);border:1px solid color-mix(in srgb, ${GOLD} 40%, transparent);font-size:12px;color:var(--text-primary);box-shadow:0 8px 24px rgba(0,0,0,.5)}
 .hf-tip b{font-size:12px;color:var(--text-secondary)}
 .hf-empty{margin:6px 0 2px;font-size:13px;line-height:1.45;color:var(--text-secondary)}
