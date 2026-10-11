@@ -1,1 +1,1 @@
-probe-home
+probe-gate
