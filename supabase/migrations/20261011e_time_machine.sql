@@ -11,7 +11,7 @@
 -- A restore is itself recorded (tagged with its batch), so "Undo this restore"
 -- is just a restore to the moment the restore started.
 --
--- Covers: the database rows of 424 company tables. Does NOT cover: uploaded
+-- Covers: the database rows of every company table (423 on 11 Oct 2026). Does NOT cover: uploaded
 -- files (Storage objects), auth logins, or a lost/deleted project — those are
 -- Supabase's daily backups. History is kept 30 days (pg_cron prunes nightly).
 -- All functions run SECURITY DEFINER and are callable by service_role only.
@@ -77,7 +77,9 @@ begin
   return null;
 end $$;
 
--- Company-data tables: public, base table, has tenant_id and a uuid id.
+-- Company-data tables: public, base table, has tenant_id and a uuid id that is
+-- unique (a restore upserts ON CONFLICT (id); a stray copy table without a
+-- unique id, e.g. zz_backup_projects_20260831, would make every restore fail).
 create or replace function recovery.covered_tables() returns setof text
 language sql stable set search_path = '' as $$
   select c.table_name::text
@@ -86,6 +88,12 @@ language sql stable set search_path = '' as $$
   where c.table_schema = 'public' and c.column_name = 'tenant_id'
     and exists (select 1 from information_schema.columns i
                 where i.table_schema = 'public' and i.table_name = c.table_name and i.column_name = 'id' and i.data_type = 'uuid')
+    and exists (select 1 from pg_catalog.pg_index ix
+                join pg_catalog.pg_class cl on cl.oid = ix.indrelid
+                join pg_catalog.pg_namespace n on n.oid = cl.relnamespace
+                join pg_catalog.pg_attribute a on a.attrelid = cl.oid and a.attnum = ix.indkey[0]
+                where n.nspname = 'public' and cl.relname = c.table_name and ix.indisunique
+                  and ix.indnatts = 1 and a.attname = 'id' and ix.indpred is null)
   order by 1
 $$;
 
