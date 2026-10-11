@@ -272,7 +272,7 @@ export default function HomeFinance({ f, strip, updatedAt, timeZone, refreshing,
 const HF_CSS = `
 .hf{margin:14px 0 6px}
 .hf-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px}
-.hf-head h2{margin:0;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)}
+.hf-head h2{margin:0;font-size:17px;font-weight:800;letter-spacing:0;color:var(--text-primary)}
 .hf-live{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 4px;background:none;border:0;color:var(--text-secondary);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
 .hf-live i{width:8px;height:8px;border-radius:50%;background:${GREEN};box-shadow:0 0 0 0 color-mix(in srgb, ${GREEN} 60%, transparent);animation:hfPulse 2s infinite}
 .hf-live i[data-busy]{background:${GOLD}}
@@ -289,7 +289,7 @@ a.hf-card:focus-visible{outline:2px solid ${GOLD};outline-offset:2px}
 
 .hf-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .hf-kpi{display:flex;flex-direction:column;gap:4px;min-height:118px;padding:14px 14px 12px}
-.hf-k-label{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--text-secondary)}
+.hf-k-label{font-size:13.5px;font-weight:700;letter-spacing:0;color:var(--text-secondary)}
 .hf-k-val{font-size:26px;line-height:1.1;font-weight:800;letter-spacing:-.01em;color:${GOLD};font-variant-numeric:tabular-nums;text-shadow:0 0 18px color-mix(in srgb, ${GOLD} 45%, transparent)}
 .hf-k-val[data-tone=good]{color:${GREEN};text-shadow:0 0 18px color-mix(in srgb, ${GREEN} 40%, transparent)}
 .hf-k-val[data-tone=warn]{color:var(--status-at-risk, ${CHART.blue});text-shadow:0 0 18px color-mix(in srgb, ${CHART.blue} 40%, transparent)}
@@ -337,7 +337,7 @@ a.hf-card:focus-visible{outline:2px solid ${GOLD};outline-offset:2px}
 .hf-donut-c{position:relative;flex:none;width:140px;height:140px;filter:drop-shadow(0 0 10px color-mix(in srgb, ${GOLD} 30%, transparent))}
 .hf-donut-mid{position:absolute;inset:0;display:grid;place-content:center;text-align:center;pointer-events:none}
 .hf-donut-mid b{font-size:26px;font-weight:800;color:var(--text-primary);line-height:1}
-.hf-donut-mid small{font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em}
+.hf-donut-mid small{font-size:12px;color:var(--text-secondary)}
 .hf-stages{list-style:none;margin:0;padding:0;display:grid;gap:8px;flex:1;min-width:0}
 .hf-stages li{display:grid;grid-template-columns:10px minmax(0,1fr) auto;align-items:center;gap:4px 8px;font-size:13px;color:var(--text-primary)}
 .hf-stages li i{width:10px;height:10px;border-radius:3px}

@@ -25,7 +25,7 @@ const ICON: Record<TickerTone, React.ReactNode> = {
 const CSS = `
 .atk { display: flex; align-items: stretch; gap: 0; min-width: 0; width: 100%; max-width: 100%; contain: inline-size; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--brand-primary) 34%, transparent); background: linear-gradient(155deg, color-mix(in srgb, var(--brand-primary) 10%, transparent), rgba(14,15,18,0.94) 45%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 0 22px color-mix(in srgb, var(--brand-primary) 12%, transparent), 0 14px 32px -18px rgba(0,0,0,0.9); overflow: hidden; }
 .atkSum { flex: 0 0 auto; display: flex; align-items: center; gap: 14px; padding: 10px 16px; border-right: 1px solid var(--border-subtle); background: rgba(255,255,255,0.02); }
-.atkLive { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 900; letter-spacing: .14em; color: var(--c-text-3); }
+.atkLive { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--c-text-2); }
 .atkLive i { width: 7px; height: 7px; border-radius: 50%; background: var(--c-green); box-shadow: 0 0 0 3px rgba(44,255,122,0.18); }
 .atkN { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; color: var(--c-text-2); white-space: nowrap; }
 .atkN b { font-size: 17px; font-weight: 900; font-variant-numeric: tabular-nums; }
@@ -120,7 +120,7 @@ export default function AlertTicker({ items, summary, failed }: { items: TickerI
       style={{ ['--atk-dur' as string]: `${duration}s` } as React.CSSProperties}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="atkSum">
-        <span className="atkLive"><i aria-hidden /> LIVE</span>
+        <span className="atkLive"><i aria-hidden /> Live</span>
         {COUNTS.map(([tone, word]) => {
           const n = summary[tone];
           const any = items.some((i) => i.tone === tone);
