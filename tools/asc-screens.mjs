@@ -850,7 +850,9 @@ const ADD_RE = /^\s*(\+\s*)?(new|add|create|log|report|record|start|upload|invit
 const SAVE_RE = /^\s*(save|create|add|submit|log|post|record|done|confirm|finish|send|invite|upload|continue|next|apply|yes|ok)\b/i;
 const CANCEL_RE = /^\s*(cancel|close|back|no|not now|dismiss|skip|×|✕|x)\s*$/i;
 const DELETE_RE = /^\s*(delete|remove|archive|trash)\b/i;
-const NOT_ACTION_RE = /^\s*(edit|delete|remove|archive|trash|cancel|close|back|×|✕|x|sign out|log ?out)\b/i;
+// "Saguaro" / "Powered by Saguaro" is the brand footer link to the marketing
+// site, not a record button (walk 38154937668 reported it as a bad tap).
+const NOT_ACTION_RE = /^\s*(edit|delete|remove|archive|trash|cancel|close|back|×|✕|x|sign out|log ?out|powered by|saguaro\s*$)/i;
 const LAST_RE = /\b(close|complete|approve|reject|void|cancel|decline|finali[sz]e|archive|lock|sign|execute|award)\b/i;
 const WRITE_BUDGET_MS = 270 * 60 * 1000;
 const SCREEN_BUDGET_MS = 10 * 60 * 1000;
@@ -1235,7 +1237,13 @@ async function writeWalk(pw, device, session, outDir, real) {
           await page.locator(`[data-wr="${edit.i}"]`).first().click({ timeout: 4000 }).catch(() => {});
           await settle(1000);
           const notPre = [];
-          for (const v of expect) if (!(await formHas(v))) notPre.push(v.replace(marker, '‹marker›'));
+          // A field the form says cannot change (an invite's email: the link already
+          // went there) is shown as text, not as an input — not "empty".
+          const lockedNote = await page.evaluate(() => /can['’]t change|cannot (be )?changed?|can['’]t be changed/i.test(document.body.innerText));
+          for (const v of expect) {
+            if (lockedNote && /@/.test(v)) continue;
+            if (!(await formHas(v))) notPre.push(v.replace(marker, '‹marker›'));
+          }
           r.prefilled = `${expect.length - notPre.length}/${expect.length}`;
           if (notPre.length) r.notPrefilled = notPre;
           const changed = await page.evaluate(({ m }) => {
