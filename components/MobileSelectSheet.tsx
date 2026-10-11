@@ -30,7 +30,16 @@ type Open = { el: HTMLSelectElement; title: string; options: Opt[]; selected: nu
 const PHONE = '(max-width: 767px) and (pointer: coarse)';
 
 function eligible(t: EventTarget | null): HTMLSelectElement | null {
-  const el = t instanceof Element ? t.closest('select') : null;
+  if (!(t instanceof Element)) return null;
+  let el = t.closest('select');
+  if (!el) {
+    /* A tap on a <label> — or on something layered over the select inside it,
+       like a chip's enlarged ::after hit area — activates its select, and iOS
+       then opens its own picker AND ours (through focus): two lists. Take the
+       tap as a tap on the select so only ours opens. */
+    const ctl = t.closest('label')?.control;
+    el = ctl instanceof HTMLSelectElement ? ctl : null;
+  }
   if (!el || el.multiple || el.size > 1 || el.disabled) return null;
   if (el.closest('[data-native-select]')) return null;
   return el;
@@ -265,7 +274,7 @@ export default function MobileSelectSheet() {
 }
 
 const CSS = `
-.ms-root { position: fixed; inset: 0; z-index: 4500; }
+.ms-root { position: fixed; inset: 0; z-index: 10200; /* above every modal (.k-overlay 10000) and overlay panel — a drop-down in a form opens on top of it */ }
 .ms-scrim { position: absolute; inset: 0; background: rgba(0,0,0,0.6); transition: opacity .24s ease; }
 .ms-sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 82vh; max-height: 82dvh; display: flex; flex-direction: column;
   background: var(--c-raised); border: 1px solid var(--border-default); border-bottom: 0; border-radius: 22px 22px 0 0;
