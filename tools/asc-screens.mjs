@@ -512,15 +512,25 @@ async function walk() {
   const outDir = path.join(ROOT, 'tools/walk');
   fs.rmSync(outDir, { recursive: true, force: true });
   fs.mkdirSync(path.join(outDir, 'shots'), { recursive: true });
-  const browser = await pw.webkit.launch();
+  // Run 86: the walk's WebKit died after the first screen and every screen after
+  // it read "browser has been closed". A dead browser is relaunched and the screen
+  // it was on is walked again once.
+  let browser = await pw.webkit.launch();
+  let relaunching = null;
+  async function liveBrowser() {
+    if (browser.isConnected()) return browser;
+    if (!relaunching) relaunching = pw.webkit.launch().then((b) => { browser = b; relaunching = null; console.log('walk: browser restarted'); return b; });
+    return relaunching;
+  }
   const device = { ...pw.devices['iPhone 15'], colorScheme: 'dark' };
 
   // Sign in ONCE; every walker phone reuses that session (parallel sign-ins
   // with one account timed out and took the whole run down).
   let session = null;
   async function signedInContext() {
-    if (session) return browser.newContext({ ...device, storageState: session });
-    const ctx = await browser.newContext(device);
+    const b = await liveBrowser();
+    if (session) return b.newContext({ ...device, storageState: session });
+    const ctx = await b.newContext(device);
     const page = await ctx.newPage();
     await page.goto(`${SITE}/login`, { waitUntil: 'networkidle' });
     await page.fill('input[name="email"]', review.demoAccountName);
@@ -678,22 +688,33 @@ async function walk() {
   }
 
   // Four signed-in phones in parallel; the shared bars are walked on the first screen only.
-  const WORKERS = 4;
+  const WORKERS = 3;
   const queue = routes.map((r, i) => [r, i]);
   const first = queue.shift();
   const ctxA = await signedInContext();
   try { results[first[1]] = await walkRoute(ctxA, first[0], first[1]); } catch (e) { results[first[1]] = { route: shortUrl(first[0]), status: 'walk error', loadErrors: [String(e.message || e).split('\n')[0]], apiErrors: [], dead: [], covered: [], erroring: [], notTapped: [], tapped: 0, ok: 0 }; }
   writeReport();
   await ctxA.close();
+  const retried = new Set();
+  const died = (res) => /has been closed|Target closed|crashed|disconnected/i.test((res.loadErrors || []).join(' '));
   await Promise.all(Array.from({ length: WORKERS }, async () => {
-    const ctx = await signedInContext();
+    let ctx = await signedInContext();
     while (queue.length) {
       const [r, i] = queue.shift();
-      try { results[i] = await walkRoute(ctx, r, i); }
-      catch (e) { results[i] = { route: shortUrl(r), status: 'walk error', loadErrors: [String(e.message || e).split('\n')[0]], apiErrors: [], dead: [], covered: [], erroring: [], notTapped: [], tapped: 0, ok: 0 }; }
+      let res;
+      try { res = await walkRoute(ctx, r, i); }
+      catch (e) { res = { route: shortUrl(r), status: 'walk error', loadErrors: [String(e.message || e).split('\n')[0]], apiErrors: [], dead: [], covered: [], erroring: [], notTapped: [], tapped: 0, ok: 0 }; }
+      if (died(res) && !retried.has(i)) {
+        retried.add(i);
+        await ctx.close().catch(() => {});
+        ctx = await signedInContext();
+        queue.unshift([r, i]);
+        continue;
+      }
+      results[i] = res;
       writeReport();
     }
-    await ctx.close();
+    await ctx.close().catch(() => {});
   }));
   await browser.close();
 
