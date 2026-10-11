@@ -1,9 +1,11 @@
 'use client';
 /**
- * UnsavedGuardModal — the house Save / Discard / Stay confirm rendered by any
- * page using useUnsavedGuard (lib/useUnsavedGuard.ts). Machined-kit styling:
- * design tokens + the premium gold/ghost button language, same overlay anatomy
- * as the app shell's modals. Sits above page-level modals (they use z 500).
+ * UnsavedGuardModal — the house "Unsaved changes" confirm: Discard · Keep
+ * editing · Save and exit. Rendered by every page using useUnsavedGuard
+ * (lib/useUnsavedGuard.ts) and by the app shell's automatic gate
+ * (components/AutoUnsavedGuard.tsx), so the words are the same everywhere.
+ * Sits above every page modal and sheet (.k-overlay is 10000, the phone
+ * select sheet 10200). Buttons are 44px tall.
  */
 import React from 'react';
 import { Warning } from '@phosphor-icons/react';
@@ -18,7 +20,7 @@ export default function UnsavedGuardModal({ guard }: { guard: UnsavedGuardApi })
   return (
     <div
       style={{
-        position: 'fixed', inset: 0, zIndex: 700, background: 'rgba(0,0,0,.72)',
+        position: 'fixed', inset: 0, zIndex: 10300, background: 'rgba(0,0,0,.72)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
       }}
       onClick={(e) => { if (e.target === e.currentTarget) guard.stay(); }}
@@ -43,11 +45,11 @@ export default function UnsavedGuardModal({ guard }: { guard: UnsavedGuardApi })
           </span>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: font.size.xl, fontWeight: font.weight.black, color: colors.text }}>
-              You Have Unsaved Changes
+              Unsaved changes
             </div>
             <div style={{ fontSize: font.size.md, color: colors.textMuted, lineHeight: 1.6, marginTop: 6 }}>
-              Leaving now will lose the work on this form.
-              {hasDraft && ' A draft copy is kept on this device either way — but saving is the only thing that makes it real.'}
+              You changed this and haven&apos;t saved it. Save before you leave, or discard the changes.
+              {hasDraft && ' A draft copy is kept on this device either way.'}
             </div>
           </div>
         </div>
@@ -56,14 +58,14 @@ export default function UnsavedGuardModal({ guard }: { guard: UnsavedGuardApi })
             type="button"
             onClick={guard.discard}
             style={{
-              ...ghostButtonStyle, padding: '10px 16px', fontSize: 13,
+              ...ghostButtonStyle, minHeight: 44, padding: '10px 16px', fontSize: 14,
               background: 'rgba(255,59,48,0.10)', border: '1px solid rgba(255,59,48,0.35)', color: colors.red,
             }}
           >
-            Discard &amp; Leave
+            Discard
           </button>
-          <button type="button" onClick={guard.stay} style={{ ...ghostButtonStyle, padding: '10px 16px', fontSize: 13 }}>
-            Stay
+          <button type="button" onClick={guard.stay} style={{ ...ghostButtonStyle, minHeight: 44, padding: '10px 16px', fontSize: 14 }}>
+            Keep editing
           </button>
           {guard.canSave ? (
             <button
@@ -71,19 +73,19 @@ export default function UnsavedGuardModal({ guard }: { guard: UnsavedGuardApi })
               onClick={guard.saveAndLeave}
               disabled={guard.saving}
               style={{
-                ...goldButtonStyle, padding: '10px 18px', fontSize: 13,
+                ...goldButtonStyle, minHeight: 44, padding: '10px 18px', fontSize: 14,
                 opacity: guard.saving ? 0.6 : 1, cursor: guard.saving ? 'not-allowed' : 'pointer',
               }}
             >
-              {guard.saving ? 'Saving…' : 'Save & Leave'}
+              {guard.saving ? 'Saving…' : 'Save and exit'}
             </button>
           ) : hasDraft ? (
             <button
               type="button"
               onClick={guard.keepDraftAndLeave}
-              style={{ ...goldButtonStyle, padding: '10px 18px', fontSize: 13 }}
+              style={{ ...goldButtonStyle, minHeight: 44, padding: '10px 18px', fontSize: 14 }}
             >
-              Keep Draft &amp; Leave
+              Keep draft and exit
             </button>
           ) : null}
         </div>

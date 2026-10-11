@@ -845,6 +845,7 @@ export default function SaguaroChatWidget({
               <div style={{ borderTop: '1px solid rgba(255,255,255,0.12)', padding: '14px', background: 'rgba(0,0,0,0.15)', flexShrink: 0 }}>
                 <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 14, display: 'flex', alignItems: 'flex-end', padding: '10px 12px', gap: 10, transition: 'border-color 0.2s, box-shadow 0.2s' }}>
                   <textarea
+                    data-no-guard=""
                     ref={inputRef}
                     value={input}
                     onChange={handleTextareaChange}
