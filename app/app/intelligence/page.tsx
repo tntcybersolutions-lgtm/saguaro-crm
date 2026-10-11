@@ -443,7 +443,7 @@ export default function IntelligencePage() {
       {/* Autopilot's only nav entry (de-featured from the sidebar). */}
       <Button icon={<Robot size={15} weight="fill" />} href="/app/autopilot" title="Overdue RFIs, expiring insurance, stale change orders — flagged across every project">Autopilot Alerts</Button>
       {ids.length > 0 && <Button variant="ghost" icon={<ArrowsClockwise size={14} weight="bold" />} onClick={() => void mutate()}>Refresh</Button>}
-      <Button variant="primary" icon={<Selection size={15} weight="bold" />} onClick={() => setSelectorOpen(!selectorOpen)} aria-expanded={selectorOpen} aria-haspopup="dialog">Select Projects ({selectedIds.size})</Button>
+      <Button variant="primary" icon={<Selection size={15} weight="bold" />} onClick={() => setSelectorOpen(!selectorOpen)} aria-expanded={selectorOpen} aria-haspopup="dialog">{projects.length ? `Select Projects (${selectedIds.size})` : 'Select Projects'}</Button>
       {selectorOpen && (
         <div className="igPop" role="dialog" aria-label="Select projects to compare">
           <div className="igPopHead">Select up to 5 projects — {selectedIds.size} selected</div>

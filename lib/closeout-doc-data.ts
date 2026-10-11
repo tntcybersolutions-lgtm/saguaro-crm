@@ -20,6 +20,7 @@
  * MONEY rule: DB numerics can round-trip as strings — Number(x)||0 before math.
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { coTotal } from '@/lib/change-order-amount';
 
 const N = (v: unknown): number => Number(v) || 0;
 const S = (v: unknown): string => (typeof v === 'string' ? v.trim() : '');
@@ -128,7 +129,7 @@ export async function contractSum(
     .is('deleted_at', null);
   if (coErr) throw coErr;
   const approved = (cos || []) as Record<string, unknown>[];
-  const approvedCoTotal = approved.reduce((s, c) => s + (N(c.cost_impact) || N(c.amount)), 0);
+  const approvedCoTotal = coTotal(approved);
 
   return {
     original,

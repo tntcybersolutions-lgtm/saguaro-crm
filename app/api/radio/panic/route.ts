@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
             method: 'POST',
             headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              from: process.env.EMAIL_FROM || 'Saguaro Radio <noreply@mail.saguarocrm.com>',
+              from: process.env.EMAIL_FROM || 'Saguaro Radio <noreply@saguarocontrol.net>',
               to: emails.slice(0, 50),
               subject: `PANIC ALARM — ${(chRow as any)?.name || 'Radio'}`,
               text: `${text}\n\n${loc ? `Map: https://maps.google.com/?q=${loc.lat},${loc.lng}\n\n` : ''}Open Saguaro Radio to respond.`,

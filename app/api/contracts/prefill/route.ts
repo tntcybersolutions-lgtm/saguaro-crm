@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { CONTRACT_FORMS, type ContractKind } from '@/lib/document-templates/contract-fields';
+import { coAmount } from '@/lib/change-order-amount';
 
 /**
  * GET /api/contracts/prefill?kind=subcontract&projectId=…&subId=…&bidPackageId=…
@@ -134,7 +135,7 @@ export async function GET(req: NextRequest) {
         .eq('tenant_id', user.tenantId);
       const priorImpact = ((executed ?? []) as Array<Record<string, any>>)
         .filter((c) => String(c.status || '').toLowerCase() === 'executed')
-        .reduce((sum, c) => sum + (Number(c.cost_impact ?? c.amount) || 0), 0);
+        .reduce((sum, c) => sum + coAmount(c), 0);
       const base = Number(p.contract_value) || 0;
       if (base) seed('newContractSum', base + priorImpact);
     }

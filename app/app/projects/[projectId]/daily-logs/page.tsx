@@ -20,6 +20,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
+import { unloggedWorkdays } from '@/lib/daily-log-gap';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
@@ -51,15 +52,6 @@ const localToday = () => new Intl.DateTimeFormat('en-CA', { year: 'numeric', mon
 const fmtDay = (d?:string|null) => d ? new Date(d.slice(0,10)+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) : '—';
 const fmtDate = (d?:string|null) => d ? new Date(d.slice(0,10)+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
 const fmtLong = (d?:string|null) => d ? new Date(d.slice(0,10)+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}) : '—';
-/** Workdays (Mon-Fri) strictly between two ISO dates — 0 across a plain weekend. */
-function missedWorkdays(fromIso:string,toIso:string){
-  let n = 0;
-  for(let d=new Date(fromIso+'T12:00:00').getTime()+86400000; d<new Date(toIso+'T12:00:00').getTime(); d+=86400000){
-    const wd = new Date(d).getDay();
-    if(wd!==0&&wd!==6) n++;
-  }
-  return n;
-}
 
 const tempStr = (l:any) => (l.high_temp!=null||l.low_temp!=null) ? `${l.high_temp??'—'}° / ${l.low_temp??'—'}°` : '—';
 
@@ -550,7 +542,7 @@ export default function DailyLogsPage(){
   const delayDays  = logs.filter((l:any)=>l.delays?.trim()).length;
   const thisMonth  = logs.filter((l:any)=>(l.log_date||'').startsWith(thisMonthIso)).length;
   const lastLogIso = (ctx?.recent?.lastDailyLogDate as string|null) || logs[0]?.log_date || null;
-  const gapDays    = lastLogIso ? missedWorkdays(lastLogIso, localToday()) : 0;
+  const gapDays    = unloggedWorkdays(lastLogIso, localToday(), ctx?.project);
 
   const filtersActive = !!search || !!monthFilter || flagFilter!=='all';
   const clearFilters = () => { setSearch(''); setMonthFilter(''); setFlagFilter('all'); };
@@ -850,7 +842,7 @@ export default function DailyLogsPage(){
       >
         {mode==='create' && (()=>{
           const lastLog = ctx?.recent?.lastDailyLogDate || logs[0]?.log_date || null;
-          const gap = lastLog ? missedWorkdays(lastLog, localToday()) : 0;
+          const gap = unloggedWorkdays(lastLog, localToday(), ctx?.project);
           return (
             <div className="pdlBanner" data-gap={gap>0?'true':'false'}>
               <div className="pdlBannerTitle">

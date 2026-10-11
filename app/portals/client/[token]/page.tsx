@@ -788,13 +788,16 @@ export default function ClientPortalPage() {
   }, []);
 
   /* ── Computed ──────────────────────────────────────────────────── */
-  const daysRemaining = project
-    ? Math.max(0, Math.ceil((new Date(project.end_date).getTime() - Date.now()) / 86400000))
-    : 0;
-  const daysElapsed = project
-    ? Math.max(0, Math.ceil((Date.now() - new Date(project.start_date).getTime()) / 86400000))
-    : 0;
-  const totalDuration = daysRemaining + daysElapsed;
+  // A job with no start or end date on file shows "—", never "NaN days".
+  const dayMs = (d?: string | null) => {
+    const t = d ? new Date(String(d).slice(0, 10) + 'T12:00:00').getTime() : NaN;
+    return Number.isFinite(t) ? t : null;
+  };
+  const endMs = project ? dayMs(project.end_date) : null;
+  const startMs = project ? dayMs(project.start_date) : null;
+  const daysRemaining: number | null = endMs != null ? Math.max(0, Math.ceil((endMs - Date.now()) / 86400000)) : null;
+  const daysElapsed: number | null = startMs != null ? Math.max(0, Math.ceil((Date.now() - startMs) / 86400000)) : null;
+  const totalDuration = daysRemaining != null && daysElapsed != null ? daysRemaining + daysElapsed : 0;
 
   const filteredDocs = documents.filter((d) => {
     const matchCat = docCategory === 'All' || d.category === docCategory;
@@ -1036,7 +1039,7 @@ export default function ClientPortalPage() {
       {/* Quick Stats Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>
         {[
-          { label: 'Days Remaining', value: daysRemaining.toString(), icon: CalendarBlank, color: BLUE },
+          { label: 'Days Remaining', value: daysRemaining == null ? '—' : String(daysRemaining), icon: CalendarBlank, color: BLUE },
           { label: 'Total Budget', value: fmt(project.total_budget), icon: Money, color: GREEN },
           { label: 'Payments Made', value: fmt(project.payments_made), icon: CheckCircle, color: PURPLE },
           { label: 'Open Items', value: project.open_items.toString(), icon: ClipboardText, color: AMBER },
@@ -2184,51 +2187,9 @@ export default function ClientPortalPage() {
         </button>
       )}
 
-      {/* ── Quick Actions FAB ──────────────────────────────────── */}
-      <div style={{
-        position: 'fixed',
-        bottom: 24,
-        left: 24,
-        zIndex: 150,
-      }}>
-        <div style={{
-          background: RAISED,
-          border: `1px solid ${BORDER}`,
-          borderRadius: 12,
-          padding: '8px',
-          display: 'flex',
-          gap: 4,
-          boxShadow: '0 4px 20px rgba(0,0,0,.4)',
-        }}>
-          {[
-            { label: 'Dashboard', tab: 'dashboard' as TabId, icon: ChartBar },
-            { label: 'Messages', tab: 'messages' as TabId, icon: ChatCircle },
-            { label: 'Approvals', tab: 'approvals' as TabId, icon: CheckCircle },
-          ].map((qa) => (
-            <button
-              key={qa.tab}
-              onClick={() => setActiveTab(qa.tab)}
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 8,
-                border: 'none',
-                background: activeTab === qa.tab ? 'color-mix(in srgb, var(--brand-primary) 19%, transparent)' : 'transparent',
-                cursor: 'pointer',
-                fontSize: 18,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'background .15s',
-              }}
-              title={qa.label}
-            >
-              <qa.icon size={19} weight="duotone" color={activeTab === qa.tab ? GOLD : DIM} />
-            </button>
-          ))}
-        </div>
-      </div>
-
+      {/* The floating Dashboard / Messages / Approvals bar that sat here
+          repeated the sticky tab bar at the top and covered cards on a phone
+          as you scrolled. The tabs (and Alt+1…7) are the one way to switch. */}
       {/* ── Footer ──────────────────────────────────────────────── */}
       <footer style={{
         borderTop: `1px solid ${BORDER}`,
@@ -2247,15 +2208,15 @@ export default function ClientPortalPage() {
             <div style={{ height: 4, background: BG, borderRadius: 2, overflow: 'hidden' }}>
               <div style={{
                 height: '100%',
-                width: `${totalDuration > 0 ? Math.min(100, pct(daysElapsed, totalDuration)) : 0}%`,
+                width: `${totalDuration > 0 ? Math.min(100, pct(daysElapsed ?? 0, totalDuration)) : 0}%`,
                 background: `linear-gradient(90deg, ${GREEN}, ${GOLD})`,
                 borderRadius: 2,
                 transition: 'width 1s ease',
               }} />
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-              <span style={{ fontSize: 10, color: DIM }}>{daysElapsed} days elapsed</span>
-              <span style={{ fontSize: 10, color: GOLD, fontWeight: 600 }}>{daysRemaining} days remaining</span>
+              <span style={{ fontSize: 10, color: DIM }}>{daysElapsed == null ? 'No start date yet' : `${daysElapsed} days elapsed`}</span>
+              <span style={{ fontSize: 10, color: GOLD, fontWeight: 600 }}>{daysRemaining == null ? 'No end date yet' : `${daysRemaining} days remaining`}</span>
             </div>
           </div>
 

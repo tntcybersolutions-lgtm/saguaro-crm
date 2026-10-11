@@ -619,7 +619,9 @@ export function FlowStrip({ steps, style }: {
   style?: React.CSSProperties;
 }) {
   return (
-    <div style={{
+    // .pmFlowStrip (globals.css): on a phone the steps stack as a numbered list —
+    // wrapped, the arrows used to land on lines of their own.
+    <div className="pmFlowStrip" style={{
       // Flat (2026-10-10): a hairline above and below, no tinted band.
       display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px 14px',
       padding: '10px 0',
@@ -628,7 +630,7 @@ export function FlowStrip({ steps, style }: {
     }}>
       {steps.map((s, i) => (
         <React.Fragment key={i}>
-          {i > 0 && <span aria-hidden style={{ color: FAINT, fontSize: 12, fontWeight: 900, flexShrink: 0 }}>&rarr;</span>}
+          {i > 0 && <span aria-hidden className="pmFlowArrow" style={{ color: FAINT, fontSize: 12, fontWeight: 900, flexShrink: 0 }}>&rarr;</span>}
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, minWidth: 0, flexWrap: 'wrap' }}>
             <span style={{
               width: 17, height: 17, borderRadius: 999, flexShrink: 0,

@@ -44,7 +44,8 @@ export interface ConnectorCtx {
   tenantId: string;
   provider: ProviderId;
   config: Record<string, any>;   // eslint-disable-line @typescript-eslint/no-explicit-any
-  secret: Record<string, any>;   // eslint-disable-line @typescript-eslint/no-explicit-any  { accessKeyId,secretAccessKey } | { apiToken } | { access_token,refresh_token,expires_at }
+  /** { accessKeyId, secretAccessKey } | { apiToken } | { access_token, refresh_token, expires_at } */
+  secret: Record<string, any>;   // eslint-disable-line @typescript-eslint/no-explicit-any
   rootPath?: string | null;
   /** Persist refreshed OAuth tokens back to the connector (adapters call this after a refresh). */
   saveSecret?: (secret: Record<string, any>) => Promise<void>; // eslint-disable-line @typescript-eslint/no-explicit-any

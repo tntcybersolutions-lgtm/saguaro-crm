@@ -980,7 +980,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
           </div>
 
           <div style={{ ...card(), overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <table className="k-stack" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr>
                   {['Person', 'Base Role', 'Access', 'Projects', 'Last Active', 'Status', ''].map(h => (
@@ -1017,7 +1017,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                         </button>
                       </td>
                       {/* Base role */}
-                      <td style={{ padding: '10px 12px' }}>
+                      <td data-label="Base Role" style={{ padding: '10px 12px' }}>
                         <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700,
                           color: isBypass ? 'var(--on-brand)' : DIM,
                           background: isBypass ? `linear-gradient(135deg, ${GOLD}, var(--brand-primary-strong))` : 'rgba(255,255,255,0.05)',
@@ -1029,7 +1029,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                         </span>
                       </td>
                       {/* Access — computed exactly the way the server enforces it */}
-                      <td style={{ padding: '10px 12px', maxWidth: 300 }}>
+                      <td data-label="Access" style={{ padding: '10px 12px', maxWidth: 300 }}>
                         {isBypass ? (
                           <span style={{ color: GOLD, fontSize: 12, fontWeight: 700 }}>Full — admin bypass ({CATEGORIES.length}/{CATEGORIES.length} categories)</span>
                         ) : r.status !== 'active' ? (
@@ -1061,15 +1061,15 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                         )}
                       </td>
                       {/* Projects (project_team memberships) */}
-                      <td style={{ padding: '10px 12px', color: r.projectNames.length ? TEXT : DIM, fontSize: 12 }}>
+                      <td data-label="Projects" style={{ padding: '10px 12px', color: r.projectNames.length ? TEXT : DIM, fontSize: 12 }}>
                         <span title={r.projectNames.join('\n')}>{r.projectNames.length || '—'}</span>
                       </td>
                       {/* Last active — real auth.users.last_sign_in_at */}
-                      <td style={{ padding: '10px 12px', color: r.lastSignInAt ? TEXT : DIM, fontSize: 12 }}>
+                      <td data-label="Last Active" style={{ padding: '10px 12px', color: r.lastSignInAt ? TEXT : DIM, fontSize: 12 }}>
                         {r.lastSignInAt ? relTimeAgo(r.lastSignInAt) : r.status === 'active' ? 'never signed in' : '—'}
                       </td>
                       {/* Status */}
-                      <td style={{ padding: '10px 12px' }}>
+                      <td data-label="Status" style={{ padding: '10px 12px' }}>
                         {r.status === 'active' ? (
                           <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 4, fontSize: 11, fontWeight: 700,
                             color: GREEN, background: `color-mix(in srgb, ${GREEN} 9%, transparent)`, border: `1px solid ${GREEN}` }}>Active</span>

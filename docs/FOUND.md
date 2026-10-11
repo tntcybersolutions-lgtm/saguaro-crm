@@ -184,3 +184,45 @@ converge. One line each, newest at the bottom.
   cards as you scroll. Not fixed (off-path).
 - (11 Oct) `app/page.tsx:107` calls `useState` inside a callback (react-hooks/rules-of-hooks
   error on main). Builds pass because lint does not gate the build. Not fixed (off-path).
+
+## 11 Oct 2026 — every open entry above, closed (`fix/all-errors`, Chad: "fix all errors")
+
+Fixed in this change:
+- `app/page.tsx:107` hook inside a callback → state hoisted to the component; `lib/storage-providers/types.ts:47`
+  broken eslint-disable comment → fixed. `eslint app components lib`: 0 errors.
+- Client portal "NaN days remaining" → a job with no start/end date reads "No end date yet" / "—".
+- Client portal floating Dashboard/Messages/Approvals bar → removed; it repeated the sticky tab bar and covered cards.
+- Change-order money read five ways → one reader, `lib/change-order-amount.ts` (`coAmount`/`coTotal`):
+  CO register, overview, project context, pay-app create (G702 line 2 missed COs stored in `amount`), contract prefill,
+  G701 (prior-CO sum string-concatenated TEXT `cost_impact`), proposal accept, closeout, triggers. Pima's $0 rows vs
+  +$127,650 were this.
+- Daily-log "N workdays unlogged" on a closed job → stops at the closeout date (`lib/daily-log-gap.ts`, shared by the
+  project register, its New Log banner and the company page; project context now carries `closeout_date`).
+- `/app/time` React #425/#422 → today's week label waits for the client; Delete now asks first.
+- Placeholders read like typed values (`-webkit-text-fill-color`) → own fill, `--text-disabled`, like the kit.
+- Rolled-forward SOV lines with no description (Mesa Flex 7, 9) → a G703 line reads its cost code or "Line N", never blank.
+- Phone tap targets under 44px (radio console, budget Actions, document titles, settings Delete account, …) → one
+  rule in the shell: every button / role=button / select in `.main-content-area` is ≥44px on a phone; icon-only ≥44 wide.
+- `/app/leads` board sideways at 393 → phones open on List (stacked cards); Board is one tap away.
+- AccessManager people table sideways at 393 → `k-stack` (stacked cards, same rules as DataTable); any hand-built
+  table opts in with `class="k-stack"` + `data-label`.
+- FlowStrip arrows wrapping onto their own lines at 393 → steps stack as a numbered list on a phone.
+- Intelligence ticker: 13px × on a marquee → on touch the strip stands still and swipes; Dismiss is 44px.
+  "Select Projects (0)" while loading → no count until the list arrives.
+- `/app/takeoff` division tables at 1280: first column not pinned → every DataTable pins its first column when it scrolls.
+- `prebuild` failed locally on drift against the retired Saguaro-Field copy → the two sync checks are retired; this
+  repo is the canonical heatmap/takeoff engine.
+- Email "from" fallbacks still said saguarocrm.com → saguarocontrol.net.
+
+Already fixed on main before this change (checked, no code needed): leads/[id] apiError; portals/[...path] catch;
+`/api/clock` (410 tombstone, no DB); iOS 16px inputs; phone top bar `left`; PDF footer domain + [X] waiver check;
+closeout date from the user's clock; sidebar phase pill on a closed job; takeoff "Drop a plan" flash; chat launcher
+(clears the page end, hides on scroll and under modals); Portals 6-tile row (flat strip, auto-fit); Pay Apps table
+(own phone cards); Home "Review →" (Home rebuilt, all client links); CO "Open Details" at 393 (detail scrolls into
+view); reviews stars (44px); `/app/customers` (New Customer form).
+
+Not code errors — left as they are, on purpose: data-model notes (`sub_portal_sessions` in types only); design debt
+already tracked by the design-system baseline (hex literals, `td` density, SalesOverview); PDF brand gold (a brand
+decision); DataTable menus opening upward near the bottom (that is the correct behaviour); the Vercel *preview*
+session timeout (preview deployments only). CLAUDE.md §7/§8 still name `app/field/` and `lib/field-tokens.ts`,
+which do not exist — Chad's standing orders, not edited here.

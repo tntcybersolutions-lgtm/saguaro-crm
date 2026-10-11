@@ -87,6 +87,12 @@ export default function LeadsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [view, setView] = useState<View>('kanban');
+  /* A kanban is a sideways strip: on a phone every card and its Actions button
+     sat off the right edge. Phones open on the List (stacked cards); Board is
+     still one tap away. */
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches) setView('list');
+  }, []);
   const [search, setSearch] = useState('');
   const [stageFilter, setStageFilter] = useState<string>('all');
   const [sourceFilter, setSourceFilter] = useState<string>('all');

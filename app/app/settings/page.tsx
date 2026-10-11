@@ -587,7 +587,7 @@ export default function SettingsPage() {
                 control for App Store Guideline 5.1.1(v). Plain text under Sign Out
                 rather than a second red button — it should be findable, not easy to
                 hit by accident next to the one people press every day. */}
-            <Link href="/app/settings/delete-account">Delete account</Link>
+            <Link href="/app/settings/delete-account" className="k-tap">Delete account</Link>
           </div>
         </div>
       </PageShell>

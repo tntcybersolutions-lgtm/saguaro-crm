@@ -26,6 +26,7 @@
  */
 import { seedBudgetFromTakeoff } from '@/lib/budget-seed';
 import { recordBidOutcome } from '@/lib/bid-outcome';
+import { coAmount } from '@/lib/change-order-amount';
 
 export interface AcceptResult {
   found: boolean;
@@ -86,7 +87,7 @@ export async function acceptProposal(db: any, tenantId: string, proposalId: stri
     if (coErr) throw coErr;
     const approvedCoTotal = ((cos || []) as Array<{ status: string | null; cost_impact: unknown; amount: unknown }>)
       .filter((c) => String(c.status || '').toLowerCase() === 'approved')
-      .reduce((s, c) => s + (Number(c.cost_impact) || Number(c.amount) || 0), 0);
+      .reduce((s, c) => s + coAmount(c), 0);
     Object.assign(projectPatch, {
       contract_amount: amount,
       original_contract_amount: amount,

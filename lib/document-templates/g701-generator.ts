@@ -6,6 +6,7 @@ import {
   saveDocument,
 } from '../pdf-engine';
 import { brandDoc, drawBrandHeader, stampFooters } from './report-theme';
+import { coAmount } from '@/lib/change-order-amount';
 
 export interface G701Input {
   /* What the GC typed on the contract form. Values still derive from the
@@ -48,7 +49,7 @@ export async function generateG701(input: G701Input): Promise<{
   const coNumber = String(pick('coNumber', co?.co_number ?? co?.number ?? ''));
   /* One figure, printed in two places — the cost-impact line and the
      financial summary had drifted apart once already. */
-  const costImpact = Number(pick('costImpact', co?.cost_impact || co?.amount || 0)) || 0;
+  const costImpact = Number(pick('costImpact', coAmount(co))) || 0;
 
   const pdf = await PDFDocument.create();
   const kit = await brandDoc(pdf, { projectId: input.projectId });
@@ -203,7 +204,7 @@ export async function generateG701(input: G701Input): Promise<{
   const originalContract = (project as any)?.contract_amount || 0;
   const netPriorCOs = ctx.changeOrders
     .filter((c: any) => c.id !== input.changeOrderId)
-    .reduce((s: number, c: any) => s + (c.cost_impact || c.amount || 0), 0);
+    .reduce((s: number, c: any) => s + coAmount(c), 0);
   const contractPriorToCO = originalContract + netPriorCOs;
   const thisCOAmount = costImpact;
   /* The revised sum is computed, but a GC who has reconciled it against their
