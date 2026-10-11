@@ -37,7 +37,8 @@ export const HOME_CSS = `
 /* Header: one controls row (view · job · +), then the greeting. */
 .fh-head{padding:12px 16px 2px}
 .fh-top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;min-height:44px}
-.fh-date{font-size:13px;color:var(--sg-text-2);letter-spacing:0;white-space:nowrap}
+/* The day and date above the greeting — neon, like the section headings (Chad, 2026-10-11). */
+.fh-date{font-size:15px;font-weight:800;color:var(--brand-primary);letter-spacing:.005em;white-space:nowrap;text-shadow:0 0 14px color-mix(in srgb,var(--brand-primary) 45%,transparent)}
 .fh-ctrls{display:flex;align-items:center;gap:6px;margin-left:auto;min-width:0}
 .fh .fh-hello{font-size:22px;font-weight:700;line-height:1.2;letter-spacing:-.01em;margin:2px 0 0;color:var(--sg-text);-webkit-text-fill-color:currentColor}
 .fh-chip{position:relative;display:inline-flex;align-items:center;gap:5px;height:30px;max-width:150px;padding:0 10px;border:1px solid var(--sg-border);border-radius:15px;background:transparent;color:var(--sg-text);font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}
