@@ -16,6 +16,7 @@ import Link from 'next/link';
 import { CreditCard, DeviceMobile, Bell, Users, Clipboard, FileText, Gear, Rocket, GraduationCap, Books, ChatCircle, Clock, ArrowRight, CloudArrowUp, ShieldCheck, Plugs, Palette, Lifebuoy, UploadSimple, CheckCircle, WarningCircle, CaretRight, SignOut } from '@phosphor-icons/react';
 import { PageShell, Card, StatRow, Badge, Button, Field, Input, FormGrid, type StatItem } from '@/components/ui/kit';
 import TimeZoneCard from '@/components/settings/TimeZoneCard';
+import { useInApp } from '@/lib/use-in-app';
 
 interface SubInfo {
   plan_name: string;
@@ -36,7 +37,7 @@ const SETTINGS_SECTIONS = [
     title: 'Account & Billing',
     sectionIcon: CreditCard,
     items: [
-      { icon: CreditCard, label: 'Subscription & Plan', desc: 'Manage your plan, upgrade, view invoices', href: '/app/billing', highlight: true },
+      { icon: CreditCard, label: 'Subscription & Plan', desc: 'Your plan, invoices and add-ons', href: '/app/billing', highlight: true },
       { icon: DeviceMobile, label: 'Get the iOS App', desc: 'Download Saguaro Control Systems for iPhone & iPad on Apple TestFlight. On Android, open it in Chrome.', href: '/get-the-app' },
       { icon: Bell, label: 'Notifications', desc: 'Configure email and push notification preferences', href: '/app/notification-settings' },
     ],
@@ -151,6 +152,8 @@ const CSS = `
 `;
 
 export default function SettingsPage() {
+  // No plan purchase prompts inside the iPhone app (lib/use-in-app.ts).
+  const inApp = useInApp();
   const [sub, setSub] = useState<SubInfo | null>(null);
   const [platformAdmin, setPlatformAdmin] = useState(false);
 
@@ -353,8 +356,8 @@ export default function SettingsPage() {
           {/* Trial warning banner */}
           {isTrialing && trialDays !== null && trialDays <= 7 && (
             <div className="stWarn" role="status">
-              <div><Clock size={16} weight="fill" /> <b>{trialDays} days left</b> in your free trial — upgrade to keep access for your whole team.</div>
-              <Button variant="primary" href="/app/billing">Upgrade Now</Button>
+              <div><Clock size={16} weight="fill" /> <b>{trialDays} days left</b> in your free trial — {inApp ? 'your account owner can choose a plan to keep access for your whole team.' : 'upgrade to keep access for your whole team.'}</div>
+              {!inApp && <Button variant="primary" href="/app/billing">Upgrade Now</Button>}
             </div>
           )}
 

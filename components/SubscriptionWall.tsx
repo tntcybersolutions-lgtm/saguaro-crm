@@ -21,6 +21,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useInApp } from '@/lib/use-in-app';
 
 // ── Apple LIGHT tokens (match the mobile app + dashboard) ──────────────────────
 const GOLD   = 'var(--brand-primary)';
@@ -57,6 +58,9 @@ function daysLeft(dateStr: string | null | undefined): number {
 
 export default function SubscriptionWall({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  // In the iPhone app the wall shows no way to buy a plan (App Store 3.1.1 /
+  // 3.1.3; see lib/use-in-app.ts) — the account owner restores access.
+  const inApp = useInApp();
   const [sub, setSub] = useState<SubResponse | null>(null);
   const [checked, setChecked] = useState(false);
 
@@ -145,13 +149,14 @@ export default function SubscriptionWall({ children }: { children: React.ReactNo
         </h1>
 
         <p style={{ fontSize: 16, color: DIM, margin: '0 0 32px', lineHeight: 1.65 }}>
-          {isPastDue && 'We couldn\'t process your last payment. Update your payment method to restore access for your entire team.'}
-          {isCanceled && 'Your subscription has been canceled. Reactivate to restore access for you and your team.'}
-          {isExpiredTrial && 'Your 30-day free trial is over. Choose a plan to keep your data and restore access for your whole team.'}
+          {inApp && 'Access for your company is paused. Your company\'s account owner can restore it — your data is safe in the meantime.'}
+          {!inApp && isPastDue && 'We couldn\'t process your last payment. Update your payment method to restore access for your entire team.'}
+          {!inApp && isCanceled && 'Your subscription has been canceled. Reactivate to restore access for you and your team.'}
+          {!inApp && isExpiredTrial && 'Your 30-day free trial is over. Choose a plan to keep your data and restore access for your whole team.'}
         </p>
 
         {/* Plan Cards (quick) */}
-        {!isPastDue && (
+        {!isPastDue && !inApp && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 28 }}>
             {[
               { id: 'starter', name: 'Starter', price: '$499', sub: '/mo · up to 10 projects' },
@@ -185,7 +190,7 @@ export default function SubscriptionWall({ children }: { children: React.ReactNo
 
         {/* CTA Buttons */}
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Link href="/app/billing" style={{
+          {!inApp && <Link href="/app/billing" style={{
             padding: '14px 32px',
             background: isPastDue ? RED : GOLD,
             borderRadius: 12, color: 'var(--text-primary)',
@@ -193,7 +198,7 @@ export default function SubscriptionWall({ children }: { children: React.ReactNo
             boxShadow: isPastDue ? '0 4px 16px rgba(255,59,48,0.25)' : '0 4px 16px var(--brand-primary-25)',
           }}>
             {isPastDue ? 'Update Payment Method' : 'Upgrade Now →'}
-          </Link>
+          </Link>}
           <a href="mailto:support@saguarocontrol.net" style={{
             padding: '14px 24px', background: CARD,
             border: `1px solid ${BORDER}`, borderRadius: 12,
