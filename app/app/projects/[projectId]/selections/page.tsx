@@ -13,6 +13,7 @@ import { ListToolbar } from '@/components/ui/ListToolbar';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
+import SelectionOptions from '@/components/selections/SelectionOptions';
 
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)';
 const GREEN='#2CFF7A',RED='var(--danger)',ORANGE='var(--warning)',BLUE='var(--brand-primary)';
@@ -388,9 +389,9 @@ export default function SelectionsPage(){
         </PremiumSurface>
       </div>
 
-      {/* Side panel */}
+      {/* Side panel — a full-screen sheet on a phone, where 480px never fit. */}
       {mode!==null&&(
-        <div style={{width:480,borderLeft:`1px solid ${BORDER}`,background:DARK,
+        <div className="selPanel" style={{width:480,borderLeft:`1px solid ${BORDER}`,background:DARK,
           overflow:'auto',flexShrink:0,display:'flex',flexDirection:'column'}}>
           <div style={{padding:'16px 20px',borderBottom:`1px solid ${BORDER}`,
             display:'flex',alignItems:'center',justifyContent:'space-between'}}>
@@ -560,7 +561,7 @@ export default function SelectionsPage(){
                     <Pill label={STATUS_LABELS[selected.status]||selected.status} color={STATUS_COLORS[selected.status]||DIM}/>
                     {selected.owner_approved&&<Pill label="Owner Approved" color={GREEN}/>}
                   </div>
-                  {!selected.owner_approved&&(
+                  {!selected.owner_approved&&(String(selected.status||'pending').toLowerCase()==='pending')&&(
                     <button onClick={()=>approve(selected)}
                       style={{padding:'9px 0',width:'100%',background:'rgba(26,138,74,.1)',
                         border:`1px solid ${GREEN}44`,borderRadius:7,color:'var(--success)',
@@ -569,6 +570,15 @@ export default function SelectionsPage(){
                     </button>
                   )}
                 </div>
+
+                <SelectionOptions
+                  key={selected.id}
+                  selectionId={selected.id}
+                  projectId={projectId}
+                  allowance={Number(selected.allowance)||0}
+                  pending={String(selected.status||'pending').toLowerCase()==='pending'}
+                  onToast={showToast}
+                />
 
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
                   {[
@@ -599,6 +609,11 @@ export default function SelectionsPage(){
                     <div style={{fontSize:14,fontWeight:800,color:selected.cost>selected.allowance?RED:GREEN}}>
                       {fmt(selected.cost-selected.allowance)} vs allowance
                     </div>
+                    {selected.cost>selected.allowance&&selected.owner_approved&&String(selected.status||'').toLowerCase()!=='pending'&&(
+                      <a href={`/app/projects/${projectId}/change-orders`} style={{display:'inline-block',marginTop:6,fontSize:12,fontWeight:700,color:'var(--brand-primary-strong)'}}>
+                        The overage is a change order — open Change Orders
+                      </a>
+                    )}
                   </div>
                 )}
 
@@ -623,6 +638,7 @@ export default function SelectionsPage(){
         </div>
       )}
       <UnsavedGuardModal guard={guard} />
+      <style dangerouslySetInnerHTML={{__html:'@media (max-width: 760px){.selPanel{position:fixed;inset:0;width:100%!important;z-index:170;border-left:none!important;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}}'}}/>
     </div>
   );
 }
