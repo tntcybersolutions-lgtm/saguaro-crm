@@ -1,0 +1,42 @@
+{
+  "homeChipFound": 1,
+  "homeChipError": "locator.tap: Timeout 30000ms exceeded.",
+  "moreFound": 1,
+  "drawerPickerFound": 1,
+  "drawerPicker": {
+    "menus": [
+      {
+        "label": "job picker sheet (.jp-sheet-root)",
+        "z": "4000",
+        "onTop": true,
+        "topIs": "jp-group"
+      },
+      {
+        "label": "menu drawer",
+        "z": "151",
+        "onTop": false,
+        "topIs": "jp-sheet-title"
+      }
+    ],
+    "visibleListboxes": 1
+  },
+  "job": "found",
+  "tradeFound": 1,
+  "trade": {
+    "menus": [
+      {
+        "label": "option sheet (.ms-root)",
+        "z": "4500",
+        "onTop": false,
+        "topIs": "bpStack"
+      },
+      {
+        "label": "modal (.k-overlay)",
+        "z": "10000",
+        "onTop": true,
+        "topIs": "bpSteps"
+      }
+    ],
+    "visibleListboxes": 1
+  }
+}
