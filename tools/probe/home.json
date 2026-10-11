@@ -1,0 +1,20 @@
+{
+  "site": "https://saguaro-crm-git-feat-home-finance-power-salty-vault.vercel.app",
+  "phone": {
+    "errors": [
+      "console: Failed to load resource: the server responded with a status of 403 (Forbidden)"
+    ],
+    "loginUrl": "vercel.com",
+    "error": "page.fill: Timeout 30000ms exceeded."
+  },
+  "desktop": {
+    "errors": [
+      "console: Failed to load resource: the server responded with a status of 403 ()",
+      "console: Provider's accounts list is empty.",
+      "console: [GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token.",
+      "console: Failed to load resource: the server responded with a status of 429 ()"
+    ],
+    "loginUrl": "vercel.com",
+    "error": "page.fill: Timeout 30000ms exceeded."
+  }
+}
