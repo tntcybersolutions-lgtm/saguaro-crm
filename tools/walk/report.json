@@ -5,13 +5,24 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [],
+  "covered": [
+   {
+    "label": "Job",
+    "why": "<label class=\"fh-chip\" title=\"All jobs\">…</label> intercepts pointer events",
+    "html": "<select aria-label=\"Job\" data-walk=\"3\"><option value=\"\">All jobs</option><option value=\"0496562c-b696-4921-93f4-99306ec41ec2\" style=\"--dot: #C07A5E;\">ZZ AUDIT W"
+   }
+  ],
   "erroring": [],
   "notTapped": [
-   "Create"
+   "Create",
+   "Pima County Adult Detention Center Complete · 5 of 5 pay apps paid · a",
+   "ZZ AUDIT Mesa Flex Office Complete · finished Oct 3",
+   "Pay app #5 · Pima County ADC paid Sep 26 · 7 days after sending $478K ",
+   "Pay app #4 · Pima County ADC paid Sep 25 · 21 days after sending $846K",
+   "Invite: Housing Unit C — Low Voltage"
   ],
-  "tapped": 7,
-  "ok": 7
+  "tapped": 28,
+  "ok": 27
  },
  {
   "route": "/app/my-work",
@@ -30,20 +41,13 @@
   "status": 200,
   "loadErrors": [],
   "apiErrors": [],
-  "dead": [
-   {
-    "label": "All",
-    "tag": "button",
-    "href": null,
-    "html": "<button type=\"button\" class=\"jl-chip\" aria-pressed=\"true\" data-walk=\"4\">All</button>"
-   }
-  ],
+  "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [
    "Complete"
   ],
-  "tapped": 5,
+  "tapped": 4,
   "ok": 4
  },
  {
@@ -67,153 +71,169 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 3,
-  "ok": 3
+  "tapped": 2,
+  "ok": 2
  },
  {
   "route": "/app/documents",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [
-   "— Pay Applications › AIA G702 / G703",
-   "Pay Applications"
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
   ],
-  "tapped": 12,
-  "ok": 7
- },
- {
-  "route": "/app/daily-logs",
-  "status": 200,
-  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 3,
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/daily-logs",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
   "ok": 0
  },
  {
   "route": "/app/schedule",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 3,
-  "ok": 1
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/compliance",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 6,
-  "ok": 3
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/takeoff",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "Upload Blueprint"
-  ],
-  "tapped": 4,
-  "ok": 4
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/reports",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "Pay App Status",
-   "Pay App Status Pay applications with amounts and status Answers: How m"
-  ],
-  "tapped": 27,
-  "ok": 26
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/people",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 1,
-  "ok": 1
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/subs",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 5,
-  "ok": 5
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/customers",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 8,
-  "ok": 8
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/leads",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 18,
-  "ok": 5
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/sales",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 8,
-  "ok": 8
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/bids",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
@@ -224,59 +244,80 @@
  },
  {
   "route": "/app/billing",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 5,
-  "ok": 4
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/billing/payapp",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "Save Pay Application",
-   "Generate AIA G702 / G703 (PDF)"
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/billing/cost-control",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
   ],
-  "tapped": 4,
-  "ok": 4
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/invoicing",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 3,
-  "ok": 3
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/catalog",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 2,
-  "ok": 1
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/certified-payroll",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
@@ -287,8 +328,10 @@
  },
  {
   "route": "/app/command-center",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
@@ -299,20 +342,24 @@
  },
  {
   "route": "/app/command-center/daily-logs",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 1,
+  "tapped": 0,
   "ok": 0
  },
  {
   "route": "/app/command-center/directory",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
@@ -323,8 +370,10 @@
  },
  {
   "route": "/app/command-center/financials",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
@@ -335,8 +384,10 @@
  },
  {
   "route": "/app/command-center/budget",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
@@ -347,8 +398,10 @@
  },
  {
   "route": "/app/command-center/checklists",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
@@ -359,8 +412,10 @@
  },
  {
   "route": "/app/command-center/escalations",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
@@ -371,8 +426,10 @@
  },
  {
   "route": "/app/command-center/kpis",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
@@ -383,8 +440,10 @@
  },
  {
   "route": "/app/command-center/long-lead",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
@@ -395,8 +454,10 @@
  },
  {
   "route": "/app/command-center/milestones",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
@@ -407,8 +468,10 @@
  },
  {
   "route": "/app/command-center/oac",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
@@ -419,9 +482,9 @@
  },
  {
   "route": "/app/command-center/owner-updates",
-  "status": 200,
+  "status": null,
   "loadErrors": [
-   "walk stopped: ENOSPC: no space left on device, write"
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
   ],
   "apiErrors": [],
   "dead": [],
@@ -433,9 +496,9 @@
  },
  {
   "route": "/app/command-center/portals",
-  "status": 200,
+  "status": null,
   "loadErrors": [
-   "walk stopped: ENOSPC: no space left on device, write"
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
   ],
   "apiErrors": [],
   "dead": [],
@@ -447,9 +510,9 @@
  },
  {
   "route": "/app/command-center/pre-site",
-  "status": 200,
+  "status": null,
   "loadErrors": [
-   "walk stopped: ENOSPC: no space left on device, write"
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
   ],
   "apiErrors": [],
   "dead": [],
@@ -461,8 +524,10 @@
  },
  {
   "route": "/app/command-center/qc",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
@@ -473,8 +538,10 @@
  },
  {
   "route": "/app/command-center/risks",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
@@ -485,8 +552,10 @@
  },
  {
   "route": "/app/command-center/rollout",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
@@ -497,8 +566,10 @@
  },
  {
   "route": "/app/command-center/vendors",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
@@ -509,8 +580,10 @@
  },
  {
   "route": "/app/command-center/verify",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
@@ -521,358 +594,786 @@
  },
  {
   "route": "/app/document-versions",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "Bulk Upload"
-  ],
-  "tapped": 3,
+  "notTapped": [],
+  "tapped": 0,
   "ok": 0
  },
  {
   "route": "/app/fleet",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 3,
-  "ok": 3
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/intelligence",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 2,
+  "tapped": 0,
   "ok": 0
  },
  {
   "route": "/app/portals",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [
-   {
-    "label": "Active Client Portals 2 Showing — owners with access",
-    "tag": "button",
-    "href": null,
-    "html": "<button type=\"button\" class=\"k-stat\" data-tone=\"good\" data-walk=\"4\"><span class=\"k-stat-top\"><span class=\"k-stat-label\">Active Client Portals</span></span><span"
-   }
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
   ],
+  "apiErrors": [],
+  "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "Invite Subcontractor",
-   "Invite Client"
-  ],
-  "tapped": 7,
-  "ok": 4
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/prequalification",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "Send Prequal Form"
-  ],
-  "tapped": 4,
-  "ok": 4
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/radio",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 11,
-  "ok": 10
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/resource-planning",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/reviews",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 6,
-  "ok": 6
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/service",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 9,
-  "ok": 9
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/settings",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "Upload company logo",
-   "Save Branding"
-  ],
-  "tapped": 70,
-  "ok": 70
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/signal-studio",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "Start Without a Project"
-  ],
-  "tapped": 9,
-  "ok": 9
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/warranty-claims",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "Create Claim"
-  ],
-  "tapped": 4,
-  "ok": 4
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/ask",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 12,
-  "ok": 3
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/overview",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "Start takeoff ›",
-   "Pay Apps None yet ›",
-   "Archive"
-  ],
-  "tapped": 30,
-  "ok": 30
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/photos",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 5,
-  "ok": 5
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/files",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "Import from Cloud",
-   "Trash"
-  ],
-  "tapped": 7,
-  "ok": 7
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/daily-logs",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 5,
-  "ok": 5
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/rfis",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "Answered 0 Ready to close out",
-   "Create First RFI"
-  ],
-  "tapped": 4,
-  "ok": 4
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/submittals",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 5,
-  "ok": 5
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/punch-list",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 2,
-  "ok": 1
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/change-orders",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 4,
-  "ok": 4
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/pay-apps",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "New Pay Application",
-   "Lien Waivers — Generate at owner approval",
-   "Create Application #1"
-  ],
-  "tapped": 1,
-  "ok": 1
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
  },
  {
   "route": "/app/projects/:id/lien-waivers",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [
-   "+ Generate Waiver",
-   "Generate All"
-  ],
+  "notTapped": [],
   "tapped": 0,
   "ok": 0
  },
  {
   "route": "/app/projects/:id/schedule",
-  "status": 200,
-  "loadErrors": [],
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "Gantt",
-    "why": "<span class=\"pmFigV\">—</span> from <div class=\"sag-side-panel\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn\" style=\"padding:9px 16px;background:var(--brand-primary-12);border:none;color:var(--brand-primary);font-size:12px;font-weight:700;cursor:po"
-   },
-   {
-    "label": "List",
-    "why": "<span class=\"pmFigV\">—</span> from <div class=\"sag-side-panel\">…</div> subtree intercepts pointer events",
-    "html": "<button class=\"pmBtn\" style=\"padding:9px 16px;background:transparent;border:none;color:var(--text-secondary);font-size:12px;font-weight:700;cursor:pointer\" data"
-   },
-   {
-    "label": "Add Task",
-    "why": "<div class=\"pmStripGrid\">…</div> from <div class=\"sag-side-panel\">…</div> subtree intercepts pointer events",
-    "html": "<button style=\"display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:10px;border:none;cursor:pointer;background:"
-   }
-  ],
+  "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 3,
+  "tapped": 0,
   "ok": 0
  },
  {
   "route": "/app/projects/:id/drawings",
-  "status": 200,
-  "loadErrors": [],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [
-   "Upload First Sheet"
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
   ],
-  "tapped": 3,
-  "ok": 3
- },
- {
-  "route": "/app/projects/:id/inspections",
-  "status": 200,
-  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 5,
-  "ok": 5
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/specs",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/inspections",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/safety",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/todos",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/messages",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/team",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/directory",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/subs",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/crews",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/timesheets",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/tm-tickets",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/budget",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/cash-flow",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/bills",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/invoices",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/contracts",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/purchase-orders",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/estimate",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/proposal",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/bid-packages",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/closeout",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/compliance",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/insurance",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/permits",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/payroll",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/selections",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/w9",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/takeoff",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/intelligence",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/autopilot",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
+ },
+ {
+  "route": "/app/projects/:id/network",
+  "status": null,
+  "loadErrors": [
+   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "apiErrors": [],
+  "dead": [],
+  "covered": [],
+  "erroring": [],
+  "notTapped": [],
+  "tapped": 0,
+  "ok": 0
  }
 ]

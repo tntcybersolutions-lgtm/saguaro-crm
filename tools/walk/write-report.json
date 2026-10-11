@@ -28,7 +28,7 @@
     },
     {
      "label": "bar counts it",
-     "result": "yes — \"You're offline Photos, daily logs and punch items you add are saved on this phone and send\""
+     "result": "yes — \"You're offline 1 item saved on this phone — it sends when you're back.\""
     },
     {
      "label": "reload offline",
@@ -36,14 +36,17 @@
     },
     {
      "label": "back-online bar shows",
-     "result": "yes — \"Back online\""
+     "result": "yes — \"Back online Sending what you saved offline…\""
     }
    ],
-   "create": "no Add/New button",
+   "create": "kept on the phone (shows On This Phone)",
    "persisted": "NOT TESTED — the test browser cannot reload with no signal",
-   "writes": [],
-   "edit": "NOTHING was sent after coming back online",
-   "fieldsBack": "GONE"
+   "writes": [
+    "POST /api/daily-logs/create → 200"
+   ],
+   "edit": "sent by itself when the signal came back",
+   "fieldsBack": "on the server",
+   "del": "not on the list any more (closed/moved by a button)"
   },
   {
    "screen": "OFFLINE · projects/:id/punch-list",
@@ -111,7 +114,7 @@
    "create": "kept on the phone",
    "persisted": "NOT TESTED — the test browser cannot reload with no signal",
    "writes": [],
-   "edit": "NOTHING was sent after coming back online",
+   "edit": "sent in the background by the offline worker",
    "fieldsBack": "uploaded"
   },
   {
@@ -122,7 +125,47 @@
    "screen": "people",
    "add": "+ New Role",
    "errors": [],
-   "actions": [],
+   "actions": [
+    {
+     "label": "Roles Defined 8 Permission templates in force",
+     "result": "gone after reopening (state changed)"
+    },
+    {
+     "label": "Role Assignments 5 Users mapped to roles",
+     "result": "gone after reopening (state changed)"
+    },
+    {
+     "label": "Pending Invites 0 None outstanding",
+     "result": "gone after reopening (state changed)"
+    },
+    {
+     "label": "Crew Directory 10 0 OSHA certified",
+     "result": "gone after reopening (state changed)"
+    },
+    {
+     "label": "+ New Role",
+     "result": "opened a form → saved",
+     "writes": [
+      "POST /api/roles → 201"
+     ]
+    },
+    {
+     "label": "Duplicate",
+     "result": "saved",
+     "writes": [
+      "POST /api/roles → 201"
+     ]
+    },
+    {
+     "label": "Saguaro",
+     "result": "opened https://saguarocontrol.net/",
+     "writes": []
+    },
+    {
+     "label": "Team Members 7 Platform sign-ins",
+     "result": "gone after reopening (state changed)"
+    }
+   ],
    "filled": 2,
    "saveClicked": [
     "Create Role"
@@ -131,7 +174,11 @@
     "POST /api/roles → 201"
    ],
    "create": "saved",
-   "persisted": "NOT ON LIST after reload"
+   "persisted": "yes",
+   "fieldsBack": "2/2",
+   "prefilled": "2/2",
+   "edit": "yes",
+   "del": "(at the end — used by the pickers)"
   },
   {
    "screen": "people",
@@ -156,12 +203,11 @@
    "create": "saved",
    "persisted": "yes",
    "fieldsBack": "3/3",
-   "prefilled": "1/3",
+   "prefilled": "2/3",
    "notPrefilled": [
-    "delivered@resend.dev",
-    "‹marker›"
+    "delivered@resend.dev"
    ],
-   "edit": "edit form did not show the saved title",
+   "edit": "yes",
    "del": "(at the end — used by the pickers)"
   },
   {
@@ -187,46 +233,23 @@
    "errors": [],
    "actions": [
     {
-     "label": "Overview",
-     "result": "nothing happened (dead button?)",
-     "writes": []
-    },
-    {
-     "label": "Discovery",
-     "result": "nothing happened (dead button?)",
-     "writes": []
-    },
-    {
-     "label": "Recommendations",
-     "result": "nothing happened (dead button?)",
-     "writes": []
-    },
-    {
-     "label": "Designs",
-     "result": "nothing happened (dead button?)",
-     "writes": []
-    },
-    {
-     "label": "Materials",
-     "result": "nothing happened (dead button?)",
-     "writes": []
-    },
-    {
-     "label": "Conversations",
-     "result": "nothing happened (dead button?)",
-     "writes": []
-    },
-    {
      "label": "Assign to Project",
-     "result": "error: locator.click: Timeout 4000ms exceeded."
+     "result": "saved",
+     "writes": [
+      "POST /api/projects/assign → 200"
+     ]
     },
     {
      "label": "Send Email",
-     "result": "error: locator.click: Timeout 4000ms exceeded."
+     "result": "opened a form → saved",
+     "writes": [
+      "POST /api/customers/:id/email → 200"
+     ]
     },
     {
      "label": "Saguaro",
-     "result": "error: locator.click: Timeout 4000ms exceeded."
+     "result": "opened https://saguarocontrol.net/",
+     "writes": []
     }
    ],
    "filled": 6,
@@ -250,7 +273,7 @@
    "actions": [
     {
      "label": "Add Someone",
-     "result": "nothing happened (dead button?)",
+     "result": "opened a form in the page (nothing to save here)",
      "writes": []
     },
     {
@@ -325,36 +348,6 @@
    "errors": [],
    "actions": [
     {
-     "label": "Overview",
-     "result": "nothing happened (dead button?)",
-     "writes": []
-    },
-    {
-     "label": "Discovery",
-     "result": "nothing happened (dead button?)",
-     "writes": []
-    },
-    {
-     "label": "Recommendations",
-     "result": "nothing happened (dead button?)",
-     "writes": []
-    },
-    {
-     "label": "Designs",
-     "result": "nothing happened (dead button?)",
-     "writes": []
-    },
-    {
-     "label": "Materials",
-     "result": "nothing happened (dead button?)",
-     "writes": []
-    },
-    {
-     "label": "Conversations",
-     "result": "nothing happened (dead button?)",
-     "writes": []
-    },
-    {
      "label": "Assign to Project",
      "result": "saved",
      "writes": [
@@ -379,8 +372,7 @@
     "Add Customer"
    ],
    "writes": [
-    "POST /api/customers/profiles → 201",
-    "PATCH /api/projects/:id → 200"
+    "POST /api/customers/profiles → 201"
    ],
    "create": "saved",
    "persisted": "yes",
@@ -390,7 +382,5 @@
    "del": "(at the end — used by the pickers)"
   }
  ],
- "leftovers": [
-  "people: \"ZZ AUDIT people 10101707\""
- ]
+ "leftovers": []
 }
