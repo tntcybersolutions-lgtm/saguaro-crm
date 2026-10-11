@@ -2,9 +2,9 @@
   "site": "https://www.saguarocontrol.net",
   "phone": {
     "errors": [
+      "/www.saguarocontrol.net/api/auth/me due to access control checks.",
       "/www.saguarocontrol.net/api/projects?limit=15&fields=id,name due to access control checks.",
-      "/www.saguarocontrol.net/api/home due to access control checks.",
-      "/www.saguarocontrol.net/api/settings/time-zone due to access control checks.",
+      "/www.saguarocontrol.net/api/auth/session due to access control checks.",
       "/www.saguarocontrol.net/api/projects/759aa973-4c36-4f04-8f70-48d53d8af0b9 due to access control checks.",
       "/www.saguarocontrol.net/api/projects/759aa973-4c36-4f04-8f70-48d53d8af0b9/tools due to access control checks."
     ],
@@ -60,7 +60,7 @@
     ],
     "afterKeepEditing": {
       "path": "/app/projects/2967590d-8998-4007-b4d2-589db6afd663/directory",
-      "text": "ZZ AUDIT Gate Discard 390-mv43qfa5",
+      "text": "ZZ AUDIT Gate Discard 390-mv43usgy",
       "dialog": 0
     },
     "afterDiscard": {
@@ -87,7 +87,13 @@
       "backOnFinancials",
       "backLandedOn",
       "searchAsked",
-      "searchLeftTo"
+      "searchLeftTo",
+      "gateAsked",
+      "gateButtons",
+      "afterKeepEditing",
+      "afterDiscard",
+      "afterSaveAndExit",
+      "cleanup"
     ],
     "jobs": {
       "real": "Pima County Adult Detention Center — BAS Modernization",
@@ -116,6 +122,28 @@
     "backLandedOn": "/app/projects/759aa973-4c36-4f04-8f70-48d53d8af0b9/overview",
     "searchAsked": false,
     "searchLeftTo": "/app",
-    "error": "locator.click: Timeout 30000ms exceeded."
+    "gateAsked": true,
+    "gateButtons": [
+      "Discard",
+      "Keep editing",
+      "Save and exit"
+    ],
+    "afterKeepEditing": {
+      "path": "/app/projects/2967590d-8998-4007-b4d2-589db6afd663/directory",
+      "text": "ZZ AUDIT Gate Discard 1440-mv43vbqz",
+      "dialog": 0
+    },
+    "afterDiscard": {
+      "path": "/app",
+      "savedAnyway": false
+    },
+    "afterSaveAndExit": {
+      "path": "/app",
+      "saved": true
+    },
+    "cleanup": {
+      "status": 200,
+      "gone": true
+    }
   }
 }
