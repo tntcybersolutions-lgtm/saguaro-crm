@@ -333,9 +333,9 @@ export default function ApiDocsPage() {
                         <span style={{
                           padding: '3px 9px', borderRadius: 20, fontSize: 10, fontWeight: 700,
                           whiteSpace: 'nowrap',
-                          background: `${GREEN}1e`,
+                          background: `color-mix(in srgb, ${GREEN} 12%, transparent)`,
                           color: GREEN,
-                          border: `1px solid ${GREEN + '55'}`,
+                          border: `1px solid color-mix(in srgb, ${GREEN} 33%, transparent)`,
                         }}>
                           Live
                         </span>

@@ -203,7 +203,7 @@ export function PeopleDirectory() {
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}><input value={f.regular_rate ?? ''} onChange={(e) => setF({ ...f, regular_rate: e.target.value })} placeholder="Rate $/hr" style={inp} />{editing && <input value={f.overtime_rate ?? ''} onChange={(e) => setF({ ...f, overtime_rate: e.target.value })} placeholder="OT $/hr" style={inp} />}</div>
           {editing && <div style={{ display: 'flex', gap: 8, marginTop: 8 }}><input value={f.emergency_contact_name ?? ''} onChange={(e) => setF({ ...f, emergency_contact_name: e.target.value })} placeholder="Emergency contact" style={inp} /><input value={f.emergency_contact_phone ?? ''} onChange={(e) => setF({ ...f, emergency_contact_phone: e.target.value })} placeholder="Emergency phone" style={inp} /></div>}
           {saveErr && (
-            <div role="alert" style={{ marginTop: 12, padding: '9px 11px', borderRadius: 8, background: 'rgba(255,59,48,0.10)', border: `1px solid ${RED}55`, color: RED, fontSize: 13, lineHeight: 1.45 }}>
+            <div role="alert" style={{ marginTop: 12, padding: '9px 11px', borderRadius: 8, background: 'rgba(255,59,48,0.10)', border: `1px solid color-mix(in srgb, ${RED} 33%, transparent)`, color: RED, fontSize: 13, lineHeight: 1.45 }}>
               {saveErr}
             </div>
           )}

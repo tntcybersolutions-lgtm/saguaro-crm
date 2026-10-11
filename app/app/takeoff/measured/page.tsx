@@ -439,15 +439,15 @@ function MeasuredTakeoffInner() {
     const net = revDiff.netDeltaCents;
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>Change Order</title>
 <style>*{box-sizing:border-box}body{font:14px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;color:#111;margin:0;padding:40px}
-h1{font-size:26px;margin:0 0 2px;letter-spacing:-.02em}.sub{color:var(--text-tertiary);font-size:12px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700}
+h1{font-size:26px;margin:0 0 2px;letter-spacing:-.02em}.sub{color:#666;font-size:12px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700}
 .brand{color:#B8860B;font-weight:800}.meta{margin:22px 0;border:1px solid #e5e5e5;border-radius:10px;padding:14px 16px;display:grid;grid-template-columns:1fr 1fr;gap:8px 22px;font-size:13px}
 .meta b{color:#444;font-weight:600}table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
-th{text-align:left;padding:8px 10px;background:#f6f6f4;border-bottom:2px solid #e5e5e5;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-tertiary)}
+th{text-align:left;padding:8px 10px;background:#f6f6f4;border-bottom:2px solid #e5e5e5;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#666}
 td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444;white-space:nowrap}td.q{color:#555;white-space:nowrap}td.d{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
 .net{margin-top:18px;display:flex;justify-content:space-between;align-items:center;border:2px solid #111;border-radius:12px;padding:16px 18px}
-.net .lbl{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-tertiary);font-weight:700}
+.net .lbl{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:#666;font-weight:700}
 .net .amt{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;color:${net >= 0 ? 'var(--success)' : 'var(--danger)'}}
-.net .was{font-size:12px;color:var(--text-tertiary);text-align:right;margin-top:2px}.foot{margin-top:26px;font-size:11px;color:var(--text-secondary);border-top:1px solid #eee;padding-top:12px}</style></head>
+.net .was{font-size:12px;color:#666;text-align:right;margin-top:2px}.foot{margin-top:26px;font-size:11px;color:#999;border-top:1px solid #eee;padding-top:12px}</style></head>
 <body><div class="sub"><span class="brand">Saguaro Control Systems</span> · Control Every Project. Deliver Every Promise.</div>
 <h1>Change Order</h1>
 <div class="meta"><div><b>Project:</b> ${escapeHtml(name || proj?.name || 'Measured Takeoff')}</div><div><b>Date:</b> ${today}</div>

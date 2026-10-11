@@ -683,7 +683,7 @@ export default function SchedulePage(){
                   </button>
                   <button onClick={()=>deleteTask(selected)} disabled={deleting}
                     style={{padding:'6px 14px',background:'rgba(192,48,48,.1)',
-                      border:`1px solid ${RED}44`,borderRadius:6,
+                      border:`1px solid color-mix(in srgb, ${RED} 27%, transparent)`,borderRadius:6,
                       color:RED,fontSize:12,fontWeight:700,cursor:'pointer'}}>
                     {deleting?'…':'Delete'}
                   </button>

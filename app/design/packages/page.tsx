@@ -268,10 +268,10 @@ export default function PackagesPage() {
                       <div key={i} style={{
                         display: 'flex', alignItems: 'center', gap: 8,
                         padding: '5px 0', fontSize: 13,
-                        color: item.included ? TEXT : `${DIM}60`,
+                        color: item.included ? TEXT : DIM,
                         textDecoration: item.included ? 'none' : 'line-through',
                       }}>
-                        <span style={{ color: item.included ? GREEN : `${DIM}40`, fontSize: 14 }}>
+                        <span style={{ color: item.included ? GREEN : DIM, fontSize: 14 }}>
                           {item.included ? <Check size={14} weight="bold" color={GREEN} /> : '—'}
                         </span>
                         {item.name}
@@ -362,7 +362,7 @@ export default function PackagesPage() {
                       {FEATURE_BY_TIER[tier]?.[fi] ? (
                         <span style={{ color: GREEN, fontSize: 18 }}>&#10003;</span>
                       ) : (
-                        <span style={{ color: `${DIM}40` }}>&mdash;</span>
+                        <span style={{ color: DIM }}>&mdash;</span>
                       )}
                     </td>
                   ))}

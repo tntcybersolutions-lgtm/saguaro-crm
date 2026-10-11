@@ -322,9 +322,9 @@ export default function CommandCenterPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
             {[1, 2, 3, 4].map((i) => (
               <div key={i} style={{ ...glassCard(), height: 140, opacity: 0.5 }}>
-                <div style={{ width: '50%', height: 14, background: `${DIM}22`, borderRadius: 6, marginBottom: 10 }} />
-                <div style={{ width: '70%', height: 10, background: `${DIM}15`, borderRadius: 4, marginBottom: 6 }} />
-                <div style={{ width: '40%', height: 10, background: `${DIM}11`, borderRadius: 4 }} />
+                <div style={{ width: '50%', height: 14, background: `color-mix(in srgb, ${DIM} 13%, transparent)`, borderRadius: 6, marginBottom: 10 }} />
+                <div style={{ width: '70%', height: 10, background: `color-mix(in srgb, ${DIM} 8%, transparent)`, borderRadius: 4, marginBottom: 6 }} />
+                <div style={{ width: '40%', height: 10, background: `color-mix(in srgb, ${DIM} 7%, transparent)`, borderRadius: 4 }} />
               </div>
             ))}
           </div>
@@ -432,7 +432,7 @@ function OpenItemPill({ label, count, color }: { label: string; count: number; c
       <span style={{
         width: 20, height: 20, borderRadius: '50%',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: count > 0 ? `color-mix(in srgb, ${color} 13%, transparent)` : `${DIM}11`,
+        background: count > 0 ? `color-mix(in srgb, ${color} 13%, transparent)` : `color-mix(in srgb, ${DIM} 7%, transparent)`,
         fontSize: 10, fontWeight: 800, color: count > 0 ? color : DIM,
       }}>
         {count}

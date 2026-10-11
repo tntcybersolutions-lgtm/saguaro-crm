@@ -36,6 +36,7 @@ import { humanError } from '@/lib/errors';
 import { calibrateModel, applyCalibration, type MeasuredPoint, type CalibrationResult } from '@/lib/heatmap/calibrate';
 import { calibrationNote, engineStamp, parseSurveyCsv } from '@/lib/heatmap/meta';
 import { rssiRgb } from '@/lib/heatmap/models';
+import { paletteHex } from '@/lib/design-tokens';
 import dynamic from 'next/dynamic';
 
 import { printHtml } from '@/lib/print-doc';
@@ -257,7 +258,7 @@ const LAYER_META: { key: string; name: string; color: string }[] = [
   { key: 'voice', name: 'Voice Jacks (RJ11)', color: SYSTEM_COLORS.power },
   { key: 'combo', name: 'Combo Plates', color: SYSTEM_COLORS.power },
   { key: 'cabling', name: 'Cable Terminations', color: SYSTEM_COLORS.cabling },
-  { key: 'other', name: 'Other Devices', color: 'var(--text-secondary)' },
+  { key: 'other', name: 'Other Devices', color: paletteHex.gray }, // drawn on the canvas — a hex, never a CSS variable
 ];
 // ── compact layer-chip row (the 6 approved systems) shown under the header ──
 type PanelTab = 'design' | 'layers' | 'bom' | 'survey';
@@ -1807,7 +1808,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         <div class="card"><div class="k">Combined BOM</div><div class="v">$${summary.bom.total.toLocaleString()}</div></div>
       </div>
       <table style="margin-top:12px"><thead><tr><th>Floor</th><th class="r">Area</th><th class="c">Coverage</th><th class="c">Devices</th><th class="c">APs</th><th class="c">Dead Zones</th></tr></thead>
-      <tbody>${summary.floors.map((fl) => `<tr><td><b>${fl.name}</b>${fl.hasPlan ? '' : ' <span style="color:var(--text-secondary)">(no plan)</span>'}</td><td class="r">${fl.areaFt2 ? fl.areaFt2.toLocaleString() + ' ft²' : '—'}</td><td class="c">${fl.hasScale && fl.apCount ? fl.coveragePct + '%' : '—'}</td><td class="c">${fl.deviceCount}</td><td class="c">${fl.apCount}</td><td class="c">${fl.deadZones}</td></tr>`).join('')}</tbody></table></div>` : '';
+      <tbody>${summary.floors.map((fl) => `<tr><td><b>${fl.name}</b>${fl.hasPlan ? '' : ' <span style="color:#999">(no plan)</span>'}</td><td class="r">${fl.areaFt2 ? fl.areaFt2.toLocaleString() + ' ft²' : '—'}</td><td class="c">${fl.hasScale && fl.apCount ? fl.coveragePct + '%' : '—'}</td><td class="c">${fl.deviceCount}</td><td class="c">${fl.apCount}</td><td class="c">${fl.deadZones}</td></tr>`).join('')}</tbody></table></div>` : '';
 
     // ── per-floor hero maps (multi) or the single active hero ──
     const heroSectionHtml = multi
@@ -1841,10 +1842,10 @@ export default function Designer({ projectId }: { projectId: string | null }) {
       tfoot td{font-weight:800;border-top:2px solid #0a0a0a;background:#fafbfc}
       .cards{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
       .card{flex:1;min-width:120px;border:1px solid #e7e9ec;border-radius:8px;padding:11px 13px;background:#fafbfc}
-      .card .k{font-size:10.5px;color:var(--text-tertiary)}
+      .card .k{font-size:10.5px;color:#777}
       .card .v{font-size:22px;font-weight:800;color:#0a0a0a;margin-top:3px}
       .sect{page-break-inside:avoid}
-      .note{color:var(--text-tertiary);font-size:10.5px;margin-top:22px;border-top:1px solid #e7e9ec;padding-top:10px}
+      .note{color:#888;font-size:10.5px;margin-top:22px;border-top:1px solid #e7e9ec;padding-top:10px}
       .foot{color:#aab;font-size:10px;text-align:center;margin:14px 0 24px}
     </style></head><body><div class="wrap">
       <div class="band">

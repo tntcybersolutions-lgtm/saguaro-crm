@@ -14,6 +14,11 @@
  *      or a faded rgba(255,255,255,<.6) as a text colour fails — zero allowed,
  *      no baseline. Print / PDF / email / canvas files and pages that paint a
  *      white page keep their greys (grey on white is readable).
+ *   5. No hex alpha glued onto a CSS variable. `${DIM}40` with
+ *      DIM = 'var(--text-secondary)' is `var(--text-secondary)40` — invalid
+ *      CSS, so the browser drops the whole declaration (the background, border
+ *      or text colour silently disappears). Fade a variable with
+ *      color-mix(in srgb, ${DIM} 25%, transparent). Zero allowed, every file.
  *
  * Allowlisted on purpose (documented exceptions): print / PDF layouts, QR
  * canvases, signature pads, customer-facing portals, email templates, charts
@@ -67,16 +72,45 @@ const dimValue = (v) => {
 };
 const VAL = String.raw`(#[0-9a-fA-F]{3,6}\b|rgba\(\s*255\s*,\s*255\s*,\s*255\s*,\s*0?\.\d+\s*\))`;
 const DIM_RES = [
-  new RegExp(String.raw`\bcolor\s*:\s*(['"])` + VAL + String.raw`\1`, 'gi'),
+  // `lit ? color : '#…'` is a ternary on a variable named color, not a property.
+  new RegExp(String.raw`(?<!\?\s*)\bcolor\s*:\s*(['"])` + VAL + String.raw`\1`, 'gi'),
   new RegExp(String.raw`(?<![-\w])color\s*:\s*` + VAL + String.raw`(?=\s*[;}"'!])`, 'gi'),
   new RegExp(String.raw`\b(?:DIM|MUTED|TEXT_DIM|TEXT_MED|TEXT_MUTED|SUBTLE|FAINT|dim|muted|faint|subtle|textDim|textMuted|text2|text3)\s*[:=]\s*(['"])` + VAL + String.raw`\1`, 'g'),
 ];
+/* 5. Hex alpha on a CSS variable. Per file: names bound to a 'var(--…)' string,
+ * then `${NAME}NN` or NAME + 'NN' anywhere in that file. */
+const VAR_BIND = /(?<![\w.])([A-Za-z_]\w*)\s*(?::\s*string\s*)?=\s*(['"`])var\(--[^'"`]+\)\2/g;
+const VAR_KEY = /(?<![\w.])([A-Za-z_]\w*)\s*:\s*(['"`])var\(--[^'"`]+\)\2/g;
+const esc = (s) => s.replace(/[$()*+.?[\\\]^{|}]/g, '\\$&');
+const varAlphaFindings = [];
+for (const r of [...walk(path.join(ROOT, 'app')), ...walk(path.join(ROOT, 'components')), ...walk(path.join(ROOT, 'lib'))].map(rel)) {
+  if (!/\.(tsx?|jsx?)$/.test(r)) continue;
+  const src = fs.readFileSync(path.join(ROOT, r), 'utf8');
+  const names = new Set([...src.matchAll(VAR_BIND)].map((m) => m[1]));
+  const keys = new Set([...src.matchAll(VAR_KEY)].map((m) => m[1]).filter((k) => !/^(color|background|border|fill|stroke)$/.test(k)));
+  if (!names.size && !keys.size) continue;
+  const res = [
+    ...[...names].map((n) => new RegExp(String.raw`\$\{${esc(n)}\}[0-9a-fA-F]{2}(?![0-9a-zA-Z])|(?<![\w.])${esc(n)}\s*\+\s*['"][0-9a-fA-F]{2}['"]`, 'g')),
+    ...[...keys].map((k) => new RegExp(String.raw`\$\{[A-Za-z_]\w*\.${esc(k)}\}[0-9a-fA-F]{2}(?![0-9a-zA-Z])`, 'g')),
+  ];
+  src.split('\n').forEach((line, i) => {
+    for (const re of res) for (const m of line.matchAll(re)) varAlphaFindings.push({ r, line: i + 1, text: m[0] });
+  });
+}
 const dimFindings = [];
 for (const r of [...walk(path.join(ROOT, 'app')), ...walk(path.join(ROOT, 'components'))].map(rel)) {
   if (!r.endsWith('.tsx') || r.startsWith('app/api/') || DIM_SKIP_FILE.test(path.basename(r))) continue;
   const src = fs.readFileSync(path.join(ROOT, r), 'utf8');
   if (WHITE_PAGE.test(src)) continue;
+  // HTML written into a print / PDF window is a white page: grey on white is
+  // readable and CSS variables do not exist there. Skip an inline style="…"
+  // attribute and any line inside a <!doctype>/<html> … </html> string.
+  let inDoc = false;
   src.split('\n').forEach((line, i) => {
+    if (/<!doctype|<html[\s>]/i.test(line)) inDoc = true;
+    const skip = inDoc || /style="/.test(line);
+    if (/<\/html>/i.test(line)) inDoc = false;
+    if (skip) return;
     for (const re of DIM_RES) {
       re.lastIndex = 0;
       for (const m of line.matchAll(re)) {
@@ -130,7 +164,12 @@ for (const [r, c] of Object.entries(counts)) {
   for (const k of ['hex', 'table', 'status']) if (c[k] > b[k]) regressions.push({ r, k, was: b[k], now: c[k] });
 }
 const totals = Object.values(counts).reduce((a, c) => ({ hex: a.hex + c.hex, table: a.table + c.table, status: a.status + c.status }), { hex: 0, table: 0, status: 0 });
-console.log(`DESIGN-SYSTEM GATE — ${files.length} files scanned: ${totals.hex} hex literals, ${totals.table} raw tables, ${totals.status} plain status spans (baseline-tracked), ${dimFindings.length} dim text colours (none allowed)`);
+console.log(`DESIGN-SYSTEM GATE — ${files.length} files scanned: ${totals.hex} hex literals, ${totals.table} raw tables, ${totals.status} plain status spans (baseline-tracked), ${dimFindings.length} dim text colours, ${varAlphaFindings.length} hex alphas on a CSS variable (none allowed)`);
+if (varAlphaFindings.length) {
+  console.error('\nHEX ALPHA ON A CSS VARIABLE (rule 5 — invalid CSS; use color-mix(in srgb, ${X} N%, transparent)):');
+  for (const f of varAlphaFindings.slice(0, 40)) console.error(`  ${f.r}:${f.line}  ${f.text}`);
+  if (!UPDATE) process.exit(1);
+}
 if (dimFindings.length) {
   console.error('\nDIM TEXT (rule 4 — text is pearl white: var(--text-primary|secondary|tertiary)):');
   for (const f of dimFindings.slice(0, 40)) console.error(`  ${f.r}:${f.line}  ${f.text}`);

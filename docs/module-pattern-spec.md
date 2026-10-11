@@ -151,7 +151,14 @@ see, not alive — full site, not hunt and peck."*
   constant is `var(--text-secondary)`. `tools/check-design-system.mjs` rule 4
   fails the build on one — portals included, no baseline.
 - Exceptions are only where grey on white is the right call: print / PDF /
-  email layouts and pages that paint a white page.
+  email layouts and pages that paint a white page. HTML written into a print
+  window keeps hex colours — CSS variables do not exist there — and so does a
+  colour drawn on a canvas or stored with a record (`paletteHex` in
+  `lib/design-tokens.ts` is the hex mirror for those).
+- A colour held in a variable is faded with
+  `color-mix(in srgb, ${X} 25%, transparent)`, never a hex alpha glued on
+  (`${DIM}40` is `var(--text-secondary)40` — invalid, the browser drops it).
+  Rule 5 of the same gate fails the build on one.
 
 ---
 

@@ -126,7 +126,7 @@ function Lamp({
         cx={cx}
         cy={cy}
         r={4.2}
-        fill={lit ? color : 'var(--text-tertiary)'}
+        fill={lit ? color : 'rgba(255,255,255,0.07)'}
         stroke={lit ? 'rgba(255,255,255,0.30)' : 'rgba(255,255,255,0.16)'}
         strokeWidth={0.8}
       />

@@ -1108,11 +1108,11 @@ export default function ClientPortalPage() {
                 <div style={{ fontSize: 28, fontWeight: 800, color: AMBER }}>{coSummary.pending}</div>
                 <div style={{ fontSize: 11, color: DIM, marginTop: 4 }}>Pending</div>
               </div>
-              <div style={{ background: `${GREEN}15`, borderRadius: 8, padding: 12 }}>
+              <div style={{ background: `color-mix(in srgb, ${GREEN} 8%, transparent)`, borderRadius: 8, padding: 12 }}>
                 <div style={{ fontSize: 28, fontWeight: 800, color: GREEN }}>{coSummary.approved}</div>
                 <div style={{ fontSize: 11, color: DIM, marginTop: 4 }}>Approved</div>
               </div>
-              <div style={{ background: `${RED}15`, borderRadius: 8, padding: 12 }}>
+              <div style={{ background: `color-mix(in srgb, ${RED} 8%, transparent)`, borderRadius: 8, padding: 12 }}>
                 <div style={{ fontSize: 28, fontWeight: 800, color: RED }}>{coSummary.rejected}</div>
                 <div style={{ fontSize: 11, color: DIM, marginTop: 4 }}>Rejected</div>
               </div>
@@ -1821,7 +1821,7 @@ export default function ClientPortalPage() {
                 <div key={item.id} style={{ ...cardStyle, padding: 16, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
                   <div style={{
                     width: 40, height: 40, borderRadius: '50%',
-                    background: item.status === 'signed_off' ? `${GREEN}20` : item.status === 'completed' ? 'color-mix(in srgb, var(--brand-primary) 13%, transparent)' : `${AMBER}20`,
+                    background: item.status === 'signed_off' ? `color-mix(in srgb, ${GREEN} 13%, transparent)` : item.status === 'completed' ? 'color-mix(in srgb, var(--brand-primary) 13%, transparent)' : `${AMBER}20`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
                     <span style={{ fontSize: 16 }}>
@@ -2267,7 +2267,7 @@ export default function ClientPortalPage() {
                 <div style={{ fontSize: 12, color: DIM }}>
                   Powered by <span style={{ color: GOLD, fontWeight: 700 }}>Saguaro Control Systems</span>
                 </div>
-                <div style={{ fontSize: 10, color: `${DIM}60`, marginTop: 2 }}>
+                <div style={{ fontSize: 10, color: DIM, marginTop: 2 }}>
                   Secure client portal · All data encrypted in transit
                 </div>
               </div>
@@ -2281,7 +2281,7 @@ export default function ClientPortalPage() {
 
           {/* Keyboard shortcuts hint */}
           <div style={{ textAlign: 'center', marginTop: 12 }}>
-            <span style={{ fontSize: 10, color: `${DIM}40` }}>
+            <span style={{ fontSize: 10, color: DIM }}>
               Tip: Use Alt+1 through Alt+7 to quickly switch tabs.
             </span>
           </div>
