@@ -213,15 +213,16 @@ export default function AutoUnsavedGuard() {
       if (scope) arm = { scope, at: Date.now() };
       else if (pickSaveButton([labelOf(t)]) === 0) arm = { scope: document.body, at: Date.now() };
     };
-    // A field that saves itself when you leave it or press Enter (inline edits).
-    const onLeaveField = (e: FocusEvent) => {
-      const el = guardable(e.target);
-      if (el && dirty.has(el)) arm = { scope: scopeOf(el) || el, at: Date.now() };
+    // On the page itself (no form around it) a field may save itself when you
+    // leave it or press Enter — an inline edit, a message box. Inside a form
+    // that is the form's own Save / submit, armed above.
+    const armLoose = (t: EventTarget | null) => {
+      const el = guardable(t);
+      if (el && dirty.has(el) && !scopeOf(el)) arm = { scope: el, at: Date.now() };
     };
+    const onLeaveField = (e: FocusEvent) => armLoose(e.target);
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Enter' || e.shiftKey) return;
-      const el = guardable(e.target);
-      if (el && dirty.has(el)) arm = { scope: scopeOf(el) || el, at: Date.now() };
+      if (e.key === 'Enter' && !e.shiftKey) armLoose(e.target);
     };
     const onSubmit = (e: Event) => {
       if (!(e.target instanceof HTMLFormElement)) return;
