@@ -123,6 +123,14 @@ screen and add gates asking … save and exit or discard … fully site wide."*
   find it. A page's own `useUnsavedGuard` answers first when it is dirty.
 - **App-shell navigation** that moves on a click handler (not a `<Link>`) uses
   `useGuardedRouter()` from `lib/navGuard.ts` so the gate can ask first.
+- **Photos & video from anywhere** — `components/media/QuickMedia.tsx`: the
+  camera in the middle of the phone's bottom tabs, Photos in the desktop top
+  bar, ⌘K ("photo", "video"), files dropped on any page, or `?media=1` on any
+  link open one sheet — Take Photo · Record Video · Choose — with **Send to**
+  any job (the one you are in, else the last one used). A page never adds its
+  own camera button for this; a page with its own drop zone just calls
+  `preventDefault()` in its drag handlers and the shell stands aside. The job's
+  Photos page viewer has **Send to Another Job** (`POST /api/media/move`).
 
 ---
 

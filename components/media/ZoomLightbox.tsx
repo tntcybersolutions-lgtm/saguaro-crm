@@ -23,7 +23,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from
 import { createPortal } from 'react-dom';
 import {
   Info, X, CaretLeft, CaretRight, MagnifyingGlassPlus, MagnifyingGlassMinus, ArrowSquareOut,
-  DownloadSimple, Trash, CircleNotch, Play, ImageSquare,
+  DownloadSimple, Trash, CircleNotch, Play, ImageSquare, PaperPlaneTilt,
 } from '@phosphor-icons/react';
 import { saveMedia } from '@/lib/media-save';
 
@@ -98,6 +98,7 @@ export default function ZoomLightbox({
   onInfo,
   onMediaError,
   onDelete,
+  onSend,
 }: {
   items: LightboxItem[];
   index: number;
@@ -109,6 +110,8 @@ export default function ZoomLightbox({
   onMediaError?: (item: LightboxItem) => void;
   /** Delete this item. The caller confirms; resolve true once it's gone. */
   onDelete?: (item: LightboxItem) => Promise<boolean> | boolean;
+  /** Send this item to another job (the page opens its job picker). */
+  onSend?: (item: LightboxItem) => void;
 }) {
   const item = items[index];
   const rootRef = useRef<HTMLDivElement>(null);
@@ -578,6 +581,11 @@ export default function ZoomLightbox({
         <button type="button" className="zlBtn" aria-label={`Save ${isVideo ? 'video' : 'photo'}`} title="Save / share" onClick={save} disabled={!!busy}>
           {busy === 'save' ? <CircleNotch size={18} className="zlSpin" /> : <DownloadSimple size={19} />}
         </button>
+        {onSend && (
+          <button type="button" className="zlBtn" aria-label="Send to another job" title="Send to another job" onClick={() => onSend(item)} disabled={!!busy}>
+            <PaperPlaneTilt size={19} />
+          </button>
+        )}
         {onDelete && (
           <button type="button" className="zlBtn" data-tone="danger" aria-label={`Delete ${isVideo ? 'video' : 'photo'}`} title="Delete" onClick={remove} disabled={!!busy}>
             {busy === 'delete' ? <CircleNotch size={18} className="zlSpin" /> : <Trash size={18} />}

@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { safeJsonParse } from '@/lib/safe-json';
 import { useGuardedRouter } from '@/lib/navGuard';
+import { openQuickMedia } from '@/components/media/QuickMedia';
 
 const GOLD   = 'var(--brand-primary)';
 const DARK   = 'var(--bg-base)';
@@ -45,6 +46,10 @@ const NAV_ITEMS: Omit<PaletteItem, 'section'>[] = [
 // ─── Quick Actions ────────────────────────────────────────────────────────────
 
 const ACTION_ITEMS: Omit<PaletteItem, 'section'>[] = [
+  // Photos & video: the most-used thing in the field. The href keeps a
+  // "recent" copy working after a reload (a stored action can't be).
+  { id: 'act-photo',        icon: '📷', label: 'Take Photo or Video', description: 'Camera, video or upload — send to any job', href: '/app?media=1', action: () => openQuickMedia() },
+  { id: 'act-upload-media', icon: '🖼️', label: 'Upload Photos & Videos', description: 'Choose or drop files and send them to any job', href: '/app?media=1', action: () => openQuickMedia() },
   { id: 'act-new-project',  icon: '🏗️', label: 'New Project',     description: 'Create a new construction project',    shortcut: 'N', href: '/app/projects/new' },
   { id: 'act-new-pay-app',  icon: '💰', label: 'New Pay App',      description: 'Select a project to create a pay app',   shortcut: 'P', href: '/app/projects' },
   { id: 'act-new-rfi',      icon: '❓', label: 'New RFI',          description: 'Select a project to submit an RFI',    shortcut: 'R', href: '/app/projects' },
@@ -83,6 +88,8 @@ export default function CommandPalette({ onScoreBid }: Props) {
         const j = await r.json().catch(() => ({}));
         const rows: Array<{ id: string; name?: string; project_number?: string }> = j?.projects || [];
         for (const p of rows) if (p?.id && p.name) out.push({ id: `proj-${p.id}`, section: 'records', icon: '\u{1F3D7}️', label: p.name, description: p.project_number ? `Job ${p.project_number}` : 'Job', href: `/app/projects/${p.id}/overview` });
+        // Each job's photos & video, so "photo" or "video" + a job name finds them.
+        for (const p of rows) if (p?.id && p.name) out.push({ id: `photos-${p.id}`, section: 'records', icon: '\u{1F4F7}', label: `Photos & Video — ${p.name}`, description: 'Photos, video, pinch to zoom, send to another job', href: `/app/projects/${p.id}/photos` });
       } catch { /* list unavailable — the palette still works without records */ }
       try {
         const r = await fetch('/api/leads', { credentials: 'include' });
@@ -133,8 +140,22 @@ export default function CommandPalette({ onScoreBid }: Props) {
     return true;
   }
 
-  const filtered = query.trim()
-    ? allItems.filter(a => fuzzyMatch(a.label + ' ' + a.description, query))
+  /* Typed words that name an action ("photo", "video", "rfi") put the actions
+     first, so "photo" opens with Take Photo, not fourteen job rows. Within a
+     section a name that contains the words outranks a loose letter match. The
+     list is kept in display order, so the arrow keys walk it top to bottom. */
+  const q = query.trim().toLowerCase();
+  const actionsFirst = !!q && ACTION_ITEMS.some((a) => a.label.toLowerCase().includes(q));
+  const sectionOrder: PaletteItem['section'][] = actionsFirst
+    ? ['recent', 'actions', 'records', 'navigation']
+    : ['recent', 'records', 'actions', 'navigation'];
+  const rank = (a: PaletteItem) => (a.label.toLowerCase().includes(q) ? 2 : (a.label + ' ' + a.description).toLowerCase().includes(q) ? 1 : 0);
+  const filtered = q
+    ? allItems
+        .filter(a => fuzzyMatch(a.label + ' ' + a.description, query))
+        .map((item, i) => ({ item, i }))
+        .sort((a, b) => sectionOrder.indexOf(a.item.section) - sectionOrder.indexOf(b.item.section) || rank(b.item) - rank(a.item) || a.i - b.i)
+        .map(({ item }) => item)
     : allItems;
 
   // Clamp focus
@@ -214,7 +235,7 @@ export default function CommandPalette({ onScoreBid }: Props) {
   // Group filtered items by section for display
   const sections: { key: PaletteItem['section']; label: string; items: { item: PaletteItem; idx: number }[] }[] = [];
   let globalIdx = 0;
-  for (const sectionKey of ['recent', 'records', 'actions', 'navigation'] as const) {
+  for (const sectionKey of sectionOrder) {
     const sectionLabel = sectionKey === 'recent' ? 'Recent Pages' : sectionKey === 'records' ? 'Jobs & Leads' : sectionKey === 'actions' ? 'Quick Actions' : 'Navigation';
     const items = filtered
       .map((item, i) => ({ item, idx: i }))

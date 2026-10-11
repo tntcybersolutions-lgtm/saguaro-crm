@@ -1356,6 +1356,11 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 .sag-tb-back:active { transform: none; opacity: .75; }
 .sag-tb-back:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
 .sag-tb-back > svg { flex: none; color: var(--brand-primary); }
+/* Photos — the desktop's one click to the camera / upload sheet (components/media/QuickMedia). */
+.sag-tb-photo { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; flex-shrink: 0; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--brand-primary) 55%, transparent); background: color-mix(in srgb, var(--brand-primary) 12%, transparent); color: var(--sg-text); font-size: 13.5px; font-weight: 800; cursor: pointer; }
+.sag-tb-photo svg { color: var(--brand-primary); }
+.sag-tb-photo:hover { background: color-mix(in srgb, var(--brand-primary) 22%, transparent); border-color: var(--brand-primary); }
+.sag-tb-photo:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
 .sag-tb-back-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sag-tb-title { flex: 1 1 auto; min-width: 0; margin: 0; font-size: 16px; font-weight: 650; letter-spacing: -0.01em; color: var(--sg-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sag-tb-icon { flex: none; width: 44px; height: 44px; display: inline-grid; place-items: center; padding: 0; background: none; border: 0; border-radius: 22px; color: var(--sg-text-2); cursor: pointer; -webkit-tap-highlight-color: transparent; }
@@ -1447,6 +1452,11 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
   .sag-tab:active { transform: none; background: rgba(255,255,255,0.04); }
   .sag-tab[data-active="true"] { color: var(--brand-primary); font-weight: 800; }
   .sag-tab[data-active="true"] .sag-tab-ic { background: var(--brand-primary); color: var(--on-brand, var(--c-on-brand)); box-shadow: 0 0 14px color-mix(in srgb, var(--brand-primary) 55%, transparent); }
+  /* The camera in the middle is an action, not a place: a raised yellow
+     circle so it never reads as "the tab you are on". */
+  .sag-tab-cam .sag-tab-ic { width: 48px; height: 48px; border-radius: 50%; margin-top: -18px; background: var(--brand-primary); color: var(--on-brand, var(--c-on-brand)); border: 3px solid var(--bg-base); box-shadow: 0 0 18px color-mix(in srgb, var(--brand-primary) 60%, transparent); }
+  .sag-tab-cam .sag-tab-label { color: var(--brand-primary); font-weight: 800; }
+  .sag-tab-cam:active .sag-tab-ic { transform: scale(.94); }
   .sag-tab-label { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; white-space: nowrap; }
   .sag-tab-badge { display: inline-block; min-width: 17px; height: 17px; padding: 0 5px; border-radius: 9px; background: var(--danger); color: #FFFFFF; font-size: 10.5px; font-weight: 700; line-height: 17px; text-align: center; font-variant-numeric: tabular-nums; }
   /* The page's own bottom room: the frame already clears the tab bar. */

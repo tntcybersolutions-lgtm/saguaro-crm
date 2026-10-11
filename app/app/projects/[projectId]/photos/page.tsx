@@ -36,6 +36,7 @@ import PhotoEditor from '../../../../../components/PhotoEditor';
 import MediaUploadPanel from '@/components/media/MediaUploadPanel';
 import ZoomLightbox, { type LightboxItem } from '@/components/media/ZoomLightbox';
 import SubInbox from '@/components/media/SubInbox';
+import SendToJobDialog from '@/components/media/SendToJobDialog';
 import { useUploadQueue } from '@/lib/useUploadQueue';
 import { uploadPhoto, uploadVideo, fmtDuration } from '@/lib/media-upload';
 import {
@@ -45,7 +46,7 @@ import {
 import OnThisPhone from '@/components/media/OnThisPhone';
 import {
   Camera, X, PencilSimple, Plus, Images, WarningCircle, ArrowClockwise, Trash,
-  Crop, CaretLeft, CaretRight, Play, ArrowsOut, LinkSimple,
+  Crop, CaretLeft, CaretRight, Play, ArrowsOut, LinkSimple, PaperPlaneTilt,
 } from '@phosphor-icons/react';
 import {
   PageShell, Card, StatRow, Badge, Button, Toolbar, Tabs, EmptyState, RowActions,
@@ -184,6 +185,7 @@ export default function PhotosPage(){
   const [loading,setLoading]=useState(true);
   const [loadError,setLoadError]=useState('');
   const [selected,setSelected]=useState<any>(null);
+  const [sendOpen,setSendOpen]=useState(false);
   const [mode,setMode]=useState<'view'|'edit'|'create'|null>(null);
   const [form,setForm]=useState({...EMPTY_FORM});
   const detailRef = useRef<HTMLDivElement>(null);
@@ -817,6 +819,11 @@ export default function PhotosPage(){
                     </Button>
                   )}
                   {(!selectedFromFiles || isVideo(selected)) && (
+                    <Button icon={<PaperPlaneTilt size={16}/>} onClick={()=>setSendOpen(true)}>
+                      Send to Another Job
+                    </Button>
+                  )}
+                  {(!selectedFromFiles || isVideo(selected)) && (
                     <RowActions actions={[
                       { label:'Delete', icon:<Trash size={15}/>, onClick:()=>deletePhoto(selected), tone:'danger', disabled:deleting },
                     ]}/>
@@ -835,6 +842,17 @@ export default function PhotosPage(){
   return(
     <div className="phWs" onDragEnter={onPageDragEnter}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
+
+      {selected && (
+        <SendToJobDialog
+          open={sendOpen}
+          fromProjectId={projectId}
+          what={isVideo(selected) ? 'this video' : 'this photo'}
+          items={[selectedFromFiles ? { kind:'file', id:String(selected.file_id) } : { kind:'photo', id:String(selected.id) }]}
+          onClose={()=>setSendOpen(false)}
+          onSent={(name)=>{ setSendOpen(false); closePanel(); showToast(`Sent to ${name}.`); softReload(); }}
+        />
+      )}
 
       <MediaUploadPanel
         open={uploadOpen}
@@ -866,6 +884,12 @@ export default function PhotosPage(){
           onInfo={()=>{ setLightboxOpen(false); setLightboxFromTap(false); }}
           onMediaError={()=>load({silent:true})}
           onDelete={(it)=>{ const p=ordered.find((x:any)=>String(x.id)===it.id); return p?deletePhoto(p,true):false; }}
+          onSend={(it)=>{
+            const p=ordered.find((x:any)=>String(x.id)===it.id);
+            if(!p) return;
+            if(isFromFiles(p)&&!isVideo(p)){ showToast('This image lives in Files & Media — move it there.','bad'); return; }
+            viewPhoto(p); setLightboxOpen(false); setLightboxFromTap(false); setSendOpen(true);
+          }}
         />
       )}
 
