@@ -9,10 +9,11 @@
  *            thin "‹ <Job>" row that goes back to the job's tool list; the job
  *            page itself gets nothing (the app's bar and tab bar already lead
  *            to Jobs).
- *   desktop  the same back row on tool pages, plus a compact flat row of the
- *            job's phases (Overview · Preconstruction · … · Closeout) as text
- *            tabs, the active one underlined. The full tool list sits in the
- *            app's left rail (components/AppSidebar, from lib/project-nav).
+ *   desktop  the same back row on tool pages, plus the job's phases
+ *            (Overview · Preconstruction · … · Closeout) as lit pills with their
+ *            icons — bright and easy to find (Chad, 2026-10-11) — the one you
+ *            are in filled solid yellow. The full tool list sits in the app's
+ *            left rail (components/AppSidebar, from lib/project-nav).
  *
  * The bar carries `data-job-bar` so the app frame can hide it if its own top
  * bar starts naming the job.
@@ -50,6 +51,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
           <div className="pjx-tabs">
             {PROJECT_PHASES.map((ph) => {
               const active = ph.key === activeKey;
+              const Icon = ph.icon;
               return (
                 <Link
                   key={ph.key}
@@ -59,7 +61,8 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
                   aria-current={active ? 'page' : undefined}
                   title={ph.tagline}
                 >
-                  {ph.label}
+                  <Icon size={16} weight={active ? 'fill' : 'bold'} aria-hidden="true" />
+                  <span>{ph.label}</span>
                 </Link>
               );
             })}
@@ -84,11 +87,22 @@ const CSS = `
 }
 @media (min-width:768px){
   .pjx-bar{padding:0 clamp(8px,1.2vw,20px) 0 4px}
-  .pjx-tabs{display:flex;align-items:stretch;gap:2px;margin-left:auto;min-width:0;overflow-x:auto;scrollbar-width:none}
+  .pjx-bar{min-height:60px}
+  .pjx-tabs{display:flex;align-items:center;gap:8px;margin-left:auto;min-width:0;overflow-x:auto;scrollbar-width:none;padding:8px 2px}
   .pjx-tabs::-webkit-scrollbar{display:none}
-  .pjx-tab{display:inline-flex;align-items:center;min-height:44px;padding:0 10px;border-bottom:2px solid transparent;color:var(--fl-text-2,var(--text-secondary));font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap}
-  .pjx-tab:hover{color:var(--fl-text,var(--text-primary))}
-  .pjx-tab[data-active]{color:var(--fl-text,var(--text-primary));border-bottom-color:var(--brand-primary)}
+  .pjx-tab{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:0 15px;border-radius:999px;
+    border:1px solid color-mix(in srgb,var(--brand-primary) 45%,transparent);
+    background:linear-gradient(180deg,color-mix(in srgb,var(--brand-primary) 16%,transparent),color-mix(in srgb,var(--brand-primary) 6%,transparent));
+    box-shadow:0 0 14px color-mix(in srgb,var(--brand-primary) 14%,transparent);
+    color:var(--text-primary);font-size:14px;font-weight:700;text-decoration:none;white-space:nowrap;flex:0 0 auto;
+    transition:background .15s ease,border-color .15s ease,box-shadow .15s ease,transform .15s ease}
+  .pjx-tab svg{color:var(--brand-primary);flex:none}
+  .pjx-tab:hover{border-color:var(--brand-primary);background:color-mix(in srgb,var(--brand-primary) 24%,transparent);box-shadow:0 0 20px color-mix(in srgb,var(--brand-primary) 30%,transparent);transform:translateY(-1px)}
+  .pjx-tab:focus-visible{outline:2px solid var(--brand-primary);outline-offset:2px}
+  .pjx-tab[data-active]{background:var(--brand-primary);border-color:var(--brand-primary);color:var(--on-brand,var(--c-on-brand));font-weight:800;
+    box-shadow:0 0 0 1px color-mix(in srgb,var(--brand-primary) 60%,transparent),0 0 24px color-mix(in srgb,var(--brand-primary) 55%,transparent)}
+  .pjx-tab[data-active] svg{color:var(--on-brand,var(--c-on-brand))}
+  @media (prefers-reduced-motion:reduce){.pjx-tab{transition:none}.pjx-tab:hover{transform:none}}
   .pjx-bar[data-on-job] .pjx-tabs{margin-left:0}
 }
 `;
