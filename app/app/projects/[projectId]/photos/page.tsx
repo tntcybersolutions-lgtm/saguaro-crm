@@ -884,6 +884,12 @@ export default function PhotosPage(){
           onInfo={()=>{ setLightboxOpen(false); setLightboxFromTap(false); }}
           onMediaError={()=>load({silent:true})}
           onDelete={(it)=>{ const p=ordered.find((x:any)=>String(x.id)===it.id); return p?deletePhoto(p,true):false; }}
+          onSend={(it)=>{
+            const p=ordered.find((x:any)=>String(x.id)===it.id);
+            if(!p) return;
+            if(isFromFiles(p)&&!isVideo(p)){ showToast('This image lives in Files & Media — move it there.','bad'); return; }
+            viewPhoto(p); setLightboxOpen(false); setLightboxFromTap(false); setSendOpen(true);
+          }}
         />
       )}
 
