@@ -231,6 +231,8 @@ export interface PayAppIn {
   total_completed_stored?: number | string | null; current_payment_due?: number | string | null;
   payment_amount?: number | string | null; submitted_at?: string | null; application_date?: string | null;
   payment_received_at?: string | null;
+  /** G702 retainage held to date on this app (Home finance). */
+  total_retainage?: number | string | null;
 }
 
 /** Statuses a G702 carries once it has gone to the owner. */

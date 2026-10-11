@@ -17,6 +17,7 @@ import {
   type BidPackageIn, type InviteIn, type SubmissionIn, type PayAppIn, type CertIn,
 } from './flat';
 import { buildBrief, type Brief } from './brief';
+import { financeHome, type FinanceHome } from './finance';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Loose = { from: (table: string) => any };
@@ -33,6 +34,8 @@ export interface FlatHome {
   money: (FlatSection<MoneySummary['rows'][number]> & { usualDays: number | null; paidCount: number }) | null;
   /** What's on the calendar in the next 7 days — the schedule itself lives in My Work. */
   comingUp: { count: number; next: { title: string; date: string; kind: string } | null };
+  /** The money picture (owner / operations views); null for the other views. */
+  finance: FinanceHome | null;
 }
 
 const HOME_ROWS = 5;
@@ -91,7 +94,7 @@ export async function buildFlat(ctx: BuildCtx, view: HomeView, sections: HomeSec
   let apps: PayAppIn[] | null = null;
   if (company && canPayApps) {
     apps = await section('money', errors, () => list<PayAppIn>(byJob(db.from('pay_applications')
-      .select('id, project_id, app_number, status, total_completed_stored, current_payment_due, payment_amount, submitted_at, application_date, payment_received_at')
+      .select('id, project_id, app_number, status, total_completed_stored, current_payment_due, payment_amount, submitted_at, application_date, payment_received_at, total_retainage')
       .eq('tenant_id', t).is('deleted_at', null).in('status', BILLED_STATUSES)).limit(3000)));
     if (apps) apps = apps.filter(a => !a.project_id || usable(a.project_id) || !projects);
   }
@@ -152,5 +155,8 @@ export async function buildFlat(ctx: BuildCtx, view: HomeView, sections: HomeSec
       ? { ...state(money?.rows || (apps ? [] : null), 'money', !canPayApps), usualDays: money?.usualDays ?? null, paidCount: money?.paidCount ?? 0 }
       : null,
     comingUp: { count: week.length, next: week[0] ? { title: week[0].title, date: week[0].date, kind: week[0].kind } : null },
+    finance: company && (canBudget || canPayApps)
+      ? financeHome({ apps, jobs, bids, today: ctx.today, canBudget, canPayApps })
+      : null,
   };
 }
