@@ -3,8 +3,8 @@
 /**
  * Flat UI — the app's list-first look (Chad approved it on 2026-10-10).
  *
- * Content sits on the page in full-width rows with hairline dividers, small
- * grey section labels and one action per row. No trays, no fat cards, no glow,
+ * Content sits on the page in full-width rows with hairline dividers, lit
+ * section headings and one action per row. No trays, no fat cards, no glow,
  * no billboard numbers: a phone shows three times as much, the way Procore's
  * open items and JobTread's lists do.
  *
@@ -41,7 +41,12 @@ const CSS = `
 .fl-strip [data-tone=bad] b{color:var(--danger)}
 .fl-strip [data-tone=warn] b{color:var(--warning)}
 .fl-strip [data-tone=good] b{color:var(--success)}
-.fl-sec.fl-sec{margin:0;line-height:1.2;-webkit-text-fill-color:currentColor;display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:18px 16px 6px;font-size:11.5px;font-weight:700;letter-spacing:.8px;color:var(--fl-text-3);text-transform:uppercase}
+/* A section heading is a topic you scan for, so it is lit (Chad, 2026-10-11):
+   brand yellow, 16px, with a short glowing bar in front. Same look as
+   .pmSecTitle / .k-card-title / .sg-nav-head in globals.css. */
+.fl-sec.fl-sec{margin:0;line-height:1.25;-webkit-text-fill-color:currentColor;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 16px 8px;font-size:16px;font-weight:800;letter-spacing:.005em;color:var(--brand-primary);text-transform:none;text-shadow:0 0 14px color-mix(in srgb,var(--brand-primary) 35%,transparent)}
+.fl-sec>span:first-child{display:inline-flex;align-items:center;gap:9px;min-width:0}
+.fl-sec>span:first-child::before{content:'';flex:none;width:4px;height:1.05em;border-radius:2px;background:var(--brand-primary);box-shadow:0 0 10px color-mix(in srgb,var(--brand-primary) 60%,transparent)}
 .fl-sec .fl-sec-act{position:relative;color:var(--brand-primary);-webkit-text-fill-color:currentColor;font-weight:600;letter-spacing:0;text-transform:none;font-size:13px;text-decoration:none;background:none;border:0;padding:0;cursor:pointer}
 .fl-sec .fl-sec-act::after{content:'';position:absolute;inset:-14px -10px}
 .fl-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--fl-line)}
@@ -125,7 +130,7 @@ export function NumberStrip({ items }: { items: StripItem[] }) {
   );
 }
 
-/** A small grey section label, with an optional link on the right. */
+/** A section heading (lit yellow, easy to find), with an optional link on the right. */
 export function SectionLabel({ children, action, id }: { children: React.ReactNode; action?: { label: string; href?: string; onClick?: () => void }; id?: string }) {
   return (
     <h2 className="fl-sec" id={id}>

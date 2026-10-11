@@ -14,11 +14,11 @@ export const HOME_CSS = `
 .fh-in .fl-row,.fh-in .fl-skel{background:transparent}
 /* flat.tsx's row action reaches 42px with its border; Home needs the full 44. */
 .fh-in .fl-act::after{inset:-6px -2px}
-/* globals.css styles every h2 in the app (15px, 800, body colour); a section label is small and grey. */
-.fh-in h2.fl-sec{font-size:15px;font-weight:700;color:var(--sg-text);letter-spacing:0;text-transform:none;line-height:1.3;margin:0}
+/* globals.css styles every h2 in the app; Home's section headings take flat.tsx's lit look. */
+.fh-in h2.fl-sec{margin:0}
 .fh-in .fl-sec .fl-sec-act{position:relative}
 .fh-in .fl-sec .fl-sec-act::after{content:'';position:absolute;inset:-6px -8px}
-.fh-in .fl-sec small{font-size:11.5px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--sg-text-3)}
+.fh-in .fl-sec small{font-size:12.5px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--sg-text-3);text-shadow:none}
 .fh-in .fl-brief{margin:6px 16px 14px}
 .fh-in .fl-brief .fl-brief-act{position:relative;display:inline-block}
 .fh-in .fl-brief .fl-brief-act::after{content:'';position:absolute;inset:-12px -8px}

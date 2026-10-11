@@ -896,11 +896,10 @@ export default function AppSidebar({
                   background: 'transparent',
                   border: 'none',
                   /* When a section is collapsed these headers are the ONLY nav
-                     text on screen, so they must read as structure, not as
-                     disabled. Title Case at 12px in the secondary text grey —
-                     clearly subordinate to the white item labels, clearly
-                     readable on black, and no longer brand-colored (neon yellow
-                     is reserved for the active item and the primary action). */
+                     text on screen, so they must read as structure. The label
+                     itself (.sg-nav-head in globals.css) is lit brand yellow in
+                     Title Case, the same as every section heading in the app
+                     (Chad, 2026-10-11), so the groups are easy to find. */
                   fontSize: '12px',
                   fontWeight: font.weight.bold,
                   color: colors.textDim,

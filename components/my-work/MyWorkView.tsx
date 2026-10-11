@@ -51,7 +51,7 @@ const CSS = `
 .mw-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:14px 16px 2px}
 .sag-app .mw .mw-h1,.mw .mw-h1{margin:0;font-size:20px;line-height:1.2}
 .mw-date{font-size:12px;font-weight:600;letter-spacing:.4px;color:var(--sg-text-2);white-space:nowrap}
-.sag-app .mw .fl-sec,.mw .fl-sec{font-size:11.5px;font-weight:700;letter-spacing:.8px;color:var(--sg-text-3);line-height:1.2;margin:0}
+.sag-app .mw .fl-sec,.mw .fl-sec{margin:0}
 .mw .fl-row{position:relative}
 .mw .fl-row:has(.mw-tl:active){background:var(--sg-border)}
 .mw .mw-tl{color:inherit;text-decoration:none;outline:none}

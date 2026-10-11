@@ -990,7 +990,9 @@ input:-webkit-autofill:focus {
    Raised is reserved for modals and menus (.k-modal, .k-menu-list). */
 .k-card { position: relative; min-width: 0; background: none; border: 0; border-radius: 0; box-shadow: none; }
 .k-card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); min-height: 36px; padding: 10px 0 6px; border-bottom: 1px solid var(--sg-border); }
-.k-card-title { font-size: 11.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--sg-text-3); line-height: 1.3; }
+/* Lit section heading — same look as flat.tsx's .fl-sec (Chad, 2026-10-11). */
+.k-card-title, .pmSecTitle { display: inline-flex; align-items: center; gap: 9px; font-size: 16px; font-weight: 800; letter-spacing: .005em; text-transform: none; color: var(--brand-primary); line-height: 1.3; text-shadow: 0 0 14px color-mix(in srgb, var(--brand-primary) 35%, transparent); }
+.k-card-title::before, .pmSecTitle::before { content: ''; flex: none; width: 4px; height: 1.05em; border-radius: 2px; background: var(--brand-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--brand-primary) 60%, transparent); }
 .k-card-sub { font-size: 12.5px; color: var(--sg-text-3); margin-top: 2px; letter-spacing: normal; text-transform: none; }
 .k-card-body { padding: 12px 0 4px; }
 .k-card-flush { padding: 0; }
@@ -1582,7 +1584,7 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 .sg-nav-label { font-weight: 600; letter-spacing: -0.005em; }
 .sg-nav-item[data-active="true"] .sg-nav-label, .sg-nav-label[data-active="true"] { color: var(--c-text); font-weight: 700; }
 .sg-nav-item:not([data-active="true"]):hover { background: rgba(255,255,255,0.04); color: var(--c-text) !important; }
-.sg-nav-head { font-size: 10.5px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--c-text-3); }
+.sg-nav-head { font-size: 13.5px; font-weight: 800; letter-spacing: .01em; text-transform: none; color: var(--brand-primary); text-shadow: 0 0 12px color-mix(in srgb, var(--brand-primary) 30%, transparent); }
 .sg-brand-name { color: var(--c-text); }
 
 /* Phone tab bar: flat — see PHONE FRAME above. The current tab is the brand
@@ -1716,10 +1718,9 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
   .pmHeadActs::-webkit-scrollbar{display:none}
   .pmHeadActs>*{flex:0 0 auto}
 }
-/* Flat section: a small caps label over a hairline, then the content. */
+/* Flat section: a lit heading (.pmSecTitle, with .k-card-title above) over a hairline, then the content. */
 .pmSec{position:relative;min-width:0}
 .pmSecHead{display:flex;align-items:center;gap:10px;min-height:34px;padding:8px 0 6px;margin-bottom:10px;border-bottom:1px solid var(--sg-border)}
-.pmSecTitle{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sg-text-3);line-height:1.3}
 .pmSecSub{font-size:12.5px;color:var(--sg-text-3);margin-top:2px;line-height:1.4}
 .pmSecTray{background:var(--c-card);border:1px solid var(--sg-border);border-radius:12px}
 .pmSecTray>.pmSecHead{padding:10px 14px 8px;margin-bottom:0}
