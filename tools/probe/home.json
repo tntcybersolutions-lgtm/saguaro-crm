@@ -16,8 +16,11 @@
       "/www.saguarocontrol.net/api/auth/me due to access control checks.",
       "/www.saguarocontrol.net/api/projects?limit=15&fields=id,name due to access control checks.",
       "/www.saguarocontrol.net/push-sw.js due to access control checks.",
-      "console: native downloads ChunkLoadError: Loading chunk 76894 failed.\n(error: https://www.saguarocontrol.net/_next/static/chunks/76894.d64040e2be2e049c.js?dpl=dpl_CvqRtm",
+      "console: native downloads ChunkLoadError: Loading chunk 76894 failed.\n(error: https://www.saguarocontrol.net/_next/static/chunks/76894.d64040e2be2e049c.js?dpl=dpl_G5SGac",
       "/www.saguarocontrol.net/api/auth/me due to access control checks.",
+      "/www.saguarocontrol.net/api/home due to access control checks.",
+      "console: Viewport argument key \"interactive-widget\" not recognized and ignored.",
+      "console: Viewport argument key \"interactive-widget\" not recognized and ignored.",
       "console: Viewport argument key \"interactive-widget\" not recognized and ignored.",
       "console: Viewport argument key \"interactive-widget\" not recognized and ignored."
     ],
@@ -80,12 +83,166 @@
         "green"
       ]
     },
+    "heads": {
+      "date": {
+        "text": "Sunday · Oct 11",
+        "color": "rgb(255, 230, 0)",
+        "size": "15px",
+        "weight": "800",
+        "caps": "none"
+      },
+      "sections": [
+        {
+          "text": "JobsAll 14",
+          "color": "rgb(255, 230, 0)",
+          "size": "16px",
+          "weight": "800",
+          "caps": "none"
+        },
+        {
+          "text": "Money · usually paid in 18 days",
+          "color": "rgb(255, 230, 0)",
+          "size": "16px",
+          "weight": "800",
+          "caps": "none"
+        },
+        {
+          "text": "Needs attention",
+          "color": "rgb(255, 230, 0)",
+          "size": "16px",
+          "weight": "800",
+          "caps": "none"
+        },
+        {
+          "text": "Activity",
+          "color": "rgb(255, 230, 0)",
+          "size": "16px",
+          "weight": "800",
+          "caps": "none"
+        }
+      ],
+      "rail": [],
+      "tabs": [
+        {
+          "text": "Home",
+          "active": true,
+          "label": "rgb(255, 230, 0)",
+          "icon": "rgb(10, 10, 0)",
+          "pill": "rgb(255, 230, 0)"
+        },
+        {
+          "text": "My Work9",
+          "active": false,
+          "label": "rgb(243, 234, 201)",
+          "icon": "rgb(255, 230, 0)",
+          "pill": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Jobs",
+          "active": false,
+          "label": "rgb(243, 234, 201)",
+          "icon": "rgb(255, 230, 0)",
+          "pill": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Time",
+          "active": false,
+          "label": "rgb(243, 234, 201)",
+          "icon": "rgb(255, 230, 0)",
+          "pill": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "More",
+          "active": false,
+          "label": "rgb(243, 234, 201)",
+          "icon": "rgb(255, 230, 0)",
+          "pill": "rgba(0, 0, 0, 0)"
+        }
+      ]
+    },
     "jobNav": {
       "tabs": [],
       "active": "Financials",
       "activeBg": "rgba(0, 0, 0, 0)",
-      "icons": 7
-    }
+      "icons": 7,
+      "cut": [],
+      "backRows": {
+        "topBar": true,
+        "jobBar": 0,
+        "jobBarShown": false
+      }
+    },
+    "overviewHeads": [
+      {
+        "text": "Preconstruction",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Documents",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Field",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Money",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Team",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Closeout",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "More toolsShow 25",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Coming upSchedule",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      }
+    ],
+    "overviewOverflowX": false,
+    "closeoutHeads": [
+      {
+        "text": "This Project Is Closed",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Closeout Progress",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Closeout Checklist",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Path to Handover",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "What Saguaro Knows",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      }
+    ],
+    "closeoutOverflowX": false
   },
   "desktop": {
     "errors": [],
@@ -148,6 +305,69 @@
         "green"
       ]
     },
+    "heads": {
+      "date": {
+        "text": "Sunday · Oct 11",
+        "color": "rgb(255, 230, 0)",
+        "size": "15px",
+        "weight": "800",
+        "caps": "none"
+      },
+      "sections": [
+        {
+          "text": "JobsAll 14",
+          "color": "rgb(255, 230, 0)",
+          "size": "16px",
+          "weight": "800",
+          "caps": "none"
+        },
+        {
+          "text": "Money · usually paid in 18 days",
+          "color": "rgb(255, 230, 0)",
+          "size": "16px",
+          "weight": "800",
+          "caps": "none"
+        },
+        {
+          "text": "Needs attention",
+          "color": "rgb(255, 230, 0)",
+          "size": "16px",
+          "weight": "800",
+          "caps": "none"
+        },
+        {
+          "text": "Activity",
+          "color": "rgb(255, 230, 0)",
+          "size": "16px",
+          "weight": "800",
+          "caps": "none"
+        }
+      ],
+      "rail": [
+        {
+          "text": "Home",
+          "color": "rgb(255, 230, 0)",
+          "size": "13.5px",
+          "weight": "800",
+          "caps": "none"
+        },
+        {
+          "text": "Sales",
+          "color": "rgb(255, 230, 0)",
+          "size": "13.5px",
+          "weight": "800",
+          "caps": "none"
+        },
+        {
+          "text": "Subs & Vendors",
+          "color": "rgb(255, 230, 0)",
+          "size": "13.5px",
+          "weight": "800",
+          "caps": "none"
+        }
+      ],
+      "tabs": []
+    },
     "jobNav": {
       "tabs": [
         "Overview",
@@ -160,8 +380,85 @@
       ],
       "active": "Financials",
       "activeBg": "rgb(255, 230, 0)",
-      "icons": 7
-    }
+      "icons": 7,
+      "cut": [],
+      "backRows": {
+        "topBar": true,
+        "jobBar": 0,
+        "jobBarShown": true
+      }
+    },
+    "overviewHeads": [
+      {
+        "text": "Preconstruction",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Documents",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Field",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Money",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Team",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Closeout",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "More toolsShow 25",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Coming upSchedule",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      }
+    ],
+    "overviewOverflowX": false,
+    "closeoutHeads": [
+      {
+        "text": "This Project Is Closed",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Closeout Progress",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Closeout Checklist",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Path to Handover",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "What Saguaro Knows",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      }
+    ],
+    "closeoutOverflowX": false
   },
   "wide": {
     "errors": [],
@@ -224,6 +521,69 @@
         "green"
       ]
     },
+    "heads": {
+      "date": {
+        "text": "Sunday · Oct 11",
+        "color": "rgb(255, 230, 0)",
+        "size": "15px",
+        "weight": "800",
+        "caps": "none"
+      },
+      "sections": [
+        {
+          "text": "JobsAll 14",
+          "color": "rgb(255, 230, 0)",
+          "size": "16px",
+          "weight": "800",
+          "caps": "none"
+        },
+        {
+          "text": "Money · usually paid in 18 days",
+          "color": "rgb(255, 230, 0)",
+          "size": "16px",
+          "weight": "800",
+          "caps": "none"
+        },
+        {
+          "text": "Needs attention",
+          "color": "rgb(255, 230, 0)",
+          "size": "16px",
+          "weight": "800",
+          "caps": "none"
+        },
+        {
+          "text": "Activity",
+          "color": "rgb(255, 230, 0)",
+          "size": "16px",
+          "weight": "800",
+          "caps": "none"
+        }
+      ],
+      "rail": [
+        {
+          "text": "Home",
+          "color": "rgb(255, 230, 0)",
+          "size": "13.5px",
+          "weight": "800",
+          "caps": "none"
+        },
+        {
+          "text": "Sales",
+          "color": "rgb(255, 230, 0)",
+          "size": "13.5px",
+          "weight": "800",
+          "caps": "none"
+        },
+        {
+          "text": "Subs & Vendors",
+          "color": "rgb(255, 230, 0)",
+          "size": "13.5px",
+          "weight": "800",
+          "caps": "none"
+        }
+      ],
+      "tabs": []
+    },
     "jobNav": {
       "tabs": [
         "Overview",
@@ -236,7 +596,84 @@
       ],
       "active": "Financials",
       "activeBg": "rgb(255, 230, 0)",
-      "icons": 7
-    }
+      "icons": 7,
+      "cut": [],
+      "backRows": {
+        "topBar": true,
+        "jobBar": 0,
+        "jobBarShown": true
+      }
+    },
+    "overviewHeads": [
+      {
+        "text": "Preconstruction",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Documents",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Field",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Money",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Team",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Closeout",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "More toolsShow 25",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Coming upSchedule",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      }
+    ],
+    "overviewOverflowX": false,
+    "closeoutHeads": [
+      {
+        "text": "This Project Is Closed",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Closeout Progress",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Closeout Checklist",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "Path to Handover",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      },
+      {
+        "text": "What Saguaro Knows",
+        "color": "rgb(255, 230, 0)",
+        "size": "16px"
+      }
+    ],
+    "closeoutOverflowX": false
   }
 }
