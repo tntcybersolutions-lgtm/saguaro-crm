@@ -6,13 +6,17 @@ import { useParams } from 'next/navigation';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 import { toCents, toDollars, sumCents, scaleCents } from '@/lib/calc';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, StatStrip, FlowSteps, FlowStrip, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
-import { Receipt, Plus, FilePlus, CurrencyDollar, Wallet, PencilSimple, ChartBar, Copy, Trash, type Icon } from '@phosphor-icons/react';
+import { Receipt, Plus, FilePlus, CurrencyDollar, Wallet, PencilSimple, ChartBar, Copy, Trash, Camera, Sparkle, type Icon } from '@phosphor-icons/react';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
 import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/table-sort';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
+import { uploadFileDirect } from '@/lib/upload-direct';
+import { shrinkForUpload } from '@/lib/image-shrink';
+import { openPdf } from '@/components/PdfViewer';
+import type { ReceiptFields } from '@/lib/receipt-read';
 
 const GOLD='var(--brand-primary)', DARK='var(--bg-base)', RAISED='var(--bg-surface)', BORDER='rgba(255,255,255,0.12)', DIM='var(--text-secondary)', TEXT='var(--text-primary)', GREEN='var(--success)', RED='var(--danger)';
 
@@ -27,6 +31,8 @@ interface Bill {
   status: string;
   category: string;
   project_id: string;
+  /** The receipt or invoice the bill was read from (signed by the list route). */
+  pdf_url?: string | null;
 }
 
 const EMPTY_FORM = { invoice_num: '', vendor: '', description: '', amount: 0, tax: 0, due_date: '', category: '03 - Concrete', cost_code: '' };
@@ -76,6 +82,10 @@ export default function BillsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('due');
+  // Scan a receipt: the photo is saved to the job's files, read, and prefills the form.
+  const [scanning, setScanning] = useState<'' | 'upload' | 'read'>('');
+  const [receipt, setReceipt] = useState<{ url: string; isPdf: boolean; fields: ReceiptFields | null; note: string } | null>(null);
+  const receiptInput = useRef<HTMLInputElement>(null);
 
   const fetchBills = useCallback(async () => {
     setLoading(true);
@@ -130,6 +140,8 @@ export default function BillsPage() {
           total: billTotal,
           due_date: form.due_date || null,
           status: 'Pending',
+          pdf_url: receipt?.url || null,
+          vendor_email: receipt?.fields?.vendor_email || null,
         }),
       });
       if (!res.ok) throw new Error('save failed');
@@ -138,7 +150,8 @@ export default function BillsPage() {
       setBills(prev => [json.bill as Bill, ...prev]);
       setShowForm(false);
       setForm(EMPTY_FORM);
-      setSuccessMsg('Bill added successfully.');
+      setReceipt(null);
+      setSuccessMsg(receipt ? 'Bill added — the receipt is attached.' : 'Bill added successfully.');
       setTimeout(() => setSuccessMsg(''), 4000);
       guard.clearDraft();
       return true;
@@ -319,6 +332,60 @@ export default function BillsPage() {
     setForm(p => ({ ...p, cost_code: div, category: div && divName ? `${div} - ${divName}` : p.category }));
   }
 
+  /* Scan a receipt: save it to the job's files first (so it is kept even if
+     reading fails), then read it (POST /api/bills/scan-receipt) and prefill
+     the form. Nothing becomes a bill until Save Bill. */
+  async function scanReceipt(original: File) {
+    setErrorMsg('');
+    setScanning('upload');
+    let url = '';
+    const isPdf = original.type === 'application/pdf' || /\.pdf$/i.test(original.name);
+    try {
+      const file = isPdf ? original : await shrinkForUpload(original);
+      const row = await uploadFileDirect(file, { projectId, folder: 'Receipts', category: 'Receipt' });
+      url = String(row?.file_url || row?.url || '');
+      if (!url) throw new Error('upload');
+    } catch {
+      setScanning('');
+      setErrorMsg('The receipt could not be uploaded. Check the connection and try again.');
+      return;
+    }
+    setReceipt({ url, isPdf, fields: null, note: '' });
+    setShowForm(true);
+    setScanning('read');
+    try {
+      const res = await fetch('/api/bills/scan-receipt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId, fileUrl: url }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.receipt) throw new Error(j.error || 'The receipt could not be read. Enter the bill by hand; your receipt is saved.');
+      const r = j.receipt as ReceiptFields;
+      const subtotal = r.subtotal ?? (r.total !== null ? r.total - (r.tax || 0) : 0);
+      setForm(p => ({
+        ...p,
+        invoice_num: r.bill_number || (r.bill_date ? `Receipt ${r.bill_date}` : p.invoice_num || 'Receipt'),
+        vendor: r.vendor_name || p.vendor,
+        description: r.description || p.description,
+        amount: Math.round((subtotal || 0) * 100) / 100,
+        tax: r.tax || 0,
+        due_date: r.due_date || r.bill_date || p.due_date || plus30(),
+      }));
+      if (r.cost_code && costCodeOptions.some((c: any) => String(c.costCode) === r.cost_code)) pickCostCode(r.cost_code);
+      else if (r.division && costCodeOptions.length === 0) pickDivision(r.division);
+      setAuto(a => ({ ...a, due: false }));
+      const unread = [!r.vendor_name && 'vendor', r.total === null && 'total', !r.bill_number && 'invoice number'].filter(Boolean);
+      setReceipt({ url, isPdf, fields: r, note: unread.length ? `Not on the receipt: ${unread.join(', ')} — fill ${unread.length === 1 ? 'it' : 'them'} in.` : '' });
+    } catch (e) {
+      setReceipt({ url, isPdf, fields: null, note: e instanceof Error ? e.message : 'The receipt could not be read. Enter the bill by hand; your receipt is saved.' });
+    } finally {
+      setScanning('');
+    }
+  }
+
+  const openReceipt = (url: string, isPdf: boolean) => (isPdf ? openPdf({ url }) : window.open(url, '_blank', 'noopener'));
+
   return (
     <PremiumSurface maxWidth={2200}>
       {/* Header */}
@@ -328,9 +395,16 @@ export default function BillsPage() {
         title="Bills"
         subtitle="Vendor bills and supplier invoices"
         actions={
-          <button onClick={() => openForm(!showForm)} style={goldButtonStyle} className="pmBtn">
-            <Plus size={15} weight="bold" /> New Bill
-          </button>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button onClick={() => receiptInput.current?.click()} disabled={!!scanning} style={{ ...goldButtonStyle, minHeight: 44, opacity: scanning ? 0.7 : 1 }} className="pmBtn">
+              <Camera size={15} weight="bold" /> {scanning === 'upload' ? 'Uploading…' : scanning === 'read' ? 'Reading…' : 'Scan Receipt'}
+            </button>
+            <button onClick={() => openForm(!showForm)} style={{ ...ghostButtonStyle, minHeight: 44 }} className="pmBtn">
+              <Plus size={15} weight="bold" /> New Bill
+            </button>
+            <input ref={receiptInput} type="file" accept="image/*,application/pdf" aria-label="Receipt photo or PDF" style={{ display: 'none' }}
+              onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) scanReceipt(f); }} />
+          </div>
         }
       />
 
@@ -349,9 +423,23 @@ export default function BillsPage() {
       {errorMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(255,59,48,.15)', border: '1px solid rgba(255,59,48,.4)', borderRadius: 7, color: RED, fontSize: 13 }}>{errorMsg}</div>}
 
       {showForm && (
-        <div style={{ marginBottom: 24, display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 320px', gap: 16, alignItems: 'start' }}>
+        <div className="billWrap" style={{ marginBottom: 24, display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 320px', gap: 16, alignItems: 'start' }}>
           <SectionCard title="New Bill" icon={<FilePlus size={17} weight="duotone" color={GOLD} />}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+            {receipt && (
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 14px', marginBottom: 14, borderRadius: 10, background: 'var(--brand-primary-08)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', fontSize: 13, color: TEXT, lineHeight: 1.5 }}>
+                <Sparkle size={17} weight="fill" color={GOLD} style={{ flexShrink: 0, marginTop: 2 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  {scanning === 'read'
+                    ? 'Reading the receipt…'
+                    : receipt.fields
+                      ? <>Read from the receipt{receipt.fields.confidence !== 'high' ? ` (${receipt.fields.confidence} confidence)` : ''} — check each field before saving.</>
+                      : null}
+                  {receipt.note && <div style={{ color: receipt.fields ? DIM : 'var(--warning)', marginTop: receipt.fields ? 2 : 0 }}>{receipt.note}</div>}
+                </div>
+                <button type="button" onClick={() => openReceipt(receipt.url, receipt.isPdf)} style={{ ...ghostButtonStyle, minHeight: 36, padding: '6px 12px', flexShrink: 0 }} className="pmBtn">View Receipt</button>
+              </div>
+            )}
+            <div className="billGrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
               <div>
                 <label style={label}>Invoice # *</label>
                 <input type="text" value={form.invoice_num} onChange={e => setForm(p => ({ ...p, invoice_num: e.target.value }))} style={inp} />
@@ -396,19 +484,19 @@ export default function BillsPage() {
                 <SaguaroDatePicker value={form.due_date} onChange={v => setForm(p => ({ ...p, due_date: v }))} style={inp} />
                 <div style={hint}>{"Net 30 from today — adjust to the vendor's terms."}</div>
               </div>
-              <div style={{ gridColumn: 'span 3' }}>
+              <div style={{ gridColumn: '1 / -1' }}>
                 <label style={label}>Description</label>
                 <input type="text" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} style={inp} />
               </div>
               {selLine && (
-                <div style={{ gridColumn: 'span 3', display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 14px', borderRadius: 10, background: 'var(--brand-primary-08)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', fontSize: 12.5, color: DIM, lineHeight: 1.55 }}>
+                <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 14px', borderRadius: 10, background: 'var(--brand-primary-08)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', fontSize: 12.5, color: DIM, lineHeight: 1.55 }}>
                   <Wallet size={16} weight="duotone" color={GOLD} style={{ flexShrink: 0, marginTop: 1 }} />
                   <span>
                     Posts <b style={{ color: TEXT }}>{fmt(grandTotal)}</b> actual against <b style={{ color: GOLD }}>{selLine.costCode || selLine.division}</b>{selLine.description ? ` (${selLine.description})` : ''} — budget <b style={{ color: TEXT }}>{fmt(lineBudget)}</b>, actual to date <b style={{ color: TEXT }}>{fmt(lineActual)}</b>, remaining <b style={{ color: lineRemaining < 0 ? RED : GREEN }}>{fmt(lineRemaining)}</b> after this bill.
                   </span>
                 </div>
               )}
-              <div style={{ gridColumn: 'span 3', display: 'flex', justifyContent: 'flex-end', gap: 24, borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 10 }}>
+              <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', gap: 24, borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 10 }}>
                 <span style={{ fontSize: 12, color: DIM }}>Subtotal <b style={{ color: TEXT }}>{fmt(subtotalNum)}</b></span>
                 <span style={{ fontSize: 12, color: DIM }}>Tax <b style={{ color: TEXT }}>{fmt(taxNum)}</b></span>
                 <span style={{ fontSize: 12, color: DIM }}>Bill Total <b style={{ color: GOLD, fontSize: 14 }}>{fmt(grandTotal)}</b></span>
@@ -418,7 +506,7 @@ export default function BillsPage() {
               <button onClick={handleSave} disabled={saving} style={{ ...goldButtonStyle, opacity: saving ? 0.7 : 1 }} className="pmBtn">
                 {saving ? 'Saving…' : 'Save Bill'}
               </button>
-              <button onClick={() => { setShowForm(false); setErrorMsg(''); }} style={ghostButtonStyle} className="pmBtn">Cancel</button>
+              <button onClick={() => { setShowForm(false); setErrorMsg(''); setReceipt(null); }} style={ghostButtonStyle} className="pmBtn">Cancel</button>
             </div>
           </SectionCard>
 
@@ -567,6 +655,11 @@ export default function BillsPage() {
                           </button>
                         )}
                         {b.status === 'Paid' && <StatusPill module="generic" status="paid" size="sm" />}
+                        {b.pdf_url && (
+                          <button onClick={() => openReceipt(b.pdf_url!, /\.pdf(\?|$)/i.test(b.pdf_url!))} style={{ padding: '4px 10px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer', marginLeft: 6 }}>
+                            Receipt
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );
@@ -597,6 +690,7 @@ export default function BillsPage() {
 
       {menuId && <div style={{ position: 'fixed', inset: 0, zIndex: 50 }} onClick={() => setMenuId(null)} />}
     <UnsavedGuardModal guard={guard} />
+    <style dangerouslySetInnerHTML={{ __html: '@media (max-width: 760px){.billWrap{grid-template-columns:minmax(0,1fr)!important}}@media (max-width: 560px){.billGrid{grid-template-columns:minmax(0,1fr)!important}.billGrid input,.billGrid select{font-size:16px!important;min-height:44px}}' }} />
     </PremiumSurface>
   );
 }
