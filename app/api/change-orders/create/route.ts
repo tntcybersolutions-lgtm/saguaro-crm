@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { assertProjectInTenant } from '@/lib/assert-project';
 import type { Database } from '@/lib/database.types';
+import { nextCoNumber } from '@/lib/change-order-number';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Change Orders', 'Edit');
@@ -33,9 +34,7 @@ export async function POST(req: NextRequest) {
     const notOurs = await assertProjectInTenant(db, user.tenantId, projectId as string);
 
     if (notOurs) return notOurs;
-    const { data: last } = await db.from('change_orders').select('co_number')
-      .eq('tenant_id', user.tenantId).eq('project_id', projectId).order('co_number', { ascending: false }).limit(1).maybeSingle();
-    const coNumber = ((last as any)?.co_number || 0) + 1;
+    const coNumber = await nextCoNumber(db, user.tenantId, projectId as string);
 
     const { data: co, error } = await db.from('change_orders').insert({
       tenant_id: user.tenantId,
