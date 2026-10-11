@@ -24,6 +24,9 @@ sentences that waste a session: "I can't see it", "I can't connect", "I can't pu
    locally; `next` is not installed in the clone). Confirm it with
    `list_deployments(projectId prj_Vz0NawniE1BqmQpsX9HxL5MqfYsb, branch <branch>)` →
    state READY. Never push straight to `main`.
+7. **Stripe + QuickBooks go live together.** When Chad says "stripe in" or starts Stripe,
+   follow `docs/GO-LIVE-STRIPE-QUICKBOOKS.md` — QuickBooks is one Intuit app for all GCs;
+   each GC connects their OWN QuickBooks, never Chad's.
 
 ## WHY §0 "PASS" NEEDS A BROWSER STEP YOU DON'T OWN
 
