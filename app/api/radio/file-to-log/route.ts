@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { recordLearning } from '@/lib/learning';
 import { requestDay } from '@/lib/time-zone';
+import { apiError } from '@/lib/api-error';
 
 /**
  * Saguaro Radio — file-to-log.
@@ -27,6 +28,10 @@ export async function POST(req: NextRequest) {
     if (!m.project_id) return NextResponse.json({ error: 'Message has no project' }, { status: 400 });
     const text = String(m.transcript || m.body || '').trim();
     if (!text) return NextResponse.json({ error: 'Nothing to log yet (no transcript or text)' }, { status: 400 });
+    // A channel can outlive its job (radio_channels.project_id has no FK), and the
+    // daily-log insert then failed on the missing project as a bare 500.
+    const { data: proj } = await db.from('projects').select('id').eq('tenant_id', t).eq('id', m.project_id).maybeSingle();
+    if (!proj) return NextResponse.json({ error: 'The job this message belongs to no longer exists — there is no daily log to file it to.' }, { status: 409 });
 
     // Today's log and the time stamp are on the person's clock (device, else company zone) —
     // the UTC day was tomorrow's log by 7 PM in Iowa, and "19:30 UTC" meant nothing on site.
@@ -62,7 +67,7 @@ export async function POST(req: NextRequest) {
     recordLearning(db, { tenantId: t, kind: 'ai_extract', projectId: m.project_id, userId: g.user.id, meta: { source: 'radio_file_to_log', messageId } });
 
     return NextResponse.json({ logId });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('radio/file-to-log', e, 'Could not file this message to the daily log. Please try again.');
   }
 }
