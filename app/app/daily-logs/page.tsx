@@ -34,6 +34,7 @@ import NudgeRing from '@/components/intelligence/NudgeRing';
 import { ANCHOR_DAILY_LOG_GAP } from '@/lib/suggestions';
 import Suggest from '@/components/ui/Suggest';
 import { sendOrSave, listSaved, savedRowId, savedIdOf, isOffline } from '@/lib/offline/outbox';
+import { unloggedWorkdays } from '@/lib/daily-log-gap';
 
 interface DailyLog {
   id: string;
@@ -70,15 +71,6 @@ type PeriodFilter = 'all' | 'month';
 /** Date-only values parse at local noon ('T12:00:00') so they never shift a day under UTC. */
 const fmtDay = (d?: string | null) => d ? new Date(d.slice(0, 10) + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : '—';
 const fmtDate = (d?: string | null) => d ? new Date(d.slice(0, 10) + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
-/** Workdays (Mon-Fri) strictly between two ISO dates — 0 across a plain weekend. */
-function missedWorkdays(fromIso: string, toIso: string) {
-  let n = 0;
-  for (let d = new Date(fromIso + 'T12:00:00').getTime() + 86400000; d < new Date(toIso + 'T12:00:00').getTime(); d += 86400000) {
-    const wd = new Date(d).getDay();
-    if (wd !== 0 && wd !== 6) n++;
-  }
-  return n;
-}
 
 /** Today as YYYY-MM-DD on the user's wall clock — never the UTC day. */
 const PICK_PROJECT = 'Pick the project this log is for.';
@@ -608,7 +600,7 @@ export default function DailyLogsPage() {
       >
         {form.projectId && ctx ? (() => {
           const lastLog = ctx.recent?.lastDailyLogDate as string | null;
-          const gap = lastLog ? missedWorkdays(lastLog, localToday()) : 0;
+          const gap = unloggedWorkdays(lastLog, localToday(), ctx.project);
           const prev = prevForForm;
           return (
             <div className="dlBanner" data-gap={gap > 0 ? 'true' : 'false'} style={{ marginBottom: 16 }}>

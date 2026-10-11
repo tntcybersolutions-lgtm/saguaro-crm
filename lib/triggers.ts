@@ -22,6 +22,7 @@ import { withComm } from '@/lib/comm-log';
 import { bidAmount } from '@/lib/bid-amount';
 import { bidDueDay } from '@/lib/bid-deadline';
 import { orValue } from '@/lib/pg-filter';
+import { coAmount } from '@/lib/change-order-amount';
 
 /* Fallback is the live domain. It used to be a Vercel preview URL that no
    longer resolves, so any email sent without NEXT_PUBLIC_APP_URL set carried
@@ -830,8 +831,8 @@ export async function onChangeOrderApproved(changeOrderId: string): Promise<void
     if (!project) return;
     /* change_orders.cost_impact is a TEXT column, so it reads back as "500".
        Every sum below adds it to a number — `1000 + "500"` is "1000500" — so
-       read it as a number once, falling back to amount. */
-    const impact = Number(c.cost_impact) || Number(c.amount) || 0;
+       read it as a number once, falling back to amount (lib/change-order-amount). */
+    const impact = coAmount(c);
 
     // Update project contract sum
     const { data: currentProject } = await db.from('projects').select('contract_amount').eq('id', project.id).single();

@@ -23,6 +23,7 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { getSupabaseBrowser, ensureBrowserSession } from '@/lib/supabase-browser';
 import { computeTimesheet, weekKey, fmtHours, liveElapsed, type TimeEntry } from '@/lib/timeclock';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
@@ -238,6 +239,11 @@ export default function TimeClockPage() {
   }, [sb, loadEntries, syncStatus]);
 
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
+  /* The server renders in UTC; the phone renders in its own zone. Anything that
+     prints today's date waits for the client, or React throws #425/#422
+     (text mismatch) and throws the server HTML away on every load. */
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   // Re-check the server when the tab comes back or once a minute, so a clock-out on the phone
   // (or in another tab) is reflected here instead of two surfaces disagreeing.
@@ -422,6 +428,7 @@ export default function TimeClockPage() {
     finally { setSavingEntry(false); }
   };
   const del = async (id: string) => {
+    if (!(await confirmDialog({ title: 'Delete this time entry?', message: 'The hours come off this week and off job cost. This cannot be undone.', danger: true }))) return;
     const { error } = await sb.from('time_entries').delete().eq('id', id);
     if (error) { console.error(error); say(humanError(error, "Couldn't delete that entry."), 'err'); return; }
     if (emp) loadEntries(emp.id);
@@ -453,7 +460,7 @@ export default function TimeClockPage() {
   // ── Stat tiles ──
   const stats: StatItem[] = [
     { label: 'Today', value: `${todayHours.toFixed(2)} h`, tone: clockedIn ? 'good' : 'default', sub: clockedIn ? `Shift running since ${fmtTime(openShift.clock_in)}` : 'Completed shifts' },
-    { label: 'This Week', value: `${(week?.workedHours ?? 0).toFixed(2)} h`, sub: `Week of ${fmtDate(thisWeekKey)}` },
+    { label: 'This Week', value: `${(week?.workedHours ?? 0).toFixed(2)} h`, sub: mounted ? `Week of ${fmtDate(thisWeekKey)}` : 'This week' },
     { label: 'Overtime', value: `${(week?.overtimeHours ?? 0).toFixed(2)} h`, tone: (week?.overtimeHours ?? 0) > 0 ? 'warn' : 'default', sub: 'Past 40 h/week or 8 h/day' },
     ...(regRate > 0
       ? [{ label: 'Est. Gross', value: fmtMoney(estGross), tone: 'good' as const, sub: `$${regRate}/h reg · $${otRate}/h OT` }]

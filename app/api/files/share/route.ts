@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
       if (!to) return NextResponse.json({ error: 'Recipient email required' }, { status: 400 });
       const { Resend } = await import('resend');
       const key = process.env.RESEND_API_KEY;
-      const from = process.env.EMAIL_FROM || 'Saguaro Control Systems <noreply@saguarocrm.com>';
+      const from = process.env.EMAIL_FROM || 'Saguaro Control Systems <noreply@saguarocontrol.net>';
       const kind = (f as any).kind;
       const size = (f as any).file_size || 0;
       const attachments: any[] = [];

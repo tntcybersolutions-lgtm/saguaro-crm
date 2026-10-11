@@ -3,6 +3,7 @@ import { requirePermission } from '@/lib/permissions';
 import { applyMarkupStack } from '@/lib/takeoff/engine';
 import { requestDay } from '@/lib/time-zone';
 import { apiError } from '@/lib/api-error';
+import { coTotal } from '@/lib/change-order-amount';
 
 /**
  * GET ?projectId= — the project intelligence snapshot every add/create screen
@@ -36,7 +37,7 @@ export async function GET(req: NextRequest) {
     projectQ, contractsQ, cosQ, payAppsQ, budgetQ, subsQ, packagesQ,
     invoicesQ, billsQ, posQ, rfisQ, submittalsQ, tasksQ, logQ, takeoffsQ, contactsQ, punchQ, proposalsQ,
   ] = await Promise.all([
-    safe(db.from('projects').select('id, name, color, status, address, project_number, owner_name, owner_email, architect_name, start_date, end_date, percent_complete, contract_amount, original_contract_amount, retainage_pct, phase, setup_step, setup_complete').eq('id', projectId).eq('tenant_id', t).single()),
+    safe(db.from('projects').select('id, name, color, status, closeout_date, address, project_number, owner_name, owner_email, architect_name, start_date, end_date, percent_complete, contract_amount, original_contract_amount, retainage_pct, phase, setup_step, setup_complete').eq('id', projectId).eq('tenant_id', t).single()),
     safe(db.from('contracts').select('id, contract_type, title, party_name, vendor_name, amount, contract_amount, original_amount, approved_changes, invoiced_amount, paid_amount, status, retainage_pct, trade').eq('project_id', projectId).eq('tenant_id', t)),
     safe(db.from('change_orders').select('id, co_number, title, status, cost_impact, amount').eq('project_id', projectId).eq('tenant_id', t)),
     safe(db.from('pay_applications').select('id, app_number, period_from, period_to, status, current_payment_due, total_completed_stored, retainage_percent, contract_sum').eq('project_id', projectId).eq('tenant_id', t).order('app_number', { ascending: false }).limit(12)),
@@ -121,8 +122,7 @@ export async function GET(req: NextRequest) {
     N(p.contract_amount) ||
     (acceptedProposal ? propAmount(acceptedProposal) : 0);
   const approvedCos = cos.filter((c) => c.status === 'approved');
-  const coAmount = (c: any) => N(c.cost_impact) || N(c.amount);
-  const approvedCoTotal = approvedCos.reduce((s, c) => s + coAmount(c), 0);
+  const approvedCoTotal = coTotal(approvedCos);
   const lastPayApp = payApps[0] ?? null;
   const billedToDate = lastPayApp ? N(lastPayApp.total_completed_stored) : 0;
   const paidToDate = payApps.filter((a) => a.status === 'paid').reduce((s, a) => s + N(a.current_payment_due), 0);

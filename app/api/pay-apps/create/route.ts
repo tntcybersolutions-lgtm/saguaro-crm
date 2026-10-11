@@ -7,6 +7,7 @@ import { toCents, toDollars, percentOf, subCents, computePayApp } from '@/lib/ca
 import { must } from '@/lib/db-write';
 import { logActivity, money } from '@/lib/activity';
 import { apiError, apiFail } from '@/lib/api-error';
+import { coTotal } from '@/lib/change-order-amount';
 
 /** A real calendar date in YYYY-MM-DD — what a Postgres DATE column accepts. */
 function isIsoDate(v: unknown): boolean {
@@ -50,11 +51,11 @@ export async function GET(req: NextRequest) {
 
     const { data: approvedCos } = await db
       .from('change_orders')
-      .select('cost_impact')
+      .select('cost_impact, amount')
       .eq('project_id', projectId)
       .eq('tenant_id', user.tenantId)
       .eq('status', 'approved');
-    const changeOrdersTotal = (approvedCos || []).reduce((s: number, c: any) => s + (Number(c.cost_impact) || 0), 0);
+    const changeOrdersTotal = coTotal(approvedCos);
 
     return NextResponse.json({
       nextAppNumber: (prior?.app_number || 0) + 1,
@@ -115,11 +116,11 @@ export async function POST(req: NextRequest) {
     //    (The typed value wins only when the client explicitly sends one.) ──
     const { data: approvedCos } = await db
       .from('change_orders')
-      .select('cost_impact')
+      .select('cost_impact, amount')
       .eq('project_id', projectId)
       .eq('tenant_id', user.tenantId)
       .eq('status', 'approved');
-    const derivedCoTotal = (approvedCos || []).reduce((s: number, c: any) => s + (Number(c.cost_impact) || 0), 0);
+    const derivedCoTotal = coTotal(approvedCos);
     const changeOrdersTotal = body.changeOrdersTotal != null ? Number(body.changeOrdersTotal) || 0 : derivedCoTotal;
 
     // Accept both camelCase and snake_case for the keys the mobile form sends.
@@ -204,7 +205,10 @@ export async function POST(req: NextRequest) {
     if (rawLines.length > 0) {
       const lines = rawLines.map((it, i) => ({
         id: String(i + 1),
-        description: String(it.description || ''),
+        // A G703 line never prints blank: an SOV row carried forward with no
+        // description (Mesa Flex lines 7 and 9) reads as its cost code or number.
+        description: String(it.description || '').trim()
+          || (it.csi_code || it.cost_code ? `Cost code ${it.csi_code || it.cost_code}` : `Line ${i + 1}`),
         scheduledValue:  toCents(Number(it.scheduledValue ?? it.scheduled_value ?? 0) || 0),
         fromPrevious:    toCents(Number(it.workFromPrev ?? it.prev_completed ?? 0) || 0),
         thisPeriod:      toCents(Number(it.workThisPeriod ?? it.this_period ?? 0) || 0),

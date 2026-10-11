@@ -666,7 +666,10 @@ input, textarea, select {
   -webkit-text-fill-color: var(--c-text) !important;
   caret-color: var(--brand-primary);
 }
-input::placeholder, textarea::placeholder { color: var(--c-text-3) !important; opacity: 1; }
+/* -webkit-text-fill-color on the field paints its placeholder too (Safari, Chrome),
+   so a placeholder read exactly like a typed value. Give it its own fill, the same
+   one the kit fields use, so an empty field never looks filled in. */
+input::placeholder, textarea::placeholder { color: var(--text-disabled) !important; -webkit-text-fill-color: var(--text-disabled) !important; opacity: 1; }
 /* FIX: Chrome/Safari autofill paints its OWN light background that background-color
    can't override — only an inset box-shadow can. Without this, autofilled email/
    password text is white-on-light = invisible (reported on the client portal). */
@@ -1043,6 +1046,15 @@ button.k-stat[aria-pressed="true"] { box-shadow: inset 0 -2px 0 var(--brand-prim
 
 /* Data table — dense rows, sticky header, row actions on the right */
 .k-table-wrap { overflow-x: auto; }
+/* A DataTable wider than its card scrolls sideways; its first column (the
+   record's name) stays pinned so a row never loses what it is (takeoff
+   divisions at 1280 had to scroll to reach Total with the item name gone).
+   Desktop only — on a phone the table is stacked cards. */
+@media (min-width: 768px) {
+  .k-table-wrap > .k-table td:first-child { position: sticky; left: 0; z-index: 1; background: var(--bg-solid); }
+  .k-table-wrap > .k-table th:first-child { left: 0; z-index: 3; }
+  .k-table-wrap > .k-table tbody tr:hover td:first-child { background: linear-gradient(rgba(255,255,255,0.03), rgba(255,255,255,0.03)), var(--bg-solid); }
+}
 .k-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 .k-table th { position: sticky; top: 0; z-index: 1; background: var(--bg-solid-2); /* no blur per header cell — one filter per column was the single most expensive effect on long tables */ box-shadow: var(--glass-highlight); text-align: left; padding: 8px 12px; font-size: 12px; font-weight: 700; letter-spacing: normal; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); white-space: nowrap; user-select: none; }
 .k-table th[data-sortable="true"] { cursor: pointer; }
@@ -1483,16 +1495,28 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
   body:has([data-ai-panel]) .sag-chat-launcher, body:has(.k-overlay) .sag-chat-launcher, body:has(.k-menu-list) .sag-chat-launcher, body:has(.rdWs) .sag-chat-launcher { display: none !important; }
   /* The radio console has its own transmit deck pinned to the bottom — no bubble over its send button. */
 
+  /* Every control in the app is a 44px thumb target (Apple HIG). The kit's
+     .k-btn / .k-tab / .k-icon-btn already are; this catches every hand-rolled
+     button left on older screens (radio console, budget Actions, document
+     titles, review stars, …) in one place instead of page by page. An
+     icon-only button is also 44px wide. A text link that is a control
+     (.k-tap) gets the same box. */
+  .main-content-area :is(button, [role="button"], select) { min-height: 44px; }
+  .main-content-area :is(button, [role="button"]):has(> svg:only-child) { min-width: 44px; }
+  .main-content-area a.k-tap { display: inline-flex; align-items: center; min-height: 44px; }
+
   /* Tables become stacked cards: name, status, amount, one action. Columns past
-     the fourth are dropped on phones — the row opens the full record. */
-  .k-table thead { display: none; }
-  .k-table, .k-table tbody, .k-table tr { display: block; width: 100%; }
-  .k-table tr { position: relative; margin: 8px 12px; width: auto; border: 1px solid var(--glass-border); border-radius: var(--radius-sm); background: var(--bg-surface); padding: 10px 12px 10px; }
-  .k-table tbody tr:hover td { background: none; }
-  .k-table td { display: flex; justify-content: space-between; align-items: center; gap: 12px; height: auto !important; min-height: 28px; padding: 3px 0 !important; border-bottom: none; white-space: normal; text-align: left !important; position: static !important; box-shadow: none !important; background: none !important; }
-  .k-table td::before { content: attr(data-label); flex-shrink: 0; font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); }
-  .k-table td:not([data-label])::before { content: none; }
-  .k-table td[style] { padding: 3px 0 !important; }
+     the fourth are dropped on phones — the row opens the full record. A hand-built
+     table that is not a DataTable opts in with class="k-stack" and data-label
+     on its cells and gets the same cards (desktop is untouched). */
+  :is(.k-table,.k-stack) thead { display: none; }
+  :is(.k-table,.k-stack), :is(.k-table,.k-stack) tbody, :is(.k-table,.k-stack) tr { display: block; width: 100%; }
+  :is(.k-table,.k-stack) tr { position: relative; margin: 8px 12px; width: auto; border: 1px solid var(--glass-border); border-radius: var(--radius-sm); background: var(--bg-surface); padding: 10px 12px 10px; }
+  :is(.k-table,.k-stack) tbody tr:hover td { background: none; }
+  :is(.k-table,.k-stack) td { display: flex; justify-content: space-between; align-items: center; gap: 12px; height: auto !important; min-height: 28px; padding: 3px 0 !important; border-bottom: none; white-space: normal; text-align: left !important; position: static !important; box-shadow: none !important; background: none !important; }
+  :is(.k-table,.k-stack) td::before { content: attr(data-label); flex-shrink: 0; font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); }
+  :is(.k-table,.k-stack) td:not([data-label])::before { content: none; }
+  :is(.k-table,.k-stack) td[style] { padding: 3px 0 !important; }
   /* Edit grids keep their columns on a phone: the wrapper scrolls sideways and
      the first column (the line's name) stays pinned so a row never loses its
      identity while you scroll to its numbers. */
@@ -1723,6 +1747,8 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 /* Page padding: the caller's on desktop, a 16px gutter on a phone. */
 .pmPage{padding:var(--pm-pad,20px 24px 48px)}
 @media (max-width:767px){.pmPage{padding:14px 16px 24px!important}}
+/* FlowStrip on a phone: a numbered list, one step per line — no orphaned arrows. */
+@media (max-width:767px){.pmFlowStrip{flex-direction:column;align-items:flex-start!important}.pmFlowArrow{display:none}}
 /* Compact page header (ModuleHero). */
 .pmHead{display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;margin-bottom:16px;min-width:0}
 .pmHead[data-align=center]{flex-direction:column;text-align:center}

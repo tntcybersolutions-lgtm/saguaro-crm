@@ -136,6 +136,15 @@ const TICKER_FX = `
   .sgTickerViewport{overflow-x:auto!important}
   .sgTickerDup{display:none!important}
 }
+/* Touch: a marquee gives a thumb no still target, and a 13px × is no target at
+   all. On a phone the strip stands still and swipes sideways, and Dismiss is a
+   44px button. */
+@media (max-width: 767px), (pointer: coarse){
+  .sgTickerTrack{animation:none!important}
+  .sgTickerViewport{overflow-x:auto!important;-webkit-overflow-scrolling:touch}
+  .sgTickerDup{display:none!important}
+  .sgTickerX{opacity:.9!important;min-width:44px;min-height:44px;display:inline-flex!important;align-items:center;justify-content:center;font-size:20px!important}
+}
 `;
 
 function TickerItem({

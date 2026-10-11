@@ -49,6 +49,7 @@ import {
 } from '@/lib/job-page';
 import JobColorPicker from '@/components/project/JobColorPicker';
 import ProjectOwnershipCard from '@/components/projects/ProjectOwnershipCard';
+import { coTotal } from '@/lib/change-order-amount';
 
 /* ── Fetchers ─────────────────────────────────────────────────────────── */
 
@@ -241,7 +242,7 @@ export default function JobPage() {
     if (stage === 'building' && late.length) attn.push({ id: 'late', dot: 'red', rank: 1, title: `${plural(late.length, 'schedule task')} past the end date`, meta: late.slice(0, 2).map((t) => t.name).join(', ') + (late.length > 2 ? ` and ${late.length - 2} more` : ''), href: `${base}/schedule` });
     const pendingCos = ((data.changeOrders || []) as any[]).filter((c) => OPEN_STATUSES.includes(String(c.status || '')));
     if (pendingCos.length) {
-      const total = pendingCos.reduce((s, c) => s + (Number(c.cost_impact ?? c.amount) || 0), 0);
+      const total = coTotal(pendingCos);
       attn.push({ id: 'cos', dot: 'amber', rank: 2, title: `${plural(pendingCos.length, 'change order')} waiting on a decision`, meta: `${total < 0 ? '−' : ''}${usd(Math.abs(total))} in play`, href: `${base}/change-orders` });
     }
     const pa = ((data.payApps || []) as any[])[0];

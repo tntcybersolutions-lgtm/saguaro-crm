@@ -1,5 +1,11 @@
 #!/usr/bin/env node
 /**
+ * RETIRED 11 Oct 2026 — no longer in `prebuild`. Saguaro-Field (the mobile repo)
+ * is retired (CLAUDE.md: ONE APP — iOS IS THE WEB APP), so THIS repo's
+ * lib/takeoff is the canonical engine and there is no peer to drift from. A
+ * local `npm run build` used to fail on drift against the dead copy on disk.
+ * Kept for history; do not wire it back in.
+ *
  * Takeoff engine sync — the ONE canonical engine lives in Saguaro-Field/lib/takeoff
  * (the mobile repo — same doctrine as scripts/sync-heatmap-engine.mjs). The web repo
  * (saguaro-crm / saguaro-web checkout) carries a byte-exact mirror of the shared

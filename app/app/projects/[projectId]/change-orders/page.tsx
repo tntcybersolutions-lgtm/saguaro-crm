@@ -45,6 +45,7 @@ import {
 import { FlowSteps, FlowStrip, InsightRow, AutoChip } from '@/components/ui/premium';
 import Suggest from '@/components/ui/Suggest';
 import { layout } from '@/lib/design-tokens';
+import { coAmount } from '@/lib/change-order-amount';
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmt = (n:number) => money.format(n||0);
@@ -419,7 +420,7 @@ export default function ChangeOrdersPage() {
   // change orders only; pending tracked separately (summarizeContract enforces this).
   const contractSummary = summarizeContract(
     toCents(contractSum),
-    cos.map((c:any)=>({ id:String(c.id), description:c.title||'', amount:toCents(c.cost_impact||0), status:(c.status||'pending') as 'pending'|'approved'|'rejected' })),
+    cos.map((c:any)=>({ id:String(c.id), description:c.title||'', amount:toCents(coAmount(c)), status:(c.status||'pending') as 'pending'|'approved'|'rejected' })),
   );
   const approvedCOs   = toDollars(contractSummary.approvedChangeOrders);
   const pendingCOs    = toDollars(contractSummary.pendingChangeOrders);
@@ -484,7 +485,7 @@ export default function ChangeOrdersPage() {
     <div className="coTitle"><span title={c.title}>{c.title||'Untitled change order'}</span>{c.description && <span title={c.description}>{c.description}</span>}</div>
   ) };
   const statusCol: Column<any> = { key:'status', header:'Status', accessor:c=>STATUS_RANK[String(c.status||'pending')]??9, render:c=>{const b=statusBadge(c.status);return <Badge tone={b.tone}>{b.label}</Badge>;} };
-  const costCol: Column<any> = { key:'cost', header:'Cost Impact', accessor:c=>Number(c.cost_impact)||0, align:'right', render:c=>{const n=Number(c.cost_impact)||0;return <span className="coMoney" data-sign={signOf(n)}>{fmtSigned(n)}</span>;} };
+  const costCol: Column<any> = { key:'cost', header:'Cost Impact', accessor:c=>coAmount(c), align:'right', render:c=>{const n=coAmount(c);return <span className="coMoney" data-sign={signOf(n)}>{fmtSigned(n)}</span>;} };
   const schedCol: Column<any> = { key:'schedule', header:'Schedule', accessor:c=>Number(c.schedule_impact)||0, align:'right', render:c=>{const d=Number(c.schedule_impact)||0;return d>0 ? <span style={{color:'var(--text-primary)'}}>+{d} day{d===1?'':'s'}</span> : <span className="coMuted">—</span>;} };
   const reasonCol: Column<any> = { key:'reason', header:'Reason', accessor:c=>(c.reason||'').toLowerCase(), render:c=>c.reason ? <span className="coTitle" style={{maxWidth:200}}><span style={{color:'var(--text-secondary)',fontWeight:500}} title={c.reason}>{c.reason}</span></span> : <span className="coMuted">—</span> };
   const columns: Column<any>[] = detailOpen
@@ -499,9 +500,9 @@ export default function ChangeOrdersPage() {
       { label:'Open Details', icon:<Clipboard size={15}/>, onClick:()=>setSelectedId(co.id) },
       { label:'Approve', icon:<CheckCircle size={15}/>, onClick:()=>approveCO(co.id), hidden:s!=='pending', disabled:busy },
       { label:'Reject', icon:<XCircle size={15}/>, onClick:()=>rejectCO(co.id), hidden:s!=='pending', disabled:busy, tone:'danger' },
-      { label:'Analyze Risk (AI)', icon:<Robot size={15}/>, onClick:()=>{ setSelectedId(co.id); analyzeRisk({title:co.title,description:co.description,reason:co.reason,cost_impact:co.cost_impact,schedule_impact:co.schedule_impact,status:co.status},co.id); }, disabled: riskLoading&&riskTarget===co.id },
-      { label:'Edit Amount', icon:<PencilSimple size={15}/>, onClick:()=>{ setSelectedId(co.id); setCoEditId(co.id); setCoEditVal(String(co.cost_impact||0)); } },
-      { label:'Copy Amount', icon:<Copy size={15}/>, onClick:()=>handleCopyCO(co.id, Number(co.cost_impact)||0) },
+      { label:'Analyze Risk (AI)', icon:<Robot size={15}/>, onClick:()=>{ setSelectedId(co.id); analyzeRisk({title:co.title,description:co.description,reason:co.reason,cost_impact:coAmount(co),schedule_impact:co.schedule_impact,status:co.status},co.id); }, disabled: riskLoading&&riskTarget===co.id },
+      { label:'Edit Amount', icon:<PencilSimple size={15}/>, onClick:()=>{ setSelectedId(co.id); setCoEditId(co.id); setCoEditVal(String(coAmount(co))); } },
+      { label:'Copy Amount', icon:<Copy size={15}/>, onClick:()=>handleCopyCO(co.id, coAmount(co)) },
       { label:'Delete', icon:<Trash size={15}/>, onClick:()=>confirmDeleteCO(co.id), tone:'danger' },
     ];
   }
@@ -509,7 +510,7 @@ export default function ChangeOrdersPage() {
   // ── Detail workspace ──
   const detailWorkspace = selected && (()=>{
     const s = String(selected.status||'pending');
-    const cost = Number(selected.cost_impact)||0;
+    const cost = coAmount(selected);
     const sched = Number(selected.schedule_impact)||0;
     const busy = approvingId===selected.id;
     const editing = coEditId===selected.id;
@@ -582,11 +583,11 @@ export default function ChangeOrdersPage() {
                       <Button variant="danger" icon={<XCircle size={16}/>} onClick={()=>rejectCO(selected.id)} disabled={busy}>Reject</Button>
                     </div>
                   )}
-                  <Button icon={<Robot size={16}/>} onClick={()=>analyzeRisk({title:selected.title,description:selected.description,reason:selected.reason,cost_impact:selected.cost_impact,schedule_impact:selected.schedule_impact,status:selected.status},selected.id)} disabled={riskLoading&&riskTarget===selected.id}>
+                  <Button icon={<Robot size={16}/>} onClick={()=>analyzeRisk({title:selected.title,description:selected.description,reason:selected.reason,cost_impact:coAmount(selected),schedule_impact:selected.schedule_impact,status:selected.status},selected.id)} disabled={riskLoading&&riskTarget===selected.id}>
                     {riskLoading&&riskTarget===selected.id ? 'Analyzing…' : 'Analyze Risk (AI)'}
                   </Button>
                   <div className="coActionsRow">
-                    <Button icon={<PencilSimple size={16}/>} onClick={()=>{ setCoEditId(selected.id); setCoEditVal(String(selected.cost_impact||0)); }} disabled={editing}>Edit Amount</Button>
+                    <Button icon={<PencilSimple size={16}/>} onClick={()=>{ setCoEditId(selected.id); setCoEditVal(String(coAmount(selected))); }} disabled={editing}>Edit Amount</Button>
                     <RowActions actions={[
                       { label:'Copy Amount', icon:<Copy size={15}/>, onClick:()=>handleCopyCO(selected.id, cost) },
                       { label:'Delete', icon:<Trash size={15}/>, onClick:()=>confirmDeleteCO(selected.id), tone:'danger' },

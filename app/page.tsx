@@ -94,7 +94,9 @@ const HOME_PLANS = PLANS.map(p => ({
    MAIN PAGE COMPONENT
    =========================== */
 export default function LandingPage() {
-  /* menuOpen state removed — dropdowns handle their own state via IIFE */
+  // The phone menu's open state lives here: a hook inside the nav IIFE broke
+  // the rules of hooks (it only worked because the IIFE ran on every render).
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <div data-landing style={{ background: BG, color: TEXT, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", minHeight: '100vh', overflowX: 'hidden' as const }}>
@@ -104,7 +106,6 @@ export default function LandingPage() {
 
       {/* ══════════ 2. NAV ══════════ */}
       {(() => {
-        const [mobileOpen, setMobileOpen] = useState(false);
         const links = [
           { label: 'Product', href: '/product' },
           { label: 'The App', href: '/get-the-app' },
