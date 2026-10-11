@@ -45,6 +45,22 @@ async function run(name, browserType, ctxOpts) {
       overflowX: document.documentElement.scrollWidth > window.innerWidth + 1,
       width: window.innerWidth,
     })));
+    // Every ticker alert is a link to a page that answers; every count with alerts is a button.
+    const hrefs = await page.evaluate(() => [...new Set([...document.querySelectorAll('.atk .atkSet:not(.atkDup) a.atkItem')].map((a) => a.getAttribute('href')))]);
+    r.tickerLinks = [];
+    for (const h of hrefs) {
+      const res = await page.request.get(new URL(h, SITE).toString()).catch((e) => ({ status: () => `failed: ${e.message}` }));
+      r.tickerLinks.push(`${h.replace(/[0-9a-f-]{36}/gi, ':id')} → ${res.status()}`);
+    }
+    r.tickerCounts = await page.evaluate(() => [...document.querySelectorAll('.atk button.atkN')].map((b) => `${b.dataset.tone}:${b.disabled ? 'disabled' : 'button'}`));
+    const firstCount = page.locator('.atk button.atkN:not([disabled])').first();
+    if (await firstCount.count()) {
+      await firstCount.click();
+      await page.waitForTimeout(400);
+      r.afterCountTap = await page.evaluate(() => ({ pressed: document.querySelector('.atk button.atkN[aria-pressed="true"]')?.dataset.tone || null, shown: [...document.querySelectorAll('.atk .atkSet:not(.atkDup) a.atkItem')].map((a) => a.dataset.tone) }));
+      await page.screenshot({ path: path.join(OUT, `${name}-ticker-filtered.png`) });
+      await firstCount.click();
+    }
     await page.screenshot({ path: path.join(OUT, `${name}-top.png`) });
     await page.screenshot({ path: path.join(OUT, `${name}-full.png`), fullPage: true });
   } catch (e) { r.error = String(e.message || e).split('\n')[0]; await page.screenshot({ path: path.join(OUT, `${name}-error.png`) }).catch(() => {}); }
