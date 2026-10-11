@@ -60,5 +60,9 @@ console.log(`login: ${derived ? 'the company CI user (derived from the ASC key)'
 
 if (derived && process.env.BCRYPT_DIR) {
   const bcrypt = createRequire(`${process.env.BCRYPT_DIR}/noop.js`)('bcryptjs');
-  console.log(`E2E_LOGIN_BCRYPT ${bcrypt.hashSync(password, 10)}`);
+  // The repo is public: its Actions logs are readable by anyone. Mask the hash
+  // so a log never carries something that could be cracked offline.
+  const hash = bcrypt.hashSync(password, 10);
+  console.log(`::add-mask::${hash}`);
+  console.log(`E2E_LOGIN_BCRYPT ${hash}`);
 }

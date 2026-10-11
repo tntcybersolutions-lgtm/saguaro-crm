@@ -39,13 +39,24 @@ jobs:
           PLAYWRIGHT_DIR: /tmp/pw
         run: |
           export SITE="$(tr -d '[:space:]' < tools/probe-site.txt 2>/dev/null || true)"
-          node "tools/$(tr -d '[:space:]' < tools/probe-which.txt 2>/dev/null || echo probe-menus).mjs"
+          # The repo is public: nothing about the company goes to the log.
+          node "tools/$(tr -d '[:space:]' < tools/probe-which.txt 2>/dev/null || echo probe-menus).mjs" > /tmp/probe-stdout.txt 2>&1 && echo "probe finished" || echo "probe exited non-zero (details are in the encrypted result)"
+      - name: Encrypt the result (public repo: only the key holder can read it)
+        if: always()
+        run: |
+          mkdir -p tools/probe && cp /tmp/probe-stdout.txt tools/probe/stdout.txt 2>/dev/null || true
+          tar czf /tmp/probe.tgz -C tools probe
+          rm -rf tools/probe && mkdir -p tools/probe
+          openssl rand -hex 32 > /tmp/k
+          openssl enc -aes-256-cbc -pbkdf2 -salt -in /tmp/probe.tgz -out tools/probe/result.tgz.enc -pass file:/tmp/k
+          openssl pkeyutl -encrypt -pubin -inkey tools/probe-pubkey.pem -pkeyopt rsa_padding_mode:oaep -in /tmp/k -out tools/probe/key.enc
+          rm -f /tmp/k /tmp/probe.tgz
       - name: Commit the probe result to this branch
         if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tools/probe || exit 0
+          git add -A tools/probe || exit 0
           git commit -m "iPhone probe result from run ${{ github.run_id }}" || exit 0
           git pull --rebase origin ${{ github.ref_name }} || true
           git push origin HEAD:${{ github.ref_name }}
