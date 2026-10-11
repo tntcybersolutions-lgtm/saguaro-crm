@@ -14,11 +14,11 @@ export const HOME_CSS = `
 .fh-in .fl-row,.fh-in .fl-skel{background:transparent}
 /* flat.tsx's row action reaches 42px with its border; Home needs the full 44. */
 .fh-in .fl-act::after{inset:-6px -2px}
-/* globals.css styles every h2 in the app (15px, 800, body colour); a section label is small and grey. */
-.fh-in h2.fl-sec{font-size:15px;font-weight:700;color:var(--sg-text);letter-spacing:0;text-transform:none;line-height:1.3;margin:0}
+/* globals.css styles every h2 in the app; Home's section headings take flat.tsx's lit look. */
+.fh-in h2.fl-sec{margin:0}
 .fh-in .fl-sec .fl-sec-act{position:relative}
 .fh-in .fl-sec .fl-sec-act::after{content:'';position:absolute;inset:-6px -8px}
-.fh-in .fl-sec small{font-size:11.5px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--sg-text-3)}
+.fh-in .fl-sec small{font-size:12.5px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--sg-text-3);text-shadow:none}
 .fh-in .fl-brief{margin:6px 16px 14px}
 .fh-in .fl-brief .fl-brief-act{position:relative;display:inline-block}
 .fh-in .fl-brief .fl-brief-act::after{content:'';position:absolute;inset:-12px -8px}
@@ -37,7 +37,8 @@ export const HOME_CSS = `
 /* Header: one controls row (view · job · +), then the greeting. */
 .fh-head{padding:12px 16px 2px}
 .fh-top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;min-height:44px}
-.fh-date{font-size:13px;color:var(--sg-text-2);letter-spacing:0;white-space:nowrap}
+/* The day and date above the greeting — neon, like the section headings (Chad, 2026-10-11). */
+.fh-date{font-size:15px;font-weight:800;color:var(--brand-primary);letter-spacing:.005em;white-space:nowrap;text-shadow:0 0 14px color-mix(in srgb,var(--brand-primary) 45%,transparent)}
 .fh-ctrls{display:flex;align-items:center;gap:6px;margin-left:auto;min-width:0}
 .fh .fh-hello{font-size:22px;font-weight:700;line-height:1.2;letter-spacing:-.01em;margin:2px 0 0;color:var(--sg-text);-webkit-text-fill-color:currentColor}
 .fh-chip{position:relative;display:inline-flex;align-items:center;gap:5px;height:30px;max-width:150px;padding:0 10px;border:1px solid var(--sg-border);border-radius:15px;background:transparent;color:var(--sg-text);font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}

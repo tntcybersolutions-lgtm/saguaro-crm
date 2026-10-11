@@ -557,8 +557,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* ── Phone tab bar: Home · My Work · Jobs · Time · More ──────────────
           Flat: a solid bar with one hairline on top, flush to the bottom edge
-          (the home-indicator safe area is padding inside it), the current tab
-          in the brand colour. Hidden on desktop by its own display:none; the
+          (the home-indicator safe area is padding inside it). Every tab is lit
+          — yellow icon, white label — and the current one sits on a solid
+          yellow pill (Chad, 2026-10-11: never dim grey). Hidden on desktop by its own display:none; the
           phone-frame block in globals.css shows it under 768px and reserves
           its height as --sag-tabbar-h so content and every floating sheet
           clear it. "Jobs" is only the label — the route stays /app/projects. */}
@@ -580,7 +581,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               aria-current={t.active ? 'page' : undefined}
               aria-label={badge ? `${t.label}, ${badge} to do` : undefined}
             >
-              <Icon size={22} weight={t.active ? 'fill' : 'regular'} aria-hidden />
+              <span className="sag-tab-ic"><Icon size={22} weight={t.active ? 'fill' : 'bold'} aria-hidden /></span>
               <span className="sag-tab-label">
                 {t.label}
                 {badge && <span className="sag-tab-badge" aria-hidden>{badge}</span>}
@@ -589,7 +590,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           );
         })}
         <button type="button" className="sag-tab" data-active={mobileSidebarOpen ? 'true' : undefined} onClick={() => setMobileSidebarOpen(v => !v)} aria-expanded={mobileSidebarOpen} aria-label="More">
-          <DotsThreeOutline size={22} weight={mobileSidebarOpen ? 'fill' : 'regular'} aria-hidden />
+          <span className="sag-tab-ic"><DotsThreeOutline size={22} weight={mobileSidebarOpen ? 'fill' : 'bold'} aria-hidden /></span>
           <span className="sag-tab-label">More</span>
         </button>
       </nav>
