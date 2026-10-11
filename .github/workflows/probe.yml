@@ -5,7 +5,7 @@ name: iPhone probe
 on:
   push:
     branches: [ops/testflight]
-    paths: ['tools/probe-*.mjs', '.github/workflows/probe.yml']
+    paths: ['tools/probe-*.mjs', 'tools/probe-which.txt', 'tools/probe-site.txt', '.github/workflows/probe.yml']
 
 permissions:
   contents: write
@@ -27,7 +27,7 @@ jobs:
         run: |
           mkdir -p /tmp/pw && cd /tmp/pw && npm init -y > /dev/null
           npm i --no-audit --no-fund playwright@1.49.1
-          npx playwright install --with-deps webkit
+          npx playwright install --with-deps webkit chromium
       - name: Real-company login
         env:
           E2E_SECRET_EMAIL: ${{ secrets.E2E_EMAIL }}
@@ -37,7 +37,9 @@ jobs:
       - name: Probe
         env:
           PLAYWRIGHT_DIR: /tmp/pw
-        run: node tools/probe-menus.mjs
+        run: |
+          export SITE="$(tr -d '[:space:]' < tools/probe-site.txt 2>/dev/null || true)"
+          node "tools/$(tr -d '[:space:]' < tools/probe-which.txt 2>/dev/null || echo probe-menus).mjs"
       - name: Commit the probe result to this branch
         if: always()
         run: |
