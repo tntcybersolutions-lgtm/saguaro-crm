@@ -41,7 +41,7 @@ jobs:
           export SITE="$(tr -d '[:space:]' < tools/probe-site.txt 2>/dev/null || true)"
           # The repo is public: nothing about the company goes to the log.
           node "tools/$(tr -d '[:space:]' < tools/probe-which.txt 2>/dev/null || echo probe-menus).mjs" > /tmp/probe-stdout.txt 2>&1 && echo "probe finished" || echo "probe exited non-zero (details are in the encrypted result)"
-      - name: Encrypt the result (public repo: only the key holder can read it)
+      - name: "Encrypt the result (public repo: only the key holder can read it)"
         if: always()
         run: |
           mkdir -p tools/probe && cp /tmp/probe-stdout.txt tools/probe/stdout.txt 2>/dev/null || true
