@@ -13,6 +13,11 @@
  *   flow        390: FlowStrip arrows hidden
  *   people      390: people table stacks (display:block)
  *   pin         1440: first DataTable column is sticky
+ *
+ * And the walk fixes (#135):
+ *   radio       no channel for a job that no longer exists; filing a message
+ *               from such a channel answers 409 in words (no write happens)
+ *   billing     390 + 1440: no Stripe portal buttons while checkout is off
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -28,6 +33,9 @@ const pw = require('playwright');
 if (!process.env.E2E_EMAIL || !process.env.E2E_PASSWORD) throw new Error('no real-company login');
 
 const JOB = 'ZZ AUDIT Walk Job 10101543';
+// A message on an "All Hands" channel whose job was deleted (radio_channels has
+// no FK to projects). Filing it must answer 409 — before #135 it was a 500.
+const DELETED_JOB_MESSAGE = 'b213b6df-8f5c-4e96-a682-c1b87444e150';
 const result = { site: SITE, steps: [] };
 const step = (k, v) => { result[k] = v; result.steps.push(k); console.log(k, JSON.stringify(v)); };
 const shot = (page, name, fullPage = false) => page.screenshot({ path: path.join(OUT, name), fullPage }).catch(() => {});
@@ -153,6 +161,29 @@ try {
   step('pin', await gc.evaluate(() => { const td = document.querySelector('.k-table-wrap > .k-table td:first-child'); return td ? getComputedStyle(td).position : null; }));
   await go(gc, '/app/takeoff');
   step('pinTakeoff', await gc.evaluate(() => { const td = document.querySelector('.k-table-wrap > .k-table td:first-child'); return td ? getComputedStyle(td).position : null; }));
+
+  // ── #135 Radio: channels of deleted jobs are gone; their messages say why they can't be filed ──
+  const chans = ((await (await gc.request.get(`${SITE}/api/radio/channels`)).json().catch(() => ({}))).channels || []);
+  step('radioChannels', { total: chans.length, jobChannelsWithNoJob: chans.filter((c) => c.project_id && !c.project_name).length });
+  const ftl = await gc.request.post(`${SITE}/api/radio/file-to-log`, { data: { messageId: DELETED_JOB_MESSAGE } });
+  step('radioFileToLog', { status: ftl.status(), says: (await ftl.json().catch(() => ({}))).error || null });
+  await go(phone, '/app/radio');
+  await shot(phone, '390-radio.png');
+  await go(gc, '/app/radio');
+  await shot(gc, '1440-radio.png');
+
+  // ── #135 Billing: no Stripe portal buttons while online checkout is off ──
+  for (const [w, page] of [['390', phone], ['1440', gc]]) {
+    await go(page, '/app/billing');
+    step(`billing${w}`, await page.evaluate(() => ({
+      checkoutOff: /Online checkout isn.t switched on yet/.test(document.body.innerText),
+      portalButtons: [...document.querySelectorAll('button')].map((b) => (b.textContent || '').trim())
+        .filter((t) => /^(Manage Payment & Invoices|Update Payment Method|Change Plan|Open Billing Portal)$/.test(t)),
+      requestPlanNote: /tap Request Plan/.test(document.body.innerText),
+      ...{ scrollW: document.scrollingElement.scrollWidth, vw: innerWidth },
+    })));
+    await shot(page, `${w}-billing.png`, true);
+  }
 } catch (e) {
   result.error = String(e.message || e).split('\n')[0];
 }
