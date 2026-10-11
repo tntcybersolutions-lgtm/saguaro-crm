@@ -5,20 +5,21 @@
  * The job page (./overview) IS the job's navigation now — every tool, grouped,
  * with its count — so nothing here repeats it:
  *
- *   phone    no tab strip, no card grid, no module drawer. On a tool page
- *            (…/budget) the app's top bar already reads "‹ <Job>"
- *            (lib/topbar-crumbs), so this bar adds nothing and is hidden. One
- *            level deeper (…/rfis/<id>) the top bar goes back to the list, so
- *            this bar keeps one thin "‹ <Job>" row that goes to the job.
- *   desktop  that same back row when it is needed, plus the job's phases
- *            (Overview · Preconstruction · … · Closeout) as lit pills with their
- *            icons — bright and easy to find (Chad, 2026-10-11) — the one you
- *            are in filled solid yellow. The pills wrap to a second row rather
- *            than run off the edge on a narrower screen. The full tool list
- *            sits in the app's left rail (components/AppSidebar, from
- *            lib/project-nav).
+ *   both     the job's phases (Overview · Preconstruction · … · Closeout) as
+ *            lit pills with their icons — bright and easy to find (Chad,
+ *            2026-10-11) — the one you are in filled solid yellow.
+ *   phone    the pills are one row you swipe sideways (Chad: "on iOS when you
+ *            pick a project you can't see the horizontal nav menu at all"),
+ *            the current one scrolled into view, the edge faded so it reads
+ *            as more to swipe. On a tool page (…/budget) the app's top bar
+ *            already reads "‹ <Job>", so no second back row; one level deeper
+ *            (…/rfis/<id>) the top bar goes back to the list, so this bar adds
+ *            one thin "‹ <Job>" row above the pills.
+ *   desktop  the same back row when it is needed; the pills wrap to a second
+ *            row rather than run off the edge. The full tool list sits in the
+ *            app's left rail (components/AppSidebar, from lib/project-nav).
  */
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
 import { useProject } from '@/lib/hooks/useProjects';
@@ -40,6 +41,15 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
   const name = String((project as { name?: string } | null)?.name || '');
   const activeKey = onJobPage ? 'overview' : phaseForPath(rel);
 
+  /* Phone: keep the current phase in view in the swipe row (no page scroll). */
+  const tabsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const row = tabsRef.current;
+    const on = row?.querySelector<HTMLElement>('[data-active]');
+    if (!row || !on || row.scrollWidth <= row.clientWidth) return;
+    row.scrollLeft = Math.max(0, on.offsetLeft - (row.clientWidth - on.offsetWidth) / 2);
+  }, [activeKey]);
+
   return (
     <div className="pjx" style={{ minWidth: 0, background: 'var(--bg-base)', minHeight: 'calc(100vh - 56px)' }}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
@@ -50,7 +60,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
               <span aria-hidden="true">‹</span><span className="pjx-back-name">{name || 'Job'}</span>
             </Link>
           )}
-          <div className="pjx-tabs">
+          <div className="pjx-tabs" ref={tabsRef}>
             {PROJECT_PHASES.map((ph) => {
               const active = ph.key === activeKey;
               const Icon = ph.icon;
@@ -83,9 +93,19 @@ const CSS = `
 .pjx-back{display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 10px 0 8px;color:var(--brand-primary);font-size:15px;font-weight:600;text-decoration:none;min-width:0;flex:0 1 auto;-webkit-tap-highlight-color:transparent}
 .pjx-back>span:first-child{font-size:22px;line-height:1;margin-top:-2px}
 .pjx-back-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(60vw,420px)}
-.pjx-tabs{display:none}
 @media (max-width:767px){
-  .pjx-bar[data-no-back]{display:none}
+  .pjx-bar{padding:0}
+  .pjx-back{padding-left:12px}
+  .pjx-tabs{display:flex;flex-wrap:nowrap;gap:8px;width:100%;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:none;padding:8px 12px;
+    -webkit-mask-image:linear-gradient(90deg,black calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,black calc(100% - 28px),transparent)}
+  .pjx-tabs::-webkit-scrollbar{display:none}
+  .pjx-tab{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 13px;border-radius:999px;scroll-snap-align:start;flex:0 0 auto;white-space:nowrap;text-decoration:none;
+    border:1px solid color-mix(in srgb,var(--brand-primary) 45%,transparent);
+    background:linear-gradient(180deg,color-mix(in srgb,var(--brand-primary) 16%,transparent),color-mix(in srgb,var(--brand-primary) 6%,transparent));
+    color:var(--text-primary);font-size:14px;font-weight:700;-webkit-tap-highlight-color:transparent}
+  .pjx-tab svg{color:var(--brand-primary);flex:none}
+  .pjx-tab[data-active]{background:var(--brand-primary);border-color:var(--brand-primary);color:var(--on-brand,var(--c-on-brand));font-weight:800;box-shadow:0 0 16px color-mix(in srgb,var(--brand-primary) 50%,transparent)}
+  .pjx-tab[data-active] svg{color:var(--on-brand,var(--c-on-brand))}
 }
 @media (min-width:768px){
   .pjx-bar{padding:0 clamp(8px,1.2vw,20px) 0 4px}

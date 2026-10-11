@@ -236,6 +236,7 @@ export default function CommandPalette({ onScoreBid }: Props) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', borderBottom: `1px solid ${BORDER}` }}>
           <span style={{ fontSize: 18, flexShrink: 0, opacity: 0.6 }}>🔍</span>
           <input
+            data-no-guard=""
             ref={inputRef}
             value={query}
             onChange={e => { setQuery(e.target.value); setFocused(0); }}

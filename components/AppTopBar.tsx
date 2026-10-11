@@ -7,11 +7,14 @@
  *   phone    [‹ Parent]  Page title ……………………  (✦)  (CD)
  *   desktop  [‹ Parent]  Job picker | Page title …  Search  Help  (✦ Sage)  🔔  (CD)
  *
- * The back link appears ONLY on a sub-page — never on a tab's own page (Home,
- * My Work, Jobs, Time) and never on a section reached from the menu, whose
- * parent is just Home: the old "← Home" pill sat on almost every screen and
- * cost the title its room ("Command Cen…"). The title now takes the rest of
- * the row. Sage and the account are 32px round buttons with a 44px hit area.
+ * Back (Chad, 2026-10-11: "a back button easy for users to go back to prior
+ * screen") is a lit pill that names where it goes and takes you to the screen
+ * you were actually on before (lib/navHistory). On the first screen of a tab
+ * — a link opened fresh, a reload — it goes up to the parent screen instead,
+ * and on a tab's own page with nothing before it there is no Back. It goes
+ * through the unsaved-changes gate like every other way out. The title takes
+ * the rest of the row. Sage and the account are 32px round buttons with a
+ * 44px hit area.
  */
 import React, { useState, useEffect } from 'react';
 import { HelpModeButton } from '@/components/HelpMode';
@@ -32,6 +35,7 @@ import {
 } from '@phosphor-icons/react';
 import { font, radius, sidebar as sidebarTokens, z } from '../lib/design-tokens';
 import { resolveTopBar, UUID_RE } from '@/lib/topbar-crumbs';
+import { recordVisit } from '@/lib/navHistory';
 
 export default function AppTopBar({
   sidebarCollapsed,
@@ -86,6 +90,25 @@ export default function AppTopBar({
 
   const { back, title } = resolveTopBar(pathname, { projectNames, companyName: companyName || null });
 
+  /* ── Back: the screen you were on, else the parent screen ───────────── */
+  const [prevPath, setPrevPath] = useState<string | null>(null);
+  useEffect(() => { setPrevPath(recordVisit(pathname)); }, [pathname]);
+  const jobName = (id: string) =>
+    projectNames[id] ||
+    (crumbProjects as Array<{ id?: string; name?: string }>).find((x) => x?.id === id)?.name ||
+    'Job';
+  const screenName = (path: string): string => {
+    if (path === '/app' || path === '/app/') return 'Home';
+    const job = path.match(/^\/app\/projects\/([^/]+)(?:\/overview)?\/?$/);
+    if (job && UUID_RE.test(job[1])) return jobName(job[1]);
+    return resolveTopBar(path, { projectNames, companyName: null }).title || 'Back';
+  };
+  const backTo = prevPath
+    ? { label: screenName(prevPath), go: () => router.back() }
+    : back
+      ? { label: back.label, go: () => router.push(back.href) }
+      : null;
+
   // Close the account menu on navigation and on Escape.
   useEffect(() => { setShowUserMenu(false); }, [pathname]);
   useEffect(() => {
@@ -128,16 +151,16 @@ export default function AppTopBar({
         <List size={20} />
       </button>
 
-      {back && (
+      {backTo && (
         <button
           type="button"
           className="sag-tb-back"
-          onClick={() => router.push(back.href)}
-          aria-label={`Back to ${back.label}`}
-          title={`Back to ${back.label}`}
+          onClick={backTo.go}
+          aria-label={`Back to ${backTo.label}`}
+          title={`Back to ${backTo.label}`}
         >
           <CaretLeft size={18} weight="bold" aria-hidden />
-          <span className="sag-tb-back-label">{back.label}</span>
+          <span className="sag-tb-back-label">{backTo.label}</span>
         </button>
       )}
 

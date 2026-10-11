@@ -36,6 +36,9 @@ export interface NavGuardEntry {
   isDirty: () => boolean;
   /** Open the Save / Discard / Stay confirm; run `proceed` if the user leaves. */
   intercept: (proceed: () => void, href: string | null) => void;
+  /** The app shell's automatic gate (components/AutoUnsavedGuard): asked only
+   *  when no page's own guard is dirty, since a page's guard knows how to save. */
+  fallback?: boolean;
 }
 
 const entries = new Set<NavGuardEntry>();
@@ -59,6 +62,26 @@ export function runUnguarded<T>(fn: () => T): T {
   }
 }
 
+function dirtyOf(e: NavGuardEntry): boolean {
+  try {
+    return e.isDirty();
+  } catch {
+    return false; /* a broken predicate must never wedge navigation */
+  }
+}
+
+/** Page guards first, then the shell's fallback. */
+function ordered(): NavGuardEntry[] {
+  const all = [...entries];
+  return [...all.filter((e) => !e.fallback), ...all.filter((e) => e.fallback)];
+}
+
+/** True when a page's own guard (not the shell fallback) holds unsaved work. */
+export function isPageGuardDirty(): boolean {
+  for (const e of entries) if (!e.fallback && dirtyOf(e)) return true;
+  return false;
+}
+
 /** True when some mounted form currently holds unsaved work. */
 export function isNavGuarded(): boolean {
   if (bypassDepth > 0) return false;
@@ -79,14 +102,8 @@ export function isNavGuarded(): boolean {
  */
 export function requestNavigation(proceed: () => void, href: string | null = null): boolean {
   if (bypassDepth > 0) return false;
-  for (const e of entries) {
-    let dirty = false;
-    try {
-      dirty = e.isDirty();
-    } catch {
-      dirty = false;
-    }
-    if (!dirty) continue;
+  for (const e of ordered()) {
+    if (!dirtyOf(e)) continue;
     e.intercept(() => runUnguarded(proceed), href);
     return true;
   }

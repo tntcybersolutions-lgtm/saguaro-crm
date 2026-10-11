@@ -96,6 +96,33 @@ In this order:
    `DateField` with required markers, real placeholders, helper text.
 6. **Voice dictation** on every long-form text field.
 7. **Unsaved-work guard** (`useUnsavedGuard`) + draft autosave on every create flow.
+   Every screen already has the shell's automatic gate (below); a create flow
+   adds `useUnsavedGuard` for the draft autosave and its own save handler.
+
+---
+
+## WHAT THE APP SHELL GIVES EVERY SCREEN — never rebuild per page
+
+*Owner directive, 2026-10-11: "a back button easy for users to go back to prior
+screen and add gates asking … save and exit or discard … fully site wide."*
+
+- **Back** — the top bar (`components/AppTopBar.tsx`) shows a lit "‹ <where>"
+  pill on every screen that has somewhere to go back to. It returns to the
+  screen the user was actually on (`lib/navHistory.ts`); on the first screen of
+  a tab it goes up to the parent screen. Pages do not add their own Back.
+- **Unsaved-changes gate** — `components/AutoUnsavedGuard.tsx`, mounted once in
+  `app/app/layout.tsx`. Any field the user changes inside a `<form>`, a dialog,
+  a `.k-modal` or a `[data-guard]` block arms it; leaving by any link, the
+  sidebar, a bottom tab or Back asks **Discard · Keep editing · Save and exit**
+  (`components/UnsavedGuardModal.tsx`). Save and exit presses the form's own
+  Save button and leaves only when the save succeeds. Closing or reloading the
+  tab gets the browser's own prompt. Search boxes, filters, sort, menus, Sage
+  and ⌘K never arm it. Rules (`lib/autoGuard.ts`): wrap custom editable areas
+  in `data-guard`; mark a field that saves itself or is not work `data-no-guard`;
+  name the save button "Save …" (or Create / Update / Submit …) so the gate can
+  find it. A page's own `useUnsavedGuard` answers first when it is dirty.
+- **App-shell navigation** that moves on a click handler (not a `<Link>`) uses
+  `useGuardedRouter()` from `lib/navGuard.ts` so the gate can ask first.
 
 ---
 

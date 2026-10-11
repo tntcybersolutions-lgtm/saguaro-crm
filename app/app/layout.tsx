@@ -28,6 +28,7 @@ import PresenceIndicator from '../../components/PresenceIndicator';
 import WhiteLabelProvider from '../../components/WhiteLabelProvider';
 import AppSidebar from '../../components/AppSidebar';
 import AppTopBar from '../../components/AppTopBar';
+import AutoUnsavedGuard from '@/components/AutoUnsavedGuard';
 import NextStepBar from '../../components/NextStepBar';
 import HeaderProjectPicker from '../../components/HeaderProjectPicker';
 import { HelpModeButton } from '../../components/HelpMode';
@@ -594,6 +595,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <span className="sag-tab-label">More</span>
         </button>
       </nav>
+
+      {/* ── Unsaved-changes gate: every screen, Save and exit / Discard ── */}
+      <AutoUnsavedGuard />
 
       {/* ── Sage CRM Chat Widget ──────────────────────────────────────── */}
       <SaguaroChatWidget variant="crm" userId={sageUserId} projectList={sageProjects} />
