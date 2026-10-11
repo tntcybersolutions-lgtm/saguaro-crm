@@ -1,147 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { getPortalSession, PORTAL_PERMS } from '@/lib/portal-auth';
+import { apiError } from '@/lib/api-error';
+import { isOwnerUpdate } from '@/lib/owner-update';
 
-/** GET — list AI summaries for project */
+/**
+ * GET — the progress updates the builder SENT to the client (lib/owner-update).
+ *
+ * This route used to let the client generate an AI summary themselves (POST),
+ * straight to the portal with nobody at the builder reading it first. It also
+ * read daily-log columns that do not exist (work_description, workforce_count)
+ * and an unknown model id, so it never produced a narrative. Updates are now
+ * written from the daily logs on the GC side and only appear here once the PM
+ * approves and sends them. Drafts are never returned.
+ */
 export async function GET(req: NextRequest) {
   try {
     const session = await getPortalSession(req, PORTAL_PERMS.VIEW_PROJECT);
     if (!session) {
       return NextResponse.json({ error: 'Access denied — insufficient permissions' }, { status: 403 });
     }
-
     const db = createServerClient();
-    const { data: summaries, error } = await db
+    const { data, error } = await db
       .from('portal_summaries')
-      .select('*')
+      .select('id, summary_data, created_at')
       .eq('project_id', session.project_id)
       .eq('tenant_id', session.tenant_id)
-      .order('created_at', { ascending: false });
-
+      .eq('summary_data->>status', 'sent')
+      .order('created_at', { ascending: false })
+      .limit(52);
     if (error) throw error;
-
-    return NextResponse.json({ summaries: summaries || [] });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
-}
-
-/** POST — generate a new summary from daily logs */
-export async function POST(req: NextRequest) {
-  try {
-    const session = await getPortalSession(req, PORTAL_PERMS.VIEW_PROJECT);
-    if (!session) {
-      return NextResponse.json({ error: 'Access denied — insufficient permissions' }, { status: 403 });
-    }
-
-    const body = await req.json();
-    const { period_start, period_end } = body;
-
-    const db = createServerClient();
-    const projectId = session.project_id;
-    const tenantId = session.tenant_id;
-
-    // Collect daily log data for the period
-    let logsQuery = db
-      .from('daily_logs')
-      .select('*')
-      .eq('project_id', projectId)
-      .eq('tenant_id', tenantId)
-      .order('log_date', { ascending: true });
-
-    if (period_start) {
-      logsQuery = logsQuery.gte('log_date', period_start);
-    }
-    if (period_end) {
-      logsQuery = logsQuery.lte('log_date', period_end);
-    }
-
-    const { data: logs, error: logsError } = await logsQuery;
-    if (logsError) throw logsError;
-
-    // Build structured summary from collected data
-    const logEntries = logs || [];
-    const totalLogs = logEntries.length;
-    const weatherDays = logEntries.filter((l: any) => l.weather_delay).length;
-    const workforceTotal = logEntries.reduce(
-      (sum: number, l: any) => sum + (l.workforce_count || 0),
-      0
-    );
-
-    const structuredSummary = {
-      period: {
-        start: period_start || (logEntries[0]?.log_date ?? null),
-        end: period_end || (logEntries[logEntries.length - 1]?.log_date ?? null),
-      },
-      stats: {
-        total_log_days: totalLogs,
-        weather_delay_days: weatherDays,
-        avg_workforce: totalLogs > 0 ? Math.round(workforceTotal / totalLogs) : 0,
-      },
-      activities: logEntries.map((l: any) => ({
-        date: l.log_date,
-        description: l.work_description || l.notes || '',
-        workforce: l.workforce_count || 0,
-        weather: l.weather || '',
-      })),
-      highlights: logEntries
-        .filter((l: any) => l.milestones || l.highlights)
-        .map((l: any) => ({
-          date: l.log_date,
-          note: l.milestones || l.highlights,
-        })),
-      ai_narrative: '',
-    };
-
-    // Generate AI narrative summary via Claude
-    if (process.env.ANTHROPIC_API_KEY && logEntries.length > 0) {
-      try {
-        const { default: Anthropic } = await import('@anthropic-ai/sdk');
-        const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-        const logContext = logEntries.slice(0, 20).map((l: any) =>
-          `${l.log_date}: ${l.work_description || l.notes || 'No notes'}${l.weather ? ` (Weather: ${l.weather})` : ''}${l.weather_delay ? ' [WEATHER DELAY]' : ''}`
-        ).join('\n');
-
-        const msg = await client.messages.create({
-          model: 'claude-haiku-4-20250514',
-          max_tokens: 600,
-          system: 'You are a construction project manager writing a weekly progress summary for a building owner. Be concise, professional, and factual. Use bullet points for key items. Mention weather delays, milestones, and any concerns.',
-          messages: [{
-            role: 'user',
-            content: `Write a brief owner-facing project summary for this period.\n\nDaily logs:\n${logContext}\n\nStats: ${totalLogs} work days, ${weatherDays} weather delays, avg ${structuredSummary.stats.avg_workforce} workers/day.\n\nWrite 3-5 bullet points summarizing progress, any concerns, and next steps.`
-          }],
-        });
-
-        const aiText = msg.content?.[0]?.type === 'text' ? msg.content[0].text : '';
-        structuredSummary.ai_narrative = aiText;
-      } catch (err) {
-        console.warn('[portal/summary] AI generation failed (non-fatal):', err);
-      }
-    }
-
-    // Store the generated summary.
-    // Live portal_summaries columns: tenant_id, project_id, session_id,
-    // summary_data (jsonb), percent_complete, next_milestone, budget_status,
-    // schedule_status, last_updated, created_at. There is no period_start /
-    // period_end / generated_by column — the period is already inside
-    // structuredSummary.period, and generated_by is folded into summary_data.
-    const { data: saved, error: saveError } = await db
-      .from('portal_summaries')
-      .insert({
-        project_id: projectId,
-        tenant_id: tenantId,
-        session_id: session.id,
-        summary_data: { ...structuredSummary, generated_by: 'system' },
-        created_at: new Date().toISOString(),
+    const updates = (data || [])
+      .filter((r) => isOwnerUpdate(r.summary_data))
+      .map((r) => {
+        const d = r.summary_data as { title: string; body: string; period: { start: string; end: string }; sent_at?: string | null };
+        return { id: r.id, title: d.title, body: d.body, period: d.period, sent_at: d.sent_at || r.created_at };
       })
-      .select()
-      .single();
-
-    if (saveError) throw saveError;
-
-    return NextResponse.json({ summary: saved });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+      .sort((a, b) => String(b.sent_at).localeCompare(String(a.sent_at)));
+    return NextResponse.json({ updates });
+  } catch (e) {
+    return apiError('portal/client/summary', e, 'Could not load the updates.');
   }
 }

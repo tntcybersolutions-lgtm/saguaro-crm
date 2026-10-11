@@ -6,12 +6,12 @@ import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intellige
 import Link from 'next/link';
 import ClientSelections from '@/components/portal/ClientSelections';
 import {
-  ChartBar, CheckCircle, CurrencyDollar, ChatCircle, FolderOpen, Wrench, Robot,
+  ChartBar, CheckCircle, CurrencyDollar, ChatCircle, FolderOpen, Wrench,
   Lock, CalendarBlank, Money, ClipboardText, Sun, CloudRain, Camera, Receipt,
   CreditCard, Paperclip, MagnifyingGlass, Ruler, FileText, ListChecks,
   DownloadSimple, PaperPlaneTilt, List, X, ArrowUp, Check, Checks, XCircle,
-  Cactus, Buildings, Target, EnvelopeSimple, Sparkle, Hammer, Files, Certificate,
-  Signature, Palette,
+  Cactus, Hammer, Files, Certificate,
+  Signature, Palette, Newspaper,
 } from '@phosphor-icons/react';
 import type { Icon as PhosphorIcon } from '@phosphor-icons/react';
 
@@ -175,14 +175,13 @@ type PunchItem = {
   photo?: string;
 };
 
+/** A progress update the builder approved and sent (lib/owner-update). */
 type AISummary = {
   id: string;
-  week_of: string;
-  work_completed: string;
-  upcoming_milestones: string;
-  budget_status: string;
-  weather_delays: string;
-  generated_at: string;
+  title: string;
+  body: string;
+  period: { start: string; end: string } | null;
+  sent_at: string;
 };
 
 type DashboardData = {
@@ -202,7 +201,7 @@ const TABS: { id: TabId; label: string; icon: IconCmp }[] = [
   { id: 'messages', label: 'Messages', icon: ChatCircle },
   { id: 'documents', label: 'Documents', icon: FolderOpen },
   { id: 'warranty', label: 'Warranty & Punch', icon: Wrench },
-  { id: 'ai', label: 'AI Summary', icon: Robot },
+  { id: 'ai', label: 'Updates', icon: Newspaper },
 ];
 
 const DOC_CATEGORIES = ['All', 'Contracts', 'Drawings', 'Specs', 'Submittals', 'Permits', 'Lien Waivers', 'Reports', 'Photos', 'Other'];
@@ -266,8 +265,6 @@ export default function ClientPortalPage() {
   /* ── AI Summary state ─────────────────────────────────────────── */
   const [aiLoading, setAiLoading] = useState(false);
   const [aiSummaries, setAiSummaries] = useState<AISummary[]>([]);
-  const [generatingAi, setGeneratingAi] = useState(false);
-  const [emailSending, setEmailSending] = useState(false);
 
   /* ── Change Request state ────────────────────────────────────── */
   const [showChangeRequest, setShowChangeRequest] = useState(false);
@@ -423,8 +420,8 @@ export default function ClientPortalPage() {
       setAiLoading(true);
       fetch(`/api/portal/client/summary?token=${token}`, { headers: { 'x-portal-token': token } })
         .then((r) => r.json())
-        .then((d) => setAiSummaries(d.summaries || []))
-        .catch(() => showToast('Failed to load AI summaries.', 'error'))
+        .then((d) => setAiSummaries(d.updates || []))
+        .catch(() => showToast('Failed to load updates.', 'error'))
         .finally(() => setAiLoading(false));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -626,44 +623,6 @@ export default function ClientPortalPage() {
       showToast('Network error. Please try again.', 'error');
     }
     setPaymentProcessing(false);
-  };
-
-  const generateAiSummary = async () => {
-    setGeneratingAi(true);
-    try {
-      const res = await fetch(`/api/portal/client/summary`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-portal-token': token },
-        body: JSON.stringify({ token }),
-      });
-      const d = await res.json();
-      if (d.summary) {
-        setAiSummaries((prev) => [d.summary, ...prev]);
-        showToast('Summary generated.');
-      } else {
-        showToast(d.error || 'Failed to generate summary.', 'error');
-      }
-    } catch {
-      showToast('Network error. Please try again.', 'error');
-    }
-    setGeneratingAi(false);
-  };
-
-  const emailSummary = async (summaryId: string) => {
-    setEmailSending(true);
-    try {
-      const res = await fetch(`/api/portal/client/summary`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-portal-token': token },
-        body: JSON.stringify({ token, action: 'email', summary_id: summaryId }),
-      });
-      const d = await res.json();
-      if (d.success) showToast('Summary emailed successfully.');
-      else showToast(d.error || 'Failed to send email.', 'error');
-    } catch {
-      showToast('Network error. Please try again.', 'error');
-    }
-    setEmailSending(false);
   };
 
   const handlePunchSignOff = async (id: string) => {
@@ -1901,93 +1860,30 @@ export default function ClientPortalPage() {
      ══════════════════════════════════════════════════════════════════ */
   const renderAiSummary = () => {
     if (aiLoading) return <LoadingBlock />;
-
+    const paras = (body: string) => body.split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-          <div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: TEXT }}>AI Project Summaries</div>
-            <div style={{ fontSize: 13, color: DIM, marginTop: 4 }}>Weekly AI-generated insights about your project.</div>
-          </div>
-          <button
-            style={{ ...btnPrimary, display: 'flex', alignItems: 'center', gap: 8, opacity: generatingAi ? 0.6 : 1 }}
-            disabled={generatingAi}
-            onClick={generateAiSummary}
-          >
-            {generatingAi ? (
-              <>
-                <div style={{ width: 14, height: 14, border: '2px solid rgba(0,0,0,.3)', borderTopColor: BG, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-                Generating…
-              </>
-            ) : (
-              <><Sparkle size={15} weight="fill" /> Generate Summary</>
-            )}
-          </button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: TEXT }}>Updates from your builder</div>
+          <div style={{ fontSize: 13, color: DIM, marginTop: 4 }}>Progress notes from {project?.company_name || 'your builder'}, written from the site&apos;s daily logs.</div>
         </div>
-
         {aiSummaries.length === 0 ? (
-          <EmptyState icon={<Robot size={44} weight="duotone" color="rgba(255,255,255,0.35)" />} title="No Summaries Yet" subtitle="Click 'Generate Summary' to create your first AI project summary." />
+          <EmptyState icon={<Newspaper size={44} weight="duotone" color="rgba(255,255,255,0.35)" />} title="No Updates Yet" subtitle="When your builder sends a progress update, it shows here and in your email." />
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            {aiSummaries.map((summary) => (
-              <div key={summary.id} style={{ ...cardStyle, position: 'relative', overflow: 'hidden' }}>
-                {/* Decorative gradient */}
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${PURPLE}, ${BLUE}, ${GOLD})` }} />
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
-                  <div>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>Week of {fmtDate(summary.week_of)}</div>
-                    <div style={{ fontSize: 11, color: DIM, marginTop: 4 }}>Generated {fmtDate(summary.generated_at)} at {fmtTime(summary.generated_at)}</div>
-                  </div>
-                  <button
-                    style={{ ...btnOutline, padding: '8px 14px', fontSize: 12, opacity: emailSending ? 0.6 : 1 }}
-                    disabled={emailSending}
-                    onClick={() => emailSummary(summary.id)}
-                  >
-                    {emailSending ? 'Sending…' : <><EnvelopeSimple size={15} weight="bold" /> Send to Email</>}
-                  </button>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
-                  {/* Work Completed */}
-                  <div style={{ background: BG, borderRadius: 10, padding: 16, border: `1px solid ${BORDER}` }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                      <Buildings size={17} weight="duotone" color={GREEN} />
-                      <span style={{ fontSize: 13, fontWeight: 700, color: GREEN }}>Work Completed</span>
-                    </div>
-                    <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.7 }}>{summary.work_completed}</div>
-                  </div>
-
-                  {/* Upcoming Milestones */}
-                  <div style={{ background: BG, borderRadius: 10, padding: 16, border: `1px solid ${BORDER}` }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                      <Target size={17} weight="duotone" color={BLUE} />
-                      <span style={{ fontSize: 13, fontWeight: 700, color: BLUE }}>Upcoming Milestones</span>
-                    </div>
-                    <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.7 }}>{summary.upcoming_milestones}</div>
-                  </div>
-
-                  {/* Budget Status */}
-                  <div style={{ background: BG, borderRadius: 10, padding: 16, border: `1px solid ${BORDER}` }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                      <CurrencyDollar size={17} weight="duotone" color={GOLD} />
-                      <span style={{ fontSize: 13, fontWeight: 700, color: GOLD }}>Budget Status</span>
-                    </div>
-                    <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.7 }}>{summary.budget_status}</div>
-                  </div>
-
-                  {/* Weather Delays */}
-                  <div style={{ background: BG, borderRadius: 10, padding: 16, border: `1px solid ${BORDER}` }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                      <CloudRain size={17} weight="duotone" color={AMBER} />
-                      <span style={{ fontSize: 13, fontWeight: 700, color: AMBER }}>Weather Delays</span>
-                    </div>
-                    <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.7 }}>{summary.weather_delays}</div>
-                  </div>
-                </div>
+          aiSummaries.map((u) => (
+            <article key={u.id} style={{ ...cardStyle }}>
+              <div style={{ fontSize: 17, fontWeight: 800, color: TEXT }}>{u.title}</div>
+              <div style={{ fontSize: 12, color: DIM, marginTop: 4, marginBottom: 14 }}>
+                {u.period ? `${fmtDate(u.period.start)} – ${fmtDate(u.period.end)} · ` : ''}Sent {fmtDate(u.sent_at)}
               </div>
-            ))}
-          </div>
+              {paras(u.body).map((para, i) => {
+                const lines = para.split('\n').map((l) => l.trim()).filter(Boolean);
+                return lines.every((l) => /^[-•*]\s+/.test(l))
+                  ? <ul key={i} style={{ margin: '0 0 12px', paddingLeft: 20, color: TEXT, fontSize: 15, lineHeight: 1.65 }}>{lines.map((l, j) => <li key={j}>{l.replace(/^[-•*]\s+/, '')}</li>)}</ul>
+                  : <p key={i} style={{ margin: '0 0 12px', color: TEXT, fontSize: 15, lineHeight: 1.65 }}>{lines.join(' ')}</p>;
+              })}
+            </article>
+          ))
         )}
       </div>
     );
