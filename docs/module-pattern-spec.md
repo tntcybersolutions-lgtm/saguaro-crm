@@ -134,6 +134,34 @@ screen and add gates asking … save and exit or discard … fully site wide."*
 
 ---
 
+## TEXT IS PEARL WHITE — every screen, every level
+
+*Owner directive, 2026-10-11: "the dark grey font … dark, can't read, hard to
+see, not alive — full site, not hunt and peck."*
+
+- Text uses three tokens and nothing else: `--text-primary` (#FAF8F2, body and
+  headings), `--text-secondary` (#E8E4D9, supporting lines, hints, labels) and
+  `--text-tertiary` (#D2CDBF, the smallest captions). All three are pearl white —
+  at least 11:1 on the page black. `--text-disabled` is only for disabled
+  controls. (`--c-text*`, `--sg-text*` and `lib/design-tokens.ts` mirror them.)
+- Hierarchy comes from **size and weight**, not from fading the colour. A line
+  is never "less important" by being grey.
+- A page never hard-codes a grey (`#6b7280`, `#8b949e`, `#A3ACBB`, `#D4D4D8`, …)
+  or a faded `rgba(255,255,255,<0.6)` as a text colour, and a `DIM` / `MUTED`
+  constant is `var(--text-secondary)`. `tools/check-design-system.mjs` rule 4
+  fails the build on one — portals included, no baseline.
+- Exceptions are only where grey on white is the right call: print / PDF /
+  email layouts and pages that paint a white page. HTML written into a print
+  window keeps hex colours — CSS variables do not exist there — and so does a
+  colour drawn on a canvas or stored with a record (`paletteHex` in
+  `lib/design-tokens.ts` is the hex mirror for those).
+- A colour held in a variable is faded with
+  `color-mix(in srgb, ${X} 25%, transparent)`, never a hex alpha glued on
+  (`${DIM}40` is `var(--text-secondary)40` — invalid, the browser drops it).
+  Rule 5 of the same gate fails the build on one.
+
+---
+
 ## MODULE IDENTITY
 One accent per module from `lib/module-identity.ts` (mirrored byte-identical on
 both repos), threaded through header, medallion, chips, field groups, and pills.

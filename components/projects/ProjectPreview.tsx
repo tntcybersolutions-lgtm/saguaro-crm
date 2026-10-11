@@ -19,7 +19,7 @@ import { Folder, MapPin, Buildings, Percent, Scales, Hash } from '@phosphor-icon
 const GOLD = 'var(--brand-primary)';
 const GOLD_HI = 'var(--brand-primary-strong)';
 const TEXT = 'var(--text-primary)';
-const DIM = 'rgba(255,255,255,0.46)';
+const DIM = 'var(--text-secondary)';
 
 export interface ProjectPreviewProps {
   name: string;

@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Cactus } from '@phosphor-icons/react/dist/ssr';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30';
 
 const NAV = (
   <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:100,height:56,background:'rgba(20,20,22,.96)',borderBottom:`1px solid ${BORDER}`,display:'flex',alignItems:'center',padding:'0 32px',gap:24,backdropFilter:'blur(12px)'}}>
@@ -18,7 +18,7 @@ const NAV = (
 );
 
 const UPTIME_TIERS = [
-  {plan:'Starter',uptime:'99.9%',desc:'Up to 8.7 hours downtime per year',color:'#6b7280'},
+  {plan:'Starter',uptime:'99.9%',desc:'Up to 8.7 hours downtime per year',color:'var(--text-tertiary)'},
   {plan:'Professional',uptime:'99.95%',desc:'Up to 4.4 hours downtime per year',color:GOLD,popular:true},
   {plan:'Enterprise',uptime:'99.99%',desc:'Up to 52 minutes downtime per year',color:'var(--brand-primary-strong)'},
 ];
@@ -91,7 +91,7 @@ export default function SLAPage() {
                   <th style={{padding:'14px 20px',textAlign:'left',color:DIM,fontWeight:700,fontSize:12}}>Description</th>
                   <th style={{padding:'14px 20px',textAlign:'center',color:'var(--brand-primary-strong)',fontWeight:700,fontSize:12}}>Enterprise</th>
                   <th style={{padding:'14px 20px',textAlign:'center',color:GOLD,fontWeight:700,fontSize:12}}>Professional</th>
-                  <th style={{padding:'14px 20px',textAlign:'center',color:'#6b7280',fontWeight:700,fontSize:12}}>Starter</th>
+                  <th style={{padding:'14px 20px',textAlign:'center',color:'var(--text-tertiary)',fontWeight:700,fontSize:12}}>Starter</th>
                 </tr>
               </thead>
               <tbody>

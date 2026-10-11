@@ -182,3 +182,5 @@ converge. One line each, newest at the bottom.
 - (11 Oct, probe of #129) Client portal floating quick-action bar (Dashboard / Messages / Approvals,
   `app/portals/client/[token]/page.tsx` ~line 2290) is fixed over the content on a phone and covers
   cards as you scroll. Not fixed (off-path).
+- (11 Oct) `app/page.tsx:107` calls `useState` inside a callback (react-hooks/rules-of-hooks
+  error on main). Builds pass because lint does not gate the build. Not fixed (off-path).

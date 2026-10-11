@@ -9,7 +9,7 @@ const C = {
   gold: 'var(--brand-primary)',
   goldBright: 'var(--brand-primary-strong)',
   text: '#FFFFFF',
-  dim: '#D4D4D8',
+  dim: 'var(--text-secondary)',
   border: 'rgba(255,255,255,0.08)',
   raised: 'var(--bg-surface)',
   raisedAlt: 'var(--bg-surface)',
@@ -224,7 +224,7 @@ export default function FeaturesPage() {
           <Link href="/signup" style={{ display: 'inline-block', padding: '12px 26px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
             Start Free Trial — No Credit Card →
           </Link>
-          <div style={{ marginTop: 14, fontSize: 12.5, color: 'rgba(255,255,255,0.45)' }}>{TRIAL_DAYS} days free · Unlimited users · Free migration</div>
+          <div style={{ marginTop: 14, fontSize: 12.5, color: 'var(--text-secondary)' }}>{TRIAL_DAYS} days free · Unlimited users · Free migration</div>
         </section>
 
         {/* Feature sections */}

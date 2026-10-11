@@ -7,7 +7,7 @@ import type { Icon as PhosphorIcon } from '@phosphor-icons/react';
  *  picks its own size and weight. */
 type IconCmp = PhosphorIcon;
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='#FFFFFF';
 
 const STEPS = [
   { num: 1, label: 'Welcome', active: true },
@@ -103,7 +103,7 @@ export default function OnboardingStep1() {
           </div>
         </div>
 
-        <div style={{ textAlign: 'center', marginTop: 20, fontSize: 12, color: '#D4D4D8' }}>
+        <div style={{ textAlign: 'center', marginTop: 20, fontSize: 12, color: 'var(--text-secondary)' }}>
           Need help? <a href="mailto:support@saguarocontrol.net" style={{ color: DIM }}>support@saguarocontrol.net</a>
         </div>
       </div>

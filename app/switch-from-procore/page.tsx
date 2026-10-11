@@ -9,7 +9,7 @@ import type { Icon } from '@phosphor-icons/react';
 const DARK = 'var(--bg-base)';
 const GOLD = 'var(--brand-primary)';
 const TEXT = '#FFFFFF';
-const DIM = '#D4D4D8';
+const DIM = 'var(--text-secondary)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const RAISED = 'var(--bg-surface)';
 const GREEN = '#2CFF7A';
@@ -610,7 +610,7 @@ export default function SwitchFromProcorePage() {
             ].map((t) => (
               <div key={t.name} className="testimonial-card">
                 <div style={{
-                  fontSize: '3rem', lineHeight: 1, color: 'rgba(255,255,255,0.18)',
+                  fontSize: '3rem', lineHeight: 1, color: 'var(--text-tertiary)',
                   fontFamily: 'Georgia, serif', marginBottom: 16,
                 }}>
                   &ldquo;
@@ -745,7 +745,7 @@ export default function SwitchFromProcorePage() {
               </Link>
             ))}
           </div>
-          <p style={{ color: '#8094B0', fontSize: '0.82rem' }}>
+          <p style={{ color: 'var(--text-tertiary)', fontSize: '0.82rem' }}>
             &copy; {new Date().getFullYear()} Saguaro Construction Software. All rights reserved.
           </p>
         </div>

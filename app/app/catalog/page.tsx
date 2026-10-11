@@ -209,7 +209,7 @@ function ProvPop({ offer, item }: { offer: Offer; item: CatalogItem }) {
       <span style={{ display: 'block', fontSize: 11, color: DIM, lineHeight: 1.45 }}>
         Captured {fmtDate(offer.asOf)}{offer.source ? ` · ${offer.source}` : ''} — not a live quote.
       </span>
-      <span style={{ display: 'block', fontSize: 11, color: live ? DIM : 'rgba(255,255,255,0.5)', lineHeight: 1.45, marginTop: 4 }}>
+      <span style={{ display: 'block', fontSize: 11, color: live ? DIM : 'var(--text-secondary)', lineHeight: 1.45, marginTop: 4 }}>
         {live
           ? `Availability from the ${offer.source} feed as of ${fmtDate(offer.asOf)}.`
           : `${AVAILABILITY_UNTRACKED_LINE} — no store, branch, or inventory feed is connected.`}

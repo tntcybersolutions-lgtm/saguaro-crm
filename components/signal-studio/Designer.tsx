@@ -36,6 +36,7 @@ import { humanError } from '@/lib/errors';
 import { calibrateModel, applyCalibration, type MeasuredPoint, type CalibrationResult } from '@/lib/heatmap/calibrate';
 import { calibrationNote, engineStamp, parseSurveyCsv } from '@/lib/heatmap/meta';
 import { rssiRgb } from '@/lib/heatmap/models';
+import { paletteHex } from '@/lib/design-tokens';
 import dynamic from 'next/dynamic';
 
 import { printHtml } from '@/lib/print-doc';
@@ -44,7 +45,7 @@ import { useToast } from '@/components/Toast';
 const Building3D = dynamic(() => import('@/components/heatmap/Building3D'), { ssr: false });
 
 const GOLD = 'var(--brand-primary)', GOLD_CANVAS = '#FF8A00', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.1)';
-const TEXT = '#fff', DIM = '#D4D4D8', MUTED = 'rgba(255,255,255,0.5)';
+const TEXT = '#fff', DIM = 'var(--text-secondary)', MUTED = 'var(--text-secondary)';
 
 type Tool = 'select' | 'scale' | 'wall' | 'place';
 /* ── FIELD MODE — the guided jobsite flow, IDENTICAL to the mobile app.
@@ -257,7 +258,7 @@ const LAYER_META: { key: string; name: string; color: string }[] = [
   { key: 'voice', name: 'Voice Jacks (RJ11)', color: SYSTEM_COLORS.power },
   { key: 'combo', name: 'Combo Plates', color: SYSTEM_COLORS.power },
   { key: 'cabling', name: 'Cable Terminations', color: SYSTEM_COLORS.cabling },
-  { key: 'other', name: 'Other Devices', color: '#A3ACBB' },
+  { key: 'other', name: 'Other Devices', color: paletteHex.gray }, // drawn on the canvas — a hex, never a CSS variable
 ];
 // ── compact layer-chip row (the 6 approved systems) shown under the header ──
 type PanelTab = 'design' | 'layers' | 'bom' | 'survey';
@@ -2986,7 +2987,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         .hm-row[data-on="true"] { background: var(--brand-primary-12); }
         .hm-row i { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
         .hm-bom { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
-        .hm-bom-row { display: flex; justify-content: space-between; gap: 8px; color: #D4D4D8; }
+        .hm-bom-row { display: flex; justify-content: space-between; gap: 8px; color: var(--text-secondary); }
         .hm-bom-row span:first-child { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         /* ── Field mode (guided jobsite flow — identical to the mobile app) ── */
         .hm-rail { display: flex; align-items: center; gap: 7px; padding: 11px 16px; border-top: 1px solid ${BORDER}; border-bottom: 1px solid rgba(0,0,0,0.55); background: linear-gradient(180deg, #17181b, #101114); flex-wrap: wrap; position: relative; z-index: 4; box-shadow: 0 6px 18px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05); }

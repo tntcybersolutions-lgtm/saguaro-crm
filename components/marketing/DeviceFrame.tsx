@@ -64,7 +64,7 @@ function ScreenMedia({ src, alt, fit = 'cover' }: { src: string; alt: string; fi
         <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.75)', letterSpacing: '0.02em' }}>
           Real app screenshot
         </div>
-        <div style={{ fontSize: 10, lineHeight: 1.6, color: 'rgba(255,255,255,0.45)' }}>
+        <div style={{ fontSize: 10, lineHeight: 1.6, color: 'var(--text-secondary)' }}>
           Drop{' '}
           <code style={{ color: 'var(--brand-primary)', fontFamily: 'ui-monospace, SFMono-Regular, monospace', fontSize: 9.5 }}>
             {fileOf(src)}

@@ -408,7 +408,7 @@ export default function SelectionsPage(){
                     Edit
                   </button>
                   <button onClick={()=>deleteItem(selected)} disabled={deleting}
-                    style={{padding:'6px 14px',background:'rgba(192,48,48,.1)',border:`1px solid ${RED}44`,
+                    style={{padding:'6px 14px',background:'rgba(192,48,48,.1)',border:`1px solid color-mix(in srgb, ${RED} 27%, transparent)`,
                       borderRadius:6,color:RED,fontSize:12,fontWeight:700,cursor:'pointer'}}>
                     {deleting?'…':'Delete'}
                   </button>
@@ -565,7 +565,7 @@ export default function SelectionsPage(){
                   {!selected.owner_approved&&(String(selected.status||'pending').toLowerCase()==='pending')&&(
                     <button onClick={()=>approve(selected)}
                       style={{padding:'9px 0',width:'100%',background:'rgba(26,138,74,.1)',
-                        border:`1px solid ${GREEN}44`,borderRadius:7,color:'var(--success)',
+                        border:`1px solid color-mix(in srgb, ${GREEN} 27%, transparent)`,borderRadius:7,color:'var(--success)',
                         fontSize:13,fontWeight:700,cursor:'pointer'}}>
                       Record Owner Approval
                     </button>

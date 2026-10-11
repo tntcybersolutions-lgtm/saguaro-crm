@@ -5,7 +5,7 @@ import MarketingNav from '@/components/MarketingNav';
 import { CurrencyDollar, TrendUp, CalendarBlank, Receipt, FileLock, ShieldCheck, Warning, ClipboardText, ArrowsClockwise, HardHat, Hourglass, FilePdf, DownloadSimple } from '@phosphor-icons/react';
 import type { Icon } from '@phosphor-icons/react';
 
-const GOLD='var(--brand-primary)',DIM='#D4D4D8',TEXT='#FFFFFF',HAIR='rgba(255,255,255,0.08)';
+const GOLD='var(--brand-primary)',DIM='var(--text-secondary)',TEXT='#FFFFFF',HAIR='rgba(255,255,255,0.08)';
 
 const REPORTS: { icon: Icon; title: string; desc: string; reportType: string }[] = [
   { icon:CurrencyDollar, title:'Job Cost Report',          desc:'Budget vs actuals by cost code, variance analysis',              reportType:'job-cost' },

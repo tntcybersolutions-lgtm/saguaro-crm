@@ -26,12 +26,17 @@
   --border-default: rgba(255,255,255,0.10);
   --border-strong: rgba(255,255,255,0.22);
   /* Text — high contrast on jet black (§6). */
-  /* Type (premium system, 6 Oct 2026): warm champagne over sand over bronze —
-     never white, never neon. Yellow is an accent, not the body colour. */
-  --text-primary: #F3EAC9;
-  --text-secondary: #B9AE8C;
-  --text-tertiary: #8E866B;
-  --text-disabled: #5E5948;
+  /* Type: pearl white at every level (11 Oct 2026 — the 6 Oct champagne /
+     sand / bronze read as dark grey). Yellow is an accent, not the body colour.
+     Pages never hard-code a grey for text: tools/check-design-system.mjs
+     fails the build on one (rule 4). */
+  /* Pearl white, every level (Chad, 11 Oct): supporting text is a step down
+     from the body, never a dim grey — hierarchy comes from size and weight.
+     Secondary ≥ 14:1 and tertiary ≥ 11:1 on the page black. */
+  --text-primary: #FAF8F2;
+  --text-secondary: #E8E4D9;
+  --text-tertiary: #D2CDBF;
+  --text-disabled: #8F8A7C;
   /* ── Brand primary — the single white-label override point. Defaults to
      Saguaro NEON YELLOW (owner decision 2026-10-02, replaces gold);
      WhiteLabelProvider overrides --brand-primary (+ the derived vars) per
@@ -44,10 +49,10 @@
   --c-bg: #050506;          /* page — black with a warm glow laid over it */
   --c-card: #0E0F13;        /* cards, nav */
   --c-raised: #13151A;      /* raised surfaces, menus, the selected segment */
-  --c-text: #F3EAC9;        /* body — warm champagne */
-  --c-text-2: #B9AE8C;      /* supporting — warm sand */
-  --c-text-3: #8E866B;      /* labels — muted bronze, small caps */
-  --c-text-4: #5E5948;      /* switched off */
+  --c-text: #FAF8F2;        /* body — pearl white */
+  --c-text-2: #E8E4D9;      /* supporting — bright pearl */
+  --c-text-3: #D2CDBF;      /* labels — soft pearl, still bright */
+  --c-text-4: #8F8A7C;      /* switched off */
   --c-yellow: #FFE600;      /* brand primary */
   --c-yellow-hi: #FFF04A;   /* highlight edge */
   --c-yellow-hover: #E6CF00;/* hover / strong */

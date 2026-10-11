@@ -568,7 +568,7 @@ export default function ClientPortalPage() {
       <Modal open={inviteOpen} onClose={() => setInviteOpen(false)} title="Invite New Client User" width={580}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {invError && (
-            <div style={{ padding: '10px 14px', background: `${RED}15`, border: `1px solid ${RED}44`, borderRadius: 8, color: RED, fontSize: 13 }}>
+            <div style={{ padding: '10px 14px', background: `color-mix(in srgb, ${RED} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${RED} 27%, transparent)`, borderRadius: 8, color: RED, fontSize: 13 }}>
               {invError}
             </div>
           )}
@@ -988,7 +988,7 @@ export default function ClientPortalPage() {
                           style={{
                             width: 28, height: 28, borderRadius: 6, margin: '0 auto', cursor: 'pointer',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            background: hasAccess ? `${GREEN}22` : 'transparent',
+                            background: hasAccess ? `color-mix(in srgb, ${GREEN} 13%, transparent)` : 'transparent',
                             border: `2px solid ${hasAccess ? GREEN : BORDER}`,
                             transition: 'all .15s', fontSize: 14, color: GREEN,
                           }}>
@@ -1171,7 +1171,7 @@ export default function ClientPortalPage() {
 
       {/* error banner */}
       {error && (
-        <div style={{ padding: '12px 18px', background: `${RED}15`, border: `1px solid ${RED}44`, borderRadius: 10, color: RED, fontSize: 13, marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ padding: '12px 18px', background: `color-mix(in srgb, ${RED} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${RED} 27%, transparent)`, borderRadius: 10, color: RED, fontSize: 13, marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>{error}</span>
           <button onClick={() => setError('')} style={{ background: 'none', border: 'none', color: RED, cursor: 'pointer', fontSize: 16 }} aria-label="Dismiss">×</button>
         </div>

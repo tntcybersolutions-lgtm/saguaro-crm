@@ -7,7 +7,7 @@ const C = {
   gold: 'var(--brand-primary)',
   goldBright: 'var(--brand-primary-strong)',
   text: '#F5F5F7',
-  dim: '#A1A1AA',
+  dim: 'var(--text-secondary)',
   border: 'rgba(255,255,255,0.10)',
   raised: 'var(--bg-surface)',
   raisedAlt: 'var(--bg-surface-2)',
@@ -111,7 +111,7 @@ export default function AboutPage() {
           <h1 style={{ fontWeight: 800, lineHeight: 1.12, margin: '0 auto 20px', letterSpacing: '-0.02em', maxWidth: 820, color: C.text }}>
             We Build the Systems That Make Construction <span style={SHINE}>Predictable</span>
           </h1>
-          <div style={{ fontSize: 12, fontWeight: 400, color: 'rgba(255,255,255,0.45)', marginBottom: 22 }}>
+          <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text-secondary)', marginBottom: 22 }}>
             {POSITIONING}
           </div>
           <p style={{ fontSize: 15, color: C.dim, maxWidth: 680, margin: '0 auto 28px', lineHeight: 1.75, fontWeight: 400 }}>

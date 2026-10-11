@@ -25,7 +25,7 @@ import { SectionCard, PremiumEmpty, ghostButtonStyle, goldButtonStyle } from '@/
 
 const GOLD = 'var(--brand-primary)';
 const TEXT = '#F0F4FF';
-const DIM = '#A1A1AA';
+const DIM = 'var(--text-secondary)';
 const HAIR = 'rgba(255,255,255,0.10)';
 const GREEN = '#2CFF7A';
 const AMBER = '#FF8A00';

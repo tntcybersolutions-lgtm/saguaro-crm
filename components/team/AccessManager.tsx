@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { textPrompt } from '@/lib/ui/async-dialog';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { CATEGORIES } from '@/lib/permission-categories';
+import { paletteHex } from '@/lib/design-tokens';
 import { getAuthHeaders, getSupabaseBrowser } from '@/lib/supabase-browser';
 
 /* ── palette ── */
@@ -12,7 +13,7 @@ const BG = 'var(--bg-base)';
 const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const TEXT = 'var(--text-primary)';
-const DIM = '#D4D4D8';
+const DIM = 'var(--text-secondary)';
 const GREEN = '#2CFF7A';
 const RED = '#FF3B30';
 const AMBER = 'var(--warning)';
@@ -89,7 +90,7 @@ const ROLE_PRESETS: { name: string; desc: string; color: string; perms: Permissi
       if (['Projects','Documents','Schedule','Safety','Pay Apps'].includes(c)) return [c, 'View' as PermLevel];
       return [c, 'None' as PermLevel];
     })) },
-  { name: 'Read-Only', desc: 'View-only access. Cannot modify any data.', color: DIM,
+  { name: 'Read-Only', desc: 'View-only access. Cannot modify any data.', color: paletteHex.text2, // stored with the role — a hex, never a CSS variable
     perms: Object.fromEntries(CATEGORIES.map(c => [c, 'View' as PermLevel])) },
 ];
 
@@ -1071,10 +1072,10 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                       <td style={{ padding: '10px 12px' }}>
                         {r.status === 'active' ? (
                           <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 4, fontSize: 11, fontWeight: 700,
-                            color: GREEN, background: `${GREEN}18`, border: `1px solid ${GREEN}` }}>Active</span>
+                            color: GREEN, background: `color-mix(in srgb, ${GREEN} 9%, transparent)`, border: `1px solid ${GREEN}` }}>Active</span>
                         ) : r.status === 'invited' ? (
                           <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 4, fontSize: 11, fontWeight: 700,
-                            color: inviteExp?.expired ? RED : AMBER, background: inviteExp?.expired ? `${RED}18` : 'color-mix(in srgb, var(--warning) 9%, transparent)',
+                            color: inviteExp?.expired ? RED : AMBER, background: inviteExp?.expired ? `color-mix(in srgb, ${RED} 9%, transparent)` : 'color-mix(in srgb, var(--warning) 9%, transparent)',
                             border: `1px solid ${inviteExp?.expired ? RED : AMBER}` }}>
                             {inviteExp?.expired ? 'Invite Expired' : `Invited · Expires ${inviteExp?.label ?? ''}`}
                           </span>
@@ -1142,7 +1143,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                 <div key={r.id} onClick={() => setSelectedRoleId(r.id)} style={{
                   ...card(), cursor: 'pointer', marginBottom: 8,
                   borderColor: isSelected ? r.color : BORDER,
-                  background: isSelected ? `${r.color}11` : RAISED,
+                  background: isSelected ? `color-mix(in srgb, ${r.color} 7%, transparent)` : RAISED,
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1305,7 +1306,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                         <span style={{
                           display: 'inline-block', padding: '3px 10px', borderRadius: 4, fontSize: 11,
                           fontWeight: 600, color: level === 'None' ? DIM : 'var(--text-primary)',
-                          background: level === 'None' ? `${DIM}15` : `color-mix(in srgb, ${permLevelColor(level)} 13%, transparent)`,
+                          background: level === 'None' ? `color-mix(in srgb, ${DIM} 8%, transparent)` : `color-mix(in srgb, ${permLevelColor(level)} 13%, transparent)`,
                           border: `1px solid ${level === 'None' ? 'transparent' : permLevelColor(level)}`,
                         }}>{level === 'Full' ? 'Full' : level}</span>
                       </td>
@@ -1381,7 +1382,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                         <td style={{ padding: '10px 12px' }}>
                           {exp.expired ? (
                             <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 4,
-                              fontSize: 11, fontWeight: 700, color: RED, background: `${RED}22`,
+                              fontSize: 11, fontWeight: 700, color: RED, background: `color-mix(in srgb, ${RED} 13%, transparent)`,
                               border: `1px solid ${RED}` }}>Expired</span>
                           ) : (
                             <span style={{ color: AMBER, fontSize: 12, fontWeight: 600 }}>{exp.label}</span>
@@ -1496,7 +1497,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                     const lB = roleB.permissions[cat] ?? 'None';
                     const match = lA === lB;
                     return (
-                      <tr key={cat} style={{ background: match ? 'transparent' : `${RED}08` }}>
+                      <tr key={cat} style={{ background: match ? 'transparent' : `color-mix(in srgb, ${RED} 3%, transparent)` }}>
                         <td style={{ padding: '10px 12px', color: TEXT, fontWeight: 500, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)` }}>{cat}</td>
                         <td style={{ padding: '8px 12px', textAlign: 'center', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)` }}>
                           <span style={{ padding: '3px 12px', borderRadius: 4, fontSize: 12, fontWeight: 600,

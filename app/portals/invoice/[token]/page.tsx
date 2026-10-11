@@ -11,7 +11,7 @@ const BG = 'var(--bg-base)';
 const CARD = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.09)';
 const TEXT = '#F4F4F5';
-const DIM = '#9CA3AF';
+const DIM = 'var(--text-secondary)';
 
 interface PublicInvoice {
   invoiceNumber: string;

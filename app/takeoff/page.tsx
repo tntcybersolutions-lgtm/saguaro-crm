@@ -32,8 +32,8 @@ const GOLD = 'var(--brand-primary)';
 const GOLD_DIM = 'var(--brand-primary-12)';
 const GOLD_LINE = 'var(--brand-primary-35)';
 const TEXT = '#FFFFFF';
-const DIM = '#D4D4D8';
-const MUTED = 'rgba(255,255,255,0.45)';
+const DIM = 'var(--text-secondary)';
+const MUTED = 'var(--text-secondary)';
 const GREEN = '#2CFF7A';
 const BORDER = 'rgba(255,255,255,0.08)';
 
@@ -66,7 +66,7 @@ const METRICS: { icon: IconType; label: string; value: string; tint: string }[] 
 const TRADES: { div: string; label: string; trade: string; amt: number; color: string }[] = [
   { div: '03', label: 'Slab-on-Grade', trade: 'Concrete', amt: 38400, color: '#C9A96A' },
   { div: '04', label: 'CMU Exterior Wall', trade: 'Masonry', amt: 34650, color: '#FF8A00' },
-  { div: '05', label: 'Steel Columns W8×24', trade: 'Metals', amt: 28800, color: '#9CA3AF' },
+  { div: '05', label: 'Steel Columns W8×24', trade: 'Metals', amt: 28800, color: 'var(--text-secondary)' },
   { div: '03', label: 'Continuous Footing', trade: 'Concrete', amt: 17000, color: '#C9A96A' },
   { div: '08', label: 'Doors & Frames', trade: 'Openings', amt: 15600, color: '#8FC4F0' },
   { div: '09', label: 'Interior Partitions', trade: 'Finishes', amt: 9450, color: '#FF8A00' },

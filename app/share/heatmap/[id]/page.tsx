@@ -87,13 +87,13 @@ export default function SharedHeatmap() {
   }, [project]);
   const s = cov?.stats;
 
-  if (loading) return <Shell><p style={{ color: '#8b949e' }}>Loading design…</p></Shell>;
-  if (err || !project) return <Shell><h2 style={{ margin: '0 0 6px' }}>Can&apos;t Open This Design</h2><p style={{ color: '#8b949e' }}>{err || 'Not found.'}</p></Shell>;
+  if (loading) return <Shell><p style={{ color: 'var(--text-tertiary)' }}>Loading design…</p></Shell>;
+  if (err || !project) return <Shell><h2 style={{ margin: '0 0 6px' }}>Can&apos;t Open This Design</h2><p style={{ color: 'var(--text-tertiary)' }}>{err || 'Not found.'}</p></Shell>;
 
   const img = project.snapshot || project.planDataUrl;
   return (
     <Shell>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 18px', color: '#8b949e', fontSize: 13, margin: '2px 0 16px' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 18px', color: 'var(--text-tertiary)', fontSize: 13, margin: '2px 0 16px' }}>
         <span>Project: <b style={{ color: '#e6edf3' }}>{design?.name || project.name}</b></span>
         <span>Layer: <b style={{ color: '#e6edf3' }}>{DEVICE_REGISTRY[project.activeType]?.label || project.activeType}</b></span>
         <span>Environment: <b style={{ color: '#e6edf3' }}>{project.env}</b></span>
@@ -121,7 +121,7 @@ export default function SharedHeatmap() {
         <Card k="Dead Zones" v={s ? `${s.deadZones}` : '0'} />
         <Card k="Dead Area" v={s ? `${Math.round(s.deadArea)} ft²` : '0 ft²'} />
       </div>
-      <div style={{ color: '#8b949e', fontSize: 11.5, marginTop: 8, lineHeight: 1.5 }}>Coverage % is a predictive RF model{cal && cal.sampleCount > 0 ? ` — validated ±${cal.rmseAfter.toFixed(1)} dB against ${cal.sampleCount} survey point${cal.sampleCount === 1 ? '' : 's'}` : ''} — confirm with an on-site walk-test.</div>
+      <div style={{ color: 'var(--text-tertiary)', fontSize: 11.5, marginTop: 8, lineHeight: 1.5 }}>Coverage % is a predictive RF model{cal && cal.sampleCount > 0 ? ` — validated ±${cal.rmseAfter.toFixed(1)} dB against ${cal.sampleCount} survey point${cal.sampleCount === 1 ? '' : 's'}` : ''} — confirm with an on-site walk-test.</div>
 
       {bom && bom.rows.length > 0 && <>
         <H>Bill of Materials</H>
@@ -139,7 +139,7 @@ export default function SharedHeatmap() {
 
       {sched && sched.rows.length > 0 && <>
         <H>Network Schedule — IP · VLAN · Switch Port</H>
-        <div style={{ color: '#8b949e', fontSize: 12, margin: '0 0 8px' }}>{sched.vlans.map((v) => `${v.name} — VLAN ${v.id} (${v.subnet}.0/24)`).join('  ·  ')}</div>
+        <div style={{ color: 'var(--text-tertiary)', fontSize: 12, margin: '0 0 8px' }}>{sched.vlans.map((v) => `${v.name} — VLAN ${v.id} (${v.subnet}.0/24)`).join('  ·  ')}</div>
         <table style={tbl}>
           <thead><tr><Th>Device</Th><Th>VLAN</Th><Th>IP Address</Th><Th>Switch Port</Th><Th align="right">PoE</Th></tr></thead>
           <tbody>{sched.rows.map((r) => (
@@ -154,12 +154,12 @@ export default function SharedHeatmap() {
         {approved ? (
           <div style={{ textAlign: 'center', padding: '8px 0' }}>
             <div style={{ fontSize: 18, fontWeight: 800, color: GOLD }}>Design approved — thank you, {approverName}.</div>
-            <div style={{ color: '#8b949e', fontSize: 13, marginTop: 6 }}>The team has been notified and will follow up with your install quote.</div>
+            <div style={{ color: 'var(--text-tertiary)', fontSize: 13, marginTop: 6 }}>The team has been notified and will follow up with your install quote.</div>
           </div>
         ) : (
           <>
             <div style={{ fontSize: 15, fontWeight: 800 }}>Approve This Design</div>
-            <div style={{ color: '#8b949e', fontSize: 13, margin: '4px 0 12px' }}>Type your name to approve the coverage design and request an install quote{bom ? ` — turnkey ~$${bom.turnkey.toLocaleString()}` : ''}.</div>
+            <div style={{ color: 'var(--text-tertiary)', fontSize: 13, margin: '4px 0 12px' }}>Type your name to approve the coverage design and request an install quote{bom ? ` — turnkey ~$${bom.turnkey.toLocaleString()}` : ''}.</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               <input value={approverName} onChange={(ev) => setApproverName(ev.target.value)} placeholder="Your full name" style={inputStyle} />
               <input value={approverEmail} onChange={(ev) => setApproverEmail(ev.target.value)} placeholder="Email (optional)" style={inputStyle} />
@@ -170,7 +170,7 @@ export default function SharedHeatmap() {
         )}
       </div>
 
-      <p style={{ color: '#6e7681', fontSize: 11, marginTop: 24, borderTop: '1px solid #21262d', paddingTop: 12 }}>
+      <p style={{ color: 'var(--text-tertiary)', fontSize: 11, marginTop: 24, borderTop: '1px solid #21262d', paddingTop: 12 }}>
         {calibrationNote(cal)} Camera ranges per EN 62676-4 DORI. Prices are estimates. Read-only shared view.
       </p>
       <p style={{ color: '#484f58', fontSize: 10, marginTop: 6, fontFamily: 'ui-monospace,Consolas,monospace' }}>{engineStamp(project)}</p>
@@ -201,13 +201,13 @@ function H({ children }: { children: React.ReactNode }) {
 function Card({ k, v }: { k: string; v: string }) {
   return (
     <div style={{ flex: 1, minWidth: 120, border: '1px solid #21262d', borderRadius: 8, padding: '11px 13px', background: '#0a0a0a' }}>
-      <div style={{ fontSize: 10.5, color: '#8b949e' }}>{k}</div>
+      <div style={{ fontSize: 10.5, color: 'var(--text-tertiary)' }}>{k}</div>
       <div style={{ fontSize: 22, fontWeight: 800, marginTop: 3 }}>{v}</div>
     </div>
   );
 }
 function Th({ children, align }: { children?: React.ReactNode; align?: 'center' | 'right' }) {
-  return <th style={{ textAlign: align || 'left', background: '#0a0a0a', color: '#8b949e', fontSize: 11, padding: '7px 9px', borderBottom: '1px solid #21262d' }}>{children}</th>;
+  return <th style={{ textAlign: align || 'left', background: '#0a0a0a', color: 'var(--text-tertiary)', fontSize: 11, padding: '7px 9px', borderBottom: '1px solid #21262d' }}>{children}</th>;
 }
 function Td({ children, align, bold }: { children?: React.ReactNode; align?: 'center' | 'right'; bold?: boolean }) {
   return <td style={{ textAlign: align || 'left', padding: '7px 9px', borderBottom: '1px solid #161b22', fontWeight: bold ? 800 : 400, fontVariantNumeric: 'tabular-nums' }}>{children}</td>;

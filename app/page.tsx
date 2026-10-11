@@ -17,7 +17,7 @@ const CARD = 'var(--bg-surface)';
 const GOLD = 'var(--brand-primary)';
 const GREEN = '#2CFF7A';
 const TEXT = '#FFFFFF';
-const DIM = '#D4D4D8';
+const DIM = 'var(--text-secondary)';
 
 const glass: React.CSSProperties = {
   background: 'rgba(20,20,22,0.65)',
@@ -141,7 +141,7 @@ export default function LandingPage() {
             {/* Right side: compact social row + CTAs */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
               <span className="desktop-nav" style={{ display: 'flex', alignItems: 'center' }}><SocialRow size={15} gap={10} /></span>
-              <Link href="/login" style={{ color: '#D4D4D8', fontSize: 13, fontWeight: 500, textDecoration: 'none' }}>Log In</Link>
+              <Link href="/login" style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 500, textDecoration: 'none' }}>Log In</Link>
               <Link href="/signup" className="btn-gold" style={{ fontSize: 13, padding: '8px 18px', textDecoration: 'none' }}>Free Trial</Link>
 
               {/* Mobile hamburger */}
@@ -182,7 +182,7 @@ export default function LandingPage() {
               <Broadcast size={15} weight="duotone" color={GOLD} /> Try the Radio
             </a>
           </div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 24, fontWeight: 400 }}>Construction management &middot; Project controls &middot; National rollout specialists</div>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 24, fontWeight: 400 }}>Construction management &middot; Project controls &middot; National rollout specialists</div>
         </div>
 
         {/* "How It Works" anchor target — points to the demo mockup region */}

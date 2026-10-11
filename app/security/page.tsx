@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Lock, ShieldCheck, Wall, Globe, Flask, Prohibit, Package, Trash } from '@phosphor-icons/react/dist/ssr';
 import type { Icon } from '@phosphor-icons/react';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',DIM='#D4D4D8',TEXT='#FFFFFF',GREEN='#2CFF7A',HAIRLINE='rgba(255,255,255,0.08)',CARD='rgba(255,255,255,0.02)';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',DIM='var(--text-secondary)',TEXT='#FFFFFF',GREEN='#2CFF7A',HAIRLINE='rgba(255,255,255,0.08)',CARD='rgba(255,255,255,0.02)';
 
 const NAV = (
   <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:200,height:64,background:'rgba(13,17,23,0.9)',borderBottom:`1px solid ${HAIRLINE}`,display:'flex',alignItems:'center',padding:'0 32px',backdropFilter:'blur(16px)',WebkitBackdropFilter:'blur(16px)'}}>
