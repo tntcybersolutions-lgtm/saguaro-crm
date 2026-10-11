@@ -10,7 +10,7 @@ import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
 import { SkeletonKPI, SkeletonRow } from '@/components/ui/Skeleton';
-import { WarningCircle, CalendarBlank, X, Plus, TrendUp, CheckCircle, Clock, ListChecks } from '@phosphor-icons/react';
+import { WarningCircle, CalendarBlank, X, Plus, TrendUp, CheckCircle, Clock, ListChecks, Flag } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, FlowStrip, AutoChip, goldButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
 import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 import { moduleAccent } from '@/lib/module-identity';
@@ -18,6 +18,7 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 import { localDay } from '@/lib/calendar-day';
+import { baselineSummary, finishVariance, varianceLabel } from '@/lib/schedule-baseline';
 
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)';
 const GREEN='var(--success)',RED='var(--danger)',ORANGE='var(--warning)',BLUE='var(--brand-primary)';
@@ -84,7 +85,7 @@ function GanttChart({tasks, jobHex}:{tasks:any[]; jobHex:string}){
     </div>
   );
 
-  const allDates = withDates.flatMap(t=>[t.start_date,t.end_date]);
+  const allDates = withDates.flatMap(t=>[t.start_date,t.end_date,t.baseline_start,t.baseline_end].filter((d:any)=>typeof d==='string'&&!Number.isNaN(Date.parse(d))));
   /* Calendar days, counted as days: new Date('YYYY-MM-DD') is UTC midnight,
      so the padding and week steps move in UTC days and labels read in UTC —
      mixing in local setDate/toLocaleDateString labelled every week one day
@@ -148,7 +149,17 @@ function GanttChart({tasks, jobHex}:{tasks:any[]; jobHex:string}){
               {task.name}
             </div>
             {/* Bar area */}
-            <div style={{flex:1,position:'relative',height:24}}>
+            <div style={{flex:1,position:'relative',height:task.baseline_end?30:24}}>
+              {/* Baseline: where this task was planned, under the bar. */}
+              {task.baseline_start&&task.baseline_end&&(
+                <div title={`Baseline ${fmtShort(task.baseline_start)} – ${fmtShort(task.baseline_end)}`} style={{position:'absolute',
+                  left:`${pct(task.baseline_start)}%`,width:`${Math.max(.5,pct(task.baseline_end)-pct(task.baseline_start))}%`,
+                  top:22,height:4,borderRadius:2,background:'rgba(255,255,255,0.45)'}}/>
+              )}
+              {(()=>{const v=finishVariance(task);return v!==null&&v!==0?(
+                <div style={{position:'absolute',left:`calc(${Math.min(96,pct(task.end_date))}% + 4px)`,top:4,
+                  fontSize:11,fontWeight:800,lineHeight:'16px',whiteSpace:'nowrap',color:v>0?RED:GREEN}}>{varianceLabel(v)}</div>
+              ):null;})()}
               {/* Today line */}
               <div style={{position:'absolute',left:`${todayPct}%`,top:0,bottom:0,
                 width:1,background:'color-mix(in srgb, var(--brand-primary) 50%, transparent)',zIndex:1}}/>
@@ -211,6 +222,7 @@ export default function SchedulePage(){
   const [deleting,setDeleting]=useState(false);
   const [toast,setToast]=useState<{msg:string;type:'success'|'error'}|null>(null);
   const [viewMode,setViewMode]=useState<'gantt'|'list'>('gantt');
+  const [baselining,setBaselining]=useState(false);
   const [search,setSearch]=useState('');
   const [filterStatus,setFilterStatus]=useState('all');
   const [filterPhase,setFilterPhase]=useState('all');
@@ -365,6 +377,22 @@ export default function SchedulePage(){
     return false;
   }
 
+  /* Set Baseline: today's dates become the plan the Gantt measures slip against. */
+  async function setBaseline(){
+    const again=tasks.some((t:any)=>t.baseline_end);
+    if(again&&!(await confirmDialog({ title:'Replace the baseline?', message:"Every task's current dates become the new baseline. The old baseline is not kept.", danger:true }))) return;
+    setBaselining(true);
+    try{
+      const h=await getAuthHeaders();
+      const r=await fetch(`/api/projects/${projectId}/schedule/baseline`,{method:'POST',headers:h});
+      const j=await r.json().catch(()=>({}));
+      if(!r.ok) throw new Error(j.error||'Could not set the baseline.');
+      showToast(`Baseline set for ${j.baselined} task${j.baselined===1?'':'s'} — slips now show on the Gantt.`);
+      await revalidate();
+    }catch(e:any){showToast(humanError(e,'Could not set the baseline.'),'error');}
+    finally{setBaselining(false);}
+  }
+
   async function deleteTask(task:any){
     if(!(await confirmDialog({ title: 'Please confirm', message: `Delete task "${task.name}"?`, danger: true }))) return;
     // Optimistic remove — the task leaves and the panel closes instantly;
@@ -460,6 +488,11 @@ export default function SchedulePage(){
                   </button>
                 ))}
               </div>
+              {tasks.length>0&&(
+                <button onClick={setBaseline} disabled={baselining} style={{...goldOutlineButtonStyle,minHeight:44,opacity:baselining?0.7:1}} className="pmBtn">
+                  <Flag size={15} weight="bold" /> {baselining?'Setting…':tasks.some((t:any)=>t.baseline_end)?'Reset Baseline':'Set Baseline'}
+                </button>
+              )}
               <button onClick={openCreate} style={goldButtonStyle} className="pmBtn">
                 <Plus size={15} weight="bold" /> Add Task
               </button>
@@ -485,7 +518,9 @@ export default function SchedulePage(){
 
           {/* Gantt view */}
           {viewMode==='gantt'&&!loading&&!loadError&&tasks.length>0&&(
-            <SectionCard flat title="Timeline" subtitle="Today is marked with a yellow line."
+            <SectionCard flat title="Timeline" subtitle={(()=>{const b=baselineSummary(tasks);return b.baselined
+                ? <>Today is the yellow line; the thin bar under each task is its baseline. <b style={{color:b.late?RED:GREEN}}>{b.late} of {b.baselined} task{b.baselined===1?'':'s'} late</b>{b.finishVariance!==null&&<> · finish <b style={{color:b.finishVariance>0?RED:GREEN}}>{varianceLabel(b.finishVariance)}</b> vs baseline</>}</>
+                : 'Today is marked with a yellow line. Set a baseline to track slip against the plan.';})()}
               icon={<CalendarBlank size={17} weight="duotone" color={moduleAccent('schedule').hex} />}
               style={{marginBottom:20}} bodyStyle={{overflowX:'auto'}}>
               <GanttChart tasks={filtered.length?filtered:tasks} jobHex={jobHex}/>
@@ -848,6 +883,7 @@ export default function SchedulePage(){
                   {[
                     {l:'Start Date',v:selected.start_date},
                     {l:'End Date',v:selected.end_date},
+                    {l:'Baseline',v:selected.baseline_start&&selected.baseline_end?`${fmtShort(selected.baseline_start)} – ${fmtShort(selected.baseline_end)}${finishVariance(selected)?` (${varianceLabel(finishVariance(selected))})`:' (on plan)'}`:null},
                     {l:'Duration',v:selected.start_date&&selected.end_date?
                       `${daysBetween(selected.start_date,selected.end_date)} days`:null},
                     {l:'Trade',v:selected.trade},

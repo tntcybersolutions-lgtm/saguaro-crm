@@ -21391,6 +21391,7 @@ export type Database = {
           setup_complete: boolean | null
           setup_dismissed: boolean | null
           setup_step: number | null
+          schedule_baselined_at: string | null
           source: string | null
           sq_footage: number | null
           square_footage: number | null
@@ -21607,6 +21608,7 @@ export type Database = {
           setup_complete?: boolean | null
           setup_dismissed?: boolean | null
           setup_step?: number | null
+          schedule_baselined_at?: string | null
           source?: string | null
           sq_footage?: number | null
           square_footage?: number | null
@@ -21823,6 +21825,7 @@ export type Database = {
           setup_complete?: boolean | null
           setup_dismissed?: boolean | null
           setup_step?: number | null
+          schedule_baselined_at?: string | null
           source?: string | null
           sq_footage?: number | null
           square_footage?: number | null
@@ -25898,6 +25901,8 @@ export type Database = {
         Row: {
           area: string | null
           area_index: number | null
+          baseline_start: string | null
+          baseline_end: string | null
           created_at: string | null
           duration: number | null
           ef: number | null
@@ -25925,6 +25930,8 @@ export type Database = {
         Insert: {
           area?: string | null
           area_index?: number | null
+          baseline_start?: string | null
+          baseline_end?: string | null
           created_at?: string | null
           duration?: number | null
           ef?: number | null
@@ -25952,6 +25959,8 @@ export type Database = {
         Update: {
           area?: string | null
           area_index?: number | null
+          baseline_start?: string | null
+          baseline_end?: string | null
           created_at?: string | null
           duration?: number | null
           ef?: number | null
