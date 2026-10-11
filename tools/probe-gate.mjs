@@ -121,17 +121,20 @@ async function run(name, browserType, ctxOpts) {
       return rows.find((c) => c.name === who) || null;
     };
 
+    // Leave the form: the phone taps the Home tab (a link); the desktop presses
+    // the top bar's Back pill (a router move) — the two ways out the gate covers.
+    const leave = () => (name === '390' ? visibleLink('/app') : page.locator('.sag-tb-back').first()).click();
     const stamp = `${name}-${Date.now().toString(36)}`;
     const discardName = `ZZ AUDIT Gate Discard ${stamp}`;
     let box = await openForm(discardName);
-    await visibleLink('/app').click();
+    await leave();
     step('gateAsked', await dialogUp());
     step('gateButtons', await page.locator(`${DIALOG} button`).allTextContents().catch(() => []));
     await page.screenshot({ path: path.join(OUT, `${name}-gate-dialog.png`) });
     await page.locator(`${DIALOG} button`, { hasText: 'Keep editing' }).click();
     await page.waitForTimeout(400);
     step('afterKeepEditing', { path: path_(), text: await box.inputValue().catch(() => null), dialog: await page.locator(DIALOG).count() });
-    await visibleLink('/app').click();
+    await leave();
     await dialogUp();
     await page.locator(`${DIALOG} button`, { hasText: 'Discard' }).click();
     await page.waitForURL((u) => u.pathname === '/app', { timeout: 15000 }).catch(() => {});
@@ -139,7 +142,7 @@ async function run(name, browserType, ctxOpts) {
 
     const saveName = `ZZ AUDIT Gate Save ${stamp}`;
     box = await openForm(saveName);
-    await visibleLink('/app').click();
+    await leave();
     await dialogUp();
     await page.locator(`${DIALOG} button`, { hasText: 'Save and exit' }).click();
     await page.waitForURL((u) => u.pathname === '/app', { timeout: 25000 }).catch(() => {});
