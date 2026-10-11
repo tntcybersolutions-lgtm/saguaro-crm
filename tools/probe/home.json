@@ -1,20 +1,105 @@
 {
-  "site": "https://saguaro-crm-git-feat-home-finance-power-salty-vault.vercel.app",
+  "site": "https://www.saguarocontrol.net",
   "phone": {
     "errors": [
-      "console: Failed to load resource: the server responded with a status of 403 (Forbidden)"
+      "console: Viewport argument key \"interactive-widget\" not recognized and ignored.",
+      "console: Viewport argument key \"interactive-widget\" not recognized and ignored.",
+      "/www.saguarocontrol.net/api/me/entitlements due to access control checks.",
+      "/www.saguarocontrol.net/api/company-tools due to access control checks.",
+      "/www.saguarocontrol.net/api/auth/permissions due to access control checks.",
+      "/www.saguarocontrol.net/api/projects/list due to access control checks.",
+      "/www.saguarocontrol.net/api/billing/subscription due to access control checks.",
+      "/www.saguarocontrol.net/api/billing/subscription due to access control checks.",
+      "/www.saguarocontrol.net/api/branding/tenant due to access control checks.",
+      "/www.saguarocontrol.net/api/my-work/count due to access control checks.",
+      "/www.saguarocontrol.net/api/auth/refresh due to access control checks.",
+      "/www.saguarocontrol.net/api/auth/me due to access control checks.",
+      "/www.saguarocontrol.net/api/projects?limit=15&fields=id,name due to access control checks.",
+      "/www.saguarocontrol.net/push-sw.js due to access control checks.",
+      "console: native downloads ChunkLoadError: Loading chunk 76894 failed.\n(error: https://www.saguarocontrol.net/_next/static/chunks/76894.d64040e2be2e049c.js?dpl=dpl_EEvz4r",
+      "/www.saguarocontrol.net/api/auth/me due to access control checks.",
+      "console: Viewport argument key \"interactive-widget\" not recognized and ignored."
     ],
-    "loginUrl": "vercel.com",
-    "error": "page.fill: Timeout 30000ms exceeded."
+    "loginUrl": "www.saguarocontrol.net",
+    "kpis": [
+      "UNDER CONTRACT $7.29M 2 jobs won",
+      "BILLED TO DATE $2.54M 35% of contract",
+      "COLLECTED $2.54M 100% of billed · $1.32M last 30 days",
+      "OWED TO YOU $0 All paid · paid in ~18 days",
+      "RETAINAGE HELD $0 None held now",
+      "BIDDING PIPELINE $10K 9 jobs out to bid",
+      "OPEN BID PACKAGES 5 Taking sub bids now",
+      "COIS CURRENT 4/4 Subs’ insurance on file"
+    ],
+    "panels": [
+      "Cash flow",
+      "Owed to you",
+      "Biggest jobs",
+      "Jobs by stage"
+    ],
+    "chartSvgs": 4,
+    "ticker": "0 urgent 0 to review 2 coming up 0 done today",
+    "tickerItems": 2,
+    "overflowX": false,
+    "width": 393,
+    "tickerLinks": [
+      "/app/projects/:id/punch-list → 200",
+      "/app/projects/:id/change-orders → 200"
+    ],
+    "tickerCounts": [
+      "red:disabled",
+      "review:disabled",
+      "yellow:button",
+      "green:disabled"
+    ],
+    "afterCountTap": {
+      "pressed": "yellow",
+      "shown": [
+        "yellow",
+        "yellow"
+      ]
+    }
   },
   "desktop": {
-    "errors": [
-      "console: Failed to load resource: the server responded with a status of 403 ()",
-      "console: Provider's accounts list is empty.",
-      "console: [GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token.",
-      "console: Failed to load resource: the server responded with a status of 429 ()"
+    "errors": [],
+    "loginUrl": "www.saguarocontrol.net",
+    "kpis": [
+      "UNDER CONTRACT $7.29M 2 jobs won",
+      "BILLED TO DATE $2.54M 35% of contract",
+      "COLLECTED $2.54M 100% of billed · $1.32M last 30 days",
+      "OWED TO YOU $0 All paid · paid in ~18 days",
+      "RETAINAGE HELD $0 None held now",
+      "BIDDING PIPELINE $10K 9 jobs out to bid",
+      "OPEN BID PACKAGES 5 Taking sub bids now",
+      "COIS CURRENT 4/4 Subs’ insurance on file"
     ],
-    "loginUrl": "vercel.com",
-    "error": "page.fill: Timeout 30000ms exceeded."
+    "panels": [
+      "Cash flow",
+      "Owed to you",
+      "Biggest jobs",
+      "Jobs by stage"
+    ],
+    "chartSvgs": 4,
+    "ticker": "LIVE 0 urgent 0 to review 2 coming up 0 done today",
+    "tickerItems": 2,
+    "overflowX": false,
+    "width": 1440,
+    "tickerLinks": [
+      "/app/projects/:id/punch-list → 200",
+      "/app/projects/:id/change-orders → 200"
+    ],
+    "tickerCounts": [
+      "red:disabled",
+      "review:disabled",
+      "yellow:button",
+      "green:disabled"
+    ],
+    "afterCountTap": {
+      "pressed": "yellow",
+      "shown": [
+        "yellow",
+        "yellow"
+      ]
+    }
   }
 }
