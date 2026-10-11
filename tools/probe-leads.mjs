@@ -59,8 +59,11 @@ try {
   await gc.goto(`${SITE}/app/leads`, { waitUntil: 'networkidle' });
   await gc.getByRole('button', { name: 'Website Form' }).click();
   await gc.waitForSelector('text=Website Form', { timeout: 10000 });
+  // The modal opens at once and reads the link in the background: wait for
+  // either the link (already on) or the Turn On button (first time).
+  await gc.waitForSelector('.k-modal code, .k-modal button:has-text("Turn On Website Form")', { timeout: 20000 });
   const turnOn = gc.getByRole('button', { name: 'Turn On Website Form' });
-  if (await turnOn.isVisible().catch(() => false)) await turnOn.click();
+  if (await turnOn.isVisible().catch(() => false)) { step('turnedOn', true); await turnOn.click(); }
   await gc.waitForSelector('.k-modal code', { timeout: 15000 });
   const url = (await gc.locator('.k-modal code').innerText()).trim();
   const embed = await gc.locator('.k-modal textarea').inputValue();
