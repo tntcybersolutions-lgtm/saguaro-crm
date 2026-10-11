@@ -6,7 +6,7 @@
  * button it presses for "Save and exit" (never Cancel or Delete), which
  * requests count as a form saving, and how Back tracks the prior screen.
  */
-import { isGuardableField, pickSaveButton, isSaveRequest } from './autoGuard';
+import { isGuardableField, isLooseWorkField, pickSaveButton, isSaveRequest } from './autoGuard';
 import { nextStack } from './navHistory';
 import { registerNavGuard, requestNavigation, isPageGuardDirty } from './navGuard';
 
@@ -31,6 +31,15 @@ check('disabled is not', !isGuardableField({ tag: 'INPUT', type: 'text', disable
 check('combobox is not', !isGuardableField({ tag: 'INPUT', type: 'text', role: 'combobox' }));
 check('a button is not', !isGuardableField({ tag: 'BUTTON' }));
 check('"Sort order" field name is not', !isGuardableField({ tag: 'SELECT', name: 'sort' }));
+
+/* On the page itself (outside a form/dialog) only typed text is work */
+check('page textarea (a note, a message) is work', isLooseWorkField({ tag: 'TEXTAREA', name: 'note' }));
+check('page text input is work', isLooseWorkField({ tag: 'INPUT', type: 'text', name: 'title' }));
+check('page dropdown is a filter, not work', !isLooseWorkField({ tag: 'SELECT', name: 'status' }));
+check('page date is a filter, not work', !isLooseWorkField({ tag: 'INPUT', type: 'date', name: 'from' }));
+check('page checkbox is not work', !isLooseWorkField({ tag: 'INPUT', type: 'checkbox' }));
+check('page number box is not work', !isLooseWorkField({ tag: 'INPUT', type: 'number' }));
+check('page search box still not work', !isLooseWorkField({ tag: 'INPUT', type: 'text', placeholder: 'Search…' }));
 
 /* Which button "Save and exit" presses */
 check('Save wins over Cancel', pickSaveButton(['Cancel', 'Save']) === 1);

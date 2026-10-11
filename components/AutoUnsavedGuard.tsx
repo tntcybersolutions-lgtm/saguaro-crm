@@ -3,8 +3,8 @@
  * AutoUnsavedGuard — the app-wide unsaved-changes gate, mounted once in the
  * app shell (app/app/layout.tsx). Every screen gets it; no page wires anything.
  *
- * While the user has changed a field in a form or dialog (see lib/autoGuard
- * for exactly what counts) and tries to leave — a link, the sidebar, a bottom
+ * While the user has changed a field in a form or dialog, or typed text on the
+ * page (see lib/autoGuard for exactly what counts), and tries to leave — a link, the sidebar, a bottom
  * tab, the top bar's Back — it asks:
  *
  *     Unsaved changes        [Discard]  [Keep editing]  [Save and exit]
@@ -22,7 +22,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/Toast';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { registerNavGuard, isPageGuardDirty, runUnguarded } from '@/lib/navGuard';
-import { SCOPE_SELECTOR, IGNORE_SELECTOR, isGuardableField, pickSaveButton, isSaveRequest } from '@/lib/autoGuard';
+import { SCOPE_SELECTOR, IGNORE_SELECTOR, isGuardableField, isLooseWorkField, pickSaveButton, isSaveRequest } from '@/lib/autoGuard';
 import type { UnsavedGuardApi } from '@/lib/useUnsavedGuard';
 
 type Field = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | HTMLElement;
@@ -58,8 +58,11 @@ function related(a: Element | null, b: Element | null): boolean {
 function guardable(t: EventTarget | null): Field | null {
   if (!(t instanceof HTMLElement)) return null;
   const el = (t.isContentEditable ? t.closest('[contenteditable="true"],[contenteditable=""]') : t) as HTMLElement | null;
-  if (!el || !scopeOf(el) || el.closest(IGNORE_SELECTOR)) return null;
-  const ok = isGuardableField({
+  if (!el || el.closest(IGNORE_SELECTOR)) return null;
+  // In a form or dialog any field is work; on the page itself only typed text is.
+  const inScope = !!scopeOf(el);
+  if (!inScope && !el.closest('.main-content-area')) return null;
+  const ok = (inScope ? isGuardableField : isLooseWorkField)({
     tag: el.isContentEditable ? 'textarea' : el.tagName,
     type: el.getAttribute('type'),
     name: el.getAttribute('name'),
@@ -210,6 +213,16 @@ export default function AutoUnsavedGuard() {
       if (scope) arm = { scope, at: Date.now() };
       else if (pickSaveButton([labelOf(t)]) === 0) arm = { scope: document.body, at: Date.now() };
     };
+    // A field that saves itself when you leave it or press Enter (inline edits).
+    const onLeaveField = (e: FocusEvent) => {
+      const el = guardable(e.target);
+      if (el && dirty.has(el)) arm = { scope: scopeOf(el) || el, at: Date.now() };
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Enter' || e.shiftKey) return;
+      const el = guardable(e.target);
+      if (el && dirty.has(el)) arm = { scope: scopeOf(el) || el, at: Date.now() };
+    };
     const onSubmit = (e: Event) => {
       if (!(e.target instanceof HTMLFormElement)) return;
       if (arm && Date.now() - arm.at < 1000 && related(arm.scope, e.target)) return; // already armed by its button
@@ -220,7 +233,11 @@ export default function AutoUnsavedGuard() {
     document.addEventListener('change', onEdit, true);
     document.addEventListener('click', onPress, true);
     document.addEventListener('submit', onSubmit, true);
+    document.addEventListener('focusout', onLeaveField, true);
+    document.addEventListener('keydown', onKey, true);
     return () => {
+      document.removeEventListener('focusout', onLeaveField, true);
+      document.removeEventListener('keydown', onKey, true);
       document.removeEventListener('focusin', onFocus, true);
       document.removeEventListener('input', onEdit, true);
       document.removeEventListener('change', onEdit, true);

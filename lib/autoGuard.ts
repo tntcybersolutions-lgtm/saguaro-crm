@@ -9,9 +9,13 @@
  * dialog and, on the way out, asks Save and exit / Discard / Keep editing.
  *
  * What counts as "unsaved work" (kept narrow so the gate never nags):
- *   - a field the user changed, inside a <form>, a dialog, a .k-modal or a
- *     [data-guard] block — not a search box, filter, sort, the top bar, the
- *     menus, the tab bar, Sage's chat or the ⌘K palette;
+ *   - any field the user changed inside a <form>, a dialog, a .k-modal or a
+ *     [data-guard] block;
+ *   - on the page itself (outside those), only text the user typed — a note,
+ *     a message, a name (isLooseWorkField). A dropdown, date or checkbox on
+ *     the page is a filter far more often than work, so it never arms it;
+ *   - never a search box, filter, sort, the top bar, the menus, the tab bar,
+ *     Sage's chat or the ⌘K palette;
  *   - whose value differs from what it held when the user first focused it
  *     (typing then deleting it again is not a change).
  * A form that closes (its fields leave the page) or saves successfully is
@@ -51,6 +55,16 @@ export function isGuardableField(f: FieldInfo): boolean {
   if (f.role === 'searchbox' || f.role === 'combobox') return false;
   const words = [f.name, f.id, f.placeholder, f.ariaLabel].filter(Boolean).join(' ');
   return !SEARCHY.test(words);
+}
+
+const LOOSE_TYPES = new Set(['', 'text', 'email', 'tel', 'url']);
+
+/** Outside a form or dialog, only typed text counts as work (see the header). */
+export function isLooseWorkField(f: FieldInfo): boolean {
+  if (!isGuardableField(f)) return false;
+  const tag = f.tag.toLowerCase();
+  if (tag === 'textarea' || f.role === 'textbox') return true;
+  return tag === 'input' && LOOSE_TYPES.has(String(f.type || '').toLowerCase());
 }
 
 /** Labels of a form's save action. */
