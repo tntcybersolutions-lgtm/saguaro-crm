@@ -43,6 +43,8 @@ async function run(name, browserType, ctxOpts) {
       ticker: (document.querySelector('.atk .atkSum')?.innerText || '').replace(/\s+/g, ' ').trim() || null,
       tickerItems: document.querySelectorAll('.atk .atkSet:not(.atkDup) .atkItem').length,
       overflowX: document.documentElement.scrollWidth > window.innerWidth + 1,
+      homeWidth: Math.round(document.querySelector('.fh-in')?.getBoundingClientRect().width || 0),
+      mainWidth: Math.round(document.querySelector('.fh')?.getBoundingClientRect().width || 0),
       width: window.innerWidth,
     })));
     // Every ticker alert is a link to a page that answers; every count with alerts is a button.
@@ -69,5 +71,7 @@ async function run(name, browserType, ctxOpts) {
 }
 result.phone = await run('390', pw.webkit, { ...pw.devices['iPhone 15'] });
 result.desktop = await run('1440', pw.chromium, { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
+// Chad's own desktop is about 1920 wide: Home should fill it.
+result.wide = await run('1920', pw.chromium, { viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1 });
 fs.writeFileSync(path.join(OUT, 'home.json'), JSON.stringify(result, null, 2));
 console.log(JSON.stringify(result, null, 2));
