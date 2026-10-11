@@ -5,7 +5,7 @@ name: iPhone probe
 on:
   push:
     branches: [ops/testflight]
-    paths: ['tools/probe-*.mjs', 'tools/probe-which.txt', 'tools/probe-site.txt', '.github/workflows/probe.yml']
+    paths: ['tools/probe-*.mjs', 'tools/probe-which.txt', 'tools/probe-label.txt', 'tools/probe-site.txt', '.github/workflows/probe.yml']
 
 permissions:
   contents: write
