@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { createNotification } from '@/lib/notifications';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 /**
  * Saguaro Radio — talkgroups.
@@ -58,7 +59,12 @@ export async function GET(req: NextRequest) {
 
     const projectId = req.nextUrl.searchParams.get('projectId');
 
-    if (projectId) {
+    // Only a job this company really has gets a talkgroup — a stale or foreign
+    // id used to create an "All Hands" channel for a job that is not there.
+    const projectOk = projectId
+      ? !!(await db.from('projects').select('id').eq('tenant_id', t).eq('id', projectId).maybeSingle()).data
+      : false;
+    if (projectId && projectOk) {
       // Ensure the project talkgroup exists (idempotent via unique constraint).
       const { data: existing } = await db.from('radio_channels').select('id').eq('tenant_id', t).eq('project_id', projectId).eq('kind', 'project').limit(1);
       if (!existing || existing.length === 0) {
@@ -70,7 +76,7 @@ export async function GET(req: NextRequest) {
     if (projectId) q = q.or(`project_id.eq.${projectId},project_id.is.null`);
     const { data: channels, error } = await q.order('created_at', { ascending: true });
     if (error) throw error;
-    const list = (channels || []) as any[];
+    let list = (channels || []) as any[];
 
     // Project names ride along — without them the rail shows four identical
     // "All Hands" rows with no way to tell which job is talking.
@@ -80,6 +86,10 @@ export async function GET(req: NextRequest) {
       const { data: projs } = await db.from('projects').select('id, name').in('id', projIds).eq('tenant_id', t);
       for (const p of (projs || []) as any[]) projNames.set(p.id, p.name);
     }
+    // A job's channels go when the job goes: radio_channels.project_id has no FK,
+    // so a deleted job left "All Hands" rows whose actions (File to daily log)
+    // could only fail. Org-wide channels (no project) always stay.
+    list = list.filter((c) => !c.project_id || projNames.has(c.project_id));
 
     // ONE members query across every listed channel: caller auto-join,
     // per-channel headcount, and live presence (last_seen_at within 90s)
@@ -132,8 +142,8 @@ export async function GET(req: NextRequest) {
       .select('id, channel_a, channel_b, created_at')
       .eq('tenant_id', t).is('released_at', null);
     return NextResponse.json({ channels: visible, patches: livePatches || [] });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('radio/channels', e, 'Could not load the radio channels. Please try again.');
   }
 }
 
@@ -255,7 +265,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     await must(db.from('radio_members').insert({ channel_id: (data as any).id, tenant_id: t, user_id: g.user.id, display_name: g.user.email || null, role: 'dispatcher' } as never), 'radio_members insert');
     return NextResponse.json({ channel: data }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('radio/channels', e, 'Could not save that radio change. Please try again.');
   }
 }
