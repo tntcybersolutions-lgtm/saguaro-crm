@@ -16,9 +16,9 @@
       "/www.saguarocontrol.net/api/auth/me due to access control checks.",
       "/www.saguarocontrol.net/api/projects?limit=15&fields=id,name due to access control checks.",
       "/www.saguarocontrol.net/push-sw.js due to access control checks.",
-      "console: native downloads ChunkLoadError: Loading chunk 76894 failed.\n(error: https://www.saguarocontrol.net/_next/static/chunks/76894.d64040e2be2e049c.js?dpl=dpl_8zwwSK",
+      "console: native downloads ChunkLoadError: Loading chunk 76894 failed.\n(error: https://www.saguarocontrol.net/_next/static/chunks/76894.d64040e2be2e049c.js?dpl=dpl_CvqRtm",
       "/www.saguarocontrol.net/api/auth/me due to access control checks.",
-      "/www.saguarocontrol.net/api/home due to access control checks.",
+      "console: Viewport argument key \"interactive-widget\" not recognized and ignored.",
       "console: Viewport argument key \"interactive-widget\" not recognized and ignored."
     ],
     "loginUrl": "www.saguarocontrol.net",
@@ -72,7 +72,20 @@
       ]
     },
     "showAllButton": 1,
-    "error": "locator.click: Timeout 30000ms exceeded."
+    "afterShowAll": {
+      "pressed": null,
+      "shown": [
+        "yellow",
+        "yellow",
+        "green"
+      ]
+    },
+    "jobNav": {
+      "tabs": [],
+      "active": "Financials",
+      "activeBg": "rgba(0, 0, 0, 0)",
+      "icons": 7
+    }
   },
   "desktop": {
     "errors": [],
@@ -127,7 +140,28 @@
       ]
     },
     "showAllButton": 1,
-    "error": "locator.click: Timeout 30000ms exceeded."
+    "afterShowAll": {
+      "pressed": null,
+      "shown": [
+        "yellow",
+        "yellow",
+        "green"
+      ]
+    },
+    "jobNav": {
+      "tabs": [
+        "Overview",
+        "Preconstruction",
+        "Execution",
+        "Field",
+        "Financials",
+        "Docs & Comms",
+        "Closeout"
+      ],
+      "active": "Financials",
+      "activeBg": "rgb(255, 230, 0)",
+      "icons": 7
+    }
   },
   "wide": {
     "errors": [],
@@ -182,6 +216,27 @@
       ]
     },
     "showAllButton": 1,
-    "error": "locator.click: Timeout 30000ms exceeded."
+    "afterShowAll": {
+      "pressed": null,
+      "shown": [
+        "yellow",
+        "yellow",
+        "green"
+      ]
+    },
+    "jobNav": {
+      "tabs": [
+        "Overview",
+        "Preconstruction",
+        "Execution",
+        "Field",
+        "Financials",
+        "Docs & Comms",
+        "Closeout"
+      ],
+      "active": "Financials",
+      "activeBg": "rgb(255, 230, 0)",
+      "icons": 7
+    }
   }
 }
