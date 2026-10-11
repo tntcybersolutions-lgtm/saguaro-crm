@@ -73,6 +73,12 @@ async function run(name, browserType, ctxOpts) {
       r.showAllButton = await showAll.count();
       if (r.showAllButton) { await showAll.click(); await page.waitForTimeout(500); r.afterShowAll = await state(); }
     }
+    // Lit headings: the day/date above the greeting, Home's section headings, the left rail's group names.
+    r.heads = await page.evaluate(() => {
+      const look = (el) => { if (!el) return null; const cs = getComputedStyle(el); return { text: el.textContent.trim().slice(0, 40), color: cs.color, size: cs.fontSize, weight: cs.fontWeight, caps: cs.textTransform }; };
+      const vis = (sel) => [...document.querySelectorAll(sel)].filter((e) => e.getBoundingClientRect().width > 0);
+      return { date: look(document.querySelector('.fh-date')), sections: vis('.fl-sec').slice(0, 4).map(look), rail: vis('.sg-nav-head').slice(0, 3).map(look) };
+    });
     await page.screenshot({ path: path.join(OUT, `${name}-top.png`) });
     await page.screenshot({ path: path.join(OUT, `${name}-full.png`), fullPage: true });
     // A job page: the lit section menu across the top (desktop only).
@@ -88,7 +94,17 @@ async function run(name, browserType, ctxOpts) {
           const act = document.querySelector('.pjx-tab[data-active]');
           return { tabs: tabs.map((t) => t.textContent.trim()), active: act?.textContent.trim() || null, activeBg: act ? getComputedStyle(act).backgroundColor : null, icons: document.querySelectorAll('.pjx-tab svg').length };
         });
+        r.jobNav.cut = await page.evaluate(() => [...document.querySelectorAll('.pjx-tab')].filter((t) => { const b = t.getBoundingClientRect(); return b.width > 0 && (b.right > window.innerWidth + 0.5 || b.left < -0.5); }).map((t) => t.textContent.trim()));
+        r.jobNav.backRows = await page.evaluate(() => ({ topBar: !!document.querySelector('.sag-tb-back'), jobBar: [...document.querySelectorAll('.pjx-back')].filter((e) => e.getBoundingClientRect().width > 0).length, jobBarShown: (() => { const b = document.querySelector('.pjx-bar'); return b ? getComputedStyle(b).display !== 'none' : false; })() }));
         await page.screenshot({ path: path.join(OUT, `${name}-job.png`) });
+        // The job page's own section headings (Preconstruction, Coming up, …) and a SectionCard page.
+        for (const [tag, sub] of [['overview', '/overview'], ['closeout', '/closeout']]) {
+          await page.goto(`${SITE}/app/projects/${job.id}${sub}`, { waitUntil: 'networkidle' });
+          await page.waitForTimeout(1500);
+          r[`${tag}Heads`] = await page.evaluate(() => [...document.querySelectorAll('.fl-sec, .pmSecTitle, .k-card-title')].filter((e) => e.getBoundingClientRect().width > 0).slice(0, 8).map((e) => { const cs = getComputedStyle(e); return { text: e.textContent.trim().slice(0, 40), color: cs.color, size: cs.fontSize }; }));
+          r[`${tag}OverflowX`] = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
+          await page.screenshot({ path: path.join(OUT, `${name}-${tag}.png`) });
+        }
       }
     } catch (e) { r.jobNavError = String(e.message || e).split('\n')[0]; }
   } catch (e) { r.error = String(e.message || e).split('\n')[0]; await page.screenshot({ path: path.join(OUT, `${name}-error.png`) }).catch(() => {}); }
