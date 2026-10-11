@@ -6,7 +6,8 @@
  */
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, DownloadSimple, ArrowRight, PencilSimple, Trash, Eye, EnvelopeSimple } from '@phosphor-icons/react';
+import { Plus, DownloadSimple, ArrowRight, PencilSimple, Trash, Eye, EnvelopeSimple, Globe } from '@phosphor-icons/react';
+import WebsiteFormModal from '@/components/leads/WebsiteFormModal';
 import { useToast } from '@/components/Toast';
 import { humanError } from '@/lib/errors';
 import { fmtDate as fmtDateSafe } from '@/lib/format-date';
@@ -81,6 +82,7 @@ const emptyLead = (): Partial<Lead> => ({
 export default function LeadsPage() {
   const router = useRouter();
   const { showToast } = useToast();
+  const [websiteFormOpen, setWebsiteFormOpen] = useState(false);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -505,6 +507,7 @@ export default function LeadsPage() {
       subtitle={loading ? 'Loading leads…' : `${filtered.length} lead${filtered.length !== 1 ? 's' : ''} · ${fmt(metrics.totalVal)} in the pipeline`}
       actions={
         <>
+          <Button icon={<Globe size={15} />} onClick={() => setWebsiteFormOpen(true)}>Website Form</Button>
           <Button icon={<DownloadSimple size={15} />} onClick={exportCSV} disabled={filtered.length === 0}>Export CSV</Button>
           <Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openEditor(emptyLead())}>New Lead</Button>
         </>
@@ -917,6 +920,7 @@ export default function LeadsPage() {
         />
       )}
       <UnsavedGuardModal guard={guard} />
+      <WebsiteFormModal open={websiteFormOpen} onClose={() => setWebsiteFormOpen(false)} onToast={showToast} />
     </PageShell>
   );
 }

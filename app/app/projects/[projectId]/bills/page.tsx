@@ -195,7 +195,8 @@ export default function BillsPage() {
     }
   }
 
-  const fmt = (n: number) => '$' + ((n || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }));
+  // Cents when there are cents: a $602.73 bill must not read "$603".
+  const fmt = (n: number) => '$' + ((Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }));
 
   function openBillMenu(id: string) { setMenuId(id); setEditId(null); setAdjustId(null); setDeleteId(null); }
 
@@ -370,7 +371,9 @@ export default function BillsPage() {
         description: r.description || p.description,
         amount: Math.round((subtotal || 0) * 100) / 100,
         tax: r.tax || 0,
-        due_date: r.due_date || r.bill_date || p.due_date || plus30(),
+        // A receipt with no printed due date is due on normal terms, not on the
+        // day it was bought (that made every scanned receipt read Overdue).
+        due_date: r.due_date || p.due_date || plus30(),
       }));
       if (r.cost_code && costCodeOptions.some((c: any) => String(c.costCode) === r.cost_code)) pickCostCode(r.cost_code);
       else if (r.division && costCodeOptions.length === 0) pickDivision(r.division);
