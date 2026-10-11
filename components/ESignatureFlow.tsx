@@ -25,17 +25,29 @@ interface SignatureRecord {
   signer_email: string;
   signer_company: string;
   signer_role: string;
-  status: 'pending' | 'viewed' | 'signed';
+  status: 'pending' | 'viewed' | 'signed' | 'declined';
   sent_at: string;
   signed_at: string | null;
+  /** Opened tracking + decline, from /api/documents/sign/status. */
+  viewed_at?: string | null;
+  last_viewed_at?: string | null;
+  view_count?: number;
+  declined_at?: string | null;
+  decline_reason?: string | null;
 }
 
 interface ESignatureFlowProps {
   projectId: string;
-  docType: 'g702' | 'lien_waiver' | 'subcontract' | 'change_order' | 'ntp' | 'purchase_order' | 'prime_contract';
+  docType: 'g702' | 'lien_waiver' | 'subcontract' | 'change_order' | 'ntp' | 'purchase_order' | 'prime_contract' | 'proposal';
   docTitle: string;
+  /** Optional for a proposal: the signing page shows its amount and terms. */
   pdfUrl: string;
   onComplete?: () => void;
+  /** The record being signed when it isn't a documents row (a proposal's id).
+   *  Status is then scoped to it, and an earlier send shows on open. */
+  sourceId?: string;
+  /** Who to send to, prefilled (the proposal's client, the job's owner). */
+  initialSigners?: Array<{ name: string; email: string; company?: string; role?: string }>;
 }
 
 function uid(): string {
@@ -61,8 +73,9 @@ function inputStyle(extra?: React.CSSProperties): React.CSSProperties {
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { bg: string; color: string; label: string }> = {
     pending: { bg: 'var(--brand-primary-12)', color: GOLD, label: 'Pending' },
-    viewed: { bg: 'var(--brand-primary-12)', color: 'var(--brand-primary)', label: 'Viewed' },
+    viewed: { bg: 'var(--brand-primary-12)', color: 'var(--brand-primary)', label: 'Opened' },
     signed: { bg: 'rgba(44,255,122,.12)', color: GREEN, label: 'Signed' },
+    declined: { bg: 'rgba(255,59,48,.12)', color: RED, label: 'Declined' },
   };
   const s = map[status] || map.pending;
   return (
@@ -72,9 +85,12 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-export default function ESignatureFlow({ projectId, docType, docTitle, pdfUrl, onComplete }: ESignatureFlowProps) {
+export default function ESignatureFlow({ projectId, docType, docTitle, pdfUrl, onComplete, sourceId, initialSigners }: ESignatureFlowProps) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [signers, setSigners] = useState<Signer[]>([{ id: uid(), name: '', email: '', company: '', role: '' }]);
+  const [signers, setSigners] = useState<Signer[]>(() =>
+    initialSigners && initialSigners.length
+      ? initialSigners.map(s => ({ id: uid(), name: s.name || '', email: s.email || '', company: s.company || '', role: s.role || '' }))
+      : [{ id: uid(), name: '', email: '', company: '', role: '' }]);
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -109,6 +125,7 @@ export default function ESignatureFlow({ projectId, docType, docTitle, pdfUrl, o
           doc_type: docType,
           doc_title: docTitle,
           pdf_url: pdfUrl,
+          source_id: sourceId,
           signers: signers.map(s => ({ name: s.name.trim(), email: s.email.trim(), company: s.company.trim(), role: s.role.trim() })),
           message: message.trim(),
         }),
@@ -127,13 +144,20 @@ export default function ESignatureFlow({ projectId, docType, docTitle, pdfUrl, o
 
   const fetchStatus = useCallback(async () => {
     try {
-      const res = await fetch(`/api/documents/sign/status?project_id=${projectId}&doc_type=${docType}`);
+      const res = await fetch(`/api/documents/sign/status?project_id=${projectId}&doc_type=${docType}${sourceId ? `&source_id=${sourceId}` : ''}`);
       const data = await res.json();
       if (data.signatures) setSignatures(data.signatures);
+      // Already sent (an earlier visit): open on the tracking view, not a blank form.
+      if (sourceId && data.signatures?.length) setSent(true);
       const allSigned = data.signatures?.length > 0 && data.signatures.every((s: SignatureRecord) => s.status === 'signed');
       if (allSigned && onComplete) onComplete();
     } catch { /* silent */ }
-  }, [projectId, docType, onComplete]);
+  }, [projectId, docType, onComplete, sourceId]);
+
+  // A proposal remembers its sends: show their tracking on open.
+  useEffect(() => {
+    if (sourceId) fetchStatus();
+  }, [sourceId, fetchStatus]);
 
   const startPolling = useCallback(() => {
     if (pollRef.current) clearInterval(pollRef.current);
@@ -298,7 +322,11 @@ export default function ESignatureFlow({ projectId, docType, docTitle, pdfUrl, o
             <StatusBadge status={sig.status} />
             <div style={{ fontSize: 11, color: DIM, textAlign: 'right' as const }}>
               <div>Sent {new Date(sig.sent_at).toLocaleDateString()}</div>
+              {(sig.view_count || 0) > 0 && sig.last_viewed_at && (
+                <div>Opened {sig.view_count}× · last {new Date(sig.last_viewed_at).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</div>
+              )}
               {sig.signed_at && <div style={{ color: GREEN }}>Signed {new Date(sig.signed_at).toLocaleDateString()}</div>}
+              {sig.declined_at && <div style={{ color: RED }}>Declined{sig.decline_reason ? `: ${sig.decline_reason}` : ''}</div>}
             </div>
             {sig.status !== 'signed' && (
               <button type="button" onClick={() => handleResend(sig.id)} style={{ background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '4px 10px', color: DIM, fontSize: 11, cursor: 'pointer' }}>

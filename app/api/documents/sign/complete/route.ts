@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
+import { onSigned, SIGNATURE_EVENT_COLUMNS, type SignatureRow } from '@/lib/esign-events';
 
 export const runtime = 'nodejs';
 
@@ -28,6 +29,9 @@ export async function POST(req: NextRequest) {
   if (request.status === 'completed') {
     return NextResponse.json({ error: 'Document already signed' }, { status: 400 });
   }
+  if (request.status === 'declined') {
+    return NextResponse.json({ error: 'This was declined — ask the sender for a new link.' }, { status: 400 });
+  }
 
   if (request.expires_at && new Date(request.expires_at) < new Date()) {
     return NextResponse.json({ error: 'Signing link has expired' }, { status: 410 });
@@ -50,15 +54,19 @@ export async function POST(req: NextRequest) {
   }
 
   // Update document_signatures
-  const { error: sigErr } = await db
+  const { data: signed, error: sigErr } = await db
     .from('document_signatures')
     .update({
       status: 'signed',
       signature_url: signatureUrl,
       signed_at: now,
       ip_address: ip,
+      signer_ip: ip,
+      user_agent: req.headers.get('user-agent') || null,
     })
-    .eq('id', request.signature_id);
+    .eq('id', request.signature_id)
+    .select(SIGNATURE_EVENT_COLUMNS)
+    .maybeSingle();
 
   if (sigErr) {
     return apiError('documents/sign/complete', sigErr, 'Your signature could not be recorded. Please try the link again.');
@@ -77,5 +85,17 @@ export async function POST(req: NextRequest) {
     return apiError('documents/sign/complete', updateErr, 'Your signature could not be recorded. Please try the link again.');
   }
 
-  return NextResponse.json({ success: true });
+  /* What signing means for the record (a proposal becomes the contract) and
+     telling the sender — lib/esign-events. The signature itself is saved
+     above whatever happens here, so a failure is logged for the GC to see,
+     not shown to the signer as "not signed". */
+  if (signed) {
+    try {
+      await onSigned(db, signed as unknown as SignatureRow, { ip, signatureData: signatureUrl });
+    } catch (e) {
+      console.error('[documents/sign/complete] after-sign step failed', e);
+    }
+  }
+
+  return NextResponse.json({ success: true, kind: (signed as { doc_type?: string } | null)?.doc_type || null });
 }

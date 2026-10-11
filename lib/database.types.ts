@@ -8802,12 +8802,15 @@ export type Database = {
         Row: {
           completed_at: string | null
           created_at: string | null
+          decline_reason: string | null
+          declined_at: string | null
           document_id: string | null
           document_type: string | null
           document_url: string | null
           expires_at: string | null
           field_placements: Json | null
           id: string
+          last_viewed_at: string | null
           message: string | null
           project_id: string | null
           recipient_email: string | null
@@ -8820,17 +8823,21 @@ export type Database = {
           status: string | null
           tenant_id: string
           token: string
+          view_count: number
           viewed_at: string | null
         }
         Insert: {
           completed_at?: string | null
           created_at?: string | null
+          decline_reason?: string | null
+          declined_at?: string | null
           document_id?: string | null
           document_type?: string | null
           document_url?: string | null
           expires_at?: string | null
           field_placements?: Json | null
           id?: string
+          last_viewed_at?: string | null
           message?: string | null
           project_id?: string | null
           recipient_email?: string | null
@@ -8843,17 +8850,21 @@ export type Database = {
           status?: string | null
           tenant_id: string
           token?: string
+          view_count?: number
           viewed_at?: string | null
         }
         Update: {
           completed_at?: string | null
           created_at?: string | null
+          decline_reason?: string | null
+          declined_at?: string | null
           document_id?: string | null
           document_type?: string | null
           document_url?: string | null
           expires_at?: string | null
           field_placements?: Json | null
           id?: string
+          last_viewed_at?: string | null
           message?: string | null
           project_id?: string | null
           recipient_email?: string | null
@@ -8866,6 +8877,7 @@ export type Database = {
           status?: string | null
           tenant_id?: string
           token?: string
+          view_count?: number
           viewed_at?: string | null
         }
         Relationships: [
@@ -8905,6 +8917,7 @@ export type Database = {
           signer_name: string
           signer_role: string | null
           signing_order: number | null
+          source_id: string | null
           status: string | null
           tenant_id: string
           updated_at: string | null
@@ -8936,6 +8949,7 @@ export type Database = {
           signer_name: string
           signer_role?: string | null
           signing_order?: number | null
+          source_id?: string | null
           status?: string | null
           tenant_id: string
           updated_at?: string | null
@@ -8967,6 +8981,7 @@ export type Database = {
           signer_name?: string
           signer_role?: string | null
           signing_order?: number | null
+          source_id?: string | null
           status?: string | null
           tenant_id?: string
           updated_at?: string | null
@@ -21912,6 +21927,7 @@ export type Database = {
           client_name: string | null
           created_at: string | null
           created_by: string | null
+          decline_reason: string | null
           declined_at: string | null
           description: string | null
           exclusions: string | null
@@ -21943,6 +21959,7 @@ export type Database = {
           client_name?: string | null
           created_at?: string | null
           created_by?: string | null
+          decline_reason?: string | null
           declined_at?: string | null
           description?: string | null
           exclusions?: string | null
@@ -21974,6 +21991,7 @@ export type Database = {
           client_name?: string | null
           created_at?: string | null
           created_by?: string | null
+          decline_reason?: string | null
           declined_at?: string | null
           description?: string | null
           exclusions?: string | null
