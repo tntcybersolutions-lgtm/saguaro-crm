@@ -32,7 +32,7 @@ concurrency:
 jobs:
   asc:
     runs-on: ubuntu-latest
-    timeout-minutes: 340
+    timeout-minutes: 15  # hard cap: no long walks (Chad, 11 Oct) — targeted probes only
     env:
       ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
@@ -117,7 +117,7 @@ jobs:
           df -h / /tmp
       - name: Walk the app
         if: env.MODE == 'walk'
-        timeout-minutes: 300
+        timeout-minutes: 12
         env:
           PLAYWRIGHT_DIR: /tmp/pw
         run: node tools/asc-screens.mjs walk
