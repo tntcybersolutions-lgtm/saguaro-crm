@@ -5,14 +5,15 @@ Test records only (ZZ AUDIT). Mail goes to delivered@resend.dev, phones to 602-5
 | Screen | Add/New | Create | Back after reload | Fields back | Edit pre-filled | Edit saved | Record buttons | Delete |
 |---|---|---|---|---|---|---|---|---|
 | projects/new (New Job form) | New Job form | saved | yes |  |  |  |  |  |
-| OFFLINE · projects/:id/daily-logs | daily log with no signal | kept on the phone (shows On This Phone) | NOT TESTED — the test browser cannot reload with no signal | on the server |  | sent by itself when the signal came back | 5 tapped, **1 bad** | not on the list any more (closed/moved by a button) |
-| OFFLINE · projects/:id/punch-list | punch item with no signal | kept on the phone (shows On This Phone) | NOT TESTED — the test browser cannot reload with no signal | on the server |  | sent by itself when the signal came back | 5 tapped, **1 bad** | yes |
-| OFFLINE · projects/:id/photos | photo with no signal | kept on the phone | NOT TESTED — the test browser cannot reload with no signal | uploaded |  | sent in the background by the offline worker | 5 tapped, **1 bad** |  |
+| OFFLINE · projects/:id/daily-logs | daily log with no signal | kept on the phone (shows On This Phone) | NOT TESTED — the test browser cannot reload with no signal | on the server |  | sent by itself when the signal came back | 5 tapped, **1 bad** |  |
+| OFFLINE · projects/:id/punch-list | punch item with no signal |  |  |  |  |  |  |  |
+| OFFLINE · projects/:id/photos | photo with no signal |  |  |  |  |  |  |  |
 | subs | no Add/New on this screen |  |  |  |  |  |  |  |
-| people | + New Role | saved | yes | 2/2 | 2/2 | yes | 8 tapped | (at the end — used by the pickers) |
-| people | + Invite User | saved | yes | 3/3 | 2/3 | yes | 1 tapped | (at the end — used by the pickers) |
+| subs — page buttons | 0 write buttons |  |  |  |  |  |  |  |
+| people | + New Role | saved | yes | 2/2 | 2/2 | yes | 1 tapped | (at the end — used by the pickers) |
+| people | + Invite User | saved | yes | 3/3 | 2/3 | yes |  |  |
 | people — page buttons | 2 write buttons |  |  |  |  |  | 2 tapped |  |
-| customers | New Customer | saved | yes | 5/5 | 5/5 | yes | 3 tapped | (at the end — used by the pickers) |
+| customers | New Customer | saved | yes | 5/5 | 5/5 | yes | 3 tapped, **1 bad** | (at the end — used by the pickers) |
 | projects/:id/directory | Add Someone | saved | yes | 4/4 | 4/4 | yes | 2 tapped | (at the end — used by the pickers) |
 | projects/:id/subs | Add Subcontractor | saved | yes | 5/5 | 5/5 | yes |  | (at the end — used by the pickers) |
 | projects/:id/team | Invite Member | saved | yes | 2/2 | 2/2 | yes | 1 tapped | (at the end — used by the pickers) |
@@ -28,37 +29,23 @@ Test records only (ZZ AUDIT). Mail goes to delivered@resend.dev, phones to 602-5
   - "offline bar shows": yes — "You're offline Photos, daily logs and punch items you add are saved on this phone and send"
   - "bar counts it": yes — "You're offline 1 item saved on this phone — it sends when you're back."
   - "reload offline": failed: page.reload: WebKit encountered an internal error
-  - "back-online bar shows": yes — "Back online Sending what you saved offline…"
-- **OFFLINE · projects/:id/punch-list**
-  - sent: POST /api/punch-list/create → 200
-  - "the offline worker controls the page": yes
-  - "offline bar shows": yes — "You're offline Photos, daily logs and punch items you add are saved on this phone and send"
-  - "bar counts it": yes — "You're offline 1 item saved on this phone — it sends when you're back."
-  - "reload offline": failed: page.reload: WebKit encountered an internal error
-  - "back-online bar shows": yes — "Back online Sending what you saved offline…"
+  - "back-online bar shows": yes — "Back online 1 item sent from this phone."
   - ERROR: airplane test took over 4 minutes on this screen
+- **OFFLINE · projects/:id/punch-list**
+  - ERROR: page.goto: Timeout 60000ms exceeded.
 - **OFFLINE · projects/:id/photos**
-  - "the offline worker controls the page": yes
-  - "offline bar shows": yes — "You're offline Photos, daily logs and punch items you add are saved on this phone and send"
-  - "bar counts it": yes — "You're offline Photos, daily logs and punch items you add are saved on this phone and send"
-  - "reload offline": failed: page.reload: WebKit encountered an internal error
-  - "back-online bar shows": yes — "Back online"
+  - ERROR: page.goto: Timeout 60000ms exceeded.
+- **subs — page buttons**
+  - ERROR: page.goto: Timeout 60000ms exceeded.
 - **people**
   - save: Create Role
   - sent: POST /api/roles → 201
-  - "Roles Defined 8 Permission templates in force": gone after reopening (state changed)
-  - "Role Assignments 5 Users mapped to roles": gone after reopening (state changed)
-  - "Pending Invites 0 None outstanding": gone after reopening (state changed)
-  - "Crew Directory 10 0 OSHA certified": gone after reopening (state changed)
-  - "+ New Role": opened a form → saved — POST /api/roles → 201
-  - "Duplicate": saved — POST /api/roles → 201
-  - "Saguaro": opened https://saguarocontrol.net/
-  - "Team Members 7 Platform sign-ins": gone after reopening (state changed)
+  - "Roles Defined 11 Permission templates in force": record no longer on the list (an earlier button closed/moved it)
 - **people**
   - save: Send Invite
   - sent: POST /api/team/invite → 200
   - edit form EMPTY for: delivered@resend.dev
-  - "Resend Invite": saved — POST /api/team/invite/:id → 200
+  - ERROR: could not reopen the record after editing
 - **people — page buttons**
   - "Team Members 7 Platform sign-ins": went to /app/people
   - "+ Assign Role": opened a panel (nothing to save)
@@ -67,7 +54,7 @@ Test records only (ZZ AUDIT). Mail goes to delivered@resend.dev, phones to 602-5
   - sent: POST /api/customers/profiles → 201
   - "Assign to Project": saved — POST /api/projects/assign → 200
   - "Send Email": opened a form → saved — POST /api/customers/:id/email → 200
-  - "Saguaro": opened https://saguarocontrol.net/
+  - "Saguaro": error: locator.click: Timeout 4000ms exceeded.
 - **projects/:id/directory**
   - save: Add to Directory
   - sent: POST /api/projects/:id/directory → 201
@@ -86,3 +73,7 @@ Test records only (ZZ AUDIT). Mail goes to delivered@resend.dev, phones to 602-5
   - "Assign to Project": saved — POST /api/projects/assign → 200
   - "Send Email": opened a form → saved — POST /api/customers/:id/email → 200
   - "Saguaro": opened https://saguarocontrol.net/
+
+## Test records left behind
+
+- people: "ZZ AUDIT people 2 10111621"

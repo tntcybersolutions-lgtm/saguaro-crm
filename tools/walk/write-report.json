@@ -16,41 +16,6 @@
   {
    "screen": "OFFLINE · projects/:id/daily-logs",
    "add": "daily log with no signal",
-   "errors": [],
-   "actions": [
-    {
-     "label": "the offline worker controls the page",
-     "result": "yes"
-    },
-    {
-     "label": "offline bar shows",
-     "result": "yes — \"You're offline Photos, daily logs and punch items you add are saved on this phone and send\""
-    },
-    {
-     "label": "bar counts it",
-     "result": "yes — \"You're offline 1 item saved on this phone — it sends when you're back.\""
-    },
-    {
-     "label": "reload offline",
-     "result": "failed: page.reload: WebKit encountered an internal error"
-    },
-    {
-     "label": "back-online bar shows",
-     "result": "yes — \"Back online Sending what you saved offline…\""
-    }
-   ],
-   "create": "kept on the phone (shows On This Phone)",
-   "persisted": "NOT TESTED — the test browser cannot reload with no signal",
-   "writes": [
-    "POST /api/daily-logs/create → 200"
-   ],
-   "edit": "sent by itself when the signal came back",
-   "fieldsBack": "on the server",
-   "del": "not on the list any more (closed/moved by a button)"
-  },
-  {
-   "screen": "OFFLINE · projects/:id/punch-list",
-   "add": "punch item with no signal",
    "errors": [
     "airplane test took over 4 minutes on this screen"
    ],
@@ -73,53 +38,44 @@
     },
     {
      "label": "back-online bar shows",
-     "result": "yes — \"Back online Sending what you saved offline…\""
+     "result": "yes — \"Back online 1 item sent from this phone.\""
     }
    ],
    "create": "kept on the phone (shows On This Phone)",
    "persisted": "NOT TESTED — the test browser cannot reload with no signal",
    "writes": [
-    "POST /api/punch-list/create → 200"
+    "POST /api/daily-logs/create → 200"
    ],
    "edit": "sent by itself when the signal came back",
-   "fieldsBack": "on the server",
-   "del": "yes"
+   "fieldsBack": "on the server"
+  },
+  {
+   "screen": "OFFLINE · projects/:id/punch-list",
+   "add": "punch item with no signal",
+   "errors": [
+    "page.goto: Timeout 60000ms exceeded."
+   ],
+   "actions": []
   },
   {
    "screen": "OFFLINE · projects/:id/photos",
    "add": "photo with no signal",
-   "errors": [],
-   "actions": [
-    {
-     "label": "the offline worker controls the page",
-     "result": "yes"
-    },
-    {
-     "label": "offline bar shows",
-     "result": "yes — \"You're offline Photos, daily logs and punch items you add are saved on this phone and send\""
-    },
-    {
-     "label": "bar counts it",
-     "result": "yes — \"You're offline Photos, daily logs and punch items you add are saved on this phone and send\""
-    },
-    {
-     "label": "reload offline",
-     "result": "failed: page.reload: WebKit encountered an internal error"
-    },
-    {
-     "label": "back-online bar shows",
-     "result": "yes — \"Back online\""
-    }
+   "errors": [
+    "page.goto: Timeout 60000ms exceeded."
    ],
-   "create": "kept on the phone",
-   "persisted": "NOT TESTED — the test browser cannot reload with no signal",
-   "writes": [],
-   "edit": "sent in the background by the offline worker",
-   "fieldsBack": "uploaded"
+   "actions": []
   },
   {
    "screen": "subs",
    "add": "no Add/New on this screen"
+  },
+  {
+   "screen": "subs — page buttons",
+   "add": "0 write buttons",
+   "errors": [
+    "page.goto: Timeout 60000ms exceeded."
+   ],
+   "actions": []
   },
   {
    "screen": "people",
@@ -127,43 +83,8 @@
    "errors": [],
    "actions": [
     {
-     "label": "Roles Defined 8 Permission templates in force",
-     "result": "gone after reopening (state changed)"
-    },
-    {
-     "label": "Role Assignments 5 Users mapped to roles",
-     "result": "gone after reopening (state changed)"
-    },
-    {
-     "label": "Pending Invites 0 None outstanding",
-     "result": "gone after reopening (state changed)"
-    },
-    {
-     "label": "Crew Directory 10 0 OSHA certified",
-     "result": "gone after reopening (state changed)"
-    },
-    {
-     "label": "+ New Role",
-     "result": "opened a form → saved",
-     "writes": [
-      "POST /api/roles → 201"
-     ]
-    },
-    {
-     "label": "Duplicate",
-     "result": "saved",
-     "writes": [
-      "POST /api/roles → 201"
-     ]
-    },
-    {
-     "label": "Saguaro",
-     "result": "opened https://saguarocontrol.net/",
-     "writes": []
-    },
-    {
-     "label": "Team Members 7 Platform sign-ins",
-     "result": "gone after reopening (state changed)"
+     "label": "Roles Defined 11 Permission templates in force",
+     "result": "record no longer on the list (an earlier button closed/moved it)"
     }
    ],
    "filled": 2,
@@ -183,16 +104,10 @@
   {
    "screen": "people",
    "add": "+ Invite User",
-   "errors": [],
-   "actions": [
-    {
-     "label": "Resend Invite",
-     "result": "saved",
-     "writes": [
-      "POST /api/team/invite/:id → 200"
-     ]
-    }
+   "errors": [
+    "could not reopen the record after editing"
    ],
+   "actions": [],
    "filled": 3,
    "saveClicked": [
     "Send Invite"
@@ -207,8 +122,7 @@
    "notPrefilled": [
     "delivered@resend.dev"
    ],
-   "edit": "yes",
-   "del": "(at the end — used by the pickers)"
+   "edit": "yes"
   },
   {
    "screen": "people — page buttons",
@@ -248,8 +162,7 @@
     },
     {
      "label": "Saguaro",
-     "result": "opened https://saguarocontrol.net/",
-     "writes": []
+     "result": "error: locator.click: Timeout 4000ms exceeded."
     }
    ],
    "filled": 6,
@@ -382,5 +295,7 @@
    "del": "(at the end — used by the pickers)"
   }
  ],
- "leftovers": []
+ "leftovers": [
+  "people: \"ZZ AUDIT people 2 10111621\""
+ ]
 }

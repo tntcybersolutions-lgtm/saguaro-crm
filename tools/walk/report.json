@@ -5,24 +5,21 @@
   "loadErrors": [],
   "apiErrors": [],
   "dead": [],
-  "covered": [
-   {
-    "label": "Job",
-    "why": "<label class=\"fh-chip\" title=\"All jobs\">…</label> intercepts pointer events",
-    "html": "<select aria-label=\"Job\" data-walk=\"3\"><option value=\"\">All jobs</option><option value=\"0496562c-b696-4921-93f4-99306ec41ec2\" style=\"--dot: #C07A5E;\">ZZ AUDIT W"
-   }
-  ],
+  "covered": [],
   "erroring": [],
   "notTapped": [
    "Create",
+   "Pay apps ›",
+   "Pima County Adult Detention Center $2.54M Complete 100% billed · $2.54",
+   "Remind bidders ›",
    "Pima County Adult Detention Center Complete · 5 of 5 pay apps paid · a",
    "ZZ AUDIT Mesa Flex Office Complete · finished Oct 3",
    "Pay app #5 · Pima County ADC paid Sep 26 · 7 days after sending $478K ",
    "Pay app #4 · Pima County ADC paid Sep 25 · 21 days after sending $846K",
    "Invite: Housing Unit C — Low Voltage"
   ],
-  "tapped": 28,
-  "ok": 27
+  "tapped": 42,
+  "ok": 42
  },
  {
   "route": "/app/my-work",
@@ -32,8 +29,12 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 2,
+  "notTapped": [
+   "Remind",
+   "Invite bidders",
+   "Invite"
+  ],
+  "tapped": 25,
   "ok": 2
  },
  {
@@ -45,9 +46,11 @@
   "covered": [],
   "erroring": [],
   "notTapped": [
-   "Complete"
+   "Complete 2",
+   "Pima County Adult Detention Center — BAS Modernization Complete · fini",
+   "ZZ AUDIT Mesa Flex Office Complete — AZ"
   ],
-  "tapped": 4,
+  "tapped": 15,
   "ok": 4
  },
  {
@@ -59,8 +62,8 @@
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 2,
-  "ok": 2
+  "tapped": 3,
+  "ok": 3
  },
  {
   "route": "/app/notifications",
@@ -70,1310 +73,787 @@
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 2,
-  "ok": 2
- },
- {
-  "route": "/app/documents",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  "notTapped": [
+   "2 Money Events › Pay apps + change orders",
+   "Pay App (2)"
   ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "tapped": 36,
+  "ok": 4
  },
  {
   "route": "/app/daily-logs",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "tapped": 3,
+  "ok": 3
  },
  {
   "route": "/app/schedule",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Complete 0 0% of the plan",
+   "Overdue 15 Past their end date, not complete"
+  ],
+  "tapped": 37,
+  "ok": 5
  },
  {
   "route": "/app/compliance",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "tapped": 17,
+  "ok": 3
  },
  {
   "route": "/app/takeoff",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Upload Blueprint",
+   "ZZ AUDIT 2 Fix Check Oct 2, 2026 · #8bf2ab3f Complete 82% confidence",
+   "ZZ AUDIT Mesa Flex Office Oct 2, 2026 · #0aed65c1 Complete 82% confide"
+  ],
+  "tapped": 9,
+  "ok": 9
  },
  {
   "route": "/app/reports",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Pay App Status",
+   "Pay App Status Pay applications with amounts and status Answers: How m"
+  ],
+  "tapped": 27,
+  "ok": 27
  },
  {
   "route": "/app/people",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "tapped": 1,
+  "ok": 1
  },
  {
   "route": "/app/subs",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "tapped": 7,
+  "ok": 7
  },
  {
   "route": "/app/customers",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "tapped": 8,
+  "ok": 8
  },
  {
   "route": "/app/leads",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "tapped": 18,
+  "ok": 5
  },
  {
   "route": "/app/sales",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "6 days late Send capability statement and three school references Tucs"
+  ],
+  "tapped": 15,
+  "ok": 15
  },
  {
   "route": "/app/bids",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "tapped": 49,
+  "ok": 7
  },
  {
   "route": "/app/billing",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  "status": 200,
+  "loadErrors": [],
+  "apiErrors": [
+   "POST /api/billing/portal → 503"
   ],
-  "apiErrors": [],
   "dead": [],
   "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "erroring": [
+   {
+    "label": "Manage Payment & Invoices",
+    "errors": [
+     "POST /api/billing/portal → 503"
+    ]
+   },
+   {
+    "label": "Change Plan",
+    "errors": [
+     "POST /api/billing/portal → 503"
+    ]
+   },
+   {
+    "label": "Open Billing Portal",
+    "errors": [
+     "POST /api/billing/portal → 503"
+    ]
+   }
+  ],
+  "notTapped": [
+   "Cancel Plan",
+   "Request Plan"
+  ],
+  "tapped": 12,
+  "ok": 12
  },
  {
   "route": "/app/billing/payapp",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/billing/cost-control",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  "notTapped": [
+   "Save Pay Application",
+   "Generate AIA G702 / G703 (PDF)"
   ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "tapped": 4,
+  "ok": 4
  },
  {
   "route": "/app/invoicing",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "tapped": 20,
+  "ok": 9
  },
  {
   "route": "/app/catalog",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "tapped": 70,
+  "ok": 70
  },
  {
   "route": "/app/certified-payroll",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "tapped": 18,
+  "ok": 1
  },
  {
   "route": "/app/command-center",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Pima County Adult Detention Center $2.54M Complete 100% billed · $2.54",
+   "Remind bidders ›",
+   "Pima County Adult Detention Center Complete · 5 of 5 pay apps paid · a",
+   "ZZ AUDIT Mesa Flex Office Complete · finished Oct 3",
+   "Pay app #5 · Pima County ADC paid Sep 26 · 7 days after sending $478K ",
+   "Pay app #4 · Pima County ADC paid Sep 25 · 21 days after sending $846K",
+   "Invite: Housing Unit C — Low Voltage"
+  ],
+  "tapped": 32,
+  "ok": 29
  },
  {
   "route": "/app/command-center/daily-logs",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Pima County Adult Detention Center $2.54M Complete 100% billed · $2.54",
+   "Remind bidders ›",
+   "Pima County Adult Detention Center Complete · 5 of 5 pay apps paid · a",
+   "ZZ AUDIT Mesa Flex Office Complete · finished Oct 3",
+   "Pay app #5 · Pima County ADC paid Sep 26 · 7 days after sending $478K ",
+   "Pay app #4 · Pima County ADC paid Sep 25 · 21 days after sending $846K",
+   "Invite: Housing Unit C — Low Voltage"
+  ],
+  "tapped": 33,
+  "ok": 30
  },
  {
   "route": "/app/command-center/directory",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Pima County Adult Detention Center $2.54M Complete 100% billed · $2.54",
+   "Remind bidders ›",
+   "Pima County Adult Detention Center Complete · 5 of 5 pay apps paid · a",
+   "ZZ AUDIT Mesa Flex Office Complete · finished Oct 3",
+   "Pay app #5 · Pima County ADC paid Sep 26 · 7 days after sending $478K ",
+   "Pay app #4 · Pima County ADC paid Sep 25 · 21 days after sending $846K",
+   "Invite: Housing Unit C — Low Voltage"
+  ],
+  "tapped": 32,
+  "ok": 29
  },
  {
   "route": "/app/command-center/financials",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Pima County Adult Detention Center $2.54M Complete 100% billed · $2.54",
+   "Remind bidders ›",
+   "Pima County Adult Detention Center Complete · 5 of 5 pay apps paid · a",
+   "ZZ AUDIT Mesa Flex Office Complete · finished Oct 3",
+   "Pay app #5 · Pima County ADC paid Sep 26 · 7 days after sending $478K ",
+   "Pay app #4 · Pima County ADC paid Sep 25 · 21 days after sending $846K",
+   "Invite: Housing Unit C — Low Voltage"
+  ],
+  "tapped": 32,
+  "ok": 29
  },
  {
   "route": "/app/command-center/budget",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Pima County Adult Detention Center $2.54M Complete 100% billed · $2.54",
+   "Remind bidders ›",
+   "Pima County Adult Detention Center Complete · 5 of 5 pay apps paid · a",
+   "ZZ AUDIT Mesa Flex Office Complete · finished Oct 3",
+   "Pay app #5 · Pima County ADC paid Sep 26 · 7 days after sending $478K ",
+   "Pay app #4 · Pima County ADC paid Sep 25 · 21 days after sending $846K",
+   "Invite: Housing Unit C — Low Voltage"
+  ],
+  "tapped": 32,
+  "ok": 29
  },
  {
   "route": "/app/command-center/checklists",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Pima County Adult Detention Center $2.54M Complete 100% billed · $2.54",
+   "Remind bidders ›",
+   "Pima County Adult Detention Center Complete · 5 of 5 pay apps paid · a",
+   "ZZ AUDIT Mesa Flex Office Complete · finished Oct 3",
+   "Pay app #5 · Pima County ADC paid Sep 26 · 7 days after sending $478K ",
+   "Pay app #4 · Pima County ADC paid Sep 25 · 21 days after sending $846K",
+   "Invite: Housing Unit C — Low Voltage"
+  ],
+  "tapped": 32,
+  "ok": 29
  },
  {
   "route": "/app/command-center/escalations",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Pima County Adult Detention Center $2.54M Complete 100% billed · $2.54",
+   "Remind bidders ›",
+   "Pima County Adult Detention Center Complete · 5 of 5 pay apps paid · a",
+   "ZZ AUDIT Mesa Flex Office Complete · finished Oct 3",
+   "Pay app #5 · Pima County ADC paid Sep 26 · 7 days after sending $478K ",
+   "Pay app #4 · Pima County ADC paid Sep 25 · 21 days after sending $846K",
+   "Invite: Housing Unit C — Low Voltage"
+  ],
+  "tapped": 32,
+  "ok": 29
  },
  {
   "route": "/app/command-center/kpis",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Pima County Adult Detention Center $2.54M Complete 100% billed · $2.54",
+   "Remind bidders ›",
+   "Pima County Adult Detention Center Complete · 5 of 5 pay apps paid · a",
+   "ZZ AUDIT Mesa Flex Office Complete · finished Oct 3",
+   "Pay app #5 · Pima County ADC paid Sep 26 · 7 days after sending $478K ",
+   "Pay app #4 · Pima County ADC paid Sep 25 · 21 days after sending $846K",
+   "Invite: Housing Unit C — Low Voltage"
+  ],
+  "tapped": 32,
+  "ok": 29
  },
  {
   "route": "/app/command-center/long-lead",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Pima County Adult Detention Center $2.54M Complete 100% billed · $2.54",
+   "Remind bidders ›",
+   "Pima County Adult Detention Center Complete · 5 of 5 pay apps paid · a",
+   "ZZ AUDIT Mesa Flex Office Complete · finished Oct 3",
+   "Pay app #5 · Pima County ADC paid Sep 26 · 7 days after sending $478K ",
+   "Pay app #4 · Pima County ADC paid Sep 25 · 21 days after sending $846K",
+   "Invite: Housing Unit C — Low Voltage"
+  ],
+  "tapped": 32,
+  "ok": 29
  },
  {
   "route": "/app/command-center/milestones",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Pima County Adult Detention Center $2.54M Complete 100% billed · $2.54",
+   "Remind bidders ›",
+   "Pima County Adult Detention Center Complete · 5 of 5 pay apps paid · a",
+   "ZZ AUDIT Mesa Flex Office Complete · finished Oct 3",
+   "Pay app #5 · Pima County ADC paid Sep 26 · 7 days after sending $478K ",
+   "Pay app #4 · Pima County ADC paid Sep 25 · 21 days after sending $846K",
+   "Invite: Housing Unit C — Low Voltage"
+  ],
+  "tapped": 32,
+  "ok": 29
  },
  {
   "route": "/app/command-center/oac",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Pima County Adult Detention Center $2.54M Complete 100% billed · $2.54",
+   "Remind bidders ›",
+   "Pima County Adult Detention Center Complete · 5 of 5 pay apps paid · a",
+   "ZZ AUDIT Mesa Flex Office Complete · finished Oct 3",
+   "Pay app #5 · Pima County ADC paid Sep 26 · 7 days after sending $478K ",
+   "Pay app #4 · Pima County ADC paid Sep 25 · 21 days after sending $846K",
+   "Invite: Housing Unit C — Low Voltage"
+  ],
+  "tapped": 32,
+  "ok": 29
  },
  {
   "route": "/app/command-center/owner-updates",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Pima County Adult Detention Center $2.54M Complete 100% billed · $2.54",
+   "Remind bidders ›",
+   "Pima County Adult Detention Center Complete · 5 of 5 pay apps paid · a",
+   "ZZ AUDIT Mesa Flex Office Complete · finished Oct 3",
+   "Pay app #5 · Pima County ADC paid Sep 26 · 7 days after sending $478K ",
+   "Pay app #4 · Pima County ADC paid Sep 25 · 21 days after sending $846K",
+   "Invite: Housing Unit C — Low Voltage"
+  ],
+  "tapped": 32,
+  "ok": 29
  },
  {
   "route": "/app/command-center/portals",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Pima County Adult Detention Center $2.54M Complete 100% billed · $2.54",
+   "Remind bidders ›",
+   "Pima County Adult Detention Center Complete · 5 of 5 pay apps paid · a",
+   "ZZ AUDIT Mesa Flex Office Complete · finished Oct 3",
+   "Pay app #5 · Pima County ADC paid Sep 26 · 7 days after sending $478K ",
+   "Pay app #4 · Pima County ADC paid Sep 25 · 21 days after sending $846K",
+   "Invite: Housing Unit C — Low Voltage"
+  ],
+  "tapped": 32,
+  "ok": 29
  },
  {
   "route": "/app/command-center/pre-site",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Pima County Adult Detention Center $2.54M Complete 100% billed · $2.54",
+   "Remind bidders ›",
+   "Pima County Adult Detention Center Complete · 5 of 5 pay apps paid · a",
+   "ZZ AUDIT Mesa Flex Office Complete · finished Oct 3",
+   "Pay app #5 · Pima County ADC paid Sep 26 · 7 days after sending $478K ",
+   "Pay app #4 · Pima County ADC paid Sep 25 · 21 days after sending $846K",
+   "Invite: Housing Unit C — Low Voltage"
+  ],
+  "tapped": 32,
+  "ok": 29
  },
  {
   "route": "/app/command-center/qc",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Pima County Adult Detention Center $2.54M Complete 100% billed · $2.54",
+   "Remind bidders ›",
+   "Pima County Adult Detention Center Complete · 5 of 5 pay apps paid · a",
+   "ZZ AUDIT Mesa Flex Office Complete · finished Oct 3",
+   "Pay app #5 · Pima County ADC paid Sep 26 · 7 days after sending $478K ",
+   "Pay app #4 · Pima County ADC paid Sep 25 · 21 days after sending $846K",
+   "Invite: Housing Unit C — Low Voltage"
+  ],
+  "tapped": 32,
+  "ok": 29
  },
  {
   "route": "/app/command-center/risks",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Pima County Adult Detention Center $2.54M Complete 100% billed · $2.54",
+   "Remind bidders ›",
+   "Pima County Adult Detention Center Complete · 5 of 5 pay apps paid · a",
+   "ZZ AUDIT Mesa Flex Office Complete · finished Oct 3",
+   "Pay app #5 · Pima County ADC paid Sep 26 · 7 days after sending $478K ",
+   "Pay app #4 · Pima County ADC paid Sep 25 · 21 days after sending $846K",
+   "Invite: Housing Unit C — Low Voltage"
+  ],
+  "tapped": 32,
+  "ok": 29
  },
  {
   "route": "/app/command-center/rollout",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Pima County Adult Detention Center $2.54M Complete 100% billed · $2.54",
+   "Remind bidders ›",
+   "Pima County Adult Detention Center Complete · 5 of 5 pay apps paid · a",
+   "ZZ AUDIT Mesa Flex Office Complete · finished Oct 3",
+   "Pay app #5 · Pima County ADC paid Sep 26 · 7 days after sending $478K ",
+   "Pay app #4 · Pima County ADC paid Sep 25 · 21 days after sending $846K",
+   "Invite: Housing Unit C — Low Voltage"
+  ],
+  "tapped": 32,
+  "ok": 29
  },
  {
   "route": "/app/command-center/vendors",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Pima County Adult Detention Center $2.54M Complete 100% billed · $2.54",
+   "Remind bidders ›",
+   "Pima County Adult Detention Center Complete · 5 of 5 pay apps paid · a",
+   "ZZ AUDIT Mesa Flex Office Complete · finished Oct 3",
+   "Pay app #5 · Pima County ADC paid Sep 26 · 7 days after sending $478K ",
+   "Pay app #4 · Pima County ADC paid Sep 25 · 21 days after sending $846K",
+   "Invite: Housing Unit C — Low Voltage"
+  ],
+  "tapped": 32,
+  "ok": 29
  },
  {
   "route": "/app/command-center/verify",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Pima County Adult Detention Center $2.54M Complete 100% billed · $2.54",
+   "Remind bidders ›",
+   "Pima County Adult Detention Center Complete · 5 of 5 pay apps paid · a",
+   "ZZ AUDIT Mesa Flex Office Complete · finished Oct 3",
+   "Pay app #5 · Pima County ADC paid Sep 26 · 7 days after sending $478K ",
+   "Pay app #4 · Pima County ADC paid Sep 25 · 21 days after sending $846K",
+   "Invite: Housing Unit C — Low Voltage"
+  ],
+  "tapped": 32,
+  "ok": 29
  },
  {
   "route": "/app/document-versions",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Bulk Upload"
+  ],
+  "tapped": 7,
+  "ok": 7
  },
  {
   "route": "/app/fleet",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
   "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "tapped": 3,
+  "ok": 3
  },
  {
   "route": "/app/intelligence",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
-  "dead": [],
-  "covered": [],
+  "dead": [
+   {
+    "label": "Daily Logs Pima County Project has gone 21 workdays without a daily lo",
+    "tag": "a",
+    "href": "/app/projects/25b4f926-57b1-403a-967b-4e2bb9e6693d/daily-logs",
+    "html": "<a title=\"No daily log exists in the last 30 days. Daily logs are the record that wins delay and change-order disputes — a gap here is documentation you can't g"
+   },
+   {
+    "label": "Daily Logs ZZ AUDIT Job 903279 has gone 7 workdays without a daily log",
+    "tag": "a",
+    "href": "/app/projects/c0728312-f1a0-47f3-870d-9ad9d72f7e00/daily-logs",
+    "html": "<a title=\"Last log was filed 11 days ago. Daily logs are the record that wins delay and change-order disputes — a gap here is documentation you can't get back.\""
+   },
+   {
+    "label": "Daily Logs Copper Ridge Data Center Phase II — Critical Environment Co",
+    "tag": "a",
+    "href": "/app/projects/d40179a1-126f-45b3-9992-f430a7a60546/daily-logs",
+    "html": "<a title=\"No daily log exists in the last 30 days. Daily logs are the record that wins delay and change-order disputes — a gap here is documentation you can't g"
+   }
+  ],
+  "covered": [
+   {
+    "label": "Dismiss suggestion",
+    "why": "locator.click: Element is outside of the viewport",
+    "html": "<button type=\"button\" class=\"sgTickerX\" aria-label=\"Dismiss suggestion\" title=\"Dismiss — won't resurface for 30 days\" style=\"background: none; border: medium; p"
+   },
+   {
+    "label": "Takeoff Takeoff \"Pima County ADC — BAS Modernization (Bid Set Rev 2)\" ",
+    "why": "locator.click: Element is outside of the viewport",
+    "html": "<a title=\"Analysis completed 2026-02-24 with a priced total of $2,412,000, but it was never exported (project Pima County Adult Detention Center — BAS Moderniza"
+   },
+   {
+    "label": "Dismiss suggestion",
+    "why": "locator.click: Element is outside of the viewport",
+    "html": "<button type=\"button\" class=\"sgTickerX\" aria-label=\"Dismiss suggestion\" title=\"Dismiss — won't resurface for 30 days\" style=\"background: none; border: medium; p"
+   },
+   {
+    "label": "Takeoff Takeoff \"Takeoff Oct 2, 2026\" priced $1,811,839 of work 8 days",
+    "why": "locator.click: Element is outside of the viewport",
+    "html": "<a title=\"Analysis completed 2026-10-02 with a priced total of $1,811,839, but it was never exported (project ZZ AUDIT Mesa Flex Office). Open the takeoff and p"
+   },
+   {
+    "label": "Dismiss suggestion",
+    "why": "locator.click: Element is outside of the viewport",
+    "html": "<button type=\"button\" class=\"sgTickerX\" aria-label=\"Dismiss suggestion\" title=\"Dismiss — won't resurface for 30 days\" style=\"background: none; border: medium; p"
+   },
+   {
+    "label": "Takeoff Takeoff \"Takeoff Oct 2, 2026\" priced $1,358,332 of work 8 days",
+    "why": "locator.click: Element is outside of the viewport",
+    "html": "<a title=\"Analysis completed 2026-10-02 with a priced total of $1,358,332, but it was never exported (project ZZ AUDIT 2 Fix Check). Open the takeoff and press "
+   },
+   {
+    "label": "Dismiss suggestion",
+    "why": "locator.click: Element is outside of the viewport",
+    "html": "<button type=\"button\" class=\"sgTickerX\" aria-label=\"Dismiss suggestion\" title=\"Dismiss — won't resurface for 30 days\" style=\"background: none; border: medium; p"
+   },
+   {
+    "label": "Daily Logs ZZ AUDIT 2 Fix Check has gone 21 workdays without a daily l",
+    "why": "locator.click: Element is outside of the viewport",
+    "html": "<a title=\"No daily log exists in the last 30 days. Daily logs are the record that wins delay and change-order disputes — a gap here is documentation you can't g"
+   },
+   {
+    "label": "Dismiss suggestion",
+    "why": "locator.click: Element is outside of the viewport",
+    "html": "<button type=\"button\" class=\"sgTickerX\" aria-label=\"Dismiss suggestion\" title=\"Dismiss — won't resurface for 30 days\" style=\"background: none; border: medium; p"
+   }
+  ],
   "erroring": [],
   "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "tapped": 23,
+  "ok": 9
  },
  {
   "route": "/app/portals",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Invite Subcontractor",
+   "Invite Client"
+  ],
+  "tapped": 6,
+  "ok": 4
  },
  {
   "route": "/app/prequalification",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
+  "status": 200,
+  "loadErrors": [],
   "apiErrors": [],
   "dead": [],
   "covered": [],
   "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "notTapped": [
+   "Send Prequal Form"
+  ],
+  "tapped": 4,
+  "ok": 4
  },
  {
   "route": "/app/radio",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  "status": 200,
+  "loadErrors": [],
+  "apiErrors": [
+   "POST /api/radio/file-to-log → 500"
   ],
-  "apiErrors": [],
   "dead": [],
   "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/resource-planning",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
+  "erroring": [
+   {
+    "label": "File this transmission to the project daily log",
+    "errors": [
+     "POST /api/radio/file-to-log → 500"
+    ]
+   },
+   {
+    "label": "File this transmission to the project daily log",
+    "errors": [
+     "POST /api/radio/file-to-log → 500"
+    ]
+   },
+   {
+    "label": "File this transmission to the project daily log",
+    "errors": [
+     "POST /api/radio/file-to-log → 500"
+    ]
+   }
   ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
   "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/reviews",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/service",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/settings",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/signal-studio",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/warranty-claims",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/ask",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/overview",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/photos",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/files",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/daily-logs",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/rfis",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/submittals",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/punch-list",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/change-orders",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/pay-apps",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/lien-waivers",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/schedule",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/drawings",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/specs",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/inspections",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/safety",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/todos",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/messages",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/team",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/directory",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/subs",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/crews",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/timesheets",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/tm-tickets",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/budget",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/cash-flow",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/bills",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/invoices",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/contracts",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/purchase-orders",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/estimate",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/proposal",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/bid-packages",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/closeout",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/compliance",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/insurance",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/permits",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/payroll",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/selections",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/w9",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/takeoff",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/intelligence",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/autopilot",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
- },
- {
-  "route": "/app/projects/:id/network",
-  "status": null,
-  "loadErrors": [
-   "walk stopped: page.waitForTimeout: Target page, context or browser has been closed"
-  ],
-  "apiErrors": [],
-  "dead": [],
-  "covered": [],
-  "erroring": [],
-  "notTapped": [],
-  "tapped": 0,
-  "ok": 0
+  "tapped": 20,
+  "ok": 20
  }
 ]
