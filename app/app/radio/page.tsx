@@ -2070,8 +2070,14 @@ export default function RadioDispatchPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messageId: m.id, channelId: activeId }),
       });
-      if (r.ok) setFiledIds((prev) => new Set(prev).add(m.id));
-    } catch { /* row simply stays unfiled — dispatcher retries */ }
+      if (r.ok) {
+        setFiledIds((prev) => new Set(prev).add(m.id));
+        pushToast('Filed to today’s daily log', 'ok');
+      } else {
+        const d = await r.json().catch(() => ({}));
+        pushToast(d.error || `Could not file to the daily log (${r.status})`, 'err');
+      }
+    } catch { pushToast('Could not file to the daily log — check your connection', 'err'); }
     setFilingId(null);
   };
 

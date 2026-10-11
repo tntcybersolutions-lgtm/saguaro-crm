@@ -446,7 +446,9 @@ export default function BillingPage() {
   const renewDays = envelope?.daysUntilRenewal ?? (sub?.current_period_end ? daysLeft(sub.current_period_end) : null);
   const fmtC = (cents: number) => '$' + ((Number(cents) || 0) / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
   const fmtDate = (d: string | null | undefined) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
-  const canPortal = !!sub && (sub.status === 'active' || sub.status === 'past_due');
+  // The Stripe portal only exists once checkout is switched on — until then
+  // every portal button 500'd, so they stay hidden and the page says why.
+  const canPortal = !!sub && (sub.status === 'active' || sub.status === 'past_due') && checkoutEnabled !== false;
 
   const stats: StatItem[] = loading
     ? [
@@ -639,7 +641,7 @@ export default function BillingPage() {
                 ) : (
                   <div className="blProse">{loading ? 'Loading your plan…' : 'No active subscription — choose a plan above.'}</div>
                 )}
-                <div className="blNote">{canPortal ? 'Plan up/downgrades run in the secure Stripe billing portal — changes take effect via Stripe.' : 'Once you subscribe, plan changes run in the secure Stripe billing portal.'}</div>
+                <div className="blNote">{canPortal ? 'Plan up/downgrades run in the secure Stripe billing portal — changes take effect via Stripe.' : checkoutEnabled === false ? 'Online billing isn’t switched on yet — to change plans, tap Request Plan and we email you an invoice within 1 business day.' : 'Once you subscribe, plan changes run in the secure Stripe billing portal.'}</div>
               </div>
               {canPortal && <Button icon={<ArrowSquareOut size={15} />} onClick={handlePortal} disabled={portalLoading}>{portalLoading ? 'Opening…' : 'Change Plan'}</Button>}
             </div>
@@ -701,7 +703,7 @@ export default function BillingPage() {
             <div className="blDowngrade">
               <div>
                 <b>Thinking about downgrading?</b>
-                <div className="blProse">Downgrades run through the Stripe billing portal and take effect at your next billing cycle — your projects, documents, and history are never deleted.</div>
+                <div className="blProse">{checkoutEnabled === false ? 'Tap Request Plan on the smaller plan above — we switch it at your next billing cycle. Your projects, documents, and history are never deleted.' : 'Downgrades run through the Stripe billing portal and take effect at your next billing cycle — your projects, documents, and history are never deleted.'}</div>
               </div>
               {canPortal && <Button onClick={handlePortal} disabled={portalLoading}>{portalLoading ? 'Opening…' : 'Open Billing Portal'}</Button>}
             </div>
