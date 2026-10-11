@@ -32,10 +32,12 @@ import {
   GearSix,
   List,
   Sparkle,
+  Camera,
 } from '@phosphor-icons/react';
 import { font, radius, sidebar as sidebarTokens, z } from '../lib/design-tokens';
 import { resolveTopBar, UUID_RE } from '@/lib/topbar-crumbs';
 import { recordVisit } from '@/lib/navHistory';
+import { openQuickMedia } from '@/components/media/QuickMedia';
 
 export default function AppTopBar({
   sidebarCollapsed,
@@ -215,6 +217,12 @@ export default function AppTopBar({
         >
           ⌘K
         </kbd>
+      </button>
+
+      {/* Photos & video to any job, from any screen (the phone has the camera tab). */}
+      <button type="button" onClick={() => openQuickMedia()} className="sag-topbar-desktop sag-tb-photo" aria-label="Photos and video — take or upload to any job">
+        <Camera size={16} weight="fill" aria-hidden />
+        <span>Photos</span>
       </button>
 
       {/* Help Mode — the arrows are the answer to "where is the button". */}

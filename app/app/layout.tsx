@@ -4,7 +4,7 @@
  * Renders persistent sidebar navigation, slim top bar with breadcrumbs,
  * and the main content area.
  */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import NotificationBell from '../../components/NotificationBell';
@@ -29,10 +29,11 @@ import WhiteLabelProvider from '../../components/WhiteLabelProvider';
 import AppSidebar from '../../components/AppSidebar';
 import AppTopBar from '../../components/AppTopBar';
 import AutoUnsavedGuard from '@/components/AutoUnsavedGuard';
+import QuickMedia, { openQuickMedia } from '@/components/media/QuickMedia';
 import NextStepBar from '../../components/NextStepBar';
 import HeaderProjectPicker from '../../components/HeaderProjectPicker';
 import { HelpModeButton } from '../../components/HelpMode';
-import { X, ArrowRight, House, Briefcase, FolderSimple, Clock, DotsThreeOutline, MagnifyingGlass, Bell, Star } from '@phosphor-icons/react';
+import { X, ArrowRight, House, Briefcase, FolderSimple, Clock, DotsThreeOutline, MagnifyingGlass, Bell, Star, Camera } from '@phosphor-icons/react';
 import { colors, font, sidebar as sidebarTokens, z } from '../../lib/design-tokens';
 import { ensureBrowserSession } from '../../lib/supabase-browser';
 import { recordCompanyTimeZoneOnce } from '@/lib/ui/company-time-zone';
@@ -568,9 +569,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {([
           { label: 'Home', href: '/app', icon: House, active: pathname === '/app' || pathname === '/app/' },
           { label: 'My Work', href: '/app/my-work', icon: Briefcase, active: pathname.startsWith('/app/my-work') },
+          { label: 'Photo', href: '', icon: Camera, active: false },
           { label: 'Jobs', href: '/app/projects', icon: FolderSimple, active: pathname.startsWith('/app/projects') },
           { label: 'Time', href: '/app/time', icon: Clock, active: pathname.startsWith('/app/time') },
         ] as const).map((t) => {
+          /* The camera, in the middle: photos and video to any job in one or
+             two taps (Chad, 2026-10-11) — components/media/QuickMedia. */
+          if (!t.href) {
+            return (
+              <button key="photo" type="button" className="sag-tab sag-tab-cam" onClick={() => openQuickMedia()} aria-label="Photos and video — take, record or upload">
+                <span className="sag-tab-ic"><Camera size={24} weight="fill" aria-hidden /></span>
+                <span className="sag-tab-label">Photo</span>
+              </button>
+            );
+          }
           const Icon = t.icon;
           const badge = t.href === '/app/my-work' && myWorkCount ? (myWorkCount > 99 ? '99+' : String(myWorkCount)) : null;
           return (
@@ -598,6 +610,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* ── Unsaved-changes gate: every screen, Save and exit / Discard ── */}
       <AutoUnsavedGuard />
+
+      {/* ── Photos & video from anywhere, to any job ──────────────────── */}
+      <Suspense fallback={null}><QuickMedia /></Suspense>
 
       {/* ── Sage CRM Chat Widget ──────────────────────────────────────── */}
       <SaguaroChatWidget variant="crm" userId={sageUserId} projectList={sageProjects} />
