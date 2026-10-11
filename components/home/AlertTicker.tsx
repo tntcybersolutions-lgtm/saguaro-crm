@@ -34,6 +34,12 @@ const CSS = `
 .atkN[data-tone="yellow"] b, .atkN[data-tone="yellow"] svg { color: var(--c-yellow); }
 .atkN[data-tone="green"] b, .atkN[data-tone="green"] svg { color: var(--c-green); }
 .atkN[data-zero="true"] { opacity: .45; }
+button.atkN { min-height: 44px; padding: 0 6px; margin: 0 -6px; background: none; border: 0; border-radius: 10px; font: inherit; cursor: pointer; }
+button.atkN:disabled { cursor: default; }
+button.atkN:not(:disabled):hover { background: rgba(255,255,255,0.06); }
+button.atkN:focus-visible { outline: 2px solid var(--c-yellow); outline-offset: 2px; }
+button.atkN[aria-pressed="true"] { background: rgba(255,255,255,0.08); box-shadow: inset 0 -2px 0 currentColor; }
+.atkShowAll { flex: 0 0 auto; min-height: 36px; margin-left: 4px; padding: 0 12px; border-radius: 999px; border: 1px dashed var(--border-subtle); background: none; color: var(--c-text-2); font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; white-space: nowrap; }
 .atkRail { position: relative; flex: 1 1 auto; min-width: 0; overflow: hidden; display: flex; align-items: center; -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
 .atkTrack { display: flex; align-items: center; gap: 10px; padding: 8px 14px; width: max-content; animation: atk-move var(--atk-dur, 40s) linear infinite; }
 .atk[data-static="true"] .atkTrack { animation: none; }
@@ -69,11 +75,16 @@ const CSS = `
 }
 `;
 
+const COUNTS: Array<[TickerTone, string]> = [['red', 'urgent'], ['review', 'to review'], ['yellow', 'coming up'], ['green', 'done today']];
+
 export default function AlertTicker({ items, summary, failed }: { items: TickerItem[]; summary: TickerSummary; failed?: boolean }) {
   const railRef = useRef<HTMLDivElement>(null);
   const firstRef = useRef<HTMLDivElement>(null);
   const [fits, setFits] = useState(true);
   const [paused, setPaused] = useState(false);
+  // A count is a button: it shows only that colour's alerts (tap again for all).
+  const [only, setOnly] = useState<TickerTone | null>(null);
+  const shown = only ? items.filter((i) => i.tone === only) : items;
   const resume = useRef<number | undefined>(undefined);
 
   // Only move when the alerts don't fit; a short list just sits still.
@@ -85,7 +96,7 @@ export default function AlertTicker({ items, summary, failed }: { items: TickerI
     const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
     ro?.observe(rail);
     return () => ro?.disconnect();
-  }, [items]);
+  }, [items, only]);
   useEffect(() => () => window.clearTimeout(resume.current), []);
 
   // A finger on the strip holds it still long enough to read and tap.
@@ -95,9 +106,9 @@ export default function AlertTicker({ items, summary, failed }: { items: TickerI
     resume.current = window.setTimeout(() => setPaused(false), 6000);
   };
 
-  const chars = items.reduce((n, i) => n + i.text.length, 0);
+  const chars = shown.reduce((n, i) => n + i.text.length, 0);
   const duration = Math.max(24, Math.round(chars * 0.32));
-  const list = (dup: boolean) => items.map((i) => (
+  const list = (dup: boolean) => shown.map((i) => (
     <Link key={`${dup ? 'd' : 'a'}:${i.id}`} href={i.href} className="atkItem" data-tone={i.tone}
       tabIndex={dup ? -1 : undefined} aria-hidden={dup || undefined}>
       {ICON[i.tone]}<span>{i.text}</span><CaretRight size={12} className="go" />
@@ -110,15 +121,24 @@ export default function AlertTicker({ items, summary, failed }: { items: TickerI
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="atkSum">
         <span className="atkLive"><i aria-hidden /> LIVE</span>
-        <span className="atkN" data-tone="red" data-zero={summary.red ? undefined : 'true'}>{ICON.red}<b>{summary.red}</b> <span>urgent</span></span>
-        <span className="atkN" data-tone="review" data-zero={summary.review ? undefined : 'true'}>{ICON.review}<b>{summary.review}</b> <span>to review</span></span>
-        <span className="atkN" data-tone="yellow" data-zero={summary.yellow ? undefined : 'true'}>{ICON.yellow}<b>{summary.yellow}</b> <span>coming up</span></span>
-        <span className="atkN" data-tone="green" data-zero={summary.green ? undefined : 'true'}>{ICON.green}<b>{summary.green}</b> <span>done today</span></span>
+        {COUNTS.map(([tone, word]) => {
+          const n = summary[tone];
+          const any = items.some((i) => i.tone === tone);
+          return (
+            <button key={tone} type="button" className="atkN" data-tone={tone} data-zero={n ? undefined : 'true'}
+              disabled={!any} aria-pressed={only === tone}
+              aria-label={`${n} ${word}${any ? (only === tone ? ' — showing only these; tap for all alerts' : ' — show only these') : ''}`}
+              onClick={() => setOnly((o) => (o === tone ? null : tone))}>
+              {ICON[tone]}<b>{n}</b> <span>{word}</span>
+            </button>
+          );
+        })}
       </div>
       <div className="atkRail" ref={railRef} onTouchStart={hold} onPointerDown={hold}>
         <div className="atkTrack" role="list">
           <div ref={firstRef} className="atkSet" role="presentation">{list(false)}</div>
           {!fits && <div className="atkSet atkDup" role="presentation">{list(true)}</div>}
+          {only && <button type="button" className="atkShowAll" onClick={() => setOnly(null)}>Show all alerts</button>}
         </div>
         {failed && <span className="atkFail">Some alerts couldn&apos;t load.</span>}
       </div>
