@@ -8,6 +8,7 @@ import { FileText, FilePlus, ClockCounterClockwise, SealCheck, Plus } from '@pho
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { openPdf } from '@/components/PdfViewer';
+import ESignatureFlow from '@/components/ESignatureFlow';
 
 const GOLD='var(--brand-primary)', RAISED='var(--bg-surface-2)', BORDER='rgba(255,255,255,0.12)', DIM='var(--text-secondary)', TEXT='var(--text-primary)', GREEN='var(--success)', RED='var(--danger)';
 
@@ -20,6 +21,13 @@ interface Proposal {
   notes: string;
   pdf_url: string | null;
   project_id: string;
+  // Sent for e-signature (lib/esign-events keeps these current).
+  client_name: string;
+  client_email: string;
+  viewed_at: string | null;
+  signed_by: string | null;
+  signed_at: string | null;
+  decline_reason: string | null;
 }
 
 const STATUS_MAP: Record<string, { bg: string; color: string }> = {
@@ -58,6 +66,12 @@ function normalizeProposal(r: Record<string, any>): Proposal {
     notes: String(r.notes ?? r.description ?? ''),
     pdf_url: (r.pdf_url as string | null) ?? null,
     project_id: String(r.project_id ?? ''),
+    client_name: String(r.client_name ?? ''),
+    client_email: String(r.client_email ?? ''),
+    viewed_at: (r.viewed_at as string | null) ?? null,
+    signed_by: (r.signed_by as string | null) ?? null,
+    signed_at: (r.signed_at as string | null) ?? null,
+    decline_reason: (r.decline_reason as string | null) ?? null,
   };
 }
 
@@ -84,6 +98,8 @@ export default function ProposalPage() {
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [uploadingId, setUploadingId] = useState<string | null>(null);
+  // The version open in the e-sign panel (send to the client, then track it).
+  const [signingId, setSigningId] = useState<string | null>(null);
   const [projectName, setProjectName] = useState('');
   // Win/Loss capture: after flipping accept/decline we open the universal outcome modal.
   const [outcomeModal, setOutcomeModal] = useState<{ proposalId: string; defaultOutcome: 'won' | 'lost'; ourAmount: number } | null>(null);
@@ -173,18 +189,8 @@ export default function ProposalPage() {
     }
   }
 
-  async function handleSend(id: string) {
-    try {
-      const res = await fetch(`/api/proposals/${id}/send`, { method: 'POST' });
-      if (!res.ok) throw new Error('send failed');
-      setProposals(prev => prev.map(p => p.id === id ? { ...p, status: 'Sent' } : p));
-      setSuccessMsg('Proposal marked as sent.');
-      setTimeout(() => setSuccessMsg(''), 4000);
-    } catch {
-      setErrorMsg('Could not mark the proposal as sent. Please try again.');
-      setTimeout(() => setErrorMsg(''), 4000);
-    }
-  }
+  const signing = signingId ? proposals.find(p => p.id === signingId) ?? null : null;
+  const fmtWhen = (iso: string) => new Date(iso).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
   async function handleUpload(id: string, file: File) {
     setUploadingId(id);
@@ -323,14 +329,38 @@ export default function ProposalPage() {
               <SectionCard flat title="After You Create" icon={<SealCheck size={17} weight="duotone" style={{ color: GOLD }} />}>
                 <FlowSteps title="" steps={[
                   { title: 'Draft Is Versioned', desc: 'Prior versions mark themselves Superseded — the history stays intact.' },
-                  { title: 'Attach the PDF & Send', desc: 'Upload the signed proposal and mark it sent to the client.' },
-                  { title: 'Capture the Outcome', desc: 'Mark Accepted or Declined — win/loss feeds bidding analytics.' },
-                  { title: 'Accepted Becomes the Contract', desc: 'The accepted amount headlines this project going forward.' },
+                  { title: 'Send to Client', desc: 'Your client gets a link to read and e-sign it. You see when they open it.' },
+                  { title: 'Signed Becomes the Contract', desc: 'Their signature sets the contract amount, moves the job to Building and starts the budget from the takeoff.' },
+                  { title: 'Signed on Paper?', desc: 'Mark Accepted or Declined yourself — win/loss feeds bidding analytics.' },
                 ]} />
               </SectionCard>
             </div>
           )}
         </div>
+      )}
+
+      {signing && (
+        <SectionCard
+          title={`Send ${signing.version} to Your Client`}
+          icon={<SealCheck size={17} weight="duotone" style={{ color: GOLD }} />}
+          subtitle={`${fmt(signing.amount)} — they read the terms and sign online. Signing makes it the contract.`}
+          action={<button onClick={() => setSigningId(null)} style={ghostButtonStyle} className="pmBtn">Close</button>}
+        >
+          <ESignatureFlow
+            key={signing.id}
+            projectId={projectId}
+            docType="proposal"
+            docTitle={`${ctx?.project?.name || projectName || 'Proposal'} — Proposal ${signing.version}`}
+            pdfUrl={signing.pdf_url || ''}
+            sourceId={signing.id}
+            initialSigners={[{
+              name: signing.client_name || ctx?.project?.ownerName || '',
+              email: signing.client_email || ctx?.project?.ownerEmail || '',
+              role: 'Owner',
+            }]}
+            onComplete={() => { fetchProposals(); revalidateCtx(); }}
+          />
+        </SectionCard>
       )}
 
       {/* Version history */}
@@ -370,11 +400,25 @@ export default function ProposalPage() {
                       <td style={{ padding: '10px 16px', color: GOLD, fontWeight: 700 }}>{p.version}</td>
                       <td style={{ padding: '10px 16px', color: DIM }}>{p.created_date}</td>
                       <td style={{ padding: '10px 16px', color: TEXT, fontWeight: 800, fontSize: 14 }}>${p.amount?.toLocaleString()}</td>
-                      <td style={{ padding: '10px 16px' }}><span style={{ padding: '3px 10px', borderRadius: 20, background: sc.bg, color: sc.color, fontSize: 11, fontWeight: 700 }}>{statusLabel(p.status)}</span></td>
+                      <td style={{ padding: '10px 16px' }}>
+                        <span style={{ padding: '3px 10px', borderRadius: 20, background: sc.bg, color: sc.color, fontSize: 11, fontWeight: 700 }}>{statusLabel(p.status)}</span>
+                        {(p.viewed_at || p.signed_at || p.decline_reason) && (
+                          <div style={{ fontSize: 11, color: DIM, marginTop: 5, lineHeight: 1.45 }}>
+                            {p.signed_at
+                              ? <span style={{ color: GREEN }}>Signed by {p.signed_by || 'client'} · {fmtWhen(p.signed_at)}</span>
+                              : p.viewed_at && <span>Opened {fmtWhen(p.viewed_at)}</span>}
+                            {p.decline_reason && <div style={{ color: RED }}>“{p.decline_reason}”</div>}
+                          </div>
+                        )}
+                      </td>
                       <td style={{ padding: '10px 16px', color: DIM }}>{p.notes}</td>
                       <td style={{ padding: '10px 16px', whiteSpace: 'nowrap', display: 'flex', gap: 6, alignItems: 'center' }}>
                         {p.pdf_url && <button onClick={() => openPdf({ url: p.pdf_url! })} style={{ padding: '4px 10px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer' }}>View PDF</button>}
-                        {s === 'draft' && <button onClick={() => handleSend(p.id)} style={{ padding: '4px 10px', background: 'color-mix(in srgb, var(--brand-primary) 20%, transparent)', border: '1px solid color-mix(in srgb, var(--brand-primary) 40%, transparent)', borderRadius: 5, color: 'var(--brand-primary-strong)', fontSize: 12, cursor: 'pointer' }}>Send</button>}
+                        {(!outcomeSet || p.signed_at || p.decline_reason) && s !== 'superseded' && (
+                          <button onClick={() => setSigningId(signingId === p.id ? null : p.id)} style={{ padding: '4px 10px', background: 'color-mix(in srgb, var(--brand-primary) 20%, transparent)', border: '1px solid color-mix(in srgb, var(--brand-primary) 40%, transparent)', borderRadius: 5, color: 'var(--brand-primary-strong)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                            {s === 'draft' ? 'Send to Client' : 'E-Sign Status'}
+                          </button>
+                        )}
                         {!outcomeSet && <button onClick={() => handleMarkOutcome(p, true)} style={{ padding: '4px 10px', background: 'rgba(44,255,122,.2)', border: '1px solid rgba(44,255,122,.4)', borderRadius: 5, color: GREEN, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Mark Accepted</button>}
                         {!outcomeSet && <button onClick={() => handleMarkOutcome(p, false)} style={{ padding: '4px 10px', background: 'rgba(255,59,48,.2)', border: '1px solid rgba(255,59,48,.4)', borderRadius: 5, color: RED, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Mark Declined</button>}
                         <label style={{ padding: '4px 10px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer' }}>

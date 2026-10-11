@@ -29,7 +29,19 @@ interface RequestInfo {
   sent_at: string;
 }
 
-type PageState = 'loading' | 'ready' | 'signed' | 'error';
+/** A proposal signed on its own terms (no PDF needed) — from /api/documents/sign/verify. */
+interface ProposalTerms {
+  title: string | null;
+  number: string | null;
+  amount: number;
+  introduction: string | null;
+  scope: string | null;
+  payment_terms: string | null;
+  exclusions: string | null;
+  valid_until: string | null;
+}
+
+type PageState = 'loading' | 'ready' | 'signed' | 'declined' | 'error';
 
 export default function PublicSigningPage() {
   const params = useParams();
@@ -39,6 +51,10 @@ export default function PublicSigningPage() {
   const [signature, setSignature] = useState<SignatureInfo | null>(null);
   const [request, setRequest] = useState<RequestInfo | null>(null);
   const [companyName, setCompanyName] = useState('');
+  const [proposal, setProposal] = useState<ProposalTerms | null>(null);
+  const [declining, setDeclining] = useState(false);
+  const [declineReason, setDeclineReason] = useState('');
+  const [declineBusy, setDeclineBusy] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   const [mode, setMode] = useState<'draw' | 'type'>('draw');
@@ -65,6 +81,7 @@ export default function PublicSigningPage() {
         setSignature(data.signature);
         setRequest(data.request);
         setCompanyName(data.company_name || '');
+        setProposal(data.proposal || null);
         setPageState('ready');
       } catch {
         setErrorMsg('Failed to load signing request.');
@@ -197,6 +214,27 @@ export default function PublicSigningPage() {
 
   const canSign = agreed && (mode === 'draw' ? hasStrokes.current : typedName.trim().length > 0);
 
+  // ─── Decline ───────────────────────────────────────────────────────
+  const handleDecline = async () => {
+    setDeclineBusy(true);
+    setErrorMsg('');
+    try {
+      const res = await fetch('/api/documents/sign/decline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, reason: declineReason.trim() || undefined }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Could not record your answer.');
+      setPageState('declined');
+    } catch (e: any) {
+      setErrorMsg(e.message || 'Could not record your answer.');
+    } finally {
+      setDeclineBusy(false);
+    }
+  };
+  const money = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
   // ─── Loading ───────────────────────────────────────────────────────
   if (pageState === 'loading') {
     return (
@@ -235,12 +273,28 @@ export default function PublicSigningPage() {
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </div>
-          <h2 style={{ margin: '0 0 8px', fontSize: 22, color: TEXT_DARK, fontWeight: 700 }}>Document Signed Successfully!</h2>
+          <h2 style={{ margin: '0 0 8px', fontSize: 22, color: TEXT_DARK, fontWeight: 700 }}>{proposal ? 'Proposal Signed' : 'Document Signed Successfully!'}</h2>
           <p style={{ margin: '0 0 4px', fontSize: 14, color: TEXT_MED }}>
-            {signature?.doc_title}
+            {signature?.doc_title}{proposal ? ` · ${money(proposal.amount)}` : ''}
           </p>
           <p style={{ margin: 0, fontSize: 13, color: TEXT_DIM }}>
-            You may close this page. A copy will be sent to your email.
+            {proposal
+              ? `${companyName || 'Your contractor'} has been told — this is now your contract. You may close this page.`
+              : 'You may close this page. A copy will be sent to your email.'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Declined ──────────────────────────────────────────────────────
+  if (pageState === 'declined') {
+    return (
+      <div style={{ minHeight: '100vh', background: BG, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+        <div style={{ background: CARD, borderRadius: 16, padding: 40, textAlign: 'center', maxWidth: 420, width: '100%' }}>
+          <h2 style={{ margin: '0 0 8px', fontSize: 22, color: TEXT_DARK, fontWeight: 700 }}>Declined</h2>
+          <p style={{ margin: 0, fontSize: 14, color: TEXT_MED }}>
+            {companyName || 'The sender'} has been told{declineReason.trim() ? ', with your reason' : ''}. You may close this page.
           </p>
         </div>
       </div>
@@ -254,7 +308,7 @@ export default function PublicSigningPage() {
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <h1 style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 700, color: TEXT_DARK }}>
-            Document Signing
+            {proposal ? 'Proposal for Your Signature' : 'Document Signing'}
           </h1>
           {companyName && (
             <p style={{ margin: 0, fontSize: 14, color: TEXT_MED }}>From {companyName}</p>
@@ -291,6 +345,28 @@ export default function PublicSigningPage() {
             </a>
           )}
         </div>
+
+        {/* A proposal's own terms — what is being agreed to. */}
+        {proposal && (
+          <div style={{ background: CARD, border: `1px solid ${BORDER_LT}`, borderRadius: 12, padding: 20, marginBottom: 16 }}>
+            <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: TEXT_DIM }}>Contract amount</p>
+            <p style={{ margin: '0 0 14px', fontSize: 30, fontWeight: 800, color: GOLD }}>{money(proposal.amount)}</p>
+            {([
+              ['Introduction', proposal.introduction],
+              ['Scope of work', proposal.scope],
+              ['Payment terms', proposal.payment_terms],
+              ['Exclusions', proposal.exclusions],
+            ] as const).filter(([, v]) => v).map(([label, v]) => (
+              <div key={label} style={{ marginBottom: 12 }}>
+                <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: TEXT_DIM }}>{label}</p>
+                <p style={{ margin: 0, fontSize: 14, color: TEXT_DARK, whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>{String(v)}</p>
+              </div>
+            ))}
+            {proposal.valid_until && (
+              <p style={{ margin: 0, fontSize: 12, color: TEXT_DIM }}>Valid until {new Date(proposal.valid_until + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+            )}
+          </div>
+        )}
 
         {/* Message */}
         {request?.message && (
@@ -397,8 +473,24 @@ export default function PublicSigningPage() {
             fontSize: 15, fontWeight: 800, cursor: canSign && !signing ? 'pointer' : 'not-allowed',
           }}
         >
-          {signing ? 'Signing…' : 'Sign Document'}
+          {signing ? 'Signing…' : proposal ? 'Sign and Accept' : 'Sign Document'}
         </button>
+
+        {/* Decline — with an optional reason the sender sees. */}
+        {!declining ? (
+          <button type="button" onClick={() => setDeclining(true)} style={{ width: '100%', marginTop: 10, minHeight: 44, padding: '12px', borderRadius: 10, background: 'transparent', border: `1px solid ${BORDER_LT}`, color: TEXT_MED, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+            Decline
+          </button>
+        ) : (
+          <div style={{ marginTop: 12, background: CARD, border: `1px solid ${BORDER_LT}`, borderRadius: 12, padding: 16 }}>
+            <label htmlFor="decline-reason" style={{ display: 'block', fontSize: 13, fontWeight: 700, color: TEXT_DARK, marginBottom: 8 }}>Why are you declining? (optional)</label>
+            <textarea id="decline-reason" value={declineReason} onChange={e => setDeclineReason(e.target.value)} rows={3} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 8, border: `1px solid ${BORDER_LT}`, background: BG, color: TEXT_DARK, fontSize: 16 }} />
+            <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+              <button type="button" onClick={() => setDeclining(false)} disabled={declineBusy} style={{ flex: 1, minHeight: 44, borderRadius: 8, background: 'transparent', border: `1px solid ${BORDER_LT}`, color: TEXT_MED, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Back</button>
+              <button type="button" onClick={handleDecline} disabled={declineBusy} style={{ flex: 1, minHeight: 44, borderRadius: 8, background: 'transparent', border: `1px solid ${RED}`, color: RED, fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>{declineBusy ? 'Sending…' : 'Decline'}</button>
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
         <p style={{ textAlign: 'center', marginTop: 24, fontSize: 12, color: TEXT_DIM }}>
