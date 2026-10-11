@@ -559,6 +559,33 @@ export async function sendSignatureRequest(opts: {
   `));
 }
 
+/** The PM-approved progress update to a homeowner (lib/owner-update). Text is
+ *  the PM's, so it is escaped; blank lines become paragraphs, "- " lines bullets. */
+export async function sendOwnerUpdate(opts: {
+  to: string;
+  clientName: string;
+  companyName: string;
+  projectName: string;
+  title: string;
+  body: string;
+  portalUrl: string;
+}): Promise<SendResult> {
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const blocks = opts.body.split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean).map((b) => {
+    const lines = b.split('\n').map((l) => l.trim()).filter(Boolean);
+    if (lines.every((l) => /^[-•*]\s+/.test(l))) {
+      return `<ul style="margin:0 0 12px;padding-left:20px;color:#374151;font-size:15px;line-height:1.65;">${lines.map((l) => `<li>${esc(l.replace(/^[-•*]\s+/, ''))}</li>`).join('')}</ul>`;
+    }
+    return p(esc(lines.join(' ')));
+  }).join('');
+  return send(opts.to, `${opts.projectName}: ${opts.title}`, layout(`
+    ${h(esc(opts.title))}
+    ${p(`Hello <strong>${esc(opts.clientName)}</strong>, here is the latest on <strong>${esc(opts.projectName)}</strong> from ${esc(opts.companyName)}.`)}
+    ${blocks}
+    ${btn('Open your project portal', opts.portalUrl)}
+  `));
+}
+
 export async function sendTrialExpiring(to: string, userName: string, daysLeft: number, upgradeUrl: string) {
   const urgent = daysLeft <= 3;
   await send(to, `Your Saguaro trial ends in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`, layout(`

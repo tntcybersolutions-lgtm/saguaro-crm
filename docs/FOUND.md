@@ -177,3 +177,8 @@ converge. One line each, newest at the bottom.
   logged (trigger and cron). No email sent or observed from this session.
 - (10 Oct) `/app/customers` has no way to create a customer — nothing in the UI posts to
   `/api/customers/profiles` except the project Ownership card's new inline form.
+- (11 Oct, probe of #129) Client portal footer reads "NaN days remaining" when the project has no
+  end date — `app/portals/client/[token]/page.tsx` Project Timeline footer. Not fixed (off-path).
+- (11 Oct, probe of #129) Client portal floating quick-action bar (Dashboard / Messages / Approvals,
+  `app/portals/client/[token]/page.tsx` ~line 2290) is fixed over the content on a phone and covers
+  cards as you scroll. Not fixed (off-path).

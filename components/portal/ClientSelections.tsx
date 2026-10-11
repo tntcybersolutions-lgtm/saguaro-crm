@@ -249,7 +249,7 @@ export default function ClientSelections({ token, onToast }: { token: string; on
           <div role="dialog" aria-modal="true" aria-label="Confirm your choice" className="csSheetWrap"
             onClick={(e) => { if (e.target === e.currentTarget && !busy) setConfirm(null); }}
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.65)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-            <div className="csSheet" style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20, width: '100%', maxWidth: 440, maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="csSheet" style={{ background: 'var(--bg-solid-2)', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20, width: '100%', maxWidth: 440, maxHeight: '90vh', overflowY: 'auto' }}>
               <div style={{ color: DIM, fontSize: 13 }}>{confirm.sel.item_name}</div>
               <div style={{ color: TEXT, fontSize: 20, fontWeight: 900, margin: '4px 0 2px' }}>{confirm.option ? `Choose ${confirm.option.name}?` : 'Approve as specified?'}</div>
               <div style={{ color: TEXT, fontSize: 18, fontWeight: 800 }}>{money(price)}</div>

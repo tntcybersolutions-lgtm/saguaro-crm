@@ -29,7 +29,8 @@ const STATUS_LABELS:Record<string,string>={
   delivered:'Delivered',installed:'Installed',
 };
 
-const fmt=(n:number)=>'$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
+// Cents when there are cents: an $899.99 option must not read "$900".
+const fmt=(n:number)=>'$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2}));
 
 const inp:React.CSSProperties={
   width:'100%',padding:'9px 12px',background:'var(--bg-surface-2)',

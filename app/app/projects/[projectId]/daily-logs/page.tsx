@@ -27,7 +27,7 @@ import { getAuthHeaders } from '@/lib/supabase-browser';
 import { sendOrSave, listSaved, updateSaved, removeSaved, savedRowId, savedIdOf, isOffline } from '@/lib/offline/outbox';
 import {
   ClipboardText, Thermometer, HardHat, WarningCircle, Plus, X, Sparkle, CopySimple, CloudSun,
-  UsersThree, PencilSimple, Trash, ArrowSquareOut, ArrowClockwise, ShieldCheck, Package, Wrench,
+  UsersThree, PencilSimple, Trash, ArrowSquareOut, ArrowClockwise, ShieldCheck, Package, Wrench, PaperPlaneTilt,
 } from '@phosphor-icons/react';
 import {
   PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, RowActions,
@@ -40,6 +40,7 @@ import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 import { SUB_TRADES } from '@/lib/construction-intelligence';
 import { layout } from '@/lib/design-tokens';
+import OwnerUpdateModal from '@/components/owner-update/OwnerUpdateModal';
 
 /** Date-only values parse at local noon ('T12:00:00') so they never shift a day under UTC. */
 /** Today as YYYY-MM-DD on the user's wall clock. toISOString() is the UTC day —
@@ -251,6 +252,8 @@ export default function DailyLogsPage(){
   const [saving,setSaving]   = useState(false);
   const [deleting,setDeleting]=useState(false);
   const { toast, show: showToast } = useToast(4000);
+  // Homeowner Update: drafted from these logs, approved before it is sent.
+  const [ownerUpdateOpen, setOwnerUpdateOpen] = useState(false);
   const [search,setSearch]   = useState('');
   const [monthFilter,setMonthFilter] = useState<MonthFilter>('');
   const [flagFilter,setFlagFilter] = useState<FlagFilter>('all');
@@ -782,6 +785,9 @@ export default function DailyLogsPage(){
             {logs.length>0&&(
               <Button icon={<CopySimple size={15} weight="bold"/>} onClick={copyYesterday}>Copy Yesterday</Button>
             )}
+            {logs.length>0&&(
+              <Button icon={<PaperPlaneTilt size={15} weight="bold"/>} onClick={()=>setOwnerUpdateOpen(true)}>Homeowner Update</Button>
+            )}
             <Button variant="primary" icon={<Sparkle size={15} weight="fill"/>} onClick={openAutoFill} disabled={prefilling}>
               {prefilling?'Assembling draft…':'Auto-Fill Today'}
             </Button>
@@ -937,6 +943,7 @@ export default function DailyLogsPage(){
       <div style={{ position:'relative', zIndex:10001 }}>
         <UnsavedGuardModal guard={guard} />
       </div>
+      <OwnerUpdateModal projectId={projectId} open={ownerUpdateOpen} onClose={()=>setOwnerUpdateOpen(false)} onToast={showToast} />
       <Toast message={toast?.message ?? null} tone={toast?.tone} />
     </div>
   );

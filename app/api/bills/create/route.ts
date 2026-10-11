@@ -43,6 +43,8 @@ export async function POST(req: NextRequest) {
         due_date: body.due_date || null,
         status: body.status || null,
         notes: body.notes || null,
+        // The receipt or invoice it was read from (Scan Receipt on the bills page).
+        pdf_url: typeof body.pdf_url === 'string' && body.pdf_url ? body.pdf_url : null,
       })
       .select()
       .single();

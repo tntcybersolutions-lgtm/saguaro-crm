@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
+import { signFields } from '@/lib/storage-signing';
 
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
   const user = await getUser(req);
@@ -24,7 +25,9 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
       .eq('project_id', params.projectId)
       .order('created_at', { ascending: false });
     if (error) throw error;
-    return NextResponse.json({ bills: data ?? [] });
+    // The attached receipt is private storage — hand back a link that opens.
+    const bills = await signFields((data ?? []) as Array<Record<string, unknown>>, ['pdf_url'], 3600, { strict: false });
+    return NextResponse.json({ bills });
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e);
     console.error('[projects/[projectId]/bills] read failed:', detail);
