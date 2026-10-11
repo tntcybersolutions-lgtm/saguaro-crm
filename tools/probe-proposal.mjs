@@ -143,7 +143,19 @@ try {
 
   await gc.reload({ waitUntil: 'networkidle' });
   step('gcSignRow', await rowText(gc, signNotes));
+  // A signed panel must not re-fetch the versions in a loop (it once did, forever).
+  let refetches = 0;
+  const countRefetch = (r) => { if (r.url().includes(`/api/projects/${job.id}/proposals`)) refetches++; };
+  gc.on('request', countRefetch);
   step('gcSignStatus', await openStatus(gc, signNotes));
+  await gc.waitForTimeout(6000);
+  gc.off('request', countRefetch);
+  step('signedPanel', {
+    proposalRefetchesIn6s: refetches,
+    tableShowsRows: await gc.locator(`tr:has-text("${signNotes}")`).isVisible(),
+    badge: await gc.evaluate(() => [...document.querySelectorAll('h3')].find((h) => /E-Signature/.test(h.textContent || ''))?.parentElement?.innerText.replace(/\s+/g, ' ').slice(-40) || null),
+    title: await gc.evaluate(() => [...document.querySelectorAll('h2,h3,div')].map((e) => e.textContent || '').find((t) => /— Signed$|Send v\d/.test(t.trim())) || null),
+  });
   await shot(gc, '1440-signed.png');
   const ctx = await (await gc.request.get(`${SITE}/api/project-context?projectId=${job.id}`)).json().catch(() => ({}));
   step('jobAfter', { phase: ctx?.project?.phase ?? null, originalContract: ctx?.money?.originalContract ?? null, budgetOriginal: ctx?.budget?.original ?? null });
