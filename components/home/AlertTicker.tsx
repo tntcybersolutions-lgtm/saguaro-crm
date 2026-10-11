@@ -39,7 +39,7 @@ button.atkN:disabled { cursor: default; }
 button.atkN:not(:disabled):hover { background: rgba(255,255,255,0.06); }
 button.atkN:focus-visible { outline: 2px solid var(--c-yellow); outline-offset: 2px; }
 button.atkN[aria-pressed="true"] { background: rgba(255,255,255,0.08); box-shadow: inset 0 -2px 0 currentColor; }
-.atkShowAll { flex: 0 0 auto; min-height: 36px; margin-left: 4px; padding: 0 12px; border-radius: 999px; border: 1px dashed var(--border-subtle); background: none; color: var(--c-text-2); font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.atkShowAll { flex: 0 0 auto; align-self: center; min-height: 44px; margin: 0 12px 0 4px; padding: 0 14px; border-radius: 999px; border: 1px dashed var(--border-subtle); background: none; color: var(--c-text-2); font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; white-space: nowrap; }
 .atkRail { position: relative; flex: 1 1 auto; min-width: 0; overflow: hidden; display: flex; align-items: center; -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
 .atkTrack { display: flex; align-items: center; gap: 10px; padding: 8px 14px; width: max-content; animation: atk-move var(--atk-dur, 40s) linear infinite; }
 .atk[data-static="true"] .atkTrack { animation: none; }
@@ -72,6 +72,7 @@ button.atkN[aria-pressed="true"] { background: rgba(255,255,255,0.08); box-shado
   .atkN b { font-size: 18px; }
   .atkN > span { grid-column: 1 / -1; }
   .atkItem { min-height: 44px; }
+  .atkShowAll { align-self: stretch; margin: 0 10px 10px; }
 }
 `;
 
@@ -138,10 +139,12 @@ export default function AlertTicker({ items, summary, failed }: { items: TickerI
         <div className="atkTrack" role="list">
           <div ref={firstRef} className="atkSet" role="presentation">{list(false)}</div>
           {!fits && <div className="atkSet atkDup" role="presentation">{list(true)}</div>}
-          {only && <button type="button" className="atkShowAll" onClick={() => setOnly(null)}>Show all alerts</button>}
         </div>
         {failed && <span className="atkFail">Some alerts couldn&apos;t load.</span>}
       </div>
+      {/* Outside the moving strip: inside it, the strip's clipping and mask left
+          this button visible but untappable (the iPhone probe could not click it). */}
+      {only && <button type="button" className="atkShowAll" onClick={() => setOnly(null)}>Show all alerts</button>}
     </section>
   );
 }
