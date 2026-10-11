@@ -5,18 +5,18 @@
  * The job page (./overview) IS the job's navigation now — every tool, grouped,
  * with its count — so nothing here repeats it:
  *
- *   phone    no tab strip, no card grid, no module drawer. A tool page gets one
- *            thin "‹ <Job>" row that goes back to the job's tool list; the job
- *            page itself gets nothing (the app's bar and tab bar already lead
- *            to Jobs).
- *   desktop  the same back row on tool pages, plus the job's phases
+ *   phone    no tab strip, no card grid, no module drawer. On a tool page
+ *            (…/budget) the app's top bar already reads "‹ <Job>"
+ *            (lib/topbar-crumbs), so this bar adds nothing and is hidden. One
+ *            level deeper (…/rfis/<id>) the top bar goes back to the list, so
+ *            this bar keeps one thin "‹ <Job>" row that goes to the job.
+ *   desktop  that same back row when it is needed, plus the job's phases
  *            (Overview · Preconstruction · … · Closeout) as lit pills with their
  *            icons — bright and easy to find (Chad, 2026-10-11) — the one you
- *            are in filled solid yellow. The full tool list sits in the app's
- *            left rail (components/AppSidebar, from lib/project-nav).
- *
- * The bar carries `data-job-bar` so the app frame can hide it if its own top
- * bar starts naming the job.
+ *            are in filled solid yellow. The pills wrap to a second row rather
+ *            than run off the edge on a narrower screen. The full tool list
+ *            sits in the app's left rail (components/AppSidebar, from
+ *            lib/project-nav).
  */
 import React from 'react';
 import Link from 'next/link';
@@ -31,6 +31,8 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
   const base = `/app/projects/${projectId}`;
   const rel = pathname.startsWith(base) ? pathname.slice(base.length) : '';
   const onJobPage = rel === '' || rel === '/' || rel.startsWith('/overview');
+  /* A tool page's own top bar already goes back to the job; deeper pages' does not. */
+  const showBack = !onJobPage && rel.split('/').filter(Boolean).length >= 2;
   const real = !!projectId && projectId !== 'new';
 
   /* Same SWR key as the job page's aggregate — opening a job costs one request. */
@@ -42,8 +44,8 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
     <div className="pjx" style={{ minWidth: 0, background: 'var(--bg-base)', minHeight: 'calc(100vh - 56px)' }}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       {real && (
-        <nav className="pjx-bar" data-job-bar="" data-on-job={onJobPage || undefined} aria-label="Job">
-          {!onJobPage && (
+        <nav className="pjx-bar" data-job-bar="" data-no-back={showBack ? undefined : ''} aria-label="Job">
+          {showBack && (
             <Link href={`${base}/overview`} className="pjx-back" aria-label={`Back to ${name || 'the job'}`}>
               <span aria-hidden="true">‹</span><span className="pjx-back-name">{name || 'Job'}</span>
             </Link>
@@ -77,19 +79,18 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
 /* Theme variables only; injected with dangerouslySetInnerHTML so the server
    and client text match (tools/check-style-escapes.mjs). */
 const CSS = `
-.pjx-bar{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 8px 0 4px;border-bottom:1px solid var(--fl-line,var(--border-default));min-width:0}
+.pjx-bar{display:flex;flex-wrap:wrap;align-items:center;gap:0 8px;min-height:44px;padding:0 8px 0 4px;border-bottom:1px solid var(--fl-line,var(--border-default));min-width:0}
 .pjx-back{display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 10px 0 8px;color:var(--brand-primary);font-size:15px;font-weight:600;text-decoration:none;min-width:0;flex:0 1 auto;-webkit-tap-highlight-color:transparent}
 .pjx-back>span:first-child{font-size:22px;line-height:1;margin-top:-2px}
 .pjx-back-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(60vw,420px)}
 .pjx-tabs{display:none}
 @media (max-width:767px){
-  .pjx-bar[data-on-job]{display:none}
+  .pjx-bar[data-no-back]{display:none}
 }
 @media (min-width:768px){
   .pjx-bar{padding:0 clamp(8px,1.2vw,20px) 0 4px}
   .pjx-bar{min-height:60px}
-  .pjx-tabs{display:flex;align-items:center;gap:8px;margin-left:auto;min-width:0;overflow-x:auto;scrollbar-width:none;padding:8px 2px}
-  .pjx-tabs::-webkit-scrollbar{display:none}
+  .pjx-tabs{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;margin-left:auto;min-width:0;padding:8px 2px}
   .pjx-tab{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:0 15px;border-radius:999px;
     border:1px solid color-mix(in srgb,var(--brand-primary) 45%,transparent);
     background:linear-gradient(180deg,color-mix(in srgb,var(--brand-primary) 16%,transparent),color-mix(in srgb,var(--brand-primary) 6%,transparent));
@@ -103,6 +104,6 @@ const CSS = `
     box-shadow:0 0 0 1px color-mix(in srgb,var(--brand-primary) 60%,transparent),0 0 24px color-mix(in srgb,var(--brand-primary) 55%,transparent)}
   .pjx-tab[data-active] svg{color:var(--on-brand,var(--c-on-brand))}
   @media (prefers-reduced-motion:reduce){.pjx-tab{transition:none}.pjx-tab:hover{transform:none}}
-  .pjx-bar[data-on-job] .pjx-tabs{margin-left:0}
+  .pjx-bar[data-no-back] .pjx-tabs{margin-left:0;justify-content:flex-start}
 }
 `;
