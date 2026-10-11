@@ -25,8 +25,13 @@ export const HOME_CSS = `
 .fh-in [data-tone=bad]{color:var(--danger)} .fh-in [data-tone=warn]{color:var(--warning)} .fh-in [data-tone=good]{color:var(--success)}
 .fh-in .fl-strip [data-tone] span{color:var(--sg-text-2)}
 .fh-in .fl-strip b span{display:inline;font-size:inherit;color:inherit}
-.fh-in .fl-strip>div{padding:10px 6px 10px 12px}
-.fh-in .fl-strip>div:first-child{padding-left:16px}
+.fh-in .fl-strip{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;border:0;margin:4px 16px 14px}
+.fh-in .fl-strip>div{position:relative;padding:12px;border:1px solid color-mix(in srgb,var(--brand-primary) 34%,transparent);border-radius:14px;background:linear-gradient(155deg,color-mix(in srgb,var(--brand-primary) 12%,transparent),color-mix(in srgb,var(--brand-primary) 2%,transparent) 45%,rgba(14,15,18,.92));box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 0 20px color-mix(in srgb,var(--brand-primary) 11%,transparent),0 12px 28px rgba(0,0,0,.4)}
+.fh-in .fl-strip>div:last-child{border-right:1px solid color-mix(in srgb,var(--brand-primary) 34%,transparent)}
+.fh-in .fl-strip b{font-size:22px;font-weight:800;color:var(--brand-primary);text-shadow:0 0 16px color-mix(in srgb,var(--brand-primary) 45%,transparent)}
+.fh-in .fl-strip span{margin-top:2px;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.fh-ticker{margin:12px 16px 0;min-width:0}
+.fh-in .hf{margin:14px 16px 8px}
 .fh-in .fl-tabs button{flex:1 1 auto;min-width:0;padding:0 6px;overflow:hidden;text-overflow:ellipsis}
 
 /* Header: one controls row (view · job · +), then the greeting. */
@@ -84,6 +89,9 @@ export const HOME_CSS = `
   .fh-main,.fh-side{display:block;min-width:0}
   .fh-side{padding-top:6px}
   .fh-side .fh-sec:first-child .fl-strip{margin-top:6px}
+  .fh-ticker{margin:14px 8px 0}
+  .fh-in .hf{margin:16px 8px 10px}
+  .fh-in .fl-strip{margin:6px 0 14px}
   .fh-in .fl-brief{margin-top:10px}
   .fh-foot{padding-left:24px}
 }

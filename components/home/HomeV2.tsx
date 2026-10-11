@@ -24,6 +24,8 @@ import type { TickerItem, TickerSummary } from '@/lib/home/ticker';
 import type { Metric, QueueItem, ScheduleEntry, HomeView, DataState } from '@/lib/home/rank';
 import type { FlatHome } from '@/lib/home/flat-build';
 import HomeHeader from './HomeHeader';
+import HomeFinance from './HomeFinance';
+import AlertTicker from './AlertTicker';
 import { ActivitySection, AttentionSection, BiddingSection, JobsSection, LinksSection, MoneySection, Prose, WorkRowsSection } from './HomeSections';
 import { HOME_CSS } from './home-css';
 import { STATUS_HEADER, reasonFromResponse, isNetworkError, NO_SIGNAL_DETAIL } from '@/lib/ui/status-fetch';
@@ -165,7 +167,8 @@ function HomeInner() {
           <Prose parts={f.brief.parts} />
         </Brief>
       ) : null,
-      strip: f?.strip?.length ? (
+      // The owner's figures are the finance cards above the lists.
+      strip: f?.strip?.length && !(view === 'owner' && f.finance) ? (
         <NumberStrip items={f.strip.map(s => ({
           value: <span title={s.note}>{s.value ?? '—'}</span>,
           label: s.label,
@@ -190,6 +193,15 @@ function HomeInner() {
     body = (
       <>
         {saveNote && <p className="fh-notice" role="status">{saveNote}</p>}
+        {data.ticker && (
+          <div className="fh-ticker">
+            <AlertTicker items={data.ticker.items} summary={data.ticker.summary} failed={data.ticker.state === 'failed'} />
+          </div>
+        )}
+        {f?.finance && (
+          <HomeFinance f={f.finance} strip={f.strip || []} updatedAt={data.generatedAt} timeZone={data.context.timeZone}
+            refreshing={isValidating} onRefresh={retry} />
+        )}
         <div className="fh-cols">
           <div className="fh-main">{order.filter(k => !SIDE.includes(k)).map(place)}</div>
           <div className="fh-side">{order.filter(k => SIDE.includes(k)).map(place)}</div>
