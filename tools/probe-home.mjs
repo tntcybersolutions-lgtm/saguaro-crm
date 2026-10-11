@@ -75,6 +75,22 @@ async function run(name, browserType, ctxOpts) {
     }
     await page.screenshot({ path: path.join(OUT, `${name}-top.png`) });
     await page.screenshot({ path: path.join(OUT, `${name}-full.png`), fullPage: true });
+    // A job page: the lit section menu across the top (desktop only).
+    try {
+      const d = await (await page.request.get(`${SITE}/api/projects?limit=50&fields=id,name`)).json();
+      const jobs = d.projects || d.data || (Array.isArray(d) ? d : []);
+      const job = jobs.find((j) => /Pima County Adult/i.test(j.name || '')) || jobs.find((j) => !/ZZ AUDIT/i.test(j.name || '')) || jobs[0];
+      if (job) {
+        await page.goto(`${SITE}/app/projects/${job.id}/budget`, { waitUntil: 'networkidle' });
+        await page.waitForTimeout(1500);
+        r.jobNav = await page.evaluate(() => {
+          const tabs = [...document.querySelectorAll('.pjx-tab')].filter((t) => t.getBoundingClientRect().width > 0);
+          const act = document.querySelector('.pjx-tab[data-active]');
+          return { tabs: tabs.map((t) => t.textContent.trim()), active: act?.textContent.trim() || null, activeBg: act ? getComputedStyle(act).backgroundColor : null, icons: document.querySelectorAll('.pjx-tab svg').length };
+        });
+        await page.screenshot({ path: path.join(OUT, `${name}-job.png`) });
+      }
+    } catch (e) { r.jobNavError = String(e.message || e).split('\n')[0]; }
   } catch (e) { r.error = String(e.message || e).split('\n')[0]; await page.screenshot({ path: path.join(OUT, `${name}-error.png`) }).catch(() => {}); }
   await browser.close();
   return r;
