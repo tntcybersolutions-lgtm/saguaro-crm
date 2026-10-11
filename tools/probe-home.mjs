@@ -77,7 +77,8 @@ async function run(name, browserType, ctxOpts) {
     r.heads = await page.evaluate(() => {
       const look = (el) => { if (!el) return null; const cs = getComputedStyle(el); return { text: el.textContent.trim().slice(0, 40), color: cs.color, size: cs.fontSize, weight: cs.fontWeight, caps: cs.textTransform }; };
       const vis = (sel) => [...document.querySelectorAll(sel)].filter((e) => e.getBoundingClientRect().width > 0);
-      return { date: look(document.querySelector('.fh-date')), sections: vis('.fl-sec').slice(0, 4).map(look), rail: vis('.sg-nav-head').slice(0, 3).map(look) };
+      const tabs = vis('.sag-tab').map((t) => { const ic = t.querySelector('.sag-tab-ic'); return { text: t.textContent.trim(), active: t.dataset.active === 'true', label: getComputedStyle(t).color, icon: ic ? getComputedStyle(ic).color : null, pill: ic ? getComputedStyle(ic).backgroundColor : null }; });
+      return { date: look(document.querySelector('.fh-date')), sections: vis('.fl-sec').slice(0, 4).map(look), rail: vis('.sg-nav-head').slice(0, 3).map(look), tabs };
     });
     await page.screenshot({ path: path.join(OUT, `${name}-top.png`) });
     await page.screenshot({ path: path.join(OUT, `${name}-full.png`), fullPage: true });
