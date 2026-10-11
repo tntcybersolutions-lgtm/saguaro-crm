@@ -160,6 +160,14 @@ see, not alive — full site, not hunt and peck."*
   (`${DIM}40` is `var(--text-secondary)40` — invalid, the browser drops it).
   Rule 5 of the same gate fails the build on one.
 
+## PAGE HEADER BUTTONS ON A PHONE — never cut off
+
+- A page's header buttons (`ModuleHero` `actions`) wrap onto a second line
+  under the title when they do not fit at 390px. They never scroll sideways
+  out of sight: a primary button half off the edge reads as missing.
+  `.pmHeadActs` in `app/globals.css` does this for every page — a page does not
+  restyle its own header row.
+
 ---
 
 ## MODULE IDENTITY

@@ -1733,11 +1733,12 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 @media (max-width:767px){
   .pmHeadText{flex-basis:100%}
   .pmHeadSub{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-  /* One row of controls under the title, at most: it scrolls sideways
-     inside itself rather than stacking three rows of buttons. */
-  .pmHeadActs{flex:1 1 100%;flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
-  .pmHeadActs::-webkit-scrollbar{display:none}
-  .pmHeadActs>*{flex:0 0 auto}
+  /* Controls sit under the title and wrap onto a second line when they do
+     not fit. They never scroll sideways: a hidden-off-the-edge "Add" button
+     reads as missing (schedule, 11 Oct 2026 — Reset Baseline pushed Add Task
+     past 390px). */
+  .pmHeadActs{flex:1 1 100%;flex-wrap:wrap;justify-content:flex-start}
+  .pmHeadActs>*{flex:0 0 auto;max-width:100%}
 }
 /* Flat section: a lit heading (.pmSecTitle, with .k-card-title above) over a hairline, then the content. */
 .pmSec{position:relative;min-width:0}
