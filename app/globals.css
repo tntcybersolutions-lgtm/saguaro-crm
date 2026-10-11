@@ -1434,13 +1434,16 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
   .sidebar-mobile-overlay aside { position: static !important; width: 100% !important; height: auto !important; min-height: 0 !important; flex: 1 1 auto; box-shadow: none !important; border-right: 0 !important; overflow: visible !important; }
   .sidebar-mobile-overlay { padding-bottom: var(--sag-tabbar-h); }
 
-  /* Bottom tab bar — flat: solid ground, one hairline on top, flush to the
-     bottom edge (the safe area is padding inside it), the current tab in
-     the brand colour. Not a floating pill. */
-  .sag-tabbar { display: flex !important; }
-  .sag-tab { flex: 1 1 0; min-width: 0; height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 0 2px; text-decoration: none; color: var(--sg-text-3); font-size: 10.5px; font-weight: 600; line-height: 1.1; background: none; border: 0; border-radius: 0; box-shadow: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  /* Bottom tab bar — solid ground flush to the bottom edge (the safe area is
+     padding inside it), a lit line on top. Every tab is bright all the time:
+     yellow icon, white label. The current tab's icon sits on a solid yellow
+     pill and its label turns yellow (Chad, 2026-10-11: never dim grey). */
+  .sag-tabbar { display: flex !important; border-top-color: color-mix(in srgb, var(--brand-primary) 40%, transparent) !important; box-shadow: 0 -6px 18px color-mix(in srgb, var(--brand-primary) 10%, transparent); }
+  .sag-tab { flex: 1 1 0; min-width: 0; height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 0 2px; text-decoration: none; color: var(--sg-text); font-size: 11.5px; font-weight: 700; line-height: 1.1; background: none; border: 0; border-radius: 0; box-shadow: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .sag-tab-ic { display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 28px; border-radius: 14px; color: var(--brand-primary); transition: background .15s ease, box-shadow .15s ease; }
   .sag-tab:active { transform: none; background: rgba(255,255,255,0.04); }
-  .sag-tab[data-active="true"] { color: var(--brand-primary); font-weight: 700; }
+  .sag-tab[data-active="true"] { color: var(--brand-primary); font-weight: 800; }
+  .sag-tab[data-active="true"] .sag-tab-ic { background: var(--brand-primary); color: var(--on-brand, var(--c-on-brand)); box-shadow: 0 0 14px color-mix(in srgb, var(--brand-primary) 55%, transparent); }
   .sag-tab-label { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; white-space: nowrap; }
   .sag-tab-badge { display: inline-block; min-width: 17px; height: 17px; padding: 0 5px; border-radius: 9px; background: var(--danger); color: #FFFFFF; font-size: 10.5px; font-weight: 700; line-height: 17px; text-align: center; font-variant-numeric: tabular-nums; }
   /* The page's own bottom room: the frame already clears the tab bar. */
