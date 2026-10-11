@@ -40,6 +40,9 @@ export async function POST(req: NextRequest) {
         token: newToken,
         status: 'pending',
         sent_at: new Date().toISOString(),
+        // A resend after a decline is a fresh ask: the new link can be signed.
+        declined_at: null,
+        decline_reason: null,
       })
       .eq('id', existing.id)
       .eq('tenant_id', user.tenantId), 'document_signature_requests write');
@@ -49,8 +52,18 @@ export async function POST(req: NextRequest) {
       .update({ status: 'pending', sent_at: new Date().toISOString() })
       .eq('id', body.resend_signature_id)
       .eq('tenant_id', user.tenantId)
-      .select('project_id, doc_title, signer_name, signer_email')
+      .select('project_id, doc_title, signer_name, signer_email, doc_type, source_id')
       .single();
+
+    // A declined proposal sent again is Sent again.
+    if (sig && (sig as any).doc_type === 'proposal' && (sig as any).source_id) {
+      await must(db
+        .from('proposals')
+        .update({ status: 'sent', sent_at: new Date().toISOString(), declined_at: null, decline_reason: null })
+        .eq('id', (sig as any).source_id)
+        .eq('tenant_id', user.tenantId)
+        .not('status', 'ilike', 'accepted'), 'proposals write');
+    }
 
     if (sig) {
       const [{ data: proj }, { data: ten }] = await Promise.all([

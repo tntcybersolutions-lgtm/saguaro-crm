@@ -388,7 +388,7 @@ export default function PublicSigningPage() {
                 type="button"
                 onClick={() => setMode(m)}
                 style={{
-                  flex: 1, padding: '8px', border: 'none', borderRadius: 6,
+                  flex: 1, minHeight: 44, padding: '8px', border: 'none', borderRadius: 6,
                   background: mode === m ? CARD : 'transparent',
                   color: mode === m ? TEXT_DARK : TEXT_DIM,
                   fontSize: 13, fontWeight: 600, cursor: 'pointer',
@@ -415,7 +415,7 @@ export default function PublicSigningPage() {
                   onMouseLeave={endDraw}
                 />
               </div>
-              <button type="button" onClick={clearCanvas} style={{ marginTop: 8, background: 'transparent', border: `1px solid ${BORDER_LT}`, borderRadius: 6, padding: '6px 16px', color: TEXT_DIM, fontSize: 12, cursor: 'pointer' }}>
+              <button type="button" onClick={clearCanvas} style={{ marginTop: 8, minHeight: 44, background: 'transparent', border: `1px solid ${BORDER_LT}`, borderRadius: 6, padding: '6px 16px', color: TEXT_DIM, fontSize: 12, cursor: 'pointer' }}>
                 Clear
               </button>
             </div>
@@ -429,7 +429,7 @@ export default function PublicSigningPage() {
                 style={{
                   width: '100%', boxSizing: 'border-box', padding: '12px 16px',
                   border: `1px solid ${BORDER_LT}`, borderRadius: 8,
-                  fontSize: 13, color: TEXT_DARK, outline: 'none',
+                  fontSize: 16, color: TEXT_DARK, outline: 'none',
                 }}
               />
               {typedName.trim() && (
