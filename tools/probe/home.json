@@ -18,7 +18,6 @@
       "/www.saguarocontrol.net/push-sw.js due to access control checks.",
       "console: native downloads ChunkLoadError: Loading chunk 76894 failed.\n(error: https://www.saguarocontrol.net/_next/static/chunks/76894.d64040e2be2e049c.js?dpl=dpl_8zwwSK",
       "/www.saguarocontrol.net/api/auth/me due to access control checks.",
-      "/www.saguarocontrol.net/api/projects?limit=15&fields=id,name due to access control checks.",
       "/www.saguarocontrol.net/api/home due to access control checks.",
       "console: Viewport argument key \"interactive-widget\" not recognized and ignored."
     ],
@@ -63,7 +62,17 @@
         "yellow",
         "yellow"
       ]
-    }
+    },
+    "afterSecondTap": {
+      "pressed": null,
+      "shown": [
+        "yellow",
+        "yellow",
+        "green"
+      ]
+    },
+    "showAllButton": 1,
+    "error": "locator.click: Timeout 30000ms exceeded."
   },
   "desktop": {
     "errors": [],
@@ -108,7 +117,17 @@
         "yellow",
         "yellow"
       ]
-    }
+    },
+    "afterSecondTap": {
+      "pressed": null,
+      "shown": [
+        "yellow",
+        "yellow",
+        "green"
+      ]
+    },
+    "showAllButton": 1,
+    "error": "locator.click: Timeout 30000ms exceeded."
   },
   "wide": {
     "errors": [],
@@ -153,6 +172,16 @@
         "yellow",
         "yellow"
       ]
-    }
+    },
+    "afterSecondTap": {
+      "pressed": null,
+      "shown": [
+        "yellow",
+        "yellow",
+        "green"
+      ]
+    },
+    "showAllButton": 1,
+    "error": "locator.click: Timeout 30000ms exceeded."
   }
 }
