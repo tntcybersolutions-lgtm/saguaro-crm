@@ -1671,6 +1671,13 @@ a.pmFig:hover,button.pmFig:hover,div.pmFig[role=button]:hover{background:rgba(14
 .pmFigL{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pmFigL>span:first-child{overflow:hidden;text-overflow:ellipsis}
 .pmFigS{font-size:12px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Phones: two figures per row and labels may take two lines, so a label never
+   ends in "…" (after-audit 12 Oct: "OSHA Reco…", "Days Incide…"). */
+@media (max-width:639px){
+  .pmStripGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pmFigL{white-space:normal;align-items:flex-start}
+  .pmFigL>span:first-child,.pmFigS{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+}
 .pmFigGo{margin-left:auto;flex:none;color:var(--sg-text-3);font-size:12px}
 .pmFig[aria-pressed=true] .pmFigGo{color:var(--brand-primary)}
 /* A StatCard on its own (callers lay several out in their own grid). Narrow
@@ -1684,7 +1691,7 @@ a.pmFig:hover,button.pmFig:hover,div.pmFig[role=button]:hover{background:rgba(14
   .pmFigIn{flex-direction:row;align-items:center;gap:12px;padding:12px 16px}
   .pmFigIn>.pmFigV{order:2;flex:none;max-width:55%}
   .pmFigText{display:flex;flex-direction:column;gap:2px;order:1;flex:1;min-width:0}
-  .pmFigIn .pmFigL{font-size:13.5px;color:var(--sg-text)}
+  .pmFigIn .pmFigL{font-size:14px;color:var(--sg-text)}
   .pmFigIn .pmFigS{font-size:12px}
 }
 /* Empty state: one plain line and one action. */

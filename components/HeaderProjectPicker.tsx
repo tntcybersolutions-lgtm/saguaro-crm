@@ -516,8 +516,8 @@ const CSS = `
 .jp-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px; border-top: 1px solid var(--border-subtle); }
 .jp-footlink { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 10px; border-radius: 9px; font-size: 13px; font-weight: 700; color: var(--c-text-2); text-decoration: none; }
 .jp-footlink:hover { background: rgba(255,255,255,0.05); color: var(--c-text); }
-.jp-new { color: var(--c-yellow); }
-.jp-new:hover { color: var(--c-yellow); background: rgba(255,224,0,0.08); }
+.jp-new { color: var(--link); }
+.jp-new:hover { color: var(--link-hover); background: var(--bg-hover); }
 /* Phone: a bottom sheet over a dimmed page. */
 .jp-sheet-root { position: fixed; inset: 0; z-index: 4000; }
 .jp-scrim { position: absolute; inset: 0; background: rgba(0,0,0,0.6); }
