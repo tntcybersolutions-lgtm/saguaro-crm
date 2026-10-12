@@ -32,6 +32,7 @@ import {
   FlagCheckered, Palette, Robot, Brain, Globe, Laptop, ArrowsSplit, Plug, Shield, WifiHigh, Gear,
   Lightning, ChartBar, Broadcast, MapPin, Info, UserCircle, Archive, Check, WarningCircle,
 } from '@phosphor-icons/react';
+import { moduleAccent } from '@/lib/ui/app-accent';
 import {
   FlatStyles, Brief, SectionLabel, FlatList, Row, RowAction, RowIcon, ToolRow, RowSkeleton, FlatEmpty, NumberStrip, type DotColor,
 } from '@/components/ui/flat';
@@ -113,7 +114,7 @@ function ToolLine({ m, projectId }: { m: ToolRowModel; projectId: string }) {
   const slug = m.tool.href.replace(/^.*\//, '');
   return (
     <li data-tour={`project-nav-${slug}`} data-tool={m.tool.id}>
-      <ToolRow icon={<Icon size={20} weight="regular" />} label={m.tool.label} value={value} warn={v.warn} href={toolHref(m.tool, projectId)} />
+      <ToolRow icon={<Icon size={20} weight="regular" />} label={m.tool.label} value={value} warn={v.warn} href={toolHref(m.tool, projectId)} accent={moduleAccent(m.tool.id).hex} />
     </li>
   );
 }

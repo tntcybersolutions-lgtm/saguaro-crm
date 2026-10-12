@@ -59,7 +59,7 @@ import {
 import { colors, font, radius, shadow, sidebar as sidebarTokens, z } from '../lib/design-tokens';
 import { useWhiteLabel } from './WhiteLabelProvider';
 import { useEntitlements } from '../lib/hooks/useEntitlements';
-import { moduleAccent } from '@/lib/ui/app-accent';
+import { moduleAccent, moduleKeyFromPath } from '@/lib/ui/app-accent';
 import { Pill } from './ui/premium';
 import { PROJECT_NAV_SECTIONS } from '@/lib/project-nav';
 import { useProjectContext, refreshProjectContext } from '@/lib/hooks/useProjectContext';
@@ -938,8 +938,6 @@ export default function AppSidebar({
             {isOpen && visibleItems.map((item: any) => {
               const active = isActive(item.href);
               const Icon = item.icon;
-              const accent = item.accentKey ? moduleAccent(item.accentKey) : null;
-              const vivid = accent ? (accent.vivid ?? accent.hex) : null;
               return (
                 <Link
                   key={item.href}
@@ -973,33 +971,10 @@ export default function AppSidebar({
                   <Icon
                     size={collapsed ? 20 : 18}
                     weight={active ? 'fill' : 'regular'}
-                    /* EACH MODULE IN ITS OWN COLOUR, at full strength.
-                     *
-                     * This was neutral for a while, and the note that made it
-                     * neutral blamed the hues: "#B8A98A parchment, #A9A2C4
-                     * lavender-gray, #FBBF24 steel, #8FB3A9 patina ... twelve
-                     * muted pastels do not read as restraint, they read as
-                     * muddy". That diagnosis was right about those values and
-                     * wrong about which values were in play — every one it
-                     * names is a module's `hex`, the SOFT tone meant for
-                     * fills and rings. `vivid` is the other half of the pair
-                     * and it is a different animal:
-                     *
-                     *   hex    19-51% saturation   the muddy pastels
-                     *   vivid  71-96% saturation   e.g. amber, blue, green
-                     *
-                     * Measured all 97 modules against this rail: every vivid
-                     * clears 3:1, most sit between 5:1 and 9:1. So the color
-                     * is confident AND legible, which is what the pastels
-                     * never were.
-                     *
-                     * Only the ICON wears it. Labels share one bright yellow
-                     * gloss, so the rail still reads as a list rather than a
-                     * rainbow of text, and the current page is the solid
-                     * yellow pill — the loudest thing on screen. Full
-                     * opacity — dimming a saturated color is what produced
-                     * the mud in the first place. */
-                    color={active ? 'var(--on-brand)' : 'var(--text-tertiary)'}
+                    /* Each module's glyph wears its domain hue (lib/ui/app-accent —
+                       one map for the sidebar, the page tiles and the job tools);
+                       the label stays slate and the current page is the yellow pill. */
+                    color={active ? 'var(--on-brand)' : moduleAccent(item.accentKey ?? moduleKeyFromPath(item.href)).hex}
                     style={{ flexShrink: 0, opacity: 1 }}
                   />
                   {!collapsed && (
@@ -1102,10 +1077,8 @@ export default function AppSidebar({
                 whiteSpace: 'nowrap',
               }}
             >
-              {/* Same rule as the main rail: the resting icon inherits the link
-                  color and stays at full opacity. Dimming a neutral only muddies
-                  it — the weight change from regular to fill already marks active. */}
-              <Icon size={collapsed ? 20 : 18} weight={active ? 'fill' : 'regular'} color={active ? 'var(--on-brand)' : 'var(--text-tertiary)'} style={{ flexShrink: 0, opacity: 1 }} />
+              {/* Same rule as the main rail: the glyph wears its module's domain hue. */}
+              <Icon size={collapsed ? 20 : 18} weight={active ? 'fill' : 'regular'} color={active ? 'var(--on-brand)' : moduleAccent(moduleKeyFromPath(item.href)).hex} style={{ flexShrink: 0, opacity: 1 }} />
               {!collapsed && <span className="sg-nav-label" data-active={active || undefined}>{item.label}</span>}
             </Link>
           );

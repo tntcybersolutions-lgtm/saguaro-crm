@@ -7,6 +7,7 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { accentForPath } from '@/lib/ui/app-accent';
 import NotificationBell from '../../components/NotificationBell';
 import CommandPalette from '../../components/CommandPalette';
 import HelpMode from '../../components/HelpMode';
@@ -541,6 +542,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <main
         className="main-content-area"
         style={{
+          /* The page's module accent: every shared icon tile inside reads var(--acc). */
+          ['--acc' as string]: accentForPath(pathname),
           marginLeft: sidebarWidth,
           paddingTop: `calc(${sidebarTokens.headerHeight}px + env(safe-area-inset-top, 0px) + var(--sag-header-msg-h, 0px) + var(--sag-nextstep-h, 0px))`,
           minHeight: '100vh',
