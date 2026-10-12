@@ -79,7 +79,7 @@ export default function OacPage() {
       <div style={{ fontFamily: font, color: C.text }}>
       <ModuleHero
         eyebrow="Command Center"
-        eyebrowIcon={<Users size={13} weight="fill" color={C.gold} />}
+        eyebrowIcon={<Users size={13} weight="fill" color="var(--text-secondary)" />}
         title="OAC"
         accent="Workflow"
         subtitle="OAC meetings and their action items, every site."
@@ -100,7 +100,7 @@ export default function OacPage() {
       {gcCadence.total > 0 && (
         <SectionCard flat
           title="GC / Saguaro Weekly Call"
-          icon={<CalendarBlank size={16} weight="duotone" color={C.gold} />}
+          icon={<CalendarBlank size={16} weight="duotone" color="var(--text-secondary)" />}
           action={<span style={{ fontSize: 13, fontWeight: 700, color: gcCadence.onTrack === gcCadence.total ? C.green : C.gold, whiteSpace: 'nowrap' }}>{gcCadence.onTrack}/{gcCadence.total} on cadence this week</span>}
           style={{ marginBottom: 18 }}
         >
@@ -131,7 +131,7 @@ export default function OacPage() {
       ) : tab === 'meetings' ? (
         filteredMeetings.length === 0 ? (
           <SectionCard>
-            <PremiumEmpty icon={<CalendarBlank size={32} weight="duotone" color={C.gold} />} title="No meetings logged yet"
+            <PremiumEmpty icon={<CalendarBlank size={32} weight="duotone" color="var(--text-secondary)" />} title="No meetings logged yet"
               description="Log OAC meetings across all your sites — capture attendees, decisions, and the action items that come out of them, each with an owner and a due date."
               action={<GoldButton icon={<Plus size={15} weight="bold" />} onClick={() => setLogging(true)}>Log Your First Meeting</GoldButton>} />
           </SectionCard>
@@ -162,7 +162,7 @@ export default function OacPage() {
       ) : (
         sortedActions.length === 0 ? (
           <SectionCard flat>
-            <PremiumEmpty icon={<CheckCircle size={32} weight="duotone" color={C.gold} />} title="No action items"
+            <PremiumEmpty icon={<CheckCircle size={32} weight="duotone" color="var(--text-secondary)" />} title="No action items"
               description="Action items captured in OAC meetings show up here — assigned, dated, and checkable from anywhere." />
           </SectionCard>
         ) : (
@@ -204,7 +204,7 @@ function LogMeetingModal({ projects, onClose }: { projects: any[]; onClose: () =
   const [err, setErr] = useState('');
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
   const inp: React.CSSProperties = { padding: '8px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', background: 'var(--bg-surface-2)', width: '100%' };
-  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
+  const lbl: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
 
   async function submit() {
     if (!f.project_id || !f.title || !f.meeting_date) { setErr('Site, title, and date are required.'); return; }

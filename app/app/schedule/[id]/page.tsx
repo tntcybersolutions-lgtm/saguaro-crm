@@ -121,16 +121,16 @@ export default function ScheduleTaskDetailPage() {
 
   // ── Shared bits ──────────────────────────────────────────────────────────
   const backBtn = (
-    <button onClick={() => router.push('/app/schedule')} style={{ ...ghostButtonStyle, padding: '8px 14px', fontSize: 12.5 }}>
+    <button onClick={() => router.push('/app/schedule')} style={{ ...ghostButtonStyle, padding: '8px 14px', fontSize: 13 }}>
       <ArrowLeft size={14} /> Back to Schedule
     </button>
   );
   const fieldLabelStyle: React.CSSProperties = {
-    fontSize: 10.5, fontWeight: 800,
+    fontSize: 12, fontWeight: 800,
     color: FAINT, marginBottom: 5,
   };
   const fieldValueStyle: React.CSSProperties = {
-    fontSize: 13.5, color: TEXT, wordBreak: 'break-word',
+    fontSize: 14, color: TEXT, wordBreak: 'break-word',
   };
 
   // ── Loading / Not found / Error ──────────────────────────────────────────
@@ -201,7 +201,7 @@ export default function ScheduleTaskDetailPage() {
         aux={
           <span style={{
             display: 'inline-flex', alignItems: 'center', padding: '5px 12px', borderRadius: 999,
-            fontSize: 10.5, fontWeight: 800,
+            fontSize: 12, fontWeight: 800,
             background: `color-mix(in srgb, ${cfg.color} 12%, transparent)`, border: `1px solid color-mix(in srgb, ${cfg.color} 35%, transparent)`, color: cfg.color,
           }}>
             {cfg.label}

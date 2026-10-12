@@ -41,7 +41,7 @@ export default function PortalsPage() {
   const sites = new Set(list.map((p) => p.project_id)).size;
 
   const inp: React.CSSProperties = { padding: '9px 11px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, outline: 'none', background: 'var(--bg-surface-2)', color: C.text, width: '100%' };
-  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
+  const lbl: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
 
   return (
     <PremiumSurface maxWidth={1000} pad="28px 24px 60px">
@@ -64,7 +64,7 @@ export default function PortalsPage() {
         )}
 
         <SectionCard
-          icon={<LinkSimple size={16} weight="duotone" color={C.gold} />}
+          icon={<LinkSimple size={16} weight="duotone" color="var(--text-secondary)" />}
           title="Generate a Portal Link"
           subtitle="Pick a site and name the owner — the link is read-only and always current."
           style={{ marginBottom: 18 }}
@@ -89,7 +89,7 @@ export default function PortalsPage() {
         ) : list.length === 0 ? (
           <SectionCard flat>
             <PremiumEmpty
-              icon={<LinkSimple size={32} weight="duotone" color={C.gold} />}
+              icon={<LinkSimple size={32} weight="duotone" color="var(--text-secondary)" />}
               title="No owner portals yet"
               description="Generate a private link for each franchisee — they'll see live progress, milestones, and budget status for their location without touching your operations."
             />
@@ -110,7 +110,7 @@ export default function PortalsPage() {
                       <div style={{ fontSize: 12, color: C.dim, marginTop: 2 }}>
                         {p.owner_name ? `${p.owner_name}${p.owner_email ? ` · ${p.owner_email}` : ''}` : 'No owner named'}
                       </div>
-                      <code style={{ fontSize: 11, color: C.faint, wordBreak: 'break-all' }}>{origin}{p.url}</code>
+                      <code style={{ fontSize: 12, color: C.faint, wordBreak: 'break-all' }}>{origin}{p.url}</code>
                     </div>
                     <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
                       <Link href={p.url} target="_blank" className="pmBtn" style={{ ...ghostButtonStyle, padding: '9px 16px', fontSize: 13, borderRadius: 10 }}>Preview</Link>

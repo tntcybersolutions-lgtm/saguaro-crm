@@ -30,7 +30,7 @@ const modalInputStyle: React.CSSProperties = {
   width: '100%', marginTop: 3,
   background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
   border: `1px solid ${BORDER}`, borderRadius: 8, color: WHITE,
-  padding: '9px 11px', fontSize: 13.5, fontFamily: 'monospace', outline: 'none', boxSizing: 'border-box',
+  padding: '9px 11px', fontSize: 14, fontFamily: 'monospace', outline: 'none', boxSizing: 'border-box',
 };
 
 /** Pulsing skeleton row (pmSkeleton keyframes ship with PremiumSurface). */
@@ -74,9 +74,9 @@ export default function PlatformIntegrationsPage() {
     return (
       <PremiumSurface maxWidth={2200}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '72px 24px' }}>
-          <IconChip size={64}><ShieldCheck size={30} weight="duotone" color={GOLD} /></IconChip>
+          <IconChip size={64}><ShieldCheck size={30} weight="duotone" color="var(--text-secondary)" /></IconChip>
           <div style={{ fontSize: 18, fontWeight: 800, color: WHITE, margin: '18px 0 8px' }}>Platform Owners Only</div>
-          <div style={{ fontSize: 13.5, color: MUTED, maxWidth: 380, lineHeight: 1.55 }}>
+          <div style={{ fontSize: 14, color: MUTED, maxWidth: 380, lineHeight: 1.55 }}>
             This page configures OAuth apps for every tenant on the platform and is limited to platform administrator accounts.
           </div>
         </div>
@@ -91,7 +91,7 @@ export default function PlatformIntegrationsPage() {
     <PremiumSurface maxWidth={2200}>
       <ModuleHero
         eyebrow="Platform"
-        eyebrowIcon={<ShieldCheck size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<ShieldCheck size={13} weight="fill" color="var(--text-secondary)" />}
         title="Platform"
         accent="Integrations"
         subtitle="Configure each provider once. Tenants then connect in one click."
@@ -113,7 +113,7 @@ export default function PlatformIntegrationsPage() {
       <SectionCard
         title="Provider OAuth Apps"
         subtitle="One provider per row. Set up once, live platform-wide."
-        icon={<ShieldCheck size={17} weight="duotone" color={GOLD} />}
+        icon={<ShieldCheck size={17} weight="duotone" color="var(--text-secondary)" />}
       >
         {apps === null ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -132,7 +132,7 @@ export default function PlatformIntegrationsPage() {
                     </div>
                     <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{a.configured ? `Configured (${a.source})${a.client_id ? ` · ${a.client_id.slice(0, 10)}…` : ''}` : 'Not configured — tenants can’t connect this yet'}</div>
                   </div>
-                  <button onClick={() => { setEditing(a); setForm({ clientId: '', clientSecret: '' }); }} className="pmBtn" style={{ ...goldButtonStyle, padding: '8px 16px', fontSize: 12.5 }}>{a.configured ? 'Update' : 'Set Up'}</button>
+                  <button onClick={() => { setEditing(a); setForm({ clientId: '', clientSecret: '' }); }} className="pmBtn" style={{ ...goldButtonStyle, padding: '8px 16px', fontSize: 13 }}>{a.configured ? 'Update' : 'Set Up'}</button>
                   {a.source === 'in-product' && (
                     <button onClick={() => remove(a)} className="pmBtn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', borderRadius: 10, cursor: 'pointer', background: 'rgba(248,113,113,0.12)', color: RED, border: '1px solid rgba(248,113,113,0.35)' }}><Trash size={13} /></button>
                   )}
@@ -150,25 +150,25 @@ export default function PlatformIntegrationsPage() {
 
             {/* setup guide */}
             <div style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015))', border: `1px solid ${BORDER}`, borderRadius: 10, padding: 12, margin: '10px 0 14px' }}>
-              <div style={{ fontSize: 12.5, color: WHITE, fontWeight: 700, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>1 · Register the App <a href={editing.portal} target="_blank" rel="noreferrer" style={{ color: GOLD, display: 'inline-flex', alignItems: 'center', gap: 3, fontWeight: 600 }}>{editing.portalName}<ArrowSquareOut size={12} /></a></div>
-              <div style={{ fontSize: 11.5, color: MUTED, marginBottom: 8 }}>Add these redirect URIs to the app (copy each):</div>
+              <div style={{ fontSize: 13, color: WHITE, fontWeight: 700, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>1 · Register the App <a href={editing.portal} target="_blank" rel="noreferrer" style={{ color: 'var(--link)', display: 'inline-flex', alignItems: 'center', gap: 3, fontWeight: 600 }}>{editing.portalName}<ArrowSquareOut size={12} /></a></div>
+              <div style={{ fontSize: 12, color: MUTED, marginBottom: 8 }}>Add these redirect URIs to the app (copy each):</div>
               {editing.redirects.map((r: string) => (
                 <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-                  <code style={{ flex: 1, fontSize: 11.5, color: 'var(--success)', wordBreak: 'break-all', fontFamily: 'monospace' }}>{r}</code>
-                  <button onClick={() => copy(r, r)} style={{ background: 'none', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '3px 7px', cursor: 'pointer', color: MUTED, display: 'inline-flex', gap: 3, alignItems: 'center', fontSize: 11 }}>{copied === r ? <Check size={12} color={GREEN} /> : <Copy size={12} />}</button>
+                  <code style={{ flex: 1, fontSize: 12, color: 'var(--success)', wordBreak: 'break-all', fontFamily: 'monospace' }}>{r}</code>
+                  <button onClick={() => copy(r, r)} style={{ background: 'none', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '3px 7px', cursor: 'pointer', color: MUTED, display: 'inline-flex', gap: 3, alignItems: 'center', fontSize: 12 }}>{copied === r ? <Check size={12} color={GREEN} /> : <Copy size={12} />}</button>
                 </div>
               ))}
-              <div style={{ fontSize: 11.5, color: MUTED, marginTop: 6 }}>Enables: {editing.providers.join(', ')}.</div>
+              <div style={{ fontSize: 12, color: MUTED, marginTop: 6 }}>Enables: {editing.providers.join(', ')}.</div>
             </div>
 
-            <div style={{ fontSize: 12.5, color: WHITE, fontWeight: 700, marginBottom: 8 }}>2 · Paste the App Credentials</div>
-            <label style={{ display: 'block', marginBottom: 10 }}><span style={{ fontSize: 12.5, color: MUTED }}>Client ID / App Key</span>
+            <div style={{ fontSize: 13, color: WHITE, fontWeight: 700, marginBottom: 8 }}>2 · Paste the App Credentials</div>
+            <label style={{ display: 'block', marginBottom: 10 }}><span style={{ fontSize: 13, color: MUTED }}>Client ID / App Key</span>
               <input value={form.clientId} onChange={(e) => setForm({ ...form, clientId: e.target.value })} autoComplete="off" style={modalInputStyle} /></label>
-            <label style={{ display: 'block', marginBottom: 10 }}><span style={{ fontSize: 12.5, color: MUTED }}>Client Secret / App Secret</span>
+            <label style={{ display: 'block', marginBottom: 10 }}><span style={{ fontSize: 13, color: MUTED }}>Client Secret / App Secret</span>
               <input type="password" value={form.clientSecret} onChange={(e) => setForm({ ...form, clientSecret: e.target.value })} autoComplete="off" style={modalInputStyle} /></label>
             <button onClick={save} disabled={busy} className="pmBtn" style={{ ...goldButtonStyle, width: '100%', marginTop: 4, cursor: busy ? 'not-allowed' : 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Saving…' : 'Save — Go Live for All Tenants'}</button>
-            <div style={{ fontSize: 11.5, color: MUTED, marginTop: 10, lineHeight: 1.5 }}>The secret is AES-encrypted server-side and never shown again. The client ID isn&apos;t a secret.</div>
-            <button onClick={() => setEditing(null)} style={{ ...ghostButtonStyle, width: '100%', marginTop: 8, padding: '9px 16px', fontSize: 12.5, boxSizing: 'border-box' }} className="pmBtn">Cancel</button>
+            <div style={{ fontSize: 12, color: MUTED, marginTop: 10, lineHeight: 1.5 }}>The secret is AES-encrypted server-side and never shown again. The client ID isn&apos;t a secret.</div>
+            <button onClick={() => setEditing(null)} style={{ ...ghostButtonStyle, width: '100%', marginTop: 8, padding: '9px 16px', fontSize: 13, boxSizing: 'border-box' }} className="pmBtn">Cancel</button>
           </div>
         </div>
       )}

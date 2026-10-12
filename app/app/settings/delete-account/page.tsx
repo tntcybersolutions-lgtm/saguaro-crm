@@ -151,7 +151,7 @@ export default function DeleteAccountPage() {
                 <DangerButton size="md" disabled={!matches || busy} onClick={onDelete}>
                   {busy ? 'Deleting…' : 'Delete My Account'}
                 </DangerButton>
-                <Link href="/app/settings" style={{ color: GOLD, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
+                <Link href="/app/settings" style={{ color: 'var(--link)', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
                   Keep My Account
                 </Link>
               </div>

@@ -133,7 +133,7 @@ export default function ImportPage() {
 
         <Card title="2. Choose the export file" subtitle="CSV or Excel (.xlsx). Up to 1,000 rows at a time.">
           <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, minHeight: 64, borderRadius: 12, border: '2px dashed var(--brand-primary)', color: 'var(--text-primary)', fontWeight: 800, cursor: 'pointer', padding: 12, textAlign: 'center' }}>
-            <UploadSimple size={22} weight="bold" color="var(--brand-primary)" />
+            <UploadSimple size={22} weight="bold" color="var(--text-secondary)" />
             {fileName ? `${fileName} — ${dataRows.length} rows. Tap to pick another.` : 'Tap to choose a file'}
             <input type="file" accept=".csv,.xlsx,.xls,text/csv" style={{ display: 'none' }} onChange={(e) => { void choose(e.target.files?.[0]); e.target.value = ''; }} />
           </label>

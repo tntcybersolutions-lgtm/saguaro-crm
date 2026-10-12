@@ -812,7 +812,7 @@ function BidsPageInner() {
           label="Project"
           required
           error={newPkgErr || null}
-          hint={scoreProjects.length === 0 ? <>No projects yet — <a href="/app/projects/new" style={{ color: 'var(--brand-primary)' }}>create one</a> first.</> : undefined}
+          hint={scoreProjects.length === 0 ? <>No projects yet — <a href="/app/projects/new" style={{ color: 'var(--link)' }}>create one</a> first.</> : undefined}
         >
           <Select
             id="new-pkg-project"

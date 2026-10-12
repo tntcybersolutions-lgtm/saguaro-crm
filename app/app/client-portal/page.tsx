@@ -70,8 +70,8 @@ const btnGold: React.CSSProperties = { padding: '9px 20px', background: 'linear-
 const btnOutline: React.CSSProperties = { padding: '8px 16px', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, cursor: 'pointer' };
 const btnDanger: React.CSSProperties = { padding: '8px 16px', background: 'transparent', border: `1px solid ${RED}`, borderRadius: 8, color: RED, fontSize: 13, cursor: 'pointer' };
 const inputS: React.CSSProperties = { padding: '9px 14px', background: 'var(--bg-surface-2)', border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const };
-const badge = (c: string, bg: string): React.CSSProperties => ({ padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, color: c, background: bg, display: 'inline-block' });
-const thS: React.CSSProperties = { padding: '10px 14px', fontSize: 10.5, fontWeight: 700, color: 'var(--text-tertiary)', textAlign: 'left' as const, borderBottom: `1px solid ${BORDER}` };
+const badge = (c: string, bg: string): React.CSSProperties => ({ padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, color: c, background: bg, display: 'inline-block' });
+const thS: React.CSSProperties = { padding: '10px 14px', fontSize: 12, fontWeight: 700, color: 'var(--text-tertiary)', textAlign: 'left' as const, borderBottom: `1px solid ${BORDER}` };
 const tdS: React.CSSProperties = { padding: '12px 14px', fontSize: 13, color: TEXT, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` };
 
 /* ── modal ────────────────────────────────────────────── */
@@ -106,7 +106,7 @@ function Toggle({ on, onToggle, label }: { on: boolean; onToggle: () => void; la
 function Stat({ label, value, color = GOLD }: { label: string; value: string | number; color?: string }) {
   return (
     <div style={{ ...card, flex: 1, minWidth: 150 }}>
-      <div style={{ fontSize: 10.5, color: 'var(--text-tertiary)', marginBottom: 6, fontWeight: 700 }}>{label}</div>
+      <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 6, fontWeight: 700 }}>{label}</div>
       <div style={{ fontSize: 26, fontWeight: 800, color, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
     </div>
   );
@@ -472,7 +472,7 @@ export default function ClientPortalPage() {
       <SectionCard
         title="Portal Users"
         subtitle={`${filteredUsers.length} of ${users.length} shown`}
-        icon={<UsersThree size={17} weight="duotone" color={GOLD} />}
+        icon={<UsersThree size={17} weight="duotone" color="var(--text-secondary)" />}
         flush
         bodyStyle={{ overflow: 'auto' }}
       >
@@ -496,7 +496,7 @@ export default function ClientPortalPage() {
                   <div style={{ textAlign: 'center', color: DIM, padding: 32 }}>No users match your filters.</div>
                 ) : (
                   <PremiumEmpty
-                    icon={<UsersThree size={30} weight="duotone" color={GOLD} />}
+                    icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />}
                     title="No portal clients yet"
                     description={`Invite an owner or stakeholder and they get a secure link to a live view of their project${projects.length ? ` — ${projects.length} project${projects.length === 1 ? ' is' : 's are'} ready to share` : ''}. They see only the sections you toggle on (budget, schedule, photos, RFIs, documents, and more), and every login and page view lands in the Activity Log.`}
                     action={<button onClick={() => { resetInviteForm(); setInviteOpen(true); }} style={btnGold}>+ Invite Your First Client</button>}
@@ -511,7 +511,7 @@ export default function ClientPortalPage() {
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                 <td style={tdS}>
                   <div style={{ fontWeight: 600 }}>{u.name}</div>
-                  <div style={{ fontSize: 11, color: DIM }}>{u.company}</div>
+                  <div style={{ fontSize: 12, color: DIM }}>{u.company}</div>
                 </td>
                 <td style={{ ...tdS, color: DIM, fontSize: 12 }}>{u.email}</td>
                 <td style={tdS}>
@@ -532,12 +532,12 @@ export default function ClientPortalPage() {
                 <td style={tdS}>
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                     <button onClick={() => copyLink(u.accessLink)}
-                      style={{ ...btnOutline, padding: '4px 10px', fontSize: 11 }}>
+                      style={{ ...btnOutline, padding: '4px 10px', fontSize: 12 }}>
                       {copiedLink === u.accessLink ? 'Copied!' : 'Copy'}
                     </button>
                     {u.status === 'pending' && (
                       <button onClick={() => resendInvite(u)}
-                        style={{ background: 'none', border: 'none', color: BLUE, fontSize: 11, cursor: 'pointer', textDecoration: 'underline' }}>
+                        style={{ background: 'none', border: 'none', color: 'var(--text-primary)', fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}>
                         Resend
                       </button>
                     )}
@@ -546,13 +546,13 @@ export default function ClientPortalPage() {
                 <td style={tdS}>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button onClick={() => setEditUser(u)}
-                      style={{ ...btnOutline, padding: '5px 10px', fontSize: 11 }}>Edit</button>
+                      style={{ ...btnOutline, padding: '5px 10px', fontSize: 12 }}>Edit</button>
                     {u.status !== 'disabled' ? (
                       <button onClick={() => setConfirmDisable(u)}
-                        style={{ ...btnDanger, padding: '5px 10px', fontSize: 11 }}>Disable</button>
+                        style={{ ...btnDanger, padding: '5px 10px', fontSize: 12 }}>Disable</button>
                     ) : (
                       <button onClick={() => toggleUserStatus(u, 'active')}
-                        style={{ ...btnOutline, padding: '5px 10px', fontSize: 11, borderColor: GREEN, color: GREEN }}>
+                        style={{ ...btnOutline, padding: '5px 10px', fontSize: 12, borderColor: GREEN, color: GREEN }}>
                         Enable
                       </button>
                     )}
@@ -730,14 +730,14 @@ export default function ClientPortalPage() {
         {/* thread sidebar — SectionCard shell */}
         <SectionCard
           title="Conversations"
-          icon={<ChatCircleDots size={17} weight="duotone" color={GOLD} />}
+          icon={<ChatCircleDots size={17} weight="duotone" color="var(--text-secondary)" />}
           flush
           style={{ width: 300, flexShrink: 0, display: 'flex', flexDirection: 'column' }}
           bodyStyle={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
         >
           <div style={{ flex: 1, overflowY: 'auto' }}>
             {threads.length === 0 && (
-              <div style={{ padding: '22px 18px', color: DIM, fontSize: 12.5, lineHeight: 1.6 }}>
+              <div style={{ padding: '22px 18px', color: DIM, fontSize: 13, lineHeight: 1.6 }}>
                 <div style={{ fontWeight: 700, color: TEXT, marginBottom: 6 }}>No conversations yet</div>
                 Every portal client gets a private thread with you — no email chains. When
                 {users.length > 0 ? ` any of your ${users.length} portal user${users.length === 1 ? '' : 's'} writes` : ' a client writes'} from
@@ -757,7 +757,7 @@ export default function ClientPortalPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                   <span style={{ fontWeight: 600, fontSize: 13, color: TEXT }}>{t.user.name}</span>
                   {t.unread > 0 && (
-                    <span style={{ width: 20, height: 20, borderRadius: 10, background: GOLD, color: 'var(--on-brand)', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ width: 20, height: 20, borderRadius: 10, background: GOLD, color: 'var(--on-brand)', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {t.unread}
                     </span>
                   )}
@@ -765,7 +765,7 @@ export default function ClientPortalPage() {
                 <div style={{ fontSize: 12, color: DIM, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {t.lastMsg.text}
                 </div>
-                <div style={{ fontSize: 10, color: DIM, marginTop: 4 }}>{relTime(t.lastMsg.ts)}</div>
+                <div style={{ fontSize: 12, color: DIM, marginTop: 4 }}>{relTime(t.lastMsg.ts)}</div>
               </div>
             ))}
           </div>
@@ -781,7 +781,7 @@ export default function ClientPortalPage() {
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
               <PremiumEmpty
                 compact
-                icon={<ChatCircleDots size={26} weight="duotone" color={GOLD} />}
+                icon={<ChatCircleDots size={26} weight="duotone" color="var(--text-secondary)" />}
                 title={threads.length > 0 ? 'Select a conversation' : 'Two-way client messaging'}
                 description={threads.length > 0
                   ? 'Pick a thread on the left to read and reply. Replies appear instantly in the client portal.'
@@ -792,14 +792,14 @@ export default function ClientPortalPage() {
             <>
               {/* thread header */}
               <div style={{ padding: '14px 20px', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 18, background: 'color-mix(in srgb, var(--brand-primary) 13%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: GOLD }}>
+                <div style={{ width: 36, height: 36, borderRadius: 18, background: 'var(--bg-surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>
                   {(users.find(u => u.id === selectedThread)?.name || '?')[0]}
                 </div>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14, color: TEXT }}>
                     {users.find(u => u.id === selectedThread)?.name}
                   </div>
-                  <div style={{ fontSize: 11, color: DIM }}>
+                  <div style={{ fontSize: 12, color: DIM }}>
                     {users.find(u => u.id === selectedThread)?.company}
                   </div>
                 </div>
@@ -819,7 +819,7 @@ export default function ClientPortalPage() {
                       background: m.fromRole === 'client' ? BG : 'color-mix(in srgb, var(--brand-primary) 9%, transparent)',
                       border: `1px solid ${m.fromRole === 'client' ? BORDER : 'color-mix(in srgb, var(--brand-primary) 20%, transparent)'}`,
                     }}>
-                      <div style={{ fontSize: 11, color: DIM, marginBottom: 4, fontWeight: 600 }}>
+                      <div style={{ fontSize: 12, color: DIM, marginBottom: 4, fontWeight: 600 }}>
                         {m.from} <span style={{ fontWeight: 400 }}>· {relTime(m.ts)}</span>
                       </div>
                       <div style={{ fontSize: 14, color: TEXT, lineHeight: 1.5 }}>{m.text}</div>
@@ -860,7 +860,7 @@ export default function ClientPortalPage() {
       <SectionCard
         title="Section Permissions"
         subtitle="Toggle what each client can see."
-        icon={<ListChecks size={17} weight="duotone" color={GOLD} />}
+        icon={<ListChecks size={17} weight="duotone" color="var(--text-secondary)" />}
         flush
         bodyStyle={{ overflow: 'auto' }}
       >
@@ -876,7 +876,7 @@ export default function ClientPortalPage() {
               <tr><td colSpan={PERM_KEYS.length + 1} style={{ ...tdS, borderBottom: 'none' }}>
                 <PremiumEmpty
                   compact
-                  icon={<UsersThree size={26} weight="duotone" color={GOLD} />}
+                  icon={<UsersThree size={26} weight="duotone" color="var(--text-secondary)" />}
                   title="No active portal users"
                   description={`Invite a client from the Users tab, then tune all ${PERM_KEYS.length} portal sections per person here — or apply a preset below in one click.`}
                 />
@@ -886,7 +886,7 @@ export default function ClientPortalPage() {
               <tr key={u.id}>
                 <td style={{ ...tdS, position: 'sticky', left: 0, background: RAISED, zIndex: 1 }}>
                   <div style={{ fontWeight: 600 }}>{u.name}</div>
-                  <div style={{ fontSize: 11, color: DIM }}>{u.role} · {u.company}</div>
+                  <div style={{ fontSize: 12, color: DIM }}>{u.role} · {u.company}</div>
                 </td>
                 {PERM_KEYS.map(k => (
                   <td key={k} style={{ ...tdS, textAlign: 'center' }}>
@@ -903,7 +903,7 @@ export default function ClientPortalPage() {
       <SectionCard
         title="Quick Permission Presets"
         subtitle="Apply a preset to every active user in one click."
-        icon={<ListChecks size={17} weight="duotone" color={GOLD} />}
+        icon={<ListChecks size={17} weight="duotone" color="var(--text-secondary)" />}
         style={{ marginTop: 20 }}
       >
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -922,8 +922,8 @@ export default function ClientPortalPage() {
                 setUsers(prev => prev.map(u =>
                   u.status !== 'disabled' ? { ...u, permissions: { ...preset.perms } } : u));
               }}>
-              <div style={{ fontWeight: 700, fontSize: 13, color: GOLD, marginBottom: 4 }}>{preset.label}</div>
-              <div style={{ fontSize: 11, color: DIM }}>{preset.desc}</div>
+              <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', marginBottom: 4 }}>{preset.label}</div>
+              <div style={{ fontSize: 12, color: DIM }}>{preset.desc}</div>
             </div>
           ))}
         </div>
@@ -943,7 +943,7 @@ export default function ClientPortalPage() {
       {projects.length === 0 ? (
         <SectionCard flat flush>
           <PremiumEmpty
-            icon={<Buildings size={30} weight="duotone" color={GOLD} />}
+            icon={<Buildings size={30} weight="duotone" color="var(--text-secondary)" />}
             title="No projects to share yet"
             description="Create a project and it appears here as a column — check a box to give a client a live portal view of that job. Clients only ever see the projects you explicitly grant."
           />
@@ -952,7 +952,7 @@ export default function ClientPortalPage() {
         <SectionCard
           title="Project Access Matrix"
           subtitle={`${activeUsers.length} active user${activeUsers.length === 1 ? '' : 's'} across ${projects.length} project${projects.length === 1 ? '' : 's'}`}
-          icon={<Buildings size={17} weight="duotone" color={GOLD} />}
+          icon={<Buildings size={17} weight="duotone" color="var(--text-secondary)" />}
           flush
           bodyStyle={{ overflow: 'auto' }}
         >
@@ -977,7 +977,7 @@ export default function ClientPortalPage() {
                 <tr key={u.id}>
                   <td style={{ ...tdS, position: 'sticky', left: 0, background: RAISED, zIndex: 1 }}>
                     <div style={{ fontWeight: 600 }}>{u.name}</div>
-                    <div style={{ fontSize: 11, color: DIM }}>{u.company}</div>
+                    <div style={{ fontSize: 12, color: DIM }}>{u.company}</div>
                   </td>
                   {projects.map(p => {
                     const hasAccess = u.projectIds.includes(p.id);
@@ -1010,7 +1010,7 @@ export default function ClientPortalPage() {
           const count = activeUsers.filter(u => u.projectIds.includes(p.id)).length;
           return (
             <div key={p.id} style={{ ...card, minWidth: 180, flex: '0 0 auto' }}>
-              <div style={{ fontSize: 11, color: DIM, fontWeight: 600, marginBottom: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ fontSize: 12, color: DIM, fontWeight: 600, marginBottom: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {p.name}
               </div>
               <div style={{ fontSize: 22, fontWeight: 800, color: count > 0 ? GREEN : DIM }}>
@@ -1043,20 +1043,20 @@ export default function ClientPortalPage() {
 
       {/* stats */}
       <div style={{ display: 'flex', gap: 14, marginBottom: 22, flexWrap: 'wrap' }}>
-        <Stat label="Total Activity" value={actLog.length} color={BLUE} />
+        <Stat label="Total Activity" value={actLog.length} color="var(--text-secondary)" />
         <Stat label="Last 7 Days" value={actLog.filter(e => Date.now() - new Date(e.ts).getTime() < 604800000).length} color={GREEN} />
         <Stat label="Unique Users" value={new Set(actLog.map(e => e.userId)).size} color={PURPLE} />
         <Stat label="Today" value={actLog.filter(e => {
           const d = new Date(e.ts); const t = new Date();
           return d.getDate() === t.getDate() && d.getMonth() === t.getMonth() && d.getFullYear() === t.getFullYear();
-        }).length} color={GOLD} />
+        }).length} color="var(--text-secondary)" />
       </div>
 
       {/* log entries — re-housed in the kit's SectionCard */}
       <SectionCard flat
         title="Audit Trail"
         subtitle="Logins, page views, and approvals — timestamped with IP."
-        icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}
+        icon={<ClockCounterClockwise size={17} weight="duotone" color="var(--text-secondary)" />}
         bodyStyle={{ maxHeight: 520, overflowY: 'auto' }}
       >
         {filteredLog.length === 0 && (
@@ -1067,7 +1067,7 @@ export default function ClientPortalPage() {
           ) : (
             <PremiumEmpty
               compact
-              icon={<ClockCounterClockwise size={26} weight="duotone" color={GOLD} />}
+              icon={<ClockCounterClockwise size={26} weight="duotone" color="var(--text-secondary)" />}
               title="No portal activity yet"
               description="Every client action is audited automatically — logins, page views, document opens, and approvals land here with a timestamp and IP, so you always know who saw what and when."
             />
@@ -1080,9 +1080,9 @@ export default function ClientPortalPage() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
               <div style={{
-                width: 32, height: 32, borderRadius: 16, background: 'color-mix(in srgb, var(--brand-primary) 13%, transparent)',
+                width: 32, height: 32, borderRadius: 16, background: 'var(--bg-surface-2)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 12, fontWeight: 700, color: BLUE, flexShrink: 0,
+                fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', flexShrink: 0,
               }}>
                 {(e.userName || '?')[0]}
               </div>
@@ -1096,12 +1096,12 @@ export default function ClientPortalPage() {
                     <span style={badge(BLUE, 'color-mix(in srgb, var(--brand-primary) 9%, transparent)')}>{e.section}</span>
                   )}
                   {e.ip && (
-                    <span style={{ fontSize: 11, color: DIM }}>IP: {e.ip}</span>
+                    <span style={{ fontSize: 12, color: DIM }}>IP: {e.ip}</span>
                   )}
                 </div>
               </div>
             </div>
-            <span style={{ color: DIM, fontSize: 11, whiteSpace: 'nowrap', marginLeft: 12 }}>
+            <span style={{ color: DIM, fontSize: 12, whiteSpace: 'nowrap', marginLeft: 12 }}>
               {fmtDate(e.ts)}
             </span>
           </div>
@@ -1117,7 +1117,7 @@ export default function ClientPortalPage() {
       <SectionCard flat
         title="Most Active Users"
         subtitle="Ranked by total portal actions."
-        icon={<UsersThree size={17} weight="duotone" color={GOLD} />}
+        icon={<UsersThree size={17} weight="duotone" color="var(--text-secondary)" />}
         style={{ marginTop: 22 }}
       >
           {(() => {
@@ -1152,7 +1152,7 @@ export default function ClientPortalPage() {
       {/* header */}
       <ModuleHero
         eyebrow="Client Experience"
-        eyebrowIcon={<UsersThree size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<UsersThree size={13} weight="fill" color="var(--text-secondary)" />}
         title="Client"
         accent="Portal"
         subtitle="A permission-gated window for owners. You control what they see."

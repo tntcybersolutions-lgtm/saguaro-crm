@@ -108,7 +108,7 @@ export default function VerifyHubPage() {
           (verifications as any[]).length === 0 ? (
             <SectionCard>
               <PremiumEmpty
-                icon={<Camera size={32} weight="duotone" color={C.gold} />}
+                icon={<Camera size={32} weight="duotone" color="var(--text-secondary)" />}
                 title="No verifications yet"
                 description="Request a remote sign-off on a milestone — the field uploads evidence, you review and verify from anywhere before the site advances a stage."
                 action={<GoldButton onClick={() => setRequesting({ method: 'photo' })} icon={<Plus size={15} weight="bold" />}>Request Your First</GoldButton>}
@@ -116,12 +116,12 @@ export default function VerifyHubPage() {
             </SectionCard>
           ) : (
             <SectionCard flat>
-              <PremiumEmpty compact icon={<Camera size={26} weight="duotone" color={C.gold} />} title="Nothing matches this filter" description="Clear the search or switch status filters to see the rest of the queue." />
+              <PremiumEmpty compact icon={<Camera size={26} weight="duotone" color="var(--text-secondary)" />} title="Nothing matches this filter" description="Clear the search or switch status filters to see the rest of the queue." />
             </SectionCard>
           )
         ) : (
           <SectionCard
-            icon={<Camera size={16} weight="duotone" color={C.gold} />}
+            icon={<Camera size={16} weight="duotone" color="var(--text-secondary)" />}
             title="Verification Requests"
             subtitle={`${filtered.length} shown · ${summary.pending} pending across ${summary.sites} site${summary.sites === 1 ? '' : 's'}`}
           >
@@ -143,9 +143,9 @@ export default function VerifyHubPage() {
                     </div>
 
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, alignItems: 'center' }}>
-                      {v.method && METHOD_META[v.method] && (() => { const MI = METHOD_ICON[v.method]; return <span style={{ fontSize: 11, fontWeight: 700, color: C.text, background: 'var(--bg-surface-2)', padding: '3px 9px', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}>{MI && <MI size={12} weight="regular" color={C.text} />}{METHOD_META[v.method].label}</span>; })()}
-                      {stage && <span style={{ fontSize: 11, fontWeight: 700, color: stage.color, background: `${stage.color}18`, padding: '3px 9px', borderRadius: 6 }}>Gate: {stage.label}</span>}
-                      {v.requested_by && <span style={{ fontSize: 11, color: C.dim, padding: '3px 0' }}>Requested by {v.requested_by}</span>}
+                      {v.method && METHOD_META[v.method] && (() => { const MI = METHOD_ICON[v.method]; return <span style={{ fontSize: 12, fontWeight: 700, color: C.text, background: 'var(--bg-surface-2)', padding: '3px 9px', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}>{MI && <MI size={12} weight="regular" color={C.text} />}{METHOD_META[v.method].label}</span>; })()}
+                      {stage && <span style={{ fontSize: 12, fontWeight: 700, color: stage.color, background: `${stage.color}18`, padding: '3px 9px', borderRadius: 6 }}>Gate: {stage.label}</span>}
+                      {v.requested_by && <span style={{ fontSize: 12, color: C.dim, padding: '3px 0' }}>Requested by {v.requested_by}</span>}
                     </div>
 
                     {v.evidence_note && <div style={{ fontSize: 13, color: C.dim, marginTop: 10, lineHeight: 1.5 }}>{v.evidence_note}</div>}
@@ -160,7 +160,7 @@ export default function VerifyHubPage() {
                     ) : (
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, fontSize: 12, color: C.dim }}>
                         <span>{st === 'verified' ? <><span style={{ display: 'inline-flex', verticalAlign: 'middle' }}><CheckCircle size={14} weight="fill" color={C.dim} /></span> Verified</> : <><span style={{ display: 'inline-flex', verticalAlign: 'middle' }}><XCircle size={14} weight="fill" color={C.dim} /></span> Rejected</>}{v.verified_by ? ` by ${v.verified_by}` : ''}{v.verified_at ? ` · ${fmtDate(v.verified_at)}` : ''}</span>
-                        <button onClick={() => decide(v, 'pending')} disabled={busy[v.id]} style={{ fontSize: 11, fontWeight: 700, color: C.blue, background: 'none', border: 'none', cursor: 'pointer' }}>Reopen</button>
+                        <button onClick={() => decide(v, 'pending')} disabled={busy[v.id]} style={{ fontSize: 12, fontWeight: 700, color: C.blue, background: 'none', border: 'none', cursor: 'pointer' }}>Reopen</button>
                       </div>
                     )}
                   </div>
@@ -186,7 +186,7 @@ function LiveWalkthroughModal({ projects, onClose }: { projects: any[]; onClose:
   const [err, setErr] = useState('');
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
   const inp: React.CSSProperties = { padding: '9px 11px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, outline: 'none', background: 'var(--bg-surface-2)', color: C.text, width: '100%' };
-  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
+  const lbl: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
 
   const PLATFORMS: Record<string, { label: string; instant: boolean; url?: string }> = {
     meet:     { label: 'Google Meet (New Instant Meeting)', instant: true, url: 'https://meet.google.com/new' },
@@ -260,7 +260,7 @@ function RequestModal({ projects, initialMethod, onClose }: { projects: any[]; i
   const [err, setErr] = useState('');
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
   const inp: React.CSSProperties = { padding: '9px 11px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, outline: 'none', background: 'var(--bg-surface-2)', color: C.text, width: '100%' };
-  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
+  const lbl: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
   const isVisit = f.method === 'site_visit';
   const mm = METHOD_META[f.method] || METHOD_META.photo;
 

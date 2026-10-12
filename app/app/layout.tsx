@@ -350,7 +350,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 the job picker, help mode and notifications. */}
             <div className="sag-menu-tools" style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 10px', borderBottom: '1px solid var(--border-default)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-tertiary)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Menu</span>
+                <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-tertiary)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Menu</span>
                 <button type="button" onClick={() => setMobileSidebarOpen(false)} aria-label="Close menu" style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', width: 40, height: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><X size={20} /></button>
               </div>
               <button
@@ -426,16 +426,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div style={{ background: colors.dark, padding: '14px 18px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
             <div>
               <div style={{ fontWeight: 800, fontSize: 15, color: colors.text, display: 'flex', alignItems: 'center', gap: 7 }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16} style={{ color: colors.gold }}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16} style={{ color: 'var(--text-primary)' }}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                 Sage AI Expert
               </div>
-              <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 1 }}>Construction · Bidding · Contracts · Finance · Safety</div>
+              <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 1 }}>Construction · Bidding · Contracts · Finance · Safety</div>
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               {aiMessages.length > 0 && (
                 <button
                   onClick={() => setAiMessages([])}
-                  style={{ background: 'none', border: `1px solid ${colors.border}`, color: colors.textMuted, cursor: 'pointer', fontSize: 11, padding: '3px 8px', borderRadius: 5, fontWeight: 600 }}
+                  style={{ background: 'none', border: `1px solid ${colors.border}`, color: colors.textMuted, cursor: 'pointer', fontSize: 12, padding: '3px 8px', borderRadius: 5, fontWeight: 600 }}
                 >
                   Clear
                 </button>
@@ -449,13 +449,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {aiMessages.length === 0 ? (
               <div>
                 <div style={{ textAlign: 'center', padding: '20px 0 16px' }}>
-                  <div style={{ marginBottom: 8, color: colors.gold, display: 'flex', justifyContent: 'center' }}>
+                  <div style={{ marginBottom: 8, color: 'var(--text-primary)', display: 'flex', justifyContent: 'center' }}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" width={40} height={40}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                   </div>
                   <div style={{ fontWeight: 700, fontSize: 14, color: colors.text, marginBottom: 4 }}>Sage AI Expert</div>
                   <div style={{ fontSize: 12, color: colors.textMuted, lineHeight: 1.6 }}>Expert in bidding, AIA contracts, lien law, finance,<br/>subcontractors, OSHA, estimating & more.</div>
                 </div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: colors.textMuted, marginBottom: 8 }}>Quick Actions</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: colors.textMuted, marginBottom: 8 }}>Quick Actions</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {QUICK_PROMPTS.map(q => (
                     <button
@@ -477,7 +477,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   </div>
                   <div style={{ maxWidth: '82%', background: msg.role === 'user' ? colors.goldDim : colors.dark, border: `1px solid ${msg.role === 'user' ? colors.goldBorder : colors.border}`, borderRadius: msg.role === 'user' ? '12px 4px 12px 12px' : '4px 12px 12px 12px', padding: '10px 14px', fontSize: 13, lineHeight: 1.65, color: colors.text }}>
                     {msg.role === 'assistant' && msg.content === '' && aiLoading ? (
-                      <span style={{ color: colors.gold }}>●●●</span>
+                      <span style={{ color: 'var(--text-primary)' }}>●●●</span>
                     ) : (
                       <div
                         className="ai-msg-content"
@@ -521,7 +521,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 {aiLoading ? '…' : 'Send'}
               </button>
             </div>
-            <div style={{ fontSize: 10, color: colors.textFaint, marginTop: 6 }}>Powered by Sage · Enter to send · Expert in construction law, finance & operations</div>
+            <div style={{ fontSize: 12, color: colors.textFaint, marginTop: 6 }}>Powered by Sage · Enter to send · Expert in construction law, finance & operations</div>
           </div>
         </div>
       )}
@@ -645,7 +645,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <div style={{ padding: '16px 20px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <div style={{ fontWeight: 800, fontSize: 16, color: colors.text, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16} style={{ color: colors.gold }}><circle cx={12} cy={12} r={10}/><circle cx={12} cy={12} r={6}/><circle cx={12} cy={12} r={2}/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16} style={{ color: 'var(--text-primary)' }}><circle cx={12} cy={12} r={10}/><circle cx={12} cy={12} r={6}/><circle cx={12} cy={12} r={2}/></svg>
                   Score a Bid
                 </div>
                 <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>Open the Bids tab to use the full AI scorer.</div>

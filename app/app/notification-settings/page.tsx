@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { humanError } from '@/lib/errors';
-import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
 import { Question, Package, Clipboard, ArrowsClockwise, CurrencyDollar, CalendarBlank, HardHat, Folder, ChartBar, CheckCircle, MagnifyingGlass, Scroll, Bell, Envelope, DeviceMobile, CaretRight, Check, Minus, Moon, ArrowCounterClockwise, FloppyDisk } from '@phosphor-icons/react';
 
 /* ── palette ── */
@@ -356,7 +356,7 @@ export default function NotificationSettingsPage() {
     sectionTitle: {
       fontSize: 16,
       fontWeight: 600,
-      color: GOLD,
+      color: 'var(--text-primary)',
       marginBottom: 14,
       margin: 0,
     } as React.CSSProperties,
@@ -410,7 +410,7 @@ export default function NotificationSettingsPage() {
       display: 'inline-block',
       padding: '2px 10px',
       borderRadius: 12,
-      fontSize: 11,
+      fontSize: 12,
       fontWeight: 600,
       background: `color-mix(in srgb, ${color} 13%, transparent)`,
       color: color,
@@ -480,7 +480,7 @@ export default function NotificationSettingsPage() {
       fontWeight: 700,
     } as React.CSSProperties,
     statLabel: {
-      fontSize: 11,
+      fontSize: 12,
       color: DIM,
 
       marginTop: 4,
@@ -560,7 +560,7 @@ export default function NotificationSettingsPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Notifications"
-        eyebrowIcon={<Bell size={13} weight="fill" color="var(--brand-primary)" />}
+        eyebrowIcon={<Bell size={13} weight="fill" color="var(--text-secondary)" />}
         title="Notification"
         accent="Preferences"
         subtitle="How and when each event reaches you."
@@ -581,7 +581,7 @@ export default function NotificationSettingsPage() {
           </button>
           <button
             className="pmBtn"
-            style={{ ...goldButtonStyle, opacity: saving ? 0.6 : 1 }}
+            style={{ ...secondaryButtonStyle, opacity: saving ? 0.6 : 1 }}
             onClick={savePrefs}
             disabled={saving}
             type="button"
@@ -643,7 +643,7 @@ export default function NotificationSettingsPage() {
           sub={prefs.globalEnabled ? 'Notifications on' : 'All muted'}
          href="/app/notification-settings"/>
         <StatCard
-          icon={<CheckCircle size={19} weight="duotone" color={GOLD} />}
+          icon={<CheckCircle size={19} weight="duotone" color="var(--text-secondary)" />}
           label="Active"
           value={totalEnabled}
           accent={GOLD}
@@ -654,7 +654,7 @@ export default function NotificationSettingsPage() {
           return (
             <StatCard
               key={ch.key}
-              icon={<ChIcon size={19} weight="duotone" color={GOLD} />}
+              icon={<ChIcon size={19} weight="duotone" color="var(--text-secondary)" />}
               label={`${ch.label} Active`}
               value={channelCounts[ch.key].enabled}
               accent={GOLD}
@@ -697,7 +697,7 @@ export default function NotificationSettingsPage() {
       <SectionCard
         title="Delivery Frequency"
         subtitle="Immediately, or bundled into a digest."
-        icon={<CalendarBlank size={17} weight="duotone" color={GOLD} />}
+        icon={<CalendarBlank size={17} weight="duotone" color="var(--text-secondary)" />}
         style={{ marginBottom: 20 }}
       >
         <div style={{
@@ -739,7 +739,7 @@ export default function NotificationSettingsPage() {
       <SectionCard
         title="Quiet Hours"
         subtitle="Queued during quiet hours, delivered when they end."
-        icon={<Moon size={17} weight="duotone" color={GOLD} />}
+        icon={<Moon size={17} weight="duotone" color="var(--text-secondary)" />}
         action={
           <Toggle
             on={prefs.quietHours.enabled}
@@ -791,7 +791,7 @@ export default function NotificationSettingsPage() {
       <SectionCard
         title="Module Notification Matrix"
         subtitle="Choose how each event reaches you — in-app, email, or push."
-        icon={<Bell size={17} weight="duotone" color={GOLD} />}
+        icon={<Bell size={17} weight="duotone" color="var(--text-secondary)" />}
         style={{ marginBottom: 20 }}
       >
         <div style={{
@@ -811,7 +811,7 @@ export default function NotificationSettingsPage() {
               style={s.searchInput}
             />
             <button
-              style={{ ...ghostButtonStyle, padding: '7px 14px', fontSize: 12.5 }}
+              style={{ ...ghostButtonStyle, padding: '7px 14px', fontSize: 13 }}
               className="pmBtn"
               onClick={expandAll}
               type="button"
@@ -819,7 +819,7 @@ export default function NotificationSettingsPage() {
               Expand All
             </button>
             <button
-              style={{ ...ghostButtonStyle, padding: '7px 14px', fontSize: 12.5 }}
+              style={{ ...ghostButtonStyle, padding: '7px 14px', fontSize: 13 }}
               className="pmBtn"
               onClick={collapseAll}
               type="button"
@@ -867,16 +867,16 @@ export default function NotificationSettingsPage() {
             <span
               key={ch.key}
               style={{
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: 600,
-                color: GOLD,
+                color: 'var(--text-primary)',
                 textAlign: 'center',
 
                 display: 'inline-flex',
                 justifyContent: 'center',
               }}
             >
-              <ChIcon size={16} weight="regular" color={GOLD} />
+              <ChIcon size={16} weight="regular" color="var(--text-secondary)" />
             </span>
             );
           })}
@@ -885,7 +885,7 @@ export default function NotificationSettingsPage() {
         {/* Module rows */}
         {filteredModules.length === 0 && (
           <PremiumEmpty
-            icon={<MagnifyingGlass size={30} weight="duotone" color={GOLD} />}
+            icon={<MagnifyingGlass size={30} weight="duotone" color="var(--text-secondary)" />}
             title="No modules found"
             description={`No modules match "${searchFilter}".`}
             compact
@@ -1030,7 +1030,7 @@ export default function NotificationSettingsPage() {
         gap: 12,
       }}>
         <div style={{ fontSize: 13, color: DIM }}>
-          <span style={{ color: GOLD, fontWeight: 600 }}>{totalEnabled}</span> of{' '}
+          <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{totalEnabled}</span> of{' '}
           <span style={{ fontWeight: 600 }}>{totalPossible}</span> notifications enabled
           {prefs.quietHours.enabled && (
             <span style={{ marginLeft: 12, color: AMBER }}>

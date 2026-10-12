@@ -155,10 +155,10 @@ const modalStyle: React.CSSProperties = {
 };
 const badgeStyle = (color: string): React.CSSProperties => ({
   display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', borderRadius: 12,
-  fontSize: 11, fontWeight: 700, background: `color-mix(in srgb, ${color} 13%, transparent)`, color,
+  fontSize: 12, fontWeight: 700, background: `color-mix(in srgb, ${color} 13%, transparent)`, color,
 });
 const thStyle: React.CSSProperties = {
-  textAlign: 'left', padding: '10px 14px', fontSize: 11, color: DIM,
+  textAlign: 'left', padding: '10px 14px', fontSize: 12, color: DIM,
   borderBottom: `1px solid ${BORDER}`, fontWeight: 700,
 };
 const tdStyle: React.CSSProperties = { padding: '12px 14px', fontSize: 13, color: TEXT, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 20%, transparent)` };
@@ -384,25 +384,25 @@ export default function ApprovalWorkflowsPage() {
     const ordered = [...steps].sort((a, b) => a.order - b.order);
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: 0, overflowX: 'auto', padding: '18px 4px' }}>
-        <div style={{ minWidth: 66, height: 36, borderRadius: 18, background: `color-mix(in srgb, ${GREEN} 16%, transparent)`, border: `2px solid ${GREEN}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: GREEN, flexShrink: 0 }}>Start</div>
+        <div style={{ minWidth: 66, height: 36, borderRadius: 18, background: `color-mix(in srgb, ${GREEN} 16%, transparent)`, border: `2px solid ${GREEN}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: GREEN, flexShrink: 0 }}>Start</div>
         {ordered.map(step => (
           <React.Fragment key={step.id}>
-            <ArrowRight size={22} color={GOLD} weight="bold" style={{ margin: '0 6px', flexShrink: 0 }} />
+            <ArrowRight size={22} color="var(--text-secondary)" weight="bold" style={{ margin: '0 6px', flexShrink: 0 }} />
             <div style={{ minWidth: 150, maxWidth: 210, border: `2px solid ${step.required ? BLUE : BORDER}`, borderRadius: 8, padding: '10px 14px', background: BG, flexShrink: 0 }}>
-              <div style={{ fontSize: 10, color: DIM, marginBottom: 3, fontWeight: 700 }}>
+              <div style={{ fontSize: 12, color: DIM, marginBottom: 3, fontWeight: 700 }}>
                 Step {step.order}{!step.required && <span style={{ color: AMBER, marginLeft: 6 }}>(Optional)</span>}
               </div>
               <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, marginBottom: 2 }}>{step.name || step.approverValue}</div>
-              <div style={{ fontSize: 11, color: DIM }}>
+              <div style={{ fontSize: 12, color: DIM }}>
                 {step.approverType === 'role' ? 'Role: ' : 'User: '}{step.approverType === 'user' ? userLabel(step.approverValue) : step.approverValue}
               </div>
-              {step.autoApproveThreshold !== null && <div style={{ ...badgeStyle(GREEN), marginTop: 6, fontSize: 9 }}>Auto &lt; {fmtCurrency(step.autoApproveThreshold)}</div>}
-              {step.conditionalMinAmount !== null && <div style={{ ...badgeStyle(AMBER), marginTop: 4, fontSize: 9 }}>Only &ge; {fmtCurrency(step.conditionalMinAmount)}</div>}
+              {step.autoApproveThreshold !== null && <div style={{ ...badgeStyle(GREEN), marginTop: 6, fontSize: 12 }}>Auto &lt; {fmtCurrency(step.autoApproveThreshold)}</div>}
+              {step.conditionalMinAmount !== null && <div style={{ ...badgeStyle(AMBER), marginTop: 4, fontSize: 12 }}>Only &ge; {fmtCurrency(step.conditionalMinAmount)}</div>}
             </div>
           </React.Fragment>
         ))}
-        <ArrowRight size={22} color={GOLD} weight="bold" style={{ margin: '0 6px', flexShrink: 0 }} />
-        <div style={{ minWidth: 66, height: 36, borderRadius: 18, background: `color-mix(in srgb, ${GOLD} 16%, transparent)`, border: `2px solid ${GOLD}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: GOLD, flexShrink: 0 }}>Done</div>
+        <ArrowRight size={22} color="var(--text-secondary)" weight="bold" style={{ margin: '0 6px', flexShrink: 0 }} />
+        <div style={{ minWidth: 66, height: 36, borderRadius: 18, background: `color-mix(in srgb, ${GOLD} 16%, transparent)`, border: `2px solid ${GOLD}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', flexShrink: 0 }}>Done</div>
       </div>
     );
   };
@@ -410,17 +410,17 @@ export default function ApprovalWorkflowsPage() {
     const ordered = [...(wf.steps || [])].sort((a, b) => a.order - b.order);
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, overflowX: 'auto', marginTop: 12 }}>
-        <span style={{ fontSize: 9, color: GREEN, fontWeight: 800, padding: '2px 8px', border: `1px solid color-mix(in srgb, ${GREEN} 25%, transparent)`, borderRadius: 10, whiteSpace: 'nowrap' }}>Start</span>
+        <span style={{ fontSize: 12, color: GREEN, fontWeight: 800, padding: '2px 8px', border: `1px solid color-mix(in srgb, ${GREEN} 25%, transparent)`, borderRadius: 10, whiteSpace: 'nowrap' }}>Start</span>
         {ordered.map(step => (
           <React.Fragment key={step.id}>
-            <ArrowRight size={12} color={GOLD} weight="bold" style={{ flexShrink: 0 }} />
-            <div style={{ fontSize: 11, padding: '3px 10px', borderRadius: 6, whiteSpace: 'nowrap', border: `1px solid ${step.required ? `color-mix(in srgb, ${BLUE} 31%, transparent)` : BORDER}`, background: BG, color: step.required ? TEXT : DIM }}>
+            <ArrowRight size={12} color="var(--text-secondary)" weight="bold" style={{ flexShrink: 0 }} />
+            <div style={{ fontSize: 12, padding: '3px 10px', borderRadius: 6, whiteSpace: 'nowrap', border: `1px solid ${step.required ? `color-mix(in srgb, ${BLUE} 31%, transparent)` : BORDER}`, background: BG, color: step.required ? TEXT : DIM }}>
               {step.order}. {step.name || step.approverValue}{step.conditionalMinAmount !== null ? ` (≥${fmtCurrency(step.conditionalMinAmount)})` : ''}
             </div>
           </React.Fragment>
         ))}
-        <ArrowRight size={12} color={GOLD} weight="bold" style={{ flexShrink: 0 }} />
-        <span style={{ fontSize: 9, color: GOLD, fontWeight: 800, padding: '2px 8px', border: `1px solid color-mix(in srgb, ${GOLD} 25%, transparent)`, borderRadius: 10, whiteSpace: 'nowrap' }}>Done</span>
+        <ArrowRight size={12} color="var(--text-secondary)" weight="bold" style={{ flexShrink: 0 }} />
+        <span style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 800, padding: '2px 8px', border: `1px solid color-mix(in srgb, ${GOLD} 25%, transparent)`, borderRadius: 10, whiteSpace: 'nowrap' }}>Done</span>
       </div>
     );
   };
@@ -450,7 +450,7 @@ export default function ApprovalWorkflowsPage() {
     }}>
       <Icon size={15} weight={t === tab ? 'fill' : 'bold'} />{label}
       {count !== undefined && count > 0 && (
-        <span style={{ marginLeft: 2, background: t === tab ? '#00000022' : RED, color: t === tab ? 'var(--bg-base)' : 'var(--text-primary)', borderRadius: 10, minWidth: 18, height: 18, padding: '0 5px', fontSize: 10, fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{count}</span>
+        <span style={{ marginLeft: 2, background: t === tab ? '#00000022' : RED, color: t === tab ? 'var(--bg-base)' : 'var(--text-primary)', borderRadius: 10, minWidth: 18, height: 18, padding: '0 5px', fontSize: 12, fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{count}</span>
       )}
     </button>
   );
@@ -507,7 +507,7 @@ export default function ApprovalWorkflowsPage() {
         {/* header */}
         <ModuleHero
           eyebrow="Approvals"
-          eyebrowIcon={<ListChecks size={13} weight="fill" color={GOLD} />}
+          eyebrowIcon={<ListChecks size={13} weight="fill" color="var(--text-secondary)" />}
           title="Approval"
           accent="Workflows"
           subtitle="Approval chains for change orders, pay apps, POs, and invoices."
@@ -574,7 +574,7 @@ export default function ApprovalWorkflowsPage() {
               />
             </SectionCard>
           ) : (
-            <SectionCard flush title="Pending Approvals" icon={<Clock size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flush title="Pending Approvals" icon={<Clock size={17} weight="duotone" color="var(--text-secondary)" />}>
               <div style={{ overflowX: 'auto' }}>
                 <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead><tr style={{ background: BG }}>
@@ -586,7 +586,7 @@ export default function ApprovalWorkflowsPage() {
                       <tr key={`${p.entityType}:${p.entityId}`} className="aw-row">
                         <td style={tdStyle}>
                           <div style={{ fontWeight: 600 }}>{p.itemName}</div>
-                          <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>{p.workflowName} · <span style={{ textTransform: 'capitalize' }}>{p.status.replace(/_/g, ' ')}</span></div>
+                          <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>{p.workflowName} · <span style={{ textTransform: 'capitalize' }}>{p.status.replace(/_/g, ' ')}</span></div>
                         </td>
                         <td style={tdStyle}><span style={badgeStyle(MODULE_COLOR[p.entityType])}>{p.module}</span></td>
                         <td style={{ ...tdStyle, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{fmtCurrency(p.itemAmount)}</td>
@@ -597,7 +597,7 @@ export default function ApprovalWorkflowsPage() {
                             <div style={{ height: 6, background: BORDER, borderRadius: 3, width: 70, overflow: 'hidden' }}>
                               <div style={{ width: `${Math.min(100, (p.currentStep / Math.max(1, p.totalSteps)) * 100)}%`, height: '100%', background: GOLD }} />
                             </div>
-                            <span style={{ fontSize: 11, color: DIM, whiteSpace: 'nowrap' }}>{p.currentStep > 0 ? `Step ${p.currentStep}/${p.totalSteps}` : `${p.totalSteps} step${p.totalSteps !== 1 ? 's' : ''}`}</span>
+                            <span style={{ fontSize: 12, color: DIM, whiteSpace: 'nowrap' }}>{p.currentStep > 0 ? `Step ${p.currentStep}/${p.totalSteps}` : `${p.totalSteps} step${p.totalSteps !== 1 ? 's' : ''}`}</span>
                           </div>
                         </td>
                         <td style={tdStyle}>
@@ -621,7 +621,7 @@ export default function ApprovalWorkflowsPage() {
             {filteredWorkflows.length === 0 && (
               <SectionCard>
                 <PremiumEmpty
-                  icon={<TreeStructure size={30} weight="duotone" color={GOLD} />}
+                  icon={<TreeStructure size={30} weight="duotone" color="var(--text-secondary)" />}
                   title={search || moduleFilter ? 'No templates match your filters' : 'No workflow templates yet'}
                   description={search || moduleFilter
                     ? 'Clear the search or module filter to see every template on this tenant.'
@@ -652,12 +652,12 @@ export default function ApprovalWorkflowsPage() {
                       {wf.steps.length} step{wf.steps.length !== 1 ? 's' : ''} · Updated {fmtDate(wf.updated_at)}
                     </div>
                     {wf.steps.some(s => s.conditionalMinAmount !== null) && (
-                      <div style={{ fontSize: 11, color: AMBER, marginTop: 4 }}>
+                      <div style={{ fontSize: 12, color: AMBER, marginTop: 4 }}>
                         Conditional routing: {wf.steps.filter(s => s.conditionalMinAmount !== null).map(s => `${s.name || s.approverValue} ≥ ${fmtCurrency(s.conditionalMinAmount!)}`).join('; ')}
                       </div>
                     )}
                     {wf.steps.some(s => s.autoApproveThreshold !== null) && (
-                      <div style={{ fontSize: 11, color: GREEN, marginTop: 2 }}>
+                      <div style={{ fontSize: 12, color: GREEN, marginTop: 2 }}>
                         Auto-approve: {wf.steps.filter(s => s.autoApproveThreshold !== null).map(s => `${s.name || s.approverValue} < ${fmtCurrency(s.autoApproveThreshold!)}`).join('; ')}
                       </div>
                     )}
@@ -680,7 +680,7 @@ export default function ApprovalWorkflowsPage() {
         {tab === 'dashboard' && (stats.length === 0 ? (
           <SectionCard>
             <PremiumEmpty
-              icon={<Gauge size={30} weight="duotone" color={GOLD} />}
+              icon={<Gauge size={30} weight="duotone" color="var(--text-secondary)" />}
               title="Nothing routed yet"
               description="This dashboard aggregates every item that enters an approval chain — pending, approved, rejected, average cycle time, and total dollars routed per module. Submit a change order, pay app, purchase order, or invoice through an active workflow and these numbers build themselves."
               action={activeCount === 0
@@ -697,10 +697,10 @@ export default function ApprovalWorkflowsPage() {
                     <ChartBar size={15} weight="fill" />{s.module}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                    <div><div style={{ fontSize: 24, fontWeight: 700, color: AMBER }}>{s.pending}</div><div style={{ fontSize: 10, color: DIM }}>Pending</div></div>
-                    <div><div style={{ fontSize: 24, fontWeight: 700, color: GREEN }}>{s.approved}</div><div style={{ fontSize: 10, color: DIM }}>Approved</div></div>
-                    <div><div style={{ fontSize: 24, fontWeight: 700, color: RED }}>{s.rejected}</div><div style={{ fontSize: 10, color: DIM }}>Rejected</div></div>
-                    <div><div style={{ fontSize: 24, fontWeight: 700, color: BLUE }}>{(Number(s.avgDays) || 0).toFixed(1)}</div><div style={{ fontSize: 10, color: DIM }}>Avg Days</div></div>
+                    <div><div style={{ fontSize: 24, fontWeight: 700, color: AMBER }}>{s.pending}</div><div style={{ fontSize: 12, color: DIM }}>Pending</div></div>
+                    <div><div style={{ fontSize: 24, fontWeight: 700, color: GREEN }}>{s.approved}</div><div style={{ fontSize: 12, color: DIM }}>Approved</div></div>
+                    <div><div style={{ fontSize: 24, fontWeight: 700, color: RED }}>{s.rejected}</div><div style={{ fontSize: 12, color: DIM }}>Rejected</div></div>
+                    <div><div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-primary)' }}>{(Number(s.avgDays) || 0).toFixed(1)}</div><div style={{ fontSize: 12, color: DIM }}>Avg Days</div></div>
                   </div>
                   <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.06)', fontSize: 12, color: DIM, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                     <span>Total Value Routed</span>
@@ -710,7 +710,7 @@ export default function ApprovalWorkflowsPage() {
               ))}
             </div>
 
-            <SectionCard flat title="Approval Pipeline by Module" icon={<Gauge size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Approval Pipeline by Module" icon={<Gauge size={17} weight="duotone" color="var(--text-secondary)" />}>
               {stats.map(s => {
                 const total = (Number(s.pending) || 0) + (Number(s.approved) || 0) + (Number(s.rejected) || 0);
                 const pc = (n: number) => total > 0 ? (n / total) * 100 : 0;
@@ -726,9 +726,9 @@ export default function ApprovalWorkflowsPage() {
                       {pc(s.rejected) > 0 && <div style={{ width: `${pc(s.rejected)}%`, background: RED }} />}
                     </div>
                     <div style={{ display: 'flex', gap: 16, marginTop: 4 }}>
-                      <span style={{ fontSize: 10, color: GREEN }}>{s.approved} approved</span>
-                      <span style={{ fontSize: 10, color: AMBER }}>{s.pending} pending</span>
-                      <span style={{ fontSize: 10, color: RED }}>{s.rejected} rejected</span>
+                      <span style={{ fontSize: 12, color: GREEN }}>{s.approved} approved</span>
+                      <span style={{ fontSize: 12, color: AMBER }}>{s.pending} pending</span>
+                      <span style={{ fontSize: 12, color: RED }}>{s.rejected} rejected</span>
                     </div>
                   </div>
                 );
@@ -747,9 +747,9 @@ export default function ApprovalWorkflowsPage() {
 
         {/* ── HISTORY ── */}
         {tab === 'history' && (
-          <SectionCard flush title="Decision History" icon={<ClipboardText size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard flush title="Decision History" icon={<ClipboardText size={17} weight="duotone" color="var(--text-secondary)" />}>
             {filteredHistory.length === 0 ? (
-              <PremiumEmpty compact icon={<ClipboardText size={30} weight="duotone" color={GOLD} />} title="No history yet" description="No decided items match your filters." />
+              <PremiumEmpty compact icon={<ClipboardText size={30} weight="duotone" color="var(--text-secondary)" />} title="No history yet" description="No decided items match your filters." />
             ) : (
               <div style={{ overflowX: 'auto' }}>
                 <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -792,7 +792,7 @@ export default function ApprovalWorkflowsPage() {
             </div>
             {delegations.length === 0 ? (
               <PremiumEmpty
-                icon={<Users size={30} weight="duotone" color={GOLD} />}
+                icon={<Users size={30} weight="duotone" color="var(--text-secondary)" />}
                 title="No delegations configured"
                 description="Delegate your approval authority to a teammate while you're out of office."
                 action={<button style={goldButtonStyle} className="pmBtn" onClick={() => setShowDel(true)}><Plus size={15} weight="bold" />New Delegation</button>}
@@ -803,8 +803,8 @@ export default function ApprovalWorkflowsPage() {
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
                       <span style={{ fontWeight: 700, fontSize: 15 }}>{d.from_user}</span>
-                      <ArrowRight size={18} color={GOLD} weight="bold" />
-                      <span style={{ fontWeight: 700, color: BLUE, fontSize: 15 }}>{userLabel(d.to_user)}</span>
+                      <ArrowRight size={18} color="var(--text-secondary)" weight="bold" />
+                      <span style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 15 }}>{userLabel(d.to_user)}</span>
                       <span style={badgeStyle(d.active ? GREEN : DIM)}>{d.active ? 'Active' : 'Revoked'}</span>
                     </div>
                     <div style={{ fontSize: 12, color: DIM }}>
@@ -824,7 +824,7 @@ export default function ApprovalWorkflowsPage() {
         <div style={overlayStyle} onClick={() => setShowWizard(false)}>
           <div style={{ ...modalStyle, width: 740 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: GOLD }}>{editing ? 'Edit Workflow' : 'Create New Workflow'}</h2>
+              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--text-primary)' }}>{editing ? 'Edit Workflow' : 'Create New Workflow'}</h2>
               <button style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', display: 'flex' }} onClick={() => setShowWizard(false)}><X size={22} weight="bold" /></button>
             </div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
@@ -848,7 +848,7 @@ export default function ApprovalWorkflowsPage() {
                   <select style={selectStyle} value={wfModule} onChange={e => setWfModule(e.target.value as EntityType)}>
                     {ENTITY_TYPES.map(m => <option key={m} value={m}>{MODULE_LABEL[m]}</option>)}
                   </select>
-                  <div style={{ fontSize: 11, color: DIM, marginTop: 6 }}>Applies to all {MODULE_LABEL[wfModule]} that require approval.</div>
+                  <div style={{ fontSize: 12, color: DIM, marginTop: 6 }}>Applies to all {MODULE_LABEL[wfModule]} that require approval.</div>
                 </div>
               </div>
             )}
@@ -857,13 +857,13 @@ export default function ApprovalWorkflowsPage() {
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                   <span style={{ fontSize: 13, color: DIM }}>Define the approval chain in order.</span>
-                  <button className="btn-gold" style={{ padding: '7px 14px', fontSize: 12.5, cursor: 'pointer' }} onClick={addStep}><Plus size={14} weight="bold" />Add Step</button>
+                  <button className="btn-gold" style={{ padding: '7px 14px', fontSize: 13, cursor: 'pointer' }} onClick={addStep}><Plus size={14} weight="bold" />Add Step</button>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {wfSteps.map(step => (
                     <div key={step.id} style={{ padding: 16, background: BG, borderRadius: 8, border: `1px solid ${step.required ? `color-mix(in srgb, ${BLUE} 31%, transparent)` : BORDER}` }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                        <span style={{ fontSize: 14, fontWeight: 700, color: GOLD }}>Step {step.order}</span>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>Step {step.order}</span>
                         <div style={{ display: 'flex', gap: 6 }}>
                           <button style={{ background: 'none', border: `1px solid ${BORDER}`, color: DIM, borderRadius: 4, padding: '4px 7px', cursor: 'pointer', display: 'flex' }} onClick={() => moveStep(step.id, -1)}><CaretUp size={13} weight="bold" /></button>
                           <button style={{ background: 'none', border: `1px solid ${BORDER}`, color: DIM, borderRadius: 4, padding: '4px 7px', cursor: 'pointer', display: 'flex' }} onClick={() => moveStep(step.id, 1)}><CaretDown size={13} weight="bold" /></button>
@@ -872,11 +872,11 @@ export default function ApprovalWorkflowsPage() {
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                         <div>
-                          <label style={{ fontSize: 11, color: DIM, display: 'block', marginBottom: 3 }}>Step Name</label>
+                          <label style={{ fontSize: 12, color: DIM, display: 'block', marginBottom: 3 }}>Step Name</label>
                           <input style={inputStyle} value={step.name} onChange={e => updateStep(step.id, { name: e.target.value })} placeholder="e.g. PM Review" />
                         </div>
                         <div>
-                          <label style={{ fontSize: 11, color: DIM, display: 'block', marginBottom: 3 }}>Approver Type</label>
+                          <label style={{ fontSize: 12, color: DIM, display: 'block', marginBottom: 3 }}>Approver Type</label>
                           <select style={selectStyle} value={step.approverType} onChange={e => {
                             const t = e.target.value as 'role' | 'user';
                             updateStep(step.id, { approverType: t, approverValue: t === 'role' ? ROLES[0] : (teamOptions[0]?.v || '') });
@@ -886,25 +886,25 @@ export default function ApprovalWorkflowsPage() {
                           </select>
                         </div>
                         <div>
-                          <label style={{ fontSize: 11, color: DIM, display: 'block', marginBottom: 3 }}>{step.approverType === 'role' ? 'Role' : 'User'}</label>
+                          <label style={{ fontSize: 12, color: DIM, display: 'block', marginBottom: 3 }}>{step.approverType === 'role' ? 'Role' : 'User'}</label>
                           <select style={selectStyle} value={step.approverValue} onChange={e => updateStep(step.id, { approverValue: e.target.value })}>
                             {step.approverType === 'user' && teamOptions.length === 0 && <option value="">No teammates found</option>}
                             {approverOptions(step.approverType).map(o => <option key={o.v} value={o.v}>{o.label}</option>)}
                           </select>
                         </div>
                         <div>
-                          <label style={{ fontSize: 11, color: DIM, display: 'block', marginBottom: 3 }}>Required / Optional</label>
+                          <label style={{ fontSize: 12, color: DIM, display: 'block', marginBottom: 3 }}>Required / Optional</label>
                           <select style={selectStyle} value={step.required ? 'required' : 'optional'} onChange={e => updateStep(step.id, { required: e.target.value === 'required' })}>
                             <option value="required">Required</option>
                             <option value="optional">Optional</option>
                           </select>
                         </div>
                         <div>
-                          <label style={{ fontSize: 11, color: DIM, display: 'block', marginBottom: 3 }}>Auto-Approve Below ($)</label>
+                          <label style={{ fontSize: 12, color: DIM, display: 'block', marginBottom: 3 }}>Auto-Approve Below ($)</label>
                           <input style={inputStyle} type="number" placeholder="None" value={step.autoApproveThreshold ?? ''} onChange={e => updateStep(step.id, { autoApproveThreshold: e.target.value ? Number(e.target.value) : null })} />
                         </div>
                         <div>
-                          <label style={{ fontSize: 11, color: DIM, display: 'block', marginBottom: 3 }}>Only If Amount ≥ ($)</label>
+                          <label style={{ fontSize: 12, color: DIM, display: 'block', marginBottom: 3 }}>Only If Amount ≥ ($)</label>
                           <input style={inputStyle} type="number" placeholder="Always" value={step.conditionalMinAmount ?? ''} onChange={e => updateStep(step.id, { conditionalMinAmount: e.target.value ? Number(e.target.value) : null })} />
                         </div>
                       </div>
@@ -930,10 +930,10 @@ export default function ApprovalWorkflowsPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {wfSteps.map(step => (
                     <div key={step.id} style={{ padding: '8px 14px', background: BG, borderRadius: 6, border: `1px solid ${BORDER}`, fontSize: 13 }}>
-                      <span style={{ color: GOLD, fontWeight: 700 }}>Step {step.order}:</span>{' '}
+                      <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>Step {step.order}:</span>{' '}
                       <span style={{ fontWeight: 600 }}>{step.name}</span>{' '}
                       <span style={{ color: DIM }}>({step.approverType === 'user' ? userLabel(step.approverValue) : step.approverValue})</span>{' '}
-                      {step.required ? <span style={{ color: BLUE }}>[Required]</span> : <span style={{ color: AMBER }}>[Optional]</span>}
+                      {step.required ? <span style={{ color: 'var(--text-primary)' }}>[Required]</span> : <span style={{ color: AMBER }}>[Optional]</span>}
                       {step.autoApproveThreshold !== null && <span style={{ color: GREEN }}> · auto &lt; {fmtCurrency(step.autoApproveThreshold)}</span>}
                       {step.conditionalMinAmount !== null && <span style={{ color: AMBER }}> · only ≥ {fmtCurrency(step.conditionalMinAmount)}</span>}
                     </div>
@@ -960,7 +960,7 @@ export default function ApprovalWorkflowsPage() {
       {actionItem && (
         <div style={overlayStyle} onClick={() => setActionItem(null)}>
           <div style={modalStyle} onClick={e => e.stopPropagation()}>
-            <h2 style={{ margin: '0 0 16px', fontSize: 18, fontWeight: 700, color: GOLD }}>Review Approval Request</h2>
+            <h2 style={{ margin: '0 0 16px', fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>Review Approval Request</h2>
             <div style={{ padding: 16, background: BG, borderRadius: 8, border: `1px solid ${BORDER}`, marginBottom: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, gap: 8 }}>
                 <span style={{ fontWeight: 700, fontSize: 15 }}>{actionItem.itemName}</span>
@@ -1003,11 +1003,11 @@ export default function ApprovalWorkflowsPage() {
           <div style={{ ...modalStyle, width: 920 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div>
-                <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700, color: GOLD }}>{diagramWf.name}</h2>
+                <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>{diagramWf.name}</h2>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                   <span style={badgeStyle(MODULE_COLOR[diagramWf.module])}>{MODULE_LABEL[diagramWf.module]}</span>
                   <span style={badgeStyle(diagramWf.active ? GREEN : DIM)}>{diagramWf.active ? 'Active' : 'Disabled'}</span>
-                  <span style={{ fontSize: 11, color: DIM }}>{diagramWf.steps.length} steps</span>
+                  <span style={{ fontSize: 12, color: DIM }}>{diagramWf.steps.length} steps</span>
                 </div>
               </div>
               <button style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', display: 'flex' }} onClick={() => setDiagramWf(null)}><X size={22} weight="bold" /></button>
@@ -1063,7 +1063,7 @@ export default function ApprovalWorkflowsPage() {
         <div style={overlayStyle} onClick={() => setShowDel(false)}>
           <div style={modalStyle} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: GOLD }}>New Approval Delegation</h2>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>New Approval Delegation</h2>
               <button style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', display: 'flex' }} onClick={() => setShowDel(false)}><X size={22} weight="bold" /></button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -1073,7 +1073,7 @@ export default function ApprovalWorkflowsPage() {
                   <option value="">Select a teammate…</option>
                   {teamOptions.map(o => <option key={o.v} value={o.v}>{o.label}</option>)}
                 </select>
-                {teamOptions.length === 0 && <div style={{ fontSize: 11, color: AMBER, marginTop: 4 }}>No teammates found on this tenant.</div>}
+                {teamOptions.length === 0 && <div style={{ fontSize: 12, color: AMBER, marginTop: 4 }}>No teammates found on this tenant.</div>}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                 <div>

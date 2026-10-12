@@ -28,18 +28,18 @@ interface NotificationItem {
 }
 
 const TYPE_CONFIG: Record<string, { icon: React.ComponentType<any>; label: string; color: string; actions?: string[] }> = {
-  pay_app_submitted:   { icon: CurrencyDollar, label: 'Pay App', color: 'var(--brand-primary)', actions: ['Review Pay App'] },
+  pay_app_submitted:   { icon: CurrencyDollar, label: 'Pay App', color: 'var(--text-primary)', actions: ['Review Pay App'] },
   pay_app_approved:    { icon: CheckCircle, label: 'Pay App', color: GREEN, actions: ['View Lien Waivers'] },
   pay_app_certified:   { icon: CheckCircle, label: 'Pay App', color: GREEN },
   change_order_approved:{ icon: ArrowsClockwise, label: 'Change Order', color: GREEN },
   insurance_expiring:  { icon: Warning, label: 'Insurance', color: 'var(--warning)', actions: ['Request Renewal'] },
   rfi_submitted:       { icon: Question, label: 'RFI', color: 'var(--warning)', actions: ['Answer RFI'] },
   rfi_answered:        { icon: CheckCircle, label: 'RFI', color: GREEN },
-  bid_submitted:       { icon: NotePencil, label: 'Bid', color: 'var(--brand-primary)', actions: ['Review Bid'] },
-  bid_awarded:         { icon: Trophy, label: 'Bid', color: GOLD },
+  bid_submitted:       { icon: NotePencil, label: 'Bid', color: 'var(--text-primary)', actions: ['Review Bid'] },
+  bid_awarded:         { icon: Trophy, label: 'Bid', color: 'var(--text-primary)' },
   sub_added:           { icon: Handshake, label: 'Team', color: 'var(--warning)' },
-  project_created:     { icon: Buildings, label: 'Project', color: GOLD },
-  document_generated:  { icon: FileText, label: 'Document', color: 'var(--brand-primary)', actions: ['Download'] },
+  project_created:     { icon: Buildings, label: 'Project', color: 'var(--text-primary)' },
+  document_generated:  { icon: FileText, label: 'Document', color: 'var(--text-primary)', actions: ['Download'] },
   Budget_Exceeded:     { icon: WarningOctagon, label: 'Alert', color: RED },
   Budget_At_Risk:      { icon: Warning, label: 'Alert', color: 'var(--warning)' },
   Overdue_RFI:         { icon: Clock, label: 'Alert', color: RED },
@@ -168,7 +168,7 @@ export default function NotificationsPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Activity Feed"
-        eyebrowIcon={<Bell size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<Bell size={13} weight="fill" color="var(--text-secondary)" />}
         title="Notification"
         accent="Center"
         subtitle={unreadCount > 0 ? `${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}` : 'All caught up'}
@@ -218,8 +218,8 @@ export default function NotificationsPage() {
         ))}
         {typeFilter === MONEY && (
           <button type="button" className="ntFilter" aria-pressed onClick={() => setTypeFilter('All')} aria-label="Clear the money events filter"
-            style={{ padding: '4px 12px', borderRadius: 'var(--radius-pill)', border: '1px solid var(--brand-primary-25)', background: 'var(--brand-primary-12)', color: GOLD, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            Money Events ({moneyCount}) <X size={12} weight="bold" color={GOLD} />
+            style={{ padding: '4px 12px', borderRadius: 'var(--radius-pill)', border: '1px solid var(--border-default)', background: 'var(--bg-surface-2)', color: 'var(--text-primary)', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            Money Events ({moneyCount}) <X size={12} weight="bold" color="var(--text-secondary)" />
           </button>
         )}
       </div>
@@ -230,7 +230,7 @@ export default function NotificationsPage() {
           <div style={{ padding: 40, textAlign: 'center', color: DIM, fontSize: 13 }}>Loading notifications…</div>
         ) : displayed.length === 0 ? (
           <PremiumEmpty
-            icon={<Bell size={30} weight="duotone" color={GOLD} />}
+            icon={<Bell size={30} weight="duotone" color="var(--text-secondary)" />}
             title={readFilter === 'unread' ? 'No unread notifications' : typeFilter === MONEY ? 'No money events' : typeFilter !== 'All' ? `No ${typeFilter} notifications` : 'No notifications yet'}
             description={readFilter === 'unread' && notifications.length > 0
               ? 'Everything in the feed has been read. New activity lands here the moment it happens.'
@@ -270,7 +270,7 @@ export default function NotificationsPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 2 }}>
                     <div style={{ fontSize: 14, fontWeight: n.read ? 500 : 700, color: n.read ? DIM : TEXT, lineHeight: 1.3 }}>{n.title}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                      <div style={{ fontSize: 11, color: DIM, whiteSpace: 'nowrap' }}>{timeAgo(n.created_at)}</div>
+                      <div style={{ fontSize: 12, color: DIM, whiteSpace: 'nowrap' }}>{timeAgo(n.created_at)}</div>
                       <button
                         onClick={e => { e.stopPropagation(); dismiss(n.id); }}
                         disabled={dismissingId === n.id}
@@ -281,7 +281,7 @@ export default function NotificationsPage() {
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: body ? 4 : 0 }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 3, background: `color-mix(in srgb, ${cfg.color} 9%, transparent)`, color: cfg.color, letterSpacing: .3 }}>{cfg.label}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, padding: '1px 6px', borderRadius: 3, background: `color-mix(in srgb, ${cfg.color} 9%, transparent)`, color: cfg.color, letterSpacing: .3 }}>{cfg.label}</span>
                   </div>
 
                   {body && <div style={{ fontSize: 13, color: DIM, lineHeight: 1.5, marginBottom: 6 }}>{body}</div>}
@@ -292,15 +292,15 @@ export default function NotificationsPage() {
                       <Link
                         href={n.link || n.action_url || '#'}
                         onClick={e => { e.stopPropagation(); markRead(n.id); }}
-                        style={{ fontSize: 12, color: GOLD, textDecoration: 'none', fontWeight: 600, padding: '3px 10px', background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-25)', borderRadius: 5 }}
+                        style={{ fontSize: 12, color: 'var(--link)', textDecoration: 'none', fontWeight: 600, padding: '3px 10px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 5 }}
                       >
-                        View <ArrowRight size={12} weight="bold" color={GOLD} style={{ verticalAlign: 'middle' }} />
+                        View <ArrowRight size={12} weight="bold" color="var(--text-secondary)" style={{ verticalAlign: 'middle' }} />
                       </Link>
                     )}
                     {n.project_id && n.type === 'pay_app_approved' && (
                       <Link href={`/app/projects/${n.project_id}/lien-waivers`} onClick={e => { e.stopPropagation(); markRead(n.id); }}
-                        style={{ fontSize: 12, color: 'var(--brand-primary)', textDecoration: 'none', fontWeight: 600, padding: '3px 10px', background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-25)', borderRadius: 5 }}>
-                        Lien Waivers <ArrowRight size={12} weight="bold" color="var(--brand-primary)" style={{ verticalAlign: 'middle' }} />
+                        style={{ fontSize: 12, color: 'var(--link)', textDecoration: 'none', fontWeight: 600, padding: '3px 10px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 5 }}>
+                        Lien Waivers <ArrowRight size={12} weight="bold" color="var(--text-secondary)" style={{ verticalAlign: 'middle' }} />
                       </Link>
                     )}
                     {n.project_id && (n.type === 'rfi_submitted') && (
@@ -311,8 +311,8 @@ export default function NotificationsPage() {
                     )}
                     {n.project_id && n.type === 'bid_submitted' && (
                       <Link href={`/app/projects/${n.project_id}/bid-packages`} onClick={e => { e.stopPropagation(); markRead(n.id); }}
-                        style={{ fontSize: 12, color: GOLD, textDecoration: 'none', fontWeight: 600, padding: '3px 10px', background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-25)', borderRadius: 5 }}>
-                        Review Bid <ArrowRight size={12} weight="bold" color={GOLD} style={{ verticalAlign: 'middle' }} />
+                        style={{ fontSize: 12, color: 'var(--link)', textDecoration: 'none', fontWeight: 600, padding: '3px 10px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 5 }}>
+                        Review Bid <ArrowRight size={12} weight="bold" color="var(--text-secondary)" style={{ verticalAlign: 'middle' }} />
                       </Link>
                     )}
                   </div>

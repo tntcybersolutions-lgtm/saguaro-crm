@@ -201,7 +201,7 @@ export default function SubsAndVendorsPage() {
     <PremiumSurface maxWidth={2200}>
       <ModuleHero
         eyebrow="Company Directory"
-        eyebrowIcon={<UsersThree size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<UsersThree size={13} weight="fill" color="var(--text-secondary)" />}
         title="Subs &"
         accent="Vendors"
         subtitle="Everyone you pay — their trade, their paperwork, and whether they can be awarded work today."
@@ -211,17 +211,17 @@ export default function SubsAndVendorsPage() {
         {/* "On File" shows them: every company (filters cleared) and the list
             brought into view. It only cleared filters, so with none set the
             tap did nothing at all. */}
-        <StatCard label="On File" value={String(subs.length)} sub="Companies tenant-wide" icon={<Buildings size={17} weight="duotone" color={GOLD} />} href="#subs-directory" onClick={() => { setQ(''); setTrade(''); setPaperFilter(false); }} />
+        <StatCard label="On File" value={String(subs.length)} sub="Companies tenant-wide" icon={<Buildings size={17} weight="duotone" color="var(--text-secondary)" />} href="#subs-directory" onClick={() => { setQ(''); setTrade(''); setPaperFilter(false); }} />
         <StatCard label="Paperwork Missing" value={String(missingPaper)} sub={missingPaper ? 'Cannot be awarded without override' : 'Everyone is current'} icon={<WarningCircle size={17} weight="duotone" color={missingPaper ? 'var(--text-primary)' : GOLD} />} tone={missingPaper ? 'bad' : undefined} active={paperFilter} onClick={() => setPaperFilter(v => !v)} />
-        <StatCard label="Prequalified" value={String(prequalified)} sub="Passed prequalification" icon={<SealCheck size={17} weight="duotone" color={GOLD} />} tone={prequalified > 0 ? 'good' : undefined} href="/app/prequalification" />
-        <StatCard label="Trades Covered" value={String(trades.length)} sub="Distinct trades on file" icon={<Package size={17} weight="duotone" color={GOLD} />} onClick={() => document.getElementById('subs-trade-filter')?.focus()} />
+        <StatCard label="Prequalified" value={String(prequalified)} sub="Passed prequalification" icon={<SealCheck size={17} weight="duotone" color="var(--text-secondary)" />} tone={prequalified > 0 ? 'good' : undefined} href="/app/prequalification" />
+        <StatCard label="Trades Covered" value={String(trades.length)} sub="Distinct trades on file" icon={<Package size={17} weight="duotone" color="var(--text-secondary)" />} onClick={() => document.getElementById('subs-trade-filter')?.focus()} />
       </div>
 
       <div id="subs-directory" style={{ scrollMarginTop: 76 }} />
       <SectionCard
         title="Directory"
         subtitle="Added from any job; available on every job after."
-        icon={<UsersThree size={17} weight="duotone" color={GOLD} />}
+        icon={<UsersThree size={17} weight="duotone" color="var(--text-secondary)" />}
         action={<span style={{ fontSize: 12, color: DIM }}>{shown.length} of {subs.length}</span>}
         flush
       >
@@ -258,14 +258,14 @@ export default function SubsAndVendorsPage() {
           />
         ) : subs.length === 0 ? (
           <PremiumEmpty
-            icon={<UsersThree size={30} weight="duotone" color={GOLD} />}
+            icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />}
             title="No subs or vendors on file yet"
             description="Subs are added from a job and stay on file for every job after it. Open a project, go to Subcontractors, and add the first one — it will appear here and in every bid package's invite list."
             action={<Link href="/app/projects" style={{ ...goldButtonStyle, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7 }}>Open a Project</Link>}
           />
         ) : shown.length === 0 ? (
           <PremiumEmpty
-            icon={<MagnifyingGlass size={30} weight="duotone" color={GOLD} />}
+            icon={<MagnifyingGlass size={30} weight="duotone" color="var(--text-secondary)" />}
             title="Nothing matches that"
             description="No company on file matches your search or trade filter."
             action={<button onClick={() => { setQ(''); setTrade(''); }} style={goldButtonStyle}>Clear Filters</button>}

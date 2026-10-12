@@ -52,7 +52,7 @@ export default function DirectoryPage() {
       <div style={{ fontFamily: font, color: C.text }}>
       <ModuleHero
         eyebrow="Command Center"
-        eyebrowIcon={<Users size={13} weight="fill" color={C.gold} />}
+        eyebrowIcon={<Users size={13} weight="fill" color="var(--text-secondary)" />}
         title="Stakeholder"
         accent="Directory"
         subtitle="One roster, every site."
@@ -86,13 +86,13 @@ export default function DirectoryPage() {
       : filtered.length === 0 ? (
         list.length === 0 ? (
           <SectionCard>
-            <PremiumEmpty icon={<Users size={32} weight="duotone" color={C.gold} />} title="No stakeholders yet"
+            <PremiumEmpty icon={<Users size={32} weight="duotone" color="var(--text-secondary)" />} title="No stakeholders yet"
               description="Build the roster for each location — every trade, vendor, and authority in one place so anyone in the org knows who to call."
               action={<GoldButton icon={<Plus size={15} weight="bold" />} onClick={() => setAdding(true)}>Add Your First</GoldButton>} />
           </SectionCard>
         ) : (
           <SectionCard flat>
-            <PremiumEmpty compact icon={<Users size={26} weight="duotone" color={C.gold} />} title="Nothing matches"
+            <PremiumEmpty compact icon={<Users size={26} weight="duotone" color="var(--text-secondary)" />} title="Nothing matches"
               description="No stakeholder matches this site or search. Clear the filters to see the full roster." />
           </SectionCard>
         )
@@ -105,7 +105,7 @@ export default function DirectoryPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 15, fontWeight: 800 }}>{s.name}</div>
-                    <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 700, color: col, background: `${col}18`, padding: '2px 8px', borderRadius: 6, marginTop: 4 }}>{role}</span>
+                    <span style={{ display: 'inline-block', fontSize: 12, fontWeight: 700, color: col, background: `${col}18`, padding: '2px 8px', borderRadius: 6, marginTop: 4 }}>{role}</span>
                   </div>
                   <button onClick={() => remove(s.id)} aria-label="Remove" style={{ background: 'none', border: 'none', color: C.faint, cursor: 'pointer', fontSize: 15, lineHeight: 1 }}><X size={15} weight="regular" color={C.faint} /></button>
                 </div>
@@ -131,7 +131,7 @@ function AddForm({ projects, onDone }: { projects: any[]; onDone: () => void }) 
   const [err, setErr] = useState('');
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
   const inp: React.CSSProperties = { padding: '8px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', background: 'var(--bg-surface-2)', width: '100%' };
-  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
+  const lbl: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
 
   async function submit() {
     if (!f.project_id || !f.name) { setErr('Site and name are required.'); return; }
@@ -140,7 +140,7 @@ function AddForm({ projects, onDone }: { projects: any[]; onDone: () => void }) 
   }
 
   return (
-    <SectionCard title="Add Stakeholder" subtitle="Name, role, and how to reach them — tied to a site." icon={<Users size={16} weight="duotone" color={C.gold} />} style={{ marginBottom: 18 }}>
+    <SectionCard title="Add Stakeholder" subtitle="Name, role, and how to reach them — tied to a site." icon={<Users size={16} weight="duotone" color="var(--text-secondary)" />} style={{ marginBottom: 18 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
         <div><label style={lbl}>Name *</label><input style={inp} value={f.name || ''} onChange={(e) => set('name', e.target.value)} /></div>
         <div><label style={lbl}>Site *</label><select style={inp} value={f.project_id || ''} onChange={(e) => set('project_id', e.target.value)}><option value="">Select site…</option>{projects.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>

@@ -146,7 +146,7 @@ const CSS = `
 .blOffer { padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid var(--brand-primary-18); background: var(--brand-primary-08); font-size: var(--fs-sm); color: var(--text-primary); }
 .blProse { font-size: var(--fs-sm); color: var(--text-secondary); line-height: 1.65; }
 .blCheckoutOff { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 16px; padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid var(--brand-primary-35); background: var(--brand-primary-08); font-size: var(--fs-sm); color: var(--text-primary); line-height: 1.55; }
-.blCheckoutOff > svg { color: var(--brand-primary); flex-shrink: 0; margin-top: 2px; }
+.blCheckoutOff > svg { color: var(--text-secondary); flex-shrink: 0; margin-top: 2px; }
 .blCheckoutOff b { display: block; }
 @media (max-width: 640px) {
   .blWs .k-btn, .blWs .k-stat { min-height: 44px; }

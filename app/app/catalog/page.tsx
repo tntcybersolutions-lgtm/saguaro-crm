@@ -116,13 +116,13 @@ interface CatalogData {
 type SortMode = 'name' | 'price' | 'category';
 
 const INP: React.CSSProperties = { padding: '9px 12px 9px 34px', background: DARK, border: `1px solid ${BORDER}`, borderRadius: 9, color: TEXT, fontSize: 13, outline: 'none', width: 260, boxSizing: 'border-box' };
-const SEL: React.CSSProperties = { padding: '8px 10px', background: DARK, border: `1px solid ${BORDER}`, borderRadius: 9, color: TEXT, fontSize: 12.5, outline: 'none', cursor: 'pointer' };
-const TH: React.CSSProperties = { padding: '9px 12px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap', background: DARK };
+const SEL: React.CSSProperties = { padding: '8px 10px', background: DARK, border: `1px solid ${BORDER}`, borderRadius: 9, color: TEXT, fontSize: 13, outline: 'none', cursor: 'pointer' };
+const TH: React.CSSProperties = { padding: '9px 12px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap', background: DARK };
 
 /** Small chip marking a price as REFERENCE data — never mistakable for a live quote. */
 function RefChip() {
   return (
-    <span style={{ marginLeft: 5, padding: '1px 5px', borderRadius: 5, background: 'color-mix(in srgb, var(--brand-primary) 14%, transparent)', border: '1px solid var(--brand-primary-35)', color: AMBER, fontSize: 8.5, fontWeight: 900, verticalAlign: 'middle', whiteSpace: 'nowrap' as const }}>Ref</span>
+    <span style={{ marginLeft: 5, padding: '1px 5px', borderRadius: 5, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', fontSize: 8.5, fontWeight: 900, verticalAlign: 'middle', whiteSpace: 'nowrap' as const }}>Ref</span>
   );
 }
 
@@ -187,7 +187,7 @@ function Availability({ offer, compact = false, feedConnected = false }: { offer
         {qty}{label}
       </span>
       {/* A live number is only honest when it says whose feed and when. */}
-      <span style={{ fontSize: 9, color: 'var(--c-text-2)' }}>
+      <span style={{ fontSize: 12, color: 'var(--c-text-2)' }}>
         {offer.vendor} · {fmtDate(offer.asOf)}
       </span>
     </span>
@@ -204,12 +204,12 @@ function ProvPop({ offer, item }: { offer: Offer; item: CatalogItem }) {
   const live = hasLiveStock(offer);
   return (
     <span className="catProvPop" role="tooltip">
-      <span style={{ display: 'block', fontSize: 11.5, fontWeight: 800, color: TEXT, marginBottom: 2 }}>{offer.vendor}</span>
-      <span style={{ display: 'block', fontSize: 10, fontWeight: 900, color: AMBER, marginBottom: 3 }}>Reference Price</span>
-      <span style={{ display: 'block', fontSize: 11, color: DIM, lineHeight: 1.45 }}>
+      <span style={{ display: 'block', fontSize: 12, fontWeight: 800, color: TEXT, marginBottom: 2 }}>{offer.vendor}</span>
+      <span style={{ display: 'block', fontSize: 12, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 3 }}>Reference Price</span>
+      <span style={{ display: 'block', fontSize: 12, color: DIM, lineHeight: 1.45 }}>
         Captured {fmtDate(offer.asOf)}{offer.source ? ` · ${offer.source}` : ''} — not a live quote.
       </span>
-      <span style={{ display: 'block', fontSize: 11, color: live ? DIM : 'var(--text-secondary)', lineHeight: 1.45, marginTop: 4 }}>
+      <span style={{ display: 'block', fontSize: 12, color: live ? DIM : 'var(--text-secondary)', lineHeight: 1.45, marginTop: 4 }}>
         {live
           ? `Availability from the ${offer.source} feed as of ${fmtDate(offer.asOf)}.`
           : `${AVAILABILITY_UNTRACKED_LINE} — no store, branch, or inventory feed is connected.`}
@@ -220,7 +220,7 @@ function ProvPop({ offer, item }: { offer: Offer; item: CatalogItem }) {
           target="_blank"
           rel="noopener noreferrer"
           className="pmBtn"
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 800, color: AMBER, textDecoration: 'none', border: '1px solid var(--brand-primary-35)', background: 'color-mix(in srgb, var(--brand-primary) 10%, transparent)', borderRadius: 6, padding: '3px 8px' }}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 800, color: 'var(--link)', textDecoration: 'none', border: '1px solid var(--border-default)', background: 'var(--bg-surface-2)', borderRadius: 6, padding: '3px 8px' }}
         >
           <MagnifyingGlassPlus size={11} weight="bold" /> Check Availability
         </a>
@@ -230,7 +230,7 @@ function ProvPop({ offer, item }: { offer: Offer; item: CatalogItem }) {
             target="_blank"
             rel="noopener noreferrer"
             className="pmBtn"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 800, color: DIM, textDecoration: 'none', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '3px 8px' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 800, color: DIM, textDecoration: 'none', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '3px 8px' }}
           >
             <Globe size={11} weight="bold" /> Vendor Site
           </a>
@@ -621,8 +621,8 @@ export default function CatalogPage() {
                 <Info size={13} weight="bold" /> How Pricing Works
               </button>
               {pricingInfo && (
-                <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', zIndex: 80, width: 304, background: 'var(--bg-solid-2)', border: '1px solid var(--brand-primary-35)', borderRadius: 12, padding: '14px 16px', boxShadow: '0 12px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)', textAlign: 'left' }}>
-                  <div style={{ fontSize: 11, fontWeight: 900, color: AMBER, marginBottom: 8 }}>How Pricing and Ordering Work</div>
+                <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', zIndex: 80, width: 304, background: 'var(--bg-solid-2)', border: '1px solid var(--border-default)', borderRadius: 12, padding: '14px 16px', boxShadow: '0 12px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)', textAlign: 'left' }}>
+                  <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 8 }}>How Pricing and Ordering Work</div>
                   {[
                     ['1. Reference Snapshot', 'Every price is seeded reference data stamped with its capture date — never a live quote.'],
                     ['2. No Stock Claims', 'Availability is not tracked. A stock badge appears only on rows fed by a connected vendor feed, stamped with that vendor and date.'],
@@ -631,8 +631,8 @@ export default function CatalogPage() {
                     ['5. Your Vendor Confirms', 'The vendor confirms price and stock before the PO is issued. Vendor API feeds connect here when accounts are linked.'],
                   ].map(([h, b]) => (
                     <div key={h} style={{ marginBottom: 8 }}>
-                      <div style={{ fontSize: 11.5, fontWeight: 800, color: TEXT }}>{h}</div>
-                      <div style={{ fontSize: 11, color: DIM, lineHeight: 1.45 }}>{b}</div>
+                      <div style={{ fontSize: 12, fontWeight: 800, color: TEXT }}>{h}</div>
+                      <div style={{ fontSize: 12, color: DIM, lineHeight: 1.45 }}>{b}</div>
                     </div>
                   ))}
                 </div>
@@ -677,7 +677,7 @@ export default function CatalogPage() {
           ...(stats.items > 0 && stats.coverage < 100 ? [`${stats.coverage}% priced`] : []),
           `reference pricing as of ${fmtDate(data.asOfMax)}`,
         ].join(' · ')}
-        icon={<Package size={17} weight="duotone" color={GOLD} />}
+        icon={<Package size={17} weight="duotone" color="var(--text-secondary)" />}
         flush
       >
         {/* ── One line, not three.
@@ -690,9 +690,9 @@ export default function CatalogPage() {
              The honesty is not negotiable, so it stays — as one sentence. The
              long version lives behind "How pricing works" in the header, where
              someone who wants it can go and get it. ── */}
-        <div style={{ display: 'flex', gap: 9, alignItems: 'center', flexWrap: 'wrap' as const, padding: '9px 16px', borderBottom: `1px solid ${BORDER}`, background: 'color-mix(in srgb, var(--brand-primary) 5%, transparent)' }}>
-          <Info size={13} weight="bold" color={AMBER} style={{ flex: 'none' }} />
-          <span style={{ fontSize: 11.5, color: DIM, lineHeight: 1.45, minWidth: 0 }}>
+        <div style={{ display: 'flex', gap: 9, alignItems: 'center', flexWrap: 'wrap' as const, padding: '9px 16px', borderBottom: `1px solid ${BORDER}`, background: 'var(--bg-surface-2)' }}>
+          <Info size={13} weight="bold" color="var(--text-secondary)" style={{ flex: 'none' }} />
+          <span style={{ fontSize: 12, color: DIM, lineHeight: 1.45, minWidth: 0 }}>
             {data?.hasLiveStockFeed
               ? 'Stock shows only on rows backed by a connected vendor feed.'
               : 'Reference prices, not live quotes — confirm with the vendor before ordering.'}
@@ -702,7 +702,7 @@ export default function CatalogPage() {
               type="button"
               onClick={() => setShowVendorSites((v) => !v)}
               className="pmBtn"
-              style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 800, color: DIM, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '3px 9px', cursor: 'pointer', whiteSpace: 'nowrap' as const }}
+              style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 800, color: DIM, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '3px 9px', cursor: 'pointer', whiteSpace: 'nowrap' as const }}
             >
               {showVendorSites ? 'Hide Vendor Sites' : `${vendorLinks.length} Vendor Sites`}
             </button>
@@ -719,7 +719,7 @@ export default function CatalogPage() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="pmBtn"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 800, color: DIM, textDecoration: 'none', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '3px 8px', whiteSpace: 'nowrap' as const }}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 800, color: DIM, textDecoration: 'none', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '3px 8px', whiteSpace: 'nowrap' as const }}
                     title={`Open ${v.name}'s website to price and order`}
                   >
                     <Globe size={11} weight="bold" /> {v.name}
@@ -738,7 +738,7 @@ export default function CatalogPage() {
           </div>
         ) : filtered.length === 0 ? (
           <PremiumEmpty
-            icon={<Package size={34} weight="duotone" color={GOLD} />}
+            icon={<Package size={34} weight="duotone" color="var(--text-secondary)" />}
             title={q.trim() ? 'No items match your search' : 'Nothing on this shelf yet'}
             description={q.trim()
               ? `No catalog items match "${q.trim()}"${vertical === 'all' ? '' : ` in ${titleCase(vertical)}`}. Try a broader term or another vertical.`
@@ -785,7 +785,7 @@ export default function CatalogPage() {
                     <React.Fragment key={it.id}>
                       {showCat && it.category && (
                         <tr>
-                          <td colSpan={6} style={{ padding: '10px 12px 5px', fontSize: 10, fontWeight: 900, color: 'var(--c-text-2)', borderBottom: `1px solid rgba(255,255,255,0.06)` }}>
+                          <td colSpan={6} style={{ padding: '10px 12px 5px', fontSize: 12, fontWeight: 900, color: 'var(--c-text-2)', borderBottom: `1px solid rgba(255,255,255,0.06)` }}>
                             {titleCase(it.category)}
                           </td>
                         </tr>
@@ -805,21 +805,21 @@ export default function CatalogPage() {
                                 display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 13px',
                                 background: it.prices.length ? `linear-gradient(180deg,var(--brand-primary-strong),${GOLD} 60%,var(--brand-primary-hover))` : 'rgba(255,255,255,0.06)',
                                 border: 'none', borderRadius: 8, color: it.prices.length ? 'var(--on-brand)' : 'rgba(255,255,255,0.3)',
-                                fontSize: 11.5, fontWeight: 900, cursor: it.prices.length ? 'pointer' : 'not-allowed',
+                                fontSize: 12, fontWeight: 900, cursor: it.prices.length ? 'pointer' : 'not-allowed',
                                 boxShadow: it.prices.length ? '0 2px 8px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' : 'none',
                               }}
                             >
                               <Plus size={12} weight="bold" /> Add
                             </button>
                           ) : (
-                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 0, border: `1px solid var(--brand-primary-35)`, borderRadius: 8, overflow: 'hidden', background: 'var(--brand-primary-08)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)' }}>
-                              <button onClick={() => setQty(it.id, qty - 1)} className="pmBtn catStep" style={{ padding: '5px 9px', background: 'var(--brand-primary-12)', border: 'none', boxShadow: 'inset -1px 0 0 var(--brand-primary-25)', color: AMBER, cursor: 'pointer' }}><Minus size={11} weight="bold" /></button>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 0, border: `1px solid var(--brand-primary-35)`, borderRadius: 8, overflow: 'hidden', background: 'var(--bg-surface-2)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+                              <button onClick={() => setQty(it.id, qty - 1)} className="pmBtn catStep" style={{ padding: '5px 9px', background: 'var(--bg-surface-2)', border: 'none', boxShadow: 'inset -1px 0 0 var(--brand-primary-25)', color: 'var(--text-primary)', cursor: 'pointer' }}><Minus size={11} weight="bold" /></button>
                               <input
                                 value={qty}
                                 onChange={(e) => setQty(it.id, Math.max(0, parseInt(e.target.value) || 0))}
-                                style={{ width: 42, textAlign: 'center', background: 'transparent', border: 'none', color: AMBER, fontWeight: 800, fontSize: 12.5, outline: 'none', fontVariantNumeric: 'tabular-nums' }}
+                                style={{ width: 42, textAlign: 'center', background: 'transparent', border: 'none', color: 'var(--text-primary)', fontWeight: 800, fontSize: 13, outline: 'none', fontVariantNumeric: 'tabular-nums' }}
                               />
-                              <button onClick={() => setQty(it.id, qty + 1)} className="pmBtn catStep" style={{ padding: '5px 9px', background: 'var(--brand-primary-12)', border: 'none', boxShadow: 'inset 1px 0 0 var(--brand-primary-25)', color: AMBER, cursor: 'pointer' }}><Plus size={11} weight="bold" /></button>
+                              <button onClick={() => setQty(it.id, qty + 1)} className="pmBtn catStep" style={{ padding: '5px 9px', background: 'var(--bg-surface-2)', border: 'none', boxShadow: 'inset 1px 0 0 var(--brand-primary-25)', color: 'var(--text-primary)', cursor: 'pointer' }}><Plus size={11} weight="bold" /></button>
                             </div>
                           )}
                         </td>
@@ -827,9 +827,9 @@ export default function CatalogPage() {
                           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                             <ItemVisual item={it} onOpen={setLightbox} />
                             <div style={{ minWidth: 0, position: 'relative' }}>
-                              <div style={{ fontWeight: 700, color: TEXT, fontSize: 12.5, lineHeight: 1.3 }}>{it.name}</div>
+                              <div style={{ fontWeight: 700, color: TEXT, fontSize: 13, lineHeight: 1.3 }}>{it.name}</div>
                               {(it.description || it.skuHint) && (
-                                <div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 2, lineHeight: 1.4 }}>
+                                <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 2, lineHeight: 1.4 }}>
                                   {it.description}{it.description && it.skuHint ? ' · ' : ''}{it.skuHint ? `SKU ${it.skuHint}` : ''}
                                 </div>
                               )}
@@ -845,9 +845,9 @@ export default function CatalogPage() {
                                 </button>
                               )}
                               {imgMenu === it.id && (
-                                <div style={{ position: 'absolute', zIndex: 80, top: '100%', left: 0, marginTop: 6, width: 252, padding: 11, borderRadius: 10, background: 'var(--bg-solid-2)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', boxShadow: '0 10px 28px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
-                                  <div style={{ fontSize: 9.5, fontWeight: 900, color: AMBER, marginBottom: 7 }}>Real Product Photo</div>
-                                  <label className="pmBtn" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 11px', background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-35)', borderRadius: 8, color: AMBER, fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>
+                                <div style={{ position: 'absolute', zIndex: 80, top: '100%', left: 0, marginTop: 6, width: 252, padding: 11, borderRadius: 10, background: 'var(--bg-solid-2)', border: '1px solid var(--border-default)', boxShadow: '0 10px 28px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
+                                  <div style={{ fontSize: 9.5, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 7 }}>Real Product Photo</div>
+                                  <label className="pmBtn" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 11px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 8, color: 'var(--text-primary)', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
                                     <UploadSimple size={12} weight="bold" /> Upload Image
                                     <input
                                       type="file"
@@ -861,7 +861,7 @@ export default function CatalogPage() {
                                       value={imgUrlDraft}
                                       onChange={(e) => setImgUrlDraft(e.target.value)}
                                       placeholder="…or paste manufacturer image URL"
-                                      style={{ flex: 1, minWidth: 0, padding: '6px 8px', background: DARK, border: `1px solid ${BORDER}`, borderRadius: 7, color: TEXT, fontSize: 11, outline: 'none' }}
+                                      style={{ flex: 1, minWidth: 0, padding: '6px 8px', background: DARK, border: `1px solid ${BORDER}`, borderRadius: 7, color: TEXT, fontSize: 12, outline: 'none' }}
                                     />
                                     <button
                                       onClick={() => attachImageUrl(it.id)}
@@ -874,7 +874,7 @@ export default function CatalogPage() {
                                     </button>
                                   </div>
                                   <div style={{ fontSize: 9.5, color: 'var(--c-text-2)', marginTop: 7, lineHeight: 1.45 }}>Images only, 5MB max. Paste a real vendor or manufacturer URL — never a guess.</div>
-                                  {imgErr && <div style={{ fontSize: 10.5, color: RED, marginTop: 6 }}>{imgErr}</div>}
+                                  {imgErr && <div style={{ fontSize: 12, color: RED, marginTop: 6 }}>{imgErr}</div>}
                                 </div>
                               )}
                             </div>
@@ -886,20 +886,20 @@ export default function CatalogPage() {
                           {best ? (
                             <span className="catProv" tabIndex={0}>
                               <ProvPop offer={best} item={it} />
-                              <div style={{ fontWeight: 800, color: AMBER, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>
+                              <div style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>
                                 {fmtMoney(best.price)}<RefChip />
                               </div>
-                              <div style={{ fontSize: 10.5, color: DIM, marginTop: 1 }}>{best.vendor}</div>
+                              <div style={{ fontSize: 12, color: DIM, marginTop: 1 }}>{best.vendor}</div>
                               <Availability offer={best} compact feedConnected={!!data?.hasLiveStockFeed} />
                               {/* Lead time comes off the same seeded row as stock — only a real feed may show it. */}
                               {hasLiveStock(best) && best.leadTimeDays != null && best.leadTimeDays > 0 && (
-                                <div style={{ fontSize: 10, color: 'var(--c-text-2)', display: 'inline-flex', alignItems: 'center', gap: 3, marginTop: 1 }}>
+                                <div style={{ fontSize: 12, color: 'var(--c-text-2)', display: 'inline-flex', alignItems: 'center', gap: 3, marginTop: 1 }}>
                                   <Truck size={10} color="rgba(255,255,255,0.45)" />{best.leadTimeDays}d lead
                                 </div>
                               )}
                             </span>
                           ) : (
-                            <span style={{ color: 'var(--c-text-2)', fontSize: 11.5 }}>No quotes yet</span>
+                            <span style={{ color: 'var(--c-text-2)', fontSize: 12 }}>No quotes yet</span>
                           )}
                         </td>
 
@@ -925,7 +925,7 @@ export default function CatalogPage() {
                              column you had to scroll sideways to read. ── */}
                         <td style={{ padding: '9px 12px', verticalAlign: 'middle' }}>
                           {others.length === 0 ? (
-                            <span style={{ fontSize: 11, color: 'var(--c-text-2)' }}>
+                            <span style={{ fontSize: 12, color: 'var(--c-text-2)' }}>
                               {best ? 'Only quote on file' : '—'}
                             </span>
                           ) : (
@@ -939,7 +939,7 @@ export default function CatalogPage() {
                                     border: `1px solid ${BORDER}`, background: 'rgba(255,255,255,0.03)',
                                     whiteSpace: 'nowrap' as const,
                                   }}>
-                                    <span style={{ fontSize: 10.5, color: DIM }}>{o.vendor}</span>
+                                    <span style={{ fontSize: 12, color: DIM }}>{o.vendor}</span>
                                     <span style={{ fontSize: 12, fontWeight: 700, color: TEXT, fontVariantNumeric: 'tabular-nums' }}>{fmtMoney(o.price)}</span>
                                     {/* Only a live feed may say anything about stock. */}
                                     {hasLiveStock(o) && <Availability offer={o} compact feedConnected={!!data?.hasLiveStockFeed} />}
@@ -951,7 +951,7 @@ export default function CatalogPage() {
                                   trying to be, but per row and actionable. */}
                               {best && overPct != null && (
                                 <span
-                                  style={{ fontSize: 10, fontWeight: 800, color: 'var(--c-text-2)', whiteSpace: 'nowrap' as const, marginLeft: 2 }}
+                                  style={{ fontSize: 12, fontWeight: 800, color: 'var(--c-text-2)', whiteSpace: 'nowrap' as const, marginLeft: 2 }}
                                   title={`Highest quote on file is ${overPct}% above ${best.vendor}'s ${fmtMoney(best.price)}`}
                                 >
                                   +{overPct}% high
@@ -971,7 +971,7 @@ export default function CatalogPage() {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="pmBtn"
-                                style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9.5, fontWeight: 800, color: AMBER, textDecoration: 'none', border: '1px solid var(--brand-primary-35)', background: 'color-mix(in srgb, var(--brand-primary) 10%, transparent)', borderRadius: 6, padding: '3px 7px', whiteSpace: 'nowrap' as const }}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9.5, fontWeight: 800, color: 'var(--link)', textDecoration: 'none', border: '1px solid var(--border-default)', background: 'var(--bg-surface-2)', borderRadius: 6, padding: '3px 7px', whiteSpace: 'nowrap' as const }}
                                 title={`Search today's price and availability for this SKU at ${best.vendor}`}
                               >
                                 <MagnifyingGlassPlus size={10} weight="bold" /> Check Availability
@@ -1015,10 +1015,10 @@ export default function CatalogPage() {
           animation: 'pmRise .2s cubic-bezier(.2,.7,.3,1)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <ShoppingCartSimple size={20} weight="fill" color={GOLD} />
+            <ShoppingCartSimple size={20} weight="fill" color="var(--text-secondary)" />
             <div>
-              <div style={{ fontWeight: 800, color: TEXT, fontSize: 13.5, fontVariantNumeric: 'tabular-nums' }}>{cartCount} item{cartCount === 1 ? '' : 's'} · {fmtMoney(cartTotal)}</div>
-              <div style={{ fontSize: 11, color: DIM }}>Best reference offer per item · availability not tracked · POs grouped by vendor · your vendor confirms price and stock before issue</div>
+              <div style={{ fontWeight: 800, color: TEXT, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>{cartCount} item{cartCount === 1 ? '' : 's'} · {fmtMoney(cartTotal)}</div>
+              <div style={{ fontSize: 12, color: DIM }}>Best reference offer per item · availability not tracked · POs grouped by vendor · your vendor confirms price and stock before issue</div>
             </div>
           </div>
           <div style={{ flex: 1 }} />
@@ -1046,12 +1046,12 @@ export default function CatalogPage() {
           onClick={() => setLightbox(null)}
           style={{ position: 'fixed', inset: 0, zIndex: 10002, background: 'rgba(2,4,8,0.72)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 28, cursor: 'zoom-out' }}
         >
-          <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: 'min(760px, 92vw)', background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 24px 64px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)', cursor: 'default' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: 'min(760px, 92vw)', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 24px 64px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)', cursor: 'default' }}>
             <img src={lightbox.imageUrl} alt={lightbox.name} style={{ display: 'block', maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain', margin: '0 auto', background: DARK }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderTop: `1px solid ${BORDER}` }}>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontWeight: 800, color: TEXT, fontSize: 13 }}>{lightbox.name}</div>
-                <div style={{ fontSize: 10.5, color: DIM, marginTop: 1 }}>{titleCase(lightbox.vertical)}{lightbox.skuHint ? ` · SKU ${lightbox.skuHint}` : ''}</div>
+                <div style={{ fontSize: 12, color: DIM, marginTop: 1 }}>{titleCase(lightbox.vertical)}{lightbox.skuHint ? ` · SKU ${lightbox.skuHint}` : ''}</div>
               </div>
               <div style={{ flex: 1 }} />
               <button onClick={() => setLightbox(null)} className="pmBtn" style={{ ...ghostButtonStyle, padding: '7px 10px' }} title="Close">

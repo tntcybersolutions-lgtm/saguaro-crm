@@ -12,7 +12,7 @@ import { FlatStyles, RowSkeleton } from '@/components/ui/flat';
 const CO_STAGES: Record<string, { label: string; color: string }> = {
   draft: { label: 'Issued', color: C.dim }, pricing: { label: 'GC Pricing', color: '#5AC8FA' },
   pm_review: { label: 'PM Review', color: C.blue }, architect_review: { label: 'Architect Review', color: 'var(--warning)' },
-  pending_owner: { label: 'Owner Approval', color: C.gold }, approved: { label: 'Executed', color: C.green },
+  pending_owner: { label: 'Owner Approval', color: 'var(--text-primary)' }, approved: { label: 'Executed', color: C.green },
   schedule_updated: { label: 'Schedule Updated', color: '#30B0C7' }, budget_updated: { label: 'Budget Updated', color: 'var(--success)' },
   rejected: { label: 'Rejected', color: C.red },
 };
@@ -59,7 +59,7 @@ export default function BudgetPage() {
       <div style={{ fontFamily: font, color: C.text }}>
       <ModuleHero
         eyebrow="Command Center"
-        eyebrowIcon={<CurrencyDollar size={13} weight="fill" color={C.gold} />}
+        eyebrowIcon={<CurrencyDollar size={13} weight="fill" color="var(--text-secondary)" />}
         title="Budget &"
         accent="Change Orders"
         subtitle="Original, revised, and forecast across every site."
@@ -85,7 +85,7 @@ export default function BudgetPage() {
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 16 }}>
         <Chip active={tab === 'budget'} onClick={() => setTab('budget')} count={(budgets as any[]).length}>Budget</Chip>
-        <Chip active={tab === 'cos'} color={C.gold} onClick={() => setTab('cos')} count={(changeOrders as any[]).length}>Change Orders</Chip>
+        <Chip active={tab === 'cos'} color="var(--text-secondary)" onClick={() => setTab('cos')} count={(changeOrders as any[]).length}>Change Orders</Chip>
       </div>
 
       {tab === 'cos' && adding && <COForm projects={projects} onDone={() => setAdding(false)} />}
@@ -95,11 +95,11 @@ export default function BudgetPage() {
         (budgets as any[]).length === 0 ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.4fr) minmax(250px,1fr)', gap: 14, alignItems: 'start' }}>
             <SectionCard
-              icon={<CurrencyDollar size={17} weight="duotone" color={C.gold} />}
+              icon={<CurrencyDollar size={17} weight="duotone" color="var(--text-secondary)" />}
               title="No Site Budgets Yet — Seed Them per Project"
               subtitle="Original, committed, actual, and forecast variance per site."
             >
-              <div style={{ fontSize: 12.5, color: C.dim, lineHeight: 1.6, marginBottom: 14 }}>
+              <div style={{ fontSize: 13, color: C.dim, lineHeight: 1.6, marginBottom: 14 }}>
                 Every project has its own Budget page — seed lines there by CSI division or pull bid-package estimates in one tap.
               </div>
               {((projects || []) as any[]).length > 0 ? (
@@ -107,13 +107,13 @@ export default function BudgetPage() {
                   {((projects || []) as any[]).slice(0, 8).map((p: any) => (
                     <Link key={p.id} href={`/app/projects/${p.id}/budget`} className="pmHover" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '9px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)', color: C.text, textDecoration: 'none', fontSize: 13, fontWeight: 700 }}>
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: C.gold, fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap' }}>Open Budget <ArrowRight size={13} color={C.gold} /></span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: 'var(--text-primary)', fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap' }}>Open Budget <ArrowRight size={13} color="var(--text-secondary)" /></span>
                     </Link>
                   ))}
-                  {((projects || []) as any[]).length > 8 && <div style={{ fontSize: 11.5, color: C.dim, paddingTop: 2 }}>+{((projects || []) as any[]).length - 8} more projects — open any project to reach its budget.</div>}
+                  {((projects || []) as any[]).length > 8 && <div style={{ fontSize: 12, color: C.dim, paddingTop: 2 }}>+{((projects || []) as any[]).length - 8} more projects — open any project to reach its budget.</div>}
                 </div>
               ) : (
-                <div style={{ fontSize: 12.5, color: C.dim }}>Create a project first — its budget page is ready the moment the project exists.</div>
+                <div style={{ fontSize: 13, color: C.dim }}>Create a project first — its budget page is ready the moment the project exists.</div>
               )}
             </SectionCard>
             <SectionCard flat>
@@ -140,7 +140,7 @@ export default function BudgetPage() {
                 <Line label="Original" v={b.original} />
                 <Line label="Approved COs" v={b.approvedCO} color={C.green} plus />
                 <Line label="Revised" v={b.revised} bold />
-                <Line label="Pending COs" v={b.pendingCO} color={C.gold} plus />
+                <Line label="Pending COs" v={b.pendingCO} color="var(--text-secondary)" plus />
                 <Line label="Committed" v={b.committed} />
                 <Line label="Actual" v={b.actual} />
                 <Line label="Forecast" v={b.forecast} bold />
@@ -152,7 +152,7 @@ export default function BudgetPage() {
       ) : (
         (changeOrders as any[]).length === 0 ? (
           <SectionCard>
-            <PremiumEmpty icon={<NotePencil size={32} weight="duotone" color={C.gold} />} title="No change orders"
+            <PremiumEmpty icon={<NotePencil size={32} weight="duotone" color="var(--text-secondary)" />} title="No change orders"
               description="Every change routes the same way: Issued, GC Pricing, PM Review, Architect Review, Owner Approval, Executed, Schedule Updated, Budget Updated."
               action={<GoldButton icon={<Plus size={15} weight="bold" />} onClick={() => setAdding(true)}>New Change Order</GoldButton>} />
           </SectionCard>
@@ -169,7 +169,7 @@ export default function BudgetPage() {
                     {co.status === 'rejected' && co.rejection_reason && <div style={{ fontSize: 12, color: C.red, marginTop: 3 }}>Rejected: {co.rejection_reason}</div>}
                   </div>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: st.color, background: `${st.color}18`, padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>{st.label}</span>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: st.color, background: `${st.color}18`, padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>{st.label}</span>
                     {!final && <>
                       <button onClick={() => act(co.id, 'advance')} disabled={busy[co.id]} className="pmBtn" style={{ padding: '6px 11px', borderRadius: 8, border: 'none', background: C.green, color: 'var(--text-primary)', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Advance <ArrowRight size={13} weight="regular" color="var(--text-primary)" style={{ verticalAlign: 'middle' }} /></button>
                       <button onClick={() => act(co.id, 'reject')} disabled={busy[co.id]} className="pmBtn" style={{ padding: '6px 11px', borderRadius: 8, border: `1px solid ${C.red}`, background: 'var(--bg-surface)', color: C.red, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Reject</button>
@@ -199,7 +199,7 @@ function COForm({ projects, onDone }: { projects: any[]; onDone: () => void }) {
   const [err, setErr] = useState('');
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
   const inp: React.CSSProperties = { padding: '8px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', background: 'var(--bg-surface-2)', width: '100%' };
-  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
+  const lbl: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
 
   async function submit() {
     if (!f.project_id || !f.title) { setErr('Site and title are required.'); return; }
@@ -207,7 +207,7 @@ function COForm({ projects, onDone }: { projects: any[]; onDone: () => void }) {
     try { await createChangeOrder(f); onDone(); } catch (e: any) { setErr(e?.message || "Couldn't save the change order. Please try again."); } finally { setBusy(false); }
   }
   return (
-    <SectionCard title="New Change Order" subtitle="Routes through GC pricing, reviews, and owner approval automatically." icon={<NotePencil size={16} weight="duotone" color={C.gold} />} style={{ marginBottom: 18 }}>
+    <SectionCard title="New Change Order" subtitle="Routes through GC pricing, reviews, and owner approval automatically." icon={<NotePencil size={16} weight="duotone" color="var(--text-secondary)" />} style={{ marginBottom: 18 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
         <div style={{ gridColumn: '1 / -1' }}><label style={lbl}>Title *</label><input style={inp} placeholder="e.g. Added rooftop screening" value={f.title || ''} onChange={(e) => set('title', e.target.value)} /></div>
         <div><label style={lbl}>Site *</label><select style={inp} value={f.project_id || ''} onChange={(e) => set('project_id', e.target.value)}><option value="">Select…</option>{projects.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>

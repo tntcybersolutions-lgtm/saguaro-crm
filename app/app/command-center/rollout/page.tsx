@@ -78,7 +78,7 @@ export default function RolloutPipelinePage() {
           <div style={{ color: C.dim, padding: 40, textAlign: 'center' }}>Loading pipeline…</div>
         ) : (
           <SectionCard
-            icon={<Cactus size={16} weight="duotone" color={C.gold} />}
+            icon={<Cactus size={16} weight="duotone" color="var(--text-secondary)" />}
             title="Pipeline Board"
             subtitle="Every stage carries its playbook duration and committed value."
             flush
@@ -95,8 +95,8 @@ export default function RolloutPipelinePage() {
                       <span style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 700, color: C.dim }}>{items.length}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0 6px 8px' }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: stage.color, background: `${stage.color}18`, borderRadius: 5, padding: '1px 6px' }}>{stage.weeks}</span>
-                      <span style={{ fontSize: 11, color: colValue > 0 ? C.gold : C.faint, fontWeight: 600 }}>{colValue > 0 ? fmtMoneyShort(colValue) : '—'}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: stage.color, background: `${stage.color}18`, borderRadius: 5, padding: '1px 6px' }}>{stage.weeks}</span>
+                      <span style={{ fontSize: 12, color: colValue > 0 ? C.gold : C.faint, fontWeight: 600 }}>{colValue > 0 ? fmtMoneyShort(colValue) : '—'}</span>
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minHeight: 40 }}>
@@ -110,7 +110,7 @@ export default function RolloutPipelinePage() {
                               <Link href={`/app/projects/${p.id}`} style={{ fontSize: 13, fontWeight: 800, color: C.text, textDecoration: 'none', lineHeight: 1.25 }}>{p.name || 'Untitled'}</Link>
                               <SevBadge sev={h.status as Severity} label={SEV_LABEL[h.status as Severity]} />
                             </div>
-                            <div style={{ fontSize: 11, color: C.dim, marginTop: 3 }}>
+                            <div style={{ fontSize: 12, color: C.dim, marginTop: 3 }}>
                               {[p.city, p.state].filter(Boolean).join(', ') || '—'}
                               {num(p.contract_value) ? ` · ${fmtMoneyShort(num(p.contract_value))}` : ''}
                             </div>
@@ -144,7 +144,7 @@ export default function RolloutPipelinePage() {
 
 function arrowStyle(disabled: boolean): React.CSSProperties {
   return {
-    flex: 1, padding: '5px 8px', borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: disabled ? 'default' : 'pointer',
+    flex: 1, padding: '5px 8px', borderRadius: 7, fontSize: 12, fontWeight: 700, cursor: disabled ? 'default' : 'pointer',
     border: `1px solid ${C.border}`, background: disabled ? 'var(--bg-base)' : 'var(--bg-surface-2)', color: disabled ? C.faint : C.text,
   };
 }
@@ -156,7 +156,7 @@ function LaunchModal({ onClose }: { onClose: () => void }) {
   const [done, setDone] = useState<any>(null);
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
   const inp: React.CSSProperties = { padding: '9px 11px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, outline: 'none', background: 'var(--bg-surface-2)', color: C.text, width: '100%' };
-  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
+  const lbl: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
 
   async function submit() {
     if (!f.name) { setErr('Site name is required.'); return; }
@@ -171,7 +171,7 @@ function LaunchModal({ onClose }: { onClose: () => void }) {
       <div onClick={(e) => e.stopPropagation()} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, width: 'min(560px, 100%)', boxShadow: '0 24px 80px rgba(2,4,8,0.55)', fontFamily: font, color: C.text }}>
         {done ? (
           <div>
-            <div style={{ fontSize: 20, fontWeight: 900, marginBottom: 6 }}><Cactus size={22} weight="fill" color={C.gold} style={{ verticalAlign: 'middle', marginRight: 6 }} />{f.name} launched</div>
+            <div style={{ fontSize: 20, fontWeight: 900, marginBottom: 6 }}><Cactus size={22} weight="fill" color="var(--text-secondary)" style={{ verticalAlign: 'middle', marginRight: 6 }} />{f.name} launched</div>
             <p style={{ fontSize: 14, color: C.dim, lineHeight: 1.6, margin: '0 0 16px' }}>
               Created from the <b>{GOLF_TEMPLATE.name}</b> playbook and pre-loaded with{' '}
               <b>{done.seeded?.phases ?? 0}</b> phases, <b>{done.seeded?.milestones ?? 0}</b> milestones,{' '}

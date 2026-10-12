@@ -1035,7 +1035,7 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
       {/* drawing register — per-sheet scale, switch pages, add PDF/image sheets */}
       {sheets.length > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderBottom: `1px solid ${LINE}`, background: BG, overflowX: 'auto' }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, color: DIM, fontWeight: 700, flexShrink: 0 }}><G g="sheet" s={15} c={DIM} />Sheets · {sheets.length}</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: DIM, fontWeight: 700, flexShrink: 0 }}><G g="sheet" s={15} c={DIM} />Sheets · {sheets.length}</span>
           {sheets.map((s) => {
             const act = s.id === activeSheet;
             return (
@@ -1043,15 +1043,15 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
                 style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 7, padding: '5px 9px', borderRadius: 8, border: `1px solid ${act ? GOLD : LINE}`, background: act ? 'color-mix(in srgb, var(--brand-primary) 14%, transparent)' : 'transparent', color: act ? GOLD : TEXT, cursor: 'pointer' }}>
                 {s.url
                   ? <img src={s.url} alt="" style={{ width: 30, height: 22, objectFit: 'cover', borderRadius: 3, border: `1px solid ${LINE}`, background: '#fff' }} />
-                  : <span style={{ width: 30, height: 22, borderRadius: 3, border: `1px dashed ${LINE}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: DIM }}>{s.page}</span>}
+                  : <span style={{ width: 30, height: 22, borderRadius: 3, border: `1px dashed ${LINE}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: DIM }}>{s.page}</span>}
                 <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 0 }}>
                   <span style={{ fontSize: 12, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 120 }}>{s.name}</span>
-                  <span style={{ fontSize: 10, color: s.ppf > 0 ? GREEN : DIM, fontWeight: 600 }}>{s.ppf > 0 ? `${s.ppf.toFixed(1)} px/ft` : 'no scale'}</span>
+                  <span style={{ fontSize: 12, color: s.ppf > 0 ? GREEN : DIM, fontWeight: 600 }}>{s.ppf > 0 ? `${s.ppf.toFixed(1)} px/ft` : 'no scale'}</span>
                 </span>
               </button>
             );
           })}
-          <label title="Add a PDF plan-set or image sheet" style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 8, border: `1px dashed ${LINE}`, color: TEXT, cursor: 'pointer', fontSize: 12.5, fontWeight: 600 }}>
+          <label title="Add a PDF plan-set or image sheet" style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 8, border: `1px dashed ${LINE}`, color: TEXT, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
             <G g="addsheet" s={16} />Add
             <input type="file" accept="application/pdf,.pdf,image/*,.heic,.heif,.tif,.tiff" style={{ display: 'none' }} onChange={(e) => { onAddFile(e.target.files?.[0]); (e.target as HTMLInputElement).value = ''; }} />
           </label>
@@ -1083,7 +1083,7 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
                   <input type="file" accept="image/*,.heic,.heif,.tif,.tiff" style={{ display: 'none' }} onChange={(e) => { onAddFile(e.target.files?.[0]); (e.target as HTMLInputElement).value = ''; }} />
                 </label>
               </div>
-              <div style={{ fontSize: 12.5, color: DIM, maxWidth: 440, textAlign: 'center', lineHeight: 1.5 }}>Multi-page PDFs render into a sheet register — calibrate each sheet&apos;s scale independently, then trace, auto-count symbols, and flood-fill rooms on any page. Phone-photo formats (HEIC/HEIF, TIFF) are decoded automatically.</div>
+              <div style={{ fontSize: 13, color: DIM, maxWidth: 440, textAlign: 'center', lineHeight: 1.5 }}>Multi-page PDFs render into a sheet register — calibrate each sheet&apos;s scale independently, then trace, auto-count symbols, and flood-fill rooms on any page. Phone-photo formats (HEIC/HEIF, TIFF) are decoded automatically.</div>
             </div>
           ) : (
             <canvas ref={canvasRef} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onDoubleClick={onDoubleClick}
@@ -1098,18 +1098,18 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
           )}
           {/* targeted-trace banner — measurements land on the caller's condition, not a new row */}
           {targetConditionId && (
-            <div style={{ position: 'absolute', top: 12, left: 12, background: 'rgba(13,17,23,0.95)', border: `1px solid ${GOLD}`, borderRadius: 9, padding: '7px 12px', fontSize: 12.5, color: GOLD, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 7 }}>
+            <div style={{ position: 'absolute', top: 12, left: 12, background: 'rgba(13,17,23,0.95)', border: `1px solid ${GOLD}`, borderRadius: 9, padding: '7px 12px', fontSize: 13, color: 'var(--text-primary)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 7 }}>
               <G g="linear" s={15} c={GOLD} />Tracing: {conditions.find((c) => c.id === targetConditionId)?.name || 'condition'}
             </div>
           )}
           {/* hint + scale entry */}
           <div style={{ position: 'absolute', left: 12, bottom: 12, right: 12, display: 'flex', gap: 10, alignItems: 'flex-end', pointerEvents: 'none' }}>
-            <div style={{ pointerEvents: 'auto', background: 'rgba(13,17,23,0.9)', border: `1px solid ${LINE}`, borderRadius: 9, padding: '8px 12px', fontSize: 12.5, color: DIM, maxWidth: 460 }}>
+            <div style={{ pointerEvents: 'auto', background: 'rgba(13,17,23,0.9)', border: `1px solid ${LINE}`, borderRadius: 9, padding: '8px 12px', fontSize: 13, color: DIM, maxWidth: 460 }}>
               {activeHint}{msg ? <div style={{ color: msg.includes('first') || msg.includes('Need') || msg.includes('Pick') ? GOLD : GREEN, marginTop: 3 }}>{msg}</div> : null}
             </div>
             {tool === 'scale' && calib.length === 2 && (
               <div style={{ pointerEvents: 'auto', background: 'rgba(13,17,23,0.95)', border: `1px solid ${GOLD}`, borderRadius: 9, padding: 10, display: 'flex', gap: 8, alignItems: 'center' }}>
-                <span style={{ fontSize: 12.5, color: TEXT }}>Known Distance</span>
+                <span style={{ fontSize: 13, color: TEXT }}>Known Distance</span>
                 <input autoFocus value={knownFt} onChange={(e) => setKnownFt(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && applyScale()} placeholder="ft" style={{ ...inp, width: 80 }} />
                 <button onClick={applyScale} style={{ background: GOLD, color: '#101722', fontWeight: 700, border: 'none', borderRadius: 7, padding: '8px 12px', cursor: 'pointer' }}>Set</button>
               </div>
@@ -1123,9 +1123,9 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
             {/* live measurement / finish form */}
             {engineKind && (
               <div style={{ border: `1px solid rgba(56,189,248,0.4)`, borderRadius: 12, padding: 12, background: 'rgba(56,189,248,0.05)' }}>
-                <div style={{ fontSize: 11, color: DIM, fontWeight: 700 }}>{TOOLS.find((t) => t.t === tool)?.label} — measuring</div>
-                <div style={{ fontSize: 30, fontWeight: 800, color: CYAN, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>{live ? live.value.toLocaleString() : '0'} <span style={{ fontSize: 15, color: DIM }}>{live?.unit}</span></div>
-                {live?.extra ? <div style={{ fontSize: 11.5, color: DIM, marginTop: 2 }}>{live.extra}</div> : null}
+                <div style={{ fontSize: 12, color: DIM, fontWeight: 700 }}>{TOOLS.find((t) => t.t === tool)?.label} — measuring</div>
+                <div style={{ fontSize: 30, fontWeight: 800, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>{live ? live.value.toLocaleString() : '0'} <span style={{ fontSize: 15, color: DIM }}>{live?.unit}</span></div>
+                {live?.extra ? <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>{live.extra}</div> : null}
 
                 {tool !== 'deduction' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginTop: 10 }}>
@@ -1162,35 +1162,35 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
                             </div>}
                       </div>
                     )}
-                    <button onClick={finishDraft} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, background: GOLD, color: '#101722', fontWeight: 700, border: 'none', borderRadius: 8, padding: '10px', cursor: 'pointer', fontSize: 13.5 }}><G g="check" s={17} c="#101722" />{targetConditionId ? 'Set Measured Value' : 'Add Condition'}</button>
+                    <button onClick={finishDraft} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, background: GOLD, color: '#101722', fontWeight: 700, border: 'none', borderRadius: 8, padding: '10px', cursor: 'pointer', fontSize: 14 }}><G g="check" s={17} c="#101722" />{targetConditionId ? 'Set Measured Value' : 'Add Condition'}</button>
                   </div>
                 )}
                 {tool === 'deduction' && <div style={{ fontSize: 12, color: DIM, marginTop: 8 }}>Draw a hole inside the active area (or select an area shape first). Double-click to finish the void.</div>}
               </div>
             )}
             {(tool === 'countsim' || tool === 'fillroom') && (
-              <div style={{ border: `1px solid var(--brand-primary-35)`, borderRadius: 12, padding: 12, background: 'color-mix(in srgb, var(--brand-primary) 5%, transparent)' }}>
-                <div style={{ fontSize: 11, color: DIM, fontWeight: 700 }}>{tool === 'countsim' ? 'Find Similar — Auto-Count' : 'Fill Room — Auto-Area'}</div>
-                <div style={{ fontSize: 12.5, color: DIM, marginTop: 6, lineHeight: 1.45 }}>{tool === 'countsim'
+              <div style={{ border: `1px solid var(--brand-primary-35)`, borderRadius: 12, padding: 12, background: 'var(--bg-surface-2)' }}>
+                <div style={{ fontSize: 12, color: DIM, fontWeight: 700 }}>{tool === 'countsim' ? 'Find Similar — Auto-Count' : 'Fill Room — Auto-Area'}</div>
+                <div style={{ fontSize: 13, color: DIM, marginTop: 6, lineHeight: 1.45 }}>{tool === 'countsim'
                   ? 'Drag a tight box around one symbol on the plan. Every matching instance is counted and dropped as a marker — deterministic template match, no AI round-trip.'
                   : 'Click inside an enclosed room. The walls are traced into a net-area condition. Needs a scale set on this sheet.'}</div>
                 {tool === 'countsim' ? (
                   <label style={{ display: 'block', marginTop: 10, fontSize: 12, color: DIM }}>Match sensitivity · {cntThresh.toFixed(2)}
                     <input type="range" min={0.6} max={0.97} step={0.01} value={cntThresh} onChange={(e) => setCntThresh(+e.target.value)} style={{ width: '100%', accentColor: GOLD, marginTop: 4 }} />
-                    <div style={{ fontSize: 11 }}>Lower = looser (more matches) · higher = exact only</div>
+                    <div style={{ fontSize: 12 }}>Lower = looser (more matches) · higher = exact only</div>
                   </label>
                 ) : (
                   <label style={{ display: 'block', marginTop: 10, fontSize: 12, color: DIM }}>Wall sensitivity · {Math.round(wallThresh * 100)}%
                     <input type="range" min={0.2} max={0.85} step={0.01} value={wallThresh} onChange={(e) => setWallThresh(+e.target.value)} style={{ width: '100%', accentColor: GOLD, marginTop: 4 }} />
-                    <div style={{ fontSize: 11 }}>Higher treats fainter lines as walls (stops leaks through gaps)</div>
+                    <div style={{ fontSize: 12 }}>Higher treats fainter lines as walls (stops leaks through gaps)</div>
                   </label>
                 )}
-                {busy && <div style={{ marginTop: 8, fontSize: 12.5, color: CYAN, fontWeight: 600 }}>{busy}</div>}
+                {busy && <div style={{ marginTop: 8, fontSize: 13, color: 'var(--text-primary)', fontWeight: 600 }}>{busy}</div>}
               </div>
             )}
             {tool === 'select' && selected && (
               <div style={{ border: `1px solid ${LINE}`, borderRadius: 12, padding: 12 }}>
-                <div style={{ fontSize: 11, color: DIM, fontWeight: 700, marginBottom: 6 }}>Selected · {measuredLabel(selected)}</div>
+                <div style={{ fontSize: 12, color: DIM, fontWeight: 700, marginBottom: 6 }}>Selected · {measuredLabel(selected)}</div>
                 <input value={selected.name} onChange={(e) => setConditions((cs) => cs.map((c) => c.id === selected.id ? { ...c, name: e.target.value } : c))} style={{ ...inp, marginBottom: 6 }} />
                 <select value={selected.assemblyId} onChange={(e) => setConditions((cs) => cs.map((c) => c.id === selected.id ? { ...c, assemblyId: e.target.value, color: divColor(csiOfAsm(e.target.value)) } : c))} style={{ ...inp, marginBottom: 8 }}>
                   {asmList(selected.kind).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
@@ -1206,7 +1206,7 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
                       {pages > 1 && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
                           <button disabled={pg === 0} onClick={() => setVtxPage(pg - 1)} style={{ ...miniBtn, width: 30, height: 26, opacity: pg === 0 ? 0.4 : 1, fontSize: 12 }}>&lt;</button>
-                          <span style={{ flex: 1, fontSize: 11.5, color: DIM, textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>Vertices {start + 1}–{end} of {N.toLocaleString()}</span>
+                          <span style={{ flex: 1, fontSize: 12, color: DIM, textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>Vertices {start + 1}–{end} of {N.toLocaleString()}</span>
                           <button disabled={pg >= pages - 1} onClick={() => setVtxPage(pg + 1)} style={{ ...miniBtn, width: 30, height: 26, opacity: pg >= pages - 1 ? 0.4 : 1, fontSize: 12 }}>&gt;</button>
                         </div>
                       )}
@@ -1230,38 +1230,38 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
 
             {/* running totals */}
             <div style={{ border: `1px solid ${LINE}`, borderRadius: 12, padding: 12 }}>
-              <div style={{ fontSize: 11, color: DIM, fontWeight: 700, marginBottom: 8 }}>Running totals · {conditions.length} conditions</div>
+              <div style={{ fontSize: 12, color: DIM, fontWeight: 700, marginBottom: 8 }}>Running totals · {conditions.length} conditions</div>
               <div style={{ display: 'flex', gap: 10 }}>
                 {[['Area', `${totals.sf.toLocaleString()} SF`], ['Linear', `${totals.lf.toLocaleString()} LF`], ['Count', `${totals.ea} EA`]].map(([k, v]) => (
-                  <div key={k} style={{ flex: 1 }}><div style={{ fontSize: 10, color: DIM, fontWeight: 700 }}>{k}</div><div style={{ fontSize: 14, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{v}</div></div>
+                  <div key={k} style={{ flex: 1 }}><div style={{ fontSize: 12, color: DIM, fontWeight: 700 }}>{k}</div><div style={{ fontSize: 14, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{v}</div></div>
                 ))}
               </div>
             </div>
 
             {/* priced rollup */}
-            <div style={{ border: `1px solid var(--brand-primary-25)`, background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', borderRadius: 12, padding: 12 }}>
-              <div style={{ fontSize: 11, color: DIM, fontWeight: 700 }}>Priced Live · Sell</div>
-              <div style={{ fontSize: 30, fontWeight: 800, color: GOLD, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>{usd(result.sellCents)}</div>
+            <div style={{ border: `1px solid var(--brand-primary-25)`, background: 'var(--bg-surface-2)', borderRadius: 12, padding: 12 }}>
+              <div style={{ fontSize: 12, color: DIM, fontWeight: 700 }}>Priced Live · Sell</div>
+              <div style={{ fontSize: 30, fontWeight: 800, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>{usd(result.sellCents)}</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 4 }}>
                 {[['Material', usd(result.materialCents)], ['Labor', `${usd(result.laborCents)} · ${result.laborHrs}h`], ['Items', `${result.lines.length}`]].map(([k, v]) => (
-                  <div key={k}><div style={{ fontSize: 10, color: DIM, fontWeight: 700 }}>{k}</div><div style={{ fontSize: 13, fontWeight: 800 }}>{v}</div></div>
+                  <div key={k}><div style={{ fontSize: 12, color: DIM, fontWeight: 700 }}>{k}</div><div style={{ fontSize: 13, fontWeight: 800 }}>{v}</div></div>
                 ))}
               </div>
               {result.byDivision.length > 0 && (
                 <div style={{ marginTop: 10, borderTop: `1px solid ${LINE}`, paddingTop: 8 }}>
-                  {result.byDivision.slice(0, 8).map((d) => <div key={d.trade} style={{ display: 'flex', fontSize: 12.5, padding: '3px 0' }}><span style={{ width: 8, height: 8, borderRadius: 4, background: divColor(result.lines.find((l) => l.trade === d.trade)?.csi ?? ''), marginRight: 7, alignSelf: 'center' }} /><span style={{ flex: 1, color: TEXT }}>{d.trade}</span><span style={{ fontWeight: 700 }}>{usd(d.totalCents)}</span></div>)}
+                  {result.byDivision.slice(0, 8).map((d) => <div key={d.trade} style={{ display: 'flex', fontSize: 13, padding: '3px 0' }}><span style={{ width: 8, height: 8, borderRadius: 4, background: divColor(result.lines.find((l) => l.trade === d.trade)?.csi ?? ''), marginRight: 7, alignSelf: 'center' }} /><span style={{ flex: 1, color: TEXT }}>{d.trade}</span><span style={{ fontWeight: 700 }}>{usd(d.totalCents)}</span></div>)}
                 </div>
               )}
             </div>
 
             {/* coverage list */}
             <div>
-              <div style={{ fontSize: 11, color: DIM, fontWeight: 700, marginBottom: 8 }}>Coverage — Every Measured Condition</div>
-              {conditions.length === 0 && <div style={{ fontSize: 12.5, color: DIM }}>Nothing measured yet. Pick a tool and trace on the plan.</div>}
+              <div style={{ fontSize: 12, color: DIM, fontWeight: 700, marginBottom: 8 }}>Coverage — Every Measured Condition</div>
+              {conditions.length === 0 && <div style={{ fontSize: 13, color: DIM }}>Nothing measured yet. Pick a tool and trace on the plan.</div>}
               {conditions.map((c) => (
                 <div key={c.id} onClick={() => { if (c.sheetId && c.sheetId !== activeSheet) goSheet(c.sheetId); setSelId(c.id); zoomToCondition(c); }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 8px', borderRadius: 8, cursor: 'pointer', border: `1px solid ${c.id === selId ? GOLD : LINE}`, marginBottom: 5, background: c.id === selId ? 'var(--brand-primary-08)' : 'transparent' }}>
                   <span style={{ width: 10, height: 10, borderRadius: 3, background: condColor(c), flexShrink: 0 }} />
-                  <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</div><div style={{ fontSize: 11.5, color: DIM }}>{measuredLabel(c)}{c.tool ? ` · ${c.tool}` : ''}</div></div>
+                  <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</div><div style={{ fontSize: 12, color: DIM }}>{measuredLabel(c)}{c.tool ? ` · ${c.tool}` : ''}</div></div>
                   <button onClick={(e) => { e.stopPropagation(); commit(() => setConditions((cs) => cs.filter((x) => x.id !== c.id))); if (selId === c.id) setSelId(null); }} style={{ ...miniBtn, width: 26, height: 24 }}><G g="trash" s={13} c={RED} /></button>
                 </div>
               ))}

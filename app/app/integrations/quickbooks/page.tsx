@@ -258,7 +258,7 @@ export default function QuickBooksPage() {
       )}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, fontSize: 14, color: DIM }}>
-        <Link href="/app/integrations" style={{ color: GOLD, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 44 }}>Integrations</Link>
+        <Link href="/app/integrations" style={{ color: 'var(--link)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 44 }}>Integrations</Link>
         <span>/</span>
         <span style={{ color: TEXT }}>QuickBooks Online</span>
       </div>

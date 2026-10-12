@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
 import { CaretUp, CaretDown, Clipboard, CheckCircle, Asterisk, Stack, MagnifyingGlass, Plus } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
@@ -161,7 +161,7 @@ function FieldPreview({ field }: { field: CustomField }) {
   };
   const lbl: React.CSSProperties = {
     color: DIM,
-    fontSize: 11,
+    fontSize: 12,
     marginBottom: 6,
     display: 'block',
   };
@@ -191,7 +191,7 @@ function FieldPreview({ field }: { field: CustomField }) {
             readOnly
           />
           {field.validation?.regex && (
-            <div style={{ color: PURPLE, fontSize: 10, marginTop: 4 }}>
+            <div style={{ color: PURPLE, fontSize: 12, marginTop: 4 }}>
               Pattern: {field.validation.regex}
             </div>
           )}
@@ -215,7 +215,7 @@ function FieldPreview({ field }: { field: CustomField }) {
             readOnly
           />
           {(field.validation?.min != null || field.validation?.max != null) && (
-            <div style={{ color: PURPLE, fontSize: 10, marginTop: 4 }}>
+            <div style={{ color: PURPLE, fontSize: 12, marginTop: 4 }}>
               Range: {field.validation?.min ?? 'any'}–{field.validation?.max ?? 'any'}
             </div>
           )}
@@ -365,26 +365,26 @@ function OptionsEditor({
             borderBottom: `1px solid ${BORDER}`,
           }}
         >
-          <span style={{ color: DIM, fontSize: 11, width: 20, textAlign: 'center' }}>
+          <span style={{ color: DIM, fontSize: 12, width: 20, textAlign: 'center' }}>
             {i + 1}
           </span>
           <span style={{ color: TEXT, fontSize: 13, flex: 1 }}>{opt}</span>
           <button
-            style={{ ...btn('transparent', DIM), padding: '2px 6px', fontSize: 11 }}
+            style={{ ...btn('transparent', DIM), padding: '2px 6px', fontSize: 12 }}
             onClick={() => moveOption(i, -1)}
             disabled={i === 0}
           >
             <span style={{ display: 'inline-flex', verticalAlign: 'middle' }}><CaretUp size={12} weight="regular" color={DIM} /></span>
           </button>
           <button
-            style={{ ...btn('transparent', DIM), padding: '2px 6px', fontSize: 11 }}
+            style={{ ...btn('transparent', DIM), padding: '2px 6px', fontSize: 12 }}
             onClick={() => moveOption(i, 1)}
             disabled={i === options.length - 1}
           >
             <span style={{ display: 'inline-flex', verticalAlign: 'middle' }}><CaretDown size={12} weight="regular" color={DIM} /></span>
           </button>
           <button
-            style={{ ...btn('transparent', RED), padding: '2px 6px', fontSize: 11 }}
+            style={{ ...btn('transparent', RED), padding: '2px 6px', fontSize: 12 }}
             onClick={() => removeOption(i)}
           >
             ×
@@ -493,7 +493,7 @@ function ValidationEditor({
               />
             </div>
             {validation.regex && (
-              <div style={{ marginTop: 8, color: PURPLE, fontSize: 11 }}>
+              <div style={{ marginTop: 8, color: PURPLE, fontSize: 12 }}>
                 Test: {(() => {
                   try {
                     new RegExp(validation.regex);
@@ -536,7 +536,7 @@ function ValidationRulesDisplay({ field }: { field: CustomField }) {
 
   return (
     <div style={{ marginTop: 8 }}>
-      <span style={{ ...labelStyle(), fontSize: 11, color: AMBER }}>Validation Rules</span>
+      <span style={{ ...labelStyle(), fontSize: 12, color: AMBER }}>Validation Rules</span>
       <ul style={{ margin: 0, paddingLeft: 18 }}>
         {rules.map((r, i) => (
           <li key={i} style={{ color: DIM, fontSize: 12, marginBottom: 2 }}>
@@ -580,7 +580,7 @@ function DeleteModal({
         </h3>
         <p style={{ color: TEXT, fontSize: 13, margin: '0 0 8px' }}>
           Are you sure you want to delete{' '}
-          <strong style={{ color: GOLD }}>{field.field_label}</strong>?
+          <strong style={{ color: 'var(--text-primary)' }}>{field.field_label}</strong>?
         </p>
         <p style={{ color: DIM, fontSize: 12, margin: '0 0 18px' }}>
           This will remove the field definition and any associated data from all records in
@@ -625,7 +625,7 @@ function ModuleSummaryModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h3 style={{ color: GOLD, margin: 0, fontSize: 16 }}>
+          <h3 style={{ color: 'var(--text-primary)', margin: 0, fontSize: 16 }}>
             Module-Level Summary
           </h3>
           <button style={{ ...btn('transparent', DIM), padding: '4px 10px' }} onClick={onClose}>
@@ -638,7 +638,7 @@ function ModuleSummaryModal({
             gridTemplateColumns: '2fr 1fr 1fr 1fr',
             gap: 8,
             padding: '8px 0',
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 700,
             color: DIM,
             borderBottom: `1px solid ${BORDER}`,
@@ -662,7 +662,7 @@ function ModuleSummaryModal({
             }}
           >
             <span style={{ color: TEXT, fontSize: 13, fontWeight: 600 }}>{s.module}</span>
-            <span style={{ color: GOLD, fontSize: 14, fontWeight: 700 }}>{s.total}</span>
+            <span style={{ color: 'var(--text-primary)', fontSize: 14, fontWeight: 700 }}>{s.total}</span>
             <span style={{ color: GREEN, fontSize: 14, fontWeight: 700 }}>{s.active}</span>
             <span style={{ color: AMBER, fontSize: 14, fontWeight: 700 }}>{s.required}</span>
           </div>
@@ -684,8 +684,8 @@ function ModuleSummaryModal({
             marginTop: 8,
           }}
         >
-          <span style={{ color: GOLD }}>Totals</span>
-          <span style={{ color: GOLD }}>{summaries.reduce((a, s) => a + s.total, 0)}</span>
+          <span style={{ color: 'var(--text-primary)' }}>Totals</span>
+          <span style={{ color: 'var(--text-primary)' }}>{summaries.reduce((a, s) => a + s.total, 0)}</span>
           <span style={{ color: GREEN }}>{summaries.reduce((a, s) => a + s.active, 0)}</span>
           <span style={{ color: AMBER }}>{summaries.reduce((a, s) => a + s.required, 0)}</span>
         </div>
@@ -1053,7 +1053,7 @@ export default function CustomFieldsPage() {
       {/* ── Header ── */}
       <ModuleHero
         eyebrow="Workspace Configuration"
-        eyebrowIcon={<Clipboard size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<Clipboard size={13} weight="fill" color="var(--text-secondary)" />}
         title="Custom"
         accent="Fields"
         subtitle="Add your own fields to any module. They flow into exports."
@@ -1104,7 +1104,7 @@ export default function CustomFieldsPage() {
                   border: `1px solid ${isActive ? 'color-mix(in srgb, var(--brand-primary) 45%, transparent)' : BORDER}`,
                   borderRadius: 999,
                   padding: '7px 16px',
-                  fontSize: 12.5,
+                  fontSize: 13,
                   fontWeight: isActive ? 700 : 500,
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
@@ -1150,7 +1150,7 @@ export default function CustomFieldsPage() {
           }}
         >
           <StatCard
-            icon={<Clipboard size={19} weight="duotone" color={GOLD} />}
+            icon={<Clipboard size={19} weight="duotone" color="var(--text-secondary)" />}
             label={`${activeModule} Fields`}
             value={stats.total}
             sub={stats.total > 0 ? 'Defined on this module' : 'None defined yet'}
@@ -1214,7 +1214,7 @@ export default function CustomFieldsPage() {
               }}
             >
               <div>
-                <h3 style={{ margin: 0, color: GOLD, fontSize: 15 }}>
+                <h3 style={{ margin: 0, color: 'var(--text-primary)', fontSize: 15 }}>
                   {editingId ? 'Edit Field' : `New ${activeModule} Field`}
                 </h3>
                 <div style={{ fontSize: 12, color: DIM, marginTop: 3, lineHeight: 1.5 }}>
@@ -1419,7 +1419,7 @@ export default function CustomFieldsPage() {
 
             {/* Field Preview */}
             <div style={{ marginTop: 12 }}>
-              <span style={{ ...labelStyle(), color: BLUE }}>
+              <span style={{ ...labelStyle(), color: 'var(--text-primary)' }}>
                 Live Preview
               </span>
               <FieldPreview
@@ -1479,8 +1479,8 @@ export default function CustomFieldsPage() {
           <SectionCard flush>
             <PremiumEmpty
               icon={searchTerm
-                ? <MagnifyingGlass size={30} weight="duotone" color={GOLD} />
-                : <Clipboard size={30} weight="duotone" color={GOLD} />}
+                ? <MagnifyingGlass size={30} weight="duotone" color="var(--text-secondary)" />
+                : <Clipboard size={30} weight="duotone" color="var(--text-secondary)" />}
               title={searchTerm
                 ? `No fields match "${searchTerm}"`
                 : `${activeModule} has no custom fields yet`}
@@ -1491,7 +1491,7 @@ export default function CustomFieldsPage() {
                 <button style={ghostButtonStyle} className="pmBtn" onClick={() => setSearchTerm('')}>Clear Search</button>
               ) : (
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
-                  <button style={goldButtonStyle} className="pmBtn" onClick={() => { resetForm(); setShowForm(true); }}>
+                  <button style={secondaryButtonStyle} className="pmBtn" onClick={() => { resetForm(); setShowForm(true); }}>
                     <Plus size={15} weight="bold" /> New Field
                   </button>
                   <button style={ghostButtonStyle} className="pmBtn" onClick={importFields}>Import JSON</button>
@@ -1508,7 +1508,7 @@ export default function CustomFieldsPage() {
                 gridTemplateColumns: '40px 2fr 1fr 80px 70px 80px 140px',
                 gap: 8,
                 padding: '8px 16px',
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: 700,
                 color: DIM,
               }}
@@ -1576,7 +1576,7 @@ export default function CustomFieldsPage() {
                       <div
                         style={{
                           color: DIM,
-                          fontSize: 11,
+                          fontSize: 12,
                           fontFamily: 'monospace',
                         }}
                       >
@@ -1589,17 +1589,17 @@ export default function CustomFieldsPage() {
                       <span
                         style={{
                           background: BORDER,
-                          color: BLUE,
+                          color: 'var(--text-primary)',
                           borderRadius: 4,
                           padding: '2px 8px',
-                          fontSize: 11,
+                          fontSize: 12,
                           fontWeight: 600,
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 4,
                         }}
                       >
-                        <span style={{ color: PURPLE, fontSize: 10 }}>
+                        <span style={{ color: PURPLE, fontSize: 12 }}>
                           {FIELD_TYPE_ICONS[field.field_type]}
                         </span>
                         {FIELD_TYPE_LABELS[field.field_type] || field.field_type}
@@ -1608,7 +1608,7 @@ export default function CustomFieldsPage() {
                         <span
                           style={{
                             color: DIM,
-                            fontSize: 10,
+                            fontSize: 12,
                             marginLeft: 6,
                           }}
                         >
@@ -1661,7 +1661,7 @@ export default function CustomFieldsPage() {
                         style={{
                           ...btn(BORDER, DIM),
                           padding: '3px 8px',
-                          fontSize: 11,
+                          fontSize: 12,
                         }}
                         onClick={() => reorder(idx, -1)}
                         disabled={idx === 0}
@@ -1673,7 +1673,7 @@ export default function CustomFieldsPage() {
                         style={{
                           ...btn(BORDER, DIM),
                           padding: '3px 8px',
-                          fontSize: 11,
+                          fontSize: 12,
                         }}
                         onClick={() => reorder(idx, 1)}
                         disabled={idx === filteredFields.length - 1}
@@ -1689,7 +1689,7 @@ export default function CustomFieldsPage() {
                         style={{
                           ...btn('transparent', BLUE),
                           padding: '3px 8px',
-                          fontSize: 11,
+                          fontSize: 12,
                         }}
                         onClick={() =>
                           setShowPreview(
@@ -1704,7 +1704,7 @@ export default function CustomFieldsPage() {
                         style={{
                           ...btn('transparent', GOLD),
                           padding: '3px 8px',
-                          fontSize: 11,
+                          fontSize: 12,
                         }}
                         onClick={() => startEdit(field)}
                         title="Edit"
@@ -1715,7 +1715,7 @@ export default function CustomFieldsPage() {
                         style={{
                           ...btn('transparent', RED),
                           padding: '3px 8px',
-                          fontSize: 11,
+                          fontSize: 12,
                         }}
                         onClick={() => setDeleteTarget(field)}
                         title="Delete"
@@ -1746,7 +1746,7 @@ export default function CustomFieldsPage() {
                         }}
                       >
                         <div>
-                          <span style={{ ...labelStyle(), color: BLUE }}>
+                          <span style={{ ...labelStyle(), color: 'var(--text-primary)' }}>
                             Field Preview
                           </span>
                           <FieldPreview field={field} />
@@ -1784,7 +1784,7 @@ export default function CustomFieldsPage() {
                                         color: TEXT,
                                         borderRadius: 10,
                                         padding: '2px 10px',
-                                        fontSize: 11,
+                                        fontSize: 12,
                                       }}
                                     >
                                       {o}
@@ -1824,7 +1824,7 @@ export default function CustomFieldsPage() {
                             <span style={labelStyle()}>Module</span>
                             <span
                               style={{
-                                color: GOLD,
+                                color: 'var(--text-primary)',
                                 fontSize: 13,
                                 fontWeight: 600,
                               }}

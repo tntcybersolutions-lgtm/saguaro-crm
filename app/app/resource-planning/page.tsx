@@ -54,7 +54,7 @@ function inp(): React.CSSProperties {
   return { width: '100%', padding: '8px 12px', background: BG, border: `1px solid ${BORDER}`, borderRadius: 7, color: TEXT, fontSize: 13, outline: 'none', boxSizing: 'border-box' as const };
 }
 function Badge({ label, color }: { label: string; color: string }) {
-  return <span style={{ display: 'inline-flex', alignItems: 'center', fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 999, background: `color-mix(in srgb, ${color} 16%, transparent)`, border: `1px solid color-mix(in srgb, ${color} 50%, transparent)`, color, whiteSpace: 'nowrap' }}>{String(label).replace(/_/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase())}</span>;
+  return <span style={{ display: 'inline-flex', alignItems: 'center', fontSize: 12, fontWeight: 700, padding: '2px 9px', borderRadius: 999, background: `color-mix(in srgb, ${color} 16%, transparent)`, border: `1px solid color-mix(in srgb, ${color} 50%, transparent)`, color, whiteSpace: 'nowrap' }}>{String(label).replace(/_/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase())}</span>;
 }
 function Card({ title, children, action, icon }: { title: string; children: React.ReactNode; action?: React.ReactNode; icon?: React.ReactNode }) {
   return <SectionCard flat title={title} action={action} icon={icon} style={{ marginBottom: 18 }}>{children}</SectionCard>;
@@ -481,7 +481,7 @@ export default function ResourcePlanningPage() {
     {/* Header */}
     <ModuleHero
       eyebrow="Resource Planning"
-      eyebrowIcon={<UsersThree size={13} weight="fill" color="var(--brand-primary)" />}
+      eyebrowIcon={<UsersThree size={13} weight="fill" color="var(--text-secondary)" />}
       title="Resource"
       accent="Planning"
       subtitle="Workforce scheduling, utilization, capacity planning, and cost forecasting"
@@ -511,7 +511,7 @@ export default function ResourcePlanningPage() {
     {/* Stats row */}
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
       {[
-        { label: 'Total People', value: people.length, accent: BLUE, sub: 'In workforce', icon: <UsersThree size={19} weight="duotone" color={BLUE} /> },
+        { label: 'Total People', value: people.length, accent: BLUE, sub: 'In workforce', icon: <UsersThree size={19} weight="duotone" color="var(--text-secondary)" /> },
         { label: 'Active Assignments', value: assignments.filter(a => a.status !== 'released' && a.status !== 'unavailable').length, accent: GREEN, sub: 'Not released', icon: <ClipboardText size={19} weight="duotone" color={GREEN} /> },
         { label: 'Current FTEs', value: totalFTEs, accent: PURPLE, sub: 'Full-time equiv', icon: <UserGear size={19} weight="duotone" color={PURPLE} /> },
         { label: 'Conflicts', value: conflicts.length, accent: conflicts.length ? RED : GREEN, sub: 'Scheduling overlaps', icon: <Warning size={19} weight="duotone" color={conflicts.length ? RED : GREEN} /> },
@@ -523,8 +523,8 @@ export default function ResourcePlanningPage() {
     {/* Filters */}
     <SectionCard
       title="Filters"
-      icon={<FunnelSimple size={17} weight="duotone" color="var(--brand-primary)" />}
-      action={hasFilters ? <button onClick={clearFilters} style={{ ...btn(), fontSize: 11, padding: '5px 12px' }}>Clear Filters</button> : undefined}
+      icon={<FunnelSimple size={17} weight="duotone" color="var(--text-secondary)" />}
+      action={hasFilters ? <button onClick={clearFilters} style={{ ...btn(), fontSize: 12, padding: '5px 12px' }}>Clear Filters</button> : undefined}
       style={{ marginBottom: 18 }}
     >
     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -538,11 +538,11 @@ export default function ResourcePlanningPage() {
       <StandardSelect value={filterCert} onChange={setFilterCert} ariaLabel="Certification" placeholder="All Certifications" width={170}
         options={CERTS} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-        <span style={{ fontSize: 11, color: DIM }}>From:</span>
+        <span style={{ fontSize: 12, color: DIM }}>From:</span>
         <SaguaroDatePicker value={filterDateStart} onChange={v => setFilterDateStart(v)} style={{ ...inp(), width: 140 }} />
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-        <span style={{ fontSize: 11, color: DIM }}>To:</span>
+        <span style={{ fontSize: 12, color: DIM }}>To:</span>
         <SaguaroDatePicker value={filterDateEnd} onChange={v => setFilterDateEnd(v)} style={{ ...inp(), width: 140 }} />
       </div>
       <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: DIM, cursor: 'pointer' }}>
@@ -569,60 +569,60 @@ export default function ResourcePlanningPage() {
         <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 20, color: TEXT }}>{editId ? 'Edit Assignment' : 'New Assignment'}</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 14 }}>
           <div>
-            <label htmlFor="rp-person" style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Person Name *</label>
+            <label htmlFor="rp-person" style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>Person Name *</label>
             {/* Suggestions are the people already on the board (it offered a lone "n" — a datalist id). */}
             <Suggest id="rp-person" value={form.person_name || ''} onChange={e => { const v = e.target.value; setForm(f => ({ ...f, person_name: v })); setFormErr(null); }} placeholder="Full name" style={inp()} options={allPersonNames.filter(Boolean)} aria-required="true" aria-invalid={formErr?.field === 'rp-person' || undefined} />
             </div>
           <div>
-            <label htmlFor="rp-project" style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Project *</label>
+            <label htmlFor="rp-project" style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>Project *</label>
             <StandardSelect id="rp-project" value={form.project_id || ''} onChange={v => { setForm(f => ({ ...f, project_id: v })); setFormErr(null); }} ariaLabel="Project" placeholder="Select project…" width="100%"
               options={projects.map(p => ({ value: p.id, label: p.name }))} />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Role</label>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>Role</label>
             <StandardSelect value={form.role || ''} onChange={v => setForm({ ...form, role: v })} ariaLabel="Role" width="100%" options={ROLES} />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Trade</label>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>Trade</label>
             <StandardSelect value={form.trade || ''} onChange={v => setForm({ ...form, trade: v })} ariaLabel="Trade" width="100%" options={TRADE_OPTIONS} />
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 14, marginBottom: 14 }}>
           <div>
-            <label htmlFor="rp-start" style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Start Date *</label>
+            <label htmlFor="rp-start" style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>Start Date *</label>
             <SaguaroDatePicker id="rp-start" value={form.start_date || ''} onChange={v => { setForm(f => ({ ...f, start_date: v })); setFormErr(null); }} style={inp()} />
           </div>
           <div>
-            <label htmlFor="rp-end" style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>End Date *</label>
+            <label htmlFor="rp-end" style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>End Date *</label>
             <SaguaroDatePicker id="rp-end" value={form.end_date || ''} onChange={v => { setForm(f => ({ ...f, end_date: v })); setFormErr(null); }} style={inp()} />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Status</label>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>Status</label>
             <StandardSelect value={form.status || 'assigned'} onChange={v => setForm({ ...form, status: v as Assignment['status'] })} ariaLabel="Status" width="100%" options={STATUS_OPTS.map(s => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) }))} />
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 14, marginBottom: 14 }}>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Hours/Day</label>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>Hours/Day</label>
             <input type="number" value={form.hours_per_day ?? 8} onChange={e => setForm({ ...form, hours_per_day: +e.target.value })} style={inp()} min={1} max={16} />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Days/Week</label>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>Days/Week</label>
             <input type="number" value={form.days_per_week ?? 5} onChange={e => setForm({ ...form, days_per_week: +e.target.value })} style={inp()} min={1} max={7} />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Hourly Rate ($)</label>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>Hourly Rate ($)</label>
             <input type="number" value={form.hourly_rate ?? 0} onChange={e => setForm({ ...form, hourly_rate: +e.target.value })} style={inp()} min={0} step={0.5} />
           </div>
         </div>
         <div style={{ marginBottom: 14 }}>
-          <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Certifications</label>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>Certifications</label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {CERTS.map(c => <button key={c} onClick={() => toggleCert(c)} style={{ padding: '4px 10px', fontSize: 11, borderRadius: 5, border: `1px solid ${(form.certifications || []).includes(c) ? GOLD : BORDER}`, background: (form.certifications || []).includes(c) ? `color-mix(in srgb, ${GOLD} 13%, transparent)` : 'transparent', color: (form.certifications || []).includes(c) ? GOLD : DIM, cursor: 'pointer', fontWeight: 600 }}>{c}</button>)}
+            {CERTS.map(c => <button key={c} onClick={() => toggleCert(c)} style={{ padding: '4px 10px', fontSize: 12, borderRadius: 5, border: `1px solid ${(form.certifications || []).includes(c) ? GOLD : BORDER}`, background: (form.certifications || []).includes(c) ? `color-mix(in srgb, ${GOLD} 13%, transparent)` : 'transparent', color: (form.certifications || []).includes(c) ? GOLD : DIM, cursor: 'pointer', fontWeight: 600 }}>{c}</button>)}
           </div>
         </div>
         <div style={{ marginBottom: 18 }}>
-          <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Notes</label>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>Notes</label>
           <textarea value={form.notes || ''} onChange={e => setForm({ ...form, notes: e.target.value })} rows={3} style={{ ...inp(), resize: 'vertical' as const }} />
         </div>
         {formErr && <div role="alert" style={{ marginBottom: 12, padding: '10px 12px', borderRadius: 8, background: `color-mix(in srgb, ${RED} 10%, transparent)`, border: `1px solid color-mix(in srgb, ${RED} 45%, transparent)`, color: RED, fontSize: 13, lineHeight: 1.5 }}>{formErr.text}</div>}
@@ -662,31 +662,31 @@ export default function ResourcePlanningPage() {
       </ModalOverlay>}
 
       {/* ========== ASSIGNMENT GRID (People x Projects x Weeks) ========== */}
-      {!loading && tab === 'grid' && <Card title={`Resource Assignment Grid (${gridData.GRID_WEEKS} Weeks)`} icon={<ClipboardText size={17} weight="duotone" color="var(--brand-primary)" />} action={<span style={{ fontSize: 12, color: DIM }}>{filteredPeople.length} people shown</span>}>
+      {!loading && tab === 'grid' && <Card title={`Resource Assignment Grid (${gridData.GRID_WEEKS} Weeks)`} icon={<ClipboardText size={17} weight="duotone" color="var(--text-secondary)" />} action={<span style={{ fontSize: 12, color: DIM }}>{filteredPeople.length} people shown</span>}>
         <div ref={gridScrollRef} style={{ overflowX: 'auto' }}>
           <div style={{ minWidth: 1000 }}>
             {/* Headers */}
             <div style={{ display: 'grid', gridTemplateColumns: `160px 140px repeat(${gridData.GRID_WEEKS}, 1fr)`, borderBottom: `1px solid ${BORDER}`, marginBottom: 6 }}>
-              <div style={{ padding: '6px 8px', fontSize: 11, fontWeight: 700, color: DIM }}>Person</div>
-              <div style={{ padding: '6px 8px', fontSize: 11, fontWeight: 700, color: DIM }}>Project</div>
-              {gridData.gridWeeks.map((w, i) => <div key={i} style={{ padding: '6px 4px', fontSize: 10, fontWeight: 600, color: DIM, textAlign: 'center', borderLeft: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
+              <div style={{ padding: '6px 8px', fontSize: 12, fontWeight: 700, color: DIM }}>Person</div>
+              <div style={{ padding: '6px 8px', fontSize: 12, fontWeight: 700, color: DIM }}>Project</div>
+              {gridData.gridWeeks.map((w, i) => <div key={i} style={{ padding: '6px 4px', fontSize: 12, fontWeight: 600, color: DIM, textAlign: 'center', borderLeft: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                 Wk {`${w.getMonth() + 1}/${w.getDate()}`}
               </div>)}
             </div>
             {/* Rows */}
-            {gridData.rows.length === 0 && <PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--brand-primary)" />} title="No assignment data" description="Create assignments to populate the grid." />}
+            {gridData.rows.length === 0 && <PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />} title="No assignment data" description="Create assignments to populate the grid." />}
             {gridData.rows.map(row => <React.Fragment key={row.name}>
               {/* Person total row */}
               <div style={{ display: 'grid', gridTemplateColumns: `160px 140px repeat(${gridData.GRID_WEEKS}, 1fr)`, background: conflictPersons.has(row.name) ? `color-mix(in srgb, ${RED} 3%, transparent)` : `color-mix(in srgb, ${BG} 38%, transparent)`, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)`, minHeight: 32, alignItems: 'center' }}>
                 <div style={{ padding: '4px 8px', fontSize: 12, fontWeight: 700, color: conflictPersons.has(row.name) ? RED : TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {row.name} {conflictPersons.has(row.name) && <span style={{ fontSize: 9, color: RED, fontWeight: 800 }}>Conflict</span>}
+                  {row.name} {conflictPersons.has(row.name) && <span style={{ fontSize: 12, color: RED, fontWeight: 800 }}>Conflict</span>}
                 </div>
-                <div style={{ padding: '4px 8px', fontSize: 11, color: DIM, fontWeight: 600 }}>Total Hrs/Wk</div>
+                <div style={{ padding: '4px 8px', fontSize: 12, color: DIM, fontWeight: 600 }}>Total Hrs/Wk</div>
                 {row.totalWeekHours.map((h, wi) => {
                   const pct = h / 40 * 100;
                   const bg = h === 0 ? 'transparent' : pct > 100 ? `color-mix(in srgb, ${RED} 19%, transparent)` : pct > 80 ? `color-mix(in srgb, ${AMBER} 13%, transparent)` : `color-mix(in srgb, ${GREEN} 8%, transparent)`;
                   const color = h === 0 ? `color-mix(in srgb, ${DIM} 38%, transparent)` : pct > 100 ? RED : pct > 80 ? AMBER : GREEN;
-                  return <div key={wi} style={{ padding: '4px', textAlign: 'center', fontSize: 11, fontWeight: 700, color, background: bg, borderLeft: `1px solid color-mix(in srgb, ${BORDER} 6%, transparent)`, borderRadius: 2 }}>
+                  return <div key={wi} style={{ padding: '4px', textAlign: 'center', fontSize: 12, fontWeight: 700, color, background: bg, borderLeft: `1px solid color-mix(in srgb, ${BORDER} 6%, transparent)`, borderRadius: 2 }}>
                     {h > 0 ? `${h}h` : '-'}
                   </div>;
                 })}
@@ -694,8 +694,8 @@ export default function ResourcePlanningPage() {
               {/* Per-project breakdown */}
               {row.cells.map(cell => <div key={cell.projectId} style={{ display: 'grid', gridTemplateColumns: `160px 140px repeat(${gridData.GRID_WEEKS}, 1fr)`, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 3%, transparent)`, minHeight: 26, alignItems: 'center' }}>
                 <div />
-                <div style={{ padding: '2px 8px', fontSize: 11, color: DIM, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cell.projectName}</div>
-                {cell.weekHours.map((h, wi) => <div key={wi} style={{ padding: '2px 4px', textAlign: 'center', fontSize: 10, color: h > 0 ? BLUE : `color-mix(in srgb, ${DIM} 25%, transparent)`, borderLeft: `1px solid color-mix(in srgb, ${BORDER} 3%, transparent)` }}>
+                <div style={{ padding: '2px 8px', fontSize: 12, color: DIM, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cell.projectName}</div>
+                {cell.weekHours.map((h, wi) => <div key={wi} style={{ padding: '2px 4px', textAlign: 'center', fontSize: 12, color: h > 0 ? BLUE : `color-mix(in srgb, ${DIM} 25%, transparent)`, borderLeft: `1px solid color-mix(in srgb, ${BORDER} 3%, transparent)` }}>
                   {h > 0 ? `${h}h` : '-'}
                 </div>)}
               </div>)}
@@ -705,26 +705,26 @@ export default function ResourcePlanningPage() {
       </Card>}
 
       {/* ========== TIMELINE / GANTT ========== */}
-      {!loading && tab === 'timeline' && <Card title={`Timeline View (${TIMELINE_WEEKS} Weeks)`} icon={<CalendarBlank size={17} weight="duotone" color="var(--brand-primary)" />} action={<span style={{ fontSize: 12, color: DIM }}>Starting {fmtDate(isoDate(timelineStart))}</span>}>
+      {!loading && tab === 'timeline' && <Card title={`Timeline View (${TIMELINE_WEEKS} Weeks)`} icon={<CalendarBlank size={17} weight="duotone" color="var(--text-secondary)" />} action={<span style={{ fontSize: 12, color: DIM }}>Starting {fmtDate(isoDate(timelineStart))}</span>}>
         <div style={{ overflowX: 'auto' }}>
           <div style={{ minWidth: 1100 }}>
             {/* Week headers */}
             <div style={{ display: 'grid', gridTemplateColumns: `180px repeat(${TIMELINE_WEEKS},1fr)`, borderBottom: `1px solid ${BORDER}`, marginBottom: 8 }}>
-              <div style={{ padding: '6px 8px', fontSize: 11, fontWeight: 700, color: DIM }}>Person</div>
+              <div style={{ padding: '6px 8px', fontSize: 12, fontWeight: 700, color: DIM }}>Person</div>
               {weeks.map((w, i) => {
                 const isCurrentWeek = isoDate(w) <= isoDate(new Date()) && isoDate(addDays(w, 6)) >= isoDate(new Date());
-                return <div key={i} style={{ padding: '6px 4px', fontSize: 10, fontWeight: 600, color: isCurrentWeek ? GOLD : DIM, textAlign: 'center', borderLeft: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)`, background: isCurrentWeek ? `color-mix(in srgb, ${GOLD} 3%, transparent)` : 'transparent' }}>
+                return <div key={i} style={{ padding: '6px 4px', fontSize: 12, fontWeight: 600, color: isCurrentWeek ? GOLD : DIM, textAlign: 'center', borderLeft: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)`, background: isCurrentWeek ? `color-mix(in srgb, ${GOLD} 3%, transparent)` : 'transparent' }}>
                   {`${w.getMonth() + 1}/${w.getDate()}`}
                 </div>;
               })}
             </div>
             {/* Rows */}
-            {filteredPeople.length === 0 && <PremiumEmpty compact icon={<CalendarBlank size={30} weight="duotone" color="var(--brand-primary)" />} title="No assignments match filters" description="Adjust filters or create new assignments." />}
+            {filteredPeople.length === 0 && <PremiumEmpty compact icon={<CalendarBlank size={30} weight="duotone" color="var(--text-secondary)" />} title="No assignments match filters" description="Adjust filters or create new assignments." />}
             {filteredPeople.map(([name, asns]) => {
               const isConflict = conflictPersons.has(name);
               return <div key={name} style={{ display: 'grid', gridTemplateColumns: `180px repeat(${TIMELINE_WEEKS},1fr)`, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)`, minHeight: 36, alignItems: 'center', background: isConflict ? `color-mix(in srgb, ${RED} 3%, transparent)` : 'transparent' }}>
                 <div style={{ padding: '4px 8px', fontSize: 12, fontWeight: 600, color: isConflict ? RED : TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={`${name} (${asns[0]?.trade} — ${asns[0]?.role})`}>
-                  {name} {isConflict && <span style={{ fontSize: 9, color: RED, fontWeight: 800 }}>Conflict</span>}
+                  {name} {isConflict && <span style={{ fontSize: 12, color: RED, fontWeight: 800 }}>Conflict</span>}
                 </div>
                 {weeks.map((w, wi) => {
                   const wStart = isoDate(w);
@@ -732,7 +732,7 @@ export default function ResourcePlanningPage() {
                   const isCurrentWeek = wStart <= isoDate(new Date()) && wEnd >= isoDate(new Date());
                   const active = asns.filter(a => a.start_date <= wEnd && a.end_date >= wStart && a.status !== 'released');
                   return <div key={wi} style={{ borderLeft: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)`, height: '100%', padding: '2px 1px', display: 'flex', flexDirection: 'column', gap: 1, background: isCurrentWeek ? `color-mix(in srgb, ${GOLD} 2%, transparent)` : 'transparent' }}>
-                    {active.map((a, ai) => <div key={ai} title={`${projMap[a.project_id] || '?'} (${a.role}) — ${a.hours_per_day}h/day`} onClick={() => editAssignment(a)} style={{ height: active.length > 1 ? 10 : 20, borderRadius: 3, background: STATUS_COLORS[a.status] || BLUE, opacity: .85, fontSize: 8, color: 'var(--text-primary)', overflow: 'hidden', whiteSpace: 'nowrap', padding: '0 3px', lineHeight: active.length > 1 ? '10px' : '20px', fontWeight: 700, cursor: 'pointer' }}>
+                    {active.map((a, ai) => <div key={ai} title={`${projMap[a.project_id] || '?'} (${a.role}) — ${a.hours_per_day}h/day`} onClick={() => editAssignment(a)} style={{ height: active.length > 1 ? 10 : 20, borderRadius: 3, background: STATUS_COLORS[a.status] || BLUE, opacity: .85, fontSize: 12, color: 'var(--text-primary)', overflow: 'hidden', whiteSpace: 'nowrap', padding: '0 3px', lineHeight: active.length > 1 ? '10px' : '20px', fontWeight: 700, cursor: 'pointer' }}>
                       {active.length <= 2 ? (projMap[a.project_id] || '').slice(0, 12) : ''}
                     </div>)}
                   </div>;
@@ -745,18 +745,18 @@ export default function ResourcePlanningPage() {
         <div style={{ marginTop: 14, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
           {STATUS_OPTS.filter(s => s !== 'released').map(s => <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <div style={{ width: 14, height: 10, borderRadius: 3, background: STATUS_COLORS[s] }} />
-            <span style={{ fontSize: 11, color: DIM, textTransform: 'capitalize' }}>{s}</span>
+            <span style={{ fontSize: 12, color: DIM, textTransform: 'capitalize' }}>{s}</span>
           </div>)}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <div style={{ width: 14, height: 10, borderRadius: 3, background: `color-mix(in srgb, ${RED} 19%, transparent)`, border: `1px solid color-mix(in srgb, ${RED} 31%, transparent)` }} />
-            <span style={{ fontSize: 11, color: DIM }}>Conflict</span>
+            <span style={{ fontSize: 12, color: DIM }}>Conflict</span>
           </div>
         </div>
       </Card>}
 
       {/* ========== PEOPLE LIST ========== */}
-      {!loading && tab === 'people' && <Card title={`People & Assignments (${filteredPeople.length})`} icon={<UsersThree size={17} weight="duotone" color="var(--brand-primary)" />}>
-        {filteredPeople.length === 0 && <PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--brand-primary)" />} title="No people found" description="No people match the current filters." />}
+      {!loading && tab === 'people' && <Card title={`People & Assignments (${filteredPeople.length})`} icon={<UsersThree size={17} weight="duotone" color="var(--text-secondary)" />}>
+        {filteredPeople.length === 0 && <PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />} title="No people found" description="No people match the current filters." />}
         {filteredPeople.map(([name, asns]) => {
           const util = utilization.find(u => u.name === name);
           const isConflict = conflictPersons.has(name);
@@ -766,13 +766,13 @@ export default function ResourcePlanningPage() {
                 <div style={{ width: 36, height: 36, borderRadius: '50%', background: `linear-gradient(135deg,${GOLD},#FBBF24)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: 'var(--surface-raised)' }}>{name.charAt(0)}</div>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>{name}</div>
-                  <div style={{ fontSize: 11, color: DIM }}>{asns[0]?.trade} - {asns[0]?.role}</div>
+                  <div style={{ fontSize: 12, color: DIM }}>{asns[0]?.trade} - {asns[0]?.role}</div>
                 </div>
                 {isConflict && <Badge label="Conflict" color={RED} />}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 11, color: DIM }}>Utilization (4wk)</div>
+                  <div style={{ fontSize: 12, color: DIM }}>Utilization (4wk)</div>
                   <div style={{ fontSize: 16, fontWeight: 800, color: util && util.pct > 100 ? RED : util && util.pct > 80 ? AMBER : GREEN }}>{util?.pct || 0}%</div>
                 </div>
                 <div style={{ width: 60, height: 8, borderRadius: 4, background: `color-mix(in srgb, ${BORDER} 31%, transparent)`, overflow: 'hidden' }}>
@@ -782,22 +782,22 @@ export default function ResourcePlanningPage() {
             </div>
             {/* Certs */}
             {asns[0]?.certifications?.length > 0 && <div style={{ display: 'flex', gap: 4, marginBottom: 8, flexWrap: 'wrap' }}>
-              {asns[0].certifications.map(c => <span key={c} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: `color-mix(in srgb, ${PURPLE} 9%, transparent)`, color: PURPLE, fontWeight: 600 }}>{c}</span>)}
+              {asns[0].certifications.map(c => <span key={c} style={{ fontSize: 12, padding: '2px 6px', borderRadius: 4, background: `color-mix(in srgb, ${PURPLE} 9%, transparent)`, color: PURPLE, fontWeight: 600 }}>{c}</span>)}
             </div>}
             {/* Assignment rows */}
             <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead><tr>{['Project', 'Dates', 'Hrs/Day', 'Rate', 'Status', 'Actions'].map(h => <th key={h} style={{ padding: '5px 8px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: DIM, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 19%, transparent)` }}>{h}</th>)}</tr></thead>
+              <thead><tr>{['Project', 'Dates', 'Hrs/Day', 'Rate', 'Status', 'Actions'].map(h => <th key={h} style={{ padding: '5px 8px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: DIM, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 19%, transparent)` }}>{h}</th>)}</tr></thead>
               <tbody>{asns.map(a => <tr key={a.id || a.project_id + a.start_date}>
                 <td style={{ padding: '6px 8px', color: TEXT, fontWeight: 600 }}>{projMap[a.project_id] || a.project_id}</td>
                 <td style={{ padding: '6px 8px', color: DIM }}>{fmtDate(a.start_date)} – {fmtDate(a.end_date)}</td>
                 <td style={{ padding: '6px 8px', color: DIM }}>{a.hours_per_day}h x {a.days_per_week}d</td>
-                <td style={{ padding: '6px 8px', color: GOLD, fontWeight: 600 }}>{fmtMoney(a.hourly_rate)}/hr</td>
+                <td style={{ padding: '6px 8px', color: 'var(--text-primary)', fontWeight: 600 }}>{fmtMoney(a.hourly_rate)}/hr</td>
                 <td style={{ padding: '6px 8px' }}><StatusPill module="resource_assignments" status={a.status} size="sm" /></td>
                 <td style={{ padding: '6px 8px' }}>
                   <div style={{ display: 'flex', gap: 6 }}>
-                    <button onClick={() => editAssignment(a)} style={{ ...btn(), padding: '3px 8px', fontSize: 11 }}>Edit</button>
-                    <button onClick={() => setReassignTarget({ assignment: a, show: true })} style={{ ...btn(), padding: '3px 8px', fontSize: 11, borderColor: `color-mix(in srgb, ${PURPLE} 31%, transparent)`, color: PURPLE }}>Move</button>
-                    <button onClick={() => a.id && setShowDeleteConfirm(a.id)} style={{ ...btn(), padding: '3px 8px', fontSize: 11, borderColor: `color-mix(in srgb, ${RED} 31%, transparent)`, color: RED }}>Delete</button>
+                    <button onClick={() => editAssignment(a)} style={{ ...btn(), padding: '3px 8px', fontSize: 12 }}>Edit</button>
+                    <button onClick={() => setReassignTarget({ assignment: a, show: true })} style={{ ...btn(), padding: '3px 8px', fontSize: 12, borderColor: `color-mix(in srgb, ${PURPLE} 31%, transparent)`, color: PURPLE }}>Move</button>
+                    <button onClick={() => a.id && setShowDeleteConfirm(a.id)} style={{ ...btn(), padding: '3px 8px', fontSize: 12, borderColor: `color-mix(in srgb, ${RED} 31%, transparent)`, color: RED }}>Delete</button>
                   </div>
                 </td>
               </tr>)}</tbody>
@@ -808,36 +808,36 @@ export default function ResourcePlanningPage() {
 
       {/* ========== PROJECT STAFFING ========== */}
       {!loading && tab === 'staffing' && <div>
-        {projects.length === 0 && <Card title="Project Staffing" icon={<Buildings size={17} weight="duotone" color="var(--brand-primary)" />}><PremiumEmpty compact icon={<Buildings size={30} weight="duotone" color="var(--brand-primary)" />} title="No projects found" description="Create a project to staff it here." /></Card>}
+        {projects.length === 0 && <Card title="Project Staffing" icon={<Buildings size={17} weight="duotone" color="var(--text-secondary)" />}><PremiumEmpty compact icon={<Buildings size={30} weight="duotone" color="var(--text-secondary)" />} title="No projects found" description="Create a project to staff it here." /></Card>}
         {projects.map(proj => {
           const projAsns = filtered.filter(a => a.project_id === proj.id);
           if (filterProject && filterProject !== proj.id) return null;
           if (!filterProject && projAsns.length === 0) return null;
-          return <Card key={proj.id} title={proj.name} icon={<Buildings size={17} weight="duotone" color="var(--brand-primary)" />} action={<div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          return <Card key={proj.id} title={proj.name} icon={<Buildings size={17} weight="duotone" color="var(--text-secondary)" />} action={<div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <span style={{ fontSize: 12, color: DIM }}>{projAsns.length} assignment{projAsns.length !== 1 ? 's' : ''}</span>
             <Badge label={proj.status || 'active'} color={GREEN} />
           </div>}>
             {projAsns.length === 0 ? <div style={{ padding: 16, textAlign: 'center', color: DIM, fontSize: 13 }}>No assignments for this project.</div>
               : <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead><tr>{['Person', 'Role', 'Trade', 'Dates', 'Hours', 'Rate', 'Status', 'Reassign', 'Actions'].map(h => <th key={h} style={{ padding: '5px 8px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: DIM, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 19%, transparent)` }}>{h}</th>)}</tr></thead>
+                <thead><tr>{['Person', 'Role', 'Trade', 'Dates', 'Hours', 'Rate', 'Status', 'Reassign', 'Actions'].map(h => <th key={h} style={{ padding: '5px 8px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: DIM, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 19%, transparent)` }}>{h}</th>)}</tr></thead>
                 <tbody>{projAsns.map(a => <tr key={a.id || a.person_name + a.start_date} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)`, background: conflictPersons.has(a.person_name) ? `color-mix(in srgb, ${RED} 2%, transparent)` : 'transparent' }}>
                   <td style={{ padding: '6px 8px', color: conflictPersons.has(a.person_name) ? RED : TEXT, fontWeight: 600 }}>
                     {a.person_name}
-                    {conflictPersons.has(a.person_name) && <span style={{ fontSize: 9, marginLeft: 4, color: RED }}>!</span>}
+                    {conflictPersons.has(a.person_name) && <span style={{ fontSize: 12, marginLeft: 4, color: RED }}>!</span>}
                   </td>
                   <td style={{ padding: '6px 8px', color: DIM }}>{a.role}</td>
                   <td style={{ padding: '6px 8px', color: DIM }}>{a.trade}</td>
                   <td style={{ padding: '6px 8px', color: DIM }}>{fmtDate(a.start_date)} – {fmtDate(a.end_date)}</td>
                   <td style={{ padding: '6px 8px', color: DIM }}>{a.hours_per_day}h/{a.days_per_week}d</td>
-                  <td style={{ padding: '6px 8px', color: GOLD, fontWeight: 600 }}>{fmtMoney(a.hourly_rate)}</td>
+                  <td style={{ padding: '6px 8px', color: 'var(--text-primary)', fontWeight: 600 }}>{fmtMoney(a.hourly_rate)}</td>
                   <td style={{ padding: '6px 8px' }}><StatusPill module="resource_assignments" status={a.status} size="sm" /></td>
                   <td style={{ padding: '6px 8px' }}>
-                    <button onClick={() => setReassignTarget({ assignment: a, show: true })} style={{ ...btn(), padding: '3px 8px', fontSize: 10 }}>Move</button>
+                    <button onClick={() => setReassignTarget({ assignment: a, show: true })} style={{ ...btn(), padding: '3px 8px', fontSize: 12 }}>Move</button>
                   </td>
                   <td style={{ padding: '6px 8px' }}>
                     <div style={{ display: 'flex', gap: 4 }}>
-                      <button onClick={() => editAssignment(a)} style={{ ...btn(), padding: '3px 8px', fontSize: 11 }}>Edit</button>
-                      <button onClick={() => a.id && setShowDeleteConfirm(a.id)} style={{ ...btn(), padding: '3px 8px', fontSize: 11, borderColor: `color-mix(in srgb, ${RED} 31%, transparent)`, color: RED }}>Delete</button>
+                      <button onClick={() => editAssignment(a)} style={{ ...btn(), padding: '3px 8px', fontSize: 12 }}>Edit</button>
+                      <button onClick={() => a.id && setShowDeleteConfirm(a.id)} style={{ ...btn(), padding: '3px 8px', fontSize: 12, borderColor: `color-mix(in srgb, ${RED} 31%, transparent)`, color: RED }}>Delete</button>
                     </div>
                   </td>
                 </tr>)}</tbody>
@@ -852,19 +852,19 @@ export default function ResourcePlanningPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 18 }}>
           <StatCard label="Avg Utilization" value={`${avgUtil}%`} accent={avgUtil > 100 ? RED : avgUtil > 80 ? AMBER : GREEN} icon={<Gauge size={19} weight="duotone" color={avgUtil > 100 ? RED : avgUtil > 80 ? AMBER : GREEN} />}  href="/app/resource-planning"/>
           <StatCard label="Overbooked (100%+)" value={overbookedCount} accent={overbookedCount > 0 ? RED : GREEN} icon={<Warning size={19} weight="duotone" color={overbookedCount > 0 ? RED : GREEN} />}  href="/app/resource-planning"/>
-          <StatCard label="Under-Utilized (<50%)" value={utilization.filter(u => u.pct < 50 && u.pct > 0).length} accent={BLUE} icon={<TrendDown size={19} weight="duotone" color={BLUE} />}  href="/app/resource-planning"/>
+          <StatCard label="Under-Utilized (<50%)" value={utilization.filter(u => u.pct < 50 && u.pct > 0).length} accent={BLUE} icon={<TrendDown size={19} weight="duotone" color="var(--text-secondary)" />}  href="/app/resource-planning"/>
           <StatCard label="Unassigned" value={utilization.filter(u => u.pct === 0).length} accent={DIM} icon={<UserMinus size={19} weight="duotone" color={DIM} />}  href="/app/resource-planning"/>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
           {/* Utilization chart */}
-          <Card title="Utilization by Person (Next 4 Weeks)" icon={<Gauge size={17} weight="duotone" color="var(--brand-primary)" />}>
+          <Card title="Utilization by Person (Next 4 Weeks)" icon={<Gauge size={17} weight="duotone" color="var(--text-secondary)" />}>
             {utilization.length === 0 && <div style={{ padding: 32, textAlign: 'center', color: DIM }}>No data.</div>}
             {[...utilization].sort((a, b) => b.pct - a.pct).map(u => {
               const color = u.pct > 100 ? RED : u.pct > 80 ? AMBER : u.pct > 50 ? GREEN : BLUE;
               return <div key={u.name} style={{ marginBottom: 8 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 3 }}>
-                  <span style={{ color: TEXT, fontWeight: 600 }}>{u.name} <span style={{ fontSize: 10, color: DIM }}>({u.trade})</span></span>
+                  <span style={{ color: TEXT, fontWeight: 600 }}>{u.name} <span style={{ fontSize: 12, color: DIM }}>({u.trade})</span></span>
                   <span style={{ color, fontWeight: 700 }}>{u.pct}%</span>
                 </div>
                 <div style={{ width: '100%', height: 14, borderRadius: 4, background: `color-mix(in srgb, ${BORDER} 25%, transparent)`, overflow: 'hidden', position: 'relative' }}>
@@ -875,20 +875,20 @@ export default function ResourcePlanningPage() {
             })}
           </Card>
           {/* Heatmap */}
-          <Card title="Weekly Heatmap (Hours)" icon={<Gauge size={17} weight="duotone" color="var(--brand-primary)" />}>
+          <Card title="Weekly Heatmap (Hours)" icon={<Gauge size={17} weight="duotone" color="var(--text-secondary)" />}>
             <div style={{ display: 'grid', gridTemplateColumns: '140px repeat(4,1fr)', gap: 2 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: DIM }}>Person</div>
-              {[0, 1, 2, 3].map(w => <div key={w} style={{ fontSize: 10, fontWeight: 700, color: DIM, textAlign: 'center' }}>Wk {w + 1}</div>)}
+              <div style={{ fontSize: 12, fontWeight: 700, color: DIM }}>Person</div>
+              {[0, 1, 2, 3].map(w => <div key={w} style={{ fontSize: 12, fontWeight: 700, color: DIM, textAlign: 'center' }}>Wk {w + 1}</div>)}
               {people.map(([name, asns]) => {
                 return <React.Fragment key={name}>
-                  <div style={{ fontSize: 11, color: TEXT, fontWeight: 600, padding: '3px 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={name}>{name}</div>
+                  <div style={{ fontSize: 12, color: TEXT, fontWeight: 600, padding: '3px 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={name}>{name}</div>
                   {[0, 1, 2, 3].map(w => {
                     const ws = isoDate(addWeeks(new Date(), w)), we = isoDate(addWeeks(new Date(), w + 1));
                     let hrs = 0;
                     asns.forEach(a => { if (a.status !== 'released' && a.status !== 'unavailable' && a.start_date <= we && a.end_date >= ws) hrs += a.hours_per_day * a.days_per_week; });
                     const pct = hrs / 40 * 100;
                     const bg = pct === 0 ? `color-mix(in srgb, ${BORDER} 13%, transparent)` : pct <= 50 ? `color-mix(in srgb, ${GREEN} 19%, transparent)` : pct <= 80 ? `color-mix(in srgb, ${GREEN} 38%, transparent)` : pct <= 100 ? `color-mix(in srgb, ${AMBER} 38%, transparent)` : `color-mix(in srgb, ${RED} 38%, transparent)`;
-                    return <div key={w} style={{ background: bg, borderRadius: 3, padding: '3px 0', textAlign: 'center', fontSize: 10, fontWeight: 600, color: pct > 100 ? RED : pct > 0 ? TEXT : `color-mix(in srgb, ${DIM} 38%, transparent)` }}>{hrs > 0 ? `${hrs}h` : '-'}</div>;
+                    return <div key={w} style={{ background: bg, borderRadius: 3, padding: '3px 0', textAlign: 'center', fontSize: 12, fontWeight: 600, color: pct > 100 ? RED : pct > 0 ? TEXT : `color-mix(in srgb, ${DIM} 38%, transparent)` }}>{hrs > 0 ? `${hrs}h` : '-'}</div>;
                   })}
                 </React.Fragment>;
               })}
@@ -898,20 +898,20 @@ export default function ResourcePlanningPage() {
       </div>}
 
       {/* ========== AVAILABILITY CALENDAR ========== */}
-      {!loading && tab === 'availability' && <Card title="Availability — Next 4 Weeks" icon={<CalendarBlank size={17} weight="duotone" color="var(--brand-primary)" />}>
+      {!loading && tab === 'availability' && <Card title="Availability — Next 4 Weeks" icon={<CalendarBlank size={17} weight="duotone" color="var(--text-secondary)" />}>
         <div style={{ display: 'grid', gridTemplateColumns: '200px repeat(4,1fr)', gap: 2, marginBottom: 8 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: DIM, padding: 6 }}>Person / Trade / Role</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: DIM, padding: 6 }}>Person / Trade / Role</div>
           {[0, 1, 2, 3].map(w => {
             const d = addWeeks(new Date(), w);
-            return <div key={w} style={{ fontSize: 11, fontWeight: 700, color: DIM, textAlign: 'center', padding: 6 }}>{`${d.getMonth() + 1}/${d.getDate()}`} - {`${addDays(d, 6).getMonth() + 1}/${addDays(d, 6).getDate()}`}</div>;
+            return <div key={w} style={{ fontSize: 12, fontWeight: 700, color: DIM, textAlign: 'center', padding: 6 }}>{`${d.getMonth() + 1}/${d.getDate()}`} - {`${addDays(d, 6).getMonth() + 1}/${addDays(d, 6).getDate()}`}</div>;
           })}
         </div>
-        {availability.length === 0 && <PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--brand-primary)" />} title="No people tracked yet" description="Add assignments to see availability." />}
+        {availability.length === 0 && <PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />} title="No people tracked yet" description="Add assignments to see availability." />}
         {availability.map(a => <div key={a.name} style={{ display: 'grid', gridTemplateColumns: '200px repeat(4,1fr)', gap: 2, marginBottom: 2 }}>
           <div style={{ padding: '6px 8px', fontSize: 12, color: TEXT, fontWeight: 600, background: `color-mix(in srgb, ${RAISED} 50%, transparent)`, borderRadius: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {a.name} <span style={{ fontSize: 10, color: DIM }}>({a.trade} - {a.role})</span>
+            {a.name} <span style={{ fontSize: 12, color: DIM }}>({a.trade} - {a.role})</span>
           </div>
-          {a.weekFree.map((free, i) => <div key={i} style={{ padding: '6px 8px', fontSize: 11, fontWeight: 700, textAlign: 'center', borderRadius: 3, background: free ? `color-mix(in srgb, ${GREEN} 9%, transparent)` : a.weekHrs[i] > 40 ? `color-mix(in srgb, ${RED} 9%, transparent)` : `color-mix(in srgb, ${AMBER} 7%, transparent)`, color: free ? GREEN : a.weekHrs[i] > 40 ? RED : AMBER }}>
+          {a.weekFree.map((free, i) => <div key={i} style={{ padding: '6px 8px', fontSize: 12, fontWeight: 700, textAlign: 'center', borderRadius: 3, background: free ? `color-mix(in srgb, ${GREEN} 9%, transparent)` : a.weekHrs[i] > 40 ? `color-mix(in srgb, ${RED} 9%, transparent)` : `color-mix(in srgb, ${AMBER} 7%, transparent)`, color: free ? GREEN : a.weekHrs[i] > 40 ? RED : AMBER }}>
             {free ? 'Available' : `${a.weekHrs[i]}h booked`}
           </div>)}
         </div>)}
@@ -932,13 +932,13 @@ export default function ResourcePlanningPage() {
       {/* ========== HEADCOUNT FORECAST ========== */}
       {!loading && tab === 'forecast' && <div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 18 }}>
-          <Card title="Monthly Headcount Projection" icon={<UsersThree size={17} weight="duotone" color="var(--brand-primary)" />}>
+          <Card title="Monthly Headcount Projection" icon={<UsersThree size={17} weight="duotone" color="var(--text-secondary)" />}>
             {forecast.map(f => {
               const pct = f.count / maxForecast * 100;
               return <div key={f.label} style={{ marginBottom: 10 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 3 }}>
                   <span style={{ color: TEXT, fontWeight: 600 }}>{f.label}</span>
-                  <span style={{ color: BLUE, fontWeight: 700 }}>{f.count} people ({f.fte} FTE)</span>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{f.count} people ({f.fte} FTE)</span>
                 </div>
                 <div style={{ width: '100%', height: 18, borderRadius: 4, background: `color-mix(in srgb, ${BORDER} 19%, transparent)`, overflow: 'hidden' }}>
                   <div style={{ width: `${pct}%`, height: '100%', borderRadius: 4, background: `linear-gradient(90deg,${BLUE},${PURPLE})` }} />
@@ -946,14 +946,14 @@ export default function ResourcePlanningPage() {
               </div>;
             })}
           </Card>
-          <Card title="Monthly Labor Cost Projection" icon={<CurrencyDollar size={17} weight="duotone" color="var(--brand-primary)" />}>
+          <Card title="Monthly Labor Cost Projection" icon={<CurrencyDollar size={17} weight="duotone" color="var(--text-secondary)" />}>
             {forecast.map(f => {
               const maxC = Math.max(1, ...forecast.map(x => x.cost));
               const pct = f.cost / maxC * 100;
               return <div key={f.label} style={{ marginBottom: 10 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 3 }}>
                   <span style={{ color: TEXT, fontWeight: 600 }}>{f.label}</span>
-                  <span style={{ color: GOLD, fontWeight: 700 }}>{fmtMoney(f.cost)}</span>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{fmtMoney(f.cost)}</span>
                 </div>
                 <div style={{ width: '100%', height: 18, borderRadius: 4, background: `color-mix(in srgb, ${BORDER} 19%, transparent)`, overflow: 'hidden' }}>
                   <div style={{ width: `${pct}%`, height: '100%', borderRadius: 4, background: `linear-gradient(90deg,${GOLD},${AMBER})` }} />
@@ -963,17 +963,17 @@ export default function ResourcePlanningPage() {
           </Card>
         </div>
         {/* Forecast table */}
-        <Card title="Forecast Detail" icon={<ClipboardText size={17} weight="duotone" color="var(--brand-primary)" />}>
+        <Card title="Forecast Detail" icon={<ClipboardText size={17} weight="duotone" color="var(--text-secondary)" />}>
           <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead><tr>{['Month', 'Headcount', 'FTEs', 'Labor Cost', 'Avg Cost/Person', 'Trend'].map(h => <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>)}</tr></thead>
+            <thead><tr>{['Month', 'Headcount', 'FTEs', 'Labor Cost', 'Avg Cost/Person', 'Trend'].map(h => <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>)}</tr></thead>
             <tbody>{forecast.map((f, fi) => {
               const prevCount = fi > 0 ? forecast[fi - 1].count : f.count;
               const trend = f.count > prevCount ? 'up' : f.count < prevCount ? 'down' : 'flat';
               return <tr key={f.label} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                 <td style={{ padding: '10px 12px', color: TEXT, fontWeight: 600 }}>{f.label}</td>
-                <td style={{ padding: '10px 12px', color: BLUE, fontWeight: 700 }}>{f.count}</td>
+                <td style={{ padding: '10px 12px', color: 'var(--text-primary)', fontWeight: 700 }}>{f.count}</td>
                 <td style={{ padding: '10px 12px', color: PURPLE, fontWeight: 700 }}>{f.fte}</td>
-                <td style={{ padding: '10px 12px', color: GOLD, fontWeight: 700 }}>{fmtMoney(f.cost)}</td>
+                <td style={{ padding: '10px 12px', color: 'var(--text-primary)', fontWeight: 700 }}>{fmtMoney(f.cost)}</td>
                 <td style={{ padding: '10px 12px', color: DIM }}>{f.count > 0 ? fmtMoney(f.cost / f.count) : '-'}</td>
                 <td style={{ padding: '10px 12px', color: trend === 'up' ? GREEN : trend === 'down' ? RED : DIM, fontWeight: 700 }}>
                   {trend === 'up' ? '+' : trend === 'down' ? '-' : '='} {trend}
@@ -986,15 +986,15 @@ export default function ResourcePlanningPage() {
 
       {/* ========== LABOR COSTS ========== */}
       {!loading && tab === 'costs' && <div>
-        <Card title="Labor Cost by Project" icon={<CurrencyDollar size={17} weight="duotone" color="var(--brand-primary)" />}>
+        <Card title="Labor Cost by Project" icon={<CurrencyDollar size={17} weight="duotone" color="var(--text-secondary)" />}>
           {projectCosts.length === 0 && <div style={{ padding: 32, textAlign: 'center', color: DIM }}>No cost data available.</div>}
           <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead><tr>{['Project', 'Headcount', 'Total Hours', 'Labor Cost', 'Avg Rate', 'Cost Bar'].map(h => <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>)}</tr></thead>
+            <thead><tr>{['Project', 'Headcount', 'Total Hours', 'Labor Cost', 'Avg Rate', 'Cost Bar'].map(h => <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>)}</tr></thead>
             <tbody>{projectCosts.map(pc => <tr key={pc.project} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
               <td style={{ padding: '10px 12px', color: TEXT, fontWeight: 700 }}>{pc.project}</td>
-              <td style={{ padding: '10px 12px', color: BLUE, fontWeight: 600 }}>{pc.headcount}</td>
+              <td style={{ padding: '10px 12px', color: 'var(--text-primary)', fontWeight: 600 }}>{pc.headcount}</td>
               <td style={{ padding: '10px 12px', color: DIM }}>{pc.hours.toLocaleString()}h</td>
-              <td style={{ padding: '10px 12px', color: GOLD, fontWeight: 700, fontSize: 14 }}>{fmtMoney(pc.labor)}</td>
+              <td style={{ padding: '10px 12px', color: 'var(--text-primary)', fontWeight: 700, fontSize: 14 }}>{fmtMoney(pc.labor)}</td>
               <td style={{ padding: '10px 12px', color: DIM }}>{pc.hours > 0 ? fmtMoney(pc.labor / pc.hours) + '/hr' : '-'}</td>
               <td style={{ padding: '10px 12px', width: 200 }}>
                 <div style={{ width: '100%', height: 12, borderRadius: 4, background: `color-mix(in srgb, ${BORDER} 19%, transparent)`, overflow: 'hidden' }}>
@@ -1007,8 +1007,8 @@ export default function ResourcePlanningPage() {
 
         {/* Cost summary */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-          <StatCard label="Total Labor Cost" value={fmtMoney(projectCosts.reduce((s, p) => s + p.labor, 0))} accent={GOLD} icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />}  href="/app/resource-planning"/>
-          <StatCard label="Total Hours" value={projectCosts.reduce((s, p) => s + p.hours, 0).toLocaleString()} accent={BLUE} icon={<Clock size={19} weight="duotone" color={BLUE} />}  href="/app/resource-planning"/>
+          <StatCard label="Total Labor Cost" value={fmtMoney(projectCosts.reduce((s, p) => s + p.labor, 0))} accent={GOLD} icon={<CurrencyDollar size={19} weight="duotone" color="var(--text-secondary)" />}  href="/app/resource-planning"/>
+          <StatCard label="Total Hours" value={projectCosts.reduce((s, p) => s + p.hours, 0).toLocaleString()} accent={BLUE} icon={<Clock size={19} weight="duotone" color="var(--text-secondary)" />}  href="/app/resource-planning"/>
           <StatCard label="Blended Rate" accent={GREEN} icon={<Scales size={19} weight="duotone" color={GREEN} />} value={(() => {
             const h = projectCosts.reduce((s, p) => s + p.hours, 0);
             const c = projectCosts.reduce((s, p) => s + p.labor, 0);
@@ -1023,7 +1023,7 @@ export default function ResourcePlanningPage() {
 
         {/* Trade breakdown */}
         <div style={{ marginTop: 18 }}>
-          <Card title="Cost by Trade" icon={<Scales size={17} weight="duotone" color="var(--brand-primary)" />}>
+          <Card title="Cost by Trade" icon={<Scales size={17} weight="duotone" color="var(--text-secondary)" />}>
             {(() => {
               const tradeMap: Record<string, { hours: number; cost: number; count: number }> = {};
               assignments.forEach(a => {
@@ -1037,12 +1037,12 @@ export default function ResourcePlanningPage() {
               const trades = Object.entries(tradeMap).sort((a, b) => b[1].cost - a[1].cost);
               const maxTradeCost = Math.max(1, ...trades.map(([, v]) => v.cost));
               return <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead><tr>{['Trade', 'Assignments', 'Hours', 'Cost', 'Avg Rate', ''].map(h => <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>)}</tr></thead>
+                <thead><tr>{['Trade', 'Assignments', 'Hours', 'Cost', 'Avg Rate', ''].map(h => <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>)}</tr></thead>
                 <tbody>{trades.map(([trade, v]) => <tr key={trade} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                   <td style={{ padding: '8px 12px', color: TEXT, fontWeight: 600 }}>{trade}</td>
                   <td style={{ padding: '8px 12px', color: DIM }}>{v.count}</td>
                   <td style={{ padding: '8px 12px', color: DIM }}>{v.hours.toLocaleString()}h</td>
-                  <td style={{ padding: '8px 12px', color: GOLD, fontWeight: 700 }}>{fmtMoney(v.cost)}</td>
+                  <td style={{ padding: '8px 12px', color: 'var(--text-primary)', fontWeight: 700 }}>{fmtMoney(v.cost)}</td>
                   <td style={{ padding: '8px 12px', color: DIM }}>{v.hours > 0 ? fmtMoney(v.cost / v.hours) + '/hr' : '-'}</td>
                   <td style={{ padding: '8px 12px', width: 160 }}>
                     <div style={{ width: '100%', height: 10, borderRadius: 4, background: `color-mix(in srgb, ${BORDER} 19%, transparent)`, overflow: 'hidden' }}>

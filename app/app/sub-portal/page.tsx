@@ -8,7 +8,7 @@ import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatSt
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 import SubInbox from '@/components/sub-portal/SubInbox';
 import ComplianceChecklist from '@/components/sub-portal/ComplianceChecklist';
-import { UsersThree, CheckCircle, Clock, Prohibit, WarningCircle, XCircle, FileX, Plus, UploadSimple, ListChecks, ClockCounterClockwise, FileText, ShieldCheck, AddressBook, Megaphone, Envelope } from '@phosphor-icons/react';
+import { UsersThree, CheckCircle, WarningCircle, XCircle, FileX, Plus, UploadSimple, ListChecks, ClockCounterClockwise, FileText, ShieldCheck, AddressBook, Megaphone, Envelope } from '@phosphor-icons/react';
 
 /* ── palette ── */
 const GOLD = 'var(--brand-primary)';
@@ -547,7 +547,7 @@ export default function SubPortalPage() {
       {/* ── header ── */}
       <ModuleHero
         eyebrow="Sub Portal"
-        eyebrowIcon={<UsersThree size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<UsersThree size={13} weight="fill" color="var(--text-secondary)" />}
         title="Sub Portal"
         accent="Management"
         subtitle="Manage subcontractor portal access, compliance, and communications"
@@ -567,49 +567,24 @@ export default function SubPortalPage() {
         </div>
       )}
 
-      {/* ── stat cards ── */}
-      {/* Two to a row on a phone, so the inbox below is reached without two screens of cards. */}
-      <style dangerouslySetInnerHTML={{ __html: '@media (max-width: 640px){.sp-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;margin-bottom:16px!important}.sp-intel{display:none}}' }} />
-      <div className="sp-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 28 }}>
-        {[
-          { label: 'Total Subs', value: stats.total, color: GOLD, icon: <UsersThree size={19} weight="duotone" color={GOLD} /> },
-          { label: 'Active', value: stats.active, color: GREEN, icon: <CheckCircle size={19} weight="duotone" color={GREEN} /> },
-          { label: 'Pending', value: stats.pending, color: AMBER, icon: <Clock size={19} weight="duotone" color={AMBER} /> },
-          { label: 'Disabled', value: stats.disabled, color: RED, icon: <Prohibit size={19} weight="duotone" color={RED} /> },
-          { label: 'Expiring Docs', value: stats.compExpiring, color: AMBER, icon: <WarningCircle size={19} weight="duotone" color={AMBER} /> },
-          { label: 'Expired Docs', value: stats.compExpired, color: RED, icon: <XCircle size={19} weight="duotone" color={RED} /> },
-          { label: 'Missing Docs', value: stats.compMissing, color: DIM, icon: <FileX size={19} weight="duotone" color={DIM} /> },
-        ].map((s, i) => (
-          <StatCard key={i} icon={s.icon} label={s.label} value={String(s.value)} accent={s.color} delay={i * 0.04}  href="/app/sub-portal"/>
-        ))}
-      </div>
-
-      {/* ── roster intelligence strip — adoption, engagement, compliance health ── */}
-      {users.length > 0 && (
-        <div className="sp-intel"><StatStrip items={[
-          {href: '/app/sub-portal', 
-            label: 'Portal Adoption', value: `${intel.adoption}%`,
-            accent: intel.adoption >= 70 ? GREEN : AMBER,
-            sub: `${stats.active} active of ${stats.total} invited`,
-          },
-          {href: '/app/sub-portal', 
+      {/* ── one summary — roster status, engagement, compliance health ── */}
+      <StatStrip items={[
+        { href: '/app/sub-portal', label: 'Total Subs', value: String(stats.total) },
+        { href: '/app/sub-portal', label: 'Active', value: String(stats.active), accent: GREEN },
+        { href: '/app/sub-portal', label: 'Pending', value: String(stats.pending), accent: AMBER },
+        ...(users.length > 0 ? [
+          {href: '/app/sub-portal',
             label: 'Never Logged In', value: String(intel.neverLogged),
             accent: intel.neverLogged > 0 ? AMBER : GREEN,
             sub: intel.neverLogged > 0 ? 'Active accounts, zero visits — resend the link' : 'Every active sub has visited',
           },
-          {href: '/app/sub-portal', label: 'Trades Onboarded', value: String(intel.uniqueTrades), sub: 'Distinct trades across the roster' },
-          {href: '/app/sub-portal', 
+          {href: '/app/sub-portal',
             label: 'Compliance Health', value: compliance.length > 0 ? `${intel.compPct}%` : '—',
             accent: compliance.length === 0 ? undefined : intel.compPct >= 80 ? GREEN : intel.needAttention > 0 ? RED : AMBER,
             sub: compliance.length > 0 ? `${intel.needAttention} document${intel.needAttention === 1 ? '' : 's'} need attention` : 'No compliance docs tracked yet',
           },
-          {href: '/app/sub-portal', label: 'Docs Shared', value: String(docs.length), sub: docs.length > 0 ? `${intel.docsAll} visible to all subs` : 'Nothing shared to the portal yet' },
-          {href: '/app/sub-portal', 
-            label: 'Activity (7d)', value: String(intel.events7),
-            sub: intel.lastEventTs > 0 ? `Last event ${fmtDateTime(new Date(intel.lastEventTs).toISOString())}` : 'No portal events yet',
-          },
-        ]} /></div>
-      )}
+        ] : []),
+      ]} />
 
       {/* ── tabs ── */}
       <div style={{ display: 'flex', gap: 0, borderBottom: `1px solid ${BORDER}`, marginBottom: 24, overflowX: 'auto' }}>
@@ -651,7 +626,7 @@ export default function SubPortalPage() {
       {/*  TAB: SUB USERS                             */}
       {/* ════════════════════════════════════════════ */}
       {tab === 'users' && (
-        <SectionCard flush icon={<UsersThree size={17} weight="duotone" color={GOLD} />} title="Sub Users">
+        <SectionCard flush icon={<UsersThree size={17} weight="duotone" color="var(--text-secondary)" />} title="Sub Users">
           <div style={{ overflowX: 'auto' }}>
           <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
@@ -663,7 +638,7 @@ export default function SubPortalPage() {
             </thead>
             <tbody>
               {filteredUsers.length === 0 && (
-                <tr><td colSpan={7} style={{ padding: 0 }}><PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color={GOLD} />} title="No subcontractors found" description="No subs match your current filters. Adjust the filters or invite a subcontractor." /></td></tr>
+                <tr><td colSpan={7} style={{ padding: 0 }}><PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />} title="No subcontractors found" description="No subs match your current filters. Adjust the filters or invite a subcontractor." /></td></tr>
               )}
               {filteredUsers.map(u => (
                 <tr key={u.id} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)`, cursor: 'pointer' }}
@@ -714,15 +689,15 @@ export default function SubPortalPage() {
       {tab === 'invite' && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 24 }}>
           {/* single invite */}
-          <SectionCard icon={<Plus size={17} weight="duotone" color={GOLD} />} title="Invite Subcontractor">
+          <SectionCard icon={<Plus size={17} weight="duotone" color="var(--text-secondary)" />} title="Invite Subcontractor">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div><label style={labelStyle}>Company Name *</label><input value={invCompany} onChange={e => onInvCompanyChange(e.target.value)} style={inputStyle} placeholder="Enter company name" /></div>
               <div><label style={labelStyle}>Contact Name *</label><input value={invContact} onChange={e => setInvContact(e.target.value)} style={inputStyle} placeholder="Full name" /></div>
               <div>
                 <label style={labelStyle}>Email Address *</label>
                 <input type="email" value={invEmail} onChange={e => setInvEmail(e.target.value)} style={{ ...inputStyle, borderColor: invEmailTrim && !invEmailValid ? `color-mix(in srgb, ${RED} 50%, transparent)` : BORDER }} placeholder="email@company.com" />
-                {invEmailTrim && !invEmailValid && <div style={{ color: RED, fontSize: 11.5, marginTop: 4 }}>Enter a valid email — the invitation and the portal login both use it.</div>}
-                {invDup && <div style={{ color: AMBER, fontSize: 11.5, marginTop: 4 }}>{invDup.company || invDup.contactName} is already on the roster ({invDup.status}) — sending again creates a duplicate. Use Resend from the Sub Users tab instead.</div>}
+                {invEmailTrim && !invEmailValid && <div style={{ color: RED, fontSize: 12, marginTop: 4 }}>Enter a valid email — the invitation and the portal login both use it.</div>}
+                {invDup && <div style={{ color: AMBER, fontSize: 12, marginTop: 4 }}>{invDup.company || invDup.contactName} is already on the roster ({invDup.status}) — sending again creates a duplicate. Use Resend from the Sub Users tab instead.</div>}
               </div>
               <div>
                 <label style={labelStyle}>Trade *{invTradeAuto && invTrade ? <AutoChip /> : null}</label>
@@ -730,11 +705,11 @@ export default function SubPortalPage() {
                   <option value="">Select trade</option>
                   {ALL_TRADES.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
-                {invTradeAuto && invTrade && <div style={{ color: DIM, fontSize: 11.5, marginTop: 4 }}>Inferred from the company name — change it if that is wrong.</div>}
+                {invTradeAuto && invTrade && <div style={{ color: DIM, fontSize: 12, marginTop: 4 }}>Inferred from the company name — change it if that is wrong.</div>}
               </div>
               <div>
                 <label style={labelStyle}>Project Access{invProjAuto && invProjects.length > 0 ? <AutoChip /> : null}</label>
-                {invProjAuto && invProjects.length > 0 && <div style={{ color: DIM, fontSize: 11.5, marginBottom: 2 }}>Your only project — preselected. Uncheck to invite without project access.</div>}
+                {invProjAuto && invProjects.length > 0 && <div style={{ color: DIM, fontSize: 12, marginBottom: 2 }}>Your only project — preselected. Uncheck to invite without project access.</div>}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
                   {projects.length === 0 && <span style={{ color: DIM, fontSize: 12 }}>No projects yet — create a project first to grant access.</span>}
                   {projects.map(p => (
@@ -746,7 +721,7 @@ export default function SubPortalPage() {
                   ))}
                 </div>
               </div>
-              <div style={{ color: DIM, fontSize: 11.5, lineHeight: 1.5, padding: '9px 12px', background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--brand-primary) 22%, transparent)', borderRadius: 8 }}>
+              <div style={{ color: DIM, fontSize: 12, lineHeight: 1.5, padding: '9px 12px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 8 }}>
                 New subs start with <b style={{ color: TEXT }}>Their Contract + Schedule</b> visible. Fine-tune everything else in the Permissions tab after inviting.
               </div>
               <button onClick={handleInvite} disabled={invDisabled}
@@ -757,7 +732,7 @@ export default function SubPortalPage() {
           </SectionCard>
 
           {/* bulk invite */}
-          <SectionCard icon={<UploadSimple size={17} weight="duotone" color={GOLD} />} title="Bulk Invite" subtitle="Enter one sub per line in CSV format: Company, Contact Name, Email, Trade">
+          <SectionCard icon={<UploadSimple size={17} weight="duotone" color="var(--text-secondary)" />} title="Bulk Invite" subtitle="Enter one sub per line in CSV format: Company, Contact Name, Email, Trade">
             <textarea value={bulkText} onChange={e => setBulkText(e.target.value)}
               style={{ ...inputStyle, height: 200, resize: 'vertical', fontFamily: 'monospace', fontSize: 13 }}
               placeholder={'Apex Electric, John Smith, john@apex.com, Electrical\nBlue Plumbing, Jane Doe, jane@blue.com, Plumbing'} />
@@ -787,7 +762,7 @@ export default function SubPortalPage() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ color: DIM, fontSize: 12 }}>Sent {fmtDate(u.invitedDate)}</span>
-                    <button onClick={() => resendInvite(u.id)} style={{ ...btnSecondary, padding: '3px 8px', fontSize: 11 }}>Resend</button>
+                    <button onClick={() => resendInvite(u.id)} style={{ ...btnSecondary, padding: '3px 8px', fontSize: 12 }}>Resend</button>
                   </div>
                 </div>
               ))}
@@ -795,7 +770,7 @@ export default function SubPortalPage() {
           </SectionCard>
 
           {/* what happens next */}
-          <SectionCard flat icon={<ListChecks size={17} weight="duotone" color={GOLD} />} title="After You Invite">
+          <SectionCard flat icon={<ListChecks size={17} weight="duotone" color="var(--text-secondary)" />} title="After You Invite">
             <FlowSteps title="" steps={[
               { title: 'Invitation email goes out', desc: 'The sub gets a secure portal link tied to their email — no password to manage.' },
               { title: 'They show as Pending', desc: 'The roster tracks them until first login. Resend the invite from Sub Users any time.' },
@@ -810,21 +785,21 @@ export default function SubPortalPage() {
       {/*  TAB: PERMISSIONS                           */}
       {/* ════════════════════════════════════════════ */}
       {tab === 'permissions' && (
-        <SectionCard flush icon={<ListChecks size={17} weight="duotone" color={GOLD} />} title="Portal Access Permissions" subtitle="Control what each subcontractor can see in their portal">
+        <SectionCard flush icon={<ListChecks size={17} weight="duotone" color="var(--text-secondary)" />} title="Portal Access Permissions" subtitle="Control what each subcontractor can see in their portal">
           <div style={{ overflowX: 'auto' }}>
           <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
                 <th style={{ padding: '12px 16px', textAlign: 'left', color: DIM, fontSize: 12, fontWeight: 600}}>Subcontractor</th>
                 {ALL_PERMISSIONS_LIST.map(p => (
-                  <th key={p.key} style={{ padding: '12px 10px', textAlign: 'center', color: DIM, fontSize: 11, fontWeight: 600}}>{p.label}</th>
+                  <th key={p.key} style={{ padding: '12px 10px', textAlign: 'center', color: DIM, fontSize: 12, fontWeight: 600}}>{p.label}</th>
                 ))}
                 <th style={{ padding: '12px 16px', textAlign: 'center', color: DIM, fontSize: 12, fontWeight: 600 }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredUsers.length === 0 && (
-                <tr><td colSpan={ALL_PERMISSIONS_LIST.length + 2} style={{ padding: 0 }}><PremiumEmpty compact icon={<ListChecks size={30} weight="duotone" color={GOLD} />} title="No subs found" description="Invite a subcontractor to manage their portal permissions here." /></td></tr>
+                <tr><td colSpan={ALL_PERMISSIONS_LIST.length + 2} style={{ padding: 0 }}><PremiumEmpty compact icon={<ListChecks size={30} weight="duotone" color="var(--text-secondary)" />} title="No subs found" description="Invite a subcontractor to manage their portal permissions here." /></td></tr>
               )}
               {filteredUsers.map(u => (
                 <tr key={u.id} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
@@ -844,9 +819,9 @@ export default function SubPortalPage() {
                   <td style={{ padding: '10px 16px', textAlign: 'center' }}>
                     <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
                       <button onClick={() => updatePermissions(u.id, ALL_PERMISSIONS_LIST.map(p => p.key))}
-                        style={{ ...btnSecondary, padding: '3px 8px', fontSize: 11, color: GREEN, borderColor: `color-mix(in srgb, ${GREEN} 31%, transparent)` }}>All</button>
+                        style={{ ...btnSecondary, padding: '3px 8px', fontSize: 12, color: GREEN, borderColor: `color-mix(in srgb, ${GREEN} 31%, transparent)` }}>All</button>
                       <button onClick={() => updatePermissions(u.id, [])}
-                        style={{ ...btnSecondary, padding: '3px 8px', fontSize: 11, color: RED, borderColor: `color-mix(in srgb, ${RED} 31%, transparent)` }}>None</button>
+                        style={{ ...btnSecondary, padding: '3px 8px', fontSize: 12, color: RED, borderColor: `color-mix(in srgb, ${RED} 31%, transparent)` }}>None</button>
                     </div>
                   </td>
                 </tr>
@@ -861,24 +836,24 @@ export default function SubPortalPage() {
       {/*  TAB: ACTIVITY LOG                          */}
       {/* ════════════════════════════════════════════ */}
       {tab === 'activity' && (
-        <SectionCard flat flush icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />} title="Portal Activity Log" subtitle="Track when subs logged in and what they viewed" action={<span style={{ color: DIM, fontSize: 13 }}>{activity.length} entries{intel.events7 > 0 ? ` · ${intel.events7} this week` : ''}</span>}>
+        <SectionCard flat flush icon={<ClockCounterClockwise size={17} weight="duotone" color="var(--text-secondary)" />} title="Portal Activity Log" subtitle="Track when subs logged in and what they viewed" action={<span style={{ color: DIM, fontSize: 13 }}>{activity.length} entries{intel.events7 > 0 ? ` · ${intel.events7} this week` : ''}</span>}>
           {/* activity context — engagement at a glance before the raw feed */}
           {activity.length > 0 && (
-            <div style={{ display: 'flex', gap: 22, flexWrap: 'wrap', padding: '12px 20px', borderBottom: `1px solid ${BORDER}`, background: 'rgba(255,255,255,0.02)', fontSize: 12.5, color: DIM }}>
+            <div style={{ display: 'flex', gap: 22, flexWrap: 'wrap', padding: '12px 20px', borderBottom: `1px solid ${BORDER}`, background: 'rgba(255,255,255,0.02)', fontSize: 13, color: DIM }}>
               <span>Last 7 days: <b style={{ color: TEXT }}>{intel.events7}</b> event{intel.events7 === 1 ? '' : 's'}</span>
               <span>Logins: <b style={{ color: GREEN }}>{intel.logins}</b></span>
-              {intel.mostActive && <span>Most active: <b style={{ color: GOLD }}>{intel.mostActive}</b></span>}
+              {intel.mostActive && <span>Most active: <b style={{ color: 'var(--text-primary)' }}>{intel.mostActive}</b></span>}
               {intel.lastEventTs > 0 && <span>Last event: <b style={{ color: TEXT }}>{fmtDateTime(new Date(intel.lastEventTs).toISOString())}</b></span>}
             </div>
           )}
           <div style={{ maxHeight: 500, overflow: 'auto' }}>
             {activity.length === 0 && (
-              <PremiumEmpty compact icon={<ClockCounterClockwise size={30} weight="duotone" color={GOLD} />} title="No portal activity yet" description="Sub logins and document views will appear here." />
+              <PremiumEmpty compact icon={<ClockCounterClockwise size={30} weight="duotone" color="var(--text-secondary)" />} title="No portal activity yet" description="Sub logins and document views will appear here." />
             )}
             {activity.map((a, i) => (
               <div key={a.id} style={{ display: 'flex', gap: 14, padding: '14px 20px', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)`,
                 background: i % 2 === 0 ? 'transparent' : `color-mix(in srgb, ${BG} 25%, transparent)` }}>
-                <div style={{ width: 36, height: 36, borderRadius: '50%', background: `color-mix(in srgb, ${BLUE} 13%, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: BLUE, fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', background: `color-mix(in srgb, ${BLUE} 13%, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
                   {a.subName.split(' ').map(n => n[0]).join('')}
                 </div>
                 <div style={{ flex: 1 }}>
@@ -903,7 +878,7 @@ export default function SubPortalPage() {
       {/*  TAB: DOCUMENTS                             */}
       {/* ════════════════════════════════════════════ */}
       {tab === 'documents' && (
-        <SectionCard flush icon={<FileText size={17} weight="duotone" color={GOLD} />} title="Document Sharing Controls" subtitle="Control which documents are visible to subcontractors">
+        <SectionCard flush icon={<FileText size={17} weight="duotone" color="var(--text-secondary)" />} title="Document Sharing Controls" subtitle="Control which documents are visible to subcontractors">
           <div style={{ overflowX: 'auto' }}>
           <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
@@ -915,13 +890,13 @@ export default function SubPortalPage() {
             </thead>
             <tbody>
               {docs.length === 0 && (
-                <tr><td colSpan={7} style={{ padding: 0 }}><PremiumEmpty compact icon={<FileText size={30} weight="duotone" color={GOLD} />} title="No shared documents yet" description="Documents shared to the sub portal will appear here." /></td></tr>
+                <tr><td colSpan={7} style={{ padding: 0 }}><PremiumEmpty compact icon={<FileText size={30} weight="duotone" color="var(--text-secondary)" />} title="No shared documents yet" description="Documents shared to the sub portal will appear here." /></td></tr>
               )}
               {docs.map(d => (
                 <tr key={d.id} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <FileText size={16} weight="duotone" color={GOLD} />
+                      <FileText size={16} weight="duotone" color="var(--text-secondary)" />
                       <span style={{ fontWeight: 500, fontSize: 14 }}>{d.name}</span>
                     </div>
                   </td>
@@ -975,7 +950,7 @@ export default function SubPortalPage() {
             ))}
           </div>
 
-          <SectionCard flush icon={<ShieldCheck size={17} weight="duotone" color={GOLD} />} title="Compliance Tracking" subtitle="Insurance, W-9, and license expiration tracking">
+          <SectionCard flush icon={<ShieldCheck size={17} weight="duotone" color="var(--text-secondary)" />} title="Compliance Tracking" subtitle="Insurance, W-9, and license expiration tracking">
             <div style={{ overflowX: 'auto' }}>
             <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
@@ -987,7 +962,7 @@ export default function SubPortalPage() {
               </thead>
               <tbody>
                 {compliance.length === 0 && (
-                  <tr><td colSpan={7} style={{ padding: 0 }}><PremiumEmpty compact icon={<ShieldCheck size={30} weight="duotone" color={GOLD} />} title="No compliance documents yet" description="COIs, W-9s, and licenses your subs upload will appear here." /></td></tr>
+                  <tr><td colSpan={7} style={{ padding: 0 }}><PremiumEmpty compact icon={<ShieldCheck size={30} weight="duotone" color="var(--text-secondary)" />} title="No compliance documents yet" description="COIs, W-9s, and licenses your subs upload will appear here." /></td></tr>
                 )}
                 {compliance
                   .filter(c => {
@@ -1030,7 +1005,7 @@ export default function SubPortalPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
           {filteredUsers.length === 0 && (
             <div style={{ gridColumn: '1 / -1' }}>
-              <PremiumEmpty icon={<AddressBook size={30} weight="duotone" color={GOLD} />} title="No subcontractors found" description="No subs match your current filters. Adjust the filters or invite a subcontractor to build your directory." />
+              <PremiumEmpty icon={<AddressBook size={30} weight="duotone" color="var(--text-secondary)" />} title="No subcontractors found" description="No subs match your current filters. Adjust the filters or invite a subcontractor to build your directory." />
             </div>
           )}
           {filteredUsers.map(u => (
@@ -1067,7 +1042,7 @@ export default function SubPortalPage() {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
                   <span style={{ color: DIM }}>Projects</span>
-                  <span style={{ color: GOLD }}>{u.projectAccess.length}</span>
+                  <span style={{ color: 'var(--text-primary)' }}>{u.projectAccess.length}</span>
                 </div>
               </div>
             </div>
@@ -1089,7 +1064,7 @@ export default function SubPortalPage() {
           </div>
 
           {/* inline compose */}
-          <SectionCard icon={<Megaphone size={17} weight="duotone" color={GOLD} />} title="Quick Broadcast" style={{ marginBottom: 20 }}>
+          <SectionCard icon={<Megaphone size={17} weight="duotone" color="var(--text-secondary)" />} title="Quick Broadcast" style={{ marginBottom: 20 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div><label style={labelStyle}>Subject</label><input value={annSubject} onChange={e => setAnnSubject(e.target.value)} style={inputStyle} placeholder="Announcement subject" /></div>
               <div>
@@ -1126,9 +1101,9 @@ export default function SubPortalPage() {
           </SectionCard>
 
           {/* announcement history */}
-          <SectionCard flat flush icon={<Envelope size={17} weight="duotone" color={GOLD} />} title="Announcement History">
+          <SectionCard flat flush icon={<Envelope size={17} weight="duotone" color="var(--text-secondary)" />} title="Announcement History">
             {announcements.length === 0 && (
-              <PremiumEmpty compact icon={<Envelope size={30} weight="duotone" color={GOLD} />} title="No announcements sent yet" description="Broadcasts you send to your subcontractors will appear here." />
+              <PremiumEmpty compact icon={<Envelope size={30} weight="duotone" color="var(--text-secondary)" />} title="No announcements sent yet" description="Broadcasts you send to your subcontractors will appear here." />
             )}
             {announcements.map(a => (
               <div key={a.id} style={{ padding: '16px 20px', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
@@ -1159,8 +1134,8 @@ export default function SubPortalPage() {
           <div>
             <label style={labelStyle}>Email *</label>
             <input type="email" value={invEmail} onChange={e => setInvEmail(e.target.value)} style={{ ...inputStyle, borderColor: invEmailTrim && !invEmailValid ? `color-mix(in srgb, ${RED} 50%, transparent)` : BORDER }} />
-            {invEmailTrim && !invEmailValid && <div style={{ color: RED, fontSize: 11.5, marginTop: 4 }}>Enter a valid email — the invitation and the portal login both use it.</div>}
-            {invDup && <div style={{ color: AMBER, fontSize: 11.5, marginTop: 4 }}>{invDup.company || invDup.contactName} is already on the roster ({invDup.status}) — use Resend from Sub Users instead.</div>}
+            {invEmailTrim && !invEmailValid && <div style={{ color: RED, fontSize: 12, marginTop: 4 }}>Enter a valid email — the invitation and the portal login both use it.</div>}
+            {invDup && <div style={{ color: AMBER, fontSize: 12, marginTop: 4 }}>{invDup.company || invDup.contactName} is already on the roster ({invDup.status}) — use Resend from Sub Users instead.</div>}
           </div>
           <div>
             <label style={labelStyle}>Trade *{invTradeAuto && invTrade ? <AutoChip /> : null}</label>
@@ -1168,11 +1143,11 @@ export default function SubPortalPage() {
               <option value="">Select trade</option>
               {ALL_TRADES.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
-            {invTradeAuto && invTrade && <div style={{ color: DIM, fontSize: 11.5, marginTop: 4 }}>Inferred from the company name — change it if that is wrong.</div>}
+            {invTradeAuto && invTrade && <div style={{ color: DIM, fontSize: 12, marginTop: 4 }}>Inferred from the company name — change it if that is wrong.</div>}
           </div>
           <div>
             <label style={labelStyle}>Project Access{invProjAuto && invProjects.length > 0 ? <AutoChip /> : null}</label>
-            {invProjAuto && invProjects.length > 0 && <div style={{ color: DIM, fontSize: 11.5, marginBottom: 2 }}>Your only project — preselected. Uncheck to invite without project access.</div>}
+            {invProjAuto && invProjects.length > 0 && <div style={{ color: DIM, fontSize: 12, marginBottom: 2 }}>Your only project — preselected. Uncheck to invite without project access.</div>}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
               {projects.length === 0 && <span style={{ color: DIM, fontSize: 12 }}>No projects yet — create a project first to grant access.</span>}
               {projects.map(p => (
@@ -1184,7 +1159,7 @@ export default function SubPortalPage() {
               ))}
             </div>
           </div>
-          <div style={{ color: DIM, fontSize: 11.5, lineHeight: 1.5 }}>
+          <div style={{ color: DIM, fontSize: 12, lineHeight: 1.5 }}>
             New subs start with <b style={{ color: TEXT }}>Their Contract + Schedule</b> visible — expand access in the Permissions tab after inviting.
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
@@ -1203,7 +1178,7 @@ export default function SubPortalPage() {
       <Modal open={bulkInviteModal} onClose={() => setBulkInviteModal(false)} title="Bulk Invite Subcontractors" width={640}>
         <p style={{ color: DIM, fontSize: 13, margin: '0 0 12px' }}>
           Paste or type one subcontractor per line in CSV format:<br />
-          <span style={{ color: GOLD, fontFamily: 'monospace' }}>Company, Contact Name, Email, Trade</span>
+          <span style={{ color: 'var(--text-primary)', fontFamily: 'monospace' }}>Company, Contact Name, Email, Trade</span>
         </p>
         <textarea value={bulkText} onChange={e => setBulkText(e.target.value)}
           style={{ ...inputStyle, height: 220, resize: 'vertical', fontFamily: 'monospace', fontSize: 13 }}
@@ -1364,12 +1339,12 @@ export default function SubPortalPage() {
                 { label: 'Last Login', value: userDetailModal.lastLogin ? fmtDateTime(userDetailModal.lastLogin) : 'Never' },
               ].map((item, i) => (
                 <div key={i} style={{ padding: '10px 14px', background: BG, borderRadius: 8, border: `1px solid ${BORDER}` }}>
-                  <p style={{ color: DIM, fontSize: 11, margin: '0 0 2px'}}>{item.label}</p>
+                  <p style={{ color: DIM, fontSize: 12, margin: '0 0 2px'}}>{item.label}</p>
                   <p style={{ color: TEXT, fontSize: 14, margin: 0, wordBreak: 'break-all' }}>{item.value}</p>
                 </div>
               ))}
               <div style={{ padding: '10px 14px', background: BG, borderRadius: 8, border: `1px solid ${BORDER}` }}>
-                <p style={{ color: DIM, fontSize: 11, margin: '0 0 4px'}}>Status</p>
+                <p style={{ color: DIM, fontSize: 12, margin: '0 0 4px'}}>Status</p>
                 <StatusBadge status={userDetailModal.status} />
               </div>
             </div>
@@ -1379,7 +1354,7 @@ export default function SubPortalPage() {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {userDetailModal.projectAccess.length === 0 && <span style={{ color: DIM, fontSize: 13 }}>No projects assigned</span>}
                 {userDetailModal.projectAccess.map(p => (
-                  <span key={p} style={{ padding: '4px 10px', background: `color-mix(in srgb, ${BLUE} 9%, transparent)`, color: BLUE, borderRadius: 6, fontSize: 12 }}>{p}</span>
+                  <span key={p} style={{ padding: '4px 10px', background: `color-mix(in srgb, ${BLUE} 9%, transparent)`, color: 'var(--text-primary)', borderRadius: 6, fontSize: 12 }}>{p}</span>
                 ))}
               </div>
             </div>

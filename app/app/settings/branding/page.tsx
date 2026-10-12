@@ -249,7 +249,7 @@ export default function BrandingPage() {
                   <div style={{ background: theme.surface2, border: `1px solid ${theme.border}`, borderRadius: 10, padding: 14 }}>
                     <div style={{ fontSize: 15, fontWeight: 800, color: theme.text, marginBottom: 5 }}>{companyName || 'Your Company'}</div>
                     <div style={{ fontSize: 13, color: theme.textMuted, lineHeight: 1.55, marginBottom: 4 }}>Application for payment #4 is with the owner for review.</div>
-                    <div style={{ fontSize: 11, color: theme.textFaint, fontWeight: 700, marginBottom: 12 }}>Submitted 6 days ago</div>
+                    <div style={{ fontSize: 12, color: theme.textFaint, fontWeight: 700, marginBottom: 12 }}>Submitted 6 days ago</div>
                     {/* A picture of a button, not a button. It exists to show the
                         label reading against the fill, and a real <button> here
                         would be a control that does nothing. */}

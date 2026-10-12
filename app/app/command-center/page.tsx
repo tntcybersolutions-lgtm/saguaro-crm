@@ -38,7 +38,7 @@ function ModuleLink({ href, icon, label, count, accent }: { href: string; icon: 
       <div className="pmBtn" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: `1px solid ${accent ? `${accent}44` : C.border}`, cursor: 'pointer', height: '100%' }}>
         <span style={{ display: 'inline-flex', flexShrink: 0 }}>{icon}</span>
         <span style={{ fontSize: 13, fontWeight: 700, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>{label}</span>
-        {count && <span style={{ fontSize: 11, fontWeight: 800, color: accent || C.dim, background: accent ? `${accent}14` : 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: 999, whiteSpace: 'nowrap' }}>{count}</span>}
+        {count && <span style={{ fontSize: 12, fontWeight: 800, color: accent || C.dim, background: accent ? `${accent}14` : 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: 999, whiteSpace: 'nowrap' }}>{count}</span>}
       </div>
     </Link>
   );
@@ -138,7 +138,7 @@ export default function CommandCenterPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Portfolio Operations"
-        eyebrowIcon={<SquaresFour size={13} weight="fill" color={C.gold} />}
+        eyebrowIcon={<SquaresFour size={13} weight="fill" color="var(--text-secondary)" />}
         title="Command"
         accent="Center"
         subtitle="Every project, one screen. Worst first."
@@ -172,28 +172,28 @@ export default function CommandCenterPage() {
       <SectionCard flat
         title="Command Modules"
         subtitle="The whole rollout. Badges are live counts."
-        icon={<SquaresFour size={17} weight="duotone" color={C.gold} />}
+        icon={<SquaresFour size={17} weight="duotone" color="var(--text-secondary)" />}
         style={{ marginBottom: 18 }}
       >
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(215px, 1fr))', gap: 10 }}>
-          <ModuleLink href="/app/command-center/kpis" icon={<ChartLineUp size={17} weight="duotone" color={C.gold} />} label="KPI Dashboard" count={summary.total ? `${summary.total} sites` : null} />
-          <ModuleLink href="/app/command-center/budget" icon={<Wallet size={17} weight="duotone" color={C.gold} />} label="Budget & COs" />
-          <ModuleLink href="/app/command-center/financials" icon={<Bank size={17} weight="duotone" color={C.gold} />} label="Financials" />
+          <ModuleLink href="/app/command-center/kpis" icon={<ChartLineUp size={17} weight="duotone" color="var(--text-secondary)" />} label="KPI Dashboard" count={summary.total ? `${summary.total} sites` : null} />
+          <ModuleLink href="/app/command-center/budget" icon={<Wallet size={17} weight="duotone" color="var(--text-secondary)" />} label="Budget & COs" />
+          <ModuleLink href="/app/command-center/financials" icon={<Bank size={17} weight="duotone" color="var(--text-secondary)" />} label="Financials" />
           <ModuleLink href="/app/command-center/risks" icon={<ShieldWarning size={17} weight="duotone" color={modCounts.critRisks ? C.red : C.gold} />} label="Risk Register" count={`${modCounts.openRisks} open`} accent={modCounts.critRisks ? C.red : undefined} />
           <ModuleLink href="/app/command-center/escalations" icon={<Siren size={17} weight="duotone" color={modCounts.openEsc ? C.red : C.gold} />} label="Escalations" count={`${modCounts.openEsc} open`} accent={modCounts.openEsc ? C.red : undefined} />
           <ModuleLink href="/app/command-center/long-lead" icon={<Package size={17} weight="duotone" color={modCounts.llAtRisk ? C.yellow : C.gold} />} label="Long-Lead" count={`${modCounts.llAtRisk} at risk`} accent={modCounts.llAtRisk ? C.yellow : undefined} />
           <ModuleLink href="/app/command-center/milestones" icon={<FlagCheckered size={17} weight="duotone" color={modCounts.msSlip ? C.yellow : C.gold} />} label="Milestones" count={`${modCounts.msSlip} slipping`} accent={modCounts.msSlip ? C.yellow : undefined} />
-          <ModuleLink href="/app/command-center/daily-logs" icon={<NotePencil size={17} weight="duotone" color={C.gold} />} label="Daily Logs" />
-          <ModuleLink href="/app/command-center/oac" icon={<UsersThree size={17} weight="duotone" color={C.gold} />} label="OAC Meetings" />
-          <ModuleLink href="/app/command-center/owner-updates" icon={<PaperPlaneTilt size={17} weight="duotone" color={C.gold} />} label="Owner Updates" />
+          <ModuleLink href="/app/command-center/daily-logs" icon={<NotePencil size={17} weight="duotone" color="var(--text-secondary)" />} label="Daily Logs" />
+          <ModuleLink href="/app/command-center/oac" icon={<UsersThree size={17} weight="duotone" color="var(--text-secondary)" />} label="OAC Meetings" />
+          <ModuleLink href="/app/command-center/owner-updates" icon={<PaperPlaneTilt size={17} weight="duotone" color="var(--text-secondary)" />} label="Owner Updates" />
           <ModuleLink href="/app/command-center/verify" icon={<SealCheck size={17} weight="duotone" color={modCounts.insp.failed ? C.red : C.gold} />} label="Remote Verify" count={modCounts.insp.total ? `${modCounts.insp.passed}/${modCounts.insp.total} passed` : null} accent={modCounts.insp.failed ? C.red : undefined} />
-          <ModuleLink href="/app/command-center/rollout" icon={<Rocket size={17} weight="duotone" color={C.gold} />} label="Rollout Pipeline" />
-          <ModuleLink href="/app/command-center/checklists" icon={<ListChecks size={17} weight="duotone" color={C.gold} />} label="Phase Checklists" />
-          <ModuleLink href="/app/command-center/pre-site" icon={<MapPin size={17} weight="duotone" color={C.gold} />} label="Pre-Site" />
-          <ModuleLink href="/app/command-center/qc" icon={<CheckSquare size={17} weight="duotone" color={C.gold} />} label="QC by Trade" />
-          <ModuleLink href="/app/command-center/vendors" icon={<Truck size={17} weight="duotone" color={C.gold} />} label="Vendors" />
-          <ModuleLink href="/app/command-center/directory" icon={<AddressBook size={17} weight="duotone" color={C.gold} />} label="Directory" />
-          <ModuleLink href="/app/command-center/portals" icon={<LinkSimple size={17} weight="duotone" color={C.gold} />} label="Franchisee Portals" />
+          <ModuleLink href="/app/command-center/rollout" icon={<Rocket size={17} weight="duotone" color="var(--text-secondary)" />} label="Rollout Pipeline" />
+          <ModuleLink href="/app/command-center/checklists" icon={<ListChecks size={17} weight="duotone" color="var(--text-secondary)" />} label="Phase Checklists" />
+          <ModuleLink href="/app/command-center/pre-site" icon={<MapPin size={17} weight="duotone" color="var(--text-secondary)" />} label="Pre-Site" />
+          <ModuleLink href="/app/command-center/qc" icon={<CheckSquare size={17} weight="duotone" color="var(--text-secondary)" />} label="QC by Trade" />
+          <ModuleLink href="/app/command-center/vendors" icon={<Truck size={17} weight="duotone" color="var(--text-secondary)" />} label="Vendors" />
+          <ModuleLink href="/app/command-center/directory" icon={<AddressBook size={17} weight="duotone" color="var(--text-secondary)" />} label="Directory" />
+          <ModuleLink href="/app/command-center/portals" icon={<LinkSimple size={17} weight="duotone" color="var(--text-secondary)" />} label="Franchisee Portals" />
         </div>
       </SectionCard>
 
@@ -248,14 +248,14 @@ export default function CommandCenterPage() {
                       {[p.city, p.state].filter(Boolean).join(', ') || p.address || '—'}{p.phase ? ` · ${p.phase}` : ''}
                     </div>
                   </div>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: `${STATUS_COLOR[h.status]}14`, color: STATUS_COLOR[h.status], fontSize: 11, fontWeight: 800, padding: '4px 9px', borderRadius: 999, whiteSpace: 'nowrap' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: `${STATUS_COLOR[h.status]}14`, color: STATUS_COLOR[h.status], fontSize: 12, fontWeight: 800, padding: '4px 9px', borderRadius: 999, whiteSpace: 'nowrap' }}>
                     <HealthDot status={h.status} size={7} />{STATUS_LABEL[h.status]}
                   </span>
                 </div>
 
                 {/* progress */}
                 <div style={{ marginTop: 12 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: C.dim, marginBottom: 4 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: C.dim, marginBottom: 4 }}>
                     <span>Complete</span><span style={{ fontWeight: 700, color: C.text }}>{h.percentComplete != null ? `${Math.round(h.percentComplete)}%` : '—'}</span>
                   </div>
                   <div style={{ height: 6, borderRadius: 3, background: 'var(--bg-surface-2)', overflow: 'hidden' }}>
@@ -283,7 +283,7 @@ export default function CommandCenterPage() {
                 {h.flags.length > 0 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 12 }}>
                     {h.flags.map((f, i) => (
-                      <span key={i} style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: `${STATUS_COLOR[f.severity]}12`, color: STATUS_COLOR[f.severity], border: `1px solid ${STATUS_COLOR[f.severity]}30` }}>{f.label}</span>
+                      <span key={i} style={{ fontSize: 12, fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: `${STATUS_COLOR[f.severity]}12`, color: STATUS_COLOR[f.severity], border: `1px solid ${STATUS_COLOR[f.severity]}30` }}>{f.label}</span>
                     ))}
                   </div>
                 )}
@@ -300,7 +300,7 @@ export default function CommandCenterPage() {
 function Metric({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
     <div>
-      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-tertiary)' }}>{label}</div>
+      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-tertiary)' }}>{label}</div>
       <div style={{ fontSize: 14, fontWeight: 800, color: color || 'var(--text-primary)', marginTop: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
     </div>
   );

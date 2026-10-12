@@ -183,11 +183,11 @@ const CSS = `
 .igGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
 .igHead { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
 .igName { font-size: var(--fs-lg); font-weight: 800; color: var(--text-primary); text-decoration: none; letter-spacing: -0.01em; }
-.igName:hover { color: var(--brand-primary); }
+.igName:hover { color: var(--link); }
 .igRing { text-align: center; flex-shrink: 0; cursor: help; }
 .igRingWrap { position: relative; width: 64px; height: 64px; margin: 0 auto; }
 .igRingVal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; }
-.igRingVerdict { font-size: 10px; font-weight: 800; margin-top: 4px; }
+.igRingVerdict { font-size: 12px; font-weight: 800; margin-top: 4px; }
 .igBurnHead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 6px; font-size: var(--fs-xs); }
 .igBurnHead b { color: var(--text-tertiary); font-weight: 700; }
 .igBurnDelta { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }

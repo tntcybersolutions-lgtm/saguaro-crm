@@ -4,7 +4,7 @@ import { confirmDialog } from '@/lib/ui/async-dialog';
 import { humanError } from '@/lib/errors';
 import Link from 'next/link';
 import { IntegrationStrip } from '@/components/Integrations';
-import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, InsightRow, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, InsightRow, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
 import { Plugs, MagnifyingGlass } from '@phosphor-icons/react';
 
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-surface-2)', CARD = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
@@ -312,7 +312,7 @@ export default function IntegrationsPage() {
       {/* Header \u2014 the imported ModuleHero, finally rendered */}
       <ModuleHero
         eyebrow="Integrations"
-        eyebrowIcon={<Plugs size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<Plugs size={13} weight="fill" color="var(--text-secondary)" />}
         title="Connect Your"
         accent="Stack"
         subtitle={loading ? 'Loading…' : `${connectedCount} connected \u00B7 ${integrations.length} available across ${categoryCount} categor${categoryCount === 1 ? 'y' : 'ies'}.`}
@@ -328,7 +328,7 @@ export default function IntegrationsPage() {
           />
           <Link
             href="/app/integrations/api-docs"
-            className="btn-gold"
+            className="k-btn k-btn-secondary"
             style={{ padding: '9px 22px', fontSize: 13, textDecoration: 'none' }}
           >
             API Docs
@@ -431,17 +431,17 @@ export default function IntegrationsPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{intg.name}</span>
                     {intg.connected ? (
-                      <span style={{ fontSize: 10, fontWeight: 700, color: GREEN, background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)', padding: '2px 8px', borderRadius: 10, whiteSpace: 'nowrap' }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: GREEN, background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)', padding: '2px 8px', borderRadius: 10, whiteSpace: 'nowrap' }}>
                         Connected
                       </span>
                     ) : (
-                      <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--brand-primary-strong)', background: 'var(--brand-primary-12)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', padding: '2px 8px', borderRadius: 10, whiteSpace: 'nowrap' }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', padding: '2px 8px', borderRadius: 10, whiteSpace: 'nowrap' }}>
                         Available
                       </span>
                     )}
                   </div>
                   <span style={{
-                    fontSize: 10, fontWeight: 600, color: CATEGORY_COLORS[intg.category] || DIM,
+                    fontSize: 12, fontWeight: 600, color: CATEGORY_COLORS[intg.category] || DIM,
                     background: `color-mix(in srgb, ${CATEGORY_COLORS[intg.category] || DIM} 9%, transparent)`,
                     padding: '2px 8px', borderRadius: 8, display: 'inline-block', marginTop: 3,
                   }}>
@@ -510,7 +510,7 @@ export default function IntegrationsPage() {
                   <button
                     onClick={() => handleConnect(intg)}
                     disabled={connectingKey === intg.key}
-                    className="btn-gold"
+                    className="k-btn k-btn-secondary"
                     style={{
                       flex: 1, justifyContent: 'center', padding: '9px 0', fontSize: 13, minHeight: 44,
                       opacity: connectingKey === intg.key ? 0.6 : 1,
@@ -530,13 +530,13 @@ export default function IntegrationsPage() {
       {!loading && filtered.length === 0 && (
         <SectionCard flush>
           <PremiumEmpty
-            icon={<MagnifyingGlass size={30} weight="duotone" color={GOLD} />}
+            icon={<MagnifyingGlass size={30} weight="duotone" color="var(--text-secondary)" />}
             title={search ? `No integrations match "${search}"` : 'No integrations in this category yet'}
             description="Every connector Saguaro supports lives in this marketplace — accounting (QuickBooks, Sage 300, Xero), documents, storage, plus a full REST API and outbound webhooks for anything custom."
             action={
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
                 <button onClick={() => { setSearch(''); setCategory('all'); }} style={ghostButtonStyle} className="pmBtn">Clear Filters</button>
-                <Link href="/app/integrations/api-docs" className="pmBtn" style={{ ...goldButtonStyle, textDecoration: 'none' }}>Browse the API Docs</Link>
+                <Link href="/app/integrations/api-docs" className="pmBtn" style={{ ...secondaryButtonStyle, textDecoration: 'none' }}>Browse the API Docs</Link>
               </div>
             }
           />

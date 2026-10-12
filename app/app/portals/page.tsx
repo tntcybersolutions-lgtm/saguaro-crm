@@ -91,7 +91,7 @@ const CSS = `
 .poLinkLabel { font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); margin-bottom: 6px; }
 .poLinkUrl { font-size: var(--fs-xs); color: var(--text-secondary); word-break: break-all; line-height: 1.5; margin-bottom: 10px; font-family: ui-monospace, monospace; }
 .poSuccessNote { font-size: var(--fs-xs); color: var(--text-tertiary); margin-bottom: 16px; line-height: 1.5; }
-.poSuccessNote a { color: var(--brand-primary); }
+.poSuccessNote a { color: var(--link); }
 .poSuccessActions { display: flex; gap: 10px; }
 .poSuccessActions > .k-btn { flex: 1; justify-content: center; }
 .poModalTabs { margin: -4px 0 14px; }

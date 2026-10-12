@@ -79,7 +79,7 @@ const CSS = `
 .apWs .k-table tbody tr[data-ack="true"] td { opacity: .62; }
 .apMuted { color: var(--text-tertiary); }
 .apTag { font-size: var(--fs-xs); color: var(--text-tertiary); white-space: nowrap; }
-.apProj { all: unset; box-sizing: border-box; color: var(--brand-primary); font-weight: 700; font-size: var(--fs-sm); cursor: pointer; white-space: nowrap; }
+.apProj { all: unset; box-sizing: border-box; color: var(--link); font-weight: 700; font-size: var(--fs-sm); cursor: pointer; white-space: nowrap; }
 .apProj:hover { text-decoration: underline; }
 .apProj:focus-visible { outline: 2px solid var(--brand-primary); }
 .apRailNote { font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 8px; line-height: 1.5; }

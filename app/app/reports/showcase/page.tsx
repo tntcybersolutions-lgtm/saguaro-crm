@@ -245,7 +245,7 @@ export default function ChartShowcasePage() {
               >
                 <span
                   style={{
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: 700,
 
                     color: 'var(--text-tertiary, #8094B0)',

@@ -298,7 +298,7 @@ export default function CustomersPage() {
     { key: 'status', header: 'Status', phone: 'show', accessor: c => c.status, render: c => <StatusPill module="customers" status={c.status} size="sm" /> },
     { key: 'lead_score', header: 'Score', phone: 'show', accessor: c => Number(c.lead_score) || 0, render: c => <span style={{ fontWeight: 800, color: scoreColor(c.lead_score) }}>{c.lead_score}</span> },
     { key: 'projects', header: 'Projects', phone: 'hide', accessor: c => projectRollup.get(c.id)?.count || 0, render: c => { const n = projectRollup.get(c.id)?.count || 0; return <span style={{ color: n > 0 ? TEXT : DIM, fontWeight: 600 }}>{n}</span>; } },
-    { key: 'ltv', header: 'Lifetime Value', align: 'right', phone: 'show', accessor: c => (projectRollup.get(c.id)?.value || 0) > 0 ? projectRollup.get(c.id)?.value : null, render: c => { const v = projectRollup.get(c.id)?.value || 0; return v > 0 ? <span style={{ color: GOLD, fontWeight: 700 }}>{fmt(v)}</span> : '—'; } },
+    { key: 'ltv', header: 'Lifetime Value', align: 'right', phone: 'show', accessor: c => (projectRollup.get(c.id)?.value || 0) > 0 ? projectRollup.get(c.id)?.value : null, render: c => { const v = projectRollup.get(c.id)?.value || 0; return v > 0 ? <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{fmt(v)}</span> : '—'; } },
     { key: 'source', header: 'Source', phone: 'hide', accessor: c => c.source, render: c => c.source || '—' },
     { key: 'created_at', header: 'Created', phone: 'hide', accessor: c => c.created_at, render: c => fmtDate(c.created_at) },
   ], [projectRollup]);
@@ -641,7 +641,7 @@ export default function CustomersPage() {
         {/* Identity Hero */}
         <ModuleHero
           eyebrow="Customer Profile"
-          eyebrowIcon={<UsersThree size={13} weight="fill" color={GOLD} />}
+          eyebrowIcon={<UsersThree size={13} weight="fill" color="var(--text-secondary)" />}
           title={c.name}
           subtitle={[c.email, c.phone].filter(Boolean).join(' · ') || 'No email or phone on file'}
           actions={
@@ -687,7 +687,7 @@ export default function CustomersPage() {
         {detailTab === 'overview' && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
             {/* Geo Info */}
-            <SectionCard flat title="Location & Geo" icon={<MapPin size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Location & Geo" icon={<MapPin size={17} weight="duotone" color="var(--text-secondary)" />}>
               <div style={{ display: 'grid', gap: 10 }}>
                 {[
                   ['City', c.city || '—'],
@@ -709,9 +709,9 @@ export default function CustomersPage() {
             </SectionCard>
 
             {/* Lead Score Breakdown */}
-            <SectionCard flat title="Lead Score Breakdown" icon={<Gauge size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Lead Score Breakdown" icon={<Gauge size={17} weight="duotone" color="var(--text-secondary)" />}>
               {!sb && (
-                <div style={{ fontSize: 12.5, color: DIM, lineHeight: 1.6 }}>
+                <div style={{ fontSize: 13, color: DIM, lineHeight: 1.6 }}>
                   Lead score {c.lead_score}. No breakdown on file yet — it fills in as this customer answers discovery questions.
                 </div>
               )}
@@ -732,10 +732,10 @@ export default function CustomersPage() {
             </SectionCard>
 
             {/* Actions */}
-            <SectionCard title="Actions" icon={<Lightning size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard title="Actions" icon={<Lightning size={17} weight="duotone" color="var(--text-secondary)" />}>
               <div style={{ display: 'grid', gap: 10 }}>
                 <div style={{ display: 'grid', gap: 6 }}>
-                  <label style={{ fontSize: 11.5, fontWeight: 700, color: DIM }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: DIM }}>
                     Assign to Team Member
                   </label>
                   <UserPicker
@@ -805,21 +805,21 @@ export default function CustomersPage() {
             )}
 
             {/* Projects & lifetime value — matched from live project data */}
-            <SectionCard flat title="Projects & Lifetime Value" icon={<Buildings size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Projects & Lifetime Value" icon={<Buildings size={17} weight="duotone" color="var(--text-secondary)" />}>
               {(projectRollup.get(c.id)?.count || 0) > 0 ? (
                 <>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
                     <span style={{ fontSize: 12, color: DIM }}>
                       {projectRollup.get(c.id)!.count} project{projectRollup.get(c.id)!.count === 1 ? '' : 's'} linked
                     </span>
-                    <span style={{ fontSize: 18, fontWeight: 800, color: GOLD }}>{fmt(projectRollup.get(c.id)!.value)}</span>
+                    <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)' }}>{fmt(projectRollup.get(c.id)!.value)}</span>
                   </div>
                   <div style={{ display: 'grid', gap: 8 }}>
                     {projectRollup.get(c.id)!.list.map(p => (
                       <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: '8px 12px', background: mix(BG, 38), borderRadius: 8, border: `1px solid ${BORDER}` }}>
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
-                          {p.status && <div style={{ fontSize: 11, color: DIM, textTransform: 'capitalize' }}>{p.status}</div>}
+                          {p.status && <div style={{ fontSize: 12, color: DIM, textTransform: 'capitalize' }}>{p.status}</div>}
                         </div>
                         <div style={{ fontSize: 13, fontWeight: 700, color: p.value > 0 ? GOLD : DIM, whiteSpace: 'nowrap' }}>{p.value > 0 ? fmt(p.value) : '—'}</div>
                       </div>
@@ -827,7 +827,7 @@ export default function CustomersPage() {
                   </div>
                 </>
               ) : (
-                <div style={{ fontSize: 12.5, color: DIM, lineHeight: 1.6 }}>
+                <div style={{ fontSize: 13, color: DIM, lineHeight: 1.6 }}>
                   No projects linked yet. Use Assign to Project and the new job is created under this
                   customer&apos;s name — its contract value rolls up here as lifetime value automatically.
                 </div>
@@ -837,7 +837,7 @@ export default function CustomersPage() {
         )}
 
         {detailTab === 'discovery' && (
-          <SectionCard flat title="Discovery Answers" icon={<Clipboard size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard flat title="Discovery Answers" icon={<Clipboard size={17} weight="duotone" color="var(--text-secondary)" />}>
             {c.discovery_answers && Object.keys(c.discovery_answers).length > 0 ? (
               <div style={{ display: 'grid', gap: 10 }}>
                 {Object.entries(c.discovery_answers).map(([key, val]) => (
@@ -863,7 +863,7 @@ export default function CustomersPage() {
             ) : (
               <PremiumEmpty
                 compact
-                icon={<Clipboard size={30} weight="duotone" color={GOLD} />}
+                icon={<Clipboard size={30} weight="duotone" color="var(--text-secondary)" />}
                 title="No discovery data yet"
                 description="Customer has not completed the discovery flow."
               />
@@ -872,7 +872,7 @@ export default function CustomersPage() {
         )}
 
         {detailTab === 'recommendations' && (
-          <SectionCard flat title="Recommendations" icon={<Target size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard flat title="Recommendations" icon={<Target size={17} weight="duotone" color="var(--text-secondary)" />}>
             {c.recommendations && c.recommendations.length > 0 ? (
               <div style={{ display: 'grid', gap: 10 }}>
                 {c.recommendations.map(rec => (
@@ -899,7 +899,7 @@ export default function CustomersPage() {
             ) : (
               <PremiumEmpty
                 compact
-                icon={<Target size={30} weight="duotone" color={GOLD} />}
+                icon={<Target size={30} weight="duotone" color="var(--text-secondary)" />}
                 title="No recommendations yet"
                 description="No recommendations generated yet."
               />
@@ -908,7 +908,7 @@ export default function CustomersPage() {
         )}
 
         {detailTab === 'designs' && (
-          <SectionCard flat title="Design Sessions" icon={<House size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard flat title="Design Sessions" icon={<House size={17} weight="duotone" color="var(--text-secondary)" />}>
             {c.design_sessions && c.design_sessions.length > 0 ? (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 14 }}>
                 {c.design_sessions.map(ds => (
@@ -929,7 +929,7 @@ export default function CustomersPage() {
             ) : (
               <PremiumEmpty
                 compact
-                icon={<House size={30} weight="duotone" color={GOLD} />}
+                icon={<House size={30} weight="duotone" color="var(--text-secondary)" />}
                 title="No design sessions"
                 description="No design sessions recorded."
               />
@@ -938,7 +938,7 @@ export default function CustomersPage() {
         )}
 
         {detailTab === 'materials' && (
-          <SectionCard flat title="Material Selections" icon={<Package size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard flat title="Material Selections" icon={<Package size={17} weight="duotone" color="var(--text-secondary)" />}>
             {c.material_selections && c.material_selections.length > 0 ? (
               <div style={{ display: 'grid', gap: 10 }}>
                 {c.material_selections.map((ms, i) => (
@@ -950,14 +950,14 @@ export default function CustomersPage() {
                       <div style={{ fontSize: 14, fontWeight: 600 }}>{ms.name}</div>
                       <div style={{ fontSize: 12, color: DIM }}>Qty: {ms.qty}</div>
                     </div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: GOLD }}>{fmt(ms.cost)}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{fmt(ms.cost)}</div>
                   </div>
                 ))}
               </div>
             ) : (
               <PremiumEmpty
                 compact
-                icon={<Package size={30} weight="duotone" color={GOLD} />}
+                icon={<Package size={30} weight="duotone" color="var(--text-secondary)" />}
                 title="No materials selected"
                 description="Product and material picks from the design studio will appear here."
               />
@@ -966,7 +966,7 @@ export default function CustomersPage() {
         )}
 
         {detailTab === 'conversations' && (
-          <SectionCard flat title="Sage Conversations" icon={<Cactus size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard flat title="Sage Conversations" icon={<Cactus size={17} weight="duotone" color="var(--text-secondary)" />}>
             {c.conversations && c.conversations.length > 0 ? (
               <div style={{ display: 'grid', gap: 10 }}>
                 {c.conversations.map((cv, i) => (
@@ -974,7 +974,7 @@ export default function CustomersPage() {
                     display: 'flex', gap: 12, padding: '12px 16px',
                     background: mix(BG, 38), borderRadius: 10, border: `1px solid ${BORDER}`,
                   }}>
-                    <span style={{ fontSize: 20, display: 'inline-flex', alignItems: 'center' }}><Cactus size={20} color={GOLD} /></span>
+                    <span style={{ fontSize: 20, display: 'inline-flex', alignItems: 'center' }}><Cactus size={20} color="var(--text-secondary)" /></span>
                     <div>
                       <div style={{ fontSize: 12, color: DIM, marginBottom: 2 }}>{cv.date}</div>
                       <div style={{ fontSize: 13 }}>{cv.preview}</div>
@@ -985,7 +985,7 @@ export default function CustomersPage() {
             ) : (
               <PremiumEmpty
                 compact
-                icon={<Cactus size={30} weight="duotone" color={GOLD} />}
+                icon={<Cactus size={30} weight="duotone" color="var(--text-secondary)" />}
                 title="No conversation history"
                 description="No conversation history."
               />
@@ -1002,7 +1002,7 @@ export default function CustomersPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Customer Relationships"
-        eyebrowIcon={<UsersThree size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<UsersThree size={13} weight="fill" color="var(--text-secondary)" />}
         title="Customer"
         accent="CRM"
         subtitle={loading ? 'Loading profiles…' : error ? 'Unable to load profiles' : `${customers.length} total profiles in your pipeline${lifetimeTotals.value > 0 ? ` · ${fmt(lifetimeTotals.value)} lifetime contract value` : ''}`}
@@ -1024,12 +1024,12 @@ export default function CustomersPage() {
       {!loading && !error && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 16, marginBottom: 24 }}>
           <StatCard
-            icon={<UsersThree size={19} weight="duotone" color={GOLD} />}
+            icon={<UsersThree size={19} weight="duotone" color="var(--text-secondary)" />}
             label="Total Profiles" value={String(customers.length)} accent={GOLD}
             sub="In pipeline" delay={0.02}
           />
           <StatCard
-            icon={<Target size={19} weight="duotone" color={GOLD} />}
+            icon={<Target size={19} weight="duotone" color="var(--text-secondary)" />}
             label="Active Pipeline"
             value={String((statusCounts.lead || 0) + (statusCounts.qualified || 0) + (statusCounts.proposal || 0))}
             sub="Lead · Qualified · Proposal" accent={GOLD} delay={0.06}
@@ -1040,12 +1040,12 @@ export default function CustomersPage() {
             sub="Converted" delay={0.10}
           />
           <StatCard
-            icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />}
+            icon={<CurrencyDollar size={19} weight="duotone" color="var(--text-secondary)" />}
             label="Lifetime Value" value={fmt(lifetimeTotals.value)} accent={GOLD}
             sub={lifetimeTotals.withProjects > 0 ? `${lifetimeTotals.withProjects} customer${lifetimeTotals.withProjects === 1 ? '' : 's'} with projects` : 'Assign customers to projects'} delay={0.14}
           />
           <StatCard
-            icon={<Gauge size={19} weight="duotone" color={GOLD} />}
+            icon={<Gauge size={19} weight="duotone" color="var(--text-secondary)" />}
             label="Avg Lead Score" value={String(avgScore)} accent={scoreColor(avgScore)}
             sub="Across all leads" delay={0.18}
           />
@@ -1081,7 +1081,7 @@ export default function CustomersPage() {
       ) : !loading && customers.length === 0 ? (
         <SectionCard flat>
           <PremiumEmpty
-            icon={<UsersThree size={30} weight="duotone" color={GOLD} />}
+            icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />}
             title="No customers yet"
             description="Add the people you build for, or let leads arrive from your design studio, Sage chat and other sources. Each one tracks lead score, project count and lifetime contract value once you assign them to projects."
             action={
@@ -1094,9 +1094,9 @@ export default function CustomersPage() {
       ) : (
         <SectionCard
           flush
-          icon={<UsersThree size={17} weight="duotone" color={GOLD} />}
+          icon={<UsersThree size={17} weight="duotone" color="var(--text-secondary)" />}
           title="Customer Profiles"
-          action={!loading ? <span style={{ fontSize: 12.5, fontWeight: 700, color: DIM }}>{filtered.length} shown</span> : undefined}
+          action={!loading ? <span style={{ fontSize: 13, fontWeight: 700, color: DIM }}>{filtered.length} shown</span> : undefined}
         >
           {loading ? (
             <div style={{ padding: 8 }}>
@@ -1105,7 +1105,7 @@ export default function CustomersPage() {
           ) : filtered.length === 0 ? (
             <PremiumEmpty
               compact
-              icon={<UsersThree size={26} weight="duotone" color={GOLD} />}
+              icon={<UsersThree size={26} weight="duotone" color="var(--text-secondary)" />}
               title="No matches"
               description="No customers match your filters."
             />

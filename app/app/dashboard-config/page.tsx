@@ -202,7 +202,7 @@ const miniBtn: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  fontSize: 11,
+  fontSize: 12,
   padding: 0,
   lineHeight: 1,
 };
@@ -550,7 +550,7 @@ export default function DashboardConfigPage() {
         {/* ── Header ── */}
         <ModuleHero
           eyebrow="Dashboard"
-          eyebrowIcon={<Gear size={13} weight="fill" color={GOLD} />}
+          eyebrowIcon={<Gear size={13} weight="fill" color="var(--text-secondary)" />}
           title="Dashboard"
           accent="Configuration"
           subtitle="Build and manage your home dashboard layout."
@@ -603,7 +603,7 @@ export default function DashboardConfigPage() {
             </div>
             <button onClick={() => setPresetModalOpen(true)} style={{ ...ghostButtonStyle, padding: '9px 16px' }} className="pmBtn">
               <span>Presets</span>
-              {layout.preset && <span style={{ fontSize: 10, background: GOLD, color: 'var(--on-brand)', padding: '1px 6px', borderRadius: 8, fontWeight: 700 }}>{layout.preset}</span>}
+              {layout.preset && <span style={{ fontSize: 12, background: GOLD, color: 'var(--on-brand)', padding: '1px 6px', borderRadius: 8, fontWeight: 700 }}>{layout.preset}</span>}
             </button>
             <div style={{ marginLeft: 'auto', display: 'flex', gap: 10, alignItems: 'center' }}>
               <span style={{ fontSize: 13, color: DIM }}>{layout.widgets.length} widget{layout.widgets.length !== 1 ? 's' : ''}</span>
@@ -618,7 +618,7 @@ export default function DashboardConfigPage() {
         {catalogOpen && (
           <SectionCard
             title="Widget Gallery"
-            icon={<SquaresFour size={18} weight="duotone" color={GOLD} />}
+            icon={<SquaresFour size={18} weight="duotone" color="var(--text-secondary)" />}
             action={<button onClick={() => setCatalogOpen(false)} style={{ ...miniBtn, fontSize: 14 }}><X size={14} color={DIM} weight="regular" /></button>}
             style={{ marginBottom: 20 }}
           >
@@ -647,11 +647,11 @@ export default function DashboardConfigPage() {
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
-                        <span style={{ marginRight: 6, display: 'inline-flex', verticalAlign: 'middle' }}><cw.icon size={18} color={GOLD} weight="regular" /></span>
+                        <span style={{ marginRight: 6, display: 'inline-flex', verticalAlign: 'middle' }}><cw.icon size={18} color="var(--text-secondary)" weight="regular" /></span>
                         <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{cw.name}</span>
                       </div>
                       {count > 0 && (
-                        <span style={{ fontSize: 10, background: GOLD, color: 'var(--on-brand)', padding: '2px 7px', borderRadius: 10, fontWeight: 700 }}>{count}</span>
+                        <span style={{ fontSize: 12, background: GOLD, color: 'var(--on-brand)', padding: '2px 7px', borderRadius: 10, fontWeight: 700 }}>{count}</span>
                       )}
                     </div>
                     <div style={{ fontSize: 12, color: DIM, flex: 1 }}>{cw.description}</div>
@@ -664,7 +664,7 @@ export default function DashboardConfigPage() {
               {filteredCatalog.length === 0 && (
                 <div style={{ gridColumn: '1/-1' }}>
                   <PremiumEmpty
-                    icon={<Package size={30} weight="duotone" color={GOLD} />}
+                    icon={<Package size={30} weight="duotone" color="var(--text-secondary)" />}
                     title="No Widgets Match Your Search"
                     description="Try a different keyword or category filter."
                     compact
@@ -682,13 +682,13 @@ export default function DashboardConfigPage() {
           <SectionCard
             title="Live Preview"
             subtitle={`${layout.columns}-Column Layout`}
-            icon={<GridFour size={18} weight="duotone" color={GOLD} />}
+            icon={<GridFour size={18} weight="duotone" color="var(--text-secondary)" />}
             action={layout.preset ? <span style={{ fontSize: 12, color: PURPLE, fontWeight: 600 }}>Preset: {layout.preset}</span> : undefined}
             style={{ flex: 1, minWidth: 280 }}
           >
           {layout.widgets.length === 0 ? (
             <PremiumEmpty
-              icon={<Package size={34} weight="duotone" color={GOLD} />}
+              icon={<Package size={34} weight="duotone" color="var(--text-secondary)" />}
               title="No Widgets Added"
               description="Open the Widget Gallery or apply a Preset to get started."
               action={<div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
@@ -726,9 +726,9 @@ export default function DashboardConfigPage() {
                     {/* Widget Header */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                       <div>
-                        <span style={{ marginRight: 6, display: 'inline-flex', verticalAlign: 'middle' }}><cat.icon size={16} color={GOLD} weight="regular" /></span>
+                        <span style={{ marginRight: 6, display: 'inline-flex', verticalAlign: 'middle' }}><cat.icon size={16} color="var(--text-secondary)" weight="regular" /></span>
                         <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{cat.name}</span>
-                        <span style={{ fontSize: 10, color: DIM, marginLeft: 8, background: BG, padding: '2px 8px', borderRadius: 4 }}>
+                        <span style={{ fontSize: 12, color: DIM, marginLeft: 8, background: BG, padding: '2px 8px', borderRadius: 4 }}>
                           {SIZE_LABELS[w.size]}
                         </span>
                       </div>
@@ -759,22 +759,22 @@ export default function DashboardConfigPage() {
                     {Object.keys(w.settings).length > 0 && (
                       <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                         {w.settings.dateRange && (
-                          <span style={{ fontSize: 10, color: DIM, background: BG, padding: '2px 8px', borderRadius: 4 }}>
+                          <span style={{ fontSize: 12, color: DIM, background: BG, padding: '2px 8px', borderRadius: 4 }}>
                             Range: {w.settings.dateRange}
                           </span>
                         )}
                         {w.settings.projectId && (
-                          <span style={{ fontSize: 10, color: DIM, background: BG, padding: '2px 8px', borderRadius: 4 }}>
+                          <span style={{ fontSize: 12, color: DIM, background: BG, padding: '2px 8px', borderRadius: 4 }}>
                             Project: {w.settings.projectId}
                           </span>
                         )}
                         {w.settings.limit !== undefined && (
-                          <span style={{ fontSize: 10, color: DIM, background: BG, padding: '2px 8px', borderRadius: 4 }}>
+                          <span style={{ fontSize: 12, color: DIM, background: BG, padding: '2px 8px', borderRadius: 4 }}>
                             Limit: {w.settings.limit}
                           </span>
                         )}
                         {w.settings.location && (
-                          <span style={{ fontSize: 10, color: DIM, background: BG, padding: '2px 8px', borderRadius: 4 }}>
+                          <span style={{ fontSize: 12, color: DIM, background: BG, padding: '2px 8px', borderRadius: 4 }}>
                             Loc: {w.settings.location}
                           </span>
                         )}
@@ -791,13 +791,13 @@ export default function DashboardConfigPage() {
           {configWidget && configCatalog && (
             <SectionCard
               title="Widget Settings"
-              icon={<Gear size={18} weight="duotone" color={GOLD} />}
+              icon={<Gear size={18} weight="duotone" color="var(--text-secondary)" />}
               action={<button onClick={() => setConfigWidgetId(null)} style={{ ...miniBtn, fontSize: 16 }}><X size={16} color={DIM} weight="regular" /></button>}
               style={{ width: 340, flexShrink: 0 }}
             >
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 15, fontWeight: 600, color: TEXT, marginBottom: 4 }}>
-                <configCatalog.icon size={18} color={GOLD} weight="regular" style={{ verticalAlign: 'middle', marginRight: 6 }} /> {configCatalog.name}
+                <configCatalog.icon size={18} color="var(--text-secondary)" weight="regular" style={{ verticalAlign: 'middle', marginRight: 6 }} /> {configCatalog.name}
               </div>
               <div style={{ fontSize: 12, color: DIM }}>{configCatalog.description}</div>
             </div>
@@ -840,7 +840,7 @@ export default function DashboardConfigPage() {
                   ))}
                 </select>
                 {projectOptions.length === 0 && (
-                  <div style={{ fontSize: 11, color: DIM, marginTop: 6 }}>
+                  <div style={{ fontSize: 12, color: DIM, marginTop: 6 }}>
                     No projects yet — widgets show data across all projects.
                   </div>
                 )}
@@ -916,7 +916,7 @@ export default function DashboardConfigPage() {
                 }).length;
                 if (!count) return null;
                 return (
-                  <span key={cat} style={{ fontSize: 11, color: DIM }}>
+                  <span key={cat} style={{ fontSize: 12, color: DIM }}>
                     {cat.charAt(0).toUpperCase() + cat.slice(1)}: <span style={{ color: TEXT, fontWeight: 600 }}>{count}</span>
                   </span>
                 );
@@ -934,7 +934,7 @@ export default function DashboardConfigPage() {
         <div style={overlayStyle} onClick={() => setPresetModalOpen(false)}>
           <div style={modalStyle} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: GOLD }}>Layout Presets</h2>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>Layout Presets</h2>
               <button onClick={() => setPresetModalOpen(false)} style={{ ...miniBtn, fontSize: 16 }}><X size={16} color={DIM} weight="regular" /></button>
             </div>
             <p style={{ fontSize: 13, color: DIM, margin: '0 0 20px' }}>
@@ -950,8 +950,8 @@ export default function DashboardConfigPage() {
                   onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER)}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: GOLD }}>{preset.name}</div>
-                    <span style={{ fontSize: 11, color: DIM, background: BG, padding: '2px 10px', borderRadius: 4 }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{preset.name}</div>
+                    <span style={{ fontSize: 12, color: DIM, background: BG, padding: '2px 10px', borderRadius: 4 }}>
                       {preset.columns}-col · {preset.widgets.length} widgets
                     </span>
                   </div>
@@ -961,7 +961,7 @@ export default function DashboardConfigPage() {
                       {preset.widgets.map((w, i) => {
                         const cat = WIDGET_CATALOG.find(c => c.id === w.catalogId);
                         return cat ? (
-                          <span key={i} style={{ fontSize: 10, color: DIM, background: BG, padding: '2px 8px', borderRadius: 4 }}>
+                          <span key={i} style={{ fontSize: 12, color: DIM, background: BG, padding: '2px 8px', borderRadius: 4 }}>
                             <cat.icon size={12} color={DIM} weight="regular" style={{ verticalAlign: 'middle', marginRight: 4 }} /> {cat.name}
                           </span>
                         ) : null;
@@ -980,7 +980,7 @@ export default function DashboardConfigPage() {
         <div style={overlayStyle} onClick={() => setLoadModalOpen(false)}>
           <div style={modalStyle} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: GOLD }}>Load Saved Layout</h2>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>Load Saved Layout</h2>
               <button onClick={() => setLoadModalOpen(false)} style={{ ...miniBtn, fontSize: 16 }}><X size={16} color={DIM} weight="regular" /></button>
             </div>
             {loadingLayouts ? (
@@ -991,7 +991,7 @@ export default function DashboardConfigPage() {
               </div>
             ) : savedLayouts.length === 0 ? (
               <PremiumEmpty
-                icon={<FolderOpen size={30} weight="duotone" color={GOLD} />}
+                icon={<FolderOpen size={30} weight="duotone" color="var(--text-secondary)" />}
                 title="No Saved Layouts"
                 description="Save your current layout to see it here."
                 compact
@@ -1031,7 +1031,7 @@ export default function DashboardConfigPage() {
         <div style={overlayStyle} onClick={() => setSaveAsModalOpen(false)}>
           <div style={{ ...modalStyle, maxWidth: 420 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: GOLD }}>Save Layout As</h2>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>Save Layout As</h2>
               <button onClick={() => setSaveAsModalOpen(false)} style={{ ...miniBtn, fontSize: 16 }}><X size={16} color={DIM} weight="regular" /></button>
             </div>
             <div style={{ marginBottom: 20 }}>

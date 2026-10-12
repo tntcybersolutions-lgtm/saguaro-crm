@@ -85,7 +85,7 @@ function KPI({
       onMouseEnter={e => { if (onClick || href) { const t = e.currentTarget as HTMLDivElement; t.style.borderColor = 'rgba(0,0,0,0.14)'; t.style.boxShadow = SHADOW_LG; t.style.transform = 'translateY(-2px)'; } }}
       onMouseLeave={e => { if (onClick || href) { const t = e.currentTarget as HTMLDivElement; t.style.borderColor = BORDER; t.style.boxShadow = SHADOW_SM; t.style.transform = 'translateY(0)'; } }}
     >
-      <div style={{ fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 8 }}>{label}</div>
+      <div style={{ fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 8 }}>{label}</div>
       <div style={{ fontSize: 28, fontWeight: 700, color: color ?? TEXT, lineHeight: 1, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>{value}</div>
       {sub && <div style={{ fontSize: 12, color: DIM, marginTop: 6 }}>{sub}</div>}
     </div>
@@ -110,10 +110,10 @@ function SkeletonRow() {
 
 /* ─── Today Action Item Card ─────────────────────────────────────────── */
 const TYPE_META: Record<TodayItem['type'], { icon: React.ReactNode; borderColor: string; label: string }> = {
-  'pay-app':    { icon: <CurrencyDollar size={22} weight="duotone" color={GOLD} />, borderColor: GOLD, label: 'Pay App' },
+  'pay-app':    { icon: <CurrencyDollar size={22} weight="duotone" color="var(--text-secondary)" />, borderColor: GOLD, label: 'Pay App' },
   'insurance':  { icon: <ShieldCheck size={22} weight="duotone" color={RED} />, borderColor: RED, label: 'Insurance' },
   'rfi':        { icon: <ClipboardText size={22} weight="duotone" color={ORANGE} />, borderColor: ORANGE, label: 'RFI' },
-  'compliance': { icon: <CheckCircle size={22} weight="duotone" color={BLUE} />, borderColor: BLUE, label: 'Compliance' },
+  'compliance': { icon: <CheckCircle size={22} weight="duotone" color="var(--text-secondary)" />, borderColor: BLUE, label: 'Compliance' },
 };
 const URGENCY_COLOR: Record<TodayItem['urgency'], string> = { high: RED, medium: ORANGE, low: DIM };
 
@@ -134,15 +134,15 @@ function TodayActionCard({ item }: { item: TodayItem }) {
         <div style={{ fontWeight: 700, fontSize: 13, color: TEXT, marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.title}</div>
         <div style={{ fontSize: 12, color: DIM, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.subtitle}</div>
       </div>
-      <span style={{ fontSize: 10, fontWeight: 700, color: URGENCY_COLOR[item.urgency], textTransform: 'capitalize', flexShrink: 0, marginRight: 8 }}>
+      <span style={{ fontSize: 12, fontWeight: 700, color: URGENCY_COLOR[item.urgency], textTransform: 'capitalize', flexShrink: 0, marginRight: 8 }}>
         {item.urgency}
       </span>
       <Link
         href={item.actionUrl}
         style={{
           padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 700,
-          background: 'var(--brand-primary-12)', color: GOLD,
-          border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', textDecoration: 'none',
+          background: 'var(--bg-surface-2)', color: 'var(--link)',
+          border: '1px solid var(--border-default)', textDecoration: 'none',
           whiteSpace: 'nowrap', flexShrink: 0,
         }}
       >
@@ -209,7 +209,7 @@ function BidScoreModal({ onClose }: { onClose: () => void }) {
                 { label: 'Our Target Margin (%)', field: 'targetMargin' as const, placeholder: 'e.g. 8.5' },
               ] as const).map(({ label, field, placeholder }) => (
                 <div key={field} style={{ marginBottom: 14 }}>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>{label}</label>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>{label}</label>
                   <input
                     value={form[field]} onChange={f(field)} placeholder={placeholder} required
                     style={{ width: '100%', background: DARK, border: `1px solid ${BORDER}`, borderRadius: 7, padding: '9px 12px', color: TEXT, fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
@@ -230,22 +230,22 @@ function BidScoreModal({ onClose }: { onClose: () => void }) {
             <div>
               <div style={{ textAlign: 'center', marginBottom: 20 }}>
                 <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', background: DARK, border: `2px solid ${scoreColor}`, borderRadius: 14, padding: '18px 32px' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 4 }}>Bid Score</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 4 }}>Bid Score</div>
                   <div style={{ fontSize: 52, fontWeight: 900, color: scoreColor, lineHeight: 1 }}>{result.score}</div>
-                  <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>out of 100</div>
+                  <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>out of 100</div>
                 </div>
               </div>
               <div style={{ background: DARK, borderRadius: 8, padding: '12px 16px', marginBottom: 12 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Recommendation</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>Recommendation</div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: scoreColor }}>{result.recommendation}</div>
               </div>
               <div style={{ background: DARK, borderRadius: 8, padding: '12px 16px', marginBottom: 12 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Reasoning</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>Reasoning</div>
                 <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.6 }}>{result.reasoning}</div>
               </div>
-              <div style={{ background: 'var(--brand-primary-12)', border: '1px solid color-mix(in srgb, var(--brand-primary) 20%, transparent)', borderRadius: 8, padding: '12px 16px', marginBottom: 16 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 4 }}>Suggested Margin</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: GOLD }}>{result.suggestedMargin}%</div>
+              <div style={{ background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 8, padding: '12px 16px', marginBottom: 16 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 4 }}>Suggested Margin</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)' }}>{result.suggestedMargin}%</div>
               </div>
               <button
                 onClick={() => setResult(null)}
@@ -264,7 +264,7 @@ function BidScoreModal({ onClose }: { onClose: () => void }) {
 /* ─── Live Pulse Indicator ───────────────────────────────────────────── */
 function LivePulse() {
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, color: GREEN }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: GREEN }}>
       <span style={{
         display: 'inline-block', width: 7, height: 7, borderRadius: '50%',
         background: GREEN, animation: 'livePulse 2s ease-in-out infinite',
@@ -311,7 +311,7 @@ function DrillDownPanel({ type, onClose }: { type: DrillDownType; onClose: () =>
             <div style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>{link.label}</div>
             <div style={{ fontSize: 12, color: DIM, marginTop: 3 }}>{link.desc}</div>
           </div>
-          <ArrowRight size={18} weight="bold" color={GOLD} />
+          <ArrowRight size={18} weight="bold" color="var(--text-secondary)" />
         </Link>
       </div>
     </div>
@@ -558,7 +558,7 @@ export default function DashboardPage() {
           <SectionCard
             title="Worth Doing Anytime"
             subtitle="Neither of these needs a project first."
-            icon={<Lightning size={16} weight="fill" color={GOLD} />}
+            icon={<Lightning size={16} weight="fill" color="var(--text-secondary)" />}
             style={{ marginBottom: 28 }}
           >
             <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
@@ -581,12 +581,12 @@ export default function DashboardPage() {
                   <span style={{
                     flexShrink: 0, width: 34, height: 34, borderRadius: 9,
                     display: 'grid', placeItems: 'center',
-                    background: 'var(--brand-primary-12)', border: '1px solid color-mix(in srgb, var(--brand-primary) 28%, transparent)',
+                    background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)',
                   }}>
-                    <Icon size={17} weight="duotone" color={GOLD} />
+                    <Icon size={17} weight="duotone" color="var(--text-secondary)" />
                   </span>
                   <span style={{ minWidth: 0 }}>
-                    <span style={{ display: 'block', color: TEXT, fontWeight: 700, fontSize: 13.5, lineHeight: 1.3 }}>{title}</span>
+                    <span style={{ display: 'block', color: TEXT, fontWeight: 700, fontSize: 14, lineHeight: 1.3 }}>{title}</span>
                     <span style={{ display: 'block', color: DIM, fontSize: 12, marginTop: 3, lineHeight: 1.45 }}>{desc}</span>
                   </span>
                 </Link>
@@ -604,13 +604,13 @@ export default function DashboardPage() {
              first, the context after it. */}
         {/* Today's Priority Actions */}
         <SectionCard
-          icon={<Lightning size={17} weight="duotone" color={GOLD} />}
+          icon={<Lightning size={17} weight="duotone" color="var(--text-secondary)" />}
           title="Today's Priority Actions"
           subtitle="Items requiring your attention"
           flush
           style={{ marginBottom: 24 }}
           action={!todayLoading && !todayError && todayItems.filter((i: TodayItem) => i.urgency === 'high').length > 0 ? (
-            <span style={{ fontSize: 11, fontWeight: 800, padding: '4px 11px', borderRadius: 999, background: 'rgba(248,113,113,0.14)', color: RED, border: '1px solid rgba(248,113,113,0.3)' }}>
+            <span style={{ fontSize: 12, fontWeight: 800, padding: '4px 11px', borderRadius: 999, background: 'rgba(248,113,113,0.14)', color: RED, border: '1px solid rgba(248,113,113,0.3)' }}>
               {todayItems.filter((i: TodayItem) => i.urgency === 'high').length} Urgent
             </span>
           ) : undefined}
@@ -668,9 +668,9 @@ export default function DashboardPage() {
           {/* Active Projects */}
           <SectionCard
             flush
-            icon={<Buildings size={17} weight="duotone" color={GOLD} />}
+            icon={<Buildings size={17} weight="duotone" color="var(--text-secondary)" />}
             title="Active Projects"
-            action={<Link href="/app/projects" style={{ fontSize: 12.5, fontWeight: 700, color: GOLD, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>All Projects <ArrowRight size={13} weight="bold" /></Link>}
+            action={<Link href="/app/projects" style={{ fontSize: 13, fontWeight: 700, color: 'var(--link)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>All Projects <ArrowRight size={13} weight="bold" /></Link>}
           >
             <div style={{ padding: 16 }}>
               {projectsLoading && <><SkeletonRow /><SkeletonRow /></>}
@@ -686,7 +686,7 @@ export default function DashboardPage() {
               )}
               {!projectsLoading && !projectsError && projects.length === 0 && (
                 <PremiumEmpty
-                  icon={<Buildings size={30} weight="duotone" color={GOLD} />}
+                  icon={<Buildings size={30} weight="duotone" color="var(--text-secondary)" />}
                   title="No active projects yet"
                   description="Create your first project to start tracking your construction work."
                   action={<Link href="/app/projects/new" style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Create Your First Project</Link>}
@@ -704,7 +704,7 @@ export default function DashboardPage() {
                         <div style={{ fontWeight: 700, color: TEXT, fontSize: 14, marginBottom: 2 }}>{proj.name}</div>
                         <div style={{ fontSize: 12, color: DIM }}>{proj.address}</div>
                       </div>
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: 'rgba(74,222,128,0.14)', color: GREEN, border: '1px solid rgba(74,222,128,0.3)', height: 'fit-content', textTransform: 'capitalize' }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: 'rgba(74,222,128,0.14)', color: GREEN, border: '1px solid rgba(74,222,128,0.3)', height: 'fit-content', textTransform: 'capitalize' }}>
                         {proj.status}
                       </span>
                     </div>
@@ -721,9 +721,9 @@ export default function DashboardPage() {
           {/* Open RFIs */}
           <SectionCard
             flush
-            icon={<ClipboardText size={17} weight="duotone" color={GOLD} />}
+            icon={<ClipboardText size={17} weight="duotone" color="var(--text-secondary)" />}
             title="Open RFIs"
-            action={<Link href="/app/projects" style={{ fontSize: 12.5, fontWeight: 700, color: GOLD, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>View Projects <ArrowRight size={13} weight="bold" /></Link>}
+            action={<Link href="/app/projects" style={{ fontSize: 13, fontWeight: 700, color: 'var(--link)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>View Projects <ArrowRight size={13} weight="bold" /></Link>}
           >
             {rfisLoading && <><SkeletonRow /><SkeletonRow /></>}
             {!rfisLoading && rfisError && (
@@ -741,7 +741,7 @@ export default function DashboardPage() {
             {!rfisLoading && !rfisError && openRFIs.length === 0 && (
               <div style={{ padding: '6px 8px' }}>
                 <PremiumEmpty
-                  icon={<ClipboardText size={30} weight="duotone" color={GOLD} />}
+                  icon={<ClipboardText size={30} weight="duotone" color="var(--text-secondary)" />}
                   title="No open RFIs"
                   description="Add projects to track requests for information here."
                   compact
@@ -754,7 +754,7 @@ export default function DashboardPage() {
                   <thead>
                     <tr style={{ background: RAISED_ALT }}>
                       {['RFI #', 'Subject', 'Status', 'Due'].map(h => (
-                        <th key={h} style={{ padding: '9px 16px', textAlign: 'left', fontWeight: 700, color: DIM, fontSize: 10.5 }}>{h}</th>
+                        <th key={h} style={{ padding: '9px 16px', textAlign: 'left', fontWeight: 700, color: DIM, fontSize: 12 }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -782,7 +782,7 @@ export default function DashboardPage() {
                           <td style={{ padding: '10px 16px', color: DIM }}>{rfi.rfi_number}</td>
                           <td style={{ padding: '10px 16px', color: TEXT, maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rfi.subject}</td>
                           <td style={{ padding: '10px 16px' }}>
-                            <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'rgba(255,149,0,0.14)', color: ORANGE, border: `1px solid rgba(255,149,0,0.3)`, textTransform: 'capitalize' }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'rgba(255,149,0,0.14)', color: ORANGE, border: `1px solid rgba(255,149,0,0.3)`, textTransform: 'capitalize' }}>
                               {rfi.status}
                             </span>
                           </td>
@@ -827,7 +827,7 @@ export default function DashboardPage() {
           ) : (
             <>
               <StatCard
-                icon={<Buildings size={19} weight="duotone" color={GOLD} />}
+                icon={<Buildings size={19} weight="duotone" color="var(--text-secondary)" />}
                 label="Active Projects" value={String(activeProjects)} accent={GOLD}
                 sub={activeProjects === 1 ? '1 in progress' : `${activeProjects} in progress`}
                 href="/app/projects" delay={0.02}
@@ -835,14 +835,14 @@ export default function DashboardPage() {
               {hasMoney && (
                 <Link href="/app/projects" style={{ textDecoration: 'none', display: 'block' }}>
                   <StatCard
-                    icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />}
+                    icon={<CurrencyDollar size={19} weight="duotone" color="var(--text-secondary)" />}
                     label="Total Contract Value" value={formatCurrency(totalContract)}
                     sub="Active projects" interactive delay={0.06}
                   />
                 </Link>
               )}
               <StatCard
-                icon={<Gavel size={19} weight="duotone" color={BLUE} />}
+                icon={<Gavel size={19} weight="duotone" color="var(--text-secondary)" />}
                 label="Open Bids" value={String(openBids)} accent={BLUE}
                 sub="Awaiting award"
                 href="/app/bids" delay={0.10}
@@ -881,7 +881,7 @@ export default function DashboardPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20, marginBottom: 28 }}>
 
             {/* Project Budget Chart */}
-            <SectionCard flat title="Project Budgets" icon={<ChartBar size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Project Budgets" icon={<ChartBar size={17} weight="duotone" color="var(--text-secondary)" />}>
               {projects.length > 0 ? (
                 <div style={{ width: '100%', height: 220 }}>
                   <ResponsiveContainer width="100%" height="100%">
@@ -889,12 +889,12 @@ export default function DashboardPage() {
                       name: p.name?.length > 12 ? p.name.slice(0, 12) + '…' : p.name || 'Unnamed',
                       budget: p.budget ?? p.contract_value ?? 0,
                     }))}>
-                      <XAxis dataKey="name" tick={{ fill: DIM, fontSize: 11 }} axisLine={{ stroke: BORDER_SUBTLE }} tickLine={false} />
-                      <YAxis tick={{ fill: DIM, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} />
+                      <XAxis dataKey="name" tick={{ fill: DIM, fontSize: 12 }} axisLine={{ stroke: BORDER_SUBTLE }} tickLine={false} />
+                      <YAxis tick={{ fill: DIM, fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} />
                       <Tooltip
                         cursor={{ fill: 'rgba(0,0,0,0.04)' }}
                         contentStyle={{ background: RAISED_ALT, border: `1px solid ${BORDER}`, borderRadius: 10, fontSize: 12, color: TEXT, boxShadow: SHADOW_MD }}
-                        labelStyle={{ color: GOLD, fontWeight: 700 }}
+                        labelStyle={{ color: 'var(--text-primary)', fontWeight: 700 }}
                         formatter={((v: number) => [`$${v.toLocaleString()}`, 'Budget']) as React.ComponentProps<typeof Tooltip>['formatter']}
                       />
                       <Bar dataKey="budget" fill={GOLD_HEX} radius={[4, 4, 0, 0]} maxBarSize={48} />
@@ -909,7 +909,7 @@ export default function DashboardPage() {
             </SectionCard>
 
             {/* Portfolio Status Donut */}
-            <SectionCard flat title="Portfolio Status" icon={<TrendUp size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Portfolio Status" icon={<TrendUp size={17} weight="duotone" color="var(--text-secondary)" />}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
                 <div style={{ width: 160, height: 160 }}>
                   <ResponsiveContainer width="100%" height="100%">
@@ -941,7 +941,7 @@ export default function DashboardPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {[
                     { label: 'Active Projects', value: stats?.activeProjects ?? 0, color: 'var(--warning)' },
-                    { label: 'Open Bids', value: stats?.openBids ?? 0, color: 'var(--brand-primary)' },
+                    { label: 'Open Bids', value: stats?.openBids ?? 0, color: 'var(--text-primary)' },
                     ...(hasPayApps ? [{ label: 'Pending Pay Apps', value: stats?.pendingPayApps ?? 0, color: 'var(--warning)' }] : []),
                     { label: 'Open RFIs', value: openRFIs?.length ?? 0, color: 'var(--status-closed)' },
                   ].map(item => (
@@ -956,7 +956,7 @@ export default function DashboardPage() {
             </SectionCard>
 
             {/* Win Rate by Trade */}
-            <SectionCard flat title="Win Rate by Trade" icon={<Gavel size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Win Rate by Trade" icon={<Gavel size={17} weight="duotone" color="var(--text-secondary)" />}>
               {winData && winData.factors.length > 0 ? (
                 <div style={{ width: '100%', height: 220 }}>
                   <ResponsiveContainer width="100%" height="100%">
@@ -971,12 +971,12 @@ export default function DashboardPage() {
                       })}
                       margin={{ left: 4, right: 16, top: 4, bottom: 4 }}
                     >
-                      <XAxis type="number" domain={[0, 100]} tick={{ fill: DIM, fontSize: 11 }} axisLine={{ stroke: BORDER_SUBTLE }} tickLine={false} tickFormatter={(v: number) => `${v}%`} />
-                      <YAxis type="category" dataKey="name" tick={{ fill: DIM, fontSize: 11 }} axisLine={false} tickLine={false} width={96} />
+                      <XAxis type="number" domain={[0, 100]} tick={{ fill: DIM, fontSize: 12 }} axisLine={{ stroke: BORDER_SUBTLE }} tickLine={false} tickFormatter={(v: number) => `${v}%`} />
+                      <YAxis type="category" dataKey="name" tick={{ fill: DIM, fontSize: 12 }} axisLine={false} tickLine={false} width={96} />
                       <Tooltip
                         cursor={{ fill: 'rgba(0,0,0,0.04)' }}
                         contentStyle={{ background: RAISED_ALT, border: `1px solid ${BORDER}`, borderRadius: 10, fontSize: 12, color: TEXT, boxShadow: SHADOW_MD }}
-                        labelStyle={{ color: GOLD, fontWeight: 700 }}
+                        labelStyle={{ color: 'var(--text-primary)', fontWeight: 700 }}
                         formatter={((v: number) => [`${v}%`, 'Win Rate']) as React.ComponentProps<typeof Tooltip>['formatter']}
                       />
                       <Bar dataKey="winRate" fill={GREEN} radius={[0, 4, 4, 0]} maxBarSize={22} />

@@ -59,7 +59,7 @@ export default function LongLeadPage() {
       <div style={{ fontFamily: font, color: C.text }}>
       <ModuleHero
         eyebrow="Command Center"
-        eyebrowIcon={<Package size={13} weight="fill" color={C.gold} />}
+        eyebrowIcon={<Package size={13} weight="fill" color="var(--text-secondary)" />}
         title="Long-Lead"
         accent="Tracker"
         subtitle="Long-lead items across all sites, by drop-dead order date."
@@ -99,13 +99,13 @@ export default function LongLeadPage() {
       ) : filtered.length === 0 ? (
         rows.length === 0 ? (
           <SectionCard>
-            <PremiumEmpty icon={<Package size={32} weight="duotone" color={C.gold} />} title="No long-lead items yet"
+            <PremiumEmpty icon={<Package size={32} weight="duotone" color="var(--text-secondary)" />} title="No long-lead items yet"
               description="Track switchgear, rooftop units, elevators, simulator bays — anything with a long lead time. The tracker computes each item's drop-dead order date and flags what to order now."
               action={<GoldButton icon={<Plus size={15} weight="bold" />} onClick={() => setAdding(true)}>Add Your First Item</GoldButton>} />
           </SectionCard>
         ) : (
           <SectionCard flat>
-            <PremiumEmpty compact icon={<Package size={26} weight="duotone" color={C.gold} />} title="Nothing matches this filter"
+            <PremiumEmpty compact icon={<Package size={26} weight="duotone" color="var(--text-secondary)" />} title="Nothing matches this filter"
               description="No item matches the current severity or search. Clear the filters to see the full tracker." />
           </SectionCard>
         )
@@ -143,9 +143,9 @@ export default function LongLeadPage() {
                 return (
                   <div style={{ marginTop: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 5 }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: C.dim }}>{lc.label} · Stage {lc.index + 1}/6</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: C.dim }}>{lc.label} · Stage {lc.index + 1}/6</span>
                       {!isLast && (
-                        <button onClick={() => advance(it)} disabled={busy[it.id]} style={{ fontSize: 11, fontWeight: 700, color: busy[it.id] ? C.dim : C.blue, background: 'none', border: 'none', cursor: busy[it.id] ? 'default' : 'pointer' }}>Advance <ArrowRight size={12} weight="regular" color={busy[it.id] ? C.dim : C.blue} style={{ verticalAlign: 'middle' }} /></button>
+                        <button onClick={() => advance(it)} disabled={busy[it.id]} style={{ fontSize: 12, fontWeight: 700, color: busy[it.id] ? C.dim : C.blue, background: 'none', border: 'none', cursor: busy[it.id] ? 'default' : 'pointer' }}>Advance <ArrowRight size={12} weight="regular" color={busy[it.id] ? C.dim : C.blue} style={{ verticalAlign: 'middle' }} /></button>
                       )}
                     </div>
                     <div style={{ display: 'flex', gap: 4 }}>
@@ -161,7 +161,7 @@ export default function LongLeadPage() {
                 {it.po_number && <Pill tone="neutral">PO {it.po_number}</Pill>}
                 {it.unit_cost != null && <Pill tone="gold">{fmtMoney((num(it.unit_cost) ?? 0) * (num(it.quantity) ?? 1))}</Pill>}
                 {h.daysToOrderBy != null && h.severity !== 'green' && (
-                  <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, marginLeft: 'auto' }}>Order {fmtDays(h.daysToOrderBy)}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: C.dim, marginLeft: 'auto' }}>Order {fmtDays(h.daysToOrderBy)}</span>
                 )}
               </div>
             </LiftCard>
@@ -179,7 +179,7 @@ function AddItemForm({ projects, onDone }: { projects: any[]; onDone: () => void
   const [err, setErr] = useState('');
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
   const inp: React.CSSProperties = { padding: '8px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', background: 'var(--bg-surface-2)', width: '100%' };
-  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
+  const lbl: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
 
   async function submit() {
     if (!f.project_id || !f.item_description) { setErr('Site and item description are required.'); return; }
@@ -190,7 +190,7 @@ function AddItemForm({ projects, onDone }: { projects: any[]; onDone: () => void
   }
 
   return (
-    <SectionCard title="Add Long-Lead Item" subtitle="The tracker computes the drop-dead order date from need-by minus lead time." icon={<Package size={16} weight="duotone" color={C.gold} />} style={{ marginBottom: 18 }}>
+    <SectionCard title="Add Long-Lead Item" subtitle="The tracker computes the drop-dead order date from need-by minus lead time." icon={<Package size={16} weight="duotone" color="var(--text-secondary)" />} style={{ marginBottom: 18 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
         <div style={{ gridColumn: '1 / -1' }}>
           <label style={lbl}>Item Description *</label>

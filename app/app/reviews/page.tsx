@@ -21,7 +21,7 @@ type Review = {
 
 const card: React.CSSProperties = { background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 18, marginBottom: 14 };
 const Stars = ({ n, size = 16 }: { n: number; size?: number }) => (
-  <span style={{ color: GOLD, fontSize: size, letterSpacing: 1 }} aria-label={`${n} of 5`}>
+  <span style={{ color: 'var(--text-primary)', fontSize: size, letterSpacing: 1 }} aria-label={`${n} of 5`}>
     {'★★★★★'.slice(0, n)}<span style={{ color: BORDER }}>{'★★★★★'.slice(n)}</span>
   </span>
 );
@@ -93,7 +93,7 @@ export default function ReviewsPage() {
         </div>
         {avg != null && (
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 26, fontWeight: 800, color: GOLD }}>{avg.toFixed(1)}<span style={{ fontSize: 15, color: DIM }}> / 5</span></div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--text-primary)' }}>{avg.toFixed(1)}<span style={{ fontSize: 15, color: DIM }}> / 5</span></div>
             <div style={{ fontSize: 12, color: DIM }}>{reviews.length} review{reviews.length === 1 ? '' : 's'}</div>
           </div>
         )}
@@ -101,7 +101,7 @@ export default function ReviewsPage() {
 
       {/* Composer */}
       <div style={card}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: DIM, letterSpacing: 0.3, marginBottom: 10 }}>Add a Review</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: DIM, letterSpacing: 0.3, marginBottom: 10 }}>Add a Review</div>
         <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
           {[1, 2, 3, 4, 5].map((n) => (
             <button key={n} type="button" onClick={() => setRating(n)} aria-label={`${n} star`} aria-pressed={n <= rating} style={{
@@ -125,7 +125,7 @@ export default function ReviewsPage() {
       {state === 'loading' ? (
         <div style={{ ...card, color: DIM }}>Loading reviews…</div>
       ) : state === 'error' ? (
-        <div style={{ ...card, color: DIM }}>Couldn’t load reviews. <button onClick={load} style={{ color: GOLD, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>Retry</button></div>
+        <div style={{ ...card, color: DIM }}>Couldn’t load reviews. <button onClick={load} style={{ color: 'var(--text-primary)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>Retry</button></div>
       ) : reviews.length === 0 ? (
         <div style={{ ...card, color: DIM }}>No reviews yet. Add the first one above — it’s what turns a happy job into the next referral.</div>
       ) : (
@@ -135,7 +135,7 @@ export default function ReviewsPage() {
               <span style={{ fontWeight: 700, fontSize: 14 }}>{r.reviewer_name || 'Anonymous'}</span>
               <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Stars n={Math.max(0, Math.min(5, r.rating))} />
-                <span style={{ fontSize: 11, color: DIM }}>{r.created_at ? fmtDateSafe(r.created_at) : ''}</span>
+                <span style={{ fontSize: 12, color: DIM }}>{r.created_at ? fmtDateSafe(r.created_at) : ''}</span>
                 <button
                   type="button"
                   onClick={() => void remove(r)}
@@ -146,7 +146,7 @@ export default function ReviewsPage() {
               </span>
             </div>
             {r.body && <div style={{ fontSize: 13, color: DIM, marginTop: 6, whiteSpace: 'pre-wrap' }}>{r.body}</div>}
-            {r.source && r.source !== 'internal' && <div style={{ fontSize: 10, color: GREEN, marginTop: 6}}>{r.source.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}</div>}
+            {r.source && r.source !== 'internal' && <div style={{ fontSize: 12, color: GREEN, marginTop: 6}}>{r.source.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}</div>}
           </div>
         ))
       )}

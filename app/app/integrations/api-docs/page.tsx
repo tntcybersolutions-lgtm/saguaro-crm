@@ -31,7 +31,7 @@ const CODE_PANEL: React.CSSProperties = {
   fontFamily: 'monospace', fontSize: 12, lineHeight: 1.8,
 };
 
-const TH: React.CSSProperties = { padding: '10px 14px', textAlign: 'left', fontSize: 10.5, fontWeight: 700, color: MUTED, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' };
+const TH: React.CSSProperties = { padding: '10px 14px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: MUTED, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' };
 
 type Endpoint = {
   method: 'GET' | 'POST' | 'PATCH' | 'DELETE';
@@ -220,7 +220,7 @@ export default function ApiDocsPage() {
 
       {/* Breadcrumb */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18, fontSize: 13, color: DIM }}>
-        <Link href="/app/integrations" style={{ color: GOLD, textDecoration: 'none' }}>Integrations</Link>
+        <Link href="/app/integrations" style={{ color: 'var(--link)', textDecoration: 'none' }}>Integrations</Link>
         <span>/</span>
         <span style={{ color: TEXT }}>API Documentation</span>
       </div>
@@ -319,7 +319,7 @@ export default function ApiDocsPage() {
                         }}
                       >
                         <span style={{
-                          padding: '3px 8px', borderRadius: 5, fontSize: 10, fontWeight: 800,
+                          padding: '3px 8px', borderRadius: 5, fontSize: 12, fontWeight: 800,
                           minWidth: 52, textAlign: 'center', fontFamily: 'monospace',
                           background: `color-mix(in srgb, ${METHOD_COLORS[ep.method]} 9%, transparent)`,
                           color: METHOD_COLORS[ep.method],
@@ -331,7 +331,7 @@ export default function ApiDocsPage() {
                         </code>
                         <span style={{ fontSize: 12, color: DIM, flex: 1 }}>{ep.description}</span>
                         <span style={{
-                          padding: '3px 9px', borderRadius: 20, fontSize: 10, fontWeight: 700,
+                          padding: '3px 9px', borderRadius: 20, fontSize: 12, fontWeight: 700,
                           whiteSpace: 'nowrap',
                           background: `color-mix(in srgb, ${GREEN} 12%, transparent)`,
                           color: GREEN,
@@ -361,7 +361,7 @@ export default function ApiDocsPage() {
           >
             <p style={{ margin: '0 0 20px', fontSize: 13, color: DIM, lineHeight: 1.6 }}>
               Public REST requests authenticate with a personal API key passed as a Bearer token. Mint a key from{' '}
-              <Link href="/app/settings/integrations-hub" style={{ color: GOLD, textDecoration: 'none' }}>Integration Hub, under API Keys</Link>.
+              <Link href="/app/settings/integrations-hub" style={{ color: 'var(--link)', textDecoration: 'none' }}>Integration Hub, under API Keys</Link>.
               The full <code style={{ fontFamily: 'monospace', color: TEXT }}>sk_live_</code> secret is shown exactly once at creation — store it securely. Every key is scoped to your tenant, so requests only ever see your company&apos;s data.
             </p>
 
@@ -370,7 +370,7 @@ export default function ApiDocsPage() {
               <div>Authorization: Bearer {'sk_live_<your_secret_key>'}</div>
             </div>
 
-            <h4 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 800, color: MUTED }}>Key Scopes &amp; Lifecycle</h4>
+            <h4 style={{ margin: '0 0 12px', fontSize: 12, fontWeight: 800, color: MUTED }}>Key Scopes &amp; Lifecycle</h4>
             <ul style={{ margin: 0, padding: '0 0 0 20px', fontSize: 13, color: DIM, lineHeight: 2 }}>
               <li>Scopes are hierarchical — <span style={{ color: TEXT }}>admin</span> implies <span style={{ color: TEXT }}>write</span> implies <span style={{ color: TEXT }}>read</span></li>
               <li>Read endpoints (like the ones below) require the <span style={{ color: TEXT }}>read</span> scope</li>
@@ -445,7 +445,7 @@ export default function ApiDocsPage() {
                       onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
                       onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
                       <td style={{ padding: '10px 14px' }}>
-                        <code style={{ fontSize: 12, color: GOLD, fontFamily: 'monospace', background: 'var(--brand-primary-08)', padding: '2px 8px', borderRadius: 4, whiteSpace: 'nowrap' }}>
+                        <code style={{ fontSize: 12, color: 'var(--text-primary)', fontFamily: 'monospace', background: 'var(--bg-surface-2)', padding: '2px 8px', borderRadius: 4, whiteSpace: 'nowrap' }}>
                           {ev.event}
                         </code>
                       </td>
@@ -465,8 +465,8 @@ export default function ApiDocsPage() {
           >
             <div className="ad-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <div>
-                <div style={{ fontSize: 10.5, fontWeight: 800, color: MUTED, marginBottom: 8 }}>Headers</div>
-                <div style={{ ...CODE_PANEL, padding: 14, fontSize: 11, color: TEXT }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: MUTED, marginBottom: 8 }}>Headers</div>
+                <div style={{ ...CODE_PANEL, padding: 14, fontSize: 12, color: TEXT }}>
                   <div>Content-Type: application/json</div>
                   <div>X-Saguaro-Event: project.created</div>
                   <div>X-Saguaro-Delivery: whd_abc123</div>
@@ -475,8 +475,8 @@ export default function ApiDocsPage() {
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: 10.5, fontWeight: 800, color: MUTED, marginBottom: 8 }}>Body</div>
-                <div style={{ ...CODE_PANEL, padding: 14, fontSize: 11, color: TEXT }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: MUTED, marginBottom: 8 }}>Body</div>
+                <div style={{ ...CODE_PANEL, padding: 14, fontSize: 12, color: TEXT }}>
                   <div>{'{'}</div>
                   <div>&nbsp;&nbsp;"event": "project.created",</div>
                   <div>&nbsp;&nbsp;"timestamp": "2026-03-28T...",</div>
@@ -502,7 +502,7 @@ export default function ApiDocsPage() {
             {/* Request Side */}
             <div>
               <label style={{ display: 'block', marginBottom: 14 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: DIM, display: 'block', marginBottom: 5 }}>API Key (Bearer Token)</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: DIM, display: 'block', marginBottom: 5 }}>API Key (Bearer Token)</span>
                 <input
                   value={tryApiKey}
                   onChange={(e) => setTryApiKey(e.target.value)}
@@ -544,7 +544,7 @@ export default function ApiDocsPage() {
 
               {tryMethod !== 'GET' && (
                 <label style={{ display: 'block', marginBottom: 14 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: DIM, display: 'block', marginBottom: 5 }}>Request Body (JSON)</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: DIM, display: 'block', marginBottom: 5 }}>Request Body (JSON)</span>
                   <textarea
                     value={tryBody}
                     onChange={(e) => setTryBody(e.target.value)}
@@ -570,14 +570,14 @@ export default function ApiDocsPage() {
 
               {/* Quick endpoint buttons */}
               <div style={{ marginTop: 16 }}>
-                <div style={{ fontSize: 10.5, fontWeight: 800, color: MUTED, marginBottom: 8 }}>Quick Select</div>
+                <div style={{ fontSize: 12, fontWeight: 800, color: MUTED, marginBottom: 8 }}>Quick Select</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {['/api/v1/projects', '/api/v1/rfis', '/api/v1/change-orders', '/api/v1/pay-apps', '/api/v1/invoices', '/api/v1/contracts', '/api/v1/subcontractors'].map((ep) => (
                     <button
                       key={ep}
                       onClick={() => { setTryEndpoint(ep); setTryMethod('GET'); }}
                       style={{
-                        padding: '4px 10px', borderRadius: 6, cursor: 'pointer', fontSize: 11,
+                        padding: '4px 10px', borderRadius: 6, cursor: 'pointer', fontSize: 12,
                         background: tryEndpoint === ep ? 'color-mix(in srgb, var(--brand-primary) 9%, transparent)' : 'transparent',
                         border: `1px solid ${tryEndpoint === ep ? 'color-mix(in srgb, var(--brand-primary) 27%, transparent)' : BORDER}`,
                         color: tryEndpoint === ep ? GOLD : DIM, fontFamily: 'monospace',
@@ -592,7 +592,7 @@ export default function ApiDocsPage() {
 
             {/* Response Side */}
             <div>
-              <div style={{ fontSize: 10.5, fontWeight: 800, color: MUTED, marginBottom: 8 }}>Response</div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: MUTED, marginBottom: 8 }}>Response</div>
               <div style={{
                 ...CODE_PANEL, color: TEXT, lineHeight: 1.6,
                 minHeight: 300, maxHeight: 500, overflowY: 'auto',

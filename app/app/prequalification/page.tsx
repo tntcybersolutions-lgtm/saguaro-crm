@@ -5,7 +5,7 @@ import { StatusPill } from '@/components/ui/Status';
 import { humanError } from '@/lib/errors';
 import { SUB_TRADES as TRADES } from '@/lib/construction-intelligence';
 import { Clipboard, NotePencil, Envelope, CheckCircle, XCircle, CaretUp, CaretDown, X, ShieldCheck, Plus, WarningCircle, ChartBar, Clock } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
 import { FlatStyles, Tabs } from '@/components/ui/flat';
 
 /* ─── Palette ─── */
@@ -55,13 +55,13 @@ function pctColor(pct: number) { return pct >= 80 ? GREEN : pct >= 60 ? AMBER : 
 const inputS: React.CSSProperties = { padding: '9px 13px', background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' };
 const btnS = (bg: string, c: string = 'var(--bg-base)'): React.CSSProperties => ({ padding: '8px 18px', background: bg, color: c, border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' });
 const cardS: React.CSSProperties = { background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: 16, marginBottom: 10 };
-const chipS = (bg: string, c: string): React.CSSProperties => ({ display: 'inline-block', padding: '3px 10px', borderRadius: 99, fontSize: 11, fontWeight: 700, background: `color-mix(in srgb, ${bg} 13%, transparent)`, color: c });
+const chipS = (bg: string, c: string): React.CSSProperties => ({ display: 'inline-block', padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 700, background: `color-mix(in srgb, ${bg} 13%, transparent)`, color: c });
 // 10000 = the kit overlay layer: above the chat launcher (9999), which otherwise sits on a phone dialog's buttons.
 const modalOverlay: React.CSSProperties = { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 };
 const modalBox: React.CSSProperties = { background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 'var(--radius-lg)', padding: 28, width: '90%', maxWidth: 700, maxHeight: '85vh', overflowY: 'auto', color: TEXT, boxShadow: 'var(--shadow-lg)' };
 const selectS: React.CSSProperties = { ...inputS, appearance: 'auto' as any };
-const labelS: React.CSSProperties = { fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 6, display: 'block', fontWeight: 700};
-const tableHeaderS: React.CSSProperties = { padding: '10px 14px', fontSize: 11, fontWeight: 700, color: 'var(--text-tertiary)', textAlign: 'left', borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' };
+const labelS: React.CSSProperties = { fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 6, display: 'block', fontWeight: 700};
+const tableHeaderS: React.CSSProperties = { padding: '10px 14px', fontSize: 12, fontWeight: 700, color: 'var(--text-tertiary)', textAlign: 'left', borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' };
 const tableCellS: React.CSSProperties = { padding: '10px 14px', fontSize: 13, color: TEXT, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)`, whiteSpace: 'nowrap' };
 
 /* Escape closes the open dialog — only the most recently opened one (a
@@ -108,7 +108,7 @@ function ScoreBar({ score, max }: { score: number; max: number }) {
 }
 
 function Spinner() {
-  return <div style={{ textAlign: 'center', padding: 60, color: GOLD, fontSize: 16, fontWeight: 600 }}>Loading…</div>;
+  return <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-primary)', fontSize: 16, fontWeight: 600 }}>Loading…</div>;
 }
 
 /* ─── Radar Chart ─── */
@@ -307,15 +307,8 @@ export default function PrequalificationPage() {
     return { total, pending, review, approved, rejected, avgScore, expiring };
   }, [submissions]);
 
-  /* ─── Pipeline intelligence (invite funnel, docs compliance, expiry buckets,
-     score distribution) — derived entirely from already-fetched data ─── */
-  const inviteFunnel = useMemo(() => {
-    const sent = invites.length;
-    const completed = invites.filter(i => i.status === 'completed').length;
-    const opened = invites.filter(i => i.status === 'opened').length;
-    return { sent, completed, opened, rate: sent > 0 ? Math.round((completed / sent) * 100) : 0 };
-  }, [invites]);
-
+  /* ─── Pipeline intelligence (docs compliance, expiry buckets, score
+     distribution) — derived entirely from already-fetched data ─── */
   const docStats = useMemo(() => {
     let up = 0, tot = 0, expired = 0, exp30 = 0, exp60 = 0, exp90 = 0;
     submissions.forEach(s => s.documents.forEach(d => {
@@ -334,9 +327,6 @@ export default function PrequalificationPage() {
 
   const decidedRate = stats.approved + stats.rejected > 0
     ? Math.round((stats.approved / (stats.approved + stats.rejected)) * 100) : 0;
-  const approvedTrades = useMemo(
-    () => new Set(submissions.filter(s => s.status === 'approved').map(s => s.sub_trade).filter(Boolean)).size,
-    [submissions]);
   const avgThreshold = templates.length > 0
     ? Math.round(templates.reduce((a, t) => a + (Number(t.threshold) || 0), 0) / templates.length) : 0;
 
@@ -499,7 +489,7 @@ export default function PrequalificationPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Prequalification"
-        eyebrowIcon={<ShieldCheck size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<ShieldCheck size={13} weight="fill" color="var(--text-secondary)" />}
         title="Subcontractor"
         accent="Prequalification"
         subtitle="Forms, submissions, and sub qualifications."
@@ -542,65 +532,38 @@ export default function PrequalificationPage() {
           {/* ════════ DASHBOARD TAB ════════ */}
           {tab === 'dashboard' && (
             <div>
-              {/* Pipeline intelligence strip — funnel, decisions, compliance, expiry */}
+              {/* Pipeline summary — one row: the submission pipeline, how decisions
+                  are landing, scores, and document expiry. Approved / rejected
+                  counts ride on the Approval Rate line; the invite funnel and
+                  templates have their own tabs. */}
               {(submissions.length > 0 || invites.length > 0 || templates.length > 0) && (
                 <StatStrip items={[
-                  {
-                    label: 'Invite Funnel', value: `${inviteFunnel.completed}/${inviteFunnel.sent}`,
-                    sub: inviteFunnel.sent > 0 ? `${inviteFunnel.rate}% submitted${inviteFunnel.opened ? ` · ${inviteFunnel.opened} opened` : ''}` : 'No invites sent yet',
-                    accent: inviteFunnel.sent > 0 && inviteFunnel.rate < 50 ? AMBER : undefined,
-                  },
+                  { label: 'Total Submissions', value: String(stats.total) },
+                  { label: 'Pending', value: String(stats.pending), accent: AMBER },
+                  { label: 'Under Review', value: String(stats.review) },
                   {
                     label: 'Approval Rate', value: `${decidedRate}%`,
                     accent: stats.approved + stats.rejected === 0 ? undefined : decidedRate >= 70 ? GREEN : AMBER,
                     sub: stats.approved + stats.rejected > 0 ? `${stats.approved} approved · ${stats.rejected} rejected` : 'No decisions yet',
                   },
-                  {
-                    label: 'Docs on File', value: docStats.tot > 0 ? `${docStats.pct}%` : '—',
-                    accent: docStats.tot === 0 ? undefined : docStats.pct >= 80 ? GREEN : AMBER,
-                    sub: docStats.tot > 0 ? `${docStats.up} of ${docStats.tot} required documents` : 'No document requests yet',
-                  },
+                  { label: 'Avg Score', value: `${stats.avgScore}%`, accent: pctColor(stats.avgScore) },
                   {
                     label: 'Expiry Pressure', value: String(docStats.expired + docStats.exp30),
                     accent: docStats.expired + docStats.exp30 > 0 ? RED : GREEN,
                     sub: `${docStats.expired} expired · ${docStats.exp30} in 30d · ${docStats.exp60} in 60d`,
                   },
-                  {
-                    label: 'Templates', value: String(templates.length),
-                    sub: templates.length > 0 ? `Avg pass threshold ${avgThreshold}%` : 'Create your first form',
-                  },
-                  {
-                    label: 'Approved Bench', value: String(stats.approved),
-                    accent: stats.approved > 0 ? GREEN : undefined,
-                    sub: approvedTrades > 0 ? `Covering ${approvedTrades} trade${approvedTrades === 1 ? '' : 's'}` : 'No approved subs yet',
-                  },
                 ]} />
               )}
-
-              {/* Stat cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 28 }}>
-                {[
-                  { label: 'Total Submissions', value: String(stats.total), icon: <Clipboard size={19} weight="duotone" color={GOLD} />, accent: undefined as string | undefined },
-                  { label: 'Pending', value: String(stats.pending), icon: <Clock size={19} weight="duotone" color={AMBER} />, accent: AMBER },
-                  { label: 'Under Review', value: String(stats.review), icon: <NotePencil size={19} weight="duotone" color={BLUE} />, accent: BLUE },
-                  { label: 'Approved', value: String(stats.approved), icon: <CheckCircle size={19} weight="duotone" color={GREEN} />, accent: GREEN },
-                  { label: 'Rejected', value: String(stats.rejected), icon: <XCircle size={19} weight="duotone" color={RED} />, accent: RED },
-                  { label: 'Avg Score', value: `${stats.avgScore}%`, icon: <ChartBar size={19} weight="duotone" color={pctColor(stats.avgScore)} />, accent: pctColor(stats.avgScore) },
-                  { label: 'Expiring Soon', value: String(stats.expiring), icon: <WarningCircle size={19} weight="duotone" color={stats.expiring > 0 ? RED : GREEN} />, accent: stats.expiring > 0 ? RED : GREEN },
-                ].map((s, i) => (
-                  <StatCard key={s.label} icon={s.icon} label={s.label} value={s.value} accent={s.accent} delay={i * 0.04} />
-                ))}
-              </div>
 
               {/* Recent submissions and Expirations side by side */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                 {/* Recent activity */}
-                <SectionCard title="Recent Submissions" icon={<Clipboard size={17} weight="duotone" color={GOLD} />}>
+                <SectionCard title="Recent Submissions" icon={<Clipboard size={17} weight="duotone" color="var(--text-secondary)" />}>
                   {submissions.slice(0, 5).map(s => (
                     <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)`, cursor: 'pointer' }} onClick={() => { setShowDetail(s.id); }}>
                       <div>
                         <div style={{ fontSize: 13, fontWeight: 600 }}>{s.sub_name}</div>
-                        <div style={{ fontSize: 11, color: DIM }}>{s.sub_trade} — {fmtDate(s.submitted_at)}</div>
+                        <div style={{ fontSize: 12, color: DIM }}>{s.sub_trade} — {fmtDate(s.submitted_at)}</div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <ScoreBar score={s.total_score} max={s.max_score} />
@@ -611,7 +574,7 @@ export default function PrequalificationPage() {
                 </SectionCard>
 
                 {/* Expiring certs/insurance */}
-                <SectionCard flat title="Expiring Documents" icon={<Clock size={17} weight="duotone" color={GOLD} />}>
+                <SectionCard flat title="Expiring Documents" icon={<Clock size={17} weight="duotone" color="var(--text-secondary)" />}>
                   {/* Expiry outlook buckets — the 90-day insurance/cert horizon at a glance */}
                   {docStats.tot > 0 && (
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
@@ -623,7 +586,7 @@ export default function PrequalificationPage() {
                       ].map(b => (
                         <div key={b.l} style={{ flex: '1 1 100px', minWidth: 96, padding: '8px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: `1px solid ${b.n > 0 ? `color-mix(in srgb, ${b.c} 33%, transparent)` : BORDER}` }}>
                           <div style={{ fontSize: 17, fontWeight: 800, color: b.n > 0 ? b.c : DIM, lineHeight: 1.1 }}>{b.n}</div>
-                          <div style={{ fontSize: 10.5, fontWeight: 700, color: DIM, marginTop: 2 }}>{b.l}</div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: DIM, marginTop: 2 }}>{b.l}</div>
                         </div>
                       ))}
                     </div>
@@ -644,7 +607,7 @@ export default function PrequalificationPage() {
                       <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                         <div>
                           <div style={{ fontSize: 13, fontWeight: 600 }}>{ed.subName}</div>
-                          <div style={{ fontSize: 11, color: DIM }}>{ed.docName}</div>
+                          <div style={{ fontSize: 12, color: DIM }}>{ed.docName}</div>
                         </div>
                         <span style={chipS(ed.daysLeft <= 0 ? RED : ed.daysLeft <= 30 ? AMBER : BLUE, ed.daysLeft <= 0 ? RED : ed.daysLeft <= 30 ? AMBER : BLUE)}>
                           {ed.daysLeft <= 0 ? 'Expired' : `${ed.daysLeft}d left`}
@@ -657,7 +620,7 @@ export default function PrequalificationPage() {
 
               {/* Score visualization — distribution histogram + per-trade averages */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20, marginTop: 20 }}>
-              <SectionCard flat title="Score Distribution" subtitle={scoredCount > 0 ? `${scoredCount} scored submission${scoredCount === 1 ? '' : 's'}` : undefined} icon={<ChartBar size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="Score Distribution" subtitle={scoredCount > 0 ? `${scoredCount} scored submission${scoredCount === 1 ? '' : 's'}` : undefined} icon={<ChartBar size={17} weight="duotone" color="var(--text-secondary)" />}>
                 {scoredCount === 0 ? (
                   <div style={{ color: DIM, fontSize: 13, padding: 20, textAlign: 'center' }}>Scores appear here as submissions arrive.</div>
                 ) : (
@@ -668,7 +631,7 @@ export default function PrequalificationPage() {
                       const c = pctColor(i * 20 + 10);
                       return (
                         <div key={lbl} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                          <span style={{ width: 64, fontSize: 11.5, color: DIM, fontWeight: 600, textAlign: 'right', flexShrink: 0 }}>{lbl}</span>
+                          <span style={{ width: 64, fontSize: 12, color: DIM, fontWeight: 600, textAlign: 'right', flexShrink: 0 }}>{lbl}</span>
                           <div style={{ flex: 1, height: 16, background: 'rgba(255,255,255,0.05)', borderRadius: 5, overflow: 'hidden' }}>
                             <div style={{ width: `${(n / maxN) * 100}%`, height: '100%', background: `linear-gradient(90deg, color-mix(in srgb, ${c} 67%, transparent), ${c})`, borderRadius: 5, transition: 'width .3s' }} />
                           </div>
@@ -684,7 +647,7 @@ export default function PrequalificationPage() {
                 )}
               </SectionCard>
 
-              <SectionCard flat title="Score by Trade" icon={<ChartBar size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="Score by Trade" icon={<ChartBar size={17} weight="duotone" color="var(--text-secondary)" />}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
                   {Array.from(new Set(submissions.map(s => s.sub_trade))).map(trade => {
                     const tradeSubs = submissions.filter(s => s.sub_trade === trade);
@@ -750,7 +713,7 @@ export default function PrequalificationPage() {
 
               {filtered.length === 0 ? (
                 <SectionCard>
-                  <PremiumEmpty icon={<Clipboard size={30} weight="duotone" color={GOLD} />} title="No Submissions Found" description={search || statusFilter !== 'all' || tradeFilter !== 'all' ? 'Try adjusting your filters.' : 'Invite subcontractors to complete a scored questionnaire — answers grade automatically against your pass threshold, required documents are tracked with expiry dates, and every submission lands here for review.'} action={search || statusFilter !== 'all' || tradeFilter !== 'all' ? undefined : <button style={goldOutlineButtonStyle} className="pmBtn" onClick={() => setShowInviteModal(true)}><Envelope size={15} weight="fill" /> Send Prequal Form</button>} />
+                  <PremiumEmpty icon={<Clipboard size={30} weight="duotone" color="var(--text-secondary)" />} title="No Submissions Found" description={search || statusFilter !== 'all' || tradeFilter !== 'all' ? 'Try adjusting your filters.' : 'Invite subcontractors to complete a scored questionnaire — answers grade automatically against your pass threshold, required documents are tracked with expiry dates, and every submission lands here for review.'} action={search || statusFilter !== 'all' || tradeFilter !== 'all' ? undefined : <button style={goldOutlineButtonStyle} className="pmBtn" onClick={() => setShowInviteModal(true)}><Envelope size={15} weight="fill" /> Send Prequal Form</button>} />
                 </SectionCard>
               ) : (
                 <SectionCard flush>
@@ -778,7 +741,7 @@ export default function PrequalificationPage() {
               {templates.length === 0 ? (
                 <SectionCard>
                   <PremiumEmpty
-                    icon={<NotePencil size={30} weight="duotone" color={GOLD} />}
+                    icon={<NotePencil size={30} weight="duotone" color="var(--text-secondary)" />}
                     title="No Templates Yet"
                     description="Create a prequalification questionnaire template to get started."
                     action={<button style={goldButtonStyle} className="pmBtn" onClick={() => { setEditTemplate(null); setShowTemplateBuilder(true); }}><Plus size={15} weight="bold" /> New Template</button>}
@@ -806,7 +769,7 @@ export default function PrequalificationPage() {
                           return <span key={c} style={chipS(CATEGORY_COLORS[c], CATEGORY_COLORS[c])}>{c}: {cnt}</span>;
                         })}
                       </div>
-                      <div style={{ fontSize: 11, color: DIM, marginTop: 10 }}>Created {fmtDate(t.created_at)}</div>
+                      <div style={{ fontSize: 12, color: DIM, marginTop: 10 }}>Created {fmtDate(t.created_at)}</div>
                     </div>
                   ))}
                 </div>
@@ -843,7 +806,7 @@ export default function PrequalificationPage() {
               {invites.length === 0 ? (
                 <SectionCard>
                   <PremiumEmpty
-                    icon={<Envelope size={30} weight="duotone" color={GOLD} />}
+                    icon={<Envelope size={30} weight="duotone" color="var(--text-secondary)" />}
                     title="No Invites Sent"
                     description="Send prequalification forms to subcontractors."
                     action={<button style={goldOutlineButtonStyle} className="pmBtn" onClick={() => setShowInviteModal(true)}><Envelope size={15} weight="fill" /> Send Prequal Form</button>}
@@ -878,10 +841,10 @@ export default function PrequalificationPage() {
                           <td style={tableCellS}>
                             <div style={{ display: 'flex', gap: 6 }}>
                               {inv.token && (
-                                <button style={{ ...btnS(BORDER, TEXT), padding: '4px 12px', fontSize: 11 }} onClick={() => copyInviteLink(inv)}>Copy Link</button>
+                                <button style={{ ...btnS(BORDER, TEXT), padding: '4px 12px', fontSize: 12 }} onClick={() => copyInviteLink(inv)}>Copy Link</button>
                               )}
                               {inv.status !== 'completed' && (
-                                <button style={{ ...btnS(BORDER, TEXT), padding: '4px 12px', fontSize: 11 }} onClick={() => sendInvite(inv.email, inv.sub_name, inv.template_id)}>Resend</button>
+                                <button style={{ ...btnS(BORDER, TEXT), padding: '4px 12px', fontSize: 12 }} onClick={() => sendInvite(inv.email, inv.sub_name, inv.template_id)}>Resend</button>
                               )}
                             </div>
                           </td>
@@ -968,7 +931,7 @@ export default function PrequalificationPage() {
                     <div key={i} style={{ padding: '8px 12px', background: BG, borderRadius: 8, border: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <div style={{ fontSize: 12, fontWeight: 600, color: d.uploaded ? TEXT : RED }}>{d.name}</div>
-                        {d.expires_at && <div style={{ fontSize: 10, color: dl !== null && dl <= 30 ? RED : DIM }}>{dl !== null && dl <= 0 ? 'Expired' : `Expires ${fmtDate(d.expires_at)}`}</div>}
+                        {d.expires_at && <div style={{ fontSize: 12, color: dl !== null && dl <= 30 ? RED : DIM }}>{dl !== null && dl <= 0 ? 'Expired' : `Expires ${fmtDate(d.expires_at)}`}</div>}
                       </div>
                       <span style={{ fontSize: 14, display: 'inline-flex', verticalAlign: 'middle' }}>{d.uploaded ? <CheckCircle size={16} weight="fill" color={GREEN} /> : <XCircle size={16} weight="fill" color={RED} />}</span>
                     </div>
@@ -989,7 +952,7 @@ export default function PrequalificationPage() {
                       <div key={q.id} style={{ padding: '10px 14px', borderBottom: i < detailTemplate.questions.length - 1 ? `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: 12, color: TEXT, fontWeight: 600 }}>{q.label}</div>
-                          <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>
+                          <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>
                             <span style={chipS(CATEGORY_COLORS[q.category] || DIM, CATEGORY_COLORS[q.category] || DIM)}>{q.category}</span>
                             <span style={{ marginLeft: 8 }}>{q.points} pts</span>
                           </div>
@@ -1103,7 +1066,7 @@ function TemplateBuilderModal({ initial, onSave, onClose }: { initial: Template 
           overlay, so nothing knew it was open over the page. */}
       <div role="dialog" aria-modal="true" aria-labelledby={builderTitleId} style={{ ...modalBox, maxWidth: 800 }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h2 id={builderTitleId} style={{ margin: 0, fontSize: 20, fontWeight: 800, color: GOLD }}>{initial ? 'Edit Template' : 'New Prequal Template'}</h2>
+          <h2 id={builderTitleId} style={{ margin: 0, fontSize: 20, fontWeight: 800, color: 'var(--text-primary)' }}>{initial ? 'Edit Template' : 'New Prequal Template'}</h2>
           <button aria-label="Close" style={{ background: 'none', border: 'none', color: DIM, fontSize: 22, cursor: 'pointer', minWidth: 44, minHeight: 44 }} onClick={onClose}><X size={20} weight="regular" color={DIM} /></button>
         </div>
 
@@ -1139,12 +1102,12 @@ function TemplateBuilderModal({ initial, onSave, onClose }: { initial: Template 
               {questions.map((q, i) => (
                 <div key={q.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: BG, borderRadius: 8, border: `1px solid ${BORDER}`, marginBottom: 6 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <button style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 10, padding: 0 }} onClick={() => moveQ(i, -1)}><CaretUp size={12} weight="fill" color={DIM} /></button>
-                    <button style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 10, padding: 0 }} onClick={() => moveQ(i, 1)}><CaretDown size={12} weight="fill" color={DIM} /></button>
+                    <button style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 12, padding: 0 }} onClick={() => moveQ(i, -1)}><CaretUp size={12} weight="fill" color={DIM} /></button>
+                    <button style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 12, padding: 0 }} onClick={() => moveQ(i, 1)}><CaretDown size={12} weight="fill" color={DIM} /></button>
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{q.label}</div>
-                    <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>
+                    <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>
                       <span style={chipS(CATEGORY_COLORS[q.category] || DIM, CATEGORY_COLORS[q.category] || DIM)}>{q.category}</span>
                       <span style={{ marginLeft: 8 }}>{q.type}</span>
                       <span style={{ marginLeft: 8 }}>{q.points} pts</span>
@@ -1204,7 +1167,7 @@ function QuestionEditor({ initial, onSave, onClose }: { initial: Question | null
   return (
     <div style={modalOverlay} onClick={onClose}>
       <div role="dialog" aria-modal="true" aria-labelledby={qTitleId} style={{ ...modalBox, maxWidth: 500 }} onClick={e => e.stopPropagation()}>
-        <h3 id={qTitleId} style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, color: GOLD }}>{initial ? 'Edit Question' : 'Add Question'}</h3>
+        <h3 id={qTitleId} style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{initial ? 'Edit Question' : 'Add Question'}</h3>
         {err && <div role="alert" style={{ background: `color-mix(in srgb, ${RED} 13%, transparent)`, color: RED, padding: '6px 12px', borderRadius: 6, fontSize: 12, marginBottom: 10 }}>{err}</div>}
 
         <div style={{ marginBottom: 12 }}>
@@ -1289,7 +1252,7 @@ function InviteModal({ templates, onSend, onClose }: { templates: Template[]; on
     <div style={modalOverlay} onClick={onClose}>
       <div role="dialog" aria-modal="true" aria-labelledby={titleId} style={{ ...modalBox, maxWidth: 480 }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h2 id={titleId} style={{ margin: 0, fontSize: 18, fontWeight: 800, color: GOLD }}>Send Prequal Form</h2>
+          <h2 id={titleId} style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'var(--text-primary)' }}>Send Prequal Form</h2>
           <button type="button" aria-label="Close" style={{ background: 'none', border: 'none', color: DIM, fontSize: 22, cursor: 'pointer', minWidth: 44, minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', margin: '-10px -10px -10px 0' }} onClick={onClose}><X size={20} weight="regular" color={DIM} /></button>
         </div>
         {err && <div role="alert" style={{ background: `color-mix(in srgb, ${RED} 13%, transparent)`, color: RED, padding: '6px 12px', borderRadius: 6, fontSize: 12, marginBottom: 10 }}>{err}</div>}
@@ -1309,10 +1272,10 @@ function InviteModal({ templates, onSend, onClose }: { templates: Template[]; on
             {templates.map(t => <option key={t.id} value={t.id}>{t.name} ({t.questions.length} questions)</option>)}
           </select>
           {templates.length === 0 ? (
-            <p style={{ color: AMBER, fontSize: 11.5, margin: '6px 0 0', lineHeight: 1.5 }}>No templates yet — create one first (New Template). The form needs scored questions before it can be sent.</p>
+            <p style={{ color: AMBER, fontSize: 12, margin: '6px 0 0', lineHeight: 1.5 }}>No templates yet — create one first (New Template). The form needs scored questions before it can be sent.</p>
           ) : (
             (() => { const t = templates.find(x => x.id === templateId); return t ? (
-              <p style={{ color: DIM, fontSize: 11.5, margin: '6px 0 0', lineHeight: 1.5 }}>Pass threshold {t.threshold}% · {t.requiredDocs.length} required document{t.requiredDocs.length === 1 ? '' : 's'}. Their answers score automatically on submit.</p>
+              <p style={{ color: DIM, fontSize: 12, margin: '6px 0 0', lineHeight: 1.5 }}>Pass threshold {t.threshold}% · {t.requiredDocs.length} required document{t.requiredDocs.length === 1 ? '' : 's'}. Their answers score automatically on submit.</p>
             ) : null; })()
           )}
         </div>

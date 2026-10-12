@@ -13,7 +13,7 @@ import {
   StatCard,
   PremiumEmpty,
   goldButtonStyle,
-  ghostButtonStyle,
+  ghostButtonStyle, secondaryButtonStyle
 } from '@/components/ui/premium';
 import {
   Gavel,
@@ -249,7 +249,7 @@ export default function LienDeadlinePage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Compliance"
-        eyebrowIcon={<Gavel size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<Gavel size={13} weight="fill" color="var(--text-secondary)" />}
         title="Lien Deadline"
         accent="Tracker"
         subtitle="Notices, liens, and bond claims. AZ statutory deadlines auto-calculated."
@@ -278,7 +278,7 @@ export default function LienDeadlinePage() {
           sub="Needs action" delay={0.06}
          href="/app/compliance/lien-deadlines"/>
         <StatCard
-          icon={<CalendarCheck size={19} weight="duotone" color={BLUE} />}
+          icon={<CalendarCheck size={19} weight="duotone" color="var(--text-secondary)" />}
           label="Due in 30 Days" value={String(due30Count)} accent={BLUE}
           sub="Upcoming" delay={0.10}
          href="/app/compliance/lien-deadlines"/>
@@ -292,7 +292,7 @@ export default function LienDeadlinePage() {
       {/* Add Deadline Form */}
       {showAdd && (
         <div style={{ marginBottom: 24 }}>
-          <SectionCard title="Add Deadline" icon={<CalendarPlus size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard title="Add Deadline" icon={<CalendarPlus size={17} weight="duotone" color="var(--text-secondary)" />}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
               <div>
                 <label style={{ fontSize: 12, color: DIM, fontWeight: 600, display: 'block', marginBottom: 6 }}>Project *</label>
@@ -325,32 +325,32 @@ export default function LienDeadlinePage() {
 
             {/* AZ-specific auto-calculation inputs */}
             {formState === 'AZ' && (
-              <div style={{ marginTop: 20, padding: 16, background: 'var(--brand-primary-08)', borderRadius: 12, border: '1px solid color-mix(in srgb, var(--brand-primary) 15%, transparent)' }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: GOLD, marginBottom: 12 }}>AZ Auto-Calculated Deadlines</div>
+              <div style={{ marginTop: 20, padding: 16, background: 'var(--bg-surface-2)', borderRadius: 12, border: '1px solid var(--border-default)' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12 }}>AZ Auto-Calculated Deadlines</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
                   <div>
-                    <label style={{ fontSize: 11, color: DIM, fontWeight: 600, display: 'block', marginBottom: 6 }}>First Work Date</label>
+                    <label style={{ fontSize: 12, color: DIM, fontWeight: 600, display: 'block', marginBottom: 6 }}>First Work Date</label>
                     <SaguaroDatePicker value={formFirstWork} onChange={v => setFormFirstWork(v)} style={inputStyle} />
                     {azCalc.preliminary && (
-                      <div style={{ fontSize: 11, color: GOLD, marginTop: 4 }}>
+                      <div style={{ fontSize: 12, color: 'var(--text-primary)', marginTop: 4 }}>
                         Preliminary 20-Day Notice: <strong>{azCalc.preliminary}</strong>
                       </div>
                     )}
                   </div>
                   <div>
-                    <label style={{ fontSize: 11, color: DIM, fontWeight: 600, display: 'block', marginBottom: 6 }}>Completion Date</label>
+                    <label style={{ fontSize: 12, color: DIM, fontWeight: 600, display: 'block', marginBottom: 6 }}>Completion Date</label>
                     <SaguaroDatePicker value={formCompletion} onChange={v => setFormCompletion(v)} style={inputStyle} />
                     {azCalc.mechLien && (
-                      <div style={{ fontSize: 11, color: GOLD, marginTop: 4 }}>
+                      <div style={{ fontSize: 12, color: 'var(--text-primary)', marginTop: 4 }}>
                         Mechanic&apos;s Lien (120d): <strong>{azCalc.mechLien}</strong>
                       </div>
                     )}
                   </div>
                   <div>
-                    <label style={{ fontSize: 11, color: DIM, fontWeight: 600, display: 'block', marginBottom: 6 }}>Last Work Date</label>
+                    <label style={{ fontSize: 12, color: DIM, fontWeight: 600, display: 'block', marginBottom: 6 }}>Last Work Date</label>
                     <SaguaroDatePicker value={formLastWork} onChange={v => setFormLastWork(v)} style={inputStyle} />
                     {azCalc.bondClaim && (
-                      <div style={{ fontSize: 11, color: GOLD, marginTop: 4 }}>
+                      <div style={{ fontSize: 12, color: 'var(--text-primary)', marginTop: 4 }}>
                         Bond Claim (90d): <strong>{azCalc.bondClaim}</strong>
                       </div>
                     )}
@@ -386,11 +386,11 @@ export default function LienDeadlinePage() {
       ) : sorted.length === 0 ? (
         <SectionCard>
           <PremiumEmpty
-            icon={<CalendarBlank size={30} weight="duotone" color={GOLD} />}
+            icon={<CalendarBlank size={30} weight="duotone" color="var(--text-secondary)" />}
             title="No Deadlines"
             description="Add your first lien deadline to start tracking preliminary notices, mechanic's liens, stop notices, and bond claims."
             action={
-              <button onClick={() => setShowAdd(true)} className="pmBtn" style={goldButtonStyle}>
+              <button onClick={() => setShowAdd(true)} className="pmBtn" style={secondaryButtonStyle}>
                 <Plus size={15} weight="bold" /> Add Deadline
               </button>
             }
@@ -399,7 +399,7 @@ export default function LienDeadlinePage() {
       ) : (
         <SectionCard flat
           title="Upcoming Deadlines"
-          icon={<CalendarBlank size={17} weight="duotone" color={GOLD} />}
+          icon={<CalendarBlank size={17} weight="duotone" color="var(--text-secondary)" />}
           subtitle={sorted.length === 1 ? '1 deadline tracked' : `${sorted.length} deadlines tracked`}
           bodyStyle={{ display: 'flex', flexDirection: 'column', gap: 10 }}
         >
@@ -433,7 +433,7 @@ export default function LienDeadlinePage() {
                   justifyContent: 'center',
                   flexShrink: 0,
                 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color }}>
                     {new Date(dl.due_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short' })}
                   </div>
                   <div style={{ fontSize: 20, fontWeight: 800, color, lineHeight: 1 }}>
@@ -445,7 +445,7 @@ export default function LienDeadlinePage() {
                 <div style={{ flex: 1, minWidth: 200 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
                     <span style={{
-                      fontSize: 10,
+                      fontSize: 12,
                       fontWeight: 700,
                       padding: '2px 8px',
                       borderRadius: 4,
@@ -455,19 +455,19 @@ export default function LienDeadlinePage() {
                       {deadlineTypeLabel(dl.deadline_type)}
                     </span>
                     <span style={{
-                      fontSize: 10,
+                      fontSize: 12,
                       fontWeight: 700,
                       padding: '2px 8px',
                       borderRadius: 4,
-                      background: 'var(--brand-primary-12)',
-                      color: BLUE,
+                      background: 'var(--bg-surface-2)',
+                      color: 'var(--text-primary)',
                     }}>
                       {dl.state}
                     </span>
                     {/* Reminder badges */}
-                    {dl.reminder_sent_30 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(163,172,187,0.12)', color: GRAY }}>30d sent</span>}
-                    {dl.reminder_sent_14 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'var(--brand-primary-12)', color: GOLD }}>14d sent</span>}
-                    {dl.reminder_sent_7 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(248,113,113,0.12)', color: RED }}>7d sent</span>}
+                    {dl.reminder_sent_30 && <span style={{ fontSize: 12, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(163,172,187,0.12)', color: GRAY }}>30d sent</span>}
+                    {dl.reminder_sent_14 && <span style={{ fontSize: 12, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'var(--bg-surface-2)', color: 'var(--text-primary)' }}>14d sent</span>}
+                    {dl.reminder_sent_7 && <span style={{ fontSize: 12, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(248,113,113,0.12)', color: RED }}>7d sent</span>}
                   </div>
                   <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, marginBottom: 2 }}>{dl.description || deadlineTypeLabel(dl.deadline_type)}</div>
                   <div style={{ fontSize: 12, color: DIM }}>
@@ -493,11 +493,11 @@ export default function LienDeadlinePage() {
                 {/* Calculated AZ deadlines */}
                 {dl.calculated_deadlines && Object.keys(dl.calculated_deadlines).length > 0 && (
                   <div style={{ width: '100%', marginTop: 4, paddingLeft: 72 }}>
-                    <div style={{ fontSize: 11, color: GOLD, fontWeight: 600, marginBottom: 4 }}>AZ Calculated:</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 600, marginBottom: 4 }}>AZ Calculated:</div>
                     <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                       {Object.entries(dl.calculated_deadlines).map(([key, val]) => (
-                        <div key={key} style={{ fontSize: 11, color: DIM }}>
-                          {key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}: <span style={{ color: GOLD, fontWeight: 600 }}>{val}</span>
+                        <div key={key} style={{ fontSize: 12, color: DIM }}>
+                          {key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}: <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{val}</span>
                         </div>
                       ))}
                     </div>

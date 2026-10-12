@@ -66,7 +66,7 @@ export default function CertifiedPayrollPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Compliance"
-        eyebrowIcon={<ShieldCheck size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<ShieldCheck size={13} weight="fill" color="var(--text-secondary)" />}
         title="Certified"
         accent="Payroll"
         subtitle="WH-347 certified payroll for Davis-Bacon work, per project."
@@ -86,7 +86,7 @@ export default function CertifiedPayrollPage() {
       {/* Projects list */}
       <SectionCard
         title="Projects"
-        icon={<Buildings size={17} weight="duotone" color={GOLD} />}
+        icon={<Buildings size={17} weight="duotone" color="var(--text-secondary)" />}
         flush
         action={
           <input
@@ -118,7 +118,7 @@ export default function CertifiedPayrollPage() {
           />
         ) : filtered.length === 0 ? (
           <PremiumEmpty
-            icon={<Buildings size={30} weight="duotone" color={GOLD} />}
+            icon={<Buildings size={30} weight="duotone" color="var(--text-secondary)" />}
             title={projects.length === 0 ? 'No projects yet' : 'No projects match your search'}
             description={projects.length === 0
               ? 'Certified payroll is filed per project — create a project first, then file a WH-347 for every week worked on Davis-Bacon or public jobs.'
@@ -141,10 +141,10 @@ export default function CertifiedPayrollPage() {
                 }}
               >
                 <span style={{
-                  width: 38, height: 38, borderRadius: 8, background: 'color-mix(in srgb, var(--brand-primary) 10%, transparent)',
+                  width: 38, height: 38, borderRadius: 8, background: 'var(--bg-surface-2)',
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}>
-                  <FileText size={18} weight="regular" color={GOLD} />
+                  <FileText size={18} weight="regular" color="var(--text-secondary)" />
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -156,11 +156,11 @@ export default function CertifiedPayrollPage() {
                 </div>
                 {p.status && (
                   <span style={{
-                    fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 4,
+                    fontSize: 12, fontWeight: 700, padding: '3px 9px', borderRadius: 4,
                     background: st.bg, color: st.color, textTransform: 'capitalize', whiteSpace: 'nowrap',
                   }}>{(p.status || '').replace(/_/g, ' ')}</span>
                 )}
-                <span style={{ fontSize: 12, fontWeight: 700, color: GOLD, whiteSpace: 'nowrap' }}>Open Payroll</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>Open Payroll</span>
                 <CaretRight size={16} weight="bold" color={DIM} />
               </Link>
             );

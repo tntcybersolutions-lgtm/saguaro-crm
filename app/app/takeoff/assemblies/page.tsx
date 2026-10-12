@@ -9,7 +9,7 @@ import {
   PremiumEmpty,
   goldButtonStyle,
   ghostButtonStyle,
-  goldOutlineButtonStyle,
+  goldOutlineButtonStyle, secondaryButtonStyle
 } from '@/components/ui/premium';
 import {
   Stack,
@@ -280,7 +280,7 @@ function AssemblyLibraryContent() {
 
   const labelStyle: React.CSSProperties = {
     display: 'block',
-    fontSize: 11,
+    fontSize: 12,
     color: DIM,
     marginBottom: 4,
     fontWeight: 600,
@@ -295,7 +295,7 @@ function AssemblyLibraryContent() {
           {/* Header */}
           <ModuleHero
             eyebrow="Assembly Library"
-            eyebrowIcon={<Cube size={13} weight="fill" color={GOLD} />}
+            eyebrowIcon={<Cube size={13} weight="fill" color="var(--text-secondary)" />}
             title="Assembly"
             accent="Library"
             subtitle="Create reusable material + labor bundles for takeoff estimates."
@@ -309,19 +309,19 @@ function AssemblyLibraryContent() {
           {/* KPI Row */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
             <StatCard
-              icon={<Stack size={19} weight="duotone" color={GOLD} />}
+              icon={<Stack size={19} weight="duotone" color="var(--text-secondary)" />}
               label="Assemblies" value={String(libStats.count)} sub="In library" accent={GOLD} delay={0.02}
              href="/app/takeoff/assemblies"/>
             <StatCard
-              icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />}
+              icon={<CurrencyDollar size={19} weight="duotone" color="var(--text-secondary)" />}
               label="Library Value" value={currency(libStats.totalValue)} sub="Total assembly cost" delay={0.06}
              href="/app/takeoff/assemblies"/>
             <StatCard
-              icon={<SquaresFour size={19} weight="duotone" color={GOLD} />}
+              icon={<SquaresFour size={19} weight="duotone" color="var(--text-secondary)" />}
               label="CSI Divisions" value={String(libStats.divisions)} sub="Covered" delay={0.10}
              href="/app/takeoff/assemblies"/>
             <StatCard
-              icon={<FunnelSimple size={19} weight="duotone" color={GOLD} />}
+              icon={<FunnelSimple size={19} weight="duotone" color="var(--text-secondary)" />}
               label="Showing" value={String(filtered.length)} sub={`Of ${libStats.count} assemblies`} delay={0.14}
              href="/app/takeoff/assemblies"/>
           </div>
@@ -329,7 +329,7 @@ function AssemblyLibraryContent() {
           {/* Catalog */}
           <SectionCard
             title="Assembly Catalog"
-            icon={<Stack size={17} weight="duotone" color={GOLD} />}
+            icon={<Stack size={17} weight="duotone" color="var(--text-secondary)" />}
             action={
               <span style={{ fontSize: 12, fontWeight: 700, color: DIM }}>
                 {filtered.length} {filtered.length === 1 ? 'assembly' : 'assemblies'}
@@ -401,18 +401,18 @@ function AssemblyLibraryContent() {
             ) : filtered.length === 0 ? (
               assemblies.length === 0 ? (
                 <PremiumEmpty
-                  icon={<Stack size={30} weight="duotone" color={GOLD} />}
+                  icon={<Stack size={30} weight="duotone" color="var(--text-secondary)" />}
                   title="No assemblies yet"
                   description="Create your first assembly to build reusable material + labor bundles for takeoff estimates."
                   action={
-                    <button onClick={openCreate} style={goldButtonStyle} className="pmBtn">
+                    <button onClick={openCreate} style={secondaryButtonStyle} className="pmBtn">
                       <Plus size={15} weight="bold" /> New Assembly
                     </button>
                   }
                 />
               ) : (
                 <PremiumEmpty
-                  icon={<MagnifyingGlass size={30} weight="duotone" color={GOLD} />}
+                  icon={<MagnifyingGlass size={30} weight="duotone" color="var(--text-secondary)" />}
                   title="No assemblies match your filters"
                   description="Try adjusting your search terms, division, or category to see more results."
                   action={
@@ -458,11 +458,11 @@ function AssemblyLibraryContent() {
                           {assembly.name}
                         </h3>
                         <span style={{
-                          fontSize: 11,
+                          fontSize: 12,
                           padding: '2px 8px',
                           borderRadius: 4,
                           background: `color-mix(in srgb, ${GOLD} 13%, transparent)`,
-                          color: GOLD,
+                          color: 'var(--text-primary)',
                           fontWeight: 600,
                           whiteSpace: 'nowrap',
                           marginLeft: 8,
@@ -477,17 +477,17 @@ function AssemblyLibraryContent() {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ display: 'flex', gap: 16 }}>
                           <div>
-                            <div style={{ fontSize: 10, color: DIM}}>Unit</div>
+                            <div style={{ fontSize: 12, color: DIM}}>Unit</div>
                             <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{assembly.unit}</div>
                           </div>
                           <div>
-                            <div style={{ fontSize: 10, color: DIM}}>Items</div>
+                            <div style={{ fontSize: 12, color: DIM}}>Items</div>
                             <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{itemCount}</div>
                           </div>
                         </div>
                         <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: 10, color: DIM}}>Total Cost</div>
-                          <div style={{ fontSize: 16, fontWeight: 700, color: GOLD }}>{currency(assembly.total_cost)}</div>
+                          <div style={{ fontSize: 12, color: DIM}}>Total Cost</div>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{currency(assembly.total_cost)}</div>
                         </div>
                       </div>
                     </div>
@@ -660,7 +660,7 @@ function AssemblyLibraryContent() {
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                    <span style={{ fontSize: 11, color: DIM, fontWeight: 600 }}>Item {idx + 1}</span>
+                    <span style={{ fontSize: 12, color: DIM, fontWeight: 600 }}>Item {idx + 1}</span>
                     {form.material_items.length > 1 && (
                       <button
                         onClick={() => removeMaterialItem(idx)}
@@ -686,7 +686,7 @@ function AssemblyLibraryContent() {
                   />
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 1fr', gap: 8 }}>
                     <div>
-                      <label style={{ fontSize: 10, color: DIM }}>Qty</label>
+                      <label style={{ fontSize: 12, color: DIM }}>Qty</label>
                       <input
                         type="number"
                         value={item.qty}
@@ -697,7 +697,7 @@ function AssemblyLibraryContent() {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: 10, color: DIM }}>Unit</label>
+                      <label style={{ fontSize: 12, color: DIM }}>Unit</label>
                       <select
                         value={item.unit}
                         onChange={e => updateMaterialItem(idx, 'unit', e.target.value)}
@@ -709,7 +709,7 @@ function AssemblyLibraryContent() {
                       </select>
                     </div>
                     <div>
-                      <label style={{ fontSize: 10, color: DIM }}>Unit Cost</label>
+                      <label style={{ fontSize: 12, color: DIM }}>Unit Cost</label>
                       <input
                         type="number"
                         value={item.unit_cost}
@@ -761,7 +761,7 @@ function AssemblyLibraryContent() {
               padding: 16,
               marginBottom: 20,
             }}>
-              <div style={{ fontSize: 11, color: DIM, marginBottom: 10, fontWeight: 600 }}>
+              <div style={{ fontSize: 12, color: DIM, marginBottom: 10, fontWeight: 600 }}>
                 Cost Summary
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -774,7 +774,7 @@ function AssemblyLibraryContent() {
               </div>
               <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 10, display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: 14, color: TEXT, fontWeight: 700 }}>Total Cost</span>
-                <span style={{ fontSize: 16, color: GOLD, fontWeight: 700 }}>{currency(totalCost)}</span>
+                <span style={{ fontSize: 16, color: 'var(--text-primary)', fontWeight: 700 }}>{currency(totalCost)}</span>
               </div>
             </div>
           </div>
