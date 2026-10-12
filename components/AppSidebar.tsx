@@ -227,7 +227,7 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             width: 52, height: 52, borderRadius: 12, textDecoration: 'none',
-            background: hover ? '#2B3B53' : 'var(--bg-surface-2)',
+            background: hover ? 'var(--bg-hover)' : 'var(--bg-surface-2)',
             border: `1px solid ${hover ? 'var(--border-strong)' : 'var(--border-subtle)'}`,
             transition: 'background .15s ease, border-color .15s ease',
             overflow: 'hidden',

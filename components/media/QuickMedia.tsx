@@ -58,8 +58,8 @@ const CSS = `
 .qmDo a { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 10px 0 12px; border-radius: 10px; border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--text-primary); font-size: 14px; font-weight: 600; text-decoration: none; min-width: 0; }
 .qmDo a > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .qmDo a svg { flex: none; color: var(--text-secondary); }
-.qmDo a:hover { background: #2B3B53; border-color: var(--border-strong); }
-.qmDo a:active { background: #2B3B53; }
+.qmDo a:hover { background: var(--bg-hover); border-color: var(--border-strong); }
+.qmDo a:active { background: var(--bg-hover); }
 .qmDoHead { margin-top: 10px; font-size: 15px; font-weight: 700; color: var(--text-primary); }
 .qmDrag { position: fixed; inset: 0; z-index: 10030; pointer-events: none; display: flex; align-items: flex-end; justify-content: center; padding: 24px; background: color-mix(in srgb, var(--bg-base, black) 35%, transparent); outline: 3px dashed var(--brand-primary); outline-offset: -10px; }
 .qmDrag div { display: inline-flex; align-items: center; gap: 10px; padding: 14px 20px; border-radius: 12px; background: var(--brand-primary); color: var(--on-brand); font-size: 16px; font-weight: 700; box-shadow: var(--shadow-lg); }

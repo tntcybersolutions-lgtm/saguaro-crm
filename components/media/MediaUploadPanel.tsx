@@ -30,7 +30,7 @@ const CSS = `
 .muPick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 /* Take Photo is THE action (yellow); Record and Choose are slate secondaries. */
 .muBig { min-height: 96px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 12px 8px; border-radius: 12px; border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--text-primary); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; }
-.muBig:hover { background: #2B3B53; border-color: var(--border-strong); }
+.muBig:hover { background: var(--bg-hover); border-color: var(--border-strong); }
 .muBig:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
 .muBig svg { color: var(--text-secondary); }
 .muBig[data-primary="true"] { border-color: var(--brand-primary); background: var(--brand-primary); color: var(--on-brand); font-weight: 700; }

@@ -57,8 +57,8 @@ export const PREMIUM_FX = `
 .pmGold:hover{background:var(--brand-primary-hover)}
 .pmGold:active{transform:none;opacity:.85}
 .pmGhost{background:var(--bg-surface-2);color:var(--c-text);border:1px solid var(--border-default);box-shadow:none;transition:background .15s ease,border-color .15s ease}
-.pmGhost:hover{background:#2B3B53;border-color:var(--border-strong)}
-.pmGhost:active{transform:none;background:#2B3B53}
+.pmGhost:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.pmGhost:active{transform:none;background:var(--bg-hover)}
 .pmDanger{background:none;color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 50%,transparent);box-shadow:none;transition:background .15s ease}
 .pmDanger:hover{background:color-mix(in srgb,var(--danger) 10%,transparent)}
 .pmDanger:active{transform:none;background:color-mix(in srgb,var(--danger) 16%,transparent)}
