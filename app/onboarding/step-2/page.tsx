@@ -86,8 +86,8 @@ export default function OnboardingStep2() {
         {/* Logo */}
         <div style={{textAlign:'center',marginBottom:36}}>
           <Link href="/" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8}}>
-            <Cactus size={28} weight="fill" color={GOLD} />
-            <span style={{fontWeight:900,fontSize:20,color:GOLD}}>Saguaro</span>
+            <Cactus size={28} weight="fill" color="var(--text-secondary)" />
+            <span style={{fontWeight:900,fontSize:20,color: 'var(--text-primary)'}}>Saguaro</span>
           </Link>
         </div>
 
@@ -105,7 +105,7 @@ export default function OnboardingStep2() {
                 }}>
                   {s.done ? <Check size={16} weight="bold" /> : s.num}
                 </div>
-                <span style={{fontSize:11,color:s.active?TEXT:DIM,fontWeight:s.active?700:400}}>{s.label}</span>
+                <span style={{fontSize:12,color:s.active?TEXT:DIM,fontWeight:s.active?700:400}}>{s.label}</span>
               </div>
               {i<STEPS.length-1&&(
                 <div style={{flex:1,height:2,background:BORDER,margin:'17px 8px 0'}}/>
@@ -117,7 +117,7 @@ export default function OnboardingStep2() {
         {/* Card */}
         <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:16,padding:40}}>
           <div style={{marginBottom:28}}>
-            <div style={{fontSize:12,fontWeight:700,color:GOLD,marginBottom:8}}>Step 2 of 4</div>
+            <div style={{fontSize:12,fontWeight:700,color: 'var(--text-primary)',marginBottom:8}}>Step 2 of 4</div>
             <h1 style={{fontSize:26,fontWeight:900,margin:'0 0 6px',color:TEXT}}>Set Up Your Company</h1>
             <p style={{color:DIM,fontSize:14,margin:0}}>This information personalizes your documents and reports.</p>
           </div>
@@ -153,7 +153,7 @@ export default function OnboardingStep2() {
                   <button
                     key={type}
                     onClick={()=>setForm(p=>({...p,companyType:type}))}
-                    style={{padding:'10px 8px',background:form.companyType===type?'var(--brand-primary-18)':'#1c1c1e',border:`1px solid ${form.companyType===type?'color-mix(in srgb, var(--brand-primary) 50%, transparent)':BORDER}`,borderRadius:8,color:form.companyType===type?GOLD:DIM,fontSize:11,fontWeight:form.companyType===type?700:400,cursor:'pointer',textAlign:'center',lineHeight:1.4}}
+                    style={{padding:'10px 8px',background:form.companyType===type?'var(--brand-primary-18)':'#1c1c1e',border:`1px solid ${form.companyType===type?'color-mix(in srgb, var(--brand-primary) 50%, transparent)':BORDER}`,borderRadius:8,color:form.companyType===type?GOLD:DIM,fontSize:12,fontWeight:form.companyType===type?700:400,cursor:'pointer',textAlign:'center',lineHeight:1.4}}
                   >
                     {type}
                   </button>

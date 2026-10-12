@@ -39,13 +39,13 @@ interface Activity {
 function iconFor(entityType: string | null, action: string) {
   const a = (action || '').toLowerCase();
   if (a === 'awarded') return <Gavel size={15} weight="duotone" color={GREEN} />;
-  if (a === 'bid_received') return <CurrencyDollar size={15} weight="duotone" color={GOLD} />;
-  if (a === 'invited') return <UserPlus size={15} weight="duotone" color={GOLD} />;
+  if (a === 'bid_received') return <CurrencyDollar size={15} weight="duotone" color="var(--text-secondary)" />;
+  if (a === 'invited') return <UserPlus size={15} weight="duotone" color="var(--text-secondary)" />;
   switch ((entityType || '').toLowerCase()) {
-    case 'project':     return <Buildings size={15} weight="duotone" color={GOLD} />;
-    case 'bid_package': return <Package size={15} weight="duotone" color={GOLD} />;
-    case 'document':    return <FileText size={15} weight="duotone" color={GOLD} />;
-    default:            return <ClockCounterClockwise size={15} weight="duotone" color={GOLD} />;
+    case 'project':     return <Buildings size={15} weight="duotone" color="var(--text-secondary)" />;
+    case 'bid_package': return <Package size={15} weight="duotone" color="var(--text-secondary)" />;
+    case 'document':    return <FileText size={15} weight="duotone" color="var(--text-secondary)" />;
+    default:            return <ClockCounterClockwise size={15} weight="duotone" color="var(--text-secondary)" />;
   }
 }
 
@@ -110,7 +110,7 @@ export default function ActivityFeed({
     <SectionCard
       title="Activity"
       subtitle={projectId ? 'Everything that happened on this job' : 'Everything that happened, newest first'}
-      icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}
+      icon={<ClockCounterClockwise size={17} weight="duotone" color="var(--text-secondary)" />}
       action={rows.length ? <span style={{ fontSize: 12, color: DIM }}>{rows.length} recent</span> : undefined}
       style={style}
       flush
@@ -127,7 +127,7 @@ export default function ActivityFeed({
         />
       ) : rows.length === 0 ? (
         <PremiumEmpty
-          icon={<ClockCounterClockwise size={28} weight="duotone" color={GOLD} />}
+          icon={<ClockCounterClockwise size={28} weight="duotone" color="var(--text-secondary)" />}
           title="Nothing yet"
           description="As you create projects, send bid packages, take bids and award work, each one lands here with who did it and when."
           compact
@@ -146,7 +146,7 @@ export default function ActivityFeed({
               <span style={{
                 flexShrink: 0, width: 28, height: 28, borderRadius: 8, marginTop: 1,
                 display: 'grid', placeItems: 'center',
-                background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-25)',
+                background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)',
               }}>
                 {iconFor(a.entity_type, a.action)}
               </span>
@@ -154,12 +154,12 @@ export default function ActivityFeed({
                 <div style={{ color: TEXT, fontSize: 13.2, lineHeight: 1.45 }}>
                   {a.description || a.action}
                 </div>
-                <div style={{ color: DIM, fontSize: 12.5, marginTop: 2, display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+                <div style={{ color: DIM, fontSize: 13, marginTop: 2, display: 'flex', gap: 7, flexWrap: 'wrap' }}>
                   {a.user_name && <span>{a.user_name}</span>}
                   {!projectId && a.project_name && a.project_id && (
                     <>
                       <span aria-hidden>·</span>
-                      <Link href={`/app/projects/${a.project_id}`} style={{ color: GOLD, textDecoration: 'none' }}>
+                      <Link href={`/app/projects/${a.project_id}`} style={{ color: 'var(--link)', textDecoration: 'none' }}>
                         {a.project_name}
                       </Link>
                     </>

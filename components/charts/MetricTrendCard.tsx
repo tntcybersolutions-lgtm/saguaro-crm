@@ -133,7 +133,7 @@ export function MetricTrendCard({
             {value}
           </div>
           {sub != null && (
-            <div style={{ fontSize: 12.5, color: CHART.textTertiary, marginTop: 4 }}>{sub}</div>
+            <div style={{ fontSize: 13, color: CHART.textTertiary, marginTop: 4 }}>{sub}</div>
           )}
         </div>
         {spark && spark.length >= 2 && (

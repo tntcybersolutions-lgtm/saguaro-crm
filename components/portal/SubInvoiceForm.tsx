@@ -84,7 +84,7 @@ export default function SubInvoiceForm({ token, lastLines, onFiled, onFixComplia
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8 }}>
         {[['This period', totals.requested], ['Retainage to date', totals.retainage], ['Net due', totals.net]].map(([k, v]) => (
           <div key={k as string} style={{ background: 'var(--bg-base)', borderRadius: 8, padding: '8px 10px', minWidth: 0 }}>
-            <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-tertiary)' }}>{k as string}</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-tertiary)' }}>{k as string}</div>
             <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{usd(v as number)}</div>
           </div>
         ))}

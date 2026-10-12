@@ -80,7 +80,7 @@ export default function PermitCorrespondence({ projectId }: { projectId: string 
     <SectionCard
       title="Architect & City Correspondence"
       subtitle="Every document and message sent to or received from the architect and the AHJ — tracked here."
-      icon={<PaperPlaneTilt size={17} weight="duotone" color={GOLD} />}
+      icon={<PaperPlaneTilt size={17} weight="duotone" color="var(--text-secondary)" />}
       action={
         <button onClick={() => setOpen((v) => !v)} className="pmBtn" style={open ? ghostButtonStyle : goldButtonStyle}>
           {open ? 'Cancel' : <><Plus size={15} weight="bold" /> Log Correspondence</>}
@@ -88,7 +88,7 @@ export default function PermitCorrespondence({ projectId }: { projectId: string 
       }
       style={{ marginBottom: 24 }}
     >
-      {msg && <div style={{ marginBottom: 12, fontSize: 13, color: GOLD }}>{msg}</div>}
+      {msg && <div style={{ marginBottom: 12, fontSize: 13, color: 'var(--text-primary)' }}>{msg}</div>}
 
       {open && (
         <div style={{ display: 'grid', gap: 12, marginBottom: 18, padding: 16, border: `1px solid ${BORDER}`, borderRadius: 12, background: 'rgba(255,255,255,0.02)' }}>
@@ -105,7 +105,7 @@ export default function PermitCorrespondence({ projectId }: { projectId: string 
           <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Subject — e.g. Revised structural set, RFI response" />
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notes (optional)" rows={3} style={{ padding: '10px 12px', resize: 'vertical' }} />
           <div>
-            <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-tertiary)', marginBottom: 6 }}>Attach Documents / Drawings</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-tertiary)', marginBottom: 6 }}>Attach Documents / Drawings</div>
             <FileDropzone
               projectId={projectId}
               category="permit-correspondence"
@@ -113,7 +113,7 @@ export default function PermitCorrespondence({ projectId }: { projectId: string 
               compact
               onUploaded={(rows) => setDocIds((prev) => [...prev, ...rows.map((r: any) => r.id).filter(Boolean)])}
             />
-            {docIds.length > 0 && <div style={{ fontSize: 12, color: GOLD, marginTop: 6 }}><Paperclip size={12} weight="bold" /> {docIds.length} file{docIds.length === 1 ? '' : 's'} attached</div>}
+            {docIds.length > 0 && <div style={{ fontSize: 12, color: 'var(--text-primary)', marginTop: 6 }}><Paperclip size={12} weight="bold" /> {docIds.length} file{docIds.length === 1 ? '' : 's'} attached</div>}
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
             <button onClick={submit} disabled={saving} className="pmBtn" style={{ ...goldButtonStyle, opacity: saving ? 0.6 : 1, cursor: saving ? 'wait' : 'pointer' }}>
@@ -139,14 +139,14 @@ export default function PermitCorrespondence({ projectId }: { projectId: string 
                   {inbound ? <DownloadSimple size={16} weight="bold" /> : <PaperPlaneTilt size={16} weight="bold" />}
                 </span>
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text-primary)' }}>{c.subject}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{c.subject}</div>
                   <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
                     <span style={{ color: tone, fontWeight: 700 }}>{inbound ? 'From' : 'To'} {c.party_name || c.party || 'AHJ'}</span>
                     {' · '}{new Date(c.created_at).toLocaleDateString()}
                     {n > 0 && <> · <Paperclip size={11} weight="bold" /> {n}</>}
                     {c.created_by_name && <> · {c.created_by_name}</>}
                   </div>
-                  {c.notes && <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', marginTop: 4 }}>{c.notes}</div>}
+                  {c.notes && <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>{c.notes}</div>}
                 </div>
               </div>
             );

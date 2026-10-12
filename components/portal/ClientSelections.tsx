@@ -139,7 +139,7 @@ export default function ClientSelections({ token, onToast }: { token: string; on
   if (!rows.length) {
     return (
       <div style={{ padding: 40, textAlign: 'center', border: `1px solid ${BORDER}`, borderRadius: 14, background: RAISED }}>
-        <Palette size={34} weight="duotone" color={GOLD} />
+        <Palette size={34} weight="duotone" color="var(--text-secondary)" />
         <div style={{ color: TEXT, fontWeight: 800, fontSize: 17, marginTop: 10 }}>No selections yet</div>
         <div style={{ color: DIM, marginTop: 6, fontSize: 14 }}>When your contractor posts finishes for you to choose, they show here with photos and prices.</div>
       </div>
@@ -170,7 +170,7 @@ export default function ClientSelections({ token, onToast }: { token: string; on
 
       {Object.entries(groups).map(([cat, items]) => (
         <section key={cat} style={{ marginBottom: 26 }}>
-          <h3 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 900, color: GOLD }}>{cat}</h3>
+          <h3 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 900, color: 'var(--text-primary)' }}>{cat}</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {items.map((s) => {
               const allowance = Number(s.allowance) || 0;
@@ -206,14 +206,14 @@ export default function ClientSelections({ token, onToast }: { token: string; on
                             ? <img src={o.image_url} alt={o.name} style={{ width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', display: 'block' }} />
                             : <div style={{ aspectRatio: '4 / 3', display: 'flex', alignItems: 'center', justifyContent: 'center', color: DIM }}><ImageSquare size={36} weight="duotone" /></div>}
                           <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
-                            {o.is_recommended && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: GOLD, fontSize: 12, fontWeight: 800 }}><Star size={13} weight="fill" /> Recommended</span>}
+                            {o.is_recommended && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--text-primary)', fontSize: 12, fontWeight: 800 }}><Star size={13} weight="fill" /> Recommended</span>}
                             <div style={{ color: TEXT, fontWeight: 800, fontSize: 15 }}>{o.name}</div>
                             {specLine(o) && <div style={{ color: DIM, fontSize: 13 }}>{specLine(o)}</div>}
                             {o.description && <div style={{ color: DIM, fontSize: 13 }}>{o.description}</div>}
                             <div style={{ color: TEXT, fontWeight: 900, fontSize: 20, marginTop: 4 }}>{money(o.price)}</div>
                             <Delta allowance={allowance} price={o.price} />
                             {o.spec_url && (
-                              <a href={o.spec_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: GOLD, fontSize: 13, fontWeight: 700, minHeight: 32 }}>
+                              <a href={o.spec_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--link)', fontSize: 13, fontWeight: 700, minHeight: 32 }}>
                                 Product details <ArrowSquareOut size={13} />
                               </a>
                             )}

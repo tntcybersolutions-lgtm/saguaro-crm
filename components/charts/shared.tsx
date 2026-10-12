@@ -323,7 +323,7 @@ export function ChartHeader({
       <div style={{ minWidth: 0 }}>
         {title && <div style={microLabel}>{title}</div>}
         {subtitle && (
-          <div style={{ fontSize: 12.5, color: CHART.textTertiary, marginTop: 4, textTransform: 'none', letterSpacing: 0 }}>
+          <div style={{ fontSize: 13, color: CHART.textTertiary, marginTop: 4, textTransform: 'none', letterSpacing: 0 }}>
             {subtitle}
           </div>
         )}

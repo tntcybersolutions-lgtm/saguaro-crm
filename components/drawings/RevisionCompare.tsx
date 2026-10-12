@@ -458,7 +458,7 @@ export default function RevisionCompare({ a, b }: Props) {
     cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap',
   });
   const grp: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 6 };
-  const lbl: React.CSSProperties = { fontSize: 11, color: DIM, fontWeight: 600 };
+  const lbl: React.CSSProperties = { fontSize: 12, color: DIM, fontWeight: 600 };
   const sep: React.CSSProperties = { width: 1, alignSelf: 'stretch', background: BORDER, margin: '2px 2px' };
 
   const vecTotal = vec ? vec.added.length + vec.removed.length : 0;
@@ -512,23 +512,23 @@ export default function RevisionCompare({ a, b }: Props) {
           <button style={ghost()} onClick={() => nudge(0, -1)} aria-label="Nudge B up">↑</button>
           <button style={ghost()} onClick={() => nudge(0, 1)} aria-label="Nudge B down">↓</button>
           <button style={ghost()} onClick={() => nudge(1, 0)} aria-label="Nudge B right">→</button>
-          <span style={{ fontSize: 11, color: DIM, fontFamily: 'monospace', minWidth: 64, textAlign: 'center' }}>Δ {off.x},{off.y}px</span>
+          <span style={{ fontSize: 12, color: DIM, fontFamily: 'monospace', minWidth: 64, textAlign: 'center' }}>Δ {off.x},{off.y}px</span>
           {(off.x !== 0 || off.y !== 0) && <button style={ghost()} onClick={() => setOff({ x: 0, y: 0 })}>Reset</button>}
         </span>
         <span style={sep} />
         {/* zoom */}
         <span style={grp}>
           <button style={ghost()} onClick={() => zoomCenter(1 / 1.25)} aria-label="Zoom out">−</button>
-          <span style={{ fontSize: 11, color: DIM, fontFamily: 'monospace', minWidth: 44, textAlign: 'center' }}>{Math.round(view.scale * 100)}%</span>
+          <span style={{ fontSize: 12, color: DIM, fontFamily: 'monospace', minWidth: 44, textAlign: 'center' }}>{Math.round(view.scale * 100)}%</span>
           <button style={ghost()} onClick={() => zoomCenter(1.25)} aria-label="Zoom in">+</button>
           <button style={ghost()} onClick={fitView}>Fit</button>
         </span>
         {/* vector assist — only ever shown when BOTH sides truly parsed */}
-        {vecBusy && <span style={{ fontSize: 11, color: DIM }}>Analyzing linework…</span>}
+        {vecBusy && <span style={{ fontSize: 12, color: DIM }}>Analyzing linework…</span>}
         {vec && (
           <span style={grp}>
             <span style={{
-              fontSize: 11, fontWeight: 600, color: TEXT, background: PANEL,
+              fontSize: 12, fontWeight: 600, color: TEXT, background: PANEL,
               border: `1px solid ${BORDER}`, borderRadius: 999, padding: '4px 10px',
               display: 'inline-flex', alignItems: 'center', gap: 6,
             }}>
@@ -542,7 +542,7 @@ export default function RevisionCompare({ a, b }: Props) {
               </button>
             )}
             {showVec && highlightCapped && (
-              <span style={{ fontSize: 10.5, color: DIM }}>Highlight capped at {MAX_HIGHLIGHT_LINES} lines/side</span>
+              <span style={{ fontSize: 12, color: DIM }}>Highlight capped at {MAX_HIGHLIGHT_LINES} lines/side</span>
             )}
           </span>
         )}
@@ -585,7 +585,7 @@ export default function RevisionCompare({ a, b }: Props) {
         {layers && !busy && !error && (
           <div style={{
             position: 'absolute', left: 12, bottom: 12, background: RAISED, border: `1px solid ${BORDER}`,
-            borderRadius: 8, padding: '7px 12px', fontSize: 11.5, color: DIM,
+            borderRadius: 8, padding: '7px 12px', fontSize: 12, color: DIM,
             display: 'flex', alignItems: 'center', gap: 12, pointerEvents: 'none',
           }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>

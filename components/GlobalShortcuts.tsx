@@ -183,7 +183,7 @@ export default function GlobalShortcuts({ onProjectSwitch }: GlobalShortcutsProp
                         borderRadius: 5,
                         fontSize: 12,
                         fontWeight: 600,
-                        color: GOLD,
+                        color: 'var(--text-primary)',
                         fontFamily: 'monospace',
                       }}
                     >
@@ -204,7 +204,7 @@ export default function GlobalShortcuts({ onProjectSwitch }: GlobalShortcutsProp
             textAlign: 'center',
           }}
         >
-          Press <strong style={{ color: GOLD }}>Esc</strong> or click outside to close.
+          Press <strong style={{ color: 'var(--text-primary)' }}>Esc</strong> or click outside to close.
         </p>
       </div>
     </div>

@@ -46,7 +46,7 @@ const CSS = `
 .sxT img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .sxT:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
 .sxT .pl { position: absolute; left: 6px; top: 6px; width: 22px; height: 22px; border-radius: 50%; background: rgba(8,9,12,0.78); color: var(--text-primary); display: inline-flex; align-items: center; justify-content: center; }
-.sxT .on { position: absolute; right: 4px; bottom: 4px; padding: 1px 5px; border-radius: 5px; background: rgba(8,9,12,0.8); color: var(--c-green); font-size: 10px; font-weight: 800; }
+.sxT .on { position: absolute; right: 4px; bottom: 4px; padding: 1px 5px; border-radius: 5px; background: rgba(8,9,12,0.8); color: var(--c-green); font-size: 12px; font-weight: 800; }
 .sxActs { display: flex; gap: 8px; flex-wrap: wrap; }
 @media (max-width: 640px) { .sxActs .k-btn { min-height: 44px; flex: 1 1 auto; } .sxThumbs { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 `;

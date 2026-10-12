@@ -92,15 +92,15 @@ export default function W9Portal() {
     <div style={{ minHeight: '100vh', background: DARK, fontFamily: 'system-ui,sans-serif', color: TEXT }}>
       {/* Header */}
       <div style={{ background: 'rgba(20,20,22,.96)', borderBottom: `1px solid ${BORDER}`, padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <Cactus size={22} weight="fill" color={GOLD} />
-        <span style={{ fontWeight: 800, fontSize: 16, color: GOLD, letterSpacing: '-0.01em' }}>Saguaro Control Systems</span>
-        <span style={{ fontSize: 11, color: DIM, marginLeft: 8 }}>Secure W-9 Collection Portal</span>
+        <Cactus size={22} weight="fill" color="var(--text-secondary)" />
+        <span style={{ fontWeight: 800, fontSize: 16, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>Saguaro Control Systems</span>
+        <span style={{ fontSize: 12, color: DIM, marginLeft: 8 }}>Secure W-9 Collection Portal</span>
       </div>
 
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '32px 24px' }}>
         {/* Banner */}
-        <div style={{ background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', border: '1px solid var(--brand-primary-18)', borderRadius: 10, padding: '16px 20px', marginBottom: 28 }}>
-          <div style={{ fontWeight: 800, fontSize: 16, color: GOLD, marginBottom: 4 }}>W-9 Request — {info.projectName}</div>
+        <div style={{ background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 10, padding: '16px 20px', marginBottom: 28 }}>
+          <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--text-primary)', marginBottom: 4 }}>W-9 Request — {info.projectName}</div>
           <div style={{ fontSize: 13, color: DIM, lineHeight: 1.6 }}>
             You have been requested to provide W-9 tax information for <strong style={{ color: TEXT }}>{info.vendorName}</strong>. This form is required to process payments. All information is transmitted securely and encrypted.
           </div>
@@ -165,7 +165,7 @@ export default function W9Portal() {
                   maxLength={11}
                   style={{ width: '100%', background: '#1c1c1e', border: `1px solid ${BORDER}`, borderRadius: 7, padding: '10px 14px', color: TEXT, fontSize: 14, outline: 'none', boxSizing: 'border-box', letterSpacing: 2 }}
                 />
-                <div style={{ fontSize: 11, color: DIM, marginTop: 4 }}>Your TIN is encrypted and stored securely. It will never be shared with unauthorized parties.</div>
+                <div style={{ fontSize: 12, color: DIM, marginTop: 4 }}>Your TIN is encrypted and stored securely. It will never be shared with unauthorized parties.</div>
               </div>
             </div>
           </div>
@@ -196,7 +196,7 @@ export default function W9Portal() {
             {saving ? 'Submitting…' : 'Submit W-9 Securely →'}
           </button>
 
-          <div style={{ textAlign: 'center', marginTop: 16, fontSize: 11, color: DIM }}>
+          <div style={{ textAlign: 'center', marginTop: 16, fontSize: 12, color: DIM }}>
             <Lock size={12} weight="fill" style={{ verticalAlign: 'middle' }} /> 256-bit encrypted · Your information is never sold or shared · Powered by Saguaro Control Systems
           </div>
         </form>

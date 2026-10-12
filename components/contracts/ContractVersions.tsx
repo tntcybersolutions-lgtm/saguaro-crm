@@ -78,11 +78,11 @@ export default function ContractVersions({ projectId, kind, refreshKey = 0 }: Co
     return () => { cancelled = true; };
   }, [projectId, kind, refreshKey]);
 
-  if (loading) return <p style={{ color: DIM, fontSize: 13.5, margin: 0 }}>Loading earlier versions…</p>;
-  if (error) return <p style={{ color: RED, fontSize: 13.5, margin: 0 }}>{error}</p>;
+  if (loading) return <p style={{ color: DIM, fontSize: 14, margin: 0 }}>Loading earlier versions…</p>;
+  if (error) return <p style={{ color: RED, fontSize: 14, margin: 0 }}>{error}</p>;
   if (!versions.length) {
     return (
-      <p style={{ color: DIM, fontSize: 13.5, margin: 0 }}>
+      <p style={{ color: DIM, fontSize: 14, margin: 0 }}>
         No earlier version of this contract on this project.
       </p>
     );
@@ -90,8 +90,8 @@ export default function ContractVersions({ projectId, kind, refreshKey = 0 }: Co
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: GOLD, fontSize: 11, fontWeight: 800 }}>
-        <ClockCounterClockwise size={14} weight="bold" color={GOLD} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-primary)', fontSize: 12, fontWeight: 800 }}>
+        <ClockCounterClockwise size={14} weight="bold" color="var(--text-secondary)" />
         History
       </div>
 
@@ -108,10 +108,10 @@ export default function ContractVersions({ projectId, kind, refreshKey = 0 }: Co
                 border: 'none', cursor: 'pointer', textAlign: 'left',
               }}
             >
-              <span style={{ color: TEXT, fontSize: 13.5, fontWeight: 700 }}>Version {v.version}</span>
-              <span style={{ color: DIM, fontSize: 12.5 }}>{when(v.createdAt)}</span>
+              <span style={{ color: TEXT, fontSize: 14, fontWeight: 700 }}>Version {v.version}</span>
+              <span style={{ color: DIM, fontSize: 13 }}>{when(v.createdAt)}</span>
               <span style={{ flex: 1 }} />
-              <span style={{ color: count ? GOLD : DIM, fontSize: 12.5 }}>
+              <span style={{ color: count ? GOLD : DIM, fontSize: 13 }}>
                 {v.version === 1
                   ? 'first version'
                   : !v.comparable
@@ -128,7 +128,7 @@ export default function ContractVersions({ projectId, kind, refreshKey = 0 }: Co
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {v.changes.map((c) => (
                       <div key={c.key} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: 8, fontSize: 13 }}>
-                        <span style={{ color: DIM, minWidth: 150, fontSize: 11.5, fontWeight: 700 }}>
+                        <span style={{ color: DIM, minWidth: 150, fontSize: 12, fontWeight: 700 }}>
                           {c.label}
                         </span>
                         <span style={{ color: c.kind === 'added' ? DIM : RED, textDecoration: c.kind === 'added' ? 'none' : 'line-through', maxWidth: 320, wordBreak: 'break-word' }}>
@@ -155,9 +155,9 @@ export default function ContractVersions({ projectId, kind, refreshKey = 0 }: Co
                   href={v.pdfUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7, minHeight: 40, color: GOLD, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7, minHeight: 40, color: 'var(--link)', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
                 >
-                  <FileText size={14} weight="duotone" color={GOLD} /> Open Version {v.version}
+                  <FileText size={14} weight="duotone" color="var(--text-secondary)" /> Open Version {v.version}
                 </a>
               </div>
             )}

@@ -39,7 +39,7 @@ export default function SetupStepper({ steps, active }: { steps: SetupStep[]; ac
         padding: '18px 22px',
         marginBottom: 18,
         background: 'var(--bg-surface)',
-        border: '1px solid var(--brand-primary-25)',
+        border: '1px solid var(--border-default)',
         boxShadow: '0 18px 40px -24px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.06)',
       }}
     >
@@ -74,7 +74,7 @@ export default function SetupStepper({ steps, active }: { steps: SetupStep[]; ac
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: 12.5,
+                    fontSize: 13,
                     fontWeight: 900,
                     transition: 'transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s',
                     transform: isActive ? 'scale(1.12)' : 'scale(1)',
@@ -99,7 +99,7 @@ export default function SetupStepper({ steps, active }: { steps: SetupStep[]; ac
                   <span
                     style={{
                       display: 'block',
-                      fontSize: 13.5,
+                      fontSize: 14,
                       fontWeight: 800,
                       lineHeight: 1.3,
                       color: state === 'todo' ? 'rgba(255,255,255,0.55)' : 'var(--text-primary)',
@@ -107,7 +107,7 @@ export default function SetupStepper({ steps, active }: { steps: SetupStep[]; ac
                   >
                     {s.title}
                   </span>
-                  <span style={{ display: 'block', fontSize: 11.5, lineHeight: 1.45, color: 'var(--c-text-2)', marginTop: 2 }}>
+                  <span style={{ display: 'block', fontSize: 12, lineHeight: 1.45, color: 'var(--c-text-2)', marginTop: 2 }}>
                     {s.hint}
                   </span>
                 </span>

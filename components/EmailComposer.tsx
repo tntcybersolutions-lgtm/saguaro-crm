@@ -176,7 +176,7 @@ export default function EmailComposer({
         </div>
 
         {!online && (
-          <div style={{ background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-25)', borderRadius: 8, padding: '8px 12px', marginBottom: 12, fontSize: 12, color: 'var(--brand-primary)', fontWeight: 600, textAlign: 'center' }}>
+          <div style={{ background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 8, padding: '8px 12px', marginBottom: 12, fontSize: 12, color: 'var(--text-primary)', fontWeight: 600, textAlign: 'center' }}>
             Offline — email will be queued and sent when connected
           </div>
         )}
@@ -193,8 +193,8 @@ export default function EmailComposer({
               style={{ ...inputStyle, flex: 1, marginBottom: 0 }}
             />
             <button onClick={addToRecipient} style={{
-              background: 'var(--brand-primary-12)', border: `1px solid var(--brand-primary-25)`,
-              borderRadius: 8, padding: '0 14px', color: BLUE, fontSize: 13, fontWeight: 700,
+              background: 'var(--bg-surface-2)', border: `1px solid var(--brand-primary-25)`,
+              borderRadius: 8, padding: '0 14px', color: 'var(--text-primary)', fontSize: 13, fontWeight: 700,
               cursor: 'pointer', flexShrink: 0,
             }}>
               Add
@@ -204,8 +204,8 @@ export default function EmailComposer({
             <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
               {to.split(',').map((email, i) => email.trim() && (
                 <span key={i} style={{
-                  background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-25)',
-                  borderRadius: 6, padding: '3px 8px', fontSize: 12, color: GOLD, fontWeight: 600,
+                  background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)',
+                  borderRadius: 6, padding: '3px 8px', fontSize: 12, color: 'var(--text-primary)', fontWeight: 600,
                   display: 'inline-flex', alignItems: 'center', gap: 4,
                 }}>
                   {email.trim()}
@@ -225,7 +225,7 @@ export default function EmailComposer({
         {/* CC toggle */}
         {!showCc ? (
           <button onClick={() => setShowCc(true)} style={{
-            background: 'none', border: 'none', color: BLUE, fontSize: 12, fontWeight: 600,
+            background: 'none', border: 'none', color: 'var(--text-primary)', fontSize: 12, fontWeight: 600,
             cursor: 'pointer', padding: 0, marginBottom: 10, display: 'block',
           }}>
             + Add CC
@@ -269,8 +269,8 @@ export default function EmailComposer({
         {module && itemId && (
           <div style={{
             display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px',
-            background: 'var(--brand-primary-08)', border: `1px solid var(--brand-primary-18)`,
-            borderRadius: 8, marginBottom: 14, fontSize: 12, color: BLUE,
+            background: 'var(--bg-surface-2)', border: `1px solid var(--brand-primary-18)`,
+            borderRadius: 8, marginBottom: 14, fontSize: 12, color: 'var(--text-primary)',
           }}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}>
               <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />

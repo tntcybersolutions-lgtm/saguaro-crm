@@ -119,7 +119,7 @@ export function DonutRatio({
         <div style={{ marginBottom: 12 }}>
           {title && <div style={microLabel}>{title}</div>}
           {subtitle && (
-            <div style={{ fontSize: 12.5, color: CHART.textTertiary, marginTop: 4 }}>{subtitle}</div>
+            <div style={{ fontSize: 13, color: CHART.textTertiary, marginTop: 4 }}>{subtitle}</div>
           )}
         </div>
       )}
@@ -244,7 +244,7 @@ export function DonutRatio({
                   >
                     {formatValue(d.value, format, true)}
                   </span>
-                  <span style={{ fontSize: 12.5, color: CHART.textTertiary, fontVariantNumeric: 'tabular-nums', minWidth: 34, textAlign: 'right' }}>
+                  <span style={{ fontSize: 13, color: CHART.textTertiary, fontVariantNumeric: 'tabular-nums', minWidth: 34, textAlign: 'right' }}>
                     {d.pct.toFixed(d.pct % 1 === 0 ? 0 : 1)}%
                   </span>
                 </span>

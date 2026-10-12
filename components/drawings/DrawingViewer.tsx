@@ -1675,7 +1675,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
     borderRadius: 8, padding: '7px 9px',
     color: active ? ACCENT : DIM,
     cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
-    minWidth: 46, fontSize: 10, fontWeight: active ? 700 : 500, letterSpacing: 0.2,
+    minWidth: 46, fontSize: 12, fontWeight: active ? 700 : 500, letterSpacing: 0.2,
   });
   const iconBtn: React.CSSProperties = {
     background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 8,
@@ -1705,7 +1705,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
             {/* live-session LED (radio pattern — quiet, no toasts) */}
             <span
               title={rtLive ? 'Live — teammate markups land instantly.' : 'Live sync offline — refreshing every 15s.'}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 9, fontWeight: 800, letterSpacing: 0.8, color: rtLive ? GREEN : 'rgba(255,255,255,0.35)', padding: '0 4px' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 800, letterSpacing: 0.8, color: rtLive ? GREEN : 'rgba(255,255,255,0.35)', padding: '0 4px' }}
             >
               <span style={{ width: 7, height: 7, borderRadius: '50%', background: rtLive ? GREEN : 'rgba(255,255,255,0.25)', boxShadow: rtLive ? '0 0 6px rgba(74,222,128,0.8)' : 'none' }} />
               {rtLive ? 'LIVE' : 'OFFLINE'}
@@ -1715,14 +1715,14 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
               <span
                 key={`${n}:${i}`}
                 title={`${n} is viewing this sheet`}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(11,14,19,0.6)', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '3px 9px', fontSize: 10, fontWeight: 700, color: DIM, whiteSpace: 'nowrap' }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(11,14,19,0.6)', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '3px 9px', fontSize: 12, fontWeight: 700, color: DIM, whiteSpace: 'nowrap' }}
               >
                 <span style={{ width: 5, height: 5, borderRadius: '50%', background: GREEN }} />
                 {initialsOf(n)} · viewing
               </span>
             ))}
             {viewers.length > 4 && (
-              <span title={viewers.slice(4).join(', ')} style={{ fontSize: 10, fontWeight: 800, color: DIM, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '3px 8px' }}>
+              <span title={viewers.slice(4).join(', ')} style={{ fontSize: 12, fontWeight: 800, color: DIM, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '3px 8px' }}>
                 +{viewers.length - 4}
               </span>
             )}
@@ -1740,7 +1740,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
                   ? 'Draw a measure markup on a calibrated sheet first.'
                   : 'Promote this sheet’s measurements into the measured takeoff.'}
               style={{
-                ...iconBtn, gap: 6, display: 'flex', fontSize: 11, fontWeight: 700,
+                ...iconBtn, gap: 6, display: 'flex', fontSize: 12, fontWeight: 700,
                 color: online && promotableReady ? ACCENT : 'rgba(255,255,255,0.25)',
                 borderColor: online && promotableReady ? ACCENT_25 : BORDER,
                 cursor: online && promotableReady ? 'pointer' : 'default',
@@ -1755,7 +1755,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
                 ? 'Create a read-only review link for outside reviewers.'
                 : 'Offline — review links need a connection.'}
               style={{
-                ...iconBtn, gap: 6, display: 'flex', fontSize: 11, fontWeight: 700,
+                ...iconBtn, gap: 6, display: 'flex', fontSize: 12, fontWeight: 700,
                 color: online ? ACCENT : 'rgba(255,255,255,0.25)',
                 borderColor: online ? ACCENT_25 : BORDER,
                 cursor: online ? 'pointer' : 'default',
@@ -1778,14 +1778,14 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
                   border: `1.5px solid ${stampChoice === s.name ? s.color : BORDER}`,
                   boxShadow: stampChoice === s.name ? `0 0 0 1px ${s.color} inset` : 'none',
                   borderRadius: 6, padding: '7px 12px', color: s.color,
-                  fontSize: 11, fontWeight: 800, letterSpacing: 1, cursor: 'pointer',
+                  fontSize: 12, fontWeight: 800, letterSpacing: 1, cursor: 'pointer',
                 }}
               >
                 {s.name}
               </button>
             ))}
             {stampChoice === 'PUNCH' && (
-              <span style={{ fontSize: 11, color: DIM, alignSelf: 'center' }}>
+              <span style={{ fontSize: 12, color: DIM, alignSelf: 'center' }}>
                 PUNCH creates a punch-list item + a pin at the click point.
               </span>
             )}
@@ -1803,7 +1803,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
                 cursor: 'pointer', padding: 0,
               }} />
             ))}
-            <span style={{ fontSize: 11, color: DIM, marginLeft: 6 }}>Width</span>
+            <span style={{ fontSize: 12, color: DIM, marginLeft: 6 }}>Width</span>
             <input type="range" min={1} max={10} value={inkWidth} onChange={(e) => setInkWidth(Number(e.target.value))} style={{ width: 80, accentColor: 'var(--brand-primary)' }} />
             {tool === 'measure' && (
               <div style={{ display: 'inline-flex', border: `1px solid ${BORDER}`, borderRadius: 8, overflow: 'hidden', marginLeft: 10 }}>
@@ -1818,7 +1818,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
                       borderLeft: i > 0 ? `1px solid ${BORDER}` : 'none',
                       padding: '6px 12px',
                       color: measureMode === mm.m ? ACCENT : DIM,
-                      fontSize: 11, fontWeight: measureMode === mm.m ? 800 : 500, letterSpacing: 0.3,
+                      fontSize: 12, fontWeight: measureMode === mm.m ? 800 : 500, letterSpacing: 0.3,
                       cursor: 'pointer',
                     }}
                   >
@@ -1830,11 +1830,11 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
             {tool === 'measure' && (
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto' }}>
                 {ppf > 0 ? (
-                  <span style={{ fontSize: 11, fontWeight: 700, color: GREEN }}>Calibrated · {ppf.toFixed(1)} px/ft</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: GREEN }}>Calibrated · {ppf.toFixed(1)} px/ft</span>
                 ) : (
-                  <span style={{ fontSize: 11, fontWeight: 700, color: AMBER }}>Uncalibrated — reads in px</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: AMBER }}>Uncalibrated — reads in px</span>
                 )}
-                <button onClick={() => { setTool('calibrate'); setCalibPts([]); setMsg('Click the two ends of a known dimension.'); }} style={{ ...iconBtn, gap: 6, color: ACCENT, borderColor: ACCENT_25, display: 'flex', fontSize: 11, fontWeight: 700 }}>
+                <button onClick={() => { setTool('calibrate'); setCalibPts([]); setMsg('Click the two ends of a known dimension.'); }} style={{ ...iconBtn, gap: 6, color: 'var(--text-primary)', borderColor: ACCENT_25, display: 'flex', fontSize: 12, fontWeight: 700 }}>
                   <G g="calib" s={14} /> Calibrate
                 </button>
               </div>
@@ -1842,7 +1842,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
           </div>
         )}
         {tool === 'calibrate' && (
-          <div style={{ marginTop: 8, fontSize: 12, color: ACCENT, fontWeight: 600 }}>
+          <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-primary)', fontWeight: 600 }}>
             Calibrating this sheet: click both ends of a known dimension, then enter the real distance.
           </div>
         )}
@@ -1931,7 +1931,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
             <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {authorOf(hoverMarkup)}
             </p>
-            <p style={{ margin: '1px 0 0', fontSize: 11, color: DIM }}>
+            <p style={{ margin: '1px 0 0', fontSize: 12, color: DIM }}>
               {hoverMarkup.markup_type}{hoverMarkup._queued ? ' · queued' : ''} · {relTime(hoverMarkup.created_at)}
             </p>
           </div>
@@ -1946,7 +1946,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
 
         {/* zoom readout */}
         {imgReady && (
-          <div style={{ position: 'absolute', right: 10, bottom: 10, background: 'rgba(20,20,22,0.85)', border: `1px solid ${BORDER}`, borderRadius: 7, padding: '3px 9px', fontSize: 11, fontWeight: 700, color: DIM, zIndex: 15, pointerEvents: 'none' }}>
+          <div style={{ position: 'absolute', right: 10, bottom: 10, background: 'rgba(20,20,22,0.85)', border: `1px solid ${BORDER}`, borderRadius: 7, padding: '3px 9px', fontSize: 12, fontWeight: 700, color: DIM, zIndex: 15, pointerEvents: 'none' }}>
             {Math.round(view.scale * 100)}%
           </div>
         )}
@@ -1955,7 +1955,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
       {/* author layers */}
       {authors.length > 0 && (
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 4 }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, color: DIM }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: DIM }}>
             <G g="layers" s={13} /> Layers
           </span>
           {authors.map(([name, count]) => {
@@ -1976,7 +1976,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
               >
                 <G g={hidden ? 'eyeOff' : 'eye'} s={13} />
                 {name === me.name ? `${name} (you)` : name}
-                <span style={{ fontSize: 10, color: DIM }}>{count}</span>
+                <span style={{ fontSize: 12, color: DIM }}>{count}</span>
               </button>
             );
           })}
@@ -2034,8 +2034,8 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
           <button onClick={() => setSelectedPin(null)} style={{ ...iconBtn, position: 'absolute', top: 10, right: 10, border: 'none' }}><G g="close" s={15} /></button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, paddingRight: 32 }}>
             <div style={{ width: 10, height: 10, borderRadius: '50%', background: CATEGORY_COLORS[selectedPin.category || ''] || DIM }} />
-            <span style={{ fontSize: 11, fontWeight: 700, color: CATEGORY_COLORS[selectedPin.category || ''] || DIM }}>{selectedPin.category || selectedPin.pin_type || 'Pin'}</span>
-            <span style={{ fontSize: 11, color: DIM, marginLeft: 'auto' }}>{relTime(selectedPin.created_at)}</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: CATEGORY_COLORS[selectedPin.category || ''] || DIM }}>{selectedPin.category || selectedPin.pin_type || 'Pin'}</span>
+            <span style={{ fontSize: 12, color: DIM, marginLeft: 'auto' }}>{relTime(selectedPin.created_at)}</span>
           </div>
           <p style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: TEXT }}>{selectedPin.title}</p>
           {(selectedPin.note || selectedPin.notes) && <p style={{ margin: 0, fontSize: 13, color: DIM, lineHeight: 1.4 }}>{selectedPin.note || selectedPin.notes}</p>}
@@ -2104,7 +2104,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
       {punchModal && (
         <div style={{ ...panelStyle, border: `1.5px solid ${CATEGORY_COLORS.Punch}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-            <span style={{ background: 'rgba(248,113,113,0.14)', border: '1px solid rgba(248,113,113,0.4)', borderRadius: 5, padding: '3px 9px', fontSize: 11, fontWeight: 800, letterSpacing: 1, color: CATEGORY_COLORS.Punch }}>PUNCH</span>
+            <span style={{ background: 'rgba(248,113,113,0.14)', border: '1px solid rgba(248,113,113,0.4)', borderRadius: 5, padding: '3px 9px', fontSize: 12, fontWeight: 800, letterSpacing: 1, color: CATEGORY_COLORS.Punch }}>PUNCH</span>
             <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: TEXT }}>New Punch Item from This Drawing</p>
           </div>
           <label style={{ display: 'block', fontSize: 12, color: DIM, marginBottom: 4 }}>Title *</label>
@@ -2181,7 +2181,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
                     onChange={(e) => setPromoteModal((rows) => rows ? rows.map((x, i) => (i === idx ? { ...x, include: e.target.checked } : x)) : rows)}
                     style={{ accentColor: 'var(--brand-primary)', width: 16, height: 16, flexShrink: 0 }}
                   />
-                  <span style={{ fontSize: 10, fontWeight: 800, color: DIM, border: `1px solid ${BORDER}`, borderRadius: 5, padding: '2px 7px', flexShrink: 0, textTransform: 'capitalize' }}>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: DIM, border: `1px solid ${BORDER}`, borderRadius: 5, padding: '2px 7px', flexShrink: 0, textTransform: 'capitalize' }}>
                     {r.kind}
                   </span>
                   <span style={{ fontSize: 12, fontWeight: 700, color: calibrated ? GREEN : AMBER, whiteSpace: 'nowrap', flexShrink: 0, minWidth: 76 }}>
@@ -2205,7 +2205,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
                       </select>
                     </>
                   ) : (
-                    <span style={{ fontSize: 11, fontWeight: 700, color: AMBER }}>Calibrate First</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: AMBER }}>Calibrate First</span>
                   )}
                 </div>
               );
@@ -2263,7 +2263,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
               </span>
               <button
                 onClick={() => copyText(shareCreated.url, 'created')}
-                style={{ background: ACCENT_12, border: `1px solid ${ACCENT_25}`, borderRadius: 8, padding: '5px 11px', color: copiedKey === 'created' ? GREEN : ACCENT, fontSize: 11, fontWeight: 700, cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}
+                style={{ background: ACCENT_12, border: `1px solid ${ACCENT_25}`, borderRadius: 8, padding: '5px 11px', color: copiedKey === 'created' ? GREEN : ACCENT, fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}
               >
                 {copiedKey === 'created' ? 'Copied' : 'Copy'}
               </button>
@@ -2271,7 +2271,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
           )}
           {shareLinks.length > 0 && (
             <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${BORDER}` }}>
-              <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: DIM }}>Active Links</p>
+              <p style={{ margin: '0 0 6px', fontSize: 12, fontWeight: 700, color: DIM }}>Active Links</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {shareLinks.map((l) => {
                   const url = reviewUrl(l);
@@ -2281,14 +2281,14 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
                         <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {l.label || 'Review Link'}
                         </p>
-                        <p style={{ margin: '1px 0 0', fontSize: 11, color: DIM, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <p style={{ margin: '1px 0 0', fontSize: 12, color: DIM, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {l.created_at ? `created ${relTime(l.created_at)}` : 'active'}{l.expires_at ? ` · expires ${relTime(l.expires_at)}` : ''}
                         </p>
                       </div>
                       {url && (
                         <button
                           onClick={() => copyText(url, l.id)}
-                          style={{ background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '5px 11px', color: copiedKey === l.id ? GREEN : DIM, fontSize: 11, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}
+                          style={{ background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '5px 11px', color: copiedKey === l.id ? GREEN : DIM, fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}
                         >
                           {copiedKey === l.id ? 'Copied' : 'Copy'}
                         </button>
@@ -2296,7 +2296,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
                       <button
                         onClick={() => revokeShareLink(l.id)}
                         disabled={revokingId === l.id}
-                        style={{ background: 'transparent', border: '1px solid rgba(248,113,113,0.35)', borderRadius: 8, padding: '5px 11px', color: RED, fontSize: 11, fontWeight: 700, cursor: revokingId === l.id ? 'wait' : 'pointer', flexShrink: 0 }}
+                        style={{ background: 'transparent', border: '1px solid rgba(248,113,113,0.35)', borderRadius: 8, padding: '5px 11px', color: RED, fontSize: 12, fontWeight: 700, cursor: revokingId === l.id ? 'wait' : 'pointer', flexShrink: 0 }}
                       >
                         {revokingId === l.id ? '…' : 'Revoke'}
                       </button>

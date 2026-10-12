@@ -201,8 +201,8 @@ export default function SageSettings({ onClose }: { onClose: () => void }) {
   }, []);
 
   const card: React.CSSProperties = { background: DARK, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '12px 14px' };
-  const label: React.CSSProperties = { fontSize: 10.5, color: DIM, fontWeight: 700 };
-  const btn: React.CSSProperties = { background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-35)', color: GOLD, borderRadius: 8, padding: '6px 12px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' };
+  const label: React.CSSProperties = { fontSize: 12, color: DIM, fontWeight: 700 };
+  const btn: React.CSSProperties = { background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 700, cursor: 'pointer' };
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={onClose}>
@@ -212,7 +212,7 @@ export default function SageSettings({ onClose }: { onClose: () => void }) {
           <div style={{ width: 30, height: 30, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: 'var(--on-brand)', fontFamily: 'Georgia, serif' }}>S</div>
           <div style={{ flex: 1 }}>
             <div style={{ color: TEXT, fontWeight: 700, fontSize: 15 }}>Sage Settings</div>
-            <div style={{ color: DIM, fontSize: 11.5 }}>Everything Sage knows about how to work with you — visible, editable, revocable.</div>
+            <div style={{ color: DIM, fontSize: 12 }}>Everything Sage knows about how to work with you — visible, editable, revocable.</div>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: DIM, fontSize: 18, cursor: 'pointer' }}>✕</button>
         </div>
@@ -225,14 +225,14 @@ export default function SageSettings({ onClose }: { onClose: () => void }) {
         </div>
 
         <div style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {note && <div style={{ ...card, borderColor: 'var(--brand-primary-35)', color: GOLD, fontSize: 12.5 }}>{note}</div>}
+          {note && <div style={{ ...card, borderColor: 'var(--border-default)', color: 'var(--text-primary)', fontSize: 13 }}>{note}</div>}
 
           {/* ── STYLE PROFILE ─────────────────────────────────────────── */}
           {tab === 'style' && (
             <>
               <div style={{ ...card, display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ color: TEXT, fontWeight: 700, fontSize: 13.5 }}>Style Mirroring</div>
+                  <div style={{ color: TEXT, fontWeight: 700, fontSize: 14 }}>Style Mirroring</div>
                   <div style={{ color: DIM, fontSize: 12, lineHeight: 1.5, marginTop: 2 }}>
                     Sage learns how you write from your real messages in Saguaro and mirrors your tone. The profile below is the exact text Sage is given — nothing hidden. Turn it off and Sage uses a neutral professional default.
                   </div>
@@ -249,7 +249,7 @@ export default function SageSettings({ onClose }: { onClose: () => void }) {
                   <div style={card}>
                     <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
                       <span style={label}>Presets</span>
-                      <span style={{ marginLeft: 'auto', color: DIM, fontSize: 11 }}>one click sets all six dimensions</span>
+                      <span style={{ marginLeft: 'auto', color: DIM, fontSize: 12 }}>one click sets all six dimensions</span>
                     </div>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       {STYLE_PRESETS.map((p) => {
@@ -271,7 +271,7 @@ export default function SageSettings({ onClose }: { onClose: () => void }) {
                             }}
                           >
                             <div>{p.name}</div>
-                            <div style={{ color: DIM, fontSize: 10.5, fontWeight: 400, marginTop: 2 }}>{p.hint}</div>
+                            <div style={{ color: DIM, fontSize: 12, fontWeight: 400, marginTop: 2 }}>{p.hint}</div>
                           </button>
                         );
                       })}
@@ -281,7 +281,7 @@ export default function SageSettings({ onClose }: { onClose: () => void }) {
                   <div style={card}>
                     <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
                       <span style={label}>Inferred Dimensions</span>
-                      <span style={{ marginLeft: 'auto', color: DIM, fontSize: 11 }}>
+                      <span style={{ marginLeft: 'auto', color: DIM, fontSize: 12 }}>
                         from {profile.sample_count} message{profile.sample_count === 1 ? '' : 's'}
                         {profile.sources?.length ? ` · ${profile.sources.join(', ')}` : ''}
                         {profile.user_edited ? ' · edited by you' : ''}
@@ -293,7 +293,7 @@ export default function SageSettings({ onClose }: { onClose: () => void }) {
                         return (
                           <div key={String(key)}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: DIM, marginBottom: 3 }}>
-                              <span>{l}</span><span style={{ color: GOLD, fontWeight: 700 }}>{v}/10</span>
+                              <span>{l}</span><span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{v}/10</span>
                             </div>
                             <input
                               type="range" min={1} max={10} value={v}
@@ -322,10 +322,10 @@ export default function SageSettings({ onClose }: { onClose: () => void }) {
                       </div>
                     </div>
                     {editingText == null ? (
-                      <pre style={{ margin: 0, whiteSpace: 'pre-wrap', color: TEXT, fontSize: 12.5, lineHeight: 1.6, fontFamily: 'inherit' }}>{profile.profile_text || 'No profile text yet.'}</pre>
+                      <pre style={{ margin: 0, whiteSpace: 'pre-wrap', color: TEXT, fontSize: 13, lineHeight: 1.6, fontFamily: 'inherit' }}>{profile.profile_text || 'No profile text yet.'}</pre>
                     ) : (
                       <textarea value={editingText} onChange={(e) => setEditingText(e.target.value)} rows={8}
-                        style={{ width: '100%', background: RAISED, color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 8, padding: 10, fontSize: 12.5, fontFamily: 'inherit', lineHeight: 1.5 }} />
+                        style={{ width: '100%', background: RAISED, color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 8, padding: 10, fontSize: 13, fontFamily: 'inherit', lineHeight: 1.5 }} />
                     )}
                   </div>
                 </>
@@ -338,7 +338,7 @@ export default function SageSettings({ onClose }: { onClose: () => void }) {
           {tab === 'rules' && (
             <>
               <div style={{ ...card }}>
-                <div style={{ color: TEXT, fontWeight: 700, fontSize: 13.5 }}>Consent-First Automation</div>
+                <div style={{ color: TEXT, fontWeight: 700, fontSize: 14 }}>Consent-First Automation</div>
                 <div style={{ color: DIM, fontSize: 12, lineHeight: 1.5, marginTop: 2 }}>
                   Sage only automates under rules you explicitly approve here. Every rule is visible and revocable, and every automated action is written to the activity trail. No rule — no automation; Sage asks in chat instead.
                 </div>
@@ -348,7 +348,7 @@ export default function SageSettings({ onClose }: { onClose: () => void }) {
                   <button
                     onClick={runRulesNow}
                     disabled={runningRules}
-                    style={{ ...btn, color: GOLD, borderColor: 'rgba(212,175,55,0.45)', background: 'rgba(212,175,55,0.10)', opacity: runningRules ? 0.6 : 1 }}
+                    style={{ ...btn, color: 'var(--text-primary)', borderColor: 'rgba(212,175,55,0.45)', background: 'rgba(212,175,55,0.10)', opacity: runningRules ? 0.6 : 1 }}
                   >
                     {runningRules ? 'Running…' : 'Run Rules Now'}
                   </button>
@@ -361,7 +361,7 @@ export default function SageSettings({ onClose }: { onClose: () => void }) {
                 <div key={r.id} style={{ ...card, display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ color: TEXT, fontWeight: 700, fontSize: 13 }}>{r.title}</div>
-                    <div style={{ color: DIM, fontSize: 11.5, marginTop: 2 }}>
+                    <div style={{ color: DIM, fontSize: 12, marginTop: 2 }}>
                       trigger: {r.trigger_type} → action: {r.action_type}
                       {r.description ? ` — ${r.description}` : ''}
                     </div>
@@ -383,10 +383,10 @@ export default function SageSettings({ onClose }: { onClose: () => void }) {
                 <div style={{ color: DIM, fontSize: 13 }}>No activity yet.</div>
               ) : activity.map((a) => (
                 <div key={a.id} style={{ ...card, display: 'flex', gap: 10, alignItems: 'baseline' }}>
-                  <span style={{ fontSize: 10.5, fontWeight: 800, color: a.actor === 'sage' ? GOLD : GREEN, flexShrink: 0, textTransform: 'capitalize' }}>{a.actor}</span>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: a.actor === 'sage' ? GOLD : GREEN, flexShrink: 0, textTransform: 'capitalize' }}>{a.actor}</span>
                   <div style={{ flex: 1 }}>
-                    <div style={{ color: TEXT, fontSize: 12.5, lineHeight: 1.5 }}>{a.summary}</div>
-                    <div style={{ color: DIM, fontSize: 10.5, marginTop: 2 }}>{a.action_type} · {new Date(a.created_at).toLocaleString()}</div>
+                    <div style={{ color: TEXT, fontSize: 13, lineHeight: 1.5 }}>{a.summary}</div>
+                    <div style={{ color: DIM, fontSize: 12, marginTop: 2 }}>{a.action_type} · {new Date(a.created_at).toLocaleString()}</div>
                   </div>
                 </div>
               ))}
@@ -404,10 +404,10 @@ export default function SageSettings({ onClose }: { onClose: () => void }) {
                     <span style={label}>From Your Real Bid History</span>
                     <div style={{ color: TEXT, fontSize: 13, marginTop: 6 }}>
                       {bids.totalBids} bids on file · {bids.decidedBids} decided · {bids.wonBids} won
-                      {bids.overallWinRate != null && <span style={{ color: GOLD, fontWeight: 700 }}> · {bids.overallWinRate}% win rate</span>}
+                      {bids.overallWinRate != null && <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}> · {bids.overallWinRate}% win rate</span>}
                     </div>
                     {!bids.enoughHistory && (
-                      <div style={{ color: DIM, fontSize: 12.5, marginTop: 6, lineHeight: 1.5 }}>
+                      <div style={{ color: DIM, fontSize: 13, marginTop: 6, lineHeight: 1.5 }}>
                         Not enough history yet — fewer than 5 decided bids. Sage won&apos;t pretend to see a trend in this little data; win-rate analysis unlocks as your history grows.
                       </div>
                     )}
@@ -417,7 +417,7 @@ export default function SageSettings({ onClose }: { onClose: () => void }) {
                       <span style={label}>Win Rate by Markup Band</span>
                       <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
                         {bids.bands.filter((b) => b.n > 0).map((b) => (
-                          <div key={b.band} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: 12.5 }}>
+                          <div key={b.band} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: 13 }}>
                             <span style={{ color: TEXT }}>{b.band}</span>
                             <span style={{ textAlign: 'right' }}>
                               <span style={{ color: b.winRate != null ? GOLD : DIM, fontWeight: b.winRate != null ? 700 : 400 }}>
@@ -429,12 +429,12 @@ export default function SageSettings({ onClose }: { onClose: () => void }) {
                             </span>
                           </div>
                         ))}
-                        {bids.bands.every((b) => b.n === 0) && <div style={{ color: DIM, fontSize: 12.5 }}>No decided bids carry cost/margin data to derive a markup band.</div>}
+                        {bids.bands.every((b) => b.n === 0) && <div style={{ color: DIM, fontSize: 13 }}>No decided bids carry cost/margin data to derive a markup band.</div>}
                         {bids.bands.some((b) => b.expectedValue != null) && (
-                          <div style={{ color: DIM, fontSize: 11, marginTop: 4 }}>Expected margin = win rate × band-midpoint markup. Only shown for bands with 5+ decided bids.</div>
+                          <div style={{ color: DIM, fontSize: 12, marginTop: 4 }}>Expected margin = win rate × band-midpoint markup. Only shown for bands with 5+ decided bids.</div>
                         )}
                       </div>
-                      {bids.markupAdvice && <div style={{ color: DIM, fontSize: 12.5, marginTop: 10, lineHeight: 1.55, borderTop: `1px solid ${BORDER}`, paddingTop: 10 }}>{bids.markupAdvice}</div>}
+                      {bids.markupAdvice && <div style={{ color: DIM, fontSize: 13, marginTop: 10, lineHeight: 1.55, borderTop: `1px solid ${BORDER}`, paddingTop: 10 }}>{bids.markupAdvice}</div>}
                     </div>
                   )}
                   {bids.workflowSuggestions.length > 0 && (
@@ -442,7 +442,7 @@ export default function SageSettings({ onClose }: { onClose: () => void }) {
                       <span style={label}>Workflow Suggestions</span>
                       {bids.workflowSuggestions.map((s, i) => (
                         <div key={i} style={{ marginTop: 8 }}>
-                          <div style={{ color: TEXT, fontSize: 12.5, fontWeight: 700 }}>{s.suggestion}</div>
+                          <div style={{ color: TEXT, fontSize: 13, fontWeight: 700 }}>{s.suggestion}</div>
                           <div style={{ color: DIM, fontSize: 12, lineHeight: 1.5, marginTop: 2 }}>Why: {s.why}</div>
                         </div>
                       ))}

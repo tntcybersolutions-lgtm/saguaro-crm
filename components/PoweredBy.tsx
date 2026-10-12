@@ -28,7 +28,7 @@ export default function PoweredBy({ style }: { style?: React.CSSProperties }) {
     <div
       style={{
         display: 'flex', justifyContent: 'center', alignItems: 'center',
-        padding: '18px 16px 22px', fontSize: 11, letterSpacing: '0.02em',
+        padding: '18px 16px 22px', fontSize: 12, letterSpacing: '0.02em',
         color: 'var(--c-text-2)',
         ...style,
       }}

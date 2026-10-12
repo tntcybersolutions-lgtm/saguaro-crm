@@ -203,11 +203,11 @@ export default function PhotoEditor({ src, photoId, onSave, onDelete, onClose }:
 
         {/* Brightness/Contrast */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ color: DIM, fontSize: 11 }}>☀️</span>
+          <span style={{ color: DIM, fontSize: 12 }}>☀️</span>
           <input type="range" min={50} max={150} value={brightness} onChange={e => setBrightness(Number(e.target.value))} style={{ width: 80, accentColor: GOLD }} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ color: DIM, fontSize: 11 }}>◐</span>
+          <span style={{ color: DIM, fontSize: 12 }}>◐</span>
           <input type="range" min={50} max={150} value={contrast} onChange={e => setContrast(Number(e.target.value))} style={{ width: 80, accentColor: GOLD }} />
         </div>
 

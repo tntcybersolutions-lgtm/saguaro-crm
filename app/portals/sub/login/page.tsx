@@ -62,7 +62,7 @@ export default function SubPortalLogin() {
         <img src="/logo-full.jpg" alt="Saguaro" style={{ height: 38, borderRadius: 4 }} />
         <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
           <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: '-0.01em', background: `linear-gradient(90deg,${GOLD},var(--brand-primary-strong))`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Saguaro</span>
-          <span style={{ fontSize: 8, color: DIM, letterSpacing: '-0.01em', fontWeight: 600 }}>Control Systems</span>
+          <span style={{ fontSize: 12, color: DIM, letterSpacing: '-0.01em', fontWeight: 600 }}>Control Systems</span>
         </span>
       </Link>
 
@@ -78,7 +78,7 @@ export default function SubPortalLogin() {
       }}>
         {/* Icon */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
-          <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--brand-primary-12)', border: '1.5px solid var(--brand-primary-35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--bg-surface-2)', border: '1.5px solid var(--brand-primary-35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg viewBox="0 0 24 24" fill="none" stroke={BLUE} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
               <circle cx="9" cy="7" r="4"/>
@@ -103,7 +103,7 @@ export default function SubPortalLogin() {
               </svg>
             </div>
             <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 6 }}>Check your email</div>
-            <div style={{ fontSize: 13.5, color: DIM, lineHeight: 1.55, marginBottom: 16 }}>
+            <div style={{ fontSize: 14, color: DIM, lineHeight: 1.55, marginBottom: 16 }}>
               If <strong style={{ color: TEXT }}>{sentTo}</strong> has portal access, we just sent the link to it. Open it on this phone to go straight to your portal.
             </div>
             <button type="button" onClick={() => { setSentTo(''); setError(''); }}
@@ -168,7 +168,7 @@ export default function SubPortalLogin() {
 
             {/* Have a direct link */}
             <div style={{ marginTop: 16, padding: '12px 14px', background: '#1c1c1e', border: `1px solid ${BORDER}`, borderRadius: 8 }}>
-              <div style={{ fontSize: 11, color: DIM, marginBottom: 6, fontWeight: 600 }}>Have a Direct Portal Link?</div>
+              <div style={{ fontSize: 12, color: DIM, marginBottom: 6, fontWeight: 600 }}>Have a Direct Portal Link?</div>
               <div style={{ fontSize: 12, color: DIM, lineHeight: 1.5 }}>
                 If your GC sent you a direct URL, click the link in that email instead of entering your email here.
               </div>

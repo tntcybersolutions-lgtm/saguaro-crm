@@ -35,8 +35,8 @@ const DIM = 'var(--text-secondary)';
 const GREEN = '#4ADE80';
 const RED = '#F87171';
 const AMBER = '#FBBF24';
-const BLUE = 'var(--brand-primary)';
-const PURPLE = '#FBBF24';
+const BLUE = 'var(--info)';
+const PURPLE = 'var(--info)';
 
 /* ── Helpers ──────────────────────────────────────────────────────── */
 const fmt = (n: number) =>
@@ -822,7 +822,7 @@ export default function ClientPortalPage() {
 
   const btnOutline: React.CSSProperties = {
     background: 'transparent',
-    color: GOLD,
+    color: 'var(--text-primary)',
     border: `1px solid ${GOLD}`,
     borderRadius: 8,
     padding: '10px 20px',
@@ -886,7 +886,7 @@ export default function ClientPortalPage() {
     color,
     padding: '4px 10px',
     borderRadius: 20,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: 700,
     textTransform: 'capitalize' as const,
   });
@@ -918,7 +918,7 @@ export default function ClientPortalPage() {
     return (
       <div style={{ minHeight: '100vh', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui, sans-serif' }}>
         <div style={{ textAlign: 'center', maxWidth: 420, padding: 32 }}>
-          <div style={{ marginBottom: 16 }}><Lock size={52} weight="duotone" color={GOLD} /></div>
+          <div style={{ marginBottom: 16 }}><Lock size={52} weight="duotone" color="var(--text-secondary)" /></div>
           <div style={{ fontSize: 22, fontWeight: 800, color: TEXT, marginBottom: 8 }}>Portal Unavailable</div>
           <div style={{ color: DIM, fontSize: 14, lineHeight: 1.6 }}>
             {dashError || 'This portal link is invalid or has expired. Please contact your contractor for a new link.'}
@@ -982,9 +982,9 @@ export default function ClientPortalPage() {
         </svg>
         <div style={{ marginTop: -110, textAlign: 'center', position: 'relative' }}>
           <div style={{ fontSize: 28, fontWeight: 800, color: TEXT }}>{spentPct}%</div>
-          <div style={{ fontSize: 11, color: DIM }}>Billed</div>
+          <div style={{ fontSize: 12, color: DIM }}>Billed</div>
         </div>
-        <div style={{ display: 'flex', gap: 16, marginTop: 48, fontSize: 11 }}>
+        <div style={{ display: 'flex', gap: 16, marginTop: 48, fontSize: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <div style={{ width: 10, height: 10, borderRadius: '50%', background: BORDER }} />
             <span style={{ color: DIM }}>Original</span>
@@ -1010,7 +1010,7 @@ export default function ClientPortalPage() {
       {/* Welcome Banner */}
       <div style={{ ...cardStyle, position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'relative' }}>
-          <div style={{ fontSize: 12, color: GOLD, fontWeight: 700, marginBottom: 6 }}>Welcome to Your Project</div>
+          <div style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 700, marginBottom: 6 }}>Welcome to Your Project</div>
           <div style={{ fontSize: 28, fontWeight: 800, color: TEXT, marginBottom: 4 }}>{project.name}</div>
           <div style={{ fontSize: 14, color: DIM, marginBottom: 16 }}>
             {project.address}{project.city ? `, ${project.city}` : ''}{project.state ? `, ${project.state}` : ''}
@@ -1019,10 +1019,10 @@ export default function ClientPortalPage() {
           <div style={{ marginTop: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
               <span style={{ fontSize: 13, color: DIM }}>Overall Progress</span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: GOLD }}>{project.percent_complete}%</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{project.percent_complete}%</span>
             </div>
             <div style={{ height: 8, background: BG, borderRadius: 4, overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${project.percent_complete}%`, background: `linear-gradient(90deg, ${GOLD}, var(--brand-primary-strong))`, borderRadius: 4, transition: 'width 1s ease' }} />
+              <div style={{ height: '100%', width: `${project.percent_complete}%`, background: 'var(--info)', borderRadius: 4, transition: 'width 1s ease' }} />
             </div>
           </div>
         </div>
@@ -1031,15 +1031,15 @@ export default function ClientPortalPage() {
       {/* Quick Stats Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>
         {[
-          { label: 'Days Remaining', value: daysRemaining == null ? '—' : String(daysRemaining), icon: CalendarBlank, color: BLUE },
-          { label: 'Total Budget', value: fmt(project.total_budget), icon: Money, color: GREEN },
-          { label: 'Payments Made', value: fmt(project.payments_made), icon: CheckCircle, color: PURPLE },
-          { label: 'Open Items', value: project.open_items.toString(), icon: ClipboardText, color: AMBER },
+          { label: 'Days Remaining', value: daysRemaining == null ? '—' : String(daysRemaining), icon: CalendarBlank },
+          { label: 'Total Budget', value: fmt(project.total_budget), icon: Money },
+          { label: 'Payments Made', value: fmt(project.payments_made), icon: CheckCircle },
+          { label: 'Open Items', value: project.open_items.toString(), icon: ClipboardText },
         ].map((stat) => (
           <div key={stat.label} style={{ ...cardStyle, padding: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <stat.icon size={22} weight="duotone" color={stat.color} />
-              <span style={{ fontSize: 10, fontWeight: 700, color: stat.color }}>{stat.label}</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: DIM }}>{stat.label}</span>
+              <stat.icon size={20} weight="duotone" color="var(--text-tertiary)" />
             </div>
             <div style={{ fontSize: 24, fontWeight: 800, color: TEXT }}>{stat.value}</div>
           </div>
@@ -1054,16 +1054,16 @@ export default function ClientPortalPage() {
           <DonutChart original={project.original_contract} committed={project.committed_cost} spent={project.spent_to_date} />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginTop: 20, textAlign: 'center' }}>
             <div>
-              <div style={{ fontSize: 11, color: DIM }}>Original</div>
+              <div style={{ fontSize: 12, color: DIM }}>Original</div>
               <div style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{fmt(project.original_contract)}</div>
             </div>
             <div>
-              <div style={{ fontSize: 11, color: DIM }}>Current</div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: AMBER }}>{fmt(project.committed_cost)}</div>
+              <div style={{ fontSize: 12, color: DIM }}>Current</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{fmt(project.committed_cost)}</div>
             </div>
             <div>
-              <div style={{ fontSize: 11, color: DIM }}>Billed</div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: GREEN }}>{fmt(project.spent_to_date)}</div>
+              <div style={{ fontSize: 12, color: DIM }}>Billed</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{fmt(project.spent_to_date)}</div>
             </div>
           </div>
         </div>
@@ -1075,7 +1075,7 @@ export default function ClientPortalPage() {
             <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 12 }}>Job Site Weather</div>
             {weather ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <div>{React.createElement(weatherIcon(weather.conditions || ''), { size: 44, weight: 'duotone', color: GOLD })}</div>
+                <div>{React.createElement(weatherIcon(weather.conditions || ''), { size: 44, weight: 'duotone', color: 'var(--text-primary)' })}</div>
                 <div>
                   {weather.high && <div style={{ fontSize: 32, fontWeight: 800, color: TEXT }}>{weather.high}°F</div>}
                   <div style={{ fontSize: 14, color: DIM }}>{weather.conditions}</div>
@@ -1101,17 +1101,17 @@ export default function ClientPortalPage() {
               </button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, textAlign: 'center' }}>
-              <div style={{ background: `${AMBER}15`, borderRadius: 8, padding: 12 }}>
-                <div style={{ fontSize: 28, fontWeight: 800, color: AMBER }}>{coSummary.pending}</div>
-                <div style={{ fontSize: 11, color: DIM, marginTop: 4 }}>Pending</div>
+              <div style={{ padding: '4px 0' }}>
+                <div style={{ fontSize: 24, fontWeight: 800, color: coSummary.pending > 0 ? AMBER : TEXT }}>{coSummary.pending}</div>
+                <div style={{ fontSize: 12, color: DIM, marginTop: 4 }}>Pending</div>
               </div>
-              <div style={{ background: `color-mix(in srgb, ${GREEN} 8%, transparent)`, borderRadius: 8, padding: 12 }}>
-                <div style={{ fontSize: 28, fontWeight: 800, color: GREEN }}>{coSummary.approved}</div>
-                <div style={{ fontSize: 11, color: DIM, marginTop: 4 }}>Approved</div>
+              <div style={{ padding: '4px 0', borderLeft: `1px solid ${BORDER}`, borderRight: `1px solid ${BORDER}` }}>
+                <div style={{ fontSize: 24, fontWeight: 800, color: coSummary.approved > 0 ? GREEN : TEXT }}>{coSummary.approved}</div>
+                <div style={{ fontSize: 12, color: DIM, marginTop: 4 }}>Approved</div>
               </div>
-              <div style={{ background: `color-mix(in srgb, ${RED} 8%, transparent)`, borderRadius: 8, padding: 12 }}>
-                <div style={{ fontSize: 28, fontWeight: 800, color: RED }}>{coSummary.rejected}</div>
-                <div style={{ fontSize: 11, color: DIM, marginTop: 4 }}>Rejected</div>
+              <div style={{ padding: '4px 0' }}>
+                <div style={{ fontSize: 24, fontWeight: 800, color: coSummary.rejected > 0 ? RED : TEXT }}>{coSummary.rejected}</div>
+                <div style={{ fontSize: 12, color: DIM, marginTop: 4 }}>Rejected</div>
               </div>
             </div>
           </div>
@@ -1130,14 +1130,14 @@ export default function ClientPortalPage() {
                 <div style={{ minWidth: 160, fontSize: 13, fontWeight: 600, color: TEXT }}>{phase.name}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <span style={{ fontSize: 11, color: DIM }}>{fmtDate(phase.start)} – {fmtDate(phase.end)}</span>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: phase.percent_complete === 100 ? GREEN : GOLD }}>{phase.percent_complete}%</span>
+                    <span style={{ fontSize: 12, color: DIM }}>{fmtDate(phase.start)} – {fmtDate(phase.end)}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: phase.percent_complete === 100 ? GREEN : TEXT }}>{phase.percent_complete}%</span>
                   </div>
                   <div style={{ height: 6, background: BG, borderRadius: 3, overflow: 'hidden' }}>
                     <div style={{
                       height: '100%',
                       width: `${phase.percent_complete}%`,
-                      background: phase.percent_complete === 100 ? GREEN : `linear-gradient(90deg, ${BLUE}, ${GOLD})`,
+                      background: phase.percent_complete === 100 ? GREEN : BLUE,
                       borderRadius: 3,
                       transition: 'width 0.8s ease',
                     }} />
@@ -1169,8 +1169,8 @@ export default function ClientPortalPage() {
                   background: 'linear-gradient(transparent, rgba(0,0,0,.7))',
                   padding: '16px 8px 8px',
                 }}>
-                  <div style={{ fontSize: 10, color: '#fff', fontWeight: 600 }}>{photo.caption}</div>
-                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,.75)' }}>{fmtDate(photo.date)}</div>
+                  <div style={{ fontSize: 12, color: '#fff', fontWeight: 600 }}>{photo.caption}</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,.75)' }}>{fmtDate(photo.date)}</div>
                 </div>
               </div>
             ))}
@@ -1204,7 +1204,7 @@ export default function ClientPortalPage() {
                         <span style={badgeStyle(statusColor(item.status))}>{item.status}</span>
                         <span style={{ ...badgeStyle(BLUE), marginLeft: 8 }}>{item.type.replace('_', ' ')}</span>
                       </div>
-                      <div style={{ fontSize: 22, fontWeight: 800, color: GOLD }}>{fmt(item.amount)}</div>
+                      <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)' }}>{fmt(item.amount)}</div>
                     </div>
                     <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 6 }}>{item.title}</div>
                     <div style={{ fontSize: 13, color: DIM, marginBottom: 4 }}>Submitted: {fmtDate(item.submitted_date)}</div>
@@ -1316,7 +1316,7 @@ export default function ClientPortalPage() {
             </div>
             <div style={{ background: BG, borderRadius: 10, padding: 20, textAlign: 'center', border: `1px solid ${BORDER}` }}>
               <div style={{ fontSize: 12, color: DIM, marginBottom: 8 }}>Current Contract</div>
-              <div style={{ fontSize: 28, fontWeight: 800, color: GOLD }}>{fmt(project.committed_cost)}</div>
+              <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-primary)' }}>{fmt(project.committed_cost)}</div>
               <div style={{ fontSize: 12, color: DIM, marginTop: 4 }}>
                 {project.approved_count > 0
                   ? `${project.approved_changes >= 0 ? '+' : ''}${fmt(project.approved_changes)} in ${project.approved_count} approved change order${project.approved_count === 1 ? '' : 's'}`
@@ -1354,7 +1354,7 @@ export default function ClientPortalPage() {
                 <thead>
                   <tr>
                     {['Invoice #', 'Date', 'Due Date', 'Amount', 'Status', ...(invoices.some((i) => i.payable) ? [''] : [])].map((h) => (
-                      <th key={h} style={{ textAlign: 'left', padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 11, fontWeight: 700 }}>{h}</th>
+                      <th key={h} style={{ textAlign: 'left', padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 12, fontWeight: 700 }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -1396,7 +1396,7 @@ export default function ClientPortalPage() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {/* Header row */}
-              <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 100px 100px 100px 100px 100px', gap: 8, padding: '8px 12px', fontSize: 11, color: DIM, fontWeight: 700, borderBottom: `1px solid ${BORDER}` }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 100px 100px 100px 100px 100px', gap: 8, padding: '8px 12px', fontSize: 12, color: DIM, fontWeight: 700, borderBottom: `1px solid ${BORDER}` }}>
                 <div>Code</div><div>Description</div><div style={{ textAlign: 'right' }}>Original</div><div style={{ textAlign: 'right' }}>Changes</div><div style={{ textAlign: 'right' }}>Current</div><div style={{ textAlign: 'right' }}>Spent</div><div style={{ textAlign: 'right' }}>Remaining</div>
               </div>
               {budgetLines.map((line) => (
@@ -1407,9 +1407,9 @@ export default function ClientPortalPage() {
                     onMouseEnter={(e) => (e.currentTarget.style.background = `color-mix(in srgb, ${BORDER} 20%, transparent)`)}
                     onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                   >
-                    <div style={{ color: GOLD, fontWeight: 600 }}>{line.code}</div>
+                    <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{line.code}</div>
                     <div style={{ color: TEXT, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ fontSize: 10, color: DIM }}>{expandedBudget[line.id] ? '▼' : '▶'}</span>
+                      <span style={{ fontSize: 12, color: DIM }}>{expandedBudget[line.id] ? '▼' : '▶'}</span>
                       {line.description}
                     </div>
                     <div style={{ textAlign: 'right', color: DIM }}>{fmt(line.original)}</div>
@@ -1422,10 +1422,10 @@ export default function ClientPortalPage() {
                     <div style={{ padding: '12px 24px', background: 'color-mix(in srgb, var(--bg-base) 50%, transparent)', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                       <div style={{ display: 'flex', gap: 24, fontSize: 12, color: DIM }}>
                         <div>Committed: <span style={{ color: TEXT, fontWeight: 600 }}>{fmt(line.committed)}</span></div>
-                        <div>% Complete: <span style={{ color: GOLD, fontWeight: 600 }}>{line.current > 0 ? pct(line.spent, line.current) : 0}%</span></div>
+                        <div>% Complete: <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{line.current > 0 ? pct(line.spent, line.current) : 0}%</span></div>
                       </div>
                       <div style={{ marginTop: 8, height: 4, background: BORDER, borderRadius: 2, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${line.current > 0 ? pct(line.spent, line.current) : 0}%`, background: GOLD, borderRadius: 2 }} />
+                        <div style={{ height: '100%', width: `${line.current > 0 ? pct(line.spent, line.current) : 0}%`, background: BLUE, borderRadius: 2 }} />
                       </div>
                     </div>
                   )}
@@ -1457,7 +1457,7 @@ export default function ClientPortalPage() {
                 <thead>
                   <tr>
                     {['Date', 'Amount', 'Method', 'Reference'].map((h) => (
-                      <th key={h} style={{ textAlign: 'left', padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 11, fontWeight: 700 }}>{h}</th>
+                      <th key={h} style={{ textAlign: 'left', padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 12, fontWeight: 700 }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -1504,25 +1504,25 @@ export default function ClientPortalPage() {
               >
                 <div style={{
                   maxWidth: '70%',
-                  background: msg.sender_type === 'client' ? 'color-mix(in srgb, var(--brand-primary) 13%, transparent)' : `color-mix(in srgb, ${BORDER} 50%, transparent)`,
+                  background: msg.sender_type === 'client' ? 'var(--bg-surface-2)' : `color-mix(in srgb, ${BORDER} 50%, transparent)`,
                   borderRadius: msg.sender_type === 'client' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                   padding: '12px 16px',
-                  border: `1px solid ${msg.sender_type === 'client' ? `color-mix(in srgb, ${GOLD} 19%, transparent)` : BORDER}`,
+                  border: `1px solid ${msg.sender_type === 'client' ? 'var(--border-strong)' : BORDER}`,
                 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: msg.sender_type === 'client' ? GOLD : BLUE, marginBottom: 4 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: msg.sender_type === 'client' ? TEXT : 'var(--text-secondary)', marginBottom: 4 }}>
                     {msg.sender}
                   </div>
                   <div style={{ fontSize: 14, color: TEXT, lineHeight: 1.5 }}>{msg.text}</div>
                   {msg.attachment && (
                     <div style={{ marginTop: 8, padding: '6px 10px', background: 'color-mix(in srgb, var(--bg-base) 50%, transparent)', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                       <Paperclip size={13} weight="bold" color={DIM} />
-                      <span style={{ fontSize: 12, color: BLUE }}>{msg.attachment.name}</span>
+                      <span style={{ fontSize: 12, color: 'var(--text-primary)' }}>{msg.attachment.name}</span>
                     </div>
                   )}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, justifyContent: 'flex-end' }}>
-                    <span style={{ fontSize: 10, color: DIM }}>{fmtTime(msg.timestamp)}</span>
+                    <span style={{ fontSize: 12, color: DIM }}>{fmtTime(msg.timestamp)}</span>
                     {msg.sender_type === 'client' && msg.read && (
-                      <Checks size={12} weight="bold" color={BLUE} />
+                      <Checks size={12} weight="bold" color="var(--text-secondary)" />
                     )}
                     {msg.sender_type === 'client' && !msg.read && (
                       <Check size={12} weight="bold" color={DIM} />
@@ -1541,7 +1541,7 @@ export default function ClientPortalPage() {
             background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 8, padding: 8,
             position: 'relative', marginBottom: 8, zIndex: 10,
           }}>
-            <div style={{ fontSize: 11, color: DIM, padding: '4px 8px', fontWeight: 700 }}>Mention</div>
+            <div style={{ fontSize: 12, color: DIM, padding: '4px 8px', fontWeight: 700 }}>Mention</div>
             {mentionList.map((name) => (
               <div
                 key={name}
@@ -1646,14 +1646,14 @@ export default function ClientPortalPage() {
               <div key={doc.id} style={{ ...cardStyle, padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                   <div style={{
-                    width: 44, height: 44, borderRadius: 8, background: 'color-mix(in srgb, var(--brand-primary) 13%, transparent)',
+                    width: 44, height: 44, borderRadius: 8, background: 'var(--bg-surface-2)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0,
                   }}>
-                    {doc.category === 'Drawings' ? <Ruler size={18} weight="duotone" color={GOLD} /> : doc.category === 'Contracts' ? <FileText size={18} weight="duotone" color={GOLD} /> : doc.category === 'Specs' ? <ClipboardText size={18} weight="duotone" color={GOLD} /> : doc.category === 'Submittals' ? <Files size={18} weight="duotone" color={GOLD} /> : doc.category === 'Permits' ? <Certificate size={18} weight="duotone" color={GOLD} /> : doc.category === 'Lien Waivers' ? <Signature size={18} weight="duotone" color={GOLD} /> : doc.category === 'Photos' ? <Camera size={18} weight="duotone" color={GOLD} /> : <FolderOpen size={18} weight="duotone" color={GOLD} />}
+                    {doc.category === 'Drawings' ? <Ruler size={18} weight="duotone" color="var(--text-secondary)" /> : doc.category === 'Contracts' ? <FileText size={18} weight="duotone" color="var(--text-secondary)" /> : doc.category === 'Specs' ? <ClipboardText size={18} weight="duotone" color="var(--text-secondary)" /> : doc.category === 'Submittals' ? <Files size={18} weight="duotone" color="var(--text-secondary)" /> : doc.category === 'Permits' ? <Certificate size={18} weight="duotone" color="var(--text-secondary)" /> : doc.category === 'Lien Waivers' ? <Signature size={18} weight="duotone" color="var(--text-secondary)" /> : doc.category === 'Photos' ? <Camera size={18} weight="duotone" color="var(--text-secondary)" /> : <FolderOpen size={18} weight="duotone" color="var(--text-secondary)" />}
                   </div>
                   <div style={{ flex: 1, overflow: 'hidden' }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.title}</div>
-                    <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>{doc.category} · v{doc.version}</div>
+                    <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>{doc.category} · v{doc.version}</div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: DIM }}>
@@ -1661,7 +1661,7 @@ export default function ClientPortalPage() {
                     <div>{fmtDate(doc.date)}</div>
                     <div style={{ marginTop: 2 }}>By: {doc.uploaded_by}</div>
                   </div>
-                  <div style={{ fontSize: 11, color: DIM }}>{doc.size}</div>
+                  <div style={{ fontSize: 12, color: DIM }}>{doc.size}</div>
                 </div>
                 <button
                   style={{ ...btnOutline, padding: '8px 14px', fontSize: 12, marginTop: 4, width: '100%', textAlign: 'center' }}
@@ -1794,7 +1794,7 @@ export default function ClientPortalPage() {
                             }}>
                               {isActive && <Check size={11} weight="bold" color="#fff" />}
                             </div>
-                            <div style={{ fontSize: 9, color: isActive ? TEXT : DIM, textTransform: 'capitalize', whiteSpace: 'nowrap', fontWeight: isCurrent ? 700 : 400 }}>
+                            <div style={{ fontSize: 12, color: isActive ? TEXT : DIM, textTransform: 'capitalize', whiteSpace: 'nowrap', fontWeight: isCurrent ? 700 : 400 }}>
                               {step.replace('_', ' ')}
                             </div>
                           </div>
@@ -1833,11 +1833,11 @@ export default function ClientPortalPage() {
                 <div key={item.id} style={{ ...cardStyle, padding: 16, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
                   <div style={{
                     width: 40, height: 40, borderRadius: '50%',
-                    background: item.status === 'signed_off' ? `color-mix(in srgb, ${GREEN} 13%, transparent)` : item.status === 'completed' ? 'color-mix(in srgb, var(--brand-primary) 13%, transparent)' : `${AMBER}20`,
+                    background: item.status === 'signed_off' ? `color-mix(in srgb, ${GREEN} 13%, transparent)` : item.status === 'completed' ? `color-mix(in srgb, ${BLUE} 13%, transparent)` : `color-mix(in srgb, ${AMBER} 13%, transparent)`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
                     <span style={{ fontSize: 16 }}>
-                      {item.status === 'signed_off' ? <Check size={14} weight="bold" color={GREEN} /> : item.status === 'completed' ? <MagnifyingGlass size={14} weight="bold" color={BLUE} /> : <Hammer size={14} weight="bold" color={AMBER} />}
+                      {item.status === 'signed_off' ? <Check size={14} weight="bold" color={GREEN} /> : item.status === 'completed' ? <MagnifyingGlass size={14} weight="bold" color="var(--text-secondary)" /> : <Hammer size={14} weight="bold" color={AMBER} />}
                     </span>
                   </div>
                   <div style={{ flex: 1 }}>
@@ -1948,10 +1948,10 @@ export default function ClientPortalPage() {
         <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
           {/* Logo area */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Cactus size={26} weight="fill" color={GOLD} />
+            <Cactus size={26} weight="fill" color="var(--text-secondary)" />
             <div>
-              <div style={{ fontWeight: 800, fontSize: 16, color: GOLD, lineHeight: 1 }}>Saguaro</div>
-              <div style={{ fontSize: 9, color: DIM }}>Client Portal</div>
+              <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--text-primary)', lineHeight: 1 }}>Saguaro</div>
+              <div style={{ fontSize: 12, color: DIM }}>Client Portal</div>
             </div>
           </div>
 
@@ -1959,11 +1959,11 @@ export default function ClientPortalPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: 2 }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{project.name}</div>
-              <div style={{ fontSize: 11, color: DIM }}>{project.client_name}{project.company_name ? ` · ${project.company_name}` : ''}</div>
+              <div style={{ fontSize: 12, color: DIM }}>{project.client_name}{project.company_name ? ` · ${project.company_name}` : ''}</div>
             </div>
             <div style={{
-              width: 38, height: 38, borderRadius: '50%', background: 'color-mix(in srgb, var(--brand-primary) 13%, transparent)', border: `2px solid ${GOLD}`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: GOLD,
+              width: 38, height: 38, borderRadius: '50%', background: 'var(--bg-surface-2)', border: `1px solid ${BORDER}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: 'var(--text-primary)',
             }}>
               {(project.client_name || 'C').charAt(0)}
             </div>
@@ -2017,7 +2017,7 @@ export default function ClientPortalPage() {
               {/* Notification badges */}
               {tab.id === 'messages' && unreadMessages > 0 && (
                 <span style={{
-                  background: RED, color: '#fff', fontSize: 10, fontWeight: 800,
+                  background: RED, color: '#fff', fontSize: 12, fontWeight: 800,
                   borderRadius: 10, padding: '2px 6px', minWidth: 18, textAlign: 'center',
                   lineHeight: '14px',
                 }}>
@@ -2026,7 +2026,7 @@ export default function ClientPortalPage() {
               )}
               {tab.id === 'approvals' && pendingApprovalCount > 0 && (
                 <span style={{
-                  background: AMBER, color: '#101722', fontSize: 10, fontWeight: 800,
+                  background: AMBER, color: '#101722', fontSize: 12, fontWeight: 800,
                   borderRadius: 10, padding: '2px 6px', minWidth: 18, textAlign: 'center',
                   lineHeight: '14px',
                 }}>
@@ -2209,8 +2209,8 @@ export default function ClientPortalPage() {
           {/* Project timeline mini bar */}
           <div style={{ marginBottom: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <span style={{ fontSize: 11, color: DIM }}>Project Timeline</span>
-              <span style={{ fontSize: 11, color: DIM }}>
+              <span style={{ fontSize: 12, color: DIM }}>Project Timeline</span>
+              <span style={{ fontSize: 12, color: DIM }}>
                 {fmtDate(project.start_date)} — {fmtDate(project.end_date)}
               </span>
             </div>
@@ -2218,31 +2218,31 @@ export default function ClientPortalPage() {
               <div style={{
                 height: '100%',
                 width: `${totalDuration > 0 ? Math.min(100, pct(daysElapsed ?? 0, totalDuration)) : 0}%`,
-                background: `linear-gradient(90deg, ${GREEN}, ${GOLD})`,
+                background: BLUE,
                 borderRadius: 2,
                 transition: 'width 1s ease',
               }} />
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-              <span style={{ fontSize: 10, color: DIM }}>{daysElapsed == null ? 'No start date yet' : `${daysElapsed} days elapsed`}</span>
-              <span style={{ fontSize: 10, color: GOLD, fontWeight: 600 }}>{daysRemaining == null ? 'No end date yet' : `${daysRemaining} days remaining`}</span>
+              <span style={{ fontSize: 12, color: DIM }}>{daysElapsed == null ? 'No start date yet' : `${daysElapsed} days elapsed`}</span>
+              <span style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 600 }}>{daysRemaining == null ? 'No end date yet' : `${daysRemaining} days remaining`}</span>
             </div>
           </div>
 
           {/* Footer links & branding */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, paddingTop: 12, borderTop: `1px solid color-mix(in srgb, ${BORDER} 27%, transparent)` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Cactus size={17} weight="fill" color={GOLD} />
+              <Cactus size={17} weight="fill" color="var(--text-secondary)" />
               <div>
                 <div style={{ fontSize: 12, color: DIM }}>
-                  Powered by <span style={{ color: GOLD, fontWeight: 700 }}>Saguaro Control Systems</span>
+                  Powered by <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>Saguaro Control Systems</span>
                 </div>
-                <div style={{ fontSize: 10, color: DIM, marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>
                   Secure client portal · All data encrypted in transit
                 </div>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 16, fontSize: 11, color: DIM }}>
+            <div style={{ display: 'flex', gap: 16, fontSize: 12, color: DIM }}>
               <Link href="/help-center" target="_blank" rel="noopener noreferrer" style={{ color: DIM, textDecoration: 'none', cursor: 'pointer' }}>Help</Link>
               <Link href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: DIM, textDecoration: 'none', cursor: 'pointer' }}>Privacy</Link>
               <Link href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: DIM, textDecoration: 'none', cursor: 'pointer' }}>Terms</Link>
@@ -2251,7 +2251,7 @@ export default function ClientPortalPage() {
 
           {/* Keyboard shortcuts hint */}
           <div style={{ textAlign: 'center', marginTop: 12 }}>
-            <span style={{ fontSize: 10, color: DIM }}>
+            <span style={{ fontSize: 12, color: DIM }}>
               Tip: Use Alt+1 through Alt+7 to quickly switch tabs.
             </span>
           </div>

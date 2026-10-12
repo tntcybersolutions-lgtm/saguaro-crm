@@ -107,7 +107,7 @@ export default function SalesJourneyRail() {
         flush={showCollapsed}
         action={
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: FAINT, whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: FAINT, whiteSpace: 'nowrap' }}>
               {doneCount} of {steps.length}
             </span>
             <button
@@ -161,26 +161,26 @@ export default function SalesJourneyRail() {
                         background: s.done ? `linear-gradient(180deg,${BLUE_HI},${BLUE})` : '#101011',
                         border: s.done ? 'none' : `1px solid rgba(251,191,36,${isCur ? 0.85 : 0.45})`,
                         boxShadow: isCur ? '0 0 12px rgba(251,191,36,0.45)' : undefined,
-                        color: s.done ? '#04121F' : BLUE_HI, fontSize: 10, fontWeight: 900,
+                        color: s.done ? '#04121F' : BLUE_HI, fontSize: 12, fontWeight: 900,
                       }}>
                         {s.done ? <Check size={12} weight="bold" color="#04121F" /> : i + 1}
                       </div>
                       <div style={{ minWidth: 0, paddingTop: 1, flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
-                          <span style={{ fontSize: 12.5, fontWeight: 800, color: s.done ? MUTED : TEXT, lineHeight: 1.35, minWidth: 0 }}>{s.title}</span>
+                          <span style={{ fontSize: 13, fontWeight: 800, color: s.done ? MUTED : TEXT, lineHeight: 1.35, minWidth: 0 }}>{s.title}</span>
                           {isCur && (
                             <span style={{
                               padding: '1px 7px', borderRadius: 999, flexShrink: 0,
                               background: 'rgba(251,191,36,0.16)', border: '1px solid rgba(251,191,36,0.45)',
-                              color: BLUE_HI, fontSize: 9, fontWeight: 900, letterSpacing: '0.08em',
+                              color: BLUE_HI, fontSize: 12, fontWeight: 900, letterSpacing: '0.08em',
                             }}>You Are Here</span>
                           )}
                         </div>
-                        <div style={{ fontSize: 11.5, color: s.done ? FAINT : MUTED, lineHeight: 1.5, marginTop: 2 }}>{s.desc}</div>
+                        <div style={{ fontSize: 12, color: s.done ? FAINT : MUTED, lineHeight: 1.5, marginTop: 2 }}>{s.desc}</div>
                       </div>
                       <span style={{
                         display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0, marginTop: 2,
-                        color: isCur ? BLUE_HI : FAINT, fontSize: 10.5, fontWeight: 800, whiteSpace: 'nowrap',
+                        color: isCur ? BLUE_HI : FAINT, fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap',
                       }}>
                         {verb} <ArrowRight size={12} weight="bold" color={isCur ? BLUE_HI : FAINT} />
                       </span>
@@ -190,7 +190,7 @@ export default function SalesJourneyRail() {
               })}
             </div>
 
-            <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.07)', fontSize: 11.5, color: FAINT, lineHeight: 1.5 }}>
+            <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.07)', fontSize: 12, color: FAINT, lineHeight: 1.5 }}>
               Once the job is open, <span style={{ color: MUTED, fontWeight: 700 }}>Your Path to First Payment</span> below picks it up — takeoff, budget, subs, schedule, the field and billing.
             </div>
           </>

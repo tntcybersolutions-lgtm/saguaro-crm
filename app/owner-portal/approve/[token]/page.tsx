@@ -45,14 +45,14 @@ export default function OwnerApprovePage() {
       <div style={{maxWidth:640,margin:'0 auto'}}>
         {/* Header */}
         <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:32}}>
-          <Cactus size={24} weight="fill" color={GOLD} />
-          <span style={{fontWeight:900,fontSize:18,color:GOLD}}>Saguaro</span>
-          <span style={{fontSize:10,background:GOLD,color:'#101722',padding:'2px 8px',borderRadius:4,fontWeight:700}}>Owner Portal</span>
+          <Cactus size={24} weight="fill" color="var(--text-secondary)" />
+          <span style={{fontWeight:900,fontSize:18,color: 'var(--text-primary)'}}>Saguaro</span>
+          <span style={{fontSize:12,background:GOLD,color:'#101722',padding:'2px 8px',borderRadius:4,fontWeight:700}}>Owner Portal</span>
         </div>
 
         <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:14,overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,.5)'}}>
           <div style={{background:'#1c1c1e',padding:'20px 24px',borderBottom:`1px solid ${BORDER}`}}>
-            <div style={{fontSize:11,fontWeight:700,color:DIM,marginBottom:6}}>Approval Required</div>
+            <div style={{fontSize:12,fontWeight:700,color:DIM,marginBottom:6}}>Approval Required</div>
             <h2 style={{fontSize:20,fontWeight:800,color:TEXT,margin:0}}>{title}</h2>
           </div>
 
@@ -60,18 +60,18 @@ export default function OwnerApprovePage() {
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:24}}>
               {[['Project',project],['Contractor','Copper State Developments'],['Period','Feb 1 – Feb 28, 2026'],['Amount Due','$'+amount.toLocaleString()]].map(r=>(
                 <div key={r[0]} style={{background:'#1c1c1e',borderRadius:8,padding:'12px 16px'}}>
-                  <div style={{fontSize:11,color:DIM,fontWeight:700,marginBottom:4}}>{r[0]}</div>
+                  <div style={{fontSize:12,color:DIM,fontWeight:700,marginBottom:4}}>{r[0]}</div>
                   <div style={{fontSize:15,fontWeight:700,color:r[0]==='Amount Due'?GOLD:TEXT}}>{r[1]}</div>
                 </div>
               ))}
             </div>
 
-            <div style={{background:'color-mix(in srgb, var(--brand-primary) 6%, transparent)',border:'1px solid var(--brand-primary-18)',borderRadius:10,padding:'16px 20px',marginBottom:24,fontSize:13,color:DIM,lineHeight:1.7}}>
+            <div style={{background:'var(--bg-surface-2)',border:'1px solid var(--border-default)',borderRadius:10,padding:'16px 20px',marginBottom:24,fontSize:13,color:DIM,lineHeight:1.7}}>
               <strong style={{color:TEXT}}>What you&apos;re approving:</strong> Payment Application #2 for work completed through February 28, 2026. This represents 14.8% completion of the total contract value of $2,895,000. Conditional lien waivers from all 6 subcontractors are attached.
             </div>
 
             <div style={{marginBottom:24}}>
-              <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:8}}>Notes (Optional)</label>
+              <label style={{display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:8}}>Notes (Optional)</label>
               <textarea value={notes} onChange={e=>setNotes(e.target.value)} rows={3} placeholder="Add any notes about this approval…" style={{width:'100%',padding:'10px 14px',background:'#1c1c1e',border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:13,outline:'none',resize:'vertical' as const}}/>
             </div>
 
@@ -84,7 +84,7 @@ export default function OwnerApprovePage() {
               </button>
             </div>
 
-            <div style={{marginTop:16,fontSize:11,color:'var(--text-secondary)',textAlign:'center' as const}}>
+            <div style={{marginTop:16,fontSize:12,color:'var(--text-secondary)',textAlign:'center' as const}}>
               This approval is legally binding. By clicking Approve you certify the work has been performed per the contract documents.
             </div>
           </div>

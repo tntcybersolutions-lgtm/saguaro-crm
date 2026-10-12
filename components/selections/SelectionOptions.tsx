@@ -109,11 +109,11 @@ export default function SelectionOptions({ selectionId, projectId, allowance, pe
   return (
     <div style={{ background: 'var(--bg-surface)', border: `1px solid ${BORDER}`, borderRadius: 10, padding: 14 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
-        <div style={{ fontSize: 14, fontWeight: 800, color: GOLD, display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
           <Storefront size={16} weight="duotone" /> Options for Your Client
         </div>
         {pending && !adding && (
-          <button type="button" onClick={() => setAdding(true)} style={{ minHeight: 36, padding: '6px 12px', borderRadius: 8, border: `1px solid ${GOLD}`, background: 'transparent', color: GOLD, fontWeight: 800, fontSize: 13, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          <button type="button" onClick={() => setAdding(true)} style={{ minHeight: 36, padding: '6px 12px', borderRadius: 8, border: `1px solid ${GOLD}`, background: 'transparent', color: 'var(--text-primary)', fontWeight: 800, fontSize: 13, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
             <Plus size={13} weight="bold" /> Add Option
           </button>
         )}
@@ -125,7 +125,7 @@ export default function SelectionOptions({ selectionId, projectId, allowance, pe
       </div>
 
       {loading ? <div style={{ color: DIM, fontSize: 13, padding: 8 }}>Loading options…</div>
-        : error ? <div style={{ color: RED, fontSize: 13 }}>{error} <button type="button" onClick={() => load()} style={{ background: 'none', border: 'none', color: GOLD, cursor: 'pointer', fontWeight: 700 }}>Retry</button></div>
+        : error ? <div style={{ color: RED, fontSize: 13 }}>{error} <button type="button" onClick={() => load()} style={{ background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 700 }}>Retry</button></div>
         : options.length === 0 && !adding ? <div style={{ color: DIM, fontSize: 13 }}>No options yet{pending ? ' — add two or three for the client to compare, or leave none and they approve the item as specified.' : '.'}</div>
         : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -136,7 +136,7 @@ export default function SelectionOptions({ selectionId, projectId, allowance, pe
                   : <div style={{ width: 56, height: 42, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', color: DIM, flexShrink: 0, border: `1px dashed ${BORDER}` }}><ImageSquare size={20} /></div>}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ color: TEXT, fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
-                    {o.is_recommended && <Star size={12} weight="fill" color={GOLD} />}{o.name}
+                    {o.is_recommended && <Star size={12} weight="fill" color="var(--text-secondary)" />}{o.name}
                   </div>
                   <div style={{ fontSize: 12, color: DIM }}>{money(o.price)} {delta(o.price)}</div>
                 </div>

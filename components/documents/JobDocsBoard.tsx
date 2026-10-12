@@ -16,7 +16,7 @@ const CSS = `
 .jdb { display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px; }
 .jdbHead { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .jdbHead h2 { margin: 0; font-size: 16px; font-weight: 800; color: var(--text-primary); }
-.jdbLegend { display: inline-flex; gap: 12px; font-size: 12.5px; font-weight: 700; color: var(--text-secondary); }
+.jdbLegend { display: inline-flex; gap: 12px; font-size: 13px; font-weight: 700; color: var(--text-secondary); }
 .jdbLegend span { display: inline-flex; align-items: center; gap: 6px; }
 .jdbLegend i, .jdbDot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: 0 0 auto; }
 [data-tone="red"] > .jdbDot, .jdbLegend i[data-tone="red"] { background: var(--c-red); box-shadow: 0 0 0 3px rgba(248,113,113,0.18); }
@@ -37,16 +37,16 @@ const CSS = `
 .jdbWhy[data-tone="yellow"] { color: var(--c-yellow); }
 .jdbWhy[data-tone="green"] { color: var(--c-green); }
 .jdbM { min-width: 0; }
-.jdbM label { display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 4px; }
+.jdbM label { display: block; font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 4px; }
 .jdbM b { font-size: 15px; font-weight: 900; color: var(--text-primary); font-variant-numeric: tabular-nums; }
-.jdbM small { display: block; margin-top: 2px; font-size: 11.5px; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jdbM small { display: block; margin-top: 2px; font-size: 12px; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .jdbM small[data-bad="true"] { color: var(--c-red); font-weight: 800; }
 .jdbBar { height: 6px; border-radius: 6px; background: rgba(255,255,255,0.08); overflow: hidden; margin-top: 6px; }
 .jdbBar > i { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--c-yellow), var(--c-orange)); }
 .jdbGo { color: var(--text-tertiary); }
 .jdbClear { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.04); color: var(--text-primary); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .jdbClear:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
-.jdbEmpty { padding: 18px 16px; font-size: 13.5px; color: var(--text-tertiary); }
+.jdbEmpty { padding: 18px 16px; font-size: 14px; color: var(--text-tertiary); }
 @media (max-width: 1100px) { .jdbRow { grid-template-columns: minmax(200px, 1.4fr) minmax(150px, 1fr) repeat(2, minmax(88px, .7fr)) 20px; } .jdbHideMd { display: none; } }
 @media (max-width: 767px) {
   .jdbRow { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; padding: 14px; }

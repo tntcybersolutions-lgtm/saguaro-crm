@@ -182,7 +182,7 @@ export default function GettingStartedRail({ projectId, compact = false }: { pro
             ? `${activeProject.name}${next ? ` · next up: ${next.title}` : ''}`
             : next ? `Next up: ${next.title}` : undefined
         }
-        icon={<Compass size={17} weight="duotone" color={GOLD} />}
+        icon={<Compass size={17} weight="duotone" color="var(--text-secondary)" />}
         flush={showCollapsed}
         action={
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -203,8 +203,8 @@ export default function GettingStartedRail({ projectId, compact = false }: { pro
               </select>
             )}
             <span style={{
-              padding: '3px 10px', borderRadius: 999, background: 'var(--brand-primary-12)',
-              border: '1px solid var(--brand-primary-35)', color: GOLD_HI,
+              padding: '3px 10px', borderRadius: 999, background: 'var(--bg-surface-2)',
+              border: '1px solid var(--border-default)', color: 'var(--text-primary)',
               fontSize: compact ? 12 : 11, fontWeight: 800, letterSpacing: compact ? 'normal' : '0.05em', whiteSpace: 'nowrap',
             }}>{doneCount} of {steps.length} steps</span>
             <button
@@ -256,7 +256,7 @@ export default function GettingStartedRail({ projectId, compact = false }: { pro
                       background: s.done ? `linear-gradient(180deg,${GOLD_HI},${GOLD})` : '#101011',
                       border: s.done ? 'none' : `1px solid rgba(251,191,36,${isCur ? 0.85 : 0.45})`,
                       boxShadow: isCur ? '0 0 12px var(--brand-primary-35)' : undefined,
-                      color: s.done ? 'var(--on-brand)' : GOLD_HI, fontSize: 10, fontWeight: 900,
+                      color: s.done ? 'var(--on-brand)' : GOLD_HI, fontSize: 12, fontWeight: 900,
                     }}>
                       {s.done ? <Check size={12} weight="bold" color="var(--on-brand)" /> : i + 1}
                     </div>
@@ -266,8 +266,8 @@ export default function GettingStartedRail({ projectId, compact = false }: { pro
                         {isCur && (
                           <span style={{
                             padding: '1px 7px', borderRadius: 999, flexShrink: 0,
-                            background: 'var(--brand-primary-18)', border: '1px solid var(--brand-primary-35)',
-                            color: GOLD_HI, fontSize: fs.here, fontWeight: 900, letterSpacing: compact ? 'normal' : '0.08em',
+                            background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)',
+                            color: 'var(--text-primary)', fontSize: fs.here, fontWeight: 900, letterSpacing: compact ? 'normal' : '0.08em',
                           }}>You Are Here</span>
                         )}
                       </div>
@@ -299,10 +299,10 @@ export default function GettingStartedRail({ projectId, compact = false }: { pro
               compact ? (
                 <Link href={next.href} className="pmBtn" style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 14, minHeight: 40, padding: '0 14px',
-                  borderRadius: 10, border: '1px solid var(--brand-primary-35)', background: 'transparent',
-                  color: GOLD_HI, fontSize: 14, fontWeight: 700, textDecoration: 'none',
+                  borderRadius: 10, border: '1px solid var(--border-default)', background: 'transparent',
+                  color: 'var(--link)', fontSize: 14, fontWeight: 700, textDecoration: 'none',
                 }}>
-                  Next: {next.title} <ArrowRight size={14} weight="bold" color={GOLD_HI} />
+                  Next: {next.title} <ArrowRight size={14} weight="bold" color="var(--text-secondary)" />
                 </Link>
               ) : (
                 <Link href={next.href} style={{ ...goldButtonStyle, marginTop: 18 }} className="pmBtn">

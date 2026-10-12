@@ -83,16 +83,16 @@ export default function RouteError({
         <div
           style={{
             background: CARD,
-            border: '1px solid var(--brand-primary-25)',
+            border: '1px solid var(--border-default)',
             borderRadius: 16,
             padding: 'clamp(22px, 4vw, 32px)',
           }}
         >
           <div
             style={{
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: 800,
-              color: GOLD,
+              color: 'var(--text-primary)',
               marginBottom: 12,
             }}
           >
@@ -117,13 +117,13 @@ export default function RouteError({
               marginBottom: 22,
             }}
           >
-            <div style={{ fontSize: 10.5, fontWeight: 700, color: DIM, marginBottom: 6 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 6 }}>
               What Went Wrong
             </div>
             <code
               style={{
                 display: 'block',
-                fontSize: 12.5,
+                fontSize: 13,
                 lineHeight: 1.5,
                 color: 'var(--c-text)',
                 wordBreak: 'break-word',
@@ -133,7 +133,7 @@ export default function RouteError({
               {error?.message || 'No error message was provided.'}
             </code>
             {error?.digest && (
-              <div style={{ fontSize: 11, color: DIM, marginTop: 8 }}>
+              <div style={{ fontSize: 12, color: DIM, marginTop: 8 }}>
                 Reference: {error.digest} — quote this when reporting it.
               </div>
             )}

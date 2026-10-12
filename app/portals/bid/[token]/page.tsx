@@ -134,7 +134,7 @@ export default function BidderJacketPage() {
             icon={
               declined ? <XCircle size={17} weight="duotone" color={DIM} />
                 : submitted ? <CheckCircle size={17} weight="duotone" color={GREEN} />
-                  : <PaperPlaneTilt size={17} weight="duotone" color={GOLD} />
+                  : <PaperPlaneTilt size={17} weight="duotone" color="var(--text-secondary)" />
             }
           >
             {declined ? (
@@ -147,7 +147,7 @@ export default function BidderJacketPage() {
                 <div style={{ fontSize: 26, fontWeight: 700, color: GREEN, fontVariantNumeric: 'tabular-nums' }}>
                   {money(data.alreadySubmitted?.amount ?? (Number(amount.replace(/[^0-9.]/g, '')) || null))}
                 </div>
-                <div style={{ color: DIM, fontSize: 13.5, marginTop: 6, lineHeight: 1.6 }}>
+                <div style={{ color: DIM, fontSize: 14, marginTop: 6, lineHeight: 1.6 }}>
                   Received{data.alreadySubmitted?.submittedAt
                     ? ` ${new Date(data.alreadySubmitted.submittedAt).toLocaleString()}`
                     : ''}. You can revise it any time before the deadline — submitting again
@@ -247,7 +247,7 @@ const inputStyle: React.CSSProperties = {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label style={{ display: 'block' }}>
-      <div style={{ fontSize: 10.5, fontWeight: 800, color: DIM, marginBottom: 6 }}>
+      <div style={{ fontSize: 12, fontWeight: 800, color: DIM, marginBottom: 6 }}>
         {label}
       </div>
       {children}
@@ -261,8 +261,8 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-base)', color: TEXT, padding: 'clamp(16px, 4vw, 40px) clamp(12px, 4vw, 28px)' }}>
       <div style={{ maxWidth: 1240, margin: '0 auto' }}>{children}</div>
-      <div style={{ maxWidth: 1240, margin: '28px auto 0', color: DIM, fontSize: 11.5, textAlign: 'center' }}>
-        Powered by <a href="https://saguarocontrol.net/" style={{ color: GOLD, textDecoration: 'none' }}>Saguaro</a>
+      <div style={{ maxWidth: 1240, margin: '28px auto 0', color: DIM, fontSize: 12, textAlign: 'center' }}>
+        Powered by <a href="https://saguarocontrol.net/" style={{ color: 'var(--link)', textDecoration: 'none' }}>Saguaro</a>
       </div>
     </div>
   );

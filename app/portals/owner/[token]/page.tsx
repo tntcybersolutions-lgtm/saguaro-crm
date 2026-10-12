@@ -74,15 +74,15 @@ export default function OwnerApprovalPortal() {
   return (
     <div style={{ minHeight:'100vh',background:DARK,fontFamily:'system-ui,sans-serif',color:TEXT }}>
       <div style={{ background:'var(--bg-surface)',borderBottom:`1px solid ${BORDER}`,padding:'16px 24px',display:'flex',alignItems:'center',gap:12 }}>
-        <Cactus size={22} weight="fill" color={GOLD} />
-        <span style={{ fontWeight:800,fontSize:16,color:GOLD }}>Saguaro Control Systems</span>
-        <span style={{ fontSize:11,color:DIM,marginLeft:8 }}>Owner Pay Application Review Portal</span>
+        <Cactus size={22} weight="fill" color="var(--text-secondary)" />
+        <span style={{ fontWeight:800,fontSize:16,color: 'var(--text-primary)' }}>Saguaro Control Systems</span>
+        <span style={{ fontSize:12,color:DIM,marginLeft:8 }}>Owner Pay Application Review Portal</span>
       </div>
 
       <div style={{ maxWidth:900,margin:'0 auto',padding:'32px 24px' }}>
         {/* Banner */}
-        <div style={{ background:'color-mix(in srgb, var(--brand-primary) 6%, transparent)',border:'1px solid var(--brand-primary-18)',borderRadius:10,padding:'16px 20px',marginBottom:24 }}>
-          <div style={{ fontWeight:800,fontSize:18,color:GOLD,marginBottom:4 }}>
+        <div style={{ background:'var(--bg-surface-2)',border:'1px solid var(--border-default)',borderRadius:10,padding:'16px 20px',marginBottom:24 }}>
+          <div style={{ fontWeight:800,fontSize:18,color: 'var(--text-primary)',marginBottom:4 }}>
             Pay Application #{pa.app_number} — Review &amp; Approval
           </div>
           <div style={{ fontSize:13,color:DIM }}>
@@ -100,7 +100,7 @@ export default function OwnerApprovalPortal() {
             ['Current Payment Due', fmt(pa.current_payment_due||0)],
           ].map(([l,v]:any)=>(
             <div key={l} style={{ background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:'14px 16px' }}>
-              <div style={{ fontSize:10,fontWeight:700,color:DIM,marginBottom:5 }}>{l}</div>
+              <div style={{ fontSize:12,fontWeight:700,color:DIM,marginBottom:5 }}>{l}</div>
               <div style={{ fontSize:20,fontWeight:800,color:l==='Current Payment Due'?GOLD:TEXT }}>{v}</div>
             </div>
           ))}
@@ -152,7 +152,7 @@ export default function OwnerApprovalPortal() {
                       <td style={{ padding:'7px 10px',textAlign:'right',color:TEXT }}>{fmt(item.work_this_period||0)}</td>
                       <td style={{ padding:'7px 10px',textAlign:'right',color:DIM }}>{fmt(item.materials_stored||0)}</td>
                       <td style={{ padding:'7px 10px',textAlign:'right',color:TEXT }}>{fmt(item.total_completed||0)}</td>
-                      <td style={{ padding:'7px 10px',textAlign:'right',color:GOLD }}>{(item.percent_complete||0).toFixed(0)}%</td>
+                      <td style={{ padding:'7px 10px',textAlign:'right',color: 'var(--text-primary)' }}>{(item.percent_complete||0).toFixed(0)}%</td>
                       <td style={{ padding:'7px 10px',textAlign:'right',color:DIM }}>{fmt(item.balance_to_finish||0)}</td>
                     </tr>
                   ))}
@@ -166,8 +166,8 @@ export default function OwnerApprovalPortal() {
         {(pa.g702_pdf_url||pa.g703_pdf_url) && (
           <div style={{ background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:'16px 20px',marginBottom:20,display:'flex',gap:12,flexWrap:'wrap' }}>
             <div style={{ fontSize:13,fontWeight:700,color:TEXT,marginBottom:8,width:'100%' }}>Download Official AIA Documents</div>
-            {pa.g702_pdf_url && <a href={pa.g702_pdf_url} target="_blank" rel="noreferrer" style={{ padding:'9px 18px',background:'var(--brand-primary-12)',border:'1px solid var(--brand-primary-35)',borderRadius:7,color:GOLD,fontSize:13,fontWeight:700,textDecoration:'none' }}><FilePdf size={14} weight="fill" /> Download G702</a>}
-            {pa.g703_pdf_url && <a href={pa.g703_pdf_url} target="_blank" rel="noreferrer" style={{ padding:'9px 18px',background:'var(--brand-primary-12)',border:'1px solid var(--brand-primary-35)',borderRadius:7,color:GOLD,fontSize:13,fontWeight:700,textDecoration:'none' }}><FilePdf size={14} weight="fill" /> Download G703</a>}
+            {pa.g702_pdf_url && <a href={pa.g702_pdf_url} target="_blank" rel="noreferrer" style={{ padding:'9px 18px',background:'var(--bg-surface-2)',border:'1px solid var(--border-default)',borderRadius:7,color: 'var(--link)',fontSize:13,fontWeight:700,textDecoration:'none' }}><FilePdf size={14} weight="fill" /> Download G702</a>}
+            {pa.g703_pdf_url && <a href={pa.g703_pdf_url} target="_blank" rel="noreferrer" style={{ padding:'9px 18px',background:'var(--bg-surface-2)',border:'1px solid var(--border-default)',borderRadius:7,color: 'var(--link)',fontSize:13,fontWeight:700,textDecoration:'none' }}><FilePdf size={14} weight="fill" /> Download G703</a>}
           </div>
         )}
 
@@ -190,7 +190,7 @@ export default function OwnerApprovalPortal() {
                 Return for Revision
               </button>
             </div>
-            <div style={{ textAlign:'center',marginTop:14,fontSize:11,color:DIM }}>
+            <div style={{ textAlign:'center',marginTop:14,fontSize:12,color:DIM }}>
               Your approval constitutes authorization for the contractor to invoice for the amount shown. · Powered by Saguaro Control Systems
             </div>
           </div>

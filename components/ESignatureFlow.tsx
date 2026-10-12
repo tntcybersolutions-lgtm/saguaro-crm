@@ -56,7 +56,7 @@ function uid(): string {
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>
+    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>
       {children}
     </label>
   );
@@ -72,14 +72,14 @@ function inputStyle(extra?: React.CSSProperties): React.CSSProperties {
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { bg: string; color: string; label: string }> = {
-    pending: { bg: 'var(--brand-primary-12)', color: GOLD, label: 'Pending' },
-    viewed: { bg: 'var(--brand-primary-12)', color: 'var(--brand-primary)', label: 'Opened' },
+    pending: { bg: 'var(--brand-primary-12)', color: 'var(--text-primary)', label: 'Pending' },
+    viewed: { bg: 'var(--brand-primary-12)', color: 'var(--text-primary)', label: 'Opened' },
     signed: { bg: 'rgba(74,222,128,.12)', color: GREEN, label: 'Signed' },
     declined: { bg: 'rgba(248,113,113,.12)', color: RED, label: 'Declined' },
   };
   const s = map[status] || map.pending;
   return (
-    <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: s.bg, color: s.color }}>
+    <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 700, background: s.bg, color: s.color }}>
       {s.label}
     </span>
   );
@@ -207,9 +207,9 @@ export default function ESignatureFlow({ projectId, docType, docTitle, pdfUrl, o
       {signers.map((signer, idx) => (
         <div key={signer.id} style={{ background: DARK, border: `1px solid ${BORDER}`, borderRadius: 10, padding: 14, marginBottom: 10, position: 'relative' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: GOLD }}>Signer {idx + 1}</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>Signer {idx + 1}</span>
             {signers.length > 1 && (
-              <button type="button" onClick={() => removeSigner(signer.id)} style={{ background: 'rgba(248,113,113,.1)', border: `1px solid rgba(248,113,113,.3)`, borderRadius: 6, padding: '4px 10px', color: RED, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+              <button type="button" onClick={() => removeSigner(signer.id)} style={{ background: 'rgba(248,113,113,.1)', border: `1px solid rgba(248,113,113,.3)`, borderRadius: 6, padding: '4px 10px', color: RED, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                 Remove
               </button>
             )}
@@ -310,7 +310,7 @@ export default function ESignatureFlow({ projectId, docType, docTitle, pdfUrl, o
         <p style={{ margin: 0, fontSize: 14, color: TEXT, fontWeight: 600 }}>
           Sent to {totalCount} signer{totalCount > 1 ? 's' : ''}
         </p>
-        <button type="button" onClick={fetchStatus} style={{ background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '5px 12px', color: DIM, fontSize: 11, cursor: 'pointer' }}>
+        <button type="button" onClick={fetchStatus} style={{ background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '5px 12px', color: DIM, fontSize: 12, cursor: 'pointer' }}>
           Refresh
         </button>
       </div>
@@ -319,7 +319,7 @@ export default function ESignatureFlow({ projectId, docType, docTitle, pdfUrl, o
       <div style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
           <span style={{ fontSize: 12, color: DIM }}>{signedCount} of {totalCount} signed</span>
-          <span style={{ fontSize: 12, color: GOLD, fontWeight: 700 }}>{Math.round(progressPct)}%</span>
+          <span style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 700 }}>{Math.round(progressPct)}%</span>
         </div>
         <div style={{ height: 6, background: DARK, borderRadius: 3, overflow: 'hidden' }}>
           <div style={{ height: '100%', width: `${progressPct}%`, background: GOLD, borderRadius: 3, transition: 'width .3s ease' }} />
@@ -335,7 +335,7 @@ export default function ESignatureFlow({ projectId, docType, docTitle, pdfUrl, o
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <StatusBadge status={sig.status} />
-            <div style={{ fontSize: 11, color: DIM, textAlign: 'right' as const }}>
+            <div style={{ fontSize: 12, color: DIM, textAlign: 'right' as const }}>
               <div>Sent {new Date(sig.sent_at).toLocaleDateString()}</div>
               {(sig.view_count || 0) > 0 && sig.last_viewed_at && (
                 <div>Opened {sig.view_count}× · last {new Date(sig.last_viewed_at).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</div>
@@ -344,7 +344,7 @@ export default function ESignatureFlow({ projectId, docType, docTitle, pdfUrl, o
               {sig.declined_at && <div style={{ color: RED }}>Declined{sig.decline_reason ? `: ${sig.decline_reason}` : ''}</div>}
             </div>
             {sig.status !== 'signed' && (
-              <button type="button" onClick={() => handleResend(sig.id)} style={{ background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '4px 10px', color: DIM, fontSize: 11, cursor: 'pointer' }}>
+              <button type="button" onClick={() => handleResend(sig.id)} style={{ background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '4px 10px', color: DIM, fontSize: 12, cursor: 'pointer' }}>
                 Resend
               </button>
             )}
@@ -365,7 +365,7 @@ export default function ESignatureFlow({ projectId, docType, docTitle, pdfUrl, o
         return (
           <div key={label} style={{ flex: 1, textAlign: 'center' as const }}>
             <div style={{ height: 4, borderRadius: 2, background: done ? GOLD : active ? GOLD : BORDER, marginBottom: 6, opacity: active ? 1 : done ? 0.5 : 0.2 }} />
-            <span style={{ fontSize: 11, fontWeight: 700, color: active || done ? GOLD : DIM }}>{label}</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: active || done ? GOLD : DIM }}>{label}</span>
           </div>
         );
       })}

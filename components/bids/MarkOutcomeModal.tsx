@@ -73,7 +73,7 @@ function parseDollars(s: string): number | null {
 }
 
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 11, fontWeight: 700, color: DIM,
+  display: 'block', fontSize: 12, fontWeight: 700, color: DIM,
   marginBottom: 5,
 };
 const inputStyle: React.CSSProperties = {
@@ -294,7 +294,7 @@ function MarkOutcomeModal({
           <div style={{ marginTop: 4, marginBottom: 16, borderTop: `1px solid ${BORDER}`, paddingTop: 14 }}>
             <button
               type="button" onClick={() => { setShowBreakdown(s => !s); if (!showBreakdown && rows.length === 0) addRow(); }}
-              style={{ background: 'none', border: 'none', color: GOLD, cursor: 'pointer', fontSize: 12, fontWeight: 700, padding: 0, display: 'flex', alignItems: 'center', gap: 6 }}
+              style={{ background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: 12, fontWeight: 700, padding: 0, display: 'flex', alignItems: 'center', gap: 6 }}
             >
               <span style={{ display: 'inline-block', transform: showBreakdown ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}>▸</span>
               Add trade breakdown {rows.length > 0 ? `(${rows.length})` : ''}
@@ -303,10 +303,10 @@ function MarkOutcomeModal({
             {showBreakdown && (
               <div style={{ marginTop: 12 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr 90px 90px 28px', gap: 6, alignItems: 'center', marginBottom: 6 }}>
-                  <div style={{ ...labelStyle, marginBottom: 0, fontSize: 9 }}>CSI</div>
-                  <div style={{ ...labelStyle, marginBottom: 0, fontSize: 9 }}>Trade</div>
-                  <div style={{ ...labelStyle, marginBottom: 0, fontSize: 9 }}>Your $</div>
-                  <div style={{ ...labelStyle, marginBottom: 0, fontSize: 9 }}>Winning $</div>
+                  <div style={{ ...labelStyle, marginBottom: 0, fontSize: 12 }}>CSI</div>
+                  <div style={{ ...labelStyle, marginBottom: 0, fontSize: 12 }}>Trade</div>
+                  <div style={{ ...labelStyle, marginBottom: 0, fontSize: 12 }}>Your $</div>
+                  <div style={{ ...labelStyle, marginBottom: 0, fontSize: 12 }}>Winning $</div>
                   <div />
                 </div>
                 {rows.map((row, i) => (

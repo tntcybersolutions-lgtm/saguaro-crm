@@ -262,7 +262,7 @@ export default function NotificationCenter() {
               borderRadius: 9,
               backgroundColor: RED,
               color: 'var(--text-primary)',
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: 700,
               display: 'flex',
               alignItems: 'center',
@@ -317,7 +317,7 @@ export default function NotificationCenter() {
                   border: `1px solid ${focusMode ? GOLD : BORDER}`,
                   borderRadius: 6,
                   padding: '3px 8px',
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: 600,
                   color: focusMode ? 'var(--on-brand)' : DIM,
                   cursor: 'pointer',
@@ -333,7 +333,7 @@ export default function NotificationCenter() {
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: GOLD,
+                  color: 'var(--text-primary)',
                   fontSize: 12,
                   fontWeight: 600,
                   cursor: markingAll ? 'default' : 'pointer',
@@ -438,7 +438,7 @@ export default function NotificationCenter() {
                     }}>
                       {n.title}
                     </span>
-                    <span style={{ fontSize: 11, color: DIM, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                    <span style={{ fontSize: 12, color: DIM, whiteSpace: 'nowrap', flexShrink: 0 }}>
                       {timeAgo(n.created_at)}
                     </span>
                   </div>
@@ -451,7 +451,7 @@ export default function NotificationCenter() {
                     </div>
                   )}
                   {n.project_name && (
-                    <div style={{ fontSize: 11, color: GOLD, marginTop: 3, opacity: 0.8 }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-primary)', marginTop: 3, opacity: 0.8 }}>
                       {n.project_name}
                     </div>
                   )}
@@ -464,7 +464,7 @@ export default function NotificationCenter() {
                     <button
                       onClick={() => dismissNotification(n.id)}
                       style={{
-                        background: 'none', border: 'none', color: DIM, fontSize: 11,
+                        background: 'none', border: 'none', color: DIM, fontSize: 12,
                         cursor: 'pointer', padding: '2px 0',
                       }}
                       onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = RED; }}
@@ -478,7 +478,7 @@ export default function NotificationCenter() {
                       <button
                         onClick={() => setSnoozeOpenId(snoozeOpenId === n.id ? null : n.id)}
                         style={{
-                          background: 'none', border: 'none', color: DIM, fontSize: 11,
+                          background: 'none', border: 'none', color: DIM, fontSize: 12,
                           cursor: 'pointer', padding: '2px 0',
                         }}
                         onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = GOLD; }}

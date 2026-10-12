@@ -46,8 +46,8 @@ export default class ErrorBoundary extends Component<Props, State> {
       const msg = this.state.error?.message;
       return (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 260, padding: '40px 24px' }}>
-          <div style={{ width: '100%', maxWidth: 560, background: 'var(--bg-surface)', border: '1px solid var(--brand-primary-25)', borderRadius: 16, padding: 28 }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: GOLD, marginBottom: 10 }}>
+          <div style={{ width: '100%', maxWidth: 560, background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 16, padding: 28 }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 10 }}>
               Something Broke on This Screen
             </div>
             <div style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: 19, marginBottom: 10, letterSpacing: '-0.01em' }}>
@@ -61,10 +61,10 @@ export default class ErrorBoundary extends Component<Props, State> {
             {/* The message itself — without it a client crash leaves no trace
                 anywhere, since nothing about it reaches the server. */}
             <div style={{ background: 'rgba(0,0,0,0.42)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 10, padding: '12px 14px', marginBottom: 20 }}>
-              <div style={{ fontSize: 10.5, fontWeight: 700, color: DIM, marginBottom: 6 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 6 }}>
                 What Went Wrong
               </div>
-              <code style={{ display: 'block', fontSize: 12.5, lineHeight: 1.5, color: 'var(--c-text)', wordBreak: 'break-word', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
+              <code style={{ display: 'block', fontSize: 13, lineHeight: 1.5, color: 'var(--c-text)', wordBreak: 'break-word', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
                 {msg || 'No error message was provided.'}
               </code>
             </div>
@@ -74,13 +74,13 @@ export default class ErrorBoundary extends Component<Props, State> {
                   re-runs the same render and throws again. */}
               <button
                 onClick={() => this.setState({ hasError: false, error: null })}
-                style={{ height: 40, padding: '0 20px', background: GOLD, border: `1px solid ${GOLD}`, borderRadius: 10, color: 'var(--on-brand)', fontWeight: 700, cursor: 'pointer', fontSize: 13.5 }}
+                style={{ height: 40, padding: '0 20px', background: GOLD, border: `1px solid ${GOLD}`, borderRadius: 10, color: 'var(--on-brand)', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}
               >
                 Try Again
               </button>
               <a
                 href="/app"
-                style={{ display: 'inline-flex', alignItems: 'center', height: 40, padding: '0 20px', background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, color: 'var(--text-primary)', fontWeight: 700, fontSize: 13.5, textDecoration: 'none' }}
+                style={{ display: 'inline-flex', alignItems: 'center', height: 40, padding: '0 20px', background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, color: 'var(--text-primary)', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}
               >
                 Back to Dashboard
               </a>

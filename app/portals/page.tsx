@@ -2,8 +2,8 @@
 
 export default function PortalsHub() {
   const portals = [
-    { title: 'Owner / Client Portal', desc: 'View project progress, budgets, photos, and documents.', href: '/portals/client', color: 'var(--brand-primary)' },
-    { title: 'Subcontractor Portal', desc: 'Upload insurance, W-9s, and lien waivers, and track pay apps.', href: '/portals/sub', color: 'var(--brand-primary)' },
+    { title: 'Owner / Client Portal', desc: 'View project progress, budgets, photos, and documents.', href: '/portals/client', color: 'var(--text-primary)' },
+    { title: 'Subcontractor Portal', desc: 'Upload insurance, W-9s, and lien waivers, and track pay apps.', href: '/portals/sub', color: 'var(--text-primary)' },
     { title: 'E-Signature Portal', desc: 'Sign contracts and documents securely in your browser.', href: '/portals/sign', color: '#4ADE80' },
     { title: 'W-9 Submission', desc: 'Securely submit your W-9 to your general contractor.', href: '/portals/w9', color: '#FBBF24' },
   ];
@@ -12,7 +12,7 @@ export default function PortalsHub() {
     <div className="mkt-page" style={{ minHeight: '100vh', background: 'var(--bg-base)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ maxWidth: 600, width: '100%' }}>
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
-          <div style={{ color: 'var(--brand-primary)', fontWeight: 800, fontSize: 24, letterSpacing: '-0.01em', marginBottom: 8 }}>Saguaro</div>
+          <div style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 24, letterSpacing: '-0.01em', marginBottom: 8 }}>Saguaro</div>
           <h1 style={{ color: '#FFFFFF', fontSize: 32, fontWeight: 700, margin: '0 0 8px' }}>Portal Access</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: 14, margin: 0 }}>Select your portal below to get started.</p>
         </div>

@@ -1212,7 +1212,7 @@ export default function DrawingReviewPortalPage() {
   if (denied) return (
     <div style={{ minHeight: '100vh', background: DARK, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui,sans-serif', padding: 24 }}>
       <div style={{ textAlign: 'center', maxWidth: 440 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 22 }}>Drawing Review</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 22 }}>Drawing Review</div>
         <div style={{ fontSize: 20, fontWeight: 800, color: TEXT }}>This Review Link Is No Longer Active</div>
         <div style={{ fontSize: 14, color: DIM, marginTop: 10, lineHeight: 1.6 }}>The invitation has expired or was revoked by the project team. Ask your contact at the general contractor for a fresh link.</div>
       </div>
@@ -1239,7 +1239,7 @@ export default function DrawingReviewPortalPage() {
             <div style={{ fontSize: 15, fontWeight: 800, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{projectName || 'Project Drawing'}</div>
             <div style={{ fontSize: 12, color: DIM, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {drawingLabel || 'Drawing'}
-              {linkLabel && <span> &middot; shared with <span style={{ color: GOLD, fontWeight: 700 }}>{linkLabel}</span></span>}
+              {linkLabel && <span> &middot; shared with <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{linkLabel}</span></span>}
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
@@ -1250,7 +1250,7 @@ export default function DrawingReviewPortalPage() {
                 <button onClick={() => goPage(page + 1)} disabled={page >= pageCount} style={{ ...zoomBtn, width: 28, height: 28, opacity: page >= pageCount ? 0.35 : 1 }} aria-label="Next page">&rsaquo;</button>
               </div>
             )}
-            <span style={{ fontSize: 10, fontWeight: 800, color: GOLD, background: `color-mix(in srgb, ${GOLD} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${GOLD} 27%, transparent)`, borderRadius: 20, padding: '5px 12px' }}>Review &middot; Markups Enabled</span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', background: `color-mix(in srgb, ${GOLD} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${GOLD} 27%, transparent)`, borderRadius: 20, padding: '5px 12px' }}>Review &middot; Markups Enabled</span>
           </div>
         </div>
       </header>
@@ -1259,13 +1259,13 @@ export default function DrawingReviewPortalPage() {
       <main style={{ flex: 1, minHeight: 0, padding: 12, display: 'flex', flexDirection: 'column', maxWidth: 1200, width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
         {/* ── Guest markup toolbar ── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, paddingBottom: 10, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 10, fontWeight: 800, color: DIM, marginRight: 4 }}>Add Comment Markup</span>
+          <span style={{ fontSize: 12, fontWeight: 800, color: DIM, marginRight: 4 }}>Add Comment Markup</span>
           <button onClick={() => selectTool(null)} style={toolBtn(tool === null)} title="Pan and zoom the sheet">Pan</button>
           {GUEST_TOOLS.map((t) => (
             <button key={t.id} onClick={() => selectTool(tool === t.id ? null : t.id)} title={t.hint} style={toolBtn(tool === t.id)}>{t.label}</button>
           ))}
           {guestName && (
-            <span style={{ fontSize: 11, color: DIM, marginLeft: 4 }}>as <span style={{ color: GOLD, fontWeight: 700 }}>{guestName}</span></span>
+            <span style={{ fontSize: 12, color: DIM, marginLeft: 4 }}>as <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{guestName}</span></span>
           )}
         </div>
 
@@ -1334,7 +1334,7 @@ export default function DrawingReviewPortalPage() {
                   </>
                 ) : (
                   <>
-                    <span style={{ fontSize: 10, fontWeight: 800, color: GOLD, padding: '0 4px' }}>Your Markup</span>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', padding: '0 4px' }}>Your Markup</span>
                     {isText && (
                       <button onClick={() => { setEditValue(String((row.data as Record<string, unknown> | null)?.text || '')); setSelMode('edit'); }} style={toolBtn(false)}>Edit Text</button>
                     )}
@@ -1349,8 +1349,8 @@ export default function DrawingReviewPortalPage() {
           {/* hover attribution */}
           {hoverTip && (
             <div style={{ position: 'absolute', left: Math.min(hoverTip.x + 14, (wrapRef.current?.clientWidth || 400) - 190), top: hoverTip.y + 14, background: 'rgba(10,10,10,0.94)', border: `1px solid color-mix(in srgb, ${GOLD} 33%, transparent)`, borderRadius: 8, padding: '7px 11px', pointerEvents: 'none', zIndex: 5, maxWidth: 180 }}>
-              <div style={{ fontSize: 12, fontWeight: 800, color: GOLD, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{hoverTip.who}</div>
-              <div style={{ fontSize: 10, color: DIM, marginTop: 2, textTransform: 'capitalize' }}>{hoverTip.kind} &middot; {hoverTip.when}</div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{hoverTip.who}</div>
+              <div style={{ fontSize: 12, color: DIM, marginTop: 2, textTransform: 'capitalize' }}>{hoverTip.kind} &middot; {hoverTip.when}</div>
             </div>
           )}
 
@@ -1358,7 +1358,7 @@ export default function DrawingReviewPortalPage() {
           <div style={{ position: 'absolute', right: 12, bottom: 12, display: 'flex', flexDirection: 'column', gap: 6, zIndex: 4 }}>
             <button onClick={() => zoomBy(1.35)} style={zoomBtn} aria-label="Zoom in">+</button>
             <button onClick={() => zoomBy(1 / 1.35)} style={zoomBtn} aria-label="Zoom out">&minus;</button>
-            <button onClick={fitView} style={{ ...zoomBtn, fontSize: 10 }} aria-label="Fit to screen">Fit</button>
+            <button onClick={fitView} style={{ ...zoomBtn, fontSize: 12 }} aria-label="Fit to screen">Fit</button>
           </div>
 
           {/* busy / error overlays */}
@@ -1383,10 +1383,10 @@ export default function DrawingReviewPortalPage() {
 
         {/* status strip */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '8px 4px 0', flexWrap: 'wrap' }}>
-          <div style={{ fontSize: 11, color: DIM }}>
+          <div style={{ fontSize: 12, color: DIM }}>
             {visibleCount} markup{visibleCount === 1 ? '' : 's'} on this {pageCount > 1 ? 'page' : 'sheet'} &middot; hover a markup for author + time &middot; You can edit or remove your own markups.
           </div>
-          <div style={{ fontSize: 11, color: DIM }}>
+          <div style={{ fontSize: 12, color: DIM }}>
             Refreshes automatically{updatedAt ? <span> &middot; updated {updatedAt}</span> : null}
           </div>
         </div>
@@ -1394,7 +1394,7 @@ export default function DrawingReviewPortalPage() {
 
       {/* ── Footer ── */}
       <footer style={{ textAlign: 'center', padding: '4px 16px 12px', flexShrink: 0 }}>
-        <div style={{ fontSize: 11, color: DIM }}>Powered by <strong style={{ color: GOLD }}>Saguaro Control Systems</strong></div>
+        <div style={{ fontSize: 12, color: DIM }}>Powered by <strong style={{ color: 'var(--text-primary)' }}>Saguaro Control Systems</strong></div>
       </footer>
 
       {/* ── honest failure / status toast ── */}

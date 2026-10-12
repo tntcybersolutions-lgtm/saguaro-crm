@@ -19,9 +19,9 @@ const CSS = `
 .stjHead h2 { margin: 0; font-size: 18px; font-weight: 800; }
 .stjHead p { margin: 4px 0 0; font-size: 13px; color: var(--text-tertiary); }
 .stjX { margin-left: auto; width: 44px; height: 44px; flex: none; border-radius: 12px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.04); color: var(--text-primary); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
-.stj label { font-size: 13px; font-weight: 800; color: var(--brand-primary); }
+.stj label { font-size: 13px; font-weight: 800; color: var(--text-secondary); }
 .stj select { width: 100%; min-height: 48px; margin-top: 6px; padding: 0 12px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--brand-primary) 45%, transparent); background: var(--bg-solid); color: var(--text-primary); font: inherit; font-size: 16px; font-weight: 700; }
-.stjErr { color: var(--c-red); font-size: 13.5px; }
+.stjErr { color: var(--c-red); font-size: 14px; }
 .stjFoot { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
 .stjBtn { min-height: 44px; padding: 0 18px; border-radius: 12px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.04); color: var(--text-primary); font: inherit; font-size: 14px; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
 .stjBtn[data-primary] { border: none; background: var(--brand-primary); color: var(--on-brand); }

@@ -31,11 +31,11 @@ type Tab='dashboard'|'photos'|'punch'|'daily'|'schedule'|'rfis'|'radio'|'payapps
 /* ── Shared styles ── */
 const card=(extra?:React.CSSProperties):React.CSSProperties=>({background:RAISED,backgroundImage:'linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015))',border:`1px solid ${BORDER}`,borderRadius:12,padding:20,boxShadow:'0 4px 14px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.06)',...extra});
 const btnS=(color:string,small?:boolean):React.CSSProperties=>({background:color,backgroundImage:color===GOLD?'linear-gradient(180deg,var(--brand-primary-strong),var(--brand-primary) 60%,var(--brand-primary-hover))':'linear-gradient(180deg,rgba(255,255,255,0.16),rgba(255,255,255,0) 55%)',color:color===GOLD?'#101722':'#fff',border:'none',borderRadius:9,padding:small?'6px 14px':'11px 20px',fontWeight:800,fontSize:small?12:14,cursor:'pointer',boxShadow:color===GOLD?'0 4px 14px color-mix(in srgb, var(--brand-primary) 28%, transparent), inset 0 1px 0 rgba(255,255,255,0.35)':'0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)'});
-const labelS:React.CSSProperties={display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5};
+const labelS:React.CSSProperties={display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:5};
 /* 16px text: iOS zooms the page into any input set smaller. 44px: a fingertip target. */
 const inputS:React.CSSProperties={width:'100%',background:DARK,border:`1px solid ${BORDER}`,borderRadius:7,padding:'10px 14px',color:TEXT,fontSize:16,minHeight:44,outline:'none',boxSizing:'border-box'};
 const textareaS:React.CSSProperties={...inputS,minHeight:80,resize:'vertical' as const};
-const badge=(status:string):React.CSSProperties=>{const m:Record<string,string>={approved:GREEN,paid:GREEN,signed:GREEN,accepted:GREEN,awarded:GREEN,valid:GREEN,submitted:BLUE,open:BLUE,pending:AMBER,under_review:AMBER,pending_review:AMBER,draft:DIM,expiring_soon:AMBER,correction_requested:AMBER,rejected:RED,disputed:RED,expired:RED,declined:RED,missing:RED};const c=m[status]||DIM;return{display:'inline-block',padding:'3px 10px',borderRadius:20,fontSize:11,fontWeight:700,background:`color-mix(in srgb, ${c} 13%, transparent)`,color:c,textTransform:'capitalize' as const}};
+const badge=(status:string):React.CSSProperties=>{const m:Record<string,string>={approved:GREEN,paid:GREEN,signed:GREEN,accepted:GREEN,awarded:GREEN,valid:GREEN,submitted:BLUE,open:BLUE,pending:AMBER,under_review:AMBER,pending_review:AMBER,draft:DIM,expiring_soon:AMBER,correction_requested:AMBER,rejected:RED,disputed:RED,expired:RED,declined:RED,missing:RED};const c=m[status]||DIM;return{display:'inline-block',padding:'3px 10px',borderRadius:20,fontSize:12,fontWeight:700,background:`color-mix(in srgb, ${c} 13%, transparent)`,color:c,textTransform:'capitalize' as const}};
 
 /** Every panel the portal loads: [route under /api/portal/sub, the name a sub reads if it fails]. Order matters (see val(i)). */
 const PANELS:ReadonlyArray<readonly [string,string]>=[
@@ -756,7 +756,7 @@ export default function SubPortal(){
         <div style={{...card(),background:`linear-gradient(135deg,${RAISED},${DARK})`,position:'relative',overflow:'hidden'}}>
           <div style={{position:'absolute',right:-30,top:-30,width:140,height:140,background:`color-mix(in srgb, ${GOLD} 3%, transparent)`,borderRadius:'50%'}}/>
           <div style={{display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
-            <div style={{width:56,height:56,borderRadius:'50%',background:`color-mix(in srgb, ${GOLD} 13%, transparent)`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,color:GOLD,fontWeight:800}}>{companyName[0]}</div>
+            <div style={{width:56,height:56,borderRadius:'50%',background:`color-mix(in srgb, ${GOLD} 13%, transparent)`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,color: 'var(--text-primary)',fontWeight:800}}>{companyName[0]}</div>
             <div style={{flex:1,minWidth:200}}>
               <div style={{fontSize:22,fontWeight:800,color:TEXT}}>{companyName}</div>
               <div style={{fontSize:13,color:DIM,marginTop:2}}>{sub?.trade||'--'}</div>
@@ -765,13 +765,13 @@ export default function SubPortal(){
             {/* Health Score Badge */}
             <div style={{background:`color-mix(in srgb, ${healthColor} 8%, transparent)`,border:`1.5px solid color-mix(in srgb, ${healthColor} 33%, transparent)`,borderRadius:12,padding:'12px 20px',textAlign:'center',minWidth:130}}>
               <div style={{fontSize:28,fontWeight:800,color:healthColor}}>{healthScore>0?healthScore.toFixed(1):'--'}</div>
-              <div style={{fontSize:10,fontWeight:700,color:healthColor}}>{healthLabel}</div>
-              <div style={{fontSize:9,color:DIM,marginTop:2}}>Health Score</div>
+              <div style={{fontSize:12,fontWeight:700,color:healthColor}}>{healthLabel}</div>
+              <div style={{fontSize:12,color:DIM,marginTop:2}}>Health Score</div>
             </div>
             {isPreferred&&(
               <div style={{background:`color-mix(in srgb, ${GOLD} 13%, transparent)`,border:`1px solid ${GOLD}`,borderRadius:8,padding:'8px 16px',display:'flex',alignItems:'center',gap:8}}>
                 <span style={{fontSize:20}}>{'\u2B50'}</span>
-                <div><div style={{fontSize:13,fontWeight:800,color:GOLD}}>Preferred Sub</div><div style={{fontSize:10,color:DIM}}>Top-rated</div></div>
+                <div><div style={{fontSize:13,fontWeight:800,color: 'var(--text-primary)'}}>Preferred Sub</div><div style={{fontSize:12,color:DIM}}>Top-rated</div></div>
               </div>
             )}
           </div>
@@ -801,15 +801,15 @@ export default function SubPortal(){
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:12}}>
           {[
             {label:'Pay Apps Pending',value:pendingPayApps,color:AMBER,action:'payapps' as Tab},
-            {label:'Open RFIs',value:openRfis,color:BLUE,action:'rfis' as Tab},
+            {label:'Open RFIs',value:openRfis,color: 'var(--text-primary)',action:'rfis' as Tab},
             {label:'Daily Logs',value:dailyLogs.length,color:GREEN,action:'daily' as Tab},
             {label:'Unread Messages',value:unreadMsgs,color:PURPLE,action:'messages' as Tab},
-            {label:'Compliance Docs',value:complianceDocs.length,color:GOLD,action:'compliance' as Tab},
+            {label:'Compliance Docs',value:complianceDocs.length,color: 'var(--text-primary)',action:'compliance' as Tab},
             {label:'Overall Score',value:overallScore>0?overallScore.toFixed(1):'--',color:overallScore>=4?GREEN:overallScore>=3?AMBER:DIM,action:'scorecard' as Tab},
           ].map(s=>(
             <button key={s.label} onClick={()=>setTab(s.action)} style={{...card(),cursor:'pointer',textAlign:'center',border:`1px solid color-mix(in srgb, ${s.color} 20%, transparent)`}}>
               <div style={{fontSize:28,fontWeight:800,color:s.color}}>{s.value}</div>
-              <div style={{fontSize:11,fontWeight:600,color:DIM,marginTop:4}}>{s.label}</div>
+              <div style={{fontSize:12,fontWeight:600,color:DIM,marginTop:4}}>{s.label}</div>
             </button>
           ))}
         </div>
@@ -845,7 +845,7 @@ export default function SubPortal(){
             {rfis.filter((r:any)=>r.status==='open').length===0?<div style={{color:DIM,fontSize:13,textAlign:'center',padding:20}}>No open RFIs</div>:
             rfis.filter((r:any)=>r.status==='open').slice(0,5).map((rfi:any)=>(
               <div key={rfi.id} style={{padding:'8px 0',borderBottom:`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                <div><div style={{fontSize:13,fontWeight:600,color:TEXT}}>{rfiNo[rfi.id]}</div><div style={{fontSize:11,color:DIM}}>{rfi.subject}</div></div>
+                <div><div style={{fontSize:13,fontWeight:600,color:TEXT}}>{rfiNo[rfi.id]}</div><div style={{fontSize:12,color:DIM}}>{rfi.subject}</div></div>
                 <span style={badge(rfi.status)}>{rfi.status}</span>
               </div>
             ))}
@@ -877,7 +877,7 @@ export default function SubPortal(){
                 <input type="file" accept={COMPLIANCE_ACCEPT} style={{display:'none'}} disabled={docUploading}
                   onChange={e=>{setDocFile(e.target.files?.[0]||null);setDocErr('');e.currentTarget.value='';}}/>
               </label>
-              {docFile&&<div style={{fontSize:11,color:DIM,marginTop:4}}>{(docFile.size/1024/1024).toFixed(1)} MB</div>}
+              {docFile&&<div style={{fontSize:12,color:DIM,marginTop:4}}>{(docFile.size/1024/1024).toFixed(1)} MB</div>}
             </div>
             <div><div style={labelS}>Expiration Date</div><SaguaroDatePicker value={docExpiry} onChange={v=>setDocExpiry(v)} style={inputS}/></div>
           </div>
@@ -894,8 +894,8 @@ export default function SubPortal(){
               const c=a.level==='critical'?RED:a.level==='warning'?AMBER:BLUE;
               const levelLabel=days<0?'Expired':days<=30?'30-Day Alert':days<=60?'60-Day Alert':'90-Day Alert';
               return <div key={i} style={{padding:'10px 12px',background:`color-mix(in srgb, ${c} 7%, transparent)`,border:`1px solid color-mix(in srgb, ${c} 20%, transparent)`,borderRadius:6,marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
-                <div><div style={{fontSize:13,fontWeight:700,color:TEXT}}>{docLabels[a.doc.doc_type]||a.doc.doc_type}</div><div style={{fontSize:11,color:DIM}}>{docFileLabel(a.doc)} &middot; Expires: {fmtDate(a.doc.expiry_date)}</div></div>
-                <div style={{padding:'4px 12px',borderRadius:20,background:`color-mix(in srgb, ${c} 13%, transparent)`,color:c,fontSize:11,fontWeight:700}}>{levelLabel} ({days<0?'Overdue':days===0?'expires today':`${days}d`})</div>
+                <div><div style={{fontSize:13,fontWeight:700,color:TEXT}}>{docLabels[a.doc.doc_type]||a.doc.doc_type}</div><div style={{fontSize:12,color:DIM}}>{docFileLabel(a.doc)} &middot; Expires: {fmtDate(a.doc.expiry_date)}</div></div>
+                <div style={{padding:'4px 12px',borderRadius:20,background:`color-mix(in srgb, ${c} 13%, transparent)`,color:c,fontSize:12,fontWeight:700}}>{levelLabel} ({days<0?'Overdue':days===0?'expires today':`${days}d`})</div>
               </div>;
             })}
           </div>
@@ -934,7 +934,7 @@ export default function SubPortal(){
             <div style={{display:'grid',gap:8}}>
               {documents.map((doc:any)=>(
                 <div key={doc.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}>
-                  <div><div style={{fontSize:13,fontWeight:600,color:TEXT}}>{doc.title||fileNameFromUrl(doc.file_url)||'Document'}</div><div style={{fontSize:11,color:DIM}}>{doc.category||'General'} &middot; {fmtDate(doc.created_at)}</div></div>
+                  <div><div style={{fontSize:13,fontWeight:600,color:TEXT}}>{doc.title||fileNameFromUrl(doc.file_url)||'Document'}</div><div style={{fontSize:12,color:DIM}}>{doc.category||'General'} &middot; {fmtDate(doc.created_at)}</div></div>
                   {doc.file_url&&<a href={doc.file_url} target="_blank" rel="noopener noreferrer" style={{...btnS(BLUE,true),textDecoration:'none'}}>Download</a>}
                 </div>
               ))}
@@ -953,7 +953,7 @@ export default function SubPortal(){
     <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
       <div style={{fontSize:12,color:DIM,flex:1,minWidth:200,lineHeight:1.5}}>{waiverTypeLabel(w.waiver_type)} for {fmt(Number(w.amount)||0)}{w.through_date?` through ${fmtDate(w.through_date)}`:''} — signed by {w.signed_name||'your company'}{w.signer_title?`, ${w.signer_title}`:''} on {fmtDate(w.signed_at)}.</div>
       {w.file_url?<a href={w.file_url} target="_blank" rel="noopener noreferrer" style={{...btnS(BORDER,true),minHeight:44,display:'inline-flex',alignItems:'center',textDecoration:'none',color:TEXT}}>View signed PDF</a>
-        :<span style={{fontSize:11,color:DIM}}>No PDF on file</span>}
+        :<span style={{fontSize:12,color:DIM}}>No PDF on file</span>}
     </div>
   );
   const renderPayApps=()=>{
@@ -1006,7 +1006,7 @@ export default function SubPortal(){
                   {i>0&&<div style={{flex:1,height:2,background:reached?GREEN:BORDER,minWidth:30}}/>}
                   <div style={{display:'flex',flexDirection:'column',alignItems:'center',minWidth:70}}>
                     <div style={{width:24,height:24,borderRadius:'50%',background:reached?GREEN:BORDER,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,color:reached?'#fff':DIM,fontWeight:700}}>{reached?'\u2713':i+1}</div>
-                    <div style={{fontSize:10,color:reached?TEXT:DIM,marginTop:4,textTransform:'capitalize'}}>{s.replace(/_/g,' ')}</div>
+                    <div style={{fontSize:12,color:reached?TEXT:DIM,marginTop:4,textTransform:'capitalize'}}>{s.replace(/_/g,' ')}</div>
                   </div>
                 </React.Fragment>
               )})}
@@ -1014,16 +1014,16 @@ export default function SubPortal(){
 
             {/* Amounts */}
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:12,marginBottom:14}}>
-              <div style={{padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}><div style={{fontSize:10,color:DIM}}>Requested</div><div style={{fontSize:16,fontWeight:700,color:TEXT}}>{fmt(iv.requested)}</div></div>
-              <div style={{padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}><div style={{fontSize:10,color:DIM}}>Retainage Held</div><div style={{fontSize:16,fontWeight:700,color:AMBER}}>{fmt(iv.retainage)}</div></div>
-              <div style={{padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}><div style={{fontSize:10,color:DIM}}>Net Amount</div><div style={{fontSize:16,fontWeight:700,color:GREEN}}>{fmt(iv.net)}</div></div>
+              <div style={{padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}><div style={{fontSize:12,color:DIM}}>Requested</div><div style={{fontSize:16,fontWeight:700,color:TEXT}}>{fmt(iv.requested)}</div></div>
+              <div style={{padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}><div style={{fontSize:12,color:DIM}}>Retainage Held</div><div style={{fontSize:16,fontWeight:700,color:AMBER}}>{fmt(iv.retainage)}</div></div>
+              <div style={{padding:'10px 14px',background:DARK,borderRadius:6,border:`1px solid ${BORDER}`}}><div style={{fontSize:12,color:DIM}}>Net Amount</div><div style={{fontSize:16,fontWeight:700,color:GREEN}}>{fmt(iv.net)}</div></div>
             </div>
 
             {/* Line items — prev_completed / this_period / total_completed / percent_complete / balance are the real columns */}
             {iv.lines.length>0&&(
               <div style={{overflowX:'auto'}}>
                 <table style={{width:'100%',borderCollapse:'collapse',minWidth:640}}>
-                  <thead><tr>{['Description','Scheduled Value','Previous','This Period','Completed to Date','% Complete','Balance'].map(h=><th key={h} style={{textAlign:'left',padding:'6px 10px',fontSize:10,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}</tr></thead>
+                  <thead><tr>{['Description','Scheduled Value','Previous','This Period','Completed to Date','% Complete','Balance'].map(h=><th key={h} style={{textAlign:'left',padding:'6px 10px',fontSize:12,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}</tr></thead>
                   <tbody>{iv.lines.map(li=>(
                     <tr key={li.id} style={{borderBottom:`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`}}>
                       <td style={{padding:'8px 10px',fontSize:12,color:TEXT}}>{li.description}</td>
@@ -1076,7 +1076,7 @@ export default function SubPortal(){
           <button onClick={handleClockOut} disabled={gpsStatus!=='clocked_in'} style={{...btnS(RED),opacity:gpsStatus!=='clocked_in'?.5:1}}>Clock Out</button>
           {clockInTime&&<span style={{fontSize:12,color:GREEN}}>In: {new Date(clockInTime).toLocaleTimeString()}</span>}
           {clockOutTime&&<span style={{fontSize:12,color:RED}}>Out: {new Date(clockOutTime).toLocaleTimeString()}</span>}
-          {gpsCoords&&<span style={{fontSize:11,color:DIM}}>GPS: {gpsCoords.lat.toFixed(4)}, {gpsCoords.lng.toFixed(4)}</span>}
+          {gpsCoords&&<span style={{fontSize:12,color:DIM}}>GPS: {gpsCoords.lat.toFixed(4)}, {gpsCoords.lng.toFixed(4)}</span>}
         </div>
       </div>
 
@@ -1149,13 +1149,13 @@ export default function SubPortal(){
         rfis.map((rfi:any)=>(
           <div key={rfi.id} style={{padding:14,background:DARK,borderRadius:8,border:`1px solid ${BORDER}`,marginBottom:10}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6,flexWrap:'wrap',gap:8}}>
-              <div><span style={{fontSize:12,color:GOLD,fontWeight:700,marginRight:8}}>{rfiNo[rfi.id]}</span><span style={{fontSize:14,fontWeight:700,color:TEXT}}>{rfi.subject}</span></div>
+              <div><span style={{fontSize:12,color: 'var(--text-primary)',fontWeight:700,marginRight:8}}>{rfiNo[rfi.id]}</span><span style={{fontSize:14,fontWeight:700,color:TEXT}}>{rfi.subject}</span></div>
               <span style={badge(rfi.status)}>{rfi.status}</span>
             </div>
             <div style={{fontSize:12,color:DIM,marginBottom:4}}>Submitted: {fmtDate(rfi.submitted_at||rfi.created_at)}</div>
             {/* Priority and drawing / spec references are saved inside the question (portal_sub_rfis has no columns for them). */}
             <div style={{fontSize:13,color:TEXT,lineHeight:1.5,whiteSpace:'pre-wrap'}}>{rfi.question}</div>
-            {rfi.answer&&<div style={{marginTop:8,padding:'8px 12px',background:`color-mix(in srgb, ${GREEN} 7%, transparent)`,borderRadius:6,border:`1px solid color-mix(in srgb, ${GREEN} 27%, transparent)`}}><div style={{fontSize:11,fontWeight:700,color:GREEN,marginBottom:4}}>Answer{rfi.answered_at?` · ${fmtDate(rfi.answered_at)}`:''}:</div><div style={{fontSize:12,color:TEXT,lineHeight:1.5,whiteSpace:'pre-wrap'}}>{rfi.answer}</div></div>}
+            {rfi.answer&&<div style={{marginTop:8,padding:'8px 12px',background:`color-mix(in srgb, ${GREEN} 7%, transparent)`,borderRadius:6,border:`1px solid color-mix(in srgb, ${GREEN} 27%, transparent)`}}><div style={{fontSize:12,fontWeight:700,color:GREEN,marginBottom:4}}>Answer{rfi.answered_at?` · ${fmtDate(rfi.answered_at)}`:''}:</div><div style={{fontSize:12,color:TEXT,lineHeight:1.5,whiteSpace:'pre-wrap'}}>{rfi.answer}</div></div>}
           </div>
         ))}
       </div>
@@ -1174,7 +1174,7 @@ export default function SubPortal(){
           {tasks.length===0?<div style={{color:DIM,fontSize:13,textAlign:'center',padding:40}}>No schedule data available</div>:(
             <div style={{overflowX:'auto'}}>
               <table style={{width:'100%',borderCollapse:'collapse',minWidth:600}}>
-                <thead><tr>{['Task','Phase','Start','End','Progress','Status'].map(h=><th key={h} style={{textAlign:'left',padding:'8px 12px',fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}</tr></thead>
+                <thead><tr>{['Task','Phase','Start','End','Progress','Status'].map(h=><th key={h} style={{textAlign:'left',padding:'8px 12px',fontSize:12,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}</tr></thead>
                 <tbody>{sorted.map((task:any)=>{
                   const pct=Math.round((task.percent_complete||0)*100);
                   const c=pct>=100?GREEN:pct>=50?BLUE:AMBER;
@@ -1214,8 +1214,8 @@ export default function SubPortal(){
       <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
         {/* Overall */}
         <div style={{...card(),background:`linear-gradient(135deg,${RAISED},${DARK})`,textAlign:'center'}}>
-          {isPreferred&&<div style={{marginBottom:16,display:'inline-flex',alignItems:'center',gap:10,background:`color-mix(in srgb, ${GOLD} 13%, transparent)`,border:`1px solid ${GOLD}`,borderRadius:30,padding:'8px 20px'}}><span style={{fontSize:22}}>{'\u2B50'}</span><span style={{fontSize:15,fontWeight:800,color:GOLD}}>Preferred Subcontractor</span></div>}
-          <div style={{fontSize:56,fontWeight:800,color:GOLD}}>{overallScore>0?overallScore.toFixed(1):'--'}</div>
+          {isPreferred&&<div style={{marginBottom:16,display:'inline-flex',alignItems:'center',gap:10,background:`color-mix(in srgb, ${GOLD} 13%, transparent)`,border:`1px solid ${GOLD}`,borderRadius:30,padding:'8px 20px'}}><span style={{fontSize:22}}>{'\u2B50'}</span><span style={{fontSize:15,fontWeight:800,color: 'var(--text-primary)'}}>Preferred Subcontractor</span></div>}
+          <div style={{fontSize:56,fontWeight:800,color: 'var(--text-primary)'}}>{overallScore>0?overallScore.toFixed(1):'--'}</div>
           <Stars rating={overallScore} size={28}/>
           <div style={{fontSize:14,color:DIM,marginTop:8}}>{reviews>0?`Overall Performance Rating (${reviews} review${reviews===1?'':'s'})`:overallScore>0?'Overall rating from your general contractor':'Not rated yet'}</div>
         </div>
@@ -1254,12 +1254,12 @@ export default function SubPortal(){
             <div style={{fontSize:17,fontWeight:700,color:TEXT,marginBottom:16}}>Score History</div>
             <div style={{overflowX:'auto'}}>
               <table style={{width:'100%',borderCollapse:'collapse',minWidth:500}}>
-                <thead><tr>{['Date',...cats.map(c=>c.label),'Notes'].map(h=><th key={h} style={{textAlign:'left',padding:'8px 12px',fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}</tr></thead>
+                <thead><tr>{['Date',...cats.map(c=>c.label),'Notes'].map(h=><th key={h} style={{textAlign:'left',padding:'8px 12px',fontSize:12,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}</tr></thead>
                 <tbody>{scorecard.scorecards.map((sc:any)=>(
                   <tr key={sc.id} style={{borderBottom:`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`}}>
                     <td style={{padding:'8px 12px',fontSize:12,color:DIM}}>{fmtDate(sc.created_at)}</td>
                     {cats.map(c=><td key={c.key} style={{padding:'8px 12px'}}>{sc[c.key]!=null?<Stars rating={Number(sc[c.key])} size={12}/>:'--'}</td>)}
-                    <td style={{padding:'8px 12px',fontSize:11,color:DIM,maxWidth:200}}>{sc.notes||'--'}</td>
+                    <td style={{padding:'8px 12px',fontSize:12,color:DIM,maxWidth:200}}>{sc.notes||'--'}</td>
                   </tr>
                 ))}</tbody>
               </table>
@@ -1286,7 +1286,7 @@ export default function SubPortal(){
                 <div key={msg.id} style={{display:'flex',justifyContent:isSub?'flex-end':'flex-start',marginBottom:10}}>
                   <div style={{maxWidth:'75%',padding:'10px 14px',borderRadius:12,background:isSub?`color-mix(in srgb, ${BLUE} 13%, transparent)`:RAISED,border:`1px solid ${isSub?`color-mix(in srgb, ${BLUE} 27%, transparent)`:BORDER}`,borderBottomRightRadius:isSub?2:12,borderBottomLeftRadius:isSub?12:2}}>
                     <div style={{fontSize:13,color:TEXT,lineHeight:1.5}}>{msg.content}</div>
-                    <div style={{fontSize:10,color:DIM,marginTop:4,textAlign:isSub?'right':'left'}}>{isSub?'You':'GC'} &middot; {fmtDate(msg.created_at)}</div>
+                    <div style={{fontSize:12,color:DIM,marginTop:4,textAlign:isSub?'right':'left'}}>{isSub?'You':'GC'} &middot; {fmtDate(msg.created_at)}</div>
                   </div>
                 </div>
               );
@@ -1326,11 +1326,11 @@ export default function SubPortal(){
             <div style={{width:10,height:10,borderRadius:'50%',background:GREEN,boxShadow:`0 0 8px ${GREEN}`,flexShrink:0}}/>
             <div style={{flex:1,minWidth:160}}>
               <div style={{fontSize:17,fontWeight:700,color:TEXT}}>{radioChannel.name||'Radio'}</div>
-              {typeof radioChannel.on_channel==='number'&&radioChannel.on_channel>0&&<div style={{fontSize:11,color:DIM,marginTop:2}}>{radioChannel.on_channel} on channel now</div>}
+              {typeof radioChannel.on_channel==='number'&&radioChannel.on_channel>0&&<div style={{fontSize:12,color:DIM,marginTop:2}}>{radioChannel.on_channel} on channel now</div>}
             </div>
             <div style={{display:'flex',border:`1px solid ${BORDER}`,borderRadius:8,overflow:'hidden'}}>
               {(['en','es'] as const).map(l=>(
-                <button key={l} onClick={()=>setRadioLang(l)} style={{padding:'6px 14px',border:'none',cursor:'pointer',fontSize:11,fontWeight:800,letterSpacing:.6,background:radioLang===l?GOLD:'transparent',color:radioLang===l?'#101722':DIM}}>{l.toUpperCase()}</button>
+                <button key={l} onClick={()=>setRadioLang(l)} style={{padding:'6px 14px',border:'none',cursor:'pointer',fontSize:12,fontWeight:800,letterSpacing:.6,background:radioLang===l?GOLD:'transparent',color:radioLang===l?'#101722':DIM}}>{l.toUpperCase()}</button>
               ))}
             </div>
           </div>
@@ -1345,9 +1345,9 @@ export default function SubPortal(){
                 const c=m.kind==='panic'?RED:AMBER;
                 return(
                   <div key={m.id} style={{padding:'10px 14px',background:`color-mix(in srgb, ${c} 7%, transparent)`,border:`1px solid color-mix(in srgb, ${c} 33%, transparent)`,borderRadius:8,marginBottom:10,...(radioFlashIds.has(m.id)?{animation:'sgRadioRing 2.4s ease-out'}:{})}}>
-                    <div style={{fontSize:11,fontWeight:800,color:c,marginBottom:4}}>{'⚠'} {m.kind==='panic'?'Panic':'Alert'} &middot; {m.sender_name||'Unknown'}{m.patched_from?<span style={{marginLeft:6,fontSize:9,fontWeight:700,color:GOLD,background:`color-mix(in srgb, ${GOLD} 8%, transparent)`,border:`1px solid color-mix(in srgb, ${GOLD} 27%, transparent)`,borderRadius:10,padding:'1px 7px',letterSpacing:.5,verticalAlign:'middle'}}>Via Patched Channel</span>:null}</div>
+                    <div style={{fontSize:12,fontWeight:800,color:c,marginBottom:4}}>{'⚠'} {m.kind==='panic'?'Panic':'Alert'} &middot; {m.sender_name||'Unknown'}{m.patched_from?<span style={{marginLeft:6,fontSize:12,fontWeight:700,color: 'var(--text-primary)',background:`color-mix(in srgb, ${GOLD} 8%, transparent)`,border:`1px solid color-mix(in srgb, ${GOLD} 27%, transparent)`,borderRadius:10,padding:'1px 7px',letterSpacing:.5,verticalAlign:'middle'}}>Via Patched Channel</span>:null}</div>
                     {shown&&<div style={{fontSize:13,color:TEXT,lineHeight:1.5}}>{shown}</div>}
-                    <div style={{fontSize:10,color:DIM,marginTop:4}}>{new Date(m.created_at).toLocaleTimeString()}</div>
+                    <div style={{fontSize:12,color:DIM,marginTop:4}}>{new Date(m.created_at).toLocaleTimeString()}</div>
                   </div>
                 );
               }
@@ -1359,9 +1359,9 @@ export default function SubPortal(){
                   <div key={m.id} style={{display:'flex',justifyContent:mine?'flex-end':'flex-start',marginBottom:10,...(radioFlashIds.has(m.id)?{animation:'sgRadioFlash 2.4s ease-out',borderRadius:10}:{})}}>
                     <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'6px 12px',background:`color-mix(in srgb, ${tc} 8%, transparent)`,border:`1px solid color-mix(in srgb, ${tc} 33%, transparent)`,borderRadius:20,flexWrap:'wrap'}}>
                       <span style={{width:7,height:7,borderRadius:'50%',background:tc,flexShrink:0}}/>
-                      <span style={{fontSize:11,fontWeight:800,color:tc}}>{tl}</span>
-                      <span style={{fontSize:10,color:DIM}}>{mine?'You':(m.sender_name||'Unknown')} &middot; {new Date(m.created_at).toLocaleTimeString()}</span>
-                      {m.patched_from&&<span style={{fontSize:9,fontWeight:700,color:GOLD,background:`color-mix(in srgb, ${GOLD} 8%, transparent)`,border:`1px solid color-mix(in srgb, ${GOLD} 27%, transparent)`,borderRadius:10,padding:'1px 7px',letterSpacing:.5}}>Via Patched Channel</span>}
+                      <span style={{fontSize:12,fontWeight:800,color:tc}}>{tl}</span>
+                      <span style={{fontSize:12,color:DIM}}>{mine?'You':(m.sender_name||'Unknown')} &middot; {new Date(m.created_at).toLocaleTimeString()}</span>
+                      {m.patched_from&&<span style={{fontSize:12,fontWeight:700,color: 'var(--text-primary)',background:`color-mix(in srgb, ${GOLD} 8%, transparent)`,border:`1px solid color-mix(in srgb, ${GOLD} 27%, transparent)`,borderRadius:10,padding:'1px 7px',letterSpacing:.5}}>Via Patched Channel</span>}
                     </div>
                   </div>
                 );
@@ -1369,15 +1369,15 @@ export default function SubPortal(){
               return(
                 <div key={m.id} style={{display:'flex',justifyContent:mine?'flex-end':'flex-start',marginBottom:10,...(radioFlashIds.has(m.id)?{animation:'sgRadioFlash 2.4s ease-out',borderRadius:10}:{})}}>
                   <div style={{maxWidth:'80%',padding:'10px 14px',borderRadius:12,background:mine?`color-mix(in srgb, ${BLUE} 13%, transparent)`:RAISED,border:`1px solid ${mine?`color-mix(in srgb, ${BLUE} 27%, transparent)`:BORDER}`,borderBottomRightRadius:mine?2:12,borderBottomLeftRadius:mine?12:2}}>
-                    <div style={{fontSize:11,fontWeight:700,color:mine?GOLD:DIM,marginBottom:4}}>{mine?'You':(m.sender_name||'Unknown')}{m.patched_from?<span style={{marginLeft:6,fontSize:9,fontWeight:700,color:GOLD,background:`color-mix(in srgb, ${GOLD} 8%, transparent)`,border:`1px solid color-mix(in srgb, ${GOLD} 27%, transparent)`,borderRadius:10,padding:'1px 7px',letterSpacing:.5,verticalAlign:'middle'}}>Via Patched Channel</span>:null}</div>
+                    <div style={{fontSize:12,fontWeight:700,color:mine?GOLD:DIM,marginBottom:4}}>{mine?'You':(m.sender_name||'Unknown')}{m.patched_from?<span style={{marginLeft:6,fontSize:12,fontWeight:700,color: 'var(--text-primary)',background:`color-mix(in srgb, ${GOLD} 8%, transparent)`,border:`1px solid color-mix(in srgb, ${GOLD} 27%, transparent)`,borderRadius:10,padding:'1px 7px',letterSpacing:.5,verticalAlign:'middle'}}>Via Patched Channel</span>:null}</div>
                     {m.kind==='voice'?(
                       <div>
                         <RadioWave seed={String(m.id||'')} color={mine?GOLD:DIM}/>
                         {m.audio_url?<audio controls preload="none" src={m.audio_url} onPlay={()=>{if(mine||!m.id||radioReceiptSentRef.current.has(m.id))return;radioReceiptSentRef.current.add(m.id);fetch(`/api/portal/sub/radio?token=${token}`,{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({receiptMessageIds:[m.id]})}).catch(()=>{});}} style={{width:230,maxWidth:'100%',height:36,display:'block'}}/>:<div style={{fontSize:12,color:DIM}}>Voice message</div>}
-                        <div style={{fontSize:10,color:DIM,marginTop:4}}>{m.audio_duration_secs?`${m.audio_duration_secs}s voice`:'voice'}</div>
+                        <div style={{fontSize:12,color:DIM,marginTop:4}}>{m.audio_duration_secs?`${m.audio_duration_secs}s voice`:'voice'}</div>
                         {(t[radioLang]||m.transcript)&&(
                           <div style={{fontSize:12,color:DIM,marginTop:6,lineHeight:1.5,fontStyle:t[radioLang]?'normal':'italic',borderLeft:`2px solid ${BORDER}`,paddingLeft:8}}>
-                            {t[radioLang]&&<span style={{color:GOLD,fontWeight:800,fontSize:9,letterSpacing:.8,marginRight:6}}>{radioLang.toUpperCase()}</span>}
+                            {t[radioLang]&&<span style={{color: 'var(--text-primary)',fontWeight:800,fontSize:12,letterSpacing:.8,marginRight:6}}>{radioLang.toUpperCase()}</span>}
                             &ldquo;{t[radioLang]||m.transcript}&rdquo;
                           </div>
                         )}
@@ -1390,7 +1390,7 @@ export default function SubPortal(){
                     ):(
                       <div style={{fontSize:13,color:TEXT,lineHeight:1.5}}>{shown}</div>
                     )}
-                    <div style={{fontSize:10,color:DIM,marginTop:4,textAlign:mine?'right':'left'}}>{new Date(m.created_at).toLocaleTimeString()}</div>
+                    <div style={{fontSize:12,color:DIM,marginTop:4,textAlign:mine?'right':'left'}}>{new Date(m.created_at).toLocaleTimeString()}</div>
                   </div>
                 </div>
               );
@@ -1488,7 +1488,7 @@ export default function SubPortal(){
               <span style={{fontSize:20}}>{/pdf/i.test(d.doc_type||'')?'\u{1F4C4}':/sheet|excel|csv/i.test(d.doc_type||'')?'\u{1F4CA}':/word/i.test(d.doc_type||'')?'\u{1F4DD}':'\u{1F4CE}'}</span>
               <div style={{flex:1,minWidth:180}}>
                 <div style={{fontSize:13,fontWeight:700,color:TEXT}}>{d.title}</div>
-                <div style={{fontSize:11,color:DIM}}>{(DOC_CATS.find(c=>c[0]===d.category)?.[1])||d.category} &middot; {fmtDate(d.created_at)}{d.file_size?` \u00b7 ${(d.file_size/1024/1024).toFixed(1)} MB`:''}</div>
+                <div style={{fontSize:12,color:DIM}}>{(DOC_CATS.find(c=>c[0]===d.category)?.[1])||d.category} &middot; {fmtDate(d.created_at)}{d.file_size?` \u00b7 ${(d.file_size/1024/1024).toFixed(1)} MB`:''}</div>
               </div>
               <span style={badge(d.status||'submitted')}>{d.status||'submitted'}</span>
               {d.file_url&&<a href={d.file_url} target="_blank" rel="noreferrer" style={{...btnS(BORDER,true),textDecoration:'none',color:TEXT}}>View</a>}
@@ -1504,7 +1504,7 @@ export default function SubPortal(){
                 {/^video\//.test(d.doc_type||'')||d.category==='video'
                   ?<video src={d.file_url} style={{width:'100%',height:110,objectFit:'cover',display:'block'}} muted/>
                   :<img src={d.file_url} alt={d.title} style={{width:'100%',height:110,objectFit:'cover',display:'block'}}/>}
-                <div style={{padding:'6px 8px',fontSize:11,color:DIM,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{d.title}</div>
+                <div style={{padding:'6px 8px',fontSize:12,color:DIM,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{d.title}</div>
               </a>
             ))}
           </div>
@@ -1520,12 +1520,12 @@ export default function SubPortal(){
         {drawings.length===0&&<div style={card()}><div style={{color:DIM,fontSize:13}}>No current drawings shared for this project yet.</div></div>}
         {Object.entries(groups).map(([disc,list]:[string,any[]])=>(
           <div key={disc} style={card()}>
-            <div style={{fontSize:11,fontWeight:700,color:DIM,marginBottom:10}}>{disc} &middot; {list.length} sheet{list.length===1?'':'s'}</div>
+            <div style={{fontSize:12,fontWeight:700,color:DIM,marginBottom:10}}>{disc} &middot; {list.length} sheet{list.length===1?'':'s'}</div>
             {list.map((d:any)=>(
               <div key={d.id} style={{display:'flex',alignItems:'center',gap:12,padding:'9px 0',borderBottom:`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`,flexWrap:'wrap'}}>
-                <span style={{fontSize:12,fontWeight:800,color:GOLD,minWidth:64}}>{d.sheet_number||'--'}</span>
+                <span style={{fontSize:12,fontWeight:800,color: 'var(--text-primary)',minWidth:64}}>{d.sheet_number||'--'}</span>
                 <div style={{flex:1,minWidth:160,fontSize:13,color:TEXT}}>{d.name}</div>
-                <span style={{fontSize:11,color:DIM}}>Rev {d.version??'--'}{d.revision_date?` \u00b7 ${fmtDate(d.revision_date)}`:''}</span>
+                <span style={{fontSize:12,color:DIM}}>Rev {d.version??'--'}{d.revision_date?` \u00b7 ${fmtDate(d.revision_date)}`:''}</span>
                 {d.url&&<a href={d.url} target="_blank" rel="noreferrer" style={{...btnS(GOLD,true),textDecoration:'none'}}>Open</a>}
               </div>
             ))}
@@ -1564,7 +1564,7 @@ export default function SubPortal(){
                     onChange={e=>{handlePunchComplete(p.id,e.target.files?.[0]||null);e.currentTarget.value='';}}/>
                 </label>
               </div>
-              {p.location&&<div style={{fontSize:11,color:DIM,marginTop:4}}>Location: {p.location}</div>}
+              {p.location&&<div style={{fontSize:12,color:DIM,marginTop:4}}>Location: {p.location}</div>}
             </div>
           ))}
         </div>
@@ -1574,7 +1574,7 @@ export default function SubPortal(){
             <div key={p.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`,flexWrap:'wrap'}}>
               <span style={{color:GREEN,fontWeight:800}}>{'\u2713'}</span>
               <div style={{flex:1,minWidth:200,fontSize:13,color:DIM}}>{p.description}</div>
-              <span style={{fontSize:11,color:DIM}}>{fmtDate(p.completed_at)}</span>
+              <span style={{fontSize:12,color:DIM}}>{fmtDate(p.completed_at)}</span>
               {(p.photo_urls||[]).slice(0,3).map((u:string,i:number)=>(<a key={i} href={u} target="_blank" rel="noreferrer"><img src={u} alt="proof" style={{width:36,height:36,objectFit:'cover',borderRadius:6,border:`1px solid ${BORDER}`}}/></a>))}
             </div>
           ))}
@@ -1594,7 +1594,7 @@ export default function SubPortal(){
             <div style={{width:8,height:8,borderRadius:'50%',background:GOLD,marginTop:6,flexShrink:0}}/>
             <div style={{flex:1}}>
               <div style={{fontSize:13,color:TEXT}}>{label(e)}</div>
-              <div style={{fontSize:11,color:DIM,marginTop:2}}>{new Date(e.created_at).toLocaleString()}</div>
+              <div style={{fontSize:12,color:DIM,marginTop:2}}>{new Date(e.created_at).toLocaleString()}</div>
             </div>
           </div>
         ))}
@@ -1619,7 +1619,7 @@ export default function SubPortal(){
           </div>
           {b.bidPackage?.scope&&<div style={{fontSize:12,color:DIM,marginTop:10,lineHeight:1.6}}>{b.bidPackage.scope}</div>}
           {b.token&&(
-            <a href={`/portals/bid/${b.token}`} style={{display:'inline-flex',alignItems:'center',justifyContent:'center',minHeight:44,marginTop:12,padding:'0 16px',borderRadius:10,background:b.canBid?GOLD:'transparent',border:b.canBid?'none':`1px solid ${BORDER}`,color:b.canBid?'var(--on-brand)':TEXT,fontSize:13.5,fontWeight:800,textDecoration:'none'}}>
+            <a href={`/portals/bid/${b.token}`} style={{display:'inline-flex',alignItems:'center',justifyContent:'center',minHeight:44,marginTop:12,padding:'0 16px',borderRadius:10,background:b.canBid?GOLD:'transparent',border:b.canBid?'none':`1px solid ${BORDER}`,color:b.canBid?'var(--on-brand)':TEXT,fontSize:14,fontWeight:800,textDecoration:'none'}}>
               {b.canBid?(b.submitted?'Open the Jacket \u00b7 Revise Bid':'Open the Jacket \u00b7 Submit Bid'):'Open the Jacket'}
             </a>
           )}
@@ -1664,16 +1664,16 @@ export default function SubPortal(){
       <header style={{background:RAISED,borderBottom:`1px solid ${BORDER}`,padding:'12px 24px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
         <div style={{display:'flex',alignItems:'center',gap:12}}>
           <span style={{fontSize:26}}>{'\u{1F335}'}</span>
-          <div><span style={{fontWeight:800,fontSize:16,color:GOLD,letterSpacing:'-0.01em'}}>Saguaro</span><span style={{fontSize:12,color:DIM,marginLeft:8}}>Subcontractor Portal</span></div>
+          <div><span style={{fontWeight:800,fontSize:16,color: 'var(--text-primary)',letterSpacing:'-0.01em'}}>Saguaro</span><span style={{fontSize:12,color:DIM,marginLeft:8}}>Subcontractor Portal</span></div>
         </div>
         <div style={{display:'flex',alignItems:'center',gap:12}}>
           <div style={{textAlign:'right'}}>
             <div style={{fontSize:13,fontWeight:700,color:TEXT}}>{companyName}</div>
-            <div style={{fontSize:11,color:DIM}}>{sub?.trade||''}</div>
+            <div style={{fontSize:12,color:DIM}}>{sub?.trade||''}</div>
           </div>
           {/* Health Badge mini — only once there is a score to show */}
           {healthScore>0&&<div style={{width:36,height:36,borderRadius:'50%',border:`2px solid ${healthColor}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:800,color:healthColor}} title={`Health Score: ${healthScore.toFixed(1)}`}>{healthScore.toFixed(1)}</div>}
-          {isPreferred&&<span style={{fontSize:18,color:GOLD}} title="Preferred Subcontractor">{'\u2B50'}</span>}
+          {isPreferred&&<span style={{fontSize:18,color: 'var(--text-primary)'}} title="Preferred Subcontractor">{'\u2B50'}</span>}
         </div>
       </header>
 
@@ -1682,7 +1682,7 @@ export default function SubPortal(){
         {TABS.map((t,i)=>(
           <React.Fragment key={t.key}>
           {i>0&&TABS[i-1].section!==t.section&&<span style={{width:1,height:20,background:BORDER,margin:'0 4px',flexShrink:0}}/>}
-          <button onClick={()=>setTab(t.key)} style={{padding:'8px 14px',background:tab===t.key?'linear-gradient(180deg,color-mix(in srgb, var(--brand-primary) 22%, transparent),var(--brand-primary-12))':'rgba(255,255,255,0.03)',border:`1px solid ${tab===t.key?'color-mix(in srgb, var(--brand-primary) 50%, transparent)':BORDER}`,borderRadius:999,color:tab===t.key?'var(--brand-primary-strong)':DIM,fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap',transition:'all .15s',display:'flex',alignItems:'center',gap:6,flexShrink:0,boxShadow:tab===t.key?'0 0 0 3px var(--brand-primary-12)':'none'}}>
+          <button onClick={()=>setTab(t.key)} style={{padding:'8px 14px',background:tab===t.key?'linear-gradient(180deg,color-mix(in srgb, var(--brand-primary) 22%, transparent),var(--brand-primary-12))':'rgba(255,255,255,0.03)',border:`1px solid ${tab===t.key?'color-mix(in srgb, var(--brand-primary) 50%, transparent)':BORDER}`,borderRadius:999,color:tab===t.key?'var(--brand-primary-strong)':DIM,fontSize:12,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap',transition:'all .15s',display:'flex',alignItems:'center',gap:6,flexShrink:0,boxShadow:tab===t.key?'0 0 0 3px var(--brand-primary-12)':'none'}}>
             <span style={{fontSize:14}}>{t.icon}</span><span>{t.label}</span>
             {t.key==='messages'&&unreadCount>0&&(
               <span style={{width:8,height:8,borderRadius:'50%',background:RED,flexShrink:0}}/>
@@ -1709,8 +1709,8 @@ export default function SubPortal(){
 
       {/* Footer */}
       <footer style={{textAlign:'center',padding:'24px 20px',borderTop:`1px solid ${BORDER}`,marginTop:40}}>
-        <div style={{fontSize:12,color:DIM}}>Powered by <strong style={{color:GOLD}}>Saguaro Control Systems</strong> &middot; Construction Management Platform</div>
-        <div style={{fontSize:10,color:BORDER,marginTop:4}}>&copy; {new Date().getFullYear()} Saguaro. All rights reserved.</div>
+        <div style={{fontSize:12,color:DIM}}>Powered by <strong style={{color: 'var(--text-primary)'}}>Saguaro Control Systems</strong> &middot; Construction Management Platform</div>
+        <div style={{fontSize:12,color:BORDER,marginTop:4}}>&copy; {new Date().getFullYear()} Saguaro. All rights reserved.</div>
       </footer>
 
       <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}@keyframes spin{to{transform:rotate(360deg)}}*{scrollbar-width:thin;scrollbar-color:${BORDER} ${DARK}}::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:${DARK}}::-webkit-scrollbar-thumb{background:${BORDER};border-radius:3px}select option{background:${DARK};color:${TEXT}}@media(max-width:768px){main{padding:16px 12px!important}}`}</style>

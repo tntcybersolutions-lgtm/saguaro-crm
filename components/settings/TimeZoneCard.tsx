@@ -142,7 +142,7 @@ export default function TimeZoneCard() {
         <div className="tzStack">
           <div>
             <div className="tzNow" data-testid="tz-current">
-              <Globe size={18} weight="duotone" color="var(--brand-primary)" style={{ alignSelf: 'center' }} />
+              <Globe size={18} weight="duotone" color="var(--text-secondary)" style={{ alignSelf: 'center' }} />
               {current ? (
                 <>
                   <span className="tzNowName">{zoneName(current)}</span>

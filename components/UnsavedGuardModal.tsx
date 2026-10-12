@@ -41,7 +41,7 @@ export default function UnsavedGuardModal({ guard }: { guard: UnsavedGuardApi })
             background: 'var(--brand-primary-12, var(--brand-primary-12))',
             border: '1px solid var(--brand-primary-25, var(--brand-primary-25))',
           }}>
-            <Warning size={19} weight="duotone" color={colors.gold} />
+            <Warning size={19} weight="duotone" color="var(--text-secondary)" />
           </span>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: font.size.xl, fontWeight: font.weight.black, color: colors.text }}>

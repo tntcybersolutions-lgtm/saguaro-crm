@@ -121,12 +121,12 @@ export default function BidFormEditor({ packageId, lines, onLinesChanged, onToas
     <div id="bid-form" ref={card} style={{ marginBottom: 20, scrollMarginTop: 80 }}>
       <style>{`
         .bfe-row { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 6px 12px; align-items: center; padding: 10px 16px; border-bottom: 1px solid ${HAIR}; }
-        .bfe-meta { display: flex; gap: 14px; align-items: center; color: ${DIM}; font-size: 12.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .bfe-meta { display: flex; gap: 14px; align-items: center; color: ${DIM}; font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
         .bfe-acts { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: 6px; }
         .bfe-act { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 34px; min-width: 34px; padding: 0 10px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.04); color: ${TEXT}; font-size: 12px; font-weight: 700; cursor: pointer; }
         .bfe-act:disabled { opacity: .4; cursor: not-allowed; }
         .bfe-form { display: grid; grid-template-columns: minmax(80px, 120px) minmax(0, 1fr) minmax(70px, 100px) minmax(60px, 90px); gap: 8px; align-items: end; }
-        .bfe-label { font-size: 10.5px; font-weight: 800; color: ${DIM}; margin-bottom: 4px; }
+        .bfe-label { font-size: 12px; font-weight: 800; color: ${DIM}; margin-bottom: 4px; }
         @media (max-width: 640px) {
           .bfe-row { grid-template-columns: 26px minmax(0, 1fr); padding: 12px 14px; }
           .bfe-meta { grid-column: 2; }
@@ -138,7 +138,7 @@ export default function BidFormEditor({ packageId, lines, onLinesChanged, onToas
       <SectionCard
         title={`Bid Form · ${lines.length} line${lines.length === 1 ? '' : 's'}`}
         subtitle="What every bidder prices, in this order."
-        icon={<FileText size={17} weight="duotone" color={GOLD} />}
+        icon={<FileText size={17} weight="duotone" color="var(--text-secondary)" />}
         action={!adding ? (
           <button className="bfe-btn pmBtn" onClick={() => { setAdding(true); setError(null); }} style={{ ...ghostButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <Plus size={14} weight="bold" /> Add Line
@@ -147,14 +147,14 @@ export default function BidFormEditor({ packageId, lines, onLinesChanged, onToas
         flush
       >
         {lines.length === 0 && !adding && (
-          <div style={{ padding: '18px 16px', color: DIM, fontSize: 13.5, lineHeight: 1.6 }}>
+          <div style={{ padding: '18px 16px', color: DIM, fontSize: 14, lineHeight: 1.6 }}>
             No lines yet — a jacket without a bid form gives bidders nothing to price. Add the first line.
           </div>
         )}
 
         {lines.map((l, i) => (
           editingId === l.id ? (
-            <div key={l.id} style={{ padding: '12px 16px', borderBottom: `1px solid ${HAIR}`, background: 'var(--brand-primary-08)' }}>
+            <div key={l.id} style={{ padding: '12px 16px', borderBottom: `1px solid ${HAIR}`, background: 'var(--bg-surface-2)' }}>
               <LineForm d={draft} set={setDraft} />
               <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
                 <button className="bfe-btn pmBtn" onClick={() => saveEdit(l.id)} disabled={busy !== null} style={{ ...goldButtonStyle, padding: '9px 16px' }}>
@@ -169,8 +169,8 @@ export default function BidFormEditor({ packageId, lines, onLinesChanged, onToas
             <div key={l.id} className="bfe-row">
               <div style={{ color: DIM, fontSize: 12, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{i + 1}</div>
               <div style={{ minWidth: 0 }}>
-                <div style={{ color: TEXT, fontSize: 13.5, fontWeight: 600, overflowWrap: 'anywhere' }}>{l.description || '—'}</div>
-                {l.code && <div style={{ color: DIM, fontSize: 11.5, marginTop: 2 }}>{l.code}</div>}
+                <div style={{ color: TEXT, fontSize: 14, fontWeight: 600, overflowWrap: 'anywhere' }}>{l.description || '—'}</div>
+                {l.code && <div style={{ color: DIM, fontSize: 12, marginTop: 2 }}>{l.code}</div>}
               </div>
               <div className="bfe-meta">
                 <span>{l.quantity} {l.unit}</span>
@@ -203,9 +203,9 @@ export default function BidFormEditor({ packageId, lines, onLinesChanged, onToas
         {error && <div role="alert" style={{ padding: '10px 16px', color: 'var(--danger)', fontSize: 13, fontWeight: 600 }}>{error}</div>}
 
         {total > 0 && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 16px', background: 'color-mix(in srgb, var(--brand-primary) 5%, transparent)' }}>
-            <span style={{ color: DIM, fontWeight: 700, fontSize: 11 }}>Estimate (GC only — bidders never see it)</span>
-            <span style={{ color: GOLD, fontWeight: 800, fontSize: 15, fontVariantNumeric: 'tabular-nums' }}>{fmt(total)}</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 16px', background: 'var(--bg-surface-2)' }}>
+            <span style={{ color: DIM, fontWeight: 700, fontSize: 12 }}>Estimate (GC only — bidders never see it)</span>
+            <span style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 15, fontVariantNumeric: 'tabular-nums' }}>{fmt(total)}</span>
           </div>
         )}
       </SectionCard>

@@ -51,9 +51,9 @@ const CSS = `
 .eodOpt { display: flex; gap: 12px; align-items: flex-start; text-align: left; min-height: 76px; padding: 14px; border-radius: 14px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.03); color: var(--text-primary); font: inherit; cursor: pointer; }
 .eodOpt:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
 .eodOpt[aria-checked="true"] { border-color: var(--brand-primary); background: var(--brand-primary-08, rgba(255,224,0,0.08)); box-shadow: 0 0 0 1px var(--brand-primary); }
-.eodOpt svg { flex: 0 0 auto; margin-top: 2px; color: var(--brand-primary); }
+.eodOpt svg { flex: 0 0 auto; margin-top: 2px; color: var(--text-secondary); }
 .eodOpt b { display: block; font-size: 15px; font-weight: 800; }
-.eodOpt small { display: block; margin-top: 3px; font-size: 12.5px; line-height: 1.4; color: var(--text-tertiary); }
+.eodOpt small { display: block; margin-top: 3px; font-size: 13px; line-height: 1.4; color: var(--text-tertiary); }
 .eodNote { width: 100%; min-height: 72px; resize: vertical; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border-default); background: var(--bg-solid); color: var(--text-primary); font: inherit; font-size: 15px; box-sizing: border-box; }
 .eodNote:focus { outline: 2px solid var(--brand-primary); outline-offset: 1px; }
 .eodSent h3 { margin: 0 0 10px; font-size: 16px; font-weight: 800; }
@@ -62,11 +62,11 @@ const CSS = `
 .eodTile:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
 .eodTile .im { aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center; color: var(--text-tertiary); }
 .eodTile img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.eodTile .st { display: flex; align-items: center; gap: 5px; padding: 6px 8px; font-size: 11.5px; font-weight: 700; color: var(--text-secondary); }
+.eodTile .st { display: flex; align-items: center; gap: 5px; padding: 6px 8px; font-size: 12px; font-weight: 700; color: var(--text-secondary); }
 .eodTile .st { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .eodTile .st[data-s="ok"] { color: var(--c-green); }
 .eodTile .st[data-s="new"] { color: var(--text-tertiary); }
-.eodDur { position: absolute; right: 6px; top: 6px; padding: 1px 6px; border-radius: 6px; background: rgba(8,9,12,0.8); color: var(--text-primary); font-size: 11px; font-weight: 700; }
+.eodDur { position: absolute; right: 6px; top: 6px; padding: 1px 6px; border-radius: 6px; background: rgba(8,9,12,0.8); color: var(--text-primary); font-size: 12px; font-weight: 700; }
 .eodPlay { position: absolute; top: 8px; left: 8px; width: 26px; height: 26px; border-radius: 50%; background: rgba(8,9,12,0.75); display: inline-flex; align-items: center; justify-content: center; color: var(--text-primary); }
 .eodEmpty { font-size: 13px; color: var(--text-tertiary); }
 @media (max-width: 520px) { .eodDest { grid-template-columns: minmax(0, 1fr); } .eodNote { font-size: 16px; } }

@@ -169,11 +169,11 @@ export default function SubscriptionWall({ children }: { children: React.ReactNo
                 boxShadow: plan.popular ? '0 4px 14px var(--brand-primary-12)' : 'none',
               }}>
                 {plan.popular && (
-                  <div style={{ fontSize: 9, fontWeight: 800, color: GOLD, marginBottom: 8 }}>Most Popular</div>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8 }}>Most Popular</div>
                 )}
                 <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 4 }}>{plan.name}</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: plan.popular ? GOLD : TEXT, marginBottom: 4 }}>{plan.price}<span style={{ fontSize: 12, fontWeight: 400, color: DIM }}>/mo</span></div>
-                <div style={{ fontSize: 11, color: DIM, marginBottom: 16 }}>{plan.sub}</div>
+                <div style={{ fontSize: 12, color: DIM, marginBottom: 16 }}>{plan.sub}</div>
                 <Link href={`/app/billing?plan=${plan.id}`} style={{
                   display: 'block', padding: '10px 0', borderRadius: 10,
                   background: plan.popular ? GOLD : PAGE,
@@ -222,7 +222,7 @@ export default function SubscriptionWall({ children }: { children: React.ReactNo
         </div>
 
         {/* Data preservation note */}
-        <div style={{ marginTop: 24, padding: '14px 20px', background: 'var(--brand-primary-08)', border: `1px solid var(--brand-primary-12)`, borderRadius: 12, fontSize: 13, color: DIM }}>
+        <div style={{ marginTop: 24, padding: '14px 20px', background: 'var(--bg-surface-2)', border: `1px solid var(--brand-primary-12)`, borderRadius: 12, fontSize: 13, color: DIM }}>
           Your projects, documents, and data are preserved for <strong style={{ color: TEXT }}>30 days</strong>. Reactivate anytime to pick up right where you left off.
         </div>
 

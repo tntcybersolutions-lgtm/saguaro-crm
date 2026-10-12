@@ -296,7 +296,7 @@ export default function SignaturePad({ onSave, onCancel, label = 'Signature', va
           margin: `0 0 ${space.sm}px`,
           fontSize: font.size.xs,
           fontWeight: font.weight.black,
-          color: colors.gold,
+          color: 'var(--text-primary)',
         }}
       >
         {label}

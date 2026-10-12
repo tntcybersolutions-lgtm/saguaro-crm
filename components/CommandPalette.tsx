@@ -265,8 +265,8 @@ export default function CommandPalette({ onScoreBid }: Props) {
             style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: TEXT, fontSize: 15, fontWeight: 500 }}
           />
           <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-            <kbd style={{ fontSize: 10, padding: '2px 6px', background: 'rgba(255,255,255,0.08)', border: `1px solid ${BORDER}`, borderRadius: 4, color: DIM }}>⌘K</kbd>
-            <span style={{ fontSize: 11, color: DIM }}>to toggle</span>
+            <kbd style={{ fontSize: 12, padding: '2px 6px', background: 'rgba(255,255,255,0.08)', border: `1px solid ${BORDER}`, borderRadius: 4, color: DIM }}>⌘K</kbd>
+            <span style={{ fontSize: 12, color: DIM }}>to toggle</span>
           </div>
         </div>
 
@@ -282,7 +282,7 @@ export default function CommandPalette({ onScoreBid }: Props) {
             // Grouped sections when no query
             sections.map(section => (
               <div key={section.key}>
-                <div style={{ padding: '8px 18px 4px', fontSize: 10, fontWeight: 700, color: 'var(--text-tertiary)' }}>{section.label}</div>
+                <div style={{ padding: '8px 18px 4px', fontSize: 12, fontWeight: 700, color: 'var(--text-tertiary)' }}>{section.label}</div>
                 {section.items.map(({ item, idx }) => (
                   <ItemRow key={item.id} item={item} idx={idx} isFocused={idx === focused} onMouseEnter={() => setFocused(idx)} onClick={() => select(item)} />
                 ))}
@@ -297,10 +297,10 @@ export default function CommandPalette({ onScoreBid }: Props) {
         </div>
 
         {/* Footer */}
-        <div style={{ padding: '8px 18px', borderTop: `1px solid ${BORDER}`, display: 'flex', gap: 16, fontSize: 11, color: DIM, alignItems: 'center' }}>
-          <span><kbd style={{ fontSize: 9, padding: '1px 5px', background: 'rgba(255,255,255,0.08)', border: `1px solid ${BORDER}`, borderRadius: 3 }}>↑↓</kbd> navigate</span>
-          <span><kbd style={{ fontSize: 9, padding: '1px 5px', background: 'rgba(255,255,255,0.08)', border: `1px solid ${BORDER}`, borderRadius: 3 }}>↵</kbd> select</span>
-          <span><kbd style={{ fontSize: 9, padding: '1px 5px', background: 'rgba(255,255,255,0.08)', border: `1px solid ${BORDER}`, borderRadius: 3 }}>Esc</kbd> close</span>
+        <div style={{ padding: '8px 18px', borderTop: `1px solid ${BORDER}`, display: 'flex', gap: 16, fontSize: 12, color: DIM, alignItems: 'center' }}>
+          <span><kbd style={{ fontSize: 12, padding: '1px 5px', background: 'rgba(255,255,255,0.08)', border: `1px solid ${BORDER}`, borderRadius: 3 }}>↑↓</kbd> navigate</span>
+          <span><kbd style={{ fontSize: 12, padding: '1px 5px', background: 'rgba(255,255,255,0.08)', border: `1px solid ${BORDER}`, borderRadius: 3 }}>↵</kbd> select</span>
+          <span><kbd style={{ fontSize: 12, padding: '1px 5px', background: 'rgba(255,255,255,0.08)', border: `1px solid ${BORDER}`, borderRadius: 3 }}>Esc</kbd> close</span>
         </div>
       </div>
     </div>
@@ -330,11 +330,11 @@ function ItemRow({
       <span style={{ fontSize: 19, flexShrink: 0 }}>{item.icon}</span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontWeight: 700, fontSize: 13, color: TEXT, marginBottom: 1 }}>{item.label}</div>
-        <div style={{ fontSize: 11, color: DIM, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.description}</div>
+        <div style={{ fontSize: 12, color: DIM, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.description}</div>
       </div>
       {item.shortcut && (
         <kbd style={{
-          flexShrink: 0, fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 5,
+          flexShrink: 0, fontSize: 12, fontWeight: 700, padding: '3px 8px', borderRadius: 5,
           background: isFocused ? 'var(--brand-primary-18)' : 'rgba(255,255,255,0.08)',
           border: `1px solid ${isFocused ? 'var(--brand-primary-35)' : 'var(--border-default)'}`,
           color: isFocused ? GOLD : DIM, letterSpacing: 0.5,
@@ -343,7 +343,7 @@ function ItemRow({
         </kbd>
       )}
       {item.section === 'recent' && (
-        <span style={{ fontSize: 10, color: DIM, flexShrink: 0 }}>Recent</span>
+        <span style={{ fontSize: 12, color: DIM, flexShrink: 0 }}>Recent</span>
       )}
     </div>
   );

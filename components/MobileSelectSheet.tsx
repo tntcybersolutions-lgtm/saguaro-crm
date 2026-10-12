@@ -291,7 +291,7 @@ const CSS = `
 .ms-search { display: flex; align-items: center; gap: 10px; margin: 0 12px 6px; padding: 0 4px 0 14px; min-height: 48px; border-radius: 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-subtle); color: var(--c-text-3); }
 .ms-search input { flex: 1; min-width: 0; height: 44px; border: 0 !important; outline: none !important; box-shadow: none !important; background: transparent !important; color: var(--c-text) !important; -webkit-text-fill-color: var(--c-text) !important; font: inherit; font-size: 16px !important; font-weight: 600; }
 .ms-list { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 4px 8px 12px; }
-.ms-group { padding: 14px 12px 6px; font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--c-text-3); }
+.ms-group { padding: 14px 12px 6px; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--c-text-3); }
 .ms-opt { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 54px; padding: 10px 12px; border: 0; border-radius: 12px; background: transparent;
   color: var(--c-text-2); font: inherit; font-size: 16px; font-weight: 650; text-align: left; cursor: pointer; }
 .ms-opt:active { background: rgba(255,224,0,0.08); }

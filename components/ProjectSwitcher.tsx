@@ -314,7 +314,7 @@ export default function ProjectSwitcher({ open, onClose }: ProjectSwitcherProps)
                       {project.status && (
                         <span
                           style={{
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: 600,
                             color: statusColor(project.status),
                             background: `color-mix(in srgb, ${statusColor(project.status)} 9%, transparent)`,
@@ -330,8 +330,8 @@ export default function ProjectSwitcher({ open, onClose }: ProjectSwitcherProps)
                       {isRecent && (
                         <span
                           style={{
-                            fontSize: 10,
-                            color: GOLD,
+                            fontSize: 12,
+                            color: 'var(--text-primary)',
                             fontWeight: 500,
                             whiteSpace: 'nowrap',
                           }}
@@ -406,9 +406,9 @@ export default function ProjectSwitcher({ open, onClose }: ProjectSwitcherProps)
                   border: `1px solid ${BORDER}`,
                   borderRadius: 3,
                   padding: '1px 5px',
-                  fontSize: 11,
+                  fontSize: 12,
                   fontFamily: 'monospace',
-                  color: GOLD,
+                  color: 'var(--text-primary)',
                 }}
               >
                 &uarr;&darr;
@@ -422,9 +422,9 @@ export default function ProjectSwitcher({ open, onClose }: ProjectSwitcherProps)
                   border: `1px solid ${BORDER}`,
                   borderRadius: 3,
                   padding: '1px 5px',
-                  fontSize: 11,
+                  fontSize: 12,
                   fontFamily: 'monospace',
-                  color: GOLD,
+                  color: 'var(--text-primary)',
                 }}
               >
                 Enter
@@ -438,9 +438,9 @@ export default function ProjectSwitcher({ open, onClose }: ProjectSwitcherProps)
                   border: `1px solid ${BORDER}`,
                   borderRadius: 3,
                   padding: '1px 5px',
-                  fontSize: 11,
+                  fontSize: 12,
                   fontFamily: 'monospace',
-                  color: GOLD,
+                  color: 'var(--text-primary)',
                 }}
               >
                 Esc

@@ -202,7 +202,7 @@ export default function BidJacketAssembly({
       icon={
         issued
           ? <CheckCircle size={17} weight="duotone" color={GREEN} />
-          : <PaperPlaneTilt size={17} weight="duotone" color={GOLD} />
+          : <PaperPlaneTilt size={17} weight="duotone" color="var(--text-secondary)" />
       }
     >
       {/* ── State of play ─────────────────────────────────────────────────── */}
@@ -227,20 +227,20 @@ export default function BidJacketAssembly({
         <div
           style={{
             border: `1px solid var(--brand-primary-35)`, borderRadius: 12,
-            background: 'var(--brand-primary-08)', padding: '13px 15px', marginBottom: 16,
+            background: 'var(--bg-surface-2)', padding: '13px 15px', marginBottom: 16,
           }}
         >
           <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
             <WarningCircle size={19} weight="fill" color={AMBER} style={{ flexShrink: 0, marginTop: 1 }} />
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontWeight: 700, color: AMBER, fontSize: 13.5, marginBottom: 5 }}>
+              <div style={{ fontWeight: 700, color: AMBER, fontSize: 14, marginBottom: 5 }}>
                 {driftCount} change{driftCount === 1 ? '' : 's'} since you issued v{drift.issuedVersion}
               </div>
               <div style={{ color: DIM, fontSize: 13, lineHeight: 1.6, marginBottom: 8 }}>
                 Your bidders are pricing what was in the jacket when it went out. Issue an addendum
                 so everyone is working from the same documents.
               </div>
-              <ul style={{ margin: 0, paddingLeft: 16, color: TEXT, fontSize: 12.5, lineHeight: 1.7 }}>
+              <ul style={{ margin: 0, paddingLeft: 16, color: TEXT, fontSize: 13, lineHeight: 1.7 }}>
                 {drift.revised.slice(0, 6).map((d, i) => (
                   <li key={`r${i}`}>
                     <strong>{d.name}</strong> — revised {d.from ? `${d.from} → ` : ''}{d.to || 'new revision'}
@@ -294,13 +294,13 @@ export default function BidJacketAssembly({
 
       {/* ── Addendum outcome ──────────────────────────────────────────────── */}
       {addendumResult && (
-        <div role="status" data-testid="addendum-result" style={{ marginBottom: 14, fontSize: 13.5, lineHeight: 1.6 }}>
+        <div role="status" data-testid="addendum-result" style={{ marginBottom: 14, fontSize: 14, lineHeight: 1.6 }}>
           <div style={{ fontWeight: 700, color: addendumResult.notified === addendumResult.recipients ? GREEN : AMBER }}>
             Addendum {addendumResult.addendumNumber} issued to {addendumResult.notified} of {addendumResult.recipients} bidder{addendumResult.recipients === 1 ? '' : 's'}
             {addendumResult.attached ? ` — ${addendumResult.attached.name || 'the file'} is in the Addenda divider.` : '.'}
           </div>
           {addendumResult.delivery.filter((d) => !d.sent).map((d, i) => (
-            <div key={i} style={{ color: 'var(--danger)', fontSize: 12.5 }}>{d.email} — not delivered{d.error ? `: ${d.error}` : ''}</div>
+            <div key={i} style={{ color: 'var(--danger)', fontSize: 13 }}>{d.email} — not delivered{d.error ? `: ${d.error}` : ''}</div>
           ))}
         </div>
       )}
@@ -309,7 +309,7 @@ export default function BidJacketAssembly({
         <div
           role={note.tone === 'bad' ? 'alert' : 'status'}
           style={{
-            fontSize: 13.5, fontWeight: 600, marginBottom: 14,
+            fontSize: 14, fontWeight: 600, marginBottom: 14,
             color: note.tone === 'ok' ? GREEN : note.tone === 'warn' ? AMBER : 'var(--danger)',
           }}
         >
@@ -320,7 +320,7 @@ export default function BidJacketAssembly({
       {/* ── Addendum composer ─────────────────────────────────────────────── */}
       {addendumOpen && (
         <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 10.5, fontWeight: 800, color: DIM, marginBottom: 6 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: DIM, marginBottom: 6 }}>
             What Changed
           </div>
           <textarea
@@ -344,7 +344,7 @@ export default function BidJacketAssembly({
             />
             {addendumFile ? (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '0 6px 0 12px', borderRadius: 10, border: `1px solid ${HAIR}`, color: TEXT, fontSize: 13, maxWidth: '100%' }}>
-                <FileText size={15} weight="duotone" color={GOLD} style={{ flexShrink: 0 }} />
+                <FileText size={15} weight="duotone" color="var(--text-secondary)" style={{ flexShrink: 0 }} />
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{addendumFile.name}</span>
                 <button
                   type="button"
@@ -483,7 +483,7 @@ export default function BidJacketAssembly({
       </div>
 
       {invited === 0 && !issued && (
-        <div style={{ color: DIM, fontSize: 12.5, marginTop: 10 }}>
+        <div style={{ color: DIM, fontSize: 13, marginTop: 10 }}>
           No bidders invited yet — add them on the package page; inviting issues the jacket.
         </div>
       )}
@@ -494,7 +494,7 @@ export default function BidJacketAssembly({
 function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div style={{ fontSize: 10, fontWeight: 800, color: DIM, marginBottom: 4 }}>
+      <div style={{ fontSize: 12, fontWeight: 800, color: DIM, marginBottom: 4 }}>
         {label}
       </div>
       <div style={{ fontSize: 15.5, fontWeight: 700, color: TEXT, fontVariantNumeric: 'tabular-nums' }}>{value}</div>

@@ -113,7 +113,7 @@ function FindingText({ s }: { s: Suggestion }) {
     <>
       {parts.map((p, i) => (
         <React.Fragment key={i}>
-          {i > 0 && <span style={{ color: GOLD_HI, fontWeight: 800 }}>{usd}</span>}
+          {i > 0 && <span style={{ color: 'var(--text-primary)', fontWeight: 800 }}>{usd}</span>}
           {p}
         </React.Fragment>
       ))}
@@ -187,10 +187,10 @@ function TickerItem({
       }}>
         {s.moduleLabel}
       </span>
-      <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--c-text-2)' }}>
+      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-text-2)' }}>
         <FindingText s={s} />
       </span>
-      <span aria-hidden style={{ fontSize: 11, color: DIM, fontWeight: 900, flexShrink: 0 }}>&rarr;</span>
+      <span aria-hidden style={{ fontSize: 12, color: DIM, fontWeight: 900, flexShrink: 0 }}>&rarr;</span>
       <button
         type="button"
         className="sgTickerX"
@@ -255,17 +255,17 @@ export default function SuggestionTicker({ style }: { style?: React.CSSPropertie
           boxShadow: `0 0 10px ${worst}`, animation: 'sgTickerDot 2s ease-in-out infinite',
         }} />
         <span style={{
-          fontSize: 10, fontWeight: 900, color: 'var(--c-text-2)',
+          fontSize: 12, fontWeight: 900, color: 'var(--c-text-2)',
           whiteSpace: 'nowrap',
         }}>
           Live Signals
         </span>
-        <span style={{ fontSize: 10.5, fontWeight: 800, color: DIM, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+        <span style={{ fontSize: 12, fontWeight: 800, color: DIM, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
           {suggestions.length} flagged
           {dollarsAtStake > 0 && (
             <>
               {' · '}
-              <span style={{ color: GOLD_HI }}>
+              <span style={{ color: 'var(--text-primary)' }}>
                 {'$' + Math.round(dollarsAtStake).toLocaleString('en-US')}
               </span>
               {' at stake'}

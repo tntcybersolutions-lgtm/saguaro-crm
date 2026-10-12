@@ -70,7 +70,7 @@ export function PageHeader({ title, subtitle, right }: { title: string; subtitle
 export function Tile({ label, value, color, sub }: { label: string; value: React.ReactNode; color?: string; sub?: string }) {
   return (
     <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '16px 18px', minWidth: 120, flex: '1 1 130px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: C.dim }}>{label}</div>
+      <div style={{ fontSize: 12, fontWeight: 700, color: C.dim }}>{label}</div>
       <div style={{ fontSize: 28, fontWeight: 900, color: color || C.text, lineHeight: 1.1, marginTop: 4, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
       {sub && <div style={{ fontSize: 12, color: C.dim, marginTop: 2 }}>{sub}</div>}
     </div>
@@ -83,7 +83,7 @@ export function SevDot({ sev, size = 10 }: { sev: Severity; size?: number }) {
 
 export function SevBadge({ sev, label }: { sev: Severity; label: string }) {
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: `${SEV_COLOR[sev]}14`, color: SEV_COLOR[sev], fontSize: 11, fontWeight: 800, padding: '4px 9px', borderRadius: 999, whiteSpace: 'nowrap' }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: `${SEV_COLOR[sev]}14`, color: SEV_COLOR[sev], fontSize: 12, fontWeight: 800, padding: '4px 9px', borderRadius: 999, whiteSpace: 'nowrap' }}>
       <SevDot sev={sev} size={7} />{label}
     </span>
   );
@@ -139,7 +139,7 @@ export function AttentionBanner({ red, yellow, noun }: { red: number; yellow: nu
 export function Metric({ label, value, color }: { label: React.ReactNode; value: React.ReactNode; color?: string }) {
   return (
     <div>
-      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.3, color: C.faint }}>{label}</div>
+      <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 0.3, color: C.faint }}>{label}</div>
       <div style={{ fontSize: 14, fontWeight: 800, color: color || C.text, marginTop: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
     </div>
   );

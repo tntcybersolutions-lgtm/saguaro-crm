@@ -446,7 +446,7 @@ export default function HelpMode() {
       >
         <div style={{ width: 'min(720px, 100%)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 6 }}>
-            <Lifebuoy size={22} weight="duotone" color={GOLD} />
+            <Lifebuoy size={22} weight="duotone" color="var(--text-secondary)" />
             <h2 style={{ margin: 0, fontSize: 21, fontWeight: 900, color: TEXT, letterSpacing: '-0.01em' }}>
               Show Me How
             </h2>
@@ -462,7 +462,7 @@ export default function HelpMode() {
               <X size={15} weight="bold" />
             </button>
           </div>
-          <p style={{ margin: '0 0 22px', color: DIM, fontSize: 13.5, lineHeight: 1.55, maxWidth: 560 }}>
+          <p style={{ margin: '0 0 22px', color: DIM, fontSize: 14, lineHeight: 1.55, maxWidth: 560 }}>
             Pick a question. An arrow will point at the button you need, one step at a time,
             all the way through — including across pages.
           </p>
@@ -472,7 +472,7 @@ export default function HelpMode() {
             if (!inCat.length) return null;
             return (
               <div key={cat} style={{ marginBottom: 22 }}>
-                <div style={{ fontSize: 10.5, fontWeight: 900, color: GOLD, marginBottom: 9 }}>
+                <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 9 }}>
                   {titleCase(cat)}
                 </div>
                 <div style={{ display: 'grid', gap: 8 }}>
@@ -495,12 +495,12 @@ export default function HelpMode() {
                     >
                       <div style={{ minWidth: 0, flex: 1 }}>
                         <div style={{ fontSize: 14.5, fontWeight: 800, marginBottom: 2 }}>{t.question}</div>
-                        <div style={{ fontSize: 12.5, color: DIM, lineHeight: 1.45 }}>{t.blurb}</div>
+                        <div style={{ fontSize: 13, color: DIM, lineHeight: 1.45 }}>{t.blurb}</div>
                       </div>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: DIM, flexShrink: 0 }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: DIM, flexShrink: 0 }}>
                         {t.steps.length} steps
                       </span>
-                      <CaretRight size={15} weight="bold" color={GOLD} />
+                      <CaretRight size={15} weight="bold" color="var(--text-secondary)" />
                     </button>
                   ))}
                 </div>
@@ -697,7 +697,7 @@ export default function HelpMode() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <span style={{ fontSize: 10, fontWeight: 900, color: GOLD }}>
+            <span style={{ fontSize: 12, fontWeight: 900, color: 'var(--text-primary)' }}>
               Step {stepNo} of {total}
             </span>
             <div style={{ flex: 1, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
@@ -770,7 +770,7 @@ export default function HelpMode() {
               {stepNo === total ? 'Done' : step?.advance === 'read' ? 'Got It' : 'Next'}
             </button>
             {step?.advance !== 'read' && (
-              <span style={{ fontSize: 11.5, color: DIM, fontWeight: 600, lineHeight: 1.35 }}>
+              <span style={{ fontSize: 12, color: DIM, fontWeight: 600, lineHeight: 1.35 }}>
                 {step?.advance === 'input' ? 'or fill it in' : 'or click it'}
               </span>
             )}
@@ -797,7 +797,7 @@ export default function HelpMode() {
             display: 'inline-flex', alignItems: 'center', gap: 8,
             minHeight: 36, padding: '0 14px', borderRadius: 999, cursor: 'pointer',
             background: 'var(--c-raised)', border: `1px solid ${GOLD}`,
-            color: GOLD_HI, fontSize: 12.5, fontWeight: 800,
+            color: 'var(--text-primary)', fontSize: 13, fontWeight: 800,
             boxShadow: '0 10px 30px -12px rgba(0,0,0,0.9)',
           }}
         >

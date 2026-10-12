@@ -255,7 +255,7 @@ export default function NextStepBar() {
     >
       <span style={{
         display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0,
-        color: tone, fontSize: 12.5, fontWeight: 800,
+        color: tone, fontSize: 13, fontWeight: 800,
       }}>
         {complete
           ? <CheckCircle size={14} weight="fill" color={tone} />
@@ -286,7 +286,7 @@ export default function NextStepBar() {
       </button>
 
       <span className="sag-nsb-detail" style={{
-        flexShrink: 0, fontSize: 11.5, fontWeight: 700,
+        flexShrink: 0, fontSize: 12, fontWeight: 700,
         color: 'var(--text-tertiary)', whiteSpace: 'nowrap',
         maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis',
       }} title={`${side} · ${position}`}>

@@ -199,7 +199,7 @@ export default function DataTable<T extends Record<string, any>>({
                           borderBottom: `1px solid ${colors.border}`,
                           boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
                           textAlign: 'left',
-                          fontSize: 10.5,
+                          fontSize: 12,
                           fontWeight: font.weight.bold,
                           color: colors.textDim,
                           cursor: canSort ? 'pointer' : 'default',

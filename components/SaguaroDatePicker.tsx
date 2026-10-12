@@ -283,7 +283,7 @@ export default function SaguaroDatePicker({ value, onChange, style, placeholder,
                   color: TEXT,
                   border: `1px solid ${BORDER}`,
                   borderRadius: 7,
-                  fontSize: 12.5,
+                  fontSize: 13,
                   fontWeight: 600,
                   padding: '3px 6px',
                   cursor: 'pointer',
@@ -308,13 +308,13 @@ export default function SaguaroDatePicker({ value, onChange, style, placeholder,
                   color: yearOpen ? GOLD : TEXT,
                   border: `1px solid ${yearOpen ? GOLD_RING : BORDER}`,
                   borderRadius: 7,
-                  fontSize: 12.5,
+                  fontSize: 13,
                   fontWeight: 600,
                   padding: '3px 10px',
                   cursor: 'pointer',
                 }}
               >
-                {viewYear} <span style={{ fontSize: 9, opacity: 0.7 }}>▾</span>
+                {viewYear} <span style={{ fontSize: 12, opacity: 0.7 }}>▾</span>
               </button>
             </div>
             <button type="button" className="sgdp-nav" aria-label="Next month" onClick={() => moveMonth(1)} style={NAV_BTN}>›</button>
@@ -350,7 +350,7 @@ export default function SaguaroDatePicker({ value, onChange, style, placeholder,
                     style={{
                       padding: '7px 0',
                       borderRadius: 8,
-                      fontSize: 12.5,
+                      fontSize: 13,
                       cursor: 'pointer',
                       background: active ? GOLD : 'transparent',
                       color: active ? SURFACE : isNow ? GOLD : 'rgba(255,255,255,0.78)',
@@ -368,7 +368,7 @@ export default function SaguaroDatePicker({ value, onChange, style, placeholder,
               {/* Weekday headers */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 2 }}>
                 {WEEKDAYS.map(w => (
-                  <div key={w} style={{ textAlign: 'center', fontSize: 10.5, letterSpacing: 0.4, color: TEXT_FAINT, fontWeight: 600, padding: '4px 0' }}>{w}</div>
+                  <div key={w} style={{ textAlign: 'center', fontSize: 12, letterSpacing: 0.4, color: TEXT_FAINT, fontWeight: 600, padding: '4px 0' }}>{w}</div>
                 ))}
               </div>
               {/* Day grid — 6 fixed weeks, adjacent-month days dimmed but pickable */}
@@ -388,7 +388,7 @@ export default function SaguaroDatePicker({ value, onChange, style, placeholder,
                       style={{
                         height: 32,
                         borderRadius: 8,
-                        fontSize: 12.5,
+                        fontSize: 13,
                         cursor: 'pointer',
                         background: isSel ? GOLD : 'transparent',
                         color: isSel ? SURFACE : isToday ? GOLD : inMonth ? 'rgba(255,255,255,0.85)' : TEXT_FAINT,
@@ -407,7 +407,7 @@ export default function SaguaroDatePicker({ value, onChange, style, placeholder,
 
           {/* Footer: readout + Today shortcut */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, paddingTop: 10, borderTop: `1px solid ${BORDER}` }}>
-            <span style={{ fontSize: 11, color: TEXT_DIM }}>{selected ? formatDisplay(value) : 'No date selected'}</span>
+            <span style={{ fontSize: 12, color: TEXT_DIM }}>{selected ? formatDisplay(value) : 'No date selected'}</span>
             <button
               type="button"
               className="sgdp-today"

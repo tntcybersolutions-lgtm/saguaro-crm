@@ -41,7 +41,7 @@ export default function FranchisePortalPage() {
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderTop: `5px solid ${st.c}`, borderRadius: 16, padding: '26px 28px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
           <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: C.gold }}>Owner Portal{data.owner?.company ? ` · ${data.owner.company}` : ''}</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>Owner Portal{data.owner?.company ? ` · ${data.owner.company}` : ''}</div>
             <h1 style={{ fontSize: 30, fontWeight: 900, margin: '6px 0 4px', letterSpacing: -0.5 }}>{p.name}</h1>
             <div style={{ fontSize: 14, color: C.dim }}>{[p.city, p.state].filter(Boolean).join(', ') || ''}{p.stage ? ` · ${p.stage}` : ''}</div>
           </div>
@@ -113,7 +113,7 @@ function Center({ title, body }: { title: string; body: string }) {
 }
 function Tile({ label, value, color }: { label: string; value: React.ReactNode; color?: string }) {
   return <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '16px 18px' }}>
-    <div style={{ fontSize: 11, fontWeight: 700, color: C.dim }}>{label}</div>
+    <div style={{ fontSize: 12, fontWeight: 700, color: C.dim }}>{label}</div>
     <div style={{ fontSize: 20, fontWeight: 900, color: color || C.text, marginTop: 4 }}>{value}</div>
   </div>;
 }

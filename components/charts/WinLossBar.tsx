@@ -130,7 +130,7 @@ export function WinLossBar({
         <div style={{ minWidth: 0 }}>
           {title && <div style={microLabel}>{title}</div>}
           {subtitle && (
-            <div style={{ fontSize: 12.5, color: CHART.textTertiary, marginTop: 4 }}>{subtitle}</div>
+            <div style={{ fontSize: 13, color: CHART.textTertiary, marginTop: 4 }}>{subtitle}</div>
           )}
         </div>
         <div style={{ textAlign: 'right', flex: '0 0 auto' }}>

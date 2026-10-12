@@ -164,7 +164,7 @@ export default function BidPackageDetails({ pkg, packageId, onSaved, onToast }: 
         flat
         title="Package Details"
         subtitle="Instructions, scope, due date, insurance and bonding — what the jacket's written pages say."
-        icon={<Note size={17} weight="duotone" color="var(--brand-primary)" />}
+        icon={<Note size={17} weight="duotone" color="var(--text-secondary)" />}
         action={!editing ? (
           <button className="bpd-btn pmBtn" onClick={() => setEditing(true)} style={{ ...ghostButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <PencilSimple size={14} weight="bold" /> Edit
@@ -223,7 +223,7 @@ export default function BidPackageDetails({ pkg, packageId, onSaved, onToast }: 
                 Prevailing wage
               </label>
             </div>
-            {error && <div role="alert" style={{ color: 'var(--danger)', fontSize: 13.5, fontWeight: 600 }}>{error}</div>}
+            {error && <div role="alert" style={{ color: 'var(--danger)', fontSize: 14, fontWeight: 600 }}>{error}</div>}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
               <button className="bpd-btn pmBtn" onClick={save} disabled={saving} style={{ ...goldButtonStyle, opacity: saving ? 0.6 : 1 }}>
                 <FloppyDisk size={15} weight="bold" /> {saving ? 'Saving…' : 'Save Details'}
@@ -243,8 +243,8 @@ function Row({ label, value, missing }: { label: string; value: string; missing?
   const empty = !String(value || '').trim();
   return (
     <div className="bpd-row">
-      <div style={{ fontSize: 11, fontWeight: 800, color: DIM }}>{label}</div>
-      <div style={{ fontSize: 13.5, color: empty ? AMBER : TEXT, lineHeight: 1.6, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', minWidth: 0 }}>
+      <div style={{ fontSize: 12, fontWeight: 800, color: DIM }}>{label}</div>
+      <div style={{ fontSize: 14, color: empty ? AMBER : TEXT, lineHeight: 1.6, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', minWidth: 0 }}>
         {empty ? missing || '—' : value}
       </div>
     </div>

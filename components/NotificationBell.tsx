@@ -132,7 +132,7 @@ export default function NotificationBell() {
         style={{ position: 'relative', background: 'rgba(255,255,255,0.06)', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '10px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <span style={{ fontSize: 18 }}>🔔</span>
         {displayCount > 0 && (
-          <span style={{ position: 'absolute', top: -4, right: -4, minWidth: 18, height: 18, background: RED, borderRadius: 9, fontSize: 10, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', border: `2px solid ${DARK}` }}>
+          <span style={{ position: 'absolute', top: -4, right: -4, minWidth: 18, height: 18, background: RED, borderRadius: 9, fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', border: `2px solid ${DARK}` }}>
             {displayCount > 99 ? '99+' : displayCount}
           </span>
         )}
@@ -146,12 +146,12 @@ export default function NotificationBell() {
             <span style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>Notifications</span>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               {displayCount > 0 && (
-                <span style={{ fontSize: 11, background: 'rgba(192,48,48,.15)', color: 'var(--danger)', padding: '2px 7px', borderRadius: 4, fontWeight: 700 }}>{displayCount} new</span>
+                <span style={{ fontSize: 12, background: 'rgba(192,48,48,.15)', color: 'var(--danger)', padding: '2px 7px', borderRadius: 4, fontWeight: 700 }}>{displayCount} new</span>
               )}
               <button
                 onClick={markAllRead}
                 disabled={markingAll || displayCount === 0}
-                style={{ background: 'none', border: 'none', color: DIM, fontSize: 11, cursor: 'pointer', opacity: displayCount === 0 ? 0.4 : 1 }}>
+                style={{ background: 'none', border: 'none', color: DIM, fontSize: 12, cursor: 'pointer', opacity: displayCount === 0 ? 0.4 : 1 }}>
                 {markingAll ? 'Marking…' : 'Mark All Read'}
               </button>
             </div>
@@ -179,7 +179,7 @@ export default function NotificationBell() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                         <div style={{ fontSize: 13, fontWeight: n.read ? 500 : 700, color: n.read ? DIM : TEXT, lineHeight: 1.3 }}>{n.title}</div>
-                        <div style={{ fontSize: 10, color: DIM, whiteSpace: 'nowrap', flexShrink: 0, marginTop: 1 }}>{timeAgo(n.created_at)}</div>
+                        <div style={{ fontSize: 12, color: DIM, whiteSpace: 'nowrap', flexShrink: 0, marginTop: 1 }}>{timeAgo(n.created_at)}</div>
                       </div>
                       <div style={{ fontSize: 12, color: DIM, marginTop: 3, lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 260 }}>{n.body}</div>
                     </div>

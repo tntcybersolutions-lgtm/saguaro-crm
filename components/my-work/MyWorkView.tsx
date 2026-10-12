@@ -72,14 +72,14 @@ const CSS = `
 @media (hover:none),(pointer:coarse){.mw-more{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}}
 .mw-day{padding:14px 16px 6px;font-size:12px;font-weight:700;letter-spacing:.5px;color:var(--sg-text-2)}
 .mw-day+.fl-list{border-top:1px solid var(--sg-border)}
-.mw-fail{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 16px 0;padding:8px 0 8px 12px;border-left:2px solid var(--danger);font-size:13.5px;color:var(--sg-text)}
-.mw-link{background:none;border:0;padding:0 2px;min-height:44px;font:inherit;font-size:13.5px;font-weight:650;color:var(--brand-primary);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
+.mw-fail{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 16px 0;padding:8px 0 8px 12px;border-left:2px solid var(--danger);font-size:14px;color:var(--sg-text)}
+.mw-link{background:none;border:0;padding:0 2px;min-height:44px;font:inherit;font-size:14px;font-weight:650;color: var(--link);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
 .mw-empty{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;padding:14px 16px;font-size:14.5px;color:var(--sg-text)}
-.mw-empty span{color:var(--sg-text-2);font-size:13.5px}
+.mw-empty span{color:var(--sg-text-2);font-size:14px}
 .mw-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--sag-tabbar-h,0px) + 12px);z-index:60;width:min(520px,calc(100vw - 32px));box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:10px 8px 10px 14px;border-radius:10px;border:1px solid var(--sg-border-strong,var(--sg-border));background:var(--sg-surface-solid,var(--bg-base));color:var(--sg-text);font-size:14px;line-height:1.35}
 .mw-toast[data-tone=bad]{border-color:var(--danger)}
 .mw-toast p{flex:1;margin:0;min-width:0}
-.mw-toast button{flex:none;min-height:44px;padding:0 10px;border:0;background:none;color:var(--brand-primary);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.mw-toast button{flex:none;min-height:44px;padding:0 10px;border:0;background:none;color: var(--link);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
 `;
 
 type Toast = { text: string; tone: 'ok' | 'bad'; undo?: () => void } | null;

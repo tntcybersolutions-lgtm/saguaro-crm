@@ -75,8 +75,8 @@ export default function ContractCompare({ projectId, pdfUrl, title, entityId }: 
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: GOLD, fontSize: 11, fontWeight: 800 }}>
-        <ArrowsLeftRight size={14} weight="bold" color={GOLD} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-primary)', fontSize: 12, fontWeight: 800 }}>
+        <ArrowsLeftRight size={14} weight="bold" color="var(--text-secondary)" />
         Compare with a Returned Copy
       </div>
 
@@ -107,7 +107,7 @@ export default function ContractCompare({ projectId, pdfUrl, title, entityId }: 
                   padding: '0 13px', borderRadius: 8, cursor: 'pointer',
                   background: on ? 'var(--brand-primary-12)' : 'transparent',
                   border: `1px solid ${on ? GOLD : BORDER}`,
-                  color: on ? GOLD : DIM, fontSize: 12.5, fontWeight: 700,
+                  color: on ? GOLD : DIM, fontSize: 13, fontWeight: 700,
                 }}
               >
                 <FileText size={13} weight="duotone" color={on ? GOLD : DIM} />
@@ -144,13 +144,13 @@ function Pane({ label, src, onClose }: { label: string; src: string; onClose?: (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 28 }}>
         <span
-          style={{ color: TEXT, fontSize: 12.5, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+          style={{ color: TEXT, fontSize: 13, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
           title={label}
         >
           {label}
         </span>
         <span style={{ flex: 1 }} />
-        <a href={src} target="_blank" rel="noopener noreferrer" style={{ color: GOLD, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
+        <a href={src} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--link)', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
           Open
         </a>
         {onClose && (
