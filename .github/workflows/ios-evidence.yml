@@ -65,13 +65,26 @@ jobs:
           xcrun simctl terminate "$SIM_UDID" net.saguarocontrol.field || true
       - name: Mobile Safari — every route, signed in
         run: |
+          # Remote Automation on the simulator's Safari (Settings > Safari > Advanced),
+          # then run Safari once so WebDriver can attach to it.
+          for k in RemoteAutomationEnabled WebKitRemoteAutomationEnabled; do
+            xcrun simctl spawn "$SIM_UDID" defaults write com.apple.mobilesafari "$k" -bool YES || true
+          done
+          xcrun simctl spawn "$SIM_UDID" defaults write com.apple.WebDriver RemoteAutomationEnabled -bool YES || true
+          xcrun simctl openurl "$SIM_UDID" "prefs:root=SAFARI&path=ADVANCED" || true
+          sleep 4
+          xcrun simctl launch "$SIM_UDID" com.apple.mobilesafari || true
+          xcrun simctl openurl "$SIM_UDID" "https://www.saguarocontrol.net/login" || true
+          sleep 8
+          xcrun simctl terminate "$SIM_UDID" com.apple.mobilesafari || true
           sudo safaridriver --enable
-          safaridriver -p 4444 > /tmp/safaridriver.log 2>&1 &
+          safaridriver -p 4444 --diagnose > /tmp/safaridriver.log 2>&1 &
           sleep 3
           export SITE="$(tr -d '[:space:]' < tools/probe-site.txt 2>/dev/null || echo https://www.saguarocontrol.net)"
           # The repo is public: nothing about the company goes to the log.
           node tools/ios-evidence.mjs > /tmp/ios-stdout.txt 2>&1 && echo "evidence finished" || echo "evidence exited non-zero (details are in the encrypted result)"
           tail -c 4000 /tmp/safaridriver.log > tools/ios-evidence/safaridriver.txt 2>/dev/null || true
+          ls -t ~/Library/Logs/com.apple.WebDriver/*.txt 2>/dev/null | head -1 | xargs -I{} tail -c 6000 {} >> tools/ios-evidence/safaridriver.txt 2>/dev/null || true
       - name: "Encrypt the result (public repo: only the key holder can read it)"
         if: always()
         run: |

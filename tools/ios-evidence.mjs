@@ -82,8 +82,21 @@ const MEASURE = `
   };`;
 
 try {
-  const caps = { capabilities: { alwaysMatch: { browserName: 'Safari', platformName: 'iOS', 'safari:useSimulator': true, 'safari:deviceUDID': UDID } } };
-  const s = await wd('POST', '/session', caps);
+  // safaridriver + a fresh iOS simulator often refuses the first session (known:
+  // Remote Automation is only live once Safari has run there). Try the pinned
+  // device, then any simulator, a few times each.
+  const variants = [
+    { browserName: 'Safari', platformName: 'iOS', 'safari:useSimulator': true, 'safari:deviceUDID': UDID },
+    { browserName: 'Safari', platformName: 'iOS', 'safari:useSimulator': true, 'safari:deviceType': 'iPhone' },
+  ];
+  let s = null; const tries = [];
+  for (let i = 0; i < 6 && !s; i++) {
+    const alwaysMatch = variants[i % variants.length];
+    try { s = await wd('POST', '/session', { capabilities: { alwaysMatch } }); }
+    catch (e) { tries.push(String(e.message || e).slice(0, 200)); await sleep(8000); }
+  }
+  result.sessionTries = tries;
+  if (!s) throw new Error(`no WebDriver session after ${tries.length} tries`);
   S = s.sessionId;
   result.device = { platform: s.capabilities?.platformName, version: s.capabilities?.platformVersion, browser: s.capabilities?.browserVersion };
   console.log('session', JSON.stringify(result.device));
