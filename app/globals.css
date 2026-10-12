@@ -1461,9 +1461,14 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
   .k-table tbody tr[style*="--row-stripe"] td:first-child { box-shadow: none !important; }
   .k-table td:first-child::before { content: none; }
   .k-table td[data-phone="hide"]:not(:first-child):not(.k-td-actions) { display: none; }
-  /* The row's actions sit on their own line under the record, right-aligned —
-     pinned to the top-right corner they covered the record's name. */
-  .k-table td.k-td-actions { position: static !important; justify-content: flex-end; flex-wrap: wrap; gap: 8px; width: auto; margin-top: 6px; padding: 8px 0 0 !important; border-top: 1px solid var(--border-subtle); }
+  /* A row whose only action is the "…" menu keeps it in the top-right corner,
+     with room held beside the record's name. A labelled action ("Open Deal
+     Page") is too wide for the corner — it covered the name — so it gets its
+     own line under the record, right-aligned. */
+  .k-table td.k-td-actions { position: absolute !important; top: 6px; right: 6px; width: auto; padding: 0 !important; }
+  .k-table tr:has(> td.k-td-actions) > td:first-child { padding-right: 52px !important; }
+  .k-table td.k-td-actions:has(.k-btn:not(.k-icon-btn)) { position: static !important; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 6px; padding: 8px 0 0 !important; border-top: 1px solid var(--border-subtle); }
+  .k-table tr:has(> td.k-td-actions .k-btn:not(.k-icon-btn)) > td:first-child { padding-right: 0 !important; }
   /* Inside a card the rows are a divided list, not cards inside a card. */
   :is(.k-card, .pmSec, .fl-list) :is(.k-table,.k-stack) tr { margin: 0; border: 0; border-bottom: 1px solid var(--border-subtle); border-radius: 0; background: none; padding: 12px 0; }
   :is(.k-card, .pmSec, .fl-list) :is(.k-table,.k-stack) tbody tr:last-child { border-bottom: 0; }
