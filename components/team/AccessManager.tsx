@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { textPrompt } from '@/lib/ui/async-dialog';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { CATEGORIES } from '@/lib/permission-categories';
-import { paletteHex } from '@/lib/design-tokens';
 import { getAuthHeaders, getSupabaseBrowser } from '@/lib/supabase-browser';
 
 /* ── palette ── */
@@ -18,7 +17,7 @@ const GREEN = '#4ADE80';
 const RED = '#F87171';
 const AMBER = 'var(--warning)';
 const BLUE = 'var(--info)';
-const ROLE_HEX = 'var(--warning)'; // stored role color value (sent to the API) — must stay hex
+const ROLE_HEX = '#38BDF8'; // stored role color value (sent to the API) — must stay hex
 const PURPLE = '#FBBF24';
 
 /* ── types ── */
@@ -68,33 +67,36 @@ const PERM_LEVELS: PermLevel[] = ['None', 'View', 'Edit', 'Full'];
    imports precisely so this client component can read it. */
 
 const ROLE_PRESETS: { name: string; desc: string; color: string; perms: PermissionMap }[] = [
-  { name: 'Admin', desc: 'Full system access across all modules.', color: ROLE_HEX,
+  { name: 'Admin', desc: 'Full system access across all modules.', color: '#F87171',
     perms: Object.fromEntries(CATEGORIES.map(c => [c, 'Full' as PermLevel])) },
-  { name: 'Project Manager', desc: 'Manage projects end-to-end, approve COs and pay apps.', color: ROLE_HEX,
+  { name: 'Project Manager', desc: 'Manage projects end-to-end, approve COs and pay apps.', color: '#38BDF8',
     perms: Object.fromEntries(CATEGORIES.map(c => [c, c === 'Admin' ? 'View' as PermLevel : 'Full' as PermLevel])) },
-  { name: 'Superintendent', desc: 'Field operations — schedule, safety, daily reporting.', color: GREEN,
+  { name: 'Superintendent', desc: 'Field operations — schedule, safety, daily reporting.', color: '#4ADE80',
     perms: Object.fromEntries(CATEGORIES.map(c => {
       if (['Schedule','Safety','Documents','RFIs','Submittals'].includes(c)) return [c, 'Edit' as PermLevel];
       if (['Projects','Budget','Change Orders','Pay Apps','Reports'].includes(c)) return [c, 'View' as PermLevel];
       return [c, 'None' as PermLevel];
     })) },
-  { name: 'Foreman', desc: 'Daily field reporting and crew management.', color: 'var(--warning)',
+  { name: 'Foreman', desc: 'Daily field reporting and crew management.', color: '#FBBF24',
     perms: Object.fromEntries(CATEGORIES.map(c => {
       if (['Safety','Schedule'].includes(c)) return [c, 'Edit' as PermLevel];
       if (['Projects','Documents','RFIs','Submittals','Reports'].includes(c)) return [c, 'View' as PermLevel];
       return [c, 'None' as PermLevel];
     })) },
-  { name: 'Subcontractor', desc: 'Limited access for subcontractor partners.', color: PURPLE,
+  { name: 'Subcontractor', desc: 'Limited access for subcontractor partners.', color: '#CBD5E1',
     perms: Object.fromEntries(CATEGORIES.map(c => {
       if (['Submittals','RFIs'].includes(c)) return [c, 'Edit' as PermLevel];
       if (['Projects','Documents','Schedule','Safety','Pay Apps'].includes(c)) return [c, 'View' as PermLevel];
       return [c, 'None' as PermLevel];
     })) },
-  { name: 'Read-Only', desc: 'View-only access. Cannot modify any data.', color: paletteHex.text2, // stored with the role — a hex, never a CSS variable
+  { name: 'Read-Only', desc: 'View-only access. Cannot modify any data.', color: '#94A3B8', // stored with the role — a hex, never a CSS variable
     perms: Object.fromEntries(CATEGORIES.map(c => [c, 'View' as PermLevel])) },
 ];
 
-const ROLE_COLORS = [ROLE_HEX, ROLE_HEX, GREEN, RED, ROLE_HEX, PURPLE, 'var(--warning)', 'var(--success)', 'var(--warning)'];
+/* Role swatches: the approved palette's distinct non-yellow values, stored as
+   hex (yellow stays for actions and selection). Same set as lib/default-roles. */
+const ROLE_COLORS = ['#38BDF8', '#4ADE80', '#FBBF24', '#F87171', '#F8FAFC', '#CBD5E1', '#94A3B8'];
+const ROLE_COLOR_NAME: Record<string, string> = { '#38BDF8': 'Blue', '#4ADE80': 'Green', '#FBBF24': 'Amber', '#F87171': 'Red', '#F8FAFC': 'White', '#CBD5E1': 'Light slate', '#94A3B8': 'Slate' };
 
 /* ── view types for the two lightweight lookup lists ── */
 interface TenantUser {
@@ -1596,13 +1598,17 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
           </div>
           <div>
             <label style={labelStyle()}>Color</label>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <div role="radiogroup" aria-label="Role color" style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
               {ROLE_COLORS.map(c => (
-                <div key={c} onClick={() => setFormColor(c)} style={{
-                  width: 28, height: 28, borderRadius: '50%', background: c, cursor: 'pointer',
-                  border: formColor === c ? `3px solid ${TEXT}` : '3px solid transparent',
-                  transition: 'border .15s',
-                }} />
+                <button key={c} type="button" role="radio" aria-checked={formColor.toUpperCase() === c} aria-label={ROLE_COLOR_NAME[c]} title={ROLE_COLOR_NAME[c]}
+                  onClick={() => setFormColor(c)}
+                  style={{ width: 44, height: 44, padding: 0, display: 'grid', placeItems: 'center', background: 'none', border: 0, cursor: 'pointer' }}>
+                  <span aria-hidden style={{
+                    width: 30, height: 30, borderRadius: '50%', background: c, boxSizing: 'border-box',
+                    border: formColor.toUpperCase() === c ? `3px solid ${TEXT}` : '1px solid var(--border-default)',
+                    transition: 'border .15s',
+                  }} />
+                </button>
               ))}
             </div>
           </div>
