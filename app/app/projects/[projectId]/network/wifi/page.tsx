@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { WifiHigh, Broadcast, UsersThree, MapTrifold, Plus, ArrowUpRight } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
@@ -223,7 +223,7 @@ export default function WifiManagerPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Network"
-        eyebrowIcon={<WifiHigh size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<WifiHigh size={13} weight="fill" color="var(--text-secondary)" />}
         title="WiFi"
         accent="Manager"
         subtitle="SSIDs, access points, and hand-off to Signal Studio."
@@ -237,12 +237,12 @@ export default function WifiManagerPage() {
       {/* KPI Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
         <StatCard
-          icon={<WifiHigh size={19} weight="duotone" color={GOLD} />}
+          icon={<WifiHigh size={19} weight="duotone" color="var(--text-secondary)" />}
           label="WiFi Networks" value={String(networks.length)} accent={GOLD}
           sub={networks.length === 1 ? '1 SSID configured' : `${networks.length} SSIDs configured`}
          href={`/app/projects/${projectId}/network/wifi`}/>
         <StatCard
-          icon={<Broadcast size={19} weight="duotone" color={BLUE} />}
+          icon={<Broadcast size={19} weight="duotone" color="var(--text-secondary)" />}
           label="Access Points" value={String(aps.length)} accent={BLUE}
           sub={`${floorApCount} on floor ${selectedFloor}`}
          href={`/app/projects/${projectId}/network/wifi`}/>
@@ -256,7 +256,7 @@ export default function WifiManagerPage() {
       {/* Add SSID Form */}
       {showSsidForm && (
         <div style={{ marginBottom: 24 }}>
-          <SectionCard title="Add WiFi Network (SSID)" icon={<WifiHigh size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard title="Add WiFi Network (SSID)" icon={<WifiHigh size={17} weight="duotone" color="var(--text-secondary)" />}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
               <div>
                 <label style={labelStyle}>SSID Name *</label>
@@ -310,13 +310,13 @@ export default function WifiManagerPage() {
 
       {/* WiFi Networks List */}
       <div style={{ marginBottom: 24 }}>
-        <SectionCard title="WiFi Networks" icon={<WifiHigh size={17} weight="duotone" color={GOLD} />}>
+        <SectionCard title="WiFi Networks" icon={<WifiHigh size={17} weight="duotone" color="var(--text-secondary)" />}>
           {networks.length === 0 ? (
             <PremiumEmpty
-              icon={<WifiHigh size={30} weight="duotone" color={GOLD} />}
+              icon={<WifiHigh size={30} weight="duotone" color="var(--text-secondary)" />}
               title="No SSIDs configured yet"
               description="Add your first wireless network to start planning coverage and access."
-              action={<button onClick={() => setShowSsidForm(true)} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add SSID</button>}
+              action={<button onClick={() => setShowSsidForm(true)} style={secondaryButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add SSID</button>}
               compact
             />
           ) : (
@@ -332,22 +332,22 @@ export default function WifiManagerPage() {
                     <div style={{ flex: 1 }}>
                       <div style={{ color: TEXT, fontSize: 14, fontWeight: 700 }}>
                         {net.ssid}
-                        {net.hidden && <span style={{ fontSize: 10, color: DIM, marginLeft: 8 }}>(Hidden)</span>}
+                        {net.hidden && <span style={{ fontSize: 12, color: DIM, marginLeft: 8 }}>(Hidden)</span>}
                       </div>
                       <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
                         <span style={{
-                          fontSize: 10, padding: '2px 8px', borderRadius: 8, fontWeight: 600,
+                          fontSize: 12, padding: '2px 8px', borderRadius: 8, fontWeight: 600,
                           background: sc.bg, color: sc.text,
                         }}>{securityLabel(net.security_type)}</span>
-                        {net.vlan_name && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', color: DIM }}>VLAN: {net.vlan_name}</span>}
-                        <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', color: DIM }}>{bandLabel(net.band)}</span>
-                        {net.client_isolation && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, background: 'var(--brand-primary-08)', color: GOLD }}>Isolated</span>}
-                        {net.bandwidth_limit_mbps > 0 && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', color: DIM }}>{net.bandwidth_limit_mbps} Mbps</span>}
+                        {net.vlan_name && <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', color: DIM }}>VLAN: {net.vlan_name}</span>}
+                        <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', color: DIM }}>{bandLabel(net.band)}</span>
+                        {net.client_isolation && <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 8, background: 'var(--bg-surface-2)', color: 'var(--text-primary)' }}>Isolated</span>}
+                        {net.bandwidth_limit_mbps > 0 && <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', color: DIM }}>{net.bandwidth_limit_mbps} Mbps</span>}
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ color: TEXT, fontSize: 18, fontWeight: 700 }}>{net.client_count ?? 0}</div>
-                      <div style={{ color: DIM, fontSize: 10 }}>Clients</div>
+                      <div style={{ color: DIM, fontSize: 12 }}>Clients</div>
                     </div>
                   </div>
                 );
@@ -361,34 +361,34 @@ export default function WifiManagerPage() {
       <div style={{ marginBottom: 24 }}>
         <SectionCard
           title="Coverage Design"
-          icon={<MapTrifold size={17} weight="duotone" color={GOLD} />}
+          icon={<MapTrifold size={17} weight="duotone" color="var(--text-secondary)" />}
         >
           <div style={{
             display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 16,
-            padding: '18px 20px', borderRadius: 12, border: '1px solid var(--brand-primary-25)',
+            padding: '18px 20px', borderRadius: 12, border: '1px solid var(--border-default)',
             background: 'var(--bg-surface-2)',
           }}>
             <div style={{
               width: 46, height: 46, borderRadius: 12, flexShrink: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'var(--brand-primary-12)', border: '1px solid color-mix(in srgb, var(--brand-primary) 45%, transparent)',
+              background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)',
             }}>
-              <Broadcast size={24} weight="duotone" color={GOLD} />
+              <Broadcast size={24} weight="duotone" color="var(--text-secondary)" />
             </div>
             <div style={{ flex: 1, minWidth: 220 }}>
               <div style={{ color: TEXT, fontSize: 15, fontWeight: 800 }}>Design this floor in Signal Studio</div>
-              <div style={{ color: DIM, fontSize: 12.5, marginTop: 3, lineHeight: 1.5 }}>
+              <div style={{ color: DIM, fontSize: 13, marginTop: 3, lineHeight: 1.5 }}>
                 Physics-based RF propagation over your real floor plan — walls, materials, AP placement, and a priced bid when you approve.
               </div>
             </div>
-            <Link href={`/app/signal-studio?projectId=${projectId}`} className="pmBtn" style={{ ...goldButtonStyle, textDecoration: 'none' }}>
+            <Link href={`/app/signal-studio?projectId=${projectId}`} className="pmBtn" style={{ ...secondaryButtonStyle, textDecoration: 'none' }}>
               Open Signal Studio <ArrowUpRight size={15} weight="bold" />
             </Link>
           </div>
 
           {designs.length > 0 && (
             <div style={{ marginTop: 14 }}>
-              <div style={{ color: DIM, fontSize: 11, fontWeight: 700, marginBottom: 8 }}>
+              <div style={{ color: DIM, fontSize: 12, fontWeight: 700, marginBottom: 8 }}>
                 Saved Designs for This Project
               </div>
               <div style={{ display: 'grid', gap: 6 }}>
@@ -397,10 +397,10 @@ export default function WifiManagerPage() {
                     display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px',
                     background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: `1px solid ${BORDER}`,
                   }}>
-                    <MapTrifold size={16} weight="duotone" color={GOLD} />
+                    <MapTrifold size={16} weight="duotone" color="var(--text-secondary)" />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ color: TEXT, fontSize: 13, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</div>
-                      <div style={{ color: DIM, fontSize: 11, marginTop: 2 }}>
+                      <div style={{ color: DIM, fontSize: 12, marginTop: 2 }}>
                         {d.device_count} device{d.device_count === 1 ? '' : 's'}
                         {typeof d.coverage_percent === 'number' ? ` · ${Math.round(d.coverage_percent)}% predicted coverage` : ''}
                         {` · updated ${new Date(d.updated_at).toLocaleDateString()}`}
@@ -417,7 +417,7 @@ export default function WifiManagerPage() {
       {/* Access Points — inventory only; placement + coverage modeling happen in Signal Studio */}
       <SectionCard
         title="Access Points"
-        icon={<Broadcast size={17} weight="duotone" color={GOLD} />}
+        icon={<Broadcast size={17} weight="duotone" color="var(--text-secondary)" />}
         action={
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <select value={selectedFloor} onChange={e => setSelectedFloor(+e.target.value)} style={{ ...inputStyle, width: 120 }}>
@@ -488,7 +488,7 @@ export default function WifiManagerPage() {
                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: ap.status === 'online' ? GREEN : ap.status === 'offline' ? RED : 'var(--status-closed)' }} />
                     <span style={{ color: TEXT, fontSize: 13, fontWeight: 600 }}>{ap.name}</span>
                   </div>
-                  <div style={{ color: DIM, fontSize: 11, marginTop: 4 }}>
+                  <div style={{ color: DIM, fontSize: 12, marginTop: 4 }}>
                     {ap.model || 'Unknown'} &middot; Ch {ap.channel} &middot; {ap.power_dbm}dBm
                   </div>
                 </div>
@@ -497,10 +497,10 @@ export default function WifiManagerPage() {
           </div>
         ) : (
           <PremiumEmpty
-            icon={<Broadcast size={30} weight="duotone" color={GOLD} />}
+            icon={<Broadcast size={30} weight="duotone" color="var(--text-secondary)" />}
             title="No access points logged yet"
             description="Track installed APs here, or design the placement first in Signal Studio."
-            action={<Link href={`/app/signal-studio?projectId=${projectId}`} className="pmBtn" style={{ ...goldButtonStyle, textDecoration: 'none' }}><ArrowUpRight size={15} weight="bold" /> Open Signal Studio</Link>}
+            action={<Link href={`/app/signal-studio?projectId=${projectId}`} className="pmBtn" style={{ ...secondaryButtonStyle, textDecoration: 'none' }}><ArrowUpRight size={15} weight="bold" /> Open Signal Studio</Link>}
             compact
           />
         )}

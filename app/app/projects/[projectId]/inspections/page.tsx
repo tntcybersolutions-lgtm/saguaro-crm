@@ -141,15 +141,14 @@ const CSS = `
 .inLadder { border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--bg-surface-2); margin-bottom: 16px; }
 .inWarn { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-sm); color: var(--text-primary); line-height: 1.55; padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(255,77,94,.35); background: rgba(255,77,94,.08); margin-bottom: 16px; }
 .inWarn > svg { color: var(--status-overdue); flex-shrink: 0; margin-top: 2px; }
-.inWarn button { background: none; border: 0; padding: 0; color: var(--brand-primary); font-weight: 700; cursor: pointer; font: inherit; margin-right: 10px; }
-.inSeq { display: flex; flex-direction: column; gap: 4px; }
+.inWarn button { background: none; border: 0; padding: 0; color: var(--link); font-weight: 700; cursor: pointer; font: inherit; margin-right: 10px; }
+.inSeq { display: flex; flex-wrap: wrap; gap: 8px 16px; }
 .inSeqItem { display: flex; align-items: center; gap: 9px; font-size: var(--fs-sm); color: var(--text-tertiary); }
-.inSeqItem[data-next="true"] { color: var(--brand-primary); font-weight: 700; }
-.inSeqNum { width: 18px; height: 18px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; border: 1px solid var(--border-default); color: var(--text-tertiary); }
-.inSeqItem[data-next="true"] .inSeqNum { border-color: var(--brand-primary-35); background: var(--brand-primary-12); color: var(--brand-primary); }
+.inSeqItem[data-next="true"] { color: var(--text-primary); font-weight: 700; }
+.inSeqNum { width: 18px; height: 18px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; border: 1px solid var(--border-default); color: var(--text-tertiary); }
+.inSeqItem[data-next="true"] .inSeqNum { border-color: var(--link); color: var(--link); }
 .inEmptyGrid { display: grid; grid-template-columns: minmax(0, 1fr); }
-@container inws (min-width: 900px) { .inEmptyGrid[data-ctx="true"] { grid-template-columns: minmax(0, 1fr) 320px; } .inEmptyRail { border-left: 1px solid var(--border-subtle); border-top: 0; } }
-.inEmptyRail { padding: 22px 24px; border-top: 1px solid var(--border-subtle); }
+.inEmptyRail { padding: 14px 20px 18px; border-top: 1px solid var(--border-subtle); }
 .inDateInput { width: 100%; }
 @media (max-width: 640px) {
   .inWs .k-btn, .inWs .k-stat, .inWs select.k-select, .inWs .k-input { min-height: 44px; }
@@ -507,10 +506,6 @@ export default function InspectionsPage() {
                 <div key={t} className="inSeqItem" data-next={t === suggestedType ? 'true' : undefined}><span className="inSeqNum">{idx + 1}</span>{t}</div>
               ))}
             </div>
-            <div style={{ height: 1, background: 'var(--border-subtle)', margin: '12px 0 8px' }} />
-            <InsightRow label="Project Progress" value={`${pctComplete}%`} />
-            <InsightRow label="Open Punch Items" value={String(openPunch)} />
-            <InsightRow label="Subs on the Job" value={String((ctx?.subs || []).length)} />
           </div>
         )}
       </div>

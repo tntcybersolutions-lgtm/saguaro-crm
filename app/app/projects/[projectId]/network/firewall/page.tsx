@@ -9,7 +9,7 @@ import {
 } from '@phosphor-icons/react';
 import {
   PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, FlowStrip,
-  goldButtonStyle, ghostButtonStyle,
+  goldButtonStyle, ghostButtonStyle, secondaryButtonStyle
 } from '@/components/ui/premium';
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
@@ -201,7 +201,7 @@ export default function FirewallRulesPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Network"
-        eyebrowIcon={<ShieldCheck size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<ShieldCheck size={13} weight="fill" color="var(--text-secondary)" />}
         title="Firewall"
         accent="Rules"
         subtitle="Define, order, and toggle the packet-filtering policy."
@@ -215,7 +215,7 @@ export default function FirewallRulesPage() {
       {/* KPI Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
         <StatCard
-          icon={<ShieldCheck size={19} weight="duotone" color={GOLD} />}
+          icon={<ShieldCheck size={19} weight="duotone" color="var(--text-secondary)" />}
           label="Total Rules" value={String(rules.length)} accent={GOLD}
           sub="Across all categories" delay={0.02}
          href={`/app/projects/${projectId}/network/firewall`}/>
@@ -230,7 +230,7 @@ export default function FirewallRulesPage() {
           sub="Deny / drop" delay={0.10}
          href={`/app/projects/${projectId}/network/firewall`}/>
         <StatCard
-          icon={<ClipboardText size={19} weight="duotone" color={GOLD} />}
+          icon={<ClipboardText size={19} weight="duotone" color="var(--text-secondary)" />}
           label="Logging" value={String(loggingCount)}
           sub="Rules logged" delay={0.14}
          href={`/app/projects/${projectId}/network/firewall`}/>
@@ -239,7 +239,7 @@ export default function FirewallRulesPage() {
       {/* Add Rule Form */}
       {showForm && (
         <div style={{ marginBottom: 24 }}>
-          <SectionCard title="Add Firewall Rule" icon={<Plus size={17} weight="bold" color={GOLD} />}>
+          <SectionCard title="Add Firewall Rule" icon={<Plus size={17} weight="bold" color="var(--text-secondary)" />}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
               <div>
                 <label style={labelStyle}>Rule Name *</label>
@@ -334,15 +334,15 @@ export default function FirewallRulesPage() {
       {/* Rules List */}
       <SectionCard
         title="Firewall Rules"
-        icon={<ShieldCheck size={17} weight="duotone" color={GOLD} />}
+        icon={<ShieldCheck size={17} weight="duotone" color="var(--text-secondary)" />}
         action={<span style={{ fontSize: 12, fontWeight: 700, color: DIM }}>{filteredRules.length} {filteredRules.length === 1 ? 'rule' : 'rules'}</span>}
         flush
       >
         {filteredRules.length === 0 ? (
           <div style={{ padding: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 800, color: TEXT }}>
-                <ShieldCheck size={16} weight="duotone" color={GOLD} style={{ marginRight: 7, verticalAlign: 'text-bottom' }} />
+              <div style={{ fontSize: 14, fontWeight: 800, color: TEXT }}>
+                <ShieldCheck size={16} weight="duotone" color="var(--text-secondary)" style={{ marginRight: 7, verticalAlign: 'text-bottom' }} />
                 {rules.length === 0 ? 'No firewall rules yet' : 'No rules in this category'}
                 <span style={{ fontWeight: 400, color: DIM }}>
                   {rules.length === 0
@@ -351,7 +351,7 @@ export default function FirewallRulesPage() {
                 </span>
               </div>
               {!showForm && (
-                <button onClick={() => setShowForm(true)} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add Rule</button>
+                <button onClick={() => setShowForm(true)} style={secondaryButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add Rule</button>
               )}
             </div>
             {rules.length === 0 && (
@@ -389,26 +389,26 @@ export default function FirewallRulesPage() {
 
                 {/* Action Badge */}
                 <span style={{
-                  fontSize: 11, padding: '3px 10px', borderRadius: 10, fontWeight: 700,
+                  fontSize: 12, padding: '3px 10px', borderRadius: 10, fontWeight: 700,
                   background: as.bg, color: as.text, textTransform: 'capitalize', width: 60, textAlign: 'center',
                 }}>{rule.action}</span>
 
                 {/* Name */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ color: TEXT, fontSize: 13, fontWeight: 600 }}>{rule.name}</div>
-                  <div style={{ color: DIM, fontSize: 11, marginTop: 2 }}>
+                  <div style={{ color: DIM, fontSize: 12, marginTop: 2 }}>
                     {rule.source_network}:{rule.source_port || '*'} → {rule.destination_network}:{rule.destination_port || '*'} ({rule.protocol.toUpperCase()})
                   </div>
                 </div>
 
                 {/* Category */}
                 <span style={{
-                  fontSize: 10, padding: '2px 8px', borderRadius: 10, background: 'rgba(255,255,255,0.06)',
+                  fontSize: 12, padding: '2px 8px', borderRadius: 10, background: 'rgba(255,255,255,0.06)',
                   color: DIM, fontWeight: 600,
                 }}>{categoryLabel(rule.category)}</span>
 
                 {/* Logging */}
-                {rule.logging && <span style={{ fontSize: 10, color: DIM }}>Log</span>}
+                {rule.logging && <span style={{ fontSize: 12, color: DIM }}>Log</span>}
 
                 {/* Enabled Toggle */}
                 <button

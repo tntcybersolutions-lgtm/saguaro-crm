@@ -872,7 +872,7 @@ export default function DailyLogsPage(){
             whenever the fields are left blank. Say so, visibly. */}
         {mode==='create'&&(
           <div className="pdlNote">
-            <CloudSun size={18} weight="fill" style={{flexShrink:0,color:'var(--brand-primary)'}}/>
+            <CloudSun size={18} weight="fill" style={{flexShrink:0,color: 'var(--text-primary)'}}/>
             <div><b>Weather stamps itself.</b> Leave the weather fields blank — conditions, temps, wind and precipitation auto-stamp from the National Weather Service when you save.</div>
           </div>
         )}

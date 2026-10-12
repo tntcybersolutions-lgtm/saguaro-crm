@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 import { toCents, toDollars, sumCents, scaleCents } from '@/lib/calc';
-import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, StatStrip, FlowSteps, FlowStrip, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, FlowStrip, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 import { Receipt, Plus, FilePlus, CurrencyDollar, Wallet, PencilSimple, ChartBar, Copy, Trash, Camera, Sparkle, type Icon } from '@phosphor-icons/react';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
@@ -284,12 +284,11 @@ export default function BillsPage() {
   const paidCount = bills.filter(b => b.status === 'Paid').length;
   const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: 'var(--bg-surface-2)', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
   const label: React.CSSProperties = { fontSize: 12, color: DIM, marginBottom: 4, display: 'block' };
-  const hint: React.CSSProperties = { fontSize: 11, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 };
+  const hint: React.CSSProperties = { fontSize: 12, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 };
 
   // ── SmartCreate intelligence (all Number-coerced: DB numerics round-trip as strings) ──
   const budget = ctx?.budget;
   const bOriginal = Number(budget?.original) || 0;
-  const bCommitted = Number(budget?.committed) || 0;
   const bActual = Number(budget?.actual) || 0;
   const bRemaining = bOriginal - bActual;
   const vendors: string[] = (ctx?.vendors || []).filter(Boolean);
@@ -394,7 +393,7 @@ export default function BillsPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Financials"
-        eyebrowIcon={<Receipt size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<Receipt size={13} weight="fill" color="var(--text-secondary)" />}
         title="Bills"
         subtitle="Vendor bills and supplier invoices"
         actions={
@@ -411,14 +410,20 @@ export default function BillsPage() {
         }
       />
 
-      {/* What the system already knows: the budget every bill posts against */}
-      {ctx && (
+      {/* One summary row: this project's bills first, then the budget every
+          bill posts against. Committed (POs + subcontracts) belongs to the
+          Budget screen; the known-vendor count shows under the Vendor field. */}
+      {(ctx || (!loading && bills.length > 0)) && (
         <StatStrip items={[
-          {href: `/app/projects/${projectId}/budget`,  label: 'Budget', value: fmt(bOriginal), sub: `${Number(budget?.lineCount) || budgetLines.length} cost-coded lines` },
-          {href: `/app/projects/${projectId}/bills`,  label: 'Committed', value: fmt(bCommitted), sub: 'POs + subcontracts' },
-          {href: `/app/projects/${projectId}/bills`,  label: 'Actual to Date', value: fmt(bActual), sub: 'Bills + invoices posted' },
-          {href: `/app/projects/${projectId}/bills`,  label: 'Remaining', value: fmt(bRemaining), accent: bRemaining < 0 ? RED : GREEN, sub: 'Original less actual' },
-          {href: `/app/projects/${projectId}/bills`,  label: 'Known Vendors', value: String(vendors.length), sub: 'Autocomplete in the form' },
+          ...(!loading && bills.length > 0 ? [
+            { href: `/app/projects/${projectId}/bills`, label: 'Total Bills', value: String(bills.length), sub: `${paidCount} paid` },
+            { href: `/app/projects/${projectId}/bills`, label: 'Pending + Approved', value: '$' + pendingTotal.toLocaleString(), sub: 'Awaiting payment' },
+          ] : []),
+          ...(ctx ? [
+            { href: `/app/projects/${projectId}/budget`, label: 'Budget', value: fmt(bOriginal), sub: `${Number(budget?.lineCount) || budgetLines.length} cost-coded lines` },
+            { href: `/app/projects/${projectId}/bills`, label: 'Actual to Date', value: fmt(bActual), sub: 'Bills + invoices posted' },
+            { href: `/app/projects/${projectId}/bills`, label: 'Remaining', value: fmt(bRemaining), accent: bRemaining < 0 ? RED : GREEN, sub: 'Original less actual' },
+          ] : []),
         ]} />
       )}
 
@@ -427,10 +432,10 @@ export default function BillsPage() {
 
       {showForm && (
         <div className="billWrap" style={{ marginBottom: 24, display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 320px', gap: 16, alignItems: 'start' }}>
-          <SectionCard title="New Bill" icon={<FilePlus size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard title="New Bill" icon={<FilePlus size={17} weight="duotone" color="var(--text-secondary)" />}>
             {receipt && (
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 14px', marginBottom: 14, borderRadius: 10, background: 'var(--brand-primary-08)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', fontSize: 13, color: TEXT, lineHeight: 1.5 }}>
-                <Sparkle size={17} weight="fill" color={GOLD} style={{ flexShrink: 0, marginTop: 2 }} />
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 14px', marginBottom: 14, borderRadius: 10, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', fontSize: 13, color: TEXT, lineHeight: 1.5 }}>
+                <Sparkle size={17} weight="fill" color="var(--text-secondary)" style={{ flexShrink: 0, marginTop: 2 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   {scanning === 'read'
                     ? 'Reading the receipt…'
@@ -492,17 +497,17 @@ export default function BillsPage() {
                 <input type="text" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} style={inp} />
               </div>
               {selLine && (
-                <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 14px', borderRadius: 10, background: 'var(--brand-primary-08)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', fontSize: 12.5, color: DIM, lineHeight: 1.55 }}>
-                  <Wallet size={16} weight="duotone" color={GOLD} style={{ flexShrink: 0, marginTop: 1 }} />
+                <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 14px', borderRadius: 10, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', fontSize: 13, color: DIM, lineHeight: 1.55 }}>
+                  <Wallet size={16} weight="duotone" color="var(--text-secondary)" style={{ flexShrink: 0, marginTop: 1 }} />
                   <span>
-                    Posts <b style={{ color: TEXT }}>{fmt(grandTotal)}</b> actual against <b style={{ color: GOLD }}>{selLine.costCode || selLine.division}</b>{selLine.description ? ` (${selLine.description})` : ''} — budget <b style={{ color: TEXT }}>{fmt(lineBudget)}</b>, actual to date <b style={{ color: TEXT }}>{fmt(lineActual)}</b>, remaining <b style={{ color: lineRemaining < 0 ? RED : GREEN }}>{fmt(lineRemaining)}</b> after this bill.
+                    Posts <b style={{ color: TEXT }}>{fmt(grandTotal)}</b> actual against <b style={{ color: 'var(--text-primary)' }}>{selLine.costCode || selLine.division}</b>{selLine.description ? ` (${selLine.description})` : ''} — budget <b style={{ color: TEXT }}>{fmt(lineBudget)}</b>, actual to date <b style={{ color: TEXT }}>{fmt(lineActual)}</b>, remaining <b style={{ color: lineRemaining < 0 ? RED : GREEN }}>{fmt(lineRemaining)}</b> after this bill.
                   </span>
                 </div>
               )}
               <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', gap: 24, borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 10 }}>
                 <span style={{ fontSize: 12, color: DIM }}>Subtotal <b style={{ color: TEXT }}>{fmt(subtotalNum)}</b></span>
                 <span style={{ fontSize: 12, color: DIM }}>Tax <b style={{ color: TEXT }}>{fmt(taxNum)}</b></span>
-                <span style={{ fontSize: 12, color: DIM }}>Bill Total <b style={{ color: GOLD, fontSize: 14 }}>{fmt(grandTotal)}</b></span>
+                <span style={{ fontSize: 12, color: DIM }}>Bill Total <b style={{ color: 'var(--text-primary)', fontSize: 14 }}>{fmt(grandTotal)}</b></span>
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
@@ -516,14 +521,14 @@ export default function BillsPage() {
           {/* Context rail — what the system does with this bill */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {selLine && (
-              <SectionCard flat title={`Cost Code ${selLine.costCode || selLine.division}`} icon={<Wallet size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title={`Cost Code ${selLine.costCode || selLine.division}`} icon={<Wallet size={17} weight="duotone" color="var(--text-secondary)" />}>
                 <InsightRow label="Line Budget" value={fmt(lineBudget)} />
                 <InsightRow label="Actual to Date" value={fmt(lineActual)} />
                 <InsightRow label="This Bill" value={fmt(grandTotal)} accent={GOLD} />
                 <InsightRow label="Remaining After" value={fmt(lineRemaining)} accent={lineRemaining < 0 ? RED : GREEN} strong />
               </SectionCard>
             )}
-            <SectionCard flat title="After You Save" icon={<CurrencyDollar size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="After You Save" icon={<CurrencyDollar size={17} weight="duotone" color="var(--text-secondary)" />}>
               <FlowSteps title="" steps={[
                 { title: 'Bill Lands as Pending', desc: 'Queued in payables with overdue tracking off the due date — no follow-up spreadsheet.' },
                 { title: 'Budget Actual Rolls Up Server-Side', desc: form.cost_code ? `${fmt(grandTotal)} posts to ${form.cost_code} actual the moment you save.` : 'Pick a cost code and the total posts to that budget line automatically.' },
@@ -556,14 +561,14 @@ export default function BillsPage() {
         style={{ marginBottom: 16 }}
       />
 
-      <SectionCard title="All Bills" icon={<Receipt size={17} weight="duotone" color={GOLD} />} flush>
+      <SectionCard title="All Bills" icon={<Receipt size={17} weight="duotone" color="var(--text-secondary)" />} flush>
         {loading ? (
           <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading…</div>
         ) : bills.length === 0 ? (
           <div style={{ padding: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 800, color: TEXT }}>
-                <Receipt size={16} weight="duotone" color={GOLD} style={{ marginRight: 7, verticalAlign: 'text-bottom' }} />
+              <div style={{ fontSize: 14, fontWeight: 800, color: TEXT }}>
+                <Receipt size={16} weight="duotone" color="var(--text-secondary)" style={{ marginRight: 7, verticalAlign: 'text-bottom' }} />
                 No Bills Yet
                 <span style={{ fontWeight: 400, color: DIM }}>{showForm ? ' — log the first one in the form above; it lands here as Pending.' : ' — log the first vendor invoice to start the payables ledger.'}</span>
               </div>
@@ -596,34 +601,34 @@ export default function BillsPage() {
                   const overdue = isOverdue(b.due_date, b.status);
                   return (
                     <tr key={b.id} style={{ borderBottom: '1px solid rgba(255,255,255,.06)', background: overdue ? 'rgba(248,113,113,.05)' : 'transparent' }}>
-                      <td style={{ padding: '10px 14px', color: GOLD, fontWeight: 600 }}>{b.bill_number}</td>
+                      <td style={{ padding: '10px 14px', color: 'var(--text-primary)', fontWeight: 600 }}>{b.bill_number}</td>
                       <td style={{ padding: '10px 14px', color: TEXT }}>{b.vendor_name}</td>
                       <td style={{ padding: '10px 14px', color: DIM, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.description}</td>
                       <td style={{ padding: '10px 14px', position: 'relative' as const }}>
                         {deleteId === b.id ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span style={{ fontSize: 11, color: RED, fontWeight: 600 }}>Delete bill?</span>
-                            <button onClick={(e) => { e.stopPropagation(); handleDeleteBill(b.id); }} style={{ padding: '3px 8px', background: 'rgba(248,113,113,.15)', border: `1px solid rgba(248,113,113,.3)`, borderRadius: 5, color: RED, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Yes</button>
-                            <button onClick={(e) => { e.stopPropagation(); setDeleteId(null); }} style={{ padding: '3px 8px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
+                            <span style={{ fontSize: 12, color: RED, fontWeight: 600 }}>Delete bill?</span>
+                            <button onClick={(e) => { e.stopPropagation(); handleDeleteBill(b.id); }} style={{ padding: '3px 8px', background: 'rgba(248,113,113,.15)', border: `1px solid rgba(248,113,113,.3)`, borderRadius: 5, color: RED, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Yes</button>
+                            <button onClick={(e) => { e.stopPropagation(); setDeleteId(null); }} style={{ padding: '3px 8px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
                           </div>
                         ) : editId === b.id ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                             <input value={editVal} onChange={e => setEditVal(e.target.value)} type="number" autoFocus onKeyDown={e => { if (e.key === 'Enter') handleEditBill(b.id); if (e.key === 'Escape') setEditId(null); }} style={{ width: 100, padding: '4px 8px', background: DARK, border: `1px solid ${GOLD}`, borderRadius: 5, color: TEXT, fontSize: 12, outline: 'none', textAlign: 'right' }} />
-                            <button onClick={() => handleEditBill(b.id)} style={{ padding: '3px 8px', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 5, color: 'var(--on-brand)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Save</button>
-                            <button onClick={() => setEditId(null)} style={{ padding: '3px 8px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
+                            <button onClick={() => handleEditBill(b.id)} style={{ padding: '3px 8px', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 5, color: 'var(--on-brand)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save</button>
+                            <button onClick={() => setEditId(null)} style={{ padding: '3px 8px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
                           </div>
                         ) : adjustId === b.id ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                             {[-10, -5, 5, 10].map(p => (
-                              <button key={p} onClick={(e) => { e.stopPropagation(); handleAdjustBill(b.id, p); }} style={{ padding: '3px 7px', background: p > 0 ? 'rgba(74,222,128,.1)' : 'rgba(248,113,113,.1)', border: `1px solid ${p > 0 ? 'rgba(74,222,128,.25)' : 'rgba(248,113,113,.25)'}`, borderRadius: 5, color: p > 0 ? GREEN : RED, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{p > 0 ? '+' : ''}{p}%</button>
+                              <button key={p} onClick={(e) => { e.stopPropagation(); handleAdjustBill(b.id, p); }} style={{ padding: '3px 7px', background: p > 0 ? 'rgba(74,222,128,.1)' : 'rgba(248,113,113,.1)', border: `1px solid ${p > 0 ? 'rgba(74,222,128,.25)' : 'rgba(248,113,113,.25)'}`, borderRadius: 5, color: p > 0 ? GREEN : RED, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{p > 0 ? '+' : ''}{p}%</button>
                             ))}
-                            <button onClick={(e) => { e.stopPropagation(); setAdjustId(null); }} style={{ padding: '3px 6px', background: 'none', border: 'none', color: DIM, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
+                            <button onClick={(e) => { e.stopPropagation(); setAdjustId(null); }} style={{ padding: '3px 6px', background: 'none', border: 'none', color: DIM, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
                           </div>
                         ) : (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                             <span style={{ color: TEXT, fontWeight: 700 }}>{fmt(b.amount)}</span>
-                            {copiedId === b.id && <span style={{ fontSize: 10, color: GREEN, fontWeight: 600 }}>Copied!</span>}
-                            <button onClick={(e) => { e.stopPropagation(); openBillMenu(b.id); }} style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 10, padding: '2px 4px', lineHeight: 1, opacity: 0.6 }} onMouseEnter={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '0.6')}>&#9662;</button>
+                            {copiedId === b.id && <span style={{ fontSize: 12, color: GREEN, fontWeight: 600 }}>Copied!</span>}
+                            <button onClick={(e) => { e.stopPropagation(); openBillMenu(b.id); }} style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 12, padding: '2px 4px', lineHeight: 1, opacity: 0.6 }} onMouseEnter={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '0.6')}>&#9662;</button>
                             {menuId === b.id && (
                               <div style={{ position: 'absolute', top: 36, right: 14, background: 'var(--bg-solid-2)', border: `1px solid ${BORDER}`, borderRadius: 'var(--radius-md)', padding: 6, zIndex: 100, minWidth: 150, boxShadow: 'var(--shadow-lg)' }}>
                                 {([
@@ -648,7 +653,7 @@ export default function BillsPage() {
                       <td style={{ padding: '10px 14px' }}>{statusBadge(overdue && b.status !== 'Paid' ? 'Overdue' : b.status)}</td>
                       <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
                         {b.status === 'Pending' && (
-                          <button onClick={() => handleApprove(b.id)} disabled={actionLoading === b.id + '-approve'} style={{ padding: '4px 10px', background: 'var(--brand-primary-18)', border: '1px solid color-mix(in srgb, var(--brand-primary) 40%, transparent)', borderRadius: 5, color: 'var(--brand-primary-strong)', fontSize: 12, cursor: 'pointer', marginRight: 6 }}>
+                          <button onClick={() => handleApprove(b.id)} disabled={actionLoading === b.id + '-approve'} style={{ padding: '4px 10px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 5, color: 'var(--text-primary)', fontSize: 12, cursor: 'pointer', marginRight: 6 }}>
                             {actionLoading === b.id + '-approve' ? '…' : 'Approve'}
                           </button>
                         )}
@@ -672,24 +677,6 @@ export default function BillsPage() {
           </div>
         )}
       </SectionCard>
-
-      {!loading && bills.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginTop: 20 }}>
-          <StatCard
-            icon={<Receipt size={19} weight="duotone" color={GOLD} />}
-            label="Total Bills"
-            value={String(bills.length)}
-            sub={`${paidCount} paid`}
-           href={`/app/projects/${projectId}/bills`}/>
-          <StatCard
-            icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />}
-            label="Pending + Approved"
-            value={'$' + pendingTotal.toLocaleString()}
-            accent={GOLD}
-            sub="Awaiting payment"
-           href={`/app/projects/${projectId}/bills`}/>
-        </div>
-      )}
 
       {menuId && <div style={{ position: 'fixed', inset: 0, zIndex: 50 }} onClick={() => setMenuId(null)} />}
     <UnsavedGuardModal guard={guard} />

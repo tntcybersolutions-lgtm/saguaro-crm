@@ -4,17 +4,17 @@ import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
-import { ShieldCheck, Plus, X, CheckCircle, Warning, WarningCircle, Users } from '@phosphor-icons/react';
+import { ShieldCheck, Plus, X } from '@phosphor-icons/react';
 import { ListToolbar } from '@/components/ui/ListToolbar';
-import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, StatStrip, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, AutoChip, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
 import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/table-sort';
 
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)',GREEN='var(--success)',RED='var(--danger)',ORANGE='var(--warning)';
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
 
 const INP:React.CSSProperties = {padding:'8px 12px',background:'var(--bg-surface-2)',border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none',width:'100%',boxSizing:'border-box'};
-const LBL:React.CSSProperties = {display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:6};
-const HINT:React.CSSProperties = {fontSize:11,color:'var(--c-text-2)',marginTop:5,lineHeight:1.45};
+const LBL:React.CSSProperties = {display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:6};
+const HINT:React.CSSProperties = {fontSize:12,color:'var(--c-text-2)',marginTop:5,lineHeight:1.45};
 
 const POLICY_TYPES = ['GL','WC','Auto','Umbrella','E&O','Professional Liability','Other'];
 
@@ -192,7 +192,7 @@ export default function InsurancePage() {
         {/* Header */}
         <ModuleHero
           eyebrow="Insurance"
-          eyebrowIcon={<ShieldCheck size={13} weight="fill" color={GOLD} />}
+          eyebrowIcon={<ShieldCheck size={13} weight="fill" color="var(--text-secondary)" />}
           title="Insurance"
           accent="Certificates"
           subtitle="COIs for all subcontractors — expiration alerts included"
@@ -204,23 +204,23 @@ export default function InsurancePage() {
           }
         />
 
-        {/* Sub-coverage strip — who on the roster is covered, lapsing, or bare */}
-        {ctx && subs.length>0 && (
-          <StatStrip items={[
-            {href: `/app/projects/${projectId}/subs`, label:'Subs on Roster', value:String(subs.length), icon:<Users size={12} color={GOLD} />, sub:'Active on this project'},
+        {/* One summary: sub coverage on the roster, certificate status, coverage tracked */}
+        <StatStrip items={[
+          ...(ctx && subs.length>0 ? [
             {href: `/app/projects/${projectId}/insurance`, label:'COI on File', value:`${coveredSubs} of ${subs.length}`, accent:coveredSubs===subs.length?'var(--success)':'var(--warning)', sub:'Subs holding a current certificate'},
             {href: `/app/projects/${projectId}/insurance`, label:'No COI', value:String(missingSubs.length), accent:missingSubs.length>0?'var(--danger)':'var(--success)', sub:missingSubs.length>0?'Uninsured exposure on site':'Every sub is covered'},
-            {href: `/app/projects/${projectId}/insurance`, label:'Expiring ≤30d', value:String(expiringCount), accent:expiringCount>0?'var(--warning)':undefined, sub:'Renewal window open'},
-            {href: `/app/projects/${projectId}/insurance`, label:'Expired', value:String(expiredCount), accent:expiredCount>0?'var(--danger)':undefined, sub:'Past expiry — request renewal'},
-            {href: `/app/projects/${projectId}/insurance`, label:'Coverage Tracked', value:fmt(totalCoverage), sub:`Across ${totalCount} certificate${totalCount===1?'':'s'}`},
-          ]}/>
-        )}
+          ] : []),
+          {href: `/app/projects/${projectId}/insurance`, label:'Active', value:String(activeCount), accent:'var(--success)', sub:'30+ days out'},
+          {href: `/app/projects/${projectId}/insurance`, label:'Expiring ≤30d', value:String(expiringCount), accent:expiringCount>0?'var(--warning)':undefined, sub:'Renewal window open'},
+          {href: `/app/projects/${projectId}/insurance`, label:'Expired', value:String(expiredCount), accent:expiredCount>0?'var(--danger)':undefined, sub:'Past expiry — request renewal'},
+          {href: `/app/projects/${projectId}/insurance`, label:'Coverage Tracked', value:fmt(totalCoverage), sub:`Across ${totalCount} certificate${totalCount===1?'':'s'}`},
+        ]}/>
 
         {/* Add Form */}
         {showForm && (
           <SectionCard
             title="Add Insurance Certificate"
-            icon={<ShieldCheck size={17} weight="duotone" color={GOLD} />}
+            icon={<ShieldCheck size={17} weight="duotone" color="var(--text-secondary)" />}
             style={{ marginBottom: 24 }}
           >
             {error && (
@@ -245,7 +245,7 @@ export default function InsurancePage() {
                 )}
                 <div style={HINT}>
                   {fCustomSub && subs.length>0
-                    ? <span onClick={()=>{setFCustomSub(false);setFSub('');}} style={{color:'var(--brand-primary-strong)',fontWeight:700,cursor:'pointer'}}>Back to the Roster List</span>
+                    ? <span onClick={()=>{setFCustomSub(false);setFSub('');}} style={{color: 'var(--text-primary)',fontWeight:700,cursor:'pointer'}}>Back to the Roster List</span>
                     : subs.length>0
                       ? `${subs.length} sub${subs.length===1?'':'s'} on the project roster — certificates match to subs by company name.`
                       : 'Certificates match to roster subs by company name.'}
@@ -282,7 +282,7 @@ export default function InsurancePage() {
                 <input type="file" accept="application/pdf,image/png,image/jpeg"
                   onChange={e=>setFFile(e.target.files?.[0]||null)}
                   style={{...INP,padding:'7px 10px'}}/>
-                {fFile && <div style={{marginTop:6,fontSize:11,color:DIM}}>Attached: {fFile.name}</div>}
+                {fFile && <div style={{marginTop:6,fontSize:12,color:DIM}}>Attached: {fFile.name}</div>}
               </div>
             </div>
             <div style={{display:'flex',gap:10}}>
@@ -304,49 +304,41 @@ export default function InsurancePage() {
           </div>
         )}
 
-        {/* KPI Cards */}
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
-          <StatCard icon={<ShieldCheck size={19} weight="duotone" color={GOLD} />}    label="Total"         value={totalCount}    sub="Certificates"    delay={0.02}  href={`/app/projects/${projectId}/insurance`}/>
-          <StatCard icon={<CheckCircle size={19} weight="duotone" color="var(--success)" />} label="Active"        value={activeCount}   accent="var(--success)" sub="30+ days out"  delay={0.06}  href={`/app/projects/${projectId}/insurance`}/>
-          <StatCard icon={<Warning size={19} weight="duotone" color="var(--warning)" />}     label="Expiring Soon" value={expiringCount} accent="var(--warning)" sub="Under 30 days" delay={0.10}  href={`/app/projects/${projectId}/insurance`}/>
-          <StatCard icon={<WarningCircle size={19} weight="duotone" color={RED} />}   label="Expired"       value={expiredCount}  accent={RED}     sub="Past due"      delay={0.14}  href={`/app/projects/${projectId}/insurance`}/>
-        </div>
-
         {/* Expiry & gap intelligence — what needs action this month */}
         {!loading && (expiringSoon.length>0 || expiredCerts.length>0 || (ctx && missingSubs.length>0)) && (
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:12,marginBottom:24}}>
             {expiredCerts.length>0 && (
               <div style={{padding:'12px 16px',borderRadius:12,background:'rgba(192,48,48,.08)',border:'1px solid rgba(192,48,48,.35)'}}>
-                <div style={{fontSize:11,fontWeight:800,color:'var(--danger)',marginBottom:6}}>Expired — Request Renewal Now</div>
+                <div style={{fontSize:12,fontWeight:800,color:'var(--danger)',marginBottom:6}}>Expired — Request Renewal Now</div>
                 {expiredCerts.slice(0,4).map((c:any,i:number)=>(
-                  <div key={c.id||i} style={{fontSize:12.5,color:DIM,padding:'2px 0'}}>
+                  <div key={c.id||i} style={{fontSize:13,color:DIM,padding:'2px 0'}}>
                     <b style={{color:TEXT}}>{c.sub_name||c.subName||'—'}</b> · {c.policy_type||c.policyType||'—'} lapsed {new Date(String(c.expiry_date||c.expiryDate)+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}
                   </div>
                 ))}
-                {expiredCerts.length>4 && <div style={{fontSize:11.5,color:DIM,marginTop:4}}>+{expiredCerts.length-4} more in the table below</div>}
+                {expiredCerts.length>4 && <div style={{fontSize:12,color:DIM,marginTop:4}}>+{expiredCerts.length-4} more in the table below</div>}
               </div>
             )}
             {expiringSoon.length>0 && (
               <div style={{padding:'12px 16px',borderRadius:12,background:'color-mix(in srgb, var(--warning) 7%, transparent)',border:'1px solid color-mix(in srgb, var(--warning) 35%, transparent)'}}>
-                <div style={{fontSize:11,fontWeight:800,color:'var(--warning)',marginBottom:6}}>Expiring Within 30 Days</div>
+                <div style={{fontSize:12,fontWeight:800,color:'var(--warning)',marginBottom:6}}>Expiring Within 30 Days</div>
                 {expiringSoon.slice(0,4).map((x:any,i:number)=>(
-                  <div key={x.c.id||i} style={{fontSize:12.5,color:DIM,padding:'2px 0'}}>
+                  <div key={x.c.id||i} style={{fontSize:13,color:DIM,padding:'2px 0'}}>
                     <b style={{color:TEXT}}>{x.c.sub_name||x.c.subName||'—'}</b> · {x.c.policy_type||x.c.policyType||'—'} — <b style={{color:'var(--warning)'}}>{x.days}d left</b>
                   </div>
                 ))}
-                {expiringSoon.length>4 && <div style={{fontSize:11.5,color:DIM,marginTop:4}}>+{expiringSoon.length-4} more in the table below</div>}
+                {expiringSoon.length>4 && <div style={{fontSize:12,color:DIM,marginTop:4}}>+{expiringSoon.length-4} more in the table below</div>}
               </div>
             )}
             {ctx && missingSubs.length>0 && (
               <div style={{padding:'12px 16px',borderRadius:12,background:'rgba(255,255,255,.03)',border:'1px solid rgba(255,255,255,.12)'}}>
-                <div style={{fontSize:11,fontWeight:800,color:DIM,marginBottom:6}}>On the Roster, No COI on File</div>
+                <div style={{fontSize:12,fontWeight:800,color:DIM,marginBottom:6}}>On the Roster, No COI on File</div>
                 {missingSubs.slice(0,4).map((s:any)=>(
-                  <div key={s.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:8,padding:'2px 0',fontSize:12.5,color:DIM}}>
+                  <div key={s.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:8,padding:'2px 0',fontSize:13,color:DIM}}>
                     <span style={{minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}><b style={{color:TEXT}}>{s.companyName}</b>{s.trade?` · ${s.trade}`:''}</span>
-                    <span onClick={()=>{setFCustomSub(false);setFSub(s.companyName);setShowForm(true);}} style={{color:'var(--brand-primary-strong)',fontWeight:700,fontSize:11.5,cursor:'pointer',whiteSpace:'nowrap' as const}}>Add COI</span>
+                    <span onClick={()=>{setFCustomSub(false);setFSub(s.companyName);setShowForm(true);}} style={{color: 'var(--text-primary)',fontWeight:700,fontSize:12,cursor:'pointer',whiteSpace:'nowrap' as const}}>Add COI</span>
                   </div>
                 ))}
-                {missingSubs.length>4 && <div style={{fontSize:11.5,color:DIM,marginTop:4}}>+{missingSubs.length-4} more subs</div>}
+                {missingSubs.length>4 && <div style={{fontSize:12,color:DIM,marginTop:4}}>+{missingSubs.length-4} more subs</div>}
               </div>
             )}
           </div>
@@ -364,28 +356,28 @@ export default function InsurancePage() {
           <SectionCard flush>
             <div style={{display:'grid',gridTemplateColumns:ctx&&subs.length>0?'minmax(0,1fr) 340px':'1fr',alignItems:'stretch'}}>
               <PremiumEmpty
-                icon={<ShieldCheck size={30} weight="duotone" color={GOLD} />}
+                icon={<ShieldCheck size={30} weight="duotone" color="var(--text-secondary)" />}
                 title="No certificates yet"
                 description={subs.length>0
                   ? `${subs.length} sub${subs.length===1?'':'s'} on the roster and no COI on file for any of them. Every sub should carry current GL and WC coverage — expiry alerts and renewal requests run from here, and coverage is checked at bid award.`
                   : 'Upload COIs for your subcontractors to track expiration dates. Certificates are checked at bid award and flagged here 30 days before they lapse.'}
                 action={
-                  <button onClick={()=>setShowForm(true)} className="pmBtn" style={goldButtonStyle}>
+                  <button onClick={()=>setShowForm(true)} className="pmBtn" style={secondaryButtonStyle}>
                     <Plus size={15} weight="bold" /> Add First Certificate
                   </button>
                 }
               />
               {ctx && subs.length>0 && (
                 <div style={{borderLeft:'1px solid rgba(255,255,255,0.08)',padding:'22px 24px'}}>
-                  <div style={{fontSize:10.5,fontWeight:900,color:'var(--c-text-2)',marginBottom:10}}>Roster Awaiting COIs</div>
+                  <div style={{fontSize:12,fontWeight:900,color:'var(--c-text-2)',marginBottom:10}}>Roster Awaiting COIs</div>
                   {subs.slice(0,7).map((s:any)=>(
                     <div key={s.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:10,padding:'5px 0'}}>
-                      <span style={{fontSize:12.5,color:TEXT,fontWeight:600,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{s.companyName}</span>
-                      <span onClick={()=>{setFCustomSub(false);setFSub(s.companyName);setShowForm(true);}} style={{color:'var(--brand-primary-strong)',fontWeight:700,fontSize:11.5,cursor:'pointer',whiteSpace:'nowrap' as const}}>Add COI</span>
+                      <span style={{fontSize:13,color:TEXT,fontWeight:600,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{s.companyName}</span>
+                      <span onClick={()=>{setFCustomSub(false);setFSub(s.companyName);setShowForm(true);}} style={{color: 'var(--text-primary)',fontWeight:700,fontSize:12,cursor:'pointer',whiteSpace:'nowrap' as const}}>Add COI</span>
                     </div>
                   ))}
-                  {subs.length>7 && <div style={{fontSize:11.5,color:DIM,marginTop:6}}>+{subs.length-7} more on the roster</div>}
-                  <div style={{marginTop:12,fontSize:11.5,color:DIM,lineHeight:1.55}}>Pick subs from the roster in the form — certificates match by company name and the coverage rollup tracks itself.</div>
+                  {subs.length>7 && <div style={{fontSize:12,color:DIM,marginTop:6}}>+{subs.length-7} more on the roster</div>}
+                  <div style={{marginTop:12,fontSize:12,color:DIM,lineHeight:1.55}}>Pick subs from the roster in the form — certificates match by company name and the coverage rollup tracks itself.</div>
                 </div>
               )}
             </div>
@@ -412,7 +404,7 @@ export default function InsurancePage() {
           />
           <SectionCard
             title="Certificates"
-            icon={<ShieldCheck size={17} weight="duotone" color={GOLD} />}
+            icon={<ShieldCheck size={17} weight="duotone" color="var(--text-secondary)" />}
             flush
           >
             <div style={{overflowX:'auto'}}>
@@ -440,7 +432,7 @@ export default function InsurancePage() {
                       <tr key={cid} style={{borderBottom:`1px solid rgba(255,255,255,0.06)`,background:rowBg}}>
                         <td style={{padding:'11px 16px',color:TEXT,fontWeight:600}}>{c.sub_name||c.subName||c.vendor_name||'—'}</td>
                         <td style={{padding:'11px 16px'}}>
-                          <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:'var(--brand-primary-12)',color:GOLD}}>
+                          <span style={{fontSize:12,fontWeight:700,padding:'2px 8px',borderRadius:4,background:'var(--bg-surface-2)',color: 'var(--text-primary)'}}>
                             {c.policy_type||c.policyType||'—'}
                           </span>
                         </td>
@@ -449,18 +441,18 @@ export default function InsurancePage() {
                         <td style={{padding:'11px 16px',color:TEXT}}>{c.coverage_amount||c.coverageAmount ? fmt(Number(c.coverage_amount||c.coverageAmount||0)) : '—'}</td>
                         <td style={{padding:'11px 16px',color:expired?RED:expiring?'var(--warning)':DIM,fontWeight:expired||expiring?700:400}}>
                           {expDate ? new Date(expDate+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—'}
-                          {expiring && !expired && <span style={{marginLeft:6,fontSize:10,color:'var(--warning)'}}>({days}d)</span>}
-                          {expired && <span style={{marginLeft:6,fontSize:10,color:RED}}>(expired)</span>}
+                          {expiring && !expired && <span style={{marginLeft:6,fontSize:12,color:'var(--warning)'}}>({days}d)</span>}
+                          {expired && <span style={{marginLeft:6,fontSize:12,color:RED}}>(expired)</span>}
                         </td>
                         <td style={{padding:'11px 16px'}}>
-                          <span style={{fontSize:10,fontWeight:700,padding:'3px 9px',borderRadius:4,background:st.bg,color:st.c}}>
+                          <span style={{fontSize:12,fontWeight:700,padding:'3px 9px',borderRadius:4,background:st.bg,color:st.c}}>
                             {st.label}
                           </span>
                         </td>
                         <td style={{padding:'11px 16px'}}>
                           {(expired||expiring) && (
                             <button onClick={()=>requestRenewal(cid,c.sub_name||c.subName||'')} disabled={renewingId===cid}
-                              style={{background:'none',border:`1px solid ${BORDER}`,borderRadius:5,color:GOLD,fontSize:11,padding:'4px 10px',cursor:renewingId===cid?'wait':'pointer',opacity:renewingId===cid?.5:1}}>
+                              style={{background:'none',border:`1px solid ${BORDER}`,borderRadius:5,color: 'var(--text-primary)',fontSize:12,padding:'4px 10px',cursor:renewingId===cid?'wait':'pointer',opacity:renewingId===cid?.5:1}}>
                               {renewingId===cid ? '…' : 'Request Renewal'}
                             </button>
                           )}

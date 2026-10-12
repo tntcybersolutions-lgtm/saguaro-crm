@@ -4,13 +4,13 @@ import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import { Badge, Table, T } from '@/components/ui/shell';
 import {
-  PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty,
+  PremiumSurface, ModuleHero, SectionCard, PremiumEmpty,
   StatStrip, FlowSteps, FlowStrip, AutoChip,
-  goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle,
+  goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle, secondaryButtonStyle
 } from '@/components/ui/premium';
 import {
-  ShieldCheck, ClipboardText, WarningCircle, CheckCircle, Warning,
-  ClockCountdown, FilePdf, Plus, X, ArrowRight, Wrench,
+  ShieldCheck, ClipboardText, CheckCircle, Warning,
+  FilePdf, Plus, X, ArrowRight, Wrench,
   ChalkboardTeacher, UsersThree,
 } from '@phosphor-icons/react';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
@@ -21,7 +21,6 @@ import Suggest from '@/components/ui/Suggest';
 import { StatusPill } from '@/components/ui/Status';
 
 // Semantic accents — tuned to match the dashboard's Sonoran palette.
-const GOLD = 'var(--brand-primary)';
 const GREEN = 'var(--success)';
 const RED = 'var(--danger)';
 const AMBER = 'var(--warning)';
@@ -225,9 +224,7 @@ export default function SafetyPage() {
 
   useEffect(() => { fetchData(); fetchActions(); fetchTalks(); }, [fetchData, fetchActions, fetchTalks]);
 
-  const totalIncidents = incidents.length;
   const openCount = incidents.filter(i => i.status === 'Open').length;
-  const resolvedCount = incidents.filter(i => i.status === 'Resolved').length;
 
   const openActionsCount = actions.filter(a => a.status === 'open' || a.status === 'in_progress').length;
   const overdueActionsCount = actions.filter(a => {
@@ -248,9 +245,6 @@ export default function SafetyPage() {
   const recordables = incidents.filter(isOshaRecordable).length;
   const nearMisses = incidents.filter(i => i.type === 'Near Miss' || i.severity === 'Near Miss').length;
   const lastTalk = talks[0] || null;
-  const daysSinceTalk = lastTalk && lastTalk.talk_date
-    ? Math.floor((Date.now() - new Date(String(lastTalk.talk_date).slice(0, 10) + 'T00:00:00').getTime()) / 86400000)
-    : null;
   const subCount = (ctx?.subs || []).length;
 
   // The pending report is OSHA-recordable when its type or severity says so —
@@ -457,15 +451,15 @@ export default function SafetyPage() {
     width: '100%', padding: '8px 12px', background: T.surface,
     border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, outline: 'none',
   };
-  const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 6 };
-  const hint: React.CSSProperties = { fontSize: 11, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 };
+  const lbl: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 600, color: T.muted, marginBottom: 6 };
+  const hint: React.CSSProperties = { fontSize: 12, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 };
 
   return (
     <PremiumSurface maxWidth={2200}>
       {/* Header */}
       <ModuleHero
         eyebrow={ctx?.project?.name || 'Health & Safety'}
-        eyebrowIcon={<ShieldCheck size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<ShieldCheck size={13} weight="fill" color="var(--text-secondary)" />}
         title="Safety"
         subtitle="Safety incidents, inspections, and OSHA records"
         actions={
@@ -483,57 +477,17 @@ export default function SafetyPage() {
         }
       />
 
-      {/* Safety intelligence strip — leading and lagging indicators together */}
+      {/* One summary: the indicators a PM watches — recordables, near misses, open incidents and actions, days incident-free */}
       {!loading && (
         <StatStrip items={[
           {href: `/app/projects/${projectId}/safety`,  label: 'OSHA Recordables', value: String(recordables), accent: recordables > 0 ? RED : GREEN, sub: recordables > 0 ? 'On the 300 log' : 'Clean 300 log' },
           {href: `/app/projects/${projectId}/safety`,  label: 'Near Misses', value: String(nearMisses), accent: nearMisses > 0 ? AMBER : undefined, sub: 'Leading indicator — keep reporting' },
-          {href: `/app/projects/${projectId}/safety`,  label: 'Toolbox Talks', value: String(talks.length), sub: lastTalk ? `Last: ${fmtDate(lastTalk.talk_date)}` : 'None logged yet' },
-          {href: `/app/projects/${projectId}/safety`,  label: 'Talk Cadence', value: daysSinceTalk == null ? '—' : `${daysSinceTalk}d ago`, accent: daysSinceTalk != null && daysSinceTalk > 7 ? AMBER : daysSinceTalk != null ? GREEN : undefined, sub: daysSinceTalk != null && daysSinceTalk > 7 ? 'Weekly cadence slipping' : 'Weekly cadence target' },
+          {href: `/app/projects/${projectId}/safety`,  label: 'Open', value: String(openCount), accent: openCount > 0 ? RED : undefined },
+          {href: `/app/projects/${projectId}/safety`,  label: 'Open Actions', value: String(openActionsCount), accent: openActionsCount > 0 ? AMBER : undefined },
+          {href: `/app/projects/${projectId}/safety`,  label: 'Overdue Actions', value: String(overdueActionsCount), accent: overdueActionsCount > 0 ? RED : undefined, sub: overdueActionsCount > 0 ? 'Needs attention' : undefined },
           {href: `/app/projects/${projectId}/safety`,  label: 'Days Incident-Free', value: String(daysSinceLast), accent: daysSinceLast > 30 ? GREEN : undefined, sub: lastIncident ? `Since ${fmtDate(lastIncident.date)}` : 'No recordable incidents' },
-          {href: `/app/projects/${projectId}/crews`,  label: 'Crews on Site', value: String(subCount), sub: subCount > 0 ? 'Subs to cover in talks' : 'No subs on the roster yet' },
         ]} />
       )}
-
-      {/* Stat Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 24 }}>
-        <StatCard
-          icon={<ClipboardText size={19} weight="duotone" color={GOLD} />}
-          label="Total Incidents" value={String(totalIncidents)} accent={GOLD}
-          delay={0.02}
-         href={`/app/projects/${projectId}/safety`}/>
-        <StatCard
-          icon={<WarningCircle size={19} weight="duotone" color={RED} />}
-          label="Open" value={String(openCount)} accent={openCount > 0 ? RED : undefined}
-          delay={0.06}
-         href={`/app/projects/${projectId}/safety`}/>
-        <StatCard
-          icon={<CheckCircle size={19} weight="duotone" color={GREEN} />}
-          label="Resolved" value={String(resolvedCount)} accent={resolvedCount > 0 ? GREEN : undefined}
-          delay={0.10}
-         href={`/app/projects/${projectId}/safety`}/>
-        <StatCard
-          icon={<ShieldCheck size={19} weight="duotone" color={GREEN} />}
-          label="Days Since Last Incident"
-          value={String(daysSinceLast)}
-          accent={daysSinceLast > 30 ? GREEN : undefined}
-          sub={daysSinceLast > 30 ? 'Excellent record' : undefined}
-          delay={0.14}
-         href={`/app/projects/${projectId}/safety`}/>
-        <StatCard
-          icon={<Warning size={19} weight="duotone" color={AMBER} />}
-          label="Open Actions" value={String(openActionsCount)} accent={openActionsCount > 0 ? AMBER : undefined}
-          delay={0.18}
-         href={`/app/projects/${projectId}/safety`}/>
-        <StatCard
-          icon={<ClockCountdown size={19} weight="duotone" color={RED} />}
-          label="Overdue Actions"
-          value={String(overdueActionsCount)}
-          accent={overdueActionsCount > 0 ? RED : undefined}
-          sub={overdueActionsCount > 0 ? 'Needs attention' : undefined}
-          delay={0.22}
-         href={`/app/projects/${projectId}/safety`}/>
-      </div>
 
       {successMsg && (
         <div style={{ marginBottom: 16, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(74,222,128,0.4)`, borderRadius: 10, color: T.green, fontSize: 13 }}>{successMsg}</div>
@@ -589,7 +543,7 @@ export default function SafetyPage() {
             </div>
           </SectionCard>
           {ctx && (
-            <SectionCard flat title="After You Report" icon={<ShieldCheck size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="After You Report" icon={<ShieldCheck size={17} weight="duotone" color="var(--text-secondary)" />}>
               <FlowSteps title="" steps={[
                 { title: 'Incident Enters the Log', desc: formIsRecordable ? 'Flagged OSHA-recordable for the 300 log.' : 'Saved for internal tracking and trends.' },
                 { title: 'Corrective Action Opens', desc: 'The corrective-action text becomes a tracked item with its own status flow.' },
@@ -618,7 +572,7 @@ export default function SafetyPage() {
         <SectionCard
           title="Incident Log"
           subtitle="Reported safety incidents for this project"
-          icon={<ClipboardText size={17} weight="duotone" color={GOLD} />}
+          icon={<ClipboardText size={17} weight="duotone" color="var(--text-secondary)" />}
           flush
         >
           {loading ? (
@@ -650,7 +604,7 @@ export default function SafetyPage() {
               rows={filteredIncidents.map(i => [
                 <span key="d" style={{ color: T.muted, whiteSpace: 'nowrap' }}>{i.date}</span>,
                 i.type,
-                <span key="osha" style={{ fontSize: 10.5, fontWeight: 800, color: isOshaRecordable(i) ? RED : T.muted }}>{isOshaRecordable(i) ? 'Recordable' : '—'}</span>,
+                <span key="osha" style={{ fontSize: 12, fontWeight: 800, color: isOshaRecordable(i) ? RED : T.muted }}>{isOshaRecordable(i) ? 'Recordable' : '—'}</span>,
                 <span key="desc" style={{ maxWidth: 300, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {i.description}
                 </span>,
@@ -665,7 +619,7 @@ export default function SafetyPage() {
       {/* Toolbox Talk form */}
       {showTalkForm && (
         <div style={{ marginBottom: 20 }}>
-          <SectionCard title="Log Toolbox Talk" icon={<ChalkboardTeacher size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard title="Log Toolbox Talk" icon={<ChalkboardTeacher size={17} weight="duotone" color="var(--text-secondary)" />}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
               <div>
                 <label style={lbl}>Topic *</label>
@@ -705,16 +659,16 @@ export default function SafetyPage() {
         <SectionCard
           title="Toolbox Talks"
           subtitle={lastTalk ? `${talks.length} logged · last ${fmtDate(lastTalk.talk_date)}` : 'Weekly safety briefings for the crew'}
-          icon={<ChalkboardTeacher size={17} weight="duotone" color={GOLD} />}
+          icon={<ChalkboardTeacher size={17} weight="duotone" color="var(--text-secondary)" />}
           flush
         >
           {talks.length === 0 ? (
             <PremiumEmpty
               compact
-              icon={<ChalkboardTeacher size={26} weight="duotone" color={GOLD} />}
+              icon={<ChalkboardTeacher size={26} weight="duotone" color="var(--text-secondary)" />}
               title="No toolbox talks logged"
               description={`A five-minute weekly talk is the cheapest safety program there is${subCount > 0 ? ` — you have ${subCount} sub crew${subCount === 1 ? '' : 's'} on this project to cover` : ''}. Log the first one to start the cadence.`}
-              action={<button onClick={openTalk} style={goldButtonStyle} className="pmBtn"><ChalkboardTeacher size={15} weight="bold" /> Log Toolbox Talk</button>}
+              action={<button onClick={openTalk} style={secondaryButtonStyle} className="pmBtn"><ChalkboardTeacher size={15} weight="bold" /> Log Toolbox Talk</button>}
             />
           ) : (
             <Table
@@ -735,9 +689,9 @@ export default function SafetyPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>Corrective Actions</h2>
-          <p style={{ margin: '3px 0 0', fontSize: 12.5, color: 'var(--c-text-2)' }}>Track and verify corrective actions from incidents</p>
+          <p style={{ margin: '3px 0 0', fontSize: 13, color: 'var(--c-text-2)' }}>Track and verify corrective actions from incidents</p>
         </div>
-        <button onClick={() => { if (showCAForm) { setShowCAForm(false); setErrorMsg(''); } else { openCA(); } }} style={goldButtonStyle} className="pmBtn">
+        <button onClick={() => { if (showCAForm) { setShowCAForm(false); setErrorMsg(''); } else { openCA(); } }} style={showCAForm ? ghostButtonStyle : secondaryButtonStyle} className="pmBtn">
           {showCAForm ? <><X size={15} weight="bold" /> Cancel</> : <><Plus size={15} weight="bold" /> New Action</>}
         </button>
       </div>
@@ -745,7 +699,7 @@ export default function SafetyPage() {
       {/* Create Corrective Action Form */}
       {showCAForm && (
         <div style={{ marginBottom: 20 }}>
-          <SectionCard title="New Corrective Action" icon={<Wrench size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard title="New Corrective Action" icon={<Wrench size={17} weight="duotone" color="var(--text-secondary)" />}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
               <div style={{ gridColumn: 'span 2' }}>
                 <label style={lbl}>Description *</label>
@@ -778,13 +732,13 @@ export default function SafetyPage() {
           ) : actions.length === 0 ? (
             <div style={{ padding: 20 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
-                <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text-primary)' }}>
-                  <Wrench size={16} weight="duotone" color={GOLD} style={{ marginRight: 7, verticalAlign: 'text-bottom' }} />
+                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)' }}>
+                  <Wrench size={16} weight="duotone" color="var(--text-secondary)" style={{ marginRight: 7, verticalAlign: 'text-bottom' }} />
                   No corrective actions
                   <span style={{ fontWeight: 400, color: 'var(--c-text-2)' }}>{showCAForm ? ' — describe the first one in the form above; the due date is already a week out.' : ' — incidents auto-create them, or add one directly.'}</span>
                 </div>
                 {!showCAForm && (
-                  <button onClick={openCA} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add Corrective Action</button>
+                  <button onClick={openCA} style={secondaryButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add Corrective Action</button>
                 )}
               </div>
               <FlowStrip steps={[
@@ -816,7 +770,7 @@ export default function SafetyPage() {
                       <button
                         onClick={() => handleAdvanceCAStatus(a)}
                         className="pmBtn"
-                        style={{ ...ghostButtonStyle, padding: '5px 12px', fontSize: 11.5, borderRadius: 9, gap: 6 }}
+                        style={{ ...ghostButtonStyle, padding: '5px 12px', fontSize: 12, borderRadius: 9, gap: 6 }}
                       >
                         <ArrowRight size={12} weight="bold" /> {nextLabel}
                       </button>

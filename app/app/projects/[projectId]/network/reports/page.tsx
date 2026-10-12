@@ -32,7 +32,7 @@ const REPORT_TYPES = [
     label: 'IP Schedule',
     icon: Clipboard,
     description: 'Complete IP address assignment schedule for all devices, VLANs, and reserved addresses.',
-    color: BLUE,
+    color: 'var(--text-primary)',
   },
   {
     type: 'cable_schedule',
@@ -60,7 +60,7 @@ const REPORT_TYPES = [
     label: 'As-Built Documentation',
     icon: Ruler,
     description: 'Complete as-built network documentation including topology, device configs, and cable routes.',
-    color: GOLD,
+    color: 'var(--text-primary)',
   },
   {
     type: 'executive_summary',
@@ -180,7 +180,7 @@ export default function ReportsPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Network"
-        eyebrowIcon={<FileText size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<FileText size={13} weight="fill" color="var(--text-secondary)" />}
         title="Network"
         accent="Reports"
         subtitle="IP schedules, cable schedules, port maps, and as-builts."
@@ -214,7 +214,7 @@ export default function ReportsPage() {
       {/* Branding Section */}
       {showBranding && (
         <div style={{ marginBottom: 24 }}>
-          <SectionCard title="Custom Branding" icon={<ChartBar size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard title="Custom Branding" icon={<ChartBar size={17} weight="duotone" color="var(--text-secondary)" />}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
               <div>
                 <label style={labelStyle}>Company Name</label>
@@ -250,7 +250,7 @@ export default function ReportsPage() {
 
       {/* Report Type Cards */}
       <div style={{ marginBottom: 28 }}>
-        <SectionCard title="Generate a Report" subtitle="Pick a document, then a format to export" icon={<FileText size={17} weight="duotone" color={GOLD} />}>
+        <SectionCard title="Generate a Report" subtitle="Pick a document, then a format to export" icon={<FileText size={17} weight="duotone" color="var(--text-secondary)" />}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
             {REPORT_TYPES.map(report => (
               <div key={report.type} className="pmHover" style={{ ...reportCardStyle, display: 'flex', flexDirection: 'column' }}>
@@ -273,7 +273,7 @@ export default function ReportsPage() {
                         flex: 1, padding: '8px 12px',
                         background: generating === report.type ? `color-mix(in srgb, ${report.color} 13%, transparent)` : 'rgba(255,255,255,0.05)',
                         color: report.color, border: `1px solid color-mix(in srgb, ${report.color} 27%, transparent)`,
-                        borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                        borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer',
                         opacity: generating === report.type ? 0.6 : 1,
                       }}
                     >
@@ -288,12 +288,12 @@ export default function ReportsPage() {
       </div>
 
       {/* Report History */}
-      <SectionCard title="Report History" icon={<Archive size={17} weight="duotone" color={GOLD} />} flush>
+      <SectionCard title="Report History" icon={<Archive size={17} weight="duotone" color="var(--text-secondary)" />} flush>
         {history.length === 0 ? (
           <div style={{ padding: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 800, color: TEXT }}>
-                <FileText size={16} weight="duotone" color={GOLD} style={{ marginRight: 7, verticalAlign: 'text-bottom' }} />
+              <div style={{ fontSize: 14, fontWeight: 800, color: TEXT }}>
+                <FileText size={16} weight="duotone" color="var(--text-secondary)" style={{ marginRight: 7, verticalAlign: 'text-bottom' }} />
                 No reports generated yet
                 <span style={{ fontWeight: 400, color: DIM }}> — one tap builds the first document from live project data:</span>
               </div>
@@ -303,7 +303,7 @@ export default function ReportsPage() {
                   if (!rt) return null;
                   return (
                     <button key={t} onClick={() => generateReport(t)} disabled={generating === t} className="pmBtn"
-                      style={{ padding: '6px 14px', background: 'var(--brand-primary-08)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', borderRadius: 999, color: GOLD, fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: generating === t ? 0.6 : 1 }}>
+                      style={{ padding: '6px 14px', background: 'var(--brand-primary-08)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', borderRadius: 999, color: 'var(--text-primary)', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: generating === t ? 0.6 : 1 }}>
                       {generating === t ? 'Generating…' : rt.label}
                     </button>
                   );
@@ -333,7 +333,7 @@ export default function ReportsPage() {
                 </span>
                 <div style={{ flex: 1 }}>
                   <div style={{ color: TEXT, fontSize: 13, fontWeight: 600 }}>{report.name}</div>
-                  <div style={{ color: DIM, fontSize: 11 }}>
+                  <div style={{ color: DIM, fontSize: 12 }}>
                     {new Date(report.created_at).toLocaleString()} &middot; {formatLabel(report.format)} &middot; {formatFileSize(report.file_size || 0)}
                   </div>
                 </div>
@@ -342,8 +342,8 @@ export default function ReportsPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
-                    padding: '6px 14px', background: 'var(--brand-primary-08)', color: GOLD, border: '1px solid var(--brand-primary-25)',
-                    borderRadius: 8, fontSize: 11, fontWeight: 700, textDecoration: 'none', cursor: 'pointer',
+                    padding: '6px 14px', background: 'var(--bg-surface-2)', color: 'var(--link)', border: '1px solid var(--border-default)',
+                    borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none', cursor: 'pointer',
                   }}
                 >
                   Download

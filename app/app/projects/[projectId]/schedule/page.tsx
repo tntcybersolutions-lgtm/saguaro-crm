@@ -11,7 +11,7 @@ import { useParams } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
 import { SkeletonKPI, SkeletonRow } from '@/components/ui/Skeleton';
 import { WarningCircle, CalendarBlank, X, Plus, TrendUp, CheckCircle, Clock, ListChecks, Flag } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, FlowStrip, AutoChip, goldButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, FlowStrip, AutoChip, goldButtonStyle, goldOutlineButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
 import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 import { moduleAccent } from '@/lib/module-identity';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
@@ -46,12 +46,12 @@ const EMPTY:Record<string,any>={
 // Canonical trade taxonomy — CSI division groups plus the specialty markets outside them.
 const DIVISION_TRADE_SET=new Set(SUB_TRADES_BY_DIVISION.flatMap(d=>d.trades));
 const EXTRA_TRADES=SUB_TRADES.filter(t=>!DIVISION_TRADE_SET.has(t));
-const HINT:React.CSSProperties={fontSize:11,color:'var(--c-text-2)',marginTop:5,lineHeight:1.45};
+const HINT:React.CSSProperties={fontSize:12,color:'var(--c-text-2)',marginTop:5,lineHeight:1.45};
 
 function Field({label,children}:{label:React.ReactNode;children:React.ReactNode}){
   return(
     <div>
-      <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,
+      <label style={{display:'block',fontSize:12,fontWeight:700,color:DIM,
         marginBottom:5}}>{label}</label>
       {children}
     </div>
@@ -119,12 +119,12 @@ function GanttChart({tasks, jobHex}:{tasks:any[]; jobHex:string}){
     <div style={{overflow:'auto'}}>
       {/* Week header */}
       <div style={{display:'flex',borderBottom:`1px solid ${BORDER}`,paddingBottom:6,marginBottom:4,
-        paddingLeft:200,fontSize:10,color:DIM,position:'relative',minWidth:700}}>
+        paddingLeft:200,fontSize:12,color:DIM,position:'relative',minWidth:700}}>
         {markers.map(m=>(
           <div key={m.toISOString()} style={{
             position:'absolute',
             left:`calc(200px + ${pct(ymd(m))}%)`,
-            fontSize:10,color:DIM,whiteSpace:'nowrap',transform:'translateX(-50%)',
+            fontSize:12,color:DIM,whiteSpace:'nowrap',transform:'translateX(-50%)',
           }}>
             {m.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'})}
           </div>
@@ -158,11 +158,11 @@ function GanttChart({tasks, jobHex}:{tasks:any[]; jobHex:string}){
               )}
               {(()=>{const v=finishVariance(task);return v!==null&&v!==0?(
                 <div style={{position:'absolute',left:`calc(${Math.min(96,pct(task.end_date))}% + 4px)`,top:4,
-                  fontSize:11,fontWeight:800,lineHeight:'16px',whiteSpace:'nowrap',color:v>0?RED:GREEN}}>{varianceLabel(v)}</div>
+                  fontSize:12,fontWeight:800,lineHeight:'16px',whiteSpace:'nowrap',color:v>0?RED:GREEN}}>{varianceLabel(v)}</div>
               ):null;})()}
               {/* Today line */}
               <div style={{position:'absolute',left:`${todayPct}%`,top:0,bottom:0,
-                width:1,background:'color-mix(in srgb, var(--brand-primary) 50%, transparent)',zIndex:1}}/>
+                width:1,background:'var(--bg-surface-2)',zIndex:1}}/>
               {/* Bar background */}
               <div style={{position:'absolute',left:`${left}%`,width:`${width}%`,
                 top:4,height:16,borderRadius:3,boxSizing:'border-box',
@@ -177,7 +177,7 @@ function GanttChart({tasks, jobHex}:{tasks:any[]; jobHex:string}){
                 {/* Label on bar */}
                 {width>8&&(
                   <div style={{position:'absolute',top:0,left:4,right:4,
-                    fontSize:9,fontWeight:700,color:'var(--text-primary)',
+                    fontSize:12,fontWeight:700,color:'var(--text-primary)',
                     lineHeight:'16px',overflow:'hidden',whiteSpace:'nowrap',
                     textOverflow:'ellipsis',textShadow:'0 1px 2px rgba(0,0,0,.6)'}}>
                     {task.pct_complete??0}%
@@ -573,24 +573,24 @@ export default function SchedulePage(){
           {!loading&&!loadError&&tasks.length===0&&(
             <SectionCard>
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap',marginBottom:12}}>
-                <div style={{fontSize:13.5,fontWeight:800,color:TEXT}}>
-                  <CalendarBlank size={16} weight="duotone" color={GOLD} style={{marginRight:7,verticalAlign:'text-bottom'}} />
+                <div style={{fontSize:14,fontWeight:800,color:TEXT}}>
+                  <CalendarBlank size={16} weight="duotone" color="var(--text-secondary)" style={{marginRight:7,verticalAlign:'text-bottom'}} />
                   No tasks yet
                   <span style={{fontWeight:400,color:DIM}}>{mode==='create' ? ' — name the first task in the panel; dates chain off predecessors from there.' : ' — add the first task to start the timeline.'}</span>
                 </div>
                 {mode!=='create'&&(
-                  <button onClick={openCreate} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add Task</button>
+                  <button onClick={openCreate} style={secondaryButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add Task</button>
                 )}
               </div>
               {((ctx?.bidPackages||[]) as any[]).filter((b:any)=>b.trade).length>0&&(
                 <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap',marginBottom:12}}>
-                  <span style={{fontSize:11,fontWeight:700,color:DIM}}>Seed from Bid Packages:</span>
+                  <span style={{fontSize:12,fontWeight:700,color:DIM}}>Seed from Bid Packages:</span>
                   {((ctx?.bidPackages||[]) as any[]).filter((b:any)=>b.trade).slice(0,5).map((b:any)=>(
                     <button key={b.id}
                       onClick={()=>{openCreate();setForm(f=>({...f,name:b.name||b.trade,trade:b.trade}));}}
                       className="pmBtn"
-                      style={{padding:'5px 12px',background:'var(--brand-primary-08)',border:'1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)',
-                        borderRadius:999,color:GOLD,fontSize:12,fontWeight:700,cursor:'pointer'}}>
+                      style={{padding:'5px 12px',background:'var(--bg-surface-2)',border:'1px solid var(--border-default)',
+                        borderRadius:999,color: 'var(--text-primary)',fontSize:12,fontWeight:700,cursor:'pointer'}}>
                       {b.trade}
                     </button>
                   ))}
@@ -616,7 +616,7 @@ export default function SchedulePage(){
                 <thead>
                   <tr style={{background:DARK}}>
                     {TASK_COLS.map(c=>(
-                      <SortTh key={c.key} col={c.key} label={c.label} sort={taskSort.sort} onSort={taskSort.cycle} style={{padding:'10px 14px',fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`,whiteSpace:'nowrap'}} />
+                      <SortTh key={c.key} col={c.key} label={c.label} sort={taskSort.sort} onSort={taskSort.cycle} style={{padding:'10px 14px',fontSize:12,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`,whiteSpace:'nowrap'}} />
                     ))}
                   </tr>
                 </thead>
@@ -637,7 +637,7 @@ export default function SchedulePage(){
                         <td style={{padding:'11px 14px',color:DIM,whiteSpace:'nowrap'}}>{task.end_date||'—'}</td>
                         <td style={{padding:'11px 14px',color:DIM}}>{dur?`${dur}d`:'—'}</td>
                         <td style={{padding:'11px 14px'}}>
-                          <span style={{fontSize:10,fontWeight:700,padding:'3px 8px',borderRadius:20,
+                          <span style={{fontSize:12,fontWeight:700,padding:'3px 8px',borderRadius:20,
                             background:`color-mix(in srgb, ${color} 13%, transparent)`,color}}>
                             {STATUS_LABELS[task.status]||task.status}
                           </span>
@@ -676,9 +676,9 @@ export default function SchedulePage(){
               {mode==='view'&&selected&&(
                 <>
                   <button onClick={()=>openEdit(selected)}
-                    style={{padding:'6px 14px',background:'color-mix(in srgb, var(--brand-primary) 10%, transparent)',
+                    style={{padding:'6px 14px',background:'var(--bg-surface-2)',
                       border:`1px solid color-mix(in srgb, ${BLUE} 27%, transparent)`,borderRadius:6,
-                      color:'var(--brand-primary-strong)',fontSize:12,fontWeight:700,cursor:'pointer'}}>
+                      color: 'var(--text-primary)',fontSize:12,fontWeight:700,cursor:'pointer'}}>
                     Edit
                   </button>
                   <button onClick={()=>deleteTask(selected)} disabled={deleting}
@@ -841,12 +841,12 @@ export default function SchedulePage(){
                   <div style={{fontSize:16,fontWeight:800,color:TEXT,marginBottom:8}}>{selected.name}</div>
                   <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:12}}>
                     {selected.phase&&(
-                      <span style={{fontSize:11,fontWeight:700,padding:'3px 9px',borderRadius:20,
-                        background:'var(--brand-primary-12)',color:'var(--brand-primary-strong)'}}>
+                      <span style={{fontSize:12,fontWeight:700,padding:'3px 9px',borderRadius:20,
+                        background:'var(--bg-surface-2)',color: 'var(--text-primary)'}}>
                         {selected.phase}
                       </span>
                     )}
-                    <span style={{fontSize:11,fontWeight:700,padding:'3px 9px',borderRadius:20,
+                    <span style={{fontSize:12,fontWeight:700,padding:'3px 9px',borderRadius:20,
                       background:`color-mix(in srgb, ${STATUS_COLORS[selected.status]||DIM} 13%, transparent)`,
                       color:STATUS_COLORS[selected.status]||DIM}}>
                       {STATUS_LABELS[selected.status]||selected.status}
@@ -855,7 +855,7 @@ export default function SchedulePage(){
                   {/* Progress slider */}
                   <div style={{marginBottom:8}}>
                     <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
-                      <span style={{fontSize:11,color:DIM}}>Progress</span>
+                      <span style={{fontSize:12,color:DIM}}>Progress</span>
                       <span style={{fontSize:12,fontWeight:800,color:STATUS_COLORS[selected.status]||GREEN}}>
                         {selected.pct_complete??0}%
                       </span>
@@ -870,9 +870,9 @@ export default function SchedulePage(){
                   <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
                     {[25,50,75,100].map(pct=>(
                       <button key={pct} onClick={()=>updatePct(selected,pct)}
-                        style={{flex:1,padding:'6px 0',background:'color-mix(in srgb, var(--brand-primary) 10%, transparent)',
+                        style={{flex:1,padding:'6px 0',background:'var(--bg-surface-2)',
                           border:`1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)`,borderRadius:6,
-                          color:GOLD,fontSize:11,fontWeight:700,cursor:'pointer'}}>
+                          color: 'var(--text-primary)',fontSize:12,fontWeight:700,cursor:'pointer'}}>
                         {pct}%
                       </button>
                     ))}
@@ -892,7 +892,7 @@ export default function SchedulePage(){
                   ].filter(x=>x.v).map(x=>(
                     <div key={x.l} style={{background:'var(--bg-surface)',border:`1px solid ${BORDER}`,
                       borderRadius:8,padding:'10px 12px'}}>
-                      <div style={{fontSize:10,fontWeight:700,color:DIM,
+                      <div style={{fontSize:12,fontWeight:700,color:DIM,
                         marginBottom:4}}>{x.l}</div>
                       <div style={{fontSize:13,color:TEXT}}>{x.v}</div>
                     </div>
@@ -901,7 +901,7 @@ export default function SchedulePage(){
 
                 {selected.notes&&(
                   <div style={{background:'var(--bg-surface)',border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
-                    <div style={{fontSize:10,fontWeight:700,color:DIM,
+                    <div style={{fontSize:12,fontWeight:700,color:DIM,
                       marginBottom:6}}>Notes</div>
                     <div style={{fontSize:13,color:TEXT,lineHeight:1.6,whiteSpace:'pre-wrap'}}>{selected.notes}</div>
                   </div>

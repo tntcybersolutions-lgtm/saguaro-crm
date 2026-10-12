@@ -511,8 +511,8 @@ const CSS = `
 .jx-brief-skel i+i{width:60%}
 @keyframes jx-pulse{50%{opacity:.45}}
 @media (prefers-reduced-motion:reduce){.jx-skel,.jx-skel-val,.jx-brief-skel i{animation:none}}
-.jx-more{display:flex;align-items:center;min-height:44px;padding:0 16px;background:none;border:0;color:var(--brand-primary);font:inherit;font-size:14px;font-weight:650;cursor:pointer}
-.jx-inline{color:var(--brand-primary);font-weight:650;text-decoration:none;background:none;border:0;padding:0;font:inherit;cursor:pointer}
+.jx-more{display:flex;align-items:center;min-height:44px;padding:0 16px;background:none;border:0;color: var(--link);font:inherit;font-size:14px;font-weight:650;cursor:pointer}
+.jx-inline{color: var(--link);font-weight:650;text-decoration:none;background:none;border:0;padding:0;font:inherit;cursor:pointer}
 .jx-note{margin:0;padding:6px 16px 10px;font-size:13px;color:var(--danger)}
 .jx-note[data-ok]{color:var(--success)}
 .jx-disc{background:none}

@@ -156,16 +156,16 @@ export default function ProjectDirectory() {
     <main style={{ background: BASE, minHeight: '100%', padding: '24px max(20px, 3vw) 64px' }}>
       <div style={{ maxWidth: 2200 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-          <UsersThree size={20} weight="duotone" color={GOLD} />
+          <UsersThree size={20} weight="duotone" color="var(--text-secondary)" />
           <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: TEXT, letterSpacing: '-0.01em' }}>Directory</h1>
         </div>
-        <p style={{ margin: '0 0 20px', color: DIM, fontSize: 13.5, maxWidth: 620, lineHeight: 1.55 }}>
+        <p style={{ margin: '0 0 20px', color: DIM, fontSize: 14, maxWidth: 620, lineHeight: 1.55 }}>
           Everyone on this job. Contracts, RFIs, submittals and pay applications read these names
           instead of asking for them again.
         </p>
 
-        {error && <p role="alert" style={{ color: 'var(--danger)', fontSize: 13.5 }}>{error}</p>}
-        {loadError && contacts.length > 0 && <p role="alert" style={{ color: 'var(--danger)', fontSize: 13.5 }}>{loadError}</p>}
+        {error && <p role="alert" style={{ color: 'var(--danger)', fontSize: 14 }}>{error}</p>}
+        {loadError && contacts.length > 0 && <p role="alert" style={{ color: 'var(--danger)', fontSize: 14 }}>{loadError}</p>}
 
         {!adding && (
           <button
@@ -185,31 +185,31 @@ export default function ProjectDirectory() {
           /* A real form: the keyboard's Go / Enter saves, the same as the button. */
           <form ref={formRef} onSubmit={save} aria-label={editingId ? 'Edit contact' : 'Add someone to the directory'} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '16px 18px', marginBottom: 18 }}>
             {editingId && (
-              <div style={{ fontSize: 12, fontWeight: 800, color: GOLD, marginBottom: 10 }}>Edit Contact</div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 10 }}>Edit Contact</div>
             )}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 190px), 1fr))', gap: 12 }}>
               <label style={{ display: 'block' }}>
-                <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 6 }}>Name</span>
+                <span style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 6 }}>Name</span>
                 <input autoFocus required aria-required="true" style={input} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
               </label>
               <label style={{ display: 'block' }}>
-                <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 6 }}>Role</span>
+                <span style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 6 }}>Role</span>
                 <Suggest style={input} value={draft.role ?? ''} onChange={(e) => setDraft({ ...draft, role: e.target.value })} options={ROLES} placeholder="Pick or type a role" />
               </label>
               <label style={{ display: 'block' }}>
-                <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 6 }}>Company</span>
+                <span style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 6 }}>Company</span>
                 <input style={input} value={draft.company ?? ''} onChange={(e) => setDraft({ ...draft, company: e.target.value })} />
               </label>
               <label style={{ display: 'block' }}>
-                <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 6 }}>Email</span>
+                <span style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 6 }}>Email</span>
                 <input type="email" inputMode="email" autoCapitalize="none" autoComplete="off" style={input} value={draft.email ?? ''} onChange={(e) => setDraft({ ...draft, email: e.target.value })} />
               </label>
               <label style={{ display: 'block' }}>
-                <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 6 }}>Phone</span>
+                <span style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 6 }}>Phone</span>
                 <input type="tel" inputMode="tel" autoComplete="off" style={input} value={draft.phone ?? ''} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} />
               </label>
             </div>
-            {formError && <p role="alert" style={{ color: 'var(--danger)', fontSize: 13.5, margin: '12px 0 0' }}>{formError}</p>}
+            {formError && <p role="alert" style={{ color: 'var(--danger)', fontSize: 14, margin: '12px 0 0' }}>{formError}</p>}
             <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
               <button
                 type="submit"
@@ -226,7 +226,7 @@ export default function ProjectDirectory() {
               <button
                 type="button"
                 onClick={closeForm}
-                style={{ minHeight: 44, padding: '0 18px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: DIM, fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}
+                style={{ minHeight: 44, padding: '0 18px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: DIM, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
               >
                 Cancel
               </button>
@@ -235,21 +235,21 @@ export default function ProjectDirectory() {
         )}
 
         {loading && contacts.length === 0 ? (
-          <p style={{ color: DIM, fontSize: 13.5 }}>Loading the directory…</p>
+          <p style={{ color: DIM, fontSize: 14 }}>Loading the directory…</p>
         ) : loadError && contacts.length === 0 ? (
           /* A failed read is not an empty job: say so, and offer the retry. */
-          <div role="alert" style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '20px 22px', color: TEXT, fontSize: 13.5, lineHeight: 1.6 }}>
+          <div role="alert" style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '20px 22px', color: TEXT, fontSize: 14, lineHeight: 1.6 }}>
             <div style={{ color: 'var(--danger)', fontWeight: 700, marginBottom: 10 }}>{loadError}</div>
             <button
               type="button"
               onClick={() => load()}
-              style={{ minHeight: 44, padding: '0 18px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}
+              style={{ minHeight: 44, padding: '0 18px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
             >
               Try Again
             </button>
           </div>
         ) : contacts.length === 0 ? (
-          <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '26px 22px', color: DIM, fontSize: 13.5, lineHeight: 1.6 }}>
+          <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '26px 22px', color: DIM, fontSize: 14, lineHeight: 1.6 }}>
             Nobody on this job yet. The owner and architect land here automatically when a project is
             created with them filled in — add the engineer, the PM and the superintendent once, and
             every document that needs them will have them.
@@ -259,23 +259,23 @@ export default function ProjectDirectory() {
             {contacts.map((c, i) => (
               <div key={c.id ?? `${c.name}-${i}`} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '15px 17px' }}>
                 {c.role && (
-                  <div style={{ fontSize: 10.5, fontWeight: 800, color: GOLD, marginBottom: 5 }}>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 5 }}>
                     {c.role}
                   </div>
                 )}
                 <div style={{ fontSize: 15, fontWeight: 800, color: TEXT, marginBottom: 3 }}>{c.name}</div>
                 {c.company && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: DIM, marginBottom: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: DIM, marginBottom: 8 }}>
                     <Buildings size={12} weight="duotone" color={DIM} /> {c.company}
                   </div>
                 )}
                 {c.email && (
-                  <a href={`mailto:${c.email}`} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: DIM, textDecoration: 'none', minHeight: 26 }}>
+                  <a href={`mailto:${c.email}`} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: DIM, textDecoration: 'none', minHeight: 26 }}>
                     <EnvelopeSimple size={12} weight="duotone" color={DIM} /> {c.email}
                   </a>
                 )}
                 {c.phone && (
-                  <a href={`tel:${c.phone}`} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: DIM, textDecoration: 'none', minHeight: 26 }}>
+                  <a href={`tel:${c.phone}`} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: DIM, textDecoration: 'none', minHeight: 26 }}>
                     <Phone size={12} weight="duotone" color={DIM} /> {c.phone}
                   </a>
                 )}

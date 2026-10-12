@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
-import { XCircle, FileText, ShieldCheck, CurrencyDollar, Clock, Wallet, CalendarBlank, UserPlus, Table as TableIcon, SealCheck, ClockCounterClockwise } from '@phosphor-icons/react';
+import { XCircle, FileText, ShieldCheck, Clock, CalendarBlank, UserPlus, Table as TableIcon, SealCheck, ClockCounterClockwise } from '@phosphor-icons/react';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
-import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, StatStrip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
 import { SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 import { leaveOf } from '@/lib/leave-entry';
 
@@ -121,7 +121,7 @@ function calcNet(emp: Employee): number {
 }
 
 const statusCfg: Record<string, { color: string; bg: string }> = {
-  submitted: { color: GOLD,      bg: 'var(--brand-primary-12)' },
+  submitted: { color: 'var(--text-primary)',      bg: 'var(--brand-primary-12)' },
   draft:     { color: DIM,       bg: 'rgba(163,172,187,.1)' },
   certified: { color: 'var(--success)', bg: 'rgba(26,138,74,.12)' },
 };
@@ -257,7 +257,6 @@ export default function PayrollPage() {
 
   // WH-347 history rollups (records arrive newest-first).
   const grossFiled = records.reduce((s, r) => s + (Number(r.total_gross) || 0), 0);
-  const lastFiled = records[0] || null;
 
   /** Build employee rows from the clocked field time for the selected week. */
   function importFromTimesheets() {
@@ -365,7 +364,7 @@ export default function PayrollPage() {
       {/* Header */}
       <ModuleHero
         eyebrow={ctx?.project?.name || 'Certified Payroll'}
-        eyebrowIcon={<ShieldCheck size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<ShieldCheck size={13} weight="fill" color="var(--text-secondary)" />}
         title="Certified"
         accent="Payroll"
         subtitle="DOL WH-347 — Davis-Bacon & prevailing wage compliance"
@@ -380,44 +379,14 @@ export default function PayrollPage() {
         }
       />
 
-      {/* Project intelligence strip — what the system already knows */}
-      {(ctx || records.length > 0 || timeEntries.length > 0) && (
-        <StatStrip items={[
-          {href: `/app/projects/${pid}/payroll`,  label: 'Payroll', value: '#' + (records.length + 1), sub: lastFiled ? 'Follows week ' + lastFiled.week_ending : 'First WH-347 on this project' },
-          {href: `/app/projects/${pid}/payroll`,  label: 'Filed to Date', value: String(records.length), sub: grossFiled > 0 ? fmt0(grossFiled) + ' gross certified' : 'No WH-347s yet' },
-          {href: `/app/projects/${pid}/crews`,  label: 'Crew This Week', value: String(employees.length), sub: totalWeekHours.toFixed(1) + ' hrs entered' },
-          {href: `/app/projects/${pid}/timesheets`,  label: 'Field Time Clock', value: weekEndingDate ? weekClockedHours.toFixed(1) + ' hrs' : timeEntries.length + ' entries', accent: weekClockedHours > 0 ? 'var(--success)' : undefined, sub: weekEndingDate ? weekClockedNames.length + ' employee' + (weekClockedNames.length === 1 ? '' : 's') + ' clocked this week' : 'Pick a week ending to match' },
-          {href: `/app/projects/${pid}/payroll`,  label: 'Prevailing Wage', value: pw ? 'Flagged' : 'Standard', accent: pw ? GOLD : undefined, sub: pw ? pw.state + (pw.county ? ' · ' + pw.county : '') + (pw.wageDecision ? ' · ' + pw.wageDecision : '') : 'Not a Davis-Bacon project' },
-          {href: `/app/projects/${pid}/subs`,  label: 'Subs on Job', value: String((ctx?.subs || []).length), sub: 'On the project roster' },
-        ]} />
-      )}
-
-      {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 24 }}>
-        <StatCard
-          icon={<Clock size={19} weight="duotone" color={GOLD} />}
-          label="Current Week Hours"
-          value={totalWeekHours.toFixed(1) + ' hrs'}
-          sub={`${employees.length} employee${employees.length === 1 ? '' : 's'}`}
-          delay={0.02}
-         href={`/app/projects/${pid}/payroll`}/>
-        <StatCard
-          icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />}
-          label="Gross Wages This Week"
-          value={fmt(totalWeekGross)}
-          accent={GOLD}
-          sub="Before deductions"
-          delay={0.06}
-         href={`/app/projects/${pid}/payroll`}/>
-        <StatCard
-          icon={<Wallet size={19} weight="duotone" color="var(--success)" />}
-          label="Net Wages This Week"
-          value={fmt(totalWeekNet)}
-          accent="var(--success)"
-          sub="After deductions"
-          delay={0.10}
-         href={`/app/projects/${pid}/payroll`}/>
-      </div>
+      {/* One summary: WH-347s filed, this week's hours against the field clock, and this week's wages */}
+      <StatStrip items={[
+        {href: `/app/projects/${pid}/payroll`,  label: 'Filed to Date', value: String(records.length), sub: grossFiled > 0 ? fmt0(grossFiled) + ' gross certified' : 'No WH-347s yet' },
+        {href: `/app/projects/${pid}/payroll`,  label: 'Current Week Hours', value: totalWeekHours.toFixed(1) + ' hrs', sub: `${employees.length} employee${employees.length === 1 ? '' : 's'}` },
+        {href: `/app/projects/${pid}/timesheets`,  label: 'Field Time Clock', value: weekEndingDate ? weekClockedHours.toFixed(1) + ' hrs' : timeEntries.length + ' entries', sub: weekEndingDate ? weekClockedNames.length + ' employee' + (weekClockedNames.length === 1 ? '' : 's') + ' clocked this week' : 'Pick a week ending to match' },
+        {href: `/app/projects/${pid}/payroll`,  label: 'Gross Wages This Week', value: fmt(totalWeekGross), sub: 'Before deductions' },
+        {href: `/app/projects/${pid}/payroll`,  label: 'Net Wages This Week', value: fmt(totalWeekNet), sub: 'After deductions' },
+      ]} />
 
       {/* Messages */}
       {error && <div style={{ background: 'rgba(192,48,48,.1)', border: '1px solid rgba(192,48,48,.3)', borderRadius: 8, padding: '10px 16px', marginBottom: 20, fontSize: 13, color: 'var(--danger)' }}>{error}</div>}
@@ -425,10 +394,10 @@ export default function PayrollPage() {
 
       {/* Prevailing Wage assist — only when the project is flagged prevailing-wage */}
       {pw && (
-        <div style={{ background: 'var(--brand-primary-08)', border: `1px solid var(--brand-primary-25)`, borderRadius: 10, padding: '12px 16px', marginBottom: 20 }}>
+        <div style={{ background: 'var(--bg-surface-2)', border: `1px solid var(--brand-primary-25)`, borderRadius: 10, padding: '12px 16px', marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ fontSize: 13, color: DIM }}>
-              <span style={{ fontWeight: 700, color: GOLD }}>Prevailing wage project</span>
+              <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>Prevailing wage project</span>
               {' — '}
               {pw.state}{pw.county ? ` · ${pw.county} County` : ' · statewide'}
               {pw.wageDecision ? ` · ${pw.wageDecision}` : ''}
@@ -445,15 +414,15 @@ export default function PayrollPage() {
             )}
           </div>
           {pwRates.length > 0 && (
-            <div style={{ fontSize: 11.5, color: 'var(--warning)', marginTop: 8, lineHeight: 1.5, borderTop: `1px solid var(--brand-primary-18)`, paddingTop: 8 }}>
-              <strong style={{ color: GOLD }}>Sample / reference rates.</strong> Applied rates are Davis-Bacon-style samples for planning — not an official determination. Verify against the official{' '}
-              <a href="https://sam.gov/content/wage-determinations" target="_blank" rel="noopener noreferrer" style={{ color: GOLD, fontWeight: 700 }}>SAM.gov (WDOL)</a>{' '}
+            <div style={{ fontSize: 12, color: 'var(--warning)', marginTop: 8, lineHeight: 1.5, borderTop: `1px solid var(--brand-primary-18)`, paddingTop: 8 }}>
+              <strong style={{ color: 'var(--text-primary)' }}>Sample / reference rates.</strong> Applied rates are Davis-Bacon-style samples for planning — not an official determination. Verify against the official{' '}
+              <a href="https://sam.gov/content/wage-determinations" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--link)', fontWeight: 700 }}>SAM.gov (WDOL)</a>{' '}
               determination for this project before certifying. Rows marked <span style={{ color: 'var(--warning)', fontWeight: 800 }}>custom</span> are your own entered determination.
             </div>
           )}
         </div>
       )}
-      {pwNote && <div style={{ background: 'var(--brand-primary-08)', border: '1px solid var(--brand-primary-25)', borderRadius: 8, padding: '9px 16px', marginBottom: 20, fontSize: 12.5, color: 'var(--warning)' }}>{pwNote}</div>}
+      {pwNote && <div style={{ background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 8, padding: '9px 16px', marginBottom: 20, fontSize: 13, color: 'var(--warning)' }}>{pwNote}</div>}
 
       {/* Field time clock rollup — import instead of retyping hours */}
       {weekEndingDate && weekEntries.length > 0 && (
@@ -462,13 +431,13 @@ export default function PayrollPage() {
             <span style={{ fontWeight: 700, color: 'var(--success)' }}>{weekClockedHours.toFixed(1)} hrs clocked in the field</span>
             {' — '}{weekEntries.length} time {weekEntries.length === 1 ? 'entry' : 'entries'} from {weekClockedNames.length} employee{weekClockedNames.length === 1 ? '' : 's'} fall in the 7 days ending {weekEndingDate}. Import them below instead of retyping.
           </div>
-          <button onClick={importFromTimesheets} className="pmBtn" style={{ ...goldOutlineButtonStyle, padding: '8px 16px', fontSize: 12.5, whiteSpace: 'nowrap' }}>
+          <button onClick={importFromTimesheets} className="pmBtn" style={{ ...goldOutlineButtonStyle, padding: '8px 16px', fontSize: 13, whiteSpace: 'nowrap' }}>
             <Clock size={15} weight="bold" /> Import Clocked Hours
           </button>
         </div>
       )}
       {weekEndingDate && weekEntries.length === 0 && timeEntries.length > 0 && (
-        <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '10px 16px', marginBottom: 20, fontSize: 12.5, color: DIM }}>
+        <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '10px 16px', marginBottom: 20, fontSize: 13, color: DIM }}>
           No field time entries fall in the 7 days ending {weekEndingDate} — {timeEntries.length} exist on this project overall. Enter hours manually below.
         </div>
       )}
@@ -476,18 +445,18 @@ export default function PayrollPage() {
       {/* Week Ending */}
       <SectionCard
         title="Pay Period"
-        icon={<CalendarBlank size={17} weight="duotone" color={GOLD} />}
+        icon={<CalendarBlank size={17} weight="duotone" color="var(--text-secondary)" />}
         style={{ marginBottom: 20 }}
       >
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 20, flexWrap: 'wrap' }}>
           <div style={{ flex: 1, maxWidth: 240 }}>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Week Ending Date *</label>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>Week Ending Date *</label>
             <SaguaroDatePicker value={weekEndingDate} onChange={setWeekEndingDate} style={inp} />
           </div>
           <button
             onClick={() => setShowAddEmployee(!showAddEmployee)}
             className="pmBtn"
-            style={showAddEmployee ? { ...ghostButtonStyle } : { ...goldButtonStyle }}>
+            style={showAddEmployee ? { ...ghostButtonStyle } : { ...secondaryButtonStyle }}>
             {showAddEmployee ? 'Cancel' : <><UserPlus size={15} weight="bold" /> Add Employee</>}
           </button>
         </div>
@@ -497,7 +466,7 @@ export default function PayrollPage() {
       {showAddEmployee && (
         <SectionCard
           title="Add Employee"
-          icon={<UserPlus size={17} weight="duotone" color={GOLD} />}
+          icon={<UserPlus size={17} weight="duotone" color="var(--text-secondary)" />}
           style={{ marginBottom: 20 }}
         >
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 2fr 1fr 1fr', gap: 12, marginBottom: 14 }}>
@@ -509,24 +478,24 @@ export default function PayrollPage() {
               { label: 'OT Rate ($)', el: <input type="number" value={newEmp.otRate} onChange={e => setNewEmp(p => ({ ...p, otRate: Number(e.target.value) }))} placeholder="42.75" style={{ ...inp, textAlign: 'right' }} /> },
             ].map(({ label, el }) => (
               <div key={label}>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>{label}</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>{label}</label>
                 {el}
               </div>
             ))}
           </div>
           <div style={{ marginBottom: 14 }}>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 8 }}>Daily Hours</label>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 8 }}>Daily Hours</label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 8 }}>
               {DAYS.map(day => (
                 <div key={day}>
-                  <div style={{ fontSize: 10, color: DIM, fontWeight: 700, textAlign: 'center', marginBottom: 4 }}>{day}</div>
+                  <div style={{ fontSize: 12, color: DIM, fontWeight: 700, textAlign: 'center', marginBottom: 4 }}>{day}</div>
                   <input type="number" min={0} max={24} step={0.5} value={newEmp.hours[day]} onChange={e => setNewEmp(p => ({ ...p, hours: { ...p.hours, [day]: Number(e.target.value) } }))} style={{ ...inp, textAlign: 'center', padding: '6px 4px' }} />
                 </div>
               ))}
             </div>
           </div>
           <div style={{ marginBottom: 14 }}>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 8 }}>Deductions ($) — Actual Amounts Withheld</label>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 8 }}>Deductions ($) — Actual Amounts Withheld</label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
               {[
                 { label: 'FICA', key: 'fica' as const },
@@ -535,7 +504,7 @@ export default function PayrollPage() {
                 { label: 'Other', key: 'deductions' as const },
               ].map(({ label, key }) => (
                 <div key={key}>
-                  <div style={{ fontSize: 10, color: DIM, fontWeight: 700, marginBottom: 4 }}>{label}</div>
+                  <div style={{ fontSize: 12, color: DIM, fontWeight: 700, marginBottom: 4 }}>{label}</div>
                   <input type="number" min={0} step={0.01} value={newEmp[key]} onChange={e => setNewEmp(p => ({ ...p, [key]: Number(e.target.value) }))} style={{ ...inp, textAlign: 'right' }} />
                 </div>
               ))}
@@ -555,7 +524,7 @@ export default function PayrollPage() {
       {employees.length > 0 && (
         <SectionCard
           title="Employee Hours — Current Week"
-          icon={<TableIcon size={17} weight="duotone" color={GOLD} />}
+          icon={<TableIcon size={17} weight="duotone" color="var(--text-secondary)" />}
           flush
           style={{ marginBottom: 20 }}
         >
@@ -564,7 +533,7 @@ export default function PayrollPage() {
               <thead>
                 <tr style={{ background: 'var(--bg-surface-2)' }}>
                   {['Employee', 'Class', 'Reg $', 'OT $', ...DAYS, 'Hrs', 'Gross', 'FICA', 'Fed WH', 'St WH', 'Other', 'Net', 'OT', ''].map(h => (
-                    <th key={h + Math.random()} style={{ padding: '9px 8px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>{h}</th>
+                    <th key={h + Math.random()} style={{ padding: '9px 8px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -576,37 +545,37 @@ export default function PayrollPage() {
                   return (
                     <tr key={emp.id} style={{ background: idx % 2 === 0 ? 'transparent' : 'rgba(0,0,0,.02)', borderBottom: `1px solid rgba(229,229,234,.5)` }}>
                       <td style={{ padding: '7px 8px', minWidth: 140 }}>
-                        <input value={emp.name} onChange={e => updateEmp(emp.id, 'name', e.target.value)} placeholder="Name" style={{ ...inp, fontSize: 11 }} />
+                        <input value={emp.name} onChange={e => updateEmp(emp.id, 'name', e.target.value)} placeholder="Name" style={{ ...inp, fontSize: 12 }} />
                       </td>
                       <td style={{ padding: '7px 6px', minWidth: 120 }}>
-                        <select value={emp.classification} onChange={e => updateEmp(emp.id, 'classification', e.target.value)} style={{ ...inp, fontSize: 11 }}>
+                        <select value={emp.classification} onChange={e => updateEmp(emp.id, 'classification', e.target.value)} style={{ ...inp, fontSize: 12 }}>
                           <ClassificationOptions current={emp.classification} />
                         </select>
                       </td>
                       <td style={{ padding: '7px 6px', width: 70 }}>
-                        <input type="number" value={emp.hourlyRate} onChange={e => updateEmp(emp.id, 'hourlyRate', Number(e.target.value))} style={{ ...inp, fontSize: 11, textAlign: 'right', width: 60 }} />
+                        <input type="number" value={emp.hourlyRate} onChange={e => updateEmp(emp.id, 'hourlyRate', Number(e.target.value))} style={{ ...inp, fontSize: 12, textAlign: 'right', width: 60 }} />
                       </td>
                       <td style={{ padding: '7px 6px', width: 70 }}>
-                        <input type="number" value={emp.otRate} onChange={e => updateEmp(emp.id, 'otRate', Number(e.target.value))} style={{ ...inp, fontSize: 11, textAlign: 'right', width: 60 }} />
+                        <input type="number" value={emp.otRate} onChange={e => updateEmp(emp.id, 'otRate', Number(e.target.value))} style={{ ...inp, fontSize: 12, textAlign: 'right', width: 60 }} />
                       </td>
                       {DAYS.map(day => (
                         <td key={day} style={{ padding: '7px 4px', width: 48 }}>
-                          <input type="number" min={0} max={24} step={0.5} value={emp.hours[day]} onChange={e => updateEmpHours(emp.id, day, Number(e.target.value))} style={{ ...inp, fontSize: 11, textAlign: 'center', padding: '5px 3px', width: 40 }} />
+                          <input type="number" min={0} max={24} step={0.5} value={emp.hours[day]} onChange={e => updateEmpHours(emp.id, day, Number(e.target.value))} style={{ ...inp, fontSize: 12, textAlign: 'center', padding: '5px 3px', width: 40 }} />
                         </td>
                       ))}
                       <td style={{ padding: '7px 8px', color: totalHours > 40 ? GOLD : TEXT, fontWeight: 700, textAlign: 'right', whiteSpace: 'nowrap' }}>{totalHours.toFixed(1)}</td>
-                      <td style={{ padding: '7px 8px', color: GOLD, fontWeight: 700, whiteSpace: 'nowrap' }}>{fmt(gross)}</td>
+                      <td style={{ padding: '7px 8px', color: 'var(--text-primary)', fontWeight: 700, whiteSpace: 'nowrap' }}>{fmt(gross)}</td>
                       <td style={{ padding: '7px 6px', width: 64 }}>
-                        <input type="number" min={0} step={0.01} value={emp.fica} onChange={e => updateEmp(emp.id, 'fica', Number(e.target.value))} title="FICA withheld" style={{ ...inp, fontSize: 11, textAlign: 'right', width: 56 }} />
+                        <input type="number" min={0} step={0.01} value={emp.fica} onChange={e => updateEmp(emp.id, 'fica', Number(e.target.value))} title="FICA withheld" style={{ ...inp, fontSize: 12, textAlign: 'right', width: 56 }} />
                       </td>
                       <td style={{ padding: '7px 6px', width: 64 }}>
-                        <input type="number" min={0} step={0.01} value={emp.fedWH} onChange={e => updateEmp(emp.id, 'fedWH', Number(e.target.value))} title="Federal withholding" style={{ ...inp, fontSize: 11, textAlign: 'right', width: 56 }} />
+                        <input type="number" min={0} step={0.01} value={emp.fedWH} onChange={e => updateEmp(emp.id, 'fedWH', Number(e.target.value))} title="Federal withholding" style={{ ...inp, fontSize: 12, textAlign: 'right', width: 56 }} />
                       </td>
                       <td style={{ padding: '7px 6px', width: 64 }}>
-                        <input type="number" min={0} step={0.01} value={emp.stateWH} onChange={e => updateEmp(emp.id, 'stateWH', Number(e.target.value))} title="State withholding" style={{ ...inp, fontSize: 11, textAlign: 'right', width: 56 }} />
+                        <input type="number" min={0} step={0.01} value={emp.stateWH} onChange={e => updateEmp(emp.id, 'stateWH', Number(e.target.value))} title="State withholding" style={{ ...inp, fontSize: 12, textAlign: 'right', width: 56 }} />
                       </td>
                       <td style={{ padding: '7px 6px', width: 64 }}>
-                        <input type="number" min={0} step={0.01} value={emp.deductions} onChange={e => updateEmp(emp.id, 'deductions', Number(e.target.value))} title="Other deductions" style={{ ...inp, fontSize: 11, textAlign: 'right', width: 56 }} />
+                        <input type="number" min={0} step={0.01} value={emp.deductions} onChange={e => updateEmp(emp.id, 'deductions', Number(e.target.value))} title="Other deductions" style={{ ...inp, fontSize: 12, textAlign: 'right', width: 56 }} />
                       </td>
                       <td style={{ padding: '7px 8px', color: 'var(--success)', fontWeight: 700, whiteSpace: 'nowrap' }}>{fmt(net)}</td>
                       <td style={{ padding: '7px 8px', textAlign: 'center' }}>
@@ -614,7 +583,7 @@ export default function PayrollPage() {
                       </td>
                       <td style={{ padding: '7px 5px', whiteSpace: 'nowrap' }}>
                         {pw && pwRates.length > 0 && (
-                          <button onClick={() => applyPwRate(emp.id)} title="Apply prevailing wage rate for this classification" style={{ background: 'none', border: `1px solid var(--brand-primary-35)`, color: GOLD, cursor: 'pointer', fontSize: 10, fontWeight: 800, padding: '2px 6px', borderRadius: 4, marginRight: 4 }}>PW</button>
+                          <button onClick={() => applyPwRate(emp.id)} title="Apply prevailing wage rate for this classification" style={{ background: 'none', border: `1px solid var(--brand-primary-35)`, color: 'var(--text-primary)', cursor: 'pointer', fontSize: 12, fontWeight: 800, padding: '2px 6px', borderRadius: 4, marginRight: 4 }}>PW</button>
                         )}
                         <button onClick={() => removeEmp(emp.id)} title="Remove" style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: 13, padding: '2px 4px', display: 'inline-flex', alignItems: 'center' }}><XCircle size={15} weight="regular" color="var(--danger)" /></button>
                       </td>
@@ -626,16 +595,16 @@ export default function PayrollPage() {
                 <tr style={{ background: 'var(--bg-surface-2)', borderTop: `2px solid ${BORDER}` }}>
                   <td colSpan={4} style={{ padding: '10px 8px', fontWeight: 800, fontSize: 12, color: TEXT }}>Totals</td>
                   {DAYS.map(day => (
-                    <td key={day} style={{ padding: '10px 4px', fontWeight: 700, color: GOLD, textAlign: 'center', fontSize: 12 }}>
+                    <td key={day} style={{ padding: '10px 4px', fontWeight: 700, color: 'var(--text-primary)', textAlign: 'center', fontSize: 12 }}>
                       {employees.reduce((s, e) => s + e.hours[day], 0)}
                     </td>
                   ))}
-                  <td style={{ padding: '10px 8px', fontWeight: 800, color: GOLD, textAlign: 'right' }}>{totalWeekHours.toFixed(1)}</td>
-                  <td style={{ padding: '10px 8px', fontWeight: 800, color: GOLD, whiteSpace: 'nowrap' }}>{fmt(totalWeekGross)}</td>
-                  <td style={{ padding: '10px 6px', fontWeight: 700, color: DIM, textAlign: 'right', fontSize: 11, whiteSpace: 'nowrap' }}>{fmt(totalWeekFica)}</td>
-                  <td style={{ padding: '10px 6px', fontWeight: 700, color: DIM, textAlign: 'right', fontSize: 11, whiteSpace: 'nowrap' }}>{fmt(totalWeekFedWH)}</td>
-                  <td style={{ padding: '10px 6px', fontWeight: 700, color: DIM, textAlign: 'right', fontSize: 11, whiteSpace: 'nowrap' }}>{fmt(totalWeekStateWH)}</td>
-                  <td style={{ padding: '10px 6px', fontWeight: 700, color: DIM, textAlign: 'right', fontSize: 11, whiteSpace: 'nowrap' }}>{fmt(totalWeekOther)}</td>
+                  <td style={{ padding: '10px 8px', fontWeight: 800, color: 'var(--text-primary)', textAlign: 'right' }}>{totalWeekHours.toFixed(1)}</td>
+                  <td style={{ padding: '10px 8px', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{fmt(totalWeekGross)}</td>
+                  <td style={{ padding: '10px 6px', fontWeight: 700, color: DIM, textAlign: 'right', fontSize: 12, whiteSpace: 'nowrap' }}>{fmt(totalWeekFica)}</td>
+                  <td style={{ padding: '10px 6px', fontWeight: 700, color: DIM, textAlign: 'right', fontSize: 12, whiteSpace: 'nowrap' }}>{fmt(totalWeekFedWH)}</td>
+                  <td style={{ padding: '10px 6px', fontWeight: 700, color: DIM, textAlign: 'right', fontSize: 12, whiteSpace: 'nowrap' }}>{fmt(totalWeekStateWH)}</td>
+                  <td style={{ padding: '10px 6px', fontWeight: 700, color: DIM, textAlign: 'right', fontSize: 12, whiteSpace: 'nowrap' }}>{fmt(totalWeekOther)}</td>
                   <td style={{ padding: '10px 8px', fontWeight: 800, color: 'var(--success)', whiteSpace: 'nowrap' }}>{fmt(totalWeekNet)}</td>
                   <td colSpan={2} />
                 </tr>
@@ -679,14 +648,14 @@ export default function PayrollPage() {
       {/* Payroll History */}
       <SectionCard
         title="Payroll History"
-        icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}
+        icon={<ClockCounterClockwise size={17} weight="duotone" color="var(--text-secondary)" />}
         flush
       >
         {recordsLoading ? (
           <div style={{ padding: 32, textAlign: 'center', color: DIM, fontSize: 13 }}>Loading records…</div>
         ) : records.length === 0 ? (
           <PremiumEmpty
-            icon={<FileText size={30} weight="duotone" color={GOLD} />}
+            icon={<FileText size={30} weight="duotone" color="var(--text-secondary)" />}
             title="No payroll records yet"
             description={pw
               ? `This project is flagged prevailing wage (${pw.state}${pw.county ? ' · ' + pw.county + ' County' : ''}) — a certified WH-347 is due for every week your crew works. Pick the week ending above, import clocked hours, and generate the first one.`
@@ -699,7 +668,7 @@ export default function PayrollPage() {
             <thead>
               <tr style={{ background: 'var(--bg-surface-2)' }}>
                 {['Week Ending', '# Employees', 'Total Gross', 'Status', 'Download'].map(h => (
-                  <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>
+                  <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -712,13 +681,13 @@ export default function PayrollPage() {
                     <td style={{ padding: '12px 16px', color: DIM }}>{record.employee_count}</td>
                     <td style={{ padding: '12px 16px', color: TEXT }}>{fmt(record.total_gross)}</td>
                     <td style={{ padding: '12px 16px' }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, background: sc.bg, color: sc.color }}>{record.status.charAt(0).toUpperCase() + record.status.slice(1)}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, padding: '2px 8px', borderRadius: 4, background: sc.bg, color: sc.color }}>{record.status.charAt(0).toUpperCase() + record.status.slice(1)}</span>
                     </td>
                     <td style={{ padding: '12px 16px' }}>
                       {record.pdf_url ? (
-                        <a href={`/api/files/open?u=${encodeURIComponent(record.pdf_url || '')}`} target="_blank" rel="noopener noreferrer" onClick={inAppFileClick(`/api/files/open?u=${encodeURIComponent(record.pdf_url || '')}`, 'WH-347 certified payroll', setError)} style={{ background: 'none', border: `1px solid ${BORDER}`, borderRadius: 5, color: GOLD, fontSize: 11, padding: '3px 10px', textDecoration: 'none', fontWeight: 700 }}><span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 4 }}><FileText size={13} weight="regular" color={GOLD} /></span>WH-347 PDF</a>
+                        <a href={`/api/files/open?u=${encodeURIComponent(record.pdf_url || '')}`} target="_blank" rel="noopener noreferrer" onClick={inAppFileClick(`/api/files/open?u=${encodeURIComponent(record.pdf_url || '')}`, 'WH-347 certified payroll', setError)} style={{ background: 'none', border: `1px solid ${BORDER}`, borderRadius: 5, color: 'var(--link)', fontSize: 12, padding: '3px 10px', textDecoration: 'none', fontWeight: 700 }}><span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 4 }}><FileText size={13} weight="regular" color="var(--text-secondary)" /></span>WH-347 PDF</a>
                       ) : (
-                        <span style={{ fontSize: 11, color: DIM }}>—</span>
+                        <span style={{ fontSize: 12, color: DIM }}>—</span>
                       )}
                     </td>
                   </tr>

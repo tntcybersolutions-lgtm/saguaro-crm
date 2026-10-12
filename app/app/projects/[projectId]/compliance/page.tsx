@@ -3,8 +3,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import { Badge, Btn, Table, T } from '@/components/ui/shell';
-import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
-import { CheckCircle, XCircle, Clipboard, Warning, ShieldCheck } from '@phosphor-icons/react';
+import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
+import { ShieldCheck } from '@phosphor-icons/react';
 import { openPdf } from '@/components/PdfViewer';
 
 interface ComplianceSub {
@@ -200,7 +200,7 @@ export default function CompliancePage() {
     <PremiumSurface maxWidth={2200}>
       <ModuleHero
         eyebrow="Risk & Compliance"
-        eyebrowIcon={<ShieldCheck size={13} weight="fill" color="var(--brand-primary)" />}
+        eyebrowIcon={<ShieldCheck size={13} weight="fill" color="var(--text-secondary)" />}
         title="Compliance"
         accent="Dashboard"
         subtitle={`Insurance, licensing, W-9, and lien-waiver compliance · ${merged.length} subcontractor${merged.length === 1 ? '' : 's'} tracked`}
@@ -229,24 +229,19 @@ export default function CompliancePage() {
         }
       />
 
-      {/* Compliance intelligence strip — live scores from certs, W-9s, and waivers */}
-      {scoredSummary && (
-        <StatStrip items={[
-          {href: `/app/projects/${projectId}/subs`,  label: 'Subs Tracked', value: String(merged.length), sub: ctxSubs.length ? `${ctxSubs.length} on the project roster` : 'From live compliance tables' },
-          {href: `/app/projects/${projectId}/compliance`,  label: 'Compliant', value: String(Number(scoredSummary.compliant) || 0), accent: 'var(--success)', sub: 'Score 80+ — cleared to work' },
-          {href: `/app/projects/${projectId}/compliance`,  label: 'At Risk', value: String(Number(scoredSummary.at_risk) || 0), accent: Number(scoredSummary.at_risk) > 0 ? 'var(--warning)' : undefined, sub: 'Gaps to close this month' },
-          {href: `/app/projects/${projectId}/compliance`,  label: 'Non-Compliant', value: String(Number(scoredSummary.non_compliant) || 0), accent: Number(scoredSummary.non_compliant) > 0 ? 'var(--danger)' : 'var(--success)', sub: 'Hold payment and site access' },
-          {href: `/app/projects/${projectId}/compliance`,  label: 'Avg Score', value: typeof scoredSummary.avg_score === 'number' ? `${scoredSummary.avg_score}/100` : '—', sub: 'W-9 25 · insurance 40 · waivers 35' },
-        ]} />
-      )}
-
-      {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 28 }}>
-        <StatCard icon={<CheckCircle size={19} weight="duotone" color={T.green} />} label="Compliant Subs" value={String(compliantCount)} accent={T.green} delay={0.02}  href={`/app/projects/${projectId}/compliance`}/>
-        <StatCard icon={<XCircle size={19} weight="duotone" color={T.red} />} label="COI Gaps" value={String(expiredCOIs)} accent={expiredCOIs > 0 ? T.red : undefined} delay={0.06}  href={`/app/projects/${projectId}/insurance`}/>
-        <StatCard icon={<Clipboard size={19} weight="duotone" color={T.muted} />} label="Missing Licenses" value={String(missingLicenses)} accent={missingLicenses > 0 ? T.amber : undefined} delay={0.10}  href={`/app/projects/${projectId}/compliance`}/>
-        <StatCard icon={<Warning size={19} weight="duotone" color={T.amber} />} label="Wage Flags" value={String(wageViolations)} accent={wageViolations > 0 ? T.amber : undefined} delay={0.14}  href={`/app/projects/${projectId}/compliance`}/>
-      </div>
+      {/* Compliance summary — one row. Live scores (certs, W-9s, waivers) when
+          the compliance API has them, then the paperwork gaps. The subs-tracked
+          count is in the header line; each sub's score is in the table. */}
+      <StatStrip items={[
+        { href: `/app/projects/${projectId}/compliance`, label: 'Compliant', value: String(compliantCount), accent: 'var(--success)', sub: scoredSummary ? 'Score 80+ — cleared to work' : undefined },
+        ...(scoredSummary ? [
+          { href: `/app/projects/${projectId}/compliance`, label: 'At Risk', value: String(Number(scoredSummary.at_risk) || 0), accent: Number(scoredSummary.at_risk) > 0 ? 'var(--warning)' : undefined, sub: 'Gaps to close this month' },
+          { href: `/app/projects/${projectId}/compliance`, label: 'Non-Compliant', value: String(Number(scoredSummary.non_compliant) || 0), accent: Number(scoredSummary.non_compliant) > 0 ? 'var(--danger)' : 'var(--success)', sub: 'Hold payment and site access' },
+        ] : []),
+        { href: `/app/projects/${projectId}/insurance`, label: 'COI Gaps', value: String(expiredCOIs), accent: expiredCOIs > 0 ? 'var(--danger)' : undefined },
+        { href: `/app/projects/${projectId}/compliance`, label: 'Missing Licenses', value: String(missingLicenses), accent: missingLicenses > 0 ? 'var(--warning)' : undefined },
+        { href: `/app/projects/${projectId}/compliance`, label: 'Wage Flags', value: String(wageViolations), accent: wageViolations > 0 ? 'var(--warning)' : undefined },
+      ]} />
 
       {toast && (
         <div style={{ marginBottom: 20, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(74,222,128,0.3)`, borderRadius: 12, color: T.green, fontSize: 13 }}>
@@ -262,15 +257,15 @@ export default function CompliancePage() {
       )}
 
       {/* Table */}
-      <SectionCard title="Subcontractor Compliance" icon={<ShieldCheck size={17} weight="duotone" color="var(--brand-primary)" />} flush>
+      <SectionCard title="Subcontractor Compliance" icon={<ShieldCheck size={17} weight="duotone" color="var(--text-secondary)" />} flush>
         {loading ? (
           <div style={{ textAlign: 'center', padding: 40, color: T.muted }}>Loading…</div>
         ) : merged.length === 0 ? (
           <PremiumEmpty
-            icon={<ShieldCheck size={30} weight="duotone" color="var(--brand-primary)" />}
+            icon={<ShieldCheck size={30} weight="duotone" color="var(--text-secondary)" />}
             title="No Subcontractors to Track Yet"
             description="Subs join this matrix when you add them to the project roster or award a bid package. From then on their COI expiry, W-9, license, and lien-waiver status roll up here — and the award gate blocks buyout to anyone missing a W-9 or carrying lapsed insurance."
-            action={<a href={`/app/projects/${projectId}/bid-packages`} className="pmBtn" style={goldButtonStyle}>Go to Bid Packages</a>}
+            action={<a href={`/app/projects/${projectId}/bid-packages`} className="pmBtn" style={secondaryButtonStyle}>Go to Bid Packages</a>}
           />
         ) : (
           <Table
@@ -304,7 +299,7 @@ export default function CompliancePage() {
                 </Btn>
                 {prequals[s.id] && (
                   <span style={{
-                    fontSize: 11, fontWeight: 800, padding: '2px 8px', borderRadius: 4, background: prequals[s.id].verdict === 'pass' ? 'rgba(26,138,74,.15)' : prequals[s.id].verdict === 'flag' ? 'color-mix(in srgb, var(--warning) 15%, transparent)' : 'rgba(192,48,48,.15)',
+                    fontSize: 12, fontWeight: 800, padding: '2px 8px', borderRadius: 4, background: prequals[s.id].verdict === 'pass' ? 'rgba(26,138,74,.15)' : prequals[s.id].verdict === 'flag' ? 'color-mix(in srgb, var(--warning) 15%, transparent)' : 'rgba(192,48,48,.15)',
                     color: prequals[s.id].verdict === 'pass' ? 'var(--success)' : prequals[s.id].verdict === 'flag' ? 'var(--warning)' : 'var(--danger)',
                   }}>
                     {prequals[s.id].verdict.charAt(0).toUpperCase() + prequals[s.id].verdict.slice(1)} {prequals[s.id].score}/100
@@ -330,7 +325,7 @@ export default function CompliancePage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                   <div style={{ fontWeight: 700, color: T.white }}>{sub.name} — AI Prequalification</div>
                   <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                    <div style={{ fontSize: 11, color: T.muted }}>Score: <strong style={{ color: verdictColor }}>{result.score}/100</strong></div>
+                    <div style={{ fontSize: 12, color: T.muted }}>Score: <strong style={{ color: verdictColor }}>{result.score}/100</strong></div>
                     <span style={{ fontSize: 12, fontWeight: 800, padding: '3px 10px', borderRadius: 5, background: verdictBg, color: verdictColor }}>{result.verdict.charAt(0).toUpperCase() + result.verdict.slice(1)}</span>
                   </div>
                 </div>
@@ -338,19 +333,19 @@ export default function CompliancePage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
                   {result.flags.length > 0 && (
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--danger)', marginBottom: 6 }}>Flags</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--danger)', marginBottom: 6 }}>Flags</div>
                       {result.flags.map((f, i) => <div key={i} style={{ fontSize: 12, color: T.muted, marginBottom: 3 }}>• {f}</div>)}
                     </div>
                   )}
                   {result.strengths.length > 0 && (
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--success)', marginBottom: 6 }}>Strengths</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--success)', marginBottom: 6 }}>Strengths</div>
                       {result.strengths.map((s, i) => <div key={i} style={{ fontSize: 12, color: T.muted, marginBottom: 3 }}>• {s}</div>)}
                     </div>
                   )}
                   {result.required_before_award.length > 0 && (
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--warning)', marginBottom: 6 }}>Required Before Award</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--warning)', marginBottom: 6 }}>Required Before Award</div>
                       {result.required_before_award.map((r, i) => <div key={i} style={{ fontSize: 12, color: T.muted, marginBottom: 3 }}>• {r}</div>)}
                     </div>
                   )}

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Network, Plus, Calculator, Stack } from '@phosphor-icons/react';
 import {
   PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty,
-  goldButtonStyle, ghostButtonStyle,
+  goldButtonStyle, ghostButtonStyle, secondaryButtonStyle
 } from '@/components/ui/premium';
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
@@ -178,7 +178,7 @@ export default function VlanManagerPage() {
     <PremiumSurface maxWidth={2200}>
       <ModuleHero
         eyebrow="Network"
-        eyebrowIcon={<Network size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<Network size={13} weight="fill" color="var(--text-secondary)" />}
         aux={<Link href={`/app/projects/${projectId}/network`} style={{ color: DIM, fontSize: 12, textDecoration: 'none' }}>&larr; Back to Network</Link>}
         title="VLAN"
         accent="Manager"
@@ -212,7 +212,7 @@ export default function VlanManagerPage() {
 
       {showForm && (
         <div style={{ marginBottom: 24 }}>
-        <SectionCard title="Add VLAN" icon={<Plus size={17} weight="bold" color={GOLD} />}>
+        <SectionCard title="Add VLAN" icon={<Plus size={17} weight="bold" color="var(--text-secondary)" />}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
             <div>
               <label style={labelStyle}>VLAN ID *</label>
@@ -252,8 +252,8 @@ export default function VlanManagerPage() {
 
           {/* Subnet Calculator */}
           {subnetInfo && (
-            <div style={{ marginTop: 16, padding: 14, background: 'var(--brand-primary-08)', borderRadius: 8, border: '1px solid var(--brand-primary-18)' }}>
-              <div style={{ color: BLUE, fontSize: 12, fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}><Calculator size={14} weight="duotone" color={BLUE} /> Subnet Calculator</div>
+            <div style={{ marginTop: 16, padding: 14, background: 'var(--bg-surface-2)', borderRadius: 8, border: '1px solid var(--border-default)' }}>
+              <div style={{ color: 'var(--text-primary)', fontSize: 12, fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}><Calculator size={14} weight="duotone" color="var(--text-secondary)" /> Subnet Calculator</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
                 {[
                   { label: 'Network', value: subnetInfo.network },
@@ -264,7 +264,7 @@ export default function VlanManagerPage() {
                   { label: 'Usable Hosts', value: subnetInfo.usableHosts.toLocaleString() },
                 ].map(item => (
                   <div key={item.label}>
-                    <div style={{ color: DIM, fontSize: 10, fontWeight: 600 }}>{item.label}</div>
+                    <div style={{ color: DIM, fontSize: 12, fontWeight: 600 }}>{item.label}</div>
                     <div style={{ color: TEXT, fontSize: 13, fontFamily: 'monospace', marginTop: 2 }}>{item.value}</div>
                   </div>
                 ))}
@@ -287,16 +287,16 @@ export default function VlanManagerPage() {
       {/* VLAN Table */}
       <SectionCard
         title="Configured VLANs"
-        icon={<Stack size={17} weight="duotone" color={GOLD} />}
+        icon={<Stack size={17} weight="duotone" color="var(--text-secondary)" />}
         flush
       >
       {vlans.length === 0 ? (
         <PremiumEmpty
-          icon={<Network size={30} weight="duotone" color={GOLD} />}
+          icon={<Network size={30} weight="duotone" color="var(--text-secondary)" />}
           title="No VLANs configured"
           description="Add your first VLAN to segment this project's network into subnets and DHCP scopes."
           action={
-            <button onClick={() => setShowForm(true)} className="pmBtn" style={goldButtonStyle}>
+            <button onClick={() => setShowForm(true)} className="pmBtn" style={secondaryButtonStyle}>
               <Plus size={15} weight="bold" /> Add VLAN
             </button>
           }
@@ -307,7 +307,7 @@ export default function VlanManagerPage() {
           <thead>
             <tr>
               {['VLAN ID', 'Name', 'Subnet', 'Gateway', 'DHCP Range', 'Purpose', 'Devices'].map(col => (
-                <th key={col} style={{ padding: '12px 16px', textAlign: 'left', color: DIM, fontSize: 11, fontWeight: 700, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>{col}</th>
+                <th key={col} style={{ padding: '12px 16px', textAlign: 'left', color: DIM, fontSize: 12, fontWeight: 700, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>{col}</th>
               ))}
             </tr>
           </thead>
@@ -325,7 +325,7 @@ export default function VlanManagerPage() {
                     </td>
                     <td style={{ padding: '12px', borderBottom: `1px solid ${BORDER}` }}>
                       <span style={{
-                        fontSize: 11, padding: '3px 10px', borderRadius: 10, fontWeight: 600,
+                        fontSize: 12, padding: '3px 10px', borderRadius: 10, fontWeight: 600,
                         background: pc.bg, color: pc.text,
                       }}>{purposeLabel(vlan.purpose)}</span>
                     </td>

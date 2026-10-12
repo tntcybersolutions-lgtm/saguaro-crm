@@ -6,9 +6,9 @@ import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 import { toCents, toDollars, sumCents, scaleCents } from '@/lib/calc';
-import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, AutoChip, IconChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, AutoChip, IconChip, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
 import { SkeletonRow } from '@/components/ui/Skeleton';
-import { Receipt, CurrencyDollar, CheckCircle, WarningCircle, PencilSimple, Percent, Copy, Trash, Plus, CaretDown, ClockCounterClockwise, Calculator } from '@phosphor-icons/react';
+import { Receipt, PencilSimple, Percent, Copy, Trash, Plus, CaretDown, ClockCounterClockwise, Calculator } from '@phosphor-icons/react';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { moduleAccent } from '@/lib/module-identity';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
@@ -39,7 +39,7 @@ interface Invoice {
 // the normalization ('Sent', 'Draft') resolve to the same keys via statusKey().
 const STATUS_MAP: Record<string, { bg: string; color: string; label: string }> = {
   draft: { bg: 'rgba(163,172,187,.2)', color: DIM, label: 'Draft' },
-  sent: { bg: 'var(--brand-primary-18)', color: 'var(--brand-primary-strong)', label: 'Sent' },
+  sent: { bg: 'var(--brand-primary-18)', color: 'var(--text-primary)', label: 'Sent' },
   pending: { bg: 'color-mix(in srgb, var(--warning) 20%, transparent)', color: 'var(--warning)', label: 'Pending' },
   approved: { bg: 'rgba(74,222,128,.2)', color: GREEN, label: 'Approved' },
   paid: { bg: 'rgba(74,222,128,.2)', color: GREEN, label: 'Paid' },
@@ -317,7 +317,7 @@ export default function InvoicesPage() {
 
   const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: 'var(--bg-surface-2)', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
   const label: React.CSSProperties = { fontSize: 12, color: DIM, marginBottom: 4, display: 'block' };
-  const hint: React.CSSProperties = { fontSize: 11, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 };
+  const hint: React.CSSProperties = { fontSize: 12, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 };
 
   return (
     <PremiumSurface maxWidth={2200}>
@@ -337,42 +337,23 @@ export default function InvoicesPage() {
         }
       />
 
-      {/* Contract intelligence strip — what the system already knows */}
-      {ctx && (
-        <StatStrip items={[
-          {href: `/app/projects/${projectId}/contracts`,  label: 'Original Contract', value: fmt(original), sub: 'Base agreement' },
-          {href: `/app/projects/${projectId}/change-orders`,  label: 'Approved COs', value: (coTotal >= 0 ? '+' : '') + fmt(coTotal), accent: coTotal > 0 ? GREEN : undefined, sub: `${Number(money?.approvedCoCount) || 0} approved${Number(money?.pendingCoCount) ? ` · ${money.pendingCoCount} pending` : ''}` },
+      {/* One summary: the contract sum, then what has been billed, paid and is still owed */}
+      <StatStrip items={[
+        ...(ctx ? [
           {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmt(revised), sub: 'Contract sum to date' },
-          {href: `/app/projects/${projectId}/invoices`,  label: 'Billed to Date', value: fmt(ctxBilled), sub: `${Number(money?.billedPct) || 0}% of revised` },
-          {href: `/app/projects/${projectId}/invoices`,  label: 'Outstanding', value: fmt(Math.max(0, ctxBilled - ctxPaid)), accent: ctxBilled - ctxPaid > 0 ? GOLD : GREEN, sub: 'Billed, not yet collected' },
-        ]} />
-      )}
-
-      {/* KPIs — invoice totals, falling back to live project money instead of $0 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <StatCard
-          icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />}
-          label="Total Billed" value={fmt(totalBilled > 0 ? totalBilled : ctxBilled)}
-          sub={totalBilled > 0 ? `Across ${invoices.length} invoice${invoices.length === 1 ? '' : 's'}` : ctxBilled > 0 ? 'Project billed to date (pay apps)' : 'Across all invoices'} delay={0.02}
-         href={`/app/projects/${projectId}/invoices`}/>
-        <StatCard
-          icon={<CheckCircle size={19} weight="duotone" color={GREEN} />}
-          label="Total Paid" value={fmt(totalPaid > 0 ? totalPaid : ctxPaid)} accent={GREEN}
-          sub={totalPaid > 0 ? 'Collected on invoices' : ctxPaid > 0 ? 'Collected on the contract' : 'Collected'} delay={0.06}
-         href={`/app/projects/${projectId}/invoices`}/>
-        <StatCard
-          icon={<WarningCircle size={19} weight="duotone" color={totalOutstanding > 0 ? GOLD : GREEN} />}
-          label="Outstanding" value={fmt(totalOutstanding > 0 ? totalOutstanding : Math.max(0, ctxBilled - ctxPaid))} accent={totalOutstanding > 0 || ctxBilled - ctxPaid > 0 ? GOLD : GREEN}
-          sub={totalOutstanding > 0 ? 'Awaiting payment' : ctxBilled - ctxPaid > 0 ? 'Billed less collected (contract)' : 'Awaiting payment'} delay={0.10}
-         href={`/app/projects/${projectId}/invoices`}/>
-      </div>
+          {href: `/app/projects/${projectId}/change-orders`,  label: 'Approved COs', value: (coTotal >= 0 ? '+' : '') + fmt(coTotal), sub: `${Number(money?.approvedCoCount) || 0} approved${Number(money?.pendingCoCount) ? ` · ${money.pendingCoCount} pending` : ''}` },
+        ] : []),
+        {href: `/app/projects/${projectId}/invoices`,  label: 'Total Billed', value: fmt(totalBilled > 0 ? totalBilled : ctxBilled), sub: totalBilled > 0 ? `Across ${invoices.length} invoice${invoices.length === 1 ? '' : 's'}` : ctxBilled > 0 ? 'Project billed to date (pay apps)' : 'Across all invoices' },
+        {href: `/app/projects/${projectId}/invoices`,  label: 'Total Paid', value: fmt(totalPaid > 0 ? totalPaid : ctxPaid), sub: totalPaid > 0 ? 'Collected on invoices' : ctxPaid > 0 ? 'Collected on the contract' : 'Collected' },
+        {href: `/app/projects/${projectId}/invoices`,  label: 'Outstanding', value: fmt(totalOutstanding > 0 ? totalOutstanding : Math.max(0, ctxBilled - ctxPaid)), accent: totalOutstanding > 0 || ctxBilled - ctxPaid > 0 ? undefined : GREEN, sub: totalOutstanding > 0 ? 'Awaiting payment' : ctxBilled - ctxPaid > 0 ? 'Billed less collected (contract)' : 'Awaiting payment' },
+      ]} />
 
       {successMsg && <div style={{ margin: '0 0 16px', padding: '10px 14px', background: 'rgba(74,222,128,.15)', border: '1px solid rgba(74,222,128,.4)', borderRadius: 10, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
       {errorMsg && <div style={{ margin: '0 0 16px', padding: '10px 14px', background: 'rgba(248,113,113,.15)', border: '1px solid rgba(248,113,113,.4)', borderRadius: 10, color: RED, fontSize: 13 }}>{errorMsg}</div>}
 
       {showForm && (
         <div style={{ display: 'grid', gridTemplateColumns: ctx ? 'minmax(0, 1fr) 320px' : '1fr', gap: 18, alignItems: 'start', marginBottom: 24 }}>
-          <SectionCard title="New Invoice" icon={<Plus size={17} weight="bold" color={GOLD} />}>
+          <SectionCard title="New Invoice" icon={<Plus size={17} weight="bold" color="var(--text-secondary)" />}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
               <div>
                 <label style={label}>Invoice # *{auto.num && <AutoChip />}</label>
@@ -395,7 +376,7 @@ export default function InvoicesPage() {
                 {lastApp && certified > 0 ? (
                   <div style={hint}>
                     App #{lastApp.appNumber} certified {fmt(certified)}.{' '}
-                    <span onClick={() => { setForm(p => ({ ...p, amount: certified })); setAuto(a => ({ ...a, amt: true })); }} style={{ color: 'var(--brand-primary-strong)', fontWeight: 700, cursor: 'pointer' }}>Use Certified Amount</span>
+                    <span onClick={() => { setForm(p => ({ ...p, amount: certified })); setAuto(a => ({ ...a, amt: true })); }} style={{ color: 'var(--text-primary)', fontWeight: 700, cursor: 'pointer' }}>Use Certified Amount</span>
                   </div>
                 ) : (
                   <div style={hint}>Pre-tax invoice amount.</div>
@@ -408,7 +389,7 @@ export default function InvoicesPage() {
               </div>
               <div>
                 <label style={label}>Invoice Total</label>
-                <div style={{ ...inp, display: 'flex', alignItems: 'center', fontWeight: 800, color: GOLD, background: 'var(--brand-primary-08)', border: '1px solid var(--brand-primary-35)' }}>
+                <div style={{ ...inp, display: 'flex', alignItems: 'center', fontWeight: 800, color: 'var(--text-primary)', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)' }}>
                   {'$' + ((Number(form.amount) || 0) + (Number(form.tax) || 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
                 <div style={hint}>Amount + tax — computed live.</div>
@@ -454,7 +435,7 @@ export default function InvoicesPage() {
           </SectionCard>
           {ctx && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <SectionCard flat title="What Saguaro Knows" icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="What Saguaro Knows" icon={<ClockCounterClockwise size={17} weight="duotone" color="var(--text-secondary)" />}>
                 <InsightRow label="Original Contract" value={fmt(original)} />
                 {coTotal !== 0 && <InsightRow label="Approved COs" value={(coTotal > 0 ? '+' : '') + fmt(coTotal)} accent={GREEN} />}
                 <InsightRow label="Revised Contract" value={fmt(revised)} />
@@ -468,7 +449,7 @@ export default function InvoicesPage() {
                   </>
                 )}
               </SectionCard>
-              <SectionCard flat title="After You Create" icon={<Calculator size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="After You Create" icon={<Calculator size={17} weight="duotone" color="var(--text-secondary)" />}>
                 <FlowSteps title="" steps={[
                   { title: 'Draft Is Saved', desc: 'Edit the amount or adjust by % any time before sending.' },
                   { title: 'Send to Owner', desc: 'One click emails the invoice to the bill-to address above.' },
@@ -505,16 +486,16 @@ export default function InvoicesPage() {
         {loading ? <div><SkeletonRow /><SkeletonRow /><SkeletonRow /><SkeletonRow /><SkeletonRow /></div> : invoices.length === 0 ? (
           <div style={{ display: 'grid', gridTemplateColumns: ctx ? 'minmax(0, 1fr) 360px' : '1fr', alignItems: 'stretch' }}>
             <PremiumEmpty
-              icon={<Receipt size={30} weight="duotone" color={GOLD} />}
+              icon={<Receipt size={30} weight="duotone" color="var(--text-secondary)" />}
               title="No invoices yet"
               description={ctxBilled > 0
                 ? `You have certified ${fmt(ctxBilled)} across ${Number(money?.payAppCount) || 0} pay application${(Number(money?.payAppCount) || 0) === 1 ? '' : 's'} — client invoices track the money you collect against it.`
                 : 'Create your first invoice to start billing owners and tracking payments.'}
-              action={<button onClick={() => openCreate(certified > 0)} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> {certified > 0 ? `Invoice Certified ${fmt(certified)}` : 'New Invoice'}</button>}
+              action={<button onClick={() => openCreate(certified > 0)} style={secondaryButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> {certified > 0 ? `Invoice Certified ${fmt(certified)}` : 'New Invoice'}</button>}
             />
             {ctx && (
               <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', padding: '22px 24px' }}>
-                <div style={{ fontSize: 10.5, fontWeight: 900, color: 'var(--c-text-2)', marginBottom: 10 }}>What Saguaro Already Knows</div>
+                <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--c-text-2)', marginBottom: 10 }}>What Saguaro Already Knows</div>
                 <InsightRow label="Original Contract" value={fmt(original)} />
                 <InsightRow label="Approved COs" value={`${(coTotal > 0 ? '+' : '') + fmt(coTotal)} (${Number(money?.approvedCoCount) || 0})`} accent={coTotal > 0 ? GREEN : undefined} />
                 <InsightRow label="Revised Contract" value={fmt(revised)} strong />
@@ -526,7 +507,7 @@ export default function InvoicesPage() {
                     <InsightRow label={`Last Pay App — #${lastApp.appNumber}`} value={String(lastApp.status || '—').replace(/_/g, ' ')} />
                     <InsightRow label="Certified This Period" value={fmt(certified)} accent={GREEN} strong />
                     {certified > 0 && (
-                      <div style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8, background: 'var(--brand-primary-08)', border: '1px solid var(--brand-primary-25)', fontSize: 12, color: 'var(--brand-primary-strong)', lineHeight: 1.5 }}>
+                      <div style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', fontSize: 12, color: 'var(--text-primary)', lineHeight: 1.5 }}>
                         Start by invoicing the certified amount from App #{lastApp.appNumber} — the form pre-fills it.
                       </div>
                     )}
@@ -546,8 +527,8 @@ export default function InvoicesPage() {
             <thead>
               <tr>
                 {INVOICE_COLS.map(c => c.key
-                  ? <SortTh key={c.key} col={c.key} label={c.label} sort={invSort} onSort={cycleInvSort} style={{ padding: '10px 14px', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: '1px solid ' + BORDER, whiteSpace: 'nowrap' }} />
-                  : <th key={c.label} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: '1px solid ' + BORDER, whiteSpace: 'nowrap' }}>{c.label}</th>
+                  ? <SortTh key={c.key} col={c.key} label={c.label} sort={invSort} onSort={cycleInvSort} style={{ padding: '10px 14px', fontSize: 12, fontWeight: 700, color: DIM, borderBottom: '1px solid ' + BORDER, whiteSpace: 'nowrap' }} />
+                  : <th key={c.label} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: DIM, borderBottom: '1px solid ' + BORDER, whiteSpace: 'nowrap' }}>{c.label}</th>
                 )}
               </tr>
             </thead>
@@ -558,32 +539,32 @@ export default function InvoicesPage() {
                 const sc = STATUS_MAP[effKey] || { bg: 'rgba(163,172,187,.2)', color: DIM, label: statusKey(inv.status) };
                 return (
                   <tr key={inv.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', background: overdue ? 'rgba(248,113,113,.05)' : 'transparent' }}>
-                    <td style={{ padding: '10px 14px', color: GOLD, fontWeight: 700 }}>{inv.invoice_number}</td>
+                    <td style={{ padding: '10px 14px', color: 'var(--text-primary)', fontWeight: 700 }}>{inv.invoice_number}</td>
                     <td style={{ padding: '10px 14px', color: DIM }}>{inv.vendor_name}</td>
                     <td style={{ padding: '10px 14px', position: 'relative' as const }}>
                       {deleteId === inv.id ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ fontSize: 11, color: RED, fontWeight: 600 }}>Delete?</span>
-                          <button onClick={() => handleDeleteInv(inv.id)} style={{ padding: '3px 8px', background: 'rgba(248,113,113,.15)', border: '1px solid rgba(248,113,113,.3)', borderRadius: 5, color: RED, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Yes</button>
-                          <button onClick={() => setDeleteId(null)} style={{ padding: '3px 8px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
+                          <span style={{ fontSize: 12, color: RED, fontWeight: 600 }}>Delete?</span>
+                          <button onClick={() => handleDeleteInv(inv.id)} style={{ padding: '3px 8px', background: 'rgba(248,113,113,.15)', border: '1px solid rgba(248,113,113,.3)', borderRadius: 5, color: RED, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Yes</button>
+                          <button onClick={() => setDeleteId(null)} style={{ padding: '3px 8px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
                         </div>
                       ) : editId === inv.id ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                           <input value={editVal} onChange={e => setEditVal(e.target.value)} type="number" autoFocus onKeyDown={e => { if (e.key === 'Enter') handleEditInv(inv.id); if (e.key === 'Escape') setEditId(null); }} style={{ width: 100, padding: '4px 8px', background: DARK, border: `1px solid ${GOLD}`, borderRadius: 5, color: TEXT, fontSize: 12, outline: 'none', textAlign: 'right' }} />
-                          <button onClick={() => handleEditInv(inv.id)} style={{ padding: '3px 8px', background: 'linear-gradient(135deg,var(--brand-primary),var(--brand-primary-strong))', border: 'none', borderRadius: 5, color: 'var(--on-brand)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Save</button>
-                          <button onClick={() => setEditId(null)} style={{ padding: '3px 8px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
+                          <button onClick={() => handleEditInv(inv.id)} style={{ padding: '3px 8px', background: 'linear-gradient(135deg,var(--brand-primary),var(--brand-primary-strong))', border: 'none', borderRadius: 5, color: 'var(--on-brand)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save</button>
+                          <button onClick={() => setEditId(null)} style={{ padding: '3px 8px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
                         </div>
                       ) : adjustId === inv.id ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                           {[-10, -5, 5, 10].map(p => (
-                            <button key={p} onClick={() => handleAdjustInv(inv.id, p)} style={{ padding: '3px 7px', background: p > 0 ? 'rgba(74,222,128,.1)' : 'rgba(248,113,113,.1)', border: `1px solid ${p > 0 ? 'rgba(74,222,128,.25)' : 'rgba(248,113,113,.25)'}`, borderRadius: 5, color: p > 0 ? GREEN : RED, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{p > 0 ? '+' : ''}{p}%</button>
+                            <button key={p} onClick={() => handleAdjustInv(inv.id, p)} style={{ padding: '3px 7px', background: p > 0 ? 'rgba(74,222,128,.1)' : 'rgba(248,113,113,.1)', border: `1px solid ${p > 0 ? 'rgba(74,222,128,.25)' : 'rgba(248,113,113,.25)'}`, borderRadius: 5, color: p > 0 ? GREEN : RED, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{p > 0 ? '+' : ''}{p}%</button>
                           ))}
-                          <button onClick={() => setAdjustId(null)} style={{ padding: '3px 6px', background: 'none', border: 'none', color: DIM, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
+                          <button onClick={() => setAdjustId(null)} style={{ padding: '3px 6px', background: 'none', border: 'none', color: DIM, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
                         </div>
                       ) : (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <span style={{ color: GOLD, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{fmt(effectiveTotal(inv))}</span>
-                          {copiedId === inv.id && <span style={{ fontSize: 10, color: GREEN, fontWeight: 600 }}>Copied</span>}
+                          <span style={{ color: 'var(--text-primary)', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{fmt(effectiveTotal(inv))}</span>
+                          {copiedId === inv.id && <span style={{ fontSize: 12, color: GREEN, fontWeight: 600 }}>Copied</span>}
                           <button onClick={() => openInvMenu(inv.id)} style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', padding: '2px 4px', lineHeight: 1, opacity: 0.6, display: 'inline-flex', alignItems: 'center' }} onMouseEnter={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '0.6')}><CaretDown size={11} weight="bold" /></button>
                           {menuId === inv.id && (
                             <div style={{ position: 'absolute', top: 36, right: 14, background: 'var(--bg-solid-2)', border: `1px solid ${BORDER}`, borderRadius: 'var(--radius-md)', padding: 6, zIndex: 100, minWidth: 160, boxShadow: 'var(--shadow-lg)' }}>
@@ -607,13 +588,13 @@ export default function InvoicesPage() {
                     </td>
                     <td style={{ padding: '10px 14px', color: DIM, whiteSpace: 'nowrap' }}>{inv.created_at ? new Date(inv.created_at).toLocaleDateString() : '—'}</td>
                     <td style={{ padding: '10px 14px', color: overdue ? RED : DIM, whiteSpace: 'nowrap' }}>{inv.due_date ? inv.due_date.slice(0, 10) : '—'}</td>
-                    <td style={{ padding: '10px 14px' }}><span style={{ padding: '3px 10px', borderRadius: 20, background: sc.bg, color: sc.color, fontSize: 11, fontWeight: 700 }}>{sc.label}</span></td>
+                    <td style={{ padding: '10px 14px' }}><span style={{ padding: '3px 10px', borderRadius: 20, background: sc.bg, color: sc.color, fontSize: 12, fontWeight: 700 }}>{sc.label}</span></td>
                     <td style={{ padding: '10px 14px', color: DIM, fontSize: 12 }}>{inv.notes}</td>
                     <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                         <button onClick={() => handlePdf(inv)} disabled={pdfBusy === inv.id} title={inv.pdf_url ? 'Open PDF' : 'Generate PDF'} style={{ padding: '4px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid ' + BORDER, borderRadius: 5, color: inv.pdf_url ? 'var(--brand-primary-strong)' : DIM, fontSize: 12, cursor: 'pointer', opacity: pdfBusy === inv.id ? 0.5 : 1 }}>{pdfBusy === inv.id ? '…' : 'PDF'}</button>
                         {statusKey(inv.status) === 'draft' && (
-                          <button onClick={() => handleSend(inv.id)} style={{ padding: '4px 12px', background: 'var(--brand-primary-18)', border: '1px solid var(--brand-primary-35)', borderRadius: 5, color: 'var(--brand-primary-strong)', fontSize: 12, cursor: 'pointer' }}>Send to Owner</button>
+                          <button onClick={() => handleSend(inv.id)} style={{ padding: '4px 12px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 5, color: 'var(--text-primary)', fontSize: 12, cursor: 'pointer' }}>Send to Owner</button>
                         )}
                         {statusKey(inv.status) === 'paid' && <StatusPill module="generic" status="paid" size="sm" />}
                       </div>

@@ -7,7 +7,6 @@ import { T, Badge } from '@/components/ui/shell';
 import {
   PremiumSurface,
   ModuleHero,
-  StatCard,
   SectionCard,
   PremiumEmpty,
   StatStrip,
@@ -15,9 +14,9 @@ import {
   InsightRow,
   AutoChip,
   goldButtonStyle,
-  ghostButtonStyle,
+  ghostButtonStyle, secondaryButtonStyle
 } from '@/components/ui/premium';
-import { Clipboard, Circle, CheckCircle, Warning, Check, Plus, ClockCounterClockwise } from '@phosphor-icons/react';
+import { Clipboard, Check, Plus, ClockCounterClockwise } from '@phosphor-icons/react';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
@@ -40,13 +39,12 @@ const PRIORITY_BADGE: Record<string, 'red' | 'amber' | 'muted'> = { high: 'red',
 const PRIORITIES = ['high', 'medium', 'low'];
 
 // Desert-dusk accents (match dashboard) ---------------------------------------
-const GOLD = 'var(--brand-primary)';
 const GREEN = 'var(--success)';
 const RED = 'var(--danger)';
 
 const inp: React.CSSProperties = { width: '100%', padding: '8px 12px', background: T.surface2, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, outline: 'none' };
-const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 6 };
-const hint: React.CSSProperties = { fontSize: 11, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 };
+const lbl: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 600, color: T.muted, marginBottom: 6 };
+const hint: React.CSSProperties = { fontSize: 12, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 };
 
 const localIso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
@@ -139,7 +137,6 @@ export default function TodosPage() {
 
   const weekOut = localIso(new Date(Date.now() + 7 * 86400000));
   const dueThisWeek = todos.filter(t => !t.complete && t.due_date && t.due_date >= today && t.due_date <= weekOut).length;
-  const unassigned = todos.filter(t => !t.complete && !t.assigned_to).length;
   const highOpen = todos.filter(t => !t.complete && t.priority === 'high').length;
   const completionPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   const assigneeLoads = todos.filter(t => !t.complete && t.assigned_to).reduce<Record<string, number>>((m, t) => { m[t.assigned_to] = (m[t.assigned_to] || 0) + 1; return m; }, {});
@@ -202,7 +199,7 @@ export default function TodosPage() {
       {/* Header */}
       <ModuleHero
         eyebrow={ctx?.project?.name || 'Tasks'}
-        eyebrowIcon={<Clipboard size={13} weight="fill" style={{ color: GOLD }} />}
+        eyebrowIcon={<Clipboard size={13} weight="fill" style={{ color: 'var(--text-primary)' }} />}
         title="Project"
         accent="To-Dos"
         subtitle="Project tasks and action items."
@@ -213,25 +210,17 @@ export default function TodosPage() {
         }
       />
 
-      {/* Task intelligence strip — where the work stands right now */}
+      {/* Task intelligence strip — where the work stands right now (the one summary on this screen) */}
       {!loading && (todos.length > 0 || ctx) && (
         <StatStrip items={[
-          {href: `/app/projects/${projectId}/todos`,  label: 'Due This Week', value: String(dueThisWeek), accent: dueThisWeek > 0 ? GOLD : undefined, sub: nextDue ? `Next: ${nextDue.due_date} — ${nextDue.title.slice(0, 24)}` : 'Nothing coming due' },
+          {href: `/app/projects/${projectId}/todos`,  label: 'Active', value: String(activeCount), sub: 'In progress' },
+          {href: `/app/projects/${projectId}/todos`,  label: 'Due This Week', value: String(dueThisWeek), sub: nextDue ? `Next: ${nextDue.due_date} — ${nextDue.title.slice(0, 24)}` : 'Nothing coming due' },
           {href: `/app/projects/${projectId}/todos`,  label: 'Overdue', value: String(overdueCount), accent: overdueCount > 0 ? RED : GREEN, sub: overdueCount > 0 ? 'Needs attention today' : 'Nothing slipping' },
           {href: `/app/projects/${projectId}/todos`,  label: 'High Priority Open', value: String(highOpen), accent: highOpen > 0 ? RED : undefined, sub: highOpen > 0 ? 'Knock these out first' : 'No fires burning' },
-          {href: `/app/projects/${projectId}/todos`,  label: 'Unassigned', value: String(unassigned), accent: unassigned > 0 ? GOLD : undefined, sub: unassigned > 0 ? 'No owner yet — assign below' : 'Every task has an owner' },
           {href: `/app/projects/${projectId}/todos`,  label: 'Completion', value: `${completionPct}%`, accent: completionPct >= 75 ? GREEN : undefined, sub: `${completedCount} of ${totalCount} done` },
           {href: `/app/projects/${projectId}/todos`,  label: 'Busiest Assignee', value: busiest ? busiest[0] : '—', sub: busiest ? `${busiest[1]} open task${busiest[1] === 1 ? '' : 's'}` : `${team.length + subs.length} people on the roster` },
         ]} />
       )}
-
-      {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 24 }}>
-        <StatCard icon={<Clipboard size={19} weight="duotone" style={{ color: GOLD }} />} label="Total" value={String(totalCount)} sub="All tasks" delay={0.02}  href={`/app/projects/${projectId}/todos`}/>
-        <StatCard icon={<Circle size={19} weight="duotone" style={{ color: GOLD }} />} label="Active" value={String(activeCount)} sub="In progress" accent={activeCount > 0 ? GOLD : undefined} delay={0.06}  href={`/app/projects/${projectId}/todos`}/>
-        <StatCard icon={<CheckCircle size={19} weight="duotone" style={{ color: GREEN }} />} label="Completed" value={String(completedCount)} sub="Done" accent={completedCount > 0 ? GREEN : undefined} delay={0.10}  href={`/app/projects/${projectId}/todos`}/>
-        <StatCard icon={<Warning size={19} weight="duotone" style={{ color: RED }} />} label="Overdue" value={String(overdueCount)} sub="Past due" accent={overdueCount > 0 ? RED : undefined} delay={0.14}  href={`/app/projects/${projectId}/todos`}/>
-      </div>
 
       {/* List toolbar — search + status/priority filters (replaces the old tab pills) */}
       <ListToolbar
@@ -259,7 +248,7 @@ export default function TodosPage() {
       {/* Create Form */}
       {showForm && (
         <div style={{ marginBottom: 24 }}>
-          <SectionCard title="Add Task" icon={<Plus size={16} weight="bold" style={{ color: GOLD }} />}>
+          <SectionCard title="Add Task" icon={<Plus size={16} weight="bold" style={{ color: 'var(--text-primary)' }} />}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
               <div style={{ gridColumn: 'span 2' }}>
                 <label style={lbl}>Title *</label>
@@ -293,12 +282,12 @@ export default function TodosPage() {
       )}
 
       {/* Todo List */}
-      <SectionCard title="Task List" icon={<Clipboard size={16} weight="duotone" style={{ color: GOLD }} />} flush>
+      <SectionCard title="Task List" icon={<Clipboard size={16} weight="duotone" style={{ color: 'var(--text-primary)' }} />} flush>
         {loading ? (
           <div style={{ textAlign: 'center', padding: 40, color: 'var(--c-text-2)' }}>Loading…</div>
         ) : filtered.length === 0 ? (
           <PremiumEmpty
-            icon={<Clipboard size={30} weight="duotone" style={{ color: GOLD }} />}
+            icon={<Clipboard size={30} weight="duotone" style={{ color: 'var(--text-primary)' }} />}
             title={todos.length === 0 ? 'No Tasks Yet' : filter === 'completed' ? 'Nothing Completed Yet' : filter === 'active' ? 'No Active Tasks' : 'No Tasks Here'}
             description={todos.length === 0
               ? (ctx
@@ -307,7 +296,7 @@ export default function TodosPage() {
               : filter === 'completed'
                 ? `${activeCount} task${activeCount === 1 ? ' is' : 's are'} still active — completed ones land here as they are checked off.`
                 : 'Every task is checked off — switch to All or Completed to see the history.'}
-            action={<button onClick={openCreate} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add Task</button>}
+            action={<button onClick={openCreate} style={secondaryButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add Task</button>}
           />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column' }}>

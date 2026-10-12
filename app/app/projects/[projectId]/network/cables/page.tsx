@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle, Square, XCircle, Plus, PlugsConnected, ListChecks, Gauge, Percent } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
@@ -181,7 +181,7 @@ export default function CableSchedulePage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Network"
-        eyebrowIcon={<PlugsConnected size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<PlugsConnected size={13} weight="fill" color="var(--text-secondary)" />}
         title="Cable"
         accent="Schedule"
         subtitle="Track every cable run, its terminations, pathway, and test results."
@@ -194,7 +194,7 @@ export default function CableSchedulePage() {
 
       {/* Summary Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <StatCard icon={<ListChecks size={19} weight="duotone" color={BLUE} />} label="Total Runs" value={String(totalRuns)} accent={BLUE} sub="Cable runs" delay={0.02}  href={`/app/projects/${projectId}/network/cables`}/>
+        <StatCard icon={<ListChecks size={19} weight="duotone" color="var(--text-secondary)" />} label="Total Runs" value={String(totalRuns)} accent={BLUE} sub="Cable runs" delay={0.02}  href={`/app/projects/${projectId}/network/cables`}/>
         <StatCard icon={<Gauge size={19} weight="duotone" color={GREEN} />} label="Tested" value={`${testedCount}/${totalRuns}`} accent={GREEN} sub="Tested" delay={0.06}  href={`/app/projects/${projectId}/network/cables`}/>
         <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Passed" value={String(passCount)} accent={GREEN} sub="Passed tests" delay={0.10}  href={`/app/projects/${projectId}/network/cables`}/>
         <StatCard icon={<XCircle size={19} weight="duotone" color={failCount > 0 ? RED : GREEN} />} label="Failed" value={String(failCount)} accent={failCount > 0 ? RED : GREEN} sub="Failed tests" delay={0.14}  href={`/app/projects/${projectId}/network/cables`}/>
@@ -203,7 +203,7 @@ export default function CableSchedulePage() {
 
       {/* Add Form */}
       {showForm && (
-        <SectionCard title="Add Cable Run" icon={<Plus size={17} weight="bold" color={GOLD} />} style={{ marginBottom: 24 }}>
+        <SectionCard title="Add Cable Run" icon={<Plus size={17} weight="bold" color="var(--text-secondary)" />} style={{ marginBottom: 24 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
             <div>
               <label style={labelStyle}>Label *</label>
@@ -279,16 +279,16 @@ export default function CableSchedulePage() {
       </div>
 
       {/* Cable Table */}
-      <SectionCard title="Cable Runs" icon={<ListChecks size={17} weight="duotone" color={GOLD} />} flush>
+      <SectionCard title="Cable Runs" icon={<ListChecks size={17} weight="duotone" color="var(--text-secondary)" />} flush>
         {filteredCables.length === 0 ? (
           <PremiumEmpty
-            icon={<PlugsConnected size={30} weight="duotone" color={GOLD} />}
+            icon={<PlugsConnected size={30} weight="duotone" color="var(--text-secondary)" />}
             title={cables.length === 0 ? 'No cable runs yet' : 'No cable runs match your filters'}
             description={cables.length === 0
               ? 'Add your first cable run to start building this project’s cable schedule.'
               : 'Try clearing or adjusting the filters above to see more runs.'}
             action={cables.length === 0
-              ? <button onClick={() => setShowForm(true)} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add Cable Run</button>
+              ? <button onClick={() => setShowForm(true)} style={secondaryButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add Cable Run</button>
               : undefined}
           />
         ) : (
@@ -297,7 +297,7 @@ export default function CableSchedulePage() {
           <thead>
             <tr>
               {['Label', 'Type', 'From', 'To', 'Length', 'Pathway', 'Tested', 'Result', 'Actions'].map(col => (
-                <th key={col} style={{ padding: '12px 14px', textAlign: 'left', color: DIM, fontSize: 11, fontWeight: 700, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>{col}</th>
+                <th key={col} style={{ padding: '12px 14px', textAlign: 'left', color: DIM, fontSize: 12, fontWeight: 700, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>{col}</th>
               ))}
             </tr>
           </thead>
@@ -308,7 +308,7 @@ export default function CableSchedulePage() {
                   <tr key={cable.id}>
                     <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontWeight: 700, fontFamily: 'monospace' }}>{cable.label}</td>
                     <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}` }}>
-                      <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 10, fontWeight: 600, background: tc.bg, color: tc.text }}>{cableLabel(cable.cable_type)}</span>
+                      <span style={{ fontSize: 12, padding: '3px 10px', borderRadius: 10, fontWeight: 600, background: tc.bg, color: tc.text }}>{cableLabel(cable.cable_type)}</span>
                     </td>
                     <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: TEXT, fontSize: 12 }}>
                       {cable.from_location}{cable.from_port ? ` (${cable.from_port})` : ''}
@@ -328,7 +328,7 @@ export default function CableSchedulePage() {
                     <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}` }}>
                       {cable.test_result ? (
                         <span style={{
-                          fontSize: 11, padding: '3px 10px', borderRadius: 10, fontWeight: 600,
+                          fontSize: 12, padding: '3px 10px', borderRadius: 10, fontWeight: 600,
                           background: cable.test_result === 'pass' ? `${GREEN}20` : `${RED}20`,
                           color: cable.test_result === 'pass' ? GREEN : RED,
                           textTransform: 'capitalize',
@@ -343,7 +343,7 @@ export default function CableSchedulePage() {
                             disabled={markingId === cable.id}
                             style={{
                               padding: '4px 10px', background: `${GREEN}15`, color: GREEN, border: `1px solid ${GREEN}30`,
-                              borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                              borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
                             }}
                           >Pass</button>
                           <button
@@ -351,7 +351,7 @@ export default function CableSchedulePage() {
                             disabled={markingId === cable.id}
                             style={{
                               padding: '4px 10px', background: `${RED}15`, color: RED, border: `1px solid ${RED}30`,
-                              borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                              borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
                             }}
                           >Fail</button>
                         </div>

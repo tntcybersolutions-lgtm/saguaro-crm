@@ -271,7 +271,7 @@ export default function ContractsPage() {
   });
   const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: 'var(--bg-surface-2)', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
   const label: React.CSSProperties = { fontSize: 12, color: DIM, marginBottom: 4, display: 'block' };
-  const hint: React.CSSProperties = { fontSize: 11, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 };
+  const hint: React.CSSProperties = { fontSize: 12, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 };
   // Compact ghost action buttons for in-row actions (View PDF / Upload Signed).
   const rowBtn: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 11px', background: 'rgba(255,255,255,0.05)', border: '1px solid ' + BORDER, borderRadius: 8, color: 'var(--c-text-2)', fontSize: 12, fontWeight: 700, cursor: 'pointer' };
 
@@ -280,7 +280,7 @@ export default function ContractsPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Contracts"
-        eyebrowIcon={<FileText size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<FileText size={13} weight="fill" color="var(--text-secondary)" />}
         title="Contract"
         accent="Ledger"
         subtitle="Subcontractor and vendor contracts"
@@ -333,7 +333,7 @@ export default function ContractsPage() {
 
       {showForm && (
         <div style={{ marginBottom: 24, display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 330px', gap: 18, alignItems: 'start' }}>
-          <SectionCard title="New Contract" subtitle="Pick the party — the system fills in what it already knows" icon={<FilePlus size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard title="New Contract" subtitle="Pick the party — the system fills in what it already knows" icon={<FilePlus size={17} weight="duotone" color="var(--text-secondary)" />}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
               <div style={{ gridColumn: 'span 3' }}>
                 <label style={label}>Contract Party</label>
@@ -408,7 +408,7 @@ export default function ContractsPage() {
           </SectionCard>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <SectionCard flat title={selSub ? 'Party Snapshot' : selPkg ? 'Award Snapshot' : 'Ready to Paper'} icon={<UsersThree size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title={selSub ? 'Party Snapshot' : selPkg ? 'Award Snapshot' : 'Ready to Paper'} icon={<UsersThree size={17} weight="duotone" color="var(--text-secondary)" />}>
               {selSub ? (
                 <>
                   <InsightRow label="Company" value={selSub.companyName || '—'} strong/>
@@ -438,16 +438,16 @@ export default function ContractsPage() {
                   <InsightRow label="Awarded Packages" value={String(awardedPkgs.length)}/>
                   <InsightRow label="Awards Without Contract" value={String(unpapered.length)} accent={unpapered.length > 0 ? 'var(--brand-primary-strong)' : GREEN} strong/>
                   {unpapered.slice(0, 3).map((b: any) => (
-                    <div key={b.id} style={{ fontSize: 11.5, color: DIM, padding: '5px 0', borderTop: '1px solid rgba(255,255,255,0.06)', lineHeight: 1.5 }}>
+                    <div key={b.id} style={{ fontSize: 12, color: DIM, padding: '5px 0', borderTop: '1px solid rgba(255,255,255,0.06)', lineHeight: 1.5 }}>
                       {b.name} — <span style={{ color: TEXT, fontWeight: 700 }}>{b.awardedTo}</span> ({fmt(Number(b.awardedAmount) || 0)})
                     </div>
                   ))}
                 </>
               ) : (
-                <div style={{ fontSize: 12.5, color: DIM, lineHeight: 1.6 }}>Pick a roster sub or an awarded bid package above and the contract fills itself in.</div>
+                <div style={{ fontSize: 13, color: DIM, lineHeight: 1.6 }}>Pick a roster sub or an awarded bid package above and the contract fills itself in.</div>
               )}
             </SectionCard>
-            <SectionCard flat title="After You Save" icon={<Signature size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="After You Save" icon={<Signature size={17} weight="duotone" color="var(--text-secondary)" />}>
               <FlowSteps title="" steps={[
                 { title: 'Draft on the Ledger', desc: 'The contract lands here as a Draft, counted in sub commitments.' },
                 { title: 'Send for Signature', desc: 'Send the package out — status moves to Sent while you wait on ink.' },
@@ -462,14 +462,14 @@ export default function ContractsPage() {
       {!loading && !ctx && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
           <StatCard
-            icon={<FileText size={19} weight="duotone" color={GOLD} />}
+            icon={<FileText size={19} weight="duotone" color="var(--text-secondary)" />}
             label="Total Contracts"
             value={String(contracts.length)}
             accent={GOLD}
             sub="On this project"
            href={`/app/projects/${projectId}/contracts`}/>
           <StatCard
-            icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />}
+            icon={<CurrencyDollar size={19} weight="duotone" color="var(--text-secondary)" />}
             label="Total Value"
             value={`$${total.toLocaleString()}`}
             accent={GOLD}
@@ -497,14 +497,14 @@ export default function ContractsPage() {
       )}
 
       {/* Contract table */}
-      <SectionCard title="Contracts" subtitle="Subcontractor and vendor contracts" icon={<FileText size={17} weight="duotone" color={GOLD} />}>
+      <SectionCard title="Contracts" subtitle="Subcontractor and vendor contracts" icon={<FileText size={17} weight="duotone" color="var(--text-secondary)" />}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading…</div>
         ) : contracts.length === 0 ? (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 800, color: TEXT }}>
-                <FileDashed size={16} weight="duotone" color={GOLD} style={{ marginRight: 7, verticalAlign: 'text-bottom' }} />
+              <div style={{ fontSize: 14, fontWeight: 800, color: TEXT }}>
+                <FileDashed size={16} weight="duotone" color="var(--text-secondary)" style={{ marginRight: 7, verticalAlign: 'text-bottom' }} />
                 No Contracts Yet
                 <span style={{ fontWeight: 400, color: DIM }}>
                   {unpapered.length > 0
@@ -546,7 +546,7 @@ export default function ContractsPage() {
                   <tr key={c.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                     <td style={{ padding: '10px 14px', color: TEXT, fontWeight: 600 }}>{c.sub_name}</td>
                     <td style={{ padding: '10px 14px', color: DIM }}>{c.trade}</td>
-                    <td style={{ padding: '10px 14px', color: GOLD, fontWeight: 700 }}>${c.amount?.toLocaleString()}</td>
+                    <td style={{ padding: '10px 14px', color: 'var(--text-primary)', fontWeight: 700 }}>${c.amount?.toLocaleString()}</td>
                     <td style={{ padding: '10px 14px' }}>{statusBadge(c.status)}</td>
                     <td style={{ padding: '10px 14px', color: DIM }}>{c.execution_date || '—'}</td>
                     <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>

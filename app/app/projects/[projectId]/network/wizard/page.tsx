@@ -172,14 +172,14 @@ export default function NetworkWizardPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="AI Wizard"
-        eyebrowIcon={<Robot size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<Robot size={13} weight="fill" color="var(--text-secondary)" />}
         title="AI Network"
         accent="Wizard"
         subtitle="Describe your site and let AI design your complete network infrastructure."
       />
 
       {/* Input Form */}
-      <SectionCard title="Site Information" icon={<SlidersHorizontal size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 24 }}>
+      <SectionCard title="Site Information" icon={<SlidersHorizontal size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginBottom: 24 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
           <div>
             <label style={labelStyle}>Site Type</label>
@@ -272,7 +272,7 @@ export default function NetworkWizardPage() {
       {streamText && !result && (
         <SectionCard flat
           title="AI is designing your network…"
-          icon={<Robot size={17} weight="duotone" color={GOLD} />}
+          icon={<Robot size={17} weight="duotone" color="var(--text-secondary)" />}
           flush
           style={{ marginBottom: 24 }}
         >
@@ -287,20 +287,20 @@ export default function NetworkWizardPage() {
         <>
           {/* Summary */}
           {result.summary && (
-            <SectionCard flat title="Design Summary" icon={<Sparkle size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 16 }}>
+            <SectionCard flat title="Design Summary" icon={<Sparkle size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginBottom: 16 }}>
               <div style={{ color: TEXT, fontSize: 14, lineHeight: 1.6 }}>{result.summary}</div>
             </SectionCard>
           )}
 
           {/* VLAN Plan */}
           {result.vlans && result.vlans.length > 0 && (
-            <SectionCard title="VLAN Plan" icon={<TreeStructure size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 16 }}>
+            <SectionCard title="VLAN Plan" icon={<TreeStructure size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginBottom: 16 }}>
               <div style={{ overflow: 'auto' }}>
                 <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
                       {['VLAN', 'Name', 'Subnet', 'Gateway', 'Purpose'].map(h => (
-                        <th key={h} style={{ padding: '8px 12px', textAlign: 'left', color: DIM, fontSize: 11, fontWeight: 700, borderBottom: `1px solid ${BORDER}` }}>{h}</th>
+                        <th key={h} style={{ padding: '8px 12px', textAlign: 'left', color: DIM, fontSize: 12, fontWeight: 700, borderBottom: `1px solid ${BORDER}` }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -312,7 +312,7 @@ export default function NetworkWizardPage() {
                         <td style={{ padding: '8px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontFamily: 'monospace' }}>{v.subnet}</td>
                         <td style={{ padding: '8px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontFamily: 'monospace' }}>{v.gateway}</td>
                         <td style={{ padding: '8px 12px', borderBottom: `1px solid ${BORDER}` }}>
-                          <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: 'var(--brand-primary-08)', color: BLUE, textTransform: 'capitalize' }}>{v.purpose}</span>
+                          <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 8, background: 'var(--bg-surface-2)', color: 'var(--text-primary)', textTransform: 'capitalize' }}>{v.purpose}</span>
                         </td>
                       </tr>
                     ))}
@@ -326,8 +326,8 @@ export default function NetworkWizardPage() {
           {result.equipment && result.equipment.length > 0 && (
             <SectionCard
               title="Equipment List"
-              icon={<Package size={17} weight="duotone" color={GOLD} />}
-              action={<span style={{ color: GOLD, fontSize: 14, fontWeight: 800 }}>Total: {fmt$(result.total_equipment_cost || 0)}</span>}
+              icon={<Package size={17} weight="duotone" color="var(--text-secondary)" />}
+              action={<span style={{ color: 'var(--text-primary)', fontSize: 14, fontWeight: 800 }}>Total: {fmt$(result.total_equipment_cost || 0)}</span>}
               style={{ marginBottom: 16 }}
             >
               <div style={{ overflow: 'auto' }}>
@@ -335,7 +335,7 @@ export default function NetworkWizardPage() {
                   <thead>
                     <tr>
                       {['Type', 'Manufacturer', 'Model', 'Qty', 'Unit Cost', 'Total'].map(h => (
-                        <th key={h} style={{ padding: '8px 12px', textAlign: 'left', color: DIM, fontSize: 11, fontWeight: 700, borderBottom: `1px solid ${BORDER}` }}>{h}</th>
+                        <th key={h} style={{ padding: '8px 12px', textAlign: 'left', color: DIM, fontSize: 12, fontWeight: 700, borderBottom: `1px solid ${BORDER}` }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -358,13 +358,13 @@ export default function NetworkWizardPage() {
 
           {/* IP Addressing */}
           {result.ip_scheme && result.ip_scheme.length > 0 && (
-            <SectionCard title="IP Addressing Scheme" icon={<Globe size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 16 }}>
+            <SectionCard title="IP Addressing Scheme" icon={<Globe size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginBottom: 16 }}>
               <div style={{ overflow: 'auto' }}>
                 <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
                       {['VLAN', 'Subnet', 'Gateway', 'DHCP Range', 'Reserved'].map(h => (
-                        <th key={h} style={{ padding: '8px 12px', textAlign: 'left', color: DIM, fontSize: 11, fontWeight: 700, borderBottom: `1px solid ${BORDER}` }}>{h}</th>
+                        <th key={h} style={{ padding: '8px 12px', textAlign: 'left', color: DIM, fontSize: 12, fontWeight: 700, borderBottom: `1px solid ${BORDER}` }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -386,16 +386,16 @@ export default function NetworkWizardPage() {
 
           {/* Firewall Summary */}
           {result.firewall_rules && result.firewall_rules.length > 0 && (
-            <SectionCard flat title="Firewall Rules" icon={<ShieldCheck size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 16 }}>
+            <SectionCard flat title="Firewall Rules" icon={<ShieldCheck size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginBottom: 16 }}>
               {result.firewall_rules.map((rule, i) => (
                 <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '6px 0', borderBottom: i < result.firewall_rules.length - 1 ? `1px solid ${BORDER}` : 'none' }}>
                   <span style={{
-                    fontSize: 10, padding: '2px 8px', borderRadius: 8, fontWeight: 700,
+                    fontSize: 12, padding: '2px 8px', borderRadius: 8, fontWeight: 700,
                     background: rule.action === 'allow' ? `${GREEN}15` : `${RED}15`,
                     color: rule.action === 'allow' ? GREEN : RED, textTransform: 'capitalize',
                   }}>{rule.action}</span>
                   <span style={{ color: TEXT, fontSize: 12 }}>{rule.name}</span>
-                  <span style={{ color: DIM, fontSize: 11 }}>{rule.source} → {rule.destination} ({rule.protocol}/{rule.port})</span>
+                  <span style={{ color: DIM, fontSize: 12 }}>{rule.source} → {rule.destination} ({rule.protocol}/{rule.port})</span>
                 </div>
               ))}
             </SectionCard>
@@ -403,16 +403,16 @@ export default function NetworkWizardPage() {
 
           {/* WiFi SSIDs */}
           {result.wifi_ssids && result.wifi_ssids.length > 0 && (
-            <SectionCard flat title="WiFi SSID Recommendations" icon={<WifiHigh size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 16 }}>
+            <SectionCard flat title="WiFi SSID Recommendations" icon={<WifiHigh size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginBottom: 16 }}>
               {result.wifi_ssids.map((ssid, i) => (
                 <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '8px 0', borderBottom: i < result.wifi_ssids.length - 1 ? `1px solid ${BORDER}` : 'none' }}>
                   <span style={{ display: 'inline-flex' }}><WifiHigh size={18} weight="regular" color={TEXT} /></span>
                   <div style={{ flex: 1 }}>
                     <span style={{ color: TEXT, fontSize: 13, fontWeight: 600 }}>{ssid.ssid}</span>
                     <div style={{ display: 'flex', gap: 6, marginTop: 2 }}>
-                      <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 6, background: `${GREEN}15`, color: GREEN }}>{ssid.security}</span>
-                      <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 6, background: 'rgba(255,255,255,0.06)', color: DIM }}>VLAN {ssid.vlan}</span>
-                      <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 6, background: 'rgba(255,255,255,0.06)', color: DIM }}>{ssid.band}</span>
+                      <span style={{ fontSize: 12, padding: '1px 6px', borderRadius: 6, background: `${GREEN}15`, color: GREEN }}>{ssid.security}</span>
+                      <span style={{ fontSize: 12, padding: '1px 6px', borderRadius: 6, background: 'rgba(255,255,255,0.06)', color: DIM }}>VLAN {ssid.vlan}</span>
+                      <span style={{ fontSize: 12, padding: '1px 6px', borderRadius: 6, background: 'rgba(255,255,255,0.06)', color: DIM }}>{ssid.band}</span>
                     </div>
                   </div>
                   <span style={{ color: DIM, fontSize: 12 }}>{ssid.purpose}</span>
@@ -423,12 +423,12 @@ export default function NetworkWizardPage() {
 
           {/* Cable Estimate */}
           {result.cable_estimate && (
-            <SectionCard flat title="Cable Estimate" icon={<Path size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 24 }}>
+            <SectionCard flat title="Cable Estimate" icon={<Path size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginBottom: 24 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-                <StatCard icon={<Path size={19} weight="duotone" color={GOLD} />} label="Cat6 Runs" value={String(result.cable_estimate.cat6_runs)}  href={`/app/projects/${projectId}/network/cables`}/>
-                <StatCard icon={<Path size={19} weight="duotone" color={GOLD} />} label="Cat6a Runs" value={String(result.cable_estimate.cat6a_runs)}  href={`/app/projects/${projectId}/network/cables`}/>
-                <StatCard icon={<Path size={19} weight="duotone" color={BLUE} />} label="Fiber Runs" value={String(result.cable_estimate.fiber_runs)} accent={BLUE}  href={`/app/projects/${projectId}/network/cables`}/>
-                <StatCard icon={<Ruler size={19} weight="duotone" color={GOLD} />} label="Total Length" value={`${result.cable_estimate.total_length_ft?.toLocaleString()} ft`}  href={`/app/projects/${projectId}/network/wizard`}/>
+                <StatCard icon={<Path size={19} weight="duotone" color="var(--text-secondary)" />} label="Cat6 Runs" value={String(result.cable_estimate.cat6_runs)}  href={`/app/projects/${projectId}/network/cables`}/>
+                <StatCard icon={<Path size={19} weight="duotone" color="var(--text-secondary)" />} label="Cat6a Runs" value={String(result.cable_estimate.cat6a_runs)}  href={`/app/projects/${projectId}/network/cables`}/>
+                <StatCard icon={<Path size={19} weight="duotone" color="var(--text-secondary)" />} label="Fiber Runs" value={String(result.cable_estimate.fiber_runs)} accent={BLUE}  href={`/app/projects/${projectId}/network/cables`}/>
+                <StatCard icon={<Ruler size={19} weight="duotone" color="var(--text-secondary)" />} label="Total Length" value={`${result.cable_estimate.total_length_ft?.toLocaleString()} ft`}  href={`/app/projects/${projectId}/network/wizard`}/>
                 <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={GREEN} />} label="Est. Cost" value={fmt$(result.cable_estimate.estimated_cost || 0)} accent={GREEN}  href={`/app/projects/${projectId}/network/wizard`}/>
               </div>
             </SectionCard>

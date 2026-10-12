@@ -8,14 +8,13 @@ import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, goldB
 import { ListToolbar } from '@/components/ui/ListToolbar';
 
 // Premium surface palette (matches components/ui/premium.tsx + the dashboard) ----
-const GOLD = 'var(--brand-primary)';
 const WHITE = 'var(--text-primary)';
 const MUTED = 'rgba(255,255,255,0.62)';
 const FAINT = 'var(--text-secondary)';
 const BORDER = 'rgba(255,255,255,0.08)';
 const RED = 'var(--danger)';
-const ME_BG = 'linear-gradient(135deg, var(--brand-primary-18), color-mix(in srgb, var(--brand-primary) 5%, transparent))';
-const ME_BORDER = 'var(--brand-primary-35)';
+const ME_BG = 'var(--bg-surface-2)';
+const ME_BORDER = 'var(--border-strong)';
 const OTHER_BG = 'linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.015))';
 const INPUT_BG = 'rgba(255,255,255,0.04)';
 
@@ -170,7 +169,7 @@ export default function MessagesPage() {
       {/* Header */}
       <ModuleHero
         eyebrow={ctx?.project?.name || 'Communication'}
-        eyebrowIcon={<ChatCircleText size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<ChatCircleText size={13} weight="fill" color="var(--text-secondary)" />}
         title="Project"
         accent="Messages"
         subtitle="The project's running record, timestamped."
@@ -200,7 +199,7 @@ export default function MessagesPage() {
       {/* Message thread — full-height card: thread scrolls internally, send bar pinned */}
       <SectionCard
         flush
-        icon={<ChatCircleText size={17} weight="duotone" color={GOLD} />}
+        icon={<ChatCircleText size={17} weight="duotone" color="var(--text-secondary)" />}
         title="Team Thread"
         subtitle={messages.length > 0 ? `${messages.length} message${messages.length === 1 ? '' : 's'} · ${contributors.length} contributor${contributors.length === 1 ? '' : 's'} · refreshes every 15s` : 'Live conversation for this project — refreshes every 15s'}
         style={{ display: 'flex', flexDirection: 'column', height: messages.length > 0 ? 'calc(100vh - 348px)' : 'calc(100vh - 260px)', minHeight: 460 }}
@@ -214,7 +213,7 @@ export default function MessagesPage() {
             <div style={{ textAlign: 'center', padding: 40, color: MUTED }}>Loading…</div>
           ) : messages.length === 0 ? (
             <PremiumEmpty
-              icon={<ChatsCircle size={30} weight="duotone" color={GOLD} />}
+              icon={<ChatsCircle size={30} weight="duotone" color="var(--text-secondary)" />}
               title="No messages yet"
               description={`Everything posted here becomes the ${ctx?.project?.name ? `${ctx.project.name} ` : 'project '}running record — timestamped, searchable, and visible to the whole team${subCount > 0 ? `, with ${subCount} sub${subCount === 1 ? '' : 's'} on the roster to coordinate` : ''}. Start with one of these:`}
               action={
@@ -224,7 +223,7 @@ export default function MessagesPage() {
                     { label: 'Schedule Check', text: 'Schedule check: are we still tracking to this week\'s milestones? Flag any slips here so we can resequence early.' },
                     { label: 'Safety Reminder', text: 'Reminder: report near misses the same day and log toolbox talks under Safety — the log only works if we feed it.' },
                   ].map(p => (
-                    <button key={p.label} onClick={() => setText(p.text)} className="pmBtn" style={{ padding: '7px 14px', borderRadius: 999, background: 'var(--brand-primary-12)', border: '1px solid color-mix(in srgb, var(--brand-primary) 40%, transparent)', color: 'var(--brand-primary-strong)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{p.label}</button>
+                    <button key={p.label} onClick={() => setText(p.text)} className="pmBtn" style={{ minHeight: 40, padding: '8px 14px', borderRadius: 10, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{p.label}</button>
                   ))}
                 </div>
               }
@@ -240,14 +239,14 @@ export default function MessagesPage() {
                   {day && day !== prevDay && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '2px 0' }}>
                       <div style={{ flex: 1, height: 1, background: BORDER }} />
-                      <span style={{ fontSize: 10.5, fontWeight: 800, color: FAINT }}>{day}</span>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: FAINT }}>{day}</span>
                       <div style={{ flex: 1, height: 1, background: BORDER }} />
                     </div>
                   )}
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: isMe ? GOLD : WHITE }}>{msg.sender}</span>
-                      <span style={{ fontSize: 11, color: FAINT }}>{relativeTime(msg.timestamp)}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: WHITE }}>{msg.sender}</span>
+                      <span style={{ fontSize: 12, color: FAINT }}>{relativeTime(msg.timestamp)}</span>
                     </div>
                     <div style={{
                       maxWidth: '70%',
