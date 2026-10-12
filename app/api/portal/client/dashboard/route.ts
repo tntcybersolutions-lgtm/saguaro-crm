@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { getPortalSession, PORTAL_PERMS } from '@/lib/portal-auth';
 import { signFields } from '@/lib/storage-signing';
+import { apiError } from '@/lib/api-error';
+import { contractMoney } from '@/lib/job-contract';
+import { jobsiteWeather } from '@/lib/jobsite-weather';
 
 /** GET — return project dashboard data */
 export async function GET(req: NextRequest) {
@@ -15,13 +18,37 @@ export async function GET(req: NextRequest) {
     const projectId = session.project_id;
     const tenantId = session.tenant_id;
 
-    // Budget summary from projects table
+    // Today's forecast at the job (NWS) — started now, read last. A slow
+    // lookup never holds the owner's page past 5 s; it just shows no forecast.
+    const weatherP = Promise.race([
+      jobsiteWeather(db, tenantId, projectId),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
+    ]);
+
+    // Contract money — the same rule the GC's screens read (lib/job-contract).
     const { data: project } = await db
       .from('projects')
-      .select('id, name, status, contract_amount, revised_contract_value, billed_to_date, start_date, end_date, percent_complete')
+      .select('id, name, status, original_contract_amount, contract_amount, billed_to_date, start_date, end_date, percent_complete')
       .eq('id', projectId)
       .eq('tenant_id', tenantId)
       .single();
+    const { data: prime } = await db
+      .from('contracts')
+      .select('original_amount, contract_amount, amount')
+      .eq('project_id', projectId)
+      .eq('tenant_id', tenantId)
+      .eq('contract_type', 'prime')
+      .limit(1)
+      .maybeSingle();
+    const { data: accepted } = await db
+      .from('proposals')
+      .select('amount, total_amount')
+      .eq('project_id', projectId)
+      .eq('tenant_id', tenantId)
+      .eq('status', 'accepted')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
     // Schedule phases
     const { data: phases } = await db
@@ -40,34 +67,34 @@ export async function GET(req: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(12);
 
-    // Change order statuses
+    // Change orders — every one, so the pending / approved counts and the
+    // contract's approved changes are whole (a 10-row cap undercounted both).
     const { data: changeOrders } = await db
       .from('change_orders')
-      .select('id, title, status, amount, created_at')
+      .select('id, title, status, amount, cost_impact, created_at')
       .eq('project_id', projectId)
       .eq('tenant_id', tenantId)
-      .order('created_at', { ascending: false })
-      .limit(10);
+      .order('created_at', { ascending: false });
 
-    // Weather placeholder
-    const weather = {
-      current: {
-        temp: null,
-        condition: 'N/A',
-        icon: 'cloud',
-      },
-      forecast: [],
-      note: 'Weather integration pending — connect a weather API for live data.',
-    };
-
-    const budgetSummary = project
+    const money = project ? contractMoney({ project, prime, acceptedProposal: accepted, changeOrders }) : null;
+    const billed = Number(project?.billed_to_date) || 0;
+    const budgetSummary = project && money
       ? {
-          contract_amount: project.contract_amount || 0,
-          budget: project.revised_contract_value || project.contract_amount || 0,
-          spent: project.billed_to_date || 0,
-          remaining: (project.revised_contract_value || project.contract_amount || 0) - (project.billed_to_date || 0),
+          contract_amount: money.original,
+          budget: money.current,
+          approved_changes: money.approvedChanges,
+          approved_count: money.approvedCount,
+          pending_changes: money.pendingChanges,
+          pending_count: money.pendingCount,
+          spent: billed,
+          remaining: money.current - billed,
           percent_complete: project.percent_complete || 0,
         }
+      : null;
+
+    const w = await weatherP;
+    const weather = w && w.available
+      ? { conditions: w.conditions, high: w.highTemp, low: w.lowTemp, wind: w.wind, precipitation: w.precipitation }
       : null;
 
     return NextResponse.json({
@@ -86,7 +113,7 @@ export async function GET(req: NextRequest) {
       changeOrders: changeOrders || [],
       weather,
     });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('portal/client/dashboard', e, "Couldn't load your project. Please try again.");
   }
 }

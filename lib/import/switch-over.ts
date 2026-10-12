@@ -136,6 +136,16 @@ export function jobStatus(v: string): string {
   return 'active';
 }
 
+/**
+ * Which phase an imported job lands in. A job list exported from another app
+ * is mostly sold work — it lands "building" (contract, schedule, field tools
+ * lead) unless its status says it is still being chased.
+ */
+export function jobPhase(v: string): 'bidding' | 'building' {
+  const t = (v || '').trim().toLowerCase();
+  return /(bid|estimat|pre-?sale|proposal|lead|prospect|quot|opportunit)/.test(t) ? 'bidding' : 'building';
+}
+
 /** One spreadsheet row → the body the app's own create route takes. null = skip (no required value). */
 export function rowToBody(kind: ImportKind, row: string[], map: Record<string, number>): Record<string, unknown> | null {
   const get = (k: string) => (map[k] >= 0 ? String(row[map[k]] ?? '').trim() : '');
@@ -144,7 +154,7 @@ export function rowToBody(kind: ImportKind, row: string[], map: Record<string, n
     if (!name) return null;
     const street = get('address');
     const address = [street, get('city'), [get('state'), get('zip')].filter(Boolean).join(' ')].filter(Boolean).join(', ');
-    const body: Record<string, unknown> = { name, status: jobStatus(get('status')) };
+    const body: Record<string, unknown> = { name, status: jobStatus(get('status')), phase: jobPhase(get('status')) };
     if (address) body.address = address;
     // The job's state sets its lien-waiver and wage rules — never leave a
     // Texas job on the create route's Arizona default.

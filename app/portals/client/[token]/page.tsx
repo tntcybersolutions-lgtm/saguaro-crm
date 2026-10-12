@@ -68,7 +68,12 @@ type ProjectInfo = {
   start_date: string;
   end_date: string;
   original_contract: number;
+  /** Original + approved change orders (lib/job-contract). */
   committed_cost: number;
+  approved_changes: number;
+  approved_count: number;
+  pending_changes: number;
+  pending_count: number;
   spent_to_date: number;
   total_budget: number;
   payments_made: number;
@@ -87,7 +92,8 @@ type Photo = { id: string; url: string; caption: string; date: string };
 
 type ChangeOrderSummary = { pending: number; approved: number; rejected: number };
 
-type WeatherInfo = { city: string; temp: number; conditions: string; icon: string };
+/** Today's NWS forecast at the job (lib/jobsite-weather); null when there is none. */
+type WeatherInfo = { conditions: string | null; high: string | null; low: string | null; wind: string | null; precipitation: string | null };
 
 type ApprovalItem = {
   id: string;
@@ -260,8 +266,7 @@ export default function ClientPortalPage() {
   const [budgetLines, setBudgetLines] = useState<BudgetLine[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [expandedBudget, setExpandedBudget] = useState<Record<string, boolean>>({});
-  const [paymentAmount, setPaymentAmount] = useState('');
-  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [payOnline, setPayOnline] = useState(false);
 
   /* ── Messages state ───────────────────────────────────────────── */
   const [msgLoading, setMsgLoading] = useState(false);
@@ -338,6 +343,10 @@ export default function ClientPortalPage() {
           end_date: p.end_date || '',
           original_contract: b.contract_amount ?? p.contract_amount ?? 0,
           committed_cost: b.budget ?? p.budget ?? 0,
+          approved_changes: b.approved_changes ?? 0,
+          approved_count: b.approved_count ?? 0,
+          pending_changes: b.pending_changes ?? 0,
+          pending_count: b.pending_count ?? 0,
           spent_to_date: b.spent ?? p.spent ?? 0,
           total_budget: b.budget ?? p.budget ?? 0,
           payments_made: b.payments_made ?? 0,
@@ -356,18 +365,8 @@ export default function ClientPortalPage() {
         } else {
           setCoSummary(cos);
         }
-        // Map weather
-        const w = d.weather;
-        if (w?.current) {
-          setWeather({
-            city: w.city || p.city || '',
-            temp: w.current.temp ?? 0,
-            conditions: w.current.condition || '',
-            icon: w.current.icon || '',
-          });
-        } else if (w) {
-          setWeather(w);
-        }
+        // Today's forecast at the job, or none — never a made-up reading.
+        setWeather(d.weather || null);
       })
       .catch((e) => setDashError(e.message))
       .finally(() => setDashLoading(false));
@@ -408,6 +407,7 @@ export default function ClientPortalPage() {
           setInvoices(d.invoices || []);
           setBudgetLines(d.budget_lines || []);
           setPayments(d.payments || []);
+          setPayOnline(!!d.payOnline);
         })
         .catch(() => showToast('Failed to load financials.', 'error'))
         .finally(() => setFinLoading(false));
@@ -616,36 +616,6 @@ export default function ClientPortalPage() {
       showToast('Network error. Please try again.', 'error');
     }
     setSubmittingClaim(false);
-  };
-
-  const makePayment = async () => {
-    const amount = parseFloat(paymentAmount);
-    if (isNaN(amount) || amount <= 0) {
-      showToast('Enter a valid payment amount.', 'error');
-      return;
-    }
-    setPaymentProcessing(true);
-    try {
-      const res = await fetch(`/api/portal/client/payments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-portal-token': token },
-        body: JSON.stringify({ token, amount }),
-      });
-      const d = await res.json();
-      if (d.success) {
-        setPayments((prev) => [
-          { id: d.id || Date.now().toString(), amount, date: new Date().toISOString(), method: 'Portal', reference: d.reference || 'N/A' },
-          ...prev,
-        ]);
-        setPaymentAmount('');
-        showToast('Payment recorded successfully.');
-      } else {
-        showToast(d.error || 'Payment failed.', 'error');
-      }
-    } catch {
-      showToast('Network error. Please try again.', 'error');
-    }
-    setPaymentProcessing(false);
   };
 
   const handlePunchSignOff = async (id: string) => {
@@ -984,7 +954,8 @@ export default function ClientPortalPage() {
     const stroke = 20;
     const radius = (size - stroke) / 2;
     const circumference = 2 * Math.PI * radius;
-    const spentPct = pct(spent, original);
+    // Billed against the contract as it stands now (original + approved changes).
+    const spentPct = pct(spent, committed || original);
     const committedPct = pct(committed, original);
     const spentDash = (spentPct / 100) * circumference;
     const committedDash = (committedPct / 100) * circumference;
@@ -1011,7 +982,7 @@ export default function ClientPortalPage() {
         </svg>
         <div style={{ marginTop: -110, textAlign: 'center', position: 'relative' }}>
           <div style={{ fontSize: 28, fontWeight: 800, color: TEXT }}>{spentPct}%</div>
-          <div style={{ fontSize: 11, color: DIM }}>Budget Used</div>
+          <div style={{ fontSize: 11, color: DIM }}>Billed</div>
         </div>
         <div style={{ display: 'flex', gap: 16, marginTop: 48, fontSize: 11 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -1020,11 +991,11 @@ export default function ClientPortalPage() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <div style={{ width: 10, height: 10, borderRadius: '50%', background: AMBER, opacity: 0.5 }} />
-            <span style={{ color: DIM }}>Committed</span>
+            <span style={{ color: DIM }}>With changes</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <div style={{ width: 10, height: 10, borderRadius: '50%', background: GREEN }} />
-            <span style={{ color: DIM }}>Spent</span>
+            <span style={{ color: DIM }}>Billed</span>
           </div>
         </div>
       </div>
@@ -1081,7 +1052,7 @@ export default function ClientPortalPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
         {/* Budget Burn Gauge */}
         <div style={{ ...cardStyle }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 20 }}>Budget Burn Rate</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 20 }}>Contract &amp; Billing</div>
           <DonutChart original={project.original_contract} committed={project.committed_cost} spent={project.spent_to_date} />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginTop: 20, textAlign: 'center' }}>
             <div>
@@ -1089,11 +1060,11 @@ export default function ClientPortalPage() {
               <div style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{fmt(project.original_contract)}</div>
             </div>
             <div>
-              <div style={{ fontSize: 11, color: DIM }}>Committed</div>
+              <div style={{ fontSize: 11, color: DIM }}>Current</div>
               <div style={{ fontSize: 14, fontWeight: 700, color: AMBER }}>{fmt(project.committed_cost)}</div>
             </div>
             <div>
-              <div style={{ fontSize: 11, color: DIM }}>Spent</div>
+              <div style={{ fontSize: 11, color: DIM }}>Billed</div>
               <div style={{ fontSize: 14, fontWeight: 700, color: GREEN }}>{fmt(project.spent_to_date)}</div>
             </div>
           </div>
@@ -1106,15 +1077,17 @@ export default function ClientPortalPage() {
             <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 12 }}>Job Site Weather</div>
             {weather ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <div>{React.createElement(weatherIcon(weather.conditions), { size: 44, weight: 'duotone', color: GOLD })}</div>
+                <div>{React.createElement(weatherIcon(weather.conditions || ''), { size: 44, weight: 'duotone', color: GOLD })}</div>
                 <div>
-                  <div style={{ fontSize: 32, fontWeight: 800, color: TEXT }}>{weather.temp}°F</div>
+                  {weather.high && <div style={{ fontSize: 32, fontWeight: 800, color: TEXT }}>{weather.high}°F</div>}
                   <div style={{ fontSize: 14, color: DIM }}>{weather.conditions}</div>
-                  <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>{weather.city}</div>
+                  <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>
+                    {[weather.low ? `Low ${weather.low}°F` : null, weather.precipitation ? `Rain ${weather.precipitation}` : null, weather.wind].filter(Boolean).join(' · ')}
+                  </div>
                 </div>
               </div>
             ) : (
-              <div style={{ color: DIM, fontSize: 14 }}>Weather data unavailable</div>
+              <div style={{ color: DIM, fontSize: 14 }}>No forecast for this job&apos;s address today.</div>
             )}
           </div>
 
@@ -1330,7 +1303,8 @@ export default function ClientPortalPage() {
   const renderFinancials = () => {
     if (finLoading) return <LoadingBlock />;
 
-    const projectedFinal = (project.original_contract || 0) + (project.committed_cost - project.original_contract);
+    // What the contract becomes if every change order still waiting is approved.
+    const projectedFinal = project.committed_cost + (project.pending_changes || 0);
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -1345,15 +1319,20 @@ export default function ClientPortalPage() {
             <div style={{ background: BG, borderRadius: 10, padding: 20, textAlign: 'center', border: `1px solid ${BORDER}` }}>
               <div style={{ fontSize: 12, color: DIM, marginBottom: 8 }}>Current Contract</div>
               <div style={{ fontSize: 28, fontWeight: 800, color: GOLD }}>{fmt(project.committed_cost)}</div>
-              {project.committed_cost !== project.original_contract && (
-                <div style={{ fontSize: 12, color: project.committed_cost > project.original_contract ? RED : GREEN, marginTop: 4 }}>
-                  {project.committed_cost > project.original_contract ? '+' : ''}{fmt(project.committed_cost - project.original_contract)}
-                </div>
-              )}
+              <div style={{ fontSize: 12, color: DIM, marginTop: 4 }}>
+                {project.approved_count > 0
+                  ? `${project.approved_changes >= 0 ? '+' : ''}${fmt(project.approved_changes)} in ${project.approved_count} approved change order${project.approved_count === 1 ? '' : 's'}`
+                  : 'No approved change orders'}
+              </div>
             </div>
             <div style={{ background: BG, borderRadius: 10, padding: 20, textAlign: 'center', border: `1px solid ${BORDER}` }}>
-              <div style={{ fontSize: 12, color: DIM, marginBottom: 8 }}>Projected Final Cost</div>
-              <div style={{ fontSize: 28, fontWeight: 800, color: projectedFinal > project.original_contract ? AMBER : GREEN }}>{fmt(projectedFinal)}</div>
+              <div style={{ fontSize: 12, color: DIM, marginBottom: 8 }}>If Pending Changes Are Approved</div>
+              <div style={{ fontSize: 28, fontWeight: 800, color: project.pending_count > 0 ? AMBER : TEXT }}>{fmt(projectedFinal)}</div>
+              <div style={{ fontSize: 12, color: DIM, marginTop: 4 }}>
+                {project.pending_count > 0
+                  ? `${project.pending_count} change order${project.pending_count === 1 ? '' : 's'} waiting on a decision`
+                  : 'Nothing waiting on a decision'}
+              </div>
             </div>
           </div>
         </div>
@@ -1373,7 +1352,7 @@ export default function ClientPortalPage() {
             <EmptyState icon={<Receipt size={44} weight="duotone" color="rgba(255,255,255,0.35)" />} title="No Invoices" subtitle="Invoices will appear here as they are generated." />
           ) : (
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+              <table className="k-stack" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
                 <thead>
                   <tr>
                     {['Invoice #', 'Date', 'Due Date', 'Amount', 'Status', ...(invoices.some((i) => i.payable) ? [''] : [])].map((h) => (
@@ -1384,11 +1363,11 @@ export default function ClientPortalPage() {
                 <tbody>
                   {invoices.map((inv) => (
                     <tr key={inv.id} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
-                      <td style={{ padding: '12px', color: TEXT, fontWeight: 600 }}>{inv.number}</td>
-                      <td style={{ padding: '12px', color: DIM }}>{fmtDate(inv.date)}</td>
-                      <td style={{ padding: '12px', color: DIM }}>{fmtDate(inv.due_date)}</td>
-                      <td style={{ padding: '12px', color: TEXT, fontWeight: 700 }}>{fmt(inv.amount)}</td>
-                      <td style={{ padding: '12px' }}><span style={badgeStyle(statusColor(inv.status))}>{inv.status}</span></td>
+                      <td data-label="Invoice #" style={{ padding: '12px', color: TEXT, fontWeight: 600 }}>{inv.number}</td>
+                      <td data-label="Date" style={{ padding: '12px', color: DIM }}>{fmtDate(inv.date)}</td>
+                      <td data-label="Due" style={{ padding: '12px', color: DIM }}>{fmtDate(inv.due_date)}</td>
+                      <td data-label="Amount" style={{ padding: '12px', color: TEXT, fontWeight: 700 }}>{fmt(inv.amount)}</td>
+                      <td data-label="Status" style={{ padding: '12px' }}><span style={badgeStyle(statusColor(inv.status))}>{inv.status}</span></td>
                       {invoices.some((i) => i.payable) && (
                         <td style={{ padding: '8px 12px', textAlign: 'right' }}>
                           {inv.payable && (
@@ -1458,27 +1437,14 @@ export default function ClientPortalPage() {
           )}
         </div>
 
-        {/* Make Payment */}
+        {/* How to pay — a real Pay button per invoice when the builder takes
+            payments online; otherwise the truth, not a form that pays nothing. */}
         <div style={{ ...cardStyle }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Make a Payment</div>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-            <div style={{ flex: 1, minWidth: 200 }}>
-              <label style={labelStyle}>Payment Amount ($)</label>
-              <input
-                type="number"
-                style={inputStyle}
-                placeholder="0.00"
-                value={paymentAmount}
-                onChange={(e) => setPaymentAmount(e.target.value)}
-              />
-            </div>
-            <button
-              style={{ ...btnPrimary, opacity: paymentProcessing ? 0.6 : 1 }}
-              disabled={paymentProcessing}
-              onClick={makePayment}
-            >
-              {paymentProcessing ? 'Processing…' : <><CreditCard size={15} weight="bold" /> Submit Payment</>}
-            </button>
+          <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 8 }}>How to Pay</div>
+          <div style={{ fontSize: 14, color: DIM, lineHeight: 1.6 }}>
+            {payOnline
+              ? 'Tap Pay on any open invoice above to pay by card or bank. It shows below as soon as it goes through.'
+              : `Pay ${project.company_name || 'your builder'} the way your invoice asks. Each payment they record shows below.`}
           </div>
         </div>
 
@@ -1489,7 +1455,7 @@ export default function ClientPortalPage() {
             <EmptyState icon={<CreditCard size={44} weight="duotone" color="rgba(255,255,255,0.35)" />} title="No Payments" subtitle="Payment history will appear here." />
           ) : (
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+              <table className="k-stack" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
                 <thead>
                   <tr>
                     {['Date', 'Amount', 'Method', 'Reference'].map((h) => (
@@ -1500,10 +1466,10 @@ export default function ClientPortalPage() {
                 <tbody>
                   {payments.map((p) => (
                     <tr key={p.id} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
-                      <td style={{ padding: '12px', color: DIM }}>{fmtDate(p.date)}</td>
-                      <td style={{ padding: '12px', color: GREEN, fontWeight: 700 }}>{fmt(p.amount)}</td>
-                      <td style={{ padding: '12px', color: TEXT }}>{p.method}</td>
-                      <td style={{ padding: '12px', color: DIM }}>{p.reference}</td>
+                      <td data-label="Date" style={{ padding: '12px', color: DIM }}>{fmtDate(p.date)}</td>
+                      <td data-label="Amount" style={{ padding: '12px', color: GREEN, fontWeight: 700 }}>{fmt(p.amount)}</td>
+                      <td data-label="Method" style={{ padding: '12px', color: TEXT }}>{p.method}</td>
+                      <td data-label="Reference" style={{ padding: '12px', color: DIM }}>{p.reference}</td>
                     </tr>
                   ))}
                 </tbody>
