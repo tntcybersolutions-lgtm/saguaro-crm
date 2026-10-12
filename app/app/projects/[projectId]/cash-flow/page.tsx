@@ -148,7 +148,7 @@ function CashFlowContent() {
             {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmt0(ctxRevised), sub: (Number(money?.approvedCoCount) || 0) + ' approved COs' },
             {href: `/app/projects/${projectId}/cash-flow`,  label: 'Billed to Date', value: fmt0(ctxBilled), sub: (Number(money?.billedPct) || 0) + '% of revised' },
             {href: `/app/projects/${projectId}/cash-flow`,  label: 'Collected', value: fmt0(ctxPaid), accent: GREEN, sub: 'Paid on the contract' },
-            {href: `/app/projects/${projectId}/cash-flow`,  label: 'Outstanding AR', value: fmt0(ctxOutstanding), accent: ctxOutstanding > 0 ? GOLD : GREEN, sub: 'Billed, not collected' },
+            {href: `/app/projects/${projectId}/cash-flow`,  label: 'Outstanding AR', value: fmt0(ctxOutstanding), accent: ctxOutstanding > 0 ? undefined : GREEN, sub: 'Billed, not collected' },
           ]} />
         )}
         <SectionCard>
@@ -260,7 +260,7 @@ function CashFlowContent() {
         <div style={{ display: 'flex', gap: 20, marginBottom: 16, fontSize: 12, color: DIM }}>
           <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: GREEN, marginRight: 6, verticalAlign: 'middle' }} />Receivables</span>
           <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: RED, marginRight: 6, verticalAlign: 'middle' }} />Payables</span>
-          <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: GOLD, marginRight: 6, verticalAlign: 'middle' }} />Net</span>
+          <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: 'var(--info)', marginRight: 6, verticalAlign: 'middle' }} />Net</span>
         </div>
 
         {/* Bars */}
@@ -299,7 +299,7 @@ function CashFlowContent() {
                 {/* Net indicator */}
                 <div style={{
                   width: 52, height: 4, borderRadius: 2, marginTop: 4,
-                  background: isNegNet ? RED : GOLD,
+                  background: isNegNet ? RED : 'var(--info)',
                   boxShadow: isDanger ? `0 0 8px ${RED}` : 'none',
                 }} title={`Net: ${fmt(period.net)}`} />
 
@@ -358,7 +358,7 @@ function CashFlowContent() {
                   background: isDanger ? 'rgba(248,113,113,0.08)' : 'transparent',
                   transition: 'background 0.2s',
                 }}
-                onMouseEnter={(e) => { if (!isDanger) e.currentTarget.style.background = 'color-mix(in srgb, var(--brand-primary) 5%, transparent)'; }}
+                onMouseEnter={(e) => { if (!isDanger) e.currentTarget.style.background = 'var(--bg-row-hover)'; }}
                 onMouseLeave={(e) => { if (!isDanger) e.currentTarget.style.background = 'transparent'; }}
               >
                 <div style={{ color: TEXT, fontWeight: 600 }}>{period.month}</div>
@@ -398,7 +398,7 @@ function CashFlowContent() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <div style={{
                             width: 8, height: 8, borderRadius: '50%',
-                            background: item.type === 'receivable' ? GREEN : item.type === 'retainage' ? GOLD : RED,
+                            background: item.type === 'receivable' ? GREEN : item.type === 'retainage' ? 'var(--info)' : RED,
                           }} />
                           <span style={{ fontSize: 12, color: TEXT }}>{item.label}</span>
                         </div>
@@ -414,7 +414,7 @@ function CashFlowContent() {
                   {period.retainage_release > 0 && (
                     <div style={{
                       marginTop: 8, padding: '8px 12px', background: 'var(--bg-surface-2)',
-                      borderRadius: 6, border: `1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)`,
+                      borderRadius: 6, border: '1px solid var(--border-default)',
                       fontSize: 12, color: 'var(--text-primary)',
                     }}>
                       Retainage release scheduled: {fmt(period.retainage_release)}
@@ -430,7 +430,7 @@ function CashFlowContent() {
         <div style={{
           display: 'grid', gridTemplateColumns: '160px 1fr 1fr 1fr 1fr 40px',
           padding: '14px 20px', background: 'var(--bg-surface-2)',
-          borderTop: `2px solid ${GOLD}`,
+          borderTop: '2px solid var(--border-strong)',
           fontSize: 13, fontWeight: 800,
         }}>
           <div style={{ color: 'var(--text-primary)' }}>Total</div>
@@ -457,7 +457,7 @@ function CashFlowContent() {
             <div>
               <InsightRow label="Billed to Date" value={`${fmt0(ctxBilled)} (${Number(money?.billedPct) || 0}%)`} />
               <InsightRow label="Collected" value={fmt0(ctxPaid)} accent={GREEN} />
-              <InsightRow label="Outstanding AR" value={fmt0(ctxOutstanding)} accent={ctxOutstanding > 0 ? GOLD : GREEN} strong />
+              <InsightRow label="Outstanding AR" value={fmt0(ctxOutstanding)} accent={ctxOutstanding > 0 ? undefined : GREEN} strong />
               <InsightRow label="Pay Applications" value={`${Number(money?.payAppCount) || 0}${money?.lastPayApp ? ' — last #' + money.lastPayApp.appNumber : ''}`} />
             </div>
           </div>

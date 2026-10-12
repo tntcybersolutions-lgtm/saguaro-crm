@@ -57,7 +57,7 @@ const lbl: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 7
 const goldBtnSm: React.CSSProperties = { ...goldButtonStyle, padding: '6px 14px', fontSize: 12, borderRadius: 9 };
 const dangerBtnSm: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '6px 14px', borderRadius: 9, cursor: 'pointer', background: 'rgba(248,113,113,0.12)', color: 'var(--danger)', border: '1px solid rgba(248,113,113,0.35)', fontWeight: 700, fontSize: 12 };
 const chipBase: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '7px 16px', borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: 'pointer', border: '1px solid', transition: 'all .16s ease' };
-const chipActive: React.CSSProperties = { ...chipBase, background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-strong))', color: 'var(--on-brand)', borderColor: 'transparent', boxShadow: '0 8px 20px -10px color-mix(in srgb, var(--brand-primary) 60%, transparent)' };
+const chipActive: React.CSSProperties = { ...chipBase, background: 'var(--brand-primary)', color: 'var(--on-brand)', borderColor: 'transparent', boxShadow: 'none' };
 const chipInactive: React.CSSProperties = { ...chipBase, background: 'rgba(255,255,255,0.04)', color: 'var(--c-text-2)', borderColor: 'rgba(255,255,255,0.10)' };
 
 function getWeekStart(date: Date): string {

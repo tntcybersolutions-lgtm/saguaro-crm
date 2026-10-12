@@ -189,7 +189,7 @@ export default function CloseoutPage() {
   // $0 billed against a $0 contract is "no contract sum", not done.
   const fullyBilled = revised > 0 && billed >= revised;
   const balanceSub = revised <= 0 ? 'No contract sum set' : fullyBilled ? 'Fully billed' : 'Still to bill';
-  const balanceAccent = fullyBilled ? T.green : revised > 0 ? 'var(--brand-primary-strong)' : undefined;
+  const balanceAccent = fullyBilled ? T.green : undefined;
   // Unsigned waivers that actually block the close (placeholders excluded),
   // so the checklist and the gate count the same thing.
   const waiverBlockers = Number(gate?.blockers?.find(b => b.key === 'lien_waivers')?.count) || 0;
@@ -465,7 +465,7 @@ export default function CloseoutPage() {
       <SectionCard flat
         title="Closeout Progress"
         icon={<ChartBar size={17} weight="duotone" color="var(--text-secondary)" />}
-        action={<span style={{ fontSize: 14, fontWeight: 800, color: pct === 100 ? T.green : 'var(--brand-primary-strong)', fontVariantNumeric: 'tabular-nums' }}>{pct}%</span>}
+        action={<span style={{ fontSize: 14, fontWeight: 800, color: pct === 100 ? T.green : 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{pct}%</span>}
         style={{ marginBottom: 24 }}
       >
         <ProgressBar pct={pct} color={pct === 100 ? T.green : T.gold} height={10} />
@@ -519,7 +519,7 @@ export default function CloseoutPage() {
                 {item.label}
               </span>
               {sig?.hint && item.status !== 'complete' && (
-                <div style={{ fontSize: 12, color: sig.warn ? 'var(--brand-primary-strong)' : sig.ready ? T.green : 'rgba(255,255,255,0.5)', marginTop: 3, lineHeight: 1.45 }}>{sig.hint}</div>
+                <div style={{ fontSize: 12, color: sig.warn ? 'var(--warning)' : sig.ready ? T.green : 'rgba(255,255,255,0.5)', marginTop: 3, lineHeight: 1.45 }}>{sig.hint}</div>
               )}
             </div>
             {sig?.ready && item.status !== 'complete' && <Badge label="Ready" color="green" />}
