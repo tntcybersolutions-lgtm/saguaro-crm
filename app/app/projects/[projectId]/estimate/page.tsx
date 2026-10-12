@@ -4,7 +4,7 @@ import { useSort, useSortedRows, SortTh, SortBar } from '@/components/ui/sort';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import { Table, T } from '@/components/ui/shell';
-import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, goldButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowStrip, goldButtonStyle } from '@/components/ui/premium';
 import { toCents, toDollars, extend, sumCents, addCents } from '@/lib/calc';
 import { Package, Ruler, Rows, Receipt, DownloadSimple, Stack } from '@phosphor-icons/react';
 import { CSI_DIVISIONS, classifyToCSI } from '@/lib/construction-intelligence';
@@ -183,7 +183,7 @@ export default function EstimatePage() {
             ]} />
           )}
           <SectionCard flush>
-            <div style={{ display: 'grid', gridTemplateColumns: ctx ? 'minmax(0, 1fr) 360px' : '1fr', alignItems: 'stretch' }}>
+            <div>
               <PremiumEmpty
                 icon={<Package size={30} weight="duotone" color="var(--text-secondary)" />}
                 title="No Takeoff Data Yet"
@@ -195,13 +195,12 @@ export default function EstimatePage() {
                 }
               />
               {ctx && (
-                <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', padding: '22px 24px' }}>
-                  <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--c-text-2)', marginBottom: 12 }}>How the Estimate Builds</div>
-                  <FlowSteps title="" steps={[
-                    { title: 'Upload Plans in Takeoff', desc: 'AI scans the sheets and extracts quantities with CSI codes.' },
-                    { title: 'Lines Price Themselves', desc: 'Unit costs extend into a priced, exportable estimate.' },
-                    { title: 'Divisions Roll Up Here', desc: 'Every line lands in its canonical MasterFormat division.' },
-                    { title: 'Estimate Meets Budget', desc: budgetLineCount > 0 ? `Compared division-by-division against your ${budgetLineCount}-line budget.` : 'Seed the budget from it and track committed vs. actual.' },
+                <div style={{ padding: '0 20px 16px' }}>
+                  <FlowStrip steps={[
+                    { title: 'Upload Plans in Takeoff', desc: 'AI extracts CSI-coded quantities' },
+                    { title: 'Lines Price Themselves', desc: 'Unit costs extend' },
+                    { title: 'Divisions Roll Up Here' },
+                    { title: 'Estimate Meets Budget', desc: budgetLineCount > 0 ? `Against your ${budgetLineCount}-line budget` : 'Seed the budget from it' },
                   ]} />
                 </div>
               )}
