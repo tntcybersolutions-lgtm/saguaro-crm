@@ -23,9 +23,6 @@ import { STATUS_COLORS } from '@/lib/status-colors';
 const GOLD = 'var(--brand-primary)';        // #FFE000 — the primary action / selected item
 const ON_GOLD = 'var(--on-brand)';             // dark text/icons on a yellow fill
 // Brand alpha steps — tokens, so a white-label override re-themes them too.
-const A12 = 'var(--brand-primary-12)';
-const A30 = 'var(--brand-primary-25)';
-const A45 = 'var(--brand-primary-35)';
 const BORDER = 'var(--border-subtle)';
 const WHITE = 'var(--text-primary)';
 const MUTED = 'var(--text-secondary)';
@@ -74,9 +71,9 @@ export const PREMIUM_FX = `
    hover/active read as one material: dim chrome -> white on hover -> brand on sort. */
 .pmSortTh{cursor:pointer;transition:color .15s ease}
 .pmSortTh:hover{color:var(--c-text-2)}
-.pmSortTh .pmSortGlyph{font-size:10px;line-height:1;opacity:.35;transition:opacity .15s ease}
+.pmSortTh .pmSortGlyph{font-size:12px;line-height:1;opacity:.35;transition:opacity .15s ease}
 .pmSortTh:hover .pmSortGlyph{opacity:.8}
-.pmSortTh[aria-sort="ascending"],.pmSortTh[aria-sort="descending"]{color:var(--brand-primary-strong)}
+.pmSortTh[aria-sort="ascending"],.pmSortTh[aria-sort="descending"]{color: var(--text-primary)}
 .pmSortTh[aria-sort="ascending"] .pmSortGlyph,.pmSortTh[aria-sort="descending"] .pmSortGlyph{opacity:1}
 /* Beat the global h1 !important size cap (globals.css) with higher specificity */
 h1.pmH1{font-size:22px!important;font-weight:700!important;line-height:1.2!important;letter-spacing:-0.015em!important;margin:0!important}
@@ -223,6 +220,14 @@ export function vividOf(accentKey?: string | null): string {
   return a.vivid ?? a.hex;
 }
 
+/** A figure's colour. Yellow is the primary action and the selected item, never
+ *  a number, so a yellow accent from a caller renders as plain white; status
+ *  colours (green / amber / red / blue) pass through. */
+export function figureColor(accent?: string | null): string | undefined {
+  if (!accent) return undefined;
+  return /brand-primary|#FFE[06]00/i.test(accent) ? undefined : accent;
+}
+
 // ─── StatCard (premium) ──────────────────────────────────────────────────────
 /**
  * One figure — flat (2026-10-10): value 17px bold over an 11px label, a
@@ -262,7 +267,7 @@ export function StatCard({
 }) {
   const interactive = !!(onClick || href || forceInteractive);
   const toneColor = tone === 'bad' ? 'var(--danger)' : tone === 'warn' ? 'var(--warning)' : tone === 'good' ? 'var(--success)' : null;
-  const valueColor = toneColor || accent || undefined;
+  const valueColor = toneColor || figureColor(accent);
   const body = (
     <span className="pmFigIn">
       <span className="pmFigV" style={valueColor ? { color: valueColor } : undefined}>{value}</span>
@@ -380,7 +385,7 @@ export const goldButtonStyle: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
   padding: '11px 18px', borderRadius: 10, border: 'none', cursor: 'pointer',
   background: GOLD, color: ON_GOLD,
-  fontWeight: 700, fontSize: 13.5, letterSpacing: '0.01em', textDecoration: 'none',
+  fontWeight: 700, fontSize: 14, letterSpacing: '0.01em', textDecoration: 'none',
   boxShadow: 'none',
 };
 
@@ -392,7 +397,7 @@ export const ghostButtonStyle: React.CSSProperties = {
   color: 'var(--sg-text)',
   border: '1px solid var(--sg-border-strong)',
   boxShadow: 'none',
-  fontWeight: 600, fontSize: 13.5, textDecoration: 'none',
+  fontWeight: 600, fontSize: 14, textDecoration: 'none',
 };
 
 /**
@@ -416,12 +421,18 @@ export const ghostButtonStyle: React.CSSProperties = {
 export const goldOutlineButtonStyle: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
   padding: '11px 16px', borderRadius: 10, cursor: 'pointer',
-  background: 'none',
-  color: GOLD,
-  border: `1px solid ${A30}`,
+  // Yellow is the one primary action; a second, outlined yellow competed with
+  // it, so this is now the slate secondary button under its old name.
+  background: 'var(--bg-surface-2)',
+  color: 'var(--text-primary)',
+  border: '1px solid var(--border-default)',
   boxShadow: 'none',
-  fontWeight: 600, fontSize: 13.5, textDecoration: 'none',
+  fontWeight: 600, fontSize: 14, textDecoration: 'none',
 };
+
+/** The slate secondary button. Use it for every action that is not the screen's
+ *  one primary — empty-state and section actions that repeat the header's. */
+export const secondaryButtonStyle: React.CSSProperties = goldOutlineButtonStyle;
 
 // ─── Machined buttons (mobile Btn port) ──────────────────────────────────────
 // Real components over the style objects above: the .pmGold/.pmGhost/.pmDanger
@@ -497,7 +508,7 @@ export function Pill({ children, tone = 'neutral', caps, style }: {
     green:   { bg: STATUS_COLORS.ongoing.bg, fg: STATUS_COLORS.ongoing.color, bd: STATUS_COLORS.ongoing.border },
     amber:   { bg: STATUS_COLORS.under_contract.bg, fg: STATUS_COLORS.under_contract.color, bd: STATUS_COLORS.under_contract.border },
     red:     { bg: STATUS_COLORS.overdue.bg, fg: STATUS_COLORS.overdue.color, bd: STATUS_COLORS.overdue.border },
-    gold:    { bg: A12, fg: GOLD, bd: A45 },
+    gold:    { bg: 'var(--bg-surface-2)', fg: 'var(--text-primary)', bd: 'var(--border-default)' },
   } as const;
   const t = map[tone];
   return (
@@ -519,14 +530,13 @@ export function Pill({ children, tone = 'neutral', caps, style }: {
 // pre-filled and what happens after submit. No create screen ships a bare form.
 
 /** Tiny brand pill marking a field the system filled from live project data. */
+/** Marks a value the system filled in. Quiet inline text, not a pill: it is a
+ *  note about the value, not a control, and a row of pills read as clutter. */
 export function AutoChip({ label = 'Auto' }: { label?: string }) {
   return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', marginLeft: 8, padding: '1.5px 7px',
-      borderRadius: 999, background: 'rgba(56,189,248,0.12)', border: '1px solid rgba(56,189,248,0.4)',
-      color: 'var(--link)', fontSize: 11, fontWeight: 700, letterSpacing: 'normal',
-      verticalAlign: 'middle', lineHeight: 1.6,
-    }}>{label}</span>
+    <span style={{ marginLeft: 6, color: 'var(--text-tertiary)', fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' }}>
+      · {label.toLowerCase() === 'auto' ? 'auto-filled' : label}
+    </span>
   );
 }
 
@@ -545,7 +555,7 @@ export function StatStrip({ items }: {
           const clickable = !!(it.href || it.onClick);
           const body = (
             <>
-              <span className="pmFigV" style={it.accent ? { color: it.accent } : undefined}>{it.value}</span>
+              <span className="pmFigV" style={figureColor(it.accent) ? { color: figureColor(it.accent) } : undefined}>{it.value}</span>
               <span className="pmFigL">
                 <span>{it.label}</span>
                 {clickable && <span className="pmFigGo" aria-hidden>{it.active ? '✓' : '›'}</span>}
@@ -576,21 +586,21 @@ export function FlowSteps({ title = 'What Happens Next', steps }: {
 }) {
   return (
     <div>
-      <div style={{ fontSize: 13, fontWeight: 700, color: MUTED, marginBottom: 14 }}>{title}</div>
+      <div style={{ fontSize: 14, fontWeight: 700, color: WHITE, marginBottom: 12 }}>{title}</div>
       <div style={{ position: 'relative' }}>
         <div style={{ position: 'absolute', left: 10, top: 8, bottom: 14, width: 1, background: 'var(--border-default)' }} />
         {steps.map((s, i) => (
           <div key={i} style={{ display: 'flex', gap: 12, marginBottom: i === steps.length - 1 ? 0 : 16, position: 'relative' }}>
             <div style={{
-              width: 21, height: 21, borderRadius: 999, flexShrink: 0, zIndex: 1,
+              width: 22, height: 22, borderRadius: 999, flexShrink: 0, zIndex: 1,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               background: s.done ? 'var(--success)' : 'var(--bg-surface-2)',
               border: s.done ? 'none' : '1px solid var(--border-default)',
-              color: s.done ? ON_GOLD : 'var(--text-secondary)', fontSize: 10, fontWeight: 800,
+              color: s.done ? ON_GOLD : 'var(--text-secondary)', fontSize: 12, fontWeight: 700,
             }}>{s.done ? <Check size={11} weight="bold" /> : i + 1}</div>
             <div style={{ minWidth: 0, paddingTop: 1 }}>
-              <div style={{ fontSize: 12.5, fontWeight: 800, color: WHITE, lineHeight: 1.35 }}>{s.title}</div>
-              {s.desc && <div style={{ fontSize: 11.5, color: MUTED, lineHeight: 1.5, marginTop: 2 }}>{s.desc}</div>}
+              <div style={{ fontSize: 14, fontWeight: 600, color: WHITE, lineHeight: 1.4 }}>{s.title}</div>
+              {s.desc && <div style={{ fontSize: 13, color: MUTED, lineHeight: 1.5, marginTop: 2 }}>{s.desc}</div>}
             </div>
           </div>
         ))}
@@ -619,16 +629,16 @@ export function FlowStrip({ steps, style }: {
     }}>
       {steps.map((s, i) => (
         <React.Fragment key={i}>
-          {i > 0 && <span aria-hidden className="pmFlowArrow" style={{ color: FAINT, fontSize: 12, fontWeight: 900, flexShrink: 0 }}>&rarr;</span>}
+          {i > 0 && <span aria-hidden className="pmFlowArrow" style={{ color: FAINT, fontSize: 13, flexShrink: 0 }}>&rarr;</span>}
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, minWidth: 0, flexWrap: 'wrap' }}>
             <span style={{
-              width: 17, height: 17, borderRadius: 999, flexShrink: 0,
+              width: 20, height: 20, borderRadius: 999, flexShrink: 0,
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              background: A12, border: `1px solid ${A45}`, color: GOLD,
-              fontSize: 9, fontWeight: 900,
+              background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', color: 'var(--text-secondary)',
+              fontSize: 12, fontWeight: 700,
             }}>{i + 1}</span>
-            <span style={{ fontSize: 12, fontWeight: 800, color: WHITE, whiteSpace: 'nowrap' }}>{s.title}</span>
-            {s.desc && <span style={{ fontSize: 11.5, color: MUTED }}>{s.desc}</span>}
+            <span style={{ fontSize: 13, fontWeight: 600, color: WHITE, whiteSpace: 'nowrap' }}>{s.title}</span>
+            {s.desc && <span style={{ fontSize: 13, color: MUTED }}>{s.desc}</span>}
           </span>
         </React.Fragment>
       ))}
@@ -928,7 +938,7 @@ export function InsightRow({ label, value, accent, strong }: {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, padding: '5.5px 0' }}>
       <span style={{ fontSize: 12, color: MUTED, whiteSpace: 'nowrap' }}>{label}</span>
-      <span style={{ fontSize: strong ? 15 : 12.5, fontWeight: strong ? 800 : 700, color: accent || WHITE, textAlign: 'right', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</span>
+      <span style={{ fontSize: strong ? 15 : 13, fontWeight: strong ? 800 : 700, color: figureColor(accent) || WHITE, textAlign: 'right', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</span>
     </div>
   );
 }

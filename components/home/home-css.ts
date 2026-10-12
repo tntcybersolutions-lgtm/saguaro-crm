@@ -26,9 +26,9 @@ export const HOME_CSS = `
 .fh-in .fl-strip [data-tone] span{color:var(--sg-text-2)}
 .fh-in .fl-strip b span{display:inline;font-size:inherit;color:inherit}
 .fh-in .fl-strip{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;border:0;margin:4px 16px 14px}
-.fh-in .fl-strip>div{position:relative;padding:12px;border:1px solid color-mix(in srgb,var(--brand-primary) 34%,transparent);border-radius:14px;background:linear-gradient(155deg,color-mix(in srgb,var(--brand-primary) 12%,transparent),color-mix(in srgb,var(--brand-primary) 2%,transparent) 45%,rgba(14,15,18,.92));box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 0 20px color-mix(in srgb,var(--brand-primary) 11%,transparent),0 12px 28px rgba(0,0,0,.4)}
-.fh-in .fl-strip>div:last-child{border-right:1px solid color-mix(in srgb,var(--brand-primary) 34%,transparent)}
-.fh-in .fl-strip b{font-size:22px;font-weight:800;color:var(--brand-primary);text-shadow:0 0 16px color-mix(in srgb,var(--brand-primary) 45%,transparent)}
+.fh-in .fl-strip>div{position:relative;padding:12px;border:1px solid var(--border-default);border-radius:12px;background:var(--bg-surface);box-shadow:var(--shadow-sm)}
+.fh-in .fl-strip>div:last-child{border-right:1px solid var(--border-default)}
+.fh-in .fl-strip b{font-size:22px;font-weight:800;color: var(--text-primary)}
 .fh-in .fl-strip span{margin-top:2px;font-size:13px;font-weight:600;letter-spacing:0;text-transform:none}
 .fh-ticker{margin:12px 16px 0;min-width:0}
 .fh-in .hf{margin:14px 16px 8px}
@@ -38,7 +38,7 @@ export const HOME_CSS = `
 .fh-head{padding:12px 16px 2px}
 .fh-top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;min-height:44px}
 /* The day and date above the greeting — neon, like the section headings (Chad, 2026-10-11). */
-.fh-date{font-size:15px;font-weight:800;color:var(--brand-primary);letter-spacing:.005em;white-space:nowrap;text-shadow:0 0 14px color-mix(in srgb,var(--brand-primary) 45%,transparent)}
+.fh-date{font-size:15px;font-weight:800;color: var(--text-secondary);letter-spacing:.005em;white-space:nowrap}
 .fh-ctrls{display:flex;align-items:center;gap:6px;margin-left:auto;min-width:0}
 .fh .fh-hello{font-size:22px;font-weight:700;line-height:1.2;letter-spacing:-.01em;margin:2px 0 0;color:var(--sg-text);-webkit-text-fill-color:currentColor}
 .fh-chip{position:relative;display:inline-flex;align-items:center;gap:5px;height:30px;max-width:150px;padding:0 10px;border:1px solid var(--sg-border);border-radius:15px;background:transparent;color:var(--sg-text);font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}
@@ -48,7 +48,7 @@ export const HOME_CSS = `
 .fh-chip[aria-expanded=true]{border-color:var(--sg-border-strong)}
 .fh-chip:focus-visible,.fh-plus:focus-visible,.fh-menu button:focus-visible,.fh-menu a:focus-visible{outline:2px solid var(--brand-primary);outline-offset:2px}
 .fh-chip select{position:absolute;z-index:1;inset:-9px -3px;width:calc(100% + 6px);height:calc(100% + 18px);opacity:0;cursor:pointer;font-size:16px;appearance:none;-webkit-appearance:none;border:0}
-.fh-plus{position:relative;flex:none;width:30px;height:30px;border-radius:15px;display:grid;place-items:center;border:1px solid var(--sg-border);background:transparent;color:var(--brand-primary);cursor:pointer;padding:0}
+.fh-plus{position:relative;flex:none;width:30px;height:30px;border-radius:15px;display:grid;place-items:center;border:1px solid var(--sg-border);background:transparent;color: var(--text-secondary);cursor:pointer;padding:0}
 .fh-plus::after{content:'';position:absolute;inset:-9px}
 .fh-pop{position:relative}
 .fh-menu{position:absolute;top:calc(100% + 8px);z-index:60;min-width:220px;max-width:calc(100vw - 32px);padding:4px 0;background:var(--sg-surface-solid);border:1px solid var(--sg-border-strong);border-radius:10px;box-shadow:var(--shadow-lg)}
@@ -69,17 +69,17 @@ export const HOME_CSS = `
 .fh-row2{display:flex;align-items:center}
 .fh-row2>.fh-grow{flex:1;min-width:0}
 .fh-row2>.fh-act{flex:none;padding-right:16px}
-.fh-more{display:flex;align-items:center;min-height:44px;padding:0 16px;background:none;border:0;font:inherit;font-size:13.5px;font-weight:600;color:var(--brand-primary);cursor:pointer}
+.fh-more{display:flex;align-items:center;min-height:44px;padding:0 16px;background:none;border:0;font:inherit;font-size:13.5px;font-weight:600;color: var(--link);cursor:pointer}
 .fh-fail{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:12px 16px;font-size:13.5px;color:var(--sg-text-2);border-top:1px solid var(--sg-border);border-bottom:1px solid var(--sg-border)}
-.fh-fail button,.fh-empty a,.fh-fail a{position:relative;background:none;border:0;padding:0;font:inherit;font-weight:650;color:var(--brand-primary);cursor:pointer;text-decoration:none}
+.fh-fail button,.fh-empty a,.fh-fail a{position:relative;background:none;border:0;padding:0;font:inherit;font-weight:650;color: var(--link);cursor:pointer;text-decoration:none}
 .fh-fail button::after,.fh-empty a::after{content:'';position:absolute;inset:-12px -8px}
 .fh-empty{padding:12px 16px;font-size:13.5px;color:var(--sg-text-2);border-top:1px solid var(--sg-border);border-bottom:1px solid var(--sg-border)}
 .fh-skel-line{display:block;height:12px;border-radius:6px;background:var(--sg-border);animation:fl-pulse 1.2s ease-in-out infinite}
 .fh-foot{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;padding:18px 16px 4px;font-size:12.5px;color:var(--sg-text-3)}
-.fh-foot button,.fh-foot a{position:relative;display:inline-flex;align-items:center;min-height:32px;background:none;border:0;padding:0;font:inherit;color:var(--brand-primary);font-weight:600;cursor:pointer;text-decoration:none}
+.fh-foot button,.fh-foot a{position:relative;display:inline-flex;align-items:center;min-height:32px;background:none;border:0;padding:0;font:inherit;color: var(--link);font-weight:600;cursor:pointer;text-decoration:none}
 .fh-foot button::after,.fh-foot a::after{content:'';position:absolute;inset:-6px -4px}
 .fh-notice{margin:0 16px 8px;font-size:13px;color:var(--sg-text-2)}
-.fh-notice button{background:none;border:0;padding:0;font:inherit;font-weight:650;color:var(--brand-primary);cursor:pointer;min-height:32px}
+.fh-notice button{background:none;border:0;padding:0;font:inherit;font-weight:650;color: var(--link);cursor:pointer;min-height:32px}
 @media (prefers-reduced-motion:reduce){.fh-skel-line{animation:none}}
 @media (pointer:coarse){.fh-foot button,.fh-foot a{min-height:44px}}
 

@@ -57,7 +57,7 @@ button.fl-row{width:100%;border:0;font:inherit;text-align:left;cursor:pointer}
 .fl-dot[data-c=red]{background:var(--danger)} .fl-dot[data-c=amber]{background:var(--warning)} .fl-dot[data-c=green]{background:var(--success)} .fl-dot[data-c=blue]{background:var(--fl-neutral)} .fl-dot[data-c=gold]{background:var(--brand-primary)} .fl-dot[data-c=grey]{background:var(--fl-text-3)}
 .fl-m{flex:1;min-width:0}
 .fl-t{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fl-s{font-size:12.5px;color:var(--fl-text-2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fl-s{font-size:13px;color:var(--fl-text-2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fl-s b{font-weight:500;color:var(--fl-text)}
 .fl-r{font-size:13px;color:var(--fl-text-2);text-align:right;flex:none;font-variant-numeric:tabular-nums}
 .fl-r b{display:block;color:var(--fl-text);font-size:15px;font-weight:650}
@@ -70,7 +70,7 @@ button.fl-row{width:100%;border:0;font:inherit;text-align:left;cursor:pointer}
 .fl-act[data-k=ghost]{background:var(--bg-surface-2);color:var(--fl-text);border-color:var(--fl-line)}
 .fl-act[disabled]{opacity:.55;cursor:default}
 .fl-tabs{display:flex;margin:10px 16px 4px;background:var(--fl-surface);border:1px solid var(--fl-line);border-radius:10px;padding:2px}
-.fl-tabs button{flex:1;min-height:36px;border:0;background:none;font:inherit;font-size:13.5px;font-weight:600;color:var(--fl-text-2);border-radius:8px;cursor:pointer;white-space:nowrap}
+.fl-tabs button{flex:1;min-height:36px;border:0;background:none;font:inherit;font-size:14px;font-weight:600;color:var(--fl-text-2);border-radius:8px;cursor:pointer;white-space:nowrap}
 .fl-tabs button[aria-selected=true]{background:var(--brand-primary);color:var(--on-brand);font-weight:700}
 @media (pointer:coarse){.fl-tabs button{min-height:44px}}
 .fl-tool{display:flex;align-items:center;gap:14px;padding:0 16px;min-height:52px;color:var(--fl-text);text-decoration:none;-webkit-tap-highlight-color:transparent}
@@ -90,7 +90,7 @@ a.fl-tool:active{background:var(--fl-line)}
 .fl-skel i{display:block;height:10px;border-radius:5px;background:var(--fl-line);animation:fl-pulse 1.2s ease-in-out infinite}
 @keyframes fl-pulse{50%{opacity:.45}}
 @media (prefers-reduced-motion:reduce){.fl-skel i{animation:none}.fl-swipe-body{transition:none}}
-.fl-empty{padding:14px 16px;font-size:13.5px;color:var(--fl-text-2)}
+.fl-empty{padding:14px 16px;font-size:14px;color:var(--fl-text-2)}
 `;
 
 /** The flat stylesheet. Render once per page; extra copies are harmless. */

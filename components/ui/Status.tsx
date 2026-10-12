@@ -159,7 +159,7 @@ export function LifecycleRail({
             title={`No movement for ${stale} days`}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 4,
-              fontSize: 11, fontWeight: 700,
+              fontSize: 12, fontWeight: 700,
               color: TONES.warn.fg, whiteSpace: 'nowrap',
             }}
           >
@@ -170,7 +170,7 @@ export function LifecycleRail({
       </div>
 
       {showAction && r.action && !compact && (
-        <div style={{ fontSize: 11.5, color: 'var(--text-tertiary)', marginTop: 3, lineHeight: 1.35 }}>
+        <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 3, lineHeight: 1.35 }}>
           {r.action}
         </div>
       )}
@@ -210,7 +210,7 @@ export function StatusLegend({ tones }: { tones?: Tone[] }) {
   return (
     <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
       {show.map((t) => (
-        <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--c-text-2)' }}>
+        <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--c-text-2)' }}>
           <span style={{ width: 7, height: 7, borderRadius: 999, background: TONES[t].fg, boxShadow: `0 0 6px ${TONES[t].fg}` }} />
           {TONES[t].meaning}
         </span>

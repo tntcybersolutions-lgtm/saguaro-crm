@@ -47,7 +47,7 @@ const MUTED = 'var(--text-tertiary)';
 
 const SIZES = {
   md: { padding: '9px 12px', fontSize: 13 },
-  sm: { padding: '6px 10px', fontSize: 12.5 },
+  sm: { padding: '6px 10px', fontSize: 13 },
 } as const;
 
 /** #RRGGBB (or #RGB) -> rgba(...) at the given alpha; passthrough on anything else. */

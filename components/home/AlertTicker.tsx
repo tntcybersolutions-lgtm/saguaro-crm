@@ -39,14 +39,14 @@ button.atkN:disabled { cursor: default; }
 button.atkN:not(:disabled):hover { background: var(--bg-hover); }
 button.atkN:focus-visible { outline: 2px solid var(--c-yellow); outline-offset: 2px; }
 button.atkN[aria-pressed="true"] { background: var(--bg-surface-2); box-shadow: inset 0 -2px 0 currentColor; }
-.atkShowAll { flex: 0 0 auto; align-self: center; min-height: 44px; margin: 0 12px 0 4px; padding: 0 14px; border-radius: 999px; border: 1px dashed var(--border-subtle); background: none; color: var(--c-text-2); font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.atkShowAll { flex: 0 0 auto; align-self: center; min-height: 44px; margin: 0 12px 0 4px; padding: 0 14px; border-radius: 999px; border: 1px dashed var(--border-subtle); background: none; color: var(--c-text-2); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
 .atkRail { position: relative; flex: 1 1 auto; min-width: 0; overflow: hidden; display: flex; align-items: center; -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
 .atkTrack { display: flex; align-items: center; gap: 10px; padding: 8px 14px; width: max-content; animation: atk-move var(--atk-dur, 40s) linear infinite; }
 .atk[data-static="true"] .atkTrack { animation: none; }
 .atkRail:hover .atkTrack, .atkRail:focus-within .atkTrack, .atk[data-paused="true"] .atkTrack { animation-play-state: paused; }
 @keyframes atk-move { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 .atkSet { display: flex; gap: 10px; }
-.atkItem { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--c-text); font-size: 13.5px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+.atkItem { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--c-text); font-size: 14px; font-weight: 700; text-decoration: none; white-space: nowrap; }
 .atkItem:hover { background: var(--bg-hover); }
 .atkItem:focus-visible { outline: 2px solid var(--c-yellow); outline-offset: 2px; }
 .atkItem > svg:first-child { flex: 0 0 auto; }
@@ -57,7 +57,7 @@ button.atkN[aria-pressed="true"] { background: var(--bg-surface-2); box-shadow: 
 .atkItem[data-tone="yellow"] > svg:first-child { color: var(--c-yellow); }
 .atkItem[data-tone="green"] > svg:first-child { color: var(--c-green); }
 .atkItem .go { color: var(--c-text-3); }
-.atkFail { padding: 0 14px; font-size: 12.5px; color: var(--c-text-3); white-space: nowrap; }
+.atkFail { padding: 0 14px; font-size: 13px; color: var(--c-text-3); white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) {
   .atkTrack { animation: none; }
   .atkRail { overflow-x: auto; -webkit-mask-image: none; mask-image: none; scroll-snap-type: x proximity; }
@@ -68,7 +68,7 @@ button.atkN[aria-pressed="true"] { background: var(--bg-surface-2); box-shadow: 
   .atk { flex-direction: column; }
   .atkSum { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-right: 0; border-bottom: 1px solid var(--border-subtle); gap: 4px; padding: 10px 8px; }
   .atkLive { display: none; }
-  .atkN { display: grid; grid-template-columns: auto auto; justify-content: center; align-items: center; column-gap: 5px; row-gap: 2px; font-size: 11px; text-align: center; white-space: normal; line-height: 1.15; }
+  .atkN { display: grid; grid-template-columns: auto auto; justify-content: center; align-items: center; column-gap: 5px; row-gap: 2px; font-size: 12px; text-align: center; white-space: normal; line-height: 1.15; }
   .atkN b { font-size: 18px; }
   .atkN > span { grid-column: 1 / -1; }
   .atkItem { min-height: 44px; }

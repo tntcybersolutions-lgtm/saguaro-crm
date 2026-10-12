@@ -88,7 +88,8 @@
   --danger: #F87171;
   --warning: #FBBF24;
   /* Elevation — restrained */
-  --shadow-sm: 0 1px 2px rgba(2,6,23,0.35);
+  /* Cards lift a little off the page: a hairline drop plus a soft wide shadow. */
+  --shadow-sm: 0 1px 2px rgba(2,6,23,0.35), 0 10px 24px -16px rgba(2,6,23,0.75);
   --shadow-md: 0 4px 12px rgba(2,6,23,0.35);
   --shadow-lg: 0 12px 32px rgba(2,6,23,0.5);
   /* Radii — cards 12px, controls 10px */
@@ -1205,7 +1206,7 @@ select.k-select { padding-right: 36px; }
 .pj-next-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 6px 16px; }
 .pj-next-list li { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border-radius: 10px; }
 .pj-next-list li[data-next="true"] { background: rgba(255,224,0,0.06); border: 1px solid rgba(255,224,0,0.35); }
-.pj-next-num { width: 20px; height: 20px; border-radius: 6px; display: inline-grid; place-items: center; flex-shrink: 0; font-size: 11px; font-weight: 800; color: var(--text-secondary); background: var(--bg-surface-2); border: 1px solid var(--border-default); margin-top: 1px; }
+.pj-next-num { width: 20px; height: 20px; border-radius: 6px; display: inline-grid; place-items: center; flex-shrink: 0; font-size: 12px; font-weight: 800; color: var(--text-secondary); background: var(--bg-surface-2); border: 1px solid var(--border-default); margin-top: 1px; }
 li[data-done="true"] .pj-next-num { color: var(--success); background: rgba(74,222,128,0.12); border-color: rgba(74,222,128,0.4); }
 li[data-next="true"] .pj-next-num { color: var(--on-brand); background: var(--brand-primary); border-color: var(--brand-primary); }
 .pj-next-step { display: flex; flex-direction: column; gap: 2px; min-width: 0; text-decoration: none; color: inherit; }
@@ -1303,7 +1304,7 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 .sag-tb-back > svg { flex: none; color: var(--text-secondary); }
 /* Photos — the desktop's one click to the camera / upload sheet (components/media/QuickMedia). */
 .sag-tb-photo { display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 12px; flex-shrink: 0; border-radius: 10px; border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--text-primary); font-size: 14px; font-weight: 700; cursor: pointer; }
-.sag-tb-photo svg { color: var(--brand-primary); }
+.sag-tb-photo svg { color: var(--text-secondary); }
 .sag-tb-photo:hover { background: var(--bg-hover); border-color: var(--border-strong); }
 .sag-tb-photo:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
 .sag-tb-back-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1313,7 +1314,7 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 .sag-tb-icon:hover { border-color: transparent; }
 .sag-tb-dot { width: 32px; height: 32px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; font-weight: 700; line-height: 1; }
 .sag-tb-sage .sag-tb-dot { border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--text-primary); }
-.sag-tb-sage .sag-tb-dot svg { color: var(--brand-primary); }
+.sag-tb-sage .sag-tb-dot svg { color: var(--text-secondary); }
 .sag-tb-sage:hover .sag-tb-dot { background: var(--bg-hover); border-color: var(--border-strong); }
 .sag-tb-avatar .sag-tb-dot { background: var(--bg-surface-2); border: 1px solid var(--border-default); color: var(--text-primary); letter-spacing: .02em; }
 .sag-tb-avatar[aria-expanded="true"] .sag-tb-dot, .sag-tb-avatar:hover .sag-tb-dot { border-color: var(--sg-border-strong); }
@@ -1393,7 +1394,7 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
      yellow icon, white label. The current tab's icon sits on a solid yellow
      pill and its label turns yellow (Chad, 2026-10-11: never dim grey). */
   .sag-tabbar { display: flex !important; background: var(--bg-surface) !important; border-top: 1px solid var(--border-subtle) !important; box-shadow: none !important; }
-  .sag-tab { flex: 1 1 0; min-width: 0; height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 0 2px; text-decoration: none; color: var(--text-secondary); font-size: 11.5px; font-weight: 600; line-height: 1.1; background: none; border: 0; border-radius: 0; box-shadow: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .sag-tab { flex: 1 1 0; min-width: 0; height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 0 2px; text-decoration: none; color: var(--text-secondary); font-size: 12px; font-weight: 600; line-height: 1.1; background: none; border: 0; border-radius: 0; box-shadow: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .sag-tab-ic { display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 28px; border-radius: 14px; color: var(--text-secondary); transition: background .15s ease; }
   .sag-tab:active { transform: none; background: rgba(148,163,184,0.08); }
   /* Selected navigation: yellow pill, dark icon, yellow label. */
@@ -1402,10 +1403,10 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
   /* The camera in the middle is an action, not a place: a raised yellow
      circle so it never reads as "the tab you are on". */
   .sag-tab-cam .sag-tab-ic { width: 48px; height: 48px; border-radius: 50%; margin-top: -18px; background: var(--brand-primary); color: var(--on-brand, var(--c-on-brand)); border: 3px solid var(--bg-surface); box-shadow: var(--shadow-md); }
-  .sag-tab-cam .sag-tab-label { color: var(--brand-primary); font-weight: 700; }
+  .sag-tab-cam .sag-tab-label { color: var(--text-primary); font-weight: 700; }
   .sag-tab-cam:active .sag-tab-ic { transform: scale(.94); }
   .sag-tab-label { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; white-space: nowrap; }
-  .sag-tab-badge { display: inline-block; min-width: 17px; height: 17px; padding: 0 5px; border-radius: 9px; background: var(--danger); color: #FFFFFF; font-size: 10.5px; font-weight: 700; line-height: 17px; text-align: center; font-variant-numeric: tabular-nums; }
+  .sag-tab-badge { display: inline-block; min-width: 17px; height: 17px; padding: 0 5px; border-radius: 9px; background: var(--danger); color: #FFFFFF; font-size: 12px; font-weight: 700; line-height: 17px; text-align: center; font-variant-numeric: tabular-nums; }
   /* The page's own bottom room: the frame already clears the tab bar. */
   .k-page { padding-bottom: var(--sp-6); }
   .k-crumbs a, .k-crumbs span { max-width: 48vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
