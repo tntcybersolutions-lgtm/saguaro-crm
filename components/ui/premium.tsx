@@ -538,7 +538,7 @@ export function Pill({ children, tone = 'neutral', caps, style }: {
       display: 'inline-flex', alignItems: 'center', gap: 5,
       padding: '3px 10px', borderRadius: 999,
       background: t.bg, border: `1px solid ${t.bd}`, color: t.fg,
-      fontSize: caps ? 11 : 12, fontWeight: 700,
+      fontSize: 12, fontWeight: 700,
       letterSpacing: 'normal',
       whiteSpace: 'nowrap', lineHeight: 1.5,
       ...style,
@@ -610,17 +610,17 @@ export function FlowSteps({ title = 'What Happens Next', steps }: {
     <div>
       <div style={{ fontSize: 14, fontWeight: 700, color: WHITE, marginBottom: 12 }}>{title}</div>
       <div style={{ position: 'relative' }}>
-        <div style={{ position: 'absolute', left: 10, top: 8, bottom: 14, width: 1, background: 'var(--border-default)' }} />
+        <div style={{ position: 'absolute', left: 13, top: 10, bottom: 16, width: 2, borderRadius: 1, background: 'var(--border-default)' }} />
         {steps.map((s, i) => (
           <div key={i} style={{ display: 'flex', gap: 12, marginBottom: i === steps.length - 1 ? 0 : 16, position: 'relative' }}>
             <div style={{
-              width: 22, height: 22, borderRadius: 999, flexShrink: 0, zIndex: 1,
+              width: 28, height: 28, borderRadius: 999, flexShrink: 0, zIndex: 1,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: s.done ? 'var(--success)' : 'var(--bg-surface-2)',
-              border: s.done ? 'none' : '1px solid var(--border-default)',
-              color: s.done ? ON_GOLD : 'var(--text-secondary)', fontSize: 12, fontWeight: 700,
-            }}>{s.done ? <Check size={11} weight="bold" /> : i + 1}</div>
-            <div style={{ minWidth: 0, paddingTop: 1 }}>
+              background: s.done ? 'var(--success-bg)' : 'var(--bg-surface)',
+              border: s.done ? '1px solid var(--success-border)' : '1px solid var(--border-strong)',
+              color: s.done ? 'var(--success-fg)' : 'var(--text-secondary)', fontSize: 13, fontWeight: 700,
+            }}>{s.done ? <Check size={13} weight="bold" /> : i + 1}</div>
+            <div style={{ minWidth: 0, paddingTop: 4 }}>
               <div style={{ fontSize: 14, fontWeight: 600, color: WHITE, lineHeight: 1.4 }}>{s.title}</div>
               {s.desc && <div style={{ fontSize: 13, color: MUTED, lineHeight: 1.5, marginTop: 2 }}>{s.desc}</div>}
             </div>

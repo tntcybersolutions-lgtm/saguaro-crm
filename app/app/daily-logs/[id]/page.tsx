@@ -396,6 +396,7 @@ export default function DailyLogDetailPage() {
       <PageShell
         crumbs={crumbs}
         title={dateStr(l.log_date)}
+        badge={<span className="dldBadges"><Badge tone={status.tone} dot>{status.label}</Badge>{!!(l.delays || '').trim() && <Badge tone="overdue">Delays</Badge>}{!!(l.safety_notes || '').trim() && <Badge tone="neutral">Safety Note</Badge>}</span>}
         subtitle={projectName ? `${projectName} — daily field report.` : 'Daily field report.'}
         actions={
           <Button
@@ -596,14 +597,7 @@ export default function DailyLogDetailPage() {
 
             <aside className="dldRail" aria-label="Daily log details and actions">
               <Card title="Details" actions={editKey !== 'meta' ? editBtn('meta', { date: (l.log_date || '').slice(0, 10) }, 'log date') : undefined}>
-                <div className="dldSection">
-                  <div className="dldBadges">
-                    <Badge tone={status.tone} dot>{status.label}</Badge>
-                    {!!(l.delays || '').trim() && <Badge tone="overdue">Delays</Badge>}
-                    {!!(l.safety_notes || '').trim() && <Badge tone="neutral">Safety Note</Badge>}
-                  </div>
-                  {status.label === 'Draft' && <div className="dldNext">Finish the day&apos;s log — it is the record that settles a claim.</div>}
-                </div>
+                {status.label === 'Draft' && <div className="dldSection"><div className="dldNext">Finish the day&apos;s log — it is the record that settles a claim.</div></div>}
                 {editKey === 'meta' ? (
                   <div className="dldSection">
                     <Field label="Log Date">
