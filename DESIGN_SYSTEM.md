@@ -92,6 +92,14 @@ action tokens with hover, pressed, focus and disabled states.
   `lib/ui/app-accent.ts`.
 - `rgba()` colours count as colours: only approved RGB values (and black /
   white for shadows and overlays) in app code.
+- A colour with an alpha suffix is `color-mix(in srgb, <colour> N%,
+  transparent)`, never `${colour}NN`: the suffix is invalid CSS when the
+  colour is a variable, and the browser drops the declaration.
+- `!important`: `app/globals.css` carries 158 from earlier rounds, mostly to
+  beat inline styles. None were added this round. The phone rule that sets
+  inputs to 16px is a deliberate exception: it has to beat inline font sizes so
+  iOS never zooms into a field. Reducing the rest means moving those inline
+  styles into classes, screen by screen.
 
 ## 2. Type, spacing, shape, depth
 

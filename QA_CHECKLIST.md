@@ -93,6 +93,16 @@ their audit group (`public`) has not run yet — **Not reviewed**.
 "Before" columns are the baseline findings. Status columns are as of the last commit
 that touched this file.
 
+**State on 12 Oct 2026 (PR #151):** batches 7–11 changed shared components that
+every row below renders (list kit, kit, premium, tokens, palette). Those changes
+are merged or open in #151 but were **not re-audited** — Chad asked for fixes,
+not more audit rounds — so no row was promoted past *Implemented* by them. The
+job page (`/overview`), Jobs list, Home and the deal page were rendered locally
+with the real components at 390 and 1440 (no sideways scroll); that is not a
+signed-in check, so their Web columns stay *Implemented*. iOS stays *Not
+reviewed*: the signed-in simulator pass is blocked (safaridriver would not
+create a session on the macOS runner).
+
 | Group | Route | Before — 1440 | Before — 390 (WebKit iPhone) | Page changed in this pass | Web 1440 | Web 390 | iOS | Functional |
 |---|---|---|---|---|---|---|---|---|
 | project | `/app/projects/[projectId]/autopilot` | 2 yellow buttons, <12px ×7, cut-off ×3 | 2 yellow buttons, <12px ×7, cut-off ×7 | yes | Implemented | Implemented | Not reviewed | Not reviewed |
