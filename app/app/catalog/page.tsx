@@ -176,7 +176,7 @@ function Availability({ offer, compact = false, feedConnected = false }: { offer
   }
   const s = String(offer.stockStatus || '').toLowerCase();
   const [label, color, bg] =
-    s === 'in_stock' ? ['In Stock', GREEN, 'rgba(44,255,122,0.12)'] :
+    s === 'in_stock' ? ['In Stock', GREEN, 'rgba(74,222,128,0.12)'] :
     s === 'limited' ? ['Limited', 'var(--warning)', 'color-mix(in srgb, var(--warning) 14%, transparent)'] :
     s === 'out_of_stock' ? ['Out of Stock', RED, 'rgba(192,48,48,0.14)'] :
     ['Special Order', 'rgba(255,255,255,0.55)', 'rgba(255,255,255,0.06)'];
@@ -649,7 +649,7 @@ export default function CatalogPage() {
       )}
 
       {placed && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(44,255,122,0.08)', border: '1px solid rgba(44,255,122,0.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 20 }}>
           <CheckCircle size={18} weight="fill" color={GREEN} />
           <span style={{ color: GREEN, fontSize: 13, fontWeight: 700 }}>
             {placed.pos} purchase order{placed.pos === 1 ? '' : 's'} drafted for {fmtMoney(placed.total)} — committed into the project budget.

@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 
-const GOLD='var(--brand-primary)',GOLD_CANVAS='#FF8A00',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF';
+const GOLD='var(--brand-primary)',GOLD_CANVAS='#FBBF24',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF';
 
 interface PhotoEditorProps {
   src: string;
@@ -150,7 +150,7 @@ export default function PhotoEditor({ src, photoId, onSave, onDelete, onClose }:
 
   const btnStyle = (active?: boolean): React.CSSProperties => ({
     padding: '8px 14px', background: active ? GOLD : RAISED, border: `1px solid ${active ? GOLD : BORDER}`,
-    borderRadius: 7, color: active ? '#0A0A00' : TEXT, fontSize: 12, fontWeight: 700,
+    borderRadius: 7, color: active ? '#101722' : TEXT, fontSize: 12, fontWeight: 700,
     cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
   });
 
@@ -161,7 +161,7 @@ export default function PhotoEditor({ src, photoId, onSave, onDelete, onClose }:
         <div style={{ color: TEXT, fontWeight: 700, fontSize: 16 }}>Photo Editor</div>
         <div style={{ display: 'flex', gap: 8 }}>
           {onSave && (
-            <button onClick={handleSave} disabled={saving} style={{ ...btnStyle(), background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, color: '#0A0A00', border: 'none' }}>
+            <button onClick={handleSave} disabled={saving} style={{ ...btnStyle(), background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, color: '#101722', border: 'none' }}>
               {saving ? 'Saving…' : '💾 Save'}
             </button>
           )}
@@ -215,12 +215,12 @@ export default function PhotoEditor({ src, photoId, onSave, onDelete, onClose }:
         <div style={{ marginLeft: 'auto' }}>
           {confirmDelete ? (
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              <span style={{ color: '#FF3B30', fontSize: 12, fontWeight: 700 }}>Delete photo?</span>
-              <button onClick={handleDelete} style={{ padding: '6px 12px', background: 'rgba(255,59,48,.15)', border: '1px solid rgba(255,59,48,.3)', borderRadius: 6, color: '#FF3B30', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Yes, Delete</button>
+              <span style={{ color: '#F87171', fontSize: 12, fontWeight: 700 }}>Delete photo?</span>
+              <button onClick={handleDelete} style={{ padding: '6px 12px', background: 'rgba(248,113,113,.15)', border: '1px solid rgba(248,113,113,.3)', borderRadius: 6, color: '#F87171', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Yes, Delete</button>
               <button onClick={() => setConfirmDelete(false)} style={{ padding: '6px 12px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 6, color: DIM, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
             </div>
           ) : (
-            <button onClick={() => setConfirmDelete(true)} style={{ ...btnStyle(), color: '#FF3B30', borderColor: 'rgba(255,59,48,.3)' }}>Delete</button>
+            <button onClick={() => setConfirmDelete(true)} style={{ ...btnStyle(), color: '#F87171', borderColor: 'rgba(248,113,113,.3)' }}>Delete</button>
           )}
         </div>
       </div>

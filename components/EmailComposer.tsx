@@ -12,8 +12,8 @@ const RAISED = 'var(--bg-surface)';
 const BORDER = '#2A2A2E';
 const TEXT = 'var(--c-text)';
 const DIM = '#A1A1AA';
-const GREEN = '#2CFF7A';
-const RED = '#FF3B30';
+const GREEN = '#4ADE80';
+const RED = '#F87171';
 const BLUE = 'var(--brand-primary)';
 
 interface EmailComposerProps {
@@ -141,8 +141,8 @@ export default function EmailComposer({
       <div style={overlayStyle} onClick={onClose}>
         <div style={{ ...modalStyle, textAlign: 'center', padding: '40px 24px' }} onClick={(e) => e.stopPropagation()}>
           <div style={{
-            width: 64, height: 64, borderRadius: '50%', background: 'rgba(44,255,122,.15)',
-            border: `2px solid rgba(44,255,122,.3)`, display: 'flex', alignItems: 'center',
+            width: 64, height: 64, borderRadius: '50%', background: 'rgba(74,222,128,.15)',
+            border: `2px solid rgba(74,222,128,.3)`, display: 'flex', alignItems: 'center',
             justifyContent: 'center', margin: '0 auto 16px',
           }}>
             <svg viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={32} height={32}>
@@ -282,7 +282,7 @@ export default function EmailComposer({
         {/* Error */}
         {errorMsg && (
           <div style={{
-            background: 'rgba(255,59,48,.1)', border: '1px solid rgba(255,59,48,.3)',
+            background: 'rgba(248,113,113,.1)', border: '1px solid rgba(248,113,113,.3)',
             borderRadius: 8, padding: '8px 12px', marginBottom: 12, fontSize: 13,
             color: RED, fontWeight: 600,
           }}>

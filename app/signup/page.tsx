@@ -58,7 +58,7 @@ const CSS = `
 .suLegal a { color: var(--text-tertiary); text-decoration: underline; text-underline-offset: 3px; }
 .suDone { min-height: 100vh; background: var(--bg-base); display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
 .suDoneWrap { width: 100%; max-width: 480px; text-align: center; }
-.suDoneIcon { width: 72px; height: 72px; border-radius: 50%; background: rgba(44,255,122,.10); border: 1px solid rgba(44,255,122,.3); display: grid; place-items: center; margin: 0 auto 20px; color: var(--status-ongoing); }
+.suDoneIcon { width: 72px; height: 72px; border-radius: 50%; background: rgba(74,222,128,.10); border: 1px solid rgba(74,222,128,.3); display: grid; place-items: center; margin: 0 auto 20px; color: var(--status-ongoing); }
 .suDoneWrap h1 { font-size: 26px; font-weight: 700; color: var(--text-primary); margin: 0 0 12px; }
 .suDoneWrap p { color: var(--text-secondary); font-size: var(--fs-md); line-height: 1.7; margin: 0 0 24px; }
 .suDoneWrap p b { color: var(--text-primary); }

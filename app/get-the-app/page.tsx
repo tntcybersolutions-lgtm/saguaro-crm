@@ -42,7 +42,7 @@ export default function GetTheAppPage() {
           --dim:    #D4D4D8;
           --border: rgba(255,255,255,0.12);
           --raised: var(--bg-surface);
-          --green:  #2CFF7A;
+          --green:  #4ADE80;
           --gold-dim: var(--brand-primary-12);
           --gold-glow: var(--brand-primary-25);
         }
@@ -76,7 +76,7 @@ export default function GetTheAppPage() {
         .nav-login:hover { color: var(--text); }
         .nav-cta {
           background: var(--gold);
-          color: #0A0A00;
+          color: #101722;
           text-decoration: none;
           font-size: 13px;
           font-weight: 600;
@@ -183,7 +183,7 @@ export default function GetTheAppPage() {
         }
         .btn-primary {
           background: var(--gold);
-          color: #0A0A00;
+          color: #101722;
           text-decoration: none;
           font-size: 14px;
           font-weight: 600;
@@ -245,9 +245,9 @@ export default function GetTheAppPage() {
         .devices-glow {
           position: absolute; inset: -60px -40px -30px;
           background:
-            radial-gradient(ellipse 62% 58% at 50% 58%, rgba(255,230,0,0.55) 0%, rgba(255,230,0,0.22) 40%, transparent 70%),
-            radial-gradient(ellipse 48% 48% at 14% 78%, rgba(255,138,0,0.50) 0%, transparent 65%),
-            radial-gradient(ellipse 44% 44% at 88% 24%, rgba(255,138,0,0.38) 0%, transparent 65%);
+            radial-gradient(ellipse 62% 58% at 50% 58%, rgba(255,224,0,0.55) 0%, rgba(255,224,0,0.22) 40%, transparent 70%),
+            radial-gradient(ellipse 48% 48% at 14% 78%, rgba(251,191,36,0.50) 0%, transparent 65%),
+            radial-gradient(ellipse 44% 44% at 88% 24%, rgba(251,191,36,0.38) 0%, transparent 65%);
           filter: blur(12px); pointer-events: none;
         }
         .dev-slot-phone-a { position: absolute; left: 50%; transform: translateX(-50%); top: 0; z-index: 3; animation: floatA 5s ease-in-out infinite; }
@@ -262,14 +262,14 @@ export default function GetTheAppPage() {
         .phones-glow {
           position: absolute; inset: 0; pointer-events: none;
           background:
-            radial-gradient(ellipse 70% 60% at 50% 70%, rgba(255,230,0,0.30) 0%, rgba(255,230,0,0.10) 40%, transparent 70%),
-            radial-gradient(ellipse 40% 50% at 8% 60%, rgba(255,138,0,0.30) 0%, transparent 65%),
-            radial-gradient(ellipse 40% 50% at 92% 60%, rgba(255,138,0,0.30) 0%, transparent 65%);
+            radial-gradient(ellipse 70% 60% at 50% 70%, rgba(255,224,0,0.30) 0%, rgba(255,224,0,0.10) 40%, transparent 70%),
+            radial-gradient(ellipse 40% 50% at 8% 60%, rgba(251,191,36,0.30) 0%, transparent 65%),
+            radial-gradient(ellipse 40% 50% at 92% 60%, rgba(251,191,36,0.30) 0%, transparent 65%);
           filter: blur(14px);
         }
         .phones-inner { position: relative; max-width: 1200px; margin: 0 auto; padding: 0 32px; }
         .phones-head { max-width: 640px; margin-bottom: 36px; }
-        .phones .eyebrow { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #FFE600; }
+        .phones .eyebrow { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #FFE000; }
         .phones-h2 { font-size: 40px !important; font-weight: 800 !important; letter-spacing: -0.02em; margin: 10px 0 12px; color: var(--text); }
         .phones-sub { color: var(--dim); font-size: 16px; line-height: 1.6; margin: 0; }
         .phones-strip { display: flex; gap: 28px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 24px 8px 18px; margin: 0 -8px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
@@ -465,8 +465,8 @@ export default function GetTheAppPage() {
           display: flex;
           align-items: center;
           gap: 8px;
-          background: rgba(44,255,122,0.08);
-          border: 1px solid rgba(44,255,122,0.2);
+          background: rgba(74,222,128,0.08);
+          border: 1px solid rgba(74,222,128,0.2);
           border-radius: 8px;
           padding: 10px 14px;
           font-size: 12px;
@@ -522,7 +522,7 @@ export default function GetTheAppPage() {
           border-left: 2px solid var(--brand-primary-35);
         }
         .compare-table tr:hover td.saguaro-col { background: color-mix(in srgb, var(--brand-primary) 9%, transparent); }
-        .compare-table td.bad { color: #FF3B30; }
+        .compare-table td.bad { color: #F87171; }
         .compare-table td.good { color: var(--green); }
 
         /* ── TESTIMONIALS ── */

@@ -16,7 +16,7 @@ import Suggest from '@/components/ui/Suggest';
 import SelectionOptions from '@/components/selections/SelectionOptions';
 
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)';
-const GREEN='#2CFF7A',RED='var(--danger)',ORANGE='var(--warning)',BLUE='var(--brand-primary)';
+const GREEN='#4ADE80',RED='var(--danger)',ORANGE='var(--warning)',BLUE='var(--brand-primary)';
 
 const CATEGORIES=['Flooring','Countertops','Cabinets','Plumbing Fixtures','Lighting',
   'Appliances','Tile','Paint','Hardware','Other'];
@@ -279,7 +279,7 @@ export default function SelectionsPage(){
               >
                 <div style={{background:'rgba(255,255,255,0.12)',borderRadius:4,height:8,overflow:'hidden'}}>
                   <div style={{height:'100%',borderRadius:4,
-                    background:overage>0?`linear-gradient(90deg,${RED},#FF3B30)`:`linear-gradient(90deg,${GREEN},#2CFF7A)`,
+                    background:overage>0?`linear-gradient(90deg,${RED},#F87171)`:`linear-gradient(90deg,${GREEN},#4ADE80)`,
                     width:`${Math.min(100,totalAllowance>0?(totalCost/totalAllowance*100):0)}%`,transition:'width .4s'}}/>
                 </div>
               </SectionCard>

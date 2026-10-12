@@ -5,9 +5,9 @@ import type { Icon } from '@phosphor-icons/react';
 import { BatteryHigh, Drop, Lightbulb, Plug, Shower, Sun, Thermometer, ThermometerHot, Wall } from '@phosphor-icons/react';
 
 /* ─── Palette — Premium Dark Glassmorphism ─── */
-const GOLD = 'var(--brand-primary)', GREEN = '#2CFF7A';
+const GOLD = 'var(--brand-primary)', GREEN = '#4ADE80';
 const TEXT = '#FFFFFF', DIM = '#D4D4D8';
-const RED = '#FF3B30', BLUE = 'var(--brand-primary)';
+const RED = '#F87171', BLUE = 'var(--brand-primary)';
 const BG = 'var(--bg-base)', CARD_BG = 'rgba(255,255,255,0.04)';
 const CARD_BORDER = 'rgba(255,255,255,0.12)', CARD_SHADOW = '0 8px 32px rgba(0,0,0,0.12)';
 
@@ -94,15 +94,15 @@ const UPGRADES: Upgrade[] = [
 
 /* ─── Icon colors per upgrade (replaces emojis) ─── */
 const ICON_COLORS: Record<string, string> = {
-  thermostat: '#FF3B30',
-  lighting: '#FFE600',
-  solar: '#FF8A00',
-  battery: '#2CFF7A',
-  ev: '#FF8A00',
-  irrigation: '#FF8A00',
-  heatpump: '#FF8A00',
+  thermostat: '#F87171',
+  lighting: '#FFE000',
+  solar: '#FBBF24',
+  battery: '#4ADE80',
+  ev: '#FBBF24',
+  irrigation: '#FBBF24',
+  heatpump: '#FBBF24',
   insulation: '#78716C',
-  waterheater: '#FF8A00',
+  waterheater: '#FBBF24',
 };
 
 /* ─── Animated counter hook ─── */
@@ -651,7 +651,7 @@ export default function ROICalculatorPage() {
                   fontSize: 48,
                   fontWeight: 800,
                   background: calculations.totalAnnual > 0
-                    ? `linear-gradient(135deg, ${GREEN}, #2CFF7A)`
+                    ? `linear-gradient(135deg, ${GREEN}, #4ADE80)`
                     : `linear-gradient(135deg, ${DIM}, ${DIM})`,
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
@@ -792,7 +792,7 @@ export default function ROICalculatorPage() {
                   width: '100%',
                   padding: '16px',
                   background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))',
-                  color: '#0A0A00',
+                  color: '#101722',
                   border: 'none',
                   borderRadius: 14,
                   fontWeight: 700,
@@ -927,7 +927,7 @@ export default function ROICalculatorPage() {
             <button className="roi-cta-btn" style={{
               padding: '16px 48px',
               background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))',
-              color: '#0A0A00',
+              color: '#101722',
               border: 'none',
               borderRadius: 14,
               fontWeight: 700,

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Lock, ShieldCheck, Wall, Globe, Flask, Prohibit, Package, Trash } from '@phosphor-icons/react/dist/ssr';
 import type { Icon } from '@phosphor-icons/react';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',DIM='var(--text-secondary)',TEXT='#FFFFFF',GREEN='#2CFF7A',HAIRLINE='rgba(255,255,255,0.08)',CARD='rgba(255,255,255,0.02)';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',DIM='var(--text-secondary)',TEXT='#FFFFFF',GREEN='#4ADE80',HAIRLINE='rgba(255,255,255,0.08)',CARD='rgba(255,255,255,0.02)';
 
 const NAV = (
   <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:200,height:64,background:'rgba(13,17,23,0.9)',borderBottom:`1px solid ${HAIRLINE}`,display:'flex',alignItems:'center',padding:'0 32px',backdropFilter:'blur(16px)',WebkitBackdropFilter:'blur(16px)'}}>
@@ -12,16 +12,16 @@ const NAV = (
     </Link>
     <div style={{flex:1}}/>
     <Link href="/login" style={{padding:'8px 16px',background:'transparent',border:`1px solid rgba(255,255,255,0.14)`,borderRadius:8,color:DIM,fontSize:13,fontWeight:500,textDecoration:'none'}}>Log In</Link>
-    <Link href="/signup" style={{marginLeft:10,padding:'8px 18px',background:GOLD,borderRadius:8,color:'#0A0A00',fontSize:13,fontWeight:600,textDecoration:'none'}}>Start Free</Link>
+    <Link href="/signup" style={{marginLeft:10,padding:'8px 18px',background:GOLD,borderRadius:8,color:'#101722',fontSize:13,fontWeight:600,textDecoration:'none'}}>Start Free</Link>
   </nav>
 );
 
 const FEATURES: { icon: Icon; title: string; desc: string; color: string; border: string }[] = [
-  {icon:Lock,title:'256-bit AES Encryption',desc:'All data at rest is encrypted using AES-256, the same standard used by banks and government agencies. Your data is unreadable without your credentials.',color:'rgba(44,255,122,.08)',border:'rgba(44,255,122,.25)'},
-  {icon:ShieldCheck,title:'TLS 1.3 in Transit',desc:'Every byte transferred between your browser and our servers is protected with TLS 1.3. We enforce HTTPS everywhere and reject older protocols.',color:'rgba(44,255,122,.08)',border:'rgba(44,255,122,.25)'},
-  {icon:Wall,title:'Row-Level Security',desc:'Powered by Supabase RLS policies. Each user can only access their own organization\'s data — enforced at the database layer, not just the application layer.',color:'rgba(44,255,122,.08)',border:'rgba(44,255,122,.25)'},
-  {icon:Globe,title:'GDPR Compliant',desc:'We honor data subject rights: access, correction, deletion, and export. Data processing agreements available. EU residents can request their data at any time.',color:'rgba(44,255,122,.08)',border:'rgba(44,255,122,.25)'},
-  {icon:Flask,title:'Penetration Testing',desc:'Annual third-party penetration tests are conducted by independent security firms. Findings are remediated within 30 days. Reports available under NDA for Enterprise customers.',color:'rgba(44,255,122,.08)',border:'rgba(44,255,122,.25)'},
+  {icon:Lock,title:'256-bit AES Encryption',desc:'All data at rest is encrypted using AES-256, the same standard used by banks and government agencies. Your data is unreadable without your credentials.',color:'rgba(74,222,128,.08)',border:'rgba(74,222,128,.25)'},
+  {icon:ShieldCheck,title:'TLS 1.3 in Transit',desc:'Every byte transferred between your browser and our servers is protected with TLS 1.3. We enforce HTTPS everywhere and reject older protocols.',color:'rgba(74,222,128,.08)',border:'rgba(74,222,128,.25)'},
+  {icon:Wall,title:'Row-Level Security',desc:'Powered by Supabase RLS policies. Each user can only access their own organization\'s data — enforced at the database layer, not just the application layer.',color:'rgba(74,222,128,.08)',border:'rgba(74,222,128,.25)'},
+  {icon:Globe,title:'GDPR Compliant',desc:'We honor data subject rights: access, correction, deletion, and export. Data processing agreements available. EU residents can request their data at any time.',color:'rgba(74,222,128,.08)',border:'rgba(74,222,128,.25)'},
+  {icon:Flask,title:'Penetration Testing',desc:'Annual third-party penetration tests are conducted by independent security firms. Findings are remediated within 30 days. Reports available under NDA for Enterprise customers.',color:'rgba(74,222,128,.08)',border:'rgba(74,222,128,.25)'},
 ];
 
 const INFRA = [
@@ -121,7 +121,7 @@ export default function SecurityPage() {
       <div style={{textAlign:'center',padding:'112px 24px',borderTop:`1px solid ${HAIRLINE}`}}>
         <h2 style={{fontSize:'clamp(22px,3vw,26px)',fontWeight:600,marginBottom:16,letterSpacing:-0.4}}>Questions About Security?</h2>
         <p style={{color:DIM,fontSize:16,marginBottom:32,lineHeight:1.6}}>Our security team is here to help.</p>
-        <a href="mailto:security@saguarocontrol.net" style={{display:'inline-block',padding:'12px 28px',background:GOLD,borderRadius:8,color:'#0A0A00',fontWeight:600,fontSize:15,textDecoration:'none'}}>
+        <a href="mailto:security@saguarocontrol.net" style={{display:'inline-block',padding:'12px 28px',background:GOLD,borderRadius:8,color:'#101722',fontWeight:600,fontSize:15,textDecoration:'none'}}>
           security@saguarocontrol.net
         </a>
         <div style={{marginTop:24,fontSize:13,color:DIM}}>

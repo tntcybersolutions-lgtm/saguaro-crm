@@ -24,8 +24,8 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
   }, [toast.id, onRemove]);
 
   const colors = {
-    success: { bg: 'rgba(44,255,122,0.15)', border: 'var(--success)', icon: '✅' },
-    error:   { bg: 'rgba(255,59,48,0.15)',  border: 'var(--danger)', icon: '❌' },
+    success: { bg: 'rgba(74,222,128,0.15)', border: 'var(--success)', icon: '✅' },
+    error:   { bg: 'rgba(248,113,113,0.15)',  border: 'var(--danger)', icon: '❌' },
     info:    { bg: 'var(--brand-primary-12)', border: 'var(--brand-primary)', icon: 'ℹ️' },
     warning: { bg: 'var(--brand-primary-12)', border: 'var(--brand-primary)', icon: '⚠️' },
   };

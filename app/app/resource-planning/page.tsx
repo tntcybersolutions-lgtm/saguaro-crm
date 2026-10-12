@@ -763,7 +763,7 @@ export default function ResourcePlanningPage() {
           return <div key={name} style={{ background: `color-mix(in srgb, ${BG} 50%, transparent)`, border: `1px solid ${isConflict ? RED : BORDER}`, borderRadius: 8, padding: 16, marginBottom: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 36, height: 36, borderRadius: '50%', background: `linear-gradient(135deg,${GOLD},#FF8A00)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: 'var(--surface-raised)' }}>{name.charAt(0)}</div>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', background: `linear-gradient(135deg,${GOLD},#FBBF24)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: 'var(--surface-raised)' }}>{name.charAt(0)}</div>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>{name}</div>
                   <div style={{ fontSize: 11, color: DIM }}>{asns[0]?.trade} - {asns[0]?.role}</div>

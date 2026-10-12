@@ -11,22 +11,22 @@ export const T = {
   border: 'rgba(255,255,255,0.12)',
   borderSubtle: 'rgba(255,255,255,0.08)',
   borderStrong: 'rgba(255,255,255,0.22)',
-  borderGold: 'rgba(255,230,0,0.35)',
+  borderGold: 'rgba(255,224,0,0.35)',
   gold: 'var(--brand-primary)',
   goldBright: 'var(--brand-primary-hi)',
-  goldDim: 'rgba(255,230,0,0.12)',
-  goldMid: 'rgba(255,230,0,0.18)',
+  goldDim: 'rgba(255,224,0,0.12)',
+  goldMid: 'rgba(255,224,0,0.18)',
   white: 'var(--text-primary)',
   muted: 'var(--text-secondary)',
   faint: 'var(--text-tertiary)',
   green: 'var(--success)',
-  greenDim: 'rgba(44,255,122,0.16)',
+  greenDim: 'rgba(74,222,128,0.16)',
   red: 'var(--danger)',
-  redDim: 'rgba(255,59,48,0.16)',
+  redDim: 'rgba(248,113,113,0.16)',
   amber: 'var(--brand-primary)',
-  amberDim: 'rgba(255,230,0,0.16)',
+  amberDim: 'rgba(255,224,0,0.16)',
   blue: 'var(--warning)',
-  blueDim: 'rgba(255,138,0,0.16)',
+  blueDim: 'rgba(251,191,36,0.16)',
   shadowSm: '0 1px 2px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
   shadowMd: '0 4px 14px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)',
   shadowLg: '0 16px 44px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)',
@@ -99,10 +99,10 @@ type BadgeColor = 'gold' | 'green' | 'red' | 'amber' | 'blue' | 'muted';
 
 const badgeStyles: Record<BadgeColor, { bg: string; color: string; border: string }> = {
   gold:  { bg: T.goldDim,  color: T.gold,  border: T.borderGold },
-  green: { bg: T.greenDim, color: T.green, border: 'rgba(44,255,122,0.50)' },
-  red:   { bg: T.redDim,   color: T.red,   border: 'rgba(255,59,48,0.50)' },
-  amber: { bg: T.amberDim, color: T.amber, border: 'rgba(255,230,0,0.50)' },
-  blue:  { bg: T.blueDim,  color: T.blue,  border: 'rgba(255,138,0,0.50)' },
+  green: { bg: T.greenDim, color: T.green, border: 'rgba(74,222,128,0.50)' },
+  red:   { bg: T.redDim,   color: T.red,   border: 'rgba(248,113,113,0.50)' },
+  amber: { bg: T.amberDim, color: T.amber, border: 'rgba(255,224,0,0.50)' },
+  blue:  { bg: T.blueDim,  color: T.blue,  border: 'rgba(251,191,36,0.50)' },
   muted: { bg: 'rgba(163,172,187,0.16)', color: T.muted, border: 'rgba(163,172,187,0.45)' },
 };
 
@@ -195,7 +195,7 @@ const btnBase: React.CSSProperties = {
 const btnVariants: Record<BtnVariant, React.CSSProperties> = {
   primary: { background: T.gold, color: 'var(--on-brand)' },
   ghost: { background: 'none', color: 'var(--sg-text)', border: '1px solid var(--sg-border-strong)' },
-  danger: { background: T.redDim, color: T.red, border: `1px solid rgba(255,59,48,0.50)` },
+  danger: { background: T.redDim, color: T.red, border: `1px solid rgba(248,113,113,0.50)` },
 };
 
 const btnSizes: Record<BtnSize, React.CSSProperties> = {

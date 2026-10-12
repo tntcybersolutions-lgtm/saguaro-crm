@@ -95,7 +95,7 @@ export default function CompliancePage(){
 
   const complianceLabel = (c:string) => c==='compliant'?'Compliant':c==='at_risk'?'At Risk':'Non-Compliant';
   const complianceColor = (c:string) => c==='compliant'?GREEN:c==='at_risk'?AMBER:RED;
-  const complianceBg = (c:string) => c==='compliant'?'rgba(44,255,122,.14)':c==='at_risk'?'rgba(255,138,0,.14)':'rgba(255,59,48,.14)';
+  const complianceBg = (c:string) => c==='compliant'?'rgba(74,222,128,.14)':c==='at_risk'?'rgba(251,191,36,.14)':'rgba(248,113,113,.14)';
 
   return <PremiumSurface maxWidth={2200}>
 
@@ -263,7 +263,7 @@ export default function CompliancePage(){
           if(selected.lien_waivers.pending>0) gaps.push({title:`Chase ${selected.lien_waivers.pending} unsigned waiver${selected.lien_waivers.pending===1?'':'s'}`, desc:'Unreleased lien rights — hold payment until signed.'});
           return gaps.length>0
             ? <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:14,marginBottom:12}}><FlowSteps title="Fix Next" steps={gaps}/></div>
-            : <div style={{background:'rgba(44,255,122,.08)',border:'1px solid rgba(44,255,122,.3)',borderRadius:10,padding:'10px 14px',marginBottom:12,fontSize:12.5,color:GREEN}}>Fully compliant — W-9 on file, insurance active, waivers signed.</div>;
+            : <div style={{background:'rgba(74,222,128,.08)',border:'1px solid rgba(74,222,128,.3)',borderRadius:10,padding:'10px 14px',marginBottom:12,fontSize:12.5,color:GREEN}}>Fully compliant — W-9 on file, insurance active, waivers signed.</div>;
         })()}
         <div style={{display:'flex',flexDirection:'column' as const,gap:8}}>
           {selected.email&&<a href={`mailto:${selected.email}?subject=Compliance%20Follow-Up`} className="pmBtn" style={{...goldButtonStyle,width:'100%'}}><Envelope size={15} weight="bold" /> Email Sub</a>}

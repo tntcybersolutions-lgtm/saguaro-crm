@@ -107,7 +107,7 @@ export default function PlatformIntegrationsPage() {
       )}
 
       {toast && (
-        <div style={{ margin: '0 0 16px', padding: '10px 14px', background: toast.ok ? 'rgba(44,255,122,0.12)' : 'rgba(255,59,48,0.12)', border: `1px solid ${toast.ok ? 'rgba(44,255,122,0.3)' : 'rgba(255,59,48,0.3)'}`, borderRadius: 10, color: toast.ok ? GREEN : RED, fontSize: 13 }}>{toast.m}</div>
+        <div style={{ margin: '0 0 16px', padding: '10px 14px', background: toast.ok ? 'rgba(74,222,128,0.12)' : 'rgba(248,113,113,0.12)', border: `1px solid ${toast.ok ? 'rgba(74,222,128,0.3)' : 'rgba(248,113,113,0.3)'}`, borderRadius: 10, color: toast.ok ? GREEN : RED, fontSize: 13 }}>{toast.m}</div>
       )}
 
       <SectionCard
@@ -134,7 +134,7 @@ export default function PlatformIntegrationsPage() {
                   </div>
                   <button onClick={() => { setEditing(a); setForm({ clientId: '', clientSecret: '' }); }} className="pmBtn" style={{ ...goldButtonStyle, padding: '8px 16px', fontSize: 12.5 }}>{a.configured ? 'Update' : 'Set Up'}</button>
                   {a.source === 'in-product' && (
-                    <button onClick={() => remove(a)} className="pmBtn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', borderRadius: 10, cursor: 'pointer', background: 'rgba(255,59,48,0.12)', color: RED, border: '1px solid rgba(255,59,48,0.35)' }}><Trash size={13} /></button>
+                    <button onClick={() => remove(a)} className="pmBtn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', borderRadius: 10, cursor: 'pointer', background: 'rgba(248,113,113,0.12)', color: RED, border: '1px solid rgba(248,113,113,0.35)' }}><Trash size={13} /></button>
                   )}
                 </div>
               </div>

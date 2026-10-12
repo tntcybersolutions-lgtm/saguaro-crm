@@ -12,8 +12,8 @@ const TEXT = '#FFFFFF';
 const DIM = 'var(--text-secondary)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const RAISED = 'var(--bg-surface)';
-const GREEN = '#2CFF7A';
-const RED = '#FF3B30';
+const GREEN = '#4ADE80';
+const RED = '#F87171';
 
 function formatCurrency(n: number) {
   return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
@@ -65,7 +65,7 @@ export default function SwitchFromProcorePage() {
         }
         .btn-amber {
           background: ${GOLD};
-          color: #0A0A00;
+          color: #101722;
           font-weight: 600;
           border: none;
           border-radius: 8px;
@@ -676,7 +676,7 @@ export default function SwitchFromProcorePage() {
           <Link href="/signup" style={{
             display: 'inline-block',
             background: GOLD,
-            color: '#0A0A00',
+            color: '#101722',
             fontWeight: 600,
             fontSize: '1rem',
             padding: '13px 32px',

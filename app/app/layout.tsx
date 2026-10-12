@@ -325,7 +325,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         .ai-msg-content strong { color: ${colors.text}; }
         .ai-msg-content code { background: rgba(255,255,255,.08); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
         .ai-msg-content h3 { color: ${colors.gold}; font-size: 13px; margin: 10px 0 4px; }
-        .quick-prompt-btn:hover { background: rgba(255,230,0,.18) !important; border-color: rgba(255,230,0,.5) !important; }
+        .quick-prompt-btn:hover { background: rgba(148,163,184,.14) !important; border-color: var(--border-strong) !important; }
       `}</style>
 
       {/* ── Sidebar (Desktop) ────────────────────────────────────────── */}

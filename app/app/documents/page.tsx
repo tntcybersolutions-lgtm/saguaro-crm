@@ -97,9 +97,9 @@ const waiverParty = (lw: any) =>
   lw?.subcontractors?.company_name ?? lw?.company_name ?? lw?.claimant_name ?? lw?.subName ?? lw?.sub_name ?? '—';
 
 const WAIVER_BADGE: Record<WaiverState, { label: string; color: string; bg: string }> = {
-  signed:       { label: 'Waiver signed',  color: GREEN, bg: 'rgba(44,255,122,.12)' },
-  waiting:      { label: 'Waiver waiting', color: 'var(--warning)', bg: 'rgba(255,138,0,.12)' },
-  missing:      { label: 'No waiver',      color: RED,   bg: 'rgba(255,59,48,.12)' },
+  signed:       { label: 'Waiver signed',  color: GREEN, bg: 'rgba(74,222,128,.12)' },
+  waiting:      { label: 'Waiver waiting', color: 'var(--warning)', bg: 'rgba(251,191,36,.12)' },
+  missing:      { label: 'No waiver',      color: RED,   bg: 'rgba(248,113,113,.12)' },
   'not-needed': { label: '—',              color: DIM,   bg: 'transparent' },
 };
 
@@ -139,10 +139,10 @@ const isCloseoutDone = (s: string) => s === 'accepted';
 
 const CLOSEOUT_STATUS: Record<string, { label: string; color: string; bg: string }> = {
   pending:      { label: 'Pending',      color: 'var(--warning)', bg: 'color-mix(in srgb, var(--warning) 10%, transparent)' },
-  submitted:    { label: 'Submitted',    color: 'var(--warning)', bg: 'rgba(255,138,0,.12)' },
-  under_review: { label: 'Under Review', color: 'var(--warning)', bg: 'rgba(255,138,0,.12)' },
-  accepted:     { label: 'Complete',     color: GREEN,     bg: 'rgba(44,255,122,.12)' },
-  rejected:     { label: 'Rejected',     color: RED,       bg: 'rgba(255,59,48,.12)' },
+  submitted:    { label: 'Submitted',    color: 'var(--warning)', bg: 'rgba(251,191,36,.12)' },
+  under_review: { label: 'Under Review', color: 'var(--warning)', bg: 'rgba(251,191,36,.12)' },
+  accepted:     { label: 'Complete',     color: GREEN,     bg: 'rgba(74,222,128,.12)' },
+  rejected:     { label: 'Rejected',     color: RED,       bg: 'rgba(248,113,113,.12)' },
   na:           { label: 'N/A',          color: DIM,       bg: 'rgba(163,172,187,.12)' },
 };
 
@@ -153,12 +153,12 @@ const CLOSEOUT_TYPE_LABEL: Record<string, string> = {
 };
 
 const statusConfig: Record<string, { color: string; bg: string }> = {
-  paid:      { color: GREEN,   bg: 'rgba(44,255,122,.12)' },
-  approved:  { color: 'var(--warning)', bg: 'rgba(255,138,0,.12)' },
+  paid:      { color: GREEN,   bg: 'rgba(74,222,128,.12)' },
+  approved:  { color: 'var(--warning)', bg: 'rgba(251,191,36,.12)' },
   draft:     { color: 'var(--warning)', bg: 'color-mix(in srgb, var(--warning) 12%, transparent)' },
-  executed:  { color: GREEN,   bg: 'rgba(44,255,122,.12)' },
+  executed:  { color: GREEN,   bg: 'rgba(74,222,128,.12)' },
   pending:   { color: 'var(--warning)', bg: 'color-mix(in srgb, var(--warning) 12%, transparent)' },
-  submitted: { color: 'var(--warning)', bg: 'rgba(255,138,0,.12)' },
+  submitted: { color: 'var(--warning)', bg: 'rgba(251,191,36,.12)' },
 };
 
 // AIA bond/form card code -> { route, body } using existing /api/documents/* generators.
@@ -942,7 +942,7 @@ export default function DocumentsPage() {
                       display: 'flex', alignItems: 'center', gap: 14,
                       padding: '14px 20px',
                       borderBottom: idx < visCloseout.length - 1 ? `1px solid rgba(255,255,255,0.08)` : 'none',
-                      background: done ? 'rgba(44,255,122,.03)' : 'transparent',
+                      background: done ? 'rgba(74,222,128,.03)' : 'transparent',
                     }}
                   >
                     <button

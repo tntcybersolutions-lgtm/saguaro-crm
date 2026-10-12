@@ -457,7 +457,7 @@ export default function PayrollPage() {
 
       {/* Field time clock rollup — import instead of retyping hours */}
       {weekEndingDate && weekEntries.length > 0 && (
-        <div style={{ background: 'rgba(44,255,122,.07)', border: '1px solid rgba(44,255,122,.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+        <div style={{ background: 'rgba(74,222,128,.07)', border: '1px solid rgba(74,222,128,.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
           <div style={{ fontSize: 13, color: DIM }}>
             <span style={{ fontWeight: 700, color: 'var(--success)' }}>{weekClockedHours.toFixed(1)} hrs clocked in the field</span>
             {' — '}{weekEntries.length} time {weekEntries.length === 1 ? 'entry' : 'entries'} from {weekClockedNames.length} employee{weekClockedNames.length === 1 ? '' : 's'} fall in the 7 days ending {weekEndingDate}. Import them below instead of retyping.

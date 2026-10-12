@@ -305,7 +305,7 @@ export default function NotificationsPage() {
                     )}
                     {n.project_id && (n.type === 'rfi_submitted') && (
                       <Link href={`/app/projects/${n.project_id}/rfis`} onClick={e => { e.stopPropagation(); markRead(n.id); }}
-                        style={{ fontSize: 12, color: 'var(--warning)', textDecoration: 'none', fontWeight: 600, padding: '3px 10px', background: 'rgba(255,138,0,.1)', border: '1px solid rgba(255,138,0,.25)', borderRadius: 5 }}>
+                        style={{ fontSize: 12, color: 'var(--warning)', textDecoration: 'none', fontWeight: 600, padding: '3px 10px', background: 'rgba(251,191,36,.1)', border: '1px solid rgba(251,191,36,.25)', borderRadius: 5 }}>
                         Answer RFI <ArrowRight size={12} weight="bold" color="var(--warning)" style={{ verticalAlign: 'middle' }} />
                       </Link>
                     )}

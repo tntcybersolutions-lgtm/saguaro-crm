@@ -66,9 +66,9 @@ export default function DailyLogsPage() {
           {activeSites.map((p) => {
             const ok = todayByProject[p.id];
             const late = ok && lateByProject[p.id];
-            const bg = !ok ? 'rgba(255,59,48,0.10)' : late ? 'rgba(255,149,0,0.12)' : 'rgba(44,255,122,0.12)';
+            const bg = !ok ? 'rgba(248,113,113,0.10)' : late ? 'rgba(255,149,0,0.12)' : 'rgba(74,222,128,0.12)';
             const fg = !ok ? C.red : late ? C.yellow : C.green;
-            const bd = !ok ? 'rgba(255,59,48,0.25)' : late ? 'rgba(255,149,0,0.3)' : 'rgba(44,255,122,0.3)';
+            const bd = !ok ? 'rgba(248,113,113,0.25)' : late ? 'rgba(255,149,0,0.3)' : 'rgba(74,222,128,0.3)';
             return (
               <span key={p.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, padding: '5px 11px', borderRadius: 999, background: bg, color: fg, border: `1px solid ${bd}` }}>
                 {!ok ? <Circle size={13} weight="regular" color={fg} style={{ verticalAlign: 'middle' }} /> : late ? <Warning size={13} weight="fill" color={fg} style={{ verticalAlign: 'middle' }} /> : <CheckCircle size={13} weight="fill" color={fg} style={{ verticalAlign: 'middle' }} />} {p.name}{late ? ' · Late' : ''}

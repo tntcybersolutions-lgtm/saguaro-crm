@@ -218,7 +218,7 @@ function BidScoreModal({ onClose }: { onClose: () => void }) {
                   />
                 </div>
               ))}
-              {error && <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: RED, fontSize: 12, fontWeight: 600, marginBottom: 12, padding: '10px 12px', borderRadius: 8, background: 'rgba(255,59,48,0.10)', border: '1px solid rgba(255,59,48,0.28)' }}><WarningCircle size={16} weight="duotone" /> {error}</div>}
+              {error && <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: RED, fontSize: 12, fontWeight: 600, marginBottom: 12, padding: '10px 12px', borderRadius: 8, background: 'rgba(248,113,113,0.10)', border: '1px solid rgba(248,113,113,0.28)' }}><WarningCircle size={16} weight="duotone" /> {error}</div>}
               <button
                 type="submit" disabled={loading}
                 style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', background: loading ? 'var(--bg-surface-2)' : 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', border: 'none', borderRadius: 'var(--radius-md)', color: loading ? DIM : 'var(--on-brand)', fontWeight: 800, fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer', marginTop: 4, boxShadow: loading ? 'none' : '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' }}
@@ -610,7 +610,7 @@ export default function DashboardPage() {
           flush
           style={{ marginBottom: 24 }}
           action={!todayLoading && !todayError && todayItems.filter((i: TodayItem) => i.urgency === 'high').length > 0 ? (
-            <span style={{ fontSize: 11, fontWeight: 800, padding: '4px 11px', borderRadius: 999, background: 'rgba(255,59,48,0.14)', color: RED, border: '1px solid rgba(255,59,48,0.3)' }}>
+            <span style={{ fontSize: 11, fontWeight: 800, padding: '4px 11px', borderRadius: 999, background: 'rgba(248,113,113,0.14)', color: RED, border: '1px solid rgba(248,113,113,0.3)' }}>
               {todayItems.filter((i: TodayItem) => i.urgency === 'high').length} Urgent
             </span>
           ) : undefined}
@@ -704,7 +704,7 @@ export default function DashboardPage() {
                         <div style={{ fontWeight: 700, color: TEXT, fontSize: 14, marginBottom: 2 }}>{proj.name}</div>
                         <div style={{ fontSize: 12, color: DIM }}>{proj.address}</div>
                       </div>
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: 'rgba(44,255,122,0.14)', color: GREEN, border: '1px solid rgba(44,255,122,0.3)', height: 'fit-content', textTransform: 'capitalize' }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: 'rgba(74,222,128,0.14)', color: GREEN, border: '1px solid rgba(74,222,128,0.3)', height: 'fit-content', textTransform: 'capitalize' }}>
                         {proj.status}
                       </span>
                     </div>

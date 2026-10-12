@@ -34,7 +34,7 @@ const GOLD_LINE = 'var(--brand-primary-35)';
 const TEXT = '#FFFFFF';
 const DIM = 'var(--text-secondary)';
 const MUTED = 'var(--text-secondary)';
-const GREEN = '#2CFF7A';
+const GREEN = '#4ADE80';
 const BORDER = 'rgba(255,255,255,0.08)';
 
 const STEPS: { n: string; icon: IconType; title: string; body: string }[] = [
@@ -65,11 +65,11 @@ const METRICS: { icon: IconType; label: string; value: string; tint: string }[] 
 // CSI-division-colored trade breakdown — same hexes as the heatmap SYSTEM_COLORS family so the two tools read as one.
 const TRADES: { div: string; label: string; trade: string; amt: number; color: string }[] = [
   { div: '03', label: 'Slab-on-Grade', trade: 'Concrete', amt: 38400, color: '#C9A96A' },
-  { div: '04', label: 'CMU Exterior Wall', trade: 'Masonry', amt: 34650, color: '#FF8A00' },
+  { div: '04', label: 'CMU Exterior Wall', trade: 'Masonry', amt: 34650, color: '#FBBF24' },
   { div: '05', label: 'Steel Columns W8×24', trade: 'Metals', amt: 28800, color: 'var(--text-secondary)' },
   { div: '03', label: 'Continuous Footing', trade: 'Concrete', amt: 17000, color: '#C9A96A' },
   { div: '08', label: 'Doors & Frames', trade: 'Openings', amt: 15600, color: '#8FC4F0' },
-  { div: '09', label: 'Interior Partitions', trade: 'Finishes', amt: 9450, color: '#FF8A00' },
+  { div: '09', label: 'Interior Partitions', trade: 'Finishes', amt: 9450, color: '#FBBF24' },
 ];
 const usd = (n: number) => '$' + n.toLocaleString('en-US');
 const pctOf = (n: number) => Math.round((n / TAKEOFF_TOTAL) * 100);
@@ -81,7 +81,7 @@ const TAKEOFF_HERO = `
 <div class="scs-takeoff" role="img" aria-label="Saguaro AI Takeoff: a construction floor plan being read and measured by AI, showing slab area, continuous footing, interior partitions, and 24 steel columns with priced line items totaling $143,900.">
   <style>
     .scs-takeoff{
-      --bg:var(--bg-base); --gold:var(--brand-primary); --green:#2CFF7A; --sky:var(--brand-primary-strong);
+      --bg:var(--bg-base); --gold:var(--brand-primary); --green:#4ADE80; --sky:var(--brand-primary-strong);
       --ink:#94A3B8; --white:#FFFFFF; --dim:#D4D4D8; --muted:rgba(255,255,255,.45);
       --line:rgba(148,163,184,.35); --hair:rgba(255,255,255,.08);
       width:100%; max-width:1200px; margin:0 auto;
@@ -124,7 +124,7 @@ const TAKEOFF_HERO = `
     <rect x="1" y="1" width="1198" height="40" rx="13" fill="#11161f"/>
     <rect x="1" y="28" width="1198" height="13" fill="#11161f"/>
     <line x1="0" y1="41" x2="1200" y2="41" stroke="var(--hair)"/>
-    <circle cx="24" cy="21" r="5.5" fill="#FF3B30"/><circle cx="44" cy="21" r="5.5" fill="#FFE600"/><circle cx="64" cy="21" r="5.5" fill="#2CFF7A"/>
+    <circle cx="24" cy="21" r="5.5" fill="#F87171"/><circle cx="44" cy="21" r="5.5" fill="#FFE000"/><circle cx="64" cy="21" r="5.5" fill="#4ADE80"/>
     <text x="600" y="25" text-anchor="middle" font-size="12.5" fill="var(--dim)" font-weight="600" letter-spacing=".2">Springfield Logistics Center — Shell &amp; Core.pdf  ·  Sheet S-201</text>
     <text x="1176" y="25" text-anchor="end" font-size="11.5" fill="var(--muted)">Sheet 4 / 18</text>
     <rect x="1" y="41" width="62" height="558" fill="#0f141c"/>
@@ -157,7 +157,7 @@ const TAKEOFF_HERO = `
     <text x="906" y="474" font-size="11" fill="var(--muted)">6 trades · 47 elements</text>
     <g class="row" style="animation-delay:3s"><text x="1160" y="466" text-anchor="end" font-size="22" fill="var(--gold)" font-weight="800">$143,900</text></g>
     <text x="888" y="512" font-size="10.5" fill="var(--muted)">Auto-priced from your regional cost book · editable</text>
-    <rect x="888" y="524" width="288" height="34" rx="8" fill="rgba(44,255,122,.12)" stroke="rgba(44,255,122,.35)"/>
+    <rect x="888" y="524" width="288" height="34" rx="8" fill="rgba(74,222,128,.12)" stroke="rgba(74,222,128,.35)"/>
     <text x="1032" y="545" text-anchor="middle" font-size="12.5" fill="var(--green)" font-weight="700">Push to Estimate →</text>
     <g clip-path="url(#canvasClip)">
       <rect x="64" y="41" width="800" height="558" fill="#0b1017"/>
@@ -173,7 +173,7 @@ const TAKEOFF_HERO = `
       <g class="plan" stroke-width="1" fill="none"><path d="M470 461 A34 34 0 0 1 504 427"/><line x1="470" y1="461" x2="470" y2="427"/><line x1="470" y1="427" x2="504" y2="427"/><path d="M440 232 A30 30 0 0 1 470 262"/><line x1="440" y1="232" x2="470" y2="232"/><path d="M250 318 A28 28 0 0 0 278 346"/><line x1="250" y1="318" x2="250" y2="346"/><path d="M540 318 A24 24 0 0 1 564 342"/><line x1="540" y1="318" x2="540" y2="342"/></g>
       <g fill="var(--muted)" text-anchor="middle" letter-spacing="1"><text x="298" y="238" font-size="10.5">OFFICE</text><text x="298" y="396" font-size="10.5">LOBBY</text><text x="611" y="236" font-size="10.5">WAREHOUSE</text><text x="525" y="396" font-size="9.5">MECH</text><text x="693" y="396" font-size="9.5">ELEC</text></g>
       <g class="ov" style="animation-delay:.55s"><rect x="159" y="159" width="612" height="302" fill="var(--brand-primary-12)" stroke="var(--gold)" stroke-width="1.3" stroke-dasharray="6 4"/><g><rect x="316" y="176" width="212" height="24" rx="6" fill="#12161d" stroke="color-mix(in srgb, var(--brand-primary) 55%, transparent)"/><circle cx="331" cy="188" r="4" fill="var(--gold)"/><text x="343" y="192" font-size="12" fill="var(--white)" font-weight="600">Slab-on-grade · 4,800 SF</text></g></g>
-      <g class="ov" style="animation-delay:1.15s"><rect x="154.5" y="154.5" width="621" height="311" fill="none" stroke="var(--green)" stroke-width="3.2" filter="url(#softGlow)" stroke-linejoin="round"/><g><rect x="300" y="474" width="230" height="24" rx="6" fill="#12161d" stroke="rgba(44,255,122,.55)"/><path d="M314 486 l3 3 l6 -7" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="330" y="490" font-size="12" fill="var(--white)" font-weight="600">Cont. footing · 340 LF  ·  verified</text></g></g>
+      <g class="ov" style="animation-delay:1.15s"><rect x="154.5" y="154.5" width="621" height="311" fill="none" stroke="var(--green)" stroke-width="3.2" filter="url(#softGlow)" stroke-linejoin="round"/><g><rect x="300" y="474" width="230" height="24" rx="6" fill="#12161d" stroke="rgba(74,222,128,.55)"/><path d="M314 486 l3 3 l6 -7" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="330" y="490" font-size="12" fill="var(--white)" font-weight="600">Cont. footing · 340 LF  ·  verified</text></g></g>
       <g class="ov" style="animation-delay:2.0s"><path d="M440 159 L440 461 M159 315 L440 315 M610 318 L610 461" fill="none" stroke="var(--sky)" stroke-width="2.6" stroke-linecap="round" filter="url(#softGlow)"/><g><rect x="452" y="196" width="182" height="22" rx="6" fill="#12161d" stroke="rgba(56,189,248,.55)"/><circle cx="466" cy="207" r="4" fill="var(--sky)"/><text x="478" y="211" font-size="11.5" fill="var(--white)" font-weight="600">Int. partitions · 210 LF</text></g></g>
       <g fill="var(--gold)">
         ${[200, 270, 340, 410].map((cy, r) => [205, 309, 413, 517, 621, 725].map((cx, c) => `<g class="pin" style="animation-delay:${(1.45 + r * 0.23 + c * 0.05).toFixed(2)}s"><circle cx="${cx}" cy="${cy}" r="5.5" fill="#0b1017" stroke="var(--gold)" stroke-width="2"/><rect x="${cx - 3}" y="${cy - 3}" width="6" height="6" fill="var(--gold)"/></g>`).join('')).join('')}
@@ -218,7 +218,7 @@ export default function TakeoffPage() {
             Saguaro reads your PDF plan set the way a senior estimator does — every wall, footing, fixture, and column — then paints measured quantities onto the sheet and prices them by trade. No scale wheel. No manual counting.
           </p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' as const, alignItems: 'center', justifyContent: 'center', marginBottom: 22 }}>
-            <Link href="/signup" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: GOLD, color: '#0A0A00', textDecoration: 'none', fontWeight: 700, fontSize: 14, padding: '12px 26px', borderRadius: 10, boxShadow: '0 8px 24px var(--brand-primary-25)' }}>Start Free Trial <ArrowRight size={14} weight="bold" color="#0A0A00" /></Link>
+            <Link href="/signup" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: GOLD, color: '#101722', textDecoration: 'none', fontWeight: 700, fontSize: 14, padding: '12px 26px', borderRadius: 10, boxShadow: '0 8px 24px var(--brand-primary-25)' }}>Start Free Trial <ArrowRight size={14} weight="bold" color="#101722" /></Link>
             <Link href="#how" style={{ color: DIM, textDecoration: 'none', fontWeight: 500, fontSize: 14, padding: '12px 16px' }}>See How It Works</Link>
           </div>
           <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' as const, justifyContent: 'center' }}>
@@ -343,7 +343,7 @@ export default function TakeoffPage() {
           <h2 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 12px' }}>Stop Counting by Hand</h2>
           <p style={{ color: DIM, fontSize: 15, lineHeight: 1.6, margin: '0 auto 28px', maxWidth: 460 }}>Upload a plan set and watch the estimate build itself — priced, coded, and traceable to the sheet.</p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' as const, alignItems: 'center' }}>
-            <Link href="/signup" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: GOLD, color: '#0A0A00', textDecoration: 'none', fontWeight: 700, fontSize: 14, padding: '13px 30px', borderRadius: 10, boxShadow: '0 8px 24px var(--brand-primary-25)' }}>Start Free Trial <ArrowRight size={14} weight="bold" color="#0A0A00" /></Link>
+            <Link href="/signup" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: GOLD, color: '#101722', textDecoration: 'none', fontWeight: 700, fontSize: 14, padding: '13px 30px', borderRadius: 10, boxShadow: '0 8px 24px var(--brand-primary-25)' }}>Start Free Trial <ArrowRight size={14} weight="bold" color="#101722" /></Link>
             <Link href="/pricing" style={{ color: DIM, textDecoration: 'none', fontWeight: 500, fontSize: 14, padding: '13px 18px' }}>View Pricing</Link>
           </div>
           <p style={{ color: MUTED, fontSize: 12, marginTop: 16 }}>No credit card required · 30-day free trial</p>

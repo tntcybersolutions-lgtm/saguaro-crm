@@ -8,8 +8,8 @@ const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = 'var(--text-secondary)';
 const TEXT = '#FFFFFF';
-const GREEN = '#2CFF7A';
-const RED = '#FF3B30';
+const GREEN = '#4ADE80';
+const RED = '#F87171';
 const BLUE = 'var(--brand-primary)';
 
 export default function SubPortalLogin() {
@@ -97,7 +97,7 @@ export default function SubPortalLogin() {
 
         {sentTo ? (
           <div style={{ textAlign: 'center' }} role="status">
-            <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(44,255,122,0.12)', border: '1.5px solid rgba(44,255,122,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(74,222,128,0.12)', border: '1.5px solid rgba(74,222,128,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
               <svg viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={24} height={24}>
                 <path d="M4 4h16v16H4z" /><polyline points="22 6 12 13 2 6" />
               </svg>
@@ -140,7 +140,7 @@ export default function SubPortalLogin() {
             />
 
             {error && (
-              <div style={{ marginTop: 10, padding: '10px 12px', background: 'rgba(255,59,48,0.1)', border: `1px solid rgba(255,59,48,0.25)`, borderRadius: 8, fontSize: 13, color: '#fca5a5', lineHeight: 1.5 }}>
+              <div style={{ marginTop: 10, padding: '10px 12px', background: 'rgba(248,113,113,0.1)', border: `1px solid rgba(248,113,113,0.25)`, borderRadius: 8, fontSize: 13, color: '#fca5a5', lineHeight: 1.5 }}>
                 {error}
               </div>
             )}
@@ -155,7 +155,7 @@ export default function SubPortalLogin() {
                 background: loading || !email.trim() ? 'var(--brand-primary-35)' : BLUE,
                 border: 'none',
                 borderRadius: 8,
-                color: '#0A0A00',
+                color: '#101722',
                 fontSize: 15,
                 fontWeight: 700,
                 cursor: loading || !email.trim() ? 'not-allowed' : 'pointer',

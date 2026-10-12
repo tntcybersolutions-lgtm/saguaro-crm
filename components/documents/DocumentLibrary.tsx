@@ -300,7 +300,7 @@ export default function DocumentLibrary({ externalQuery = '', jobId = null }: { 
 
 const CSS = `
 .dl { background: var(--bg-surface); border: 1px solid var(--glass-border); border-top: 2px solid color-mix(in srgb, var(--brand-primary) 70%, transparent); border-radius: 14px; padding: 18px 20px; min-width: 0; }
-.dl h2 { margin: 0; font-size: 18px; font-weight: 800; color: var(--title-color, #FFE600); }
+.dl h2 { margin: 0; font-size: 18px; font-weight: 800; color: var(--title-color, #FFE000); }
 .dl-head { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
 .dl-sub { margin: 4px 0 0; font-size: 13px; color: var(--text-tertiary); }
 .dl-viewtoggle, .dl-chips { display: inline-flex; flex-wrap: wrap; gap: 6px; }
@@ -310,7 +310,7 @@ const CSS = `
 .dl-toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
 .dl-search { flex: 1 1 260px; display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 12px; border: 1px solid var(--glass-border); border-radius: 10px; background: var(--bg-surface-2); color: var(--text-tertiary); }
 .dl-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text-primary); font-size: 14px; }
-.dl-toolbar select { min-height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--glass-border); background: var(--bg-solid-2, #15171C); color: var(--text-primary); font-size: 14px; }
+.dl-toolbar select { min-height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--glass-border); background: var(--bg-solid-2, #243247); color: var(--text-primary); font-size: 14px; }
 .dl-chips { margin-bottom: 12px; }
 .dl-chips button { display: inline-flex; align-items: center; gap: 7px; min-height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.04); color: var(--text-secondary); font-size: 13px; font-weight: 700; cursor: pointer; }
 .dl-chips button b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
@@ -326,14 +326,14 @@ const CSS = `
 .dl-check input { width: 18px; height: 18px; accent-color: var(--brand-primary); cursor: pointer; }
 .dl-doc { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .dl-docText { display: flex; flex-direction: column; min-width: 0; }
-.dl-title { all: unset; cursor: pointer; font-size: 14.5px; font-weight: 750; line-height: 1.3; color: var(--title-color, #FFE600); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.dl-title { all: unset; cursor: pointer; font-size: 14.5px; font-weight: 750; line-height: 1.3; color: var(--title-color, #FFE000); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
 .dl-title:hover { text-decoration: underline; }
 .dl-title:focus-visible, .dl-btn:focus-visible, .dl-chips button:focus-visible, .dl-viewtoggle button:focus-visible, .dl-ghead:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
 .dl-meta { display: flex; gap: 10px; font-size: 12.5px; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dl-cat { font-weight: 700; }
 .dl-job { font-size: 13.5px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dl-date { font-size: 13px; color: var(--text-secondary); white-space: nowrap; }
-.dl-badge { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: rgba(44,255,122,0.10); color: #2CFF7A; border: 1px solid rgba(44,255,122,0.32); }
+.dl-badge { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: rgba(74,222,128,0.10); color: #4ADE80; border: 1px solid rgba(74,222,128,0.32); }
 .dl-actions { display: flex; justify-content: flex-end; gap: 6px; }
 .dl-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 0 12px; border-radius: 9px; border: 1px solid var(--glass-border); background: var(--bg-surface-2); color: var(--text-primary); font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; }
 .dl-btn:hover { border-color: var(--brand-primary-35); }
@@ -342,13 +342,13 @@ const CSS = `
 .dl-primary { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 14px; border: 0; border-radius: 9px; background: var(--brand-primary); color: var(--on-brand); font-weight: 800; font-size: 13px; cursor: pointer; }
 .dl-link { background: none; border: 0; color: var(--brand-primary); font-weight: 700; cursor: pointer; font-size: 13px; }
 .dl-state { padding: 28px 16px; text-align: center; color: var(--text-secondary); font-size: 14px; }
-.dl-err { color: #FF3B30; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.dl-err { color: #F87171; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
 .dl-skel span { height: 14px; border-radius: 6px; background: linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.08), rgba(255,255,255,0.04)); background-size: 200% 100%; animation: dlsk 1.4s ease infinite; }
 @keyframes dlsk { to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .dl-skel span { animation: none; } }
 .dl-group + .dl-group { border-top: 1px solid var(--glass-border); }
-.dl-ghead { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 0 14px; border: 0; background: rgba(255,230,0,0.05); color: var(--text-primary); cursor: pointer; font-size: 14px; font-weight: 800; text-align: left; }
-.dl-gname { color: var(--title-color, #FFE600); }
+.dl-ghead { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 0 14px; border: 0; background: rgba(255,224,0,0.05); color: var(--text-primary); cursor: pointer; font-size: 14px; font-weight: 800; text-align: left; }
+.dl-gname { color: var(--title-color, #FFE000); }
 .dl-gcount { margin-left: auto; font-size: 12.5px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
 .dl-more { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; font-size: 13px; color: var(--text-tertiary); }
 .dl-metaJob { display: none; }

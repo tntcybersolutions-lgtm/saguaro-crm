@@ -23,8 +23,8 @@ interface Project {
 
 const statusStyle = (s: string): { color: string; bg: string } => {
   const k = (s || '').toLowerCase();
-  if (k.includes('active') || k.includes('progress')) return { color: 'var(--success)', bg: 'rgba(44,255,122,.12)' };
-  if (k.includes('complete') || k.includes('closed')) return { color: 'var(--warning)', bg: 'rgba(255,138,0,.12)' };
+  if (k.includes('active') || k.includes('progress')) return { color: 'var(--success)', bg: 'rgba(74,222,128,.12)' };
+  if (k.includes('complete') || k.includes('closed')) return { color: 'var(--warning)', bg: 'rgba(251,191,36,.12)' };
   return { color: 'var(--warning)', bg: 'color-mix(in srgb, var(--warning) 12%, transparent)' };
 };
 

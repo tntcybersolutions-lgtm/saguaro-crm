@@ -536,10 +536,10 @@ export default function SafetyPage() {
       </div>
 
       {successMsg && (
-        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(44,255,122,0.4)`, borderRadius: 10, color: T.green, fontSize: 13 }}>{successMsg}</div>
+        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(74,222,128,0.4)`, borderRadius: 10, color: T.green, fontSize: 13 }}>{successMsg}</div>
       )}
       {errorMsg && (
-        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.redDim, border: `1px solid rgba(255,59,48,0.4)`, borderRadius: 10, color: T.red, fontSize: 13 }}>{errorMsg}</div>
+        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.redDim, border: `1px solid rgba(248,113,113,0.4)`, borderRadius: 10, color: T.red, fontSize: 13 }}>{errorMsg}</div>
       )}
 
       {/* Create Incident Form */}
@@ -567,7 +567,7 @@ export default function SafetyPage() {
                 <div style={hint}>Drives the OSHA-recordable flag below.</div>
               </div>
               <div style={{ gridColumn: 'span 3' }}>
-                <div style={{ padding: '9px 12px', borderRadius: 8, fontSize: 12, lineHeight: 1.5, background: formIsRecordable ? 'rgba(255,59,48,0.10)' : 'rgba(44,255,122,0.08)', border: `1px solid ${formIsRecordable ? 'rgba(255,59,48,0.35)' : 'rgba(44,255,122,0.3)'}`, color: formIsRecordable ? '#F0A092' : GREEN }}>
+                <div style={{ padding: '9px 12px', borderRadius: 8, fontSize: 12, lineHeight: 1.5, background: formIsRecordable ? 'rgba(248,113,113,0.10)' : 'rgba(74,222,128,0.08)', border: `1px solid ${formIsRecordable ? 'rgba(248,113,113,0.35)' : 'rgba(74,222,128,0.3)'}`, color: formIsRecordable ? '#F0A092' : GREEN }}>
                   {formIsRecordable
                     ? 'OSHA-recordable: this incident will be flagged for the 300 log. Recordables generally must be logged within 7 calendar days; fatalities reported within 8 hours, in-patient hospitalizations within 24.'
                     : 'Not OSHA-recordable as classified — it will be saved for internal tracking and trend analysis only.'}

@@ -11,8 +11,8 @@ const C = {
   border: 'rgba(255,255,255,0.10)',
   raised: 'var(--bg-surface)',
   raisedAlt: 'var(--bg-surface-2)',
-  green: '#2CFF7A',
-  blue: '#FF8A00',
+  green: '#4ADE80',
+  blue: '#FBBF24',
   font: "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
 };
 
@@ -288,7 +288,7 @@ export default function HelpCenterPage() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link href="/login" style={{ padding: '8px 16px', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, fontSize: 13, fontWeight: 500, textDecoration: 'none' }}>Log In</Link>
-          <Link href="/signup" style={{ padding: '8px 16px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Free Trial</Link>
+          <Link href="/signup" style={{ padding: '8px 16px', background: C.gold, borderRadius: 8, color: '#101722', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Free Trial</Link>
         </div>
       </nav>
 
@@ -522,7 +522,7 @@ export default function HelpCenterPage() {
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'stretch', minWidth: 220 }}>
-              <Link href="/contact" style={{ padding: '13px 28px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 15, textDecoration: 'none', textAlign: 'center' }}>
+              <Link href="/contact" style={{ padding: '13px 28px', background: C.gold, borderRadius: 8, color: '#101722', fontWeight: 600, fontSize: 15, textDecoration: 'none', textAlign: 'center' }}>
                 Contact Support
               </Link>
               <Link href="/signup" style={{ padding: '13px 28px', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, fontWeight: 500, fontSize: 15, textDecoration: 'none', textAlign: 'center' }}>

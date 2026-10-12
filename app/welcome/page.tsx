@@ -10,7 +10,7 @@ const HAIR  = 'rgba(255,255,255,0.08)';
 const DIM   = 'var(--text-secondary)';
 const MUTED = 'var(--text-secondary)';
 const TEXT  = '#FFFFFF';
-const GREEN = '#2CFF7A';
+const GREEN = '#4ADE80';
 
 export default function WelcomePage() {
   const [name, setName] = useState('');
@@ -111,7 +111,7 @@ export default function WelcomePage() {
                 <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, marginBottom: 6 }}>{item.title}</div>
                 <div style={{ fontSize: 13, color: DIM, lineHeight: 1.6, marginBottom: 16 }}>{item.desc}</div>
                 {item.primary ? (
-                  <a href={item.href} style={{ display: 'inline-block', padding: '10px 20px', background: GOLD, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>
+                  <a href={item.href} style={{ display: 'inline-block', padding: '10px 20px', background: GOLD, borderRadius: 8, color: '#101722', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>
                     {item.cta}
                   </a>
                 ) : (
@@ -148,7 +148,7 @@ export default function WelcomePage() {
           {['30 days free', 'No credit card yet', 'Cancel anytime', 'Free migration included'].map(t => (
             <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: DIM }}>
               <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-                <circle cx="8" cy="8" r="8" fill="rgba(44,255,122,0.15)" />
+                <circle cx="8" cy="8" r="8" fill="rgba(74,222,128,0.15)" />
                 <path d="M4.5 8l2.5 2.5 4-5" stroke={GREEN} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               {t}

@@ -34,10 +34,10 @@ import { humanError } from '@/lib/errors';
 /* ── palette (Sonoran navy + gold) ──────────────────────────────────────── */
 const BG = 'var(--bg-base)', PANEL = 'var(--bg-surface)', LINE = 'rgba(255,255,255,0.09)', GOLD = 'var(--brand-primary)';
 // Canvas 2D cannot resolve CSS custom properties — the drawing surface keeps literal brand hexes.
-const CANVAS_GOLD = '#FF8A00', CANVAS_CYAN = '#FFE600';
-const TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#2CFF7A', RED = '#FF3B30', CYAN = 'var(--brand-primary-strong)';
+const CANVAS_GOLD = '#FBBF24', CANVAS_CYAN = '#FFE000';
+const TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#4ADE80', RED = '#F87171', CYAN = 'var(--brand-primary-strong)';
 const CANVAS_BG = '#0b0e13';
-const TRADE_PALETTE = ['#FFE600', '#2CFF7A', '#FF8A00', '#FF8A00', '#FF8A00', '#FB7185', '#FF8A00', '#FFE600', '#2CFF7A', '#FFE600', '#FF8A00', '#2CFF7A'];
+const TRADE_PALETTE = ['#FFE000', '#4ADE80', '#FBBF24', '#FBBF24', '#FBBF24', '#FB7185', '#FBBF24', '#FFE000', '#4ADE80', '#FFE000', '#FBBF24', '#4ADE80'];
 const uid = () => Math.random().toString(36).slice(2, 9);
 const usd = (c: number) => '$' + Math.round(c / 100).toLocaleString();
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
@@ -893,7 +893,7 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
 
     // foot grid
     if (gridOn && ppf > 0 && scale * ppf * (+gridFt || 1) > 7) {
-      const g = Math.max(0.25, +gridFt || 1) * ppf; ctx.strokeStyle = 'rgba(255,138,0,0.12)'; ctx.lineWidth = 1;
+      const g = Math.max(0.25, +gridFt || 1) * ppf; ctx.strokeStyle = 'rgba(251,191,36,0.12)'; ctx.lineWidth = 1;
       const x0 = Math.floor((-tx / scale) / g) * g, x1 = (-tx + cssSize.w) / scale, y0 = Math.floor((-ty / scale) / g) * g, y1 = (-ty + cssSize.h) / scale;
       ctx.beginPath(); for (let x = x0; x < x1; x += g) { const a = sc({ x, y: y0 }), b = sc({ x, y: y1 }); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); }
       for (let y = y0; y < y1; y += g) { const a = sc({ x: x0, y }), b = sc({ x: x1, y }); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); } ctx.stroke();
@@ -928,7 +928,7 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
         if (isArea) { ctx.closePath(); ctx.fillStyle = col; ctx.globalAlpha = sel ? 0.22 : 0.13; ctx.fill(); ctx.globalAlpha = 1; }
         ctx.stroke();
         // voids
-        if (c.holes) for (const h of c.holes) { const hp = h.map(sc); ctx.beginPath(); ctx.moveTo(hp[0].x, hp[0].y); for (let i = 1; i < hp.length; i++) ctx.lineTo(hp[i].x, hp[i].y); ctx.closePath(); ctx.fillStyle = 'rgba(255,59,48,0.18)'; ctx.fill(); ctx.setLineDash([5, 4]); ctx.strokeStyle = RED; ctx.lineWidth = 1.5; ctx.stroke(); ctx.setLineDash([]); ctx.strokeStyle = col; }
+        if (c.holes) for (const h of c.holes) { const hp = h.map(sc); ctx.beginPath(); ctx.moveTo(hp[0].x, hp[0].y); for (let i = 1; i < hp.length; i++) ctx.lineTo(hp[i].x, hp[i].y); ctx.closePath(); ctx.fillStyle = 'rgba(248,113,113,0.18)'; ctx.fill(); ctx.setLineDash([5, 4]); ctx.strokeStyle = RED; ctx.lineWidth = 1.5; ctx.stroke(); ctx.setLineDash([]); ctx.strokeStyle = col; }
       }
       // vertices when selected — capped at 300 handles (an uncapped 3000-marker auto-count froze the paint;
       // above the cap the heat-dot layer above is the selection affordance and the vertex list paginates)
@@ -948,7 +948,7 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
     }
 
     // active area voids (draft)
-    for (const h of holes) { const hp = h.map(sc); ctx.beginPath(); ctx.moveTo(hp[0].x, hp[0].y); for (let i = 1; i < hp.length; i++) ctx.lineTo(hp[i].x, hp[i].y); ctx.closePath(); ctx.fillStyle = 'rgba(255,59,48,0.2)'; ctx.fill(); ctx.setLineDash([5, 4]); ctx.strokeStyle = RED; ctx.lineWidth = 1.6; ctx.stroke(); ctx.setLineDash([]); }
+    for (const h of holes) { const hp = h.map(sc); ctx.beginPath(); ctx.moveTo(hp[0].x, hp[0].y); for (let i = 1; i < hp.length; i++) ctx.lineTo(hp[i].x, hp[i].y); ctx.closePath(); ctx.fillStyle = 'rgba(248,113,113,0.2)'; ctx.fill(); ctx.setLineDash([5, 4]); ctx.strokeStyle = RED; ctx.lineWidth = 1.6; ctx.stroke(); ctx.setLineDash([]); }
 
     // active draft
     const drawPts = draft.map(sc);
@@ -982,7 +982,7 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
       const a = sc(box.a), b = sc(box.b);
       ctx.save(); ctx.strokeStyle = CANVAS_GOLD; ctx.setLineDash([6, 4]); ctx.lineWidth = 1.6;
       ctx.strokeRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y));
-      ctx.setLineDash([]); ctx.fillStyle = 'rgba(255,138,0,0.10)'; ctx.fillRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y)); ctx.restore();
+      ctx.setLineDash([]); ctx.fillStyle = 'rgba(251,191,36,0.10)'; ctx.fillRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y)); ctx.restore();
     }
 
     // snap indicator
@@ -1074,8 +1074,8 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
           {!planUrl ? (
             <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 24 }}>
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
-                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 9, background: GOLD, color: '#0A0A00', fontWeight: 700, borderRadius: 9, padding: '12px 20px', cursor: 'pointer' }}>
-                  <G g="pdf" s={18} c="#0A0A00" />Open PDF plan set
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 9, background: GOLD, color: '#101722', fontWeight: 700, borderRadius: 9, padding: '12px 20px', cursor: 'pointer' }}>
+                  <G g="pdf" s={18} c="#101722" />Open PDF plan set
                   <input type="file" accept="application/pdf,.pdf" style={{ display: 'none' }} onChange={(e) => { onAddFile(e.target.files?.[0]); (e.target as HTMLInputElement).value = ''; }} />
                 </label>
                 <label style={{ display: 'inline-flex', alignItems: 'center', gap: 9, background: 'transparent', color: TEXT, border: `1px solid ${LINE}`, fontWeight: 700, borderRadius: 9, padding: '12px 20px', cursor: 'pointer' }}>
@@ -1111,7 +1111,7 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
               <div style={{ pointerEvents: 'auto', background: 'rgba(13,17,23,0.95)', border: `1px solid ${GOLD}`, borderRadius: 9, padding: 10, display: 'flex', gap: 8, alignItems: 'center' }}>
                 <span style={{ fontSize: 12.5, color: TEXT }}>Known Distance</span>
                 <input autoFocus value={knownFt} onChange={(e) => setKnownFt(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && applyScale()} placeholder="ft" style={{ ...inp, width: 80 }} />
-                <button onClick={applyScale} style={{ background: GOLD, color: '#0A0A00', fontWeight: 700, border: 'none', borderRadius: 7, padding: '8px 12px', cursor: 'pointer' }}>Set</button>
+                <button onClick={applyScale} style={{ background: GOLD, color: '#101722', fontWeight: 700, border: 'none', borderRadius: 7, padding: '8px 12px', cursor: 'pointer' }}>Set</button>
               </div>
             )}
           </div>
@@ -1162,7 +1162,7 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
                             </div>}
                       </div>
                     )}
-                    <button onClick={finishDraft} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, background: GOLD, color: '#0A0A00', fontWeight: 700, border: 'none', borderRadius: 8, padding: '10px', cursor: 'pointer', fontSize: 13.5 }}><G g="check" s={17} c="#0A0A00" />{targetConditionId ? 'Set Measured Value' : 'Add Condition'}</button>
+                    <button onClick={finishDraft} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, background: GOLD, color: '#101722', fontWeight: 700, border: 'none', borderRadius: 8, padding: '10px', cursor: 'pointer', fontSize: 13.5 }}><G g="check" s={17} c="#101722" />{targetConditionId ? 'Set Measured Value' : 'Add Condition'}</button>
                   </div>
                 )}
                 {tool === 'deduction' && <div style={{ fontSize: 12, color: DIM, marginTop: 8 }}>Draw a hole inside the active area (or select an area shape first). Double-click to finish the void.</div>}
@@ -1219,12 +1219,12 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
                         ))}
                       </div>
                       {pages > 1 && (
-                        <button onClick={() => deleteVertexRange(selected.id, start, end)} style={{ ...miniBtn, width: '100%', height: 28, marginTop: 5, fontSize: 12, color: RED, borderColor: 'rgba(255,59,48,0.4)' }}>Delete this page ({end - start} markers)</button>
+                        <button onClick={() => deleteVertexRange(selected.id, start, end)} style={{ ...miniBtn, width: '100%', height: 28, marginTop: 5, fontSize: 12, color: RED, borderColor: 'rgba(248,113,113,0.4)' }}>Delete this page ({end - start} markers)</button>
                       )}
                     </>
                   );
                 })()}
-                <button onClick={() => { commit(() => setConditions((cs) => cs.filter((c) => c.id !== selected.id))); setSelId(null); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, width: '100%', marginTop: 8, border: `1px solid rgba(255,59,48,0.4)`, background: 'rgba(255,59,48,0.08)', color: RED, borderRadius: 8, padding: '8px', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}><G g="trash" s={15} c={RED} />Delete Condition</button>
+                <button onClick={() => { commit(() => setConditions((cs) => cs.filter((c) => c.id !== selected.id))); setSelId(null); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, width: '100%', marginTop: 8, border: `1px solid rgba(248,113,113,0.4)`, background: 'rgba(248,113,113,0.08)', color: RED, borderRadius: 8, padding: '8px', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}><G g="trash" s={15} c={RED} />Delete Condition</button>
               </div>
             )}
 

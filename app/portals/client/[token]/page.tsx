@@ -32,11 +32,11 @@ const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const TEXT = '#FFFFFF';
 const DIM = 'var(--text-secondary)';
-const GREEN = '#2CFF7A';
-const RED = '#FF3B30';
-const AMBER = '#FF8A00';
+const GREEN = '#4ADE80';
+const RED = '#F87171';
+const AMBER = '#FBBF24';
 const BLUE = 'var(--brand-primary)';
-const PURPLE = '#FF8A00';
+const PURPLE = '#FBBF24';
 
 /* ── Helpers ──────────────────────────────────────────────────────── */
 const fmt = (n: number) =>
@@ -810,7 +810,7 @@ export default function ClientPortalPage() {
 
   const btnPrimary: React.CSSProperties = {
     background: GOLD,
-    color: '#0A0A00',
+    color: '#101722',
     border: 'none',
     borderRadius: 8,
     padding: '10px 20px',
@@ -2028,7 +2028,7 @@ export default function ClientPortalPage() {
               )}
               {tab.id === 'approvals' && pendingApprovalCount > 0 && (
                 <span style={{
-                  background: AMBER, color: '#0A0A00', fontSize: 10, fontWeight: 800,
+                  background: AMBER, color: '#101722', fontSize: 10, fontWeight: 800,
                   borderRadius: 10, padding: '2px 6px', minWidth: 18, textAlign: 'center',
                   lineHeight: '14px',
                 }}>
@@ -2177,7 +2177,7 @@ export default function ClientPortalPage() {
             height: 48,
             borderRadius: '50%',
             background: GOLD,
-            color: '#0A0A00',
+            color: '#101722',
             border: 'none',
             fontSize: 20,
             fontWeight: 800,

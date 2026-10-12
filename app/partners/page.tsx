@@ -13,8 +13,8 @@ const C = {
   cardBg: 'rgba(255,255,255,0.02)',
   raised: 'var(--bg-surface)',
   raisedAlt: 'var(--bg-surface-2)',
-  green: '#2CFF7A',
-  blue: '#FF8A00',
+  green: '#4ADE80',
+  blue: '#FBBF24',
   font: "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
 };
 
@@ -31,7 +31,7 @@ const INTEGRATIONS = [
     name: 'QuickBooks',
     category: 'Accounting',
     status: 'Live',
-    accent: '#2CFF7A',
+    accent: '#4ADE80',
     abbr: 'QB',
     desc: 'Approved AIA G702/G703 pay applications go to QuickBooks Online as invoices to the job owner, and your subcontractors as vendors — entered once in Saguaro, never typed twice.',
     bullets: [
@@ -45,7 +45,7 @@ const INTEGRATIONS = [
     name: 'Stripe',
     category: 'Payments',
     status: 'Live',
-    accent: '#FF8A00',
+    accent: '#FBBF24',
     abbr: 'S',
     desc: 'Collect owner payments and subcontractor disbursements directly from approved pay applications. ACH and card payments settle against the draw schedule, with receipts attached to the project ledger automatically.',
     bullets: [
@@ -129,7 +129,7 @@ const INTEGRATIONS = [
     name: 'Open REST API',
     category: 'Developer',
     status: 'Live',
-    accent: '#FF8A00',
+    accent: '#FBBF24',
     abbr: 'API',
     desc: 'A full REST API and webhook system for building custom workflows on top of Saguaro. Read and write projects, pay apps, RFIs, and takeoffs, and subscribe to real-time events from your own stack.',
     bullets: [
@@ -142,7 +142,7 @@ const INTEGRATIONS = [
 ];
 
 const STATUS_STYLES: Record<string, { color: string; bg: string; border: string }> = {
-  Live: { color: C.green, bg: 'transparent', border: 'rgba(44,255,122,0.30)' },
+  Live: { color: C.green, bg: 'transparent', border: 'rgba(74,222,128,0.30)' },
   Beta: { color: C.dim, bg: 'transparent', border: 'rgba(255,255,255,0.14)' },
 };
 
@@ -282,7 +282,7 @@ export default function PartnersPage() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link href="/login" style={{ padding: '8px 16px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 8, color: C.dim, fontSize: 13, fontWeight: 500, textDecoration: 'none' }}>Log In</Link>
-          <Link href="/signup" style={{ padding: '8px 18px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Free Trial</Link>
+          <Link href="/signup" style={{ padding: '8px 18px', background: C.gold, borderRadius: 8, color: '#101722', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Free Trial</Link>
         </div>
       </nav>
 
@@ -305,7 +305,7 @@ export default function PartnersPage() {
             Saguaro Control Systems connects to QuickBooks, Stripe, DocuSign, and Autodesk — and the Open API lets anyone build more. Integrate, resell, or refer, and grow alongside the AI-powered construction platform.
           </p>
           <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/signup" style={{ display: 'inline-block', padding: '12px 28px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
+            <Link href="/signup" style={{ display: 'inline-block', padding: '12px 28px', background: C.gold, borderRadius: 8, color: '#101722', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
               Start Free — Connect Your Stack
             </Link>
             <a href="#become-a-partner" style={{ display: 'inline-block', padding: '12px 28px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 8, color: C.dim, fontWeight: 500, fontSize: 15, textDecoration: 'none' }}>
@@ -391,7 +391,7 @@ export default function PartnersPage() {
                 boxShadow: 'none',
               }}>
                 {tier.popular && (
-                  <div style={{ background: C.gold, textAlign: 'center', padding: '7px 0', fontSize: 11, fontWeight: 600, color: '#0A0A00' }}>
+                  <div style={{ background: C.gold, textAlign: 'center', padding: '7px 0', fontSize: 11, fontWeight: 600, color: '#101722' }}>
                     Most Popular
                   </div>
                 )}
@@ -415,7 +415,7 @@ export default function PartnersPage() {
                     display: 'block', textAlign: 'center', padding: '12px 0',
                     background: tier.popular ? C.gold : 'transparent',
                     border: tier.popular ? '1px solid transparent' : `1px solid ${C.hairline}`,
-                    borderRadius: 8, color: tier.popular ? '#0A0A00' : C.text,
+                    borderRadius: 8, color: tier.popular ? '#101722' : C.text,
                     fontWeight: 600, fontSize: 14, textDecoration: 'none', letterSpacing: 0.2,
                     boxShadow: 'none',
                   }}>
@@ -470,7 +470,7 @@ export default function PartnersPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', minWidth: 220 }}>
               <div style={{ fontSize: 44, fontWeight: 600, color: C.text, lineHeight: 1 }}>20%</div>
               <div style={{ fontSize: 14, color: C.dim, textAlign: 'center' }}>Recurring Commission<br />for 12 Months</div>
-              <a href="mailto:partners@saguarocontrol.net" style={{ padding: '12px 24px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 14, textDecoration: 'none', textAlign: 'center' }}>
+              <a href="mailto:partners@saguarocontrol.net" style={{ padding: '12px 24px', background: C.gold, borderRadius: 8, color: '#101722', fontWeight: 600, fontSize: 14, textDecoration: 'none', textAlign: 'center' }}>
                 Apply to Partner
               </a>
               <Link href="/signup" style={{ fontSize: 13, color: C.gold, textDecoration: 'none', fontWeight: 500 }}>Or Start a Free Trial First →</Link>
@@ -512,7 +512,7 @@ export default function PartnersPage() {
               Connect your stack on a free trial, or apply to the partner program and grow with the AI-powered construction platform.
             </p>
             <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 40 }}>
-              <Link href="/signup" style={{ display: 'inline-block', padding: '12px 28px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
+              <Link href="/signup" style={{ display: 'inline-block', padding: '12px 28px', background: C.gold, borderRadius: 8, color: '#101722', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
                 Start Free Trial — No CC Required
               </Link>
               <a href="mailto:partners@saguarocontrol.net" style={{ display: 'inline-block', padding: '12px 28px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 8, color: C.dim, fontWeight: 500, fontSize: 15, textDecoration: 'none' }}>

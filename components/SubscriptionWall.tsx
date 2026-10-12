@@ -116,8 +116,8 @@ export default function SubscriptionWall({ children }: { children: React.ReactNo
         {/* Icon */}
         <div style={{
           width: 72, height: 72, borderRadius: 20, margin: '0 auto 28px',
-          background: isPastDue ? 'rgba(255,59,48,0.10)' : 'rgba(255,149,0,0.10)',
-          border: `1px solid ${isPastDue ? 'rgba(255,59,48,0.22)' : 'rgba(255,149,0,0.22)'}`,
+          background: isPastDue ? 'rgba(248,113,113,0.10)' : 'rgba(255,149,0,0.10)',
+          border: `1px solid ${isPastDue ? 'rgba(248,113,113,0.22)' : 'rgba(255,149,0,0.22)'}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -195,7 +195,7 @@ export default function SubscriptionWall({ children }: { children: React.ReactNo
             background: isPastDue ? RED : GOLD,
             borderRadius: 12, color: 'var(--text-primary)',
             fontWeight: 700, fontSize: 15, textDecoration: 'none',
-            boxShadow: isPastDue ? '0 4px 16px rgba(255,59,48,0.25)' : '0 4px 16px var(--brand-primary-25)',
+            boxShadow: isPastDue ? '0 4px 16px rgba(248,113,113,0.25)' : '0 4px 16px var(--brand-primary-25)',
           }}>
             {isPastDue ? 'Update Payment Method' : 'Upgrade Now →'}
           </Link>}
@@ -213,7 +213,7 @@ export default function SubscriptionWall({ children }: { children: React.ReactNo
           {['Your data is safe', 'Cancel anytime', 'No per-seat fees'].map(t => (
             <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: DIM }}>
               <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                <circle cx="8" cy="8" r="8" fill="rgba(44,255,122,0.15)" />
+                <circle cx="8" cy="8" r="8" fill="rgba(74,222,128,0.15)" />
                 <path d="M4.5 8l2.5 2.5 4-5" stroke={GREEN} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               {t}

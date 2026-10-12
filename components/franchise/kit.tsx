@@ -10,8 +10,8 @@ import { useFeature } from '@/lib/hooks/useEntitlements';
 import type { Severity } from '@/lib/franchise';
 
 export const C = {
-  gold: '#FF8A00', green: '#2CFF7A', yellow: '#FF8A00', red: '#FF3B30', blue: '#FF8A00',
-  bg: '#0a0a0a', card: '#0E0F12', border: 'rgba(255,255,255,0.12)', dim: 'var(--text-secondary)', text: '#FFFFFF', faint: 'var(--text-secondary)',
+  gold: '#FBBF24', green: '#4ADE80', yellow: '#FBBF24', red: '#F87171', blue: '#FBBF24',
+  bg: '#0a0a0a', card: '#1B2636', border: 'rgba(255,255,255,0.12)', dim: 'var(--text-secondary)', text: '#FFFFFF', faint: 'var(--text-secondary)',
 };
 export const SEV_COLOR: Record<Severity, string> = { green: C.green, yellow: C.yellow, red: C.red };
 export const font = "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
@@ -126,7 +126,7 @@ export function AttentionBanner({ red, yellow, noun }: { red: number; yellow: nu
   if (n <= 0) return null;
   const hot = red > 0;
   return (
-    <div style={{ background: hot ? 'rgba(255,59,48,0.08)' : 'rgba(255,149,0,0.08)', border: `1px solid ${hot ? 'rgba(255,59,48,0.25)' : 'rgba(255,149,0,0.25)'}`, borderRadius: 12, padding: '13px 16px', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>
+    <div style={{ background: hot ? 'rgba(248,113,113,0.08)' : 'rgba(255,149,0,0.08)', border: `1px solid ${hot ? 'rgba(248,113,113,0.25)' : 'rgba(255,149,0,0.25)'}`, borderRadius: 12, padding: '13px 16px', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>
       <Circle size={18} weight="fill" color={hot ? C.red : C.yellow} />
       <span style={{ color: C.text }}>
         <b>{n}</b> {n === 1 ? `${noun} needs` : `${noun}s need`} attention

@@ -50,7 +50,7 @@ const CSS = `
 .eodDest { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .eodOpt { display: flex; gap: 12px; align-items: flex-start; text-align: left; min-height: 76px; padding: 14px; border-radius: 14px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.03); color: var(--text-primary); font: inherit; cursor: pointer; }
 .eodOpt:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
-.eodOpt[aria-checked="true"] { border-color: var(--brand-primary); background: var(--brand-primary-08, rgba(255,230,0,0.08)); box-shadow: 0 0 0 1px var(--brand-primary); }
+.eodOpt[aria-checked="true"] { border-color: var(--brand-primary); background: var(--brand-primary-08, rgba(255,224,0,0.08)); box-shadow: 0 0 0 1px var(--brand-primary); }
 .eodOpt svg { flex: 0 0 auto; margin-top: 2px; color: var(--brand-primary); }
 .eodOpt b { display: block; font-size: 15px; font-weight: 800; }
 .eodOpt small { display: block; margin-top: 3px; font-size: 12.5px; line-height: 1.4; color: var(--text-tertiary); }

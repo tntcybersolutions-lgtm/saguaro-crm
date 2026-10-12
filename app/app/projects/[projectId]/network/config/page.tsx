@@ -309,9 +309,9 @@ export default function ConfigGeneratorPage() {
                         style={{
                           display: 'inline-flex', alignItems: 'center', gap: 6,
                           padding: '7px 13px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                          background: copied ? 'rgba(44,255,122,0.14)' : 'rgba(255,255,255,0.04)',
+                          background: copied ? 'rgba(74,222,128,0.14)' : 'rgba(255,255,255,0.04)',
                           color: copied ? GREEN : 'rgba(255,255,255,0.82)',
-                          border: `1px solid ${copied ? 'rgba(44,255,122,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                          border: `1px solid ${copied ? 'rgba(74,222,128,0.4)' : 'rgba(255,255,255,0.08)'}`,
                         }}
                       >
                         <Copy size={13} weight="bold" />{copied ? 'Copied!' : 'Copy'}

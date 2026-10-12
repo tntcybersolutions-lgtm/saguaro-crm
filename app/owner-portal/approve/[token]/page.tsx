@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Cactus, Check, CheckCircle, X, XCircle } from '@phosphor-icons/react';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='#FFFFFF',GREEN='#22a85e',RED='#FF3B30';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='#FFFFFF',GREEN='#22a85e',RED='#F87171';
 
 export default function OwnerApprovePage() {
   const params = useParams();
@@ -47,7 +47,7 @@ export default function OwnerApprovePage() {
         <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:32}}>
           <Cactus size={24} weight="fill" color={GOLD} />
           <span style={{fontWeight:900,fontSize:18,color:GOLD}}>Saguaro</span>
-          <span style={{fontSize:10,background:GOLD,color:'#0A0A00',padding:'2px 8px',borderRadius:4,fontWeight:700}}>Owner Portal</span>
+          <span style={{fontSize:10,background:GOLD,color:'#101722',padding:'2px 8px',borderRadius:4,fontWeight:700}}>Owner Portal</span>
         </div>
 
         <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:14,overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,.5)'}}>
@@ -76,10 +76,10 @@ export default function OwnerApprovePage() {
             </div>
 
             <div style={{display:'flex',gap:12}}>
-              <button onClick={()=>{setDecision('approved');submit('approved');}} disabled={submitting} style={{flex:1,padding:14,background:'linear-gradient(135deg,#2CFF7A,#22a85e)',border:'none',borderRadius:8,color:'#fff',fontSize:15,fontWeight:800,cursor:'pointer',opacity:submitting?.7:1}}>
+              <button onClick={()=>{setDecision('approved');submit('approved');}} disabled={submitting} style={{flex:1,padding:14,background:'linear-gradient(135deg,#4ADE80,#22a85e)',border:'none',borderRadius:8,color:'#fff',fontSize:15,fontWeight:800,cursor:'pointer',opacity:submitting?.7:1}}>
                 <Check size={16} weight="bold" /> Approve — ${amount.toLocaleString()}
               </button>
-              <button onClick={()=>{setDecision('rejected');submit('rejected');}} disabled={submitting} style={{flex:1,padding:14,background:'rgba(192,48,48,.12)',border:'1px solid rgba(192,48,48,.3)',borderRadius:8,color:'#FF3B30',fontSize:15,fontWeight:800,cursor:'pointer'}}>
+              <button onClick={()=>{setDecision('rejected');submit('rejected');}} disabled={submitting} style={{flex:1,padding:14,background:'rgba(192,48,48,.12)',border:'1px solid rgba(192,48,48,.3)',borderRadius:8,color:'#F87171',fontSize:15,fontWeight:800,cursor:'pointer'}}>
                 <X size={16} weight="bold" /> Reject
               </button>
             </div>

@@ -570,7 +570,7 @@ export default function NotificationSettingsPage() {
             style={{
               ...ghostButtonStyle,
               color: RED,
-              borderColor: 'rgba(255,59,48,0.45)',
+              borderColor: 'rgba(248,113,113,0.45)',
               opacity: resetting ? 0.6 : 1,
             }}
             onClick={resetToDefaults}
@@ -1049,7 +1049,7 @@ export default function NotificationSettingsPage() {
             style={{
               ...ghostButtonStyle,
               color: RED,
-              borderColor: 'rgba(255,59,48,0.45)',
+              borderColor: 'rgba(248,113,113,0.45)',
               opacity: resetting ? 0.6 : 1,
             }}
             onClick={resetToDefaults}

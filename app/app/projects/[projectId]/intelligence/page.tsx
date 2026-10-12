@@ -239,7 +239,7 @@ function IntelligenceChat() {
               </div>
             </div>
 
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)', boxShadow: '0 0 6px #2CFF7A', marginBottom: '20px', display: 'inline-block' }} />
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)', boxShadow: '0 0 6px #4ADE80', marginBottom: '20px', display: 'inline-block' }} />
             <span style={{ fontSize: '11px', color: DIM, marginLeft: '6px' }}>Online</span>
 
             {ctx && (

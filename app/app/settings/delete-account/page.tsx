@@ -113,8 +113,8 @@ export default function DeleteAccountPage() {
               style={{
                 display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', marginBottom: 20,
                 borderRadius: 12,
-                border: `1px solid ${workspace ? 'rgba(255,59,48,0.45)' : 'color-mix(in srgb, var(--warning) 35%, transparent)'}`,
-                background: workspace ? 'rgba(255,59,48,0.10)' : 'color-mix(in srgb, var(--warning) 8%, transparent)',
+                border: `1px solid ${workspace ? 'rgba(248,113,113,0.45)' : 'color-mix(in srgb, var(--warning) 35%, transparent)'}`,
+                background: workspace ? 'rgba(248,113,113,0.10)' : 'color-mix(in srgb, var(--warning) 8%, transparent)',
               }}
             >
               <Warning size={22} weight="fill" color={workspace ? RED : 'var(--warning)'} />

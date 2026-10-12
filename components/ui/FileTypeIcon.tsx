@@ -29,7 +29,7 @@ export const PdfIcon = ({ size = 18 }: { size?: number }) => <FileGlyph color="#
 export const XlsIcon = ({ size = 18 }: { size?: number }) => <FileGlyph color="#1E7145" label="XLS" size={size} />;
 /** Excel-green CSV variant. */
 export const CsvIcon = ({ size = 18 }: { size?: number }) => <FileGlyph color="#1E7145" label="CSV" size={size} />;
-/** Word. #FF8A00 is Microsoft's own Word blue, matching the Excel green and
+/** Word. #FBBF24 is Microsoft's own Word blue, matching the Excel green and
  *  Acrobat red already used here so the row reads as one family. */
 export const DocIcon = ({ size = 18 }: { size?: number }) => <FileGlyph color="var(--warning)" label="DOC" size={size} />;
 

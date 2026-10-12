@@ -36,7 +36,7 @@ interface Batch { key: string; items: Item[]; at: string; who: string; note: str
 const CSS = `
 .sx { display: flex; flex-direction: column; gap: 14px; }
 .sxBatch { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); background: rgba(255,255,255,0.02); }
-.sxBatch[data-new="true"] { border-color: var(--brand-primary-35, rgba(255,230,0,0.35)); }
+.sxBatch[data-new="true"] { border-color: var(--brand-primary-35, rgba(255,224,0,0.35)); }
 .sxTop { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
 .sxWho { font-size: var(--fs-md, 15px); font-weight: 800; color: var(--text-primary); }
 .sxWhen { font-size: var(--fs-xs, 12px); color: var(--text-tertiary); }

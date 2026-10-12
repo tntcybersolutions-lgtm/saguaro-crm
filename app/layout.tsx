@@ -138,8 +138,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <meta charSet="utf-8" />
         {/* Theme color + status bar tint */}
-        <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
-        <meta name="theme-color" content="#000000" />
+        <meta name="theme-color" content="#101722" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#101722" />
         {/* Apple touch icons — PNG, multiple sizes for iPhone/iPad/Mac */}
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="apple-touch-icon" sizes="120x120" href="/icons/icon-120x120.png" />
@@ -149,7 +149,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
         {/* Microsoft Tiles */}
-        <meta name="msapplication-TileColor" content="#000000" />
+        <meta name="msapplication-TileColor" content="#101722" />
         <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
         <meta name="msapplication-config" content="none" />
         {/* Marketing pages are not a PWA — no site-wide service worker registration and no

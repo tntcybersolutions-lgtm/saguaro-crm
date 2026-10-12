@@ -14,12 +14,12 @@ const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const TEXT = 'var(--text-primary)';
 const DIM = 'var(--text-secondary)';
-const GREEN = '#2CFF7A';
-const RED = '#FF3B30';
+const GREEN = '#4ADE80';
+const RED = '#F87171';
 const AMBER = 'var(--warning)';
 const BLUE = 'var(--brand-primary)';
 const ROLE_HEX = 'var(--warning)'; // stored role color value (sent to the API) — must stay hex
-const PURPLE = '#FF8A00';
+const PURPLE = '#FBBF24';
 
 /* ── types ── */
 type PermLevel = 'None' | 'View' | 'Edit' | 'Full';
@@ -1702,7 +1702,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
         <div style={{ marginBottom: 16 }}>
           <label style={labelStyle()}>Email</label>
           <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)}
-            placeholder="name@company.com" style={{ ...inputStyle(), borderColor: inviteEmailTrim && !inviteEmailValid ? 'rgba(255,59,48,0.55)' : BORDER }} />
+            placeholder="name@company.com" style={{ ...inputStyle(), borderColor: inviteEmailTrim && !inviteEmailValid ? 'rgba(248,113,113,0.55)' : BORDER }} />
           {inviteEmailTrim && !inviteEmailValid && (
             <p style={{ color: RED, fontSize: 11, marginTop: 4, marginBottom: 0 }}>Enter a valid email address — the invite link is delivered there.</p>
           )}

@@ -4,7 +4,7 @@ import type { Icon } from '@phosphor-icons/react';
 import { Cactus, CookingPot, Eye, House, Lightning, Question, Smiley, SmileyAngry, Sun, Wrench } from '@phosphor-icons/react';
 
 /* ─── Palette ─── */
-const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#2CFF7A';
+const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#4ADE80';
 const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = 'var(--text-secondary)', DARK = 'var(--bg-base)';
 const BLUE = 'var(--brand-primary)';
 
@@ -211,7 +211,7 @@ export default function SageChatPage() {
                   background: msg.role === 'user'
                     ? 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))'
                     : `color-mix(in srgb, ${CARD} 80%, transparent)`,
-                  color: msg.role === 'user' ? '#0A0A00' : TEXT,
+                  color: msg.role === 'user' ? '#101722' : TEXT,
                   fontSize: 14, lineHeight: 1.6,
                   borderBottomRightRadius: msg.role === 'user' ? 4 : 14,
                   borderBottomLeftRadius: msg.role === 'assistant' ? 4 : 14,
@@ -297,7 +297,7 @@ export default function SageChatPage() {
               background: input.trim() ? 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))' : `color-mix(in srgb, ${CARD} 80%, transparent)`,
               border: 'none', cursor: input.trim() ? 'pointer' : 'default',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 20, color: input.trim() ? '#0A0A00' : DIM,
+              fontSize: 20, color: input.trim() ? '#101722' : DIM,
               transition: 'all .2s',
             }}
           >

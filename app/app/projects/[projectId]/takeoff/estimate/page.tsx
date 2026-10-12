@@ -559,7 +559,7 @@ function EstimatePage() {
                   {(SHEET_DISCIPLINES.includes(newSheetDiscipline) ? SHEET_DISCIPLINES : [newSheetDiscipline, ...SHEET_DISCIPLINES]).map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
                 {sheetError && (
-                  <div style={{ fontSize: 12, lineHeight: 1.45, color: 'var(--danger)', background: 'rgba(255,59,48,0.10)', border: '1px solid rgba(255,59,48,0.28)', borderRadius: 8, padding: '7px 10px' }}>
+                  <div style={{ fontSize: 12, lineHeight: 1.45, color: 'var(--danger)', background: 'rgba(248,113,113,0.10)', border: '1px solid rgba(248,113,113,0.28)', borderRadius: 8, padding: '7px 10px' }}>
                     {sheetError}
                   </div>
                 )}

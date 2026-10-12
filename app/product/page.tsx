@@ -55,8 +55,8 @@ function IncludedTag() {
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', padding: '2px 9px', borderRadius: 999,
-      background: 'rgba(44,255,122,0.10)', border: '1px solid rgba(44,255,122,0.30)',
-      color: '#2CFF7A', fontSize: 11, fontWeight: 800,
+      background: 'rgba(74,222,128,0.10)', border: '1px solid rgba(74,222,128,0.30)',
+      color: '#4ADE80', fontSize: 11, fontWeight: 800,
       whiteSpace: 'nowrap',
     }}>Included</span>
   );

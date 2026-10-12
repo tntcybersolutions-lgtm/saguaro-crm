@@ -249,7 +249,7 @@ export default function CompliancePage() {
       </div>
 
       {toast && (
-        <div style={{ marginBottom: 20, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(44,255,122,0.3)`, borderRadius: 12, color: T.green, fontSize: 13 }}>
+        <div style={{ marginBottom: 20, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(74,222,128,0.3)`, borderRadius: 12, color: T.green, fontSize: 13 }}>
           {toast}
         </div>
       )}

@@ -238,7 +238,7 @@ export default function IntegrationsHubPage() {
   const compactDanger: React.CSSProperties = {
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
     padding: '7px 12px', borderRadius: 10, cursor: 'pointer', fontSize: 12, fontWeight: 700,
-    background: 'rgba(255,59,48,0.12)', color: RED, border: '1px solid rgba(255,59,48,0.35)',
+    background: 'rgba(248,113,113,0.12)', color: RED, border: '1px solid rgba(248,113,113,0.35)',
   };
 
   return (

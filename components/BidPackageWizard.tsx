@@ -464,7 +464,7 @@ function Step3({ trade, projectId, selectedSubs, onSelectedSubsChange, manualEma
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <span style={{
               fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4,
-              background: sub.winRate >= 75 ? 'rgba(44,255,122,0.12)' : 'var(--brand-primary-12)',
+              background: sub.winRate >= 75 ? 'rgba(74,222,128,0.12)' : 'var(--brand-primary-12)',
               color: sub.winRate >= 75 ? GREEN : GOLD,
             }}>
               {sub.winRate}% Win

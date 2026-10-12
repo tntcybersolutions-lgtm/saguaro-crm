@@ -8,7 +8,7 @@ import { UsersThree, ChatCircleDots, Buildings, ClockCounterClockwise, ListCheck
 
 /* ── palette ──────────────────────────────────────────── */
 const GOLD='var(--brand-primary)',BG='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',TEXT='var(--text-primary)',DIM='var(--text-secondary)';
-const GREEN='#2CFF7A',RED='var(--danger)',AMBER='var(--warning)',BLUE='var(--brand-primary)',PURPLE='var(--warning)';
+const GREEN='#4ADE80',RED='var(--danger)',AMBER='var(--warning)',BLUE='var(--brand-primary)',PURPLE='var(--warning)';
 
 /* ── types ────────────────────────────────────────────── */
 type PortalStatus = 'active' | 'pending' | 'disabled';
@@ -517,7 +517,7 @@ export default function ClientPortalPage() {
                 <td style={tdS}>
                   <span style={badge(
                     u.role === 'Owner' ? GOLD : u.role === 'Architect' ? BLUE : u.role === 'Investor' ? PURPLE : AMBER,
-                    u.role === 'Owner' ? 'var(--brand-primary-12)' : u.role === 'Architect' ? 'var(--brand-primary-12)' : u.role === 'Investor' ? 'rgba(255,138,0,.14)' : 'color-mix(in srgb, var(--warning) 14%, transparent)'
+                    u.role === 'Owner' ? 'var(--brand-primary-12)' : u.role === 'Architect' ? 'var(--brand-primary-12)' : u.role === 'Investor' ? 'rgba(251,191,36,.14)' : 'color-mix(in srgb, var(--warning) 14%, transparent)'
                   )}>{u.role}</span>
                 </td>
                 <td style={tdS}>

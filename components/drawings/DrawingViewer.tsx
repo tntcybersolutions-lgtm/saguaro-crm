@@ -37,9 +37,9 @@ const CANVAS_BG = '#0b0e13';
 const ACCENT = 'var(--brand-primary)';
 const ACCENT_12 = 'var(--brand-primary-12, var(--brand-primary-12))';
 const ACCENT_25 = 'var(--brand-primary-25, var(--brand-primary-25))';
-const RED = '#FF3B30', GREEN = '#2CFF7A', AMBER = 'var(--warning)';
-const INK_COLORS = ['#FF3B30', '#FF8A00', '#FFE600', '#2CFF7A', '#FF8A00', '#FF8A00', '#FF8A00', '#FFFFFF'];
-const CATEGORY_COLORS: Record<string, string> = { RFI: '#FF8A00', Punch: '#FF3B30', Safety: '#FFE600', Other: '#D4D4D8' };
+const RED = '#F87171', GREEN = '#4ADE80', AMBER = 'var(--warning)';
+const INK_COLORS = ['#F87171', '#FBBF24', '#FFE000', '#4ADE80', '#FBBF24', '#FBBF24', '#FBBF24', '#FFFFFF'];
+const CATEGORY_COLORS: Record<string, string> = { RFI: '#FBBF24', Punch: '#F87171', Safety: '#FFE000', Other: '#D4D4D8' };
 
 const PDF_LONG_EDGE = 2600;   // crisp raster for plan sheets
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
@@ -47,9 +47,9 @@ const uid = () => 'local-' + Math.random().toString(36).slice(2, 10) + Date.now(
 
 /* Resolve the live brand accent for canvas painting (canvas can't read CSS vars). */
 function brandHex(): string {
-  if (typeof window === 'undefined') return '#FF8A00';
+  if (typeof window === 'undefined') return '#FBBF24';
   const v = getComputedStyle(document.documentElement).getPropertyValue('--brand-primary').trim();
-  return v || '#FF8A00';
+  return v || '#FBBF24';
 }
 
 /* ── thin-line CAD glyphs (crisp vector, never emoji) ───────────────────── */
@@ -770,7 +770,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
       const data = (row.data && typeof row.data === 'object') ? (row.data as Record<string, unknown>) : {};
       pastRef.current = [...pastRef.current.slice(-49), {
         t: 'del', localId: row.id,
-        payload: { markup_type: row.markup_type, data, color: row.color || (p.mode === 'canonical' ? p.data.style.color : '#FF3B30'), page_number: row.page_number },
+        payload: { markup_type: row.markup_type, data, color: row.color || (p.mode === 'canonical' ? p.data.style.color : '#F87171'), page_number: row.page_number },
         row,
       }];
       futureRef.current = [];
@@ -1707,7 +1707,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
               title={rtLive ? 'Live — teammate markups land instantly.' : 'Live sync offline — refreshing every 15s.'}
               style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 9, fontWeight: 800, letterSpacing: 0.8, color: rtLive ? GREEN : 'rgba(255,255,255,0.35)', padding: '0 4px' }}
             >
-              <span style={{ width: 7, height: 7, borderRadius: '50%', background: rtLive ? GREEN : 'rgba(255,255,255,0.25)', boxShadow: rtLive ? '0 0 6px rgba(44,255,122,0.8)' : 'none' }} />
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: rtLive ? GREEN : 'rgba(255,255,255,0.25)', boxShadow: rtLive ? '0 0 6px rgba(74,222,128,0.8)' : 'none' }} />
               {rtLive ? 'LIVE' : 'OFFLINE'}
             </span>
             {/* presence chips — who else is on this sheet */}
@@ -1917,7 +1917,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
             top: pendingPin.y * view.scale + view.ty,
             transform: 'translate(-50%, -50%)', width: 20, height: 20, borderRadius: '50%',
             background: RED, border: '2px solid #fff', zIndex: 12, pointerEvents: 'none',
-            boxShadow: '0 0 0 6px rgba(255,59,48,0.25)',
+            boxShadow: '0 0 0 6px rgba(248,113,113,0.25)',
           }} />
         )}
 
@@ -1987,7 +1987,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
       {selMarkup && (
         <div style={{ ...panelStyle, borderColor: ACCENT_25 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 10, height: 10, borderRadius: '50%', background: selMarkup.color || '#FF3B30', flexShrink: 0 }} />
+            <div style={{ width: 10, height: 10, borderRadius: '50%', background: selMarkup.color || '#F87171', flexShrink: 0 }} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: TEXT, textTransform: 'capitalize' }}>
                 {selMarkup.markup_type}{parsed(selMarkup).mode === 'legacy' ? ' (legacy · read-only)' : ''}
@@ -1997,7 +1997,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
               </p>
             </div>
             {parsed(selMarkup).mode === 'canonical' && (!selMarkup.created_by || selMarkup.created_by === me.id) && (
-              <button onClick={() => deleteMarkup(selMarkup, true)} style={{ ...iconBtn, color: RED, borderColor: 'rgba(255,59,48,0.35)' }} title="Delete markup"><G g="trash" s={15} /></button>
+              <button onClick={() => deleteMarkup(selMarkup, true)} style={{ ...iconBtn, color: RED, borderColor: 'rgba(248,113,113,0.35)' }} title="Delete markup"><G g="trash" s={15} /></button>
             )}
             <button onClick={() => setSelId(null)} style={iconBtn} title="Close"><G g="close" s={15} /></button>
           </div>
@@ -2019,7 +2019,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
             ) : (
               <div style={{ display: 'flex', gap: 6 }}>
                 <input value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder="Add a comment…" style={{ ...inp, fontSize: 12, padding: '8px 10px' }} onKeyDown={(e) => { if (e.key === 'Enter') submitComment(); }} />
-                <button onClick={submitComment} disabled={postingComment || !commentText.trim()} style={{ background: commentText.trim() ? 'var(--brand-primary)' : 'transparent', border: `1px solid ${commentText.trim() ? 'var(--brand-primary)' : BORDER}`, borderRadius: 8, padding: '6px 12px', color: commentText.trim() ? '#0A0A00' : DIM, fontSize: 12, fontWeight: 700, cursor: commentText.trim() ? 'pointer' : 'default', flexShrink: 0 }}>
+                <button onClick={submitComment} disabled={postingComment || !commentText.trim()} style={{ background: commentText.trim() ? 'var(--brand-primary)' : 'transparent', border: `1px solid ${commentText.trim() ? 'var(--brand-primary)' : BORDER}`, borderRadius: 8, padding: '6px 12px', color: commentText.trim() ? '#101722' : DIM, fontSize: 12, fontWeight: 700, cursor: commentText.trim() ? 'pointer' : 'default', flexShrink: 0 }}>
                   {postingComment ? '…' : 'Post'}
                 </button>
               </div>
@@ -2073,7 +2073,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button type="button" onClick={() => setPendingPin(null)} style={{ flex: 1, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '12px', color: DIM, fontSize: 14, cursor: 'pointer' }}>Cancel</button>
-            <button type="submit" disabled={savingPin} style={{ flex: 2, background: savingPin ? 'rgba(255,255,255,0.12)' : 'var(--brand-primary)', border: 'none', borderRadius: 10, padding: '12px', color: savingPin ? DIM : '#0A0A00', fontSize: 14, fontWeight: 800, cursor: savingPin ? 'wait' : 'pointer' }}>
+            <button type="submit" disabled={savingPin} style={{ flex: 2, background: savingPin ? 'rgba(255,255,255,0.12)' : 'var(--brand-primary)', border: 'none', borderRadius: 10, padding: '12px', color: savingPin ? DIM : '#101722', fontSize: 14, fontWeight: 800, cursor: savingPin ? 'wait' : 'pointer' }}>
               {savingPin ? 'Saving…' : 'Save Pin'}
             </button>
           </div>
@@ -2095,7 +2095,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
           />
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
             <button onClick={() => setTextModal(null)} style={{ flex: 1, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '10px', color: DIM, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-            <button onClick={confirmText} disabled={!textModal.value.trim()} style={{ flex: 2, background: textModal.value.trim() ? 'var(--brand-primary)' : 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 10, padding: '10px', color: textModal.value.trim() ? '#0A0A00' : DIM, fontSize: 13, fontWeight: 800, cursor: textModal.value.trim() ? 'pointer' : 'default' }}>Place</button>
+            <button onClick={confirmText} disabled={!textModal.value.trim()} style={{ flex: 2, background: textModal.value.trim() ? 'var(--brand-primary)' : 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 10, padding: '10px', color: textModal.value.trim() ? '#101722' : DIM, fontSize: 13, fontWeight: 800, cursor: textModal.value.trim() ? 'pointer' : 'default' }}>Place</button>
           </div>
         </div>
       )}
@@ -2104,7 +2104,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
       {punchModal && (
         <div style={{ ...panelStyle, border: `1.5px solid ${CATEGORY_COLORS.Punch}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-            <span style={{ background: 'rgba(255,59,48,0.14)', border: '1px solid rgba(255,59,48,0.4)', borderRadius: 5, padding: '3px 9px', fontSize: 11, fontWeight: 800, letterSpacing: 1, color: CATEGORY_COLORS.Punch }}>PUNCH</span>
+            <span style={{ background: 'rgba(248,113,113,0.14)', border: '1px solid rgba(248,113,113,0.4)', borderRadius: 5, padding: '3px 9px', fontSize: 11, fontWeight: 800, letterSpacing: 1, color: CATEGORY_COLORS.Punch }}>PUNCH</span>
             <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: TEXT }}>New Punch Item from This Drawing</p>
           </div>
           <label style={{ display: 'block', fontSize: 12, color: DIM, marginBottom: 4 }}>Title *</label>
@@ -2146,7 +2146,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
           </div>
           <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
             <button onClick={() => { setCalibModal(null); setCalibPts([]); setTool('measure'); }} style={{ flex: 1, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '10px', color: DIM, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-            <button onClick={confirmCalibration} disabled={!(parseFloat(calibModal.ft) > 0)} style={{ flex: 2, background: parseFloat(calibModal.ft) > 0 ? 'var(--brand-primary)' : 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 10, padding: '10px', color: parseFloat(calibModal.ft) > 0 ? '#0A0A00' : DIM, fontSize: 13, fontWeight: 800, cursor: parseFloat(calibModal.ft) > 0 ? 'pointer' : 'default' }}>Set Scale</button>
+            <button onClick={confirmCalibration} disabled={!(parseFloat(calibModal.ft) > 0)} style={{ flex: 2, background: parseFloat(calibModal.ft) > 0 ? 'var(--brand-primary)' : 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 10, padding: '10px', color: parseFloat(calibModal.ft) > 0 ? '#101722' : DIM, fontSize: 13, fontWeight: 800, cursor: parseFloat(calibModal.ft) > 0 ? 'pointer' : 'default' }}>Set Scale</button>
           </div>
         </div>
       )}
@@ -2219,7 +2219,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
                 <button
                   onClick={confirmPromote}
                   disabled={!n}
-                  style={{ flex: 2, background: n ? 'var(--brand-primary)' : 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 10, padding: '10px', color: n ? '#0A0A00' : DIM, fontSize: 13, fontWeight: 800, cursor: n ? 'pointer' : 'default' }}
+                  style={{ flex: 2, background: n ? 'var(--brand-primary)' : 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 10, padding: '10px', color: n ? '#101722' : DIM, fontSize: 13, fontWeight: 800, cursor: n ? 'pointer' : 'default' }}
                 >
                   {n ? `Send ${n} to Takeoff` : 'Nothing Selected'}
                 </button>
@@ -2251,7 +2251,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
             <button
               onClick={createShareLink}
               disabled={shareBusy}
-              style={{ background: shareBusy ? 'rgba(255,255,255,0.08)' : 'var(--brand-primary)', border: 'none', borderRadius: 10, padding: '8px 14px', color: shareBusy ? DIM : '#0A0A00', fontSize: 12, fontWeight: 800, cursor: shareBusy ? 'wait' : 'pointer', flexShrink: 0 }}
+              style={{ background: shareBusy ? 'rgba(255,255,255,0.08)' : 'var(--brand-primary)', border: 'none', borderRadius: 10, padding: '8px 14px', color: shareBusy ? DIM : '#101722', fontSize: 12, fontWeight: 800, cursor: shareBusy ? 'wait' : 'pointer', flexShrink: 0 }}
             >
               {shareBusy ? 'Creating…' : 'Create Link'}
             </button>
@@ -2296,7 +2296,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
                       <button
                         onClick={() => revokeShareLink(l.id)}
                         disabled={revokingId === l.id}
-                        style={{ background: 'transparent', border: '1px solid rgba(255,59,48,0.35)', borderRadius: 8, padding: '5px 11px', color: RED, fontSize: 11, fontWeight: 700, cursor: revokingId === l.id ? 'wait' : 'pointer', flexShrink: 0 }}
+                        style={{ background: 'transparent', border: '1px solid rgba(248,113,113,0.35)', borderRadius: 8, padding: '5px 11px', color: RED, fontSize: 11, fontWeight: 700, cursor: revokingId === l.id ? 'wait' : 'pointer', flexShrink: 0 }}
                       >
                         {revokingId === l.id ? '…' : 'Revoke'}
                       </button>

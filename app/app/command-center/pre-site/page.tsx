@@ -84,7 +84,7 @@ export default function PreSitePage() {
               {href: '/app/command-center/pre-site',  label: 'Complete', value: `${view.pct}%`, accent: view.pct >= 100 ? C.green : C.gold },
             ]} />
             {view.flagged > 0 && (
-              <div style={{ background: 'rgba(255,59,48,0.08)', border: '1px solid rgba(255,59,48,0.25)', borderRadius: 12, padding: '11px 14px', marginBottom: 14, fontSize: 13, color: C.text }}>
+              <div style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: 12, padding: '11px 14px', marginBottom: 14, fontSize: 13, color: C.text }}>
                 <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 4 }}><Flag size={16} weight="fill" color={C.red} /></span> <b>{view.flagged}</b> item(s) flagged — resolve or price these before signing the lease.
               </div>
             )}

@@ -17,7 +17,7 @@ import {
 
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)',
   BORDER = 'rgba(255,255,255,0.12)', DIM = 'var(--text-secondary)', TEXT = '#FFFFFF',
-  RED = '#FF3B30', GREEN = '#2CFF7A';
+  RED = '#F87171', GREEN = '#4ADE80';
 
 type Reason = 'pending' | 'accepted' | 'expired' | 'invalid' | 'error';
 interface Invite {
@@ -37,7 +37,7 @@ const card: React.CSSProperties = {
   padding: '32px 28px', boxShadow: '0 8px 32px rgba(0,0,0,.25)',
 };
 
-function Spinner({ size = 18, color = '#0A0A00' }: { size?: number; color?: string }) {
+function Spinner({ size = 18, color = '#101722' }: { size?: number; color?: string }) {
   return (
     <span style={{
       display: 'inline-block', width: size, height: size,
@@ -314,7 +314,7 @@ function StateCard({ icon, title, body, cta }: { icon: React.ReactNode; title: s
 
 const ctaPrimary: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 20px',
-  background: GOLD, border: 'none', borderRadius: 9, color: '#0A0A00',
+  background: GOLD, border: 'none', borderRadius: 9, color: '#101722',
   fontSize: 14, fontWeight: 700, textDecoration: 'none', cursor: 'pointer',
 };
 const ctaSecondary: React.CSSProperties = {
@@ -323,8 +323,8 @@ const ctaSecondary: React.CSSProperties = {
   color: TEXT, fontSize: 14, fontWeight: 600, textDecoration: 'none', cursor: 'pointer',
 };
 const errorBox: React.CSSProperties = {
-  display: 'flex', alignItems: 'flex-start', gap: 8, background: 'rgba(255,59,48,.1)',
-  border: '1px solid rgba(255,59,48,.3)', borderRadius: 8, padding: '10px 14px',
+  display: 'flex', alignItems: 'flex-start', gap: 8, background: 'rgba(248,113,113,.1)',
+  border: '1px solid rgba(248,113,113,.3)', borderRadius: 8, padding: '10px 14px',
   marginBottom: 16, fontSize: 13, color: RED, lineHeight: 1.45,
 };
 const noticeBox: React.CSSProperties = {

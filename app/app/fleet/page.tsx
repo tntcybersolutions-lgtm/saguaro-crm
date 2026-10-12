@@ -175,14 +175,14 @@ export default function FleetPage() {
       <h2 style="margin:0">Fleet Report</h2><div style="color:#555;font-size:12px;margin-bottom:16px">Generated ${new Date().toLocaleString()}</div>
       <div style="display:flex;gap:24px;margin-bottom:18px;font-size:13px">
         <div><b style="font-size:20px">${summary.total}</b><br>Assets</div>
-        <div><b style="font-size:20px;color:#FF3B30">${summary.maintenanceOverdue}</b><br>Maint. Overdue</div>
+        <div><b style="font-size:20px;color:#F87171">${summary.maintenanceOverdue}</b><br>Maint. Overdue</div>
         <div><b style="font-size:20px;color:#b8860b">${summary.maintenanceSoon}</b><br>Due Soon</div>
-        <div><b style="font-size:20px;color:#FF3B30">${summary.docsExpired}</b><br>Docs Expired</div>
+        <div><b style="font-size:20px;color:#F87171">${summary.docsExpired}</b><br>Docs Expired</div>
         <div><b style="font-size:20px;color:#b8860b">${summary.docsExpiringSoon}</b><br>Expiring</div>
         <div><b style="font-size:20px">${usd(summary.totalMaintenanceCostCents)}</b><br>Maint. Cost</div>
       </div>
       ${summary.needsAttention.length ? `<div style="background:#fff4e5;border-left:3px solid #b8860b;padding:8px 12px;margin-bottom:14px;font-size:13px"><b>Needs attention:</b> ${summary.needsAttention.join(', ')}</div>` : ''}
-      <table style="border-collapse:collapse;width:100%;font-size:12px"><thead><tr style="background:#0E0F12;color:var(--c-text)">${['Asset', 'Type', 'Odometer', 'Status', 'Next Maintenance', 'Expiring', ''].map((h) => `<th style="border:1px solid #ccc;padding:6px 8px;text-align:left">${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
+      <table style="border-collapse:collapse;width:100%;font-size:12px"><thead><tr style="background:#1B2636;color:var(--c-text)">${['Asset', 'Type', 'Odometer', 'Status', 'Next Maintenance', 'Expiring', ''].map((h) => `<th style="border:1px solid #ccc;padding:6px 8px;text-align:left">${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
       </body></html>`);
     printHtml(html, 'Fleet Report')
       .catch((e) => { console.error(e); showToast("Couldn't open the fleet report to print. Try again.", 'error'); });

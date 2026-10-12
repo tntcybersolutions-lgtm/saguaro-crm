@@ -185,7 +185,7 @@ export function StatRow({ items }: { items: StatItem[] }) {
 
 export type BadgeTone = StatusKind | 'neutral' | 'gold';
 
-const BADGE_NEUTRAL = { color: 'var(--text-secondary)', bg: 'rgba(255,255,255,0.08)', border: 'rgba(255,255,255,0.18)' };
+const BADGE_NEUTRAL = { color: 'var(--text-secondary)', bg: 'rgba(148,163,184,0.12)', border: 'rgba(148,163,184,0.40)' };
 const BADGE_GOLD = { color: 'var(--brand-primary)', bg: 'var(--brand-primary-12)', border: 'var(--brand-primary-35)' };
 
 /** Status badge. Tones are the six fixed status colors (lib/status-colors). */

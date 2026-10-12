@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { Check } from '@phosphor-icons/react';
 
 /* ─── Palette ─── */
-const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#2CFF7A';
+const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#4ADE80';
 const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = 'var(--text-secondary)', DARK = 'var(--bg-base)';
-const BLUE = 'var(--brand-primary)', PURPLE = '#FF8A00', AMBER = '#FF8A00';
+const BLUE = 'var(--brand-primary)', PURPLE = '#FBBF24', AMBER = '#FBBF24';
 
 const glass: React.CSSProperties = {
   background: `color-mix(in srgb, ${CARD} 80%, transparent)`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
@@ -207,7 +207,7 @@ export default function PackagesPage() {
             }}
           />
           <button onClick={handleCustomize} disabled={customizing || zipCode.length < 5} style={{
-            padding: '10px 24px', background: GOLD, color: '#0A0A00', border: 'none',
+            padding: '10px 24px', background: GOLD, color: '#101722', border: 'none',
             borderRadius: 10, fontWeight: 700, cursor: 'pointer', fontSize: 14,
             opacity: customizing || zipCode.length < 5 ? 0.5 : 1,
           }}>
@@ -244,7 +244,7 @@ export default function PackagesPage() {
                 {pkg.tier === 'premium' && (
                   <div style={{
                     position: 'absolute', top: 12, right: -28, background: GOLD,
-                    color: '#0A0A00', fontSize: 11, fontWeight: 800, padding: '4px 32px',
+                    color: '#101722', fontSize: 11, fontWeight: 800, padding: '4px 32px',
                     transform: 'rotate(45deg)', zIndex: 1,
                   }}>Popular</div>
                 )}
@@ -322,7 +322,7 @@ export default function PackagesPage() {
                 <Link href="/design/discover" style={{ textDecoration: 'none' }}>
                   <button style={{
                     width: '100%', padding: '14px', border: 'none', borderRadius: 0,
-                    background: tierColor, color: (pkg.tier === 'essential' || pkg.tier === 'premium') ? '#0A0A00' : '#000',
+                    background: tierColor, color: (pkg.tier === 'essential' || pkg.tier === 'premium') ? '#101722' : '#000',
                     fontWeight: 700, fontSize: 15, cursor: 'pointer', transition: 'opacity .2s',
                   }}>
                     Get Started

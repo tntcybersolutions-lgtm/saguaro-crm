@@ -34,10 +34,10 @@ const STATUS_MAP: Record<string, { bg: string; color: string }> = {
   Draft: { bg: 'rgba(163,172,187,.2)', color: DIM },
   Sent: { bg: 'color-mix(in srgb, var(--brand-primary) 20%, transparent)', color: 'var(--brand-primary-strong)' },
   Under_Review: { bg: 'color-mix(in srgb, var(--warning) 20%, transparent)', color: 'var(--warning)' },
-  Accepted: { bg: 'rgba(44,255,122,.2)', color: GREEN },
+  Accepted: { bg: 'rgba(74,222,128,.2)', color: GREEN },
   Superseded: { bg: 'rgba(163,172,187,.2)', color: DIM },
-  Rejected: { bg: 'rgba(255,59,48,.2)', color: RED },
-  Declined: { bg: 'rgba(255,59,48,.2)', color: RED },
+  Rejected: { bg: 'rgba(248,113,113,.2)', color: RED },
+  Declined: { bg: 'rgba(248,113,113,.2)', color: RED },
 };
 
 const EMPTY_FORM = { amount: 0, notes: '' };
@@ -278,8 +278,8 @@ export default function ProposalPage() {
         </div>
       )}
 
-      {successMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(44,255,122,.15)', border: '1px solid rgba(44,255,122,.4)', borderRadius: 10, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
-      {errorMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(255,59,48,.15)', border: '1px solid rgba(255,59,48,.4)', borderRadius: 10, color: RED, fontSize: 13 }}>{errorMsg}</div>}
+      {successMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(74,222,128,.15)', border: '1px solid rgba(74,222,128,.4)', borderRadius: 10, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
+      {errorMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(248,113,113,.15)', border: '1px solid rgba(248,113,113,.4)', borderRadius: 10, color: RED, fontSize: 13 }}>{errorMsg}</div>}
 
       {showForm && (
         <div style={{ display: 'grid', gridTemplateColumns: ctx ? 'minmax(0, 1fr) 320px' : '1fr', gap: 18, alignItems: 'start', marginBottom: 24 }}>
@@ -398,7 +398,7 @@ export default function ProposalPage() {
                   const s = statusKey(p.status);
                   const outcomeSet = s === 'accepted' || s === 'declined' || s === 'rejected';
                   return (
-                    <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: s === 'accepted' ? 'rgba(44,255,122,.06)' : 'transparent' }}>
+                    <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: s === 'accepted' ? 'rgba(74,222,128,.06)' : 'transparent' }}>
                       <td style={{ padding: '10px 16px', color: GOLD, fontWeight: 700 }}>{p.version}</td>
                       <td style={{ padding: '10px 16px', color: DIM }}>{p.created_date}</td>
                       <td style={{ padding: '10px 16px', color: TEXT, fontWeight: 800, fontSize: 14 }}>${p.amount?.toLocaleString()}</td>
@@ -421,8 +421,8 @@ export default function ProposalPage() {
                             {s === 'draft' ? 'Send to Client' : 'E-Sign Status'}
                           </button>
                         )}
-                        {!outcomeSet && <button onClick={() => handleMarkOutcome(p, true)} style={{ padding: '4px 10px', background: 'rgba(44,255,122,.2)', border: '1px solid rgba(44,255,122,.4)', borderRadius: 5, color: GREEN, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Mark Accepted</button>}
-                        {!outcomeSet && <button onClick={() => handleMarkOutcome(p, false)} style={{ padding: '4px 10px', background: 'rgba(255,59,48,.2)', border: '1px solid rgba(255,59,48,.4)', borderRadius: 5, color: RED, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Mark Declined</button>}
+                        {!outcomeSet && <button onClick={() => handleMarkOutcome(p, true)} style={{ padding: '4px 10px', background: 'rgba(74,222,128,.2)', border: '1px solid rgba(74,222,128,.4)', borderRadius: 5, color: GREEN, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Mark Accepted</button>}
+                        {!outcomeSet && <button onClick={() => handleMarkOutcome(p, false)} style={{ padding: '4px 10px', background: 'rgba(248,113,113,.2)', border: '1px solid rgba(248,113,113,.4)', borderRadius: 5, color: RED, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Mark Declined</button>}
                         <label style={{ padding: '4px 10px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer' }}>
                           {uploadingId === p.id ? 'Uploading…' : 'Upload PDF'}
                           <input type="file" accept=".pdf" style={{ display: 'none' }} onChange={e => { if (e.target.files?.[0]) handleUpload(p.id, e.target.files[0]); }} />

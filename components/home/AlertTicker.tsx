@@ -26,7 +26,7 @@ const CSS = `
 .atk { display: flex; align-items: stretch; gap: 0; min-width: 0; width: 100%; max-width: 100%; contain: inline-size; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--brand-primary) 34%, transparent); background: linear-gradient(155deg, color-mix(in srgb, var(--brand-primary) 10%, transparent), rgba(14,15,18,0.94) 45%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 0 22px color-mix(in srgb, var(--brand-primary) 12%, transparent), 0 14px 32px -18px rgba(0,0,0,0.9); overflow: hidden; }
 .atkSum { flex: 0 0 auto; display: flex; align-items: center; gap: 14px; padding: 10px 16px; border-right: 1px solid var(--border-subtle); background: rgba(255,255,255,0.02); }
 .atkLive { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--c-text-2); }
-.atkLive i { width: 7px; height: 7px; border-radius: 50%; background: var(--c-green); box-shadow: 0 0 0 3px rgba(44,255,122,0.18); }
+.atkLive i { width: 7px; height: 7px; border-radius: 50%; background: var(--c-green); box-shadow: 0 0 0 3px rgba(74,222,128,0.18); }
 .atkN { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; color: var(--c-text-2); white-space: nowrap; }
 .atkN b { font-size: 17px; font-weight: 900; font-variant-numeric: tabular-nums; }
 .atkN[data-tone="red"] b, .atkN[data-tone="red"] svg { color: var(--c-red); }
@@ -50,9 +50,9 @@ button.atkN[aria-pressed="true"] { background: rgba(255,255,255,0.08); box-shado
 .atkItem:hover { background: rgba(255,255,255,0.07); }
 .atkItem:focus-visible { outline: 2px solid var(--c-yellow); outline-offset: 2px; }
 .atkItem > svg:first-child { flex: 0 0 auto; }
-.atkItem[data-tone="red"] { border-color: rgba(255,59,48,0.45); background: rgba(255,59,48,0.08); }
+.atkItem[data-tone="red"] { border-color: rgba(248,113,113,0.45); background: rgba(248,113,113,0.08); }
 .atkItem[data-tone="red"] > svg:first-child { color: var(--c-red); }
-.atkItem[data-tone="review"] { border-color: rgba(255,138,0,0.45); background: rgba(255,138,0,0.08); }
+.atkItem[data-tone="review"] { border-color: rgba(251,191,36,0.45); background: rgba(251,191,36,0.08); }
 .atkItem[data-tone="review"] > svg:first-child { color: var(--c-orange); }
 .atkItem[data-tone="yellow"] > svg:first-child { color: var(--c-yellow); }
 .atkItem[data-tone="green"] > svg:first-child { color: var(--c-green); }

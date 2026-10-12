@@ -626,7 +626,7 @@ export default function SaguaroChatWidget({
         .sage-chip:hover { background: var(--brand-primary-18) !important; transform: translateY(-1px); }
         .sage-action-card:hover { background: var(--brand-primary-12) !important; border-color: color-mix(in srgb, var(--brand-primary) 50%, transparent) !important; }
         .sage-send-btn:hover:not(:disabled) { transform: scale(1.08); }
-        .sage-close-btn:hover { background: rgba(255,59,48,0.2) !important; color: #FF3B30 !important; }
+        .sage-close-btn:hover { background: rgba(248,113,113,0.2) !important; color: #F87171 !important; }
       `}</style>
 
       {/* LAUNCHER */}
@@ -652,7 +652,7 @@ export default function SaguaroChatWidget({
               alignItems: 'center', justifyContent: 'center', fontSize: 10,
               fontWeight: 700, color: 'var(--text-primary)', zIndex: 1,
               animation: 'badgePulse 2s ease-in-out infinite',
-              border: '2px solid #0E0F12',
+              border: '2px solid #1B2636',
             }}>1</div>
           )}
           <button
@@ -701,7 +701,7 @@ export default function SaguaroChatWidget({
             onClick={isMinimized ? () => setIsMinimized(false) : undefined}
             style={{
               height: 72, minHeight: 72,
-              background: 'linear-gradient(135deg, #0E0F12 0%, #0a0a0a 100%)',
+              background: 'linear-gradient(135deg, #1B2636 0%, #0a0a0a 100%)',
               borderBottom: isMinimized ? 'none' : '1px solid rgba(255,255,255,0.12)',
               padding: '0 16px', display: 'flex', alignItems: 'center', gap: 12,
               cursor: isMinimized ? 'pointer' : 'default', flexShrink: 0,
@@ -871,7 +871,7 @@ export default function SaguaroChatWidget({
                       cursor: isStreaming || input.trim() ? 'pointer' : 'default',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                       transition: 'all 0.15s',
-                      background: isStreaming ? 'rgba(255,59,48,0.2)' : input.trim() ? 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))' : 'rgba(255,255,255,0.06)',
+                      background: isStreaming ? 'rgba(248,113,113,0.2)' : input.trim() ? 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))' : 'rgba(255,255,255,0.06)',
                       boxShadow: input.trim() && !isStreaming ? '0 2px 12px var(--brand-primary-25)' : 'none',
                     }}
                   >

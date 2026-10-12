@@ -13,8 +13,8 @@ const C = {
   border: 'rgba(255,255,255,0.08)',
   raised: 'var(--bg-surface)',
   raisedAlt: 'var(--bg-surface)',
-  green: '#2CFF7A',
-  blue: '#FF8A00',
+  green: '#4ADE80',
+  blue: '#FBBF24',
   font: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,system-ui,sans-serif",
 };
 
@@ -221,7 +221,7 @@ export default function FeaturesPage() {
           <p style={{ fontSize: 15, fontWeight: 400, color: C.dim, maxWidth: 600, margin: '0 auto 32px', lineHeight: 1.7 }}>
             AI-powered estimating, bidding, billing, field reporting, and compliance — built for general contractors who are tired of stitching together a dozen disconnected tools. One login. Your whole company.
           </p>
-          <Link href="/signup" style={{ display: 'inline-block', padding: '12px 26px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
+          <Link href="/signup" style={{ display: 'inline-block', padding: '12px 26px', background: C.gold, borderRadius: 8, color: '#101722', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
             Start Free Trial — No Credit Card →
           </Link>
           <div style={{ marginTop: 14, fontSize: 12.5, color: 'var(--text-secondary)' }}>{TRIAL_DAYS} days free · Unlimited users · Free migration</div>
@@ -273,7 +273,7 @@ export default function FeaturesPage() {
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
               {REPLACES.map(item => (
                 <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px', background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.border}`, borderRadius: 999, fontSize: 14, color: C.dim, fontWeight: 500 }}>
-                  <span style={{ color: '#FF3B30', fontWeight: 600, fontSize: 15, lineHeight: 1 }}>&times;</span>
+                  <span style={{ color: '#F87171', fontWeight: 600, fontSize: 15, lineHeight: 1 }}>&times;</span>
                   {item}
                 </div>
               ))}
@@ -295,7 +295,7 @@ export default function FeaturesPage() {
               Spin up a free account and run a real project through Saguaro today. {TRIAL_DAYS} days free, free migration, no credit card required.
             </p>
             <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 40 }}>
-              <Link href="/signup" style={{ display: 'inline-block', padding: '12px 26px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
+              <Link href="/signup" style={{ display: 'inline-block', padding: '12px 26px', background: C.gold, borderRadius: 8, color: '#101722', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
                 Start Free Trial — No CC Required
               </Link>
               <Link href="/compare" style={{ display: 'inline-block', padding: '12px 26px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 8, color: C.dim, fontWeight: 500, fontSize: 14, textDecoration: 'none' }}>

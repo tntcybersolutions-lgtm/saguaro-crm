@@ -35,8 +35,8 @@ const WHITE = '#FFFFFF';
 const MUTED = '#D4D4D8';
 const FAINT = '#A9B4C4';
 const BORDER = 'rgba(255,255,255,0.09)';
-const GOLD_HI = '#FFE600';
-const RED = '#FF3B30';
+const GOLD_HI = '#FFE000';
+const RED = '#F87171';
 const NEST = 'rgba(255,255,255,0.03)';
 
 /* ── Server shapes (GET /api/radio/location) ─────────────────────────────── */
@@ -74,9 +74,9 @@ const LOW_BATTERY = 20;
 /* Deterministic trade color — hash of the trade name into a fixed palette, so
  * any trade (canonical or custom) gets a stable, distinguishable pin color
  * without hardcoding the taxonomy here. Red is reserved for panic. */
-const PIN_PALETTE = ['#FFE600', '#FF8A00', '#2CFF7A', '#FF8A00', '#FF8A00', '#FF8A00', '#2CFF7A', '#FF8A00', '#2CFF7A', '#FF8A00'];
+const PIN_PALETTE = ['#FFE000', '#FBBF24', '#4ADE80', '#FBBF24', '#FBBF24', '#FBBF24', '#4ADE80', '#FBBF24', '#4ADE80', '#FBBF24'];
 function tradeColor(trade: string | null | undefined): string {
-  if (!trade) return '#A3ACBB';
+  if (!trade) return '#94A3B8';
   let h = 0;
   for (let i = 0; i < trade.length; i++) h = (h * 31 + trade.charCodeAt(i)) >>> 0;
   return PIN_PALETTE[h % PIN_PALETTE.length];
@@ -316,7 +316,7 @@ export function CrewMap({
       bctx.font = '900 9px ui-sans-serif, system-ui, sans-serif';
       bctx.textAlign = 'center';
       bctx.textBaseline = 'middle';
-      bctx.fillStyle = '#0A0A00';
+      bctx.fillStyle = '#101722';
       bctx.fillText(initialsOf(c.name), x, y + 0.5);
 
       drawLabel(bctx, shortName(c.name), x, y + 24, stale ? MUTED : 'rgba(255,255,255,0.82)');
@@ -357,7 +357,7 @@ export function CrewMap({
         const { x, y } = proj(p.lat, p.lng);
         ctx.beginPath();
         ctx.arc(x, y, 10 + phase * 16, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(255,59,48,${(0.55 * (1 - phase)).toFixed(3)})`;
+        ctx.strokeStyle = `rgba(248,113,113,${(0.55 * (1 - phase)).toFixed(3)})`;
         ctx.lineWidth = 2.5;
         ctx.stroke();
         ctx.beginPath();
@@ -454,7 +454,7 @@ export function CrewMap({
               style={{
                 padding: '7px 13px', border: 'none', cursor: 'pointer',
                 fontSize: 11.5, fontWeight: 700, whiteSpace: 'nowrap',
-                background: hours === w.h ? 'rgba(255,230,0,0.16)' : 'rgba(255,255,255,0.04)',
+                background: hours === w.h ? 'rgba(255,224,0,0.16)' : 'rgba(255,255,255,0.04)',
                 color: hours === w.h ? GOLD_HI : MUTED,
               }}
             >
