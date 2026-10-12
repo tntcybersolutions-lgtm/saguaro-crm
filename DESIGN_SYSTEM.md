@@ -34,6 +34,44 @@ border or tint. Figures use `figureColor()` (`components/ui/premium.tsx`),
 which renders a yellow accent as white. Status colour always sits beside a
 word (badge text, label) — never colour alone.
 
+### Colour roles (implemented in `app/globals.css` `:root`)
+
+Approved values come from Chad's directive of 12 Oct 2026. Hover and pressed
+states are mixes of approved values (no new hex). Status hues were approved by
+name (green / amber / red); their exact values are awaiting confirmation.
+
+| Color role | Approved value | Implemented value | Token | Main consumers |
+|---|---|---|---|---|
+| App background | #101722 | #101722 | `--bg-base` | app shell, pages, inputs |
+| Cards / panels | #1B2636 | #1B2636 | `--bg-surface`, `--surface-modal`, `--nav-bg` | `.k-card`, `.pmSec`, modals, sidebar |
+| Elevated / secondary controls | #243247 | #243247 | `--bg-surface-2`, `--surface-popover`, `--action-secondary-bg`, `--tile-bg` | secondary buttons, menus, icon tiles |
+| Borders | #334155 | #334155 | `--border-default`, `--border-subtle`, `--action-secondary-border` | cards, inputs, tables, tiles |
+| Strong / interactive border | — (derived) | mix #334155 72% + #94A3B8 | `--border-strong`, `--border-interactive` | hover borders, dropzone |
+| Primary text | #F8FAFC | #F8FAFC | `--text-primary`, `--action-secondary-fg` | titles, values, body |
+| Secondary text | #CBD5E1 | #CBD5E1 | `--text-secondary`, `--nav-fg`, `--tab-fg` | subtitles, descriptions, nav |
+| Muted text | #94A3B8 | #94A3B8 | `--text-tertiary`, `--disabled-fg` | labels, meta, captions |
+| Inverse text | #101722 | #101722 | `--text-inverse`, `--on-brand`, `--action-primary-fg` | text on yellow |
+| Primary action | #FFE000 | #FFE000 | `--brand-primary`, `--action-primary-bg` | `.k-btn-primary`, `goldButtonStyle` |
+| Primary hover / pressed | — (derived) | mix #FFE000 90% / 80% + #101722 | `--action-primary-hover`, `--action-primary-pressed` | primary buttons |
+| Selected navigation / tab / control | #FFE000 + dark text | #FFE000 on #101722 | `--nav-active-*`, `--tab-selected-*`, `--selected-control-*` | sidebar, job tabs, `.k-tab`, `StagePicker` |
+| Links / information | #38BDF8 | #38BDF8 | `--link`, `--info`, `--info-fg`, `--focus-ring`, `--chart-1` | links, info callouts, focus rings, charts |
+| Link hover | — (derived) | mix #38BDF8 72% + #F8FAFC | `--link-hover` | links |
+| Selected row | — (derived) | mix #38BDF8 10% + #1B2636 | `--selected-row-bg`, `--selected-row-indicator` | tables, lists |
+| Success | green (name) | #4ADE80 | `--success`, `--success-fg/bg/border` | badges, callouts, timelines |
+| Warning / pending | amber (name) | #FBBF24 | `--warning`, `--warning-fg/bg/border` | badges, callouts |
+| Error / overdue | red (name) | #F87171 | `--danger`, `--danger-fg/bg/border`, `--action-danger-*` | badges, errors, destructive buttons |
+| Disabled | — (derived) | #243247 / #94A3B8 / #334155 | `--disabled-bg/fg/border` | disabled controls |
+| Chart series | — (approved values only) | #38BDF8, light blue, deep blue, #CBD5E1, green, amber, #94A3B8, #334155 | `--chart-1…5`, `components/charts/shared.tsx` | every chart |
+
+### Concept building blocks (kit)
+
+`PageShell` takes `badge` (status pill beside the title) and `meta` (icon + text
+facts). `Card` takes `icon` (tile beside the title). `ItemRow` / `ItemList`
+(icon tile, title, description, value / action / chevron), `Callout` (the alert
+card: status icon, one line, actions), `StagePicker` (ordered stages, the
+current one solid yellow), `Timeline` (icon dots with a connector). Toasts post
+into the status box inside the app — one notification system.
+
 ## 2. Type, spacing, shape, depth
 
 - **Type scale:** page title 22/700 · section title 16/700 · body 14 · labels

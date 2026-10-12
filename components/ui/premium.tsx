@@ -150,12 +150,14 @@ export function PremiumSurface({
  * word, no module bar, no margin scribble. On a phone the actions are one
  * row under the title that scrolls sideways inside itself.
  *
- * Every prop is still accepted so no caller breaks: `accent` reads as the
- * rest of the title in the same colour; `eyebrow`, `eyebrowIcon`,
- * `accentColor` and `note` are decoration the flat header leaves out; `aux`
- * (a live control or badge) stays, under the subtitle.
+ * The concept header: the module icon in a slate tile, the record it belongs
+ * to (`eyebrow`, e.g. the job) as a quiet line above the title, the title, then
+ * the subtitle. `accent` reads as the rest of the title; `accentColor` and
+ * `note` are not drawn; `aux` (a live control or badge) stays under the subtitle.
  */
 export function ModuleHero({
+  eyebrow,
+  eyebrowIcon,
   aux,
   title,
   accent,
@@ -180,13 +182,21 @@ export function ModuleHero({
 }) {
   return (
     <div className="pmHead" data-align={align === 'center' ? 'center' : undefined} style={style}>
+      <div className="pmHeadLead">
+      {eyebrowIcon && align !== 'center' && (
+        <span className="k-tile pmHeadTile" aria-hidden>
+          {React.isValidElement(eyebrowIcon) ? React.cloneElement(eyebrowIcon as React.ReactElement<{ size?: number }>, { size: 22 }) : eyebrowIcon}
+        </span>
+      )}
       <div className="pmHeadText">
+        {eyebrow && <div className="pmEyebrow">{eyebrow}</div>}
         <h1 className="pmH1">
           {title}
           {accent != null && accent !== '' && <>{' '}{accent}</>}
         </h1>
         {subtitle && <p className="pmHeadSub" title={typeof subtitle === 'string' ? subtitle : undefined}>{subtitle}</p>}
         {aux && <div className="pmHeadAux">{aux}</div>}
+      </div>
       </div>
       {actions && <div className="pmHeadActs">{actions}</div>}
     </div>
@@ -335,7 +345,7 @@ export function SectionCard({
     <div className={tray ? 'pmSec pmSecTray' : 'pmSec'} style={style}>
       {hasHead && (
         <div className="pmSecHead">
-          {tray && icon && <span aria-hidden style={{ display: 'inline-flex', flexShrink: 0, color: 'var(--sg-text-3)' }}>{icon}</span>}
+          {icon && <span className="k-tile" aria-hidden style={{ width: 34, height: 34 }}>{icon}</span>}
           <div style={{ minWidth: 0, flex: 1 }}>
             {title && <div className="pmSecTitle" role="heading" aria-level={2}>{title}</div>}
             {subtitle && <div className="pmSecSub">{subtitle}</div>}
@@ -355,6 +365,7 @@ export function SectionCard({
  * (red for an error); the description finishes it.
  */
 export function PremiumEmpty({
+  icon,
   title,
   description,
   action,
@@ -372,6 +383,11 @@ export function PremiumEmpty({
   const joiner = /[.!?…]$/.test(t) ? ' ' : '. ';
   return (
     <div className="pmEmpty" data-tone={tone === 'error' ? 'error' : undefined} role={tone === 'error' ? 'alert' : undefined} style={compact ? { padding: '8px 0' } : undefined}>
+      {icon && (
+        <span className="k-tile" aria-hidden style={{ width: 36, height: 36, color: tone === 'error' ? 'var(--danger-fg)' : undefined }}>
+          {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<{ size?: number }>, { size: 18 }) : icon}
+        </span>
+      )}
       <p className="pmEmptyLine"><b>{t}</b>{description ? <>{joiner}{description}</> : null}</p>
       {action && <div className="pmEmptyActs">{action}</div>}
     </div>

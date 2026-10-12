@@ -1,5 +1,6 @@
 'use client';
 import { useState, useCallback, useEffect, createContext, useContext } from 'react';
+import { hasStatusCenter, note } from '@/lib/ui/status';
 
 interface Toast {
   id: string;
@@ -53,6 +54,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const showToast = useCallback((message: string, type: Toast['type'] = 'info') => {
+    // Inside the app the status box is the one place results appear; a second
+    // pop-up on top of it was the overlap people saw. Portals keep this toast.
+    if (hasStatusCenter()) { note(message, type !== 'error'); return; }
     const id = Date.now().toString();
     setToasts(prev => [...prev.slice(-4), { id, message, type }]);
   }, []);

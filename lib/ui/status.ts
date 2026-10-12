@@ -143,4 +143,26 @@ export async function withStatus<T>(label: string, done: string, fn: () => Promi
 }
 
 /** Tests only. */
+/* Whether a <StatusCenter> is on screen. Toasts route into the status box when
+   one is (the signed-in app), so two notifications never stack on each other;
+   portals and public pages, which have no status box, keep the plain toast. */
+let centers = 0;
+export function registerStatusCenter(): () => void { centers += 1; return () => { centers -= 1; }; }
+export function hasStatusCenter(): boolean { return centers > 0; }
+
+/* A toast posted into the status box. If the last step settled a moment ago
+   (the request that the toast is announcing), the toast's words become that
+   step's result instead of a second line saying the same thing. */
+export function note(message: string, ok = true) {
+  const g = groups[groups.length - 1];
+  const last = g?.steps[g.steps.length - 1];
+  if (g && last && (last.state === 'done' || last.state === 'failed') && Date.now() - last.startedAt < 8000 && !last.result) {
+    const owner = g;
+    owner.steps = owner.steps.map((y) => (y.id === last.id ? { ...y, result: message, state: ok ? y.state : 'failed' } : y));
+    recompute(owner);
+    return;
+  }
+  step(message, { state: ok ? 'done' : 'failed' });
+}
+
 export function __resetStatus() { groups = []; seq = 0; if (closeTimer) clearTimeout(closeTimer); closeTimer = null; emit(); }
