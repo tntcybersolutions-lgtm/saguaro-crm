@@ -169,7 +169,7 @@ export default function BudgetPage() {
                     {co.status === 'rejected' && co.rejection_reason && <div style={{ fontSize: 12, color: C.red, marginTop: 3 }}>Rejected: {co.rejection_reason}</div>}
                   </div>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <span style={{ fontSize: 12, fontWeight: 800, color: st.color, background: `${st.color}18`, padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>{st.label}</span>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: st.color, background: `color-mix(in srgb, ${st.color} 9%, transparent)`, padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>{st.label}</span>
                     {!final && <>
                       <button onClick={() => act(co.id, 'advance')} disabled={busy[co.id]} className="pmBtn" style={{ padding: '6px 11px', borderRadius: 8, border: 'none', background: C.green, color: 'var(--text-primary)', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Advance <ArrowRight size={13} weight="regular" color="var(--text-primary)" style={{ verticalAlign: 'middle' }} /></button>
                       <button onClick={() => act(co.id, 'reject')} disabled={busy[co.id]} className="pmBtn" style={{ padding: '6px 11px', borderRadius: 8, border: `1px solid ${C.red}`, background: 'var(--bg-surface)', color: C.red, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Reject</button>

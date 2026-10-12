@@ -13,12 +13,12 @@ import { FlatStyles, RowSkeleton } from '@/components/ui/flat';
 import {
   Warning, SquaresFour, ChartLineUp, Wallet, Bank, ShieldWarning, Siren, Package, FlagCheckered,
   NotePencil, UsersThree, PaperPlaneTilt, Truck, AddressBook, ListChecks, LinkSimple, MapPin,
-  CheckSquare, Rocket, SealCheck,
+  CheckSquare, Rocket, SealCheck, CaretRight,
 } from '@phosphor-icons/react';
 
 const C = {
-  gold: 'var(--brand-primary)', green: 'var(--success)', yellow: 'var(--warning)', red: 'var(--danger)', blue: 'var(--brand-primary)',
-  bg: 'var(--bg-base)', card: 'var(--bg-surface)', border: 'rgba(255,255,255,0.12)', dim: 'var(--text-secondary)', text: 'var(--text-primary)',
+  gold: 'var(--text-secondary)', green: 'var(--success)', yellow: 'var(--warning)', red: 'var(--danger)', blue: 'var(--info-fg)',
+  bg: 'var(--bg-base)', card: 'var(--bg-surface)', border: 'var(--border-default)', dim: 'var(--text-secondary)', text: 'var(--text-primary)',
 };
 const STATUS_COLOR: Record<HealthStatus, string> = { green: C.green, yellow: C.yellow, red: C.red };
 const STATUS_LABEL: Record<HealthStatus, string> = { green: 'On Track', yellow: 'Watch', red: 'Escalate' };
@@ -35,17 +35,20 @@ const fmtDate = (s: string | null) => {
 function ModuleLink({ href, icon, label, count, accent }: { href: string; icon: React.ReactNode; label: string; count?: string | null; accent?: string }) {
   return (
     <Link href={href} style={{ textDecoration: 'none', color: 'inherit' }}>
-      <div className="pmBtn" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: `1px solid ${accent ? `${accent}44` : C.border}`, cursor: 'pointer', height: '100%' }}>
+      {/* The concept's tool tile: icon, name, live count, chevron. A tile with
+          something at risk takes that status colour on its border and count. */}
+      <div className="pmBtn" style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 52, padding: '8px 10px 8px 12px', borderRadius: 12, background: C.card, border: `1px solid ${accent ? `color-mix(in srgb, ${accent} 45%, var(--border-default))` : C.border}`, cursor: 'pointer', height: '100%', boxSizing: 'border-box' }}>
         <span style={{ display: 'inline-flex', flexShrink: 0 }}>{icon}</span>
-        <span style={{ fontSize: 13, fontWeight: 700, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>{label}</span>
-        {count && <span style={{ fontSize: 12, fontWeight: 800, color: accent || C.dim, background: accent ? `${accent}14` : 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: 999, whiteSpace: 'nowrap' }}>{count}</span>}
+        <span style={{ fontSize: 14, fontWeight: 700, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>{label}</span>
+        {count && <span style={{ fontSize: 12, fontWeight: 800, color: accent || C.dim, background: accent ? `color-mix(in srgb, ${accent} 14%, transparent)` : 'var(--bg-surface-2)', padding: '2px 8px', borderRadius: 999, whiteSpace: 'nowrap' }}>{count}</span>}
+        <CaretRight size={14} weight="bold" color="var(--text-tertiary)" style={{ flexShrink: 0 }} aria-hidden />
       </div>
     </Link>
   );
 }
 
 function HealthDot({ status, size = 10 }: { status: HealthStatus; size?: number }) {
-  return <span style={{ width: size, height: size, borderRadius: '50%', background: STATUS_COLOR[status], display: 'inline-block', boxShadow: `0 0 0 3px ${STATUS_COLOR[status]}22` }} />;
+  return <span style={{ width: size, height: size, borderRadius: '50%', background: STATUS_COLOR[status], display: 'inline-block', boxShadow: `0 0 0 3px color-mix(in srgb, ${STATUS_COLOR[status]} 13%, transparent)` }} />;
 }
 
 export default function CommandCenterPage() {
@@ -206,7 +209,7 @@ export default function CommandCenterPage() {
           return (
             <button key={f} onClick={() => setFilter(f)} style={{
               padding: '7px 14px', borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: 'pointer',
-              border: `1px solid ${on ? col : C.border}`, background: on ? `${col}14` : C.card, color: on ? col : C.dim,
+              border: `1px solid ${on ? col : C.border}`, background: on ? `color-mix(in srgb, ${col} 8%, transparent)` : C.card, color: on ? col : C.dim,
               display: 'inline-flex', alignItems: 'center', gap: 7,
             }}>
               {f !== 'all' && <HealthDot status={f as HealthStatus} size={8} />}
@@ -248,7 +251,7 @@ export default function CommandCenterPage() {
                       {[p.city, p.state].filter(Boolean).join(', ') || p.address || '—'}{p.phase ? ` · ${p.phase}` : ''}
                     </div>
                   </div>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: `${STATUS_COLOR[h.status]}14`, color: STATUS_COLOR[h.status], fontSize: 12, fontWeight: 800, padding: '4px 9px', borderRadius: 999, whiteSpace: 'nowrap' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: `color-mix(in srgb, ${STATUS_COLOR[h.status]} 8%, transparent)`, color: STATUS_COLOR[h.status], fontSize: 12, fontWeight: 800, padding: '4px 9px', borderRadius: 999, whiteSpace: 'nowrap' }}>
                     <HealthDot status={h.status} size={7} />{STATUS_LABEL[h.status]}
                   </span>
                 </div>
@@ -283,7 +286,7 @@ export default function CommandCenterPage() {
                 {h.flags.length > 0 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 12 }}>
                     {h.flags.map((f, i) => (
-                      <span key={i} style={{ fontSize: 12, fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: `${STATUS_COLOR[f.severity]}12`, color: STATUS_COLOR[f.severity], border: `1px solid ${STATUS_COLOR[f.severity]}30` }}>{f.label}</span>
+                      <span key={i} style={{ fontSize: 12, fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: `color-mix(in srgb, ${STATUS_COLOR[f.severity]} 7%, transparent)`, color: STATUS_COLOR[f.severity], border: `1px solid color-mix(in srgb, ${STATUS_COLOR[f.severity]} 19%, transparent)` }}>{f.label}</span>
                     ))}
                   </div>
                 )}

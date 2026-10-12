@@ -1161,7 +1161,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                           padding: '2px 8px', borderRadius: 4 }}>Built-In</span>
                       )}
                       {!r.isBuiltIn && (
-                        <span style={{ background: `${PURPLE}22`, color: PURPLE, fontSize: 12, fontWeight: 700,
+                        <span style={{ background: `color-mix(in srgb, ${PURPLE} 13%, transparent)`, color: PURPLE, fontSize: 12, fontWeight: 700,
                           padding: '2px 8px', borderRadius: 4 }}>Custom</span>
                       )}
                       <span style={{ color: DIM, fontSize: 12 }}>{count} user{count !== 1 ? 's' : ''}</span>
@@ -1186,7 +1186,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                         <span style={{ background: 'var(--bg-surface-2)', color: 'var(--text-primary)', fontSize: 12, fontWeight: 700,
                           padding: '2px 8px', borderRadius: 4 }}>Built-In</span>
                       ) : (
-                        <span style={{ background: `${PURPLE}22`, color: PURPLE, fontSize: 12, fontWeight: 700,
+                        <span style={{ background: `color-mix(in srgb, ${PURPLE} 13%, transparent)`, color: PURPLE, fontSize: 12, fontWeight: 700,
                           padding: '2px 8px', borderRadius: 4 }}>CUSTOM</span>
                       )}
                     </div>

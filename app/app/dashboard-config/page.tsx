@@ -556,10 +556,10 @@ export default function DashboardConfigPage() {
           subtitle="Build and manage your home dashboard layout."
           actions={<>
             {saveMsg && (
-              <span style={{ fontSize: 13, color: GREEN, fontWeight: 600, padding: '6px 12px', background: `${GREEN}15`, borderRadius: 8, alignSelf: 'center' }}>{saveMsg}</span>
+              <span style={{ fontSize: 13, color: GREEN, fontWeight: 600, padding: '6px 12px', background: `color-mix(in srgb, ${GREEN} 8%, transparent)`, borderRadius: 8, alignSelf: 'center' }}>{saveMsg}</span>
             )}
             {error && (
-              <span style={{ fontSize: 13, color: RED, fontWeight: 600, padding: '6px 12px', background: `${RED}15`, borderRadius: 8, alignSelf: 'center' }}>{error}</span>
+              <span style={{ fontSize: 13, color: RED, fontWeight: 600, padding: '6px 12px', background: `color-mix(in srgb, ${RED} 8%, transparent)`, borderRadius: 8, alignSelf: 'center' }}>{error}</span>
             )}
             {isDirty && (
               <span style={{ fontSize: 12, color: AMBER, fontWeight: 600, alignSelf: 'center' }}>Unsaved changes</span>

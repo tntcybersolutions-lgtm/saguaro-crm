@@ -391,7 +391,7 @@ export default function NetworkWizardPage() {
                 <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '6px 0', borderBottom: i < result.firewall_rules.length - 1 ? `1px solid ${BORDER}` : 'none' }}>
                   <span style={{
                     fontSize: 12, padding: '2px 8px', borderRadius: 8, fontWeight: 700,
-                    background: rule.action === 'allow' ? `${GREEN}15` : `${RED}15`,
+                    background: rule.action === 'allow' ? `color-mix(in srgb, ${GREEN} 8%, transparent)` : `color-mix(in srgb, ${RED} 8%, transparent)`,
                     color: rule.action === 'allow' ? GREEN : RED, textTransform: 'capitalize',
                   }}>{rule.action}</span>
                   <span style={{ color: TEXT, fontSize: 12 }}>{rule.name}</span>
@@ -410,7 +410,7 @@ export default function NetworkWizardPage() {
                   <div style={{ flex: 1 }}>
                     <span style={{ color: TEXT, fontSize: 13, fontWeight: 600 }}>{ssid.ssid}</span>
                     <div style={{ display: 'flex', gap: 6, marginTop: 2 }}>
-                      <span style={{ fontSize: 12, padding: '1px 6px', borderRadius: 6, background: `${GREEN}15`, color: GREEN }}>{ssid.security}</span>
+                      <span style={{ fontSize: 12, padding: '1px 6px', borderRadius: 6, background: `color-mix(in srgb, ${GREEN} 8%, transparent)`, color: GREEN }}>{ssid.security}</span>
                       <span style={{ fontSize: 12, padding: '1px 6px', borderRadius: 6, background: 'rgba(255,255,255,0.06)', color: DIM }}>VLAN {ssid.vlan}</span>
                       <span style={{ fontSize: 12, padding: '1px 6px', borderRadius: 6, background: 'rgba(255,255,255,0.06)', color: DIM }}>{ssid.band}</span>
                     </div>
@@ -439,7 +439,7 @@ export default function NetworkWizardPage() {
             <button onClick={applyAll} disabled={applying || applied} className="pmBtn" style={{
               ...goldButtonStyle,
               padding: '14px 40px', fontSize: 15,
-              ...(applied ? { background: `${GREEN}20`, color: GREEN, border: `1px solid ${GREEN}`, boxShadow: 'none' } : {}),
+              ...(applied ? { background: `color-mix(in srgb, ${GREEN} 13%, transparent)`, color: GREEN, border: `1px solid ${GREEN}`, boxShadow: 'none' } : {}),
               opacity: applying ? 0.6 : 1,
               cursor: applying || applied ? 'default' : 'pointer',
             }}>

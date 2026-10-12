@@ -31,7 +31,7 @@ function SLARow({ label, target, current, met }: { label: string; target: string
       <span style={{ flex: '1 1 200px', fontSize: 14, fontWeight: 700 }}>{label}</span>
       <span style={{ flex: '0 0 120px', fontSize: 12, color: C.dim, textAlign: 'right' }}>target {target}</span>
       <span style={{ flex: '0 0 110px', fontSize: 14, fontWeight: 800, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{current}</span>
-      <span style={{ flex: '0 0 96px', fontSize: 12, fontWeight: 800, color: col, background: `${col}14`, padding: '4px 9px', borderRadius: 999, textAlign: 'center' }}>{badge}</span>
+      <span style={{ flex: '0 0 96px', fontSize: 12, fontWeight: 800, color: col, background: `color-mix(in srgb, ${col} 8%, transparent)`, padding: '4px 9px', borderRadius: 999, textAlign: 'center' }}>{badge}</span>
     </div>
   );
 }

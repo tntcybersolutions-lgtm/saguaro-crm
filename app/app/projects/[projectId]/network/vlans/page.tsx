@@ -39,11 +39,11 @@ interface Vlan {
 const PURPOSE_COLORS: Record<string, { bg: string; text: string }> = {
   data: { bg: 'var(--brand-primary-12)', text: BLUE },
   voice: { bg: '#8B5CF620', text: 'var(--warning)' },
-  security: { bg: `${RED}20`, text: RED },
+  security: { bg: `color-mix(in srgb, ${RED} 13%, transparent)`, text: RED },
   guest: { bg: 'var(--brand-primary-12)', text: GOLD },
   iot: { bg: '#14B8A620', text: 'var(--success)' },
   management: { bg: '#6B728020', text: 'var(--status-closed)' },
-  server: { bg: `${GREEN}20`, text: GREEN },
+  server: { bg: `color-mix(in srgb, ${GREEN} 13%, transparent)`, text: GREEN },
   dmz: { bg: '#F9731620', text: 'var(--warning)' },
 };
 

@@ -105,7 +105,7 @@ export default function DirectoryPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 15, fontWeight: 800 }}>{s.name}</div>
-                    <span style={{ display: 'inline-block', fontSize: 12, fontWeight: 700, color: col, background: `${col}18`, padding: '2px 8px', borderRadius: 6, marginTop: 4 }}>{role}</span>
+                    <span style={{ display: 'inline-block', fontSize: 12, fontWeight: 700, color: col, background: `color-mix(in srgb, ${col} 9%, transparent)`, padding: '2px 8px', borderRadius: 6, marginTop: 4 }}>{role}</span>
                   </div>
                   <button onClick={() => remove(s.id)} aria-label="Remove" style={{ background: 'none', border: 'none', color: C.faint, cursor: 'pointer', fontSize: 15, lineHeight: 1 }}><X size={15} weight="regular" color={C.faint} /></button>
                 </div>

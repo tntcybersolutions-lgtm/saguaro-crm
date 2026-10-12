@@ -1123,7 +1123,7 @@ export default function CustomFieldsPage() {
         {error && (
           <div
             style={{
-              background: `${RED}22`,
+              background: `color-mix(in srgb, ${RED} 13%, transparent)`,
               border: `1px solid ${RED}`,
               borderRadius: 8,
               padding: '12px 16px',

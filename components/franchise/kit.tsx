@@ -78,12 +78,12 @@ export function Tile({ label, value, color, sub }: { label: string; value: React
 }
 
 export function SevDot({ sev, size = 10 }: { sev: Severity; size?: number }) {
-  return <span style={{ width: size, height: size, borderRadius: '50%', background: SEV_COLOR[sev], display: 'inline-block', boxShadow: `0 0 0 3px ${SEV_COLOR[sev]}22` }} />;
+  return <span style={{ width: size, height: size, borderRadius: '50%', background: SEV_COLOR[sev], display: 'inline-block', boxShadow: `0 0 0 3px color-mix(in srgb, ${SEV_COLOR[sev]} 13%, transparent)` }} />;
 }
 
 export function SevBadge({ sev, label }: { sev: Severity; label: string }) {
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: `${SEV_COLOR[sev]}14`, color: SEV_COLOR[sev], fontSize: 12, fontWeight: 800, padding: '4px 9px', borderRadius: 999, whiteSpace: 'nowrap' }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: `color-mix(in srgb, ${SEV_COLOR[sev]} 8%, transparent)`, color: SEV_COLOR[sev], fontSize: 12, fontWeight: 800, padding: '4px 9px', borderRadius: 999, whiteSpace: 'nowrap' }}>
       <SevDot sev={sev} size={7} />{label}
     </span>
   );

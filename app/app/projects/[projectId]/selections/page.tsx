@@ -497,7 +497,7 @@ export default function SelectionsPage(){
                   const over=v>0;
                   return(
                     <div style={{background:over?'rgba(248,113,113,.07)':'rgba(74,222,128,.07)',
-                      border:`1px solid ${over?RED:GREEN}33`,borderRadius:10,padding:'10px 14px'}}>
+                      border:`1px solid color-mix(in srgb, ${over?RED:GREEN} 20%, transparent)`,borderRadius:10,padding:'10px 14px'}}>
                       <InsightRow label="Selected Price" value={fmt(price)}/>
                       <InsightRow label="Allowance" value={fmt(allow)}/>
                       <InsightRow label={over?'Over Allowance':v<0?'Under Allowance':'On Allowance'}
@@ -604,7 +604,7 @@ export default function SelectionsPage(){
 
                 {selected.cost>0&&selected.allowance>0&&(
                   <div style={{background:selected.cost>selected.allowance?'rgba(248,113,113,.07)':'rgba(74,222,128,.07)',
-                    border:`1px solid ${selected.cost>selected.allowance?RED:GREEN}33`,borderRadius:8,padding:'10px 14px'}}>
+                    border:`1px solid color-mix(in srgb, ${selected.cost>selected.allowance?RED:GREEN} 20%, transparent)`,borderRadius:8,padding:'10px 14px'}}>
                     <div style={{fontSize:12,fontWeight:700,color:DIM,marginBottom:4}}>
                       Budget Impact
                     </div>
