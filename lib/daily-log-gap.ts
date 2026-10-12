@@ -19,7 +19,8 @@ export function missedWorkdays(fromIso: string, toIso: string): number {
   return n;
 }
 
-export type GapProject = { status?: string | null; closeout_date?: string | null } | null | undefined;
+/** A projects row (closeout_date) or the /api/project-context job (closeoutDate). */
+export type GapProject = { status?: string | null; closeout_date?: string | null; closeoutDate?: string | null } | null | undefined;
 
 /**
  * Unlogged workdays from the last log to today — or to the closeout date when
@@ -29,7 +30,7 @@ export function unloggedWorkdays(lastLogIso: string | null | undefined, todayIso
   if (!lastLogIso) return 0;
   let end = todayIso.slice(0, 10);
   if (project && isClosedStatus(project.status)) {
-    const close = String(project.closeout_date || '').slice(0, 10);
+    const close = String(project.closeoutDate || project.closeout_date || '').slice(0, 10);
     if (!close) return 0;
     if (close < end) end = close;
   }

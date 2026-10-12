@@ -14,6 +14,7 @@ import { SECTORS } from '@/lib/taxonomy';
 import { Plus, Buildings, MapPin, CalendarBlank, UsersThree, Sparkle, CurrencyDollar, ShieldCheck, Stack } from '@phosphor-icons/react';
 import { useProjects } from '@/lib/hooks/useProjects';
 import Suggest from '@/components/ui/Suggest';
+import { stateFromAddress } from '@/lib/us-state';
 
 const GOLD='var(--brand-primary)',DARK='var(--bg-surface-2)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)';
 const INPUT_STYLE = {width:'100%',padding:'10px 12px',background:DARK,border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:13,outline:'none'};
@@ -124,34 +125,8 @@ export default function NewProjectPage() {
   /* "Phoenix, AZ 85001" carries the jurisdiction already. Reading it saves the
      GC a field and, more importantly, stops a Texas job quietly inheriting
      Arizona's lien-waiver and prevailing-wage rules because nobody scrolled
-     down to change a default. Two-letter code, or the state spelled out. */
-  const STATE_CODES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC'];
-  const STATE_NAMES: Record<string, string> = {
-    alabama:'AL', alaska:'AK', arizona:'AZ', arkansas:'AR', california:'CA', colorado:'CO',
-    connecticut:'CT', delaware:'DE', florida:'FL', georgia:'GA', hawaii:'HI', idaho:'ID',
-    illinois:'IL', indiana:'IN', iowa:'IA', kansas:'KS', kentucky:'KY', louisiana:'LA',
-    maine:'ME', maryland:'MD', massachusetts:'MA', michigan:'MI', minnesota:'MN',
-    mississippi:'MS', missouri:'MO', montana:'MT', nebraska:'NE', nevada:'NV',
-    'new hampshire':'NH', 'new jersey':'NJ', 'new mexico':'NM', 'new york':'NY',
-    'north carolina':'NC', 'north dakota':'ND', ohio:'OH', oklahoma:'OK', oregon:'OR',
-    pennsylvania:'PA', 'rhode island':'RI', 'south carolina':'SC', 'south dakota':'SD',
-    tennessee:'TN', texas:'TX', utah:'UT', vermont:'VT', virginia:'VA', washington:'WA',
-    'west virginia':'WV', wisconsin:'WI', wyoming:'WY',
-  };
-  const stateFromAddress = (addr: string): string | null => {
-    const lower = addr.toLowerCase();
-    for (const [name, code] of Object.entries(STATE_NAMES)) {
-      if (lower.includes(name)) return code;
-    }
-    /* Last standalone two-letter token that is a real state — "1 Test Street,
-       Phoenix, AZ 85001" gives AZ without matching "St" or a street number. */
-    const tokens = addr.toUpperCase().match(/[A-Z]{2}/g) || [];
-    for (let i = tokens.length - 1; i >= 0; i--) {
-      if (STATE_CODES.includes(tokens[i])) return tokens[i];
-    }
-    return null;
-  };
-
+     down to change a default. Two-letter code, or the state spelled out
+     (lib/us-state — the switch-over import reads it the same way). */
   useEffect(() => {
     if (jurisdictionTouched) return;
     const found = stateFromAddress(address);

@@ -29,6 +29,8 @@ check('no last log → 0', unloggedWorkdays(null, '2026-10-14') === 0);
 check('active job counts to today', unloggedWorkdays('2026-10-01', '2026-10-14', { status: 'active' }) === 8);
 check('closed job stops at closeout', unloggedWorkdays('2026-10-01', '2026-10-14', { status: 'closed', closeout_date: '2026-10-06' }) === 2,
   String(unloggedWorkdays('2026-10-01', '2026-10-14', { status: 'closed', closeout_date: '2026-10-06' })));
+check('closed job stops at closeout (project-context shape)', unloggedWorkdays('2026-09-30', '2026-10-12', { status: 'closed', closeoutDate: '2026-10-02' }) === 1,
+  String(unloggedWorkdays('2026-09-30', '2026-10-12', { status: 'closed', closeoutDate: '2026-10-02' })));
 check('closed job with no closeout date → 0', unloggedWorkdays('2026-10-01', '2026-10-14', { status: 'closed' }) === 0);
 check('closeout after today still counts to today', unloggedWorkdays('2026-10-01', '2026-10-14', { status: 'closed', closeout_date: '2026-12-01' }) === 8);
 
