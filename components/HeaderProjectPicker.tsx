@@ -466,16 +466,16 @@ export default function HeaderProjectPicker() {
 const CSS = `
 .jp-wrap { position: relative; flex-shrink: 0; min-width: 0; }
 .jp-trigger { display: flex; align-items: center; gap: 9px; min-height: 40px; max-width: 300px; padding: 4px 10px 4px 5px; border-radius: 12px; cursor: pointer; white-space: nowrap; text-align: left;
-  background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); color: var(--c-text-2); font-size: 13.5px; font-weight: 700; }
-.jp-trig-tile { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0; color: var(--c-orange); background: rgba(251,191,36,0.10); border: 1px solid rgba(251,191,36,0.35); }
+  background: var(--bg-surface-2); border: 1px solid var(--border-default); color: var(--c-text-2); font-size: 14px; font-weight: 700; }
+.jp-trig-tile { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0; color: var(--text-secondary); background: var(--bg-surface); border: 1px solid var(--border-default); }
 .jp-trig-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
 .jp-trig-meta { color: var(--c-text-3); font-size: 11px; font-weight: 700; letter-spacing: .02em; overflow: hidden; text-overflow: ellipsis; }
-.jp-trigger:hover { background: rgba(255,255,255,0.06); color: var(--c-text); }
-.jp-trigger[data-in-job] { color: var(--c-text); background: rgba(255,224,0,0.05); border-color: rgba(255,224,0,0.3); }
-.jp-trigger[data-in-job]:hover { border-color: rgba(255,224,0,0.55); }
-.jp-trigger[aria-expanded="true"] { border-color: rgba(255,224,0,0.6); box-shadow: 0 0 0 3px rgba(255,224,0,0.12); }
+.jp-trigger:hover { background: var(--bg-hover); color: var(--c-text); }
+.jp-trigger[data-in-job] { color: var(--c-text); }
+.jp-trigger[data-in-job]:hover { border-color: var(--border-strong); }
+.jp-trigger[aria-expanded="true"] { border-color: var(--border-strong); background: var(--bg-hover); }
 .jp-trigger:focus-visible { outline: 2px solid var(--c-yellow); outline-offset: 2px; }
-.jp-trig-caret { color: var(--c-orange); flex-shrink: 0; margin-left: 2px; }
+.jp-trig-caret { color: var(--text-tertiary); flex-shrink: 0; margin-left: 2px; }
 .jp-trig-label { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .jp-panel { position: absolute; top: calc(100% + 8px); left: 0; z-index: 3000; width: 420px; max-height: min(560px, 72vh);
   display: flex; flex-direction: column; overflow: hidden; background: var(--c-raised); border: 1px solid var(--border-default); border-radius: 16px;
@@ -508,11 +508,11 @@ const CSS = `
 .jp-opt[data-closed] .jp-money { color: var(--c-text-3); }
 .jp-prog { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
 .jp-bar { position: relative; flex: 0 1 140px; height: 4px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; }
-.jp-bar > i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--c-yellow), var(--c-orange)); }
+.jp-bar > i { display: block; height: 100%; border-radius: inherit; background: var(--info); }
 .jp-pct { color: var(--c-text-2); font-size: 11.5px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .jp-check { color: var(--c-yellow); flex-shrink: 0; }
 .jp-empty { padding: 18px 12px; font-size: 13.5px; color: var(--c-text-2); line-height: 1.45; }
-.jp-linkbtn { background: none; border: 0; padding: 0; color: var(--c-yellow); font: inherit; font-weight: 700; cursor: pointer; }
+.jp-linkbtn { background: none; border: 0; padding: 0; color: var(--link); font: inherit; font-weight: 700; cursor: pointer; }
 .jp-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px; border-top: 1px solid var(--border-subtle); }
 .jp-footlink { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 10px; border-radius: 9px; font-size: 13px; font-weight: 700; color: var(--c-text-2); text-decoration: none; }
 .jp-footlink:hover { background: rgba(255,255,255,0.05); color: var(--c-text); }

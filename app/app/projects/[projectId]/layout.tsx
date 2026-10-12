@@ -90,40 +90,32 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
    and client text match (tools/check-style-escapes.mjs). */
 const CSS = `
 .pjx-bar{display:flex;flex-wrap:wrap;align-items:center;gap:0 8px;min-height:44px;padding:0 8px 0 4px;border-bottom:1px solid var(--fl-line,var(--border-default));min-width:0}
-.pjx-back{display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 10px 0 8px;color:var(--brand-primary);font-size:15px;font-weight:600;text-decoration:none;min-width:0;flex:0 1 auto;-webkit-tap-highlight-color:transparent}
+.pjx-back{display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 10px 0 8px;color:var(--link);font-size:15px;font-weight:600;text-decoration:none;min-width:0;flex:0 1 auto;-webkit-tap-highlight-color:transparent}
+.pjx-back:hover{color:var(--link-hover)}
 .pjx-back>span:first-child{font-size:22px;line-height:1;margin-top:-2px}
 .pjx-back-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(60vw,420px)}
+/* Phase tabs: slate pills; the phase you are in is the one yellow pill. */
+.pjx-tab{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 15px;border-radius:999px;flex:0 0 auto;white-space:nowrap;text-decoration:none;
+  border:1px solid var(--border-default);background:var(--bg-surface-2);color:var(--text-primary);font-size:14px;font-weight:600;
+  -webkit-tap-highlight-color:transparent;transition:background-color .15s ease,border-color .15s ease}
+.pjx-tab svg{color:var(--text-secondary);flex:none}
+.pjx-tab:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.pjx-tab:focus-visible{outline:2px solid var(--brand-primary);outline-offset:2px}
+.pjx-tab[data-active]{background:var(--brand-primary);border-color:var(--brand-primary);color:var(--on-brand);font-weight:700}
+.pjx-tab[data-active] svg{color:var(--on-brand)}
+@media (prefers-reduced-motion:reduce){.pjx-tab{transition:none}}
 @media (max-width:767px){
   .pjx-bar{padding:0}
   .pjx-back{padding-left:12px}
   .pjx-tabs{display:flex;flex-wrap:nowrap;gap:8px;width:100%;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:none;padding:8px 12px;
     -webkit-mask-image:linear-gradient(90deg,black calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,black calc(100% - 28px),transparent)}
   .pjx-tabs::-webkit-scrollbar{display:none}
-  .pjx-tab{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 13px;border-radius:999px;scroll-snap-align:start;flex:0 0 auto;white-space:nowrap;text-decoration:none;
-    border:1px solid color-mix(in srgb,var(--brand-primary) 45%,transparent);
-    background:linear-gradient(180deg,color-mix(in srgb,var(--brand-primary) 16%,transparent),color-mix(in srgb,var(--brand-primary) 6%,transparent));
-    color:var(--text-primary);font-size:14px;font-weight:700;-webkit-tap-highlight-color:transparent}
-  .pjx-tab svg{color:var(--brand-primary);flex:none}
-  .pjx-tab[data-active]{background:var(--brand-primary);border-color:var(--brand-primary);color:var(--on-brand,var(--c-on-brand));font-weight:800;box-shadow:0 0 16px color-mix(in srgb,var(--brand-primary) 50%,transparent)}
-  .pjx-tab[data-active] svg{color:var(--on-brand,var(--c-on-brand))}
+  .pjx-tab{padding:0 13px;scroll-snap-align:start}
 }
 @media (min-width:768px){
-  .pjx-bar{padding:0 clamp(8px,1.2vw,20px) 0 4px}
-  .pjx-bar{min-height:60px}
+  .pjx-bar{padding:0 clamp(8px,1.2vw,20px) 0 4px;min-height:60px}
   .pjx-tabs{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;margin-left:auto;min-width:0;padding:8px 2px}
-  .pjx-tab{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:0 15px;border-radius:999px;
-    border:1px solid color-mix(in srgb,var(--brand-primary) 45%,transparent);
-    background:linear-gradient(180deg,color-mix(in srgb,var(--brand-primary) 16%,transparent),color-mix(in srgb,var(--brand-primary) 6%,transparent));
-    box-shadow:0 0 14px color-mix(in srgb,var(--brand-primary) 14%,transparent);
-    color:var(--text-primary);font-size:14px;font-weight:700;text-decoration:none;white-space:nowrap;flex:0 0 auto;
-    transition:background .15s ease,border-color .15s ease,box-shadow .15s ease,transform .15s ease}
-  .pjx-tab svg{color:var(--brand-primary);flex:none}
-  .pjx-tab:hover{border-color:var(--brand-primary);background:color-mix(in srgb,var(--brand-primary) 24%,transparent);box-shadow:0 0 20px color-mix(in srgb,var(--brand-primary) 30%,transparent);transform:translateY(-1px)}
-  .pjx-tab:focus-visible{outline:2px solid var(--brand-primary);outline-offset:2px}
-  .pjx-tab[data-active]{background:var(--brand-primary);border-color:var(--brand-primary);color:var(--on-brand,var(--c-on-brand));font-weight:800;
-    box-shadow:0 0 0 1px color-mix(in srgb,var(--brand-primary) 60%,transparent),0 0 24px color-mix(in srgb,var(--brand-primary) 55%,transparent)}
-  .pjx-tab[data-active] svg{color:var(--on-brand,var(--c-on-brand))}
-  @media (prefers-reduced-motion:reduce){.pjx-tab{transition:none}.pjx-tab:hover{transform:none}}
+  .pjx-tab{min-height:40px}
   .pjx-bar[data-no-back] .pjx-tabs{margin-left:0;justify-content:flex-start}
 }
 `;
