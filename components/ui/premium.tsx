@@ -204,9 +204,9 @@ export function ModuleHero({
 }
 
 // ─── IconChip ────────────────────────────────────────────────────────────────
-// A slate tile with a hairline border. With `vivid` (a module-identity hue) it
-// takes a low tint of that hue and a matching ring — flat, no gradient, no
-// glow — for a white (#F8FAFC) glyph.
+// A tile in a module hue: a low tint of `vivid` (lib/ui/app-accent) with a
+// matching ring, or of the page's accent (--acc) without it — flat, no
+// gradient, no glow.
 export function IconChip({ children, size = 40, vivid }: { children: React.ReactNode; size?: number; vivid?: string }) {
   return (
     <span
@@ -214,8 +214,9 @@ export function IconChip({ children, size = 40, vivid }: { children: React.React
       style={{
         flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         width: size, height: size, borderRadius: Math.round(size * 0.28),
-        background: vivid ? `color-mix(in srgb, ${vivid} 22%, var(--bg-surface-2))` : 'var(--bg-surface-2)',
-        border: `1px solid ${vivid ? `color-mix(in srgb, ${vivid} 50%, transparent)` : 'var(--border-default)'}`,
+        background: `color-mix(in srgb, ${vivid ?? 'var(--acc)'} 16%, var(--bg-surface-2))`,
+        border: `1px solid color-mix(in srgb, ${vivid ?? 'var(--acc)'} 42%, var(--bg-surface-2))`,
+        color: vivid ?? 'var(--acc)',
       }}
     >
       {children}

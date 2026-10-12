@@ -33,7 +33,7 @@
      rule 4). All three clear 5.5:1 on a card. */
   --text-primary: #F8FAFC;
   --text-secondary: #CBD5E1;
-  --text-tertiary: #94A3B8;
+  --text-tertiary: #A3B1C6;  /* captions, labels — 7:1 on a card */
   --text-disabled: color-mix(in srgb, #94A3B8 72%, #101722);
   /* ── Brand primary — the single white-label override point (WhiteLabelProvider
      overrides --brand-primary + the derived vars per tenant). Yellow is for
@@ -45,7 +45,7 @@
   --c-raised: #243247;
   --c-text: #F8FAFC;
   --c-text-2: #CBD5E1;
-  --c-text-3: #94A3B8;
+  --c-text-3: #A3B1C6;
   --c-text-4: color-mix(in srgb, #94A3B8 72%, #101722);
   --c-yellow: #FFE000;      /* primary action, selected navigation */
   --c-yellow-hi: color-mix(in srgb, #FFE000 86%, #F8FAFC);
@@ -189,6 +189,31 @@
   --chart-5: #94A3B8;
   --tile-bg: #243247;
   --tile-border: #334155;
+  /* ── Hierarchy, module identity and card edges (global theme pass,
+     12 Oct 2026). Page titles are bright cyan-blue, section headings a
+     lighter cyan, cards carry a clearly visible edge, and every icon tile
+     wears its module's accent. Change the look here, not in pages. ── */
+  --title-page: #38BDF8;      /* page titles (PageShell, ModuleHero, any h1 in the app) */
+  --title-section: #7DD3FC;   /* section and card headings (h2, card titles, list sections) */
+  --border-card: #3D4F68;     /* a card's own edge; --border-subtle stays for dividers inside it */
+  --card-highlight: inset 0 1px 0 rgba(148,163,184,0.08);
+  --surface-card: var(--bg-surface);
+  --fs-title: 26px;           /* page title, desktop */
+  --fs-title-m: 22px;         /* page title, phone */
+  --fs-section: 16px;         /* section / card heading */
+  /* Module accents: one hue per product domain. lib/ui/app-accent.ts maps
+     every module (and every /app route) to one of these and mirrors the
+     hexes for canvas/SVG. They mark identity only — icon tiles, the sidebar
+     glyphs, a header tile; status meaning stays green / amber / red. */
+  --mod-core: #38BDF8;    /* home, dashboards, reports, settings */
+  --mod-sales: #A78BFA;   /* leads, customers, bids, intelligence */
+  --mod-precon: #22D3EE;  /* takeoff, estimates, bid packages, catalog */
+  --mod-build: #818CF8;   /* jobs, schedule, contracts, submittals, closeout */
+  --mod-field: #2DD4BF;   /* daily logs, photos, punch, time, equipment */
+  --mod-money: #F472B6;   /* pay apps, invoices, budget, change orders, waivers */
+  --mod-docs: #60A5FA;    /* drawings, specs, documents, RFIs, messages */
+  --mod-people: #FB923C;  /* subs, team, compliance, safety, people */
+  --acc: var(--mod-core); /* the current module's accent; the app shell sets it per route */
 }
 
 
@@ -355,7 +380,7 @@ select option:checked, select option:hover, select option:focus {
 /* ── App typography — small, light, lots of air. Scoped to the app shell
    (.sag-app on app/app/layout.tsx) so the marketing pages' own heading scale
    (.mkt-page below) is not overridden; the old global !important rules were. ── */
-.sag-app h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.3; }
+.sag-app h1 { font-size: var(--fs-title-m); font-weight: 700; letter-spacing: -0.02em; line-height: 1.25; }
 .sag-app h2 { font-size: 15px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.35; }
 .sag-app h3 { font-size: 13.5px; font-weight: 600; letter-spacing: -0.008em; line-height: 1.4; }
 .sag-app h4, .sag-app h5, .sag-app h6 { font-size: 12px; font-weight: 600; line-height: 1.35; }
@@ -1009,7 +1034,7 @@ input:-webkit-autofill:focus {
 /* Page header — compact (flat UI): a 20–22px title, one line under it, the
    actions on the right. No eyebrow, no hero art. */
 .k-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2) var(--sp-4); }
-.sag-app .k-title, .k-title { font-size: 22px; font-weight: 700; letter-spacing: -0.015em; line-height: 1.2; color: var(--sg-text); }
+.sag-app .k-title, .k-title { font-size: var(--fs-title); font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; color: var(--title-page); }
 .k-sub { margin-top: 4px; font-size: 14px; line-height: 1.5; color: var(--text-secondary); max-width: 760px; }
 .k-head-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
 
@@ -1036,9 +1061,9 @@ input:-webkit-autofill:focus {
 /* Card — a solid slate panel on the navy page (approved reference, 12 Oct
    2026): 12px corners, a hairline border, a restrained shadow. The head is the
    section title over a hairline; a flush body (tables) runs to the edges. */
-.k-card { position: relative; min-width: 0; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 4px 16px 12px; }
+.k-card { position: relative; min-width: 0; background: var(--bg-surface); border: 1px solid var(--border-card); border-radius: var(--radius-lg); box-shadow: var(--card-highlight), var(--shadow-sm); padding: 4px 16px 12px; }
 .k-card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); min-height: 44px; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); }
-.k-card-title, .pmSecTitle { display: inline-flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 700; letter-spacing: -0.005em; text-transform: none; color: var(--text-primary); line-height: 1.3; text-shadow: none; }
+.k-card-title, .pmSecTitle { display: inline-flex; align-items: center; gap: 8px; font-size: var(--fs-section); font-weight: 700; letter-spacing: -0.005em; text-transform: none; color: var(--title-section); line-height: 1.3; text-shadow: none; }
 .k-card-sub { font-size: 13px; color: var(--text-secondary); margin-top: 2px; letter-spacing: normal; text-transform: none; }
 .k-card-body { padding: 12px 0 4px; }
 .k-card-flush { padding: 0; margin: 0 -16px -12px; border-radius: 0 0 var(--radius-lg) var(--radius-lg); overflow: hidden; }
@@ -1046,13 +1071,13 @@ input:-webkit-autofill:focus {
 
 /* Stat figures — one slate strip of numbers with hairline separators. The
    value leads (financial totals are prominent), the label says what it is. */
-.k-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; }
+.k-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); background: var(--bg-surface); border: 1px solid var(--border-card); border-radius: var(--radius-lg); box-shadow: var(--card-highlight), var(--shadow-sm); overflow: hidden; }
 .k-stat { position: relative; display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 12px 16px; margin: 0 0 -1px -1px; border-left: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); background: none; border-radius: 0; box-shadow: none; text-decoration: none; color: inherit; }
 a.k-stat:hover, button.k-stat:hover { background: rgba(148,163,184,0.06); }
 button.k-stat { text-align: left; font: inherit; border-top: 0; border-right: 0; cursor: pointer; }
 button.k-stat[aria-pressed="true"] { box-shadow: inset 0 -2px 0 var(--brand-primary); }
 .k-stat-top { order: 1; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; min-width: 0; }
-.k-stat-icon { display: inline-grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 8px; background: var(--tile-bg); border: 1px solid var(--tile-border); color: var(--text-secondary); }
+.k-stat-icon { display: inline-grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 8px; background: color-mix(in srgb, var(--acc) 14%, var(--bg-surface-2)); border: 1px solid color-mix(in srgb, var(--acc) 38%, var(--bg-surface-2)); color: var(--acc); }
 /* Labels and sublines wrap to two lines rather than cutting a word mid-way. */
 .k-stat-label { font-size: 13px; font-weight: 600; letter-spacing: normal; text-transform: none; color: var(--text-tertiary); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
 .k-stat-value { order: 2; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; color: var(--text-primary); font-variant-numeric: tabular-nums; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1188,7 +1213,7 @@ select.k-select { padding-right: 36px; }
 
 @media (max-width: 720px) {
   .k-page { padding: var(--sp-4) var(--sp-4) var(--sp-6); }
-  .sag-app .k-title, .k-title { font-size: 20px; }
+  .sag-app .k-title, .k-title { font-size: var(--fs-title-m); }
   .k-form-grid { grid-template-columns: minmax(0, 1fr); }
   .k-search { flex: 1 1 100%; }
   /* Row actions stay reachable while the rest of the row scrolls sideways. */
@@ -1560,12 +1585,12 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 }
 .sag-app h1,
 .sag-app .k-title {
-  color: var(--c-text);
-  -webkit-text-fill-color: var(--c-text); /* beats an inline colour on page titles */
-  font-weight: 700;
-  letter-spacing: -0.015em;
+  color: var(--title-page);
+  -webkit-text-fill-color: var(--title-page); /* beats an inline colour on page titles */
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
-.sag-app h2 { color: var(--c-text); font-weight: 700; }
+.sag-app h2 { color: var(--title-section); font-weight: 700; }
 .sag-app :is(button, .k-btn, [data-tone="brand"]) :is(h1, h2),
 .sag-app :is(button, .k-btn) .k-title { -webkit-text-fill-color: currentColor; color: inherit; }
 .sag-app .k-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-tertiary); }
@@ -1587,7 +1612,7 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 .sg-nav-label { font-weight: 600; letter-spacing: -0.005em; }
 .sg-nav-item[data-active="true"] .sg-nav-label, .sg-nav-label[data-active="true"] { color: var(--on-brand); font-weight: 700; }
 .sg-nav-item:not([data-active="true"]):hover { background: rgba(148,163,184,0.10); color: var(--c-text) !important; }
-.sg-nav-head { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-tertiary); text-shadow: none; }
+.sg-nav-head { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--title-section); text-shadow: none; }
 .sg-brand-name { color: var(--c-text); }
 
 /* Dropdowns: the open list is ours, not the operating system's. Chrome and
@@ -1712,10 +1737,10 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
   .pmHeadActs>*{flex:0 0 auto;max-width:100%}
 }
 /* Section: a slate panel — its title (.pmSecTitle) over a hairline, then the content. */
-.pmSec{position:relative;min-width:0;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:4px 16px 14px}
+.pmSec{position:relative;min-width:0;background:var(--bg-surface);border:1px solid var(--border-card);border-radius:var(--radius-lg);box-shadow:var(--card-highlight),var(--shadow-sm);padding:4px 16px 14px}
 .pmSecHead{display:flex;align-items:center;gap:10px;min-height:44px;padding:10px 0;margin-bottom:12px;border-bottom:1px solid var(--border-subtle)}
 .pmSecSub{font-size:13px;color:var(--text-secondary);margin-top:2px;line-height:1.4}
-.pmSecTray{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg)}
+.pmSecTray{background:var(--bg-surface);border:1px solid var(--border-card);border-radius:var(--radius-lg)}
 .pmSec .pmSec{background:none;border:0;box-shadow:none;padding:0}
 @media (max-width:767px){.pmSec{padding:4px 12px 12px}}
 /* A table in a section runs edge to edge on a desk, like .k-card-flush; its
@@ -1726,7 +1751,7 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
   .pmSec:has(> div > .k-table-wrap){overflow:hidden}
 }
 /* Number strip (StatStrip / StatCard): a slate panel of figures, hairlines between. */
-.pmStrip{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden;margin-bottom:16px;min-width:0}
+.pmStrip{background:var(--bg-surface);border:1px solid var(--border-card);border-radius:var(--radius-lg);box-shadow:var(--card-highlight),var(--shadow-sm);overflow:hidden;margin-bottom:16px;min-width:0}
 .pmStripGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));margin:0 0 -1px -1px}
 .pmFig{position:relative;display:flex;flex-direction:column;gap:2px;min-width:0;min-height:44px;padding:12px 16px;border-left:1px solid var(--border-subtle);border-bottom:1px solid var(--border-subtle);background:none;color:inherit;text-decoration:none;text-align:left;font:inherit;box-sizing:border-box}
 button.pmFig,a.pmFig,div.pmFig[role=button]{cursor:pointer}
@@ -1751,7 +1776,7 @@ a.pmFig:hover,button.pmFig:hover,div.pmFig[role=button]:hover{background:rgba(14
    Full width (the caller's grid fell to one column on a phone): a list row —
    label on the left, value on the right, a hairline under it. */
 .pmFig.pmFigSolo{display:block;padding:0;border:0;height:100%;container-type:inline-size}
-.pmFigIn{display:flex;flex-direction:column;gap:2px;min-width:0;height:100%;min-height:44px;padding:12px 16px;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);box-sizing:border-box}
+.pmFigIn{display:flex;flex-direction:column;gap:2px;min-width:0;height:100%;min-height:44px;padding:12px 16px;background:var(--bg-surface);border:1px solid var(--border-card);border-radius:var(--radius-lg);box-shadow:var(--card-highlight);box-sizing:border-box}
 .pmFigText{display:contents}
 @container (min-width:320px){
   .pmFigIn{flex-direction:row;align-items:center;gap:12px;padding:12px 16px}
@@ -1767,8 +1792,8 @@ a.pmFig:hover,button.pmFig:hover,div.pmFig[role=button]:hover{background:rgba(14
 .pmEmpty[data-tone=error] .pmEmptyLine b{color:var(--danger)}
 .pmEmptyActs{display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex:0 0 auto}
 
-.sag-app .pmHead h1, .pmHead h1 { margin: 0; font-size: 22px; font-weight: 700; line-height: 1.2; letter-spacing: -0.015em; color: var(--sg-text); -webkit-text-fill-color: var(--sg-text); }
-@media (max-width: 767px) { .sag-app .pmHead h1, .pmHead h1 { font-size: 20px; } }
+.sag-app .pmHead h1, .pmHead h1 { margin: 0; font-size: var(--fs-title); font-weight: 800; line-height: 1.2; letter-spacing: -0.02em; color: var(--title-page); -webkit-text-fill-color: var(--title-page); }
+@media (max-width: 767px) { .sag-app .pmHead h1, .pmHead h1 { font-size: var(--fs-title-m); } }
 
 /* Content + side rail (DESIGN_SYSTEM.md §3). One source for every "main column plus
    a context rail" layout: the rail's width comes from --pm-rail (railStyle() in
@@ -1794,7 +1819,7 @@ a.pmFig:hover,button.pmFig:hover,div.pmFig[role=button]:hover{background:rgba(14
 .k-title-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; min-width: 0; }
 .k-meta { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 8px; font-size: 14px; color: var(--text-secondary); }
 .k-meta-item { display: inline-flex; align-items: center; gap: 6px; min-width: 0; color: var(--text-secondary); text-decoration: none; }
-.k-meta-ic { display: inline-flex; color: var(--text-tertiary); }
+.k-meta-ic { display: inline-flex; color: var(--acc); }
 a.k-meta-item, .k-link { color: var(--link); }
 a.k-meta-item:hover, .k-link:hover { color: var(--link-hover); }
 /* Filter / toggle chips (kit): slate until chosen, then the selected-control
@@ -1804,11 +1829,11 @@ a.k-meta-item:hover, .k-link:hover { color: var(--link-hover); }
 .k-chip:hover:not([aria-pressed="true"]) { background: var(--bg-row-hover); color: var(--text-primary); }
 .k-chip[aria-pressed="true"] { background: var(--selected-control-bg); border-color: var(--selected-control-bg); color: var(--selected-control-fg); }
 .k-chip:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-.k-tile { display: inline-grid; place-items: center; flex: none; border-radius: 10px; background: var(--tile-bg); border: 1px solid var(--tile-border); color: var(--text-secondary); }
-.k-tile[data-tone="info"] { color: var(--info-fg); }
-.k-tile[data-tone="success"] { color: var(--success-fg); }
-.k-tile[data-tone="warning"] { color: var(--warning-fg); }
-.k-tile[data-tone="danger"] { color: var(--danger-fg); }
+.k-tile { display: inline-grid; place-items: center; flex: none; border-radius: 10px; background: color-mix(in srgb, var(--acc) 14%, var(--bg-surface-2)); border: 1px solid color-mix(in srgb, var(--acc) 38%, var(--bg-surface-2)); color: var(--acc); }
+.k-tile[data-tone="info"] { background: var(--info-bg); border-color: var(--info-border); color: var(--info-fg); }
+.k-tile[data-tone="success"] { background: var(--success-bg); border-color: var(--success-border); color: var(--success-fg); }
+.k-tile[data-tone="warning"] { background: var(--warning-bg); border-color: var(--warning-border); color: var(--warning-fg); }
+.k-tile[data-tone="danger"] { background: var(--danger-bg); border-color: var(--danger-border); color: var(--danger-fg); }
 .k-card-head .k-tile { margin-right: 2px; }
 .k-items { display: flex; flex-direction: column; }
 .k-item { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); color: inherit; text-decoration: none; text-align: left; background: none; border-left: 0; border-right: 0; border-top: 0; width: 100%; font: inherit; }
@@ -1823,7 +1848,7 @@ a.k-meta-item:hover, .k-link:hover { color: var(--link-hover); }
 .k-item-value a { color: var(--link); text-decoration: none; }
 .k-item-action { flex: none; display: inline-flex; gap: 8px; }
 .k-item-chev { flex: none; color: var(--text-tertiary); }
-.k-callout { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; padding: 14px 16px; border-radius: var(--radius-lg); background: var(--bg-surface); border: 1px solid var(--border-default); box-shadow: var(--shadow-sm); }
+.k-callout { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; padding: 14px 16px; border-radius: var(--radius-lg); background: var(--bg-surface); border: 1px solid var(--border-card); box-shadow: var(--card-highlight), var(--shadow-sm); }
 .k-callout-main { display: flex; align-items: flex-start; gap: 12px; min-width: 0; flex: 1 1 320px; }
 .k-callout-ic { display: inline-grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 50%; }
 .k-callout[data-tone="info"] .k-callout-ic { background: var(--info-bg); border: 1px solid var(--info-border); color: var(--info-fg); }
@@ -1847,7 +1872,7 @@ a.k-meta-item:hover, .k-link:hover { color: var(--link-hover); }
 .k-tl { list-style: none; margin: 0; padding: 0; }
 .k-tl-item { position: relative; display: flex; gap: 12px; padding: 0 0 16px; }
 .k-tl-item:not(:last-child)::before { content: ''; position: absolute; left: 15px; top: 34px; bottom: 2px; width: 1px; background: var(--border-default); }
-.k-tl-dot { display: inline-grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 50%; background: var(--tile-bg); border: 1px solid var(--tile-border); color: var(--text-secondary); }
+.k-tl-dot { display: inline-grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 50%; background: color-mix(in srgb, var(--acc) 14%, var(--bg-surface-2)); border: 1px solid color-mix(in srgb, var(--acc) 38%, var(--bg-surface-2)); color: var(--acc); }
 .k-tl-dot[data-tone="info"] { color: var(--info-fg); }
 .k-tl-dot[data-tone="success"] { color: var(--success-fg); }
 .k-tl-dot[data-tone="warning"] { color: var(--warning-fg); }
@@ -1865,6 +1890,6 @@ a.k-meta-item:hover, .k-link:hover { color: var(--link-hover); }
 .k-prog > span { display: block; height: 100%; border-radius: 6px; background: var(--info); }
 /* Premium header (ModuleHero): module icon tile + record line + title. */
 .pmHeadLead { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1 1 420px; }
-.pmHeadTile { width: 48px; height: 48px; border-radius: 12px; color: var(--text-primary); }
+.pmHeadTile { width: 48px; height: 48px; border-radius: 12px; }
 .pmEyebrow { font-size: 13px; font-weight: 600; color: var(--text-tertiary); margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 639px) { .pmHeadTile { width: 40px; height: 40px; border-radius: 10px; } }

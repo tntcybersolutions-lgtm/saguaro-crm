@@ -57,7 +57,18 @@ const CSS = `
 .stc-bar > span { display: block; height: 100%; background: var(--info-fg); border-radius: 4px; transition: width .25s ease; }
 .stc-more { font-size: 13px; color: var(--text-tertiary); padding: 4px 0 2px; }
 @media (max-width: 767px) {
-  .stc { left: 12px; right: 12px; width: auto; transform: none; bottom: calc(var(--sag-tabbar-h, 0px) + 8px); }
+  .stc { left: 12px; right: 12px; width: auto; transform: none; bottom: calc(var(--sag-tabbar-h, 0px) + 8px);
+    padding: 2px 2px 2px 12px; border-radius: 12px; font-size: 14px; }
+  /* Done / working: the steps carry the meaning, so the heading word steps
+     aside and the close button sits in the corner — one compact line per
+     step instead of a heading row plus a 44px button row. A failure or "no
+     signal" keeps its heading. */
+  .stc:not([data-tone="bad"]):not([data-tone="nosig"]) .stc-head { position: absolute; top: 0; right: 0; }
+  .stc:not([data-tone="bad"]):not([data-tone="nosig"]) .stc-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .stc:not([data-tone="bad"]):not([data-tone="nosig"]) ol { margin-top: 0; padding-right: 44px; }
+  .stc-x { margin: 0; }
+  .stc ol { max-height: 32vh; }
+  .stc li { padding: 11px 0; }
 }
 `;
 
