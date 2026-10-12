@@ -9,6 +9,8 @@
  * exactly like one made by hand. Pure functions: tested in switch-over.sanity.test.ts.
  */
 
+import { stateFromAddress } from '../us-state';
+
 export type ImportKind = 'jobs' | 'customers' | 'leads';
 
 export interface TargetField {
@@ -144,6 +146,10 @@ export function rowToBody(kind: ImportKind, row: string[], map: Record<string, n
     const address = [street, get('city'), [get('state'), get('zip')].filter(Boolean).join(' ')].filter(Boolean).join(', ');
     const body: Record<string, unknown> = { name, status: jobStatus(get('status')) };
     if (address) body.address = address;
+    // The job's state sets its lien-waiver and wage rules — never leave a
+    // Texas job on the create route's Arizona default.
+    const jurisdiction = stateFromAddress(get('state')) || stateFromAddress(address);
+    if (jurisdiction) body.stateJurisdiction = jurisdiction;
     if (get('projectNumber')) body.projectNumber = get('projectNumber');
     const value = parseMoney(get('contractValue'));
     if (value !== null) body.contractValue = value;
