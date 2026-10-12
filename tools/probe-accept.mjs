@@ -206,6 +206,11 @@ try {
     for (const w of ['1440', '390']) { const m = R.screens[k]?.[w]; if (m && !m.error && !m.blocked) check(`${k} ${w}: status pill beside the title`, !!m.pill, m.pill); }
   }
 
+  for (const k of ['invoice', 'pay-app']) for (const w of ['1440', '390']) {
+    const m = R.screens[k]?.[w];
+    if (m && !m.error && !m.blocked) check(`${k} ${w}: exactly one yellow primary action`, m.yButtons.length === 1, m.yButtons.join(', '));
+  }
+
   /* ── 2. Shared component states (once, 1440 on Jobs) ── */
   if (want('jobs')) {
   await open(gc, '/app/projects');
@@ -334,6 +339,10 @@ try {
     await open(gc, '/app/prequalification');
     const bad = await gc.evaluate(() => [...document.querySelectorAll('button, a')].filter((el) => { const cs = getComputedStyle(el); const b = (cs.backgroundColor.match(/[\d.]+/g) || []).map(Number); const c = (cs.color.match(/[\d.]+/g) || []).map(Number); return b[0] > 240 && b[1] > 210 && b[2] < 60 && c[0] > 200 && c[1] > 200 && c[2] > 200; }).map((el) => (el.textContent || '').trim().slice(0, 24)));
     check('prequalification: no white text on a yellow button', bad.length === 0, bad.join(', '));
+    const empties = await gc.evaluate(() => [...document.querySelectorAll('.main-content-area p, .main-content-area div')]
+      .filter((e) => /^(No submissions yet|No documents expiring|No scores yet|No trade averages yet)/.test((e.textContent || '').trim()) && !e.querySelector('p, div'))
+      .map((e) => ({ shared: !!e.closest('.k-empty'), fs: parseFloat(getComputedStyle(e).fontSize), align: getComputedStyle(e).textAlign })));
+    check('prequalification: every empty card uses the shared empty line (14px, left)', empties.length > 0 && empties.every((x) => x.shared && x.fs === 14 && x.align !== 'center'), JSON.stringify(empties).slice(0, 160));
   }
   if (want('people')) await section('people', async () => {
     // The Roles tab inside Roles & Access (the tab rides the URL as ?view=roles).
@@ -388,7 +397,6 @@ try {
   if (pa && want('pay-app')) await section('pay-app', async () => {
     const U = `/app/projects/${pa.project}/pay-apps/${pa.id}`;
     await open(gc, U);
-    const before = await (await api.get(`${SITE}/api/pay-apps/${pa.id}`)).json().catch(() => ({}));
     const pdf = gc.getByRole('button', { name: /G702/ }).first();
     if (await pdf.count()) {
       const popup = gc.context().waitForEvent('page', { timeout: 45000 }).catch(() => null);
@@ -405,6 +413,8 @@ try {
     } else check('pay app: G702/G703 PDF button present', false);
     const edit = gc.getByRole('button', { name: /Edit SOV/ }).first();
     if (await edit.count()) {
+      // Read the record here, after the PDF step (generating the PDF stores its links on the pay app).
+      const before = await (await api.get(`${SITE}/api/pay-apps/${pa.id}`)).json().catch(() => ({}));
       await edit.click({ timeout: 10000 }); await gc.waitForTimeout(800);
       const saveShown = await gc.getByRole('button', { name: /Save Changes/ }).count();
       await shot(gc, 'recheck-payapp-edit-1440', true);
