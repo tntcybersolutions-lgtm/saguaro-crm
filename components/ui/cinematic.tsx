@@ -3,9 +3,9 @@
 /**
  * components/ui/cinematic.tsx — the premium "cinematic" presentational kit.
  *
- * Jet black page, glass cards, neon-yellow brand accent (docs/COPY-STYLE.md
- * §6–§7): big gradient headline, glass cards with an icon chip + hover lift,
- * tasteful motion, generous spacing. No warm glows or blobs behind text.
+ * Navy page, slate cards (12px), yellow only on the primary action and the
+ * selected item: a clear headline, slate cards with a quiet icon chip, gentle
+ * motion, generous spacing. No glows, gradients or blobs behind text.
  *
  * PURELY PRESENTATIONAL. No data, no logic, no routing — drop these around existing
  * content to lift a flat workspace page to the cinematic bar. Reads the brand and
@@ -15,7 +15,6 @@
  * All animation is disabled under prefers-reduced-motion.
  */
 import React from 'react';
-import { neonCard, neonFor, neonText } from '@/lib/neon';
 import { ScribbleNote } from '@/components/Scribble';
 
 /* ── Palette — jet black + glass + neon yellow (COPY-STYLE §7) ── */
@@ -31,11 +30,10 @@ export const CIN = {
   text: 'var(--text-primary)',
   muted: 'var(--text-secondary)',
   faint: 'var(--text-tertiary)',
-  border: 'rgba(255,255,255,0.09)',
-  borderGold: 'var(--brand-primary-25)',
-  surface: 'linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.03))',
+  border: 'var(--border-default)',
+  borderGold: 'var(--border-default)',
+  surface: 'var(--bg-surface)',
 } as const;
-const GLASS_BLUR = 'blur(16px) saturate(140%)';
 
 /* ── Cinematic FX — keyframes + interaction classes, injected once per page ── */
 const FX = `
@@ -48,11 +46,14 @@ const FX = `
 @keyframes sgGridPan{from{background-position:0 0}to{background-position:34px 34px}}
 @keyframes sgShimmer{from{background-position:180% 0}to{background-position:-180% 0}}
 .sgShine{background-size:200% 100%;animation:sgShimmer 3.6s linear infinite}
-.sgLift{transition:transform .2s cubic-bezier(.2,.7,.3,1),box-shadow .2s ease,border-color .2s ease,background .2s ease}
-.sgLift:hover{transform:translateY(-4px);border-color:rgba(255,255,255,.22)}
-.sgLift:hover .sgIcon{box-shadow:0 0 0 3px var(--brand-primary-12)}
-.sgBtn{transition:transform .16s ease,box-shadow .16s ease,filter .16s ease}
-.sgBtn:hover{transform:translateY(-2px);filter:brightness(1.06)}
+.sgLift{transition:border-color .15s ease,background-color .15s ease}
+a .sgLift:hover,.sgLift[data-interactive]:hover{border-color:var(--border-strong)!important;background:var(--bg-row-hover)!important}
+/* Icon chips are quiet slate; the colour a page passes to the icon is overridden
+   so yellow stays on the actions and the selected item. */
+.sgIcon svg{fill:var(--text-secondary)}
+.sgBtn{transition:filter .15s ease,background-color .15s ease}
+.sgBtn:hover{filter:brightness(1.06)}
+.sgBtn:focus-visible{outline:2px solid var(--brand-primary);outline-offset:2px}
 /* Beat the global h1/h2 !important size caps (globals.css) with higher specificity */
 h1.sgHeroTitle{font-size:clamp(28px,4.2vw,46px)!important;font-weight:900!important;line-height:1.04!important;letter-spacing:-0.03em!important;margin:0!important}
 h2.sgSectionTitle{font-size:clamp(16px,1.7vw,19px)!important;font-weight:800!important;line-height:1.2!important;letter-spacing:-0.01em!important;margin:0!important}
@@ -62,15 +63,10 @@ h2.sgSectionTitle{font-size:clamp(16px,1.7vw,19px)!important;font-weight:800!imp
 }
 `;
 
-/* ── Aurora — jet black (COPY-STYLE §6). The animated gold blobs, blueprint grid
- * and vignette sat behind text; all that remains is one faint, static, COOL
- * sheen at the top. Name and props kept so callers keep compiling. ─────────── */
+/* ── Aurora — kept so callers keep compiling. The page is plain navy now: no
+ * sheen, blobs or grid behind text. ─────────────────────────────────────────── */
 export function Aurora({ soft = false }: { soft?: boolean }) {
-  return (
-    <div aria-hidden style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-      <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(120% 60% at 50% -12%, rgba(170,195,255,${soft ? 0.035 : 0.05}), transparent 60%)` }} />
-    </div>
-  );
+  return <div aria-hidden data-soft={soft || undefined} style={{ display: 'none' }} />;
 }
 
 /* ── CinematicPage — relative container with the aurora backdrop + FX keyframes,
@@ -104,14 +100,14 @@ export function HeroBadge({ icon, children }: { icon?: React.ReactNode; children
       style={{
         animation: 'sgRise .5s ease both',
         display: 'inline-flex', alignItems: 'center', gap: 7,
-        padding: '6px 14px', borderRadius: 999,
-        background: 'var(--brand-primary-12)',
-        border: '1px solid var(--brand-primary-35)',
-        color: CIN.gold, fontSize: 12.5, fontWeight: 700,
+        padding: '5px 12px', borderRadius: 999,
+        background: 'var(--bg-surface-2)',
+        border: '1px solid var(--border-default)',
+        color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600,
         letterSpacing: 'normal',
       }}
     >
-      {icon}
+      {icon && <span className="sgIcon" style={{ display: 'inline-flex' }}>{icon}</span>}
       {children}
     </span>
   );
@@ -152,10 +148,9 @@ export function ModuleHero({
                 className="sgIcon"
                 style={{
                   flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  width: 52, height: 52, borderRadius: 15,
-                  background: 'linear-gradient(150deg, var(--brand-primary-18), var(--brand-primary-08))',
-                  border: '1px solid var(--brand-primary-35)',
-                  transition: 'box-shadow .2s',
+                  width: 48, height: 48, borderRadius: 12,
+                  background: 'var(--bg-surface-2)',
+                  border: '1px solid var(--border-default)',
                 }}
               >
                 {icon}
@@ -166,22 +161,13 @@ export function ModuleHero({
               {accent && (
                 <>
                   {' '}
-                  <span
-                    className="sgShine"
-                    style={{
-                      background: `linear-gradient(100deg, ${CIN.gold} 8%, ${CIN.goldHi} 42%, ${CIN.goldSoft} 58%, ${CIN.gold} 92%)`,
-                      WebkitBackgroundClip: 'text', backgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent', color: 'transparent',
-                    }}
-                  >
-                    {accent}
-                  </span>
+                  <span style={{ color: CIN.text }}>{accent}</span>
                 </>
               )}
             </h1>
           </div>
           {subtitle && (
-            <p style={{ animation: 'sgRise .6s ease .1s both', color: CIN.muted, fontSize: 14.5, margin: '12px 0 0', lineHeight: 1.55, maxWidth: 620 }}>
+            <p style={{ animation: 'sgRise .6s ease .1s both', color: CIN.muted, fontSize: 15, margin: '10px 0 0', lineHeight: 1.55, maxWidth: 620 }}>
               {subtitle}
             </p>
           )}
@@ -221,23 +207,25 @@ export function HeroButton({
   icon?: React.ReactNode;
 }) {
   const base: React.CSSProperties = {
-    display: 'inline-flex', alignItems: 'center', gap: 8,
-    padding: '10px 18px', borderRadius: 12, fontSize: 13, fontWeight: 800,
-    letterSpacing: '0.01em', cursor: disabled ? 'not-allowed' : 'pointer',
-    textDecoration: 'none', whiteSpace: 'nowrap', border: 'none',
-    fontFamily: 'inherit', opacity: disabled ? 0.55 : 1,
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+    minHeight: 44, padding: '0 18px', borderRadius: 10, fontSize: 14, fontWeight: 700,
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    textDecoration: 'none', whiteSpace: 'nowrap', border: '1px solid transparent',
+    fontFamily: 'inherit',
   };
-  const skin: React.CSSProperties =
-    variant === 'primary'
-      ? { background: `linear-gradient(135deg, ${CIN.gold}, ${CIN.goldHi})`, color: 'var(--on-brand)', boxShadow: '0 10px 30px -12px var(--brand-primary-35)' }
-      : { background: 'rgba(255,255,255,0.07)', backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR, color: CIN.text, border: '1px solid rgba(255,255,255,0.14)' };
+  // Disabled is slate with dim text, never a faded yellow (which reads as olive).
+  const skin: React.CSSProperties = disabled
+    ? { background: 'var(--bg-surface-2)', color: 'var(--text-tertiary)', borderColor: 'var(--border-default)' }
+    : variant === 'primary'
+      ? { background: 'var(--brand-primary)', color: 'var(--on-brand)' }
+      : { background: 'var(--bg-surface-2)', color: CIN.text, borderColor: 'var(--border-default)' };
   const style = { ...base, ...skin };
   if (href && !disabled) {
     return <a href={href} className="sgBtn" style={style}>{icon}{children}</a>;
   }
   return (
-    <button onClick={onClick} disabled={disabled} className={disabled ? undefined : 'sgBtn'} style={style}>
-      {icon}{children}
+    <button onClick={onClick} disabled={disabled} className={disabled ? 'sgBtnOff' : 'sgBtn'} style={style}>
+      <span style={{ display: 'inline-flex', opacity: disabled ? 0.6 : 1 }}>{icon}</span>{children}
     </button>
   );
 }
@@ -266,48 +254,43 @@ export function StatCard({
   onClick?: () => void;
 }) {
   const interactive = !!(href || onClick);
-  /* Neon by default (owner 2026-10-03): a caller's accent wins, otherwise a
-     stable neon from the label — no more flat dark tiles. */
-  const lit = accentColor || neonFor(label);
-  const glow = neonCard(lit);
+  // A slate tile. The value carries the status colour the caller passes; the
+  // accent no longer paints a glow or an edge bar (accentColor kept for callers).
+  void accentColor;
   const inner = (
     <div
       className="sgLift"
+      data-interactive={interactive || undefined}
       onClick={onClick}
       style={{
         position: 'relative', overflow: 'hidden',
         animation: `sgRise .5s ease ${delay.toFixed(2)}s both`,
-        background: `${glow.background}, ${CIN.surface}`,
-        backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR,
+        background: CIN.surface,
         border: `1px solid ${CIN.border}`,
-        borderTop: glow.borderTop,
-        borderRadius: 16,
-        padding: '16px 18px',
-        boxShadow: glow.boxShadow,
+        borderRadius: 12,
+        padding: '14px 16px',
         cursor: interactive ? 'pointer' : 'default',
         height: '100%',
       }}
     >
-      <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${lit}, transparent)` }} />
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
         {icon && (
           <span
             className="sgIcon"
             style={{
               flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              width: 34, height: 34, borderRadius: 10,
-              background: 'linear-gradient(150deg, var(--brand-primary-18), var(--brand-primary-08))',
-              border: '1px solid var(--brand-primary-25)',
-              transition: 'box-shadow .2s',
+              width: 32, height: 32, borderRadius: 8,
+              background: 'var(--bg-surface-2)',
+              border: '1px solid var(--border-default)',
             }}
           >
             {icon}
           </span>
         )}
-        <span style={{ fontSize: 12.5, fontWeight: 750, color: CIN.muted }}>{label}</span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: CIN.muted }}>{label}</span>
       </div>
-      <div style={{ fontSize: 25, fontWeight: 900, color: valueColor || 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
-      {sub && <div style={{ fontSize: 12, color: CIN.faint, marginTop: 6 }}>{sub}</div>}
+      <div style={{ fontSize: 24, fontWeight: 800, color: valueColor || 'var(--text-primary)', letterSpacing: '-0.01em', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      {sub && <div style={{ fontSize: 13, color: CIN.faint, marginTop: 6 }}>{sub}</div>}
     </div>
   );
   if (href) {
@@ -382,13 +365,10 @@ export function SectionCard({
         position: 'relative', overflow: 'hidden',
         animation: `sgRise .5s ease ${delay.toFixed(2)}s both`,
         background: CIN.surface,
-        backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR,
         border: `1px solid ${CIN.border}`,
-        /* 16 and this shadow are the platform's card, shared with premium.tsx.
-           Three implementations each picked their own radius and drop, which is
-           the main reason two screens side by side did not look like one app. */
-        borderRadius: 16,
-        boxShadow: '0 24px 48px -32px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.06)',
+        /* 12, slate, no drop shadow: the platform's card, shared with kit.tsx
+           (.k-card) and premium.tsx, so two screens side by side look like one app. */
+        borderRadius: 12,
         ...style,
       }}
     >
@@ -398,10 +378,11 @@ export function SectionCard({
             <span
               style={{
                 flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                width: 34, height: 34, borderRadius: 10,
-                background: 'linear-gradient(150deg, var(--brand-primary-18), var(--brand-primary-08))',
-                border: '1px solid var(--brand-primary-25)',
+                width: 32, height: 32, borderRadius: 8,
+                background: 'var(--bg-surface-2)',
+                border: '1px solid var(--border-default)',
               }}
+              className="sgIcon"
             >
               {icon}
             </span>
@@ -421,7 +402,7 @@ export function SectionCard({
 /* ── SectionLink — the small brand "View All →" link used in section headers ─── */
 export function SectionLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <a href={href} style={{ fontSize: 12, fontWeight: 700, color: CIN.goldHi, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+    <a href={href} style={{ fontSize: 14, fontWeight: 600, color: 'var(--link)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4, minHeight: 44 }}>
       {children}
     </a>
   );
@@ -454,37 +435,34 @@ export function EmptyStatePremium({
         position: 'relative', overflow: 'hidden',
         animation: 'sgPop .5s ease both',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        textAlign: 'center', padding: '52px 32px',
+        textAlign: 'center', padding: '44px 24px',
         background: CIN.surface,
-        backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR,
         border: `1px solid ${CIN.border}`,
-        borderRadius: 20,
-        boxShadow: '0 20px 50px -30px rgba(0,0,0,0.8)',
+        borderRadius: 12,
       }}
     >
       <div
         style={{
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          width: 84, height: 84, borderRadius: '50%', marginBottom: 20,
-          background: 'radial-gradient(circle, var(--brand-primary-18), var(--brand-primary-08))',
-          border: '1px solid var(--brand-primary-35)',
-          animation: 'sgFloat 5s ease-in-out infinite',
+          width: 64, height: 64, borderRadius: '50%', marginBottom: 16,
+          background: 'var(--bg-surface-2)',
+          border: '1px solid var(--border-default)',
         }}
+        className="sgIcon"
       >
         {icon}
       </div>
-      <div style={{ color: CIN.text, fontWeight: 900, fontSize: 20, letterSpacing: '-0.02em' }}>{title}</div>
-      {description && <p style={{ color: CIN.muted, fontSize: 13.5, maxWidth: 440, margin: '10px 0 0', lineHeight: 1.6 }}>{description}</p>}
+      <div style={{ color: CIN.text, fontWeight: 800, fontSize: 18 }}>{title}</div>
+      {description && <p style={{ color: CIN.muted, fontSize: 14, maxWidth: 440, margin: '8px 0 0', lineHeight: 1.6 }}>{description}</p>}
       {actionLabel && (
         <button
           onClick={handle}
           className="sgBtn"
           style={{
-            marginTop: 22, display: 'inline-flex', alignItems: 'center', gap: 8,
-            padding: '11px 22px', borderRadius: 12, border: 'none', cursor: 'pointer',
-            background: `linear-gradient(135deg, ${CIN.gold}, ${CIN.goldHi})`, color: 'var(--on-brand)',
-            fontSize: 13, fontWeight: 800, fontFamily: 'inherit',
-            boxShadow: '0 10px 30px -12px var(--brand-primary-35)',
+            marginTop: 20, display: 'inline-flex', alignItems: 'center', gap: 8,
+            minHeight: 44, padding: '0 20px', borderRadius: 10, border: 'none', cursor: 'pointer',
+            background: 'var(--brand-primary)', color: 'var(--on-brand)',
+            fontSize: 14, fontWeight: 700, fontFamily: 'inherit',
           }}
         >
           {actionLabel}

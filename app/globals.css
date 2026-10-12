@@ -731,6 +731,16 @@ select:autofill {
 /* Buttons: material press + smooth ease everywhere (hover ease already global). */
 button:active { transform: translateY(0.5px); }
 button:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+/* A disabled primary is slate with dim text. A faded yellow over navy reads as
+   olive, which looks broken rather than unavailable. Covers the kit classes and
+   buttons styled inline with the brand yellow. */
+.k-btn-primary:disabled, .k-btn-primary[aria-disabled="true"], .btn-gold:disabled, .pmGold:disabled,
+button:disabled[style*="--brand-primary"] {
+  background: var(--bg-surface-2) !important; color: var(--text-tertiary) !important;
+  border: 1px solid var(--border-default) !important; box-shadow: none !important;
+  opacity: 1 !important; filter: none !important;
+}
+.k-btn-primary:disabled svg, button:disabled[style*="--brand-primary"] svg { fill: currentColor; color: currentColor; }
 
 /* Selects: machined face + brand chevron instead of the browser default. */
 select {
@@ -977,9 +987,10 @@ button.k-stat { text-align: left; font: inherit; border-top: 0; border-right: 0;
 button.k-stat[aria-pressed="true"] { box-shadow: inset 0 -2px 0 var(--brand-primary); }
 .k-stat-top { order: 2; display: flex; align-items: center; gap: 6px; min-width: 0; }
 .k-stat-icon { display: none; }
-.k-stat-label { font-size: 12px; font-weight: 600; letter-spacing: normal; text-transform: none; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Labels and sublines wrap to two lines rather than cutting a word mid-way. */
+.k-stat-label { font-size: 13px; font-weight: 600; letter-spacing: normal; text-transform: none; color: var(--text-tertiary); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
 .k-stat-value { order: 1; font-size: 20px; font-weight: 700; letter-spacing: -0.01em; color: var(--text-primary); font-variant-numeric: tabular-nums; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.k-stat-sub { order: 3; font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.k-stat-sub { order: 3; font-size: 13px; color: var(--text-secondary); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .k-stat[data-tone="good"] .k-stat-value { color: var(--success); }
 .k-stat[data-tone="warn"] .k-stat-value { color: var(--warning); }
 .k-stat[data-tone="bad"] .k-stat-value { color: var(--danger); }
@@ -1016,8 +1027,8 @@ button.k-stat[aria-pressed="true"] { box-shadow: inset 0 -2px 0 var(--brand-prim
   .k-table-wrap > .k-table th:first-child { left: 0; z-index: 3; }
   .k-table-wrap > .k-table tbody tr:hover td:first-child { background: var(--bg-row-hover); }
 }
-.k-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
-.k-table th { position: sticky; top: 0; z-index: 1; background: var(--bg-surface-2); text-align: left; padding: 10px 12px; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); white-space: nowrap; user-select: none; }
+.k-table { width: 100%; border-collapse: collapse; font-size: var(--fs-md); }
+.k-table th { position: sticky; top: 0; z-index: 1; background: var(--bg-surface-2); text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); white-space: nowrap; user-select: none; }
 .k-table th[data-sortable="true"] { cursor: pointer; }
 .k-table th[data-sortable="true"]:hover, .k-table th[aria-sort="ascending"], .k-table th[aria-sort="descending"] { color: var(--text-primary); }
 .k-table td { padding: 0 12px; height: 48px; border-bottom: 1px solid rgba(51,65,85,0.7); color: var(--text-secondary); white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -1105,6 +1116,8 @@ select.k-select { padding-right: 36px; }
 .k-empty-text { font-size: inherit; color: var(--sg-text-2); }
 .k-empty-act { flex: 0 0 auto; }
 .k-table-empty .k-empty { padding: 4px 0; }
+/* A flush card body runs edge to edge, so an empty state in it pads itself. */
+.k-card-flush > .k-empty { padding: 14px 16px; }
 
 @media (max-width: 720px) {
   .k-page { padding: var(--sp-4) var(--sp-4) var(--sp-6); }
@@ -1120,6 +1133,7 @@ select.k-select { padding-right: 36px; }
   .k-input, .k-textarea, select.k-select { font-size: 16px !important; }
   .k-card { padding: 4px 12px 10px; }
   .k-card-flush { margin: 0 -12px -10px; }
+  .k-card-flush > .k-empty { padding: 14px 12px; }
 }
 
 :root {
@@ -1447,7 +1461,13 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
   .k-table tbody tr[style*="--row-stripe"] td:first-child { box-shadow: none !important; }
   .k-table td:first-child::before { content: none; }
   .k-table td[data-phone="hide"]:not(:first-child):not(.k-td-actions) { display: none; }
-  .k-table td.k-td-actions { position: absolute !important; top: 6px; right: 6px; width: auto; padding: 0 !important; }
+  /* The row's actions sit on their own line under the record, right-aligned —
+     pinned to the top-right corner they covered the record's name. */
+  .k-table td.k-td-actions { position: static !important; justify-content: flex-end; flex-wrap: wrap; gap: 8px; width: auto; margin-top: 6px; padding: 8px 0 0 !important; border-top: 1px solid var(--border-subtle); }
+  /* Inside a card the rows are a divided list, not cards inside a card. */
+  :is(.k-card, .pmSec, .fl-list) :is(.k-table,.k-stack) tr { margin: 0; border: 0; border-bottom: 1px solid var(--border-subtle); border-radius: 0; background: none; padding: 12px 0; }
+  :is(.k-card, .pmSec, .fl-list) :is(.k-table,.k-stack) tbody tr:last-child { border-bottom: 0; }
+  .k-card-flush :is(.k-table,.k-stack) tr { padding: 12px; }
   .k-table td.k-td-actions::before { content: none; }
   .k-table td.k-table-empty { display: block; padding: 32px 12px !important; }
   .k-table .k-skel { display: block; height: 12px; }
@@ -1626,6 +1646,13 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 .pmSecTray{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg)}
 .pmSec .pmSec{background:none;border:0;box-shadow:none;padding:0}
 @media (max-width:767px){.pmSec{padding:4px 12px 12px}}
+/* A table in a section runs edge to edge on a desk, like .k-card-flush; its
+   first and last columns carry the 16px inset. Phones stack rows instead. */
+@media (min-width:768px){
+  .pmSec > div > .k-table-wrap{margin:0 -16px}
+  .pmSec > div > .k-table-wrap:last-child{margin-bottom:-14px}
+  .pmSec:has(> div > .k-table-wrap){overflow:hidden}
+}
 /* Number strip (StatStrip / StatCard): a slate panel of figures, hairlines between. */
 .pmStrip{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden;margin-bottom:16px;min-width:0}
 .pmStripGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));margin:0 0 -1px -1px}
