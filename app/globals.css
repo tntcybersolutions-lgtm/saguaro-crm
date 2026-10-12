@@ -1052,6 +1052,9 @@ input:-webkit-autofill:focus {
 /* A form page: the header keeps the full width, the fields hold a readable
    column against the left edge (never centred). */
 :is(.k-frame, .k-page)[data-width=form] > :not(.k-head):not(.pmHead):not(.k-crumbs), .k-form-col { max-width: var(--form-max); }
+/* In that column a summary strip is two figures per row, so a name-length
+   value (brand colour, signed-in user) reads in full instead of cutting off. */
+:is(.k-frame, .k-page)[data-width=form] > .k-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .k-reading { max-width: var(--reading-max); }
 /* The page crumb trail is gone on every width: the top bar already shows the
    parent (Home / the job switcher) and the page title, so this row said the
