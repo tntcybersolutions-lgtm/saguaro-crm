@@ -15,14 +15,14 @@ const ROLES = ['Admin','Project Manager','Field Supervisor','Estimator','Account
 
 const inputStyle: React.CSSProperties = {
   flex:1,padding:'11px 14px',background:'rgba(0,0,0,.04)',
-  border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:14,
-  outline:'none',
+  border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:16,
+  minHeight:44,outline:'none',
 };
 
 const selectStyle: React.CSSProperties = {
   padding:'11px 14px',background:'rgba(0,0,0,.04)',
-  border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:13,
-  outline:'none',minWidth:160,cursor:'pointer',
+  border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:16,
+  minHeight:44,outline:'none',minWidth:160,cursor:'pointer',
 };
 
 type Invite = { email: string; role: string };
@@ -98,7 +98,7 @@ export default function OnboardingStep4() {
                   width:36,height:36,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',
                   fontSize:14,fontWeight:800,
                   background: s.done ? GREEN : s.active ? GOLD : 'rgba(0,0,0,.06)',
-                  color: (s.done||s.active) ? '#101722' : DIM,
+                  color: (s.done||s.active) ? 'var(--on-brand)' : DIM,
                   border:`2px solid ${s.done ? GREEN : s.active ? GOLD : BORDER}`,
                 }}>
                   {s.done ? <Check size={16} weight="bold" /> : s.num}
@@ -125,7 +125,7 @@ export default function OnboardingStep4() {
             </p>
             <a
               href="/app"
-              style={{display:'inline-block',padding:'14px 40px',background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,borderRadius:10,color:'#101722',fontWeight:800,fontSize:15,textDecoration:'none'}}
+              style={{display:'inline-block',padding:'14px 40px',background:GOLD,borderRadius:10,color:'var(--on-brand)',fontWeight:800,fontSize:15,textDecoration:'none'}}
             >
               Go to Dashboard →
             </a>
@@ -170,7 +170,7 @@ export default function OnboardingStep4() {
 
               <button
                 onClick={()=>setInvites(p=>[...p,{email:'',role:'Project Manager'}])}
-                style={{alignSelf:'flex-start',padding:'7px 14px',background:'transparent',border:`1px solid ${BORDER}`,borderRadius:7,color:DIM,fontSize:12,fontWeight:600,cursor:'pointer'}}
+                style={{alignSelf:'flex-start',minHeight:44,padding:'7px 14px',background:'transparent',border:`1px solid ${BORDER}`,borderRadius:7,color:DIM,fontSize:13,fontWeight:600,cursor:'pointer'}}
               >
                 + Add another person
               </button>
@@ -180,13 +180,13 @@ export default function OnboardingStep4() {
               <button
                 onClick={handleSendInvites}
                 disabled={loading}
-                style={{padding:'14px 0',background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,border:'none',borderRadius:10,color:'#101722',fontSize:15,fontWeight:800,cursor:loading?'wait':'pointer',opacity:loading?.7:1}}
+                style={{padding:'14px 0',background:GOLD,border:'none',borderRadius:10,color:'var(--on-brand)',fontSize:15,fontWeight:800,cursor:loading?'wait':'pointer',opacity:loading?.7:1}}
               >
                 {loading?'Sending Invites…':'Send Invites'}
               </button>
               <a
                 href="/app"
-                style={{display:'block',textAlign:'center',padding:'12px 0',background:'transparent',border:`1px solid ${BORDER}`,borderRadius:10,color:DIM,fontSize:14,fontWeight:600,textDecoration:'none'}}
+                style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:44,boxSizing:'border-box',textAlign:'center',padding:'12px 0',background:'transparent',border:`1px solid ${BORDER}`,borderRadius:10,color:DIM,fontSize:14,fontWeight:600,textDecoration:'none'}}
               >
                 Skip this step — go to dashboard
               </a>

@@ -31,7 +31,7 @@ export default function ForgotPasswordPage(){
     setLoading(false);
   }
 
-  const inputStyle = {width:'100%',padding:'11px 14px',background:'#1c1c1e',border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:14,outline:'none',boxSizing:'border-box' as const};
+  const inputStyle = {width:'100%',padding:'11px 14px',background:'#1c1c1e',border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:16,outline:'none',boxSizing:'border-box' as const};
 
   return (
     <div style={{minHeight:'100vh',background:DARK,display:'flex',flexDirection:'column'}}>
@@ -45,10 +45,10 @@ export default function ForgotPasswordPage(){
         <div style={{width:'100%',maxWidth:400}}>
           {sent ? (
             <div style={{textAlign:'center'}}>
-              <div style={{marginBottom:16}}><EnvelopeOpen size={52} weight="duotone" color={GOLD} /></div>
+              <div style={{marginBottom:16}}><EnvelopeOpen size={52} weight="duotone" color={DIM} /></div>
               <h1 style={{fontSize:22,fontWeight:800,color:TEXT,marginBottom:10}}>Check Your Email</h1>
               <p style={{color:DIM,fontSize:14,lineHeight:1.6,marginBottom:24}}>We sent a password reset link to <strong style={{color:TEXT}}>{email}</strong>.</p>
-              <Link href="/login" style={{display:'block',padding:'12px',background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,borderRadius:9,color:'#101722',fontWeight:800,fontSize:14,textDecoration:'none',textAlign:'center'}}>Back to Login</Link>
+              <Link href="/login" style={{display:'block',padding:'13px',background:GOLD,borderRadius:9,color:'var(--on-brand)',fontWeight:800,fontSize:14,textDecoration:'none',textAlign:'center'}}>Back to Login</Link>
             </div>
           ) : (
             <>
@@ -63,12 +63,12 @@ export default function ForgotPasswordPage(){
                     <label style={{display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:6}}>Work Email</label>
                     <input type="email" placeholder="you@company.com" value={email} onChange={e=>setEmail(e.target.value)} required autoComplete="email" style={inputStyle}/>
                   </div>
-                  <button type="submit" disabled={loading} style={{padding:'13px',background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,border:'none',borderRadius:9,color:'#101722',fontSize:15,fontWeight:800,cursor:loading?'not-allowed':'pointer'}}>
+                  <button type="submit" disabled={loading} style={{padding:'13px',background:GOLD,border:'none',borderRadius:9,color:'var(--on-brand)',fontSize:15,fontWeight:800,cursor:loading?'not-allowed':'pointer'}}>
                     {loading?'Sending…':'Send Reset Link →'}
                   </button>
                 </form>
                 <div style={{marginTop:18,textAlign:'center',fontSize:12,color:DIM}}>
-                  Remember it? <Link href="/login" style={{color:GOLD,textDecoration:'none',fontWeight:700}}>Sign In</Link>
+                  Remember it? <Link href="/login" style={{color:'var(--link)',textDecoration:'none',fontWeight:700}}>Sign In</Link>
                 </div>
               </div>
             </>
