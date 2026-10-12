@@ -38,10 +38,10 @@ import {
 
 const EVENT = 'saguaro-open-pdf';
 
-const TEXT = '#F0F4FF';
-const DIM = '#93A9C4';
-const HAIR = 'rgba(255,255,255,0.10)';
-const GOLD = 'var(--brand-primary)';
+/* The viewer chrome uses the app tokens; only the scrim behind it is its own. */
+const TEXT = 'var(--text-primary)';
+const DIM = 'var(--text-tertiary)';
+const HAIR = 'var(--border-default)';
 
 export interface OpenPdfRequest {
   url: string;
@@ -240,7 +240,7 @@ function Pane({
           padding: '8px 14px', fontSize: 12, fontWeight: 800,
           color: DIM, whiteSpace: 'nowrap', overflow: 'hidden',
           textOverflow: 'ellipsis', flexShrink: 0,
-          background: 'rgba(255,255,255,0.03)',
+          background: 'var(--bg-surface)',
           borderBottom: `1px solid ${HAIR}`,
         }}>
           {label}
@@ -252,12 +252,11 @@ function Pane({
           flex: 1, overflow: 'auto', display: 'flex', position: 'relative',
           justifyContent: 'center', alignItems: 'flex-start', padding: 24,
           touchAction: 'pan-x pan-y',
-          background:
-            'radial-gradient(120% 90% at 50% 0%, #10161F 0%, #070A0F 60%, #05070B 100%)',
+          background: 'var(--bg-base)',
         }}
       >
         {err ? (
-          <div style={{ color: '#F87171', fontSize: 13, maxWidth: 360, textAlign: 'center', marginTop: 56, lineHeight: 1.65 }}>
+          <div style={{ color: 'var(--danger)', fontSize: 13, maxWidth: 360, textAlign: 'center', marginTop: 56, lineHeight: 1.65 }}>
             {err}
             <div style={{ marginTop: 14 }}>
               <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: DIM, fontSize: 13 }}>
@@ -363,16 +362,23 @@ export default function PdfViewer() {
   const chip: React.CSSProperties = {
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7,
     height: 34, padding: '0 12px', borderRadius: 9, cursor: 'pointer',
-    background: 'rgba(255,255,255,0.06)',
+    background: 'var(--bg-surface-2)',
     border: `1px solid ${HAIR}`,
     color: TEXT, fontSize: 13, fontWeight: 700,
     backdropFilter: 'blur(6px)',
     transition: 'background .14s ease, border-color .14s ease',
   };
+  /* Selected control: solid yellow, dark text (the one selected-state style). */
   const active: React.CSSProperties = {
-    background: 'var(--bg-surface-2)',
-    borderColor: 'color-mix(in srgb, var(--brand-primary) 55%, transparent)',
-    color: '#FDE68A',
+    background: 'var(--selected-control-bg)',
+    borderColor: 'var(--selected-control-bg)',
+    color: 'var(--selected-control-fg)',
+  };
+  /* The viewer's one primary action (Mark Up, when the document can be marked up). */
+  const primary: React.CSSProperties = {
+    background: 'var(--action-primary-bg)',
+    borderColor: 'var(--action-primary-bg)',
+    color: 'var(--action-primary-fg)',
   };
 
   return createPortal(
@@ -399,12 +405,8 @@ export default function PdfViewer() {
       <div style={{
         display: 'flex', alignItems: 'center', gap: 9, padding: '11px 16px',
         flexShrink: 0, flexWrap: 'wrap',
-        background: 'linear-gradient(180deg, rgba(22,29,40,0.92), rgba(12,17,25,0.88))',
-        backdropFilter: 'blur(18px) saturate(160%)',
-        WebkitBackdropFilter: 'blur(18px) saturate(160%)',
+        background: 'var(--bg-surface)',
         borderBottom: `1px solid ${HAIR}`,
-        /* The lit top edge is what sells glass — without it this is a grey bar. */
-        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.10), 0 18px 40px -24px rgba(0,0,0,0.9)',
       }}>
         <span style={{
           fontSize: 14, fontWeight: 800, color: TEXT, marginRight: 4,
@@ -435,14 +437,14 @@ export default function PdfViewer() {
         <button style={chip} onClick={() => { setFit(false); setZoom((z) => Math.min(5, z + 0.2)); }} aria-label="Zoom in">
           <MagnifyingGlassPlus size={14} weight="bold" />
         </button>
-        <button style={{ ...chip, ...(fit ? active : {}) }} onClick={() => setFit(true)}>
+        <button type="button" aria-pressed={fit} style={{ ...chip, ...(fit ? active : {}) }} onClick={() => setFit(true)}>
           <ArrowsOutSimple size={14} weight="bold" /> Fit
         </button>
 
         {req.compareUrl && (
           <>
             <span style={{ width: 1, height: 20, background: HAIR, margin: '0 5px' }} />
-            <button style={{ ...chip, ...(compare ? active : {}) }} onClick={() => setCompare((v) => !v)}>
+            <button type="button" aria-pressed={compare} style={{ ...chip, ...(compare ? active : {}) }} onClick={() => setCompare((v) => !v)}>
               <Columns size={14} weight="bold" /> Compare
             </button>
             {compare && (
@@ -456,7 +458,7 @@ export default function PdfViewer() {
 
         <span style={{ marginLeft: 'auto', display: 'flex', gap: 9, alignItems: 'center' }}>
           {req.editHref && (
-            <a href={req.editHref} style={{ ...chip, ...active, textDecoration: 'none' }}>
+            <a href={req.editHref} style={{ ...chip, ...primary, textDecoration: 'none' }}>
               <PencilSimple size={14} weight="bold" /> Mark Up
             </a>
           )}
@@ -469,7 +471,7 @@ export default function PdfViewer() {
             <ArrowSquareOut size={14} weight="bold" />
           </a>
           <button
-            style={{ ...chip, background: 'rgba(248,113,113,0.16)', borderColor: 'rgba(248,113,113,0.45)', color: '#FCA5A5' }}
+            style={chip}
             onClick={close}
             aria-label="Close"
           >
@@ -515,8 +517,7 @@ export default function PdfViewer() {
 
       <div style={{
         padding: '8px 16px', fontSize: 12, color: DIM, flexShrink: 0,
-        background: 'linear-gradient(180deg, rgba(12,17,25,0.88), rgba(8,11,17,0.92))',
-        backdropFilter: 'blur(18px) saturate(160%)',
+        background: 'var(--bg-surface)',
         borderTop: `1px solid ${HAIR}`,
         letterSpacing: '0.02em',
       }}>
