@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/premium';
 import { Button } from '@/components/ui/kit';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
-import { moduleAccent } from '@/lib/module-identity';
+import { moduleAccent } from '@/lib/ui/app-accent';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 

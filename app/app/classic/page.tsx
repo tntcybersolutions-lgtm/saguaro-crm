@@ -783,7 +783,7 @@ export default function DashboardPage() {
                           <td style={{ padding: '10px 16px', color: DIM }}>{rfi.rfi_number}</td>
                           <td style={{ padding: '10px 16px', color: TEXT, maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rfi.subject}</td>
                           <td style={{ padding: '10px 16px' }}>
-                            <span style={{ fontSize: 12, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'rgba(255,149,0,0.14)', color: ORANGE, border: `1px solid rgba(255,149,0,0.3)`, textTransform: 'capitalize' }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'rgba(251,191,36,0.14)', color: ORANGE, border: `1px solid rgba(251,191,36,0.3)`, textTransform: 'capitalize' }}>
                               {rfi.status}
                             </span>
                           </td>

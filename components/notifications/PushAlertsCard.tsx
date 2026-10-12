@@ -21,7 +21,7 @@ const CSS = `
 .pacBtn { min-height: 44px; padding: 0 16px; border-radius: 12px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.04); color: var(--text-primary); font: inherit; font-size: 14px; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
 .pacBtn[data-primary="true"] { border: 0; background: var(--brand-primary); color: var(--on-brand); }
 .pacBtn:disabled { opacity: .55; cursor: default; }
-.pacBtn:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.pacBtn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .pacMsg { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 13px; font-weight: 700; }
 .pacMsg[data-tone="good"] { color: var(--c-green); }
 .pacMsg[data-tone="bad"] { color: var(--c-red); }

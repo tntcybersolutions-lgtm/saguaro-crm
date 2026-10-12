@@ -49,17 +49,17 @@ const CSS = `
 .eodStep { font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 8px; }
 .eodDest { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .eodOpt { display: flex; gap: 12px; align-items: flex-start; text-align: left; min-height: 76px; padding: 14px; border-radius: 14px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.03); color: var(--text-primary); font: inherit; cursor: pointer; }
-.eodOpt:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.eodOpt:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .eodOpt[aria-checked="true"] { border-color: var(--brand-primary); background: var(--brand-primary-08, rgba(255,224,0,0.08)); box-shadow: 0 0 0 1px var(--brand-primary); }
 .eodOpt svg { flex: 0 0 auto; margin-top: 2px; color: var(--text-secondary); }
 .eodOpt b { display: block; font-size: 15px; font-weight: 800; }
 .eodOpt small { display: block; margin-top: 3px; font-size: 13px; line-height: 1.4; color: var(--text-tertiary); }
 .eodNote { width: 100%; min-height: 72px; resize: vertical; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border-default); background: var(--bg-solid); color: var(--text-primary); font: inherit; font-size: 15px; box-sizing: border-box; }
-.eodNote:focus { outline: 2px solid var(--brand-primary); outline-offset: 1px; }
+.eodNote:focus { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
 .eodSent h3 { margin: 0 0 10px; font-size: 16px; font-weight: 800; }
 .eodGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
 .eodTile { position: relative; padding: 0; border: 1px solid var(--border-default); border-radius: 10px; overflow: hidden; background: var(--bg-solid); cursor: pointer; color: inherit; font: inherit; text-align: left; }
-.eodTile:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.eodTile:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .eodTile .im { aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center; color: var(--text-tertiary); }
 .eodTile img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .eodTile .st { display: flex; align-items: center; gap: 5px; padding: 6px 8px; font-size: 12px; font-weight: 700; color: var(--text-secondary); }

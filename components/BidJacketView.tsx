@@ -397,7 +397,7 @@ export default function BidJacketView({
                     padding: '11px 14px', border: 'none', cursor: 'pointer', textAlign: 'left',
                     background: on ? 'var(--brand-primary-12)' : 'transparent',
                     borderLeft: `3px solid ${on ? GOLD : 'transparent'}`,
-                    color: on ? TEXT : empty ? DIM : 'rgba(240,244,255,0.86)',
+                    color: on ? TEXT : empty ? DIM : 'rgba(248,250,252,0.86)',
                     fontSize: 13, fontWeight: on ? 700 : 500,
                   }}
                 >
@@ -620,11 +620,11 @@ function Written({ page }: { page: Page }) {
         {page.title}
       </div>
       {page.bullets && page.bullets.length > 0 ? (
-        <ul style={{ margin: 0, paddingLeft: 20, fontSize: 14, lineHeight: 1.7, color: 'rgba(240,244,255,0.88)', maxWidth: '68ch' }}>
+        <ul style={{ margin: 0, paddingLeft: 20, fontSize: 14, lineHeight: 1.7, color: 'rgba(248,250,252,0.88)', maxWidth: '68ch' }}>
           {page.bullets.map((b, i) => <li key={i} style={{ overflowWrap: 'anywhere' }}>{b}</li>)}
         </ul>
       ) : (
-        <div style={{ fontSize: 14, lineHeight: 1.7, color: 'rgba(240,244,255,0.88)', whiteSpace: 'pre-wrap', maxWidth: '68ch', overflowWrap: 'anywhere' }}>
+        <div style={{ fontSize: 14, lineHeight: 1.7, color: 'rgba(248,250,252,0.88)', whiteSpace: 'pre-wrap', maxWidth: '68ch', overflowWrap: 'anywhere' }}>
           {page.body}
         </div>
       )}

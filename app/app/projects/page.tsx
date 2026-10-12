@@ -14,7 +14,8 @@ import Link from 'next/link';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { humanError } from '@/lib/errors';
 import { dayIn, deviceTimeZone } from '@/lib/time-zone';
-import { FlatStyles, Brief, FlatList, Row, RowAction, RowSkeleton, FlatEmpty } from '@/components/ui/flat';
+import { Archive, CheckCircle, Flag, HardHat, WarningCircle } from '@phosphor-icons/react';
+import { FlatStyles, Brief, FlatList, Row, RowAction, RowSkeleton, FlatEmpty, type FlatTone } from '@/components/ui/flat';
 import { jobStage, stageLabel, dateLine, fmtMoneyShort, billedPct, plural, ymd, type JobStage } from '@/lib/job-page';
 import { isDoneStatus } from '@/lib/project-lifecycle';
 
@@ -34,6 +35,14 @@ function bucket(p: JobRow): Exclude<StageFilter, 'all'> {
   if (s === 'closed') return isDoneStatus(p.status) ? 'complete' : 'closed';
   return s;
 }
+
+/** Each stage's icon in its row tile. */
+const STAGE_ICON: Record<Exclude<StageFilter, 'all'>, { icon: React.ElementType; tone: FlatTone }> = {
+  bidding: { icon: Flag, tone: 'neutral' },
+  building: { icon: HardHat, tone: 'info' },
+  complete: { icon: CheckCircle, tone: 'success' },
+  closed: { icon: Archive, tone: 'neutral' },
+};
 
 const CHIPS: { key: StageFilter; label: string }[] = [
   { key: 'all', label: 'All' },
@@ -75,7 +84,7 @@ export default function JobsPage() {
 
   let body: React.ReactNode;
   if (failed) {
-    body = <Brief action={{ label: 'Retry', onClick: () => { void revalidate(); } }}>Couldn&apos;t load your jobs. {humanError(loadError, 'The server did not answer.')}</Brief>;
+    body = <Brief tone="danger" icon={<WarningCircle size={18} weight="fill" />} action={{ label: 'Retry', onClick: () => { void revalidate(); } }}>Couldn&apos;t load your jobs. {humanError(loadError, 'The server did not answer.')}</Brief>;
   } else if (loading) {
     body = <RowSkeleton rows={6} />;
   } else if (rows.length === 0) {
@@ -91,9 +100,12 @@ export default function JobsPage() {
           const pct = typeof p.billed_live === 'number' ? billedPct(p.billed_live, contract) : null;
           const when = dateLine(s, ymd(p.start_date), ymd(p.end_date), today);
           const meta = [stageLabel(p), when?.text || null, pct != null ? `${pct}% billed` : null].filter(Boolean).join(' · ');
+          const st = STAGE_ICON[bucket(p)];
           return (
             <li key={p.id} data-tour="project-card">
               <Row
+                icon={<st.icon size={18} weight="bold" />}
+                tone={st.tone}
                 title={p.name || 'Untitled job'}
                 meta={meta}
                 bar={pct}
@@ -167,17 +179,15 @@ const CSS = `
 .jl-search{flex:1;min-width:0;padding:0 12px}
 .jl-search::placeholder{color:var(--fl-text-3)}
 .jl-sort{flex:none;width:auto;max-width:42%;padding:0 34px 0 12px}
-.jl-search:focus-visible,.jl-sort:focus-visible,.jl-chip:focus-visible{outline:2px solid var(--brand-primary);outline-offset:1px}
-.jl-chips{display:flex;flex-wrap:wrap;align-items:center;gap:5px;padding:8px 16px 12px}
-.jl-chip{position:relative;display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 9px;border-radius:16px;border:1px solid var(--fl-line);background:none;color:var(--fl-text-2);font:inherit;font-size:13px;font-weight:600;letter-spacing:0;cursor:pointer;white-space:nowrap}
-.jl-chip::after{content:"";position:absolute;inset:-6px -3px}
+.jl-search:focus-visible,.jl-sort:focus-visible,.jl-chip:focus-visible{outline:2px solid var(--focus-ring);outline-offset:1px}
+.jl-chips{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 16px 12px}
+.jl-chip{position:relative;display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:10px;border:1px solid var(--fl-line);background:var(--bg-surface);color:var(--fl-text-2);font:inherit;font-size:13px;font-weight:600;letter-spacing:0;cursor:pointer;white-space:nowrap}
+.jl-chip::after{content:"";position:absolute;inset:-4px -3px}
 .jl-chip span{font-variant-numeric:tabular-nums;color:var(--fl-text-3);font-weight:600}
-.jl-chip[aria-pressed=true]{background:var(--fl-line);color:var(--fl-text);border-color:var(--fl-line-strong)}
-.jl-chip[aria-pressed=true] span{color:var(--fl-text-2)}
+.jl-chip:hover:not([aria-pressed=true]){background:var(--bg-row-hover)}
+.jl-chip[aria-pressed=true]{background:var(--selected-control-bg);color:var(--selected-control-fg);border-color:var(--selected-control-bg);font-weight:700}
+.jl-chip[aria-pressed=true] span{color:var(--selected-control-fg)}
 .jl-count{margin-left:auto;font-size:13px;color:var(--fl-text-3)}
 .jl-inline{color: var(--link);font-weight:650;text-decoration:none;background:none;border:0;padding:0;font:inherit;cursor:pointer;min-height:44px}
-/* The brief's one action sits inside the sentence; its tap area reaches 44px without moving a word. */
-.jl .fl-brief-act{position:relative;display:inline-block}
-.jl .fl-brief-act::after{content:"";position:absolute;inset:-12px -6px}
 @media (min-width:1100px){.jl{padding:12px 8px 48px}}
 `;

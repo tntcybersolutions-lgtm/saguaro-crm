@@ -456,8 +456,8 @@ export default function NetworkDashboard() {
           {alerts.filter(a => !a.resolved).map(alert => (
             <div key={alert.id} style={{
               display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px',
-              background: alert.severity === 'critical' ? `${RED}18` : 'rgba(255,255,255,0.03)',
-              borderRadius: 10, border: `1px solid ${alert.severity === 'critical' ? `${RED}44` : KIT_BORDER}`,
+              background: alert.severity === 'critical' ? `color-mix(in srgb, ${RED} 9%, transparent)` : 'rgba(255,255,255,0.03)',
+              borderRadius: 10, border: `1px solid ${alert.severity === 'critical' ? `color-mix(in srgb, ${RED} 27%, transparent)` : KIT_BORDER}`,
               marginBottom: 6,
             }}>
               <span style={{ display: 'inline-flex', alignItems: 'center' }}>{alert.severity === 'critical' ? <WarningCircle size={16} weight="fill" color={RED} /> : alert.severity === 'warning' ? <Warning size={16} weight="fill" color="var(--text-secondary)" /> : <Info size={16} weight="fill" color="var(--text-secondary)" />}</span>

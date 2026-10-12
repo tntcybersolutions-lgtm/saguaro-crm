@@ -93,7 +93,7 @@ export default function IntelligencePage() {
           <button onClick={scoreOpportunity} disabled={loading} style={{padding:'10px 20px',background:GOLD,border:'none',borderRadius:8,color:'#101722',fontSize:13,fontWeight:600,cursor:'pointer'}}>{loading?'Scoring…':'Score with AI'}</button>
           <button onClick={()=>setScoring(false)} style={{padding:'10px 20px',background:'transparent',border:`1px solid ${BORDER}`,borderRadius:8,color:DIM,fontSize:13,cursor:'pointer'}}>Cancel</button>
         </div>
-        {result&&('error' in result)&&<div style={{marginTop:20,background:'rgba(192,48,48,.08)',border:`1px solid rgba(192,48,48,.3)`,borderRadius:10,padding:'14px 16px',fontSize:13,color:DIM}}>{result['error'] as string}</div>}
+        {result&&('error' in result)&&<div style={{marginTop:20,background:'rgba(248,113,113,.08)',border:`1px solid rgba(248,113,113,.3)`,borderRadius:10,padding:'14px 16px',fontSize:13,color:DIM}}>{result['error'] as string}</div>}
         {result&&!('error' in result)&&<div style={{marginTop:24,background:CARD,border:`1px solid ${BORDER}`,borderRadius:14,padding:24}}>
           <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:0,marginBottom:20,borderTop:`1px solid ${HAIRLINE}`,borderBottom:`1px solid ${HAIRLINE}`}}>
             {[{l:'Fit Score',v:`${result['score']}/100`,c:TEXT},{l:'Win Probability',v:`${result['winProbability']}%`,c:GREEN},{l:'Recommendation',v:(r=>r.charAt(0).toUpperCase()+r.slice(1))(String(result['recommendation']??'')),c:TEXT},{l:'Suggested Margin',v:`${result['suggestedMargin']}%`,c:TEXT}].map((k,i)=>(
@@ -162,7 +162,7 @@ export default function IntelligencePage() {
                 <td style={{padding:'12px 14px',color:TEXT}}>${o.amount.toLocaleString()}</td>
                 <td style={{padding:'12px 14px',color:DIM}}>{o.margin}%</td>
                 <td style={{padding:'12px 14px'}}>
-                  <span style={{fontSize:10,fontWeight:600,padding:'2px 8px',borderRadius:4,background:o.outcome==='won'?'rgba(26,138,74,.15)':'rgba(192,48,48,.12)',color:o.outcome==='won'?GREEN:RED}}>
+                  <span style={{fontSize:10,fontWeight:600,padding:'2px 8px',borderRadius:4,background:o.outcome==='won'?'rgba(74,222,128,.15)':'rgba(248,113,113,.12)',color:o.outcome==='won'?GREEN:RED}}>
                     {o.outcome.charAt(0).toUpperCase()+o.outcome.slice(1)}
                   </span>
                   {o.outcome==='lost'&&o.reason&&<div style={{fontSize:10,color:MUTED,marginTop:2}}>{o.reason}</div>}

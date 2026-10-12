@@ -33,7 +33,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Broadcast, Waveform, MapPin, Warning, ArrowClockwise } from '@phosphor-icons/react';
 import { T } from '@/components/ui/shell';
-import { moduleAccent } from '@/lib/module-identity';
+import { moduleAccent } from '@/lib/ui/app-accent';
 import { getAuthHeaders } from '@/lib/supabase-browser';
 import { TRANSCRIPT_PENDING_NOTE, durationSecs as toSecs } from '@/lib/radio-promote';
 

@@ -45,7 +45,7 @@ export default function FranchisePortalPage() {
             <h1 style={{ fontSize: 30, fontWeight: 900, margin: '6px 0 4px', letterSpacing: -0.5 }}>{p.name}</h1>
             <div style={{ fontSize: 14, color: C.dim }}>{[p.city, p.state].filter(Boolean).join(', ') || ''}{p.stage ? ` · ${p.stage}` : ''}</div>
           </div>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: `${st.c}18`, color: st.c, fontWeight: 800, fontSize: 14, padding: '8px 16px', borderRadius: 999 }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: `color-mix(in srgb, ${st.c} 9%, transparent)`, color: st.c, fontWeight: 800, fontSize: 14, padding: '8px 16px', borderRadius: 999 }}>
             <span style={{ width: 9, height: 9, borderRadius: '50%', background: st.c }} />{st.l}
           </span>
         </div>

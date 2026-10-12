@@ -436,6 +436,7 @@ export default function InvoiceDetailPage() {
       <PageShell
         crumbs={crumbs}
         title={inv.invoice_number || 'Invoice'}
+        badge={<span className="idBadges"><Badge tone={status.tone} dot>{status.label}</Badge>{overdue && <Badge tone="overdue">Overdue</Badge>}</span>}
         subtitle={`${inv.vendor_name || 'Unknown vendor'}${projectName || inv.project_id ? ` · ${projectName || 'Project'}` : ''}`}
         actions={
           <>
@@ -520,10 +521,6 @@ export default function InvoiceDetailPage() {
             <aside className="idRail" aria-label="Invoice details and actions">
               <Card title="Details">
                 <div className="idSection">
-                  <div className="idBadges">
-                    <Badge tone={status.tone} dot>{status.label}</Badge>
-                    {overdue && <Badge tone="overdue">Overdue</Badge>}
-                  </div>
                   <div className="idNext">
                     {status.label === 'Draft' && 'Draft — generate the PDF and send it to put it on the clock.'}
                     {status.label === 'Pending' && 'Pending — waiting to go out.'}

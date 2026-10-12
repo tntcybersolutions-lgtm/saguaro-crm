@@ -731,7 +731,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
     const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
     const ctx = cv.getContext('2d')!;
     ctx.fillStyle = '#eef1f5'; ctx.fillRect(0, 0, W, H);
-    ctx.strokeStyle = 'rgba(163,172,187,0.20)'; ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(148,163,184,0.20)'; ctx.lineWidth = 1;
     for (let gx = 0; gx <= spec.ftW; gx += 5) { const x = gx * k; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
     for (let gy = 0; gy <= spec.ftH; gy += 5) { const y = gy * k; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
     ctx.font = `600 ${Math.round(k * 1.5)}px system-ui`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';

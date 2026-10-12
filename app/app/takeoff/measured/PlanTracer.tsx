@@ -1018,7 +1018,7 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderBottom: `1px solid ${LINE}`, background: PANEL }}>
         <button onClick={onClose} style={{ ...miniBtn, width: 'auto', padding: '0 12px', gap: 7 }}><G g="close" s={16} />Close</button>
         <b style={{ fontSize: 15 }}>Plan Tracer</b>
-        <span style={{ fontSize: 12, color: ppf > 0 ? GREEN : DIM, border: `1px solid ${ppf > 0 ? 'rgba(52,211,153,0.4)' : LINE}`, borderRadius: 20, padding: '3px 10px' }}>
+        <span style={{ fontSize: 12, color: ppf > 0 ? GREEN : DIM, border: `1px solid ${ppf > 0 ? 'rgba(74,222,128,0.4)' : LINE}`, borderRadius: 20, padding: '3px 10px' }}>
           {ppf > 0 ? `Scale ${ppf.toFixed(2)} px/ft` : 'No Scale — Set It First'}{scaleBad ? ' · check!' : ''}
         </span>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>

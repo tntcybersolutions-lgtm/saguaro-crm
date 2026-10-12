@@ -50,7 +50,7 @@ const FL_CSS = `
 .fl-views{display:inline-flex;padding:3px;border:1px solid var(--border-subtle);border-radius:12px;gap:2px;background:var(--bg-surface)}
 .fl-views button{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border-radius:9px;font-size:13px;font-weight:600;color:var(--text-secondary)}
 .fl-views button[aria-pressed="true"]{background:var(--brand-primary);color:var(--on-brand)}
-.fl-views button:focus-visible{outline:2px solid var(--brand-primary);outline-offset:2px}
+.fl-views button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .fl-group{margin-bottom:18px}
 .fl-ghead{display:flex;align-items:center;gap:8px;padding:0 4px 8px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-tertiary)}
 .fl-ghead b{font-weight:700;letter-spacing:0;color:var(--text-secondary);background:var(--bg-surface-2);border:1px solid var(--border-default);border-radius:999px;padding:0 8px;font-size:12px}

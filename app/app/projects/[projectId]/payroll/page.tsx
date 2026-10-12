@@ -122,8 +122,8 @@ function calcNet(emp: Employee): number {
 
 const statusCfg: Record<string, { color: string; bg: string }> = {
   submitted: { color: 'var(--text-primary)',      bg: 'var(--brand-primary-12)' },
-  draft:     { color: DIM,       bg: 'rgba(163,172,187,.1)' },
-  certified: { color: 'var(--success)', bg: 'rgba(26,138,74,.12)' },
+  draft:     { color: DIM,       bg: 'rgba(148,163,184,.1)' },
+  certified: { color: 'var(--success)', bg: 'rgba(74,222,128,.12)' },
 };
 
 export default function PayrollPage() {
@@ -389,8 +389,8 @@ export default function PayrollPage() {
       ]} />
 
       {/* Messages */}
-      {error && <div style={{ background: 'rgba(192,48,48,.1)', border: '1px solid rgba(192,48,48,.3)', borderRadius: 8, padding: '10px 16px', marginBottom: 20, fontSize: 13, color: 'var(--danger)' }}>{error}</div>}
-      {success && <div style={{ background: 'rgba(26,138,74,.08)', border: '1px solid rgba(26,138,74,.3)', borderRadius: 8, padding: '10px 16px', marginBottom: 20, fontSize: 13, color: 'var(--success)' }}>{success}</div>}
+      {error && <div style={{ background: 'rgba(248,113,113,.1)', border: '1px solid rgba(248,113,113,.3)', borderRadius: 8, padding: '10px 16px', marginBottom: 20, fontSize: 13, color: 'var(--danger)' }}>{error}</div>}
+      {success && <div style={{ background: 'rgba(74,222,128,.08)', border: '1px solid rgba(74,222,128,.3)', borderRadius: 8, padding: '10px 16px', marginBottom: 20, fontSize: 13, color: 'var(--success)' }}>{success}</div>}
 
       {/* Prevailing Wage assist — only when the project is flagged prevailing-wage */}
       {pw && (
@@ -543,7 +543,7 @@ export default function PayrollPage() {
                   const gross = calcGross(emp);
                   const net = calcNet(emp);
                   return (
-                    <tr key={emp.id} style={{ background: idx % 2 === 0 ? 'transparent' : 'rgba(0,0,0,.02)', borderBottom: `1px solid rgba(229,229,234,.5)` }}>
+                    <tr key={emp.id} style={{ background: idx % 2 === 0 ? 'transparent' : 'rgba(0,0,0,.02)', borderBottom: `1px solid rgba(203,213,225,.5)` }}>
                       <td style={{ padding: '7px 8px', minWidth: 140 }}>
                         <input value={emp.name} onChange={e => updateEmp(emp.id, 'name', e.target.value)} placeholder="Name" style={{ ...inp, fontSize: 12 }} />
                       </td>
@@ -676,7 +676,7 @@ export default function PayrollPage() {
               {records.map(record => {
                 const sc = statusCfg[record.status] || statusCfg.draft;
                 return (
-                  <tr key={record.id} style={{ borderBottom: `1px solid rgba(229,229,234,.5)` }}>
+                  <tr key={record.id} style={{ borderBottom: `1px solid rgba(203,213,225,.5)` }}>
                     <td style={{ padding: '12px 16px', color: TEXT, fontWeight: 600 }}>{record.week_ending}</td>
                     <td style={{ padding: '12px 16px', color: DIM }}>{record.employee_count}</td>
                     <td style={{ padding: '12px 16px', color: TEXT }}>{fmt(record.total_gross)}</td>

@@ -224,7 +224,7 @@ export default function PrevailingWagePage() {
         for the exact project, county and decision number. Rows marked <span style={{ color: 'var(--text-primary)', fontWeight: 800 }}>Custom</span> are your own tenant-entered determination and override the sample schedule.
       </div>
       {error && (
-        <div style={{ background: 'rgba(192,48,48,.1)', border: '1px solid rgba(192,48,48,.3)', borderRadius: 8, padding: '10px 16px', marginBottom: 20, fontSize: 13, color: 'var(--danger)' }}>
+        <div style={{ background: 'rgba(248,113,113,.1)', border: '1px solid rgba(248,113,113,.3)', borderRadius: 8, padding: '10px 16px', marginBottom: 20, fontSize: 13, color: 'var(--danger)' }}>
           {error}
         </div>
       )}

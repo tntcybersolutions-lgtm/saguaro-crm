@@ -320,7 +320,7 @@ const AM_CSS = `@media (max-width: 767px) {
 }
 .amPerson { background: none; border: 0; padding: 0; margin: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; }
 .amPerson:hover .amPersonName { text-decoration: underline; }
-.amPerson:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; border-radius: 6px; }`;
+.amPerson:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; border-radius: 6px; }`;
 
 /* ── loading spinner ── */
 function Spinner() {
@@ -1161,7 +1161,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                           padding: '2px 8px', borderRadius: 4 }}>Built-In</span>
                       )}
                       {!r.isBuiltIn && (
-                        <span style={{ background: `${PURPLE}22`, color: PURPLE, fontSize: 12, fontWeight: 700,
+                        <span style={{ background: `color-mix(in srgb, ${PURPLE} 13%, transparent)`, color: PURPLE, fontSize: 12, fontWeight: 700,
                           padding: '2px 8px', borderRadius: 4 }}>Custom</span>
                       )}
                       <span style={{ color: DIM, fontSize: 12 }}>{count} user{count !== 1 ? 's' : ''}</span>
@@ -1186,7 +1186,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                         <span style={{ background: 'var(--bg-surface-2)', color: 'var(--text-primary)', fontSize: 12, fontWeight: 700,
                           padding: '2px 8px', borderRadius: 4 }}>Built-In</span>
                       ) : (
-                        <span style={{ background: `${PURPLE}22`, color: PURPLE, fontSize: 12, fontWeight: 700,
+                        <span style={{ background: `color-mix(in srgb, ${PURPLE} 13%, transparent)`, color: PURPLE, fontSize: 12, fontWeight: 700,
                           padding: '2px 8px', borderRadius: 4 }}>CUSTOM</span>
                       )}
                     </div>

@@ -103,7 +103,7 @@ const CSS = `
 .peActions .k-btn { width: 100%; justify-content: flex-start; }
 .peRail { position: sticky; top: 16px; }
 .peLadder { border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--bg-surface-2); margin-bottom: 16px; }
-.peWatch { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-sm); color: var(--text-primary); line-height: 1.55; padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(255,197,61,.35); background: rgba(255,197,61,.08); }
+.peWatch { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-sm); color: var(--text-primary); line-height: 1.55; padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(251,191,36,.35); background: rgba(251,191,36,.08); }
 .peWatch > svg { color: var(--status-under-contract); flex-shrink: 0; margin-top: 2px; }
 .peWatch b { color: var(--status-under-contract); }
 .peCorr { margin-top: 16px; }

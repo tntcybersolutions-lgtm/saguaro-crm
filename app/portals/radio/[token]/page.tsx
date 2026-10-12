@@ -237,7 +237,7 @@ export default function RadioGuestPage() {
             <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{channel?.name || 'Project Channel'}</div>
             {label && <div style={{ fontSize: 12, color: DIM, marginTop: 1 }}>Guest access: <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{label}</span></div>}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: GREEN + '14', border: `1px solid ${GREEN}44`, borderRadius: 20, padding: '5px 12px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: GREEN + '14', border: `1px solid color-mix(in srgb, ${GREEN} 27%, transparent)`, borderRadius: 20, padding: '5px 12px', flexShrink: 0 }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: GREEN, animation: 'sgLivePulse 1.8s ease-out infinite' }} />
             <span style={{ fontSize: 12, fontWeight: 800, color: GREEN }}>Live</span>
           </div>
@@ -265,7 +265,7 @@ export default function RadioGuestPage() {
               if (m.kind === 'panic' || m.kind === 'alert') {
                 const c = m.kind === 'panic' ? RED : AMBER;
                 return (
-                  <div key={m.id} style={{ padding: '10px 14px', background: c + '11', border: `1px solid ${c}55`, borderRadius: 8, marginBottom: 10, ...(flashIds.has(m.id) ? { animation: 'sgRadioRing 2.4s ease-out' } : {}) }}>
+                  <div key={m.id} style={{ padding: '10px 14px', background: c + '11', border: `1px solid color-mix(in srgb, ${c} 33%, transparent)`, borderRadius: 8, marginBottom: 10, ...(flashIds.has(m.id) ? { animation: 'sgRadioRing 2.4s ease-out' } : {}) }}>
                     <div style={{ fontSize: 12, fontWeight: 800, color: c, marginBottom: 4 }}>{'\u26A0'} {m.kind === 'panic' ? 'Panic' : 'Alert'} &middot; {m.sender_name || 'Unknown'}{m.patched_from ? <span style={{ marginLeft: 6, fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', background: `color-mix(in srgb, ${GOLD} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${GOLD} 27%, transparent)`, borderRadius: 10, padding: '1px 7px', letterSpacing: .5, verticalAlign: 'middle' }}>Via Patched Channel</span> : null}</div>
                     {shown && <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.5 }}>{shown}</div>}
                     <div style={{ fontSize: 12, color: DIM, marginTop: 4 }}>{new Date(m.created_at).toLocaleTimeString()}</div>
@@ -278,7 +278,7 @@ export default function RadioGuestPage() {
                 const tl = tone === 'negative' ? 'Negative' : tone === 'comein' ? 'Come In' : 'Ack';
                 return (
                   <div key={m.id} style={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start', marginBottom: 10, ...(flashIds.has(m.id) ? { animation: 'sgRadioFlash 2.4s ease-out', borderRadius: 10 } : {}) }}>
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 12px', background: tc + '14', border: `1px solid ${tc}55`, borderRadius: 20, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 12px', background: tc + '14', border: `1px solid color-mix(in srgb, ${tc} 33%, transparent)`, borderRadius: 20, flexWrap: 'wrap' }}>
                       <span style={{ width: 7, height: 7, borderRadius: '50%', background: tc, flexShrink: 0 }} />
                       <span style={{ fontSize: 12, fontWeight: 800, color: tc }}>{tl}</span>
                       <span style={{ fontSize: 12, color: DIM }}>{mine ? 'You' : (m.sender_name || 'Unknown')} &middot; {new Date(m.created_at).toLocaleTimeString()}</span>

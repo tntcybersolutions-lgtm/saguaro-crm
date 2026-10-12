@@ -144,7 +144,7 @@ export default function VerifyHubPage() {
 
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, alignItems: 'center' }}>
                       {v.method && METHOD_META[v.method] && (() => { const MI = METHOD_ICON[v.method]; return <span style={{ fontSize: 12, fontWeight: 700, color: C.text, background: 'var(--bg-surface-2)', padding: '3px 9px', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}>{MI && <MI size={12} weight="regular" color={C.text} />}{METHOD_META[v.method].label}</span>; })()}
-                      {stage && <span style={{ fontSize: 12, fontWeight: 700, color: stage.color, background: `${stage.color}18`, padding: '3px 9px', borderRadius: 6 }}>Gate: {stage.label}</span>}
+                      {stage && <span style={{ fontSize: 12, fontWeight: 700, color: stage.color, background: `color-mix(in srgb, ${stage.color} 9%, transparent)`, padding: '3px 9px', borderRadius: 6 }}>Gate: {stage.label}</span>}
                       {v.requested_by && <span style={{ fontSize: 12, color: C.dim, padding: '3px 0' }}>Requested by {v.requested_by}</span>}
                     </div>
 

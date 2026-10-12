@@ -186,7 +186,7 @@ export default function OwnerApprovalPortal() {
                 <Check size={15} weight="bold" /> Approve Payment — {fmt(pa.current_payment_due||0)}
               </button>
               <button onClick={()=>handleAction('rejected')} disabled={saving}
-                style={{ padding:'14px 24px',background:'rgba(192,48,48,.1)',border:`1px solid rgba(192,48,48,.3)`,borderRadius:9,color:RED,fontWeight:700,fontSize:15,cursor:saving?'not-allowed':'pointer' }}>
+                style={{ padding:'14px 24px',background:'rgba(248,113,113,.1)',border:`1px solid rgba(248,113,113,.3)`,borderRadius:9,color:RED,fontWeight:700,fontSize:15,cursor:saving?'not-allowed':'pointer' }}>
                 Return for Revision
               </button>
             </div>
@@ -196,7 +196,7 @@ export default function OwnerApprovalPortal() {
           </div>
         </div>
       </div>
-      {feedback && <div style={{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:'8px',background:'rgba(192,48,48,0.9)',color:'#fff',fontWeight:600,fontSize:'14px'}}>{feedback}</div>}
+      {feedback && <div style={{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:'8px',background:'rgba(248,113,113,0.9)',color:'#fff',fontWeight:600,fontSize:'14px'}}>{feedback}</div>}
     </div>
   );
 }

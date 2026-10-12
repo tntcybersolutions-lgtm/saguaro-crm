@@ -498,8 +498,8 @@ export default function ApprovalWorkflowsPage() {
         .aw-row:hover { background: rgba(255,255,255,0.05) !important; }
       `}</style>
       {toast && (
-        <div style={{ position: 'fixed', top: 20, right: 20, background: 'var(--brand-primary)', color: 'var(--on-brand)', padding: '10px 22px', borderRadius: 'var(--radius-md)', fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: 'var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.35)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <CheckCircle size={16} weight="fill" />{toast}
+        <div role="status" style={{ position: 'fixed', top: 20, right: 20, background: 'var(--surface-popover)', color: 'var(--text-primary)', border: '1px solid var(--success-border)', padding: '10px 22px', borderRadius: 'var(--radius-md)', fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: 'var(--shadow-lg)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <CheckCircle size={16} weight="fill" color="var(--success)" />{toast}
         </div>
       )}
       <PremiumSurface maxWidth={2200}>

@@ -115,7 +115,7 @@ const CSS = `
 .phSplit[data-open="true"] .phGrid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
 .phCard { position: relative; display: flex; flex-direction: column; min-width: 0; border-radius: var(--radius-sm); overflow: hidden; background: var(--bg-surface-2); border: 1px solid var(--border-default); cursor: pointer; transition: border-color .15s, box-shadow .15s; text-align: left; padding: 0; color: inherit; font: inherit; }
 .phCard:hover { border-color: var(--border-strong); }
-.phCard:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.phCard:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .phCard[data-sel="true"] { border-color: var(--brand-primary); box-shadow: 0 0 0 1px var(--brand-primary), var(--glass-highlight); }
 .phThumb { position: relative; width: 100%; aspect-ratio: 4 / 3; background: var(--bg-solid); overflow: hidden; }
 .phThumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -148,7 +148,7 @@ const CSS = `
 .phNext a { color: var(--link); font-weight: 700; }
 .phDrop { width: 100%; min-height: 96px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px 12px; border-radius: var(--radius-sm); border: 1px dashed var(--brand-primary-35); background: var(--brand-primary-08); color: var(--text-primary); font-weight: 700; font-size: var(--fs-md); cursor: pointer; }
 .phDrop:hover { background: var(--brand-primary-12); }
-.phDrop:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.phDrop:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .phPreview { border: 1px solid var(--border-default); border-radius: var(--radius-sm); overflow: hidden; background: var(--bg-solid); }
 .phPreview img { width: 100%; max-height: 240px; object-fit: contain; display: block; background: var(--bg-solid); }
 .phPreviewBar { display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: var(--fs-xs); color: var(--text-tertiary); }
@@ -163,7 +163,7 @@ const CSS = `
 .phDur { position: absolute; right: 6px; bottom: 6px; padding: 2px 6px; border-radius: 6px; background: rgba(8,9,12,0.8); color: #fff; font-size: 12px; font-weight: 700; }
 .phUploading { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.04); color: var(--text-secondary); font: inherit; font-size: var(--fs-sm); font-weight: 700; cursor: pointer; }
 .phUploading i { display: block; width: 64px; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.1); overflow: hidden; }
-.phUploading i > b { display: block; height: 100%; background: var(--brand-primary); }
+.phUploading i > b { display: block; height: 100%; background: var(--info-fg); }
 .phLinkAlt { align-self: flex-start; background: none; border: none; padding: 6px 0; color: var(--text-tertiary); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; }
 .phLinkAlt:hover { color: var(--text-primary); }
 @media (max-width: 640px) {

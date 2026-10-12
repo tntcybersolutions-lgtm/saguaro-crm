@@ -65,14 +65,17 @@ export interface ToneStyle {
   meaning: string;
 }
 
+/* Approved palette only (2026-10-12): status colours are the approved green,
+   amber and red; "waiting on you" is the info blue, because yellow is kept for
+   primary actions and the selected item. */
 export const TONES: Record<Tone, ToneStyle> = {
-  draft:   { fg: '#A3ACBB', bg: 'rgba(163,172,187,0.14)', border: 'rgba(163,172,187,0.40)', meaning: 'Not sent yet — nobody is waiting on this' },
-  active:  { fg: '#FFE600', bg: 'rgba(255,230,0,0.16)',  border: 'rgba(255,230,0,0.50)',  meaning: 'Waiting on you' },
-  waiting: { fg: '#FF8A00', bg: 'rgba(255,138,0,0.16)',  border: 'rgba(255,138,0,0.50)',  meaning: 'Waiting on someone else' },
-  good:    { fg: '#2CFF7A', bg: 'rgba(44,255,122,0.16)',  border: 'rgba(44,255,122,0.50)',  meaning: 'Approved' },
-  warn:    { fg: '#FF8A00', bg: 'rgba(255,138,0,0.16)',  border: 'rgba(255,138,0,0.50)',  meaning: 'Came back needing changes' },
-  bad:     { fg: '#FF3B30', bg: 'rgba(255,59,48,0.16)',   border: 'rgba(255,59,48,0.50)',   meaning: 'Rejected or failed' },
-  done:    { fg: '#2CFF7A', bg: 'rgba(44,255,122,0.10)',  border: 'rgba(44,255,122,0.32)',  meaning: 'Closed — nothing left to do' },
+  draft:   { fg: '#94A3B8', bg: 'rgba(148,163,184,0.14)', border: 'rgba(148,163,184,0.40)', meaning: 'Not sent yet — nobody is waiting on this' },
+  active:  { fg: '#38BDF8', bg: 'rgba(56,189,248,0.14)',  border: 'rgba(56,189,248,0.45)',  meaning: 'Waiting on you' },
+  waiting: { fg: '#FBBF24', bg: 'rgba(251,191,36,0.16)',  border: 'rgba(251,191,36,0.50)',  meaning: 'Waiting on someone else' },
+  good:    { fg: '#4ADE80', bg: 'rgba(74,222,128,0.16)',  border: 'rgba(74,222,128,0.50)',  meaning: 'Approved' },
+  warn:    { fg: '#FBBF24', bg: 'rgba(251,191,36,0.16)',  border: 'rgba(251,191,36,0.50)',  meaning: 'Came back needing changes' },
+  bad:     { fg: '#F87171', bg: 'rgba(248,113,113,0.16)',   border: 'rgba(248,113,113,0.50)',   meaning: 'Rejected or failed' },
+  done:    { fg: '#4ADE80', bg: 'rgba(74,222,128,0.10)',  border: 'rgba(74,222,128,0.32)',  meaning: 'Closed — nothing left to do' },
 };
 
 /* ── modules ────────────────────────────────────────────────────────────── */

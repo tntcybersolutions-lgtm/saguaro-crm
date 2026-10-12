@@ -65,11 +65,11 @@ const SECURITY_TYPES = ['wpa3_enterprise', 'wpa3_personal', 'wpa2_enterprise', '
 const BANDS = ['2.4ghz', '5ghz', 'dual', '6ghz'];
 
 const SECURITY_COLORS: Record<string, { bg: string; text: string }> = {
-  wpa3_enterprise: { bg: `${GREEN}20`, text: GREEN },
-  wpa3_personal: { bg: `${GREEN}15`, text: GREEN },
+  wpa3_enterprise: { bg: `color-mix(in srgb, ${GREEN} 13%, transparent)`, text: GREEN },
+  wpa3_personal: { bg: `color-mix(in srgb, ${GREEN} 8%, transparent)`, text: GREEN },
   wpa2_enterprise: { bg: 'var(--brand-primary-12)', text: BLUE },
   wpa2_personal: { bg: 'var(--brand-primary-08)', text: BLUE },
-  open: { bg: `${RED}20`, text: RED },
+  open: { bg: `color-mix(in srgb, ${RED} 13%, transparent)`, text: RED },
 };
 
 const SECURITY_LABELS: Record<string, string> = {

@@ -51,7 +51,7 @@ import {
 } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, IconChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/table-sort';
-import { moduleAccent } from '@/lib/module-identity';
+import { moduleAccent } from '@/lib/ui/app-accent';
 import {
   hasLiveStock,
   AVAILABILITY_UNTRACKED_LABEL,
@@ -178,7 +178,7 @@ function Availability({ offer, compact = false, feedConnected = false }: { offer
   const [label, color, bg] =
     s === 'in_stock' ? ['In Stock', GREEN, 'rgba(74,222,128,0.12)'] :
     s === 'limited' ? ['Limited', 'var(--warning)', 'color-mix(in srgb, var(--warning) 14%, transparent)'] :
-    s === 'out_of_stock' ? ['Out of Stock', RED, 'rgba(192,48,48,0.14)'] :
+    s === 'out_of_stock' ? ['Out of Stock', RED, 'rgba(248,113,113,0.14)'] :
     ['Special Order', 'rgba(255,255,255,0.55)', 'rgba(255,255,255,0.06)'];
   const qty = offer.qtyInStock != null ? `${offer.qtyInStock.toLocaleString('en-US')} ` : '';
   return (
@@ -644,7 +644,7 @@ export default function CatalogPage() {
       />
 
       {error && (
-        <div style={{ background: 'rgba(192,48,48,.12)', border: '1px solid rgba(192,48,48,.3)', borderRadius: 8, padding: '12px 16px', marginBottom: 20, color: RED, fontSize: 13 }}>
+        <div style={{ background: 'rgba(248,113,113,.12)', border: '1px solid rgba(248,113,113,.3)', borderRadius: 8, padding: '12px 16px', marginBottom: 20, color: RED, fontSize: 13 }}>
           {error}
         </div>
       )}

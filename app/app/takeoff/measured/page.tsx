@@ -848,7 +848,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         {/* Import an existing takeoff — CSV/Excel quantities + DXF CAD (the migration wedge) */}
         <SectionCard title="Bring an Existing Takeoff" subtitle="CSV/Excel quantities or AutoCAD DXF — mapped to assemblies & priced live" icon={<FileArrowUp size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginTop: 16 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(250px,1fr))', gap: 12 }}>
-            <label style={{ display: 'flex', gap: 13, alignItems: 'flex-start', border: `1.5px solid rgba(52,211,153,0.5)`, background: 'linear-gradient(180deg,rgba(52,211,153,0.10),rgba(52,211,153,0.03))', borderRadius: 14, padding: '15px 16px', cursor: importing ? 'wait' : 'pointer' }}>
+            <label style={{ display: 'flex', gap: 13, alignItems: 'flex-start', border: `1.5px solid rgba(74,222,128,0.5)`, background: 'linear-gradient(180deg,rgba(74,222,128,0.10),rgba(74,222,128,0.03))', borderRadius: 14, padding: '15px 16px', cursor: importing ? 'wait' : 'pointer' }}>
               <FileCsv size={34} weight="duotone" color={GREEN} />
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 800, fontSize: 15, color: TEXT }}>Import CSV / Excel</div>
@@ -920,7 +920,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                   </div>
                 ));
               })()}
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 12px', fontSize: 14, fontWeight: 800, color: 'var(--on-brand)', background: 'var(--brand-primary)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 12px', fontSize: 14, fontWeight: 800, color: 'var(--text-primary)', background: 'var(--bg-surface-2)', borderTop: '1px solid var(--border-default)' }}>
                 <span>Sell Price</span><span style={{ fontVariantNumeric: 'tabular-nums' }}>{usd(r.sellCents)}</span>
               </div>
             </div>
@@ -989,13 +989,13 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             </button>
             {chainBusy && (
               <div style={{ marginTop: 9 }}>
-                <div style={{ height: 7, borderRadius: 4, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}><div style={{ height: '100%', width: `${chainPct}%`, background: 'var(--brand-primary)', transition: 'width .3s ease' }} /></div>
+                <div style={{ height: 7, borderRadius: 4, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}><div style={{ height: '100%', width: `${chainPct}%`, background: 'var(--chart-1)', transition: 'width .3s ease' }} /></div>
                 {chainMsg && <div style={{ fontSize: 12, color: DIM, marginTop: 5 }}>{chainMsg}</div>}
               </div>
             )}
             {!chainBusy && chainMsg && <div style={{ marginTop: 8, fontSize: 13, color: (chainMsg.startsWith('Sage:') || chainMsg.startsWith("Couldn't")) ? RED : DIM }}>{chainMsg}</div>}
             {chainResult && (
-              <div style={{ marginTop: 10, border: '1px solid rgba(52,211,153,0.4)', background: 'rgba(52,211,153,0.06)', borderRadius: 10, padding: '12px 13px' }}>
+              <div style={{ marginTop: 10, border: '1px solid rgba(74,222,128,0.4)', background: 'rgba(74,222,128,0.06)', borderRadius: 10, padding: '12px 13px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 800, fontSize: 14, color: TEXT }}><CheckCircle size={18} weight="fill" color={GREEN} />Documents Generated</div>
                 <div style={{ fontSize: 13, color: DIM, marginTop: 3 }}>{chainResult.packagesCreated} bid package{chainResult.packagesCreated === 1 ? '' : 's'} · {chainResult.jacketsGenerated} jacket PDF{chainResult.jacketsGenerated === 1 ? '' : 's'}{chainResult.sovCreated ? ' · Schedule of Values + pay application' : ''}</div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
@@ -1207,7 +1207,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                     const bad = row.status === 'mismatch';
                     const col = ok ? GREEN : bad ? RED : DIM;
                     return (
-                      <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 11, padding: '10px 12px', borderRadius: 10, border: `1px solid ${bad ? 'rgba(248,113,113,0.4)' : LINE}`, background: ok ? 'rgba(52,211,153,0.06)' : bad ? 'rgba(248,113,113,0.08)' : 'transparent', marginBottom: 8 }}>
+                      <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 11, padding: '10px 12px', borderRadius: 10, border: `1px solid ${bad ? 'rgba(248,113,113,0.4)' : LINE}`, background: ok ? 'rgba(74,222,128,0.06)' : bad ? 'rgba(248,113,113,0.08)' : 'transparent', marginBottom: 8 }}>
                         {ok ? <CheckCircle size={20} weight="fill" color={GREEN} style={{ flexShrink: 0, marginTop: 1 }} /> : bad ? <WarningCircle size={20} weight="fill" color={RED} style={{ flexShrink: 0, marginTop: 1 }} /> : <XCircle size={20} weight="duotone" color={DIM} style={{ flexShrink: 0, marginTop: 1 }} />}
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>{row.label}</div>
@@ -1333,7 +1333,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                     <div style={{ flex: 1 }}><b>{c.name}</b>
                       {c.instanceCount && c.instanceCount > 1 ? <span style={{ marginLeft: 7, fontSize: 12, fontWeight: 800, color: '#16794a', background: '#eef7ee', borderRadius: 5, padding: '1px 6px' }}>×{c.instanceCount}</span> : null}
                       {(c.building || c.level || c.zone) ? <span style={{ marginLeft: 6, fontSize: 12, fontWeight: 700, color: DIM, border: `1px solid ${LINE}`, borderRadius: 5, padding: '1px 6px' }}>{[c.building, c.level && `L${c.level}`, c.zone].filter(Boolean).join('·')}</span> : null}
-                      {c.alternate ? <span style={{ marginLeft: 6, fontSize: 12, fontWeight: 800, color: c.alternateType === 'deduct' ? 'var(--danger)' : 'var(--warning)', background: c.alternateType === 'deduct' ? 'rgba(192,57,43,0.12)' : 'rgba(47,107,255,0.12)', borderRadius: 5, padding: '1px 6px' }}>ALT {c.alternateType === 'deduct' ? '−' : '+'}</span> : null}
+                      {c.alternate ? <span style={{ marginLeft: 6, fontSize: 12, fontWeight: 800, color: c.alternateType === 'deduct' ? 'var(--danger)' : 'var(--warning)', background: c.alternateType === 'deduct' ? 'rgba(192,57,43,0.12)' : 'rgba(56,189,248,0.12)', borderRadius: 5, padding: '1px 6px' }}>ALT {c.alternateType === 'deduct' ? '−' : '+'}</span> : null}
                       {c.note ? <span title={c.note} style={{ marginLeft: 6, fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', border: `1px solid var(--brand-primary-35)`, borderRadius: 5, padding: '1px 6px' }}>note</span> : null}
                       <div style={{ color: DIM, fontSize: 13, marginTop: 2, display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>{c.value > 0
                       ? <span>{c.value} {unit}{c.heightFt ? ` · ${c.heightFt}′` : ''}{c.thicknessIn ? ` · ${c.thicknessIn}″` : ''} → {lines.length} items</span>
@@ -1437,7 +1437,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                   <div style={{ fontSize: 20, fontWeight: 800, color: TEXT }}>Set the Scale</div>
                   <div style={{ fontSize: 14, color: DIM, marginTop: 4, lineHeight: 1.5 }}>Two clicks a known distance apart calibrate the drawing so every trace prices in real feet.</div>
                   {ppf > 0 ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginTop: 14, padding: 14, borderRadius: 12, border: `1px solid rgba(52,211,153,0.4)`, background: 'rgba(52,211,153,0.06)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginTop: 14, padding: 14, borderRadius: 12, border: `1px solid rgba(74,222,128,0.4)`, background: 'rgba(74,222,128,0.06)' }}>
                       <CheckCircle size={24} weight="fill" color={GREEN} />
                       <div><div style={{ fontWeight: 800, color: TEXT }}>Scale is set — {ppf.toFixed(2)} px/ft</div><div style={{ fontSize: 13, color: DIM }}>You&apos;re calibrated. Trace conditions and they price live.</div></div>
                     </div>
@@ -1505,7 +1505,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             {revResult && (
               <div style={{ marginTop: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                  <span style={{ fontSize: 12, fontWeight: 800, padding: '4px 10px', borderRadius: 20, background: revResult.netScope === 'increase' ? 'rgba(248,113,113,0.15)' : revResult.netScope === 'decrease' ? 'rgba(52,211,153,0.15)' : 'rgba(139,148,158,0.15)', color: revResult.netScope === 'increase' ? RED : revResult.netScope === 'decrease' ? GREEN : DIM }}>Net scope: {revResult.netScope}</span>
+                  <span style={{ fontSize: 12, fontWeight: 800, padding: '4px 10px', borderRadius: 20, background: revResult.netScope === 'increase' ? 'rgba(248,113,113,0.15)' : revResult.netScope === 'decrease' ? 'rgba(74,222,128,0.15)' : 'rgba(139,148,158,0.15)', color: revResult.netScope === 'increase' ? RED : revResult.netScope === 'decrease' ? GREEN : DIM }}>Net scope: {revResult.netScope}</span>
                   <span style={{ color: DIM, fontSize: 13 }}>{revResult.changes.length} changes found</span>
                 </div>
                 <div style={{ color: TEXT, fontSize: 14, marginBottom: 12, lineHeight: 1.5 }}>{revResult.summary}</div>
@@ -1678,10 +1678,10 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               {reviewQueue.items.map((it) => {
                 const mapped = !!(it.assemblyId && ASSEMBLIES[it.assemblyId]);
                 return (
-                  <div key={it.id} style={{ border: `1px solid ${it.accept ? 'rgba(52,211,153,0.4)' : LINE}`, background: it.accept ? 'rgba(52,211,153,0.05)' : BG, borderRadius: 12, padding: '11px 13px' }}>
+                  <div key={it.id} style={{ border: `1px solid ${it.accept ? 'rgba(74,222,128,0.4)' : LINE}`, background: it.accept ? 'rgba(74,222,128,0.05)' : BG, borderRadius: 12, padding: '11px 13px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                       <button onClick={() => patchReview(it.id, { accept: !it.accept })} title={it.accept ? 'Accepted — click to reject' : 'Rejected — click to accept'}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: `1px solid ${it.accept ? GREEN : LINE}`, background: it.accept ? 'rgba(52,211,153,0.14)' : 'transparent', color: it.accept ? GREEN : DIM, borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontWeight: 800, fontSize: 13, flexShrink: 0 }}>
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: `1px solid ${it.accept ? GREEN : LINE}`, background: it.accept ? 'rgba(74,222,128,0.14)' : 'transparent', color: it.accept ? GREEN : DIM, borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontWeight: 800, fontSize: 13, flexShrink: 0 }}>
                         {it.accept ? <CheckCircle size={15} weight="fill" color={GREEN} /> : <XCircle size={15} weight="bold" />}{it.accept ? 'Accept' : 'Reject'}
                       </button>
                       <div style={{ flex: 1, minWidth: 140 }}>

@@ -139,7 +139,7 @@ const CSS = `
 .inActions .k-btn { width: 100%; justify-content: flex-start; }
 .inRail { position: sticky; top: 16px; }
 .inLadder { border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--bg-surface-2); margin-bottom: 16px; }
-.inWarn { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-sm); color: var(--text-primary); line-height: 1.55; padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(255,77,94,.35); background: rgba(255,77,94,.08); margin-bottom: 16px; }
+.inWarn { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-sm); color: var(--text-primary); line-height: 1.55; padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(248,113,113,.35); background: rgba(248,113,113,.08); margin-bottom: 16px; }
 .inWarn > svg { color: var(--status-overdue); flex-shrink: 0; margin-top: 2px; }
 .inWarn button { background: none; border: 0; padding: 0; color: var(--link); font-weight: 700; cursor: pointer; font: inherit; margin-right: 10px; }
 .inSeq { display: flex; flex-wrap: wrap; gap: 8px 16px; }

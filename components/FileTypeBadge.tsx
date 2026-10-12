@@ -54,9 +54,9 @@ export function FileTypeBadge({
       style={{
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         minWidth: size, height: size - 8, padding: '0 7px', borderRadius: 6,
-        background: `${meta.color}22`, color: meta.color,
+        background: `color-mix(in srgb, ${meta.color} 13%, transparent)`, color: meta.color,
         fontSize: 12, fontWeight: 900, letterSpacing: 0.4, lineHeight: 1,
-        border: `1px solid ${meta.color}66`, flexShrink: 0,
+        border: `1px solid color-mix(in srgb, ${meta.color} 40%, transparent)`, flexShrink: 0,
         ...style,
       }}
     >

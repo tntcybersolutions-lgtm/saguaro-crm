@@ -173,7 +173,7 @@ const CSS = `
 .tkDoors { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
 .tkDoor { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-default); background: var(--bg-surface); text-decoration: none; min-height: 52px; }
 .tkDoor:hover { background: var(--bg-row-hover); border-color: var(--border-strong); }
-.tkDoor:focus-visible { outline: 2px solid var(--brand-primary); }
+.tkDoor:focus-visible { outline: 2px solid var(--focus-ring); }
 .tkDoor > svg:first-child { color: var(--text-secondary); flex-shrink: 0; }
 .tkDoor > svg:last-child { color: var(--text-tertiary); margin-left: auto; flex-shrink: 0; }
 .tkDoorText { display: flex; flex-direction: column; min-width: 0; }
@@ -186,7 +186,7 @@ const CSS = `
 .tkLeft { display: flex; flex-direction: column; gap: 16px; }
 .tkDrop { border: 2px dashed var(--border-strong); border-radius: var(--radius-sm); padding: 28px 16px; text-align: center; cursor: pointer; background: var(--bg-surface-2); transition: border-color .15s, background .15s; }
 .tkDrop[data-over="true"] { border-color: var(--brand-primary); background: var(--brand-primary-08); }
-.tkDrop:focus-visible { outline: 2px solid var(--brand-primary); }
+.tkDrop:focus-visible { outline: 2px solid var(--focus-ring); }
 .tkDrop > svg { color: var(--text-tertiary); margin-bottom: 8px; }
 .tkDropTitle { color: var(--text-primary); font-weight: 600; font-size: var(--fs-md); margin-bottom: 4px; }
 .tkDropSub { color: var(--text-tertiary); font-size: var(--fs-xs); }
@@ -194,11 +194,11 @@ const CSS = `
 .tkMuted { color: var(--text-tertiary); font-size: var(--fs-xs); }
 .tkFileName { color: var(--text-primary); font-weight: 600; word-break: break-all; }
 .tkLink { all: unset; color: var(--text-tertiary); font-size: var(--fs-xs); text-decoration: underline; cursor: pointer; align-self: flex-start; min-height: 32px; display: inline-flex; align-items: center; }
-.tkLink:focus-visible { outline: 2px solid var(--brand-primary); }
+.tkLink:focus-visible { outline: 2px solid var(--focus-ring); }
 .tkRow { display: flex; gap: 8px; }
 .tkRow > .k-btn { flex: 1; justify-content: center; }
 .tkBar { height: 8px; border-radius: 4px; background: rgba(255,255,255,.08); overflow: hidden; }
-.tkBar > div { height: 100%; border-radius: 4px; background: var(--brand-primary); transition: width .3s ease; }
+.tkBar > div { height: 100%; border-radius: 4px; background: var(--chart-1); transition: width .3s ease; }
 .tkScan { position: relative; height: 110px; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border-subtle); background: var(--bg-solid); background-image: linear-gradient(var(--brand-primary-08) 1px, transparent 1px), linear-gradient(90deg, var(--brand-primary-08) 1px, transparent 1px); background-size: 20px 20px; display: grid; place-items: center; color: var(--brand-primary-35); }
 .tkScanline { position: absolute; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--brand-primary), transparent); animation: tkscan 2s ease-in-out infinite; }
 @keyframes tkscan { 0% { top: 0 } 50% { top: calc(100% - 2px) } 100% { top: 0 } }
@@ -209,12 +209,12 @@ const CSS = `
 .tkStep[data-state="active"] { color: var(--text-primary); } .tkStep[data-state="active"] i { border-color: var(--brand-primary-35); background: var(--brand-primary-12); color: var(--brand-primary); }
 .tkDone { display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center; }
 .tkDoneIcon { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: rgba(74,222,128,.12); border: 2px solid rgba(74,222,128,.3); color: var(--status-ongoing); }
-.tkErr { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-sm); color: var(--text-primary); padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(255,77,94,.35); background: rgba(255,77,94,.08); }
+.tkErr { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-sm); color: var(--text-primary); padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(248,113,113,.35); background: rgba(248,113,113,.08); }
 .tkErr > svg { color: var(--status-overdue); flex-shrink: 0; margin-top: 2px; }
 .tkRecent { max-height: 460px; overflow-y: auto; }
 .tkRecentRow { all: unset; box-sizing: border-box; display: block; width: 100%; padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border-subtle); }
 .tkRecentRow:hover { background: rgba(255,255,255,0.03); }
-.tkRecentRow:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: -2px; }
+.tkRecentRow:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
 .tkRecentRow[aria-current="true"] { background: var(--brand-primary-08); box-shadow: inset 3px 0 0 var(--brand-primary); }
 .tkRecentHead { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
 .tkRecentName { font-size: var(--fs-sm); font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -263,7 +263,7 @@ const CSS = `
 .tkPct { display: flex; align-items: center; gap: 6px; min-width: 90px; }
 .tkPct .tkBar { flex: 1; height: 4px; }
 .tkShowAll { all: unset; box-sizing: border-box; display: block; width: 100%; padding: 12px; text-align: center; color: var(--link); font-weight: 700; font-size: var(--fs-sm); cursor: pointer; background: var(--bg-surface-2); }
-.tkShowAll:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: -2px; }
+.tkShowAll:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
 .tkRecs { display: flex; flex-direction: column; gap: 10px; }
 .tkRec { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-sm); color: var(--text-secondary); line-height: 1.6; }
 .tkRec i { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 12px; font-weight: 700; background: var(--bg-surface-2); border: 1px solid var(--border-default); color: var(--text-secondary); }

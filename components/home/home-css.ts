@@ -20,8 +20,6 @@ export const HOME_CSS = `
 .fh-in .fl-sec .fl-sec-act::after{content:'';position:absolute;inset:-6px -8px}
 .fh-in .fl-sec small{font-size:12.5px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--sg-text-3);text-shadow:none}
 .fh-in .fl-brief{margin:6px 16px 14px}
-.fh-in .fl-brief .fl-brief-act{position:relative;display:inline-block}
-.fh-in .fl-brief .fl-brief-act::after{content:'';position:absolute;inset:-12px -8px}
 .fh-in [data-tone=bad]{color:var(--danger)} .fh-in [data-tone=warn]{color:var(--warning)} .fh-in [data-tone=good]{color:var(--success)}
 .fh-in .fl-strip [data-tone] span{color:var(--sg-text-2)}
 .fh-in .fl-strip b span{display:inline;font-size:inherit;color:inherit}
@@ -46,7 +44,7 @@ export const HOME_CSS = `
 .fh-chip>span{overflow:hidden;text-overflow:ellipsis;min-width:0}
 .fh-chip i{font-style:normal;color:var(--sg-text-3);font-size: 12px;flex:none}
 .fh-chip[aria-expanded=true]{border-color:var(--sg-border-strong)}
-.fh-chip:focus-visible,.fh-plus:focus-visible,.fh-menu button:focus-visible,.fh-menu a:focus-visible{outline:2px solid var(--brand-primary);outline-offset:2px}
+.fh-chip:focus-visible,.fh-plus:focus-visible,.fh-menu button:focus-visible,.fh-menu a:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .fh-chip select{position:absolute;z-index:1;inset:-9px -3px;width:calc(100% + 6px);height:calc(100% + 18px);opacity:0;cursor:pointer;font-size:16px;appearance:none;-webkit-appearance:none;border:0}
 .fh-plus{position:relative;flex:none;width:30px;height:30px;border-radius:15px;display:grid;place-items:center;border:1px solid var(--sg-border);background:transparent;color: var(--text-secondary);cursor:pointer;padding:0}
 .fh-plus::after{content:'';position:absolute;inset:-9px}

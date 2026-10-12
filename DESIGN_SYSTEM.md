@@ -37,8 +37,8 @@ word (badge text, label) — never colour alone.
 ### Colour roles (implemented in `app/globals.css` `:root`)
 
 Approved values come from Chad's directive of 12 Oct 2026. Hover and pressed
-states are mixes of approved values (no new hex). Status hues were approved by
-name (green / amber / red); their exact values are awaiting confirmation.
+states are mixes of approved values (no new hex). The status values
+#4ADE80 / #FBBF24 / #F87171 were confirmed by Chad on 12 Oct 2026.
 
 | Color role | Approved value | Implemented value | Token | Main consumers |
 |---|---|---|---|---|
@@ -57,10 +57,12 @@ name (green / amber / red); their exact values are awaiting confirmation.
 | Links / information | #38BDF8 | #38BDF8 | `--link`, `--info`, `--info-fg`, `--focus-ring`, `--chart-1` | links, info callouts, focus rings, charts |
 | Link hover | — (derived) | mix #38BDF8 72% + #F8FAFC | `--link-hover` | links |
 | Selected row | — (derived) | mix #38BDF8 10% + #1B2636 | `--selected-row-bg`, `--selected-row-indicator` | tables, lists |
-| Success | green (name) | #4ADE80 | `--success`, `--success-fg/bg/border` | badges, callouts, timelines |
-| Warning / pending | amber (name) | #FBBF24 | `--warning`, `--warning-fg/bg/border` | badges, callouts |
-| Error / overdue | red (name) | #F87171 | `--danger`, `--danger-fg/bg/border`, `--action-danger-*` | badges, errors, destructive buttons |
+| Success | #4ADE80 | #4ADE80 | `--success`, `--success-fg/bg/border` | badges, callouts, timelines |
+| Warning / pending | #FBBF24 | #FBBF24 | `--warning`, `--warning-fg/bg/border` | badges, callouts |
+| Error / overdue | #F87171 | #F87171 | `--danger`, `--danger-fg/bg/border`, `--action-danger-*` | badges, errors, destructive buttons |
 | Disabled | — (derived) | #243247 / #94A3B8 / #334155 | `--disabled-bg/fg/border` | disabled controls |
+| Module icon (in app) | — (concept icon tile) | glyph #CBD5E1 on #243247, border #334155 | `lib/ui/app-accent.ts` `moduleAccent()` | premium headers and section cards, sidebar, 12 module screens |
+| Status chips (`components/ui/Status`) | approved status values | draft #94A3B8 · waiting on you #38BDF8 · waiting/warn #FBBF24 · good/done #4ADE80 · bad #F87171 | `lib/status-system.ts` `TONES` | RFIs, header messages, Home |
 | Chart series | — (approved values only) | #38BDF8, light blue, deep blue, #CBD5E1, green, amber, #94A3B8, #334155 | `--chart-1…5`, `components/charts/shared.tsx` | every chart |
 
 ### Concept building blocks (kit)
@@ -71,6 +73,33 @@ facts). `Card` takes `icon` (tile beside the title). `ItemRow` / `ItemList`
 card: status icon, one line, actions), `StagePicker` (ordered stages, the
 current one solid yellow), `Timeline` (icon dots with a connector). Toasts post
 into the status box inside the app — one notification system.
+
+### List kit (`components/ui/flat.tsx`)
+
+`Brief` is the concept's alert card (status circle, sentence, one yellow
+action; `tone` and `icon` props). `Row` draws an icon tile; a status `dot`
+becomes that colour's status icon. `ToolRow` + `FlatList grid` is the
+two-column "More project tools" tile grid. `RowAction` primary/ghost use the
+action tokens with hover, pressed, focus and disabled states.
+
+### Rules this round (12 Oct 2026)
+
+- Yellow is for the primary action and the selected item only: never a
+  progress bar, marker, count badge, chat bubble, toast or focus ring.
+  Progress bars use `--chart-1`; focus rings use `--focus-ring`.
+- `lib/module-identity.ts` is a byte mirror of the marketing site and keeps
+  its marketing hues there; in-app code imports `moduleAccent` from
+  `lib/ui/app-accent.ts`.
+- `rgba()` colours count as colours: only approved RGB values (and black /
+  white for shadows and overlays) in app code.
+- A colour with an alpha suffix is `color-mix(in srgb, <colour> N%,
+  transparent)`, never `${colour}NN`: the suffix is invalid CSS when the
+  colour is a variable, and the browser drops the declaration.
+- `!important`: `app/globals.css` carries 158 from earlier rounds, mostly to
+  beat inline styles. None were added this round. The phone rule that sets
+  inputs to 16px is a deliberate exception: it has to beat inline font sizes so
+  iOS never zooms into a field. Reducing the rest means moving those inline
+  styles into classes, screen by screen.
 
 ## 2. Type, spacing, shape, depth
 

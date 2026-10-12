@@ -7,6 +7,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import useSWR from 'swr';
+import { Camera, CalendarBlank, ChartLineUp, ClockCounterClockwise, Flag, HardHat, Receipt, UserCircle, Wrench } from '@phosphor-icons/react';
 import { FlatList, FlatEmpty, Row, RowAction, RowSkeleton, SectionLabel, Tabs, type DotColor } from '@/components/ui/flat';
 import type { BidRow, JobRow, MoneyRow, TextPart } from '@/lib/home/flat';
 import type { FlatSection } from '@/lib/home/flat-build';
@@ -77,9 +78,9 @@ export function BiddingSection({ sec, onRetry }: { sec: FlatSection<BidRow>; onR
             {rows.map(b => (
               <li key={b.id}>
                 {b.action
-                  ? <RowWithAction dot={b.dot} title={b.title} meta={<Meta parts={b.meta} />} href={b.href}
+                  ? <RowWithAction icon={<Flag size={18} weight="bold" />} dot={b.dot} title={b.title} meta={<Meta parts={b.meta} />} href={b.href}
                       action={<RowAction href={b.action.href} label={`${b.action.label}: ${b.title}`}>{b.action.label}</RowAction>} />
-                  : <Row dot={b.dot} title={b.title} meta={<Meta parts={b.meta} />} right={b.right} rightSub={b.rightSub} href={b.href} chevron={false} />}
+                  : <Row icon={<Flag size={18} weight="bold" />} dot={b.dot} title={b.title} meta={<Meta parts={b.meta} />} right={b.right} rightSub={b.rightSub} href={b.href} chevron={false} />}
               </li>
             ))}
           </FlatList>
@@ -101,7 +102,7 @@ export function JobsSection({ sec, onRetry }: { sec: FlatSection<JobRow>; onRetr
           <FlatList label="Jobs">
             {sec.rows.map(j => (
               <li key={j.id}>
-                <Row dot={j.dot || undefined} title={j.title} meta={<Meta parts={j.meta} />} bar={j.billedPct} right={j.right} rightSub={j.rightSub} href={j.href} chevron={false} />
+                <Row icon={<HardHat size={18} weight="bold" />} tone={j.dot ? undefined : 'info'} dot={j.dot || undefined} title={j.title} meta={<Meta parts={j.meta} />} bar={j.billedPct} right={j.right} rightSub={j.rightSub} href={j.href} chevron={false} />
               </li>
             ))}
           </FlatList>
@@ -121,7 +122,7 @@ export function MoneySection({ sec, onRetry }: { sec: FlatSection<MoneyRow> & { 
       {sec.state === 'failed' ? <SectionFailed name="pay apps" onRetry={onRetry} /> : (
         <FlatList label="Pay apps">
           {sec.rows.map(m => (
-            <li key={m.id}><Row dot={m.dot} title={m.title} meta={<Meta parts={m.meta} />} right={m.right} rightSub={m.rightSub} href={m.href} chevron={false} /></li>
+            <li key={m.id}><Row icon={<Receipt size={18} weight="bold" />} dot={m.dot} title={m.title} meta={<Meta parts={m.meta} />} right={m.right} rightSub={m.rightSub} href={m.href} chevron={false} /></li>
           ))}
         </FlatList>
       )}
@@ -217,7 +218,7 @@ export function AttentionSection({ items, total, restricted, today, canEdit, rev
             : (
               <FlatList label="Needs attention">
                 {shown.map(it => <li key={it.id}><QueueRow it={it} today={today} canEdit={canEdit} onChanged={onChanged} /></li>)}
-                {reviewRows.map(r => <li key={r.id}><Row dot="blue" title={r.text} meta="Not looked at yet" href={r.href} /></li>)}
+                {reviewRows.map(r => <li key={r.id}><Row icon={<Camera size={18} weight="bold" />} dot="blue" title={r.text} meta="Not looked at yet" href={r.href} /></li>)}
               </FlatList>
             )}
         </>
@@ -236,11 +237,13 @@ type WorkTable = {
 const NIL = (v: unknown) => v == null || v === '' || v === '—' || v === 'Not set' || v === 'None recorded' || String(v).startsWith('Unknown');
 const DATE_COLS = ['due', 'nextDate', 'when'];
 const RIGHT_COLS = ['value', 'contract', 'open'];
+const KIND_ICON: Record<string, React.ElementType> = { leads: UserCircle, service: Wrench, 'my-jobs': HardHat, jobs: HardHat };
 const ALL_LINK: Record<string, string> = { leads: '/app/leads', service: '/app/service', 'my-jobs': '/app/projects', jobs: '/app/projects' };
 
 export function WorkRowsSection({ table, today, onRetry }: { table: WorkTable; today: string; onRetry: () => void }) {
   const [all, setAll] = useState(false);
   const first = table.columns[0]?.key;
+  const KindIcon = KIND_ICON[table.kind] || HardHat;
   const rightCol = table.columns.find(c => RIGHT_COLS.includes(c.key));
   const rows = all ? table.rows.slice(0, 25) : table.rows.slice(0, 6);
   const meta = (r: WorkTable['rows'][number]): TextPart[] => table.columns
@@ -261,7 +264,7 @@ export function WorkRowsSection({ table, today, onRetry }: { table: WorkTable; t
           <FlatList label={table.title}>
             {rows.map(r => (
               <li key={r.id}>
-                <Row title={String(r[first] ?? '—')} meta={<Meta parts={meta(r)} />} right={rightCol && !NIL(r[rightCol.key]) ? String(r[rightCol.key]) : undefined} href={r.href} />
+                <Row icon={<KindIcon size={18} weight="bold" />} tone="info" title={String(r[first] ?? '—')} meta={<Meta parts={meta(r)} />} right={rightCol && !NIL(r[rightCol.key]) ? String(r[rightCol.key]) : undefined} href={r.href} />
               </li>
             ))}
           </FlatList>
@@ -279,10 +282,10 @@ export function LinksSection({ comingUp, pipeline }: { comingUp: { count: number
       <SectionLabel id="fh-links">More</SectionLabel>
       <FlatList label="More">
         <li>
-          <Row title="Coming up" href="/app/my-work"
+          <Row icon={<CalendarBlank size={18} weight="bold" />} tone="info" title="Coming up" href="/app/my-work"
             meta={comingUp.count ? <><b>{comingUp.count}</b> in the next 7 days{next ? <> · next: {next.title}, {fmtDowMonDay(next.date)}</> : null}</> : 'Your schedule for the week is in My Work'} />
         </li>
-        {pipeline && <li><Row title="Pipeline & win rate" meta="Leads, follow-ups, won vs active" href="/app/sales" /></li>}
+        {pipeline && <li><Row icon={<ChartLineUp size={18} weight="bold" />} tone="info" title="Pipeline & win rate" meta="Leads, follow-ups, won vs active" href="/app/sales" /></li>}
       </FlatList>
     </>
   );
@@ -329,7 +332,7 @@ export function ActivitySection({ projectId, done }: { projectId: string | null;
             {done.map(d => <li key={d.id}><Row dot="green" title={d.text} href={d.href} /></li>)}
             {rows.map(a => {
               const meta = [a.user_name, a.project_name ? shortJobName(a.project_name) : null, ago(a.created_at)].filter(Boolean).join(' · ');
-              return <li key={a.id}><Row title={a.description || a.action} meta={meta} href={a.project_id ? `/app/projects/${a.project_id}/overview` : undefined} /></li>;
+              return <li key={a.id}><Row icon={<ClockCounterClockwise size={18} weight="bold" />} title={a.description || a.action} meta={meta} href={a.project_id ? `/app/projects/${a.project_id}/overview` : undefined} /></li>;
             })}
           </FlatList>
         )}

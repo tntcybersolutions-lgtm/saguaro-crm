@@ -137,8 +137,8 @@ const CSS = `
 .scSeg { display: inline-flex; gap: 2px; padding: 2px; border-radius: var(--radius-sm); background: var(--bg-surface-2); border: 1px solid var(--glass-border); }
 .scSeg button { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 6px; font-size: var(--fs-sm); font-weight: 700; color: var(--text-tertiary); cursor: pointer; }
 .scSeg button[aria-pressed="true"] { background: var(--bg-solid-2); color: var(--text-primary); }
-.scSeg button:focus-visible { outline: 2px solid var(--brand-primary); }
-.scErr { display: flex; gap: 10px; align-items: center; font-size: var(--fs-sm); color: var(--text-primary); padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(255,77,94,.35); background: rgba(255,77,94,.08); }
+.scSeg button:focus-visible { outline: 2px solid var(--focus-ring); }
+.scErr { display: flex; gap: 10px; align-items: center; font-size: var(--fs-sm); color: var(--text-primary); padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(248,113,113,.35); background: rgba(248,113,113,.08); }
 .scErr > svg { color: var(--status-overdue); flex-shrink: 0; }
 .scLadder { border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--bg-surface-2); margin-bottom: 16px; }
 .scHint { font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 4px; }

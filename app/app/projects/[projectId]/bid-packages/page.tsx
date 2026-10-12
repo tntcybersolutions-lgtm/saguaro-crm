@@ -145,11 +145,11 @@ const CSS = `
 .bpVs[data-tone="under"] { color: var(--status-ongoing); font-weight: 700; }
 .bpVs[data-tone="over"] { color: var(--status-overdue); font-weight: 700; }
 .bpJacket { all: unset; color: var(--link); font-weight: 700; font-size: var(--fs-xs); cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
-.bpJacket:focus-visible { outline: 2px solid var(--brand-primary); }
+.bpJacket:focus-visible { outline: 2px solid var(--focus-ring); }
 .bpSteps { display: flex; gap: 6px; margin: -4px 0 16px; }
 .bpStep { flex: 1; text-align: center; font-size: var(--fs-xs); color: var(--text-tertiary); }
 .bpStep i { display: block; height: 3px; border-radius: 2px; background: var(--border-default); margin-bottom: 4px; }
-.bpStep[data-done="true"] i { background: var(--brand-primary); }
+.bpStep[data-done="true"] i { background: var(--success); }
 .bpStep[data-on="true"] { color: var(--brand-primary); font-weight: 700; }
 .bpStack { display: flex; flex-direction: column; gap: 14px; }
 .bpHint { font-size: var(--fs-xs); color: var(--text-tertiary); line-height: 1.45; }
@@ -174,7 +174,7 @@ const CSS = `
 .bpExtra > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bpSection { font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); margin: 16px 0 10px; padding-top: 16px; border-top: 1px solid var(--border-subtle); }
 .bpScope { font-size: var(--fs-sm); color: var(--text-primary); line-height: 1.6; white-space: pre-wrap; }
-.bpErr { font-size: var(--fs-sm); color: var(--status-overdue); padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(255,77,94,.35); background: rgba(255,77,94,.08); }
+.bpErr { font-size: var(--fs-sm); color: var(--status-overdue); padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(248,113,113,.35); background: rgba(248,113,113,.08); }
 .bpFoot { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; }
 .bpSkel { height: 56px; border-bottom: 1px solid var(--border-subtle); background: rgba(255,255,255,0.03); }
 @media (max-width: 640px) {

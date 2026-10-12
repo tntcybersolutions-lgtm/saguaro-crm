@@ -146,7 +146,7 @@ const CSS = `
 .dvVer { position: relative; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--border-subtle); }
 .dvVer:last-child { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; }
 .dvVer::before { content: ''; position: absolute; left: -20px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--border-default); border: 2px solid var(--bg-solid); }
-.dvVer[data-latest="true"]::before { background: var(--brand-primary); }
+.dvVer[data-latest="true"]::before { background: var(--info-fg); }
 .dvVerHead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .dvVerTitle { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
 .dvVerTitle b { font-family: ui-monospace, monospace; font-size: var(--fs-md); color: var(--text-primary); }
@@ -156,7 +156,7 @@ const CSS = `
 .dvVerActions { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
 .dvVerify { display: flex; gap: 10px; align-items: center; padding: 10px 14px; border-radius: var(--radius-sm); font-size: var(--fs-sm); color: var(--text-primary); margin-bottom: 14px; }
 .dvVerify[data-same="true"] { background: rgba(74,222,128,.08); border: 1px solid rgba(74,222,128,.3); }
-.dvVerify[data-same="false"] { background: rgba(255,197,61,.08); border: 1px solid rgba(255,197,61,.35); }
+.dvVerify[data-same="false"] { background: rgba(251,191,36,.08); border: 1px solid rgba(251,191,36,.35); }
 .dvVerify > svg { flex-shrink: 0; }
 .dvVerify[data-same="true"] > svg { color: var(--status-ongoing); }
 .dvVerify[data-same="false"] > svg { color: var(--status-under-contract); }

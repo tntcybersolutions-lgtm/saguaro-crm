@@ -25,9 +25,9 @@ function daysUntilExpiry(expiryDate:string):number{
 
 function certStatus(expiryDate:string):{label:string,c:string,bg:string}{
   const days = daysUntilExpiry(expiryDate);
-  if(days<0)   return {label:'Expired',        c:RED,        bg:'rgba(192,48,48,.14)'};
+  if(days<0)   return {label:'Expired',        c:RED,        bg:'rgba(248,113,113,.14)'};
   if(days<30)  return {label:`Exp. in ${days}d`,c:'var(--warning)', bg:'color-mix(in srgb, var(--warning) 14%, transparent)'};
-  return {label:'Active',c:'var(--success)',bg:'rgba(26,138,74,.14)'};
+  return {label:'Active',c:'var(--success)',bg:'rgba(74,222,128,.14)'};
 }
 
 export default function InsurancePage() {
@@ -224,7 +224,7 @@ export default function InsurancePage() {
             style={{ marginBottom: 24 }}
           >
             {error && (
-              <div style={{background:'rgba(192,48,48,.12)',border:`1px solid rgba(192,48,48,.3)`,borderRadius:8,padding:'10px 14px',marginBottom:16,color:RED,fontSize:13}}>
+              <div style={{background:'rgba(248,113,113,.12)',border:`1px solid rgba(248,113,113,.3)`,borderRadius:8,padding:'10px 14px',marginBottom:16,color:RED,fontSize:13}}>
                 {error}
               </div>
             )}
@@ -299,7 +299,7 @@ export default function InsurancePage() {
 
         {/* Error (outside form) */}
         {error && !showForm && (
-          <div style={{background:'rgba(192,48,48,.12)',border:`1px solid rgba(192,48,48,.3)`,borderRadius:8,padding:'12px 16px',marginBottom:20,color:RED,fontSize:13}}>
+          <div style={{background:'rgba(248,113,113,.12)',border:`1px solid rgba(248,113,113,.3)`,borderRadius:8,padding:'12px 16px',marginBottom:20,color:RED,fontSize:13}}>
             {error}
           </div>
         )}
@@ -308,7 +308,7 @@ export default function InsurancePage() {
         {!loading && (expiringSoon.length>0 || expiredCerts.length>0 || (ctx && missingSubs.length>0)) && (
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:12,marginBottom:24}}>
             {expiredCerts.length>0 && (
-              <div style={{padding:'12px 16px',borderRadius:12,background:'rgba(192,48,48,.08)',border:'1px solid rgba(192,48,48,.35)'}}>
+              <div style={{padding:'12px 16px',borderRadius:12,background:'rgba(248,113,113,.08)',border:'1px solid rgba(248,113,113,.35)'}}>
                 <div style={{fontSize:12,fontWeight:800,color:'var(--danger)',marginBottom:6}}>Expired — Request Renewal Now</div>
                 {expiredCerts.slice(0,4).map((c:any,i:number)=>(
                   <div key={c.id||i} style={{fontSize:13,color:DIM,padding:'2px 0'}}>
@@ -426,7 +426,7 @@ export default function InsurancePage() {
                     const st       = certStatus(expDate);
                     const expired  = days<0;
                     const expiring = days>=0&&days<30;
-                    const rowBg    = expired?'rgba(192,48,48,.06)':expiring?'color-mix(in srgb, var(--warning) 4%, transparent)':'transparent';
+                    const rowBg    = expired?'rgba(248,113,113,.06)':expiring?'color-mix(in srgb, var(--warning) 4%, transparent)':'transparent';
                     const cid      = c.id||String(idx);
                     return (
                       <tr key={cid} style={{borderBottom:`1px solid rgba(255,255,255,0.06)`,background:rowBg}}>

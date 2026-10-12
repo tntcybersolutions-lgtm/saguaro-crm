@@ -17,7 +17,7 @@ import {
   ArrowLeft, Warning, CalendarBlank, GitBranch, ClipboardText, ChartBar,
 } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, ghostButtonStyle } from '@/components/ui/premium';
-import { moduleAccent } from '@/lib/module-identity';
+import { moduleAccent } from '@/lib/ui/app-accent';
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 
 const ACCENT = moduleAccent('schedule'); // sage — chips, eyebrow, section markers only

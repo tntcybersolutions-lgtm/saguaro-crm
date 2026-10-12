@@ -78,12 +78,12 @@ export function Tile({ label, value, color, sub }: { label: string; value: React
 }
 
 export function SevDot({ sev, size = 10 }: { sev: Severity; size?: number }) {
-  return <span style={{ width: size, height: size, borderRadius: '50%', background: SEV_COLOR[sev], display: 'inline-block', boxShadow: `0 0 0 3px ${SEV_COLOR[sev]}22` }} />;
+  return <span style={{ width: size, height: size, borderRadius: '50%', background: SEV_COLOR[sev], display: 'inline-block', boxShadow: `0 0 0 3px color-mix(in srgb, ${SEV_COLOR[sev]} 13%, transparent)` }} />;
 }
 
 export function SevBadge({ sev, label }: { sev: Severity; label: string }) {
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: `${SEV_COLOR[sev]}14`, color: SEV_COLOR[sev], fontSize: 12, fontWeight: 800, padding: '4px 9px', borderRadius: 999, whiteSpace: 'nowrap' }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: `color-mix(in srgb, ${SEV_COLOR[sev]} 8%, transparent)`, color: SEV_COLOR[sev], fontSize: 12, fontWeight: 800, padding: '4px 9px', borderRadius: 999, whiteSpace: 'nowrap' }}>
       <SevDot sev={sev} size={7} />{label}
     </span>
   );
@@ -126,7 +126,7 @@ export function AttentionBanner({ red, yellow, noun }: { red: number; yellow: nu
   if (n <= 0) return null;
   const hot = red > 0;
   return (
-    <div style={{ background: hot ? 'rgba(248,113,113,0.08)' : 'rgba(255,149,0,0.08)', border: `1px solid ${hot ? 'rgba(248,113,113,0.25)' : 'rgba(255,149,0,0.25)'}`, borderRadius: 12, padding: '13px 16px', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>
+    <div style={{ background: hot ? 'rgba(248,113,113,0.08)' : 'rgba(251,191,36,0.08)', border: `1px solid ${hot ? 'rgba(248,113,113,0.25)' : 'rgba(251,191,36,0.25)'}`, borderRadius: 12, padding: '13px 16px', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>
       <Circle size={18} weight="fill" color={hot ? C.red : C.yellow} />
       <span style={{ color: C.text }}>
         <b>{n}</b> {n === 1 ? `${noun} needs` : `${noun}s need`} attention

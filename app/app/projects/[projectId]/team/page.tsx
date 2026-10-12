@@ -10,7 +10,7 @@ import { useToast } from '@/components/Toast';
 import { UsersThree, UserPlus, HardHat, EnvelopeSimple, Phone, IdentificationBadge, ClockCounterClockwise, Briefcase, X } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, AutoChip, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
 import { ListToolbar } from '@/components/ui/ListToolbar';
-import { moduleAccent } from '@/lib/module-identity';
+import { moduleAccent } from '@/lib/ui/app-accent';
 import { Button, Input, FormModal, FormGrid, Field, Select } from '@/components/ui/kit';
 import ProjectOwnershipCard from '@/components/projects/ProjectOwnershipCard';
 import { createPortal } from 'react-dom';
@@ -33,7 +33,7 @@ const TEAM_CSS = `
 .tmRecActs { display: flex; gap: 10px; flex-wrap: wrap; width: 100%; }
 .tmRecActs .k-btn { min-height: 44px; }
 `;
-function Badge({label,color='var(--text-secondary)',bg='rgba(163,172,187,.12)'}:{label:string,color?:string,bg?:string}){
+function Badge({label,color='var(--text-secondary)',bg='rgba(148,163,184,.12)'}:{label:string,color?:string,bg?:string}){
   return <span style={{fontSize:12,fontWeight:700,padding:'2px 8px',borderRadius:4,background:bg,color}}>{label}</span>;
 }
 

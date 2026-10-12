@@ -5,7 +5,7 @@ import { StatusPill } from '@/components/ui/Status';
 import Link from 'next/link';
 import { ShieldCheck, FileText, Signature, MagnifyingGlass, Envelope, UsersThree, ArrowRight, Check, X, Warning } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, IconChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
-import { moduleAccent } from '@/lib/module-identity';
+import { moduleAccent } from '@/lib/ui/app-accent';
 import { FlatStyles, FlatList, Row } from '@/components/ui/flat';
 import NudgeRing from '@/components/intelligence/NudgeRing';
 import { ANCHOR_INSURANCE_EXPIRING } from '@/lib/suggestions';

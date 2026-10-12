@@ -27,13 +27,13 @@ export const CHART = {
   blueStrong: '#F8FAFC',
   green: 'var(--success, #4ADE80)',
   red: 'var(--danger, #F87171)',
-  textPrimary: 'var(--text-primary, #FFFFFF)',
-  textSecondary: 'var(--text-secondary, #D4D4D8)',
-  textTertiary: 'var(--text-tertiary, #8094B0)',
-  border: 'var(--border-subtle, rgba(255,255,255,0.06))',
-  borderDefault: 'var(--border-default, rgba(255,255,255,0.12))',
-  surface: 'var(--bg-surface, #141416)',
-  surfaceRaised: 'var(--bg-surface-2, #1c1c1e)',
+  textPrimary: 'var(--text-primary, #F8FAFC)',
+  textSecondary: 'var(--text-secondary, #CBD5E1)',
+  textTertiary: 'var(--text-tertiary, #94A3B8)',
+  border: 'var(--border-subtle, #334155)',
+  borderDefault: 'var(--border-default, #334155)',
+  surface: 'var(--bg-surface, #1B2636)',
+  surfaceRaised: 'var(--bg-surface-2, #243247)',
 } as const;
 
 /** The two money/sales accents. Charts are prop-driven between them. */

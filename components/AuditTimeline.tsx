@@ -9,17 +9,17 @@ const DIM = 'var(--text-secondary)';
 const TEXT = 'var(--text-primary)';
 
 const ACTION_COLORS: Record<string, string> = {
-  create: '#2ea043',
-  created: '#2ea043',
-  insert: '#2ea043',
+  create: 'var(--success)',
+  created: 'var(--success)',
+  insert: 'var(--success)',
   update: 'var(--warning)',
   updated: 'var(--warning)',
   edit: 'var(--warning)',
-  status_change: '#d29922',
-  status_updated: '#d29922',
-  approved: '#d29922',
-  rejected: '#d29922',
-  submitted: '#d29922',
+  status_change: 'var(--info-fg)',
+  status_updated: 'var(--info-fg)',
+  approved: 'var(--info-fg)',
+  rejected: 'var(--info-fg)',
+  submitted: 'var(--info-fg)',
   delete: 'var(--danger)',
   deleted: 'var(--danger)',
   removed: 'var(--danger)',
@@ -266,12 +266,12 @@ export default function AuditTimeline({ entityType, entityId }: AuditTimelinePro
                               {formatValue(prevVal)}
                             </span>
                             <span style={{ color: DIM, margin: '0 4px' }}>&rarr;</span>
-                            <span style={{ color: '#2ea043' }}>
+                            <span style={{ color: 'var(--success)' }}>
                               {formatValue(newVal)}
                             </span>
                           </>
                         ) : (
-                          <span style={{ color: '#2ea043' }}>
+                          <span style={{ color: 'var(--success)' }}>
                             {formatValue(newVal)}
                           </span>
                         )}

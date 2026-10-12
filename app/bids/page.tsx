@@ -50,7 +50,7 @@ export default function BidsPage() {
             ))}
           </tr></thead>
           <tbody>{opportunities.map(op=>{
-            const ac = op.action==='bid'?{bg:'rgba(26,138,74,.12)',c:'#4ADE80',label:'✓ Bid'}:op.action==='pass'?{bg:'rgba(192,48,48,.12)',c:'#F87171',label:'✗ Pass'}:{bg:'var(--brand-primary-12)',c:'var(--brand-primary)',label:'? Investigate'};
+            const ac = op.action==='bid'?{bg:'rgba(74,222,128,.12)',c:'#4ADE80',label:'✓ Bid'}:op.action==='pass'?{bg:'rgba(248,113,113,.12)',c:'#F87171',label:'✗ Pass'}:{bg:'var(--brand-primary-12)',c:'var(--brand-primary)',label:'? Investigate'};
             return <tr key={op.id} style={{borderBottom:`1px solid rgba(255,255,255,0.08)`}}>
               <td style={{padding:'12px 14px',color:TEXT,fontWeight:600,maxWidth:240,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{op.title}</td>
               <td style={{padding:'12px 14px',color:DIM}}>{op.trade}</td>

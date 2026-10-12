@@ -13,7 +13,7 @@ import {
   goldButtonStyle, ghostButtonStyle, secondaryButtonStyle
 } from '@/components/ui/premium';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { moduleAccent } from '@/lib/module-identity';
+import { moduleAccent } from '@/lib/ui/app-accent';
 import {
   Brain, Sparkle, Trophy, TrendUp, ChartBar, Percent, Stack, Notebook,
   CurrencyCircleDollar, Warning, X,
@@ -186,7 +186,7 @@ export default function IntelligencePage() {
             </button>
             <button onClick={()=>setScoring(false)} className="pmBtn" style={ghostButtonStyle}>Cancel</button>
           </div>
-          {result&&('error' in result)&&<div style={{marginTop:20,background:'rgba(192,48,48,.08)',border:`1px solid rgba(192,48,48,.3)`,borderRadius:10,padding:'14px 16px',fontSize:13,color:DIM,display:'flex',alignItems:'center',gap:8}}><Warning size={15} weight="fill" color={RED} />{result['error'] as string}</div>}
+          {result&&('error' in result)&&<div style={{marginTop:20,background:'rgba(248,113,113,.08)',border:`1px solid rgba(248,113,113,.3)`,borderRadius:10,padding:'14px 16px',fontSize:13,color:DIM,display:'flex',alignItems:'center',gap:8}}><Warning size={15} weight="fill" color={RED} />{result['error'] as string}</div>}
           {result&&!('error' in result)&&<div style={{marginTop:24}}>
             {/* Machined verdict band — micro-caps labels over hairline-separated figures */}
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:0,marginBottom:20,borderTop:`1px solid ${HAIRLINE}`,borderBottom:`1px solid ${HAIRLINE}`}}>
@@ -316,7 +316,7 @@ export default function IntelligencePage() {
                 <td style={{...TD,textAlign:'right' as const,color: 'var(--text-primary)',fontWeight:700,fontVariantNumeric:'tabular-nums' as const,whiteSpace:'nowrap' as const}}>${amt.toLocaleString()}</td>
                 <td style={{...TD,textAlign:'right' as const,color:DIM,fontVariantNumeric:'tabular-nums' as const}}>{mp==null?'—':`${mp}%`}</td>
                 <td style={TD}>
-                  <span style={{fontSize:12,fontWeight:800,padding:'3px 9px',borderRadius:999,background:won?'rgba(26,138,74,.15)':lost?'rgba(192,48,48,.12)':'rgba(255,255,255,.06)',color:won?GREEN:lost?RED:DIM,whiteSpace:'nowrap' as const}}>
+                  <span style={{fontSize:12,fontWeight:800,padding:'3px 9px',borderRadius:999,background:won?'rgba(74,222,128,.15)':lost?'rgba(248,113,113,.12)':'rgba(255,255,255,.06)',color:won?GREEN:lost?RED:DIM,whiteSpace:'nowrap' as const}}>
                     {(o.outcome||'').toString().replace(/^./,ch=>ch.toUpperCase())||'—'}
                   </span>
                   {lost&&o.loss_reason&&<div style={{fontSize:12,color:MUTED,marginTop:3}}>{o.loss_reason}</div>}

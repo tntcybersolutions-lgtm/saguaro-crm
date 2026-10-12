@@ -164,7 +164,7 @@ export default function EscalationsPage() {
                 </div>
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 12, alignItems: 'center' }}>
-                  {lvl && <span style={{ fontSize: 12, fontWeight: 700, padding: '3px 8px', borderRadius: 6, background: `${lvl.color}18`, color: lvl.color, border: `1px solid ${lvl.color}44` }}>L{lvl.level} · {lvl.owner}</span>}
+                  {lvl && <span style={{ fontSize: 12, fontWeight: 700, padding: '3px 8px', borderRadius: 6, background: `color-mix(in srgb, ${lvl.color} 9%, transparent)`, color: lvl.color, border: `1px solid color-mix(in srgb, ${lvl.color} 27%, transparent)` }}>L{lvl.level} · {lvl.owner}</span>}
                   {it.item_type && <span style={pill}>{(() => { const t = String(it.item_type).replace(/_/g, ' '); return t.length <= 3 ? t.toUpperCase() : t.charAt(0).toUpperCase() + t.slice(1); })()}</span>}
                   {h.resolved && it.resolved_at && <span style={pill}>Resolved {fmtDate(it.resolved_at)}</span>}
                   {!h.resolved && h.daysOverdue > 0 && (

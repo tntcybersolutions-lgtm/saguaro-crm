@@ -348,7 +348,7 @@ export default function SageSettings({ onClose }: { onClose: () => void }) {
                   <button
                     onClick={runRulesNow}
                     disabled={runningRules}
-                    style={{ ...btn, color: 'var(--text-primary)', borderColor: 'rgba(212,175,55,0.45)', background: 'rgba(212,175,55,0.10)', opacity: runningRules ? 0.6 : 1 }}
+                    style={{ ...btn, color: 'var(--text-primary)', borderColor: 'rgba(255,224,0,0.45)', background: 'rgba(255,224,0,0.10)', opacity: runningRules ? 0.6 : 1 }}
                   >
                     {runningRules ? 'Running…' : 'Run Rules Now'}
                   </button>

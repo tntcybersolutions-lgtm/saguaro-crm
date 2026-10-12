@@ -201,7 +201,7 @@ export default function W9Portal() {
           </div>
         </form>
       </div>
-      {feedback && <div style={{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:'8px',background:'rgba(192,48,48,0.9)',color:'#fff',fontWeight:600,fontSize:'14px'}}>{feedback}</div>}
+      {feedback && <div style={{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:'8px',background:'rgba(248,113,113,0.9)',color:'#fff',fontWeight:600,fontSize:'14px'}}>{feedback}</div>}
     </div>
   );
 }

@@ -13,7 +13,7 @@ import {
   PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, IconChip,
   goldButtonStyle, goldOutlineButtonStyle,
 } from '@/components/ui/premium';
-import { moduleAccent } from '@/lib/module-identity';
+import { moduleAccent } from '@/lib/ui/app-accent';
 import { docTypeLabel } from '@/lib/document-types';
 import { PdfIcon } from '@/components/ui/FileTypeIcon';
 import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/table-sort';
@@ -37,7 +37,7 @@ const fmt = (n: number | string | null | undefined) =>
 const fmtDay = (d: string | null | undefined) =>
   d ? new Date(String(d).includes('T') ? d : `${d}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null;
 
-function Badge({ label, color = 'var(--text-secondary)', bg = 'rgba(163,172,187,.12)' }: { label: string; color?: string; bg?: string }) {
+function Badge({ label, color = 'var(--text-secondary)', bg = 'rgba(148,163,184,.12)' }: { label: string; color?: string; bg?: string }) {
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', fontSize: 12, fontWeight: 700, padding: '2px 9px',
@@ -143,7 +143,7 @@ const CLOSEOUT_STATUS: Record<string, { label: string; color: string; bg: string
   under_review: { label: 'Under Review', color: 'var(--warning)', bg: 'rgba(251,191,36,.12)' },
   accepted:     { label: 'Complete',     color: GREEN,     bg: 'rgba(74,222,128,.12)' },
   rejected:     { label: 'Rejected',     color: RED,       bg: 'rgba(248,113,113,.12)' },
-  na:           { label: 'N/A',          color: DIM,       bg: 'rgba(163,172,187,.12)' },
+  na:           { label: 'N/A',          color: DIM,       bg: 'rgba(148,163,184,.12)' },
 };
 
 const CLOSEOUT_TYPE_LABEL: Record<string, string> = {

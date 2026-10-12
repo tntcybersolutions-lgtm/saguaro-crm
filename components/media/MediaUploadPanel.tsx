@@ -25,18 +25,18 @@ const CSS = `
 .muHead p { margin: 4px 0 0; font-size: 14px; line-height: 1.45; color: var(--text-secondary); }
 .muX { margin-left: auto; flex: 0 0 auto; width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--text-primary); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
 .muInline .muBody { padding: 0; overflow: visible; }
-.muInline[data-drag="true"] { outline: 2px dashed var(--brand-primary); outline-offset: 6px; border-radius: 14px; }
+.muInline[data-drag="true"] { outline: 2px dashed var(--focus-ring); outline-offset: 6px; border-radius: 14px; }
 .muBody { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 18px 12px; display: flex; flex-direction: column; gap: 14px; }
 .muPick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 /* Take Photo is THE action (yellow); Record and Choose are slate secondaries. */
 .muBig { min-height: 96px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 12px 8px; border-radius: 12px; border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--text-primary); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; }
 .muBig:hover { background: var(--bg-hover); border-color: var(--border-strong); }
-.muBig:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.muBig:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .muBig svg { color: var(--text-secondary); }
 .muBig[data-primary="true"] { border-color: var(--brand-primary); background: var(--brand-primary); color: var(--on-brand); font-weight: 700; }
 .muBig[data-primary="true"]:hover { background: var(--brand-primary-hover); }
 .muBig[data-primary="true"] svg { color: var(--on-brand); }
-.mu[data-drag="true"] .muSheet { outline: 2px dashed var(--brand-primary); outline-offset: -8px; }
+.mu[data-drag="true"] .muSheet { outline: 2px dashed var(--focus-ring); outline-offset: -8px; }
 .muDropHint { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 64px; border-radius: 12px; border: 1px dashed var(--border-strong); color: var(--text-secondary); font-size: 14px; font-weight: 600; }
 .muList { display: flex; flex-direction: column; gap: 8px; }
 .muRow { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px; border-radius: 10px; background: var(--bg-surface-2); border: 1px solid var(--border-subtle); }

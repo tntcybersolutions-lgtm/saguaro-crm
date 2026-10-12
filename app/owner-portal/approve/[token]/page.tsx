@@ -79,7 +79,7 @@ export default function OwnerApprovePage() {
               <button onClick={()=>{setDecision('approved');submit('approved');}} disabled={submitting} style={{flex:1,padding:14,background:'linear-gradient(135deg,#4ADE80,#22a85e)',border:'none',borderRadius:8,color:'#fff',fontSize:15,fontWeight:800,cursor:'pointer',opacity:submitting?.7:1}}>
                 <Check size={16} weight="bold" /> Approve — ${amount.toLocaleString()}
               </button>
-              <button onClick={()=>{setDecision('rejected');submit('rejected');}} disabled={submitting} style={{flex:1,padding:14,background:'rgba(192,48,48,.12)',border:'1px solid rgba(192,48,48,.3)',borderRadius:8,color:'#F87171',fontSize:15,fontWeight:800,cursor:'pointer'}}>
+              <button onClick={()=>{setDecision('rejected');submit('rejected');}} disabled={submitting} style={{flex:1,padding:14,background:'rgba(248,113,113,.12)',border:'1px solid rgba(248,113,113,.3)',borderRadius:8,color:'#F87171',fontSize:15,fontWeight:800,cursor:'pointer'}}>
                 <X size={16} weight="bold" /> Reject
               </button>
             </div>

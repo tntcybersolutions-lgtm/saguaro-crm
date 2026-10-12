@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/premium';
 import { Clock, Plus } from '@phosphor-icons/react';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
-import { moduleAccent } from '@/lib/module-identity';
+import { moduleAccent } from '@/lib/ui/app-accent';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';

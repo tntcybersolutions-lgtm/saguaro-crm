@@ -42,14 +42,14 @@ const CABLE_TYPES = ['cat5e', 'cat6', 'cat6a', 'fiber_sm', 'fiber_mm', 'coax_rg6
 
 const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   cat5e: { bg: 'var(--brand-primary-12)', text: BLUE },
-  cat6: { bg: `${GREEN}20`, text: GREEN },
+  cat6: { bg: `color-mix(in srgb, ${GREEN} 13%, transparent)`, text: GREEN },
   cat6a: { bg: 'var(--brand-primary-12)', text: GOLD },
   fiber_sm: { bg: '#F9731620', text: 'var(--warning)' },
   fiber_mm: { bg: '#8B5CF620', text: 'var(--warning)' },
   coax_rg6: { bg: '#6B728020', text: 'var(--status-closed)' },
   coax_rg59: { bg: '#6B728020', text: 'var(--status-closed)' },
   speaker: { bg: '#14B8A620', text: 'var(--success)' },
-  hdmi: { bg: `${RED}20`, text: RED },
+  hdmi: { bg: `color-mix(in srgb, ${RED} 13%, transparent)`, text: RED },
   usb: { bg: '#EC489920', text: 'var(--warning)' },
 };
 
@@ -329,7 +329,7 @@ export default function CableSchedulePage() {
                       {cable.test_result ? (
                         <span style={{
                           fontSize: 12, padding: '3px 10px', borderRadius: 10, fontWeight: 600,
-                          background: cable.test_result === 'pass' ? `${GREEN}20` : `${RED}20`,
+                          background: cable.test_result === 'pass' ? `color-mix(in srgb, ${GREEN} 13%, transparent)` : `color-mix(in srgb, ${RED} 13%, transparent)`,
                           color: cable.test_result === 'pass' ? GREEN : RED,
                           textTransform: 'capitalize',
                         }}>{cable.test_result}</span>
@@ -342,7 +342,7 @@ export default function CableSchedulePage() {
                             onClick={() => markTested(cable.id, 'pass')}
                             disabled={markingId === cable.id}
                             style={{
-                              padding: '4px 10px', background: `${GREEN}15`, color: GREEN, border: `1px solid ${GREEN}30`,
+                              padding: '4px 10px', background: `color-mix(in srgb, ${GREEN} 8%, transparent)`, color: GREEN, border: `1px solid color-mix(in srgb, ${GREEN} 19%, transparent)`,
                               borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
                             }}
                           >Pass</button>
@@ -350,7 +350,7 @@ export default function CableSchedulePage() {
                             onClick={() => markTested(cable.id, 'fail')}
                             disabled={markingId === cable.id}
                             style={{
-                              padding: '4px 10px', background: `${RED}15`, color: RED, border: `1px solid ${RED}30`,
+                              padding: '4px 10px', background: `color-mix(in srgb, ${RED} 8%, transparent)`, color: RED, border: `1px solid color-mix(in srgb, ${RED} 19%, transparent)`,
                               borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
                             }}
                           >Fail</button>

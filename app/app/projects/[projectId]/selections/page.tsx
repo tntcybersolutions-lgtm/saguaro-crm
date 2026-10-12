@@ -232,7 +232,7 @@ export default function SelectionsPage(){
       {toast&&(
         <div style={{position:'fixed',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:99999,
           padding:'12px 20px',borderRadius:8,color:'var(--text-primary)',fontWeight:700,fontSize:14,pointerEvents:'none',
-          background:toast.type==='success'?'rgba(26,138,74,.92)':'rgba(192,48,48,.92)'}}>
+          background:toast.type==='success'?'rgba(74,222,128,.92)':'rgba(248,113,113,.92)'}}>
           {toast.msg}
         </div>
       )}
@@ -409,14 +409,14 @@ export default function SelectionsPage(){
                     Edit
                   </button>
                   <button onClick={()=>deleteItem(selected)} disabled={deleting}
-                    style={{padding:'6px 14px',background:'rgba(192,48,48,.1)',border:`1px solid color-mix(in srgb, ${RED} 27%, transparent)`,
+                    style={{padding:'6px 14px',background:'rgba(248,113,113,.1)',border:`1px solid color-mix(in srgb, ${RED} 27%, transparent)`,
                       borderRadius:6,color:RED,fontSize:12,fontWeight:700,cursor:'pointer'}}>
                     {deleting?'…':'Delete'}
                   </button>
                 </>
               )}
               <button onClick={closePanel} aria-label="Close"
-                style={{display:'inline-flex',alignItems:'center',justifyContent:'center',padding:'6px 10px',background:'rgba(163,172,187,.1)',
+                style={{display:'inline-flex',alignItems:'center',justifyContent:'center',padding:'6px 10px',background:'rgba(148,163,184,.1)',
                   border:`1px solid ${BORDER}`,borderRadius:6,color:DIM,fontSize:12,cursor:'pointer'}}>
                 <X size={14} weight="bold" />
               </button>
@@ -496,8 +496,8 @@ export default function SelectionsPage(){
                   const price=Number(form.cost)||0, allow=Number(form.allowance)||0, v=price-allow;
                   const over=v>0;
                   return(
-                    <div style={{background:over?'rgba(192,48,48,.07)':'rgba(26,138,74,.07)',
-                      border:`1px solid ${over?RED:GREEN}33`,borderRadius:10,padding:'10px 14px'}}>
+                    <div style={{background:over?'rgba(248,113,113,.07)':'rgba(74,222,128,.07)',
+                      border:`1px solid color-mix(in srgb, ${over?RED:GREEN} 20%, transparent)`,borderRadius:10,padding:'10px 14px'}}>
                       <InsightRow label="Selected Price" value={fmt(price)}/>
                       <InsightRow label="Allowance" value={fmt(allow)}/>
                       <InsightRow label={over?'Over Allowance':v<0?'Under Allowance':'On Allowance'}
@@ -565,7 +565,7 @@ export default function SelectionsPage(){
                   </div>
                   {!selected.owner_approved&&(String(selected.status||'pending').toLowerCase()==='pending')&&(
                     <button onClick={()=>approve(selected)}
-                      style={{padding:'9px 0',width:'100%',background:'rgba(26,138,74,.1)',
+                      style={{padding:'9px 0',width:'100%',background:'rgba(74,222,128,.1)',
                         border:`1px solid color-mix(in srgb, ${GREEN} 27%, transparent)`,borderRadius:7,color:'var(--success)',
                         fontSize:13,fontWeight:700,cursor:'pointer'}}>
                       Record Owner Approval
@@ -603,8 +603,8 @@ export default function SelectionsPage(){
                 </div>
 
                 {selected.cost>0&&selected.allowance>0&&(
-                  <div style={{background:selected.cost>selected.allowance?'rgba(192,48,48,.07)':'rgba(26,138,74,.07)',
-                    border:`1px solid ${selected.cost>selected.allowance?RED:GREEN}33`,borderRadius:8,padding:'10px 14px'}}>
+                  <div style={{background:selected.cost>selected.allowance?'rgba(248,113,113,.07)':'rgba(74,222,128,.07)',
+                    border:`1px solid color-mix(in srgb, ${selected.cost>selected.allowance?RED:GREEN} 20%, transparent)`,borderRadius:8,padding:'10px 14px'}}>
                     <div style={{fontSize:12,fontWeight:700,color:DIM,marginBottom:4}}>
                       Budget Impact
                     </div>

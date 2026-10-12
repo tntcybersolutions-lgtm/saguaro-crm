@@ -95,7 +95,7 @@ export default function RolloutPipelinePage() {
                       <span style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 700, color: C.dim }}>{items.length}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0 6px 8px' }}>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: stage.color, background: `${stage.color}18`, borderRadius: 5, padding: '1px 6px' }}>{stage.weeks}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: stage.color, background: `color-mix(in srgb, ${stage.color} 9%, transparent)`, borderRadius: 5, padding: '1px 6px' }}>{stage.weeks}</span>
                       <span style={{ fontSize: 12, color: colValue > 0 ? C.gold : C.faint, fontWeight: 600 }}>{colValue > 0 ? fmtMoneyShort(colValue) : '—'}</span>
                     </div>
 

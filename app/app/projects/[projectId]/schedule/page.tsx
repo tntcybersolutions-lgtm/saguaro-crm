@@ -13,7 +13,7 @@ import { SkeletonKPI, SkeletonRow } from '@/components/ui/Skeleton';
 import { WarningCircle, CalendarBlank, X, Plus, TrendUp, CheckCircle, Clock, ListChecks, Flag } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, FlowStrip, AutoChip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
 import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
-import { moduleAccent } from '@/lib/module-identity';
+import { moduleAccent } from '@/lib/ui/app-accent';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
@@ -462,7 +462,7 @@ export default function SchedulePage(){
       {toast&&(
         <div style={{position:'fixed',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:99999,
           padding:'12px 20px',borderRadius:8,color:'var(--text-primary)',fontWeight:700,fontSize:14,pointerEvents:'none',
-          background:toast.type==='success'?'rgba(26,138,74,.92)':'rgba(192,48,48,.92)'}}>
+          background:toast.type==='success'?'rgba(74,222,128,.92)':'rgba(248,113,113,.92)'}}>
           {toast.msg}
         </div>
       )}
@@ -683,7 +683,7 @@ export default function SchedulePage(){
                     Edit
                   </button>
                   <button onClick={()=>deleteTask(selected)} disabled={deleting}
-                    style={{padding:'6px 14px',background:'rgba(192,48,48,.1)',
+                    style={{padding:'6px 14px',background:'rgba(248,113,113,.1)',
                       border:`1px solid color-mix(in srgb, ${RED} 27%, transparent)`,borderRadius:6,
                       color:RED,fontSize:12,fontWeight:700,cursor:'pointer'}}>
                     {deleting?'…':'Delete'}
@@ -691,7 +691,7 @@ export default function SchedulePage(){
                 </>
               )}
               <button onClick={closePanel}
-                style={{padding:'6px 10px',background:'rgba(163,172,187,.1)',
+                style={{padding:'6px 10px',background:'rgba(148,163,184,.1)',
                   border:`1px solid ${BORDER}`,borderRadius:6,color:DIM,fontSize:12,cursor:'pointer'}}>
                 <X size={14} weight="regular" color={DIM} />
               </button>
@@ -828,7 +828,7 @@ export default function SchedulePage(){
                     {saving?'Saving…':mode==='create'?'Add Task':'Save Changes'}
                   </button>
                   <button onClick={closePanel}
-                    style={{padding:'11px 16px',background:'rgba(163,172,187,.1)',
+                    style={{padding:'11px 16px',background:'rgba(148,163,184,.1)',
                       border:`1px solid ${BORDER}`,borderRadius:8,color:DIM,
                       fontSize:14,cursor:'pointer'}}>
                     Cancel

@@ -61,7 +61,7 @@ const CSS = `
 .qmDo a:hover { background: var(--bg-hover); border-color: var(--border-strong); }
 .qmDo a:active { background: var(--bg-hover); }
 .qmDoHead { margin-top: 10px; font-size: 15px; font-weight: 700; color: var(--text-primary); }
-.qmDrag { position: fixed; inset: 0; z-index: 10030; pointer-events: none; display: flex; align-items: flex-end; justify-content: center; padding: 24px; background: color-mix(in srgb, var(--bg-base, black) 35%, transparent); outline: 3px dashed var(--brand-primary); outline-offset: -10px; }
+.qmDrag { position: fixed; inset: 0; z-index: 10030; pointer-events: none; display: flex; align-items: flex-end; justify-content: center; padding: 24px; background: color-mix(in srgb, var(--bg-base, black) 35%, transparent); outline: 3px dashed var(--focus-ring); outline-offset: -10px; }
 .qmDrag div { display: inline-flex; align-items: center; gap: 10px; padding: 14px 20px; border-radius: 12px; background: var(--brand-primary); color: var(--on-brand); font-size: 16px; font-weight: 700; box-shadow: var(--shadow-lg); }
 `;
 

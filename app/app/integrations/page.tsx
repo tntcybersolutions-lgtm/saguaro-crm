@@ -420,8 +420,8 @@ export default function IntegrationsPage() {
                 {/* Icon */}
                 <div style={{
                   width: 48, height: 48, borderRadius: 12,
-                  background: `linear-gradient(135deg, ${intg.icon_color}22, ${intg.icon_color}44)`,
-                  border: `1px solid ${intg.icon_color}55`,
+                  background: `linear-gradient(135deg, color-mix(in srgb, ${intg.icon_color} 13%, transparent), color-mix(in srgb, ${intg.icon_color} 27%, transparent))`,
+                  border: `1px solid color-mix(in srgb, ${intg.icon_color} 33%, transparent)`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 15, fontWeight: 900, color: intg.icon_color, flexShrink: 0,
                 }}>

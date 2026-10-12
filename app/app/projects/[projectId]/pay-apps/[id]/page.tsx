@@ -442,6 +442,7 @@ export default function PayAppDetailPage() {
         /* app_number is the column; application_number does not exist on
            pay_applications, so the older read gave "Pay App #undefined". */
         title={`Pay App #${appNum}`}
+        badge={<span className="pdBadges"><Badge tone={meta.tone} dot>{meta.label}</Badge>{wTotal > 0 && <Badge tone={wBlocking > 0 ? 'under_contract' : 'ongoing'}>{wSigned} of {wTotal} waivers signed</Badge>}</span>}
         subtitle={`${payApp.projects?.name || ctx?.project?.name || 'Project'} · Period ${fmtDate(payApp.period_from)} – ${fmtDate(payApp.period_to)}`}
         actions={<>
           <Button icon={<FileText size={15} />} onClick={downloadPDF} disabled={downloading}>{downloading ? 'Generating…' : 'G702 / G703 PDF'}</Button>
@@ -577,10 +578,6 @@ export default function PayAppDetailPage() {
             <aside className="pdRail" aria-label="Pay application details and actions">
               <Card title="Details">
                 <div className="pdSection">
-                  <div className="pdBadges">
-                    <Badge tone={meta.tone} dot>{meta.label}</Badge>
-                    {wTotal > 0 && <Badge tone={wBlocking > 0 ? 'under_contract' : 'ongoing'}>{wSigned} of {wTotal} waivers signed</Badge>}
-                  </div>
                   <div className="pdNext">
                     {payApp.status === 'draft' && 'Draft — edit the schedule of values, then submit the G702/G703 packet to the owner.'}
                     {payApp.status === 'submitted' && 'With the owner. Approval generates conditional lien waivers for the subs.'}

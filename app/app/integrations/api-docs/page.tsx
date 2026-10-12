@@ -279,15 +279,15 @@ export default function ApiDocsPage() {
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '15px 20px',
                   background: 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))',
-                  border: `1px solid ${activeModule === mod.name ? `${API_ACCENT}73` : 'rgba(255,255,255,0.08)'}`,
+                  border: `1px solid ${activeModule === mod.name ? `color-mix(in srgb, ${API_ACCENT} 45%, transparent)` : 'rgba(255,255,255,0.08)'}`,
                   borderRadius: activeModule === mod.name ? '14px 14px 0 0' : 14,
                   cursor: 'pointer', textAlign: 'left',
                 }}
               >
                 <div style={{
                   width: 36, height: 36, borderRadius: 10,
-                  background: `${API_ACCENT}1F`,
-                  border: `1px solid ${API_ACCENT}73`,
+                  background: `color-mix(in srgb, ${API_ACCENT} 12%, transparent)`,
+                  border: `1px solid color-mix(in srgb, ${API_ACCENT} 45%, transparent)`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 13, fontWeight: 900, color: API_ACCENT, flexShrink: 0,
                 }}>
