@@ -389,6 +389,15 @@ try {
     const viewer = gc.locator('[role=dialog]').last();
     if (await viewer.count()) {
       await shot(gc, 'recheck-invoice-pdf-1440');
+      // The viewer's chrome: a selected toggle (Fit) is solid yellow with dark text; Close is not red.
+      const v = await gc.evaluate(() => {
+        const d = [...document.querySelectorAll('[role=dialog]')].pop();
+        const on = d && d.querySelector('button[aria-pressed="true"]');
+        const close = d && d.querySelector('button[aria-label="Close"]');
+        return { on: on ? [getComputedStyle(on).backgroundColor, getComputedStyle(on).color] : null, close: close ? getComputedStyle(close).color : null };
+      });
+      check('PDF viewer: selected Fit is solid yellow with dark text', !!v.on && /255, 224, 0/.test(v.on[0]) && /16, 23, 34/.test(v.on[1]), JSON.stringify(v.on));
+      check('PDF viewer: Close is an ordinary (not red) control', !!v.close && !/252, 165, 165/.test(v.close), v.close);
       for (let i = 0; i < 3 && (await gc.locator('[role=dialog]').count()); i++) { await gc.keyboard.press('Escape'); await gc.waitForTimeout(500); }
       check('invoice: the PDF viewer closes with Escape', (await gc.locator('[role=dialog]').count()) === 0);
     }

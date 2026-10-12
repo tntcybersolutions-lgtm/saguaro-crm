@@ -1,1 +1,1 @@
-prequalification,invoice,pay-app
+invoice,pay-app
