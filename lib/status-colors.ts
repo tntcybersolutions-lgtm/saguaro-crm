@@ -5,10 +5,10 @@
  * scrolls across the ticker. These six are fixed and never change meaning:
  *
  *   OVERDUE         red     — anything late / past due / needs action now
- *   LEADS           blue    — a lead / opportunity / deal in the pipeline
- *   UNDER CONTRACT  amber   — awarded / under contract / bidding won, pre-build
+ *   LEADS           amber   — a lead / opportunity / deal in the pipeline
+ *   UNDER CONTRACT  blue    — awarded / under contract / bidding won, pre-build
  *   ONGOING         green   — active / in progress on site
- *   COMPLETED       orange  — finished / substantially complete
+ *   COMPLETED       green   — finished / substantially complete
  *   CLOSED          grey    — closed / cancelled / archived / lost
  *
  * This is a leaf module — no imports, safe in both server (suggestion engine)
@@ -35,22 +35,20 @@ export interface StatusStyle {
   border: string;
 }
 
-/* One bright, clean neon-on-black family (owner decision 2026-10-02 — jet
-   black + glass + neon yellow, uniform end to end). Same saturation and
-   lightness band for all six so no status shouts over another; fills are
-   ~16% and borders ~50% of the hue so a pill reads on glass and on black.
-   Job-grade traffic-light semantics (Procore/Fieldwire/Buildertrend convention):
-   red = late, orange = bidding/at risk, yellow = under contract, green = active/done, grey = closed.
-   Mirrored as --status-* in app/globals.css. */
+/* One calm, readable family on the navy/slate theme (owner-approved
+   reference, 12 Oct 2026): green = success / on site, amber = pending / in the
+   pipeline, blue = under contract (informational), red = overdue, slate =
+   closed. Text shades (400) so the word on a pill reads at ≥ 5:1 on a card;
+   fills ~12%, borders ~40%. A status always carries its label. Mirrored as
+   --status-* in app/globals.css. */
 export const STATUS_COLORS: Record<StatusKind, StatusStyle> = {
-  overdue:        { kind: 'overdue',        label: 'Overdue',        color: '#FF3B30', bg: 'rgba(255,59,48,0.16)',   border: 'rgba(255,59,48,0.50)' },
-  lead:           { kind: 'lead',           label: 'Lead',           color: '#FF8A00', bg: 'rgba(255,138,0,0.16)',  border: 'rgba(255,138,0,0.50)' },
-  under_contract: { kind: 'under_contract', label: 'Under Contract', color: '#FFE600', bg: 'rgba(255,230,0,0.16)',  border: 'rgba(255,230,0,0.50)' },
-  ongoing:        { kind: 'ongoing',        label: 'Ongoing',        color: '#2CFF7A', bg: 'rgba(44,255,122,0.16)',  border: 'rgba(44,255,122,0.50)' },
-  completed:      { kind: 'completed',      label: 'Completed',      color: '#2CFF7A', bg: 'rgba(44,255,122,0.10)', border: 'rgba(44,255,122,0.35)' },
-  closed:         { kind: 'closed',         label: 'Closed',         color: '#A3ACBB', bg: 'rgba(163,172,187,0.16)', border: 'rgba(163,172,187,0.45)' },
+  overdue:        { kind: 'overdue',        label: 'Overdue',        color: '#F87171', bg: 'rgba(248,113,113,0.12)', border: 'rgba(248,113,113,0.40)' },
+  lead:           { kind: 'lead',           label: 'Lead',           color: '#FBBF24', bg: 'rgba(251,191,36,0.12)',  border: 'rgba(251,191,36,0.40)' },
+  under_contract: { kind: 'under_contract', label: 'Under Contract', color: '#38BDF8', bg: 'rgba(56,189,248,0.12)',  border: 'rgba(56,189,248,0.40)' },
+  ongoing:        { kind: 'ongoing',        label: 'Ongoing',        color: '#4ADE80', bg: 'rgba(74,222,128,0.12)',  border: 'rgba(74,222,128,0.40)' },
+  completed:      { kind: 'completed',      label: 'Completed',      color: '#4ADE80', bg: 'rgba(74,222,128,0.08)',  border: 'rgba(74,222,128,0.30)' },
+  closed:         { kind: 'closed',         label: 'Closed',         color: '#CBD5E1', bg: 'rgba(148,163,184,0.12)', border: 'rgba(148,163,184,0.40)' },
 };
-
 const norm = (v: unknown) => String(v ?? '').toLowerCase().trim();
 
 /* Raw project.status / lead.stage spellings mapped to a kind. Kept generous

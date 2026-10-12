@@ -8,22 +8,22 @@
  * Use `palette.*` (a CSS variable) in style props; use `paletteHex.*` only
  * where a real hex is unavoidable (canvas, SVG export, PDF, charts). */
 export const paletteHex = {
-  bg: '#050506', card: '#0E0F13', raised: '#13151A',
-  text: '#FAF8F2', text2: '#E8E4D9', text3: '#D2CDBF', text4: '#8F8A7C',
-  yellow: '#FFE600', yellowHi: '#FFF04A', yellowHover: '#E6CF00', onBrand: '#0A0A00',
-  orange: '#FF8A00', green: '#2CFF7A', red: '#FF3B30', gray: '#A3ACBB',
+  bg: '#101722', card: '#1B2636', raised: '#243247', border: '#334155',
+  text: '#F8FAFC', text2: '#CBD5E1', text3: '#94A3B8', text4: '#64748B',
+  yellow: '#FFE000', yellowHi: '#FFE94D', yellowHover: '#F2D500', onBrand: '#101722',
+  blue: '#38BDF8', orange: '#FBBF24', green: '#4ADE80', red: '#F87171', gray: '#94A3B8',
 } as const;
 export const palette = {
-  bg: 'var(--c-bg)', card: 'var(--c-card)', raised: 'var(--c-raised)',
+  bg: 'var(--c-bg)', card: 'var(--c-card)', raised: 'var(--c-raised)', border: 'var(--border-subtle)',
   text: 'var(--c-text)', text2: 'var(--c-text-2)', text3: 'var(--c-text-3)', text4: 'var(--c-text-4)',
   yellow: 'var(--c-yellow)', yellowHi: 'var(--c-yellow-hi)', yellowHover: 'var(--c-yellow-hover)', onBrand: 'var(--c-on-brand)',
-  orange: 'var(--c-orange)', green: 'var(--c-green)', red: 'var(--c-red)', gray: 'var(--c-gray)',
+  blue: 'var(--c-blue)', orange: 'var(--c-orange)', green: 'var(--c-green)', red: 'var(--c-red)', gray: 'var(--c-gray)',
 } as const;
 export type PaletteKey = keyof typeof palette;
 
 export const colors = {
-  // Brand accent (historically "gold", now NEON YELLOW #FFE600 — owner decision
-  // 2026-10-02) — resolves through the --brand-primary CSS variable defined in
+  // Brand accent (historically "gold", now yellow #FFE000 — the primary action
+  // and the selected item only) — resolves through the --brand-primary CSS variable defined in
   // globals.css, so a tenant's white-label color
   // override reskins every component that uses these tokens. Used only in CSS
   // contexts (style props / template strings), never as SVG fill/stroke attrs.
@@ -36,37 +36,33 @@ export const colors = {
   // Text / icons drawn ON a brand-yellow fill.
   onGold:     'var(--on-brand)',
 
-  // JET BLACK + GLASS (owner decision 2026-10-02, docs/COPY-STYLE.md §6).
-  // `dark` is the page; the card tokens are SOLID fallbacks that read the same
-  // as the glass tokens (--bg-surface / --bg-surface-2) over a black page, for
-  // consumers that cannot take a translucent value. Naming kept (`dark` = page
+  // NAVY / SLATE (owner-approved reference, 12 Oct 2026). `dark` is the page;
+  // the card tokens are the solid slate surfaces. Naming kept (`dark` = page
   // bg, `surface`/`raised` = cards) so consumers re-theme without renames.
-  dark:       '#050506', // page background — matches --bg-base
-  darkAlt:    '#0E0F13', // card / panel — solid stand-in for --bg-surface
-  raised:     '#0E0F13', // raised card
-  raisedAlt:  '#13151A', // grouped inset / input — solid stand-in for --bg-surface-2
-  surface:    '#0E0F13', // surface / card
-  glass:      'var(--bg-surface)',   // translucent card (use with backdropFilter)
-  glass2:     'var(--bg-surface-2)', // translucent raised (inputs, headers)
-  glassBlur:  'blur(16px) saturate(140%)',
+  dark:       '#101722', // page background — matches --bg-base
+  darkAlt:    '#1B2636', // card / panel — matches --bg-surface
+  raised:     '#1B2636', // raised card
+  raisedAlt:  '#243247', // raised panel / secondary control — matches --bg-surface-2
+  surface:    '#1B2636', // surface / card
+  glass:      'var(--bg-surface)',   // card (solid — the name is historical)
+  glass2:     'var(--bg-surface-2)', // raised (headers, secondary controls)
+  glassBlur:  'none',
 
-  border:     'rgba(255,255,255,0.10)',
-  borderDim:  'rgba(255,255,255,0.07)',
+  border:     '#334155',
+  borderDim:  '#334155',
 
-  // Pearl white at every level (owner, 11 Oct 2026 — replaces the 6 Oct
-  // champagne / sand / bronze, which read as dark grey and hard to see).
   // Same values as the --c-text* variables in globals.css.
-  text:       '#FAF8F2',
-  textMuted:  '#E8E4D9',
-  textDim:    '#D2CDBF',
-  textFaint:  '#8F8A7C',
+  text:       '#F8FAFC',
+  textMuted:  '#CBD5E1',
+  textDim:    '#94A3B8',
+  textFaint:  '#64748B',
 
-  // Semantic — the same neon-on-black family as lib/status-colors.ts.
-  green:      '#2CFF7A',
-  red:        '#FF3B30',
-  orange:     '#FF8A00',
-  amber:      '#FFE600',
-  blue:       '#FF8A00',
+  // Semantic — the same family as lib/status-colors.ts.
+  green:      '#4ADE80',
+  red:        '#F87171',
+  orange:     '#FBBF24',
+  amber:      '#FBBF24',
+  blue:       '#38BDF8',
 
   white:      '#ffffff',
   black:      '#000000',
@@ -77,13 +73,13 @@ export const colors = {
  * letterheads, section dividers, the dark field-app surfaces). The neutral
  * UI chrome stays on `colors` above; `brand` is the desert identity layer. */
 export const brand = {
-  gold:       '#FFE600', // brand neon yellow (was the wordmark gold)
+  gold:       '#FFE000', // brand yellow (was the wordmark gold)
   sunset:     '#F2A93B', // bright sun
   ember:      '#E8732B', // sunset orange
   terracotta: '#A8431C', // canyon rock
   canyon:     '#4A1E08', // deep shadow / dark text on warm fills
   cactus:     '#2E8B3D', // saguaro green (positive / accent, sparing)
-  night:      '#000000', // jet-black app surface
+  night:      '#101722', // navy app surface
   sand:       '#F7F2E8', // warm light surface
 } as const;
 
@@ -140,7 +136,7 @@ export const shadow = {
   md:   '0 4px 14px rgba(0,0,0,.08)',
   lg:   '0 16px 44px rgba(0,0,0,.10)',
   xl:   '0 24px 60px rgba(0,0,0,.12)',
-  glow: `0 0 20px rgba(255,230,0,.15)`,
+  glow: 'none', // no glow on the navy/slate theme
 } as const;
 
 /* ── Sidebar ───────────────────────────────────────────────────────── */
