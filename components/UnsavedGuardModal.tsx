@@ -44,7 +44,7 @@ export default function UnsavedGuardModal({ guard }: { guard: UnsavedGuardApi })
             <Warning size={19} weight="duotone" color="var(--text-secondary)" />
           </span>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: font.size.xl, fontWeight: font.weight.black, color: colors.text }}>
+            <div className="k-dialog-title">
               Unsaved changes
             </div>
             <div style={{ fontSize: font.size.md, color: colors.textMuted, lineHeight: 1.6, marginTop: 6 }}>

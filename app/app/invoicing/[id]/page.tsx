@@ -578,7 +578,7 @@ export default function InvoiceDetailPage() {
         open={editing}
         onClose={closeEdit}
         title={`Edit ${inv.invoice_number || 'Invoice'}`}
-        subtitle="The server recomputes the total from amount + tax on save."
+        subtitle="Total updates automatically when you save."
         onSubmit={handleSave}
         submitLabel="Save Changes"
         busy={busy === 'save'}

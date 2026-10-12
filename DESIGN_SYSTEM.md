@@ -171,6 +171,7 @@ edge, and the header's primary action sits on that right edge.
 | `--form-max` | 760px | — | A form's field column (left-aligned) |
 | `--reading-max` | 75ch | — | Long reading text (`.k-reading`) |
 | `--fs-title` / `--fs-title-m` | 26px | 22px | Page title (`.k-title`, `.pmHead h1`) |
+| `--fs-dialog` | 18px | 18px | Dialog and sheet title (`.k-modal-title`, `.k-dialog-title`): `--title-page` colour |
 
 **Who uses the frame:** `PageShell` (`.k-page` = the frame + a flex column),
 `PremiumSurface` (`.k-frame.pmPage`), the flat pages (Home `.fh-in`, My Work
@@ -181,7 +182,7 @@ service, people, Ask, assemblies). The shared header is `.k-head` (kit) or
 `.pmHead` (`ModuleHero`): title + subtitle on the left, actions on the right;
 on a phone the actions drop under the title and wrap.
 
-**Forms:** `PageShell width="form"` / `PremiumSurface width="form"` keep the
+**Forms:** in a form column a summary strip is two figures per row and a long value wraps to a second line. `PageShell width="form"` / `PremiumSurface width="form"` keep the
 header full width and hold the body to `--form-max`, left-aligned (Settings).
 Delete account uses `PremiumSurface width="form"`; a single block can use `.k-form-col` (Settings → Import).
 

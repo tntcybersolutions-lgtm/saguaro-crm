@@ -527,7 +527,7 @@ const CSS = `
 .jp-scrim { transition: opacity .24s ease; }
 @media (prefers-reduced-motion: reduce) { .jp-panel.jp-sheet, .jp-scrim { transition: none; } }
 .jp-grab { width: 40px; height: 5px; border-radius: 99px; background: rgba(255,255,255,0.22); margin: 10px auto 4px; flex-shrink: 0; }
-.jp-sheet-title { padding: 6px 16px 10px; font-size: 17px; font-weight: 800; color: var(--c-text); }
+.jp-sheet-title { padding: 6px 16px 10px; font-size: var(--fs-dialog); font-weight: 700; color: var(--title-page); }
 .jp-sheet .jp-search { border-top: 1px solid var(--border-subtle); }
 .jp-sheet .jp-opt { min-height: 56px; }
 .jp-sheet .jp-name { font-size: 15px; }

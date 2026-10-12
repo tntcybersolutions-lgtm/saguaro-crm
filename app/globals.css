@@ -218,7 +218,8 @@
   --card-highlight: inset 0 1px 0 rgba(148,163,184,0.08);
   --surface-card: var(--bg-surface);
   --fs-title: 26px;           /* page title, desktop */
-  --fs-title-m: 22px;         /* page title, phone */
+  --fs-title-m: 22px;
+  --fs-dialog: 18px;          /* dialog and sheet title (.k-dialog-title) */         /* page title, phone */
   --fs-section: 16px;         /* section / card heading */
   /* Module accents: one hue per product domain. lib/ui/app-accent.ts maps
      every module (and every /app route) to one of these and mirrors the
@@ -1055,6 +1056,9 @@ input:-webkit-autofill:focus {
 /* In that column a summary strip is two figures per row, so a name-length
    value (brand colour, signed-in user) reads in full instead of cutting off. */
 :is(.k-frame, .k-page)[data-width=form] > .k-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* …and a long value (a person's or brand's name) wraps to a second line
+   instead of being cut off. */
+:is(.k-frame, .k-page)[data-width=form] > .k-stats .k-stat-value { white-space: normal; overflow-wrap: break-word; text-overflow: clip; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .k-reading { max-width: var(--reading-max); }
 /* The page crumb trail is gone on every width: the top bar already shows the
    parent (Home / the job switcher) and the page title, so this row said the
@@ -1207,7 +1211,10 @@ select.k-select { padding-right: 36px; }
 .k-modal { width: var(--modal-w); max-height: 88vh; display: flex; flex-direction: column; background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); }
 .k-modal[data-size="sm"] { width: var(--modal-w-sm); }
 .k-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-4) var(--sp-6); border-bottom: 1px solid var(--border-subtle); }
-.k-modal-title { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+/* Dialog and sheet titles share the heading system: the page-title cyan at
+   the dialog size (FormModal, BottomSheet, the select sheet, the job picker,
+   the unsaved-changes dialog). */
+.k-modal-title, .k-dialog-title { font-size: var(--fs-dialog); font-weight: 700; line-height: 1.3; letter-spacing: -0.01em; color: var(--title-page); }
 .k-modal-body { padding: var(--sp-6); overflow-y: auto; flex: 1 1 auto; }
 .k-modal-foot { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--sp-2); padding: var(--sp-3) var(--sp-6); border-top: 1px solid var(--border-subtle); background: var(--bg-surface); border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
 
