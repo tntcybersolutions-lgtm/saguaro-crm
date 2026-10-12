@@ -48,6 +48,7 @@ import RadioEvidence, {
   stripRadioProvenance,
 } from '@/components/RadioEvidence';
 import { layout } from '@/lib/design-tokens';
+import { useOpenOnNew } from '@/lib/ui/open-on-new';
 
 // Priorities are STORED lowercase ('low'|'medium'|'high'|'critical') and
 // DISPLAYED capitalized. Legacy rows may carry capitalized values — every
@@ -249,6 +250,8 @@ export default function PunchListPage(){
     setAutoDue(true);setAutoAssign(false);setAssignOther(false);
     setMode('create');setSelected(null);
   }
+  // Photo-sheet shortcut (?new=1) lands in the new-item form.
+  useOpenOnNew(openCreate, !loading);
   function openEdit(item:any){
     setAutoDue(false);setAutoAssign(false);setAssignOther(false);
     setForm({title:item.title||'',description:item.description||'',location:item.location||'',

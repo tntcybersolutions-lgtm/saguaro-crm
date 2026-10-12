@@ -20,6 +20,7 @@
  * Server only — imports the service-role client type. Never import from a
  * client component.
  */
+import { SAVED_AT_HEADER } from '@/lib/offline/saved-at';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Json } from '../database.types';
 import {
@@ -449,8 +450,11 @@ export function gpsPayload(
   address: unknown,
   clientTime: unknown,
   serverTime: string,
+  savedOffline = false,
 ): Json {
   const payload: Record<string, Json> = { source: 'api', server_time: serverTime };
+  // Kept on the phone with no signal and sent later: server_time is when it ARRIVED.
+  if (savedOffline) { payload.saved_offline = true; payload.sent_at = serverTime; }
   const la = numOrNull(lat);
   const ln = numOrNull(lng);
   if (la !== null) payload.lat = la;
@@ -462,6 +466,25 @@ export function gpsPayload(
     if (Number.isFinite(skewMs)) payload.client_skew_secs = Math.round(skewMs / 1000);
   }
   return payload as Json;
+}
+
+/** How far back a punch kept on the phone may land — a weekend with no signal. */
+const SAVED_PUNCH_MAX_AGE_MS = 72 * 3600 * 1000;
+
+/**
+ * When a punch happened. Normally the server's clock — a worker can't pick their
+ * own time. The one exception is a punch kept on the phone with no signal
+ * (lib/offline/outbox): stamping it with the moment it finally SENT would cost
+ * the crew the hours they worked out of range. Its tap time is used only when it
+ * is in the past and no older than 72 hours, and the row says so
+ * (saved_offline + sent_at in its gps payload) so a reviewer sees it was sent late.
+ */
+export function punchTime(headers: Headers, nowIso: string): { at: string; savedOffline: boolean } {
+  const raw = headers.get(SAVED_AT_HEADER);
+  const t = raw ? new Date(raw).getTime() : NaN;
+  const now = new Date(nowIso).getTime();
+  if (!Number.isFinite(t) || t > now + 60_000 || now - t > SAVED_PUNCH_MAX_AGE_MS) return { at: nowIso, savedOffline: false };
+  return { at: new Date(Math.min(t, now)).toISOString(), savedOffline: true };
 }
 
 /** work_date for an instant, bucketed in the shift's own timezone. */

@@ -24,6 +24,7 @@ import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
 import { confirmDialog } from '@/lib/ui/async-dialog';
+import { sendOrSave, listSaved, isOffline, drainOutbox } from '@/lib/offline/outbox';
 import { getSupabaseBrowser, ensureBrowserSession } from '@/lib/supabase-browser';
 import { computeTimesheet, weekKey, fmtHours, liveElapsed, type TimeEntry } from '@/lib/timeclock';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
@@ -76,18 +77,29 @@ type Shift = {
   mealBreakMins: number | null;
 };
 
-/** POST to the timeclock API. Never throws on a non-2xx — the caller decides what each status means. */
-async function postClock(path: string, body: Record<string, unknown>): Promise<{ status: number; json: any }> {
-  const res = await fetch(path, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'same-origin',
-    cache: 'no-store',
-    body: JSON.stringify(body),
-  });
+/** POST a punch to the timeclock API — or, with no signal, keep it on the phone
+ *  (lib/offline/outbox). A kept punch is sent by itself when the signal is back,
+ *  stamped with the moment it was tapped, and the server flags it as sent late.
+ *  Never throws on a non-2xx — the caller decides what each status means. */
+async function postClock(path: string, body: Record<string, unknown>, label: string): Promise<{ saved: true } | { saved: false; status: number; json: any }> {
+  // Punches go in order: anything still on the phone (an offline clock-in) is sent first.
+  if (!isOffline() && (await listSaved(null, 'time')).length) await drainOutbox();
+  const r = await sendOrSave({ url: path, method: 'POST', body, kind: 'time', label, projectId: (body.projectId as string | undefined) ?? null });
+  if (r.saved) return { saved: true };
   let json: any = null;
-  try { json = await res.json(); } catch { /* non-JSON body — handled as an unknown failure below */ }
-  return { status: res.status, json };
+  try { json = await r.response.json(); } catch { /* non-JSON body — handled as an unknown failure below */ }
+  return { saved: false, status: r.response.status, json };
+}
+
+const SAVED_SHIFT = 'saved:';
+/** The clock state the phone is holding: the last punch kept on it, if any. */
+async function savedClockState(): Promise<{ in: boolean; at: string; projectId: string | null; csi: string | null } | null> {
+  const punches = await listSaved(null, 'time');
+  const last = punches[punches.length - 1];
+  if (!last) return null;
+  let body: any = {};
+  try { body = JSON.parse(last.body || '{}'); } catch { /* keep {} */ }
+  return { in: last.url.endsWith('/in'), at: new Date(last.createdAt).toISOString(), projectId: body.projectId ?? null, csi: body.csiDivision ?? null };
 }
 
 /** One status → one badge. Pending stays amber, approved green, the running
@@ -188,6 +200,15 @@ export default function TimeClockPage() {
 
   /** Ask the server whether we are on the clock. Returns the payload, or null if it could not be reached. */
   const syncStatus = useCallback(async (): Promise<any | null> => {
+    // With no signal, or a punch still waiting on the phone, the server's answer is
+    // out of date (or a cached copy) — the phone's own punch is the truth until it sends.
+    const held = await savedClockState();
+    if (held) {
+      setShift(held.in ? { id: `${SAVED_SHIFT}${held.at}`, projectId: held.projectId, workDate: held.at.slice(0, 10), clockIn: held.at, clockOut: null, status: 'clocked_in', timezone: TZ, costCodeId: null, csiDivision: held.csi, hoursWorked: null, mealBreakMins: null } : null);
+      setStatusLoaded(true);
+      return null;
+    }
+    if (isOffline()) return null;
     try {
       const res = await fetch('/api/timeclock/status', { credentials: 'same-origin', cache: 'no-store' });
       if (!res.ok) return null;
@@ -212,7 +233,10 @@ export default function TimeClockPage() {
          budget. With more than one job, the choice has to be deliberate. */
       sb.from('projects').select('id, name').order('name').then(({ data }) => {
         setProjects(data ?? []);
-        if (data?.length === 1) setProjectId(data[0].id);
+        // ?project= (the Photo sheet's Clock shortcut) names the job deliberately.
+        const asked = new URLSearchParams(window.location.search).get('project');
+        if (asked && data?.some((p) => p.id === asked)) setProjectId(asked);
+        else if (data?.length === 1) setProjectId(data[0].id);
       });
       if (!user?.email) return;
       // Resolve the signed-in user's tenant so every write is tenant-scoped (RLS/NOT NULL) — without
@@ -244,6 +268,17 @@ export default function TimeClockPage() {
      (text mismatch) and throws the server HTML away on every load. */
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
+
+  // A punch kept on the phone just reached the server — read the server's truth again.
+  useEffect(() => {
+    const onSynced = (ev: Event) => {
+      if ((ev as CustomEvent).detail?.kind !== 'time') return;
+      void syncStatus();
+      if (emp) void loadEntries(emp.id);
+    };
+    window.addEventListener('saguaro:outbox-synced', onSynced);
+    return () => window.removeEventListener('saguaro:outbox-synced', onSynced);
+  }, [syncStatus, loadEntries, emp]);
 
   // Re-check the server when the tab comes back or once a minute, so a clock-out on the phone
   // (or in another tab) is reflected here instead of two surfaces disagreeing.
@@ -308,14 +343,21 @@ export default function TimeClockPage() {
     inflight.current = true; setBusy(true); setMsg('');
     try {
       const g = await geo();
-      const { status, json } = await postClock('/api/timeclock/in', {
+      const r = await postClock('/api/timeclock/in', {
         ...(projectId ? { projectId } : {}),
         ...(csiDiv ? { csiDivision: csiDiv } : {}),
         ...(g ? { lat: g.lat, lng: g.lng } : {}),
         clientTime: new Date().toISOString(),
         // The shift's day is this device's day (a 7:30 PM Iowa clock-in is Oct 10, not the UTC Oct 11).
         timezone: TZ,
-      });
+      }, 'Clock in');
+      if (r.saved) {
+        await syncStatus(); // shows the shift the phone is holding
+        say("Clocked in — no signal, so it's saved on this phone at the time you tapped. It sends by itself when you have signal.");
+        inflight.current = false; setBusy(false);
+        return;
+      }
+      const { status, json } = r;
       if (status >= 200 && status < 300 && json?.ok && json?.shift) {
         setShift(json.shift as Shift); setStatusLoaded(true);
         // alreadyOpen means the server refused to open a second shift — adopt the one it returned.
@@ -336,12 +378,21 @@ export default function TimeClockPage() {
     try {
       const g = await geo();
       const meal = Number(openShift.meal_break_mins ?? 30) || 0;
-      const { status, json } = await postClock('/api/timeclock/out', {
-        shiftId: openShift.id,
+      const heldShift = String(openShift.id).startsWith(SAVED_SHIFT);
+      const r = await postClock('/api/timeclock/out', {
+        // A shift opened offline has no server id yet — the server closes whichever shift is open.
+        ...(heldShift ? {} : { shiftId: openShift.id }),
         breakMinutes: meal,
         ...(g ? { lat: g.lat, lng: g.lng } : {}),
         clientTime: new Date().toISOString(),
-      });
+      }, 'Clock out');
+      if (r.saved) {
+        await syncStatus();
+        say("Clocked out — no signal, so it's saved on this phone at the time you tapped. It sends by itself when you have signal.");
+        inflight.current = false; setBusy(false);
+        return;
+      }
+      const { status, json } = r;
       if (status >= 200 && status < 300 && json?.ok) {
         setShift(null); setStatusLoaded(true);
         const worked = Number(json?.hours?.worked ?? json?.shift?.hoursWorked ?? 0) || 0;

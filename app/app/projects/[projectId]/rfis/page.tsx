@@ -40,6 +40,7 @@ import RadioEvidence, {
 } from '@/components/RadioEvidence';
 import { MODULES } from '@/lib/status-system';
 import { layout } from '@/lib/design-tokens';
+import { useOpenOnNew } from '@/lib/ui/open-on-new';
 
 interface RFI {
   id: string;
@@ -388,6 +389,9 @@ export default function RFIsPage() {
     setFormError('');
     setShowForm(true);
   }
+
+  // Photo-sheet shortcut (?new=1) lands in the new-RFI form.
+  useOpenOnNew(openCreate, !loading);
 
   /** POST the RFI — shared by the modal submit and the guard's "Save & leave".
    *  Optimistic: the row lands and the modal closes instantly; returns true

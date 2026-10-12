@@ -42,6 +42,7 @@ import Suggest from '@/components/ui/Suggest';
 import { SUB_TRADES } from '@/lib/construction-intelligence';
 import { layout } from '@/lib/design-tokens';
 import OwnerUpdateModal from '@/components/owner-update/OwnerUpdateModal';
+import { useOpenOnNew } from '@/lib/ui/open-on-new';
 
 /** Date-only values parse at local noon ('T12:00:00') so they never shift a day under UTC. */
 /** Today as YYYY-MM-DD on the user's wall clock. toISOString() is the UTC day —
@@ -331,6 +332,9 @@ export default function DailyLogsPage(){
   // (headcount from BOTH clock systems, manpower from active crews, subs from
   // the project team, carry-forward off the last log, deliveries) and the
   // composer opens pre-filled. The GC only types what the system can't know.
+  // Photo-sheet shortcut (?new=1): today's log, drafted when there's signal, blank when not.
+  useOpenOnNew(() => (isOffline() ? openCreate() : void openAutoFill()), !loading);
+
   async function openAutoFill(){
     setPrefilling(true);
     try{

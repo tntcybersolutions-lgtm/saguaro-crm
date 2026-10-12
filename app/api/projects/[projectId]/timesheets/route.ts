@@ -49,6 +49,9 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
         leave_hrs: leave?.hours ?? null,
         classification: leave ? '' : (r.trade ?? r.classification ?? r.csi_division ?? ''),
         status: r.status || 'pending',
+        // Punched with no signal and sent later (lib/timeclock/server punchTime): the
+        // reviewer sees it, because those times came from the phone, not the server.
+        sent_late: !!((r.gps_clock_in as { saved_offline?: boolean } | null)?.saved_offline || (r.gps_clock_out as { saved_offline?: boolean } | null)?.saved_offline),
       };
     });
     return NextResponse.json({ entries, timesheets: entries });

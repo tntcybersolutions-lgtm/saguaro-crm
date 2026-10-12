@@ -25,7 +25,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Images, PaperPlaneTilt, UploadSimple, X } from '@phosphor-icons/react';
+import { Images, PaperPlaneTilt, UploadSimple, X, Notebook, CheckSquare, Question, Clock } from '@phosphor-icons/react';
 import MediaUploadPanel from '@/components/media/MediaUploadPanel';
 import { useUploadQueue } from '@/lib/useUploadQueue';
 import { uploadPhoto, uploadVideo, mediaKindOf } from '@/lib/media-upload';
@@ -52,6 +52,10 @@ const CSS = `
 .qmBtn { min-height: 44px; padding: 0 16px; border-radius: 12px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.04); color: var(--text-primary); font: inherit; font-size: 14px; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
 .qmBtn[data-primary] { border: none; background: var(--brand-primary); color: var(--on-brand); }
 .qmAll { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: var(--brand-primary); font-size: 14px; font-weight: 800; text-decoration: none; }
+.qmDo { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+.qmDo a { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 12px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--brand-primary) 35%, transparent); background: color-mix(in srgb, var(--brand-primary) 8%, transparent); color: var(--text-primary); font-size: 15px; font-weight: 800; text-decoration: none; }
+.qmDo a:active { background: color-mix(in srgb, var(--brand-primary) 22%, transparent); }
+.qmDoHead { margin-top: 10px; font-size: 13px; font-weight: 800; color: var(--brand-primary); }
 .qmDrag { position: fixed; inset: 0; z-index: 10030; pointer-events: none; display: flex; align-items: flex-end; justify-content: center; padding: 24px; background: color-mix(in srgb, var(--bg-base, black) 35%, transparent); outline: 3px dashed var(--brand-primary); outline-offset: -10px; }
 .qmDrag div { display: inline-flex; align-items: center; gap: 10px; padding: 14px 20px; border-radius: 14px; background: var(--brand-primary); color: var(--on-brand); font-size: 16px; font-weight: 800; box-shadow: 0 0 30px color-mix(in srgb, var(--brand-primary) 50%, transparent); }
 `;
@@ -220,9 +224,19 @@ export default function QuickMedia() {
         onRemove={queue.remove}
         doneLabel="Done"
         extra={target ? (
-          <Link className="qmAll" href={`/app/projects/${target.id}/photos`}>
-            <Images size={18} weight="bold" /> See all photos &amp; video on {target.name} ›
-          </Link>
+          <>
+            <Link className="qmAll" href={`/app/projects/${target.id}/photos`}>
+              <Images size={18} weight="bold" /> See all photos &amp; video on {target.name} ›
+            </Link>
+            {/* The rest of the daily field loop, one tap from any screen, already on this job. */}
+            <div className="qmDoHead">Also on {target.name}</div>
+            <nav className="qmDo" aria-label={`More for ${target.name}`}>
+              <Link href={`/app/projects/${target.id}/daily-logs?new=1`}><Notebook size={20} weight="bold" aria-hidden /> Daily Log</Link>
+              <Link href={`/app/projects/${target.id}/punch-list?new=1`}><CheckSquare size={20} weight="bold" aria-hidden /> Punch Item</Link>
+              <Link href={`/app/projects/${target.id}/rfis?new=1`}><Question size={20} weight="bold" aria-hidden /> RFI</Link>
+              <Link href={`/app/time?project=${target.id}`}><Clock size={20} weight="bold" aria-hidden /> Clock In / Out</Link>
+            </nav>
+          </>
         ) : null}
       >
         <div className="qmTo">
