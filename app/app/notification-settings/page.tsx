@@ -387,9 +387,9 @@ export default function NotificationSettingsPage() {
       const map: Record<string, { bg: string; fg: string; bdr: string }> = {
         gold:    { bg: GOLD, fg: 'var(--on-brand)', bdr: 'none' },
         outline: { bg: 'transparent', fg: DIM, bdr: `1px solid ${BORDER}` },
-        red:     { bg: RED, fg: 'var(--text-primary)', bdr: 'none' },
+        red:     { bg: RED, fg: 'var(--on-brand)', bdr: 'none' },
         blue:    { bg: BLUE, fg: 'var(--on-brand)', bdr: 'none' },
-        green:   { bg: GREEN, fg: 'var(--text-primary)', bdr: 'none' },
+        green:   { bg: 'var(--bg-surface-2)', fg: 'var(--text-primary)', bdr: '1px solid var(--border-default)' },
         amber:   { bg: AMBER, fg: 'var(--bg-base)', bdr: 'none' },
       };
       const v = map[variant] || map.outline;

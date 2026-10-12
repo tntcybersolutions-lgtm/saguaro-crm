@@ -1,4 +1,5 @@
 'use client';
+import { CHART } from '@/components/charts/shared';
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -43,7 +44,7 @@ const TEXT   = 'var(--text-primary)';
 // terracotta, amber are authentic Sonoran hues that sit on the dark bg).
 const GREEN  = 'var(--success)'; // money / positive — muted emerald-sage
 const RED    = 'var(--danger)'; // alert / overdue  — terracotta
-const BLUE   = 'var(--brand-primary)'; // info / open bids — unified to brand color (Chad's call)
+const BLUE   = 'var(--info)'; // info / open bids
 const ORANGE = 'var(--warning)'; // warning / pending
 const SHADOW_SM = '0 1px 2px rgba(0,0,0,0.06)';
 const SHADOW_MD = '0 4px 14px rgba(0,0,0,0.08)';
@@ -110,7 +111,7 @@ function SkeletonRow() {
 
 /* ─── Today Action Item Card ─────────────────────────────────────────── */
 const TYPE_META: Record<TodayItem['type'], { icon: React.ReactNode; borderColor: string; label: string }> = {
-  'pay-app':    { icon: <CurrencyDollar size={22} weight="duotone" color="var(--text-secondary)" />, borderColor: GOLD, label: 'Pay App' },
+  'pay-app':    { icon: <CurrencyDollar size={22} weight="duotone" color="var(--text-secondary)" />, borderColor: 'var(--border-strong)', label: 'Pay App' },
   'insurance':  { icon: <ShieldCheck size={22} weight="duotone" color={RED} />, borderColor: RED, label: 'Insurance' },
   'rfi':        { icon: <ClipboardText size={22} weight="duotone" color={ORANGE} />, borderColor: ORANGE, label: 'RFI' },
   'compliance': { icon: <CheckCircle size={22} weight="duotone" color="var(--text-secondary)" />, borderColor: BLUE, label: 'Compliance' },
@@ -213,7 +214,7 @@ function BidScoreModal({ onClose }: { onClose: () => void }) {
                   <input
                     value={form[field]} onChange={f(field)} placeholder={placeholder} required
                     style={{ width: '100%', background: DARK, border: `1px solid ${BORDER}`, borderRadius: 7, padding: '9px 12px', color: TEXT, fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
-                    onFocus={e => (e.target.style.borderColor = GOLD)}
+                    onFocus={e => (e.target.style.borderColor = 'var(--link)')}
                     onBlur={e => (e.target.style.borderColor = BORDER)}
                   />
                 </div>
@@ -696,7 +697,7 @@ export default function DashboardPage() {
               {!projectsLoading && !projectsError && projects.slice(0, 3).map(proj => (
                 <Link key={proj.id} href={`/app/projects/${proj.id}`} style={{ display: 'block', textDecoration: 'none', marginBottom: 10 }}>
                   <div className="lift" style={{ padding: '14px 16px', background: RAISED_ALT, borderRadius: 10, border: `1px solid ${BORDER_SUBTLE}`, cursor: 'pointer', boxShadow: 'var(--shadow-sm)' }}
-                    onMouseEnter={e => (e.currentTarget.style.borderColor = 'color-mix(in srgb, var(--brand-primary) 50%, transparent)')}
+                    onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--border-strong)')}
                     onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER_SUBTLE)}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -828,7 +829,7 @@ export default function DashboardPage() {
             <>
               <StatCard
                 icon={<Buildings size={19} weight="duotone" color="var(--text-secondary)" />}
-                label="Active Projects" value={String(activeProjects)} accent={GOLD}
+                label="Active Projects" value={String(activeProjects)}
                 sub={activeProjects === 1 ? '1 in progress' : `${activeProjects} in progress`}
                 href="/app/projects" delay={0.02}
               />
@@ -897,7 +898,7 @@ export default function DashboardPage() {
                         labelStyle={{ color: 'var(--text-primary)', fontWeight: 700 }}
                         formatter={((v: number) => [`$${v.toLocaleString()}`, 'Budget']) as React.ComponentProps<typeof Tooltip>['formatter']}
                       />
-                      <Bar dataKey="budget" fill={GOLD_HEX} radius={[4, 4, 0, 0]} maxBarSize={48} />
+                      <Bar dataKey="budget" fill={CHART.gold} radius={[4, 4, 0, 0]} maxBarSize={48} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -917,7 +918,7 @@ export default function DashboardPage() {
                       <Pie
                         data={[
                           { name: 'Active', value: stats?.activeProjects ?? 0, fill: 'var(--warning)' },
-                          { name: 'Open Bids', value: stats?.openBids ?? 0, fill: 'var(--brand-primary)' },
+                          { name: 'Open Bids', value: stats?.openBids ?? 0, fill: 'var(--info)' },
                           /* Withheld, not zero — see hasPayApps. The donut's own
                              `.filter(value > 0)` would have hidden it anyway; the
                              legend below would not, so both read the same flag. */

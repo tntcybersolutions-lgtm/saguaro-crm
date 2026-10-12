@@ -19,10 +19,12 @@ import React from 'react';
 
 // ─── Color tokens (resolve through globals.css :root, with safe fallbacks) ──
 export const CHART = {
-  gold: 'var(--brand-primary)',
-  goldStrong: 'var(--brand-primary-strong)',
-  blue: '#FBBF24',
-  blueStrong: '#FBBF24',
+  // The accent names are kept for the prop API; yellow is for actions, never
+  // data (DESIGN_SYSTEM.md §1), so the primary series is sky and the second violet.
+  gold: '#38BDF8',
+  goldStrong: '#7DD3FC',
+  blue: '#A78BFA',
+  blueStrong: '#C4B5FD',
   green: 'var(--success, #4ADE80)',
   red: 'var(--danger, #F87171)',
   textPrimary: 'var(--text-primary, #FFFFFF)',
@@ -51,17 +53,16 @@ export function accentColors(accent: ChartAccent): AccentPair {
 }
 
 /** Categorical palette for ratio breakdowns (stage mix, project type, …).
- *  Ordered gold → blue → green → violet → cyan → orange → pink → slate, so a
- *  money chart leads with the brand hue and never collides series on hue. */
+ *  Eight distinct hues, never the action yellow, so series never collide. */
 export const CATEGORICAL: readonly string[] = [
-  'var(--brand-primary)',
-  '#FBBF24',
-  '#4ADE80',
-  '#FBBF24',
-  '#FBBF24',
-  '#FBBF24',
-  '#FBBF24',
-  '#64748B',
+  '#38BDF8', // sky
+  '#4ADE80', // green
+  '#A78BFA', // violet
+  '#F472B6', // pink
+  '#2DD4BF', // teal
+  '#FB923C', // orange
+  '#FBBF24', // amber
+  '#64748B', // slate
 ];
 
 // ─── Card chrome (byte-matched to premium.tsx StatCard / SectionCard) ─────────
