@@ -127,7 +127,11 @@ try {
         check(`${key} ${w}: gutter ${g}px both sides`, near(L.gutter?.[0], g, 1) && near(L.gutter?.[1], g, 1), JSON.stringify(L.gutter));
         if (L.title) check(`${key} ${w}: title on the left edge`, near(L.title.left, g), JSON.stringify(L.title));
         if (L.card) check(`${key} ${w}: first card/list on the left edge`, near(L.card.left, g), JSON.stringify(L.card));
-        if (L.card && !['home', 'job'].includes(key)) check(`${key} ${w}: first card/list reaches the right edge`, near(L.card.right, g), JSON.stringify(L.card));
+        // Settings is a form page: its field column is a deliberate 760px
+        // (--form-max) against the left edge, so it is checked for that, not
+        // for reaching the right edge (DESIGN_SYSTEM.md §2a).
+        if (L.card && key === 'settings' && w === '1440') check(`${key} ${w}: field column 760px on the left edge (intentional form width)`, near(L.card.left, g) && L.card.width <= 762, JSON.stringify(L.card));
+        else if (L.card && !['home', 'job'].includes(key)) check(`${key} ${w}: first card/list reaches the right edge`, near(L.card.right, g), JSON.stringify(L.card));
         if (L.action && w === '1440') check(`${key} ${w}: header action on the right edge`, near(L.action.right, g), JSON.stringify(L.action));
       }
       console.log(`${key} ${w}`, JSON.stringify({ title: t.title?.color, section: t.section?.color, card: t.cardBorder, tile: t.tile?.color, acc: t.acc, side: t.sideScroll }));
@@ -163,8 +167,8 @@ try {
   await open(gc, `/app/projects/${projectId}/overview`);
   const toolHues = await gc.evaluate(() => [...new Set([...document.querySelectorAll('.fl-tool .fl-ti')].map((e) => getComputedStyle(e).color))]);
   check('job: tool tiles carry several module hues', toolHues.length >= 3, toolHues.join(' '));
-  const navHues = await gc.evaluate(() => [...new Set([...document.querySelectorAll('.sg-nav-item:not([data-active]) > svg:first-of-type, .sg-nav-item:not([data-active]) svg')].filter((e) => e.getBoundingClientRect().width > 0).map((e) => getComputedStyle(e).color))]);
-  check('sidebar: module icons carry several hues', navHues.length >= 3, navHues.slice(0, 8).join(' '));
+  const navHues = await gc.evaluate(() => [...new Set([...document.querySelectorAll('.sg-nav-item:not([data-active]) svg')].filter((e) => e.getBoundingClientRect().width > 0).map((e) => e.getAttribute('fill')).filter(Boolean))]); // Phosphor draws the hue as the SVG fill attribute, not CSS color
+  check('sidebar: module icons carry several hues (SVG fill)', navHues.length >= 3, navHues.slice(0, 8).join(' '));
 
   // A form: the invoice Edit dialog (opened, then cancelled — nothing saved).
   if (inv) {
