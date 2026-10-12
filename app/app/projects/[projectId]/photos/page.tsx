@@ -163,7 +163,7 @@ const CSS = `
 .phDur { position: absolute; right: 6px; bottom: 6px; padding: 2px 6px; border-radius: 6px; background: rgba(8,9,12,0.8); color: #fff; font-size: 12px; font-weight: 700; }
 .phUploading { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.04); color: var(--text-secondary); font: inherit; font-size: var(--fs-sm); font-weight: 700; cursor: pointer; }
 .phUploading i { display: block; width: 64px; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.1); overflow: hidden; }
-.phUploading i > b { display: block; height: 100%; background: var(--brand-primary); }
+.phUploading i > b { display: block; height: 100%; background: var(--info-fg); }
 .phLinkAlt { align-self: flex-start; background: none; border: none; padding: 6px 0; color: var(--text-tertiary); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; }
 .phLinkAlt:hover { color: var(--text-primary); }
 @media (max-width: 640px) {

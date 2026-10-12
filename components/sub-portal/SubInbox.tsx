@@ -62,7 +62,7 @@ const CSS = `
 .sbx-titem { text-align: left; border: 1px solid var(--border-default); background: var(--bg-surface); border-radius: 12px; padding: 10px 12px; cursor: pointer; color: var(--text-primary); min-height: 64px; display: grid; gap: 2px; }
 .sbx-titem[aria-current="true"] { border-color: var(--brand-primary); }
 .sbx-titem .sbx-snip { font-size: 13px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sbx-dot { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--brand-primary); color: var(--on-brand); font-size: 12px; font-weight: 800; margin-left: 6px; }
+.sbx-dot { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--info-fg); color: var(--on-brand); font-size: 12px; font-weight: 800; margin-left: 6px; }
 .sbx-chat { border: 1px solid var(--border-default); background: var(--bg-surface); border-radius: 14px; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 420px; max-height: 70vh; min-width: 0; }
 .sbx-chat-head { padding: 12px 14px; border-bottom: 1px solid var(--border-default); display: flex; gap: 8px; align-items: center; }
 .sbx-chat-body { overflow-y: auto; padding: 12px 14px; display: grid; gap: 8px; align-content: start; }

@@ -88,27 +88,6 @@ interface Assembly {
   }>;
 }
 
-const disciplineColors: Record<string, string> = {
-  Architectural: '#4a90d9',
-  Structural: 'var(--danger)',
-  Mechanical: 'var(--warning)',
-  Electrical: '#e5c07b',
-  Plumbing: '#56b6c2',
-  Civil: 'var(--success)',
-  Sitework: '#8a9a5b',
-  Demolition: '#b0743c',
-  'Fire Protection': '#d1494e',
-  'Low Voltage / Technology': '#9b7ede',
-  Landscape: '#5faa72',
-  Interiors: '#c678dd',
-  Specialties: '#7f8ea3',
-  General: DIM,
-};
-
-function getDisciplineColor(d: string): string {
-  return disciplineColors[d] || DIM;
-}
-
 function currency(n: number): string {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n || 0);
 }
@@ -598,7 +577,7 @@ function EstimatePage() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: selectedSheet?.id === s.id ? GOLD : TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
-                      <span style={{ fontSize: 12, padding: '1px 6px', borderRadius: 4, background: getDisciplineColor(s.discipline), color: 'var(--text-primary)', fontWeight: 700 }}>{s.discipline}</span>
+                      <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 999, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', color: 'var(--text-secondary)', fontWeight: 700 }}>{s.discipline}</span>
                       {s.sheet_number && <span style={{ fontSize: 12, color: DIM }}>{s.sheet_number}</span>}
                     </div>
                   </div>

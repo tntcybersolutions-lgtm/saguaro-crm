@@ -195,7 +195,7 @@ const CSS = `
 .igBurnDelta[data-ahead="false"] { color: var(--status-overdue); }
 .igBurnTrack { position: relative; height: 12px; }
 .igBurnBg { position: absolute; inset: 0; background: rgba(255,255,255,0.08); border-radius: 6px; overflow: hidden; }
-.igBurnFill { height: 100%; border-radius: 6px; background: var(--brand-primary); }
+.igBurnFill { height: 100%; border-radius: 6px; background: var(--chart-1); }
 .igBurnMark { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--text-primary); opacity: .9; border-radius: 1px; box-shadow: 0 0 6px rgba(255,255,255,.55); }
 .igBurnFoot { display: flex; justify-content: space-between; margin-top: 5px; font-size: var(--fs-xs); color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
 .igRule { font-size: var(--fs-xs); color: var(--text-tertiary); font-weight: 800; margin: 14px 0 4px; padding-top: 12px; border-top: 1px solid var(--border-subtle); }

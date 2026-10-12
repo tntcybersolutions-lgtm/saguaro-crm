@@ -198,7 +198,7 @@ const CSS = `
 .tkRow { display: flex; gap: 8px; }
 .tkRow > .k-btn { flex: 1; justify-content: center; }
 .tkBar { height: 8px; border-radius: 4px; background: rgba(255,255,255,.08); overflow: hidden; }
-.tkBar > div { height: 100%; border-radius: 4px; background: var(--brand-primary); transition: width .3s ease; }
+.tkBar > div { height: 100%; border-radius: 4px; background: var(--chart-1); transition: width .3s ease; }
 .tkScan { position: relative; height: 110px; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border-subtle); background: var(--bg-solid); background-image: linear-gradient(var(--brand-primary-08) 1px, transparent 1px), linear-gradient(90deg, var(--brand-primary-08) 1px, transparent 1px); background-size: 20px 20px; display: grid; place-items: center; color: var(--brand-primary-35); }
 .tkScanline { position: absolute; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--brand-primary), transparent); animation: tkscan 2s ease-in-out infinite; }
 @keyframes tkscan { 0% { top: 0 } 50% { top: calc(100% - 2px) } 100% { top: 0 } }

@@ -149,7 +149,7 @@ const CSS = `
 .bpSteps { display: flex; gap: 6px; margin: -4px 0 16px; }
 .bpStep { flex: 1; text-align: center; font-size: var(--fs-xs); color: var(--text-tertiary); }
 .bpStep i { display: block; height: 3px; border-radius: 2px; background: var(--border-default); margin-bottom: 4px; }
-.bpStep[data-done="true"] i { background: var(--brand-primary); }
+.bpStep[data-done="true"] i { background: var(--success); }
 .bpStep[data-on="true"] { color: var(--brand-primary); font-weight: 700; }
 .bpStack { display: flex; flex-direction: column; gap: 14px; }
 .bpHint { font-size: var(--fs-xs); color: var(--text-tertiary); line-height: 1.45; }

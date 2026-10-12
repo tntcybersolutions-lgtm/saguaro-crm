@@ -205,7 +205,7 @@ const CSS = `
 .rpProgress { padding: 40px 24px; text-align: center; }
 .rpProgress .rpSage { width: 52px; height: 52px; border-radius: 14px; margin: 0 auto 16px; }
 .rpBar { background: rgba(255,255,255,.08); border-radius: 8px; height: 8px; overflow: hidden; max-width: 420px; margin: 0 auto; }
-.rpBar > div { height: 100%; background: var(--brand-primary); border-radius: 8px; transition: width .4s ease; }
+.rpBar > div { height: 100%; background: var(--chart-1); border-radius: 8px; transition: width .4s ease; }
 .rpMeta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 16px; border-bottom: 1px solid var(--border-subtle); font-size: var(--fs-xs); color: var(--text-tertiary); }
 .rpNote { padding: 8px 16px; border-bottom: 1px solid var(--border-subtle); font-size: var(--fs-xs); color: var(--status-under-contract); }
 .rpTotals { display: flex; flex-wrap: wrap; gap: 8px 18px; padding: 12px 16px; border-top: 2px solid var(--brand-primary-35); background: var(--brand-primary-08); font-size: var(--fs-sm); }

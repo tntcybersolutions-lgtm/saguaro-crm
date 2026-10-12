@@ -102,7 +102,7 @@ const CSS = `
 .blPlan { position: relative; display: flex; flex-direction: column; border-radius: 10px; border: 1px solid var(--sg-border); background: none; overflow: hidden; }
 .blPlan[data-popular="true"] { border-color: var(--brand-primary-35); }
 .blPlan[data-current="true"] { border-color: rgba(74,222,128,.5); }
-.blPlanRibbon { text-align: center; padding: 5px 0; font-size: var(--fs-xs); font-weight: 800; background: var(--brand-primary); color: var(--on-brand); }
+.blPlanRibbon { text-align: center; padding: 5px 0; font-size: var(--fs-xs); font-weight: 800; background: var(--info-bg); color: var(--info-fg); border-bottom: 1px solid var(--info-border); }
 .blPlanRibbon[data-current="true"] { background: rgba(74,222,128,.15); color: var(--status-ongoing); border-bottom: 1px solid rgba(74,222,128,.25); }
 .blPlanBody { padding: 16px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
 .blPlanTitle { font-size: var(--fs-md); font-weight: 800; color: var(--text-primary); }

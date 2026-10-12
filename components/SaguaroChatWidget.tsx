@@ -707,7 +707,7 @@ export default function SaguaroChatWidget({
               cursor: isMinimized ? 'pointer' : 'default', flexShrink: 0,
             }}
           >
-            <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--brand-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: '0 2px 12px var(--brand-primary-35)', flexShrink: 0 }}>🌵</div>
+            <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--tile-bg)', border: '1px solid var(--tile-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🌵</div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.2px' }}>
                 Sage
@@ -776,7 +776,7 @@ export default function SaguaroChatWidget({
                   }}>
                     {msg.role === 'user' ? (
                       <>
-                        <div style={{ maxWidth: '80%', background: 'var(--brand-primary)', color: 'var(--on-brand)', fontSize: 14, fontWeight: 500, padding: '10px 16px', borderRadius: '18px 18px 4px 18px', boxShadow: '0 2px 12px var(--brand-primary-18)', lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                        <div style={{ maxWidth: '80%', background: 'var(--action-secondary-bg)', color: 'var(--text-primary)', border: '1px solid var(--action-secondary-border)', fontSize: 14, fontWeight: 500, padding: '10px 16px', borderRadius: '18px 18px 4px 18px', boxShadow: '0 2px 12px var(--brand-primary-18)', lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                           {msg.content}
                         </div>
                         <div style={{ fontSize: 12, color: 'var(--text-tertiary)', paddingRight: 4 }}>
@@ -785,12 +785,12 @@ export default function SaguaroChatWidget({
                       </>
                     ) : (
                       <div style={{ display: 'flex', gap: 10, maxWidth: '88%', alignItems: 'flex-start' }}>
-                        <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--brand-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0, marginTop: 2 }}>🌵</div>
+                        <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--tile-bg)', border: '1px solid var(--tile-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0, marginTop: 2 }}>🌵</div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                           {msg.content === '__TYPING__' ? (
                             <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', padding: '14px 18px', borderRadius: '4px 18px 18px 18px', display: 'flex', gap: 6, alignItems: 'center' }}>
                               {[0, 0.2, 0.4].map((delay, i) => (
-                                <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--brand-primary)', animation: 'dotBlink 1.2s ease-in-out infinite', animationDelay: `${delay}s` }} />
+                                <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--text-tertiary)', animation: 'dotBlink 1.2s ease-in-out infinite', animationDelay: `${delay}s` }} />
                               ))}
                             </div>
                           ) : (

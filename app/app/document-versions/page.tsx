@@ -146,7 +146,7 @@ const CSS = `
 .dvVer { position: relative; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--border-subtle); }
 .dvVer:last-child { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; }
 .dvVer::before { content: ''; position: absolute; left: -20px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--border-default); border: 2px solid var(--bg-solid); }
-.dvVer[data-latest="true"]::before { background: var(--brand-primary); }
+.dvVer[data-latest="true"]::before { background: var(--info-fg); }
 .dvVerHead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .dvVerTitle { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
 .dvVerTitle b { font-family: ui-monospace, monospace; font-size: var(--fs-md); color: var(--text-primary); }

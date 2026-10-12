@@ -920,7 +920,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                   </div>
                 ));
               })()}
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 12px', fontSize: 14, fontWeight: 800, color: 'var(--on-brand)', background: 'var(--brand-primary)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 12px', fontSize: 14, fontWeight: 800, color: 'var(--text-primary)', background: 'var(--bg-surface-2)', borderTop: '1px solid var(--border-default)' }}>
                 <span>Sell Price</span><span style={{ fontVariantNumeric: 'tabular-nums' }}>{usd(r.sellCents)}</span>
               </div>
             </div>
@@ -989,7 +989,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             </button>
             {chainBusy && (
               <div style={{ marginTop: 9 }}>
-                <div style={{ height: 7, borderRadius: 4, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}><div style={{ height: '100%', width: `${chainPct}%`, background: 'var(--brand-primary)', transition: 'width .3s ease' }} /></div>
+                <div style={{ height: 7, borderRadius: 4, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}><div style={{ height: '100%', width: `${chainPct}%`, background: 'var(--chart-1)', transition: 'width .3s ease' }} /></div>
                 {chainMsg && <div style={{ fontSize: 12, color: DIM, marginTop: 5 }}>{chainMsg}</div>}
               </div>
             )}
