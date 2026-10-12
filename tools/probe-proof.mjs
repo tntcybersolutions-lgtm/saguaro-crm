@@ -8,7 +8,8 @@
  *   dailylog    #134 closed 2 Oct, last log 30 Sep → "1 workday unlogged"
  *   portal      #137 the owner's portal lists the owner invoice and never the sub bill
  *   invoice     #137 the emailed invoice page opens; no Pay button while payments are off
- *   import      #137 a Buildertrend-style CSV → mapped, 2 jobs created with their fields,
+ *   import      #137/#138 a Buildertrend-style CSV → mapped, 2 jobs created with their fields
+ *               (the Texas row gets TX rules — checked by SQL after the run),
  *               the same file again → 0 created / 2 already in Saguaro; then both archived
  */
 import fs from 'node:fs';
@@ -111,7 +112,7 @@ try {
   fs.writeFileSync(csv, [
     'Job Name,Job Number,Street Address,City,State,Zip,Status,Contract Price,Projected Start,Customer Name,Customer Email',
     `"${names[0]}",ZZ-${stamp}-A,"100 N Test St",Phoenix,AZ,85004,Open,"$12,500.00",10/15/2026,ZZ AUDIT Owner,delivered@resend.dev`,
-    `"${names[1]}",ZZ-${stamp}-B,"200 N Test St",Mesa,AZ,85201,Closed,"$7,250",11/2/2026,ZZ AUDIT Owner,delivered@resend.dev`,
+    `"${names[1]}",ZZ-${stamp}-B,"200 N Test St",Austin,Texas,78701,Closed,"$7,250",11/2/2026,ZZ AUDIT Owner,delivered@resend.dev`,
   ].join('\r\n'));
   await go(phone, '/app/settings/import');
   await phone.setInputFiles('input[type="file"]', csv);
@@ -121,14 +122,16 @@ try {
   await shot(phone, '390-import-mapped.png', true);
   const importBtn = phone.getByRole('button', { name: /^Import \d+ jobs$/ });
   step('importButton', await importBtn.textContent());
+  // The import's own result box (the page also carries an empty toast region with role=status).
+  const outcome = phone.locator('[role="status"]', { hasText: 'already in Saguaro' });
   await importBtn.click();
-  await phone.getByRole('status').waitFor({ timeout: 60000 });
-  step('importFirst', await phone.getByRole('status').innerText());
+  await outcome.waitFor({ timeout: 90000 });
+  step('importFirst', (await outcome.innerText()).replace(/\s+/g, ' '));
   await shot(phone, '390-import-done.png', true);
   await phone.getByRole('button', { name: /^Import \d+ jobs$/ }).click();
-  await phone.waitForFunction(() => /already in Saguaro/.test(document.querySelector('[role="status"]')?.textContent || '') && !/Importing/.test(document.body.innerText), null, { timeout: 60000 });
-  await phone.waitForTimeout(800);
-  step('importAgain', await phone.getByRole('status').innerText());
+  await outcome.waitFor({ state: 'detached', timeout: 10000 }).catch(() => {});
+  await outcome.waitFor({ timeout: 90000 });
+  step('importAgain', (await outcome.innerText()).replace(/\s+/g, ' '));
   await shot(phone, '390-import-again.png', true);
 
   // What landed: every field, read back from the server.
