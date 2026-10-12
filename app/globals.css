@@ -1164,9 +1164,9 @@ select.k-select { padding-right: 36px; }
 
 /* Detail list (label / value rows) */
 .k-dl { display: flex; flex-direction: column; }
-.k-dl-row { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-3); padding: 8px 0; border-bottom: 1px solid var(--border-subtle); font-size: var(--fs-sm); }
+.k-dl-row { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); min-height: 48px; padding: 8px 0; border-bottom: 1px solid var(--border-subtle); font-size: 14px; }
 .k-dl-row:last-child { border-bottom: none; }
-.k-dl-row dt { color: var(--text-tertiary); white-space: nowrap; }
+.k-dl-row dt { display: inline-flex; align-items: center; gap: 10px; color: var(--text-secondary); white-space: nowrap; }
 .k-dl-row dd { color: var(--text-primary); font-weight: 600; text-align: right; min-width: 0; overflow-wrap: anywhere; }
 
 /* Loading placeholder + toast */

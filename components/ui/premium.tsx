@@ -365,6 +365,7 @@ export function SectionCard({
  * (red for an error); the description finishes it.
  */
 export function PremiumEmpty({
+  icon,
   title,
   description,
   action,
@@ -382,6 +383,11 @@ export function PremiumEmpty({
   const joiner = /[.!?…]$/.test(t) ? ' ' : '. ';
   return (
     <div className="pmEmpty" data-tone={tone === 'error' ? 'error' : undefined} role={tone === 'error' ? 'alert' : undefined} style={compact ? { padding: '8px 0' } : undefined}>
+      {icon && (
+        <span className="k-tile" aria-hidden style={{ width: 36, height: 36, color: tone === 'error' ? 'var(--danger-fg)' : undefined }}>
+          {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<{ size?: number }>, { size: 18 }) : icon}
+        </span>
+      )}
       <p className="pmEmptyLine"><b>{t}</b>{description ? <>{joiner}{description}</> : null}</p>
       {action && <div className="pmEmptyActs">{action}</div>}
     </div>

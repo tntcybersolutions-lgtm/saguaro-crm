@@ -18,7 +18,7 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { CaretRight, DotsThree, MagnifyingGlass, X } from '@phosphor-icons/react';
+import { type Icon as PhosphorIcon, CaretRight, DotsThree, MagnifyingGlass, X, EnvelopeSimple, Phone, User, Buildings, MapPin, CalendarBlank, CurrencyDollar, Flag, Tag, Hash, Note, Info } from '@phosphor-icons/react';
 import { useSortedRows, type SortState, type SortDir } from './premium';
 import { SortBar } from './sort';
 import { STATUS_COLORS, type StatusKind } from '@/lib/status-colors';
@@ -636,13 +636,42 @@ export function DataTable<T>({
 // ─── DetailList ──────────────────────────────────────────────────────────────
 
 /** Label / value rows for a record's details panel. Empty values show "—". */
+/* A detail row's icon, chosen from its label so every DetailList in the app gets
+   the concept's icon-led rows without each caller listing icons. */
+const DETAIL_ICONS: [RegExp, PhosphorIcon][] = [
+  [/e-?mail/i, EnvelopeSimple], [/phone|mobile|cell/i, Phone], [/contact|person|owner|assignee|assigned|by$|manager|inspector|foreman|super/i, User],
+  [/company|vendor|sub(contractor)?\b|customer|client|gc\b/i, Buildings], [/address|location|site|city/i, MapPin],
+  [/date|due|created|updated|submitted|received|sent|issued|approved|expires?|period|week|day/i, CalendarBlank],
+  [/amount|value|total|cost|price|budget|paid|billed|retainage|contract|\$/i, CurrencyDollar],
+  [/status|stage|phase|result|priority/i, Flag], [/source|channel|type|trade|category|discipline/i, Tag],
+  [/number|#|no\.|ref|code|id\b/i, Hash], [/note|description|scope|reason|summary|comment/i, Note],
+];
+function detailIcon(label: string) {
+  const hit = DETAIL_ICONS.find(([re]) => re.test(label));
+  const Ic = hit ? hit[1] : Info;
+  return <Ic size={15} />;
+}
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_RE = /^\+?[\d\s().-]{7,}$/;
+/** A plain string that is an email or phone number becomes a blue link. */
+function detailValue(v: React.ReactNode): React.ReactNode {
+  if (v == null || v === '') return '—';
+  if (typeof v === 'string') {
+    const t = v.trim();
+    if (EMAIL_RE.test(t)) return <a className="k-link" href={`mailto:${t}`}>{t}</a>;
+    if (PHONE_RE.test(t) && t.replace(/\D/g, '').length >= 7) return <a className="k-link" href={`tel:${t.replace(/[^\d+]/g, '')}`}>{t}</a>;
+  }
+  return v;
+}
+
+/** Label / value facts, as concept rows: an icon tile, the label, the value. */
 export function DetailList({ items }: { items: [string, React.ReactNode][] }) {
   return (
     <dl className="k-dl">
       {items.map(([k, v]) => (
         <div key={k} className="k-dl-row">
-          <dt>{k}</dt>
-          <dd>{v == null || v === '' ? '—' : v}</dd>
+          <dt><IconTile size={30}>{detailIcon(k)}</IconTile><span>{k}</span></dt>
+          <dd>{detailValue(v)}</dd>
         </div>
       ))}
     </dl>
@@ -653,10 +682,11 @@ export function DetailList({ items }: { items: [string, React.ReactNode][] }) {
 
 /** Nothing here yet — flat (2026-10-10): one plain line and one action. The
  *  title leads the line, the text finishes it; `icon` is accepted and not drawn. */
-export function EmptyState({ title, text, action }: { icon?: React.ReactNode; title: string; text?: React.ReactNode; action?: React.ReactNode }) {
+export function EmptyState({ icon, title, text, action }: { icon?: React.ReactNode; title: string; text?: React.ReactNode; action?: React.ReactNode }) {
   const t = title.trim();
   return (
     <div className="k-empty">
+      {icon && <IconTile size={36}>{icon}</IconTile>}
       <p className="k-empty-line">
         <span className="k-empty-title">{t}</span>
         {text ? <>{/[.!?…]$/.test(t) ? ' ' : '. '}<span className="k-empty-text">{text}</span></> : null}
