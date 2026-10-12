@@ -113,12 +113,20 @@ const measure = (page, phone) => page.evaluate((phone) => {
 }, phone);
 
 const desktop = await pw.chromium.launch();
-const phoneBrowser = await pw.webkit.launch();
+let phoneBrowser = await pw.webkit.launch();
+async function freshPhone() {
+  try { await phoneBrowser.close(); } catch { /* already gone */ }
+  phoneBrowser = await pw.webkit.launch();
+  const ctx = await phoneBrowser.newContext({ ...pw.devices['iPhone 15'], deviceScaleFactor: 1, colorScheme: 'dark' });
+  const p = await ctx.newPage();
+  if (GROUP !== 'public') await login(p);
+  return p;
+}
 try {
   const desk = await desktop.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, colorScheme: 'dark' });
   const phoneCtx = await phoneBrowser.newContext({ ...pw.devices['iPhone 15'], deviceScaleFactor: 1, colorScheme: 'dark' });
   const gc = await desk.newPage();
-  const ph = await phoneCtx.newPage();
+  let ph = await phoneCtx.newPage();
   if (GROUP !== 'public') { await login(gc); await login(ph); }
 
   // Ids for dynamic segments.
@@ -133,6 +141,10 @@ try {
          need('[dailyLogId]', '/app/daily-logs', '/app/daily-logs/'), need('[scheduleId]', '/app/schedule', '/app/schedule/')]
       : [need('[bidPackageId]', `${P}/bid-packages`, `${P}/bid-packages/`), need('[payAppId]', `${P}/pay-apps`, `${P}/pay-apps/`)];
     for (const f of plan) await f();
+    if (GROUP === 'project' && !ids['[bidPackageId]'] && ROUTES.some((r) => r.includes('[bidPackageId]'))) {
+      const bp = (await (await gc.request.get(`${SITE}/api/bid-packages/list?projectId=${ids.projectId}`)).json().catch(() => ({}))).bidPackages || [];
+      ids['[bidPackageId]'] = bp[0]?.id || null;
+    }
     if (ROUTES.some((r) => r.includes('[clientToken]'))) {
       const pr = await gc.request.post(`${SITE}/api/portal/client/create`, { data: { projectId: ids.projectId, clientName: 'ZZ AUDIT Client', clientEmail: 'delivered@resend.dev' } });
       ids['[clientToken]'] = (await pr.json().catch(() => ({}))).session?.token || null;
@@ -147,7 +159,9 @@ try {
     for (const [k, v] of Object.entries(ids)) if (k.startsWith('[')) url = url.replace(k, v);
     const name = route.replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_|_$/g, '') || 'root';
     result.screens[route] = {};
-    for (const [w, page] of [['390', ph], ['1440', gc]]) {
+    for (const w of ['390', '1440']) {
+      for (let attempt = 0; attempt < 2; attempt++) {
+      const page = w === '390' ? ph : gc;
       try {
         await open(page, url);
         result.screens[route][w] = await measure(page, w === '390');
@@ -156,8 +170,13 @@ try {
           path: path.join(OUT, 'shots', `${name}-${w}.jpg`), type: 'jpeg', quality: 55,
           ...(w === '390' ? { fullPage: true, clip: { x: 0, y: 0, width: 390, height: Math.min(H, 2532) } } : {}),
         }).catch(() => {});
+        break;
       } catch (e) {
-        result.screens[route][w] = { error: String(e.message || e).split('\n')[0].slice(0, 120) };
+        const msg = String(e.message || e).split('\n')[0].slice(0, 120);
+        result.screens[route][w] = { error: msg };
+        if (w === '390' && attempt === 0 && /closed|crash|Target/i.test(msg)) { ph = await freshPhone(); continue; }
+        break;
+      }
       }
     }
     console.log(route, JSON.stringify(Object.fromEntries(Object.entries(result.screens[route]).map(([w, m]) => [w, m.error || `${m.title}|y${m.yText}/${m.yBorder}/${m.yFill} s${m.small} c${m.lowC} cut${m.cut} p${m.pills} b${m.boxes}/${m.nest} t${m.targets}${m.err?.length ? ' ERR' : ''}`]))));
