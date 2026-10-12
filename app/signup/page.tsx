@@ -29,7 +29,7 @@ const CSS = `
 .suRight { padding: 48px 0 40px; }
 .suTrial { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 24px; }
 .suH1 { font-size: clamp(26px, 3.4vw, 36px); font-weight: 800; color: var(--text-primary); line-height: 1.15; margin: 0 0 12px; letter-spacing: -0.02em; }
-.suH1 b { color: var(--brand-primary); }
+.suH1 b { color: var(--text-primary); }
 .suLead { font-size: var(--fs-md); color: var(--text-secondary); line-height: 1.7; margin: 0 0 32px; }
 .suLead b { color: var(--text-primary); }
 .suSteps { display: flex; flex-direction: column; gap: 20px; margin-bottom: 32px; }
@@ -53,7 +53,7 @@ const CSS = `
 .suSubmit { width: 100%; justify-content: center; min-height: 46px; margin-top: 6px; }
 .suNext { margin-top: 18px; }
 .suFoot { margin-top: 16px; text-align: center; font-size: var(--fs-sm); color: var(--text-tertiary); }
-.suFoot a { color: var(--brand-primary); text-decoration: none; font-weight: 600; }
+.suFoot a { color: var(--link); text-decoration: none; font-weight: 600; }
 .suLegal { margin-top: 8px; text-align: center; font-size: var(--fs-xs); color: var(--text-tertiary); }
 .suLegal a { color: var(--text-tertiary); text-decoration: underline; text-underline-offset: 3px; }
 .suDone { min-height: 100vh; background: var(--bg-base); display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
@@ -65,8 +65,8 @@ const CSS = `
 .suDoneList { text-align: left; margin-bottom: 20px; }
 .suDoneList div { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: var(--fs-sm); color: var(--text-secondary); }
 .suDoneList svg { color: var(--status-ongoing); flex-shrink: 0; }
-.suLink { all: unset; color: var(--brand-primary); cursor: pointer; font-weight: 600; }
-.suLink:focus-visible { outline: 2px solid var(--brand-primary); }
+.suLink { all: unset; color: var(--link); cursor: pointer; font-weight: 600; }
+.suLink:focus-visible { outline: 2px solid var(--link); }
 .suPage select.k-select optgroup { color: var(--text-tertiary); }
 @media (max-width: 760px) { .suGrid { grid-template-columns: 1fr; gap: 32px; } .suLeft { position: static; padding-bottom: 0; } .suRight { padding-top: 0; } }
 @media (max-width: 640px) { .suPage .k-btn, .suPage .k-input, .suPage select.k-select { min-height: 44px; } }

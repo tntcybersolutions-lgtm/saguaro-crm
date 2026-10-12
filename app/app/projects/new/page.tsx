@@ -5,7 +5,7 @@ import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
 import { PHASE_CHOICES, type ProjectPhase } from '@/lib/project-phase';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import SaguaroDatePicker from '../../../../components/SaguaroDatePicker';
-import { PremiumSurface, ModuleHero, SectionCard, StatStrip, FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, SectionCard, StatStrip, FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle, railStyle } from '@/components/ui/premium';
 import { PROJECT_TEMPLATES, templateByKey } from '@/lib/project-templates';
 import SetupStepper from '@/components/projects/SetupStepper';
 import ProjectPreview from '@/components/projects/ProjectPreview';
@@ -448,7 +448,7 @@ export default function NewProjectPage() {
       </div>
 
       <form onSubmit={create}>
-        <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) 340px',gap:16,alignItems:'start'}}>
+        <div className="pmSplit" style={railStyle(340, { gap:16,alignItems:'start' })}>
           {/* Form columns */}
           <div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>

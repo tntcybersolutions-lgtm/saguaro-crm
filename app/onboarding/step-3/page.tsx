@@ -14,8 +14,8 @@ const STEPS = [
 
 const inputStyle: React.CSSProperties = {
   width:'100%',padding:'11px 14px',background:'rgba(0,0,0,.04)',
-  border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:14,
-  outline:'none',boxSizing:'border-box',
+  border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:16,
+  minHeight:44,outline:'none',boxSizing:'border-box',
 };
 
 const labelStyle: React.CSSProperties = {
@@ -88,7 +88,7 @@ export default function OnboardingStep3() {
                   width:36,height:36,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',
                   fontSize:14,fontWeight:800,
                   background: s.done ? GREEN : s.active ? GOLD : 'rgba(0,0,0,.06)',
-                  color: (s.done||s.active) ? '#101722' : DIM,
+                  color: (s.done||s.active) ? 'var(--on-brand)' : DIM,
                   border:`2px solid ${s.done ? GREEN : s.active ? GOLD : BORDER}`,
                 }}>
                   {s.done ? <Check size={16} weight="bold" /> : s.num}
@@ -144,14 +144,14 @@ export default function OnboardingStep3() {
             <button
               onClick={handleCreate}
               disabled={loading}
-              style={{marginTop:8,padding:'14px 0',background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,border:'none',borderRadius:10,color:'#101722',fontSize:15,fontWeight:800,cursor:loading?'wait':'pointer',opacity:loading?.7:1}}
+              style={{marginTop:8,padding:'14px 0',background:GOLD,border:'none',borderRadius:10,color:'var(--on-brand)',fontSize:15,fontWeight:800,cursor:loading?'wait':'pointer',opacity:loading?.7:1}}
             >
               {loading?'Creating Project…':'Add Project and Invite Team →'}
             </button>
 
             <a
               href="/app"
-              style={{display:'block',textAlign:'center',padding:'12px 0',background:'transparent',border:`1px solid ${BORDER}`,borderRadius:10,color:DIM,fontSize:14,fontWeight:600,textDecoration:'none'}}
+              style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:44,boxSizing:'border-box',textAlign:'center',padding:'12px 0',background:'transparent',border:`1px solid ${BORDER}`,borderRadius:10,color:DIM,fontSize:14,fontWeight:600,textDecoration:'none'}}
             >
               Skip for now — go to dashboard
             </a>

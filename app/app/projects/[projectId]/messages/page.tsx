@@ -223,7 +223,7 @@ export default function MessagesPage() {
                     { label: 'Schedule Check', text: 'Schedule check: are we still tracking to this week\'s milestones? Flag any slips here so we can resequence early.' },
                     { label: 'Safety Reminder', text: 'Reminder: report near misses the same day and log toolbox talks under Safety — the log only works if we feed it.' },
                   ].map(p => (
-                    <button key={p.label} onClick={() => setText(p.text)} className="pmBtn" style={{ minHeight: 40, padding: '8px 14px', borderRadius: 10, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{p.label}</button>
+                    <button key={p.label} onClick={() => setText(p.text)} className="pmBtn" style={{ minHeight: 44, padding: '10px 14px', borderRadius: 10, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{p.label}</button>
                   ))}
                 </div>
               }

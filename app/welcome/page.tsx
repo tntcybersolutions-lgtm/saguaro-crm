@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { Globe, Ruler, DeviceMobile, UsersThree, Laptop, AndroidLogo, DeviceTablet } from '@phosphor-icons/react';
 import type { Icon } from '@phosphor-icons/react';
 
-const GOLD  = 'var(--brand-primary)';
 const DARK  = 'var(--bg-base)';
 const HAIR  = 'rgba(255,255,255,0.08)';
 const DIM   = 'var(--text-secondary)';
@@ -23,9 +22,6 @@ export default function WelcomePage() {
 
   return (
     <div style={{ minHeight: '100vh', background: DARK, color: TEXT, fontFamily: "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif", padding: '56px 24px' }}>
-
-      {/* Top accent bar */}
-      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 2, background: GOLD }} />
 
       <div style={{ maxWidth: 760, margin: '0 auto' }}>
 
@@ -48,16 +44,16 @@ export default function WelcomePage() {
           <div style={{ fontSize: 12, fontWeight: 600, color: DIM, marginBottom: 12 }}>How to Access Your Software</div>
           <div style={{ fontSize: 16, fontWeight: 600, color: TEXT, marginBottom: 8 }}>
             Open any browser and go to{' '}
-            <Link href="/app" style={{ color: GOLD, textDecoration: 'none', borderBottom: '1px solid color-mix(in srgb, var(--brand-primary) 40%, transparent)' }}>saguarocontrol.net/app</Link>
+            <Link href="/app" style={{ color: 'var(--link)', textDecoration: 'none', borderBottom: '1px solid color-mix(in srgb, var(--link) 40%, transparent)' }}>saguarocontrol.net/app</Link>
           </div>
           <p style={{ fontSize: 14, color: DIM, margin: '0 0 20px', lineHeight: 1.65 }}>
             Saguaro is a <strong style={{ color: TEXT }}>web-based platform</strong> — there is nothing to download or install on your computer. Just bookmark this address and log in from any device, any time.
           </p>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <Link href="/app" className="btn-gold" style={{ padding: '10px 22px', fontSize: 14, textDecoration: 'none' }}>
+            <Link href="/app" className="btn-gold" style={{ padding: '10px 22px', minHeight: 44, fontSize: 14, textDecoration: 'none' }}>
               Go to My Dashboard →
             </Link>
-            <Link href="/get-the-app" style={{ padding: '10px 20px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 8, color: DIM, fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
+            <Link href="/get-the-app" style={{ display: 'inline-flex', alignItems: 'center', padding: '10px 20px', minHeight: 44, boxSizing: 'border-box', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 8, color: DIM, fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
               Install on Phone
             </Link>
           </div>
@@ -107,15 +103,17 @@ export default function WelcomePage() {
             ] as { step: string; icon: Icon; title: string; desc: string; href: string; cta: string; primary: boolean }[]).map((item, i) => (
               <div key={i} style={{ position: 'relative' }}>
                 <div style={{ fontSize: 12, fontWeight: 600, color: MUTED, marginBottom: 10 }}>Step {item.step}</div>
-                <div style={{ marginBottom: 12 }}><item.icon size={22} weight="duotone" color={GOLD} /></div>
+                <div style={{ marginBottom: 12 }}><item.icon size={22} weight="duotone" color={DIM} /></div>
                 <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, marginBottom: 6 }}>{item.title}</div>
                 <div style={{ fontSize: 13, color: DIM, lineHeight: 1.6, marginBottom: 16 }}>{item.desc}</div>
                 {item.primary ? (
-                  <a href={item.href} style={{ display: 'inline-block', padding: '10px 20px', background: GOLD, borderRadius: 8, color: '#101722', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>
+                  /* The page's one yellow action is "Go to My Dashboard" above; this
+                     repeat of it is the slate secondary button. */
+                  <a href={item.href} style={{ display: 'inline-flex', alignItems: 'center', minHeight: 44, boxSizing: 'border-box', padding: '10px 20px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 8, color: 'var(--text-primary)', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>
                     {item.cta}
                   </a>
                 ) : (
-                  <a href={item.href} style={{ display: 'inline-block', color: GOLD, fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>
+                  <a href={item.href} style={{ display: 'inline-block', color: 'var(--link)', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>
                     {item.cta}
                   </a>
                 )}
@@ -135,7 +133,7 @@ export default function WelcomePage() {
               { icon: DeviceTablet, device: 'Tablet', how: 'Any browser → works full screen' },
             ] as { icon: Icon; device: string; how: string }[]).map((d, i) => (
               <div key={i}>
-                <div style={{ marginBottom: 8 }}><d.icon size={20} weight="duotone" color={GOLD} /></div>
+                <div style={{ marginBottom: 8 }}><d.icon size={20} weight="duotone" color={DIM} /></div>
                 <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, marginBottom: 4 }}>{d.device}</div>
                 <div style={{ fontSize: 12, color: DIM, lineHeight: 1.5 }}>{d.how}</div>
               </div>
@@ -159,7 +157,7 @@ export default function WelcomePage() {
         {/* Support */}
         <p style={{ fontSize: 13, color: DIM, textAlign: 'center' }}>
           Questions? Email us at{' '}
-          <a href="mailto:support@saguarocontrol.net" style={{ color: GOLD, textDecoration: 'none' }}>support@saguarocontrol.net</a>
+          <a href="mailto:support@saguarocontrol.net" style={{ color: 'var(--link)', textDecoration: 'none' }}>support@saguarocontrol.net</a>
           {' '}— we respond within 48 hours.
         </p>
 

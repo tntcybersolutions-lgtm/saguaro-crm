@@ -14,9 +14,9 @@ const CSS = `
 .lgBrand { text-decoration: none; display: inline-flex; align-items: center; gap: 10px; }
 .lgBrand img { height: 36px; width: auto; object-fit: contain; border-radius: 4px; }
 .lgBrandName { font-weight: 900; font-size: 15px; letter-spacing: -0.01em; color: var(--brand-primary); line-height: 1.15; }
-.lgBrandSub { font-size: 10px; color: var(--text-tertiary); letter-spacing: .5px; font-weight: 600; }
+.lgBrandSub { font-size: 12px; color: var(--text-tertiary); letter-spacing: .5px; font-weight: 600; }
 .lgNavLink { font-size: var(--fs-sm); color: var(--text-tertiary); text-decoration: none; font-weight: 600; }
-.lgNavLink b { color: var(--brand-primary); }
+.lgNavLink b { color: var(--link); }
 .lgMain { flex: 1; display: flex; align-items: center; justify-content: center; padding: 32px 16px; }
 .lgWrap { width: 100%; max-width: 420px; }
 .lgHead { text-align: center; margin-bottom: 24px; }
@@ -32,12 +32,12 @@ const CSS = `
 .lgPwdWrap .k-input { padding-right: 44px; }
 .lgPwdToggle { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); }
 .lgLabelRow { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-.lgLabelRow a { font-size: var(--fs-xs); color: var(--brand-primary); text-decoration: none; font-weight: 600; }
+.lgLabelRow a { font-size: var(--fs-xs); color: var(--link); text-decoration: none; font-weight: 600; }
 .lgRemember { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; font-size: var(--fs-sm); color: var(--text-secondary); min-height: 32px; }
 .lgRemember input { width: 16px; height: 16px; accent-color: var(--brand-primary); cursor: pointer; }
 .lgFoot { margin-top: 14px; text-align: center; font-size: var(--fs-sm); color: var(--text-tertiary); }
-.lgFoot a { color: var(--brand-primary); text-decoration: none; font-weight: 700; }
-.lgTrust { margin-top: 20px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; font-size: 10px; color: var(--text-tertiary); font-weight: 600; }
+.lgFoot a { color: var(--link); text-decoration: none; font-weight: 700; }
+.lgTrust { margin-top: 20px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; font-size: 12px; color: var(--text-tertiary); font-weight: 600; }
 .lgTrust span { display: inline-flex; align-items: center; gap: 4px; }
 .lgSubmit { width: 100%; justify-content: center; min-height: 44px; }
 @media (max-width: 640px) { .lgPage .k-btn, .lgPage .k-input { min-height: 44px; } }
@@ -208,7 +208,7 @@ export default function LoginPage(){
           {/* Trust badges */}
           <div className="lgTrust">
             {['256-Bit SSL','Encrypted at Rest','99.9% Uptime'].map(badge => (
-              <span key={badge}><Lock size={10} weight="fill" />{badge}</span>
+              <span key={badge}><Lock size={12} weight="fill" />{badge}</span>
             ))}
           </div>
         </div>

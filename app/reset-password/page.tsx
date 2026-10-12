@@ -31,7 +31,7 @@ export default function ResetPasswordPage(){
     setLoading(false);
   }
 
-  const inputStyle = {width:'100%',padding:'11px 14px',background:'#1c1c1e',border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:14,outline:'none',boxSizing:'border-box' as const};
+  const inputStyle = {width:'100%',padding:'11px 14px',background:'#1c1c1e',border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:16,outline:'none',boxSizing:'border-box' as const};
 
   return (
     <div style={{minHeight:'100vh',background:DARK,display:'flex',flexDirection:'column'}}>
@@ -66,7 +66,7 @@ export default function ResetPasswordPage(){
                     <label style={{display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:6}}>Confirm Password</label>
                     <input type="password" placeholder="Repeat password" value={confirm} onChange={e=>setConfirm(e.target.value)} required autoComplete="new-password" style={inputStyle}/>
                   </div>
-                  <button type="submit" disabled={loading} style={{padding:'13px',background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,border:'none',borderRadius:9,color:'#101722',fontSize:15,fontWeight:800,cursor:loading?'not-allowed':'pointer'}}>
+                  <button type="submit" disabled={loading} style={{padding:'13px',background:GOLD,border:'none',borderRadius:9,color:'var(--on-brand)',fontSize:15,fontWeight:800,cursor:loading?'not-allowed':'pointer'}}>
                     {loading?'Updating…':'Update Password →'}
                   </button>
                 </form>

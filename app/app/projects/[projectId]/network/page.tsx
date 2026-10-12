@@ -5,7 +5,7 @@ import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Globe, ArrowsLeftRight, Shield, WifiHigh, Printer, VideoCamera, HardDrives, Laptop, Phone, Plug, CellSignalFull, BatteryFull, Package, Robot, Devices, Shuffle, Gear, ChartBar, Plus, CheckCircle, Warning, Circle, WarningCircle, Info, Lightning, SquaresFour } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, IconChip, StatStrip, FlowSteps, InsightRow, goldButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, IconChip, StatStrip, FlowSteps, InsightRow, goldButtonStyle, railStyle } from '@/components/ui/premium';
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 
 const GOLD = 'var(--brand-primary)';
@@ -195,7 +195,7 @@ export default function NetworkDashboard() {
             ]} />
           </div>
         )}
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 360px', gap: 22, alignItems: 'start', maxWidth: 2200 }}>
+        <div className="pmSplit" style={railStyle(360, { gap: 22, alignItems: 'start', maxWidth: 2200 })}>
           <SectionCard
             icon={<Globe size={18} weight="duotone" color="var(--text-secondary)" />}
             title="Set Up Network Module"
@@ -300,7 +300,7 @@ export default function NetworkDashboard() {
       </div>
 
       {/* Quick Actions + modules, with a live readiness rail */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 340px', gap: 22, alignItems: 'start', marginBottom: 24 }}>
+      <div className="pmSplit" style={railStyle(340, { gap: 22, alignItems: 'start', marginBottom: 24 })}>
       <div style={{ minWidth: 0 }}>
       {/* Quick Actions */}
       <SectionCard

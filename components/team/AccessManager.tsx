@@ -17,7 +17,7 @@ const DIM = 'var(--text-secondary)';
 const GREEN = '#4ADE80';
 const RED = '#F87171';
 const AMBER = 'var(--warning)';
-const BLUE = 'var(--brand-primary)';
+const BLUE = 'var(--info)';
 const ROLE_HEX = 'var(--warning)'; // stored role color value (sent to the API) — must stay hex
 const PURPLE = '#FBBF24';
 
@@ -150,6 +150,11 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const btn = (bg: string, color = TEXT): React.CSSProperties => ({
   background: bg, color, border: 'none', borderRadius: 6, padding: '8px 18px',
   cursor: 'pointer', fontWeight: 600, fontSize: 13, transition: 'opacity .15s',
+});
+/* The slate secondary button — every action that is not the screen's one
+   yellow primary (row actions, the second header action, modal extras). */
+const secBtn = (): React.CSSProperties => ({
+  ...btn('var(--bg-surface-2)', TEXT), border: '1px solid var(--border-default)',
 });
 const inputStyle = (): React.CSSProperties => ({
   background: BG, color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 6,
@@ -321,7 +326,7 @@ const AM_CSS = `@media (max-width: 767px) {
 function Spinner() {
   return (
     <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
-      <div style={{ width: 36, height: 36, border: `3px solid ${BORDER}`, borderTopColor: GOLD,
+      <div style={{ width: 36, height: 36, border: `3px solid ${BORDER}`, borderTopColor: 'var(--text-secondary)',
         borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
@@ -950,7 +955,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
             Manage access levels across {CATEGORIES.length} categories — {roles.length} roles configured
           </p>
         </div>
-        <button onClick={openCreateRole} style={{ ...btn(GOLD, 'var(--on-brand)'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)' }}>+ New Role</button>
+        <button onClick={openCreateRole} style={btn(GOLD, 'var(--on-brand)')}>+ New Role</button>
       </div>
 
       {/* tab bar */}
@@ -975,8 +980,8 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
               {teamRows.length} {teamRows.length === 1 ? 'person' : 'people'} · {teamRows.filter(r => r.status === 'active').length} sign-ins · {teamRows.filter(r => r.status === 'invited').length} invited · {teamRows.filter(r => r.status === 'contact').length} project contacts
             </span>
             <div style={{ flex: 1 }} />
-            <button type="button" className="amTap" onClick={() => setShowInvite(true)} style={{ ...btn('transparent', GOLD), background: 'linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))', border: `1px solid ${BORDER}` }}>+ Invite User</button>
-            <button type="button" className="amTap" onClick={() => { setAssignUserId(''); setAssignRoleId(''); setAssignProjectId(''); setShowAssign(true); }} style={{ ...btn(GOLD, 'var(--on-brand)'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)' }}>+ Assign Role</button>
+            <button type="button" className="amTap" onClick={() => setShowInvite(true)} style={secBtn()}>+ Invite User</button>
+            <button type="button" className="amTap" onClick={() => { setAssignUserId(''); setAssignRoleId(''); setAssignProjectId(''); setShowAssign(true); }} style={secBtn()}>+ Assign Role</button>
           </div>
 
           <div style={{ ...card(), overflowX: 'auto' }}>
@@ -1019,9 +1024,9 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                       {/* Base role */}
                       <td data-label="Base Role" style={{ padding: '10px 12px' }}>
                         <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontSize: 12, fontWeight: 700,
-                          color: isBypass ? 'var(--on-brand)' : DIM,
-                          background: isBypass ? `linear-gradient(135deg, ${GOLD}, var(--brand-primary-strong))` : 'rgba(255,255,255,0.05)',
-                          border: isBypass ? 'none' : `1px solid ${BORDER}`,
+                          color: isBypass ? TEXT : DIM,
+                          background: isBypass ? 'var(--bg-surface-2)' : 'rgba(255,255,255,0.05)',
+                          border: isBypass ? '1px solid var(--border-strong)' : `1px solid ${BORDER}`,
                           /* Title-case the built-in lowercase base roles ("member");
                              a role name you typed is shown exactly as you typed it. */
                           textTransform: (r.baseRole || 'member') === (r.baseRole || 'member').toLowerCase() ? 'capitalize' : 'none' }}>
@@ -1052,7 +1057,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                             })}
                             {r.projectGrants.length > 0 && (
                               <span title={r.projectGrants.map(g => `${roles.find(x => x.id === g.roleId)?.name ?? 'Role'} @ ${g.projectName ?? 'Project'}`).join('\n')}
-                                style={{ display: 'inline-flex', alignItems: 'center', background: 'var(--bg-surface-2)', border: `1px solid var(--brand-primary-35)`,
+                                style={{ display: 'inline-flex', alignItems: 'center', background: 'var(--bg-surface-2)', border: `1px solid ${BORDER}`,
                                   borderRadius: 999, padding: '2px 9px', fontSize: 12, fontWeight: 700, color: AMBER }}>
                                 {r.projectGrants.length} project-scoped
                               </span>
@@ -1089,7 +1094,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                         {r.status === 'active' && r.userId ? (
                           <>
                             <button type="button" className="amTap" onClick={() => openAssignFor(r.userId!)}
-                              style={{ ...btn('transparent', GOLD), padding: '6px 12px' }}>Assign Role</button>
+                              style={{ ...secBtn(), padding: '6px 12px' }}>Assign Role</button>
                             <button onClick={() => resetUserPassword(r.userId!, r.name)}
                               style={{ ...btn('transparent', DIM), padding: '6px 12px', marginLeft: 4 }}>Reset Password</button>
                             {/* Destructive action last, and only for someone who
@@ -1104,7 +1109,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                         ) : r.status === 'invited' && r.invite ? (
                           <>
                             <button onClick={() => resendInvite(r.invite!.id)}
-                              style={{ ...btn('transparent', GOLD), padding: '6px 12px' }}>Resend</button>
+                              style={{ ...secBtn(), padding: '6px 12px' }}>Resend</button>
                             <button onClick={() => cancelInvite(r.invite!.id)}
                               style={{ ...btn('transparent', RED), padding: '6px 12px', marginLeft: 4 }}>Cancel</button>
                           </>
@@ -1192,7 +1197,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                   </div>
                   <div style={{ display: 'flex', gap: 6 }}>
                     {!selectedRole.isBuiltIn && (
-                      <button onClick={() => openEditRole(selectedRole)} style={btn(BLUE)}>Edit</button>
+                      <button onClick={() => openEditRole(selectedRole)} style={secBtn()}>Edit</button>
                     )}
                     <button onClick={() => duplicateRole(selectedRole)} style={btn(RAISED, DIM)}>Duplicate</button>
                     {!selectedRole.isBuiltIn && (
@@ -1227,7 +1232,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                               cursor: canEdit ? 'pointer' : 'default', transition: 'all .15s',
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                             }}>
-                              {isActive && <span style={{ color: level === 'None' ? DIM : 'var(--text-primary)', fontSize: 12, fontWeight: 700 }}>
+                              {isActive && <span style={{ color: level === 'None' ? DIM : 'var(--on-brand)', fontSize: 12, fontWeight: 700 }}>
                                 {level === 'None' ? '-' : '\u2713'}
                               </span>}
                             </div>
@@ -1337,8 +1342,8 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
               {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
             </select>
             <div style={{ flex: 1 }} />
-            <button type="button" className="amTap" onClick={() => setShowInvite(true)} style={{ ...btn('transparent', GOLD), background: 'linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))', border: `1px solid ${BORDER}` }}>+ Invite User</button>
-            <button type="button" className="amTap" onClick={() => setShowAssign(true)} style={{ ...btn(GOLD, 'var(--on-brand)'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)' }}>+ Assign Role</button>
+            <button type="button" className="amTap" onClick={() => setShowInvite(true)} style={secBtn()}>+ Invite User</button>
+            <button type="button" className="amTap" onClick={() => setShowAssign(true)} style={secBtn()}>+ Assign Role</button>
           </div>
 
           {/* ── Pending sent invites (expiry countdown + cancel / resend) ── */}
@@ -1390,7 +1395,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                         </td>
                         <td style={{ padding: '10px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                           <button onClick={() => resendInvite(inv.id)}
-                            style={{ ...btn('transparent', GOLD), padding: '6px 12px' }}>Resend</button>
+                            style={{ ...secBtn(), padding: '6px 12px' }}>Resend</button>
                           <button onClick={() => cancelInvite(inv.id)}
                             style={{ ...btn('transparent', RED), padding: '6px 12px', marginLeft: 8 }}>Cancel</button>
                         </td>
@@ -1434,7 +1439,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                       <td style={{ padding: '10px 12px', color: DIM, fontSize: 12 }}>{a.assignedBy}</td>
                       <td style={{ padding: '10px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                         <button onClick={() => resetUserPassword(a.userId, a.userName)}
-                          style={{ ...btn('transparent', GOLD), padding: '6px 12px' }}>Reset Password</button>
+                          style={{ ...secBtn(), padding: '6px 12px' }}>Reset Password</button>
                         <button onClick={() => removeAssignment(a.id)}
                           style={{ ...btn('transparent', RED), padding: '6px 12px', marginLeft: 8 }}>Remove</button>
                       </td>
@@ -1633,7 +1638,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         transition: 'all .15s',
                       }}>
-                        {isActive && level !== 'None' && <span style={{ color: 'var(--text-primary)', fontSize: 12, fontWeight: 700 }}>{'\u2713'}</span>}
+                        {isActive && level !== 'None' && <span style={{ color: 'var(--on-brand)', fontSize: 12, fontWeight: 700 }}>{'\u2713'}</span>}
                       </div>
                     </div>
                   );
@@ -1657,7 +1662,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
           <button onClick={() => setShowRoleModal(false)} style={btn(RAISED, DIM)}>Cancel</button>
           <button onClick={saveRole} disabled={!formName.trim()} style={{
-            ...btn(GOLD, 'var(--on-brand)'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)', opacity: formName.trim() ? 1 : 0.5,
+            ...btn(GOLD, 'var(--on-brand)'), opacity: formName.trim() ? 1 : 0.5,
           }}>{editRoleId ? 'Save Changes' : 'Create Role'}</button>
         </div>
       </Modal>
@@ -1692,7 +1697,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
           <button onClick={() => setShowAssign(false)} style={btn(RAISED, DIM)}>Cancel</button>
           <button onClick={assignRole} disabled={!assignUserId || !assignRoleId} style={{
-            ...btn(GOLD, 'var(--on-brand)'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)', opacity: assignUserId && assignRoleId ? 1 : 0.5,
+            ...btn(GOLD, 'var(--on-brand)'), opacity: assignUserId && assignRoleId ? 1 : 0.5,
           }}>Assign</button>
         </div>
       </Modal>
@@ -1753,7 +1758,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
           <button onClick={() => setShowInvite(false)} style={btn(RAISED, DIM)}>Cancel</button>
           <button onClick={sendInvite} disabled={!inviteEmailValid} style={{
-            ...btn(GOLD, 'var(--on-brand)'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)', opacity: inviteEmailValid ? 1 : 0.5, cursor: inviteEmailValid ? 'pointer' : 'not-allowed',
+            ...btn(GOLD, 'var(--on-brand)'), opacity: inviteEmailValid ? 1 : 0.5, cursor: inviteEmailValid ? 'pointer' : 'not-allowed',
           }}>Send Invite</button>
         </div>
       </Modal>
@@ -1789,16 +1794,16 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                 <button type="button" onClick={startPersonEdit} style={{ ...btn(GOLD, 'var(--on-brand)') }}>Edit Details</button>
               )}
               {person.status === 'active' && person.userId && (
-                <button type="button" onClick={() => { const id = person.userId!; setPersonKey(null); openAssignFor(id); }} style={btn(RAISED, GOLD)}>Assign Role</button>
+                <button type="button" onClick={() => { const id = person.userId!; setPersonKey(null); openAssignFor(id); }} style={secBtn()}>Assign Role</button>
               )}
               {person.status === 'invited' && person.invite && (
                 <>
-                  <button type="button" onClick={() => resendInvite(person.invite!.id)} style={btn(RAISED, GOLD)}>Resend Invite</button>
+                  <button type="button" onClick={() => resendInvite(person.invite!.id)} style={secBtn()}>Resend Invite</button>
                   <button type="button" onClick={async () => { await cancelInvite(person.invite!.id); setPersonKey(null); await loadData(); }} style={btn(RAISED, RED)}>Cancel Invite</button>
                 </>
               )}
               {person.status === 'contact' && (
-                <button type="button" onClick={() => { setInviteEmail(person.email); setInviteName(person.name); setPersonKey(null); setShowInvite(true); }} style={btn(RAISED, GOLD)} disabled={!person.email}>Invite to Sign In</button>
+                <button type="button" onClick={() => { setInviteEmail(person.email); setInviteName(person.name); setPersonKey(null); setShowInvite(true); }} style={btn(GOLD, 'var(--on-brand)')} disabled={!person.email}>Invite to Sign In</button>
               )}
             </div>
           </div>

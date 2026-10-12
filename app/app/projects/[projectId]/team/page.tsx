@@ -550,7 +550,7 @@ export default function TeamPage(){
       <SectionCard title="Project Directory" subtitle="Field leadership and parties of record — set or edit any slot right here" icon={<IdentificationBadge size={17} weight="duotone" color="var(--text-secondary)" />}>
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(210px,1fr))',gap:12}}>
           {leadership.map(l=>(
-            <div key={l.role} style={{padding:'12px 14px',borderRadius:12,border:`1px solid ${l.name?'var(--brand-primary-25)':'rgba(255,255,255,0.08)'}`,background:l.name?'color-mix(in srgb, var(--brand-primary) 5%, transparent)':'rgba(255,255,255,0.02)'}}>
+            <div key={l.role} style={{padding:'12px 14px',borderRadius:12,border:'1px solid var(--border-default)',background:l.name?'var(--bg-surface-2)':'rgba(255,255,255,0.02)'}}>
               <div style={{fontSize:12,fontWeight:800,color:DIM,marginBottom:6}}>{l.role}</div>
               {editRole === l.role ? (
                 <div style={{display:'flex',flexDirection:'column' as const,gap:6}}>

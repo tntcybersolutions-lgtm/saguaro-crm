@@ -59,7 +59,7 @@ import {
   ORDER_PATH_SENTENCE,
 } from '@/app/api/catalog/stock';
 
-const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', BORDER = 'rgba(255,255,255,0.12)', DIM = 'var(--text-secondary)', TEXT = 'var(--text-primary)', GREEN = 'var(--success)', AMBER = 'var(--brand-primary-strong)', RED = 'var(--danger)';
+const DARK = 'var(--bg-base)', BORDER = 'rgba(255,255,255,0.12)', DIM = 'var(--text-secondary)', TEXT = 'var(--text-primary)', GREEN = 'var(--success)', RED = 'var(--danger)';
 
 const fmtMoney = (n: number) => '$' + ((Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 const fmtDate = (d?: string | null) => {
@@ -122,7 +122,7 @@ const TH: React.CSSProperties = { padding: '9px 12px', textAlign: 'left', fontSi
 /** Small chip marking a price as REFERENCE data — never mistakable for a live quote. */
 function RefChip() {
   return (
-    <span style={{ marginLeft: 5, padding: '1px 5px', borderRadius: 5, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', fontSize: 8.5, fontWeight: 900, verticalAlign: 'middle', whiteSpace: 'nowrap' as const }}>Ref</span>
+    <span style={{ marginLeft: 5, padding: '1px 5px', borderRadius: 5, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', fontSize: 12, fontWeight: 700, verticalAlign: 'middle', whiteSpace: 'nowrap' as const }}>Ref</span>
   );
 }
 
@@ -168,7 +168,7 @@ function Availability({ offer, compact = false, feedConnected = false }: { offer
     return (
       <span
         title={`${AVAILABILITY_UNTRACKED_LINE}. No inventory feed is connected for ${offer.vendor}.`}
-        style={{ display: 'inline-flex', alignItems: 'center', fontSize: compact ? 9.5 : 10, fontWeight: 600, color: 'var(--c-text-2)', whiteSpace: 'nowrap' }}
+        style={{ display: 'inline-flex', alignItems: 'center', fontSize: 12, fontWeight: 600, color: 'var(--c-text-2)', whiteSpace: 'nowrap' }}
       >
         {compact ? AVAILABILITY_UNTRACKED_LABEL : AVAILABILITY_UNTRACKED_LINE}
       </span>
@@ -183,7 +183,7 @@ function Availability({ offer, compact = false, feedConnected = false }: { offer
   const qty = offer.qtyInStock != null ? `${offer.qtyInStock.toLocaleString('en-US')} ` : '';
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
-      <span style={{ display: 'inline-flex', alignItems: 'center', padding: '1px 7px', borderRadius: 999, background: bg, color, fontSize: 9.5, fontWeight: 800, letterSpacing: 0.04 }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', padding: '1px 7px', borderRadius: 999, background: bg, color, fontSize: 12, fontWeight: 800, letterSpacing: 0.04 }}>
         {qty}{label}
       </span>
       {/* A live number is only honest when it says whose feed and when. */}
@@ -236,7 +236,7 @@ function ProvPop({ offer, item }: { offer: Offer; item: CatalogItem }) {
           </a>
         )}
       </span>
-      <span style={{ display: 'block', fontSize: 9.5, color: 'var(--c-text-2)', lineHeight: 1.45, marginTop: 7 }}>
+      <span style={{ display: 'block', fontSize: 12, color: 'var(--c-text-2)', lineHeight: 1.45, marginTop: 7 }}>
         {ORDER_PATH_SENTENCE}
       </span>
     </span>
@@ -251,7 +251,7 @@ function ProvPop({ offer, item }: { offer: Offer; item: CatalogItem }) {
  *  seeded verticals; unknown verticals fall back to gold + Package. */
 const VERTICAL_VISUAL: Record<string, { icon: React.ElementType; hue: string }> = {
   'Low Voltage & Networking': { icon: PlugsConnected, hue: 'var(--warning)' },
-  Electrical: { icon: Lightning, hue: 'var(--brand-primary)' },
+  Electrical: { icon: Lightning, hue: 'var(--warning)' },
   Plumbing: { icon: Drop, hue: 'var(--warning)' },
   HVAC: { icon: Fan, hue: 'var(--success)' },
   'Flooring & Carpet': { icon: SquaresFour, hue: 'var(--warning)' },
@@ -268,7 +268,7 @@ const VERTICAL_VISUAL: Record<string, { icon: React.ElementType; hue: string }> 
  *  lightbox), else the vertical-accent monogram chip. */
 function ItemVisual({ item, onOpen }: { item: CatalogItem; onOpen: (item: CatalogItem) => void }) {
   const vis = VERTICAL_VISUAL[item.vertical];
-  const hue = vis?.hue || GOLD;
+  const hue = vis?.hue || 'var(--text-secondary)';
   const MonoIcon = vis?.icon || Package;
   if (item.imageUrl) {
     return (
@@ -288,12 +288,12 @@ function ItemVisual({ item, onOpen }: { item: CatalogItem; onOpen: (item: Catalo
       style={{
         width: 40, height: 40, borderRadius: 10, position: 'relative', overflow: 'hidden', flex: 'none',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: `linear-gradient(150deg, color-mix(in srgb, ${hue} 14%, transparent), rgba(255,255,255,0.03) 70%)`,
+        background: `color-mix(in srgb, ${hue} 10%, transparent)`,
         border: `1px solid color-mix(in srgb, ${hue} 24%, transparent)`,
         boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.07)',
       }}
     >
-      <span style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${hue}, color-mix(in srgb, ${hue} 33%, transparent))` }} />
+      <span style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: hue }} />
       <MonoIcon size={17} weight="duotone" color={hue} />
     </div>
   );
@@ -575,12 +575,13 @@ export default function CatalogPage() {
   return (
     <PremiumSurface maxWidth={2200}>
       <style>{`
-        .catAdd:active{transform:translateY(1px)!important;filter:brightness(.94)!important;box-shadow:0 1px 4px var(--brand-primary-18),inset 0 1px 0 rgba(255,255,255,0.22)!important}
-        .catStep:hover{transform:none!important;filter:none!important;background:color-mix(in srgb, var(--brand-primary) 20%, transparent)!important}
-        .catStep:active{background:color-mix(in srgb, var(--brand-primary) 28%, transparent)!important}
+        .catAdd:hover:not(:disabled){background:var(--bg-hover)!important;border-color:var(--border-strong)!important}
+        .catAdd:active{transform:translateY(1px)!important}
+        .catStep:hover{transform:none!important;filter:none!important;background:var(--bg-hover)!important}
+        .catStep:active{background:var(--bg-hover)!important}
         @media (prefers-reduced-motion: reduce){.catAdd:active{transform:none!important}}
         .catProv{position:relative;display:inline-block;outline:none}
-        .catProv .catProvPop{display:none;position:absolute;right:0;bottom:calc(100% + 6px);z-index:60;width:264px;padding:10px 12px;border-radius:9px;background:var(--bg-surface);border:1px solid var(--brand-primary-35);box-shadow:0 8px 24px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.06);text-align:left;white-space:normal;cursor:default}
+        .catProv .catProvPop{display:none;position:absolute;right:0;bottom:calc(100% + 6px);z-index:60;width:264px;padding:10px 12px;border-radius:9px;background:var(--bg-surface);border:1px solid var(--border-default);box-shadow:0 8px 24px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.06);text-align:left;white-space:normal;cursor:default}
         .catProv:hover .catProvPop,.catProv:focus-within .catProvPop{display:block}
         .catImgBtn{opacity:0;transition:opacity .15s ease}
         tr:hover .catImgBtn,.catImgBtn:focus-visible{opacity:1}
@@ -803,23 +804,23 @@ export default function CatalogPage() {
                               className="pmBtn catAdd"
                               style={{
                                 display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 13px',
-                                background: it.prices.length ? `linear-gradient(180deg,var(--brand-primary-strong),${GOLD} 60%,var(--brand-primary-hover))` : 'rgba(255,255,255,0.06)',
-                                border: 'none', borderRadius: 8, color: it.prices.length ? 'var(--on-brand)' : 'rgba(255,255,255,0.3)',
-                                fontSize: 12, fontWeight: 900, cursor: it.prices.length ? 'pointer' : 'not-allowed',
-                                boxShadow: it.prices.length ? '0 2px 8px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' : 'none',
+                                background: 'var(--bg-surface-2)',
+                                border: '1px solid var(--border-default)', borderRadius: 8, color: it.prices.length ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                                fontSize: 12, fontWeight: 700, cursor: it.prices.length ? 'pointer' : 'not-allowed',
+                                boxShadow: 'none',
                               }}
                             >
                               <Plus size={12} weight="bold" /> Add
                             </button>
                           ) : (
-                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 0, border: `1px solid var(--brand-primary-35)`, borderRadius: 8, overflow: 'hidden', background: 'var(--bg-surface-2)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)' }}>
-                              <button onClick={() => setQty(it.id, qty - 1)} className="pmBtn catStep" style={{ padding: '5px 9px', background: 'var(--bg-surface-2)', border: 'none', boxShadow: 'inset -1px 0 0 var(--brand-primary-25)', color: 'var(--text-primary)', cursor: 'pointer' }}><Minus size={11} weight="bold" /></button>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 0, border: '1px solid var(--border-default)', borderRadius: 8, overflow: 'hidden', background: 'var(--bg-surface-2)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+                              <button onClick={() => setQty(it.id, qty - 1)} className="pmBtn catStep" style={{ padding: '5px 9px', background: 'var(--bg-surface-2)', border: 'none', boxShadow: 'inset -1px 0 0 var(--border-default)', color: 'var(--text-primary)', cursor: 'pointer' }}><Minus size={11} weight="bold" /></button>
                               <input
                                 value={qty}
                                 onChange={(e) => setQty(it.id, Math.max(0, parseInt(e.target.value) || 0))}
                                 style={{ width: 42, textAlign: 'center', background: 'transparent', border: 'none', color: 'var(--text-primary)', fontWeight: 800, fontSize: 13, outline: 'none', fontVariantNumeric: 'tabular-nums' }}
                               />
-                              <button onClick={() => setQty(it.id, qty + 1)} className="pmBtn catStep" style={{ padding: '5px 9px', background: 'var(--bg-surface-2)', border: 'none', boxShadow: 'inset 1px 0 0 var(--brand-primary-25)', color: 'var(--text-primary)', cursor: 'pointer' }}><Plus size={11} weight="bold" /></button>
+                              <button onClick={() => setQty(it.id, qty + 1)} className="pmBtn catStep" style={{ padding: '5px 9px', background: 'var(--bg-surface-2)', border: 'none', boxShadow: 'inset 1px 0 0 var(--border-default)', color: 'var(--text-primary)', cursor: 'pointer' }}><Plus size={11} weight="bold" /></button>
                             </div>
                           )}
                         </td>
@@ -846,7 +847,7 @@ export default function CatalogPage() {
                               )}
                               {imgMenu === it.id && (
                                 <div style={{ position: 'absolute', zIndex: 80, top: '100%', left: 0, marginTop: 6, width: 252, padding: 11, borderRadius: 10, background: 'var(--bg-solid-2)', border: '1px solid var(--border-default)', boxShadow: '0 10px 28px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
-                                  <div style={{ fontSize: 9.5, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 7 }}>Real Product Photo</div>
+                                  <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 7 }}>Real Product Photo</div>
                                   <label className="pmBtn" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 11px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 8, color: 'var(--text-primary)', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
                                     <UploadSimple size={12} weight="bold" /> Upload Image
                                     <input
@@ -873,7 +874,7 @@ export default function CatalogPage() {
                                       <LinkSimple size={12} weight="bold" />
                                     </button>
                                   </div>
-                                  <div style={{ fontSize: 9.5, color: 'var(--c-text-2)', marginTop: 7, lineHeight: 1.45 }}>Images only, 5MB max. Paste a real vendor or manufacturer URL — never a guess.</div>
+                                  <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 7, lineHeight: 1.45 }}>Images only, 5MB max. Paste a real vendor or manufacturer URL — never a guess.</div>
                                   {imgErr && <div style={{ fontSize: 12, color: RED, marginTop: 6 }}>{imgErr}</div>}
                                 </div>
                               )}
@@ -971,7 +972,7 @@ export default function CatalogPage() {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="pmBtn"
-                                style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9.5, fontWeight: 800, color: 'var(--link)', textDecoration: 'none', border: '1px solid var(--border-default)', background: 'var(--bg-surface-2)', borderRadius: 6, padding: '3px 7px', whiteSpace: 'nowrap' as const }}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 12, fontWeight: 800, color: 'var(--link)', textDecoration: 'none', border: '1px solid var(--border-default)', background: 'var(--bg-surface-2)', borderRadius: 6, padding: '3px 7px', whiteSpace: 'nowrap' as const }}
                                 title={`Search today's price and availability for this SKU at ${best.vendor}`}
                               >
                                 <MagnifyingGlassPlus size={10} weight="bold" /> Check Availability
@@ -982,7 +983,7 @@ export default function CatalogPage() {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="pmBtn"
-                                  style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9.5, fontWeight: 800, color: DIM, textDecoration: 'none', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '3px 7px', whiteSpace: 'nowrap' as const }}
+                                  style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 12, fontWeight: 800, color: DIM, textDecoration: 'none', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '3px 7px', whiteSpace: 'nowrap' as const }}
                                   title={`Open ${best.vendor}'s website`}
                                 >
                                   <Globe size={10} weight="bold" /> {best.vendor}
@@ -1007,8 +1008,8 @@ export default function CatalogPage() {
         <div style={{
           // Above the chat launcher (9999), which otherwise sits on this bar's buttons on a phone.
           position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 10000,
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0) 46%), rgba(12,12,13,0.97)',
-          borderTop: `1px solid var(--brand-primary-35)`,
+          background: 'var(--bg-surface)',
+          borderTop: '1px solid var(--border-default)',
           boxShadow: '0 -8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)',
           padding: '14px 16px calc(14px + env(safe-area-inset-bottom, 0px))',
           display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',

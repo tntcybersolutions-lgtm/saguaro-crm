@@ -6,7 +6,7 @@ import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 import { toCents, toDollars, sumCents, scaleCents } from '@/lib/calc';
-import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, AutoChip, IconChip, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, AutoChip, IconChip, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle, railStyle } from '@/components/ui/premium';
 import { SkeletonRow } from '@/components/ui/Skeleton';
 import { Receipt, PencilSimple, Percent, Copy, Trash, Plus, CaretDown, ClockCounterClockwise, Calculator } from '@phosphor-icons/react';
 import { ListToolbar } from '@/components/ui/ListToolbar';
@@ -352,7 +352,7 @@ export default function InvoicesPage() {
       {errorMsg && <div style={{ margin: '0 0 16px', padding: '10px 14px', background: 'rgba(248,113,113,.15)', border: '1px solid rgba(248,113,113,.4)', borderRadius: 10, color: RED, fontSize: 13 }}>{errorMsg}</div>}
 
       {showForm && (
-        <div style={{ display: 'grid', gridTemplateColumns: ctx ? 'minmax(0, 1fr) 320px' : '1fr', gap: 18, alignItems: 'start', marginBottom: 24 }}>
+        <div className={ctx ? 'pmSplit' : undefined} style={railStyle(320, { gap: 18, alignItems: 'start', marginBottom: 24 })}>
           <SectionCard title="New Invoice" icon={<Plus size={17} weight="bold" color="var(--text-secondary)" />}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
               <div>
@@ -484,7 +484,7 @@ export default function InvoicesPage() {
 
       <SectionCard title="All Invoices" icon={<Receipt size={17} weight="duotone" color={moduleAccent('invoices').hex} />} flush>
         {loading ? <div><SkeletonRow /><SkeletonRow /><SkeletonRow /><SkeletonRow /><SkeletonRow /></div> : invoices.length === 0 ? (
-          <div style={{ display: 'grid', gridTemplateColumns: ctx ? 'minmax(0, 1fr) 360px' : '1fr', alignItems: 'stretch' }}>
+          <div className={ctx ? 'pmSplit' : undefined} style={railStyle(360, { alignItems: 'stretch' })}>
             <PremiumEmpty
               icon={<Receipt size={30} weight="duotone" color="var(--text-secondary)" />}
               title="No invoices yet"

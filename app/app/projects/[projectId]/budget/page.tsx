@@ -13,7 +13,7 @@ import { Skeleton, SkeletonKPI } from '../../../../../components/ui/Skeleton';
 import { toCents, toDollars, sumCents, subCents, addCents, scaleCents } from '@/lib/calc';
 import {
   PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty,
-  FlowSteps, InsightRow, AutoChip, goldButtonStyle, goldOutlineButtonStyle,
+  FlowSteps, InsightRow, AutoChip, goldButtonStyle, goldOutlineButtonStyle, railStyle
 } from '@/components/ui/premium';
 import { Button } from '@/components/ui/kit';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
@@ -406,10 +406,10 @@ export default function BudgetPage() {
       {showAddForm && (
         <div style={{ marginBottom: 20 }}>
           {/* The figures above already summarise the budget; the form needs no second strip. */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 300px', gap: 16, alignItems: 'start' }}>
+          <div className="pmSplit" style={railStyle(300, { gap: 16, alignItems: 'start' })}>
           <SectionCard title="Add Budget Line" subtitle="Pick the CSI division — code and description fill themselves" icon={<Plus size={18} weight="bold" color={'var(--text-secondary)'} />}>
             <form onSubmit={addLine}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(170px,1.2fr) minmax(120px,0.9fr) minmax(200px,1.6fr) minmax(130px,0.9fr) auto', gap: 12, alignItems: 'start' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))', gap: 12, alignItems: 'start' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-tertiary)', marginBottom: 6 }}>CSI Division</label>
                   <select value={csiDiv} onChange={e => pickDivision(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
@@ -480,7 +480,7 @@ export default function BudgetPage() {
 
       {/* EMPTY — genuine zero results (only reaches here when !loading && !error). */}
       {lines.length === 0 ? ctx ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 320px', gap: 16, alignItems: 'start' }}>
+        <div className="pmSplit" style={railStyle(320, { gap: 16, alignItems: 'start' })}>
           <SectionCard
             title={seedablePackages.length > 0 ? 'Seed the Budget from Your Estimate' : 'Start the Budget by CSI Division'}
             subtitle={seedablePackages.length > 0
