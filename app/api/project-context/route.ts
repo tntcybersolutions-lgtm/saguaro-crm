@@ -3,7 +3,7 @@ import { requirePermission } from '@/lib/permissions';
 import { applyMarkupStack } from '@/lib/takeoff/engine';
 import { requestDay } from '@/lib/time-zone';
 import { apiError } from '@/lib/api-error';
-import { coTotal } from '@/lib/change-order-amount';
+import { contractMoney } from '@/lib/job-contract';
 
 /**
  * GET ?projectId= — the project intelligence snapshot every add/create screen
@@ -116,13 +116,10 @@ export async function GET(req: NextRequest) {
   const propAmount = (r: { amount: unknown; total_amount: unknown }) => N(r.amount) || N(r.total_amount);
   const acceptedProposal = [...proposals].reverse().find((r) => String(r.status || '').toLowerCase() === 'accepted') ?? null;
   const latestProposal = proposals.length ? proposals[proposals.length - 1] : null;
-  const originalContract =
-    N(p.original_contract_amount) ||
-    (prime ? N(prime.original_amount) || N(prime.contract_amount) || N(prime.amount) : 0) ||
-    N(p.contract_amount) ||
-    (acceptedProposal ? propAmount(acceptedProposal) : 0);
-  const approvedCos = cos.filter((c) => c.status === 'approved');
-  const approvedCoTotal = coTotal(approvedCos);
+  // The same rule the owner's portal reads (lib/job-contract).
+  const contract = contractMoney({ project: p, prime, acceptedProposal, changeOrders: cos });
+  const originalContract = contract.original;
+  const approvedCoTotal = contract.approvedChanges;
   const lastPayApp = payApps[0] ?? null;
   const billedToDate = lastPayApp ? N(lastPayApp.total_completed_stored) : 0;
   const paidToDate = payApps.filter((a) => a.status === 'paid').reduce((s, a) => s + N(a.current_payment_due), 0);
@@ -155,8 +152,8 @@ export async function GET(req: NextRequest) {
     money: {
       originalContract,
       approvedCoTotal,
-      approvedCoCount: approvedCos.length,
-      pendingCoCount: cos.filter((c) => openStatuses.includes(c.status)).length,
+      approvedCoCount: contract.approvedCount,
+      pendingCoCount: contract.pendingCount,
       revisedContract: originalContract + approvedCoTotal,
       billedToDate,
       billedPct: originalContract + approvedCoTotal > 0 ? Math.round((billedToDate / (originalContract + approvedCoTotal)) * 1000) / 10 : 0,

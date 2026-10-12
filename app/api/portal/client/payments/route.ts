@@ -38,52 +38,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-/** POST — initiate a payment */
-export async function POST(req: NextRequest) {
-  try {
-    const session = await getPortalSession(req, PORTAL_PERMS.VIEW_FINANCIALS);
-    if (!session) {
-      return NextResponse.json({ error: 'Access denied — insufficient permissions' }, { status: 403 });
-    }
-
-    const body = await req.json();
-    const { amount, payment_method, invoice_id, description } = body;
-
-    if (!amount || amount <= 0) {
-      return NextResponse.json({ error: 'A valid amount is required' }, { status: 400 });
-    }
-
-    const db = createServerClient();
-
-    // Live portal_payments columns: tenant_id, project_id, session_id, amount,
-    // payment_type, status, due_date, paid_at, invoice_url, notes, created_at.
-    // payment_method -> payment_type, description -> notes. There is no
-    // invoice_id / initiated_by column: invoice_id is folded into notes and the
-    // initiator is recorded via session_id.
-    const combinedNotes = [
-      description || null,
-      invoice_id ? `Invoice: ${invoice_id}` : null,
-    ].filter(Boolean).join(' — ');
-
-    const { data: payment, error } = await db
-      .from('portal_payments')
-      .insert({
-        project_id: session.project_id,
-        tenant_id: session.tenant_id,
-        session_id: session.id,
-        amount,
-        payment_type: payment_method || null,
-        notes: combinedNotes || null,
-        status: 'pending',
-        created_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return NextResponse.json({ payment });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
-}
+/* No POST: an owner "submitting a payment" here moved no money and filed a
+   pending row the builder never asked for. Owners pay an invoice through
+   /api/portal/client/pay (Stripe, when the builder takes payments online). */
