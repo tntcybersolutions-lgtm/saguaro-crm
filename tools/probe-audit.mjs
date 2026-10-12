@@ -1,6 +1,6 @@
 /**
  * tools/probe-audit.mjs — platform-wide visual audit. Visits every route in a
- * group (tools/probe-group.txt: company | project | public) signed in as the
+ * group (tools/probe-group.txt: company | project | public | all) signed in as the
  * real company, read-only, at 390 (iPhone 15, WebKit) and 1440 (Chromium).
  * Per screen: a screenshot plus measured defects — title size, yellow used on
  * non-actions, small / low-contrast text, text cut off with no full value,
@@ -136,12 +136,13 @@ try {
     ids.projectId = jobs.find((j) => j.name === JOB)?.id || null;
     const P = `/app/projects/${ids.projectId}`;
     const need = (k, list, prefix) => async () => { if (ROUTES.some((r) => r.includes(k))) ids[k] = await firstLink(gc, list, prefix).catch(() => null); };
-    const plan = GROUP === 'company'
-      ? [need('[leadId]', '/app/leads', '/app/leads/'), need('[invoiceId]', '/app/invoicing', '/app/invoicing/'),
-         need('[dailyLogId]', '/app/daily-logs', '/app/daily-logs/'), need('[scheduleId]', '/app/schedule', '/app/schedule/')]
-      : [need('[bidPackageId]', `${P}/bid-packages`, `${P}/bid-packages/`), need('[payAppId]', `${P}/pay-apps`, `${P}/pay-apps/`)];
+    // need() only looks a record up when some route in the list uses it, so one
+    // plan serves the company, project and combined ("all") groups.
+    const plan = [need('[leadId]', '/app/leads', '/app/leads/'), need('[invoiceId]', '/app/invoicing', '/app/invoicing/'),
+      need('[dailyLogId]', '/app/daily-logs', '/app/daily-logs/'), need('[scheduleId]', '/app/schedule', '/app/schedule/'),
+      need('[bidPackageId]', `${P}/bid-packages`, `${P}/bid-packages/`), need('[payAppId]', `${P}/pay-apps`, `${P}/pay-apps/`)];
     for (const f of plan) await f();
-    if (GROUP === 'project' && !ids['[bidPackageId]'] && ROUTES.some((r) => r.includes('[bidPackageId]'))) {
+    if (!ids['[bidPackageId]'] && ROUTES.some((r) => r.includes('[bidPackageId]'))) {
       const bp = (await (await gc.request.get(`${SITE}/api/bid-packages/list?projectId=${ids.projectId}`)).json().catch(() => ({}))).bidPackages || [];
       ids['[bidPackageId]'] = bp[0]?.id || null;
     }
@@ -152,7 +153,16 @@ try {
   }
   console.log('ids', JSON.stringify(Object.fromEntries(Object.entries(ids).map(([k, v]) => [k, v ? 'ok' : null]))));
 
-  for (const route of ROUTES) {
+  // "public:/path" routes are opened signed out, in their own browser contexts.
+  let pubGc = null; let pubPh = null;
+  if (ROUTES.some((r) => r.startsWith('public:'))) {
+    pubGc = await (await desktop.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, colorScheme: 'dark' })).newPage();
+    pubPh = await (await phoneBrowser.newContext({ ...pw.devices['iPhone 15'], deviceScaleFactor: 1, colorScheme: 'dark' })).newPage();
+  }
+
+  for (const entry of ROUTES) {
+    const signedOut = entry.startsWith('public:') || GROUP === 'public';
+    const route = entry.replace(/^public:/, '');
     let url = route.replace('[projectId]', ids.projectId || 'missing');
     const missing = (url.match(/\[[A-Za-z]+\]/g) || []).filter((k) => !ids[k]);
     if (missing.length) { result.screens[route] = { blocked: `no record for ${missing.join(', ')}` }; continue; }
@@ -161,7 +171,7 @@ try {
     result.screens[route] = {};
     for (const w of ['390', '1440']) {
       for (let attempt = 0; attempt < 2; attempt++) {
-      const page = w === '390' ? ph : gc;
+      const page = signedOut && pubGc ? (w === '390' ? pubPh : pubGc) : (w === '390' ? ph : gc);
       try {
         await open(page, url);
         result.screens[route][w] = await measure(page, w === '390');
@@ -174,7 +184,11 @@ try {
       } catch (e) {
         const msg = String(e.message || e).split('\n')[0].slice(0, 120);
         result.screens[route][w] = { error: msg };
-        if (w === '390' && attempt === 0 && /closed|crash|Target/i.test(msg)) { ph = await freshPhone(); continue; }
+        if (w === '390' && attempt === 0 && /closed|crash|Target/i.test(msg)) {
+          ph = await freshPhone();
+          if (pubPh) pubPh = await (await phoneBrowser.newContext({ ...pw.devices['iPhone 15'], deviceScaleFactor: 1, colorScheme: 'dark' })).newPage();
+          continue;
+        }
         break;
       }
       }
