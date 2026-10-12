@@ -499,7 +499,7 @@ export default function InvoiceDetailPage() {
                       <div>Open it, attach it, or send it — regenerate after an edit.</div>
                     </div>
                     <div className="idBtns">
-                      <Button variant="primary" icon={<ArrowSquareOut size={14} />} onClick={() => openPdf({ url: `/api/files/open?u=${encodeURIComponent(inv.pdf_url || '')}`, title: 'Invoice' })}>Open PDF</Button>
+                      <Button icon={<ArrowSquareOut size={14} />} onClick={() => openPdf({ url: `/api/files/open?u=${encodeURIComponent(inv.pdf_url || '')}`, title: 'Invoice' })}>Open PDF</Button>
                       <Button icon={<ArrowsClockwise size={14} />} onClick={() => handlePdf(true)} disabled={busy === 'pdf'}>{busy === 'pdf' ? 'Regenerating…' : 'Regenerate'}</Button>
                     </div>
                   </div>
