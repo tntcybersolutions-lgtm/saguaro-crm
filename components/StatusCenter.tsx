@@ -16,7 +16,7 @@
  */
 import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Check, X } from '@phosphor-icons/react';
-import { subscribeStatus, getStatusGroups, getServerStatusGroups, dismissGroup, step, type StatusGroup, type StatusStep } from '@/lib/ui/status';
+import { subscribeStatus, getStatusGroups, getServerStatusGroups, dismissGroup, step, registerStatusCenter, type StatusGroup, type StatusStep } from '@/lib/ui/status';
 import { installStatusFetch } from '@/lib/ui/status-fetch';
 
 const CSS = `
@@ -142,6 +142,7 @@ export default function StatusCenter() {
   const listRef = useRef<HTMLOListElement>(null);
 
   useEffect(() => { installStatusFetch(); }, []);
+  useEffect(() => registerStatusCenter(), []);
   useNavigationSteps();
 
   // A sheet or dialog keeps its buttons at the bottom of the screen — move up out of their way.

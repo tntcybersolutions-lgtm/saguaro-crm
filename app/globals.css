@@ -19,22 +19,22 @@
   --bg-solid: #1B2636;
   --bg-solid-2: #243247;
   --bg-input: #101722;       /* a field sits a step darker than the card it is on */
-  --bg-hover: #2B3B53;       /* a raised control under the pointer */
-  --bg-row-hover: #202C3E;   /* a table row under the pointer */
+  --bg-hover: color-mix(in srgb, #243247 88%, #F8FAFC);       /* a raised control under the pointer */
+  --bg-row-hover: color-mix(in srgb, #1B2636 70%, #243247);   /* a table row under the pointer */
   --glass-blur: none;
   --glass-border: #334155;
   --glass-highlight: inset 0 1px 0 rgba(248,250,252,0.04);
   /* Borders */
   --border-subtle: #334155;
   --border-default: #334155;
-  --border-strong: #475569;
+  --border-strong: color-mix(in srgb, #334155 72%, #94A3B8);
   /* Text — crisp white for content, slate greys for supporting text. Pages
      use these tokens, never a hard-coded grey (tools/check-design-system.mjs
      rule 4). All three clear 5.5:1 on a card. */
   --text-primary: #F8FAFC;
   --text-secondary: #CBD5E1;
   --text-tertiary: #94A3B8;
-  --text-disabled: #64748B;
+  --text-disabled: color-mix(in srgb, #94A3B8 72%, #101722);
   /* ── Brand primary — the single white-label override point (WhiteLabelProvider
      overrides --brand-primary + the derived vars per tenant). Yellow is for
      the primary action and the selected item only; text on it is --on-brand. ── */
@@ -46,10 +46,10 @@
   --c-text: #F8FAFC;
   --c-text-2: #CBD5E1;
   --c-text-3: #94A3B8;
-  --c-text-4: #64748B;
+  --c-text-4: color-mix(in srgb, #94A3B8 72%, #101722);
   --c-yellow: #FFE000;      /* primary action, selected navigation */
-  --c-yellow-hi: #FFE94D;
-  --c-yellow-hover: #F2D500;
+  --c-yellow-hi: color-mix(in srgb, #FFE000 86%, #F8FAFC);
+  --c-yellow-hover: color-mix(in srgb, #FFE000 90%, #101722);
   --c-on-brand: #101722;    /* dark text on yellow */
   --c-blue: #38BDF8;        /* informational links */
   --c-orange: #FBBF24;      /* pending / waiting (amber) */
@@ -58,8 +58,8 @@
   --c-gray: #94A3B8;        /* closed / neutral status */
   --brand-primary-hi: var(--c-yellow-hi);
   --brand-primary: #FFE000;
-  --brand-primary-strong: #FFE94D;
-  --brand-primary-hover: #F2D500;
+  --brand-primary-strong: color-mix(in srgb, #FFE000 86%, #F8FAFC);
+  --brand-primary-hover: color-mix(in srgb, #FFE000 90%, #101722);
   --brand-primary-08: rgba(255,224,0,0.08);
   --brand-primary-12: rgba(255,224,0,0.12);
   --brand-primary-18: rgba(255,224,0,0.18);
@@ -74,7 +74,7 @@
   --gold-ring: var(--brand-primary-35);
   /* Links — blue, never the brand yellow. */
   --link: #38BDF8;
-  --link-hover: #7DD3FC;
+  --link-hover: color-mix(in srgb, #38BDF8 72%, #F8FAFC);
   /* Status — green success, amber pending, red errors, blue informational,
      slate closed (lib/status-colors.ts). A status always carries its word. */
   --status-overdue: #F87171;
@@ -122,12 +122,73 @@
   --sg-text-2: var(--c-text-2);
   --sg-text-3: var(--c-text-3);
   --sg-border: #334155;
-  --sg-border-strong: #475569;
+  --sg-border-strong: color-mix(in srgb, #334155 72%, #94A3B8);
   --sg-surface-solid: var(--c-card);
   /* Fixed chrome heights — the page keeps clear of both, and so does every
      scrollIntoView (scroll-padding below), so nothing lands under a bar. */
   --sag-topbar-h: calc(56px + env(safe-area-inset-top, 0px));
   --sag-tabbar-h: 0px;
+  /* ── Semantic roles (DESIGN_SYSTEM.md §1). Every value is one of the approved
+     colours (#101722 #1B2636 #243247 #334155 #F8FAFC #CBD5E1 #94A3B8 #FFE000
+     #38BDF8) or a mix of them — no other hex. Status hues are the approved
+     green / amber / red names; their exact values await Chad's confirmation. */
+  --bg-subtle: color-mix(in srgb, #101722 60%, #1B2636);
+  --surface-modal: #1B2636;
+  --surface-popover: #243247;
+  --text-inverse: #101722;
+  --border-interactive: color-mix(in srgb, #334155 72%, #94A3B8);
+  --focus-ring: #38BDF8;
+  --action-primary-bg: #FFE000;
+  --action-primary-fg: #101722;
+  --action-primary-hover: color-mix(in srgb, #FFE000 90%, #101722);
+  --action-primary-pressed: color-mix(in srgb, #FFE000 80%, #101722);
+  --action-secondary-bg: #243247;
+  --action-secondary-fg: #F8FAFC;
+  --action-secondary-border: #334155;
+  --action-secondary-hover: color-mix(in srgb, #243247 88%, #F8FAFC);
+  --action-secondary-pressed: color-mix(in srgb, #243247 80%, #101722);
+  --action-danger-bg: color-mix(in srgb, var(--danger) 14%, #1B2636);
+  --action-danger-fg: var(--danger);
+  --action-danger-hover: color-mix(in srgb, var(--danger) 22%, #1B2636);
+  --action-danger-pressed: color-mix(in srgb, var(--danger) 30%, #1B2636);
+  --disabled-bg: #243247;
+  --disabled-fg: #94A3B8;
+  --disabled-border: #334155;
+  --nav-bg: #1B2636;
+  --nav-fg: #CBD5E1;
+  --nav-hover-bg: #243247;
+  --nav-active-bg: #FFE000;
+  --nav-active-fg: #101722;
+  --nav-active-indicator: #FFE000;
+  --tab-fg: #CBD5E1;
+  --tab-hover-bg: #243247;
+  --tab-selected-bg: #FFE000;
+  --tab-selected-fg: #101722;
+  --tab-selected-indicator: #FFE000;
+  --selected-row-bg: color-mix(in srgb, #38BDF8 10%, #1B2636);
+  --selected-row-indicator: #38BDF8;
+  --selected-card-border: #38BDF8;
+  --selected-control-bg: #FFE000;
+  --selected-control-fg: #101722;
+  --success-fg: var(--success);
+  --success-bg: color-mix(in srgb, var(--success) 12%, #1B2636);
+  --success-border: color-mix(in srgb, var(--success) 40%, #334155);
+  --warning-fg: var(--warning);
+  --warning-bg: color-mix(in srgb, var(--warning) 12%, #1B2636);
+  --warning-border: color-mix(in srgb, var(--warning) 40%, #334155);
+  --danger-fg: var(--danger);
+  --danger-bg: color-mix(in srgb, var(--danger) 12%, #1B2636);
+  --danger-border: color-mix(in srgb, var(--danger) 40%, #334155);
+  --info-fg: #38BDF8;
+  --info-bg: color-mix(in srgb, #38BDF8 12%, #1B2636);
+  --info-border: color-mix(in srgb, #38BDF8 40%, #334155);
+  --chart-1: #38BDF8;
+  --chart-2: color-mix(in srgb, #38BDF8 45%, #F8FAFC);
+  --chart-3: var(--success);
+  --chart-4: var(--warning);
+  --chart-5: #94A3B8;
+  --tile-bg: #243247;
+  --tile-border: #334155;
 }
 
 
@@ -732,11 +793,15 @@ select:autofill {
 /* Buttons: material press + smooth ease everywhere (hover ease already global). */
 button:active { transform: translateY(0.5px); }
 button:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+button:disabled[aria-current], button:disabled[aria-pressed="true"] { opacity: 1; cursor: default; }
 /* A disabled primary is slate with dim text. A faded yellow over navy reads as
    olive, which looks broken rather than unavailable. Covers the kit classes and
    buttons styled inline with the brand yellow. */
-.k-btn-primary:disabled, .k-btn-primary[aria-disabled="true"], .btn-gold:disabled, .pmGold:disabled,
-button:disabled[style*="--brand-primary"] {
+/* Never the selected item: a current stage or a pressed segment is disabled only
+   because clicking it again does nothing; it must still read as selected. */
+.k-btn-primary:disabled:not([aria-current]):not([aria-pressed="true"]), .k-btn-primary[aria-disabled="true"]:not([aria-current]),
+.btn-gold:disabled:not([aria-current]), .pmGold:disabled:not([aria-current]),
+button:disabled:not([aria-current]):not([aria-pressed="true"])[style*="--brand-primary"] {
   background: var(--bg-surface-2) !important; color: var(--text-tertiary) !important;
   border: 1px solid var(--border-default) !important; box-shadow: none !important;
   opacity: 1 !important; filter: none !important;
@@ -986,11 +1051,11 @@ input:-webkit-autofill:focus {
 a.k-stat:hover, button.k-stat:hover { background: rgba(148,163,184,0.06); }
 button.k-stat { text-align: left; font: inherit; border-top: 0; border-right: 0; cursor: pointer; }
 button.k-stat[aria-pressed="true"] { box-shadow: inset 0 -2px 0 var(--brand-primary); }
-.k-stat-top { order: 2; display: flex; align-items: center; gap: 6px; min-width: 0; }
-.k-stat-icon { display: none; }
+.k-stat-top { order: 1; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; min-width: 0; }
+.k-stat-icon { display: inline-grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 8px; background: var(--tile-bg); border: 1px solid var(--tile-border); color: var(--text-secondary); }
 /* Labels and sublines wrap to two lines rather than cutting a word mid-way. */
 .k-stat-label { font-size: 13px; font-weight: 600; letter-spacing: normal; text-transform: none; color: var(--text-tertiary); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
-.k-stat-value { order: 1; font-size: 20px; font-weight: 700; letter-spacing: -0.01em; color: var(--text-primary); font-variant-numeric: tabular-nums; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.k-stat-value { order: 2; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; color: var(--text-primary); font-variant-numeric: tabular-nums; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .k-stat-sub { order: 3; font-size: 13px; color: var(--text-secondary); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .k-stat[data-tone="good"] .k-stat-value { color: var(--success); }
 .k-stat[data-tone="warn"] .k-stat-value { color: var(--warning); }
@@ -1723,3 +1788,70 @@ a.pmFig:hover,button.pmFig:hover,div.pmFig[role=button]:hover{background:rgba(14
     font-size: 16px !important;
   }
 }
+
+/* ── Concept building blocks (components/ui/kit.tsx; DESIGN_SYSTEM.md §3) ── */
+.k-title-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; min-width: 0; }
+.k-meta { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 8px; font-size: 14px; color: var(--text-secondary); }
+.k-meta-item { display: inline-flex; align-items: center; gap: 6px; min-width: 0; color: var(--text-secondary); text-decoration: none; }
+.k-meta-ic { display: inline-flex; color: var(--text-tertiary); }
+a.k-meta-item, .k-link { color: var(--link); }
+a.k-meta-item:hover, .k-link:hover { color: var(--link-hover); }
+.k-tile { display: inline-grid; place-items: center; flex: none; border-radius: 10px; background: var(--tile-bg); border: 1px solid var(--tile-border); color: var(--text-secondary); }
+.k-tile[data-tone="info"] { color: var(--info-fg); }
+.k-tile[data-tone="success"] { color: var(--success-fg); }
+.k-tile[data-tone="warning"] { color: var(--warning-fg); }
+.k-tile[data-tone="danger"] { color: var(--danger-fg); }
+.k-card-head .k-tile { margin-right: 2px; }
+.k-items { display: flex; flex-direction: column; }
+.k-item { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); color: inherit; text-decoration: none; text-align: left; background: none; border-left: 0; border-right: 0; border-top: 0; width: 100%; font: inherit; }
+.k-items > .k-item:last-child { border-bottom: 0; }
+.k-item-link { cursor: pointer; border-radius: 0; }
+.k-item-link:hover { background: var(--bg-row-hover); }
+.k-item-link:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.k-item-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.k-item-title { font-size: 14px; font-weight: 600; color: var(--text-primary); overflow-wrap: anywhere; }
+.k-item-desc { font-size: 13px; color: var(--text-tertiary); overflow-wrap: anywhere; }
+.k-item-value { flex: none; max-width: 60%; font-size: 14px; font-weight: 600; color: var(--text-primary); text-align: right; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.k-item-value a { color: var(--link); text-decoration: none; }
+.k-item-action { flex: none; display: inline-flex; gap: 8px; }
+.k-item-chev { flex: none; color: var(--text-tertiary); }
+.k-callout { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; padding: 14px 16px; border-radius: var(--radius-lg); background: var(--bg-surface); border: 1px solid var(--border-default); box-shadow: var(--shadow-sm); }
+.k-callout-main { display: flex; align-items: flex-start; gap: 12px; min-width: 0; flex: 1 1 320px; }
+.k-callout-ic { display: inline-grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 50%; }
+.k-callout[data-tone="info"] .k-callout-ic { background: var(--info-bg); border: 1px solid var(--info-border); color: var(--info-fg); }
+.k-callout[data-tone="success"] .k-callout-ic { background: var(--success-bg); border: 1px solid var(--success-border); color: var(--success-fg); }
+.k-callout[data-tone="warning"] .k-callout-ic { background: var(--warning-bg); border: 1px solid var(--warning-border); color: var(--warning-fg); }
+.k-callout[data-tone="danger"] .k-callout-ic { background: var(--danger-bg); border: 1px solid var(--danger-border); color: var(--danger-fg); }
+.k-callout-title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.k-callout-text { margin-top: 2px; font-size: 14px; color: var(--text-secondary); line-height: 1.45; }
+.k-callout-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.k-stages { display: flex; flex-wrap: wrap; gap: 6px; }
+.k-stage { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px 0 8px; border-radius: 10px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+  background: var(--action-secondary-bg); color: var(--action-secondary-fg); border: 1px solid var(--action-secondary-border); }
+.k-stage:hover:not(:disabled) { background: var(--action-secondary-hover); }
+.k-stage:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.k-stage-n { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; font-size: 12px; font-weight: 700; background: var(--bg-base); color: var(--text-tertiary); border: 1px solid var(--border-default); }
+.k-stage[data-state="done"] .k-stage-n { background: var(--success-bg); color: var(--success-fg); border-color: var(--success-border); }
+.k-stage[data-state="current"] { background: var(--selected-control-bg); color: var(--selected-control-fg); border-color: var(--selected-control-bg); font-weight: 700; cursor: default; }
+.k-stage[data-state="current"] .k-stage-n { background: var(--selected-control-fg); color: var(--selected-control-bg); border-color: var(--selected-control-fg); }
+.k-stage:disabled { opacity: 1; }
+.k-stage:disabled:not([data-state="current"]) { cursor: progress; }
+.k-tl { list-style: none; margin: 0; padding: 0; }
+.k-tl-item { position: relative; display: flex; gap: 12px; padding: 0 0 16px; }
+.k-tl-item:not(:last-child)::before { content: ''; position: absolute; left: 15px; top: 34px; bottom: 2px; width: 1px; background: var(--border-default); }
+.k-tl-dot { display: inline-grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 50%; background: var(--tile-bg); border: 1px solid var(--tile-border); color: var(--text-secondary); }
+.k-tl-dot[data-tone="info"] { color: var(--info-fg); }
+.k-tl-dot[data-tone="success"] { color: var(--success-fg); }
+.k-tl-dot[data-tone="warning"] { color: var(--warning-fg); }
+.k-tl-body { min-width: 0; flex: 1; padding-top: 5px; }
+.k-tl-head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.k-tl-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.k-tl-meta { font-size: 13px; color: var(--text-tertiary); white-space: nowrap; }
+.k-tl-text { margin-top: 3px; font-size: 14px; color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 639px) {
+  .k-stages { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -2px; padding: 2px; }
+  .k-stage { flex: none; }
+  .k-item-value { max-width: 55%; }
+}
+.k-prog { display: block; height: 6px; margin-top: 6px; border-radius: 6px; background: var(--bg-surface-2); overflow: hidden; }
+.k-prog > span { display: block; height: 100%; border-radius: 6px; background: var(--info); }

@@ -20,11 +20,11 @@ import React from 'react';
 // ─── Color tokens (resolve through globals.css :root, with safe fallbacks) ──
 export const CHART = {
   // The accent names are kept for the prop API; yellow is for actions, never
-  // data (DESIGN_SYSTEM.md §1), so the primary series is sky and the second violet.
-  gold: '#38BDF8',
-  goldStrong: '#7DD3FC',
-  blue: '#A78BFA',
-  blueStrong: '#C4B5FD',
+  // data (DESIGN_SYSTEM.md §1). Series come from the approved palette only.
+  gold: 'var(--chart-1)',
+  goldStrong: 'color-mix(in srgb, #38BDF8 72%, #F8FAFC)',
+  blue: 'var(--chart-2)',
+  blueStrong: '#F8FAFC',
   green: 'var(--success, #4ADE80)',
   red: 'var(--danger, #F87171)',
   textPrimary: 'var(--text-primary, #FFFFFF)',
@@ -55,14 +55,14 @@ export function accentColors(accent: ChartAccent): AccentPair {
 /** Categorical palette for ratio breakdowns (stage mix, project type, …).
  *  Eight distinct hues, never the action yellow, so series never collide. */
 export const CATEGORICAL: readonly string[] = [
-  '#38BDF8', // sky
-  '#4ADE80', // green
-  '#A78BFA', // violet
-  '#F472B6', // pink
-  '#2DD4BF', // teal
-  '#FB923C', // orange
-  '#FBBF24', // amber
-  '#64748B', // slate
+  'var(--chart-1)',                               // link blue
+  'var(--chart-2)',                               // light blue
+  'color-mix(in srgb, #38BDF8 55%, #101722)',     // deep blue
+  '#CBD5E1',                                      // secondary text
+  'var(--chart-3)',                               // green
+  'var(--chart-4)',                               // amber
+  '#94A3B8',                                      // muted
+  '#334155',                                      // border slate
 ];
 
 // ─── Card chrome (byte-matched to premium.tsx StatCard / SectionCard) ─────────

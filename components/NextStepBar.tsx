@@ -246,20 +246,20 @@ export default function NextStepBar() {
            so scrolled page content (hero titles, tables) bled straight through
            it — the garbled overlap on every screen. Layer the gradient over the
            page base so the bar is fully opaque and nothing shows through. */
-        background: `linear-gradient(90deg, color-mix(in srgb, ${tone} 8%, transparent), rgba(0,0,0,0) 55%), var(--bg-base, #000000)`,
+        background: 'var(--bg-surface)',
         borderTop: '1px solid var(--border-subtle)',
-        borderBottom: `1px solid color-mix(in srgb, ${tone} 25%, transparent)`,
+        borderBottom: '1px solid var(--border-default)',
         minWidth: 0,
         minHeight: BAR_H, boxSizing: 'border-box',
       }}
     >
       <span style={{
         display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0,
-        color: tone, fontSize: 13, fontWeight: 800,
+        color: 'var(--text-secondary)', fontSize: 13, fontWeight: 700,
       }}>
         {complete
-          ? <CheckCircle size={14} weight="fill" color={tone} />
-          : <MapPin size={14} weight="fill" color={tone} />}
+          ? <CheckCircle size={14} weight="fill" color="var(--success)" />
+          : <MapPin size={14} weight="fill" color="var(--link)" />}
         You Are Here
       </span>
 
@@ -298,14 +298,13 @@ export default function NextStepBar() {
         className="pmBtn sag-nsb-detail"
         style={{
           flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6,
-          padding: '6px 13px', borderRadius: 8, textDecoration: 'none',
-          background: `linear-gradient(180deg, ${toneHi}, ${tone})`,
-          color: 'var(--on-brand)',
-          fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap',
-          boxShadow: `0 2px 10px color-mix(in srgb, ${tone} 27%, transparent)`,
+          minHeight: 32, padding: '6px 13px', borderRadius: 8, textDecoration: 'none',
+          background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)',
+          color: 'var(--text-primary)',
+          fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap',
         }}
       >
-        {cta} <ArrowRight size={12} weight="bold" color={'var(--on-brand)'} />
+        {cta} <ArrowRight size={12} weight="bold" />
       </Link>
     </div>
   );
