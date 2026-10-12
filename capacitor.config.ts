@@ -61,20 +61,20 @@ const config: CapacitorConfig = {
       // the web side ever called SplashScreen.hide(), so the app stayed on the
       // splash forever (seen on the iPhone simulator in CI).
       launchAutoHide: true,
-      backgroundColor: '#000000',
+      backgroundColor: '#101722',
       androidSplashResourceName: 'splash',
       androidScaleType: 'CENTER_CROP',
       showSpinner: false,
       splashFullScreen: true,
       splashImmersive: true,
       iosSpinnerStyle: 'small',
-      spinnerColor: '#FFE600',
+      spinnerColor: '#FFE000',
     },
 
     // ── Status Bar ────────────────────────────────────────────────
     StatusBar: {
       style: 'Dark',
-      backgroundColor: '#000000',
+      backgroundColor: '#101722',
       overlaysWebView: false,
     },
 
@@ -135,7 +135,7 @@ const config: CapacitorConfig = {
     limitsNavigationsToAppBoundDomains: true,
     // Scroll elastic behaviour matches native feel
     scrollEnabled: true,
-    backgroundColor: '#000000',
+    backgroundColor: '#101722',
     // Required capability entries go in ios/App/App/Info.plist
     infoPlist: {
       NSCameraUsageDescription:
@@ -156,7 +156,7 @@ const config: CapacitorConfig = {
     // Debug only — set false before App Store submission
     webContentsDebuggingEnabled: process.env.NODE_ENV !== 'production',
     appendUserAgent: 'SaguaroField/1.0',
-    backgroundColor: '#000000',
+    backgroundColor: '#101722',
     // Edge-to-edge with safe area insets
     initialFocus: false,
   },
