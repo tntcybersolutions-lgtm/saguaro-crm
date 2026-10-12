@@ -26,13 +26,27 @@
 
 import React, { useRef, useState } from 'react';
 import Link from 'next/link';
+import { CheckCircle, Circle, Clock, Info, Sparkle, Star, WarningCircle } from '@phosphor-icons/react';
 
 const CSS = `
 :root{--fl-line:var(--border-default);--fl-line-strong:var(--border-strong);--fl-text:var(--text-primary);--fl-text-2:var(--text-secondary);--fl-text-3:var(--text-tertiary);--fl-surface:var(--surface-card);--fl-neutral:var(--c-gray)}
 .sgUi{--fl-line:var(--sg-border);--fl-line-strong:var(--sg-border-strong);--fl-text:var(--sg-text);--fl-text-2:var(--sg-text-2);--fl-text-3:var(--sg-text-3);--fl-surface:var(--sg-surface-solid)}
-.fl-brief{margin:8px 16px 12px;padding:2px 0 2px 12px;border-left:2px solid var(--link);font-size:14.5px;line-height:1.45;color:var(--fl-text)}
+/* Sage's read of the data, as the concept's alert card: a status circle, the
+   sentence, and its one action as the screen's yellow button. */
+.fl-brief{display:flex;align-items:flex-start;gap:12px;margin:8px 16px 12px;padding:14px 16px;border-radius:12px;background:var(--bg-surface);border:1px solid var(--fl-line);color:var(--fl-text)}
+.fl-brief-ic{flex:none;display:inline-grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--info-bg);border:1px solid var(--info-border);color:var(--info-fg)}
+.fl-brief[data-tone=warning] .fl-brief-ic{background:var(--warning-bg);border-color:var(--warning-border);color:var(--warning-fg)}
+.fl-brief[data-tone=danger] .fl-brief-ic{background:var(--danger-bg);border-color:var(--danger-border);color:var(--danger-fg)}
+.fl-brief[data-tone=success] .fl-brief-ic{background:var(--success-bg);border-color:var(--success-border);color:var(--success-fg)}
+.fl-brief-body{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding-top:6px}
+.fl-brief-text{margin:0;font-size:15px;line-height:1.45;color:var(--fl-text)}
 .fl-brief b{font-weight:700}
-.fl-brief .fl-brief-act{color:var(--link);font-weight:650;white-space:nowrap;background:none;border:0;padding:0;font:inherit;cursor:pointer;text-decoration:none}
+.fl-brief .fl-brief-act{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:0 18px;border-radius:10px;border:0;background:var(--action-primary-bg);color:var(--action-primary-fg);font:inherit;font-size:14px;font-weight:700;white-space:nowrap;text-decoration:none;cursor:pointer}
+.fl-brief .fl-brief-act:hover{background:var(--action-primary-hover)}
+.fl-brief .fl-brief-act:active{background:var(--action-primary-pressed)}
+.fl-brief .fl-brief-act:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+@media (pointer:coarse){.fl-brief .fl-brief-act{min-height:44px}}
+@media (max-width:640px){.fl-brief-body{align-items:stretch}.fl-brief .fl-brief-act{width:100%}}
 .fl-strip{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;margin:0 16px;background:var(--bg-surface);border:1px solid var(--fl-line);border-radius:12px;overflow:hidden}
 .fl-strip>div{padding:10px 8px 10px 16px;border-right:1px solid var(--fl-line);min-width:0}
 .fl-strip>div:last-child{border-right:0}
@@ -51,12 +65,17 @@ const CSS = `
 .fl-list>li{border-bottom:1px solid var(--fl-line)}
 .fl-list>li:last-child{border-bottom:0}
 .fl-row{display:flex;align-items:center;gap:12px;padding:10px 16px;min-height:58px;color:var(--fl-text);text-decoration:none;background:var(--bg-surface);-webkit-tap-highlight-color:transparent}
+a.fl-row:hover,button.fl-row:hover{background:var(--bg-row-hover)}
 a.fl-row:active,button.fl-row:active{background:var(--fl-line)}
+a.fl-row:focus-visible,button.fl-row:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
 button.fl-row{width:100%;border:0;font:inherit;text-align:left;cursor:pointer}
 .fl-dot{width:8px;height:8px;border-radius:4px;flex:none}
 .fl-dot[data-c=red]{background:var(--danger)} .fl-dot[data-c=amber]{background:var(--warning)} .fl-dot[data-c=green]{background:var(--success)} .fl-dot[data-c=blue]{background:var(--fl-neutral)} .fl-dot[data-c=gold]{background:var(--brand-primary)} .fl-dot[data-c=grey]{background:var(--fl-text-3)}
+.fl-row>.k-tile{width:36px;height:36px}
 .fl-m{flex:1;min-width:0}
 .fl-t{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* A row with a button beside it keeps its whole title: two lines, not an ellipsis. */
+.fl-row:has(>.fl-act) .fl-t,.fl-row:has(>.fl-act) .fl-s{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.3}
 .fl-s{font-size:13px;color:var(--fl-text-2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fl-s b{font-weight:500;color:var(--fl-text)}
 .fl-r{font-size:13px;color:var(--fl-text-2);text-align:right;flex:none;font-variant-numeric:tabular-nums}
@@ -66,19 +85,39 @@ button.fl-row{width:100%;border:0;font:inherit;text-align:left;cursor:pointer}
 .fl-chev{color:var(--fl-text-3);font-size:18px;flex:none;line-height:1}
 .fl-act{position:relative;box-sizing:border-box;flex:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:0 12px;border-radius:8px;font-size:13px;font-weight:650;white-space:nowrap;cursor:pointer;border:1px solid transparent;font-family:inherit}
 .fl-act::after{content:'';position:absolute;inset:-5px -2px}
-.fl-act[data-k=primary]{background:var(--brand-primary);color:var(--on-brand)}
-.fl-act[data-k=ghost]{background:var(--bg-surface-2);color:var(--fl-text);border-color:var(--fl-line)}
-.fl-act[disabled]{opacity:.55;cursor:default}
+.fl-act[data-k=primary]{background:var(--action-primary-bg);color:var(--action-primary-fg)}
+.fl-act[data-k=primary]:hover:not([disabled]){background:var(--action-primary-hover)}
+.fl-act[data-k=primary]:active:not([disabled]){background:var(--action-primary-pressed)}
+.fl-act[data-k=ghost]{background:var(--action-secondary-bg);color:var(--action-secondary-fg);border-color:var(--action-secondary-border)}
+.fl-act[data-k=ghost]:hover:not([disabled]){background:var(--action-secondary-hover)}
+.fl-act[data-k=ghost]:active:not([disabled]){background:var(--action-secondary-pressed)}
+.fl-act:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.fl-act[disabled]:not([aria-busy=true]){background:var(--disabled-bg);color:var(--disabled-fg);border-color:var(--disabled-border);cursor:default}
+.fl-act[aria-busy=true]{opacity:.8;cursor:progress}
 .fl-tabs{display:flex;margin:10px 16px 4px;background:var(--fl-surface);border:1px solid var(--fl-line);border-radius:10px;padding:2px}
-.fl-tabs button{flex:1;min-height:36px;border:0;background:none;font:inherit;font-size:14px;font-weight:600;color:var(--fl-text-2);border-radius:8px;cursor:pointer;white-space:nowrap}
-.fl-tabs button[aria-selected=true]{background:var(--brand-primary);color:var(--on-brand);font-weight:700}
+.fl-tabs button{flex:1;min-height:36px;border:0;background:none;font:inherit;font-size:14px;font-weight:600;color:var(--tab-fg);border-radius:8px;cursor:pointer;white-space:nowrap}
+.fl-tabs button:hover:not([aria-selected=true]){background:var(--tab-hover-bg)}
+.fl-tabs button[aria-selected=true]{background:var(--tab-selected-bg);color:var(--tab-selected-fg);font-weight:700}
+.fl-tabs button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:1px}
 @media (pointer:coarse){.fl-tabs button{min-height:44px}}
-.fl-tool{display:flex;align-items:center;gap:14px;padding:0 16px;min-height:52px;color:var(--fl-text);text-decoration:none;-webkit-tap-highlight-color:transparent}
+.fl-tool{display:flex;align-items:center;gap:12px;padding:0 16px;min-height:56px;color:var(--fl-text);text-decoration:none;-webkit-tap-highlight-color:transparent}
+a.fl-tool:hover{background:var(--bg-row-hover)}
 a.fl-tool:active{background:var(--fl-line)}
-.fl-tool .fl-ti{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;flex:none;color:var(--fl-text-2);background:var(--bg-surface-2);border:1px solid var(--fl-line)}
-.fl-tool .fl-tn{flex:1;min-width:0;font-size:15.5px;font-weight:550;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fl-tool .fl-tc{font-size:13px;color:var(--fl-text-2);white-space:nowrap}
+a.fl-tool:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
+.fl-tool .fl-ti{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:none;color:var(--fl-text);background:var(--tile-bg);border:1px solid var(--tile-border)}
+.fl-tool .fl-tm{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.fl-tool .fl-tn{min-width:0;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fl-tool .fl-tc{font-size:13px;color:var(--fl-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fl-tool .fl-tc[data-warn=true]{color:var(--warning)}
+/* The concept's "More project tools": a two-column grid of separate tiles,
+   each an icon, its name over its count, and a chevron. */
+.fl-list[data-grid]{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;background:none;border:0;border-radius:0;overflow:visible}
+.fl-list[data-grid]>li,.fl-list[data-grid]>li:last-child{border:1px solid var(--fl-line);border-radius:12px;background:var(--bg-surface);overflow:hidden}
+.fl-list[data-grid] .fl-tool{gap:10px;padding:8px 10px 8px 12px;min-height:60px}
+.fl-list[data-grid] .fl-ti{width:28px;height:28px;background:none;border:0}
+.fl-list[data-grid] .fl-tm{flex-direction:column;align-items:flex-start;justify-content:center;gap:2px}
+.fl-list[data-grid] .fl-tn{font-size:14px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.25;overflow-wrap:anywhere}
+.fl-list[data-grid] .fl-tc{max-width:100%;font-size:13px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.3}
 .fl-swipe{position:relative;overflow:hidden;touch-action:pan-y}
 .fl-swipe-acts{position:absolute;top:0;right:0;bottom:0;display:flex}
 .fl-swipe-acts button{width:78px;border:0;font:inherit;font-size:13px;font-weight:700;cursor:pointer;color:var(--fl-text);background:var(--fl-line)}
@@ -104,15 +143,25 @@ export function Dot({ c }: { c: DotColor }) {
   return <span className="fl-dot" data-c={c} aria-hidden="true" />;
 }
 
-/** Sage's one-line read of the data, with at most one action. */
-export function Brief({ children, action }: { children: React.ReactNode; action?: { label: string; href?: string; onClick?: () => void } }) {
+export type FlatTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
+
+/** Sage's read of the data, with at most one action: the concept's alert card. */
+export function Brief({ children, action, tone = 'info', icon }: {
+  children: React.ReactNode;
+  action?: { label: string; href?: string; onClick?: () => void };
+  tone?: Exclude<FlatTone, 'neutral'>;
+  icon?: React.ReactNode;
+}) {
   return (
-    <p className="fl-brief">
-      {children}{' '}
-      {action && (action.href
-        ? <Link className="fl-brief-act" href={action.href}>{action.label} ›</Link>
-        : <button type="button" className="fl-brief-act" onClick={action.onClick}>{action.label} ›</button>)}
-    </p>
+    <div className="fl-brief" data-tone={tone}>
+      <span className="fl-brief-ic" aria-hidden="true">{icon ?? <Sparkle size={18} weight="fill" />}</span>
+      <div className="fl-brief-body">
+        <p className="fl-brief-text">{children}</p>
+        {action && (action.href
+          ? <Link className="fl-brief-act" href={action.href}>{action.label}</Link>
+          : <button type="button" className="fl-brief-act" onClick={action.onClick}>{action.label}</button>)}
+      </div>
+    </div>
   );
 }
 
@@ -141,8 +190,9 @@ export function SectionLabel({ children, action, id }: { children: React.ReactNo
   );
 }
 
-export function FlatList({ children, label }: { children: React.ReactNode; label?: string }) {
-  return <ul className="fl-list" aria-label={label}>{children}</ul>;
+/** A grouped list. `grid` lays tool rows out as the concept's two-column tiles. */
+export function FlatList({ children, label, grid }: { children: React.ReactNode; label?: string; grid?: boolean }) {
+  return <ul className="fl-list" aria-label={label} data-grid={grid || undefined}>{children}</ul>;
 }
 
 /** A row's one action. `primary` is gold-filled, `ghost` is outlined. 44px tap area. */
@@ -171,13 +221,27 @@ export type RowProps = {
   /** 0–100: a thin progress bar under the meta line. */
   bar?: number | null;
   chevron?: boolean;
+  /** The row's icon, drawn in a tile. A row with a `dot` and no icon gets the
+      status icon for that colour, so every status row reads the same way. */
+  icon?: React.ReactNode;
+  tone?: FlatTone;
 };
 
-/** A list row: dot · title over meta · right value or one action. Wrap in <li>. */
-export function Row({ title, meta, dot, right, rightSub, action, href, onClick, bar, chevron }: RowProps) {
+const DOT_TONE: Record<DotColor, FlatTone> = { red: 'danger', amber: 'warning', green: 'success', blue: 'info', gold: 'info', grey: 'neutral' };
+const DOT_ICON: Record<DotColor, React.ElementType> = { red: WarningCircle, amber: Clock, green: CheckCircle, blue: Info, gold: Star, grey: Circle };
+
+/** A row's icon tile (the concept's list rows). */
+export function RowIcon({ tone = 'neutral', children }: { tone?: FlatTone; children: React.ReactNode }) {
+  return <span className="k-tile" data-tone={tone === 'neutral' ? undefined : tone} aria-hidden="true">{children}</span>;
+}
+
+/** A list row: icon tile · title over meta · right value or one action. Wrap in <li>. */
+export function Row({ title, meta, dot, right, rightSub, action, href, onClick, bar, chevron, icon, tone }: RowProps) {
+  const DotIcon = dot && !icon ? DOT_ICON[dot] : null;
   const body = (
     <>
-      {dot && <Dot c={dot} />}
+      {icon ? <RowIcon tone={tone ?? (dot ? DOT_TONE[dot] : 'neutral')}>{icon}</RowIcon>
+        : DotIcon && dot ? <RowIcon tone={tone ?? DOT_TONE[dot]}><DotIcon size={18} weight="bold" /></RowIcon> : null}
       <span className="fl-m">
         <span className="fl-t" style={{ display: 'block' }}>{title}</span>
         {meta != null && <span className="fl-s" style={{ display: 'block' }}>{meta}</span>}
@@ -271,8 +335,10 @@ export function ToolRow({ icon, label, value, warn, href }: { icon: React.ReactN
   return (
     <Link className="fl-tool" href={href}>
       <span className="fl-ti" aria-hidden="true">{icon}</span>
-      <span className="fl-tn">{label}</span>
-      {value != null && <span className="fl-tc" data-warn={warn || undefined}>{value}</span>}
+      <span className="fl-tm">
+        <span className="fl-tn">{label}</span>
+        {value != null && <span className="fl-tc" data-warn={warn || undefined}>{value}</span>}
+      </span>
       <span className="fl-chev" aria-hidden="true">›</span>
     </Link>
   );

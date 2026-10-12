@@ -20,8 +20,6 @@ export const HOME_CSS = `
 .fh-in .fl-sec .fl-sec-act::after{content:'';position:absolute;inset:-6px -8px}
 .fh-in .fl-sec small{font-size:12.5px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--sg-text-3);text-shadow:none}
 .fh-in .fl-brief{margin:6px 16px 14px}
-.fh-in .fl-brief .fl-brief-act{position:relative;display:inline-block}
-.fh-in .fl-brief .fl-brief-act::after{content:'';position:absolute;inset:-12px -8px}
 .fh-in [data-tone=bad]{color:var(--danger)} .fh-in [data-tone=warn]{color:var(--warning)} .fh-in [data-tone=good]{color:var(--success)}
 .fh-in .fl-strip [data-tone] span{color:var(--sg-text-2)}
 .fh-in .fl-strip b span{display:inline;font-size:inherit;color:inherit}

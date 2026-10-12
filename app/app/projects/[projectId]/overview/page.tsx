@@ -30,10 +30,10 @@ import {
   Users, Timer, CurrencyDollar, Receipt, PlusMinus, Signature, Clipboard, NotePencil, Invoice,
   ChartLineUp, IdentificationBadge, UsersThree, ShieldCheck, AddressBook, Stamp, ChatCircle,
   FlagCheckered, Palette, Robot, Brain, Globe, Laptop, ArrowsSplit, Plug, Shield, WifiHigh, Gear,
-  Lightning, ChartBar, Broadcast,
+  Lightning, ChartBar, Broadcast, MapPin, Info, UserCircle, Archive, Check, WarningCircle,
 } from '@phosphor-icons/react';
 import {
-  FlatStyles, Brief, SectionLabel, FlatList, Row, RowAction, ToolRow, RowSkeleton, FlatEmpty, type DotColor,
+  FlatStyles, Brief, SectionLabel, FlatList, Row, RowAction, RowIcon, ToolRow, RowSkeleton, FlatEmpty, NumberStrip, type DotColor,
 } from '@/components/ui/flat';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { humanError } from '@/lib/errors';
@@ -113,16 +113,17 @@ function ToolLine({ m, projectId }: { m: ToolRowModel; projectId: string }) {
   const slug = m.tool.href.replace(/^.*\//, '');
   return (
     <li data-tour={`project-nav-${slug}`} data-tool={m.tool.id}>
-      <ToolRow icon={<Icon size={16} weight="bold" />} label={m.tool.label} value={value} warn={v.warn} href={toolHref(m.tool, projectId)} />
+      <ToolRow icon={<Icon size={20} weight="regular" />} label={m.tool.label} value={value} warn={v.warn} href={toolHref(m.tool, projectId)} />
     </li>
   );
 }
 
 /** A row that opens and closes the panel under it, in place. */
-function Disclosure({ title, meta, open, onToggle, children, id }: { title: string; meta?: React.ReactNode; open: boolean; onToggle: () => void; children: React.ReactNode; id: string }) {
+function Disclosure({ title, meta, open, onToggle, children, id, icon }: { title: string; meta?: React.ReactNode; open: boolean; onToggle: () => void; children: React.ReactNode; id: string; icon: React.ReactNode }) {
   return (
     <li>
       <button type="button" className="fl-row jx-disc" aria-expanded={open} aria-controls={id} onClick={onToggle}>
+        <RowIcon>{icon}</RowIcon>
         <span className="fl-m"><span className="fl-t" style={{ display: 'block' }}>{title}</span>{meta != null && <span className="fl-s" style={{ display: 'block' }}>{meta}</span>}</span>
         <span className="fl-chev jx-chev" aria-hidden="true" data-open={open || undefined}>›</span>
       </button>
@@ -171,7 +172,7 @@ export default function JobPage() {
     return (
       <div className="jx">{css}
         <header className="jx-head"><h1>Job not found</h1></header>
-        <Brief action={{ label: 'All jobs', href: '/app/projects' }}>This job doesn&apos;t exist, or it belongs to another company.</Brief>
+        <Brief tone="warning" icon={<WarningCircle size={18} weight="fill" />} action={{ label: 'All jobs', href: '/app/projects' }}>This job doesn&apos;t exist, or it belongs to another company.</Brief>
       </div>
     );
   }
@@ -182,7 +183,7 @@ export default function JobPage() {
       return (
         <div className="jx" role="alert">{css}
           <header className="jx-head"><h1>Couldn&apos;t load this job</h1></header>
-          <Brief action={{ label: 'Retry', onClick: retryAll }}>{why}</Brief>
+          <Brief tone="danger" icon={<WarningCircle size={18} weight="fill" />} action={{ label: 'Retry', onClick: retryAll }}>{why}</Brief>
         </div>
       );
     }
@@ -258,14 +259,14 @@ export default function JobPage() {
   const alertCount = ((data?.alerts || []) as any[]).length;
 
   /* ── Coming up: open schedule tasks by end date + scheduled inspections ── */
-  type Up = { id: string; date: string; title: string; meta: string; href: string };
+  type Up = { id: string; date: string; title: string; meta: string; href: string; kind: 'task' | 'inspection' };
   const ups: Up[] = [];
   for (const t of (data?.schedulePhases || []) as any[]) {
     const d = ymd(t.planned_end);
     if (!d || d < today || ['complete', 'completed'].includes(String(t.status || ''))) continue;
-    ups.push({ id: 'task:' + t.id, date: d, title: t.name || 'Untitled task', meta: `Task due${t.status ? ' · ' + titleCase(String(t.status)) : ''}`, href: `${base}/schedule` });
+    ups.push({ id: 'task:' + t.id, kind: 'task', date: d, title: t.name || 'Untitled task', meta: `Task due${t.status ? ' · ' + titleCase(String(t.status)) : ''}`, href: `${base}/schedule` });
   }
-  for (const i of tr?.tools.inspections?.upcoming || []) ups.push({ id: 'insp:' + i.id, date: i.date, title: i.type, meta: `Inspection${i.inspector ? ' · ' + i.inspector : ''}`, href: `${base}/inspections` });
+  for (const i of tr?.tools.inspections?.upcoming || []) ups.push({ id: 'insp:' + i.id, kind: 'inspection', date: i.date, title: i.type, meta: `Inspection${i.inspector ? ' · ' + i.inspector : ''}`, href: `${base}/inspections` });
   ups.sort((a, b) => a.date.localeCompare(b.date));
   const upDay = (d: string) => { const s = fmtDay(d, today, true); return s[0].toUpperCase() + s.slice(1); };
 
@@ -350,12 +351,12 @@ export default function JobPage() {
       {list.groups.map((g) => (
         <div key={g.key}>
           <SectionLabel>{g.label}</SectionLabel>
-          <FlatList label={g.label}>{g.rows.map((m) => <ToolLine key={m.tool.id} m={m} projectId={projectId} />)}</FlatList>
+          <FlatList label={g.label} grid>{g.rows.map((m) => <ToolLine key={m.tool.id} m={m} projectId={projectId} />)}</FlatList>
         </div>
       ))}
       <SectionLabel action={{ label: showMore ? 'Hide' : `Show ${list.more.length}`, onClick: toggleMore }}>More tools</SectionLabel>
       {showMore
-        ? <FlatList label="More tools">{list.more.map((m) => <ToolLine key={m.tool.id} m={m} projectId={projectId} />)}</FlatList>
+        ? <FlatList label="More tools" grid>{list.more.map((m) => <ToolLine key={m.tool.id} m={m} projectId={projectId} />)}</FlatList>
         : <FlatEmpty>{list.more.slice(0, 4).map((m) => m.tool.label).join(', ')}{list.more.length > 4 ? ` and ${list.more.length - 4} more` : ''}.</FlatEmpty>}
     </section>
   );
@@ -366,7 +367,7 @@ export default function JobPage() {
         <section aria-label="Needs attention">
           <SectionLabel action={alertCount > 0 ? { label: scanning ? 'Scanning…' : 'Re-scan', onClick: () => { if (!scanning) void runAutopilot(); } } : undefined}>Needs attention</SectionLabel>
           {scanMsg && <p className="jx-note" data-ok={scanMsg.ok || undefined} role="status">{scanMsg.text}</p>}
-          {aggError && !data && <Brief action={{ label: 'Retry', onClick: () => { void reloadAgg(); } }}>Couldn&apos;t load RFIs, change orders and pay apps for this list.</Brief>}
+          {aggError && !data && <Brief tone="danger" icon={<WarningCircle size={18} weight="fill" />} action={{ label: 'Retry', onClick: () => { void reloadAgg(); } }}>Couldn&apos;t load RFIs, change orders and pay apps for this list.</Brief>}
           {attn.length > 0 && (
             <FlatList label="Needs attention">
               {attnShown.map((a) => <li key={a.id}><Row dot={a.dot} title={a.title} meta={a.meta} href={a.href} /></li>)}
@@ -382,10 +383,34 @@ export default function JobPage() {
           <FlatEmpty>Nothing scheduled ahead. <Link href={`${base}/schedule`} className="jx-inline">Add to the schedule ›</Link></FlatEmpty>
         ) : (
           <FlatList label="Coming up">
-            {ups.slice(0, 5).map((u) => <li key={u.id}><Row title={u.title} meta={u.meta} rightSub={upDay(u.date)} href={u.href} /></li>)}
+            {ups.slice(0, 5).map((u) => <li key={u.id}><Row icon={u.kind === 'inspection' ? <MagnifyingGlass size={18} weight="bold" /> : <CalendarBlank size={18} weight="bold" />} tone="info" title={u.title} meta={u.meta} rightSub={upDay(u.date)} href={u.href} /></li>)}
           </FlatList>
         )}
         {ups.length > 5 && <p className="fl-empty">{ups.length - 5} more on the <Link href={`${base}/schedule`} className="jx-inline">schedule</Link>.</p>}
+      </section>
+
+      <section aria-label="Steps">
+        <SectionLabel>{done ? `Steps · ${doneCount} of ${steps.length} done` : 'Steps'}</SectionLabel>
+        {!done ? (
+          ctxError ? <FlatEmpty>Couldn&apos;t read the steps yet. <button type="button" className="jx-inline" onClick={() => { void reloadCtx(); }}>Retry</button></FlatEmpty> : <RowSkeleton rows={3} />
+        ) : (
+          <ol className="jx-steps">
+            {steps.map((s, i) => {
+              const state = done[s.key] ? 'done' : s === nextStep && !closed ? 'next' : 'todo';
+              return (
+                <li key={s.key} data-state={state}>
+                  <Link className="jx-step" href={base + (s.href || '')} aria-current={state === 'next' ? 'step' : undefined}>
+                    <span className="jx-step-n" aria-hidden="true">{state === 'done' ? <Check size={14} weight="bold" /> : i + 1}</span>
+                    <span className="jx-step-t">
+                      <b>{s.title}</b>
+                      <span>{state === 'done' ? 'Done' : state === 'next' ? `Next · ${s.desc}` : s.desc}</span>
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ol>
+        )}
       </section>
 
       <section aria-label="The job">
@@ -393,40 +418,35 @@ export default function JobPage() {
         <FlatList label="The job">
           <li>
             {closed ? (
-              <Row title={`Phase · ${stageLabel(p)}`} meta="The job is closed out" href={`${base}/closeout`} />
+              <Row icon={<FlagCheckered size={18} weight="bold" />} tone="success" title={`Phase · ${stageLabel(p)}`} meta="The job is closed out" href={`${base}/closeout`} />
             ) : (
               <Row
-                title={`Phase · ${stageLabel(p)}`}
-                meta={phase === 'building' ? 'Won — budget, field and billing lead' : 'Chasing it — takeoff, bids and proposal lead'}
-                action={<RowAction kind={phase === 'building' ? 'ghost' : 'primary'} busy={phaseBusy} onClick={() => void switchPhase()}>{phaseBusy ? 'Saving…' : phase === 'building' ? 'Back to bidding' : 'We won it'}</RowAction>}
+                icon={phase === 'building' ? <HardHat size={18} weight="bold" /> : <Flag size={18} weight="bold" />}
+                tone="info"
+                title="Phase"
+                meta={`${stageLabel(p)} · ${phase === 'building' ? 'won — budget, field and billing lead' : 'chasing it — takeoff, bids and proposal lead'}`}
+                action={<RowAction kind="ghost" busy={phaseBusy} onClick={() => void switchPhase()}>{phaseBusy ? 'Saving…' : phase === 'building' ? 'Back to bidding' : 'We won it'}</RowAction>}
               />
             )}
             {phaseErr && <p className="jx-note" role="alert">{phaseErr}</p>}
           </li>
-          <Disclosure id="jx-steps" title={done ? `Steps · ${doneCount} of ${steps.length} done` : 'Steps'} meta={!done ? 'Loading the steps…' : closed ? 'Every step is behind you' : nextStep ? `Next: ${nextStep.title}` : 'Every step is done'} open={!!open.steps} onToggle={() => flip('steps')}>
-            {!done ? <p className="fl-empty">Couldn&apos;t read the steps yet. <button type="button" className="jx-inline" onClick={() => { void reloadCtx(); }}>Retry</button></p> : (
-              <ul className="jx-sub">
-                {steps.map((s) => (
-                  <li key={s.key}><Row dot={done[s.key] ? 'green' : s === nextStep ? 'gold' : 'grey'} title={s.title} meta={done[s.key] ? 'Done' : s.desc} href={base + (s.href || '')} /></li>
-                ))}
-              </ul>
-            )}
-          </Disclosure>
-          <Disclosure id="jx-details" title="Details" meta={[pr.project_number || null, pr.owner_entity?.name || pr.owner_name || null].filter(Boolean).join(' · ') || 'Number, owner, dates, contract and billing'} open={!!open.details} onToggle={() => flip('details')}>
+          <Disclosure id="jx-details" icon={<Info size={18} weight="bold" />} title="Details" meta={[pr.project_number || null, pr.owner_entity?.name || pr.owner_name || null].filter(Boolean).join(' · ') || 'Number, owner, dates, contract and billing'} open={!!open.details} onToggle={() => flip('details')}>
             {!data ? <p className="fl-empty">{aggError ? <>Couldn&apos;t load the details. <button type="button" className="jx-inline" onClick={() => { void reloadAgg(); }}>Retry</button></> : 'Loading…'}</p> : (
               <dl className="jx-dl">
                 {[...details, ...money].map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
               </dl>
             )}
           </Disclosure>
-          <Disclosure id="jx-own" title="Ownership" meta={pr.assigned_to_name ? `Assigned to ${pr.assigned_to_name}` : 'Who runs it, and whose job it is'} open={!!open.own} onToggle={() => flip('own')}>
+          <Disclosure id="jx-own" icon={<UserCircle size={18} weight="bold" />} title="Ownership" meta={pr.assigned_to_name ? `Assigned to ${pr.assigned_to_name}` : 'Who runs it, and whose job it is'} open={!!open.own} onToggle={() => flip('own')}>
             {data ? <div className="jx-own"><ProjectOwnershipCard projectId={projectId} project={data.project} onSaved={() => { void reloadAgg(); }} /></div> : <p className="fl-empty">Loading…</p>}
           </Disclosure>
-          <Disclosure id="jx-color" title="Job color" meta="The dot beside this job everywhere" open={!!open.color} onToggle={() => flip('color')}>
+          <Disclosure id="jx-color" icon={<Palette size={18} weight="bold" />} title="Job color" meta="The dot beside this job everywhere" open={!!open.color} onToggle={() => flip('color')}>
             <div className="jx-color"><JobColorPicker projectId={projectId} color={pr.color ?? null} onSaved={() => { void reloadAgg(); }} /></div>
           </Disclosure>
           <li>
             <Row
+              icon={<Archive size={18} weight="bold" />}
+              tone="danger"
               title="Archive job"
               meta="Off the job list; records stay"
               action={<button type="button" className="fl-act jx-danger" data-k="ghost" disabled={archiving} onClick={() => void archive()}>{archiving ? 'Archiving…' : 'Archive'}</button>}
@@ -442,21 +462,28 @@ export default function JobPage() {
     <div className="jx">
       {css}
       <header className="jx-head">
-        <h1>{p.name || 'Untitled job'}</h1>
-        <p className="jx-sub-line">
-          {[addr || null, stageLabel(p)].filter(Boolean).join(' · ')}
-          {when && <> · <span data-late={when.late || undefined}>{when.text}</span></>}
-        </p>
+        <div className="jx-title">
+          <h1>{p.name || 'Untitled job'}</h1>
+          <span className="jx-pill" data-tone={stage === 'building' ? 'success' : stage === 'bidding' ? 'info' : undefined}>{stageLabel(p)}</span>
+        </div>
+        {(addr || when) && (
+          <p className="jx-meta">
+            {addr && <span><MapPin size={16} weight="bold" aria-hidden="true" />{addr}</span>}
+            {when && <span data-late={when.late || undefined}><CalendarBlank size={16} weight="bold" aria-hidden="true" />{when.text}</span>}
+          </p>
+        )}
       </header>
 
       <div className="jx-money" aria-busy={moneyState === 'loading' || undefined}>
-        <div><b>{moneyState === 'ok' ? (contract > 0 ? fmtMoneyShort(contract) : 'Not set') : moneyState === 'failed' ? '—' : <i className="jx-skel-val" />}</b>Contract</div>
-        <div><b>{moneyState === 'ok' ? fmtMoneyShort(billed) : moneyState === 'failed' ? '—' : <i className="jx-skel-val" />}</b>Billed{moneyState === 'ok' && billed > 0 && pct != null ? ` · ${pct}%` : ''}</div>
-        <div><b>{third.value}</b>{third.label}</div>
+        <NumberStrip items={[
+          { value: moneyState === 'ok' ? (contract > 0 ? fmtMoneyShort(contract) : 'Not set') : moneyState === 'failed' ? '—' : <i className="jx-skel-val" />, label: 'Contract' },
+          { value: moneyState === 'ok' ? fmtMoneyShort(billed) : moneyState === 'failed' ? '—' : <i className="jx-skel-val" />, label: `Billed${moneyState === 'ok' && billed > 0 && pct != null ? ` · ${pct}%` : ''}` },
+          { value: third.value, label: third.label },
+        ]} />
+        {moneyState === 'ok' && billed > 0 && contract > 0 && (
+          <div className="jx-bar" role="progressbar" aria-label="Billed of contract" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct ?? 0}><i style={{ width: `${Math.min(100, pct ?? 0)}%` }} /></div>
+        )}
       </div>
-      {moneyState === 'ok' && billed > 0 && contract > 0 && (
-        <div className="jx-bar" role="progressbar" aria-label="Billed of contract" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct ?? 0}><i style={{ width: `${Math.min(100, pct ?? 0)}%` }} /></div>
-      )}
 
       {brief ? (
         <Brief action={{ label: brief.action.label, href: base + brief.action.href }}>
@@ -482,7 +509,7 @@ function JobSkeleton({ css }: { css: React.ReactNode }) {
     <div className="jx" aria-busy="true" aria-label="Loading job">
       {css}
       <header className="jx-head"><i className="jx-skel" style={{ width: '70%', height: 20 }} /><i className="jx-skel" style={{ width: '50%', height: 12, marginTop: 10 }} /></header>
-      <div className="jx-money"><div><i className="jx-skel-val" />Contract</div><div><i className="jx-skel-val" />Billed</div><div><i className="jx-skel-val" />Finish</div></div>
+      <div className="jx-money"><NumberStrip items={[{ value: <i className="jx-skel-val" />, label: 'Contract' }, { value: <i className="jx-skel-val" />, label: 'Billed' }, { value: <i className="jx-skel-val" />, label: 'Finish' }]} /></div>
       <div className="jx-brief-skel"><i /><i /></div>
       <RowSkeleton rows={8} />
     </div>
@@ -494,51 +521,68 @@ function JobSkeleton({ css }: { css: React.ReactNode }) {
 const CSS = `
 .jx{width:100%;max-width:1240px;box-sizing:border-box;padding:4px 0 32px;color:var(--fl-text);background:var(--bg-base);min-height:calc(100vh - 120px)}
 .jx-head{padding:12px 16px 4px}
-.jx-head h1{margin:0;font-size:20px !important;font-weight:700;line-height:1.2;color:var(--fl-text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
-.jx-sub-line{margin:4px 0 0;font-size:13px;color:var(--fl-text-2);line-height:1.4}
-.jx-sub-line [data-late]{color:var(--warning)}
-.jx-money{display:flex;gap:18px;padding:10px 16px 10px;font-size:13px;color:var(--fl-text-2)}
-.jx-money>div{min-width:0}
-.jx-money b{display:block;font-size:16px;font-weight:700;color:var(--fl-text);font-variant-numeric:tabular-nums;white-space:nowrap}
-.jx-bar{height:3px;margin:0 16px 12px;background:var(--fl-line);border-radius:2px;overflow:hidden}
-.jx-bar i{display:block;height:100%;background:var(--brand-primary)}
-.jx .fl-brief{margin-top:2px}
+.jx-title{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;min-width:0}
+.jx .jx-head h1{margin:0;min-width:0;font-size:24px;font-weight:800;letter-spacing:-0.01em;line-height:1.2;color:var(--fl-text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.jx-pill{display:inline-flex;align-items:center;min-height:26px;padding:0 10px;border-radius:999px;font-size:13px;font-weight:700;white-space:nowrap;background:var(--bg-surface-2);color:var(--fl-text-2);border:1px solid var(--fl-line)}
+.jx-pill[data-tone=info]{background:var(--info-bg);color:var(--info-fg);border-color:var(--info-border)}
+.jx-pill[data-tone=success]{background:var(--success-bg);color:var(--success-fg);border-color:var(--success-border)}
+.jx-meta{display:flex;flex-wrap:wrap;gap:6px 18px;margin:8px 0 0;font-size:14px;color:var(--fl-text-2);line-height:1.4}
+.jx-meta>span{display:inline-flex;align-items:center;gap:6px;min-width:0}
+.jx-meta svg{flex:none;color:var(--fl-text-3)}
+.jx-meta [data-late]{color:var(--warning)}
+.jx-meta [data-late] svg{color:var(--warning)}
+.jx-money{padding:10px 0 4px}
+.jx-bar{height:6px;margin:8px 16px 4px;background:var(--fl-line);border-radius:3px;overflow:hidden}
+.jx-bar i{display:block;height:100%;background:var(--success);border-radius:3px}
+.jx .fl-brief{margin-top:10px}
 .jx-skel,.jx-skel-val,.jx-brief-skel i{display:block;border-radius:5px;background:var(--fl-line);animation:jx-pulse 1.2s ease-in-out infinite}
 .jx-skel-val{display:inline-block;width:44px;height:12px;vertical-align:middle}
 .jx-money .jx-skel-val{display:block;height:16px;width:56px;margin-bottom:4px}
-.jx-brief-skel{margin:8px 16px 12px;padding:2px 0 2px 12px;border-left:2px solid var(--fl-line)}
+.jx-brief-skel{margin:10px 16px 12px;padding:16px;border:1px solid var(--fl-line);border-radius:12px;background:var(--bg-surface)}
 .jx-brief-skel i{height:12px;width:92%;margin:4px 0 8px}
 .jx-brief-skel i+i{width:60%}
 @keyframes jx-pulse{50%{opacity:.45}}
 @media (prefers-reduced-motion:reduce){.jx-skel,.jx-skel-val,.jx-brief-skel i{animation:none}}
-.jx-more{display:flex;align-items:center;min-height:44px;padding:0 16px;background:none;border:0;color: var(--link);font:inherit;font-size:14px;font-weight:650;cursor:pointer}
-.jx-inline{color: var(--link);font-weight:650;text-decoration:none;background:none;border:0;padding:0;font:inherit;cursor:pointer}
+.jx-more{display:flex;align-items:center;min-height:44px;padding:0 16px;background:none;border:0;color:var(--link);font:inherit;font-size:14px;font-weight:650;cursor:pointer}
+.jx-inline{color:var(--link);font-weight:650;text-decoration:none;background:none;border:0;padding:0;font:inherit;cursor:pointer}
 .jx-note{margin:0;padding:6px 16px 10px;font-size:13px;color:var(--danger)}
 .jx-note[data-ok]{color:var(--success)}
-.jx-disc{background:none}
+.jx-disc{background:var(--bg-surface)}
 .jx-chev{transition:transform .15s ease}
 .jx-chev[data-open]{transform:rotate(90deg)}
 .jx-panel{padding:0 0 8px}
-.jx-sub{list-style:none;margin:0;padding:0 0 0 12px}
-.jx-sub>li{border-top:1px solid var(--fl-line)}
+/* The concept's numbered steps: a circle per step joined by a line; done
+   steps carry a check, the next one is lit in the link colour. */
+.jx-steps{list-style:none;margin:0 16px;padding:4px 0}
+.jx-steps>li{position:relative}
+.jx-steps>li:not(:last-child)::before{content:"";position:absolute;left:15px;top:40px;bottom:-4px;width:2px;border-radius:1px;background:var(--fl-line)}
+.jx-steps>li[data-state=done]:not(:last-child)::before{background:var(--success-border)}
+.jx-step{display:flex;align-items:flex-start;gap:12px;padding:6px 0 10px;min-height:44px;color:var(--fl-text);text-decoration:none;border-radius:10px}
+.jx-step:hover .jx-step-t b{color:var(--link)}
+.jx-step:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.jx-step-n{flex:none;display:inline-grid;place-items:center;width:32px;height:32px;border-radius:50%;font-size:14px;font-weight:700;background:var(--bg-surface);color:var(--fl-text-2);border:1px solid var(--fl-line-strong);font-variant-numeric:tabular-nums}
+.jx-steps [data-state=done] .jx-step-n{background:var(--success-bg);color:var(--success-fg);border-color:var(--success-border)}
+.jx-steps [data-state=next] .jx-step-n{background:var(--info-bg);color:var(--info-fg);border-color:var(--info-fg)}
+.jx-step-t{min-width:0;display:flex;flex-direction:column;gap:2px;padding-top:5px}
+.jx-step-t b{font-size:15px;font-weight:700}
+.jx-step-t span{font-size:13px;color:var(--fl-text-2);line-height:1.4}
+.jx-steps [data-state=done] .jx-step-t b{color:var(--fl-text-2);font-weight:600}
+.jx-steps [data-state=next] .jx-step-t span{color:var(--fl-text)}
 .jx-dl{margin:0;padding:0 16px}
-.jx-dl>div{display:flex;justify-content:space-between;gap:16px;min-height:40px;align-items:center;border-top:1px solid var(--fl-line);font-size:14px}
+.jx-dl>div{display:flex;justify-content:space-between;gap:16px;min-height:44px;align-items:center;border-top:1px solid var(--fl-line);font-size:14px}
 .jx-dl dt{color:var(--fl-text-2)}
 .jx-dl dd{margin:0;color:var(--fl-text);font-weight:600;text-align:right;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;min-width:0}
 .jx-own{padding:0 16px}
+/* The card and the swatches set inline styles; these two overrides predate the theme work and only reach this page. */
 .jx-own .k-card{background:none !important;border:0 !important;box-shadow:none !important;padding:0 !important;border-radius:0 !important}
 .jx-color{padding:6px 16px 10px}
 .jx-color [role=radio]{width:36px !important;height:36px !important;position:relative}
 .jx-color [role=radio]::after{content:"";position:absolute;inset:-4px}
-.jx-danger{color:var(--danger) !important}
-.jx [data-tool] .fl-tc{max-width:52vw;overflow:hidden;text-overflow:ellipsis}
-/* The brief's one action sits inside the sentence; its tap area reaches 44px without moving a word. */
-.jx .fl-brief-act{position:relative;display:inline-block}
-.jx .fl-brief-act::after{content:"";position:absolute;inset:-12px -6px}
+.jx .fl-act.jx-danger{background:var(--action-danger-bg);color:var(--action-danger-fg);border-color:var(--danger-border)}
+.jx .fl-act.jx-danger:hover:not([disabled]){background:var(--action-danger-hover)}
 @media (min-width:1100px){
   .jx{padding:12px 8px 48px}
-  .jx-head h1{font-size:22px !important}
+  .jx .jx-head h1{font-size:26px}
   .jx-cols{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:0 40px;align-items:start}
-  .jx [data-tool] .fl-tc{max-width:none}
 }
 `;
