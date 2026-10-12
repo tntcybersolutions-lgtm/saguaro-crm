@@ -142,7 +142,7 @@ export async function GET(req: NextRequest) {
 
   const res = NextResponse.json({
     project: {
-      id: p.id, name: p.name, status: p.status, address: p.address,
+      id: p.id, name: p.name, status: p.status, closeoutDate: p.closeout_date, address: p.address,
       projectNumber: p.project_number, ownerName: p.owner_name, ownerEmail: p.owner_email,
       architectName: p.architect_name, startDate: p.start_date, endDate: p.end_date,
       percentComplete: N(p.percent_complete), setupStep: p.setup_step, setupComplete: p.setup_complete,
