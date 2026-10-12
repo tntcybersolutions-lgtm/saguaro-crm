@@ -177,10 +177,12 @@ export const z = {
  * the Inter font default dropped: the brand stays NEON YELLOW (--brand-primary)
  * and the type stays on the native system stack (`font.family` above). */
 export const layout = {
-  gutter:        'clamp(16px, 1.67vw, 32px)', // desktop page gutter → 32 on wide
+  /* Mirrors the page-layout tokens in app/globals.css :root (DESIGN_SYSTEM.md
+     §2a): the page frame (.k-frame) owns the gutter on every /app page. */
+  gutter:        'var(--page-gutter)', // 24px desktop
   gutterMobile:  16,
-  gap:           24,   // standard block gap between page sections
-  gapMobile:     16,
+  gap:           16,   // --section-gap: between page sections
+  gapMobile:     12,
   topbarHeight:  60,
   navWidth:      256,  // expanded rail (current sidebar.width stays 240 until the shell migrates)
   navWidthCollapsed: 72,
