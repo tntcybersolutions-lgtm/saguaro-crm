@@ -1,9 +1,9 @@
 name: iOS evidence
 
-# Real-iOS screenshots for the redesign: the app shell's launch and sign-in in
-# the iPhone simulator, then every route in tools/ios-evidence-routes.txt in
-# Mobile Safari on the same simulator (same WebKit as the shell's WKWebView),
-# signed in as the real company, read-only. Results are encrypted to the repo
+# Real-iOS screenshots for the redesign: the app shell's launch in the iPhone
+# simulator, then the real app driven by Appium XCUITest — signed in as the real
+# company inside the app's own WKWebView, every route in
+# tools/ios-evidence-native-routes.txt, read-only. Results are encrypted to the repo
 # key and committed here; nothing readable lands in this public repo.
 on:
   push:
@@ -63,28 +63,21 @@ jobs:
           sleep 2;  xcrun simctl io "$SIM_UDID" screenshot --type=jpeg "$OUT/shell-1-launch.jpg"
           sleep 25; xcrun simctl io "$SIM_UDID" screenshot --type=jpeg "$OUT/shell-2-loaded.jpg"
           xcrun simctl terminate "$SIM_UDID" net.saguarocontrol.field || true
-      - name: Mobile Safari — every route, signed in
+      - name: Native app — Appium XCUITest, signed in
+        # safaridriver would not create a session on this runner (three runs);
+        # Appium's XCUITest driver drives the real app instead and attaches to
+        # its WKWebView (inspectable in this Debug build).
         run: |
-          # Remote Automation on the simulator's Safari (Settings > Safari > Advanced),
-          # then run Safari once so WebDriver can attach to it.
-          for k in RemoteAutomationEnabled WebKitRemoteAutomationEnabled; do
-            xcrun simctl spawn "$SIM_UDID" defaults write com.apple.mobilesafari "$k" -bool YES || true
-          done
-          xcrun simctl spawn "$SIM_UDID" defaults write com.apple.WebDriver RemoteAutomationEnabled -bool YES || true
-          xcrun simctl openurl "$SIM_UDID" "prefs:root=SAFARI&path=ADVANCED" || true
-          sleep 4
-          xcrun simctl launch "$SIM_UDID" com.apple.mobilesafari || true
-          xcrun simctl openurl "$SIM_UDID" "https://www.saguarocontrol.net/login" || true
-          sleep 8
-          xcrun simctl terminate "$SIM_UDID" com.apple.mobilesafari || true
-          sudo safaridriver --enable
-          safaridriver -p 4444 --diagnose > /tmp/safaridriver.log 2>&1 &
-          sleep 3
+          npm i -g --no-audit --no-fund appium@2.11.5 > /dev/null 2>&1
+          appium driver install xcuitest@7.27.1 > /tmp/appium-install.txt 2>&1 || appium driver install xcuitest > /tmp/appium-install.txt 2>&1
+          appium --port 4723 --log /tmp/appium.log --log-level info > /dev/null 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:4723/status > /dev/null && break; sleep 2; done
           export SITE="$(tr -d '[:space:]' < tools/probe-site.txt 2>/dev/null || echo https://www.saguarocontrol.net)"
           # The repo is public: nothing about the company goes to the log.
-          node tools/ios-evidence.mjs > /tmp/ios-stdout.txt 2>&1 && echo "evidence finished" || echo "evidence exited non-zero (details are in the encrypted result)"
-          tail -c 4000 /tmp/safaridriver.log > tools/ios-evidence/safaridriver.txt 2>/dev/null || true
-          ls -t ~/Library/Logs/com.apple.WebDriver/*.txt 2>/dev/null | head -1 | xargs -I{} tail -c 6000 {} >> tools/ios-evidence/safaridriver.txt 2>/dev/null || true
+          node tools/ios-evidence-native.mjs > /tmp/ios-stdout.txt 2>&1 && echo "native evidence finished" || echo "native evidence exited non-zero (details are in the encrypted result)"
+          mkdir -p tools/ios-evidence
+          grep -E "error|Error|WebDriverAgent|webview|WEBVIEW|context" /tmp/appium.log | tail -c 8000 > tools/ios-evidence/appium.txt 2>/dev/null || true
+          tail -c 2000 /tmp/appium-install.txt >> tools/ios-evidence/appium.txt 2>/dev/null || true
       - name: "Encrypt the result (public repo: only the key holder can read it)"
         if: always()
         run: |

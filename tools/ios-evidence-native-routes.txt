@@ -1,0 +1,8 @@
+/app
+/app/my-work
+/app/projects
+/app/projects/[projectId]/overview
+/app/leads
+/app/compliance
+/app/prequalification
+/app/invoicing
