@@ -11,6 +11,7 @@ import {
   toShift,
   workedHoursFor,
   type ShiftRow,
+  punchTime,
 } from '@/lib/timeclock/server';
 
 /**
@@ -65,8 +66,12 @@ export async function POST(req: NextRequest) {
     //    supplied, otherwise whatever the shift already carried — never an
     //    invented default deduction.
     const nowIso = new Date().toISOString();
+    // A punch kept on the phone lands when it was tapped — never before the shift began.
+    const saved = punchTime(req.headers, nowIso);
+    const punchedAt = new Date(saved.at).getTime() > new Date(open.clock_in).getTime() ? saved.at : nowIso;
+    const savedOffline = saved.savedOffline && punchedAt === saved.at;
     const mealBreakMins = minutesOrNull(body.breakMinutes) ?? (Number(open.meal_break_mins ?? 0) || 0);
-    const worked = workedHoursFor(open.clock_in, nowIso, mealBreakMins);
+    const worked = workedHoursFor(open.clock_in, punchedAt, mealBreakMins);
     const hours = splitHours(worked);
 
     // 3) `.is('clock_out', null)` makes the close itself idempotent: a second
@@ -74,7 +79,7 @@ export async function POST(req: NextRequest) {
     const { data: updated, error: updErr } = await db
       .from('time_entries')
       .update({
-        clock_out: nowIso,
+        clock_out: punchedAt,
         meal_break_mins: mealBreakMins,
         hours_worked: hours.worked,
         // total_hours is a GENERATED column in Postgres — writing it makes the
@@ -84,7 +89,7 @@ export async function POST(req: NextRequest) {
         doubletime_hours: hours.doubletime,
         is_overtime: hours.overtime > 0 || hours.doubletime > 0,
         status: 'pending',
-        gps_clock_out: gpsPayload(body.lat, body.lng, body.address, body.clientTime, nowIso),
+        gps_clock_out: gpsPayload(body.lat, body.lng, body.address, body.clientTime, nowIso, savedOffline),
         updated_at: nowIso,
       } as never)
       .eq('tenant_id', t)
@@ -103,7 +108,7 @@ export async function POST(req: NextRequest) {
       projectId: open.project_id,
       employeeName: employee.name,
       punchType: 'out',
-      punchedAt: nowIso,
+      punchedAt,
       lat: body.lat as number | null | undefined,
       lng: body.lng as number | null | undefined,
       address: body.address as string | null | undefined,

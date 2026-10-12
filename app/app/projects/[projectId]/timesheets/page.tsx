@@ -39,6 +39,8 @@ interface TimeEntry {
   project_id: string;
   /** "PTO" / "Sick" … on a leave row (its regular / OT are 0), else null. */
   leave_label?: string | null;
+  /** Punched with no signal and sent later — the times came from the phone. */
+  sent_late?: boolean;
   /** Leave hours (hours_worked) on a leave row, else null. */
   leave_hrs?: number | null;
 }
@@ -361,7 +363,10 @@ export default function TimesheetsPage() {
             headers={['Employee', 'Date', 'Regular Hrs', 'OT Hrs', 'Total Hrs', 'Classification', 'Status', 'Actions']}
             rows={filtered.map(e => [
               <span key="emp" style={{ fontWeight: 600 }}>{e.employee}</span>,
-              <span key="dt" style={{ color: T.muted, whiteSpace: 'nowrap' }}>{e.date}</span>,
+              <span key="dt" style={{ color: T.muted, whiteSpace: 'nowrap' }}>
+                {e.date}
+                {e.sent_late && <> <Badge label="Punched offline" color="amber" /></>}
+              </span>,
               ...(e.leave_label ? [
                 /* A PTO / sick row: no worked hours. Show its leave hours and what kind of
                    leave it is — it used to read as an unlabeled 0-hour shift. */

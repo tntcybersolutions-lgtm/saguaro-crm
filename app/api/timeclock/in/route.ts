@@ -14,6 +14,7 @@ import {
   toShift,
   workDateFor,
   type ShiftRow,
+  punchTime,
 } from '@/lib/timeclock/server';
 import { must } from '@/lib/db-write';
 import { TIME_ZONE_HEADER } from '@/lib/time-zone';
@@ -66,6 +67,8 @@ export async function POST(req: NextRequest) {
     }
 
     const nowIso = new Date().toISOString();
+    // A punch kept on the phone with no signal lands at the moment it was tapped.
+    const { at: punchedAt, savedOffline } = punchTime(req.headers, nowIso);
     const timezone = await resolveTimezone(db, t, employee.id, (body as { timezone?: unknown }).timezone, req.headers.get(TIME_ZONE_HEADER));
     const csiDivision = typeof body.csiDivision === 'string' && body.csiDivision.trim() ? body.csiDivision.trim() : null;
     const costCodeId = typeof body.costCodeId === 'string' && body.costCodeId.trim() ? body.costCodeId.trim() : null;
@@ -76,8 +79,8 @@ export async function POST(req: NextRequest) {
         tenant_id: t,
         employee_id: employee.id,
         project_id: projectId,
-        work_date: workDateFor(nowIso, timezone),
-        clock_in: nowIso,
+        work_date: workDateFor(punchedAt, timezone),
+        clock_in: punchedAt,
         clock_out: null,
         status: 'clocked_in',
         entry_type: 'regular',
@@ -85,7 +88,7 @@ export async function POST(req: NextRequest) {
         cost_code_id: costCodeId,
         csi_division: csiDivision,
         cost_code_description: csiDivision ? CSI_DIVISIONS[csiDivision]?.name ?? null : null,
-        gps_clock_in: gpsPayload(body.lat, body.lng, body.address, body.clientTime, nowIso),
+        gps_clock_in: gpsPayload(body.lat, body.lng, body.address, body.clientTime, nowIso, savedOffline),
         created_by: await resolveCreatedBy(db, g.user.id),
       } as never)
       .select(SHIFT_COLUMNS)
@@ -117,7 +120,7 @@ export async function POST(req: NextRequest) {
       projectId,
       employeeName: employee.name,
       punchType: 'in',
-      punchedAt: nowIso,
+      punchedAt,
       lat: body.lat as number | null | undefined,
       lng: body.lng as number | null | undefined,
       address: body.address as string | null | undefined,

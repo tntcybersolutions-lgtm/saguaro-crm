@@ -16,6 +16,7 @@ import { getAuthHeaders } from '@/lib/supabase-browser';
 import { step } from '@/lib/ui/status';
 import { describeRequest } from '@/lib/ui/status-labels';
 import { STATUS_HEADER, reasonFromResponse } from '@/lib/ui/status-fetch';
+import { SAVED_AT_HEADER } from '@/lib/offline/saved-at';
 
 export interface OutboxItem {
   id: string;
@@ -276,7 +277,8 @@ async function drainOnce(): Promise<{ done: number; failed: number }> {
   // Written records first (a log is small and the office is waiting on it), then media.
   for (const w of writes) {
     try {
-      const res = await fetch(w.url, { method: w.method, headers: { 'Content-Type': 'application/json', [STATUS_HEADER]: 'off', ...(await getAuthHeaders()) }, body: w.body ?? undefined });
+      // SAVED_AT_HEADER: when it was really done, so a punch kept on the phone keeps its time.
+      const res = await fetch(w.url, { method: w.method, headers: { 'Content-Type': 'application/json', [STATUS_HEADER]: 'off', [SAVED_AT_HEADER]: new Date(w.createdAt).toISOString(), ...(await getAuthHeaders()) }, body: w.body ?? undefined });
       if (!res.ok && res.status !== 404) {
         // 404 on an edit/delete: the record is already gone — nothing left to do.
         const text = await res.text().catch(() => '');
