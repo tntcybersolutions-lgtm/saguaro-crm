@@ -30,28 +30,27 @@ import Link from 'next/link';
 const CSS = `
 :root{--fl-line:var(--border-default);--fl-line-strong:var(--border-strong);--fl-text:var(--text-primary);--fl-text-2:var(--text-secondary);--fl-text-3:var(--text-tertiary);--fl-surface:var(--surface-card);--fl-neutral:var(--c-gray)}
 .sgUi{--fl-line:var(--sg-border);--fl-line-strong:var(--sg-border-strong);--fl-text:var(--sg-text);--fl-text-2:var(--sg-text-2);--fl-text-3:var(--sg-text-3);--fl-surface:var(--sg-surface-solid)}
-.fl-brief{margin:8px 16px 12px;padding:2px 0 2px 12px;border-left:2px solid var(--brand-primary);font-size:14.5px;line-height:1.45;color:var(--fl-text)}
+.fl-brief{margin:8px 16px 12px;padding:2px 0 2px 12px;border-left:2px solid var(--link);font-size:14.5px;line-height:1.45;color:var(--fl-text)}
 .fl-brief b{font-weight:700}
-.fl-brief .fl-brief-act{color:var(--brand-primary);font-weight:650;white-space:nowrap;background:none;border:0;padding:0;font:inherit;cursor:pointer;text-decoration:none}
-.fl-strip{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border-top:1px solid var(--fl-line);border-bottom:1px solid var(--fl-line)}
+.fl-brief .fl-brief-act{color:var(--link);font-weight:650;white-space:nowrap;background:none;border:0;padding:0;font:inherit;cursor:pointer;text-decoration:none}
+.fl-strip{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;margin:0 16px;background:var(--bg-surface);border:1px solid var(--fl-line);border-radius:12px;overflow:hidden}
 .fl-strip>div{padding:10px 8px 10px 16px;border-right:1px solid var(--fl-line);min-width:0}
 .fl-strip>div:last-child{border-right:0}
-.fl-strip b{display:block;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--fl-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fl-strip span{display:block;font-size:11px;color:var(--fl-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fl-strip b{display:block;font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--fl-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fl-strip span{display:block;font-size:12px;color:var(--fl-text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fl-strip [data-tone=bad] b{color:var(--danger)}
 .fl-strip [data-tone=warn] b{color:var(--warning)}
 .fl-strip [data-tone=good] b{color:var(--success)}
-/* A section heading is a topic you scan for, so it is lit (Chad, 2026-10-11):
-   brand yellow, 16px, with a short glowing bar in front. Same look as
-   .pmSecTitle / .k-card-title / .sg-nav-head in globals.css. */
-.fl-sec.fl-sec{margin:0;line-height:1.25;-webkit-text-fill-color:currentColor;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 16px 8px;font-size:16px;font-weight:800;letter-spacing:.005em;color:var(--brand-primary);text-transform:none;text-shadow:0 0 14px color-mix(in srgb,var(--brand-primary) 35%,transparent)}
+/* A section heading: white, 16px, bold — the same look as .pmSecTitle /
+   .k-card-title in globals.css. Its action ("See all ›") is a blue link. */
+.fl-sec.fl-sec{margin:0;line-height:1.25;-webkit-text-fill-color:currentColor;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 16px 8px;font-size:16px;font-weight:700;letter-spacing:-0.005em;color:var(--fl-text);text-transform:none;text-shadow:none}
 .fl-sec>span:first-child{display:inline-flex;align-items:center;gap:9px;min-width:0}
-.fl-sec>span:first-child::before{content:'';flex:none;width:4px;height:1.05em;border-radius:2px;background:var(--brand-primary);box-shadow:0 0 10px color-mix(in srgb,var(--brand-primary) 60%,transparent)}
-.fl-sec .fl-sec-act{position:relative;color:var(--brand-primary);-webkit-text-fill-color:currentColor;font-weight:600;letter-spacing:0;text-transform:none;font-size:13px;text-decoration:none;background:none;border:0;padding:0;cursor:pointer}
+.fl-sec .fl-sec-act{position:relative;color:var(--link);-webkit-text-fill-color:currentColor;font-weight:600;letter-spacing:0;text-transform:none;font-size:13px;text-decoration:none;background:none;border:0;padding:0;cursor:pointer}
 .fl-sec .fl-sec-act::after{content:'';position:absolute;inset:-14px -10px}
-.fl-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--fl-line)}
+.fl-list{list-style:none;margin:0 16px;padding:0;background:var(--bg-surface);border:1px solid var(--fl-line);border-radius:12px;overflow:hidden}
 .fl-list>li{border-bottom:1px solid var(--fl-line)}
-.fl-row{display:flex;align-items:center;gap:12px;padding:10px 16px;min-height:58px;color:var(--fl-text);text-decoration:none;background:var(--bg-base,transparent);-webkit-tap-highlight-color:transparent}
+.fl-list>li:last-child{border-bottom:0}
+.fl-row{display:flex;align-items:center;gap:12px;padding:10px 16px;min-height:58px;color:var(--fl-text);text-decoration:none;background:var(--bg-surface);-webkit-tap-highlight-color:transparent}
 a.fl-row:active,button.fl-row:active{background:var(--fl-line)}
 button.fl-row{width:100%;border:0;font:inherit;text-align:left;cursor:pointer}
 .fl-dot{width:8px;height:8px;border-radius:4px;flex:none}
@@ -63,29 +62,29 @@ button.fl-row{width:100%;border:0;font:inherit;text-align:left;cursor:pointer}
 .fl-r{font-size:13px;color:var(--fl-text-2);text-align:right;flex:none;font-variant-numeric:tabular-nums}
 .fl-r b{display:block;color:var(--fl-text);font-size:15px;font-weight:650}
 .fl-bar{height:3px;background:var(--fl-line);border-radius:2px;margin-top:6px;overflow:hidden}
-.fl-bar i{display:block;height:100%;background:var(--brand-primary)}
+.fl-bar i{display:block;height:100%;background:var(--success)}
 .fl-chev{color:var(--fl-text-3);font-size:18px;flex:none;line-height:1}
 .fl-act{position:relative;box-sizing:border-box;flex:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:0 12px;border-radius:8px;font-size:13px;font-weight:650;white-space:nowrap;cursor:pointer;border:1px solid transparent;font-family:inherit}
 .fl-act::after{content:'';position:absolute;inset:-5px -2px}
-.fl-act[data-k=primary]{background:var(--brand-primary);color:var(--bg-base)}
-.fl-act[data-k=ghost]{background:none;color:var(--brand-primary);border-color:var(--fl-line-strong)}
+.fl-act[data-k=primary]{background:var(--brand-primary);color:var(--on-brand)}
+.fl-act[data-k=ghost]{background:var(--bg-surface-2);color:var(--fl-text);border-color:var(--fl-line)}
 .fl-act[disabled]{opacity:.55;cursor:default}
 .fl-tabs{display:flex;margin:10px 16px 4px;background:var(--fl-surface);border:1px solid var(--fl-line);border-radius:10px;padding:2px}
 .fl-tabs button{flex:1;min-height:36px;border:0;background:none;font:inherit;font-size:13.5px;font-weight:600;color:var(--fl-text-2);border-radius:8px;cursor:pointer;white-space:nowrap}
-.fl-tabs button[aria-selected=true]{background:var(--fl-line);color:var(--fl-text)}
+.fl-tabs button[aria-selected=true]{background:var(--brand-primary);color:var(--on-brand);font-weight:700}
 @media (pointer:coarse){.fl-tabs button{min-height:44px}}
 .fl-tool{display:flex;align-items:center;gap:14px;padding:0 16px;min-height:52px;color:var(--fl-text);text-decoration:none;-webkit-tap-highlight-color:transparent}
 a.fl-tool:active{background:var(--fl-line)}
-.fl-tool .fl-ti{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;flex:none;color:var(--brand-primary);background:var(--fl-surface);border:1px solid var(--fl-line)}
+.fl-tool .fl-ti{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;flex:none;color:var(--fl-text-2);background:var(--bg-surface-2);border:1px solid var(--fl-line)}
 .fl-tool .fl-tn{flex:1;min-width:0;font-size:15.5px;font-weight:550;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fl-tool .fl-tc{font-size:13px;color:var(--fl-text-2);white-space:nowrap}
 .fl-tool .fl-tc[data-warn=true]{color:var(--warning)}
 .fl-swipe{position:relative;overflow:hidden;touch-action:pan-y}
 .fl-swipe-acts{position:absolute;top:0;right:0;bottom:0;display:flex}
 .fl-swipe-acts button{width:78px;border:0;font:inherit;font-size:13px;font-weight:700;cursor:pointer;color:var(--fl-text);background:var(--fl-line)}
-.fl-swipe-acts button[data-k=primary]{background:var(--brand-primary);color:var(--bg-base)}
-.fl-swipe-acts button[data-k=good]{background:var(--success);color:var(--bg-base)}
-.fl-swipe-body{position:relative;background:var(--bg-base,transparent);transition:transform .2s cubic-bezier(.2,.7,.3,1)}
+.fl-swipe-acts button[data-k=primary]{background:var(--brand-primary);color:var(--on-brand)}
+.fl-swipe-acts button[data-k=good]{background:var(--success);color:var(--on-brand)}
+.fl-swipe-body{position:relative;background:var(--bg-surface);transition:transform .2s cubic-bezier(.2,.7,.3,1)}
 .fl-swipe-body[data-drag=true]{transition:none}
 .fl-skel{display:flex;align-items:center;gap:12px;padding:12px 16px;min-height:58px;border-bottom:1px solid var(--fl-line)}
 .fl-skel i{display:block;height:10px;border-radius:5px;background:var(--fl-line);animation:fl-pulse 1.2s ease-in-out infinite}

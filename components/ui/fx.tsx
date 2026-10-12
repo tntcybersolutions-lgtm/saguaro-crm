@@ -33,7 +33,7 @@ export const GOLD_HI = 'var(--brand-primary-strong)';
 
 /** The gold → light-gold shimmer gradient used for accent words + shine. */
 export const GOLD_TEXT_GRADIENT =
-  'linear-gradient(100deg, var(--brand-primary) 6%, var(--brand-primary-strong) 42%, #FFF7A8 60%, var(--brand-primary) 92%)';
+  'linear-gradient(var(--brand-primary), var(--brand-primary))'; /* solid — no shimmer */
 
 /* ── Shared stylesheet ─────────────────────────────────────────────────
  * Injected once per page via <UiFx/> (which <ModuleHero> and <PremiumEmpty>
@@ -44,22 +44,22 @@ export const GOLD_TEXT_GRADIENT =
 export const UI_FX_CSS = `
 /* Theme-aware tokens (dark default; flip under light) */
 .sgUi{
-  --sg-text:#ffffff;
-  --sg-text-2:#D4D4D8;
-  --sg-text-3:#A9B4C4;
-  --sg-surface-from:rgba(255,255,255,0.055);
-  --sg-surface-to:rgba(255,255,255,0.03);
-  --sg-surface-solid:#0E0F12;
-  --sg-border:rgba(255,255,255,0.09);
-  --sg-border-strong:rgba(255,255,255,0.16);
-  --sg-page-fade:rgba(0,0,0,0);
-  --sg-inner-glow:rgba(255,255,255,0.045);
-  --sg-shadow:0 24px 60px -24px rgba(0,0,0,0.55);
+  --sg-text:var(--text-primary);
+  --sg-text-2:var(--text-secondary);
+  --sg-text-3:var(--text-tertiary);
+  --sg-surface-from:var(--bg-surface);
+  --sg-surface-to:var(--bg-surface);
+  --sg-surface-solid:var(--bg-surface);
+  --sg-border:var(--border-subtle);
+  --sg-border-strong:var(--border-strong);
+  --sg-page-fade:transparent;
+  --sg-inner-glow:transparent;
+  --sg-shadow:var(--shadow-md);
 }
 [data-theme="light"] .sgUi{
   --sg-text:#0a0a0a;
   --sg-text-2:#7A8597;
-  --sg-text-3:#A3ACBB;
+  --sg-text-3:#94A3B8;
   --sg-surface-from:#ffffff;
   --sg-surface-to:#f7f8fa;
   --sg-surface-solid:#ffffff;
@@ -118,18 +118,19 @@ export function UiFx() {
 }
 
 /* ── Aurora backdrop ───────────────────────────────────────────────────
- * Jet black (COPY-STYLE §6). The animated gold blobs, drifting blueprint grid
- * and vignette sat behind text and hurt legibility, so the backdrop is now a
- * single faint, static, COOL sheen at the top. Props kept (`grid` is accepted
+ * The animated gold blobs, drifting blueprint grid, vignette and the last
+ * faint sheen all sat behind text; the backdrop is now empty — the page is
+ * one solid navy (globals.css --bg-base). Props kept (`grid` is accepted
  * and ignored) so every caller keeps compiling. position:absolute so it fills
  * only its positioned parent; pointer-events:none keeps content interactive. */
 export function Aurora({ soft = false }: { soft?: boolean; grid?: boolean }) {
   return (
     <div
       aria-hidden
+      data-soft={soft || undefined}
       style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}
     >
-      <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(120% 60% at 50% -12%, rgba(170,195,255,${soft ? 0.035 : 0.05}), transparent 60%)` }} />
+      {/* Solid page — no glow behind the text. */}
     </div>
   );
 }

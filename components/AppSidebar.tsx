@@ -206,9 +206,8 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
         width: size, height: size, flexShrink: 0,
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         borderRadius: Math.round(size * 0.27),
-        background: 'linear-gradient(150deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))',
-        boxShadow: '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)',
-        color: 'var(--on-brand)', fontSize, fontWeight: 900,
+        background: 'var(--brand-primary)',
+        color: 'var(--on-brand)', fontSize, fontWeight: 800,
         userSelect: 'none',
       }}
     >
@@ -228,8 +227,8 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             width: 52, height: 52, borderRadius: 12, textDecoration: 'none',
-            background: hover ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)',
-            border: `1px solid ${hover ? 'var(--brand-primary-35)' : colors.borderDim}`,
+            background: hover ? '#2B3B53' : 'var(--bg-surface-2)',
+            border: `1px solid ${hover ? 'var(--border-strong)' : 'var(--border-subtle)'}`,
             transition: 'background .15s ease, border-color .15s ease',
             overflow: 'hidden',
           }}
@@ -267,13 +266,13 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
         style={{
           display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, textDecoration: 'none',
           padding: '8px 10px', borderRadius: 12,
-          background: hover ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.03)',
-          border: `1px solid ${hover ? 'rgba(255,230,0,0.3)' : 'var(--border-subtle)'}`,
+          background: hover ? 'rgba(148,163,184,0.10)' : 'transparent',
+          border: `1px solid ${hover ? 'rgba(255,224,0,0.3)' : 'var(--border-subtle)'}`,
           transition: 'background .15s ease, border-color .15s ease',
         }}
       >
         {hasLogo ? (
-          <span style={{ width: 36, height: 36, borderRadius: 10, overflow: 'hidden', flexShrink: 0, display: 'grid', placeItems: 'center', background: needsPlate ? '#F5F5F5' : 'rgba(255,255,255,0.04)' }}>
+          <span style={{ width: 36, height: 36, borderRadius: 10, overflow: 'hidden', flexShrink: 0, display: 'grid', placeItems: 'center', background: needsPlate ? '#F5F5F5' : 'var(--bg-surface-2)' }}>
             <img
               src={wl.logoUrl}
               alt={wl.companyName || 'Company logo'}
@@ -285,7 +284,7 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
           </span>
         ) : monogram(36, 14)}
         <span style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
-          <span className="sg-brand-name" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 13, fontWeight: font.weight.black, color: colors.gold, letterSpacing: '-0.01em', lineHeight: 1.2 }}>
+          <span className="sg-brand-name" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 14, fontWeight: font.weight.bold, color: 'var(--text-primary)', letterSpacing: '-0.01em', lineHeight: 1.2 }}>
             {wl.companyName || 'Your company'}
           </span>
           {planPill && <span style={{ display: 'flex' }}>{planPill}</span>}
@@ -785,12 +784,11 @@ export default function AppSidebar({
         left: 0,
         bottom: 0,
         width,
-        // Premium system (6 Oct 2026): a calm graphite rail with a hairline
-        // edge — the page carries the warm light, the rail stays quiet so the
-        // selected row reads instantly.
-        background: 'linear-gradient(180deg, var(--c-card) 0%, var(--c-bg) 100%)',
+        // Navy/slate (12 Oct 2026): a solid slate rail with a hairline edge —
+        // quiet, so the selected row (yellow) reads instantly.
+        background: 'var(--bg-surface)',
         borderRight: '1px solid var(--border-subtle)',
-        boxShadow: '14px 0 34px rgba(0,0,0,0.45)',
+        boxShadow: 'none',
         display: 'flex',
         flexDirection: 'column',
         zIndex: z.sidebar,
@@ -858,8 +856,8 @@ export default function AppSidebar({
              and its contents. It only says out loud where the boundary is. */
           const prevZone = sIdx > 0 ? renderSections[sIdx - 1]?.zone : undefined;
           const showZoneDivider = !inProject && !!section.zone && section.zone !== prevZone;
-          /* Same meaning as the phase pill: blue sells (Lead), green builds (Ongoing). */
-          const zoneTone = section.zone === 'sell' ? STATUS_COLORS.lead.color : STATUS_COLORS.ongoing.color;
+          /* The two zones are quiet structure labels, not colour-coded status. */
+          const zoneTone = 'var(--text-tertiary)';
           const zoneLabel = section.zone === 'sell' ? 'Winning the Work' : 'Running the Work';
 
           return (
@@ -869,14 +867,14 @@ export default function AppSidebar({
                 /* No room for words at 64px — the rule alone still marks the
                    boundary, and the color carries the same meaning it does on
                    the phase pill: blue sells, green builds. */
-                <div aria-hidden style={{ height: 2, borderRadius: 2, margin: '4px 10px 12px', background: `linear-gradient(90deg, ${zoneTone}, transparent)` }} />
+                <div aria-hidden style={{ height: 1, margin: '4px 10px 12px', background: 'var(--border-subtle)' }} />
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '2px 8px 10px', padding: '0 8px 0 12px', minWidth: 0 }}>
                   <span style={{
-                    fontSize: 10.5, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase',
-                    color: zoneTone, whiteSpace: 'nowrap', opacity: 0.85,
+                    fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
+                    color: zoneTone, whiteSpace: 'nowrap',
                   }}>{zoneLabel}</span>
-                  <span aria-hidden style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${zoneTone}55, transparent)` }} />
+                  <span aria-hidden style={{ flex: 1, height: 1, background: 'var(--border-subtle)' }} />
                 </div>
               )
             )}
@@ -897,9 +895,8 @@ export default function AppSidebar({
                   border: 'none',
                   /* When a section is collapsed these headers are the ONLY nav
                      text on screen, so they must read as structure. The label
-                     itself (.sg-nav-head in globals.css) is lit brand yellow in
-                     Title Case, the same as every section heading in the app
-                     (Chad, 2026-10-11), so the groups are easy to find. */
+                     itself (.sg-nav-head in globals.css) is a quiet small-caps
+                     label so the yellow selected row stays the loudest thing. */
                   fontSize: '12px',
                   fontWeight: font.weight.bold,
                   color: colors.textDim,
@@ -915,9 +912,9 @@ export default function AppSidebar({
                   {!isOpen && (
                     <span style={{
                       fontVariantNumeric: 'tabular-nums',
-                      background: 'rgba(255,255,255,0.08)',
-                      border: '1px solid rgba(255,255,255,0.16)',
-                      color: colors.textMuted,
+                      background: 'var(--bg-surface-2)',
+                      border: '1px solid var(--border-default)',
+                      color: 'var(--text-secondary)',
                       borderRadius: 999, padding: '1px 6px', fontSize: 10.5, lineHeight: 1.5,
                     }}>{visibleItems.length}</span>
                   )}
@@ -959,11 +956,9 @@ export default function AppSidebar({
                     borderRadius: radius.lg,
                     fontSize: font.size.md,
                     fontWeight: active ? font.weight.semibold : font.weight.medium,
-                    color: active ? 'var(--c-text)' : 'var(--c-text-2)',
-                    background: active
-                      ? 'linear-gradient(90deg, rgba(255,230,0,0.16), rgba(255,230,0,0.03))'
-                      : undefined,
-                    boxShadow: active ? 'inset 3px 0 0 var(--c-yellow)' : undefined,
+                    /* Selected navigation: yellow with dark text. */
+                    color: active ? 'var(--on-brand)' : 'var(--c-text-2)',
+                    background: active ? 'var(--brand-primary)' : undefined,
                     textDecoration: 'none',
                     transition: 'background .15s ease, color .15s ease',
                     position: 'relative',
@@ -979,7 +974,7 @@ export default function AppSidebar({
                      *
                      * This was neutral for a while, and the note that made it
                      * neutral blamed the hues: "#B8A98A parchment, #A9A2C4
-                     * lavender-gray, #FF8A00 steel, #8FB3A9 patina ... twelve
+                     * lavender-gray, #FBBF24 steel, #8FB3A9 patina ... twelve
                      * muted pastels do not read as restraint, they read as
                      * muddy". That diagnosis was right about those values and
                      * wrong about which values were in play — every one it
@@ -1001,7 +996,7 @@ export default function AppSidebar({
                      * yellow pill — the loudest thing on screen. Full
                      * opacity — dimming a saturated color is what produced
                      * the mud in the first place. */
-                    color={active ? 'var(--c-yellow)' : 'var(--c-orange)'}
+                    color={active ? 'var(--on-brand)' : 'var(--text-tertiary)'}
                     style={{ flexShrink: 0, opacity: 1 }}
                   />
                   {!collapsed && (
@@ -1016,8 +1011,8 @@ export default function AppSidebar({
                         marginLeft: 'auto',
                         fontSize: font.size.xs,
                         fontWeight: font.weight.bold,
-                        background: active ? 'rgba(255,230,0,0.15)' : 'rgba(255,255,255,0.06)',
-                        color: active ? 'var(--c-yellow)' : 'var(--c-text-2)',
+                        background: active ? 'rgba(16,23,34,0.16)' : 'var(--bg-surface-2)',
+                        color: active ? 'var(--on-brand)' : 'var(--c-text-2)',
                         borderRadius: radius.full,
                         padding: '1px 7px',
                         minWidth: 18,
@@ -1096,9 +1091,8 @@ export default function AppSidebar({
                 borderRadius: radius.lg,
                 fontSize: font.size.md,
                 fontWeight: active ? font.weight.semibold : font.weight.medium,
-                color: active ? 'var(--c-text)' : 'var(--c-text-2)',
-                background: active ? 'linear-gradient(90deg, rgba(255,230,0,0.16), rgba(255,230,0,0.03))' : undefined,
-                boxShadow: active ? 'inset 3px 0 0 var(--c-yellow)' : undefined,
+                color: active ? 'var(--on-brand)' : 'var(--c-text-2)',
+                background: active ? 'var(--brand-primary)' : undefined,
                 textDecoration: 'none',
                 transition: 'background .15s ease, color .15s ease',
                 position: 'relative',
@@ -1108,7 +1102,7 @@ export default function AppSidebar({
               {/* Same rule as the main rail: the resting icon inherits the link
                   color and stays at full opacity. Dimming a neutral only muddies
                   it — the weight change from regular to fill already marks active. */}
-              <Icon size={collapsed ? 20 : 18} weight={active ? 'fill' : 'regular'} color={active ? 'var(--c-yellow)' : 'var(--c-orange)'} style={{ flexShrink: 0, opacity: 1 }} />
+              <Icon size={collapsed ? 20 : 18} weight={active ? 'fill' : 'regular'} color={active ? 'var(--on-brand)' : 'var(--text-tertiary)'} style={{ flexShrink: 0, opacity: 1 }} />
               {!collapsed && <span className="sg-nav-label" data-active={active || undefined}>{item.label}</span>}
             </Link>
           );
@@ -1138,7 +1132,7 @@ export default function AppSidebar({
           }}
           className="sg-nav-item"
         >
-          {collapsed ? <CaretRight size={18} color="var(--c-orange)" style={{ flexShrink: 0 }} /> : <><CaretLeft size={18} color="var(--c-orange)" style={{ flexShrink: 0 }} /><span className="sg-nav-label">Collapse</span></>}
+          {collapsed ? <CaretRight size={18} color="var(--text-tertiary)" style={{ flexShrink: 0 }} /> : <><CaretLeft size={18} color="var(--text-tertiary)" style={{ flexShrink: 0 }} /><span className="sg-nav-label">Collapse</span></>}
         </button>
       </div>
     </aside>

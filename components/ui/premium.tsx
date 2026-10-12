@@ -20,16 +20,13 @@ import { moduleAccent } from '@/lib/module-identity';
 import { STATUS_COLORS } from '@/lib/status-colors';
 
 // Brand hooks (white-label re-themes these via WhiteLabelProvider) ------------
-const GOLD = 'var(--brand-primary)';        // #FFE600 neon yellow default
-const ON_GOLD = 'var(--on-brand)';             // #0A0A00 — text/icons on a yellow fill
+const GOLD = 'var(--brand-primary)';        // #FFE000 — the primary action / selected item
+const ON_GOLD = 'var(--on-brand)';             // dark text/icons on a yellow fill
 // Brand alpha steps — tokens, so a white-label override re-themes them too.
-const A08 = 'var(--brand-primary-08)';
 const A12 = 'var(--brand-primary-12)';
-const A18 = 'var(--brand-primary-18)';
-const A22 = 'var(--brand-primary-18)';
 const A30 = 'var(--brand-primary-25)';
 const A45 = 'var(--brand-primary-35)';
-const BORDER = 'rgba(255,255,255,0.09)';
+const BORDER = 'var(--border-subtle)';
 const WHITE = 'var(--text-primary)';
 const MUTED = 'var(--text-secondary)';
 const FAINT = 'var(--text-tertiary)';
@@ -59,9 +56,9 @@ export const PREMIUM_FX = `
 .pmGold{background:var(--brand-primary);color:var(--on-brand);border:none;box-shadow:none;transition:background .15s ease,opacity .15s ease}
 .pmGold:hover{background:var(--brand-primary-hover)}
 .pmGold:active{transform:none;opacity:.85}
-.pmGhost{background:none;color:var(--c-text);border:1px solid var(--sg-border-strong);box-shadow:none;transition:background .15s ease,border-color .15s ease}
-.pmGhost:hover{background:rgba(255,255,255,0.04)}
-.pmGhost:active{transform:none;background:rgba(255,255,255,0.07)}
+.pmGhost{background:var(--bg-surface-2);color:var(--c-text);border:1px solid var(--border-default);box-shadow:none;transition:background .15s ease,border-color .15s ease}
+.pmGhost:hover{background:#2B3B53;border-color:var(--border-strong)}
+.pmGhost:active{transform:none;background:#2B3B53}
 .pmDanger{background:none;color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 50%,transparent);box-shadow:none;transition:background .15s ease}
 .pmDanger:hover{background:color-mix(in srgb,var(--danger) 10%,transparent)}
 .pmDanger:active{transform:none;background:color-mix(in srgb,var(--danger) 16%,transparent)}
@@ -200,10 +197,9 @@ export function ModuleHero({
 }
 
 // ─── IconChip ────────────────────────────────────────────────────────────────
-// Default (no `vivid`): the classic low-alpha brand-yellow chip. With `vivid` (a module-identity vivid hex) the
-// chip goes chip-loud: saturated gradient ground (vivid -> ~20% darker), a
-// 1px vivid ring at 55%, and a soft outer glow at 25% — built for a WHITE
-// (#F8FAFC) glyph sitting ON the color. Never hue-on-hue.
+// A slate tile with a hairline border. With `vivid` (a module-identity hue) it
+// takes a low tint of that hue and a matching ring — flat, no gradient, no
+// glow — for a white (#F8FAFC) glyph.
 export function IconChip({ children, size = 40, vivid }: { children: React.ReactNode; size?: number; vivid?: string }) {
   return (
     <span
@@ -211,14 +207,8 @@ export function IconChip({ children, size = 40, vivid }: { children: React.React
       style={{
         flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         width: size, height: size, borderRadius: Math.round(size * 0.28),
-        background: vivid
-          ? `linear-gradient(150deg, ${vivid}, color-mix(in srgb, ${vivid} 80%, #000000))`
-          : `linear-gradient(150deg, ${A18}, ${A08})`,
-        border: `1px solid ${vivid ? vivid + '8C' : A30}`,
-        boxShadow: vivid
-          ? `0 0 0 3px ${vivid}1F, 0 6px 20px -6px ${vivid}40, inset 0 1px 0 rgba(255,255,255,0.25)`
-          : `0 0 0 3px ${A08}, inset 0 1px 0 rgba(255,255,255,0.08)`,
-        transition: 'box-shadow .2s ease',
+        background: vivid ? `color-mix(in srgb, ${vivid} 22%, var(--bg-surface-2))` : 'var(--bg-surface-2)',
+        border: `1px solid ${vivid ? `color-mix(in srgb, ${vivid} 50%, transparent)` : 'var(--border-default)'}`,
       }}
     >
       {children}
@@ -503,7 +493,7 @@ export function Pill({ children, tone = 'neutral', caps, style }: {
   style?: React.CSSProperties;
 }) {
   const map = {
-    neutral: { bg: STATUS_COLORS.closed.bg, fg: 'var(--text-secondary)', bd: 'rgba(255,255,255,0.16)' },
+    neutral: { bg: STATUS_COLORS.closed.bg, fg: 'var(--text-secondary)', bd: STATUS_COLORS.closed.border },
     green:   { bg: STATUS_COLORS.ongoing.bg, fg: STATUS_COLORS.ongoing.color, bd: STATUS_COLORS.ongoing.border },
     amber:   { bg: STATUS_COLORS.under_contract.bg, fg: STATUS_COLORS.under_contract.color, bd: STATUS_COLORS.under_contract.border },
     red:     { bg: STATUS_COLORS.overdue.bg, fg: STATUS_COLORS.overdue.color, bd: STATUS_COLORS.overdue.border },
@@ -533,10 +523,9 @@ export function AutoChip({ label = 'Auto' }: { label?: string }) {
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', marginLeft: 8, padding: '1.5px 7px',
-      borderRadius: 999, background: `linear-gradient(180deg, ${A22}, ${A08})`, border: `1px solid ${A45}`,
-      color: GOLD, fontSize: 10, fontWeight: 800, letterSpacing: 'normal',
+      borderRadius: 999, background: 'rgba(56,189,248,0.12)', border: '1px solid rgba(56,189,248,0.4)',
+      color: 'var(--link)', fontSize: 11, fontWeight: 700, letterSpacing: 'normal',
       verticalAlign: 'middle', lineHeight: 1.6,
-      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12)',
     }}>{label}</span>
   );
 }
@@ -589,15 +578,15 @@ export function FlowSteps({ title = 'What Happens Next', steps }: {
     <div>
       <div style={{ fontSize: 13, fontWeight: 700, color: MUTED, marginBottom: 14 }}>{title}</div>
       <div style={{ position: 'relative' }}>
-        <div style={{ position: 'absolute', left: 10, top: 8, bottom: 14, width: 1, background: `linear-gradient(180deg, ${A45}, ${A18} 55%, transparent)` }} />
+        <div style={{ position: 'absolute', left: 10, top: 8, bottom: 14, width: 1, background: 'var(--border-default)' }} />
         {steps.map((s, i) => (
           <div key={i} style={{ display: 'flex', gap: 12, marginBottom: i === steps.length - 1 ? 0 : 16, position: 'relative' }}>
             <div style={{
               width: 21, height: 21, borderRadius: 999, flexShrink: 0, zIndex: 1,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: s.done ? GOLD : 'var(--bg-base)',
-              border: s.done ? 'none' : `1px solid ${A45}`,
-              color: s.done ? ON_GOLD : GOLD, fontSize: 10, fontWeight: 900,
+              background: s.done ? 'var(--success)' : 'var(--bg-surface-2)',
+              border: s.done ? 'none' : '1px solid var(--border-default)',
+              color: s.done ? ON_GOLD : 'var(--text-secondary)', fontSize: 10, fontWeight: 800,
             }}>{s.done ? <Check size={11} weight="bold" /> : i + 1}</div>
             <div style={{ minWidth: 0, paddingTop: 1 }}>
               <div style={{ fontSize: 12.5, fontWeight: 800, color: WHITE, lineHeight: 1.35 }}>{s.title}</div>
