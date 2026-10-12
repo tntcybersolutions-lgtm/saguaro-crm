@@ -35,6 +35,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
     const body = await req.json();
     const { data, error } = await supabase.from('invoices').insert({
       tenant_id: user.tenantId, project_id: params.projectId, created_by: user.id,
+      direction: 'receivable', // owner billing — the GC bills the owner
       invoice_number: body.invoice_number || null, vendor_name: body.vendor_name,
       amount: body.amount ?? 0, tax: body.tax ?? 0,
       // Server-canonical: total always amount + tax, never left to DEFAULT 0.

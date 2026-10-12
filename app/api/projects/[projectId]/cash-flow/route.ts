@@ -63,6 +63,7 @@ export async function GET(
         .select('id, invoice_number, vendor_name, amount, status, due_date, description, created_at')
         .eq('project_id', projectId)
         .eq('tenant_id', user.tenantId)
+        .eq('direction', 'receivable') // money in; vendor bills are money out (bills)
         .order('created_at', { ascending: false }),
       db.from('bills')
         .select('id, vendor_name, amount, status, due_date, description, created_at')

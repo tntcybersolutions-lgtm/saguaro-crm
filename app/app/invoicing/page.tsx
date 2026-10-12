@@ -411,7 +411,7 @@ export default function InvoicingPage() {
   // ── Register columns ──
   const columns: Column<Invoice>[] = [
     { key: 'invoice_number', header: 'Invoice #', accessor: i => i.invoice_number || '', width: 140, render: i => <span className="ivNum">{i.invoice_number || <span className="ivMuted">No number</span>}</span> },
-    { key: 'vendor_name', header: 'Vendor', accessor: i => (i.vendor_name || '').toLowerCase(), render: i => <span className="ivClamp" style={{ color: 'var(--text-primary)', fontWeight: 600 }} title={i.vendor_name}>{i.vendor_name || '—'}</span> },
+    { key: 'vendor_name', header: 'Bill To', accessor: i => (i.vendor_name || '').toLowerCase(), render: i => <span className="ivClamp" style={{ color: 'var(--text-primary)', fontWeight: 600 }} title={i.vendor_name}>{i.vendor_name || '—'}</span> },
     { key: 'project', phone: 'hide', header: 'Project', accessor: i => projectName(i.project_id).toLowerCase(), render: i => projectName(i.project_id) ? <span className="ivClamp" style={{ maxWidth: 200 }} title={projectName(i.project_id)}>{projectName(i.project_id)}</span> : <span className="ivMuted">—</span> },
     { key: 'description', phone: 'hide', header: 'Description', accessor: i => (i.description || '').toLowerCase(), render: i => i.description ? <span className="ivClamp" title={i.description}>{i.description}</span> : <span className="ivMuted">—</span> },
     { key: 'total', phone: 'show', header: 'Total', accessor: i => effectiveTotal(i), align: 'right', render: i => <span className="ivTotal">{fmtUsd(effectiveTotal(i))}</span> },
@@ -489,7 +489,7 @@ export default function InvoicingPage() {
           <Toolbar
             search={search}
             onSearch={setSearch}
-            placeholder="Search by number, vendor, project, or description…"
+            placeholder="Search by number, client, project, or description…"
             filters={
               <>
                 <Select
@@ -555,8 +555,8 @@ export default function InvoicingPage() {
           <Field label="Project" required hint={ctx ? 'Snapshot loaded — fields below pre-fill from it.' : 'Pick one to pre-fill the rest.'}>
             <Select value={form.project_id} onChange={(e) => { setForm({ ...form, project_id: e.target.value }); if (error) setError(''); }} required placeholder="Select project…" options={projects.map(p => ({ value: p.id, label: p.name }))} />
           </Field>
-          <Field label="Vendor Name" required hint={<>{auto.billto && <AutoChip />} {ctxVendors.length > 0 ? `${ctxVendors.length} known vendor${ctxVendors.length === 1 ? '' : 's'} on this project — start typing.` : 'Vendors suggest once a project is picked.'}</>}>
-            <Suggest className="k-input" value={form.vendor_name} onChange={(e) => { setForm({ ...form, vendor_name: e.target.value }); if (error) setError(''); }} required placeholder="Vendor name" options={ctxVendors} />
+          <Field label="Bill To" required hint={<>{auto.billto && <AutoChip />} {ctxVendors.length > 0 ? `${ctxVendors.length} known name${ctxVendors.length === 1 ? '' : 's'} on this project — start typing.` : 'The owner fills in once a project is picked.'}</>}>
+            <Suggest className="k-input" value={form.vendor_name} onChange={(e) => { setForm({ ...form, vendor_name: e.target.value }); if (error) setError(''); }} required placeholder="Client / owner name" options={ctxVendors} />
           </Field>
           <Field label="Invoice #" hint={<>{auto.num && <AutoChip />} {auto.num ? 'Next in sequence on this project.' : 'Auto-suggested when you pick a project.'}</>}>
             <Input value={form.invoice_number} onChange={(e) => setForm({ ...form, invoice_number: e.target.value })} placeholder="INV-001" />

@@ -43,6 +43,8 @@ export async function POST(req: NextRequest) {
         tenant_id: user.tenantId,
         created_by: user.id,
         project_id: projectId,
+        // Both create screens bill the owner. A vendor / sub bill says so explicitly.
+        direction: body.direction === 'payable' ? 'payable' : 'receivable',
         vendor_name: body.vendor_name,
         invoice_number: body.invoice_number || null,
         vendor_email: body.vendor_email || null,

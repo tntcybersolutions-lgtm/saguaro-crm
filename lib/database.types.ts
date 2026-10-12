@@ -13012,6 +13012,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           description: string | null
+          direction: string
           due_date: string | null
           id: string
           invoice_number: string | null
@@ -13041,6 +13042,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           description?: string | null
+          direction?: string
           due_date?: string | null
           id?: string
           invoice_number?: string | null
@@ -13070,6 +13072,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           description?: string | null
+          direction?: string
           due_date?: string | null
           id?: string
           invoice_number?: string | null
