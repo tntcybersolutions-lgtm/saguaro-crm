@@ -111,7 +111,7 @@ export default function ContractVersions({ projectId, kind, refreshKey = 0 }: Co
               <span style={{ color: TEXT, fontSize: 14, fontWeight: 700 }}>Version {v.version}</span>
               <span style={{ color: DIM, fontSize: 13 }}>{when(v.createdAt)}</span>
               <span style={{ flex: 1 }} />
-              <span style={{ color: count ? GOLD : DIM, fontSize: 13 }}>
+              <span style={{ color: count ? 'var(--text-primary)' : DIM, fontSize: 13 }}>
                 {v.version === 1
                   ? 'first version'
                   : !v.comparable

@@ -161,7 +161,7 @@ export default function PhotoEditor({ src, photoId, onSave, onDelete, onClose }:
         <div style={{ color: TEXT, fontWeight: 700, fontSize: 16 }}>Photo Editor</div>
         <div style={{ display: 'flex', gap: 8 }}>
           {onSave && (
-            <button onClick={handleSave} disabled={saving} style={{ ...btnStyle(), background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, color: '#101722', border: 'none' }}>
+            <button onClick={handleSave} disabled={saving} style={{ ...btnStyle(), background: `var(--brand-primary)`, color: '#101722', border: 'none' }}>
               {saving ? 'Saving…' : '💾 Save'}
             </button>
           )}

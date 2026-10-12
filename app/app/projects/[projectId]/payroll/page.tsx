@@ -408,7 +408,7 @@ export default function PayrollPage() {
             {pwRates.length > 0 && (
               <button
                 onClick={applyPwRateAll}
-                style={{ padding: '7px 16px', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 7, color: 'var(--on-brand)', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                style={{ padding: '7px 16px', background: `var(--brand-primary)`, border: 'none', borderRadius: 7, color: 'var(--on-brand)', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                 Apply Prevailing Rates
               </button>
             )}
@@ -563,7 +563,7 @@ export default function PayrollPage() {
                           <input type="number" min={0} max={24} step={0.5} value={emp.hours[day]} onChange={e => updateEmpHours(emp.id, day, Number(e.target.value))} style={{ ...inp, fontSize: 12, textAlign: 'center', padding: '5px 3px', width: 40 }} />
                         </td>
                       ))}
-                      <td style={{ padding: '7px 8px', color: totalHours > 40 ? GOLD : TEXT, fontWeight: 700, textAlign: 'right', whiteSpace: 'nowrap' }}>{totalHours.toFixed(1)}</td>
+                      <td style={{ padding: '7px 8px', color: totalHours > 40 ? 'var(--warning)' : TEXT, fontWeight: 700, textAlign: 'right', whiteSpace: 'nowrap' }}>{totalHours.toFixed(1)}</td>
                       <td style={{ padding: '7px 8px', color: 'var(--text-primary)', fontWeight: 700, whiteSpace: 'nowrap' }}>{fmt(gross)}</td>
                       <td style={{ padding: '7px 6px', width: 64 }}>
                         <input type="number" min={0} step={0.01} value={emp.fica} onChange={e => updateEmp(emp.id, 'fica', Number(e.target.value))} title="FICA withheld" style={{ ...inp, fontSize: 12, textAlign: 'right', width: 56 }} />

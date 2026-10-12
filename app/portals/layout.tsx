@@ -12,16 +12,18 @@
  *
  * This mounts the reader for the whole /portals subtree. It renders children
  * untouched, so each portal keeps its own layout and branding; the only thing
- * added is the reader, which is inert until openPdf() is called.
+ * added is the reader, which is inert until openPdf() is called. The wrapper's
+ * .pt-root class gives portal form fields the phone rules in globals.css (44px,
+ * 16px text) without touching any portal's own layout.
  */
 
 import PdfViewer from '@/components/PdfViewer';
 
 export default function PortalsLayout({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <div className="pt-root">
       {children}
       <PdfViewer />
-    </>
+    </div>
   );
 }

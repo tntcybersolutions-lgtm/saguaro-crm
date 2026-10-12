@@ -79,7 +79,7 @@ export default function PublicInvoicePage() {
     <div style={{ minHeight: '100vh', background: BG, color: TEXT, fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif', display: 'flex', justifyContent: 'center', padding: '48px 16px' }}>
       <div style={{ width: '100%', maxWidth: 560 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-          <div style={{ width: 34, height: 34, borderRadius: 9, background: `linear-gradient(180deg, ${GOLD}, var(--brand-primary-hover))`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#101722', fontWeight: 900, fontSize: 15 }}>S</div>
+          <div style={{ width: 34, height: 34, borderRadius: 9, background: `var(--brand-primary)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#101722', fontWeight: 900, fontSize: 15 }}>S</div>
           <div>
             <div style={{ fontSize: 15, fontWeight: 800 }}>{from || 'Invoice'}</div>
             {projectName && <div style={{ fontSize: 12, color: DIM }}>{projectName}</div>}
@@ -134,7 +134,7 @@ export default function PublicInvoicePage() {
                 </button>
               )}
               {pdfUrl ? (
-                <a href={pdfUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: `linear-gradient(180deg, var(--brand-primary-strong), ${GOLD} 60%, var(--brand-primary-hover))`, color: '#101722', fontWeight: 800, fontSize: 14, borderRadius: 10, padding: '11px 20px', textDecoration: 'none', boxShadow: '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' }}>
+                <a href={pdfUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: `var(--brand-primary)`, color: '#101722', fontWeight: 800, fontSize: 14, borderRadius: 10, padding: '11px 20px', textDecoration: 'none', boxShadow: '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' }}>
                   Download PDF
                 </a>
               ) : (

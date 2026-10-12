@@ -226,7 +226,7 @@ export default function GettingStartedRail({ projectId, compact = false }: { pro
           <>
             {/* Progress */}
             <div style={{ height: 6, borderRadius: 999, background: 'rgba(255,255,255,0.07)', overflow: 'hidden', marginBottom: 18 }}>
-              <div style={{ height: '100%', width: `${(doneCount / steps.length) * 100}%`, background: `linear-gradient(90deg,${GOLD},${GOLD_HI})`, borderRadius: 999, transition: 'width .4s ease' }} />
+              <div style={{ height: '100%', width: `${(doneCount / steps.length) * 100}%`, background: `var(--brand-primary)`, borderRadius: 999, transition: 'width .4s ease' }} />
             </div>
 
             {/* The pipeline — FlowSteps anatomy, every row deep-linked */}
@@ -253,7 +253,7 @@ export default function GettingStartedRail({ projectId, compact = false }: { pro
                     <div style={{
                       width: 21, height: 21, borderRadius: 999, flexShrink: 0, zIndex: 1,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      background: s.done ? `linear-gradient(180deg,${GOLD_HI},${GOLD})` : '#101011',
+                      background: s.done ? `var(--brand-primary)` : '#101011',
                       border: s.done ? 'none' : `1px solid rgba(251,191,36,${isCur ? 0.85 : 0.45})`,
                       boxShadow: isCur ? '0 0 12px var(--brand-primary-35)' : undefined,
                       color: s.done ? 'var(--on-brand)' : GOLD_HI, fontSize: 12, fontWeight: 900,

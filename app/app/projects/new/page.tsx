@@ -462,7 +462,7 @@ export default function NewProjectPage() {
                         return (
                           <button type="button" key={s.key} onClick={()=>pickSector(s.key)} className="pmBtn npSeg"
                             style={{padding:'6px 12px',borderRadius:7,border:'none',cursor:'pointer',fontWeight:800,fontSize:12,whiteSpace:'nowrap' as const,
-                              background:active?`linear-gradient(180deg,var(--brand-primary-strong),${GOLD} 60%,var(--brand-primary-hover))`:'transparent',color:active?'var(--on-brand)':DIM,transition:'all .15s',
+                              background:active?`var(--brand-primary)`:'transparent',color:active?'var(--on-brand)':DIM,transition:'all .15s',
                               boxShadow:active?'0 2px 10px color-mix(in srgb, var(--brand-primary) 28%, transparent), inset 0 1px 0 rgba(255,255,255,0.35)':'none'}}>
                             {s.label}
                           </button>

@@ -61,7 +61,7 @@ export default function SubPortalLogin() {
       <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', marginBottom: 40 }}>
         <img src="/logo-full.jpg" alt="Saguaro" style={{ height: 38, borderRadius: 4 }} />
         <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-          <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: '-0.01em', background: `linear-gradient(90deg,${GOLD},var(--brand-primary-strong))`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Saguaro</span>
+          <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: '-0.01em', background: `var(--brand-primary)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Saguaro</span>
           <span style={{ fontSize: 12, color: DIM, letterSpacing: '-0.01em', fontWeight: 600 }}>Control Systems</span>
         </span>
       </Link>

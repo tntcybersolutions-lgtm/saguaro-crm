@@ -86,7 +86,7 @@ export default function OnboardingStep1() {
             <button
               onClick={goToDashboard}
               disabled={loading}
-              style={{ padding: '14px 0', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 10, color: '#101722', fontSize: 16, fontWeight: 800, cursor: loading ? 'wait' : 'pointer', opacity: loading ? .7 : 1 }}
+              style={{ padding: '14px 0', background: `var(--brand-primary)`, border: 'none', borderRadius: 10, color: '#101722', fontSize: 16, fontWeight: 800, cursor: loading ? 'wait' : 'pointer', opacity: loading ? .7 : 1 }}
             >
               {loading ? 'Loading your dashboard…' : 'Go to Dashboard →'}
             </button>

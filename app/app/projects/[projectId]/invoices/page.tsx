@@ -551,7 +551,7 @@ export default function InvoicesPage() {
                       ) : editId === inv.id ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                           <input value={editVal} onChange={e => setEditVal(e.target.value)} type="number" autoFocus onKeyDown={e => { if (e.key === 'Enter') handleEditInv(inv.id); if (e.key === 'Escape') setEditId(null); }} style={{ width: 100, padding: '4px 8px', background: DARK, border: `1px solid ${GOLD}`, borderRadius: 5, color: TEXT, fontSize: 12, outline: 'none', textAlign: 'right' }} />
-                          <button onClick={() => handleEditInv(inv.id)} style={{ padding: '3px 8px', background: 'linear-gradient(135deg,var(--brand-primary),var(--brand-primary-strong))', border: 'none', borderRadius: 5, color: 'var(--on-brand)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save</button>
+                          <button onClick={() => handleEditInv(inv.id)} style={{ padding: '3px 8px', background: 'var(--brand-primary)', border: 'none', borderRadius: 5, color: 'var(--on-brand)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save</button>
                           <button onClick={() => setEditId(null)} style={{ padding: '3px 8px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
                         </div>
                       ) : adjustId === inv.id ? (
@@ -592,7 +592,7 @@ export default function InvoicesPage() {
                     <td style={{ padding: '10px 14px', color: DIM, fontSize: 12 }}>{inv.notes}</td>
                     <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                        <button onClick={() => handlePdf(inv)} disabled={pdfBusy === inv.id} title={inv.pdf_url ? 'Open PDF' : 'Generate PDF'} style={{ padding: '4px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid ' + BORDER, borderRadius: 5, color: inv.pdf_url ? 'var(--brand-primary-strong)' : DIM, fontSize: 12, cursor: 'pointer', opacity: pdfBusy === inv.id ? 0.5 : 1 }}>{pdfBusy === inv.id ? '…' : 'PDF'}</button>
+                        <button onClick={() => handlePdf(inv)} disabled={pdfBusy === inv.id} title={inv.pdf_url ? 'Open PDF' : 'Generate PDF'} style={{ padding: '4px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid ' + BORDER, borderRadius: 5, color: inv.pdf_url ? 'var(--link)' : DIM, fontSize: 12, cursor: 'pointer', opacity: pdfBusy === inv.id ? 0.5 : 1 }}>{pdfBusy === inv.id ? '…' : 'PDF'}</button>
                         {statusKey(inv.status) === 'draft' && (
                           <button onClick={() => handleSend(inv.id)} style={{ padding: '4px 12px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 5, color: 'var(--text-primary)', fontSize: 12, cursor: 'pointer' }}>Send to Owner</button>
                         )}

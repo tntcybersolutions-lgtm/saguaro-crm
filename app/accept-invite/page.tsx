@@ -141,7 +141,7 @@ export default function AcceptInvitePage() {
         <Link href="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 10 }} aria-label="Saguaro Control Systems — home">
           <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 36, width: 'auto', objectFit: 'contain', borderRadius: 4 }} />
           <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-            <span style={{ fontWeight: 900, fontSize: 15, letterSpacing: '-0.01em', background: `linear-gradient(90deg,${GOLD},var(--brand-primary-strong))`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Saguaro</span>
+            <span style={{ fontWeight: 900, fontSize: 15, letterSpacing: '-0.01em', background: `var(--brand-primary)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Saguaro</span>
             <span style={{ fontSize: 12, color: DIM, letterSpacing: .5, fontWeight: 600 }}>Control Systems</span>
           </span>
         </Link>

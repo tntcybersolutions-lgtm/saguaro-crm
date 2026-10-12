@@ -96,7 +96,7 @@ function TickerItem({ a, ghost = false }: { a: ActivityRow; ghost?: boolean }) {
       }}
     >
       <span aria-hidden style={{ width: 7, height: 7, borderRadius: 999, flexShrink: 0, background: st.color, boxShadow: `0 0 8px ${st.color}` }} />
-      <span style={{ fontSize: 9.5, fontWeight: 900, color: st.color, flexShrink: 0 }}>
+      <span style={{ fontSize: 12, fontWeight: 900, color: st.color, flexShrink: 0 }}>
         {st.label}
       </span>
       <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-text-2)' }}>{label}</span>

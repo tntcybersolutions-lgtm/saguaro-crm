@@ -475,7 +475,7 @@ export default function IntegrationsPage() {
                           style={{
                             flex: 1, padding: '8px 0', textAlign: 'center', borderRadius: 8, minHeight: 44,
                             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                            background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, color: 'var(--on-brand)',
+                            background: `var(--brand-primary)`, color: 'var(--on-brand)',
                             fontSize: 12, fontWeight: 700, textDecoration: 'none',
                           }}
                         >
@@ -629,7 +629,7 @@ export default function IntegrationsPage() {
                 disabled={!setupForm.api_url || connectingKey === 'sage300'}
                 style={{
                   padding: '10px 24px', borderRadius: 8, cursor: 'pointer',
-                  background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none',
+                  background: `var(--brand-primary)`, border: 'none',
                   color: 'var(--on-brand)', fontSize: 13, fontWeight: 700,
                   opacity: !setupForm.api_url || connectingKey === 'sage300' ? 0.5 : 1,
                 }}

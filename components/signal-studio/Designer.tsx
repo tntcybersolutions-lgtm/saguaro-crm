@@ -2439,7 +2439,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                             </div>
                           ))}
                         </div>
-                        <div style={{ fontSize: 9.5, color: MUTED, lineHeight: 1.4 }}>Run ft = straight plan distance × 1.35 routing + 18 ft drop, rounded up to 5 ft. Runs over 328 ft (100 m copper limit) show red — fiber or a second IDF.</div>
+                        <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.4 }}>Run ft = straight plan distance × 1.35 routing + 18 ft drop, rounded up to 5 ft. Runs over 328 ft (100 m copper limit) show red — fiber or a second IDF.</div>
                       </> : (
                         <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.5 }}>Place an IDF (Devices step) to get the cable schedule — run footage measured from plan geometry.</div>
                       )}
@@ -2639,8 +2639,8 @@ export default function Designer({ projectId }: { projectId: string | null }) {
               </PanelSection>}
 
               {tab === 'design' && <PanelSection title="Smart Tools">
-                {project.planDataUrl && <button className="hm-smart" style={{ background: `linear-gradient(135deg, ${GOLD}, var(--brand-primary-strong))`, color: '#101722', border: 'none', fontWeight: 800, fontSize: 14, marginBottom: 8, textAlign: 'center' }} onClick={autopilot}><Sparkle size={15} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Design my building — AI reads the plan, designs &amp; prices it</button>}
-                {project.scale && <button className="hm-smart" style={{ background: `linear-gradient(135deg, ${GOLD}, var(--brand-primary-strong))`, color: '#101722', border: 'none', fontWeight: 800, fontSize: 13, marginBottom: 10, textAlign: 'center' }} onClick={autoDesign}><Sparkle size={15} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Auto-design coverage — place · close dead zones · price it</button>}
+                {project.planDataUrl && <button className="hm-smart" style={{ background: `var(--brand-primary)`, color: '#101722', border: 'none', fontWeight: 800, fontSize: 14, marginBottom: 8, textAlign: 'center' }} onClick={autopilot}><Sparkle size={15} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Design my building — AI reads the plan, designs &amp; prices it</button>}
+                {project.scale && <button className="hm-smart" style={{ background: `var(--brand-primary)`, color: '#101722', border: 'none', fontWeight: 800, fontSize: 13, marginBottom: 10, textAlign: 'center' }} onClick={autoDesign}><Sparkle size={15} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Auto-design coverage — place · close dead zones · price it</button>}
                 <button className="hm-smart" onClick={doAiScan}><Sparkle size={14} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />AI scan blueprint → read walls + place devices</button>
                 <div style={{ border: `1px solid var(--brand-primary-25)`, borderRadius: 8, padding: 9, marginBottom: 7, background: 'var(--bg-surface-2)' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 7 }}>
@@ -2737,7 +2737,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                   <button className="hm-tool" onClick={() => surveyCsvRef.current?.click()} style={{ padding: '6px 10px', flex: 1 }}><UploadSimple size={13} weight="regular" style={{ verticalAlign: 'middle', marginRight: 5 }} />Import Survey CSV</button>
                   {measured.length > 0 && <button className="hm-tool" title="Clear all readings on this floor" onClick={() => { updateMeasured(() => []); setCalResult(null); }} style={{ padding: '6px 10px' }}>Clear</button>}
                 </div>
-                <div style={{ fontSize: 9.5, color: MUTED, marginTop: 4 }}>CSV columns: x, y, dBm (image px) · optional 4th column servingApId. Header row auto-detected.</div>
+                <div style={{ fontSize: 12, color: MUTED, marginTop: 4 }}>CSV columns: x, y, dBm (image px) · optional 4th column servingApId. Header row auto-detected.</div>
                 {measured.length > 0 && <div className="hm-bom" style={{ maxHeight: 120, overflowY: 'auto', marginTop: 8 }}>
                   {measured.map((mp, i) => (
                     <div key={i} className="hm-bom-row" style={{ gap: 8 }}>
@@ -2919,7 +2919,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         .hm-minichip { background: rgba(255,255,255,0.04); border: 1px solid ${BORDER}; color: ${DIM}; border-radius: 999px; padding: 5px 11px; font-size: 12px; font-weight: 700; cursor: pointer; font-variant-numeric: tabular-nums; transition: background .12s, border-color .12s, color .12s; }
         .hm-minichip:hover { background: rgba(255,255,255,0.08); color: ${TEXT}; }
         .hm-minichip[data-on="true"] { background: var(--brand-primary-18); border-color: color-mix(in srgb, var(--brand-primary) 50%, transparent); color: ${GOLD}; }
-        .hm-cta { display: inline-block; background: linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover)); color: #101722; font-weight: 800; font-size: 14px; padding: 11px 22px; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 16px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35); transition: transform .12s, box-shadow .12s, filter .12s; }
+        .hm-cta { display: inline-block; background: var(--brand-primary); color: #101722; font-weight: 800; font-size: 14px; padding: 11px 22px; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 16px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35); transition: transform .12s, box-shadow .12s, filter .12s; }
         .hm-cta:hover { transform: translateY(-1px); box-shadow: 0 8px 24px var(--brand-primary-35), inset 0 1px 0 rgba(255,255,255,0.35); filter: brightness(1.04); }
         .hm-cta:active { transform: translateY(0); box-shadow: 0 2px 8px var(--brand-primary-25), inset 0 1px 3px rgba(0,0,0,0.2); }
         .hm-tmpl { display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 2px; padding: 14px; border: 1px solid ${BORDER}; border-radius: 12px; background: ${RAISED}; cursor: pointer; transition: border-color .15s, transform .15s, box-shadow .15s, background .15s; }
@@ -2950,7 +2950,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         .hm-sel:focus, .hm-sel-full:focus { outline: none; border-color: color-mix(in srgb, var(--brand-primary) 55%, transparent); box-shadow: 0 0 0 3px var(--brand-primary-12), inset 0 1px 0 rgba(255,255,255,0.05); }
         .hm-chk { display: flex; align-items: center; gap: 5px; font-size: 12px; color: ${DIM}; }
         .hm-hint { font-size: 12px; color: ${MUTED}; }
-        .hm-btn { background: linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover)); color: #101722; border: none; border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 800; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.28); transition: filter .12s; }
+        .hm-btn { background: var(--brand-primary); color: #101722; border: none; border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 800; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.28); transition: filter .12s; }
         .hm-btn:hover { filter: brightness(1.07); }
         .hm-body { flex: 1; display: flex; min-height: 0; }
         .hm-canvas-wrap { flex: 1; overflow: hidden; position: relative; background: radial-gradient(ellipse 120% 90% at 50% 30%, #0b1017 0%, #05080d 100%); }
@@ -2997,7 +2997,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         .hm-step[data-done="true"] .hm-step-num { background: rgba(74,222,128,0.22); color: #4ADE80; box-shadow: inset 0 0 0 1px rgba(74,222,128,0.35); }
         .hm-step-num { width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.09); font-size: 12px; font-variant-numeric: tabular-nums; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); transition: background .25s, color .25s, box-shadow .25s; }
         .hm-fieldbar { display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-bottom: 1px solid rgba(0,0,0,0.6); background: linear-gradient(180deg, #0d0e11, #0a0b0d); flex-wrap: wrap; position: relative; z-index: 3; box-shadow: 0 10px 26px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04); }
-        .hm-big { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover)); color: #101722; font-weight: 800; font-size: 14.5px; padding: 12px 21px; border-radius: 12px; border: none; cursor: pointer; box-shadow: 0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35); transition: transform .12s, box-shadow .12s, filter .12s; }
+        .hm-big { display: inline-flex; align-items: center; gap: 8px; background: var(--brand-primary); color: #101722; font-weight: 800; font-size: 14.5px; padding: 12px 21px; border-radius: 12px; border: none; cursor: pointer; box-shadow: 0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35); transition: transform .12s, box-shadow .12s, filter .12s; }
         .hm-big:hover { transform: translateY(-1px); box-shadow: 0 8px 22px var(--brand-primary-35), inset 0 1px 0 rgba(255,255,255,0.35); filter: brightness(1.04); }
         .hm-big:active { transform: translateY(0); box-shadow: 0 2px 8px var(--brand-primary-25), inset 0 1px 3px rgba(0,0,0,0.2); }
         .hm-big[data-alt="true"] { background: linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.05)); color: ${TEXT}; border: 1px solid rgba(255,255,255,0.14); box-shadow: 0 2px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.07); }
@@ -3020,10 +3020,10 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         .hm-advisor-body { overflow-y: auto; padding: 0 13px 13px; display: flex; flex-direction: column; gap: 8px; }
         .hm-advdict { font-size: 12px; font-weight: 700; line-height: 1.5; border-radius: 9px; padding: 9px 11px; background: rgba(74,222,128,0.10); border: 1px solid rgba(74,222,128,0.35); color: #8CE7A5; font-variant-numeric: tabular-nums; }
         .hm-advdict[data-bad="true"] { background: rgba(248,113,113,0.10); border-color: rgba(248,113,113,0.4); color: #FCA5A5; }
-        .hm-advlabel { font-size: 9.5px; font-weight: 800; color: ${MUTED}; margin-top: 2px; }
+        .hm-advlabel { font-size: 12px; font-weight: 800; color: ${MUTED}; margin-top: 2px; }
         .hm-advrow { display: flex; align-items: center; gap: 8px; font-size: 12px; color: ${DIM}; }
         .hm-advrow b { color: ${TEXT}; font-weight: 700; }
-        .hm-advchip { flex-shrink: 0; font-size: 9.5px; font-weight: 800; padding: 2px 8px; border-radius: 999px; }
+        .hm-advchip { flex-shrink: 0; font-size: 12px; font-weight: 800; padding: 2px 8px; border-radius: 999px; }
         .hm-advchip[data-kind="ok"] { background: rgba(74,222,128,0.14); color: #4ADE80; box-shadow: inset 0 0 0 1px rgba(74,222,128,0.35); }
         .hm-advchip[data-kind="crowded"], .hm-advchip[data-kind="warn"] { background: var(--brand-primary-12); color: ${GOLD}; box-shadow: inset 0 0 0 1px var(--brand-primary-35); }
         .hm-advchip[data-kind="over"] { background: rgba(248,113,113,0.14); color: #F87171; box-shadow: inset 0 0 0 1px rgba(248,113,113,0.4); }
@@ -3465,7 +3465,7 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
             <div key={i} style={{ padding: '6px 8px', border: `1px solid ${BORDER}`, borderRadius: 8, marginBottom: 6, background: DARK }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ fontSize: 12, fontWeight: 700, color: TEXT }}>{s.name}</span>
-                {s.hidden && <span style={{ fontSize: 9.5, color: MUTED, border: `1px solid ${BORDER}`, borderRadius: 5, padding: '0 5px' }}>hidden</span>}
+                {s.hidden && <span style={{ fontSize: 12, color: MUTED, border: `1px solid ${BORDER}`, borderRadius: 5, padding: '0 5px' }}>hidden</span>}
                 <span style={{ flex: 1 }} />
                 <span style={{ fontSize: 12, color: DIM }}>{SSID_BAND_LABEL[s.band]} · {SSID_SEC_LABEL[s.security]}</span>
               </div>

@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 import { toCents, toDollars, sumCents, scaleCents } from '@/lib/calc';
-import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, FlowStrip, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, FlowStrip, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
 import { Receipt, Plus, FilePlus, CurrencyDollar, Wallet, PencilSimple, ChartBar, Copy, Trash, Camera, Sparkle, type Icon } from '@phosphor-icons/react';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
@@ -398,7 +398,7 @@ export default function BillsPage() {
         subtitle="Vendor bills and supplier invoices"
         actions={
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button onClick={() => receiptInput.current?.click()} disabled={!!scanning} style={{ ...goldButtonStyle, minHeight: 44, opacity: scanning ? 0.7 : 1 }} className="pmBtn">
+            <button onClick={() => receiptInput.current?.click()} disabled={!!scanning} style={{ ...(showForm ? secondaryButtonStyle : goldButtonStyle), minHeight: 44, opacity: scanning ? 0.7 : 1 }} className="pmBtn">
               <Camera size={15} weight="bold" /> {scanning === 'upload' ? 'Uploading…' : scanning === 'read' ? 'Reading…' : 'Scan Receipt'}
             </button>
             <button onClick={() => openForm(!showForm)} style={{ ...ghostButtonStyle, minHeight: 44 }} className="pmBtn">
@@ -614,7 +614,7 @@ export default function BillsPage() {
                         ) : editId === b.id ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                             <input value={editVal} onChange={e => setEditVal(e.target.value)} type="number" autoFocus onKeyDown={e => { if (e.key === 'Enter') handleEditBill(b.id); if (e.key === 'Escape') setEditId(null); }} style={{ width: 100, padding: '4px 8px', background: DARK, border: `1px solid ${GOLD}`, borderRadius: 5, color: TEXT, fontSize: 12, outline: 'none', textAlign: 'right' }} />
-                            <button onClick={() => handleEditBill(b.id)} style={{ padding: '3px 8px', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 5, color: 'var(--on-brand)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save</button>
+                            <button onClick={() => handleEditBill(b.id)} style={{ padding: '3px 8px', background: `var(--brand-primary)`, border: 'none', borderRadius: 5, color: 'var(--on-brand)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save</button>
                             <button onClick={() => setEditId(null)} style={{ padding: '3px 8px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
                           </div>
                         ) : adjustId === b.id ? (

@@ -383,7 +383,7 @@ export default function SageSettings({ onClose }: { onClose: () => void }) {
                 <div style={{ color: DIM, fontSize: 13 }}>No activity yet.</div>
               ) : activity.map((a) => (
                 <div key={a.id} style={{ ...card, display: 'flex', gap: 10, alignItems: 'baseline' }}>
-                  <span style={{ fontSize: 12, fontWeight: 800, color: a.actor === 'sage' ? GOLD : GREEN, flexShrink: 0, textTransform: 'capitalize' }}>{a.actor}</span>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: a.actor === 'sage' ? 'var(--info)' : GREEN, flexShrink: 0, textTransform: 'capitalize' }}>{a.actor}</span>
                   <div style={{ flex: 1 }}>
                     <div style={{ color: TEXT, fontSize: 13, lineHeight: 1.5 }}>{a.summary}</div>
                     <div style={{ color: DIM, fontSize: 12, marginTop: 2 }}>{a.action_type} · {new Date(a.created_at).toLocaleString()}</div>
@@ -420,7 +420,7 @@ export default function SageSettings({ onClose }: { onClose: () => void }) {
                           <div key={b.band} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: 13 }}>
                             <span style={{ color: TEXT }}>{b.band}</span>
                             <span style={{ textAlign: 'right' }}>
-                              <span style={{ color: b.winRate != null ? GOLD : DIM, fontWeight: b.winRate != null ? 700 : 400 }}>
+                              <span style={{ color: b.winRate != null ? 'var(--text-primary)' : DIM, fontWeight: b.winRate != null ? 700 : 400 }}>
                                 {b.winRate != null ? `${b.winRate}% (${b.wins}/${b.n})` : `not enough data (n=${b.n})`}
                               </span>
                               {b.expectedValue != null && (

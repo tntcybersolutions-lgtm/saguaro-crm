@@ -60,7 +60,7 @@ export default function ClientPortalLanding() {
             <button
               onClick={handleEmailAccess}
               disabled={loading || !email.trim()}
-              style={{ width: '100%', marginTop: 12, padding: '12px', background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))', border: 'none', borderRadius: 10, color: '#101722', fontWeight: 700, fontSize: 14, cursor: loading ? 'wait' : 'pointer', opacity: !email.trim() ? 0.5 : 1 }}
+              style={{ width: '100%', marginTop: 12, padding: '12px', background: 'var(--brand-primary)', border: 'none', borderRadius: 10, color: '#101722', fontWeight: 700, fontSize: 14, cursor: loading ? 'wait' : 'pointer', opacity: !email.trim() ? 0.5 : 1 }}
             >
               {loading ? 'Checking…' : 'Access My Project'}
             </button>

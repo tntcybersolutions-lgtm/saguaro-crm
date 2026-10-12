@@ -2710,7 +2710,7 @@ export default function RadioDispatchPage() {
               style={{
                 flexShrink: 0, width: 15, height: 15, borderRadius: 5,
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                background: on ? `linear-gradient(180deg, ${GOLD_HI}, ${GOLD})` : FIELD_BG,
+                background: on ? `var(--brand-primary)` : FIELD_BG,
                 border: on ? 'none' : FIELD_BORDER, color: 'var(--on-brand)',
               }}
             >
@@ -2724,7 +2724,7 @@ export default function RadioDispatchPage() {
           <span style={{ flex: 1, minWidth: 0, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {busy ? 'Working…' : personName(p)}
           </span>
-          <span style={{ flexShrink: 0, fontSize: 9.5, fontWeight: 800, color: FAINT, whiteSpace: 'nowrap' }}>
+          <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 800, color: FAINT, whiteSpace: 'nowrap' }}>
             {sub ? 'Sub' : String(p.role || 'Staff').replace(/_/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase()).slice(0, 14)}
           </span>
         </button>
@@ -3041,23 +3041,23 @@ export default function RadioDispatchPage() {
             {m.patched_from && (
               <span
                 title={`Mirrored from ${channelName(m.patched_from)} through an active patch`}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 9.5, fontWeight: 800, color: FAINT, border: `1px solid ${BORDER}`, borderRadius: 999, padding: '1px 7px', whiteSpace: 'nowrap' }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 800, color: FAINT, border: `1px solid ${BORDER}`, borderRadius: 999, padding: '1px 7px', whiteSpace: 'nowrap' }}
               >
                 <PlugsConnected size={10} weight="bold" /> via {channelName(m.patched_from)}
               </span>
             )}
             {panic && (
-              <span style={{ fontSize: 9.5, fontWeight: 900, color: RED, border: `1px solid ${RED_BORDER}`, borderRadius: 999, padding: '1px 7px' }}>
+              <span style={{ fontSize: 12, fontWeight: 900, color: RED, border: `1px solid ${RED_BORDER}`, borderRadius: 999, padding: '1px 7px' }}>
                 PANIC
               </span>
             )}
             {resolved && (
-              <span style={{ fontSize: 9.5, fontWeight: 900, color: GREEN, border: `1px solid ${GREEN_BORDER}`, borderRadius: 999, padding: '1px 7px' }}>
+              <span style={{ fontSize: 12, fontWeight: 900, color: GREEN, border: `1px solid ${GREEN_BORDER}`, borderRadius: 999, padding: '1px 7px' }}>
                 RESOLVED {timeOf(m.panic_resolved_at as string)}
               </span>
             )}
             {alert && (
-              <span style={{ fontSize: 9.5, fontWeight: 900, color: 'var(--text-primary)', border: `1px solid ${AMBER_BORDER}`, borderRadius: 999, padding: '1px 7px' }}>
+              <span style={{ fontSize: 12, fontWeight: 900, color: 'var(--text-primary)', border: `1px solid ${AMBER_BORDER}`, borderRadius: 999, padding: '1px 7px' }}>
                 ALERT
               </span>
             )}
@@ -3148,7 +3148,7 @@ export default function RadioDispatchPage() {
           {/* Location trail (v2) — numbered breadcrumbs, newest last */}
           {trail.length > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-              <span style={{ fontSize: 9.5, fontWeight: 900, color: 'var(--danger)' }}>Trail</span>
+              <span style={{ fontSize: 12, fontWeight: 900, color: 'var(--danger)' }}>Trail</span>
               {trail.map((p, i) => (
                 <a
                   key={i}
@@ -3294,7 +3294,7 @@ export default function RadioDispatchPage() {
             style={{
               flexShrink: 0, minWidth: 20, height: 20, padding: '0 6px', borderRadius: 999,
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              background: `linear-gradient(180deg, ${GOLD_HI}, ${GOLD})`,
+              background: `var(--brand-primary)`,
               color: 'var(--on-brand)', fontSize: 12, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
             }}
           >
@@ -3366,7 +3366,7 @@ export default function RadioDispatchPage() {
             <span style={{ fontSize: 12, color: FAINT, fontVariantNumeric: 'tabular-nums' }}>{p.secs.toFixed(1)}s · {sizeLabel(p.bytes)}</span>
             <span
               style={{
-                fontSize: 9.5, fontWeight: 900, borderRadius: 999, padding: '1px 8px',
+                fontSize: 12, fontWeight: 900, borderRadius: 999, padding: '1px 8px',
                 color: held ? RED : GOLD_HI, border: `1px solid ${held ? RED_BORDER : AMBER_BORDER}`,
               }}
             >
@@ -3550,7 +3550,7 @@ export default function RadioDispatchPage() {
                   style={{
                     flexShrink: 0, minWidth: 20, height: 20, padding: '0 6px', borderRadius: 999,
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    background: `linear-gradient(180deg, ${GOLD_HI}, ${GOLD})`, color: 'var(--on-brand)',
+                    background: `var(--brand-primary)`, color: 'var(--on-brand)',
                     fontSize: 12, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
                   }}
                 >
@@ -3587,7 +3587,7 @@ export default function RadioDispatchPage() {
                         {grp.label}
                       </span>
                       <span aria-hidden style={{ flex: 1, height: 1, background: BORDER }} />
-                      <span style={{ fontSize: 9.5, fontWeight: 800, color: FAINT, fontVariantNumeric: 'tabular-nums' }}>{grp.rows.length}</span>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: FAINT, fontVariantNumeric: 'tabular-nums' }}>{grp.rows.length}</span>
                     </div>
                     {grp.rows.map(chanRow)}
                   </div>
@@ -3793,7 +3793,7 @@ export default function RadioDispatchPage() {
           {/* Instrument readouts — what the console already knows, inline */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0, paddingRight: 2 }}>
             {rtLive && (
-              <span title="Live — transmissions arrive instantly over the realtime socket" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 9.5, fontWeight: 900, color: GREEN }}>
+              <span title="Live — transmissions arrive instantly over the realtime socket" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 900, color: GREEN }}>
                 <span aria-hidden style={{ width: 7, height: 7, borderRadius: 999, background: GREEN, boxShadow: '0 0 8px rgba(74,222,128,0.8)' }} />
                 LIVE
               </span>
@@ -3803,7 +3803,7 @@ export default function RadioDispatchPage() {
               { label: 'Monitoring', value: `${stats.monitored}/${stats.channels}` },
             ].map((r) => (
               <span key={r.label} style={{ display: 'none', flexDirection: 'column', lineHeight: 1.15 }} className="sagReadout">
-                <span style={{ fontSize: 8.5, fontWeight: 900, color: FAINT }}>{r.label}</span>
+                <span style={{ fontSize: 12, fontWeight: 900, color: FAINT }}>{r.label}</span>
                 <span style={{ fontSize: 13, fontWeight: 800, color: WHITE, fontVariantNumeric: 'tabular-nums' }}>{r.value}</span>
               </span>
             ))}
@@ -3842,9 +3842,9 @@ export default function RadioDispatchPage() {
                   style={{
                     minWidth: 16, height: 16, padding: '0 4px', borderRadius: 999,
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    background: assistOpenCount > 0 ? RED : `linear-gradient(180deg, ${GOLD_HI}, ${GOLD})`,
+                    background: assistOpenCount > 0 ? RED : `var(--brand-primary)`,
                     color: assistOpenCount > 0 ? WHITE : 'var(--on-brand)',
-                    fontSize: 9.5, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
+                    fontSize: 12, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
                   }}
                 >
                   {unheardVoice.length + assistOpenCount}
@@ -4033,7 +4033,7 @@ export default function RadioDispatchPage() {
               <FrequencyDial seed={activeId || 'saguaro'} />
               {lastTraffic?.lastMessage && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', padding: '8px 12px', marginTop: 12, borderRadius: 10, background: NEST, border: `1px solid ${BORDER}` }}>
-                  <span style={{ fontSize: 9.5, fontWeight: 900, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>Last Traffic</span>
+                  <span style={{ fontSize: 12, fontWeight: 900, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>Last Traffic</span>
                   <span style={{ fontSize: 12, color: WHITE, fontWeight: 700, minWidth: 0, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {senderShort(lastTraffic.lastMessage.sender)} — {trafficPreview(lastTraffic.lastMessage)}
                   </span>
@@ -4121,10 +4121,10 @@ export default function RadioDispatchPage() {
                 background: micOpen
                   ? `linear-gradient(180deg, ${RED}, #991B1B)`
                   : keyed
-                    ? 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary))'
+                    ? 'var(--brand-primary)'
                     : micError
                       ? `linear-gradient(180deg, rgba(248,113,113,0.22), rgba(248,113,113,0.10))`
-                      : `linear-gradient(180deg, ${GOLD_HI}, ${GOLD} 60%, var(--brand-primary-hover))`,
+                      : `var(--brand-primary)`,
                 color: micOpen ? WHITE : micError && !keyed ? 'var(--danger)' : 'var(--on-brand)',
                 boxShadow: micOpen
                   ? '0 0 0 5px rgba(248,113,113,0.22), 0 8px 26px -10px rgba(248,113,113,0.8)'
@@ -4219,7 +4219,7 @@ export default function RadioDispatchPage() {
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 background: pendingFile ? AMBER_SOFT : FIELD_BG,
                 border: pendingFile ? `1px solid ${AMBER_BORDER}` : FIELD_BORDER,
-                color: pendingFile ? GOLD_HI : MUTED, cursor: active ? 'pointer' : 'not-allowed',
+                color: pendingFile ? 'var(--text-primary)' : MUTED, cursor: active ? 'pointer' : 'not-allowed',
                 opacity: !active || uploadingMedia ? 0.55 : 1,
               }}
             >
@@ -4244,7 +4244,7 @@ export default function RadioDispatchPage() {
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     height: 42, padding: '0 10px', borderRadius: 11, cursor: 'pointer',
                     background: TONES[tn].soft, border: `1px solid ${TONES[tn].border}`,
-                    color: TONES[tn].color, fontWeight: 900, fontSize: 9.5,
+                    color: TONES[tn].color, fontWeight: 900, fontSize: 12,
                     whiteSpace: 'nowrap', opacity: !active || toneSending !== null ? 0.5 : 1,
                   }}
                 >
@@ -4338,7 +4338,7 @@ export default function RadioDispatchPage() {
                 >
                   <span
                     style={{
-                      fontSize: 9.5, fontWeight: 900, borderRadius: 999, padding: '2px 8px',
+                      fontSize: 12, fontWeight: 900, borderRadius: 999, padding: '2px 8px',
                       color: acked ? GREEN : RED,
                       border: `1px solid ${acked ? GREEN_BORDER : RED_BORDER}`,
                       background: acked ? GREEN_SOFT : RED_SOFT, whiteSpace: 'nowrap',
@@ -4580,15 +4580,15 @@ export default function RadioDispatchPage() {
                 style={{
                   flexShrink: 0, width: 15, height: 15, borderRadius: 5,
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  background: on ? `linear-gradient(180deg, ${GOLD_HI}, ${GOLD})` : FIELD_BG,
+                  background: on ? `var(--brand-primary)` : FIELD_BG,
                   border: on ? 'none' : FIELD_BORDER, color: 'var(--on-brand)',
                 }}
               >
                 {on && <Check size={10} weight="bold" />}
               </span>
-              <span style={{ flexShrink: 0, fontSize: 9.5, fontWeight: 900, color: FAINT, fontVariantNumeric: 'tabular-nums' }}>{channelNo.get(c.id)}</span>
+              <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 900, color: FAINT, fontVariantNumeric: 'tabular-nums' }}>{channelNo.get(c.id)}</span>
               <span style={{ flex: 1, minWidth: 0, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</span>
-              <span style={{ flexShrink: 0, fontSize: 9.5, fontWeight: 800, color: FAINT, whiteSpace: 'nowrap', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 800, color: FAINT, whiteSpace: 'nowrap', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {c.kind === 'direct' ? 'Direct' : c.project_name || (c.project_id ? 'Project' : 'Organization')}
               </span>
             </button>
@@ -4661,7 +4661,7 @@ export default function RadioDispatchPage() {
               <span style={{ flexShrink: 0, width: 120, fontSize: 12, fontWeight: 800, color: WHITE, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {senderShort(m.sender_name)}
               </span>
-              <span style={{ flexShrink: 0, width: 52, fontSize: 9.5, fontWeight: 900, color: m.kind === 'panic' ? RED : m.kind === 'alert' ? GOLD_HI : FAINT }}>
+              <span style={{ flexShrink: 0, width: 52, fontSize: 12, fontWeight: 900, color: m.kind === 'panic' ? RED : m.kind === 'alert' ? GOLD_HI : FAINT }}>
                 {m.kind.charAt(0).toUpperCase() + m.kind.slice(1)}
               </span>
               <span style={{ flex: 1, minWidth: 0, fontSize: 12, color: WHITE, lineHeight: 1.45, overflowWrap: 'anywhere' }}>

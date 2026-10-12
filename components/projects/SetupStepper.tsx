@@ -80,7 +80,7 @@ export default function SetupStepper({ steps, active }: { steps: SetupStep[]; ac
                     transform: isActive ? 'scale(1.12)' : 'scale(1)',
                     background:
                       state === 'done'
-                        ? `linear-gradient(150deg, ${GOLD_HI}, ${GOLD})`
+                        ? `var(--brand-primary)`
                         : state === 'active'
                           ? 'var(--brand-primary-18)'
                           : 'rgba(255,255,255,0.05)',
@@ -141,7 +141,7 @@ export default function SetupStepper({ steps, active }: { steps: SetupStep[]; ac
             height: '100%',
             width: `${pct}%`,
             borderRadius: 2,
-            background: `linear-gradient(90deg, ${GOLD}, ${GOLD_HI})`,
+            background: `var(--brand-primary)`,
             boxShadow: `0 0 12px -2px ${GOLD}`,
             transition: 'width .35s cubic-bezier(.4,0,.2,1)',
           }}

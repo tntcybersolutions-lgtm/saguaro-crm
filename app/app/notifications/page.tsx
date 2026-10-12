@@ -190,7 +190,7 @@ export default function NotificationsPage() {
       {/* Activity intelligence strip — what the feed holds right now */}
       {!loading && notifications.length > 0 && (
         <StatStrip items={[
-          { label: 'Unread', value: String(unreadCount), accent: unreadCount > 0 ? GOLD : undefined, onClick: unreadCount > 0 || readFilter === 'unread' ? () => setReadFilter(f => (f === 'unread' ? 'all' : 'unread')) : undefined, active: readFilter === 'unread', sub: readFilter === 'unread' ? 'Showing unread — tap to clear' : unreadCount > 0 ? 'Waiting on you' : 'All caught up' },
+          { label: 'Unread', value: String(unreadCount), accent: unreadCount > 0 ? 'var(--info)' : undefined, onClick: unreadCount > 0 || readFilter === 'unread' ? () => setReadFilter(f => (f === 'unread' ? 'all' : 'unread')) : undefined, active: readFilter === 'unread', sub: readFilter === 'unread' ? 'Showing unread — tap to clear' : unreadCount > 0 ? 'Waiting on you' : 'All caught up' },
           { label: 'In the Feed', value: String(notifications.length), onClick: filtersActive ? showAll : undefined, sub: filtersActive ? 'Filtered — tap to show all' : 'Most recent 100 events' },
           { label: 'Money Events', value: String(moneyCount), onClick: moneyCount > 0 || typeFilter === MONEY ? () => toggleType(MONEY) : undefined, active: typeFilter === MONEY, sub: typeFilter === MONEY ? 'Showing money — tap to clear' : 'Pay apps + change orders' },
           { label: 'Alerts', value: String(alertCount), accent: alertCount > 0 ? RED : undefined, onClick: alertCount > 0 || typeFilter === 'Alert' ? () => toggleType('Alert') : undefined, active: typeFilter === 'Alert', sub: typeFilter === 'Alert' ? 'Showing alerts — tap to clear' : alertCount > 0 ? 'Budget / overdue flags' : 'Nothing flagged' },
@@ -212,7 +212,7 @@ export default function NotificationsPage() {
       <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
         {TYPE_GROUPS.filter(g => g === 'All' || typeCounts[g] > 0).map(g => (
           <button key={g} type="button" className="ntFilter" aria-pressed={typeFilter === g} onClick={() => setTypeFilter(g)}
-            style={{ padding: '4px 12px', borderRadius: 'var(--radius-pill)', border: `1px solid ${typeFilter === g ? 'var(--brand-primary-25)' : 'var(--border-default)'}`, background: typeFilter === g ? 'var(--brand-primary-12)' : 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))', color: typeFilter === g ? GOLD : DIM, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+            style={{ padding: '4px 12px', borderRadius: 'var(--radius-sm)', border: `1px solid ${typeFilter === g ? 'var(--brand-primary-25)' : 'var(--border-default)'}`, background: typeFilter === g ? 'var(--brand-primary-12)' : 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))', color: typeFilter === g ? GOLD : DIM, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
             {g}{typeCounts[g] > 0 && g !== 'All' ? ` (${typeCounts[g]})` : ''}
           </button>
         ))}
@@ -253,7 +253,7 @@ export default function NotificationsPage() {
                   padding: '14px 20px',
                   borderBottom: i < displayed.length - 1 ? `1px solid ${BORDER}` : 'none',
                   cursor: n.read ? 'default' : 'pointer',
-                  background: n.read ? 'transparent' : 'color-mix(in srgb, var(--brand-primary) 4%, transparent)',
+                  background: n.read ? 'transparent' : 'var(--bg-row-hover)',
                   transition: 'background .15s',
                   display: 'flex',
                   gap: 14,
@@ -318,7 +318,7 @@ export default function NotificationsPage() {
                   </div>
                 </div>
 
-                {!n.read && <div style={{ width: 8, height: 8, borderRadius: '50%', background: GOLD, flexShrink: 0, marginTop: 6 }} />}
+                {!n.read && <div aria-label="Unread" style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--info)', flexShrink: 0, marginTop: 6 }} />}
               </div>
             );
           })

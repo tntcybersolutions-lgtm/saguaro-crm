@@ -505,10 +505,10 @@ function DivisionComposer({ div, divName, onAdd, onClose }: {
           onChange={(e) => setNotes(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') submit(); }} style={{ marginTop: 8, textAlign: 'left' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 10, flexWrap: 'wrap' }}>
           <button onClick={submit} disabled={!valid || busy} className="tkBtn"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 9, border: 'none', background: valid ? `linear-gradient(135deg, ${GOLD}, ${AMBER})` : 'rgba(255,255,255,0.06)', color: valid ? 'var(--on-brand)' : 'rgba(255,255,255,0.35)', fontWeight: 800, fontSize: 13, cursor: valid && !busy ? 'pointer' : 'not-allowed' }}>
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 9, border: 'none', background: valid ? `var(--brand-primary)` : 'rgba(255,255,255,0.06)', color: valid ? 'var(--on-brand)' : 'rgba(255,255,255,0.35)', fontWeight: 800, fontSize: 13, cursor: valid && !busy ? 'pointer' : 'not-allowed' }}>
             {busy ? <CircleNotch size={14} weight="bold" style={{ animation: 'tkSpin .9s linear infinite' }} /> : <Plus size={14} weight="bold" />} Add Line
           </button>
-          <span style={{ fontSize: 12, fontWeight: 700, color: valid ? GOLD : 'rgba(255,255,255,0.35)' }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: valid ? 'var(--text-primary)' : 'rgba(255,255,255,0.35)' }}>
             {valid ? `= ${fmt$(preview)} cost` : 'Description, qty > 0 and $/unit > 0 required'}
           </span>
         </div>
@@ -1682,7 +1682,7 @@ export default function TakeoffPage() {
               </div>
             )}
             <div style={{ marginTop: 26, display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-              <a href="/app/takeoff/measured" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 22px', borderRadius: 12, background: `linear-gradient(135deg, ${GOLD}, ${AMBER})`, color: 'var(--on-brand)', fontWeight: 800, fontSize: 14, textDecoration: 'none' }}>
+              <a href="/app/takeoff/measured" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 22px', borderRadius: 12, background: `var(--brand-primary)`, color: 'var(--on-brand)', fontWeight: 800, fontSize: 14, textDecoration: 'none' }}>
                 Open in Takeoff Studio <ArrowRight size={16} weight="bold" />
               </a>
               <button onClick={() => setMeasuredHandoff(null)} style={{ padding: '12px 22px', borderRadius: 12, background: 'transparent', border: `1px solid ${BORDER}`, color: 'var(--c-text-2)', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
@@ -1889,7 +1889,7 @@ export default function TakeoffPage() {
             <div style={{
               height: '100%',
               width: `${progress.pct}%`,
-              background: `linear-gradient(90deg, ${AMBER}, ${GOLD}, ${GOLD_HI})`,
+              background: `var(--brand-primary)`,
               borderRadius: 999,
               transition: 'width 0.5s ease',
               boxShadow: '0 0 16px color-mix(in srgb, var(--brand-primary) 60%, transparent)',
@@ -1996,7 +1996,7 @@ export default function TakeoffPage() {
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44,
                   padding: '0 22px', borderRadius: 10, border: 'none', cursor: 'pointer',
-                  background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))',
+                  background: 'var(--brand-primary)',
                   color: 'var(--on-brand)', fontSize: 14, fontWeight: 800,
                 }}
               >
@@ -2030,7 +2030,7 @@ export default function TakeoffPage() {
         </div>
         <div style={{ position: 'relative', textAlign: 'right', flex: '1 1 auto', minWidth: 220 }}>
           <div style={{ color: 'var(--c-text-2)', fontSize: 12, fontWeight: 700 }}>Bid Price</div>
-          <div style={{ fontWeight: 900, fontSize: 'clamp(38px,5vw,56px)', lineHeight: 1.02, letterSpacing: '-0.03em', background: `linear-gradient(100deg, ${GOLD}, ${GOLD_HI} 55%, var(--brand-primary-hover))`, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent', textShadow: '0 0 50px color-mix(in srgb, var(--brand-primary) 30%, transparent)', animation: 'tkPop .6s ease .1s both' }}>
+          <div style={{ fontWeight: 900, fontSize: 'clamp(38px,5vw,56px)', lineHeight: 1.02, letterSpacing: '-0.03em', color: 'var(--text-primary)', animation: 'tkPop .6s ease .1s both' }}>
             {fmt$(bidPrice)}
           </div>
           {computedCosts && (
@@ -2041,11 +2041,11 @@ export default function TakeoffPage() {
           <div style={{ display: 'inline-flex', gap: 8, marginTop: 10, justifyContent: 'flex-end' }}>
             <div style={{ background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.35)', borderRadius: 9, padding: '6px 12px', textAlign: 'center' }}>
               <div style={{ color: GREEN, fontWeight: 800, fontSize: 16 }}>{result?.confidence ?? 0}%</div>
-              <div style={{ color: 'var(--c-text-2)', fontSize: 9.5 }}>Confidence</div>
+              <div style={{ color: 'var(--c-text-2)', fontSize: 12 }}>Confidence</div>
             </div>
             <div style={{ background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 9, padding: '6px 12px', textAlign: 'center' }}>
               <div style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 16 }}>{result?.itemCount ?? 0}</div>
-              <div style={{ color: 'var(--c-text-2)', fontSize: 9.5 }}>Line Items</div>
+              <div style={{ color: 'var(--c-text-2)', fontSize: 12 }}>Line Items</div>
             </div>
           </div>
         </div>
@@ -2250,7 +2250,7 @@ export default function TakeoffPage() {
           <NotePencil size={15} weight="duotone" color="var(--text-secondary)" />
           Click any description, qty, unit or $/unit to edit. Every line takes a note; deletes hold 6s for undo.
         </div>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 700, color: saveState === 'saving' ? GOLD_HI : saveState === 'confirmed' ? GREEN : saveState === 'error' ? 'var(--danger)' : 'rgba(255,255,255,0.45)' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 700, color: saveState === 'saving' ? 'var(--text-secondary)' : saveState === 'confirmed' ? GREEN : saveState === 'error' ? 'var(--danger)' : 'rgba(255,255,255,0.45)' }}>
           {saveState === 'saving' ? (<><CircleNotch size={14} weight="bold" style={{ animation: 'tkSpin .9s linear infinite' }} /> Saving…</>)
             : saveState === 'confirmed' ? (<><CheckCircle size={14} weight="fill" color={GREEN} /> Saved — totals server-confirmed</>)
             : saveState === 'error' ? (<><Warning size={14} weight="fill" color="var(--danger)" /> Save failed — change rolled back</>)
@@ -2319,7 +2319,7 @@ export default function TakeoffPage() {
           <span style={{ color: 'var(--c-text-2)', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             Deleted “{undoDelete.item.description}” — {fmt$(Number(undoDelete.item.totalCost) || 0)}
           </span>
-          <button onClick={undoPendingDelete} className="tkBtn" style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 9, border: 'none', background: `linear-gradient(135deg, ${GOLD}, ${AMBER})`, color: 'var(--on-brand)', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
+          <button onClick={undoPendingDelete} className="tkBtn" style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 9, border: 'none', background: `var(--brand-primary)`, color: 'var(--on-brand)', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
             Undo
           </button>
         </div>
@@ -2394,7 +2394,7 @@ export default function TakeoffPage() {
             {autoSummary.packages} bid package{autoSummary.packages !== 1 ? 's' : ''} written{autoSummary.sov ? ', Schedule of Values built' : autoSummary.sovDeferred ? ' (pay application waits until the job is won)' : ''} — everything filed to Documents / Compliance.
           </div>
           <div style={{ position: 'relative', display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 18 }}>
-            <a href={`/app/projects/${projectId}/bid-packages`} className="tkBtn" style={{ textDecoration: 'none', padding: '11px 20px', background: `linear-gradient(135deg, ${GOLD}, ${AMBER})`, borderRadius: 10, color: 'var(--on-brand)', fontWeight: 800, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 12px 30px -12px color-mix(in srgb, var(--brand-primary) 60%, transparent)' }}>
+            <a href={`/app/projects/${projectId}/bid-packages`} className="tkBtn" style={{ textDecoration: 'none', padding: '11px 20px', background: `var(--brand-primary)`, borderRadius: 10, color: 'var(--on-brand)', fontWeight: 800, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 12px 30px -12px color-mix(in srgb, var(--brand-primary) 60%, transparent)' }}>
               <Package size={15} weight="duotone" color="var(--on-brand)" /> View Bid Packages
             </a>
             <a href={`/app/projects/${projectId}/compliance`} style={{ textDecoration: 'none', padding: '11px 18px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 10, color: 'var(--text-primary)', fontWeight: 700, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 7 }}>
@@ -2434,7 +2434,7 @@ export default function TakeoffPage() {
               <div style={{ color: 'var(--text-primary)', fontWeight: 900, fontSize: 26, letterSpacing: '-0.02em' }}>{progress.pct}%</div>
             </div>
             <div style={{ position: 'relative', height: 10, background: 'rgba(255,255,255,0.07)', border: '1px solid var(--border-default)', borderRadius: 999, overflow: 'hidden' }}>
-              <div style={{ position: 'relative', height: '100%', width: `${progress.pct}%`, background: `linear-gradient(90deg, ${AMBER}, ${GOLD}, ${GOLD_HI})`, borderRadius: 999, transition: 'width .5s ease', boxShadow: '0 0 16px color-mix(in srgb, var(--brand-primary) 60%, transparent)' }}>
+              <div style={{ position: 'relative', height: '100%', width: `${progress.pct}%`, background: `var(--brand-primary)`, borderRadius: 999, transition: 'width .5s ease', boxShadow: '0 0 16px color-mix(in srgb, var(--brand-primary) 60%, transparent)' }}>
                 <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.5) 50%, transparent 60%)', backgroundSize: '200% 100%', animation: 'tkBarShine 2.4s ease-in-out infinite' }} />
               </div>
             </div>

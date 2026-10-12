@@ -106,7 +106,7 @@ export default function ReviewsPage() {
           {[1, 2, 3, 4, 5].map((n) => (
             <button key={n} type="button" onClick={() => setRating(n)} aria-label={`${n} star`} aria-pressed={n <= rating} style={{
               background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
-              minWidth: 44, minHeight: 44, fontSize: 24, color: n <= rating ? GOLD : BORDER,
+              minWidth: 44, minHeight: 44, fontSize: 24, color: n <= rating ? 'var(--warning)' : BORDER,
             }}>★</button>
           ))}
         </div>

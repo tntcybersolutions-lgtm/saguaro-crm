@@ -74,7 +74,7 @@ function PrimaryBtn({ onClick, disabled, loading, children }: {
       disabled={disabled || loading}
       style={{
         padding: '10px 24px',
-        background: disabled || loading ? 'var(--surface-raised)' : `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,
+        background: disabled || loading ? 'var(--surface-raised)' : `var(--brand-primary)`,
         border: 'none', borderRadius: 7, color: disabled || loading ? DIM : '#F2F2F7',
         fontSize: 13, fontWeight: 800, cursor: disabled || loading ? 'not-allowed' : 'pointer',
         transition: 'opacity 0.15s',
@@ -579,7 +579,7 @@ function Step4({ trade, scope, lineItems, selectedSubCount, packageName, onPacka
           disabled={submitting}
           style={{
             padding: '12px 32px',
-            background: submitting ? 'var(--surface-raised)' : `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,
+            background: submitting ? 'var(--surface-raised)' : `var(--brand-primary)`,
             border: 'none', borderRadius: 8,
             color: submitting ? DIM : '#F2F2F7',
             fontSize: 15, fontWeight: 800,

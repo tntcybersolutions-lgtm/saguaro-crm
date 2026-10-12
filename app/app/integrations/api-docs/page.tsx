@@ -260,7 +260,7 @@ export default function ApiDocsPage() {
               display: 'inline-flex', alignItems: 'center', gap: 7,
               padding: '8px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer',
               border: 'none', whiteSpace: 'nowrap',
-              background: activeSection === s.key ? `linear-gradient(180deg, var(--brand-primary-strong), ${GOLD})` : 'transparent',
+              background: activeSection === s.key ? `var(--brand-primary)` : 'transparent',
               color: activeSection === s.key ? 'var(--on-brand)' : DIM,
             }}
           >
@@ -393,7 +393,7 @@ export default function ApiDocsPage() {
                   style={{
                     padding: '6px 16px', borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: 'pointer',
                     border: 'none', textTransform: 'capitalize',
-                    background: codeTab === lang ? `linear-gradient(180deg, var(--brand-primary-strong), ${GOLD})` : 'transparent',
+                    background: codeTab === lang ? `var(--brand-primary)` : 'transparent',
                     color: codeTab === lang ? 'var(--on-brand)' : DIM,
                   }}
                 >
