@@ -226,3 +226,8 @@ already tracked by the design-system baseline (hex literals, `td` density, Sales
 decision); DataTable menus opening upward near the bottom (that is the correct behaviour); the Vercel *preview*
 session timeout (preview deployments only). CLAUDE.md §7/§8 still name `app/field/` and `lib/field-tokens.ts`,
 which do not exist — Chad's standing orders, not edited here.
+- `app/app/daily-logs/page.tsx:355` — a 409 "daily log already exists" from create is thrown away as a generic "Failed to create daily log"; the route's `error` and `existingLogId` are never read, so a second save for the same day gives no hint to open the existing log.
+- `app/app/daily-logs/page.tsx:700` — Work Performed is marked `required` but `submitCreate` never checks it; the route defaults it to `''`, so an empty-narrative log saves.
+- `app/api/daily-logs/list/route.ts:20` — bare `catch {}` with no log and no `apiError`; also returns `{logs:[]}` shape on 401/500 (§3).
+- `app/api/daily-logs/[id]/route.ts:19` — GET/PUT/DELETE catches (lines 19, 54, 74) are bare `catch {}` returning 'Internal server error'; no `apiError`, no correlation id (§3).
+- `app/api/daily-logs/create/route.ts:78` — empty `catch { /* stay manual */ }` around the weather auto-fill (and `:7` imports `getUser` is unused-adjacent); weather failure is silent by design but unlogged.
