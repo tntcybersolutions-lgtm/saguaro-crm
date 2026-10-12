@@ -43,6 +43,10 @@ const check = (name, ok, detail) => {
   R.checks.push({ name, ok: !!ok, detail: detail == null ? undefined : String(detail).slice(0, 200) });
   console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${detail != null ? ' — ' + String(detail).slice(0, 120) : ''}`);
 };
+/* One section's failure is recorded and the run moves on, so a stuck step can't skip the rest (or the cleanup). */
+const section = async (name, fn) => {
+  try { await fn(); } catch (e) { check(`${name}: section ran to the end`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
+};
 const shot = (page, name, full = false) => page.screenshot({ path: path.join(OUT, 'shots', `${name}.jpg`), type: 'jpeg', quality: 60, fullPage: full }).catch(() => {});
 
 async function login(page) {
@@ -159,6 +163,16 @@ try {
   const inv = invRow ? { id: invRow.id, zz: true } : null;
   const dl = await firstLink(gc, '/app/daily-logs', '/app/daily-logs/').catch(() => null);
   R.ids.invoice = inv && { ok: true, zz: inv.zz }; R.ids.payApp = pa && { ok: true, zz: pa.zz }; R.ids.dailyLog = dl && { ok: true, zz: dl.zz };
+  // A test lead left by an aborted earlier run (named "ZZ AUDIT Accept <stamp>", made only by this
+  // script) is removed first through the app's own delete — never any other lead.
+  if (want('deal')) {
+    const all = (await (await api.get(`${SITE}/api/leads`)).json().catch(() => ({}))).leads || [];
+    for (const l of all.filter((x) => /^ZZ AUDIT Accept \d{6}$/.test(x.company_name || ''))) {
+      const del = await api.delete(`${SITE}/api/leads/${l.id}`);
+      const gone = (await api.get(`${SITE}/api/leads/${l.id}`)).status();
+      check(`leftover test lead "${l.company_name}" from an aborted run removed`, del.ok() && (gone === 404 || gone === 410), `${del.status()} then ${gone}`);
+    }
+  }
   // The deal-page test record: created here, removed at the end through the UI.
   const created = !want('deal') ? null : await api.post(`${SITE}/api/leads`, { data: {
     company_name: `ZZ AUDIT Accept ${STAMP}`, contact_name: 'ZZ AUDIT Contact', contact_email: 'delivered@resend.dev',
@@ -321,20 +335,25 @@ try {
     const bad = await gc.evaluate(() => [...document.querySelectorAll('button, a')].filter((el) => { const cs = getComputedStyle(el); const b = (cs.backgroundColor.match(/[\d.]+/g) || []).map(Number); const c = (cs.color.match(/[\d.]+/g) || []).map(Number); return b[0] > 240 && b[1] > 210 && b[2] < 60 && c[0] > 200 && c[1] > 200 && c[2] > 200; }).map((el) => (el.textContent || '').trim().slice(0, 24)));
     check('prequalification: no white text on a yellow button', bad.length === 0, bad.join(', '));
   }
-  if (want('people')) {
-    await open(gc, '/app/people');
-    const rolesTab = gc.getByRole('tab', { name: /roles/i }).first();
-    if (await rolesTab.count()) { await rolesTab.click(); await gc.waitForTimeout(800); }
+  if (want('people')) await section('people', async () => {
+    // The Roles tab inside Roles & Access (the tab rides the URL as ?view=roles).
+    await open(gc, '/app/people?view=roles');
+    await gc.getByRole('tab', { name: 'Roles', exact: true }).first().click().catch(() => {});
+    await gc.waitForTimeout(800);
     const dots = await gc.evaluate(() => [...new Set([...document.querySelectorAll('.main-content-area div, .main-content-area span')].filter((e) => { const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return r.width >= 6 && r.width <= 16 && Math.abs(r.width - r.height) < 1 && parseFloat(cs.borderTopLeftRadius) >= r.width / 2 - 1 && cs.backgroundColor !== 'rgba(0, 0, 0, 0)'; }).map((e) => getComputedStyle(e).backgroundColor))]);
     const ok = ['rgb(56, 189, 248)', 'rgb(74, 222, 128)', 'rgb(251, 191, 36)', 'rgb(248, 113, 113)', 'rgb(248, 250, 252)', 'rgb(203, 213, 225)', 'rgb(148, 163, 184)'];
     const off = dots.filter((d) => !ok.includes(d));
     check('people: role colour dots are approved values', dots.length > 0 && off.length <= 1, `${dots.length} colours; off-palette: ${off.join(' ') || 'none'}`);
     await shot(gc, 'recheck-people-roles-1440');
-  }
+    await open(ph, '/app/people?view=roles');
+    await ph.getByRole('tab', { name: 'Roles', exact: true }).first().click().catch(() => {});
+    await ph.waitForTimeout(800);
+    await shot(ph, 'recheck-people-roles-390', true);
+  });
 
   // Invoice detail (an existing ZZ AUDIT test invoice): Edit opens and Cancel leaves it unchanged; the PDF
   // action produces a PDF. "Send to Vendor" is not pressed — it emails the vendor.
-  if (inv && want('invoice')) {
+  if (inv && want('invoice')) await section('invoice', async () => {
     const U = `/app/invoicing/${inv.id}`;
     await open(gc, U);
     const before = await (await api.get(`${SITE}/api/invoices/${inv.id}`)).json().catch(() => ({}));
@@ -357,11 +376,19 @@ try {
     }
     const sendShown = await gc.getByRole('button', { name: /Send to Vendor/ }).count();
     check('invoice: Send to Vendor present (not pressed: it emails the vendor)', true, sendShown ? 'present' : 'not shown for this status');
-  }
+    // The PDF opens in the in-page viewer: it must show, and Escape must close it.
+    const viewer = gc.locator('[role=dialog]').last();
+    if (await viewer.count()) {
+      await shot(gc, 'recheck-invoice-pdf-1440');
+      for (let i = 0; i < 3 && (await gc.locator('[role=dialog]').count()); i++) { await gc.keyboard.press('Escape'); await gc.waitForTimeout(500); }
+      check('invoice: the PDF viewer closes with Escape', (await gc.locator('[role=dialog]').count()) === 0);
+    }
+  });
   // Pay app detail (an existing ZZ AUDIT test pay app): the G702/G703 PDF action; Edit SOV opens and Cancel leaves it.
-  if (pa && want('pay-app')) {
+  if (pa && want('pay-app')) await section('pay-app', async () => {
     const U = `/app/projects/${pa.project}/pay-apps/${pa.id}`;
     await open(gc, U);
+    const before = await (await api.get(`${SITE}/api/pay-apps/${pa.id}`)).json().catch(() => ({}));
     const pdf = gc.getByRole('button', { name: /G702/ }).first();
     if (await pdf.count()) {
       const popup = gc.context().waitForEvent('page', { timeout: 45000 }).catch(() => null);
@@ -370,19 +397,27 @@ try {
       const [pg, rs] = await Promise.all([popup, resp]);
       check('pay app: G702/G703 PDF is produced', !!pg || (rs && rs.ok()), pg ? 'opened in a new tab' : rs ? rs.status() : 'no response');
       if (pg) await pg.close().catch(() => {});
+      // G702 and G703 open in the in-page viewer (one each): show it, then close both with Escape.
+      await gc.waitForTimeout(2500);
+      if (await gc.locator('[role=dialog]').count()) await shot(gc, 'recheck-payapp-pdf-1440');
+      for (let i = 0; i < 4 && (await gc.locator('[role=dialog]').count()); i++) { await gc.keyboard.press('Escape'); await gc.waitForTimeout(500); }
+      check('pay app: the PDF viewer closes with Escape', (await gc.locator('[role=dialog]').count()) === 0);
     } else check('pay app: G702/G703 PDF button present', false);
     const edit = gc.getByRole('button', { name: /Edit SOV/ }).first();
     if (await edit.count()) {
-      await edit.click(); await gc.waitForTimeout(800);
+      await edit.click({ timeout: 10000 }); await gc.waitForTimeout(800);
       const saveShown = await gc.getByRole('button', { name: /Save Changes/ }).count();
       await shot(gc, 'recheck-payapp-edit-1440', true);
-      await gc.getByRole('button', { name: /^Cancel$/ }).first().click().catch(() => {}); await gc.waitForTimeout(800);
-      check('pay app: Edit SOV opens edit mode and Cancel leaves it', saveShown > 0 && (await gc.getByRole('button', { name: /Save Changes/ }).count()) === 0);
+      await gc.getByRole('button', { name: /^Cancel$/ }).first().click({ timeout: 10000 }).catch(() => {}); await gc.waitForTimeout(1200);
+      const after = await (await api.get(`${SITE}/api/pay-apps/${pa.id}`)).json().catch(() => ({}));
+      check('pay app: Edit SOV opens edit mode and Cancel leaves it unchanged', saveShown > 0 && (await gc.getByRole('button', { name: /Save Changes/ }).count()) === 0 && JSON.stringify(before) === JSON.stringify(after));
     } else check('pay app: Edit SOV', true, 'not offered for this status');
-  }
+    const submit = await gc.getByRole('button', { name: /Submit to Owner/ }).count();
+    check('pay app: Submit to Owner present (not pressed: it emails the owner)', true, submit ? 'present' : 'not shown for this status');
+  });
 
   // Deal page on the test lead: stage, activity, edit — each reopened.
-  if (leadId && want('deal')) {
+  if (leadId && want('deal')) await section('deal', async () => {
     const D = `/app/leads/${leadId}`;
     const read = async () => (await (await api.get(`${SITE}/api/leads/${leadId}`)).json().catch(() => ({})));
     const leadOf = (j) => j.lead || j.data || j;
@@ -442,6 +477,11 @@ try {
     }
     const gone = (await api.get(`${SITE}/api/leads/${leadId}`)).status();
     check('deal: confirmed delete removes the test lead', gone === 404 || gone === 410, gone);
+  });
+  // Whatever happened above, the test lead this run made does not outlive the run.
+  if (leadId && (await api.get(`${SITE}/api/leads/${leadId}`)).ok()) {
+    const del = await api.delete(`${SITE}/api/leads/${leadId}`);
+    check('cleanup: the test lead removed after an incomplete deal section', del.ok(), del.status());
   }
 } catch (e) {
   R.error = String(e.message || e).split('\n')[0].slice(0, 300);
