@@ -43,8 +43,15 @@ to stop.
 - Pick a project, enter crew / weather / work done, save
 - Reopen and confirm it persisted with today's practice date, not a UTC date
 - API: `app/api/daily-logs`
-- Taps at 390px: MEASURE
-- STATUS: NOT VERIFIED
+- Taps at 390px: MEASURE (NEEDS-LIVE-RUN)
+- Code walk 2026-10-12 (no runtime): page, `/api/daily-logs/list` (returns `logs`, client reads `logs`),
+  `/api/daily-logs/create` (reads camelCase and snake_case; auth via requirePermission; tenant stamped
+  from user; project checked with assertProjectInTenant), `/api/projects?fields=id,name` (returns `projects`,
+  client reads `projects`), prefill route (`carryForward`, `crewCount` match client), detail page
+  `/app/daily-logs/[id]` + `/api/daily-logs/[id]` (`log` key) all CODE-VERIFIED. Link hrefs resolve.
+  Date: form default uses local-day (`Intl en-CA`), display parses at local noon. Persist-and-reopen,
+  date-on-disk, tap count, and offline outbox: NEEDS-LIVE-RUN.
+- STATUS: CODE-VERIFIED — AWAITING LIVE RUN
 
 ### Path 2 — Clock in and clock out
 - Open `app/app/time/page.tsx` (474 lines), clock in, clock out
