@@ -152,7 +152,7 @@ const CSS = `
 }
 .idTableWrap { overflow-x: auto; }
 .idTable { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
-.idTable th { text-align: left; padding: 8px 12px; font-size: 12px; font-weight: 700; color: var(--text-tertiary); background: rgba(21,23,28,0.88); border-bottom: 1px solid var(--border-default); white-space: nowrap; }
+.idTable th { text-align: left; padding: 8px 12px; font-size: 12px; font-weight: 700; color: var(--text-tertiary); background: var(--bg-surface-2); border-bottom: 1px solid var(--border-default); white-space: nowrap; }
 .idTable td { padding: 10px 12px; border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); vertical-align: top; font-variant-numeric: tabular-nums; }
 .idTable th:first-child, .idTable td:first-child { padding-left: var(--sp-4); }
 .idTable th[data-align="right"], .idTable td[data-align="right"] { text-align: right; white-space: nowrap; }

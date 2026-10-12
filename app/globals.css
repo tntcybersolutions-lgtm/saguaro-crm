@@ -1797,6 +1797,13 @@ a.pmFig:hover,button.pmFig:hover,div.pmFig[role=button]:hover{background:rgba(14
 .k-meta-ic { display: inline-flex; color: var(--text-tertiary); }
 a.k-meta-item, .k-link { color: var(--link); }
 a.k-meta-item:hover, .k-link:hover { color: var(--link-hover); }
+/* Filter / toggle chips (kit): slate until chosen, then the selected-control
+   yellow with dark text — the same look as the Jobs stage chips. Use
+   aria-pressed for the chosen state. */
+.k-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--border-default); background: var(--bg-surface); color: var(--text-secondary); font: inherit; font-size: 13px; font-weight: 700; line-height: 1; white-space: nowrap; cursor: pointer; }
+.k-chip:hover:not([aria-pressed="true"]) { background: var(--bg-row-hover); color: var(--text-primary); }
+.k-chip[aria-pressed="true"] { background: var(--selected-control-bg); border-color: var(--selected-control-bg); color: var(--selected-control-fg); }
+.k-chip:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .k-tile { display: inline-grid; place-items: center; flex: none; border-radius: 10px; background: var(--tile-bg); border: 1px solid var(--tile-border); color: var(--text-secondary); }
 .k-tile[data-tone="info"] { color: var(--info-fg); }
 .k-tile[data-tone="success"] { color: var(--success-fg); }

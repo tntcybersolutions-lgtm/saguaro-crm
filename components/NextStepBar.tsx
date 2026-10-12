@@ -79,7 +79,7 @@ function Reserve({ boxRef }: { boxRef: React.MutableRefObject<HTMLDivElement | n
       aria-hidden
       style={{
         minHeight: BAR_H, boxSizing: 'border-box',
-        background: 'var(--bg-base, #000000)',
+        background: 'var(--bg-base, #101722)',
         borderTop: '1px solid var(--border-subtle)',
         borderBottom: '1px solid var(--border-subtle)',
       }}

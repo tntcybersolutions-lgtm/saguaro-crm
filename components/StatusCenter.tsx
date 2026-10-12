@@ -41,7 +41,7 @@ const CSS = `
 .stc-ic[data-s="done"], .stc-ic[data-s="offline"] { background: var(--c-green); color: var(--on-brand); }
 .stc-ic[data-s="failed"] { background: var(--c-red); color: var(--on-brand); }
 .stc-ic[data-s="waiting"] { border: 2px solid var(--border-strong); color: var(--text-secondary); }
-.stc-ic[data-s="running"] { border: 2.5px solid var(--gold); border-right-color: transparent; }
+.stc-ic[data-s="running"] { border: 2.5px solid var(--info-fg); border-right-color: transparent; }
 @media (prefers-reduced-motion: no-preference) {
   .stc-ic[data-s="running"] { animation: stc-spin .8s linear infinite; }
   .stc { animation: stc-in .18s ease-out; }
@@ -54,7 +54,7 @@ const CSS = `
 .stc li[data-s="failed"] .stc-label { color: var(--c-red); }
 .stc-detail { margin-top: 2px; font-size: 13px; font-weight: 600; color: var(--text-secondary); overflow-wrap: anywhere; }
 .stc-bar { margin-top: 6px; height: 4px; border-radius: 4px; background: var(--border-subtle); overflow: hidden; }
-.stc-bar > span { display: block; height: 100%; background: var(--gold); border-radius: 4px; transition: width .25s ease; }
+.stc-bar > span { display: block; height: 100%; background: var(--info-fg); border-radius: 4px; transition: width .25s ease; }
 .stc-more { font-size: 13px; color: var(--text-tertiary); padding: 4px 0 2px; }
 @media (max-width: 767px) {
   .stc { left: 12px; right: 12px; width: auto; transform: none; bottom: calc(var(--sag-tabbar-h, 0px) + 8px); }

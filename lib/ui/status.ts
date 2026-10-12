@@ -33,6 +33,8 @@ export interface StatusStep {
   transient?: boolean;
   /** It failed because there was no signal (the box says NO SIGNAL). */
   net?: boolean;
+  /** Posted by a toast (note()); later toasts never merge into it. */
+  note?: boolean;
   startedAt: number;
 }
 
@@ -108,9 +110,9 @@ export interface StepHandle {
 }
 
 /** Add a step to the open box (or open one). */
-export function step(label: string, o: { state?: StepState; transient?: boolean; detail?: string } = {}): StepHandle {
+export function step(label: string, o: { state?: StepState; transient?: boolean; detail?: string; note?: boolean } = {}): StepHandle {
   const g = currentGroup();
-  const s: StatusStep = { id: ++seq, label, state: o.state ?? 'running', transient: o.transient, detail: o.detail, startedAt: Date.now() };
+  const s: StatusStep = { id: ++seq, label, state: o.state ?? 'running', transient: o.transient, detail: o.detail, note: o.note, startedAt: Date.now() };
   g.steps = [...g.steps, s];
   recompute(g);
   const set = (p: Partial<StatusStep>) => {
@@ -156,13 +158,14 @@ export function hasStatusCenter(): boolean { return centers > 0; }
 export function note(message: string, ok = true) {
   const g = groups[groups.length - 1];
   const last = g?.steps[g.steps.length - 1];
-  if (g && last && (last.state === 'done' || last.state === 'failed') && Date.now() - last.startedAt < 8000 && !last.result) {
-    const owner = g;
-    owner.steps = owner.steps.map((y) => (y.id === last.id ? { ...y, result: message, state: ok ? y.state : 'failed' } : y));
-    recompute(owner);
+  // The request the toast announces has just settled with its generic words
+  // ("Activity saved"); the page's own words replace them on that one line.
+  if (g && last && !last.note && !last.transient && isSettled(last) && Date.now() - last.startedAt < 8000) {
+    g.steps = g.steps.map((y) => (y.id === last.id ? { ...y, result: message, note: true, state: ok ? y.state : 'failed' } : y));
+    recompute(g);
     return;
   }
-  step(message, { state: ok ? 'done' : 'failed' });
+  step(message, { state: ok ? 'done' : 'failed', note: true });
 }
 
 export function __resetStatus() { groups = []; seq = 0; if (closeTimer) clearTimeout(closeTimer); closeTimer = null; emit(); }

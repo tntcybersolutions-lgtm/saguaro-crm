@@ -131,7 +131,7 @@ const CSS = `
 .pdBar b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
 .pdTableWrap { overflow-x: auto; }
 .pdTable { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
-.pdTable th { position: sticky; top: 0; z-index: 1; background: rgba(21,23,28,0.88); text-align: left; padding: 8px 10px; font-size: 12px; font-weight: 700; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); white-space: nowrap; }
+.pdTable th { position: sticky; top: 0; z-index: 1; background: var(--bg-surface-2); text-align: left; padding: 8px 10px; font-size: 12px; font-weight: 700; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); white-space: nowrap; }
 .pdTable td { padding: 6px 10px; height: 44px; border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); white-space: nowrap; font-variant-numeric: tabular-nums; vertical-align: middle; }
 .pdTable th:first-child, .pdTable td:first-child { padding-left: var(--sp-4); position: sticky; left: 0; z-index: 1; background: var(--bg-solid); }
 .pdTable th:first-child { background: var(--bg-solid-2); z-index: 3; }

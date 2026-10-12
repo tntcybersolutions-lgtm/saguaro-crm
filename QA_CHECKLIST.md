@@ -51,6 +51,59 @@ committed. "Before" = production at `8a260258` (12 Oct 2026), before this pass.
 After the pass deploys, the same audit runs again and each row's Web columns move to
 Visually verified or Needs correction.
 
+## Acceptance pass — redesign round (#150–#152), 12 Oct 2026
+
+This section is the record for the screens this round changed. It supersedes
+their rows in the tables below.
+
+**Environment.** Production, https://www.saguarocontrol.net.
+- **Code checked:** deployment `dpl_ENdm1kzo` = main `c1ada85c` (#151). It was READY and held `saguarocontrol.net` and `www.saguarocontrol.net` at test time.
+- **Signed-in run:** GitHub Actions run 38296866595 (`tools/probe-accept.mjs`), signed in as the Saguaro Control CI user.
+  - 1440 used Chromium.
+  - 390 used WebKit with iPhone 15 metrics. That is a mobile-width browser, **not iOS**.
+- **Result:** 38 checks, 35 passed, 3 failed. All three failures are explained below; none was a defect in a page this round changed.
+- **Evidence:** screenshots and measurements are in the encrypted bundle on `ops/testflight` (`tools/probe/`, commit 35726ec7). The repo is public, so no plaintext screenshots are committed.
+
+**Data handling.**
+- The run created one test record: the lead "ZZ AUDIT Accept 855789".
+  - It moved that lead's stage, added two activities, and edited it (next step and value).
+  - It then deleted that lead through the page's Delete dialog. First Cancel was checked (the record stayed); then Confirm was used (the lead API returned 404 afterwards).
+- No other record was created, changed or deleted.
+- The job page's Archive dialog was opened on the ZZ AUDIT Walk Job and **cancelled**; nothing was archived.
+- The daily log was opened read-only.
+
+| Screen | Route | Code | Automated checks (run 38296866595) | Web 1440 | Web 390 (mobile browser, not iOS) | Functional | iOS (native app) |
+|---|---|---|---|---|---|---|---|
+| Home | `/app` | #151 | pass: no sideways scroll, 0 text <12px, 0 low contrast, 1 yellow action, no overlay overlap | Visually verified | Visually verified | Row opens its record: pass | Not verified (Appium run pending) |
+| My Work | `/app/my-work` | #151 | pass (4 yellow "Remind" are swipe-only actions behind the rows, not visible) | Visually verified | Visually verified | Tab switches in place and lights yellow: pass | Not verified |
+| Jobs | `/app/projects` | #151 | pass; 1 low-contrast reading = hovered row (pointer resting on it) | Visually verified | Visually verified | Filter, search, row open at both widths: pass. Shared states (primary #FFE000/#101722, hover, focus ring #38BDF8, selected chip): pass | Not verified |
+| Job page | `/app/projects/[id]/overview` | #151 | pass; stage pill beside title | Visually verified | Visually verified | Tool tiles, numbered steps, Details opens, tool tile opens tool, Archive asks first and Cancel keeps the job: pass | Not verified |
+| Deal page | `/app/leads/[id]` | #150, #152 | pass; stage pill beside title | Visually verified | Visually verified | Stage move, activity add, Edit Deal save — each reopened and read back: pass. Delete Cancel / Confirm on the test lead: pass. Defects found: two status lines per save; "Scheduled" shown with no date. Fixed in #152; re-check pending | Not verified |
+| Command Center | `/app/command-center` | #151 | **Blocked** | Blocked | Blocked | Blocked | Blocked |
+| Compliance | `/app/compliance` | #151, #152 | 30 status labels at 11px | Needs correction (fixed in #152) | Needs correction (fixed in #152) | Not verified | Not verified |
+| Prequalification | `/app/prequalification` | #151, #152 | pass on c1ada85c; on review: white text on three yellow buttons, chart in action yellow, cramped tabs, empty card with no message | Needs correction (fixed in #152) | Needs correction (fixed in #152) | Not verified | Not verified |
+| Invoice detail | `/app/invoicing/[id]` | #151, #152 | **Not opened**: the run found no invoice link on the list page. A ZZ AUDIT invoice exists and is targeted by the re-check | Not reviewed | Not reviewed | Not verified | Not verified |
+| Pay app detail | `/app/projects/[id]/pay-apps/[id]` | #151, #152 | **Not opened**: the run followed the "New" link (the Walk Job has no pay apps). A ZZ AUDIT pay app exists on another ZZ AUDIT job and is targeted by the re-check | Not reviewed | Not reviewed | Not verified | Not verified |
+| Daily log | `/app/daily-logs/[id]` | #151 | pass; status pills beside title | Visually verified | Visually verified | Read-only (no edits made) | Not verified |
+| People & Access (role colours) | `/app/people` | #152 + migration 20261012d | Data: 97 built-in rows moved to approved colours, 0 legacy defaults left, 4 custom roles untouched (SQL read-back) | Not reviewed | Not reviewed | Not verified | Not verified |
+
+**Command Center blocker.**
+- The screen opens only for a company with the `command_center` entitlement. The test company does not have it.
+- One production company does, and it is a customer account, so it was not used.
+- **Needed:** either (a) a test login for a company that has the entitlement, or (b) Chad's OK to turn the flag on for the Saguaro Control CI company for one run and off after.
+
+**iOS.**
+- `check-ios-mirror` passing only proves the app's configuration; it is not runtime evidence.
+- The native runtime run uses Appium XCUITest driving the real app (`net.saguarocontrol.field`) in the simulator. It is in progress (run 38299459065). Its result replaces "Not verified" in the iOS column.
+- The old `safaridriver` path failed three times, on runs 38279063263, 38281936580 and 38284688542. It is retired, not retried.
+
+**Re-check plan (after #152 deploys).** Only these are re-checked, at 1440 and 390:
+- Compliance, Prequalification and the deal page: affected by #152.
+- Invoice and pay app detail pages: unopened so far.
+- People & Access role colours.
+
+Everything else keeps the evidence above, because its code did not change.
+
 ## Customer portals (23 routes)
 
 Token routes need a live token per portal; the audit only mints a client-portal token

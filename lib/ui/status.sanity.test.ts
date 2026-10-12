@@ -3,7 +3,7 @@
  * Run: npx -y tsx lib/ui/status.sanity.test.ts   (exit 0 = every assertion held)
  */
 import { describeRequest } from './status-labels';
-import { step, getStatusGroups, dismissGroup, __resetStatus } from './status';
+import { step, note, getStatusGroups, dismissGroup, __resetStatus } from './status';
 import { wordsFor, reasonForStatus, reasonFromResponse, isNetworkError } from './status-fetch';
 
 let failed = 0;
@@ -123,6 +123,23 @@ async function store() {
   step('B');
   g = getStatusGroups();
   check('new action → fresh box numbered from 1', g.length === 1 && g[0].steps.length === 1 && g[0].steps[0].label === 'B');
+  __resetStatus();
+
+  // A toast right after its request: one line in the page's words, not two.
+  step('Saving activity').done('Activity saved');
+  note('Activity logged.');
+  g = getStatusGroups();
+  check('toast after its request → one line', g[0].steps.length === 1 && g[0].steps[0].result === 'Activity logged.', JSON.stringify(g[0].steps.map((x) => x.result)));
+  // A second toast does not overwrite the first toast's line.
+  note('Second note.');
+  g = getStatusGroups();
+  check('toast after a toast → its own line', g[0].steps.length === 2 && g[0].steps[0].result === 'Activity logged.' && g[0].steps[1].label === 'Second note.');
+  // A failed toast after a successful request marks that line failed.
+  __resetStatus();
+  step('Saving').done('Saved');
+  note('Could not add the activity.', false);
+  g = getStatusGroups();
+  check('error toast marks the request line failed', g[0].steps.length === 1 && g[0].steps[0].state === 'failed');
   __resetStatus();
 }
 
