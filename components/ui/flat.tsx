@@ -33,7 +33,7 @@ const CSS = `
 .sgUi{--fl-line:var(--sg-border);--fl-line-strong:var(--sg-border-strong);--fl-text:var(--sg-text);--fl-text-2:var(--sg-text-2);--fl-text-3:var(--sg-text-3);--fl-surface:var(--sg-surface-solid)}
 /* Sage's read of the data, as the concept's alert card: a status circle, the
    sentence, and its one action as the screen's yellow button. */
-.fl-brief{display:flex;align-items:flex-start;gap:12px;margin:8px 16px 12px;padding:14px 16px;border-radius:12px;background:var(--bg-surface);border:1px solid var(--fl-line);color:var(--fl-text)}
+.fl-brief{display:flex;align-items:flex-start;gap:12px;margin:8px 16px 12px;padding:14px 16px;border-radius:12px;background:var(--bg-surface);border:1px solid var(--border-card);box-shadow:var(--card-highlight);color:var(--fl-text)}
 .fl-brief-ic{flex:none;display:inline-grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--info-bg);border:1px solid var(--info-border);color:var(--info-fg)}
 .fl-brief[data-tone=warning] .fl-brief-ic{background:var(--warning-bg);border-color:var(--warning-border);color:var(--warning-fg)}
 .fl-brief[data-tone=danger] .fl-brief-ic{background:var(--danger-bg);border-color:var(--danger-border);color:var(--danger-fg)}
@@ -47,7 +47,7 @@ const CSS = `
 .fl-brief .fl-brief-act:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 @media (pointer:coarse){.fl-brief .fl-brief-act{min-height:44px}}
 @media (max-width:640px){.fl-brief-body{align-items:stretch}.fl-brief .fl-brief-act{width:100%}}
-.fl-strip{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;margin:0 16px;background:var(--bg-surface);border:1px solid var(--fl-line);border-radius:12px;overflow:hidden}
+.fl-strip{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;margin:0 16px;background:var(--bg-surface);border:1px solid var(--border-card);box-shadow:var(--card-highlight);border-radius:12px;overflow:hidden}
 .fl-strip>div{padding:10px 8px 10px 16px;border-right:1px solid var(--fl-line);min-width:0}
 .fl-strip>div:last-child{border-right:0}
 .fl-strip b{display:block;font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--fl-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -55,13 +55,14 @@ const CSS = `
 .fl-strip [data-tone=bad] b{color:var(--danger)}
 .fl-strip [data-tone=warn] b{color:var(--warning)}
 .fl-strip [data-tone=good] b{color:var(--success)}
-/* A section heading: white, 16px, bold — the same look as .pmSecTitle /
-   .k-card-title in globals.css. Its action ("See all ›") is a blue link. */
-.fl-sec.fl-sec{margin:0;line-height:1.25;-webkit-text-fill-color:currentColor;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 16px 8px;font-size:16px;font-weight:700;letter-spacing:-0.005em;color:var(--fl-text);text-transform:none;text-shadow:none}
+/* A section heading: the section colour (--title-section), 16px, bold — the
+   same look as .pmSecTitle / .k-card-title in globals.css. Its action
+   ("See all ›") is a blue link. */
+.fl-sec.fl-sec{margin:0;line-height:1.25;-webkit-text-fill-color:currentColor;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 16px 8px;font-size:var(--fs-section);font-weight:700;letter-spacing:-0.005em;color:var(--title-section);text-transform:none;text-shadow:none}
 .fl-sec>span:first-child{display:inline-flex;align-items:center;gap:9px;min-width:0}
 .fl-sec .fl-sec-act{position:relative;color:var(--link);-webkit-text-fill-color:currentColor;font-weight:600;letter-spacing:0;text-transform:none;font-size:13px;text-decoration:none;background:none;border:0;padding:0;cursor:pointer}
 .fl-sec .fl-sec-act::after{content:'';position:absolute;inset:-14px -10px}
-.fl-list{list-style:none;margin:0 16px;padding:0;background:var(--bg-surface);border:1px solid var(--fl-line);border-radius:12px;overflow:hidden}
+.fl-list{list-style:none;margin:0 16px;padding:0;background:var(--bg-surface);border:1px solid var(--border-card);box-shadow:var(--card-highlight);border-radius:12px;overflow:hidden}
 .fl-list>li{border-bottom:1px solid var(--fl-line)}
 .fl-list>li:last-child{border-bottom:0}
 .fl-row{display:flex;align-items:center;gap:12px;padding:10px 16px;min-height:58px;color:var(--fl-text);text-decoration:none;background:var(--bg-surface);-webkit-tap-highlight-color:transparent}
@@ -106,7 +107,7 @@ button.fl-row{width:100%;border:0;font:inherit;text-align:left;cursor:pointer}
 a.fl-tool:hover{background:var(--bg-row-hover)}
 a.fl-tool:active{background:var(--fl-line)}
 a.fl-tool:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
-.fl-tool .fl-ti{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:none;color:var(--fl-text);background:var(--tile-bg);border:1px solid var(--tile-border)}
+.fl-tool .fl-ti{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:none;color:var(--acc);background:color-mix(in srgb,var(--acc) 14%,var(--bg-surface-2));border:1px solid color-mix(in srgb,var(--acc) 38%,var(--bg-surface-2))}
 .fl-tool .fl-tm{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .fl-tool .fl-tn{min-width:0;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fl-tool .fl-tc{font-size:13px;color:var(--fl-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -116,7 +117,7 @@ a.fl-tool:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
 .fl-list[data-grid]{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;background:none;border:0;border-radius:0;overflow:visible}
 .fl-list[data-grid]>li,.fl-list[data-grid]>li:last-child{border:1px solid var(--fl-line);border-radius:12px;background:var(--bg-surface);overflow:hidden}
 .fl-list[data-grid] .fl-tool{gap:10px;padding:8px 10px 8px 12px;min-height:60px}
-.fl-list[data-grid] .fl-ti{width:28px;height:28px;background:none;border:0}
+.fl-list[data-grid] .fl-ti{width:32px;height:32px;border-radius:9px}
 .fl-list[data-grid] .fl-tm{flex-direction:column;align-items:flex-start;justify-content:center;gap:2px}
 .fl-list[data-grid] .fl-tn{font-size:14px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.25;overflow-wrap:anywhere}
 .fl-list[data-grid] .fl-tc{max-width:100%;font-size:13px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.3}
@@ -332,10 +333,12 @@ export function Tabs<K extends string>({ value, options, onChange, label }: { va
   );
 }
 
-/** One of a job's tools: icon · name · count or state · chevron. */
-export function ToolRow({ icon, label, value, warn, href }: { icon: React.ReactNode; label: string; value?: React.ReactNode; warn?: boolean; href: string }) {
+/** One of a job's tools: icon · name · count or state · chevron. `accent` is
+ *  the tool's module hue (lib/ui/app-accent); without it the tile takes the
+ *  page's accent. */
+export function ToolRow({ icon, label, value, warn, href, accent }: { icon: React.ReactNode; label: string; value?: React.ReactNode; warn?: boolean; href: string; accent?: string }) {
   return (
-    <Link className="fl-tool" href={href}>
+    <Link className="fl-tool" href={href} style={accent ? ({ ['--acc' as string]: accent } as React.CSSProperties) : undefined}>
       <span className="fl-ti" aria-hidden="true">{icon}</span>
       <span className="fl-tm">
         <span className="fl-tn">{label}</span>

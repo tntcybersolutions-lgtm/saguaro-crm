@@ -1,11 +1,11 @@
-import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { PDFDocument, StandardFonts, PageSizes } from 'pdf-lib';
 import {
   getProjectContext,
   drawField,
   fmtCurrency,
   saveDocument,
 } from '../pdf-engine';
-import { brandDoc, drawBrandHeader, stampFooters } from './report-theme';
+import { brandDoc, drawBrandHeader, stampFooters, DOC } from './report-theme';
 
 export interface PunchListItem {
   id: string;
@@ -135,7 +135,7 @@ export async function generateG704(input: G704Input): Promise<{
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 1,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accent,
   });
 
   // Certificate body
@@ -145,7 +145,7 @@ export async function generateG704(input: G704Input): Promise<{
     y,
     size: 11,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
 
   y -= 14;
@@ -164,7 +164,7 @@ export async function generateG704(input: G704Input): Promise<{
         y,
         size: 8.5,
         font,
-        color: rgb(0.2, 0.2, 0.2),
+        color: DOC.text,
       });
       y -= 12;
       certLine = word;
@@ -178,7 +178,7 @@ export async function generateG704(input: G704Input): Promise<{
       y,
       size: 8.5,
       font,
-      color: rgb(0.2, 0.2, 0.2),
+      color: DOC.text,
     });
     y -= 12;
   }
@@ -190,7 +190,7 @@ export async function generateG704(input: G704Input): Promise<{
     y,
     size: 10,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 5;
 
@@ -215,21 +215,21 @@ export async function generateG704(input: G704Input): Promise<{
       y: y - 4,
       width: width - 20,
       height: 18,
-      color: i % 2 === 0 ? rgb(0.96, 0.97, 0.98) : rgb(1, 1, 1),
+      color: i % 2 === 0 ? DOC.zebra : DOC.paper,
     });
     page.drawText(label, {
       x: 15,
       y: y + 2,
       size: 9,
       font: bold,
-      color: rgb(0.2, 0.2, 0.2),
+      color: DOC.text,
     });
     page.drawText(value, {
       x: 280,
       y: y + 2,
       size: 9,
       font,
-      color: rgb(0, 0, 0),
+      color: DOC.ink,
     });
   });
 
@@ -239,7 +239,7 @@ export async function generateG704(input: G704Input): Promise<{
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 0.5,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accent,
   });
   y -= 15;
   page.drawText('WORK TO COMPLETE OR CORRECT (PUNCH LIST)', {
@@ -247,13 +247,13 @@ export async function generateG704(input: G704Input): Promise<{
     y,
     size: 10,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
 
   if (input.punchListCost) {
     page.drawText(
       `Estimated Cost to Complete Punch List: ${fmtCurrency(input.punchListCost)}`,
-      { x: 10, y: y - 14, size: 9, font, color: rgb(0.3, 0.3, 0.3) }
+      { x: 10, y: y - 14, size: 9, font, color: DOC.muted }
     );
     y -= 14;
   }
@@ -266,7 +266,7 @@ export async function generateG704(input: G704Input): Promise<{
       y,
       size: 9,
       font,
-      color: rgb(0.4, 0.4, 0.4),
+      color: DOC.muted,
     });
     y -= 14;
   } else {
@@ -277,35 +277,35 @@ export async function generateG704(input: G704Input): Promise<{
       y: y - 4,
       width: width - 20,
       height: 16,
-      color: rgb(0.15, 0.2, 0.25),
+      color: DOC.ink,
     });
     page.drawText('DESCRIPTION', {
       x: 15,
       y: y + 1,
       size: 7.5,
       font: bold,
-      color: rgb(1, 1, 1),
+      color: DOC.paper,
     });
     page.drawText('ASSIGNED TO', {
       x: 310,
       y: y + 1,
       size: 7.5,
       font: bold,
-      color: rgb(1, 1, 1),
+      color: DOC.paper,
     });
     page.drawText('DUE DATE', {
       x: 440,
       y: y + 1,
       size: 7.5,
       font: bold,
-      color: rgb(1, 1, 1),
+      color: DOC.paper,
     });
     page.drawText('STATUS', {
       x: 520,
       y: y + 1,
       size: 7.5,
       font: bold,
-      color: rgb(1, 1, 1),
+      color: DOC.paper,
     });
 
     const maxItems = Math.min(punchItems.length, 12);
@@ -317,35 +317,35 @@ export async function generateG704(input: G704Input): Promise<{
         y: y - 4,
         width: width - 20,
         height: 14,
-        color: i % 2 === 0 ? rgb(0.96, 0.97, 0.98) : rgb(1, 1, 1),
+        color: i % 2 === 0 ? DOC.zebra : DOC.paper,
       });
       page.drawText(item.description.slice(0, 42), {
         x: 15,
         y: y + 1,
         size: 8,
         font,
-        color: rgb(0.1, 0.1, 0.1),
+        color: DOC.ink,
       });
       page.drawText(item.assignedTo.slice(0, 18), {
         x: 310,
         y: y + 1,
         size: 8,
         font,
-        color: rgb(0.2, 0.2, 0.2),
+        color: DOC.text,
       });
       page.drawText(item.dueDate, {
         x: 440,
         y: y + 1,
         size: 8,
         font,
-        color: rgb(0.2, 0.2, 0.2),
+        color: DOC.text,
       });
       page.drawText(item.completed ? 'COMPLETE' : 'OPEN', {
         x: 520,
         y: y + 1,
         size: 8,
         font: bold,
-        color: item.completed ? rgb(0.1, 0.5, 0.2) : rgb(0.7, 0.3, 0.1),
+        color: item.completed ? DOC.success : DOC.warning,
       });
     }
 
@@ -353,7 +353,7 @@ export async function generateG704(input: G704Input): Promise<{
       y -= 14;
       page.drawText(
         `... and ${punchItems.length - 12} more items. See attached full punch list.`,
-        { x: 15, y, size: 8, font, color: rgb(0.5, 0.5, 0.5) }
+        { x: 15, y, size: 8, font, color: DOC.faint }
       );
     }
   }
@@ -364,7 +364,7 @@ export async function generateG704(input: G704Input): Promise<{
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 0.5,
-    color: rgb(0.75, 0.75, 0.75),
+    color: DOC.rule,
   });
   y -= 15;
 
@@ -380,33 +380,33 @@ export async function generateG704(input: G704Input): Promise<{
       y,
       size: 8,
       font: bold,
-      color: rgb(0, 0, 0),
+      color: DOC.ink,
     });
     page.drawLine({
       start: { x: col.x, y: y - 20 },
       end: { x: col.x + 180, y: y - 20 },
       thickness: 0.5,
-      color: rgb(0, 0, 0),
+      color: DOC.ink,
     });
     page.drawText('Signature / Date', {
       x: col.x,
       y: y - 30,
       size: 7,
       font,
-      color: rgb(0.5, 0.5, 0.5),
+      color: DOC.faint,
     });
     page.drawLine({
       start: { x: col.x, y: y - 45 },
       end: { x: col.x + 180, y: y - 45 },
       thickness: 0.5,
-      color: rgb(0, 0, 0),
+      color: DOC.ink,
     });
     page.drawText('Printed Name / Title', {
       x: col.x,
       y: y - 55,
       size: 7,
       font,
-      color: rgb(0.5, 0.5, 0.5),
+      color: DOC.faint,
     });
   });
 

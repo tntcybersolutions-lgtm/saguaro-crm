@@ -12,8 +12,8 @@ const RAISED = 'var(--bg-surface)';
 const BORDER = '#2A2A2E';
 const TEXT = 'var(--c-text)';
 const DIM = '#A1A1AA';
-const GREEN = '#4ADE80';
-const RED = '#F87171';
+const GREEN = 'var(--success)';
+const RED = 'var(--danger)';
 const BLUE = 'var(--brand-primary)';
 
 interface EmailComposerProps {
@@ -163,7 +163,7 @@ export default function EmailComposer({
       <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: TEXT }}>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>
             <svg viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={20} height={20} style={{ verticalAlign: 'middle', marginRight: 8 }}>
               <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
               <polyline points="22,6 12,13 2,6" />
@@ -305,7 +305,7 @@ export default function EmailComposer({
             style={{
               flex: 2, background: status === 'sending' ? '#2A2A2E' : GOLD,
               border: 'none', borderRadius: 12, padding: '14px',
-              color: status === 'sending' ? DIM : '#000', fontSize: 15,
+              color: status === 'sending' ? DIM : 'var(--on-brand)', fontSize: 15,
               fontWeight: 800, cursor: status === 'sending' ? 'wait' : 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             }}

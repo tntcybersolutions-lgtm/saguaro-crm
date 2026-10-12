@@ -824,7 +824,7 @@ export default function ApprovalWorkflowsPage() {
         <div style={overlayStyle} onClick={() => setShowWizard(false)}>
           <div style={{ ...modalStyle, width: 740 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--text-primary)' }}>{editing ? 'Edit Workflow' : 'Create New Workflow'}</h2>
+              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{editing ? 'Edit Workflow' : 'Create New Workflow'}</h2>
               <button style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', display: 'flex' }} onClick={() => setShowWizard(false)}><X size={22} weight="bold" /></button>
             </div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
@@ -960,7 +960,7 @@ export default function ApprovalWorkflowsPage() {
       {actionItem && (
         <div style={overlayStyle} onClick={() => setActionItem(null)}>
           <div style={modalStyle} onClick={e => e.stopPropagation()}>
-            <h2 style={{ margin: '0 0 16px', fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>Review Approval Request</h2>
+            <h2 style={{ margin: '0 0 16px', fontSize: 18, fontWeight: 700 }}>Review Approval Request</h2>
             <div style={{ padding: 16, background: BG, borderRadius: 8, border: `1px solid ${BORDER}`, marginBottom: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, gap: 8 }}>
                 <span style={{ fontWeight: 700, fontSize: 15 }}>{actionItem.itemName}</span>
@@ -1003,7 +1003,7 @@ export default function ApprovalWorkflowsPage() {
           <div style={{ ...modalStyle, width: 920 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div>
-                <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>{diagramWf.name}</h2>
+                <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700 }}>{diagramWf.name}</h2>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                   <span style={badgeStyle(MODULE_COLOR[diagramWf.module])}>{MODULE_LABEL[diagramWf.module]}</span>
                   <span style={badgeStyle(diagramWf.active ? GREEN : DIM)}>{diagramWf.active ? 'Active' : 'Disabled'}</span>
@@ -1063,7 +1063,7 @@ export default function ApprovalWorkflowsPage() {
         <div style={overlayStyle} onClick={() => setShowDel(false)}>
           <div style={modalStyle} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>New Approval Delegation</h2>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>New Approval Delegation</h2>
               <button style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', display: 'flex' }} onClick={() => setShowDel(false)}><X size={22} weight="bold" /></button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

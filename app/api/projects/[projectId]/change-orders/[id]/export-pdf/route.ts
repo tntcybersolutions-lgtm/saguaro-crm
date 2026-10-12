@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
-import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { PDFDocument, StandardFonts, PageSizes } from 'pdf-lib';
+import { DOC } from '@/lib/document-templates/report-theme';
 import { must } from '@/lib/db-write';
 
 export const runtime = 'nodejs';
@@ -23,12 +24,12 @@ export const dynamic = 'force-dynamic';
 
 type Row = Record<string, unknown>;
 
-const GOLD = rgb(0.831, 0.627, 0.09);
-const DARK = rgb(0.051, 0.067, 0.086);
-const GRAY = rgb(0.4, 0.4, 0.4);
-const LGRAY = rgb(0.94, 0.94, 0.94);
-const WHITE = rgb(1, 1, 1);
-const BLACK = rgb(0, 0, 0);
+const GOLD = DOC.accent;
+const DARK = DOC.ink;
+const GRAY = DOC.muted;
+const LGRAY = DOC.zebra;
+const WHITE = DOC.paper;
+const BLACK = DOC.ink;
 
 function fmtCurrency(n: unknown): string {
   return '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -77,7 +78,7 @@ async function buildCoPdf(co: Row, project: Row): Promise<Uint8Array> {
   // Header
   page.drawRectangle({ x: 0, y: height - 60, width, height: 60, color: DARK });
   draw(page, 'CHANGE ORDER', 36, height - 24, 16, bold, GOLD);
-  draw(page, 'SAGUARO CONSTRUCTION INTELLIGENCE', 36, height - 42, 8, reg, rgb(0.7, 0.7, 0.7));
+  draw(page, 'SAGUARO CONSTRUCTION INTELLIGENCE', 36, height - 42, 8, reg, DOC.rule);
   draw(page, coNum ? `CO #${coNum}` : '', width - 130, height - 24, 12, bold, GOLD);
 
   let y = height - 82;

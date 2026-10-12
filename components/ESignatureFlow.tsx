@@ -8,8 +8,8 @@ const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#D4D4D8';
 const TEXT = 'var(--c-text)';
-const GREEN = '#4ADE80';
-const RED = '#F87171';
+const GREEN = 'var(--success)';
+const RED = 'var(--danger)';
 
 interface Signer {
   id: string;
@@ -238,7 +238,7 @@ export default function ESignatureFlow({ projectId, docType, docTitle, pdfUrl, o
         + Add Another Signer
       </button>
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <button type="button" disabled={!canProceedStep1} onClick={() => setStep(2)} style={{ background: canProceedStep1 ? GOLD : BORDER, border: 'none', borderRadius: 8, padding: '10px 28px', color: canProceedStep1 ? '#101722' : DIM, fontSize: 13, fontWeight: 800, cursor: canProceedStep1 ? 'pointer' : 'not-allowed' }}>
+        <button type="button" disabled={!canProceedStep1} onClick={() => setStep(2)} style={{ background: canProceedStep1 ? GOLD : BORDER, border: 'none', borderRadius: 8, padding: '10px 28px', color: canProceedStep1 ? 'var(--on-brand)' : DIM, fontSize: 13, fontWeight: 800, cursor: canProceedStep1 ? 'pointer' : 'not-allowed' }}>
           Next: Add Message
         </button>
       </div>
@@ -261,7 +261,7 @@ export default function ESignatureFlow({ projectId, docType, docTitle, pdfUrl, o
         <button type="button" onClick={() => setStep(1)} style={{ background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '10px 20px', color: DIM, fontSize: 13, cursor: 'pointer' }}>
           Back
         </button>
-        <button type="button" onClick={() => setStep(3)} style={{ background: GOLD, border: 'none', borderRadius: 8, padding: '10px 28px', color: '#101722', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
+        <button type="button" onClick={() => setStep(3)} style={{ background: GOLD, border: 'none', borderRadius: 8, padding: '10px 28px', color: 'var(--on-brand)', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
           Next: Review & Send
         </button>
       </div>
@@ -296,7 +296,7 @@ export default function ESignatureFlow({ projectId, docType, docTitle, pdfUrl, o
         <button type="button" onClick={() => setStep(2)} style={{ background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '10px 20px', color: DIM, fontSize: 13, cursor: 'pointer' }}>
           Back
         </button>
-        <button type="button" disabled={sending} onClick={handleSend} style={{ background: GOLD, border: 'none', borderRadius: 8, padding: '10px 28px', color: '#101722', fontSize: 13, fontWeight: 800, cursor: sending ? 'not-allowed' : 'pointer', opacity: sending ? 0.6 : 1 }}>
+        <button type="button" disabled={sending} onClick={handleSend} style={{ background: GOLD, border: 'none', borderRadius: 8, padding: '10px 28px', color: 'var(--on-brand)', fontSize: 13, fontWeight: 800, cursor: sending ? 'not-allowed' : 'pointer', opacity: sending ? 0.6 : 1 }}>
           {sending ? 'Sending…' : 'Send for Signature'}
         </button>
       </div>

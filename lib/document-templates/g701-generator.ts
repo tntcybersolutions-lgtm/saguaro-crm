@@ -1,11 +1,11 @@
-import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { PDFDocument, StandardFonts, PageSizes } from 'pdf-lib';
 import {
   getProjectContext,
   drawField,
   fmtCurrency,
   saveDocument,
 } from '../pdf-engine';
-import { brandDoc, drawBrandHeader, stampFooters } from './report-theme';
+import { brandDoc, drawBrandHeader, stampFooters, DOC } from './report-theme';
 import { coAmount } from '@/lib/change-order-amount';
 
 export interface G701Input {
@@ -86,7 +86,7 @@ export async function generateG701(input: G701Input): Promise<{
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 1,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accent,
   });
 
   // Description of change
@@ -96,7 +96,7 @@ export async function generateG701(input: G701Input): Promise<{
     y,
     size: 11,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
 
   y -= 14;
@@ -110,7 +110,7 @@ export async function generateG701(input: G701Input): Promise<{
       y,
       size: 8.5,
       font: bold,
-      color: rgb(0.2, 0.2, 0.2),
+      color: DOC.text,
     });
     y -= 14;
   }
@@ -124,7 +124,7 @@ export async function generateG701(input: G701Input): Promise<{
         y,
         size: 8.5,
         font,
-        color: rgb(0.2, 0.2, 0.2),
+        color: DOC.text,
       });
       y -= 12;
       descLine = word;
@@ -138,7 +138,7 @@ export async function generateG701(input: G701Input): Promise<{
       y,
       size: 8.5,
       font,
-      color: rgb(0.2, 0.2, 0.2),
+      color: DOC.text,
     });
     y -= 12;
   }
@@ -150,7 +150,7 @@ export async function generateG701(input: G701Input): Promise<{
     y,
     size: 10,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 14;
   page.drawText(`Amount: ${fmtCurrency(costImpact)}`, {
@@ -158,7 +158,7 @@ export async function generateG701(input: G701Input): Promise<{
     y,
     size: 9,
     font,
-    color: rgb(0.2, 0.2, 0.2),
+    color: DOC.text,
   });
 
   y -= 18;
@@ -167,7 +167,7 @@ export async function generateG701(input: G701Input): Promise<{
     y,
     size: 10,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 14;
   const scheduleDays = pick('scheduleImpactDays', co?.schedule_impact || co?.schedule_days || 0);
@@ -180,7 +180,7 @@ export async function generateG701(input: G701Input): Promise<{
       y,
       size: 9,
       font,
-      color: rgb(0.2, 0.2, 0.2),
+      color: DOC.text,
     }
   );
 
@@ -190,7 +190,7 @@ export async function generateG701(input: G701Input): Promise<{
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 0.5,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accent,
   });
   y -= 15;
   page.drawText('FINANCIAL SUMMARY', {
@@ -198,7 +198,7 @@ export async function generateG701(input: G701Input): Promise<{
     y,
     size: 10,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
 
   const originalContract = (project as any)?.contract_amount || 0;
@@ -226,21 +226,21 @@ export async function generateG701(input: G701Input): Promise<{
       y: y - 4,
       width: width - 20,
       height: 18,
-      color: i % 2 === 0 ? rgb(0.96, 0.97, 0.98) : rgb(1, 1, 1),
+      color: i % 2 === 0 ? DOC.zebra : DOC.paper,
     });
     page.drawText(label, {
       x: 15,
       y: y + 2,
       size: 9,
       font: i === 4 ? bold : font,
-      color: rgb(0.2, 0.2, 0.2),
+      color: DOC.text,
     });
     page.drawText(value, {
       x: 420,
       y: y + 2,
       size: 9,
       font: i === 4 ? bold : font,
-      color: rgb(0, 0, 0),
+      color: DOC.ink,
     });
   });
 
@@ -250,7 +250,7 @@ export async function generateG701(input: G701Input): Promise<{
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 0.5,
-    color: rgb(0.75, 0.75, 0.75),
+    color: DOC.rule,
   });
   y -= 15;
 
@@ -266,33 +266,33 @@ export async function generateG701(input: G701Input): Promise<{
       y,
       size: 8,
       font: bold,
-      color: rgb(0, 0, 0),
+      color: DOC.ink,
     });
     page.drawLine({
       start: { x: col.x, y: y - 20 },
       end: { x: col.x + 180, y: y - 20 },
       thickness: 0.5,
-      color: rgb(0, 0, 0),
+      color: DOC.ink,
     });
     page.drawText('Signature / Date', {
       x: col.x,
       y: y - 30,
       size: 7,
       font,
-      color: rgb(0.5, 0.5, 0.5),
+      color: DOC.faint,
     });
     page.drawLine({
       start: { x: col.x, y: y - 45 },
       end: { x: col.x + 180, y: y - 45 },
       thickness: 0.5,
-      color: rgb(0, 0, 0),
+      color: DOC.ink,
     });
     page.drawText('Printed Name / Title', {
       x: col.x,
       y: y - 55,
       size: 7,
       font,
-      color: rgb(0.5, 0.5, 0.5),
+      color: DOC.faint,
     });
   });
 

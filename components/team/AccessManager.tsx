@@ -14,15 +14,15 @@ const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const TEXT = 'var(--text-primary)';
 const DIM = 'var(--text-secondary)';
-const GREEN = '#4ADE80';
-const RED = '#F87171';
+const GREEN = 'var(--success)';
+const RED = 'var(--danger)';
 const AMBER = 'var(--warning)';
 const BLUE = 'var(--info)';
 /* Role colours are stored with the role (sent to the API), so they stay hex: the
    approved palette's distinct non-yellow values. Same set as lib/default-roles. */
 const ROLE_SWATCH = { blue: paletteHex.blue, green: paletteHex.green, amber: paletteHex.orange, red: paletteHex.red, white: paletteHex.text, lightSlate: paletteHex.text2, slate: paletteHex.text3 } as const;
 const ROLE_HEX: string = ROLE_SWATCH.blue;
-const PURPLE = '#FBBF24';
+const PURPLE = 'var(--warning)';
 
 /* ── types ── */
 type PermLevel = 'None' | 'View' | 'Edit' | 'Full';
@@ -1185,7 +1185,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
                       <div style={{ width: 16, height: 16, borderRadius: '50%', background: selectedRole.color }} />
-                      <h2 style={{ color: TEXT, margin: 0, fontSize: 20 }}>{selectedRole.name}</h2>
+                      <h2 style={{ margin: 0, fontSize: 20 }}>{selectedRole.name}</h2>
                       {selectedRole.isBuiltIn ? (
                         <span style={{ background: 'var(--bg-surface-2)', color: 'var(--text-primary)', fontSize: 12, fontWeight: 700,
                           padding: '2px 8px', borderRadius: 4 }}>Built-In</span>

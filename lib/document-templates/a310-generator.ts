@@ -1,6 +1,6 @@
-import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { PDFDocument, StandardFonts, PageSizes } from 'pdf-lib';
 import { drawField, fmtCurrency, saveDocument } from '../pdf-engine';
-import { brandDoc, drawBrandHeader, stampFooters } from './report-theme';
+import { brandDoc, drawBrandHeader, stampFooters, DOC } from './report-theme';
 
 export interface A310Input {
   projectId: string;
@@ -47,7 +47,7 @@ export async function generateA310(input: A310Input): Promise<{
       y,
       size: 9,
       font: bold,
-      color: rgb(0, 0, 0),
+      color: DOC.ink,
     });
   }
   page.drawText(`Date: ${input.bondDate || new Date().toLocaleDateString()}`, {
@@ -55,7 +55,7 @@ export async function generateA310(input: A310Input): Promise<{
     y: y - 12,
     size: 9,
     font,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
 
   // Principal and Obligee
@@ -89,7 +89,7 @@ export async function generateA310(input: A310Input): Promise<{
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 1,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accent,
   });
 
   // Penal sum highlight
@@ -99,28 +99,28 @@ export async function generateA310(input: A310Input): Promise<{
     y: y - 5,
     width: width - 20,
     height: 28,
-    color: rgb(0.05, 0.07, 0.09),
+    color: DOC.ink,
   });
   page.drawText('PENAL SUM OF THIS BOND:', {
     x: 20,
     y: y + 7,
     size: 11,
     font: bold,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accentOnBand,
   });
   page.drawText(fmtCurrency(penalSum), {
     x: 380,
     y: y + 7,
     size: 13,
     font: bold,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accentOnBand,
   });
   page.drawText('(10% of Bid Amount)', {
     x: 380,
     y: y - 2,
     size: 7,
     font,
-    color: rgb(0.7, 0.6, 0.3),
+    color: DOC.accentOnBand,
   });
 
   // Bond body text
@@ -130,7 +130,7 @@ export async function generateA310(input: A310Input): Promise<{
     y,
     size: 10,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
 
   y -= 14;
@@ -153,7 +153,7 @@ export async function generateA310(input: A310Input): Promise<{
         y,
         size: 8.5,
         font,
-        color: rgb(0.2, 0.2, 0.2),
+        color: DOC.text,
       });
       y -= 12;
       bondLine = word;
@@ -167,7 +167,7 @@ export async function generateA310(input: A310Input): Promise<{
       y,
       size: 8.5,
       font,
-      color: rgb(0.2, 0.2, 0.2),
+      color: DOC.text,
     });
     y -= 12;
   }
@@ -178,7 +178,7 @@ export async function generateA310(input: A310Input): Promise<{
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 0.5,
-    color: rgb(0.75, 0.75, 0.75),
+    color: DOC.rule,
   });
   y -= 15;
   page.drawText('IN WITNESS WHEREOF, the parties have executed this instrument.', {
@@ -186,31 +186,31 @@ export async function generateA310(input: A310Input): Promise<{
     y,
     size: 9,
     font,
-    color: rgb(0.3, 0.3, 0.3),
+    color: DOC.muted,
   });
 
   y -= 25;
   // Principal signature
-  page.drawText('PRINCIPAL:', { x: 10, y, size: 9, font: bold, color: rgb(0, 0, 0) });
+  page.drawText('PRINCIPAL:', { x: 10, y, size: 9, font: bold, color: DOC.ink });
   page.drawLine({
     start: { x: 10, y: y - 18 },
     end: { x: 260, y: y - 18 },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page.drawText(input.principalName, {
     x: 10,
     y: y - 28,
     size: 8,
     font,
-    color: rgb(0.3, 0.3, 0.3),
+    color: DOC.muted,
   });
   page.drawText('Signature / Title / Date', {
     x: 10,
     y: y - 38,
     size: 7,
     font,
-    color: rgb(0.5, 0.5, 0.5),
+    color: DOC.faint,
   });
 
   // Surety signature
@@ -219,27 +219,27 @@ export async function generateA310(input: A310Input): Promise<{
     y,
     size: 9,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page.drawLine({
     start: { x: 310, y: y - 18 },
     end: { x: width - 10, y: y - 18 },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page.drawText(input.suretyName, {
     x: 310,
     y: y - 28,
     size: 8,
     font,
-    color: rgb(0.3, 0.3, 0.3),
+    color: DOC.muted,
   });
   page.drawText('Attorney-in-Fact Signature / Date', {
     x: 310,
     y: y - 38,
     size: 7,
     font,
-    color: rgb(0.5, 0.5, 0.5),
+    color: DOC.faint,
   });
 
   // Notary acknowledgment
@@ -248,7 +248,7 @@ export async function generateA310(input: A310Input): Promise<{
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 0.5,
-    color: rgb(0.75, 0.75, 0.75),
+    color: DOC.rule,
   });
   y -= 14;
   page.drawText('NOTARY ACKNOWLEDGMENT', {
@@ -256,31 +256,31 @@ export async function generateA310(input: A310Input): Promise<{
     y,
     size: 9,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 12;
   page.drawText(
     'State of _____________  County of _____________  On this _____ day of ________________, 20___, before me personally appeared',
-    { x: 10, y, size: 8, font, color: rgb(0.3, 0.3, 0.3) }
+    { x: 10, y, size: 8, font, color: DOC.muted }
   );
   y -= 12;
   page.drawText(
     '___________________________, known to me to be the person(s) whose name(s) is/are subscribed to the within instrument.',
-    { x: 10, y, size: 8, font, color: rgb(0.3, 0.3, 0.3) }
+    { x: 10, y, size: 8, font, color: DOC.muted }
   );
   y -= 18;
   page.drawLine({
     start: { x: 10, y },
     end: { x: 260, y },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page.drawText('Notary Public / Commission Expiration', {
     x: 10,
     y: y - 10,
     size: 7,
     font,
-    color: rgb(0.5, 0.5, 0.5),
+    color: DOC.faint,
   });
 
   // Corporate footer: Page X of Y \u2022 company \u2022 generated date

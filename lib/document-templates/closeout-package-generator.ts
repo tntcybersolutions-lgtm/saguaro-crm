@@ -1,6 +1,6 @@
-import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { PDFDocument, StandardFonts, PageSizes } from 'pdf-lib';
 import { getProjectContext, saveDocument, mergePDFs, fmtCurrency } from '../pdf-engine';
-import { brandDoc } from './report-theme';
+import { brandDoc, DOC } from './report-theme';
 import { subsOnProject } from '@/lib/project-subs';
 
 export interface CloseoutItem {
@@ -138,7 +138,7 @@ export async function generateCloseoutPackage(projectId: string): Promise<{
     y: 0,
     width,
     height,
-    color: rgb(0.05, 0.07, 0.09),
+    color: DOC.ink,
   });
   coverPage.drawRectangle({
     x: 0,
@@ -159,7 +159,7 @@ export async function generateCloseoutPackage(projectId: string): Promise<{
       y: height - 50,
       size: 14,
       font: bold,
-      color: rgb(0.05, 0.07, 0.09),
+      color: DOC.ink,
     });
   }
   coverPage.drawText('PROJECT CLOSEOUT PACKAGE', {
@@ -167,28 +167,28 @@ export async function generateCloseoutPackage(projectId: string): Promise<{
     y: height - 80,
     size: 24,
     font: bold,
-    color: rgb(0.05, 0.07, 0.09),
+    color: DOC.ink,
   });
   coverPage.drawText((project as any)?.name || 'Project', {
     x: 40,
     y: height - 108,
     size: 16,
     font: bold,
-    color: rgb(0.1, 0.1, 0.1),
+    color: DOC.ink,
   });
   coverPage.drawText((project as any)?.address || '', {
     x: 40,
     y: height - 126,
     size: 10,
     font,
-    color: rgb(0.2, 0.1, 0),
+    color: DOC.ink,
   });
   coverPage.drawText(`Prepared: ${new Date().toLocaleDateString()}`, {
     x: 40,
     y: height - 144,
     size: 10,
     font,
-    color: rgb(0.2, 0.1, 0),
+    color: DOC.ink,
   });
 
   // Project details
@@ -208,14 +208,14 @@ export async function generateCloseoutPackage(projectId: string): Promise<{
       y,
       size: 10,
       font: bold,
-      color: rgb(0.83, 0.63, 0.09),
+      color: DOC.accent,
     });
     coverPage.drawText(value, {
       x: 220,
       y,
       size: 10,
       font,
-      color: rgb(0.85, 0.9, 0.95),
+      color: DOC.highlight,
     });
     y -= 18;
   });
@@ -227,8 +227,8 @@ export async function generateCloseoutPackage(projectId: string): Promise<{
     y: y - 5,
     width: width - 80,
     height: 30,
-    color: completionPct === 100 ? rgb(0.1, 0.4, 0.2) : rgb(0.5, 0.2, 0.1),
-    borderColor: rgb(0.83, 0.63, 0.09),
+    color: completionPct === 100 ? DOC.success : DOC.danger,
+    borderColor: DOC.accent,
     borderWidth: 1,
   });
   coverPage.drawText(
@@ -240,7 +240,7 @@ export async function generateCloseoutPackage(projectId: string): Promise<{
       y: y + 7,
       size: 10,
       font: bold,
-      color: rgb(1, 1, 1),
+      color: DOC.paper,
     }
   );
 
@@ -251,7 +251,7 @@ export async function generateCloseoutPackage(projectId: string): Promise<{
     y,
     size: 12,
     font: bold,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accent,
   });
   y -= 5;
 
@@ -264,7 +264,7 @@ export async function generateCloseoutPackage(projectId: string): Promise<{
       y,
       size: 8,
       font: bold,
-      color: rgb(0.6, 0.7, 0.8),
+      color: DOC.rule,
     });
 
     const catItems = items.filter((i) => i.category === category);
@@ -277,10 +277,10 @@ export async function generateCloseoutPackage(projectId: string): Promise<{
         width: 10,
         height: 10,
         color: item.completed
-          ? rgb(0.1, 0.6, 0.2)
+          ? DOC.success
           : item.required
-          ? rgb(0.7, 0.2, 0.1)
-          : rgb(0.4, 0.4, 0.4),
+          ? DOC.danger
+          : DOC.muted,
       });
       coverPage.drawText(item.title, {
         x: 55,
@@ -288,10 +288,10 @@ export async function generateCloseoutPackage(projectId: string): Promise<{
         size: 8.5,
         font: item.required ? bold : font,
         color: item.completed
-          ? rgb(0.7, 0.85, 0.7)
+          ? DOC.successFill
           : item.required
-          ? rgb(0.9, 0.7, 0.6)
-          : rgb(0.6, 0.65, 0.7),
+          ? DOC.dangerFill
+          : DOC.faint,
       });
       coverPage.drawText(
         item.completed ? 'INCLUDED' : item.required ? 'MISSING' : 'N/A',
@@ -301,10 +301,10 @@ export async function generateCloseoutPackage(projectId: string): Promise<{
           size: 8,
           font: bold,
           color: item.completed
-            ? rgb(0.5, 0.85, 0.5)
+            ? DOC.successFill
             : item.required
-            ? rgb(0.9, 0.5, 0.3)
-            : rgb(0.5, 0.5, 0.5),
+            ? DOC.warning
+            : DOC.faint,
         }
       );
 
@@ -315,7 +315,7 @@ export async function generateCloseoutPackage(projectId: string): Promise<{
 
   coverPage.drawText(
     `${kit.companyName}  \u2022  Project Closeout Package  \u2022  Generated ${new Date().toLocaleDateString()}`,
-    { x: 40, y: 30, size: 7, font, color: rgb(0.55, 0.57, 0.6) }
+    { x: 40, y: 30, size: 7, font, color: DOC.faint }
   );
 
   const coverBytes = await coverPdf.save();

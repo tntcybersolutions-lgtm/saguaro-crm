@@ -1,11 +1,11 @@
-import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { PDFDocument, StandardFonts, PageSizes } from 'pdf-lib';
 import {
   getProjectContext,
   drawField,
   fmtCurrency,
   saveDocument,
 } from '../pdf-engine';
-import { brandDoc, drawBrandHeader, stampFooters } from './report-theme';
+import { brandDoc, drawBrandHeader, stampFooters, DOC } from './report-theme';
 
 export interface NTPInput {
   projectId: string;
@@ -61,25 +61,25 @@ export async function generateNTP(input: NTPInput): Promise<{
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 1,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accent,
   });
 
   // Date
   y -= 18;
   page.drawText(`Date: ${new Date(ntpDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`, {
-    x: 10, y, size: 9, font, color: rgb(0.2, 0.2, 0.2),
+    x: 10, y, size: 9, font, color: DOC.text,
   });
 
   // Letter format
   y -= 25;
   const contractorName = p?.gc_entity?.name || 'Contractor';
   page.drawText(`To: ${contractorName}`, {
-    x: 10, y, size: 9, font: bold, color: rgb(0, 0, 0),
+    x: 10, y, size: 9, font: bold, color: DOC.ink,
   });
 
   y -= 25;
   page.drawText(`Dear ${contractorName},`, {
-    x: 10, y, size: 9, font, color: rgb(0.1, 0.1, 0.1),
+    x: 10, y, size: 9, font, color: DOC.ink,
   });
 
   // Body text
@@ -102,7 +102,7 @@ export async function generateNTP(input: NTPInput): Promise<{
     for (const word of words) {
       if ((line + ' ' + word).length > 95) {
         page.drawText(line.trim(), {
-          x: 10, y, size: 8.5, font, color: rgb(0.2, 0.2, 0.2),
+          x: 10, y, size: 8.5, font, color: DOC.text,
         });
         y -= 12;
         line = word;
@@ -112,7 +112,7 @@ export async function generateNTP(input: NTPInput): Promise<{
     }
     if (line.trim()) {
       page.drawText(line.trim(), {
-        x: 10, y, size: 8.5, font, color: rgb(0.2, 0.2, 0.2),
+        x: 10, y, size: 8.5, font, color: DOC.text,
       });
       y -= 12;
     }
@@ -135,13 +135,13 @@ export async function generateNTP(input: NTPInput): Promise<{
       y: y - 4,
       width: width - 20,
       height: 18,
-      color: i % 2 === 0 ? rgb(0.96, 0.97, 0.98) : rgb(1, 1, 1),
+      color: i % 2 === 0 ? DOC.zebra : DOC.paper,
     });
     page.drawText(label, {
-      x: 15, y: y + 2, size: 9, font: bold, color: rgb(0.2, 0.2, 0.2),
+      x: 15, y: y + 2, size: 9, font: bold, color: DOC.text,
     });
     page.drawText(value, {
-      x: 280, y: y + 2, size: 9, font, color: rgb(0, 0, 0),
+      x: 280, y: y + 2, size: 9, font, color: DOC.ink,
     });
   });
 
@@ -156,7 +156,7 @@ export async function generateNTP(input: NTPInput): Promise<{
   for (const word of closingWords) {
     if ((closingLine + ' ' + word).length > 95) {
       page.drawText(closingLine.trim(), {
-        x: 10, y, size: 8.5, font, color: rgb(0.2, 0.2, 0.2),
+        x: 10, y, size: 8.5, font, color: DOC.text,
       });
       y -= 12;
       closingLine = word;
@@ -166,7 +166,7 @@ export async function generateNTP(input: NTPInput): Promise<{
   }
   if (closingLine.trim()) {
     page.drawText(closingLine.trim(), {
-      x: 10, y, size: 8.5, font, color: rgb(0.2, 0.2, 0.2),
+      x: 10, y, size: 8.5, font, color: DOC.text,
     });
     y -= 12;
   }
@@ -177,62 +177,62 @@ export async function generateNTP(input: NTPInput): Promise<{
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 0.5,
-    color: rgb(0.75, 0.75, 0.75),
+    color: DOC.rule,
   });
   y -= 15;
   page.drawText('OWNER:', {
-    x: 10, y, size: 9, font: bold, color: rgb(0, 0, 0),
+    x: 10, y, size: 9, font: bold, color: DOC.ink,
   });
   y -= 5;
   page.drawText((ctx.owner as any)?.name || '', {
-    x: 10, y: y - 10, size: 9, font, color: rgb(0.1, 0.1, 0.1),
+    x: 10, y: y - 10, size: 9, font, color: DOC.ink,
   });
   y -= 25;
   page.drawLine({
     start: { x: 10, y },
     end: { x: 300, y },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 10;
   page.drawText('Signature / Date', {
-    x: 10, y, size: 8, font, color: rgb(0.5, 0.5, 0.5),
+    x: 10, y, size: 8, font, color: DOC.faint,
   });
   y -= 15;
   page.drawLine({
     start: { x: 10, y },
     end: { x: 300, y },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 10;
   page.drawText('Printed Name / Title', {
-    x: 10, y, size: 8, font, color: rgb(0.5, 0.5, 0.5),
+    x: 10, y, size: 8, font, color: DOC.faint,
   });
 
   // Contractor acknowledgment
   y -= 25;
   page.drawText('CONTRACTOR ACKNOWLEDGMENT:', {
-    x: 10, y, size: 9, font: bold, color: rgb(0, 0, 0),
+    x: 10, y, size: 9, font: bold, color: DOC.ink,
   });
   y -= 18;
   page.drawText('Receipt of the above Notice to Proceed is hereby acknowledged.', {
-    x: 10, y, size: 8.5, font, color: rgb(0.2, 0.2, 0.2),
+    x: 10, y, size: 8.5, font, color: DOC.text,
   });
   y -= 20;
   page.drawText(contractorName, {
-    x: 10, y, size: 9, font, color: rgb(0.1, 0.1, 0.1),
+    x: 10, y, size: 9, font, color: DOC.ink,
   });
   y -= 20;
   page.drawLine({
     start: { x: 10, y },
     end: { x: 300, y },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 10;
   page.drawText('Contractor Signature / Date', {
-    x: 10, y, size: 8, font, color: rgb(0.5, 0.5, 0.5),
+    x: 10, y, size: 8, font, color: DOC.faint,
   });
 
   // Corporate footer: Page X of Y \u2022 company \u2022 generated date

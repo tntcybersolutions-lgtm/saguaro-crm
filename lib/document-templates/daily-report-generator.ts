@@ -1,11 +1,11 @@
-import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { PDFDocument, StandardFonts, PageSizes } from 'pdf-lib';
 import {
   getProjectContext,
   drawField,
   fmtCurrency,
   saveDocument,
 } from '../pdf-engine';
-import { brandDoc, drawBrandHeader, stampFooters } from './report-theme';
+import { brandDoc, drawBrandHeader, stampFooters, DOC } from './report-theme';
 
 export interface DailyReportInput {
   projectId: string;
@@ -94,14 +94,14 @@ export async function generateDailyReport(input: DailyReportInput): Promise<{
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 1,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accent,
   });
 
   // Helper to draw a section
   const drawSection = (title: string, content: string, startY: number): number => {
     let sy = startY - 18;
     page.drawText(title, {
-      x: 10, y: sy, size: 10, font: bold, color: rgb(0, 0, 0),
+      x: 10, y: sy, size: 10, font: bold, color: DOC.ink,
     });
     sy -= 5;
     page.drawRectangle({
@@ -109,9 +109,9 @@ export async function generateDailyReport(input: DailyReportInput): Promise<{
       y: sy - 45,
       width: width - 20,
       height: 45,
-      borderColor: rgb(0.7, 0.7, 0.7),
+      borderColor: DOC.rule,
       borderWidth: 0.5,
-      color: rgb(0.98, 0.98, 0.98),
+      color: DOC.zebra,
     });
     if (content) {
       const words = content.split(' ');
@@ -120,7 +120,7 @@ export async function generateDailyReport(input: DailyReportInput): Promise<{
       for (const word of words) {
         if ((line + ' ' + word).length > 95) {
           page.drawText(line.trim(), {
-            x: 15, y: ly, size: 8.5, font, color: rgb(0.2, 0.2, 0.2),
+            x: 15, y: ly, size: 8.5, font, color: DOC.text,
           });
           ly -= 12;
           line = word;
@@ -130,7 +130,7 @@ export async function generateDailyReport(input: DailyReportInput): Promise<{
       }
       if (line.trim()) {
         page.drawText(line.trim(), {
-          x: 15, y: ly, size: 8.5, font, color: rgb(0.2, 0.2, 0.2),
+          x: 15, y: ly, size: 8.5, font, color: DOC.text,
         });
       }
     }
@@ -151,11 +151,11 @@ export async function generateDailyReport(input: DailyReportInput): Promise<{
     start: { x: 10, y },
     end: { x: 260, y },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 10;
   page.drawText('Superintendent Signature / Date', {
-    x: 10, y, size: 8, font, color: rgb(0.5, 0.5, 0.5),
+    x: 10, y, size: 8, font, color: DOC.faint,
   });
 
   // Corporate footer on every page: Page X of Y \u2022 company \u2022 generated date

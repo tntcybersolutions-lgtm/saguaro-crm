@@ -12,8 +12,8 @@ const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const TEXT   = 'var(--text-primary)';
 const DIM    = 'var(--text-secondary)';
-const GREEN  = '#4ADE80';
-const RED    = '#F87171';
+const GREEN  = 'var(--success)';
+const RED    = 'var(--danger)';
 const AMBER  = 'var(--warning)';
 const BLUE   = 'var(--brand-primary)';
 const PURPLE = 'var(--warning)';
@@ -934,7 +934,7 @@ export default function DashboardConfigPage() {
         <div style={overlayStyle} onClick={() => setPresetModalOpen(false)}>
           <div style={modalStyle} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>Layout Presets</h2>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Layout Presets</h2>
               <button onClick={() => setPresetModalOpen(false)} style={{ ...miniBtn, fontSize: 16 }}><X size={16} color={DIM} weight="regular" /></button>
             </div>
             <p style={{ fontSize: 13, color: DIM, margin: '0 0 20px' }}>
@@ -980,7 +980,7 @@ export default function DashboardConfigPage() {
         <div style={overlayStyle} onClick={() => setLoadModalOpen(false)}>
           <div style={modalStyle} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>Load Saved Layout</h2>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Load Saved Layout</h2>
               <button onClick={() => setLoadModalOpen(false)} style={{ ...miniBtn, fontSize: 16 }}><X size={16} color={DIM} weight="regular" /></button>
             </div>
             {loadingLayouts ? (
@@ -1031,7 +1031,7 @@ export default function DashboardConfigPage() {
         <div style={overlayStyle} onClick={() => setSaveAsModalOpen(false)}>
           <div style={{ ...modalStyle, maxWidth: 420 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>Save Layout As</h2>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Save Layout As</h2>
               <button onClick={() => setSaveAsModalOpen(false)} style={{ ...miniBtn, fontSize: 16 }}><X size={16} color={DIM} weight="regular" /></button>
             </div>
             <div style={{ marginBottom: 20 }}>

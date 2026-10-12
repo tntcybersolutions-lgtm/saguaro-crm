@@ -1,11 +1,11 @@
-import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { PDFDocument, StandardFonts, PageSizes } from 'pdf-lib';
 import {
   getProjectContext,
   drawField,
   fmtCurrency,
   saveDocument,
 } from '../pdf-engine';
-import { brandDoc, drawBrandHeader, stampFooters, num } from './report-theme';
+import { brandDoc, drawBrandHeader, stampFooters, num, DOC } from './report-theme';
 
 export interface POLineItem {
   itemNumber: number;
@@ -145,7 +145,7 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 1,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accent,
   });
 
   // Line items table header
@@ -155,14 +155,14 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
     y: y - 4,
     width: width - 20,
     height: 16,
-    color: rgb(0.15, 0.2, 0.25),
+    color: DOC.ink,
   });
-  page.drawText('ITEM', { x: 15, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1) });
-  page.drawText('DESCRIPTION', { x: 50, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1) });
-  page.drawText('QTY', { x: 310, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1) });
-  page.drawText('UNIT', { x: 360, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1) });
-  page.drawText('UNIT PRICE', { x: 410, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1) });
-  page.drawText('TOTAL', { x: 500, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1) });
+  page.drawText('ITEM', { x: 15, y: y + 1, size: 7.5, font: bold, color: DOC.paper });
+  page.drawText('DESCRIPTION', { x: 50, y: y + 1, size: 7.5, font: bold, color: DOC.paper });
+  page.drawText('QTY', { x: 310, y: y + 1, size: 7.5, font: bold, color: DOC.paper });
+  page.drawText('UNIT', { x: 360, y: y + 1, size: 7.5, font: bold, color: DOC.paper });
+  page.drawText('UNIT PRICE', { x: 410, y: y + 1, size: 7.5, font: bold, color: DOC.paper });
+  page.drawText('TOTAL', { x: 500, y: y + 1, size: 7.5, font: bold, color: DOC.paper });
 
   // Line item rows
   const maxItems = Math.min(items.length, 18);
@@ -174,25 +174,25 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
       y: y - 4,
       width: width - 20,
       height: 14,
-      color: i % 2 === 0 ? rgb(0.96, 0.97, 0.98) : rgb(1, 1, 1),
+      color: i % 2 === 0 ? DOC.zebra : DOC.paper,
     });
     page.drawText(item.itemNumber.toString(), {
-      x: 15, y: y + 1, size: 8, font, color: rgb(0.1, 0.1, 0.1),
+      x: 15, y: y + 1, size: 8, font, color: DOC.ink,
     });
     page.drawText(item.description.slice(0, 38), {
-      x: 50, y: y + 1, size: 8, font, color: rgb(0.1, 0.1, 0.1),
+      x: 50, y: y + 1, size: 8, font, color: DOC.ink,
     });
     page.drawText(item.qty.toString(), {
-      x: 310, y: y + 1, size: 8, font, color: rgb(0.2, 0.2, 0.2),
+      x: 310, y: y + 1, size: 8, font, color: DOC.text,
     });
     page.drawText(item.unit, {
-      x: 360, y: y + 1, size: 8, font, color: rgb(0.2, 0.2, 0.2),
+      x: 360, y: y + 1, size: 8, font, color: DOC.text,
     });
     page.drawText(fmtCurrency(item.unitPrice), {
-      x: 410, y: y + 1, size: 8, font, color: rgb(0.2, 0.2, 0.2),
+      x: 410, y: y + 1, size: 8, font, color: DOC.text,
     });
     page.drawText(fmtCurrency(item.total), {
-      x: 500, y: y + 1, size: 8, font, color: rgb(0.1, 0.1, 0.1),
+      x: 500, y: y + 1, size: 8, font, color: DOC.ink,
     });
   }
 
@@ -200,7 +200,7 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
     y -= 14;
     page.drawText(
       `... and ${items.length - 18} more line items. See attached schedule.`,
-      { x: 15, y, size: 8, font, color: rgb(0.5, 0.5, 0.5) }
+      { x: 15, y, size: 8, font, color: DOC.faint }
     );
   }
 
@@ -210,7 +210,7 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
     start: { x: 380, y },
     end: { x: width - 10, y },
     thickness: 0.5,
-    color: rgb(0.75, 0.75, 0.75),
+    color: DOC.rule,
   });
 
   const totalRows = [
@@ -221,8 +221,8 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
 
   totalRows.forEach(([label, value]) => {
     y -= 16;
-    page.drawText(label, { x: 400, y, size: 9, font, color: rgb(0.3, 0.3, 0.3) });
-    page.drawText(value, { x: 500, y, size: 9, font, color: rgb(0, 0, 0) });
+    page.drawText(label, { x: 400, y, size: 9, font, color: DOC.muted });
+    page.drawText(value, { x: 500, y, size: 9, font, color: DOC.ink });
   });
 
   // Grand total highlight
@@ -232,21 +232,21 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
     y: y - 5,
     width: width - 390,
     height: 22,
-    color: rgb(0.05, 0.07, 0.09),
+    color: DOC.ink,
   });
   page.drawText('TOTAL:', {
     x: 400,
     y: y + 3,
     size: 10,
     font: bold,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accentOnBand,
   });
   page.drawText(fmtCurrency(total), {
     x: 490,
     y: y + 3,
     size: 11,
     font: bold,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accentOnBand,
   });
 
   // Delivery instructions
@@ -257,7 +257,7 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
       y,
       size: 9,
       font: bold,
-      color: rgb(0, 0, 0),
+      color: DOC.ink,
     });
     y -= 12;
     page.drawText(deliveryInstructions.slice(0, 120), {
@@ -265,7 +265,7 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
       y,
       size: 8.5,
       font,
-      color: rgb(0.2, 0.2, 0.2),
+      color: DOC.text,
     });
   }
 
@@ -275,31 +275,31 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 0.5,
-    color: rgb(0.75, 0.75, 0.75),
+    color: DOC.rule,
   });
   y -= 15;
 
-  page.drawText('AUTHORIZED BY:', { x: 10, y, size: 9, font: bold, color: rgb(0, 0, 0) });
+  page.drawText('AUTHORIZED BY:', { x: 10, y, size: 9, font: bold, color: DOC.ink });
   page.drawText(`Date: ${new Date().toLocaleDateString()}`, {
     x: 310,
     y,
     size: 9,
     font,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
 
   page.drawLine({
     start: { x: 10, y: y - 20 },
     end: { x: 260, y: y - 20 },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page.drawText('Signature / Title', {
     x: 10,
     y: y - 30,
     size: 7,
     font,
-    color: rgb(0.5, 0.5, 0.5),
+    color: DOC.faint,
   });
 
   // Corporate footer: Page X of Y \u2022 company \u2022 generated date

@@ -9,13 +9,15 @@
  * where a real hex is unavoidable (canvas, SVG export, PDF, charts). */
 export const paletteHex = {
   bg: '#101722', card: '#1B2636', raised: '#243247', border: '#334155',
-  text: '#F8FAFC', text2: '#CBD5E1', text3: '#94A3B8', text4: '#64748B',
+  text: '#F8FAFC', text2: '#CBD5E1', text3: '#A3B1C6', text4: '#64748B',
+  titlePage: '#38BDF8', titleSection: '#7DD3FC', borderCard: '#3D4F68',
   yellow: '#FFE000', yellowHi: '#FFE94D', yellowHover: '#F2D500', onBrand: '#101722',
   blue: '#38BDF8', orange: '#FBBF24', green: '#4ADE80', red: '#F87171', gray: '#94A3B8',
 } as const;
 export const palette = {
   bg: 'var(--c-bg)', card: 'var(--c-card)', raised: 'var(--c-raised)', border: 'var(--border-subtle)',
   text: 'var(--c-text)', text2: 'var(--c-text-2)', text3: 'var(--c-text-3)', text4: 'var(--c-text-4)',
+  titlePage: 'var(--title-page)', titleSection: 'var(--title-section)', borderCard: 'var(--border-card)',
   yellow: 'var(--c-yellow)', yellowHi: 'var(--c-yellow-hi)', yellowHover: 'var(--c-yellow-hover)', onBrand: 'var(--c-on-brand)',
   blue: 'var(--c-blue)', orange: 'var(--c-orange)', green: 'var(--c-green)', red: 'var(--c-red)', gray: 'var(--c-gray)',
 } as const;
@@ -54,7 +56,7 @@ export const colors = {
   // Same values as the --c-text* variables in globals.css.
   text:       '#F8FAFC',
   textMuted:  '#CBD5E1',
-  textDim:    '#94A3B8',
+  textDim:    '#A3B1C6',
   textFaint:  '#64748B',
 
   // Semantic — the same family as lib/status-colors.ts.

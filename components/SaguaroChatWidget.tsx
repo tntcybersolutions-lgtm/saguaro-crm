@@ -701,7 +701,7 @@ export default function SaguaroChatWidget({
             onClick={isMinimized ? () => setIsMinimized(false) : undefined}
             style={{
               height: 72, minHeight: 72,
-              background: 'linear-gradient(135deg, #1B2636 0%, #0a0a0a 100%)',
+              background: 'var(--bg-surface)',
               borderBottom: isMinimized ? 'none' : '1px solid rgba(255,255,255,0.12)',
               padding: '0 16px', display: 'flex', alignItems: 'center', gap: 12,
               cursor: isMinimized ? 'pointer' : 'default', flexShrink: 0,

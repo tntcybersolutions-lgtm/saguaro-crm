@@ -306,7 +306,7 @@ export default function NotificationCenter() {
               borderBottom: `1px solid ${BORDER}`,
             }}
           >
-            <span style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>Notifications</span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--title-section)' }}>Notifications</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               {/* Focus Mode Toggle */}
               <button

@@ -15,11 +15,14 @@
  *  • Browser: print from a hidden frame on the same page — no pop-up.
  */
 import { isNative } from '@/lib/native';
+import { DOC_HEX } from '@/lib/document-palette';
 
 export type PrintResult = 'printed' | 'shared' | 'cancelled';
 
-/** Fixed print values for the app tokens these documents use. */
-const PRINT_TOKENS = '<style>:root{--c-text:#F0F4FF;--success:#16a34a;--danger:#dc2626;--warning:#b45309;--brand-primary:#C8960F;--brand-primary-strong:#a87a00;--surface-card:#161b22}</style>';
+/** Print values for the app tokens these documents use — the document
+ *  palette (lib/document-palette): dark ink on white paper, never the app's
+ *  dark page. */
+const PRINT_TOKENS = `<style>:root{--c-text:${DOC_HEX.ink};--text-primary:${DOC_HEX.ink};--text-secondary:${DOC_HEX.muted};--success:${DOC_HEX.success};--danger:${DOC_HEX.danger};--warning:${DOC_HEX.warning};--brand-primary:${DOC_HEX.accent};--brand-primary-strong:${DOC_HEX.accent};--surface-card:${DOC_HEX.zebra};--title-page:${DOC_HEX.accent};--title-section:${DOC_HEX.accent}}</style>`;
 
 /** The document with the print token values in its <head> (or in front of it). */
 export function withPrintTokens(html: string): string {

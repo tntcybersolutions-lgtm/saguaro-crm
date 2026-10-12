@@ -6,6 +6,9 @@
  * except the optional logo fetch inside buildPdf.
  */
 import ExcelJS from 'exceljs';
+import { DOC } from '@/lib/document-templates/report-theme';
+import { DOC_HEX } from '@/lib/document-palette';
+const hex6 = (h: string) => h.replace('#', '').toUpperCase();
 import {
   Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
   WidthType, AlignmentType, ShadingType, PageOrientation,
@@ -175,9 +178,10 @@ export async function buildXlsx(
     pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 },
   });
 
-  const DARK = 'FF0D1116';
-  const GOLD = 'FFD4A017';
-  const HAIRLINE = 'FFD9DDE3';
+  // Document palette (lib/document-palette), as Excel ARGB.
+  const DARK = 'FF' + hex6(DOC_HEX.ink);
+  const GOLD = 'FF' + hex6(DOC_HEX.accentOnBand); // totals on the dark row
+  const HAIRLINE = 'FF' + hex6(DOC_HEX.rule);
   const isNumeric = (t: ColumnType) => t === 'currency' || t === 'number' || t === 'percent';
 
   // Row 1 - title, merged across the table
@@ -290,8 +294,8 @@ export async function buildDocx(
   totals?: Record<string, number>,
   companyName?: string,
 ): Promise<Buffer> {
-  const DARK = '0D1116';
-  const GOLD = 'D4A017';
+  const DARK = hex6(DOC_HEX.ink);
+  const GOLD = hex6(DOC_HEX.accentOnBand);
   const isNumeric = (t: ColumnType) => t === 'currency' || t === 'number' || t === 'percent';
 
   const cell = (
@@ -380,11 +384,11 @@ export async function buildPdf(
 ): Promise<Uint8Array> {
   const { PDFDocument, StandardFonts, rgb } = await import('pdf-lib');
 
-  const GOLD   = rgb(0.831, 0.627,  0.09);
-  const DARK   = rgb(0.051, 0.067,  0.086);
-  const WHITE  = rgb(1,     1,      1);
-  const LGRAY  = rgb(0.965, 0.965,  0.965);
-  const MGRAY  = rgb(0.85,  0.85,   0.85);
+  const GOLD   = DOC.accentOnBand; // drawn on the dark header band and the dark totals row
+  const DARK   = DOC.ink;
+  const WHITE  = DOC.paper;
+  const LGRAY  = DOC.zebra;
+  const MGRAY  = DOC.rule;
 
   const pdfDoc = await PDFDocument.create();
   const font      = await pdfDoc.embedFont(StandardFonts.Helvetica);

@@ -1,4 +1,4 @@
-import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { PDFDocument, StandardFonts, PageSizes } from 'pdf-lib';
 import { createServerClient } from '../supabase-server';
 import {
   getProjectContext,
@@ -6,7 +6,7 @@ import {
   fmtCurrency,
   saveDocument,
 } from '../pdf-engine';
-import { brandDoc, drawBrandHeader, stampFooters } from './report-theme';
+import { brandDoc, drawBrandHeader, stampFooters, DOC } from './report-theme';
 
 export interface PrevailingWageInput {
   projectId: string;
@@ -148,14 +148,14 @@ export async function generatePrevailingWage(input: PrevailingWageInput): Promis
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 1,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accent,
   });
 
   if (rates.length === 0) {
     // Honest empty state — no fabricated rates.
     y -= 28;
     page.drawText('No wage determination on file', {
-      x: 10, y, size: 11, font: bold, color: rgb(0.1, 0.1, 0.1),
+      x: 10, y, size: 11, font: bold, color: DOC.ink,
     });
     y -= 18;
     const lines = state
@@ -171,7 +171,7 @@ export async function generatePrevailingWage(input: PrevailingWageInput): Promis
           'determination on SAM.gov (WDOL) before certifying payroll.',
         ];
     for (const ln of lines) {
-      page.drawText(ln, { x: 10, y, size: 8.5, font, color: rgb(0.3, 0.3, 0.3) });
+      page.drawText(ln, { x: 10, y, size: 8.5, font, color: DOC.muted });
       y -= 13;
     }
   } else {
@@ -182,13 +182,13 @@ export async function generatePrevailingWage(input: PrevailingWageInput): Promis
       y: y - 4,
       width: width - 20,
       height: 16,
-      color: rgb(0.15, 0.2, 0.25),
+      color: DOC.ink,
     });
-    page.drawText('TRADE CLASSIFICATION', { x: 15, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1) });
-    page.drawText('BASE RATE', { x: 250, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1) });
-    page.drawText('FRINGE BENEFITS', { x: 340, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1) });
-    page.drawText('TOTAL RATE', { x: 440, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1) });
-    page.drawText('SOURCE', { x: 520, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1) });
+    page.drawText('TRADE CLASSIFICATION', { x: 15, y: y + 1, size: 7.5, font: bold, color: DOC.paper });
+    page.drawText('BASE RATE', { x: 250, y: y + 1, size: 7.5, font: bold, color: DOC.paper });
+    page.drawText('FRINGE BENEFITS', { x: 340, y: y + 1, size: 7.5, font: bold, color: DOC.paper });
+    page.drawText('TOTAL RATE', { x: 440, y: y + 1, size: 7.5, font: bold, color: DOC.paper });
+    page.drawText('SOURCE', { x: 520, y: y + 1, size: 7.5, font: bold, color: DOC.paper });
 
     // Wage rows — real data only.
     for (let i = 0; i < rates.length; i++) {
@@ -200,15 +200,15 @@ export async function generatePrevailingWage(input: PrevailingWageInput): Promis
         y: y - 4,
         width: width - 20,
         height: 18,
-        color: i % 2 === 0 ? rgb(0.96, 0.97, 0.98) : rgb(1, 1, 1),
+        color: i % 2 === 0 ? DOC.zebra : DOC.paper,
       });
-      page.drawText(String(rate.trade).slice(0, 40), { x: 15, y: y + 2, size: 9, font, color: rgb(0.1, 0.1, 0.1) });
-      page.drawText(fmtCurrency(rate.baseRate), { x: 250, y: y + 2, size: 9, font, color: rgb(0.2, 0.2, 0.2) });
-      page.drawText(fmtCurrency(rate.fringe), { x: 340, y: y + 2, size: 9, font, color: rgb(0.2, 0.2, 0.2) });
-      page.drawText(fmtCurrency(rate.total), { x: 440, y: y + 2, size: 9, font: bold, color: rgb(0, 0, 0) });
+      page.drawText(String(rate.trade).slice(0, 40), { x: 15, y: y + 2, size: 9, font, color: DOC.ink });
+      page.drawText(fmtCurrency(rate.baseRate), { x: 250, y: y + 2, size: 9, font, color: DOC.text });
+      page.drawText(fmtCurrency(rate.fringe), { x: 340, y: y + 2, size: 9, font, color: DOC.text });
+      page.drawText(fmtCurrency(rate.total), { x: 440, y: y + 2, size: 9, font: bold, color: DOC.ink });
       page.drawText(rate.custom ? 'CUSTOM' : 'REFERENCE', {
         x: 520, y: y + 2, size: 7.5, font: bold,
-        color: rate.custom ? rgb(0.1, 0.45, 0.2) : rgb(0.45, 0.45, 0.45),
+        color: rate.custom ? DOC.success : DOC.muted,
       });
     }
   }
@@ -219,10 +219,10 @@ export async function generatePrevailingWage(input: PrevailingWageInput): Promis
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 0.5,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accent,
   });
   y -= 15;
-  page.drawText('NOTICE:', { x: 10, y, size: 9, font: bold, color: rgb(0, 0, 0) });
+  page.drawText('NOTICE:', { x: 10, y, size: 9, font: bold, color: DOC.ink });
   y -= 14;
   const notice = allCustom
     ? [
@@ -236,7 +236,7 @@ export async function generatePrevailingWage(input: PrevailingWageInput): Promis
         'Rows marked CUSTOM are your own entered determination and override the reference schedule.',
       ];
   for (const ln of notice) {
-    page.drawText(ln, { x: 10, y, size: 8.5, font, color: rgb(0.3, 0.3, 0.3) });
+    page.drawText(ln, { x: 10, y, size: 8.5, font, color: DOC.muted });
     y -= 12;
   }
 

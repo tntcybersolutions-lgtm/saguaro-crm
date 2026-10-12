@@ -1,11 +1,11 @@
-import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { PDFDocument, StandardFonts, PageSizes } from 'pdf-lib';
 import {
   getProjectContext,
   drawField,
   fmtCurrency,
   saveDocument,
 } from '../pdf-engine';
-import { brandDoc, drawBrandHeader, stampFooters } from './report-theme';
+import { brandDoc, drawBrandHeader, stampFooters, DOC } from './report-theme';
 
 export interface SubstantialCompletionInput {
   projectId: string;
@@ -51,13 +51,13 @@ export async function generateSubstantialCompletionCert(input: SubstantialComple
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 1,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accent,
   });
 
   // Certificate body
   y -= 18;
   page.drawText('CERTIFICATE OF SUBSTANTIAL COMPLETION', {
-    x: 10, y, size: 11, font: bold, color: rgb(0, 0, 0),
+    x: 10, y, size: 11, font: bold, color: DOC.ink,
   });
 
   y -= 18;
@@ -72,7 +72,7 @@ export async function generateSubstantialCompletionCert(input: SubstantialComple
   for (const word of certWords) {
     if ((certLine + ' ' + word).length > 95) {
       page.drawText(certLine.trim(), {
-        x: 10, y, size: 8.5, font, color: rgb(0.2, 0.2, 0.2),
+        x: 10, y, size: 8.5, font, color: DOC.text,
       });
       y -= 12;
       certLine = word;
@@ -82,7 +82,7 @@ export async function generateSubstantialCompletionCert(input: SubstantialComple
   }
   if (certLine.trim()) {
     page.drawText(certLine.trim(), {
-      x: 10, y, size: 8.5, font, color: rgb(0.2, 0.2, 0.2),
+      x: 10, y, size: 8.5, font, color: DOC.text,
     });
     y -= 12;
   }
@@ -90,7 +90,7 @@ export async function generateSubstantialCompletionCert(input: SubstantialComple
   // Key dates
   y -= 15;
   page.drawText('COMPLETION DATES', {
-    x: 10, y, size: 10, font: bold, color: rgb(0, 0, 0),
+    x: 10, y, size: 10, font: bold, color: DOC.ink,
   });
   y -= 5;
 
@@ -109,13 +109,13 @@ export async function generateSubstantialCompletionCert(input: SubstantialComple
       y: y - 4,
       width: width - 20,
       height: 18,
-      color: i % 2 === 0 ? rgb(0.96, 0.97, 0.98) : rgb(1, 1, 1),
+      color: i % 2 === 0 ? DOC.zebra : DOC.paper,
     });
     page.drawText(label, {
-      x: 15, y: y + 2, size: 9, font: bold, color: rgb(0.2, 0.2, 0.2),
+      x: 15, y: y + 2, size: 9, font: bold, color: DOC.text,
     });
     page.drawText(value, {
-      x: 280, y: y + 2, size: 9, font, color: rgb(0, 0, 0),
+      x: 280, y: y + 2, size: 9, font, color: DOC.ink,
     });
   });
 
@@ -125,16 +125,16 @@ export async function generateSubstantialCompletionCert(input: SubstantialComple
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 0.5,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accent,
   });
   y -= 15;
   page.drawText('ITEMS TO COMPLETE OR CORRECT (PUNCH LIST)', {
-    x: 10, y, size: 10, font: bold, color: rgb(0, 0, 0),
+    x: 10, y, size: 10, font: bold, color: DOC.ink,
   });
 
   y -= 14;
   page.drawText('See attached punch list for items remaining to be completed or corrected.', {
-    x: 15, y, size: 9, font, color: rgb(0.4, 0.4, 0.4),
+    x: 15, y, size: 9, font, color: DOC.muted,
   });
 
   // Responsibilities section
@@ -143,11 +143,11 @@ export async function generateSubstantialCompletionCert(input: SubstantialComple
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 0.5,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accent,
   });
   y -= 15;
   page.drawText('DIVISION OF RESPONSIBILITIES', {
-    x: 10, y, size: 10, font: bold, color: rgb(0, 0, 0),
+    x: 10, y, size: 10, font: bold, color: DOC.ink,
   });
 
   y -= 14;
@@ -162,7 +162,7 @@ export async function generateSubstantialCompletionCert(input: SubstantialComple
   for (const word of respWords) {
     if ((respLine + ' ' + word).length > 95) {
       page.drawText(respLine.trim(), {
-        x: 10, y, size: 8.5, font, color: rgb(0.2, 0.2, 0.2),
+        x: 10, y, size: 8.5, font, color: DOC.text,
       });
       y -= 12;
       respLine = word;
@@ -172,7 +172,7 @@ export async function generateSubstantialCompletionCert(input: SubstantialComple
   }
   if (respLine.trim()) {
     page.drawText(respLine.trim(), {
-      x: 10, y, size: 8.5, font, color: rgb(0.2, 0.2, 0.2),
+      x: 10, y, size: 8.5, font, color: DOC.text,
     });
     y -= 12;
   }
@@ -183,7 +183,7 @@ export async function generateSubstantialCompletionCert(input: SubstantialComple
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 0.5,
-    color: rgb(0.75, 0.75, 0.75),
+    color: DOC.rule,
   });
   y -= 15;
 
@@ -195,25 +195,25 @@ export async function generateSubstantialCompletionCert(input: SubstantialComple
 
   sigCols.forEach((col) => {
     page.drawText(col.label, {
-      x: col.x, y, size: 8, font: bold, color: rgb(0, 0, 0),
+      x: col.x, y, size: 8, font: bold, color: DOC.ink,
     });
     page.drawLine({
       start: { x: col.x, y: y - 20 },
       end: { x: col.x + 180, y: y - 20 },
       thickness: 0.5,
-      color: rgb(0, 0, 0),
+      color: DOC.ink,
     });
     page.drawText('Signature / Date', {
-      x: col.x, y: y - 30, size: 7, font, color: rgb(0.5, 0.5, 0.5),
+      x: col.x, y: y - 30, size: 7, font, color: DOC.faint,
     });
     page.drawLine({
       start: { x: col.x, y: y - 45 },
       end: { x: col.x + 180, y: y - 45 },
       thickness: 0.5,
-      color: rgb(0, 0, 0),
+      color: DOC.ink,
     });
     page.drawText('Printed Name / Title', {
-      x: col.x, y: y - 55, size: 7, font, color: rgb(0.5, 0.5, 0.5),
+      x: col.x, y: y - 55, size: 7, font, color: DOC.faint,
     });
   });
 

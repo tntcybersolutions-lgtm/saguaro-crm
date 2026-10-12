@@ -447,7 +447,7 @@ export default function HelpMode() {
         <div style={{ width: 'min(720px, 100%)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 6 }}>
             <Lifebuoy size={22} weight="duotone" color="var(--text-secondary)" />
-            <h2 style={{ margin: 0, fontSize: 21, fontWeight: 900, color: TEXT, letterSpacing: '-0.01em' }}>
+            <h2 style={{ margin: 0, fontSize: 21, fontWeight: 900, letterSpacing: '-0.01em' }}>
               Show Me How
             </h2>
             <button

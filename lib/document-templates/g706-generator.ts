@@ -1,4 +1,4 @@
-import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { PDFDocument, StandardFonts, PageSizes } from 'pdf-lib';
 import {
   getProjectContext,
   drawField,
@@ -6,7 +6,7 @@ import {
   saveDocument,
 } from '../pdf-engine';
 import { supabaseAdmin } from '../../supabase/admin';
-import { brandDoc, drawBrandHeader, stampFooters } from './report-theme';
+import { brandDoc, drawBrandHeader, stampFooters, DOC } from './report-theme';
 
 export interface G706Input {
   projectId: string;
@@ -148,7 +148,7 @@ export async function generateG706(input: G706Input): Promise<{
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 1,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accent,
   });
 
   // Affidavit text
@@ -158,7 +158,7 @@ export async function generateG706(input: G706Input): Promise<{
     y,
     size: 11,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
 
   y -= 14;
@@ -181,7 +181,7 @@ export async function generateG706(input: G706Input): Promise<{
           y,
           size: 8.5,
           font,
-          color: rgb(0.2, 0.2, 0.2),
+          color: DOC.text,
         });
         y -= 12;
       }
@@ -195,7 +195,7 @@ export async function generateG706(input: G706Input): Promise<{
         y,
         size: 8.5,
         font,
-        color: rgb(0.2, 0.2, 0.2),
+        color: DOC.text,
       });
       y -= 12;
       affLine = word;
@@ -209,7 +209,7 @@ export async function generateG706(input: G706Input): Promise<{
       y,
       size: 8.5,
       font,
-      color: rgb(0.2, 0.2, 0.2),
+      color: DOC.text,
     });
     y -= 12;
   }
@@ -221,7 +221,7 @@ export async function generateG706(input: G706Input): Promise<{
     y,
     size: 9,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 5;
   page.drawRectangle({
@@ -229,9 +229,9 @@ export async function generateG706(input: G706Input): Promise<{
     y: y - 50,
     width: width - 20,
     height: 50,
-    borderColor: rgb(0.7, 0.7, 0.7),
+    borderColor: DOC.rule,
     borderWidth: 0.5,
-    color: rgb(0.98, 0.98, 0.98),
+    color: DOC.zebra,
   });
   y -= 60;
 
@@ -242,7 +242,7 @@ export async function generateG706(input: G706Input): Promise<{
     y,
     size: 9,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 5;
   page.drawRectangle({
@@ -250,35 +250,35 @@ export async function generateG706(input: G706Input): Promise<{
     y: y - 14,
     width: width - 20,
     height: 14,
-    color: rgb(0.15, 0.2, 0.25),
+    color: DOC.ink,
   });
   page.drawText('SUBCONTRACTOR / SUPPLIER NAME', {
     x: 15,
     y: y - 10,
     size: 7.5,
     font: bold,
-    color: rgb(1, 1, 1),
+    color: DOC.paper,
   });
   page.drawText('TRADE', {
     x: 270,
     y: y - 10,
     size: 7.5,
     font: bold,
-    color: rgb(1, 1, 1),
+    color: DOC.paper,
   });
   page.drawText('CONTRACT AMOUNT', {
     x: 360,
     y: y - 10,
     size: 7.5,
     font: bold,
-    color: rgb(1, 1, 1),
+    color: DOC.paper,
   });
   page.drawText('FINAL WAIVER', {
     x: 480,
     y: y - 10,
     size: 7.5,
     font: bold,
-    color: rgb(1, 1, 1),
+    color: DOC.paper,
   });
 
   const maxSubRows = Math.min(subs.length, 10);
@@ -290,7 +290,7 @@ export async function generateG706(input: G706Input): Promise<{
       y: y - 4,
       width: width - 20,
       height: 14,
-      color: i % 2 === 0 ? rgb(0.96, 0.97, 0.98) : rgb(1, 1, 1),
+      color: i % 2 === 0 ? DOC.zebra : DOC.paper,
     });
     const hasWaiver = lienWaivers.some(
       (w: any) =>
@@ -301,28 +301,28 @@ export async function generateG706(input: G706Input): Promise<{
       y: y + 1,
       size: 8,
       font,
-      color: rgb(0.1, 0.1, 0.1),
+      color: DOC.ink,
     });
     page.drawText(sub.trade || '', {
       x: 270,
       y: y + 1,
       size: 8,
       font,
-      color: rgb(0.2, 0.2, 0.2),
+      color: DOC.text,
     });
     page.drawText(fmtCurrency(sub.contract_amount || 0), {
       x: 360,
       y: y + 1,
       size: 8,
       font,
-      color: rgb(0.2, 0.2, 0.2),
+      color: DOC.text,
     });
     page.drawText(hasWaiver ? 'RECEIVED' : 'PENDING', {
       x: 480,
       y: y + 1,
       size: 8,
       font: bold,
-      color: hasWaiver ? rgb(0.1, 0.5, 0.2) : rgb(0.7, 0.3, 0.1),
+      color: hasWaiver ? DOC.success : DOC.warning,
     });
   }
 
@@ -333,7 +333,7 @@ export async function generateG706(input: G706Input): Promise<{
       y,
       size: 8,
       font,
-      color: rgb(0.5, 0.5, 0.5),
+      color: DOC.faint,
     });
   }
 
@@ -343,7 +343,7 @@ export async function generateG706(input: G706Input): Promise<{
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 0.5,
-    color: rgb(0.75, 0.75, 0.75),
+    color: DOC.rule,
   });
   y -= 15;
   page.drawText('CONTRACTOR CERTIFICATION AND NOTARY ACKNOWLEDGMENT', {
@@ -351,7 +351,7 @@ export async function generateG706(input: G706Input): Promise<{
     y,
     size: 9,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
 
   y -= 18;
@@ -360,7 +360,7 @@ export async function generateG706(input: G706Input): Promise<{
     y,
     size: 8.5,
     font,
-    color: rgb(0.2, 0.2, 0.2),
+    color: DOC.text,
   });
 
   y -= 25;
@@ -368,13 +368,13 @@ export async function generateG706(input: G706Input): Promise<{
     start: { x: 10, y },
     end: { x: 260, y },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page.drawLine({
     start: { x: 310, y },
     end: { x: width - 10, y },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 10;
   page.drawText('Contractor Signature / Date', {
@@ -382,14 +382,14 @@ export async function generateG706(input: G706Input): Promise<{
     y,
     size: 8,
     font,
-    color: rgb(0.5, 0.5, 0.5),
+    color: DOC.faint,
   });
   page.drawText('Notary Public / Commission Expiration', {
     x: 310,
     y,
     size: 8,
     font,
-    color: rgb(0.5, 0.5, 0.5),
+    color: DOC.faint,
   });
 
   // Corporate footer: Page X of Y \u2022 company \u2022 generated date

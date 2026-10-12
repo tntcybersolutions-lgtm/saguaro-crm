@@ -1,6 +1,6 @@
-import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { PDFDocument, StandardFonts, PageSizes } from 'pdf-lib';
 import { getProjectContext, saveDocument, fmtCurrency } from '../pdf-engine';
-import { brandDoc, drawBrandHeader, stampFooters } from './report-theme';
+import { brandDoc, drawBrandHeader, stampFooters, DOC } from './report-theme';
 
 export interface G703LineItem {
   itemNo: string;
@@ -57,7 +57,7 @@ export async function generateG703(
       y: y - 20,
       width: width - 20,
       height: 20,
-      color: rgb(0.15, 0.2, 0.25),
+      color: DOC.ink,
     });
     cols.forEach((col) => {
       page.drawText(col.label, {
@@ -65,7 +65,7 @@ export async function generateG703(
         y: y - 14,
         size: 6.5,
         font: bold,
-        color: rgb(1, 1, 1),
+        color: DOC.paper,
         maxWidth: col.w - 4,
       });
     });
@@ -81,7 +81,7 @@ export async function generateG703(
           y: rowY - 14,
           width: width - 20,
           height: 14,
-          color: rgb(0.96, 0.97, 0.98),
+          color: DOC.zebra,
         });
       }
       const total =
@@ -96,42 +96,42 @@ export async function generateG703(
         y: rowY - 10,
         size: 8,
         font,
-        color: rgb(0.1, 0.1, 0.1),
+        color: DOC.ink,
       });
       page.drawText(fmtCurrency(item.scheduledValue), {
         x: 213,
         y: rowY - 10,
         size: 8,
         font,
-        color: rgb(0.1, 0.1, 0.1),
+        color: DOC.ink,
       });
       page.drawText(fmtCurrency(item.prevCompleted), {
         x: 286,
         y: rowY - 10,
         size: 8,
         font,
-        color: rgb(0.3, 0.3, 0.3),
+        color: DOC.muted,
       });
       page.drawText(fmtCurrency(item.thisPeriod), {
         x: 354,
         y: rowY - 10,
         size: 8,
         font: bold,
-        color: rgb(0.05, 0.3, 0.1),
+        color: DOC.success,
       });
       page.drawText(fmtCurrency(item.storedMaterials || 0), {
         x: 422,
         y: rowY - 10,
         size: 8,
         font,
-        color: rgb(0.3, 0.3, 0.3),
+        color: DOC.muted,
       });
       page.drawText(`${fmtCurrency(total)} (${pct}%)`, {
         x: 480,
         y: rowY - 10,
         size: 8,
         font: bold,
-        color: rgb(0.1, 0.1, 0.1),
+        color: DOC.ink,
       });
     });
 
@@ -142,7 +142,7 @@ export async function generateG703(
       y: totY - 14,
       width: width - 20,
       height: 16,
-      color: rgb(0.05, 0.07, 0.09),
+      color: DOC.ink,
     });
     const totSched = batch.reduce((s, l) => s + l.scheduledValue, 0);
     const totPrev = batch.reduce((s, l) => s + l.prevCompleted, 0);
@@ -153,35 +153,35 @@ export async function generateG703(
       y: totY - 10,
       size: 8,
       font: bold,
-      color: rgb(0.83, 0.63, 0.09),
+      color: DOC.accentOnBand,
     });
     page.drawText(fmtCurrency(totSched), {
       x: 213,
       y: totY - 10,
       size: 8,
       font: bold,
-      color: rgb(0.83, 0.63, 0.09),
+      color: DOC.accentOnBand,
     });
     page.drawText(fmtCurrency(totPrev), {
       x: 286,
       y: totY - 10,
       size: 8,
       font: bold,
-      color: rgb(0.83, 0.63, 0.09),
+      color: DOC.accentOnBand,
     });
     page.drawText(fmtCurrency(totThis), {
       x: 354,
       y: totY - 10,
       size: 8,
       font: bold,
-      color: rgb(0.83, 0.63, 0.09),
+      color: DOC.accentOnBand,
     });
     page.drawText(fmtCurrency(totPrev + totThis + totStored), {
       x: 480,
       y: totY - 10,
       size: 8,
       font: bold,
-      color: rgb(0.83, 0.63, 0.09),
+      color: DOC.accentOnBand,
     });
 
   }

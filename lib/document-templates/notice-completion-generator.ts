@@ -1,10 +1,10 @@
-import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { PDFDocument, StandardFonts, PageSizes } from 'pdf-lib';
 import {
   getProjectContext,
   drawField,
   saveDocument,
 } from '../pdf-engine';
-import { brandDoc, drawBrandHeader, stampFooters } from './report-theme';
+import { brandDoc, drawBrandHeader, stampFooters, DOC } from './report-theme';
 
 export interface NoticeCompletionInput {
   projectId: string;
@@ -36,7 +36,7 @@ export async function generateNoticeCompletion(input: NoticeCompletionInput): Pr
     y,
     size: 9,
     font: bold,
-    color: rgb(0.3, 0.3, 0.3),
+    color: DOC.muted,
   });
 
   // Owner info
@@ -63,7 +63,7 @@ export async function generateNoticeCompletion(input: NoticeCompletionInput): Pr
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 1,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accent,
   });
 
   // Body text
@@ -73,7 +73,7 @@ export async function generateNoticeCompletion(input: NoticeCompletionInput): Pr
     y,
     size: 11,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
 
   y -= 14;
@@ -97,7 +97,7 @@ export async function generateNoticeCompletion(input: NoticeCompletionInput): Pr
         y,
         size: 8.5,
         font,
-        color: rgb(0.2, 0.2, 0.2),
+        color: DOC.text,
       });
       y -= 12;
       bodyLine = word;
@@ -111,7 +111,7 @@ export async function generateNoticeCompletion(input: NoticeCompletionInput): Pr
       y,
       size: 8.5,
       font,
-      color: rgb(0.2, 0.2, 0.2),
+      color: DOC.text,
     });
     y -= 12;
   }
@@ -123,7 +123,7 @@ export async function generateNoticeCompletion(input: NoticeCompletionInput): Pr
     y: y - 30,
     width: width - 20,
     height: 45,
-    color: rgb(0.96, 0.97, 0.98),
+    color: DOC.zebra,
   });
   y -= 5;
   page.drawText('RECORDING INSTRUCTIONS', {
@@ -131,17 +131,17 @@ export async function generateNoticeCompletion(input: NoticeCompletionInput): Pr
     y,
     size: 9,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 12;
   page.drawText(
     'TO BE RECORDED in the office of the County Recorder of the county in which the property is located.',
-    { x: 15, y, size: 8.5, font, color: rgb(0.3, 0.3, 0.3) }
+    { x: 15, y, size: 8.5, font, color: DOC.muted }
   );
   y -= 12;
   page.drawText(
     'This notice must be recorded within ten (10) days of completion of the work of improvement.',
-    { x: 15, y, size: 8.5, font, color: rgb(0.3, 0.3, 0.3) }
+    { x: 15, y, size: 8.5, font, color: DOC.muted }
   );
 
   // Owner signature
@@ -150,37 +150,37 @@ export async function generateNoticeCompletion(input: NoticeCompletionInput): Pr
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 0.5,
-    color: rgb(0.75, 0.75, 0.75),
+    color: DOC.rule,
   });
   y -= 15;
 
-  page.drawText('OWNER:', { x: 10, y, size: 9, font: bold, color: rgb(0, 0, 0) });
+  page.drawText('OWNER:', { x: 10, y, size: 9, font: bold, color: DOC.ink });
   page.drawText(`Date: ${new Date().toLocaleDateString()}`, {
     x: 310,
     y,
     size: 9,
     font,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page.drawLine({
     start: { x: 10, y: y - 20 },
     end: { x: 260, y: y - 20 },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page.drawText(ownerName, {
     x: 10,
     y: y - 30,
     size: 8,
     font,
-    color: rgb(0.3, 0.3, 0.3),
+    color: DOC.muted,
   });
   page.drawText('Signature / Title', {
     x: 10,
     y: y - 40,
     size: 7,
     font,
-    color: rgb(0.5, 0.5, 0.5),
+    color: DOC.faint,
   });
 
   // Notary acknowledgment
@@ -189,7 +189,7 @@ export async function generateNoticeCompletion(input: NoticeCompletionInput): Pr
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 0.5,
-    color: rgb(0.75, 0.75, 0.75),
+    color: DOC.rule,
   });
   y -= 14;
   page.drawText('NOTARY ACKNOWLEDGMENT', {
@@ -197,36 +197,36 @@ export async function generateNoticeCompletion(input: NoticeCompletionInput): Pr
     y,
     size: 9,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 12;
   page.drawText(
     'State of Arizona    County of _____________    On this _____ day of ________________, 20___, before me personally appeared',
-    { x: 10, y, size: 8, font, color: rgb(0.3, 0.3, 0.3) }
+    { x: 10, y, size: 8, font, color: DOC.muted }
   );
   y -= 12;
   page.drawText(
     '___________________________, known to me to be the person(s) whose name(s) is/are subscribed to the within instrument,',
-    { x: 10, y, size: 8, font, color: rgb(0.3, 0.3, 0.3) }
+    { x: 10, y, size: 8, font, color: DOC.muted }
   );
   y -= 12;
   page.drawText(
     'and acknowledged to me that he/she/they executed the same in his/her/their authorized capacity(ies).',
-    { x: 10, y, size: 8, font, color: rgb(0.3, 0.3, 0.3) }
+    { x: 10, y, size: 8, font, color: DOC.muted }
   );
   y -= 18;
   page.drawLine({
     start: { x: 10, y },
     end: { x: 260, y },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page.drawText('Notary Public / Commission Expiration', {
     x: 10,
     y: y - 10,
     size: 7,
     font,
-    color: rgb(0.5, 0.5, 0.5),
+    color: DOC.faint,
   });
 
   // Corporate footer: Page X of Y \u2022 company \u2022 generated date

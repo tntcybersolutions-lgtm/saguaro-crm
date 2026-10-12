@@ -522,7 +522,7 @@ function AssemblyLibraryContent() {
             justifyContent: 'space-between',
             alignItems: 'center',
           }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: TEXT, margin: 0 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>
               {editingId ? 'Edit Assembly' : 'New Assembly'}
             </h2>
             <button

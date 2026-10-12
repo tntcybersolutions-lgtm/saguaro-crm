@@ -1,11 +1,11 @@
-import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { PDFDocument, StandardFonts, PageSizes } from 'pdf-lib';
 import {
   getProjectContext,
   drawField,
   fmtCurrency,
   saveDocument,
 } from '../pdf-engine';
-import { brandDoc, drawBrandHeader, stampFooters } from './report-theme';
+import { brandDoc, drawBrandHeader, stampFooters, DOC } from './report-theme';
 
 interface HazardRow {
   task: string;
@@ -118,7 +118,7 @@ export async function generateJHA(input: JHAInput): Promise<{
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 1,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accent,
   });
 
   // Table header
@@ -128,16 +128,16 @@ export async function generateJHA(input: JHAInput): Promise<{
     y: y - 4,
     width: width - 20,
     height: 16,
-    color: rgb(0.15, 0.2, 0.25),
+    color: DOC.ink,
   });
   page.drawText('TASK / ACTIVITY', {
-    x: 15, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1),
+    x: 15, y: y + 1, size: 7.5, font: bold, color: DOC.paper,
   });
   page.drawText('POTENTIAL HAZARD', {
-    x: 210, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1),
+    x: 210, y: y + 1, size: 7.5, font: bold, color: DOC.paper,
   });
   page.drawText('CONTROLS / MITIGATION', {
-    x: 400, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1),
+    x: 400, y: y + 1, size: 7.5, font: bold, color: DOC.paper,
   });
 
   // Hazard rows
@@ -150,16 +150,16 @@ export async function generateJHA(input: JHAInput): Promise<{
       y: y - 4,
       width: width - 20,
       height: 16,
-      color: i % 2 === 0 ? rgb(0.96, 0.97, 0.98) : rgb(1, 1, 1),
+      color: i % 2 === 0 ? DOC.zebra : DOC.paper,
     });
     page.drawText(row.task.slice(0, 28), {
-      x: 15, y: y + 1, size: 8, font, color: rgb(0.1, 0.1, 0.1),
+      x: 15, y: y + 1, size: 8, font, color: DOC.ink,
     });
     page.drawText(row.hazard.slice(0, 28), {
-      x: 210, y: y + 1, size: 8, font, color: rgb(0.2, 0.2, 0.2),
+      x: 210, y: y + 1, size: 8, font, color: DOC.text,
     });
     page.drawText(row.control.slice(0, 35), {
-      x: 400, y: y + 1, size: 8, font, color: rgb(0.2, 0.2, 0.2),
+      x: 400, y: y + 1, size: 8, font, color: DOC.text,
     });
   }
 
@@ -169,11 +169,11 @@ export async function generateJHA(input: JHAInput): Promise<{
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 0.5,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accent,
   });
   y -= 15;
   page.drawText('REQUIRED PPE', {
-    x: 10, y, size: 10, font: bold, color: rgb(0, 0, 0),
+    x: 10, y, size: 10, font: bold, color: DOC.ink,
   });
   y -= 14;
   const ppeItems = [
@@ -182,7 +182,7 @@ export async function generateJHA(input: JHAInput): Promise<{
   ];
   ppeItems.forEach((item) => {
     page.drawText(`\u2022  ${item}`, {
-      x: 15, y, size: 8.5, font, color: rgb(0.2, 0.2, 0.2),
+      x: 15, y, size: 8.5, font, color: DOC.text,
     });
     y -= 12;
   });
@@ -190,7 +190,7 @@ export async function generateJHA(input: JHAInput): Promise<{
   // Emergency contacts section
   y -= 10;
   page.drawText('EMERGENCY CONTACTS', {
-    x: 10, y, size: 10, font: bold, color: rgb(0, 0, 0),
+    x: 10, y, size: 10, font: bold, color: DOC.ink,
   });
   y -= 14;
   const emergencyItems = [
@@ -201,7 +201,7 @@ export async function generateJHA(input: JHAInput): Promise<{
   ];
   emergencyItems.forEach((item) => {
     page.drawText(item, {
-      x: 15, y, size: 8.5, font, color: rgb(0.2, 0.2, 0.2),
+      x: 15, y, size: 8.5, font, color: DOC.text,
     });
     y -= 12;
   });
@@ -212,7 +212,7 @@ export async function generateJHA(input: JHAInput): Promise<{
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 0.5,
-    color: rgb(0.75, 0.75, 0.75),
+    color: DOC.rule,
   });
   y -= 15;
 
@@ -224,16 +224,16 @@ export async function generateJHA(input: JHAInput): Promise<{
 
   sigCols.forEach((col) => {
     page.drawText(col.label, {
-      x: col.x, y, size: 8, font: bold, color: rgb(0, 0, 0),
+      x: col.x, y, size: 8, font: bold, color: DOC.ink,
     });
     page.drawLine({
       start: { x: col.x, y: y - 20 },
       end: { x: col.x + 180, y: y - 20 },
       thickness: 0.5,
-      color: rgb(0, 0, 0),
+      color: DOC.ink,
     });
     page.drawText('Signature / Date', {
-      x: col.x, y: y - 30, size: 7, font, color: rgb(0.5, 0.5, 0.5),
+      x: col.x, y: y - 30, size: 7, font, color: DOC.faint,
     });
   });
 

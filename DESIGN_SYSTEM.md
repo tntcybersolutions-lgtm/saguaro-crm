@@ -19,7 +19,11 @@ jet-black era), **this file wins**. Copy rules stay in `docs/COPY-STYLE.md`.
 | Borders | `--border-default` / `--border-subtle` / `--border-strong` | `#334155` / `#334155` / `#475569` |
 | Primary text | `--text-primary` | `#F8FAFC` |
 | Secondary text | `--text-secondary` | `#CBD5E1` |
-| Muted text | `--text-tertiary` | `#94A3B8` |
+| Muted text | `--text-tertiary` | `#A3B1C6` |
+| Page title | `--title-page` | `#38BDF8` (bright cyan-blue), `--fs-title` 26px / `--fs-title-m` 22px on phones |
+| Section / card heading | `--title-section` | `#7DD3FC`, `--fs-section` 16px |
+| Card edge | `--border-card` + `--card-highlight` | `#3D4F68` + a 1px top highlight |
+| Module accent (the page's) | `--acc` (set per route by the app shell) | one of the eight `--mod-*` hues below |
 | Primary action, selected navigation | `--brand-primary` + `--on-brand` | `#FFE000` on `#101722` |
 | Informational links | `--link` / `--link-hover` | `#38BDF8` / `#7DD3FC` |
 | Status | `--success` / `--warning` / `--danger` / `--info` | `#4ADE80` / `#FBBF24` / `#F87171` / `#38BDF8` |
@@ -49,7 +53,10 @@ states are mixes of approved values (no new hex). The status values
 | Strong / interactive border | — (derived) | mix #334155 72% + #94A3B8 | `--border-strong`, `--border-interactive` | hover borders, dropzone |
 | Primary text | #F8FAFC | #F8FAFC | `--text-primary`, `--action-secondary-fg` | titles, values, body |
 | Secondary text | #CBD5E1 | #CBD5E1 | `--text-secondary`, `--nav-fg`, `--tab-fg` | subtitles, descriptions, nav |
-| Muted text | #94A3B8 | #94A3B8 | `--text-tertiary`, `--disabled-fg` | labels, meta, captions |
+| Muted text | #94A3B8 → raised to #A3B1C6 (global theme pass) | #A3B1C6 (7:1 on a card) | `--text-tertiary` | labels, meta, captions, table headers |
+| Page title | #38BDF8 (global theme pass) | #38BDF8 | `--title-page` | `PageShell`, `ModuleHero`, any `h1` in `.sag-app`, login |
+| Section heading | #7DD3FC (global theme pass) | #7DD3FC | `--title-section` | `h2`, `.k-card-title`, `.pmSecTitle`, `.fl-sec`, sidebar group heads |
+| Card edge | (global theme pass) | #3D4F68 + top highlight | `--border-card`, `--card-highlight` | `.k-card`, `.pmSec`, `.k-stats`, `.pmStrip`, `.k-callout`, `.fl-list`, `.fl-strip`, `.fl-brief` |
 | Inverse text | #101722 | #101722 | `--text-inverse`, `--on-brand`, `--action-primary-fg` | text on yellow |
 | Primary action | #FFE000 | #FFE000 | `--brand-primary`, `--action-primary-bg` | `.k-btn-primary`, `goldButtonStyle` |
 | Primary hover / pressed | — (derived) | mix #FFE000 90% / 80% + #101722 | `--action-primary-hover`, `--action-primary-pressed` | primary buttons |
@@ -61,9 +68,39 @@ states are mixes of approved values (no new hex). The status values
 | Warning / pending | #FBBF24 | #FBBF24 | `--warning`, `--warning-fg/bg/border` | badges, callouts |
 | Error / overdue | #F87171 | #F87171 | `--danger`, `--danger-fg/bg/border`, `--action-danger-*` | badges, errors, destructive buttons |
 | Disabled | — (derived) | #243247 / #94A3B8 / #334155 | `--disabled-bg/fg/border` | disabled controls |
-| Module icon (in app) | — (concept icon tile) | glyph #CBD5E1 on #243247, border #334155 | `lib/ui/app-accent.ts` `moduleAccent()` | premium headers and section cards, sidebar, 12 module screens |
+| Module accents (global theme pass) | one hue per domain | core #38BDF8 · sales #A78BFA · precon #22D3EE · build #818CF8 · field #2DD4BF · money #F472B6 · docs #60A5FA · people #FB923C | `--mod-*`, `--acc`; `lib/ui/app-accent.ts` (`moduleAccent`, `accentForPath`, `DOMAIN_HEX` mirror) | every icon tile (`.k-tile`, `IconTile`, `SectionCard` icon, `ModuleHero` tile, stat icons, timeline dots, `IconChip`), sidebar glyphs, job tool rows |
+| Documents (PDF, print, Excel, Word) | white paper | ink #0F172A, accent #0284C7 (#38BDF8 on the navy band), rules #CBD5E1, zebra #F1F5F9 | `lib/document-palette.ts` `DOC_HEX` → `report-theme` `DOC`, `print-doc` `PRINT_TOKENS`, `report-export` | every generator in `lib/document-templates`, report exports, HTML print docs |
 | Status chips (`components/ui/Status`) | approved status values | draft #94A3B8 · waiting on you #38BDF8 · waiting/warn #FBBF24 · good/done #4ADE80 · bad #F87171 | `lib/status-system.ts` `TONES` | RFIs, header messages, Home |
 | Chart series | — (approved values only) | #38BDF8, light blue, deep blue, #CBD5E1, green, amber, #94A3B8, #334155 | `--chart-1…5`, `components/charts/shared.tsx` | every chart |
+
+### Global theme pass (12 Oct 2026): one system, documented exceptions
+
+The look is set in three places only: the `:root` tokens in `app/globals.css`,
+the module map in `lib/ui/app-accent.ts`, and the document palette in
+`lib/document-palette.ts`. Shared components read those; pages do not set
+title, heading, card-edge or tile colours. The app shell puts the page's
+module hue in `--acc` (`accentForPath(pathname)` on `.main-content-area`), so
+every shared tile on a page takes it with no per-page code.
+
+Accents mark identity only. Status meaning stays green / amber / red with its
+word; yellow stays the one primary action and the selected item.
+
+**Intentional exceptions (not bypasses):**
+- Customer branding: a tenant's own colour (`tenants.settings.primary_color`,
+  white-label `--brand-primary`) and its previews in Settings → Branding.
+- Drawing, markup and takeoff canvases (`components/drawings/*`,
+  `app/app/takeoff/measured/*`, `components/signal-studio/Designer.tsx`,
+  `components/PhotoEditor.tsx`, `components/heatmap/*`, `components/ui/CrewMap.tsx`):
+  annotation and map colours the user picks or that carry meaning.
+- Charts (`components/charts/*`): series colours from `--chart-*` / `CHART`.
+- CSS masks (`#000` in `mask-image`), video and media backgrounds, signature
+  pads and QR codes (white for contrast), print documents (white paper).
+- Role colours stored per company (`role_definitions.color`) are hex by design.
+- `lib/pdf-engine.ts` (the older WH-347 / lien-waiver engine) holds embedded
+  binary and keeps its 22 colour literals; the newer generators in
+  `lib/document-templates/` replace it.
+- Hand-built record names, figures and error lines stay `--text-primary`:
+  they are content, not headings.
 
 ### Concept building blocks (kit)
 
@@ -89,7 +126,8 @@ action tokens with hover, pressed, focus and disabled states.
   Progress bars use `--chart-1`; focus rings use `--focus-ring`.
 - `lib/module-identity.ts` is a byte mirror of the marketing site and keeps
   its marketing hues there; in-app code imports `moduleAccent` from
-  `lib/ui/app-accent.ts`.
+  `lib/ui/app-accent.ts` (the domain map; `lib/ui/app-accent.sanity.test.ts`
+  checks it mirrors the `--mod-*` tokens and assigns every module).
 - `rgba()` colours count as colours: only approved RGB values (and black /
   white for shadows and overlays) in app code.
 - A colour with an alpha suffix is `color-mix(in srgb, <colour> N%,

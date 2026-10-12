@@ -11,7 +11,7 @@ import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 const GOLD = 'var(--brand-primary)';
 const GREEN = 'var(--success)';
 const BLUE = 'var(--brand-primary)';
-const RED = '#F87171';
+const RED = 'var(--danger)';
 const TEXT = 'var(--text-primary)';
 // Premium kit surface tokens (match components/ui/premium.tsx) ------------------
 const WHITE = 'var(--text-primary)';

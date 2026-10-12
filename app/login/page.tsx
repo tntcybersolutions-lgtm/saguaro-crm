@@ -13,15 +13,19 @@ const CSS = `
 .lgNav { padding: env(safe-area-inset-top, 0px) 24px 0; box-sizing: content-box; height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--border-subtle); }
 .lgBrand { text-decoration: none; display: inline-flex; align-items: center; gap: 10px; }
 .lgBrand img { height: 36px; width: auto; object-fit: contain; border-radius: 4px; }
-.lgBrandName { font-weight: 900; font-size: 15px; letter-spacing: -0.01em; color: var(--brand-primary); line-height: 1.15; }
-.lgBrandSub { font-size: 12px; color: var(--text-tertiary); letter-spacing: .5px; font-weight: 600; }
-.lgNavLink { font-size: var(--fs-sm); color: var(--text-tertiary); text-decoration: none; font-weight: 600; }
+.lgBrandName { font-weight: 900; font-size: 15px; letter-spacing: -0.01em; color: var(--text-primary); line-height: 1.15; white-space: nowrap; }
+.lgBrandSub { font-size: 12px; color: var(--text-tertiary); letter-spacing: .5px; font-weight: 600; white-space: nowrap; }
+.lgNavLink { font-size: var(--fs-sm); color: var(--text-tertiary); text-decoration: none; font-weight: 600; white-space: nowrap; min-height: 44px; display: inline-flex; align-items: center; }
+.lgNavLink b { color: var(--link); }
+/* A phone keeps the header on one line: the brand drops its second line and
+   the trial link drops its lead-in. */
+@media (max-width: 480px) { .lgNav { padding-left: 16px; padding-right: 16px; } .lgBrandSub, .lgNavPre { display: none; } }
 .lgNavLink b { color: var(--link); }
 .lgMain { flex: 1; display: flex; align-items: center; justify-content: center; padding: 32px 16px; }
 .lgWrap { width: 100%; max-width: 420px; }
 .lgHead { text-align: center; margin-bottom: 24px; }
 .lgHead img { height: 56px; width: auto; object-fit: contain; border-radius: 6px; margin-bottom: 14px; }
-.lgHead h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 6px; color: var(--text-primary); }
+.lgHead h1 { font-size: var(--fs-title); font-weight: 800; letter-spacing: -0.02em; margin: 0 0 6px; color: var(--title-page); }
 .lgHead p { color: var(--text-tertiary); font-size: var(--fs-md); margin: 0; }
 .lgForm { display: flex; flex-direction: column; gap: 14px; }
 .lgMsg { display: flex; align-items: flex-start; gap: 8px; padding: 10px 14px; border-radius: var(--radius-sm); font-size: var(--fs-sm); margin-bottom: 16px; }
@@ -146,7 +150,7 @@ export default function LoginPage(){
             <span className="lgBrandSub">Control Systems</span>
           </span>
         </Link>
-        <Link href="/signup" className="lgNavLink">No account? <b>Start Free Trial →</b></Link>
+        <Link href="/signup" className="lgNavLink"><span className="lgNavPre">No account?&nbsp;</span><b>Start Free Trial →</b></Link>
       </nav>
 
       <div className="lgMain">

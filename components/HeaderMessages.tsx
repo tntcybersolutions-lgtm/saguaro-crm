@@ -139,7 +139,7 @@ export default function HeaderMessages() {
             style={{
               display: 'flex', alignItems: 'center', gap: 10,
               padding: '9px 16px',
-              background: `linear-gradient(${t.bg}, ${t.bg}), #000000`,
+              background: `linear-gradient(${t.bg}, ${t.bg}), var(--bg-base)`,
               borderTop: `1px solid ${t.border}`,
               color: t.fg,
               fontSize: 13, fontWeight: 600,

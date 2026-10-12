@@ -9,24 +9,8 @@
  * line-item table with correct columns, right-aligned gold money, zebra rows,
  * repeated headers on every page, dark totals row, and Page X of Y footers.
  */
-import { PDFDocument, PDFPage, rgb } from 'pdf-lib';
-import {
-  brandDoc,
-  resolveBrandingValues,
-  drawBrandHeader,
-  drawKpiBand,
-  stampFooters,
-  money,
-  INK,
-  PAPER,
-  MIST,
-  SLATE,
-  HAIRLINE,
-  GOLD,
-  type BrandKit,
-  type BrandingValues,
-  type KpiItem,
-} from './report-theme';
+import { PDFDocument, PDFPage } from 'pdf-lib';
+import { brandDoc, resolveBrandingValues, drawBrandHeader, drawKpiBand, stampFooters, money, INK, PAPER, MIST, SLATE, HAIRLINE, GOLD, type BrandKit, type BrandingValues, type KpiItem, type ThemeRGB, DOC } from './report-theme';
 
 export type ExecColumnType = 'text' | 'currency' | 'date' | 'number' | 'badge' | 'percent';
 
@@ -56,7 +40,7 @@ const CONTENT_W = PAGE_W - M * 2;
 const ROW_H = 16;
 const COL_HDR_H = 20;
 const FOOTER_CLEAR = 44; // keep clear of the stamped footer
-const GOLD_TEXT = rgb(0.72, 0.46, 0.03); // legible gold on paper
+const GOLD_TEXT = DOC.accent; // legible gold on paper
 
 const NUMERIC_TYPES = new Set<ExecColumnType>(['currency', 'number', 'percent']);
 
@@ -143,7 +127,7 @@ export async function generateExecReportPdf(input: ExecReportInput): Promise<Uin
   const colWidths = weights.map((w) => Math.floor((w / weightSum) * CONTENT_W));
 
   const drawCellText = (page: PDFPage, text: string, colIdx: number, x: number, y: number, opts: {
-    size: number; bold?: boolean; color?: ReturnType<typeof rgb>;
+    size: number; bold?: boolean; color?: ThemeRGB;
   }) => {
     const font = opts.bold ? kit.bold : kit.reg;
     const w = colWidths[colIdx];

@@ -16,7 +16,7 @@ import Suggest from '@/components/ui/Suggest';
 import SelectionOptions from '@/components/selections/SelectionOptions';
 
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)';
-const GREEN='#4ADE80',RED='var(--danger)',ORANGE='var(--warning)',BLUE='var(--info)';
+const GREEN='var(--success)',RED='var(--danger)',ORANGE='var(--warning)',BLUE='var(--info)';
 
 const CATEGORIES=['Flooring','Countertops','Cabinets','Plumbing Fixtures','Lighting',
   'Appliances','Tile','Paint','Hardware','Other'];

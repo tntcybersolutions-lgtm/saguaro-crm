@@ -8,7 +8,7 @@ import { UsersThree, ChatCircleDots, Buildings, ClockCounterClockwise, ListCheck
 
 /* ── palette ──────────────────────────────────────────── */
 const GOLD='var(--brand-primary)',BG='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',TEXT='var(--text-primary)',DIM='var(--text-secondary)';
-const GREEN='#4ADE80',RED='var(--danger)',AMBER='var(--warning)',BLUE='var(--brand-primary)',PURPLE='var(--warning)';
+const GREEN='var(--success)',RED='var(--danger)',AMBER='var(--warning)',BLUE='var(--brand-primary)',PURPLE='var(--warning)';
 
 /* ── types ────────────────────────────────────────────── */
 type PortalStatus = 'active' | 'pending' | 'disabled';
