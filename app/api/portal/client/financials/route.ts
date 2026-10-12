@@ -18,9 +18,12 @@ export async function GET(req: NextRequest) {
     // Invoices
     const { data: invoiceRows } = await db
       .from('invoices')
-      .select('id, invoice_number, amount, total, due_date, status, created_at')
+      .select('id, invoice_number, amount, total, paid_amount, due_date, status, created_at')
       .eq('project_id', projectId)
       .eq('tenant_id', tenantId)
+      // Only what the owner owes. Vendor / sub bills (direction 'payable') are
+      // the GC's costs — the owner never sees them.
+      .eq('direction', 'receivable')
       .order('created_at', { ascending: false });
 
     const invoices = (invoiceRows || []).map((inv: any) => ({

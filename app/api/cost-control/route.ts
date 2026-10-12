@@ -50,7 +50,8 @@ export async function GET(req: NextRequest) {
         .eq('project_id', projectId).eq('tenant_id', user.tenantId),
       db.from('invoices')
         .select('cost_code, amount, total, status')
-        .eq('project_id', projectId).eq('tenant_id', user.tenantId),
+        .eq('project_id', projectId).eq('tenant_id', user.tenantId)
+        .eq('direction', 'payable'), // a cost is what the GC pays, never what it bills the owner
       db.from('cost_reports')
         .select('id, report_date, lines')
         .eq('project_id', projectId).eq('tenant_id', user.tenantId)
