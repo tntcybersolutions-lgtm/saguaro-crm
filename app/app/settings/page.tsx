@@ -39,6 +39,7 @@ const SETTINGS_SECTIONS = [
     items: [
       { icon: CreditCard, label: 'Subscription & Plan', desc: 'Your plan, invoices and add-ons', href: '/app/billing', highlight: true },
       { icon: CreditCard, label: 'Get Paid Online', desc: 'Owners pay your invoices by card or bank — connect your Stripe account', href: '/app/settings/payments' },
+      { icon: Clock, label: 'Calendar Sync', desc: 'Schedule tasks, inspections and meetings in Google, Outlook or iPhone Calendar', href: '/app/settings/calendar' },
       { icon: UploadSimple, label: 'Import From Another App', desc: 'Bring jobs, customers and leads over from Buildertrend, JobTread, CoConstruct or a spreadsheet', href: '/app/settings/import' },
       { icon: DeviceMobile, label: 'Get the iOS App', desc: 'Download Saguaro Control Systems for iPhone & iPad on Apple TestFlight. On Android, open it in Chrome.', href: '/get-the-app' },
       { icon: Bell, label: 'Notifications', desc: 'Configure email and push notification preferences', href: '/app/notification-settings' },
