@@ -34,7 +34,10 @@ const pw = require('playwright');
 if (!process.env.E2E_EMAIL || !process.env.E2E_PASSWORD) throw new Error('no login');
 const JOB = 'ZZ AUDIT Walk Job 10101543';
 const STAMP = Date.now().toString().slice(-6);
-const R = { site: SITE, startedAt: new Date().toISOString(), ids: {}, screens: {}, states: {}, checks: [], error: null };
+/* tools/probe-accept-only.txt: comma list of screen keys for a re-check run (empty = all). */
+const ONLY = (() => { try { return fs.readFileSync(path.join(ROOT, 'tools/probe-accept-only.txt'), 'utf8').split(/[,\s]+/).filter(Boolean); } catch { return []; } })();
+const want = (k) => !ONLY.length || ONLY.includes(k);
+const R = { site: SITE, only: ONLY, startedAt: new Date().toISOString(), ids: {}, screens: {}, states: {}, checks: [], error: null };
 
 const check = (name, ok, detail) => {
   R.checks.push({ name, ok: !!ok, detail: detail == null ? undefined : String(detail).slice(0, 200) });
@@ -143,31 +146,42 @@ try {
   const jobs = (await (await api.get(`${SITE}/api/projects?limit=1000&fields=id,name`)).json()).projects || [];
   R.ids.projectId = jobs.find((j) => j.name === JOB)?.id || null;
   const P = `/app/projects/${R.ids.projectId}`;
-  const inv = await firstLink(gc, '/app/invoicing', '/app/invoicing/').catch(() => null);
-  const pa = await firstLink(gc, `${P}/pay-apps`, `${P}/pay-apps/`).catch(() => null);
+  // Existing ZZ AUDIT test records, found by name through the app's own APIs.
+  const zzJobs = jobs.filter((j) => /^zz audit/i.test(j.name || ''));
+  let pa = null;
+  for (const j of zzJobs) {
+    const list = (await (await api.get(`${SITE}/api/pay-apps/list?projectId=${j.id}`)).json().catch(() => ({}))).payApps || [];
+    if (list.length) { pa = { id: list[0].id, project: j.id, zz: true }; break; }
+  }
+  const invs = (await (await api.get(`${SITE}/api/invoices/list`)).json().catch(() => ({}))).invoices || [];
+  const zzIds = new Set(zzJobs.map((j) => j.id));
+  const invRow = invs.find((i) => /^zz audit/i.test(i.vendor_name || '') || zzIds.has(i.project_id));
+  const inv = invRow ? { id: invRow.id, zz: true } : null;
   const dl = await firstLink(gc, '/app/daily-logs', '/app/daily-logs/').catch(() => null);
   R.ids.invoice = inv && { ok: true, zz: inv.zz }; R.ids.payApp = pa && { ok: true, zz: pa.zz }; R.ids.dailyLog = dl && { ok: true, zz: dl.zz };
   // The deal-page test record: created here, removed at the end through the UI.
-  const created = await api.post(`${SITE}/api/leads`, { data: {
+  const created = !want('deal') ? null : await api.post(`${SITE}/api/leads`, { data: {
     company_name: `ZZ AUDIT Accept ${STAMP}`, contact_name: 'ZZ AUDIT Contact', contact_email: 'delivered@resend.dev',
     stage: 'New', estimated_value: 50000, probability: 20, source: 'Referral', project_type: 'Commercial', location: 'Phoenix, AZ',
     next_action: 'ZZ AUDIT first step',
   } });
-  const cj = await created.json().catch(() => ({}));
+  const cj = created ? await created.json().catch(() => ({})) : {};
   const leadId = cj.lead?.id || cj.id || cj.data?.id || null;
-  check('test lead created (POST /api/leads)', created.ok() && !!leadId, created.status());
+  if (created) check('test lead created (POST /api/leads)', created.ok() && !!leadId, created.status());
   console.log('ids', JSON.stringify({ projectId: !!R.ids.projectId, invoice: R.ids.invoice, payApp: R.ids.payApp, dailyLog: R.ids.dailyLog, lead: !!leadId }));
 
   const SCREENS = [
     ['home', '/app'], ['my-work', '/app/my-work'], ['jobs', '/app/projects'],
     ['job', `${P}/overview`], ['deal', leadId ? `/app/leads/${leadId}` : null],
     ['command-center', '/app/command-center'], ['compliance', '/app/compliance'], ['prequalification', '/app/prequalification'],
-    ['invoice', inv ? `/app/invoicing/${inv.id}` : null], ['pay-app', pa ? `${P}/pay-apps/${pa.id}` : null],
+    ['invoice', inv ? `/app/invoicing/${inv.id}` : null], ['pay-app', pa ? `/app/projects/${pa.project}/pay-apps/${pa.id}` : null],
+    ['people', '/app/people'],
     ['daily-log', dl ? `/app/daily-logs/${dl.id}` : null],
   ];
 
   /* ── 1. Screens at both widths ── */
   for (const [key, url] of SCREENS) {
+    if (!want(key)) continue;
     if (!url) { R.screens[key] = { blocked: 'no record' }; console.log(key, 'BLOCKED no record'); continue; }
     for (const [w, page] of [['1440', gc], ['390', ph]]) {
       try { await screen(page, key, url, w); }
@@ -179,6 +193,7 @@ try {
   }
 
   /* ── 2. Shared component states (once, 1440 on Jobs) ── */
+  if (want('jobs')) {
   await open(gc, '/app/projects');
   const st = {};
   const style = (loc) => loc.evaluate((el) => { const cs = getComputedStyle(el); return { bg: cs.backgroundColor, fg: cs.color, border: cs.borderColor, outline: `${cs.outlineStyle} ${cs.outlineColor} ${cs.outlineWidth}`, opacity: cs.opacity }; });
@@ -201,10 +216,11 @@ try {
   check('keyboard focus ring is #38BDF8', /56, 189, 248/.test(st.primaryFocus?.outline || ''), st.primaryFocus?.outline);
   check('selected stage chip is the selected-control yellow', /255, 224, 0/.test(st.chipSelected?.bg || ''), st.chipSelected?.bg);
   check('unselected chip hover changes', st.chipHover && st.chipHover.bg !== st.chip?.bg, st.chipHover?.bg);
+  }
 
   /* ── 3. Interactions ── */
   // Jobs: filter, search, open.
-  for (const [w, page] of [['1440', gc], ['390', ph]]) {
+  for (const [w, page] of want('jobs') ? [['1440', gc], ['390', ph]] : []) {
     await open(page, '/app/projects');
     const rows = () => page.locator('li[data-tour="project-card"]').count();
     const all = await rows();
@@ -228,7 +244,7 @@ try {
   }
 
   // Job page: tool tile, Details, steps, Archive dialog (cancelled).
-  if (R.ids.projectId) {
+  if (R.ids.projectId && want('job')) {
     await open(gc, `${P}/overview`);
     const tiles = gc.locator('.fl-list[data-grid] a.fl-tool');
     const nTiles = await tiles.count();
@@ -263,7 +279,7 @@ try {
   }
 
   // Home and My Work: tabs, a row opens.
-  for (const [key, url] of [['home', '/app'], ['my-work', '/app/my-work']]) {
+  for (const [key, url] of [['home', '/app'], ['my-work', '/app/my-work']].filter(([k]) => want(k))) {
     await open(gc, url);
     const tabs = gc.locator('.fl-tabs [role=tab]');
     if ((await tabs.count()) > 1) {
@@ -283,14 +299,41 @@ try {
   }
 
   // Command Center: a tile opens.
-  await open(gc, '/app/command-center');
-  if (new URL(gc.url()).pathname.startsWith('/app/command-center')) {
+  if (want('command-center')) await open(gc, '/app/command-center');
+  if (!want('command-center')) { /* skipped in a re-check run */ } else if (new URL(gc.url()).pathname.startsWith('/app/command-center')) {
     const cc = gc.locator('a:has(.pmBtn)').first();
     if (await cc.count()) { const href = await cc.getAttribute('href'); await cc.click(); await gc.waitForTimeout(1500); check('command center: a tool tile opens', new URL(gc.url()).pathname === href, href); }
   } else check('command center: reachable', false, `redirected to ${new URL(gc.url()).pathname} (feature not on for this company)`);
 
+  // Re-check of the fixes in #152.
+  if (want('compliance')) {
+    await open(gc, '/app/compliance');
+    const pill = await gc.evaluate(() => { const els = [...document.querySelectorAll('.main-content-area span')].filter((e) => /^(Missing|None on File|Non-Compliant|On File|Compliant|Pending)$/.test((e.textContent || '').trim())); return els.map((e) => parseFloat(getComputedStyle(e).fontSize)); });
+    check('compliance: status pills are at least 12px', pill.length > 0 && pill.every((f) => f >= 12), `${pill.length} pills, min ${Math.min(...pill)}`);
+    const chips = gc.locator('button.k-chip');
+    const sel = await gc.locator('button.k-chip[aria-pressed="true"]').first().evaluate((el) => getComputedStyle(el).backgroundColor).catch(() => '');
+    check('compliance: selected filter chip is solid yellow (selected control)', /255, 224, 0/.test(sel), sel);
+    if ((await chips.count()) > 1) { await chips.nth(1).click(); await gc.waitForTimeout(300); check('compliance: a chip click selects it', (await chips.nth(1).getAttribute('aria-pressed')) === 'true'); }
+    await shot(gc, 'recheck-compliance-1440');
+  }
+  if (want('prequalification')) {
+    await open(gc, '/app/prequalification');
+    const bad = await gc.evaluate(() => [...document.querySelectorAll('button, a')].filter((el) => { const cs = getComputedStyle(el); const b = (cs.backgroundColor.match(/[\d.]+/g) || []).map(Number); const c = (cs.color.match(/[\d.]+/g) || []).map(Number); return b[0] > 240 && b[1] > 210 && b[2] < 60 && c[0] > 200 && c[1] > 200 && c[2] > 200; }).map((el) => (el.textContent || '').trim().slice(0, 24)));
+    check('prequalification: no white text on a yellow button', bad.length === 0, bad.join(', '));
+  }
+  if (want('people')) {
+    await open(gc, '/app/people');
+    const rolesTab = gc.getByRole('tab', { name: /roles/i }).first();
+    if (await rolesTab.count()) { await rolesTab.click(); await gc.waitForTimeout(800); }
+    const dots = await gc.evaluate(() => [...new Set([...document.querySelectorAll('.main-content-area div, .main-content-area span')].filter((e) => { const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return r.width >= 6 && r.width <= 16 && Math.abs(r.width - r.height) < 1 && parseFloat(cs.borderTopLeftRadius) >= r.width / 2 - 1 && cs.backgroundColor !== 'rgba(0, 0, 0, 0)'; }).map((e) => getComputedStyle(e).backgroundColor))]);
+    const ok = ['rgb(56, 189, 248)', 'rgb(74, 222, 128)', 'rgb(251, 191, 36)', 'rgb(248, 113, 113)', 'rgb(248, 250, 252)', 'rgb(203, 213, 225)', 'rgb(148, 163, 184)'];
+    const off = dots.filter((d) => !ok.includes(d));
+    check('people: role colour dots are approved values', dots.length > 0 && off.length <= 1, `${dots.length} colours; off-palette: ${off.join(' ') || 'none'}`);
+    await shot(gc, 'recheck-people-roles-1440');
+  }
+
   // Deal page on the test lead: stage, activity, edit — each reopened.
-  if (leadId) {
+  if (leadId && want('deal')) {
     const D = `/app/leads/${leadId}`;
     const read = async () => (await (await api.get(`${SITE}/api/leads/${leadId}`)).json().catch(() => ({})));
     const leadOf = (j) => j.lead || j.data || j;
@@ -308,6 +351,8 @@ try {
     await gc.getByLabel('Activity description').fill(note);
     await gc.locator('form.k-toolbar button[type=submit]').click(); await gc.waitForTimeout(1800);
     await shot(gc, 'deal-after-activity-1440');
+    const lines = await gc.locator('.stc .stc-ic').count();
+    check('deal: one save = one line in the status box', lines === 1, `${lines} lines`);
     const ovNow = await measure(gc, false);
     check('deal: status box does not overlap another overlay after a save', ovNow.overlaps.length === 0, ovNow.overlaps.join('; ') || `${ovNow.fixed.length} fixed`);
     await open(gc, D);
@@ -322,6 +367,8 @@ try {
     await open(gc, D);
     const L = leadOf(await read());
     const callout = await gc.locator('.k-callout-title').first().textContent().catch(() => '');
+    const statText = await gc.locator('.k-stat').filter({ hasText: 'Next Action' }).first().textContent().catch(() => '');
+    check('deal: Next Action with no date says so (not "Scheduled")', /No date set/.test(statText || '') && !/Scheduled/.test(statText || ''), (statText || '').replace(/\s+/g, ' ').slice(0, 60));
     check('deal: Edit Deal saves and every edited field reopens', L.next_action === step && Number(L.estimated_value) === 12345 && (callout || '').includes(step), `${L.next_action === step} ${L.estimated_value} ${(callout || '').slice(0, 40)}`);
     await shot(gc, 'deal-reopened-1440', true);
     // Phone: the same record after the edits, plus a save to see the status box on a phone.
