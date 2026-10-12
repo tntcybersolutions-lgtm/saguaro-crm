@@ -16,13 +16,13 @@ import Suggest from '@/components/ui/Suggest';
 import SelectionOptions from '@/components/selections/SelectionOptions';
 
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)';
-const GREEN='#4ADE80',RED='var(--danger)',ORANGE='var(--warning)',BLUE='var(--brand-primary)';
+const GREEN='#4ADE80',RED='var(--danger)',ORANGE='var(--warning)',BLUE='var(--info)';
 
 const CATEGORIES=['Flooring','Countertops','Cabinets','Plumbing Fixtures','Lighting',
   'Appliances','Tile','Paint','Hardware','Other'];
 const STATUSES=['pending','selected','ordered','delivered','installed'];
 const STATUS_COLORS:Record<string,string>={
-  pending:ORANGE,selected:BLUE,ordered:GOLD,delivered:'var(--warning)',installed:GREEN,
+  pending:ORANGE,selected:BLUE,ordered:BLUE,delivered:'var(--warning)',installed:GREEN,
 };
 const STATUS_LABELS:Record<string,string>={
   pending:'Pending',selected:'Selected',ordered:'Ordered',
@@ -228,7 +228,7 @@ export default function SelectionsPage(){
   }
 
   return(
-    <div style={{display:'flex',height:'100%',minHeight:0,position:'relative'}}>
+    <div className="selRoot" style={{display:'flex',height:'100%',minHeight:0,position:'relative'}}>
       {toast&&(
         <div style={{position:'fixed',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:99999,
           padding:'12px 20px',borderRadius:8,color:'var(--text-primary)',fontWeight:700,fontSize:14,pointerEvents:'none',
@@ -248,7 +248,8 @@ export default function SelectionsPage(){
             accent="Selections"
             subtitle="Materials, finishes & owner approvals"
             actions={
-              <button onClick={openCreate} style={goldButtonStyle} className="pmBtn">
+              /* While the New/Edit panel is open its submit is the one yellow action. */
+              <button onClick={openCreate} style={mode==='create'||mode==='edit'?ghostButtonStyle:goldButtonStyle} className="pmBtn">
                 <Plus size={15} weight="bold" /> Add Selection
               </button>
             }
@@ -357,7 +358,7 @@ export default function SelectionsPage(){
                         style={{background:isSel?'var(--brand-primary-08)':RAISED,
                           border:`1px solid ${isSel?GOLD:BORDER}`,borderRadius:10,
                           padding:'12px 16px',cursor:'pointer',transition:'all .15s'}}
-                        onMouseEnter={e=>{if(!isSel)e.currentTarget.style.borderColor='var(--brand-primary-35)';}}
+                        onMouseEnter={e=>{if(!isSel)e.currentTarget.style.borderColor='var(--border-strong)';}}
                         onMouseLeave={e=>{if(!isSel)e.currentTarget.style.borderColor=BORDER;}}>
                         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10}}>
                           <div style={{flex:1,minWidth:0}}>
@@ -525,11 +526,11 @@ export default function SelectionsPage(){
                     rows={3} style={{...inp,resize:'vertical',lineHeight:1.5}}
                     placeholder="Additional notes…"/>
                 </Field>
-                <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <div style={{display:'flex',alignItems:'center',gap:10,minHeight:44}}>
                   <input type="checkbox" id="oa" checked={form.owner_approved}
                     onChange={e=>setForm(f=>({...f,owner_approved:e.target.checked}))}
                     style={{width:16,height:16,cursor:'pointer'}}/>
-                  <label htmlFor="oa" style={{fontSize:13,color:TEXT,cursor:'pointer'}}>Owner Approved</label>
+                  <label htmlFor="oa" style={{display:'flex',alignItems:'center',flex:1,minHeight:44,fontSize:13,color:TEXT,cursor:'pointer'}}>Owner Approved</label>
                 </div>
                 <div style={{...HINT,marginTop:-8}}>Leave unchecked to track the decision{ctx?.project?.ownerName?` with ${ctx.project.ownerName}`:''} — approval can be recorded later from the detail view.</div>
                 {mode==='create'&&(
@@ -639,7 +640,7 @@ export default function SelectionsPage(){
         </div>
       )}
       <UnsavedGuardModal guard={guard} />
-      <style dangerouslySetInnerHTML={{__html:'@media (max-width: 760px){.selPanel{position:fixed;inset:0;width:100%!important;z-index:170;border-left:none!important;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}}'}}/>
+      <style dangerouslySetInnerHTML={{__html:'@media (max-width: 760px){.selPanel{position:fixed;inset:0;width:100%!important;z-index:170;border-left:none!important;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}}@media (max-width: 767px){.selRoot input:not([type=checkbox]):not([type=radio]){min-height:44px}}'}}/>
     </div>
   );
 }

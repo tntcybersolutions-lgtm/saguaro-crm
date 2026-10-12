@@ -11,7 +11,7 @@ import { useParams } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
 import { SkeletonKPI, SkeletonRow } from '@/components/ui/Skeleton';
 import { WarningCircle, CalendarBlank, X, Plus, TrendUp, CheckCircle, Clock, ListChecks, Flag } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, FlowStrip, AutoChip, goldButtonStyle, goldOutlineButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, FlowStrip, AutoChip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
 import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 import { moduleAccent } from '@/lib/module-identity';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
@@ -21,7 +21,7 @@ import { localDay } from '@/lib/calendar-day';
 import { baselineSummary, finishVariance, varianceLabel } from '@/lib/schedule-baseline';
 
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)';
-const GREEN='var(--success)',RED='var(--danger)',ORANGE='var(--warning)',BLUE='var(--brand-primary)';
+const GREEN='var(--success)',RED='var(--danger)',ORANGE='var(--warning)';
 
 const STATUSES=['not_started','in_progress','completed','delayed','on_hold'];
 const STATUS_LABELS:Record<string,string>={
@@ -493,7 +493,8 @@ export default function SchedulePage(){
                   <Flag size={15} weight="bold" /> {baselining?'Setting…':tasks.some((t:any)=>t.baseline_end)?'Reset Baseline':'Set Baseline'}
                 </button>
               )}
-              <button onClick={openCreate} style={goldButtonStyle} className="pmBtn">
+              {/* While the New/Edit Task panel is open its submit is the one yellow action. */}
+              <button onClick={openCreate} style={mode==='create'||mode==='edit'?ghostButtonStyle:goldButtonStyle} className="pmBtn">
                 <Plus size={15} weight="bold" /> Add Task
               </button>
             </>}
@@ -677,7 +678,7 @@ export default function SchedulePage(){
                 <>
                   <button onClick={()=>openEdit(selected)}
                     style={{padding:'6px 14px',background:'var(--bg-surface-2)',
-                      border:`1px solid color-mix(in srgb, ${BLUE} 27%, transparent)`,borderRadius:6,
+                      border:'1px solid var(--border-default)',borderRadius:6,
                       color: 'var(--text-primary)',fontSize:12,fontWeight:700,cursor:'pointer'}}>
                     Edit
                   </button>
@@ -871,7 +872,7 @@ export default function SchedulePage(){
                     {[25,50,75,100].map(pct=>(
                       <button key={pct} onClick={()=>updatePct(selected,pct)}
                         style={{flex:1,padding:'6px 0',background:'var(--bg-surface-2)',
-                          border:`1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)`,borderRadius:6,
+                          border:'1px solid var(--border-default)',borderRadius:6,
                           color: 'var(--text-primary)',fontSize:12,fontWeight:700,cursor:'pointer'}}>
                         {pct}%
                       </button>
