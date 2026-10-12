@@ -183,7 +183,7 @@ on a phone the actions drop under the title and wrap.
 
 **Forms:** `PageShell width="form"` / `PremiumSurface width="form"` keep the
 header full width and hold the body to `--form-max`, left-aligned (Settings).
-A single block can use `.k-form-col` (Settings → Import, Delete account).
+Delete account uses `PremiumSurface width="form"`; a single block can use `.k-form-col` (Settings → Import).
 
 **Flat list kit:** `.fl-brief`, `.fl-strip`, `.fl-sec`, `.fl-list`, `.fl-tabs`
 and `.fl-empty` carry no side margin; rows keep their own 16px inner padding.

@@ -1064,6 +1064,7 @@ input:-webkit-autofill:focus {
    actions on the right. No eyebrow, no hero art. */
 .k-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2) var(--sp-4); }
 .sag-app .k-title, .k-title { font-size: var(--fs-title); font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; color: var(--title-page); }
+@media (max-width: 767px) { .sag-app .k-title, .k-title { font-size: var(--fs-title-m); } }
 .k-sub { margin-top: 4px; font-size: 14px; line-height: 1.5; color: var(--text-secondary); max-width: 760px; }
 .k-head-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
 
@@ -1241,7 +1242,6 @@ select.k-select { padding-right: 36px; }
 .k-card-flush > .k-empty { padding: 14px 16px; }
 
 @media (max-width: 720px) {
-  .sag-app .k-title, .k-title { font-size: var(--fs-title-m); }
   .k-form-grid { grid-template-columns: minmax(0, 1fr); }
   .k-search { flex: 1 1 100%; }
   /* Row actions stay reachable while the rest of the row scrolls sideways. */

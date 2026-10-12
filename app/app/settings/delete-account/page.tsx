@@ -88,8 +88,8 @@ export default function DeleteAccountPage() {
   }
 
   return (
-    <PremiumSurface>
-      <div className="k-form-col">
+    <PremiumSurface width="form">
+      <div>
         <Link
           href="/app/settings"
           style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: DIM, textDecoration: 'none', fontSize: 13, marginBottom: 16 }}
