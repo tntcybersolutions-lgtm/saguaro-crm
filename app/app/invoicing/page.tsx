@@ -122,7 +122,8 @@ const CSS = `
 .ivList .k-table th:first-child { background: var(--bg-solid-2); z-index: 3; }
 .ivList .k-table tbody tr:hover td:first-child { background: linear-gradient(rgba(255,255,255,0.03), rgba(255,255,255,0.03)), var(--bg-solid); }
 .ivNum { color: var(--text-primary); font-weight: 800; white-space: nowrap; }
-.ivClamp { display: inline-block; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+/* Clamped cells keep the register inside 1440 at 14px; the full value is the title. */
+.ivClamp { display: inline-block; max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
 .ivMoney { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .ivTotal { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 800; color: var(--text-primary); }
 .ivLate { color: var(--status-overdue); font-weight: 700; }
@@ -412,8 +413,8 @@ export default function InvoicingPage() {
   const columns: Column<Invoice>[] = [
     { key: 'invoice_number', header: 'Invoice #', accessor: i => i.invoice_number || '', width: 140, render: i => <span className="ivNum">{i.invoice_number || <span className="ivMuted">No number</span>}</span> },
     { key: 'vendor_name', header: 'Bill To', accessor: i => (i.vendor_name || '').toLowerCase(), render: i => <span className="ivClamp" style={{ color: 'var(--text-primary)', fontWeight: 600 }} title={i.vendor_name}>{i.vendor_name || '—'}</span> },
-    { key: 'project', phone: 'hide', header: 'Project', accessor: i => projectName(i.project_id).toLowerCase(), render: i => projectName(i.project_id) ? <span className="ivClamp" style={{ maxWidth: 200 }} title={projectName(i.project_id)}>{projectName(i.project_id)}</span> : <span className="ivMuted">—</span> },
-    { key: 'description', phone: 'hide', header: 'Description', accessor: i => (i.description || '').toLowerCase(), render: i => i.description ? <span className="ivClamp" title={i.description}>{i.description}</span> : <span className="ivMuted">—</span> },
+    { key: 'project', phone: 'hide', header: 'Project', accessor: i => projectName(i.project_id).toLowerCase(), render: i => projectName(i.project_id) ? <span className="ivClamp" style={{ maxWidth: 170 }} title={projectName(i.project_id)}>{projectName(i.project_id)}</span> : <span className="ivMuted">—</span> },
+    { key: 'description', phone: 'hide', header: 'Description', accessor: i => (i.description || '').toLowerCase(), render: i => i.description ? <span className="ivClamp" style={{ maxWidth: 170 }} title={i.description}>{i.description}</span> : <span className="ivMuted">—</span> },
     { key: 'total', phone: 'show', header: 'Total', accessor: i => effectiveTotal(i), align: 'right', render: i => <span className="ivTotal">{fmtUsd(effectiveTotal(i))}</span> },
     { key: 'due_date', phone: 'show', header: 'Due', accessor: i => i.due_date || '', render: i => <span className={isOverdue(i) ? 'ivLate' : undefined}>{fmtDate(i.due_date)}</span> },
     { key: 'status', phone: 'show', header: 'Status', accessor: i => STATUS_RANK[statusKey(i.status)] ?? 9, render: i => {
