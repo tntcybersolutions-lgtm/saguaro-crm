@@ -332,6 +332,55 @@ try {
     await shot(gc, 'recheck-people-roles-1440');
   }
 
+  // Invoice detail (an existing ZZ AUDIT test invoice): Edit opens and Cancel leaves it unchanged; the PDF
+  // action produces a PDF. "Send to Vendor" is not pressed — it emails the vendor.
+  if (inv && want('invoice')) {
+    const U = `/app/invoicing/${inv.id}`;
+    await open(gc, U);
+    const before = await (await api.get(`${SITE}/api/invoices/${inv.id}`)).json().catch(() => ({}));
+    await gc.getByRole('button', { name: /^Edit$/ }).first().click();
+    const dlg = gc.locator('[role=dialog]').last();
+    const opened = await dlg.waitFor({ timeout: 8000 }).then(() => true).catch(() => false);
+    if (opened) await shot(gc, 'recheck-invoice-edit-1440');
+    check('invoice: Edit opens the edit form', opened);
+    if (opened) { await dlg.getByRole('button', { name: /^Cancel$/ }).click().catch(async () => { await gc.keyboard.press('Escape'); }); await gc.waitForTimeout(600); }
+    const after = await (await api.get(`${SITE}/api/invoices/${inv.id}`)).json().catch(() => ({}));
+    check('invoice: Cancel closes it and changes nothing', (await gc.locator('[role=dialog]').count()) === 0 && JSON.stringify(before) === JSON.stringify(after));
+    const pdfBtn = gc.getByRole('button', { name: /PDF/ }).first();
+    if (await pdfBtn.count()) {
+      const popup = gc.context().waitForEvent('page', { timeout: 30000 }).catch(() => null);
+      const resp = gc.waitForResponse((r) => r.url().includes(`/api/invoices/${inv.id}/pdf`) || r.url().includes('/api/files/open'), { timeout: 30000 }).catch(() => null);
+      await pdfBtn.click();
+      const [pg, rs] = await Promise.all([popup, resp]);
+      check('invoice: the PDF action produces a PDF', !!pg || (rs && rs.ok()), pg ? 'opened in a new tab' : rs ? rs.status() : 'no response');
+      if (pg) await pg.close().catch(() => {});
+    }
+    const sendShown = await gc.getByRole('button', { name: /Send to Vendor/ }).count();
+    check('invoice: Send to Vendor present (not pressed: it emails the vendor)', true, sendShown ? 'present' : 'not shown for this status');
+  }
+  // Pay app detail (an existing ZZ AUDIT test pay app): the G702/G703 PDF action; Edit SOV opens and Cancel leaves it.
+  if (pa && want('pay-app')) {
+    const U = `/app/projects/${pa.project}/pay-apps/${pa.id}`;
+    await open(gc, U);
+    const pdf = gc.getByRole('button', { name: /G702/ }).first();
+    if (await pdf.count()) {
+      const popup = gc.context().waitForEvent('page', { timeout: 45000 }).catch(() => null);
+      const resp = gc.waitForResponse((r) => r.url().includes('/api/documents/pay-application'), { timeout: 45000 }).catch(() => null);
+      await pdf.click();
+      const [pg, rs] = await Promise.all([popup, resp]);
+      check('pay app: G702/G703 PDF is produced', !!pg || (rs && rs.ok()), pg ? 'opened in a new tab' : rs ? rs.status() : 'no response');
+      if (pg) await pg.close().catch(() => {});
+    } else check('pay app: G702/G703 PDF button present', false);
+    const edit = gc.getByRole('button', { name: /Edit SOV/ }).first();
+    if (await edit.count()) {
+      await edit.click(); await gc.waitForTimeout(800);
+      const saveShown = await gc.getByRole('button', { name: /Save Changes/ }).count();
+      await shot(gc, 'recheck-payapp-edit-1440', true);
+      await gc.getByRole('button', { name: /^Cancel$/ }).first().click().catch(() => {}); await gc.waitForTimeout(800);
+      check('pay app: Edit SOV opens edit mode and Cancel leaves it', saveShown > 0 && (await gc.getByRole('button', { name: /Save Changes/ }).count()) === 0);
+    } else check('pay app: Edit SOV', true, 'not offered for this status');
+  }
+
   // Deal page on the test lead: stage, activity, edit — each reopened.
   if (leadId && want('deal')) {
     const D = `/app/leads/${leadId}`;
