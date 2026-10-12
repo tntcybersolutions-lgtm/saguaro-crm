@@ -269,7 +269,7 @@ export default function EstimatePage() {
                           <td style={{ padding: '9px 14px', color: T.white, fontWeight: 600, minWidth: 180 }}>
                             {r.name}
                             <div style={{ marginTop: 5, height: 4, width: '100%', maxWidth: 220, borderRadius: 999, background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
-                              <div style={{ height: '100%', width: Math.min(100, pctOfMat) + '%', borderRadius: 999, background: 'linear-gradient(90deg,var(--brand-primary),var(--brand-primary-strong))' }} />
+                              <div style={{ height: '100%', width: Math.min(100, pctOfMat) + '%', borderRadius: 999, background: 'var(--brand-primary)' }} />
                             </div>
                           </td>
                           <td style={{ padding: '9px 14px', textAlign: 'right', color: T.muted }}>{r.count}</td>

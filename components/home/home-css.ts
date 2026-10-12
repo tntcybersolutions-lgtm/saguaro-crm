@@ -44,7 +44,7 @@ export const HOME_CSS = `
 .fh-chip{position:relative;display:inline-flex;align-items:center;gap:5px;height:30px;max-width:150px;padding:0 10px;border:1px solid var(--sg-border);border-radius:15px;background:transparent;color:var(--sg-text);font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}
 .fh-chip::after{content:'';position:absolute;inset:-9px -3px}
 .fh-chip>span{overflow:hidden;text-overflow:ellipsis;min-width:0}
-.fh-chip i{font-style:normal;color:var(--sg-text-3);font-size:11px;flex:none}
+.fh-chip i{font-style:normal;color:var(--sg-text-3);font-size: 12px;flex:none}
 .fh-chip[aria-expanded=true]{border-color:var(--sg-border-strong)}
 .fh-chip:focus-visible,.fh-plus:focus-visible,.fh-menu button:focus-visible,.fh-menu a:focus-visible{outline:2px solid var(--brand-primary);outline-offset:2px}
 .fh-chip select{position:absolute;z-index:1;inset:-9px -3px;width:calc(100% + 6px);height:calc(100% + 18px);opacity:0;cursor:pointer;font-size:16px;appearance:none;-webkit-appearance:none;border:0}

@@ -189,7 +189,7 @@ export default function FleetPage() {
   };
 
   const inp: React.CSSProperties = { background: DARK, border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, padding: '9px 11px', fontSize: 14, width: '100%' };
-  const btn: React.CSSProperties = { background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', color: 'var(--on-brand)', fontWeight: 700, border: 'none', borderRadius: 8, padding: '9px 16px', cursor: 'pointer', fontSize: 14 };
+  const btn: React.CSSProperties = { background: 'var(--brand-primary)', color: 'var(--on-brand)', fontWeight: 700, border: 'none', borderRadius: 8, padding: '9px 16px', cursor: 'pointer', fontSize: 14 };
 
   return (
     <>
@@ -241,7 +241,7 @@ export default function FleetPage() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</span>
-                      {a.status && a.status !== 'active' ? <span style={{ flexShrink: 0, fontSize: 9.5, fontWeight: 800, padding: '1px 7px', borderRadius: 999, background: 'color-mix(in srgb, var(--warning) 14%, transparent)', border: '1px solid color-mix(in srgb, var(--warning) 40%, transparent)', color: 'var(--warning)' }}>{STATUS_LABEL[a.status] || a.status}</span> : null}
+                      {a.status && a.status !== 'active' ? <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 800, padding: '1px 7px', borderRadius: 999, background: 'color-mix(in srgb, var(--warning) 14%, transparent)', border: '1px solid color-mix(in srgb, var(--warning) 40%, transparent)', color: 'var(--warning)' }}>{STATUS_LABEL[a.status] || a.status}</span> : null}
                     </div>
                     <div style={{ color: DIM, fontSize: 13 }}>{[a.license_plate, a.odometer ? `${Math.round(a.odometer).toLocaleString()} ${a.odometer_unit || 'mi'}` : null].filter(Boolean).join(' · ') || a.category || a.type}</div>
                     {issue ? <div style={{ fontSize: 12, color: h.overall === 'overdue' ? RED : AMBER, marginTop: 2 }}>{issue}</div> : null}

@@ -623,7 +623,7 @@ export default function TeamPage(){
             {assignments.map(a=>(
               <span key={a.id} style={{display:'inline-flex',alignItems:'center',gap:7,padding:'5px 8px 5px 12px',borderRadius:999,background:WORK.soft,border:`1px solid ${WORK.ring}`,color:WORK.hex,fontSize:12,fontWeight:700}}>
                 {a.assignee_name || members.find(m=>m.userId===a.assignee_user_id)?.name || 'Member'}
-                <span style={{fontSize:9.5,fontWeight:800,opacity:.8}}>{assignRoleLabel(a.role)}</span>
+                <span style={{fontSize: 12,fontWeight:800,opacity:.8}}>{assignRoleLabel(a.role)}</span>
                 <button onClick={()=>endAssignment(a)} title="End this assignment" aria-label={`End ${assignRoleLabel(a.role)} assignment`} style={{display:'inline-flex',alignItems:'center',justifyContent:'center',width:16,height:16,padding:0,borderRadius:999,background:WORK.soft,border:'none',color:WORK.hex,cursor:'pointer'}}><X size={10} weight="bold"/></button>
               </span>
             ))}

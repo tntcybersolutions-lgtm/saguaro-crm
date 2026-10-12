@@ -66,7 +66,7 @@ function defaultPerms(): Record<string, boolean> {
 
 /* ── shared inline styles ─────────────────────────────── */
 const card: React.CSSProperties = { background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: 20 };
-const btnGold: React.CSSProperties = { padding: '9px 20px', background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', color: 'var(--on-brand)', borderRadius: 8, fontWeight: 800, fontSize: 13, border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' };
+const btnGold: React.CSSProperties = { padding: '9px 20px', background: 'var(--brand-primary)', color: 'var(--on-brand)', borderRadius: 8, fontWeight: 800, fontSize: 13, border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' };
 const btnOutline: React.CSSProperties = { padding: '8px 16px', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, cursor: 'pointer' };
 const btnDanger: React.CSSProperties = { padding: '8px 16px', background: 'transparent', border: `1px solid ${RED}`, borderRadius: 8, color: RED, fontSize: 13, cursor: 'pointer' };
 const inputS: React.CSSProperties = { padding: '9px 14px', background: 'var(--bg-surface-2)', border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const };
@@ -1134,7 +1134,7 @@ export default function ClientPortalPage() {
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '8px 0', borderBottom: i < sorted.length - 1 ? `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` : 'none' }}>
                 <div style={{ width: 140, fontWeight: 600, fontSize: 13, color: TEXT }}>{item.name}</div>
                 <div style={{ flex: 1, height: 8, borderRadius: 4, background: BG, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${Math.round(item.count / max * 100)}%`, background: `linear-gradient(90deg,${GOLD},${AMBER})`, borderRadius: 4, transition: 'width .4s' }} />
+                  <div style={{ height: '100%', width: `${Math.round(item.count / max * 100)}%`, background: `var(--brand-primary)`, borderRadius: 4, transition: 'width .4s' }} />
                 </div>
                 <div style={{ width: 60, textAlign: 'right', fontSize: 12, color: DIM }}>{item.count} actions</div>
               </div>

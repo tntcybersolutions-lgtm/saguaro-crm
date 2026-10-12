@@ -744,7 +744,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
   };
 
   const inp: React.CSSProperties = { background: 'var(--bg-base)', border: `1px solid ${LINE}`, borderRadius: 8, color: TEXT, padding: '9px 11px', fontSize: 14, width: '100%' };
-  const btn: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'linear-gradient(135deg,var(--brand-primary),var(--brand-primary-strong))', color: 'var(--on-brand)', fontWeight: 800, border: 'none', borderRadius: 10, padding: '10px 18px', cursor: 'pointer', fontSize: 14 };
+  const btn: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'var(--brand-primary)', color: 'var(--on-brand)', fontWeight: 800, border: 'none', borderRadius: 10, padding: '10px 18px', cursor: 'pointer', fontSize: 14 };
   const pillBtn: React.CSSProperties = { background: 'transparent', color: TEXT, border: `1px solid ${LINE}`, borderRadius: 20, padding: '5px 12px', cursor: 'pointer', fontWeight: 700, fontSize: 12 };
   const wizRow: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', width: '100%', border: `1px solid ${LINE}`, background: BG, borderRadius: 12, padding: '13px 14px', cursor: 'pointer' };
   const wizRowT: React.CSSProperties = { fontWeight: 800, fontSize: 14, color: TEXT };
@@ -920,7 +920,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                   </div>
                 ));
               })()}
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 12px', fontSize: 14, fontWeight: 800, color: 'var(--on-brand)', background: 'linear-gradient(135deg,var(--brand-primary-strong),var(--brand-primary))' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 12px', fontSize: 14, fontWeight: 800, color: 'var(--on-brand)', background: 'var(--brand-primary)' }}>
                 <span>Sell Price</span><span style={{ fontVariantNumeric: 'tabular-nums' }}>{usd(r.sellCents)}</span>
               </div>
             </div>
@@ -951,7 +951,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
           )}
 
           <button onClick={exportEstimate} disabled={!conditions.length} title="Cover, executive summary, division rollup, full line items, transparent markup stack & basis of estimate"
-            style={{ marginTop: 14, width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, border: 'none', borderRadius: 10, padding: '13px', cursor: conditions.length ? 'pointer' : 'not-allowed', opacity: conditions.length ? 1 : 0.5, fontWeight: 800, fontSize: 15, color: 'var(--on-brand)', background: 'linear-gradient(135deg,var(--brand-primary-strong),var(--brand-primary))', boxShadow: '0 6px 18px var(--brand-primary-35)' }}>
+            style={{ marginTop: 14, width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, border: 'none', borderRadius: 10, padding: '13px', cursor: conditions.length ? 'pointer' : 'not-allowed', opacity: conditions.length ? 1 : 0.5, fontWeight: 800, fontSize: 15, color: 'var(--on-brand)', background: 'var(--brand-primary)', boxShadow: '0 6px 18px var(--brand-primary-35)' }}>
             <Ic name="documents" s={20} k="estpdf" />Client Estimate PDF
             <span style={{ fontWeight: 600, fontSize: 12, color: 'rgba(13,17,23,0.7)' }}>· one-tap proposal</span>
           </button>
@@ -989,7 +989,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             </button>
             {chainBusy && (
               <div style={{ marginTop: 9 }}>
-                <div style={{ height: 7, borderRadius: 4, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}><div style={{ height: '100%', width: `${chainPct}%`, background: 'linear-gradient(90deg,var(--brand-primary-strong),var(--brand-primary))', transition: 'width .3s ease' }} /></div>
+                <div style={{ height: 7, borderRadius: 4, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}><div style={{ height: '100%', width: `${chainPct}%`, background: 'var(--brand-primary)', transition: 'width .3s ease' }} /></div>
                 {chainMsg && <div style={{ fontSize: 12, color: DIM, marginTop: 5 }}>{chainMsg}</div>}
               </div>
             )}
@@ -1263,7 +1263,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         </SectionCard>
 
         {/* sanity */}
-        {r.sanity.map((f, i) => <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 8, padding: '9px 12px', borderRadius: 8, border: `1px solid ${f.level === 'warn' ? 'var(--brand-primary-35)' : LINE}`, background: PANEL, fontSize: 13, color: f.level === 'warn' ? GOLD : DIM }}>{f.level === 'warn' ? <Ic name="warnTri" s={17} k={`sn${i}`} /> : <span style={{ width: 7, height: 7, borderRadius: 4, background: DIM, flexShrink: 0 }} />}{f.message}</div>)}
+        {r.sanity.map((f, i) => <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 8, padding: '9px 12px', borderRadius: 8, border: `1px solid ${f.level === 'warn' ? 'var(--brand-primary-35)' : LINE}`, background: PANEL, fontSize: 13, color: f.level === 'warn' ? 'var(--warning)' : DIM }}>{f.level === 'warn' ? <Ic name="warnTri" s={17} k={`sn${i}`} /> : <span style={{ width: 7, height: 7, borderRadius: 4, background: DIM, flexShrink: 0 }} />}{f.message}</div>)}
 
         {/* divisions */}
         {r.byDivision.length > 0 && (
@@ -1463,7 +1463,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                       <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>{confidence.reasons[0]}</div>
                     </div>
                   </div>
-                  <button onClick={exportEstimate} disabled={!conditions.length} style={{ marginTop: 12, width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9, border: 'none', borderRadius: 10, padding: '13px', cursor: conditions.length ? 'pointer' : 'not-allowed', opacity: conditions.length ? 1 : 0.5, fontWeight: 800, fontSize: 15, color: 'var(--on-brand)', background: 'linear-gradient(135deg,var(--brand-primary-strong),var(--brand-primary))' }}>
+                  <button onClick={exportEstimate} disabled={!conditions.length} style={{ marginTop: 12, width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9, border: 'none', borderRadius: 10, padding: '13px', cursor: conditions.length ? 'pointer' : 'not-allowed', opacity: conditions.length ? 1 : 0.5, fontWeight: 800, fontSize: 15, color: 'var(--on-brand)', background: 'var(--brand-primary)' }}>
                     <Receipt size={19} weight="bold" color="var(--on-brand)" />Client Estimate PDF
                   </button>
                 </div>
@@ -1495,7 +1495,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                 const url = w === 'A' ? revA : revB;
                 return (
                   <label key={w} style={{ border: `1.5px dashed ${url ? GOLD : LINE}`, borderRadius: 12, minHeight: 170, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', overflow: 'hidden', background: PANEL, padding: 8 }}>
-                    <div style={{ fontSize: 12, fontWeight: 800, color: url ? GOLD : DIM, marginBottom: 6 }}>{w === 'A' ? 'Old Revision' : 'New Revision'}</div>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: url ? 'var(--link)' : DIM, marginBottom: 6 }}>{w === 'A' ? 'Old Revision' : 'New Revision'}</div>
                     {url ? <img src={url} alt={w} style={{ maxWidth: '100%', maxHeight: 230, display: 'block', borderRadius: 6 }} /> : <span style={{ color: DIM, fontSize: 13 }}>Click to upload a sheet image</span>}
                     <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { pickRev(w, e.target.files?.[0]); (e.target as HTMLInputElement).value = ''; }} />
                   </label>

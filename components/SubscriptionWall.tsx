@@ -172,7 +172,7 @@ export default function SubscriptionWall({ children }: { children: React.ReactNo
                   <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8 }}>Most Popular</div>
                 )}
                 <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 4 }}>{plan.name}</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: plan.popular ? GOLD : TEXT, marginBottom: 4 }}>{plan.price}<span style={{ fontSize: 12, fontWeight: 400, color: DIM }}>/mo</span></div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: TEXT, marginBottom: 4 }}>{plan.price}<span style={{ fontSize: 12, fontWeight: 400, color: DIM }}>/mo</span></div>
                 <div style={{ fontSize: 12, color: DIM, marginBottom: 16 }}>{plan.sub}</div>
                 <Link href={`/app/billing?plan=${plan.id}`} style={{
                   display: 'block', padding: '10px 0', borderRadius: 10,

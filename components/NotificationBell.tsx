@@ -183,7 +183,7 @@ export default function NotificationBell() {
                       </div>
                       <div style={{ fontSize: 12, color: DIM, marginTop: 3, lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 260 }}>{n.body}</div>
                     </div>
-                    {!n.read && <div style={{ width: 7, height: 7, borderRadius: '50%', background: GOLD, flexShrink: 0, marginTop: 4 }} />}
+                    {!n.read && <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--info)', flexShrink: 0, marginTop: 4 }} />}
                   </div>
                 </div>
               ))

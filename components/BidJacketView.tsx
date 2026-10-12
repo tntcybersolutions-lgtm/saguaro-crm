@@ -513,7 +513,7 @@ export default function BidJacketView({
                           </span>
                         )}
                       </span>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: d.url ? GOLD : DIM, flexShrink: 0 }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: d.url ? 'var(--link)' : DIM, flexShrink: 0 }}>
                         {d.url ? 'Open' : 'No file'}
                       </span>
                     </button>

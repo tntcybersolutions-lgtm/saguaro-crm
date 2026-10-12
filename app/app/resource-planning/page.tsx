@@ -47,7 +47,7 @@ type Tab = 'grid' | 'timeline' | 'people' | 'staffing' | 'utilization' | 'availa
 /* ===== STYLE HELPERS ===== */
 function btn(primary?: boolean): React.CSSProperties {
   return primary
-    ? { padding: '8px 18px', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 7, color: 'var(--on-brand)', fontSize: 13, fontWeight: 800, cursor: 'pointer', transition: 'opacity .15s' }
+    ? { padding: '8px 18px', background: `var(--brand-primary)`, border: 'none', borderRadius: 7, color: 'var(--on-brand)', fontSize: 13, fontWeight: 800, cursor: 'pointer', transition: 'opacity .15s' }
     : { padding: '8px 18px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 7, color: DIM, fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'opacity .15s' };
 }
 function inp(): React.CSSProperties {
@@ -956,7 +956,7 @@ export default function ResourcePlanningPage() {
                   <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{fmtMoney(f.cost)}</span>
                 </div>
                 <div style={{ width: '100%', height: 18, borderRadius: 4, background: `color-mix(in srgb, ${BORDER} 19%, transparent)`, overflow: 'hidden' }}>
-                  <div style={{ width: `${pct}%`, height: '100%', borderRadius: 4, background: `linear-gradient(90deg,${GOLD},${AMBER})` }} />
+                  <div style={{ width: `${pct}%`, height: '100%', borderRadius: 4, background: `var(--brand-primary)` }} />
                 </div>
               </div>;
             })}
@@ -998,7 +998,7 @@ export default function ResourcePlanningPage() {
               <td style={{ padding: '10px 12px', color: DIM }}>{pc.hours > 0 ? fmtMoney(pc.labor / pc.hours) + '/hr' : '-'}</td>
               <td style={{ padding: '10px 12px', width: 200 }}>
                 <div style={{ width: '100%', height: 12, borderRadius: 4, background: `color-mix(in srgb, ${BORDER} 19%, transparent)`, overflow: 'hidden' }}>
-                  <div style={{ width: `${pc.labor / maxCost * 100}%`, height: '100%', borderRadius: 4, background: `linear-gradient(90deg,${GOLD},${AMBER})` }} />
+                  <div style={{ width: `${pc.labor / maxCost * 100}%`, height: '100%', borderRadius: 4, background: `var(--brand-primary)` }} />
                 </div>
               </td>
             </tr>)}</tbody>

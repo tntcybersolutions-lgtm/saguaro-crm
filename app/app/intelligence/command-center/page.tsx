@@ -103,13 +103,10 @@ function getStatusColor(status: string): string {
   return DIM;
 }
 
-function getTypeColor(type: string): string {
-  const t = type.toLowerCase();
-  if (t.includes('commercial')) return BLUE;
-  if (t.includes('residential')) return GREEN;
-  if (t.includes('industrial')) return AMBER;
-  if (t.includes('infrastructure') || t.includes('civil')) return 'var(--warning)';
-  return GOLD;
+/* A project type is a category, not a status, so its tag is neutral
+   (DESIGN_SYSTEM.md §1: colour only means status). */
+function getTypeColor(_type: string): string {
+  return 'var(--text-secondary)';
 }
 
 function getBudgetVariance(original: number, actual: number): { pct: number; color: string; label: string } {

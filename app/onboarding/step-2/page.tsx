@@ -186,7 +186,7 @@ export default function OnboardingStep2() {
             <button
               onClick={handleNext}
               disabled={loading}
-              style={{marginTop:8,padding:'14px 0',background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,border:'none',borderRadius:10,color:'#101722',fontSize:15,fontWeight:800,cursor:loading?'wait':'pointer',opacity:loading?.7:1}}
+              style={{marginTop:8,padding:'14px 0',background:`var(--brand-primary)`,border:'none',borderRadius:10,color:'#101722',fontSize:15,fontWeight:800,cursor:loading?'wait':'pointer',opacity:loading?.7:1}}
             >
               {loading?'Saving…':'Continue to First Project →'}
             </button>

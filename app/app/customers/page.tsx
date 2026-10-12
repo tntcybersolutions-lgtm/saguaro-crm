@@ -821,7 +821,7 @@ export default function CustomersPage() {
                           <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
                           {p.status && <div style={{ fontSize: 12, color: DIM, textTransform: 'capitalize' }}>{p.status}</div>}
                         </div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: p.value > 0 ? GOLD : DIM, whiteSpace: 'nowrap' }}>{p.value > 0 ? fmt(p.value) : '—'}</div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: p.value > 0 ? 'var(--text-primary)' : DIM, whiteSpace: 'nowrap' }}>{p.value > 0 ? fmt(p.value) : '—'}</div>
                       </div>
                     ))}
                   </div>

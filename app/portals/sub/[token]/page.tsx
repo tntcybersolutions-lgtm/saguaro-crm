@@ -30,7 +30,7 @@ type Tab='dashboard'|'photos'|'punch'|'daily'|'schedule'|'rfis'|'radio'|'payapps
 
 /* ── Shared styles ── */
 const card=(extra?:React.CSSProperties):React.CSSProperties=>({background:RAISED,backgroundImage:'linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015))',border:`1px solid ${BORDER}`,borderRadius:12,padding:20,boxShadow:'0 4px 14px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.06)',...extra});
-const btnS=(color:string,small?:boolean):React.CSSProperties=>({background:color,backgroundImage:color===GOLD?'linear-gradient(180deg,var(--brand-primary-strong),var(--brand-primary) 60%,var(--brand-primary-hover))':'linear-gradient(180deg,rgba(255,255,255,0.16),rgba(255,255,255,0) 55%)',color:color===GOLD?'#101722':'#fff',border:'none',borderRadius:9,padding:small?'6px 14px':'11px 20px',fontWeight:800,fontSize:small?12:14,cursor:'pointer',boxShadow:color===GOLD?'0 4px 14px color-mix(in srgb, var(--brand-primary) 28%, transparent), inset 0 1px 0 rgba(255,255,255,0.35)':'0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)'});
+const btnS=(color:string,small?:boolean):React.CSSProperties=>({background:color,backgroundImage:color===GOLD?'var(--brand-primary)':'linear-gradient(180deg,rgba(255,255,255,0.16),rgba(255,255,255,0) 55%)',color:color===GOLD?'#101722':'#fff',border:'none',borderRadius:9,padding:small?'6px 14px':'11px 20px',fontWeight:800,fontSize:small?12:14,cursor:'pointer',boxShadow:color===GOLD?'0 4px 14px color-mix(in srgb, var(--brand-primary) 28%, transparent), inset 0 1px 0 rgba(255,255,255,0.35)':'0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)'});
 const labelS:React.CSSProperties={display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:5};
 /* 16px text: iOS zooms the page into any input set smaller. 44px: a fingertip target. */
 const inputS:React.CSSProperties={width:'100%',background:DARK,border:`1px solid ${BORDER}`,borderRadius:7,padding:'10px 14px',color:TEXT,fontSize:16,minHeight:44,outline:'none',boxSizing:'border-box'};
@@ -45,7 +45,7 @@ const PANELS:ReadonlyArray<readonly [string,string]>=[
 ];
 
 function Stars({rating,max=5,size=18}:{rating:number;max?:number;size?:number}){
-  return <span style={{display:'inline-flex',gap:2}}>{Array.from({length:max},(_,i)=><span key={i} style={{fontSize:size,color:i<Math.round(rating)?GOLD:BORDER}}>{i<Math.round(rating)?'\u2605':'\u2606'}</span>)}</span>;
+  return <span style={{display:'inline-flex',gap:2}}>{Array.from({length:max},(_,i)=><span key={i} style={{fontSize:size,color:i<Math.round(rating)?'var(--warning)':BORDER}}>{i<Math.round(rating)?'\u2605':'\u2606'}</span>)}</span>;
 }
 
 function ProgressBar({value,color=GOLD,height=8}:{value:number;color?:string;height?:number}){
@@ -1369,7 +1369,7 @@ export default function SubPortal(){
               return(
                 <div key={m.id} style={{display:'flex',justifyContent:mine?'flex-end':'flex-start',marginBottom:10,...(radioFlashIds.has(m.id)?{animation:'sgRadioFlash 2.4s ease-out',borderRadius:10}:{})}}>
                   <div style={{maxWidth:'80%',padding:'10px 14px',borderRadius:12,background:mine?`color-mix(in srgb, ${BLUE} 13%, transparent)`:RAISED,border:`1px solid ${mine?`color-mix(in srgb, ${BLUE} 27%, transparent)`:BORDER}`,borderBottomRightRadius:mine?2:12,borderBottomLeftRadius:mine?12:2}}>
-                    <div style={{fontSize:12,fontWeight:700,color:mine?GOLD:DIM,marginBottom:4}}>{mine?'You':(m.sender_name||'Unknown')}{m.patched_from?<span style={{marginLeft:6,fontSize:12,fontWeight:700,color: 'var(--text-primary)',background:`color-mix(in srgb, ${GOLD} 8%, transparent)`,border:`1px solid color-mix(in srgb, ${GOLD} 27%, transparent)`,borderRadius:10,padding:'1px 7px',letterSpacing:.5,verticalAlign:'middle'}}>Via Patched Channel</span>:null}</div>
+                    <div style={{fontSize:12,fontWeight:700,color:mine?'var(--text-primary)':DIM,marginBottom:4}}>{mine?'You':(m.sender_name||'Unknown')}{m.patched_from?<span style={{marginLeft:6,fontSize:12,fontWeight:700,color: 'var(--text-primary)',background:`color-mix(in srgb, ${GOLD} 8%, transparent)`,border:`1px solid color-mix(in srgb, ${GOLD} 27%, transparent)`,borderRadius:10,padding:'1px 7px',letterSpacing:.5,verticalAlign:'middle'}}>Via Patched Channel</span>:null}</div>
                     {m.kind==='voice'?(
                       <div>
                         <RadioWave seed={String(m.id||'')} color={mine?GOLD:DIM}/>

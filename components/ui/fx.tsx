@@ -33,7 +33,7 @@ export const GOLD_HI = 'var(--brand-primary-strong)';
 
 /** The gold → light-gold shimmer gradient used for accent words + shine. */
 export const GOLD_TEXT_GRADIENT =
-  'linear-gradient(var(--brand-primary), var(--brand-primary))'; /* solid — no shimmer */
+  'var(--brand-primary)'; /* solid — no shimmer */
 
 /* ── Shared stylesheet ─────────────────────────────────────────────────
  * Injected once per page via <UiFx/> (which <ModuleHero> and <PremiumEmpty>

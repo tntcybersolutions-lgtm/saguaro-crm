@@ -679,7 +679,7 @@ export default function DocumentsPage() {
                             exist, so Sub Name and Type rendered blank on every row. */}
                         <td style={{ padding: '12px 16px', color: TEXT, fontWeight: 600 }}>{waiverParty(lw)}</td>
                         <td style={{ padding: '12px 16px', color: DIM }}>{waiverTypeLabel(lw.waiver_type ?? lw.type)}</td>
-                        <td style={{ padding: '12px 16px', color: payAppNo(lw.pay_application_id) ? GOLD : DIM, fontWeight: 700 }}>{payAppNo(lw.pay_application_id) ?? '—'}</td>
+                        <td style={{ padding: '12px 16px', color: payAppNo(lw.pay_application_id) ? 'var(--text-primary)' : DIM, fontWeight: 700 }}>{payAppNo(lw.pay_application_id) ?? '—'}</td>
                         <td style={{ padding: '12px 16px', color: TEXT }}>{fmt(lw.amount)}</td>
                         <td style={{ padding: '12px 16px', color: DIM }}>{fmtDay(lw.through_date ?? lw.throughDate) ?? '—'}</td>
                         <td style={{ padding: '12px 16px' }}><Badge label={lw.status} color={sc.color} bg={sc.bg} /></td>
@@ -892,7 +892,7 @@ export default function DocumentsPage() {
                   <div style={{ height: 8, background: 'rgba(255,255,255,0.1)', borderRadius: 4 }}>
                     <div style={{
                       height: '100%', width: `${pct}%`,
-                      background: `linear-gradient(90deg,${GOLD},var(--brand-primary-strong))`,
+                      background: `var(--brand-primary)`,
                       borderRadius: 4, transition: 'width .3s',
                     }} />
                   </div>

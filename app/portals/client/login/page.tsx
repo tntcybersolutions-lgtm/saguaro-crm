@@ -61,7 +61,7 @@ export default function ClientPortalLogin() {
       <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', marginBottom: 40 }}>
         <img src="/logo-full.jpg" alt="Saguaro" style={{ height: 38, borderRadius: 4 }} />
         <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-          <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: '-0.01em', background: `linear-gradient(90deg,${GOLD},var(--brand-primary-strong))`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Saguaro</span>
+          <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: '-0.01em', background: `var(--brand-primary)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Saguaro</span>
           <span style={{ fontSize: 12, color: DIM, fontWeight: 600 }}>Control Systems</span>
         </span>
       </Link>
@@ -152,7 +152,7 @@ export default function ClientPortalLogin() {
                 width: '100%',
                 marginTop: 16,
                 padding: '13px',
-                background: loading || !email.trim() ? 'color-mix(in srgb, var(--brand-primary) 40%, transparent)' : `linear-gradient(135deg, ${GOLD}, var(--brand-primary-hover))`,
+                background: loading || !email.trim() ? 'color-mix(in srgb, var(--brand-primary) 40%, transparent)' : `var(--brand-primary)`,
                 border: 'none',
                 borderRadius: 8,
                 color: '#101722',

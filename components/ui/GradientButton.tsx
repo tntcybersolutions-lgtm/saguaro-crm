@@ -87,7 +87,7 @@ export function GradientButton({
       ? {
           color: 'var(--on-brand)',
           border: '1px solid transparent',
-          background: `linear-gradient(180deg, ${GOLD_HI}, ${GOLD} 60%, var(--brand-primary-hover))`,
+          background: `var(--brand-primary)`,
           boxShadow: hover && !isDisabled
             ? `0 8px 22px var(--brand-primary-35), inset 0 1px 0 rgba(255,255,255,0.35)`
             : `0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)`,

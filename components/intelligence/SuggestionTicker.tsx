@@ -182,7 +182,7 @@ function TickerItem({
         }}
       />
       <span style={{
-        fontSize: 9.5, fontWeight: 900, color: c,
+        fontSize: 12, fontWeight: 900, color: c,
         flexShrink: 0,
       }}>
         {s.moduleLabel}

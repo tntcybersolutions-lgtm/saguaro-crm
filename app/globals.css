@@ -1710,3 +1710,16 @@ a.pmFig:hover,button.pmFig:hover,div.pmFig[role=button]:hover{background:rgba(14
    so a phone never gets a squeezed two-column page. */
 .pmSplit { display: grid; grid-template-columns: minmax(0, 1fr) var(--pm-rail, 320px); gap: 16px; align-items: start; }
 @media (max-width: 899px) { .pmSplit { grid-template-columns: minmax(0, 1fr); } }
+
+/* Phone form controls (DESIGN_SYSTEM.md §5): every field in the app and the
+   portals is a 44px target with 16px text on a phone, so iOS never zooms on
+   focus and no hand-rolled input is a 30px sliver. One base rule instead of a
+   minHeight on hundreds of inline-styled inputs. */
+@media (max-width: 767px) {
+  .sag-app input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=hidden]):not([type=color]):not([type=file]),
+  .sag-app select, .sag-app textarea,
+  .pt-root input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=hidden]), .pt-root select, .pt-root textarea {
+    min-height: 44px !important;
+    font-size: 16px !important;
+  }
+}

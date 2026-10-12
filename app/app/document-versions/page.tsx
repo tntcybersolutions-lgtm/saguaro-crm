@@ -853,7 +853,7 @@ export default function DocumentVersionsPage() {
         <Field label="File" required hint="PDF, Word, Excel or image · up to 50 MB">
           <input ref={uploadInputRef} type="file" accept={ACCEPT} style={{ display: 'none' }} onChange={(e) => { setUploadFile(e.target.files?.[0] || null); if (formError) setFormError(''); }} />
           <div className="dvFile">
-            <div className="k-input" aria-live="polite"><FileText size={16} style={{ color: uploadFile ? 'var(--brand-primary)' : 'var(--text-tertiary)', flexShrink: 0 }} />{uploadFile ? `${uploadFile.name} · ${fmtBytes(uploadFile.size)}` : <span className="dvMuted">No file selected</span>}</div>
+            <div className="k-input" aria-live="polite"><FileText size={16} style={{ color: uploadFile ? 'var(--text-primary)' : 'var(--text-tertiary)', flexShrink: 0 }} />{uploadFile ? `${uploadFile.name} · ${fmtBytes(uploadFile.size)}` : <span className="dvMuted">No file selected</span>}</div>
             <Button icon={<UploadSimple size={15} weight="bold" />} onClick={() => uploadInputRef.current?.click()}>Choose</Button>
           </div>
         </Field>

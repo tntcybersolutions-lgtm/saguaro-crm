@@ -288,7 +288,7 @@ export default function AppTopBar({
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px 10px' }}>
                 <UserCircle size={28} weight="fill" style={{ color: 'var(--sg-text-3)', flexShrink: 0 }} />
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: '11.5px', fontWeight: font.weight.bold, color: 'var(--sg-text-3)', lineHeight: 1.4 }}>Signed In As</div>
+                  <div style={{ fontSize: '12px', fontWeight: font.weight.bold, color: 'var(--sg-text-3)', lineHeight: 1.4 }}>Signed In As</div>
                   <div style={{ fontSize: font.size.md, fontWeight: font.weight.semibold, color: 'var(--sg-text)', lineHeight: 1.3 }}>{userInitials}</div>
                 </div>
               </div>
