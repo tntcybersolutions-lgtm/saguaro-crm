@@ -1,6 +1,6 @@
 'use client';
 /**
- * Home finance — the landing page's money picture, in lit glass cards.
+ * Home finance — the landing page's money picture, in calm slate panels.
  *
  *   Company finances · Live                         heading + live dot
  *   8 figures                                       2 across on a phone, 4 on a desk
@@ -22,13 +22,15 @@ import { CHART } from '@/components/charts/shared';
 
 type Strip = StripFigure;
 
-const GOLD = 'var(--brand-primary)';
+// Yellow is for actions and the selected item only, so money lines are blue
+// (billed) and green (collected), and every colour sits beside its label.
+const BLUE = 'var(--info)';
 const GREEN = CHART.green;
 const STAGE_COLOR: Record<string, string> = {
-  Bidding: 'var(--status-under-contract, var(--brand-primary))',
-  Building: 'var(--brand-primary)',
-  Closeout: CHART.blue,
-  Complete: CHART.green,
+  Bidding: 'var(--warning)',
+  Building: 'var(--info)',
+  Closeout: 'var(--text-secondary)',
+  Complete: 'var(--success)',
 };
 
 function money(n: number | null | undefined): string {
@@ -47,6 +49,7 @@ function Kpi({ label, value, sub, href, pct, spark, tone, note }: {
   label: string; value: string; sub?: React.ReactNode; href?: string; pct?: number | null;
   spark?: number[]; tone?: 'good' | 'warn' | 'bad'; note?: string;
 }) {
+  const line = tone === 'good' ? GREEN : BLUE;
   const body = (
     <>
       <span className="hf-k-label">{label}</span>
@@ -59,11 +62,11 @@ function Kpi({ label, value, sub, href, pct, spark, tone, note }: {
             <AreaChart data={spark.map((v, i) => ({ i, v }))} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id={`hfsp-${label.replace(/\W/g, '')}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={GOLD} stopOpacity={0.45} />
-                  <stop offset="100%" stopColor={GOLD} stopOpacity={0} />
+                  <stop offset="0%" stopColor={line} stopOpacity={0.18} />
+                  <stop offset="100%" stopColor={line} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <Area type="monotone" dataKey="v" stroke={GOLD} strokeWidth={1.6} fill={`url(#hfsp-${label.replace(/\W/g, '')})`} isAnimationActive={false} />
+              <Area type="monotone" dataKey="v" stroke={line} strokeWidth={1.6} fill={`url(#hfsp-${label.replace(/\W/g, '')})`} isAnimationActive={false} />
             </AreaChart>
           </ResponsiveContainer>
         </span>
@@ -96,7 +99,7 @@ function CashTip({ active, payload, label }: { active?: boolean; payload?: Array
   return (
     <div className="hf-tip">
       <b>{label}</b>
-      <span><i style={{ background: GOLD }} />Billed {money(v('billed'))}</span>
+      <span><i style={{ background: BLUE }} />Billed {money(v('billed'))}</span>
       <span><i style={{ background: GREEN }} />Collected {money(v('collected'))}</span>
     </div>
   );
@@ -110,7 +113,7 @@ function CashFlow({ f }: { f: FinanceHome }) {
     <Panel
       className="hf-wide"
       title="Cash flow"
-      sub={<>Billed <b className="hf-gold">{money(billed12)}</b> · collected <b className="hf-green">{money(coll12)}</b> in the last 12 months</>}
+      sub={<>Billed <b className="hf-blue">{money(billed12)}</b> · collected <b className="hf-green">{money(coll12)}</b> in the last 12 months</>}
       action={{ label: 'Pay apps', href: '/app/billing/payapp' }}
     >
       {any ? (
@@ -119,14 +122,14 @@ function CashFlow({ f }: { f: FinanceHome }) {
             <AreaChart data={f.monthly} margin={{ top: 8, right: 6, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id="hf-billed" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={GOLD} stopOpacity={0.5} />
-                  <stop offset="100%" stopColor={GOLD} stopOpacity={0.02} />
+                  <stop offset="0%" stopColor={BLUE} stopOpacity={0.22} />
+                  <stop offset="100%" stopColor={BLUE} stopOpacity={0} />
                 </linearGradient>
               </defs>
               <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: CHART.textTertiary, fontSize: 11 }} interval="preserveStartEnd" minTickGap={14} />
               <YAxis tickFormatter={axisMoney} tickLine={false} axisLine={false} width={46} tick={{ fill: CHART.textTertiary, fontSize: 11 }} />
               <Tooltip content={<CashTip />} cursor={{ stroke: 'rgba(255,255,255,0.18)' }} />
-              <Area type="monotone" dataKey="billed" stroke={GOLD} strokeWidth={2.2} fill="url(#hf-billed)" isAnimationActive={false} />
+              <Area type="monotone" dataKey="billed" stroke={BLUE} strokeWidth={2.2} fill="url(#hf-billed)" isAnimationActive={false} />
               {/* Collected is a dashed line over the billed area: when an owner pays every
                   app in the month it was sent, the two match and a second filled area
                   would hide billed completely. */}
@@ -137,7 +140,7 @@ function CashFlow({ f }: { f: FinanceHome }) {
       ) : (
         <p className="hf-empty">No pay apps sent in the last 12 months. Bill your first job from Progress Billing and the chart fills in.</p>
       )}
-      <div className="hf-legend"><span><i style={{ background: GOLD }} />Billed (pay apps sent)</span><span><i style={{ background: GREEN }} />Collected (payments in)</span></div>
+      <div className="hf-legend"><span><i style={{ background: BLUE }} />Billed (pay apps sent)</span><span><i style={{ background: GREEN }} />Collected (payments in)</span></div>
     </Panel>
   );
 }
@@ -267,89 +270,85 @@ export default function HomeFinance({ f, strip, updatedAt, timeZone, refreshing,
   );
 }
 
-/* ── Look: lit glass on black, brand-yellow edge glow ───────────────────── */
+/* ── Look: slate panels on navy; no glow, no gradient fills ──────────────── */
 
 const HF_CSS = `
 .hf{margin:14px 0 6px}
 .hf-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px}
 .hf-head h2{margin:0;font-size:17px;font-weight:800;letter-spacing:0;color:var(--text-primary)}
-.hf-live{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 4px;background:none;border:0;color:var(--text-secondary);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
-.hf-live i{width:8px;height:8px;border-radius:50%;background:${GREEN};box-shadow:0 0 0 0 color-mix(in srgb, ${GREEN} 60%, transparent);animation:hfPulse 2s infinite}
-.hf-live i[data-busy]{background:${GOLD}}
-@keyframes hfPulse{0%{box-shadow:0 0 0 0 color-mix(in srgb, ${GREEN} 55%, transparent)}70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.hf-live{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 4px;background:none;border:0;color:var(--text-secondary);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.hf-live i{width:8px;height:8px;border-radius:50%;background:${GREEN}}
+.hf-live i[data-busy]{background:${BLUE}}
 
-.hf-card{position:relative;display:block;border-radius:16px;text-decoration:none;color:inherit;overflow:hidden;
-  background:linear-gradient(155deg, color-mix(in srgb, ${GOLD} 13%, transparent) 0%, color-mix(in srgb, ${GOLD} 3%, transparent) 38%, rgba(14,15,18,.92) 100%);
-  border:1px solid color-mix(in srgb, ${GOLD} 34%, transparent);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.07), 0 0 22px color-mix(in srgb, ${GOLD} 12%, transparent), 0 14px 34px rgba(0,0,0,.45);
-  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease}
-.hf-card::before{content:'';position:absolute;inset:0 0 auto 0;height:1px;background:linear-gradient(90deg,transparent, color-mix(in srgb, ${GOLD} 80%, transparent),transparent);opacity:.7}
-a.hf-card:hover{transform:translateY(-2px);border-color:color-mix(in srgb, ${GOLD} 60%, transparent);box-shadow:inset 0 1px 0 rgba(255,255,255,.09), 0 0 34px color-mix(in srgb, ${GOLD} 24%, transparent), 0 18px 40px rgba(0,0,0,.5)}
-a.hf-card:focus-visible{outline:2px solid ${GOLD};outline-offset:2px}
+.hf-card{position:relative;display:block;border-radius:12px;text-decoration:none;color:inherit;overflow:hidden;
+  background:var(--bg-surface);border:1px solid var(--border-default);transition:border-color .15s ease, background-color .15s ease}
+a.hf-card:hover{border-color:var(--border-strong);background:var(--bg-row-hover)}
+a.hf-card:focus-visible{outline:2px solid var(--brand-primary);outline-offset:2px}
 
 .hf-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .hf-kpi{display:flex;flex-direction:column;gap:4px;min-height:118px;padding:14px 14px 12px}
-.hf-k-label{font-size:13.5px;font-weight:700;letter-spacing:0;color:var(--text-secondary)}
-.hf-k-val{font-size:26px;line-height:1.1;font-weight:800;letter-spacing:-.01em;color:${GOLD};font-variant-numeric:tabular-nums;text-shadow:0 0 18px color-mix(in srgb, ${GOLD} 45%, transparent)}
-.hf-k-val[data-tone=good]{color:${GREEN};text-shadow:0 0 18px color-mix(in srgb, ${GREEN} 40%, transparent)}
-.hf-k-val[data-tone=warn]{color:var(--status-at-risk, ${CHART.blue});text-shadow:0 0 18px color-mix(in srgb, ${CHART.blue} 40%, transparent)}
-.hf-k-val[data-tone=bad]{color:${CHART.red};text-shadow:0 0 18px color-mix(in srgb, ${CHART.red} 40%, transparent)}
-.hf-k-sub{font-size:12px;line-height:1.35;color:var(--text-secondary);position:relative;z-index:1}
-.hf-k-bar{display:block;height:5px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden;margin:3px 0 1px}
-.hf-k-bar i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg, color-mix(in srgb, ${GOLD} 70%, transparent), ${GOLD});box-shadow:0 0 10px ${GOLD}}
-.hf-k-spark{position:absolute;left:0;right:0;bottom:0;height:42px;opacity:.55;pointer-events:none}
+.hf-k-label{font-size:13px;font-weight:600;letter-spacing:0;color:var(--text-secondary)}
+.hf-k-val{font-size:24px;line-height:1.15;font-weight:800;letter-spacing:-.01em;color:var(--text-primary);font-variant-numeric:tabular-nums}
+.hf-k-val[data-tone=good]{color:var(--success)}
+.hf-k-val[data-tone=warn]{color:var(--warning)}
+.hf-k-val[data-tone=bad]{color:var(--danger)}
+.hf-k-sub{font-size:13px;line-height:1.35;color:var(--text-secondary);position:relative;z-index:1}
+.hf-k-bar{display:block;height:6px;border-radius:3px;background:var(--bg-surface-2);overflow:hidden;margin:3px 0 1px}
+.hf-k-bar i{display:block;height:100%;border-radius:3px;background:${BLUE}}
+.hf-k-spark{position:absolute;left:0;right:0;bottom:0;height:42px;opacity:.6;pointer-events:none}
 
 .hf-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-top:12px}
-.hf-panel{padding:14px 14px 12px}
+.hf-panel{padding:14px 16px 14px}
 .hf-p-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
-.hf-p-head h3{margin:0;font-size:15px;font-weight:800;color:var(--text-primary)}
-.hf-p-head p{margin:3px 0 0;font-size:12.5px;line-height:1.4;color:var(--text-secondary)}
-.hf-p-act{flex:none;display:inline-flex;align-items:center;min-height:44px;margin:-12px -4px -12px 0;padding:0 4px;font-size:13px;font-weight:700;color:${GOLD};text-decoration:none}
-.hf-gold{color:${GOLD}} .hf-green{color:${GREEN}}
+.hf-p-head h3{margin:0;font-size:16px;font-weight:700;color:var(--text-primary)}
+.hf-p-head p{margin:3px 0 0;font-size:13px;line-height:1.4;color:var(--text-secondary)}
+.hf-p-act{flex:none;display:inline-flex;align-items:center;min-height:44px;margin:-12px -4px -12px 0;padding:0 4px;font-size:14px;font-weight:600;color:var(--link);text-decoration:none}
+.hf-p-act:hover{color:var(--link-hover)}
+.hf-blue{color:${BLUE}} .hf-green{color:${GREEN}}
 .hf-chart{height:210px;margin:0 -4px}
-.hf-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:6px;font-size:12px;color:var(--text-secondary)}
+.hf-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:6px;font-size:13px;color:var(--text-secondary)}
 .hf-legend i,.hf-tip i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 .hf-legend span:last-child i{height:0;width:14px;border-radius:0;border-top:2.4px dashed ${GREEN};background:none !important;vertical-align:3px}
-.hf-tip{display:grid;gap:3px;padding:8px 10px;border-radius:10px;background:rgba(10,11,13,.94);border:1px solid color-mix(in srgb, ${GOLD} 40%, transparent);font-size:12px;color:var(--text-primary);box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.hf-tip{display:grid;gap:3px;padding:8px 10px;border-radius:10px;background:var(--bg-surface-2);border:1px solid var(--border-default);font-size:13px;color:var(--text-primary);box-shadow:0 8px 24px rgba(0,0,0,.35)}
 .hf-tip b{font-size:12px;color:var(--text-secondary)}
-.hf-empty{margin:6px 0 2px;font-size:13px;line-height:1.45;color:var(--text-secondary)}
+.hf-empty{margin:6px 0 2px;font-size:14px;line-height:1.45;color:var(--text-secondary)}
 
 .hf-aging{display:grid;gap:9px;margin-top:4px}
-.hf-age{display:grid;grid-template-columns:70px minmax(0,1fr) auto;align-items:center;gap:10px;font-size:12.5px}
+.hf-age{display:grid;grid-template-columns:70px minmax(0,1fr) auto;align-items:center;gap:10px;font-size:13px}
 .hf-age-l{color:var(--text-secondary)}
-.hf-age-bar{height:10px;border-radius:5px;background:rgba(255,255,255,.06);overflow:hidden}
-.hf-age-bar i{display:block;height:100%;border-radius:5px;background:${GOLD};box-shadow:0 0 12px color-mix(in srgb, ${GOLD} 60%, transparent)}
-.hf-age[data-k="61-90"] .hf-age-bar i,.hf-age[data-k="90+"] .hf-age-bar i{background:${CHART.red};box-shadow:0 0 12px color-mix(in srgb, ${CHART.red} 60%, transparent)}
-.hf-age-v{font-weight:800;color:var(--text-primary);font-variant-numeric:tabular-nums;text-align:right;min-width:60px}
-.hf-age-v small{display:block;font-weight:600;font-size:11px;color:var(--text-tertiary)}
+.hf-age-bar{height:10px;border-radius:5px;background:var(--bg-surface-2);overflow:hidden}
+.hf-age-bar i{display:block;height:100%;border-radius:5px;background:${BLUE}}
+.hf-age[data-k="61-90"] .hf-age-bar i,.hf-age[data-k="90+"] .hf-age-bar i{background:var(--danger)}
+.hf-age-v{font-weight:700;color:var(--text-primary);font-variant-numeric:tabular-nums;text-align:right;min-width:60px}
+.hf-age-v small{display:block;font-weight:600;font-size:12px;color:var(--text-tertiary)}
 
 .hf-jobs{list-style:none;margin:0;padding:0;display:grid;gap:2px}
 .hf-jobs a{display:grid;gap:5px;padding:9px 2px;min-height:44px;color:inherit;text-decoration:none;border-radius:10px}
-.hf-jobs a:hover .hf-j-name{color:${GOLD}}
+.hf-jobs a:hover .hf-j-name{color:var(--link)}
 .hf-j-top,.hf-j-meta{display:flex;justify-content:space-between;gap:10px;min-width:0}
 .hf-j-name{font-size:14px;font-weight:700;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hf-j-amt{flex:none;font-size:14px;font-weight:800;color:var(--text-primary);font-variant-numeric:tabular-nums}
-.hf-j-bar{display:block;height:7px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden}
-.hf-j-bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg, color-mix(in srgb, ${GOLD} 55%, transparent), ${GOLD});box-shadow:0 0 12px color-mix(in srgb, ${GOLD} 70%, transparent)}
-.hf-j-meta{font-size:12px;color:var(--text-secondary)}
+.hf-j-amt{flex:none;font-size:14px;font-weight:700;color:var(--text-primary);font-variant-numeric:tabular-nums;text-align:right}
+.hf-j-bar{display:block;height:6px;border-radius:3px;background:var(--bg-surface-2);overflow:hidden}
+.hf-j-bar i{display:block;height:100%;border-radius:3px;background:${BLUE}}
+.hf-j-meta{font-size:13px;color:var(--text-secondary)}
 
 .hf-donut{display:flex;align-items:center;gap:18px}
-.hf-donut-c{position:relative;flex:none;width:140px;height:140px;filter:drop-shadow(0 0 10px color-mix(in srgb, ${GOLD} 30%, transparent))}
+.hf-donut-c{position:relative;flex:none;width:140px;height:140px}
 .hf-donut-mid{position:absolute;inset:0;display:grid;place-content:center;text-align:center;pointer-events:none}
 .hf-donut-mid b{font-size:26px;font-weight:800;color:var(--text-primary);line-height:1}
 .hf-donut-mid small{font-size:12px;color:var(--text-secondary)}
 .hf-stages{list-style:none;margin:0;padding:0;display:grid;gap:8px;flex:1;min-width:0}
-.hf-stages li{display:grid;grid-template-columns:10px minmax(0,1fr) auto;align-items:center;gap:4px 8px;font-size:13px;color:var(--text-primary)}
+.hf-stages li{display:grid;grid-template-columns:10px minmax(0,1fr) auto;align-items:center;gap:4px 8px;font-size:14px;color:var(--text-primary)}
 .hf-stages li i{width:10px;height:10px;border-radius:3px}
 .hf-stages li b{font-variant-numeric:tabular-nums}
-.hf-stages li small{grid-column:2 / 4;margin-top:-4px;font-size:11.5px;color:var(--text-tertiary)}
+.hf-stages li small{grid-column:2 / 4;margin-top:-4px;font-size:12px;color:var(--text-tertiary)}
 
 @media (min-width:768px){
   .hf-kpis{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-  .hf-kpi{min-height:128px;padding:16px}
-  .hf-k-val{font-size:30px}
+  .hf-kpi{min-height:124px;padding:16px}
+  .hf-k-val{font-size:28px}
   .hf-grid{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:14px}
   .hf-chart{height:240px}
 }
-@media (prefers-reduced-motion:reduce){.hf-live i{animation:none}.hf-card{transition:none}}
+@media (prefers-reduced-motion:reduce){.hf-card{transition:none}}
 `;

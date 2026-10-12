@@ -324,7 +324,7 @@ export default function BudgetPage() {
       subtitle="Committed, actual, and forecast by CSI cost code."
       note="This is where the money truth lives"
       actions={<>
-        <HeroButton variant="ghost" onClick={() => setShowAddForm(v => !v)} icon={<Plus size={15} weight="bold" color={CIN.goldHi} />}>Add Line</HeroButton>
+        <HeroButton variant="ghost" onClick={() => setShowAddForm(v => !v)} icon={<Plus size={15} weight="bold" />}>Add Line</HeroButton>
         <HeroButton onClick={exportReport} disabled={exporting || lines.length === 0} icon={<DownloadSimple size={15} weight="bold" color="var(--on-brand)" />}>{exporting ? 'Exporting…' : 'Export'}</HeroButton>
       </>}
     />

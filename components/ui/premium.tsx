@@ -62,7 +62,7 @@ export const PREMIUM_FX = `
 .pmDanger{background:none;color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 50%,transparent);box-shadow:none;transition:background .15s ease}
 .pmDanger:hover{background:color-mix(in srgb,var(--danger) 10%,transparent)}
 .pmDanger:active{transform:none;background:color-mix(in srgb,var(--danger) 16%,transparent)}
-.pmGold:disabled,.pmGhost:disabled,.pmDanger:disabled{opacity:.45;cursor:not-allowed;transform:none;filter:none;box-shadow:none}
+.pmGhost:disabled,.pmDanger:disabled{opacity:.45;cursor:not-allowed;transform:none;filter:none;box-shadow:none}
 .pmHover:active{transform:none}
 .pmTile{transition:background .15s ease}
 /* The flat section, header, figure-strip and empty-state rules live in

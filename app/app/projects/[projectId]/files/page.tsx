@@ -52,9 +52,12 @@ const FL_CSS = `
 .fl-views button[aria-pressed="true"]{background:var(--brand-primary);color:var(--on-brand)}
 .fl-views button:focus-visible{outline:2px solid var(--brand-primary);outline-offset:2px}
 .fl-group{margin-bottom:18px}
-.fl-ghead{display:flex;align-items:center;gap:8px;padding:0 4px 8px;font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--c-orange)}
-.fl-ghead b{font-weight:800;letter-spacing:0;color:var(--text-secondary);background:var(--brand-primary-08);border:1px solid var(--brand-primary-25);border-radius:999px;padding:0 8px;font-size:11px}
-.fl-ghead i{flex:1;height:1px;background:linear-gradient(90deg,var(--brand-primary-25),transparent)}
+.fl-ghead{display:flex;align-items:center;gap:8px;padding:0 4px 8px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-tertiary)}
+.fl-empty{display:grid;grid-template-columns:minmax(0,1fr) 320px;align-items:stretch}
+.fl-empty-aside{border-left:1px solid var(--border-subtle);padding:20px 22px}
+@media (max-width:767px){.fl-empty{grid-template-columns:minmax(0,1fr)}.fl-empty-aside{border-left:0;border-top:1px solid var(--border-subtle);padding:16px}}
+.fl-ghead b{font-weight:700;letter-spacing:0;color:var(--text-secondary);background:var(--bg-surface-2);border:1px solid var(--border-default);border-radius:999px;padding:0 8px;font-size:12px}
+.fl-ghead i{flex:1;height:1px;background:var(--border-subtle)}
 .fl-list{border:1px solid var(--border-default);border-radius:14px;overflow:hidden;background:var(--c-card)}
 .fl-row{display:grid;grid-template-columns:44px minmax(0,1fr) 190px 120px 22px;align-items:center;gap:14px;min-height:64px;padding:10px 16px;border-top:1px solid var(--border-subtle);cursor:pointer;transition:background .15s}
 .fl-row:first-child{border-top:0}
@@ -278,7 +281,7 @@ export default function FilesPage() {
                   compact
                 />
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: ctx ? 'minmax(0, 1fr) 320px' : '1fr', alignItems: 'stretch' }}>
+                <div className={ctx ? 'fl-empty' : undefined}>
                   <PremiumEmpty
                     icon={<Folder size={30} weight="duotone" color={T.gold} />}
                     title="The Project File Room, Empty for Now"
@@ -286,8 +289,8 @@ export default function FilesPage() {
                     compact
                   />
                   {ctx && (
-                    <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', padding: '20px 22px' }}>
-                      <div style={{ fontSize: 10.5, fontWeight: 900, color: 'var(--c-text-2)', marginBottom: 10 }}>What Belongs Here</div>
+                    <div className="fl-empty-aside">
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 10 }}>What Belongs Here</div>
                       <InsightRow label="Drawings & Specs" value="PDF · CAD" />
                       <InsightRow label="Contracts & Permits" value="PDF · DOC" />
                       <InsightRow label="Site Photos & Video" value="Up to 500MB" />

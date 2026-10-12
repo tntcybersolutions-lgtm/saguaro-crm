@@ -773,6 +773,9 @@ export default function AppSidebar({
     // Command Center index highlights only on its own page, not its sub-routes
     // (Rollout, KPIs, Long-Lead, …), which each own their nav item.
     if (href === '/app/command-center') return pathname === '/app/command-center';
+    // A job's Overview is the job's root URL, which every job page starts with —
+    // it is the selected item only on the overview itself.
+    if (/^\/app\/projects\/[^/]+$/.test(href)) return pathname === href || pathname === `${href}/overview`;
     return pathname.startsWith(href);
   }
 

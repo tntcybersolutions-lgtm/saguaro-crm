@@ -1008,9 +1008,7 @@ export default function ClientPortalPage() {
   const renderDashboard = () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       {/* Welcome Banner */}
-      <div style={{ ...cardStyle, background: `linear-gradient(135deg, ${RAISED} 0%, #1c1c1e 100%)`, position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: '50%', background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)' }} />
-        <div style={{ position: 'absolute', bottom: -20, right: 40, width: 80, height: 80, borderRadius: '50%', background: 'color-mix(in srgb, var(--brand-primary) 3%, transparent)' }} />
+      <div style={{ ...cardStyle, position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'relative' }}>
           <div style={{ fontSize: 12, color: GOLD, fontWeight: 700, marginBottom: 6 }}>Welcome to Your Project</div>
           <div style={{ fontSize: 28, fontWeight: 800, color: TEXT, marginBottom: 4 }}>{project.name}</div>

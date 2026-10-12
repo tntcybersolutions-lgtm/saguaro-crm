@@ -23,10 +23,10 @@ const ICON: Record<TickerTone, React.ReactNode> = {
 };
 
 const CSS = `
-.atk { display: flex; align-items: stretch; gap: 0; min-width: 0; width: 100%; max-width: 100%; contain: inline-size; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--brand-primary) 34%, transparent); background: linear-gradient(155deg, color-mix(in srgb, var(--brand-primary) 10%, transparent), rgba(14,15,18,0.94) 45%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 0 22px color-mix(in srgb, var(--brand-primary) 12%, transparent), 0 14px 32px -18px rgba(0,0,0,0.9); overflow: hidden; }
-.atkSum { flex: 0 0 auto; display: flex; align-items: center; gap: 14px; padding: 10px 16px; border-right: 1px solid var(--border-subtle); background: rgba(255,255,255,0.02); }
+.atk { display: flex; align-items: stretch; gap: 0; min-width: 0; width: 100%; max-width: 100%; contain: inline-size; border-radius: 12px; border: 1px solid var(--border-default); background: var(--bg-surface); overflow: hidden; }
+.atkSum { flex: 0 0 auto; display: flex; align-items: center; gap: 14px; padding: 10px 16px; border-right: 1px solid var(--border-subtle); }
 .atkLive { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--c-text-2); }
-.atkLive i { width: 7px; height: 7px; border-radius: 50%; background: var(--c-green); box-shadow: 0 0 0 3px rgba(74,222,128,0.18); }
+.atkLive i { width: 7px; height: 7px; border-radius: 50%; background: var(--c-green); }
 .atkN { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; color: var(--c-text-2); white-space: nowrap; }
 .atkN b { font-size: 17px; font-weight: 900; font-variant-numeric: tabular-nums; }
 .atkN[data-tone="red"] b, .atkN[data-tone="red"] svg { color: var(--c-red); }
@@ -36,9 +36,9 @@ const CSS = `
 .atkN[data-zero="true"] { opacity: .45; }
 button.atkN { min-height: 44px; padding: 0 6px; margin: 0 -6px; background: none; border: 0; border-radius: 10px; font: inherit; cursor: pointer; }
 button.atkN:disabled { cursor: default; }
-button.atkN:not(:disabled):hover { background: rgba(255,255,255,0.06); }
+button.atkN:not(:disabled):hover { background: var(--bg-hover); }
 button.atkN:focus-visible { outline: 2px solid var(--c-yellow); outline-offset: 2px; }
-button.atkN[aria-pressed="true"] { background: rgba(255,255,255,0.08); box-shadow: inset 0 -2px 0 currentColor; }
+button.atkN[aria-pressed="true"] { background: var(--bg-surface-2); box-shadow: inset 0 -2px 0 currentColor; }
 .atkShowAll { flex: 0 0 auto; align-self: center; min-height: 44px; margin: 0 12px 0 4px; padding: 0 14px; border-radius: 999px; border: 1px dashed var(--border-subtle); background: none; color: var(--c-text-2); font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; white-space: nowrap; }
 .atkRail { position: relative; flex: 1 1 auto; min-width: 0; overflow: hidden; display: flex; align-items: center; -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
 .atkTrack { display: flex; align-items: center; gap: 10px; padding: 8px 14px; width: max-content; animation: atk-move var(--atk-dur, 40s) linear infinite; }
@@ -46,8 +46,8 @@ button.atkN[aria-pressed="true"] { background: rgba(255,255,255,0.08); box-shado
 .atkRail:hover .atkTrack, .atkRail:focus-within .atkTrack, .atk[data-paused="true"] .atkTrack { animation-play-state: paused; }
 @keyframes atk-move { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 .atkSet { display: flex; gap: 10px; }
-.atkItem { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-subtle); background: rgba(255,255,255,0.03); color: var(--c-text); font-size: 13.5px; font-weight: 700; text-decoration: none; white-space: nowrap; }
-.atkItem:hover { background: rgba(255,255,255,0.07); }
+.atkItem { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--c-text); font-size: 13.5px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+.atkItem:hover { background: var(--bg-hover); }
 .atkItem:focus-visible { outline: 2px solid var(--c-yellow); outline-offset: 2px; }
 .atkItem > svg:first-child { flex: 0 0 auto; }
 .atkItem[data-tone="red"] { border-color: rgba(248,113,113,0.45); background: rgba(248,113,113,0.08); }

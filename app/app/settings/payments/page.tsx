@@ -115,7 +115,7 @@ export default function PaymentsSettingsPage() {
 
         {status && head && (
           <Card>
-            <div style={{ display: 'grid', gap: 14, padding: '12px 0 4px' }}>
+            <div style={{ display: 'grid', gap: 14, padding: 0 }}>
               <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                 <span aria-hidden style={{ width: 40, height: 40, flexShrink: 0, display: 'grid', placeItems: 'center', borderRadius: 10, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)' }}>
                   {head.tone === 'good' ? <CheckCircle size={22} weight="fill" color={toneColor} /> : head.tone === 'warn' ? <WarningCircle size={22} weight="fill" color={toneColor} /> : <Info size={22} weight="bold" color={toneColor} />}
