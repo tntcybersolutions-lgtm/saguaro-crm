@@ -455,7 +455,7 @@ export default function SafetyPage() {
   const hint: React.CSSProperties = { fontSize: 12, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 };
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       {/* Header */}
       <ModuleHero
         eyebrow={ctx?.project?.name || 'Health & Safety'}

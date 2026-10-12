@@ -275,7 +275,7 @@ export default function HomeFinance({ f, strip, updatedAt, timeZone, refreshing,
 const HF_CSS = `
 .hf{margin:14px 0 6px}
 .hf-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px}
-.hf-head h2{margin:0;font-size:17px;font-weight:800;letter-spacing:0;color:var(--text-primary)}
+.hf-head h2{margin:0;font-size:var(--fs-section);font-weight:700;letter-spacing:-0.005em;color:var(--title-section)}
 .hf-live{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 4px;background:none;border:0;color:var(--text-secondary);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
 .hf-live i{width:8px;height:8px;border-radius:50%;background:${GREEN}}
 .hf-live i[data-busy]{background:${BLUE}}

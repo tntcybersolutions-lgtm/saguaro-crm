@@ -183,14 +183,14 @@ export default function FirewallRulesPage() {
 
   if (loading) {
     return (
-      <PremiumSurface maxWidth={2200}>
+      <PremiumSurface>
         <ModuleSkeleton kpis={4} rows={5} />
       </PremiumSurface>
     );
   }
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       {/* Breadcrumb */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}>
         <Link href={`/app/projects/${projectId}/network`} style={{ color: DIM, fontSize: 12, textDecoration: 'none' }}>Network</Link>

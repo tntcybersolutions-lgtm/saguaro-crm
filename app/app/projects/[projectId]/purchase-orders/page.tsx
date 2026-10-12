@@ -368,7 +368,7 @@ export default function PurchaseOrdersPage() {
   };
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
 
       {/* Header */}
       <ModuleHero

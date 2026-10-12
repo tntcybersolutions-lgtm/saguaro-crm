@@ -142,7 +142,7 @@ export default function SubscriptionWall({ children }: { children: React.ReactNo
         </div>
 
         {/* Heading */}
-        <h1 style={{ fontSize: 28, fontWeight: 800, margin: '0 0 12px', letterSpacing: -0.5, color: TEXT }}>
+        <h1 className="k-title" style={{ margin: '0 0 12px' }}>
           {isPastDue && 'Payment Failed'}
           {isCanceled && 'Subscription Canceled'}
           {isExpiredTrial && 'Your Free Trial Has Ended'}

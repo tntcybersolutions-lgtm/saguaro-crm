@@ -632,7 +632,7 @@ export default function CustomersPage() {
     // No breakdown on file is said as such — not drawn as four zero bars.
     const sb = c.score_breakdown || null;
     return (
-      <PremiumSurface maxWidth={1000}>
+      <PremiumSurface>
         {/* Back button */}
         <button onClick={closeCustomer} className="pmBtn" style={{ ...ghostButtonStyle, marginBottom: 20, minHeight: 44 }}>
           <ArrowLeft size={15} weight="bold" /> Back to Customers
@@ -998,7 +998,7 @@ export default function CustomersPage() {
 
   /* ─── Main Table View ─── */
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       {/* Header */}
       <ModuleHero
         eyebrow="Customer Relationships"

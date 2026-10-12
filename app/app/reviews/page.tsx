@@ -85,10 +85,10 @@ export default function ReviewsPage() {
   }, [saving, name, text, rating, showToast, load]);
 
   return (
-    <div style={{ padding: '28px 32px', maxWidth: 900, margin: '0 auto', color: TEXT }}>
+    <div className="k-frame" style={{ color: TEXT }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 12, marginBottom: 18 }}>
         <div>
-          <div style={{ fontSize: 24, fontWeight: 800 }}>Reviews</div>
+          <h1 className="k-title" style={{ margin: 0 }}>Reviews</h1>
           <div style={{ color: DIM, fontSize: 14, marginTop: 2 }}>What your customers say — reputation, in one place.</div>
         </div>
         {avg != null && (

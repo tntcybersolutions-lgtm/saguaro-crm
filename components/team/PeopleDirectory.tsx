@@ -105,10 +105,10 @@ export function PeopleDirectory() {
 
   return (
     <div style={{ background: DARK, color: TEXT, minHeight: '100vh', fontFamily: 'system-ui,Segoe UI,sans-serif' }}>
-      <div style={{ maxWidth: 1180, margin: '0 auto', padding: '24px 20px 80px' }}>
+      <div className="k-frame">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <UsersThree size={26} weight="fill" color="var(--text-secondary)" />
-          <div style={{ flex: 1 }}><h1 style={{ fontSize: 26, fontWeight: 800, margin: 0 }}>People</h1><p style={{ color: DIM, margin: 0, fontSize: 14 }}>Your crew — records, certifications, assignments, and incident history.</p></div>
+          <div style={{ flex: 1 }}><h1 className="k-title" style={{ margin: 0 }}>People</h1><p style={{ color: DIM, margin: 0, fontSize: 14 }}>Your crew — records, certifications, assignments, and incident history.</p></div>
           <button onClick={() => { setF({ employment_type: 'hourly' }); setSaveErr(null); setAdding(true); }} style={{ ...btn, display: 'inline-flex', alignItems: 'center', gap: 6 }}><Plus size={15} weight="bold" />Add Employee</button>
         </div>
 

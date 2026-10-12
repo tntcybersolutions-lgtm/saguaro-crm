@@ -194,7 +194,7 @@ export default function TodosPage() {
   }
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
 
       {/* Header */}
       <ModuleHero

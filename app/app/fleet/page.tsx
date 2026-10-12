@@ -195,7 +195,7 @@ export default function FleetPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: FLEET_CSS }} />
-      <PremiumSurface maxWidth={2200}>
+      <PremiumSurface>
 
         {/* Header */}
         <ModuleHero

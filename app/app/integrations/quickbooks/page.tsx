@@ -243,7 +243,7 @@ export default function QuickBooksPage() {
   const failuresFirst = (lastRun?.results ?? []).slice().sort((a, b) => Number(b.outcome === 'failed') - Number(a.outcome === 'failed'));
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       {toast && (
         <div role="status" style={{
           position: 'fixed', top: 16, left: 16, right: 16, margin: '0 auto', maxWidth: 560, zIndex: 1000,

@@ -215,7 +215,7 @@ export default function ApiDocsPage() {
   const liveCount = LIVE_MODULES.reduce((n, m) => n + m.endpoints.length, 0);
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       <style>{`@media (max-width: 760px){ .ad-stack{ grid-template-columns: 1fr !important } }`}</style>
 
       {/* Breadcrumb */}

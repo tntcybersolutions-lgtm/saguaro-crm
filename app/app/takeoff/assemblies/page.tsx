@@ -291,7 +291,7 @@ function AssemblyLibraryContent() {
     <>
       {/* Content shifts left when the edit/create panel is open (behavior preserved). */}
       <div style={{ transition: 'margin-right 0.3s ease', marginRight: panelOpen ? 480 : 0 }}>
-        <PremiumSurface maxWidth={2200}>
+        <PremiumSurface>
           {/* Header */}
           <ModuleHero
             eyebrow="Assembly Library"
@@ -852,7 +852,7 @@ function AssemblyLibraryLoading() {
         animation: 'shimmer 1.5s infinite',
       }} />
       <style>{`@keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }`}</style>
-      <div style={{ padding: '40px 28px', maxWidth: 2200, margin: '0 auto' }}>
+      <div className="k-frame">
         <div style={{ height: 44, width: 280, background: SURFACE, borderRadius: 8, marginBottom: 10 }} />
         <div style={{ height: 16, width: 320, background: SURFACE, borderRadius: 4, marginBottom: 24 }} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>

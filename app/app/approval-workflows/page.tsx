@@ -458,7 +458,7 @@ export default function ApprovalWorkflowsPage() {
   /* ── loading / error ── */
   if (loading) {
     return (
-      <PremiumSurface maxWidth={2200}>
+      <PremiumSurface>
         <div style={{ minHeight: '52vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ width: 44, height: 44, border: `3px solid ${BORDER}`, borderTopColor: GOLD, borderRadius: '50%', animation: 'aw-spin 1s linear infinite', margin: '0 auto 16px' }} />
@@ -471,8 +471,8 @@ export default function ApprovalWorkflowsPage() {
   }
   if (error) {
     return (
-      <PremiumSurface maxWidth={2200}>
-        <div style={{ maxWidth: 520, margin: '0 auto' }}>
+      <PremiumSurface>
+        <div style={{ maxWidth: 520 }}>
           <SectionCard>
             <PremiumEmpty
               tone="error"
@@ -502,7 +502,7 @@ export default function ApprovalWorkflowsPage() {
           <CheckCircle size={16} weight="fill" color="var(--success)" />{toast}
         </div>
       )}
-      <PremiumSurface maxWidth={2200}>
+      <PremiumSurface>
 
         {/* header */}
         <ModuleHero

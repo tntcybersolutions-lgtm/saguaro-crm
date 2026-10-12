@@ -136,7 +136,7 @@ export default function ScheduleTaskDetailPage() {
   // ── Loading / Not found / Error ──────────────────────────────────────────
   if (loading) {
     return (
-      <PremiumSurface maxWidth={2200}>
+      <PremiumSurface>
         <ModuleSkeleton kpis={0} rows={6} />
       </PremiumSurface>
     );
@@ -144,7 +144,7 @@ export default function ScheduleTaskDetailPage() {
 
   if (notFound) {
     return (
-      <PremiumSurface maxWidth={2200}>
+      <PremiumSurface>
         <SectionCard flat flush>
           <PremiumEmpty
             icon={<CalendarBlank size={30} weight="duotone" color={ACCENT.hex} />}
@@ -159,7 +159,7 @@ export default function ScheduleTaskDetailPage() {
 
   if (error && !task) {
     return (
-      <PremiumSurface maxWidth={2200}>
+      <PremiumSurface>
         <SectionCard flat flush>
           <PremiumEmpty
             tone="error"
@@ -179,7 +179,7 @@ export default function ScheduleTaskDetailPage() {
   const overdue = !!t.end_date && new Date(t.end_date) < new Date() && (t.status ?? '') !== 'complete';
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       {/* Back link */}
       <button
         onClick={() => router.push('/app/schedule')}

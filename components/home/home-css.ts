@@ -10,7 +10,7 @@
  */
 export const HOME_CSS = `
 .fh{--fhx-text:var(--sg-text,var(--text-primary));--fhx-text-2:var(--sg-text-2,var(--text-secondary));--fhx-text-3:var(--sg-text-3,var(--text-tertiary));--fhx-border:var(--sg-border,var(--border-default));--fhx-border-strong:var(--sg-border-strong,var(--border-strong));--fhx-surface:var(--sg-surface-solid,var(--bg-solid))}
-.fh-in{--sg-text:var(--fhx-text);--sg-text-2:var(--fhx-text-2);--sg-text-3:var(--fhx-text-3);--sg-border:var(--fhx-border);--sg-border-strong:var(--fhx-border-strong);--sg-surface-solid:var(--fhx-surface);color:var(--sg-text);max-width:none;margin:0;padding:0 0 28px;font-size:15px}
+.fh-in{--sg-text:var(--fhx-text);--sg-text-2:var(--fhx-text-2);--sg-text-3:var(--fhx-text-3);--sg-border:var(--fhx-border);--sg-border-strong:var(--fhx-border-strong);--sg-surface-solid:var(--fhx-surface);color:var(--sg-text);font-size:15px}
 .fh-in .fl-row,.fh-in .fl-skel{background:transparent}
 /* flat.tsx's row action reaches 42px with its border; Home needs the full 44. */
 .fh-in .fl-act::after{inset:-6px -2px}
@@ -19,26 +19,27 @@ export const HOME_CSS = `
 .fh-in .fl-sec .fl-sec-act{position:relative}
 .fh-in .fl-sec .fl-sec-act::after{content:'';position:absolute;inset:-6px -8px}
 .fh-in .fl-sec small{font-size:12.5px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--sg-text-3);text-shadow:none}
-.fh-in .fl-brief{margin:6px 16px 14px}
+.fh-in .fl-brief{margin:6px 0 14px}
 .fh-in [data-tone=bad]{color:var(--danger)} .fh-in [data-tone=warn]{color:var(--warning)} .fh-in [data-tone=good]{color:var(--success)}
 .fh-in .fl-strip [data-tone] span{color:var(--sg-text-2)}
 .fh-in .fl-strip b span{display:inline;font-size:inherit;color:inherit}
-.fh-in .fl-strip{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;border:0;margin:4px 16px 14px}
+.fh-in .fl-strip{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;border:0;margin:4px 0 14px}
 .fh-in .fl-strip>div{position:relative;padding:12px;border:1px solid var(--border-default);border-radius:12px;background:var(--bg-surface);box-shadow:var(--shadow-sm)}
 .fh-in .fl-strip>div:last-child{border-right:1px solid var(--border-default)}
 .fh-in .fl-strip b{font-size:22px;font-weight:800;color: var(--text-primary)}
 .fh-in .fl-strip span{margin-top:2px;font-size:13px;font-weight:600;letter-spacing:0;text-transform:none}
-.fh-ticker{margin:12px 16px 0;min-width:0}
-.fh-in .hf{margin:14px 16px 8px}
+.fh-ticker{margin:0;min-width:0}
+.fh-in .hf{margin:14px 0 8px}
 .fh-in .fl-tabs button{flex:1 1 auto;min-width:0;padding:0 6px;overflow:hidden;text-overflow:ellipsis}
 
-/* Header: one controls row (view · job · +), then the greeting. */
-.fh-head{padding:12px 16px 2px}
+/* Header: one controls row (view · job · +), then the greeting — the shared
+   page title (.k-title: --title-page, --fs-title). */
+.fh-head{margin-bottom:var(--head-gap)}
 .fh-top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;min-height:44px}
 /* The day and date above the greeting — neon, like the section headings (Chad, 2026-10-11). */
 .fh-date{font-size:15px;font-weight:800;color: var(--text-secondary);letter-spacing:.005em;white-space:nowrap}
 .fh-ctrls{display:flex;align-items:center;gap:6px;margin-left:auto;min-width:0}
-.fh .fh-hello{font-size:22px;font-weight:700;line-height:1.2;letter-spacing:-.01em;margin:2px 0 0;color:var(--sg-text);-webkit-text-fill-color:currentColor}
+.fh .fh-hello{margin:2px 0 0}
 .fh-chip{position:relative;display:inline-flex;align-items:center;gap:5px;height:30px;max-width:150px;padding:0 10px;border:1px solid var(--sg-border);border-radius:15px;background:transparent;color:var(--sg-text);font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}
 .fh-chip::after{content:'';position:absolute;inset:-9px -3px}
 .fh-chip>span{overflow:hidden;text-overflow:ellipsis;min-width:0}
@@ -67,32 +68,27 @@ export const HOME_CSS = `
 .fh-row2{display:flex;align-items:center}
 .fh-row2>.fh-grow{flex:1;min-width:0}
 .fh-row2>.fh-act{flex:none;padding-right:16px}
-.fh-more{display:flex;align-items:center;min-height:44px;padding:0 16px;background:none;border:0;font:inherit;font-size:13.5px;font-weight:600;color: var(--link);cursor:pointer}
-.fh-fail{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:12px 16px;font-size:13.5px;color:var(--sg-text-2);border-top:1px solid var(--sg-border);border-bottom:1px solid var(--sg-border)}
+.fh-more{display:flex;align-items:center;min-height:44px;padding:0;background:none;border:0;font:inherit;font-size:13.5px;font-weight:600;color: var(--link);cursor:pointer}
+.fh-fail{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:12px 0;font-size:13.5px;color:var(--sg-text-2);border-top:1px solid var(--sg-border);border-bottom:1px solid var(--sg-border)}
 .fh-fail button,.fh-empty a,.fh-fail a{position:relative;background:none;border:0;padding:0;font:inherit;font-weight:650;color: var(--link);cursor:pointer;text-decoration:none}
 .fh-fail button::after,.fh-empty a::after{content:'';position:absolute;inset:-12px -8px}
-.fh-empty{padding:12px 16px;font-size:13.5px;color:var(--sg-text-2);border-top:1px solid var(--sg-border);border-bottom:1px solid var(--sg-border)}
+.fh-empty{padding:12px 0;font-size:13.5px;color:var(--sg-text-2);border-top:1px solid var(--sg-border);border-bottom:1px solid var(--sg-border)}
 .fh-skel-line{display:block;height:12px;border-radius:6px;background:var(--sg-border);animation:fl-pulse 1.2s ease-in-out infinite}
-.fh-foot{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;padding:18px 16px 4px;font-size:12.5px;color:var(--sg-text-3)}
+.fh-foot{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;padding:18px 0 4px;font-size:12.5px;color:var(--sg-text-3)}
 .fh-foot button,.fh-foot a{position:relative;display:inline-flex;align-items:center;min-height:32px;background:none;border:0;padding:0;font:inherit;color: var(--link);font-weight:600;cursor:pointer;text-decoration:none}
 .fh-foot button::after,.fh-foot a::after{content:'';position:absolute;inset:-6px -4px}
-.fh-notice{margin:0 16px 8px;font-size:13px;color:var(--sg-text-2)}
+.fh-notice{margin:0 0 8px;font-size:13px;color:var(--sg-text-2)}
 .fh-notice button{background:none;border:0;padding:0;font:inherit;font-weight:650;color: var(--link);cursor:pointer;min-height:32px}
 @media (prefers-reduced-motion:reduce){.fh-skel-line{animation:none}}
 @media (pointer:coarse){.fh-foot button,.fh-foot a{min-height:44px}}
 
 @media (min-width:1100px){
-  .fh-head{padding:24px 24px 4px}
-  .fh .fh-hello{font-size:24px}
-  .fh-cols{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:0 40px;align-items:start;padding:0 8px}
+  .fh-cols{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:0 40px;align-items:start}
   .fh-main,.fh-side{display:block;min-width:0}
   .fh-side{padding-top:6px}
   .fh-side .fh-sec:first-child .fl-strip{margin-top:6px}
-  .fh-in{padding:0 20px 32px}
-  .fh-ticker{margin:14px 8px 0}
-  .fh-in .hf{margin:16px 8px 10px}
+  .fh-in .hf{margin:16px 0 10px}
   .fh-in .fl-strip{margin:6px 0 14px}
   .fh-in .fl-brief{margin-top:10px}
-  .fh-foot{padding-left:24px}
 }
 `;

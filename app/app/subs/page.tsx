@@ -198,7 +198,7 @@ export default function SubsAndVendorsPage() {
   const prequalified = subs.filter(s => s.prequalified === true).length;
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       <ModuleHero
         eyebrow="Company Directory"
         eyebrowIcon={<UsersThree size={13} weight="fill" color="var(--text-secondary)" />}

@@ -21,7 +21,7 @@ const CSS = `
 .mu { position: fixed; inset: 0; z-index: 10040; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(2,6,23,0.72); }
 .muSheet { position: relative; width: min(640px, 100%); max-height: min(92vh, 860px); display: flex; flex-direction: column; border-radius: 16px; border: 1px solid var(--border-default); background: var(--bg-surface); box-shadow: var(--shadow-lg); color: var(--text-primary); overflow: hidden; }
 .muHead { display: flex; align-items: flex-start; gap: 12px; padding: 18px 18px 12px; }
-.muHead h2 { margin: 0; font-size: 20px; font-weight: 700; line-height: 1.25; color: var(--text-primary); }
+.muHead h2 { margin: 0; font-size: 20px; font-weight: 700; line-height: 1.25; color: var(--title-section); }
 .muHead p { margin: 4px 0 0; font-size: 14px; line-height: 1.45; color: var(--text-secondary); }
 .muX { margin-left: auto; flex: 0 0 auto; width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--text-primary); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
 .muInline .muBody { padding: 0; overflow: visible; }

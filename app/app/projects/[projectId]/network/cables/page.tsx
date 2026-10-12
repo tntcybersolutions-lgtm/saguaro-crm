@@ -165,14 +165,14 @@ export default function CableSchedulePage() {
 
   if (loading) {
     return (
-      <PremiumSurface maxWidth={2200}>
+      <PremiumSurface>
         <ModuleSkeleton kpis={5} rows={5} />
       </PremiumSurface>
     );
   }
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       <div style={{ marginBottom: 12 }}>
         <Link href={`/app/projects/${projectId}/network`} style={{ color: DIM, fontSize: 12, textDecoration: 'none' }}>Network →</Link>
         <span style={{ color: TEXT, fontSize: 12, marginLeft: 4 }}>Cables</span>

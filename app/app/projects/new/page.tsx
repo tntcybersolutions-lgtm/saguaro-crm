@@ -346,7 +346,7 @@ export default function NewProjectPage() {
   const archNames = Object.keys(pf?.archs||{});
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       <style>{`
         .npSeg:active{transform:translateY(1px)!important;filter:brightness(.94)!important}
         @media (prefers-reduced-motion: reduce){.npSeg:active{transform:none!important}}

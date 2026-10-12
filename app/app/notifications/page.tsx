@@ -163,7 +163,7 @@ export default function NotificationsPage() {
   const toggleType = (t: string) => setTypeFilter(prev => (prev === t ? 'All' : t));
 
   return (
-    <PremiumSurface maxWidth={900}>
+    <PremiumSurface>
       <style dangerouslySetInnerHTML={{ __html: NT_CSS }} />
       {/* Header */}
       <ModuleHero

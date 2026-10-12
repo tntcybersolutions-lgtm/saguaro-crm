@@ -425,7 +425,7 @@ export default function WarrantyClaimsPage() {
 
   /* ──────── RENDER ──────── */
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       <style dangerouslySetInnerHTML={{ __html: CREATE_CSS }} />
       {/* header */}
       <ModuleHero

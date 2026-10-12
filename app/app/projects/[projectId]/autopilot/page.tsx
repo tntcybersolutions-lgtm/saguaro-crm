@@ -141,7 +141,7 @@ export default function AutopilotPage() {
   );
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       {/* Header */}
       <ModuleHero
         eyebrow={ctx?.project?.name || 'AI Monitoring'}

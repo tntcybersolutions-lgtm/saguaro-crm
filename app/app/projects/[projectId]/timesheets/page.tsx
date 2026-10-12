@@ -211,7 +211,7 @@ export default function TimesheetsPage() {
   }
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       {/* Header */}
       <ModuleHero
         eyebrow="Labor Tracking"

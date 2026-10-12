@@ -168,7 +168,7 @@ export default function NetworkDashboard() {
 
   if (loading) {
     return (
-      <PremiumSurface maxWidth={2200}>
+      <PremiumSurface>
         <ModuleSkeleton kpis={4} rows={5} />
       </PremiumSurface>
     );
@@ -176,7 +176,7 @@ export default function NetworkDashboard() {
 
   if (showSetup) {
     return (
-      <PremiumSurface maxWidth={2200}>
+      <PremiumSurface>
         <ModuleHero
           eyebrow={ctx?.project?.name || 'Network Hub'}
           eyebrowIcon={<Globe size={13} weight="fill" color="var(--text-secondary)" />}
@@ -185,7 +185,7 @@ export default function NetworkDashboard() {
           subtitle="Design, document, and certify this building's network."
         />
         {ctx && (
-          <div style={{ maxWidth: 2200 }}>
+          <div>
             <StatStrip items={[
               {href: `/app/projects/${projectId}/network`,  label: 'Project', value: ctx.project?.name || '—', sub: ctx.project?.projectNumber ? `#${ctx.project.projectNumber}` : (ctx.project?.status || 'active') },
               {href: `/app/projects/${projectId}/network`,  label: 'Site Address', value: ctx.project?.address || '—', sub: 'The network documents against this site' },
@@ -195,7 +195,7 @@ export default function NetworkDashboard() {
             ]} />
           </div>
         )}
-        <div className="pmSplit" style={railStyle(360, { gap: 22, alignItems: 'start', maxWidth: 2200 })}>
+        <div className="pmSplit" style={railStyle(360, { gap: 22, alignItems: 'start' })}>
           <SectionCard
             icon={<Globe size={18} weight="duotone" color="var(--text-secondary)" />}
             title="Set Up Network Module"
@@ -266,7 +266,7 @@ export default function NetworkDashboard() {
   }
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       {/* Header */}
       <ModuleHero
         eyebrow={ctx?.project?.name || 'Network Hub'}

@@ -168,14 +168,14 @@ export default function VlanManagerPage() {
 
   if (loading) {
     return (
-      <PremiumSurface maxWidth={2200}>
+      <PremiumSurface>
         <ModuleSkeleton kpis={4} rows={5} />
       </PremiumSurface>
     );
   }
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       <ModuleHero
         eyebrow="Network"
         eyebrowIcon={<Network size={13} weight="fill" color="var(--text-secondary)" />}

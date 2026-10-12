@@ -197,7 +197,7 @@ export default function CompliancePage() {
   }
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       <ModuleHero
         eyebrow="Risk & Compliance"
         eyebrowIcon={<ShieldCheck size={13} weight="fill" color="var(--text-secondary)" />}

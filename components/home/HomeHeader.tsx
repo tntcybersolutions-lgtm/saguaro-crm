@@ -151,9 +151,9 @@ export default function HomeHeader({ ctx, loading, projects, projectId, onParam,
         </div>
       </div>
       {ctx
-        ? <h1 className="fh-hello">{ctx.firstName ? `${greeting(ctx.timeZone)}, ${ctx.firstName}` : `${ctx.viewLabel} home`}</h1>
+        ? <h1 className="k-title fh-hello">{ctx.firstName ? `${greeting(ctx.timeZone)}, ${ctx.firstName}` : `${ctx.viewLabel} home`}</h1>
         : loading ? <span className="fh-skel-line" style={{ width: 220, height: 20, marginTop: 6 }} aria-hidden="true" />
-        : <h1 className="fh-hello">Home</h1>}
+        : <h1 className="k-title fh-hello">Home</h1>}
     </header>
   );
 }

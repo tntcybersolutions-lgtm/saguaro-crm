@@ -242,7 +242,7 @@ export default function IntegrationsHubPage() {
   };
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       <ModuleHero
         eyebrow="Workspace"
         eyebrowIcon={<Plugs size={13} weight="fill" color="var(--text-secondary)" />}

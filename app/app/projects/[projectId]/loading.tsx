@@ -10,10 +10,10 @@ import { FlatStyles, RowSkeleton } from '@/components/ui/flat';
 
 export default function JobLoading() {
   return (
-    <div aria-busy="true" aria-label="Loading" style={{ background: 'var(--bg-base)', minHeight: '60vh' }}>
+    <div className="k-frame" aria-busy="true" aria-label="Loading" style={{ background: 'var(--bg-base)', minHeight: '60vh' }}>
       <FlatStyles />
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <div className="jl-head">
+      <div className="jbl-head">
         <i style={{ width: '62%', height: 18 }} />
         <i style={{ width: '44%', height: 11, marginTop: 10 }} />
       </div>
@@ -23,8 +23,8 @@ export default function JobLoading() {
 }
 
 const CSS = `
-.jl-head{padding:14px 16px 10px;border-bottom:1px solid var(--fl-line)}
-.jl-head i{display:block;border-radius:5px;background:var(--fl-line);animation:jl-pulse 1.2s ease-in-out infinite}
-@keyframes jl-pulse{50%{opacity:.45}}
-@media (prefers-reduced-motion:reduce){.jl-head i{animation:none}}
+.jbl-head{padding:0 0 10px;border-bottom:1px solid var(--fl-line)}
+.jbl-head i{display:block;border-radius:5px;background:var(--fl-line);animation:jbl-pulse 1.2s ease-in-out infinite}
+@keyframes jbl-pulse{50%{opacity:.45}}
+@media (prefers-reduced-motion:reduce){.jbl-head i{animation:none}}
 `;

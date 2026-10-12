@@ -95,7 +95,7 @@ export default function OwnerUpdatesPage() {
   const llTotal = updates.reduce((s, u) => s + u.llRisk, 0);
 
   return (
-    <PremiumSurface maxWidth={1000} pad="28px 24px 60px">
+    <PremiumSurface>
       <div style={{ fontFamily: font, color: C.text }}>
         <ModuleHero
           eyebrow="Command Center"

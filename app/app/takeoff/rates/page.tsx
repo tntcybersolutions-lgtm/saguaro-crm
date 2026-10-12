@@ -41,7 +41,7 @@ export default function CostCatalogPage() {
   const isDone = msg.startsWith('✓');
 
   return (
-    <PremiumSurface maxWidth={1040}>
+    <PremiumSurface>
       {/* Header */}
       <ModuleHero
         eyebrow="Learning Cost Database"

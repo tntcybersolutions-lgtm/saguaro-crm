@@ -343,7 +343,7 @@ export default function SubsPage() {
   });
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       <style dangerouslySetInnerHTML={{ __html: SUBS_CSS }} />
       {toast && <div role={toast.type==='error'?'alert':'status'} style={{position:'fixed',bottom:'calc(24px + var(--sag-tabbar-h, 0px))',left:'50%',transform:'translateX(-50%)',zIndex:99999,maxWidth:'calc(100vw - 32px)',padding:'12px 20px',borderRadius:8,background:toast.type==='success'?'rgba(74,222,128,0.9)':'rgba(248,113,113,0.9)',color:'var(--text-primary)',fontWeight:600,fontSize:14}}>{toast.msg}</div>}
 

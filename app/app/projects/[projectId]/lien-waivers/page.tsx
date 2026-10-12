@@ -279,7 +279,7 @@ export default function LienWaiversPage() {
     : 0;
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       {/* Header */}
       <ModuleHero
         eyebrow="Lien Waivers"

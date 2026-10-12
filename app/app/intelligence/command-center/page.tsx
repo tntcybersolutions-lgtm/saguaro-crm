@@ -234,7 +234,7 @@ export default function CommandCenterPage() {
   }, [projects]);
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       {/* Header */}
       <ModuleHero
         eyebrow="Intelligence"

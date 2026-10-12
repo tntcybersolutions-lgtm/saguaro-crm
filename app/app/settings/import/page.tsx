@@ -122,7 +122,7 @@ export default function ImportPage() {
       title="Import From Another App"
       subtitle="Bring your jobs, customers and leads over from Buildertrend, JobTread, CoConstruct or a spreadsheet."
     >
-      <div style={{ display: 'grid', gap: 16, maxWidth: 900 }}>
+      <div className="k-form-col" style={{ display: 'grid', gap: 16 }}>
         <Card title="1. What are you importing?" subtitle={active.hint}>
           <div role="tablist" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
             {KINDS.map((k) => (

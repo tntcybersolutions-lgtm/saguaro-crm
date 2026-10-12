@@ -276,7 +276,7 @@ export default function ContractsPage() {
   const rowBtn: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 11px', background: 'rgba(255,255,255,0.05)', border: '1px solid ' + BORDER, borderRadius: 8, color: 'var(--c-text-2)', fontSize: 12, fontWeight: 700, cursor: 'pointer' };
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       {/* Header */}
       <ModuleHero
         eyebrow="Contracts"

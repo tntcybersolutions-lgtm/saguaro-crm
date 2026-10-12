@@ -63,7 +63,7 @@ export default function EscalationsPage() {
   const pill: React.CSSProperties = { fontSize: 12, fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: 'var(--bg-surface-2)', color: C.dim };
 
   return (
-    <PremiumSurface maxWidth={2200} pad="28px 24px 60px">
+    <PremiumSurface>
       <div style={{ fontFamily: font, color: C.text }}>
       <ModuleHero
         eyebrow="Command Center"

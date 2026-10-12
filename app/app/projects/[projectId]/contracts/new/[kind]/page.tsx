@@ -100,7 +100,7 @@ export default function NewContractFromTemplate() {
 
   if (!spec) {
     return (
-      <main style={{ background: BASE, minHeight: '100vh', padding: '28px max(20px, 4vw)' }}>
+      <main className="k-frame" style={{ background: BASE, minHeight: '100vh' }}>
         <p style={{ color: TEXT, fontSize: 15 }}>
           There is no contract template called “{String(params['kind'])}”.{' '}
           <Link href={base} style={{ color: 'var(--link)' }}>Back to Contracts</Link>
@@ -126,15 +126,15 @@ export default function NewContractFromTemplate() {
   };
 
   return (
-    <main style={{ background: BASE, minHeight: '100vh', padding: '24px max(20px, 4vw) 64px' }}>
-      <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+    <main className="k-frame" style={{ background: BASE, minHeight: '100vh' }}>
+      <div>
         <Link href={base} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, minHeight: 44, color: DIM, fontSize: 14, textDecoration: 'none' }}>
           <ArrowLeft size={15} weight="bold" color={DIM} /> Contracts
         </Link>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '6px 0 22px' }}>
           <FileText size={20} weight="duotone" color="var(--text-secondary)" />
-          <h1 style={{ margin: 0, color: TEXT, fontSize: 24, fontWeight: 800, letterSpacing: '-0.01em' }}>
+          <h1 className="k-title" style={{ margin: 0 }}>
             New {spec.title}
           </h1>
         </div>
