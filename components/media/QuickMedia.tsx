@@ -25,7 +25,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Images, PaperPlaneTilt, UploadSimple, X, Notebook, CheckSquare, Question, Clock } from '@phosphor-icons/react';
+import { Images, PaperPlaneTilt, UploadSimple, X, Notebook, CheckSquare, Question, Clock, CaretRight } from '@phosphor-icons/react';
 import MediaUploadPanel from '@/components/media/MediaUploadPanel';
 import { useUploadQueue } from '@/lib/useUploadQueue';
 import { uploadPhoto, uploadVideo, mediaKindOf } from '@/lib/media-upload';
@@ -45,19 +45,24 @@ type Job = { id: string; name: string };
 
 const CSS = `
 .qmTo { display: grid; gap: 6px; }
-.qmTo label { font-size: 13px; font-weight: 800; color: var(--brand-primary); }
-.qmTo select { width: 100%; min-height: 48px; padding: 0 12px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--brand-primary) 45%, transparent); background: var(--bg-solid); color: var(--text-primary); font: inherit; font-size: 16px; font-weight: 700; }
-.qmStaged { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px; border-radius: 12px; border: 1px dashed color-mix(in srgb, var(--brand-primary) 55%, transparent); background: color-mix(in srgb, var(--brand-primary) 8%, transparent); font-size: 14px; font-weight: 700; }
+.qmTo label { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-tertiary); }
+.qmTo select { width: 100%; min-height: 48px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--border-default); background: var(--bg-input); color: var(--text-primary); font: inherit; font-size: 16px; font-weight: 600; }
+.qmStaged { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px; border-radius: 10px; border: 1px dashed var(--border-strong); background: var(--bg-surface-2); font-size: 14px; font-weight: 600; }
 .qmStaged span { flex: 1 1 160px; min-width: 0; }
-.qmBtn { min-height: 44px; padding: 0 16px; border-radius: 12px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.04); color: var(--text-primary); font: inherit; font-size: 14px; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.qmBtn { min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--border-default); background: var(--bg-surface); color: var(--text-primary); font: inherit; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
 .qmBtn[data-primary] { border: none; background: var(--brand-primary); color: var(--on-brand); }
-.qmAll { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: var(--brand-primary); font-size: 14px; font-weight: 800; text-decoration: none; }
+.qmAll { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: var(--link); font-size: 14px; font-weight: 600; text-decoration: none; }
+.qmAll:hover { color: var(--link-hover); }
+/* The rest of the field loop, grouped: slate tiles with a chevron. */
 .qmDo { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
-.qmDo a { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 12px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--brand-primary) 35%, transparent); background: color-mix(in srgb, var(--brand-primary) 8%, transparent); color: var(--text-primary); font-size: 15px; font-weight: 800; text-decoration: none; }
-.qmDo a:active { background: color-mix(in srgb, var(--brand-primary) 22%, transparent); }
-.qmDoHead { margin-top: 10px; font-size: 13px; font-weight: 800; color: var(--brand-primary); }
+.qmDo a { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 10px 0 12px; border-radius: 10px; border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--text-primary); font-size: 14px; font-weight: 600; text-decoration: none; min-width: 0; }
+.qmDo a > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qmDo a svg { flex: none; color: var(--text-secondary); }
+.qmDo a:hover { background: #2B3B53; border-color: var(--border-strong); }
+.qmDo a:active { background: #2B3B53; }
+.qmDoHead { margin-top: 10px; font-size: 15px; font-weight: 700; color: var(--text-primary); }
 .qmDrag { position: fixed; inset: 0; z-index: 10030; pointer-events: none; display: flex; align-items: flex-end; justify-content: center; padding: 24px; background: color-mix(in srgb, var(--bg-base, black) 35%, transparent); outline: 3px dashed var(--brand-primary); outline-offset: -10px; }
-.qmDrag div { display: inline-flex; align-items: center; gap: 10px; padding: 14px 20px; border-radius: 14px; background: var(--brand-primary); color: var(--on-brand); font-size: 16px; font-weight: 800; box-shadow: 0 0 30px color-mix(in srgb, var(--brand-primary) 50%, transparent); }
+.qmDrag div { display: inline-flex; align-items: center; gap: 10px; padding: 14px 20px; border-radius: 12px; background: var(--brand-primary); color: var(--on-brand); font-size: 16px; font-weight: 700; box-shadow: var(--shadow-lg); }
 `;
 
 export default function QuickMedia() {
@@ -225,22 +230,22 @@ export default function QuickMedia() {
         doneLabel="Done"
         extra={target ? (
           <>
-            <Link className="qmAll" href={`/app/projects/${target.id}/photos`}>
-              <Images size={18} weight="bold" /> See all photos &amp; video on {target.name} ›
+            <Link className="qmAll" href={`/app/projects/${target.id}/photos`} aria-label={`View photos and videos on ${target.name}`}>
+              <Images size={18} weight="bold" aria-hidden /> View project photos and videos ›
             </Link>
             {/* The rest of the daily field loop, one tap from any screen, already on this job. */}
-            <div className="qmDoHead">Also on {target.name}</div>
+            <div className="qmDoHead">More project tools</div>
             <nav className="qmDo" aria-label={`More for ${target.name}`}>
-              <Link href={`/app/projects/${target.id}/daily-logs?new=1`}><Notebook size={20} weight="bold" aria-hidden /> Daily Log</Link>
-              <Link href={`/app/projects/${target.id}/punch-list?new=1`}><CheckSquare size={20} weight="bold" aria-hidden /> Punch Item</Link>
-              <Link href={`/app/projects/${target.id}/rfis?new=1`}><Question size={20} weight="bold" aria-hidden /> RFI</Link>
-              <Link href={`/app/time?project=${target.id}`}><Clock size={20} weight="bold" aria-hidden /> Clock In / Out</Link>
+              <Link href={`/app/projects/${target.id}/daily-logs?new=1`}><Notebook size={20} weight="bold" aria-hidden /><span>Daily Log</span><CaretRight size={16} weight="bold" aria-hidden /></Link>
+              <Link href={`/app/projects/${target.id}/punch-list?new=1`}><CheckSquare size={20} weight="bold" aria-hidden /><span>Punch Item</span><CaretRight size={16} weight="bold" aria-hidden /></Link>
+              <Link href={`/app/projects/${target.id}/rfis?new=1`}><Question size={20} weight="bold" aria-hidden /><span>RFI</span><CaretRight size={16} weight="bold" aria-hidden /></Link>
+              <Link href={`/app/time?project=${target.id}`}><Clock size={20} weight="bold" aria-hidden /><span>Clock In / Out</span><CaretRight size={16} weight="bold" aria-hidden /></Link>
             </nav>
           </>
         ) : null}
       >
         <div className="qmTo">
-          <label htmlFor="qm-job">Send to</label>
+          <label htmlFor="qm-job">Project</label>
           <select id="qm-job" data-no-guard="" value={jobId} onChange={(e) => setJobId(e.target.value)} disabled={!jobs}>
             {!jobs && <option value="">Loading jobs…</option>}
             {jobs && !jobs.length && <option value="">No jobs yet</option>}

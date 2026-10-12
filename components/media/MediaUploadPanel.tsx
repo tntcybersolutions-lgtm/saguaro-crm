@@ -18,38 +18,41 @@ import type { QueueItem } from '@/lib/useUploadQueue';
 import { fmtBytes } from '@/lib/media-upload';
 
 const CSS = `
-.mu { position: fixed; inset: 0; z-index: 10040; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(4,5,7,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
-.muSheet { position: relative; width: min(640px, 100%); max-height: min(92vh, 860px); display: flex; flex-direction: column; border-radius: 18px; border: 1px solid var(--border-default); background: var(--bg-solid-2); box-shadow: 0 30px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06); color: var(--text-primary); overflow: hidden; }
+.mu { position: fixed; inset: 0; z-index: 10040; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(2,6,23,0.72); }
+.muSheet { position: relative; width: min(640px, 100%); max-height: min(92vh, 860px); display: flex; flex-direction: column; border-radius: 16px; border: 1px solid var(--border-default); background: var(--bg-surface); box-shadow: var(--shadow-lg); color: var(--text-primary); overflow: hidden; }
 .muHead { display: flex; align-items: flex-start; gap: 12px; padding: 18px 18px 12px; }
-.muHead h2 { margin: 0; font-size: 18px; font-weight: 800; line-height: 1.25; color: var(--text-primary); }
-.muHead p { margin: 4px 0 0; font-size: 13px; color: var(--text-tertiary); }
-.muX { margin-left: auto; flex: 0 0 auto; width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.04); color: var(--text-primary); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.muHead h2 { margin: 0; font-size: 20px; font-weight: 700; line-height: 1.25; color: var(--text-primary); }
+.muHead p { margin: 4px 0 0; font-size: 14px; line-height: 1.45; color: var(--text-secondary); }
+.muX { margin-left: auto; flex: 0 0 auto; width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--text-primary); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
 .muInline .muBody { padding: 0; overflow: visible; }
 .muInline[data-drag="true"] { outline: 2px dashed var(--brand-primary); outline-offset: 6px; border-radius: 14px; }
 .muBody { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 18px 12px; display: flex; flex-direction: column; gap: 14px; }
 .muPick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.muBig { min-height: 92px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 12px 8px; border-radius: 14px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.04); color: var(--text-primary); font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; text-align: center; }
-.muBig:hover { background: rgba(255,255,255,0.08); }
+/* Take Photo is THE action (yellow); Record and Choose are slate secondaries. */
+.muBig { min-height: 96px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 12px 8px; border-radius: 12px; border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--text-primary); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; }
+.muBig:hover { background: #2B3B53; border-color: var(--border-strong); }
 .muBig:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
-.muBig[data-primary="true"] { border-color: var(--brand-primary-35, rgba(255,230,0,0.35)); background: var(--brand-primary-08, rgba(255,230,0,0.08)); }
-.muBig svg { color: var(--brand-primary); }
+.muBig svg { color: var(--text-secondary); }
+.muBig[data-primary="true"] { border-color: var(--brand-primary); background: var(--brand-primary); color: var(--on-brand); font-weight: 700; }
+.muBig[data-primary="true"]:hover { background: var(--brand-primary-hover); }
+.muBig[data-primary="true"] svg { color: var(--on-brand); }
 .mu[data-drag="true"] .muSheet { outline: 2px dashed var(--brand-primary); outline-offset: -8px; }
-.muDropHint { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 64px; border-radius: 12px; border: 1px dashed var(--border-strong, rgba(255,255,255,0.2)); color: var(--text-tertiary); font-size: 13px; font-weight: 600; }
+.muDropHint { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 64px; border-radius: 12px; border: 1px dashed var(--border-strong); color: var(--text-secondary); font-size: 14px; font-weight: 600; }
 .muList { display: flex; flex-direction: column; gap: 8px; }
-.muRow { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle, rgba(255,255,255,0.06)); }
-.muThumb { width: 48px; height: 48px; border-radius: 8px; overflow: hidden; background: var(--bg-solid); display: flex; align-items: center; justify-content: center; color: var(--text-tertiary); }
+.muRow { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px; border-radius: 10px; background: var(--bg-surface-2); border: 1px solid var(--border-subtle); }
+.muThumb { width: 48px; height: 48px; border-radius: 8px; overflow: hidden; background: var(--bg-input); display: flex; align-items: center; justify-content: center; color: var(--text-tertiary); }
 .muThumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .muName { font-size: 14px; font-weight: 700; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .muMeta { display: flex; align-items: center; gap: 6px; margin-top: 3px; font-size: 12px; color: var(--text-tertiary); min-width: 0; }
 .muMeta[data-tone="bad"] { color: var(--c-red); }
 .muMeta[data-tone="good"] { color: var(--c-green); }
 .muMeta span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.muBar { height: 4px; margin-top: 6px; border-radius: 4px; background: rgba(255,255,255,0.08); overflow: hidden; }
-.muBar > i { display: block; height: 100%; background: var(--brand-primary); border-radius: 4px; transition: width .2s ease; }
-.muRowBtn { min-width: 44px; height: 44px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.04); color: var(--text-primary); font: inherit; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
-.muFoot { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 12px 18px max(14px, env(safe-area-inset-bottom)); border-top: 1px solid var(--border-subtle, rgba(255,255,255,0.06)); }
-.muSum { flex: 1; min-width: 0; font-size: 13px; color: var(--text-secondary); }
-.muDone { min-height: 44px; padding: 0 20px; border-radius: 12px; border: none; background: var(--brand-primary); color: var(--on-brand); font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; }
+.muBar { height: 4px; margin-top: 6px; border-radius: 4px; background: var(--bg-input); overflow: hidden; }
+.muBar > i { display: block; height: 100%; background: var(--success); border-radius: 4px; transition: width .2s ease; }
+.muRowBtn { min-width: 44px; height: 44px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--border-default); background: var(--bg-surface); color: var(--text-primary); font: inherit; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
+.muFoot { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 12px 18px max(14px, env(safe-area-inset-bottom)); border-top: 1px solid var(--border-subtle); background: var(--bg-surface); }
+.muSum { flex: 1; min-width: 0; font-size: 14px; color: var(--text-secondary); }
+.muDone { min-height: 44px; padding: 0 22px; border-radius: 10px; border: none; background: var(--brand-primary); color: var(--on-brand); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
 .muDone:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
 /* Camera buttons show on touch devices, the drop zone on mouse ones. Decided
    in script (touch points or any coarse pointer), not by (pointer: fine): a
@@ -130,7 +133,7 @@ export default function MediaUploadPanel(p: MediaUploadPanelProps) {
   const failed = p.items.filter((i) => i.status === 'failed').length;
   const active = p.items.filter((i) => i.status === 'waiting' || i.status === 'uploading').length;
   const summary = !p.items.length
-    ? 'Nothing picked yet.'
+    ? 'No files selected.'
     : active
       ? `Uploading… ${done} of ${p.items.length - failed} done${failed ? ` · ${failed} failed` : ''}`
       : `${done} uploaded${failed ? ` · ${failed} failed — tap Retry` : ''}`;
