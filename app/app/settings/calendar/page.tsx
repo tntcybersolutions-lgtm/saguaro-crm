@@ -86,7 +86,7 @@ export default function CalendarSyncPage() {
               </ul>
             </Card>
             <Card>
-              <div style={{ display: 'grid', gap: 12, padding: '12px 0 4px' }}>
+              <div style={{ display: 'grid', gap: 12, padding: 0 }}>
                 <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                   <span aria-hidden style={{ width: 40, height: 40, flexShrink: 0, display: 'grid', placeItems: 'center', borderRadius: 10, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)' }}>
                     <LockSimple size={20} weight="bold" color="var(--text-secondary)" />

@@ -171,14 +171,14 @@ function ConfidenceRing({ value, size = 96, stroke = 9 }: { value: number; size?
 const CSS = `
 .tkWs > .k-page { max-width: none; }
 .tkDoors { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
-.tkDoor { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--brand-primary-35); background: var(--brand-primary-08); text-decoration: none; min-height: 52px; }
-.tkDoor:hover { background: var(--brand-primary-12); }
+.tkDoor { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-default); background: var(--bg-surface); text-decoration: none; min-height: 52px; }
+.tkDoor:hover { background: var(--bg-row-hover); border-color: var(--border-strong); }
 .tkDoor:focus-visible { outline: 2px solid var(--brand-primary); }
-.tkDoor > svg:first-child { color: var(--brand-primary); flex-shrink: 0; }
-.tkDoor > svg:last-child { color: var(--brand-primary); margin-left: auto; flex-shrink: 0; }
+.tkDoor > svg:first-child { color: var(--text-secondary); flex-shrink: 0; }
+.tkDoor > svg:last-child { color: var(--text-tertiary); margin-left: auto; flex-shrink: 0; }
 .tkDoorText { display: flex; flex-direction: column; min-width: 0; }
-.tkDoorText b { color: var(--text-primary); font-weight: 700; font-size: var(--fs-sm); }
-.tkDoorText span { color: var(--text-tertiary); font-size: var(--fs-xs); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tkDoorText b { color: var(--text-primary); font-weight: 700; font-size: var(--fs-md); }
+.tkDoorText span { color: var(--text-secondary); font-size: var(--fs-sm); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tkCq { container: tkws / inline-size; min-width: 0; }
 .tkSplit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
 .tkSplit > * { min-width: 0; }
