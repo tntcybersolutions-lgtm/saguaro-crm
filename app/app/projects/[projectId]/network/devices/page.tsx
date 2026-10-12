@@ -188,14 +188,14 @@ export default function DeviceInventoryPage() {
 
   if (loading) {
     return (
-      <PremiumSurface maxWidth={2200}>
+      <PremiumSurface>
         <ModuleSkeleton kpis={4} rows={5} />
       </PremiumSurface>
     );
   }
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       {/* Breadcrumb */}
       <div style={{ marginBottom: 14 }}>
         <Link href={`/app/projects/${projectId}/network`} style={{ color: 'var(--c-text-2)', fontSize: 12, textDecoration: 'none' }}>

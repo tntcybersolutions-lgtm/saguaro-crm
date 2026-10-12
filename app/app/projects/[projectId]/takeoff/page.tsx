@@ -1670,7 +1670,7 @@ export default function TakeoffPage() {
             </div>
           </div>
           <div style={{ animation: 'tkRise .55s ease .05s both', borderRadius: 20, border: '1px solid var(--border-default)', background: SURFACE, padding: '36px 28px', textAlign: 'center' }}>
-            <h1 style={{ color: 'var(--text-primary)', fontSize: 26, fontWeight: 800, margin: 0, lineHeight: 1.25 }}>{measuredHandoff.name}</h1>
+            <h1 className="k-title" style={{ margin: 0, lineHeight: 1.25 }}>{measuredHandoff.name}</h1>
             <p style={{ color: 'var(--c-text-2)', fontSize: 14.5, lineHeight: 1.6, margin: '14px auto 0', maxWidth: 460 }}>
               The latest takeoff on this project was traced and priced in Takeoff Studio.
               Its conditions, plan scale and markup stack live there — open it to review or keep measuring.
@@ -1716,10 +1716,10 @@ export default function TakeoffPage() {
       ? (result.elapsedSec < 90 ? `${Math.round(result.elapsedSec)}s` : `${(result.elapsedSec / 60).toFixed(1)} min`)
       : null;
     return (
-      <div className="tkRoot" style={{ padding: '24px clamp(16px, 2.4vw, 32px) 48px', maxWidth: 1080 }}>
+      <div className="k-frame tkRoot">
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 20 }}>
           <div style={{ minWidth: 0, flex: '1 1 420px' }}>
-            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>AI Takeoff</h1>
+            <h1 className="k-title" style={{ margin: 0 }}>AI Takeoff</h1>
             <p style={{ margin: '6px 0 0', fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5, maxWidth: 640 }}>
               Upload a plan set. Claude measures every wall, footing, fixture and column, then prices the quantities by trade.
               {lastRun ? ` Your last run took ${lastRun}.` : ''}
@@ -1931,7 +1931,7 @@ export default function TakeoffPage() {
       <style>{FX_KEYFRAMES}</style>
       <UiFx />
       <Aurora soft still />
-      <div style={{ position: 'relative', zIndex: 1, padding: '24px', maxWidth: 1180, margin: '0 auto' }}>
+      <div className="k-frame" style={{ position: 'relative', zIndex: 1 }}>
 
       {/* Summary header — hero sell number */}
       <div style={{

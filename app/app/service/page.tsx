@@ -406,11 +406,11 @@ function ServiceInner() {
   const sel = data?.tickets.find(t => t.id === selected) || null;
 
   return (
-    <div className="sv">
+    <div className="k-frame sv">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <Link href="/app?view=service" className="sv-back"><ArrowLeft size={14} /> Service Home</Link>
       <div className="sv-top">
-        <h1>Service &amp; Dispatch</h1>
+        <h1 className="k-title">Service &amp; Dispatch</h1>
         <button type="button" className="sv-btn sv-primary" onClick={() => setParams({ new: '1', ticket: null, edit: null })}><Plus size={15} weight="bold" /> New Service Call</button>
       </div>
       <div role="group" aria-label="Filter calls" className="sv-seg">
@@ -469,8 +469,8 @@ export default function ServicePage() {
 }
 
 const CSS = `
-.sv { padding: 24px; max-width: 1600px; margin: 0 auto; color: var(--text-primary); font-size: 15px; }
-.sv h1 { font-size: 26px; font-weight: 800; margin: 0; }
+.sv { color: var(--text-primary); font-size: 15px; }
+.sv h1 { margin: 0; }
 .sv h2 { font-size: 18px; font-weight: 750; margin: 2px 0 0; }
 .sv h3 { font-size: 14px; font-weight: 750; color: var(--text-secondary); margin: 20px 0 10px; }
 .sv-back { display: inline-flex; align-items: center; gap: 6px; color: var(--text-tertiary); font-size: 13px; text-decoration: none; margin-bottom: 10px; }

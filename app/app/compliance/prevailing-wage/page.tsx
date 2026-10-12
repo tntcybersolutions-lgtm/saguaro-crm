@@ -200,7 +200,7 @@ export default function PrevailingWagePage() {
   };
 
   return (
-    <PremiumSurface maxWidth={1040}>
+    <PremiumSurface>
       {/* Header */}
       <ModuleHero
         eyebrow="Compliance"

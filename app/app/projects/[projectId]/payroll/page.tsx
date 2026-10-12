@@ -359,7 +359,7 @@ export default function PayrollPage() {
   }
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
 
       {/* Header */}
       <ModuleHero

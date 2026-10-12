@@ -36,7 +36,7 @@ export default function QCPage() {
   if (!ready) return null;
 
   return (
-    <PremiumSurface maxWidth={900} pad="28px 24px 60px">
+    <PremiumSurface>
       <div style={{ fontFamily: font, color: C.text }}>
         <ModuleHero
           eyebrow="Command Center"

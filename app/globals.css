@@ -112,8 +112,27 @@
   --fs-lg: 16px;
   --fs-xl: 20px;
   --fs-2xl: 26px;
-  /* Layout widths — one page width, one modal width, app-wide. */
-  --page-max: 1680px;
+  /* Page layout — ONE system for every /app page (DESIGN_SYSTEM.md "Page
+     layout"). The page frame (.k-frame: PageShell, PremiumSurface and the
+     flat pages) owns the gutter; nothing inside it adds side margins, so the
+     title, the toolbar, the filters, the cards and the lists share one left
+     and one right edge. Operational pages fill the workspace beside the
+     sidebar (--page-max: none); only a form's field column (--form-max),
+     long reading text (--reading-max), dialogs and the sign-in card are
+     narrower, on purpose. The phone values are below (max-width: 767px). */
+  --page-max: none;
+  --page-gutter: 24px;
+  --page-pad-top: 20px;
+  --page-pad-bottom: 48px;
+  --head-gap: 16px;        /* page header → first content */
+  --section-gap: 16px;     /* between sections and cards */
+  --card-pad-x: 16px;
+  --card-pad-y: 14px;
+  --control-h: 40px;       /* buttons, inputs, selects */
+  --control-h-touch: 44px; /* the same on a touch screen (Apple HIG) */
+  --row-h: 56px;           /* a list row */
+  --form-max: 760px;
+  --reading-max: 75ch;
   --modal-w: min(1040px, 94vw);
   --modal-w-sm: min(560px, 94vw);
   /* Flat-UI aliases (components/ui/flat.tsx and the shared parts) — they
@@ -1023,7 +1042,17 @@ input:-webkit-autofill:focus {
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* Page frame */
-.k-page { width: 100%; max-width: var(--page-max); margin: 0 auto; padding: var(--sp-6) var(--sp-6) var(--sp-8); display: flex; flex-direction: column; gap: var(--sp-4); }
+/* The page frame — every /app page sits in one (PageShell, PremiumSurface and
+   the flat pages add .k-frame). Full workspace width beside the sidebar, the
+   gutter on both sides, nothing centred. */
+.k-frame, .k-page { width: 100%; max-width: var(--page-max); box-sizing: border-box; margin: 0; padding: var(--page-pad-top) var(--page-gutter) var(--page-pad-bottom); min-width: 0; }
+.k-page { display: flex; flex-direction: column; gap: var(--section-gap); }
+/* The shared header inside a frame that is not a flex column. */
+.k-frame > .k-head { margin-bottom: var(--head-gap); }
+/* A form page: the header keeps the full width, the fields hold a readable
+   column against the left edge (never centred). */
+:is(.k-frame, .k-page)[data-width=form] > :not(.k-head):not(.pmHead):not(.k-crumbs), .k-form-col { max-width: var(--form-max); }
+.k-reading { max-width: var(--reading-max); }
 /* The page crumb trail is gone on every width: the top bar already shows the
    parent (Home / the job switcher) and the page title, so this row said the
    same thing a second time directly beneath it. The nav stays in the DOM for
@@ -1035,6 +1064,7 @@ input:-webkit-autofill:focus {
    actions on the right. No eyebrow, no hero art. */
 .k-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2) var(--sp-4); }
 .sag-app .k-title, .k-title { font-size: var(--fs-title); font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; color: var(--title-page); }
+@media (max-width: 767px) { .sag-app .k-title, .k-title { font-size: var(--fs-title-m); } }
 .k-sub { margin-top: 4px; font-size: 14px; line-height: 1.5; color: var(--text-secondary); max-width: 760px; }
 .k-head-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
 
@@ -1212,8 +1242,6 @@ select.k-select { padding-right: 36px; }
 .k-card-flush > .k-empty { padding: 14px 16px; }
 
 @media (max-width: 720px) {
-  .k-page { padding: var(--sp-4) var(--sp-4) var(--sp-6); }
-  .sag-app .k-title, .k-title { font-size: var(--fs-title-m); }
   .k-form-grid { grid-template-columns: minmax(0, 1fr); }
   .k-search { flex: 1 1 100%; }
   /* Row actions stay reachable while the rest of the row scrolls sideways. */
@@ -1423,6 +1451,17 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
      indicator's safe area. Everything that floats (toasts, the Sage panel,
      sheets) and the page's own bottom padding read this one number. */
   :root { --sag-tabbar-h: calc(56px + env(safe-area-inset-bottom, 0px)); }
+  /* Page layout on a phone: a 16px gutter (wider only where a landscape
+     notch needs it), tighter header and section spacing. The frame already
+     clears the tab bar, so the page's own bottom room is small. */
+  :root {
+    --page-gutter: max(16px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+    --page-pad-top: 14px;
+    --page-pad-bottom: 24px;
+    --head-gap: 12px;
+    --section-gap: 12px;
+    --card-pad-x: 12px;
+  }
 
   /* Inputs at 16px so iOS never zooms into a field. This beats the compact
      13px rule above because it comes later with the same !important weight. */
@@ -1499,7 +1538,6 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
   .sag-tab-label { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; white-space: nowrap; }
   .sag-tab-badge { display: inline-block; min-width: 17px; height: 17px; padding: 0 5px; border-radius: 9px; background: var(--danger); color: #FFFFFF; font-size: 12px; font-weight: 700; line-height: 17px; text-align: center; font-variant-numeric: tabular-nums; }
   /* The page's own bottom room: the frame already clears the tab bar. */
-  .k-page { padding-bottom: var(--sp-6); }
   .k-crumbs a, .k-crumbs span { max-width: 48vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   /* The chat launcher steps aside while the page scrolls (see SaguaroChatWidget). */
   /* No floating bubble on phones at all — the top-bar Sage button opens the chat. */
@@ -1571,9 +1609,6 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
   /* Every target 44px. */
   .k-btn, .k-tab, select.k-select, .k-input { min-height: 44px; }
   .k-stat { min-height: 44px; }
-}
-@media (max-width: 480px) {
-  .k-page { padding: var(--sp-3) var(--sp-3) var(--sp-6); }
 }
 
 /* ══ APP SHELL — navy/slate (owner-approved reference, 12 Oct 2026) ═══════
@@ -1714,13 +1749,10 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
    PremiumEmpty. Sections and number strips are slate panels like the kit's
    .k-card / .k-stats; no gradients, no glow, no hover lift.
    ═══════════════════════════════════════════════════════════════════════════ */
-/* Page padding: the caller's on desktop, a 16px gutter on a phone. */
-.pmPage{padding:var(--pm-pad,20px 24px 48px)}
-@media (max-width:767px){.pmPage{padding:14px 16px 24px!important}}
 /* FlowStrip on a phone: a numbered list, one step per line — no orphaned arrows. */
 @media (max-width:767px){.pmFlowStrip{flex-direction:column;align-items:flex-start!important}.pmFlowArrow{display:none}}
 /* Compact page header (ModuleHero). */
-.pmHead{display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;margin-bottom:16px;min-width:0}
+.pmHead{display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;margin-bottom:var(--head-gap);min-width:0}
 .pmHead[data-align=center]{flex-direction:column;text-align:center}
 .pmHeadText{min-width:0;flex:1 1 320px}
 .pmHeadSub{margin:4px 0 0;font-size:14px;line-height:1.5;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:760px}

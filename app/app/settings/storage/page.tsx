@@ -61,7 +61,7 @@ function SkeletonRow({ h = 60 }: { h?: number }) {
 export default function StorageSettingsPage() {
   return (
     <Suspense fallback={
-      <PremiumSurface maxWidth={2200}>
+      <PremiumSurface>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <SkeletonRow h={90} /><SkeletonRow /><SkeletonRow />
         </div>
@@ -144,7 +144,7 @@ function StorageSettings() {
   const healthy = connectors.filter((c) => c.connected).length;
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       <ModuleHero
         eyebrow="Workspace"
         eyebrowIcon={<CloudArrowUp size={13} weight="fill" color="var(--text-secondary)" />}

@@ -33,7 +33,7 @@ const CSS = `
 .sgUi{--fl-line:var(--sg-border);--fl-line-strong:var(--sg-border-strong);--fl-text:var(--sg-text);--fl-text-2:var(--sg-text-2);--fl-text-3:var(--sg-text-3);--fl-surface:var(--sg-surface-solid)}
 /* Sage's read of the data, as the concept's alert card: a status circle, the
    sentence, and its one action as the screen's yellow button. */
-.fl-brief{display:flex;align-items:flex-start;gap:12px;margin:8px 16px 12px;padding:14px 16px;border-radius:12px;background:var(--bg-surface);border:1px solid var(--border-card);box-shadow:var(--card-highlight);color:var(--fl-text)}
+.fl-brief{display:flex;align-items:flex-start;gap:12px;margin:8px 0 12px;padding:14px 16px;border-radius:12px;background:var(--bg-surface);border:1px solid var(--border-card);box-shadow:var(--card-highlight);color:var(--fl-text)}
 .fl-brief-ic{flex:none;display:inline-grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--info-bg);border:1px solid var(--info-border);color:var(--info-fg)}
 .fl-brief[data-tone=warning] .fl-brief-ic{background:var(--warning-bg);border-color:var(--warning-border);color:var(--warning-fg)}
 .fl-brief[data-tone=danger] .fl-brief-ic{background:var(--danger-bg);border-color:var(--danger-border);color:var(--danger-fg)}
@@ -47,7 +47,7 @@ const CSS = `
 .fl-brief .fl-brief-act:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 @media (pointer:coarse){.fl-brief .fl-brief-act{min-height:44px}}
 @media (max-width:640px){.fl-brief-body{align-items:stretch}.fl-brief .fl-brief-act{width:100%}}
-.fl-strip{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;margin:0 16px;background:var(--bg-surface);border:1px solid var(--border-card);box-shadow:var(--card-highlight);border-radius:12px;overflow:hidden}
+.fl-strip{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;margin:0;background:var(--bg-surface);border:1px solid var(--border-card);box-shadow:var(--card-highlight);border-radius:12px;overflow:hidden}
 .fl-strip>div{padding:10px 8px 10px 16px;border-right:1px solid var(--fl-line);min-width:0}
 .fl-strip>div:last-child{border-right:0}
 .fl-strip b{display:block;font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--fl-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -58,11 +58,11 @@ const CSS = `
 /* A section heading: the section colour (--title-section), 16px, bold — the
    same look as .pmSecTitle / .k-card-title in globals.css. Its action
    ("See all ›") is a blue link. */
-.fl-sec.fl-sec{margin:0;line-height:1.25;-webkit-text-fill-color:currentColor;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 16px 8px;font-size:var(--fs-section);font-weight:700;letter-spacing:-0.005em;color:var(--title-section);text-transform:none;text-shadow:none}
+.fl-sec.fl-sec{margin:0;line-height:1.25;-webkit-text-fill-color:currentColor;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 0 8px;font-size:var(--fs-section);font-weight:700;letter-spacing:-0.005em;color:var(--title-section);text-transform:none;text-shadow:none}
 .fl-sec>span:first-child{display:inline-flex;align-items:center;gap:9px;min-width:0}
 .fl-sec .fl-sec-act{position:relative;color:var(--link);-webkit-text-fill-color:currentColor;font-weight:600;letter-spacing:0;text-transform:none;font-size:13px;text-decoration:none;background:none;border:0;padding:0;cursor:pointer}
 .fl-sec .fl-sec-act::after{content:'';position:absolute;inset:-14px -10px}
-.fl-list{list-style:none;margin:0 16px;padding:0;background:var(--bg-surface);border:1px solid var(--border-card);box-shadow:var(--card-highlight);border-radius:12px;overflow:hidden}
+.fl-list{list-style:none;margin:0;padding:0;background:var(--bg-surface);border:1px solid var(--border-card);box-shadow:var(--card-highlight);border-radius:12px;overflow:hidden}
 .fl-list>li{border-bottom:1px solid var(--fl-line)}
 .fl-list>li:last-child{border-bottom:0}
 .fl-row{display:flex;align-items:center;gap:12px;padding:10px 16px;min-height:58px;color:var(--fl-text);text-decoration:none;background:var(--bg-surface);-webkit-tap-highlight-color:transparent}
@@ -95,7 +95,7 @@ button.fl-row{width:100%;border:0;font:inherit;text-align:left;cursor:pointer}
 .fl-act:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .fl-act[disabled]:not([aria-busy=true]){background:var(--disabled-bg);color:var(--disabled-fg);border-color:var(--disabled-border);cursor:default}
 .fl-act[aria-busy=true]{opacity:.8;cursor:progress}
-.fl-tabs{display:flex;margin:10px 16px 4px;background:var(--fl-surface);border:1px solid var(--fl-line);border-radius:10px;padding:2px}
+.fl-tabs{display:flex;margin:10px 0 4px;background:var(--fl-surface);border:1px solid var(--fl-line);border-radius:10px;padding:2px}
 .fl-tabs{gap:2px}
 .fl-tabs button{flex:1 1 auto;min-width:0;min-height:36px;padding:0 10px;border:0;background:none;font:inherit;font-size:14px;font-weight:600;color:var(--tab-fg);border-radius:8px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:420px){.fl-tabs button{padding:0 6px;font-size:13px}}
@@ -132,7 +132,7 @@ a.fl-tool:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
 .fl-skel i{display:block;height:10px;border-radius:5px;background:var(--fl-line);animation:fl-pulse 1.2s ease-in-out infinite}
 @keyframes fl-pulse{50%{opacity:.45}}
 @media (prefers-reduced-motion:reduce){.fl-skel i{animation:none}.fl-swipe-body{transition:none}}
-.fl-empty{padding:14px 16px;font-size:14px;color:var(--fl-text-2)}
+.fl-empty{padding:14px 0;font-size:14px;color:var(--fl-text-2)}
 `;
 
 /** The flat stylesheet. Render once per page; extra copies are harmless. */

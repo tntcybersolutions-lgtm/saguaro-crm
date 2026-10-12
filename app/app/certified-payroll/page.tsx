@@ -62,7 +62,7 @@ export default function CertifiedPayrollPage() {
   });
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       {/* Header */}
       <ModuleHero
         eyebrow="Compliance"

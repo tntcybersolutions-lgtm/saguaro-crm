@@ -450,7 +450,7 @@ export default function DocumentsPage() {
   );
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
 
       {/* Header */}
       <ModuleHero

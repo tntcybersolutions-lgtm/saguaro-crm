@@ -153,11 +153,11 @@ export default function ProjectDirectory() {
   };
 
   return (
-    <main style={{ background: BASE, minHeight: '100%', padding: '24px max(20px, 3vw) 64px' }}>
-      <div style={{ maxWidth: 2200 }}>
+    <main className="k-frame" style={{ background: BASE, minHeight: '100%' }}>
+      <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
           <UsersThree size={20} weight="duotone" color="var(--text-secondary)" />
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: TEXT, letterSpacing: '-0.01em' }}>Directory</h1>
+          <h1 className="k-title" style={{ margin: 0 }}>Directory</h1>
         </div>
         <p style={{ margin: '0 0 20px', color: DIM, fontSize: 14, maxWidth: 620, lineHeight: 1.55 }}>
           Everyone on this job. Contracts, RFIs, submittals and pay applications read these names

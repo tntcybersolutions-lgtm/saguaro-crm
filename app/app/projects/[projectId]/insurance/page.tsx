@@ -187,7 +187,7 @@ export default function InsurancePage() {
         </div>
       )}
 
-      <PremiumSurface maxWidth={2200}>
+      <PremiumSurface>
 
         {/* Header */}
         <ModuleHero

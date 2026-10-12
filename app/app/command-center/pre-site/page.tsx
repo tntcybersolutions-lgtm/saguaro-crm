@@ -50,7 +50,7 @@ export default function PreSitePage() {
   });
 
   return (
-    <PremiumSurface maxWidth={960} pad="28px 24px 60px">
+    <PremiumSurface>
       <div style={{ fontFamily: font, color: C.text }}>
         <ModuleHero
           eyebrow="Command Center"

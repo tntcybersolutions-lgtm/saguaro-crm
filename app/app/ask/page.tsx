@@ -56,7 +56,7 @@ export default function AskDocsPage() {
     <div className="pmRoot" style={{ position: 'relative', background: DARK, color: TEXT, minHeight: '100vh', fontFamily: 'system-ui,Segoe UI,sans-serif' }}>
       <PremiumFX />
       <Aurora soft />
-      <div style={{ position: 'relative', zIndex: 1, maxWidth: 900, margin: '0 auto', padding: '34px 22px 40px', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <div className="k-frame" style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <ModuleHero
           eyebrow="Sage Intelligence"
           eyebrowIcon={<Sparkle size={13} weight="fill" color="var(--text-secondary)" />}

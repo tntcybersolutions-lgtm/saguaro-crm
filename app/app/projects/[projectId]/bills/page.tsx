@@ -389,7 +389,7 @@ export default function BillsPage() {
   const openReceipt = (url: string, isPdf: boolean) => (isPdf ? openPdf({ url }) : window.open(url, '_blank', 'noopener'));
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       {/* Header */}
       <ModuleHero
         eyebrow="Financials"

@@ -217,7 +217,7 @@ function HomeInner() {
 
   return (
     <div className="fh">
-      <div className="fh-in" aria-busy={isLoading || undefined}>
+      <div className="k-frame fh-in" aria-busy={isLoading || undefined}>
         <FlatStyles />
         <style dangerouslySetInnerHTML={{ __html: HOME_CSS }} />
         <HomeHeader
@@ -237,7 +237,7 @@ function HomeInner() {
 
 export default function HomeV2() {
   return (
-    <Suspense fallback={<div className="fh"><div className="fh-in"><FlatStyles /><RowSkeleton rows={6} /></div></div>}>
+    <Suspense fallback={<div className="fh"><div className="k-frame fh-in"><FlatStyles /><RowSkeleton rows={6} /></div></div>}>
       <HomeInner />
     </Suspense>
   );

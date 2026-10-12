@@ -102,7 +102,6 @@ function SaveNotice({ notice }: { notice: { text: string; ok: boolean } | null }
 const GOLD = 'var(--brand-primary)';
 
 const CSS = `
-.stWs > .k-page { max-width: 1040px; }
 .stStack { display: flex; flex-direction: column; gap: 16px; }
 .stActions { display: flex; align-items: center; gap: 14px; margin-top: 16px; flex-wrap: wrap; }
 .stNotice { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-sm); font-weight: 600; }
@@ -316,6 +315,7 @@ export default function SettingsPage() {
         crumbs={[{ label: 'Home', href: '/app' }, { label: 'Settings' }]}
         title="Settings"
         subtitle="Your account, team, billing, and app preferences — every control here saves for real."
+        width="form"
       >
         {(me || sub) && <StatRow items={stats} />}
 

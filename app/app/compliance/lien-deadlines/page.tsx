@@ -245,7 +245,7 @@ export default function LienDeadlinePage() {
   const submitDisabled = !formProject.trim() || !formDueDate || saving;
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       {/* Header */}
       <ModuleHero
         eyebrow="Compliance"

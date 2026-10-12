@@ -217,7 +217,7 @@ export default function PayAppPage() {
   ];
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       {/* Header */}
       <ModuleHero
         eyebrow="Progress Billing · AIA G702 / G703"

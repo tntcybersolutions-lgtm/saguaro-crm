@@ -457,7 +457,7 @@ function EstimatePage() {
   const smallGoldBtn: CSSProperties = { ...goldButtonStyle, padding: '7px 13px', fontSize: 13, borderRadius: 10 };
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
 
       {/* HEADER */}
       <div style={{ marginBottom: 10 }}>

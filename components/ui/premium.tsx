@@ -120,23 +120,24 @@ export function Aurora(_props: { soft?: boolean }) {
 }
 
 // ─── PremiumSurface ──────────────────────────────────────────────────────────
-// The page wrapper: the shared FX stylesheet, a max width, and the page
-// padding — the caller's on desktop, a 16px gutter on a phone (.pmPage).
+// The page wrapper: the shared FX stylesheet inside the one page frame
+// (.k-frame in app/globals.css) — full workspace width, the shared gutter and
+// spacing tokens. A form page passes width="form": the header stays full
+// width and the fields hold a readable column against the left edge.
 export function PremiumSurface({
   children,
-  maxWidth = 2200,
-  pad = '20px 24px 48px',
+  width,
 }: {
   children: React.ReactNode;
-  maxWidth?: number;
+  /** "form" keeps the body to --form-max (left-aligned). Default: full width. */
+  width?: 'form';
   /** Kept for callers; the surface is flat either way. */
   soft?: boolean;
-  pad?: string;
 }) {
   return (
     <div className="pmRoot" style={{ position: 'relative', overflow: 'hidden', minHeight: 'calc(100vh - 56px)' }}>
       <PremiumFX />
-      <div className="pmPage" style={{ position: 'relative', maxWidth, margin: '0 auto', ['--pm-pad' as string]: pad }}>
+      <div className="k-frame pmPage" data-width={width} style={{ position: 'relative' }}>
         {children}
       </div>
     </div>

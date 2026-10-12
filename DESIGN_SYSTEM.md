@@ -141,21 +141,68 @@ action tokens with hover, pressed, focus and disabled states.
 
 ## 2. Type, spacing, shape, depth
 
-- **Type scale:** page title 22/700 · section title 16/700 · body 14 · labels
+- **Type scale:** page title 26/800 (22 on a phone, `--fs-title`) · section title 16/700 · body 14 · labels
   and secondary 13 · captions and meta 12 (the floor). Uppercase table headers
   are the one exception: 11/700, tracking .05em. Inputs are 16px on phones.
-- **Spacing:** 4-pt grid (`--sp-*`). Page gutter 24px desktop, 16px phone.
+- **Spacing:** 4-pt grid (`--sp-*`). Page layout tokens below (§2a).
 - **Radius:** 8 controls · 10 buttons/tabs · 12 cards. Fully round (999) only for
   status badges and avatars — never for tabs, toggles or filters.
 - **Depth:** cards sit on `--shadow-sm` (hairline drop + soft wide shadow) with a
   1px border. No glows, no gradients behind content, no glass (blur) on data;
   blur is reserved for overlays such as sheets and menus.
 
+## 2a. Page layout — one frame for every `/app` page (12 Oct 2026)
+
+Every page sits in **one page frame**, `.k-frame` (`app/globals.css`). The
+frame owns the gutter; nothing inside it adds side margins. Title, subtitle,
+toolbar, filters, cards and lists therefore share one left edge and one right
+edge, and the header's primary action sits on that right edge.
+
+| Token (`:root`) | Desktop | Phone (≤ 767px) | Used for |
+|---|---|---|---|
+| `--page-max` | `none` | `none` | Operational pages fill the workspace beside the sidebar — never a centred column |
+| `--page-gutter` | 24px | 16px (wider only for a landscape notch: `env(safe-area-inset-*)`) | Left and right edge of all content |
+| `--page-pad-top` / `--page-pad-bottom` | 20 / 48px | 14 / 24px (the shell already clears the tab bar) | Above the title / below the last section |
+| `--head-gap` | 16px | 12px | Page header → first content |
+| `--section-gap` | 16px | 12px | Between sections (`.k-page` column gap) |
+| `--card-pad-x` / `--card-pad-y` | 16 / 14px | 12 / 14px | Card padding |
+| `--control-h` / `--control-h-touch` | 40 / 44px | 44px | Buttons, inputs, selects |
+| `--row-h` | 56px | 56px | List rows |
+| `--form-max` | 760px | — | A form's field column (left-aligned) |
+| `--reading-max` | 75ch | — | Long reading text (`.k-reading`) |
+| `--fs-title` / `--fs-title-m` | 26px | 22px | Page title (`.k-title`, `.pmHead h1`) |
+
+**Who uses the frame:** `PageShell` (`.k-page` = the frame + a flex column),
+`PremiumSurface` (`.k-frame.pmPage`), the flat pages (Home `.fh-in`, My Work
+`.mw`, Jobs `.jl`, the job page `.jx`), the route skeletons
+(`PageSkeleton`, `projects/loading`, `projects/[id]/loading`) and the pages
+that had their own wrapper (takeoff, contract form, directory, reviews,
+service, people, Ask, assemblies). The shared header is `.k-head` (kit) or
+`.pmHead` (`ModuleHero`): title + subtitle on the left, actions on the right;
+on a phone the actions drop under the title and wrap.
+
+**Forms:** `PageShell width="form"` / `PremiumSurface width="form"` keep the
+header full width and hold the body to `--form-max`, left-aligned (Settings).
+Delete account uses `PremiumSurface width="form"`; a single block can use `.k-form-col` (Settings → Import).
+
+**Flat list kit:** `.fl-brief`, `.fl-strip`, `.fl-sec`, `.fl-list`, `.fl-tabs`
+and `.fl-empty` carry no side margin; rows keep their own 16px inner padding.
+
+**Intentional exceptions (narrower or centred on purpose):** the sign-in and
+sign-up card (420px); dialogs and sheets (`--modal-w`, `--modal-w-sm`); the
+measured-takeoff revision compare overlay (920px, a full-screen dialog);
+full-screen start states of a tool (AI Takeoff's upload hero, 640–680px;
+Signal Studio's empty hero, 1040px), which are empty states, not pages; the
+drawing viewer and Signal Studio editor (full-bleed canvases, no gutter);
+centred empty-state copy inside a card; customer-facing portals and the
+bidder portal's jacket (a 1240px document column); print and PDF layouts;
+marketing pages.
+
 ## 3. Components — use these, do not hand-roll
 
 | Need | Component | File |
 |---|---|---|
-| Page frame + header | `PageShell` (kit) or `PremiumSurface` + `ModuleHero` (premium) | `components/ui/kit.tsx`, `components/ui/premium.tsx` |
+| Page frame + header | `PageShell` (kit) or `PremiumSurface` + `ModuleHero` (premium) — both are the `.k-frame` (§2a); `width="form"` for a form page | `components/ui/kit.tsx`, `components/ui/premium.tsx` |
 | Buttons | `Button` variants `primary / secondary / ghost / danger` (`.k-btn-*`); premium pages use `goldButtonStyle` for the one primary and `secondaryButtonStyle` for every other action (an empty state's button that repeats the header's is secondary) | kit / premium |
 | Card / section | `Card` (`.k-card`) or `SectionCard` (`.pmSec`); `flush` for a table | kit / premium |
 | Summary figures | `StatRow` (kit) or `StatStrip` / `StatCard` (premium) — one summary per screen, never repeated | kit / premium |

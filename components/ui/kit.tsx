@@ -36,6 +36,7 @@ export function PageShell({
   meta,
   actions,
   crumbs,
+  width,
   children,
 }: {
   title: React.ReactNode;
@@ -47,10 +48,13 @@ export function PageShell({
   /** Right side of the header. Exactly one `variant="primary"` button per page. */
   actions?: React.ReactNode;
   crumbs?: Crumb[];
+  /** "form": the header keeps the full width and the body holds a readable
+   *  field column (--form-max) against the left edge. Default: full width. */
+  width?: 'form';
   children: React.ReactNode;
 }) {
   return (
-    <div className="k-page">
+    <div className="k-page" data-width={width}>
       {crumbs && crumbs.length > 0 && (
         <nav className="k-crumbs" aria-label="Breadcrumb">
           {crumbs.map((c, i) => (

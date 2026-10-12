@@ -88,8 +88,8 @@ export default function DeleteAccountPage() {
   }
 
   return (
-    <PremiumSurface>
-      <div style={{ maxWidth: 680, margin: '0 auto' }}>
+    <PremiumSurface width="form">
+      <div>
         <Link
           href="/app/settings"
           style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: DIM, textDecoration: 'none', fontSize: 13, marginBottom: 16 }}
@@ -97,7 +97,7 @@ export default function DeleteAccountPage() {
           <ArrowLeft size={14} weight="bold" /> Settings
         </Link>
 
-        <h1 style={{ fontSize: 26, fontWeight: 800, color: TEXT, margin: '0 0 20px' }}>Delete Account</h1>
+        <h1 className="k-title" style={{ margin: '0 0 20px' }}>Delete Account</h1>
 
         {loadErr ? (
           <SectionCard><div style={{ color: DIM, fontSize: 14 }}>{loadErr}</div></SectionCard>

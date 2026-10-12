@@ -485,7 +485,7 @@ export default function PrequalificationPage() {
   useEscapeToClose(() => setShowDetail(null), !!showDetail);
   return (
     <>
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       {/* Toast */}
       {toast && <div role="status" style={{ position: 'fixed', top: 20, right: 20, background: `color-mix(in srgb, ${GREEN} 13%, transparent)`, border: `1px solid ${GREEN}`, color: GREEN, padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 600, zIndex: 10010 }}>{toast}</div>}
 
@@ -506,7 +506,7 @@ export default function PrequalificationPage() {
           24px-padded buttons ran past the edge: "Templates" was cut and
           "Invites" could not be reached). Switches in place, never scrolls. */}
       <FlatStyles />
-      <div style={{ margin: '0 -16px 20px', maxWidth: 592 }}>
+      <div style={{ margin: '0 0 20px', maxWidth: 560 }}>
         <Tabs
           label="Prequalification views"
           value={tab}

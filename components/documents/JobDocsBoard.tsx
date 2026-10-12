@@ -15,7 +15,7 @@ import { projectColor, jobTileStyle } from '@/lib/project-colors';
 const CSS = `
 .jdb { display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px; }
 .jdbHead { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.jdbHead h2 { margin: 0; font-size: 16px; font-weight: 800; color: var(--text-primary); }
+.jdbHead h2 { margin: 0; font-size: var(--fs-section); font-weight: 700; color: var(--title-section); }
 .jdbLegend { display: inline-flex; gap: 12px; font-size: 13px; font-weight: 700; color: var(--text-secondary); }
 .jdbLegend span { display: inline-flex; align-items: center; gap: 6px; }
 .jdbLegend i, .jdbDot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: 0 0 auto; }

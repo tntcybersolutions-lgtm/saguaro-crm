@@ -753,7 +753,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
   return (
     <>
       <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
-      <PremiumSurface maxWidth={1000}>
+      <PremiumSurface>
       <div ref={pageRef} style={{ color: TEXT, fontFamily: 'system-ui,Segoe UI,sans-serif', paddingBottom: conditions.length ? 72 : 0 }}>
         <ModuleHero
           eyebrow="Measurement-driven · deterministic"

@@ -464,7 +464,7 @@ export default function DashboardPage() {
         @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
       `}</style>
 
-      <PremiumSurface maxWidth={2200}>
+      <PremiumSurface>
 
         {/* Header */}
         <ModuleHero

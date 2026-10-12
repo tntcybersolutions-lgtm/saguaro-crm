@@ -134,7 +134,7 @@ function CashFlowContent() {
 
   if (loading) {
     return (
-      <PremiumSurface maxWidth={2200}>
+      <PremiumSurface>
         <ModuleSkeleton kpis={4} rows={6} />
       </PremiumSurface>
     );
@@ -142,7 +142,7 @@ function CashFlowContent() {
 
   if (error || !data) {
     return (
-      <PremiumSurface maxWidth={2200}>
+      <PremiumSurface>
         {ctx && (
           <StatStrip items={[
             {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmt0(ctxRevised), sub: (Number(money?.approvedCoCount) || 0) + ' approved COs' },
@@ -189,7 +189,7 @@ function CashFlowContent() {
   ];
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       {/* Toast */}
       {toast && (
         <div style={{
@@ -492,7 +492,7 @@ function CashFlowContent() {
 export default function CashFlowPage() {
   return (
     <Suspense fallback={
-      <PremiumSurface maxWidth={2200}>
+      <PremiumSurface>
         <ModuleSkeleton kpis={4} rows={6} />
       </PremiumSurface>
     }>

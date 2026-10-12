@@ -1010,7 +1010,7 @@ export default function CustomFieldsPage() {
 
   /* ══════════ RENDER ══════════ */
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       {/* Toast Notification */}
       {toast && (
         <div

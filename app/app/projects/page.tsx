@@ -122,13 +122,13 @@ export default function JobsPage() {
   }
 
   return (
-    <div className="jl">
+    <div className="k-frame jl">
       <FlatStyles />
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <header className="jl-head">
+      <header className="k-head jl-head">
         <div className="jl-title">
-          <h1>Jobs</h1>
-          <p>{ready ? `${plural(rows.length, 'job')}${total > 0 ? ` · ${fmtMoneyShort(total)} in contracts` : ''}` : loading ? 'Loading your jobs…' : ' '}</p>
+          <h1 className="k-title">Jobs</h1>
+          <p className="k-sub">{ready ? `${plural(rows.length, 'job')}${total > 0 ? ` · ${fmtMoneyShort(total)} in contracts` : ''}` : loading ? 'Loading your jobs…' : ' '}</p>
         </div>
         <RowAction kind="primary" href="/app/projects/new">New job</RowAction>
       </header>
@@ -168,19 +168,17 @@ export default function JobsPage() {
 /* Theme variables only; injected with dangerouslySetInnerHTML so the server
    and client text match (tools/check-style-escapes.mjs). */
 const CSS = `
-.jl{max-width:1040px;box-sizing:border-box;padding:4px 0 32px;color:var(--fl-text);background:var(--bg-base);min-height:calc(100vh - 120px)}
-.jl-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px 6px}
+.jl{color:var(--fl-text);background:var(--bg-base);min-height:calc(100vh - 120px)}
 .jl-title{min-width:0}
-.jl-title h1{margin:0;font-size:22px !important;font-weight:700;line-height:1.2;color:var(--fl-text)}
-.jl-title p{margin:2px 0 0;font-size:13px;color:var(--fl-text-2);min-height:18px}
-.jl-tools{display:flex;gap:8px;padding:6px 16px 4px}
+.jl-title .k-sub{min-height:21px}
+.jl-tools{display:flex;gap:8px;padding:0 0 4px}
 /* 16px beats the app-wide 13px !important on fields: under 16px iOS zooms the page on focus. */
 .jl-search,.jl-sort{height:44px;min-height:44px;box-sizing:border-box;border:1px solid var(--fl-line);border-radius:10px;background-color:var(--bg-base);color:var(--fl-text);font-family:inherit;font-size:16px !important}
 .jl-search{flex:1;min-width:0;padding:0 12px}
 .jl-search::placeholder{color:var(--fl-text-3)}
 .jl-sort{flex:none;width:auto;max-width:42%;padding:0 34px 0 12px}
 .jl-search:focus-visible,.jl-sort:focus-visible,.jl-chip:focus-visible{outline:2px solid var(--focus-ring);outline-offset:1px}
-.jl-chips{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 16px 12px}
+.jl-chips{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 0 12px}
 .jl-chip{position:relative;display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:10px;border:1px solid var(--fl-line);background:var(--bg-surface);color:var(--fl-text-2);font:inherit;font-size:13px;font-weight:600;letter-spacing:0;cursor:pointer;white-space:nowrap}
 .jl-chip::after{content:"";position:absolute;inset:-4px -3px}
 .jl-chip span{font-variant-numeric:tabular-nums;color:var(--fl-text-3);font-weight:600}
@@ -189,5 +187,4 @@ const CSS = `
 .jl-chip[aria-pressed=true] span{color:var(--selected-control-fg)}
 .jl-count{margin-left:auto;font-size:13px;color:var(--fl-text-3)}
 .jl-inline{color: var(--link);font-weight:650;text-decoration:none;background:none;border:0;padding:0;font:inherit;cursor:pointer;min-height:44px}
-@media (min-width:1100px){.jl{padding:12px 8px 48px}}
 `;

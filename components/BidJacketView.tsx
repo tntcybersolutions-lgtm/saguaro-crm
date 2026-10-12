@@ -189,7 +189,7 @@ export default function BidJacketView({
   const contents = jacket.sections.filter((s) => DOC_DIVIDERS.includes(s.key) && s.docs.length > 0);
 
   return (
-    <div style={{ maxWidth: 1240, margin: '0 auto', padding: '0 4px 48px' }}>
+    <div style={{ paddingBottom: 48 }}>
 
         {backHref !== null && (
         <Link

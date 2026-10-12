@@ -933,14 +933,14 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
 
   if (loading) return (
     <div className="amRoot" style={{ minHeight: '100vh', background: BG, padding: 32 }}>
-      <h1 style={{ color: 'var(--text-primary)', fontSize: 26, margin: 0, marginBottom: 8 }}>Roles & Permissions</h1>
+      <h1 className="k-title" style={{ margin: 0, marginBottom: 8 }}>Roles & Permissions</h1>
       <Spinner />
     </div>
   );
 
   if (error) return (
     <div className="amRoot" style={{ minHeight: '100vh', background: BG, padding: 32 }}>
-      <h1 style={{ color: 'var(--text-primary)', fontSize: 26, margin: 0, marginBottom: 8 }}>Roles & Permissions</h1>
+      <h1 className="k-title" style={{ margin: 0, marginBottom: 8 }}>Roles & Permissions</h1>
       <div style={{ ...card(), borderColor: RED }}>
         <p style={{ color: RED, margin: 0, marginBottom: 12 }}>Error: {error}</p>
         <button onClick={loadData} style={btn(GOLD, 'var(--on-brand)')}>Retry</button>
@@ -954,7 +954,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
       {/* header */}
       <div className="amHead" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <div>
-          <h1 style={{ color: 'var(--text-primary)', fontSize: 26, margin: 0 }}>Roles & Permissions</h1>
+          <h1 className="k-title" style={{ margin: 0 }}>Roles & Permissions</h1>
           <p style={{ color: DIM, fontSize: 13, margin: '4px 0 0' }}>
             Manage access levels across {CATEGORIES.length} categories — {roles.length} roles configured
           </p>

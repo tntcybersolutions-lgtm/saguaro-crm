@@ -165,7 +165,7 @@ export default function MessagesPage() {
   const sendDisabled = sending || !text.trim();
 
   return (
-    <PremiumSurface maxWidth={1040} pad="40px 28px 40px">
+    <PremiumSurface>
       {/* Header */}
       <ModuleHero
         eyebrow={ctx?.project?.name || 'Communication'}

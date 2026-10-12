@@ -463,7 +463,7 @@ export default function TeamPage(){
     setInviteMsg('');
   }
 
-  return <PremiumSurface maxWidth={2200}>
+  return <PremiumSurface>
     <style dangerouslySetInnerHTML={{ __html: TEAM_CSS }} />
     <div className="tmScope">
     <ModuleHero

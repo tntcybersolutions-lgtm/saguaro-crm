@@ -171,8 +171,8 @@ export default function JobPage() {
 
   if (notFound) {
     return (
-      <div className="jx">{css}
-        <header className="jx-head"><h1>Job not found</h1></header>
+      <div className="k-frame jx">{css}
+        <header className="jx-head"><h1 className="k-title">Job not found</h1></header>
         <Brief tone="warning" icon={<WarningCircle size={18} weight="fill" />} action={{ label: 'All jobs', href: '/app/projects' }}>This job doesn&apos;t exist, or it belongs to another company.</Brief>
       </div>
     );
@@ -182,8 +182,8 @@ export default function JobPage() {
     if ((aggError || !aggLoading) && (toolsError || !toolsLoading) && (aggError || toolsError)) {
       const why = humanError(aggError || toolsError, 'Network error. Check your connection and try again.');
       return (
-        <div className="jx" role="alert">{css}
-          <header className="jx-head"><h1>Couldn&apos;t load this job</h1></header>
+        <div className="k-frame jx" role="alert">{css}
+          <header className="jx-head"><h1 className="k-title">Couldn&apos;t load this job</h1></header>
           <Brief tone="danger" icon={<WarningCircle size={18} weight="fill" />} action={{ label: 'Retry', onClick: retryAll }}>{why}</Brief>
         </div>
       );
@@ -460,11 +460,11 @@ export default function JobPage() {
   );
 
   return (
-    <div className="jx">
+    <div className="k-frame jx">
       {css}
       <header className="jx-head">
         <div className="jx-title">
-          <h1>{p.name || 'Untitled job'}</h1>
+          <h1 className="k-title">{p.name || 'Untitled job'}</h1>
           <span className="jx-pill" data-tone={stage === 'building' ? 'success' : stage === 'bidding' ? 'info' : undefined}>{stageLabel(p)}</span>
         </div>
         {(addr || when) && (
@@ -507,7 +507,7 @@ export default function JobPage() {
 /* The shape of the page while the first answer is on its way — never blank. */
 function JobSkeleton({ css }: { css: React.ReactNode }) {
   return (
-    <div className="jx" aria-busy="true" aria-label="Loading job">
+    <div className="k-frame jx" aria-busy="true" aria-label="Loading job">
       {css}
       <header className="jx-head"><i className="jx-skel" style={{ width: '70%', height: 20 }} /><i className="jx-skel" style={{ width: '50%', height: 12, marginTop: 10 }} /></header>
       <div className="jx-money"><NumberStrip items={[{ value: <i className="jx-skel-val" />, label: 'Contract' }, { value: <i className="jx-skel-val" />, label: 'Billed' }, { value: <i className="jx-skel-val" />, label: 'Finish' }]} /></div>
@@ -520,10 +520,10 @@ function JobSkeleton({ css }: { css: React.ReactNode }) {
 /* Injected with dangerouslySetInnerHTML (tools/check-style-escapes.mjs), so the
    server and client text match. */
 const CSS = `
-.jx{width:100%;max-width:1240px;box-sizing:border-box;padding:4px 0 32px;color:var(--fl-text);background:var(--bg-base);min-height:calc(100vh - 120px)}
-.jx-head{padding:12px 16px 4px}
+.jx{color:var(--fl-text);background:var(--bg-base);min-height:calc(100vh - 120px)}
+.jx-head{margin-bottom:var(--head-gap)}
 .jx-title{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;min-width:0}
-.jx .jx-head h1{margin:0;min-width:0;font-size:24px;font-weight:800;letter-spacing:-0.01em;line-height:1.2;color:var(--fl-text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.jx .jx-head h1{margin:0;min-width:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
 .jx-pill{display:inline-flex;align-items:center;min-height:26px;padding:0 10px;border-radius:999px;font-size:13px;font-weight:700;white-space:nowrap;background:var(--bg-surface-2);color:var(--fl-text-2);border:1px solid var(--fl-line)}
 .jx-pill[data-tone=info]{background:var(--info-bg);color:var(--info-fg);border-color:var(--info-border)}
 .jx-pill[data-tone=success]{background:var(--success-bg);color:var(--success-fg);border-color:var(--success-border)}
@@ -533,20 +533,21 @@ const CSS = `
 .jx-meta [data-late]{color:var(--warning)}
 .jx-meta [data-late] svg{color:var(--warning)}
 .jx-money{padding:10px 0 4px}
-.jx-bar{height:6px;margin:8px 16px 4px;background:var(--fl-line);border-radius:3px;overflow:hidden}
+.jx-bar{height:6px;margin:8px 0 4px;background:var(--fl-line);border-radius:3px;overflow:hidden}
 .jx-bar i{display:block;height:100%;background:var(--success);border-radius:3px}
 .jx .fl-brief{margin-top:10px}
 .jx-skel,.jx-skel-val,.jx-brief-skel i{display:block;border-radius:5px;background:var(--fl-line);animation:jx-pulse 1.2s ease-in-out infinite}
 .jx-skel-val{display:inline-block;width:44px;height:12px;vertical-align:middle}
 .jx-money .jx-skel-val{display:block;height:16px;width:56px;margin-bottom:4px}
-.jx-brief-skel{margin:10px 16px 12px;padding:16px;border:1px solid var(--fl-line);border-radius:12px;background:var(--bg-surface)}
+.jx-brief-skel{margin:10px 0 12px;padding:16px;border:1px solid var(--fl-line);border-radius:12px;background:var(--bg-surface)}
 .jx-brief-skel i{height:12px;width:92%;margin:4px 0 8px}
 .jx-brief-skel i+i{width:60%}
 @keyframes jx-pulse{50%{opacity:.45}}
 @media (prefers-reduced-motion:reduce){.jx-skel,.jx-skel-val,.jx-brief-skel i{animation:none}}
-.jx-more{display:flex;align-items:center;min-height:44px;padding:0 16px;background:none;border:0;color:var(--link);font:inherit;font-size:14px;font-weight:650;cursor:pointer}
+.jx-more{display:flex;align-items:center;min-height:44px;padding:0;background:none;border:0;color:var(--link);font:inherit;font-size:14px;font-weight:650;cursor:pointer}
 .jx-inline{color:var(--link);font-weight:650;text-decoration:none;background:none;border:0;padding:0;font:inherit;cursor:pointer}
-.jx-note{margin:0;padding:6px 16px 10px;font-size:13px;color:var(--danger)}
+.jx-note{margin:0;padding:6px 0 10px;font-size:13px;color:var(--danger)}
+.fl-list .jx-note{padding:6px 16px 10px}
 .jx-note[data-ok]{color:var(--success)}
 .jx-disc{background:var(--bg-surface)}
 .jx-chev{transition:transform .15s ease}
@@ -554,7 +555,7 @@ const CSS = `
 .jx-panel{padding:0 0 8px}
 /* The concept's numbered steps: a circle per step joined by a line; done
    steps carry a check, the next one is lit in the link colour. */
-.jx-steps{list-style:none;margin:0 16px;padding:4px 0}
+.jx-steps{list-style:none;margin:0;padding:4px 0}
 .jx-steps>li{position:relative}
 .jx-steps>li:not(:last-child)::before{content:"";position:absolute;left:15px;top:40px;bottom:-4px;width:2px;border-radius:1px;background:var(--fl-line)}
 .jx-steps>li[data-state=done]:not(:last-child)::before{background:var(--success-border)}
@@ -582,8 +583,6 @@ const CSS = `
 .jx .fl-act.jx-danger{background:var(--action-danger-bg);color:var(--action-danger-fg);border-color:var(--danger-border)}
 .jx .fl-act.jx-danger:hover:not([disabled]){background:var(--action-danger-hover)}
 @media (min-width:1100px){
-  .jx{padding:12px 8px 48px}
-  .jx .jx-head h1{font-size:26px}
   .jx-cols{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:0 40px;align-items:start}
 }
 `;

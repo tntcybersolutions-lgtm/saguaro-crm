@@ -121,7 +121,7 @@ const DW_CSS=`
 .dw-head{display:flex;align-items:center;flex-wrap:wrap;gap:10px 16px;padding:14px var(--sp-6) 0;min-width:0}
 .dw-head-id{min-width:0;flex:1 1 220px}
 .dw-eyebrow{font-size:12px;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dw-title{margin:2px 0 0;font-size:20px;font-weight:800;color:var(--text-primary);letter-spacing:-0.01em;line-height:1.2}
+.dw-title{margin:2px 0 0;font-size:var(--fs-title-m);font-weight:800;color:var(--title-page);letter-spacing:-0.01em;line-height:1.2}
 .dw-head-tabs .k-tabs{border-bottom:none}
 .dw-err{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px var(--sp-6) 0;padding:10px 14px;border-radius:var(--radius-sm);background:rgba(248,113,113,0.10);border:1px solid rgba(248,113,113,0.40);color:#FFB3BB;font-size:13px}
 .dw-work{flex:1;min-height:0;min-width:0;display:flex;margin:12px var(--sp-6) var(--sp-4);border:1px solid var(--border-subtle);border-radius:var(--radius-md);overflow:hidden;background:var(--bg-base)}

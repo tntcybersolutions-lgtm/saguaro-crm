@@ -298,7 +298,7 @@ export default function CloseoutPage() {
   }
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       {/* Header */}
       <ModuleHero
         eyebrow={ctx?.project?.name || 'Closeout'}

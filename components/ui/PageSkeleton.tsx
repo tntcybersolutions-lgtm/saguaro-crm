@@ -28,7 +28,7 @@ export function ModuleSkeleton({ hero = true, kpis = 4, rows = 5 }: { hero?: boo
         </div>
       )}
       {rows > 0 && (
-        <div style={{ borderTop: '1px solid var(--sg-border)', margin: '0 -16px' }}>
+        <div style={{ borderTop: '1px solid var(--sg-border)' }}>
           <RowSkeleton rows={rows} />
         </div>
       )}
@@ -43,7 +43,7 @@ export function ModuleSkeleton({ hero = true, kpis = 4, rows = 5 }: { hero?: boo
  */
 export function RouteSkeleton({ title, figures = 4, rows = 7 }: { title?: string; figures?: number; rows?: number }) {
   return (
-    <div className="sag-route-skel" aria-busy="true" aria-label={title ? `Loading ${title}` : 'Loading'}>
+    <div className="k-frame sag-route-skel" aria-busy="true" aria-label={title ? `Loading ${title}` : 'Loading'}>
       <FlatStyles />
       <style dangerouslySetInnerHTML={{ __html: ROUTE_SKEL_CSS }} />
       <div className="sag-route-skel-head">
@@ -65,16 +65,13 @@ export function RouteSkeleton({ title, figures = 4, rows = 7 }: { title?: string
 }
 
 const ROUTE_SKEL_CSS = `
-.sag-route-skel{max-width:2200px;margin:0 auto;padding:20px 24px 48px}
-.sag-route-skel-head{margin-bottom:14px}
-.sag-route-skel-title{font-size:22px;font-weight:700;line-height:1.2;letter-spacing:-0.015em;color:var(--sg-text)}
+.sag-route-skel-head{margin-bottom:var(--head-gap)}
+.sag-route-skel-title{font-size:var(--fs-title);font-weight:800;line-height:1.2;letter-spacing:-0.02em;color:var(--title-page)}
 .sag-route-skel-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));border-top:1px solid var(--sg-border);border-bottom:1px solid var(--sg-border);overflow:hidden;margin-bottom:16px}
 .sag-route-skel-strip>div{margin-left:-1px}
-.sag-route-skel-rows{border-top:1px solid var(--sg-border);margin:0 -24px}
+.sag-route-skel-rows{border-top:1px solid var(--sg-border)}
 @media (max-width:767px){
-  .sag-route-skel{padding:14px 16px 24px}
-  .sag-route-skel-title{font-size:20px}
+  .sag-route-skel-title{font-size:var(--fs-title-m)}
   .sag-route-skel-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .sag-route-skel-rows{margin:0 -16px}
 }
 `;

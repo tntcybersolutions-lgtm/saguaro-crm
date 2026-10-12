@@ -209,11 +209,11 @@ export default function WifiManagerPage() {
   const floorApCount = aps.filter(a => a.floor === selectedFloor).length;
 
   if (loading) {
-    return <PremiumSurface maxWidth={2200}><ModuleSkeleton kpis={4} rows={5} /></PremiumSurface>;
+    return <PremiumSurface><ModuleSkeleton kpis={4} rows={5} /></PremiumSurface>;
   }
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       {/* Breadcrumb */}
       <div style={{ marginBottom: 14 }}>
         <Link href={`/app/projects/${projectId}/network`} style={{ color: DIM, fontSize: 12, textDecoration: 'none' }}>Network →</Link>

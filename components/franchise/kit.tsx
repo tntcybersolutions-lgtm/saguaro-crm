@@ -61,7 +61,7 @@ export function PageHeader({ title, subtitle, right }: { title: string; subtitle
   return (
     <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 22 }}>
       <div>
-        <h1 style={{ fontSize: 26, fontWeight: 900, margin: '0 0 4px', letterSpacing: -0.4 }}>{title}</h1>
+        <h1 className="k-title" style={{ margin: '0 0 4px' }}>{title}</h1>
         {subtitle && <p style={{ fontSize: 14, color: C.dim, margin: 0 }}>{subtitle}</p>}
       </div>
       {right}

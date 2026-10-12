@@ -44,7 +44,7 @@ export default function PortalsPage() {
   const lbl: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
 
   return (
-    <PremiumSurface maxWidth={1000} pad="28px 24px 60px">
+    <PremiumSurface>
       <div style={{ fontFamily: font, color: C.text }}>
         <ModuleHero
           eyebrow="Command Center"

@@ -573,7 +573,7 @@ export default function CatalogPage() {
   }
 
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       <style>{`
         .catAdd:hover:not(:disabled){background:var(--bg-hover)!important;border-color:var(--border-strong)!important}
         .catAdd:active{transform:translateY(1px)!important}

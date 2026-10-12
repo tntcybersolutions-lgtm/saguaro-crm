@@ -529,7 +529,7 @@ export default function NotificationSettingsPage() {
   /* ── loading state ── */
   if (loading) {
     return (
-      <PremiumSurface maxWidth={2200}>
+      <PremiumSurface>
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -556,7 +556,7 @@ export default function NotificationSettingsPage() {
 
   /* ── main render ── */
   return (
-    <PremiumSurface maxWidth={2200}>
+    <PremiumSurface>
       {/* Header */}
       <ModuleHero
         eyebrow="Notifications"

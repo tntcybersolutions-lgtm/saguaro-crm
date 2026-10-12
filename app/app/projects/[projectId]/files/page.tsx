@@ -188,7 +188,7 @@ export default function FilesPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: FL_CSS }} />
-      <PremiumSurface maxWidth={2200}>
+      <PremiumSurface>
         {/* Header */}
         <ModuleHero
           title="Files & Media"
