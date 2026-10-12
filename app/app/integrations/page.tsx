@@ -297,7 +297,7 @@ export default function IntegrationsPage() {
       {notification && (
         <div style={{
           position: 'fixed', top: 20, right: 20, zIndex: 1000, padding: '14px 24px',
-          background: notification.type === 'success' ? 'rgba(44,255,122,0.15)' : 'rgba(255,59,48,0.15)',
+          background: notification.type === 'success' ? 'rgba(74,222,128,0.15)' : 'rgba(248,113,113,0.15)',
           border: `1px solid ${notification.type === 'success' ? GREEN : RED}`,
           borderRadius: 10, color: notification.type === 'success' ? GREEN : RED,
           fontSize: 13, fontWeight: 600, backdropFilter: 'blur(12px)',
@@ -370,7 +370,7 @@ export default function IntegrationsPage() {
 
       {/* Error */}
       {error && (
-        <div style={{ padding: 16, background: 'rgba(255,59,48,0.1)', border: `1px solid ${RED}`, borderRadius: 10, color: RED, marginBottom: 20 }}>
+        <div style={{ padding: 16, background: 'rgba(248,113,113,0.1)', border: `1px solid ${RED}`, borderRadius: 10, color: RED, marginBottom: 20 }}>
           {error}
         </div>
       )}
@@ -406,7 +406,7 @@ export default function IntegrationsPage() {
               key={intg.key}
               style={{
                 background: 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))',
-                border: `1px solid ${intg.connected ? 'rgba(44,255,122,0.35)' : intg.available ? 'color-mix(in srgb, var(--brand-primary) 22%, transparent)' : BORDER}`,
+                border: `1px solid ${intg.connected ? 'rgba(74,222,128,0.35)' : intg.available ? 'color-mix(in srgb, var(--brand-primary) 22%, transparent)' : BORDER}`,
                 borderRadius: 16,
                 padding: 22,
                 position: 'relative',
@@ -431,7 +431,7 @@ export default function IntegrationsPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{intg.name}</span>
                     {intg.connected ? (
-                      <span style={{ fontSize: 10, fontWeight: 700, color: GREEN, background: 'rgba(44,255,122,0.12)', border: '1px solid rgba(44,255,122,0.3)', padding: '2px 8px', borderRadius: 10, whiteSpace: 'nowrap' }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: GREEN, background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)', padding: '2px 8px', borderRadius: 10, whiteSpace: 'nowrap' }}>
                         Connected
                       </span>
                     ) : (
@@ -457,7 +457,7 @@ export default function IntegrationsPage() {
 
               {/* Connected Details */}
               {intg.connected && (
-                <div style={{ marginBottom: 14, padding: '6px 12px', background: 'rgba(44,255,122,0.06)', border: '1px solid rgba(44,255,122,0.18)', borderRadius: 10 }}>
+                <div style={{ marginBottom: 14, padding: '6px 12px', background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.18)', borderRadius: 10 }}>
                   <InsightRow label="Last Sync" value={timeAgo(intg.last_sync_at)} />
                   <InsightRow label="Status" value="Active" accent={GREEN} />
                   <InsightRow label="Auth" value={String(intg.auth_type || 'credentials').replace(/_/g, ' ')} />
@@ -486,7 +486,7 @@ export default function IntegrationsPage() {
                           disabled={syncing === intg.key}
                           style={{
                             flex: 1, padding: '8px 0', borderRadius: 8, cursor: 'pointer', minHeight: 44,
-                            background: 'rgba(44,255,122,0.12)', border: `1px solid rgba(44,255,122,0.3)`,
+                            background: 'rgba(74,222,128,0.12)', border: `1px solid rgba(74,222,128,0.3)`,
                             color: GREEN, fontSize: 12, fontWeight: 700,
                             opacity: syncing === intg.key ? 0.6 : 1,
                           }}
@@ -499,7 +499,7 @@ export default function IntegrationsPage() {
                       onClick={() => handleDisconnect(intg)}
                       style={{
                         padding: '8px 14px', borderRadius: 8, cursor: 'pointer', minHeight: 44,
-                        background: 'rgba(255,59,48,0.1)', border: `1px solid rgba(255,59,48,0.3)`,
+                        background: 'rgba(248,113,113,0.1)', border: `1px solid rgba(248,113,113,0.3)`,
                         color: RED, fontSize: 12, fontWeight: 600,
                       }}
                     >

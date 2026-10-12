@@ -12,7 +12,7 @@ import {
 } from '@phosphor-icons/react';
 
 /* ─── Palette ─── */
-const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#2CFF7A';
+const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#4ADE80';
 const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = 'var(--text-secondary)', DARK = 'var(--bg-base)';
 
 const glass: React.CSSProperties = {
@@ -327,7 +327,7 @@ export default function DiscoverPage() {
                 onClick={() => { setShowResults(false); setRecError(false); generateRecommendations(answers); }}
                 style={{
                   padding: '14px 28px', background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))',
-                  color: '#0A0A00', border: 'none', borderRadius: 12, fontWeight: 700, fontSize: 15, cursor: 'pointer',
+                  color: '#101722', border: 'none', borderRadius: 12, fontWeight: 700, fontSize: 15, cursor: 'pointer',
                 }}
               >
                 Try Again
@@ -370,7 +370,7 @@ export default function DiscoverPage() {
                 <div style={{ flex: 1, minWidth: 200 }}>
                   <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>
                     {rec.status === 'accepted' && <span style={{ color: GREEN, marginRight: 8 }}>&#10003;</span>}
-                    {rec.status === 'rejected' && <span style={{ color: '#FF3B30', marginRight: 8 }}>&#10007;</span>}
+                    {rec.status === 'rejected' && <span style={{ color: '#F87171', marginRight: 8 }}>&#10007;</span>}
                     {rec.title}
                   </h3>
                   <p style={{ color: DIM, fontSize: 14, lineHeight: 1.6, marginBottom: 12 }}>{rec.description}</p>
@@ -388,8 +388,8 @@ export default function DiscoverPage() {
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>&#10003;</button>
                     <button onClick={() => handleRecAction(rec.id, 'rejected')} style={{
-                      width: 44, height: 44, borderRadius: 12, border: `1px solid #FF3B30`,
-                      background: '#EF444420', color: '#FF3B30', fontSize: 20, cursor: 'pointer',
+                      width: 44, height: 44, borderRadius: 12, border: `1px solid #F87171`,
+                      background: '#EF444420', color: '#F87171', fontSize: 20, cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>&#10007;</button>
                   </div>
@@ -414,7 +414,7 @@ export default function DiscoverPage() {
             <Link href="/design/packages" style={{ textDecoration: 'none' }}>
               <button style={{
                 padding: '16px 36px', background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))',
-                color: '#0A0A00', border: 'none', borderRadius: 12, fontWeight: 700,
+                color: '#101722', border: 'none', borderRadius: 12, fontWeight: 700,
                 fontSize: 16, cursor: 'pointer',
               }}>
                 See Your Smart Building Packages

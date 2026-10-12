@@ -18,7 +18,7 @@ export default function W9PortalLanding() {
           <label style={{ color: 'var(--text-secondary)', fontSize: 12, display: 'block', marginBottom: 8 }}>Enter Your Access Token</label>
           <div style={{ display: 'flex', gap: 8 }}>
             <input type="text" value={token} onChange={(e) => setToken(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && token.trim() && router.push(`/portals/w9/${token.trim()}`)} placeholder="Paste token from email" style={{ flex: 1, padding: '12px 16px', background: '#1c1c1e', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#FFFFFF', fontSize: 14, outline: 'none' }} />
-            <button onClick={() => token.trim() && router.push(`/portals/w9/${token.trim()}`)} disabled={!token.trim()} style={{ padding: '12px 24px', background: 'var(--brand-primary)', border: 'none', borderRadius: 10, color: '#0A0A00', fontWeight: 700, fontSize: 14, cursor: 'pointer', opacity: !token.trim() ? 0.5 : 1 }}>Submit</button>
+            <button onClick={() => token.trim() && router.push(`/portals/w9/${token.trim()}`)} disabled={!token.trim()} style={{ padding: '12px 24px', background: 'var(--brand-primary)', border: 'none', borderRadius: 10, color: '#101722', fontWeight: 700, fontSize: 14, cursor: 'pointer', opacity: !token.trim() ? 0.5 : 1 }}>Submit</button>
           </div>
         </div>
         <div style={{ textAlign: 'center', marginTop: 24 }}><a href="/" style={{ color: 'var(--text-secondary)', fontSize: 13, textDecoration: 'none' }}>← Back to Saguaro</a></div>

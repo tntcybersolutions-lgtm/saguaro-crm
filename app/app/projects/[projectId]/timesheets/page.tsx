@@ -57,7 +57,7 @@ const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 7
 
 // Compact button + filter-chip presets derived from the kit --------------------
 const goldBtnSm: React.CSSProperties = { ...goldButtonStyle, padding: '6px 14px', fontSize: 12, borderRadius: 9 };
-const dangerBtnSm: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '6px 14px', borderRadius: 9, cursor: 'pointer', background: 'rgba(255,59,48,0.12)', color: 'var(--danger)', border: '1px solid rgba(255,59,48,0.35)', fontWeight: 700, fontSize: 12 };
+const dangerBtnSm: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '6px 14px', borderRadius: 9, cursor: 'pointer', background: 'rgba(248,113,113,0.12)', color: 'var(--danger)', border: '1px solid rgba(248,113,113,0.35)', fontWeight: 700, fontSize: 12 };
 const chipBase: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '7px 16px', borderRadius: 999, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', border: '1px solid', transition: 'all .16s ease' };
 const chipActive: React.CSSProperties = { ...chipBase, background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-strong))', color: 'var(--on-brand)', borderColor: 'transparent', boxShadow: '0 8px 20px -10px color-mix(in srgb, var(--brand-primary) 60%, transparent)' };
 const chipInactive: React.CSSProperties = { ...chipBase, background: 'rgba(255,255,255,0.04)', color: 'var(--c-text-2)', borderColor: 'rgba(255,255,255,0.10)' };
@@ -256,7 +256,7 @@ export default function TimesheetsPage() {
       </div>
 
       {toast && (
-        <div style={{ marginBottom: 16, padding: '11px 16px', background: 'rgba(44,255,122,0.12)', border: '1px solid rgba(44,255,122,0.3)', borderRadius: 10, color: GREEN, fontSize: 13, fontWeight: 600 }}>
+        <div style={{ marginBottom: 16, padding: '11px 16px', background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 10, color: GREEN, fontSize: 13, fontWeight: 600 }}>
           {toast}
         </div>
       )}

@@ -491,10 +491,10 @@ const CSS = `
 .sv-num { font-size: 13px; font-weight: 750; color: var(--text-secondary); }
 .sv-rowtitle { font-size: 15px; font-weight: 650; }
 .sv-rowmeta { font-size: 13px; color: var(--text-tertiary); }
-.sv-unassigned { color: #FFE600; font-style: normal; font-weight: 700; }
+.sv-unassigned { color: #FFE000; font-style: normal; font-weight: 700; }
 .sv-pill { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--bg-surface-2); color: var(--text-secondary); text-transform: capitalize; }
-.sv-p-emergency { background: rgba(255,59,48,.16); color: #FF3B30; }
-.sv-p-high { background: rgba(255,138,0,.16); color: #FF8A00; }
+.sv-p-emergency { background: rgba(248,113,113,.16); color: #F87171; }
+.sv-p-high { background: rgba(251,191,36,.16); color: #FBBF24; }
 .sv-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
 .sv-headbtns { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 .sv-danger { background: transparent; border-color: color-mix(in srgb, var(--danger) 45%, transparent); color: var(--danger); }
@@ -509,7 +509,7 @@ const CSS = `
 .sv-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .sv-span2 { grid-column: span 2; }
 .sv-field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--text-secondary); font-weight: 650; }
-.sv-field input, .sv-field select, .sv-field textarea, .sv-note { min-height: 44px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--glass-border); background: var(--bg-solid-2, #15171C); color: var(--text-primary); font-size: 16px; font-family: inherit; }
+.sv-field input, .sv-field select, .sv-field textarea, .sv-note { min-height: 44px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--glass-border); background: var(--bg-solid-2, #243247); color: var(--text-primary); font-size: 16px; font-family: inherit; }
 .sv-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 14px; }
 .sv-statusrow { display: flex; flex-wrap: wrap; gap: 8px; }
 .sv-inline { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; margin-top: 12px; }
@@ -521,9 +521,9 @@ const CSS = `
 .sv-ghost { background: var(--bg-surface-2); border-color: var(--glass-border); color: var(--text-primary); }
 .sv-linkbtn { background: none; border: 0; color: var(--brand-primary); font-weight: 700; cursor: pointer; font-size: 13px; }
 .sv-msg { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; padding: 10px 12px; border-radius: 10px; font-size: 13.5px; }
-.sv-ok { background: rgba(44,255,122,.1); color: #2CFF7A; }
-.sv-err { color: #FF3B30; }
-.sv-msg.sv-err, .sv-msg.sv-conflict { background: rgba(255,59,48,.1); color: #FF3B30; }
+.sv-ok { background: rgba(74,222,128,.1); color: #4ADE80; }
+.sv-err { color: #F87171; }
+.sv-msg.sv-err, .sv-msg.sv-conflict { background: rgba(248,113,113,.1); color: #F87171; }
 .sv-notes { list-style: none; margin: 10px 0 0; padding: 0; font-size: 13px; color: var(--text-tertiary); display: flex; flex-direction: column; gap: 6px; }
 .sv-res { font-size: 14px; margin: 10px 0 0; }
 @media (max-width: 1100px) { .sv-layout.with-side { grid-template-columns: minmax(0, 1fr); } .sv-detail { order: -1; } }

@@ -123,7 +123,7 @@ const DW_CSS=`
 .dw-eyebrow{font-size:12px;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dw-title{margin:2px 0 0;font-size:20px;font-weight:800;color:var(--text-primary);letter-spacing:-0.01em;line-height:1.2}
 .dw-head-tabs .k-tabs{border-bottom:none}
-.dw-err{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px var(--sp-6) 0;padding:10px 14px;border-radius:var(--radius-sm);background:rgba(255,59,48,0.10);border:1px solid rgba(255,59,48,0.40);color:#FFB3BB;font-size:13px}
+.dw-err{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px var(--sp-6) 0;padding:10px 14px;border-radius:var(--radius-sm);background:rgba(248,113,113,0.10);border:1px solid rgba(248,113,113,0.40);color:#FFB3BB;font-size:13px}
 .dw-work{flex:1;min-height:0;min-width:0;display:flex;margin:12px var(--sp-6) var(--sp-4);border:1px solid var(--border-subtle);border-radius:var(--radius-md);overflow:hidden;background:var(--bg-base)}
 .dw-rail{width:280px;flex-shrink:0;display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--border-subtle);background:var(--bg-surface)}
 .dw-rail-head{display:flex;align-items:center;gap:6px;padding:10px 10px 8px 12px;border-bottom:1px solid var(--border-subtle)}
@@ -895,12 +895,12 @@ export default function DrawingsPage(){
           <div style={{flex:1,padding:20}}>
             <div style={{display:'flex',flexDirection:'column',gap:14}}>
               {mode==='create'&&replacing&&(
-                <div style={{background:'rgba(255,138,0,0.10)',border:'1px solid rgba(255,138,0,0.40)',borderRadius:10,padding:'10px 12px',fontSize:13,color:TEXT,lineHeight:1.5}}>
+                <div style={{background:'rgba(251,191,36,0.10)',border:'1px solid rgba(251,191,36,0.40)',borderRadius:10,padding:'10px 12px',fontSize:13,color:TEXT,lineHeight:1.5}}>
                   Replacing <strong>{sheetNo(replacing)||'this sheet'} R{revOf(replacing)}</strong> — this files as R{Number(form.revision)||0}. The earlier revision stays on record; edit it to mark it superseded once the new one is in.
                 </div>
               )}
               {mode==='create'&&(
-                <label style={{display:'block',cursor:'pointer',border:`1.5px dashed ${saveError&&uploadFile?'rgba(255,59,48,0.6)':uploadFile?'rgba(44,255,122,0.5)':'color-mix(in srgb, var(--brand-primary) 40%, transparent)'}`,borderRadius:12,padding:'16px 14px',textAlign:'center',background:saveError&&uploadFile?'rgba(255,59,48,0.06)':uploadFile?'rgba(44,255,122,0.06)':'color-mix(in srgb, var(--brand-primary) 5%, transparent)'}}>
+                <label style={{display:'block',cursor:'pointer',border:`1.5px dashed ${saveError&&uploadFile?'rgba(248,113,113,0.6)':uploadFile?'rgba(74,222,128,0.5)':'color-mix(in srgb, var(--brand-primary) 40%, transparent)'}`,borderRadius:12,padding:'16px 14px',textAlign:'center',background:saveError&&uploadFile?'rgba(248,113,113,0.06)':uploadFile?'rgba(74,222,128,0.06)':'color-mix(in srgb, var(--brand-primary) 5%, transparent)'}}>
                   <input type="file" accept=".pdf,image/*" style={{display:'none'}}
                     onChange={e=>pickFile(e.target.files?.[0]||null)}/>
                   <UploadSimple size={20} weight="bold" color={saveError&&uploadFile?'var(--danger)':uploadFile?'var(--success)':'var(--brand-primary-strong)'}/>
@@ -984,7 +984,7 @@ export default function DrawingsPage(){
                 </div>
               )}
               {saveError&&(
-                <div role="alert" style={{display:'flex',gap:8,alignItems:'flex-start',background:'rgba(255,59,48,0.10)',border:'1px solid rgba(255,59,48,0.45)',borderRadius:10,padding:'10px 12px',fontSize:13,color:'var(--danger)',lineHeight:1.5}}>
+                <div role="alert" style={{display:'flex',gap:8,alignItems:'flex-start',background:'rgba(248,113,113,0.10)',border:'1px solid rgba(248,113,113,0.45)',borderRadius:10,padding:'10px 12px',fontSize:13,color:'var(--danger)',lineHeight:1.5}}>
                   <Warning size={16} color={RED} style={{flexShrink:0,marginTop:2}}/>
                   <div><strong style={{color:TEXT}}>{mode==='create'&&uploadFile?'Upload Failed':'Save Failed'}</strong> — {saveError}</div>
                 </div>

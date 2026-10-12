@@ -49,7 +49,7 @@ export default function OnboardingStep1() {
           {STEPS.map((s, i) => (
             <React.Fragment key={s.num}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                <div style={{ width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, background: s.active ? GOLD : 'rgba(255,255,255,.08)', color: s.active ? '#0A0A00' : DIM, border: `2px solid ${s.active ? GOLD : BORDER}` }}>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, background: s.active ? GOLD : 'rgba(255,255,255,.08)', color: s.active ? '#101722' : DIM, border: `2px solid ${s.active ? GOLD : BORDER}` }}>
                   {s.num}
                 </div>
                 <span style={{ fontSize: 11, color: s.active ? TEXT : DIM, fontWeight: s.active ? 700 : 400 }}>{s.label}</span>
@@ -86,7 +86,7 @@ export default function OnboardingStep1() {
             <button
               onClick={goToDashboard}
               disabled={loading}
-              style={{ padding: '14px 0', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 10, color: '#0A0A00', fontSize: 16, fontWeight: 800, cursor: loading ? 'wait' : 'pointer', opacity: loading ? .7 : 1 }}
+              style={{ padding: '14px 0', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 10, color: '#101722', fontSize: 16, fontWeight: 800, cursor: loading ? 'wait' : 'pointer', opacity: loading ? .7 : 1 }}
             >
               {loading ? 'Loading your dashboard…' : 'Go to Dashboard →'}
             </button>

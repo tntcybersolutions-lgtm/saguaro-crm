@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Cactus, Check, Lock, Warning } from '@phosphor-icons/react';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='#FFFFFF',GREEN='#4ADE80',RED='#F87171';
 
 export default function W9Portal() {
   const { token } = useParams<{ token: string }>();
@@ -191,7 +191,7 @@ export default function W9Portal() {
           <button
             type="submit"
             disabled={saving}
-            style={{ width: '100%', padding: '14px', background: saving ? '#6E6E73' : `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 9, color: '#0A0A00', fontWeight: 800, fontSize: 16, cursor: saving ? 'not-allowed' : 'pointer', letterSpacing: .5 }}
+            style={{ width: '100%', padding: '14px', background: saving ? '#6E6E73' : `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 9, color: '#101722', fontWeight: 800, fontSize: 16, cursor: saving ? 'not-allowed' : 'pointer', letterSpacing: .5 }}
           >
             {saving ? 'Submitting…' : 'Submit W-9 Securely →'}
           </button>

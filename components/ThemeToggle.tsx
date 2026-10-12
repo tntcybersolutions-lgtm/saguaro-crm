@@ -14,7 +14,7 @@ const LIGHT_OVERRIDES_CSS = `
   --surface: #ffffff;
   --border: #e2e5ea;
   --text: #FFFFFF;
-  --dim: #A3ACBB;
+  --dim: #94A3B8;
 }
 `;
 

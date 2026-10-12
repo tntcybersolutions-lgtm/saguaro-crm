@@ -345,7 +345,7 @@ export default function SubsPage() {
   return (
     <PremiumSurface maxWidth={2200}>
       <style dangerouslySetInnerHTML={{ __html: SUBS_CSS }} />
-      {toast && <div role={toast.type==='error'?'alert':'status'} style={{position:'fixed',bottom:'calc(24px + var(--sag-tabbar-h, 0px))',left:'50%',transform:'translateX(-50%)',zIndex:99999,maxWidth:'calc(100vw - 32px)',padding:'12px 20px',borderRadius:8,background:toast.type==='success'?'rgba(44,255,122,0.9)':'rgba(255,59,48,0.9)',color:'var(--text-primary)',fontWeight:600,fontSize:14}}>{toast.msg}</div>}
+      {toast && <div role={toast.type==='error'?'alert':'status'} style={{position:'fixed',bottom:'calc(24px + var(--sag-tabbar-h, 0px))',left:'50%',transform:'translateX(-50%)',zIndex:99999,maxWidth:'calc(100vw - 32px)',padding:'12px 20px',borderRadius:8,background:toast.type==='success'?'rgba(74,222,128,0.9)':'rgba(248,113,113,0.9)',color:'var(--text-primary)',fontWeight:600,fontSize:14}}>{toast.msg}</div>}
 
       <ModuleHero
         eyebrow="Subcontractors"
@@ -410,7 +410,7 @@ export default function SubsPage() {
                   <input id="sb-license" type="text" placeholder="ROC-123456" value={form.license_number} onChange={e=>setForm(p=>({...p,license_number:e.target.value}))} style={inpS} />
                 </div>
               </div>
-              {formErr && <div role="alert" style={{marginTop:14,padding:'10px 12px',borderRadius:8,background:'rgba(255,59,48,0.10)',border:'1px solid rgba(255,59,48,0.45)',color:'var(--danger)',fontSize:13,lineHeight:1.5}}>{formErr}</div>}
+              {formErr && <div role="alert" style={{marginTop:14,padding:'10px 12px',borderRadius:8,background:'rgba(248,113,113,0.10)',border:'1px solid rgba(248,113,113,0.45)',color:'var(--danger)',fontSize:13,lineHeight:1.5}}>{formErr}</div>}
               <div style={{marginTop:16,display:'flex',gap:10,flexWrap:'wrap'}}>
                 <button type="submit" disabled={saving} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> {saving ? 'Adding…' : 'Add Subcontractor'}</button>
                 <button type="button" onClick={closeForm} style={ghostButtonStyle} className="pmBtn">Cancel</button>

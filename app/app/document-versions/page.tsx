@@ -155,7 +155,7 @@ const CSS = `
 .dvVerMeta b { color: var(--text-primary); font-weight: 600; }
 .dvVerActions { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
 .dvVerify { display: flex; gap: 10px; align-items: center; padding: 10px 14px; border-radius: var(--radius-sm); font-size: var(--fs-sm); color: var(--text-primary); margin-bottom: 14px; }
-.dvVerify[data-same="true"] { background: rgba(44,255,122,.08); border: 1px solid rgba(44,255,122,.3); }
+.dvVerify[data-same="true"] { background: rgba(74,222,128,.08); border: 1px solid rgba(74,222,128,.3); }
 .dvVerify[data-same="false"] { background: rgba(255,197,61,.08); border: 1px solid rgba(255,197,61,.35); }
 .dvVerify > svg { flex-shrink: 0; }
 .dvVerify[data-same="true"] > svg { color: var(--status-ongoing); }

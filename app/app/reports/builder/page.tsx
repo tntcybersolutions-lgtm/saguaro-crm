@@ -517,7 +517,7 @@ export default function ReportBuilderPage() {
       </div>
 
       {error && (
-        <div className="rb-noprint" style={{ padding: '12px 16px', background: 'rgba(255,59,48,.1)', border: '1px solid rgba(255,59,48,.3)', borderRadius: 10, color: RED, fontSize: 13, marginBottom: 16 }}>
+        <div className="rb-noprint" style={{ padding: '12px 16px', background: 'rgba(248,113,113,.1)', border: '1px solid rgba(248,113,113,.3)', borderRadius: 10, color: RED, fontSize: 13, marginBottom: 16 }}>
           {error}
         </div>
       )}
@@ -640,7 +640,7 @@ export default function ReportBuilderPage() {
                       onClick={() => removeFilter(i)}
                       title="Remove"
                       className="pmBtn"
-                      style={{ background: 'rgba(255,59,48,0.12)', color: RED, border: '1px solid rgba(255,59,48,0.3)', borderRadius: 8, width: 30, height: 32, cursor: 'pointer', fontSize: 15, flexShrink: 0 }}
+                      style={{ background: 'rgba(248,113,113,0.12)', color: RED, border: '1px solid rgba(248,113,113,0.3)', borderRadius: 8, width: 30, height: 32, cursor: 'pointer', fontSize: 15, flexShrink: 0 }}
                     >×</button>
                   </div>
                 );
@@ -841,7 +841,7 @@ export default function ReportBuilderPage() {
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {schedError && (
-              <div style={{ padding: '10px 14px', background: 'rgba(255,59,48,.1)', border: '1px solid rgba(255,59,48,.3)', borderRadius: 10, color: RED, fontSize: 13 }}>
+              <div style={{ padding: '10px 14px', background: 'rgba(248,113,113,.1)', border: '1px solid rgba(248,113,113,.3)', borderRadius: 10, color: RED, fontSize: 13 }}>
                 {schedError}
               </div>
             )}
@@ -927,7 +927,7 @@ export default function ReportBuilderPage() {
                         onClick={() => saveSchedule(tpl.id, { ...s, enabled: false })}
                         disabled={savingThis}
                         className="pmBtn"
-                        style={{ background: 'rgba(255,59,48,0.12)', color: RED, border: '1px solid rgba(255,59,48,0.3)', borderRadius: 10, padding: '9px 14px', fontSize: 12, fontWeight: 700, cursor: savingThis ? 'not-allowed' : 'pointer' }}
+                        style={{ background: 'rgba(248,113,113,0.12)', color: RED, border: '1px solid rgba(248,113,113,0.3)', borderRadius: 10, padding: '9px 14px', fontSize: 12, fontWeight: 700, cursor: savingThis ? 'not-allowed' : 'pointer' }}
                       >
                         Cancel schedule
                       </button>

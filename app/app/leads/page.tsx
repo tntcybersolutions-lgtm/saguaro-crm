@@ -611,7 +611,7 @@ export default function LeadsPage() {
                     <div key={item.stage}>
                       <div style={{ display: 'grid', gridTemplateColumns: '96px minmax(0, 1fr)', alignItems: 'center', gap: 12 }}>
                         <span style={{ textAlign: 'right', fontSize: 'var(--fs-sm)', fontWeight: 600 }}>{item.stage}</span>
-                        <div style={{ width: `${widthPct}%`, minWidth: 140, height: 36, borderRadius: 'var(--radius-sm)', background: 'rgba(255,138,0,0.18)', border: '1px solid rgba(255,138,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px', fontSize: 'var(--fs-sm)', fontWeight: 700, gap: 8 }}>
+                        <div style={{ width: `${widthPct}%`, minWidth: 140, height: 36, borderRadius: 'var(--radius-sm)', background: 'rgba(251,191,36,0.18)', border: '1px solid rgba(251,191,36,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px', fontSize: 'var(--fs-sm)', fontWeight: 700, gap: 8 }}>
                           <span>{item.count} lead{item.count !== 1 ? 's' : ''}</span>
                           <span style={{ color: 'var(--text-secondary)' }}>{fmt(item.value)}</span>
                         </div>

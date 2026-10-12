@@ -158,7 +158,7 @@ export function PeopleDirectory() {
                 <Section title="Certifications">
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                     {[['osha_10_certified', 'OSHA 10'], ['osha_30_certified', 'OSHA 30'], ['forklift_certified', 'Forklift']].map(([col, label]) => (
-                      <button key={col} onClick={() => patch({ [col]: !detail[col] })} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: `1px solid ${detail[col] ? GREEN : BORDER}`, background: detail[col] ? 'rgba(44,255,122,0.12)' : 'transparent', color: detail[col] ? GREEN : DIM, borderRadius: 8, padding: '8px 12px', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}><SealCheck size={16} weight={detail[col] ? 'fill' : 'regular'} />{label}</button>
+                      <button key={col} onClick={() => patch({ [col]: !detail[col] })} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: `1px solid ${detail[col] ? GREEN : BORDER}`, background: detail[col] ? 'rgba(74,222,128,0.12)' : 'transparent', color: detail[col] ? GREEN : DIM, borderRadius: 8, padding: '8px 12px', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}><SealCheck size={16} weight={detail[col] ? 'fill' : 'regular'} />{label}</button>
                     ))}
                   </div>
                 </Section>
@@ -203,7 +203,7 @@ export function PeopleDirectory() {
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}><input value={f.regular_rate ?? ''} onChange={(e) => setF({ ...f, regular_rate: e.target.value })} placeholder="Rate $/hr" style={inp} />{editing && <input value={f.overtime_rate ?? ''} onChange={(e) => setF({ ...f, overtime_rate: e.target.value })} placeholder="OT $/hr" style={inp} />}</div>
           {editing && <div style={{ display: 'flex', gap: 8, marginTop: 8 }}><input value={f.emergency_contact_name ?? ''} onChange={(e) => setF({ ...f, emergency_contact_name: e.target.value })} placeholder="Emergency contact" style={inp} /><input value={f.emergency_contact_phone ?? ''} onChange={(e) => setF({ ...f, emergency_contact_phone: e.target.value })} placeholder="Emergency phone" style={inp} /></div>}
           {saveErr && (
-            <div role="alert" style={{ marginTop: 12, padding: '9px 11px', borderRadius: 8, background: 'rgba(255,59,48,0.10)', border: `1px solid color-mix(in srgb, ${RED} 33%, transparent)`, color: RED, fontSize: 13, lineHeight: 1.45 }}>
+            <div role="alert" style={{ marginTop: 12, padding: '9px 11px', borderRadius: 8, background: 'rgba(248,113,113,0.10)', border: `1px solid color-mix(in srgb, ${RED} 33%, transparent)`, color: RED, fontSize: 13, lineHeight: 1.45 }}>
               {saveErr}
             </div>
           )}

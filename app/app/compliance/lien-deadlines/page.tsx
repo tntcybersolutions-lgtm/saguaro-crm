@@ -467,7 +467,7 @@ export default function LienDeadlinePage() {
                     {/* Reminder badges */}
                     {dl.reminder_sent_30 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(163,172,187,0.12)', color: GRAY }}>30d sent</span>}
                     {dl.reminder_sent_14 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'var(--brand-primary-12)', color: GOLD }}>14d sent</span>}
-                    {dl.reminder_sent_7 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(255,59,48,0.12)', color: RED }}>7d sent</span>}
+                    {dl.reminder_sent_7 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(248,113,113,0.12)', color: RED }}>7d sent</span>}
                   </div>
                   <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, marginBottom: 2 }}>{dl.description || deadlineTypeLabel(dl.deadline_type)}</div>
                   <div style={{ fontSize: 12, color: DIM }}>

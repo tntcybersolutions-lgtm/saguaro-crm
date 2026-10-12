@@ -2,18 +2,18 @@ import React from 'react';
 import Link from 'next/link';
 import { Cactus } from '@phosphor-icons/react/dist/ssr';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='#FFFFFF',GREEN='#4ADE80',RED='#F87171';
 
 const NAV = (
   <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:100,height:56,background:'rgba(20,20,22,.96)',borderBottom:`1px solid ${BORDER}`,display:'flex',alignItems:'center',padding:'0 32px',gap:24,backdropFilter:'blur(12px)'}}>
     <Link href="/" style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none'}}>
       <Cactus size={22} weight="fill" color={GOLD} />
       <span style={{fontWeight:800,fontSize:16,color:GOLD}}>Saguaro</span>
-      <span style={{fontSize:10,background:GOLD,color:'#0A0A00',padding:'1px 6px',borderRadius:4,fontWeight:700}}>Platform</span>
+      <span style={{fontSize:10,background:GOLD,color:'#101722',padding:'1px 6px',borderRadius:4,fontWeight:700}}>Platform</span>
     </Link>
     <div style={{flex:1}}/>
     <Link href="/login" style={{padding:'7px 16px',background:'var(--brand-primary-12)',border:'1px solid var(--brand-primary-35)',borderRadius:7,color:GOLD,fontSize:13,fontWeight:700,textDecoration:'none'}}>Log In</Link>
-    <Link href="/signup" style={{padding:'7px 16px',background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,borderRadius:7,color:'#0A0A00',fontSize:13,fontWeight:800,textDecoration:'none'}}>Start Free</Link>
+    <Link href="/signup" style={{padding:'7px 16px',background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,borderRadius:7,color:'#101722',fontSize:13,fontWeight:800,textDecoration:'none'}}>Start Free</Link>
   </nav>
 );
 
@@ -24,7 +24,7 @@ const UPTIME_TIERS = [
 ];
 
 const SUPPORT_ROWS = [
-  {priority:'Critical',desc:'System unavailable / data loss risk',enterprise:'< 1 hour',pro:'< 4 hours',starter:'< 8 hours',eColor:GREEN,pColor:GREEN,sColor:'#FFE600'},
+  {priority:'Critical',desc:'System unavailable / data loss risk',enterprise:'< 1 hour',pro:'< 4 hours',starter:'< 8 hours',eColor:GREEN,pColor:GREEN,sColor:'#FFE000'},
   {priority:'High',desc:'Major feature broken / blocking work',enterprise:'< 4 hours',pro:'< 8 hours',starter:'Next business day',eColor:GREEN,pColor:GREEN,sColor:DIM},
   {priority:'Medium',desc:'Feature degraded / workaround available',enterprise:'Next business day',pro:'2 business days',starter:'3 business days',eColor:DIM,pColor:DIM,sColor:DIM},
   {priority:'Low',desc:'Questions, feature requests, enhancements',enterprise:'2 business days',pro:'3 business days',starter:'Best effort',eColor:DIM,pColor:DIM,sColor:DIM},
@@ -67,7 +67,7 @@ export default function SLAPage() {
         <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:20}}>
           {UPTIME_TIERS.map(t=>(
             <div key={t.plan} style={{background:RAISED,border:`2px solid ${t.popular?t.color:BORDER}`,borderRadius:14,padding:'28px 24px',textAlign:'center',position:'relative'}}>
-              {t.popular&&<div style={{position:'absolute',top:-1,left:0,right:0,background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,borderRadius:'12px 12px 0 0',padding:'5px 0',fontSize:11,fontWeight:800,color:'#0A0A00'}}>Most Popular</div>}
+              {t.popular&&<div style={{position:'absolute',top:-1,left:0,right:0,background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,borderRadius:'12px 12px 0 0',padding:'5px 0',fontSize:11,fontWeight:800,color:'#101722'}}>Most Popular</div>}
               <div style={{marginTop:t.popular?12:0}}>
                 <div style={{fontSize:13,fontWeight:700,color:t.color,marginBottom:10}}>{t.plan}</div>
                 <div style={{fontSize:52,fontWeight:900,color:TEXT,lineHeight:1}}>{t.uptime}</div>
@@ -98,7 +98,7 @@ export default function SLAPage() {
                 {SUPPORT_ROWS.map((row,i)=>(
                   <tr key={row.priority} style={{borderTop:`1px solid ${BORDER}`,background:i%2===0?'transparent':'rgba(0,0,0,.01)'}}>
                     <td style={{padding:'14px 20px'}}>
-                      <span style={{fontSize:11,fontWeight:800,padding:'3px 10px',borderRadius:4,background:row.priority==='Critical'?'rgba(255,59,48,.15)':row.priority==='High'?'var(--brand-primary-12)':'rgba(0,0,0,.06)',color:row.priority==='Critical'?RED:row.priority==='High'?GOLD:DIM}}>
+                      <span style={{fontSize:11,fontWeight:800,padding:'3px 10px',borderRadius:4,background:row.priority==='Critical'?'rgba(248,113,113,.15)':row.priority==='High'?'var(--brand-primary-12)':'rgba(0,0,0,.06)',color:row.priority==='Critical'?RED:row.priority==='High'?GOLD:DIM}}>
                         {row.priority}
                       </span>
                     </td>
@@ -131,7 +131,7 @@ export default function SLAPage() {
             </div>
           ))}
         </div>
-        <div style={{marginTop:20,padding:'16px 20px',background:'rgba(255,59,48,.06)',border:'1px solid rgba(255,59,48,.2)',borderRadius:8,fontSize:13,color:DIM}}>
+        <div style={{marginTop:20,padding:'16px 20px',background:'rgba(248,113,113,.06)',border:'1px solid rgba(248,113,113,.2)',borderRadius:8,fontSize:13,color:DIM}}>
           <strong style={{color:TEXT}}>Credit Cap:</strong> Total credits in any calendar month shall not exceed 50% of your monthly fee. Credits are non-transferable and have no cash value. To request a review, email <a href="mailto:sla@saguarocontrol.net" style={{color:GOLD,textDecoration:'none'}}>sla@saguarocontrol.net</a> within 30 days of the incident.
         </div>
       </div>
@@ -172,7 +172,7 @@ export default function SLAPage() {
       <div style={{textAlign:'center',padding:'60px 24px',background:RAISED,borderTop:`1px solid ${BORDER}`}}>
         <h2 style={{fontSize:26,fontWeight:900,marginBottom:10}}>SLA Questions or Incident Reports?</h2>
         <p style={{color:DIM,marginBottom:20,fontSize:15}}>We respond to SLA inquiries within one business day.</p>
-        <a href="mailto:sla@saguarocontrol.net" style={{display:'inline-block',padding:'13px 32px',background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,borderRadius:9,color:'#0A0A00',fontWeight:800,fontSize:15,textDecoration:'none'}}>
+        <a href="mailto:sla@saguarocontrol.net" style={{display:'inline-block',padding:'13px 32px',background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,borderRadius:9,color:'#101722',fontWeight:800,fontSize:15,textDecoration:'none'}}>
           sla@saguarocontrol.net
         </a>
         <div style={{marginTop:20,fontSize:13,color:DIM}}>

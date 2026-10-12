@@ -15,8 +15,8 @@ const C = {
   cardBg: 'rgba(255,255,255,0.02)',
   raised: 'var(--bg-surface)',
   raisedAlt: 'var(--bg-surface-2)',
-  green: '#2CFF7A',
-  blue: '#FF8A00',
+  green: '#4ADE80',
+  blue: '#FBBF24',
   font: "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
 };
 
@@ -200,7 +200,7 @@ export default function ContactPage() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link href="/login" style={{ padding: '8px 16px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 8, color: C.dim, fontSize: 13, fontWeight: 500, textDecoration: 'none' }}>Log In</Link>
-          <Link href="/signup" style={{ padding: '8px 18px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Free Trial</Link>
+          <Link href="/signup" style={{ padding: '8px 18px', background: C.gold, borderRadius: 8, color: '#101722', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Free Trial</Link>
         </div>
       </nav>
 
@@ -247,7 +247,7 @@ export default function ContactPage() {
             <div style={{ background: C.cardBg, border: `1px solid ${C.hairline}`, borderRadius: 14, padding: '36px 36px', boxShadow: 'none' }}>
               {status === 'sent' ? (
                 <div style={{ textAlign: 'center', padding: '32px 8px' }}>
-                  <div style={{ width: 64, height: 64, margin: '0 auto 20px', borderRadius: '50%', background: 'rgba(44,255,122,0.12)', border: `1px solid rgba(44,255,122,0.35)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 64, height: 64, margin: '0 auto 20px', borderRadius: '50%', background: 'rgba(74,222,128,0.12)', border: `1px solid rgba(74,222,128,0.35)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
                       <path d="M5 12.5l4.5 4.5L19 7" stroke={C.green} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
@@ -257,7 +257,7 @@ export default function ContactPage() {
                     Thanks{form.name ? `, ${form.name.split(' ')[0]}` : ''}. We received your note and a real person from our team will reply shortly. If your mail client opened, just hit send to confirm.
                   </p>
                   <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-                    <Link href="/signup" style={{ display: 'inline-block', padding: '12px 26px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
+                    <Link href="/signup" style={{ display: 'inline-block', padding: '12px 26px', background: C.gold, borderRadius: 8, color: '#101722', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
                       Start Free Trial &rarr;
                     </Link>
                     <button onClick={() => { setForm({ name: '', email: '', company: '', reason: REASONS[0].value, message: '' }); setStatus('idle'); }} style={{ padding: '12px 26px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 8, color: C.dim, fontWeight: 500, fontSize: 14, cursor: 'pointer', fontFamily: C.font }}>
@@ -321,7 +321,7 @@ export default function ContactPage() {
                   <button type="submit" disabled={status === 'sending'} style={{
                     width: '100%', padding: '14px 0',
                     background: C.gold,
-                    border: 'none', borderRadius: 8, color: '#0A0A00',
+                    border: 'none', borderRadius: 8, color: '#101722',
                     fontWeight: 600, fontSize: 15, cursor: status === 'sending' ? 'default' : 'pointer',
                     opacity: status === 'sending' ? 0.7 : 1, fontFamily: C.font,
                     boxShadow: 'none', letterSpacing: 0.2,
@@ -346,7 +346,7 @@ export default function ContactPage() {
                 <p style={{ fontSize: 14, color: C.dim, lineHeight: 1.65, margin: '0 0 20px' }}>
                   You do not have to talk to anyone to try Saguaro. Spin up your account, run an AI takeoff, and invite your whole team — free for 30 days, no credit card.
                 </p>
-                <Link href="/signup" style={{ display: 'inline-block', padding: '12px 24px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
+                <Link href="/signup" style={{ display: 'inline-block', padding: '12px 24px', background: C.gold, borderRadius: 8, color: '#101722', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
                   Create Your Account &rarr;
                 </Link>
               </div>
@@ -362,7 +362,7 @@ export default function ContactPage() {
                   ].map(item => (
                     <div key={item} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 2 }}>
-                        <circle cx="8" cy="8" r="8" fill="rgba(44,255,122,0.13)" />
+                        <circle cx="8" cy="8" r="8" fill="rgba(74,222,128,0.13)" />
                         <path d="M4.5 8l2.5 2.5 4-5" stroke={C.green} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                       <span style={{ fontSize: 13.5, color: C.text, lineHeight: 1.5 }}>{item}</span>
@@ -407,7 +407,7 @@ export default function ContactPage() {
               30-day free trial. Free migration from any platform. No credit card. Your whole team, one flat rate.
             </p>
             <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 40 }}>
-              <Link href="/signup" style={{ display: 'inline-block', padding: '12px 28px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
+              <Link href="/signup" style={{ display: 'inline-block', padding: '12px 28px', background: C.gold, borderRadius: 8, color: '#101722', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
                 Start Free Trial &rarr;
               </Link>
               <Link href="/pricing" style={{ display: 'inline-block', padding: '12px 28px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 8, color: C.dim, fontWeight: 500, fontSize: 15, textDecoration: 'none' }}>

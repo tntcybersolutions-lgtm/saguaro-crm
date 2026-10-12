@@ -17,8 +17,8 @@ const C = {
   cardBg: 'rgba(255,255,255,0.02)',
   raised: 'var(--bg-surface)',
   raisedAlt: 'var(--bg-surface-2)',
-  green: '#2CFF7A',
-  blue: '#FF8A00',
+  green: '#4ADE80',
+  blue: '#FBBF24',
   font: "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
 };
 
@@ -148,7 +148,7 @@ export default function PricingPage() {
                 boxShadow: 'none',
               }}>
                 {plan.popular && (
-                  <div style={{ background: C.gold, textAlign: 'center', padding: '7px 0', fontSize: 11, fontWeight: 600, color: '#0A0A00' }}>
+                  <div style={{ background: C.gold, textAlign: 'center', padding: '7px 0', fontSize: 11, fontWeight: 600, color: '#101722' }}>
                     Most Popular
                   </div>
                 )}
@@ -182,7 +182,7 @@ export default function PricingPage() {
                     display: 'block', textAlign: 'center', padding: '12px 0',
                     background: plan.popular ? 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))' : 'transparent',
                     border: plan.popular ? '1px solid transparent' : `1px solid ${C.hairline}`,
-                    borderRadius: 8, color: plan.popular ? '#0A0A00' : C.text,
+                    borderRadius: 8, color: plan.popular ? '#101722' : C.text,
                     fontWeight: plan.popular ? 700 : 600, fontSize: 14, textDecoration: 'none', marginBottom: 28, letterSpacing: 0.2,
                     boxShadow: plan.popular ? '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' : 'none',
                   }}>
@@ -246,7 +246,7 @@ export default function PricingPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
               <div style={{ fontSize: 44, fontWeight: 600, color: C.text, lineHeight: 1 }}>$0</div>
               <div style={{ fontSize: 14, color: C.dim, textAlign: 'center' }}>Migration Fee<br />(Always Free)</div>
-              <Link href="/signup" style={{ padding: '12px 24px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 14, textDecoration: 'none', textAlign: 'center' }}>
+              <Link href="/signup" style={{ padding: '12px 24px', background: C.gold, borderRadius: 8, color: '#101722', fontWeight: 600, fontSize: 14, textDecoration: 'none', textAlign: 'center' }}>
                 Start Free Migration
               </Link>
             </div>
@@ -313,7 +313,7 @@ export default function PricingPage() {
                 <div style={{ fontSize: 13, color: C.dim, lineHeight: 1.6 }}>{service.description}</div>
                 {service.highlight && (
                   <div style={{ marginTop: 16 }}>
-                    <Link href="/signup" style={{ display: 'inline-block', padding: '10px 20px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>
+                    <Link href="/signup" style={{ display: 'inline-block', padding: '10px 20px', background: C.gold, borderRadius: 8, color: '#101722', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>
                       Start Free Migration
                     </Link>
                   </div>

@@ -15,7 +15,7 @@ import { calibrateModel } from '@/lib/heatmap/calibrate';
 import { calibrationNote, engineStamp } from '@/lib/heatmap/meta';
 
 const GOLD = 'var(--brand-primary)';
-const NAVY = '#0A0A00'; // text on gold fills
+const NAVY = '#101722'; // text on gold fills
 
 type ProjSnap = HeatmapProject & { snapshot?: string };
 type MultiData = { multifloor: true; floors: { id: string; name: string; proj: ProjSnap | null }[]; activeFloor?: string };

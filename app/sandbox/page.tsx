@@ -10,7 +10,7 @@ const TEXT = '#FFFFFF';
 const DIM = 'var(--text-secondary)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const RAISED = 'var(--bg-surface)';
-const GREEN = '#2CFF7A';
+const GREEN = '#4ADE80';
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -172,7 +172,7 @@ export default function SandboxPage() {
             <Link href="/app" style={{
               display: 'block', padding: '15px 32px',
               background: `linear-gradient(135deg, ${GOLD}, var(--brand-primary-strong))`,
-              color: '#0A0A00', borderRadius: 9, fontWeight: 900,
+              color: '#101722', borderRadius: 9, fontWeight: 900,
               fontSize: 16, textDecoration: 'none', textAlign: 'center',
               boxShadow: `0 4px 24px var(--brand-primary-35)`,
               letterSpacing: 0.3,
@@ -321,7 +321,7 @@ export default function SandboxPage() {
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 12, fontWeight: 700,
                       background: step >= s ? GOLD : 'rgba(0,0,0,0.06)',
-                      color: step >= s ? '#0A0A00' : DIM,
+                      color: step >= s ? '#101722' : DIM,
                       border: step >= s ? 'none' : `1px solid ${BORDER}`,
                       transition: 'all 0.2s',
                     }}>
@@ -348,7 +348,7 @@ export default function SandboxPage() {
               {/* Error banner */}
               {error && (
                 <div style={{
-                  background: 'rgba(255,59,48,0.1)', border: '1px solid rgba(255,59,48,0.3)',
+                  background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)',
                   borderRadius: 8, padding: '10px 14px', marginBottom: 16,
                   fontSize: 13, color: '#fca5a5', lineHeight: 1.5,
                 }}>
@@ -411,7 +411,7 @@ export default function SandboxPage() {
                           ? 'color-mix(in srgb, var(--brand-primary) 40%, transparent)'
                           : `linear-gradient(135deg, ${GOLD}, var(--brand-primary-strong))`,
                         border: 'none', borderRadius: 9,
-                        color: '#0A0A00', fontSize: 15, fontWeight: 900,
+                        color: '#101722', fontSize: 15, fontWeight: 900,
                         cursor: (!firstName || !lastName || !email || !company) ? 'not-allowed' : 'pointer',
                         marginBottom: 0,
                         transition: 'all 0.15s',
@@ -465,7 +465,7 @@ export default function SandboxPage() {
                           ? 'color-mix(in srgb, var(--brand-primary) 50%, transparent)'
                           : `linear-gradient(135deg, ${GOLD}, var(--brand-primary-strong))`,
                         border: 'none', borderRadius: 9,
-                        color: '#0A0A00', fontSize: 16, fontWeight: 900,
+                        color: '#101722', fontSize: 16, fontWeight: 900,
                         cursor: loading ? 'not-allowed' : 'pointer',
                         boxShadow: loading ? 'none' : '0 4px 20px var(--brand-primary-35)',
                         marginBottom: 12,

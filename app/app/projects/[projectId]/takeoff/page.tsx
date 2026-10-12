@@ -424,7 +424,7 @@ const EditableRow = memo(function EditableRow({ item, idx, sellMult, laborAlloc,
             <Plus size={14} weight="bold" color="rgba(255,255,255,0.55)" />
           </button>
           <button className="tkIconBtn" disabled={!editable} title="Delete line (6s undo)" onClick={() => onDelete(item)}>
-            <Trash size={14} weight="duotone" color="rgba(255,59,48,0.85)" />
+            <Trash size={14} weight="duotone" color="rgba(248,113,113,0.85)" />
           </button>
         </div>
       </div>
@@ -1759,7 +1759,7 @@ export default function TakeoffPage() {
               background: isDragging
                 ? `linear-gradient(135deg, ${GOLD}, ${GOLD_HI})`
                 : selectedFile
-                  ? 'linear-gradient(135deg, rgba(44,255,122,0.6), rgba(44,255,122,0.14))'
+                  ? 'linear-gradient(135deg, rgba(74,222,128,0.6), rgba(74,222,128,0.14))'
                   : 'linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 50%, transparent), var(--brand-primary-12))',
             }}
           >
@@ -1797,7 +1797,7 @@ export default function TakeoffPage() {
 
               {selectedFile ? (
                 <div style={{ position: 'relative', zIndex: 1 }}>
-                  <div style={{ display: 'inline-flex', width: 88, height: 88, borderRadius: '50%', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle, rgba(44,255,122,0.28), rgba(44,255,122,0.05))', border: '1px solid rgba(44,255,122,0.5)', marginBottom: 16, boxShadow: '0 0 44px -8px rgba(44,255,122,0.7)' }}>
+                  <div style={{ display: 'inline-flex', width: 88, height: 88, borderRadius: '50%', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle, rgba(74,222,128,0.28), rgba(74,222,128,0.05))', border: '1px solid rgba(74,222,128,0.5)', marginBottom: 16, boxShadow: '0 0 44px -8px rgba(74,222,128,0.7)' }}>
                     <CheckCircle size={46} weight="fill" color={GREEN} />
                   </div>
                   <div style={{ color: GREEN, fontWeight: 800, fontSize: 18, wordBreak: 'break-word' }}>{selectedFile.name}</div>
@@ -1954,8 +1954,8 @@ export default function TakeoffPage() {
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 9, marginBottom: 28,
               padding: '8px 16px', borderRadius: 999,
-              background: lane.fast ? 'rgba(44,255,122,0.12)' : 'color-mix(in srgb, var(--brand-primary) 10%, transparent)',
-              border: `1px solid ${lane.fast ? 'rgba(44,255,122,0.42)' : 'color-mix(in srgb, var(--brand-primary) 28%, transparent)'}`,
+              background: lane.fast ? 'rgba(74,222,128,0.12)' : 'color-mix(in srgb, var(--brand-primary) 10%, transparent)',
+              border: `1px solid ${lane.fast ? 'rgba(74,222,128,0.42)' : 'color-mix(in srgb, var(--brand-primary) 28%, transparent)'}`,
             }}>
               {lane.fast
                 ? <MagicWand size={16} weight="fill" color={GREEN} />
@@ -2128,7 +2128,7 @@ export default function TakeoffPage() {
             </div>
           )}
           <div style={{ display: 'inline-flex', gap: 8, marginTop: 10, justifyContent: 'flex-end' }}>
-            <div style={{ background: 'rgba(44,255,122,0.12)', border: '1px solid rgba(44,255,122,0.35)', borderRadius: 9, padding: '6px 12px', textAlign: 'center' }}>
+            <div style={{ background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.35)', borderRadius: 9, padding: '6px 12px', textAlign: 'center' }}>
               <div style={{ color: GREEN, fontWeight: 800, fontSize: 16 }}>{result?.confidence ?? 0}%</div>
               <div style={{ color: 'var(--c-text-2)', fontSize: 9.5 }}>Confidence</div>
             </div>
@@ -2266,7 +2266,7 @@ export default function TakeoffPage() {
                         <rect key={wi}
                           x={padX + bldgW * wx - 8} y={y + 6}
                           width={16} height={floorH - 12}
-                          fill="rgba(255,138,0,0.2)" stroke="rgba(255,138,0,0.4)" strokeWidth={0.5} />
+                          fill="rgba(251,191,36,0.2)" stroke="rgba(251,191,36,0.4)" strokeWidth={0.5} />
                       ))}
                       {/* Floor label */}
                       <text x={padX + bldgW + 6} y={y + floorH / 2 + 4}
@@ -2438,10 +2438,10 @@ export default function TakeoffPage() {
       {/* ── Autonomous Sage CTA · streaming · summary · manual picker ──────────── */}
       {autoSummary ? (
         /* ── SUMMARY: what Sage built ── */
-        <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 18, padding: '26px 28px', background: 'linear-gradient(135deg, rgba(44,255,122,0.14), rgba(44,255,122,0.03))', border: '1px solid rgba(44,255,122,0.32)', boxShadow: '0 22px 64px -26px rgba(44,255,122,0.4)', animation: 'tkPop .5s ease both' }}>
-          <div aria-hidden style={{ position: 'absolute', width: 280, height: 280, right: '10%', top: '-74%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(44,255,122,0.2), transparent 62%)', filter: 'blur(26px)', pointerEvents: 'none' }} />
+        <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 18, padding: '26px 28px', background: 'linear-gradient(135deg, rgba(74,222,128,0.14), rgba(74,222,128,0.03))', border: '1px solid rgba(74,222,128,0.32)', boxShadow: '0 22px 64px -26px rgba(74,222,128,0.4)', animation: 'tkPop .5s ease both' }}>
+          <div aria-hidden style={{ position: 'absolute', width: 280, height: 280, right: '10%', top: '-74%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(74,222,128,0.2), transparent 62%)', filter: 'blur(26px)', pointerEvents: 'none' }} />
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
-            <div style={{ flex: '0 0 auto', width: 54, height: 54, borderRadius: 15, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle, rgba(44,255,122,0.28), rgba(44,255,122,0.05))', border: '1px solid rgba(44,255,122,0.5)', boxShadow: '0 0 34px -8px rgba(44,255,122,0.7)' }}>
+            <div style={{ flex: '0 0 auto', width: 54, height: 54, borderRadius: 15, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle, rgba(74,222,128,0.28), rgba(74,222,128,0.05))', border: '1px solid rgba(74,222,128,0.5)', boxShadow: '0 0 34px -8px rgba(74,222,128,0.7)' }}>
               <SealCheck size={30} weight="fill" color={GREEN} />
             </div>
             <div style={{ minWidth: 0 }}>
@@ -2561,7 +2561,7 @@ export default function TakeoffPage() {
               how a GC ends up guessing. The individual actions below remain for
               anyone who genuinely wants one piece. */}
           <button onClick={exportXLS} disabled={!!generating}
-            style={{ padding: '11px 22px', background: 'rgba(44,255,122,0.12)', border: '1px solid rgba(44,255,122,0.3)', borderRadius: 8, color: 'var(--success)', fontWeight: 600, fontSize: 13, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'xls') ? 0.5 : 1 }}>
+            style={{ padding: '11px 22px', background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 8, color: 'var(--success)', fontWeight: 600, fontSize: 13, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'xls') ? 0.5 : 1 }}>
             {generating === 'xls' ? 'Generating…' : <><FileXls size={16} weight="duotone" color="var(--success)" style={{marginRight:4, verticalAlign:'middle'}} /> Export Excel</>}
           </button>
           {/* The sheet-by-sheet estimate workspace shipped UNREACHABLE — no link

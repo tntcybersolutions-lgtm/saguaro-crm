@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Cactus, Check } from '@phosphor-icons/react';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='#FFFFFF',RED='#FF3B30',GREEN='#2CFF7A';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='#FFFFFF',RED='#F87171',GREEN='#4ADE80';
 
 const STEPS = [
   { num: 1, label: 'Welcome', done: true },
@@ -100,7 +100,7 @@ export default function OnboardingStep2() {
                   width:36,height:36,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',
                   fontSize:14,fontWeight:800,
                   background: s.done ? GREEN : s.active ? GOLD : 'rgba(255,255,255,.08)',
-                  color: (s.done||s.active) ? '#0A0A00' : DIM,
+                  color: (s.done||s.active) ? '#101722' : DIM,
                   border:`2px solid ${s.done ? GREEN : s.active ? GOLD : BORDER}`,
                 }}>
                   {s.done ? <Check size={16} weight="bold" /> : s.num}
@@ -123,7 +123,7 @@ export default function OnboardingStep2() {
           </div>
 
           {error&&(
-            <div style={{background:'rgba(255,59,48,.1)',border:'1px solid rgba(255,59,48,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:RED}}>{error}</div>
+            <div style={{background:'rgba(248,113,113,.1)',border:'1px solid rgba(248,113,113,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:RED}}>{error}</div>
           )}
 
           <div style={{display:'flex',flexDirection:'column',gap:16}}>
@@ -186,7 +186,7 @@ export default function OnboardingStep2() {
             <button
               onClick={handleNext}
               disabled={loading}
-              style={{marginTop:8,padding:'14px 0',background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,border:'none',borderRadius:10,color:'#0A0A00',fontSize:15,fontWeight:800,cursor:loading?'wait':'pointer',opacity:loading?.7:1}}
+              style={{marginTop:8,padding:'14px 0',background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,border:'none',borderRadius:10,color:'#101722',fontSize:15,fontWeight:800,cursor:loading?'wait':'pointer',opacity:loading?.7:1}}
             >
               {loading?'Saving…':'Continue to First Project →'}
             </button>

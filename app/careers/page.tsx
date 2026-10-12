@@ -12,8 +12,8 @@ const C = {
   border: 'rgba(255,255,255,0.10)',
   raised: 'var(--bg-surface)',
   raisedAlt: 'var(--bg-surface-2)',
-  green: '#2CFF7A',
-  blue: '#FF8A00',
+  green: '#4ADE80',
+  blue: '#FBBF24',
   font: "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
 };
 
@@ -147,7 +147,7 @@ export default function CareersPage() {
             We are a small, remote team building the AI-powered platform that runs takeoffs, bids, pay apps, RFIs, and compliance for general contractors. Real product, real users, real ownership.
           </p>
           <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="#open-roles" style={{ display: 'inline-block', padding: '10px 22px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
+            <a href="#open-roles" style={{ display: 'inline-block', padding: '10px 22px', background: C.gold, borderRadius: 8, color: '#101722', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
               See Open Roles
             </a>
             <a href="mailto:careers@saguarocontrol.net" style={{ display: 'inline-block', padding: '10px 22px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 8, color: C.dim, fontWeight: 500, fontSize: 14, textDecoration: 'none' }}>
@@ -244,7 +244,7 @@ export default function CareersPage() {
               <p style={{ fontSize: 15, color: C.dim, lineHeight: 1.7, margin: '0 0 28px' }}>
                 We hire deliberately and we are between openings at the moment. If you are an engineer, designer, or builder who wants to work on AI for construction, send us a note anyway — we keep great people in mind and reach out when a role opens.
               </p>
-              <a href="mailto:careers@saguarocontrol.net?subject=Introduction" style={{ display: 'inline-block', padding: '10px 22px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
+              <a href="mailto:careers@saguarocontrol.net?subject=Introduction" style={{ display: 'inline-block', padding: '10px 22px', background: C.gold, borderRadius: 8, color: '#101722', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
                 careers@saguarocontrol.net
               </a>
             </div>
@@ -290,7 +290,7 @@ export default function CareersPage() {
               The best way to understand Saguaro is to use it. Spin up a free account and explore AI takeoff, Sage, pay apps, and the field app firsthand.
             </p>
             <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-              <Link href="/signup" style={{ display: 'inline-block', padding: '10px 22px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
+              <Link href="/signup" style={{ display: 'inline-block', padding: '10px 22px', background: C.gold, borderRadius: 8, color: '#101722', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
                 Try the Product Free
               </Link>
               <a href="mailto:careers@saguarocontrol.net" style={{ display: 'inline-block', padding: '10px 22px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 8, color: C.dim, fontWeight: 500, fontSize: 14, textDecoration: 'none' }}>

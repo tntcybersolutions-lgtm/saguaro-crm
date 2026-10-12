@@ -13,10 +13,10 @@ import { useParams } from 'next/navigation';
 
 /* ── Design tokens (gold-on-black, matches the portal family) ── */
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)', DIM = 'var(--text-secondary)', TEXT = '#FFFFFF';
-const GREEN = '#2CFF7A', RED = '#FF3B30', AMBER = '#FF8A00';
+const GREEN = '#4ADE80', RED = '#F87171', AMBER = '#FBBF24';
 
 const card = (extra?: React.CSSProperties): React.CSSProperties => ({ background: RAISED, backgroundImage: 'linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015))', border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16, boxShadow: '0 4px 14px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.06)', ...extra });
-const btnS = (color: string): React.CSSProperties => ({ background: color, backgroundImage: color === GOLD ? 'linear-gradient(180deg,var(--brand-primary-strong),var(--brand-primary) 60%,var(--brand-primary-hover))' : 'linear-gradient(180deg,rgba(255,255,255,0.16),rgba(255,255,255,0) 55%)', color: color === GOLD ? '#0A0A00' : '#fff', border: 'none', borderRadius: 9, padding: '11px 20px', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: color === GOLD ? '0 4px 14px color-mix(in srgb, var(--brand-primary) 28%, transparent), inset 0 1px 0 rgba(255,255,255,0.35)' : '0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)' });
+const btnS = (color: string): React.CSSProperties => ({ background: color, backgroundImage: color === GOLD ? 'linear-gradient(180deg,var(--brand-primary-strong),var(--brand-primary) 60%,var(--brand-primary-hover))' : 'linear-gradient(180deg,rgba(255,255,255,0.16),rgba(255,255,255,0) 55%)', color: color === GOLD ? '#101722' : '#fff', border: 'none', borderRadius: 9, padding: '11px 20px', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: color === GOLD ? '0 4px 14px color-mix(in srgb, var(--brand-primary) 28%, transparent), inset 0 1px 0 rgba(255,255,255,0.35)' : '0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)' });
 const inputS: React.CSSProperties = { width: '100%', background: DARK, border: `1px solid ${BORDER}`, borderRadius: 7, padding: '10px 14px', color: TEXT, fontSize: 14, outline: 'none', boxSizing: 'border-box' };
 
 /* Pseudo-waveform for voice rows: deterministic bars seeded by message id. */
@@ -224,7 +224,7 @@ export default function RadioGuestPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: DARK, fontFamily: 'system-ui,sans-serif', display: 'flex', flexDirection: 'column' }}>
-      <style>{`@keyframes sgRadioFlash{0%{background:color-mix(in srgb, var(--brand-primary) 16%, transparent)}100%{background:transparent}}@keyframes sgRadioRing{0%{box-shadow:0 0 0 3px color-mix(in srgb, var(--brand-primary) 45%, transparent)}100%{box-shadow:0 0 0 0 transparent}}@keyframes sgLivePulse{0%{box-shadow:0 0 0 0 rgba(44,255,122,0.55)}70%{box-shadow:0 0 0 7px rgba(44,255,122,0)}100%{box-shadow:0 0 0 0 rgba(44,255,122,0)}}`}</style>
+      <style>{`@keyframes sgRadioFlash{0%{background:color-mix(in srgb, var(--brand-primary) 16%, transparent)}100%{background:transparent}}@keyframes sgRadioRing{0%{box-shadow:0 0 0 3px color-mix(in srgb, var(--brand-primary) 45%, transparent)}100%{box-shadow:0 0 0 0 transparent}}@keyframes sgLivePulse{0%{box-shadow:0 0 0 0 rgba(74,222,128,0.55)}70%{box-shadow:0 0 0 7px rgba(74,222,128,0)}100%{box-shadow:0 0 0 0 rgba(74,222,128,0)}}`}</style>
 
       {/* ── Branded header ── */}
       <header style={{ position: 'sticky', top: 0, zIndex: 10, background: 'rgba(10,10,10,0.92)', backdropFilter: 'blur(8px)', borderBottom: `1px solid ${BORDER}`, padding: '12px 16px' }}>
@@ -251,7 +251,7 @@ export default function RadioGuestPage() {
             <div style={{ fontSize: 12, color: DIM }}>Live channel traffic updates every few seconds.</div>
             <div style={{ display: 'flex', border: `1px solid ${BORDER}`, borderRadius: 8, overflow: 'hidden' }}>
               {(['en', 'es'] as const).map(l => (
-                <button key={l} onClick={() => setLang(l)} style={{ padding: '6px 14px', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 800, letterSpacing: .6, background: lang === l ? GOLD : 'transparent', color: lang === l ? '#0A0A00' : DIM }}>{l.toUpperCase()}</button>
+                <button key={l} onClick={() => setLang(l)} style={{ padding: '6px 14px', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 800, letterSpacing: .6, background: lang === l ? GOLD : 'transparent', color: lang === l ? '#101722' : DIM }}>{l.toUpperCase()}</button>
               ))}
             </div>
           </div>

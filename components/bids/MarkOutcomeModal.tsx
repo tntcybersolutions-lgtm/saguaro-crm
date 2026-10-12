@@ -347,7 +347,7 @@ function MarkOutcomeModal({
           </div>
 
           {error && (
-            <div style={{ color: RED, fontSize: 12, marginBottom: 12, background: 'rgba(255,59,48,0.10)', border: `1px solid rgba(255,59,48,0.3)`, borderRadius: 7, padding: '9px 12px' }}>
+            <div style={{ color: RED, fontSize: 12, marginBottom: 12, background: 'rgba(248,113,113,0.10)', border: `1px solid rgba(248,113,113,0.3)`, borderRadius: 7, padding: '9px 12px' }}>
               {error}
             </div>
           )}

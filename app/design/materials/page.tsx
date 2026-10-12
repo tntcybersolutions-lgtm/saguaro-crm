@@ -5,9 +5,9 @@ import type { Icon } from '@phosphor-icons/react';
 import { Bathtub, CookingPot, GridFour, Lightbulb, Log, Mountains, Nut, Palette } from '@phosphor-icons/react';
 
 /* ─── Palette ─── */
-const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#2CFF7A';
+const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#4ADE80';
 const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = 'var(--text-secondary)', DARK = 'var(--bg-base)';
-const RED = '#FF3B30', BLUE = 'var(--brand-primary)';
+const RED = '#F87171', BLUE = 'var(--brand-primary)';
 
 const glass: React.CSSProperties = {
   background: `color-mix(in srgb, ${CARD} 80%, transparent)`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
@@ -364,7 +364,7 @@ export default function MaterialsPage() {
 
                   <button onClick={exportToEstimate} style={{
                     width: '100%', padding: '12px', background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))',
-                    color: '#0A0A00', border: 'none', borderRadius: 10, fontWeight: 700,
+                    color: '#101722', border: 'none', borderRadius: 10, fontWeight: 700,
                     fontSize: 14, cursor: 'pointer',
                   }}>
                     Export to Estimate

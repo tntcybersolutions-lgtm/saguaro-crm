@@ -305,7 +305,7 @@ export default function BudgetPage() {
   function rowBg(l: BudgetLine) {
     const actual = l.actual_cost ?? 0;
     const revised = l.revised_budget ?? 0;
-    if (actual > revised) return 'rgba(255,59,48,.08)';
+    if (actual > revised) return 'rgba(248,113,113,.08)';
     if (revised > 0 && actual / revised > 0.9) return 'var(--brand-primary-08)';
     return 'transparent';
   }
@@ -365,7 +365,7 @@ export default function BudgetPage() {
     return (
       <CinematicPage soft>
         {hero}
-        <div style={{ background: 'rgba(255,59,48,.1)', border: `1px solid rgba(255,59,48,.3)`, borderRadius: 12, padding: '12px 16px', marginBottom: 20, color: 'var(--danger)', fontSize: 13 }}>
+        <div style={{ background: 'rgba(248,113,113,.1)', border: `1px solid rgba(248,113,113,.3)`, borderRadius: 12, padding: '12px 16px', marginBottom: 20, color: 'var(--danger)', fontSize: 13 }}>
           {error}
         </div>
         <EmptyStatePremium
@@ -383,7 +383,7 @@ export default function BudgetPage() {
     <CinematicPage>
       {/* Toast */}
       {toast && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, padding: '12px 20px', borderRadius: 12, background: toast.ok ? 'rgba(44,255,122,.92)' : 'rgba(255,59,48,.92)', color: 'var(--text-primary)', fontWeight: 700, fontSize: 14, boxShadow: '0 12px 40px -10px rgba(0,0,0,.6)' }}>
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, padding: '12px 20px', borderRadius: 12, background: toast.ok ? 'rgba(74,222,128,.92)' : 'rgba(248,113,113,.92)', color: 'var(--text-primary)', fontWeight: 700, fontSize: 14, boxShadow: '0 12px 40px -10px rgba(0,0,0,.6)' }}>
           {toast.msg}
         </div>
       )}
@@ -623,14 +623,14 @@ export default function BudgetPage() {
                       ) : adjustId === l.id ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                           {[-10, -5, 5, 10].map(p => (
-                            <button key={p} onClick={() => handleAdjust(l.id, p)} style={{ padding: '3px 7px', background: p > 0 ? 'rgba(44,255,122,.1)' : 'rgba(255,59,48,.1)', border: `1px solid ${p > 0 ? 'rgba(44,255,122,.25)' : 'rgba(255,59,48,.25)'}`, borderRadius: 4, color: p > 0 ? 'var(--success)' : 'var(--danger)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{p > 0 ? '+' : ''}{p}%</button>
+                            <button key={p} onClick={() => handleAdjust(l.id, p)} style={{ padding: '3px 7px', background: p > 0 ? 'rgba(74,222,128,.1)' : 'rgba(248,113,113,.1)', border: `1px solid ${p > 0 ? 'rgba(74,222,128,.25)' : 'rgba(248,113,113,.25)'}`, borderRadius: 4, color: p > 0 ? 'var(--success)' : 'var(--danger)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{p > 0 ? '+' : ''}{p}%</button>
                           ))}
                           <button onClick={() => setAdjustId(null)} style={{ padding: '3px 6px', background: 'none', border: 'none', color: CIN.faint, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
                         </div>
                       ) : deleteId === l.id ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <span style={{ fontSize: 11, color: 'var(--danger)', fontWeight: 600 }}>Delete?</span>
-                          <button onClick={() => handleDeleteLine(l.id)} style={{ padding: '3px 8px', background: 'rgba(255,59,48,.15)', border: '1px solid rgba(255,59,48,.3)', borderRadius: 4, color: 'var(--danger)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Yes</button>
+                          <button onClick={() => handleDeleteLine(l.id)} style={{ padding: '3px 8px', background: 'rgba(248,113,113,.15)', border: '1px solid rgba(248,113,113,.3)', borderRadius: 4, color: 'var(--danger)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Yes</button>
                           <button onClick={() => setDeleteId(null)} style={{ padding: '3px 8px', background: 'none', border: `1px solid ${CIN.border}`, borderRadius: 4, color: CIN.faint, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
                         </div>
                       ) : (
@@ -649,7 +649,7 @@ export default function BudgetPage() {
                                 </div>
                               ))}
                               <div style={{ height: 1, background: CIN.border, margin: '4px 0' }} />
-                              <div onClick={() => { setMenuId(null); setDeleteId(l.id); }} style={{ padding: '8px 12px', fontSize: 12, color: 'var(--danger)', cursor: 'pointer', borderRadius: 7, display: 'flex', alignItems: 'center', gap: 8 }} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,59,48,.08)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                              <div onClick={() => { setMenuId(null); setDeleteId(l.id); }} style={{ padding: '8px 12px', fontSize: 12, color: 'var(--danger)', cursor: 'pointer', borderRadius: 7, display: 'flex', alignItems: 'center', gap: 8 }} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(248,113,113,.08)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                                 <Trash size={14} weight="duotone" color="var(--danger)" />Delete Line
                               </div>
                             </div>

@@ -183,10 +183,10 @@ export default function PayAppPage() {
     const html = (`<!doctype html><html><head><title>Application ${appNo} — ${proj}</title><style>
       body{font-family:-apple-system,system-ui,sans-serif;color:#111;margin:0;padding:24px}
       .band{background:linear-gradient(100deg,#0a0a0a,#161b22);color:var(--c-text);padding:16px 22px;border-radius:4px;display:flex;justify-content:space-between;align-items:center}
-      .tag{color:#FF8A00;font-size:10px;letter-spacing:1.4px;font-weight:700;text-transform:uppercase}
-      h1{font-size:17px;margin:2px 0 0} h2{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#333;border-bottom:2px solid #FF8A00;padding-bottom:4px;display:inline-block;margin:20px 0 8px}
+      .tag{color:#FBBF24;font-size:10px;letter-spacing:1.4px;font-weight:700;text-transform:uppercase}
+      h1{font-size:17px;margin:2px 0 0} h2{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#333;border-bottom:2px solid #FBBF24;padding-bottom:4px;display:inline-block;margin:20px 0 8px}
       table{width:100%;border-collapse:collapse;font-size:11px} td,th{border:1px solid #ccc;padding:5px 6px}.r{text-align:right}
-      th{background:#f4f4f6;font-size:9.5px;text-transform:uppercase} .g702 td{border:none;padding:5px 8px;font-size:13px}.g702 tr:nth-child(8){font-weight:800;background:rgba(255,138,0,.12)}
+      th{background:#f4f4f6;font-size:9.5px;text-transform:uppercase} .g702 td{border:none;padding:5px 8px;font-size:13px}.g702 tr:nth-child(8){font-weight:800;background:rgba(251,191,36,.12)}
       .meta{font-size:12px;color:#444;margin:10px 0}
     </style></head><body>
       <div class=band><div><div class=tag>Saguaro Control Systems</div><h1>Application &amp; Certificate for Payment (AIA G702/G703)</h1></div><div style="text-align:right"><div>Application No. <b>${appNo}</b></div><div style="font-size:12px">${period || new Date().toLocaleDateString()}</div></div></div>
@@ -300,7 +300,7 @@ export default function PayAppPage() {
       </SectionCard>
 
       {formErr && (
-        <div role="alert" style={{ marginBottom: 12, padding: '10px 12px', borderRadius: 10, background: 'rgba(255,59,48,0.10)', border: '1px solid rgba(255,59,48,0.45)', color: 'var(--danger)', fontSize: 13.5, lineHeight: 1.5 }}>{formErr}</div>
+        <div role="alert" style={{ marginBottom: 12, padding: '10px 12px', borderRadius: 10, background: 'rgba(248,113,113,0.10)', border: '1px solid rgba(248,113,113,0.45)', color: 'var(--danger)', fontSize: 13.5, lineHeight: 1.5 }}>{formErr}</div>
       )}
       {/* Enabled whenever idle: a tap on an incomplete form says what is
           missing, instead of a greyed-out button that says nothing. */}

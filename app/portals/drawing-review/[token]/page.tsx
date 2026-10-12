@@ -38,7 +38,7 @@ import { lengthLF, areaSF } from '@/lib/takeoff/geometry';
 /* ── Design tokens (gold-on-black, matches the portal family) ── */
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)', DIM = 'var(--text-secondary)', TEXT = '#FFFFFF';
 /* Canvas paint + the stored markup color cannot use CSS var() — keep real hex for those. */
-const GOLD_HEX = '#FF8A00', DARK_HEX = '#000000';
+const GOLD_HEX = '#FBBF24', DARK_HEX = '#000000';
 
 const card = (extra?: React.CSSProperties): React.CSSProperties => ({ background: RAISED, backgroundImage: 'linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015))', border: `1px solid ${BORDER}`, borderRadius: 12, boxShadow: '0 4px 14px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.06)', ...extra });
 const zoomBtn: React.CSSProperties = { width: 34, height: 34, borderRadius: 8, border: `1px solid ${BORDER}`, background: RAISED, color: TEXT, fontSize: 16, fontWeight: 800, cursor: 'pointer', lineHeight: 1 };
@@ -114,8 +114,8 @@ function parseMarkup(row: MarkupRow): ParsedMarkup {
     if (d && typeof d === 'object' && !Array.isArray(d) && (d as Record<string, unknown>).space === 'image') {
       const o = d as Record<string, unknown>;
       const style = (o.style && typeof o.style === 'object')
-        ? { color: String((o.style as Record<string, unknown>).color || row.color || '#FF3B30'), width: num((o.style as Record<string, unknown>).width) || 3 }
-        : { color: row.color || '#FF3B30', width: 3 };
+        ? { color: String((o.style as Record<string, unknown>).color || row.color || '#F87171'), width: num((o.style as Record<string, unknown>).width) || 3 }
+        : { color: row.color || '#F87171', width: 3 };
       return {
         mode: 'canonical',
         kind: row.markup_type || 'freehand',
@@ -142,7 +142,7 @@ function parseMarkup(row: MarkupRow): ParsedMarkup {
       if (Array.isArray(o.strokes)) strokes = legacyStrokesFrom(o.strokes);
       else if (Array.isArray(o.points)) strokes = legacyStrokesFrom([o.points]);
     }
-    return { mode: 'legacy', strokes, color: row.color || '#FF3B30', refW };
+    return { mode: 'legacy', strokes, color: row.color || '#F87171', refW };
   } catch {
     return { mode: 'invisible' };
   }
@@ -1329,7 +1329,7 @@ export default function DrawingReviewPortalPage() {
                 ) : selMode === 'confirm' ? (
                   <>
                     <span style={{ fontSize: 12, fontWeight: 700, color: TEXT, padding: '0 4px' }}>Remove this markup?</span>
-                    <button onClick={() => void doDelete(selected.id)} style={{ ...toolBtn(false), borderColor: '#EF444488', color: '#FF3B30' }}>Remove</button>
+                    <button onClick={() => void doDelete(selected.id)} style={{ ...toolBtn(false), borderColor: '#EF444488', color: '#F87171' }}>Remove</button>
                     <button onClick={() => setSelMode('chips')} style={toolBtn(false)}>Cancel</button>
                   </>
                 ) : (

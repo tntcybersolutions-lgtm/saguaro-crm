@@ -205,10 +205,10 @@ const CSS = `
 .tkSteps { display: flex; flex-direction: column; gap: 6px; }
 .tkStep { display: flex; align-items: center; gap: 8px; font-size: var(--fs-xs); color: var(--text-tertiary); }
 .tkStep i { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; font-style: normal; font-size: 10px; font-weight: 700; border: 1px solid var(--border-default); }
-.tkStep[data-state="done"] { color: var(--status-ongoing); } .tkStep[data-state="done"] i { border-color: rgba(44,255,122,.35); background: rgba(44,255,122,.12); color: var(--status-ongoing); }
+.tkStep[data-state="done"] { color: var(--status-ongoing); } .tkStep[data-state="done"] i { border-color: rgba(74,222,128,.35); background: rgba(74,222,128,.12); color: var(--status-ongoing); }
 .tkStep[data-state="active"] { color: var(--text-primary); } .tkStep[data-state="active"] i { border-color: var(--brand-primary-35); background: var(--brand-primary-12); color: var(--brand-primary); }
 .tkDone { display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center; }
-.tkDoneIcon { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: rgba(44,255,122,.12); border: 2px solid rgba(44,255,122,.3); color: var(--status-ongoing); }
+.tkDoneIcon { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: rgba(74,222,128,.12); border: 2px solid rgba(74,222,128,.3); color: var(--status-ongoing); }
 .tkErr { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-sm); color: var(--text-primary); padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(255,77,94,.35); background: rgba(255,77,94,.08); }
 .tkErr > svg { color: var(--status-overdue); flex-shrink: 0; margin-top: 2px; }
 .tkRecent { max-height: 460px; overflow-y: auto; }

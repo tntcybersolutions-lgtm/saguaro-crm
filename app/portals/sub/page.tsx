@@ -50,7 +50,7 @@ export default function SubPortalLanding() {
           <div style={{ marginBottom: 24 }}>
             <label style={{ color: 'var(--text-secondary)', fontSize: 12, display: 'block', marginBottom: 8 }}>Access With Your Email</label>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleEmailAccess()} placeholder="you@company.com" style={{ width: '100%', padding: '12px 16px', background: '#1c1c1e', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#FFFFFF', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
-            <button onClick={handleEmailAccess} disabled={loading || !email.trim()} style={{ width: '100%', marginTop: 12, padding: '12px', background: 'var(--brand-primary)', border: 'none', borderRadius: 10, color: '#0A0A00', fontWeight: 700, fontSize: 14, cursor: loading ? 'wait' : 'pointer', opacity: !email.trim() ? 0.5 : 1 }}>
+            <button onClick={handleEmailAccess} disabled={loading || !email.trim()} style={{ width: '100%', marginTop: 12, padding: '12px', background: 'var(--brand-primary)', border: 'none', borderRadius: 10, color: '#101722', fontWeight: 700, fontSize: 14, cursor: loading ? 'wait' : 'pointer', opacity: !email.trim() ? 0.5 : 1 }}>
               {loading ? 'Checking…' : 'Access Portal'}
             </button>
           </div>
@@ -66,7 +66,7 @@ export default function SubPortalLanding() {
               <button onClick={handleTokenAccess} disabled={!token.trim()} style={{ padding: '12px 20px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#FFFFFF', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: !token.trim() ? 0.5 : 1 }}>Go</button>
             </div>
           </div>
-          {error && <div style={{ marginTop: 16, padding: '10px 14px', background: 'rgba(255,59,48,0.1)', border: '1px solid rgba(255,59,48,0.3)', borderRadius: 8, color: '#FF3B30', fontSize: 13 }}>{error}</div>}
+          {error && <div style={{ marginTop: 16, padding: '10px 14px', background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 8, color: '#F87171', fontSize: 13 }}>{error}</div>}
         </div>
         <div style={{ textAlign: 'center', marginTop: 24 }}><a href="/" style={{ color: 'var(--text-secondary)', fontSize: 13, textDecoration: 'none' }}>← Back to Saguaro</a></div>
       </div>

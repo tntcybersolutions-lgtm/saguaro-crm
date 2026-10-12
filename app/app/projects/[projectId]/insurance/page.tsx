@@ -182,7 +182,7 @@ export default function InsurancePage() {
   return (
     <>
       {toast && (
-        <div style={{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:'8px',background:toast.type==='success'?'rgba(44,255,122,0.9)':'rgba(255,59,48,0.9)',color:'var(--text-primary)',fontWeight:600,fontSize:'14px',pointerEvents:'none'}}>
+        <div style={{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:'8px',background:toast.type==='success'?'rgba(74,222,128,0.9)':'rgba(248,113,113,0.9)',color:'var(--text-primary)',fontWeight:600,fontSize:'14px',pointerEvents:'none'}}>
           {toast.msg}
         </div>
       )}

@@ -178,7 +178,7 @@ export default function Building3D({ floors, activeFloorId, heightFt = 10 }: Pro
         const geo = new THREE.BoxGeometry(len, wallH, 0.35);
         disposables.push(geo);
         const mat = new THREE.MeshStandardMaterial({
-          color: toColor(WALL_MATERIALS[w.material]?.color || '#A3ACBB'),
+          color: toColor(WALL_MATERIALS[w.material]?.color || '#94A3B8'),
           transparent: true, opacity: 0.9, roughness: 0.85, metalness: 0.05,
         });
         disposables.push(mat);

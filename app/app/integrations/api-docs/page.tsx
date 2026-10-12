@@ -23,7 +23,7 @@ const DIM = 'var(--text-secondary)', MUTED = 'var(--text-secondary)', TEXT = 'va
 
 // Integrations accent — steel blue, local because 'integrations' is not a key in
 // lib/module-identity (owned elsewhere). Chips / eyebrows / badges ONLY.
-const API_ACCENT = '#FF8A00';
+const API_ACCENT = '#FBBF24';
 
 // Dark inset panel for code — every sample and payload sits on this material.
 const CODE_PANEL: React.CSSProperties = {

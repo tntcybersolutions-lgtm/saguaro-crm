@@ -333,7 +333,7 @@ export default function GetStartedTour() {
                             style={{
                               display: 'flex', alignItems: 'center', gap: 8,
                               background: 'rgba(255,255,255,0.03)',
-                              border: '1px solid ' + (filled ? 'rgba(44,255,122,0.4)' : p > 0 ? 'color-mix(in srgb, var(--brand-primary) 50%, transparent)' : LINE),
+                              border: '1px solid ' + (filled ? 'rgba(74,222,128,0.4)' : p > 0 ? 'color-mix(in srgb, var(--brand-primary) 50%, transparent)' : LINE),
                               borderRadius: 9, padding: '10px 12px', minHeight: 40,
                               transition: 'border-color .25s',
                             }}

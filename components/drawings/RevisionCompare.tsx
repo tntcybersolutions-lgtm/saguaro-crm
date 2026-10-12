@@ -44,8 +44,8 @@ const DIM = '#8094B0';
 const CANVAS_BG = '#0b0e13';
 const ACCENT = 'var(--brand-primary)';
 const ACCENT_12 = 'var(--brand-primary-12, var(--brand-primary-12))';
-const A_RED = '#FF3B30';
-const B_BLUE = '#FF8A00';
+const A_RED = '#F87171';
+const B_BLUE = '#FBBF24';
 
 const LONG_EDGE = 2200;              // raster long edge for the compare (crisp, fast to tint)
 const MAX_HIGHLIGHT_LINES = 4000;    // SVG line cap per side for the vector highlight

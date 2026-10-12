@@ -108,7 +108,7 @@ export default function ReportsPage() {
                 <button
                   onClick={() => downloadReport(r.reportType, r.title, 'pdf')}
                   disabled={busy}
-                  style={{ padding: '7px 14px', background: GOLD, border: 'none', borderRadius: 8, color: '#0A0A00', fontSize: 12, fontWeight: 600, cursor: busy ? 'wait' : 'pointer', opacity: busy ? 0.6 : 1, minWidth: 118 }}
+                  style={{ padding: '7px 14px', background: GOLD, border: 'none', borderRadius: 8, color: '#101722', fontSize: 12, fontWeight: 600, cursor: busy ? 'wait' : 'pointer', opacity: busy ? 0.6 : 1, minWidth: 118 }}
                 >
                   {pdfBusy ? <><Hourglass size={13} weight="duotone" style={{ verticalAlign: -2 }} /> Generating…</> : <><FilePdf size={13} weight="duotone" style={{ verticalAlign: -2 }} /> Download PDF</>}
                 </button>
@@ -127,7 +127,7 @@ export default function ReportsPage() {
       </div>
 
       {toast && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 99999, padding: '12px 22px', borderRadius: 8, background: toast.type === 'success' ? 'rgba(44,255,122,0.92)' : 'rgba(255,59,48,0.92)', color: '#fff', fontWeight: 600, fontSize: 14, boxShadow: '0 4px 20px rgba(0,0,0,.4)', pointerEvents: 'none', whiteSpace: 'nowrap' }}>
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 99999, padding: '12px 22px', borderRadius: 8, background: toast.type === 'success' ? 'rgba(74,222,128,0.92)' : 'rgba(248,113,113,0.92)', color: '#fff', fontWeight: 600, fontSize: 14, boxShadow: '0 4px 20px rgba(0,0,0,.4)', pointerEvents: 'none', whiteSpace: 'nowrap' }}>
           {toast.msg}
         </div>
       )}

@@ -257,7 +257,7 @@ function Pane({
         }}
       >
         {err ? (
-          <div style={{ color: '#FF3B30', fontSize: 13, maxWidth: 360, textAlign: 'center', marginTop: 56, lineHeight: 1.65 }}>
+          <div style={{ color: '#F87171', fontSize: 13, maxWidth: 360, textAlign: 'center', marginTop: 56, lineHeight: 1.65 }}>
             {err}
             <div style={{ marginTop: 14 }}>
               <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: DIM, fontSize: 12.5 }}>
@@ -469,7 +469,7 @@ export default function PdfViewer() {
             <ArrowSquareOut size={14} weight="bold" />
           </a>
           <button
-            style={{ ...chip, background: 'rgba(255,59,48,0.16)', borderColor: 'rgba(255,59,48,0.45)', color: '#FCA5A5' }}
+            style={{ ...chip, background: 'rgba(248,113,113,0.16)', borderColor: 'rgba(248,113,113,0.45)', color: '#FCA5A5' }}
             onClick={close}
             aria-label="Close"
           >

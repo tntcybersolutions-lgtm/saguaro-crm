@@ -308,7 +308,7 @@ export default function CompetitorComparePage({ competitor }: { competitor: Comp
               {/* Saguaro cell */}
               <div style={{
                 padding: '15px 20px', borderLeft: `1px solid ${BORDER}`,
-                background: row.saguaroWins ? 'rgba(44,255,122,0.04)' : 'transparent',
+                background: row.saguaroWins ? 'rgba(74,222,128,0.04)' : 'transparent',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
               }}>
                 {row.saguaroWins && <Check />}

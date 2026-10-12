@@ -130,7 +130,7 @@ const TICKER_FX = `
 .sgTickerItem:hover{background:rgba(255,255,255,0.07)!important;border-color:rgba(255,255,255,0.18)!important}
 .sgTickerX{opacity:.35;transition:opacity .15s ease,color .15s ease}
 .sgTickerItem:hover .sgTickerX{opacity:.75}
-.sgTickerX:hover{opacity:1!important;color:#FF3B30!important}
+.sgTickerX:hover{opacity:1!important;color:#F87171!important}
 @media (prefers-reduced-motion: reduce){
   .sgTickerTrack{animation:none!important}
   .sgTickerViewport{overflow-x:auto!important}

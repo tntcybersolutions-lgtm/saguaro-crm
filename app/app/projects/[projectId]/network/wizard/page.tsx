@@ -8,9 +8,9 @@ import { PremiumSurface, ModuleHero, SectionCard, StatCard, goldButtonStyle } fr
 
 const BASE = 'var(--bg-surface-2)';
 const GOLD = 'var(--brand-primary)';
-const GREEN = '#2CFF7A';
+const GREEN = '#4ADE80';
 const BLUE = 'var(--brand-primary)';
-const RED = '#FF3B30';
+const RED = '#F87171';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = 'var(--text-secondary)';
 const TEXT = 'var(--text-primary)';

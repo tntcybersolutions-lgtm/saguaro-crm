@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 const DARK = 'var(--bg-base)';
-const ON_GOLD = '#0A0A00';
+const ON_GOLD = '#101722';
 const GOLD = 'var(--brand-primary)';
 const TEXT = '#FFFFFF';
 const DIM = 'var(--text-secondary)';

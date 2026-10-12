@@ -15,7 +15,7 @@ export default function HowToGetStartedPage() {
         :root {
           --dark: var(--bg-base); --gold: var(--brand-primary); --text: #FFFFFF;
           --dim: #D4D4D8; --border: rgba(255,255,255,0.08); --raised: var(--bg-surface);
-          --green: #2CFF7A; --font: system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+          --green: #4ADE80; --font: system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
         }
         body { background: var(--dark); color: var(--text); font-family: var(--font); }
         a { color: var(--gold); }
@@ -30,7 +30,7 @@ export default function HowToGetStartedPage() {
           color: var(--text); }
         .nav-cta {
           padding: 9px 22px; background: var(--gold);
-          border-radius: 8px; color: #0A0A00; font-weight: 600; font-size: 13px;
+          border-radius: 8px; color: #101722; font-weight: 600; font-size: 13px;
           text-decoration: none;
         }
         .container { max-width: 860px; margin: 0 auto; padding: 72px 24px; }
@@ -98,7 +98,7 @@ export default function HowToGetStartedPage() {
         .btn-primary {
           display: inline-block; padding: 11px 26px;
           background: var(--gold);
-          border-radius: 8px; color: #0A0A00; font-weight: 600; font-size: 15px;
+          border-radius: 8px; color: #101722; font-weight: 600; font-size: 15px;
           text-decoration: none; box-shadow: none;
           margin-bottom: 12px;
         }
@@ -281,13 +281,13 @@ export default function HowToGetStartedPage() {
                 <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>{p.name}</div>
                 <div style={{ fontSize: 22, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>{p.price}</div>
                 <p style={{ fontSize: 13, color: 'var(--dim)', lineHeight: 1.6, marginBottom: 16 }}>{p.desc}</p>
-                <a href={p.href} style={{ display: 'block', padding: '10px', textAlign: 'center', background: p.popular ? 'var(--gold)' : 'transparent', border: p.popular ? 'none' : '1px solid rgba(255,255,255,0.14)', borderRadius: 8, color: p.popular ? '#0A0A00' : 'var(--dim)', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
+                <a href={p.href} style={{ display: 'block', padding: '10px', textAlign: 'center', background: p.popular ? 'var(--gold)' : 'transparent', border: p.popular ? 'none' : '1px solid rgba(255,255,255,0.14)', borderRadius: 8, color: p.popular ? '#101722' : 'var(--dim)', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
                   Start Free Trial →
                 </a>
               </div>
             ))}
           </div>
-          <div style={{ marginTop: 16, padding: '16px 20px', background: 'rgba(44,255,122,0.05)', border: '1px solid rgba(44,255,122,0.2)', borderRadius: 10, fontSize: 13, color: 'var(--dim)' }}>
+          <div style={{ marginTop: 16, padding: '16px 20px', background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 10, fontSize: 13, color: 'var(--dim)' }}>
             Payment is handled securely via Stripe. Your card is never charged during the free trial. Cancel anytime — your data is preserved for 30 days after cancellation.
           </div>
         </div>
@@ -322,8 +322,8 @@ export default function HowToGetStartedPage() {
             {['30 Days Free', 'No Credit Card', 'Unlimited Users', 'Free Migration', 'Cancel Anytime'].map(t => (
               <div key={t} className="trust-item">
                 <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                  <circle cx="8" cy="8" r="8" fill="rgba(44,255,122,0.15)" />
-                  <path d="M4.5 8l2.5 2.5 4-5" stroke="#2CFF7A" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  <circle cx="8" cy="8" r="8" fill="rgba(74,222,128,0.15)" />
+                  <path d="M4.5 8l2.5 2.5 4-5" stroke="#4ADE80" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 {t}
               </div>

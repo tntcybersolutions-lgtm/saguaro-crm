@@ -70,7 +70,7 @@ const CSS = `
 .brCheckTitle { display: block; font-size: var(--fs-md); font-weight: 700; color: var(--text-primary); }
 .brCheckSub { display: block; font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 3px; line-height: 1.55; }
 .brMsg { display: flex; align-items: center; gap: 9px; padding: 11px 14px; border-radius: var(--radius-sm); font-size: var(--fs-sm); font-weight: 600; }
-.brMsg[data-ok="true"] { background: rgba(44,255,122,.10); border: 1px solid rgba(44,255,122,.35); color: var(--status-ongoing); }
+.brMsg[data-ok="true"] { background: rgba(74,222,128,.10); border: 1px solid rgba(74,222,128,.35); color: var(--status-ongoing); }
 .brMsg[data-ok="false"] { background: rgba(255,77,94,.08); border: 1px solid rgba(255,77,94,.35); color: var(--status-overdue); }
 .brFix { background: var(--bg-surface-2); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px 12px; }
 .brFixWhat { font-size: var(--fs-sm); font-weight: 800; color: var(--text-primary); margin-bottom: 5px; }

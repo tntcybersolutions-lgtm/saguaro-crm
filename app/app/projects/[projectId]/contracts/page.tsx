@@ -328,8 +328,8 @@ export default function ContractsPage() {
         ]} />
       )}
 
-      {successMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(44,255,122,.15)', border: '1px solid rgba(44,255,122,.4)', borderRadius: 10, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
-      {errorMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(255,59,48,.15)', border: '1px solid rgba(255,59,48,.4)', borderRadius: 10, color: RED, fontSize: 13 }}>{errorMsg}</div>}
+      {successMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(74,222,128,.15)', border: '1px solid rgba(74,222,128,.4)', borderRadius: 10, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
+      {errorMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(248,113,113,.15)', border: '1px solid rgba(248,113,113,.4)', borderRadius: 10, color: RED, fontSize: 13 }}>{errorMsg}</div>}
 
       {showForm && (
         <div style={{ marginBottom: 24, display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 330px', gap: 18, alignItems: 'start' }}>

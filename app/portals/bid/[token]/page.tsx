@@ -27,8 +27,8 @@ const GOLD = 'var(--brand-primary)';
 const TEXT = '#F0F4FF';
 const DIM = 'var(--text-secondary)';
 const HAIR = 'rgba(255,255,255,0.10)';
-const GREEN = '#2CFF7A';
-const AMBER = '#FF8A00';
+const GREEN = '#4ADE80';
+const AMBER = '#FBBF24';
 
 type Payload = Jacket & {
   invite: { id: string; company: string | null; contact: string | null; email: string | null; status: string };
@@ -195,7 +195,7 @@ export default function BidderJacketPage() {
                 </div>
 
                 {formError && (
-                  <div style={{ color: '#FF3B30', fontSize: 13, marginTop: 12, fontWeight: 600 }}>{formError}</div>
+                  <div style={{ color: '#F87171', fontSize: 13, marginTop: 12, fontWeight: 600 }}>{formError}</div>
                 )}
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 16 }}>

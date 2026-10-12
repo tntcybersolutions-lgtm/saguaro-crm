@@ -11,8 +11,8 @@ const C = {
   border: 'rgba(255,255,255,0.10)',
   raised: 'var(--bg-surface)',
   raisedAlt: 'var(--bg-surface-2)',
-  green: '#2CFF7A',
-  blue: '#FF8A00',
+  green: '#4ADE80',
+  blue: '#FBBF24',
   font: "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
 };
 
@@ -289,7 +289,7 @@ export default function AboutPage() {
               Whether you are planning a single tenant improvement or a national franchise rollout, we bring the discipline, the controls, and the platform to keep it on schedule and within budget.
             </p>
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 40 }}>
-              <Link href="/contact" style={{ display: 'inline-block', padding: '11px 26px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
+              <Link href="/contact" style={{ display: 'inline-block', padding: '11px 26px', background: C.gold, borderRadius: 8, color: '#101722', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
                 Talk to Our Team
               </Link>
               <Link href="/features" style={{ display: 'inline-block', padding: '11px 26px', background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, color: C.dim, fontWeight: 500, fontSize: 14, textDecoration: 'none' }}>

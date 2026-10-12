@@ -835,7 +835,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             </div>
             <input type="file" accept="image/*" disabled={counting} style={{ display: 'none' }} onChange={(e) => { countSymbols(e.target.files?.[0]); (e.target as HTMLInputElement).value = ''; }} />
           </label>
-          <button onClick={() => { setRevResult(null); setComparing(true); }} style={{ display: 'flex', gap: 13, alignItems: 'flex-start', textAlign: 'left', border: `1.5px solid rgba(255,138,0,0.5)`, background: 'linear-gradient(180deg,rgba(255,138,0,0.10),rgba(255,138,0,0.03))', borderRadius: 14, padding: '15px 16px', cursor: 'pointer' }}>
+          <button onClick={() => { setRevResult(null); setComparing(true); }} style={{ display: 'flex', gap: 13, alignItems: 'flex-start', textAlign: 'left', border: `1.5px solid rgba(251,191,36,0.5)`, background: 'linear-gradient(180deg,rgba(251,191,36,0.10),rgba(251,191,36,0.03))', borderRadius: 14, padding: '15px 16px', cursor: 'pointer' }}>
             <Ic name="compareRevs" s={34} k="hero3" />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 800, fontSize: 15, color: TEXT }}>Compare Revisions</div>
@@ -1162,7 +1162,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                 {/* Draft change order (real route) + printable fallback */}
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 12, flexWrap: 'wrap' }}>
                   <button onClick={draftChangeOrder} disabled={coBusy || !projectId}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 9, padding: '11px 16px', cursor: (coBusy || !projectId) ? 'not-allowed' : 'pointer', opacity: (coBusy || !projectId) ? 0.55 : 1, fontWeight: 800, fontSize: 13.5, color: 'var(--on-brand)', background: 'linear-gradient(135deg,#FF8A00,#FF8A00)' }}>
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 9, padding: '11px 16px', cursor: (coBusy || !projectId) ? 'not-allowed' : 'pointer', opacity: (coBusy || !projectId) ? 0.55 : 1, fontWeight: 800, fontSize: 13.5, color: 'var(--on-brand)', background: 'linear-gradient(135deg,#FBBF24,#FBBF24)' }}>
                     {coBusy ? <><CircleNotch size={16} weight="bold" color="var(--on-brand)" style={{ animation: 'spin 0.7s linear infinite' }} />Filing…</> : <><Note size={17} weight="bold" color="var(--on-brand)" />Draft Change Order</>}
                   </button>
                   <button onClick={printChangeOrder} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'transparent', color: TEXT, border: `1px solid ${LINE}`, borderRadius: 9, padding: '11px 14px', cursor: 'pointer', fontWeight: 700, fontSize: 13 }}><Printer size={16} weight="duotone" color="var(--warning)" />Print CO</button>
@@ -1177,8 +1177,8 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         {/* SPEC-AWARE CROSS-CHECK — your counted quantities vs the scheduled quantities on file (the edge nobody has) */}
         <SectionCard icon={<ClipboardText size={20} weight="duotone" color="var(--brand-primary-strong)" />} title="Check Against Schedules" subtitle="Cross-check counted quantities against the schedules on file." accent="var(--brand-primary-strong)" style={{ marginTop: 14 }} action={
           <button onClick={runSpecCheck} disabled={specBusy || !projectId || !specItems.length} title={!projectId ? 'Open from a project to cross-check' : !specItems.length ? 'Add a counted condition first' : ''}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 9, padding: '10px 16px', cursor: (specBusy || !projectId || !specItems.length) ? 'not-allowed' : 'pointer', opacity: (specBusy || !projectId || !specItems.length) ? 0.5 : 1, fontWeight: 800, fontSize: 13.5, color: 'var(--on-brand)', background: 'linear-gradient(135deg,#FF8A00,var(--brand-primary-strong))', flexShrink: 0 }}>
-              {specBusy ? <><span style={{ width: 13, height: 13, borderRadius: 7, border: '2px solid #0A0A00', borderTopColor: 'transparent', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />Checking…</> : <><SealCheck size={17} weight="bold" color="var(--on-brand)" />Cross-check{specItems.length ? ` ${specItems.length} item${specItems.length === 1 ? '' : 's'}` : ''}</>}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 9, padding: '10px 16px', cursor: (specBusy || !projectId || !specItems.length) ? 'not-allowed' : 'pointer', opacity: (specBusy || !projectId || !specItems.length) ? 0.5 : 1, fontWeight: 800, fontSize: 13.5, color: 'var(--on-brand)', background: 'linear-gradient(135deg,#FBBF24,var(--brand-primary-strong))', flexShrink: 0 }}>
+              {specBusy ? <><span style={{ width: 13, height: 13, borderRadius: 7, border: '2px solid #101722', borderTopColor: 'transparent', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />Checking…</> : <><SealCheck size={17} weight="bold" color="var(--on-brand)" />Cross-check{specItems.length ? ` ${specItems.length} item${specItems.length === 1 ? '' : 's'}` : ''}</>}
             </button>
         }>
           {!projectId && <div style={{ marginTop: 10, fontSize: 12.5, color: DIM }}>Open from a project to cross-check.</div>}
@@ -1198,7 +1198,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                     return (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
                         <span style={{ fontSize: 13.5, fontWeight: 700, color: TEXT }}>{m} of {rs.length} item{rs.length === 1 ? '' : 's'} match your schedules</span>
-                        {mm > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 800, color: RED, background: 'rgba(255,59,48,0.12)', border: `1px solid rgba(255,59,48,0.4)`, borderRadius: 20, padding: '3px 10px' }}><WarningCircle size={13} weight="bold" />{mm} mismatch{mm === 1 ? '' : 'es'} to reconcile</span>}
+                        {mm > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 800, color: RED, background: 'rgba(248,113,113,0.12)', border: `1px solid rgba(248,113,113,0.4)`, borderRadius: 20, padding: '3px 10px' }}><WarningCircle size={13} weight="bold" />{mm} mismatch{mm === 1 ? '' : 'es'} to reconcile</span>}
                       </div>
                     );
                   })()}
@@ -1207,7 +1207,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                     const bad = row.status === 'mismatch';
                     const col = ok ? GREEN : bad ? RED : DIM;
                     return (
-                      <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 11, padding: '10px 12px', borderRadius: 10, border: `1px solid ${bad ? 'rgba(255,59,48,0.4)' : LINE}`, background: ok ? 'rgba(52,211,153,0.06)' : bad ? 'rgba(255,59,48,0.08)' : 'transparent', marginBottom: 8 }}>
+                      <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 11, padding: '10px 12px', borderRadius: 10, border: `1px solid ${bad ? 'rgba(248,113,113,0.4)' : LINE}`, background: ok ? 'rgba(52,211,153,0.06)' : bad ? 'rgba(248,113,113,0.08)' : 'transparent', marginBottom: 8 }}>
                         {ok ? <CheckCircle size={20} weight="fill" color={GREEN} style={{ flexShrink: 0, marginTop: 1 }} /> : bad ? <WarningCircle size={20} weight="fill" color={RED} style={{ flexShrink: 0, marginTop: 1 }} /> : <XCircle size={20} weight="duotone" color={DIM} style={{ flexShrink: 0, marginTop: 1 }} />}
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>{row.label}</div>
@@ -1505,7 +1505,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             {revResult && (
               <div style={{ marginTop: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                  <span style={{ fontSize: 12, fontWeight: 800, padding: '4px 10px', borderRadius: 20, background: revResult.netScope === 'increase' ? 'rgba(255,59,48,0.15)' : revResult.netScope === 'decrease' ? 'rgba(52,211,153,0.15)' : 'rgba(139,148,158,0.15)', color: revResult.netScope === 'increase' ? RED : revResult.netScope === 'decrease' ? GREEN : DIM }}>Net scope: {revResult.netScope}</span>
+                  <span style={{ fontSize: 12, fontWeight: 800, padding: '4px 10px', borderRadius: 20, background: revResult.netScope === 'increase' ? 'rgba(248,113,113,0.15)' : revResult.netScope === 'decrease' ? 'rgba(52,211,153,0.15)' : 'rgba(139,148,158,0.15)', color: revResult.netScope === 'increase' ? RED : revResult.netScope === 'decrease' ? GREEN : DIM }}>Net scope: {revResult.netScope}</span>
                   <span style={{ color: DIM, fontSize: 13 }}>{revResult.changes.length} changes found</span>
                 </div>
                 <div style={{ color: TEXT, fontSize: 14, marginBottom: 12, lineHeight: 1.5 }}>{revResult.summary}</div>
@@ -1554,13 +1554,13 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                   {qtyReview.rows.map((row, i) => {
                     const unmatched = !row.assemblyId;
                     return (
-                      <tr key={i} style={{ background: unmatched ? 'rgba(255,59,48,0.07)' : 'transparent', borderBottom: `1px solid ${LINE}` }}>
+                      <tr key={i} style={{ background: unmatched ? 'rgba(248,113,113,0.07)' : 'transparent', borderBottom: `1px solid ${LINE}` }}>
                         <td style={{ padding: '7px 12px', color: TEXT, maxWidth: 280 }}>{row.description}{row.unitCostCents ? <span style={{ color: DIM, fontSize: 11 }}> · ${(row.unitCostCents / 100).toFixed(2)}/{row.unit}</span> : null}</td>
                         <td style={{ padding: '7px 12px', fontVariantNumeric: 'tabular-nums', fontWeight: 600, whiteSpace: 'nowrap' }}>{row.qty.toLocaleString()}</td>
                         <td style={{ padding: '7px 12px', color: DIM }}>{row.unit}</td>
                         <td style={{ padding: '7px 12px', color: DIM, whiteSpace: 'nowrap' }}>{row.csi || '—'}</td>
                         <td style={{ padding: '7px 12px', minWidth: 220 }}>
-                          <select value={row.assemblyId} onChange={(e) => setQtyReview((r) => r ? { ...r, rows: r.rows.map((x, j) => j === i ? { ...x, assemblyId: e.target.value } : x) } : r)} style={{ ...inp, padding: '6px 8px', border: `1px solid ${unmatched ? 'rgba(255,59,48,0.5)' : LINE}` }}>
+                          <select value={row.assemblyId} onChange={(e) => setQtyReview((r) => r ? { ...r, rows: r.rows.map((x, j) => j === i ? { ...x, assemblyId: e.target.value } : x) } : r)} style={{ ...inp, padding: '6px 8px', border: `1px solid ${unmatched ? 'rgba(248,113,113,0.5)' : LINE}` }}>
                             <option value="">— unmapped (won&apos;t import) —</option>
                             {catalog.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
                           </select>
@@ -1692,7 +1692,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                         {it.confidence < 45 && <WarningCircle size={12} weight="bold" />}{it.aiConf ? 'AI' : 'est.'} {it.confidence}%
                       </span>
                     </div>
-                    <select value={it.assemblyId} onChange={(e) => patchReview(it.id, { assemblyId: e.target.value })} style={{ ...inp, marginTop: 9, padding: '7px 9px', border: `1px solid ${mapped ? LINE : 'rgba(255,59,48,0.5)'}` }}>
+                    <select value={it.assemblyId} onChange={(e) => patchReview(it.id, { assemblyId: e.target.value })} style={{ ...inp, marginTop: 9, padding: '7px 9px', border: `1px solid ${mapped ? LINE : 'rgba(248,113,113,0.5)'}` }}>
                       <option value="">— pick an assembly (required to add) —</option>
                       {asmList('count').map((a) => <option key={a.id} value={a.id}>{a.name} ({a.components.length} components)</option>)}
                     </select>

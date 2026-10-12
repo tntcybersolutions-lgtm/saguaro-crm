@@ -189,7 +189,7 @@ export default function ScheduleTaskDetailPage() {
       </button>
 
       {error && (
-        <div style={{ padding: '12px 16px', background: 'rgba(255,59,48,.1)', border: `1px solid rgba(255,59,48,.3)`, borderRadius: 12, color: RED, fontSize: 13, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ padding: '12px 16px', background: 'rgba(248,113,113,.1)', border: `1px solid rgba(248,113,113,.3)`, borderRadius: 12, color: RED, fontSize: 13, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
           <Warning size={16} /> {error}
         </div>
       )}

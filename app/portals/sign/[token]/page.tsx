@@ -9,8 +9,8 @@ const TEXT_DARK = '#FFFFFF';
 const TEXT_MED = '#F1F5F9';
 const TEXT_DIM = 'var(--text-secondary)';
 const GOLD = 'var(--brand-primary)';
-const GREEN = '#2CFF7A';
-const RED = '#FF3B30';
+const GREEN = '#4ADE80';
+const RED = '#F87171';
 
 interface SignatureInfo {
   id: string;
@@ -469,7 +469,7 @@ export default function PublicSigningPage() {
           style={{
             width: '100%', padding: '14px', border: 'none', borderRadius: 10,
             background: canSign && !signing ? GOLD : '#5B677A',
-            color: canSign && !signing ? '#0A0A00' : '#94a3b8',
+            color: canSign && !signing ? '#101722' : '#94a3b8',
             fontSize: 15, fontWeight: 800, cursor: canSign && !signing ? 'pointer' : 'not-allowed',
           }}
         >

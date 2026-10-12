@@ -60,7 +60,7 @@ export default function ClientPortalLanding() {
             <button
               onClick={handleEmailAccess}
               disabled={loading || !email.trim()}
-              style={{ width: '100%', marginTop: 12, padding: '12px', background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))', border: 'none', borderRadius: 10, color: '#0A0A00', fontWeight: 700, fontSize: 14, cursor: loading ? 'wait' : 'pointer', opacity: !email.trim() ? 0.5 : 1 }}
+              style={{ width: '100%', marginTop: 12, padding: '12px', background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))', border: 'none', borderRadius: 10, color: '#101722', fontWeight: 700, fontSize: 14, cursor: loading ? 'wait' : 'pointer', opacity: !email.trim() ? 0.5 : 1 }}
             >
               {loading ? 'Checking…' : 'Access My Project'}
             </button>
@@ -93,7 +93,7 @@ export default function ClientPortalLanding() {
             </div>
           </div>
 
-          {error && <div style={{ marginTop: 16, padding: '10px 14px', background: 'rgba(255,59,48,0.1)', border: '1px solid rgba(255,59,48,0.3)', borderRadius: 8, color: '#FF3B30', fontSize: 13 }}>{error}</div>}
+          {error && <div style={{ marginTop: 16, padding: '10px 14px', background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 8, color: '#F87171', fontSize: 13 }}>{error}</div>}
         </div>
 
         <div style={{ textAlign: 'center', marginTop: 24 }}>

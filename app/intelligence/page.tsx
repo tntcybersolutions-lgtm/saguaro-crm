@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 import MarketingNav from '@/components/MarketingNav';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',BORDER='rgba(255,255,255,0.08)',HAIRLINE='rgba(255,255,255,0.08)',CARD='rgba(255,255,255,0.02)',DIM='var(--text-secondary)',MUTED='var(--text-secondary)',TEXT='#FFFFFF',GREEN='#2CFF7A',RED='#FF3B30';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',BORDER='rgba(255,255,255,0.08)',HAIRLINE='rgba(255,255,255,0.08)',CARD='rgba(255,255,255,0.02)',DIM='var(--text-secondary)',MUTED='var(--text-secondary)',TEXT='#FFFFFF',GREEN='#4ADE80',RED='#F87171';
 
 export default function IntelligencePage() {
   const [scoring, setScoring] = useState(false);
@@ -61,7 +61,7 @@ export default function IntelligencePage() {
           <h1 style={{fontWeight:600,color:TEXT,margin:'0 0 8px',letterSpacing:-0.3}}>Bid Intelligence</h1>
           <div style={{fontSize:14,color:DIM,lineHeight:1.5}}>Saguaro learns from every bid you win or lose. No competitor has this.</div>
         </div>
-        <button onClick={()=>setScoring(!scoring)} style={{padding:'10px 18px',background:GOLD,border:'none',borderRadius:8,color:'#0A0A00',fontSize:13,fontWeight:600,cursor:'pointer'}}>
+        <button onClick={()=>setScoring(!scoring)} style={{padding:'10px 18px',background:GOLD,border:'none',borderRadius:8,color:'#101722',fontSize:13,fontWeight:600,cursor:'pointer'}}>
           Score New Opportunity
         </button>
       </div>
@@ -90,7 +90,7 @@ export default function IntelligencePage() {
         <div style={{marginBottom:14}}><label style={{display:'block',fontSize:12,fontWeight:500,color:MUTED,marginBottom:6}}>Description</label>
           <textarea value={desc} onChange={e=>setDesc(e.target.value)} rows={3} placeholder="Describe the project scope…" style={{width:'100%',padding:'9px 12px',background:DARK,border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:13,outline:'none',resize:'vertical'}}/></div>
         <div style={{display:'flex',gap:10}}>
-          <button onClick={scoreOpportunity} disabled={loading} style={{padding:'10px 20px',background:GOLD,border:'none',borderRadius:8,color:'#0A0A00',fontSize:13,fontWeight:600,cursor:'pointer'}}>{loading?'Scoring…':'Score with AI'}</button>
+          <button onClick={scoreOpportunity} disabled={loading} style={{padding:'10px 20px',background:GOLD,border:'none',borderRadius:8,color:'#101722',fontSize:13,fontWeight:600,cursor:'pointer'}}>{loading?'Scoring…':'Score with AI'}</button>
           <button onClick={()=>setScoring(false)} style={{padding:'10px 20px',background:'transparent',border:`1px solid ${BORDER}`,borderRadius:8,color:DIM,fontSize:13,cursor:'pointer'}}>Cancel</button>
         </div>
         {result&&('error' in result)&&<div style={{marginTop:20,background:'rgba(192,48,48,.08)',border:`1px solid rgba(192,48,48,.3)`,borderRadius:10,padding:'14px 16px',fontSize:13,color:DIM}}>{result['error'] as string}</div>}

@@ -26,7 +26,7 @@ const CSS = `
 .lgForm { display: flex; flex-direction: column; gap: 14px; }
 .lgMsg { display: flex; align-items: flex-start; gap: 8px; padding: 10px 14px; border-radius: var(--radius-sm); font-size: var(--fs-sm); margin-bottom: 16px; }
 .lgMsg > svg { flex-shrink: 0; margin-top: 1px; }
-.lgMsg[data-tone="good"] { background: rgba(44,255,122,.10); border: 1px solid rgba(44,255,122,.3); color: var(--status-ongoing); }
+.lgMsg[data-tone="good"] { background: rgba(74,222,128,.10); border: 1px solid rgba(74,222,128,.3); color: var(--status-ongoing); }
 .lgMsg[data-tone="bad"] { background: rgba(255,77,94,.08); border: 1px solid rgba(255,77,94,.35); color: var(--status-overdue); }
 .lgPwdWrap { position: relative; }
 .lgPwdWrap .k-input { padding-right: 44px; }

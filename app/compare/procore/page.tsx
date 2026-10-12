@@ -12,8 +12,8 @@ const C = {
   dim: 'var(--text-secondary)',
   border: 'rgba(255,255,255,0.12)',
   raised: 'var(--bg-surface)',
-  green: '#2CFF7A',
-  red: '#FF3B30',
+  green: '#4ADE80',
+  red: '#F87171',
 };
 
 const HAIR = 'rgba(255,255,255,0.08)';
@@ -184,7 +184,7 @@ export default function CompareProcorePage() {
             padding: '9px 20px',
             background: C.gold,
             borderRadius: 8,
-            color: '#0A0A00',
+            color: '#101722',
             fontSize: 13,
             fontWeight: 600,
             textDecoration: 'none',
@@ -252,7 +252,7 @@ export default function CompareProcorePage() {
             padding: '10px 22px',
             background: C.gold,
             borderRadius: 8,
-            color: '#0A0A00',
+            color: '#101722',
             fontWeight: 600,
             fontSize: 13.5,
             textDecoration: 'none',
@@ -416,7 +416,7 @@ export default function CompareProcorePage() {
                 <div style={{
                   padding: '16px 24px',
                   borderLeft: `1px solid ${HAIR}`,
-                  background: saguaroGood ? 'rgba(44,255,122,0.04)' : undefined,
+                  background: saguaroGood ? 'rgba(74,222,128,0.04)' : undefined,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -618,7 +618,7 @@ export default function CompareProcorePage() {
               padding: '11px 26px',
               background: C.gold,
               borderRadius: 8,
-              color: '#0A0A00',
+              color: '#101722',
               fontWeight: 600,
               fontSize: 14,
               textDecoration: 'none',
@@ -689,8 +689,8 @@ export default function CompareProcorePage() {
                 </p>
                 {activeDeep === idx && (
                   <div style={{
-                    background: 'rgba(255,59,48,0.05)',
-                    border: `1px solid rgba(255,59,48,0.15)`,
+                    background: 'rgba(248,113,113,0.05)',
+                    border: `1px solid rgba(248,113,113,0.15)`,
                     borderRadius: 8,
                     padding: '14px 16px',
                   }}>
@@ -829,8 +829,8 @@ export default function CompareProcorePage() {
         <div style={{
           maxWidth: 900,
           margin: '24px auto 0',
-          background: 'rgba(44,255,122,0.08)',
-          border: `1px solid rgba(44,255,122,0.25)`,
+          background: 'rgba(74,222,128,0.08)',
+          border: `1px solid rgba(74,222,128,0.25)`,
           borderRadius: 12,
           padding: '20px 28px',
           display: 'flex',
@@ -847,7 +847,7 @@ export default function CompareProcorePage() {
             padding: '11px 26px',
             background: C.gold,
             borderRadius: 8,
-            color: '#0A0A00',
+            color: '#101722',
             fontWeight: 600,
             fontSize: 14,
             textDecoration: 'none',
@@ -959,7 +959,7 @@ export default function CompareProcorePage() {
                 padding: '12px 24px',
                 background: C.gold,
                 borderRadius: 8,
-                color: '#0A0A00',
+                color: '#101722',
                 fontWeight: 600,
                 fontSize: 14,
                 textDecoration: 'none',
@@ -1092,7 +1092,7 @@ export default function CompareProcorePage() {
             padding: '12px 28px',
             background: C.gold,
             borderRadius: 8,
-            color: '#0A0A00',
+            color: '#101722',
             fontWeight: 600,
             fontSize: 14,
             textDecoration: 'none',
@@ -1125,7 +1125,7 @@ export default function CompareProcorePage() {
       {/* ── MOBILE STICKY CTA ── */}
       <div className="mobile-sticky-cta" style={{ display: 'none', position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, background: 'rgba(20,20,22,0.97)', borderTop: `1px solid ${HAIR}`, padding: '12px 16px', backdropFilter: 'blur(12px)' }}>
         <div style={{ display: 'flex', gap: 10 }}>
-          <Link href="/signup" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '13px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
+          <Link href="/signup" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '13px', background: C.gold, borderRadius: 8, color: '#101722', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
             Start Free Trial
           </Link>
           <Link href="/switch-from-procore" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '13px', background: 'transparent', border: `1px solid ${EYEBROW}`, borderRadius: 8, color: C.dim, fontSize: 14, fontWeight: 500, textDecoration: 'none' }}>

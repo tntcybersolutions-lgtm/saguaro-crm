@@ -467,13 +467,13 @@ const CSS = `
 .jp-wrap { position: relative; flex-shrink: 0; min-width: 0; }
 .jp-trigger { display: flex; align-items: center; gap: 9px; min-height: 40px; max-width: 300px; padding: 4px 10px 4px 5px; border-radius: 12px; cursor: pointer; white-space: nowrap; text-align: left;
   background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); color: var(--c-text-2); font-size: 13.5px; font-weight: 700; }
-.jp-trig-tile { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0; color: var(--c-orange); background: rgba(255,138,0,0.10); border: 1px solid rgba(255,138,0,0.35); }
+.jp-trig-tile { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0; color: var(--c-orange); background: rgba(251,191,36,0.10); border: 1px solid rgba(251,191,36,0.35); }
 .jp-trig-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
 .jp-trig-meta { color: var(--c-text-3); font-size: 11px; font-weight: 700; letter-spacing: .02em; overflow: hidden; text-overflow: ellipsis; }
 .jp-trigger:hover { background: rgba(255,255,255,0.06); color: var(--c-text); }
-.jp-trigger[data-in-job] { color: var(--c-text); background: rgba(255,230,0,0.05); border-color: rgba(255,230,0,0.3); }
-.jp-trigger[data-in-job]:hover { border-color: rgba(255,230,0,0.55); }
-.jp-trigger[aria-expanded="true"] { border-color: rgba(255,230,0,0.6); box-shadow: 0 0 0 3px rgba(255,230,0,0.12); }
+.jp-trigger[data-in-job] { color: var(--c-text); background: rgba(255,224,0,0.05); border-color: rgba(255,224,0,0.3); }
+.jp-trigger[data-in-job]:hover { border-color: rgba(255,224,0,0.55); }
+.jp-trigger[aria-expanded="true"] { border-color: rgba(255,224,0,0.6); box-shadow: 0 0 0 3px rgba(255,224,0,0.12); }
 .jp-trigger:focus-visible { outline: 2px solid var(--c-yellow); outline-offset: 2px; }
 .jp-trig-caret { color: var(--c-orange); flex-shrink: 0; margin-left: 2px; }
 .jp-trig-label { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
@@ -485,19 +485,19 @@ const CSS = `
 /* globals.css pins inputs to 13px !important on desktop; 16px on a phone stops iOS zooming on focus. */
 .jp-sheet .jp-search input { font-size: 16px !important; }
 .jp-panel .jp-search input:focus, .jp-panel .jp-search input:focus-visible { border: 0 !important; box-shadow: none !important; outline: none !important; background: transparent !important; }
-.jp-panel .jp-search:focus-within { box-shadow: inset 0 -2px 0 rgba(255,230,0,0.45); }
+.jp-panel .jp-search:focus-within { box-shadow: inset 0 -2px 0 rgba(255,224,0,0.45); }
 .jp-panel .jp-search input::placeholder { color: var(--c-text-3); font-weight: 500; }
 .jp-kbd { font-family: inherit; font-size: 11px; font-weight: 700; line-height: 1; color: var(--c-text-3); padding: 4px 6px; border-radius: 6px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.03); }
 .jp-iconbtn { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 9px; border: 0; background: transparent; color: var(--c-text-2); cursor: pointer; }
 .jp-iconbtn:hover { background: rgba(255,255,255,0.06); color: var(--c-text); }
-.jp-note { padding: 8px 14px; font-size: 12px; color: var(--c-text-2); background: rgba(255,230,0,0.04); border-bottom: 1px solid var(--border-subtle); }
+.jp-note { padding: 8px 14px; font-size: 12px; color: var(--c-text-2); background: rgba(255,224,0,0.04); border-bottom: 1px solid var(--border-subtle); }
 .jp-note b { color: var(--c-text); font-weight: 750; }
 .jp-scroll { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 4px 6px 8px; }
 .jp-group { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 12px 10px 6px; font-size: 10.5px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--c-text-3); }
 .jp-group-btn { background: transparent; border: 0; cursor: pointer; min-height: 36px; text-align: left; }
 .jp-group-btn:hover { color: var(--c-text-2); }
 .jp-opt { display: flex; align-items: center; gap: 11px; min-height: 48px; padding: 7px 10px; border-radius: 10px; cursor: pointer; }
-.jp-opt[data-active] { background: rgba(255,230,0,0.08); }
+.jp-opt[data-active] { background: rgba(255,224,0,0.08); }
 .jp-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .jp-name { color: var(--c-text-2); font-size: 14px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .jp-opt[data-active] .jp-name, .jp-opt[data-current] .jp-name { color: var(--c-text); }
@@ -517,7 +517,7 @@ const CSS = `
 .jp-footlink { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 10px; border-radius: 9px; font-size: 13px; font-weight: 700; color: var(--c-text-2); text-decoration: none; }
 .jp-footlink:hover { background: rgba(255,255,255,0.05); color: var(--c-text); }
 .jp-new { color: var(--c-yellow); }
-.jp-new:hover { color: var(--c-yellow); background: rgba(255,230,0,0.08); }
+.jp-new:hover { color: var(--c-yellow); background: rgba(255,224,0,0.08); }
 /* Phone: a bottom sheet over a dimmed page. */
 .jp-sheet-root { position: fixed; inset: 0; z-index: 4000; }
 .jp-scrim { position: absolute; inset: 0; background: rgba(0,0,0,0.6); }

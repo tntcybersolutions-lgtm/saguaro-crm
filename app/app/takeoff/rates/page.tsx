@@ -61,8 +61,8 @@ export default function CostCatalogPage() {
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 20,
           padding: '9px 15px', borderRadius: 10, fontSize: 13,
-          background: isDone ? 'rgba(52,211,153,0.10)' : isError ? 'rgba(255,59,48,0.10)' : 'rgba(255,255,255,0.04)',
-          border: `1px solid ${isDone ? 'rgba(52,211,153,0.3)' : isError ? 'rgba(255,59,48,0.3)' : LINE}`,
+          background: isDone ? 'rgba(52,211,153,0.10)' : isError ? 'rgba(248,113,113,0.10)' : 'rgba(255,255,255,0.04)',
+          border: `1px solid ${isDone ? 'rgba(52,211,153,0.3)' : isError ? 'rgba(248,113,113,0.3)' : LINE}`,
           color: isDone ? GREEN : isError ? 'var(--danger)' : DIM,
         }}>
           {isDone && <CheckCircle size={15} weight="fill" color={GREEN} />}

@@ -233,7 +233,7 @@ export default function FilesPage() {
           </div>
         )}
 
-        {toast && <div style={{ marginBottom: 14, padding: '9px 14px', background: T.greenDim, border: '1px solid rgba(44,255,122,0.3)', borderRadius: 8, color: T.green, fontSize: 13 }}>{toast}</div>}
+        {toast && <div style={{ marginBottom: 14, padding: '9px 14px', background: T.greenDim, border: '1px solid rgba(74,222,128,0.3)', borderRadius: 8, color: T.green, fontSize: 13 }}>{toast}</div>}
 
         {/* Library */}
         <SectionCard

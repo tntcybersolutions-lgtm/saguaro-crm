@@ -81,11 +81,11 @@ const CSS = `
 .poTabs { padding: 0 16px; }
 .poFlow { padding: 0; }
 .poSuccess { text-align: center; }
-.poSuccessIcon { width: 52px; height: 52px; border-radius: 50%; margin: 0 auto 12px; display: grid; place-items: center; background: rgba(44,255,122,.12); border: 1.5px solid rgba(44,255,122,.3); color: var(--status-ongoing); }
+.poSuccessIcon { width: 52px; height: 52px; border-radius: 50%; margin: 0 auto 12px; display: grid; place-items: center; background: rgba(74,222,128,.12); border: 1.5px solid rgba(74,222,128,.3); color: var(--status-ongoing); }
 .poSuccessTitle { font-size: var(--fs-lg); font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
 .poSuccessSub { font-size: var(--fs-sm); color: var(--text-tertiary); margin-bottom: 12px; }
 .poMail { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: var(--radius-sm); margin-bottom: 16px; text-align: left; font-size: var(--fs-xs); font-weight: 600; }
-.poMail[data-ok="true"] { background: rgba(44,255,122,.08); border: 1px solid rgba(44,255,122,.2); color: var(--status-ongoing); }
+.poMail[data-ok="true"] { background: rgba(74,222,128,.08); border: 1px solid rgba(74,222,128,.2); color: var(--status-ongoing); }
 .poMail[data-ok="false"] { background: rgba(255,197,61,.08); border: 1px solid rgba(255,197,61,.3); color: var(--status-under-contract); }
 .poLink { background: var(--bg-surface-2); border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 12px; text-align: left; }
 .poLinkLabel { font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); margin-bottom: 6px; }

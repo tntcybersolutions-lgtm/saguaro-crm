@@ -273,10 +273,10 @@ export default function SpecsPage() {
       </div>
 
       {successMsg && (
-        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(44,255,122,0.4)`, borderRadius: 10, color: T.green, fontSize: 13 }}>{successMsg}</div>
+        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(74,222,128,0.4)`, borderRadius: 10, color: T.green, fontSize: 13 }}>{successMsg}</div>
       )}
       {errorMsg && (
-        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.redDim, border: `1px solid rgba(255,59,48,0.4)`, borderRadius: 10, color: T.red, fontSize: 13 }}>{errorMsg}</div>
+        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.redDim, border: `1px solid rgba(248,113,113,0.4)`, borderRadius: 10, color: T.red, fontSize: 13 }}>{errorMsg}</div>
       )}
 
       {/* Create Form */}

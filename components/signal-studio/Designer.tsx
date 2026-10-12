@@ -44,7 +44,7 @@ import { useToast } from '@/components/Toast';
 // CLIENT-ONLY 3D building view (three.js touches window/WebGL → never SSR).
 const Building3D = dynamic(() => import('@/components/heatmap/Building3D'), { ssr: false });
 
-const GOLD = 'var(--brand-primary)', GOLD_CANVAS = '#FF8A00', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.1)';
+const GOLD = 'var(--brand-primary)', GOLD_CANVAS = '#FBBF24', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.1)';
 const TEXT = '#fff', DIM = 'var(--text-secondary)', MUTED = 'var(--text-secondary)';
 
 type Tool = 'select' | 'scale' | 'wall' | 'place';
@@ -279,7 +279,7 @@ const hexA = (hex: string, a: number) => {
 
 // ── hero badge art: the bespoke drawings glyph the legacy field header used
 //    (scopedFieldIcon('drawings')), inlined so the designer carries no /field imports ──
-const HERO_ICON_SVG = `<svg width="30" height="30" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="ss_hero_sheet" x1="6" y1="6" x2="26" y2="27" gradientUnits="userSpaceOnUse"><stop stop-color="#EDF1F6"/><stop offset="1" stop-color="#C6CFDC"/></linearGradient><linearGradient id="ss_hero_roll" x1="5" y1="5" x2="9" y2="28" gradientUnits="userSpaceOnUse"><stop stop-color="#4A5A72"/><stop offset="1" stop-color="#2A2A2E"/></linearGradient><linearGradient id="ss_hero_gold" x1="20" y1="5" x2="20" y2="28" gradientUnits="userSpaceOnUse"><stop stop-color="#FFE600"/><stop offset="1" stop-color="#FF8A00"/></linearGradient></defs><path d="M9 6.4c0-.9.7-1.6 1.6-1.6h14.8c.9 0 1.6.7 1.6 1.6v19.2c0 .9-.7 1.6-1.6 1.6H10.6c-.9 0-1.6-.7-1.6-1.6V6.4Z" fill="url(#ss_hero_sheet)"/><path d="M13 11h11M13 15h11M13 19h7" stroke="#FFE600" stroke-width="1.4" stroke-linecap="round"/><rect x="18" y="4.8" width="9" height="3.1" rx="1.1" fill="url(#ss_hero_gold)"/><path d="M4.6 6.6C4.6 5.4 5.6 4.4 6.8 4.4S9 5.4 9 6.6v18.8c0 1.2-1 2.2-2.2 2.2s-2.2-1-2.2-2.2V6.6Z" fill="url(#ss_hero_roll)"/><ellipse cx="6.8" cy="6.6" rx="2.2" ry="1.4" fill="#1A1A1D"/></svg>`;
+const HERO_ICON_SVG = `<svg width="30" height="30" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="ss_hero_sheet" x1="6" y1="6" x2="26" y2="27" gradientUnits="userSpaceOnUse"><stop stop-color="#EDF1F6"/><stop offset="1" stop-color="#C6CFDC"/></linearGradient><linearGradient id="ss_hero_roll" x1="5" y1="5" x2="9" y2="28" gradientUnits="userSpaceOnUse"><stop stop-color="#4A5A72"/><stop offset="1" stop-color="#2A2A2E"/></linearGradient><linearGradient id="ss_hero_gold" x1="20" y1="5" x2="20" y2="28" gradientUnits="userSpaceOnUse"><stop stop-color="#FFE000"/><stop offset="1" stop-color="#FBBF24"/></linearGradient></defs><path d="M9 6.4c0-.9.7-1.6 1.6-1.6h14.8c.9 0 1.6.7 1.6 1.6v19.2c0 .9-.7 1.6-1.6 1.6H10.6c-.9 0-1.6-.7-1.6-1.6V6.4Z" fill="url(#ss_hero_sheet)"/><path d="M13 11h11M13 15h11M13 19h7" stroke="#FFE000" stroke-width="1.4" stroke-linecap="round"/><rect x="18" y="4.8" width="9" height="3.1" rx="1.1" fill="url(#ss_hero_gold)"/><path d="M4.6 6.6C4.6 5.4 5.6 4.4 6.8 4.4S9 5.4 9 6.6v18.8c0 1.2-1 2.2-2.2 2.2s-2.2-1-2.2-2.2V6.6Z" fill="url(#ss_hero_roll)"/><ellipse cx="6.8" cy="6.6" rx="2.2" ry="1.4" fill="#1A1A1D"/></svg>`;
 
 function makeDevice(typeId: DeviceTypeId, pos: Pt, model?: string): Device {
   const def = defOf(typeId); // registry-tolerant: 'idf' works pre-sync too
@@ -385,17 +385,17 @@ function drawCinematicField(ctx: CanvasRenderingContext2D, p: HeatmapProject): C
     const meta = WALL_MATERIALS[w.material]; const lw = hmClamp(4 + (meta?.db5 ?? 4) / 3.5, 4, 11);
     ctx.save(); ctx.lineCap = 'round';
     ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = lw + 4; ctx.beginPath(); ctx.moveTo(w.a.x, w.a.y); ctx.lineTo(w.b.x, w.b.y); ctx.stroke();
-    ctx.strokeStyle = meta?.color || '#15171C'; ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(w.a.x, w.a.y); ctx.lineTo(w.b.x, w.b.y); ctx.stroke(); ctx.restore();
+    ctx.strokeStyle = meta?.color || '#243247'; ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(w.a.x, w.a.y); ctx.lineTo(w.b.x, w.b.y); ctx.stroke(); ctx.restore();
   });
   // DEAD ZONE callouts: dashed-red box + "Place 1 AP here"
   const gaps = (cov.gaps || []).filter((g) => g.area > 150);
   gaps.forEach((gp) => {
     const b = gp.bbox;
-    ctx.save(); ctx.strokeStyle = '#FF3B30'; ctx.lineWidth = 3.5; ctx.setLineDash([16, 11]); rr(ctx, b.x, b.y, b.w, b.h, 14); ctx.stroke(); ctx.restore();
+    ctx.save(); ctx.strokeStyle = '#F87171'; ctx.lineWidth = 3.5; ctx.setLineDash([16, 11]); rr(ctx, b.x, b.y, b.w, b.h, 14); ctx.stroke(); ctx.restore();
     const gx = gp.centroid.x, gy = gp.centroid.y;
-    ctx.save(); ctx.setLineDash([6, 7]); ctx.strokeStyle = '#2CFF7A'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(gx, gy - 70, 34, 0, 7); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle = '#2CFF7A'; ctx.font = '800 34px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('+', gx, gy - 70); ctx.restore();
-    const lines: [string, string, string][] = [['Dead Zone', '800 30px system-ui', '#fff'], [`${Math.round(gp.area).toLocaleString()} ft² · low signal`, '700 22px system-ui', '#ffd7d7'], ['▸ Place 1 AP here', '800 23px system-ui', '#2CFF7A']];
+    ctx.save(); ctx.setLineDash([6, 7]); ctx.strokeStyle = '#4ADE80'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(gx, gy - 70, 34, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = '#4ADE80'; ctx.font = '800 34px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('+', gx, gy - 70); ctx.restore();
+    const lines: [string, string, string][] = [['Dead Zone', '800 30px system-ui', '#fff'], [`${Math.round(gp.area).toLocaleString()} ft² · low signal`, '700 22px system-ui', '#ffd7d7'], ['▸ Place 1 AP here', '800 23px system-ui', '#4ADE80']];
     const tw = Math.max(...lines.map((l) => { ctx.font = l[1]; return ctx.measureText(l[0]).width; })) + 40, bh = 112, ly = Math.min(gy + 40, H - 150);
     ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 18; ctx.fillStyle = 'rgba(140,22,26,.97)'; rr(ctx, gx - tw / 2, ly - bh / 2, tw, bh, 14); ctx.fill(); ctx.restore();
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; lines.forEach((l, i) => { ctx.font = l[1]; ctx.fillStyle = l[2]; ctx.fillText(l[0], gx, ly - 32 + i * 32); });
@@ -736,9 +736,9 @@ export default function Designer({ projectId }: { projectId: string | null }) {
     for (let gy = 0; gy <= spec.ftH; gy += 5) { const y = gy * k; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
     ctx.font = `600 ${Math.round(k * 1.5)}px system-ui`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     for (const r of spec.rooms) {
-      ctx.strokeStyle = '#15171C'; ctx.lineWidth = Math.max(2, k * 0.45);
+      ctx.strokeStyle = '#243247'; ctx.lineWidth = Math.max(2, k * 0.45);
       ctx.strokeRect(r.x * k, r.y * k, r.w * k, r.h * k);
-      if (r.label) { ctx.fillStyle = '#A3ACBB'; ctx.fillText(r.label, (r.x + r.w / 2) * k, (r.y + r.h / 2) * k); }
+      if (r.label) { ctx.fillStyle = '#94A3B8'; ctx.fillText(r.label, (r.x + r.w / 2) * k, (r.y + r.h / 2) * k); }
     }
     const walls: Wall[] = spec.walls.map((w) => ({ id: uid(), a: { x: w.a[0] * k, y: w.a[1] * k }, b: { x: w.b[0] * k, y: w.b[1] * k }, material: w.material }));
     const devices: Device[] = spec.devices.map((d) => {
@@ -1424,7 +1424,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
       ctx.save(); ctx.setLineDash([5, 6]);
       for (const r of cableRuns.runs) {
         if (!r.pos) continue;
-        ctx.strokeStyle = r.overLimit ? 'rgba(255,59,48,0.55)' : hexA(SYSTEM_COLORS.cabling, 0.3);
+        ctx.strokeStyle = r.overLimit ? 'rgba(248,113,113,0.55)' : hexA(SYSTEM_COLORS.cabling, 0.3);
         ctx.lineWidth = r.overLimit ? 1.6 : 1;
         ctx.beginPath(); ctx.moveTo(r.pos.x, r.pos.y); ctx.lineTo(cableRuns.idfPos.x, cableRuns.idfPos.y); ctx.stroke();
       }
@@ -1457,15 +1457,15 @@ export default function Designer({ projectId }: { projectId: string | null }) {
     if (pendingScale.length) { ctx.fillStyle = GOLD_CANVAS; pendingScale.forEach((p) => { ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, 7); ctx.fill(); }); }
     // ── dead zones (outlined + labeled) ──
     if (showHeat && coverage) for (const g of coverage.gaps) {
-      ctx.strokeStyle = '#FF3B30'; ctx.lineWidth = 3; ctx.setLineDash([11, 7]);
+      ctx.strokeStyle = '#F87171'; ctx.lineWidth = 3; ctx.setLineDash([11, 7]);
       rr(ctx, g.bbox.x, g.bbox.y, g.bbox.w, g.bbox.h, 10); ctx.stroke(); ctx.setLineDash([]);
-      chip(ctx, `DEAD ZONE · ${Math.round(g.area)} ft²`, g.bbox.x + g.bbox.w / 2, Math.max(14, g.bbox.y - 4), '#FF3B30');
+      chip(ctx, `DEAD ZONE · ${Math.round(g.area)} ft²`, g.bbox.x + g.bbox.w / 2, Math.max(14, g.bbox.y - 4), '#F87171');
     }
     // ── co-channel interference overlay (grounded low-SIR cells, hatched) ──
     if (showInterference && interference) {
       const sx = cv.width / interference.cols, sy = cv.height / interference.rows;
       const hc = document.createElement('canvas'); hc.width = 9; hc.height = 9;
-      const hx = hc.getContext('2d')!; hx.strokeStyle = 'rgba(255,59,48,0.9)'; hx.lineWidth = 1.6;
+      const hx = hc.getContext('2d')!; hx.strokeStyle = 'rgba(248,113,113,0.9)'; hx.lineWidth = 1.6;
       hx.beginPath(); hx.moveTo(0, 9); hx.lineTo(9, 0); hx.moveTo(-2, 2); hx.lineTo(2, -2); hx.moveTo(7, 11); hx.lineTo(11, 7); hx.stroke();
       const pat = ctx.createPattern(hc, 'repeat');
       const paint = (style: string | CanvasPattern) => {
@@ -1474,7 +1474,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
           if (interference.mask[r * interference.cols + c]) ctx.fillRect(c * sx, r * sy, sx + 0.6, sy + 0.6);
         }
       };
-      paint('rgba(255,59,48,0.12)');
+      paint('rgba(248,113,113,0.12)');
       if (pat) paint(pat);
     }
     // ── RSSI iso-contours (marching squares) ──
@@ -1557,7 +1557,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         const pred = inspectAt({ x: mp.x, y: mp.y }, project).value;
         if (Number.isFinite(pred)) {
           const delta = pred - mp.measuredDbm;
-          const dc = Math.abs(delta) <= 3 ? '#A3ACBB' : delta > 0 ? '#FF8A00' : '#FF3B30';
+          const dc = Math.abs(delta) <= 3 ? '#94A3B8' : delta > 0 ? '#FBBF24' : '#F87171';
           const txt = `${delta > 0 ? '+' : ''}${delta.toFixed(0)}`;
           const bx = mp.x + 15, by = mp.y - 15;
           ctx.font = 'bold 11px system-ui';
@@ -1608,7 +1608,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
   const poeWatts = bom?.poeWatts ?? 0;
   const poeBudget = bom?.recSwitch?.poeBudgetW ?? 0;
   const poeUtil = poeBudget ? poeWatts / poeBudget : 0;
-  const poeColor = poeUtil > 0.9 ? '#FF3B30' : poeUtil > 0.7 ? GOLD : '#2CFF7A';
+  const poeColor = poeUtil > 0.9 ? '#F87171' : poeUtil > 0.7 ? GOLD : '#4ADE80';
 
   /* ── export ── */
   const exportPng = () => {
@@ -1827,15 +1827,15 @@ export default function Designer({ projectId }: { projectId: string | null }) {
       .band{background:linear-gradient(100deg,#0a0a0a,#161b22);color:#fff;padding:20px 26px;display:flex;align-items:center;gap:16px;border-radius:0 0 4px 4px}
       .mark{width:38px;height:38px;flex:0 0 38px}
       .band h1{font-size:19px;margin:0;font-weight:800;letter-spacing:.2px}
-      .band .tag{color:#FFE600;font-size:11px;font-weight:700}
+      .band .tag{color:#FFE000;font-size:11px;font-weight:700}
       .meta{color:#555;font-size:12.5px;margin:14px 2px 12px;display:flex;flex-wrap:wrap;gap:4px 18px}
       .meta b{color:#111}
-      .verdict{font-size:15px;line-height:1.5;color:#1a2232;background:#f7f9fc;border:1px solid #E4E4E7;border-left:4px solid #FFE600;border-radius:10px;padding:13px 16px;margin:0 2px 16px}
+      .verdict{font-size:15px;line-height:1.5;color:#1a2232;background:#f7f9fc;border:1px solid #E4E4E7;border-left:4px solid #FFE000;border-radius:10px;padding:13px 16px;margin:0 2px 16px}
       .verdict b{color:#0a0a0a}
       img.plan{width:100%;border:1px solid #d5d9de;border-radius:8px;margin-top:4px}
       .floorblock{page-break-inside:avoid;margin-top:12px}
       .floortitle{font-size:13px;font-weight:800;color:#0a0a0a;margin:0 0 4px}.floortitle span{font-weight:600;color:#6b7688}
-      h2{font-size:12px;margin:26px 0 8px;color:#0a0a0a;border-bottom:2px solid #FFE600;padding-bottom:5px;display:inline-block}
+      h2{font-size:12px;margin:26px 0 8px;color:#0a0a0a;border-bottom:2px solid #FFE000;padding-bottom:5px;display:inline-block}
       table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:2px} td,th{border-bottom:1px solid #e7e9ec;padding:7px 9px}
       th{text-align:left;background:#f4f5f7;font-size:11px;color:#555}
       .c{text-align:center}.r{text-align:right;font-variant-numeric:tabular-nums}
@@ -1849,7 +1849,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
       .foot{color:#aab;font-size:10px;text-align:center;margin:14px 0 24px}
     </style></head><body><div class="wrap">
       <div class="band">
-        <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="#FFE600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M12 9c0-2 -1.6-3.5 -3.5-3.5S5 7 5 9v3c0 1.4 1.1 2.5 2.5 2.5S10 13.4 10 12M12 12c0-2 1.6-3.5 3.5-3.5S19 10 19 12v2c0 1.4-1.1 2.5-2.5 2.5S14 15.4 14 14"/></svg>
+        <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="#FFE000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M12 9c0-2 -1.6-3.5 -3.5-3.5S5 7 5 9v3c0 1.4 1.1 2.5 2.5 2.5S10 13.4 10 12M12 12c0-2 1.6-3.5 3.5-3.5S19 10 19 12v2c0 1.4-1.1 2.5-2.5 2.5S14 15.4 14 14"/></svg>
         <div><div class="tag">Saguaro Control Systems</div><h1>Coverage Design Report</h1></div>
       </div>
       <div class="meta"><span>Project: <b>${project.name}</b></span><span>Layer: <b>${DEVICE_REGISTRY[project.activeType].label}</b></span><span>Environment: <b>${project.env}</b></span>${multi ? `<span>Floors: <b>${summary!.floorCount}</b></span>` : ''}<span>Date: <b>${dstr}</b></span></div>
@@ -2087,12 +2087,12 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         {project && <div className="hm-hero-actions">
           {/* Simple mode: TWO buttons. Everything else lives in Details or the Bid step. */}
           <button className="hm-btn" style={{ background: 'rgba(255,255,255,0.06)', color: TEXT }} onClick={openListModal}>Open</button>
-          <button className="hm-btn" style={{ background: savedId ? 'rgba(44,255,122,0.15)' : 'rgba(255,255,255,0.06)', color: savedId ? '#2CFF7A' : TEXT }} onClick={openSaveModal}>{savedId ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>Saved <CheckCircle size={13} weight="fill" /></span> : 'Save'}</button>
+          <button className="hm-btn" style={{ background: savedId ? 'rgba(74,222,128,0.15)' : 'rgba(255,255,255,0.06)', color: savedId ? '#4ADE80' : TEXT }} onClick={openSaveModal}>{savedId ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>Saved <CheckCircle size={13} weight="fill" /></span> : 'Save'}</button>
           {!fieldMode && <>
             <button className="hm-btn" style={{ background: 'rgba(255,255,255,0.06)', color: TEXT }} onClick={openShare}>Share</button>
             <button className="hm-btn" style={{ background: 'rgba(255,255,255,0.06)', color: TEXT }} onClick={exportPng}>PNG</button>
             <button className="hm-btn" onClick={exportReport}>Report</button>
-            <button className="hm-btn" style={{ background: 'rgba(44,255,122,0.14)', color: '#2CFF7A' }} onClick={sendToBidJacket}>→ Bid Jacket</button>
+            <button className="hm-btn" style={{ background: 'rgba(74,222,128,0.14)', color: '#4ADE80' }} onClick={sendToBidJacket}>→ Bid Jacket</button>
           </>}
         </div>}
       </div>
@@ -2158,7 +2158,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                 </button>
               </div>
               <div style={{ fontSize: 11.5, color: MUTED, marginTop: 12 }}>Drag &amp; drop a PDF, PNG or JPG anywhere · CAD PDFs import exact walls &amp; scale automatically · or tap a template below.</div>
-              {aiNotes.length > 0 && <div style={{ marginTop: 14, fontSize: 12, color: '#FCA5A5', background: 'rgba(255,59,48,0.08)', border: '1px solid rgba(255,59,48,0.25)', borderRadius: 8, padding: '9px 11px', lineHeight: 1.5 }}>{aiNotes.map((n, i) => <div key={i}>{n}</div>)}</div>}
+              {aiNotes.length > 0 && <div style={{ marginTop: 14, fontSize: 12, color: '#FCA5A5', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: 8, padding: '9px 11px', lineHeight: 1.5 }}>{aiNotes.map((n, i) => <div key={i}>{n}</div>)}</div>}
             </div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <div style={{ flex: '1 1 400px', minWidth: 300, borderRadius: 14, overflow: 'hidden', border: `1px solid ${BORDER}`, boxShadow: '0 16px 50px rgba(0,0,0,0.45)', position: 'relative' }}>
@@ -2199,11 +2199,11 @@ export default function Designer({ projectId }: { projectId: string | null }) {
           {fieldMode && (
             <div className="hm-fieldbar">
               {fieldStep === 'plan' && <>
-                <span className="hm-fieldmsg">Plan loaded <Check size={13} weight="bold" color="#2CFF7A" style={{ verticalAlign: '-2px' }} /> — next, set the scale so every distance is real.</span>
+                <span className="hm-fieldmsg">Plan loaded <Check size={13} weight="bold" color="#4ADE80" style={{ verticalAlign: '-2px' }} /> — next, set the scale so every distance is real.</span>
                 <button className="hm-big" onClick={() => openStep('scale')}>Set the Scale →</button>
               </>}
               {fieldStep === 'scale' && (project.scale ? <>
-                <span className="hm-fieldmsg">Scale set <Check size={13} weight="bold" color="#2CFF7A" style={{ verticalAlign: '-2px' }} /> — distances on this plan are real now.</span>
+                <span className="hm-fieldmsg">Scale set <Check size={13} weight="bold" color="#4ADE80" style={{ verticalAlign: '-2px' }} /> — distances on this plan are real now.</span>
                 <button className="hm-big" onClick={() => openStep('devices')}>Place Devices →</button>
                 <button className="hm-big" data-alt="true" onClick={() => openStep('walls')}>Trace Walls</button>
                 <button className="hm-big" data-alt="true" onClick={() => { finishWall(); setTool('scale'); setScaleDoor(true); setPendingScale([]); }}>Redo Scale</button>
@@ -2253,7 +2253,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                 {project.devices.length > 0 && <button className="hm-big" data-alt="true" onClick={() => openStep('heatmap')}>{project.devices.length} placed → Heatmap</button>}
               </>}
               {fieldStep === 'heatmap' && <>
-                <span className="hm-fieldstat" style={{ color: stats && stats.pctCovered > 90 ? '#2CFF7A' : stats && stats.pctCovered > 75 ? GOLD : '#FF3B30' }}>{stats ? `${stats.pctCovered.toFixed(0)}%` : '—'} <small>coverage</small></span>
+                <span className="hm-fieldstat" style={{ color: stats && stats.pctCovered > 90 ? '#4ADE80' : stats && stats.pctCovered > 75 ? GOLD : '#F87171' }}>{stats ? `${stats.pctCovered.toFixed(0)}%` : '—'} <small>coverage</small></span>
                 <span className="hm-fieldstat">{stats ? stats.deadZones : '—'} <small>dead zone{stats?.deadZones === 1 ? '' : 's'}</small></span>
                 {fixableGaps.length > 0 && <button className="hm-big" onClick={doFixDeadZones}>Fix {fixableGaps.length} Dead Zone{fixableGaps.length === 1 ? '' : 's'}</button>}
                 {fixableGaps.length === 0 && (coverage?.gaps?.length ?? 0) > 0 && <span className="hm-fieldmsg">Remaining pockets are too small for more hardware — drag an AP a few feet toward the worst one.</span>}
@@ -2375,7 +2375,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                 <div className="hm-selcard">
                   <i style={{ background: defOf(sel.typeId).color, width: 10, height: 10, borderRadius: '50%', display: 'inline-block' }} />
                   <b style={{ fontSize: 13 }}>{sel.label}</b>
-                  <button className="hm-tool" style={{ color: '#FF3B30' }} onClick={() => { snapshot(); patch({ devices: project.devices.filter((x) => x.id !== sel.id) }); setSelId(null); }}>Remove</button>
+                  <button className="hm-tool" style={{ color: '#F87171' }} onClick={() => { snapshot(); patch({ devices: project.devices.filter((x) => x.id !== sel.id) }); setSelId(null); }}>Remove</button>
                   <button className="hm-tool" onClick={() => flipFieldMode(false)} title="Full inspector in Details mode">Edit…</button>
                 </div>
               )}
@@ -2396,7 +2396,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                         {advice.density.apCount === 0
                           ? 'No access points yet — Auto-design places the engine-correct count for this floor.'
                           : advice.density.areaFt2 > 0
-                            ? <>{advice.density.apCount} AP{advice.density.apCount === 1 ? '' : 's'} on {advice.density.areaFt2.toLocaleString()} ft² = 1 AP / {advice.density.perApFt2?.toLocaleString() ?? '—'} ft² — cap {advice.density.capAps} (1 / 1,500 ft²){advice.density.flagged ? ' · OVER' : <Check size={12} weight="bold" color="#2CFF7A" style={{ verticalAlign: '-1px', marginLeft: 4 }} />}</>
+                            ? <>{advice.density.apCount} AP{advice.density.apCount === 1 ? '' : 's'} on {advice.density.areaFt2.toLocaleString()} ft² = 1 AP / {advice.density.perApFt2?.toLocaleString() ?? '—'} ft² — cap {advice.density.capAps} (1 / 1,500 ft²){advice.density.flagged ? ' · OVER' : <Check size={12} weight="bold" color="#4ADE80" style={{ verticalAlign: '-1px', marginLeft: 4 }} />}</>
                             : <>{advice.density.apCount} AP{advice.density.apCount === 1 ? '' : 's'} placed — set the scale to check density against the 1 AP / 1,500 ft² cap.</>}
                       </div>
                       {advice.apRows.length > 0 && <>
@@ -2434,7 +2434,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                           {cableRuns.runs.map((r) => (
                             <div key={r.id} className="hm-advrow" style={{ fontSize: 10.5 }}>
                               <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.label}</span>
-                              <span style={{ color: r.overLimit ? '#FF3B30' : DIM, fontVariantNumeric: 'tabular-nums', fontWeight: 700 }}>{r.lengthFt} ft</span>
+                              <span style={{ color: r.overLimit ? '#F87171' : DIM, fontVariantNumeric: 'tabular-nums', fontWeight: 700 }}>{r.lengthFt} ft</span>
                               <span style={{ color: MUTED, minWidth: 74, textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.cable}</span>
                             </div>
                           ))}
@@ -2454,8 +2454,8 @@ export default function Designer({ projectId }: { projectId: string | null }) {
               {/* ── always-visible metric strip + segmented group control ── */}
               <div className="hm-panel-top">
                 <div className="hm-strip">
-                  <Metric label="Coverage" big val={stats ? `${stats.pctCovered.toFixed(0)}%` : '—'} color={stats ? (stats.pctCovered > 90 ? '#2CFF7A' : stats.pctCovered > 75 ? GOLD : '#FF3B30') : DIM} />
-                  <Metric label="Health" big val={stats ? `${stats.healthScore}` : '—'} color={stats ? (stats.healthScore > 80 ? '#2CFF7A' : stats.healthScore > 60 ? GOLD : '#FF3B30') : DIM} />
+                  <Metric label="Coverage" big val={stats ? `${stats.pctCovered.toFixed(0)}%` : '—'} color={stats ? (stats.pctCovered > 90 ? '#4ADE80' : stats.pctCovered > 75 ? GOLD : '#F87171') : DIM} />
+                  <Metric label="Health" big val={stats ? `${stats.healthScore}` : '—'} color={stats ? (stats.healthScore > 80 ? '#4ADE80' : stats.healthScore > 60 ? GOLD : '#F87171') : DIM} />
                   <Metric label="Devices" big val={`${project.devices.length}`} />
                   {project.activeType === 'wifi_ap'
                     ? <Metric label="Dead Zones" big val={stats ? `${stats.deadZones}` : '—'} color={stats && stats.deadZones ? GOLD : DIM} />
@@ -2502,7 +2502,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                 </div>}
                 {coverage && <div style={{ marginTop: 10 }}>
                   {activeDef?.modelType === 'rf' && <>
-                    <div style={{ height: 12, borderRadius: 4, background: 'linear-gradient(90deg,#2a3340,#FF3B30,#f8c22a,#7ac943,#1cb052)' }} />
+                    <div style={{ height: 12, borderRadius: 4, background: 'linear-gradient(90deg,#2a3340,#F87171,#f8c22a,#7ac943,#1cb052)' }} />
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: MUTED, marginTop: 3 }}><span>−90</span><span style={{ color: GOLD }}>−{Math.abs(project.rssiTargetDbm)} target</span><span>−45 dBm</span></div>
                   </>}
                   {activeDef?.modelType === 'camera' && <>
@@ -2515,14 +2515,14 @@ export default function Designer({ projectId }: { projectId: string | null }) {
 
               {stats && <PanelSection title="Coverage Detail">
                 <div className="hm-metrics">
-                  <Metric label="Coverage" val={`${stats.pctCovered.toFixed(0)}%`} big color={stats.pctCovered > 90 ? '#2CFF7A' : stats.pctCovered > 75 ? GOLD : '#FF3B30'} />
-                  <Metric label="Health" val={`${stats.healthScore}`} big color={stats.healthScore > 80 ? '#2CFF7A' : stats.healthScore > 60 ? GOLD : '#FF3B30'} />
+                  <Metric label="Coverage" val={`${stats.pctCovered.toFixed(0)}%`} big color={stats.pctCovered > 90 ? '#4ADE80' : stats.pctCovered > 75 ? GOLD : '#F87171'} />
+                  <Metric label="Health" val={`${stats.healthScore}`} big color={stats.healthScore > 80 ? '#4ADE80' : stats.healthScore > 60 ? GOLD : '#F87171'} />
                   <Metric label="Avg" val={`${stats.avgValue.toFixed(0)} ${stats.valueUnit}`} />
                   <Metric label="Devices" val={`${stats.deviceCount}`} />
                   {project.activeType === 'wifi_ap' && <Metric label="Dead Zones" val={`${stats.deadZones}`} color={stats.deadZones ? GOLD : DIM} />}
                   {project.activeType === 'wifi_ap' && <Metric label="Dead Area" val={`${Math.round(stats.deadArea)} ft²`} />}
-                  {project.activeType === 'wifi_ap' && stats.roamReadyPct != null && <Metric label="Roam-ready" val={`${stats.roamReadyPct.toFixed(0)}%`} color={stats.roamReadyPct > 80 ? '#2CFF7A' : stats.roamReadyPct > 50 ? GOLD : '#FF3B30'} />}
-                  {project.activeType === 'wifi_ap' && stats.avgConfidence != null && <Metric label="Confidence" val={`${Math.round(stats.avgConfidence * 100)}%`} color={stats.avgConfidence > 0.7 ? '#2CFF7A' : stats.avgConfidence > 0.45 ? GOLD : '#FF3B30'} />}
+                  {project.activeType === 'wifi_ap' && stats.roamReadyPct != null && <Metric label="Roam-ready" val={`${stats.roamReadyPct.toFixed(0)}%`} color={stats.roamReadyPct > 80 ? '#4ADE80' : stats.roamReadyPct > 50 ? GOLD : '#F87171'} />}
+                  {project.activeType === 'wifi_ap' && stats.avgConfidence != null && <Metric label="Confidence" val={`${Math.round(stats.avgConfidence * 100)}%`} color={stats.avgConfidence > 0.7 ? '#4ADE80' : stats.avgConfidence > 0.45 ? GOLD : '#F87171'} />}
                 </div>
                 {project.activeType === 'wifi_ap' && stats.roamReadyPct != null && stats.avgConfidence == null && <div style={{ marginTop: 8, fontSize: 10.5, color: MUTED, lineHeight: 1.5 }}>Roam-ready = share of covered floor that can also reach a 2nd AP. Import a survey to add a validated <b>Confidence</b> layer.</div>}
               </PanelSection>}
@@ -2531,7 +2531,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                 <div className="hm-list">
                   {coverage.gaps.slice(0, 10).map((g, i) => (
                     <button key={i} className="hm-row" onClick={() => zoomToBox(g.bbox)} style={{ width: '100%' }} title="Zoom to this dead zone">
-                      <i style={{ background: '#FF3B30' }} />
+                      <i style={{ background: '#F87171' }} />
                       <span style={{ flex: 1, fontSize: 12, textAlign: 'left' }}>Dead zone {i + 1} · {Math.round(g.area)} ft²</span>
                       <ArrowUpRight size={13} weight="bold" style={{ color: GOLD }} />
                     </button>
@@ -2547,7 +2547,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                 <div className="hm-list">
                   <button className="hm-row" data-on={showHeat} onClick={() => setShowHeat((v) => !v)} style={{ width: '100%' }}>
                     <i style={{ background: '#1cb052' }} /><span style={{ flex: 1 }}>Coverage Heatmap</span>
-                    <span style={{ fontSize: 10.5, color: showHeat ? '#2CFF7A' : MUTED, fontWeight: 700 }}>{showHeat ? 'ON' : 'OFF'}</span>
+                    <span style={{ fontSize: 10.5, color: showHeat ? '#4ADE80' : MUTED, fontWeight: 700 }}>{showHeat ? 'ON' : 'OFF'}</span>
                   </button>
                   <div className="hm-row" style={{ width: '100%', cursor: 'default' }}>
                     <i style={{ background: 'transparent' }} /><span style={{ flex: 1 }}>Heatmap Opacity</span>
@@ -2556,40 +2556,40 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                   {project.activeType === 'wifi_ap' && (
                     <button className="hm-row" data-on={showContours} onClick={() => setShowContours((v) => !v)} style={{ width: '100%', opacity: showContours ? 1 : 0.6 }} title="RSSI iso-contour lines">
                       <i style={{ background: '#7ac943' }} /><span style={{ flex: 1 }}>RSSI contours</span>
-                      <span style={{ fontSize: 10.5, color: showContours ? '#2CFF7A' : MUTED, fontWeight: 700 }}>{showContours ? 'ON' : 'OFF'}</span>
+                      <span style={{ fontSize: 10.5, color: showContours ? '#4ADE80' : MUTED, fontWeight: 700 }}>{showContours ? 'ON' : 'OFF'}</span>
                     </button>
                   )}
                   {project.activeType === 'wifi_ap' && (
                     <button className="hm-row" data-on={showInterference} onClick={() => setShowInterference((v) => !v)} style={{ width: '100%', opacity: showInterference ? 1 : 0.6 }} title="Co-channel interference (low SIR)">
-                      <i style={{ background: '#FF3B30' }} /><span style={{ flex: 1 }}>Co-channel interference</span>
-                      <span style={{ fontSize: 10.5, color: showInterference ? '#2CFF7A' : MUTED, fontWeight: 700 }}>{showInterference ? 'ON' : 'OFF'}</span>
+                      <i style={{ background: '#F87171' }} /><span style={{ flex: 1 }}>Co-channel interference</span>
+                      <span style={{ fontSize: 10.5, color: showInterference ? '#4ADE80' : MUTED, fontWeight: 700 }}>{showInterference ? 'ON' : 'OFF'}</span>
                     </button>
                   )}
                   <button className="hm-row" data-on={showDori} onClick={() => setShowDori((v) => !v)} style={{ width: '100%', opacity: showDori ? 1 : 0.6 }} title="Camera DORI zones (EN 62676-4)">
                     <i style={{ background: SYSTEM_COLORS.camera }} /><span style={{ flex: 1 }}>Camera DORI Cones</span>
-                    <span style={{ fontSize: 10.5, color: showDori ? '#2CFF7A' : MUTED, fontWeight: 700 }}>{showDori ? 'ON' : 'OFF'}</span>
+                    <span style={{ fontSize: 10.5, color: showDori ? '#4ADE80' : MUTED, fontWeight: 700 }}>{showDori ? 'ON' : 'OFF'}</span>
                   </button>
                   <button className="hm-row" data-on={showCabling} onClick={() => setShowCabling((v) => !v)} style={{ width: '100%', opacity: showCabling ? 1 : 0.6 }} title="Structured cabling home-run lines to the rack/MDF">
                     <i style={{ background: SYSTEM_COLORS.cabling }} /><span style={{ flex: 1 }}>Cabling Runs</span>
-                    <span style={{ fontSize: 10.5, color: showCabling ? '#2CFF7A' : MUTED, fontWeight: 700 }}>{showCabling ? 'ON' : 'OFF'}</span>
+                    <span style={{ fontSize: 10.5, color: showCabling ? '#4ADE80' : MUTED, fontWeight: 700 }}>{showCabling ? 'ON' : 'OFF'}</span>
                   </button>
                   {project.activeType === 'wifi_ap' && measured.length > 0 && (
                     <button className="hm-row" data-on={showMeasured} onClick={() => setShowMeasured((v) => !v)} style={{ width: '100%', opacity: showMeasured ? 1 : 0.6 }}>
                       <i style={{ background: 'var(--brand-primary)' }} /><span style={{ flex: 1 }}>Measured Survey</span>
                       <span style={{ fontSize: 11, color: MUTED, marginRight: 8, fontVariantNumeric: 'tabular-nums' }}>{measured.length}</span>
-                      <span style={{ fontSize: 10.5, color: showMeasured ? '#2CFF7A' : MUTED, fontWeight: 700 }}>{showMeasured ? 'ON' : 'OFF'}</span>
+                      <span style={{ fontSize: 10.5, color: showMeasured ? '#4ADE80' : MUTED, fontWeight: 700 }}>{showMeasured ? 'ON' : 'OFF'}</span>
                     </button>
                   )}
                   {project.activeType === 'wifi_ap' && (
                     <button className="hm-row" data-on={showRoam} onClick={() => setShowRoam((v) => !v)} style={{ width: '100%', opacity: showRoam ? 1 : 0.6 }} title="Covered cells that can't reach a 2nd AP — a roaming risk">
-                      <i style={{ background: '#FFE600' }} /><span style={{ flex: 1 }}>Roaming Risk</span>
-                      <span style={{ fontSize: 10.5, color: showRoam ? '#2CFF7A' : MUTED, fontWeight: 700 }}>{showRoam ? 'ON' : 'OFF'}</span>
+                      <i style={{ background: '#FFE000' }} /><span style={{ flex: 1 }}>Roaming Risk</span>
+                      <span style={{ fontSize: 10.5, color: showRoam ? '#4ADE80' : MUTED, fontWeight: 700 }}>{showRoam ? 'ON' : 'OFF'}</span>
                     </button>
                   )}
                   {project.activeType === 'wifi_ap' && (
                     <button className="hm-row" data-on={showConfidence} onClick={() => setShowConfidence((v) => !v)} style={{ width: '100%', opacity: showConfidence ? 1 : 0.6 }} title="Veils areas the prediction is least sure about — import a survey to light it up">
                       <i style={{ background: '#3f3f46' }} /><span style={{ flex: 1 }}>Confidence Veil</span>
-                      <span style={{ fontSize: 10.5, color: showConfidence ? '#2CFF7A' : MUTED, fontWeight: 700 }}>{showConfidence ? 'ON' : 'OFF'}</span>
+                      <span style={{ fontSize: 10.5, color: showConfidence ? '#4ADE80' : MUTED, fontWeight: 700 }}>{showConfidence ? 'ON' : 'OFF'}</span>
                     </button>
                   )}
                 </div>
@@ -2604,7 +2604,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                       <button key={l.key} className="hm-row" data-on={on} onClick={() => setLayerVis((v) => ({ ...v, [l.key]: !on }))} style={{ width: '100%', opacity: on ? 1 : 0.55 }}>
                         <i style={{ background: l.color }} /><span style={{ flex: 1 }}>{l.name}</span>
                         <span style={{ fontSize: 11, color: MUTED, marginRight: 8, fontVariantNumeric: 'tabular-nums' }}>{count}</span>
-                        <span style={{ fontSize: 10.5, color: on ? '#2CFF7A' : MUTED, fontWeight: 700 }}>{on ? 'ON' : 'OFF'}</span>
+                        <span style={{ fontSize: 10.5, color: on ? '#4ADE80' : MUTED, fontWeight: 700 }}>{on ? 'ON' : 'OFF'}</span>
                       </button>
                     );
                   })}
@@ -2639,8 +2639,8 @@ export default function Designer({ projectId }: { projectId: string | null }) {
               </PanelSection>}
 
               {tab === 'design' && <PanelSection title="Smart Tools">
-                {project.planDataUrl && <button className="hm-smart" style={{ background: `linear-gradient(135deg, ${GOLD}, var(--brand-primary-strong))`, color: '#0A0A00', border: 'none', fontWeight: 800, fontSize: 13.5, marginBottom: 8, textAlign: 'center' }} onClick={autopilot}><Sparkle size={15} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Design my building — AI reads the plan, designs &amp; prices it</button>}
-                {project.scale && <button className="hm-smart" style={{ background: `linear-gradient(135deg, ${GOLD}, var(--brand-primary-strong))`, color: '#0A0A00', border: 'none', fontWeight: 800, fontSize: 13, marginBottom: 10, textAlign: 'center' }} onClick={autoDesign}><Sparkle size={15} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Auto-design coverage — place · close dead zones · price it</button>}
+                {project.planDataUrl && <button className="hm-smart" style={{ background: `linear-gradient(135deg, ${GOLD}, var(--brand-primary-strong))`, color: '#101722', border: 'none', fontWeight: 800, fontSize: 13.5, marginBottom: 8, textAlign: 'center' }} onClick={autopilot}><Sparkle size={15} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Design my building — AI reads the plan, designs &amp; prices it</button>}
+                {project.scale && <button className="hm-smart" style={{ background: `linear-gradient(135deg, ${GOLD}, var(--brand-primary-strong))`, color: '#101722', border: 'none', fontWeight: 800, fontSize: 13, marginBottom: 10, textAlign: 'center' }} onClick={autoDesign}><Sparkle size={15} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Auto-design coverage — place · close dead zones · price it</button>}
                 <button className="hm-smart" onClick={doAiScan}><Sparkle size={14} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />AI scan blueprint → read walls + place devices</button>
                 <div style={{ border: `1px solid var(--brand-primary-25)`, borderRadius: 8, padding: 9, marginBottom: 7, background: 'color-mix(in srgb, var(--brand-primary) 5%, transparent)' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 7 }}>
@@ -2671,7 +2671,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                   </label>
                   <button className="hm-smart" style={{ marginBottom: 0, marginTop: 4 }} onClick={doAutoPlace}><Sparkle size={14} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Auto-place {apCat ? apCat.model : apModel.replace('UniFi ', '')} → {Math.round(autoTarget * 100)}%</button>
                 </div>
-                {fixableGaps.length > 0 && <button className="hm-smart" style={{ borderColor: 'rgba(34,211,165,0.55)', color: '#2CFF7A' }} onClick={doFixDeadZones}><Sparkle size={14} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Fix {fixableGaps.length} Dead Zone{fixableGaps.length === 1 ? '' : 's'} → place {fixableGaps.length} AP{fixableGaps.length === 1 ? '' : 's'}</button>}
+                {fixableGaps.length > 0 && <button className="hm-smart" style={{ borderColor: 'rgba(34,211,165,0.55)', color: '#4ADE80' }} onClick={doFixDeadZones}><Sparkle size={14} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Fix {fixableGaps.length} Dead Zone{fixableGaps.length === 1 ? '' : 's'} → place {fixableGaps.length} AP{fixableGaps.length === 1 ? '' : 's'}</button>}
                 {fixableGaps.length === 0 && (coverage?.gaps?.length ?? 0) > 0 && <div style={{ fontSize: 11.5, color: DIM, background: DARK, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '8px 10px', lineHeight: 1.5 }}>Remaining dead pockets are too small to justify more hardware — drag an existing AP a few feet toward the worst one.</div>}
                 <button className="hm-smart" onClick={doChannels}><Sparkle size={14} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Plan WiFi channels (1/6/11)</button>
                 <button className="hm-smart" onClick={compute}><ArrowsClockwise size={14} weight="regular" style={{ verticalAlign: 'middle', marginRight: 6 }} />Recompute Heatmap</button>
@@ -2691,7 +2691,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                     {interFloorHits.slice(0, 8).map((it, i) => (
                       <div key={i} className="hm-bom-row" style={{ gap: 8 }}>
                         <span style={{ flex: 1 }}>L{it.aLevel} ↔ L{it.bLevel} · ch {it.channel} ({it.band} GHz)</span>
-                        <span style={{ color: it.severity === 'severe' ? '#FF3B30' : it.severity === 'moderate' ? GOLD : MUTED, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{Math.round(it.worstBleedDbm)} dBm · {it.severity}</span>
+                        <span style={{ color: it.severity === 'severe' ? '#F87171' : it.severity === 'moderate' ? GOLD : MUTED, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{Math.round(it.worstBleedDbm)} dBm · {it.severity}</span>
                       </div>
                     ))}
                   </div>
@@ -2708,7 +2708,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                       <div key={i} className="hm-bom-row" style={{ gap: 8 }}>
                         <span style={{ flex: 1 }}>{c.band} GHz · ch {c.channel}</span>
                         <span style={{ color: MUTED, fontSize: 11, fontVariantNumeric: 'tabular-nums' }}>{c.coChannel}co/{c.adjChannel}adj</span>
-                        <span style={{ color: c.congestion > 66 ? '#FF3B30' : c.congestion > 33 ? GOLD : '#2CFF7A', fontWeight: 700, fontVariantNumeric: 'tabular-nums', minWidth: 60, textAlign: 'right' }}>{c.congestion}% · {c.airtimePct}%air</span>
+                        <span style={{ color: c.congestion > 66 ? '#F87171' : c.congestion > 33 ? GOLD : '#4ADE80', fontWeight: 700, fontVariantNumeric: 'tabular-nums', minWidth: 60, textAlign: 'right' }}>{c.congestion}% · {c.airtimePct}%air</span>
                       </div>
                     ))}
                   </div>
@@ -2743,13 +2743,13 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                     <div key={i} className="hm-bom-row" style={{ gap: 8 }}>
                       <span style={{ flex: 1, fontVariantNumeric: 'tabular-nums' }}>({Math.round(mp.x)}, {Math.round(mp.y)})</span>
                       <span style={{ color: DIM, fontVariantNumeric: 'tabular-nums' }}>{mp.measuredDbm} dBm</span>
-                      <button title="Remove reading" onClick={() => { updateMeasured((m) => m.filter((_, j) => j !== i)); setCalResult(null); }} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#FF3B30', display: 'inline-flex' }}><Trash size={13} weight="regular" /></button>
+                      <button title="Remove reading" onClick={() => { updateMeasured((m) => m.filter((_, j) => j !== i)); setCalResult(null); }} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#F87171', display: 'inline-flex' }}><Trash size={13} weight="regular" /></button>
                     </div>
                   ))}
                 </div>}
                 {accuracy && <div style={{ marginTop: 9, padding: '8px 10px', borderRadius: 8, background: 'var(--brand-primary-08)', border: '1px solid var(--brand-primary-25)', fontSize: 11, color: DIM, lineHeight: 1.55 }}>
                   <div style={{ fontWeight: 700, color: TEXT, marginBottom: 2 }}>Model accuracy — validated vs {accuracy.n} reading{accuracy.n === 1 ? '' : 's'}</div>
-                  <div>Mean abs. error <b style={{ color: accuracy.mae <= 3 ? '#2CFF7A' : accuracy.mae <= 6 ? GOLD : '#FF3B30', fontVariantNumeric: 'tabular-nums' }}>{accuracy.mae.toFixed(1)} dB</b> · worst <b style={{ fontVariantNumeric: 'tabular-nums' }}>{accuracy.worst.delta > 0 ? '+' : ''}{accuracy.worst.delta.toFixed(0)} dB</b> @ ({Math.round(accuracy.worst.mp.x)}, {Math.round(accuracy.worst.mp.y)})</div>
+                  <div>Mean abs. error <b style={{ color: accuracy.mae <= 3 ? '#4ADE80' : accuracy.mae <= 6 ? GOLD : '#F87171', fontVariantNumeric: 'tabular-nums' }}>{accuracy.mae.toFixed(1)} dB</b> · worst <b style={{ fontVariantNumeric: 'tabular-nums' }}>{accuracy.worst.delta > 0 ? '+' : ''}{accuracy.worst.delta.toFixed(0)} dB</b> @ ({Math.round(accuracy.worst.mp.x)}, {Math.round(accuracy.worst.mp.y)})</div>
                   {calResult && <div style={{ marginTop: 1 }}>Calibration RMSE <b style={{ fontVariantNumeric: 'tabular-nums' }}>{calResult.rmseBefore.toFixed(1)} → {calResult.rmseAfter.toFixed(1)} dB</b></div>}
                 </div>}
                 <div style={{ marginTop: 8, fontSize: 10, color: MUTED, lineHeight: 1.5 }}>Map dots + delta badges come from these survey readings (toggle “Measured survey” under Layers). Live auto Wi-Fi scan is Android-only — Apple blocks RSSI reads on iOS.</div>
@@ -2757,7 +2757,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                 {calResult && <div style={{ marginTop: 10 }}>
                   <div className="hm-metrics">
                     <Metric label="Samples" val={`${calResult.sampleCount}`} />
-                    <Metric label="RMSE Improved" val={`${calResult.improvedPct.toFixed(0)}%`} big color={calResult.improvedPct > 0 ? '#2CFF7A' : DIM} />
+                    <Metric label="RMSE Improved" val={`${calResult.improvedPct.toFixed(0)}%`} big color={calResult.improvedPct > 0 ? '#4ADE80' : DIM} />
                     <Metric label="Path-loss n" val={`${calResult.nBefore.toFixed(2)} → ${calResult.nAfter.toFixed(2)}`} />
                     <Metric label="RMSE dB" val={`${calResult.rmseBefore.toFixed(1)} → ${calResult.rmseAfter.toFixed(1)}`} />
                   </div>
@@ -2799,7 +2799,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                 </div>
                 <div style={{ marginTop: 8, fontSize: 11, color: MUTED }}>{sched.poePorts} PoE ports · {sched.poeTotal} W · {sched.vlans.length} VLANs</div>
                 <button className="hm-smart" style={{ marginTop: 10 }} onClick={pullUnifi}><Sparkle size={14} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Pull live devices from UniFi controller</button>
-                {unifiMsg && <div style={{ marginTop: 6, fontSize: 11, color: unifiMsg.startsWith('✓') ? '#2CFF7A' : DIM, lineHeight: 1.5 }}>{unifiMsg}</div>}
+                {unifiMsg && <div style={{ marginTop: 6, fontSize: 11, color: unifiMsg.startsWith('✓') ? '#4ADE80' : DIM, lineHeight: 1.5 }}>{unifiMsg}</div>}
               </PanelSection>}
 
               {tab === 'bom' && <PanelSection title="Wi-Fi Networks (SSIDs)">
@@ -2814,7 +2814,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                       <span style={{ color: DIM, fontSize: 11 }}>Click to select · drag on the plan to move</span>
                       <button
                         className="hm-tool"
-                        style={{ color: '#FF3B30', borderColor: 'rgba(255,59,48,0.3)', fontSize: 11, padding: '3px 8px' }}
+                        style={{ color: '#F87171', borderColor: 'rgba(248,113,113,0.3)', fontSize: 11, padding: '3px 8px' }}
                         onClick={async () => { if ((await confirmDialog({ title: 'Please confirm', message: `Remove all ${project.devices.length} devices from this plan? Walls & scale stay.`, danger: true }))) { snapshot(); patch({ devices: [] }); setSelId(null); } }}
                       >
                         <Trash size={12} weight="regular" style={{ verticalAlign: 'middle', marginRight: 4 }} />Clear all
@@ -2829,7 +2829,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                       <button
                         title="Remove device"
                         onClick={(e) => { e.stopPropagation(); snapshot(); patch({ devices: project.devices.filter((x) => x.id !== d.id) }); if (selId === d.id) setSelId(null); }}
-                        style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', color: '#FF3B30', display: 'inline-flex', alignItems: 'center' }}
+                        style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', color: '#F87171', display: 'inline-flex', alignItems: 'center' }}
                       >
                         <Trash size={14} weight="regular" />
                       </button>
@@ -2862,7 +2862,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
               <div style={{ display: 'flex', gap: 8, marginTop: 18, alignItems: 'center' }}>
                 <button className="hm-btn" onClick={doSave}>{savedId ? 'Update' : 'Save'}</button>
                 <button className="hm-tool" onClick={() => setModal('none')}>Cancel</button>
-                {saveMsg && <span style={{ fontSize: 12, color: saveMsg.startsWith('✓') ? '#2CFF7A' : (saveMsg.startsWith('Error') || saveMsg.startsWith('Failed')) ? '#FF3B30' : DIM }}>{saveMsg}</span>}
+                {saveMsg && <span style={{ fontSize: 12, color: saveMsg.startsWith('✓') ? '#4ADE80' : (saveMsg.startsWith('Error') || saveMsg.startsWith('Failed')) ? '#F87171' : DIM }}>{saveMsg}</span>}
               </div>
             </> : modal === 'share' ? <>
               <h3 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 700 }}>Share Read-Only Design</h3>
@@ -2875,13 +2875,13 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                 <p style={{ fontSize: 11, color: DIM, margin: '10px 0 0' }}>Link expires in 30 days. Revoke any time to kill every copy instantly.</p>
                 <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
                   <a className="hm-btn" href={shareUrl} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>Open Preview <ArrowUpRight size={13} weight="bold" /></a>
-                  <button className="hm-tool" onClick={revokeShare} style={{ color: '#FF3B30' }}>Revoke Link</button>
+                  <button className="hm-tool" onClick={revokeShare} style={{ color: '#F87171' }}>Revoke Link</button>
                   <button className="hm-tool" onClick={() => setModal('none')}>Done</button>
                 </div>
-              </> : <p style={{ color: '#FF3B30', fontSize: 12 }}>{saveMsg || 'Could not create link.'}</p>}
+              </> : <p style={{ color: '#F87171', fontSize: 12 }}>{saveMsg || 'Could not create link.'}</p>}
             </> : <>
               <h3 style={{ margin: '0 0 14px', fontSize: 16, fontWeight: 700 }}>Open a Saved Design</h3>
-              {saveMsg && <p style={{ fontSize: 12, color: '#FF3B30', margin: '0 0 8px' }}>{saveMsg}</p>}
+              {saveMsg && <p style={{ fontSize: 12, color: '#F87171', margin: '0 0 8px' }}>{saveMsg}</p>}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 360, overflowY: 'auto' }}>
                 {designList.length === 0 && !saveMsg && <span style={{ color: MUTED, fontSize: 12 }}>No saved designs yet — save one first.</span>}
                 {designList.map((d) => (
@@ -2910,7 +2910,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         .hm-hero-title { display: flex; align-items: center; gap: 10px; min-width: 0; margin-top: 2px; }
         .hm-hero-name { font-size: 19px; font-weight: 700; letter-spacing: -0.02em; color: ${TEXT}; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .hm-hero-cal { flex-shrink: 0; font-size: 10px; font-weight: 800; padding: 3px 9px; border-radius: 999px; background: var(--brand-primary-12); color: ${GOLD}; border: 1px solid var(--brand-primary-35); }
-        .hm-hero-cal[data-ok="true"] { background: rgba(44,255,122,0.14); color: #2CFF7A; border-color: rgba(44,255,122,0.4); }
+        .hm-hero-cal[data-ok="true"] { background: rgba(74,222,128,0.14); color: #4ADE80; border-color: rgba(74,222,128,0.4); }
         .hm-hero-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         @media (min-width: 1000px) { .hm-hero { padding: 16px 24px 12px; } }
         /* ── compact essential chips (coverage target / band) on the simple flow ── */
@@ -2919,7 +2919,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         .hm-minichip { background: rgba(255,255,255,0.04); border: 1px solid ${BORDER}; color: ${DIM}; border-radius: 999px; padding: 5px 11px; font-size: 11.5px; font-weight: 700; cursor: pointer; font-variant-numeric: tabular-nums; transition: background .12s, border-color .12s, color .12s; }
         .hm-minichip:hover { background: rgba(255,255,255,0.08); color: ${TEXT}; }
         .hm-minichip[data-on="true"] { background: var(--brand-primary-18); border-color: color-mix(in srgb, var(--brand-primary) 50%, transparent); color: ${GOLD}; }
-        .hm-cta { display: inline-block; background: linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover)); color: #0A0A00; font-weight: 800; font-size: 14px; padding: 11px 22px; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 16px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35); transition: transform .12s, box-shadow .12s, filter .12s; }
+        .hm-cta { display: inline-block; background: linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover)); color: #101722; font-weight: 800; font-size: 14px; padding: 11px 22px; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 16px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35); transition: transform .12s, box-shadow .12s, filter .12s; }
         .hm-cta:hover { transform: translateY(-1px); box-shadow: 0 8px 24px var(--brand-primary-35), inset 0 1px 0 rgba(255,255,255,0.35); filter: brightness(1.04); }
         .hm-cta:active { transform: translateY(0); box-shadow: 0 2px 8px var(--brand-primary-25), inset 0 1px 3px rgba(0,0,0,0.2); }
         .hm-tmpl { display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 2px; padding: 14px; border: 1px solid ${BORDER}; border-radius: 12px; background: ${RAISED}; cursor: pointer; transition: border-color .15s, transform .15s, box-shadow .15s, background .15s; }
@@ -2950,7 +2950,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         .hm-sel:focus, .hm-sel-full:focus { outline: none; border-color: color-mix(in srgb, var(--brand-primary) 55%, transparent); box-shadow: 0 0 0 3px var(--brand-primary-12), inset 0 1px 0 rgba(255,255,255,0.05); }
         .hm-chk { display: flex; align-items: center; gap: 5px; font-size: 12px; color: ${DIM}; }
         .hm-hint { font-size: 11px; color: ${MUTED}; }
-        .hm-btn { background: linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover)); color: #0A0A00; border: none; border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 800; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.28); transition: filter .12s; }
+        .hm-btn { background: linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover)); color: #101722; border: none; border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 800; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.28); transition: filter .12s; }
         .hm-btn:hover { filter: brightness(1.07); }
         .hm-body { flex: 1; display: flex; min-height: 0; }
         .hm-canvas-wrap { flex: 1; overflow: hidden; position: relative; background: radial-gradient(ellipse 120% 90% at 50% 30%, #0b1017 0%, #05080d 100%); }
@@ -2994,10 +2994,10 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         .hm-step { display: inline-flex; align-items: center; gap: 8px; padding: 8px 15px 8px 9px; border-radius: 999px; border: 1px solid ${BORDER}; background: rgba(255,255,255,0.03); color: ${DIM}; font-size: 11px; font-weight: 700; cursor: pointer; transition: border-color .15s, background .15s, color .15s, box-shadow .15s; }
         .hm-step:hover { background: rgba(255,255,255,0.06); }
         .hm-step[data-on="true"] { background: linear-gradient(180deg, var(--brand-primary-25), var(--brand-primary-12)); color: #FFD98A; border-color: color-mix(in srgb, var(--brand-primary) 55%, transparent); box-shadow: 0 0 0 3px var(--brand-primary-12), 0 4px 14px var(--brand-primary-12); }
-        .hm-step[data-done="true"] .hm-step-num { background: rgba(44,255,122,0.22); color: #2CFF7A; box-shadow: inset 0 0 0 1px rgba(44,255,122,0.35); }
+        .hm-step[data-done="true"] .hm-step-num { background: rgba(74,222,128,0.22); color: #4ADE80; box-shadow: inset 0 0 0 1px rgba(74,222,128,0.35); }
         .hm-step-num { width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.09); font-size: 10.5px; font-variant-numeric: tabular-nums; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); transition: background .25s, color .25s, box-shadow .25s; }
         .hm-fieldbar { display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-bottom: 1px solid rgba(0,0,0,0.6); background: linear-gradient(180deg, #0d0e11, #0a0b0d); flex-wrap: wrap; position: relative; z-index: 3; box-shadow: 0 10px 26px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04); }
-        .hm-big { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover)); color: #0A0A00; font-weight: 800; font-size: 14.5px; padding: 12px 21px; border-radius: 12px; border: none; cursor: pointer; box-shadow: 0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35); transition: transform .12s, box-shadow .12s, filter .12s; }
+        .hm-big { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover)); color: #101722; font-weight: 800; font-size: 14.5px; padding: 12px 21px; border-radius: 12px; border: none; cursor: pointer; box-shadow: 0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35); transition: transform .12s, box-shadow .12s, filter .12s; }
         .hm-big:hover { transform: translateY(-1px); box-shadow: 0 8px 22px var(--brand-primary-35), inset 0 1px 0 rgba(255,255,255,0.35); filter: brightness(1.04); }
         .hm-big:active { transform: translateY(0); box-shadow: 0 2px 8px var(--brand-primary-25), inset 0 1px 3px rgba(0,0,0,0.2); }
         .hm-big[data-alt="true"] { background: linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.05)); color: ${TEXT}; border: 1px solid rgba(255,255,255,0.14); box-shadow: 0 2px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.07); }
@@ -3005,10 +3005,10 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         .hm-fieldmsg { font-size: 13.5px; color: #E2E8F0; font-weight: 600; line-height: 1.5; max-width: 560px; }
         .hm-fieldstat { font-size: 27px; font-weight: 900; letter-spacing: -0.5px; color: ${TEXT}; font-variant-numeric: tabular-nums; display: inline-flex; align-items: baseline; gap: 8px; padding: 8px 16px; border-radius: 12px; background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03)); box-shadow: inset 0 1px 0 rgba(255,255,255,0.09), inset 0 0 0 1px rgba(255,255,255,0.07); }
         .hm-fieldstat small { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.62); }
-        .hm-fieldbusy { display: flex; align-items: center; gap: 9px; padding: 8px 16px; color: #FFE600; font-size: 12.5px; font-weight: 700; background: linear-gradient(90deg, var(--brand-primary-12), color-mix(in srgb, var(--brand-primary) 3%, transparent) 55%, ${DARK}); border-bottom: 1px solid var(--brand-primary-25); }
+        .hm-fieldbusy { display: flex; align-items: center; gap: 9px; padding: 8px 16px; color: #FFE000; font-size: 12.5px; font-weight: 700; background: linear-gradient(90deg, var(--brand-primary-12), color-mix(in srgb, var(--brand-primary) 3%, transparent) 55%, ${DARK}); border-bottom: 1px solid var(--brand-primary-25); }
         .hm-fieldbusy::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: ${GOLD}; box-shadow: 0 0 10px color-mix(in srgb, var(--brand-primary) 90%, transparent); animation: hm-pulse 1.1s ease-in-out infinite; flex-shrink: 0; }
         @keyframes hm-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.7); } }
-        .hm-fieldnote { display: flex; align-items: flex-start; gap: 10px; padding: 9px 16px 9px 14px; color: #FFE600; font-size: 12.5px; font-weight: 600; line-height: 1.5; background: linear-gradient(180deg, var(--brand-primary-12), color-mix(in srgb, var(--brand-primary) 5%, transparent)); border-bottom: 1px solid var(--brand-primary-25); box-shadow: inset 3px 0 0 ${GOLD}; }
+        .hm-fieldnote { display: flex; align-items: flex-start; gap: 10px; padding: 9px 16px 9px 14px; color: #FFE000; font-size: 12.5px; font-weight: 600; line-height: 1.5; background: linear-gradient(180deg, var(--brand-primary-12), color-mix(in srgb, var(--brand-primary) 5%, transparent)); border-bottom: 1px solid var(--brand-primary-25); box-shadow: inset 3px 0 0 ${GOLD}; }
         .hm-fieldnote-x { background: none; border: none; color: ${MUTED}; font-size: 16px; font-weight: 800; cursor: pointer; line-height: 1; padding: 0 2px; }
         .hm-selcard { position: absolute; right: 14px; bottom: 14px; z-index: 7; background: rgba(13,17,23,0.88); border: 1px solid rgba(255,255,255,0.14); border-radius: 14px; padding: 11px 14px; display: flex; align-items: center; gap: 11px; backdrop-filter: blur(10px); box-shadow: 0 14px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08); }
         /* ── Advisor right-rail card + legacy density guard band ── */
@@ -3016,18 +3016,18 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         .hm-advisor-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: none; border: none; color: ${TEXT}; cursor: pointer; padding: 10px 13px; font-size: 11px; font-weight: 800; }
         .hm-advisor-head:hover { background: rgba(255,255,255,0.04); }
         .hm-advdot { width: 8px; height: 8px; border-radius: 50%; background: ${GOLD}; box-shadow: 0 0 8px color-mix(in srgb, var(--brand-primary) 80%, transparent); display: inline-block; }
-        .hm-advdot[data-bad="true"] { background: #FF3B30; box-shadow: 0 0 8px rgba(255,59,48,0.8); }
+        .hm-advdot[data-bad="true"] { background: #F87171; box-shadow: 0 0 8px rgba(248,113,113,0.8); }
         .hm-advisor-body { overflow-y: auto; padding: 0 13px 13px; display: flex; flex-direction: column; gap: 8px; }
-        .hm-advdict { font-size: 12px; font-weight: 700; line-height: 1.5; border-radius: 9px; padding: 9px 11px; background: rgba(44,255,122,0.10); border: 1px solid rgba(44,255,122,0.35); color: #8CE7A5; font-variant-numeric: tabular-nums; }
-        .hm-advdict[data-bad="true"] { background: rgba(255,59,48,0.10); border-color: rgba(255,59,48,0.4); color: #FCA5A5; }
+        .hm-advdict { font-size: 12px; font-weight: 700; line-height: 1.5; border-radius: 9px; padding: 9px 11px; background: rgba(74,222,128,0.10); border: 1px solid rgba(74,222,128,0.35); color: #8CE7A5; font-variant-numeric: tabular-nums; }
+        .hm-advdict[data-bad="true"] { background: rgba(248,113,113,0.10); border-color: rgba(248,113,113,0.4); color: #FCA5A5; }
         .hm-advlabel { font-size: 9.5px; font-weight: 800; color: ${MUTED}; margin-top: 2px; }
         .hm-advrow { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: ${DIM}; }
         .hm-advrow b { color: ${TEXT}; font-weight: 700; }
         .hm-advchip { flex-shrink: 0; font-size: 9.5px; font-weight: 800; padding: 2px 8px; border-radius: 999px; }
-        .hm-advchip[data-kind="ok"] { background: rgba(44,255,122,0.14); color: #2CFF7A; box-shadow: inset 0 0 0 1px rgba(44,255,122,0.35); }
+        .hm-advchip[data-kind="ok"] { background: rgba(74,222,128,0.14); color: #4ADE80; box-shadow: inset 0 0 0 1px rgba(74,222,128,0.35); }
         .hm-advchip[data-kind="crowded"], .hm-advchip[data-kind="warn"] { background: var(--brand-primary-12); color: ${GOLD}; box-shadow: inset 0 0 0 1px var(--brand-primary-35); }
-        .hm-advchip[data-kind="over"] { background: rgba(255,59,48,0.14); color: #FF3B30; box-shadow: inset 0 0 0 1px rgba(255,59,48,0.4); }
-        .hm-guardband { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 16px; font-size: 13px; font-weight: 700; color: #FECACA; line-height: 1.5; background: linear-gradient(180deg, rgba(255,59,48,0.14), rgba(255,59,48,0.06)); border-bottom: 1px solid rgba(255,59,48,0.35); box-shadow: inset 3px 0 0 #FF3B30; }
+        .hm-advchip[data-kind="over"] { background: rgba(248,113,113,0.14); color: #F87171; box-shadow: inset 0 0 0 1px rgba(248,113,113,0.4); }
+        .hm-guardband { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 16px; font-size: 13px; font-weight: 700; color: #FECACA; line-height: 1.5; background: linear-gradient(180deg, rgba(248,113,113,0.14), rgba(248,113,113,0.06)); border-bottom: 1px solid rgba(248,113,113,0.35); box-shadow: inset 3px 0 0 #F87171; }
         @media (max-width: 820px) {
           .hm-body { flex-direction: column; } .hm-panel { width: 100%; border-left: none; border-top: 1px solid ${BORDER}; overflow: visible; } .hm-layout { height: auto; }
           /* the canvas-wrap's children are all absolutely positioned — without this it
@@ -3170,7 +3170,7 @@ function SsidsPanel({ ssids, onCommit }: { ssids: Ssid[]; onCommit: (next: Ssid[
           <div key={i} style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: 8, marginBottom: 8, background: DARK }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
               <input className="hm-sel" value={s.name} placeholder="SSID name" onChange={(e) => set(i, { name: e.target.value })} style={{ flex: 1, minWidth: 0, fontWeight: 700 }} />
-              <button title="Remove network" onClick={() => onCommit(ssids.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', color: '#FF3B30', display: 'inline-flex', alignItems: 'center' }}>
+              <button title="Remove network" onClick={() => onCommit(ssids.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', color: '#F87171', display: 'inline-flex', alignItems: 'center' }}>
                 <Trash size={14} weight="regular" />
               </button>
             </div>
@@ -3291,12 +3291,12 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
   // ── SIMPLE view: zero-jargon plain language ──
   const simple: React.ReactNode[] = [];
   if (isAp) {
-    if (project.scale) simple.push(<SimpleLine key="s1" color="#2CFF7A">Signal at this point: <b>{apSignalDbm} dBm</b> ({rssiVerdict(apSignalDbm)}) — strongest spot.</SimpleLine>);
+    if (project.scale) simple.push(<SimpleLine key="s1" color="#4ADE80">Signal at this point: <b>{apSignalDbm} dBm</b> ({rssiVerdict(apSignalDbm)}) — strongest spot.</SimpleLine>);
     if (project.scale) simple.push(<SimpleLine key="s2" color={SYSTEM_COLORS.wifi}>Coverage radius: <b>{apRadiusFt} ft</b> (at the {project.rssiTargetDbm} dBm target){roomsCovered.length ? <> — reaches <b>{roomsCovered.join(' + ')}</b></> : ''}.</SimpleLine>);
     if (hasPort) simple.push(<SimpleLine key="s3" color={SYSTEM_COLORS.power}>Plugs into: <b>PoE switch, port {netRow!.port.split('/').pop()}</b> (one cable does data + power).</SimpleLine>);
     simple.push(<SimpleLine key="s4" color={GOLD}>Capacity: <b>{clientsPerAp} client devices</b> (phones, laptops).</SimpleLine>);
   } else if (isCam) {
-    if (project.scale) { simple.push(<SimpleLine key="c1" color="#2CFF7A">Observation range: <b>{doriFt(62)} ft</b> (sees clearly).</SimpleLine>); simple.push(<SimpleLine key="c2" color={SYSTEM_COLORS.camera}>Recognition range: <b>{doriFt(125)} ft</b> (identifies faces).</SimpleLine>); }
+    if (project.scale) { simple.push(<SimpleLine key="c1" color="#4ADE80">Observation range: <b>{doriFt(62)} ft</b> (sees clearly).</SimpleLine>); simple.push(<SimpleLine key="c2" color={SYSTEM_COLORS.camera}>Recognition range: <b>{doriFt(125)} ft</b> (identifies faces).</SimpleLine>); }
     simple.push(<SimpleLine key="c3" color={SYSTEM_COLORS.wifi}>Points: <b>{aimDir(d.aimDeg ?? 0)}</b> ({(d.aimDeg ?? 0).toFixed(0)}°){nearestRoom ? <> near <b>{nearestRoom}</b></> : ''}.</SimpleLine>);
     if (hasPort) simple.push(<SimpleLine key="c4" color={SYSTEM_COLORS.power}>Plugs into: <b>PoE switch, port {netRow!.port.split('/').pop()}</b>. Records to the NVR.</SimpleLine>);
   } else if (isMarker) {
@@ -3420,7 +3420,7 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
         </InspGroup>}
 
         <div style={{ fontSize: 10, color: MUTED, lineHeight: 1.5, marginBottom: 8 }}>Values are from the <b>design</b> (plan model), not a live device. Verify against the installed hardware.</div>
-        <button className="hm-tool" style={{ color: '#FF3B30', borderColor: 'rgba(255,59,48,0.3)', width: '100%' }} onClick={onDelete}>Delete Device</button>
+        <button className="hm-tool" style={{ color: '#F87171', borderColor: 'rgba(248,113,113,0.3)', width: '100%' }} onClick={onDelete}>Delete Device</button>
       </div>}
 
       {/* ── DRILL: switch ── */}
@@ -3548,7 +3548,7 @@ function DeviceEditor({ d, onChange, onDelete }: { d: Device; onChange: (u: Part
       {def.modelType === 'camera' && <label style={{ fontSize: 11, color: DIM }}>HFOV {(d.hfovDeg ?? 68).toFixed(0)}°<input type="range" min={20} max={130} value={d.hfovDeg ?? 68} onChange={(e) => onChange({ hfovDeg: +e.target.value })} style={{ width: '100%' }} /></label>}
       {def.modelType === 'rf' && d.typeId === 'wifi_ap' && <label style={{ fontSize: 11, color: DIM }}>Tx {(d.txPowerDbm ?? 15)} dBm<input type="range" min={3} max={26} value={d.txPowerDbm ?? 15} onChange={(e) => onChange({ txPowerDbm: +e.target.value })} style={{ width: '100%' }} /></label>}
       {(def.modelType === 'radius' || def.modelType === 'spl' || def.modelType === 'fov') && <label style={{ fontSize: 11, color: DIM }}>Range {(d.rangeFt ?? (def.defaults.rangeFt as number))} ft<input type="range" min={4} max={120} value={d.rangeFt ?? (def.defaults.rangeFt as number)} onChange={(e) => onChange({ rangeFt: +e.target.value })} style={{ width: '100%' }} /></label>}
-      <button className="hm-tool" style={{ color: '#FF3B30', borderColor: 'rgba(255,59,48,0.3)' }} onClick={onDelete}>Delete Device</button>
+      <button className="hm-tool" style={{ color: '#F87171', borderColor: 'rgba(248,113,113,0.3)' }} onClick={onDelete}>Delete Device</button>
     </div>
   );
 }
