@@ -1,1 +1,1 @@
-probe-theme
+probe-finish
