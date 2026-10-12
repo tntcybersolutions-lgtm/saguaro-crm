@@ -9,9 +9,11 @@ import { Circle } from '@phosphor-icons/react';
 import { useFeature } from '@/lib/hooks/useEntitlements';
 import type { Severity } from '@/lib/franchise';
 
+/* The suite's colours are the app tokens: `gold` is the module accent (the
+   page's --acc), green / yellow / red are status, blue is information. */
 export const C = {
-  gold: '#FBBF24', green: '#4ADE80', yellow: '#FBBF24', red: '#F87171', blue: '#FBBF24',
-  bg: '#0a0a0a', card: '#1B2636', border: 'rgba(255,255,255,0.12)', dim: 'var(--text-secondary)', text: '#FFFFFF', faint: 'var(--text-secondary)',
+  gold: 'var(--acc)', green: 'var(--success)', yellow: 'var(--warning)', red: 'var(--danger)', blue: 'var(--info)',
+  bg: 'var(--bg-base)', card: 'var(--bg-surface)', border: 'var(--border-card)', dim: 'var(--text-secondary)', text: 'var(--text-primary)', faint: 'var(--text-tertiary)',
 };
 export const SEV_COLOR: Record<Severity, string> = { green: C.green, yellow: C.yellow, red: C.red };
 export const font = "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";

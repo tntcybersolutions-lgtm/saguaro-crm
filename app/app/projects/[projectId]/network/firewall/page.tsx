@@ -17,8 +17,8 @@ import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
 const BASE = 'var(--bg-surface-2)';
 const GOLD = 'var(--brand-primary)';
-const GREEN = '#4ADE80';
-const RED = '#F87171';
+const GREEN = 'var(--success)';
+const RED = 'var(--danger)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = 'var(--text-secondary)';
 const TEXT = 'var(--text-primary)';

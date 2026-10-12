@@ -129,7 +129,7 @@ export default function GlobalShortcuts({ onProjectSwitch }: GlobalShortcutsProp
             marginBottom: 20,
           }}
         >
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: TEXT }}>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>
             Keyboard Shortcuts
           </h2>
           <button

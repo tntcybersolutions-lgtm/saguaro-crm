@@ -688,7 +688,7 @@ export default function SafetyPage() {
       {/* Corrective Actions Section */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>Corrective Actions</h2>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, letterSpacing: '-0.01em' }}>Corrective Actions</h2>
           <p style={{ margin: '3px 0 0', fontSize: 13, color: 'var(--c-text-2)' }}>Track and verify corrective actions from incidents</p>
         </div>
         <button onClick={() => { if (showCAForm) { setShowCAForm(false); setErrorMsg(''); } else { openCA(); } }} style={showCAForm ? ghostButtonStyle : secondaryButtonStyle} className="pmBtn">

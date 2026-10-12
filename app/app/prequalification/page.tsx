@@ -873,7 +873,7 @@ export default function PrequalificationPage() {
           <div role="dialog" aria-modal="true" aria-label={`Prequalification — ${detailSub.sub_name}`} style={{ ...modalBox, maxWidth: 880 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
               <div>
-                <h2 style={{ fontSize: 22, fontWeight: 800, color: TEXT, margin: 0 }}>{detailSub.sub_name}</h2>
+                <h2 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>{detailSub.sub_name}</h2>
                 <div style={{ fontSize: 13, color: DIM, marginTop: 4 }}>{detailSub.sub_email} — {detailSub.sub_trade}</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1071,7 +1071,7 @@ function TemplateBuilderModal({ initial, onSave, onClose }: { initial: Template 
           overlay, so nothing knew it was open over the page. */}
       <div role="dialog" aria-modal="true" aria-labelledby={builderTitleId} style={{ ...modalBox, maxWidth: 800 }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h2 id={builderTitleId} style={{ margin: 0, fontSize: 20, fontWeight: 800, color: 'var(--text-primary)' }}>{initial ? 'Edit Template' : 'New Prequal Template'}</h2>
+          <h2 id={builderTitleId} style={{ margin: 0, fontSize: 20, fontWeight: 800 }}>{initial ? 'Edit Template' : 'New Prequal Template'}</h2>
           <button aria-label="Close" style={{ background: 'none', border: 'none', color: DIM, fontSize: 22, cursor: 'pointer', minWidth: 44, minHeight: 44 }} onClick={onClose}><X size={20} weight="regular" color={DIM} /></button>
         </div>
 
@@ -1257,7 +1257,7 @@ function InviteModal({ templates, onSend, onClose }: { templates: Template[]; on
     <div style={modalOverlay} onClick={onClose}>
       <div role="dialog" aria-modal="true" aria-labelledby={titleId} style={{ ...modalBox, maxWidth: 480 }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h2 id={titleId} style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'var(--text-primary)' }}>Send Prequal Form</h2>
+          <h2 id={titleId} style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>Send Prequal Form</h2>
           <button type="button" aria-label="Close" style={{ background: 'none', border: 'none', color: DIM, fontSize: 22, cursor: 'pointer', minWidth: 44, minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', margin: '-10px -10px -10px 0' }} onClick={onClose}><X size={20} weight="regular" color={DIM} /></button>
         </div>
         {err && <div role="alert" style={{ background: `color-mix(in srgb, ${RED} 13%, transparent)`, color: RED, padding: '6px 12px', borderRadius: 6, fontSize: 12, marginBottom: 10 }}>{err}</div>}

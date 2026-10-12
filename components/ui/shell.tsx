@@ -165,7 +165,7 @@ export function SectionHeader({
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
       <div>
-        <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: 'var(--sg-text)', letterSpacing: '-0.01em', lineHeight: 1.25 }}>{title}</h2>
+        <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1.25 }}>{title}</h2>
         {sub && <p style={{ margin: '3px 0 0', fontSize: 13, color: 'var(--sg-text-2)', lineHeight: 1.45 }}>{sub}</p>}
       </div>
       {action && <div>{action}</div>}

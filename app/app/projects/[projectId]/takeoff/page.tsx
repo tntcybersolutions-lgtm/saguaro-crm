@@ -1783,7 +1783,7 @@ export default function TakeoffPage() {
           )}
         </div>
 
-        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: '4px 0 12px' }}>What the AI pulls out</div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--title-section)', margin: '4px 0 12px' }}>What the AI pulls out</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px 24px', marginBottom: 24 }}>
           {[
             { icon: <Blueprint size={18} weight="duotone" color="var(--text-secondary)" />, t: 'Every material by CSI division', s: '16 divisions, ground to finish' },
@@ -1853,7 +1853,7 @@ export default function TakeoffPage() {
             </div>
           </div>
 
-          <h2 className="tkH2" style={{ color: 'var(--text-primary)', marginBottom: 8 }}>
+          <h2 className="tkH2" style={{ marginBottom: 8 }}>
             Reading your blueprint…
           </h2>
           <p style={{ color: 'var(--c-text-2)', fontSize: 15, marginBottom: lane ? 16 : 30 }}>

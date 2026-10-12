@@ -212,9 +212,8 @@ export default function GetStartedTour() {
           id="get-started-h"
           className="landing-display gst-h2"
           style={{
-            textAlign: 'center', margin: '0 0 10px', color: TEXT,
-            textWrap: 'balance' as const,
-          }}
+            textAlign: 'center', margin: '0 0 10px',
+            textWrap: 'balance' as const}}
         >
           From signup to your first project.
         </h2>

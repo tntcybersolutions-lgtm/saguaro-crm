@@ -138,7 +138,7 @@ export default function ContractForm({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div>
-        <h2 style={{ margin: '0 0 4px', color: TEXT, fontSize: 20, fontWeight: 800 }}>{data.title}</h2>
+        <h2 style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 800 }}>{data.title}</h2>
         <p style={{ margin: 0, color: DIM, fontSize: 14 }}>{data.blurb}</p>
         {auto.size > 0 && (
           <p style={{ margin: '10px 0 0', color: DIM, fontSize: 13 }}>
