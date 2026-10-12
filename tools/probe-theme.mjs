@@ -163,7 +163,7 @@ try {
   await open(gc, `/app/projects/${projectId}/overview`);
   const toolHues = await gc.evaluate(() => [...new Set([...document.querySelectorAll('.fl-tool .fl-ti')].map((e) => getComputedStyle(e).color))]);
   check('job: tool tiles carry several module hues', toolHues.length >= 3, toolHues.join(' '));
-  const navHues = await gc.evaluate(() => [...new Set([...document.querySelectorAll('.sidebar-desktop a:not([aria-current]) svg, nav a:not([aria-current]) svg')].filter((e) => e.getBoundingClientRect().width > 0).map((e) => getComputedStyle(e).color))]);
+  const navHues = await gc.evaluate(() => [...new Set([...document.querySelectorAll('.sg-nav-item:not([data-active]) > svg:first-of-type, .sg-nav-item:not([data-active]) svg')].filter((e) => e.getBoundingClientRect().width > 0).map((e) => getComputedStyle(e).color))]);
   check('sidebar: module icons carry several hues', navHues.length >= 3, navHues.slice(0, 8).join(' '));
 
   // A form: the invoice Edit dialog (opened, then cancelled — nothing saved).
