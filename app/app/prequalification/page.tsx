@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { DataTable, type Column } from '@/components/ui/kit';
+import { DataTable, EmptyState, type Column } from '@/components/ui/kit';
 import { StatusPill } from '@/components/ui/Status';
 import { humanError } from '@/lib/errors';
 import { SUB_TRADES as TRADES } from '@/lib/construction-intelligence';
@@ -562,7 +562,7 @@ export default function PrequalificationPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 20 }}>
                 {/* Recent activity */}
                 <SectionCard title="Recent Submissions" icon={<Clipboard size={17} weight="duotone" color="var(--text-secondary)" />}>
-                  {submissions.length === 0 && <p style={{ margin: '4px 0', fontSize: 14, color: DIM, lineHeight: 1.5 }}>No submissions yet. Send a prequal form and the answers land here.</p>}
+                  {submissions.length === 0 && <EmptyState title="No submissions yet" text="Send a prequal form and the answers land here." />}
                   {submissions.slice(0, 5).map(s => (
                     <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)`, cursor: 'pointer' }} onClick={() => { setShowDetail(s.id); }}>
                       <div>
@@ -606,7 +606,7 @@ export default function PrequalificationPage() {
                       });
                     });
                     expDocs.sort((a, b) => a.daysLeft - b.daysLeft);
-                    if (expDocs.length === 0) return <div style={{ color: DIM, fontSize: 13, padding: 20, textAlign: 'center' }}>No documents expiring within 90 days</div>;
+                    if (expDocs.length === 0) return <EmptyState title="No documents expiring within 90 days" />;
                     return expDocs.slice(0, 6).map((ed, i) => (
                       <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                         <div>
@@ -623,10 +623,10 @@ export default function PrequalificationPage() {
               </div>
 
               {/* Score visualization — distribution histogram + per-trade averages */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20, marginTop: 20 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 20, marginTop: 20 }}>
               <SectionCard flat title="Score Distribution" subtitle={scoredCount > 0 ? `${scoredCount} scored submission${scoredCount === 1 ? '' : 's'}` : undefined} icon={<ChartBar size={17} weight="duotone" color="var(--text-secondary)" />}>
                 {scoredCount === 0 ? (
-                  <div style={{ color: DIM, fontSize: 13, padding: 20, textAlign: 'center' }}>Scores appear here as submissions arrive.</div>
+                  <EmptyState title="No scores yet" text="Scores appear here as submissions arrive." />
                 ) : (
                   <div>
                     {['0–19%', '20–39%', '40–59%', '60–79%', '80–100%'].map((lbl, i) => {
@@ -652,7 +652,7 @@ export default function PrequalificationPage() {
               </SectionCard>
 
               <SectionCard flat title="Score by Trade" icon={<ChartBar size={17} weight="duotone" color="var(--text-secondary)" />}>
-                {submissions.length === 0 && <p style={{ margin: '4px 0', fontSize: 14, color: DIM, lineHeight: 1.5 }}>Trade averages appear once subs submit.</p>}
+                {submissions.length === 0 && <EmptyState title="No trade averages yet" text="They appear once subs submit." />}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 200px), 1fr))', gap: 12 }}>
                   {Array.from(new Set(submissions.map(s => s.sub_trade))).map(trade => {
                     const tradeSubs = submissions.filter(s => s.sub_trade === trade);
