@@ -18,6 +18,10 @@
  *   radio       no channel for a job that no longer exists; filing a message
  *               from such a channel answers 409 in words (no write happens)
  *   billing     390 + 1440: no Stripe portal buttons while checkout is off
+ *
+ * #136 field loop: Photo sheet shortcuts; ?new=1 opens the punch form.
+ * #137: Get Paid Online / Import / Calendar Sync screens (390 + 1440), the
+ *   calendar feed is a real iCalendar, portal financials say payOnline.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -184,6 +188,39 @@ try {
     })));
     await shot(page, `${w}-billing.png`, true);
   }
+
+  // ── #136 Field loop: the Photo sheet carries Daily Log / Punch Item / RFI / Clock for the picked job ──
+  await go(phone, `/app?media=1`);
+  await phone.waitForTimeout(1500);
+  step('fieldSheet', await phone.evaluate(() => {
+    const nav = document.querySelector('nav.qmDo');
+    return nav ? [...nav.querySelectorAll('a')].map((a) => ({ text: (a.textContent || '').trim(), href: a.getAttribute('href') })) : null;
+  }));
+  await shot(phone, '390-photo-sheet.png');
+  await go(phone, `/app/projects/${job.id}/punch-list?new=1`);
+  await phone.waitForTimeout(1500);
+  step('punchNewOpens', await phone.evaluate(() => ({ formOpen: /New Punch Item/.test(document.body.innerText), flagCleared: !location.search.includes('new=1') })));
+  await shot(phone, '390-punch-new.png');
+
+  // ── #137 Payments / Import / Calendar screens + the calendar feed ──
+  for (const [name, url] of [['payments', '/app/settings/payments'], ['import', '/app/settings/import'], ['calendar', '/app/settings/calendar']]) {
+    for (const [w, page] of [['390', phone], ['1440', gc]]) {
+      await go(page, url);
+      await page.waitForTimeout(1200);
+      step(`${name}${w}`, await page.evaluate(() => ({
+        title: document.querySelector('h1')?.textContent?.trim() || null,
+        sideScroll: document.scrollingElement.scrollWidth > innerWidth + 1,
+        says: document.body.innerText.slice(0, 400).replace(/\s+/g, ' '),
+      })));
+      await shot(page, `${w}-${name}.png`, true);
+    }
+  }
+  const link = await (await gc.request.get(`${SITE}/api/calendar/link`)).json().catch(() => ({}));
+  const feed = link.url ? await gc.request.get(link.url.replace(/^https?:\/\/[^/]+/, SITE)) : null;
+  const ics = feed ? await feed.text() : '';
+  step('calendarFeed', { linkOk: !!link.url, status: feed ? feed.status() : null, contentType: feed ? feed.headers()['content-type'] : null, isCalendar: ics.startsWith('BEGIN:VCALENDAR'), events: (ics.match(/BEGIN:VEVENT/g) || []).length });
+  const fin = await (await gc.request.get(`${SITE}/api/portal/client/financials?token=${token}`, { headers: { 'x-portal-token': token } })).json().catch(() => ({}));
+  step('portalFinancials', { invoices: (fin.invoices || []).length, payOnline: fin.payOnline ?? null, anyPayable: (fin.invoices || []).some((i) => i.payable) });
 } catch (e) {
   result.error = String(e.message || e).split('\n')[0];
 }
