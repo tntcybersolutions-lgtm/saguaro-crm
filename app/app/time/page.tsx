@@ -233,7 +233,10 @@ export default function TimeClockPage() {
          budget. With more than one job, the choice has to be deliberate. */
       sb.from('projects').select('id, name').order('name').then(({ data }) => {
         setProjects(data ?? []);
-        if (data?.length === 1) setProjectId(data[0].id);
+        // ?project= (the Photo sheet's Clock shortcut) names the job deliberately.
+        const asked = new URLSearchParams(window.location.search).get('project');
+        if (asked && data?.some((p) => p.id === asked)) setProjectId(asked);
+        else if (data?.length === 1) setProjectId(data[0].id);
       });
       if (!user?.email) return;
       // Resolve the signed-in user's tenant so every write is tenant-scoped (RLS/NOT NULL) — without
