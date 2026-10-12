@@ -27,6 +27,8 @@ const body = rowToBody('jobs', ['Smith Remodel', 'BT-1042', '12 Main St', 'Mesa'
 check('job body', body.name === 'Smith Remodel' && body.projectNumber === 'BT-1042' && body.contractValue === 128500 && body.startDate === '2026-03-07' && body.status === 'completed' && body.ownerName === 'Pat Smith', JSON.stringify(body));
 check('address joined', body.address === '12 Main St, Mesa, AZ 85201', String(body.address));
 check('row with no job name is skipped', rowToBody('jobs', ['', 'X'], m) === null);
+check('a sold job lands building, not bidding', body.phase === 'building', String(body.phase));
+check('an estimating job lands bidding', rowToBody('jobs', ['Est Job', '', '', '', '', '', 'Estimating', '', '', '', ''], m)!.phase === 'bidding');
 check('jurisdiction from the State column', body.stateJurisdiction === 'AZ', String(body.stateJurisdiction));
 const tx = rowToBody('jobs', ['Hill Country Build', '', '9 Oak Ln', 'Austin', 'Texas', '78701', 'Open', '', '', '', ''], m)!;
 check('a Texas job is never left on the Arizona default', tx.stateJurisdiction === 'TX', String(tx.stateJurisdiction));
