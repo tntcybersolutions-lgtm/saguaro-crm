@@ -88,6 +88,13 @@ jobs:
           openssl enc -aes-256-cbc -pbkdf2 -salt -in /tmp/ev.tgz -out tools/ios-evidence/result.tgz.enc -pass file:/tmp/k
           openssl pkeyutl -encrypt -pubin -inkey tools/probe-pubkey.pem -pkeyopt rsa_padding_mode:oaep -in /tmp/k -out tools/ios-evidence/key.enc
           rm -f /tmp/k /tmp/ev.tgz
+      - name: Keep the encrypted result as a run artifact too
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-evidence-encrypted
+          path: tools/ios-evidence/
+          retention-days: 7
       - name: Commit the result to this branch
         if: always()
         run: |
@@ -96,7 +103,8 @@ jobs:
           git add -A tools/ios-evidence || exit 0
           git commit -m "iOS evidence result from run ${{ github.run_id }}" || exit 0
           for i in 1 2 3 4; do
-            git pull --rebase origin ${{ github.ref_name }} || true
+            # --autostash: the build leaves the checkout dirty, which made a plain rebase refuse (run 38299459065).
+            git pull --rebase --autostash origin ${{ github.ref_name }} || true
             git push origin HEAD:${{ github.ref_name }} && exit 0
             sleep $((i * 10))
           done

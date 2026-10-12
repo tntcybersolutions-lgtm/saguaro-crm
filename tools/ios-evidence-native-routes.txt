@@ -2,7 +2,10 @@
 /app/my-work
 /app/projects
 /app/projects/[projectId]/overview
-/app/leads
+/app/leads/[leadId]
 /app/compliance
 /app/prequalification
-/app/invoicing
+/app/invoicing/[invoiceId]
+/app/projects/[payAppPath]
+/app/daily-logs/[dailyLogId]
+/app/people?view=roles

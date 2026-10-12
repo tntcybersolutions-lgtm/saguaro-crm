@@ -6,6 +6,8 @@
  * signs in as the real company, opens each route in
  * tools/ios-evidence-native-routes.txt read-only, and saves full-device
  * screenshots with `xcrun simctl io` (status bar, notch, home indicator).
+ * The only write: one "ZZ AUDIT Accept <stamp>" test lead for the deal page,
+ * deleted through the app's own API at the end of the run.
  *
  * If the WKWebView context never appears, it records exactly that, signs in
  * with native XCUITest taps instead and captures what the tab bar reaches.
@@ -39,6 +41,18 @@ async function wd(method, p, body, timeoutMs = 600000) {
 }
 let S = '';
 const run = (script, args = []) => wd('POST', `/session/${S}/execute/sync`, { script, args });
+/* Async work in the page: start it, park the result on window, poll for it (works whether or
+   not the driver awaits a returned promise). */
+async function runAsync(body, args = [], timeoutMs = 60000) {
+  const key = '__zz' + Math.random().toString(36).slice(2);
+  await run(`const A = arguments; window['${key}'] = undefined; (async () => { ${body} })().then((v) => { window['${key}'] = { v }; }, (e) => { window['${key}'] = { e: String(e) }; });`, args);
+  for (let t = 0; t < timeoutMs; t += 1000) {
+    const r = await run(`return window['${key}'] || null`).catch(() => null);
+    if (r) { if (r.e) throw new Error(r.e); return r.v; }
+    await sleep(1000);
+  }
+  throw new Error('page work timed out');
+}
 const shot = (name) => execFileSync('xcrun', ['simctl', 'io', UDID, 'screenshot', '--type=jpeg', path.join(OUT, 'shots', `${name}.jpg`)], { stdio: 'ignore' });
 
 const MEASURE = `
@@ -112,11 +126,37 @@ try {
     }
     const signedIn = !String(await run('return location.pathname').catch(() => '/login')).startsWith('/login');
     log(`signed in: ${signedIn}`);
-    const projectId = signedIn ? await run(`return fetch('/api/projects?limit=1000&fields=id,name').then(r => r.json()).then(d => ((d.projects || []).find(j => j.name === ${JSON.stringify(JOB)}) || {}).id || null)`).catch(() => null) : null;
+    // Records, found by name through the app's own APIs: the ZZ AUDIT Walk Job, a ZZ AUDIT
+    // pay app, invoice and daily log (opened read-only).
+    const ids = signedIn ? await runAsync(`
+      const J = A[0];
+      const j = (u) => fetch(u, { credentials: 'include' }).then((r) => (r.ok ? r.json() : {})).catch(() => ({}));
+      const jobs = (await j('/api/projects?limit=1000&fields=id,name')).projects || [];
+      const walk = jobs.find((x) => x.name === J);
+      const zz = jobs.filter((x) => /^zz audit/i.test(x.name || ''));
+      let pay = null;
+      for (const x of zz) { const l = (await j('/api/pay-apps/list?projectId=' + x.id)).payApps || []; if (l.length) { pay = x.id + '/pay-apps/' + l[0].id; break; } }
+      const zid = new Set(zz.map((x) => x.id));
+      const inv = ((await j('/api/invoices/list')).invoices || []).find((i) => /^zz audit/i.test(i.vendor_name || '') || zid.has(i.project_id));
+      let dl = null;
+      for (const x of [walk, ...zz].filter(Boolean)) { const l = (await j('/api/daily-logs/list?projectId=' + x.id)).logs || []; if (l.length) { dl = l[0].id; break; } }
+      return { projectId: walk ? walk.id : null, payAppPath: pay, invoiceId: inv ? inv.id : null, dailyLogId: dl };`, [JOB]).catch((e) => { log(`ids error ${String(e.message).slice(0, 120)}`); return {}; }) : {};
+    // The deal page needs a deal: one ZZ AUDIT test lead, made here and deleted at the end.
+    const stamp = String(Date.now()).slice(-6);
+    ids.leadId = signedIn ? await runAsync(`
+      const r = await fetch('/api/leads', { method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json' }, body: JSON.stringify(A[0]) });
+      const d = await r.json().catch(() => ({}));
+      return (d.lead && d.lead.id) || d.id || (d.data && d.data.id) || null;`,
+      [{ company_name: `ZZ AUDIT Accept ${stamp}`, contact_name: 'ZZ AUDIT Contact', contact_email: 'delivered@resend.dev', stage: 'New', estimated_value: 50000, source: 'Referral', project_type: 'Commercial', location: 'Phoenix, AZ', next_action: 'ZZ AUDIT first step' }]).catch(() => null) : null;
+    R.testLead = { created: !!ids.leadId, deleted: false };
+    R.records = Object.fromEntries(Object.entries(ids).map(([k, v]) => [k, !!v]));
+    log(`records ${JSON.stringify(R.records)}`);
     for (const route of signedIn ? ROUTES : []) {
-      if (route.includes('[projectId]') && !projectId) { R.screens[route] = { blocked: 'no ZZ AUDIT job' }; continue; }
-      const url = route.replace('[projectId]', projectId || '');
-      const name = 'native-' + (route.replace('[projectId]', 'job').replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_|_$/g, '') || 'root');
+      const need = [...route.matchAll(/\[(\w+)\]/g)].map((m) => m[1]);
+      const missing = need.filter((k) => !ids[k]);
+      if (missing.length) { R.screens[route] = { blocked: `no ZZ AUDIT record for ${missing.join(', ')}` }; log(`${route} BLOCKED`); continue; }
+      const url = route.replace(/\[(\w+)\]/g, (_, k) => ids[k]);
+      const name = 'native-' + (route.replace(/\[(\w+)\]/g, (_, k) => k.replace(/Id$|Path$/, '')).replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_|_$/g, '') || 'root');
       try {
         await run('location.href = arguments[0]', [`${SITE}${url}`]);
         await sleep(6500);
@@ -126,6 +166,14 @@ try {
         const m = R.screens[route];
         log(`${route} vp ${m.viewport} safe ${m.safeArea} side ${m.sideScroll} t${m.smallTargets} txt${m.smallText} in${m.smallInputs} tab ${m.tabbar ? m.tabbar.clearsHomeIndicator : 'none'} native ${m.standalone}`);
       } catch (e) { R.screens[route] = { error: String(e.message || e).split('\n')[0].slice(0, 160) }; log(`${route} ERROR`); }
+    }
+    if (ids.leadId) {
+      const st = await runAsync(`
+        await fetch('/api/leads/' + A[0], { method: 'DELETE', credentials: 'include' });
+        return (await fetch('/api/leads/' + A[0], { credentials: 'include' })).status;`, [ids.leadId]).catch(() => 0);
+      R.testLead.deleted = st === 404 || st === 410;
+      R.testLead.afterDelete = st;
+      log(`test lead deleted: ${R.testLead.deleted} (${st})`);
     }
   } else {
     R.mode = 'native-only';
