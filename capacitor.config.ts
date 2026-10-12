@@ -86,7 +86,7 @@ const config: CapacitorConfig = {
     // ── Local Notifications ───────────────────────────────────────
     LocalNotifications: {
       smallIcon: 'ic_stat_saguaro',
-      iconColor: '#FFE600',
+      iconColor: '#FFE000',
       sound: 'default',
     },
 
